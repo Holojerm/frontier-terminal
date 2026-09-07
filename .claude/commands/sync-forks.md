@@ -116,7 +116,7 @@ The template ships three things the portfolio dashboard (`fleet`) depends on, an
 PR must leave the fork with all of them working — see CLAUDE.md › Fleet contract:
 
 1. **`fleet.json`** at the repo root, matching `wrangler.toml`. Write it from the fork's real
-   values (Worker names including `mcp/` if present, D1 `database_name` + `database_id`, KV
+   values (Worker names, D1 `database_name` + `database_id`, KV
    ids, R2 buckets, `[triggers] crons`), and set `stage` honestly — `live` only if the app has
    users it would be bad to lose. Set `features` to what the fork actually kept: a fork with no
    `users` table is `auth: false` and gets `/api/status` but not `/api/fleet`.
