@@ -1,0 +1,43 @@
+# Nuxt
+.nuxt
+.output
+.data
+.env
+.env.*
+!.env.example
+dist
+
+# Node
+node_modules
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Editor
+.idea
+.vscode
+*.suo
+*.ntvs*
+*.njsproj
+*.sln
+*.sw?
+
+# Cloudflare / Wrangler
+.wrangler/
+
+# Claude Code worktrees — created on demand by agent isolation features.
+# Never commit; vue-tsc / nuxt prepare otherwise tries to type-check them.
+.claude/worktrees/
+
+# Logs
+*.log
+npm-debug.log*
+pnpm-debug.log*
+
+# Test coverage
+coverage
+
+# Playwright (axe a11y suite)
+playwright-report/
+test-results/

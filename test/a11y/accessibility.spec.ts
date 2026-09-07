@@ -1,0 +1,233 @@
+// Automated half of DESIGN.md › Accessibility.
+//
+// `bun run design:check` catches what a regex can see in source (a missing alt,
+// a suppressed outline, an icon-only button under the touch floor). It cannot
+// see a rendered page, so it cannot check the thing DESIGN.md is most explicit
+// about: contrast ratios, in both color modes. That is what this suite is for.
+//
+// Every public route is scanned in light and dark, because the two resolve to
+// different colors through the token layer — a ratio that passes in one can
+// fail in the other, and that failure mode is exactly why numbered Tailwind
+// scales are a build error.
+
+import AxeBuilder from '@axe-core/playwright'
+import type { Result } from 'axe-core'
+import { expect, test } from '@playwright/test'
+
+// Public routes only. /dashboard and /account redirect to /login when signed
+// out, so scanning them here would just scan /login a second time; they need a
+// session fixture to be worth anything.
+//
+// /design-system is deliberately excluded: it is a token gallery, so it renders
+// `text-dimmed` swatches on their own. Dimmed is the placeholder/disabled token
+// and is legitimately below 4.5:1 — scanning that page would report the design
+// system documenting itself as a violation.
+//
+// This list is hardcoded because Playwright generates its tests synchronously
+// at module load, before any server is reachable. That makes it exactly the
+// kind of second list `definePageMeta({ publicPage })` exists to abolish — so
+// the `sitemap coverage` test at the bottom of this file fails the build if the
+// two ever disagree. Add a public page, forget this list, and CI tells you.
+//
+// /auth/verify and /unsubscribe are scanned with no parameters, which is
+// exactly the state a stale or mangled link produces — the one a reader is most
+// likely to meet on a bad day, and therefore the one whose error copy has to
+// survive both color modes. Both are public and reachable straight from an
+// email, by people who are not signed in and may never have been.
+const ROUTES = [
+  '/',
+  '/pricing',
+  '/blog',
+  // One post stands in for all of them — see BLOG_POST_PREFIX below. This one
+  // is chosen because it exercises the most rendered markdown: h2s, lists,
+  // inline code, bold, and an inline link, which is the node most likely to
+  // fail contrast in one of the two modes.
+  '/blog/how-billing-works',
+  '/changelog',
+  '/login',
+  '/auth/verify',
+  '/unsubscribe',
+  '/terms',
+  '/privacy',
+]
+
+/**
+ * Blog posts are content, not pages: every one of them renders through the same
+ * app/pages/blog/[slug].vue, so the markup axe sees differs only in prose.
+ * Scanning all of them would make writing a post a CI failure until someone
+ * remembered this file — which trains people to weaken the guard rather than
+ * use it. The coverage test below accepts any URL under this prefix, and
+ * separately insists that at least one real post is actually scanned.
+ */
+const BLOG_POST_PREFIX = '/blog/'
+
+const COLOR_MODES = ['light', 'dark'] as const
+
+const WCAG_TAGS = [
+  'wcag2a',
+  'wcag2aa',
+  'wcag21a',
+  'wcag21aa',
+  'wcag22aa',
+  // Not WCAG, but it carries `region` (all content inside a landmark) and
+  // `heading-order` — both rules DESIGN.md states as requirements.
+  'best-practice',
+]
+
+/** axe's raw output is deeply nested; a failed assertion has to be readable in
+ *  CI logs without opening the HTML report. Contrast failures additionally carry
+ *  the measured ratio and the two colors — without those numbers the message
+ *  says a token is wrong but not by how much, which is the difference between a
+ *  one-shade fix and a rethink. */
+function format(violations: Result[]): string[] {
+  return violations.flatMap((v) =>
+    v.nodes.map((node) => {
+      const where = node.target.join(' ')
+      const contrast = node.any.find((check) => check.id === 'color-contrast')?.data as
+        | {
+            contrastRatio?: number
+            expectedContrastRatio?: string
+            fgColor?: string
+            bgColor?: string
+          }
+        | undefined
+
+      const detail = contrast?.contrastRatio
+        ? ` (${contrast.contrastRatio}:1, needs ${contrast.expectedContrastRatio}; ${contrast.fgColor} on ${contrast.bgColor})`
+        : ''
+
+      return `[${v.impact ?? 'unknown'}] ${v.id}: ${v.help}${detail} → ${where}`
+    }),
+  )
+}
+
+for (const route of ROUTES) {
+  for (const mode of COLOR_MODES) {
+    test(`${route} passes axe in ${mode} mode`, async ({ page }) => {
+      // NuxtUI's color mode defaults to `system`, so emulating the media query
+      // is enough — no cookie or class juggling.
+      await page.emulateMedia({ colorScheme: mode })
+      const response = await page.goto(route)
+
+      // The 404 page is accessible. That is not what this suite is for, and a
+      // route that quietly stopped existing — a renamed post, a moved page —
+      // would otherwise be scanned green forever while nobody could reach it.
+      expect(response?.status(), `${route} did not return 200`).toBe(200)
+
+      // Contrast is measured against rendered pixels, so the webfonts have to
+      // have landed before axe runs or it can sample a fallback face.
+      await page.waitForLoadState('networkidle')
+      await page.evaluate(() => document.fonts.ready)
+
+      const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+
+      expect(format(violations)).toEqual([])
+    })
+  }
+}
+
+// The keyboard path can only be checked in a real browser — `:focus` needs a
+// focused document, which jsdom and a background tab both lack. These two are
+// the guarantees DESIGN.md makes that nothing else verifies.
+test.describe('keyboard', () => {
+  test('the skip link is the first tab stop and moves focus to main', async ({ page }) => {
+    await page.goto('/')
+
+    await page.keyboard.press('Tab')
+    const skip = page.locator('a[href="#main"]')
+
+    // sr-only until focused: it must become genuinely visible, not just present.
+    await expect(skip).toBeFocused()
+    await expect(skip).toBeVisible()
+    const box = await skip.boundingBox()
+    expect(box, 'skip link should have a real box once focused').not.toBeNull()
+    expect(box!.height, 'skip link is still visually hidden while focused').toBeGreaterThan(10)
+
+    await page.keyboard.press('Enter')
+    await expect(page.locator('#main')).toBeFocused()
+  })
+
+  test('every focusable control in the header shows a focus ring', async ({ page }) => {
+    await page.goto('/')
+
+    const outlines = await page.evaluate(() => {
+      const results: { label: string; outlineWidth: string; boxShadow: string }[] = []
+      const controls = document.querySelectorAll<HTMLElement>('header a, header button')
+      for (const el of controls) {
+        el.focus()
+        const cs = getComputedStyle(el)
+        results.push({
+          label: (el.textContent || '').trim().slice(0, 20) || el.getAttribute('aria-label') || '?',
+          outlineWidth: cs.outlineWidth,
+          boxShadow: cs.boxShadow,
+        })
+      }
+      return results
+    })
+
+    expect(outlines.length).toBeGreaterThan(0)
+    for (const control of outlines) {
+      const hasRing = control.outlineWidth !== '0px' || control.boxShadow !== 'none'
+      expect(hasRing, `no focus indicator on "${control.label}"`).toBe(true)
+    }
+  })
+})
+
+// The guard that keeps ROUTES honest.
+//
+// sitemap.xml is rendered from the `publicPage` declarations on the pages
+// themselves, so it is the authoritative answer to "what is public here". If a
+// page is public enough to hand to Google, it is public enough to scan for
+// contrast and heading order — and the failure this catches is silent: the new
+// page simply never gets tested, and nothing anywhere goes red.
+//
+// /login is in ROUTES but deliberately NOT in the sitemap (it is noindex), so
+// the check runs one way only: everything in the sitemap must be scanned.
+test('sitemap coverage: every public page is in ROUTES', async ({ request }) => {
+  const response = await request.get('/sitemap.xml')
+  expect(response.ok()).toBe(true)
+
+  const xml = await response.text()
+  const paths = [...xml.matchAll(/<loc>([^<]+)<\/loc>/g)].map((match) => {
+    const url = new URL(match[1]!)
+    return url.pathname === '/' ? '/' : url.pathname.replace(/\/$/, '')
+  })
+
+  expect(paths.length).toBeGreaterThan(0)
+
+  // ── The exemption, and the two checks that keep it honest ─────────────────
+  //
+  // Posts are exempt from the sitemap→ROUTES direction on purpose: they all
+  // render through one app/pages/blog/[slug].vue, so scanning every one adds
+  // nothing, and requiring it would fail CI on a pure content commit — which
+  // trains people to delete the guard rather than use it.
+  //
+  // What that exemption cannot be allowed to do is let the sample post go
+  // stale. Asserting only that ROUTES *mentions* something under /blog/ is not
+  // enough: rename a post and ROUTES still mentions the old slug, the scan
+  // fetches a 404, and axe finds the error page perfectly accessible. So the
+  // sampled posts are checked against the live sitemap, which is the same list
+  // the app actually publishes. (The per-route status assertion above closes
+  // the same hole from the other side, for every route.)
+  const sampled = ROUTES.filter((route) => route.startsWith(BLOG_POST_PREFIX))
+  expect(
+    sampled,
+    'ROUTES must scan at least one blog post — it stands in for all of them.',
+  ).not.toEqual([])
+
+  const stale = sampled.filter((route) => !paths.includes(route))
+  expect(
+    stale,
+    `ROUTES scans blog posts that are not in the sitemap: ${stale.join(', ')}. ` +
+      'A renamed or deleted post leaves the sweep scanning a 404.',
+  ).toEqual([])
+
+  const missing = paths.filter(
+    (path) => !ROUTES.includes(path) && !path.startsWith(BLOG_POST_PREFIX),
+  )
+  expect(
+    missing,
+    `Public pages missing from the a11y sweep: ${missing.join(', ')}. ` +
+      'Add them to ROUTES in this file.',
+  ).toEqual([])
+})
