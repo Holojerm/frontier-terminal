@@ -2,9 +2,7 @@
 //
 // `nuxt dev` answers Playwright's webServer health check by server-rendering
 // one page. The client bundle is a separate, much larger job: Vite transforms
-// the component graph on demand when a browser first asks for it, and that
-// graph grew substantially when @nuxt/content arrived, because NuxtUI registers
-// ~44 Prose* components globally as soon as it is installed.
+// the component graph on demand when a browser first asks for it.
 //
 // The symptom was the first `page.goto` of a run — whichever test won the race
 // — blowing through Playwright's 30s default while every later navigation took
@@ -26,8 +24,8 @@
 import { chromium } from '@playwright/test'
 import type { FullConfig } from '@playwright/test'
 
-/** Enough to pull both halves of the graph: the app shell, and rendered markdown. */
-const WARM_PATHS = ['/', '/blog/how-billing-works']
+/** The app shell is the whole graph today; add a route here when a heavier one lands. */
+const WARM_PATHS = ['/']
 
 export default async function globalSetup(config: FullConfig): Promise<void> {
   const baseURL = config.projects[0]?.use?.baseURL

@@ -1,29 +1,13 @@
 // The one salt that must never change.
 //
-// ── Why this is not derived from sessionPassword ─────────────────────────────
-// server/utils/unsubscribe.ts sets this repo's rule: "a new secret is a human
-// gate", so the unsubscribe key is derived from `sessionPassword` rather than
-// being its own env var. That reasoning is right and it does not reach here,
-// for one reason: an unsubscribe token is short-lived and re-issued on every
-// email, so rotating the password merely invalidates links in flight. The
-// referral welcome trial is the opposite — its whole enforcement mechanism is a
-// PERMANENT deterministic ref (`welcome_<hash of mailbox>`) meeting a unique
-// index, so the salt has to outlive everything, forever.
-//
-// Rotate `sessionPassword` after a compromise — the reasonable thing to do, and
-// not the same thing as this repo's actual sign-everyone-out mechanism, which
-// is the `users.sessions_invalid_before` watermark — and every mailbox's ref is
-// recomputed, every spent trial silently re-arms, and the product starts giving
-// free months to people who already had one. Nothing fails, nothing logs, and
-// the graph moves three weeks later.
-//
-// ── Why not NUXT_IDENTITY_SALT either ────────────────────────────────────────
-// Because that is precisely the human gate the rule above exists to avoid, and
-// it fails in the direction that matters: the fork that never sets it is the
-// fork that gets the bug, and the warning telling them so is a log line nobody
-// reads. A value generated once and kept makes the DEFAULT correct rather than
-// the documented path correct, which is the same trade the design and SEO gates
-// in this repo make everywhere else.
+// A per-deployment salt for hashing values that must be recognisable later
+// without being readable now (an IP for a rate limit, a key for a dedupe
+// check). It is generated once and stored in `instance_secrets` rather than
+// read from an env var, because an env var is a setup step every fork would
+// have to remember and the fork that forgets gets a silently different hash on
+// every deploy. A value generated once and kept makes the DEFAULT correct
+// rather than the documented path correct — the same trade the design and SEO
+// gates in this repo make everywhere else.
 //
 // So: 32 random bytes, written once, read forever. No configuration, no
 // rotation story, and nothing for a fork to get wrong.
@@ -41,9 +25,7 @@ export const IDENTITY_SALT_ID = 'identity-salt'
 
 /**
  * Memoised per isolate. The value is immutable by construction, so there is no
- * invalidation to get wrong — unlike the session-revocation read in
- * server/utils/session-guard.ts, which is deliberately uncached because the
- * whole point of that column is that it changes underneath you.
+ * invalidation to get wrong.
  */
 let cached: string | null = null
 
@@ -52,9 +34,9 @@ let cached: string | null = null
  *
  * ── Race safety, which is the only interesting part ──────────────────────────
  * Two requests can reach a virgin database at the same moment, and if both
- * generated a salt and both kept their own, two mailboxes' worth of refs would
- * be computed under different salts — the exact invariant break this salt
- * exists to prevent, on day one, permanently.
+ * generated a salt and both kept their own, two values would be hashed under
+ * different salts — the exact invariant break this salt exists to prevent, on
+ * day one, permanently.
  *
  * `INSERT … ON CONFLICT DO NOTHING` followed by a read makes that impossible
  * without a transaction: both writers race, the primary key lets exactly one

@@ -1,9 +1,8 @@
 // GET /api/fleet — business counters for the portfolio dashboard, behind a
 // bearer token.
 //
-// Counts only, never rows: users, entitlements by status, the ops spool's
-// backlog, the feedback queue. See collectFleetCounters() for what each one
-// means and where a fork adds its own.
+// Counts only, never rows: the ops spool's backlog today, the pipeline's own
+// counters as they arrive. See collectFleetCounters() for where those go.
 //
 // Responses that are not a 200, and why each one is what it is:
 //   404 — NUXT_FLEET_TOKEN is unset (or too short to be a secret). An app that
