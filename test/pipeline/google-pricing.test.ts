@@ -279,3 +279,16 @@ describe('parseGooglePricing structure guards', () => {
     })
   })
 })
+
+// Committed page fixtures are trimmed of <script> blocks on purpose: Google's
+// site bootstrap embeds its own browser API keys, and a public repo must not
+// carry anyone's key strings, even keys that are not ours.
+describe('fixture hygiene', () => {
+  it.each([
+    ['google-pricing.html', fixture],
+    ['google-pricing.2026-09-07.html', live],
+  ])('%s carries no scripts and no key-shaped strings', (_name, html) => {
+    expect(html).not.toMatch(/<script\b/i)
+    expect(html).not.toMatch(/AIza[0-9A-Za-z_-]{35}/)
+  })
+})
