@@ -27,6 +27,7 @@ export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
   'xai-models-md': { label: 'xAI models.md', role: 'primary' },
   'google-pricing-html': { label: 'Google Gemini API pricing', role: 'primary' },
   'openrouter-models': { label: 'OpenRouter /api/v1/models', role: 'cross-check' },
+  'openrouter-rankings-daily': { label: 'OpenRouter usage rankings (daily)', role: 'primary' },
   'openai-ashby': { label: 'OpenAI Ashby job board', role: 'primary' },
   'anthropic-greenhouse': { label: 'Anthropic Greenhouse jobs', role: 'primary' },
   'anthropic-greenhouse-departments': {
@@ -80,6 +81,10 @@ export interface RegisteredSource {
   url: string
   verdict: string
   caveat: string | null
+  /** Data license, where the source states one (the rankings feed: CC BY 4.0). */
+  license: string | null
+  /** Required citation template; `{meta.as_of}` is filled by the query that serves it. */
+  citation: string | null
 }
 
 export interface CutSourceEntry {
@@ -167,6 +172,7 @@ const AXES: readonly SourceAxis[] = [
   'hiring',
   'sec',
   'status',
+  'demand-share',
 ]
 const PROVIDERS: readonly (ProviderId | 'all')[] = [
   'openai',
@@ -203,6 +209,8 @@ export function readSourceRegistry(sourcesYaml: string): SourceRegistry {
       url,
       verdict,
       caveat: block.fields.caveats ?? null,
+      license: block.fields.license ?? null,
+      citation: block.fields.citation ?? null,
     })
   }
   if (sources.length === 0) throw new Error('sources.yaml yielded zero include sources')

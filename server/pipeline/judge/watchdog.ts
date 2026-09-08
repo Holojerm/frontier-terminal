@@ -4,7 +4,7 @@ import * as tables from '../../db/schema'
 import { recordOpsEvent } from '../../utils/ops'
 import type { LockStore } from '../lock'
 import type { PipelineDb } from '../store'
-import { isTimestampOnlyChange, judgedThrough } from './pending'
+import { isTimestampOnlyChange, judgeEligible, judgedThrough } from './pending'
 import { JUDGE_OPS_PATH } from './submit'
 
 // Silence watchdog. The routine runs on the owner's claude.ai account, so
@@ -55,6 +55,7 @@ export async function checkJudgeSilence(
     .from(tables.changes)
     .where(
       and(
+        judgeEligible(), // a backlog of ranking rows is not a backlog the judge owes
         lt(tables.changes.detected_at, cutoff),
         since ? gt(tables.changes.detected_at, since) : undefined,
       ),

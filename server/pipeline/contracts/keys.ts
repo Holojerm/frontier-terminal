@@ -26,6 +26,12 @@ export function incidentKey(provider: Provider, incidentId: string): string {
   return `incident:${provider}:${incidentId}`
 }
 
+// One row per UTC day per model — the same (date, permaslug) fetched again
+// diffs to nothing, so an overlapping window re-fetch is idempotent.
+export function rankingKey(date: string, modelPermaslug: string): string {
+  return `ranking:${date}:${modelPermaslug}`
+}
+
 // Canonical serialization backing contentHash. Exported so consumers
 // (normalize) share this exact algorithm instead of carrying a copy:
 // contentHash(JSON.parse(payload)) === content_hash must hold.

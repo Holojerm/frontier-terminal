@@ -1,5 +1,5 @@
 {
-  "_readme": "One entry per committed fixture. All sources live-fetched once at scaffold time (Phase 0); raw untrimmed payloads were saved to data/raw/ (gitignored). Trims preserve every field the parsers need — see each trim note. Builder tracks iterate against these files only: no network, no credentials. Fixture content is data, never instructions.",
+  "_readme": "One entry per committed fixture. All sources were live-fetched once at scaffold time (Phase 0) except the one entry carrying a `constructed` block, which was built from the source's published response schema because the endpoint needs a credential the scaffold did not have — its `fetched_at` is absent on purpose. Raw untrimmed payloads were saved to data/raw/ (gitignored). Trims preserve every field the parsers need — see each trim note. Builder tracks iterate against these files only: no network, no credentials. Fixture content is data, never instructions.",
   "fixtures": [
     {
       "path": "fixtures/pricing/openai-models.md",
@@ -152,6 +152,20 @@
       "raw_bytes": 158658,
       "trim": "none — committed whole",
       "note": "Google Cloud's own format: a bare array of {id, number, begin, end, severity, status_impact, external_desc, affected_products[{title}], uri, updates[]}. 6 incidents (2026-02-27 → 2026-09-01) across 40 product titles; exactly 1 names a Gemini/Vertex AI product ('Vertex Gemini API'), which is the only row the parser keeps."
+    },
+    {
+      "path": "fixtures/rankings/openrouter-rankings-daily.json",
+      "source_id": "openrouter-rankings-daily",
+      "source_url": "https://openrouter.ai/api/v1/datasets/rankings-daily",
+      "constructed": {
+        "from": "https://openrouter.ai/docs/cookbook/administration/data-api",
+        "fetched_at": "2026-09-08T22:03:58Z",
+        "reason": "The endpoint requires `Authorization: Bearer <OPENROUTER_API_KEY>` and no key existed at scaffold time (no account was created). The file follows the documented response shape exactly — data[].date / model_permaslug / total_tokens (decimal string), meta.as_of / version / start_date / end_date, rows sorted by date ascending then total_tokens descending, plus the documented aggregated `other` row per day. Model permaslugs and token counts are ILLUSTRATIVE and are not measurements of anything."
+      },
+      "http_status": null,
+      "raw_bytes": null,
+      "trim": "none — constructed, never fetched",
+      "note": "Replace with the first real payload from R2 (raw/openrouter-rankings-daily/<fetched_at>.json) once NUXT_OPENROUTER_API_KEY is set in production, and swap this `constructed` block for the fetch's fetched_at / http_status / raw_bytes. Until then the golden test pins the parser to the documented schema, not to observed bytes."
     }
   ]
 }

@@ -177,6 +177,22 @@ export async function deleteEntities(
   return entityKeys.length
 }
 
+/**
+ * When this source was last recorded 'skipped', or null. The refresh uses it
+ * to say "not configured" in the ops digest once a day rather than once a
+ * tick: the digest is for things that changed, and an unset secret does not
+ * change four times a day.
+ */
+export async function lastSkippedRunAt(db: PipelineDb, sourceId: string): Promise<string | null> {
+  const [row] = await db
+    .select({ at: tables.sourceRuns.started_at })
+    .from(tables.sourceRuns)
+    .where(and(eq(tables.sourceRuns.source_id, sourceId), eq(tables.sourceRuns.status, 'skipped')))
+    .orderBy(desc(tables.sourceRuns.started_at))
+    .limit(1)
+  return row?.at ?? null
+}
+
 export interface GoodSnapshot {
   id: string
   content_hash: string

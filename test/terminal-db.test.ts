@@ -192,6 +192,7 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       'prices_latest',
       'jobs_open',
       'incidents',
+      'rankings_daily',
       'changes',
       'alerts',
       'source_runs',
@@ -232,10 +233,10 @@ describe('after a baseline poll of every source', () => {
     expect(as_of).toMatch(/^2026-09-07T10:0\d:/)
     expect(movement.total_changes).toBe(0)
     expect(movement.latest_detected_at).toBeNull()
-    expect(movement.sources_total).toBe(16)
+    expect(movement.sources_total).toBe(17)
     // Every source has exactly one snapshot => nothing could have been
     // diffed. That is a different sentence from "nothing changed".
-    expect(movement.sources_not_yet_compared).toBe(16)
+    expect(movement.sources_not_yet_compared).toBe(17)
     expect(latest_fetched_at).toMatch(/^2026-09-07T10:0\d:/)
   })
 
@@ -353,7 +354,7 @@ describe('after a baseline poll of every source', () => {
 
   it('coverage: every source has a snapshot, a run, and the audit caveat', async () => {
     const coverage = await queryCoverage(db, await ctx())
-    expect(coverage.sources).toHaveLength(16)
+    expect(coverage.sources).toHaveLength(17)
     for (const s of coverage.sources) {
       expect(s.newest_snapshot!.source_url).toBe(urlOf(s.source_id))
       expect(s.newest_snapshot!.fetched_at).toMatch(/^2026-09-07T10:0\d:/)
@@ -369,7 +370,7 @@ describe('after a baseline poll of every source', () => {
     expect(byId['anthropic-greenhouse-departments']!.role).toBe('join')
     // The resolved CIK URL from the manifest, not the sources.yaml template.
     expect(byId['edgar-submissions-spcx']!.url).toBe(urlOf('edgar-submissions-spcx'))
-    expect(coverage.totals.snapshots).toBe(16)
+    expect(coverage.totals.snapshots).toBe(17)
     expect(coverage.exports.find((e) => e.name === 'jobs_open')!.rows).toBe(65 + 59 + 42)
     expect(coverage.exports.find((e) => e.name === 'incidents')!.rows).toBe(25 + 50 + 1)
     expect(byId['google-cloud-status']).toMatchObject({ entity_count: 1, role: 'status' })
@@ -490,8 +491,8 @@ describe('after a second poll that moves prices, closes a role, and files an S-1
     expect(Date.parse(movement.latest_detected_at!) - Date.parse(movement.window_from!)).toBe(
       24 * 3_600_000,
     )
-    expect(movement.sources_total).toBe(16)
-    expect(movement.sources_not_yet_compared).toBe(16 - 4) // xai md, xai jobs + its join, edgar-fts
+    expect(movement.sources_total).toBe(17)
+    expect(movement.sources_not_yet_compared).toBe(17 - 4) // xai md, xai jobs + its join, edgar-fts
 
     expect(alert_count).toBe(1)
     expect(alerts).toHaveLength(1)

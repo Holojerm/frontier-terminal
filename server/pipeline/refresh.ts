@@ -18,6 +18,7 @@ import {
   currentEntities,
   deleteEntities,
   insertRows,
+  lastSkippedRunAt,
   latestGoodSnapshot,
   updateEntities,
   type PipelineDb,
@@ -87,6 +88,9 @@ export function describeError(err: unknown): string {
 
 const DETAIL_MAX = 1000
 
+/** How often an unconfigured source may say so in the ops digest. */
+export const SKIPPED_EVENT_INTERVAL_MS = 24 * 60 * 60 * 1000
+
 interface Fetched {
   source: FetchSource
   fetched_at: string
@@ -98,13 +102,22 @@ interface Fetched {
     first: boolean
   } | null
   failure: string | null
+  /** True when the fetcher refused for want of a credential (nothing attempted). */
+  skipped: boolean
 }
 
 async function fetchAndSnapshot(deps: RefreshDeps, source: FetchSource, now: () => Date) {
   const outcome = await deps.fetcher(source)
   const fetched_at = now().toISOString()
   const base = { source, fetched_at }
-  if (!outcome.ok) return { ...base, body: null, failure: outcome.detail } satisfies Fetched
+  if (!outcome.ok) {
+    return {
+      ...base,
+      body: null,
+      failure: outcome.detail,
+      skipped: 'skipped' in outcome && outcome.skipped,
+    } satisfies Fetched
+  }
 
   const content_hash = contentHashOfText(outcome.text)
   const latest = await latestGoodSnapshot(deps.db, source.source_id)
@@ -134,6 +147,7 @@ async function fetchAndSnapshot(deps: RefreshDeps, source: FetchSource, now: () 
     ...base,
     body: { text: outcome.text, snapshot_id, unchanged, first: latest === null },
     failure: null,
+    skipped: false,
   } satisfies Fetched
 }
 
@@ -149,7 +163,7 @@ async function parseAndStore(
   whitelist: CikWhitelist,
 ): Promise<Outcome> {
   const { source, fetched_at, body } = fetched
-  if (!body) return quiet('failed', fetched.failure, null)
+  if (!body) return quiet(fetched.skipped ? 'skipped' : 'failed', fetched.failure, null)
 
   const lane = LANES[source.source_id]
   if (!lane) {
@@ -275,7 +289,13 @@ export async function runRefresh(
     try {
       fetched = await fetchAndSnapshot(deps, source, now)
     } catch (err) {
-      fetched = { source, fetched_at: now().toISOString(), body: null, failure: describeError(err) }
+      fetched = {
+        source,
+        fetched_at: now().toISOString(),
+        body: null,
+        failure: describeError(err),
+        skipped: false,
+      }
     }
     byId.set(source.source_id, fetched)
   }
@@ -297,6 +317,18 @@ export async function runRefresh(
         detail: `${source.source_id}: ${detail ?? 'unknown failure'}`,
         path: source.url,
       })
+    } else if (outcome.status === 'skipped') {
+      // Once a day, not once a tick: the previous skipped run is the marker.
+      const last = await lastSkippedRunAt(deps.db, source.source_id)
+      const recent =
+        last !== null && Date.parse(started_at) - Date.parse(last) < SKIPPED_EVENT_INTERVAL_MS
+      if (!recent) {
+        await recordOpsEvent(deps.db, {
+          kind: 'source_unconfigured',
+          detail: `${source.source_id}: ${detail ?? 'skipped'}`,
+          path: source.url,
+        })
+      }
     }
     // Written last, after the entity writes — see latestGoodSnapshot() for why.
     await insertRows(deps.db, 'source_runs', [
@@ -318,7 +350,10 @@ export async function runRefresh(
   }
 
   const failed = reports.filter((r) => r.status === 'failed').length
-  const all_failed = reports.length > 0 && failed === reports.length
+  // A skipped source was never attempted, so it is neither a failure nor a
+  // success — it does not count toward "everything failed".
+  const attempted = reports.filter((r) => r.status !== 'skipped').length
+  const all_failed = attempted > 0 && failed === attempted
   if (all_failed) {
     await recordOpsEvent(deps.db, {
       kind: 'all_sources_failed',

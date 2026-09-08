@@ -14,6 +14,7 @@ import anthropicPricing from '../../fixtures/pricing/anthropic-pricing.md?raw'
 import googlePricing from '../../fixtures/pricing/google-pricing.html?raw'
 import openaiModels from '../../fixtures/pricing/openai-models.md?raw'
 import openrouterModels from '../../fixtures/pricing/openrouter-models.json?raw'
+import openrouterRankings from '../../fixtures/rankings/openrouter-rankings-daily.json?raw'
 import xaiModels from '../../fixtures/pricing/xai-models.md?raw'
 import edgarFts from '../../fixtures/sec/edgar-fts.json?raw'
 import edgarSubmissionsSpcx from '../../fixtures/sec/edgar-submissions-spcx.json?raw'
@@ -21,6 +22,8 @@ import anthropicStatus from '../../fixtures/status/anthropic-status.json?raw'
 import googleCloudStatus from '../../fixtures/status/google-cloud-status.json?raw'
 import openaiStatus from '../../fixtures/status/openai-status.json?raw'
 import sourcesYaml from '../../sources.yaml?raw'
+
+import { fixtureProvenance } from '../../server/pipeline/parsers/fixture-provenance'
 
 export const manifest = manifestJson
 
@@ -36,6 +39,7 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/pricing/openai-models.md': openaiModels,
   'fixtures/pricing/openrouter-models.json': openrouterModels,
   'fixtures/pricing/xai-models.md': xaiModels,
+  'fixtures/rankings/openrouter-rankings-daily.json': openrouterRankings,
   'fixtures/sec/edgar-fts.json': edgarFts,
   'fixtures/sec/edgar-submissions-spcx.json': edgarSubmissionsSpcx,
   'fixtures/status/anthropic-status.json': anthropicStatus,
@@ -57,9 +61,8 @@ export function fixtureText(repoRelativePath: string): string {
 }
 
 /** Provenance recorded in fixtures/manifest.json for a source id — the tests'
- * expected values come from here, never retyped. */
+ * expected values come from here, never retyped. For a constructed fixture
+ * that is the documentation it was built from (fixture-provenance.ts). */
 export function provenanceOf(sourceId: string): { source_url: string; fetched_at: string } {
-  const entry = manifest.fixtures.find((f) => f.source_id === sourceId)
-  if (!entry) throw new Error(`no manifest entry for ${sourceId}`)
-  return { source_url: entry.source_url, fetched_at: entry.fetched_at }
+  return fixtureProvenance(sourceId)
 }

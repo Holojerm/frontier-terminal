@@ -20,3 +20,5 @@ import './parsers/status/anthropic-status'
 import './parsers/status/google-cloud-status'
 // OpenRouter drift check (cross-check only)
 import './parsers/openrouter'
+// OpenRouter usage rankings (demand share)
+import './parsers/openrouter-rankings'

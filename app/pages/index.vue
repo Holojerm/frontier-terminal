@@ -1,8 +1,8 @@
 <script setup lang="ts">
 // The terminal's front page. Reading order is priority order: what moved,
-// then what things cost, then who is hiring, then how strained the APIs
-// are, then the coverage the first four rest on. Five cached endpoints,
-// fetched in parallel on the server.
+// then what things cost, then who is winning demand, then who is hiring,
+// then how strained the APIs are, then the coverage the rest rest on. Six
+// cached endpoints, fetched in parallel on the server.
 
 import type {
   CoverageData,
@@ -10,6 +10,7 @@ import type {
   IncidentsData,
   OverviewData,
   PricesData,
+  RankingsData,
 } from '#shared/utils/terminal-types'
 
 definePageMeta({
@@ -36,16 +37,17 @@ useSeo({
   description,
 })
 
-const [overview, prices, hiring, incidents, coverage] = await Promise.all([
+const [overview, prices, rankings, hiring, incidents, coverage] = await Promise.all([
   useFetch<OverviewData>('/api/overview'),
   useFetch<PricesData>('/api/prices'),
+  useFetch<RankingsData>('/api/rankings'),
   useFetch<HiringData>('/api/hiring'),
   useFetch<IncidentsData>('/api/incidents'),
   useFetch<CoverageData>('/api/coverage'),
 ])
 
 const failed = computed(() =>
-  [overview, prices, hiring, incidents, coverage].some(
+  [overview, prices, rankings, hiring, incidents, coverage].some(
     (r) => r.error.value !== null && r.error.value !== undefined,
   ),
 )
@@ -81,6 +83,14 @@ const failed = computed(() =>
           {{ prices.data.value.counts.priced }} priced
         </NuxtLink>
       </p>
+    </TerminalPanel>
+
+    <TerminalPanel
+      id="demand"
+      title="Demand share"
+      note="Each lab’s share of tokens routed through OpenRouter in the newest seven days — a proxy for relative demand while the labs are private."
+    >
+      <TerminalDemandShare v-if="rankings.data.value" :rankings="rankings.data.value" compact />
     </TerminalPanel>
 
     <TerminalPanel
