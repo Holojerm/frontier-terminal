@@ -173,6 +173,14 @@ Use the semantic utility, never a numbered scale. `text-gray-900` is a build fai
 | Default border | `border-default` |
 | Emphasized border | `border-accented` |
 
+Two pairings the token names do not warn you about, both measured in light mode:
+
+- **Secondary text on an elevated surface is `text-toned`, not `text-muted`.** stone-500 on
+  stone-100 is 4.39:1 — under AA — while it clears on the page ground (4.79). A panel or card
+  that carries its own `bg-elevated` uses `text-toned` (6.99) for captions and stamps.
+- **`text-primary` is body-text only on `bg-default`.** clay-600 reads 4.58:1 on the page and
+  4.20 on `bg-elevated`; a link inside an elevated panel is `text-highlighted` and underlined.
+
 ---
 
 ## Typography
@@ -251,6 +259,9 @@ because this system is for reading. Never set arbitrary sizes (`text-[13px]`).
   inline links get a real `underline` instead of a hover-only bottom border. Measure is
   `max-w-2xl` — a reading column, not the full container.
 - **Empty states:** one line of `text-muted` explanation plus one action. No illustrations.
+- **Alerts:** the description renders at full opacity. NuxtUI dims it to 90%, which takes
+  info-700 on its own tint from 5.08:1 to 3.9:1 — below AA — for the one line of an alert that
+  carries the actual content.
 - **Tables:** `font-mono` for numeric columns, right-aligned. Row separators, not zebra striping.
 
 ---

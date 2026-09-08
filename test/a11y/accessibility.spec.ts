@@ -24,7 +24,7 @@ import { expect, test } from '@playwright/test'
 // kind of second list `definePageMeta({ publicPage })` exists to abolish — so
 // the `sitemap coverage` test at the bottom of this file fails the build if the
 // two ever disagree. Add a public page, forget this list, and CI tells you.
-const ROUTES = ['/']
+const ROUTES = ['/', '/prices', '/alerts', '/data', '/about']
 
 const COLOR_MODES = ['light', 'dark'] as const
 

@@ -1,8 +1,14 @@
 <script setup lang="ts">
-// Placeholder landing page. The terminal UI replaces this in a later PR; what
-// has to survive that replacement is the contract below — one useSeo() call
-// and a publicPage declaration, which is what puts this URL in sitemap.xml
-// and llms.txt (scripts/check-seo.ts fails the build otherwise).
+// The terminal's front page. Reading order is priority order: what moved,
+// then what things cost, then who is hiring, then the coverage the first
+// three rest on. Four cached endpoints, fetched in parallel on the server.
+
+import type {
+  CoverageData,
+  HiringData,
+  OverviewData,
+  PricesData,
+} from '#shared/utils/terminal-types'
 
 definePageMeta({
   publicPage: {
@@ -10,7 +16,7 @@ definePageMeta({
     priority: '1.0',
     title: 'Overview',
     summary:
-      'What the terminal tracks across the frontier AI labs — API pricing, hiring, SEC filings — and where each number comes from.',
+      'What moved across the frontier AI labs — judged alerts, change counts by axis, like-for-like API prices, open roles by department, and source coverage.',
   },
 })
 
@@ -27,12 +33,67 @@ useSeo({
   title: config.public.appName,
   description,
 })
+
+const [overview, prices, hiring, coverage] = await Promise.all([
+  useFetch<OverviewData>('/api/overview'),
+  useFetch<PricesData>('/api/prices'),
+  useFetch<HiringData>('/api/hiring'),
+  useFetch<CoverageData>('/api/coverage'),
+])
+
+const failed = computed(() =>
+  [overview, prices, hiring, coverage].some(
+    (r) => r.error.value !== null && r.error.value !== undefined,
+  ),
+)
 </script>
 
 <template>
-  <section class="mx-auto flex max-w-2xl flex-col gap-6 py-16 text-center">
-    <h1 class="text-4xl text-highlighted sm:text-5xl">{{ config.public.appName }}</h1>
-    <p class="text-lg text-muted">{{ description }}</p>
-    <p class="text-sm text-muted">Not investment advice.</p>
-  </section>
+  <div class="space-y-12">
+    <header class="space-y-2">
+      <h1 class="text-4xl text-highlighted">{{ config.public.appName }}</h1>
+      <p class="max-w-2xl text-muted">{{ description }}</p>
+    </header>
+
+    <UAlert
+      v-if="failed"
+      color="error"
+      variant="soft"
+      icon="i-lucide-database-zap"
+      title="Part of the terminal could not be read"
+      description="A data endpoint failed to respond. The panels that did load are shown; nothing is inferred for the ones that did not."
+    />
+
+    <TerminalSignalBand v-if="overview.data.value" :overview="overview.data.value" />
+
+    <TerminalPanel
+      id="pricing"
+      title="Like-for-like API pricing"
+      note="$ per million tokens, on each vendor’s own flagship / balanced / economy recommendation."
+    >
+      <TerminalPriceMatrix v-if="prices.data.value" :matrix="prices.data.value.matrix" />
+      <p v-if="prices.data.value" class="text-sm">
+        <NuxtLink to="/prices" class="text-primary underline underline-offset-2">
+          Full catalog — {{ prices.data.value.counts.total }} SKU rows,
+          {{ prices.data.value.counts.priced }} priced
+        </NuxtLink>
+      </p>
+    </TerminalPanel>
+
+    <TerminalPanel
+      id="hiring"
+      title="Hiring mix"
+      note="Open roles by department, from each board’s current listing."
+    >
+      <TerminalHiringMix v-if="hiring.data.value" :hiring="hiring.data.value" />
+    </TerminalPanel>
+
+    <TerminalPanel
+      id="coverage"
+      title="Coverage"
+      note="Every source behind the numbers above: newest snapshot, last poll, and the audit’s caveat."
+    >
+      <TerminalCoveragePanel v-if="coverage.data.value" :coverage="coverage.data.value" />
+    </TerminalPanel>
+  </div>
 </template>
