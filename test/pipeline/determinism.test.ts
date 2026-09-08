@@ -13,15 +13,12 @@ import { fixtureText, manifest } from './fixtures'
 // fixture, must produce byte-identical output hashes. This is the boundary
 // table's "deterministic" promise, executed — with no filesystem in the loop.
 
-// The one agent-parsed source. It is gated by parseAgentOutput, never by
-// this harness, and registering it here would be a category error.
-const AGENT_LANE: ParserId = 'google-pricing-html'
-
+// Every parser id with an output schema is a fixed parser — Google's pricing
+// page included, since 2026-09-07. The judge lane has no parser id; it is
+// gated by parseAgentOutput, never by this harness.
 describe('determinism gate', () => {
-  test('every deterministic parser id is registered, and the agent lane is not', () => {
-    const expected = (Object.keys(parserOutputSchemas) as ParserId[])
-      .filter((id) => id !== AGENT_LANE)
-      .sort()
+  test('every parser id is registered', () => {
+    const expected = (Object.keys(parserOutputSchemas) as ParserId[]).sort()
     expect(
       registeredParsers()
         .map((p) => p.name)

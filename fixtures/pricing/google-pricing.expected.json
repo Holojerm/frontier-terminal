@@ -1,0 +1,816 @@
+{
+  "_origin": "Ground truth for fixtures/pricing/google-pricing.html (fetched 2026-08-25T11:10:42Z from https://ai.google.dev/gemini-api/docs/pricing). Derived from the take-home's data/export/prices_latest.csv rows with provider=google, which the Claude agent lane extracted and a human hand-verified against the page. Only the compared columns are kept: model_slug, tier, the three per-MTok prices, and the promo window bounds. Notes were free text written by the model and are not compared.",
+  "_excluded": "The CSV (snapshot 2026-08-26T22:32:27Z) also held 2 rows for models that do not appear anywhere in the 2026-08-25 fixture and only exist on the 2026-09-07 page: gemini-3.5-transcribe (standard), gemini-3.5-transcribe-live (standard). They are asserted against the second fixture instead.",
+  "rows": [
+    {
+      "model_slug": "gemini-2.0-flash",
+      "tier": "batch",
+      "input_per_mtok": 0.05,
+      "cached_input_per_mtok": 0.025,
+      "output_per_mtok": 0.2,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.0-flash",
+      "tier": "standard",
+      "input_per_mtok": 0.1,
+      "cached_input_per_mtok": 0.025,
+      "output_per_mtok": 0.4,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.0-flash-lite",
+      "tier": "batch",
+      "input_per_mtok": 0.0375,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 0.15,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.0-flash-lite",
+      "tier": "standard",
+      "input_per_mtok": 0.075,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 0.3,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-computer-use-preview-10-2025",
+      "tier": null,
+      "input_per_mtok": 1.25,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 10,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-flash",
+      "tier": "batch",
+      "input_per_mtok": 0.15,
+      "cached_input_per_mtok": 0.03,
+      "output_per_mtok": 1.25,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-flash",
+      "tier": "flex",
+      "input_per_mtok": 0.15,
+      "cached_input_per_mtok": 0.03,
+      "output_per_mtok": 1.25,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-flash",
+      "tier": "priority",
+      "input_per_mtok": 0.54,
+      "cached_input_per_mtok": 0.054,
+      "output_per_mtok": 4.5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-flash",
+      "tier": "standard",
+      "input_per_mtok": 0.3,
+      "cached_input_per_mtok": 0.03,
+      "output_per_mtok": 2.5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-flash-image",
+      "tier": "batch",
+      "input_per_mtok": 0.15,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": null,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-flash-image",
+      "tier": "flex",
+      "input_per_mtok": 0.15,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": null,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-flash-image",
+      "tier": "priority",
+      "input_per_mtok": 0.54,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": null,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-flash-image",
+      "tier": "standard",
+      "input_per_mtok": 0.3,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": null,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-flash-lite",
+      "tier": "batch",
+      "input_per_mtok": 0.05,
+      "cached_input_per_mtok": 0.01,
+      "output_per_mtok": 0.2,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-flash-lite",
+      "tier": "flex",
+      "input_per_mtok": 0.05,
+      "cached_input_per_mtok": 0.01,
+      "output_per_mtok": 0.2,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-flash-lite",
+      "tier": "priority",
+      "input_per_mtok": 0.18,
+      "cached_input_per_mtok": 0.018,
+      "output_per_mtok": 0.72,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-flash-lite",
+      "tier": "standard",
+      "input_per_mtok": 0.1,
+      "cached_input_per_mtok": 0.01,
+      "output_per_mtok": 0.4,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-flash-lite-preview-09-2025",
+      "tier": "batch",
+      "input_per_mtok": 0.05,
+      "cached_input_per_mtok": 0.01,
+      "output_per_mtok": 0.2,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-flash-lite-preview-09-2025",
+      "tier": "standard",
+      "input_per_mtok": 0.1,
+      "cached_input_per_mtok": 0.01,
+      "output_per_mtok": 0.4,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-flash-native-audio-preview-12-2025",
+      "tier": null,
+      "input_per_mtok": 0.5,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 2,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-flash-preview-tts",
+      "tier": "batch",
+      "input_per_mtok": 0.25,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-flash-preview-tts",
+      "tier": "standard",
+      "input_per_mtok": 0.5,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 10,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-pro",
+      "tier": "batch",
+      "input_per_mtok": 0.625,
+      "cached_input_per_mtok": 0.125,
+      "output_per_mtok": 5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-pro",
+      "tier": "flex",
+      "input_per_mtok": 0.625,
+      "cached_input_per_mtok": 0.125,
+      "output_per_mtok": 5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-pro",
+      "tier": "priority",
+      "input_per_mtok": 2.25,
+      "cached_input_per_mtok": 0.225,
+      "output_per_mtok": 18,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-pro",
+      "tier": "standard",
+      "input_per_mtok": 1.25,
+      "cached_input_per_mtok": 0.125,
+      "output_per_mtok": 10,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-pro-preview-tts",
+      "tier": "batch",
+      "input_per_mtok": 0.5,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 10,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-2.5-pro-preview-tts",
+      "tier": "standard",
+      "input_per_mtok": 1,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 20,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3-flash-preview",
+      "tier": "batch",
+      "input_per_mtok": 0.25,
+      "cached_input_per_mtok": 0.05,
+      "output_per_mtok": 1.5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3-flash-preview",
+      "tier": "flex",
+      "input_per_mtok": 0.25,
+      "cached_input_per_mtok": 0.05,
+      "output_per_mtok": 1.5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3-flash-preview",
+      "tier": "priority",
+      "input_per_mtok": 0.9,
+      "cached_input_per_mtok": 0.09,
+      "output_per_mtok": 5.4,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3-flash-preview",
+      "tier": "standard",
+      "input_per_mtok": 0.5,
+      "cached_input_per_mtok": 0.05,
+      "output_per_mtok": 3,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3-pro-image",
+      "tier": "batch",
+      "input_per_mtok": 1,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 6,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3-pro-image",
+      "tier": "flex",
+      "input_per_mtok": 1,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 6,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3-pro-image",
+      "tier": "priority",
+      "input_per_mtok": 3.6,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 21.6,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3-pro-image",
+      "tier": "standard",
+      "input_per_mtok": 2,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 12,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-flash-image",
+      "tier": "batch",
+      "input_per_mtok": 0.25,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 1.5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-flash-image",
+      "tier": "standard",
+      "input_per_mtok": 0.5,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 3,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-flash-lite",
+      "tier": "batch",
+      "input_per_mtok": 0.125,
+      "cached_input_per_mtok": 0.0125,
+      "output_per_mtok": 0.75,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-flash-lite",
+      "tier": "flex",
+      "input_per_mtok": 0.125,
+      "cached_input_per_mtok": 0.0125,
+      "output_per_mtok": 0.75,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-flash-lite",
+      "tier": "priority",
+      "input_per_mtok": 0.45,
+      "cached_input_per_mtok": 0.045,
+      "output_per_mtok": 2.7,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-flash-lite",
+      "tier": "standard",
+      "input_per_mtok": 0.25,
+      "cached_input_per_mtok": 0.025,
+      "output_per_mtok": 1.5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-flash-lite-image",
+      "tier": "batch",
+      "input_per_mtok": 0.125,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 0.75,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-flash-lite-image",
+      "tier": "standard",
+      "input_per_mtok": 0.25,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 1.5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-flash-live-preview",
+      "tier": null,
+      "input_per_mtok": 0.75,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 4.5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-flash-tts-preview",
+      "tier": "batch",
+      "input_per_mtok": 0.5,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 10,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-flash-tts-preview",
+      "tier": "standard",
+      "input_per_mtok": 1,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 20,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-pro-preview",
+      "tier": "batch",
+      "input_per_mtok": 1,
+      "cached_input_per_mtok": 0.2,
+      "output_per_mtok": 6,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-pro-preview",
+      "tier": "flex",
+      "input_per_mtok": 1,
+      "cached_input_per_mtok": 0.2,
+      "output_per_mtok": 6,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-pro-preview",
+      "tier": "priority",
+      "input_per_mtok": 3.6,
+      "cached_input_per_mtok": 0.36,
+      "output_per_mtok": 21.6,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-pro-preview",
+      "tier": "standard",
+      "input_per_mtok": 2,
+      "cached_input_per_mtok": 0.2,
+      "output_per_mtok": 12,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-pro-preview-customtools",
+      "tier": "batch",
+      "input_per_mtok": 1,
+      "cached_input_per_mtok": 0.2,
+      "output_per_mtok": 6,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-pro-preview-customtools",
+      "tier": "flex",
+      "input_per_mtok": 1,
+      "cached_input_per_mtok": 0.2,
+      "output_per_mtok": 6,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-pro-preview-customtools",
+      "tier": "priority",
+      "input_per_mtok": 3.6,
+      "cached_input_per_mtok": 0.36,
+      "output_per_mtok": 21.6,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.1-pro-preview-customtools",
+      "tier": "standard",
+      "input_per_mtok": 2,
+      "cached_input_per_mtok": 0.2,
+      "output_per_mtok": 12,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.5-flash",
+      "tier": "batch",
+      "input_per_mtok": 0.75,
+      "cached_input_per_mtok": 0.075,
+      "output_per_mtok": 4.5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.5-flash",
+      "tier": "flex",
+      "input_per_mtok": 0.75,
+      "cached_input_per_mtok": 0.08,
+      "output_per_mtok": 4.5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.5-flash",
+      "tier": "priority",
+      "input_per_mtok": 2.7,
+      "cached_input_per_mtok": 0.27,
+      "output_per_mtok": 16.2,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.5-flash",
+      "tier": "standard",
+      "input_per_mtok": 1.5,
+      "cached_input_per_mtok": 0.15,
+      "output_per_mtok": 9,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.5-flash-lite",
+      "tier": "batch",
+      "input_per_mtok": 0.15,
+      "cached_input_per_mtok": 0.02,
+      "output_per_mtok": 1.25,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.5-flash-lite",
+      "tier": "flex",
+      "input_per_mtok": 0.15,
+      "cached_input_per_mtok": 0.02,
+      "output_per_mtok": 1.25,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.5-flash-lite",
+      "tier": "priority",
+      "input_per_mtok": 0.54,
+      "cached_input_per_mtok": 0.05,
+      "output_per_mtok": 4.5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.5-flash-lite",
+      "tier": "standard",
+      "input_per_mtok": 0.3,
+      "cached_input_per_mtok": 0.03,
+      "output_per_mtok": 2.5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.5-live-translate-preview",
+      "tier": "standard",
+      "input_per_mtok": 3.5,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 21,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.6-flash",
+      "tier": "batch",
+      "input_per_mtok": 0.75,
+      "cached_input_per_mtok": 0.075,
+      "output_per_mtok": 3.75,
+      "effective_from": "2027-01-01",
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.6-flash",
+      "tier": "batch",
+      "input_per_mtok": 0.375,
+      "cached_input_per_mtok": 0.0375,
+      "output_per_mtok": 1.875,
+      "effective_from": null,
+      "effective_until": "2027-01-01"
+    },
+    {
+      "model_slug": "gemini-3.6-flash",
+      "tier": "flex",
+      "input_per_mtok": 0.75,
+      "cached_input_per_mtok": 0.075,
+      "output_per_mtok": 3.75,
+      "effective_from": "2027-01-01",
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.6-flash",
+      "tier": "flex",
+      "input_per_mtok": 0.375,
+      "cached_input_per_mtok": 0.0375,
+      "output_per_mtok": 1.875,
+      "effective_from": null,
+      "effective_until": "2027-01-01"
+    },
+    {
+      "model_slug": "gemini-3.6-flash",
+      "tier": "priority",
+      "input_per_mtok": 2.7,
+      "cached_input_per_mtok": 0.27,
+      "output_per_mtok": 13.5,
+      "effective_from": "2027-01-01",
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.6-flash",
+      "tier": "priority",
+      "input_per_mtok": 1.35,
+      "cached_input_per_mtok": 0.135,
+      "output_per_mtok": 6.75,
+      "effective_from": null,
+      "effective_until": "2027-01-01"
+    },
+    {
+      "model_slug": "gemini-3.6-flash",
+      "tier": "standard",
+      "input_per_mtok": 1.5,
+      "cached_input_per_mtok": 0.15,
+      "output_per_mtok": 7.5,
+      "effective_from": "2027-01-01",
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.6-flash",
+      "tier": "standard",
+      "input_per_mtok": 0.75,
+      "cached_input_per_mtok": 0.075,
+      "output_per_mtok": 3.75,
+      "effective_from": null,
+      "effective_until": "2027-01-01"
+    },
+    {
+      "model_slug": "gemini-3.7-flash",
+      "tier": "batch",
+      "input_per_mtok": 0.75,
+      "cached_input_per_mtok": 0.075,
+      "output_per_mtok": 3.75,
+      "effective_from": "2027-01-01",
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.7-flash",
+      "tier": "batch",
+      "input_per_mtok": 0.375,
+      "cached_input_per_mtok": 0.0375,
+      "output_per_mtok": 1.875,
+      "effective_from": null,
+      "effective_until": "2027-01-01"
+    },
+    {
+      "model_slug": "gemini-3.7-flash",
+      "tier": "flex",
+      "input_per_mtok": 0.75,
+      "cached_input_per_mtok": 0.075,
+      "output_per_mtok": 3.75,
+      "effective_from": "2027-01-01",
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.7-flash",
+      "tier": "flex",
+      "input_per_mtok": 0.375,
+      "cached_input_per_mtok": 0.0375,
+      "output_per_mtok": 1.875,
+      "effective_from": null,
+      "effective_until": "2027-01-01"
+    },
+    {
+      "model_slug": "gemini-3.7-flash",
+      "tier": "priority",
+      "input_per_mtok": 2.7,
+      "cached_input_per_mtok": 0.27,
+      "output_per_mtok": 13.5,
+      "effective_from": "2027-01-01",
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.7-flash",
+      "tier": "priority",
+      "input_per_mtok": 1.35,
+      "cached_input_per_mtok": 0.135,
+      "output_per_mtok": 6.75,
+      "effective_from": null,
+      "effective_until": "2027-01-01"
+    },
+    {
+      "model_slug": "gemini-3.7-flash",
+      "tier": "standard",
+      "input_per_mtok": 1.5,
+      "cached_input_per_mtok": 0.15,
+      "output_per_mtok": 7.5,
+      "effective_from": "2027-01-01",
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-3.7-flash",
+      "tier": "standard",
+      "input_per_mtok": 0.75,
+      "cached_input_per_mtok": 0.075,
+      "output_per_mtok": 3.75,
+      "effective_from": null,
+      "effective_until": "2027-01-01"
+    },
+    {
+      "model_slug": "gemini-embedding-001",
+      "tier": "batch",
+      "input_per_mtok": 0.075,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": null,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-embedding-001",
+      "tier": "standard",
+      "input_per_mtok": 0.15,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": null,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-embedding-2",
+      "tier": "batch",
+      "input_per_mtok": 0.1,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": null,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-embedding-2",
+      "tier": "standard",
+      "input_per_mtok": 0.2,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": null,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-omni-flash-preview",
+      "tier": "standard",
+      "input_per_mtok": 1.5,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 9,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-robotics-er-1.6-preview",
+      "tier": "batch",
+      "input_per_mtok": 0.5,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 2.5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-robotics-er-1.6-preview",
+      "tier": "standard",
+      "input_per_mtok": 1,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-robotics-er-2-preview",
+      "tier": "batch",
+      "input_per_mtok": 1,
+      "cached_input_per_mtok": 0.1,
+      "output_per_mtok": 5,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-robotics-er-2-preview",
+      "tier": "standard",
+      "input_per_mtok": 2,
+      "cached_input_per_mtok": 0.2,
+      "output_per_mtok": 10,
+      "effective_from": null,
+      "effective_until": null
+    },
+    {
+      "model_slug": "gemini-robotics-er-2-streaming-preview",
+      "tier": "standard",
+      "input_per_mtok": 2,
+      "cached_input_per_mtok": null,
+      "output_per_mtok": 10,
+      "effective_from": null,
+      "effective_until": null
+    }
+  ]
+}
