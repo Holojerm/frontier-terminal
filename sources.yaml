@@ -306,3 +306,16 @@ cut:
       page) to any non-browser client, live-checked 2026-09-08 with a
       descriptive User-Agent. Scraping a rendered page would be a
       dependency on a bot wall; the terminal shows the gap instead.
+  mistral:
+    verdict: cut — not tracked on any axis
+    reason: >-
+      No supported surface on either primary axis, live-checked 2026-09-08.
+      Hiring: api.ashbyhq.com/posting-api/job-board/mistral answers 404
+      (the board at jobs.ashbyhq.com/mistral is a 7 KB HTML shell over an
+      internal GraphQL endpoint, not the posting API). Pricing:
+      mistral.ai/pricing is a 485 KB client-side HTML app (same bytes at
+      docs.mistral.ai/deployment/laplateforme/pricing) with no markdown or
+      JSON endpoint; docs.mistral.ai/llms.txt lists a Pricing and a Models
+      Overview .md page, but both links answer 404 with a 462 KB HTML shell.
+      An HTML parse in the Google style is conceivable; with no hiring feed
+      to pair it with, a fifth lab on one axis is not worth the parser.
