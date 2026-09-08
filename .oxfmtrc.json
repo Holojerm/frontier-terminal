@@ -16,6 +16,8 @@
     ".github/**",
     "docs/**",
     "server/db/migrations/**",
+    "fixtures/**",
+    "sources.yaml",
     "**/*.md",
     "**/*.json"
   ]
