@@ -116,3 +116,7 @@ NUXT_ALERT_EMAIL_FROM = "frontier-terminal@drawthesystem.com"
 #   NUXT_JUDGE_TOKEN             bearer the judge routine presents to /api/judge/*
 #                                (server/utils/judge-auth.ts). 32+ chars. Unset = those
 #                                routes 404 and no judge exists.
+#   NUXT_OPENROUTER_API_KEY      bearer for openrouter.ai/api/v1/datasets/* — the usage
+#                                rankings behind the demand-share panel
+#                                (server/pipeline/fetch.ts). Unset = that source is
+#                                recorded 'skipped' each tick, never fetched anonymously.

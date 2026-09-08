@@ -18,7 +18,7 @@ describe('readSourceRegistry', () => {
       .map((s) => s.source_id)
       .sort()
     expect(registry.sources.map((s) => s.source_id).sort()).toEqual(pipelineIds)
-    expect(registry.sources).toHaveLength(16)
+    expect(registry.sources).toHaveLength(17)
     // The one id sources.yaml spells differently from the manifest.
     expect(byId['edgar-submissions-spcx']!.yaml_id).toBe('edgar-submissions')
   })
@@ -51,6 +51,14 @@ describe('readSourceRegistry', () => {
     expect(byId['openrouter-models']!.axis).toBe('pricing-cross-check')
     expect(byId['google-cloud-status']).toMatchObject({ axis: 'status', provider: 'google' })
     expect(byId['google-cloud-status']!.caveat).toContain('equals "Vertex AI"')
+    expect(byId['openrouter-rankings-daily']).toMatchObject({
+      axis: 'demand-share',
+      provider: 'all',
+      license: 'CC BY 4.0 (openrouter.ai/docs/cookbook/administration/data-api, read 2026-09-08)',
+      citation:
+        'Source: OpenRouter (openrouter.ai/rankings), as of {meta.as_of}. Licensed under CC BY 4.0.',
+    })
+    expect(byId['openai-models-md']!.license).toBeNull()
   })
 
   it('lists the deliberate cuts with their reasons', () => {
@@ -60,7 +68,13 @@ describe('readSourceRegistry', () => {
     expect(google.reason).toContain('DeepMind Greenhouse board is vestigial')
     const xai = registry.cuts.find((c) => c.id === 'xai-status')!
     expect(xai.reason).toContain('403')
-    expect(registry.cuts.map((c) => c.id)).toEqual(['google-hiring', 'compute-deals', 'xai-status'])
+    expect(registry.cuts.map((c) => c.id)).toEqual([
+      'google-hiring',
+      'artificial-analysis',
+      'lmarena',
+      'compute-deals',
+      'xai-status',
+    ])
   })
 
   it('fails loudly on a file with no sources block', () => {

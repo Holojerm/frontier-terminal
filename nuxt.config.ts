@@ -411,6 +411,12 @@ export default defineNuxtConfig({
     // Unset = those routes 404 and no judge exists. Same shape and floor as the
     // fleet token; a Worker secret: `wrangler secret put NUXT_JUDGE_TOKEN`.
     judgeToken: '',
+    // OpenRouter API key for the usage-rankings dataset (the demand-share axis,
+    // server/pipeline/fetch.ts). Sent as a bearer to openrouter.ai/api/v1/datasets/*
+    // only. Empty = that source is recorded 'skipped' every tick and the panel
+    // says "not configured"; nothing is fetched anonymously. A Worker secret:
+    // `op read "op://…" | bunx wrangler secret put NUXT_OPENROUTER_API_KEY`.
+    openrouterApiKey: '',
     // Public vars (access via useRuntimeConfig().public.myVar)
     // NUXT_PUBLIC_APP_NAME in wrangler.toml [vars] overrides this at runtime
     public: {

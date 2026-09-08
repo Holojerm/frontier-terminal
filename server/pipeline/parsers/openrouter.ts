@@ -16,6 +16,14 @@ const prefixToProvider: Record<string, Provider> = {
   'x-ai': 'xai',
 }
 
+/** The lab behind an OpenRouter id ("anthropic/claude-…") from its prefix;
+ * everything else — other vendors, and the rankings' aggregated `other`
+ * row, which has no prefix at all — is 'other'. Shared with the rankings
+ * parser so the two OpenRouter feeds cannot map a prefix differently. */
+export function providerOfOpenRouterId(id: string): Provider {
+  return prefixToProvider[id.split('/')[0] ?? ''] ?? 'other'
+}
+
 interface OrModel {
   id: string
   context_length?: number | null
@@ -44,7 +52,7 @@ export function parseOpenRouter(
   const rows = models
     .map((m) => ({
       or_model_id: m.id,
-      provider: prefixToProvider[m.id.split('/')[0] ?? ''] ?? ('other' as Provider),
+      provider: providerOfOpenRouterId(m.id),
       prompt_per_tok: toPerTok(m.pricing?.prompt),
       completion_per_tok: toPerTok(m.pricing?.completion),
       context_length: typeof m.context_length === 'number' ? m.context_length : null,

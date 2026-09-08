@@ -14,7 +14,7 @@ import { blobRawStore, runPoll } from '../../pipeline/poll'
 export default defineTask({
   meta: {
     name: 'poll:survey',
-    description: 'Fetch every include source (pricing, hiring, EDGAR); diff and store',
+    description: 'Fetch every include source (pricing, hiring, EDGAR, rankings); diff and store',
   },
   async run() {
     const config = useRuntimeConfig()
@@ -24,6 +24,7 @@ export default defineTask({
       lock: unstorageLockStore(kv),
       fetcher: createFetcher({
         secContactEmail: config.secContactEmail,
+        openrouterApiKey: config.openrouterApiKey,
         appUrl: config.public.appUrl,
       }),
       sourcesYaml,

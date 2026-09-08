@@ -1,7 +1,7 @@
 // Bulk exports of the store: every table, as CSV or JSON, streamed in pages
 // so a 100k-row changes table never has to fit in Worker memory at once.
 //
-// The three entity views (prices_latest, jobs_open, incidents) flatten the JSON payload
+// The entity views (prices_latest, jobs_open, incidents, rankings_daily) flatten the JSON payload
 // into columns, because a CSV with a JSON blob in one cell is not a
 // spreadsheet anyone can sort. Provenance columns are always present and
 // always last: source_url and fetched_at on every table except source_runs,
@@ -44,6 +44,8 @@ const PRICE_FIELDS = [
   'effective_until',
   'notes',
 ] as const
+
+const RANKING_FIELDS = ['date', 'model_permaslug', 'total_tokens'] as const
 
 const JOB_FIELDS = [
   'job_id',
@@ -89,7 +91,7 @@ function project(row: Row, columns: readonly string[]): Row {
 function entityView(
   name: string,
   description: string,
-  entityType: 'model' | 'job' | 'incident',
+  entityType: 'model' | 'job' | 'incident' | 'ranking',
   fields: readonly string[],
 ): ExportTable {
   const columns = [
@@ -178,6 +180,12 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     'Every status-page incident held: title, vendor impact and status verbatim, start and resolution, components. Append-only — an incident that scrolls out of its feed stays.',
     'incident',
     INCIDENT_FIELDS,
+  ),
+  rankings_daily: entityView(
+    'rankings_daily',
+    'One row per UTC day and model from OpenRouter’s usage rankings: total tokens routed. CC BY 4.0 — cite "Source: OpenRouter (openrouter.ai/rankings)".',
+    'ranking',
+    RANKING_FIELDS,
   ),
   changes: plainTable(
     'changes',
