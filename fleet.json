@@ -3,7 +3,7 @@
   "slug": "frontier-terminal",
   "name": "Frontier Terminal",
   "stage": "unreleased",
-  "urls": { "prod": "https://frontier-terminal.holojerm.workers.dev" },
+  "urls": { "prod": "https://frontier-terminal.jeremy-ettlinger.workers.dev" },
   "workers": ["frontier-terminal"],
   "bindings": {
     "d1": [{ "name": "frontier-terminal-db", "id": "31a693ed-7e93-48db-8375-40513d667b80" }],
