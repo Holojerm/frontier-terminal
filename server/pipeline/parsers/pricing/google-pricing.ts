@@ -1,4 +1,6 @@
-import { z } from 'zod'
+import type { z } from 'zod'
+import { GooglePricingOutput as ContractGooglePricingOutput, registerParser } from '../../contracts'
+import { fixtureProvenance } from '../fixture-provenance'
 
 // google-pricing — https://ai.google.dev/gemini-api/docs/pricing
 //
@@ -23,38 +25,12 @@ import { z } from 'zod'
 //      the failure the agent lane had.
 //   4. Provenance is an argument. Nothing here reads a clock.
 
-// TODO(port): replace with contracts import once server/pipeline/contracts/
-// lands. Shape is identical to the take-home's GooglePricingOutput (PriceRow
-// with provider pinned to "google").
-export const GooglePricingRow = z
-  .object({
-    provider: z.literal('google'),
-    model_slug: z.string().min(1),
-    // standard / batch / flex / priority, or null when the section has no
-    // <h3> tier headings. Part of the stable row key.
-    tier: z.string().nullable(),
-    context_window: z.string().nullable(),
-    input_per_mtok: z.number().nonnegative().nullable(),
-    cached_input_per_mtok: z.number().nonnegative().nullable(),
-    output_per_mtok: z.number().nonnegative().nullable(),
-    currency: z.literal('USD'),
-    // A dual-date promo cell ("$0.75 through December 31, 2026. $1.50
-    // starting January 1, 2027.") yields two rows bounded by these.
-    effective_from: z.string().nullable(),
-    effective_until: z.string().nullable(),
-    notes: z.string().nullable(),
-    source_url: z.url().startsWith('http'),
-    fetched_at: z
-      .string()
-      .regex(
-        /^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(\.\d+)?(Z|[+-]\d{2}:\d{2})$/,
-        'fetched_at must be ISO 8601 with timezone',
-      ),
-  })
-  .strict()
+// The row shape is the shared PriceRow with provider pinned to "google" —
+// the same schema the take-home's agent lane had to pass. Exported under the
+// lane's own names so callers and tests read naturally.
+export const GooglePricingOutput = ContractGooglePricingOutput
+export const GooglePricingRow = GooglePricingOutput.shape.rows.element
 export type GooglePricingRow = z.infer<typeof GooglePricingRow>
-
-export const GooglePricingOutput = z.object({ rows: z.array(GooglePricingRow) }).strict()
 
 export interface Provenance {
   source_url: string
@@ -392,3 +368,15 @@ export function parseGooglePricingPage(html: string, prov: Provenance): GooglePr
 export function parseGooglePricing(html: string, prov: Provenance): GooglePricingRow[] {
   return parseGooglePricingPage(html, prov).rows
 }
+
+// Registered so the determinism harness runs it twice on its fixture like every
+// other fixed parser. Until 2026-09-07 this source was agent-parsed and stayed
+// out of the registry on purpose; it is deterministic now.
+registerParser({
+  name: 'google-pricing-html',
+  lane: 'vendor-md',
+  fixturePath: 'fixtures/pricing/google-pricing.html',
+  sideFixturePaths: [],
+  schema: GooglePricingOutput,
+  parse: (html) => ({ rows: parseGooglePricing(html, fixtureProvenance('google-pricing-html')) }),
+})
