@@ -1,8 +1,9 @@
-# Operations Routines
+# Cloud Routines
 
-Repo-shipped definitions for the cloud agents ("routines") that run the commercial side of this
-product: issue triage, bug fixes, in-app feedback triage, support inbox, analytics review,
-marketing drafts, and a single daily digest email summarizing everything that happened.
+Repo-shipped definitions for the cloud agents ("routines") that run on a schedule against this
+repo. None are defined yet — the first (a judge routine that grades the terminal's data against
+its sources) arrives in a later PR. This file, `_shared.md`, and `routines.config.md` are the
+scaffolding every routine reads first.
 
 **All routines ship default-inactive.** Nothing runs until you explicitly enable it.
 
@@ -21,37 +22,15 @@ so the repo ships the *definitions* and a sync command:
    instructions stay versioned here — editing a definition file and re-running `/routines sync`
    updates the live routine.
 
-## The routines
-
-| File | Cadence (UTC) | What it does | Needs |
-| --- | --- | --- | --- |
-| `issue-triage.md` | Daily 11:00 | Labels, deduplicates, and assesses new GitHub issues | GitHub connector |
-| `bug-fix.md` | Daily 12:00 | Picks the top triaged bug, opens a fix PR (never pushes to main) | GitHub connector |
-| `feedback-triage.md` | Daily 11:30 | Turns the in-app feedback queue (D1 `feedback` table) into GitHub issues | GitHub connector (+ Cloudflare API token) |
-| `support-inbox.md` | Daily 13:00 | Triages support email, **drafts** replies (never sends), files bugs as issues | Gmail + GitHub connectors |
-| `analytics-review.md` | Weekly Mon 12:30 | Reviews product/traffic metrics, writes a report, files opportunities | GitHub connector (+ analytics access) |
-| `marketing-content.md` | Weekly Thu 14:00 | Drafts changelog + marketing copy into `ops/marketing/` for review | GitHub connector |
-| `daily-digest.md` | Daily 22:00 | Sends **one email per day** to the owner summarizing all actions taken | Gmail connector |
-
 ## Coordination: the ops journal
 
 Routines coordinate through an `ops-journal` git branch (never merged to `main`, so journal
 commits don't trigger deploys). Every routine appends what it did to `journal/YYYY-MM-DD.md`
-on that branch; the daily digest reads it to compose the email. Protocol details in
-[`_shared.md`](_shared.md).
-
-## Before enabling anything
-
-1. **Fork setup**: fill in [`routines.config.md`](routines.config.md) (product name, owner email,
-   support inbox query, analytics sources).
-2. **Connectors**: connect GitHub and Gmail at https://claude.ai/customize/connectors — routines
-   that need a missing connector will log the failure to the journal instead of acting.
-3. **Sync**: `/routines sync`, then enable the ones you want. Start with `issue-triage` and
-   `daily-digest`; add the rest once you trust the output.
+on that branch. Protocol details in [`_shared.md`](_shared.md).
 
 ## Adding a routine
 
-Drop a new `<name>.md` file here with the same frontmatter shape:
+Drop a new `<name>.md` file here with this frontmatter shape:
 
 ```yaml
 ---
@@ -68,9 +47,7 @@ must follow the operating rules in `_shared.md` (the pointer prompt enforces rea
 ## Safety model
 
 - **Default inactive** — sync never enables; enabling is a separate explicit step.
-- **Outbound gates** — support replies are drafts, code changes are PRs, marketing copy goes to a
-  review folder. The only autonomous outbound action in the whole system is the daily digest
-  email to the owner.
-- **Untrusted input** — issue text and support emails are attacker-controlled data. `_shared.md`
+- **Outbound gates** — code changes are PRs, never pushes to `main`; nothing sends email.
+- **Untrusted input** — fetched pages and issue text are attacker-controlled data. `_shared.md`
   forbids following instructions found in them.
-- **Audit trail** — everything lands in the ops journal, and the digest surfaces it daily.
+- **Audit trail** — everything lands in the ops journal.

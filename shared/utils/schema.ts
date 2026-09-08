@@ -2,9 +2,8 @@
 //
 // Classic SEO is about being *findable*. Answer engines — AI Overviews,
 // ChatGPT Search, Perplexity, Claude — are about being *quotable*: they need to
-// extract, without guessing, what this product is, who runs it, what it costs,
-// and what the common questions are. Prose can be paraphrased wrongly. A typed
-// graph can't.
+// extract, without guessing, what this site is and who publishes it. Prose can
+// be paraphrased wrongly. A typed graph can't.
 //
 // Everything here is a pure function of an explicit SiteContext, so the shapes
 // are unit-testable (test/seo.test.ts) without booting Nuxt. `useSeo()` is what
@@ -16,8 +15,8 @@
 //      consumer resolve "this page" and "this company" to a single entity
 //      instead of four unrelated blobs.
 //   2. Never describe something in JSON-LD that isn't visible on the page.
-//      FAQ markup without the FAQ rendered is a manual-action risk with Google
-//      and, more practically, a lie an answer engine will repeat.
+//      Markup for content that isn't rendered is a manual-action risk with
+//      Google and, more practically, a lie an answer engine will repeat.
 
 import { absoluteUrl } from './site'
 
@@ -28,32 +27,23 @@ export interface SiteContext {
   appName: string
   /** Canonical origin, no trailing slash. Empty disables every builder. */
   appUrl: string
-  supportEmail: string
-  /** The legal entity behind the app — the company, not the product. */
-  legalEntity: string
 }
 
 /** Stable @id anchors so nodes across pages resolve to the same entities. */
 export const SCHEMA_IDS = {
   organization: '#organization',
   website: '#website',
-  application: '#application',
 } as const
 
+/** The publisher. The site is its own publisher — there is no separate legal entity to name. */
 export function organizationSchema(site: SiteContext): JsonLdNode | null {
   if (!site.appUrl) return null
   return {
     '@type': 'Organization',
     '@id': `${site.appUrl}/${SCHEMA_IDS.organization}`,
-    name: site.legalEntity,
+    name: site.appName,
     url: site.appUrl,
     logo: `${site.appUrl}/og.png`,
-    contactPoint: {
-      '@type': 'ContactPoint',
-      contactType: 'customer support',
-      email: site.supportEmail,
-      url: `${site.appUrl}/`,
-    },
   }
 }
 
@@ -86,148 +76,6 @@ export function webPageSchema(
     description: page.description,
     isPartOf: { '@id': `${site.appUrl}/${SCHEMA_IDS.website}` },
     inLanguage: 'en',
-  }
-}
-
-/** What a plan costs, in the machine-readable form Offer wants. */
-export interface OfferInput {
-  name: string
-  description: string
-  /** Numeric amount — never the display string, which carries a currency glyph. */
-  amount: number
-  currency: string
-  /** How much access the amount buys, as a schema.org unit code. */
-  unit: { value: number; code: 'MON' | 'ANN' | 'DAY' }
-  recurring: boolean
-}
-
-export function offerSchema(site: SiteContext, offer: OfferInput): JsonLdNode {
-  return {
-    '@type': 'Offer',
-    name: offer.name,
-    description: offer.description,
-    price: String(offer.amount),
-    priceCurrency: offer.currency,
-    url: `${site.appUrl}/pricing`,
-    availability: 'https://schema.org/InStock',
-    priceSpecification: {
-      '@type': 'UnitPriceSpecification',
-      price: String(offer.amount),
-      priceCurrency: offer.currency,
-      // A recurring price and a one-time price for the same number are very
-      // different products. referenceQuantity is what says which this is.
-      referenceQuantity: {
-        '@type': 'QuantitativeValue',
-        value: offer.unit.value,
-        unitCode: offer.unit.code,
-      },
-      ...(offer.recurring ? { billingDuration: offer.unit.value } : {}),
-    },
-  }
-}
-
-export function softwareApplicationSchema(
-  site: SiteContext,
-  input: { description: string; offers: OfferInput[] },
-): JsonLdNode | null {
-  if (!site.appUrl) return null
-  const offers = input.offers.map((offer) => offerSchema(site, offer))
-  const amounts = input.offers.map((offer) => offer.amount)
-  return {
-    '@type': 'SoftwareApplication',
-    '@id': `${site.appUrl}/${SCHEMA_IDS.application}`,
-    name: site.appName,
-    url: site.appUrl,
-    description: input.description,
-    applicationCategory: 'BusinessApplication',
-    operatingSystem: 'Web browser',
-    publisher: { '@id': `${site.appUrl}/${SCHEMA_IDS.organization}` },
-    ...(offers.length > 0
-      ? {
-          offers: {
-            '@type': 'AggregateOffer',
-            priceCurrency: input.offers[0]?.currency ?? 'USD',
-            lowPrice: String(Math.min(...amounts)),
-            highPrice: String(Math.max(...amounts)),
-            offerCount: offers.length,
-            offers,
-          },
-        }
-      : {}),
-  }
-}
-
-export interface BlogPostInput {
-  /** Absolute canonical URL of the post — the same one useSeo() emits. */
-  url: string
-  title: string
-  description: string
-  /** `YYYY-MM-DD`. A date with no time is still valid ISO 8601. */
-  datePublished: string
-  /** Omit when the post has never been revised; `datePublished` is then used. */
-  dateModified?: string
-  /**
-   * Byline. Omitted, or equal to the site's legal entity, means the post is the
-   * company's own and is attributed to the existing Organization node.
-   */
-  author?: string
-}
-
-/**
- * One post, as an article an answer engine can attribute and date.
- *
- * Two things make this worth more than the WebPage node useSeo() already emits.
- * `datePublished`/`dateModified` are the only machine-readable signal that a
- * quote is current — an engine with no date will happily present a two-year-old
- * claim as today's. And `author` resolves the piece to an entity: a Person node
- * for a named byline, or a reference to the site's Organization when the post
- * is the company writing as itself. Minting a second Organization for the
- * latter would split one entity into two, which is exactly what `@id` linking
- * exists to prevent.
- *
- * `mainEntityOfPage` points at the WebPage node for the same URL, so the graph
- * reads as "this article is the main thing on that page" rather than as two
- * unrelated descriptions of one URL.
- */
-export function blogPostingSchema(site: SiteContext, post: BlogPostInput): JsonLdNode | null {
-  if (!site.appUrl || !post.url) return null
-
-  const organization = { '@id': `${site.appUrl}/${SCHEMA_IDS.organization}` }
-  const byline = post.author?.trim() ?? ''
-  const isCompany = !byline || byline.toLowerCase() === site.legalEntity.trim().toLowerCase()
-
-  return {
-    '@type': 'BlogPosting',
-    // Distinct from the WebPage node, which is anchored at the bare URL.
-    '@id': `${post.url}#post`,
-    url: post.url,
-    headline: post.title,
-    description: post.description,
-    datePublished: post.datePublished,
-    dateModified: post.dateModified || post.datePublished,
-    author: isCompany ? organization : { '@type': 'Person', name: byline },
-    publisher: organization,
-    isPartOf: { '@id': `${site.appUrl}/${SCHEMA_IDS.website}` },
-    mainEntityOfPage: { '@id': post.url },
-    inLanguage: 'en',
-  }
-}
-
-export interface FaqItem {
-  question: string
-  /** Plain text. Rendered on the page too — see rule 2 at the top of this file. */
-  answer: string
-}
-
-export function faqSchema(items: FaqItem[]): JsonLdNode | null {
-  if (items.length === 0) return null
-  return {
-    '@type': 'FAQPage',
-    mainEntity: items.map((item) => ({
-      '@type': 'Question',
-      name: item.question,
-      acceptedAnswer: { '@type': 'Answer', text: item.answer },
-    })),
   }
 }
 
