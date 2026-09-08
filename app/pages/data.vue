@@ -110,8 +110,15 @@ const { data: coverage, error } = await useFetch<CoverageData>('/api/coverage')
         Alerts are also published as Atom at
         <NuxtLink to="/alerts.xml" external class="text-primary underline underline-offset-2">
           /alerts.xml</NuxtLink
-        >: one entry per alert, its explanation as the summary, and the source URL as a related
-        link.
+        >: one entry per alert linking to its permalink, its explanation as the summary, and the
+        source URL as a related link. The feed carries the alert tier (notable, critical);
+        <NuxtLink
+          to="/alerts.xml?include=ticker"
+          external
+          class="font-mono text-primary underline underline-offset-2"
+          >/alerts.xml?include=ticker</NuxtLink
+        >
+        adds the info-tier ticker.
       </p>
     </TerminalPanel>
   </div>

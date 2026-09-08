@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // The lead band: what an analyst should act on, above everything else.
-// Order of precedence, top to bottom — alerts the judge fired, then raw
+// Order of precedence, top to bottom — alert-tier rows, the ticker, then raw
 // change counts by axis, then an explicit quiet state. A terminal that
 // cannot say "nothing moved" is a terminal you have to re-read every morning.
 
@@ -57,7 +57,7 @@ const quietReason = computed(() => {
       </p>
     </header>
 
-    <!-- 1. Judged alerts, if any. -->
+    <!-- 1. Alert-tier rows (notable, critical), if any. -->
     <TerminalAlertList v-if="overview.alerts.length" :alerts="overview.alerts" :level="3" />
     <p v-if="overview.alert_count > overview.alerts.length" class="text-sm">
       <NuxtLink to="/alerts" class="text-highlighted underline underline-offset-2">
@@ -65,7 +65,18 @@ const quietReason = computed(() => {
       </NuxtLink>
     </p>
 
-    <!-- 2. Raw movement, whether or not the judge spoke. -->
+    <!-- 2. The ticker (info): what moved at low stakes, one line each. -->
+    <section v-if="overview.ticker.length" aria-labelledby="ticker-heading" class="space-y-2">
+      <h3 id="ticker-heading" class="text-xs tracking-wide text-toned uppercase">Ticker</h3>
+      <TerminalTickerList :alerts="overview.ticker" />
+      <p v-if="overview.ticker_count > overview.ticker.length" class="text-sm">
+        <NuxtLink to="/alerts#ticker" class="text-highlighted underline underline-offset-2">
+          All {{ overview.ticker_count }} ticker lines
+        </NuxtLink>
+      </p>
+    </section>
+
+    <!-- 3. Raw movement, whether or not the judge spoke. -->
     <div class="flex flex-wrap items-baseline gap-x-4 gap-y-2 text-sm text-toned">
       <span>
         <span class="font-mono text-lg text-highlighted">{{ movement.recent.total }}</span>
@@ -84,11 +95,11 @@ const quietReason = computed(() => {
         {{ c.label }} <span class="font-mono text-default">{{ c.n }}</span>
       </span>
       <span v-if="overview.alerts.length === 0 && movement.recent.total > 0" class="text-xs">
-        none judged alert-worthy
+        {{ overview.ticker.length ? 'nothing above the ticker' : 'none judged alert-worthy' }}
       </span>
     </div>
 
-    <!-- 3. Quiet state, said plainly and with its reason. -->
+    <!-- 4. Quiet state, said plainly and with its reason. -->
     <p v-if="quietReason" class="text-sm text-toned">{{ quietReason }}</p>
   </section>
 </template>

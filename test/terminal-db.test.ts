@@ -7,11 +7,15 @@ import { contentHashOfText } from '../server/pipeline/contracts'
 import type { FetchOutcome, SourceFetcher } from '../server/pipeline/fetch'
 import { runRefresh, type RawStore, type RefreshDeps } from '../server/pipeline/refresh'
 import { includeSources } from '../server/pipeline/sources'
+import { AlertRow, contentHash } from '../server/pipeline/contracts'
 import { insertRows } from '../server/pipeline/store'
 import { terminalStamp } from '../server/utils/terminal-cache'
 import { MODEL_CLASS_MAP } from '../server/utils/terminal-classes'
 import {
+  alertPermalinks,
   fieldDiff,
+  fieldTable,
+  queryAlert,
   queryAlerts,
   queryContext,
   queryCoverage,
@@ -442,6 +446,22 @@ describe('after a second poll that moves prices, closes a role, and files an S-1
     expect(alert!.source_url).toBe(urlOf('edgar-fts'))
   })
 
+  it('the permalink resolves the same alert with every field of the cited row', async () => {
+    const { rows } = await queryAlerts(db, await ctx(), 1)
+    const detail = await queryAlert(db, await ctx(), rows[0]!.id)
+    expect(detail).not.toBeNull()
+    expect(detail!.alert).toMatchObject({ id: rows[0]!.id, rule: 's1-floor', severity: 'critical' })
+    const [change] = detail!.alert.changes
+    expect(change!.id).toBe(rows[0]!.change_ids[0])
+    // An added row: every field is ∅ → value, and the diff stays empty.
+    expect(change!.diff).toEqual([])
+    expect(change!.fields.length).toBeGreaterThan(0)
+    for (const f of change!.fields) expect(f.before).toBeNull()
+    expect(change!.fields.find((f) => f.field === 'form')!.after).toBe('S-1/A')
+    expect(change!.source_url).toBe(urlOf('edgar-fts'))
+    expect(await queryAlert(db, await ctx(), 'f'.repeat(64))).toBeNull()
+  })
+
   it('the coverage panel shows how the last poll of each source ended', async () => {
     const coverage = await queryCoverage(db, await ctx())
     const byId = Object.fromEntries(coverage.sources.map((s) => [s.source_id, s]))
@@ -503,5 +523,100 @@ describe('the like-for-like map is checkable', () => {
       { field: 'c', before: null, after: 'now' },
     ])
     expect(fieldDiff(null, { a: 1 })).toEqual([])
+  })
+})
+
+describe('the ticker/alert split', () => {
+  const src = 'https://boards-api.greenhouse.io/v1/boards/xai/jobs'
+  const job = (n: number, at: string) => {
+    const after = JSON.stringify({ title: `Role ${n}`, department: 'Sales' })
+    return {
+      id: contentHash({ n, at }),
+      entity_key: `job:xai:${n}`,
+      entity_type: 'job',
+      provider: 'xai',
+      change_type: 'added',
+      before_hash: null,
+      after_hash: contentHashOfText(after),
+      before_json: null,
+      after_json: after,
+      detected_at: at,
+      source_url: src,
+      fetched_at: at,
+    }
+  }
+  const alertRow = (severity: 'info' | 'notable' | 'critical', changeId: string, at: string) =>
+    AlertRow.parse({
+      id: contentHash({ change_ids: [changeId], headline: `${severity} ${at}` }),
+      severity,
+      headline: `${severity} ${at}`,
+      explanation: 'x',
+      change_ids: JSON.stringify([changeId]),
+      rule: 'agent-judge',
+      created_at: at,
+      source_url: src,
+      fetched_at: at,
+    })
+
+  const T = (h: number) =>
+    `2026-09-0${1 + Math.floor(h / 24)}T${String(h % 24).padStart(2, '0')}:00:00Z`
+
+  beforeEach(async () => {
+    const changes = Array.from({ length: 12 }, (_, i) => job(i, T(i)))
+    await insertRows(db, 'changes', changes)
+    // 9 info, 2 notable, 1 critical — the live store's shape in miniature.
+    const severities = (i: number) => (i % 4 === 3 ? (i === 11 ? 'critical' : 'notable') : 'info')
+    await insertRows(
+      db,
+      'alerts',
+      changes.map((c, i) => alertRow(severities(i), c.id, c.detected_at)),
+    )
+  })
+
+  it('queryAlerts filters by tier and reports the tier’s own total', async () => {
+    const all = await queryAlerts(db, await ctx(), 50)
+    expect(all.tier).toBe('all')
+    expect(all.total).toBe(12)
+
+    const alerts = await queryAlerts(db, await ctx(), 2, 'alert')
+    expect(alerts.tier).toBe('alert')
+    expect(alerts.total).toBe(3)
+    expect(alerts.rows).toHaveLength(2)
+    expect(alerts.rows.map((r) => r.severity)).toEqual(['critical', 'notable'])
+    for (const r of alerts.rows) expect(r.changes).toHaveLength(1)
+
+    const ticker = await queryAlerts(db, await ctx(), 50, 'ticker')
+    expect(ticker.total).toBe(9)
+    expect(ticker.rows.every((r) => r.severity === 'info')).toBe(true)
+    // Newest first within the tier.
+    expect(ticker.rows[0]!.created_at > ticker.rows.at(-1)!.created_at).toBe(true)
+  })
+
+  it('the overview leads with the alert tier and carries the ticker beside it', async () => {
+    const overview = await queryOverview(db, await ctx())
+    expect(overview.alert_count).toBe(3)
+    expect(overview.alerts.map((a) => a.severity)).toEqual(['critical', 'notable', 'notable'])
+    expect(overview.ticker_count).toBe(9)
+    expect(overview.ticker).toHaveLength(8) // OVERVIEW_TICKER caps the band; the count says 9
+    expect(overview.ticker.every((a) => a.severity === 'info')).toBe(true)
+  })
+
+  it('enumerates every permalink for the sitemap with its own tier and date', async () => {
+    const links = await alertPermalinks(db)
+    expect(links).toHaveLength(12)
+    expect(links.filter((l) => l.tier === 'alert')).toHaveLength(3)
+    expect(links.filter((l) => l.tier === 'ticker')).toHaveLength(9)
+    expect(links[0]!.created_at).toBe(T(11))
+    expect(await alertPermalinks(db, 3)).toHaveLength(3)
+  })
+
+  it('fieldTable lists every field of either side; fieldDiff is its changed subset', () => {
+    expect(fieldTable({ a: 1, b: 'x' }, { a: 2, b: 'x', c: true })).toEqual([
+      { field: 'a', before: '1', after: '2' },
+      { field: 'b', before: 'x', after: 'x' },
+      { field: 'c', before: null, after: 'true' },
+    ])
+    expect(fieldTable(null, { a: 1 })).toEqual([{ field: 'a', before: null, after: '1' }])
+    expect(fieldTable({ a: 1 }, null)).toEqual([{ field: 'a', before: '1', after: null }])
   })
 })

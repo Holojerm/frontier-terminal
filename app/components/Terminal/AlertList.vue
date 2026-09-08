@@ -1,9 +1,10 @@
 <script setup lang="ts">
 // The alert feed. Each alert names the rule that fired it, the change rows
 // it cites (expandable, so the claim can be checked against the row), and
-// the source those rows were read from.
+// the source those rows were read from. The headline is the permalink.
 
 import { relativeStamp } from '#shared/utils/terminal-format'
+import { alertPath } from '#shared/utils/terminal-tiers'
 import type { AlertView, ChangeView } from '#shared/utils/terminal-types'
 
 const props = withDefaults(
@@ -18,25 +19,6 @@ const props = withDefaults(
 const now = useNow()
 const headingTag = computed(() => `h${props.level}`)
 
-const RULE_TEXT: Record<AlertView['rule'], string> = {
-  's1-floor':
-    'Deterministic floor rule: a new S-1/424B4 filing on a whitelisted CIK always alerts — no model in the loop.',
-  'agent-judge':
-    'Agent-judged significance. The explanation may cite only fields present in the referenced change rows; nothing outside them.',
-}
-
-const SEVERITY = {
-  critical: { color: 'error', icon: 'i-lucide-siren' },
-  notable: { color: 'warning', icon: 'i-lucide-triangle-alert' },
-  info: { color: 'info', icon: 'i-lucide-info' },
-} as const
-
-const CHANGE = {
-  added: { color: 'success', icon: 'i-lucide-plus' },
-  removed: { color: 'neutral', icon: 'i-lucide-minus' },
-  modified: { color: 'warning', icon: 'i-lucide-pencil' },
-} as const
-
 function changeLabel(change: ChangeView): string {
   return `${change.change_type} ${change.entity_type}`
 }
@@ -47,8 +29,8 @@ function changeLabel(change: ChangeView): string {
     <li v-for="alert in alerts" :id="alert.id" :key="alert.id" class="space-y-2 py-4 first:pt-0">
       <div class="flex flex-wrap items-center gap-2 text-xs">
         <UBadge
-          :color="SEVERITY[alert.severity].color"
-          :icon="SEVERITY[alert.severity].icon"
+          :color="SEVERITY_BADGE[alert.severity].color"
+          :icon="SEVERITY_BADGE[alert.severity].icon"
           variant="subtle"
           size="sm"
         >
@@ -60,7 +42,11 @@ function changeLabel(change: ChangeView): string {
         </time>
       </div>
 
-      <component :is="headingTag" class="text-lg text-highlighted">{{ alert.headline }}</component>
+      <component :is="headingTag" class="text-lg text-highlighted">
+        <NuxtLink :to="alertPath(alert.id)" class="hover:underline hover:underline-offset-2">
+          {{ alert.headline }}
+        </NuxtLink>
+      </component>
       <p class="text-sm text-default">{{ alert.explanation }}</p>
 
       <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
@@ -68,6 +54,9 @@ function changeLabel(change: ChangeView): string {
         <span v-if="alert.missing_change_ids.length" class="text-xs text-toned">
           {{ alert.missing_change_ids.length }} cited change id(s) not found in the change log
         </span>
+        <NuxtLink :to="alertPath(alert.id)" class="text-xs text-toned underline underline-offset-2">
+          Permalink
+        </NuxtLink>
       </div>
 
       <UCollapsible v-if="alert.changes.length" class="space-y-2">
@@ -84,8 +73,8 @@ function changeLabel(change: ChangeView): string {
             <li v-for="change in alert.changes" :key="change.id" class="space-y-1 text-sm">
               <div class="flex flex-wrap items-center gap-2">
                 <UBadge
-                  :color="CHANGE[change.change_type].color"
-                  :icon="CHANGE[change.change_type].icon"
+                  :color="CHANGE_BADGE[change.change_type].color"
+                  :icon="CHANGE_BADGE[change.change_type].icon"
                   variant="subtle"
                   size="sm"
                 >
