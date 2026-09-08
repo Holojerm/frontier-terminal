@@ -14,10 +14,13 @@
 // with nobody watching.
 
 import { db } from '@nuxthub/db'
+import { kv } from '@nuxthub/kv'
 
 import { FleetManifestSchema } from '#shared/utils/fleet-manifest'
 
 import rawManifest from '../../../fleet.json'
+import { checkJudgeSilence } from '../../pipeline/judge/watchdog'
+import { unstorageLockStore } from '../../pipeline/lock'
 import { getOpsMailer } from '../../utils/ops-mail'
 import { drainOpsEvents } from '../../utils/ops'
 
@@ -33,6 +36,11 @@ export default defineTask({
     description: 'Email a digest of spooled ops events, then prune old ones',
   },
   async run({ context }) {
+    // The judge watchdog spools its own event, so it runs before the mailer
+    // check: an unconfigured digest still records that the judge went quiet.
+    const judge = await checkJudgeSilence(db, unstorageLockStore(kv))
+    if (judge === 'silent') console.warn(JSON.stringify({ kind: 'judge_silent' }))
+
     const env = (context as CloudflareTaskContext | undefined)?.cloudflare?.env
     const mailer = getOpsMailer(env)
     if (!mailer) {

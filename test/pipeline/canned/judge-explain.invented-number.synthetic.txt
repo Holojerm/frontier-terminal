@@ -1,0 +1,1 @@
+{"alerts":[{"severity":"critical","headline":"xAI slashes grok-4.6 pricing by 50%","explanation":"Input fell 50% and output fell 50%, a 33% blended cut ahead of the IPO wave.","change_ids":["9e309cf67ebca180ddba60ffe6622ddd9734dd61f2a6114fa593f0c0f9dd3529"]}]}

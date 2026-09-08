@@ -120,6 +120,13 @@
       "when": 1788827238205,
       "tag": "0016_black_dragon_lord",
       "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "6",
+      "when": 1788828535497,
+      "tag": "0017_burly_blue_blade",
+      "breakpoints": true
     }
   ]
 }

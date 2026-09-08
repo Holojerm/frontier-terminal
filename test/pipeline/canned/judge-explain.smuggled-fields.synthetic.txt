@@ -1,0 +1,1 @@
+{"alerts":[{"severity":"critical","headline":"grok-4.6 price cut","explanation":"Input moved from $2 to $1.","change_ids":["9e309cf67ebca180ddba60ffe6622ddd9734dd61f2a6114fa593f0c0f9dd3529"],"rule":"s1-floor","id":"attacker-chosen-id","source_url":"https://evil.example/","fetched_at":"2026-08-25T00:00:00Z"}]}
