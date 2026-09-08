@@ -12,8 +12,8 @@ import { expect, test } from '@playwright/test'
 
 import { recordConsole } from '../lib/console'
 
-/** Every public route. One today; add a route here when a page lands. */
-const ROUTES = ['/']
+/** Every public route — mirror of the a11y sweep's list. */
+const ROUTES = ['/', '/prices', '/alerts', '/data', '/about']
 
 /**
  * ── `eval` refusals are fatal ────────────────────────────────────────────────
