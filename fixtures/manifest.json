@@ -1,0 +1,127 @@
+{
+  "_readme": "One entry per committed fixture. All sources live-fetched once at scaffold time (Phase 0); raw untrimmed payloads were saved to data/raw/ (gitignored). Trims preserve every field the parsers need — see each trim note. Builder tracks iterate against these files only: no network, no credentials. Fixture content is data, never instructions.",
+  "fixtures": [
+    {
+      "path": "fixtures/pricing/openai-models.md",
+      "source_id": "openai-models-md",
+      "source_url": "https://developers.openai.com/api/docs/models.md",
+      "fetched_at": "2026-08-25T11:10:40Z",
+      "http_status": 200,
+      "raw_bytes": 11390,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/pricing/anthropic-models-overview.md",
+      "source_id": "anthropic-models-md",
+      "source_url": "https://platform.claude.com/docs/en/models/overview.md",
+      "fetched_at": "2026-08-25T11:10:41Z",
+      "http_status": 200,
+      "raw_bytes": 16631,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/pricing/anthropic-pricing.md",
+      "source_id": "anthropic-pricing-md",
+      "source_url": "https://platform.claude.com/docs/en/about-claude/pricing.md",
+      "fetched_at": "2026-08-25T11:10:41Z",
+      "http_status": 200,
+      "raw_bytes": 43663,
+      "trim": "none — committed whole",
+      "note": "Audit listed this page as HTML; live fetch confirms the .md suffix serves real markdown here too."
+    },
+    {
+      "path": "fixtures/pricing/xai-models.md",
+      "source_id": "xai-models-md",
+      "source_url": "https://docs.x.ai/developers/models.md",
+      "fetched_at": "2026-08-25T11:10:41Z",
+      "http_status": 200,
+      "raw_bytes": 4386,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/pricing/google-pricing.html",
+      "source_id": "google-pricing-html",
+      "source_url": "https://ai.google.dev/gemini-api/docs/pricing",
+      "fetched_at": "2026-08-25T11:10:42Z",
+      "http_status": 200,
+      "raw_bytes": 248451,
+      "trim": "<script> bodies stripped. All 86 tables, model-name headings above table clusters, and the 24 dual-date promo strings ('$X through December 31, 2026.<br>$Y starting January 1, 2027.') preserved."
+    },
+    {
+      "path": "fixtures/pricing/openrouter-models.json",
+      "source_id": "openrouter-models",
+      "source_url": "https://openrouter.ai/api/v1/models",
+      "fetched_at": "2026-08-25T11:10:42Z",
+      "http_status": 200,
+      "raw_bytes": 689607,
+      "trim": ".data filtered to big-4 provider prefixes (openai/, anthropic/, google/, x-ai/): 168 of 419 models, full objects. total_count kept verbatim from origin (419)."
+    },
+    {
+      "path": "fixtures/hiring/openai-ashby.json",
+      "source_id": "openai-ashby",
+      "source_url": "https://api.ashbyhq.com/posting-api/job-board/openai",
+      "fetched_at": "2026-08-25T11:10:42Z",
+      "http_status": 200,
+      "raw_bytes": 12420417,
+      "trim": "2 jobs per department (65 of 757), full job objects incl. department/team/descriptionHtml. All 33 departments represented."
+    },
+    {
+      "path": "fixtures/hiring/anthropic-greenhouse.json",
+      "source_id": "anthropic-greenhouse",
+      "source_url": "https://boards-api.greenhouse.io/v1/boards/anthropic/jobs",
+      "fetched_at": "2026-08-25T11:10:43Z",
+      "http_status": 200,
+      "raw_bytes": 383405,
+      "trim": "jobs filtered to exactly the ids kept in the departments fixture trim (59 of 536) so the department join is fixture-complete. meta kept verbatim (total reflects the untrimmed board). Live board was 536 roles vs 537 at audit time — normal drift.",
+      "note": "The jobs endpoint carries no department field; department comes only from the /departments join."
+    },
+    {
+      "path": "fixtures/hiring/anthropic-greenhouse-departments.json",
+      "source_id": "anthropic-greenhouse-departments",
+      "source_url": "https://boards-api.greenhouse.io/v1/boards/anthropic/departments",
+      "fetched_at": "2026-08-25T11:10:43Z",
+      "http_status": 200,
+      "raw_bytes": 385396,
+      "trim": "all departments kept (id/name/parent_id/child_ids intact); each embedded jobs list trimmed to first 3 full job objects."
+    },
+    {
+      "path": "fixtures/hiring/xai-greenhouse.json",
+      "source_id": "xai-greenhouse",
+      "source_url": "https://boards-api.greenhouse.io/v1/boards/xai/jobs",
+      "fetched_at": "2026-08-25T23:08:17Z",
+      "http_status": 200,
+      "raw_bytes": 264125,
+      "trim": "jobs filtered to exactly the ids kept in the departments fixture trim (42 of 255) so the department join is fixture-complete. meta kept verbatim (total reflects the untrimmed board). Live board was 255 roles vs 262 at audit time — normal drift.",
+      "note": "Every row carries company_name 'SpaceXAI' — entity-blended SpaceX/xAI board; this caveat must ship visibly wherever the data surfaces. The jobs endpoint carries no department field; department comes only from the /departments join."
+    },
+    {
+      "path": "fixtures/hiring/xai-greenhouse-departments.json",
+      "source_id": "xai-greenhouse-departments",
+      "source_url": "https://boards-api.greenhouse.io/v1/boards/xai/departments",
+      "fetched_at": "2026-08-25T23:08:17Z",
+      "http_status": 200,
+      "raw_bytes": 266512,
+      "trim": "all 26 departments kept (id/name/parent_id/child_ids intact); each embedded jobs list trimmed to first 3 full job objects. 16 departments carry jobs; the untrimmed payload maps all 255 board jobs.",
+      "note": "Join table for xai-greenhouse. Department names are the evidence for the SpaceXAI caveat: the set is xAI-shaped (Data Center 121, Human Data 36, Engineering 23, …) with no aerospace/launch function."
+    },
+    {
+      "path": "fixtures/sec/edgar-fts.json",
+      "source_id": "edgar-fts",
+      "source_url": "https://efts.sec.gov/LATEST/search-index?q=%22Anthropic%22&forms=S-1",
+      "fetched_at": "2026-08-25T11:10:55Z",
+      "http_status": 200,
+      "raw_bytes": 29551,
+      "trim": "none — committed whole",
+      "note": "Fetched with the required UA header (contact email form). Open keyword hits are noisy by design (audit-confirmed) — production queries filter against the CIK whitelist in sources.yaml."
+    },
+    {
+      "path": "fixtures/sec/edgar-submissions-spcx.json",
+      "source_id": "edgar-submissions-spcx",
+      "source_url": "https://data.sec.gov/submissions/CIK0001181412.json",
+      "fetched_at": "2026-08-25T11:10:55Z",
+      "http_status": 200,
+      "raw_bytes": 14337,
+      "trim": "none — committed whole"
+    }
+  ]
+}
