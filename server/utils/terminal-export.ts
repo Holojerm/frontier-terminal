@@ -1,7 +1,7 @@
 // Bulk exports of the store: every table, as CSV or JSON, streamed in pages
 // so a 100k-row changes table never has to fit in Worker memory at once.
 //
-// The two entity views (prices_latest, jobs_open) flatten the JSON payload
+// The three entity views (prices_latest, jobs_open, incidents) flatten the JSON payload
 // into columns, because a CSV with a JSON blob in one cell is not a
 // spreadsheet anyone can sort. Provenance columns are always present and
 // always last: source_url and fetched_at on every table except source_runs,
@@ -57,6 +57,17 @@ const JOB_FIELDS = [
   'company_name',
 ] as const
 
+const INCIDENT_FIELDS = [
+  'incident_id',
+  'title',
+  'impact',
+  'status',
+  'started_at',
+  'resolved_at',
+  'components',
+  'incident_url',
+] as const
+
 function parsePayload(text: string): Row {
   try {
     const value = JSON.parse(text) as unknown
@@ -78,7 +89,7 @@ function project(row: Row, columns: readonly string[]): Row {
 function entityView(
   name: string,
   description: string,
-  entityType: 'model' | 'job',
+  entityType: 'model' | 'job' | 'incident',
   fields: readonly string[],
 ): ExportTable {
   const columns = [
@@ -162,6 +173,12 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     'job',
     JOB_FIELDS,
   ),
+  incidents: entityView(
+    'incidents',
+    'Every status-page incident held: title, vendor impact and status verbatim, start and resolution, components. Append-only — an incident that scrolls out of its feed stays.',
+    'incident',
+    INCIDENT_FIELDS,
+  ),
   changes: plainTable(
     'changes',
     'Append-only change log: added / removed / modified per entity, with the before and after payloads.',
@@ -242,10 +259,17 @@ export function parseExportPath(path: string): { name: string; format: ExportFor
 
 // ---- CSV -------------------------------------------------------------------
 
-/** RFC 4180: quote when the value carries a comma, a quote, or a line break. */
+/** RFC 4180: quote when the value carries a comma, a quote, or a line break.
+ * A list (an incident's components) is one JSON cell, not a comma-joined string
+ * that a spreadsheet would split. */
 export function csvCell(value: unknown): string {
   if (value === null || value === undefined) return ''
-  const text = typeof value === 'string' ? value : String(value)
+  const text =
+    typeof value === 'string'
+      ? value
+      : typeof value === 'object'
+        ? JSON.stringify(value)
+        : String(value)
   return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
 }
 

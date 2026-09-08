@@ -7,7 +7,7 @@ import { provenanceFields } from './provenance'
 // against it before D1 sees the row.
 
 export const providerEnum = z.enum(['openai', 'anthropic', 'google', 'xai', 'other'])
-export const entityTypeEnum = z.enum(['job', 'model', 'filing'])
+export const entityTypeEnum = z.enum(['job', 'model', 'filing', 'incident'])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])
 export const alertRuleEnum = z.enum(['agent-judge', 's1-floor'])

@@ -168,6 +168,63 @@ sources:
     fixture: fixtures/sec/edgar-submissions-spcx.json  # SPCX example
     caveats: Same UA + rate rules as edgar-fts.
 
+  openai-status:
+    axis: status
+    provider: openai
+    url: https://status.openai.com/api/v2/incidents.json
+    format: JSON (Statuspage v2, {page, incidents[]})
+    diff_mechanism: incident ids; status/resolved_at per incident
+    verdict: include
+    fixture: fixtures/status/openai-status.json
+    caveats: >-
+      Capacity-strain proxy, not an SLA: a status page records what the
+      vendor chose to post. Live-fetched 2026-09-08: 25 incidents
+      (2026-08-05 to 2026-09-08), so the feed itself covers roughly one
+      month and older history is only what this pipeline accumulates
+      (append-only lane — an incident scrolling out of the feed is kept).
+      No components on this page; the incident URL is composed from the
+      feed's own page.url + /incidents/{id} (verified to resolve), not read
+      from a field.
+
+  anthropic-status:
+    axis: status
+    provider: anthropic
+    url: https://status.claude.com/api/v2/incidents.json
+    format: JSON (Statuspage v2, {page, incidents[]} with components)
+    diff_mechanism: incident ids; status/resolved_at per incident
+    verdict: include
+    fixture: fixtures/status/anthropic-status.json
+    caveats: >-
+      Registered at the final URL: status.anthropic.com 301-redirects to
+      status.claude.com. Live-fetched 2026-09-08: exactly 50 incidents
+      (2026-07-21 to 2026-09-03), which is the page's window cap — counts
+      before that date are partial until the pipeline has polled through
+      it. Components name the surface (Claude API, claude.ai, Claude Code,
+      Claude Cowork, Console); consumer-app incidents count alongside API
+      ones, so read the component list, not just the count. Incident URL
+      composed as page.url + /incidents/{id} (verified to resolve).
+
+  google-cloud-status:
+    axis: status
+    provider: google
+    url: https://status.cloud.google.com/incidents.json
+    format: JSON array (Google Cloud incident format, not Statuspage)
+    diff_mechanism: incident ids; end timestamp per incident
+    verdict: include — filtered to Gemini / Vertex AI products only
+    fixture: fixtures/status/google-cloud-status.json
+    caveats: >-
+      This is the Alphabet-wide Cloud feed; an unfiltered count would
+      conflate Compute/BigQuery/Spanner outages with Gemini and mislead —
+      the same reasoning that cuts Google hiring. The parser keeps ONLY
+      incidents whose affected_products[].title contains "Gemini"
+      (case-insensitive) or equals "Vertex AI"; everything else is
+      dropped and counted in the run note. Live-fetched 2026-09-08: 6
+      incidents across 40 product titles, 1 kept ("Vertex Gemini API",
+      2026-02-27). Severity vocabulary is Google's (low/medium/high), not
+      Statuspage's (minor/major/critical); status is the most recent
+      update's status (AVAILABLE once resolved). Incident URL composed as
+      status.cloud.google.com/ + uri (verified to resolve).
+
 # CIK whitelist for EDGAR queries. MSFT, SPCX and GOOGL are transcribed from
 # the audit. AMZN and NVDA were null here through the audit and the first live
 # runs — the audit recorded no numbers for them — and were resolved on
@@ -199,3 +256,10 @@ cut:
       RSS detection solvable for 4 sources (Anthropic = SPA no feed; xAI =
       hard 403), but the deals that matter break in the press before any
       company feed — honest coverage is impossible, so extraction is cut.
+  xai-status:
+    verdict: cut — display "no public feed" honestly
+    reason: >-
+      status.x.ai/api/v2/incidents.json answers 403 (Cloudflare challenge
+      page) to any non-browser client, live-checked 2026-09-08 with a
+      descriptive User-Agent. Scraping a rendered page would be a
+      dependency on a bot wall; the terminal shows the gap instead.

@@ -13,7 +13,7 @@ import { expect, test } from '@playwright/test'
 import { recordConsole } from '../lib/console'
 
 /** Every public route — mirror of the a11y sweep's list. */
-const ROUTES = ['/', '/prices', '/alerts', '/data', '/about']
+const ROUTES = ['/', '/prices', '/alerts', '/incidents', '/data', '/about']
 
 /**
  * ── `eval` refusals are fatal ────────────────────────────────────────────────

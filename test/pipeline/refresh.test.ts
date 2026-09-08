@@ -113,7 +113,9 @@ describe('scopes', () => {
   it('edgar is the two SEC feeds; survey is every include source', () => {
     expect(sourceIdsForScope('edgar', ALL)).toEqual(['edgar-fts', 'edgar-submissions-spcx'])
     expect(sourceIdsForScope('survey', ALL)).toEqual(ALL_IDS)
-    expect(ALL_IDS).toHaveLength(13)
+    expect(ALL_IDS).toHaveLength(16)
+    // The status feeds ride the six-hourly survey only, never the EDGAR tick.
+    expect(sourceIdsForScope('edgar', ALL)).not.toContain('openai-status')
   })
 })
 
@@ -121,7 +123,7 @@ describe('baseline', () => {
   it('stores entities for every parser source, zero changes, one snapshot and one raw object each', async () => {
     const report = await run('survey', ALL_IDS)
 
-    expect(report.sources).toHaveLength(13)
+    expect(report.sources).toHaveLength(16)
     expect(report.failed).toBe(0)
     const byId = Object.fromEntries(report.sources.map((s) => [s.source_id, s]))
     // Sides and the cross-check are fetched and snapshotted but yield no entities.
@@ -139,8 +141,8 @@ describe('baseline', () => {
 
     expect(await rows.changes()).toHaveLength(0)
     expect(await rows.alerts()).toHaveLength(0)
-    expect(await rows.snapshots()).toHaveLength(13)
-    expect(await rows.runs()).toHaveLength(13)
+    expect(await rows.snapshots()).toHaveLength(16)
+    expect(await rows.runs()).toHaveLength(16)
     expect(await rows.ops()).toHaveLength(0)
 
     const entities = await rows.entities()
@@ -151,6 +153,10 @@ describe('baseline', () => {
     expect(perSource.get('openai-ashby')).toBe(65)
     expect(perSource.get('anthropic-pricing-md')).toBe(30)
     expect(perSource.get('edgar-submissions-spcx')).toBe(81)
+    // A status feed's whole backlog lands as baseline rows, never as 'added'.
+    expect(perSource.get('openai-status')).toBe(25)
+    expect(perSource.get('anthropic-status')).toBe(50)
+    expect(perSource.get('google-cloud-status')).toBe(1)
     expect(perSource.has('openrouter-models')).toBe(false)
 
     // Every stored row carries provenance from the fetch, not the fixture manifest.
@@ -170,7 +176,7 @@ describe('baseline', () => {
     ])
 
     const keys = await rawKeys()
-    expect(keys).toHaveLength(13)
+    expect(keys).toHaveLength(16)
     expect(keys).toContain(
       (await rows.snapshots()).find((s) => s.source_id === 'xai-models-md')!.raw_key,
     )
@@ -310,6 +316,69 @@ describe('second run', () => {
       (await rows.entities()).filter((e) => e.source_id === 'anthropic-greenhouse'),
     ).toHaveLength(59)
     expect(await rows.changes()).toHaveLength(0)
+  })
+
+  it('an incident that resolves is one modified change; the rest of the feed is untouched', async () => {
+    await run('survey', ['openai-status'])
+    const feed = JSON.parse(fixtureText('fixtures/status/openai-status.json')) as {
+      incidents: { id: string; status: string; resolved_at?: string }[]
+    }
+    const open = feed.incidents.find((i) => i.id === '01M20PYYYGRT9303VHAPA7YNT2')!
+    expect(open.resolved_at).toBeUndefined()
+    open.status = 'resolved'
+    open.resolved_at = '2026-09-08T22:30:00Z'
+
+    const report = await run(
+      'survey',
+      ['openai-status'],
+      fixtureFetcher({ 'openai-status': JSON.stringify(feed) }),
+    )
+    expect(report.sources[0]).toMatchObject({ status: 'ok', added: 0, removed: 0, modified: 1 })
+    const [change] = await rows.changes()
+    expect(change).toMatchObject({
+      entity_key: 'incident:openai:01M20PYYYGRT9303VHAPA7YNT2',
+      entity_type: 'incident',
+      change_type: 'modified',
+    })
+    expect(JSON.parse(change!.before_json!).resolved_at).toBeNull()
+    expect(JSON.parse(change!.after_json!).resolved_at).toBe('2026-09-08T22:30:00Z')
+  })
+
+  it('a filtered feed with no matching rows is an ordinary tick for an append-only lane, and its first row is then added', async () => {
+    const feed = JSON.parse(fixtureText('fixtures/status/google-cloud-status.json')) as {
+      id: string
+      affected_products: { title: string }[]
+    }[]
+    const withoutGemini = JSON.stringify(
+      feed.filter((i) => !i.affected_products.some((p) => p.title === 'Vertex Gemini API')),
+    )
+
+    // First observation with zero Gemini rows: a baseline of nothing, not a failure.
+    const first = await run(
+      'survey',
+      ['google-cloud-status'],
+      fixtureFetcher({ 'google-cloud-status': withoutGemini }),
+    )
+    expect(first.sources[0]).toMatchObject({
+      status: 'baseline',
+      detail: '0 entities; 5 incidents skipped: no Gemini / Vertex AI product',
+    })
+
+    // Still nothing: ok, not "refusing to record a mass removal".
+    const again = await run(
+      'survey',
+      ['google-cloud-status'],
+      fixtureFetcher({ 'google-cloud-status': withoutGemini.replace('"id":', '"id" :') }),
+    )
+    expect(again.sources[0]).toMatchObject({ status: 'ok', added: 0, removed: 0, modified: 0 })
+
+    // The real feed: its one Gemini incident is the first 'added' change.
+    const third = await run('survey', ['google-cloud-status'])
+    expect(third.sources[0]).toMatchObject({ status: 'ok', added: 1 })
+    expect((await rows.changes()).map((c) => [c.entity_key, c.change_type])).toEqual([
+      ['incident:google:41E5S3mkTGDfkZuJZH5k', 'added'],
+    ])
+    expect(await rows.ops()).toHaveLength(0)
   })
 
   it('keeps filings that scroll out of an append-only feed', async () => {

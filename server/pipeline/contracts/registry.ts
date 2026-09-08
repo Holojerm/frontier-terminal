@@ -17,7 +17,7 @@ export type FixtureReader = (repoRelativePath: string) => string
 
 export interface RegisteredParser {
   name: ParserId
-  lane: 'hiring' | 'vendor-md' | 'sec' | 'cross-check'
+  lane: 'hiring' | 'vendor-md' | 'sec' | 'status' | 'cross-check'
   fixturePath: string
   /** Committed files the parser joins against beyond its fixture (a Greenhouse
    * /departments payload, sources.yaml). Declared so the harness serves exactly
