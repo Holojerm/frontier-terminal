@@ -13,7 +13,7 @@ import { fixtureProvenance } from '../fixture-provenance'
 // SKUs exist, keyed by the vendor's own slugs from the per-model .md URLs.
 
 const CATALOG_HEADING = '## Browse our full catalog of models'
-// "- [GPT-5.6 Sol](/api/docs/models/gpt-5.6-sol.md): Frontier model ..."
+// "- [GPT-5.6 Sol](/api/docs/models/gpt-5.6-sol.md): Frontier model ..." (a line of the vendor page, not a repo path; refs-check-ignore)
 const ENTRY = /^- \[([^\]]+)\]\(\/api\/docs\/models\/([^)]+?)\.md\): (.+)$/
 
 // prov defaults to the fixture manifest's record (single-arg behavior is
