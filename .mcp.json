@@ -17,7 +17,7 @@
     },
     "nuxt": {
       "type": "sse",
-      "url": "https://my-app.localhost/__mcp/sse"
+      "url": "https://frontier-terminal.localhost/__mcp/sse"
     },
     "nuxt-ui": {
       "type": "http",

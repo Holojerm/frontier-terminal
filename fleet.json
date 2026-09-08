@@ -1,18 +1,19 @@
 {
   "schema": 1,
-  "slug": "my-app",
-  "name": "My App",
+  "slug": "frontier-terminal",
+  "name": "Frontier Terminal",
   "stage": "unreleased",
-  "urls": { "prod": "https://my-app.example.workers.dev" },
-  "workers": ["my-app", "my-app-mcp"],
+  "urls": { "prod": "https://frontier-terminal.holojerm.workers.dev" },
+  "workers": ["frontier-terminal"],
   "bindings": {
-    "d1": [{ "name": "my-app-db", "id": "YOUR_D1_DATABASE_ID" }],
-    "kv": ["YOUR_KV_NAMESPACE_ID"],
-    "r2": ["my-app-blob"]
+    "d1": [{ "name": "frontier-terminal-db", "id": "31a693ed-7e93-48db-8375-40513d667b80" }],
+    "kv": ["ba653082105144bdb3b91a9189a72a3d"],
+    "r2": ["frontier-terminal-blob"]
   },
-  "crons": ["0 4 * * *", "*/30 * * * *"],
+  "crons": ["*/30 * * * *"],
   "deploy": "workers-builds",
   "template": { "repo": "Holojerm/nuxt-cf-template", "syncedSha": null },
-  "features": { "auth": true, "billing": true, "posthog": null, "opsEvents": true },
-  "secrets": ["NUXT_SESSION_PASSWORD"]
+  "features": { "auth": false, "billing": false, "posthog": null, "opsEvents": true },
+  "secrets": [],
+  "links": { "github": "https://github.com/Holojerm/frontier-terminal" }
 }
