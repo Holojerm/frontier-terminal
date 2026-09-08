@@ -22,7 +22,7 @@ const goodSnapshot: SnapshotRow = {
   id: 'test:2026-08-25T11:10:40Z',
   source_id: 'openai-models-md',
   content_hash: contentHashOfText('payload'),
-  raw_path: 'fixtures/pricing/openai-models.md',
+  raw_key: 'raw/openai-models-md/2026-08-25T11:10:40Z.md',
   http_status: 200,
   bytes: 11390,
   source_url: 'https://developers.openai.com/api/docs/models.md',

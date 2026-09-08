@@ -27,7 +27,12 @@ import { FleetManifestSchema } from '#shared/utils/fleet-manifest'
 
 import rawManifest from '../../fleet.json'
 import pkg from '../../package.json'
-import { compareMigrations, readAppliedMigrations, repoMigrations } from '../utils/fleet-status'
+import {
+  compareMigrations,
+  latestFetchBySource,
+  readAppliedMigrations,
+  repoMigrations,
+} from '../utils/fleet-status'
 
 /** Bump when the shape of this payload changes incompatibly. */
 export const FLEET_STATUS_SCHEMA_VERSION = 1
@@ -55,6 +60,10 @@ export default defineEventHandler(async (event) => {
     database === 'connected' ? await readAppliedMigrations(db) : { table: null, names: [] }
   const repo = repoMigrations()
   const drift = compareMigrations(repo, applied.names)
+  // Only once the snapshots table exists: before the migration is applied,
+  // `migrations.pending` is the finding and this must not turn it into a 500.
+  const sources =
+    database === 'connected' && drift.pending.length === 0 ? await latestFetchBySource(db) : {}
 
   const status = database === 'unavailable' ? 'down' : drift.pending.length ? 'degraded' : 'ok'
   if (status === 'down') setResponseStatus(event, 503)
@@ -95,5 +104,9 @@ export default defineEventHandler(async (event) => {
     // The same map Nitro runs, so a reader can compare it with the triggers
     // Cloudflare reports — the cron-parity check, from the outside.
     crons: config.scheduledTasks,
+    // Newest fetched_at per source id — is the poll actually polling. Public
+    // by the same argument as the rest: source ids and timestamps are what
+    // every page already prints beside its numbers.
+    sources,
   }
 })

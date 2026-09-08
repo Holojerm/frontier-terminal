@@ -146,8 +146,13 @@ const securityHeaders = {
 //
 //   */30       — ops digest, server/tasks/ops/alert.ts. Silence is the healthy
 //                state: an empty spool costs one indexed SELECT per tick.
+//              — EDGAR tick, server/tasks/poll/edgar.ts: the two SEC feeds,
+//                the one axis where latency is worth polling for.
+//   0 */6      — full survey, server/tasks/poll/survey.ts: every include
+//                source. Scope policy: server/pipeline/scopes.ts.
 const SCHEDULED_TASKS: Record<string, string[]> = {
-  '*/30 * * * *': ['ops:alert'],
+  '*/30 * * * *': ['ops:alert', 'poll:edgar'],
+  '0 */6 * * *': ['poll:survey'],
 }
 
 /**
@@ -397,6 +402,11 @@ export default defineNuxtConfig({
     // secret, and the [[send_email]] binding pins the destination anyway.
     alertEmailTo: '',
     alertEmailFrom: '',
+    // SEC fair-access policy requires a contact email in the User-Agent of
+    // every request to sec.gov hosts. Empty = the EDGAR sources are skipped
+    // with a 'failed' run, never fetched anonymously (server/pipeline/fetch.ts).
+    // A Worker secret: `wrangler secret put NUXT_SEC_CONTACT_EMAIL`.
+    secContactEmail: '',
     // Public vars (access via useRuntimeConfig().public.myVar)
     // NUXT_PUBLIC_APP_NAME in wrangler.toml [vars] overrides this at runtime
     public: {

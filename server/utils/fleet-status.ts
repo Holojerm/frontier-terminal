@@ -22,8 +22,9 @@
 // `_hub_migrations` instead, and both work — which is exactly why this reads
 // whichever one exists rather than assuming.
 
-import { and, count, gt, isNull, sql } from 'drizzle-orm'
+import { and, count, eq, gt, isNull, max, ne, sql } from 'drizzle-orm'
 import type { drizzle } from 'drizzle-orm/d1'
+import type { SQLiteTable } from 'drizzle-orm/sqlite-core'
 
 import journal from '../db/migrations/meta/_journal.json'
 import * as tables from '../db/schema'
@@ -121,8 +122,46 @@ export async function collectFleetCounters(db: FleetDb, now = new Date()): Promi
     .from(tables.opsEvents)
     .where(and(gt(tables.opsEvents.createdAt, dayAgo)))
 
+  const total = async (table: SQLiteTable) => {
+    const [row] = await db.select({ total: count() }).from(table)
+    return row?.total ?? 0
+  }
+  // Newest tick per scope that fetched anything at all (not 'failed'), and the
+  // newest failure — as epoch ms because `extra` is numbers only. 0 = never.
+  const lastTick = async (scope: string, failed: boolean) => {
+    const [row] = await db
+      .select({ at: max(tables.sourceRuns.started_at) })
+      .from(tables.sourceRuns)
+      .where(
+        and(
+          scope ? eq(tables.sourceRuns.scope, scope) : undefined,
+          failed ? eq(tables.sourceRuns.status, 'failed') : ne(tables.sourceRuns.status, 'failed'),
+        ),
+      )
+    return row?.at ? Date.parse(row.at) : 0
+  }
+
   return {
     opsEvents: { pending: pendingOps?.total ?? 0, last24h: recentOps?.total ?? 0 },
-    extra: {},
+    extra: {
+      snapshots: await total(tables.snapshots),
+      entities: await total(tables.entities),
+      changes: await total(tables.changes),
+      alerts: await total(tables.alerts),
+      lastOkTickEdgarMs: await lastTick('edgar', false),
+      lastOkTickSurveyMs: await lastTick('survey', false),
+      lastFailureMs: await lastTick('', true),
+    },
   }
+}
+
+/** Newest fetched_at per source — the freshness a reader of /api/status wants. */
+export async function latestFetchBySource(db: FleetDb): Promise<Record<string, string>> {
+  const rows = await db
+    .select({ source_id: tables.snapshots.source_id, at: max(tables.snapshots.fetched_at) })
+    .from(tables.snapshots)
+    .groupBy(tables.snapshots.source_id)
+  const out: Record<string, string> = {}
+  for (const row of rows) if (row.at) out[row.source_id] = row.at
+  return out
 }

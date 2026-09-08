@@ -1,15 +1,19 @@
 import { z } from 'zod'
 import { provenanceFields } from './provenance'
 
-// One zod schema per store table (snapshots, entities, changes, alerts).
-// The row schema is the contract; whatever persistence layer lands must
-// mirror it, and every insert path validates against it first.
+// One zod schema per store table (snapshots, entities, changes, alerts,
+// source_runs). The row schema is the contract; server/db/schema.ts mirrors
+// it column for column, and server/pipeline/store.ts validates every row
+// against it before D1 sees the row.
 
 export const providerEnum = z.enum(['openai', 'anthropic', 'google', 'xai', 'other'])
 export const entityTypeEnum = z.enum(['job', 'model', 'filing'])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])
 export const alertRuleEnum = z.enum(['agent-judge', 's1-floor'])
+export const sourceRunStatusEnum = z.enum(['ok', 'unchanged', 'failed', 'baseline'])
+export const pollScopeEnum = z.enum(['edgar', 'survey'])
+export type PollScope = z.infer<typeof pollScopeEnum>
 
 const sha256Hex = z.string().regex(/^[0-9a-f]{64}$/)
 
@@ -29,7 +33,7 @@ export const SnapshotRow = z.strictObject({
   id: z.string().min(1),
   source_id: z.string().min(1), // key into sources.yaml
   content_hash: sha256Hex,
-  raw_path: z.string().min(1), // where the stored payload lives
+  raw_key: z.string().min(1), // R2 object key of the stored payload
   http_status: z.int().nullable(),
   bytes: z.int().nonnegative().nullable(),
   ...provenanceFields,
@@ -46,6 +50,17 @@ export const EntityRow = z.strictObject({
   ...provenanceFields,
 })
 export type EntityRow = z.infer<typeof EntityRow>
+
+// What the entities TABLE holds: the normalize output plus two columns only
+// the store can know. source_id scopes the current set (two Anthropic pages
+// legitimately emit the same modelKey with different content, so entity_key
+// alone cannot be the primary key); first_seen_at is the fetched_at of the
+// fetch that first produced the row and is never rewritten.
+export const StoredEntityRow = EntityRow.extend({
+  source_id: z.string().min(1),
+  first_seen_at: provenanceFields.fetched_at,
+})
+export type StoredEntityRow = z.infer<typeof StoredEntityRow>
 
 export const ChangeRow = z
   .strictObject({
@@ -88,11 +103,31 @@ export const AlertRow = z.strictObject({
 })
 export type AlertRow = z.infer<typeof AlertRow>
 
+// One row per (tick, source). The only table without fetched_at, because a
+// failed run fetched nothing and a timestamp claiming otherwise would be the
+// exact lie the provenance rule exists to prevent; started_at is the tick's
+// clock and source_url still names what was attempted.
+export const SourceRunRow = z.strictObject({
+  id: z.string().min(1),
+  scope: pollScopeEnum,
+  source_id: z.string().min(1),
+  started_at: provenanceFields.fetched_at,
+  status: sourceRunStatusEnum,
+  detail: z.string().nullable(),
+  snapshot_id: z.string().min(1).nullable(), // null iff no fetch succeeded
+  added: z.int().nonnegative(),
+  removed: z.int().nonnegative(),
+  modified: z.int().nonnegative(),
+  source_url: provenanceFields.source_url,
+})
+export type SourceRunRow = z.infer<typeof SourceRunRow>
+
 export const tableSchemas = {
   snapshots: SnapshotRow,
-  entities: EntityRow,
+  entities: StoredEntityRow,
   changes: ChangeRow,
   alerts: AlertRow,
+  source_runs: SourceRunRow,
 } as const
 
 export type TableName = keyof typeof tableSchemas
