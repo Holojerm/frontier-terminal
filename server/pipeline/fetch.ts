@@ -11,6 +11,9 @@ import type { FetchSource } from './sources'
 export type FetchOutcome =
   | { ok: true; status: number; text: string; bytes: number }
   | { ok: false; status: number | null; detail: string }
+  // Nothing was attempted: the host wants a credential this deploy does not
+  // have. The refresh records it as a 'skipped' run, not a failure.
+  | { ok: false; status: null; detail: string; skipped: true }
 
 export type SourceFetcher = (source: FetchSource) => Promise<FetchOutcome>
 
@@ -18,6 +21,15 @@ export type SourceFetcher = (source: FetchSource) => Promise<FetchOutcome>
 export const SEC_HOSTS: readonly string[] = ['efts.sec.gov', 'data.sec.gov', 'www.sec.gov']
 
 export const SEC_CONTACT_UNSET = 'NUXT_SEC_CONTACT_EMAIL unset'
+
+export const OPENROUTER_KEY_UNSET = 'NUXT_OPENROUTER_API_KEY not set'
+
+/** OpenRouter's dataset endpoints (the usage rankings) take a bearer key;
+ * its public model list does not and is fetched as audited, anonymously. */
+export function needsOpenRouterKey(url: string): boolean {
+  const u = new URL(url)
+  return u.hostname === 'openrouter.ai' && u.pathname.startsWith('/api/v1/datasets/')
+}
 
 export function isSecHost(url: string): boolean {
   return SEC_HOSTS.includes(new URL(url).hostname)
@@ -45,6 +57,8 @@ export function userAgentFor(url: string, options: UserAgentOptions): string | n
 }
 
 export interface FetcherOptions extends UserAgentOptions {
+  /** NUXT_OPENROUTER_API_KEY — sent only to openrouter.ai/api/v1/datasets/*. Never logged. */
+  openrouterApiKey?: string
   fetch?: typeof globalThis.fetch
   sleep?: (ms: number) => Promise<void>
   attempts?: number
@@ -65,7 +79,9 @@ function retryable(status: number): boolean {
  * Build the fetcher the refresh runs with. SEC sources are refused up front
  * when no contact email is configured — never fetched anonymously — and the
  * refusal is a normal 'failed' outcome so it lands in source_runs and the
- * ops digest like any other failure.
+ * ops digest like any other failure. A keyed OpenRouter dataset without its
+ * key is a 'skipped' outcome instead: not configured is a state, not an
+ * outage, and the refresh throttles its ops event to one a day.
  */
 export function createFetcher(options: FetcherOptions): SourceFetcher {
   const doFetch = options.fetch ?? globalThis.fetch
@@ -76,14 +92,18 @@ export function createFetcher(options: FetcherOptions): SourceFetcher {
     const userAgent = userAgentFor(source.url, options)
     if (userAgent === null) return { ok: false, status: null, detail: SEC_CONTACT_UNSET }
 
+    const headers: Record<string, string> = { 'User-Agent': userAgent, Accept: '*/*' }
+    if (needsOpenRouterKey(source.url)) {
+      const key = options.openrouterApiKey?.trim() ?? ''
+      if (!key) return { ok: false, status: null, detail: OPENROUTER_KEY_UNSET, skipped: true }
+      headers.Authorization = `Bearer ${key}`
+    }
+
     let last: FetchOutcome = { ok: false, status: null, detail: 'no attempt made' }
     for (let attempt = 1; attempt <= attempts; attempt++) {
       if (attempt > 1) await sleep(FETCH_BACKOFF_MS[attempt - 2] ?? FETCH_BACKOFF_MS.at(-1) ?? 0)
       try {
-        const response = await doFetch(source.url, {
-          headers: { 'User-Agent': userAgent, Accept: '*/*' },
-          redirect: 'follow',
-        })
+        const response = await doFetch(source.url, { headers, redirect: 'follow' })
         if (response.ok) {
           const text = await response.text()
           return {

@@ -44,9 +44,10 @@ const caveats = computed(() => (coverage.value?.sources ?? []).filter((s) => s.c
         <p>
           A free, public, read-only terminal for an equity analyst covering the AI-infrastructure
           complex into the frontier-lab IPO wave. It watches the four frontier model providers —
-          OpenAI, Anthropic, Google, xAI — on three axes: the API price list, the hiring board, and
-          SEC filings. The first two are the private-company signals that carry the weight before
-          any lab trades; EDGAR is the tripwire for the moment one does.
+          OpenAI, Anthropic, Google, xAI — on four axes: the API price list, the hiring board,
+          demand share on OpenRouter, and SEC filings. The first three are the private-company
+          signals that carry the weight before any lab trades; EDGAR is the tripwire for the moment
+          one does.
         </p>
         <p>
           Every source is polled on a schedule, snapshotted whole, parsed deterministically, and
@@ -68,9 +69,10 @@ const caveats = computed(() => (coverage.value?.sources ?? []).filter((s) => s.c
         </p>
         <p>
           Where a source does not publish a figure, the terminal says so instead of guessing:
-          OpenAI’s catalog page prints no prices, Google has no public hiring feed, and OpenRouter
-          is a third-party restatement held out as a cross-check. Timestamps read relative inside a
-          day; the exact value is one hover away and in the page markup.
+          OpenAI’s catalog page prints no prices, Google has no public hiring feed, OpenRouter’s
+          price list is a third-party restatement held out as a cross-check, and its usage rankings
+          are one aggregator’s traffic, never market share. Timestamps read relative inside a day;
+          the exact value is one hover away and in the page markup.
         </p>
       </div>
     </TerminalPanel>

@@ -6,10 +6,17 @@ import {
   type EntityRow,
   type Provenance,
 } from './contracts'
-import { normalizeFilings, normalizeIncidents, normalizeJobs, normalizePrices } from './normalize'
+import {
+  normalizeFilings,
+  normalizeIncidents,
+  normalizeJobs,
+  normalizePrices,
+  normalizeRankings,
+} from './normalize'
 import { parseAnthropicGreenhouse } from './parsers/hiring/anthropic-greenhouse'
 import { parseOpenaiAshby } from './parsers/hiring/openai-ashby'
 import { parseXaiGreenhouse } from './parsers/hiring/xai-greenhouse'
+import { parseOpenRouterRankings } from './parsers/openrouter-rankings'
 import { parseAnthropicModelsOverviewMd } from './parsers/pricing/anthropic-models-overview'
 import { parseAnthropicPricingMd } from './parsers/pricing/anthropic-pricing'
 import { parseGooglePricingPage } from './parsers/pricing/google-pricing'
@@ -29,8 +36,11 @@ import type { CikWhitelist } from './parsers/sec/whitelist'
 // joins against payloads fetched in the same tick).
 //
 // A source with no lane is fetched and snapshotted but yields no entities:
-// the Greenhouse /departments feeds exist to be joined, and OpenRouter is a
-// cross-check that must never become a source of record (sources.yaml).
+// the Greenhouse /departments feeds exist to be joined, and the OpenRouter
+// model list is a cross-check that must never become a source of record
+// (sources.yaml). The OpenRouter rankings feed DOES have a lane: it is the
+// source of record for the demand-share axis, held out as one aggregator's
+// traffic rather than the market's.
 
 export interface ParseContext {
   prov: Provenance
@@ -149,6 +159,24 @@ export const LANES: Readonly<Record<string, Lane>> = {
       }
     },
   },
+  // A rolling window of daily buckets: a day scrolling out of the window was
+  // not un-observed, so no removal is recorded and the series accumulates.
+  // meta.as_of rides on the run's detail (`as_of <iso>`) rather than in each
+  // row's payload, where it would mark every row modified on every tick;
+  // /api/rankings reads it back from the newest run that carries it.
+  'openrouter-rankings-daily': {
+    sides: [],
+    removals: 'append-only',
+    parse: (text, { prov, snapshotId }) => {
+      const { rows, as_of } = parseOpenRouterRankings(text, prov)
+      return { entities: normalizeRankings(rows, snapshotId), note: `as_of ${as_of}` }
+    },
+  },
+}
+
+/** The `as_of` a rankings lane wrote into its run detail, if the detail carries one. */
+export function asOfFromDetail(detail: string | null): string | null {
+  return detail?.match(/as_of (\S+)/)?.[1] ?? null
 }
 
 /**

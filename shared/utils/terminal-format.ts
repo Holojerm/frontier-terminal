@@ -89,3 +89,32 @@ export function pctLabel(pct: number): string {
 export function count(n: number): string {
   return n.toLocaleString('en-US')
 }
+
+/** '2.4T' / '910B' / '15.0M' — token counts at the scale a chart axis can carry. */
+export function compactTokens(n: number): string {
+  const units: [number, string][] = [
+    [1e12, 'T'],
+    [1e9, 'B'],
+    [1e6, 'M'],
+    [1e3, 'K'],
+  ]
+  for (const [value, unit] of units) {
+    if (Math.abs(n) >= value) {
+      const x = n / value
+      return `${x >= 100 ? Math.round(x) : x >= 10 ? x.toFixed(1) : x.toFixed(2)}${unit}`
+    }
+  }
+  return String(n)
+}
+
+/** '12.3%' from a 0..1 share; '—' for absent. */
+export function sharePct(share: number | null): string {
+  return share === null ? '—' : `${(share * 100).toFixed(1)}%`
+}
+
+/** '+1.2 pp' / '−0.4 pp' / '0.0 pp' — a share change in percentage points, sign visible. */
+export function ppLabel(pp: number): string {
+  const rounded = Math.round(pp * 10) / 10
+  const sign = rounded > 0 ? '+' : rounded < 0 ? '−' : ''
+  return `${sign}${Math.abs(rounded).toFixed(1)} pp`
+}

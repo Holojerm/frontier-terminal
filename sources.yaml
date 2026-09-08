@@ -79,6 +79,33 @@ sources:
       Third-party restatement with no drift SLA and thin xAI coverage (6 vs
       20+ SKUs) — cross-check, never source of record.
 
+  openrouter-rankings-daily:
+    axis: demand-share
+    provider: all
+    url: https://openrouter.ai/api/v1/datasets/rankings-daily
+    format: JSON — top 50 public models per UTC day by total tokens, plus one aggregated "other" row
+    diff_mechanism: (date, model_permaslug) keys; a revised total_tokens diffs as modified; append-only window
+    verdict: include — needs NUXT_OPENROUTER_API_KEY; recorded as skipped, never fetched anonymously, without it
+    fixture: fixtures/rankings/openrouter-rankings-daily.json
+    license: CC BY 4.0 (openrouter.ai/docs/cookbook/administration/data-api, read 2026-09-08)
+    citation: "Source: OpenRouter (openrouter.ai/rankings), as of {meta.as_of}. Licensed under CC BY 4.0."
+    caveats: >-
+      OpenRouter share, not market share — one aggregator's traffic. Direct
+      API and enterprise volume never route through OpenRouter, so a lab's
+      share here measures its standing among developers who use an
+      aggregator, not its revenue. Fetched without date parameters: the
+      endpoint's default window is the trailing 30 completed UTC days, so
+      every 6-hourly survey tick re-reads the same days and a late revision
+      lands as a modified row. Rate limits 30 req/min per key, 500/day per
+      account; this terminal uses four a day.
+    fixture_note: >-
+      The committed fixture is CONSTRUCTED from the documented response
+      schema, not fetched — no key existed at scaffold time and no account
+      was created (fixtures/manifest.json `constructed`). Its slugs and
+      counts are illustrative. It must be replaced by the first real payload
+      from R2 (raw/openrouter-rankings-daily/<fetched_at>.json) once the key
+      is set, with the manifest entry rewritten to that fetch's provenance.
+
   openai-ashby:
     axis: hiring
     provider: openai
@@ -250,6 +277,22 @@ cut:
       None usable: careers.google.com is an auth-walled SPA; the DeepMind
       Greenhouse board is vestigial (10 jobs). Alphabet-wide numbers would
       conflate Search/Ads/Cloud with Gemini and mislead.
+  artificial-analysis:
+    verdict: cut — external link only, never ingested
+    reason: >-
+      artificialanalysis.ai/data-api (read 2026-09-08) states the free API
+      tier is "Internal use only; no redistribution." and that redistribution
+      rights come only with a commercial package ("Commercial redistribution
+      with attribution"). A public terminal republishes by definition, so the
+      site is linked as a reference beside the demand-share panel and no
+      figure from it is stored or shown.
+  lmarena:
+    verdict: cut — external link only, never ingested
+    reason: >-
+      arena.ai (formerly lmarena.ai; read 2026-09-08) publishes a leaderboard
+      app with no documented data endpoint, dataset download, or data license.
+      Scraping a page with no stated license would be a claim about that page,
+      not data; it is linked as a reference beside the demand-share panel.
   compute-deals:
     verdict: stretch goal only (new-post tier, no extraction claims)
     reason: >-

@@ -13,6 +13,8 @@ const STATUS = {
   unchanged: { color: 'neutral', icon: 'i-lucide-minus', label: 'unchanged' },
   baseline: { color: 'info', icon: 'i-lucide-flag', label: 'baseline' },
   failed: { color: 'error', icon: 'i-lucide-x', label: 'failed' },
+  // Not attempted: the source needs a secret this deploy does not have.
+  skipped: { color: 'warning', icon: 'i-lucide-key-round', label: 'not configured' },
 } as const
 
 const PROVIDER: Record<string, string> = {

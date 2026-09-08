@@ -15,9 +15,9 @@
 // server/utils/fleet-status.ts uses) so test/terminal-db.test.ts drives them
 // against the workerd D1.
 
-import { and, asc, count, desc, eq, inArray, max, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, inArray, max, ne, sql } from 'drizzle-orm'
 
-import { money } from '#shared/utils/terminal-format'
+import { count as countLabel, money } from '#shared/utils/terminal-format'
 import {
   alertTier,
   severitiesOf,
@@ -255,6 +255,13 @@ const AXIS_OF: Readonly<Record<string, keyof Omit<MovementSummary['recent'], 'to
   incident: 'incidents',
 }
 
+// Ranking rows are a daily time series, not events (~50 new rows a day by
+// construction), so they are out of "what moved" entirely — the window's
+// anchor included, or a ranking tick would pull the 24h window past a price
+// change detected the day before. Same exclusion as the judge's pending
+// query (server/pipeline/judge/pending.ts › JUDGE_EXCLUDED_ENTITY_TYPES).
+const isEvent = () => ne(tables.changes.entity_type, 'ranking')
+
 /**
  * Reported window: 24h back from the NEWEST detection, not from the reader's
  * clock. A terminal opened on Monday must still say what moved on Friday
@@ -267,6 +274,7 @@ export async function queryMovement(db: PipelineDb): Promise<MovementSummary> {
   const [bounds] = await db
     .select({ latest: max(tables.changes.detected_at), n: count() })
     .from(tables.changes)
+    .where(isEvent())
   const totalChanges = bounds?.n ?? 0
   const latest = bounds?.latest ?? null
 
@@ -280,7 +288,9 @@ export async function queryMovement(db: PipelineDb): Promise<MovementSummary> {
     const inWindow = await db
       .select({ entity_type: tables.changes.entity_type, n: count() })
       .from(tables.changes)
-      .where(sql`datetime(${tables.changes.detected_at}) >= datetime(${windowFrom})`)
+      .where(
+        and(isEvent(), sql`datetime(${tables.changes.detected_at}) >= datetime(${windowFrom})`),
+      )
       .groupBy(tables.changes.entity_type)
     for (const row of inWindow) {
       const axis = AXIS_OF[row.entity_type]
@@ -338,6 +348,10 @@ function summarize(entityType: string, payload: Json | null): string {
       payload.resolved_at === null ? 'open' : str(payload.status),
     ]
     return parts.filter((p): p is string => Boolean(p)).join(' · ')
+  }
+  if (entityType === 'ranking') {
+    const tokens = num(payload.total_tokens)
+    return `${str(payload.model_permaslug) ?? '?'} · ${str(payload.date) ?? '?'} · ${tokens === null ? '?' : countLabel(tokens)} tokens`
   }
   return entityType
 }

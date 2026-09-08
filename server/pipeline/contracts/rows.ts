@@ -7,11 +7,16 @@ import { provenanceFields } from './provenance'
 // against it before D1 sees the row.
 
 export const providerEnum = z.enum(['openai', 'anthropic', 'google', 'xai', 'other'])
-export const entityTypeEnum = z.enum(['job', 'model', 'filing', 'incident'])
+// 'ranking' is a time series (one row per UTC day and model), not an event:
+// server/pipeline/judge/pending.ts and queryMovement() both exclude it.
+export const entityTypeEnum = z.enum(['job', 'model', 'filing', 'incident', 'ranking'])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])
 export const alertRuleEnum = z.enum(['agent-judge', 's1-floor'])
-export const sourceRunStatusEnum = z.enum(['ok', 'unchanged', 'failed', 'baseline'])
+// 'skipped': the source needs a credential the deploy does not have, so
+// nothing was attempted — distinct from 'failed' so a missing key is a
+// configuration state on the coverage panel, not an outage in the digest.
+export const sourceRunStatusEnum = z.enum(['ok', 'unchanged', 'failed', 'baseline', 'skipped'])
 export const pollScopeEnum = z.enum(['edgar', 'survey'])
 export type PollScope = z.infer<typeof pollScopeEnum>
 

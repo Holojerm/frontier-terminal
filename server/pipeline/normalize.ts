@@ -7,10 +7,12 @@ import {
   jobKey,
   modelKey,
   stableStringify,
+  rankingKey,
   type FilingRow,
   type IncidentRow,
   type PriceRow,
   type Provider,
+  type RankingRow,
 } from './contracts'
 
 // Normalize: validated parser-output rows -> EntityRow (boundary table,
@@ -32,7 +34,7 @@ export { stableStringify }
 // content is byte-identical, poisoning every diff downstream.
 function toEntity(
   entity_key: string,
-  entity_type: 'job' | 'model' | 'filing' | 'incident',
+  entity_type: EntityRow['entity_type'],
   provider: Provider,
   snapshotId: string,
   row: Record<string, unknown> & { source_url: string; fetched_at: string },
@@ -127,6 +129,23 @@ export function normalizeJobs(rows: readonly JobRow[], snapshotId: string): Enti
 
 export function normalizePrices(rows: readonly PriceRow[], snapshotId: string): EntityRow[] {
   return collapse(rows.map((row) => normalizePrice(row, snapshotId)))
+}
+
+// A ranking row is one (UTC day, model) observation. Its provider is the
+// permaslug prefix the parser already resolved; total_tokens is the whole
+// content, so a revised count diffs as one 'modified' row for that day.
+export function normalizeRanking(row: RankingRow, snapshotId: string): EntityRow {
+  return toEntity(
+    rankingKey(row.date, row.model_permaslug),
+    'ranking',
+    row.provider,
+    snapshotId,
+    row,
+  )
+}
+
+export function normalizeRankings(rows: readonly RankingRow[], snapshotId: string): EntityRow[] {
+  return collapse(rows.map((row) => normalizeRanking(row, snapshotId)))
 }
 
 export function normalizeFilings(

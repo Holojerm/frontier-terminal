@@ -100,6 +100,7 @@ describe('the table registry', () => {
       'prices_latest',
       'jobs_open',
       'incidents',
+      'rankings_daily',
       'changes',
       'alerts',
       'source_runs',

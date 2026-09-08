@@ -1,4 +1,4 @@
-import { desc, gt, isNotNull, max } from 'drizzle-orm'
+import { and, desc, gt, isNotNull, max, ne } from 'drizzle-orm'
 
 import * as tables from '../../db/schema'
 import { ChangeRow } from '../contracts'
@@ -25,6 +25,18 @@ export const JUDGE_CHANGE_LIMIT = 200
  * Model and filing rows carry no such field, so the filter is job-only.
  */
 export const JOB_TIMESTAMP_FIELDS = ['published_at', 'updated_at'] as const
+
+/**
+ * Entity types the judge never sees. 'ranking' rows are a time series — one
+ * (UTC day, model) observation each, ~50 new rows a day by construction — not
+ * events; offering them would wake the judge every morning to read a table.
+ * Demand-share movement is read off /api/rankings instead. The same set is
+ * excluded from the signal band's counts (server/utils/terminal-db.ts).
+ */
+export const JUDGE_EXCLUDED_ENTITY_TYPES = ['ranking'] as const
+
+/** The WHERE fragment that keeps excluded entity types out of a changes query. */
+export const judgeEligible = () => ne(tables.changes.entity_type, JUDGE_EXCLUDED_ENTITY_TYPES[0])
 
 /** A job `modified` whose before/after differ only in JOB_TIMESTAMP_FIELDS.
  * Typed on plain strings so a raw D1 row qualifies without a parse. */
@@ -81,7 +93,7 @@ export async function pendingChanges(
   const rows = await db
     .select()
     .from(tables.changes)
-    .where(since ? gt(tables.changes.detected_at, since) : undefined)
+    .where(and(judgeEligible(), since ? gt(tables.changes.detected_at, since) : undefined))
     .orderBy(desc(tables.changes.detected_at), desc(tables.changes.id))
   const pending = rows.filter((row) => !isTimestampOnlyChange(row))
   return {

@@ -131,6 +131,26 @@ export const OpenRouterModelRow = z.strictObject({
 })
 export const OpenRouterOutput = z.strictObject({ rows: z.array(OpenRouterModelRow) })
 
+// ---- Demand share (OpenRouter usage rankings, CC BY 4.0) ------------------
+
+export const RankingRow = z.strictObject({
+  provider: providerEnum,
+  date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/), // UTC day bucket
+  model_permaslug: z.string().min(1), // e.g. "anthropic/claude-sonnet-4.5"
+  // Arrives as a decimal string; a number here so share arithmetic never
+  // silently concatenates. Safe-integer bounded: a day of tokens on one
+  // aggregator is ~1e12, far under 2^53.
+  total_tokens: z.int().nonnegative(),
+  ...provenanceFields,
+})
+export type RankingRow = z.infer<typeof RankingRow>
+export const OpenRouterRankingsOutput = z.strictObject({
+  rows: z.array(RankingRow),
+  // meta.as_of — the dataset build time, carried on the run, not in each
+  // row's hash (it advances daily and would mark every row modified).
+  as_of: provenanceFields.fetched_at,
+})
+
 export const parserOutputSchemas = {
   'openai-ashby': AshbyJobsOutput,
   'anthropic-greenhouse': GreenhouseJobsOutput,
@@ -146,5 +166,6 @@ export const parserOutputSchemas = {
   'anthropic-status': StatuspageIncidentsOutput,
   'google-cloud-status': GoogleCloudIncidentsOutput,
   'openrouter-models': OpenRouterOutput,
+  'openrouter-rankings-daily': OpenRouterRankingsOutput,
 } as const
 export type ParserId = keyof typeof parserOutputSchemas
