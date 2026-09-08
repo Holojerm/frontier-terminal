@@ -14,6 +14,6 @@
   "deploy": "workers-builds",
   "template": { "repo": "Holojerm/nuxt-cf-template", "syncedSha": null },
   "features": { "auth": false, "billing": false, "posthog": null, "opsEvents": true },
-  "secrets": ["NUXT_SEC_CONTACT_EMAIL"],
+  "secrets": ["NUXT_SEC_CONTACT_EMAIL", "NUXT_JUDGE_TOKEN"],
   "links": { "github": "https://github.com/Holojerm/frontier-terminal" }
 }

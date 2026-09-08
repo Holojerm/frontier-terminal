@@ -84,12 +84,12 @@ crons = ["*/30 * * * *", "0 */6 * * *"]
 # single destination on purpose: an unrestricted send binding is a spam cannon
 # if the Worker is ever compromised, and this one only ever needs to reach one
 # inbox. Sends to a verified destination address are free and count against no
-# quota. To enable: verify the address under Email → Email Routing →
-# Destination addresses, uncomment this block, and set the two vars below.
-# Until then the cron logs `ops_alert_unconfigured` every tick and sends nothing.
-# [[send_email]]
-# name = "ALERT_EMAIL"
-# destination_address = "you@example.com"
+# quota. The address is verified under Email → Email Routing → Destination
+# addresses; `from` lives on drawthesystem.com because that is the only zone in
+# the account with Email Routing enabled.
+[[send_email]]
+name = "ALERT_EMAIL"
+destination_address = "jeremy.ettlinger@gmail.com"
 
 [vars]
 NUXT_PUBLIC_APP_NAME = "Frontier Terminal"
@@ -100,8 +100,8 @@ NUXT_PUBLIC_APP_URL = "https://frontier-terminal.jeremy-ettlinger.workers.dev"
 # the same verified destination address the binding is pinned to; `from` must
 # be on a zone in this account with Email Routing enabled. Not secrets: the
 # binding already decides where mail can go.
-# NUXT_ALERT_EMAIL_TO = "you@example.com"
-# NUXT_ALERT_EMAIL_FROM = "alerts@your-domain.example"
+NUXT_ALERT_EMAIL_TO = "jeremy.ettlinger@gmail.com"
+NUXT_ALERT_EMAIL_FROM = "frontier-terminal@drawthesystem.com"
 
 # Secrets — set via `wrangler secret put <NAME>`, never in this file.
 #
@@ -113,3 +113,6 @@ NUXT_PUBLIC_APP_URL = "https://frontier-terminal.jeremy-ettlinger.workers.dev"
 #                                the User-Agent (server/pipeline/fetch.ts). Unset = the
 #                                EDGAR sources are skipped as 'failed', never fetched
 #                                anonymously. A secret because it is a personal address.
+#   NUXT_JUDGE_TOKEN             bearer the judge routine presents to /api/judge/*
+#                                (server/utils/judge-auth.ts). 32+ chars. Unset = those
+#                                routes 404 and no judge exists.
