@@ -74,6 +74,7 @@ describe('readSourceRegistry', () => {
       'lmarena',
       'compute-deals',
       'xai-status',
+      'mistral',
     ])
   })
 

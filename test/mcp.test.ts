@@ -162,8 +162,13 @@ describe('tools/list', () => {
       'get_alerts',
       'get_coverage',
       'get_hiring',
+      'get_hiring_history',
+      'get_incidents',
       'get_overview',
+      'get_price_history',
       'get_prices',
+      'get_rankings',
+      'get_releases',
       'get_status',
     ])
     for (const t of tools) {
@@ -174,6 +179,16 @@ describe('tools/list', () => {
     expect(hiring.description).toContain('SpaceX')
     expect(hiring.description).toContain('no public')
     expect(tools.find((t) => t.name === 'get_prices')!.description).toContain('OpenRouter')
+    // The number's limits travel with the tool, in the audit's terms.
+    expect(tools.find((t) => t.name === 'get_rankings')!.description).toContain('NOT market share')
+    expect(tools.find((t) => t.name === 'get_rankings')!.description).toContain('CC BY 4.0')
+    expect(tools.find((t) => t.name === 'get_incidents')!.description).toContain(
+      'xAI has NO public feed',
+    )
+    expect(tools.find((t) => t.name === 'get_hiring_history')!.description).toContain(
+      'RECONSTRUCTED',
+    )
+    expect(tools.find((t) => t.name === 'get_releases')!.description).toContain('EXCLUDED')
   })
 
   it('serves llms.txt as a resource and as the describe tool', async () => {
@@ -283,6 +298,157 @@ describe('tools/call', () => {
 
     const missing = await tool('get_alert', { id: 'nope' })
     expect(missing.isError).toBe(true)
+  })
+
+  it('get_price_history: one SKU’s series from the baseline, and an unknown key is an error', async () => {
+    const key = 'model:xai:grok-4.6:standard'
+    const history = (await tool('get_price_history', { key })).structuredContent as {
+      entity_key: string
+      provider: string
+      model_slug: string
+      removed: boolean
+      points: {
+        kind: string
+        input_per_mtok: number | null
+        source_url: string
+        fetched_at: string
+      }[]
+    }
+    expect(history).toMatchObject({
+      entity_key: key,
+      provider: 'xai',
+      model_slug: 'grok-4.6',
+      removed: false,
+    })
+    // One poll so far, nothing changed: the current row is the whole series.
+    expect(history.points.map((p) => [p.kind, p.input_per_mtok])).toEqual([['current', 2]])
+    expect(history.points[0]!.source_url).toBe('https://docs.x.ai/developers/models.md')
+    expect(history.points[0]!.fetched_at).toMatch(/^2026-09-07T10:/)
+
+    const missing = await tool('get_price_history', { key: 'model:xai:nope' })
+    expect(missing.isError).toBe(true)
+    expect(missing.content[0]!.text).toContain('get_prices')
+  })
+
+  it('get_hiring_history: the current set reconstructed per day, Google an honest cut, filterable', async () => {
+    const all = (await tool('get_hiring_history')).structuredContent as {
+      window_days: number
+      log: { changes: number }
+      providers: {
+        provider: string
+        feed: string
+        dates: string[]
+        total: number[]
+        series_from: string | null
+        baseline_at: string | null
+        caveat: string | null
+        sources: { source_url: string; fetched_at: string }[]
+      }[]
+    }
+    expect(all.window_days).toBe(30)
+    expect(all.log.changes).toBe(0)
+    expect(all.providers.map((p) => p.provider)).toEqual(['openai', 'anthropic', 'google', 'xai'])
+    const google = all.providers[2]!
+    expect(google).toMatchObject({ feed: 'no_public_feed', dates: [], total: [] })
+
+    const xai = (await tool('get_hiring_history', { provider: 'xai' }))
+      .structuredContent as typeof all
+    expect(xai.providers).toHaveLength(1)
+    expect(xai.providers[0]).toMatchObject({
+      provider: 'xai',
+      feed: 'ok',
+      dates: ['2026-09-07'],
+      total: [42],
+    })
+    expect(xai.providers[0]!.series_from).toMatch(/^2026-09-07T10:/)
+    expect(xai.providers[0]!.baseline_at).toMatch(/^2026-09-07T10:/)
+    expect(xai.providers[0]!.caveat).toContain('SpaceXAI')
+    expect(xai.providers[0]!.sources[0]!.source_url).toMatch(/^https:\/\//)
+  })
+
+  it('get_releases: a store with only baselines has no releases, and says where the log begins', async () => {
+    const releases = (await tool('get_releases')).structuredContent as {
+      rows: unknown[]
+      excluded_baseline: number
+      log_from: string | null
+      total?: number
+    }
+    expect(releases.rows).toEqual([])
+    expect(releases.excluded_baseline).toBe(0)
+    expect(releases.log_from).toMatch(/^2026-09-07T10:/)
+    expect(releases.total).toBeUndefined()
+
+    const limited = (await tool('get_releases', { limit: 5 })).structuredContent as typeof releases
+    expect(limited).toMatchObject({ rows: [], total: 0 })
+  })
+
+  it('get_incidents: three feeds with provenance, xAI a stated cut, filterable', async () => {
+    const all = (await tool('get_incidents')).structuredContent as {
+      window_to: string
+      window_days: number
+      providers: {
+        provider: string
+        feed: string
+        reason: string | null
+        last_window: number
+        open: { incident_id: string }[]
+        sources: { source_url: string; fetched_at: string }[]
+      }[]
+      incidents: {
+        provider: string
+        source_url: string
+        fetched_at: string
+        incident_url: string
+      }[]
+    }
+    expect(all.window_to).toMatch(/^2026-09-07T10:/)
+    expect(all.window_days).toBe(30)
+    expect(all.providers.map((p) => [p.provider, p.feed])).toEqual([
+      ['openai', 'ok'],
+      ['anthropic', 'ok'],
+      ['google', 'ok'],
+      ['xai', 'no_public_feed'],
+    ])
+    expect(all.providers[3]!.reason).toContain('403')
+    expect(all.incidents.length).toBeGreaterThan(0)
+    for (const i of all.incidents) {
+      expect(i.source_url).toMatch(/^https:\/\//)
+      expect(i.fetched_at).toMatch(/^2026-/)
+      expect(i.incident_url).toMatch(/^https:\/\//)
+    }
+
+    const openai = (await tool('get_incidents', { provider: 'openai' }))
+      .structuredContent as typeof all
+    expect(openai.providers.map((p) => p.provider)).toEqual(['openai'])
+    expect(openai.providers[0]!.open.map((i) => i.incident_id)).toEqual([
+      '01M20PYYYGRT9303VHAPA7YNT2',
+    ])
+    expect(openai.incidents.every((i) => i.provider === 'openai')).toBe(true)
+    expect(openai.incidents.length).toBeLessThan(all.incidents.length)
+  })
+
+  it('get_rankings: OpenRouter share with the CC BY 4.0 citation and its as_of', async () => {
+    const rankings = (await tool('get_rankings')).structuredContent as {
+      status: string
+      source: { source_id: string; license: string | null; caveat: string | null }
+      provenance: { source_url: string; fetched_at: string } | null
+      meta: { as_of: string | null; citation: string | null; coverage: { days: number } }
+      shares: { provider: string; share: number | null }[]
+    }
+    expect(rankings.status).toBe('ok')
+    expect(rankings.source.source_id).toBe('openrouter-rankings-daily')
+    expect(rankings.source.license).toContain('CC BY 4.0')
+    expect(rankings.source.caveat).toContain('not market share')
+    expect(rankings.provenance!.source_url).toBe(
+      'https://openrouter.ai/api/v1/datasets/rankings-daily',
+    )
+    expect(rankings.meta.as_of).toBe('2026-09-07T02:00:00.000Z')
+    expect(rankings.meta.citation).toBe(
+      'Source: OpenRouter (openrouter.ai/rankings), as of 2026-09-07T02:00:00.000Z. Licensed under CC BY 4.0.',
+    )
+    expect(rankings.meta.coverage.days).toBe(3)
+    const total = rankings.shares.reduce((n, s) => n + (s.share ?? 0), 0)
+    expect(total).toBeCloseTo(1, 6)
   })
 
   it('rejects arguments the schema does not allow', async () => {

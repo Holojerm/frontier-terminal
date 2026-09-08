@@ -12,7 +12,7 @@
 // leak.
 //
 // Stateless and JSON on both protocol eras. Each request gets a fresh
-// McpServer — nine registrations, cheap — so a Worker isolate holds no
+// McpServer — fourteen registrations, cheap — so a Worker isolate holds no
 // session, and a client that reconnects to a different isolate notices
 // nothing. Legacy (2025-era) clients, which is every shipping client today,
 // are served through a per-request WebStandardStreamableHTTPServerTransport
@@ -27,8 +27,8 @@
 //
 // ── Extension point ──────────────────────────────────────────────────────────
 // A new JSON route gets a tool here, calling the same query function through
-// `deps.serve` with the route's cache name. Price history, hiring history,
-// releases, incidents and rankings belong in this file when their queries land.
+// `deps.serve` with the route's cache name (and the same variant, so both
+// doors fill one KV entry). Never a second query.
 
 import {
   McpServer,
@@ -44,15 +44,23 @@ import { ALERT_TIER_FILTERS } from '#shared/utils/terminal-tiers'
 import type { PipelineDb } from '../pipeline/store'
 import { collectStatus, type StatusConfig } from './fleet-status'
 import {
+  HIRING_WINDOW_DAYS,
+  INCIDENT_HISTORY_DAYS,
+  INCIDENT_WINDOW_DAYS,
   MOVEMENT_WINDOW_HOURS,
   queryAlert,
   queryAlerts,
   queryCoverage,
   queryHiring,
+  queryHiringHistory,
+  queryIncidents,
   queryOverview,
+  queryPriceHistory,
   queryPrices,
+  queryReleases,
   type QueryContext,
 } from './terminal-db'
+import { SHARE_WINDOW_DAYS, queryRankings } from './terminal-rankings'
 import { PROVIDER_ORDER } from './terminal-sources'
 
 /** What the server needs from its host — the route supplies the real thing, the test a fixture. */
@@ -81,6 +89,15 @@ const ProviderSchema = z
   .enum(PROVIDER_ORDER)
   .describe('One of the four tracked labs: openai, anthropic, google, xai.')
 
+// modelKey() output: `model:<provider>:<slug>[:<tier>]` (server/pipeline/contracts/keys.ts) —
+// the same shape GET /api/prices/<key> accepts.
+const SkuKeySchema = z
+  .string()
+  .min(1)
+  .max(200)
+  .regex(/^model:[a-z]+:[^\s/]+$/)
+  .describe('A SKU key as get_prices lists it in entity_key, e.g. model:xai:grok-4.6:standard.')
+
 /**
  * The SDK's tool-result shape, with the payload sent twice on purpose: the
  * text block is what a client that ignores structuredContent (most of them,
@@ -106,7 +123,8 @@ const PROVENANCE =
 
 const INSTRUCTIONS =
   `${MCP_SERVER_NAME}: a free, public, read-only investor terminal tracking the frontier AI labs ` +
-  '(OpenAI, Anthropic, Google, xAI) on three axes — API price lists, hiring boards, SEC filings. ' +
+  '(OpenAI, Anthropic, Google, xAI) on five axes — API price lists, hiring boards, SEC filings, status-page incidents, ' +
+  'and OpenRouter demand share. ' +
   'Not investment advice. Start with `describe` (the site map) or `get_overview` (what moved). ' +
   PROVENANCE
 
@@ -270,6 +288,127 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
       if (!detail) return failure(`No alert with id ${id}.`)
       return json(detail)
     },
+  )
+
+  server.registerTool(
+    'get_price_history',
+    {
+      title: 'One SKU’s price series',
+      description:
+        'Every observation of one SKU key, oldest first: points carry kind (baseline = the price as of the source’s first snapshot, ' +
+        'added, modified with the changed fields in diff, removed, or current), the three USD-per-million-token figures, and the fetch ' +
+        'each was read from. A series is one price per revision of the vendor page, not a daily sample — a flat line is a page that did ' +
+        'not change. removed=true when the newest observation is a delisting. Keys come from get_prices (entity_key); an unknown key is ' +
+        'an error, not an empty series. ' +
+        PROVENANCE,
+      inputSchema: z.object({ key: SkuKeySchema }),
+      annotations: READ_ONLY,
+    },
+    async ({ key }) => {
+      const history = await deps.serve(
+        'price-history',
+        (ctx) => queryPriceHistory(deps.db, ctx, key),
+        key,
+      )
+      if (history === null) return failure(`No SKU with key ${key}. Keys are listed by get_prices.`)
+      return json(history)
+    },
+  )
+
+  server.registerTool(
+    'get_hiring_history',
+    {
+      title: 'Open roles per day',
+      description:
+        'Open roles per lab and department, per UTC day (dates, total, departments[].series), RECONSTRUCTED by undoing the ' +
+        'change log backwards from the current job-board set — not a series of daily snapshots. Each series starts at the ' +
+        'provider’s earliest board snapshot (series_from); baseline_at is this store’s first poll, and roles that opened or closed ' +
+        'before the log begins are carried as they stand today, so the oldest points understate churn. compare sets today ' +
+        `against ${HIRING_WINDOW_DAYS} days back, or the series start when that is younger (days says which). log is the change ` +
+        'rows the series rests on. Google is an audited cut (feed no_public_feed, reason given) with an empty series; xAI carries the ' +
+        'SpaceXAI blend caveat. Optional provider filter. ' +
+        PROVENANCE,
+      inputSchema: z.object({ provider: ProviderSchema.optional() }),
+      annotations: READ_ONLY,
+    },
+    async ({ provider }) => {
+      const history = await deps.serve('hiring-history', (ctx) => queryHiringHistory(deps.db, ctx))
+      if (!provider) return json(history)
+      return json({
+        ...history,
+        providers: history.providers.filter((p) => p.provider === provider),
+      })
+    },
+  )
+
+  server.registerTool(
+    'get_releases',
+    {
+      title: 'Release timeline',
+      description:
+        'Every SKU first listed on a vendor page after that source’s baseline, newest first, with the price printed beside it ' +
+        'when it was first seen (first_seen_at is the detection, not the vendor’s launch date) and also_listed_by for keys two ' +
+        'pages carry. A row is an `added` change on a model entity — a listing event, so a rename or a tier split appears as a ' +
+        'release. Baseline sightings are EXCLUDED: everything on a page at its first snapshot is a starting state, not a release, ' +
+        'and excluded_baseline counts them; nothing before log_from could have been seen at all. Optional limit truncates rows ' +
+        'and adds total. ' +
+        PROVENANCE,
+      inputSchema: z.object({ limit: z.number().int().min(1).max(500).optional() }),
+      annotations: READ_ONLY,
+    },
+    async ({ limit }) => {
+      const releases = await deps.serve('releases', (ctx) => queryReleases(deps.db, ctx))
+      if (limit === undefined) return json(releases)
+      return json({ ...releases, rows: releases.rows.slice(0, limit), total: releases.rows.length })
+    },
+  )
+
+  server.registerTool(
+    'get_incidents',
+    {
+      title: 'Status-page incidents',
+      description:
+        'Capacity strain as the vendor chose to post it: three status feeds (OpenAI and Anthropic Statuspage, Google Cloud ' +
+        `filtered to Gemini / Vertex AI products). Per provider, incidents started in the newest ${INCIDENT_WINDOW_DAYS} days ` +
+        '(last_window) against the same span before (prior_window), what is open now, and coverage_from — where held history ' +
+        'begins; a Statuspage feed is a rolling window, so prior_window is partial until the pipeline has polled through it. ' +
+        `incidents lists every one started inside ${INCIDENT_HISTORY_DAYS} days, newest first, with impact in the vendor’s own ` +
+        'vocabulary (never mapped across vendors) and a link. Windows anchor on window_to, the newest status fetch, not the ' +
+        'clock. Not an SLA and not comparable across vendors: OpenAI’s feed mixes ChatGPT with API incidents and has no component ' +
+        'field. xAI has NO public feed (its status API answers 403 to non-browsers) and is reported as no_public_feed with the ' +
+        'reason, never as zero incidents. Optional provider filter narrows providers and incidents. ' +
+        PROVENANCE,
+      inputSchema: z.object({ provider: ProviderSchema.optional() }),
+      annotations: READ_ONLY,
+    },
+    async ({ provider }) => {
+      const incidents = await deps.serve('incidents', (ctx) => queryIncidents(deps.db, ctx))
+      if (!provider) return json(incidents)
+      return json({
+        ...incidents,
+        providers: incidents.providers.filter((p) => p.provider === provider),
+        incidents: incidents.incidents.filter((i) => i.provider === provider),
+      })
+    },
+  )
+
+  server.registerTool(
+    'get_rankings',
+    {
+      title: 'Demand share (OpenRouter)',
+      description:
+        'OpenRouter’s daily usage rankings folded into token share per lab over the newest ' +
+        `${SHARE_WINDOW_DAYS} days present (shares[].share, 0..1) with the change against the ${SHARE_WINDOW_DAYS} before ` +
+        '(delta_pp, percentage points; null when there is no prior window), each lab’s top models in the window, and a daily ' +
+        'series. This is OpenRouter share — one aggregator’s routed traffic, top 50 models a day plus an aggregated `other` — ' +
+        'NOT market share, revenue share or total usage; say so when you cite it. Windows are days present in the store, ' +
+        'not calendar days (meta.coverage names them). status is ok, not_configured (no API key on the poller, nothing fetched) ' +
+        'or no_rows. The data is CC BY 4.0 and republication requires the citation carried in meta.citation, with OpenRouter’s ' +
+        'own meta.as_of filled in; reproduce it beside any figure you quote. ' +
+        PROVENANCE,
+      annotations: READ_ONLY,
+    },
+    async () => json(await deps.serve('rankings', (ctx) => queryRankings(deps.db, ctx))),
   )
 
   server.registerTool(

@@ -182,7 +182,8 @@ const caveats = computed(() => (coverage.value?.sources ?? []).filter((s) => s.c
           class="overflow-x-auto rounded-md border border-default bg-muted p-3 font-mono text-xs text-default"
         ><code>claude mcp add --transport http frontier-terminal {{ mcpUrl }}</code></pre>
         <p class="text-muted">
-          Tools: describe, get_overview, get_prices, get_hiring, get_alerts, get_alert,
+          Tools: describe, get_overview, get_prices, get_price_history, get_hiring,
+          get_hiring_history, get_releases, get_incidents, get_rankings, get_alerts, get_alert,
           get_coverage, get_status. Start with <span class="font-mono">describe</span>.
         </p>
       </div>

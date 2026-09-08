@@ -52,3 +52,16 @@ Live-fetched with `curl -A "Mozilla/5.0 (compatible; FrontierTerminal/1.0; +http
 | Status | xAI | `status.x.ai/api/v2/incidents.json` | — | — | **Cut** — HTTP 403 (Cloudflare challenge HTML, 5503 bytes) to a non-browser client with a descriptive UA. Displayed as "no public feed", as Google hiring is |
 
 **Findings.** Both Statuspage feeds are rolling windows (OpenAI ~1 month, Anthropic the 50-incident cap), so the first snapshot already carries a backlog: the pipeline records that first parse as a `baseline` run (entities only, no change rows), and the lane is append-only — an incident scrolling out of the feed is kept, never recorded as a removal. An incident that resolves is a `modified` change (`resolved_at` null → timestamp). Impact vocabularies differ and are stored verbatim (Statuspage none/minor/major/critical; Google low/medium/high); the UI never maps one onto the other. Incident URLs are composed (`page.url` + `/incidents/{id}`; `status.cloud.google.com/` + `uri`) — the feeds carry no canonical link field on the OpenAI page, and all three composed forms were checked to return 200. Interpretation, marked as such: OpenAI's page mixes ChatGPT-product incidents with API ones and carries no component field, so its count is "OpenAI operations", not "OpenAI API" — the Anthropic feed's components allow that split, OpenAI's does not.
+
+## Addendum, 2026-09-08 — Mistral
+
+Live-fetched with `curl -L` and a descriptive User-Agent at 22:30Z. Checked because it is the one other frontier lab with a public API price list; cut on both primary axes.
+
+| Axis | Source | Result | Verdict |
+|---|---|---|---|
+| Hiring | `api.ashbyhq.com/posting-api/job-board/mistral` | **404** (9 bytes, `text/plain`) — the posting API is not enabled for the board | **Cut** |
+| Hiring | `jobs.ashbyhq.com/mistral` | 200, 7 319 bytes of HTML shell; the board renders from an internal GraphQL endpoint that is not a supported surface | **Cut** |
+| Pricing | `mistral.ai/pricing` | 200, 485 344 bytes, `text/html`: a client-side Astro app. `docs.mistral.ai/deployment/laplateforme/pricing` serves the identical bytes | **Cut** |
+| Pricing | `docs.mistral.ai/llms.txt` | 200, 14 658 bytes. It lists a Pricing page (`/docs/deployment/laplateforme/pricing.md`) and a Models Overview page (`/docs/getting-started/models/overview.md`), but both links answer **404** with a 462 KB HTML shell — no markdown surface exists | **Cut** |
+
+**Findings.** The docs llms.txt advertises markdown pages that do not resolve, so the only pricing surface is the HTML app; model slugs and a few prose prices are present in its source, so a Google-style HTML parse is conceivable. Interpretation, marked as such: with no hiring feed to pair it with, a fifth lab on a single axis would cost a parser and buy one column — it is registered as a cut (`sources.yaml` `cut.mistral`) so the terminal can say why, and nothing about Mistral appears in the UI.

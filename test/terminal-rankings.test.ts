@@ -222,6 +222,7 @@ describe('queryRankings', () => {
       'lmarena',
       'compute-deals',
       'xai-status',
+      'mistral',
     ])
     expect(coverage.cuts.find((c) => c.id === 'artificial-analysis')!.reason).toContain(
       '"Internal use only; no redistribution."',
