@@ -33,6 +33,6 @@ useSeo({
   <section class="mx-auto flex max-w-2xl flex-col gap-6 py-16 text-center">
     <h1 class="text-4xl text-highlighted sm:text-5xl">{{ config.public.appName }}</h1>
     <p class="text-lg text-muted">{{ description }}</p>
-    <p class="text-sm text-dimmed">Not investment advice.</p>
+    <p class="text-sm text-muted">Not investment advice.</p>
   </section>
 </template>
