@@ -160,6 +160,10 @@ export interface PriceRowView extends Prov {
   delta: PriceDeltaView | null
   /** Other sources carrying the same SKU key (the two Anthropic pages both do). */
   also_listed_by: string[]
+  /** Observations of this SKU on record — change rows plus the current row (see PriceHistoryData). */
+  revisions: number
+  /** One price field across those observations, oldest first; null until there are two. */
+  spark: { field: 'input_per_mtok' | 'output_per_mtok'; values: (number | null)[] } | null
 }
 
 export type ModelClassId = 'flagship' | 'balanced' | 'economy'
@@ -208,6 +212,36 @@ export interface PricesData extends Stamp {
     caveat: string | null
     snapshot: SnapshotStamp
   } | null
+}
+
+/**
+ * One observation of a SKU: a change row (added / modified / removed), the
+ * current entity row, or — when the earliest change carries a before state
+ * — that state as of the source's first snapshot ('baseline'). `at` is the
+ * instant of the observation (detected_at for a change, fetched_at
+ * otherwise) and the Prov fields say which fetch it was read from.
+ */
+export interface PricePoint extends Prov {
+  at: string
+  kind: 'baseline' | 'added' | 'modified' | 'removed' | 'current'
+  source_id: string
+  input_per_mtok: number | null
+  cached_input_per_mtok: number | null
+  output_per_mtok: number | null
+  /** Scalar fields that differ from the previous revision (modified points only). */
+  diff: FieldDiff[]
+}
+
+export interface PriceHistoryData extends Stamp {
+  entity_key: string
+  provider: ProviderId
+  model_slug: string
+  tier: string | null
+  context_window: string | null
+  /** Oldest first. */
+  points: PricePoint[]
+  /** True when the newest observation is a removal and no current row exists. */
+  removed: boolean
 }
 
 // ---- hiring ----------------------------------------------------------------
@@ -369,6 +403,97 @@ export interface RankingsData extends Stamp {
   shares: ProviderShare[]
   top_models: ProviderTopModels[]
   series: RankingDay[]
+}
+
+// ---- hiring history ---------------------------------------------------------
+
+export interface DeptSeries {
+  department: string
+  /** Open roles at the end of each date in the provider's `dates`. */
+  series: number[]
+}
+
+export interface DeptCompare {
+  department: string
+  then: number
+  now: number
+}
+
+/**
+ * Open roles now against an earlier instant: `window_days` back, or the
+ * start of the series when that is younger — `days` says which it was.
+ */
+export interface HiringCompare {
+  at: string
+  days: number
+  total_then: number
+  total_now: number
+  departments: DeptCompare[]
+}
+
+/**
+ * Open roles per day, reconstructed by undoing the change log backwards
+ * from the current entity set (server/utils/terminal-history.ts). The
+ * series starts at the provider's earliest snapshot; roles that opened or
+ * closed between the last imported poll and this store's baseline are not
+ * in the log and are carried as they stand today.
+ */
+export interface HiringHistoryProvider {
+  provider: BigFour
+  display: string
+  feed: 'ok' | 'no_public_feed' | 'no_rows'
+  reason: string | null
+  caveat: string | null
+  /** UTC dates (YYYY-MM-DD), oldest first; a point is the state at the end of that day. */
+  dates: string[]
+  total: number[]
+  /** Every department seen in the window, largest today first. */
+  departments: DeptSeries[]
+  compare: HiringCompare | null
+  /** Earliest snapshot of the provider's job board — where the series starts. */
+  series_from: string | null
+  /** This store's first (baseline) poll of the board; the log before it is imported history. */
+  baseline_at: string | null
+  /** Earliest snapshot of the board's /departments join, where one exists: rows before it carry no department. */
+  join_from: string | null
+  sources: HiringSource[]
+}
+
+export interface HiringHistoryData extends Stamp {
+  window_days: number
+  providers: HiringHistoryProvider[]
+  /** The change rows the series rests on: how many, and the span they cover. */
+  log: { changes: number; from: string | null; to: string | null }
+}
+
+// ---- releases --------------------------------------------------------------
+
+/** A SKU first listed after a source's baseline: an `added` change on a model row. */
+export interface ReleaseView extends Prov {
+  change_id: string
+  entity_key: string
+  source_id: string
+  provider: ProviderId
+  model_slug: string
+  tier: string | null
+  context_window: string | null
+  /** detected_at of the added change — when the listing was first seen. */
+  first_seen_at: string
+  input_per_mtok: number | null
+  cached_input_per_mtok: number | null
+  output_per_mtok: number | null
+  notes: string | null
+  /** Other sources that also listed the key (the two Anthropic pages both do). */
+  also_listed_by: string[]
+}
+
+export interface ReleasesData extends Stamp {
+  /** Newest first. */
+  rows: ReleaseView[]
+  /** Added rows dropped because they came from a source's first snapshot. */
+  excluded_baseline: number
+  /** Earliest snapshot in the store — before it, nothing could have been seen. */
+  log_from: string | null
 }
 
 // ---- alerts ----------------------------------------------------------------

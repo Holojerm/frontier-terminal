@@ -1,16 +1,18 @@
 <script setup lang="ts">
 // The terminal's front page. Reading order is priority order: what moved,
-// then what things cost, then who is winning demand, then who is hiring,
-// then how strained the APIs are, then the coverage the rest rest on. Six
-// cached endpoints, fetched in parallel on the server.
+// then what things cost, then who is winning demand, then what is new, then
+// who is hiring, then how strained the APIs are, then the coverage the rest
+// rest on. Eight cached endpoints, fetched in parallel on the server.
 
 import type {
   CoverageData,
   HiringData,
+  HiringHistoryData,
   IncidentsData,
   OverviewData,
   PricesData,
   RankingsData,
+  ReleasesData,
 } from '#shared/utils/terminal-types'
 
 definePageMeta({
@@ -37,20 +39,26 @@ useSeo({
   description,
 })
 
-const [overview, prices, rankings, hiring, incidents, coverage] = await Promise.all([
-  useFetch<OverviewData>('/api/overview'),
-  useFetch<PricesData>('/api/prices'),
-  useFetch<RankingsData>('/api/rankings'),
-  useFetch<HiringData>('/api/hiring'),
-  useFetch<IncidentsData>('/api/incidents'),
-  useFetch<CoverageData>('/api/coverage'),
-])
+const [overview, prices, rankings, releases, hiring, hiringHistory, incidents, coverage] =
+  await Promise.all([
+    useFetch<OverviewData>('/api/overview'),
+    useFetch<PricesData>('/api/prices'),
+    useFetch<RankingsData>('/api/rankings'),
+    useFetch<ReleasesData>('/api/releases'),
+    useFetch<HiringData>('/api/hiring'),
+    useFetch<HiringHistoryData>('/api/hiring/history'),
+    useFetch<IncidentsData>('/api/incidents'),
+    useFetch<CoverageData>('/api/coverage'),
+  ])
 
 const failed = computed(() =>
-  [overview, prices, rankings, hiring, incidents, coverage].some(
+  [overview, prices, rankings, releases, hiring, hiringHistory, incidents, coverage].some(
     (r) => r.error.value !== null && r.error.value !== undefined,
   ),
 )
+
+const RECENT_RELEASES = 5
+const recent = computed(() => releases.data.value?.rows.slice(0, RECENT_RELEASES) ?? [])
 </script>
 
 <template>
@@ -94,11 +102,43 @@ const failed = computed(() =>
     </TerminalPanel>
 
     <TerminalPanel
+      id="releases"
+      title="Recent releases"
+      note="SKUs that appeared on a vendor page already being watched, with the price printed beside them that day."
+    >
+      <template v-if="releases.data.value">
+        <TerminalEmptyState
+          v-if="recent.length === 0"
+          title="No new SKUs since watching began."
+          body="A baseline records what was already listed; a later poll can see a new listing."
+          :action="{ label: 'About releases', to: '/releases' }"
+        />
+        <template v-else>
+          <TerminalReleaseList :rows="recent" />
+          <p class="text-sm">
+            <NuxtLink to="/releases" class="text-primary underline underline-offset-2">
+              All {{ releases.data.value.rows.length }} releases
+            </NuxtLink>
+          </p>
+        </template>
+      </template>
+    </TerminalPanel>
+
+    <TerminalPanel
       id="hiring"
       title="Hiring mix"
-      note="Open roles by department, from each board’s current listing."
+      note="Open roles by department, from each board’s current listing, and the change over the comparison window."
     >
-      <TerminalHiringMix v-if="hiring.data.value" :hiring="hiring.data.value" />
+      <TerminalHiringMix
+        v-if="hiring.data.value"
+        :hiring="hiring.data.value"
+        :history="hiringHistory.data.value"
+      />
+      <p v-if="hiring.data.value" class="text-sm">
+        <NuxtLink to="/hiring" class="text-primary underline underline-offset-2">
+          Open roles over time
+        </NuxtLink>
+      </p>
     </TerminalPanel>
 
     <TerminalPanel

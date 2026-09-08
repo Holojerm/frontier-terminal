@@ -7,9 +7,21 @@
 // they must: the xAI board is an entity-blended SpaceX/xAI artifact, and
 // Google has no public feed — shown as a stated cut, never a number.
 
-import type { HiringData, HiringProviderView } from '#shared/utils/terminal-types'
+import type {
+  HiringData,
+  HiringHistoryData,
+  HiringProviderView,
+} from '#shared/utils/terminal-types'
 
-defineProps<{ hiring: HiringData }>()
+const props = defineProps<{
+  hiring: HiringData
+  /** When present, each board also shows its change since the comparison day (/hiring). */
+  history?: HiringHistoryData | null
+}>()
+
+const compare = (p: HiringProviderView) =>
+  props.history?.providers.find((h) => h.provider === p.provider)?.compare ?? null
+const signed = (n: number) => (n > 0 ? `+${n}` : String(n))
 
 const MAX_BARS = 8
 
@@ -35,6 +47,19 @@ const share = (p: HiringProviderView, n: number) =>
         <h3 :id="`hiring-${p.provider}`" class="text-lg text-highlighted">{{ p.display }}</h3>
         <span v-if="p.feed === 'ok'" class="text-sm text-toned">
           <span class="font-mono text-highlighted">{{ p.total }}</span> open roles
+          <template v-if="compare(p)">
+            ·
+            <NuxtLink
+              :to="`/hiring#${p.provider}`"
+              class="text-highlighted underline underline-offset-2"
+              :title="`${compare(p)!.total_then} open on ${compare(p)!.at}`"
+            >
+              <span class="font-mono">{{
+                signed(compare(p)!.total_now - compare(p)!.total_then)
+              }}</span>
+              in {{ compare(p)!.days }}d
+            </NuxtLink>
+          </template>
         </span>
       </header>
 

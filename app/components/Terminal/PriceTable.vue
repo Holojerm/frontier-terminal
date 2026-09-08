@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // The full catalog: everything the store holds, one row per SKU key, priced
 // rows first. Each row carries the delta against its previous revision (from
-// the change log) and its own provenance. Batch, long-context and promo
+// the change log), a sparkline once it has been observed more than once, a
+// link to its own page, and its provenance. Batch, long-context and promo
 // rows sit here, not in the matrix.
 
 import type { TableColumn } from '@nuxt/ui'
@@ -39,6 +40,7 @@ const columns: TableColumn<PriceRowView>[] = [
   { accessorKey: 'cached_input_per_mtok', header: 'Cached in', meta: numeric },
   { accessorKey: 'output_per_mtok', header: 'Out $/Mtok', meta: numeric },
   { id: 'delta', header: 'Δ vs previous' },
+  { id: 'history', header: 'History' },
   { id: 'window', header: 'Window' },
   { id: 'source', header: 'Source' },
 ]
@@ -77,12 +79,13 @@ function deltaText(row: PriceRowView): string | null {
       empty="No rows match the current filter."
     >
       <template #model_slug-cell="{ row }">
-        <span
-          class="font-mono"
+        <NuxtLink
+          :to="`/prices/${row.original.entity_key}`"
+          class="font-mono underline underline-offset-2"
           :class="row.original.removed ? 'text-muted line-through' : 'text-highlighted'"
         >
           {{ row.original.model_slug }}
-        </span>
+        </NuxtLink>
         <TerminalCaveatMark
           v-if="row.original.notes"
           :name="`Notes for ${row.original.model_slug}`"
@@ -111,6 +114,18 @@ function deltaText(row: PriceRowView): string | null {
         >
           {{ deltaText(row.original) }}
         </span>
+        <span v-else class="text-muted">—</span>
+      </template>
+      <template #history-cell="{ row }">
+        <NuxtLink
+          v-if="row.original.spark"
+          :to="`/prices/${row.original.entity_key}`"
+          class="inline-flex items-center gap-2 text-xs text-muted"
+          :title="`${row.original.revisions} observations of ${row.original.spark.field.replace(/_per_mtok$/, '')} price — open the SKU page`"
+        >
+          <TerminalSparkline :values="row.original.spark.values" />
+          <span>{{ row.original.revisions }}×</span>
+        </NuxtLink>
         <span v-else class="text-muted">—</span>
       </template>
       <template #window-cell="{ row }">
