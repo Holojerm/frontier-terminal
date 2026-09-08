@@ -1,0 +1,201 @@
+# Source registry — transcribed from docs/source-audit.md (all sources
+# live-fetched 2026-08-25; full raw reports in transcripts/). This file
+# transcribes the audit; it never re-derives or invents. Fixture provenance
+# (fetch timestamps, trim notes): fixtures/manifest.json.
+
+sources:
+  openai-models-md:
+    axis: pricing-catalog
+    provider: openai
+    url: https://developers.openai.com/api/docs/models.md
+    format: Markdown tables
+    diff_mechanism: body hash (ETag on pricing page)
+    verdict: include
+    fixture: fixtures/pricing/openai-models.md
+    caveats: >-
+      Per-model .md pages exist for catalog depth. The marketing page
+      (openai.com/api/pricing) is Cloudflare-403'd to any headless client
+      and must never be a dependency.
+
+  anthropic-models-md:
+    axis: pricing-catalog
+    provider: anthropic
+    url: https://platform.claude.com/docs/en/models/overview.md
+    format: Markdown tables
+    diff_mechanism: body hash (no validators)
+    verdict: include
+    fixture: fixtures/pricing/anthropic-models-overview.md
+    caveats: Catalog fields (context window, cutoff); pair with anthropic-pricing-md for prices.
+
+  anthropic-pricing-md:
+    axis: pricing-catalog
+    provider: anthropic
+    url: https://platform.claude.com/docs/en/about-claude/pricing.md
+    format: Markdown tables
+    diff_mechanism: body hash (no validators)
+    verdict: include
+    fixture: fixtures/pricing/anthropic-pricing.md
+    caveats: >-
+      Audit recorded this page as semantic HTML; scaffold-time fetch
+      (2026-08-25) confirmed the .md suffix serves real markdown here too.
+
+  xai-models-md:
+    axis: pricing-catalog
+    provider: xai
+    url: https://docs.x.ai/developers/models.md
+    format: Markdown tables
+    diff_mechanism: body hash (1h cache TTL)
+    verdict: include
+    fixture: fixtures/pricing/xai-models.md
+    caveats: >-
+      Long-context dual pricing: models listed with two rows (< 200k / >=
+      200k prompt tokens). The marketing page (x.ai/api) is Cloudflare-403'd
+      and must never be a dependency.
+
+  google-pricing-html:
+    axis: pricing-catalog
+    provider: google
+    url: https://ai.google.dev/gemini-api/docs/pricing
+    format: SSR HTML, 86 tables
+    diff_mechanism: If-Modified-Since (real Last-Modified)
+    verdict: include — hardest parse
+    fixture: fixtures/pricing/google-pricing.html
+    parse_mode: agent  # the one agent-parsed source; output gated by GooglePricingOutput
+    caveats: >-
+      Model names live in headings above table clusters; prices carry
+      dual-date promo strings ("$0.75 through Dec 31, 2026. $1.50 starting
+      Jan 1, 2027."). The .md trick returns a JS shell and the models page
+      is client-rendered — only this pricing page is genuine SSR.
+
+  openrouter-models:
+    axis: pricing-cross-check
+    provider: all
+    url: https://openrouter.ai/api/v1/models
+    format: JSON, 419 models
+    diff_mechanism: 5-min cache, field diff
+    verdict: include as cross-check only
+    fixture: fixtures/pricing/openrouter-models.json
+    caveats: >-
+      Third-party restatement with no drift SLA and thin xAI coverage (6 vs
+      20+ SKUs) — cross-check, never source of record.
+
+  openai-ashby:
+    axis: hiring
+    provider: openai
+    url: https://api.ashbyhq.com/posting-api/job-board/openai
+    format: JSON (dept+team inline; ~12 MB)
+    diff_mechanism: UUID ids, publishedAt, ETag
+    verdict: include
+    fixture: fixtures/hiring/openai-ashby.json
+    caveats: 757 roles at audit time.
+
+  anthropic-greenhouse:
+    axis: hiring
+    provider: anthropic
+    url: https://boards-api.greenhouse.io/v1/boards/anthropic/jobs
+    format: JSON
+    diff_mechanism: numeric ids, updated_at, ETag
+    verdict: include
+    fixture: fixtures/hiring/anthropic-greenhouse.json
+    caveats: >-
+      537 roles at audit time. Department requires the /departments join —
+      the jobs endpoint carries no department field.
+
+  anthropic-greenhouse-departments:
+    axis: hiring
+    provider: anthropic
+    url: https://boards-api.greenhouse.io/v1/boards/anthropic/departments
+    format: JSON
+    diff_mechanism: numeric ids
+    verdict: include (join table for anthropic-greenhouse)
+    fixture: fixtures/hiring/anthropic-greenhouse-departments.json
+    caveats: null
+
+  xai-greenhouse:
+    axis: hiring
+    provider: xai
+    url: https://boards-api.greenhouse.io/v1/boards/xai/jobs
+    format: JSON
+    diff_mechanism: numeric ids, updated_at, ETag
+    verdict: include with disclosed caveat
+    fixture: fixtures/hiring/xai-greenhouse.json
+    caveats: >-
+      262 roles at audit time; 255 at the 2026-08-25T23:08Z join re-fetch.
+      Every row carries company_name "SpaceXAI" — the board is an
+      entity-blended SpaceX/xAI artifact of the 2025 merger, and presenting
+      it as pure xAI hiring would mislead. Caveat must ship visibly wherever
+      this data surfaces. What the /departments join adds is bounded
+      evidence, not a fix: the 26 departments are xAI-shaped (Data Center
+      121, Human Data 36, Engineering 23) with no aerospace or launch
+      function, and 2 of 255 titles name a SpaceX-side program (Starlink,
+      battery storage). Department requires the join — the jobs endpoint
+      carries no department field.
+
+  xai-greenhouse-departments:
+    axis: hiring
+    provider: xai
+    url: https://boards-api.greenhouse.io/v1/boards/xai/departments
+    format: JSON
+    diff_mechanism: numeric ids
+    verdict: include (join table for xai-greenhouse)
+    fixture: fixtures/hiring/xai-greenhouse-departments.json
+    caveats: >-
+      Departments are the board owner's own labels, not an independent
+      entity split: they narrow how much SpaceX could be hiding in the blend,
+      they do not prove none is.
+
+  edgar-fts:
+    axis: sec
+    provider: all
+    url: https://efts.sec.gov/LATEST/search-index
+    format: JSON
+    diff_mechanism: startdt param + accession numbers
+    verdict: include, narrowly scoped
+    fixture: fixtures/sec/edgar-fts.json
+    caveats: >-
+      UA header required (contact email form), 10 req/s. Open keyword sweeps
+      across all filers are confirmed noisy (micro-cap false positives) —
+      whitelist only. Confidential DRS filings are structurally invisible
+      until flipped public; we catch the public-flip moment and say so.
+
+  edgar-submissions:
+    axis: sec
+    provider: all
+    url: https://data.sec.gov/submissions/CIK{n}.json
+    format: JSON
+    diff_mechanism: accession numbers
+    verdict: include, narrowly scoped
+    fixture: fixtures/sec/edgar-submissions-spcx.json  # SPCX example
+    caveats: Same UA + rate rules as edgar-fts.
+
+# CIK whitelist for EDGAR queries. MSFT, SPCX and GOOGL are transcribed from
+# the audit. AMZN and NVDA were null here through the audit and the first live
+# runs — the audit recorded no numbers for them — and were resolved on
+# 2026-08-25 from SEC's own ticker map (sec.gov/files/company_tickers.json),
+# each round-tripped through the endpoint this file names:
+# data.sec.gov/submissions/CIK0001018724.json -> "AMAZON COM INC",
+# data.sec.gov/submissions/CIK0001045810.json -> "NVIDIA CORP". The same
+# check re-confirmed MSFT and GOOGL. NEVER fill an entry in from memory: a
+# wrong CIK here silently suppresses the highest-value alert this product
+# fires, and a null at least fails visibly.
+cik_whitelist:
+  MSFT: "0000789019"
+  AMZN: "0001018724"
+  NVDA: "0001045810"
+  SPCX: "0001181412"
+  GOOGL: "0001652044"
+
+# Deliberate cuts — honesty is the feature (docs/source-audit.md verdicts).
+cut:
+  google-hiring:
+    verdict: cut — display "no public feed" honestly
+    reason: >-
+      None usable: careers.google.com is an auth-walled SPA; the DeepMind
+      Greenhouse board is vestigial (10 jobs). Alphabet-wide numbers would
+      conflate Search/Ads/Cloud with Gemini and mislead.
+  compute-deals:
+    verdict: stretch goal only (new-post tier, no extraction claims)
+    reason: >-
+      RSS detection solvable for 4 sources (Anthropic = SPA no feed; xAI =
+      hard 403), but the deals that matter break in the press before any
+      company feed — honest coverage is impossible, so extraction is cut.

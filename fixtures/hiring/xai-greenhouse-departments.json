@@ -1,0 +1,2333 @@
+{
+  "departments": [
+    {
+      "id": 4042930007,
+      "name": "Data Center",
+      "parent_id": null,
+      "child_ids": [],
+      "jobs": [
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4538639007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "education": "education_optional",
+          "internal_job_id": 4330094007,
+          "location": {
+            "name": "Memphis, Tennessee; Southaven, Mississippi"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Daniel Rowland",
+                "email": "rowland@x.ai",
+                "user_id": 4408996007,
+                "employee_id": "032388"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4538639007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "83",
+          "title": "Facilities Operations Technician",
+          "company_name": "SpaceXAI",
+          "first_published": "2024-10-22T14:31:02-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4611087007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4366453007,
+          "location": {
+            "name": "Memphis, TN"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Daniel Rowland",
+                "email": "rowland@x.ai",
+                "user_id": 4408996007,
+                "employee_id": "032388"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4611087007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "133",
+          "title": "Controls Engineer",
+          "company_name": "SpaceXAI",
+          "first_published": "2024-12-23T14:23:36-05:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4741579007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "education": "education_optional",
+          "internal_job_id": 4429276007,
+          "location": {
+            "name": "Memphis, Tennessee; Southaven, Mississippi"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Daniel Rowland",
+                "email": "rowland@x.ai",
+                "user_id": 4408996007,
+                "employee_id": "032388"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1dGBM-mq_6pRkNObEQW1QcCucxqD889oZZW6JJKdayDI/edit?tab=t.0",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4741579007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "257",
+          "title": "Data Center Operations Technician ",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-05-21T15:55:56-04:00",
+          "language": "en",
+          "application_deadline": null
+        }
+      ]
+    },
+    {
+      "id": 4064385007,
+      "name": "Design",
+      "parent_id": 4024733007,
+      "child_ids": [],
+      "jobs": []
+    },
+    {
+      "id": 4024733007,
+      "name": "Engineering",
+      "parent_id": null,
+      "child_ids": [
+        4064385007,
+        4064292007,
+        4046295007,
+        4052172007,
+        4064383007,
+        4046294007
+      ],
+      "jobs": [
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4703144007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4409671007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Wendy Li",
+                "email": "wendyl@x.ai",
+                "user_id": 4589295007,
+                "employee_id": null
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4703144007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "221",
+          "title": "Machine Learning Engineer - Recommendation Systems",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-04-10T23:21:31-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4946696007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4386759007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Alan McDonnell",
+                "email": "amcdonnell@x.ai",
+                "user_id": 4409308007,
+                "employee_id": "024412"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4946696007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "163",
+          "title": "Software Engineer - Networking Software and Services",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-10-15T14:47:39-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4956028007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4543050007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Baris Akis",
+                "email": "baris@x.ai",
+                "user_id": 4274268007,
+                "employee_id": "C006182"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://drive.google.com/drive/folders/1mPTB2U9ZGWVAWCuTdlvTRLyEr-RYqQnx?usp=drive_link",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": true,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4956028007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "567",
+          "title": "Exceptional Software Engineer",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-10-23T17:51:19-04:00",
+          "language": "en",
+          "application_deadline": null
+        }
+      ]
+    },
+    {
+      "id": 4046282007,
+      "name": "Finance",
+      "parent_id": 4046280007,
+      "child_ids": [],
+      "jobs": []
+    },
+    {
+      "id": 4064287007,
+      "name": "Financial",
+      "parent_id": 4025087007,
+      "child_ids": [],
+      "jobs": [
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4760806007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4439879007,
+          "location": {
+            "name": "Remote International"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Diego Pasini",
+                "email": "diego@x.ai",
+                "user_id": 4471675007,
+                "employee_id": "031569"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4760806007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "278",
+          "title": "Finance Expert",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-06-10T18:15:48-04:00",
+          "language": "en",
+          "application_deadline": null
+        }
+      ]
+    },
+    {
+      "id": 4046280007,
+      "name": "G&A",
+      "parent_id": null,
+      "child_ids": [
+        4046282007,
+        4047058007,
+        4046281007,
+        4043619007,
+        4065610007,
+        4046310007
+      ],
+      "jobs": []
+    },
+    {
+      "id": 4064292007,
+      "name": "Grok for Government",
+      "parent_id": 4024733007,
+      "child_ids": [],
+      "jobs": []
+    },
+    {
+      "id": 4064382007,
+      "name": "GTM",
+      "parent_id": null,
+      "child_ids": [
+        4060730007,
+        4059410007
+      ],
+      "jobs": []
+    },
+    {
+      "id": 4025087007,
+      "name": "Human Data",
+      "parent_id": null,
+      "child_ids": [
+        4064287007,
+        4064300007,
+        4064289007,
+        4064288007,
+        4064290007,
+        4064286007
+      ],
+      "jobs": [
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5090171007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4609960007,
+          "location": {
+            "name": "Remote United States"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Rashid Alblwi",
+                "email": "ralblwi@x.ai",
+                "user_id": 4545064007,
+                "employee_id": "033031"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5090171007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "869",
+          "title": "AI Tutor - Arabic",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-03-27T05:07:37-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5090189007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4609960007,
+          "location": {
+            "name": "Remote United States"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Rashid Alblwi",
+                "email": "ralblwi@x.ai",
+                "user_id": 4545064007,
+                "employee_id": "033031"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5090189007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "869",
+          "title": "AI Tutor - Danish",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-03-27T05:07:16-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5090197007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4609960007,
+          "location": {
+            "name": "Remote United States"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Rashid Alblwi",
+                "email": "ralblwi@x.ai",
+                "user_id": 4545064007,
+                "employee_id": "033031"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5090197007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "869",
+          "title": "AI Tutor - Dutch",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-03-27T05:05:14-04:00",
+          "language": "en",
+          "application_deadline": null
+        }
+      ]
+    },
+    {
+      "id": 4046295007,
+      "name": "Information Security",
+      "parent_id": 4024733007,
+      "child_ids": [],
+      "jobs": [
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4559147007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4340373007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Steven Aiello",
+                "email": "saiello@x.ai",
+                "user_id": 4550881007,
+                "employee_id": "031182"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1mX2xqlDBhaXYGLyH4BN5rHlgKBa_LKXtuZftAd7ddA8/edit?tab=t.0#heading=h.lw8417b1tq8q",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4559147007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "103",
+          "title": "Application Security Engineer",
+          "company_name": "SpaceXAI",
+          "first_published": "2024-11-14T18:04:42-05:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4800712007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4460759007,
+          "location": {
+            "name": "Austin, Texas; New York, New York; Palo Alto, California; Washington, D.C."
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Steven Aiello",
+                "email": "saiello@twitter.com",
+                "user_id": 4504105007,
+                "employee_id": null
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1Jxkip1mp5Eyq2aSyPbuClfCQfTaQkrn4Y6KkMD3p_cw/edit?tab=t.0",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4800712007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "334",
+          "title": "Network Security Engineer",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-07-27T23:38:32-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4835611007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4478051007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Steven Aiello",
+                "email": "saiello@twitter.com",
+                "user_id": 4504105007,
+                "employee_id": null
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4835611007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "404",
+          "title": "Software Engineer - Platform Security",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-08-21T14:19:01-04:00",
+          "language": "en",
+          "application_deadline": null
+        }
+      ]
+    },
+    {
+      "id": 4047058007,
+      "name": "Information Technology",
+      "parent_id": 4046280007,
+      "child_ids": [],
+      "jobs": [
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4871633007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4497305007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Andrew Lu",
+                "email": "andrew@x.ai",
+                "user_id": 4405323007,
+                "employee_id": "030505"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1zlUVUGz4Q-LLrF5JhB5GBd760p0aSikhyrqbVxdrhnU/edit?tab=t.0",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4871633007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "431",
+          "title": "IT Systems Engineer",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-09-11T17:30:02-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5071895007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4601806007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Christopher Stanley",
+                "email": "cstanley@x.ai",
+                "user_id": 4514834007,
+                "employee_id": "030336"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1FozBSNLffztfojFBzFekUzoZWweVxc0amEXfVQFjE0U/edit?tab=t.0",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5071895007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "827",
+          "title": "Senior IT Systems Engineer",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-03-10T10:17:25-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5167318007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4646804007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Ryan Pigford",
+                "email": "rpigford@x.ai",
+                "user_id": 4521253007,
+                "employee_id": "027006"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1HJvWWjfqmNlV67Sj-ngbnqF_TwwPoUxGf1Ue27bx9UY/edit?tab=t.0",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5167318007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "1013",
+          "title": "Sr. IT Data Engineer",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-06-23T13:20:43-04:00",
+          "language": "en",
+          "application_deadline": null
+        }
+      ]
+    },
+    {
+      "id": 4052172007,
+      "name": "Infrastructure",
+      "parent_id": 4024733007,
+      "child_ids": [],
+      "jobs": [
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4533894007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4327690007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Daniel Dueri",
+                "email": "ddueri@x.ai",
+                "user_id": 4580441007,
+                "employee_id": null
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4533894007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "75",
+          "title": "Software Engineer - Training/Inference (C++)",
+          "company_name": "SpaceXAI",
+          "first_published": "2024-10-04T20:14:13-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4805886007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4463382007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Mica Lopez",
+                "email": "micaelal@x.ai",
+                "user_id": 4513675007,
+                "employee_id": "024978"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1JV1NT4FcKCdJhbRIF5SmEfn1su513YwXoSTJpGRlbmQ/edit?tab=t.0",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4805886007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "360",
+          "title": "Software Engineer - Real-Time Storage",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-07-30T15:59:32-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5007872007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4507518007,
+          "location": {
+            "name": "London, England, United Kingdom"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Stiopa Koltsov",
+                "email": "st@x.ai",
+                "user_id": 4456218007,
+                "employee_id": "033490"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5007872007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "450",
+          "title": "Member of Technical Staff - Sandbox Service",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-12-18T13:51:00-05:00",
+          "language": "en",
+          "application_deadline": null
+        }
+      ]
+    },
+    {
+      "id": 4046281007,
+      "name": "Legal",
+      "parent_id": 4046280007,
+      "child_ids": [],
+      "jobs": [
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5128169007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4627673007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Adeeb Sahar",
+                "email": "adeeb@x.ai",
+                "user_id": 4554696007,
+                "employee_id": "030547"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1-gDgjmDZOM1VIbOlng6tfQUQe84_zaUgPKoUqt2reYU/edit?usp=drive_link",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5128169007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "934",
+          "title": "Corporate Counsel",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-05-04T16:32:19-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5149101007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4637981007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Naser Baseer",
+                "email": "nbaseer@x.com",
+                "user_id": 4538239007,
+                "employee_id": "018897"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1of4aXRUleHFXhmYnna3CCc_r0Wuj3XlSpktmUqRm2ow/edit?tab=t.0",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5149101007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "972",
+          "title": "Product Counsel",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-07-10T11:44:07-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5170639007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4648491007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Adeeb Sahar",
+                "email": "adeeb@x.ai",
+                "user_id": 4554696007,
+                "employee_id": "030547"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1Esl_cWEiZiNkYjG5R0d6ZFwH_Py_-XpknAbeh38cIsk/edit?tab=t.0#heading=h.x8zsg283lks3",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5170639007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "1024",
+          "title": "Paralegal - Commercial & Corporate",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-06-22T16:31:42-04:00",
+          "language": "en",
+          "application_deadline": null
+        }
+      ]
+    },
+    {
+      "id": 4064300007,
+      "name": "Legal & Compliance",
+      "parent_id": 4025087007,
+      "child_ids": [],
+      "jobs": []
+    },
+    {
+      "id": 4060730007,
+      "name": "Marketing",
+      "parent_id": 4064382007,
+      "child_ids": [],
+      "jobs": []
+    },
+    {
+      "id": 4064383007,
+      "name": "Model",
+      "parent_id": 4024733007,
+      "child_ids": [],
+      "jobs": [
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4965893007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4549187007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Steven Yin",
+                "email": "styin@x.ai",
+                "user_id": 4562720007,
+                "employee_id": "033646"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1xijpVGqvEogmK7i4-blcpG9nGizd_Z3XnOx1R1lk9UE/edit?tab=t.0",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4965893007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "585",
+          "title": "Member of Technical Staff - Mid-training",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-10-31T19:21:47-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5051966007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4592504007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Aidan Bauer",
+                "email": "abauer@x.ai",
+                "user_id": 4583392007,
+                "employee_id": null
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5051966007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "778",
+          "title": "Software Engineer - Voice Model",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-03-16T16:39:18-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5051985007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4592516007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Xuhui Jia",
+                "email": "xjia@x.ai",
+                "user_id": 4536565007,
+                "employee_id": "032804"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/10PFwJ0IaKnVaCyUKxVBfbKbMQD665Konhp9RlmSZNNY/edit?usp=drive_link",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5051985007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "783",
+          "title": "Member of Technical Staff - Imagine Model",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-03-05T19:44:12-05:00",
+          "language": "en",
+          "application_deadline": null
+        }
+      ]
+    },
+    {
+      "id": 4043619007,
+      "name": "People",
+      "parent_id": 4046280007,
+      "child_ids": [],
+      "jobs": [
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4744227007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4430479007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Chris Costas",
+                "email": "chriscostas@x.ai",
+                "user_id": 4517770007,
+                "employee_id": "032099"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4744227007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "258",
+          "title": "Barista",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-05-26T11:00:19-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5077471007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4604385007,
+          "location": {
+            "name": "Tokyo, Japan"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Baris Akis",
+                "email": "baris@x.ai",
+                "user_id": 4274268007,
+                "employee_id": "C006182"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5077471007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "834",
+          "title": "Recruiting Coordinator",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-03-12T12:57:13-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5146610007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4636763007,
+          "location": {
+            "name": "New York, New York"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Walter Gilbert",
+                "email": "wgilbert@x.ai",
+                "user_id": 4481399007,
+                "employee_id": "030558"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5146610007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "970",
+          "title": "HR Business Partner",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-05-26T14:56:09-04:00",
+          "language": "en",
+          "application_deadline": null
+        }
+      ]
+    },
+    {
+      "id": 4064289007,
+      "name": "Post-Training",
+      "parent_id": 4025087007,
+      "child_ids": [],
+      "jobs": []
+    },
+    {
+      "id": 4046294007,
+      "name": "Product",
+      "parent_id": 4024733007,
+      "child_ids": [],
+      "jobs": [
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4803862007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4462366007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Mica Lopez",
+                "email": "micaelal@x.ai",
+                "user_id": 4513675007,
+                "employee_id": "024978"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4803862007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "353",
+          "title": "Software Engineer - Data Platform",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-07-29T18:05:33-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4803905007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4462387007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Mica Lopez",
+                "email": "micaelal@x.ai",
+                "user_id": 4513675007,
+                "employee_id": "024978"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1lS4JkdiwocG8fdbFTAHTOD39mnbr8nfcOgy-jBBSTqo/edit?tab=t.0",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4803905007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "354",
+          "title": "Software Engineer - Observability",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-07-29T18:07:33-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4805874007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4463376007,
+          "location": {
+            "name": "Palo Alto, California; Seattle, Washington"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Michael Anderson",
+                "email": "manderson@x.ai",
+                "user_id": 4510700007,
+                "employee_id": "016215"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1iTq7WAygFaB9P8BXR4M37DIIHsiSWM8lxAUxVwJbmCM/edit?tab=t.0#heading=h.izvzbr4izim3",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4805874007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "359",
+          "title": "Member of Technical Staff -  Media",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-07-30T15:59:28-04:00",
+          "language": "en",
+          "application_deadline": null
+        }
+      ]
+    },
+    {
+      "id": 4065610007,
+      "name": "Safety",
+      "parent_id": 4046280007,
+      "child_ids": [],
+      "jobs": [
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5097904007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4613487007,
+          "location": {
+            "name": "Palo Alto, California"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Ignacio Baquero",
+                "email": "ibaquero@x.ai",
+                "user_id": 4551099007,
+                "employee_id": "032165"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5097904007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "880",
+          "title": "Senior Analyst, Safety Operations (Child Safety)",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-04-02T12:32:25-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5097907007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4613488007,
+          "location": {
+            "name": "Bastrop, Texas"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Ignacio Baquero",
+                "email": "ibaquero@x.ai",
+                "user_id": 4551099007,
+                "employee_id": "032165"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1NinGJlvei0rJh0RnCAKBrbQzo-IHJInR_JEizRpJWh0/edit?tab=t.0",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5097907007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "881",
+          "title": "Senior Analyst, Safety Operations (Child Safety)",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-04-02T12:32:33-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5194492007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4660067007,
+          "location": {
+            "name": "Bastrop, Texas"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Dibyendu Pal",
+                "email": "dpal@x.ai",
+                "user_id": 4550761007,
+                "employee_id": "024517"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1xp_KuG231pjeQ7mERJ10GdVQ_nuYnZm_1EkO5iWtiPA/edit?usp=sharing",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5194492007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "1079",
+          "title": "Safety Trainer, X Money",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-07-24T09:24:57-04:00",
+          "language": "en",
+          "application_deadline": null
+        }
+      ]
+    },
+    {
+      "id": 4059410007,
+      "name": "Sales",
+      "parent_id": 4064382007,
+      "child_ids": [],
+      "jobs": [
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4940377007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4533847007,
+          "location": {
+            "name": "Los Angeles, California; New York, New York"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Erin Moran",
+                "email": "emoran@x.com",
+                "user_id": 4537255007,
+                "employee_id": null
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1weQQ8jKgdZriG1wJQ--tniV0wXOs5FjbUhKbbcdavuY/edit?tab=t.0",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4940377007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "546",
+          "title": "Client Account Manager",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-10-16T19:43:49-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5182478007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4654084007,
+          "location": {
+            "name": "Dublin, Ireland"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Carly Sotura",
+                "email": "csotura@x.ai",
+                "user_id": 4579489007,
+                "employee_id": "020384"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1yyYuU12R0sx9-aKdQOBJ7o5UtEZ37PDRsvB5eXztnbg/edit?tab=t.0",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5182478007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "1051",
+          "title": "Technical Solutions Specialist- FTC",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-07-08T13:07:41-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5191183007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "internal_job_id": 4658417007,
+          "location": {
+            "name": "Austin, Texas; Bastrop, Texas"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Ellen Palumbo",
+                "email": "ellen.palumbo.spcx@x.ai",
+                "user_id": 4613268007,
+                "employee_id": null
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1WjhZD0lx43nBuOpSLDXnweVQh6Q9uY7wKVVrqwwRNZ8/edit?tab=t.0",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5191183007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "1071",
+          "title": "Technical Account Manager",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-07-20T14:59:58-04:00",
+          "language": "en",
+          "application_deadline": null
+        }
+      ]
+    },
+    {
+      "id": 4046310007,
+      "name": "Security",
+      "parent_id": 4046280007,
+      "child_ids": [],
+      "jobs": []
+    },
+    {
+      "id": 4064288007,
+      "name": "Software Engineering",
+      "parent_id": 4025087007,
+      "child_ids": [],
+      "jobs": [
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5063490007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "education": "education_optional",
+          "internal_job_id": 4597986007,
+          "location": {
+            "name": "Remote United States"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Diego Pasini",
+                "email": "diego@x.ai",
+                "user_id": 4471675007,
+                "employee_id": "031569"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1qX9K1xrXQbHlMzn4y-J_b5GnSjJwEUq4d_OFgTsz5Hw/edit?tab=t.0",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5063490007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "818",
+          "title": "AI Tutor - Software Engineering Specialist",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-02-26T18:35:41-05:00",
+          "language": "en",
+          "application_deadline": null
+        }
+      ]
+    },
+    {
+      "id": 4064290007,
+      "name": "STEM",
+      "parent_id": 4025087007,
+      "child_ids": [],
+      "jobs": [
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4925832007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "education": "education_optional",
+          "internal_job_id": 4525794007,
+          "location": {
+            "name": "Remote International"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Diego Pasini",
+                "email": "diego@x.ai",
+                "user_id": 4471675007,
+                "employee_id": "031569"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1fProD6IU1fEdEQA-tvh-joaXzKrKpwNY/edit",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4925832007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "483",
+          "title": "Physics Tutor",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-09-30T19:15:00-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4925859007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "education": "education_optional",
+          "internal_job_id": 4525811007,
+          "location": {
+            "name": "Remote International"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Diego Pasini",
+                "email": "diego@x.ai",
+                "user_id": 4471675007,
+                "employee_id": "031569"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4925859007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "490",
+          "title": "Pure Math Tutor",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-09-30T19:39:35-04:00",
+          "language": "en",
+          "application_deadline": null
+        },
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/4925866007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "education": "education_optional",
+          "internal_job_id": 4525814007,
+          "location": {
+            "name": "Remote International"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Diego Pasini",
+                "email": "diego@x.ai",
+                "user_id": 4471675007,
+                "employee_id": "031569"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": "https://docs.google.com/document/d/1qpPaDcRC5pCTn60kfiiTlGcen7QPD7-T/edit",
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 4925866007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "491",
+          "title": "Statistics Tutor",
+          "company_name": "SpaceXAI",
+          "first_published": "2025-09-30T19:46:34-04:00",
+          "language": "en",
+          "application_deadline": null
+        }
+      ]
+    },
+    {
+      "id": 4064286007,
+      "name": "Vision",
+      "parent_id": 4025087007,
+      "child_ids": [],
+      "jobs": [
+        {
+          "absolute_url": "https://job-boards.greenhouse.io/xai/jobs/5047564007",
+          "data_compliance": [
+            {
+              "type": "gdpr",
+              "requires_consent": false,
+              "requires_processing_consent": false,
+              "requires_retention_consent": false,
+              "retention_period": null,
+              "demographic_data_consent_applies": false
+            }
+          ],
+          "education": "education_optional",
+          "internal_job_id": 4590578007,
+          "location": {
+            "name": "Remote United States"
+          },
+          "metadata": [
+            {
+              "id": 19440023007,
+              "name": "Team Lead",
+              "value": {
+                "name": "Cristiano Giardina",
+                "email": "cgiardina@x.ai",
+                "user_id": 4548998007,
+                "employee_id": "032539"
+              },
+              "value_type": "user"
+            },
+            {
+              "id": 22659078007,
+              "name": "Job Description via Google Doc URL [please share with Olivia]",
+              "value": null,
+              "value_type": "short_text"
+            },
+            {
+              "id": 16340689007,
+              "name": "Featured Role",
+              "value": null,
+              "value_type": "yes_no"
+            }
+          ],
+          "id": 5047564007,
+          "updated_at": "2026-08-21T18:24:01-04:00",
+          "requisition_id": "765",
+          "title": "Video Tutor",
+          "company_name": "SpaceXAI",
+          "first_published": "2026-02-10T11:35:02-05:00",
+          "language": "en",
+          "application_deadline": null
+        }
+      ]
+    },
+    {
+      "id": 0,
+      "name": "No Department",
+      "parent_id": null,
+      "child_ids": [],
+      "jobs": []
+    }
+  ]
+}
