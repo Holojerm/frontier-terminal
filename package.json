@@ -40,6 +40,7 @@
     "deploy": "nuxt build && wrangler --cwd .output deploy"
   },
   "dependencies": {
+    "@modelcontextprotocol/server": "2.0.0",
     "@nuxt/ui": "^4.10.0",
     "drizzle-orm": "^0.45.2",
     "nuxt": "^4.5.2",

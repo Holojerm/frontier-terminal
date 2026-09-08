@@ -28,7 +28,7 @@ instead, because the Workers Builds image cannot launch Chromium — `.github/wo
 | --- | --- |
 | `app/pages/` | One page today, the landing placeholder. Every page calls `useSeo()` once and declares `publicPage`. |
 | `server/api/` | `health`, `status`, `fleet` — the ops contract. Data endpoints arrive with the pipeline. |
-| `server/routes/` | `robots.txt`, `sitemap.xml`, `llms.txt`, `manifest.webmanifest`, all derived from the route table. |
+| `server/routes/` | `robots.txt`, `sitemap.xml`, `llms.txt`, `manifest.webmanifest`, all derived from the route table; `mcp.ts`, the MCP endpoint. |
 | `server/db/schema.ts` | `instance_secrets` and `ops_events`. The pipeline adds its tables beside them. |
 | `server/tasks/ops/alert.ts` | Every 30 minutes, drains the `ops_events` spool into one digest email. |
 | `scripts/check-*.ts` | The gates in `bun run ci`: design tokens, brand assets, references, SEO, fleet manifest, cron parity. |
@@ -41,6 +41,38 @@ you**: after any schema change, run `bun run db:migrate:remote`. `GET /api/statu
 
 Bindings live in `wrangler.toml` (one environment, no preview). `fleet.json` must match it —
 `bun run fleet:check` fails the build otherwise.
+
+## Connect an agent
+
+The terminal is an MCP server as well as a site: the same read-only queries, over Streamable
+HTTP, no auth, at
+
+```
+https://frontier-terminal.jeremy-ettlinger.workers.dev/mcp
+```
+
+```bash
+claude mcp add --transport http frontier-terminal https://frontier-terminal.jeremy-ettlinger.workers.dev/mcp
+```
+
+For any other client that takes a JSON server definition:
+
+```json
+{
+  "mcpServers": {
+    "frontier-terminal": {
+      "type": "http",
+      "url": "https://frontier-terminal.jeremy-ettlinger.workers.dev/mcp"
+    }
+  }
+}
+```
+
+Tools: `describe` (the site map), `get_overview`, `get_prices`, `get_hiring`, `get_alerts`,
+`get_alert`, `get_coverage`, `get_status`. Every result is the matching `/api/*` payload,
+provenance included, served through the same cache and the same per-IP rate limit (60 requests
+a minute). The server is stateless — each call is one POST with a JSON reply — so there is
+nothing to keep a session for. Tools and their descriptions live in `server/utils/mcp.ts`.
 
 ## For agents
 
