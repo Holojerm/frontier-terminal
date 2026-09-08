@@ -52,9 +52,20 @@ export function normalizeJob(row: JobRow, snapshotId: string): EntityRow {
   return toEntity(jobKey(row.provider, row.job_id), 'job', row.provider, snapshotId, row)
 }
 
+// A scheduled price ("$Y starting Jan 1, 2027" — Google's promo strings) is
+// its own SKU row beside the current one, with the same slug and tier. The
+// contract says tier disambiguates promo windows, so the window's start date
+// joins the tier here: the current row keeps the bare key, the scheduled row
+// gets `<tier>@<effective_from>`. When the date arrives and the page drops
+// the promo text, the diff reads as one modified row and one removed row.
+export function priceTier(row: Pick<PriceRow, 'tier' | 'effective_from'>): string | null {
+  if (!row.effective_from) return row.tier
+  return `${row.tier ?? 'standard'}@${row.effective_from}`
+}
+
 export function normalizePrice(row: PriceRow, snapshotId: string): EntityRow {
   return toEntity(
-    modelKey(row.provider, row.model_slug, row.tier),
+    modelKey(row.provider, row.model_slug, priceTier(row)),
     'model',
     row.provider,
     snapshotId,
