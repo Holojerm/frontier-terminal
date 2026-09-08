@@ -407,6 +407,10 @@ export default defineNuxtConfig({
     // with a 'failed' run, never fetched anonymously (server/pipeline/fetch.ts).
     // A Worker secret: `wrangler secret put NUXT_SEC_CONTACT_EMAIL`.
     secContactEmail: '',
+    // Bearer the judge routine presents to /api/judge/* (server/utils/judge-auth.ts).
+    // Unset = those routes 404 and no judge exists. Same shape and floor as the
+    // fleet token; a Worker secret: `wrangler secret put NUXT_JUDGE_TOKEN`.
+    judgeToken: '',
     // Public vars (access via useRuntimeConfig().public.myVar)
     // NUXT_PUBLIC_APP_NAME in wrangler.toml [vars] overrides this at runtime
     public: {
