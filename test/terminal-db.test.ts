@@ -13,8 +13,6 @@ import { terminalStamp } from '../server/utils/terminal-cache'
 import { MODEL_CLASS_MAP } from '../server/utils/terminal-classes'
 import {
   alertPermalinks,
-  fieldDiff,
-  fieldTable,
   queryAlert,
   queryAlerts,
   queryContext,
@@ -24,6 +22,7 @@ import {
   queryOverview,
   queryPrices,
 } from '../server/utils/terminal-db'
+import { fieldDiff, fieldTable } from '../server/utils/terminal-json'
 import { fixtureText, manifest } from './pipeline/fixtures'
 
 // The UI's query layer against a real D1, seeded the way production is: the

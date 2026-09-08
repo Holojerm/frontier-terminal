@@ -15,7 +15,7 @@
 // server/utils/fleet-status.ts uses) so test/terminal-db.test.ts drives them
 // against the workerd D1.
 
-import { and, asc, count, desc, eq, inArray, max, ne, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, inArray, max, min, ne, sql } from 'drizzle-orm'
 
 import { count as countLabel, money } from '#shared/utils/terminal-format'
 import {
@@ -33,8 +33,9 @@ import type {
   ChangeView,
   CoverageData,
   DeptCount,
-  FieldDiff,
   HiringData,
+  HiringHistoryData,
+  HiringHistoryProvider,
   HiringProviderView,
   HiringSource,
   IncidentProviderView,
@@ -44,10 +45,12 @@ import type {
   MovementSummary,
   OverviewData,
   PriceDeltaView,
+  PriceHistoryData,
   PriceMatrix,
   PriceRowView,
   PricesData,
   ProviderId,
+  ReleasesData,
   SnapshotStamp,
   SourceCoverage,
   SourceRef,
@@ -67,6 +70,21 @@ import {
   PRICE_GAPS,
 } from './terminal-classes'
 import { EXPORT_TABLES } from './terminal-export'
+import {
+  baselineInstants,
+  byDetectedAt,
+  compareWindow,
+  dailyInstants,
+  dayOf,
+  departmentSeries,
+  NO_DEPARTMENT,
+  openRolesAt,
+  priceHistory,
+  releaseEvents,
+  sparkOf,
+  type OpenRole,
+} from './terminal-history'
+import { byString, fieldDiff, fieldTable, num, parseJson, str, type Json } from './terminal-json'
 import {
   HIRING_SOURCE_IDS,
   INCIDENT_SOURCE_IDS,
@@ -97,25 +115,6 @@ const stampOf = (ctx: QueryContext): Stamp => ({
   as_of: ctx.as_of,
   computed_at: ctx.now().toISOString(),
 })
-
-type Json = Record<string, unknown>
-
-function parseJson(text: string | null): Json | null {
-  if (text === null) return null
-  try {
-    const value = JSON.parse(text) as unknown
-    return typeof value === 'object' && value !== null && !Array.isArray(value)
-      ? (value as Json)
-      : null
-  } catch {
-    return null
-  }
-}
-
-const str = (v: unknown): string | null => (typeof v === 'string' ? v : null)
-const num = (v: unknown): number | null => (typeof v === 'number' ? v : null)
-
-const byString = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
 const PROVIDER_RANK: Readonly<Record<string, number>> = {
   openai: 0,
@@ -356,33 +355,6 @@ function summarize(entityType: string, payload: Json | null): string {
   return entityType
 }
 
-const scalar = (v: unknown): string | null =>
-  v === null || v === undefined
-    ? null
-    : typeof v === 'string'
-      ? v
-      : typeof v === 'number' || typeof v === 'boolean'
-        ? String(v)
-        : JSON.stringify(v)
-
-/** Every field of either payload, sorted by name, with both sides as scalars. */
-export function fieldTable(before: Json | null, after: Json | null): FieldDiff[] {
-  const keys = [...new Set([...Object.keys(before ?? {}), ...Object.keys(after ?? {})])].sort(
-    byString,
-  )
-  return keys.map((field) => ({
-    field,
-    before: before ? scalar(before[field]) : null,
-    after: after ? scalar(after[field]) : null,
-  }))
-}
-
-/** Fields whose value differs between the two payloads, sorted by name. */
-export function fieldDiff(before: Json | null, after: Json | null): FieldDiff[] {
-  if (!before || !after) return []
-  return fieldTable(before, after).filter((d) => d.before !== d.after)
-}
-
 function toChangeView(row: typeof tables.changes.$inferSelect): ChangeView {
   const before = parseJson(row.before_json)
   const after = parseJson(row.after_json)
@@ -595,42 +567,40 @@ function priceRowFromPayload(
     removed: false,
     delta: null,
     also_listed_by: [],
+    revisions: 0,
+    spark: null,
     source_url: base.source_url,
     fetched_at: base.fetched_at,
   }
 }
 
-/** Newest change per (entity_key, source_url) for model rows. */
-async function newestModelChanges(db: PipelineDb) {
-  const newest = db
-    .select({
-      entity_key: tables.changes.entity_key,
-      source_url: tables.changes.source_url,
-      at: max(tables.changes.detected_at).as('at'),
-    })
-    .from(tables.changes)
-    .where(eq(tables.changes.entity_type, 'model'))
-    .groupBy(tables.changes.entity_key, tables.changes.source_url)
-    .as('newest_change')
+type ChangeRow = typeof tables.changes.$inferSelect
 
+/** Every model change, oldest first — the history behind deltas and sparklines. */
+async function modelChanges(db: PipelineDb): Promise<ChangeRow[]> {
+  const rows = await db.select().from(tables.changes).where(eq(tables.changes.entity_type, 'model'))
+  return rows.sort(byDetectedAt)
+}
+
+/** Earliest fetch per source URL — when watching began, for the opening history point. */
+async function firstSnapshotByUrl(db: PipelineDb): Promise<Map<string, string>> {
   const rows = await db
-    .select({ change: tables.changes })
-    .from(tables.changes)
-    .innerJoin(
-      newest,
-      and(
-        eq(tables.changes.entity_key, newest.entity_key),
-        eq(tables.changes.source_url, newest.source_url),
-        eq(tables.changes.detected_at, newest.at),
-      ),
-    )
-    .orderBy(asc(tables.changes.entity_key), asc(tables.changes.id))
+    .select({ source_url: tables.snapshots.source_url, at: min(tables.snapshots.fetched_at) })
+    .from(tables.snapshots)
+    .groupBy(tables.snapshots.source_url)
+  return new Map(rows.filter((r) => r.at !== null).map((r) => [r.source_url, r.at!]))
+}
 
-  const out = new Map<string, typeof tables.changes.$inferSelect>()
-  for (const { change } of rows) {
-    const key = `${change.entity_key} ${change.source_url}`
-    if (!out.has(key)) out.set(key, change)
-  }
+/** Newest change per (entity_key, source_url), from a list already sorted oldest first. */
+function newestPerSource(changes: readonly ChangeRow[]): Map<string, ChangeRow> {
+  const out = new Map<string, ChangeRow>()
+  for (const change of changes) out.set(`${change.entity_key} ${change.source_url}`, change)
+  return out
+}
+
+function groupByKey<T extends { entity_key: string }>(rows: readonly T[]): Map<string, T[]> {
+  const out = new Map<string, T[]>()
+  for (const row of rows) out.set(row.entity_key, [...(out.get(row.entity_key) ?? []), row])
   return out
 }
 
@@ -650,11 +620,17 @@ function toDelta(change: typeof tables.changes.$inferSelect): PriceDeltaView {
 }
 
 export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<PricesData> {
-  const [entities, changes, stamps] = await Promise.all([
+  const [entities, history, stamps, firsts] = await Promise.all([
     db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'model')),
-    newestModelChanges(db),
+    modelChanges(db),
     sourceStamps(db),
+    firstSnapshotByUrl(db),
   ])
+  const changes = newestPerSource(history)
+  const entitiesByKey = groupByKey(entities)
+  const historyByKey = groupByKey(history)
+  const sourceId = (url: string) => sourceIdForUrl(url, ctx)
+  const firstOf = (url: string) => firsts.get(url) ?? null
 
   // One view per stored row, then collapse to one per SKU key.
   const byKey = new Map<string, PriceRowView[]>()
@@ -662,7 +638,7 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
     const payload = parseJson(e.payload)
     if (!payload || typeof payload.model_slug !== 'string') continue
     const row = priceRowFromPayload(e, payload)
-    const change = changes.get(`${e.entity_key} ${e.source_url}`)
+    const change = changes.get(`${e.entity_key} ${e.source_url}`)
     if (change) row.delta = toDelta(change)
     const list = byKey.get(e.entity_key) ?? []
     list.push(row)
@@ -670,10 +646,20 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
   }
 
   const rows: PriceRowView[] = []
-  for (const [, candidates] of byKey) {
+  for (const [key, candidates] of byKey) {
     candidates.sort(preferRow)
     const [winner, ...rest] = candidates
     winner!.also_listed_by = rest.map((r) => r.source_id).sort(byString)
+    // The row cites one source, so its sparkline is that source's
+    // observations; the other page's are on the SKU's own page.
+    const points = priceHistory(
+      entitiesByKey.get(key) ?? [],
+      historyByKey.get(key) ?? [],
+      sourceId,
+      firstOf,
+    ).filter((p) => p.source_url === winner!.source_url)
+    winner!.revisions = points.length
+    winner!.spark = sparkOf(points)
     rows.push(winner!)
   }
 
@@ -694,6 +680,9 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
     )
     row.removed = true
     row.delta = toDelta(change)
+    const points = priceHistory([], historyByKey.get(change.entity_key) ?? [], sourceId, firstOf)
+    row.revisions = points.length
+    row.spark = sparkOf(points)
     byKey.set(change.entity_key, [row])
     rows.push(row)
   }
@@ -852,7 +841,7 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
 
     const depts: DeptCount[] = departments
       .filter((d) => d.provider === provider)
-      .map((d) => ({ department: d.department ?? '(no department)', count: d.n }))
+      .map((d) => ({ department: d.department ?? NO_DEPARTMENT, count: d.n }))
       .sort((a, b) => b.count - a.count || byString(a.department, b.department))
     const total = depts.reduce((acc, d) => acc + d.count, 0)
 
@@ -1039,6 +1028,266 @@ export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise
     providers,
     incidents: all.filter((i) => Date.parse(i.started_at) > historyFrom),
   }
+}
+
+// ---- price history ---------------------------------------------------------
+
+/** One SKU's observations, or null when the store has never seen the key. */
+export async function queryPriceHistory(
+  db: PipelineDb,
+  ctx: QueryContext,
+  key: string,
+): Promise<PriceHistoryData | null> {
+  const [entities, changes, firsts] = await Promise.all([
+    db
+      .select()
+      .from(tables.entities)
+      .where(and(eq(tables.entities.entity_type, 'model'), eq(tables.entities.entity_key, key))),
+    db
+      .select()
+      .from(tables.changes)
+      .where(and(eq(tables.changes.entity_type, 'model'), eq(tables.changes.entity_key, key))),
+    firstSnapshotByUrl(db),
+  ])
+  if (entities.length === 0 && changes.length === 0) return null
+
+  const points = priceHistory(
+    entities,
+    changes,
+    (url) => sourceIdForUrl(url, ctx),
+    (url) => firsts.get(url) ?? null,
+  )
+  // Identity fields from the newest payload on record.
+  const newest = [...changes].sort(byDetectedAt).at(-1)
+  const payload =
+    parseJson(entities[0]?.payload ?? null) ??
+    parseJson(newest?.after_json ?? null) ??
+    parseJson(newest?.before_json ?? null)
+  const provider = (entities[0]?.provider ?? newest?.provider ?? 'other') as ProviderId
+  return {
+    ...stampOf(ctx),
+    entity_key: key,
+    provider,
+    model_slug: str(payload?.model_slug) ?? '?',
+    tier: str(payload?.tier),
+    context_window: str(payload?.context_window),
+    points,
+    removed: entities.length === 0 && newest?.change_type === 'removed',
+  }
+}
+
+/**
+ * Every SKU key the store has a page for, with the newest observation as
+ * its lastmod — the sitemap's dynamic entries.
+ */
+export async function queryPriceKeys(
+  db: PipelineDb,
+): Promise<{ entity_key: string; lastmod: string }[]> {
+  const [current, logged] = await Promise.all([
+    db
+      .select({ entity_key: tables.entities.entity_key, at: max(tables.entities.fetched_at) })
+      .from(tables.entities)
+      .where(eq(tables.entities.entity_type, 'model'))
+      .groupBy(tables.entities.entity_key),
+    db
+      .select({ entity_key: tables.changes.entity_key, at: max(tables.changes.detected_at) })
+      .from(tables.changes)
+      .where(eq(tables.changes.entity_type, 'model'))
+      .groupBy(tables.changes.entity_key),
+  ])
+  const newest = new Map<string, string>()
+  for (const row of [...current, ...logged]) {
+    if (!row.at) continue
+    const seen = newest.get(row.entity_key)
+    if (!seen || Date.parse(row.at) > Date.parse(seen)) newest.set(row.entity_key, row.at)
+  }
+  return [...newest]
+    .map(([entity_key, at]) => ({ entity_key, lastmod: dayOf(at) }))
+    .sort((a, b) => byString(a.entity_key, b.entity_key))
+}
+
+// ---- hiring history --------------------------------------------------------
+
+export const HIRING_WINDOW_DAYS = 30
+
+/** Baseline (source_url, fetched_at) pairs: first snapshot per source, plus runs marked baseline. */
+async function loadBaselineInstants(db: PipelineDb): Promise<Set<string>> {
+  const [firsts, runs] = await Promise.all([
+    db
+      .select({
+        source_url: tables.snapshots.source_url,
+        fetched_at: min(tables.snapshots.fetched_at),
+      })
+      .from(tables.snapshots)
+      .groupBy(tables.snapshots.source_url),
+    db
+      .select({ status: tables.sourceRuns.status, snapshot_id: tables.sourceRuns.snapshot_id })
+      .from(tables.sourceRuns)
+      .where(eq(tables.sourceRuns.status, 'baseline')),
+  ])
+  const ids = runs.map((r) => r.snapshot_id).filter((id): id is string => id !== null)
+  const marked: { id: string; source_url: string; fetched_at: string }[] = []
+  for (let i = 0; i < ids.length; i += 90) {
+    marked.push(
+      ...(await db
+        .select({
+          id: tables.snapshots.id,
+          source_url: tables.snapshots.source_url,
+          fetched_at: tables.snapshots.fetched_at,
+        })
+        .from(tables.snapshots)
+        .where(inArray(tables.snapshots.id, ids.slice(i, i + 90)))),
+    )
+  }
+  const snapshots = [
+    ...firsts
+      .filter((f) => f.fetched_at !== null)
+      .map((f) => ({ id: '', source_url: f.source_url, fetched_at: f.fetched_at! })),
+    ...marked,
+  ]
+  return baselineInstants(snapshots, runs)
+}
+
+export async function queryHiringHistory(
+  db: PipelineDb,
+  ctx: QueryContext,
+): Promise<HiringHistoryData> {
+  const department = sql<string | null>`json_extract(${tables.entities.payload}, '$.department')`
+  const isJob = eq(tables.entities.entity_type, 'job')
+  const [roles, changes, firstSnapshots, baselines, stamps] = await Promise.all([
+    db
+      .select({
+        entity_key: tables.entities.entity_key,
+        provider: tables.entities.provider,
+        department,
+      })
+      .from(tables.entities)
+      .where(isJob),
+    db.select().from(tables.changes).where(eq(tables.changes.entity_type, 'job')),
+    db
+      .select({ source_id: tables.snapshots.source_id, at: min(tables.snapshots.fetched_at) })
+      .from(tables.snapshots)
+      .groupBy(tables.snapshots.source_id),
+    db
+      .select({ source_id: tables.sourceRuns.source_id, at: min(tables.sourceRuns.started_at) })
+      .from(tables.sourceRuns)
+      .where(eq(tables.sourceRuns.status, 'baseline'))
+      .groupBy(tables.sourceRuns.source_id),
+    sourceStamps(db),
+  ])
+
+  const current: OpenRole[] = roles.map((r) => ({
+    entity_key: r.entity_key,
+    provider: r.provider,
+    department: r.department ?? NO_DEPARTMENT,
+  }))
+  const firstOf = new Map(firstSnapshots.map((s) => [s.source_id, s.at]))
+  const baselineOf = new Map(baselines.map((b) => [b.source_id, b.at]))
+  const now = ctx.now().toISOString()
+  const sorted = [...changes].sort(byDetectedAt)
+
+  // One grid from the earliest board snapshot; each provider's series is cut
+  // to start at its own.
+  const boards = PROVIDER_ORDER.filter((p): p is Exclude<BigFour, 'google'> => p !== 'google')
+  const earliest =
+    boards
+      .map((p) => firstOf.get(HIRING_SOURCE_IDS[p][0]!) ?? null)
+      .filter((s): s is string => s !== null)
+      .sort(byString)[0] ?? null
+  const grid = earliest ? dailyInstants(dayOf(earliest), now) : []
+  const byInstant = openRolesAt(
+    current,
+    sorted,
+    grid.map((g) => g.at),
+  )
+
+  const cut = ctx.registry.cuts.find((c) => c.id === 'google-hiring')
+  const xaiCaveat = ctx.registry.sources.find((s) => s.source_id === 'xai-greenhouse')?.caveat
+
+  const providers: HiringHistoryProvider[] = []
+  for (const provider of PROVIDER_ORDER) {
+    if (provider === 'google') {
+      // Honest cut — never a fabricated series (sources.yaml `cut.google-hiring`).
+      providers.push({
+        provider,
+        display: PROVIDER_DISPLAY.google,
+        feed: 'no_public_feed',
+        reason: cut?.reason ?? 'No public hiring feed exists for Google.',
+        caveat: null,
+        dates: [],
+        total: [],
+        departments: [],
+        compare: null,
+        series_from: null,
+        baseline_at: null,
+        join_from: null,
+        sources: [],
+      })
+      continue
+    }
+    const [primary, join] = HIRING_SOURCE_IDS[provider] as [string, string | undefined]
+    const from = firstOf.get(primary) ?? null
+    const own = from ? grid.filter((g) => g.date >= dayOf(from)) : []
+    const { total, departments } = departmentSeries(byInstant, own, provider)
+    const dates = own.map((g) => g.date)
+    const sources: HiringSource[] = HIRING_SOURCE_IDS[provider]
+      .map((id) => {
+        const stamp = stamps.get(id)
+        return stamp
+          ? {
+              source_id: id,
+              label: labelOf(id).label,
+              source_url: stamp.newest.source_url,
+              fetched_at: stamp.newest.fetched_at,
+            }
+          : null
+      })
+      .filter((s): s is HiringSource => s !== null)
+    const open = total.at(-1) ?? 0
+    providers.push({
+      provider,
+      display: PROVIDER_DISPLAY[provider],
+      feed: open > 0 ? 'ok' : 'no_rows',
+      reason: null,
+      caveat: provider === 'xai' ? (xaiCaveat ?? null) : null,
+      dates,
+      total,
+      departments,
+      compare: compareWindow(dates, total, departments, HIRING_WINDOW_DAYS),
+      series_from: from,
+      baseline_at: baselineOf.get(primary) ?? null,
+      join_from: join ? (firstOf.get(join) ?? null) : null,
+      sources,
+    })
+  }
+
+  return {
+    ...stampOf(ctx),
+    window_days: HIRING_WINDOW_DAYS,
+    providers,
+    log: {
+      changes: sorted.length,
+      from: sorted[0]?.detected_at ?? null,
+      to: sorted.at(-1)?.detected_at ?? null,
+    },
+  }
+}
+
+// ---- releases --------------------------------------------------------------
+
+export async function queryReleases(db: PipelineDb, ctx: QueryContext): Promise<ReleasesData> {
+  const [added, baseline, [earliest]] = await Promise.all([
+    db
+      .select()
+      .from(tables.changes)
+      .where(and(eq(tables.changes.entity_type, 'model'), eq(tables.changes.change_type, 'added'))),
+    loadBaselineInstants(db),
+    db.select({ at: min(tables.snapshots.fetched_at) }).from(tables.snapshots),
+  ])
+  const { rows, excluded_baseline } = releaseEvents(added, baseline, (url) =>
+    sourceIdForUrl(url, ctx),
+  )
+  return { ...stampOf(ctx), rows, excluded_baseline, log_from: earliest?.at ?? null }
 }
 
 // ---- coverage --------------------------------------------------------------
