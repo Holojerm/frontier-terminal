@@ -12,6 +12,7 @@ import {
   normalizeFilings,
   normalizeJobs,
   normalizePrices,
+  priceTier,
   stableStringify,
   type JobRow,
 } from '../../server/pipeline/normalize'
@@ -252,5 +253,38 @@ describe('normalize-diff lane', () => {
     expect(stableStringify({ b: 1, a: [null, 'x'], skip: undefined })).toBe(
       '{"a":[null,"x"],"b":1}',
     )
+  })
+})
+
+describe('priceTier', () => {
+  test('a scheduled promo row gets its own key beside the current one; everything else keeps the bare tier', () => {
+    const [standard] = priceRows as [PriceRow]
+    expect(priceTier(standard)).toBeNull()
+    expect(priceTier({ tier: 'batch', effective_from: null })).toBe('batch')
+    expect(priceTier({ tier: 'standard', effective_from: '2027-01-01' })).toBe(
+      'standard@2027-01-01',
+    )
+    expect(priceTier({ tier: null, effective_from: '2027-01-01' })).toBe('standard@2027-01-01')
+
+    // The pair Google's dual-date cells produce: same slug, same tier, two
+    // windows — two entities, not a conflict.
+    const current: PriceRow = {
+      ...standard,
+      provider: 'google',
+      model_slug: 'gemini-3.7-flash',
+      tier: 'standard',
+      effective_from: null,
+      effective_until: '2027-01-01',
+    }
+    const scheduled: PriceRow = {
+      ...current,
+      input_per_mtok: 1.5,
+      effective_from: '2027-01-01',
+      effective_until: null,
+    }
+    expect(normalizePrices([current, scheduled], 'snap').map((e) => e.entity_key)).toEqual([
+      'model:google:gemini-3.7-flash:standard',
+      'model:google:gemini-3.7-flash:standard@2027-01-01',
+    ])
   })
 })
