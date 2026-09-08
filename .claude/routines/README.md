@@ -1,9 +1,9 @@
 # Cloud Routines
 
 Repo-shipped definitions for the cloud agents ("routines") that run on a schedule against this
-repo. None are defined yet — the first (a judge routine that grades the terminal's data against
-its sources) arrives in a later PR. This file, `_shared.md`, and `routines.config.md` are the
-scaffolding every routine reads first.
+repo. One is defined: `judge.md`, which reads the Worker's unjudged change rows and sends back
+significance alerts through a gated API. This file, `_shared.md`, and `routines.config.md` are
+the scaffolding every routine reads first.
 
 **All routines ship default-inactive.** Nothing runs until you explicitly enable it.
 
