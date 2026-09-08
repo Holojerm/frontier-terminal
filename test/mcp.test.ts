@@ -305,7 +305,8 @@ describe('tools/call', () => {
       cuts: { id: string }[]
       exports: { name: string }[]
     }
-    expect(coverage.sources).toHaveLength(13)
+    expect(coverage.sources).toHaveLength(16)
+    expect(coverage.cuts.map((c) => c.id)).toContain('xai-status')
     expect(coverage.sources.find((s) => s.source_id === 'openrouter-models')!.caveat).toContain(
       'never source of record',
     )
