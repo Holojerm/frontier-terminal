@@ -141,8 +141,8 @@ describe('chooseBackend', () => {
   })
 
   it('falls back to KV for a window the binding was not deployed for', () => {
-    // The real case: mcp-connect-code wants 10 per 300s. The platform only
-    // permits periods of 10 or 60, so no binding could serve this one.
+    // A call site that wants 10 per 300s: the platform only permits periods of
+    // 10 or 60, so no binding could serve this one.
     expect(chooseBackend(makeNative([]), { limit: 10, windowSeconds: 300 })).toEqual({
       backend: 'kv',
       reason: 'window-mismatch',
@@ -150,7 +150,7 @@ describe('chooseBackend', () => {
   })
 
   it('falls back to KV when the limit differs, rather than enforcing the wrong one', () => {
-    // /api/auth/dev asks for 20/60s. The binding is 30/60s and cannot be told
+    // A call site asks for 20/60s. The binding is 30/60s and cannot be told
     // otherwise at call time, so delegating would enforce 30 while the response
     // header promised 20. This is the case the exact-match rule exists for.
     expect(chooseBackend(makeNative([]), { limit: 20, windowSeconds: 60 })).toEqual({
@@ -275,7 +275,7 @@ describe('the deployed binding', () => {
     expect(
       (await limiter.limit({ key })).success,
       `request ${NATIVE_LIMITER.limit + 1} was allowed — wrangler.toml's simple.limit is higher ` +
-        'than NATIVE_LIMITER.limit, so the auth surface is enforcing a number nobody wrote down',
+        'than NATIVE_LIMITER.limit, so the native path is enforcing a number nobody wrote down',
     ).toBe(false)
   })
 })

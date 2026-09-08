@@ -35,12 +35,8 @@ export const AI_CRAWLERS: { agent: string; purpose: string }[] = [
   { agent: 'CCBot', purpose: 'Common Crawl — corpus most open models train on' },
 ]
 
-/**
- * Paths no crawler should spend budget on: private areas, the API surface, the
- * analytics proxy, and OAuth callbacks (which are redirects with single-use
- * codes in them, worthless in an index).
- */
-const DISALLOWED = ['/account', '/dashboard', '/login', '/api/', '/ingest/']
+/** Paths no crawler should spend budget on: the JSON API is not a page. */
+const DISALLOWED = ['/api/']
 
 export interface RobotsInput {
   appUrl: string
@@ -102,13 +98,12 @@ const EMPTY_SITEMAP =
 /**
  * /sitemap.xml.
  *
- * `lastmod` arrives per entry rather than being stamped here, because the two
- * kinds of URL in this sitemap know different things. A static page has only
- * the build date — the honest per-page alternative is git history, which CI
- * clones shallowly (nuxt.config.ts › runtimeConfig.buildDate). A blog post has
- * a real publication date in its frontmatter, and telling a crawler that a
- * two-month-old post changed today is how a site teaches Google to ignore its
- * lastmod entirely.
+ * `lastmod` arrives per entry rather than being stamped here, so a URL that
+ * knows its own revision date (a data page keyed on a fetch timestamp) can say
+ * so. A static page has only the build date — the honest per-page alternative
+ * is git history, which CI clones shallowly (nuxt.config.ts › runtimeConfig.buildDate).
+ * Telling a crawler that an unchanged page changed today is how a site teaches
+ * Google to ignore its lastmod entirely.
  *
  * An empty but well-formed document rather than a 404 when there is nothing to
  * publish: a broken sitemap is a crawl error, an empty one is a fact.
@@ -121,13 +116,9 @@ export function buildSitemap(input: SitemapInput): string {
   if (!appUrl || !input.indexable || input.entries.length === 0) return EMPTY_SITEMAP
 
   // Every value is escaped, including the three that "cannot" contain markup.
-  // `changefreq` and `priority` come from a typed page declaration, and
-  // `lastmod` is shaped like a date — but the only thing actually enforcing
-  // that shape is `bun run seo:check` reading the markdown, because
-  // @nuxt/content converts a collection schema into SQL columns without ever
-  // running its refinements (content.config.ts says so). Escaping the whole row
-  // costs nothing and means a hand-edited frontmatter value can never produce a
-  // sitemap that fails to parse.
+  // `changefreq` and `priority` come from a typed page declaration and
+  // `lastmod` is shaped like a date, but escaping the whole row costs nothing
+  // and means a hand-edited value can never produce a sitemap that fails to parse.
   const urls = input.entries
     .map((entry) => {
       const loc = escapeXml(absoluteUrl(appUrl, entry.path))
@@ -152,41 +143,19 @@ export const DEGRADED_CACHE_CONTROL = 'no-store'
  * complete.
  *
  * The pairing is the point, and getting it wrong is worse than not degrading at
- * all. If the blog query fails, both routes still serve — a document missing
- * its posts beats a 500. But "the posts are missing" and "the posts were
- * deleted" are the same bytes to a crawler, so caching that answer publicly for
- * an hour turns a five-second D1 blip into an hour of Google believing the blog
- * was removed. `no-store` makes the degraded document exactly as durable as the
- * failure that produced it.
+ * all. If a D1 query feeding either document fails, the route still serves — a
+ * document missing its dynamic URLs beats a 500. But "the URLs are missing" and
+ * "the URLs were deleted" are the same bytes to a crawler, so caching that
+ * answer publicly for an hour turns a five-second D1 blip into an hour of
+ * Google believing the pages were removed. `no-store` makes the degraded
+ * document exactly as durable as the failure that produced it.
  *
  * Applies only to degradation, not to suppression: an empty sitemap on a
- * preview deploy is a deliberate, stable answer and stays cacheable.
+ * non-indexable deploy is a deliberate, stable answer and stays cacheable.
  */
 export function crawlerCacheControl(complete: boolean): string {
   return complete ? CRAWLER_CACHE_CONTROL : DEGRADED_CACHE_CONTROL
 }
-
-/**
- * The date a crawler should treat as a post's last modification.
- *
- * Here rather than next to the query in server/utils/blog.ts for one practical
- * reason: that module imports @nuxt/content's Nitro entry, which resolves a
- * `#content/*` build alias that does not exist inside the workerd vitest pool.
- * This rule is the whole point of querying the collection for the sitemap, so
- * it belongs somewhere a test can reach it.
- */
-export function blogPostLastmod(post: { date: string; updated?: string }): string {
-  return post.updated || post.date
-}
-
-/**
- * Crawl hints for a blog post. Lower than the marketing pages on purpose: an
- * individual post is worth indexing, but /pricing and the landing page are what
- * this site is for. `monthly` because a published post is normally finished —
- * the index at /blog is the URL that actually changes weekly, and it declares
- * that itself via `publicPage`.
- */
-export const POST_CRAWL_HINTS = { changefreq: 'monthly', priority: '0.5' } as const
 
 /** A crawler document plus how long it may be believed. */
 export interface CrawlerDocument {
@@ -201,20 +170,21 @@ export interface SitemapResponseInput {
   buildDate: string
   /** Collected from `definePageMeta({ publicPage })` at build time. */
   pages: PublicPage[]
-  posts: { path: string; date: string; updated?: string }[]
-  /** False when the post query failed — see crawlerCacheControl(). */
+  /** URLs with no route-table entry — one per dynamic record, with its own lastmod. */
+  dynamic?: SitemapEntry[]
+  /** False when a query feeding `dynamic` failed — see crawlerCacheControl(). */
   complete: boolean
 }
 
 /**
  * Everything /sitemap.xml decides, as one function of plain data.
  *
- * The route is deliberately left with nothing but config reads, the query, and
- * two assignments. That is not tidiness: the bug this shape prevents is a
- * degraded document going out with the cacheable header, which is invisible in
- * review (two adjacent, individually-correct lines) and cannot be reached by a
- * test as long as it lives inside `defineEventHandler` — the vitest pool has
- * neither Nitro's auto-imports nor content's build aliases.
+ * The route is deliberately left with nothing but config reads and two
+ * assignments. That is not tidiness: the bug this shape prevents is a degraded
+ * document going out with the cacheable header, which is invisible in review
+ * (two adjacent, individually-correct lines) and cannot be reached by a test
+ * as long as it lives inside `defineEventHandler` — the vitest pool has no
+ * Nitro auto-imports.
  */
 export function sitemapResponse(input: SitemapResponseInput): CrawlerDocument {
   const entries: SitemapEntry[] = [
@@ -224,11 +194,7 @@ export function sitemapResponse(input: SitemapResponseInput): CrawlerDocument {
       priority: page.priority,
       lastmod: input.buildDate,
     })),
-    ...input.posts.map((post) => ({
-      path: post.path,
-      ...POST_CRAWL_HINTS,
-      lastmod: blogPostLastmod(post),
-    })),
+    ...(input.dynamic ?? []),
   ]
 
   return {
@@ -237,25 +203,12 @@ export function sitemapResponse(input: SitemapResponseInput): CrawlerDocument {
   }
 }
 
-/** One blog post, as llms.txt lists it. */
-export interface LlmsTxtPost {
-  path: string
-  title: string
-  description: string
-  /** `YYYY-MM-DD`. Stated because a model has no other way to date a claim. */
-  date: string
-}
-
 export interface LlmsTxtInput {
   appName: string
   appUrl: string
-  /** One-paragraph description of the product, used as the blockquote. */
+  /** One-paragraph description of the site, used as the blockquote. */
   description: string
-  supportEmail: string
-  legalEntity: string
   pages: PublicPage[]
-  /** Newest first. Listed under their own heading, below the pages. */
-  posts?: LlmsTxtPost[]
 }
 
 /**
@@ -264,9 +217,9 @@ export interface LlmsTxtInput {
  *
  * It is a map, not a mirror. Every line is a link plus one sentence saying what
  * is behind it, so a model can decide what to fetch rather than guessing from a
- * rendered page full of buttons and cookie banners. Duplicating the pages'
- * actual content here would create a second copy to keep in sync, and a stale
- * price in a machine-readable file is worse than no file.
+ * rendered page full of buttons. Duplicating the pages' actual content here
+ * would create a second copy to keep in sync, and a stale number in a
+ * machine-readable file is worse than no file.
  */
 export function buildLlmsTxt(input: LlmsTxtInput): string {
   const appUrl = normalizeOrigin(input.appUrl)
@@ -280,27 +233,11 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
     sections.push('')
   }
 
-  // Posts get their own heading rather than being folded in with the pages.
-  // They are a different kind of thing — dated, numerous, and worth quoting on
-  // their own — and the date belongs on the line for the same reason
-  // `dateModified` belongs in the JSON-LD: a model that cannot tell how old a
-  // claim is will repeat it as current.
-  if (input.posts?.length) {
-    sections.push('## Blog', '')
-    for (const post of input.posts) {
-      sections.push(
-        `- [${post.title}](${absoluteUrl(appUrl, post.path)}): ${post.description} (published ${post.date})`,
-      )
-    }
-    sections.push('')
-  }
-
   sections.push(
     '## About',
     '',
-    `- Operated by ${input.legalEntity}.`,
-    `- Support: ${input.supportEmail}`,
-    `- Structured data for each page is published as schema.org JSON-LD in the page head.`,
+    '- Not investment advice. Every figure carries the URL it was read from and when.',
+    '- Structured data for each page is published as schema.org JSON-LD in the page head.',
     '',
   )
 
@@ -313,8 +250,8 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
  * The same shape as `sitemapResponse()`, and for the same reason: the pairing
  * of a possibly-degraded body with its Cache-Control is the part worth testing,
  * and it cannot be tested inside the route. Suppression (no origin, or a
- * preview deploy) stays in the route, because that is a 404 rather than a
- * document.
+ * non-indexable deploy) stays in the route, because that is a 404 rather than
+ * a document.
  */
 export function llmsTxtResponse(input: LlmsTxtInput & { complete: boolean }): CrawlerDocument {
   return {
