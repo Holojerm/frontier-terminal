@@ -11,6 +11,7 @@ import xaiGreenhouseDepartments from '../../fixtures/hiring/xai-greenhouse-depar
 import xaiGreenhouse from '../../fixtures/hiring/xai-greenhouse.json?raw'
 import anthropicModelsOverview from '../../fixtures/pricing/anthropic-models-overview.md?raw'
 import anthropicPricing from '../../fixtures/pricing/anthropic-pricing.md?raw'
+import googlePricing from '../../fixtures/pricing/google-pricing.html?raw'
 import openaiModels from '../../fixtures/pricing/openai-models.md?raw'
 import openrouterModels from '../../fixtures/pricing/openrouter-models.json?raw'
 import xaiModels from '../../fixtures/pricing/xai-models.md?raw'
@@ -28,6 +29,7 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/hiring/xai-greenhouse.json': xaiGreenhouse,
   'fixtures/pricing/anthropic-models-overview.md': anthropicModelsOverview,
   'fixtures/pricing/anthropic-pricing.md': anthropicPricing,
+  'fixtures/pricing/google-pricing.html': googlePricing,
   'fixtures/pricing/openai-models.md': openaiModels,
   'fixtures/pricing/openrouter-models.json': openrouterModels,
   'fixtures/pricing/xai-models.md': xaiModels,
