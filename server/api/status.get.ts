@@ -15,32 +15,12 @@
 // most needs it, an external heartbeat, must not have to hold a credential.
 // Anything that IS operational detail lives behind a bearer in /api/fleet instead.
 //
-// HTTP status: 200 with `status: 'ok'` or `'degraded'` (migrations pending —
-// the app is up, just not the app the code expects), 503 with `'down'` when
-// D1 is unreachable. A poller can key on the HTTP code; a human reads the
-// field.
+// The payload and its HTTP code are decided by collectStatus() in
+// server/utils/fleet-status.ts, which the MCP `get_status` tool shares.
 
 import { db } from '@nuxthub/db'
-import { sql } from 'drizzle-orm'
 
-import { FleetManifestSchema } from '#shared/utils/fleet-manifest'
-
-import rawManifest from '../../fleet.json'
-import pkg from '../../package.json'
-import {
-  compareMigrations,
-  latestFetchBySource,
-  readAppliedMigrations,
-  repoMigrations,
-} from '../utils/fleet-status'
-
-/** Bump when the shape of this payload changes incompatibly. */
-export const FLEET_STATUS_SCHEMA_VERSION = 1
-
-// Parsed once at module load. `bun run fleet:check` guarantees this passes in
-// CI, so a throw here means the manifest was edited by hand after the gate —
-// and failing the route loudly is better than serving a half-read manifest.
-const manifest = FleetManifestSchema.parse(rawManifest)
+import { collectStatus } from '../utils/fleet-status'
 
 export default defineEventHandler(async (event) => {
   // Same budget as /api/health: generous for a monitor, useless as a load generator.
@@ -48,65 +28,11 @@ export default defineEventHandler(async (event) => {
   setResponseHeader(event, 'Cache-Control', 'no-store')
 
   const config = useRuntimeConfig(event)
-
-  let database: 'connected' | 'unavailable' = 'connected'
-  try {
-    await db.run(sql`SELECT 1`)
-  } catch {
-    database = 'unavailable'
-  }
-
-  const applied =
-    database === 'connected' ? await readAppliedMigrations(db) : { table: null, names: [] }
-  const repo = repoMigrations()
-  const drift = compareMigrations(repo, applied.names)
-  // Only once the snapshots table exists: before the migration is applied,
-  // `migrations.pending` is the finding and this must not turn it into a 500.
-  const sources =
-    database === 'connected' && drift.pending.length === 0 ? await latestFetchBySource(db) : {}
-
-  const status = database === 'unavailable' ? 'down' : drift.pending.length ? 'degraded' : 'ok'
-  if (status === 'down') setResponseStatus(event, 503)
-
-  return {
-    schema: FLEET_STATUS_SCHEMA_VERSION,
-    status,
-    timestamp: new Date().toISOString(),
-    app: {
-      slug: manifest.slug,
-      name: manifest.name,
-      stage: manifest.stage,
-      workers: manifest.workers,
-    },
-    database,
-    build: {
-      // Empty when neither CI nor git could supply one — reported as null so a
-      // reader does not mistake '' for "the sha is the empty string".
-      sha: config.public.buildSha || null,
-      date: config.buildDate,
-    },
-    versions: {
-      nuxt: pkg.dependencies.nuxt,
-      wrangler: pkg.devDependencies.wrangler,
-      templateRepo: manifest.template.repo,
-      templateSyncedSha: manifest.template.syncedSha,
-    },
-    migrations: {
-      repo: { head: repo.at(-1) ?? null, count: repo.length },
-      applied: {
-        table: applied.table,
-        head: applied.names.at(-1) ?? null,
-        count: applied.names.length,
-      },
-      pending: drift.pending,
-      unknown: drift.unknown,
-    },
-    // The same map Nitro runs, so a reader can compare it with the triggers
-    // Cloudflare reports — the cron-parity check, from the outside.
-    crons: config.scheduledTasks,
-    // Newest fetched_at per source id — is the poll actually polling. Public
-    // by the same argument as the rest: source ids and timestamps are what
-    // every page already prints beside its numbers.
-    sources,
-  }
+  const { httpStatus, payload } = await collectStatus(db, {
+    buildSha: config.public.buildSha,
+    buildDate: config.buildDate,
+    scheduledTasks: config.scheduledTasks,
+  })
+  setResponseStatus(event, httpStatus)
+  return payload
 })

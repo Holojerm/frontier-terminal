@@ -25,6 +25,7 @@ useSeo({
 
 const config = useRuntimeConfig()
 const repo = manifest.links.github
+const mcpUrl = `${config.public.appUrl.replace(/\/+$/, '')}/mcp`
 
 const { data: coverage } = await useFetch<CoverageData>('/api/coverage')
 
@@ -159,6 +160,30 @@ const caveats = computed(() => (coverage.value?.sources ?? []).filter((s) => s.c
           <span class="text-muted"> — alerts, for a reader that wants to be told.</span>
         </li>
       </ul>
+    </TerminalPanel>
+
+    <TerminalPanel
+      id="agents"
+      title="Connect an agent"
+      note="The same queries the pages run, as MCP tools. Read-only, no account, no key."
+    >
+      <div class="max-w-2xl space-y-3 text-sm">
+        <p class="text-default">
+          Point Claude, ChatGPT or any MCP client at the endpoint below. Each tool returns the
+          matching API payload with its provenance intact, through the same cache and the same
+          per-address rate limit as the site.
+        </p>
+        <pre
+          class="overflow-x-auto rounded-md border border-default bg-muted p-3 font-mono text-xs text-default"
+        ><code>{{ mcpUrl }}</code></pre>
+        <pre
+          class="overflow-x-auto rounded-md border border-default bg-muted p-3 font-mono text-xs text-default"
+        ><code>claude mcp add --transport http frontier-terminal {{ mcpUrl }}</code></pre>
+        <p class="text-muted">
+          Tools: describe, get_overview, get_prices, get_hiring, get_alerts, get_alert,
+          get_coverage, get_status. Start with <span class="font-mono">describe</span>.
+        </p>
+      </div>
     </TerminalPanel>
   </div>
 </template>

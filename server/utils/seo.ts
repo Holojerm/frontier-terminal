@@ -35,8 +35,8 @@ export const AI_CRAWLERS: { agent: string; purpose: string }[] = [
   { agent: 'CCBot', purpose: 'Common Crawl — corpus most open models train on' },
 ]
 
-/** Paths no crawler should spend budget on: the JSON API is not a page. */
-const DISALLOWED = ['/api/']
+/** Paths no crawler should spend budget on: the JSON API and the MCP endpoint are not pages. */
+const DISALLOWED = ['/api/', '/mcp']
 
 export interface RobotsInput {
   appUrl: string
@@ -234,6 +234,10 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
   }
 
   sections.push(
+    '## Agents',
+    '',
+    `- [MCP endpoint](${appUrl}/mcp): read-only tools over the same data — overview, prices, hiring, alerts, coverage, status — with provenance on every row. Streamable HTTP, no auth. \`claude mcp add --transport http frontier-terminal ${appUrl}/mcp\``,
+    '',
     '## About',
     '',
     '- Not investment advice. Every figure carries the URL it was read from and when.',
