@@ -10,10 +10,10 @@
     "kv": ["ba653082105144bdb3b91a9189a72a3d"],
     "r2": ["frontier-terminal-blob"]
   },
-  "crons": ["*/30 * * * *"],
+  "crons": ["*/30 * * * *", "0 */6 * * *"],
   "deploy": "workers-builds",
   "template": { "repo": "Holojerm/nuxt-cf-template", "syncedSha": null },
   "features": { "auth": false, "billing": false, "posthog": null, "opsEvents": true },
-  "secrets": [],
+  "secrets": ["NUXT_SEC_CONTACT_EMAIL"],
   "links": { "github": "https://github.com/Holojerm/frontier-terminal" }
 }

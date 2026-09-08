@@ -94,7 +94,15 @@ describe('collectFleetCounters', () => {
   it('is all zeros on an empty database', async () => {
     expect(await collectFleetCounters(db, NOW)).toEqual({
       opsEvents: { pending: 0, last24h: 0 },
-      extra: {},
+      extra: {
+        snapshots: 0,
+        entities: 0,
+        changes: 0,
+        alerts: 0,
+        lastOkTickEdgarMs: 0,
+        lastOkTickSurveyMs: 0,
+        lastFailureMs: 0,
+      },
     })
   })
 
