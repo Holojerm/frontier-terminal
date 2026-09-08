@@ -93,7 +93,7 @@ crons = ["*/30 * * * *"]
 NUXT_PUBLIC_APP_NAME = "Frontier Terminal"
 # Canonical public origin, no trailing slash. sitemap.xml, robots.txt and og:
 # tags build absolute links from this.
-NUXT_PUBLIC_APP_URL = "https://frontier-terminal.holojerm.workers.dev"
+NUXT_PUBLIC_APP_URL = "https://frontier-terminal.jeremy-ettlinger.workers.dev"
 # Ops digest routing — pairs with the [[send_email]] block above. `to` must be
 # the same verified destination address the binding is pinned to; `from` must
 # be on a zone in this account with Email Routing enabled. Not secrets: the
