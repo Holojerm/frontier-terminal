@@ -90,7 +90,13 @@ const DETAIL_MAX = 1000
 interface Fetched {
   source: FetchSource
   fetched_at: string
-  body: { text: string; snapshot_id: string; unchanged: boolean } | null
+  body: {
+    text: string
+    snapshot_id: string
+    unchanged: boolean
+    /** No earlier good run for this source: whatever parses is the baseline. */
+    first: boolean
+  } | null
   failure: string | null
 }
 
@@ -126,7 +132,7 @@ async function fetchAndSnapshot(deps: RefreshDeps, source: FetchSource, now: () 
   ])
   return {
     ...base,
-    body: { text: outcome.text, snapshot_id, unchanged },
+    body: { text: outcome.text, snapshot_id, unchanged, first: latest === null },
     failure: null,
   } satisfies Fetched
 }
@@ -178,9 +184,12 @@ async function parseAndStore(
   })
 
   const before = await currentEntities(deps.db, source.source_id)
-  if (before.length === 0) {
+  if (body.first) {
     // First observation: record what is there, not a wall of "added" events
-    // for things that happened before we were watching.
+    // for things that happened before we were watching — a status feed's
+    // whole backlog, a filer's recent window. Decided by "no earlier good
+    // run", not by an empty current set: a filtered feed can legitimately
+    // baseline at zero rows, and its first real row must then be 'added'.
     await insertRows(deps.db, 'entities', parsed.entities.map(toStored))
     return quiet(
       'baseline',
@@ -188,9 +197,10 @@ async function parseAndStore(
       body.snapshot_id,
     )
   }
-  if (parsed.entities.length === 0) {
+  if (parsed.entities.length === 0 && lane.removals === 'set') {
     // An empty page that parsed cleanly is far more often an outage that
-    // returned 200 than a board that really closed every role.
+    // returned 200 than a board that really closed every role. An
+    // append-only feed is different: an empty window removes nothing.
     return quiet(
       'failed',
       `parser returned zero rows against ${before.length} current entities; refusing to record a mass removal`,

@@ -1,11 +1,13 @@
 <script setup lang="ts">
 // The terminal's front page. Reading order is priority order: what moved,
-// then what things cost, then who is hiring, then the coverage the first
-// three rest on. Four cached endpoints, fetched in parallel on the server.
+// then what things cost, then who is hiring, then how strained the APIs
+// are, then the coverage the first four rest on. Five cached endpoints,
+// fetched in parallel on the server.
 
 import type {
   CoverageData,
   HiringData,
+  IncidentsData,
   OverviewData,
   PricesData,
 } from '#shared/utils/terminal-types'
@@ -16,7 +18,7 @@ definePageMeta({
     priority: '1.0',
     title: 'Overview',
     summary:
-      'What moved across the frontier AI labs — judged alerts, change counts by axis, like-for-like API prices, open roles by department, and source coverage.',
+      'What moved across the frontier AI labs — judged alerts, change counts by axis, like-for-like API prices, open roles by department, status-page incidents, and source coverage.',
   },
 })
 
@@ -34,15 +36,16 @@ useSeo({
   description,
 })
 
-const [overview, prices, hiring, coverage] = await Promise.all([
+const [overview, prices, hiring, incidents, coverage] = await Promise.all([
   useFetch<OverviewData>('/api/overview'),
   useFetch<PricesData>('/api/prices'),
   useFetch<HiringData>('/api/hiring'),
+  useFetch<IncidentsData>('/api/incidents'),
   useFetch<CoverageData>('/api/coverage'),
 ])
 
 const failed = computed(() =>
-  [overview, prices, hiring, coverage].some(
+  [overview, prices, hiring, incidents, coverage].some(
     (r) => r.error.value !== null && r.error.value !== undefined,
   ),
 )
@@ -86,6 +89,20 @@ const failed = computed(() =>
       note="Open roles by department, from each board’s current listing."
     >
       <TerminalHiringMix v-if="hiring.data.value" :hiring="hiring.data.value" />
+    </TerminalPanel>
+
+    <TerminalPanel
+      id="strain"
+      title="Capacity strain"
+      note="Incidents each lab posted on its own status page: the newest 30 days against the 30 before, and what is open now."
+    >
+      <TerminalStrainPanel v-if="incidents.data.value" :incidents="incidents.data.value" />
+      <p v-if="incidents.data.value" class="text-sm">
+        <NuxtLink to="/incidents" class="text-primary underline underline-offset-2">
+          All incidents — {{ incidents.data.value.incidents.length }} in the last
+          {{ incidents.data.value.history_days }} days
+        </NuxtLink>
+      </p>
     </TerminalPanel>
 
     <TerminalPanel

@@ -11,14 +11,14 @@ definePageMeta({
     priority: '0.6',
     title: 'Data',
     summary:
-      'Bulk downloads of every table — snapshots, current prices, open jobs, the change log, alerts, poll runs — as CSV or JSON, with provenance columns on every row.',
+      'Bulk downloads of every table — snapshots, current prices, open jobs, status-page incidents, the change log, alerts, poll runs — as CSV or JSON, with provenance columns on every row.',
   },
 })
 
 useSeo({
   title: 'Data',
   description:
-    'Download the terminal’s tables as CSV or JSON: snapshots, current prices, open jobs, the change log, alerts and poll runs, each row with its source URL.',
+    'Download the terminal’s tables as CSV or JSON: snapshots, prices, open jobs, incidents, the change log, alerts and poll runs, each row with its source URL.',
 })
 
 const { data: coverage, error } = await useFetch<CoverageData>('/api/coverage')

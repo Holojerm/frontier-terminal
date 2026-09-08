@@ -6,7 +6,7 @@ import {
   type EntityRow,
   type Provenance,
 } from './contracts'
-import { normalizeFilings, normalizeJobs, normalizePrices } from './normalize'
+import { normalizeFilings, normalizeIncidents, normalizeJobs, normalizePrices } from './normalize'
 import { parseAnthropicGreenhouse } from './parsers/hiring/anthropic-greenhouse'
 import { parseOpenaiAshby } from './parsers/hiring/openai-ashby'
 import { parseXaiGreenhouse } from './parsers/hiring/xai-greenhouse'
@@ -18,6 +18,9 @@ import { parseXaiModelsMd } from './parsers/pricing/xai-models'
 import { parseEdgarFts } from './parsers/sec/edgar-fts'
 import { parseEdgarSubmissionsSpcx } from './parsers/sec/edgar-submissions'
 import { isS1FloorForm } from './parsers/sec/s1-floor'
+import { parseAnthropicStatus } from './parsers/status/anthropic-status'
+import { parseGoogleCloudStatus } from './parsers/status/google-cloud-status'
+import { parseOpenaiStatus } from './parsers/status/openai-status'
 import type { CikWhitelist } from './parsers/sec/whitelist'
 
 // How each include source turns a fetched body into entities — the join
@@ -117,6 +120,34 @@ export const LANES: Readonly<Record<string, Lane>> = {
       entities: normalizeFilings(parseEdgarSubmissionsSpcx(text, whitelist, prov).rows, snapshotId),
     }),
     alerts: s1FloorAlerts,
+  },
+  // Status feeds are rolling windows (Statuspage caps at 50; OpenAI's page
+  // holds about a month), so an incident scrolling out was not un-posted.
+  // An incident that resolves diffs as 'modified' (resolved_at null → set).
+  'openai-status': {
+    sides: [],
+    removals: 'append-only',
+    parse: (text, { prov, snapshotId }) => ({
+      entities: normalizeIncidents(parseOpenaiStatus(text, prov).rows, snapshotId),
+    }),
+  },
+  'anthropic-status': {
+    sides: [],
+    removals: 'append-only',
+    parse: (text, { prov, snapshotId }) => ({
+      entities: normalizeIncidents(parseAnthropicStatus(text, prov).rows, snapshotId),
+    }),
+  },
+  'google-cloud-status': {
+    sides: [],
+    removals: 'append-only',
+    parse: (text, { prov, snapshotId }) => {
+      const { rows, skipped } = parseGoogleCloudStatus(text, prov)
+      return {
+        entities: normalizeIncidents(rows, snapshotId),
+        note: skipped ? `${skipped} incidents skipped: no Gemini / Vertex AI product` : undefined,
+      }
+    },
   },
 }
 

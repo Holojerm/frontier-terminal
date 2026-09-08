@@ -17,6 +17,9 @@ import openrouterModels from '../../fixtures/pricing/openrouter-models.json?raw'
 import xaiModels from '../../fixtures/pricing/xai-models.md?raw'
 import edgarFts from '../../fixtures/sec/edgar-fts.json?raw'
 import edgarSubmissionsSpcx from '../../fixtures/sec/edgar-submissions-spcx.json?raw'
+import anthropicStatus from '../../fixtures/status/anthropic-status.json?raw'
+import googleCloudStatus from '../../fixtures/status/google-cloud-status.json?raw'
+import openaiStatus from '../../fixtures/status/openai-status.json?raw'
 import sourcesYaml from '../../sources.yaml?raw'
 
 export const manifest = manifestJson
@@ -35,6 +38,9 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/pricing/xai-models.md': xaiModels,
   'fixtures/sec/edgar-fts.json': edgarFts,
   'fixtures/sec/edgar-submissions-spcx.json': edgarSubmissionsSpcx,
+  'fixtures/status/anthropic-status.json': anthropicStatus,
+  'fixtures/status/google-cloud-status.json': googleCloudStatus,
+  'fixtures/status/openai-status.json': openaiStatus,
   'sources.yaml': sourcesYaml,
 }
 

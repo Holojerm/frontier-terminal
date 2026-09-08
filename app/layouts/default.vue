@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // The app shell for every page. One layout: there is no signed-in state to
-// adapt to, so the header is the mark, the five section links, and the
+// adapt to, so the header is the mark, the six section links, and the
 // color-mode toggle; the footer is the disclaimer and the machine-readable
 // exits (feed, exports, repo).
 //
@@ -21,6 +21,7 @@ const links = [
   { label: 'Overview', to: '/' },
   { label: 'Prices', to: '/prices' },
   { label: 'Alerts', to: '/alerts' },
+  { label: 'Incidents', to: '/incidents' },
   { label: 'Data', to: '/data' },
   { label: 'About', to: '/about' },
 ]

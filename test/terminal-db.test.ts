@@ -20,6 +20,7 @@ import {
   queryContext,
   queryCoverage,
   queryHiring,
+  queryIncidents,
   queryOverview,
   queryPrices,
 } from '../server/utils/terminal-db'
@@ -127,7 +128,7 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       latest_detected_at: null,
       window_from: null,
       window_hours: 24,
-      recent: { pricing: 0, hiring: 0, sec: 0, total: 0 },
+      recent: { pricing: 0, hiring: 0, sec: 0, incidents: 0, total: 0 },
       total_changes: 0,
       sources_total: 0,
       sources_not_yet_compared: 0,
@@ -190,10 +191,34 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       'snapshots',
       'prices_latest',
       'jobs_open',
+      'incidents',
       'changes',
       'alerts',
       'source_runs',
     ])
+  })
+
+  it('incidents: xAI is a stated cut; the other three say no rows, not zero incidents', async () => {
+    const incidents = await queryIncidents(db, await ctx())
+    expect(incidents.providers.map((p) => p.provider)).toEqual([
+      'openai',
+      'anthropic',
+      'google',
+      'xai',
+    ])
+    const xai = incidents.providers[3]!
+    expect(xai.feed).toBe('no_public_feed')
+    expect(xai.reason).toContain('403')
+    for (const p of incidents.providers.slice(0, 3)) {
+      expect(p.feed).toBe('no_rows')
+      expect(p.last_window).toBe(0)
+      expect(p.open).toEqual([])
+      expect(p.coverage_from).toBeNull()
+    }
+    // No feed fetched: the window anchors on the query clock and says so.
+    expect(incidents.window_to).toBe('2026-09-07T12:00:00.000Z')
+    expect(incidents.incidents).toEqual([])
+    expect(incidents.providers[2]!.caveat).toContain('Gemini')
   })
 })
 
@@ -207,10 +232,10 @@ describe('after a baseline poll of every source', () => {
     expect(as_of).toMatch(/^2026-09-07T10:0\d:/)
     expect(movement.total_changes).toBe(0)
     expect(movement.latest_detected_at).toBeNull()
-    expect(movement.sources_total).toBe(13)
+    expect(movement.sources_total).toBe(16)
     // Every source has exactly one snapshot => nothing could have been
     // diffed. That is a different sentence from "nothing changed".
-    expect(movement.sources_not_yet_compared).toBe(13)
+    expect(movement.sources_not_yet_compared).toBe(16)
     expect(latest_fetched_at).toMatch(/^2026-09-07T10:0\d:/)
   })
 
@@ -328,7 +353,7 @@ describe('after a baseline poll of every source', () => {
 
   it('coverage: every source has a snapshot, a run, and the audit caveat', async () => {
     const coverage = await queryCoverage(db, await ctx())
-    expect(coverage.sources).toHaveLength(13)
+    expect(coverage.sources).toHaveLength(16)
     for (const s of coverage.sources) {
       expect(s.newest_snapshot!.source_url).toBe(urlOf(s.source_id))
       expect(s.newest_snapshot!.fetched_at).toMatch(/^2026-09-07T10:0\d:/)
@@ -344,8 +369,57 @@ describe('after a baseline poll of every source', () => {
     expect(byId['anthropic-greenhouse-departments']!.role).toBe('join')
     // The resolved CIK URL from the manifest, not the sources.yaml template.
     expect(byId['edgar-submissions-spcx']!.url).toBe(urlOf('edgar-submissions-spcx'))
-    expect(coverage.totals.snapshots).toBe(13)
+    expect(coverage.totals.snapshots).toBe(16)
     expect(coverage.exports.find((e) => e.name === 'jobs_open')!.rows).toBe(65 + 59 + 42)
+    expect(coverage.exports.find((e) => e.name === 'incidents')!.rows).toBe(25 + 50 + 1)
+    expect(byId['google-cloud-status']).toMatchObject({ entity_count: 1, role: 'status' })
+    expect(byId['google-cloud-status']!.last_run!.detail).toBe(
+      '1 entities; 5 incidents skipped: no Gemini / Vertex AI product',
+    )
+  })
+
+  it('incidents: windows anchor on the newest status fetch and each card says where its history begins', async () => {
+    const incidents = await queryIncidents(db, await ctx())
+    // The anchor is the fetch, not the reader's clock: the fixture feeds
+    // were read on 2026-09-08 but this store fetched them "on" 2026-09-07.
+    expect(incidents.window_to).toMatch(/^2026-09-07T10:0\d:/)
+    expect(incidents).toMatchObject({ window_days: 30, history_days: 90 })
+    const byProvider = Object.fromEntries(incidents.providers.map((p) => [p.provider, p]))
+
+    // OpenAI: 25 incidents 2026-08-05 → 2026-09-08; the one at 14:32Z on the
+    // 8th starts AFTER this store's anchor and is outside every window.
+    const openai = byProvider.openai!
+    expect(openai.feed).toBe('ok')
+    expect(openai.coverage_from).toBe('2026-08-05T16:55:54Z')
+    expect(openai.last_window + openai.prior_window).toBeLessThanOrEqual(25)
+    expect(openai.open.map((i) => i.incident_id)).toEqual(['01M20PYYYGRT9303VHAPA7YNT2'])
+    expect(openai.sources[0]).toMatchObject({
+      source_id: 'openai-status',
+      source_url: urlOf('openai-status'),
+    })
+
+    // Anthropic: the 50-incident cap begins 2026-07-21, inside the prior window.
+    const anthropic = byProvider.anthropic!
+    expect(anthropic.coverage_from).toBe('2026-07-21T15:35:03.985Z')
+    expect(anthropic.last_window).toBeGreaterThan(0)
+    expect(anthropic.prior_window).toBeGreaterThan(0)
+    expect(anthropic.open).toEqual([])
+
+    // Google: the one Gemini incident is from February — held, but outside 90 days.
+    const google = byProvider.google!
+    expect(google).toMatchObject({ feed: 'ok', last_window: 0, prior_window: 0 })
+    expect(google.coverage_from).toBe('2026-02-27T12:37:00+00:00')
+    expect(incidents.incidents.some((i) => i.provider === 'google')).toBe(false)
+
+    // Newest first, every row with the fetch's provenance and the vendor's link.
+    const starts = incidents.incidents.map((i) => i.started_at)
+    expect(starts).toEqual([...starts].sort().reverse())
+    for (const i of incidents.incidents) {
+      expect(i.source_url).toBe(urlOf(`${i.provider}-status`))
+      expect(i.fetched_at).toMatch(/^2026-09-07T10:0\d:/)
+      expect(i.incident_url).toMatch(/^https:\/\/status\./)
+    }
+    expect(byProvider.xai!.feed).toBe('no_public_feed')
   })
 
   it('alerts: none after a baseline', async () => {
@@ -410,14 +484,14 @@ describe('after a second poll that moves prices, closes a role, and files an S-1
 
   it('the signal band counts each change on its axis inside a stated 24h window', async () => {
     const { movement, alerts, alert_count } = await queryOverview(db, await ctx())
-    expect(movement.recent).toEqual({ pricing: 3, hiring: 1, sec: 1, total: 5 })
+    expect(movement.recent).toEqual({ pricing: 3, hiring: 1, sec: 1, incidents: 0, total: 5 })
     expect(movement.total_changes).toBe(5)
     expect(movement.latest_detected_at).toMatch(/^2026-09-07T10:0\d:/)
     expect(Date.parse(movement.latest_detected_at!) - Date.parse(movement.window_from!)).toBe(
       24 * 3_600_000,
     )
-    expect(movement.sources_total).toBe(13)
-    expect(movement.sources_not_yet_compared).toBe(13 - 4) // xai md, xai jobs + its join, edgar-fts
+    expect(movement.sources_total).toBe(16)
+    expect(movement.sources_not_yet_compared).toBe(16 - 4) // xai md, xai jobs + its join, edgar-fts
 
     expect(alert_count).toBe(1)
     expect(alerts).toHaveLength(1)
@@ -498,7 +572,7 @@ describe('the stated window holds when changes span several axes', () => {
     const { movement } = await queryOverview(db, await ctx())
     expect(movement.latest_detected_at).toBe('2026-08-26T16:24:42Z')
     expect(movement.window_from).toBe('2026-08-25T16:24:42.000Z')
-    expect(movement.recent).toEqual({ pricing: 1, hiring: 2, sec: 0, total: 3 })
+    expect(movement.recent).toEqual({ pricing: 1, hiring: 2, sec: 0, incidents: 0, total: 3 })
     expect(movement.total_changes).toBe(4)
   })
 })
