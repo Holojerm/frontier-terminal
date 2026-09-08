@@ -11,7 +11,7 @@ import { fixtureText, manifest } from './fixtures'
 const sourcesYaml = fixtureText('sources.yaml')
 
 describe('includeSources', () => {
-  test('yields the 13 include-verdict sources in sources.yaml order, keyed by manifest source_id', () => {
+  test('yields the 16 include-verdict sources in sources.yaml order, keyed by manifest source_id', () => {
     const sources = includeSources(sourcesYaml, manifest.fixtures)
     expect(sources.map((s) => s.source_id)).toEqual([
       'openai-models-md',
@@ -27,6 +27,9 @@ describe('includeSources', () => {
       'xai-greenhouse-departments',
       'edgar-fts',
       'edgar-submissions-spcx',
+      'openai-status',
+      'anthropic-status',
+      'google-cloud-status',
     ])
   })
 
@@ -52,6 +55,7 @@ describe('includeSources', () => {
     const ids = includeSources(sourcesYaml, manifest.fixtures).map((s) => s.source_id)
     expect(ids).not.toContain('google-hiring')
     expect(ids).not.toContain('compute-deals')
+    expect(ids).not.toContain('xai-status')
   })
 
   test('non-include verdicts are skipped; an include source must name a fixture the manifest knows', () => {

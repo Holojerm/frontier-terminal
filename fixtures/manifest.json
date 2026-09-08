@@ -122,6 +122,36 @@
       "http_status": 200,
       "raw_bytes": 14337,
       "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/status/openai-status.json",
+      "source_id": "openai-status",
+      "source_url": "https://status.openai.com/api/v2/incidents.json",
+      "fetched_at": "2026-09-08T21:57:31Z",
+      "http_status": 200,
+      "raw_bytes": 39009,
+      "trim": "none — committed whole",
+      "note": "Statuspage v2 shape: {page, incidents[]}. 25 incidents (2026-08-05 → 2026-09-08); no `components`, `started_at` or `shortlink` on this page, and one open incident (status monitoring) has no `resolved_at` key at all rather than null."
+    },
+    {
+      "path": "fixtures/status/anthropic-status.json",
+      "source_id": "anthropic-status",
+      "source_url": "https://status.claude.com/api/v2/incidents.json",
+      "fetched_at": "2026-09-08T21:57:32Z",
+      "http_status": 200,
+      "raw_bytes": 190515,
+      "trim": "none — committed whole",
+      "note": "status.anthropic.com/api/v2/incidents.json 301-redirects here; the final URL is the one registered. Statuspage v2 shape with `components` (claude.ai, Claude API (api.anthropic.com), Claude Code, Claude Cowork, Claude Console) and `started_at`. 50 incidents (2026-07-21 → 2026-09-03), all resolved — the page's window cap, so history beyond 50 is only what this pipeline accumulates."
+    },
+    {
+      "path": "fixtures/status/google-cloud-status.json",
+      "source_id": "google-cloud-status",
+      "source_url": "https://status.cloud.google.com/incidents.json",
+      "fetched_at": "2026-09-08T21:57:32Z",
+      "http_status": 200,
+      "raw_bytes": 158658,
+      "trim": "none — committed whole",
+      "note": "Google Cloud's own format: a bare array of {id, number, begin, end, severity, status_impact, external_desc, affected_products[{title}], uri, updates[]}. 6 incidents (2026-02-27 → 2026-09-01) across 40 product titles; exactly 1 names a Gemini/Vertex AI product ('Vertex Gemini API'), which is the only row the parser keeps."
     }
   ]
 }

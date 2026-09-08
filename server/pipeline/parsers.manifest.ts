@@ -14,5 +14,9 @@ import './parsers/pricing/xai-models'
 import './parsers/pricing/google-pricing'
 import './parsers/sec/edgar-fts'
 import './parsers/sec/edgar-submissions'
+// Status pages (capacity strain)
+import './parsers/status/openai-status'
+import './parsers/status/anthropic-status'
+import './parsers/status/google-cloud-status'
 // OpenRouter drift check (cross-check only)
 import './parsers/openrouter'

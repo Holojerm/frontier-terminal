@@ -37,6 +37,12 @@ export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
   'xai-greenhouse-departments': { label: 'xAI Greenhouse departments (join)', role: 'join' },
   'edgar-fts': { label: 'EDGAR full-text search (S-1 tripwire)', role: 'sec' },
   'edgar-submissions-spcx': { label: 'EDGAR submissions (SPCX)', role: 'sec' },
+  'openai-status': { label: 'OpenAI status page incidents', role: 'status' },
+  'anthropic-status': { label: 'Anthropic (Claude) status page incidents', role: 'status' },
+  'google-cloud-status': {
+    label: 'Google Cloud status incidents (Gemini / Vertex AI only)',
+    role: 'status',
+  },
 }
 
 export const PROVIDER_DISPLAY: Readonly<Record<ProviderId, string>> = {
@@ -55,6 +61,13 @@ export const HIRING_SOURCE_IDS: Readonly<Record<'openai' | 'anthropic' | 'xai', 
   openai: ['openai-ashby'],
   anthropic: ['anthropic-greenhouse', 'anthropic-greenhouse-departments'],
   xai: ['xai-greenhouse', 'xai-greenhouse-departments'],
+}
+
+/** Which status feed backs each provider — for provenance before rows land. xAI has none (sources.yaml `cut.xai-status`). */
+export const INCIDENT_SOURCE_IDS: Readonly<Record<'openai' | 'anthropic' | 'google', string>> = {
+  openai: 'openai-status',
+  anthropic: 'anthropic-status',
+  google: 'google-cloud-status',
 }
 
 export interface RegisteredSource {
@@ -148,7 +161,13 @@ function readBlock(lines: string[], name: string): Block[] {
   return blocks
 }
 
-const AXES: readonly SourceAxis[] = ['pricing-catalog', 'pricing-cross-check', 'hiring', 'sec']
+const AXES: readonly SourceAxis[] = [
+  'pricing-catalog',
+  'pricing-cross-check',
+  'hiring',
+  'sec',
+  'status',
+]
 const PROVIDERS: readonly (ProviderId | 'all')[] = [
   'openai',
   'anthropic',

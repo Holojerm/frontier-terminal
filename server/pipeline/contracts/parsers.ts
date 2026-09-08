@@ -91,6 +91,34 @@ export type FilingRow = z.infer<typeof FilingRow>
 export const EdgarFtsOutput = z.strictObject({ rows: z.array(FilingRow) })
 export const EdgarSubmissionsOutput = z.strictObject({ rows: z.array(FilingRow) })
 
+// ---- Status pages (capacity strain) ---------------------------------------
+
+// One row per incident the vendor posted. Vocabulary is stored VERBATIM per
+// feed and never mapped across vendors: Statuspage impact is
+// none/minor/major/critical and its status investigating/identified/
+// monitoring/resolved/postmortem; Google Cloud severity is low/medium/high
+// and its status is the most recent update's (AVAILABLE once resolved).
+// `updated_at` is deliberately absent — Statuspage re-stamps it on every
+// posted update, and a row that changed only there is not a change.
+export const IncidentRow = z.strictObject({
+  provider: providerEnum,
+  incident_id: z.string().min(1),
+  title: z.string().min(1),
+  impact: z.string().min(1),
+  status: z.string().min(1),
+  started_at: z.string().min(1),
+  resolved_at: z.string().nullable(), // null while open
+  // Statuspage component names / Google affected_products titles, sorted.
+  components: z.array(z.string().min(1)),
+  incident_url: z.url({ protocol: /^https?$/ }),
+  ...provenanceFields,
+})
+export type IncidentRow = z.infer<typeof IncidentRow>
+export const StatuspageIncidentsOutput = z.strictObject({ rows: z.array(IncidentRow) })
+export const GoogleCloudIncidentsOutput = z.strictObject({
+  rows: z.array(IncidentRow.extend({ provider: z.literal('google') })),
+})
+
 // ---- Cross-check (never source of record) ---------------------------------
 
 export const OpenRouterModelRow = z.strictObject({
@@ -114,6 +142,9 @@ export const parserOutputSchemas = {
   'google-pricing-html': GooglePricingOutput,
   'edgar-fts': EdgarFtsOutput,
   'edgar-submissions-spcx': EdgarSubmissionsOutput,
+  'openai-status': StatuspageIncidentsOutput,
+  'anthropic-status': StatuspageIncidentsOutput,
+  'google-cloud-status': GoogleCloudIncidentsOutput,
   'openrouter-models': OpenRouterOutput,
 } as const
 export type ParserId = keyof typeof parserOutputSchemas

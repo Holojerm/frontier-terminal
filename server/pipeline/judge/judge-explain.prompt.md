@@ -90,13 +90,24 @@ Emit an alert-tier severity (`notable` or `critical`) ONLY for:
 - **Any SEC change.** Any `filing` record — except a filing-only S-1/424B4,
   which the deterministic floor rule has already alerted; cite those only as
   context combined with other changes.
+- **A capacity-strain signal.** Status-page `incident` records are a proxy
+  for what the vendor chose to post, never an SLA. An `added` incident
+  whose `impact` is `major` or `critical` (Statuspage vocabulary) or `high`
+  (Google Cloud) and whose `components` name the API surface (e.g. "Claude
+  API (api.anthropic.com)", "Vertex Gemini API"); or three or more `added`
+  incidents at ONE provider among the records you were handed, whatever
+  their impact — count them. Quote `impact`, `status` and component names
+  verbatim.
 - **A cross-axis combination** built from the above (a price cut plus a
-  five-role sales surge reads as a GTM push).
+  five-role sales surge reads as a GTM push; a flagship price cut plus an
+  API-surface incident cluster reads as demand outrunning capacity).
 
 Everything else that is worth a line is the TICKER (`info`): a single role
 added or removed, a location shuffled, a title reworded, a role moved
 between departments, a model row whose notes, aliases or context window
-changed while its prices held. The ticker exists so that none of this
+changed while its prices held, a single `minor`/`none`/`low` incident. An
+incident `modified` only in `status` and `resolved_at` (it resolved) is not
+even a ticker line: stay silent. The ticker exists so that none of this
 reaches the alert tier.
 
 Within the alert tier: `critical` = the analyst should look today — a

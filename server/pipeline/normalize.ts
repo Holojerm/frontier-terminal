@@ -3,10 +3,12 @@ import {
   EntityRow,
   contentHash,
   filingKey,
+  incidentKey,
   jobKey,
   modelKey,
   stableStringify,
   type FilingRow,
+  type IncidentRow,
   type PriceRow,
   type Provider,
 } from './contracts'
@@ -30,7 +32,7 @@ export { stableStringify }
 // content is byte-identical, poisoning every diff downstream.
 function toEntity(
   entity_key: string,
-  entity_type: 'job' | 'model' | 'filing',
+  entity_type: 'job' | 'model' | 'filing' | 'incident',
   provider: Provider,
   snapshotId: string,
   row: Record<string, unknown> & { source_url: string; fetched_at: string },
@@ -85,6 +87,16 @@ export function normalizeFiling(
   return toEntity(filingKey(row.accession_no), 'filing', provider, snapshotId, row)
 }
 
+export function normalizeIncident(row: IncidentRow, snapshotId: string): EntityRow {
+  return toEntity(
+    incidentKey(row.provider, row.incident_id),
+    'incident',
+    row.provider,
+    snapshotId,
+    row,
+  )
+}
+
 const byEntityKey = (a: EntityRow, b: EntityRow): number =>
   a.entity_key < b.entity_key ? -1 : a.entity_key > b.entity_key ? 1 : 0
 
@@ -123,4 +135,8 @@ export function normalizeFilings(
   provider: Provider = 'other',
 ): EntityRow[] {
   return collapse(rows.map((row) => normalizeFiling(row, snapshotId, provider)))
+}
+
+export function normalizeIncidents(rows: readonly IncidentRow[], snapshotId: string): EntityRow[] {
+  return collapse(rows.map((row) => normalizeIncident(row, snapshotId)))
 }

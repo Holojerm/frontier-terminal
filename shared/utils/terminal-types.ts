@@ -16,8 +16,8 @@ export interface Prov {
 export type ProviderId = 'openai' | 'anthropic' | 'google' | 'xai' | 'other'
 export type BigFour = Exclude<ProviderId, 'other'>
 
-export type SourceAxis = 'pricing-catalog' | 'pricing-cross-check' | 'hiring' | 'sec'
-export type SourceRole = 'primary' | 'join' | 'cross-check' | 'sec'
+export type SourceAxis = 'pricing-catalog' | 'pricing-cross-check' | 'hiring' | 'sec' | 'status'
+export type SourceRole = 'primary' | 'join' | 'cross-check' | 'sec' | 'status'
 export type RunStatus = 'ok' | 'unchanged' | 'failed' | 'baseline'
 
 /** Where the numbers on a page stand in time. Every payload carries one. */
@@ -104,7 +104,7 @@ export interface MovementSummary {
   window_from: string | null
   window_hours: number
   /** Changes inside that window, by axis. */
-  recent: { pricing: number; hiring: number; sec: number; total: number }
+  recent: { pricing: number; hiring: number; sec: number; incidents: number; total: number }
   /** Every change ever recorded — the denominator for "quiet" claims. */
   total_changes: number
   /** Sources with snapshots at all. */
@@ -211,10 +211,12 @@ export interface DeptCount {
   count: number
 }
 
-export interface HiringSource extends Prov {
+/** A source cited beside a number: which feed, where, and when it was read. */
+export interface SourceRef extends Prov {
   source_id: string
   label: string
 }
+export type HiringSource = SourceRef
 
 export interface HiringProviderView {
   provider: BigFour
@@ -236,6 +238,56 @@ export interface HiringData extends Stamp {
   providers: HiringProviderView[]
 }
 
+// ---- incidents (capacity strain) -------------------------------------------
+
+/** One posted incident, as the vendor's own feed states it. */
+export interface IncidentView extends Prov {
+  entity_key: string
+  source_id: string
+  provider: BigFour
+  incident_id: string
+  title: string
+  /** Vendor vocabulary, verbatim: Statuspage none/minor/major/critical; Google low/medium/high. */
+  impact: string
+  status: string
+  started_at: string
+  /** null while the incident is open. */
+  resolved_at: string | null
+  /** Statuspage component names / Google affected_products titles. */
+  components: string[]
+  incident_url: string
+}
+
+export interface IncidentProviderView {
+  provider: BigFour
+  display: string
+  /** no_public_feed: an audited cut; no_rows: feed registered, nothing parsed yet. */
+  feed: 'ok' | 'no_public_feed' | 'no_rows'
+  /** Set for no_public_feed — the audit verdict, never a number. */
+  reason: string | null
+  /** The audit's caveat for the feed (e.g. Google's product filter), in its own words. */
+  caveat: string | null
+  /** Incidents started inside the newest window_days. */
+  last_window: number
+  /** Incidents started in the window_days before that. */
+  prior_window: number
+  /** Currently open (resolved_at null), newest first. */
+  open: IncidentView[]
+  /** Earliest started_at held for this provider — where the count's history begins. */
+  coverage_from: string | null
+  sources: SourceRef[]
+}
+
+export interface IncidentsData extends Stamp {
+  /** The windows count back from here: the newest status-feed fetch, or computed_at before any. */
+  window_to: string
+  window_days: number
+  history_days: number
+  providers: IncidentProviderView[]
+  /** Every incident started inside history_days, all providers, newest first. */
+  incidents: IncidentView[]
+}
+
 // ---- alerts ----------------------------------------------------------------
 
 export interface FieldDiff {
@@ -247,7 +299,7 @@ export interface FieldDiff {
 export interface ChangeView extends Prov {
   id: string
   entity_key: string
-  entity_type: 'job' | 'model' | 'filing'
+  entity_type: 'job' | 'model' | 'filing' | 'incident'
   provider: ProviderId
   change_type: 'added' | 'removed' | 'modified'
   detected_at: string

@@ -16,6 +16,7 @@ const counters = computed(() => [
   { label: 'pricing', n: movement.value.recent.pricing },
   { label: 'hiring', n: movement.value.recent.hiring },
   { label: 'sec', n: movement.value.recent.sec },
+  { label: 'incidents', n: movement.value.recent.incidents },
 ])
 
 /**

@@ -20,6 +20,12 @@ export function filingKey(accessionNo: string): string {
   return `filing:${accessionNo}`
 }
 
+// Status-page incident ids are page-scoped (Statuspage ULIDs/short ids,
+// Google Cloud's own ids), so the provider is part of the key.
+export function incidentKey(provider: Provider, incidentId: string): string {
+  return `incident:${provider}:${incidentId}`
+}
+
 // Canonical serialization backing contentHash. Exported so consumers
 // (normalize) share this exact algorithm instead of carrying a copy:
 // contentHash(JSON.parse(payload)) === content_hash must hold.
