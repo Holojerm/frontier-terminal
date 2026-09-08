@@ -236,7 +236,7 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
   sections.push(
     '## Agents',
     '',
-    `- [MCP endpoint](${appUrl}/mcp): read-only tools over the same data — overview, prices, hiring, alerts, coverage, status — with provenance on every row. Streamable HTTP, no auth. \`claude mcp add --transport http frontier-terminal ${appUrl}/mcp\``,
+    `- [MCP endpoint](${appUrl}/mcp): read-only tools over the same data — overview, prices and price history, hiring and its history, releases, incidents, demand share, alerts, coverage, status — with provenance on every row. Streamable HTTP, no auth. \`claude mcp add --transport http frontier-terminal ${appUrl}/mcp\``,
     '',
     '## About',
     '',

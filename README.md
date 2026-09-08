@@ -68,8 +68,9 @@ For any other client that takes a JSON server definition:
 }
 ```
 
-Tools: `describe` (the site map), `get_overview`, `get_prices`, `get_hiring`, `get_alerts`,
-`get_alert`, `get_coverage`, `get_status`. Every result is the matching `/api/*` payload,
+Tools: `describe` (the site map), `get_overview`, `get_prices`, `get_price_history`, `get_hiring`,
+`get_hiring_history`, `get_releases`, `get_incidents`, `get_rankings`, `get_alerts`, `get_alert`,
+`get_coverage`, `get_status`. Every result is the matching `/api/*` payload,
 provenance included, served through the same cache and the same per-IP rate limit (60 requests
 a minute). The server is stateless — each call is one POST with a JSON reply — so there is
 nothing to keep a session for. Tools and their descriptions live in `server/utils/mcp.ts`.
