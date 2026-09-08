@@ -26,6 +26,10 @@ import { and, count, eq, gt, isNull, max, ne, sql } from 'drizzle-orm'
 import type { drizzle } from 'drizzle-orm/d1'
 import type { SQLiteTable } from 'drizzle-orm/sqlite-core'
 
+import { FleetManifestSchema } from '#shared/utils/fleet-manifest'
+
+import rawManifest from '../../fleet.json'
+import pkg from '../../package.json'
 import journal from '../db/migrations/meta/_journal.json'
 import * as tables from '../db/schema'
 
@@ -164,4 +168,97 @@ export async function latestFetchBySource(db: FleetDb): Promise<Record<string, s
   const out: Record<string, string> = {}
   for (const row of rows) if (row.at) out[row.source_id] = row.at
   return out
+}
+
+// ── The status payload ───────────────────────────────────────────────────────
+
+/** Bump when the shape of the status payload changes incompatibly. */
+export const FLEET_STATUS_SCHEMA_VERSION = 1
+
+// Parsed once at module load. `bun run fleet:check` guarantees this passes in
+// CI, so a throw here means the manifest was edited by hand after the gate —
+// and failing loudly is better than serving a half-read manifest.
+const manifest = FleetManifestSchema.parse(rawManifest)
+
+/** What the route reads off runtime config and hands in, so this stays testable. */
+export interface StatusConfig {
+  /** Empty when neither CI nor git could supply one — reported as null. */
+  buildSha: string
+  buildDate: string
+  /** The cron map Nitro runs. */
+  scheduledTasks: Record<string, string[]>
+}
+
+export type StatusLevel = 'ok' | 'degraded' | 'down'
+
+/**
+ * Everything /api/status says, and the HTTP code it should say it with:
+ * 200 for `ok` and `degraded` (migrations pending — the app is up, just not
+ * the app the code expects), 503 for `down` (D1 unreachable). A poller keys
+ * on the code; a human reads the field. The MCP `get_status` tool returns
+ * the same payload, so an agent and a dashboard cannot disagree.
+ */
+export async function collectStatus(
+  db: FleetDb,
+  config: StatusConfig,
+  now = new Date(),
+): Promise<{ httpStatus: 200 | 503; payload: Record<string, unknown> & { status: StatusLevel } }> {
+  let database: 'connected' | 'unavailable' = 'connected'
+  try {
+    await db.run(sql`SELECT 1`)
+  } catch {
+    database = 'unavailable'
+  }
+
+  const applied =
+    database === 'connected' ? await readAppliedMigrations(db) : { table: null, names: [] }
+  const repo = repoMigrations()
+  const drift = compareMigrations(repo, applied.names)
+  // Only once the snapshots table exists: before the migration is applied,
+  // `migrations.pending` is the finding and this must not turn it into a 500.
+  const sources =
+    database === 'connected' && drift.pending.length === 0 ? await latestFetchBySource(db) : {}
+
+  const status: StatusLevel =
+    database === 'unavailable' ? 'down' : drift.pending.length ? 'degraded' : 'ok'
+
+  return {
+    httpStatus: status === 'down' ? 503 : 200,
+    payload: {
+      schema: FLEET_STATUS_SCHEMA_VERSION,
+      status,
+      timestamp: now.toISOString(),
+      app: {
+        slug: manifest.slug,
+        name: manifest.name,
+        stage: manifest.stage,
+        workers: manifest.workers,
+      },
+      database,
+      build: { sha: config.buildSha || null, date: config.buildDate },
+      versions: {
+        nuxt: pkg.dependencies.nuxt,
+        wrangler: pkg.devDependencies.wrangler,
+        templateRepo: manifest.template.repo,
+        templateSyncedSha: manifest.template.syncedSha,
+      },
+      migrations: {
+        repo: { head: repo.at(-1) ?? null, count: repo.length },
+        applied: {
+          table: applied.table,
+          head: applied.names.at(-1) ?? null,
+          count: applied.names.length,
+        },
+        pending: drift.pending,
+        unknown: drift.unknown,
+      },
+      // The same map Nitro runs, so a reader can compare it with the triggers
+      // Cloudflare reports — the cron-parity check, from the outside.
+      crons: config.scheduledTasks,
+      // Newest fetched_at per source id — is the poll actually polling. Public
+      // by the same argument as the rest: source ids and timestamps are what
+      // every page already prints beside its numbers.
+      sources,
+    },
+  }
 }
