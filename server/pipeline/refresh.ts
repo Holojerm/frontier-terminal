@@ -67,7 +67,7 @@ export interface RefreshReport {
   all_failed: boolean
 }
 
-const CONTENT_TYPES: Readonly<Record<string, string>> = {
+export const CONTENT_TYPES: Readonly<Record<string, string>> = {
   json: 'application/json',
   md: 'text/markdown',
   html: 'text/html',
