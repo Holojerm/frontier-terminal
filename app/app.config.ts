@@ -34,6 +34,15 @@ export default defineAppConfig({
       },
     },
 
+    // DESIGN.md › Component behavior › Alerts. The resolved theme sets the
+    // description slot to `text-sm opacity-90`; tailwind-merge keeps the size
+    // and replaces the opacity.
+    alert: {
+      slots: {
+        description: 'opacity-100',
+      },
+    },
+
     // DESIGN.md › Component behavior › Long-form content.
     //
     // NuxtUI registers its Prose* components as soon as @nuxt/content is
