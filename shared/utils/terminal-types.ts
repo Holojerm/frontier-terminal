@@ -5,6 +5,8 @@
 // shapes are plain JSON so a KV cache can hold them and a page can render
 // them without a second conversion.
 
+import type { AlertSeverity, AlertTierFilter } from './terminal-tiers'
+
 export interface Prov {
   source_url: string
   /** ISO 8601 with timezone, exactly as stored. */
@@ -113,9 +115,12 @@ export interface MovementSummary {
 
 export interface OverviewData extends Stamp {
   movement: MovementSummary
-  /** Newest alerts first, with their cited change rows. */
+  /** Newest alert-tier rows first (notable, critical), with their cited change rows. */
   alerts: AlertView[]
   alert_count: number
+  /** Newest ticker-tier rows first (info) — what moved, low stakes. */
+  ticker: AlertView[]
+  ticker_count: number
   totals: TableCounts
   latest_fetched_at: string | null
 }
@@ -254,7 +259,7 @@ export interface ChangeView extends Prov {
 
 export interface AlertView extends Prov {
   id: string
-  severity: 'info' | 'notable' | 'critical'
+  severity: AlertSeverity
   headline: string
   explanation: string
   rule: 'agent-judge' | 's1-floor'
@@ -266,6 +271,22 @@ export interface AlertView extends Prov {
 }
 
 export interface AlertsData extends Stamp {
+  /** Which tier(s) `rows` and `total` cover. */
+  tier: AlertTierFilter
   rows: AlertView[]
   total: number
+}
+
+/** A cited change on its permalink: every scalar field, before and after. */
+export interface ChangeDetailView extends ChangeView {
+  /** Every field of before_json ∪ after_json, sorted; unchanged ones included. */
+  fields: FieldDiff[]
+}
+
+export interface AlertDetail extends Omit<AlertView, 'changes'> {
+  changes: ChangeDetailView[]
+}
+
+export interface AlertDetailData extends Stamp {
+  alert: AlertDetail
 }

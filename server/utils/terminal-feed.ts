@@ -8,34 +8,51 @@
 // buys a feed reader that cannot misfile an alert.
 
 import { escapeXml, normalizeOrigin } from '#shared/utils/site'
+import { alertPath, TICKER_FEED_QUERY } from '#shared/utils/terminal-tiers'
 import type { AlertView } from '#shared/utils/terminal-types'
 
 export interface AlertsFeedInput {
   appName: string
   /** Canonical origin. Empty is allowed: ids fall back to URNs and links stay relative. */
   appUrl: string
-  /** Newest first, as /api/alerts serves them. */
+  /** Newest first, as /api/alerts serves them, already filtered to `tier`. */
   alerts: readonly AlertView[]
+  /** `alert` is the default feed; `all` is the feed with the ticker included. */
+  tier?: 'alert' | 'all'
   /** `updated` for the feed itself when there are no entries (RFC 4287 requires one). */
   fallbackUpdated: string
 }
 
 export const ALERTS_FEED_PATH = '/alerts.xml'
 
-/** An Atom id must be an IRI. The alert URL when there is an origin, a URN otherwise. */
-export function alertEntryId(appUrl: string, alertId: string): string {
-  const origin = normalizeOrigin(appUrl)
-  return origin ? `${origin}/alerts#${alertId}` : `urn:sha256:${alertId}`
+/** The two documents are two feeds: the one with the ticker has its own id and self link. */
+export function feedPath(tier: 'alert' | 'all'): string {
+  return tier === 'all' ? `${ALERTS_FEED_PATH}?${TICKER_FEED_QUERY}` : ALERTS_FEED_PATH
 }
 
+/** An Atom id must be an IRI. The alert's permalink when there is an origin, a URN otherwise. */
+export function alertEntryId(appUrl: string, alertId: string): string {
+  const origin = normalizeOrigin(appUrl)
+  return origin ? `${origin}${alertPath(alertId)}` : `urn:sha256:${alertId}`
+}
+
+const SUBTITLE = {
+  alert:
+    'Judged and rule-fired alerts over the change log — notable and critical only. Every entry links to the source it was read from.',
+  all: 'Alerts and the ticker over the change log — every severity. Every entry links to the source it was read from.',
+} as const
+
 export function buildAlertsAtom(input: AlertsFeedInput): string {
+  const tier = input.tier ?? 'alert'
   const origin = normalizeOrigin(input.appUrl)
-  const feedId = origin ? `${origin}${ALERTS_FEED_PATH}` : 'urn:frontier-terminal:alerts'
+  const feedId = origin
+    ? `${origin}${feedPath(tier)}`
+    : `urn:frontier-terminal:alerts${tier === 'all' ? ':with-ticker' : ''}`
   const site = origin || ''
   const updated = input.alerts[0]?.created_at ?? input.fallbackUpdated
 
   const entries = input.alerts.map((alert) => {
-    const alternate = `${site}/alerts#${alert.id}`
+    const alternate = `${site}${alertPath(alert.id)}`
     const lines = [
       '  <entry>',
       `    <id>${escapeXml(alertEntryId(input.appUrl, alert.id))}</id>`,
@@ -57,8 +74,8 @@ export function buildAlertsAtom(input: AlertsFeedInput): string {
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<feed xmlns="http://www.w3.org/2005/Atom">',
     `  <id>${escapeXml(feedId)}</id>`,
-    `  <title>${escapeXml(`${input.appName} — alerts`)}</title>`,
-    `  <subtitle>${escapeXml('Judged and rule-fired alerts over the change log. Every entry links to the source it was read from.')}</subtitle>`,
+    `  <title>${escapeXml(`${input.appName} — ${tier === 'all' ? 'alerts and ticker' : 'alerts'}`)}</title>`,
+    `  <subtitle>${escapeXml(SUBTITLE[tier])}</subtitle>`,
     `  <updated>${escapeXml(updated)}</updated>`,
     `  <author><name>${escapeXml(input.appName)}</name></author>`,
     `  <link rel="self" type="application/atom+xml" href="${escapeXml(feedId)}"/>`,

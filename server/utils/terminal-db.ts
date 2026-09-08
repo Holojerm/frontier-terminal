@@ -18,10 +18,18 @@
 import { and, asc, count, desc, eq, inArray, max, sql } from 'drizzle-orm'
 
 import { money } from '#shared/utils/terminal-format'
+import {
+  alertTier,
+  severitiesOf,
+  type AlertSeverity,
+  type AlertTierFilter,
+} from '#shared/utils/terminal-tiers'
 import type {
+  AlertDetailData,
   AlertView,
   AlertsData,
   BigFour,
+  ChangeDetailView,
   ChangeView,
   CoverageData,
   DeptCount,
@@ -329,17 +337,22 @@ const scalar = (v: unknown): string | null =>
         ? String(v)
         : JSON.stringify(v)
 
+/** Every field of either payload, sorted by name, with both sides as scalars. */
+export function fieldTable(before: Json | null, after: Json | null): FieldDiff[] {
+  const keys = [...new Set([...Object.keys(before ?? {}), ...Object.keys(after ?? {})])].sort(
+    byString,
+  )
+  return keys.map((field) => ({
+    field,
+    before: before ? scalar(before[field]) : null,
+    after: after ? scalar(after[field]) : null,
+  }))
+}
+
 /** Fields whose value differs between the two payloads, sorted by name. */
 export function fieldDiff(before: Json | null, after: Json | null): FieldDiff[] {
   if (!before || !after) return []
-  const keys = [...new Set([...Object.keys(before), ...Object.keys(after)])].sort(byString)
-  const out: FieldDiff[] = []
-  for (const field of keys) {
-    const b = scalar(before[field])
-    const a = scalar(after[field])
-    if (b !== a) out.push({ field, before: b, after: a })
-  }
-  return out
+  return fieldTable(before, after).filter((d) => d.before !== d.after)
 }
 
 function toChangeView(row: typeof tables.changes.$inferSelect): ChangeView {
@@ -359,70 +372,132 @@ function toChangeView(row: typeof tables.changes.$inferSelect): ChangeView {
   }
 }
 
+/** The permalink's reading of a change: the whole record, both sides. */
+function toChangeDetail(row: typeof tables.changes.$inferSelect): ChangeDetailView {
+  return {
+    ...toChangeView(row),
+    fields: fieldTable(parseJson(row.before_json), parseJson(row.after_json)),
+  }
+}
+
 /** One IN() per 90 ids — D1 binds at most 100 parameters per statement. */
-async function changesById(
+async function changesById<T>(
   db: PipelineDb,
   ids: readonly string[],
-): Promise<Map<string, ChangeView>> {
-  const out = new Map<string, ChangeView>()
+  view: (row: typeof tables.changes.$inferSelect) => T,
+): Promise<Map<string, T>> {
+  const out = new Map<string, T>()
   for (let i = 0; i < ids.length; i += 90) {
     const slice = ids.slice(i, i + 90)
     const rows = await db.select().from(tables.changes).where(inArray(tables.changes.id, slice))
-    for (const row of rows) out.set(row.id, toChangeView(row))
+    for (const row of rows) out.set(row.id, view(row))
   }
   return out
 }
 
-export async function queryAlerts(
+function parseChangeIds(text: string): string[] {
+  try {
+    const ids = JSON.parse(text) as unknown
+    return Array.isArray(ids) ? ids.map(String) : []
+  } catch {
+    return []
+  }
+}
+
+/** Alert rows with their cited change rows resolved through `view`. */
+async function resolveAlerts<C extends ChangeView>(
   db: PipelineDb,
-  ctx: QueryContext,
-  limit: number,
-): Promise<AlertsData> {
-  const rows = await db
-    .select()
-    .from(tables.alerts)
-    .orderBy(desc(tables.alerts.created_at), asc(tables.alerts.id))
-    .limit(limit)
-  const [totalRow] = await db.select({ total: count() }).from(tables.alerts)
-
-  const parsedIds = rows.map((row) => {
-    try {
-      const ids = JSON.parse(row.change_ids) as unknown
-      return Array.isArray(ids) ? ids.map(String) : []
-    } catch {
-      return []
-    }
-  })
-  const cited = await changesById(db, [...new Set(parsedIds.flat())])
-
-  const views: AlertView[] = rows.map((row, i) => {
+  rows: readonly (typeof tables.alerts.$inferSelect)[],
+  view: (row: typeof tables.changes.$inferSelect) => C,
+): Promise<(Omit<AlertView, 'changes'> & { changes: C[] })[]> {
+  const parsedIds = rows.map((row) => parseChangeIds(row.change_ids))
+  const cited = await changesById(db, [...new Set(parsedIds.flat())], view)
+  return rows.map((row, i) => {
     const ids = parsedIds[i]!
     return {
       id: row.id,
-      severity: row.severity as AlertView['severity'],
+      severity: row.severity as AlertSeverity,
       headline: row.headline,
       explanation: row.explanation,
       rule: row.rule as AlertView['rule'],
       created_at: row.created_at,
       change_ids: ids,
-      changes: ids.map((id) => cited.get(id)).filter((c): c is ChangeView => c !== undefined),
+      changes: ids.map((id) => cited.get(id)).filter((c): c is C => c !== undefined),
       missing_change_ids: ids.filter((id) => !cited.has(id)),
       source_url: row.source_url,
       fetched_at: row.fetched_at,
     }
   })
+}
 
-  return { ...stampOf(ctx), rows: views, total: totalRow?.total ?? 0 }
+/** The WHERE for a tier filter; undefined admits every severity. */
+const tierWhere = (tier: AlertTierFilter) =>
+  tier === 'all' ? undefined : inArray(tables.alerts.severity, severitiesOf(tier))
+
+export async function queryAlerts(
+  db: PipelineDb,
+  ctx: QueryContext,
+  limit: number,
+  tier: AlertTierFilter = 'all',
+): Promise<AlertsData> {
+  const where = tierWhere(tier)
+  const rows = await db
+    .select()
+    .from(tables.alerts)
+    .where(where)
+    .orderBy(desc(tables.alerts.created_at), asc(tables.alerts.id))
+    .limit(limit)
+  const [totalRow] = await db.select({ total: count() }).from(tables.alerts).where(where)
+  const views = await resolveAlerts(db, rows, toChangeView)
+  return { ...stampOf(ctx), tier, rows: views, total: totalRow?.total ?? 0 }
+}
+
+/** One alert by id, its cited rows in full; null when no such alert. */
+export async function queryAlert(
+  db: PipelineDb,
+  ctx: QueryContext,
+  id: string,
+): Promise<AlertDetailData | null> {
+  const rows = await db.select().from(tables.alerts).where(eq(tables.alerts.id, id)).limit(1)
+  const [alert] = await resolveAlerts(db, rows, toChangeDetail)
+  return alert ? { ...stampOf(ctx), alert } : null
+}
+
+export interface AlertPermalink {
+  id: string
+  tier: ReturnType<typeof alertTier>
+  /** The alert's own created_at — its lastmod, since an alert row is never rewritten. */
+  created_at: string
+}
+
+/** Every alert, newest first, for the sitemap's dynamic entries. */
+export async function alertPermalinks(db: PipelineDb, limit = 5000): Promise<AlertPermalink[]> {
+  const rows = await db
+    .select({
+      id: tables.alerts.id,
+      severity: tables.alerts.severity,
+      created_at: tables.alerts.created_at,
+    })
+    .from(tables.alerts)
+    .orderBy(desc(tables.alerts.created_at), asc(tables.alerts.id))
+    .limit(limit)
+  return rows.map((row) => ({
+    id: row.id,
+    tier: alertTier(row.severity as AlertSeverity),
+    created_at: row.created_at,
+  }))
 }
 
 // ---- overview --------------------------------------------------------------
 
 export const OVERVIEW_ALERTS = 10
+export const OVERVIEW_TICKER = 8
 
 export async function queryOverview(db: PipelineDb, ctx: QueryContext): Promise<OverviewData> {
-  const [movement, alerts, totals, stamps] = await Promise.all([
+  const [movement, alerts, ticker, totals, stamps] = await Promise.all([
     queryMovement(db),
-    queryAlerts(db, ctx, OVERVIEW_ALERTS),
+    queryAlerts(db, ctx, OVERVIEW_ALERTS, 'alert'),
+    queryAlerts(db, ctx, OVERVIEW_TICKER, 'ticker'),
     tableCounts(db),
     sourceStamps(db),
   ])
@@ -436,6 +511,8 @@ export async function queryOverview(db: PipelineDb, ctx: QueryContext): Promise<
     movement,
     alerts: alerts.rows,
     alert_count: alerts.total,
+    ticker: ticker.rows,
+    ticker_count: ticker.total,
     totals,
     latest_fetched_at: latest,
   }

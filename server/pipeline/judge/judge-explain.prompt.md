@@ -64,21 +64,54 @@ Operationally:
   are not found in its cited records. A rejected alert is silence, not a
   retry — so stay inside the records.
 
-## Judging significance
+## Materiality bar — which records become an alert, which the ticker
 
-- Pricing moves on flagship models, hiring-mix shifts (GTM/sales surges,
-  datacenter buildout, large removals), and cross-axis combinations
-  (e.g. a price cut plus a sales-hiring surge reads as a GTM push) are the
-  signal. Routine churn is not.
-- Severity: `info` = worth a line in a daily brief; `notable` = changes the
-  picture for the covered thesis; `critical` = the analyst should look
-  today.
-- S-1 / 424B4 filing hits already alert through a deterministic floor rule
-  — do not duplicate a filing-only alert; cite filings only as context
-  combined with other changes.
-- One alert may cite several change_ids; list every record it relies on.
-  If no change clears the bar, emit {"alerts": []} — silence is a valid,
-  expected output.
+The terminal reads `severity` as a tier. `notable` and `critical` are
+ALERTS: the landing page leads with them, /alerts lists them first, and the
+Atom feed carries them by default. `info` is the TICKER: a one-line "what
+moved" list, low stakes, read after the alerts. An equity analyst opens the
+page and sees the alert tier first — so the alert tier must hold only what
+is worth that position.
+
+Emit an alert-tier severity (`notable` or `critical`) ONLY for:
+
+- **Any pricing change.** A `model` record whose `input_per_mtok`,
+  `cached_input_per_mtok` or `output_per_mtok` differs between `before_json`
+  and `after_json`, or a price appearing where there was none. A `model`
+  record removed (a SKU delisted) counts here too.
+- **Any new model SKU.** A `model` record with `change_type` `added`.
+- **A department-level hiring shift.** Five or more `job` records added, or
+  five or more removed, in ONE `department` at ONE provider among the
+  records you were handed. Count them: `after_json.department` for adds,
+  `before_json.department` for removes. Four roles in one department is a
+  ticker line, however senior the titles.
+- **A department going dark.** Five or more `job` removals in one
+  department with no `job` added in that department in the same records.
+- **Any SEC change.** Any `filing` record — except a filing-only S-1/424B4,
+  which the deterministic floor rule has already alerted; cite those only as
+  context combined with other changes.
+- **A cross-axis combination** built from the above (a price cut plus a
+  five-role sales surge reads as a GTM push).
+
+Everything else that is worth a line is the TICKER (`info`): a single role
+added or removed, a location shuffled, a title reworded, a role moved
+between departments, a model row whose notes, aliases or context window
+changed while its prices held. The ticker exists so that none of this
+reaches the alert tier.
+
+Within the alert tier: `critical` = the analyst should look today — a
+flagship price change, a cluster consistent with IPO readiness, a
+department going dark; `notable` = everything else that clears the bar.
+
+Two rules about volume:
+
+- **Returning zero alerts is a correct output.** Most hours nothing clears
+  the bar and nothing is worth a ticker line either; `{"alerts": []}` is the
+  expected, valid result, never a failure to try harder.
+- **Group the ticker.** Several small hiring changes at one provider in one
+  batch are ONE ticker line citing all of their change_ids ("OpenAI adds
+  three GTM roles and closes one"), never one line each. One alert may cite
+  several change_ids; list every record it relies on.
 
 Print the JSON object now.
 

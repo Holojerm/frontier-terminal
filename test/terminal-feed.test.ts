@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { ALERTS_FEED_PATH, alertEntryId, buildAlertsAtom } from '../server/utils/terminal-feed'
+import {
+  ALERTS_FEED_PATH,
+  alertEntryId,
+  buildAlertsAtom,
+  feedPath,
+} from '../server/utils/terminal-feed'
 import type { AlertView } from '../shared/utils/terminal-types'
 
 // The Atom feed as a document. workerd has no XML parser, so well-formedness
@@ -62,20 +67,20 @@ describe('buildAlertsAtom', () => {
     )
   })
 
-  it('carries one entry per alert: id, headline, explanation, page link, and the source as a related link', () => {
+  it('carries one entry per alert: id, headline, explanation, permalink, and the source as a related link', () => {
     const xml = buildAlertsAtom({
       ...SITE,
       alerts: [alert()],
       fallbackUpdated: '2026-01-01T00:00:00Z',
     })
     expect(xml).toContain('<entry>')
-    expect(xml).toContain('<id>https://example.com/alerts#a1b2c3</id>')
+    expect(xml).toContain('<id>https://example.com/alerts/a1b2c3</id>')
     expect(xml).toContain('<title>S-1/A filed by SPCX (2026-09-01)</title>')
     expect(xml).toContain(
       '<summary type="text">Accession 0001628280-26-099999: form S-1/A filed 2026-09-01 by whitelisted CIK.</summary>',
     )
     expect(xml).toContain(
-      '<link rel="alternate" type="text/html" href="https://example.com/alerts#a1b2c3"/>',
+      '<link rel="alternate" type="text/html" href="https://example.com/alerts/a1b2c3"/>',
     )
     // The & in the query string must be escaped, and the fetch time travels on the link.
     expect(xml).toContain(
@@ -96,6 +101,30 @@ describe('buildAlertsAtom', () => {
     expect(xml).toContain('<summary type="text">it&apos;s &lt;/feed&gt;</summary>')
   })
 
+  it('is the alert tier by default: a distinct feed id, self link and title once the ticker is included', () => {
+    const alerts = [alert(), alert({ id: 't1', severity: 'info', headline: 'One role added' })]
+    const base = buildAlertsAtom({ ...SITE, alerts: [alerts[0]!], fallbackUpdated: 'x' })
+    expect(base).toContain('<id>https://example.com/alerts.xml</id>')
+    expect(base).toContain('<title>Frontier Terminal — alerts</title>')
+    expect(base).toContain('notable and critical only')
+    expect(base).not.toContain('<category term="info"')
+
+    const withTicker = buildAlertsAtom({ ...SITE, alerts, tier: 'all', fallbackUpdated: 'x' })
+    assertBalanced(withTicker)
+    expect(feedPath('all')).toBe('/alerts.xml?include=ticker')
+    expect(withTicker).toContain('<id>https://example.com/alerts.xml?include=ticker</id>')
+    expect(withTicker).toContain(
+      '<link rel="self" type="application/atom+xml" href="https://example.com/alerts.xml?include=ticker"/>',
+    )
+    expect(withTicker).toContain('<title>Frontier Terminal — alerts and ticker</title>')
+    expect(withTicker).toContain('<category term="info" label="severity"/>')
+    expect(withTicker).toContain('<id>https://example.com/alerts/t1</id>')
+    // The HTML alternate for both documents is the one alerts page.
+    expect(withTicker).toContain(
+      '<link rel="alternate" type="text/html" href="https://example.com/alerts"/>',
+    )
+  })
+
   it('with no alerts is still a valid feed, dated by the fallback', () => {
     const xml = buildAlertsAtom({
       ...SITE,
@@ -109,7 +138,7 @@ describe('buildAlertsAtom', () => {
 
   it('falls back to URNs when no origin is configured, since an Atom id must be an IRI', () => {
     expect(alertEntryId('', 'abc')).toBe('urn:sha256:abc')
-    expect(alertEntryId('https://example.com/', 'abc')).toBe('https://example.com/alerts#abc')
+    expect(alertEntryId('https://example.com/', 'abc')).toBe('https://example.com/alerts/abc')
     const xml = buildAlertsAtom({
       appName: 'T',
       appUrl: '',
@@ -119,5 +148,8 @@ describe('buildAlertsAtom', () => {
     assertBalanced(xml)
     expect(xml).toContain('<id>urn:frontier-terminal:alerts</id>')
     expect(xml).toContain('<id>urn:sha256:a1b2c3</id>')
+    expect(
+      buildAlertsAtom({ appName: 'T', appUrl: '', alerts: [], tier: 'all', fallbackUpdated: 'x' }),
+    ).toContain('<id>urn:frontier-terminal:alerts:with-ticker</id>')
   })
 })
