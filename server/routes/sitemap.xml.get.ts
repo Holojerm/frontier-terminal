@@ -14,17 +14,18 @@
 //
 // Dynamic routes are the other half, and they cannot work that way: one
 // route-table entry describes N URLs, so the hook skips them by design. The
-// alert permalinks (/alerts/:id) are enumerated from D1 here, each with its
-// own lastmod — an alert row is append-only, so its created_at is exact. A
-// failed query degrades to the static list with a no-store header
-// (server/utils/seo.ts › crawlerCacheControl) rather than a 500.
+// alert permalinks (/alerts/:id) and the SKU pages (/prices/[key]) are
+// enumerated from D1 here, each with its own lastmod — an alert row is
+// append-only, so its created_at is exact; a SKU's is the date of its newest
+// observation. A failed query degrades to the static list with a no-store
+// header (server/utils/seo.ts › crawlerCacheControl) rather than a 500.
 
 import { db } from '@nuxthub/db'
 
 import { alertPath } from '#shared/utils/terminal-tiers'
 
 import { sitemapResponse, type SitemapEntry } from '../utils/seo'
-import { alertPermalinks } from '../utils/terminal-db'
+import { alertPermalinks, queryPriceKeys } from '../utils/terminal-db'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
@@ -34,13 +35,22 @@ export default defineEventHandler(async (event) => {
   let dynamic: SitemapEntry[] = []
   let complete = true
   try {
-    dynamic = (await alertPermalinks(db)).map((alert) => ({
-      path: alertPath(alert.id),
-      // Append-only rows never change; the ticker ranks below the alerts.
-      changefreq: 'yearly',
-      priority: alert.tier === 'alert' ? '0.6' : '0.3',
-      lastmod: alert.created_at.slice(0, 10),
-    }))
+    const [alerts, skus] = await Promise.all([alertPermalinks(db), queryPriceKeys(db)])
+    dynamic = [
+      ...alerts.map((alert) => ({
+        path: alertPath(alert.id),
+        // Append-only rows never change; the ticker ranks below the alerts.
+        changefreq: 'yearly' as const,
+        priority: alert.tier === 'alert' ? '0.6' : '0.3',
+        lastmod: alert.created_at.slice(0, 10),
+      })),
+      ...skus.map((sku) => ({
+        path: `/prices/${sku.entity_key}`,
+        changefreq: 'daily' as const,
+        priority: '0.6',
+        lastmod: sku.lastmod,
+      })),
+    ]
   } catch (error) {
     console.warn(JSON.stringify({ kind: 'sitemap_dynamic_failed', error: String(error) }))
     complete = false

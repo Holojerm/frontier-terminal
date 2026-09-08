@@ -24,7 +24,24 @@ import { expect, test } from '@playwright/test'
 // kind of second list `definePageMeta({ publicPage })` exists to abolish — so
 // the `sitemap coverage` test at the bottom of this file fails the build if the
 // two ever disagree. Add a public page, forget this list, and CI tells you.
-const ROUTES = ['/', '/prices', '/rankings', '/alerts', '/incidents', '/data', '/about']
+const ROUTES = [
+  '/',
+  '/prices',
+  '/hiring',
+  '/releases',
+  '/rankings',
+  '/alerts',
+  '/incidents',
+  '/data',
+  '/about',
+]
+
+// One template, N URLs — pages the sweep cannot enumerate ahead of a server:
+// the SKU pages the sitemap reads from the store (server/routes/
+// sitemap.xml.get.ts) and the alert permalinks (/alerts/[id]). They are
+// scanned through the static routes' shared components; the patterns are
+// what the coverage test recognises.
+const DYNAMIC = [/^\/prices\/model:/, /^\/alerts\/[0-9a-f]{64}$/]
 
 const COLOR_MODES = ['light', 'dark'] as const
 
@@ -160,11 +177,9 @@ test('sitemap coverage: every public page is in ROUTES', async ({ request }) => 
 
   expect(paths.length).toBeGreaterThan(0)
 
-  // One template, N URLs: an alert permalink is the /alerts/[id] page, which
-  // this sweep cannot enumerate ahead of a server. It is scanned through the
-  // static routes' shared components, not listed here per id.
-  const PERMALINK = /^\/alerts\/[0-9a-f]{64}$/
-  const missing = paths.filter((path) => !ROUTES.includes(path) && !PERMALINK.test(path))
+  const missing = paths.filter(
+    (path) => !ROUTES.includes(path) && !DYNAMIC.some((pattern) => pattern.test(path)),
+  )
   expect(
     missing,
     `Public pages missing from the a11y sweep: ${missing.join(', ')}. ` +
