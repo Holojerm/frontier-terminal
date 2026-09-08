@@ -12,24 +12,47 @@
 // gets listed, and `scripts/check-seo.ts` fails the build if an indexable page
 // forgets to declare itself.
 //
-// Dynamic routes (`/provider/[slug]`) are the other half, and they cannot work
-// that way: one route-table entry describes N URLs, so the hook skips them by
-// design. When the pipeline adds them, query the records here and pass them as
-// `dynamic` with a real per-URL `lastmod` — see sitemapResponse().
+// Dynamic routes are the other half, and they cannot work that way: one
+// route-table entry describes N URLs, so the hook skips them by design. The
+// alert permalinks (/alerts/:id) are enumerated from D1 here, each with its
+// own lastmod — an alert row is append-only, so its created_at is exact. A
+// failed query degrades to the static list with a no-store header
+// (server/utils/seo.ts › crawlerCacheControl) rather than a 500.
 
-import { sitemapResponse } from '../utils/seo'
+import { db } from '@nuxthub/db'
 
-export default defineEventHandler((event) => {
+import { alertPath } from '#shared/utils/terminal-tiers'
+
+import { sitemapResponse, type SitemapEntry } from '../utils/seo'
+import { alertPermalinks } from '../utils/terminal-db'
+
+export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
 
   setResponseHeader(event, 'Content-Type', 'application/xml; charset=utf-8')
+
+  let dynamic: SitemapEntry[] = []
+  let complete = true
+  try {
+    dynamic = (await alertPermalinks(db)).map((alert) => ({
+      path: alertPath(alert.id),
+      // Append-only rows never change; the ticker ranks below the alerts.
+      changefreq: 'yearly',
+      priority: alert.tier === 'alert' ? '0.6' : '0.3',
+      lastmod: alert.created_at.slice(0, 10),
+    }))
+  } catch (error) {
+    console.warn(JSON.stringify({ kind: 'sitemap_dynamic_failed', error: String(error) }))
+    complete = false
+  }
 
   const { body, cacheControl } = sitemapResponse({
     appUrl: config.public.appUrl,
     indexable: config.public.indexable !== false,
     buildDate: config.buildDate,
     pages: config.publicPages ?? [],
-    complete: true,
+    dynamic,
+    complete,
   })
 
   setResponseHeader(event, 'Cache-Control', cacheControl)
