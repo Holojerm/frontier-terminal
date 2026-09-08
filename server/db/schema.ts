@@ -208,8 +208,33 @@ export const sourceRuns = sqliteTable(
   ],
 )
 
+// Judge runs — one row per POST /api/judge/alerts (server/pipeline/judge).
+// judged_through is the cursor GET /api/judge/pending reads: a change is
+// pending while its detected_at is newer than the newest judged_through
+// here. NULL when the run advanced nothing — a body that failed the schema
+// gate is recorded (rejection_reason says why) without moving the cursor,
+// so the changes it was about are offered again next hour.
+export const judgeRuns = sqliteTable(
+  'judge_runs',
+  {
+    id: text('id').primaryKey(),
+    started_at: text('started_at').notNull(),
+    judged_through: text('judged_through'),
+    changes_seen: integer('changes_seen').notNull(),
+    accepted: integer('accepted').notNull(),
+    rejected: integer('rejected').notNull(),
+    rejection_reason: text('rejection_reason'),
+    source: text('source').notNull(), // 'routine' today; anything else that judges says who
+  },
+  (t) => [
+    index('judge_runs_started_at_idx').on(t.started_at),
+    index('judge_runs_judged_through_idx').on(t.judged_through),
+  ],
+)
+
 export type Snapshot = typeof snapshots.$inferSelect
 export type Entity = typeof entities.$inferSelect
 export type Change = typeof changes.$inferSelect
 export type Alert = typeof alerts.$inferSelect
 export type SourceRun = typeof sourceRuns.$inferSelect
+export type JudgeRun = typeof judgeRuns.$inferSelect
