@@ -69,13 +69,13 @@ describe('buildOpsDigest', () => {
   })
 
   it('leads with the loudest kind when several are mixed', async () => {
-    await spool('paddle_webhook_rejected', 5)
+    await spool('source_fetch_failed', 5)
     await spool('server_error', 2)
     const rows = await db.select().from(schema.opsEvents)
     const digest = buildOpsDigest(rows, OPTIONS)!
-    expect(digest.subject).toBe('My App: 7 events across 2 kinds (paddle_webhook_rejected loudest)')
+    expect(digest.subject).toBe('My App: 7 events across 2 kinds (source_fetch_failed loudest)')
     // Loudest kind's section comes first in the body too.
-    expect(digest.text.indexOf('paddle_webhook_rejected —')).toBeLessThan(
+    expect(digest.text.indexOf('source_fetch_failed —')).toBeLessThan(
       digest.text.indexOf('server_error —'),
     )
   })

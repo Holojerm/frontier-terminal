@@ -7,46 +7,15 @@ import type { PublicPage } from './shared/utils/site'
 
 // ─── Security headers ────────────────────────────────────────────────────────
 //
-// A CSP that silently breaks analytics or checkout is worse than no CSP: the
-// failure is invisible in dev (both vendors no-op without keys), invisible in
-// tests, and shows up as "revenue stopped" in production. So every host below
-// was derived from something checkable rather than from a blog post, and the
-// provenance is recorded next to it. `test/csp/` re-checks the browser half in
-// a real Chromium on every `bun run ci`.
+// This site loads nothing from a third party — no analytics, no checkout, no
+// bot challenge — so the policy is 'self' almost everywhere, and `test/csp/`
+// pins it that way in a real Chromium: adding an external origin has to be a
+// decision someone makes in this file, not a violation someone silences.
 //
 // Why `routeRules` and not a Nitro middleware: the only thing a middleware buys
 // here is a per-request nonce, and we cannot spend one (see `script-src`). What
 // it costs is a handler invocation on every request, including the static assets
 // Cloudflare would otherwise serve without waking the Worker.
-
-/** Paddle's hosts, read out of the live bundle rather than guessed — see below. */
-const PADDLE = {
-  cdn: ['https://cdn.paddle.com', 'https://sandbox-cdn.paddle.com'],
-  // `checkoutFrontEndBase` + `checkoutBase` from the bundle's env table.
-  checkout: [
-    'https://buy.paddle.com',
-    'https://sandbox-buy.paddle.com',
-    'https://create-checkout.paddle.com',
-    'https://sandbox-create-checkout.paddle.com',
-  ],
-  // `apiBase` — fetched by Paddle.js for /pricing-preview and /transactions/preview.
-  api: ['https://api.paddle.com', 'https://sandbox-api.paddle.com'],
-} as const
-
-/**
- * Cloudflare Turnstile. One host, doing two jobs: `script-src` for the
- * `api.js` loader @nuxtjs/turnstile injects, and `frame-src` for the challenge
- * iframe that loader then mounts. Both are named in Cloudflare's own CSP page
- * (turnstile/reference/content-security-policy) — `connect-src` is listed there
- * too but only for pre-clearance mode, which this app does not use, and 'self'
- * already covers our own verify round-trip.
- *
- * Present even while `turnstile.siteKey` is empty and the widget never renders.
- * A policy that only permits what today's config happens to load is a policy
- * that breaks on the day someone pastes in a key — at which point the widget
- * shows as an empty box with a console error, on the signup form, in production.
- */
-const TURNSTILE = ['https://challenges.cloudflare.com'] as const
 
 // `nuxt dev` sets NODE_ENV=development, `nuxt build` sets production.
 //
@@ -85,50 +54,33 @@ const CSP: Record<string, string[]> = {
   // lint, typecheck and this repo's own tests, then white-screen production
   // after a routine `bun update`.
   //
-  // What survives: script-src still refuses every *external* origin except
-  // Paddle's CDN and Turnstile's, so an injected `<script src="//evil.tld/x.js">`
-  // does not load. Paired with object-src/base-uri below, the classic bypasses
-  // stay shut. test/csp/ pins that list to exactly those two vendors.
-  'script-src': ["'self'", "'unsafe-inline'", ...PADDLE.cdn, ...TURNSTILE],
+  // What survives: script-src still refuses every *external* origin, so an
+  // injected `<script src="//evil.tld/x.js">` does not load. Paired with
+  // object-src/base-uri below, the classic bypasses stay shut. test/csp/ pins
+  // the external-host list to exactly empty.
+  'script-src': ["'self'", "'unsafe-inline'"],
 
   // Vue SSR emits inline style attributes and Vite dev injects <style> blocks;
-  // there is no build flag that stops either. Paddle's overlay pulls
-  // assets/css/paddle.css from its CDN (verified: that file has no @font-face
-  // and no url(), so it drags nothing else in with it).
-  'style-src': ["'self'", "'unsafe-inline'", ...PADDLE.cdn],
+  // there is no build flag that stops either.
+  'style-src': ["'self'", "'unsafe-inline'"],
 
   // data: because the @nuxt/icon client bundle inlines icons as
   // `mask-image: url("data:image/svg+xml,…")`, which is img-src, not style-src.
-  // The two avatar hosts are where `users.avatar_url` comes from — GitHub's
-  // profile CDN and Google's, which shards across *.googleusercontent.com.
-  // Paddle's CDN serves the overlay's images plus a health-check.gif.
-  'img-src': [
-    "'self'",
-    'data:',
-    ...PADDLE.cdn,
-    'https://avatars.githubusercontent.com',
-    'https://*.googleusercontent.com',
-  ],
+  'img-src': ["'self'", 'data:'],
 
   // @nuxt/fonts downloads Inter / Instrument Serif / JetBrains Mono at build
   // time and serves them from /_fonts — there is deliberately no Google Fonts
   // origin here, and if one ever appears it means the build stopped self-hosting.
   'font-src': ["'self'"],
 
-  // PostHog needs no host of its own: the SDK is pinned to `api_host: '/ingest'`
-  // and server/routes/ingest/[...path].ts reverse-proxies events, decide, replay
-  // snapshots and the SDK's own assets. Adding a *.posthog.com origin here would
-  // defeat that proxy (its point is to survive ad blockers) — so if you find
-  // yourself reaching for one, fix the proxy instead.
-  //
   // No `ws:` for Vite's HMR socket, which is the obvious thing to add here and
   // measurably unnecessary: CSP3 has `'self'` match ws/wss on the document's own
   // host, and dropping it changed nothing in test/csp. It is also not a cheap
   // addition — `ws:` is a bare scheme source, so it would permit a socket to
   // *any* host, which is a strange thing to hand a dev server.
-  'connect-src': ["'self'", ...PADDLE.api],
+  'connect-src': ["'self'"],
 
-  // The overlay checkout is an iframe into this page, which is frame-src.
+  // Nothing on this site frames anything, so production refuses every frame.
   // X-Frame-Options / frame-ancestors govern the opposite direction and do not
   // conflict with it — a common reason people delete one of the two.
   //
@@ -138,19 +90,14 @@ const CSP: Record<string, string[]> = {
   // back to default-src's 'self' — a same-origin frame is refused unless listed.
   // Worse, a refused iframe still fires `load`, so the panel renders *blank*: it
   // reads as a broken DevTools, not as a CSP decision, and the natural next move
-  // is to rip the header out. DevTools does not exist in a production build, so
-  // the shipped policy keeps frame-src to Paddle and Turnstile alone.
-  'frame-src': [...PADDLE.cdn, ...PADDLE.checkout, ...TURNSTILE, ...(isDev ? ["'self'"] : [])],
+  // is to rip the header out. DevTools does not exist in a production build.
+  'frame-src': isDev ? ["'self'"] : ["'none'"],
 
-  // PostHog session replay runs rrweb's packer in a worker built from a Blob
-  // (`new Worker(URL.createObjectURL(...))` in posthog-js/dist/recorder.js), so
-  // blob: here is the difference between replay working and replay being
-  // silently absent from your dashboard.
-  'worker-src': ["'self'", 'blob:'],
-  // Same blob worker, for Safari < 15.4, which never shipped worker-src and
-  // falls back to child-src. Not redundant with frame-src: frame-src is set
-  // explicitly above and wins for frames in every browser that has it.
-  'child-src': ["'self'", 'blob:'],
+  'worker-src': ["'self'"],
+  // Safari < 15.4 never shipped worker-src and falls back to child-src. Not
+  // redundant with frame-src: frame-src is set explicitly above and wins for
+  // frames in every browser that has it.
+  'child-src': ["'self'"],
 
   // No <object>/<embed> anywhere in this app, and leaving it open is one of the
   // two standard ways to bypass a script-src that allows 'unsafe-inline'.
@@ -158,9 +105,7 @@ const CSP: Record<string, string[]> = {
   // The other one: without this, injected markup can repoint every relative
   // script URL at an attacker's origin.
   'base-uri': ["'self'"],
-  // Sign-in is a top-level navigation to /api/auth/<provider> (which then
-  // redirects out), not a cross-origin form post — so nothing legitimate here
-  // submits off-origin.
+  // There are no forms on this site; nothing legitimate submits anywhere.
   'form-action': ["'self'"],
   'frame-ancestors': ["'none'"],
 }
@@ -177,21 +122,12 @@ const securityHeaders = {
   // on their own domain, not a default a template should make for them.
   'Strict-Transport-Security': 'max-age=31536000; includeSubDomains',
   // Full URL to our own origin, origin-only to third parties, nothing at all on
-  // an HTTPS→HTTP downgrade. Keeps internal referrers useful in PostHog without
-  // leaking gated paths or query strings to Paddle.
+  // an HTTPS→HTTP downgrade.
   'Referrer-Policy': 'strict-origin-when-cross-origin',
   // Redundant with frame-ancestors for modern browsers, kept for the ones that
-  // only understand this. Note it says nothing about the Paddle overlay, which
-  // is an iframe *into* this page.
+  // only understand this.
   'X-Frame-Options': 'DENY',
   'X-Content-Type-Options': 'nosniff',
-  // Deliberately short. `payment` is the conspicuous omission: Paddle's overlay
-  // delegates Apple Pay / Google Pay into its own iframe, and the lazily-loaded
-  // checkout chunk (cdn.paddle.com/paddle/v2/paddle.js is only a loader) is what
-  // sets that iframe's `allow` attribute — so we cannot verify what it needs
-  // from here. `payment=()` is an empty allowlist that an iframe's `allow`
-  // cannot re-open, so guessing wrong silently removes the wallet buttons and
-  // nothing logs. The default (`payment=self`, delegable) is already correct.
   'Permissions-Policy': 'camera=(), microphone=(), geolocation=()',
 }
 
@@ -208,11 +144,9 @@ const securityHeaders = {
 // map, so the dashboard compares the schedule Nitro will honour against the
 // triggers Cloudflare says it registered.
 //
-//   04:00 UTC  — retention sweep, server/tasks/purge-expired-tokens.ts
 //   */30       — ops digest, server/tasks/ops/alert.ts. Silence is the healthy
 //                state: an empty spool costs one indexed SELECT per tick.
 const SCHEDULED_TASKS: Record<string, string[]> = {
-  '0 4 * * *': ['purge-expired-tokens'],
   '*/30 * * * *': ['ops:alert'],
 }
 
@@ -243,29 +177,6 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/ui',
     '@nuxthub/core',
-    // The blog. Markdown in content/, parsed at build time into SQL, queried at
-    // runtime out of D1 — see the `content` block further down for which
-    // database that is and why. Registering it also makes @nuxt/ui register its
-    // Prose* components globally, which is what gives rendered markdown the
-    // DESIGN.md type scale without a stylesheet of our own.
-    '@nuxt/content',
-    // Images. `<NuxtImg>`/`<NuxtPicture>` emit `/cdn-cgi/image/w=…,f=auto/<src>`
-    // URLs that Cloudflare's edge rewrites — resize, format negotiation, and
-    // srcset for free, with no build step and no image binary in the bundle.
-    //
-    // Two things about that URL are worth knowing before you debug it:
-    //
-    //   1. It is a ZONE feature, not a Worker one. It needs a custom domain
-    //      with Images › Transformations enabled; on `*.workers.dev` and under
-    //      `bun dev` the path simply 404s. Hence the `$development` override
-    //      below, which swaps in the `none` provider so local pages render the
-    //      original file instead of a broken image.
-    //   2. It cannot serve anything behind a session. The edge fetches the
-    //      source itself, with no cookie, so a private R2 object comes back
-    //      401. Those transform inside the worker instead — see
-    //      server/utils/images.ts.
-    '@nuxt/image',
-    'nuxt-auth-utils',
     // nuxt-mcp rewrites `.mcp.json` — a *tracked* file — with the live dev
     // server URL every time a dev server boots. Helpful when you started that
     // server yourself; destructive in automation, because `bun run test:a11y`
@@ -277,18 +188,6 @@ export default defineNuxtConfig({
     // array form because nuxt-mcp registers `configKey: 'mcp'` without
     // augmenting `@nuxt/schema`, so a top-level `mcp:` key would not typecheck.
     ['nuxt-mcp', { updateConfig: process.env.NUXT_DEVTOOLS === 'false' ? false : 'auto' }],
-    // Cloudflare Turnstile. Registered with no options on purpose: the module's
-    // own defaults hand `nuxt dev` Cloudflare's always-passing TEST keys, and
-    // the explicit empty `turnstile` entries in runtimeConfig below override
-    // them (defu keeps a value already present on the config). So the template
-    // renders no widget and verifies nothing until a real key is set — the same
-    // "runs without an account" posture as Resend and Paddle, and identical in
-    // dev and production rather than only in one of them.
-    //
-    // Expect one build-time warning, "No site key was provided." That is the
-    // module telling you which env var to set; a template that ships without a
-    // Turnstile account cannot make it go away without pretending to have one.
-    '@nuxtjs/turnstile',
   ],
 
   // NuxtUI v4 requires this CSS entry — without it, Tailwind utilities and
@@ -330,7 +229,7 @@ export default defineNuxtConfig({
   hub: {
     db: 'sqlite', // D1 SQLite via Drizzle (auto-imports `db` and `schema` in server routes)
     kv: true, // KV store
-    blob: true, // R2 object storage
+    blob: true, // R2 — raw fetched payloads, so every derived datum has its source bytes
     // Cache layer, for `defineCachedFunction` / `defineCachedEventHandler`.
     //
     // The binding is named explicitly, and that is a bug fix rather than a
@@ -339,116 +238,14 @@ export default defineNuxtConfig({
     // cache read and write threw `Invalid binding 'CACHE': 'undefined'`.
     // Nitro catches those, so nothing broke loudly: the cache simply never
     // stored anything, while logging two errors per request into Cloudflare
-    // Logs and, via the error plugin, into PostHog as `server_error`. Observed
-    // directly against `wrangler dev` on the built Worker.
+    // Logs as `server_error`. Observed directly against `wrangler dev` on the
+    // built Worker.
     //
     // Pointing it at the `KV` namespace that already exists costs a fork
     // nothing — no second namespace to create, no second placeholder id in
     // wrangler.toml. Sharing is safe: Nitro prefixes its entries with
     // `cache:`, which nothing else in this app writes.
     cache: { driver: 'cloudflare-kv-binding', binding: 'KV' },
-  },
-
-  // ─── Blog content (@nuxt/content v3) ───────────────────────────────────────
-  //
-  // Content v3 does not ship markdown to the client; it parses content/ at
-  // build time into SQL and queries it at runtime. A Worker has no filesystem,
-  // so on Cloudflare that store has to be D1.
-  //
-  // WHICH D1. This points at the app's own `DB` binding rather than a second
-  // `CONTENT_DB`, and that is a deliberate trade:
-  //
-  //   * Cost of sharing: content creates its own `_content_info` and
-  //     `_content_blog` tables inside the app's database. Drizzle never sees
-  //     them — `drizzle-kit generate` diffs schema.ts against its own snapshot
-  //     in server/db/migrations/meta, not against the live database, and
-  //     `wrangler d1 migrations apply` only runs the files in that directory
-  //     and records them in its own `d1_migrations` table. So `bun db:generate`
-  //     will not try to drop these, and `bun db:migrate` will not try to create
-  //     them. (`drizzle-kit push`, which DOES diff against a live database,
-  //     is not wired up here — keep it that way, or exclude `_content_*`.)
-  //   * Cost of not sharing: a second `[[d1_databases]]` block with a
-  //     placeholder id, which every fork must replace with a real database
-  //     before `wrangler deploy` will even accept the config. That is a second
-  //     setup step, on the deploy path, to isolate three markdown files.
-  //
-  // Sharing wins at this size. If the blog ever grows into something with real
-  // write traffic, split it: create the database, add the binding, and change
-  // `bindingName` here — nothing else in the app reads these tables.
-  //
-  // NO MIGRATION STEP. Unlike the app's own schema (CLAUDE.md › Gotchas:
-  // "Nothing applies migrations to production D1"), the content tables need no
-  // `db:migrate:remote`. The build writes a compressed SQL dump into the
-  // Worker's static assets, and the first request after a deploy compares its
-  // checksum against `_content_info` and imports it if they differ. That is
-  // content's `integrityCheck`, and it stays on precisely because we deploy
-  // with wrangler: NuxtHub's own "apply queries during build" path is disabled
-  // for the d1 driver, and it would not reach the remote database anyway.
-  //
-  // DEV AND BUILD both ignore the setting above: parsing content, and every
-  // `nuxt dev` query, run against a local SQLite file in .data/ instead. Which
-  // SQLite is the `sqliteConnector` below, and it is not optional here.
-  //
-  // The module's default is `better-sqlite3` — a native module this repo does
-  // not have, which it tries to install by *prompting on stdin*. Under `bun
-  // run` that is not a prompt, it is a crash: consola cannot open a TTY, and
-  // `nuxt prepare` dies in postinstall with `uv_tty_init returned EINVAL`.
-  // Observed on a clean install here, before this line existed.
-  //
-  // `native` is `node:sqlite` — nothing to install, nothing to compile, and
-  // Node is the runtime that actually executes the build (`bun run dev` and
-  // `bun run build` both shell out to the `nuxt` bin, which has a node shebang,
-  // so `process.versions.bun` is undefined inside it and the module's own Bun
-  // detection never fires).
-  //
-  // The floor is **22.13.0**, not the 22.5.0 that first shipped the module:
-  // until 22.13 / 23.4 it was behind `--experimental-sqlite`, and this stack has
-  // no way to pass that flag. On 22.5–22.12 the module's availability probe
-  // simply returns false and falls back to the better-sqlite3 prompt above — so
-  // the wrong Node here reads as the same confusing crash, not as a version
-  // error. package.json's `engines` and the committed `.node-version` both
-  // record it.
-  content: {
-    database: { type: 'd1', bindingName: 'DB' },
-    experimental: { sqliteConnector: 'native' },
-  },
-
-  // NuxtUI v4 + Tailwind v4
-  image: {
-    // The edge does the work; nothing here runs at build time.
-    provider: 'cloudflare',
-
-    // The width ladder. Kept identical to IMAGE_WIDTHS in server/utils/images.ts
-    // on purpose — that file snaps `?w=` to these rungs so a private upload and
-    // a public asset are cached at the same handful of sizes rather than at two
-    // overlapping sets. Change one, change the other.
-    screens: {
-      xs: 64,
-      sm: 128,
-      md: 256,
-      lg: 384,
-      xl: 512,
-      xxl: 768,
-      '3xl': 1024,
-      '4xl': 1536,
-      '5xl': 2048,
-    },
-
-    // `f=auto` lets Cloudflare pick AVIF or WebP from the request's Accept
-    // header. It is set here rather than per-call site so that forgetting it on
-    // one `<NuxtImg>` cannot quietly ship a 400 kB PNG to a browser that would
-    // have taken a 40 kB AVIF.
-    format: ['avif', 'webp'],
-    quality: 85,
-  },
-
-  // `/cdn-cgi/image/` is a ZONE feature. There is no zone under `bun dev`, so
-  // every transformed URL would 404 and every image on every local page would
-  // be broken — which reads as "I broke the images" rather than as "this needs
-  // a custom domain." The `none` provider hands the raw src straight through,
-  // so dev renders originals and production transforms them.
-  $development: {
-    image: { provider: 'none' },
   },
 
   ui: {
@@ -473,14 +270,14 @@ export default defineNuxtConfig({
   //
   // clientBundle: each i-lucide-* literal the scanner finds is inlined into
   // the client bundle, which SSR consults first. The scanner skips .ts by
-  // default (a performance default, not a limit), but some icon names are
-  // data — app/utils/admin.ts, server/utils/auth-providers.ts — rendered by
-  // `:icon` / `<UIcon :name>`. Unbundled, each of those costs one server-side
-  // `[Icon] failed to load icon lucide:*` per render and one browser round
-  // trip to /api/_nuxt_icon/lucide.json. Scanning the source trees' .ts too
-  // means there is no hand-kept list to drift. Prose that happens to look
-  // like `ci-browser` is matched, unresolvable, and silently skipped — only
-  // a hand-listed `clientBundle.icons` entry can fail the build.
+  // default (a performance default, not a limit), but an icon name kept as
+  // data in a .ts file and rendered by `:icon` / `<UIcon :name>` is a real
+  // pattern. Unbundled, each of those costs one server-side `[Icon] failed to
+  // load icon lucide:*` per render and one browser round trip to
+  // /api/_nuxt_icon/lucide.json. Scanning the source trees' .ts too means
+  // there is no hand-kept list to drift. Prose that happens to look like
+  // `ci-browser` is matched, unresolvable, and silently skipped — only a
+  // hand-listed `clientBundle.icons` entry can fail the build.
   //
   // serverBundle: `auto` resolves to `remote` on the cloudflare_module preset,
   // so the Worker answered /api/_nuxt_icon by fetching whole collections from
@@ -571,9 +368,6 @@ export default defineNuxtConfig({
 
   // Runtime config — public vars go in public, secrets stay private
   runtimeConfig: {
-    // Server-only secrets (access via useRuntimeConfig().mySecret)
-    // Set via NUXT_SESSION_PASSWORD env var — Nuxt reads it automatically
-    sessionPassword: '',
     // Filled by the `pages:resolved` hook above from
     // `definePageMeta({ publicPage })`. Server-only: sitemap.xml and llms.txt
     // are the only readers, so it stays out of the client bundle.
@@ -603,80 +397,10 @@ export default defineNuxtConfig({
     // secret, and the [[send_email]] binding pins the destination anyway.
     alertEmailTo: '',
     alertEmailFrom: '',
-    // Paddle billing (sandbox-first) — set via NUXT_PADDLE_* env vars / secrets
-    paddle: {
-      // Endpoint secret from Paddle → Developer tools → Notifications
-      webhookSecret: '',
-      // Server-side API key (only needed if you call Paddle's API, not for webhooks)
-      apiKey: '',
-    },
-    // OAuth providers, read by nuxt-auth-utils' defineOAuth*EventHandler.
-    // Declared here (rather than left implicit) so /api/auth/providers can tell
-    // the login page which buttons to render — an unconfigured provider dead-ends
-    // in a "missing configuration" error instead of a sign-in.
-    // Set via NUXT_OAUTH_GITHUB_CLIENT_ID etc.
-    //
-    // All of these are optional. The primary sign-in path is the magic link
-    // (server/api/auth/magic-link.post.ts), which needs no provider at all —
-    // only Resend, below. GitHub in particular ships unconfigured on purpose:
-    // it is a developer credential, and a consumer sign-in page that leads with
-    // it is telling most of its visitors the product isn't for them.
-    oauth: {
-      // Apple's client secret is an ES256 JWT signed per request, so the config
-      // is four values rather than two: `clientId` is the Services ID, and
-      // `privateKey` is the .p8 contents with literal newlines written as \n.
-      // A real secret — `wrangler secret put`, never wrangler.toml [vars].
-      //
-      // `redirectURL` is the fifth, and it is REQUIRED for Apple specifically —
-      // the only provider here that needs one. nuxt-auth-utils' Apple handler
-      // puts the raw value into the token-exchange body instead of falling back
-      // to the request's own origin the way the Google and GitHub handlers do,
-      // so leaving it empty sends `redirect_uri=undefined` to Apple and the
-      // sign-in dies with `invalid_grant` at the very last step. Set
-      // NUXT_OAUTH_APPLE_REDIRECT_URL to exactly the Return URL registered with
-      // Apple: https://<your-app>/api/auth/apple
-      apple: { clientId: '', teamId: '', keyId: '', privateKey: '', redirectURL: '' },
-      google: { clientId: '', clientSecret: '' },
-      github: { clientId: '', clientSecret: '' },
-    },
-    // Cloudflare Turnstile (server/utils/turnstile.ts). Set via
-    // NUXT_TURNSTILE_SECRET_KEY — the name @nuxtjs/turnstile reads, not one we
-    // chose. Empty = requireTurnstile() skips verification, so the template runs
-    // without a Turnstile account.
-    //
-    // Declared here rather than left to the module because the module's dev
-    // default is Cloudflare's always-passing test secret, and a challenge that
-    // always passes is worse than no challenge: it looks like protection in dev
-    // and is not protection anywhere.
-    turnstile: {
-      secretKey: '',
-    },
-    // Which queue the email consumer owns, set by NUXT_EMAIL_QUEUE_NAME in
-    // wrangler.toml's [vars] — and again, with a different value, in
-    // [env.preview.vars].
-    //
-    // It is configuration rather than a constant precisely because those two
-    // values differ. A constant is baked into the bundle once, so it matched
-    // the production queue and silently failed to match the preview one; the
-    // consumer then returned without acking, which acks the batch by omission,
-    // and every preview email disappeared. See shouldHandleQueue().
-    //
-    // Empty here on purpose: the default must not be a stale `my-app-email`
-    // that survives `bun run rename`. Unset means "accept every batch", which
-    // for a Worker with one consumer is the safe direction to fail.
-    emailQueueName: '',
-    // Transactional email (server/utils/email.ts). Empty key = no-op, so the
-    // template runs without a Resend account.
-    resend: {
-      apiKey: '',
-      // Must be an address on a domain you've verified in Resend, e.g.
-      // "My App <hello@myapp.com>". Anything else is rejected at send time.
-      from: '',
-    },
     // Public vars (access via useRuntimeConfig().public.myVar)
     // NUXT_PUBLIC_APP_NAME in wrangler.toml [vars] overrides this at runtime
     public: {
-      appName: 'My App',
+      appName: 'Frontier Terminal',
       // Stamped at build time; /api/status reports it so a dashboard can tell
       // which commit is live. Public because a sha is not a secret and a
       // footer may want to show it.
@@ -686,56 +410,22 @@ export default defineNuxtConfig({
       // description — so an answer engine reads the same claim everywhere
       // rather than three paraphrases it has to reconcile.
       appDescription:
-        'A full-stack SaaS template on Nuxt 4 and Cloudflare Workers: auth, billing, email, and analytics already wired together.',
-      // PostHog — paste your project's phc_… key here (or set
-      // NUXT_PUBLIC_POSTHOG_KEY in env). Public-by-design; ships in the
-      // client bundle. Empty key = plugin no-ops, nothing tracked.
-      posthogKey: '',
-      posthogHost: 'https://us.i.posthog.com',
-      // Paddle client-side token (public by design) + environment. Empty
-      // token = usePaddle() no-ops, so the template runs without a Paddle account.
-      paddleClientToken: '',
-      paddleEnv: 'sandbox',
-      // Paddle price IDs (pri_…) for the plans on /pricing. Kept in config
-      // rather than in app/utils/plans.ts so sandbox and production can point at
-      // different prices without a code change. Empty = that plan's button is
-      // disabled instead of opening a checkout that 400s.
-      paddlePriceMonthly: '',
-      paddlePriceYearly: '',
-      paddlePricePass: '',
+        'Tracking the frontier AI labs — API pricing, hiring, SEC filings. Every number carries its source URL and fetch timestamp.',
       // The app's canonical public origin, no trailing slash. Absolute links in
-      // emails, sitemap.xml, robots.txt, and og: tags are built from this —
-      // there is no request context in a webhook to infer it from.
+      // sitemap.xml, robots.txt, and og: tags are built from this.
       appUrl: 'http://localhost:3000',
-      // Set false on preview deploys so robots.txt disallows everything, every
-      // page renders `noindex`, and an ephemeral URL never competes with
-      // production in the index.
+      // Set false to make robots.txt disallow everything, every page render
+      // `noindex`, and sitemap.xml/llms.txt go empty — for any deploy that
+      // must not compete with production in the index.
       indexable: true,
       // Whether AI crawlers and answer-engine fetchers (GPTBot, ClaudeBot,
       // PerplexityBot, Google-Extended, …) may read the public pages.
       //
-      // Default true, and deliberately so: for a SaaS marketing site, being
-      // quotable by an answer engine is distribution, not theft — these are the
-      // crawlers behind ChatGPT Search, Perplexity, and AI Overviews. Set false
-      // (NUXT_PUBLIC_ALLOW_AI_CRAWLERS=false) if your public content is the
-      // product rather than an advert for it. Either way it is a decision you
-      // made, which is the point of the flag.
+      // Default true, and deliberately so: the data here is public and sourced,
+      // and being quotable by an answer engine is distribution. Set false
+      // (NUXT_PUBLIC_ALLOW_AI_CRAWLERS=false) to block the named crawlers.
+      // Either way it is a decision you made, which is the point of the flag.
       allowAiCrawlers: true,
-      // Cloudflare Turnstile site key (public by design — it identifies the
-      // widget, it does not authorise anything). Set via
-      // NUXT_PUBLIC_TURNSTILE_SITE_KEY, the name @nuxtjs/turnstile reads.
-      //
-      // Empty = <NuxtTurnstile> is never rendered and no challenge script is
-      // fetched. Components gate on this value, not on the module being
-      // installed, so an unconfigured fork ships zero Turnstile bytes.
-      turnstile: {
-        siteKey: '',
-      },
-      // Shown on /terms and /privacy and used as the Reply-To on transactional
-      // email. A legal page with no way to reach a human is not a legal page.
-      supportEmail: 'support@example.com',
-      // Legal entity named in /terms and /privacy. Your company, not your app.
-      legalEntity: 'My Company Ltd',
     },
   },
 

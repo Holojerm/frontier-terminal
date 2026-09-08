@@ -8,11 +8,9 @@
 // handler gets. That beats importing `cloudflare:workers`, which types don't
 // resolve for under Nuxt's generated server tsconfig.
 //
-// Why the `send_email` binding and not Resend: the binding delivers to a
+// Why the `send_email` binding and not a mail API: the binding delivers to a
 // *verified destination address* for free with no sending-domain onboarding,
-// which is exactly right for mailing yourself and useless for mailing a
-// customer. The two transports are deliberately separate — see the `resend`
-// block in nuxt.config.ts.
+// which is exactly right for mailing yourself — the only mail this site sends.
 
 import type { OpsDigest, OpsMailer } from './ops'
 

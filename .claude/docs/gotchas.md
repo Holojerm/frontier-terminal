@@ -1,6 +1,6 @@
 # Gotchas — silent failure modes
 
-Failures this repo has actually hit that produce **no error**: wrong-file databases, migrations that never run, empty sitemaps, rate limiters that quietly do nothing. If something appears to work but produces no output, or fails only for signed-in users, the answer is probably here.
+Failures this repo has actually hit that produce **no error**: wrong-file databases, migrations that never run, empty sitemaps, rate limiters that quietly do nothing. If something appears to work but produces no output, the answer is probably here.
 
 > **Load this when:** debugging anything that fails quietly, touching D1/migrations/deploy config, adding a cron task or a custom `definePageMeta` key, or working in a git worktree.
 > Canonical index: [CLAUDE.md](../../CLAUDE.md).
@@ -11,7 +11,7 @@ Sharp edges that have bitten this template before — read before forking or bef
 
 ## Local D1 lives in two places — only one is real
 
-NuxtHub serves the dev DB from `.data/db/sqlite.db`. Wrangler's own local D1 sandbox lives at `.wrangler/state/v3/d1/`. Migrations applied via `wrangler d1 execute --local` or direct writes via `wrangler d1 execute --local` land in the **wrangler** path, which the dev server does NOT read. Seed via `bun seed` (see `scripts/seed.ts`), which uses `bun:sqlite` against the NuxtHub path directly. The two only converge in production.
+NuxtHub serves the dev DB from `.data/db/sqlite.db`. Wrangler's own local D1 sandbox lives at `.wrangler/state/v3/d1/`. Migrations applied via `bun run db:migrate` or direct writes via `wrangler d1 execute --local` land in the **wrangler** path, which the dev server does NOT read. Anything that writes to the local dev DB from outside the app must open the NuxtHub path directly with `bun:sqlite`. The two only converge in production.
 
 ## Nothing applies migrations to production D1 — you have to
 
@@ -38,39 +38,20 @@ command tracks state in wrangler's default `d1_migrations`, while the generated
 `.output/server/wrangler.json` sets `migrations_table = "_hub_migrations"`. Both work; pick
 one and stay on it, because alternating makes each think nothing has been applied.
 
-The **preview** D1 is a second database with the same problem: `bun run db:migrate:preview`.
-
 `GET /api/status` reports the gap: `migrations.pending` lists every migration in the repo
 that the deployed database has not applied. It is what the portfolio dashboard polls, and
 the quickest way to check by hand after a deploy — `curl https://<app>/api/status | jq .migrations`.
 
-## NuxtHub deletes `env` from the generated wrangler config
+## NuxtHub rewrites the generated wrangler config
 
 `wrangler.toml` is an input, not the deployed config. `nuxt build` writes
 `.output/server/wrangler.json` and wrangler deploys that. Nitro copies your `wrangler.toml`
-into it verbatim — bindings, `[triggers]`, `[[queues.*]]` all survive, verified — and then
-`@nuxthub/core` rewrites the file on Nuxt's `close` hook (`processWranglerConfigFile`):
-
-- `CLOUDFLARE_ENV=<name>` set → **flattens** `env.<name>` onto the top level (dropping the
-  top-level non-inheritable keys, spreading the environment's over what remains), then
-  deletes `env`.
-- unset → deletes `env`, keeping production's bindings.
-
-Either way **the generated config contains no environments**. So the obvious command,
-`wrangler --cwd .output deploy --env preview`, cannot work — there is nothing named
-`preview` in the file wrangler reads. The environment is selected **at build time**:
-`bun run build:preview` / `bun run deploy:preview`, and in Workers Builds a
-`CLOUDFLARE_ENV=preview` *build variable* on the non-production trigger, with the deploy
-command left as a plain `wrangler versions upload`.
-
-Two consequences when editing `[env.preview]`:
-
-- **`name` must be set there.** It is inheritable, so without it a preview build produces a
-  config still named `my-app` — preview bindings on the production Worker, sharing its
-  secrets.
-- **NuxtHub's non-inheritable list is not wrangler's.** `ratelimits` is absent from it, so an
-  environment that omits `[[env.preview.ratelimits]]` silently inherits production's
-  `namespace_id` and shares its counters. The block is required, not optional.
+into it verbatim — bindings, `[triggers]`, `[[ratelimits]]` all survive, verified — and then
+`@nuxthub/core` rewrites the file on Nuxt's `close` hook (`processWranglerConfigFile`),
+deleting any `env` key. This repo has a single environment, so nothing is lost; if one is
+ever added, know that it is selected at **build** time (`CLOUDFLARE_ENV=<name>`), not with
+`wrangler --env`, because the generated file contains no environments by the time wrangler
+reads it.
 
 ## A cron task needs the same string in two files
 
@@ -86,7 +67,7 @@ once as `SCHEDULED_TASKS` at the top of `nuxt.config.ts` and handed to both
 `nitro.scheduledTasks` and `runtimeConfig.scheduledTasks` (what `/api/status` reports) —
 keep it there; the gate can read an inline literal too, but one map is harder to get wrong.
 
-No custom Worker entry is needed for either background surface: the `cloudflare_module`
+No custom Worker entry is needed for a background surface: the `cloudflare_module`
 preset already exports `scheduled()` (which calls `runCronTasks` when
 `nitro.experimental.tasks` is on) and `queue()` (which dispatches the `cloudflare:queue`
 Nitro hook), plus `email`, `tail` and `trace`. Hook them from `server/plugins/`; do not
@@ -95,57 +76,25 @@ one of them.
 
 Note that Nitro **skips scheduled tasks under vitest** (`isTest` in its task runtime). Put
 the logic in a `server/utils/` function that takes `db` (and any binding it needs) as an
-argument and test that, as `server/utils/purge.ts` does — a test driving the task wrapper
+argument and test that, as `server/utils/ops.ts` does — a test driving the task wrapper
 tests the shim. For the same reason, a task must import `db`/`blob` **explicitly** from
 `@nuxthub/db` / `@nuxthub/blob` rather than relying on the auto-imports: a task is an
 untested bundling surface that runs unattended, and the `kv is not defined` failure in
-the gotcha above would surface as a cron event failing nightly with nobody watching.
+the gotcha below would surface as a cron event failing with nobody watching.
 
-Anything the sweep filters on needs an **index**. `purge.ts` matches `expires_at` /
-`used_at` / `status`, and a `LIMIT` bounds rows *deleted*, not rows *examined* — so an
-unindexed predicate full-scans the table on every tick and gets slower as the product
-grows. Both credential tables got theirs in migration 0012.
-
-## @nuxt/content's default SQLite driver crashes `bun run` in postinstall
-
-Content v3 needs a local SQLite for parsing and for `nuxt dev`, and its default connector is
-`better-sqlite3` — a native module this repo does not depend on. When it is missing, the module
-does not fail; it **prompts on stdin** to install it. Under `bun run` there is no usable TTY,
-so consola throws `uv_tty_init returned EINVAL` and `nuxt prepare` dies during postinstall.
-Observed on a clean `bun install` before `content.experimental.sqliteConnector` was set.
-
-`nuxt.config.ts` pins `sqliteConnector: 'native'` — Node's built-in `node:sqlite`, hence the
-`node >= 22.13` line in `engines`. **22.13**, not the 22.5.0 that first shipped `node:sqlite`:
-it was behind `--experimental-sqlite` until 22.13.0 / 23.4.0, and on 22.5–22.12 the module's
-availability probe returns false and falls straight back to the better-sqlite3 prompt — so the
-wrong Node reads as the same confusing crash rather than as a version error.
-Note the module's own Bun detection cannot help here either:
-`bun run dev` and `bun run build` both shell out to the `nuxt` bin, which has a node shebang,
-so `process.versions.bun` is undefined by the time the connector is chosen.
-
-That makes the Node version a **deploy-environment** constraint, not just a local one: CI runs
-`bun run ci`, which runs `nuxt build`, which is Node. Workers Builds defaults to Node 24 and
-preinstalls 22 and 24, so it passes today. The committed `.node-version` pins it anyway, so
-that a future image default — or someone setting `NODE_VERSION=20` for an unrelated reason —
-cannot quietly reintroduce the prompt. `engines` is documentation here, not a gate: bun warns
-on a mismatch rather than refusing to install. Workers Builds reads `.node-version`, `.nvmrc`,
-or a `NODE_VERSION` build variable.
-
-Production is unaffected — there the store is D1 (`content.database`), not a file.
+Anything a sweep filters on needs an **index**. A `LIMIT` bounds rows *deleted*, not rows
+*examined* — so an unindexed predicate full-scans the table on every tick and gets slower
+as the table grows. `ops_events.notified_at` has one for exactly this reason.
 
 ## The dev server caches its DB connection — external writes need a restart
 
-`bun seed` (and anything else writing to `.data/db/sqlite.db` with `bun:sqlite`) writes the file
-correctly, but a **running** dev server keeps its own libsql connection and will keep returning
-the old rows. Observed directly: insert an entitlement while `bun dev` is up and
-`/api/billing/entitlement` still reports `active: false`, with the row plainly visible in the
-file. Restart the dev server (or touch `nuxt.config.ts`) and it appears immediately.
+Anything writing to `.data/db/sqlite.db` with `bun:sqlite` writes the file correctly, but a
+**running** dev server keeps its own libsql connection and will keep returning the old rows.
+Observed directly on the template this came from: insert a row while `bun dev` is up and the
+API still reports the old state, with the row plainly visible in the file. Restart the dev
+server (or touch `nuxt.config.ts`) and it appears immediately.
 
-So: seed before starting the dev server, or restart after seeding. Don't go debugging the query.
-
-## nuxt-auth-utils uses `/api/_auth/session` (underscore)
-
-`useUserSession()`'s `fetch()` and `clear()` calls hit `/api/_auth/session` — note the underscore. The global auth middleware allowlist must include `/api/_auth/` or sign-out and session refresh will 401. OAuth callback routes you write yourself live under `/api/auth/` (no underscore) and need their own allowlist entry.
+So: write before starting the dev server, or restart after writing. Don't go debugging the query.
 
 ## NuxtHub's `kv` auto-import doesn't reach every file at runtime
 
@@ -193,7 +142,7 @@ How each gate stays scoped — **match this when you add a gate**:
 | Gate | Why a sibling worktree can't reach it |
 | --- | --- |
 | `lint` | `.oxlintrc.json` › `ignorePatterns` lists `.claude/**` |
-| `design:check` / `seo:check` / `brand:check` | Walk `ROOT/app`, `ROOT/app/pages`, `ROOT/content/blog`, and fixed root-relative asset paths |
+| `design:check` / `seo:check` / `brand:check` | Walk `ROOT/app`, `ROOT/app/pages`, and fixed root-relative asset paths |
 | `test` | `vitest.config.ts` › `include` is `test/**` + `server/**`, relative to the checkout |
 | `typecheck` | Nuxt's generated `.nuxt/tsconfig.*` use scoped includes (`../app/**/*`, `../server/**/*`), not a root glob |
 | `test:a11y` | Per-checkout port — see below |
@@ -221,7 +170,7 @@ branch is not a unique key for a worktree. Three ways that collides, all of them
 | --- | --- | --- |
 | Worktree checked out on `main` | `my-app.localhost` — same as the main checkout | `main`/`master` are treated as default branches and skipped |
 | Detached-HEAD worktree | `my-app.localhost` | Branch reads as `HEAD`, also skipped — and Claude Code creates detached worktrees |
-| `feat/magic-link` vs `claude/magic-link` | both `magic-link.my-app.localhost` | The prefix is only the branch's last path segment |
+| `feat/pricing` vs `claude/pricing` | both `pricing.my-app.localhost` | The prefix is only the branch's last path segment |
 
 The worktree *directory* has none of those problems: git won't create two worktrees at one path,
 so it's unique by construction and — unlike the branch — doesn't change under you. That's what
@@ -239,7 +188,7 @@ move every time the branch did. `bun dev:app` bypasses the proxy entirely.
 
 ## Workers Builds: dashboard Worker name must match `wrangler.toml`
 
-CI/CD runs on Cloudflare Workers Builds (repo connected in the dashboard under Worker → Settings → Build). The Worker's name in the dashboard must exactly match `name` in the root `wrangler.toml`, or every build fails before it starts. When you fork and rename the project, reconnect the repo to a Worker with the new name. Build settings live in the dashboard, not in the repo: build command `bun run ci`, deploy command `bunx wrangler --cwd .output deploy`, preview deploy command (non-production branches) `bunx wrangler --cwd .output versions upload`. `NUXT_SESSION_PASSWORD` must be set as a build variable there too — the old GitHub Actions secrets are gone.
+CI/CD runs on Cloudflare Workers Builds (repo connected in the dashboard under Worker → Settings → Build). The Worker's name in the dashboard must exactly match `name` in the root `wrangler.toml`, or every build fails before it starts. Build settings live in the dashboard, not in the repo: build command `bun run ci`, deploy command `bunx wrangler --cwd .output deploy`.
 
 ## The browser suites run in GitHub Actions, NOT in `bun run ci`
 
@@ -269,7 +218,7 @@ ubuntu runners, where `--with-deps` succeeds. Everything else stayed in Workers
 Builds: lint, the design/brand/mirror/seo gates, typecheck, the unit tests and the
 build. Those block a **deploy**; the browser suites block a **merge**.
 
-**`test:a11y` is THREE Playwright projects, not one** — `a11y`, `csp` and `e2e`. So the
+**`test:a11y` is TWO Playwright projects, not one** — `a11y` and `csp`. So the
 Content-Security-Policy gate now lives in the Action too. That is the trap: a broken CSP
 fails silently, in exactly the way that gate exists to catch. Deleting that workflow
 deletes the CSP gate, and nothing will tell you.

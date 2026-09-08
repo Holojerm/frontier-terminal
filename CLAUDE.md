@@ -5,6 +5,10 @@ It is the **index**, deliberately kept small: it loads into every session, so
 anything that is not needed on every task lives in [`.claude/docs/`](.claude/docs/)
 and is read on demand.
 
+Frontier Terminal is a free, public, read-only data site: an investor terminal tracking
+the frontier AI labs (API pricing, hiring, SEC filings). No accounts, no sign-in, no
+payments. Every datum carries its source URL and fetch timestamp.
+
 ---
 
 ## Where things are documented
@@ -14,16 +18,11 @@ Read the row that matches what you are about to touch. Do not load them all.
 | Doc | Covers | Load it when |
 | --- | --- | --- |
 | [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md) | Silent failure modes — wrong-file databases, migrations that never run, empty sitemaps, rate limiters that quietly do nothing | Something "works" but produces no output; or you touch D1, migrations, deploy config, cron, `definePageMeta`, or a worktree |
-| [`.claude/docs/patterns.md`](.claude/docs/patterns.md) | Worked examples: components, API routes, Drizzle queries, forms, error handling, feedback | Writing a new component, route, form, or query — especially your first change here |
-| [`.claude/docs/auth.md`](.claude/docs/auth.md) | Magic link, OAuth, session revocation, `rateLimit()`, Turnstile | Anything under `server/api/auth/`, sessions, rate limiting, or bot protection |
-| [`.claude/docs/billing.md`](.claude/docs/billing.md) | Paddle, entitlements, clawbacks, referral economics, the `mcp/` worker | Anything that grants, revokes, or prices access |
-| [`.claude/docs/email.md`](.claude/docs/email.md) | Resend, the `EMAIL_QUEUE`, retry/dead-letter, notification decisions | Adding or changing any outbound email |
-| [`.claude/docs/seo.md`](.claude/docs/seo.md) | `useSeo()`, `publicPage` meta, structured data, the blog | Adding or editing a page, or writing in `content/blog/` |
-| [`.claude/docs/images.md`](.claude/docs/images.md) | `<NuxtImg>` at the edge vs. transforming a private R2 object in the Worker | Rendering any image, adding a thumbnail, or debugging a `/cdn-cgi/image/` 404 |
+| [`.claude/docs/patterns.md`](.claude/docs/patterns.md) | Worked examples: components, API routes, Drizzle queries, error handling | Writing a new component, route, or query — especially your first change here |
+| [`.claude/docs/seo.md`](.claude/docs/seo.md) | `useSeo()`, `publicPage` meta, structured data, the crawler files | Adding or editing a page |
 | [`.claude/docs/brand.md`](.claude/docs/brand.md) | How every icon is generated from one `Logo.vue` | Redesigning the mark or fixing `brand:check` |
-| [`.claude/docs/agent-setup.md`](.claude/docs/agent-setup.md) | MCP servers, skills, slash commands, cloud routines | Configuring tooling, or setting up a fork |
+| [`.claude/docs/agent-setup.md`](.claude/docs/agent-setup.md) | MCP servers, skills, slash commands, cloud routines | Configuring tooling |
 | [`.claude/docs/fleet.md`](.claude/docs/fleet.md) | `fleet.json`, `/api/status`, `/api/fleet`, the `ops_events` spool and its digest cron | Touching the manifest, the status/fleet endpoints, or ops alerting |
-| [`TEARDOWN.md`](TEARDOWN.md) | How to **remove** billing, referrals, the MCP worker, or swap Paddle for Stripe | You do not need one of the shipped subsystems |
 | [`DESIGN.md`](DESIGN.md) | The visual design system — source of truth | Writing any UI |
 
 **Three gotchas are load-bearing enough to state here**, because each one fails with
@@ -43,18 +42,15 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 | Styling      | **Tailwind CSS v4**        | Utility-first, via NuxtUI                                        |
 | Backend      | **Cloudflare Workers**     | Via NuxtHub + Nitro                                              |
 | Database     | **Cloudflare D1** (SQLite) | Via Drizzle ORM — `db` + `schema` auto-imported by NuxtHub       |
-| KV Store     | **Cloudflare KV**          | For caching, sessions, config                                    |
-| File Storage | **Cloudflare R2**          | For uploads (images, videos, docs)                               |
-| Auth         | **nuxt-auth-utils**        | Sealed cookie sessions, OAuth                                    |
-| Deployment   | **Wrangler**               | `bun deploy` → `wrangler deploy` (NuxtHub Admin sunset Feb 2026) |
+| KV Store     | **Cloudflare KV**          | Cache and rate-limit counters                                    |
+| Object Store | **Cloudflare R2**          | Raw fetched payloads, so every derived number has its source bytes |
+| Deployment   | **Wrangler**               | `bun deploy` → `wrangler deploy`                                 |
 | CI/CD        | **Workers Builds**         | Cloudflare-native CI: `bun run ci` + deploy on push (see README) |
 | Linting      | **oxlint**                 | Fast Rust-based linter, config in `.oxlintrc.json`               |
 | Formatting   | **oxfmt**                  | Fast Rust-based formatter, config in `.oxfmtrc.json`             |
-| Validation   | **Zod**                    | All user input + API I/O                                         |
-| Content      | **@nuxt/content v3**       | Markdown blog in `content/`, parsed to SQL, served from the `DB` D1 |
+| Validation   | **Zod**                    | All input + API I/O                                              |
 
 ---
-
 
 ## Directory Structure
 
@@ -64,34 +60,28 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 │   ├── app.config.ts       # GENERATED from DESIGN.md — NuxtUI colors + component defaults
 │   ├── components/         # Reusable UI components
 │   │   ├── Brand/          # Logo.vue — the mark; every icon is generated from it
-│   │   └── [Feature]/      # Group by feature, e.g. app/components/Workout/
-│   ├── composables/        # Shared stateful logic (useAuth, useWorkout, etc.)
+│   │   └── [Feature]/      # Group by feature, e.g. app/components/Pricing/
+│   ├── composables/        # Shared stateful logic (useSeo, …)
 │   ├── layouts/            # Page layouts
-│   ├── middleware/         # Route guards — auth.ts, subscription.ts (UX only, not security)
 │   ├── pages/              # File-based routing
-│   ├── types/              # Frontend-only TypeScript types (seo.d.ts augments PageMeta)
-│   └── utils/              # Auto-imported client helpers (plans.ts, faq.ts)
+│   └── types/              # Frontend-only TypeScript types (seo.d.ts augments PageMeta)
 ├── server/                 # Backend (Nitro / Cloudflare Workers)
-│   ├── api/                # API routes (file = endpoint)
+│   ├── api/                # API routes (file = endpoint) — all public, all read-only
 │   ├── db/
 │   │   ├── schema.ts       # Single source of truth for DB schema
 │   │   └── migrations/     # Generated by drizzle-kit
-│   ├── middleware/         # Server middleware (auth guard + auth-surface rate limit)
-│   ├── plugins/            # Nitro plugins (error logging, EMAIL_QUEUE consumer)
-│   ├── routes/             # Non-/api Nitro routes (paddle webhook, ingest, robots, sitemap, llms.txt)
+│   ├── plugins/            # Nitro plugins (error logging)
+│   ├── routes/             # Non-/api Nitro routes (robots, sitemap, llms.txt, manifest)
 │   ├── tasks/              # Nitro scheduled tasks — cron wiring in nuxt.config + wrangler.toml
-│   └── utils/              # Server utilities (helpers, etc.)
+│   └── utils/              # Server utilities
 ├── shared/                 # Auto-imported in BOTH app/ and server/ (Nuxt 4 `shared/`)
 │   ├── types/              # Cross-cutting type augmentation (runtime config)
 │   └── utils/              # site.ts (URL identity), schema.ts (JSON-LD builders), fleet-manifest.ts (fleet.json shape)
-├── content/                # @nuxt/content sources — NOT scanned by Nuxt as app code
-│   └── blog/               # One markdown file per post; the filename is the URL
-├── scripts/                # One-off scripts (bun seed, etc.)
+├── scripts/                # CI gates and one-off scripts
 ├── public/                 # Static assets — og.png, favicon.svg, apple-touch-icon.png
-├── .github/                # Dependabot + browser-suites.yml (axe/CSP/E2E — the only CI
+├── .github/                # Dependabot + browser-suites.yml (axe/CSP — the only CI
 │                           # not in Workers Builds; that image can't launch Chromium)
 ├── fleet.json              # How this app describes itself to the portfolio dashboard — see bun run fleet:check
-├── content.config.ts       # Blog collection + frontmatter schema
 ├── drizzle.config.ts       # Drizzle Kit config
 ├── nuxt.config.ts
 ├── wrangler.toml
@@ -101,7 +91,6 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 ```
 
 ---
-
 
 ## Coding Standards
 
@@ -114,7 +103,7 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 - **No `console.log` in committed code.** Use `console.warn`/`console.error` for real issues only.
 
 - **Worked examples** — a full `<script setup>` component, a Zod-validated API route,
-  Drizzle queries, forms, and error handling — are in
+  Drizzle queries, and error handling — are in
   [`.claude/docs/patterns.md`](.claude/docs/patterns.md). Copy those shapes.
 
 ---
@@ -130,6 +119,7 @@ don't hand-edit them and expect the change to survive. `bun run design:check` (p
 
 The dev-only `/design-system` route renders every token and component state on one page in both
 color modes — use it to verify a design change actually landed.
+
 ### The brand mark
 
 The logo is drawn **once**, in
@@ -140,9 +130,9 @@ Never hand-edit generated files in `public/`. Details and the redesign workflow:
 
 ### Component Usage
 
-- **Use NuxtUI components first.** Before building a custom component, check if `<UButton>`, `<UModal>`, `<UForm>`, `<UTable>`, etc. covers your need.
+- **Use NuxtUI components first.** Before building a custom component, check if `<UButton>`, `<UModal>`, `<UTable>`, etc. covers your need.
 - **Custom components go in `app/components/[Feature]/`** — never dump everything in `app/components/`.
-- **Component names are PascalCase** in templates and files: `WorkoutCard.vue`, `ClientList.vue`.
+- **Component names are PascalCase** in templates and files: `PricingTable.vue`, `FilingList.vue`.
 
 ### Styling Rules
 
@@ -162,7 +152,7 @@ Never hand-edit generated files in `public/`. Details and the redesign workflow:
   anything pinned to a viewport edge. `bun run design:check` fails the build on the
   machine-checkable half, and `bun run test:a11y` runs axe in a real browser over every
   public route in both color modes — that one owns contrast ratios, landmark uniqueness,
-  and heading order. Despite the name it now runs **two** Playwright projects: the axe
+  and heading order. Despite the name it runs **two** Playwright projects: the axe
   sweep and `test/csp/` (see Security headers), so it is the browser gate rather than
   just the a11y one.
 
@@ -172,29 +162,20 @@ NuxtUI handles dark mode automatically via `UColorModeButton`. Use semantic toke
 
 ---
 
-
----
-
 ## Product Standards
 
 Each of these has a full contract in its own doc — this is the one-line version.
 
-- **Errors** — `<UAlert>`/`useToast()` on the client, `createError({ statusCode })` on the
+- **Provenance** — every datum carries a source URL and a fetch timestamp. Trustworthiness
+  is the depth axis of this project; never trade it for a feature.
+- **Errors** — `<UAlert>` on the client, `createError({ statusCode })` on the
   server, never a raw error message to a user. → [`patterns.md`](.claude/docs/patterns.md)
-- **Forms** — `<UForm>` with a Zod schema, re-validated server-side with the same schema.
-  Client validation is never the boundary. → [`patterns.md`](.claude/docs/patterns.md)
-- **Auth** — the client middleware is **not** a security boundary; every paid API route
-  calls `requireSubscription(event)` itself. → [`auth.md`](.claude/docs/auth.md)
-- **Billing & referrals** — a referral reward is access nobody paid for; treat
-  `server/utils/referral.ts` as billing code. → [`billing.md`](.claude/docs/billing.md)
-- **Email** — `sendEmail()` never throws, and enqueues rather than POSTs when
-  `EMAIL_QUEUE` exists. → [`email.md`](.claude/docs/email.md)
+- **Public API** — every `/api/*` route is public and read-only. There is no session and no
+  server auth guard; a route that takes input validates it with Zod and calls `rateLimit()`.
 - **SEO & AEO** — every page calls `useSeo()` exactly once and declares `publicPage`;
   `bun run seo:check` fails the build otherwise. → [`seo.md`](.claude/docs/seo.md)
-- **Feedback** — unsolicited via `<FeedbackWidget />`; solicited via PostHog Surveys.
-  Feedback text is untrusted input. → [`patterns.md`](.claude/docs/patterns.md)
 - **Performance** — server-side `useFetch` for initial loads, `defineAsyncComponent` for
-  heavy components, uploads to R2 via `blob`. → [`patterns.md`](.claude/docs/patterns.md)
+  heavy components, raw payloads to R2 via `blob`. → [`patterns.md`](.claude/docs/patterns.md)
 - **Fleet contract** — `fleet.json` describes this app, `GET /api/status` reports build,
   migrations and crons, `GET /api/fleet` reports counters behind a token, and every 5xx
   spools an `ops_events` row that a cron emails as a digest.
@@ -205,13 +186,11 @@ Each of these has a full contract in its own doc — this is the one-line versio
 ## Git Workflow
 
 - **`main`** — production branch, auto-deploys via Cloudflare Workers Builds
-- **`dev`** — integration branch (optional for larger features)
-- **Feature branches**: `feat/workout-builder`, `fix/auth-redirect`, `chore/update-deps`
-- **Commit format**: `feat: add workout builder`, `fix: correct auth redirect`, `chore: update deps`
-- **PRs require**: lint + typecheck + tests to pass before merge — enforced by the Workers Builds check (non-production branch builds run `bun run ci` and post status + a preview URL back to the PR)
+- **Feature branches**: `feat/pricing-parser`, `fix/sitemap-lastmod`, `chore/update-deps`
+- **Commit format**: `feat: add pricing parser`, `fix: correct sitemap lastmod`, `chore: update deps`
+- **PRs require**: lint + typecheck + tests to pass before merge — enforced by the Workers Builds check
 
 ---
-
 
 ## Common Commands
 
@@ -227,31 +206,24 @@ bun format:check      # Check formatting without writing
 bun run design:check  # Fail on UI code that bypasses the DESIGN.md token layer
 bun run brand:generate # Rebuild favicon.svg, apple-touch-icon.png and og.png from the brand mark
 bun run brand:check   # Fail when those generated files no longer match the mark
+bun run mirror:check  # Fail when a comment or doc names a file, symbol, or variable that no longer exists
 bun run seo:check     # Fail on pages that bypass useSeo() or aren't declared public/noindex
 bun run fleet:check   # Fail when fleet.json stops matching wrangler.toml (names, binding ids, crons)
 bun run crons:check   # Fail when [triggers] crons and nitro.scheduledTasks disagree, or a task has no file
 bun run test:a11y     # Playwright/Chromium browser suites: axe over every public route
                       # (light + dark) AND the Content-Security-Policy spec (test/csp/)
 bun typecheck         # TypeScript type checking
-bun run build:preview # Build with the [env.preview] bindings (CLOUDFLARE_ENV=preview)
-bun run deploy:preview # Same, then deploy — creates/updates the my-app-preview Worker
 bun db:generate       # Generate Drizzle migration after schema changes
 bun db:migrate        # Apply migrations to local D1
-bun db:migrate:preview # Apply migrations to the preview D1 — nothing does this for you
+bun run db:migrate:remote # Apply migrations to production D1 — nothing does this for you
 bun db:studio         # Open Drizzle Studio (visual DB browser)
-bun seed              # Seed dev DB via bun:sqlite (writes to .data/db/sqlite.db)
-bun run rename <name> # Rewrite the `my-app` placeholder across wrangler.toml, package.json,
-                      # .mcp.json, fleet.json and mcp/ — every occurrence, in one go
-bun run ci            # Lint + format:check + design/brand/seo/fleet/crons gates + typecheck + test + build —
+bun run ci            # Lint + format:check + design/brand/mirror/seo/fleet/crons gates + typecheck + test + build —
                       # Workers Builds runs this. NO browser suites: that image cannot
                       # launch Chromium (see Gotchas).
 bun run ci:browser    # playwright:install + test:a11y — what GitHub Actions runs
 bun run deploy        # Manual deploy to Cloudflare via wrangler (normally unnecessary —
                       # Workers Builds deploys automatically on push to main).
                       # Requires CLOUDFLARE_API_TOKEN + CLOUDFLARE_ACCOUNT_ID env vars
-bun run mcp:dev       # Run the optional MCP worker locally (mcp/ — bun install there first)
-bun run mcp:typecheck # Typecheck the MCP worker
-bun run mcp:deploy    # Deploy the MCP worker
 ```
 
 `bun run ci` is the merge gate. It is a gate on finished work, not a precondition for
@@ -269,17 +241,14 @@ When I ask you to build features in this project:
 3. **Nuxt auto-imports** mean you never need to import Vue primitives or Nuxt composables.
 4. **`db` and `schema` are auto-imported** in server routes by `@nuxthub/core` — never instantiate Drizzle manually.
 5. **Server routes go in `server/api/`**, frontend pages in `app/pages/`.
-6. **Validate all inputs with Zod** — both on the client (UForm schema) and server (`readValidatedBody`).
+6. **Validate all inputs with Zod** — `getValidatedQuery` / `readValidatedBody` on the server.
 7. **Ask before adding new dependencies** — prefer solving problems with what's already installed.
-
----
-
 
 ---
 
 ## Agent tooling
 
-MCP servers, the NuxtUI skill, slash commands, and the cloud operations routines are
+MCP servers, the NuxtUI skill, slash commands, and the cloud routines are
 documented in [`.claude/docs/agent-setup.md`](.claude/docs/agent-setup.md).
 
 Parallel agent worktrees under `.claude/worktrees/<name>` are supported and every gate in

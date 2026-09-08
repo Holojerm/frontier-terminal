@@ -1,53 +1,12 @@
 <script setup lang="ts">
-// The app shell for every page — marketing and product alike.
-//
-// One shell rather than a marketing/app split: at this size a second layout
-// costs more than it saves, and the nav already adapts (public links always,
-// Dashboard only when signed in, avatar menu instead of a Sign in button).
-// Split it the day the product needs a sidebar.
+// The app shell for every page. One layout: there is no signed-in state to
+// adapt to, so the header is the mark and the color-mode toggle, and the footer
+// is the copyright line. Split it the day the terminal needs a sidebar.
 
 const config = useRuntimeConfig()
-const { loggedIn } = useUserSession()
 
 const appName = config.public.appName
-const supportEmail = config.public.supportEmail
 const year = new Date().getFullYear()
-
-const navLinks = computed(() => [
-  { label: 'Pricing', to: '/pricing' },
-  // In the header, not only the footer: the blog is the top of the funnel, and
-  // a link a search visitor never sees is a link that never earns a second page
-  // view. It is also the internal link that tells a crawler /blog exists
-  // without waiting for the sitemap.
-  { label: 'Blog', to: '/blog' },
-  // Files is paying-only (middleware: ['auth', 'subscription']), but gated
-  // on `loggedIn` here, same as Dashboard just above — a signed-in visitor
-  // without a subscription clicking either link lands on /pricing via that
-  // page's own middleware, rather than this nav trying to duplicate the
-  // subscription check just to decide whether to show a link.
-  ...(loggedIn.value
-    ? [
-        { label: 'Dashboard', to: '/dashboard' },
-        { label: 'Files', to: '/files' },
-      ]
-    : []),
-])
-
-// Mobile nav drawer. Two links don't need one — five do, and this is the seam a
-// fork grows through, so the pattern ships now rather than being retrofitted
-// once the header has already started wrapping.
-const navOpen = ref(false)
-
-// Close on navigation. A route watcher rather than a click handler on each link:
-// it also covers programmatic redirects (the auth middleware bouncing someone to
-// /login) that never fire a click.
-const route = useRoute()
-watch(
-  () => route.fullPath,
-  () => {
-    navOpen.value = false
-  },
-)
 </script>
 
 <template>
@@ -62,7 +21,6 @@ watch(
       Skip to content
     </a>
 
-    <!-- Navigation -->
     <header class="border-b border-default">
       <UContainer>
         <div class="flex h-16 items-center justify-between gap-4">
@@ -74,102 +32,27 @@ watch(
             <BrandLogo />
           </NuxtLink>
 
-          <div class="flex items-center gap-1 sm:gap-2">
-            <!-- Inline nav, desktop only. Below `sm` these move into the drawer
-                 rather than wrapping or scrolling horizontally. -->
-            <nav aria-label="Primary" class="hidden items-center gap-2 sm:flex">
-              <UButton
-                v-for="link in navLinks"
-                :key="link.to"
-                :to="link.to"
-                color="neutral"
-                variant="ghost"
-                size="sm"
-              >
-                {{ link.label }}
-              </UButton>
-            </nav>
-
-            <UColorModeButton class="min-touch" />
-            <AuthUserMenu />
-
-            <!-- Drawer trigger, mobile only. -->
-            <USlideover
-              v-model:open="navOpen"
-              title="Menu"
-              side="right"
-              :ui="{ content: 'max-w-xs' }"
-            >
-              <UButton
-                class="min-touch sm:hidden"
-                color="neutral"
-                variant="ghost"
-                icon="i-lucide-menu"
-                aria-label="Open menu"
-              />
-
-              <template #body>
-                <nav aria-label="Mobile" class="flex flex-col gap-1">
-                  <UButton
-                    v-for="link in navLinks"
-                    :key="link.to"
-                    :to="link.to"
-                    color="neutral"
-                    variant="ghost"
-                    size="lg"
-                    block
-                    class="min-touch justify-start"
-                  >
-                    {{ link.label }}
-                  </UButton>
-                </nav>
-              </template>
-            </USlideover>
-          </div>
+          <UColorModeButton class="min-touch" />
         </div>
       </UContainer>
     </header>
 
-    <!-- Main content -->
     <!-- tabindex="-1" so the skip link moves focus here, not just the scroll
          position — without it the next Tab lands back at the top of the nav.
          The focus-visible rule protects elements a user can Tab to; `main` is only
          ever focused programmatically by the skip link, and a ring around the whole
          page region reads as a rendering bug. design-check-ignore -->
     <UContainer id="main" as="main" tabindex="-1" class="flex-1 py-8 focus:outline-none">
-      <!-- Dunning notice. Inside `main` rather than between the landmarks, so
-           it sits in a landmark (axe's `region` rule) and lines up with the
-           page content instead of floating over it. Renders nothing unless a
-           signed-in user's subscription is actually past_due — and costs a
-           signed-out visitor nothing at all, because it never mounts. -->
-      <BillingPastDueBanner v-if="loggedIn" />
       <slot />
     </UContainer>
 
-    <!-- Footer. The legal links are not optional decoration: Paddle's onboarding
-         review checks for reachable terms and privacy pages before approving an
-         account, and so do most payment processors. -->
     <footer class="mt-16 border-t border-default">
       <UContainer>
         <div class="flex flex-col gap-4 py-8 sm:flex-row sm:items-center sm:justify-between">
           <p class="text-sm text-muted">© {{ year }} {{ appName }}</p>
-          <nav aria-label="Footer" class="flex flex-wrap items-center gap-x-6 gap-y-2 text-sm">
-            <ULink to="/pricing" class="text-muted hover:text-default">Pricing</ULink>
-            <ULink to="/blog" class="text-muted hover:text-default">Blog</ULink>
-            <ULink to="/changelog" class="text-muted hover:text-default">Changelog</ULink>
-            <ULink to="/terms" class="text-muted hover:text-default">Terms</ULink>
-            <ULink to="/privacy" class="text-muted hover:text-default">Privacy</ULink>
-            <ULink :to="`mailto:${supportEmail}`" class="text-muted hover:text-default">
-              Support
-            </ULink>
-          </nav>
+          <p class="text-sm text-muted">Not investment advice.</p>
         </div>
       </UContainer>
     </footer>
-
-    <!-- Feedback entry point — on every page, open to signed-out visitors too.
-         Remove this and drop <FeedbackWidget position="inline" /> into specific
-         pages if a floating button doesn't suit the product. -->
-    <FeedbackWidget />
   </div>
 </template>

@@ -25,7 +25,7 @@ const DAY_MS = 24 * 60 * 60 * 1000
 describe('repoMigrations', () => {
   it('lists the journal, oldest first, as drizzle-kit tags', () => {
     const tags = repoMigrations()
-    expect(tags.length).toBeGreaterThanOrEqual(14)
+    expect(tags.length).toBeGreaterThanOrEqual(15)
     expect(tags[0]).toBe('0000_wakeful_forgotten_one')
     expect(tags.at(-1)).toMatch(/^\d{4}_[a-z_]+$/)
     expect(tags).toEqual([...tags].sort())
@@ -88,34 +88,17 @@ describe('compareMigrations', () => {
 
 describe('collectFleetCounters', () => {
   beforeEach(async () => {
-    await env.DB.exec('DELETE FROM entitlements')
-    await env.DB.exec('DELETE FROM feedback')
     await env.DB.exec('DELETE FROM ops_events')
-    await env.DB.exec('DELETE FROM users')
   })
 
   it('is all zeros on an empty database', async () => {
     expect(await collectFleetCounters(db, NOW)).toEqual({
-      users: { total: 0, last7d: 0 },
-      entitlements: { byStatus: {} },
       opsEvents: { pending: 0, last24h: 0 },
-      feedback: { total: 0, open: 0 },
       extra: {},
     })
   })
 
-  it('counts, and only counts — no rows, no ids, no addresses leave', async () => {
-    const recent = new Date(NOW.getTime() - 2 * DAY_MS)
-    const old = new Date(NOW.getTime() - 30 * DAY_MS)
-    await db.insert(schema.users).values([
-      { id: 'u-new', email: 'new@example.com', name: 'New', createdAt: recent, updatedAt: recent },
-      { id: 'u-old', email: 'old@example.com', name: 'Old', createdAt: old, updatedAt: old },
-    ])
-    await db.insert(schema.entitlements).values([
-      { userId: 'u-new', paddleSubscriptionId: 'sub_1', status: 'active' },
-      { userId: 'u-old', paddleSubscriptionId: 'sub_2', status: 'active' },
-      { userId: 'u-old', paddleSubscriptionId: 'txn_3', status: 'canceled' },
-    ])
+  it('counts, and only counts — no rows, no ids leave', async () => {
     const hourAgo = new Date(NOW.getTime() - 60 * 60 * 1000)
     const twoDaysAgo = new Date(NOW.getTime() - 2 * DAY_MS)
     await db.insert(schema.opsEvents).values([
@@ -128,17 +111,9 @@ describe('collectFleetCounters', () => {
         notifiedAt: twoDaysAgo,
       },
     ])
-    await db.insert(schema.feedback).values([
-      { message: 'love it', status: 'new' },
-      { message: 'broken', status: 'new' },
-      { message: 'fixed now', status: 'closed' },
-    ])
 
     const counters = await collectFleetCounters(db, NOW)
-    expect(counters.users).toEqual({ total: 2, last7d: 1 })
-    expect(counters.entitlements.byStatus).toEqual({ active: 2, canceled: 1 })
     expect(counters.opsEvents).toEqual({ pending: 1, last24h: 2 })
-    expect(counters.feedback).toEqual({ total: 3, open: 2 })
 
     // The payload is stored for months in someone else's database: it must be
     // numbers all the way down.

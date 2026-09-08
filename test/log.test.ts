@@ -1,42 +1,27 @@
-// Log lines must not contain credentials.
-//
-// Two routes in this app carry one in their query string because the specs they
-// implement require it there: RFC 8058's one-click unsubscribe URL, and a
-// legacy or hand-assembled /auth/verify link. `event.path` includes the query,
-// and the error plugin writes it to Cloudflare Logs and to PostHog's
-// `$exception` — at the one moment the token is both logged and unspent.
+// pathForLog() is what keeps query strings out of every log line: the error
+// plugin writes `event.path` on every 5xx, and a query string is where a caller
+// puts the things a log should never keep.
 
 import { describe, expect, it } from 'vitest'
 
 import { pathForLog } from '../server/utils/log'
 
 describe('pathForLog', () => {
-  it('drops a signed unsubscribe token', () => {
-    expect(pathForLog('/api/email/unsubscribe?u=user-1&e=welcome&t=signed-token')).toBe(
-      '/api/email/unsubscribe',
-    )
+  it('drops the query string', () => {
+    expect(pathForLog('/api/pricing?provider=openai&t=signed-token')).toBe('/api/pricing')
   })
 
-  it('drops a sign-in token', () => {
-    expect(pathForLog('/auth/verify?token=RVZuBk3ZbgpqJcT-nBcmLfU0TnUUxBCGblIsSLBPxB8')).toBe(
-      '/auth/verify',
-    )
+  it('drops the fragment, and a query and fragment together', () => {
+    expect(pathForLog('/filings#token=abc')).toBe('/filings')
+    expect(pathForLog('/filings?a=1#token=abc')).toBe('/filings')
   })
 
-  it('drops a fragment too', () => {
-    // The fragment is where real sign-in links put the token. A server rarely
-    // sees one — but `event.path` is a string from a request line, and a
-    // handful of clients do send it.
-    expect(pathForLog('/auth/verify#token=abc')).toBe('/auth/verify')
-    expect(pathForLog('/auth/verify?a=1#token=abc')).toBe('/auth/verify')
-  })
-
-  it('leaves an ordinary path alone, because that is the whole diagnostic value', () => {
-    expect(pathForLog('/api/billing/entitlement')).toBe('/api/billing/entitlement')
+  it('leaves a bare path alone', () => {
+    expect(pathForLog('/api/status')).toBe('/api/status')
     expect(pathForLog('/')).toBe('/')
   })
 
-  it('passes undefined straight through for a JSON payload', () => {
+  it('passes undefined through so callers can spread it into JSON', () => {
     expect(pathForLog(undefined)).toBeUndefined()
     expect(pathForLog('')).toBeUndefined()
   })

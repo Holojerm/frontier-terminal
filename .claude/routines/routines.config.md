@@ -1,24 +1,19 @@
 # Routines Configuration
 
-Product-specific values for the operations routines. **Fill this in when you fork** — routines
-treat placeholder values as "not configured" and skip the dependent work (journaling the gap).
+Repo-specific values for the cloud routines. Routines treat placeholder values as "not
+configured" and skip the dependent work (journaling the gap).
 
 | Key | Value |
 | --- | --- |
-| Product name | `<PRODUCT_NAME>` |
-| Production URL | `<https://product.example>` |
+| Product name | Frontier Terminal |
+| Production URL | `https://frontier-terminal.holojerm.workers.dev` |
 | Owner name | `<your name>` |
-| Owner email (daily digest recipient) | `<you@example.com>` |
-| GitHub repo | `<org/repo — routines can also infer this from the git remote>` |
-| Support inbox search query | `<Gmail query for support mail, e.g. to:support@product.example is:unread>` |
-| Support reply signature | `<PRODUCT_NAME> support` |
-| Analytics sources | Cloudflare Workers analytics for the production Worker; `<add PostHog/Stripe/etc. when wired up>` |
-| Feedback queue | D1 `feedback` table (in-app widget → `POST /api/feedback`); read via `wrangler d1 execute --remote` |
-| Target audience (for marketing tone) | `<who the product is for>` |
+| GitHub repo | Holojerm/frontier-terminal |
+| Analytics sources | Cloudflare Workers analytics for the production Worker |
 
 ## Product context
 
-Replace this section with 2–3 paragraphs about what the product does, who uses it, current
-priorities, and anything a support or marketing agent should know (pricing, known limitations,
-roadmap themes). Routines read this for voice and judgment — the better this section, the less
-they escalate.
+A free, public, read-only investor terminal tracking the frontier AI labs — API pricing,
+hiring, SEC filings. Every datum carries its source URL and fetch timestamp; trustworthiness
+is the depth axis of the project and is never traded for a feature. There are no accounts and
+nothing is for sale. Not investment advice.

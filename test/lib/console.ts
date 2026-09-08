@@ -1,20 +1,14 @@
 // Shared browser console / CSP-violation recorder for the Playwright suites.
 //
-// test/csp/csp.spec.ts and test/e2e/fixtures.ts each grew a near-identical
-// copy of this independently: an `addInitScript` that records
-// `securitypolicyviolation` events into a window property (has to run via
-// `addInitScript` rather than a listener attached after `goto` — a page's
-// own inline scripts run before any post-navigation listener could attach,
-// and those are precisely the scripts most likely to be blocked), plus a
-// `page.on('console', …)` listener. One copy now.
+// An `addInitScript` that records `securitypolicyviolation` events into a
+// window property (it has to run via `addInitScript` rather than a listener
+// attached after `goto` — a page's own inline scripts run before any
+// post-navigation listener could attach, and those are precisely the scripts
+// most likely to be blocked), plus a `page.on('console', …)` listener.
 //
-// Deliberately thin: this only RECORDS. Each caller still decides what to do
-// with what it recorded, because the two existing callers want genuinely
-// different things from the same raw stream — csp.spec.ts filters console
-// messages for CSP-flavoured text on signed-out routes, test/e2e/fixtures.ts
-// treats every console error as fatal (with one counted, documented
-// exception) on signed-in ones. Folding that policy in here would force one
-// caller's rules onto the other.
+// Deliberately thin: this only RECORDS. The caller decides what counts as a
+// failure — test/csp/csp.spec.ts filters console messages for CSP-flavoured
+// text — so a second suite with different rules can share the recorder.
 
 import type { ConsoleMessage, Page } from '@playwright/test'
 
@@ -26,9 +20,7 @@ export interface CspViolation {
 
 // The window property name is part of this module's public contract, not an
 // implementation detail: a caller that needs to read it from INSIDE a
-// page.evaluate() callback (test/csp/csp.spec.ts's Paddle.js test does,
-// because it has to check for a violation from the same browser-side
-// callback that triggered it) has no other way to reach it.
+// page.evaluate() callback has no other way to reach it.
 declare global {
   interface Window {
     __cspViolations?: CspViolation[]

@@ -1,11 +1,10 @@
-// Rate limiting for unauthenticated endpoints. Two backends, one front door.
+// Rate limiting for the public API. Two backends, one front door.
 //
 // ── What this is, honestly ───────────────────────────────────────────────────
 // Neither backend is a metering primitive. Both are abuse control — they stop a
-// script hammering /api/auth/dev or minting a thousand connect codes. If you
-// need an exact quota (per-seat API credits, anything you bill on), move that
-// counter to a Durable Object, which is strongly consistent and single threaded.
-// Leave this here for the front door.
+// script hammering /api/status or scraping a data endpoint in a tight loop. If
+// you need an exact quota, move that counter to a Durable Object, which is
+// strongly consistent and single threaded. Leave this here for the front door.
 //
 // ── Backend 1: Cloudflare's native Rate Limiting binding (preferred) ─────────
 // `env.RATE_LIMITER.limit({ key })` — GA since September 2025, declared as
@@ -17,9 +16,10 @@
 //   * It counts PER COLO. "30 per minute" means 30 per minute *in each
 //     Cloudflare location*, so a caller distributed across data centres gets a
 //     multiple of the number you wrote. KV is at least nominally global. This is
-//     the trade this file makes deliberately: the realistic attacker on a login
-//     form is one host in one place, and against that the native limiter is
-//     both stricter and faster. Against a botnet neither backend is the answer.
+//     the trade this file makes deliberately: the realistic abuser of a public
+//     JSON endpoint is one host in one place, and against that the native
+//     limiter is both stricter and faster. Against a botnet neither backend is
+//     the answer.
 //   * Cloudflare documents it as "permissive, eventually consistent, and
 //     intentionally designed to not be used as an accurate accounting system."
 //   * It answers `{ success }` and nothing else — no count, no reset time. What
@@ -37,11 +37,11 @@
 // The window is fixed, not sliding: a caller can spend `limit` at the end of one
 // window and `limit` again at the start of the next. That's the standard
 // trade-off for one KV read + one write per request, and it's the right one for
-// a login endpoint.
+// a public read endpoint.
 //
 // KV is not vestigial. It is the only backend for any window the binding is not
-// configured for (the 300s connect-code limit, the 600s export limit), and the
-// only one that exists at all where no Worker env is bound.
+// configured for, and the only one that exists at all where no Worker env is
+// bound.
 
 // `kv` is imported explicitly rather than relying on NuxtHub's auto-import.
 // The auto-import resolves for TypeScript but is not injected into this file at
@@ -59,7 +59,7 @@ export interface RateLimitStore {
 }
 
 export interface RateLimitOptions {
-  /** Identifies the caller + endpoint, e.g. `login:203.0.113.4`. */
+  /** Identifies the caller + endpoint, e.g. `status:203.0.113.4`. */
   key: string
   /** Requests allowed per window. */
   limit: number
@@ -130,28 +130,6 @@ export const NATIVE_LIMITER: {
   limit: 30,
   windowSeconds: 60,
 }
-
-/**
- * The unsubscribe surface's budget, named rather than typed as a literal at two
- * call sites.
- *
- * ── Why these numbers are NOT NATIVE_LIMITER's ───────────────────────────────
- * They were, by accident: both handlers passed a literal `30`/`60`, which is an
- * exact match for the binding, so `chooseBackend` silently routed the whole
- * unsubscribe surface onto the native limiter. Two consequences nobody chose.
- * The binding counts PER COLO, so "30 a minute" became 30 per Cloudflare
- * location — and this is the one endpoint whose realistic caller is a mail
- * provider's infrastructure fanning out across many of them. And retuning the
- * auth limit would have silently retuned unsubscribe with it, because the only
- * thing joining them was two literals that happened to agree.
- *
- * 60/120s keeps the same requests-per-second while being deliberately
- * unmatchable by the current binding, so this surface stays on KV: globally
- * counted, and independent of whatever the auth budget becomes. A window the
- * binding cannot express (120 is not 10 or 60) makes that structural rather
- * than a coincidence in the other direction.
- */
-export const UNSUBSCRIBE_LIMITER = { name: 'email-unsubscribe', limit: 60, windowSeconds: 120 }
 
 /** Why a call site fell back to KV. Reported once per call site, per isolate. */
 export type KvFallbackReason = 'binding-absent' | 'window-mismatch' | 'limit-mismatch'
@@ -378,10 +356,8 @@ export async function rateLimit(
       JSON.stringify({
         kind: 'rate_limited',
         name: opts.name,
-        // pathForLog, not event.path: this fires on /api/auth/**, which includes
-        // the routes that carry a live sign-in token. A 429 there is precisely
-        // the moment the credential is both logged and still unspent — see
-        // server/utils/log.ts.
+        // pathForLog, not event.path — a 429 is a request logged in full, and
+        // the query string is not ours to keep. See server/utils/log.ts.
         path: pathForLog(event.path),
         backend: verdict.backend,
       }),

@@ -14,10 +14,10 @@
 //      shared/utils/schema.ts.
 //   4. noindex, applied both per-page and globally on preview deploys.
 //
-// Preview builds (NUXT_PUBLIC_INDEXABLE=false) force noindex on every page and
-// drop the canonical and the graph — the same decision robots.txt makes, made
-// again in the document, because a crawler that ignored robots.txt still reads
-// the head.
+// Non-indexable builds (NUXT_PUBLIC_INDEXABLE=false) force noindex on every
+// page and drop the canonical and the graph — the same decision robots.txt
+// makes, made again in the document, because a crawler that ignored robots.txt
+// still reads the head.
 
 import type { JsonLdNode, SiteContext } from '#shared/utils/schema'
 
@@ -26,8 +26,8 @@ export interface SeoInput {
   title: string
   description: string
   /**
-   * 'suffix' (default) renders `Pricing · My App`. 'exact' uses the title
-   * verbatim, for the landing page where the brand should lead.
+   * 'suffix' (default) renders `Filings · Frontier Terminal`. 'exact' uses the
+   * title verbatim, for the landing page where the brand should lead.
    */
   titleMode?: 'suffix' | 'exact'
   ogType?: 'website' | 'article'
@@ -47,8 +47,6 @@ export function useSiteContext(): SiteContext {
   return {
     appName: config.public.appName,
     appUrl: normalizeOrigin(config.public.appUrl),
-    supportEmail: config.public.supportEmail,
-    legalEntity: config.public.legalEntity,
   }
 }
 

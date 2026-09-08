@@ -16,7 +16,6 @@
 //   5. `urls.prod` is NUXT_PUBLIC_APP_URL, when that var is set — the dashboard
 //      fetches /api/status relative to it.
 //   6. No binding id is a template placeholder unless `stage` is "unreleased".
-//   7. If mcp/wrangler.jsonc exists, its Worker is listed in `workers`.
 //
 // Reads the TOML with Bun's built-in parser, so this runs with no dependency
 // the app does not already have. It is a Bun script rather than a vitest case
@@ -109,7 +108,7 @@ if (manifest) {
     report(
       'workers[0] is not the Worker',
       `fleet.json says "${manifest.workers[0]}", wrangler.toml name is "${wrangler.name ?? '(unset)'}"`,
-      'the app Worker goes first in `workers`; mcp/ and any others follow',
+      'the app Worker goes first in `workers`; any others follow',
     )
   }
   if (manifest.slug !== wrangler.name) {
@@ -170,37 +169,6 @@ if (manifest) {
       'paste the real ids from the Cloudflare dashboard, or set stage to "unreleased" until you have',
     )
   }
-
-  // ── 7. the MCP worker, if present ───────────────────────────────────────
-  const mcpConfigPath = join(ROOT, 'mcp', 'wrangler.jsonc')
-  if (existsSync(mcpConfigPath)) {
-    const mcpName = readJsoncName(readFileSync(mcpConfigPath, 'utf8'))
-    if (mcpName === null) {
-      report(
-        'mcp/wrangler.jsonc unreadable',
-        'could not find a top-level "name"',
-        'keep `"name": "…"` as a plain string at the top level',
-      )
-    } else if (!manifest.workers.includes(mcpName)) {
-      report(
-        'MCP worker not listed',
-        `mcp/wrangler.jsonc deploys "${mcpName}", which is not in fleet.json workers`,
-        'add it after the app Worker — the dashboard checks every Worker this repo deploys',
-      )
-    }
-  }
-}
-
-/**
- * The top-level `name` of a wrangler.jsonc. Comments and trailing commas make
- * it not-JSON, and a JSONC parser is a strange dependency for a build gate
- * that needs one string, so this reads the key directly. Returns null when
- * there is no such key rather than guessing.
- */
-function readJsoncName(source: string): string | null {
-  const withoutComments = source.replace(/\/\*[\s\S]*?\*\//g, '').replace(/^\s*\/\/.*$/gm, '')
-  const match = withoutComments.match(/^\s*"name"\s*:\s*"([^"]+)"/m)
-  return match?.[1] ?? null
 }
 
 // ── report ──────────────────────────────────────────────────────────────────

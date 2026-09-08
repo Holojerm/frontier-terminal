@@ -14,10 +14,6 @@ import AxeBuilder from '@axe-core/playwright'
 import type { Result } from 'axe-core'
 import { expect, test } from '@playwright/test'
 
-// Public routes only. /dashboard and /account redirect to /login when signed
-// out, so scanning them here would just scan /login a second time; they need a
-// session fixture to be worth anything.
-//
 // /design-system is deliberately excluded: it is a token gallery, so it renders
 // `text-dimmed` swatches on their own. Dimmed is the placeholder/disabled token
 // and is legitimately below 4.5:1 — scanning that page would report the design
@@ -28,38 +24,7 @@ import { expect, test } from '@playwright/test'
 // kind of second list `definePageMeta({ publicPage })` exists to abolish — so
 // the `sitemap coverage` test at the bottom of this file fails the build if the
 // two ever disagree. Add a public page, forget this list, and CI tells you.
-//
-// /auth/verify and /unsubscribe are scanned with no parameters, which is
-// exactly the state a stale or mangled link produces — the one a reader is most
-// likely to meet on a bad day, and therefore the one whose error copy has to
-// survive both color modes. Both are public and reachable straight from an
-// email, by people who are not signed in and may never have been.
-const ROUTES = [
-  '/',
-  '/pricing',
-  '/blog',
-  // One post stands in for all of them — see BLOG_POST_PREFIX below. This one
-  // is chosen because it exercises the most rendered markdown: h2s, lists,
-  // inline code, bold, and an inline link, which is the node most likely to
-  // fail contrast in one of the two modes.
-  '/blog/how-billing-works',
-  '/changelog',
-  '/login',
-  '/auth/verify',
-  '/unsubscribe',
-  '/terms',
-  '/privacy',
-]
-
-/**
- * Blog posts are content, not pages: every one of them renders through the same
- * app/pages/blog/[slug].vue, so the markup axe sees differs only in prose.
- * Scanning all of them would make writing a post a CI failure until someone
- * remembered this file — which trains people to weaken the guard rather than
- * use it. The coverage test below accepts any URL under this prefix, and
- * separately insists that at least one real post is actually scanned.
- */
-const BLOG_POST_PREFIX = '/blog/'
+const ROUTES = ['/']
 
 const COLOR_MODES = ['light', 'dark'] as const
 
@@ -181,8 +146,8 @@ test.describe('keyboard', () => {
 // contrast and heading order — and the failure this catches is silent: the new
 // page simply never gets tested, and nothing anywhere goes red.
 //
-// /login is in ROUTES but deliberately NOT in the sitemap (it is noindex), so
-// the check runs one way only: everything in the sitemap must be scanned.
+// One direction only: everything in the sitemap must be scanned. A route may be
+// in ROUTES without being in the sitemap (a noindex page is still a page).
 test('sitemap coverage: every public page is in ROUTES', async ({ request }) => {
   const response = await request.get('/sitemap.xml')
   expect(response.ok()).toBe(true)
@@ -195,36 +160,7 @@ test('sitemap coverage: every public page is in ROUTES', async ({ request }) => 
 
   expect(paths.length).toBeGreaterThan(0)
 
-  // ── The exemption, and the two checks that keep it honest ─────────────────
-  //
-  // Posts are exempt from the sitemap→ROUTES direction on purpose: they all
-  // render through one app/pages/blog/[slug].vue, so scanning every one adds
-  // nothing, and requiring it would fail CI on a pure content commit — which
-  // trains people to delete the guard rather than use it.
-  //
-  // What that exemption cannot be allowed to do is let the sample post go
-  // stale. Asserting only that ROUTES *mentions* something under /blog/ is not
-  // enough: rename a post and ROUTES still mentions the old slug, the scan
-  // fetches a 404, and axe finds the error page perfectly accessible. So the
-  // sampled posts are checked against the live sitemap, which is the same list
-  // the app actually publishes. (The per-route status assertion above closes
-  // the same hole from the other side, for every route.)
-  const sampled = ROUTES.filter((route) => route.startsWith(BLOG_POST_PREFIX))
-  expect(
-    sampled,
-    'ROUTES must scan at least one blog post — it stands in for all of them.',
-  ).not.toEqual([])
-
-  const stale = sampled.filter((route) => !paths.includes(route))
-  expect(
-    stale,
-    `ROUTES scans blog posts that are not in the sitemap: ${stale.join(', ')}. ` +
-      'A renamed or deleted post leaves the sweep scanning a 404.',
-  ).toEqual([])
-
-  const missing = paths.filter(
-    (path) => !ROUTES.includes(path) && !path.startsWith(BLOG_POST_PREFIX),
-  )
+  const missing = paths.filter((path) => !ROUTES.includes(path))
   expect(
     missing,
     `Public pages missing from the a11y sweep: ${missing.join(', ')}. ` +

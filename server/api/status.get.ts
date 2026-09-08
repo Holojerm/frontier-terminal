@@ -13,8 +13,7 @@
 // cron expressions and the app's own name are all in the public repo of an
 // open-source fork and in the bundle of a closed one — and the one reader that
 // most needs it, an external heartbeat, must not have to hold a credential.
-// Anything that IS sensitive (user counts, revenue) lives behind a bearer in
-// /api/fleet instead.
+// Anything that IS operational detail lives behind a bearer in /api/fleet instead.
 //
 // HTTP status: 200 with `status: 'ok'` or `'degraded'` (migrations pending —
 // the app is up, just not the app the code expects), 503 with `'down'` when
