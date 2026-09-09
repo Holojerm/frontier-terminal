@@ -233,32 +233,44 @@ describe('queryRankings', () => {
     await runRefresh(deps(fixtureFetcher), 'survey', [SOURCE_ID])
     const r = await queryRankings(db, await ctx())
     expect(r.status).toBe('ok')
-    expect(r.meta.as_of).toBe('2026-09-07T02:00:00.000Z')
+    expect(r.meta.as_of).toBe('2026-09-09T12:00:03.352Z')
     expect(r.meta.citation).toBe(
-      'Source: OpenRouter (openrouter.ai/rankings), as of 2026-09-07T02:00:00.000Z. Licensed under CC BY 4.0.',
+      'Source: OpenRouter (openrouter.ai/rankings), as of 2026-09-09T12:00:03.352Z. Licensed under CC BY 4.0.',
     )
     expect(r.provenance!.source_url).toBe('https://openrouter.ai/api/v1/datasets/rankings-daily')
     expect(r.provenance!.fetched_at).toMatch(/^2026-09-07T10:00:\d\d\.000Z$/)
     expect(r.meta.coverage).toEqual({
-      days: 3,
-      first_date: '2026-09-04',
-      last_date: '2026-09-06',
-      window: { from: '2026-09-04', to: '2026-09-06' },
-      prior_window: null,
+      days: 30,
+      first_date: '2026-08-10',
+      last_date: '2026-09-08',
+      window: { from: '2026-09-02', to: '2026-09-08' },
+      prior_window: { from: '2026-08-26', to: '2026-09-01' },
     })
-    // Fixture arithmetic: anthropic 3 days × (sonnet + opus).
+    // Fixture arithmetic: every anthropic/* row dated 2026-09-02..08, and the
+    // prior seven days, summed by hand from the payload.
     const anthropic = r.shares.find((p) => p.provider === 'anthropic')!
-    expect(anthropic.tokens).toBe(910e9 + 280e9 + 950e9 + 300e9 + 980e9 + 320e9)
+    expect(anthropic.tokens).toBe(5_479_856_483_101)
+    expect(anthropic.prior_tokens).toBe(4_286_332_317_301)
+    expect(r.shares.find((p) => p.provider === 'openai')!.tokens).toBe(18_526_584_734_856)
     expect(r.shares.reduce((acc, p) => acc + (p.share ?? 0), 0)).toBeCloseTo(1, 9)
     expect(
       r.top_models.find((t) => t.provider === 'anthropic')!.models.map((m) => m.model_permaslug),
-    ).toEqual(['anthropic/claude-sonnet-4.5', 'anthropic/claude-opus-4.5'])
-    expect(r.series.map((d) => d.date)).toEqual(['2026-09-04', '2026-09-05', '2026-09-06'])
-    expect(r.series[0]!.tokens.other).toBe(2400e9 + 310e9)
+    ).toEqual([
+      'anthropic/claude-opus-5-20260723',
+      'anthropic/claude-4.6-sonnet-20260217',
+      'anthropic/claude-sonnet-5-20260630',
+      'anthropic/claude-fable-5.1-20260831',
+      'anthropic/claude-4.8-opus-20260528',
+    ])
+    expect(r.series).toHaveLength(30)
+    expect(r.series[0]!.date).toBe('2026-08-10')
+    expect(r.series.at(-1)!.date).toBe('2026-09-08')
+    expect(r.series[0]!.tokens.other).toBe(7_891_874_126_459)
+    expect(r.series[0]!.tokens.openai).toBe(1_299_773_079_324)
 
     // The export view flattens the same rows.
     const view = EXPORT_TABLES.rankings_daily!
-    expect(await view.count(db)).toBe(24)
+    expect(await view.count(db)).toBe(1530)
     const [first] = await view.page(db, 0, 1)
     expect(Object.keys(first!)).toEqual(view.columns)
     expect(first).not.toHaveProperty('entity_type')

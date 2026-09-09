@@ -442,11 +442,11 @@ describe('tools/call', () => {
     expect(rankings.provenance!.source_url).toBe(
       'https://openrouter.ai/api/v1/datasets/rankings-daily',
     )
-    expect(rankings.meta.as_of).toBe('2026-09-07T02:00:00.000Z')
+    expect(rankings.meta.as_of).toBe('2026-09-09T12:00:03.352Z')
     expect(rankings.meta.citation).toBe(
-      'Source: OpenRouter (openrouter.ai/rankings), as of 2026-09-07T02:00:00.000Z. Licensed under CC BY 4.0.',
+      'Source: OpenRouter (openrouter.ai/rankings), as of 2026-09-09T12:00:03.352Z. Licensed under CC BY 4.0.',
     )
-    expect(rankings.meta.coverage.days).toBe(3)
+    expect(rankings.meta.coverage.days).toBe(30)
     const total = rankings.shares.reduce((n, s) => n + (s.share ?? 0), 0)
     expect(total).toBeCloseTo(1, 6)
   })
