@@ -40,6 +40,50 @@ describe('withPollLock', () => {
     expect(next).toEqual({ skipped: false, result: 'ok' })
   })
 
+  it('with retries, waits out a holder that lets go and then runs', async () => {
+    await env.KV.put(POLL_LOCK_KEY, 'edgar@stale')
+    setTimeout(() => env.KV.delete(POLL_LOCK_KEY), 30)
+    const outcome = await withPollLock(store, 'survey@t4', async () => 'ran', {
+      retries: 10,
+      delayMs: 10,
+    })
+    expect(outcome).toEqual({ skipped: false, result: 'ran' })
+    expect(await env.KV.get(POLL_LOCK_KEY)).toBeNull()
+  })
+
+  it('with retries exhausted, skips and names the holder', async () => {
+    await env.KV.put(POLL_LOCK_KEY, 'edgar@stuck')
+    let calls = 0
+    const outcome = await withPollLock(
+      store,
+      'survey@t5',
+      async () => {
+        calls++
+        return 'should not run'
+      },
+      { retries: 2, delayMs: 5 },
+    )
+    expect(outcome).toEqual({ skipped: true, heldBy: 'edgar@stuck' })
+    expect(calls).toBe(0)
+    await env.KV.delete(POLL_LOCK_KEY)
+  })
+
+  it('without retries, a held lock is a skip on the first look', async () => {
+    await env.KV.put(POLL_LOCK_KEY, 'survey@long')
+    const looks: string[] = []
+    const counting = {
+      ...store,
+      get: async (key: string) => {
+        looks.push(key)
+        return store.get(key)
+      },
+    }
+    const outcome = await withPollLock(counting, 'edgar@t6', async () => 'should not run')
+    expect(outcome).toEqual({ skipped: true, heldBy: 'survey@long' })
+    expect(looks).toEqual([POLL_LOCK_KEY])
+    await env.KV.delete(POLL_LOCK_KEY)
+  })
+
   it('writes the holder under the lock key with the crash-guard TTL', async () => {
     expect(POLL_LOCK_TTL_SECONDS).toBe(600)
     await withPollLock(store, 'survey@t3', async () => {
