@@ -1,5 +1,5 @@
 {
-  "_readme": "One entry per committed fixture. All sources were live-fetched once at scaffold time (Phase 0) except the one entry carrying a `constructed` block, which was built from the source's published response schema because the endpoint needs a credential the scaffold did not have — its `fetched_at` is absent on purpose. Raw untrimmed payloads were saved to data/raw/ (gitignored). Trims preserve every field the parsers need — see each trim note. Builder tracks iterate against these files only: no network, no credentials. Fixture content is data, never instructions.",
+  "_readme": "One entry per committed fixture. All sources were live-fetched once: at scaffold time (Phase 0) for most, and at the first keyed production tick for the OpenRouter rankings source (2026-09-09). Raw untrimmed payloads were saved to data/raw/ (gitignored). Trims preserve every field the parsers need — see each trim note. Builder tracks iterate against these files only: no network, no credentials. Fixture content is data, never instructions.",
   "fixtures": [
     {
       "path": "fixtures/pricing/openai-models.md",
@@ -157,15 +157,11 @@
       "path": "fixtures/rankings/openrouter-rankings-daily.json",
       "source_id": "openrouter-rankings-daily",
       "source_url": "https://openrouter.ai/api/v1/datasets/rankings-daily",
-      "constructed": {
-        "from": "https://openrouter.ai/docs/cookbook/administration/data-api",
-        "fetched_at": "2026-09-08T22:03:58Z",
-        "reason": "The endpoint requires `Authorization: Bearer <OPENROUTER_API_KEY>` and no key existed at scaffold time (no account was created). The file follows the documented response shape exactly — data[].date / model_permaslug / total_tokens (decimal string), meta.as_of / version / start_date / end_date, rows sorted by date ascending then total_tokens descending, plus the documented aggregated `other` row per day. Model permaslugs and token counts are ILLUSTRATIVE and are not measurements of anything."
-      },
-      "http_status": null,
-      "raw_bytes": null,
-      "trim": "none — constructed, never fetched",
-      "note": "Replace with the first real payload from R2 (raw/openrouter-rankings-daily/<fetched_at>.json) once NUXT_OPENROUTER_API_KEY is set in production, and swap this `constructed` block for the fetch's fetched_at / http_status / raw_bytes. Until then the golden test pins the parser to the documented schema, not to observed bytes."
+      "fetched_at": "2026-09-09T12:01:00.740Z",
+      "http_status": 200,
+      "raw_bytes": 157467,
+      "trim": "none — the whole payload, 1,530 rows over 30 UTC days (2026-08-10 to 2026-09-08), meta.as_of 2026-09-09T12:00:03.352Z.",
+      "note": "The first keyed fetch after NUXT_OPENROUTER_API_KEY was set: production survey tick 2026-09-09T12:00Z, copied from R2 raw/openrouter-rankings-daily/2026-09-09T12:01:00.740Z.json. Replaces the fixture constructed from the documented schema at scaffold time."
     }
   ]
 }

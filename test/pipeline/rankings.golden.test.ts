@@ -25,8 +25,8 @@ import { includeSources } from '../../server/pipeline/sources'
 import { queryMovement } from '../../server/utils/terminal-db'
 import { fixtureText, manifest, provenanceOf } from './fixtures'
 
-// The demand-share source end to end: the parser against the CONSTRUCTED
-// fixture (documented schema, not observed bytes — fixtures/manifest.json),
+// The demand-share source end to end: the parser against the first keyed
+// fetch (30 UTC days, 1,530 rows — fixtures/manifest.json),
 // the keyed fetch, the honest 'skipped' path without the key, and the two
 // places ranking rows are kept away from the judge and the signal band.
 
@@ -37,26 +37,28 @@ const sourcesYaml = fixtureText('sources.yaml')
 const ALL = includeSources(sourcesYaml, manifest.fixtures)
 const urlOf = (id: string) => ALL.find((s) => s.source_id === id)!.url
 
-describe('parseOpenRouterRankings on the constructed fixture', () => {
+describe('parseOpenRouterRankings on the fetched fixture', () => {
   const out = parseOpenRouterRankings(fixtureText(FIXTURE))
 
   it('yields one validated row per (date, model) with total_tokens as a number', () => {
-    expect(out.rows).toHaveLength(24)
-    expect(out.as_of).toBe('2026-09-07T02:00:00.000Z')
+    expect(out.rows).toHaveLength(1530)
+    expect(out.as_of).toBe('2026-09-09T12:00:03.352Z')
     const sonnet = out.rows.find(
-      (r) => r.date === '2026-09-06' && r.model_permaslug === 'anthropic/claude-sonnet-4.5',
+      (r) => r.date === '2026-09-08' && r.model_permaslug === 'anthropic/claude-sonnet-5-20260630',
     )!
-    expect(sonnet).toMatchObject({ provider: 'anthropic', total_tokens: 980_000_000_000 })
+    expect(sonnet).toMatchObject({ provider: 'anthropic', total_tokens: 219_800_987_915 })
     expect(typeof sonnet.total_tokens).toBe('number')
   })
 
-  it('carries the provenance the manifest records — the documentation, since nothing was fetched', () => {
+  it('carries the provenance the manifest records — the keyed fetch itself', () => {
     const prov = provenanceOf(SOURCE_ID)
-    expect(prov.source_url).toBe('https://openrouter.ai/docs/cookbook/administration/data-api')
+    expect(prov).toEqual({
+      source_url: 'https://openrouter.ai/api/v1/datasets/rankings-daily',
+      fetched_at: '2026-09-09T12:01:00.740Z',
+    })
     for (const row of out.rows) expect(row).toMatchObject(prov)
     const entry = manifest.fixtures.find((f) => f.source_id === SOURCE_ID)!
-    expect('fetched_at' in entry).toBe(false)
-    expect(entry).toHaveProperty('constructed')
+    expect(entry).not.toHaveProperty('constructed')
   })
 
   it('is ordered by date then permaslug, whatever order the payload used', () => {
@@ -78,11 +80,11 @@ describe('parseOpenRouterRankings on the constructed fixture', () => {
     const byProvider = new Map<string, number>()
     for (const r of out.rows) byProvider.set(r.provider, (byProvider.get(r.provider) ?? 0) + 1)
     expect(Object.fromEntries(byProvider)).toEqual({
-      other: 6,
-      anthropic: 6,
-      openai: 6,
-      google: 3,
-      xai: 3,
+      other: 798,
+      anthropic: 198,
+      openai: 239,
+      google: 263,
+      xai: 32,
     })
   })
 
@@ -107,8 +109,8 @@ describe('parseOpenRouterRankings on the constructed fixture', () => {
   })
 
   it('as_of round-trips through the run detail the lane writes', () => {
-    expect(asOfFromDetail('24 entities; as_of 2026-09-07T02:00:00.000Z')).toBe(
-      '2026-09-07T02:00:00.000Z',
+    expect(asOfFromDetail('1530 entities; as_of 2026-09-09T12:00:03.352Z')).toBe(
+      '2026-09-09T12:00:03.352Z',
     )
     expect(asOfFromDetail(null)).toBeNull()
     expect(asOfFromDetail('no parser')).toBeNull()
@@ -258,21 +260,21 @@ describe('with the key', () => {
     const baseline = await runRefresh(deps(fixtureFetcher()), 'survey', [SOURCE_ID])
     expect(baseline.sources[0]).toMatchObject({
       status: 'baseline',
-      detail: '24 entities; as_of 2026-09-07T02:00:00.000Z',
+      detail: '1530 entities; as_of 2026-09-09T12:00:03.352Z',
     })
     const entities = await db.select().from(schema.entities)
-    expect(entities).toHaveLength(24)
+    expect(entities).toHaveLength(1530)
     for (const e of entities) {
       expect(e.entity_type).toBe('ranking')
       expect(e.source_url).toBe(urlOf(SOURCE_ID))
       expect(e.entity_key).toMatch(/^ranking:\d{4}-\d{2}-\d{2}:/)
       expect(contentHash(JSON.parse(e.payload))).toBe(e.content_hash)
     }
-    expect(entities.find((e) => e.entity_key === 'ranking:2026-09-05:x-ai/grok-4.6')).toMatchObject(
-      {
-        provider: 'xai',
-      },
-    )
+    expect(
+      entities.find((e) => e.entity_key === 'ranking:2026-09-05:x-ai/grok-4.6-20260810'),
+    ).toMatchObject({
+      provider: 'xai',
+    })
 
     // A day scrolling out of the window is not un-observed: nothing is removed.
     const doc = JSON.parse(fixtureText(FIXTURE)) as {
@@ -281,13 +283,13 @@ describe('with the key', () => {
     }
     const revised = {
       data: doc.data
-        .filter((r) => r.date !== '2026-09-04')
+        .filter((r) => r.date !== '2026-08-10')
         .map((r) =>
-          r.date === '2026-09-06' && r.model_permaslug === 'x-ai/grok-4.6'
+          r.date === '2026-09-08' && r.model_permaslug === 'x-ai/grok-4.6-20260810'
             ? { ...r, total_tokens: '200000000000' }
             : r,
         ),
-      meta: { ...doc.meta, as_of: '2026-09-08T02:00:00.000Z' },
+      meta: { ...doc.meta, as_of: '2026-09-10T12:00:03.000Z' },
     }
     const second = await runRefresh(deps(fixtureFetcher(JSON.stringify(revised))), 'survey', [
       SOURCE_ID,
@@ -297,13 +299,13 @@ describe('with the key', () => {
       added: 0,
       removed: 0,
       modified: 1,
-      detail: 'as_of 2026-09-08T02:00:00.000Z',
+      detail: 'as_of 2026-09-10T12:00:03.000Z',
     })
-    expect(await db.select().from(schema.entities)).toHaveLength(24)
+    expect(await db.select().from(schema.entities)).toHaveLength(1530)
     const [change] = await db.select().from(schema.changes)
     expect(change).toMatchObject({
       entity_type: 'ranking',
-      entity_key: 'ranking:2026-09-06:x-ai/grok-4.6',
+      entity_key: 'ranking:2026-09-08:x-ai/grok-4.6-20260810',
       change_type: 'modified',
     })
     expect(JSON.parse(change!.after_json!).total_tokens).toBe(200_000_000_000)

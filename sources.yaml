@@ -98,13 +98,6 @@ sources:
       every 6-hourly survey tick re-reads the same days and a late revision
       lands as a modified row. Rate limits 30 req/min per key, 500/day per
       account; this terminal uses four a day.
-    fixture_note: >-
-      The committed fixture is CONSTRUCTED from the documented response
-      schema, not fetched — no key existed at scaffold time and no account
-      was created (fixtures/manifest.json `constructed`). Its slugs and
-      counts are illustrative. It must be replaced by the first real payload
-      from R2 (raw/openrouter-rankings-daily/<fetched_at>.json) once the key
-      is set, with the manifest entry rewritten to that fetch's provenance.
 
   openai-ashby:
     axis: hiring
