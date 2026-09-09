@@ -158,7 +158,7 @@ describe('baseline', () => {
     expect(perSource.get('anthropic-status')).toBe(50)
     expect(perSource.get('google-cloud-status')).toBe(1)
     expect(perSource.has('openrouter-models')).toBe(false)
-    expect(perSource.get('openrouter-rankings-daily')).toBe(24)
+    expect(perSource.get('openrouter-rankings-daily')).toBe(1530)
 
     // Every stored row carries provenance from the fetch, not the fixture manifest.
     for (const e of entities) {
