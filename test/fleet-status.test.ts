@@ -102,6 +102,9 @@ describe('collectFleetCounters', () => {
         lastOkTickEdgarMs: 0,
         lastOkTickSurveyMs: 0,
         lastFailureMs: 0,
+        lastTripwireRunMs: 0,
+        launchStaleCells: 0,
+        launchUnalerted: 0,
       },
     })
   })

@@ -152,9 +152,13 @@ const securityHeaders = {
 //                model catalogs, the two axes where latency is worth polling for.
 //   0 */6      — full survey, server/tasks/poll/survey.ts: every include
 //                source. Scope policy: server/pipeline/scopes.ts.
+//   */5        — launch tripwire, server/tasks/poll/tripwire.ts: parses the
+//                model catalogs, polls them only when they differ from the
+//                store, and yields on the half-hour ticks above.
 const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:alert', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
+  '*/5 * * * *': ['poll:tripwire'],
 }
 
 /**

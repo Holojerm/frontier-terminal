@@ -32,6 +32,7 @@ import rawManifest from '../../fleet.json'
 import pkg from '../../package.json'
 import journal from '../db/migrations/meta/_journal.json'
 import * as tables from '../db/schema'
+import { launchCoverage } from '../pipeline/launch-watch'
 
 /** The Drizzle client, passed in explicitly. */
 export type FleetDb = ReturnType<typeof drizzle<typeof tables>>
@@ -145,6 +146,8 @@ export async function collectFleetCounters(db: FleetDb, now = new Date()): Promi
     return row?.at ? Date.parse(row.at) : 0
   }
 
+  const coverage = await launchCoverage(db, now)
+
   return {
     opsEvents: { pending: pendingOps?.total ?? 0, last24h: recentOps?.total ?? 0 },
     extra: {
@@ -155,6 +158,9 @@ export async function collectFleetCounters(db: FleetDb, now = new Date()): Promi
       lastOkTickEdgarMs: await lastTick('edgar', false),
       lastOkTickSurveyMs: await lastTick('survey', false),
       lastFailureMs: await lastTick('', true),
+      lastTripwireRunMs: await lastTick('tripwire', false),
+      launchStaleCells: coverage.stale_cells.length,
+      launchUnalerted: coverage.unalerted.length,
     },
   }
 }

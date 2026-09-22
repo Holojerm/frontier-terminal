@@ -707,7 +707,7 @@ export interface AlertView extends Prov {
   severity: AlertSeverity
   headline: string
   explanation: string
-  rule: 'agent-judge' | 's1-floor' | 'periodic-floor' | 'cik-resolved'
+  rule: 'agent-judge' | 's1-floor' | 'periodic-floor' | 'cik-resolved' | 'model-floor'
   created_at: string
   change_ids: string[]
   /** The cited rows, resolved; ids that resolve to nothing are listed in `missing`. */

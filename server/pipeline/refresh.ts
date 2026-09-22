@@ -13,6 +13,7 @@ import {
   type StoredEntityRow,
 } from './contracts'
 import { diff } from './diff'
+import { modelFloorAlerts } from './model-floor'
 import type { SourceFetcher } from './fetch'
 import { derivedKeyOf, laneFor } from './lanes'
 import { deriveSources, resolvedFilers } from './derived'
@@ -271,7 +272,10 @@ async function parseAndStore(
     removed.map((c) => c.entity_key),
   )
   await insertRows(deps.db, 'changes', changes)
-  const alerts = lane.alerts?.(changes) ?? []
+  const alerts = [
+    ...(lane.alerts?.(changes) ?? []),
+    ...(await modelFloorAlerts(deps.db, source.source_id, changes)),
+  ]
   await insertRows(deps.db, 'alerts', alerts)
   // A vendor rewrote a sentence the class map rests on: the owner has a
   // transcription to redo. Once per flip — an unchanged verdict diffs to

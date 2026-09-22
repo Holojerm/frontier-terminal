@@ -22,6 +22,7 @@ export const RULE_TEXT: Record<AlertView['rule'], string> = {
   'cik-resolved':
     'Rule-based: a registration filing whose filer matches a pending lab’s name resolves that lab’s CIK and alerts.',
   'periodic-floor': 'Rule-based: every new 10-Q/10-K on a whitelisted CIK alerts.',
+  'model-floor': 'Rule-based: a model no vendor catalog has listed before always alerts.',
   'agent-judge':
     'Judged by a model, which may cite only fields present in the referenced change rows.',
 }

@@ -20,6 +20,7 @@ import { FleetManifestSchema } from '#shared/utils/fleet-manifest'
 
 import rawManifest from '../../../fleet.json'
 import { checkJudgeSilence } from '../../pipeline/judge/watchdog'
+import { checkLaunchCoverage } from '../../pipeline/launch-watch'
 import { unstorageLockStore } from '../../pipeline/lock'
 import { getOpsMailer } from '../../utils/ops-mail'
 import { drainOpsEvents } from '../../utils/ops'
@@ -40,6 +41,12 @@ export default defineTask({
     // check: an unconfigured digest still records that the judge went quiet.
     const judge = await checkJudgeSilence(db, unstorageLockStore(kv))
     if (judge === 'silent') console.warn(JSON.stringify({ kind: 'judge_silent' }))
+    // Same reason: a launch the site has stored but does not show is recorded
+    // whether or not the digest can be mailed.
+    const launch = await checkLaunchCoverage(db, unstorageLockStore(kv))
+    if (launch.stale_cells.length || launch.unalerted.length) {
+      console.warn(JSON.stringify({ kind: 'launch_gap', ...launch }))
+    }
 
     const env = (context as CloudflareTaskContext | undefined)?.cloudflare?.env
     const mailer = getOpsMailer(env)
