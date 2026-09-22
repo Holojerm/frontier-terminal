@@ -22,6 +22,7 @@ export interface SourceLabel {
 /** Human labels and roles per source id. Everything else comes from sources.yaml. */
 export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
   'openai-models-md': { label: 'OpenAI models.md', role: 'primary' },
+  'openai-pricing-md': { label: 'OpenAI pricing.md', role: 'primary' },
   'anthropic-models-md': { label: 'Anthropic models overview.md', role: 'primary' },
   'anthropic-pricing-md': { label: 'Anthropic pricing.md', role: 'primary' },
   'xai-models-md': { label: 'xAI models.md', role: 'primary' },

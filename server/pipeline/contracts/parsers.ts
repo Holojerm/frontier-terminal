@@ -184,6 +184,7 @@ export const parserOutputSchemas = {
   'anthropic-greenhouse': GreenhouseJobsOutput,
   'xai-greenhouse': GreenhouseJobsOutput,
   'openai-models-md': VendorMdPricingOutput,
+  'openai-pricing-md': VendorMdPricingOutput,
   'anthropic-models-md': VendorMdPricingOutput,
   'anthropic-pricing-md': VendorMdPricingOutput,
   'xai-models-md': VendorMdPricingOutput,

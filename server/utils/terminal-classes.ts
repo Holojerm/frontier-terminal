@@ -144,7 +144,7 @@ export const CLASS_GAPS: { provider: BigFour; class: ModelClassId; reason: strin
  */
 export const PRICE_GAPS: Readonly<Partial<Record<BigFour, string>>> = {
   openai:
-    'OpenAI’s audited source (developers.openai.com/api/docs/models.md) is a catalog: it lists every SKU with a one-line description and prints no prices. Per-model pages carry them; they are not fetched, so nothing is shown here rather than a number from elsewhere.',
+    'OpenAI’s catalog page (developers.openai.com/api/docs/models.md) prints no prices; they come from the separately polled pricing.md (registered 2026-09-22). No priced row yet means that source has not been polled, and nothing is shown rather than a number from elsewhere.',
 }
 
 /** The generic reason when a mapped SKU has simply not been stored yet. */

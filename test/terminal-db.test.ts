@@ -233,10 +233,10 @@ describe('after a baseline poll of every source', () => {
     expect(as_of).toMatch(/^2026-09-07T10:0\d:/)
     expect(movement.total_changes).toBe(0)
     expect(movement.latest_detected_at).toBeNull()
-    expect(movement.sources_total).toBe(22)
+    expect(movement.sources_total).toBe(23)
     // Every source has exactly one snapshot => nothing could have been
     // diffed. That is a different sentence from "nothing changed".
-    expect(movement.sources_not_yet_compared).toBe(22)
+    expect(movement.sources_not_yet_compared).toBe(23)
     expect(latest_fetched_at).toMatch(/^2026-09-07T10:0\d:/)
   })
 
@@ -300,12 +300,17 @@ describe('after a baseline poll of every source', () => {
     expect(xai.gap).toBeNull()
     expect(xai.basis).toContain('Grok 4.6')
 
-    // Mapped, no price: the SKU is right, the audited source prints no number.
+    // The catalog row (models.md, no prices) and the pricing row (pricing.md)
+    // share one key; the cell reads the priced one and cites both pages.
     const openai = cell('openai', 'flagship')
     expect(openai.row!.model_slug).toBe('gpt-5.6-sol')
-    expect(openai.priced).toBe(false)
+    expect(openai.priced).toBe(true)
+    expect(openai.row!.input_per_mtok).toBe(4)
+    expect(openai.row!.output_per_mtok).toBe(20)
+    expect(openai.row!.source_url).toBe(urlOf('openai-pricing-md'))
+    expect(openai.row!.also_listed_by).toEqual(['openai-models-md'])
     expect(openai.basis).toContain('Start here')
-    expect(openai.gap).toContain('catalog')
+    expect(openai.gap).toBeNull()
 
     // Google has prices in the store but no vendor sentence to map against.
     const google = cell('google', 'flagship')
@@ -354,7 +359,7 @@ describe('after a baseline poll of every source', () => {
 
   it('coverage: every source has a snapshot, a run, and the audit caveat', async () => {
     const coverage = await queryCoverage(db, await ctx())
-    expect(coverage.sources).toHaveLength(22)
+    expect(coverage.sources).toHaveLength(23)
     for (const s of coverage.sources) {
       expect(s.newest_snapshot!.source_url).toBe(urlOf(s.source_id))
       expect(s.newest_snapshot!.fetched_at).toMatch(/^2026-09-07T10:0\d:/)
@@ -370,7 +375,7 @@ describe('after a baseline poll of every source', () => {
     expect(byId['anthropic-greenhouse-departments']!.role).toBe('join')
     // The resolved CIK URL from the manifest, not the sources.yaml template.
     expect(byId['edgar-submissions-spcx']!.url).toBe(urlOf('edgar-submissions-spcx'))
-    expect(coverage.totals.snapshots).toBe(22)
+    expect(coverage.totals.snapshots).toBe(23)
     expect(coverage.exports.find((e) => e.name === 'jobs_open')!.rows).toBe(65 + 59 + 42)
     expect(coverage.exports.find((e) => e.name === 'incidents')!.rows).toBe(25 + 50 + 1)
     expect(byId['google-cloud-status']).toMatchObject({ entity_count: 1, role: 'status' })
@@ -491,8 +496,8 @@ describe('after a second poll that moves prices, closes a role, and files an S-1
     expect(Date.parse(movement.latest_detected_at!) - Date.parse(movement.window_from!)).toBe(
       24 * 3_600_000,
     )
-    expect(movement.sources_total).toBe(22)
-    expect(movement.sources_not_yet_compared).toBe(22 - 4) // xai md, xai jobs + its join, edgar-fts
+    expect(movement.sources_total).toBe(23)
+    expect(movement.sources_not_yet_compared).toBe(23 - 4) // xai md, xai jobs + its join, edgar-fts
 
     expect(alert_count).toBe(1)
     expect(alerts).toHaveLength(1)

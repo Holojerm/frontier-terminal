@@ -11,6 +11,16 @@
       "trim": "none — committed whole"
     },
     {
+      "path": "fixtures/pricing/openai-pricing.md",
+      "source_id": "openai-pricing-md",
+      "source_url": "https://developers.openai.com/api/docs/pricing.md",
+      "fetched_at": "2026-09-22T04:10:32Z",
+      "http_status": 200,
+      "raw_bytes": 23063,
+      "trim": "none — committed whole",
+      "note": "Not in the audit: the docs origin began serving pricing as markdown after 2026-08-25 (Last-Modified 2026-09-22T00:54:52Z, ETag present). Four $/MTok tables under '### Standard / Batch / Flex / Fast pricing data' with short- and long-context columns; the grouped tables below them (cyber, audio, image, realtime, tools) are not parsed."
+    },
+    {
       "path": "fixtures/pricing/anthropic-models-overview.md",
       "source_id": "anthropic-models-md",
       "source_url": "https://platform.claude.com/docs/en/models/overview.md",
