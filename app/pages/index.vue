@@ -108,12 +108,7 @@ const openIncidents = computed(() =>
       title="Flagship API price"
       note="$ per million tokens, on each vendor’s own “start here” model."
     >
-      <TerminalPriceMatrix
-        v-if="prices.data.value"
-        :matrix="prices.data.value.matrix"
-        :classes="['flagship']"
-        compact
-      />
+      <TerminalFlagshipGrid v-if="prices.data.value" :matrix="prices.data.value.matrix" />
       <p v-if="prices.data.value" class="text-sm">
         <NuxtLink to="/prices" class="text-primary underline underline-offset-2">
           Balanced and economy tiers, and all

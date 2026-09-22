@@ -5,14 +5,12 @@
 // behind it, and a cell with nothing to show explains itself rather than
 // printing a dash.
 
-import { absoluteStamp, money, pctChange, pctLabel } from '#shared/utils/terminal-format'
+import { absoluteStamp, money } from '#shared/utils/terminal-format'
 import { LAB_DISPLAY as DISPLAY } from '#shared/utils/terminal-labs'
-import type { BigFour, MatrixCell, ModelClassId, PriceMatrix } from '#shared/utils/terminal-types'
+import type { BigFour, MatrixCell, PriceMatrix } from '#shared/utils/terminal-types'
 
 const props = defineProps<{
   matrix: PriceMatrix
-  /** Which columns to draw; every class by default. The front page draws the flagship alone. */
-  classes?: ModelClassId[]
   /** Which rows to draw; every provider by default. A lab page draws its own alone. */
   providers?: BigFour[]
   /** Drop the method footnote — the axis page carries it. */
@@ -25,32 +23,8 @@ const rows = computed(() =>
     : props.matrix.providers,
 )
 
-const columns = computed(() =>
-  props.classes
-    ? props.matrix.classes.filter((k) => props.classes!.includes(k.id))
-    : props.matrix.classes,
-)
-
 function cell(provider: string, klass: string): MatrixCell | undefined {
   return props.matrix.cells.find((c) => c.provider === provider && c.class === klass)
-}
-
-/** The vendor sentence behind a cell, and the last poll's word on whether it is still there. */
-function basisText(c: MatrixCell, label: string): string {
-  const mapped = `Mapped to “${label}” on the vendor's own words: “${c.basis}” (${c.basis_source_id}).`
-  if (c.basis_current === false) return `${mapped} ${c.basis_note ?? ''}`.trim()
-  if (c.basis_current === true && c.basis_checked_at) {
-    return `${mapped} Sentence confirmed on the page at the ${absoluteStamp(c.basis_checked_at)} poll.`
-  }
-  return mapped
-}
-
-/** Percent move on the input price since the previous revision, when there is one. */
-function delta(c: MatrixCell): string | null {
-  const d = c.row?.delta
-  if (!d || d.change_type !== 'modified') return null
-  const pct = pctChange(d.input_before, d.input_after)
-  return pct === null ? null : `${pctLabel(pct)} in`
 }
 </script>
 
@@ -64,7 +38,7 @@ function delta(c: MatrixCell): string | null {
         <thead>
           <tr class="border-b border-default text-left align-top">
             <th scope="col" class="py-2 pr-4 font-medium text-muted">Provider</th>
-            <th v-for="k in columns" :key="k.id" scope="col" class="py-2 pr-4">
+            <th v-for="k in matrix.classes" :key="k.id" scope="col" class="py-2 pr-4">
               <span class="font-medium text-highlighted">{{ k.label }}</span>
               <span class="block max-w-48 text-xs font-normal text-muted">{{ k.question }}</span>
             </th>
@@ -75,7 +49,7 @@ function delta(c: MatrixCell): string | null {
             <th scope="row" class="py-3 pr-4 text-left font-medium text-highlighted">
               {{ DISPLAY[p] ?? p }}
             </th>
-            <td v-for="k in columns" :key="k.id" class="py-3 pr-4">
+            <td v-for="k in matrix.classes" :key="k.id" class="py-3 pr-4">
               <template v-if="cell(p, k.id)">
                 <div v-if="cell(p, k.id)!.priced" class="space-y-1">
                   <div class="flex items-center gap-1">
@@ -101,8 +75,8 @@ function delta(c: MatrixCell): string | null {
                       >{{ money(cell(p, k.id)!.row!.output_per_mtok) }}
                       <span class="text-xs text-muted">out</span></span
                     >
-                    <span v-if="delta(cell(p, k.id)!)" class="text-xs text-muted">
-                      {{ delta(cell(p, k.id)!) }}
+                    <span v-if="cellDelta(cell(p, k.id)!)" class="text-xs text-muted">
+                      {{ cellDelta(cell(p, k.id)!) }}
                     </span>
                   </div>
                   <TerminalProvenanceTag
