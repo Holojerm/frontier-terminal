@@ -288,11 +288,24 @@ default, because the prose pages are for reading. Never set arbitrary sizes (`te
 - **Inputs:** 1px border, `bg-default`. Focus shows a 2px primary ring, never a glow.
 - **Focus:** every interactive element has a visible focus-visible ring. Never `outline: none`
   without a replacement.
-- **Navigation:** inline links from `sm` up; below that they collapse into a right-side
-  `USlideover` behind an `i-lucide-menu` trigger. Drawer rows are `size="lg"` and
-  `block`, left-aligned — full-width rows are the easiest thing on a screen to hit. The
-  drawer closes on route change, not on click, so redirects close it too. Never let the
-  header wrap to two lines or scroll sideways.
+- **Navigation:** at most **five** things across the header, and they are grouped rather
+  than listed. This site has ten pages; ten inline links put `Prices` at the same weight as
+  `About` and made the reader scan instead of choose. The six reading pages sit under two
+  `UNavigationMenu` triggers named for the questions they answer — **Economics** (prices,
+  revenue, demand) and **Operations** (hiring, releases, incidents) — with a one-line
+  description per child, because a name alone does not tell a first-time reader what
+  "Demand" measures. `Overview` and `Alerts` stay top-level: they are the two entry points.
+  Reference pages (`About`, `Data`) live in the footer, where a reader already looks for
+  exports and the disclaimer.
+
+  Inline from `md` up — not `sm`, which the grouped header overruns; below that everything
+  collapses into a right-side `USlideover` behind an `i-lucide-menu` trigger. The drawer
+  carries the *whole* site map including the footer's reference pages, because below `md`
+  it is the only navigation affordance there is. Drawer rows are `size="lg"` and `block`,
+  left-aligned — full-width rows are the easiest thing on a screen to hit — and each group
+  is introduced by a real heading, not a styled `div`. The drawer closes on route change,
+  not on click, so redirects close it too. Never let the header wrap to two lines or scroll
+  sideways.
 - **Links:** inline prose links are `text-primary` **and** underlined (see Accessibility ›
   Contrast). Standalone links in navigation or footers are colour-only by design.
 - **Long-form content:** markdown renders through NuxtUI's `Prose*`
