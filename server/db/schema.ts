@@ -113,9 +113,9 @@ export const snapshots = sqliteTable(
 // when a set-typed source (a job board, a pricing page) stops listing them.
 // History lives in `changes`, never in duplicate entity rows.
 //
-// This is a deliberate departure from the take-home, which stored every
-// entity for every snapshot and reached 130k rows in two weeks — almost all
-// of them byte-identical repeats of the row before. The current set plus the
+// Storing every entity for every snapshot is the obvious alternative, and was
+// measured at 130k rows in two weeks — almost all of them byte-identical
+// repeats of the row before. The current set plus the
 // change log carries the same information: any past state is the current
 // state with the changes after that instant undone.
 //

@@ -37,9 +37,9 @@ export function byDetectedAt(a: Change, b: Change): number {
  * snapshot each source ever produced, plus any snapshot a source_runs row
  * marks 'baseline'. This Worker's baseline writes entities and no change
  * rows (server/pipeline/refresh.ts), so the first form is what matters for
- * imported history — the take-home's Google lane logged its first parse as
- * an `added` row per SKU, and those are first sightings of a watcher, not
- * of a model.
+ * the history imported at the 2026-09-08 cutover — that build logged its
+ * first Google parse as an `added` row per SKU, and those are first
+ * sightings of a watcher, not of a model.
  */
 export function baselineInstants(
   snapshots: readonly Pick<

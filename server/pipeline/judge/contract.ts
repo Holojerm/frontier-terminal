@@ -3,8 +3,7 @@ import { z } from 'zod'
 import { AlertRow, contentHash, parseAgentOutput, type AgentGateResult } from '../contracts'
 import type { ChangeRow } from '../contracts'
 
-// The judge lane's contract, ported from the take-home's judge-explain.ts.
-// The Worker owns the data and every gate; the routine only reasons. What
+// The judge lane's contract. The Worker owns the data and every gate; the routine only reasons. What
 // the routine may send back is derived entirely from the AlertRow contract:
 // it emits ONLY severity/headline/explanation/change_ids, and id, rule,
 // created_at and provenance are stamped here from the cited change rows, so
@@ -16,7 +15,7 @@ export const JudgeAlert = AlertRow.pick({ severity: true, headline: true, explan
   .strict()
 export type JudgeAlert = z.infer<typeof JudgeAlert>
 
-/** What the model prints: the take-home's JudgeOutput. */
+/** What the model prints. */
 export const JudgeOutput = z.strictObject({ alerts: JudgeAlert.array() })
 export type JudgeOutput = z.infer<typeof JudgeOutput>
 

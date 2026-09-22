@@ -1,8 +1,8 @@
 /// <reference types="vite/client" />
 
 // Deterministic Google pricing parser, checked against two snapshots of the
-// page: the 2026-08-25 fixture (with hand-verified ground truth from the
-// take-home's agent lane, fixtures/pricing/google-pricing.expected.json) and
+// page: the 2026-08-25 fixture (with hand-verified ground truth in
+// fixtures/pricing/google-pricing.expected.json) and
 // the 2026-09-07 page, which adds models and drops others — proof the parser
 // reads structure rather than one snapshot's bytes.
 
@@ -27,9 +27,9 @@ const PRICE_FIELDS = ['input_per_mtok', 'cached_input_per_mtok', 'output_per_mto
 type Keyed = Pick<GooglePricingRow, 'model_slug' | 'tier' | 'effective_from' | 'effective_until'>
 const rowKey = (r: Keyed) => `${r.model_slug}|${r.tier}|${r.effective_from}|${r.effective_until}`
 
-// The take-home's grounding tripwires (pipeline/src/agent/grounding.ts):
-// a slug must be printed verbatim in a <code> element, and every non-null
-// price must literally appear in the page ("$7.50" grounds 7.5).
+// Grounding tripwires: a slug must be printed verbatim in a <code> element,
+// and every non-null price must literally appear in the page ("$7.50"
+// grounds 7.5).
 function codeSlugs(html: string): Set<string> {
   return new Set([...html.matchAll(/<code[^>]*>([^<]+)<\/code>/g)].map((m) => m[1]!.trim()))
 }

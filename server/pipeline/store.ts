@@ -8,9 +8,8 @@ import { EntityRow, tableSchemas, type SourceRunRow, type TableName } from './co
 
 // The write chokepoint. Every pipeline row reaches D1 through insertRows(),
 // which validates it against its zod contract first — so a row missing
-// source_url or fetched_at cannot be stored, whatever produced it. This is
-// the take-home's provenance gate, kept; the NOT NULL columns in
-// server/db/schema.ts are the second layer, not the first.
+// source_url or fetched_at cannot be stored, whatever produced it. The NOT
+// NULL columns in server/db/schema.ts are the second layer, not the first.
 //
 // Every function takes the Drizzle client explicitly so the workerd suite
 // can drive it against a real D1 binding (the same shape server/utils/ops.ts
