@@ -34,7 +34,19 @@ export const alertRuleEnum = z.enum(['agent-judge', 's1-floor', 'periodic-floor'
 // 'skipped': the source needs a credential the deploy does not have, so
 // nothing was attempted — distinct from 'failed' so a missing key is a
 // configuration state on the coverage panel, not an outage in the digest.
-export const sourceRunStatusEnum = z.enum(['ok', 'unchanged', 'failed', 'baseline', 'skipped'])
+// 'absent': a DERIVED url 404s. The key is real (it came from a row the store
+// holds) and the document simply is not published — OpenAI prices SKUs whose
+// model page it never wrote. Distinct from 'failed' for the same reason
+// 'skipped' is: an audited url that 404s is breakage, because the audit said
+// it was there, but a derived one that 404s is a fact about the catalogue.
+export const sourceRunStatusEnum = z.enum([
+  'ok',
+  'unchanged',
+  'failed',
+  'baseline',
+  'skipped',
+  'absent',
+])
 export const pollScopeEnum = z.enum(['edgar', 'survey'])
 export type PollScope = z.infer<typeof pollScopeEnum>
 

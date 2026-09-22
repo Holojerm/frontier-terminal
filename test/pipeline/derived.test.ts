@@ -392,4 +392,43 @@ describe('OpenAI model pages end to end', () => {
       'model page is for gpt-5.6-sol, derived for gpt-5.6-terra',
     )
   })
+
+  it('a derived page that 404s is absent, not failed — said once, and shown on the coverage panel', async () => {
+    await run(['openai-models-md', 'openai-pricing-md'], fetcher(), 'survey')
+    const missing = 'openai-model-md-gpt-4o-mini'
+    const gone: FetchOutcome = { ok: false, status: 404, detail: 'HTTP 404' }
+
+    // OpenAI prices SKUs whose model page it never published. That is a fact
+    // about the catalogue, not breakage here, so it is its own status.
+    const first = await run([missing], fetcher({ [missing]: gone }), 'survey')
+    expect(first.sources[0]).toMatchObject({ status: 'absent', detail: 'HTTP 404' })
+    expect((await db.select().from(schema.opsEvents)).map((o) => o.kind)).toEqual(['source_absent'])
+
+    // Still absent next tick, and still absent the tick after: the mail is
+    // for the transition, because five of these never change again.
+    await run([missing], fetcher({ [missing]: gone }), 'survey')
+    await run([missing], fetcher({ [missing]: gone }), 'survey')
+    expect((await db.select().from(schema.opsEvents)).map((o) => o.kind)).toEqual(['source_absent'])
+
+    // Keying the panel on snapshots hid these entirely — a 404 snapshots
+    // nothing — so a reader could not see that the SKU has no page.
+    const coverage = await queryCoverage(db, await ctx())
+    const row = coverage.sources.find((c) => c.source_id === missing)
+    expect(row).toBeDefined()
+    expect(row!.newest_snapshot).toBeNull()
+    expect(row!.snapshot_count).toBe(0)
+    expect(row!.derived_from).toBe('openai-model-md')
+    expect(row!.last_run).toMatchObject({ status: 'absent', detail: 'HTTP 404' })
+    expect(row!.url).toBe('https://developers.openai.com/api/docs/models/gpt-4o-mini.md')
+  })
+
+  it('an audited url that 404s is still a failure — the audit recorded that it resolved', async () => {
+    const report = await run(
+      ['openai-pricing-md'],
+      fetcher({ 'openai-pricing-md': { ok: false, status: 404, detail: 'HTTP 404' } }),
+      'survey',
+    )
+    expect(report.sources[0]).toMatchObject({ status: 'failed' })
+    expect((await db.select().from(schema.opsEvents)).map((o) => o.kind)).toContain('source_failed')
+  })
 })
