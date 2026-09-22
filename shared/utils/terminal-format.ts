@@ -118,3 +118,31 @@ export function ppLabel(pp: number): string {
   const sign = rounded > 0 ? '+' : rounded < 0 ? '−' : ''
   return `${sign}${Math.abs(rounded).toFixed(1)} pp`
 }
+
+/** '$7.81B' / '$412M' / '$20.9M' / '$676K' — a dollar figure at the scale a card can carry; the exact value stays in the markup. */
+export function compactUsd(n: number): string {
+  const sign = n < 0 ? '−' : ''
+  const abs = Math.abs(n)
+  const units: [number, string][] = [
+    [1e12, 'T'],
+    [1e9, 'B'],
+    [1e6, 'M'],
+    [1e3, 'K'],
+  ]
+  for (const [value, unit] of units) {
+    if (abs >= value) {
+      const x = abs / value
+      return `${sign}$${x >= 100 ? Math.round(x) : x >= 10 ? x.toFixed(1) : x.toFixed(2)}${unit}`
+    }
+  }
+  return `${sign}$${abs.toFixed(0)}`
+}
+
+/** '1 Apr → 30 Jun 2026' style period label from two ISO dates, with the span named. */
+export function periodLabel(days: number): string {
+  if (days >= 350) return 'year'
+  if (days >= 260) return 'nine months'
+  if (days >= 170) return 'half'
+  if (days >= 80) return 'quarter'
+  return `${days} days`
+}

@@ -87,9 +87,25 @@ Emit an alert-tier severity (`notable` or `critical`) ONLY for:
   ticker line, however senior the titles.
 - **A department going dark.** Five or more `job` removals in one
   department with no `job` added in that department in the same records.
-- **Any SEC change.** Any `filing` record — except a filing-only S-1/424B4,
-  which the deterministic floor rule has already alerted; cite those only as
-  context combined with other changes.
+- **A physical-infrastructure move — a capacity signal.** The labs' binding
+  constraint is data centers and power, and the hiring board sees it first.
+  Treat `job` records whose `department` names Data Center, Infrastructure,
+  Facilities, Energy, Construction, Compute or Hardware (not Software) as
+  one cluster per provider: five or more added across it reads as capacity
+  buildout, five or more removed as a buildout pulled back or completed —
+  `notable`, `critical` when the removals empty a location. Quote the
+  `department` values and `location` values verbatim; the count is yours to
+  state only as records cited.
+- **Any SEC filing change.** Any `filing` record — except a filing-only
+  S-1/424B4 or 10-Q/10-K, which the deterministic floor rules have already
+  alerted; cite those only as context combined with other changes. An
+  `8-K` is yours: `notable`, naming the filer from `display_names`.
+- **A new or restated revenue fact.** A `revenue` record (an XBRL fact from
+  EDGAR company facts) `added` or `modified`: quote `val`, `start`, `end`,
+  `form` and `entity_name` verbatim — the value is the filer's own number in
+  USD, never rescaled to billions. Say whose revenue it is: the
+  `entity_name` is the filer, and a parent's consolidated figure is not the
+  lab's.
 - **A capacity-strain signal.** Status-page `incident` records are a proxy
   for what the vendor chose to post, never an SLA. An `added` incident
   whose `impact` is `major` or `critical` (Statuspage vocabulary) or `high`
@@ -100,7 +116,9 @@ Emit an alert-tier severity (`notable` or `critical`) ONLY for:
   verbatim.
 - **A cross-axis combination** built from the above (a price cut plus a
   five-role sales surge reads as a GTM push; a flagship price cut plus an
-  API-surface incident cluster reads as demand outrunning capacity).
+  API-surface incident cluster reads as demand outrunning capacity; an
+  API-surface incident cluster plus a physical-infrastructure hiring surge
+  reads as supply being built against visible strain).
 
 Everything else that is worth a line is the TICKER (`info`): a single role
 added or removed, a location shuffled, a title reworded, a role moved

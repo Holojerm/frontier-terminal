@@ -20,13 +20,15 @@ export const CHANGE_BADGE = {
 export const RULE_TEXT: Record<AlertView['rule'], string> = {
   's1-floor':
     'Deterministic floor rule: a new S-1/424B4 filing on a whitelisted CIK always alerts — no model in the loop.',
+  'periodic-floor':
+    'Deterministic floor rule: a new 10-Q/10-K filing on a whitelisted CIK always alerts — no model in the loop.',
   'agent-judge':
     'Agent-judged significance. The explanation may cite only fields present in the referenced change rows; nothing outside them.',
 }
 
 export const TIER_TEXT = {
   alert:
-    'Alert tier (notable, critical): a price move, a new SKU, a department-level hiring shift, or a filing.',
+    'Alert tier (notable, critical): a price move, a new SKU, a department-level hiring shift, a physical-infrastructure hiring move, a filing, or a new revenue fact.',
   ticker:
     'Ticker tier (info): what moved, low stakes — a role added or closed, a title reworded, a location shuffled.',
 } as const

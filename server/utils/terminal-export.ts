@@ -1,7 +1,7 @@
 // Bulk exports of the store: every table, as CSV or JSON, streamed in pages
 // so a 100k-row changes table never has to fit in Worker memory at once.
 //
-// The entity views (prices_latest, jobs_open, incidents, rankings_daily) flatten the JSON payload
+// The entity views (prices_latest, jobs_open, incidents, rankings_daily, revenue_facts) flatten the JSON payload
 // into columns, because a CSV with a JSON blob in one cell is not a
 // spreadsheet anyone can sort. Provenance columns are always present and
 // always last: source_url and fetched_at on every table except source_runs,
@@ -47,6 +47,24 @@ const PRICE_FIELDS = [
 
 const RANKING_FIELDS = ['date', 'model_permaslug', 'total_tokens'] as const
 
+const REVENUE_FIELDS = [
+  'cik',
+  'entity_name',
+  'taxonomy',
+  'tag',
+  'unit',
+  'start',
+  'end',
+  'val',
+  'accession_no',
+  'fy',
+  'fp',
+  'form',
+  'filed',
+  'frame',
+  'whitelist_cik',
+] as const
+
 const JOB_FIELDS = [
   'job_id',
   'title',
@@ -91,7 +109,7 @@ function project(row: Row, columns: readonly string[]): Row {
 function entityView(
   name: string,
   description: string,
-  entityType: 'model' | 'job' | 'incident' | 'ranking',
+  entityType: 'model' | 'job' | 'incident' | 'ranking' | 'revenue',
   fields: readonly string[],
 ): ExportTable {
   const columns = [
@@ -186,6 +204,12 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     'One row per UTC day and model from OpenRouter’s usage rankings: total tokens routed. CC BY 4.0 — cite "Source: OpenRouter (openrouter.ai/rankings)".',
     'ranking',
     RANKING_FIELDS,
+  ),
+  revenue_facts: entityView(
+    'revenue_facts',
+    'One row per XBRL revenue fact from EDGAR company facts: filer, tag, period, value in USD, and the filing that reported it. Append-only — a restatement is a new row under its own accession.',
+    'revenue',
+    REVENUE_FIELDS,
   ),
   changes: plainTable(
     'changes',

@@ -44,10 +44,12 @@ const caveats = computed(() => (coverage.value?.sources ?? []).filter((s) => s.c
         <p>
           A free, public, read-only terminal for an equity analyst covering the AI-infrastructure
           complex into the frontier-lab IPO wave. It watches the four frontier model providers —
-          OpenAI, Anthropic, Google, xAI — on four axes: the API price list, the hiring board,
-          demand share on OpenRouter, and SEC filings. The first three are the private-company
-          signals that carry the weight before any lab trades; EDGAR is the tripwire for the moment
-          one does.
+          OpenAI, Anthropic, Google, xAI — on six axes: the API price list, the hiring board (with
+          the physical-infrastructure buildout read off it), demand share on OpenRouter and the
+          spend share it implies at list price, status-page incidents, SEC filings, and disclosed
+          revenue. The private-company signals carry the weight before any lab trades; EDGAR is the
+          tripwire for the moment one does, and the revenue panel is wired to fill the day it
+          happens — until then it says “no audited disclosure” rather than printing a run-rate.
         </p>
         <p>
           Every source is polled on a schedule, snapshotted whole, parsed deterministically, and
@@ -105,8 +107,9 @@ const caveats = computed(() => (coverage.value?.sources ?? []).filter((s) => s.c
       <dl class="grid max-w-2xl gap-x-6 gap-y-2 text-sm sm:grid-cols-[auto_1fr]">
         <dt class="text-muted">SEC filings</dt>
         <dd class="text-default">
-          The two EDGAR feeds are polled every 30 minutes — the tripwire, the one axis where latency
-          is worth polling for.
+          The EDGAR feeds — the S-1 full-text tripwire, one submissions feed per whitelisted CIK,
+          and XBRL company facts for each tagged revenue filer — are polled every 30 minutes: the
+          one axis where latency is worth polling for.
         </dd>
         <dt class="text-muted">Pricing and hiring</dt>
         <dd class="text-default">

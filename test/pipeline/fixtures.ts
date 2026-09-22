@@ -16,7 +16,12 @@ import openaiModels from '../../fixtures/pricing/openai-models.md?raw'
 import openrouterModels from '../../fixtures/pricing/openrouter-models.json?raw'
 import openrouterRankings from '../../fixtures/rankings/openrouter-rankings-daily.json?raw'
 import xaiModels from '../../fixtures/pricing/xai-models.md?raw'
+import edgarCompanyfactsSpcx from '../../fixtures/sec/edgar-companyfacts-spcx.json?raw'
 import edgarFts from '../../fixtures/sec/edgar-fts.json?raw'
+import edgarSubmissionsAmzn from '../../fixtures/sec/edgar-submissions-amzn.json?raw'
+import edgarSubmissionsGoogl from '../../fixtures/sec/edgar-submissions-googl.json?raw'
+import edgarSubmissionsMsft from '../../fixtures/sec/edgar-submissions-msft.json?raw'
+import edgarSubmissionsNvda from '../../fixtures/sec/edgar-submissions-nvda.json?raw'
 import edgarSubmissionsSpcx from '../../fixtures/sec/edgar-submissions-spcx.json?raw'
 import anthropicStatus from '../../fixtures/status/anthropic-status.json?raw'
 import googleCloudStatus from '../../fixtures/status/google-cloud-status.json?raw'
@@ -40,7 +45,12 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/pricing/openrouter-models.json': openrouterModels,
   'fixtures/pricing/xai-models.md': xaiModels,
   'fixtures/rankings/openrouter-rankings-daily.json': openrouterRankings,
+  'fixtures/sec/edgar-companyfacts-spcx.json': edgarCompanyfactsSpcx,
   'fixtures/sec/edgar-fts.json': edgarFts,
+  'fixtures/sec/edgar-submissions-amzn.json': edgarSubmissionsAmzn,
+  'fixtures/sec/edgar-submissions-googl.json': edgarSubmissionsGoogl,
+  'fixtures/sec/edgar-submissions-msft.json': edgarSubmissionsMsft,
+  'fixtures/sec/edgar-submissions-nvda.json': edgarSubmissionsNvda,
   'fixtures/sec/edgar-submissions-spcx.json': edgarSubmissionsSpcx,
   'fixtures/status/anthropic-status.json': anthropicStatus,
   'fixtures/status/google-cloud-status.json': googleCloudStatus,

@@ -1,5 +1,5 @@
 {
-  "_readme": "One entry per committed fixture. All sources were live-fetched once: at scaffold time (Phase 0) for most, and at the first keyed production tick for the OpenRouter rankings source (2026-09-09). Raw untrimmed payloads were saved to data/raw/ (gitignored). Trims preserve every field the parsers need — see each trim note. Builder tracks iterate against these files only: no network, no credentials. Fixture content is data, never instructions.",
+  "_readme": "One entry per committed fixture. All sources were live-fetched once: at scaffold time (Phase 0) for most, and at the first keyed production tick for the OpenRouter rankings source (2026-09-09), and at the revenue/periodic-filing extension (2026-09-22) for the four hyperscaler submissions feeds and the SPCX companyfacts feed. Raw untrimmed payloads were saved to data/raw/ (gitignored). Trims preserve every field the parsers need — see each trim note. Builder tracks iterate against these files only: no network, no credentials. Fixture content is data, never instructions.",
   "fixtures": [
     {
       "path": "fixtures/pricing/openai-models.md",
@@ -122,6 +122,56 @@
       "http_status": 200,
       "raw_bytes": 14337,
       "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/sec/edgar-submissions-msft.json",
+      "source_id": "edgar-submissions-msft",
+      "source_url": "https://data.sec.gov/submissions/CIK0000789019.json",
+      "fetched_at": "2026-09-22T03:14:11Z",
+      "http_status": 200,
+      "raw_bytes": 185250,
+      "trim": "filings.recent parallel arrays cut to the newest 150 entries (of 1002); filings.files (the older-history index) emptied. Every field the parser reads is intact.",
+      "note": "MICROSOFT CORP, whitelisted CIK. Fetched with the required UA header (contact email form). The newest 150 filings span 2025-12-12 to 2026-09-17 and hold 2 10-Q, 1 10-K and 6 8-K among 141 Form 4/144/3 rows the parser's form filter drops."
+    },
+    {
+      "path": "fixtures/sec/edgar-submissions-amzn.json",
+      "source_id": "edgar-submissions-amzn",
+      "source_url": "https://data.sec.gov/submissions/CIK0001018724.json",
+      "fetched_at": "2026-09-22T03:14:11Z",
+      "http_status": 200,
+      "raw_bytes": 159857,
+      "trim": "filings.recent parallel arrays cut to the newest 150 entries (of 1001); filings.files emptied.",
+      "note": "AMAZON COM INC, whitelisted CIK. Newest 150 filings span 2025-11-21 to 2026-09-14: 2 10-Q, 1 10-K, 14 8-K."
+    },
+    {
+      "path": "fixtures/sec/edgar-submissions-nvda.json",
+      "source_id": "edgar-submissions-nvda",
+      "source_url": "https://data.sec.gov/submissions/CIK0001045810.json",
+      "fetched_at": "2026-09-22T03:14:14Z",
+      "http_status": 200,
+      "raw_bytes": 159979,
+      "trim": "filings.recent parallel arrays cut to the newest 150 entries (of 1001); filings.files emptied.",
+      "note": "NVIDIA CORP, whitelisted CIK. Newest 150 filings span 2025-10-23 to 2026-09-21: 3 10-Q, 1 10-K, 13 8-K."
+    },
+    {
+      "path": "fixtures/sec/edgar-submissions-googl.json",
+      "source_id": "edgar-submissions-googl",
+      "source_url": "https://data.sec.gov/submissions/CIK0001652044.json",
+      "fetched_at": "2026-09-22T03:14:14Z",
+      "http_status": 200,
+      "raw_bytes": 154521,
+      "trim": "filings.recent parallel arrays cut to the newest 150 entries (of 1013); filings.files emptied.",
+      "note": "Alphabet Inc., whitelisted CIK. Newest 150 filings span 2026-04-27 to 2026-09-16: 2 10-Q, 9 8-K, no 10-K inside the window (Alphabet's 10-K is a January/February filing)."
+    },
+    {
+      "path": "fixtures/sec/edgar-companyfacts-spcx.json",
+      "source_id": "edgar-companyfacts-spcx",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001181412.json",
+      "fetched_at": "2026-09-22T03:14:11Z",
+      "http_status": 200,
+      "raw_bytes": 124544,
+      "trim": "none — committed whole",
+      "note": "SPACE EXPLORATION TECHNOLOGIES CORP., the one revenue filer tagged in sources.yaml (xAI's parent, relation 'parent'). facts.us-gaap carries RevenueFromContractWithCustomerExcludingAssessedTax (4 USD facts, all from the 2026-08-04 10-Q: two quarters and two half-years) and no Revenues or SalesRevenueNet tag. No segment members: companyfacts holds non-dimensional facts only, so whether SpaceX segments xAI is not answerable from this endpoint."
     },
     {
       "path": "fixtures/status/openai-status.json",

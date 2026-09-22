@@ -61,6 +61,8 @@ import type {
 
 import * as tables from '../db/schema'
 import { manifestFixtures } from '../pipeline/parsers/fixture-provenance'
+import { parseRevenueFilersBlock, type RevenueFilers } from '../pipeline/parsers/sec/revenue-filers'
+import { parseCikWhitelistBlock, type CikWhitelist } from '../pipeline/parsers/sec/whitelist'
 import type { PipelineDb } from '../pipeline/store'
 import {
   CLASS_GAPS,
@@ -69,6 +71,7 @@ import {
   NO_ROW_GAP,
   PRICE_GAPS,
 } from './terminal-classes'
+import { clusterSeries, parseDepartmentClusters, type DepartmentCluster } from './terminal-clusters'
 import { EXPORT_TABLES } from './terminal-export'
 import {
   baselineInstants,
@@ -98,6 +101,11 @@ import {
 /** What every query needs beyond the client: the registry and the tick it reports. */
 export interface QueryContext {
   registry: SourceRegistry
+  /** sources.yaml department_clusters — the buildout signal's department terms. */
+  clusters: DepartmentCluster[]
+  /** sources.yaml revenue_filers and cik_whitelist — which lab a filer's facts belong to. */
+  revenueFilers: RevenueFilers
+  whitelist: CikWhitelist
   /** Newest source_runs.started_at, already read for the cache key. */
   as_of: string | null
   now: () => Date
@@ -108,7 +116,14 @@ export function queryContext(
   as_of: string | null,
   now: () => Date = () => new Date(),
 ): QueryContext {
-  return { registry: readSourceRegistry(sourcesYaml), as_of, now }
+  return {
+    registry: readSourceRegistry(sourcesYaml),
+    clusters: parseDepartmentClusters(sourcesYaml),
+    revenueFilers: parseRevenueFilersBlock(sourcesYaml),
+    whitelist: parseCikWhitelistBlock(sourcesYaml),
+    as_of,
+    now,
+  }
 }
 
 const stampOf = (ctx: QueryContext): Stamp => ({
@@ -251,6 +266,7 @@ const AXIS_OF: Readonly<Record<string, keyof Omit<MovementSummary['recent'], 'to
   model: 'pricing',
   job: 'hiring',
   filing: 'sec',
+  revenue: 'sec',
   incident: 'incidents',
 }
 
@@ -351,6 +367,18 @@ function summarize(entityType: string, payload: Json | null): string {
   if (entityType === 'ranking') {
     const tokens = num(payload.total_tokens)
     return `${str(payload.model_permaslug) ?? '?'} · ${str(payload.date) ?? '?'} · ${tokens === null ? '?' : countLabel(tokens)} tokens`
+  }
+  if (entityType === 'revenue') {
+    const val = num(payload.val)
+    return [
+      str(payload.entity_name) ?? str(payload.cik) ?? '?',
+      str(payload.tag),
+      `${str(payload.start) ?? '?'} → ${str(payload.end) ?? '?'}`,
+      val === null ? '?' : `USD ${countLabel(val)}`,
+      str(payload.form),
+    ]
+      .filter((p): p is string => Boolean(p))
+      .join(' · ')
   }
   return entityType
 }
@@ -1217,6 +1245,7 @@ export async function queryHiringHistory(
         dates: [],
         total: [],
         departments: [],
+        clusters: [],
         compare: null,
         series_from: null,
         baseline_at: null,
@@ -1244,6 +1273,8 @@ export async function queryHiringHistory(
       })
       .filter((s): s is HiringSource => s !== null)
     const open = total.at(-1) ?? 0
+    const compare = compareWindow(dates, total, departments, HIRING_WINDOW_DAYS)
+    const thenIndex = compare ? dates.indexOf(compare.at) : null
     providers.push({
       provider,
       display: PROVIDER_DISPLAY[provider],
@@ -1253,7 +1284,10 @@ export async function queryHiringHistory(
       dates,
       total,
       departments,
-      compare: compareWindow(dates, total, departments, HIRING_WINDOW_DAYS),
+      clusters: ctx.clusters.map((c) =>
+        clusterSeries(c, departments, dates, thenIndex === -1 ? null : thenIndex),
+      ),
+      compare,
       series_from: from,
       baseline_at: baselineOf.get(primary) ?? null,
       join_from: join ? (firstOf.get(join) ?? null) : null,
