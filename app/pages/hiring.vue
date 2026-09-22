@@ -20,13 +20,14 @@ definePageMeta({
   },
 })
 
+const { data: hiring, error } = await useFetch<HiringHistoryData>('/api/hiring/history')
+
 useSeo({
   title: 'Hiring',
   description:
     'Open roles over time at the frontier AI labs, per day and per department, reconstructed from each job board’s change log with the source URL behind every count.',
+  dateModified: hiring.value?.as_of,
 })
-
-const { data: hiring, error } = await useFetch<HiringHistoryData>('/api/hiring/history')
 
 const now = useNow()
 

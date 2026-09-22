@@ -93,6 +93,7 @@ const SECTIONS: NavSection[] = [
 const REFERENCE: NavLink[] = [
   { label: 'About', to: '/about' },
   { label: 'Data', to: '/data' },
+  { label: 'License', to: '/license' },
 ]
 
 // A section with `children` renders as a dropdown; one with `to` renders as a

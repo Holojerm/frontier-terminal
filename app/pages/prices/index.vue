@@ -14,13 +14,14 @@ definePageMeta({
   },
 })
 
+const { data: prices, error } = await useFetch<PricesData>('/api/prices')
+
 useSeo({
   title: 'Prices',
   description:
     'API pricing per million tokens across the frontier labs: the like-for-like matrix, the full SKU catalog, and each row’s source URL and fetch time.',
+  dateModified: prices.value?.as_of,
 })
-
-const { data: prices, error } = await useFetch<PricesData>('/api/prices')
 </script>
 
 <template>

@@ -35,6 +35,7 @@ const ROUTES = [
   '/incidents',
   '/data',
   '/about',
+  '/license',
 ]
 
 // One template, N URLs — pages the sweep cannot enumerate ahead of a server:

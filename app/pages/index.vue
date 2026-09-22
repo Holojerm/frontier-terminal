@@ -35,14 +35,6 @@ const config = useRuntimeConfig()
 // the schema.org description, so all three agree.
 const description = config.public.appDescription
 
-useSeo({
-  // 'exact' because the brand should lead on the landing page — everywhere else
-  // useSeo appends `· AppName` for you.
-  titleMode: 'exact',
-  title: config.public.appName,
-  description,
-})
-
 const [
   overview,
   prices,
@@ -66,6 +58,15 @@ const [
   useFetch<IncidentsData>('/api/incidents'),
   useFetch<CoverageData>('/api/coverage'),
 ])
+
+useSeo({
+  // 'exact' because the brand should lead on the landing page — everywhere else
+  // useSeo appends `· AppName` for you.
+  titleMode: 'exact',
+  title: config.public.appName,
+  description,
+  dateModified: overview.data.value?.as_of,
+})
 
 const failed = computed(() =>
   [
