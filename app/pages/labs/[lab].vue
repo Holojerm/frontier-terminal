@@ -7,6 +7,7 @@
 
 import { sharePct, ppLabel } from '#shared/utils/terminal-format'
 import { isLab, summarizeLab } from '#shared/utils/terminal-lab-summary'
+import { alertLabs } from '#shared/utils/terminal-labs'
 import type {
   AlertsData,
   HiringHistoryData,
@@ -39,15 +40,60 @@ if (!isLab(labParam)) {
 }
 const lab = labParam
 
+// Every panel on this page is one lab's slice of an all-lab payload, and the
+// filtering used to happen in the computeds below — after Nuxt had already
+// serialised the whole thing into the hydration payload. `transform` runs on
+// the server, before serialisation, so the other three labs' rows never reach
+// the HTML. The shapes are unchanged: these return the same types, with fewer
+// rows in them.
+//
+// EXPLICIT `key` PER LAB, and it is load-bearing. Nuxt derives an automatic key
+// from the call site, not from what a transform closes over — so all four lab
+// pages would share one cache entry and a client-side navigation between them
+// would render the first lab's rows under the second lab's heading.
 const [prices, revenue, rankings, spend, hiring, incidents, releases, alerts] = await Promise.all([
-  useFetch<PricesData>('/api/prices'),
+  useFetch<PricesData>('/api/prices', {
+    key: `lab-prices:${lab}`,
+    transform: (d: PricesData): PricesData => ({
+      ...d,
+      rows: d.rows.filter((r) => r.provider === lab),
+    }),
+  }),
   useFetch<RevenueData>('/api/revenue'),
-  useFetch<RankingsData>('/api/rankings'),
+  useFetch<RankingsData>('/api/rankings', {
+    key: `lab-rankings:${lab}`,
+    transform: (d: RankingsData): RankingsData => ({
+      ...d,
+      top_models: d.top_models.filter((m) => m.provider === lab),
+    }),
+  }),
   useFetch<SpendData>('/api/spend'),
   useFetch<HiringHistoryData>('/api/hiring/history'),
-  useFetch<IncidentsData>('/api/incidents'),
-  useFetch<ReleasesData>('/api/releases'),
-  useFetch<AlertsData>('/api/alerts', { query: { tier: 'all', limit: 200 } }),
+  useFetch<IncidentsData>('/api/incidents', {
+    key: `lab-incidents:${lab}`,
+    transform: (d: IncidentsData): IncidentsData => ({
+      ...d,
+      incidents: d.incidents.filter((i) => i.provider === lab),
+    }),
+  }),
+  useFetch<ReleasesData>('/api/releases', {
+    key: `lab-releases:${lab}`,
+    transform: (d: ReleasesData): ReleasesData => ({
+      ...d,
+      rows: d.rows.filter((r) => r.provider === lab),
+    }),
+  }),
+  // The big one: /api/alerts at tier=all&limit=200 is ~600KB, most of this
+  // page's weight. `alertLabs` is the same predicate summarizeLab applies
+  // below, so this narrows to exactly the rows the page was going to keep.
+  useFetch<AlertsData>('/api/alerts', {
+    key: `lab-alerts:${lab}`,
+    query: { tier: 'all', limit: 200 },
+    transform: (d: AlertsData): AlertsData => ({
+      ...d,
+      rows: d.rows.filter((a) => alertLabs(a).includes(lab)),
+    }),
+  }),
 ])
 
 const data = computed(() => ({
@@ -108,7 +154,8 @@ const incidentsOf = computed(() =>
 // A readout, not the catalog: priced rows only, a page of them, the rest on
 // /prices with this lab preselected.
 const CATALOG_ROWS = 15
-const labRows = computed(() => prices.data.value?.rows.filter((r) => r.provider === lab) ?? [])
+// Already this lab's rows — the fetch above narrowed them server-side.
+const labRows = computed(() => prices.data.value?.rows ?? [])
 const pricesOf = computed(() =>
   prices.data.value
     ? {
@@ -119,15 +166,9 @@ const pricesOf = computed(() =>
       }
     : null,
 )
-const topModels = computed(
-  () => rankings.data.value?.top_models.filter((p) => p.provider === lab) ?? [],
-)
-const labReleases = computed(
-  () => releases.data.value?.rows.filter((r) => r.provider === lab) ?? [],
-)
-const labIncidents = computed(
-  () => incidents.data.value?.incidents.filter((i) => i.provider === lab).length ?? 0,
-)
+const topModels = computed(() => rankings.data.value?.top_models ?? [])
+const labReleases = computed(() => releases.data.value?.rows ?? [])
+const labIncidents = computed(() => incidents.data.value?.incidents.length ?? 0)
 </script>
 
 <template>
