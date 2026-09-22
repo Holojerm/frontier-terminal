@@ -7,7 +7,10 @@
 import { absoluteStamp, relativeStamp } from '#shared/utils/terminal-format'
 import type { IncidentProviderView, IncidentsData } from '#shared/utils/terminal-types'
 
-const props = defineProps<{ incidents: IncidentsData }>()
+// `Omit<…, 'incidents'>` rather than IncidentsData: this table renders the
+// per-provider counts and never the incident list, and saying so lets a page
+// drop that array before it is serialised into the hydration payload.
+const props = defineProps<{ incidents: Omit<IncidentsData, 'incidents'> }>()
 
 const now = useNow()
 const DAY_MS = 86_400_000
