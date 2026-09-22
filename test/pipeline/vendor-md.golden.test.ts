@@ -19,7 +19,7 @@ import {
   parseCikWhitelistBlock,
   whitelistCikFor,
 } from '../../server/pipeline/parsers/sec/whitelist'
-import { fixtureText } from './fixtures'
+import { fixtureText, provenanceOf } from './fixtures'
 
 // Vendor .md pricing/catalog + EDGAR golden tests. Fixtures:
 // fixtures/pricing/*.md, fixtures/sec/* (provenance in fixtures/manifest.json).
@@ -84,14 +84,17 @@ describe('vendor-md + sec lane', () => {
     const out = parseOpenAiModelsMd(fixtureText('fixtures/pricing/openai-models.md'))
     expect(VendorMdPricingOutput.safeParse(out).success).toBe(true)
 
-    // Full catalog: 96 entries, slugs unique (they ARE the stable keys).
-    expect(out.rows.length).toBe(96)
-    expect(new Set(out.rows.map((r) => r.model_slug)).size).toBe(96)
+    // Full catalog: 100 entries, slugs unique (they ARE the stable keys).
+    expect(out.rows.length).toBe(100)
+    expect(new Set(out.rows.map((r) => r.model_slug)).size).toBe(100)
     expect(out.rows.every((r) => r.provider === 'openai')).toBe(true)
 
+    const astra = out.rows.find((r) => r.model_slug === 'gpt-6-astra')
+    expect(astra).toBeDefined()
+    expect(astra!.notes).toBe('Our most capable model, built for the hardest end-to-end work')
     const sol = out.rows.find((r) => r.model_slug === 'gpt-5.6-sol')
     expect(sol).toBeDefined()
-    expect(sol!.notes).toBe('Frontier model for complex professional work')
+    expect(sol!.notes).toBe('Flagship model for complex professional work')
 
     // Price honesty: this page prints no prices and no context windows —
     // every nullable field stays null on every row, never guessed.
@@ -102,7 +105,7 @@ describe('vendor-md + sec lane', () => {
       expect(row.context_window).toBeNull()
       // Provenance from fixtures/manifest.json, on every row.
       expect(row.source_url).toBe('https://developers.openai.com/api/docs/models.md')
-      expect(row.fetched_at).toBe('2026-08-25T11:10:40Z')
+      expect(row.fetched_at).toBe(provenanceOf('openai-models-md').fetched_at)
     }
   })
 
@@ -110,11 +113,11 @@ describe('vendor-md + sec lane', () => {
     const priced = parseAnthropicPricingMd(fixtureText('fixtures/pricing/anthropic-pricing.md'))
     expect(VendorMdPricingOutput.safeParse(priced).success).toBe(true)
 
-    // 15 models in "Model pricing" (tier null) + the same 15 in "Batch
+    // 17 models in "Model pricing" (tier null) + the same 17 in "Batch
     // processing" (tier "batch").
-    expect(priced.rows.length).toBe(30)
-    expect(priced.rows.filter((r) => r.tier === null).length).toBe(15)
-    expect(priced.rows.filter((r) => r.tier === 'batch').length).toBe(15)
+    expect(priced.rows.length).toBe(34)
+    expect(priced.rows.filter((r) => r.tier === null).length).toBe(17)
+    expect(priced.rows.filter((r) => r.tier === 'batch').length).toBe(17)
 
     const base = (slug: string) =>
       priced.rows.find((r) => r.model_slug === slug && r.tier === null)!
@@ -142,7 +145,7 @@ describe('vendor-md + sec lane', () => {
 
     for (const row of priced.rows) {
       expect(row.source_url).toBe('https://platform.claude.com/docs/en/about-claude/pricing.md')
-      expect(row.fetched_at).toBe('2026-08-25T11:10:41Z')
+      expect(row.fetched_at).toBe(provenanceOf('anthropic-pricing-md').fetched_at)
     }
 
     // Catalog fields from the models overview (own parser, source id
@@ -153,17 +156,17 @@ describe('vendor-md + sec lane', () => {
     )
     expect(VendorMdPricingOutput.safeParse(catalog).success).toBe(true)
     expect(catalog.rows.map((r) => r.model_slug)).toEqual([
-      'claude-fable-5',
+      'claude-fable-5-1',
       'claude-haiku-4-5',
       'claude-opus-5',
       'claude-sonnet-5',
     ])
     const cat = (slug: string) => catalog.rows.find((r) => r.model_slug === slug)!
-    expect(cat('claude-fable-5').context_window).toBe('1M tokens')
+    expect(cat('claude-fable-5-1').context_window).toBe('1M tokens')
     expect(cat('claude-haiku-4-5').context_window).toBe('200K tokens')
     expect(cat('claude-haiku-4-5').input_per_mtok).toBe(1)
     expect(cat('claude-haiku-4-5').output_per_mtok).toBe(5)
-    expect(cat('claude-fable-5').source_url).toBe(
+    expect(cat('claude-fable-5-1').source_url).toBe(
       'https://platform.claude.com/docs/en/models/overview.md',
     )
 
@@ -179,10 +182,10 @@ describe('vendor-md + sec lane', () => {
     const out = parseXaiModelsMd(fixtureText('fixtures/pricing/xai-models.md'))
     expect(VendorMdPricingOutput.safeParse(out).success).toBe(true)
 
-    // 7 text models x 2 tiers — dual rows are never collapsed or averaged.
-    expect(out.rows.length).toBe(14)
+    // 8 text models x 2 tiers — dual rows are never collapsed or averaged.
+    expect(out.rows.length).toBe(16)
     const slugs = new Set(out.rows.map((r) => r.model_slug))
-    expect(slugs.size).toBe(7)
+    expect(slugs.size).toBe(8)
     for (const slug of slugs) {
       const tiers = out.rows
         .filter((r) => r.model_slug === slug)
@@ -193,6 +196,9 @@ describe('vendor-md + sec lane', () => {
 
     const row = (slug: string, tier: string) =>
       out.rows.find((r) => r.model_slug === slug && r.tier === tier)!
+    expect(row('grok-4.7', 'standard').input_per_mtok).toBe(2)
+    expect(row('grok-4.7', 'standard').output_per_mtok).toBe(6)
+    expect(row('grok-4.7', 'long_context').input_per_mtok).toBe(4)
     expect(row('grok-4.6', 'standard').input_per_mtok).toBe(2)
     expect(row('grok-4.6', 'standard').cached_input_per_mtok).toBe(0.5)
     expect(row('grok-4.6', 'standard').output_per_mtok).toBe(6)
@@ -210,7 +216,7 @@ describe('vendor-md + sec lane', () => {
 
     for (const r of out.rows) {
       expect(r.source_url).toBe('https://docs.x.ai/developers/models.md')
-      expect(r.fetched_at).toBe('2026-08-25T11:10:41Z')
+      expect(r.fetched_at).toBe(provenanceOf('xai-models-md').fetched_at)
     }
   })
 

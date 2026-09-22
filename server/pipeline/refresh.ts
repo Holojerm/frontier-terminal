@@ -3,6 +3,7 @@ import { ZodError } from 'zod'
 import { recordOpsEvent } from '../utils/ops'
 import {
   contentHashOfText,
+  type ChangeRow,
   type EntityRow,
   type PollScope,
   type SourceRunRow,
@@ -250,6 +251,16 @@ async function parseAndStore(
   await insertRows(deps.db, 'changes', changes)
   const alerts = lane.alerts?.(changes) ?? []
   await insertRows(deps.db, 'alerts', alerts)
+  // A vendor rewrote a sentence the class map rests on: the owner has a
+  // transcription to redo. Once per flip — an unchanged verdict diffs to
+  // nothing, so a stale cell does not re-spool every tick.
+  for (const change of recommendationsLost(modified)) {
+    await recordOpsEvent(deps.db, {
+      kind: 'class_basis_stale',
+      detail: `${source.source_id}: ${change}`,
+      path: source.url,
+    })
+  }
 
   return {
     status: 'ok',
@@ -260,6 +271,24 @@ async function parseAndStore(
     modified: modified.length,
     alerts: alerts.length,
   }
+}
+
+/** One line per 'recommendation' change whose after-state lost the sentence. */
+function recommendationsLost(modified: readonly ChangeRow[]): string[] {
+  const lines: string[] = []
+  for (const change of modified) {
+    if (change.entity_type !== 'recommendation' || !change.after_json) continue
+    const after = JSON.parse(change.after_json) as {
+      class?: string
+      model_slug?: string
+      present?: boolean
+    }
+    if (after.present !== false) continue
+    lines.push(
+      `${change.provider} ${after.class} (${after.model_slug}) — vendor sentence no longer on the page`,
+    )
+  }
+  return lines
 }
 
 /**
