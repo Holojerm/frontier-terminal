@@ -148,8 +148,8 @@ const securityHeaders = {
 //
 //   */30       — ops digest, server/tasks/ops/alert.ts. Silence is the healthy
 //                state: an empty spool costs one indexed SELECT per tick.
-//              — EDGAR tick, server/tasks/poll/edgar.ts: the two SEC feeds,
-//                the one axis where latency is worth polling for.
+//              — EDGAR tick, server/tasks/poll/edgar.ts: the SEC feeds and the
+//                model catalogs, the two axes where latency is worth polling for.
 //   0 */6      — full survey, server/tasks/poll/survey.ts: every include
 //                source. Scope policy: server/pipeline/scopes.ts.
 const SCHEDULED_TASKS: Record<string, string[]> = {
