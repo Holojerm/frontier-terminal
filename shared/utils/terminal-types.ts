@@ -25,7 +25,7 @@ export type SourceAxis =
   | 'status'
   | 'demand-share'
 export type SourceRole = 'primary' | 'join' | 'cross-check' | 'sec' | 'status'
-export type RunStatus = 'ok' | 'unchanged' | 'failed' | 'baseline' | 'skipped'
+export type RunStatus = 'ok' | 'unchanged' | 'failed' | 'baseline' | 'skipped' | 'absent'
 
 /** Where the numbers on a page stand in time. Every payload carries one. */
 export interface Stamp {
@@ -47,6 +47,12 @@ export interface SourceRunStamp {
   status: RunStatus
   detail: string | null
   scope: string
+  /**
+   * The url this run actually fetched. Usually the same as the newest
+   * snapshot's, and the only record of it when the run produced no snapshot
+   * — a 404 is fetched and stored nowhere else.
+   */
+  source_url: string
 }
 
 /** One registered source, whether or not it has ever been fetched. */

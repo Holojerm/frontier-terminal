@@ -5,6 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import * as schema from '../../server/db/schema'
 import { contentHash, type PollScope } from '../../server/pipeline/contracts'
 import type { FetchOutcome, SourceFetcher } from '../../server/pipeline/fetch'
+import { MAX_UNJOINED_JOBS } from '../../server/pipeline/parsers/hiring/common'
 import { runRefresh, type RawStore, type RefreshDeps } from '../../server/pipeline/refresh'
 import { sourceIdsForScope } from '../../server/pipeline/scopes'
 import { includeSources } from '../../server/pipeline/sources'
@@ -631,6 +632,61 @@ describe('failures', () => {
       detail: 'xai-models-md: HTTP 503 after 3 attempts',
       path: urlOf('xai-models-md'),
     })
+  })
+
+  it('the Greenhouse join race holds its ops event for a tick; a join that stays broken still raises one', async () => {
+    // The jobs feed and the departments feed are two requests about a second
+    // apart, so a job posted between them is in one and not the other. The
+    // source still fails — a cluster count that dips and recovers is the
+    // shape of the hiring signal here — but nobody is mailed about a race
+    // that the next tick clears on its own.
+    const departments = JSON.parse(
+      fixtureText('fixtures/hiring/anthropic-greenhouse-departments.json'),
+    ) as {
+      departments: { jobs: { id: number }[] }[]
+    }
+    const jobs = JSON.parse(fixtureText('fixtures/hiring/anthropic-greenhouse.json')) as {
+      jobs: { id: number }[]
+    }
+    const racing = jobs.jobs[0]!.id
+    for (const d of departments.departments) d.jobs = d.jobs.filter((j) => j.id !== racing)
+    const unjoined = { 'anthropic-greenhouse-departments': JSON.stringify(departments) }
+
+    const first = await run(
+      'survey',
+      ['openai-models-md', 'anthropic-greenhouse'],
+      fixtureFetcher(unjoined),
+    )
+    expect(first.sources.find((r) => r.source_id === 'anthropic-greenhouse')).toMatchObject({
+      status: 'failed',
+    })
+    expect((await rows.ops()).filter((o) => o.kind === 'source_failed')).toHaveLength(0)
+
+    // Same failure a second time is not a race any more.
+    await run('survey', ['openai-models-md', 'anthropic-greenhouse'], fixtureFetcher(unjoined))
+    const raised = (await rows.ops()).filter((o) => o.kind === 'source_failed')
+    expect(raised).toHaveLength(1)
+    expect(raised[0]!.detail).toContain(`1 job(s) missing from departments join: ${racing}`)
+  })
+
+  it('a join broken past the race threshold is drift, and is mailed on the first tick', async () => {
+    const departments = JSON.parse(
+      fixtureText('fixtures/hiring/anthropic-greenhouse-departments.json'),
+    ) as {
+      departments: { jobs: { id: number }[] }[]
+    }
+    const jobs = JSON.parse(fixtureText('fixtures/hiring/anthropic-greenhouse.json')) as {
+      jobs: { id: number }[]
+    }
+    const dropped = jobs.jobs.slice(0, MAX_UNJOINED_JOBS + 1).map((j) => j.id)
+    for (const d of departments.departments) d.jobs = d.jobs.filter((j) => !dropped.includes(j.id))
+
+    await run(
+      'survey',
+      ['openai-models-md', 'anthropic-greenhouse'],
+      fixtureFetcher({ 'anthropic-greenhouse-departments': JSON.stringify(departments) }),
+    )
+    expect((await rows.ops()).filter((o) => o.kind === 'source_failed')).toHaveLength(1)
   })
 
   it('a parser whose output fails its schema stores the snapshot and nothing else', async () => {

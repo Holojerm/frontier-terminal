@@ -219,6 +219,7 @@ export async function lastRuns(db: PipelineDb): Promise<Map<string, SourceRunSta
       status: tables.sourceRuns.status,
       detail: tables.sourceRuns.detail,
       scope: tables.sourceRuns.scope,
+      source_url: tables.sourceRuns.source_url,
     })
     .from(tables.sourceRuns)
     .innerJoin(
@@ -238,6 +239,7 @@ export async function lastRuns(db: PipelineDb): Promise<Map<string, SourceRunSta
       status: row.status as SourceRunStamp['status'],
       detail: row.detail,
       scope: row.scope,
+      source_url: row.source_url,
     })
   }
   return out
@@ -1432,11 +1434,19 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
       derived_from: null,
     }
   })
-  // Sources the store derived for itself (server/pipeline/derived.ts) have
-  // snapshots but no registry entry; they are listed after the audited ones,
-  // named by their template, so nothing that was fetched is invisible here.
+  // Sources the store derived for itself (server/pipeline/derived.ts) have no
+  // registry entry; they are listed after the audited ones, named by their
+  // template, so nothing that was fetched is invisible here.
+  //
+  // Enumerated over the runs as well as the snapshots, not the snapshots
+  // alone. A derived url that 404s is fetched every tick and snapshots
+  // nothing, so keying on snapshots hid exactly the sources with something to
+  // say: five priced OpenAI SKUs whose model page does not exist were missing
+  // from this panel entirely while the ops digest mailed about them.
   const registered = new Set(sources.map((s) => s.source_id))
-  for (const [source_id, stamp] of [...stamps].sort(([a], [b]) => byString(a, b))) {
+  const derivedIds = [...new Set([...stamps.keys(), ...runs.keys()])].sort(byString)
+  for (const source_id of derivedIds) {
+    const stamp = stamps.get(source_id)
     const template = derivedTemplateOf(source_id)
     if (registered.has(source_id) || !template) continue
     const { label, role } = labelOf(source_id)
@@ -1458,9 +1468,11 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
       // A derived source has no registry entry and so states no licence of its
       // own; it inherits whatever the source it was derived from stated.
       license: null,
-      url: stamp.newest.source_url,
-      newest_snapshot: stamp.newest,
-      snapshot_count: stamp.snapshot_count,
+      // The newest snapshot's url, or — when there is no snapshot because the
+      // fetch 404s — the url the last run went to.
+      url: stamp?.newest.source_url ?? runs.get(source_id)?.source_url ?? '',
+      newest_snapshot: stamp?.newest ?? null,
+      snapshot_count: stamp?.snapshot_count ?? 0,
       last_run: runs.get(source_id) ?? null,
       entity_count: entityCount.get(source_id) ?? 0,
       derived_from: template,

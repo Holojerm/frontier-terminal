@@ -7,6 +7,7 @@ import {
   jobKey,
 } from '../../server/pipeline/contracts'
 import { parseAnthropicGreenhouse } from '../../server/pipeline/parsers/hiring/anthropic-greenhouse'
+import { JoinRaceError, MAX_UNJOINED_JOBS } from '../../server/pipeline/parsers/hiring/common'
 import { parseOpenaiAshby } from '../../server/pipeline/parsers/hiring/openai-ashby'
 import { parseXaiGreenhouse } from '../../server/pipeline/parsers/hiring/xai-greenhouse'
 import { fixtureText } from './fixtures'
@@ -118,15 +119,53 @@ describe('hiring lane', () => {
     expect(out.rows[0]?.job_id).toBe('4533894007')
   })
 
-  test('greenhouse: a job absent from the /departments join fails loudly instead of emitting a null department', () => {
-    const board = JSON.parse(xaiText) as { jobs: { id: number }[] }
-    const firstId = board.jobs[0]!.id
+  /** The xAI departments fixture with `drop` job ids unjoined, as the race leaves it. */
+  const xaiDepartmentsMissing = (drop: readonly number[]) => {
     const departments = JSON.parse(xaiDepartments) as {
       departments: { jobs: { id: number }[] }[]
     }
-    for (const d of departments.departments) d.jobs = d.jobs.filter((j) => j.id !== firstId)
-    expect(() => parseXaiGreenhouse(xaiText, JSON.stringify(departments))).toThrow(
-      `xai-greenhouse: job ${firstId} missing from departments join`,
+    for (const d of departments.departments) d.jobs = d.jobs.filter((j) => !drop.includes(j.id))
+    return JSON.stringify(departments)
+  }
+
+  const xaiJobIds = (n: number) =>
+    (JSON.parse(xaiText) as { jobs: { id: number }[] }).jobs.slice(0, n).map((j) => j.id)
+
+  test('greenhouse: a job absent from the /departments join fails loudly instead of emitting a null department', () => {
+    const [firstId] = xaiJobIds(1)
+    expect(() => parseXaiGreenhouse(xaiText, xaiDepartmentsMissing([firstId!]))).toThrow(
+      `xai-greenhouse: 1 job(s) missing from departments join: ${firstId}`,
+    )
+  })
+
+  test('greenhouse: a handful of unjoined jobs is the snapshot race, and says so by type', () => {
+    // The two feeds are fetched about a second apart, so a job posted between
+    // them is in /jobs and not yet in /departments. refresh.ts holds the ops
+    // event for this class until a second tick fails the same way.
+    const dropped = xaiJobIds(MAX_UNJOINED_JOBS)
+    expect(() => parseXaiGreenhouse(xaiText, xaiDepartmentsMissing(dropped))).toThrow(JoinRaceError)
+  })
+
+  test('greenhouse: more unjoined than a second of postings is drift, and alerts at once', () => {
+    const dropped = xaiJobIds(MAX_UNJOINED_JOBS + 1)
+    const thrown = (() => {
+      try {
+        parseXaiGreenhouse(xaiText, xaiDepartmentsMissing(dropped))
+      } catch (err) {
+        return err
+      }
+    })()
+    expect(thrown).toBeInstanceOf(Error)
+    expect(thrown).not.toBeInstanceOf(JoinRaceError)
+    expect((thrown as Error).message).toContain(
+      `${MAX_UNJOINED_JOBS + 1} job(s) missing from departments join`,
+    )
+  })
+
+  test('greenhouse: every unjoined id is named, not just the first', () => {
+    const dropped = xaiJobIds(3)
+    expect(() => parseXaiGreenhouse(xaiText, xaiDepartmentsMissing(dropped))).toThrow(
+      dropped.join(', '),
     )
   })
 

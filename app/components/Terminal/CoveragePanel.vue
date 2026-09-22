@@ -15,6 +15,10 @@ const STATUS = {
   failed: { color: 'error', icon: 'i-lucide-x', label: 'failed' },
   // Not attempted: the source needs a secret this deploy does not have.
   skipped: { color: 'warning', icon: 'i-lucide-key-round', label: 'not configured' },
+  // Attempted, and there is nothing at the other end: a derived url that 404s.
+  // Its own row rather than a failure, because for a priced SKU with no model
+  // page the absence IS the fact worth showing a reader.
+  absent: { color: 'neutral', icon: 'i-lucide-file-question', label: 'no page' },
 } as const
 
 const PROVIDER: Record<string, string> = {
