@@ -1,9 +1,13 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  BODY_TOO_LARGE,
   FETCH_ATTEMPTS,
+  MAX_BODY_BYTES,
+  REDIRECT_REFUSED,
   SEC_CONTACT_UNSET,
   createFetcher,
+  readCappedBody,
   userAgentFor,
 } from '../../server/pipeline/fetch'
 import type { FetchSource } from '../../server/pipeline/sources'
@@ -26,11 +30,21 @@ const XAI: FetchSource = {
 
 /** A fetch that answers from a script and records what it was asked. */
 function scripted(responses: (Response | Error)[]) {
-  const calls: { url: string; userAgent: string | null }[] = []
+  const calls: {
+    url: string
+    userAgent: string | null
+    authorization: string | null
+    redirect: RequestRedirect | undefined
+    aborts: boolean
+  }[] = []
   const fetch = (async (input: string | URL | Request, init?: RequestInit) => {
     calls.push({
       url: String(input),
       userAgent: new Headers(init?.headers).get('user-agent'),
+      authorization: new Headers(init?.headers).get('authorization'),
+      redirect: init?.redirect,
+      // Every attempt must carry a deadline; the value is the platform's to keep.
+      aborts: init?.signal instanceof AbortSignal,
     })
     const next = responses.shift()
     if (next === undefined) throw new Error('script exhausted')
@@ -71,7 +85,9 @@ describe('createFetcher', () => {
     const { fetch, calls } = scripted([new Response('{"hits":{}}', { status: 200 })])
     const outcome = await createFetcher({ ...WITH_EMAIL, fetch, sleep })(EDGAR)
     expect(outcome).toMatchObject({ ok: true, status: 200, text: '{"hits":{}}', bytes: 11 })
-    expect(calls).toEqual([{ url: EDGAR.url, userAgent: 'FrontierTerminal owner@example.com' }])
+    expect(calls).toMatchObject([
+      { url: EDGAR.url, userAgent: 'FrontierTerminal owner@example.com', aborts: true },
+    ])
   })
 
   it('retries a 5xx with backoff and returns the eventual body', async () => {
@@ -111,5 +127,65 @@ describe('createFetcher', () => {
     const { fetch } = scripted([new Response('€')])
     const outcome = await createFetcher({ ...APP, fetch, sleep })(XAI)
     expect(outcome).toMatchObject({ ok: true, bytes: 3 })
+  })
+
+  it('gives every attempt a deadline, and follows redirects when nothing is at stake', async () => {
+    const { fetch, calls } = scripted([new Response('# models')])
+    await createFetcher({ ...APP, fetch, sleep })(XAI)
+    expect(calls[0]).toMatchObject({ aborts: true, redirect: 'follow' })
+  })
+})
+
+// The key is chosen from the URL we were handed. Following a redirect would
+// hand it to whichever host answered — the fetch spec strips Authorization
+// across origins, but a secret should not rest on someone else's invariant.
+describe('createFetcher, credentialed', () => {
+  const KEYED: FetchSource = {
+    source_id: 'openrouter-rankings-daily',
+    url: 'https://openrouter.ai/api/v1/datasets/rankings-daily',
+    ext: 'json',
+  }
+  const WITH_KEY = { ...APP, openrouterApiKey: 'or-test-key' }
+
+  it('refuses to chase a redirect, and never asks fetch to follow one', async () => {
+    const { fetch, calls } = scripted([new Response('', { status: 302 })])
+    const outcome = await createFetcher({ ...WITH_KEY, fetch, sleep })(KEYED)
+    expect(outcome).toEqual({ ok: false, status: 302, detail: REDIRECT_REFUSED })
+    expect(calls).toHaveLength(1)
+    expect(calls[0]).toMatchObject({ redirect: 'manual', authorization: 'Bearer or-test-key' })
+  })
+
+  it('still serves a plain 200', async () => {
+    const { fetch } = scripted([new Response('{"rankings":[]}')])
+    const outcome = await createFetcher({ ...WITH_KEY, fetch, sleep })(KEYED)
+    expect(outcome).toMatchObject({ ok: true, status: 200, text: '{"rankings":[]}' })
+  })
+})
+
+describe('readCappedBody', () => {
+  it('returns the body when it fits', async () => {
+    expect(await readCappedBody(new Response('abc'), 3)).toEqual({ text: 'abc', bytes: 3 })
+  })
+
+  it('abandons a body that runs over the cap mid-stream', async () => {
+    expect(await readCappedBody(new Response('abcdef'), 3)).toBeNull()
+  })
+
+  it('refuses on a declared content-length before reading anything', async () => {
+    const response = new Response('short', {
+      headers: { 'content-length': String(MAX_BODY_BYTES + 1) },
+    })
+    expect(await readCappedBody(response, MAX_BODY_BYTES)).toBeNull()
+    // Untouched: the refusal cost nothing.
+    expect(response.bodyUsed).toBe(false)
+  })
+
+  it('reports the oversized source as a failed run, without retrying it', async () => {
+    const { fetch, calls } = scripted([
+      new Response('short', { headers: { 'content-length': String(MAX_BODY_BYTES + 1) } }),
+    ])
+    const outcome = await createFetcher({ ...APP, fetch, sleep })(XAI)
+    expect(outcome).toEqual({ ok: false, status: 200, detail: BODY_TOO_LARGE })
+    expect(calls).toHaveLength(1)
   })
 })

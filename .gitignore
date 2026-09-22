@@ -26,6 +26,13 @@ Thumbs.db
 # Cloudflare / Wrangler
 .wrangler/
 
+# Agent tooling. `.mcp.json` is local configuration, not project source: it
+# names servers a given machine can reach, and nuxt-mcp REWRITES it on every
+# `bun dev` with that machine's dev URL. Tracking it means a public repo
+# carrying one developer's hostnames, and a diff nobody asked for after every
+# dev session. `.mcp.json.example` is the shared copy.
+.mcp.json
+
 # Claude Code worktrees — created on demand by agent isolation features.
 # Never commit; vue-tsc / nuxt prepare otherwise tries to type-check them.
 .claude/worktrees/

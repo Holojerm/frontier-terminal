@@ -89,6 +89,24 @@ describe('normalizeOrigin / escapeXml', () => {
   it('escapes the five XML entities', () => {
     expect(escapeXml(`a&b<c>d"e'f`)).toBe('a&amp;b&lt;c&gt;d&quot;e&apos;f')
   })
+
+  // A headline is written by the judge model and a title comes from a vendor
+  // page; either can carry a byte XML 1.0 cannot spell, and one of those in
+  // one entry makes the whole feed unparseable.
+  it('drops the control characters XML 1.0 forbids, keeping tab/newline/return', () => {
+    const vertical = String.fromCharCode(0x0b)
+    const nul = String.fromCharCode(0)
+    expect(escapeXml(`a${vertical}b${nul}c`)).toBe('abc')
+    expect(escapeXml('tab\tnl\ncr\r')).toBe('tab\tnl\ncr\r')
+  })
+
+  // The `u` flag is load-bearing: without it the surrogate range in the strip
+  // pattern eats both halves of every astral character.
+  it('keeps astral characters whole and drops a lone surrogate', () => {
+    const rocket = String.fromCodePoint(0x1f680)
+    expect(escapeXml(`ship ${rocket} it`)).toBe(`ship ${rocket} it`)
+    expect(escapeXml(`lone${String.fromCharCode(0xd800)}x`)).toBe('lonex')
+  })
 })
 
 describe('jsonLdGraph', () => {
