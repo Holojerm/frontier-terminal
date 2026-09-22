@@ -30,8 +30,7 @@ import {
 } from './store'
 
 // One poll tick: fetch → hash → snapshot → parse → normalize → diff → store,
-// per source, with every stage's outcome written to source_runs. Replaces the
-// take-home's DuckDB refresh (docs/DECISIONS-takehome.md › Operator wiring).
+// per source, with every stage's outcome written to source_runs.
 //
 // Two passes on purpose. Pass one fetches and snapshots every source in the
 // tick; pass two parses. A Greenhouse board can only be parsed against the

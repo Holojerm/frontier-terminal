@@ -39,8 +39,8 @@ import { fixtureText, provenanceOf } from './fixtures'
 const db = drizzle(env.DB, { schema })
 
 // ---- Change set, built deterministically from committed fixtures ---------
-// Same scenario as the take-home's golden test, so its canned transcripts
-// cite ids that hold here: parse the xAI fixtures, simulate an after-state,
+// The scenario the canned/ transcripts were captured against, so the ids
+// they cite hold here: parse the xAI fixtures, simulate an after-state,
 // diff. Every id below is a pure function of fixture bytes.
 const DETECTED_AT = '2026-08-25T12:00:00Z'
 const priceProv = provenanceOf('xai-models-md')

@@ -28,8 +28,8 @@ import { fixtureText, manifest } from './pipeline/fixtures'
 // The UI's query layer against a real D1, seeded the way production is: the
 // committed fixtures pushed through runRefresh (fetch → parse → normalize →
 // diff → insertRows), so every row carries live provenance and every value
-// was read from a fixture rather than typed here. The take-home's golden
-// assertions are ported: jobs are counted from the current set, the newest
+// was read from a fixture rather than typed here. The golden assertions:
+// jobs are counted from the current set, the newest
 // price revision wins, every class quote greps back out of its fixture, and
 // the signal window is anchored to the newest detection.
 

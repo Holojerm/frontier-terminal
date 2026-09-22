@@ -1,5 +1,5 @@
 {
-  "_origin": "Ground truth for fixtures/pricing/google-pricing.html (fetched 2026-08-25T11:10:42Z from https://ai.google.dev/gemini-api/docs/pricing). Derived from the take-home's data/export/prices_latest.csv rows with provider=google, which the Claude agent lane extracted and a human hand-verified against the page. Only the compared columns are kept: model_slug, tier, the three per-MTok prices, and the promo window bounds. Notes were free text written by the model and are not compared.",
+  "_origin": "Ground truth for fixtures/pricing/google-pricing.html (fetched 2026-08-25T11:10:42Z from https://ai.google.dev/gemini-api/docs/pricing). Extracted by a Claude agent lane on 2026-08-25 and hand-verified against the page by a human. Only the compared columns are kept: model_slug, tier, the three per-MTok prices, and the promo window bounds. Notes were free text written by the model and are not compared.",
   "_excluded": "The CSV (snapshot 2026-08-26T22:32:27Z) also held 2 rows for models that do not appear anywhere in the 2026-08-25 fixture and only exist on the 2026-09-07 page: gemini-3.5-transcribe (standard), gemini-3.5-transcribe-live (standard). They are asserted against the second fixture instead.",
   "rows": [
     {

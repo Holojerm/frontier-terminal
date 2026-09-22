@@ -17,10 +17,10 @@ import type { JudgeAlert } from './contract'
 // Rejection is silence, not repair: a rejected alert is never inserted.
 // Deliberately coarse — a tripwire against invention, not a re-judging.
 //
-// Ported unchanged from the take-home's alert-grounding.ts, including the
-// digit requirement on slugs: without it "near-term", "cost-per-token" and
-// "input/output" rejected every live model output measured (3/3 runs,
-// 2026-08-25). A tripwire that fires on ordinary prose is not a tripwire.
+// The digit requirement on slugs is load-bearing: without it "near-term",
+// "cost-per-token" and "input/output" rejected every live model output
+// measured (3/3 runs, 2026-08-25). A tripwire that fires on ordinary prose
+// is not a tripwire.
 
 export type AlertGroundingReason = 'unknown-change-id' | 'ungrounded-number' | 'ungrounded-term'
 

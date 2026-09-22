@@ -4,7 +4,7 @@ import { fixtureProvenance } from '../fixture-provenance'
 
 // google-pricing — https://ai.google.dev/gemini-api/docs/pricing
 //
-// Deterministic replacement for the take-home's agent lane. The page is
+// Deterministic parse — no model in the loop. The page is
 // server-rendered and regular: one `<h2 id="<slug>">` per model, the API code
 // in a `<code>` element directly under it, then one `<table>` per tier under
 // an `<h3>` (Standard / Batch / Flex / Priority). Every table is three columns
@@ -21,13 +21,12 @@ import { fixtureProvenance } from '../fixture-provenance'
 //   2. A price is only ever a `$` amount printed in the cell; a cell that
 //      prints no per-token amount yields null and a note carrying its text.
 //   3. A section or table whose structure is not recognised is reported in
-//      `skipped`, never dropped. Partial extraction that looks complete was
-//      the failure the agent lane had.
+//      `skipped`, never dropped. Partial extraction that looks complete is
+//      the failure mode a model-driven extractor had on this page.
 //   4. Provenance is an argument. Nothing here reads a clock.
 
-// The row shape is the shared PriceRow with provider pinned to "google" —
-// the same schema the take-home's agent lane had to pass. Exported under the
-// lane's own names so callers and tests read naturally.
+// The row shape is the shared PriceRow with provider pinned to "google".
+// Exported under the lane's own names so callers and tests read naturally.
 export const GooglePricingOutput = ContractGooglePricingOutput
 export const GooglePricingRow = GooglePricingOutput.shape.rows.element
 export type GooglePricingRow = z.infer<typeof GooglePricingRow>
