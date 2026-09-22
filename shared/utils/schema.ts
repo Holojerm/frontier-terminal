@@ -18,6 +18,7 @@
 //      Markup for content that isn't rendered is a manual-action risk with
 //      Google and, more practically, a lie an answer engine will repeat.
 
+import { DATA_LICENSE } from './license'
 import { absoluteUrl } from './site'
 
 /** A JSON-LD node. Deliberately loose — schema.org is open-world. */
@@ -27,13 +28,26 @@ export interface SiteContext {
   appName: string
   /** Canonical origin, no trailing slash. Empty disables every builder. */
   appUrl: string
+  /** Public source repository, from fleet.json. Empty omits `sameAs`. */
+  repoUrl: string
 }
 
 /** Stable @id anchors so nodes across pages resolve to the same entities. */
 export const SCHEMA_IDS = {
   organization: '#organization',
   website: '#website',
+  /** The one DataCatalog every Dataset node points back at. Anchored on /data. */
+  dataCatalog: '#data-catalog',
 } as const
+
+/**
+ * The catalog's `@id`. Unlike the site-wide anchors above it hangs off a real
+ * page rather than the origin, because the catalog *is* /data — the node and
+ * the page a reader would open describe the same thing.
+ */
+export function dataCatalogId(site: SiteContext): string {
+  return `${absoluteUrl(site.appUrl, '/data')}${SCHEMA_IDS.dataCatalog}`
+}
 
 /** The publisher. The site is its own publisher — there is no separate legal entity to name. */
 export function organizationSchema(site: SiteContext): JsonLdNode | null {
@@ -44,6 +58,10 @@ export function organizationSchema(site: SiteContext): JsonLdNode | null {
     name: site.appName,
     url: site.appUrl,
     logo: `${site.appUrl}/og.png`,
+    // The repo is the only other place this entity exists on the open web.
+    // Without it an answer engine has a name and a domain and no way to tell
+    // that the code producing the numbers is the code it can go read.
+    ...(site.repoUrl ? { sameAs: [site.repoUrl] } : {}),
   }
 }
 
@@ -62,10 +80,17 @@ export function websiteSchema(site: SiteContext): JsonLdNode | null {
 /**
  * The page itself. Emitted on every indexable page so each URL has a node an
  * answer engine can attribute a quote to, rather than only the site root.
+ *
+ * `dateModified` is the one field here worth the wiring. Every page on this
+ * site restates numbers that change daily, and the question an answer engine
+ * is actually asked — "what does Claude's API cost right now" — is answered
+ * wrongly by a stale quote with no date on it. Pages pass the poll tick the
+ * data reflects (`Stamp.as_of`), not the render time, so the claim is about
+ * the data rather than about the request.
  */
 export function webPageSchema(
   site: SiteContext,
-  page: { url: string; title: string; description: string },
+  page: { url: string; title: string; description: string; dateModified?: string | null },
 ): JsonLdNode | null {
   if (!site.appUrl || !page.url) return null
   return {
@@ -76,6 +101,138 @@ export function webPageSchema(
     description: page.description,
     isPartOf: { '@id': `${site.appUrl}/${SCHEMA_IDS.website}` },
     inLanguage: 'en',
+    ...(page.dateModified ? { dateModified: page.dateModified } : {}),
+  }
+}
+
+/**
+ * The catalog on /data: one node saying that a set of downloadable tables
+ * exists, is free, and is licensed. Every Dataset points at it by `@id`, which
+ * is what turns seven unrelated downloads into one publication.
+ */
+export function dataCatalogSchema(
+  site: SiteContext,
+  catalog: { description: string; dateModified?: string | null },
+): JsonLdNode | null {
+  if (!site.appUrl) return null
+  return {
+    '@type': 'DataCatalog',
+    '@id': dataCatalogId(site),
+    url: absoluteUrl(site.appUrl, '/data'),
+    name: `${site.appName} data`,
+    description: catalog.description,
+    license: DATA_LICENSE.url,
+    isAccessibleForFree: true,
+    publisher: { '@id': `${site.appUrl}/${SCHEMA_IDS.organization}` },
+    inLanguage: 'en',
+    ...(catalog.dateModified ? { dateModified: catalog.dateModified } : {}),
+  }
+}
+
+export interface DatasetInput {
+  /**
+   * Absolute URL of the page documenting this dataset. Also the base of its
+   * `@id`, which appends `#dataset` (plus `slug`, where one page carries many).
+   */
+  url: string
+  /** Distinguishes sibling datasets documented on the same page. */
+  slug?: string
+  name: string
+  description: string
+  /** ISO 8601 of the newest observation behind it. */
+  dateModified?: string | null
+  /** `YYYY-MM-DD/YYYY-MM-DD`, or an open interval — schema.org's own format. */
+  temporalCoverage?: string | null
+  /** Column names, or the quantities measured. */
+  variableMeasured?: readonly string[]
+  /** Downloads, as `{ format, url }`. A dataset with none is still a dataset. */
+  distribution?: readonly { encodingFormat: string; contentUrl: string }[]
+  /** Rows, where the count is known and cheap. */
+  rows?: number | null
+}
+
+/**
+ * A Dataset node — the schema.org type this whole site is, and the one type
+ * with a search index of its own (Google Dataset Search) rather than a
+ * rich-result treatment.
+ *
+ * `distribution` is the part that does the work: a DataDownload with a real
+ * `contentUrl` and `encodingFormat` is the difference between "a page about
+ * some numbers" and "a machine-readable table at this URL". Pass only formats
+ * that actually resolve — a 404 in a distribution is worse than an omission.
+ */
+export function datasetSchema(site: SiteContext, dataset: DatasetInput): JsonLdNode | null {
+  if (!site.appUrl || !dataset.url) return null
+  const id = `${dataset.url}#dataset${dataset.slug ? `-${dataset.slug}` : ''}`
+  return {
+    '@type': 'Dataset',
+    '@id': id,
+    url: dataset.url,
+    name: dataset.name,
+    description: dataset.description,
+    license: DATA_LICENSE.url,
+    isAccessibleForFree: true,
+    creator: { '@id': `${site.appUrl}/${SCHEMA_IDS.organization}` },
+    publisher: { '@id': `${site.appUrl}/${SCHEMA_IDS.organization}` },
+    includedInDataCatalog: { '@id': dataCatalogId(site) },
+    inLanguage: 'en',
+    ...(dataset.dateModified ? { dateModified: dataset.dateModified } : {}),
+    ...(dataset.temporalCoverage ? { temporalCoverage: dataset.temporalCoverage } : {}),
+    ...(dataset.variableMeasured?.length
+      ? { variableMeasured: [...dataset.variableMeasured] }
+      : {}),
+    ...(typeof dataset.rows === 'number' ? { size: `${dataset.rows} rows` } : {}),
+    ...(dataset.distribution?.length
+      ? {
+          distribution: dataset.distribution.map((d) => ({
+            '@type': 'DataDownload',
+            encodingFormat: d.encodingFormat,
+            contentUrl: d.contentUrl,
+          })),
+        }
+      : {}),
+  }
+}
+
+export interface ArticleInput {
+  url: string
+  headline: string
+  description: string
+  /** ISO 8601. An append-only row's creation time is exact. */
+  datePublished: string
+  dateModified?: string | null
+  /**
+   * The sources the piece rests on, as URLs. On an alert these are the source
+   * URLs of the change rows it cites — the same links the page renders, which
+   * is what keeps this side of rule 2.
+   */
+  citation?: readonly string[]
+}
+
+/**
+ * An Article node for a page that makes a dated claim — here, an alert
+ * permalink. These are the most quotable URLs on the site and the only ones
+ * where WebPage undersells what is there: a WebPage has no author, no
+ * publication date and nowhere to put the sources, so a quote from one is
+ * attributable to nobody and datable to nothing.
+ */
+export function articleSchema(site: SiteContext, article: ArticleInput): JsonLdNode | null {
+  if (!site.appUrl || !article.url) return null
+  const citation = [...new Set(article.citation ?? [])].filter(Boolean)
+  return {
+    '@type': 'Article',
+    '@id': `${article.url}#article`,
+    url: article.url,
+    headline: article.headline,
+    description: article.description,
+    datePublished: article.datePublished,
+    dateModified: article.dateModified ?? article.datePublished,
+    author: { '@id': `${site.appUrl}/${SCHEMA_IDS.organization}` },
+    publisher: { '@id': `${site.appUrl}/${SCHEMA_IDS.organization}` },
+    isPartOf: { '@id': `${site.appUrl}/${SCHEMA_IDS.website}` },
+    license: DATA_LICENSE.url,
+    inLanguage: 'en',
+    ...(citation.length ? { citation } : {}),
   }
 }
 

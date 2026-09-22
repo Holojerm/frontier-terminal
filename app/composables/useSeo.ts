@@ -19,6 +19,8 @@
 // makes, made again in the document, because a crawler that ignored robots.txt
 // still reads the head.
 
+import manifest from '~~/fleet.json'
+
 import type { JsonLdNode, SiteContext } from '#shared/utils/schema'
 
 export interface SeoInput {
@@ -35,6 +37,12 @@ export interface SeoInput {
   image?: string
   /** Private or duplicate page: noindex, no canonical, no structured data. */
   noindex?: boolean
+  /**
+   * When the data on this page was last true — pass `Stamp.as_of`, the poll
+   * tick, not the render time. Omitted rather than faked: a page that always
+   * claims to have changed today teaches a crawler to ignore the field.
+   */
+  dateModified?: string | null
   /** Page-specific JSON-LD nodes, merged into the site graph. */
   schema?: (JsonLdNode | null)[]
   /** Breadcrumb trail below Home, which is prepended for you. */
@@ -47,7 +55,22 @@ export function useSiteContext(): SiteContext {
   return {
     appName: config.public.appName,
     appUrl: normalizeOrigin(config.public.appUrl),
+    // fleet.json is already the one place this app's identity is declared, and
+    // the dashboard reads it — a second copy in runtimeConfig would be a second
+    // thing to keep true.
+    repoUrl: manifest.links.github ?? '',
   }
+}
+
+/**
+ * The canonical URL of the current page, for a caller building `@id`s.
+ *
+ * `useSeo()` computes the same string internally; a page passing `schema`
+ * needs it *before* the call, and deriving it a second time by hand is how the
+ * page's nodes end up anchored to a URL the canonical tag disagrees with.
+ */
+export function usePageUrl(): string {
+  return absoluteUrl(useSiteContext().appUrl, useRoute().path)
 }
 
 export function useSeo(input: SeoInput): void {
@@ -105,6 +128,7 @@ export function useSeo(input: SeoInput): void {
             url: canonical,
             title,
             description: input.description,
+            dateModified: input.dateModified,
           }),
           // A Home-only breadcrumb is noise; emit one only for a real trail.
           trail.length > 1 ? breadcrumbSchema(site, trail) : null,

@@ -1421,6 +1421,7 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
       axis: source.axis,
       role,
       caveat: source.caveat,
+      license: source.license,
       // The manifest carries the resolved URL (query strings, the CIK) where
       // sources.yaml has a template.
       url: manifestFixtures.find((f) => f.source_id === source.source_id)?.source_url ?? source.url,
@@ -1454,6 +1455,9 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
             : 'sec',
       role,
       caveat: ctx.derivedTemplates.find((t) => t.id === template)?.caveat ?? null,
+      // A derived source has no registry entry and so states no licence of its
+      // own; it inherits whatever the source it was derived from stated.
+      license: null,
       url: stamp.newest.source_url,
       newest_snapshot: stamp.newest,
       snapshot_count: stamp.snapshot_count,

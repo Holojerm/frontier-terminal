@@ -16,16 +16,17 @@ definePageMeta({
   },
 })
 
-useSeo({
-  title: 'Demand share',
-  description:
-    'Token share per frontier lab on OpenRouter — a public proxy for demand while the labs are private — with a 30-day series and top models per lab. CC BY 4.0.',
-})
-
 const [{ data: rankings, error }, { data: spend }] = await Promise.all([
   useFetch<RankingsData>('/api/rankings'),
   useFetch<SpendData>('/api/spend'),
 ])
+
+useSeo({
+  title: 'Demand share',
+  description:
+    'Token share per frontier lab on OpenRouter — a public proxy for demand while the labs are private — with a 30-day series and top models per lab. CC BY 4.0.',
+  dateModified: rankings.value?.as_of,
+})
 </script>
 
 <template>
