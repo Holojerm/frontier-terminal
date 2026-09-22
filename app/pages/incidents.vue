@@ -16,13 +16,14 @@ definePageMeta({
   },
 })
 
+const { data: incidents, error } = await useFetch<IncidentsData>('/api/incidents')
+
 useSeo({
   title: 'Incidents',
   description:
     'Status-page incidents at the frontier AI labs over the last 90 days, as each vendor posted them, with source feed and fetch time on every row.',
+  dateModified: incidents.value?.as_of,
 })
-
-const { data: incidents, error } = await useFetch<IncidentsData>('/api/incidents')
 
 const now = useNow()
 

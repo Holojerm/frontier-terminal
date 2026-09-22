@@ -27,7 +27,31 @@ The `useSeo()` one-call-per-page contract, how `publicPage` meta feeds both `sit
   not `'$12'`.
 - Structured-data builders live in `shared/utils/schema.ts` and are pure functions of a
   `SiteContext` — add a node type there, unit-test it in `test/seo.test.ts`, then pass it via
-  `useSeo({ schema: [...] })`.
+  `useSeo({ schema: [...] })`. A page building `@id`s calls `usePageUrl()` for the base rather
+  than assembling the canonical a second time by hand.
+- **A page showing data passes `dateModified`**: `Stamp.as_of`, the poll tick, never the render
+  time. `useSeo()` must therefore be called *after* the `await useFetch` it reads from. Omit the
+  field rather than fake it — a page that always claims to have changed today teaches a crawler
+  to discard the field.
+- **A table of rows is a `Dataset`, not prose that happens to contain numbers.** `/data` emits one
+  `DataCatalog` plus one `datasetSchema()` per exportable table, built from the same
+  `coverage.exports` the page renders; `/prices/[key]` emits one for the price series. Every
+  `distribution` must be a URL that actually resolves — a 404 in a DataDownload is worse than
+  omitting it.
+- **A dated claim is an `Article`.** Alert permalinks use `articleSchema()` with `citation` set to
+  the source URLs of the change rows the page renders, so a quote lands back on the primary
+  documents.
+- **Licensing is stated once**, in `shared/utils/license.ts`, and read from there by `/license`,
+  `/llms.txt`, and every `license` field in the graph. The three-way split is load-bearing: the
+  code is MIT, the compilation is CC BY 4.0, and the underlying facts belong to their publishers
+  and are not ours to license. `SourceCoverage.license` carries each source's own stated terms
+  verbatim from `sources.yaml`; where a source states none, `/license` says nothing rather than
+  inventing terms on its behalf.
+- `/llms.txt` also names the bulk tables (from `EXPORT_TABLES`, compile-time constants, so the
+  section can never be half-true) and the licence. Row counts stay out of it: a number there is
+  stale the moment the next poll runs.
+- **A new public page needs adding to `ROUTES` in `test/a11y/accessibility.spec.ts`** — the sweep
+  has a coverage test that fails when a page reaches the sitemap without reaching axe.
 - `NUXT_PUBLIC_INDEXABLE=false` makes robots.txt disallow everything, every page render
   `noindex`, and sitemap/llms.txt go empty. `NUXT_PUBLIC_ALLOW_AI_CRAWLERS=false`
   blocks the named answer-engine crawlers (`server/utils/seo.ts` › `AI_CRAWLERS`); it defaults

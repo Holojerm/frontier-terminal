@@ -17,17 +17,18 @@ definePageMeta({
   },
 })
 
-useSeo({
-  title: 'Alerts',
-  description:
-    'Every alert fired over pricing, hiring and SEC changes at the frontier AI labs, split into alerts and a ticker, each citing its change rows and sources.',
-})
-
 const [{ data: alerts, error: alertsError }, { data: ticker, error: tickerError }] =
   await Promise.all([
     useFetch<AlertsData>('/api/alerts', { query: { tier: 'alert' } }),
     useFetch<AlertsData>('/api/alerts', { query: { tier: 'ticker' } }),
   ])
+
+useSeo({
+  title: 'Alerts',
+  description:
+    'Every alert fired over pricing, hiring and SEC changes at the frontier AI labs, split into alerts and a ticker, each citing its change rows and sources.',
+  dateModified: alerts.value?.as_of,
+})
 
 const failed = computed(() => Boolean(alertsError.value || tickerError.value))
 const tickerFeed = `/alerts.xml?${TICKER_FEED_QUERY}`

@@ -43,6 +43,13 @@ function snippet(text: string): string {
   return `${cut.slice(0, Math.max(cut.lastIndexOf(' '), 60))}…`
 }
 
+// The permalink already says `ogType: 'article'`; the graph now agrees. An
+// alert is the most quotable thing on this site — a dated claim resting on
+// named rows — and WebPage has nowhere to put an author, a publication date,
+// or the sources. `citation` carries the same source URLs the page renders
+// below, so a quote lands back on the primary documents rather than on us.
+const citation = [alert.source_url, ...alert.changes.map((change) => change.source_url)]
+
 useSeo({
   title: alert.headline,
   description: snippet(alert.explanation),
@@ -50,6 +57,18 @@ useSeo({
   breadcrumb: [
     { name: 'Alerts', path: '/alerts' },
     { name: alert.headline, path: `/alerts/${alert.id}` },
+  ],
+  // An alerts row is append-only, so its creation time is exact and is also
+  // the last time anything about it was true.
+  dateModified: alert.created_at,
+  schema: [
+    articleSchema(useSiteContext(), {
+      url: usePageUrl(),
+      headline: alert.headline,
+      description: snippet(alert.explanation),
+      datePublished: alert.created_at,
+      citation,
+    }),
   ],
 })
 </script>

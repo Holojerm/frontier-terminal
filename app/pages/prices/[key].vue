@@ -44,10 +44,45 @@ const DISPLAY: Record<string, string> = {
   other: 'Other',
 }
 
+// A price series with a source URL on every point is a Dataset, not a page
+// that happens to contain numbers, and "what does <model> cost" is the query
+// this site most wants to be the answer to. `temporalCoverage` is taken from
+// the observations themselves rather than stamped: the interval is only as
+// wide as what was actually watched.
+const site = useSiteContext()
+const points = computed(() => history.value?.points ?? [])
+const coverage = computed(() => {
+  const all = points.value
+  const first = all[0]
+  const last = all[all.length - 1]
+  if (!first || !last) return null
+  // Open-ended while the SKU is still listed: the series has a start and no
+  // end until the day it is delisted.
+  return `${first.at}/${history.value?.removed ? last.at : '..'}`
+})
+
 useSeo({
   title: `${name.value} price history`,
   description: `Every observed API price for ${name.value} per million tokens, point by point, with the source URL and fetch time behind each one.`,
   breadcrumb: [{ name: 'Prices', path: '/prices' }],
+  dateModified: history.value?.as_of,
+  schema: [
+    datasetSchema(site, {
+      url: usePageUrl(),
+      name: `${name.value} — API price history`,
+      description: `Every observed list price for ${name.value}, per million tokens, as read from ${DISPLAY[history.value?.provider ?? 'other'] ?? 'the provider'}’s own pricing page, with the source URL and fetch time behind each observation.`,
+      dateModified: history.value?.as_of,
+      temporalCoverage: coverage.value,
+      variableMeasured: ['input_per_mtok', 'cached_input_per_mtok', 'output_per_mtok'],
+      rows: points.value.length,
+      distribution: [
+        {
+          encodingFormat: 'application/json',
+          contentUrl: `${site.appUrl}/api/prices/${encodeURIComponent(key)}`,
+        },
+      ],
+    }),
+  ],
 })
 
 const KIND: Record<

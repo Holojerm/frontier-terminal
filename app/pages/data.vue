@@ -2,6 +2,7 @@
 // What the store holds and how to take it away: one row per exportable
 // table with its columns, its current row count, and CSV/JSON downloads.
 
+import { DATA_LICENSE } from '#shared/utils/license'
 import { count } from '#shared/utils/terminal-format'
 import type { CoverageData } from '#shared/utils/terminal-types'
 
@@ -15,13 +16,53 @@ definePageMeta({
   },
 })
 
+const { data: coverage, error } = await useFetch<CoverageData>('/api/coverage')
+
+const pageUrl = usePageUrl()
+const site = useSiteContext()
+
+// This page is the site's data catalog, so it says so in the graph: one
+// DataCatalog node and one Dataset per exportable table, each with the CSV and
+// JSON downloads as real DataDownload URLs.
+//
+// Dataset is the only schema.org type with a search index of its own rather
+// than a rich-result treatment, and it is the type this site actually is. The
+// nodes are built from the same `coverage.exports` the table below renders —
+// if a table stops being listed it stops being described, which is the only
+// way to keep the graph from claiming a download that 404s.
+const datasets = (coverage.value?.exports ?? []).map((table) =>
+  datasetSchema(site, {
+    url: pageUrl,
+    slug: table.name,
+    name: `${site.appName} — ${table.name}`,
+    description: table.description,
+    dateModified: coverage.value?.as_of,
+    variableMeasured: table.columns,
+    rows: table.rows,
+    distribution: [
+      { encodingFormat: 'text/csv', contentUrl: `${site.appUrl}/export/${table.name}.csv` },
+      {
+        encodingFormat: 'application/json',
+        contentUrl: `${site.appUrl}/export/${table.name}.json`,
+      },
+    ],
+  }),
+)
+
 useSeo({
   title: 'Data',
   description:
     'Download the terminal’s tables as CSV or JSON: snapshots, prices, open jobs, incidents, the change log, alerts and poll runs, each row with its source URL.',
+  dateModified: coverage.value?.as_of,
+  schema: [
+    dataCatalogSchema(site, {
+      description:
+        'Every table behind the terminal, streamed whole as CSV or JSON. Each row carries the URL it was read from and when.',
+      dateModified: coverage.value?.as_of,
+    }),
+    ...datasets,
+  ],
 })
-
-const { data: coverage, error } = await useFetch<CoverageData>('/api/coverage')
 </script>
 
 <template>
@@ -102,6 +143,17 @@ const { data: coverage, error } = await useFetch<CoverageData>('/api/coverage')
         <time v-if="coverage.as_of" :datetime="coverage.as_of">{{ coverage.as_of }}</time>
         <span v-else>— no poll has run yet</span>. Exports are served live; the counts above are
         cached for up to five minutes.
+      </p>
+    </TerminalPanel>
+
+    <TerminalPanel id="license" title="Terms">
+      <p class="max-w-2xl text-sm text-default">
+        The compilation — these tables, the change log and the alerts — is licensed
+        {{ DATA_LICENSE.short }}. The underlying facts belong to whoever published them, which is
+        why every row carries its source URL.
+        <NuxtLink to="/license" class="text-primary underline underline-offset-2"
+          >Full terms and the attribution line</NuxtLink
+        >.
       </p>
     </TerminalPanel>
 

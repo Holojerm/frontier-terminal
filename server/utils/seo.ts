@@ -6,6 +6,7 @@
 // kind of thing that breaks silently — nobody notices a wrong robots.txt until
 // traffic is already gone.
 
+import { attributionLine, CODE_LICENSE, DATA_LICENSE } from '#shared/utils/license'
 import type { PublicPage } from '#shared/utils/site'
 import { absoluteUrl, escapeXml, normalizeOrigin } from '#shared/utils/site'
 
@@ -203,12 +204,27 @@ export function sitemapResponse(input: SitemapResponseInput): CrawlerDocument {
   }
 }
 
+/** One bulk table, as /llms.txt names it. `name` is the export path stem. */
+export interface LlmsTxtTable {
+  name: string
+  description: string
+}
+
 export interface LlmsTxtInput {
   appName: string
   appUrl: string
   /** One-paragraph description of the site, used as the blockquote. */
   description: string
   pages: PublicPage[]
+  /**
+   * The exportable tables, from EXPORT_TABLES — names and descriptions only,
+   * which are compile-time constants, so this section never needs the database
+   * and can never be half-true. Row counts deliberately stay out: a number
+   * here would be stale the moment the next poll runs.
+   */
+  tables?: LlmsTxtTable[]
+  /** Public source repository, for the licensing section. */
+  repoUrl?: string
 }
 
 /**
@@ -233,15 +249,41 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
     sections.push('')
   }
 
+  // The bulk tables, named individually. A model that has decided it wants the
+  // numbers rather than the prose should not have to render /data and read
+  // button labels to discover that /export/prices_latest.csv exists.
+  if (input.tables?.length) {
+    sections.push('## Data', '')
+    for (const table of input.tables) {
+      sections.push(
+        `- [${table.name}](${appUrl}/export/${table.name}.csv): ${table.description} Also JSON at ${appUrl}/export/${table.name}.json.`,
+      )
+    }
+    sections.push(
+      `- [Alerts feed](${appUrl}/alerts.xml): Atom, one entry per alert; add \`?include=ticker\` for the info tier.`,
+      '',
+    )
+  }
+
   sections.push(
     '## Agents',
     '',
     `- [MCP endpoint](${appUrl}/mcp): read-only tools over the same data — overview, prices and price history, hiring and its history, releases, incidents, demand share, alerts, coverage, status — with provenance on every row. Streamable HTTP, no auth. \`claude mcp add --transport http frontier-terminal ${appUrl}/mcp\``,
     '',
+    '## License',
+    '',
+    `- The compilation — the tables, the change log, the alerts and the exports — is licensed ${DATA_LICENSE.short} (${DATA_LICENSE.url}). Quoting or republishing it is fine; attribution is the condition.`,
+    `- Attribution: ${attributionLine(input.appName, appUrl)}`,
+    '- The underlying facts belong to whoever published them. Every row carries the URL it was read from, and one source (the OpenRouter rankings feed) carries an attribution string of its own that the demand-share page prints verbatim.',
+    ...(input.repoUrl
+      ? [`- The code is ${CODE_LICENSE.short} (${CODE_LICENSE.url}): ${input.repoUrl}`]
+      : []),
+    `- Full terms: ${appUrl}/license`,
+    '',
     '## About',
     '',
     '- Not investment advice. Every figure carries the URL it was read from and when.',
-    '- Structured data for each page is published as schema.org JSON-LD in the page head.',
+    '- Structured data for each page is published as schema.org JSON-LD in the page head; the bulk tables are described as schema.org Dataset nodes on /data.',
     '',
   )
 

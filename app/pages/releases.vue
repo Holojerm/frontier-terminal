@@ -17,13 +17,14 @@ definePageMeta({
   },
 })
 
+const { data: releases, error } = await useFetch<ReleasesData>('/api/releases')
+
 useSeo({
   title: 'Releases',
   description:
     'New model SKUs as they appear on the frontier labs’ own pricing pages: date first seen, launch price per million tokens, and the URL each was read from.',
+  dateModified: releases.value?.as_of,
 })
-
-const { data: releases, error } = await useFetch<ReleasesData>('/api/releases')
 
 const now = useNow()
 </script>

@@ -17,12 +17,6 @@ definePageMeta({
   },
 })
 
-useSeo({
-  title: 'About',
-  description:
-    'What Frontier Terminal is, the provenance rule behind every number, each source’s disclosed caveat, how stale a figure can be, and the open-source repo.',
-})
-
 const config = useRuntimeConfig()
 const repo = manifest.links.github
 const mcpUrl = `${config.public.appUrl.replace(/\/+$/, '')}/mcp`
@@ -30,6 +24,13 @@ const mcpUrl = `${config.public.appUrl.replace(/\/+$/, '')}/mcp`
 const { data: coverage } = await useFetch<CoverageData>('/api/coverage')
 
 const caveats = computed(() => (coverage.value?.sources ?? []).filter((s) => s.caveat))
+
+useSeo({
+  title: 'About',
+  description:
+    'What Frontier Terminal is, the provenance rule behind every number, each source’s disclosed caveat, how stale a figure can be, and the open-source repo.',
+  dateModified: coverage.value?.as_of,
+})
 </script>
 
 <template>

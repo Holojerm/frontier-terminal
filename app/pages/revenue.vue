@@ -17,13 +17,14 @@ definePageMeta({
   },
 })
 
+const { data: revenue, error } = await useFetch<RevenueData>('/api/revenue')
+
 useSeo({
   title: 'Revenue',
   description:
     'Revenue the frontier AI labs have actually disclosed to the SEC, per reported period with the filing linked, and an honest blank where no audited figure exists.',
+  dateModified: revenue.value?.as_of,
 })
-
-const { data: revenue, error } = await useFetch<RevenueData>('/api/revenue')
 </script>
 
 <template>

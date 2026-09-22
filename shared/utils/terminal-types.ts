@@ -58,6 +58,13 @@ export interface SourceCoverage {
   role: SourceRole
   /** The audit's own words, read from sources.yaml — never paraphrased here. */
   caveat: string | null
+  /**
+   * The licence the source itself states, verbatim from sources.yaml. Null
+   * where it states none, which is most of them — a pricing page publishes
+   * facts without publishing terms, and inventing terms on its behalf would be
+   * exactly the kind of claim the provenance rule exists to prevent.
+   */
+  license: string | null
   /** The audited URL this source is fetched from. */
   url: string
   newest_snapshot: SnapshotStamp | null

@@ -21,17 +21,22 @@ import {
 import type { SiteContext } from '../shared/utils/schema'
 import { canonicalRedirect } from '../shared/utils/site'
 import {
+  articleSchema,
   breadcrumbSchema,
+  dataCatalogSchema,
+  datasetSchema,
   jsonLdGraph,
   organizationSchema,
   webPageSchema,
   websiteSchema,
 } from '../shared/utils/schema'
+import { DATA_LICENSE } from '../shared/utils/license'
 import { absoluteUrl, canonicalPath, escapeXml, normalizeOrigin } from '../shared/utils/site'
 
 const SITE: SiteContext = {
   appName: 'Frontier Terminal',
   appUrl: 'https://example.com',
+  repoUrl: 'https://github.com/Holojerm/frontier-terminal',
 }
 
 describe('canonicalPath', () => {
@@ -122,6 +127,13 @@ describe('organizationSchema / websiteSchema / webPageSchema', () => {
     expect(breadcrumbSchema({ ...SITE, appUrl: '' }, [{ name: 'Home', path: '/' }])).toBeNull()
   })
 
+  it('points the organization at the repo, which is the only other place it exists', () => {
+    expect(organizationSchema(SITE)?.sameAs).toEqual([
+      'https://github.com/Holojerm/frontier-terminal',
+    ])
+    expect(organizationSchema({ ...SITE, repoUrl: '' })).not.toHaveProperty('sameAs')
+  })
+
   it('links a page back to the site graph', () => {
     const node = webPageSchema(SITE, {
       url: 'https://example.com/filings',
@@ -129,6 +141,18 @@ describe('organizationSchema / websiteSchema / webPageSchema', () => {
       description: 'SEC filings.',
     })
     expect(node?.isPartOf).toEqual({ '@id': 'https://example.com/#website' })
+  })
+
+  it('carries the poll tick as dateModified, and omits the field rather than faking it', () => {
+    const page = { url: 'https://example.com/prices', title: 'Prices', description: 'Prices.' }
+    expect(
+      webPageSchema(SITE, { ...page, dateModified: '2026-09-22T06:00:00Z' })?.dateModified,
+    ).toBe('2026-09-22T06:00:00Z')
+    // A page whose data has never been fetched must not claim a date. A
+    // dateModified that is always present and always "now" is the thing that
+    // teaches a crawler to discard the field entirely.
+    expect(webPageSchema(SITE, { ...page, dateModified: null })).not.toHaveProperty('dateModified')
+    expect(webPageSchema(SITE, page)).not.toHaveProperty('dateModified')
   })
 
   it('numbers a breadcrumb trail from 1 with absolute items', () => {
@@ -140,6 +164,115 @@ describe('organizationSchema / websiteSchema / webPageSchema', () => {
       { '@type': 'ListItem', position: 1, name: 'Home', item: 'https://example.com' },
       { '@type': 'ListItem', position: 2, name: 'Filings', item: 'https://example.com/filings' },
     ])
+  })
+})
+
+describe('datasetSchema / dataCatalogSchema', () => {
+  const TABLE = {
+    url: 'https://example.com/data',
+    slug: 'prices_latest',
+    name: 'Frontier Terminal — prices_latest',
+    description: 'Every SKU currently listed.',
+    dateModified: '2026-09-22T06:00:00Z',
+    temporalCoverage: '2026-01-01/..',
+    variableMeasured: ['input_per_mtok', 'output_per_mtok'],
+    rows: 412,
+    distribution: [
+      { encodingFormat: 'text/csv', contentUrl: 'https://example.com/export/prices_latest.csv' },
+    ],
+  }
+
+  it('gives sibling datasets on one page distinct @ids', () => {
+    expect(datasetSchema(SITE, TABLE)?.['@id']).toBe(
+      'https://example.com/data#dataset-prices_latest',
+    )
+    // A page carrying exactly one dataset needs no slug.
+    expect(datasetSchema(SITE, { ...TABLE, slug: undefined })?.['@id']).toBe(
+      'https://example.com/data#dataset',
+    )
+  })
+
+  it('files every dataset in the one catalog and under the stated license', () => {
+    const node = datasetSchema(SITE, TABLE)
+    expect(node?.includedInDataCatalog).toEqual({ '@id': 'https://example.com/data#data-catalog' })
+    expect(node?.license).toBe(DATA_LICENSE.url)
+    expect(node?.isAccessibleForFree).toBe(true)
+    expect(dataCatalogSchema(SITE, { description: 'Everything.' })?.['@id']).toBe(
+      'https://example.com/data#data-catalog',
+    )
+  })
+
+  it('turns a download into a DataDownload with a real contentUrl', () => {
+    expect(datasetSchema(SITE, TABLE)?.distribution).toEqual([
+      {
+        '@type': 'DataDownload',
+        encodingFormat: 'text/csv',
+        contentUrl: 'https://example.com/export/prices_latest.csv',
+      },
+    ])
+  })
+
+  it('omits every optional field rather than emitting an empty one', () => {
+    // An empty variableMeasured or a zero-length distribution is a claim that
+    // the dataset measures nothing and can't be downloaded — worse than silence.
+    const bare = datasetSchema(SITE, {
+      url: 'https://example.com/prices/claude-opus',
+      name: 'n',
+      description: 'd',
+      variableMeasured: [],
+      distribution: [],
+      dateModified: null,
+      temporalCoverage: null,
+      rows: null,
+    })
+    for (const field of [
+      'variableMeasured',
+      'distribution',
+      'dateModified',
+      'temporalCoverage',
+      'size',
+    ]) {
+      expect(bare).not.toHaveProperty(field)
+    }
+  })
+
+  it('returns null with no origin', () => {
+    expect(datasetSchema({ ...SITE, appUrl: '' }, TABLE)).toBeNull()
+    expect(dataCatalogSchema({ ...SITE, appUrl: '' }, { description: 'd' })).toBeNull()
+  })
+})
+
+describe('articleSchema', () => {
+  const ALERT = {
+    url: 'https://example.com/alerts/abc',
+    headline: 'Anthropic cut Opus output pricing',
+    description: 'Output per million tokens fell from $75 to $60.',
+    datePublished: '2026-09-20T12:00:00Z',
+    citation: [
+      'https://anthropic.com/pricing',
+      'https://anthropic.com/pricing',
+      'https://openai.com/api/pricing',
+    ],
+  }
+
+  it('attributes the piece to the site organization and dates it', () => {
+    const node = articleSchema(SITE, ALERT)
+    expect(node?.author).toEqual({ '@id': 'https://example.com/#organization' })
+    expect(node?.datePublished).toBe('2026-09-20T12:00:00Z')
+    // An append-only row was never revised; the two dates agreeing is the truth.
+    expect(node?.dateModified).toBe('2026-09-20T12:00:00Z')
+  })
+
+  it('dedupes citations — several change rows routinely share one source URL', () => {
+    expect(articleSchema(SITE, ALERT)?.citation).toEqual([
+      'https://anthropic.com/pricing',
+      'https://openai.com/api/pricing',
+    ])
+  })
+
+  it('omits citation entirely when there is nothing to cite', () => {
+    expect(articleSchema(SITE, { ...ALERT, citation: [] })).not.toHaveProperty('citation')
+    expect(articleSchema({ ...SITE, appUrl: '' }, ALERT)).toBeNull()
   })
 })
 
@@ -303,6 +436,37 @@ describe('buildLlmsTxt', () => {
 
   it('omits the Pages heading when nothing is declared public', () => {
     expect(buildLlmsTxt({ ...INPUT, pages: [] })).not.toContain('## Pages')
+  })
+
+  it('names the bulk tables so a model can fetch numbers instead of rendering prose', () => {
+    const text = buildLlmsTxt({
+      ...INPUT,
+      tables: [{ name: 'prices_latest', description: 'Every SKU currently listed.' }],
+    })
+    expect(text).toContain(
+      '- [prices_latest](https://example.com/export/prices_latest.csv): Every SKU currently listed. Also JSON at https://example.com/export/prices_latest.json.',
+    )
+    expect(text).toContain('https://example.com/alerts.xml')
+  })
+
+  it('omits the Data heading rather than printing an empty one', () => {
+    expect(buildLlmsTxt(INPUT)).not.toContain('## Data')
+    expect(buildLlmsTxt({ ...INPUT, tables: [] })).not.toContain('## Data')
+  })
+
+  it('states the terms and the exact attribution line a reuser should copy', () => {
+    const text = buildLlmsTxt({
+      ...INPUT,
+      repoUrl: 'https://github.com/Holojerm/frontier-terminal',
+    })
+    expect(text).toContain('## License')
+    expect(text).toContain(DATA_LICENSE.url)
+    // The string we ask for, not one the reuser has to compose.
+    expect(text).toContain(
+      'Attribution: Source: Frontier Terminal (https://example.com). Licensed under CC BY 4.0.',
+    )
+    expect(text).toContain('https://github.com/Holojerm/frontier-terminal')
+    expect(text).toContain('https://example.com/license')
   })
 })
 
