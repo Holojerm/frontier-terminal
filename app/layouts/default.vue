@@ -10,6 +10,8 @@
 
 import type { NavigationMenuItem } from '@nuxt/ui'
 
+import { LABS, labPath } from '#shared/utils/terminal-lab-summary'
+import { LAB_DISPLAY } from '#shared/utils/terminal-labs'
 import manifest from '~~/fleet.json'
 
 const config = useRuntimeConfig()
@@ -28,8 +30,9 @@ const repo = manifest.links.github
  * lab doing". The six reading pages now group under those two questions.
  *
  * `Overview` and `Alerts` stay top-level because they are the two entry points
- * — the state of things, and what changed in it. `Data` and `About` drop to the
- * footer, which is already where a reader looks for exports and the disclaimer.
+ * — the state of things, and what changed in it. `Labs` is the third way in:
+ * one lab across every axis. `Data` and `About` drop to the footer, which is
+ * already where a reader looks for exports and the disclaimer.
  */
 interface NavLink {
   label: string
@@ -48,6 +51,14 @@ const OVERVIEW: NavLink = { label: 'Overview', to: '/' }
 const ALERTS: NavLink = { label: 'Alerts', to: '/alerts' }
 
 const SECTIONS: NavSection[] = [
+  {
+    label: 'Labs',
+    links: LABS.map((lab) => ({
+      label: LAB_DISPLAY[lab],
+      to: labPath(lab),
+      description: `${LAB_DISPLAY[lab]} on every axis, one page.`,
+    })),
+  },
   {
     label: 'Economics',
     links: [
