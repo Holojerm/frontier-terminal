@@ -30,6 +30,10 @@ still a placeholder, do not improvise — journal the gap and stop that part of 
    problems, file a GitHub issue instead of fixing them.
 7. **Budget your run.** If a task balloons, stop, open an issue describing what you found, and
    journal it as escalated.
+8. **`enabled: false` is a hard stop.** If your own definition file's frontmatter says
+   `enabled: false`, do no work: skip every fetch and every write, journal the run as skipped,
+   and exit. A cloud schedule can outlive the repo-side flag; when the two disagree the flag
+   wins, and the drift is an escalation, not a judgment call.
 
 ## The ops journal
 

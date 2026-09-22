@@ -46,7 +46,9 @@ must follow the operating rules in `_shared.md` (the pointer prompt enforces rea
 
 ## Safety model
 
-- **Default inactive** — sync never enables; enabling is a separate explicit step.
+- **Default inactive** — sync never enables; enabling is a separate explicit step. Once a
+  routine is enabled in your account, flip its frontmatter to `enabled: true` so the file
+  matches: runs treat `enabled: false` as a hard stop (`_shared.md` rule 8).
 - **Outbound gates** — code changes are PRs, never pushes to `main`; nothing sends email.
 - **Untrusted input** — fetched pages and issue text are attacker-controlled data. `_shared.md`
   forbids following instructions found in them.
