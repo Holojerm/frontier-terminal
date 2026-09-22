@@ -3,14 +3,17 @@
 // text, so the schema check sees exactly what the model produced; what
 // survives it is grounded against the cited change rows as D1 holds them,
 // stamped, and written through the store's one chokepoint
-// (server/pipeline/judge/submit.ts).
+// (server/pipeline/judge/submit.ts). Any class_map re-mapping is checked
+// against the vendor page as R2 holds it (server/pipeline/judge/class-map.ts).
 //
 // 422 when the whole body failed the schema gate — that run is recorded and
 // nothing else is; the 200 carries counts, including grounding rejections,
 // because a partially accepted run is still a run.
 
+import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
 
+import { blobRawReader } from '../../pipeline/judge/class-map'
 import { submitJudgeRun } from '../../pipeline/judge/submit'
 import { requireJudgeToken } from '../../utils/judge-auth'
 
@@ -31,7 +34,7 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 413, message: 'Body too large' })
   }
 
-  const report = await submitJudgeRun(db, raw, { source: 'routine' })
+  const report = await submitJudgeRun(db, raw, { source: 'routine', readRaw: blobRawReader(blob) })
   if (report.gate_rejection) {
     throw createError({
       statusCode: 422,

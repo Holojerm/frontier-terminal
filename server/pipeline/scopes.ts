@@ -29,13 +29,14 @@ const EDGAR_SOURCES: readonly string[] = [
   'edgar-companyfacts-spcx',
 ]
 
-// A model launch lands on these pages first — the vendor's own price list and
-// catalog, and OpenRouter's model list, which often carries a new SKU within
-// minutes of the announcement. On the six-hourly survey alone a launch could
-// sit unreported for most of a working day; on this tick it waits at most 30
-// minutes. Each is one small document hashed against the last, so an
-// unchanged re-fetch diffs to zero. The derived per-model OpenAI pages stay on
-// the survey: they add context windows to a SKU these pages already announced.
+// A model launch lands on these pages first: the vendor's own price list and
+// catalog. On the six-hourly survey alone a launch could sit unreported for
+// most of a working day; on this tick it waits at most 30 minutes. Each is one
+// small document hashed against the last, so an unchanged re-fetch diffs to
+// zero. OpenRouter's model list stays on the survey: it has no lane (a
+// cross-check, never a source of record — lanes.ts), so polling it faster
+// would only store bytes. The derived per-model OpenAI pages stay there too:
+// they add context windows to a SKU these pages already announced.
 const LAUNCH_SOURCES: readonly string[] = [
   'openai-models-md',
   'openai-pricing-md',
@@ -43,7 +44,6 @@ const LAUNCH_SOURCES: readonly string[] = [
   'anthropic-pricing-md',
   'xai-models-md',
   'google-pricing-html',
-  'openrouter-models',
 ]
 
 export function sourceIdsForScope(scope: PollScope, all: readonly FetchSource[]): string[] {

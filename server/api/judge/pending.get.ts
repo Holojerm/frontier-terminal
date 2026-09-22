@@ -4,13 +4,18 @@
 //
 // The prompt travels in the response so the routine judges with the prompt
 // this deploy shipped, whatever commit its own checkout happens to be on —
-// one prompt, versioned here. Empty `changes` is the common case and the
-// routine's signal to stop.
+// one prompt, versioned here. Empty `changes` with no cell in
+// `class_map_review` is the common case and the routine's signal to stop.
+// `class_map_review` lists the price-matrix cells whose vendor sentence left
+// the page, with that page's text to re-map them from
+// (server/pipeline/judge/class-map.ts).
 
+import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
 
 import judgePrompt from 'raw:../../pipeline/judge/judge-explain.prompt.md'
 
+import { blobRawReader, classMapReview } from '../../pipeline/judge/class-map'
 import { JUDGE_CHANGE_LIMIT, pendingChanges } from '../../pipeline/judge/pending'
 import { requireJudgeToken } from '../../utils/judge-auth'
 
@@ -19,13 +24,17 @@ export default defineEventHandler(async (event) => {
   setResponseHeader(event, 'Cache-Control', 'no-store')
   await requireJudgeToken(event)
 
-  const { changes, total_pending, since } = await pendingChanges(db, JUDGE_CHANGE_LIMIT)
+  const [{ changes, total_pending, since }, class_map_review] = await Promise.all([
+    pendingChanges(db, JUDGE_CHANGE_LIMIT),
+    classMapReview(db, blobRawReader(blob)),
+  ])
   return {
     schema: 1,
     changes,
     total_pending,
     since,
     limit: JUDGE_CHANGE_LIMIT,
+    class_map_review,
     prompt: judgePrompt,
   }
 })

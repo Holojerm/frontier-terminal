@@ -127,7 +127,6 @@ describe('scopes', () => {
       'anthropic-pricing-md',
       'xai-models-md',
       'google-pricing-html',
-      'openrouter-models',
     ])
     expect(sourceIdsForScope('survey', ALL)).toEqual(ALL_IDS)
     expect(ALL_IDS).toHaveLength(24)

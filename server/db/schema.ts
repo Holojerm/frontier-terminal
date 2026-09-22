@@ -232,9 +232,32 @@ export const judgeRuns = sqliteTable(
   ],
 )
 
+// Class-map decisions — append-only. One row per mapping the judge changed on
+// the like-for-like price matrix (server/pipeline/judge/class-map.ts). The
+// hand-transcribed MODEL_CLASS_MAP (server/utils/terminal-classes.ts) is the
+// seed; the newest row per (provider, class) overrides it. A row is written
+// only after the Worker proved the sentence is on the vendor page, so its
+// provenance is the snapshot that sentence was verified in, not the judge.
+export const classMapDecisions = sqliteTable(
+  'class_map_decisions',
+  {
+    id: text('id').primaryKey(),
+    provider: text('provider').notNull(),
+    class: text('class').notNull(),
+    model_slug: text('model_slug').notNull(),
+    basis: text('basis').notNull(),
+    basis_source_id: text('basis_source_id').notNull(),
+    decided_at: text('decided_at').notNull(),
+    decided_by: text('decided_by').notNull(), // 'judge' today; anything else that decides says who
+    ...provenance,
+  },
+  (t) => [index('class_map_decisions_cell_idx').on(t.provider, t.class, t.decided_at)],
+)
+
 export type Snapshot = typeof snapshots.$inferSelect
 export type Entity = typeof entities.$inferSelect
 export type Change = typeof changes.$inferSelect
 export type Alert = typeof alerts.$inferSelect
 export type SourceRun = typeof sourceRuns.$inferSelect
 export type JudgeRun = typeof judgeRuns.$inferSelect
+export type ClassMapDecision = typeof classMapDecisions.$inferSelect

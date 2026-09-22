@@ -1,4 +1,4 @@
-import { MODEL_CLASS_MAP } from '../utils/terminal-classes'
+import { MODEL_CLASS_MAP, type ClassEntry } from '../utils/terminal-classes'
 import { RecommendationRow, type Provenance } from './contracts'
 
 // The drift check on the like-for-like matrix. The class map is editorial and
@@ -20,13 +20,15 @@ export function flattenMdLinks(md: string): string {
   return md.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
 }
 
-/** One row per class-map entry transcribed from this source; empty for a source none cite. */
+/** One row per class-map entry resting on this source; empty for a source none cite.
+ * `classMap` is the map in effect (server/pipeline/class-map.ts); the seed by default. */
 export function recommendationRows(
   sourceId: string,
   text: string,
   prov: Provenance,
+  classMap: readonly ClassEntry[] = MODEL_CLASS_MAP,
 ): RecommendationRow[] {
-  const entries = MODEL_CLASS_MAP.filter((e) => e.basis_source_id === sourceId)
+  const entries = classMap.filter((e) => e.basis_source_id === sourceId)
   if (entries.length === 0) return []
   const flat = flattenMdLinks(text)
   return entries.map((e) =>

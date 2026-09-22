@@ -152,7 +152,6 @@ describe('runPoll between survey instants', () => {
       'anthropic-pricing-md',
       'xai-models-md',
       'google-pricing-html',
-      'openrouter-models',
       'edgar-fts',
       'edgar-fts-openai',
       'edgar-submissions-spcx',

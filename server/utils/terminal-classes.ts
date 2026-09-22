@@ -15,6 +15,12 @@
 //     false, lands a 'modified' change in the feed and an ops event in the
 //     digest, and the matrix says the mapping is under review — instead of
 //     the old mapping quietly aging into fiction;
+//   - a cell under review is handed to the judge routine with the page it
+//     rests on, and the judge may re-map it. The Worker accepts that only
+//     under the same rule — the new sentence verbatim on the stored page, the
+//     slug one the store lists — and records it in class_map_decisions
+//     (server/pipeline/judge/class-map.ts). This file is the seed; the
+//     newest decision per cell overrides it (server/pipeline/class-map.ts);
 //   - a provider that publishes no such recommendation gets a stated gap,
 //     never a guess (xAI names one model and stops; Google's pricing page
 //     carries no recommendation text at all).
@@ -51,6 +57,23 @@ export interface ClassEntry {
   basis: string
   /** source_id the sentence was transcribed from (fixtures/manifest.json). */
   basis_source_id: string
+  /**
+   * Set on an entry a judge decision produced: when the Worker found the
+   * sentence on the stored page. Stands in for the drift check until the next
+   * poll that parses that page re-checks it.
+   */
+  verified_at?: string
+}
+
+/**
+ * The page each provider's class map may rest on — the sources the seed
+ * below was transcribed from, and the only ones a judge decision may cite.
+ * Google has none: its pricing page prints no recommendation text.
+ */
+export const CLASS_MAP_SOURCES: Readonly<Partial<Record<BigFour, string>>> = {
+  openai: 'openai-models-md',
+  anthropic: 'anthropic-models-md',
+  xai: 'xai-models-md',
 }
 
 // Verbatim transcriptions from the fixtures fetched 2026-09-22 (the previous

@@ -64,6 +64,7 @@ import { manifestFixtures } from '../pipeline/parsers/fixture-provenance'
 import { parseDerivedSourcesBlock, type DerivedTemplate } from '../pipeline/derived'
 import { parseRevenueFilersBlock, type RevenueFilers } from '../pipeline/parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock, type CikWhitelist } from '../pipeline/parsers/sec/whitelist'
+import { effectiveClassMap } from '../pipeline/class-map'
 import type { PipelineDb } from '../pipeline/store'
 import {
   BASIS_STALE_NOTE,
@@ -72,6 +73,7 @@ import {
   MODEL_CLASS_MAP,
   NO_ROW_GAP,
   PRICE_GAPS,
+  type ClassEntry,
 } from './terminal-classes'
 import { clusterSeries, parseDepartmentClusters, type DepartmentCluster } from './terminal-clusters'
 import { EXPORT_TABLES } from './terminal-export'
@@ -675,12 +677,13 @@ function toDelta(change: typeof tables.changes.$inferSelect): PriceDeltaView {
 }
 
 export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<PricesData> {
-  const [entities, history, stamps, firsts, checks] = await Promise.all([
+  const [entities, history, stamps, firsts, checks, classMap] = await Promise.all([
     db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'model')),
     modelChanges(db),
     sourceStamps(db),
     firstSnapshotByUrl(db),
     db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'recommendation')),
+    effectiveClassMap(db),
   ])
   const changes = newestPerSource(history)
   const entitiesByKey = groupByKey(entities)
@@ -760,7 +763,7 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
   return {
     ...stampOf(ctx),
     rows,
-    matrix: buildMatrix(rows, basisChecks(checks)),
+    matrix: buildMatrix(rows, basisChecks(checks), classMap),
     counts: {
       total: rows.length,
       priced: rows.filter((r) => !r.removed && pricedRow(r)).length,
@@ -826,11 +829,13 @@ export function basisChecks(
  * Nothing is computed about a model here: the map says which slug answers
  * which question, the store says what that slug costs, and anything the two
  * cannot answer becomes a stated gap. `checks` is the last poll's word on
- * whether each mapping's vendor sentence is still on the page.
+ * whether each mapping's vendor sentence is still on the page. `classMap` is
+ * the map in effect — the seed plus judge decisions (server/pipeline/class-map.ts).
  */
 export function buildMatrix(
   rows: readonly PriceRowView[],
   checks: ReadonlyMap<string, BasisCheck> = new Map(),
+  classMap: readonly ClassEntry[] = MODEL_CLASS_MAP,
 ): PriceMatrix {
   const bySlug = new Map<string, PriceRowView[]>()
   for (const row of rows) {
@@ -842,7 +847,7 @@ export function buildMatrix(
   const cells: MatrixCell[] = []
   for (const provider of PROVIDER_ORDER) {
     for (const klass of MODEL_CLASSES) {
-      const entry = MODEL_CLASS_MAP.find((e) => e.provider === provider && e.class === klass.id)
+      const entry = classMap.find((e) => e.provider === provider && e.class === klass.id)
       if (!entry) {
         const gap = CLASS_GAPS.find((g) => g.provider === provider && g.class === klass.id)
         cells.push({
@@ -865,8 +870,15 @@ export function buildMatrix(
       const priced = row !== null && pricedRow(row)
       // A check for a slug this map no longer names is a verdict on the
       // previous transcription, not this one: it waits for the next poll.
+      // Until then a judge decision's own verification — the Worker found the
+      // sentence on the stored page — is the newest word, and whichever of
+      // the two is newer wins.
       const check = checks.get(`${provider}:${klass.id}`)
-      const current = check && check.model_slug === entry.model_slug ? check : null
+      const polled = check && check.model_slug === entry.model_slug ? check : null
+      let current: { present: boolean; fetched_at: string } | null = polled
+      if (entry.verified_at && (!current || entry.verified_at > current.fetched_at)) {
+        current = { present: true, fetched_at: entry.verified_at }
+      }
       cells.push({
         provider,
         class: klass.id,
