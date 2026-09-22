@@ -49,8 +49,14 @@ export const GENERATED_ASSETS = [
  * that had already generated icons under the old value needs this bump to
  * get flagged stale and re-render them — nothing in `fingerprintOf()` below
  * hashes MASKABLE_COVERAGE itself, only this string.
+ *
+ * Bumped to '4' when the OG image started waiting for the provider's
+ * stylesheets before screenshotting, and set its title at the display face's
+ * real weight: every og.png generated before that was a coin flip between the
+ * brand face and a system serif, and the ones that lost look fine until you
+ * compare them to the site.
  */
-export const GENERATOR_VERSION = '3'
+export const GENERATOR_VERSION = '4'
 
 export interface BrandColor {
   /** The `--color-*` token named in DESIGN.md › Brand mark. */

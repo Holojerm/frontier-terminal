@@ -16,41 +16,47 @@ fails the build when they fall out of sync.
 > **Scope note:** this file means *visual* design — color, type, space, motion, component
 > behavior. Architectural rationale and stack decisions live in `CLAUDE.md`, not here.
 
-> **Forking?** Replace everything below the Identity heading. The system described here is
-> "Quarry", the template's placeholder identity — it exists to prove the pipeline works, not
-> because your app should look like this. Drop in any DESIGN.md from
-> [designmd.app](https://designmd.app/) or
-> [awesome-claude-design](https://github.com/VoltAgent/awesome-claude-design), then run
-> `/design-sync`.
-
 ---
 
 ## Identity
 
-- **Personality:** quarried, editorial, unhurried
-- **References:** Linear's density with Stripe Press's typography; printed field guides
-- **Audience:** people who read carefully and return daily
-- **Density:** comfortable — generous vertical rhythm, restrained horizontal padding
+Frontier Terminal is an instrument, not a publication. Someone opens it to find out what a
+lab's API costs this morning, how many people it is hiring, and what it told the SEC — and to
+see where that number came from. The design serves that and nothing else.
+
+- **Personality:** instrumented, dense, unsentimental
+- **References:** a trading terminal's information density; EDGAR's refusal to decorate;
+  flight-deck instrumentation, where every marking is a reading
+- **Audience:** investors and operators who check it daily, know the domain, and want the
+  number and its provenance rather than a narrative about them
+- **Density:** dense in data, comfortable in prose. Tables and panels pack; the few pages of
+  running text keep a reading rhythm.
 - **Motion:** minimal. Motion confirms, it never decorates.
 - **Iconography:** Lucide (`i-lucide-*`), bundled locally via `@iconify-json/lucide`. Line
   icons at default weight — never emoji, never a second icon family.
-- **Color mode:** dual. Light is the primary design target; dark is a first-class equal.
+- **Color mode:** **dark-first.** Dark is the primary design target and the fallback when a
+  visitor expresses no preference; light is a first-class equal, checked in the same axe sweep,
+  never an afterthought. Every design decision here is made in dark and then verified in light.
 
 ### Never
 
 - Gradients as decoration, glassmorphism, or drop shadows used for style rather than elevation
 - More than one accent color visible in a single viewport
-- Faux-bold headings (the display face ships at weight 400 only — never `font-bold` on it)
 - Pure black (`#000`) or pure white (`#fff`) as a surface color
 - Emoji as UI iconography
+- A figure rendered without its source link and its fetch timestamp within reach — provenance
+  is the product, so a design that hides it is a wrong design
 
 ---
 
 ## Brand mark
 
-Two quarried strata, offset — the lower one shorter and lighter, cut from the same face.
-Abstract rather than a letterform on purpose: `bun run rename` cannot rewrite a picture, so
-an initial would still spell the template's name long after the app stopped being called that.
+**A frontier, and the edge that has crossed it.** A dim rule runs the full width — the line
+everything on this site is measured against — and above it a solid mass climbs in three steps
+from left to right. Two elements, one flat fill, one opacity step.
+
+Abstract rather than a letterform on purpose: `bun run rename` cannot rewrite a picture, so an
+initial would still spell the template's name long after the app stopped being called that.
 
 **The mark lives in `app/components/Brand/Logo.vue`, and nowhere else.** Every standalone
 file is derived from that component by `bun run brand:generate`:
@@ -73,7 +79,12 @@ about it ever throws.
 - **Grid:** 32×32 viewBox, geometry on whole and half units only.
 - **Optical box:** the glyph spans 3→29 across and 7→25 down, so it is centred with room to
   breathe once an icon square is drawn around it.
-- **Corners:** `rx 1.5` — slab corners that echo `--ui-radius`. Never a pill.
+- **The rule:** full width, 2.5 units tall, at `opacity .5`, separated from the mass above it
+  by a 2-unit gap. It is the reference line, so it never competes with the reading.
+- **The mass:** one closed path, three treads of 8.5/8.5/9 units rising 4 → 9 → 13.5 units
+  above the rule. Connected, not three bars — this is one edge, not a chart.
+- **Corners:** square. The mark is drawn at instrument precision; `--ui-radius` softens
+  controls, not readings.
 - **Fill:** `currentColor`, one flat fill plus a single opacity step. No stroke, no gradient,
   no second hue.
 - **Minimum size:** 16px. A mark that stops reading at favicon size is a different mark.
@@ -83,18 +94,23 @@ about it ever throws.
 ### Color roles
 
 A PNG has no color mode, so each role below resolves to a concrete ramp token rather than a
-`--ui-*` alias — the aliases flip between light and dark, and a file has to pick one.
+`--ui-*` alias — the aliases flip between light and dark, and a file has to pick one. This app
+is dark-first, so the files that can only pick one pick dark.
 
-| Role | Token | Where it lands |
-|---|---|---|
-| `icon-ink` | `--color-clay-50` | The glyph inside the app icon |
-| `icon-ground` | `--color-clay-600` | The square behind it |
-| `og-mark` | `--color-clay-600` | The mark on the share image |
-| `og-ground` | `--color-stone-50` | Share image background |
-| `og-ink` | `--color-stone-900` | Share image title |
-| `og-muted` | `--color-stone-500` | Share image description and footer |
-| `manifest-theme` | `--color-clay-600` | `theme_color` in `manifest.webmanifest` — the browser UI tint once installed |
-| `manifest-ground` | `--color-stone-50` | `background_color` in `manifest.webmanifest` — the splash screen before the app paints |
+| Role | Token | Where it lands | Measured |
+|---|---|---|---|
+| `icon-ink` | `--color-iris-400` | The glyph inside the app icon | 7.01 on the ground |
+| `icon-ground` | `--color-zinc-950` | The square behind it | — |
+| `og-mark` | `--color-iris-400` | The mark on the share image | 7.01 |
+| `og-ground` | `--color-zinc-950` | Share image background | — |
+| `og-ink` | `--color-zinc-50` | Share image title | 19.06 |
+| `og-muted` | `--color-zinc-400` | Share image description and footer | 7.59 |
+| `manifest-theme` | `--color-zinc-950` | `theme_color` in `manifest.webmanifest` — the browser UI tint once installed | — |
+| `manifest-ground` | `--color-zinc-950` | `background_color` in `manifest.webmanifest` — the splash screen before the app paints | — |
+
+`icon-ink` is the **400**, not the 600 the in-app accent resolves to in light mode: on a
+zinc-950 ground the 600 measures 3.51:1 and the 400 measures 7.01:1. An icon is read at 16px
+on someone else's dark dock, which is the hardest case this palette has.
 
 In-app the mark takes `text-primary` and inherits the color mode for free. These eight exist
 only for the files that can't.
@@ -103,7 +119,7 @@ only for the files that can't.
 
 - A second mark. If a surface seems to need a different logo, the logo is wrong.
 - Effects: shadow, gradient, outline, rotation, or animation on the mark.
-- The wordmark in anything but the display face at weight 400 (DESIGN.md › Typography).
+- The wordmark in anything but the display face at weight 500 (DESIGN.md › Typography).
 - Hand-editing anything in `public/` — or `shared/utils/brand-colors.generated.ts` — that
   this pipeline generates.
 
@@ -111,50 +127,70 @@ only for the files that can't.
 
 ## Color
 
-### Primary ramp — `clay`
+### Primary ramp — `iris`
 
-A warm earth red. Confident at 600, quiet at 100.
+A cool blue-violet. The one accent, and deliberately not a status hue: this site spends green
+on "up", red on "down", amber on "notable" and sky on "for information", so the brand cannot
+have any of them without saying something it does not mean.
 
 | Shade | Hex | Shade | Hex |
 |---|---|---|---|
-| 50 | `#fdf5f3` | 500 | `#db6a4b` |
-| 100 | `#fbe8e3` | 600 | `#c74f2f` |
-| 200 | `#f8d5cb` | 700 | `#a63e24` |
-| 300 | `#f2b8a7` | 800 | `#883622` |
-| 400 | `#e88f75` | 900 | `#713122` |
-| | | 950 | `#3d160d` |
+| 50 | `#f4f5ff` | 500 | `#7c5fff` |
+| 100 | `#eaeaff` | 600 | `#6c3efa` |
+| 200 | `#d7d7ff` | 700 | `#582dd4` |
+| 300 | `#bab8ff` | 800 | `#4624aa` |
+| 400 | `#978aff` | 900 | `#381f8a` |
+| | | 950 | `#1f0f53` |
 
 ### Semantic assignments
 
 | Role | Color | Use |
 |---|---|---|
-| `primary` | `clay` | CTAs, active nav, focus rings, links |
-| `secondary` | `stone` | Secondary actions — deliberately not a second hue |
-| `neutral` | `stone` | Text, borders, surfaces |
-| `success` | `emerald` | Confirmations |
-| `info` | `sky` | Neutral notices |
-| `warning` | `amber` | Reversible risk |
-| `error` | `rose` | Failure, destructive actions |
+| `primary` | `iris` | CTAs, active nav, focus rings, links |
+| `secondary` | `zinc` | Secondary actions — deliberately not a second hue |
+| `neutral` | `zinc` | Text, borders, surfaces |
+| `success` | `emerald` | Confirmations, a figure that moved up |
+| `info` | `sky` | Neutral notices, ticker-grade changes |
+| `warning` | `amber` | Reversible risk, notable changes |
+| `error` | `rose` | Failure, destructive actions, critical alerts |
 
-Semantic colors resolve one to three steps darker than NuxtUI's 500 default in light mode,
-and to **400** in dark. This is not taste — NuxtUI's defaults fail WCAG AA in light mode in
-both directions that matter, as text on their own 10% tint (`subtle` alerts and badges) and
-as white text on the solid fill (`solid` buttons):
+`zinc` rather than `slate` for the neutral: with a violet accent a blue-tinted grey makes the
+whole page one hue, and the accent stops being an accent.
 
-| Role | Light shade | Text on tint | White on solid |
-|---|---|---|---|
-| `primary` | 600 | 4.04 ✗ | 4.58 ✓ |
-| `secondary` | 600 | 6.48 ✓ | 7.64 ✓ |
-| `success` | 700 | 4.66 ✓ | 5.36 ✓ |
-| `info` | 700 | 5.08 ✓ | 5.86 ✓ |
-| `warning` | 800 | 6.06 ✓ | 7.09 ✓ |
-| `error` | 700 | 5.19 ✓ | 6.03 ✓ |
+Semantic colors resolve one to three steps darker than NuxtUI's 500 default in light mode, and
+to **400** in dark. This is not taste — NuxtUI's defaults fail WCAG AA in light mode in both
+directions that matter, as text on their own 10% tint (`subtle` alerts and badges) and as white
+text on the solid fill (`solid` buttons).
 
-`primary` stays at 600 because it is the brand accent rather than a status color, and 600
-clears AA for its real uses. It is the one exception in the table: **never pair
-`color="primary"` with `variant="subtle"`** — clay-600 on a clay tint is 4.04:1. Use `solid`.
+Light mode, measured against `bg-default` (white) and `bg-elevated` (zinc-100):
 
-Warning needs 800 specifically; amber-700 reaches only 4.39:1 on its tint.
+| Role | Light shade | Text on tint | White on solid | As text on elevated |
+|---|---|---|---|---|
+| `primary` | 600 | 4.90 ✓ | 5.66 ✓ | 5.15 ✓ |
+| `secondary` | 600 | 6.66 ✓ | 7.72 ✓ | 7.02 ✓ |
+| `success` | 700 | 4.67 ✓ | 5.36 ✓ | 4.88 ✓ |
+| `info` | 700 | 5.06 ✓ | 5.86 ✓ | 5.33 ✓ |
+| `warning` | 800 | 6.08 ✓ | 7.09 ✓ | 6.45 ✓ |
+| `error` | 700 | 5.04 ✓ | 6.03 ✓ | 5.49 ✓ |
+
+Dark mode, measured against `bg-default` (zinc-900) and `bg-elevated` (zinc-800):
+
+| Role | Dark shade | Text on tint | Ground on solid | As text on elevated |
+|---|---|---|---|---|
+| `primary` | 400 | 5.42 ✓ | 6.24 ✓ | 5.25 ✓ |
+| `secondary` | 400 | 5.75 ✓ | 6.75 ✓ | 5.68 ✓ |
+| `success` | 400 | 7.69 ✓ | 9.14 ✓ | 7.68 ✓ |
+| `info` | 400 | 6.96 ✓ | 8.13 ✓ | 6.84 ✓ |
+| `warning` | 400 | 8.48 ✓ | 10.29 ✓ | 8.65 ✓ |
+| `error` | 400 | 5.42 ✓ | 6.19 ✓ | 5.20 ✓ |
+
+Warning needs 800 specifically in light; amber-700 reaches only 4.39:1 on its tint.
+
+`iris-600` was chosen over `iris-500` for the light-mode primary precisely so the table above
+has no exception in it: at 500 the accent measures 3.76:1 on its own tint and 4.25:1 on the
+page, both under AA. The template this app was forked from shipped a primary that failed as
+`variant="subtle"` and documented the failure as a rule to remember. A shade that passes is
+cheaper than a rule.
 
 ### Surface and text rules
 
@@ -173,13 +209,12 @@ Use the semantic utility, never a numbered scale. `text-gray-900` is a build fai
 | Default border | `border-default` |
 | Emphasized border | `border-accented` |
 
-Two pairings the token names do not warn you about, both measured in light mode:
-
-- **Secondary text on an elevated surface is `text-toned`, not `text-muted`.** stone-500 on
-  stone-100 is 4.39:1 — under AA — while it clears on the page ground (4.79). A panel or card
-  that carries its own `bg-elevated` uses `text-toned` (6.99) for captions and stamps.
-- **`text-primary` is body-text only on `bg-default`.** clay-600 reads 4.58:1 on the page and
-  4.20 on `bg-elevated`; a link inside an elevated panel is `text-highlighted` and underlined.
+One pairing the token names do not warn you about, and it is a light-mode-only trap:
+**secondary text on an elevated surface is `text-toned`, not `text-muted`.** zinc-500 on
+zinc-100 is 4.39:1 — under AA — while it clears on the page ground (4.83). A panel or card that
+carries its own `bg-elevated` uses `text-toned` (7.02) for captions and stamps. Dark mode has
+no equivalent problem: `text-muted` resolves to zinc-400, which reads 6.75 on the page and 5.68
+on an elevated surface.
 
 ---
 
@@ -189,12 +224,17 @@ Two pairings the token names do not warn you about, both measured in light mode:
 
 | Token | Family | Use |
 |---|---|---|
-| `font-display` | Instrument Serif, 400 only | `h1`–`h3`, pull quotes, numerals in stat tiles |
+| `font-display` | JetBrains Mono, 500 | `h1`–`h3`, the wordmark, numerals in stat tiles |
 | `font-sans` | Inter | Body, UI, labels, everything else |
-| `font-mono` | JetBrains Mono | Code, IDs, keyboard keys, tabular data |
+| `font-mono` | JetBrains Mono, 400 | Code, IDs, keyboard keys, tabular data |
 
-Headings are set in the display serif at weight 400 with `-0.02em` tracking. The size does the
-work, not the weight.
+Headings are set in the mono face at weight 500 with `-0.03em` tracking. Display and data are
+the same family at two weights, which is the whole typographic argument of the site: a heading
+here names a reading, so it is set in the face the readings are set in. Body copy is the one
+thing that is not an instrument, so it gets a proportional face.
+
+Two webfonts, not three. A mono display face costs nothing extra because `font-mono` was
+already loading it.
 
 ### Scale
 
@@ -206,12 +246,14 @@ work, not the weight.
 | `text-lg` | 1.125rem | 1.6 |
 | `text-xl` | 1.375rem | 1.4 |
 | `text-2xl` | 1.75rem | 1.3 |
-| `text-3xl` | 2.25rem | 1.2 |
-| `text-4xl` | 3rem | 1.1 |
-| `text-5xl` | 3.75rem | 1.05 |
+| `text-3xl` | 2.125rem | 1.2 |
+| `text-4xl` | 2.5rem | 1.15 |
+| `text-5xl` | 3.125rem | 1.05 |
 
-Body copy runs at `text-base` with a 1.65 line height — looser than Tailwind's default,
-because this system is for reading. Never set arbitrary sizes (`text-[13px]`).
+The top three steps are shorter than the template's, because a monospaced face sets roughly 15%
+wider per character: an `h1` of "Frontier Terminal" at 3rem mono overruns a phone before it
+says anything. Body copy stays at `text-base` with a 1.65 line height — looser than Tailwind's
+default, because the prose pages are for reading. Never set arbitrary sizes (`text-[13px]`).
 
 ---
 
@@ -239,28 +281,41 @@ because this system is for reading. Never set arbitrary sizes (`text-[13px]`).
 ## Component behavior
 
 - **Buttons:** NuxtUI defaults already carry `font-medium` and derive radius from `--ui-radius`
-  — no override needed. Primary = solid clay, secondary = outline neutral, destructive = solid
+  — no override needed. Primary = solid iris, secondary = outline neutral, destructive = solid
   error. One primary button per view.
 - **Cards:** NuxtUI `subtle` variant — elevated surface, hairline ring, no shadow. Padding
   stays on the component default (`p-4`, `p-6` from `sm`), which is already mobile-first.
 - **Inputs:** 1px border, `bg-default`. Focus shows a 2px primary ring, never a glow.
 - **Focus:** every interactive element has a visible focus-visible ring. Never `outline: none`
   without a replacement.
-- **Navigation:** inline links from `sm` up; below that they collapse into a right-side
-  `USlideover` behind an `i-lucide-menu` trigger. Drawer rows are `size="lg"` and
-  `block`, left-aligned — full-width rows are the easiest thing on a screen to hit. The
-  drawer closes on route change, not on click, so redirects close it too. Never let the
-  header wrap to two lines or scroll sideways.
+- **Navigation:** at most **five** things across the header, and they are grouped rather
+  than listed. This site has ten pages; ten inline links put `Prices` at the same weight as
+  `About` and made the reader scan instead of choose. The six reading pages sit under two
+  `UNavigationMenu` triggers named for the questions they answer — **Economics** (prices,
+  revenue, demand) and **Operations** (hiring, releases, incidents) — with a one-line
+  description per child, because a name alone does not tell a first-time reader what
+  "Demand" measures. `Overview` and `Alerts` stay top-level: they are the two entry points.
+  Reference pages (`About`, `Data`) live in the footer, where a reader already looks for
+  exports and the disclaimer.
+
+  Inline from `md` up — not `sm`, which the grouped header overruns; below that everything
+  collapses into a right-side `USlideover` behind an `i-lucide-menu` trigger. The drawer
+  carries the *whole* site map including the footer's reference pages, because below `md`
+  it is the only navigation affordance there is. Drawer rows are `size="lg"` and `block`,
+  left-aligned — full-width rows are the easiest thing on a screen to hit — and each group
+  is introduced by a real heading, not a styled `div`. The drawer closes on route change,
+  not on click, so redirects close it too. Never let the header wrap to two lines or scroll
+  sideways.
 - **Links:** inline prose links are `text-primary` **and** underlined (see Accessibility ›
   Contrast). Standalone links in navigation or footers are colour-only by design.
 - **Long-form content:** markdown renders through NuxtUI's `Prose*`
   components, which already read the token layer. Two of their defaults contradict this file
-  and are overridden in `app.config.ts` under `ui.prose`: `h1`–`h3` drop `font-bold`, and
-  inline links get a real `underline` instead of a hover-only bottom border. Measure is
-  `max-w-2xl` — a reading column, not the full container.
+  and are overridden in `app.config.ts` under `ui.prose`: `h1`–`h3` drop `font-bold` in favour
+  of the display face's own 500, and inline links get a real `underline` instead of a
+  hover-only bottom border. Measure is `max-w-2xl` — a reading column, not the full container.
 - **Empty states:** one line of `text-muted` explanation plus one action. No illustrations.
 - **Alerts:** the description renders at full opacity. NuxtUI dims it to 90%, which takes
-  info-700 on its own tint from 5.08:1 to 3.9:1 — below AA — for the one line of an alert that
+  info-700 on its own tint from 5.06:1 to 3.9:1 — below AA — for the one line of an alert that
   carries the actual content.
 - **Tables:** `font-mono` for numeric columns, right-aligned. Row separators, not zebra striping.
 
@@ -284,7 +339,7 @@ whether a label actually describes its field, whether alt text is meaningful —
 | Disabled text, decorative rules | none |
 
 The semantic tokens in Color are vetted at both ends of the color-mode switch. A numbered
-scale is a build failure precisely because `text-stone-500` can pass in light mode and fail
+scale is a build failure precisely because `text-zinc-500` can pass in light mode and fail
 in dark — the token layer *is* the contrast guarantee.
 
 **Never convey state by color alone.** Every status pairs its color with an icon or a word.
@@ -344,7 +399,7 @@ nav items, footer rows, buttons — don't need it.
 
 | This file | Destination |
 |---|---|
-| Primary ramp | `main.css` → `@theme static` → `--color-clay-*` (all 11 shades required) |
+| Primary ramp | `main.css` → `@theme static` → `--color-iris-*` (all 11 shades required) |
 | Semantic assignments | `app.config.ts` → `ui.colors` |
 | Primary shade choice | `main.css` → `:root`/`.dark` → `--ui-primary` |
 | Families + scale | `main.css` → `@theme static` → `--font-*`, `--text-*` |
@@ -362,10 +417,10 @@ The Brand mark section compiles through a second, smaller pipeline of its own:
 | Brand mark › Construction | `app/components/Brand/Logo.vue` | `/logo-sync` |
 | Brand mark › Color roles | `public/favicon.svg`, `apple-touch-icon.png`, `og.png` | `bun run brand:generate` |
 
-Two Accessibility rules land outside the generated files, because no CSS variable can
-express them: `<html lang>` and `viewport-fit=cover` live in `app.head` in
-`nuxt.config.ts`, and the skip link lives in `app/layouts/default.vue`. `/design-sync`
-does not own those three — leave them alone.
+Four rules land outside the generated files, because no CSS variable can express them:
+`<html lang>` and `viewport-fit=cover` live in `app.head` in `nuxt.config.ts`, the dark-first
+fallback lives in `colorMode` there, and the skip link lives in `app/layouts/default.vue`.
+`/design-sync` does not own those — leave them alone.
 
 Verify the result at `/design-system` in dev — every token and component state on one page,
 in both color modes.

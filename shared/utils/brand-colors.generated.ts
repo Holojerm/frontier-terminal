@@ -6,6 +6,6 @@
 // `manifest-ground` — see scripts/generate-brand-assets.ts.
 
 export const BRAND_MANIFEST_COLORS = {
-  themeColor: '#c74f2f',
-  backgroundColor: '#fafaf9',
+  themeColor: '#09090b',
+  backgroundColor: '#09090b',
 } as const

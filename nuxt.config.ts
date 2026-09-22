@@ -68,9 +68,11 @@ const CSP: Record<string, string[]> = {
   // `mask-image: url("data:image/svg+xml,…")`, which is img-src, not style-src.
   'img-src': ["'self'", 'data:'],
 
-  // @nuxt/fonts downloads Inter / Instrument Serif / JetBrains Mono at build
-  // time and serves them from /_fonts — there is deliberately no Google Fonts
-  // origin here, and if one ever appears it means the build stopped self-hosting.
+  // @nuxt/fonts downloads Inter and JetBrains Mono at build time and serves them
+  // from /_fonts — there is deliberately no Google Fonts origin here, and if one
+  // ever appears it means the build stopped self-hosting. Two families, not
+  // three: DESIGN.md › Typography sets `font-display` to the same JetBrains Mono
+  // that `font-mono` already loads, at a heavier weight.
   'font-src': ["'self'"],
 
   // No `ws:` for Vite's HMR socket, which is the obvious thing to add here and
@@ -254,8 +256,17 @@ export default defineNuxtConfig({
   },
 
   ui: {
-    // Customize your design system here
-    // colors: { primary: 'blue', neutral: 'slate' }
+    // The design system is compiled from DESIGN.md into app/app.config.ts and
+    // app/assets/css/main.css by /design-sync — nothing belongs here.
+  },
+
+  // DESIGN.md › Identity: this app is dark-first. `system` still wins whenever a
+  // visitor has expressed a preference; `fallback` only decides what to paint
+  // when they have not, and painting the light theme at a terminal is the wrong
+  // default. This is one of the four rules DESIGN.md cannot express as a token.
+  colorMode: {
+    preference: 'system',
+    fallback: 'dark',
   },
 
   // TypeScript — follow Vite/Nuxt recommended defaults.

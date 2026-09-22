@@ -45,7 +45,7 @@ const TAILWIND_PALETTES = [
   'pink',
   'rose',
   // The app's own custom ramp — reachable only through semantic tokens.
-  'clay',
+  'iris',
 ].join('|')
 
 const COLOR_UTILITIES = [

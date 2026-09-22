@@ -34,7 +34,7 @@ describe('withBase', () => {
 })
 
 describe('buildManifest', () => {
-  const base = { appName: 'Quarry', appDescription: 'A test app.' }
+  const base = { appName: 'Frontier Terminal', appDescription: 'A test app.' }
 
   it('scopes to root by default', () => {
     const manifest = buildManifest({ baseURL: '/', ...base })

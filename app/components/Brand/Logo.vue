@@ -5,9 +5,9 @@
 // same way main.css and app.config.ts are what the rest of DESIGN.md compiles
 // to. `bun run brand:generate` extracts the <svg data-brand-mark> element below
 // and derives every standalone asset from it — favicon.svg, the apple-touch
-// icon, the OG share image. That is the whole reason the mark lives in a
-// component instead of three hand-drawn files: a logo that exists in four
-// places gets redesigned in one of them.
+// icon, the two manifest icons, the OG share image. That is the whole reason
+// the mark lives in a component instead of five hand-drawn files: a logo that
+// exists in five places gets redesigned in one of them.
 //
 // Two consequences worth knowing before editing:
 //
@@ -54,16 +54,22 @@ const appName = useRuntimeConfig().public.appName
       focusable="false"
       :class="['shrink-0', markClass]"
     >
-      <!-- Two quarried strata, offset — DESIGN.md › Brand mark. Slab corners
-           (rx 1.5), not pills: the radius echoes --ui-radius rather than
-           contradicting it. -->
-      <rect x="3" y="7" width="26" height="6.5" rx="1.5" />
-      <rect x="3" y="18.5" width="17" height="6.5" rx="1.5" opacity=".55" />
+      <!-- A frontier, and the edge that has crossed it — DESIGN.md › Brand mark.
+           One closed path of three rising treads over a dim full-width rule;
+           square corners, because `--ui-radius` softens controls, not readings. -->
+      <path d="M3 20.5V16.5h8.5V11.5h8.5V7H29v13.5Z" />
+      <rect x="3" y="22.5" width="26" height="2.5" opacity=".5" />
     </svg>
 
+    <!-- Two rules from DESIGN.md › Component behavior › Navigation, both about
+         the same fact — the display face is monospaced, so "Frontier Terminal"
+         sets about 15% wider than it would proportionally. `whitespace-nowrap`
+         stops the header wrapping to two lines when the nav squeezes the
+         lockup, and the smaller step below `sm` keeps the menu and color-mode
+         buttons on a 375px header instead of pushing them off it. -->
     <span
       v-if="variant === 'lockup'"
-      class="font-display text-xl tracking-tight text-highlighted"
+      class="whitespace-nowrap font-display text-base tracking-tight text-highlighted sm:text-lg"
       >{{ appName }}</span
     >
   </span>

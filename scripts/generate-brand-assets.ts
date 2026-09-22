@@ -79,6 +79,17 @@ const MASKABLE_COVERAGE = 0.56
 const SAFE_ZONE_DIAMETER = 0.8
 /** Corner radius on the 32 grid — favicons are not masked by the browser. */
 const FAVICON_RADIUS = 7
+/** The weight DESIGN.md › Typography sets the display face in. */
+const DISPLAY_WEIGHT = 500
+/** How long to wait for the font provider before shooting anyway. */
+const FONT_BUDGET_MS = 15_000
+
+/** A family to ask the font provider for, and optionally which weights of it. */
+interface FontRequest {
+  family: string
+  /** css2 `wght` axis list, e.g. `400;500`. Omitted asks for the default 400. */
+  weights?: string
+}
 
 const inputs = collectBrandInputs()
 
@@ -208,15 +219,15 @@ function iconGroundHtml(
 
 function ogHtml(inputs: BrandInputs, palette: Palette): string {
   const { display, sans, mono } = inputs.fonts
-  // DESIGN.md › Typography: display face at weight 400 with -0.02em tracking,
-  // body in the sans. Sizes are the OG canvas's own scale — 1200x630 is
-  // routinely shown at 500px wide, so nothing subtle survives.
+  // DESIGN.md › Typography: display face at DISPLAY_WEIGHT with -0.03em
+  // tracking, body in the sans. Sizes are the OG canvas's own scale — 1200x630
+  // is routinely shown at 500px wide, so nothing subtle survives.
   return htmlPage(
     `
     <div style="width:${OG.width}px;height:${OG.height}px;background:${palette['og-ground']};display:flex;flex-direction:column;justify-content:space-between;padding:80px;box-sizing:border-box">
       <div>
         ${markSvg(inputs, palette['og-mark'], OG_MARK)}
-        <div style="font-family:'${display}',serif;font-weight:400;letter-spacing:-0.02em;font-size:88px;line-height:1.1;color:${palette['og-ink']};margin-top:40px;max-width:940px">
+        <div style="font-family:'${display}',serif;font-weight:${DISPLAY_WEIGHT};letter-spacing:-0.03em;font-size:88px;line-height:1.1;color:${palette['og-ink']};margin-top:40px;max-width:940px">
           ${escapeHtml(inputs.appName)}
         </div>
         <div style="font-family:'${sans}',sans-serif;font-size:34px;line-height:1.5;color:${palette['og-muted']};margin-top:28px;max-width:880px">
@@ -230,7 +241,15 @@ function ogHtml(inputs: BrandInputs, palette: Palette): string {
       }
     </div>
   `,
-    [display, sans, mono],
+    [
+      // The display family is the only one asked for a second weight. A face
+      // that doesn't ship DISPLAY_WEIGHT makes this one request 400 at the
+      // provider and fall back — which the `fonts` line of this script's output
+      // now reports, rather than silently shipping a share image in Times.
+      { family: display, weights: `400;${DISPLAY_WEIGHT}` },
+      { family: sans },
+      { family: mono },
+    ],
   )
 }
 
@@ -259,12 +278,13 @@ export const BRAND_MANIFEST_COLORS = {
 
 /** One <link> per family: a single stylesheet request naming a family that the
  *  provider doesn't have fails the whole request, taking the others with it. */
-function htmlPage(body: string, families: string[] = []): string {
+function htmlPage(body: string, families: FontRequest[] = []): string {
   const links = families
-    .map(
-      (family) =>
-        `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${encodeURIComponent(family).replace(/%20/g, '+')}&display=block">`,
-    )
+    .map(({ family, weights }) => {
+      const name = encodeURIComponent(family).replace(/%20/g, '+')
+      const axis = weights ? `:wght@${weights}` : ''
+      return `<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=${name}${axis}&display=block">`
+    })
     .join('')
   return `<!doctype html><html><head><meta charset="utf-8">${links}<style>*{margin:0;padding:0}body{display:flex}</style></head><body>${body}</body></html>`
 }
@@ -388,15 +408,37 @@ async function shoot(
   await page.setViewportSize({ width, height })
   await page.setContent(html, { waitUntil: 'domcontentloaded' })
 
-  // Never block on the font provider: an offline run should still produce a
-  // correct-looking image rather than hang for the default navigation timeout.
-  await page.evaluate(() =>
-    Promise.race([document.fonts.ready, new Promise((resolve) => setTimeout(resolve, 15_000))]),
-  )
+  // `document.fonts.ready` alone is a race, and it loses silently: at
+  // domcontentloaded the provider's <link> stylesheets have not parsed yet, so
+  // no font load is pending, so `ready` resolves immediately and the screenshot
+  // catches the generic fallback. Wait for the stylesheets first.
+  //
+  // Never block on the font provider though: an offline run should still
+  // produce a correct-looking image rather than hang for the default
+  // navigation timeout, so the whole wait is raced against a budget.
+  await page.evaluate(async (budgetMs: number) => {
+    const sheets = [...document.querySelectorAll('link[rel="stylesheet"]')].map(
+      (node) =>
+        new Promise<void>((resolve) => {
+          const link = node as HTMLLinkElement
+          if (link.sheet) return resolve()
+          link.addEventListener('load', () => resolve(), { once: true })
+          link.addEventListener('error', () => resolve(), { once: true })
+        }),
+    )
+    await Promise.race([
+      Promise.all(sheets).then(() => document.fonts.ready),
+      new Promise((resolve) => setTimeout(resolve, budgetMs)),
+    ])
+  }, FONT_BUDGET_MS)
 
+  // `document.fonts.check()` is not this question: it answers "can the text be
+  // painted", which is true the moment a fallback exists, so it returns true
+  // for a family that never arrived. Ask the face itself.
   const loaded = fontCheck
     ? await page.evaluate(
-        (family: string) => document.fonts.check(`88px "${family}"`),
+        (family: string) =>
+          [...document.fonts].some((face) => face.family === family && face.status === 'loaded'),
         fontCheck.fonts.display,
       )
     : true
