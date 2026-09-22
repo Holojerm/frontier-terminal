@@ -1,7 +1,7 @@
 <script setup lang="ts">
-// What the terminal is, the one rule every number obeys, the caveats in the
-// audit's own words, and how stale a number can be. The caveats are read
-// from the coverage endpoint so this page and sources.yaml cannot disagree.
+// What the terminal is, the one rule every number obeys, where the caveats
+// live, and how stale a number can be. The coverage endpoint is read for
+// the page's dateModified only.
 
 import manifest from '~~/fleet.json'
 
@@ -22,8 +22,6 @@ const repo = manifest.links.github
 const mcpUrl = `${config.public.appUrl.replace(/\/+$/, '')}/mcp`
 
 const { data: coverage } = await useFetch<CoverageData>('/api/coverage')
-
-const caveats = computed(() => (coverage.value?.sources ?? []).filter((s) => s.caveat))
 
 useSeo({
   title: 'About',
@@ -80,28 +78,14 @@ useSeo({
       </div>
     </TerminalPanel>
 
-    <TerminalPanel
-      id="caveats"
-      title="Caveats"
-      note="In the audit’s own words, read from the source registry at request time."
-    >
-      <ul v-if="caveats.length" class="max-w-2xl space-y-3">
-        <li v-for="s in caveats" :key="s.source_id" class="space-y-1 text-sm">
-          <a
-            :href="s.url"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-highlighted underline underline-offset-2"
-            >{{ s.label }}</a
-          >
-          <p class="text-default">{{ s.caveat }}</p>
-        </li>
-        <li v-for="cut in coverage?.cuts ?? []" :key="cut.id" class="space-y-1 text-sm">
-          <span class="font-mono text-highlighted">{{ cut.id }}</span>
-          <p class="text-default">{{ cut.verdict }}. {{ cut.reason }}</p>
-        </li>
-      </ul>
-      <p v-else class="text-sm text-muted">The source registry could not be read.</p>
+    <TerminalPanel id="caveats" title="Caveats">
+      <p class="max-w-2xl text-sm text-default">
+        Every source carries the audit’s caveat in its own words, and every deliberate cut its
+        reason. Both are read from the source registry at request time and listed on the
+        <NuxtLink to="/data#coverage" class="text-primary underline underline-offset-2"
+          >coverage table</NuxtLink
+        >, behind the info control on each row.
+      </p>
     </TerminalPanel>
 
     <TerminalPanel id="latency" title="Data latency">

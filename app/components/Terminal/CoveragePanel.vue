@@ -42,12 +42,12 @@ const roleNote = (s: SourceCoverage) =>
 
 <template>
   <div class="space-y-4">
-    <div class="overflow-x-auto">
+    <div class="overflow-x-auto md:overflow-visible">
       <table class="w-full text-sm">
         <caption class="sr-only">
           Every registered source: newest snapshot, last poll status, snapshot count, rows, caveat
         </caption>
-        <thead>
+        <thead class="bg-default md:sticky md:top-0">
           <tr class="border-b border-default text-left">
             <th scope="col" class="py-2 pr-4 font-medium text-muted">Source</th>
             <th scope="col" class="py-2 pr-4 font-medium text-muted">Newest snapshot</th>

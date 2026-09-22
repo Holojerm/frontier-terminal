@@ -31,6 +31,14 @@ useSeo({
 })
 
 const failed = computed(() => Boolean(alertsError.value || tickerError.value))
+
+// The page holds every alert the endpoint returned; the reader sees a page
+// of rows at a time. "Show more" rather than a scroll region: a long list
+// stays in the document, where find-in-page and a crawler can reach it.
+const PAGE = 25
+const shownCount = ref(PAGE)
+const shown = computed(() => alerts.value?.rows.slice(0, shownCount.value) ?? [])
+const remaining = computed(() => (alerts.value?.rows.length ?? 0) - shown.value.length)
 const tickerFeed = `/alerts.xml?${TICKER_FEED_QUERY}`
 </script>
 
@@ -75,8 +83,21 @@ const tickerFeed = `/alerts.xml?${TICKER_FEED_QUERY}`
           :action="{ label: 'What moved anyway', to: '/#signal' }"
         />
         <template v-else>
-          <p class="text-sm text-muted">Showing {{ alerts.rows.length }} of {{ alerts.total }}.</p>
-          <TerminalAlertList :alerts="alerts.rows" :level="3" />
+          <TerminalSignalTable :alerts="shown" />
+          <div class="flex flex-wrap items-baseline gap-x-4 text-sm">
+            <UButton
+              v-if="remaining > 0"
+              variant="link"
+              size="sm"
+              class="px-0"
+              :label="`Show ${Math.min(PAGE, remaining)} more`"
+              @click="shownCount += PAGE"
+            />
+            <span class="text-xs text-muted">
+              {{ shown.length }} of {{ alerts.total }}; each row opens the explanation, rule and
+              cited change rows.
+            </span>
+          </div>
         </template>
       </template>
     </TerminalPanel>
@@ -94,7 +115,17 @@ const tickerFeed = `/alerts.xml?${TICKER_FEED_QUERY}`
         />
         <template v-else>
           <p class="text-sm text-muted">Showing {{ ticker.rows.length }} of {{ ticker.total }}.</p>
-          <TerminalTickerList :alerts="ticker.rows" />
+          <!-- A feed, so a scroll region: nobody reads line 157, and the page
+               should not be 157 lines tall so that they can. tabindex="0" so
+               a keyboard can scroll it (axe: scrollable-region-focusable). -->
+          <div
+            class="max-h-96 overflow-y-auto rounded border border-default p-3"
+            tabindex="0"
+            role="region"
+            aria-label="Ticker lines"
+          >
+            <TerminalTickerList :alerts="ticker.rows" />
+          </div>
         </template>
       </template>
     </TerminalPanel>

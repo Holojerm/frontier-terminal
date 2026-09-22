@@ -16,6 +16,10 @@ definePageMeta({
 
 const { data: prices, error } = await useFetch<PricesData>('/api/prices')
 
+// `?provider=xai` preselects the catalog filter — how a lab page hands off.
+const route = useRoute()
+const provider = typeof route.query.provider === 'string' ? route.query.provider : undefined
+
 useSeo({
   title: 'Prices',
   description:
@@ -62,7 +66,7 @@ useSeo({
           body="Pricing rows land on the first poll of each vendor page."
           :action="{ label: 'See coverage', to: '/data#coverage' }"
         />
-        <TerminalPriceTable v-else :prices="prices" />
+        <TerminalPriceTable v-else :prices="prices" :provider="provider" />
       </TerminalPanel>
     </template>
   </div>
