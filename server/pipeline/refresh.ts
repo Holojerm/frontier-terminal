@@ -18,11 +18,13 @@ import { manifestFixtures } from './parsers/fixture-provenance'
 import { parsePendingFilersBlock, type PendingFilers } from './parsers/sec/pending-filers'
 import { parseRevenueFilersBlock, type RevenueFilers } from './parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock, type CikWhitelist } from './parsers/sec/whitelist'
+import { JoinRaceError } from './parsers/hiring/common'
 import { includeSources, type FetchSource } from './sources'
 import {
   currentEntities,
   deleteEntities,
   insertRows,
+  lastRunStatus,
   lastSkippedRunAt,
   latestGoodSnapshot,
   updateEntities,
@@ -108,6 +110,8 @@ interface Fetched {
   failure: string | null
   /** True when the fetcher refused for want of a credential (nothing attempted). */
   skipped: boolean
+  /** True when a DERIVED url 404d — the document is not published, see rows.ts. */
+  absent: boolean
 }
 
 async function fetchAndSnapshot(deps: RefreshDeps, source: FetchSource, now: () => Date) {
@@ -120,6 +124,9 @@ async function fetchAndSnapshot(deps: RefreshDeps, source: FetchSource, now: () 
       body: null,
       failure: outcome.detail,
       skipped: 'skipped' in outcome && outcome.skipped,
+      // Only for a derived id. An audited url that 404s is breakage — the
+      // audit recorded that it resolved — so that one stays a failure.
+      absent: outcome.status === 404 && derivedKeyOf(source.source_id) !== null,
     } satisfies Fetched
   }
 
@@ -152,6 +159,7 @@ async function fetchAndSnapshot(deps: RefreshDeps, source: FetchSource, now: () 
     body: { text: outcome.text, snapshot_id, unchanged, first: latest === null },
     failure: null,
     skipped: false,
+    absent: false,
   } satisfies Fetched
 }
 
@@ -170,7 +178,10 @@ async function parseAndStore(
   resolvedProviders: ReadonlySet<Provider>,
 ): Promise<Outcome> {
   const { source, fetched_at, body } = fetched
-  if (!body) return quiet(fetched.skipped ? 'skipped' : 'failed', fetched.failure, null)
+  if (!body) {
+    const status = fetched.skipped ? 'skipped' : fetched.absent ? 'absent' : 'failed'
+    return quiet(status, fetched.failure, null)
+  }
 
   const lane = laneFor(source.source_id)
   if (!lane) {
@@ -352,6 +363,7 @@ export async function runRefresh(
         body: null,
         failure: describeError(err),
         skipped: false,
+        absent: false,
       }
     }
     byId.set(source.source_id, fetched)
@@ -361,6 +373,9 @@ export async function runRefresh(
   for (const source of sources) {
     const fetched = byId.get(source.source_id)!
     let outcome: Outcome
+    // A failure the next tick clears was a blip. Only one class is known to
+    // self-resolve — the Greenhouse snapshot race — and it says so by type.
+    let transient = false
     try {
       outcome = await parseAndStore(
         deps,
@@ -372,16 +387,35 @@ export async function runRefresh(
         resolvedProviders,
       )
     } catch (err) {
+      transient = err instanceof JoinRaceError
       outcome = quiet('failed', describeError(err), fetched.body?.snapshot_id ?? null)
     }
     const detail = outcome.detail?.slice(0, DETAIL_MAX) ?? null
 
     if (outcome.status === 'failed') {
-      await recordOpsEvent(deps.db, {
-        kind: 'source_failed',
-        detail: `${source.source_id}: ${detail ?? 'unknown failure'}`,
-        path: source.url,
-      })
+      // The run is recorded either way — the coverage panel shows every one.
+      // The mail waits a tick for a transient class, so a race that resolves
+      // itself before anyone could have acted on it never becomes an alert,
+      // and one that does not resolve still does.
+      const persists = !transient || (await lastRunStatus(deps.db, source.source_id)) === 'failed'
+      if (persists) {
+        await recordOpsEvent(deps.db, {
+          kind: 'source_failed',
+          detail: `${source.source_id}: ${detail ?? 'unknown failure'}`,
+          path: source.url,
+        })
+      }
+    } else if (outcome.status === 'absent') {
+      // On the transition only. A SKU that has never had a model page has
+      // nothing to report; a page that was there last tick and is gone now is
+      // the event, and for this product it is the interesting kind.
+      if ((await lastRunStatus(deps.db, source.source_id)) !== 'absent') {
+        await recordOpsEvent(deps.db, {
+          kind: 'source_absent',
+          detail: `${source.source_id}: ${detail ?? 'no document at this url'}`,
+          path: source.url,
+        })
+      }
     } else if (outcome.status === 'skipped') {
       // Once a day, not once a tick: the previous skipped run is the marker.
       const last = await lastSkippedRunAt(deps.db, source.source_id)

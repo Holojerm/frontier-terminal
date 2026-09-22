@@ -192,6 +192,25 @@ export async function lastSkippedRunAt(db: PipelineDb, sourceId: string): Promis
   return row?.at ?? null
 }
 
+/**
+ * The status of this source's most recent run, or null before its first.
+ *
+ * The refresh uses it to raise `source_absent` on the transition only. Five
+ * OpenAI SKUs are priced with no model page behind them and never will be;
+ * a digest that repeats that every survey tick is training its reader to
+ * archive the mail unopened, which costs the tick where a page that did
+ * exist stops existing.
+ */
+export async function lastRunStatus(db: PipelineDb, sourceId: string): Promise<string | null> {
+  const [row] = await db
+    .select({ status: tables.sourceRuns.status })
+    .from(tables.sourceRuns)
+    .where(eq(tables.sourceRuns.source_id, sourceId))
+    .orderBy(desc(tables.sourceRuns.started_at))
+    .limit(1)
+  return row?.status ?? null
+}
+
 export interface GoodSnapshot {
   id: string
   content_hash: string
