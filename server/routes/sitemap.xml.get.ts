@@ -22,6 +22,7 @@
 
 import { db } from '@nuxthub/db'
 
+import { LAB_PAGES } from '#shared/utils/terminal-lab-summary'
 import { alertPath } from '#shared/utils/terminal-tiers'
 
 import { sitemapResponse, type SitemapEntry } from '../utils/seo'
@@ -60,7 +61,7 @@ export default defineEventHandler(async (event) => {
     appUrl: config.public.appUrl,
     indexable: config.public.indexable !== false,
     buildDate: config.buildDate,
-    pages: config.publicPages ?? [],
+    pages: [...(config.publicPages ?? []), ...LAB_PAGES],
     dynamic,
     complete,
   })

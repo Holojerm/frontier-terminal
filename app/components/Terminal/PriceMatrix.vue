@@ -7,15 +7,23 @@
 
 import { absoluteStamp, money, pctChange, pctLabel } from '#shared/utils/terminal-format'
 import { LAB_DISPLAY as DISPLAY } from '#shared/utils/terminal-labs'
-import type { MatrixCell, ModelClassId, PriceMatrix } from '#shared/utils/terminal-types'
+import type { BigFour, MatrixCell, ModelClassId, PriceMatrix } from '#shared/utils/terminal-types'
 
 const props = defineProps<{
   matrix: PriceMatrix
   /** Which columns to draw; every class by default. The front page draws the flagship alone. */
   classes?: ModelClassId[]
+  /** Which rows to draw; every provider by default. A lab page draws its own alone. */
+  providers?: BigFour[]
   /** Drop the method footnote — the axis page carries it. */
   compact?: boolean
 }>()
+
+const rows = computed(() =>
+  props.providers
+    ? props.matrix.providers.filter((p) => props.providers!.includes(p))
+    : props.matrix.providers,
+)
 
 const columns = computed(() =>
   props.classes
@@ -63,7 +71,7 @@ function delta(c: MatrixCell): string | null {
           </tr>
         </thead>
         <tbody>
-          <tr v-for="p in matrix.providers" :key="p" class="border-b border-default align-top">
+          <tr v-for="p in rows" :key="p" class="border-b border-default align-top">
             <th scope="row" class="py-3 pr-4 text-left font-medium text-highlighted">
               {{ DISPLAY[p] ?? p }}
             </th>

@@ -6,6 +6,7 @@
 // catalog and source coverage are each one link away on their own page.
 // Eight cached endpoints, fetched in parallel on the server.
 
+import { LABS } from '#shared/utils/terminal-lab-summary'
 import type {
   HiringHistoryData,
   IncidentsData,
@@ -60,6 +61,19 @@ const failed = computed(() =>
   ),
 )
 
+// The readout row reads the same payloads the panels below render.
+const readout = computed(() => ({
+  prices: prices.data.value,
+  revenue: revenue.data.value,
+  rankings: rankings.data.value,
+  spend: spend.data.value,
+  hiring: hiringHistory.data.value,
+  incidents: incidents.data.value,
+  alerts: [...(overview.data.value?.alerts ?? []), ...(overview.data.value?.ticker ?? [])].sort(
+    (a, b) => b.created_at.localeCompare(a.created_at),
+  ),
+}))
+
 const RECENT_RELEASES = 5
 const recent = computed(() => releases.data.value?.rows.slice(0, RECENT_RELEASES) ?? [])
 
@@ -70,9 +84,12 @@ const openIncidents = computed(() =>
 
 <template>
   <div class="space-y-12">
-    <header class="space-y-1">
-      <h1 class="text-2xl text-highlighted">{{ config.public.appName }}</h1>
-      <p class="max-w-2xl text-sm text-muted">{{ description }}</p>
+    <header class="space-y-4">
+      <div class="space-y-1">
+        <h1 class="text-2xl text-highlighted">{{ config.public.appName }}</h1>
+        <p class="max-w-2xl text-sm text-muted">{{ description }}</p>
+      </div>
+      <TerminalReadoutStrip :labs="LABS" :data="readout" link-labs />
     </header>
 
     <UAlert

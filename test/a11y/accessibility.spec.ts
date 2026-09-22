@@ -26,6 +26,10 @@ import { expect, test } from '@playwright/test'
 // two ever disagree. Add a public page, forget this list, and CI tells you.
 const ROUTES = [
   '/',
+  '/labs/openai',
+  '/labs/anthropic',
+  '/labs/google',
+  '/labs/xai',
   '/prices',
   '/revenue',
   '/hiring',

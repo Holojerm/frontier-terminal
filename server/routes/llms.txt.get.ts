@@ -16,6 +16,7 @@
 //
 // Suppressed on non-indexable deploys for the same reason robots.txt is.
 
+import { LAB_PAGES } from '#shared/utils/terminal-lab-summary'
 import manifest from '../../fleet.json'
 import { llmsTxtResponse } from '../utils/seo'
 import { EXPORT_TABLES } from '../utils/terminal-export'
@@ -34,7 +35,7 @@ export default defineEventHandler((event) => {
     appName: config.public.appName,
     appUrl: config.public.appUrl,
     description: config.public.appDescription,
-    pages: config.publicPages ?? [],
+    pages: [...(config.publicPages ?? []), ...LAB_PAGES],
     tables: Object.values(EXPORT_TABLES).map((table) => ({
       name: table.name,
       description: table.description,
