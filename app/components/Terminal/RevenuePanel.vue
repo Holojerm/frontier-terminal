@@ -16,6 +16,17 @@ const props = defineProps<{
 
 const MAX_PERIODS = 8
 
+// On the front page the labs with nothing on file share one line; a card
+// each would say the same sentence three times.
+const undisclosed = computed(() =>
+  props.compact ? props.revenue.providers.filter((p) => p.disclosure === 'none') : [],
+)
+const cards = computed(() =>
+  props.compact
+    ? props.revenue.providers.filter((p) => p.disclosure !== 'none')
+    : props.revenue.providers,
+)
+
 const shown = (p: RevenueProviderView) =>
   props.compact ? p.periods.slice(0, 2) : p.periods.slice(0, MAX_PERIODS)
 const overflow = (p: RevenueProviderView) =>
@@ -34,9 +45,13 @@ const relationLine = (p: RevenueProviderView) =>
 
 <template>
   <div class="space-y-4">
+    <p v-if="compact && undisclosed.length" class="text-sm text-toned">
+      No SEC-disclosed revenue: {{ undisclosed.map((p) => p.display).join(', ') }}. Press run-rates
+      are not shown.
+    </p>
     <div class="grid gap-4 md:grid-cols-2">
       <article
-        v-for="p in revenue.providers"
+        v-for="p in cards"
         :key="p.provider"
         :aria-labelledby="`revenue-${p.provider}`"
         class="space-y-3 rounded border border-default bg-elevated p-4"
@@ -61,26 +76,18 @@ const relationLine = (p: RevenueProviderView) =>
              filled the space named as deliberately absent. -->
         <TerminalEmptyState
           v-if="p.disclosure === 'none'"
-          title="No audited disclosure yet."
-          body="No SEC filing on record carries this lab’s revenue. Press-reported run-rates are deliberately not shown: a figure this terminal cannot link to the document it came from is a claim, not data."
+          title="No SEC filing carries this lab’s revenue."
+          body="Press-reported run-rates are not shown."
         />
 
         <TerminalEmptyState
           v-else-if="p.disclosure === 'no_rows'"
-          title="Tagged, nothing parsed yet."
-          body="A revenue filer is registered for this lab; its XBRL facts land on the first successful company-facts poll."
+          title="Filer tagged, nothing parsed yet."
+          body="Its XBRL facts land on the first company-facts poll."
         />
 
         <template v-else>
-          <UAlert
-            v-if="p.disclosure === 'parent'"
-            color="warning"
-            variant="soft"
-            icon="i-lucide-git-branch"
-            title="Parent’s consolidated revenue"
-            :description="relationLine(p)"
-          />
-          <p v-else class="text-sm text-toned">
+          <p class="text-sm text-toned">
             {{ relationLine(p) }}
             <a
               v-if="p.filer?.resolved_from"
@@ -164,10 +171,10 @@ const relationLine = (p: RevenueProviderView) =>
       </article>
     </div>
 
-    <p class="text-xs text-muted">{{ revenue.rule }}</p>
+    <p v-if="!compact" class="text-xs text-muted">{{ revenue.rule }}</p>
     <p v-if="compact" class="text-sm">
       <NuxtLink to="/revenue" class="text-primary underline underline-offset-2">
-        Every reported period, restatements and the filing links
+        Every period, restatements and filings
       </NuxtLink>
     </p>
   </div>

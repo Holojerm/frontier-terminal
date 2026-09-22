@@ -32,10 +32,8 @@ useSeo({
     <header class="space-y-2">
       <h1 class="text-4xl text-highlighted">Revenue</h1>
       <p class="max-w-2xl text-muted">
-        What the labs have disclosed, read from EDGAR’s XBRL company facts and linked to the filing
-        that reported each value. Where no lab or parent has filed, the panel says so — a
-        press-reported run-rate is a claim about a number, not the number, and is deliberately not
-        shown.
+        Revenue read from EDGAR’s XBRL company facts, each value linked to its filing. Press
+        run-rates are not shown.
       </p>
     </header>
 
@@ -45,14 +43,14 @@ useSeo({
       variant="soft"
       icon="i-lucide-database-zap"
       title="Revenue could not be read"
-      description="The revenue endpoint failed to respond. Nothing is shown rather than a stale or inferred number."
+      description="The revenue endpoint failed to respond."
     />
 
     <template v-else-if="revenue">
       <TerminalPanel
         id="disclosed"
         title="Disclosed revenue, per lab"
-        note="Each reported period once, from the newest filing that reported it; a value a later filing restated is listed as superseded, never silently overwritten."
+        note="Each period once, from the newest filing; restated values are listed as superseded."
       >
         <TerminalRevenuePanel :revenue="revenue" />
       </TerminalPanel>
@@ -60,14 +58,13 @@ useSeo({
       <TerminalPanel
         id="how"
         title="How a lab gets a number here"
-        note="The pipeline is wired for the public-flip moment; the tag is the only thing missing."
+        note="What happens the day a lab files for itself."
       >
         <div class="max-w-2xl space-y-3 text-sm text-default">
           <p>
-            The EDGAR poll runs every 30 minutes over the full-text S-1 tripwire, one submissions
-            feed per whitelisted CIK (S-1, 424B4, 10-Q, 10-K and 8-K forms), and XBRL company facts
-            for every tagged revenue filer. A new S-1/424B4 or 10-Q/10-K on a whitelisted CIK alerts
-            deterministically, with no model in the loop.
+            EDGAR is polled every 30 minutes: the full-text S-1 tripwire, one submissions feed per
+            whitelisted CIK (S-1, 424B4, 10-Q, 10-K and 8-K), and XBRL company facts for every
+            tagged revenue filer. A new S-1/424B4 or 10-Q/10-K on a whitelisted CIK alerts by rule.
           </p>
           <p>
             When a lab files for itself, nothing has to be typed. Two full-text queries watch for

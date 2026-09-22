@@ -57,6 +57,19 @@ const anyLog = computed(() => (hiring.value?.log.changes ?? 0) > 0)
 const showTable = ref(false)
 
 const compareRows = (p: HiringHistoryProvider) => p.compare?.departments ?? []
+
+/** One entry per board with something to disclose: an entity blend, or no feed at all. */
+const caveats = computed(() =>
+  (hiring.value?.providers ?? []).flatMap((p) => {
+    if (p.feed === 'no_public_feed') {
+      return [{ provider: p.provider, label: `${p.display}: no public feed`, text: p.reason ?? '' }]
+    }
+    if (p.caveat) {
+      return [{ provider: p.provider, label: `${p.display}: entity-blended board`, text: p.caveat }]
+    }
+    return []
+  }),
+)
 </script>
 
 <template>
@@ -64,9 +77,8 @@ const compareRows = (p: HiringHistoryProvider) => p.compare?.departments ?? []
     <header class="space-y-2">
       <h1 class="text-4xl text-highlighted">Hiring</h1>
       <p class="max-w-2xl text-muted">
-        Open roles per day, per lab. A job board is a set, so the count on any day is today’s
-        listing with every later change undone — a role added after that day removed, a role closed
-        after it restored. Nothing is estimated; the log either holds the change or it does not.
+        Open roles per day, per lab, reconstructed from each board’s change log. Nothing is
+        estimated.
       </p>
     </header>
 
@@ -80,6 +92,13 @@ const compareRows = (p: HiringHistoryProvider) => p.compare?.departments ?? []
     />
 
     <template v-else-if="hiring">
+      <!-- Every board caveat once, here, so the panels below carry only a mark. -->
+      <ul v-if="caveats.length" class="space-y-1 text-sm text-muted">
+        <li v-for="c in caveats" :key="c.provider">
+          <TerminalCaveatMark :label="c.label" :text="c.text" />
+        </li>
+      </ul>
+
       <TerminalPanel
         id="series"
         title="Open roles over time"
@@ -101,7 +120,7 @@ const compareRows = (p: HiringHistoryProvider) => p.compare?.departments ?? []
           v-else
           title="No series to draw yet."
           body="A series needs a board with a current listing and at least two days on record. The first poll of each board writes its baseline; the days after it fill the line."
-          :action="{ label: 'See coverage', to: '/#coverage' }"
+          :action="{ label: 'See coverage', to: '/data#coverage' }"
         />
 
         <UCollapsible v-if="chart.x.length > 1" v-model:open="showTable" class="space-y-2">
@@ -155,7 +174,7 @@ const compareRows = (p: HiringHistoryProvider) => p.compare?.departments ?? []
       <TerminalPanel
         id="buildout"
         title="Physical-infrastructure buildout"
-        note="Open roles in the data-center, facilities, energy, construction, compute and hardware departments per lab per day — the supply-side signal beside the status pages’ demand strain."
+        note="Data-center, facilities, energy, construction, compute and hardware roles per lab per day."
       >
         <TerminalBuildoutPanel :history="hiring" />
       </TerminalPanel>
@@ -163,7 +182,7 @@ const compareRows = (p: HiringHistoryProvider) => p.compare?.departments ?? []
       <TerminalPanel
         id="departments"
         title="Department mix, now against earlier"
-        :note="`Each board’s open roles by department today and ${hiring.window_days} days ago — or on the first day on record when the series is younger than that.`"
+        :note="`Open roles by department, now against ${hiring.window_days} days ago or the first day on record.`"
       >
         <div class="grid gap-4 md:grid-cols-2">
           <article
@@ -174,7 +193,15 @@ const compareRows = (p: HiringHistoryProvider) => p.compare?.departments ?? []
             class="space-y-3 rounded border border-default bg-elevated p-4"
           >
             <header class="flex flex-wrap items-baseline justify-between gap-2">
-              <h3 :id="`mix-${p.provider}`" class="text-lg text-highlighted">{{ p.display }}</h3>
+              <h3 :id="`mix-${p.provider}`" class="text-lg text-highlighted">
+                {{ p.display }}
+                <TerminalCaveatMark
+                  v-if="p.caveat"
+                  label="blended board"
+                  :text="p.caveat"
+                  class="ml-1"
+                />
+              </h3>
               <span v-if="p.compare" class="text-sm text-toned">
                 <span class="font-mono text-highlighted">{{ p.compare.total_now }}</span> open,
                 <span class="font-mono">{{
@@ -184,24 +211,17 @@ const compareRows = (p: HiringHistoryProvider) => p.compare?.departments ?? []
               </span>
             </header>
 
-            <UAlert
-              v-if="p.caveat"
-              color="warning"
-              variant="soft"
-              icon="i-lucide-triangle-alert"
-              title="Entity-blended board"
-              :description="p.caveat"
-            />
-
             <!-- Honest cut: no public feed, never a fabricated series. -->
-            <UAlert
+            <p
               v-if="p.feed === 'no_public_feed'"
-              color="info"
-              variant="soft"
-              icon="i-lucide-eye-off"
-              title="No public feed"
-              :description="`${p.reason ?? ''} Verdict transcribed from the source audit — showing nothing beats guessing.`"
-            />
+              class="flex items-center gap-1 text-sm text-toned"
+            >
+              No public feed
+              <TerminalCaveatMark
+                :name="`Why ${p.display} has no hiring feed`"
+                :text="p.reason ?? ''"
+              />
+            </p>
 
             <TerminalEmptyState
               v-else-if="p.feed === 'no_rows'"
@@ -261,17 +281,16 @@ const compareRows = (p: HiringHistoryProvider) => p.compare?.departments ?? []
                 v-if="p.join_from && p.compare.at < p.join_from.slice(0, 10)"
                 class="text-xs text-toned"
               >
-                Departments come from the board’s /departments join, first fetched
-                {{ absoluteStamp(p.join_from, now) }}; before that, rows carried no department,
-                which the “{{ NO_DEPARTMENT }}” row above reflects.
+                Departments joined from {{ absoluteStamp(p.join_from, now) }}; earlier rows read “{{
+                  NO_DEPARTMENT
+                }}”.
               </p>
               <p
                 v-if="p.baseline_at && p.series_from && p.baseline_at > p.series_from"
                 class="text-xs text-toned"
               >
-                Rows before this store’s baseline poll ({{ absoluteStamp(p.baseline_at, now) }}) are
-                imported history; a role that opened or closed between the last imported poll and
-                that baseline is not in the log and is carried as it stands today.
+                Rows before the {{ absoluteStamp(p.baseline_at, now) }} baseline are imported
+                history, carried as they stand today.
               </p>
             </template>
 
