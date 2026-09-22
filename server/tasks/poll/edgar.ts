@@ -1,4 +1,5 @@
-// Cron task: poll the two EDGAR feeds every 30 minutes (server/pipeline/scopes.ts).
+// Cron task: poll the EDGAR feeds and the model catalogs every 30 minutes
+// (server/pipeline/scopes.ts).
 //
 // Scheduled from nuxt.config.ts (SCHEDULED_TASKS) and matched by the
 // [triggers] crons entry in wrangler.toml; `bun run crons:check` fails the
@@ -22,7 +23,7 @@ import { blobRawStore, runPoll } from '../../pipeline/poll'
 export default defineTask({
   meta: {
     name: 'poll:edgar',
-    description: 'Fetch the EDGAR full-text search and SPCX submissions feeds; diff and store',
+    description: 'Fetch the EDGAR feeds and the model catalogs (launch detection); diff and store',
   },
   async run() {
     const config = useRuntimeConfig()

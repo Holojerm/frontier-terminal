@@ -111,7 +111,7 @@ beforeEach(async () => {
 })
 
 describe('scopes', () => {
-  it('edgar is the SEC feeds; survey is every include source', () => {
+  it('edgar is the SEC feeds and the model catalogs; survey is every include source', () => {
     expect(sourceIdsForScope('edgar', ALL)).toEqual([
       'edgar-fts',
       'edgar-fts-openai',
@@ -121,6 +121,12 @@ describe('scopes', () => {
       'edgar-submissions-nvda',
       'edgar-submissions-googl',
       'edgar-companyfacts-spcx',
+      'openai-models-md',
+      'openai-pricing-md',
+      'anthropic-models-md',
+      'anthropic-pricing-md',
+      'xai-models-md',
+      'google-pricing-html',
     ])
     expect(sourceIdsForScope('survey', ALL)).toEqual(ALL_IDS)
     expect(ALL_IDS).toHaveLength(24)

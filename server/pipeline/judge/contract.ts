@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { AlertRow, contentHash, parseAgentOutput, type AgentGateResult } from '../contracts'
 import type { ChangeRow } from '../contracts'
+import { JudgeClassMapping } from './class-map'
 
 // The judge lane's contract. The Worker owns the data and every gate; the routine only reasons. What
 // the routine may send back is derived entirely from the AlertRow contract:
@@ -15,8 +16,15 @@ export const JudgeAlert = AlertRow.pick({ severity: true, headline: true, explan
   .strict()
 export type JudgeAlert = z.infer<typeof JudgeAlert>
 
-/** What the model prints. */
-export const JudgeOutput = z.strictObject({ alerts: JudgeAlert.array() })
+/**
+ * What the model prints. `class_map` is optional so a run with no cell under
+ * review prints exactly what it always did; the Worker gates each entry in
+ * server/pipeline/judge/class-map.ts.
+ */
+export const JudgeOutput = z.strictObject({
+  alerts: JudgeAlert.array(),
+  class_map: JudgeClassMapping.array().max(9).default([]),
+})
 export type JudgeOutput = z.infer<typeof JudgeOutput>
 
 /**

@@ -139,12 +139,19 @@ describe('runPoll at a survey instant', () => {
 })
 
 describe('runPoll between survey instants', () => {
-  it('edgar runs the SEC feeds', async () => {
+  it('edgar runs the SEC feeds and the model catalogs', async () => {
     const { all } = deps('2026-09-09T00:30:03Z')
     const outcome = await runPoll('edgar', all)
     expect(outcome.status).toBe('ran')
     if (outcome.status !== 'ran') return
+    // Reported in sources.yaml order, where the catalogs come first.
     expect(outcome.result.sources.map((s) => s.source_id)).toEqual([
+      'openai-models-md',
+      'openai-pricing-md',
+      'anthropic-models-md',
+      'anthropic-pricing-md',
+      'xai-models-md',
+      'google-pricing-html',
       'edgar-fts',
       'edgar-fts-openai',
       'edgar-submissions-spcx',
@@ -154,6 +161,7 @@ describe('runPoll between survey instants', () => {
       'edgar-submissions-googl',
       'edgar-companyfacts-spcx',
     ])
+    expect(outcome.result.failed).toBe(0)
   })
 
   it('edgar skips a held lock at once, and that is only a log line', async () => {

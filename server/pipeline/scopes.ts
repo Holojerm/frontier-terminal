@@ -6,8 +6,10 @@ import type { FetchSource } from './sources'
 //
 //   edgar   */30 * * * *   the SEC feeds — the FTS tripwire, one submissions
 //                          feed per whitelisted CIK, and company facts for
-//                          each tagged revenue filer: the one axis where
-//                          latency is worth polling for.
+//                          each tagged revenue filer — plus the model catalogs
+//                          (LAUNCH_SOURCES): the two axes where latency is
+//                          worth polling for. The scope keeps its stored name
+//                          'edgar' (pollScopeEnum, source_runs, /api/status).
 //   survey  0 */6 * * *    every include source. It re-checks EDGAR on purpose:
 //                          an unchanged re-fetch diffs to zero, and the overlap
 //                          means a stalled edgar tick goes covered, not blind.
@@ -27,17 +29,34 @@ const EDGAR_SOURCES: readonly string[] = [
   'edgar-companyfacts-spcx',
 ]
 
+// A model launch lands on these pages first: the vendor's own price list and
+// catalog. On the six-hourly survey alone a launch could sit unreported for
+// most of a working day; on this tick it waits at most 30 minutes. Each is one
+// small document hashed against the last, so an unchanged re-fetch diffs to
+// zero. OpenRouter's model list stays on the survey: it has no lane (a
+// cross-check, never a source of record — lanes.ts), so polling it faster
+// would only store bytes. The derived per-model OpenAI pages stay there too:
+// they add context windows to a SKU these pages already announced.
+const LAUNCH_SOURCES: readonly string[] = [
+  'openai-models-md',
+  'openai-pricing-md',
+  'anthropic-models-md',
+  'anthropic-pricing-md',
+  'xai-models-md',
+  'google-pricing-html',
+]
+
 export function sourceIdsForScope(scope: PollScope, all: readonly FetchSource[]): string[] {
   const ids = all.map((s) => s.source_id)
   if (scope === 'survey') return ids
-  const missing = EDGAR_SOURCES.filter((id) => !ids.includes(id))
+  const missing = [...EDGAR_SOURCES, ...LAUNCH_SOURCES].filter((id) => !ids.includes(id))
   if (missing.length) {
     throw new Error(`edgar scope names sources not in sources.yaml: ${missing.join(', ')}`)
   }
   // Derived EDGAR feeds (a resolved lab's submissions and company facts —
   // server/pipeline/derived.ts) ride the same tick as the static ones.
   const derived = ids.filter((id) => id.startsWith('edgar-') && !EDGAR_SOURCES.includes(id))
-  return [...EDGAR_SOURCES, ...derived]
+  return [...EDGAR_SOURCES, ...derived, ...LAUNCH_SOURCES]
 }
 
 const EDGAR_PERIOD_MS = 30 * 60 * 1000

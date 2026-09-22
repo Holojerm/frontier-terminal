@@ -4,6 +4,7 @@ import * as tables from '../../db/schema'
 import { recordOpsEvent } from '../../utils/ops'
 import { ChangeRow } from '../contracts'
 import { D1_MAX_BOUND_PARAMS, chunk, insertRows, type PipelineDb } from '../store'
+import { applyClassMappings, type RawReader } from './class-map'
 import { buildAlertRows, gateJudgeSubmission } from './contract'
 import { groundAlerts } from './grounding'
 
@@ -27,6 +28,11 @@ export interface JudgeRunReport {
   rejections: { reason: string; detail: string; headline: string }[]
   /** Whole-body rejection at the schema gate — nothing reached grounding. */
   gate_rejection: { reason: string; detail: string } | null
+  /** Re-mappings of matrix cells under review (server/pipeline/judge/class-map.ts). */
+  class_map: {
+    accepted: number
+    rejected: { reason: string; detail: string; cell: string; model_slug: string }[]
+  }
 }
 
 async function loadChanges(db: PipelineDb, ids: readonly string[]): Promise<ChangeRow[]> {
@@ -50,10 +56,13 @@ async function existingAlertIds(db: PipelineDb, ids: readonly string[]): Promise
   return existing
 }
 
+/** No stored pages: every class-map proposal is rejected for want of one. */
+const NO_PAGES: RawReader = async () => null
+
 export async function submitJudgeRun(
   db: PipelineDb,
   raw: string,
-  opts: { source?: string; now?: Date } = {},
+  opts: { source?: string; now?: Date; readRaw?: RawReader } = {},
 ): Promise<JudgeRunReport> {
   const started_at = (opts.now ?? new Date()).toISOString()
   const source = opts.source ?? 'routine'
@@ -85,6 +94,7 @@ export async function submitJudgeRun(
       rejected: 0,
       rejections: [],
       gate_rejection: { reason: gate.reason, detail: gate.detail },
+      class_map: { accepted: 0, rejected: [] },
     }
   }
 
@@ -138,6 +148,14 @@ export async function submitJudgeRun(
     })
   }
 
+  // Re-mappings are gated against the stored page, never against the body.
+  const classMap = await applyClassMappings(
+    db,
+    opts.readRaw ?? NO_PAGES,
+    body.class_map,
+    opts.now ?? new Date(),
+  )
+
   return {
     changes_seen: body.change_ids_seen.length,
     accepted: accepted.length,
@@ -145,5 +163,14 @@ export async function submitJudgeRun(
     rejected: rejected.length,
     rejections,
     gate_rejection: null,
+    class_map: {
+      accepted: classMap.accepted,
+      rejected: classMap.rejected.map((r) => ({
+        reason: r.reason,
+        detail: r.detail,
+        cell: `${r.mapping.provider}:${r.mapping.class}`,
+        model_slug: r.mapping.model_slug,
+      })),
+    },
   }
 }

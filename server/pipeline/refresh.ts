@@ -1,6 +1,8 @@
 import { ZodError } from 'zod'
 
 import { recordOpsEvent } from '../utils/ops'
+import type { ClassEntry } from '../utils/terminal-classes'
+import { effectiveClassMap } from './class-map'
 import {
   contentHashOfText,
   type ChangeRow,
@@ -176,6 +178,7 @@ async function parseAndStore(
   revenueFilers: RevenueFilers,
   pendingFilers: PendingFilers,
   resolvedProviders: ReadonlySet<Provider>,
+  classMap: readonly ClassEntry[],
 ): Promise<Outcome> {
   const { source, fetched_at, body } = fetched
   if (!body) {
@@ -210,6 +213,7 @@ async function parseAndStore(
     pendingFilers,
     resolvedProviders,
     derivedKey: derivedKeyOf(source.source_id),
+    classMap,
   })
   const note = parsed.note ?? null
 
@@ -342,6 +346,10 @@ export async function runRefresh(
     revenueFilers.set(filer.provider, { ticker: filer.provider.toUpperCase(), relation: 'issuer' })
   }
 
+  // The drift check runs against the map in effect — the seed plus any judge
+  // decision — so a re-mapped cell is checked for its new sentence.
+  const classMap = await effectiveClassMap(deps.db)
+
   const unknown = sourceIds.filter((id) => !all.some((s) => s.source_id === id))
   if (unknown.length) throw new Error(`not include sources: ${unknown.join(', ')}`)
 
@@ -385,6 +393,7 @@ export async function runRefresh(
         revenueFilers,
         pendingFilers,
         resolvedProviders,
+        classMap,
       )
     } catch (err) {
       transient = err instanceof JoinRaceError

@@ -237,7 +237,11 @@ describe('CIK resolution end to end', () => {
     expect(ids).toContain('edgar-fts-openai')
     await run(ids, fetcher())
     expect(await resolvedFilers(db)).toEqual([])
-    expect(await deriveSources(db, sourcesYaml)).toEqual([])
+    // The tick also carries the model catalogs (scopes.ts), so the OpenAI
+    // model pages derive too; this test is about the EDGAR ones.
+    const edgarOnly = (sources: Awaited<ReturnType<typeof deriveSources>>) =>
+      sources.filter((s) => s.source_id.startsWith('edgar-'))
+    expect(edgarOnly(await deriveSources(db, sourcesYaml))).toEqual([])
 
     // Anthropic files.
     const report = await run(['edgar-fts'], fetcher({ 'edgar-fts': ftsWithAnthropicS1() }))
@@ -254,7 +258,7 @@ describe('CIK resolution end to end', () => {
     expect(alert!.explanation).toContain('Accession 0001628280-26-777777')
 
     // The next tick knows two more sources, both in the edgar scope.
-    const derived = await deriveSources(db, sourcesYaml)
+    const derived = edgarOnly(await deriveSources(db, sourcesYaml))
     expect(derived).toEqual([
       {
         source_id: 'edgar-submissions-anthropic',

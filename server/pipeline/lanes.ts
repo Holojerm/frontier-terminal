@@ -39,6 +39,7 @@ import { parseAnthropicStatus } from './parsers/status/anthropic-status'
 import { parseGoogleCloudStatus } from './parsers/status/google-cloud-status'
 import { parseOpenaiStatus } from './parsers/status/openai-status'
 import { recommendationRows } from './recommendations'
+import type { ClassEntry } from '../utils/terminal-classes'
 import type { CikWhitelist } from './parsers/sec/whitelist'
 
 // How each include source turns a fetched body into entities — the join
@@ -67,6 +68,8 @@ export interface ParseContext {
   resolvedProviders: ReadonlySet<Provider>
   /** For a derived source, the key it was derived for (a CIK or a slug); null for a registered one. */
   derivedKey: string | null
+  /** The class map in effect this tick (server/pipeline/class-map.ts); the seed when omitted. */
+  classMap?: readonly ClassEntry[]
 }
 
 export interface ParseResult {
@@ -195,32 +198,32 @@ export function derivedKeyOf(sourceId: string): string | null {
 // The pages the class map (server/utils/terminal-classes.ts) is transcribed
 // from also carry the drift check on that map: one 'recommendation' row per
 // mapped cell, beside the page's price rows (recommendations.ts).
-const checked = (sourceId: string, text: string, prov: Provenance, snapshotId: string) =>
-  normalizeRecommendations(recommendationRows(sourceId, text, prov), snapshotId)
+const checked = (sourceId: string, text: string, { prov, snapshotId, classMap }: ParseContext) =>
+  normalizeRecommendations(recommendationRows(sourceId, text, prov, classMap), snapshotId)
 
 export const LANES: Readonly<Record<string, Lane>> = {
-  'openai-models-md': set((text, { prov, snapshotId }) => ({
+  'openai-models-md': set((text, ctx) => ({
     entities: [
-      ...normalizePrices(parseOpenAiModelsMd(text, prov).rows, snapshotId),
-      ...checked('openai-models-md', text, prov, snapshotId),
+      ...normalizePrices(parseOpenAiModelsMd(text, ctx.prov).rows, ctx.snapshotId),
+      ...checked('openai-models-md', text, ctx),
     ],
   })),
   'openai-pricing-md': set((text, { prov, snapshotId }) => ({
     entities: normalizePrices(parseOpenAiPricingMd(text, prov).rows, snapshotId),
   })),
-  'anthropic-models-md': set((text, { prov, snapshotId }) => ({
+  'anthropic-models-md': set((text, ctx) => ({
     entities: [
-      ...normalizePrices(parseAnthropicModelsOverviewMd(text, prov).rows, snapshotId),
-      ...checked('anthropic-models-md', text, prov, snapshotId),
+      ...normalizePrices(parseAnthropicModelsOverviewMd(text, ctx.prov).rows, ctx.snapshotId),
+      ...checked('anthropic-models-md', text, ctx),
     ],
   })),
   'anthropic-pricing-md': set((text, { prov, snapshotId }) => ({
     entities: normalizePrices(parseAnthropicPricingMd(text, prov).rows, snapshotId),
   })),
-  'xai-models-md': set((text, { prov, snapshotId }) => ({
+  'xai-models-md': set((text, ctx) => ({
     entities: [
-      ...normalizePrices(parseXaiModelsMd(text, prov).rows, snapshotId),
-      ...checked('xai-models-md', text, prov, snapshotId),
+      ...normalizePrices(parseXaiModelsMd(text, ctx.prov).rows, ctx.snapshotId),
+      ...checked('xai-models-md', text, ctx),
     ],
   })),
   'google-pricing-html': set((html, { prov, snapshotId }) => {
