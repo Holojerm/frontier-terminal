@@ -10,6 +10,10 @@ import type { MatrixCell, PriceMatrix } from '#shared/utils/terminal-types'
 
 const props = defineProps<{ matrix: PriceMatrix }>()
 
+// Secondary text here is `text-toned`, never `text-muted`: every cell sits on
+// `bg-elevated`, where zinc-500 reads 4.39:1 and fails AA. DESIGN.md states the
+// rule; this component is the one that broke it.
+
 const column = computed(() => props.matrix.classes.find((k) => k.id === 'flagship'))
 const cells = computed(() =>
   props.matrix.providers
@@ -37,15 +41,15 @@ const cells = computed(() =>
         </div>
         <div class="font-mono">
           <span class="text-highlighted">{{ money(c.row!.input_per_mtok) }}</span>
-          <span class="text-xs text-muted"> in </span>
+          <span class="text-xs text-toned"> in </span>
           <span class="text-default">{{ money(c.row!.output_per_mtok) }}</span>
-          <span class="text-xs text-muted"> out</span>
-          <span v-if="cellDelta(c)" class="ml-2 text-xs text-muted">{{ cellDelta(c) }}</span>
+          <span class="text-xs text-toned"> out</span>
+          <span v-if="cellDelta(c)" class="ml-2 text-xs text-toned">{{ cellDelta(c) }}</span>
         </div>
         <p v-if="c.basis_current === false" class="text-xs text-warning">Mapping under review</p>
         <TerminalProvenanceTag :source-url="c.row!.source_url" :fetched-at="c.row!.fetched_at" />
       </dd>
-      <dd v-else class="space-y-1 text-muted">
+      <dd v-else class="space-y-1 text-toned">
         <div v-if="c.row" class="truncate font-mono text-xs">{{ c.row.model_slug }}</div>
         <div class="flex items-center gap-1 text-xs">
           <span>{{ c.row ? 'no published price' : 'not mapped' }}</span>
