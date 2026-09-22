@@ -1,8 +1,10 @@
 # Frontier Terminal
 
-A free, public, read-only investor terminal tracking the frontier AI labs — API pricing,
-hiring, SEC filings. Every number carries the URL it was read from and when. Not investment
-advice.
+A free, public, read-only investor terminal tracking the frontier AI labs — OpenAI, Anthropic,
+Google, xAI — on six axes: API price lists, hiring boards (with the physical-infrastructure
+buildout cluster), SEC filings, disclosed revenue, status-page incidents, and OpenRouter demand
+share with the spend share it implies. Every number carries the URL it was read from and when.
+Not investment advice.
 
 Built on [nuxt-cf-template](https://github.com/Holojerm/nuxt-cf-template): **Nuxt 4 + NuxtUI v4**
 on **Cloudflare Workers**, with D1 (SQLite via Drizzle), KV, and R2. No accounts, no sign-in,
@@ -26,12 +28,16 @@ instead, because the Workers Builds image cannot launch Chromium — `.github/wo
 
 | Path | What |
 | --- | --- |
-| `app/pages/` | One page today, the landing placeholder. Every page calls `useSeo()` once and declares `publicPage`. |
-| `server/api/` | `health`, `status`, `fleet` — the ops contract. Data endpoints arrive with the pipeline. |
-| `server/routes/` | `robots.txt`, `sitemap.xml`, `llms.txt`, `manifest.webmanifest`, all derived from the route table; `mcp.ts`, the MCP endpoint. |
-| `server/db/schema.ts` | `instance_secrets` and `ops_events`. The pipeline adds its tables beside them. |
-| `server/tasks/ops/alert.ts` | Every 30 minutes, drains the `ops_events` spool into one digest email. |
+| `app/pages/` | The terminal: the overview, `prices/` (catalog and per-SKU history), `hiring.vue`, `revenue.vue`, `releases.vue`, `incidents.vue`, `rankings.vue`, `alerts/` (feed and permalinks), `data.vue` (bulk downloads), `about.vue`. Every page calls `useSeo()` once and declares `publicPage`. |
+| `sources.yaml` | The source registry — one entry per candidate source with its axis, its diff mechanism, and an include/exclude verdict. Transcribed from `docs/source-audit.md`; it never re-derives. |
+| `server/pipeline/` | Fetch → normalize → diff → store. `parsers/` is one parser per source, `contracts/` the zod row shapes the DB mirrors, `judge/` the one writer that promotes changes to alerts, `scopes.ts` which sources a given tick covers. |
+| `server/api/` | The read-only JSON API: `overview`, `prices` (+ `prices/[key]`), `hiring` (+ `hiring/history`), `revenue`, `releases`, `incidents`, `rankings`, `spend`, `alerts` (+ `alerts/[id]`), `coverage`. Plus `health`, `status`, `fleet` — the ops contract — and `judge/`, bearer-gated, the only route that writes. |
+| `server/routes/` | `robots.txt`, `sitemap.xml`, `llms.txt`, `manifest.webmanifest`, all derived from the route table; `alerts.xml`, the Atom feed; `server/routes/export/[table].csv.get.ts` and its JSON twin, the bulk downloads; `mcp.ts`, the MCP endpoint. |
+| `server/db/schema.ts` | `snapshots` (one row per fetch, the provenance spine), `entities` (current state per source), `changes` and `alerts` (both append-only), `source_runs`, `judge_runs` — beside the template's `instance_secrets` and `ops_events`. |
+| `server/tasks/` | `server/tasks/poll/edgar.ts` every 30 minutes, the one axis worth low latency; `server/tasks/poll/survey.ts` every 6 hours over every included source; `server/tasks/ops/alert.ts` every 30 minutes, draining the `ops_events` spool into one digest email. |
+| `fixtures/` | A captured copy of every source, with fetch timestamps and trim notes in `fixtures/manifest.json`, so the parsers are tested against the real bytes without the network. |
 | `scripts/check-*.ts` | The gates in `bun run ci`: design tokens, brand assets, references, SEO, fleet manifest, cron parity. |
+| `docs/` | `source-audit.md` — every candidate source, fetched and judged, with why the excluded ones were excluded. |
 
 ## Deploy
 
@@ -41,6 +47,21 @@ you**: after any schema change, run `bun run db:migrate:remote`. `GET /api/statu
 
 Bindings live in `wrangler.toml` (one environment, no preview). `fleet.json` must match it —
 `bun run fleet:check` fails the build otherwise.
+
+## Take the data
+
+Every table is a bulk download, CSV or JSON, no key — the whole table, streamed, at 30
+requests a minute per IP:
+
+```
+https://frontierterm.com/export/prices_latest.csv
+https://frontierterm.com/export/changes.json
+```
+
+`snapshots`, `prices_latest`, `jobs_open`, `incidents`, `rankings_daily`, `revenue_facts`,
+`changes`, `alerts`, `source_runs` — each row carrying `source_url` and `fetched_at`. The
+`/data` page lists them with their columns and current row counts. Alerts are also an Atom
+feed at `/alerts.xml`.
 
 ## Connect an agent
 
