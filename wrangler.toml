@@ -100,12 +100,24 @@ crons = ["*/30 * * * *", "0 */6 * * *"]
 # single destination on purpose: an unrestricted send binding is a spam cannon
 # if the Worker is ever compromised, and this one only ever needs to reach one
 # inbox. Sends to a verified destination address are free and count against no
-# quota. The address is verified under Email → Email Routing → Destination
-# addresses; `from` lives on drawthesystem.com because that is the only zone in
-# the account with Email Routing enabled.
+# quota.
+#
+# Both addresses are ROLE addresses on this app's own zone, and that is a
+# security property, not tidiness. This file is public. The owner's personal
+# inbox used to be written here twice, which is a harvestable address in a
+# repository anyone can clone; `alerts@frontierterm.com` forwards to it through
+# an Email Routing rule instead, so the private address lives in the Cloudflare
+# account and nowhere in git. Changing who reads the digest is now a routing
+# rule, not a commit.
+#
+# Both halves are configured under Email → Email Routing on frontierterm.com:
+# the rule that forwards alerts@ to a personal inbox, and alerts@ itself as a
+# VERIFIED destination address — which is what lets the binding be pinned to
+# it. A fork replaces both with its own, or drops this block entirely and gets
+# no digest.
 [[send_email]]
 name = "ALERT_EMAIL"
-destination_address = "jeremy.ettlinger@gmail.com"
+destination_address = "alerts@frontierterm.com"
 
 [vars]
 NUXT_PUBLIC_APP_NAME = "Frontier Terminal"
@@ -114,10 +126,12 @@ NUXT_PUBLIC_APP_NAME = "Frontier Terminal"
 NUXT_PUBLIC_APP_URL = "https://frontierterm.com"
 # Ops digest routing — pairs with the [[send_email]] block above. `to` must be
 # the same verified destination address the binding is pinned to; `from` must
-# be on a zone in this account with Email Routing enabled. Not secrets: the
-# binding already decides where mail can go.
-NUXT_ALERT_EMAIL_TO = "jeremy.ettlinger@gmail.com"
-NUXT_ALERT_EMAIL_FROM = "frontier-terminal@drawthesystem.com"
+# be on a zone in this account with Email Routing enabled. Both are on
+# frontierterm.com now, so the app sends and receives its own mail on its own
+# domain rather than borrowing another zone's. Not secrets, and no longer
+# anyone's personal address either — see the block above.
+NUXT_ALERT_EMAIL_TO = "alerts@frontierterm.com"
+NUXT_ALERT_EMAIL_FROM = "frontier-terminal@frontierterm.com"
 
 # Secrets — set via `wrangler secret put <NAME>`, never in this file.
 #
