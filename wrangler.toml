@@ -82,7 +82,11 @@ simple = { limit = 30, period = 60 }
 # runs in the runtime instead. Same budget, same enforcement, no round-trips.
 [[ratelimits]]
 name = "RATE_LIMITER_60"
-namespace_id = "1002"
+# 1402, not 1002: the namespace is account-scoped, and 1002 is already taken by
+# the template's preview limiter (30/60s) and apartment-planner's UPLOAD_LIMITER
+# (10/60s). Sharing one with a different budget is exactly the collision the
+# comment above warns about.
+namespace_id = "1402"
 simple = { limit = 60, period = 60 }
 
 # ─── Workers Logs ────────────────────────────────────────────────────────────
