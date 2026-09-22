@@ -1,12 +1,14 @@
 <script setup lang="ts">
 // The app shell for every page. One layout: there is no signed-in state to
 // adapt to, so the header is the mark, the section links, and the
-// color-mode toggle; the footer is the disclaimer and the machine-readable
-// exits (feed, exports, repo).
+// color-mode toggle; the footer is the disclaimer, the reference pages, and
+// the machine-readable exits (feed, repo).
 //
-// Navigation follows DESIGN.md › Component behavior: inline links from `sm`
+// Navigation follows DESIGN.md › Component behavior: inline links from `md`
 // up, a right-side slideover behind a menu button below that. The drawer
 // closes on route change, not on click, so a redirect closes it too.
+
+import type { NavigationMenuItem } from '@nuxt/ui'
 
 import manifest from '~~/fleet.json'
 
@@ -17,17 +19,97 @@ const appName = config.public.appName
 const year = new Date().getFullYear()
 const repo = manifest.links.github
 
-const links = [
-  { label: 'Overview', to: '/' },
-  { label: 'Prices', to: '/prices' },
-  { label: 'Revenue', to: '/revenue' },
-  { label: 'Demand', to: '/rankings' },
-  { label: 'Hiring', to: '/hiring' },
-  { label: 'Releases', to: '/releases' },
-  { label: 'Alerts', to: '/alerts' },
-  { label: 'Incidents', to: '/incidents' },
-  { label: 'Data', to: '/data' },
+/**
+ * Every link in the shell, declared once.
+ *
+ * Ten flat entries across the header was a list, not a navigation: it put
+ * `Prices` and `Incidents` at the same weight as `About`, and nothing in it
+ * said which pages answer "what does this cost" and which answer "what is this
+ * lab doing". The six reading pages now group under those two questions.
+ *
+ * `Overview` and `Alerts` stay top-level because they are the two entry points
+ * — the state of things, and what changed in it. `Data` and `About` drop to the
+ * footer, which is already where a reader looks for exports and the disclaimer.
+ */
+interface NavLink {
+  label: string
+  to: string
+  /** One line, shown in the header dropdown. Reading pages only. */
+  description?: string
+}
+
+interface NavSection {
+  /** Omitted for the ungrouped entry points at the top of the drawer. */
+  label?: string
+  links: NavLink[]
+}
+
+const OVERVIEW: NavLink = { label: 'Overview', to: '/' }
+const ALERTS: NavLink = { label: 'Alerts', to: '/alerts' }
+
+const SECTIONS: NavSection[] = [
+  {
+    label: 'Economics',
+    links: [
+      {
+        label: 'Prices',
+        to: '/prices',
+        description: 'List price per SKU, like for like, with the delta.',
+      },
+      {
+        label: 'Revenue',
+        to: '/revenue',
+        description: 'What each lab has actually disclosed to the SEC.',
+      },
+      {
+        label: 'Demand',
+        to: '/rankings',
+        description: 'OpenRouter token share, and the spend it implies.',
+      },
+    ],
+  },
+  {
+    label: 'Operations',
+    links: [
+      {
+        label: 'Hiring',
+        to: '/hiring',
+        description: 'Open roles by department, and the buildout behind them.',
+      },
+      {
+        label: 'Releases',
+        to: '/releases',
+        description: 'Every SKU first seen since watching began.',
+      },
+      {
+        label: 'Incidents',
+        to: '/incidents',
+        description: 'Status-page history and current API strain.',
+      },
+    ],
+  },
+]
+
+const REFERENCE: NavLink[] = [
   { label: 'About', to: '/about' },
+  { label: 'Data', to: '/data' },
+]
+
+// A section with `children` renders as a dropdown; one with `to` renders as a
+// plain link. Both come from the same objects the drawer and footer read.
+const headerItems: NavigationMenuItem[] = [
+  OVERVIEW,
+  ...SECTIONS.map((section) => ({ label: section.label, children: section.links })),
+  ALERTS,
+]
+
+// The drawer is the whole site map rather than a copy of the header: below
+// `md` it is the only navigation affordance there is, so the reference pages
+// belong in it even though the header hands them to the footer.
+const drawerSections: NavSection[] = [
+  { links: [OVERVIEW, ALERTS] },
+  ...SECTIONS,
+  { label: 'Reference', links: REFERENCE },
 ]
 
 const drawer = ref(false)
@@ -60,14 +142,17 @@ watch(
             <BrandLogo />
           </NuxtLink>
 
-          <nav aria-label="Primary" class="hidden sm:block">
-            <UNavigationMenu :items="links" />
+          <nav aria-label="Primary" class="hidden md:block">
+            <!-- Vertical content because each child carries a description: the
+                 default horizontal panel spreads three of those across the
+                 viewport, which is a menu pretending to be a landing page. -->
+            <UNavigationMenu :items="headerItems" content-orientation="vertical" />
           </nav>
 
           <div class="flex items-center gap-2">
             <UColorModeButton class="min-touch" />
             <UButton
-              class="min-touch sm:hidden"
+              class="min-touch md:hidden"
               icon="i-lucide-menu"
               color="neutral"
               variant="ghost"
@@ -82,20 +167,36 @@ watch(
     <USlideover v-model:open="drawer" title="Navigation" description="Sections of the terminal">
       <template #body>
         <nav aria-label="Primary, drawer">
-          <ul class="space-y-1">
-            <li v-for="link in links" :key="link.to">
-              <UButton
-                :to="link.to"
-                variant="ghost"
-                color="neutral"
-                size="lg"
-                block
-                class="justify-start"
+          <div class="space-y-6">
+            <div v-for="(section, index) in drawerSections" :key="section.label ?? index">
+              <!-- A real heading, not a styled div: the drawer is a list of
+                   lists, and a screen reader should be able to jump between
+                   them (DESIGN.md › Accessibility › Structure and labels).
+                   `text-toned`, not `text-dimmed`: dimmed is the disabled and
+                   placeholder token and is legitimately under AA, which is the
+                   wrong thing for 12px type that carries the structure. -->
+              <h3
+                v-if="section.label"
+                class="mb-1 px-2.5 text-xs uppercase tracking-wide text-toned"
               >
-                {{ link.label }}
-              </UButton>
-            </li>
-          </ul>
+                {{ section.label }}
+              </h3>
+              <ul class="space-y-1">
+                <li v-for="link in section.links" :key="link.to">
+                  <UButton
+                    :to="link.to"
+                    variant="ghost"
+                    color="neutral"
+                    size="lg"
+                    block
+                    class="justify-start"
+                  >
+                    {{ link.label }}
+                  </UButton>
+                </li>
+              </ul>
+            </div>
+          </div>
         </nav>
       </template>
     </USlideover>
@@ -116,8 +217,10 @@ watch(
         >
           <p>© {{ year }} {{ appName }} · Not investment advice.</p>
           <ul class="flex flex-wrap gap-4">
+            <li v-for="link in REFERENCE" :key="link.to">
+              <NuxtLink :to="link.to">{{ link.label }}</NuxtLink>
+            </li>
             <li><NuxtLink to="/alerts.xml" external>Atom feed</NuxtLink></li>
-            <li><NuxtLink to="/data">Exports</NuxtLink></li>
             <li><a :href="repo" target="_blank" rel="noopener noreferrer">Source on GitHub</a></li>
           </ul>
         </div>

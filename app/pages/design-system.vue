@@ -7,22 +7,22 @@
 // Dev-only — stripped from production routes by the `pages:extend` hook in
 // nuxt.config.ts, so it never ships to users.
 
-// Literal class strings: Tailwind scans source text, so `bg-clay-${n}` would
+// Literal class strings: Tailwind scans source text, so `bg-iris-${n}` would
 // generate nothing. Direct ramp access is exactly what design:check forbids in
 // app code — this page is the one legitimate exception, since its job is to
 // display the raw ramp.
 const ramp = [
-  { shade: '50', class: 'bg-clay-50' }, // design-check-ignore
-  { shade: '100', class: 'bg-clay-100' }, // design-check-ignore
-  { shade: '200', class: 'bg-clay-200' }, // design-check-ignore
-  { shade: '300', class: 'bg-clay-300' }, // design-check-ignore
-  { shade: '400', class: 'bg-clay-400' }, // design-check-ignore
-  { shade: '500', class: 'bg-clay-500' }, // design-check-ignore
-  { shade: '600', class: 'bg-clay-600' }, // design-check-ignore
-  { shade: '700', class: 'bg-clay-700' }, // design-check-ignore
-  { shade: '800', class: 'bg-clay-800' }, // design-check-ignore
-  { shade: '900', class: 'bg-clay-900' }, // design-check-ignore
-  { shade: '950', class: 'bg-clay-950' }, // design-check-ignore
+  { shade: '50', class: 'bg-iris-50' }, // design-check-ignore
+  { shade: '100', class: 'bg-iris-100' }, // design-check-ignore
+  { shade: '200', class: 'bg-iris-200' }, // design-check-ignore
+  { shade: '300', class: 'bg-iris-300' }, // design-check-ignore
+  { shade: '400', class: 'bg-iris-400' }, // design-check-ignore
+  { shade: '500', class: 'bg-iris-500' }, // design-check-ignore
+  { shade: '600', class: 'bg-iris-600' }, // design-check-ignore
+  { shade: '700', class: 'bg-iris-700' }, // design-check-ignore
+  { shade: '800', class: 'bg-iris-800' }, // design-check-ignore
+  { shade: '900', class: 'bg-iris-900' }, // design-check-ignore
+  { shade: '950', class: 'bg-iris-950' }, // design-check-ignore
 ]
 
 const surfaces = [
@@ -158,7 +158,7 @@ useSeo({
       <h2 class="text-2xl text-highlighted">Color</h2>
 
       <div class="space-y-2">
-        <h3 class="text-lg text-highlighted">Primary ramp — clay</h3>
+        <h3 class="text-lg text-highlighted">Primary ramp — iris</h3>
         <div class="flex overflow-hidden rounded border border-default">
           <div v-for="step in ramp" :key="step.shade" class="flex-1">
             <div :class="step.class" class="h-16" />
@@ -236,8 +236,8 @@ useSeo({
       <div class="grid gap-6 sm:grid-cols-3">
         <div class="space-y-1">
           <p class="text-xs uppercase tracking-wide text-dimmed">font-display</p>
-          <p class="font-display text-3xl text-highlighted">Instrument Serif</p>
-          <p class="text-sm text-muted">Headings only. Weight 400 — never bold.</p>
+          <p class="font-display text-3xl text-highlighted">JetBrains Mono</p>
+          <p class="text-sm text-muted">Headings and the wordmark. Weight 500 — never bold.</p>
         </div>
         <div class="space-y-1">
           <p class="text-xs uppercase tracking-wide text-dimmed">font-sans</p>
@@ -246,8 +246,8 @@ useSeo({
         </div>
         <div class="space-y-1">
           <p class="text-xs uppercase tracking-wide text-dimmed">font-mono</p>
-          <p class="font-mono text-3xl text-highlighted">JetBrains</p>
-          <p class="text-sm text-muted">Code, IDs, numerals.</p>
+          <p class="font-mono text-3xl text-highlighted">JetBrains Mono</p>
+          <p class="text-sm text-muted">Code, IDs, tabular data. Weight 400 — the same family.</p>
         </div>
       </div>
 
