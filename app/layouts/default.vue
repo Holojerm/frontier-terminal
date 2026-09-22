@@ -20,6 +20,7 @@ const repo = manifest.links.github
 const links = [
   { label: 'Overview', to: '/' },
   { label: 'Prices', to: '/prices' },
+  { label: 'Revenue', to: '/revenue' },
   { label: 'Demand', to: '/rankings' },
   { label: 'Hiring', to: '/hiring' },
   { label: 'Releases', to: '/releases' },

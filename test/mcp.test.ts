@@ -169,6 +169,8 @@ describe('tools/list', () => {
       'get_prices',
       'get_rankings',
       'get_releases',
+      'get_revenue',
+      'get_spend',
       'get_status',
     ])
     for (const t of tools) {
@@ -471,7 +473,7 @@ describe('tools/call', () => {
       cuts: { id: string }[]
       exports: { name: string }[]
     }
-    expect(coverage.sources).toHaveLength(17)
+    expect(coverage.sources).toHaveLength(22)
     expect(coverage.sources.find((s) => s.source_id === 'openrouter-models')!.caveat).toContain(
       'never source of record',
     )

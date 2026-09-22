@@ -91,6 +91,34 @@ export type FilingRow = z.infer<typeof FilingRow>
 export const EdgarFtsOutput = z.strictObject({ rows: z.array(FilingRow) })
 export const EdgarSubmissionsOutput = z.strictObject({ rows: z.array(FilingRow) })
 
+// ---- Revenue (XBRL company facts) -----------------------------------------
+
+// One duration fact from data.sec.gov/api/xbrl/companyfacts: the filer's
+// value for one revenue tag over one period, as one filing reported it.
+// Values are the filer's own XBRL numbers in USD, never scaled or rounded;
+// `tag` travels with the row because filers switch tags between years and
+// the reader, not the parser, decides which tag a period is read from.
+export const RevenueRow = z.strictObject({
+  cik: z.string().regex(/^\d{10}$/),
+  entity_name: z.string().min(1),
+  taxonomy: z.literal('us-gaap'),
+  tag: z.string().min(1),
+  unit: z.literal('USD'),
+  start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  end: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  val: z.number(),
+  accession_no: z.string().min(1),
+  fy: z.int().nullable(),
+  fp: z.string().nullable(), // FY, Q1..Q4 as the filer tagged it
+  form: z.string().min(1),
+  filed: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  frame: z.string().nullable(), // SEC's calendar frame (CY2026Q2) when the fact is the canonical one for it
+  whitelist_cik: z.string().nullable(),
+  ...provenanceFields,
+})
+export type RevenueRow = z.infer<typeof RevenueRow>
+export const EdgarCompanyfactsOutput = z.strictObject({ rows: z.array(RevenueRow) })
+
 // ---- Status pages (capacity strain) ---------------------------------------
 
 // One row per incident the vendor posted. Vocabulary is stored VERBATIM per
@@ -162,6 +190,11 @@ export const parserOutputSchemas = {
   'google-pricing-html': GooglePricingOutput,
   'edgar-fts': EdgarFtsOutput,
   'edgar-submissions-spcx': EdgarSubmissionsOutput,
+  'edgar-submissions-msft': EdgarSubmissionsOutput,
+  'edgar-submissions-amzn': EdgarSubmissionsOutput,
+  'edgar-submissions-nvda': EdgarSubmissionsOutput,
+  'edgar-submissions-googl': EdgarSubmissionsOutput,
+  'edgar-companyfacts-spcx': EdgarCompanyfactsOutput,
   'openai-status': StatuspageIncidentsOutput,
   'anthropic-status': StatuspageIncidentsOutput,
   'google-cloud-status': GoogleCloudIncidentsOutput,

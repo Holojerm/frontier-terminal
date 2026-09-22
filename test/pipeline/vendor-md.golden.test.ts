@@ -12,6 +12,7 @@ import { parseOpenAiModelsMd } from '../../server/pipeline/parsers/pricing/opena
 import { parseXaiModelsMd } from '../../server/pipeline/parsers/pricing/xai-models'
 import { parseEdgarFts } from '../../server/pipeline/parsers/sec/edgar-fts'
 import { parseEdgarSubmissionsSpcx } from '../../server/pipeline/parsers/sec/edgar-submissions'
+import { isTrackedForm } from '../../server/pipeline/parsers/sec/forms'
 import { isS1FloorForm, s1FloorFilings } from '../../server/pipeline/parsers/sec/s1-floor'
 import {
   parseCikWhitelistBlock,
@@ -210,14 +211,17 @@ describe('vendor-md + sec lane', () => {
     expect(isS1FloorForm('10-Q')).toBe(false)
     expect(isS1FloorForm('D')).toBe(false)
 
-    // Submissions feed (SPCX, a whitelisted CIK): 81 filings, of which
-    // exactly the S-1, two S-1/As, and the 424B4 trip the floor.
+    // Submissions feed (SPCX, a whitelisted CIK): 81 filings in the
+    // payload, 13 on a tracked form (forms.ts drops Form 4 / D / 13G and
+    // the rest), of which exactly the S-1, two S-1/As, and the 424B4 trip
+    // the floor.
     const subs = parseEdgarSubmissionsSpcx(
       fixtureText('fixtures/sec/edgar-submissions-spcx.json'),
       whitelist,
     )
     expect(EdgarSubmissionsOutput.safeParse(subs).success).toBe(true)
-    expect(subs.rows.length).toBe(81)
+    expect(subs.rows.length).toBe(13)
+    expect(subs.rows.map((r) => r.form).every(isTrackedForm)).toBe(true)
     expect(subs.rows.every((r) => r.whitelist_cik === SPCX_CIK)).toBe(true)
 
     const flagged = s1FloorFilings(subs.rows)

@@ -186,7 +186,82 @@ sources:
     diff_mechanism: accession numbers
     verdict: include, narrowly scoped
     fixture: fixtures/sec/edgar-submissions-spcx.json  # SPCX example
-    caveats: Same UA + rate rules as edgar-fts.
+    caveats: >-
+      Same UA + rate rules as edgar-fts. The parser keeps only the tracked
+      forms (S-1, 424B4, 10-Q, 10-K, 8-K and their amendments —
+      server/pipeline/parsers/sec/forms.ts); Form 4, 144, 3, 13G and D rows
+      are dropped at parse so insider trades and notices never reach the
+      judge as "an SEC change". SPCX is xAI's parent since the 2025 merger:
+      its periodic filings are where any xAI segment disclosure would land.
+
+  edgar-submissions-msft:
+    axis: sec
+    provider: all
+    url: https://data.sec.gov/submissions/CIK0000789019.json
+    format: JSON
+    diff_mechanism: accession numbers
+    verdict: include, narrowly scoped
+    fixture: fixtures/sec/edgar-submissions-msft.json
+    caveats: >-
+      Whitelisted CIK, same form filter as edgar-submissions. Microsoft's
+      10-Q/10-K carry the OpenAI equity-method and commitment disclosures;
+      the terminal alerts on the filing, it does not extract the figure.
+
+  edgar-submissions-amzn:
+    axis: sec
+    provider: all
+    url: https://data.sec.gov/submissions/CIK0001018724.json
+    format: JSON
+    diff_mechanism: accession numbers
+    verdict: include, narrowly scoped
+    fixture: fixtures/sec/edgar-submissions-amzn.json
+    caveats: >-
+      Whitelisted CIK, same form filter as edgar-submissions. Amazon's
+      10-Q/10-K carry the Anthropic convertible-note and investment
+      disclosures; the terminal alerts on the filing, it does not extract
+      the figure.
+
+  edgar-submissions-nvda:
+    axis: sec
+    provider: all
+    url: https://data.sec.gov/submissions/CIK0001045810.json
+    format: JSON
+    diff_mechanism: accession numbers
+    verdict: include, narrowly scoped
+    fixture: fixtures/sec/edgar-submissions-nvda.json
+    caveats: Whitelisted CIK, same form filter as edgar-submissions.
+
+  edgar-submissions-googl:
+    axis: sec
+    provider: all
+    url: https://data.sec.gov/submissions/CIK0001652044.json
+    format: JSON
+    diff_mechanism: accession numbers
+    verdict: include, narrowly scoped
+    fixture: fixtures/sec/edgar-submissions-googl.json
+    caveats: >-
+      Whitelisted CIK, same form filter as edgar-submissions. Alphabet is
+      Google's parent; its filings segment Google Cloud, never Gemini, so
+      nothing here is a lab revenue figure (see revenue_filers).
+
+  edgar-companyfacts-spcx:
+    axis: revenue
+    provider: all
+    url: https://data.sec.gov/api/xbrl/companyfacts/CIK0001181412.json
+    format: JSON (XBRL company facts — facts.{taxonomy}.{tag}.units.USD[])
+    diff_mechanism: (tag, accession, start, end) keys; a restated value diffs as modified
+    verdict: include — the one revenue filer tagged in revenue_filers
+    fixture: fixtures/sec/edgar-companyfacts-spcx.json
+    caveats: >-
+      SpaceX consolidated revenue, not xAI's: SpaceX is xAI's parent since
+      the 2025 merger and files as one registrant. Company facts carry
+      non-dimensional XBRL facts only — no segment members — so whether
+      SpaceX segments xAI in its 10-Q cannot be read here and is unverified.
+      Read as the parent's audited top line, the ceiling any xAI figure sits
+      under, never as a lab revenue number. Revenue tags are read in a fixed
+      order (Revenues, RevenueFromContractWithCustomerExcludingAssessedTax,
+      SalesRevenueNet) and every tag present is stored with its name; the
+      reader picks per period. Same UA + rate rules as edgar-fts.
 
   openai-status:
     axis: status
@@ -261,6 +336,42 @@ cik_whitelist:
   NVDA: "0001045810"
   SPCX: "0001181412"
   GOOGL: "0001652044"
+
+# Disclosed-revenue filers. One entry per tracked lab: null while the lab has
+# no audited, primary-source disclosure — the /revenue panel then says so and
+# shows nothing, because a press run-rate is a claim, not data. To tag a lab:
+# add its ticker to cik_whitelist, register an edgar-companyfacts-<ticker>
+# source above with a committed fixture, and set ticker + relation here.
+# relation is `issuer` when the lab itself files (the S-1 public-flip
+# moment) and `parent` when a public parent consolidates it, in which case
+# the series is the parent's and is labelled as such.
+revenue_filers:
+  openai: null
+  anthropic: null
+  google: null # Alphabet (GOOGL) is public but segments Google Cloud, never Gemini — a consolidated figure would mislead
+  xai:
+    ticker: SPCX
+    relation: parent
+
+# Department clusters read off the hiring boards. A cluster is a name match
+# over each board's own department labels: a department belongs when its
+# name contains one of `terms` as a whole word (case-insensitive) and none of
+# `exclude`. The matched departments ship beside every cluster count so a
+# reader can see exactly which labels were summed. The judge prompt
+# (server/pipeline/judge/judge-explain.prompt.md) names the same terms;
+# test/terminal-clusters.test.ts fails when the two drift.
+department_clusters:
+  physical-infrastructure:
+    label: Physical infrastructure
+    terms: Data Center, Infrastructure, Facilities, Energy, Construction, Compute, Hardware
+    exclude: Software
+    why: >-
+      The binding constraint on the labs is atoms and energy, not code, and
+      the hiring lane sees it first: xAI's board is roughly half Data Center
+      roles, and the first judged alert on this terminal was xAI pulling its
+      Memphis and Southaven infrastructure roles. Open roles in this cluster
+      per lab per day are the supply-buildout signal beside the status-page
+      demand-strain signal.
 
 # Deliberate cuts — honesty is the feature (docs/source-audit.md verdicts).
 cut:

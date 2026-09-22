@@ -139,7 +139,7 @@ describe('runPoll at a survey instant', () => {
 })
 
 describe('runPoll between survey instants', () => {
-  it('edgar runs its two feeds', async () => {
+  it('edgar runs the SEC feeds', async () => {
     const { all } = deps('2026-09-09T00:30:03Z')
     const outcome = await runPoll('edgar', all)
     expect(outcome.status).toBe('ran')
@@ -147,6 +147,11 @@ describe('runPoll between survey instants', () => {
     expect(outcome.result.sources.map((s) => s.source_id)).toEqual([
       'edgar-fts',
       'edgar-submissions-spcx',
+      'edgar-submissions-msft',
+      'edgar-submissions-amzn',
+      'edgar-submissions-nvda',
+      'edgar-submissions-googl',
+      'edgar-companyfacts-spcx',
     ])
   })
 
