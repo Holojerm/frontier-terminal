@@ -5,7 +5,7 @@
 // behind it, and a cell with nothing to show explains itself rather than
 // printing a dash.
 
-import { money, pctChange, pctLabel } from '#shared/utils/terminal-format'
+import { absoluteStamp, money, pctChange, pctLabel } from '#shared/utils/terminal-format'
 import type { MatrixCell, PriceMatrix } from '#shared/utils/terminal-types'
 
 const props = defineProps<{ matrix: PriceMatrix }>()
@@ -19,6 +19,16 @@ const DISPLAY: Record<string, string> = {
 
 function cell(provider: string, klass: string): MatrixCell | undefined {
   return props.matrix.cells.find((c) => c.provider === provider && c.class === klass)
+}
+
+/** The vendor sentence behind a cell, and the last poll's word on whether it is still there. */
+function basisText(c: MatrixCell, label: string): string {
+  const mapped = `Mapped to “${label}” on the vendor's own words: “${c.basis}” (${c.basis_source_id}).`
+  if (c.basis_current === false) return `${mapped} ${c.basis_note ?? ''}`.trim()
+  if (c.basis_current === true && c.basis_checked_at) {
+    return `${mapped} Sentence confirmed on the page at the ${absoluteStamp(c.basis_checked_at)} poll.`
+  }
+  return mapped
 }
 
 /** Percent move on the input price since the previous revision, when there is one. */
@@ -59,9 +69,15 @@ function delta(c: MatrixCell): string | null {
                     <TerminalCaveatMark
                       v-if="cell(p, k.id)!.basis"
                       :name="`Why ${cell(p, k.id)!.row!.model_slug} is the ${k.label}`"
-                      :text="`Mapped to “${k.label}” on the vendor's own words: “${cell(p, k.id)!.basis}” (${cell(p, k.id)!.basis_source_id}).`"
+                      :text="basisText(cell(p, k.id)!, k.label)"
                     />
                   </div>
+                  <p v-if="cell(p, k.id)!.basis_current === false" class="text-xs text-warning">
+                    Mapping under review — the vendor rewrote its recommendation
+                    <span v-if="cell(p, k.id)!.basis_checked_at"
+                      >(checked {{ absoluteStamp(cell(p, k.id)!.basis_checked_at!) }})</span
+                    >
+                  </p>
                   <div class="flex flex-wrap items-baseline gap-x-3 font-mono">
                     <span class="text-highlighted"
                       >{{ money(cell(p, k.id)!.row!.input_per_mtok) }}

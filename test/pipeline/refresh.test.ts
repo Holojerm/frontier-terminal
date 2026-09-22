@@ -159,7 +159,9 @@ describe('baseline', () => {
     expect(perSource.get('xai-greenhouse')).toBe(42)
     expect(perSource.get('anthropic-greenhouse')).toBe(59)
     expect(perSource.get('openai-ashby')).toBe(65)
-    expect(perSource.get('anthropic-pricing-md')).toBe(30)
+    expect(perSource.get('anthropic-pricing-md')).toBe(34)
+    // 16 price rows (8 models × 2 tiers) + the flagship class-map check.
+    expect(perSource.get('xai-models-md')).toBe(17)
     // Tracked forms only (parsers/sec/forms.ts): 13 of SPCX's 81 recent filings.
     expect(perSource.get('edgar-submissions-spcx')).toBe(13)
     expect(perSource.get('edgar-submissions-msft')).toBe(9)
@@ -298,6 +300,52 @@ describe('second run', () => {
           e.entity_key !== 'model:xai:grok-4.6:standard',
       )
     expect(untouched(after)).toEqual(untouched(before))
+  })
+
+  it('class-map drift: a rewritten vendor recommendation flips the check, logs a change and spools an ops event', async () => {
+    await run('survey', ['xai-models-md'])
+    const check = (await rows.entities()).find(
+      (e) => e.entity_key === 'recommendation:xai:flagship',
+    )!
+    expect(check.entity_type).toBe('recommendation')
+    expect(check.source_id).toBe('xai-models-md')
+    expect(JSON.parse(check.payload)).toMatchObject({
+      provider: 'xai',
+      class: 'flagship',
+      model_slug: 'grok-4.7',
+      present: true,
+    })
+
+    // The vendor re-points developers at a successor: the sentence is gone.
+    const md = fixtureText('fixtures/pricing/xai-models.md')
+    expect(md).toContain('use Grok 4.7. It is the most capable model')
+    const rewritten = md.replace(
+      'use Grok 4.7. It is the most capable model',
+      'use Grok 4.8. It is the most capable model',
+    )
+    const report = await run(
+      'survey',
+      ['xai-models-md'],
+      fixtureFetcher({ 'xai-models-md': rewritten }),
+    )
+    expect(report.sources[0]).toMatchObject({ status: 'ok', modified: 1, added: 0, removed: 0 })
+
+    const changes = await rows.changes()
+    expect(changes.map((c) => [c.entity_key, c.change_type])).toEqual([
+      ['recommendation:xai:flagship', 'modified'],
+    ])
+    expect(JSON.parse(changes[0]!.before_json!).present).toBe(true)
+    expect(JSON.parse(changes[0]!.after_json!).present).toBe(false)
+
+    const ops = await rows.ops()
+    expect(ops).toHaveLength(1)
+    expect(ops[0]).toMatchObject({ kind: 'class_basis_stale', path: urlOf('xai-models-md') })
+    expect(ops[0]!.detail).toContain('xai flagship (grok-4.7)')
+
+    // The same page again: still absent, nothing new to say.
+    await run('survey', ['xai-models-md'], fixtureFetcher({ 'xai-models-md': rewritten }))
+    expect(await rows.changes()).toHaveLength(1)
+    expect(await rows.ops()).toHaveLength(1)
   })
 
   it('re-parses a Greenhouse board when only its /departments join changed', async () => {

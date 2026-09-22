@@ -8,12 +8,14 @@ import {
   modelKey,
   stableStringify,
   rankingKey,
+  recommendationKey,
   revenueKey,
   type FilingRow,
   type IncidentRow,
   type PriceRow,
   type Provider,
   type RankingRow,
+  type RecommendationRow,
   type RevenueRow,
 } from './contracts'
 
@@ -148,6 +150,26 @@ export function normalizeRanking(row: RankingRow, snapshotId: string): EntityRow
 
 export function normalizeRankings(rows: readonly RankingRow[], snapshotId: string): EntityRow[] {
   return collapse(rows.map((row) => normalizeRanking(row, snapshotId)))
+}
+
+// A recommendation row is one mapped matrix cell checked against the page it
+// was transcribed from; `present` is part of the content, so the check
+// flipping is a 'modified' change and an unchanged verdict diffs to nothing.
+export function normalizeRecommendation(row: RecommendationRow, snapshotId: string): EntityRow {
+  return toEntity(
+    recommendationKey(row.provider, row.class),
+    'recommendation',
+    row.provider,
+    snapshotId,
+    row,
+  )
+}
+
+export function normalizeRecommendations(
+  rows: readonly RecommendationRow[],
+  snapshotId: string,
+): EntityRow[] {
+  return collapse(rows.map((row) => normalizeRecommendation(row, snapshotId)))
 }
 
 // A revenue fact's provider is the lab whose filer reported it, resolved by

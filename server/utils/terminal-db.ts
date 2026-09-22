@@ -65,6 +65,7 @@ import { parseRevenueFilersBlock, type RevenueFilers } from '../pipeline/parsers
 import { parseCikWhitelistBlock, type CikWhitelist } from '../pipeline/parsers/sec/whitelist'
 import type { PipelineDb } from '../pipeline/store'
 import {
+  BASIS_STALE_NOTE,
   CLASS_GAPS,
   MODEL_CLASSES,
   MODEL_CLASS_MAP,
@@ -264,6 +265,7 @@ export const MOVEMENT_WINDOW_HOURS = 24
 
 const AXIS_OF: Readonly<Record<string, keyof Omit<MovementSummary['recent'], 'total'>>> = {
   model: 'pricing',
+  recommendation: 'pricing',
   job: 'hiring',
   filing: 'sec',
   revenue: 'sec',
@@ -367,6 +369,13 @@ function summarize(entityType: string, payload: Json | null): string {
   if (entityType === 'ranking') {
     const tokens = num(payload.total_tokens)
     return `${str(payload.model_permaslug) ?? '?'} · ${str(payload.date) ?? '?'} · ${tokens === null ? '?' : countLabel(tokens)} tokens`
+  }
+  if (entityType === 'recommendation') {
+    const verdict =
+      payload.present === false
+        ? 'vendor sentence no longer on the page'
+        : 'vendor sentence on the page'
+    return `${str(payload.class) ?? '?'} → ${str(payload.model_slug) ?? '?'} — ${verdict}`
   }
   if (entityType === 'revenue') {
     const val = num(payload.val)
@@ -648,11 +657,12 @@ function toDelta(change: typeof tables.changes.$inferSelect): PriceDeltaView {
 }
 
 export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<PricesData> {
-  const [entities, history, stamps, firsts] = await Promise.all([
+  const [entities, history, stamps, firsts, checks] = await Promise.all([
     db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'model')),
     modelChanges(db),
     sourceStamps(db),
     firstSnapshotByUrl(db),
+    db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'recommendation')),
   ])
   const changes = newestPerSource(history)
   const entitiesByKey = groupByKey(entities)
@@ -732,7 +742,7 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
   return {
     ...stampOf(ctx),
     rows,
-    matrix: buildMatrix(rows),
+    matrix: buildMatrix(rows, basisChecks(checks)),
     counts: {
       total: rows.length,
       priced: rows.filter((r) => !r.removed && pricedRow(r)).length,
@@ -760,13 +770,50 @@ function sourceIdForUrl(url: string, ctx: QueryContext): string {
   )
 }
 
+/** The last poll's verdict on one mapped cell (server/pipeline/recommendations.ts). */
+export interface BasisCheck {
+  provider: string
+  class: string
+  /** The slug the check was run for — a check for a superseded mapping is ignored. */
+  model_slug: string
+  present: boolean
+  fetched_at: string
+}
+
+/** Stored 'recommendation' entities as checks, keyed by provider:class. */
+export function basisChecks(
+  entities: readonly (typeof tables.entities.$inferSelect)[],
+): Map<string, BasisCheck> {
+  const out = new Map<string, BasisCheck>()
+  for (const e of entities) {
+    const payload = parseJson(e.payload)
+    if (!payload) continue
+    const provider = str(payload.provider)
+    const klass = str(payload.class)
+    const model_slug = str(payload.model_slug)
+    if (!provider || !klass || !model_slug || typeof payload.present !== 'boolean') continue
+    out.set(`${provider}:${klass}`, {
+      provider,
+      class: klass,
+      model_slug,
+      present: payload.present,
+      fetched_at: e.fetched_at,
+    })
+  }
+  return out
+}
+
 /**
  * Joins the editorial class map (terminal-classes.ts) to real stored rows.
  * Nothing is computed about a model here: the map says which slug answers
  * which question, the store says what that slug costs, and anything the two
- * cannot answer becomes a stated gap.
+ * cannot answer becomes a stated gap. `checks` is the last poll's word on
+ * whether each mapping's vendor sentence is still on the page.
  */
-export function buildMatrix(rows: readonly PriceRowView[]): PriceMatrix {
+export function buildMatrix(
+  rows: readonly PriceRowView[],
+  checks: ReadonlyMap<string, BasisCheck> = new Map(),
+): PriceMatrix {
   const bySlug = new Map<string, PriceRowView[]>()
   for (const row of rows) {
     if (row.removed || !isStandardTier(row.tier)) continue
@@ -786,6 +833,9 @@ export function buildMatrix(rows: readonly PriceRowView[]): PriceMatrix {
           row: null,
           basis: null,
           basis_source_id: null,
+          basis_current: null,
+          basis_checked_at: null,
+          basis_note: null,
           gap: gap?.reason ?? 'No mapping — the vendor publishes no recommendation to transcribe.',
           priced: false,
         })
@@ -795,12 +845,19 @@ export function buildMatrix(rows: readonly PriceRowView[]): PriceMatrix {
       const row =
         (bySlug.get(`${provider}:${entry.model_slug}`) ?? []).slice().sort(preferRow)[0] ?? null
       const priced = row !== null && pricedRow(row)
+      // A check for a slug this map no longer names is a verdict on the
+      // previous transcription, not this one: it waits for the next poll.
+      const check = checks.get(`${provider}:${klass.id}`)
+      const current = check && check.model_slug === entry.model_slug ? check : null
       cells.push({
         provider,
         class: klass.id,
         row,
         basis: entry.basis,
         basis_source_id: entry.basis_source_id,
+        basis_current: current ? current.present : null,
+        basis_checked_at: current ? current.fetched_at : null,
+        basis_note: current && !current.present ? BASIS_STALE_NOTE : null,
         gap: priced ? null : row ? (PRICE_GAPS[provider as BigFour] ?? NO_ROW_GAP) : NO_ROW_GAP,
         priced,
       })

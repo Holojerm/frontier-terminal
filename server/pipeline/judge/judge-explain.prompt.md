@@ -106,6 +106,16 @@ Emit an alert-tier severity (`notable` or `critical`) ONLY for:
   USD, never rescaled to billions. Say whose revenue it is: the
   `entity_name` is the filer, and a parent's consolidated figure is not the
   lab's.
+- **A vendor changing its own recommendation.** A `recommendation` record
+  `modified` so that `present` is `false`: the vendor's docs no longer carry
+  the sentence (`basis`) that positioned `model_slug` as the `class` model.
+  That is the vendor re-pointing developers, usually at a new launch —
+  `notable`, quoting `basis` and `model_slug` verbatim; combine it with the
+  `model` rows `added` on the same page when they name the successor. Never
+  say what the new recommendation is: the record only says the old one is
+  gone. A `recommendation` record `added`, or `modified` with `present`
+  still `true`, is the check being introduced or re-transcribed, not news:
+  stay silent.
 - **A capacity-strain signal.** Status-page `incident` records are a proxy
   for what the vendor chose to post, never an SLA. An `added` incident
   whose `impact` is `major` or `critical` (Statuspage vocabulary) or `high`

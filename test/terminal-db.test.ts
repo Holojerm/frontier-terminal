@@ -75,7 +75,7 @@ const xaiJobsWithout = (id: number) => {
   return JSON.stringify({ ...board, jobs: board.jobs.filter((j) => j.id !== id) })
 }
 
-const XAI_PRICE_LINE = '| grok-4.6 (< 200k prompt tokens) | 500k | $2.00 | $0.50 | $6.00 |'
+const XAI_PRICE_LINE = '| grok-4.7 (< 200k prompt tokens) | 500k | $2.00 | $0.50 | $6.00 |'
 const xaiRepricedAndDelisted = () => {
   const md = fixtureText('fixtures/pricing/xai-models.md')
   expect(md).toContain(XAI_PRICE_LINE)
@@ -242,8 +242,8 @@ describe('after a baseline poll of every source', () => {
 
   it('prices: fixture values, live provenance, priced rows first', async () => {
     const prices = await queryPrices(db, await ctx())
-    const grok = prices.rows.find((r) => r.entity_key === 'model:xai:grok-4.6:standard')!
-    // "| grok-4.6 (< 200k prompt tokens) | 500k | $2.00 | $0.50 | $6.00 |"
+    const grok = prices.rows.find((r) => r.entity_key === 'model:xai:grok-4.7:standard')!
+    // "| grok-4.7 (< 200k prompt tokens) | 500k | $2.00 | $0.50 | $6.00 |"
     expect(grok).toMatchObject({
       provider: 'xai',
       tier: 'standard',
@@ -294,22 +294,29 @@ describe('after a baseline poll of every source', () => {
 
     const xai = cell('xai', 'flagship')
     expect(xai.priced).toBe(true)
-    expect(xai.row!.model_slug).toBe('grok-4.6')
+    expect(xai.row!.model_slug).toBe('grok-4.7')
     expect(xai.row!.input_per_mtok).toBe(2)
     expect(xai.row!.source_url).toBe(urlOf('xai-models-md'))
     expect(xai.gap).toBeNull()
-    expect(xai.basis).toContain('Grok 4.6')
+    expect(xai.basis).toContain('Grok 4.7')
+    // The poll re-read the sentence off the page and said so.
+    expect(xai.basis_current).toBe(true)
+    expect(xai.basis_checked_at).toBe(xai.row!.fetched_at)
+    expect(xai.basis_note).toBeNull()
 
     // The catalog row (models.md, no prices) and the pricing row (pricing.md)
     // share one key; the cell reads the priced one and cites both pages.
     const openai = cell('openai', 'flagship')
-    expect(openai.row!.model_slug).toBe('gpt-5.6-sol')
+    expect(openai.row!.model_slug).toBe('gpt-6-astra')
     expect(openai.priced).toBe(true)
-    expect(openai.row!.input_per_mtok).toBe(4)
-    expect(openai.row!.output_per_mtok).toBe(20)
+    expect(openai.row!.input_per_mtok).toBe(10)
+    expect(openai.row!.output_per_mtok).toBe(50)
     expect(openai.row!.source_url).toBe(urlOf('openai-pricing-md'))
     expect(openai.row!.also_listed_by).toEqual(['openai-models-md'])
-    expect(openai.basis).toContain('Start here')
+    expect(openai.basis).toContain('GPT-6 Astra')
+    // The sentence lives on the catalog page, and that is where it was checked.
+    expect(openai.basis_source_id).toBe('openai-models-md')
+    expect(openai.basis_current).toBe(true)
     expect(openai.gap).toBeNull()
 
     // Google has prices in the store but no vendor sentence to map against.
@@ -433,6 +440,30 @@ describe('after a baseline poll of every source', () => {
     expect(alerts.rows).toEqual([])
     expect(alerts.total).toBe(0)
   })
+
+  it('matrix: a vendor rewriting its recommendation puts the cell under review, price intact', async () => {
+    const md = fixtureText('fixtures/pricing/xai-models.md')
+    const rewritten = md.replace('use Grok 4.7. It is', 'use Grok 4.8. It is')
+    expect(rewritten).not.toBe(md)
+    await run(['xai-models-md'], fixtureFetcher({ 'xai-models-md': rewritten }))
+
+    const { matrix } = await queryPrices(db, await ctx())
+    const xai = matrix.cells.find((c) => c.provider === 'xai' && c.class === 'flagship')!
+    // The stored price for the mapped SKU is still the stored price.
+    expect(xai.priced).toBe(true)
+    expect(xai.row!.model_slug).toBe('grok-4.7')
+    expect(xai.row!.input_per_mtok).toBe(2)
+    // What changed is the claim that this SKU still answers the column.
+    expect(xai.basis_current).toBe(false)
+    expect(xai.basis_note).toContain('under review')
+    expect(xai.basis_checked_at).toMatch(/^2026-09-07T10:0\d:/)
+    // Every other mapped cell is untouched.
+    for (const c of matrix.cells) {
+      if (c.basis && !(c.provider === 'xai' && c.class === 'flagship')) {
+        expect(c.basis_current).toBe(true)
+      }
+    }
+  })
 })
 
 describe('after a second poll that moves prices, closes a role, and files an S-1', () => {
@@ -450,7 +481,7 @@ describe('after a second poll that moves prices, closes a role, and files an S-1
 
   it('the newest price revision wins, with the delta against the previous one', async () => {
     const prices = await queryPrices(db, await ctx())
-    const grok = prices.rows.find((r) => r.entity_key === 'model:xai:grok-4.6:standard')!
+    const grok = prices.rows.find((r) => r.entity_key === 'model:xai:grok-4.7:standard')!
     expect(grok.input_per_mtok).toBe(2.5)
     expect(grok.delta).toMatchObject({
       change_type: 'modified',

@@ -7,8 +7,14 @@
 //   - every entry quotes the vendor sentence it rests on, verbatim from a
 //     committed fixture (markdown link syntax flattened to its text, nothing
 //     else touched), with the source_id that sentence came from — a golden
-//     test greps each quote back out of its fixture, so a rewritten vendor
-//     page fails CI instead of quietly aging into fiction;
+//     test greps each quote back out of its fixture, so a mis-transcription
+//     fails CI;
+//   - the fixture is a moment in time, so every poll re-checks each sentence
+//     against the live page (server/pipeline/recommendations.ts): a vendor
+//     that rewrites its recommendation flips the cell's `basis_current` to
+//     false, lands a 'modified' change in the feed and an ops event in the
+//     digest, and the matrix says the mapping is under review — instead of
+//     the old mapping quietly aging into fiction;
 //   - a provider that publishes no such recommendation gets a stated gap,
 //     never a guess (xAI names one model and stops; Google's pricing page
 //     carries no recommendation text at all).
@@ -47,39 +53,43 @@ export interface ClassEntry {
   basis_source_id: string
 }
 
-// Verbatim transcriptions, checked against the committed fixtures on
-// 2026-08-25 and re-verified against this repo's copies on 2026-09-07. If a
-// vendor rewrites its recommendation, this map is stale and must be
-// re-transcribed — the UI labels it as an editorial mapping for exactly that
-// reason.
+// Verbatim transcriptions from the fixtures fetched 2026-09-22 (the previous
+// set, transcribed 2026-08-25, was found stale on 2026-09-22: all three
+// vendors had rewritten their recommendation — GPT-6 Astra, Grok 4.7, and a
+// new Opus 5 / Fable 5.1 sentence — while the matrix kept showing the old
+// slugs). The rule stays "the vendor's start-here model": Anthropic's page
+// now names Opus 5 as the start-here and Fable 5.1 as the escalation for
+// work that still falls short on Opus 5, so Opus 5 remains the flagship
+// cell and Fable 5.1 is in the full catalog. When a check flips
+// `basis_current` off, re-transcribe here and refresh the fixture.
 export const MODEL_CLASS_MAP: ClassEntry[] = [
   {
     provider: 'openai',
     class: 'flagship',
-    model_slug: 'gpt-5.6-sol',
-    basis: 'Start here for complex reasoning and coding.',
+    model_slug: 'gpt-6-astra',
+    basis:
+      "If you're not sure where to start, use GPT-6 Astra, our flagship model for complex reasoning and coding.",
     basis_source_id: 'openai-models-md',
   },
   {
     provider: 'openai',
     class: 'balanced',
     model_slug: 'gpt-5.6-terra',
-    basis: 'Balance intelligence and cost.',
+    basis: 'Choose GPT-5.6 Terra to balance intelligence and cost',
     basis_source_id: 'openai-models-md',
   },
   {
     provider: 'openai',
     class: 'economy',
     model_slug: 'gpt-5.6-luna',
-    basis: 'Optimize cost-sensitive, high-volume workloads.',
+    basis: 'GPT-5.6 Luna for cost-sensitive, high-volume workloads.',
     basis_source_id: 'openai-models-md',
   },
   {
     provider: 'anthropic',
     class: 'flagship',
     model_slug: 'claude-opus-5',
-    basis:
-      "If you're unsure which model to use, start with Claude Opus 5 for complex agentic coding and enterprise work; for the highest available capability, use Claude Fable 5.",
+    basis: "If you're unsure which model to use, start with Claude Opus 5 for most workloads.",
     basis_source_id: 'anthropic-models-md',
   },
   {
@@ -99,9 +109,9 @@ export const MODEL_CLASS_MAP: ClassEntry[] = [
   {
     provider: 'xai',
     class: 'flagship',
-    model_slug: 'grok-4.6',
+    model_slug: 'grok-4.7',
     basis:
-      'For everything else, including code, use Grok 4.6. It is the most intelligent and fastest model we’ve built.',
+      'For everything else, including code, use Grok 4.7. It is the most capable model we’ve built.',
     basis_source_id: 'xai-models-md',
   },
 ]
@@ -149,3 +159,11 @@ export const PRICE_GAPS: Readonly<Partial<Record<BigFour, string>>> = {
 
 /** The generic reason when a mapped SKU has simply not been stored yet. */
 export const NO_ROW_GAP = 'No row for this SKU in the store yet — the source has not been polled.'
+
+/**
+ * Shown on a cell whose vendor sentence was not found on the page at the
+ * last poll. The price is still the stored price for the mapped SKU; what
+ * is in doubt is whether that SKU still answers the column's question.
+ */
+export const BASIS_STALE_NOTE =
+  'The vendor page no longer carries the sentence this mapping rests on, so the class assignment is under review. The price shown is still the stored price for this SKU; the vendor may now recommend a different one — see the full catalog.'

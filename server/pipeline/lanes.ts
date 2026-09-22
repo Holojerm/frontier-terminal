@@ -12,6 +12,7 @@ import {
   normalizeJobs,
   normalizePrices,
   normalizeRankings,
+  normalizeRecommendations,
   normalizeRevenues,
 } from './normalize'
 import { parseAnthropicGreenhouse } from './parsers/hiring/anthropic-greenhouse'
@@ -32,6 +33,7 @@ import { isPeriodicForm, isS1FloorForm } from './parsers/sec/s1-floor'
 import { parseAnthropicStatus } from './parsers/status/anthropic-status'
 import { parseGoogleCloudStatus } from './parsers/status/google-cloud-status'
 import { parseOpenaiStatus } from './parsers/status/openai-status'
+import { recommendationRows } from './recommendations'
 import type { CikWhitelist } from './parsers/sec/whitelist'
 
 // How each include source turns a fetched body into entities — the join
@@ -126,21 +128,36 @@ function companyfactsLanes(): Record<string, Lane> {
   return lanes
 }
 
+// The pages the class map (server/utils/terminal-classes.ts) is transcribed
+// from also carry the drift check on that map: one 'recommendation' row per
+// mapped cell, beside the page's price rows (recommendations.ts).
+const checked = (sourceId: string, text: string, prov: Provenance, snapshotId: string) =>
+  normalizeRecommendations(recommendationRows(sourceId, text, prov), snapshotId)
+
 export const LANES: Readonly<Record<string, Lane>> = {
   'openai-models-md': set((text, { prov, snapshotId }) => ({
-    entities: normalizePrices(parseOpenAiModelsMd(text, prov).rows, snapshotId),
+    entities: [
+      ...normalizePrices(parseOpenAiModelsMd(text, prov).rows, snapshotId),
+      ...checked('openai-models-md', text, prov, snapshotId),
+    ],
   })),
   'openai-pricing-md': set((text, { prov, snapshotId }) => ({
     entities: normalizePrices(parseOpenAiPricingMd(text, prov).rows, snapshotId),
   })),
   'anthropic-models-md': set((text, { prov, snapshotId }) => ({
-    entities: normalizePrices(parseAnthropicModelsOverviewMd(text, prov).rows, snapshotId),
+    entities: [
+      ...normalizePrices(parseAnthropicModelsOverviewMd(text, prov).rows, snapshotId),
+      ...checked('anthropic-models-md', text, prov, snapshotId),
+    ],
   })),
   'anthropic-pricing-md': set((text, { prov, snapshotId }) => ({
     entities: normalizePrices(parseAnthropicPricingMd(text, prov).rows, snapshotId),
   })),
   'xai-models-md': set((text, { prov, snapshotId }) => ({
-    entities: normalizePrices(parseXaiModelsMd(text, prov).rows, snapshotId),
+    entities: [
+      ...normalizePrices(parseXaiModelsMd(text, prov).rows, snapshotId),
+      ...checked('xai-models-md', text, prov, snapshotId),
+    ],
   })),
   'google-pricing-html': set((html, { prov, snapshotId }) => {
     const { rows, skipped } = parseGooglePricingPage(html, prov)

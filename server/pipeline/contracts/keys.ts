@@ -16,6 +16,13 @@ export function modelKey(provider: Provider, slug: string, tier?: string | null)
   return tier ? `model:${provider}:${slug}:${tier}` : `model:${provider}:${slug}`
 }
 
+// One row per mapped matrix cell. The key is the cell, not the model: when
+// a re-transcription moves a class to a new slug, the row diffs as 'modified'
+// (old slug → new slug) rather than as a removal plus an addition.
+export function recommendationKey(provider: Provider, klass: string): string {
+  return `recommendation:${provider}:${klass}`
+}
+
 export function filingKey(accessionNo: string): string {
   return `filing:${accessionNo}`
 }

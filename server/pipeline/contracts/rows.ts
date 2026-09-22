@@ -11,7 +11,19 @@ export const providerEnum = z.enum(['openai', 'anthropic', 'google', 'xai', 'oth
 // server/pipeline/judge/pending.ts and queryMovement() both exclude it.
 // 'revenue' is one XBRL fact (a filer, a tag, a period, a filing) — an event
 // when a new filing adds or restates one, so the judge does see it.
-export const entityTypeEnum = z.enum(['job', 'model', 'filing', 'incident', 'ranking', 'revenue'])
+// 'recommendation' is the drift check on the editorial class map
+// (server/pipeline/recommendations.ts): one row per mapped (provider, class),
+// whose payload says whether the vendor sentence the mapping rests on is
+// still on the vendor's page. A flip to `present: false` is an event.
+export const entityTypeEnum = z.enum([
+  'job',
+  'model',
+  'filing',
+  'incident',
+  'ranking',
+  'revenue',
+  'recommendation',
+])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])
 // The two deterministic floors (server/pipeline/lanes.ts) and the judge lane.
