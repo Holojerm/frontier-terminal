@@ -32,6 +32,21 @@ export function rankingKey(date: string, modelPermaslug: string): string {
   return `ranking:${date}:${modelPermaslug}`
 }
 
+// One XBRL fact: a filer's value for one tag over one period, as one filing
+// reported it. The accession number is part of the key because a 10-K
+// restates the prior year's quarters — the same period from two filings is
+// two observations, and a value that differs between them is a restatement
+// the reader should be able to see, not a silent overwrite.
+export function revenueKey(
+  cik: string,
+  tag: string,
+  accessionNo: string,
+  start: string,
+  end: string,
+): string {
+  return `revenue:${cik}:${tag}:${accessionNo}:${start}:${end}`
+}
+
 // Canonical serialization backing contentHash. Exported so consumers
 // (normalize) share this exact algorithm instead of carrying a copy:
 // contentHash(JSON.parse(payload)) === content_hash must hold.

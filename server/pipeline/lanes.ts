@@ -12,6 +12,7 @@ import {
   normalizeJobs,
   normalizePrices,
   normalizeRankings,
+  normalizeRevenues,
 } from './normalize'
 import { parseAnthropicGreenhouse } from './parsers/hiring/anthropic-greenhouse'
 import { parseOpenaiAshby } from './parsers/hiring/openai-ashby'
@@ -22,9 +23,11 @@ import { parseAnthropicPricingMd } from './parsers/pricing/anthropic-pricing'
 import { parseGooglePricingPage } from './parsers/pricing/google-pricing'
 import { parseOpenAiModelsMd } from './parsers/pricing/openai-models'
 import { parseXaiModelsMd } from './parsers/pricing/xai-models'
+import { COMPANYFACTS_SOURCES, parseEdgarCompanyfacts } from './parsers/sec/edgar-companyfacts'
 import { parseEdgarFts } from './parsers/sec/edgar-fts'
-import { parseEdgarSubmissionsSpcx } from './parsers/sec/edgar-submissions'
-import { isS1FloorForm } from './parsers/sec/s1-floor'
+import { SUBMISSIONS_SOURCES, parseEdgarSubmissions } from './parsers/sec/edgar-submissions'
+import { revenueProviderFor, type RevenueFilers } from './parsers/sec/revenue-filers'
+import { isPeriodicForm, isS1FloorForm } from './parsers/sec/s1-floor'
 import { parseAnthropicStatus } from './parsers/status/anthropic-status'
 import { parseGoogleCloudStatus } from './parsers/status/google-cloud-status'
 import { parseOpenaiStatus } from './parsers/status/openai-status'
@@ -48,6 +51,8 @@ export interface ParseContext {
   /** Body of a side source fetched in this same tick; throws if it was not. */
   side: (sourceId: string) => string
   whitelist: CikWhitelist
+  /** sources.yaml revenue_filers — which lab a company-facts filer belongs to. */
+  revenueFilers: RevenueFilers
 }
 
 export interface ParseResult {
@@ -71,6 +76,54 @@ export interface Lane {
 }
 
 const set = (parse: Lane['parse']): Lane => ({ sides: [], removals: 'set', parse })
+
+// One submissions lane per whitelisted CIK. A filer's recent window is a
+// rolling list, so a filing scrolling out was not un-filed: append-only.
+// Both floors run on every feed; a tracked form on a whitelisted CIK is an
+// alert whichever feed saw it first (the FTS query is S-1-only, so the
+// periodic floor only ever fires from here).
+function submissionsLanes(): Record<string, Lane> {
+  const lanes: Record<string, Lane> = {}
+  for (const sourceId of Object.keys(SUBMISSIONS_SOURCES)) {
+    lanes[sourceId] = {
+      sides: [],
+      removals: 'append-only',
+      parse: (text, { prov, snapshotId, whitelist }) => {
+        const { rows, skipped } = parseEdgarSubmissions(text, whitelist, prov)
+        return {
+          entities: normalizeFilings(rows, snapshotId),
+          note: skipped ? `${skipped} filings skipped: untracked form` : undefined,
+        }
+      },
+      alerts: (changes) => [...s1FloorAlerts(changes), ...periodicFloorAlerts(changes)],
+    }
+  }
+  return lanes
+}
+
+// One company-facts lane per tagged revenue filer. Facts accumulate (a
+// 10-K restates the prior year's quarters under a new accession), so the
+// lane is append-only; the provider is the lab the filer is tagged to in
+// sources.yaml, 'other' when the tag is gone — never a guess from the name.
+function companyfactsLanes(): Record<string, Lane> {
+  const lanes: Record<string, Lane> = {}
+  for (const sourceId of Object.keys(COMPANYFACTS_SOURCES)) {
+    lanes[sourceId] = {
+      sides: [],
+      removals: 'append-only',
+      parse: (text, { prov, snapshotId, whitelist, revenueFilers }) => {
+        const { rows, tags } = parseEdgarCompanyfacts(text, whitelist, prov)
+        const cik = rows[0]?.cik
+        const provider = cik ? revenueProviderFor(cik, revenueFilers, whitelist) : 'other'
+        return {
+          entities: normalizeRevenues(rows, snapshotId, provider),
+          note: tags.length ? `tags ${tags.join(', ')}` : 'no revenue tag in us-gaap facts',
+        }
+      },
+    }
+  }
+  return lanes
+}
 
 export const LANES: Readonly<Record<string, Lane>> = {
   'openai-models-md': set((text, { prov, snapshotId }) => ({
@@ -123,14 +176,8 @@ export const LANES: Readonly<Record<string, Lane>> = {
     }),
     alerts: s1FloorAlerts,
   },
-  'edgar-submissions-spcx': {
-    sides: [],
-    removals: 'append-only',
-    parse: (text, { prov, snapshotId, whitelist }) => ({
-      entities: normalizeFilings(parseEdgarSubmissionsSpcx(text, whitelist, prov).rows, snapshotId),
-    }),
-    alerts: s1FloorAlerts,
-  },
+  ...submissionsLanes(),
+  ...companyfactsLanes(),
   // Status feeds are rolling windows (Statuspage caps at 50; OpenAI's page
   // holds about a month), so an incident scrolling out was not un-posted.
   // An incident that resolves diffs as 'modified' (resolved_at null → set).
@@ -213,6 +260,48 @@ export function s1FloorAlerts(changes: readonly ChangeRow[]): AlertRow[] {
           'An S-1/424B4 on a whitelisted filer always alerts — the s1-floor rule, no model in the loop.',
         change_ids: JSON.stringify([change.id]),
         rule: 's1-floor',
+        created_at: change.detected_at,
+        source_url: change.source_url,
+        fetched_at: change.fetched_at,
+      }),
+    )
+  }
+  return alerts
+}
+
+/**
+ * The second deterministic rule: a NEW 10-Q/10-K on a whitelisted CIK
+ * always alerts, `notable` rather than `critical` — a periodic report is
+ * scheduled news, an S-1 is not. Same grounding as s1FloorAlerts: every
+ * value is read back out of the change row's after_json. An 8-K is tracked
+ * but left to the judge (parsers/sec/forms.ts).
+ */
+export function periodicFloorAlerts(changes: readonly ChangeRow[]): AlertRow[] {
+  const alerts: AlertRow[] = []
+  for (const change of changes) {
+    if (change.change_type !== 'added' || change.entity_type !== 'filing' || !change.after_json) {
+      continue
+    }
+    const filing = FilingRow.parse({
+      ...(JSON.parse(change.after_json) as Record<string, unknown>),
+      source_url: change.source_url,
+      fetched_at: change.fetched_at,
+    })
+    if (filing.whitelist_cik === null || !isPeriodicForm(filing.form)) continue
+
+    const filer = filing.display_names[0] ?? `CIK ${filing.whitelist_cik}`
+    alerts.push(
+      AlertRow.parse({
+        id: contentHash({ rule: 'periodic-floor', change_id: change.id }),
+        severity: 'notable',
+        headline: `${filing.form} filed by ${filer} (${filing.file_date})`,
+        explanation:
+          `Accession ${filing.accession_no}: form ${filing.form} filed ${filing.file_date} by ` +
+          `whitelisted CIK ${filing.whitelist_cik} (${filing.display_names.join(', ')}). ` +
+          'A 10-Q/10-K on a whitelisted filer always alerts — the periodic-floor rule, no model in the loop. ' +
+          'Where the filer is a tagged revenue filer, its XBRL revenue facts refresh on the /revenue panel at the next company-facts poll.',
+        change_ids: JSON.stringify([change.id]),
+        rule: 'periodic-floor',
         created_at: change.detected_at,
         source_url: change.source_url,
         fetched_at: change.fetched_at,

@@ -8,11 +8,13 @@ import {
   modelKey,
   stableStringify,
   rankingKey,
+  revenueKey,
   type FilingRow,
   type IncidentRow,
   type PriceRow,
   type Provider,
   type RankingRow,
+  type RevenueRow,
 } from './contracts'
 
 // Normalize: validated parser-output rows -> EntityRow (boundary table,
@@ -146,6 +148,33 @@ export function normalizeRanking(row: RankingRow, snapshotId: string): EntityRow
 
 export function normalizeRankings(rows: readonly RankingRow[], snapshotId: string): EntityRow[] {
   return collapse(rows.map((row) => normalizeRanking(row, snapshotId)))
+}
+
+// A revenue fact's provider is the lab whose filer reported it, resolved by
+// the lane from sources.yaml (revenue_filers + cik_whitelist); the row
+// itself carries only the filer. `val` is the whole content, so a restated
+// figure in a later filing is a new key (the accession differs), and a
+// corrected value under the SAME accession diffs as 'modified'.
+export function normalizeRevenue(
+  row: RevenueRow,
+  snapshotId: string,
+  provider: Provider,
+): EntityRow {
+  return toEntity(
+    revenueKey(row.cik, row.tag, row.accession_no, row.start, row.end),
+    'revenue',
+    provider,
+    snapshotId,
+    row,
+  )
+}
+
+export function normalizeRevenues(
+  rows: readonly RevenueRow[],
+  snapshotId: string,
+  provider: Provider,
+): EntityRow[] {
+  return collapse(rows.map((row) => normalizeRevenue(row, snapshotId, provider)))
 }
 
 export function normalizeFilings(

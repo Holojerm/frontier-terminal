@@ -37,7 +37,15 @@ export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
   'xai-greenhouse': { label: 'xAI Greenhouse jobs', role: 'primary' },
   'xai-greenhouse-departments': { label: 'xAI Greenhouse departments (join)', role: 'join' },
   'edgar-fts': { label: 'EDGAR full-text search (S-1 tripwire)', role: 'sec' },
-  'edgar-submissions-spcx': { label: 'EDGAR submissions (SPCX)', role: 'sec' },
+  'edgar-submissions-spcx': { label: 'EDGAR submissions (SPCX — xAI’s parent)', role: 'sec' },
+  'edgar-submissions-msft': { label: 'EDGAR submissions (MSFT)', role: 'sec' },
+  'edgar-submissions-amzn': { label: 'EDGAR submissions (AMZN)', role: 'sec' },
+  'edgar-submissions-nvda': { label: 'EDGAR submissions (NVDA)', role: 'sec' },
+  'edgar-submissions-googl': { label: 'EDGAR submissions (GOOGL)', role: 'sec' },
+  'edgar-companyfacts-spcx': {
+    label: 'EDGAR XBRL company facts (SPCX — xAI’s parent)',
+    role: 'sec',
+  },
   'openai-status': { label: 'OpenAI status page incidents', role: 'status' },
   'anthropic-status': { label: 'Anthropic (Claude) status page incidents', role: 'status' },
   'google-cloud-status': {
@@ -171,6 +179,7 @@ const AXES: readonly SourceAxis[] = [
   'pricing-cross-check',
   'hiring',
   'sec',
+  'revenue',
   'status',
   'demand-share',
 ]

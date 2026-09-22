@@ -12,7 +12,7 @@
 // leak.
 //
 // Stateless and JSON on both protocol eras. Each request gets a fresh
-// McpServer — fourteen registrations, cheap — so a Worker isolate holds no
+// McpServer — sixteen registrations, cheap — so a Worker isolate holds no
 // session, and a client that reconnects to a different isolate notices
 // nothing. Legacy (2025-era) clients, which is every shipping client today,
 // are served through a per-request WebStandardStreamableHTTPServerTransport
@@ -61,7 +61,9 @@ import {
   type QueryContext,
 } from './terminal-db'
 import { SHARE_WINDOW_DAYS, queryRankings } from './terminal-rankings'
+import { queryRevenue } from './terminal-revenue'
 import { PROVIDER_ORDER } from './terminal-sources'
+import { querySpend } from './terminal-spend'
 
 /** What the server needs from its host — the route supplies the real thing, the test a fixture. */
 export interface McpDeps {
@@ -123,8 +125,8 @@ const PROVENANCE =
 
 const INSTRUCTIONS =
   `${MCP_SERVER_NAME}: a free, public, read-only investor terminal tracking the frontier AI labs ` +
-  '(OpenAI, Anthropic, Google, xAI) on five axes — API price lists, hiring boards, SEC filings, status-page incidents, ' +
-  'and OpenRouter demand share. ' +
+  '(OpenAI, Anthropic, Google, xAI) on six axes — API price lists, hiring boards (with the physical-infrastructure buildout cluster), ' +
+  'SEC filings and disclosed revenue, status-page incidents, and OpenRouter demand share with its implied spend share. ' +
   'Not investment advice. Start with `describe` (the site map) or `get_overview` (what moved). ' +
   PROVENANCE
 
@@ -246,8 +248,8 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'Alerts newest first, each citing the change rows it is a claim about (changes, resolved; missing_change_ids if any did not resolve). ' +
         'Severity reads as a tier: info is the ticker (what moved, low stakes — a role added, a title reworded); notable and critical are alerts ' +
         '(a price move, a new SKU, a department-level hiring shift, a filing). tier selects alert, ticker, or all (default all). ' +
-        'rule is s1-floor (deterministic: a registration statement appeared on EDGAR) or agent-judge (a model’s reading of change rows, ' +
-        'labelled as such). total is the count on file for the chosen tier. ' +
+        'rule is s1-floor (deterministic: a registration statement appeared on EDGAR), periodic-floor (deterministic: a 10-Q/10-K on a ' +
+        'whitelisted CIK) or agent-judge (a model’s reading of change rows, labelled as such). total is the count on file for the chosen tier. ' +
         `With a severity filter, the newest ${ALERT_SEARCH_DEPTH} rows of the tier are searched and up to limit returned. ` +
         PROVENANCE,
       inputSchema: z.object({
@@ -325,8 +327,10 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'provider’s earliest board snapshot (series_from); baseline_at is this store’s first poll, and roles that opened or closed ' +
         'before the log begins are carried as they stand today, so the oldest points understate churn. compare sets today ' +
         `against ${HIRING_WINDOW_DAYS} days back, or the series start when that is younger (days says which). log is the change ` +
-        'rows the series rests on. Google is an audited cut (feed no_public_feed, reason given) with an empty series; xAI carries the ' +
-        'SpaceXAI blend caveat. Optional provider filter. ' +
+        'rows the series rests on. clusters[] sums named department clusters from sources.yaml — physical-infrastructure (Data Center, ' +
+        'Infrastructure, Facilities, Energy, Construction, Compute, Hardware; not Software) is the capacity-buildout signal — with the ' +
+        'matched department labels listed so the sum is checkable. Google is an audited cut (feed no_public_feed, reason given) with an ' +
+        'empty series; xAI carries the SpaceXAI blend caveat. Optional provider filter. ' +
         PROVENANCE,
       inputSchema: z.object({ provider: ProviderSchema.optional() }),
       annotations: READ_ONLY,
@@ -409,6 +413,50 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
       annotations: READ_ONLY,
     },
     async () => json(await deps.serve('rankings', (ctx) => queryRankings(deps.db, ctx))),
+  )
+
+  server.registerTool(
+    'get_revenue',
+    {
+      title: 'Disclosed revenue (primary source only)',
+      description:
+        'Revenue each lab, or the public parent that consolidates it, has reported to the SEC, read from EDGAR’s XBRL company facts. ' +
+        'disclosure is none (no audited disclosure on file — nothing is shown, and press run-rates are deliberately absent), parent ' +
+        '(a public parent’s consolidated figure, labelled as the parent’s: today xAI via SpaceX/SPCX, whose XBRL carries no xAI segment), ' +
+        'issuer (the lab files for itself) or no_rows (tagged, nothing parsed yet). periods are the filer’s own USD values per ' +
+        '(start, end) from the newest filing that reported them, each with the tag, form, accession and a link to the filing index; ' +
+        'days distinguishes a quarter (~91) from a half (~182) or a year (~365) — nothing is derived across periods. superseded lists ' +
+        'values a later filing restated. Never call a parent’s number the lab’s. Optional provider filter. ' +
+        PROVENANCE,
+      inputSchema: z.object({ provider: ProviderSchema.optional() }),
+      annotations: READ_ONLY,
+    },
+    async ({ provider }) => {
+      const revenue = await deps.serve('revenue', (ctx) => queryRevenue(deps.db, ctx))
+      if (!provider) return json(revenue)
+      return json({
+        ...revenue,
+        providers: revenue.providers.filter((p) => p.provider === provider),
+      })
+    },
+  )
+
+  server.registerTool(
+    'get_spend',
+    {
+      title: 'Implied spend share (OpenRouter channel)',
+      description:
+        `The ${SHARE_WINDOW_DAYS}-day rankings joined to the vendors’ list prices: per lab, tokens routed, the share of those tokens that ` +
+        'matched a priced SKU (coverage), and implied spend as a RANGE — spend_low is every token at the input list price, spend_high ' +
+        'every token at the output price (the rankings carry no prompt/completion split, so a point estimate would be invented). ' +
+        'share_low/share_high are each lab’s slice of the four labs’ implied dollars at each bound; token_share is the same window’s ' +
+        'token slice, so tokens and dollars can be read side by side. models[] shows the join per model, with reason (free, unlisted, ' +
+        'unpriced) for every model excluded from dollars. This is one aggregator’s channel at list price, not revenue and not market ' +
+        'share; cite it as implied OpenRouter-channel spend and reproduce the CC BY 4.0 citation in rankings.meta.citation. ' +
+        PROVENANCE,
+      annotations: READ_ONLY,
+    },
+    async () => json(await deps.serve('spend', (ctx) => querySpend(deps.db, ctx))),
   )
 
   server.registerTool(

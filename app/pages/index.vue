@@ -1,8 +1,10 @@
 <script setup lang="ts">
 // The terminal's front page. Reading order is priority order: what moved,
-// then what things cost, then who is winning demand, then what is new, then
-// who is hiring, then how strained the APIs are, then the coverage the rest
-// rest on. Eight cached endpoints, fetched in parallel on the server.
+// then what things cost, then what has actually been disclosed, then who is
+// winning demand and where the implied dollars go, then what is new, then
+// who is hiring and who is building capacity, then how strained the APIs
+// are, then the coverage the rest rest on. Ten cached endpoints, fetched in
+// parallel on the server.
 
 import type {
   CoverageData,
@@ -13,6 +15,8 @@ import type {
   PricesData,
   RankingsData,
   ReleasesData,
+  RevenueData,
+  SpendData,
 } from '#shared/utils/terminal-types'
 
 definePageMeta({
@@ -21,7 +25,7 @@ definePageMeta({
     priority: '1.0',
     title: 'Overview',
     summary:
-      'What moved across the frontier AI labs — judged alerts, change counts by axis, like-for-like API prices, open roles by department, status-page incidents, and source coverage.',
+      'What moved across the frontier AI labs — judged alerts, change counts by axis, like-for-like API prices, disclosed revenue, demand and implied spend share, open roles by department, the physical-infrastructure buildout, status-page incidents, and source coverage.',
   },
 })
 
@@ -39,22 +43,43 @@ useSeo({
   description,
 })
 
-const [overview, prices, rankings, releases, hiring, hiringHistory, incidents, coverage] =
-  await Promise.all([
-    useFetch<OverviewData>('/api/overview'),
-    useFetch<PricesData>('/api/prices'),
-    useFetch<RankingsData>('/api/rankings'),
-    useFetch<ReleasesData>('/api/releases'),
-    useFetch<HiringData>('/api/hiring'),
-    useFetch<HiringHistoryData>('/api/hiring/history'),
-    useFetch<IncidentsData>('/api/incidents'),
-    useFetch<CoverageData>('/api/coverage'),
-  ])
+const [
+  overview,
+  prices,
+  revenue,
+  rankings,
+  spend,
+  releases,
+  hiring,
+  hiringHistory,
+  incidents,
+  coverage,
+] = await Promise.all([
+  useFetch<OverviewData>('/api/overview'),
+  useFetch<PricesData>('/api/prices'),
+  useFetch<RevenueData>('/api/revenue'),
+  useFetch<RankingsData>('/api/rankings'),
+  useFetch<SpendData>('/api/spend'),
+  useFetch<ReleasesData>('/api/releases'),
+  useFetch<HiringData>('/api/hiring'),
+  useFetch<HiringHistoryData>('/api/hiring/history'),
+  useFetch<IncidentsData>('/api/incidents'),
+  useFetch<CoverageData>('/api/coverage'),
+])
 
 const failed = computed(() =>
-  [overview, prices, rankings, releases, hiring, hiringHistory, incidents, coverage].some(
-    (r) => r.error.value !== null && r.error.value !== undefined,
-  ),
+  [
+    overview,
+    prices,
+    revenue,
+    rankings,
+    spend,
+    releases,
+    hiring,
+    hiringHistory,
+    incidents,
+    coverage,
+  ].some((r) => r.error.value !== null && r.error.value !== undefined),
 )
 
 const RECENT_RELEASES = 5
@@ -94,11 +119,27 @@ const recent = computed(() => releases.data.value?.rows.slice(0, RECENT_RELEASES
     </TerminalPanel>
 
     <TerminalPanel
+      id="revenue"
+      title="Disclosed revenue"
+      note="What each lab, or the public parent that consolidates it, has reported to the SEC — and an explicit blank where nothing audited exists."
+    >
+      <TerminalRevenuePanel v-if="revenue.data.value" :revenue="revenue.data.value" compact />
+    </TerminalPanel>
+
+    <TerminalPanel
       id="demand"
       title="Demand share"
       note="Each lab’s share of tokens routed through OpenRouter in the newest seven days — a proxy for relative demand while the labs are private."
     >
       <TerminalDemandShare v-if="rankings.data.value" :rankings="rankings.data.value" compact />
+    </TerminalPanel>
+
+    <TerminalPanel
+      id="spend"
+      title="Implied spend share"
+      note="The same tokens at each vendor’s list price: where the dollars would go if the channel paid list — a range, with the labs it could not price named."
+    >
+      <TerminalSpendShare v-if="spend.data.value" :spend="spend.data.value" compact />
     </TerminalPanel>
 
     <TerminalPanel
@@ -139,6 +180,18 @@ const recent = computed(() => releases.data.value?.rows.slice(0, RECENT_RELEASES
           Open roles over time
         </NuxtLink>
       </p>
+    </TerminalPanel>
+
+    <TerminalPanel
+      id="buildout"
+      title="Capacity buildout"
+      note="Open roles in each board’s physical-infrastructure departments — data center, facilities, energy, construction, compute, hardware — the supply side of the strain panel below."
+    >
+      <TerminalBuildoutPanel
+        v-if="hiringHistory.data.value"
+        :history="hiringHistory.data.value"
+        compact
+      />
     </TerminalPanel>
 
     <TerminalPanel

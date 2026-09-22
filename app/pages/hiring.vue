@@ -16,7 +16,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Hiring',
     summary:
-      'Open roles per day at OpenAI, Anthropic and xAI reconstructed from each job board’s change log, with the department mix now against 30 days ago and the caveats per board.',
+      'Open roles per day at OpenAI, Anthropic and xAI reconstructed from each job board’s change log, the physical-infrastructure buildout cluster per lab, the department mix now against 30 days ago, and the caveats per board.',
   },
 })
 
@@ -149,6 +149,14 @@ const compareRows = (p: HiringHistoryProvider) => p.compare?.departments ?? []
             </div>
           </template>
         </UCollapsible>
+      </TerminalPanel>
+
+      <TerminalPanel
+        id="buildout"
+        title="Physical-infrastructure buildout"
+        note="Open roles in the data-center, facilities, energy, construction, compute and hardware departments per lab per day — the supply-side signal beside the status pages’ demand strain."
+      >
+        <TerminalBuildoutPanel :history="hiring" />
       </TerminalPanel>
 
       <TerminalPanel

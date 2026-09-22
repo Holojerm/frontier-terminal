@@ -9,10 +9,13 @@ import { provenanceFields } from './provenance'
 export const providerEnum = z.enum(['openai', 'anthropic', 'google', 'xai', 'other'])
 // 'ranking' is a time series (one row per UTC day and model), not an event:
 // server/pipeline/judge/pending.ts and queryMovement() both exclude it.
-export const entityTypeEnum = z.enum(['job', 'model', 'filing', 'incident', 'ranking'])
+// 'revenue' is one XBRL fact (a filer, a tag, a period, a filing) — an event
+// when a new filing adds or restates one, so the judge does see it.
+export const entityTypeEnum = z.enum(['job', 'model', 'filing', 'incident', 'ranking', 'revenue'])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])
-export const alertRuleEnum = z.enum(['agent-judge', 's1-floor'])
+// The two deterministic floors (server/pipeline/lanes.ts) and the judge lane.
+export const alertRuleEnum = z.enum(['agent-judge', 's1-floor', 'periodic-floor'])
 // 'skipped': the source needs a credential the deploy does not have, so
 // nothing was attempted — distinct from 'failed' so a missing key is a
 // configuration state on the coverage panel, not an outage in the digest.

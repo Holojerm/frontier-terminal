@@ -21,6 +21,7 @@ export type SourceAxis =
   | 'pricing-cross-check'
   | 'hiring'
   | 'sec'
+  | 'revenue'
   | 'status'
   | 'demand-share'
 export type SourceRole = 'primary' | 'join' | 'cross-check' | 'sec' | 'status'
@@ -405,12 +406,151 @@ export interface RankingsData extends Stamp {
   series: RankingDay[]
 }
 
+// ---- revenue (disclosed, primary-source only) -------------------------------
+
+/**
+ * One reported period: the filer's own XBRL value for one revenue tag over
+ * start..end, from the filing that reported it. When a later filing
+ * restates the same period, `superseded_by` names it and the newest
+ * filing's value is the one the period table shows.
+ */
+export interface RevenuePeriod extends Prov {
+  entity_key: string
+  start: string
+  end: string
+  /** Calendar days in the period — ~91 reads as a quarter, ~182 a half, ~365 a year. */
+  days: number
+  fy: number | null
+  fp: string | null
+  form: string
+  filed: string
+  accession_no: string
+  /** EDGAR's filing index for the accession — composed from cik + accession, verified to resolve. */
+  filing_url: string
+  tag: string
+  val: number
+  /** SEC's calendar frame when the fact is the canonical one for it (CY2026Q2). */
+  frame: string | null
+}
+
+export interface RevenueFilerView {
+  ticker: string
+  cik: string
+  /** As the filer's company-facts payload names itself. */
+  entity_name: string | null
+  /** issuer: the lab files for itself. parent: a public parent consolidates it, and the series is the parent's. */
+  relation: 'issuer' | 'parent'
+  source_id: string
+  /** The audit's caveat for the feed — for a parent, the words that say whose revenue this is. */
+  caveat: string | null
+}
+
+export interface RevenueProviderView {
+  provider: BigFour
+  display: string
+  /** none: no audited disclosure on file, nothing shown. parent / issuer: a tagged filer with facts. no_rows: tagged, nothing parsed yet. */
+  disclosure: 'none' | 'parent' | 'issuer' | 'no_rows'
+  filer: RevenueFilerView | null
+  /** Newest-period first; only the newest filing's value per (start, end). */
+  periods: RevenuePeriod[]
+  /** Periods dropped because a later filing restated them, newest first. */
+  superseded: RevenuePeriod[]
+  /** Tags present in the filer's facts, in preference order. */
+  tags: string[]
+  sources: SourceRef[]
+}
+
+export interface RevenueData extends Stamp {
+  providers: RevenueProviderView[]
+  /** The rule this panel obeys, stated once for the page. */
+  rule: string
+}
+
+// ---- implied spend share (rankings × list prices) ---------------------------
+
+/** One ranked model in the share window, joined to a stored SKU when one matched. */
+export interface SpendModel {
+  model_permaslug: string
+  tokens: number
+  /** The SKU key the permaslug matched, or null — with `reason` saying why not. */
+  matched_key: string | null
+  /** free: an OpenRouter free-tier variant; unlisted: no stored SKU with that slug; unpriced: SKU listed without a published price. */
+  reason: 'free' | 'unlisted' | 'unpriced' | null
+  input_per_mtok: number | null
+  output_per_mtok: number | null
+  /** tokens × input list price, in USD; the floor of what those tokens would cost at list. */
+  spend_low: number | null
+  /** tokens × output list price, in USD; the ceiling. */
+  spend_high: number | null
+  price_source_url: string | null
+  price_fetched_at: string | null
+}
+
+export interface SpendProviderView {
+  provider: BigFour
+  display: string
+  tokens: number
+  /** Tokens on models that matched a priced SKU. */
+  priced_tokens: number
+  /** priced_tokens / tokens; null when the lab routed nothing in the window. */
+  coverage: number | null
+  spend_low: number
+  spend_high: number
+  /** This lab's spend_low over the four labs' spend_low, 0..1; null when nothing is priced. */
+  share_low: number | null
+  share_high: number | null
+  /** Token share of the same window, for the decomposition: tokens vs. dollars. */
+  token_share: number | null
+  models: SpendModel[]
+}
+
+export interface SpendData extends Stamp {
+  /** Mirrors RankingsData.status. */
+  status: 'ok' | 'not_configured' | 'no_rows'
+  window: DateWindow | null
+  providers: SpendProviderView[]
+  totals: {
+    tokens: number
+    /** Tokens routed to models outside the four labs — not priced here, stated as the gap. */
+    other_tokens: number
+    priced_tokens: number
+    spend_low: number
+    spend_high: number
+  }
+  /** Labs with tokens in the window but no priced SKU matched: in the token share, out of the dollar share, and said so. */
+  excluded: { provider: BigFour; display: string; reason: string }[]
+  /** The rankings feed's provenance, citation and caveat travel with the derivation. */
+  rankings: Pick<RankingsData, 'provenance' | 'source' | 'meta'>
+  /** The pricing sources the SKUs came from. */
+  price_sources: SourceRef[]
+  /** What this number is and is not, stated once. */
+  caveat: string
+}
+
 // ---- hiring history ---------------------------------------------------------
 
 export interface DeptSeries {
   department: string
   /** Open roles at the end of each date in the provider's `dates`. */
   series: number[]
+}
+
+/**
+ * One department cluster (sources.yaml `department_clusters`) on one board:
+ * the departments whose names matched, and their summed open roles per day
+ * on the provider's `dates`. `now`/`then` mirror HiringCompare's instant.
+ */
+export interface ClusterSeries {
+  id: string
+  label: string
+  /** The board's own department labels that matched, largest today first — what was summed, visibly. */
+  departments: DeptCompare[]
+  series: number[]
+  now: number
+  /** null until the series has two points. */
+  then: number | null
+  /** The comparison instant, as HiringCompare.at. */
+  then_at: string | null
 }
 
 export interface DeptCompare {
@@ -449,6 +589,8 @@ export interface HiringHistoryProvider {
   total: number[]
   /** Every department seen in the window, largest today first. */
   departments: DeptSeries[]
+  /** Named department clusters from sources.yaml (the physical-infrastructure buildout signal), summed over the matched departments. */
+  clusters: ClusterSeries[]
   compare: HiringCompare | null
   /** Earliest snapshot of the provider's job board — where the series starts. */
   series_from: string | null
@@ -507,7 +649,7 @@ export interface FieldDiff {
 export interface ChangeView extends Prov {
   id: string
   entity_key: string
-  entity_type: 'job' | 'model' | 'filing' | 'incident' | 'ranking'
+  entity_type: 'job' | 'model' | 'filing' | 'incident' | 'ranking' | 'revenue'
   provider: ProviderId
   change_type: 'added' | 'removed' | 'modified'
   detected_at: string
@@ -522,7 +664,7 @@ export interface AlertView extends Prov {
   severity: AlertSeverity
   headline: string
   explanation: string
-  rule: 'agent-judge' | 's1-floor'
+  rule: 'agent-judge' | 's1-floor' | 'periodic-floor'
   created_at: string
   change_ids: string[]
   /** The cited rows, resolved; ids that resolve to nothing are listed in `missing`. */

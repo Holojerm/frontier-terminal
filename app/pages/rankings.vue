@@ -1,8 +1,10 @@
 <script setup lang="ts">
-// The demand-share axis in full: the share bars, the 30-day series, and each
-// lab's top models — all from OpenRouter's usage rankings (CC BY 4.0).
+// The demand-share axis in full: the share bars, the implied spend share
+// the tokens decompose into at list price, the 30-day series, and each
+// lab's top models — all from OpenRouter's usage rankings (CC BY 4.0) and,
+// for the dollars, the vendors' own price pages.
 
-import type { RankingsData } from '#shared/utils/terminal-types'
+import type { RankingsData, SpendData } from '#shared/utils/terminal-types'
 
 definePageMeta({
   publicPage: {
@@ -10,7 +12,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Demand share',
     summary:
-      'Each frontier lab’s share of tokens routed through OpenRouter over the newest seven days, the change against the seven before, a 30-day daily series, and the top models per lab — OpenRouter share, not market share.',
+      'Each frontier lab’s share of tokens routed through OpenRouter over the newest seven days, the implied spend share those tokens carry at list price, a 30-day daily series, and the top models per lab — OpenRouter share, not market share.',
   },
 })
 
@@ -20,7 +22,10 @@ useSeo({
     'Token share per frontier lab on OpenRouter — a public proxy for demand while the labs are private — with a 30-day series and top models per lab. CC BY 4.0.',
 })
 
-const { data: rankings, error } = await useFetch<RankingsData>('/api/rankings')
+const [{ data: rankings, error }, { data: spend }] = await Promise.all([
+  useFetch<RankingsData>('/api/rankings'),
+  useFetch<SpendData>('/api/spend'),
+])
 </script>
 
 <template>
@@ -49,6 +54,15 @@ const { data: rankings, error } = await useFetch<RankingsData>('/api/rankings')
         :note="`${rankings.meta.coverage.days} day${rankings.meta.coverage.days === 1 ? '' : 's'} on record. Share is of every model in OpenRouter’s daily top 50 plus its aggregated “other” row.`"
       >
         <TerminalDemandShare :rankings="rankings" />
+      </TerminalPanel>
+
+      <TerminalPanel
+        v-if="spend"
+        id="spend"
+        title="Implied spend share"
+        note="Tokens to open-weight models, dollars to the frontier labs: the window’s tokens at each vendor’s published list price, as a low–high range with the join’s coverage on every row."
+      >
+        <TerminalSpendShare :spend="spend" />
       </TerminalPanel>
 
       <TerminalPanel

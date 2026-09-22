@@ -110,10 +110,18 @@ beforeEach(async () => {
 })
 
 describe('scopes', () => {
-  it('edgar is the two SEC feeds; survey is every include source', () => {
-    expect(sourceIdsForScope('edgar', ALL)).toEqual(['edgar-fts', 'edgar-submissions-spcx'])
+  it('edgar is the SEC feeds; survey is every include source', () => {
+    expect(sourceIdsForScope('edgar', ALL)).toEqual([
+      'edgar-fts',
+      'edgar-submissions-spcx',
+      'edgar-submissions-msft',
+      'edgar-submissions-amzn',
+      'edgar-submissions-nvda',
+      'edgar-submissions-googl',
+      'edgar-companyfacts-spcx',
+    ])
     expect(sourceIdsForScope('survey', ALL)).toEqual(ALL_IDS)
-    expect(ALL_IDS).toHaveLength(17)
+    expect(ALL_IDS).toHaveLength(22)
     // The status feeds ride the six-hourly survey only, never the EDGAR tick.
     expect(sourceIdsForScope('edgar', ALL)).not.toContain('openai-status')
   })
@@ -123,7 +131,7 @@ describe('baseline', () => {
   it('stores entities for every parser source, zero changes, one snapshot and one raw object each', async () => {
     const report = await run('survey', ALL_IDS)
 
-    expect(report.sources).toHaveLength(17)
+    expect(report.sources).toHaveLength(22)
     expect(report.failed).toBe(0)
     const byId = Object.fromEntries(report.sources.map((s) => [s.source_id, s]))
     // Sides and the cross-check are fetched and snapshotted but yield no entities.
@@ -141,8 +149,8 @@ describe('baseline', () => {
 
     expect(await rows.changes()).toHaveLength(0)
     expect(await rows.alerts()).toHaveLength(0)
-    expect(await rows.snapshots()).toHaveLength(17)
-    expect(await rows.runs()).toHaveLength(17)
+    expect(await rows.snapshots()).toHaveLength(22)
+    expect(await rows.runs()).toHaveLength(22)
     expect(await rows.ops()).toHaveLength(0)
 
     const entities = await rows.entities()
@@ -152,7 +160,13 @@ describe('baseline', () => {
     expect(perSource.get('anthropic-greenhouse')).toBe(59)
     expect(perSource.get('openai-ashby')).toBe(65)
     expect(perSource.get('anthropic-pricing-md')).toBe(30)
-    expect(perSource.get('edgar-submissions-spcx')).toBe(81)
+    // Tracked forms only (parsers/sec/forms.ts): 13 of SPCX's 81 recent filings.
+    expect(perSource.get('edgar-submissions-spcx')).toBe(13)
+    expect(perSource.get('edgar-submissions-msft')).toBe(9)
+    expect(perSource.get('edgar-companyfacts-spcx')).toBe(4)
+    expect(byId['edgar-companyfacts-spcx']!.detail).toBe(
+      '4 entities; tags RevenueFromContractWithCustomerExcludingAssessedTax',
+    )
     // A status feed's whole backlog lands as baseline rows, never as 'added'.
     expect(perSource.get('openai-status')).toBe(25)
     expect(perSource.get('anthropic-status')).toBe(50)
@@ -177,7 +191,7 @@ describe('baseline', () => {
     ])
 
     const keys = await rawKeys()
-    expect(keys).toHaveLength(17)
+    expect(keys).toHaveLength(22)
     expect(keys).toContain(
       (await rows.snapshots()).find((s) => s.source_id === 'xai-models-md')!.raw_key,
     )
@@ -398,7 +412,7 @@ describe('second run', () => {
       fixtureFetcher({ 'edgar-submissions-spcx': trimmed }),
     )
     expect(report.sources[0]).toMatchObject({ status: 'ok', added: 0, removed: 0, modified: 0 })
-    expect((await rows.entities()).filter((e) => e.entity_type === 'filing')).toHaveLength(81)
+    expect((await rows.entities()).filter((e) => e.entity_type === 'filing')).toHaveLength(13)
     expect(await rows.changes()).toHaveLength(0)
   })
 })
@@ -444,6 +458,94 @@ describe('s1-floor', () => {
     )
     expect(alert!.explanation).toContain('Accession 0001628280-26-099999')
     expect(alert!.explanation).toContain(`CIK ${SPCX_CIK}`)
+  })
+})
+
+describe('periodic-floor', () => {
+  it('a new 10-Q on a whitelisted CIK alerts notable; an 8-K and an untracked form do not', async () => {
+    await run('edgar', ['edgar-submissions-msft'])
+    expect(await rows.alerts()).toHaveLength(0)
+
+    const doc = JSON.parse(fixtureText('fixtures/sec/edgar-submissions-msft.json')) as {
+      filings: { recent: Record<string, unknown[]> }
+    }
+    const prepend = (accession: string, form: string) => {
+      const recent = Object.fromEntries(
+        Object.entries(doc.filings.recent).map(([k, v]) => [
+          k,
+          [
+            k === 'accessionNumber'
+              ? accession
+              : k === 'form'
+                ? form
+                : k === 'filingDate'
+                  ? '2026-09-20'
+                  : '',
+            ...v,
+          ],
+        ]),
+      )
+      doc.filings.recent = recent
+    }
+    prepend('0000950170-26-999901', '4') // dropped at parse
+    prepend('0000950170-26-999902', '8-K') // tracked, left to the judge
+    prepend('0000950170-26-999903', '10-Q') // the floor
+
+    const report = await run(
+      'edgar',
+      ['edgar-submissions-msft'],
+      fixtureFetcher({ 'edgar-submissions-msft': JSON.stringify(doc) }),
+    )
+    expect(report.sources[0]).toMatchObject({ status: 'ok', added: 2, alerts: 1 })
+    expect(report.sources[0]!.detail).toBe('142 filings skipped: untracked form')
+
+    const [alert, ...others] = await rows.alerts()
+    expect(others).toHaveLength(0)
+    const change = (await rows.changes()).find(
+      (c) => c.entity_key === 'filing:0000950170-26-999903',
+    )!
+    expect(alert).toMatchObject({
+      rule: 'periodic-floor',
+      severity: 'notable',
+      headline: '10-Q filed by MICROSOFT CORP (2026-09-20)',
+      change_ids: JSON.stringify([change.id]),
+      created_at: change.detected_at,
+      source_url: urlOf('edgar-submissions-msft'),
+    })
+    expect(alert!.explanation).toContain('CIK 0000789019')
+    expect(alert!.explanation).toContain('periodic-floor rule')
+  })
+
+  it('a company-facts baseline writes revenue rows under the tagged lab and no change', async () => {
+    const report = await run('edgar', ['edgar-companyfacts-spcx'])
+    expect(report.sources[0]).toMatchObject({ status: 'baseline' })
+    const facts = (await rows.entities()).filter((e) => e.entity_type === 'revenue')
+    expect(facts).toHaveLength(4)
+    expect(facts.every((e) => e.provider === 'xai')).toBe(true)
+    expect(facts.map((e) => e.entity_key).sort()[0]).toBe(
+      'revenue:0001181412:RevenueFromContractWithCustomerExcludingAssessedTax:0001628280-26-052535:2025-01-01:2025-06-30',
+    )
+    expect(await rows.changes()).toHaveLength(0)
+
+    // A restated value under the same accession is one modified row the judge will see.
+    const doc = JSON.parse(fixtureText('fixtures/sec/edgar-companyfacts-spcx.json')) as {
+      facts: { 'us-gaap': Record<string, { units: { USD: { val: number }[] } }> }
+    }
+    doc.facts['us-gaap']['RevenueFromContractWithCustomerExcludingAssessedTax']!.units.USD[3]!.val =
+      7_815_000_000
+    const again = await run(
+      'edgar',
+      ['edgar-companyfacts-spcx'],
+      fixtureFetcher({ 'edgar-companyfacts-spcx': JSON.stringify(doc) }),
+    )
+    expect(again.sources[0]).toMatchObject({ status: 'ok', added: 0, modified: 1, alerts: 0 })
+    const [change] = await rows.changes()
+    expect(change).toMatchObject({
+      entity_type: 'revenue',
+      provider: 'xai',
+      change_type: 'modified',
+    })
+    expect(JSON.parse(change!.after_json!)).toMatchObject({ val: 7_815_000_000, form: '10-Q' })
   })
 })
 

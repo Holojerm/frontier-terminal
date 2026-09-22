@@ -4,7 +4,9 @@ import type { FetchSource } from './sources'
 // Which sources each cron tick polls. One file, so the two tasks under
 // server/tasks/poll/ share a policy instead of two lists that drift.
 //
-//   edgar   */30 * * * *   the two SEC feeds — the tripwire, the one axis where
+//   edgar   */30 * * * *   the SEC feeds — the FTS tripwire, one submissions
+//                          feed per whitelisted CIK, and company facts for
+//                          each tagged revenue filer: the one axis where
 //                          latency is worth polling for.
 //   survey  0 */6 * * *    every include source. It re-checks EDGAR on purpose:
 //                          an unchanged re-fetch diffs to zero, and the overlap
@@ -14,7 +16,15 @@ import type { FetchSource } from './sources'
 // sixth hour. The survey is a superset, so at that instant edgar yields
 // (server/pipeline/poll.ts) rather than racing it for the lock.
 
-const EDGAR_SOURCES: readonly string[] = ['edgar-fts', 'edgar-submissions-spcx']
+const EDGAR_SOURCES: readonly string[] = [
+  'edgar-fts',
+  'edgar-submissions-spcx',
+  'edgar-submissions-msft',
+  'edgar-submissions-amzn',
+  'edgar-submissions-nvda',
+  'edgar-submissions-googl',
+  'edgar-companyfacts-spcx',
+]
 
 export function sourceIdsForScope(scope: PollScope, all: readonly FetchSource[]): string[] {
   const ids = all.map((s) => s.source_id)

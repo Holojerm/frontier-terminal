@@ -531,5 +531,23 @@ describe('after a baseline and a second poll', () => {
     expect(openai.total).toEqual([65, 65, 65])
     expect(openai.join_from).toBeNull()
     expect(hiring.log.changes).toBe(1)
+
+    // The buildout cluster on each board, summed from the board's own labels.
+    const infra = xai.clusters.find((c) => c.id === 'physical-infrastructure')!
+    expect(infra.label).toBe('Physical infrastructure')
+    expect(infra.departments.map((d) => d.department)).toEqual(['Data Center', 'Infrastructure'])
+    expect(infra.series).toHaveLength(3)
+    expect(infra.now).toBe(infra.departments.reduce((n, d) => n + d.now, 0))
+    expect(infra).toMatchObject({ then_at: '2026-09-07', then: infra.series[0] })
+    const anthropic = hiring.providers.find((p) => p.provider === 'anthropic')!
+    const anthropicInfra = anthropic.clusters[0]!
+    // "Software Engineering - Infrastructure" is excluded; Compute and Hardware are in.
+    expect(anthropicInfra.departments.map((d) => d.department).sort()).toEqual([
+      'Compute',
+      'Hardware',
+    ])
+    expect(openai.clusters[0]!.departments).toEqual([])
+    const google = hiring.providers.find((p) => p.provider === 'google')!
+    expect(google.clusters).toEqual([])
   })
 })

@@ -12,6 +12,7 @@ import { diff } from './diff'
 import type { SourceFetcher } from './fetch'
 import { LANES } from './lanes'
 import { manifestFixtures } from './parsers/fixture-provenance'
+import { parseRevenueFilersBlock, type RevenueFilers } from './parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock, type CikWhitelist } from './parsers/sec/whitelist'
 import { includeSources, type FetchSource } from './sources'
 import {
@@ -161,6 +162,7 @@ async function parseAndStore(
   fetched: Fetched,
   byId: ReadonlyMap<string, Fetched>,
   whitelist: CikWhitelist,
+  revenueFilers: RevenueFilers,
 ): Promise<Outcome> {
   const { source, fetched_at, body } = fetched
   if (!body) return quiet(fetched.skipped ? 'skipped' : 'failed', fetched.failure, null)
@@ -188,6 +190,7 @@ async function parseAndStore(
     snapshotId: body.snapshot_id,
     side: (id) => byId.get(id)!.body!.text,
     whitelist,
+    revenueFilers,
   })
   const note = parsed.note ?? null
 
@@ -273,6 +276,7 @@ export async function runRefresh(
   const started_at = now().toISOString()
   const all = includeSources(deps.sourcesYaml, manifestFixtures)
   const whitelist = parseCikWhitelistBlock(deps.sourcesYaml)
+  const revenueFilers = parseRevenueFilersBlock(deps.sourcesYaml)
 
   const unknown = sourceIds.filter((id) => !all.some((s) => s.source_id === id))
   if (unknown.length) throw new Error(`not include sources: ${unknown.join(', ')}`)
@@ -305,7 +309,7 @@ export async function runRefresh(
     const fetched = byId.get(source.source_id)!
     let outcome: Outcome
     try {
-      outcome = await parseAndStore(deps, fetched, byId, whitelist)
+      outcome = await parseAndStore(deps, fetched, byId, whitelist, revenueFilers)
     } catch (err) {
       outcome = quiet('failed', describeError(err), fetched.body?.snapshot_id ?? null)
     }
