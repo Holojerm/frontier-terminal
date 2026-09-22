@@ -2,8 +2,8 @@
 // renders. The UI never writes: server/pipeline/store.ts › insertRows() is
 // the only write path.
 //
-// Ported from the take-home's DuckDB queries onto Drizzle/D1, with one
-// structural change the store forced: `entities` here IS the current set
+// Drizzle/D1 queries over those tables, shaped by one structural fact the
+// store forces: `entities` here IS the current set
 // (one row per source and key, rewritten in place, deleted on removal), so
 // "the newest revision per SKU" is the entity row and the previous revision
 // is the newest `changes` row for that key. Jobs are a set — a role missing
@@ -290,8 +290,8 @@ const isEvent = () => ne(tables.changes.entity_type, 'ranking')
  * clock. A terminal opened on Monday must still say what moved on Friday
  * rather than "nothing recently" — and the window's start ships with the
  * number so the claim is checkable. window_from is derived from the same
- * max() the counts filter on; the take-home once selected it per entity type
- * and reported a window it had not filtered on.
+ * max() the counts filter on — deriving it per entity type instead reports a
+ * window the counts were never filtered on.
  */
 export async function queryMovement(db: PipelineDb): Promise<MovementSummary> {
   const [bounds] = await db
