@@ -72,19 +72,20 @@ describe('extractMark', () => {
 describe('parseColorTokens', () => {
   it('keeps values verbatim — hex and oklch both resolve in the browser', () => {
     const tokens = parseColorTokens(`@theme static {
-      --color-clay-600: #c74f2f;
-      --color-stone-500: oklch(55.3% 0.013 58.071);
+      --color-iris-600: #6c3efa;
+      --color-zinc-500: oklch(55.2% 0.016 285.938);
     }`)
-    expect(tokens['--color-clay-600']).toBe('#c74f2f')
-    expect(tokens['--color-stone-500']).toBe('oklch(55.3% 0.013 58.071)')
+    expect(tokens['--color-iris-600']).toBe('#6c3efa')
+    expect(tokens['--color-zinc-500']).toBe('oklch(55.2% 0.016 285.938)')
   })
 })
 
 describe('parseFontFamilies', () => {
   it('takes the first family — the one a font provider has to be asked for', () => {
-    const fonts = parseFontFamilies(`--font-display: 'Instrument Serif', ui-serif, Georgia, serif;
+    const fonts =
+      parseFontFamilies(`--font-display: 'JetBrains Mono', ui-monospace, SFMono-Regular, monospace;
       --font-sans: 'Inter', system-ui, sans-serif;`)
-    expect(fonts.display).toBe('Instrument Serif')
+    expect(fonts.display).toBe('JetBrains Mono')
     expect(fonts.sans).toBe('Inter')
   })
 })
@@ -95,14 +96,14 @@ describe('parseBrandRoles', () => {
 
 | Role | Token | Where it lands |
 |---|---|---|
-${BRAND_ROLES.map((role) => `| \`${role}\` | \`--color-clay-600\` | somewhere |`).join('\n')}
+${BRAND_ROLES.map((role) => `| \`${role}\` | \`--color-iris-600\` | somewhere |`).join('\n')}
 
 ## Color
 `
 
   it('maps every declared role to its token', () => {
     const roles = parseBrandRoles(table)
-    for (const role of BRAND_ROLES) expect(roles[role]).toBe('--color-clay-600')
+    for (const role of BRAND_ROLES) expect(roles[role]).toBe('--color-iris-600')
   })
 
   it('says which role is missing rather than generating a half-coloured icon', () => {
@@ -141,8 +142,11 @@ describe('fingerprint', () => {
 describe('app identity', () => {
   it('prefers what the deployed Worker actually serves', () => {
     expect(
-      parseWranglerVar('[vars]\nNUXT_PUBLIC_APP_NAME = "Quarry"\n', 'NUXT_PUBLIC_APP_NAME'),
-    ).toBe('Quarry')
+      parseWranglerVar(
+        '[vars]\nNUXT_PUBLIC_APP_NAME = "Frontier Terminal"\n',
+        'NUXT_PUBLIC_APP_NAME',
+      ),
+    ).toBe('Frontier Terminal')
   })
 
   it('falls back to the nuxt.config default, wrapped line and all', () => {

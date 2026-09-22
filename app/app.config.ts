@@ -11,12 +11,16 @@
 export default defineAppConfig({
   ui: {
     // DESIGN.md › Color › Semantic assignments.
-    // `clay` is the custom ramp in main.css; the rest are Tailwind built-ins.
+    // `iris` is the custom ramp in main.css; the rest are Tailwind built-ins.
     // Every color named here must have all 11 shades available.
+    //
+    // `zinc` rather than `slate` for the neutral: with a violet accent a
+    // blue-tinted grey makes the whole page one hue and the accent stops
+    // reading as an accent.
     colors: {
-      primary: 'clay',
-      secondary: 'stone',
-      neutral: 'stone',
+      primary: 'iris',
+      secondary: 'zinc',
+      neutral: 'zinc',
       success: 'emerald',
       info: 'sky',
       warning: 'amber',
@@ -50,9 +54,9 @@ export default defineAppConfig({
     // use the semantic token layer already — these are the two defaults that
     // contradict DESIGN.md, and nothing else.
     prose: {
-      // The display face ships at 400 only, so `font-bold` on a serif heading
-      // is the faux-bold DESIGN.md › Identity › Never rules out. It survives
-      // today only because `font-synthesis-weight: none` refuses to fake it.
+      // The display face carries its own weight (500, set in main.css's base
+      // layer), so NuxtUI's `font-bold` would both contradict DESIGN.md ›
+      // Typography and lose the tracking the base rule applies.
       h1: { slots: { base: 'font-normal' } },
       h2: { slots: { base: 'font-normal' } },
       h3: { slots: { base: 'font-normal' } },
