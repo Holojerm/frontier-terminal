@@ -131,6 +131,25 @@ export const NATIVE_LIMITER: {
   windowSeconds: 60,
 }
 
+/**
+ * The budget for a permalink family — `/api/alerts/:id`, `/api/prices/:key`.
+ *
+ * Sized off the sitemap rather than off a feeling. robots.txt invites fifteen
+ * crawlers onto every public page, and server/routes/sitemap.xml.get.ts
+ * enumerates one URL per SKU and one per alert — 378 and 184 when this was
+ * written, both growing with the store. A budget smaller than a full family
+ * means every crawl half-completes, and what the crawler gets for the rest is
+ * an error where the most citable documents on this site should be. So the
+ * number has to clear a whole pass inside one window, with room to grow.
+ *
+ * It is still a ceiling, not a formality: 500/60s is eight requests a second
+ * sustained, which no reader and no crawler comes near and a scraping loop
+ * passes in a blink. Both routes answer from the KV cache behind an edge
+ * cache (TERMINAL_CACHE_CONTROL), so a hit that reaches this is already the
+ * cheap kind.
+ */
+export const PERMALINK_LIMIT = 500
+
 /** Why a call site fell back to KV. Reported once per call site, per isolate. */
 export type KvFallbackReason = 'binding-absent' | 'window-mismatch' | 'limit-mismatch'
 

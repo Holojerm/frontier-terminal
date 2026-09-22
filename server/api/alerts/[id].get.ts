@@ -5,13 +5,18 @@
 
 import { z } from 'zod'
 
+import { PERMALINK_LIMIT } from '../../utils/rate-limit'
 import { queryAlert } from '../../utils/terminal-db'
 import { serveTerminal, terminalDb } from '../../utils/terminal-handler'
 
 const idSchema = z.string().regex(/^[0-9a-f]{64}$/)
 
 export default defineEventHandler(async (event) => {
-  await rateLimit(event, { name: 'alerts', limit: 60, windowSeconds: 60 })
+  // Its own bucket, not the list's. Sharing one meant a crawler walking the
+  // 184 alert permalinks in the sitemap spent /api/alerts' budget as it went,
+  // so a crawl took the alerts index down for the rest of that minute for the
+  // same IP — and the permalinks with it, from the 61st onwards.
+  await rateLimit(event, { name: 'alert-detail', limit: PERMALINK_LIMIT, windowSeconds: 60 })
   const id = idSchema.safeParse(getRouterParam(event, 'id'))
   if (!id.success) throw createError({ statusCode: 404, message: 'No such alert' })
 

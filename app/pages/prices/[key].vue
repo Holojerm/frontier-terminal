@@ -26,8 +26,16 @@ const { data: history, error } = await useFetch<PriceHistoryData>(
   `/api/prices/${encodeURIComponent(key)}`,
 )
 
-if (error.value?.statusCode === 404 || error.value?.statusCode === 400) {
+const upstream = error.value?.statusCode
+if (upstream === 404 || upstream === 400) {
   throw createError({ statusCode: 404, statusMessage: 'SKU not found', fatal: true })
+}
+// A throttled fetch is not a SKU with no history. Falling through renders the
+// inline "could not be read" alert under a 200, which is the one answer a
+// crawler stores as content — the permalink would enter the index as an empty
+// page. Say 429 and it comes back instead.
+if (upstream === 429) {
+  throw createError({ statusCode: 429, statusMessage: 'Too many requests', fatal: true })
 }
 
 const name = computed(() => {

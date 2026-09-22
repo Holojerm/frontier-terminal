@@ -26,9 +26,22 @@ const id = String(route.params.id ?? '')
 const { data, error } = await useFetch<AlertDetailData>(`/api/alerts/${id}`)
 
 if (!data.value) {
+  // Answer with what happened upstream rather than calling everything a server
+  // fault. A 429 is the rate limiter working — reporting it as 503 told a
+  // crawler the site was down, and, because server/plugins/error-logger.ts
+  // spools every 5xx, mailed the owner an ops digest about a healthy limiter.
+  // Anything genuinely unexpected keeps its upstream status in the message, so
+  // the digest can tell a throttle from a database that has gone away.
+  const upstream = error.value?.statusCode
+  if (upstream === 404) {
+    throw createError({ statusCode: 404, statusMessage: 'No such alert', fatal: true })
+  }
+  if (upstream === 429) {
+    throw createError({ statusCode: 429, statusMessage: 'Too many requests', fatal: true })
+  }
   throw createError({
-    statusCode: error.value?.statusCode === 404 ? 404 : 503,
-    statusMessage: error.value?.statusCode === 404 ? 'No such alert' : 'Alert could not be read',
+    statusCode: 503,
+    statusMessage: `Alert could not be read (upstream ${upstream ?? 'unknown'})`,
     fatal: true,
   })
 }
