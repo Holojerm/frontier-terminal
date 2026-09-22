@@ -9,6 +9,7 @@ import {
 import { parseAnthropicModelsOverviewMd } from '../../server/pipeline/parsers/pricing/anthropic-models-overview'
 import { parseAnthropicPricingMd } from '../../server/pipeline/parsers/pricing/anthropic-pricing'
 import { parseOpenAiModelsMd } from '../../server/pipeline/parsers/pricing/openai-models'
+import { parseOpenAiPricingMd } from '../../server/pipeline/parsers/pricing/openai-pricing'
 import { parseXaiModelsMd } from '../../server/pipeline/parsers/pricing/xai-models'
 import { parseEdgarFts } from '../../server/pipeline/parsers/sec/edgar-fts'
 import { parseEdgarSubmissionsSpcx } from '../../server/pipeline/parsers/sec/edgar-submissions'
@@ -29,6 +30,56 @@ const SPCX_CIK = '0001181412'
 const whitelist = parseCikWhitelistBlock(fixtureText('sources.yaml'))
 
 describe('vendor-md + sec lane', () => {
+  test('openai: pricing.md yields one row per model, service tier and context band, promo bounds kept as notes', () => {
+    const out = parseOpenAiPricingMd(fixtureText('fixtures/pricing/openai-pricing.md'))
+    expect(VendorMdPricingOutput.safeParse(out).success).toBe(true)
+    expect(out.rows).toHaveLength(134)
+    expect(out.rows.every((r) => r.provider === 'openai' && r.context_window === null)).toBe(true)
+    const tiers = new Map<string | null, number>()
+    for (const r of out.rows) tiers.set(r.tier, (tiers.get(r.tier) ?? 0) + 1)
+    expect([...tiers.entries()].sort()).toEqual([
+      [null, 37],
+      ['batch', 35],
+      ['batch_long_context', 7],
+      ['fast', 19],
+      ['fast_long_context', 4],
+      ['flex', 17],
+      ['flex_long_context', 7],
+      ['long_context', 8],
+    ])
+    const row = (slug: string, tier: string | null) =>
+      out.rows.find((r) => r.model_slug === slug && r.tier === tier)!
+    // "| gpt-5.6-sol | $4.00 | $0.40 | $5.00 | $20.00 | $8.00 | $0.80 | $10.00 | $30.00 |"
+    expect(row('gpt-5.6-sol', null)).toMatchObject({
+      input_per_mtok: 4,
+      cached_input_per_mtok: 0.4,
+      output_per_mtok: 20,
+      notes: null,
+    })
+    expect(row('gpt-5.6-sol', 'long_context')).toMatchObject({
+      input_per_mtok: 8,
+      output_per_mtok: 30,
+      notes: 'long context',
+    })
+    expect(row('gpt-5.6-sol', 'batch').input_per_mtok).toBe(2)
+    expect(row('gpt-5.6-sol', 'fast').output_per_mtok).toBe(40)
+    // "| gpt-5.5 (<272K context length) | $5.00 | ..." — the bound is a note, not a window.
+    expect(row('gpt-5.5', null)).toMatchObject({
+      input_per_mtok: 5,
+      notes: 'short context: <272K context length',
+    })
+    expect(row('gpt-5.5', 'long_context').notes).toBe('long context: beyond <272K context length')
+    // A "-" cell is null, never zero; a model with no long-context prices has no long row.
+    expect(row('gpt-5.5-pro', null).cached_input_per_mtok).toBeNull()
+    expect(
+      out.rows.find((r) => r.model_slug === 'gpt-4o-mini' && r.tier === 'long_context'),
+    ).toBeUndefined()
+    // Cyber, audio and image tables are not parsed.
+    expect(out.rows.some((r) => r.model_slug === 'gpt-5.6-cyber')).toBe(false)
+    for (const r of out.rows)
+      expect(r.source_url).toBe('https://developers.openai.com/api/docs/pricing.md')
+  })
+
   test('openai: parses fixtures/pricing/openai-models.md into PriceRow[] with model slugs as stable keys', () => {
     const out = parseOpenAiModelsMd(fixtureText('fixtures/pricing/openai-models.md'))
     expect(VendorMdPricingOutput.safeParse(out).success).toBe(true)

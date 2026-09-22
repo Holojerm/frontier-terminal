@@ -189,7 +189,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         '(input_per_mtok, cached_input_per_mtok, output_per_mtok; null = the vendor publishes no figure), plus delta vs. the previous revision ' +
         'and removed=true for a delisted SKU. matrix is the like-for-like view: one flagship / balanced / economy cell per provider on the ' +
         'standard tier, each citing the vendor sentence (basis) that justifies the mapping, or a stated gap. ' +
-        'OpenAI’s catalog page prints no prices, so its cells are gaps, not zeros. cross_check is OpenRouter: snapshotted as a drift check ' +
+        'OpenAI prices come from its pricing.md (Standard / Batch / Flex / Fast tiers, long-context bands as their own tiers); its catalog page prints none. cross_check is OpenRouter: snapshotted as a drift check ' +
         'on the vendor pages, never a price of record. Optional provider filter narrows rows and matrix to one lab. ' +
         PROVENANCE,
       inputSchema: z.object({ provider: ProviderSchema.optional() }),
