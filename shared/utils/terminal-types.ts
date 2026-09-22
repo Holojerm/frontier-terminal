@@ -187,6 +187,16 @@ export interface MatrixCell {
   row: PriceRowView | null
   basis: string | null
   basis_source_id: string | null
+  /**
+   * Whether `basis` was found on the vendor page at the last poll of
+   * `basis_source_id`; null when that page has not been polled since the
+   * check was introduced, or the cell is unmapped.
+   */
+  basis_current: boolean | null
+  /** fetched_at of the poll that produced `basis_current`. */
+  basis_checked_at: string | null
+  /** Set when basis_current is false: what the reader should make of the cell. */
+  basis_note: string | null
   /** Set when there is no price to show: why, in the vendor's terms. */
   gap: string | null
   /** true => a stored row with at least one published $/Mtok figure. */
@@ -649,7 +659,7 @@ export interface FieldDiff {
 export interface ChangeView extends Prov {
   id: string
   entity_key: string
-  entity_type: 'job' | 'model' | 'filing' | 'incident' | 'ranking' | 'revenue'
+  entity_type: 'job' | 'model' | 'filing' | 'incident' | 'ranking' | 'revenue' | 'recommendation'
   provider: ProviderId
   change_type: 'added' | 'removed' | 'modified'
   detected_at: string

@@ -6,6 +6,8 @@
 
 | Model | Context | Input / 1M tokens | Cached input / 1M tokens | Output / 1M tokens |
 | --- | --- | --- | --- | --- |
+| grok-4.7 (< 200k prompt tokens) | 500k | $2.00 | $0.50 | $6.00 |
+| grok-4.7 (≥ 200k prompt tokens) | 500k | $4.00 | $1.00 | $12.00 |
 | grok-4.6 (< 200k prompt tokens) | 500k | $2.00 | $0.50 | $6.00 |
 | grok-4.6 (≥ 200k prompt tokens) | 500k | $4.00 | $1.00 | $12.00 |
 | grok-4.5 (< 200k prompt tokens) | 500k | $2.00 | $0.30 | $6.00 |
@@ -27,28 +29,27 @@
 
 | Model | Cost |
 | --- | --- |
-| grok-imagine-image | $0.02 / image |
 | grok-imagine-image-quality | $0.05 / image |
 | grok-imagine-image-2.0 | $0.04 / image |
-| grok-imagine-video-1.5 | $0.080 / sec |
+| grok-imagine-image | $0.02 / image |
 | grok-imagine-video | $0.050 / sec |
+| grok-imagine-video-1.5 | $0.080 / sec |
 
 ### Voice Pricing
 
 | Mode | Cost |
 | --- | --- |
 | Speech to Speech (grok-voice-think-fast-2.0) | $0.08 / min ($4.80 / hr) audio<br />$0.004 / text input |
-| Speech to Speech (grok-voice-think-fast-1.0) — Deprecated | $0.05 / min ($3.00 / hr) audio<br />$0.004 / text input |
 | Speech to Text | $0.10 / hr (REST), $0.20 / hr (Streaming) |
 | Text to Speech | $15.00 / 1M chars |
 
 ## Which model should I choose?
 
-Your choice depends on your use case. We have dedicated models and APIs for audio, image, and video capabilities. For everything else, including code, use Grok 4.6. It is the most intelligent and fastest model we’ve built.
+Your choice depends on your use case. We have dedicated models and APIs for audio, image, and video capabilities. For everything else, including code, use Grok 4.7. It is the most capable model we’ve built.
 
-Code: [Grok 4.6](/developers/models/grok-4.6)
+Code: [Grok 4.7](/developers/models/grok-4.7)
 
-Chat: [Grok 4.6](/developers/models/grok-4.6)
+Chat: [Grok 4.7](/developers/models/grok-4.7)
 
 Images: [Grok Imagine Image 2.0](/developers/models/grok-imagine-image-2.0)
 
@@ -71,10 +72,12 @@ Voice: [Grok Voice API](/developers/model-capabilities/audio/voice)
   * Any image/text input order is accepted (e.g. text prompt can precede image prompt)
 * **Batch API**
   * Not every model accepts [Batch API](/developers/advanced-api-usage/batch-api) requests. See Details on each model page.
+* **Encrypted reasoning**
+  * On the [Responses API](/developers/rest-api-reference/inference/responses#create-new-response), `grok-4.7` always returns `reasoning.encrypted_content`, even when `include` does not list it. See [Encrypted reasoning content](/developers/model-capabilities/text/reasoning#encrypted-reasoning-content).
 
 > [!NOTE]
 >
-> The knowledge cut-off date of Grok 4.6 is February 1, 2026.
+> The knowledge cut-off date of Grok 4.7 is May 2026.
 
 ## Model Aliases
 

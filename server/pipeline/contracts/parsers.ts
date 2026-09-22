@@ -172,6 +172,21 @@ export const RankingRow = z.strictObject({
   ...provenanceFields,
 })
 export type RankingRow = z.infer<typeof RankingRow>
+
+// One mapped matrix cell (server/utils/terminal-classes.ts) checked against
+// the live body of the page its sentence was transcribed from
+// (server/pipeline/recommendations.ts). `present` is the whole verdict: the
+// sentence is either on the page, byte for byte after link-flattening, or it
+// is not — nothing is inferred about what replaced it.
+export const RecommendationRow = z.strictObject({
+  provider: providerEnum,
+  class: z.string().min(1),
+  model_slug: z.string().min(1),
+  basis: z.string().min(1),
+  present: z.boolean(),
+  ...provenanceFields,
+})
+export type RecommendationRow = z.infer<typeof RecommendationRow>
 export const OpenRouterRankingsOutput = z.strictObject({
   rows: z.array(RankingRow),
   // meta.as_of — the dataset build time, carried on the run, not in each
