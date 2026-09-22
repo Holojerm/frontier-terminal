@@ -9,7 +9,8 @@
 // ── Backend 1: Cloudflare's native Rate Limiting binding (preferred) ─────────
 // `env.RATE_LIMITER.limit({ key })` — GA since September 2025, declared as
 // `[[ratelimits]]` in wrangler.toml. It runs in the runtime rather than over the
-// network, so it is faster and cannot be raced by a slow KV write.
+// network, so it is faster and cannot be raced by a slow KV write. There are two
+// such bindings, one per budget in use; NATIVE_LIMITERS below says why.
 //
 // Its honest caveats, which are different from KV's and not smaller:
 //
@@ -25,9 +26,10 @@
 //   * It answers `{ success }` and nothing else — no count, no reset time. What
 //     that costs us is spelled out at `rateLimit` below.
 //   * Its (limit, period) is FIXED AT DEPLOY. `limit()` takes only a key, so one
-//     binding enforces exactly one budget. That is why `chooseBackend` refuses
-//     to delegate a call site whose numbers differ: the alternative is a handler
-//     asking for 20/60s, silently getting 30/60s, and nothing anywhere saying so.
+//     binding enforces exactly one budget — hence one block per budget. That is
+//     why `chooseBackend` refuses to delegate a call site whose numbers match no
+//     declared block: the alternative is a handler asking for 20/60s, silently
+//     getting 30/60s, and nothing anywhere saying so.
 //
 // ── Backend 2: a fixed-window counter in KV (fallback) ───────────────────────
 // KV reads can serve a stale count and KV caps sustained writes to roughly one
@@ -39,9 +41,9 @@
 // trade-off for one KV read + one write per request, and it's the right one for
 // a public read endpoint.
 //
-// KV is not vestigial. It is the only backend for any window the binding is not
-// configured for, and the only one that exists at all where no Worker env is
-// bound.
+// KV is not vestigial. It is the only backend for any budget no block is declared
+// for — PERMALINK_LIMIT's 500/60s among them — and the only one that exists at
+// all where no Worker env is bound.
 
 // `kv` is imported explicitly rather than relying on NuxtHub's auto-import.
 // The auto-import resolves for TypeScript but is not injected into this file at
@@ -111,25 +113,34 @@ export interface NativeRateLimiter {
 }
 
 /**
- * What `[[ratelimits]]` in wrangler.toml declares. These two numbers MUST match
- * that block — `test/rate-limit.test.ts` probes the real binding and fails if
- * they drift, because a mismatch does not throw, it just quietly stops anything
- * from using the native path.
+ * What the `[[ratelimits]]` blocks in wrangler.toml declare. Every entry here
+ * MUST match a block there, name and both numbers — `test/rate-limit.test.ts`
+ * probes each real binding and fails if they drift, because a mismatch does not
+ * throw, it just quietly stops anything from using the native path.
  *
  * `windowSeconds` is typed `10 | 60` rather than `number` on purpose: those are
  * the only two periods the platform accepts. Wrangler rejects anything else at
  * deploy; this makes `bun typecheck` reject it first.
+ *
+ * There are two because a binding's (limit, period) is FIXED AT DEPLOY —
+ * `limit()` takes only a key, so one binding enforces exactly one budget. The
+ * public read path asks for 60/60s and the two writers (export, judge) ask for
+ * 30/60s, so serving both natively takes two blocks. Adding a third means a
+ * third `[[ratelimits]]` block with its own namespace_id and an entry here.
+ *
+ * No two entries may share a (limit, windowSeconds) pair — `chooseBackend`
+ * takes the first match, so a duplicate would make one binding unreachable and
+ * nothing would say so. The test suite asserts the pairs are distinct.
  */
-export const NATIVE_LIMITER: {
-  /** Binding name — must match `name` in the wrangler.toml block. */
+export const NATIVE_LIMITERS: readonly {
+  /** Binding name — must match `name` in its wrangler.toml block. */
   binding: string
   limit: number
   windowSeconds: 10 | 60
-} = {
-  binding: 'RATE_LIMITER',
-  limit: 30,
-  windowSeconds: 60,
-}
+}[] = [
+  { binding: 'RATE_LIMITER', limit: 30, windowSeconds: 60 },
+  { binding: 'RATE_LIMITER_60', limit: 60, windowSeconds: 60 },
+]
 
 /**
  * The budget for a permalink family — `/api/alerts/:id`, `/api/prices/:key`.
@@ -158,29 +169,42 @@ export type BackendChoice =
   | { backend: 'kv'; reason: KvFallbackReason }
 
 /**
- * Which backend may serve this request.
+ * Which backend may serve this request, and with which binding.
  *
- * The rule is exact-match on BOTH numbers, and the strictness is the point. A
- * binding configured 30/60s cannot be asked for 20/60s at call time, so routing
- * a 20/60s handler through it would enforce 30 — looser than the handler asked
- * for — while `X-RateLimit-Limit: 20` went out on the response. The tempting
- * relaxation ("use it whenever the binding is *stricter* than the request") has
- * the same flaw pointed the other way: /api/health would silently become 30/60s
- * with a header still claiming 60.
+ * The rule is exact-match on BOTH numbers against a declared limiter, and the
+ * strictness is the point. A binding configured 30/60s cannot be asked for
+ * 20/60s at call time, so routing a 20/60s handler through it would enforce 30
+ * — looser than the handler asked for — while `X-RateLimit-Limit: 20` went out
+ * on the response. The tempting relaxation ("use it whenever some binding is
+ * *stricter* than the request") has the same flaw pointed the other way:
+ * /api/health would silently become 30/60s with a header still claiming 60.
  *
- * So: match, or use KV. To move another call site onto the binding, give it the
- * same numbers as NATIVE_LIMITER, or add a second `[[ratelimits]]` block with
- * its own namespace_id and a second entry here.
+ * So: match a declared pair exactly, or use KV. Takes a resolver rather than a
+ * binding because which binding to look up is the answer, not the question —
+ * the numbers decide it, and this function owns that decision so no caller can
+ * pair a handler's budget with the wrong binding.
  */
 export function chooseBackend(
-  native: NativeRateLimiter | undefined,
+  resolve: (binding: string) => NativeRateLimiter | undefined,
   opts: Pick<RateLimitOptions, 'limit' | 'windowSeconds'>,
 ): BackendChoice {
-  if (!native) return { backend: 'kv', reason: 'binding-absent' }
-  if (opts.windowSeconds !== NATIVE_LIMITER.windowSeconds) {
-    return { backend: 'kv', reason: 'window-mismatch' }
+  const declared = NATIVE_LIMITERS.find(
+    (l) => l.windowSeconds === opts.windowSeconds && l.limit === opts.limit,
+  )
+  if (!declared) {
+    // Distinguish the two so the log line tells a fork owner what to change:
+    // an unservable window needs a different period, a servable one with the
+    // wrong limit just needs the numbers lined up.
+    const reason: KvFallbackReason = NATIVE_LIMITERS.some(
+      (l) => l.windowSeconds === opts.windowSeconds,
+    )
+      ? 'limit-mismatch'
+      : 'window-mismatch'
+    return { backend: 'kv', reason }
   }
-  if (opts.limit !== NATIVE_LIMITER.limit) return { backend: 'kv', reason: 'limit-mismatch' }
+
+  const native = resolve(declared.binding)
+  if (!native) return { backend: 'kv', reason: 'binding-absent' }
   return { backend: 'native', native }
 }
 
@@ -189,7 +213,9 @@ function isRecord(value: unknown): value is Record<string, unknown> {
 }
 
 /**
- * Pull the binding off the Worker env, or undefined when there isn't one.
+ * A resolver that pulls a named binding off the Worker env, or undefined when
+ * there isn't one. Handed to `chooseBackend`, which decides WHICH name to ask
+ * for from the handler's numbers.
  *
  * Nitro's cloudflare preset puts the Worker's `env` on `event.context.cloudflare`
  * — in production via the module handler's `_platform` context, and under
@@ -203,13 +229,17 @@ function isRecord(value: unknown): value is Record<string, unknown> {
  * older wrangler, a non-Cloudflare preset, or a `wrangler.toml` someone trimmed
  * all land here and get KV instead of a TypeError.
  */
-export function resolveNativeLimiter(event: H3Event): NativeRateLimiter | undefined {
-  const cloudflare: unknown = event.context.cloudflare
-  if (!isRecord(cloudflare) || !isRecord(cloudflare.env)) return undefined
+export function nativeLimiterResolver(
+  event: H3Event,
+): (binding: string) => NativeRateLimiter | undefined {
+  return (name) => {
+    const cloudflare: unknown = event.context.cloudflare
+    if (!isRecord(cloudflare) || !isRecord(cloudflare.env)) return undefined
 
-  const binding = cloudflare.env[NATIVE_LIMITER.binding]
-  if (!isRecord(binding) || typeof binding.limit !== 'function') return undefined
-  return binding as unknown as NativeRateLimiter
+    const binding = cloudflare.env[name]
+    if (!isRecord(binding) || typeof binding.limit !== 'function') return undefined
+    return binding as unknown as NativeRateLimiter
+  }
 }
 
 /** What actually happened, once a backend has been picked and run. */
@@ -240,11 +270,15 @@ export interface RateLimitVerdict {
  * broken, the request goes through and the log says so.
  */
 export async function consumeRateLimitWithFallback(
-  backends: { native?: NativeRateLimiter; store: RateLimitStore },
+  backends: {
+    /** Looks up a binding by name; `chooseBackend` picks the name. */
+    resolve?: (binding: string) => NativeRateLimiter | undefined
+    store: RateLimitStore
+  },
   opts: RateLimitOptions,
   now: number = Date.now(),
 ): Promise<RateLimitVerdict> {
-  const choice = chooseBackend(backends.native, opts)
+  const choice = chooseBackend(backends.resolve ?? (() => undefined), opts)
 
   try {
     if (choice.backend === 'native') {
@@ -346,7 +380,7 @@ export async function rateLimit(
   const identifier = opts.identifier ?? getClientIp(event)
 
   const verdict = await consumeRateLimitWithFallback(
-    { native: resolveNativeLimiter(event), store: kv },
+    { resolve: nativeLimiterResolver(event), store: kv },
     {
       key: `${opts.name}:${identifier}`,
       limit: opts.limit,

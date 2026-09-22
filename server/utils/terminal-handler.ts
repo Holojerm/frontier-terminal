@@ -12,7 +12,7 @@ import type { H3Event } from 'h3'
 
 import sourcesYaml from 'raw:../../sources.yaml'
 
-import { cachedTerminal, terminalStamp } from './terminal-cache'
+import { cachedTerminal, sharedTerminalStamp, terminalStamp } from './terminal-cache'
 import { queryContext, type QueryContext } from './terminal-db'
 
 /** Five minutes at the edge too — the same window as the KV entry. */
@@ -38,7 +38,7 @@ export async function terminalPayload<T>(
 ): Promise<T> {
   let stamp: string | null
   try {
-    stamp = await terminalStamp(db)
+    stamp = await sharedTerminalStamp(() => terminalStamp(db))
   } catch (error) {
     throw createError({ statusCode: 503, message: 'Database unavailable', cause: error })
   }
