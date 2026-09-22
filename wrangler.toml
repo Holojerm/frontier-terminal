@@ -19,13 +19,17 @@ compatibility_flags = ["nodejs_compat", "queue_consumer_wait_for_wait_until"]
 # Custom domain. `custom_domain = true` makes wrangler create the DNS records
 # and certificate in the frontierterm.com zone on deploy, so nothing is set up
 # by hand in the dashboard. The zone must live in the same account as the Worker.
-# The *.workers.dev origin keeps answering; server/middleware/canonical-host.ts
-# redirects page requests there to this origin, and NUXT_PUBLIC_APP_URL below
-# makes every canonical, sitemap and og: URL agree with it.
 routes = [
   { pattern = "frontierterm.com", custom_domain = true },
   { pattern = "www.frontierterm.com", custom_domain = true },
 ]
+# Once `routes` exists wrangler defaults this to false and the deploy silently
+# disables the *.workers.dev origin (every request there becomes a bare 404).
+# It must stay on: the judge routine's JUDGE_BASE_URL and any MCP client set up
+# from the old README still point at it. server/middleware/canonical-host.ts
+# redirects page requests there to the custom domain; /api and /mcp answer in
+# place.
+workers_dev = true
 
 [[d1_databases]]
 binding = "DB"
