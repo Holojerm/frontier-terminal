@@ -66,3 +66,43 @@ export interface PublicPage {
   /** One sentence, for llms.txt — what a model would find on this page. */
   summary: string
 }
+
+/**
+ * Where a request should be redirected so that only one origin serves pages,
+ * or null to serve it as-is.
+ *
+ * The Worker answers on *.workers.dev and on the custom domain; a canonical
+ * tag tells crawlers which one counts, but a visitor who bookmarked the old
+ * origin still lands on it. Only GET/HEAD page requests move: a 301 turns a
+ * POST into a GET at the new location, which would break an MCP client or the
+ * judge routine still configured with the workers.dev origin, so /api and
+ * /mcp are left alone until every caller has been repointed.
+ */
+export function canonicalRedirect(
+  origin: string | undefined,
+  request: { method: string; host: string; path: string },
+): string | null {
+  const base = normalizeOrigin(origin)
+  if (!base) return null
+  let canonicalHost: string
+  try {
+    canonicalHost = new URL(base).host
+  } catch {
+    return null
+  }
+  const host = request.host.toLowerCase()
+  if (host === canonicalHost) return null
+  if (request.method !== 'GET' && request.method !== 'HEAD') return null
+  if (
+    request.path.startsWith('/api/') ||
+    request.path === '/api' ||
+    request.path.startsWith('/mcp')
+  ) {
+    return null
+  }
+  // Only the origins this Worker is known to answer on. A stray Host header
+  // from a scanner is not a reason to bounce it somewhere.
+  const ours = host.endsWith('.workers.dev') || host === `www.${canonicalHost}`
+  if (!ours) return null
+  return `${base}${request.path}`
+}
