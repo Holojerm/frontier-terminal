@@ -46,10 +46,10 @@ const widthPct = (share: number | null) =>
     />
 
     <template v-else>
-      <p v-if="window" class="text-sm text-muted">
-        Share of tokens routed, {{ window.from }} → {{ window.to }}
-        <template v-if="prior"> · change vs {{ prior.from }} → {{ prior.to }}</template>
-        <template v-else> · no earlier window to compare against yet</template>
+      <p v-if="window" class="text-xs text-toned">
+        {{ window.from }} → {{ window.to }}
+        <template v-if="prior"> · Δ vs {{ prior.from }} → {{ prior.to }}</template>
+        <template v-else> · no earlier window yet</template>
       </p>
 
       <ul class="space-y-2">
@@ -80,23 +80,13 @@ const widthPct = (share: number | null) =>
 
       <p v-if="compact" class="text-sm">
         <NuxtLink to="/rankings" class="text-primary underline underline-offset-2">
-          30-day series and top models per lab
+          30-day series and top models
         </NuxtLink>
       </p>
     </template>
 
     <!-- Provenance, license and caveat ship in every state, including the empty ones. -->
     <div class="space-y-1 text-xs text-toned">
-      <p v-if="rankings.meta.citation">
-        <a
-          href="https://openrouter.ai/rankings"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="underline underline-offset-2 hover:text-default"
-          >{{ rankings.meta.citation }}</a
-        >
-      </p>
-      <p v-else-if="rankings.source.license">Licensed under {{ rankings.source.license }}.</p>
       <p class="flex flex-wrap items-center gap-x-2">
         <span>{{ ONE_LINE_CAVEAT }}</span>
         <TerminalCaveatMark
@@ -105,7 +95,7 @@ const widthPct = (share: number | null) =>
           :text="rankings.source.caveat"
         />
       </p>
-      <p>
+      <p class="flex flex-wrap items-baseline gap-x-2">
         <TerminalProvenanceTag
           v-if="rankings.provenance"
           :label="rankings.source.label"
@@ -120,15 +110,25 @@ const widthPct = (share: number | null) =>
           class="underline underline-offset-2 hover:text-default"
           >{{ rankings.source.url }}</a
         >
-        <template v-if="rankings.meta.as_of">
+        <span v-if="rankings.meta.as_of">
           · dataset as of
           <time :datetime="rankings.meta.as_of" :title="rankings.meta.as_of">{{
             absoluteStamp(rankings.meta.as_of)
           }}</time>
-        </template>
+        </span>
+        <a
+          v-if="rankings.meta.citation"
+          href="https://openrouter.ai/rankings"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="underline underline-offset-2 hover:text-default"
+          :title="rankings.meta.citation"
+          >· CC BY 4.0</a
+        >
+        <span v-else-if="rankings.source.license">· {{ rankings.source.license }}</span>
       </p>
-      <p>
-        Also published, not ingested (license or no data endpoint — see coverage):
+      <p v-if="!compact">
+        Also published, not ingested (license or no data endpoint):
         <template v-for="(ref, i) in EXTERNAL" :key="ref.url">
           <a
             :href="ref.url"

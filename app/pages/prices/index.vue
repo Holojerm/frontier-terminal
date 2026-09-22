@@ -29,8 +29,7 @@ useSeo({
     <header class="space-y-2">
       <h1 class="text-4xl text-highlighted">Prices</h1>
       <p class="max-w-2xl text-muted">
-        $ per million tokens, read from each vendor’s own published page. A row shows a delta only
-        when the change log holds an earlier revision of it.
+        $ per million tokens, read from each vendor’s own published page.
       </p>
     </header>
 
@@ -40,14 +39,14 @@ useSeo({
       variant="soft"
       icon="i-lucide-database-zap"
       title="Prices could not be read"
-      description="The pricing endpoint failed to respond. Nothing is shown rather than a stale or inferred number."
+      description="The pricing endpoint failed to respond."
     />
 
     <template v-else-if="prices">
       <TerminalPanel
         id="matrix"
         title="Like-for-like"
-        note="Each cell quotes the vendor sentence it rests on; a gap says why it is a gap."
+        note="Flagship, balanced and economy on each vendor’s own recommendation."
       >
         <TerminalPriceMatrix :matrix="prices.matrix" />
       </TerminalPanel>
@@ -55,13 +54,13 @@ useSeo({
       <TerminalPanel
         id="catalog"
         title="Full catalog"
-        :note="`${prices.counts.total} SKU rows — ${prices.counts.priced} priced, ${prices.counts.catalog_only} catalog-only${prices.counts.removed ? `, ${prices.counts.removed} delisted` : ''}. Priced rows first.`"
+        :note="`${prices.counts.priced} priced, ${prices.counts.catalog_only} catalog-only${prices.counts.removed ? `, ${prices.counts.removed} delisted` : ''}.`"
       >
         <TerminalEmptyState
           v-if="prices.rows.length === 0"
           title="No model rows yet."
           body="Pricing rows land on the first poll of each vendor page."
-          :action="{ label: 'See coverage', to: '/#coverage' }"
+          :action="{ label: 'See coverage', to: '/data#coverage' }"
         />
         <TerminalPriceTable v-else :prices="prices" />
       </TerminalPanel>

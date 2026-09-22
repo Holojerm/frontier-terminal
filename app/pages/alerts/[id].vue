@@ -102,7 +102,7 @@ useSeo({
     <TerminalPanel
       id="cited"
       title="Cited change rows"
-      note="An alert is a claim about these rows and may cite nothing else. Every field is shown, before and after; the ones that moved are marked."
+      note="Every field of every cited row, before and after."
     >
       <div v-if="alert.changes.length" class="space-y-4">
         <TerminalChangeDetail v-for="change in alert.changes" :key="change.id" :change="change" />

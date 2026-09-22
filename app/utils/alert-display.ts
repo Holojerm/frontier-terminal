@@ -18,14 +18,12 @@ export const CHANGE_BADGE = {
 } as const satisfies Record<ChangeView['change_type'], { color: string; icon: string }>
 
 export const RULE_TEXT: Record<AlertView['rule'], string> = {
-  's1-floor':
-    'Deterministic floor rule: a new S-1/424B4 filing on a whitelisted CIK always alerts — no model in the loop.',
+  's1-floor': 'Rule-based: every new S-1/424B4 on a whitelisted CIK alerts.',
   'cik-resolved':
-    'Deterministic floor rule: a registration filing whose filer matches a pending lab’s name pattern resolves that lab’s CIK and always alerts — no model in the loop.',
-  'periodic-floor':
-    'Deterministic floor rule: a new 10-Q/10-K filing on a whitelisted CIK always alerts — no model in the loop.',
+    'Rule-based: a registration filing whose filer matches a pending lab’s name resolves that lab’s CIK and alerts.',
+  'periodic-floor': 'Rule-based: every new 10-Q/10-K on a whitelisted CIK alerts.',
   'agent-judge':
-    'Agent-judged significance. The explanation may cite only fields present in the referenced change rows; nothing outside them.',
+    'Judged by a model, which may cite only fields present in the referenced change rows.',
 }
 
 export const TIER_TEXT = {

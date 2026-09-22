@@ -117,16 +117,16 @@ const roleNote = (s: SourceCoverage) =>
     <div v-if="coverage.cuts.length" class="space-y-2">
       <h3 class="text-lg text-highlighted">Not tracked, on purpose</h3>
       <ul class="space-y-1 text-sm">
-        <li v-for="cut in coverage.cuts" :key="cut.id">
+        <li v-for="cut in coverage.cuts" :key="cut.id" class="flex flex-wrap items-center gap-x-2">
           <span class="font-mono text-default">{{ cut.id }}</span>
-          <span class="text-muted"> — {{ cut.verdict }}. {{ cut.reason }}</span>
+          <span class="text-muted">{{ cut.verdict }}</span>
+          <TerminalCaveatMark :name="`Why ${cut.id} is not tracked`" :text="cut.reason" />
         </li>
       </ul>
     </div>
 
     <p class="text-xs text-muted">
-      Every label links to the exact URL fetched; the age beside it carries the exact UTC timestamp.
-      The info control on a row opens the audit’s caveat for that source, in its own words.
+      Each label links to the exact URL fetched; the age beside it carries the exact UTC timestamp.
     </p>
   </div>
 </template>

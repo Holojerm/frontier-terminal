@@ -49,9 +49,8 @@ const joined = computed(() => props.spend.providers.filter((p) => p.models.lengt
     />
 
     <template v-else>
-      <p v-if="spend.window" class="text-sm text-muted">
-        Tokens routed {{ spend.window.from }} → {{ spend.window.to }}, at each vendor’s list price
-        as published — implied, not observed.
+      <p v-if="spend.window" class="text-xs text-toned">
+        {{ spend.window.from }} → {{ spend.window.to }} · at list price, implied not observed
       </p>
 
       <div class="overflow-x-auto">
@@ -66,7 +65,9 @@ const joined = computed(() => props.spend.providers.filter((p) => p.models.lengt
               <th scope="col" class="py-2 pr-3 font-medium text-toned">Spend share</th>
               <th scope="col" class="py-2 pr-3 text-right font-medium text-toned">Implied $</th>
               <th scope="col" class="py-2 pr-3 text-right font-medium text-toned">Token share</th>
-              <th scope="col" class="py-2 text-right font-medium text-toned">Priced</th>
+              <th v-if="!compact" scope="col" class="py-2 text-right font-medium text-toned">
+                Priced
+              </th>
             </tr>
           </thead>
           <tbody>
@@ -95,7 +96,7 @@ const joined = computed(() => props.spend.providers.filter((p) => p.models.lengt
                 {{ sharePct(p.token_share) }}
                 <span class="text-xs">· {{ compactTokens(p.tokens) }}</span>
               </td>
-              <td class="whitespace-nowrap py-2 text-right font-mono text-toned">
+              <td v-if="!compact" class="whitespace-nowrap py-2 text-right font-mono text-toned">
                 {{ sharePct(p.coverage) }}
               </td>
             </tr>
@@ -103,23 +104,22 @@ const joined = computed(() => props.spend.providers.filter((p) => p.models.lengt
         </table>
       </div>
 
-      <UAlert
+      <p
         v-if="spend.excluded.length"
-        color="info"
-        variant="soft"
-        icon="i-lucide-eye-off"
-        title="In the token share, out of the dollar share"
-        :description="
-          spend.excluded.map((e) => `${e.display}: ${e.reason}.`).join(' ') +
-          ' The spend share is among the labs that could be priced, and says nothing about the rest.'
-        "
-      />
+        class="flex flex-wrap items-center gap-x-1 text-xs text-toned"
+      >
+        Not priceable, so out of the dollar share:
+        {{ spend.excluded.map((e) => e.display).join(', ') }}
+        <TerminalCaveatMark
+          name="Why some labs are out of the dollar share"
+          :text="spend.excluded.map((e) => `${e.display}: ${e.reason}.`).join(' ')"
+        />
+      </p>
 
       <p class="text-xs text-toned">
         {{ compactTokens(spend.totals.other_tokens) }} of
-        {{ compactTokens(spend.totals.tokens) }} tokens in the window went to models outside the
-        four labs (open-weight and others) and are not priced here — the “tokens to open source,
-        economics to the frontier labs” split this table exists to show.
+        {{ compactTokens(spend.totals.tokens) }} tokens went to models outside the four labs and are
+        not priced.
       </p>
 
       <UCollapsible v-if="!compact && joined.length" v-model:open="showJoin" class="space-y-2">
@@ -197,7 +197,7 @@ const joined = computed(() => props.spend.providers.filter((p) => p.models.lengt
 
       <p v-if="compact" class="text-sm">
         <NuxtLink to="/rankings#spend" class="text-primary underline underline-offset-2">
-          The join per model, and what could not be priced
+          The join per model
         </NuxtLink>
       </p>
     </template>
@@ -207,14 +207,14 @@ const joined = computed(() => props.spend.providers.filter((p) => p.models.lengt
       <p class="flex flex-wrap items-center gap-x-2">
         <span>Implied OpenRouter-channel spend at list price — not revenue, not market share</span>
         <TerminalCaveatMark name="Full caveat for the implied spend share" :text="spend.caveat" />
-      </p>
-      <p v-if="spend.rankings.meta.citation">
         <a
+          v-if="spend.rankings.meta.citation"
           href="https://openrouter.ai/rankings"
           target="_blank"
           rel="noopener noreferrer"
           class="underline underline-offset-2 hover:text-default"
-          >{{ spend.rankings.meta.citation }}</a
+          :title="spend.rankings.meta.citation"
+          >CC BY 4.0</a
         >
       </p>
       <p class="flex flex-wrap items-center gap-x-3 gap-y-1">

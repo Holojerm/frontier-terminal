@@ -59,14 +59,13 @@ const bars = (p: IncidentProviderView) => [
         </header>
 
         <!-- Honest cut: no public feed, never a fabricated zero. -->
-        <UAlert
-          v-if="p.feed === 'no_public_feed'"
-          color="info"
-          variant="soft"
-          icon="i-lucide-eye-off"
-          title="No public feed"
-          :description="`${p.reason ?? ''} Verdict transcribed from the source audit — showing nothing beats guessing.`"
-        />
+        <p v-if="p.feed === 'no_public_feed'" class="flex items-center gap-1 text-sm text-toned">
+          No public feed
+          <TerminalCaveatMark
+            :name="`Why ${p.display} has no status feed`"
+            :text="p.reason ?? ''"
+          />
+        </p>
 
         <TerminalEmptyState
           v-else-if="p.feed === 'no_rows'"
@@ -94,8 +93,7 @@ const bars = (p: IncidentProviderView) => [
           </ul>
 
           <p v-if="priorPartial(p)" class="text-xs text-toned">
-            Held history begins {{ absoluteStamp(p.coverage_from!, now) }} — the prior window is
-            partial until the feed has been polled through it.
+            Prior window partial: history held since {{ absoluteStamp(p.coverage_from!, now) }}.
           </p>
 
           <ul v-if="p.open.length" class="space-y-1">
@@ -138,12 +136,11 @@ const bars = (p: IncidentProviderView) => [
     </div>
 
     <p class="text-xs text-muted">
-      Windows count incidents by the start time the vendor posted, back from the newest status fetch
-      (<time :datetime="incidents.window_to" :title="incidents.window_to">{{
+      Counted by the vendor’s posted start time, back from
+      <time :datetime="incidents.window_to" :title="incidents.window_to">{{
         absoluteStamp(incidents.window_to, now)
       }}</time
-      >). Impact and status are each vendor’s own words — Statuspage’s none / minor / major /
-      critical is not mapped onto Google’s low / medium / high.
+      >. Impact and status are each vendor’s own words, not normalized across vendors.
     </p>
   </div>
 </template>

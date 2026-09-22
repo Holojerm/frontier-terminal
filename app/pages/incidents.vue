@@ -3,7 +3,7 @@
 // to the vendor's own incident page and stamped with the fetch it was read
 // from. The landing page's Capacity strain panel is the summary of this.
 
-import { absoluteStamp, relativeStamp } from '#shared/utils/terminal-format'
+import { absoluteStamp } from '#shared/utils/terminal-format'
 import type { IncidentView, IncidentsData } from '#shared/utils/terminal-types'
 
 definePageMeta({
@@ -53,9 +53,8 @@ const caveats = computed(
     <header class="space-y-2">
       <h1 class="text-4xl text-highlighted">Incidents</h1>
       <p class="max-w-2xl text-muted">
-        What each lab posted on its own status page. A row is the vendor’s words — impact and status
-        are not normalized across vendors — and every row links to the incident page it was read
-        from. Summary by provider on the
+        Every status-page incident, in the vendor’s own words, linked to the incident page it was
+        read from. Per-lab summary on the
         <NuxtLink to="/#strain" class="text-primary underline underline-offset-2"
           >Capacity strain</NuxtLink
         >
@@ -73,16 +72,10 @@ const caveats = computed(
     />
 
     <template v-else-if="incidents">
-      <UAlert
-        v-if="cut"
-        color="info"
-        variant="soft"
-        icon="i-lucide-eye-off"
-        :title="`${cut.display}: no public feed`"
-        :description="cut.reason ?? ''"
-      />
-
-      <ul v-if="caveats.length" class="space-y-1 text-sm text-muted">
+      <ul v-if="cut || caveats.length" class="space-y-1 text-sm text-muted">
+        <li v-if="cut">
+          <TerminalCaveatMark :label="`${cut.display}: no public feed`" :text="cut.reason ?? ''" />
+        </li>
         <li v-for="p in caveats" :key="p.provider">
           <TerminalCaveatMark :label="`${p.display} feed caveat`" :text="p.caveat!" />
         </li>
@@ -91,15 +84,15 @@ const caveats = computed(
       <TerminalEmptyState
         v-if="incidents.incidents.length === 0"
         title="No incidents in the window."
-        :body="`Nothing started in the last ${incidents.history_days} days across the polled feeds — or no status feed has been polled yet (see Coverage).`"
-        :action="{ label: 'Coverage', to: '/#coverage' }"
+        :body="`Nothing started in the last ${incidents.history_days} days across the polled feeds.`"
+        :action="{ label: 'Coverage', to: '/data#coverage' }"
       />
 
       <TerminalPanel
         v-else
         id="incidents"
         :title="`Last ${incidents.history_days} days`"
-        :note="`${incidents.incidents.length} incidents, newest first, counted back from the newest status fetch (${absoluteStamp(incidents.window_to, now)}).`"
+        :note="`${incidents.incidents.length} incidents, newest first, to ${absoluteStamp(incidents.window_to, now)}.`"
       >
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
@@ -169,10 +162,7 @@ const caveats = computed(
           </table>
         </div>
         <p class="text-xs text-muted">
-          Duration is resolution minus start as the feed states them. “Read from” is the feed URL
-          and the fetch that produced the row; the row’s age reads
-          <time :datetime="incidents.window_to">{{ relativeStamp(incidents.window_to, now) }}</time>
-          at the newest.
+          Duration is resolution minus start, as the feed states them.
         </p>
       </TerminalPanel>
     </template>

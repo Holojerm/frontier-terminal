@@ -34,8 +34,7 @@ useSeo({
     <header class="space-y-2">
       <h1 class="text-4xl text-highlighted">Demand share</h1>
       <p class="max-w-2xl text-muted">
-        Tokens routed through OpenRouter, per lab, from its published daily rankings. A proxy for
-        relative demand while the labs are private — one aggregator’s traffic, never market share.
+        Tokens routed through OpenRouter, per lab. One aggregator’s traffic, not market share.
       </p>
     </header>
 
@@ -45,14 +44,14 @@ useSeo({
       variant="soft"
       icon="i-lucide-database-zap"
       title="Rankings could not be read"
-      description="The rankings endpoint failed to respond. Nothing is shown rather than a stale or inferred number."
+      description="The rankings endpoint failed to respond."
     />
 
     <template v-else-if="rankings">
       <TerminalPanel
         id="share"
         title="7-day share"
-        :note="`${rankings.meta.coverage.days} day${rankings.meta.coverage.days === 1 ? '' : 's'} on record. Share is of every model in OpenRouter’s daily top 50 plus its aggregated “other” row.`"
+        :note="`${rankings.meta.coverage.days} day${rankings.meta.coverage.days === 1 ? '' : 's'} on record. Share of OpenRouter’s daily top 50 plus its “other” row.`"
       >
         <TerminalDemandShare :rankings="rankings" />
       </TerminalPanel>
@@ -61,7 +60,7 @@ useSeo({
         v-if="spend"
         id="spend"
         title="Implied spend share"
-        note="Tokens to open-weight models, dollars to the frontier labs: the window’s tokens at each vendor’s published list price, as a low–high range with the join’s coverage on every row."
+        note="The window’s tokens at each vendor’s list price, as a low–high range."
       >
         <TerminalSpendShare :spend="spend" />
       </TerminalPanel>
@@ -70,7 +69,7 @@ useSeo({
         v-if="rankings.status === 'ok'"
         id="series"
         title="30-day series"
-        note="Tokens routed per UTC day, stacked by lab. Hover a column for its values; the table view lists them all."
+        note="Tokens routed per UTC day, stacked by lab."
       >
         <TerminalRankingsSeries :series="rankings.series" />
       </TerminalPanel>
@@ -79,7 +78,7 @@ useSeo({
         v-if="rankings.status === 'ok'"
         id="models"
         title="Top models per lab"
-        note="Most-routed models in the share window, by tokens; the percentage is of the lab’s own window total."
+        note="Most-routed models per lab; the percentage is of the lab’s own total."
       >
         <TerminalRankingsTopModels :providers="rankings.top_models" />
       </TerminalPanel>
