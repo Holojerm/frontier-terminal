@@ -39,21 +39,36 @@ concurrency:
   group: browser-suites-${{ github.ref }}
   cancel-in-progress: true
 
+# This job reads the checkout and writes nothing back. Declared explicitly
+# because the default is whatever the repository setting happens to be, and
+# the step that follows `bun install` runs a browser over code from a fork's
+# pull request — the least authority that can still do the job is the point.
+permissions:
+  contents: read
+
 jobs:
   browser-suites:
     runs-on: ubuntu-latest
     timeout-minutes: 20
 
     steps:
-      - uses: actions/checkout@v4
+      # Third-party actions are pinned to a commit, not a tag: a tag is a
+      # mutable pointer in somebody else's repository, and `@v4` moving under
+      # us is the shape of every actions supply-chain incident so far. The
+      # trailing comment is the human-readable version; Dependabot's
+      # github-actions ecosystem (.github/dependabot.yml) moves both together.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
 
-      - uses: oven-sh/setup-bun@v2
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
         with:
-          bun-version: latest
+          # Not `latest`: the toolchain that runs the suite should be the one
+          # `packageManager` in package.json names, or a green run here says
+          # nothing about the bun that built the deploy.
+          bun-version: 1.4.0
 
       # `.node-version` is the single source of truth for the Node that runs
       # `nuxt build`, so this cannot drift from Workers Builds.
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@49933ea5288caeca8642d1e84afbd3f7d6820020 # v4
         with:
           node-version-file: .node-version
 
@@ -66,7 +81,7 @@ jobs:
       - name: Run axe and CSP suites
         run: bun run test:a11y
 
-      - uses: actions/upload-artifact@v4
+      - uses: actions/upload-artifact@ea165f8d65b6e75b540449e92b4886f43607fa02 # v4
         if: ${{ !cancelled() }}
         with:
           name: playwright-report

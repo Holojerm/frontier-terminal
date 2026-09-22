@@ -38,9 +38,25 @@ export function absoluteUrl(origin: string | undefined, path = '/'): string {
   return route === '/' ? base : `${base}${route}`
 }
 
+/**
+ * Characters XML 1.0 has no spelling for — not even as a numeric reference.
+ * Tab, newline and carriage return are the three C0 codes it does allow;
+ * everything else below 0x20, the lone surrogates, and the two non-characters
+ * at the end of the BMP make a document a parser must reject (XML 1.0 §2.2).
+ *
+ * This matters because the strings reaching escapeXml are not ours: an alert
+ * headline is written by the judge model, a page title comes from a vendor.
+ * One stray 0x0B in one entry would make the whole feed unreadable to every
+ * reader at once, which is a strange way to lose an alerting channel. Dropped
+ * rather than replaced: these carry no meaning to drop.
+ */
+// oxlint-disable-next-line no-control-regex -- matching the control range is the job
+const XML_FORBIDDEN = /[\u0000-\u0008\u000B\u000C\u000E-\u001F\uD800-\uDFFF\uFFFE\uFFFF]/gu
+
 /** XML/HTML text escape, for hand-built sitemap and JSON-LD payloads. */
 export function escapeXml(value: string): string {
   return value
+    .replace(XML_FORBIDDEN, '')
     .replace(/&/g, '&amp;')
     .replace(/</g, '&lt;')
     .replace(/>/g, '&gt;')
