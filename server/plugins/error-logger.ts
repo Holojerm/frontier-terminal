@@ -18,7 +18,7 @@
 // the exception it was trying to record.
 import { db } from '@nuxthub/db'
 
-import { pathForLog } from '../utils/log'
+import { errorDetail, pathForLog } from '../utils/log'
 import { recordOpsEvent } from '../utils/ops'
 
 export default defineNitroPlugin((nitro) => {
@@ -27,11 +27,14 @@ export default defineNitroPlugin((nitro) => {
     if (status < 500) return
 
     const err = error as Error
+    // errorDetail, not err.message: the message alone is the wrapper's, and
+    // the wrapper is usually the least specific thing known about the failure.
+    const detail = errorDetail(error)
     console.error(
       JSON.stringify({
         kind: 'server_error',
         status,
-        message: err.message,
+        message: detail,
         stack: err.stack,
         // Never event.path verbatim — see server/utils/log.ts.
         path: pathForLog(event?.path),
@@ -41,7 +44,7 @@ export default defineNitroPlugin((nitro) => {
 
     await recordOpsEvent(db, {
       kind: 'server_error',
-      detail: `${status} ${err.message}`,
+      detail: `${status} ${detail}`,
       path: pathForLog(event?.path),
     })
   })
