@@ -34,9 +34,7 @@ const now = useNow()
     <header class="space-y-2">
       <h1 class="text-4xl text-highlighted">Releases</h1>
       <p class="max-w-2xl text-muted">
-        A release here is a SKU row appearing on a vendor page that was already being watched — an
-        <code class="text-default">added</code> change in the log. The price is the one printed
-        beside it that day; later reprices are on the SKU’s own page.
+        SKUs that appeared on a watched vendor page, with the price printed beside them that day.
       </p>
     </header>
 

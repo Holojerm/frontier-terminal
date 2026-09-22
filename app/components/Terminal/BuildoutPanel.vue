@@ -72,7 +72,15 @@ const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
         class="space-y-3 rounded border border-default bg-elevated p-4"
       >
         <header class="flex flex-wrap items-baseline justify-between gap-2">
-          <h3 :id="`buildout-${p.provider}`" class="text-lg text-highlighted">{{ p.display }}</h3>
+          <h3 :id="`buildout-${p.provider}`" class="text-lg text-highlighted">
+            {{ p.display }}
+            <TerminalCaveatMark
+              v-if="p.caveat"
+              label="blended board"
+              :text="p.caveat"
+              class="ml-1"
+            />
+          </h3>
           <span v-if="p.feed === 'ok' && clusterOf(p)" class="text-sm text-toned">
             <span class="font-mono text-highlighted">{{ clusterOf(p)!.now }}</span>
             open
@@ -84,14 +92,13 @@ const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
           </span>
         </header>
 
-        <UAlert
-          v-if="p.feed === 'no_public_feed'"
-          color="info"
-          variant="soft"
-          icon="i-lucide-eye-off"
-          title="No public feed"
-          :description="`${p.reason ?? ''} Verdict transcribed from the source audit — showing nothing beats guessing.`"
-        />
+        <p v-if="p.feed === 'no_public_feed'" class="flex items-center gap-1 text-sm text-toned">
+          No public feed
+          <TerminalCaveatMark
+            :name="`Why ${p.display} has no hiring feed`"
+            :text="p.reason ?? ''"
+          />
+        </p>
 
         <TerminalEmptyState
           v-else-if="p.feed === 'no_rows' || !clusterOf(p)"
@@ -102,13 +109,11 @@ const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
         <template v-else>
           <TerminalEmptyState
             v-if="clusterOf(p)!.departments.length === 0"
-            title="No department on this board matches the cluster."
-            body="The board’s own department labels name none of the cluster terms; a zero here is a label fact, not a hiring one."
+            title="No matching department on this board."
+            body="A zero here is a label fact, not a hiring one."
           />
           <template v-else>
-            <p class="text-xs text-toned">
-              {{ shareOfBoard(p, clusterOf(p)!.now) }} · summed from the board’s own labels:
-            </p>
+            <p class="text-xs text-toned">{{ shareOfBoard(p, clusterOf(p)!.now) }}</p>
             <ul class="space-y-1">
               <li
                 v-for="d in clusterOf(p)!.departments"
@@ -125,14 +130,6 @@ const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
               </li>
             </ul>
           </template>
-          <UAlert
-            v-if="p.caveat"
-            color="warning"
-            variant="soft"
-            icon="i-lucide-triangle-alert"
-            title="Entity-blended board"
-            :description="p.caveat"
-          />
         </template>
 
         <ul v-if="p.sources.length" class="space-y-1">
@@ -148,16 +145,8 @@ const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
     </div>
 
     <p class="text-xs text-muted">
-      A department belongs to the cluster when its name, as the board prints it, contains one of the
-      cluster’s terms (Data Center, Infrastructure, Facilities, Energy, Construction, Compute,
-      Hardware) and not “Software”. Terms live in the source registry, and the judge reads the same
-      list: a five-role move across these departments at one lab is a capacity signal, not a hiring
-      one.
-    </p>
-    <p v-if="compact" class="text-sm">
-      <NuxtLink to="/hiring#buildout" class="text-primary underline underline-offset-2">
-        Cluster per day, per lab
-      </NuxtLink>
+      A department counts when the board’s own label contains Data Center, Infrastructure,
+      Facilities, Energy, Construction, Compute or Hardware, and not “Software”.
     </p>
   </div>
 </template>

@@ -6,16 +6,22 @@
 // printing a dash.
 
 import { absoluteStamp, money, pctChange, pctLabel } from '#shared/utils/terminal-format'
-import type { MatrixCell, PriceMatrix } from '#shared/utils/terminal-types'
+import { LAB_DISPLAY as DISPLAY } from '#shared/utils/terminal-labs'
+import type { MatrixCell, ModelClassId, PriceMatrix } from '#shared/utils/terminal-types'
 
-const props = defineProps<{ matrix: PriceMatrix }>()
+const props = defineProps<{
+  matrix: PriceMatrix
+  /** Which columns to draw; every class by default. The front page draws the flagship alone. */
+  classes?: ModelClassId[]
+  /** Drop the method footnote — the axis page carries it. */
+  compact?: boolean
+}>()
 
-const DISPLAY: Record<string, string> = {
-  openai: 'OpenAI',
-  anthropic: 'Anthropic',
-  google: 'Google',
-  xai: 'xAI',
-}
+const columns = computed(() =>
+  props.classes
+    ? props.matrix.classes.filter((k) => props.classes!.includes(k.id))
+    : props.matrix.classes,
+)
 
 function cell(provider: string, klass: string): MatrixCell | undefined {
   return props.matrix.cells.find((c) => c.provider === provider && c.class === klass)
@@ -50,7 +56,7 @@ function delta(c: MatrixCell): string | null {
         <thead>
           <tr class="border-b border-default text-left align-top">
             <th scope="col" class="py-2 pr-4 font-medium text-muted">Provider</th>
-            <th v-for="k in matrix.classes" :key="k.id" scope="col" class="py-2 pr-4">
+            <th v-for="k in columns" :key="k.id" scope="col" class="py-2 pr-4">
               <span class="font-medium text-highlighted">{{ k.label }}</span>
               <span class="block max-w-48 text-xs font-normal text-muted">{{ k.question }}</span>
             </th>
@@ -61,7 +67,7 @@ function delta(c: MatrixCell): string | null {
             <th scope="row" class="py-3 pr-4 text-left font-medium text-highlighted">
               {{ DISPLAY[p] ?? p }}
             </th>
-            <td v-for="k in matrix.classes" :key="k.id" class="py-3 pr-4">
+            <td v-for="k in columns" :key="k.id" class="py-3 pr-4">
               <template v-if="cell(p, k.id)">
                 <div v-if="cell(p, k.id)!.priced" class="space-y-1">
                   <div class="flex items-center gap-1">
@@ -120,11 +126,9 @@ function delta(c: MatrixCell): string | null {
       </table>
     </div>
 
-    <p class="text-xs text-muted">
-      {{ matrix.tier_note }} Class assignment is the one editorial judgment on this page: a model
-      sits in a column because the vendor’s own docs recommend it there — open the info control
-      beside a model for the sentence and its source. Prices, timestamps and URLs are read from the
-      store untouched.
+    <p v-if="!compact" class="text-xs text-muted">
+      {{ matrix.tier_note }} A model sits in a column because the vendor’s own docs recommend it
+      there; the info control beside it quotes the sentence.
     </p>
   </div>
 </template>

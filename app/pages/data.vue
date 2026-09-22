@@ -12,7 +12,7 @@ definePageMeta({
     priority: '0.6',
     title: 'Data',
     summary:
-      'Bulk downloads of every table — snapshots, current prices, open jobs, status-page incidents, the change log, alerts, poll runs — as CSV or JSON, with provenance columns on every row.',
+      'Every source behind the terminal with its newest snapshot, last poll and caveat, and bulk downloads of every table — snapshots, prices, open jobs, incidents, the change log, alerts, poll runs — as CSV or JSON, with provenance columns on every row.',
   },
 })
 
@@ -70,10 +70,8 @@ useSeo({
     <header class="space-y-2">
       <h1 class="text-4xl text-highlighted">Data</h1>
       <p class="max-w-2xl text-muted">
-        Every table, as it stands, streamed whole. Each row carries the URL it was read from and
-        when; <code class="text-default">source_runs</code> is the one table without a
-        <code class="text-default">fetched_at</code>, because a failed run fetched nothing and a
-        timestamp claiming otherwise would be the lie the provenance rule exists to prevent.
+        Every source the terminal reads, and every table it holds, streamed whole as CSV or JSON.
+        Each row carries the URL it was read from and when.
       </p>
     </header>
 
@@ -85,6 +83,14 @@ useSeo({
       title="Table counts could not be read"
       description="The downloads below still work; only the row counts are unavailable."
     />
+
+    <TerminalPanel
+      id="coverage"
+      title="Coverage"
+      note="Every source: newest snapshot, last poll, snapshot count, rows, and the audit’s caveat."
+    >
+      <TerminalCoveragePanel v-if="coverage" :coverage="coverage" />
+    </TerminalPanel>
 
     <TerminalPanel id="tables" title="Tables">
       <div class="overflow-x-auto">
@@ -148,9 +154,8 @@ useSeo({
 
     <TerminalPanel id="license" title="Terms">
       <p class="max-w-2xl text-sm text-default">
-        The compilation — these tables, the change log and the alerts — is licensed
-        {{ DATA_LICENSE.short }}. The underlying facts belong to whoever published them, which is
-        why every row carries its source URL.
+        The compilation is licensed {{ DATA_LICENSE.short }}. The underlying facts belong to whoever
+        published them.
         <NuxtLink to="/license" class="text-primary underline underline-offset-2"
           >Full terms and the attribution line</NuxtLink
         >.
@@ -159,18 +164,17 @@ useSeo({
 
     <TerminalPanel id="feed" title="Feed">
       <p class="text-sm text-default">
-        Alerts are also published as Atom at
+        Alerts as Atom at
         <NuxtLink to="/alerts.xml" external class="text-primary underline underline-offset-2">
           /alerts.xml</NuxtLink
-        >: one entry per alert linking to its permalink, its explanation as the summary, and the
-        source URL as a related link. The feed carries the alert tier (notable, critical);
+        >;
         <NuxtLink
           to="/alerts.xml?include=ticker"
           external
           class="font-mono text-primary underline underline-offset-2"
-          >/alerts.xml?include=ticker</NuxtLink
+          >?include=ticker</NuxtLink
         >
-        adds the info-tier ticker.
+        adds the ticker.
       </p>
     </TerminalPanel>
   </div>
