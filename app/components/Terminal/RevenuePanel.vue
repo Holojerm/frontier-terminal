@@ -8,29 +8,12 @@
 import { compactUsd, count, periodLabel } from '#shared/utils/terminal-format'
 import type { RevenueData, RevenueProviderView } from '#shared/utils/terminal-types'
 
-const props = defineProps<{
-  revenue: RevenueData
-  /** On the landing page: the newest period per lab and a link to the axis. */
-  compact?: boolean
-}>()
+defineProps<{ revenue: RevenueData }>()
 
 const MAX_PERIODS = 8
 
-// On the front page the labs with nothing on file share one line; a card
-// each would say the same sentence three times.
-const undisclosed = computed(() =>
-  props.compact ? props.revenue.providers.filter((p) => p.disclosure === 'none') : [],
-)
-const cards = computed(() =>
-  props.compact
-    ? props.revenue.providers.filter((p) => p.disclosure !== 'none')
-    : props.revenue.providers,
-)
-
-const shown = (p: RevenueProviderView) =>
-  props.compact ? p.periods.slice(0, 2) : p.periods.slice(0, MAX_PERIODS)
-const overflow = (p: RevenueProviderView) =>
-  props.compact ? 0 : Math.max(0, p.periods.length - MAX_PERIODS)
+const shown = (p: RevenueProviderView) => p.periods.slice(0, MAX_PERIODS)
+const overflow = (p: RevenueProviderView) => Math.max(0, p.periods.length - MAX_PERIODS)
 
 const filerName = (p: RevenueProviderView) =>
   `${p.filer?.entity_name ?? p.filer?.ticker ?? p.display} (${p.filer?.ticker ?? `CIK ${p.filer?.cik}`})`
@@ -45,13 +28,9 @@ const relationLine = (p: RevenueProviderView) =>
 
 <template>
   <div class="space-y-4">
-    <p v-if="compact && undisclosed.length" class="text-sm text-toned">
-      No SEC-disclosed revenue: {{ undisclosed.map((p) => p.display).join(', ') }}. Press run-rates
-      are not shown.
-    </p>
     <div class="grid gap-4 md:grid-cols-2">
       <article
-        v-for="p in cards"
+        v-for="p in revenue.providers"
         :key="p.provider"
         :aria-labelledby="`revenue-${p.provider}`"
         class="space-y-3 rounded border border-default bg-elevated p-4"
@@ -144,11 +123,11 @@ const relationLine = (p: RevenueProviderView) =>
             </table>
           </div>
           <p v-if="overflow(p)" class="text-xs text-toned">+ {{ overflow(p) }} more periods</p>
-          <p v-if="!compact && p.superseded.length" class="text-xs text-toned">
+          <p v-if="p.superseded.length" class="text-xs text-toned">
             {{ p.superseded.length }} earlier value{{ p.superseded.length === 1 ? '' : 's' }} for
             these periods restated by a later filing — see the revenue_facts export.
           </p>
-          <p v-if="!compact && p.tags.length" class="text-xs text-toned">
+          <p v-if="p.tags.length" class="text-xs text-toned">
             XBRL tag{{ p.tags.length === 1 ? '' : 's' }}:
             <code class="text-default">{{ p.tags.join(', ') }}</code>
           </p>
@@ -171,11 +150,6 @@ const relationLine = (p: RevenueProviderView) =>
       </article>
     </div>
 
-    <p v-if="!compact" class="text-xs text-muted">{{ revenue.rule }}</p>
-    <p v-if="compact" class="text-sm">
-      <NuxtLink to="/revenue" class="text-primary underline underline-offset-2">
-        Every period, restatements and filings
-      </NuxtLink>
-    </p>
+    <p class="text-xs text-muted">{{ revenue.rule }}</p>
   </div>
 </template>

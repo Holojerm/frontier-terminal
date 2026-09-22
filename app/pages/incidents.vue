@@ -94,7 +94,7 @@ const caveats = computed(
         :title="`Last ${incidents.history_days} days`"
         :note="`${incidents.incidents.length} incidents, newest first, to ${absoluteStamp(incidents.window_to, now)}.`"
       >
-        <div class="overflow-x-auto">
+        <div class="overflow-x-auto md:overflow-visible">
           <table class="w-full text-sm">
             <caption class="sr-only">
               Status-page incidents in the last
@@ -103,7 +103,7 @@ const caveats = computed(
               }}
               days, newest first
             </caption>
-            <thead>
+            <thead class="bg-default md:sticky md:top-0">
               <tr class="border-b border-default text-left">
                 <th scope="col" class="py-2 pr-4 font-medium text-muted">Started</th>
                 <th scope="col" class="py-2 pr-4 font-medium text-muted">Provider</th>

@@ -105,9 +105,18 @@ const incidentsOf = computed(() =>
     ? { ...incidents.data.value, providers: [summary.value.incidents] }
     : null,
 )
+// A readout, not the catalog: priced rows only, a page of them, the rest on
+// /prices with this lab preselected.
+const CATALOG_ROWS = 15
+const labRows = computed(() => prices.data.value?.rows.filter((r) => r.provider === lab) ?? [])
 const pricesOf = computed(() =>
   prices.data.value
-    ? { ...prices.data.value, rows: prices.data.value.rows.filter((r) => r.provider === lab) }
+    ? {
+        ...prices.data.value,
+        rows: labRows.value
+          .filter((r) => r.input_per_mtok !== null || r.output_per_mtok !== null)
+          .slice(0, CATALOG_ROWS),
+      }
     : null,
 )
 const topModels = computed(
@@ -159,11 +168,19 @@ const labIncidents = computed(
       <template v-if="prices.data.value">
         <TerminalPriceMatrix :matrix="prices.data.value.matrix" :providers="[lab]" compact />
         <TerminalEmptyState
-          v-if="pricesOf!.rows.length === 0"
+          v-if="labRows.length === 0"
           title="No SKU rows for this lab yet."
           :action="{ label: 'See coverage', to: '/data#coverage' }"
         />
         <TerminalPriceTable v-else :prices="pricesOf!" />
+        <p v-if="labRows.length > pricesOf!.rows.length" class="text-sm">
+          <NuxtLink
+            :to="`/prices?provider=${lab}#catalog`"
+            class="text-primary underline underline-offset-2"
+          >
+            All {{ labRows.length }} {{ display }} SKUs, including batch and catalog-only rows
+          </NuxtLink>
+        </p>
       </template>
     </TerminalPanel>
 
