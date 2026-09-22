@@ -1,15 +1,26 @@
 # Agent tooling — MCP servers, skills, commands, routines
 
-What ships in `.mcp.json` and `.claude/`: the MCP servers available for live introspection, the NuxtUI skill, the slash commands, and the cloud routines.
+What ships in `.mcp.json.example` and `.claude/`: the MCP servers available for live introspection, the NuxtUI skill, the slash commands, and the cloud routines.
 
 > **Load this when:** configuring Claude Code for this repo, wiring a new MCP server, or adding a cloud routine.
 > Canonical index: [CLAUDE.md](../../CLAUDE.md).
 
 ---
 
-This project ships with Claude Code configuration in `.mcp.json` and `.claude/`.
+This project ships with Claude Code configuration in `.mcp.json.example` and `.claude/`.
 
-## MCP Servers (`.mcp.json`)
+## MCP Servers (`.mcp.json.example`)
+
+`.mcp.json` itself is **untracked** (`.gitignore`). Copy the example once:
+
+```bash
+cp .mcp.json.example .mcp.json
+```
+
+Two reasons it is not in the repository. It is machine-local — it names servers and hostnames a
+given machine can reach — and `nuxt-mcp` rewrites it on every `bun dev` with that machine's dev
+URL, so tracking it means a public repo carrying one developer's hostnames plus an unasked-for
+diff after every dev session.
 
 | Server | Type | Purpose |
 | --- | --- | --- |
@@ -24,7 +35,7 @@ This project ships with Claude Code configuration in `.mcp.json` and `.claude/`.
 - `cloudflare-*` and `nuxt-ui` work with no credentials — always available.
 - For GitHub MCP: set `GITHUB_TOKEN` in your shell (a PAT with repo read scope is enough).
 - For live Nuxt introspection: start `bun dev` before opening Claude Code. The `nuxt` server URL in `.mcp.json` is `https://<portless-name>.localhost/__mcp/sse` and must match the `portless.name` in `package.json`.
-- **In a linked worktree the dev host is different**, so that committed URL is wrong there by design — see the worktree section below. `bun dev` prints the host it's using, and `nuxt-mcp` repoints `.mcp.json` at it on boot so introspection keeps working. That leaves a modified `.mcp.json` in the worktree: expected, and **not something to commit**.
+- **In a linked worktree the dev host is different** — see the worktree section below. `bun dev` prints the host it's using, and `nuxt-mcp` repoints your `.mcp.json` at it on boot so introspection keeps working. Since the file is untracked, that rewrite is now invisible to git.
 - Drizzle MCP works automatically via `bunx`.
 
 ## NuxtUI Skill (`.claude/skills/nuxt-ui/`)
