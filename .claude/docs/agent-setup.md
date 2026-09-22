@@ -47,7 +47,9 @@ Installed via `npx skills add nuxt/ui --agent claude-code`. Provides Claude with
 
 Repo-shipped definitions for cloud agents that run on a schedule. **All ship default-inactive**
 — `/routines sync` registers them (disabled) in your claude.ai account, and each one is
-enabled explicitly. Routines coordinate through an `ops-journal` branch (never merged to
+enabled explicitly. The `enabled:` flag mirrors that account state rather than setting it:
+after enabling one, flip its frontmatter to match, because a run whose file says
+`enabled: false` hard-stops (`_shared.md` rule 8). Routines coordinate through an `ops-journal` branch (never merged to
 `main`, so journal commits don't trigger deploys). Before enabling one: fill in
 `.claude/routines/routines.config.md`, connect the connectors it needs at
 claude.ai/customize/connectors, then `/routines sync`. Full docs in

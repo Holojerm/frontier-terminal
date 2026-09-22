@@ -2,7 +2,7 @@
 schedule: "17 * * * *"
 model: claude-sonnet-5
 connectors: []
-enabled: false
+enabled: true
 ---
 
 # judge — significance + explain over the terminal's change log
