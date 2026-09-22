@@ -13,9 +13,32 @@ sources:
     verdict: include
     fixture: fixtures/pricing/openai-models.md
     caveats: >-
-      Per-model .md pages exist for catalog depth. The marketing page
-      (openai.com/api/pricing) is Cloudflare-403'd to any headless client
-      and must never be a dependency.
+      Catalog only — the page prints no prices; they come from
+      openai-pricing-md. The marketing page (openai.com/api/pricing) is
+      Cloudflare-403'd to any headless client and must never be a
+      dependency.
+
+  openai-pricing-md:
+    axis: pricing-catalog
+    provider: openai
+    url: https://developers.openai.com/api/docs/pricing.md
+    format: Markdown tables (Standard / Batch / Flex / Fast, short + long context columns)
+    diff_mechanism: body hash (ETag present)
+    verdict: include
+    fixture: fixtures/pricing/openai-pricing.md
+    caveats: >-
+      Did not exist at the 2026-08-25 audit; live-checked 2026-09-22 as
+      real markdown (text/markdown, ETag, Last-Modified) at the docs
+      origin, not the 403'd marketing page. One row per model, service
+      tier and context band; the Standard short-context row shares its key
+      with the catalog row from openai-models-md. The "(<272K context
+      length)" annotation is the short-context bound and is kept in notes,
+      never read as a context window. Cache-write prices, the cyber /
+      multimodal / realtime "Grouped Pricing Table" sections and per-minute
+      or per-image tables are not $/MTok token pricing and are not parsed.
+      Promotional windows are prose on this page ("promotional pricing is
+      available at least through …") with no hard end date, so no
+      effective_until is set — the price shown is the price printed.
 
   anthropic-models-md:
     axis: pricing-catalog

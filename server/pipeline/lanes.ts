@@ -22,6 +22,7 @@ import { parseAnthropicModelsOverviewMd } from './parsers/pricing/anthropic-mode
 import { parseAnthropicPricingMd } from './parsers/pricing/anthropic-pricing'
 import { parseGooglePricingPage } from './parsers/pricing/google-pricing'
 import { parseOpenAiModelsMd } from './parsers/pricing/openai-models'
+import { parseOpenAiPricingMd } from './parsers/pricing/openai-pricing'
 import { parseXaiModelsMd } from './parsers/pricing/xai-models'
 import { COMPANYFACTS_SOURCES, parseEdgarCompanyfacts } from './parsers/sec/edgar-companyfacts'
 import { parseEdgarFts } from './parsers/sec/edgar-fts'
@@ -128,6 +129,9 @@ function companyfactsLanes(): Record<string, Lane> {
 export const LANES: Readonly<Record<string, Lane>> = {
   'openai-models-md': set((text, { prov, snapshotId }) => ({
     entities: normalizePrices(parseOpenAiModelsMd(text, prov).rows, snapshotId),
+  })),
+  'openai-pricing-md': set((text, { prov, snapshotId }) => ({
+    entities: normalizePrices(parseOpenAiPricingMd(text, prov).rows, snapshotId),
   })),
   'anthropic-models-md': set((text, { prov, snapshotId }) => ({
     entities: normalizePrices(parseAnthropicModelsOverviewMd(text, prov).rows, snapshotId),
