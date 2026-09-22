@@ -64,10 +64,26 @@ bucket_name = "frontier-terminal-blob"
 #   * `namespace_id` is any positive integer, unique per Cloudflare account —
 #     not an id Cloudflare issues you, and nothing to create in the dashboard.
 #     Adding a second limiter means picking a different number here.
+# One block per budget in use, because a block enforces exactly one. Both must
+# appear in NATIVE_LIMITERS in server/utils/rate-limit.ts with the same name and
+# the same two numbers, and no two may share a (limit, period) pair.
+#
+# 30/60s: the two writers — /export/* and /api/judge/*.
 [[ratelimits]]
 name = "RATE_LIMITER"
 namespace_id = "1001"
 simple = { limit = 30, period = 60 }
+
+# 60/60s: the public read path. Every /api/* route the terminal's pages fetch
+# asks for this budget, and rendering the front page spends one from eight of
+# those buckets — so this is the block that carries page-view traffic, and the
+# reason it exists is latency. On KV the limiter costs a read plus a write, two
+# network round-trips in front of every one of those eight calls; the binding
+# runs in the runtime instead. Same budget, same enforcement, no round-trips.
+[[ratelimits]]
+name = "RATE_LIMITER_60"
+namespace_id = "1002"
+simple = { limit = 60, period = 60 }
 
 # ─── Workers Logs ────────────────────────────────────────────────────────────
 # Structured logs and the Observability tab in the dashboard, retained 7 days on

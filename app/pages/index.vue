@@ -28,22 +28,40 @@ definePageMeta({
   },
 })
 
+/** What this page needs from /api/incidents: the per-provider counts and a total. */
+type IncidentsStrip = Omit<IncidentsData, 'incidents'> & { incident_count: number }
+
 const config = useRuntimeConfig()
 
 // One source for the site's one-sentence claim — also used by /llms.txt and
 // the schema.org description, so all three agree.
 const description = config.public.appDescription
 
+// `pick`/`transform` run on the server, before Nuxt serialises the result into
+// the hydration payload — so what is dropped here is not fetched-then-ignored,
+// it never reaches the HTML. Both of these were most of this page's weight:
+// /api/prices is 241 KB of which `rows` is 240 KB, and /api/incidents carries
+// ~40 KB of incident rows this page reduces to a single count. The full catalog
+// and the full list are each one link away on their own page, where they are
+// actually rendered.
 const [overview, prices, revenue, rankings, spend, releases, hiringHistory, incidents] =
   await Promise.all([
     useFetch<OverviewData>('/api/overview'),
-    useFetch<PricesData>('/api/prices'),
+    useFetch<PricesData>('/api/prices', { pick: ['as_of', 'computed_at', 'matrix', 'counts'] }),
     useFetch<RevenueData>('/api/revenue'),
     useFetch<RankingsData>('/api/rankings'),
     useFetch<SpendData>('/api/spend'),
     useFetch<ReleasesData>('/api/releases'),
     useFetch<HiringHistoryData>('/api/hiring/history'),
-    useFetch<IncidentsData>('/api/incidents'),
+    // No `useFetch<IncidentsData>` here: the explicit generic pins the data type
+    // as well as the response type, so a transform that reshapes cannot satisfy
+    // it. Annotating the transform's input types both ends instead.
+    useFetch('/api/incidents', {
+      transform: ({ incidents: rows, ...rest }: IncidentsData): IncidentsStrip => ({
+        ...rest,
+        incident_count: rows.length,
+      }),
+    }),
   ])
 
 useSeo({
@@ -187,7 +205,7 @@ const openIncidents = computed(() =>
       <TerminalStrainTable v-if="incidents.data.value" :incidents="incidents.data.value" />
       <p v-if="incidents.data.value" class="text-sm">
         <NuxtLink to="/incidents" class="text-primary underline underline-offset-2">
-          All {{ incidents.data.value.incidents.length }} incidents in
+          All {{ incidents.data.value.incident_count }} incidents in
           {{ incidents.data.value.history_days }} days
         </NuxtLink>
       </p>

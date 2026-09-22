@@ -47,12 +47,14 @@ export const LAB_PAGES = LABS.map((lab) => ({
 }))
 
 export interface LabInputs {
-  prices?: PricesData | null
+  /** Only `matrix` is read, so a page may `pick` it and keep the catalog out of its payload. */
+  prices?: Pick<PricesData, 'matrix'> | null
   revenue?: RevenueData | null
   rankings?: RankingsData | null
   spend?: SpendData | null
   hiring?: HiringHistoryData | null
-  incidents?: IncidentsData | null
+  /** Likewise: only `providers`, never the full incident list. */
+  incidents?: Pick<IncidentsData, 'providers'> | null
   /** Newest first; filtered here to the ones whose cited rows name the lab. */
   alerts?: AlertView[] | null
 }
