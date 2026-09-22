@@ -61,6 +61,7 @@ import type {
 
 import * as tables from '../db/schema'
 import { manifestFixtures } from '../pipeline/parsers/fixture-provenance'
+import { parseDerivedSourcesBlock, type DerivedTemplate } from '../pipeline/derived'
 import { parseRevenueFilersBlock, type RevenueFilers } from '../pipeline/parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock, type CikWhitelist } from '../pipeline/parsers/sec/whitelist'
 import type { PipelineDb } from '../pipeline/store'
@@ -94,6 +95,7 @@ import {
   INCIDENT_SOURCE_IDS,
   PROVIDER_DISPLAY,
   PROVIDER_ORDER,
+  derivedTemplateOf,
   labelOf,
   readSourceRegistry,
   type SourceRegistry,
@@ -107,6 +109,8 @@ export interface QueryContext {
   /** sources.yaml revenue_filers and cik_whitelist — which lab a filer's facts belong to. */
   revenueFilers: RevenueFilers
   whitelist: CikWhitelist
+  /** sources.yaml derived_sources — the templates, for naming derived sources on the coverage panel. */
+  derivedTemplates: DerivedTemplate[]
   /** Newest source_runs.started_at, already read for the cache key. */
   as_of: string | null
   now: () => Date
@@ -122,6 +126,7 @@ export function queryContext(
     clusters: parseDepartmentClusters(sourcesYaml),
     revenueFilers: parseRevenueFilersBlock(sourcesYaml),
     whitelist: parseCikWhitelistBlock(sourcesYaml),
+    derivedTemplates: parseDerivedSourcesBlock(sourcesYaml),
     as_of,
     now,
   }
@@ -269,6 +274,7 @@ const AXIS_OF: Readonly<Record<string, keyof Omit<MovementSummary['recent'], 'to
   job: 'hiring',
   filing: 'sec',
   revenue: 'sec',
+  filer: 'sec',
   incident: 'incidents',
 }
 
@@ -376,6 +382,13 @@ function summarize(entityType: string, payload: Json | null): string {
         ? 'vendor sentence no longer on the page'
         : 'vendor sentence on the page'
     return `${str(payload.class) ?? '?'} → ${str(payload.model_slug) ?? '?'} — ${verdict}`
+  }
+  if (entityType === 'filer') {
+    return [
+      str(payload.name) ?? '?',
+      `CIK ${str(payload.cik) ?? '?'}`,
+      `resolved from ${str(payload.resolved_form) ?? '?'} ${str(payload.resolved_file_date) ?? ''}`.trim(),
+    ].join(' · ')
   }
   if (entityType === 'revenue') {
     const val = num(payload.val)
@@ -564,14 +577,17 @@ const isStandardTier = (tier: string | null): boolean => tier === null || tier =
 
 const pricedRow = (r: PriceRowView) => r.input_per_mtok !== null || r.output_per_mtok !== null
 
-/** Prefer a priced row, then the one carrying more price fields, then the newest fetch. */
+/** Prefer a priced row, then the one carrying more fields (prices, then the
+ * context window — the OpenAI model page beats the pricing page on that),
+ * then the newest fetch. */
 function preferRow(a: PriceRowView, b: PriceRowView): number {
   const priced = Number(pricedRow(b)) - Number(pricedRow(a))
   if (priced !== 0) return priced
   const fields = (r: PriceRowView) =>
     Number(r.input_per_mtok !== null) +
     Number(r.cached_input_per_mtok !== null) +
-    Number(r.output_per_mtok !== null)
+    Number(r.output_per_mtok !== null) +
+    Number(r.context_window !== null)
   const richer = fields(b) - fields(a)
   if (richer !== 0) return richer
   if (a.fetched_at !== b.fetched_at) return a.fetched_at < b.fetched_at ? 1 : -1
@@ -1412,8 +1428,40 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
       snapshot_count: stamp?.snapshot_count ?? 0,
       last_run: runs.get(source.source_id) ?? null,
       entity_count: entityCount.get(source.source_id) ?? 0,
+      derived_from: null,
     }
   })
+  // Sources the store derived for itself (server/pipeline/derived.ts) have
+  // snapshots but no registry entry; they are listed after the audited ones,
+  // named by their template, so nothing that was fetched is invisible here.
+  const registered = new Set(sources.map((s) => s.source_id))
+  for (const [source_id, stamp] of [...stamps].sort(([a], [b]) => byString(a, b))) {
+    const template = derivedTemplateOf(source_id)
+    if (registered.has(source_id) || !template) continue
+    const { label, role } = labelOf(source_id)
+    const provider = source_id.startsWith('openai-')
+      ? 'openai'
+      : ((PROVIDER_ORDER.find((p) => source_id.endsWith(`-${p}`)) ?? 'all') as ProviderId | 'all')
+    sources.push({
+      source_id,
+      label,
+      provider,
+      axis:
+        template === 'openai-model-md'
+          ? 'pricing-catalog'
+          : template === 'edgar-companyfacts'
+            ? 'revenue'
+            : 'sec',
+      role,
+      caveat: ctx.derivedTemplates.find((t) => t.id === template)?.caveat ?? null,
+      url: stamp.newest.source_url,
+      newest_snapshot: stamp.newest,
+      snapshot_count: stamp.snapshot_count,
+      last_run: runs.get(source_id) ?? null,
+      entity_count: entityCount.get(source_id) ?? 0,
+      derived_from: template,
+    })
+  }
 
   const exports = await Promise.all(
     Object.values(EXPORT_TABLES).map(async (table) => ({

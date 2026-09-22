@@ -201,6 +201,20 @@ sources:
       whitelist only. Confidential DRS filings are structurally invisible
       until flipped public; we catch the public-flip moment and say so.
 
+  edgar-fts-openai:
+    axis: sec
+    provider: all
+    url: https://efts.sec.gov/LATEST/search-index?q=%22OpenAI%22&forms=S-1
+    format: JSON
+    diff_mechanism: startdt param + accession numbers
+    verdict: include, narrowly scoped
+    fixture: fixtures/sec/edgar-fts-openai.json
+    caveats: >-
+      The OpenAI side of the S-1 tripwire, same UA + rate rules and the same
+      noise as edgar-fts: an S-1 that mentions OpenAI in its text is a hit,
+      so display_names (the filer) is what the resolver matches, never the
+      query term. The endpoint caps a response at 100 hits.
+
   edgar-submissions:
     axis: sec
     provider: all
@@ -375,6 +389,49 @@ revenue_filers:
   xai:
     ticker: SPCX
     relation: parent
+
+# Labs with no CIK yet, and how to recognise theirs the moment it exists.
+# An S-1-family hit on either edgar-fts query whose FILER name (EDGAR's
+# display_names, never the query term) matches `name_pattern` as a
+# case-insensitive regex, and matches none of `exclude`, resolves the lab's
+# CIK from that filing (server/pipeline/parsers/sec/pending-filers.ts). The
+# resolution is stored as a `filer` row with the filing it came from, fires
+# the cik-resolved alert, joins the CIK whitelist for every later tick, and
+# derives the lab's submissions and company-facts feeds (derived_sources).
+# Funds and SPVs carrying a lab's name file Form D, never an S-1, which is
+# why the tripwire query's form filter does most of the work; `exclude` is
+# the belt to that brace. A resolution is revoked by adding the CIK to
+# cik_whitelist under its own ticker and the lab to revenue_filers — the
+# audited file always wins over a derived row.
+pending_filers:
+  exclude: Acquisition, SPAC, Fund, SPV, Trust, Series, Capital, Ventures
+  anthropic:
+    name_pattern: ^Anthropic\b
+  openai:
+    name_pattern: ^OpenAI\b
+
+# Feeds derived at poll time from a key the store already holds. The URL is
+# a template audited here; the key is never typed into code — a CIK comes
+# from a `filer` row (above), a model slug from the openai-pricing-md rows.
+# A derived source is polled, snapshotted, parsed and diffed like any other;
+# it has no fixture of its own because the parser it shares was gated on a
+# committed one (fixtures/manifest.json names it).
+derived_sources:
+  edgar-submissions:
+    url: https://data.sec.gov/submissions/CIK{cik}.json
+    from: filer
+  edgar-companyfacts:
+    url: https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json
+    from: filer
+  openai-model-md:
+    url: https://developers.openai.com/api/docs/models/{slug}.md
+    from: openai-priced-model
+    caveats: >-
+      One page per priced Standard-tier SKU on openai-pricing-md (about 40),
+      each carrying the context window, max output and knowledge cutoff the
+      catalog and pricing pages omit, beside the same $/MTok prices. The
+      page's own "Model ID" must equal the slug it was derived for, or the
+      source fails rather than storing a page under the wrong SKU.
 
 # Department clusters read off the hiring boards. A cluster is a name match
 # over each board's own department labels: a department belongs when its

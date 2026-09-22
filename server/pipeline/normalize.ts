@@ -2,6 +2,7 @@ import {
   AshbyJobRow,
   EntityRow,
   contentHash,
+  filerKey,
   filingKey,
   incidentKey,
   jobKey,
@@ -10,6 +11,7 @@ import {
   rankingKey,
   recommendationKey,
   revenueKey,
+  type FilerRow,
   type FilingRow,
   type IncidentRow,
   type PriceRow,
@@ -170,6 +172,14 @@ export function normalizeRecommendations(
   snapshotId: string,
 ): EntityRow[] {
   return collapse(rows.map((row) => normalizeRecommendation(row, snapshotId)))
+}
+
+// One row per resolved lab, keyed by provider: a second resolving hit for
+// the same lab rewrites the row (a 'modified' change) rather than adding one.
+export function normalizeFilers(rows: readonly FilerRow[], snapshotId: string): EntityRow[] {
+  return collapse(
+    rows.map((row) => toEntity(filerKey(row.provider), 'filer', row.provider, snapshotId, row)),
+  )
 }
 
 // A revenue fact's provider is the lab whose filer reported it, resolved by

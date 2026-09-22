@@ -18,6 +18,7 @@ import type { FetchSource } from './sources'
 
 const EDGAR_SOURCES: readonly string[] = [
   'edgar-fts',
+  'edgar-fts-openai',
   'edgar-submissions-spcx',
   'edgar-submissions-msft',
   'edgar-submissions-amzn',
@@ -33,7 +34,10 @@ export function sourceIdsForScope(scope: PollScope, all: readonly FetchSource[])
   if (missing.length) {
     throw new Error(`edgar scope names sources not in sources.yaml: ${missing.join(', ')}`)
   }
-  return [...EDGAR_SOURCES]
+  // Derived EDGAR feeds (a resolved lab's submissions and company facts —
+  // server/pipeline/derived.ts) ride the same tick as the static ones.
+  const derived = ids.filter((id) => id.startsWith('edgar-') && !EDGAR_SOURCES.includes(id))
+  return [...EDGAR_SOURCES, ...derived]
 }
 
 const EDGAR_PERIOD_MS = 30 * 60 * 1000

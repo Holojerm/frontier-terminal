@@ -146,6 +146,7 @@ describe('runPoll between survey instants', () => {
     if (outcome.status !== 'ran') return
     expect(outcome.result.sources.map((s) => s.source_id)).toEqual([
       'edgar-fts',
+      'edgar-fts-openai',
       'edgar-submissions-spcx',
       'edgar-submissions-msft',
       'edgar-submissions-amzn',
