@@ -88,7 +88,11 @@ Emit an alert-tier severity (`notable` or `critical`) ONLY for:
   `cached_input_per_mtok` or `output_per_mtok` differs between `before_json`
   and `after_json`, or a price appearing where there was none. A `model`
   record removed (a SKU delisted) counts here too.
-- **Any new model SKU.** A `model` record with `change_type` `added`.
+- **Any new model SKU.** A `model` record with `change_type` `added` — a
+  new tier or a newly priced variant of a model already listed. A model
+  slug that no catalog listed before (a launch) has already been alerted by
+  the deterministic model-floor rule; cite it only as context combined with
+  other changes, such as the vendor re-pointing its recommendation at it.
 - **A department-level hiring shift.** Five or more `job` records added, or
   five or more removed, in ONE `department` at ONE provider among the
   records you were handed. Count them: `after_json.department` for adds,
