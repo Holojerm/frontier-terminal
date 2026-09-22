@@ -122,7 +122,12 @@ const openIncidents = computed(() =>
       title="Disclosed revenue"
       note="What each lab, or its public parent, has reported to the SEC."
     >
-      <TerminalRevenuePanel v-if="revenue.data.value" :revenue="revenue.data.value" compact />
+      <TerminalRevenueTable v-if="revenue.data.value" :revenue="revenue.data.value" />
+      <p class="text-sm">
+        <NuxtLink to="/revenue" class="text-primary underline underline-offset-2">
+          Every period, restatements and filings
+        </NuxtLink>
+      </p>
     </TerminalPanel>
 
     <div class="grid gap-12 lg:grid-cols-2">
@@ -179,7 +184,7 @@ const openIncidents = computed(() =>
           : 'Status-page incidents, newest 30 days against the prior 30.'
       "
     >
-      <TerminalStrainPanel v-if="incidents.data.value" :incidents="incidents.data.value" />
+      <TerminalStrainTable v-if="incidents.data.value" :incidents="incidents.data.value" />
       <p v-if="incidents.data.value" class="text-sm">
         <NuxtLink to="/incidents" class="text-primary underline underline-offset-2">
           All {{ incidents.data.value.incidents.length }} incidents in

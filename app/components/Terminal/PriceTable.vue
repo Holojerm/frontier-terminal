@@ -10,10 +10,14 @@ import type { TableColumn } from '@nuxt/ui'
 import { money, pctChange, pctLabel } from '#shared/utils/terminal-format'
 import type { PriceRowView, PricesData } from '#shared/utils/terminal-types'
 
-const props = defineProps<{ prices: PricesData }>()
+const props = defineProps<{
+  prices: PricesData
+  /** Initial provider filter, e.g. from `/prices?provider=xai`. */
+  provider?: string
+}>()
 
 const pricedOnly = ref(true)
-const provider = ref('all')
+const provider = ref(props.provider ?? 'all')
 
 const providers = computed(() => [
   { label: 'All providers', value: 'all' },
@@ -72,10 +76,14 @@ function deltaText(row: PriceRowView): string | null {
       <span v-if="hidden > 0" class="text-xs text-muted">{{ hidden }} row(s) filtered out</span>
     </div>
 
+    <!-- Sticky header: the catalog runs to hundreds of rows. The root is
+         the horizontal scroll container on a phone, where a sticky header
+         has nothing to stick to; from md up it scrolls with the page. -->
     <UTable
       :data="rows"
       :columns="columns"
-      :ui="{ td: 'align-top', th: 'whitespace-nowrap' }"
+      sticky="header"
+      :ui="{ root: 'md:overflow-visible', td: 'align-top', th: 'whitespace-nowrap' }"
       empty="No rows match the current filter."
     >
       <template #model_slug-cell="{ row }">

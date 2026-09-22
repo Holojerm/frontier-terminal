@@ -56,7 +56,12 @@ const anyLog = computed(() => (hiring.value?.log.changes ?? 0) > 0)
 
 const showTable = ref(false)
 
-const compareRows = (p: HiringHistoryProvider) => p.compare?.departments ?? []
+// Rows that held still say nothing; hide them unless asked.
+const movedOnly = ref(true)
+const compareRows = (p: HiringHistoryProvider) =>
+  (p.compare?.departments ?? []).filter((d) => !movedOnly.value || d.now !== d.then)
+const unchanged = (p: HiringHistoryProvider) =>
+  (p.compare?.departments ?? []).filter((d) => d.now === d.then).length
 
 /** One entry per board with something to disclose: an entity blend, or no feed at all. */
 const caveats = computed(() =>
@@ -184,6 +189,7 @@ const caveats = computed(() =>
         title="Department mix, now against earlier"
         :note="`Open roles by department, now against ${hiring.window_days} days ago or the first day on record.`"
       >
+        <UCheckbox v-model="movedOnly" label="Only departments that moved" />
         <div class="grid gap-4 md:grid-cols-2">
           <article
             v-for="p in hiring.providers"
@@ -234,7 +240,10 @@ const caveats = computed(() =>
             />
 
             <template v-else-if="p.compare">
-              <div class="overflow-x-auto">
+              <p v-if="compareRows(p).length === 0" class="text-xs text-toned">
+                No department moved; {{ unchanged(p) }} unchanged.
+              </p>
+              <div v-else class="overflow-x-auto">
                 <table class="w-full text-xs">
                   <caption class="sr-only">
                     {{
@@ -277,6 +286,12 @@ const caveats = computed(() =>
                   </tbody>
                 </table>
               </div>
+              <p
+                v-if="movedOnly && compareRows(p).length && unchanged(p)"
+                class="text-xs text-toned"
+              >
+                {{ unchanged(p) }} unchanged hidden.
+              </p>
               <p
                 v-if="p.join_from && p.compare.at < p.join_from.slice(0, 10)"
                 class="text-xs text-toned"
