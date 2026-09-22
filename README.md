@@ -48,11 +48,11 @@ The terminal is an MCP server as well as a site: the same read-only queries, ove
 HTTP, no auth, at
 
 ```
-https://frontier-terminal.jeremy-ettlinger.workers.dev/mcp
+https://frontierterm.com/mcp
 ```
 
 ```bash
-claude mcp add --transport http frontier-terminal https://frontier-terminal.jeremy-ettlinger.workers.dev/mcp
+claude mcp add --transport http frontier-terminal https://frontierterm.com/mcp
 ```
 
 For any other client that takes a JSON server definition:
@@ -62,7 +62,7 @@ For any other client that takes a JSON server definition:
   "mcpServers": {
     "frontier-terminal": {
       "type": "http",
-      "url": "https://frontier-terminal.jeremy-ettlinger.workers.dev/mcp"
+      "url": "https://frontierterm.com/mcp"
     }
   }
 }

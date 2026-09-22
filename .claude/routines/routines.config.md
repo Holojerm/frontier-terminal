@@ -6,7 +6,7 @@ configured" and skip the dependent work (journaling the gap).
 | Key | Value |
 | --- | --- |
 | Product name | Frontier Terminal |
-| Production URL | `https://frontier-terminal.jeremy-ettlinger.workers.dev` |
+| Production URL | `https://frontierterm.com` |
 | Owner name | Jeremy Ettlinger |
 | GitHub repo | Holojerm/frontier-terminal |
 | Analytics sources | Cloudflare Workers analytics for the production Worker |

@@ -19,6 +19,7 @@ import {
   DEGRADED_CACHE_CONTROL,
 } from '../server/utils/seo'
 import type { SiteContext } from '../shared/utils/schema'
+import { canonicalRedirect } from '../shared/utils/site'
 import {
   breadcrumbSchema,
   jsonLdGraph,
@@ -333,5 +334,36 @@ describe('buildRobotsTxt', () => {
       expect(allowed).toContain(`User-agent: ${agent}\nAllow: /`)
       expect(blocked).toContain(`User-agent: ${agent}\nDisallow: /`)
     }
+  })
+})
+
+describe('canonicalRedirect', () => {
+  const origin = 'https://frontierterm.com'
+  const get = (host: string, path = '/pricing') => ({ method: 'GET', host, path })
+
+  it('moves page requests off the workers.dev origin', () => {
+    expect(canonicalRedirect(origin, get('frontier-terminal.jeremy-ettlinger.workers.dev'))).toBe(
+      'https://frontierterm.com/pricing',
+    )
+    expect(canonicalRedirect(origin, get('www.frontierterm.com', '/?ref=x'))).toBe(
+      'https://frontierterm.com/?ref=x',
+    )
+  })
+
+  it('serves the canonical host as-is', () => {
+    expect(canonicalRedirect(origin, get('frontierterm.com'))).toBeNull()
+    expect(canonicalRedirect(origin, get('FrontierTerm.com'))).toBeNull()
+  })
+
+  it('leaves /api, /mcp and non-GET requests where they are', () => {
+    const host = 'frontier-terminal.jeremy-ettlinger.workers.dev'
+    expect(canonicalRedirect(origin, get(host, '/api/status'))).toBeNull()
+    expect(canonicalRedirect(origin, get(host, '/mcp'))).toBeNull()
+    expect(canonicalRedirect(origin, { method: 'POST', host, path: '/' })).toBeNull()
+  })
+
+  it('ignores hosts that are not ours and an unset origin', () => {
+    expect(canonicalRedirect(origin, get('evil.example'))).toBeNull()
+    expect(canonicalRedirect('', get('x.workers.dev'))).toBeNull()
   })
 })
