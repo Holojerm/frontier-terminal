@@ -1,12 +1,15 @@
 import {
   AlertRow,
+  FilerRow,
   FilingRow,
   contentHash,
   type ChangeRow,
   type EntityRow,
   type Provenance,
+  type Provider,
 } from './contracts'
 import {
+  normalizeFilers,
   normalizeFilings,
   normalizeIncidents,
   normalizeJobs,
@@ -23,10 +26,12 @@ import { parseAnthropicModelsOverviewMd } from './parsers/pricing/anthropic-mode
 import { parseAnthropicPricingMd } from './parsers/pricing/anthropic-pricing'
 import { parseGooglePricingPage } from './parsers/pricing/google-pricing'
 import { parseOpenAiModelsMd } from './parsers/pricing/openai-models'
+import { parseOpenAiModelPage } from './parsers/pricing/openai-model-page'
 import { parseOpenAiPricingMd } from './parsers/pricing/openai-pricing'
 import { parseXaiModelsMd } from './parsers/pricing/xai-models'
 import { COMPANYFACTS_SOURCES, parseEdgarCompanyfacts } from './parsers/sec/edgar-companyfacts'
-import { parseEdgarFts } from './parsers/sec/edgar-fts'
+import { FTS_SOURCES, parseEdgarFts } from './parsers/sec/edgar-fts'
+import { resolveFilers, type PendingFilers } from './parsers/sec/pending-filers'
 import { SUBMISSIONS_SOURCES, parseEdgarSubmissions } from './parsers/sec/edgar-submissions'
 import { revenueProviderFor, type RevenueFilers } from './parsers/sec/revenue-filers'
 import { isPeriodicForm, isS1FloorForm } from './parsers/sec/s1-floor'
@@ -56,6 +61,12 @@ export interface ParseContext {
   whitelist: CikWhitelist
   /** sources.yaml revenue_filers — which lab a company-facts filer belongs to. */
   revenueFilers: RevenueFilers
+  /** sources.yaml pending_filers — the labs whose CIK an S-1 hit may resolve. */
+  pendingFilers: PendingFilers
+  /** Labs already resolved (or tagged in the audited file): the resolver leaves them alone. */
+  resolvedProviders: ReadonlySet<Provider>
+  /** For a derived source, the key it was derived for (a CIK or a slug); null for a registered one. */
+  derivedKey: string | null
 }
 
 export interface ParseResult {
@@ -80,27 +91,51 @@ export interface Lane {
 
 const set = (parse: Lane['parse']): Lane => ({ sides: [], removals: 'set', parse })
 
+// The FTS tripwire lanes: filings, plus the labs those filings resolve
+// (parsers/sec/pending-filers.ts). Both floors and the cik-resolved alert run.
+const FTS_LANE: Lane = {
+  sides: [],
+  removals: 'append-only',
+  parse: (text, { prov, snapshotId, whitelist, pendingFilers, resolvedProviders }) => {
+    const { rows } = parseEdgarFts(text, whitelist, prov)
+    const filers = resolveFilers(rows, pendingFilers, resolvedProviders)
+    return {
+      entities: [...normalizeFilings(rows, snapshotId), ...normalizeFilers(filers, snapshotId)],
+      note: filers.length
+        ? `resolved ${filers.map((f) => `${f.provider} -> CIK ${f.cik}`).join(', ')}`
+        : undefined,
+    }
+  },
+  alerts: (changes) => [...s1FloorAlerts(changes), ...cikResolvedAlerts(changes)],
+}
+
+function ftsLanes(): Record<string, Lane> {
+  const lanes: Record<string, Lane> = {}
+  for (const sourceId of Object.keys(FTS_SOURCES)) lanes[sourceId] = FTS_LANE
+  return lanes
+}
+
 // One submissions lane per whitelisted CIK. A filer's recent window is a
 // rolling list, so a filing scrolling out was not un-filed: append-only.
 // Both floors run on every feed; a tracked form on a whitelisted CIK is an
 // alert whichever feed saw it first (the FTS query is S-1-only, so the
 // periodic floor only ever fires from here).
+const SUBMISSIONS_LANE: Lane = {
+  sides: [],
+  removals: 'append-only',
+  parse: (text, { prov, snapshotId, whitelist }) => {
+    const { rows, skipped } = parseEdgarSubmissions(text, whitelist, prov)
+    return {
+      entities: normalizeFilings(rows, snapshotId),
+      note: skipped ? `${skipped} filings skipped: untracked form` : undefined,
+    }
+  },
+  alerts: (changes) => [...s1FloorAlerts(changes), ...periodicFloorAlerts(changes)],
+}
+
 function submissionsLanes(): Record<string, Lane> {
   const lanes: Record<string, Lane> = {}
-  for (const sourceId of Object.keys(SUBMISSIONS_SOURCES)) {
-    lanes[sourceId] = {
-      sides: [],
-      removals: 'append-only',
-      parse: (text, { prov, snapshotId, whitelist }) => {
-        const { rows, skipped } = parseEdgarSubmissions(text, whitelist, prov)
-        return {
-          entities: normalizeFilings(rows, snapshotId),
-          note: skipped ? `${skipped} filings skipped: untracked form` : undefined,
-        }
-      },
-      alerts: (changes) => [...s1FloorAlerts(changes), ...periodicFloorAlerts(changes)],
-    }
-  }
+  for (const sourceId of Object.keys(SUBMISSIONS_SOURCES)) lanes[sourceId] = SUBMISSIONS_LANE
   return lanes
 }
 
@@ -108,24 +143,53 @@ function submissionsLanes(): Record<string, Lane> {
 // 10-K restates the prior year's quarters under a new accession), so the
 // lane is append-only; the provider is the lab the filer is tagged to in
 // sources.yaml, 'other' when the tag is gone — never a guess from the name.
+const COMPANYFACTS_LANE: Lane = {
+  sides: [],
+  removals: 'append-only',
+  parse: (text, { prov, snapshotId, whitelist, revenueFilers }) => {
+    const { rows, tags } = parseEdgarCompanyfacts(text, whitelist, prov)
+    const cik = rows[0]?.cik
+    const provider = cik ? revenueProviderFor(cik, revenueFilers, whitelist) : 'other'
+    return {
+      entities: normalizeRevenues(rows, snapshotId, provider),
+      note: tags.length ? `tags ${tags.join(', ')}` : 'no revenue tag in us-gaap facts',
+    }
+  },
+}
+
 function companyfactsLanes(): Record<string, Lane> {
   const lanes: Record<string, Lane> = {}
-  for (const sourceId of Object.keys(COMPANYFACTS_SOURCES)) {
-    lanes[sourceId] = {
-      sides: [],
-      removals: 'append-only',
-      parse: (text, { prov, snapshotId, whitelist, revenueFilers }) => {
-        const { rows, tags } = parseEdgarCompanyfacts(text, whitelist, prov)
-        const cik = rows[0]?.cik
-        const provider = cik ? revenueProviderFor(cik, revenueFilers, whitelist) : 'other'
-        return {
-          entities: normalizeRevenues(rows, snapshotId, provider),
-          note: tags.length ? `tags ${tags.join(', ')}` : 'no revenue tag in us-gaap facts',
-        }
-      },
-    }
-  }
+  for (const sourceId of Object.keys(COMPANYFACTS_SOURCES)) lanes[sourceId] = COMPANYFACTS_LANE
   return lanes
+}
+
+// A derived OpenAI model page: one SKU row that must be the slug it was
+// derived for (the parser checks). The page IS the SKU's current state.
+const OPENAI_MODEL_PAGE_LANE: Lane = {
+  sides: [],
+  removals: 'set',
+  parse: (text, { prov, snapshotId, derivedKey }) => ({
+    entities: normalizePrices(parseOpenAiModelPage(text, derivedKey, prov).rows, snapshotId),
+  }),
+}
+
+/** Lanes for derived sources, by id prefix (server/pipeline/derived.ts). */
+const DERIVED_LANES: readonly { prefix: string; lane: Lane }[] = [
+  { prefix: 'edgar-submissions-', lane: SUBMISSIONS_LANE },
+  { prefix: 'edgar-companyfacts-', lane: COMPANYFACTS_LANE },
+  { prefix: 'openai-model-md-', lane: OPENAI_MODEL_PAGE_LANE },
+]
+
+/** The lane for a source id: a registered one exactly, a derived one by prefix. */
+export function laneFor(sourceId: string): Lane | undefined {
+  return LANES[sourceId] ?? DERIVED_LANES.find((d) => sourceId.startsWith(d.prefix))?.lane
+}
+
+/** The key a derived source id carries after its template prefix, or null. */
+export function derivedKeyOf(sourceId: string): string | null {
+  if (LANES[sourceId]) return null
+  const d = DERIVED_LANES.find((x) => sourceId.startsWith(x.prefix))
+  return d ? sourceId.slice(d.prefix.length) : null
 }
 
 // The pages the class map (server/utils/terminal-classes.ts) is transcribed
@@ -189,14 +253,7 @@ export const LANES: Readonly<Record<string, Lane>> = {
       ),
     }),
   },
-  'edgar-fts': {
-    sides: [],
-    removals: 'append-only',
-    parse: (text, { prov, snapshotId, whitelist }) => ({
-      entities: normalizeFilings(parseEdgarFts(text, whitelist, prov).rows, snapshotId),
-    }),
-    alerts: s1FloorAlerts,
-  },
+  ...ftsLanes(),
   ...submissionsLanes(),
   ...companyfactsLanes(),
   // Status feeds are rolling windows (Statuspage caps at 50; OpenAI's page
@@ -323,6 +380,45 @@ export function periodicFloorAlerts(changes: readonly ChangeRow[]): AlertRow[] {
           'Where the filer is a tagged revenue filer, its XBRL revenue facts refresh on the /revenue panel at the next company-facts poll.',
         change_ids: JSON.stringify([change.id]),
         rule: 'periodic-floor',
+        created_at: change.detected_at,
+        source_url: change.source_url,
+        fetched_at: change.fetched_at,
+      }),
+    )
+  }
+  return alerts
+}
+
+/**
+ * The third deterministic rule: a lab's CIK resolved from its own S-1 hit
+ * (a NEW `filer` row) always alerts, `critical` — this is the public-flip
+ * moment the whole SEC axis waits for. Every value is read back out of the
+ * change row's after_json, re-validated as a FilerRow.
+ */
+export function cikResolvedAlerts(changes: readonly ChangeRow[]): AlertRow[] {
+  const alerts: AlertRow[] = []
+  for (const change of changes) {
+    if (change.change_type !== 'added' || change.entity_type !== 'filer' || !change.after_json) {
+      continue
+    }
+    const filer = FilerRow.parse({
+      ...(JSON.parse(change.after_json) as Record<string, unknown>),
+      source_url: change.source_url,
+      fetched_at: change.fetched_at,
+    })
+    alerts.push(
+      AlertRow.parse({
+        id: contentHash({ rule: 'cik-resolved', change_id: change.id }),
+        severity: 'critical',
+        headline: `${filer.name} filed ${filer.resolved_form} (${filer.resolved_file_date}) — CIK ${filer.cik} resolved for ${filer.provider}`,
+        explanation:
+          `Accession ${filer.resolved_accession}: form ${filer.resolved_form} filed ${filer.resolved_file_date} by ` +
+          `${filer.name} (CIK ${filer.cik}), whose name matches the ${filer.provider} pattern in sources.yaml pending_filers. ` +
+          'A registration filing by a pending lab always alerts — the cik-resolved rule, no model in the loop. ' +
+          'From the next poll the CIK is whitelisted and the filer’s submissions and XBRL company-facts feeds are derived and polled; ' +
+          'its reported revenue lands on /revenue as an issuer filing.',
+        change_ids: JSON.stringify([change.id]),
+        rule: 'cik-resolved',
         created_at: change.detected_at,
         source_url: change.source_url,
         fetched_at: change.fetched_at,

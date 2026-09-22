@@ -1,4 +1,10 @@
-import { registerParser, EdgarFtsOutput, type FilingRow, type Provenance } from '../../contracts'
+import {
+  registerParser,
+  EdgarFtsOutput,
+  type FilingRow,
+  type ParserId,
+  type Provenance,
+} from '../../contracts'
 import { fixtureProvenance } from '../fixture-provenance'
 import { parseCikWhitelistBlock, whitelistCikFor, type CikWhitelist } from './whitelist'
 
@@ -52,11 +58,24 @@ export function parseEdgarFts(
   return EdgarFtsOutput.parse({ rows })
 }
 
-registerParser({
-  name: 'edgar-fts',
-  lane: 'sec',
-  fixturePath: 'fixtures/sec/edgar-fts.json',
-  sideFixturePaths: ['sources.yaml'],
-  schema: EdgarFtsOutput,
-  parse: (text, side) => parseEdgarFts(text, parseCikWhitelistBlock(side('sources.yaml'))),
-})
+// Two queries, one parser: the Anthropic-side and the OpenAI-side tripwire.
+export const FTS_SOURCES: Readonly<Record<string, string>> = {
+  'edgar-fts': 'fixtures/sec/edgar-fts.json',
+  'edgar-fts-openai': 'fixtures/sec/edgar-fts-openai.json',
+}
+
+for (const [sourceId, fixturePath] of Object.entries(FTS_SOURCES)) {
+  registerParser({
+    name: sourceId as ParserId,
+    lane: 'sec',
+    fixturePath,
+    sideFixturePaths: ['sources.yaml'],
+    schema: EdgarFtsOutput,
+    parse: (text, side) =>
+      parseEdgarFts(
+        text,
+        parseCikWhitelistBlock(side('sources.yaml')),
+        fixtureProvenance(sourceId),
+      ),
+  })
+}

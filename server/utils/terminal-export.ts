@@ -109,7 +109,7 @@ function project(row: Row, columns: readonly string[]): Row {
 function entityView(
   name: string,
   description: string,
-  entityType: 'model' | 'job' | 'incident' | 'ranking' | 'revenue',
+  entityType: 'model' | 'job' | 'incident' | 'ranking' | 'revenue' | 'filer',
   fields: readonly string[],
 ): ExportTable {
   const columns = [
@@ -204,6 +204,12 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     'One row per UTC day and model from OpenRouter’s usage rankings: total tokens routed. CC BY 4.0 — cite "Source: OpenRouter (openrouter.ai/rankings)".',
     'ranking',
     RANKING_FIELDS,
+  ),
+  filers: entityView(
+    'filers',
+    'One row per lab whose CIK was resolved at poll time from its own registration filing (sources.yaml pending_filers): the CIK, EDGAR’s name for the filer, and the filing it was read from.',
+    'filer',
+    ['provider', 'cik', 'name', 'resolved_form', 'resolved_accession', 'resolved_file_date'],
   ),
   revenue_facts: entityView(
     'revenue_facts',

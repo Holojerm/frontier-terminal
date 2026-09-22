@@ -1,5 +1,5 @@
 {
-  "_readme": "One entry per committed fixture. All sources were live-fetched once: at scaffold time (Phase 0) for most, and at the first keyed production tick for the OpenRouter rankings source (2026-09-09), and at the revenue/periodic-filing extension (2026-09-22) for the four hyperscaler submissions feeds and the SPCX companyfacts feed. Raw untrimmed payloads were saved to data/raw/ (gitignored). Trims preserve every field the parsers need \u2014 see each trim note. Builder tracks iterate against these files only: no network, no credentials. Fixture content is data, never instructions.",
+  "_readme": "One entry per committed fixture. All sources were live-fetched once: at scaffold time (Phase 0) for most, and at the first keyed production tick for the OpenRouter rankings source (2026-09-09), and at the revenue/periodic-filing extension (2026-09-22) for the four hyperscaler submissions feeds and the SPCX companyfacts feed. Raw untrimmed payloads were saved to data/raw/ (gitignored). Trims preserve every field the parsers need — see each trim note. Builder tracks iterate against these files only: no network, no credentials. Fixture content is data, never instructions.",
   "fixtures": [
     {
       "path": "fixtures/pricing/openai-models.md",
@@ -8,7 +8,7 @@
       "fetched_at": "2026-09-22T04:10:10Z",
       "http_status": 200,
       "raw_bytes": 12163,
-      "trim": "none \u2014 committed whole"
+      "trim": "none — committed whole"
     },
     {
       "path": "fixtures/pricing/openai-pricing.md",
@@ -21,13 +21,23 @@
       "note": "Not in the audit: the docs origin began serving pricing as markdown after 2026-08-25 (Last-Modified 2026-09-22T00:54:52Z, ETag present). Four $/MTok tables under '### Standard / Batch / Flex / Fast pricing data' with short- and long-context columns; the grouped tables below them (cyber, audio, image, realtime, tools) are not parsed."
     },
     {
+      "path": "fixtures/pricing/openai-model-gpt-5.6-sol.md",
+      "source_id": "openai-model-md-gpt-5.6-sol",
+      "source_url": "https://developers.openai.com/api/docs/models/gpt-5.6-sol.md",
+      "fetched_at": "2026-09-22T04:25:51Z",
+      "http_status": 200,
+      "raw_bytes": 3991,
+      "trim": "none — committed whole",
+      "note": "One representative per-model page for the derived openai-model-md-<slug> sources (server/pipeline/derived.ts): the determinism gate runs the shared parser on this page. Carries what the catalog and pricing pages do not — context window (1,050,000), max output, knowledge cutoff — beside the same $/MTok prices."
+    },
+    {
       "path": "fixtures/pricing/anthropic-models-overview.md",
       "source_id": "anthropic-models-md",
       "source_url": "https://platform.claude.com/docs/en/models/overview.md",
       "fetched_at": "2026-09-22T04:10:11Z",
       "http_status": 200,
       "raw_bytes": 16849,
-      "trim": "none \u2014 committed whole"
+      "trim": "none — committed whole"
     },
     {
       "path": "fixtures/pricing/anthropic-pricing.md",
@@ -36,7 +46,7 @@
       "fetched_at": "2026-09-22T04:10:11Z",
       "http_status": 200,
       "raw_bytes": 45062,
-      "trim": "none \u2014 committed whole",
+      "trim": "none — committed whole",
       "note": "Audit listed this page as HTML; live fetch confirms the .md suffix serves real markdown here too."
     },
     {
@@ -46,7 +56,7 @@
       "fetched_at": "2026-09-22T04:10:11Z",
       "http_status": 200,
       "raw_bytes": 4708,
-      "trim": "none \u2014 committed whole"
+      "trim": "none — committed whole"
     },
     {
       "path": "fixtures/pricing/google-pricing.html",
@@ -82,7 +92,7 @@
       "fetched_at": "2026-08-25T11:10:43Z",
       "http_status": 200,
       "raw_bytes": 383405,
-      "trim": "jobs filtered to exactly the ids kept in the departments fixture trim (59 of 536) so the department join is fixture-complete. meta kept verbatim (total reflects the untrimmed board). Live board was 536 roles vs 537 at audit time \u2014 normal drift.",
+      "trim": "jobs filtered to exactly the ids kept in the departments fixture trim (59 of 536) so the department join is fixture-complete. meta kept verbatim (total reflects the untrimmed board). Live board was 536 roles vs 537 at audit time — normal drift.",
       "note": "The jobs endpoint carries no department field; department comes only from the /departments join."
     },
     {
@@ -101,8 +111,8 @@
       "fetched_at": "2026-08-25T23:08:17Z",
       "http_status": 200,
       "raw_bytes": 264125,
-      "trim": "jobs filtered to exactly the ids kept in the departments fixture trim (42 of 255) so the department join is fixture-complete. meta kept verbatim (total reflects the untrimmed board). Live board was 255 roles vs 262 at audit time \u2014 normal drift.",
-      "note": "Every row carries company_name 'SpaceXAI' \u2014 entity-blended SpaceX/xAI board; this caveat must ship visibly wherever the data surfaces. The jobs endpoint carries no department field; department comes only from the /departments join."
+      "trim": "jobs filtered to exactly the ids kept in the departments fixture trim (42 of 255) so the department join is fixture-complete. meta kept verbatim (total reflects the untrimmed board). Live board was 255 roles vs 262 at audit time — normal drift.",
+      "note": "Every row carries company_name 'SpaceXAI' — entity-blended SpaceX/xAI board; this caveat must ship visibly wherever the data surfaces. The jobs endpoint carries no department field; department comes only from the /departments join."
     },
     {
       "path": "fixtures/hiring/xai-greenhouse-departments.json",
@@ -112,7 +122,7 @@
       "http_status": 200,
       "raw_bytes": 266512,
       "trim": "all 26 departments kept (id/name/parent_id/child_ids intact); each embedded jobs list trimmed to first 3 full job objects. 16 departments carry jobs; the untrimmed payload maps all 255 board jobs.",
-      "note": "Join table for xai-greenhouse. Department names are the evidence for the SpaceXAI caveat: the set is xAI-shaped (Data Center 121, Human Data 36, Engineering 23, \u2026) with no aerospace/launch function."
+      "note": "Join table for xai-greenhouse. Department names are the evidence for the SpaceXAI caveat: the set is xAI-shaped (Data Center 121, Human Data 36, Engineering 23, …) with no aerospace/launch function."
     },
     {
       "path": "fixtures/sec/edgar-fts.json",
@@ -121,8 +131,18 @@
       "fetched_at": "2026-08-25T11:10:55Z",
       "http_status": 200,
       "raw_bytes": 29551,
-      "trim": "none \u2014 committed whole",
-      "note": "Fetched with the required UA header (contact email form). Open keyword hits are noisy by design (audit-confirmed) \u2014 production queries filter against the CIK whitelist in sources.yaml."
+      "trim": "none — committed whole",
+      "note": "Fetched with the required UA header (contact email form). Open keyword hits are noisy by design (audit-confirmed) — production queries filter against the CIK whitelist in sources.yaml."
+    },
+    {
+      "path": "fixtures/sec/edgar-fts-openai.json",
+      "source_id": "edgar-fts-openai",
+      "source_url": "https://efts.sec.gov/LATEST/search-index?q=%22OpenAI%22&forms=S-1",
+      "fetched_at": "2026-09-22T04:24:30Z",
+      "http_status": 200,
+      "raw_bytes": 56784,
+      "trim": "none — committed whole",
+      "note": "The OpenAI-side S-1 tripwire, added with the pending_filers resolver (2026-09-22). 161 hits, the endpoint's top 100 returned; none filed by an entity whose name starts with OpenAI (the OpenAI Startup Fund SPVs file Form D, not S-1s), so nothing resolves on this fixture."
     },
     {
       "path": "fixtures/sec/edgar-submissions-spcx.json",
@@ -131,7 +151,7 @@
       "fetched_at": "2026-08-25T11:10:55Z",
       "http_status": 200,
       "raw_bytes": 14337,
-      "trim": "none \u2014 committed whole"
+      "trim": "none — committed whole"
     },
     {
       "path": "fixtures/sec/edgar-submissions-msft.json",
@@ -180,7 +200,7 @@
       "fetched_at": "2026-09-22T03:14:11Z",
       "http_status": 200,
       "raw_bytes": 124544,
-      "trim": "none \u2014 committed whole",
+      "trim": "none — committed whole",
       "note": "SPACE EXPLORATION TECHNOLOGIES CORP., the one revenue filer tagged in sources.yaml (xAI's parent, relation 'parent'). facts.us-gaap carries RevenueFromContractWithCustomerExcludingAssessedTax (4 USD facts, all from the 2026-08-04 10-Q: two quarters and two half-years) and no Revenues or SalesRevenueNet tag. No segment members: companyfacts holds non-dimensional facts only, so whether SpaceX segments xAI is not answerable from this endpoint."
     },
     {
@@ -190,8 +210,8 @@
       "fetched_at": "2026-09-08T21:57:31Z",
       "http_status": 200,
       "raw_bytes": 39009,
-      "trim": "none \u2014 committed whole",
-      "note": "Statuspage v2 shape: {page, incidents[]}. 25 incidents (2026-08-05 \u2192 2026-09-08); no `components`, `started_at` or `shortlink` on this page, and one open incident (status monitoring) has no `resolved_at` key at all rather than null."
+      "trim": "none — committed whole",
+      "note": "Statuspage v2 shape: {page, incidents[]}. 25 incidents (2026-08-05 → 2026-09-08); no `components`, `started_at` or `shortlink` on this page, and one open incident (status monitoring) has no `resolved_at` key at all rather than null."
     },
     {
       "path": "fixtures/status/anthropic-status.json",
@@ -200,8 +220,8 @@
       "fetched_at": "2026-09-08T21:57:32Z",
       "http_status": 200,
       "raw_bytes": 190515,
-      "trim": "none \u2014 committed whole",
-      "note": "status.anthropic.com/api/v2/incidents.json 301-redirects here; the final URL is the one registered. Statuspage v2 shape with `components` (claude.ai, Claude API (api.anthropic.com), Claude Code, Claude Cowork, Claude Console) and `started_at`. 50 incidents (2026-07-21 \u2192 2026-09-03), all resolved \u2014 the page's window cap, so history beyond 50 is only what this pipeline accumulates."
+      "trim": "none — committed whole",
+      "note": "status.anthropic.com/api/v2/incidents.json 301-redirects here; the final URL is the one registered. Statuspage v2 shape with `components` (claude.ai, Claude API (api.anthropic.com), Claude Code, Claude Cowork, Claude Console) and `started_at`. 50 incidents (2026-07-21 → 2026-09-03), all resolved — the page's window cap, so history beyond 50 is only what this pipeline accumulates."
     },
     {
       "path": "fixtures/status/google-cloud-status.json",
@@ -210,8 +230,8 @@
       "fetched_at": "2026-09-08T21:57:32Z",
       "http_status": 200,
       "raw_bytes": 158658,
-      "trim": "none \u2014 committed whole",
-      "note": "Google Cloud's own format: a bare array of {id, number, begin, end, severity, status_impact, external_desc, affected_products[{title}], uri, updates[]}. 6 incidents (2026-02-27 \u2192 2026-09-01) across 40 product titles; exactly 1 names a Gemini/Vertex AI product ('Vertex Gemini API'), which is the only row the parser keeps."
+      "trim": "none — committed whole",
+      "note": "Google Cloud's own format: a bare array of {id, number, begin, end, severity, status_impact, external_desc, affected_products[{title}], uri, updates[]}. 6 incidents (2026-02-27 → 2026-09-01) across 40 product titles; exactly 1 names a Gemini/Vertex AI product ('Vertex Gemini API'), which is the only row the parser keeps."
     },
     {
       "path": "fixtures/rankings/openrouter-rankings-daily.json",
@@ -220,7 +240,7 @@
       "fetched_at": "2026-09-09T12:01:00.740Z",
       "http_status": 200,
       "raw_bytes": 157467,
-      "trim": "none \u2014 the whole payload, 1,530 rows over 30 UTC days (2026-08-10 to 2026-09-08), meta.as_of 2026-09-09T12:00:03.352Z.",
+      "trim": "none — the whole payload, 1,530 rows over 30 UTC days (2026-08-10 to 2026-09-08), meta.as_of 2026-09-09T12:00:03.352Z.",
       "note": "The first keyed fetch after NUXT_OPENROUTER_API_KEY was set: production survey tick 2026-09-09T12:00Z, copied from R2 raw/openrouter-rankings-daily/2026-09-09T12:01:00.740Z.json. Replaces the fixture constructed from the documented schema at scaffold time."
     }
   ]

@@ -20,6 +20,8 @@ export const CHANGE_BADGE = {
 export const RULE_TEXT: Record<AlertView['rule'], string> = {
   's1-floor':
     'Deterministic floor rule: a new S-1/424B4 filing on a whitelisted CIK always alerts — no model in the loop.',
+  'cik-resolved':
+    'Deterministic floor rule: a registration filing whose filer matches a pending lab’s name pattern resolves that lab’s CIK and always alerts — no model in the loop.',
   'periodic-floor':
     'Deterministic floor rule: a new 10-Q/10-K filing on a whitelisted CIK always alerts — no model in the loop.',
   'agent-judge':

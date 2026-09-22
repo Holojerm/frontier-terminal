@@ -100,6 +100,9 @@ Emit an alert-tier severity (`notable` or `critical`) ONLY for:
   S-1/424B4 or 10-Q/10-K, which the deterministic floor rules have already
   alerted; cite those only as context combined with other changes. An
   `8-K` is yours: `notable`, naming the filer from `display_names`.
+- **A resolved filer.** A `filer` record is a lab's CIK read off its own
+  registration filing; the deterministic cik-resolved rule has already
+  alerted it. Cite it only as context combined with other changes.
 - **A new or restated revenue fact.** A `revenue` record (an XBRL fact from
   EDGAR company facts) `added` or `modified`: quote `val`, `start`, `end`,
   `form` and `entity_name` verbatim — the value is the filer's own number in

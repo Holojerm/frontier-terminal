@@ -4,6 +4,7 @@ import { withPollLock, type LockRetry, type LockStore } from './lock'
 import { manifestFixtures } from './parsers/fixture-provenance'
 import { runRefresh, type RawStore, type RefreshDeps, type RefreshReport } from './refresh'
 import { isSurveyInstant, sourceIdsForScope } from './scopes'
+import { deriveSources } from './derived'
 import { includeSources } from './sources'
 
 // What a poll task does, minus the bindings: decide whether this tick is
@@ -63,11 +64,14 @@ export async function runPoll(scope: PollScope, deps: PollDeps): Promise<PollOut
   const outcome = await withPollLock(
     lock,
     `${scope}@${now.toISOString()}`,
-    () =>
+    async () =>
       runRefresh(
         refreshDeps,
         scope,
-        sourceIdsForScope(scope, includeSources(deps.sourcesYaml, manifestFixtures)),
+        sourceIdsForScope(scope, [
+          ...includeSources(deps.sourcesYaml, manifestFixtures),
+          ...(await deriveSources(deps.db, deps.sourcesYaml)),
+        ]),
       ),
     retry,
   )

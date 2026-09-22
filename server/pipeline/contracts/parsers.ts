@@ -91,6 +91,23 @@ export type FilingRow = z.infer<typeof FilingRow>
 export const EdgarFtsOutput = z.strictObject({ rows: z.array(FilingRow) })
 export const EdgarSubmissionsOutput = z.strictObject({ rows: z.array(FilingRow) })
 
+// ---- Resolved filers (pending_filers × EDGAR hits) -------------------------
+
+// A lab's CIK read off its own registration filing: the earliest S-1-family
+// hit whose filer name matches the lab's pending_filers pattern. `name` is
+// EDGAR's display name for the filer, verbatim; the resolving filing is
+// named so the resolution is checkable from the row alone.
+export const FilerRow = z.strictObject({
+  provider: providerEnum,
+  cik: z.string().regex(/^\d{10}$/),
+  name: z.string().min(1),
+  resolved_form: z.string().min(1),
+  resolved_accession: z.string().min(1),
+  resolved_file_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  ...provenanceFields,
+})
+export type FilerRow = z.infer<typeof FilerRow>
+
 // ---- Revenue (XBRL company facts) -----------------------------------------
 
 // One duration fact from data.sec.gov/api/xbrl/companyfacts: the filer's
@@ -200,11 +217,15 @@ export const parserOutputSchemas = {
   'xai-greenhouse': GreenhouseJobsOutput,
   'openai-models-md': VendorMdPricingOutput,
   'openai-pricing-md': VendorMdPricingOutput,
+  // One registration for every derived per-model page (derived.ts); the
+  // committed fixture is one representative page.
+  'openai-model-md-gpt-5.6-sol': VendorMdPricingOutput,
   'anthropic-models-md': VendorMdPricingOutput,
   'anthropic-pricing-md': VendorMdPricingOutput,
   'xai-models-md': VendorMdPricingOutput,
   'google-pricing-html': GooglePricingOutput,
   'edgar-fts': EdgarFtsOutput,
+  'edgar-fts-openai': EdgarFtsOutput,
   'edgar-submissions-spcx': EdgarSubmissionsOutput,
   'edgar-submissions-msft': EdgarSubmissionsOutput,
   'edgar-submissions-amzn': EdgarSubmissionsOutput,

@@ -27,11 +27,13 @@ const PROVIDER: Record<string, string> = {
 }
 
 const roleNote = (s: SourceCoverage) =>
-  s.role === 'join'
-    ? 'join table — fetched to enrich another source, yields no rows of its own'
-    : s.role === 'cross-check'
-      ? 'cross-check only — never a source of record'
-      : null
+  s.derived_from
+    ? `derived at poll time from the ${s.derived_from} template — a key the store already held, filled into an audited URL`
+    : s.role === 'join'
+      ? 'join table — fetched to enrich another source, yields no rows of its own'
+      : s.role === 'cross-check'
+        ? 'cross-check only — never a source of record'
+        : null
 </script>
 
 <template>

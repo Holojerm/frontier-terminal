@@ -113,6 +113,7 @@ describe('scopes', () => {
   it('edgar is the SEC feeds; survey is every include source', () => {
     expect(sourceIdsForScope('edgar', ALL)).toEqual([
       'edgar-fts',
+      'edgar-fts-openai',
       'edgar-submissions-spcx',
       'edgar-submissions-msft',
       'edgar-submissions-amzn',
@@ -121,7 +122,7 @@ describe('scopes', () => {
       'edgar-companyfacts-spcx',
     ])
     expect(sourceIdsForScope('survey', ALL)).toEqual(ALL_IDS)
-    expect(ALL_IDS).toHaveLength(23)
+    expect(ALL_IDS).toHaveLength(24)
     // The status feeds ride the six-hourly survey only, never the EDGAR tick.
     expect(sourceIdsForScope('edgar', ALL)).not.toContain('openai-status')
   })
@@ -131,7 +132,7 @@ describe('baseline', () => {
   it('stores entities for every parser source, zero changes, one snapshot and one raw object each', async () => {
     const report = await run('survey', ALL_IDS)
 
-    expect(report.sources).toHaveLength(23)
+    expect(report.sources).toHaveLength(24)
     expect(report.failed).toBe(0)
     const byId = Object.fromEntries(report.sources.map((s) => [s.source_id, s]))
     // Sides and the cross-check are fetched and snapshotted but yield no entities.
@@ -149,8 +150,8 @@ describe('baseline', () => {
 
     expect(await rows.changes()).toHaveLength(0)
     expect(await rows.alerts()).toHaveLength(0)
-    expect(await rows.snapshots()).toHaveLength(23)
-    expect(await rows.runs()).toHaveLength(23)
+    expect(await rows.snapshots()).toHaveLength(24)
+    expect(await rows.runs()).toHaveLength(24)
     expect(await rows.ops()).toHaveLength(0)
 
     const entities = await rows.entities()
@@ -193,7 +194,7 @@ describe('baseline', () => {
     ])
 
     const keys = await rawKeys()
-    expect(keys).toHaveLength(23)
+    expect(keys).toHaveLength(24)
     expect(keys).toContain(
       (await rows.snapshots()).find((s) => s.source_id === 'xai-models-md')!.raw_key,
     )

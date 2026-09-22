@@ -23,11 +23,14 @@ export const entityTypeEnum = z.enum([
   'ranking',
   'revenue',
   'recommendation',
+  // 'filer': a lab's CIK, resolved from its own S-1 hit by the pending_filers
+  // patterns in sources.yaml (parsers/sec/pending-filers.ts). One row per lab.
+  'filer',
 ])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])
 // The two deterministic floors (server/pipeline/lanes.ts) and the judge lane.
-export const alertRuleEnum = z.enum(['agent-judge', 's1-floor', 'periodic-floor'])
+export const alertRuleEnum = z.enum(['agent-judge', 's1-floor', 'periodic-floor', 'cik-resolved'])
 // 'skipped': the source needs a credential the deploy does not have, so
 // nothing was attempted — distinct from 'failed' so a missing key is a
 // configuration state on the coverage panel, not an outage in the digest.

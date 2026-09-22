@@ -69,10 +69,13 @@ const { data: revenue, error } = await useFetch<RevenueData>('/api/revenue')
             deterministically, with no model in the loop.
           </p>
           <p>
-            When a lab files for itself, its CIK joins the whitelist, its company-facts feed is
-            registered with a committed fixture, and the lab is tagged as an <em>issuer</em> in the
-            source registry. From that poll on, its reported revenue appears above with the filing
-            linked. A public parent that consolidates a lab is tagged as a <em>parent</em> instead,
+            When a lab files for itself, nothing has to be typed. Two full-text queries watch for
+            S-1s mentioning Anthropic and OpenAI; the moment one is filed by an entity whose name
+            matches the lab’s pattern in the source registry, the CIK is read off that filing, a
+            critical alert fires, the CIK joins the whitelist, and the filer’s submissions and XBRL
+            company-facts feeds are derived and polled from the next tick. Its reported revenue then
+            appears above as an <em>issuer</em> filing, with the resolving filing linked. A public
+            parent that consolidates a lab is tagged as a <em>parent</em> in the registry instead,
             and its series is labelled as the parent’s wherever it is shown.
           </p>
         </div>

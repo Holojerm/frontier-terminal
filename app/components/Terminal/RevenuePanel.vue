@@ -21,11 +21,14 @@ const shown = (p: RevenueProviderView) =>
 const overflow = (p: RevenueProviderView) =>
   props.compact ? 0 : Math.max(0, p.periods.length - MAX_PERIODS)
 
+const filerName = (p: RevenueProviderView) =>
+  `${p.filer?.entity_name ?? p.filer?.ticker ?? p.display} (${p.filer?.ticker ?? `CIK ${p.filer?.cik}`})`
+
 const relationLine = (p: RevenueProviderView) =>
   p.filer?.relation === 'parent'
-    ? `${p.filer.entity_name ?? p.filer.ticker} (${p.filer.ticker}) consolidated — the parent’s top line, not ${p.display}’s`
+    ? `${filerName(p)} consolidated — the parent’s top line, not ${p.display}’s`
     : p.filer
-      ? `${p.filer.entity_name ?? p.filer.ticker} (${p.filer.ticker}) — the lab’s own filing`
+      ? `${filerName(p)} — the lab’s own filing${p.filer.tagged_by === 'resolved' && p.filer.resolved_from ? `, CIK resolved from its ${p.filer.resolved_from.form} of ${p.filer.resolved_from.file_date}` : ''}`
       : ''
 </script>
 
@@ -77,7 +80,17 @@ const relationLine = (p: RevenueProviderView) =>
             title="Parent’s consolidated revenue"
             :description="relationLine(p)"
           />
-          <p v-else class="text-sm text-toned">{{ relationLine(p) }}</p>
+          <p v-else class="text-sm text-toned">
+            {{ relationLine(p) }}
+            <a
+              v-if="p.filer?.resolved_from"
+              :href="p.filer.resolved_from.filing_url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="underline underline-offset-2 hover:text-default"
+              >{{ p.filer.resolved_from.accession_no }}</a
+            >
+          </p>
 
           <div class="overflow-x-auto">
             <table class="w-full text-xs">

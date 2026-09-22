@@ -137,8 +137,28 @@ export function splitPeriods<T extends RevenuePeriod>(
   return { periods, superseded, tags }
 }
 
+/** A lab's `filer` row (server/pipeline/parsers/sec/pending-filers.ts), as the panel needs it. */
+interface ResolvedFilerView {
+  cik: string
+  name: string
+  form: string
+  accession_no: string
+  file_date: string
+}
+
+function resolvedFilerFromPayload(payload: string): ResolvedFilerView | null {
+  const p = parseJson(payload)
+  const cik = str(p?.cik)
+  const name = str(p?.name)
+  const form = str(p?.resolved_form)
+  const accession_no = str(p?.resolved_accession)
+  const file_date = str(p?.resolved_file_date)
+  if (!p || !cik || !name || !form || !accession_no || !file_date) return null
+  return { cik, name, form, accession_no, file_date }
+}
+
 export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<RevenueData> {
-  const [rows, stamps] = await Promise.all([
+  const [rows, filerRows, stamps] = await Promise.all([
     db
       .select({
         entity_key: tables.entities.entity_key,
@@ -149,13 +169,26 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
       })
       .from(tables.entities)
       .where(eq(tables.entities.entity_type, 'revenue')),
+    db
+      .select({ provider: tables.entities.provider, payload: tables.entities.payload })
+      .from(tables.entities)
+      .where(eq(tables.entities.entity_type, 'filer')),
     sourceStamps(db),
   ])
+  const resolved = new Map<string, ResolvedFilerView>()
+  for (const row of filerRows) {
+    const view = resolvedFilerFromPayload(row.payload)
+    if (view) resolved.set(row.provider, view)
+  }
 
   const providers: RevenueProviderView[] = []
   for (const provider of PROVIDER_ORDER) {
     const display = PROVIDER_DISPLAY[provider]
-    const filer = ctx.revenueFilers.get(provider) ?? null
+    // The audited file first; a filer the poll resolved from the lab's own
+    // S-1 fills a null entry as an issuer, keyed by provider (no ticker yet).
+    const tagged = ctx.revenueFilers.get(provider) ?? null
+    const auto = tagged ? null : (resolved.get(provider) ?? null)
+    const filer = tagged ?? (auto ? { ticker: null, relation: 'issuer' as const } : null)
     if (!filer) {
       providers.push({
         provider,
@@ -170,8 +203,9 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
       continue
     }
 
-    const cik = ctx.whitelist.get(filer.ticker) ?? null
-    const factsId = companyfactsSourceId(filer.ticker)
+    const cik = filer.ticker ? (ctx.whitelist.get(filer.ticker) ?? null) : (auto?.cik ?? null)
+    const feedKey = filer.ticker ?? provider
+    const factsId = companyfactsSourceId(feedKey)
     const registered = ctx.registry.sources.find((s) => s.source_id === factsId)
     const parsed = rows
       .filter((r) => r.provider === provider)
@@ -179,7 +213,7 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
       .filter((r): r is NonNullable<typeof r> => r !== null && (cik === null || r.cik === cik))
     const { periods, superseded, tags } = splitPeriods(parsed)
 
-    const sources: SourceRef[] = [factsId, submissionsSourceId(filer.ticker)]
+    const sources: SourceRef[] = [factsId, submissionsSourceId(feedKey)]
       .map((id) => {
         const stamp = stamps.get(id)
         return stamp
@@ -196,10 +230,23 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
     const view: RevenueFilerView = {
       ticker: filer.ticker,
       cik: cik ?? '',
-      entity_name: parsed[0]?.entity_name ?? null,
+      entity_name: parsed[0]?.entity_name ?? auto?.name ?? null,
       relation: filer.relation,
+      tagged_by: tagged ? 'sources.yaml' : 'resolved',
+      resolved_from:
+        auto && cik
+          ? {
+              form: auto.form,
+              accession_no: auto.accession_no,
+              file_date: auto.file_date,
+              filing_url: filingIndexUrl(cik, auto.accession_no),
+            }
+          : null,
       source_id: factsId,
-      caveat: registered?.caveat ?? null,
+      caveat:
+        registered?.caveat ??
+        ctx.derivedTemplates.find((t) => t.id === 'edgar-companyfacts')?.caveat ??
+        null,
     }
     providers.push({
       provider: provider as BigFour,

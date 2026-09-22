@@ -37,7 +37,8 @@ export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
   },
   'xai-greenhouse': { label: 'xAI Greenhouse jobs', role: 'primary' },
   'xai-greenhouse-departments': { label: 'xAI Greenhouse departments (join)', role: 'join' },
-  'edgar-fts': { label: 'EDGAR full-text search (S-1 tripwire)', role: 'sec' },
+  'edgar-fts': { label: 'EDGAR full-text search (S-1 tripwire, “Anthropic”)', role: 'sec' },
+  'edgar-fts-openai': { label: 'EDGAR full-text search (S-1 tripwire, “OpenAI”)', role: 'sec' },
   'edgar-submissions-spcx': { label: 'EDGAR submissions (SPCX — xAI’s parent)', role: 'sec' },
   'edgar-submissions-msft': { label: 'EDGAR submissions (MSFT)', role: 'sec' },
   'edgar-submissions-amzn': { label: 'EDGAR submissions (AMZN)', role: 'sec' },
@@ -234,7 +235,37 @@ export function readSourceRegistry(sourcesYaml: string): SourceRegistry {
   return { sources, cuts }
 }
 
-/** The label for a source id, or the id itself so an unlabeled source is still named. */
+/** Derived source ids (server/pipeline/derived.ts) are named by their template. */
+const DERIVED_LABELS: readonly {
+  prefix: string
+  label: (key: string) => string
+  role: SourceRole
+}[] = [
+  {
+    prefix: 'edgar-submissions-',
+    label: (k) => `EDGAR submissions (${k}, resolved filer)`,
+    role: 'sec',
+  },
+  {
+    prefix: 'edgar-companyfacts-',
+    label: (k) => `EDGAR XBRL company facts (${k}, resolved filer)`,
+    role: 'sec',
+  },
+  { prefix: 'openai-model-md-', label: (k) => `OpenAI model page (${k})`, role: 'primary' },
+]
+
+/** The template a derived source id came from, or null for a registered one. */
+export function derivedTemplateOf(sourceId: string): string | null {
+  if (SOURCE_LABELS[sourceId]) return null
+  const d = DERIVED_LABELS.find((x) => sourceId.startsWith(x.prefix))
+  return d ? d.prefix.slice(0, -1) : null
+}
+
+/** The label for a source id: registered, derived by template, or the id itself so an unlabeled source is still named. */
 export function labelOf(sourceId: string): SourceLabel {
-  return SOURCE_LABELS[sourceId] ?? { label: sourceId, role: 'primary' }
+  const known = SOURCE_LABELS[sourceId]
+  if (known) return known
+  const d = DERIVED_LABELS.find((x) => sourceId.startsWith(x.prefix))
+  if (d) return { label: d.label(sourceId.slice(d.prefix.length)), role: d.role }
+  return { label: sourceId, role: 'primary' }
 }

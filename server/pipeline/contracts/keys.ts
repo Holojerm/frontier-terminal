@@ -39,6 +39,12 @@ export function rankingKey(date: string, modelPermaslug: string): string {
   return `ranking:${date}:${modelPermaslug}`
 }
 
+// One resolved filer per lab: the row is rewritten if the resolution changes
+// (it should not), never duplicated.
+export function filerKey(provider: Provider): string {
+  return `filer:${provider}`
+}
+
 // One XBRL fact: a filer's value for one tag over one period, as one filing
 // reported it. The accession number is part of the key because a 10-K
 // restates the prior year's quarters — the same period from two filings is
