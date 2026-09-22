@@ -16,6 +16,17 @@ compatibility_date = "2025-09-01"
 # inherits the safe behaviour without anyone having to remember why.
 compatibility_flags = ["nodejs_compat", "queue_consumer_wait_for_wait_until"]
 
+# Custom domain. `custom_domain = true` makes wrangler create the DNS records
+# and certificate in the frontierterm.com zone on deploy, so nothing is set up
+# by hand in the dashboard. The zone must live in the same account as the Worker.
+# The *.workers.dev origin keeps answering; server/middleware/canonical-host.ts
+# redirects page requests there to this origin, and NUXT_PUBLIC_APP_URL below
+# makes every canonical, sitemap and og: URL agree with it.
+routes = [
+  { pattern = "frontierterm.com", custom_domain = true },
+  { pattern = "www.frontierterm.com", custom_domain = true },
+]
+
 [[d1_databases]]
 binding = "DB"
 database_name = "frontier-terminal-db"
@@ -95,7 +106,7 @@ destination_address = "jeremy.ettlinger@gmail.com"
 NUXT_PUBLIC_APP_NAME = "Frontier Terminal"
 # Canonical public origin, no trailing slash. sitemap.xml, robots.txt and og:
 # tags build absolute links from this.
-NUXT_PUBLIC_APP_URL = "https://frontier-terminal.jeremy-ettlinger.workers.dev"
+NUXT_PUBLIC_APP_URL = "https://frontierterm.com"
 # Ops digest routing — pairs with the [[send_email]] block above. `to` must be
 # the same verified destination address the binding is pinned to; `from` must
 # be on a zone in this account with Email Routing enabled. Not secrets: the
