@@ -53,11 +53,9 @@ const ALERTS: NavLink = { label: 'Alerts', to: '/alerts' }
 const SECTIONS: NavSection[] = [
   {
     label: 'Labs',
-    links: LABS.map((lab) => ({
-      label: LAB_DISPLAY[lab],
-      to: labPath(lab),
-      description: `${LAB_DISPLAY[lab]} on every axis, one page.`,
-    })),
+    // No description: the label is the whole meaning, and four lines saying
+    // "on every axis" under four lab names is a menu repeating itself.
+    links: LABS.map((lab) => ({ label: LAB_DISPLAY[lab], to: labPath(lab) })),
   },
   {
     label: 'Economics',
