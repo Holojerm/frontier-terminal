@@ -249,7 +249,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'Severity reads as a tier: info is the ticker (what moved, low stakes — a role added, a title reworded); notable and critical are alerts ' +
         '(a price move, a new SKU, a department-level hiring shift, a filing). tier selects alert, ticker, or all (default all). ' +
         'rule is s1-floor (deterministic: a registration statement appeared on EDGAR), periodic-floor (deterministic: a 10-Q/10-K on a ' +
-        'whitelisted CIK) or agent-judge (a model’s reading of change rows, labelled as such). total is the count on file for the chosen tier. ' +
+        'whitelisted CIK), cik-resolved (deterministic: a pending lab’s own S-1 appeared and its CIK was read off it) or agent-judge (a model’s reading of change rows, labelled as such). total is the count on file for the chosen tier. ' +
         `With a severity filter, the newest ${ALERT_SEARCH_DEPTH} rows of the tier are searched and up to limit returned. ` +
         PROVENANCE,
       inputSchema: z.object({
@@ -423,7 +423,8 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'Revenue each lab, or the public parent that consolidates it, has reported to the SEC, read from EDGAR’s XBRL company facts. ' +
         'disclosure is none (no audited disclosure on file — nothing is shown, and press run-rates are deliberately absent), parent ' +
         '(a public parent’s consolidated figure, labelled as the parent’s: today xAI via SpaceX/SPCX, whose XBRL carries no xAI segment), ' +
-        'issuer (the lab files for itself) or no_rows (tagged, nothing parsed yet). periods are the filer’s own USD values per ' +
+        'issuer (the lab files for itself — tagged in sources.yaml, or resolved at poll time from its own S-1 by the pending_filers patterns, ' +
+        'in which case filer.tagged_by is resolved and filer.resolved_from names the filing) or no_rows (tagged, nothing parsed yet). periods are the filer’s own USD values per ' +
         '(start, end) from the newest filing that reported them, each with the tag, form, accession and a link to the filing index; ' +
         'days distinguishes a quarter (~91) from a half (~182) or a year (~365) — nothing is derived across periods. superseded lists ' +
         'values a later filing restated. Never call a parent’s number the lab’s. Optional provider filter. ' +

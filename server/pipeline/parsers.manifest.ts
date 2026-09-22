@@ -9,6 +9,7 @@ import './parsers/hiring/xai-greenhouse'
 // Vendor-md pricing/catalog + EDGAR
 import './parsers/pricing/openai-models'
 import './parsers/pricing/openai-pricing'
+import './parsers/pricing/openai-model-page'
 import './parsers/pricing/anthropic-pricing'
 import './parsers/pricing/anthropic-models-overview'
 import './parsers/pricing/xai-models'

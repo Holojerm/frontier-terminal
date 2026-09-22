@@ -65,6 +65,8 @@ export interface SourceCoverage {
   last_run: SourceRunStamp | null
   /** Rows in the current entity set that came from this source. */
   entity_count: number
+  /** Set for a source the store derived for itself (sources.yaml derived_sources): the template id. */
+  derived_from: string | null
 }
 
 export interface TableCounts {
@@ -444,12 +446,22 @@ export interface RevenuePeriod extends Prov {
 }
 
 export interface RevenueFilerView {
-  ticker: string
+  /** The ticker sources.yaml tags; null for a filer resolved from its own S-1 (no ticker until it lists). */
+  ticker: string | null
   cik: string
   /** As the filer's company-facts payload names itself. */
   entity_name: string | null
   /** issuer: the lab files for itself. parent: a public parent consolidates it, and the series is the parent's. */
   relation: 'issuer' | 'parent'
+  /** How the filer was tagged: the audited file, or resolved at poll time from a registration filing (pending_filers). */
+  tagged_by: 'sources.yaml' | 'resolved'
+  /** For a resolved filer: the filing the CIK was read from. */
+  resolved_from: {
+    form: string
+    accession_no: string
+    file_date: string
+    filing_url: string
+  } | null
   source_id: string
   /** The audit's caveat for the feed — for a parent, the words that say whose revenue this is. */
   caveat: string | null
@@ -659,7 +671,15 @@ export interface FieldDiff {
 export interface ChangeView extends Prov {
   id: string
   entity_key: string
-  entity_type: 'job' | 'model' | 'filing' | 'incident' | 'ranking' | 'revenue' | 'recommendation'
+  entity_type:
+    | 'job'
+    | 'model'
+    | 'filing'
+    | 'incident'
+    | 'ranking'
+    | 'revenue'
+    | 'recommendation'
+    | 'filer'
   provider: ProviderId
   change_type: 'added' | 'removed' | 'modified'
   detected_at: string
@@ -674,7 +694,7 @@ export interface AlertView extends Prov {
   severity: AlertSeverity
   headline: string
   explanation: string
-  rule: 'agent-judge' | 's1-floor' | 'periodic-floor'
+  rule: 'agent-judge' | 's1-floor' | 'periodic-floor' | 'cik-resolved'
   created_at: string
   change_ids: string[]
   /** The cited rows, resolved; ids that resolve to nothing are listed in `missing`. */

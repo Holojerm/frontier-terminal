@@ -13,11 +13,13 @@ import anthropicModelsOverview from '../../fixtures/pricing/anthropic-models-ove
 import anthropicPricing from '../../fixtures/pricing/anthropic-pricing.md?raw'
 import googlePricing from '../../fixtures/pricing/google-pricing.html?raw'
 import openaiModels from '../../fixtures/pricing/openai-models.md?raw'
+import openaiModelPage from '../../fixtures/pricing/openai-model-gpt-5.6-sol.md?raw'
 import openaiPricing from '../../fixtures/pricing/openai-pricing.md?raw'
 import openrouterModels from '../../fixtures/pricing/openrouter-models.json?raw'
 import openrouterRankings from '../../fixtures/rankings/openrouter-rankings-daily.json?raw'
 import xaiModels from '../../fixtures/pricing/xai-models.md?raw'
 import edgarCompanyfactsSpcx from '../../fixtures/sec/edgar-companyfacts-spcx.json?raw'
+import edgarFtsOpenai from '../../fixtures/sec/edgar-fts-openai.json?raw'
 import edgarFts from '../../fixtures/sec/edgar-fts.json?raw'
 import edgarSubmissionsAmzn from '../../fixtures/sec/edgar-submissions-amzn.json?raw'
 import edgarSubmissionsGoogl from '../../fixtures/sec/edgar-submissions-googl.json?raw'
@@ -43,11 +45,13 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/pricing/anthropic-pricing.md': anthropicPricing,
   'fixtures/pricing/google-pricing.html': googlePricing,
   'fixtures/pricing/openai-models.md': openaiModels,
+  'fixtures/pricing/openai-model-gpt-5.6-sol.md': openaiModelPage,
   'fixtures/pricing/openai-pricing.md': openaiPricing,
   'fixtures/pricing/openrouter-models.json': openrouterModels,
   'fixtures/pricing/xai-models.md': xaiModels,
   'fixtures/rankings/openrouter-rankings-daily.json': openrouterRankings,
   'fixtures/sec/edgar-companyfacts-spcx.json': edgarCompanyfactsSpcx,
+  'fixtures/sec/edgar-fts-openai.json': edgarFtsOpenai,
   'fixtures/sec/edgar-fts.json': edgarFts,
   'fixtures/sec/edgar-submissions-amzn.json': edgarSubmissionsAmzn,
   'fixtures/sec/edgar-submissions-googl.json': edgarSubmissionsGoogl,

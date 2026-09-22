@@ -6,13 +6,16 @@ import {
   type ChangeRow,
   type EntityRow,
   type PollScope,
+  type Provider,
   type SourceRunRow,
   type StoredEntityRow,
 } from './contracts'
 import { diff } from './diff'
 import type { SourceFetcher } from './fetch'
-import { LANES } from './lanes'
+import { derivedKeyOf, laneFor } from './lanes'
+import { deriveSources, resolvedFilers } from './derived'
 import { manifestFixtures } from './parsers/fixture-provenance'
+import { parsePendingFilersBlock, type PendingFilers } from './parsers/sec/pending-filers'
 import { parseRevenueFilersBlock, type RevenueFilers } from './parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock, type CikWhitelist } from './parsers/sec/whitelist'
 import { includeSources, type FetchSource } from './sources'
@@ -164,11 +167,13 @@ async function parseAndStore(
   byId: ReadonlyMap<string, Fetched>,
   whitelist: CikWhitelist,
   revenueFilers: RevenueFilers,
+  pendingFilers: PendingFilers,
+  resolvedProviders: ReadonlySet<Provider>,
 ): Promise<Outcome> {
   const { source, fetched_at, body } = fetched
   if (!body) return quiet(fetched.skipped ? 'skipped' : 'failed', fetched.failure, null)
 
-  const lane = LANES[source.source_id]
+  const lane = laneFor(source.source_id)
   if (!lane) {
     return quiet(
       body.unchanged ? 'unchanged' : 'ok',
@@ -192,6 +197,9 @@ async function parseAndStore(
     side: (id) => byId.get(id)!.body!.text,
     whitelist,
     revenueFilers,
+    pendingFilers,
+    resolvedProviders,
+    derivedKey: derivedKeyOf(source.source_id),
   })
   const note = parsed.note ?? null
 
@@ -303,9 +311,26 @@ export async function runRefresh(
 ): Promise<RefreshReport> {
   const now = deps.now ?? (() => new Date())
   const started_at = now().toISOString()
-  const all = includeSources(deps.sourcesYaml, manifestFixtures)
-  const whitelist = parseCikWhitelistBlock(deps.sourcesYaml)
-  const revenueFilers = parseRevenueFilersBlock(deps.sourcesYaml)
+  // The audited sources plus the ones the store derives for itself (a
+  // resolved lab's feeds, the OpenAI model pages) — server/pipeline/derived.ts.
+  const all = [
+    ...includeSources(deps.sourcesYaml, manifestFixtures),
+    ...(await deriveSources(deps.db, deps.sourcesYaml)),
+  ]
+  // A resolved lab joins the whitelist and the revenue filers for this tick
+  // under its provider id, as an issuer; the audited file's entries win a
+  // collision, so a lab tagged there is never re-resolved.
+  const whitelist = new Map(parseCikWhitelistBlock(deps.sourcesYaml))
+  const revenueFilers = new Map(parseRevenueFilersBlock(deps.sourcesYaml))
+  const pendingFilers = parsePendingFilersBlock(deps.sourcesYaml)
+  const resolvedProviders = new Set<Provider>()
+  for (const [provider, filer] of revenueFilers) if (filer) resolvedProviders.add(provider)
+  for (const filer of await resolvedFilers(deps.db)) {
+    if (resolvedProviders.has(filer.provider)) continue
+    resolvedProviders.add(filer.provider)
+    whitelist.set(filer.provider.toUpperCase(), filer.cik)
+    revenueFilers.set(filer.provider, { ticker: filer.provider.toUpperCase(), relation: 'issuer' })
+  }
 
   const unknown = sourceIds.filter((id) => !all.some((s) => s.source_id === id))
   if (unknown.length) throw new Error(`not include sources: ${unknown.join(', ')}`)
@@ -313,7 +338,7 @@ export async function runRefresh(
   // Sides a wanted source joins against ride along even when the caller did
   // not name them; their runs are reported like any other source's.
   const wantedIds = new Set(sourceIds)
-  for (const id of sourceIds) for (const side of LANES[id]?.sides ?? []) wantedIds.add(side)
+  for (const id of sourceIds) for (const side of laneFor(id)?.sides ?? []) wantedIds.add(side)
   const sources = all.filter((s) => wantedIds.has(s.source_id))
 
   const byId = new Map<string, Fetched>()
@@ -338,7 +363,15 @@ export async function runRefresh(
     const fetched = byId.get(source.source_id)!
     let outcome: Outcome
     try {
-      outcome = await parseAndStore(deps, fetched, byId, whitelist, revenueFilers)
+      outcome = await parseAndStore(
+        deps,
+        fetched,
+        byId,
+        whitelist,
+        revenueFilers,
+        pendingFilers,
+        resolvedProviders,
+      )
     } catch (err) {
       outcome = quiet('failed', describeError(err), fetched.body?.snapshot_id ?? null)
     }
