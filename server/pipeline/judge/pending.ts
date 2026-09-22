@@ -6,7 +6,11 @@ import type { PipelineDb } from '../store'
 
 // What GET /api/judge/pending hands the routine: change rows detected since
 // the last judged run, minus the ones that only say "the board re-stamped
-// its timestamps", newest first and capped.
+// its timestamps" and the tripwire hits on filers nobody here tracks, newest
+// first and capped.
+//
+// Nothing is deleted by either filter. The rows stay in `changes`, in the
+// export and on every public endpoint; they just do not wake the judge.
 
 /**
  * Newest-first cap on what one judge run considers. Changes the model stays
@@ -56,6 +60,46 @@ export function isTimestampOnlyChange(change: {
   return stableEquals(strip(change.before_json), strip(change.after_json))
 }
 
+/**
+ * A `filing` change about a company this terminal does not track.
+ *
+ * The two EDGAR full-text tripwires sweep every filer for the words
+ * "Anthropic" and "OpenAI", and sources.yaml records the verdict on that
+ * plainly: "Open keyword sweeps across all filers are confirmed noisy
+ * (micro-cap false positives) — whitelist only." A micro-cap whose S-1 names
+ * a lab in its risk factors is a hit, and the row is kept — the tripwire only
+ * works because every hit is stored and diffed. What it is not is an event
+ * about a frontier lab.
+ *
+ * The deterministic rules already read it that way: s1-floor alerts on
+ * whitelisted rows only. The judge did not, and the prompt tells it every
+ * filing record is alert-worthy, so it wrote headlines like "Oura Inc. (OURA)
+ * files S-1/A matching an EDGAR full-text search for 'Anthropic'" — where the
+ * only thing tying the filing to a lab was the query, which is not in the
+ * record. The grounding gate rejected them, correctly, five times in two
+ * weeks. This stops them being offered in the first place.
+ *
+ * `whitelist_cik` is the discriminator, and it is safe to filter on: a
+ * submissions or company-facts feed is only ever derived for a CIK that is
+ * already whitelisted or resolved, so those rows always carry one. A lab's
+ * OWN first S-1 arrives before it is whitelisted and so is filtered here —
+ * and is exactly what the deterministic cik-resolved rule fires on
+ * (server/pipeline/lanes.ts), at `critical`, with no model in the loop. From
+ * the next poll the lab is whitelisted and its filings reach the judge.
+ */
+export function isUntrackedFilingChange(change: {
+  entity_type: string
+  before_json: string | null
+  after_json: string | null
+}): boolean {
+  if (change.entity_type !== 'filing') return false
+  // A removal carries its row in before_json; everything else in after_json.
+  const json = change.after_json ?? change.before_json
+  if (json === null) return false
+  const row = JSON.parse(json) as { whitelist_cik?: unknown }
+  return row.whitelist_cik === null || row.whitelist_cik === undefined
+}
+
 function stableEquals(a: unknown, b: unknown): boolean {
   if (a === b) return true
   if (typeof a !== 'object' || typeof b !== 'object' || a === null || b === null) return false
@@ -79,7 +123,7 @@ export async function judgedThrough(db: PipelineDb): Promise<string | null> {
 
 export interface PendingChanges {
   changes: ChangeRow[]
-  /** Pending after the timestamp filter, before the cap. */
+  /** Pending after both filters, before the cap. */
   total_pending: number
   /** The cursor the selection started from; null on the first run. */
   since: string | null
@@ -95,7 +139,7 @@ export async function pendingChanges(
     .from(tables.changes)
     .where(and(judgeEligible(), since ? gt(tables.changes.detected_at, since) : undefined))
     .orderBy(desc(tables.changes.detected_at), desc(tables.changes.id))
-  const pending = rows.filter((row) => !isTimestampOnlyChange(row))
+  const pending = rows.filter((row) => !isTimestampOnlyChange(row) && !isUntrackedFilingChange(row))
   return {
     changes: pending.slice(0, limit).map((row) => ChangeRow.parse(row)),
     total_pending: pending.length,
