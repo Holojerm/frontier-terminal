@@ -4,7 +4,12 @@ import * as tables from '../../db/schema'
 import { recordOpsEvent } from '../../utils/ops'
 import type { LockStore } from '../lock'
 import type { PipelineDb } from '../store'
-import { isTimestampOnlyChange, judgeEligible, judgedThrough } from './pending'
+import {
+  isTimestampOnlyChange,
+  isUntrackedFilingChange,
+  judgeEligible,
+  judgedThrough,
+} from './pending'
 import { JUDGE_OPS_PATH } from './submit'
 
 // Silence watchdog. The routine runs on the owner's claude.ai account, so
@@ -40,10 +45,10 @@ export async function checkJudgeSilence(
   if (run?.at && run.at > cutoff) return 'recent-run'
 
   // Oldest first, bounded: the question is "is anything old still waiting",
-  // and the first non-timestamp-only row answers it. The bound only matters
-  // when a backlog is made entirely of re-stamped job rows, which the
-  // pending route would not offer either — so a miss there is a quiet day,
-  // not a lie.
+  // and the first row the pending route would actually offer answers it. Both
+  // of that route's filters are applied here for that reason — a backlog made
+  // of rows the judge is never handed is not a backlog the judge owes, and
+  // reporting one would be a lie in the direction that wakes somebody.
   const since = await judgedThrough(db)
   const oldest = await db
     .select({
@@ -62,7 +67,8 @@ export async function checkJudgeSilence(
     )
     .orderBy(asc(tables.changes.detected_at))
     .limit(200)
-  if (!oldest.some((row) => !isTimestampOnlyChange(row))) return 'no-backlog'
+  const owed = oldest.some((row) => !isTimestampOnlyChange(row) && !isUntrackedFilingChange(row))
+  if (!owed) return 'no-backlog'
 
   if ((await marker.get(JUDGE_SILENT_MARKER_KEY)) !== null) return 'already-notified'
   await recordOpsEvent(db, {

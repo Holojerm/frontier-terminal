@@ -99,7 +99,13 @@ Emit an alert-tier severity (`notable` or `critical`) ONLY for:
 - **Any SEC filing change.** Any `filing` record — except a filing-only
   S-1/424B4 or 10-Q/10-K, which the deterministic floor rules have already
   alerted; cite those only as context combined with other changes. An
-  `8-K` is yours: `notable`, naming the filer from `display_names`.
+  `8-K` is yours: `notable`, naming the filer from `display_names`. Every
+  `filing` record you are shown is a filer this terminal tracks; the
+  full-text tripwires also hit companies that merely mention a lab in their
+  own text, and those are filtered out before they reach you. So the filer
+  is the subject — never write that a filing matched a search term, because
+  the search term is not in the record and the grounding gate will reject
+  the alert.
 - **A resolved filer.** A `filer` record is a lab's CIK read off its own
   registration filing; the deterministic cik-resolved rule has already
   alerted it. Cite it only as context combined with other changes.
