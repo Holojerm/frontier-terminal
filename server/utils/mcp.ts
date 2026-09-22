@@ -249,7 +249,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'Severity reads as a tier: info is the ticker (what moved, low stakes — a role added, a title reworded); notable and critical are alerts ' +
         '(a price move, a new SKU, a department-level hiring shift, a filing). tier selects alert, ticker, or all (default all). ' +
         'rule is s1-floor (deterministic: a registration statement appeared on EDGAR), periodic-floor (deterministic: a 10-Q/10-K on a ' +
-        'whitelisted CIK), cik-resolved (deterministic: a pending lab’s own S-1 appeared and its CIK was read off it) or agent-judge (a model’s reading of change rows, labelled as such). total is the count on file for the chosen tier. ' +
+        'whitelisted CIK), cik-resolved (deterministic: a pending lab’s own S-1 appeared and its CIK was read off it), model-floor (deterministic: a model slug no vendor catalog listed before) or agent-judge (a model’s reading of change rows, labelled as such). total is the count on file for the chosen tier. ' +
         `With a severity filter, the newest ${ALERT_SEARCH_DEPTH} rows of the tier are searched and up to limit returned. ` +
         PROVENANCE,
       inputSchema: z.object({

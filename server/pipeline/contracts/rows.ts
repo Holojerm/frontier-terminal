@@ -29,8 +29,14 @@ export const entityTypeEnum = z.enum([
 ])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])
-// The two deterministic floors (server/pipeline/lanes.ts) and the judge lane.
-export const alertRuleEnum = z.enum(['agent-judge', 's1-floor', 'periodic-floor', 'cik-resolved'])
+// The deterministic rules (server/pipeline/lanes.ts, model-floor.ts) and the judge lane.
+export const alertRuleEnum = z.enum([
+  'agent-judge',
+  's1-floor',
+  'periodic-floor',
+  'cik-resolved',
+  'model-floor',
+])
 // 'skipped': the source needs a credential the deploy does not have, so
 // nothing was attempted — distinct from 'failed' so a missing key is a
 // configuration state on the coverage panel, not an outage in the digest.
@@ -47,7 +53,8 @@ export const sourceRunStatusEnum = z.enum([
   'skipped',
   'absent',
 ])
-export const pollScopeEnum = z.enum(['edgar', 'survey'])
+// 'tripwire': an off-cycle poll of the model catalogs (server/pipeline/tripwire.ts).
+export const pollScopeEnum = z.enum(['edgar', 'survey', 'tripwire'])
 export type PollScope = z.infer<typeof pollScopeEnum>
 
 const sha256Hex = z.string().regex(/^[0-9a-f]{64}$/)
