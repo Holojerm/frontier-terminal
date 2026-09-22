@@ -9,6 +9,7 @@ import { buildAlertRows, gateJudgeSubmission } from '../../server/pipeline/judge
 import { groundAlerts } from '../../server/pipeline/judge/grounding'
 import {
   isTimestampOnlyChange,
+  isUntrackedFilingChange,
   JUDGE_CHANGE_LIMIT,
   pendingChanges,
 } from '../../server/pipeline/judge/pending'
@@ -114,6 +115,37 @@ function change(n: number, detected_at: string, over: Partial<ChangeRow> = {}): 
   })
 }
 
+/** A filing `added` row as the EDGAR lanes store one: the parser row is the payload. */
+function filingAdded(
+  accession: string,
+  displayName: string,
+  whitelist_cik: string | null,
+  detected_at = DETECTED_AT,
+): ChangeRow {
+  const row = {
+    accession_no: accession,
+    form: 'S-1/A',
+    file_date: '2026-09-21',
+    ciks: ['0001234567'],
+    display_names: [displayName],
+    whitelist_cik,
+  }
+  return ChangeRow.parse({
+    id: contentHash({ accession, whitelist_cik }),
+    entity_key: `filing:${accession}`,
+    entity_type: 'filing',
+    provider: 'other',
+    change_type: 'added',
+    before_hash: null,
+    after_hash: contentHash(row),
+    before_json: null,
+    after_json: JSON.stringify(row),
+    detected_at,
+    source_url: 'https://efts.sec.gov/LATEST/search-index?q=%22Anthropic%22&forms=S-1',
+    fetched_at: detected_at,
+  })
+}
+
 /** A job `modified` row whose before/after differ in the given fields only. */
 function jobModified(
   id: string,
@@ -210,7 +242,59 @@ describe('isTimestampOnlyChange', () => {
   })
 })
 
+describe('isUntrackedFilingChange', () => {
+  // The real one: Oura Inc. filed an S-1/A that names Anthropic in its own
+  // text, the tripwire hit it, and the judge wrote a headline whose only tie
+  // to a lab was the query string. The grounding gate rejected it five times
+  // in two weeks; it should never have been offered.
+  it('is true for a tripwire hit on a filer this terminal does not track', () => {
+    expect(isUntrackedFilingChange(filingAdded('0001193125-26-396051', 'Oura Inc.', null))).toBe(
+      true,
+    )
+  })
+
+  it('is false for a filing from a whitelisted filer', () => {
+    expect(
+      isUntrackedFilingChange(
+        filingAdded('0001181412-26-000123', 'SPACE EXPLORATION TECHNOLOGIES CORP', '0001181412'),
+      ),
+    ).toBe(false)
+  })
+
+  it('reads a removal off before_json, and leaves every non-filing row alone', () => {
+    const removed = ChangeRow.parse({
+      ...filingAdded('0001193125-26-396051', 'Oura Inc.', null),
+      change_type: 'removed',
+      before_json: JSON.stringify({ whitelist_cik: null }),
+      after_json: null,
+      before_hash: contentHash({ whitelist_cik: null }),
+      after_hash: null,
+    })
+    expect(isUntrackedFilingChange(removed)).toBe(true)
+    for (const c of changes) expect(isUntrackedFilingChange(c)).toBe(false)
+  })
+})
+
 describe('pendingChanges', () => {
+  it('never offers the judge a tripwire hit on an untracked filer, and always offers a tracked one', async () => {
+    const noise = filingAdded('0001193125-26-396051', 'Oura Inc.', null)
+    const real = filingAdded(
+      '0001181412-26-000123',
+      'SPACE EXPLORATION TECHNOLOGIES CORP',
+      '0001181412',
+    )
+    await insertRows(db, 'changes', [...changes, noise, real])
+
+    const pending = await pendingChanges(db)
+    const ids = pending.changes.map((c) => c.id)
+    expect(ids).not.toContain(noise.id)
+    expect(ids).toContain(real.id)
+    // Filtered, not deleted: the row is still in the store and on every
+    // public endpoint — the tripwire only works because every hit is kept.
+    expect((await db.select().from(schema.changes)).map((c) => c.id)).toContain(noise.id)
+    expect(pending.total_pending).toBe(changes.length + 1)
+  })
+
   it('offers every change on the first run, newest first, minus timestamp-only job rows', async () => {
     const restamped = jobModified('1', JOB, { ...JOB, updated_at: '2026-08-25T00:00:00Z' })
     const moved = jobModified('2', JOB, { ...JOB, location: 'Austin, TX' })
@@ -545,6 +629,25 @@ describe('checkJudgeSilence', () => {
       jobModified('1', JOB, { ...JOB, updated_at: '2026-08-25T00:00:00Z' }, OLD),
     ])
     expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('no-backlog')
+  })
+
+  it('does not count day-old tripwire hits on untracked filers as a backlog', async () => {
+    // The pending route would not offer these, so the judge owes nothing for
+    // them — calling it silent over a queue it was never handed is the lie
+    // that wakes somebody.
+    await insertRows(db, 'changes', [
+      filingAdded('0001193125-26-396051', 'Oura Inc.', null, OLD),
+      filingAdded('0001193125-26-396052', 'Some Micro-Cap Corp.', null, OLD),
+    ])
+    expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('no-backlog')
+    expect(await db.select().from(schema.opsEvents)).toHaveLength(0)
+  })
+
+  it('still counts a day-old filing from a tracked filer', async () => {
+    await insertRows(db, 'changes', [
+      filingAdded('0001181412-26-000123', 'SPACE EXPLORATION TECHNOLOGIES CORP', '0001181412', OLD),
+    ])
+    expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('silent')
   })
 
   it('records judge_silent once a day for an old backlog with no run', async () => {
