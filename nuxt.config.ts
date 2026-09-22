@@ -430,7 +430,7 @@ export default defineNuxtConfig({
       // description — so an answer engine reads the same claim everywhere
       // rather than three paraphrases it has to reconcile.
       appDescription:
-        'Tracking the frontier AI labs — API pricing, hiring, SEC filings. Every number carries its source URL and fetch timestamp.',
+        'Tracking the frontier AI labs — API prices, hiring, filings, revenue, incidents, demand share. Every number carries its source URL and fetch timestamp.',
       // The app's canonical public origin, no trailing slash. Absolute links in
       // sitemap.xml, robots.txt, and og: tags are built from this.
       appUrl: 'http://localhost:3000',
