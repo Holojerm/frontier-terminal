@@ -126,8 +126,8 @@ export async function cellsUnderReview(
     if (payload.present !== false) continue
     if (Date.parse(check.fetched_at) < cutoff) continue
     const entry = classMap.find((e) => e.provider === payload.provider && e.class === payload.class)
-    // A check on a slug the map no longer names was about a mapping already replaced.
-    if (!entry || entry.model_slug !== payload.model_slug) continue
+    // A check on a slug or sentence the map no longer holds was about a mapping already replaced.
+    if (!entry || entry.model_slug !== payload.model_slug || entry.basis !== payload.basis) continue
     out.push({
       provider: entry.provider,
       class: entry.class,
@@ -166,7 +166,10 @@ export async function classMapReview(
 
 /** Lowercased, every run of non-alphanumerics folded to one "-". */
 function fold(text: string): string {
-  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, '-')
+    .replace(/^-|-$/g, '')
 }
 
 /**
