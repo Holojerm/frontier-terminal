@@ -24,13 +24,12 @@ import { parseCikWhitelistBlock, type CikWhitelist } from './parsers/sec/whiteli
 import { JoinRaceError } from './parsers/hiring/common'
 import { includeSources, type FetchSource } from './sources'
 import {
+  applyDiff,
   currentEntities,
-  deleteEntities,
   insertRows,
   lastRunStatus,
   lastSkippedRunAt,
   latestGoodSnapshot,
-  updateEntities,
   type PipelineDb,
 } from './store'
 
@@ -92,7 +91,11 @@ export function describeError(err: unknown): string {
   if (err instanceof ZodError) {
     return err.issues.map((i) => `${i.path.join('.')}: ${i.message}`).join('; ')
   }
-  return err instanceof Error ? err.message : String(err)
+  if (!(err instanceof Error)) return String(err)
+  // Drizzle wraps a D1 failure as "Failed query: <sql> params: <values>" and
+  // puts D1's reason in `cause`; lead with the reason so DETAIL_MAX keeps it.
+  const cause = err.cause instanceof Error ? describeError(err.cause) : null
+  return cause ? `${cause} — ${err.message}` : err.message
 }
 
 const DETAIL_MAX = 1000
@@ -256,27 +259,19 @@ async function parseAndStore(
   const modified = changes.filter((c) => c.change_type === 'modified')
   const removed = changes.filter((c) => c.change_type === 'removed')
 
-  await insertRows(
-    deps.db,
-    'entities',
-    added.map((c) => toStored(afterByKey.get(c.entity_key)!)),
-  )
-  await updateEntities(
-    deps.db,
-    source.source_id,
-    modified.map((c) => afterByKey.get(c.entity_key)!),
-  )
-  await deleteEntities(
-    deps.db,
-    source.source_id,
-    removed.map((c) => c.entity_key),
-  )
-  await insertRows(deps.db, 'changes', changes)
+  // Alerts are computed before anything is written, so the whole diff lands
+  // in one transaction — see applyDiff.
   const alerts = [
     ...(lane.alerts?.(changes) ?? []),
     ...(await modelFloorAlerts(deps.db, source.source_id, changes)),
   ]
-  await insertRows(deps.db, 'alerts', alerts)
+  await applyDiff(deps.db, source.source_id, {
+    added: added.map((c) => toStored(afterByKey.get(c.entity_key)!)),
+    modified: modified.map((c) => afterByKey.get(c.entity_key)!),
+    removed: removed.map((c) => c.entity_key),
+    changes,
+    alerts,
+  })
   // A vendor rewrote a sentence the class map rests on: the owner has a
   // transcription to redo. Once per flip — an unchanged verdict diffs to
   // nothing, so a stale cell does not re-spool every tick.
