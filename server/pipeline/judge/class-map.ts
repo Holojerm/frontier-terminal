@@ -166,10 +166,7 @@ export async function classMapReview(
 
 /** Lowercased, every run of non-alphanumerics folded to one "-". */
 function fold(text: string): string {
-  return text
-    .toLowerCase()
-    .replace(/[^a-z0-9]+/g, '-')
-    .replace(/^-|-$/g, '')
+  return text.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '')
 }
 
 /**
