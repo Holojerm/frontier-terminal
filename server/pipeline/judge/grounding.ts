@@ -13,7 +13,9 @@ import type { JudgeAlert } from './contract'
 //      figure like "-33%" does not),
 //   3. every slug-like token carrying a digit ("grok-4.6", "gemini-2.5-pro",
 //      "s-1") and every "double-quoted span" (how the prompt tells the model
-//      to cite job titles) appears verbatim, case-insensitively, in them.
+//      to cite job titles) appears verbatim, case-insensitively, in them —
+//      bar trailing sentence punctuation inside the closing quote, see
+//      spanIsGrounded.
 // Rejection is silence, not repair: a rejected alert is never inserted.
 // Deliberately coarse — a tripwire against invention, not a re-judging.
 //
@@ -54,6 +56,22 @@ export function slugLikeTokens(text: string): Set<string> {
 
 export function quotedSpans(text: string): string[] {
   return [...text.matchAll(/"([^"]+)"/g)].map((m) => m[1]!)
+}
+
+/**
+ * A quoted span grounds if it appears verbatim, or if it does once trailing
+ * sentence punctuation is dropped. English typography puts the comma inside
+ * the closing quote ("Foo," not "Foo",), so a title copied verbatim from a
+ * record arrives with punctuation the record never had — three real alerts,
+ * one of them `notable`, were rejected and lost that way (issue #23). The
+ * span still has to match the record for its whole length; only the closing
+ * punctuation is forgiven.
+ */
+function spanIsGrounded(span: string, corpusLower: string): boolean {
+  const lower = span.toLowerCase()
+  if (corpusLower.includes(lower)) return true
+  const trimmed = lower.replace(/[,.;:!?]+$/, '')
+  return trimmed.length > 0 && corpusLower.includes(trimmed)
 }
 
 /** The only text an alert may draw values from. */
@@ -101,7 +119,7 @@ export function groundAlerts(
     const badTerms = [
       ...[...slugLikeTokens(text)].filter((t) => !corpusLower.includes(t)),
       ...quotedSpans(text)
-        .filter((q) => !corpusLower.includes(q.toLowerCase()))
+        .filter((q) => !spanIsGrounded(q, corpusLower))
         .map((q) => `"${q}"`),
     ]
     if (badTerms.length > 0) {

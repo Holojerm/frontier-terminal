@@ -486,6 +486,34 @@ describe('gate + grounding, without the store', () => {
     expect(rejected[0]!.detail).toContain('grok-4.6-turbo')
   })
 
+  const addedJob = changes.find((c) => c.id === ADDED_CHANGE_ID)!
+  const jobAlert = (over: Record<string, unknown>) => ({
+    severity: 'info' as const,
+    headline: 'xAI adds an AI Tutor role',
+    explanation: 'The new posting is "AI Tutor - Arabic".',
+    change_ids: [ADDED_CHANGE_ID],
+    ...over,
+  })
+
+  it('a quoted job title grounds with the comma inside the closing quote', () => {
+    const { accepted, rejected } = groundAlerts(
+      [jobAlert({ explanation: 'The new posting, "AI Tutor - Arabic," is a language role.' })],
+      [addedJob],
+    )
+    expect(rejected).toEqual([])
+    expect(accepted).toHaveLength(1)
+  })
+
+  it('an invented job title is still rejected, trailing punctuation or not', () => {
+    const { accepted, rejected } = groundAlerts(
+      [jobAlert({ explanation: 'The new posting, "AI Tutor - Aramaic," is a language role.' })],
+      [addedJob],
+    )
+    expect(accepted).toEqual([])
+    expect(rejected[0]!.reason).toBe('ungrounded-term')
+    expect(rejected[0]!.detail).toContain('AI Tutor - Aramaic')
+  })
+
   it('a derived percentage in the HEADLINE rejects the alert, exactly as in the explanation', () => {
     const { accepted, rejected } = groundAlerts(
       [alert({ headline: 'xAI cuts grok-4.6 standard pricing 50% on input and output' })],
