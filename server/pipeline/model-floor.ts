@@ -111,7 +111,7 @@ export function modelFloorAlert(group: SlugChanges): AlertRow {
     severity: 'notable',
     headline: `${lab} lists a new model, ${group.slug}${price ? ` — ${price}` : ''}`,
     explanation:
-      `${group.slug} appears for the first time in a ${lab} catalog (${first.source_url}), ` +
+      `${group.slug} appears for the first time in ${lab}'s catalog (${first.source_url}), ` +
       `listed as ${tiers.join(', ')}. ` +
       'A model no catalog has listed before always alerts — the model-floor rule, no model in the loop.',
     change_ids: JSON.stringify(group.changes.map((c) => c.id)),
