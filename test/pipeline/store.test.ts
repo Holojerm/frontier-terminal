@@ -7,6 +7,7 @@ import { ChangeRow, contentHash } from '../../server/pipeline/contracts'
 import {
   D1_MAX_BOUND_PARAMS,
   StoreValidationError,
+  applyDiff,
   chunk,
   insertRows,
   rowsPerStatement,
@@ -41,6 +42,7 @@ function change(n: number): ChangeRow {
 }
 
 beforeEach(async () => {
+  await db.delete(schema.entities)
   await db.delete(schema.changes)
   await db.delete(schema.snapshots)
 })
@@ -91,5 +93,40 @@ describe('D1 bound-parameter chunking', () => {
   it('chunks without dropping or duplicating', () => {
     const groups = chunk([1, 2, 3, 4, 5, 6, 7], 3)
     expect(groups).toEqual([[1, 2, 3], [4, 5, 6], [7]])
+  })
+})
+
+describe('applyDiff', () => {
+  const entity = (n: number) => ({
+    entity_key: `job:xai:${n}`,
+    entity_type: 'job' as const,
+    provider: 'xai' as const,
+    snapshot_id: 'snap-1',
+    content_hash: contentHash({ n }),
+    payload: JSON.stringify({ n }),
+    source_id: 'xai-greenhouse',
+    first_seen_at: PROV.fetched_at,
+    ...PROV,
+  })
+  const writes = (n: number) => ({
+    added: [entity(n)],
+    modified: [],
+    removed: [],
+    changes: [change(n)],
+    alerts: [],
+  })
+
+  it('writes the entity and its change row together', async () => {
+    await applyDiff(db, 'xai-greenhouse', writes(1))
+    expect(await db.select().from(schema.entities)).toHaveLength(1)
+    expect(await db.select().from(schema.changes)).toHaveLength(1)
+  })
+
+  // The 2026-09-22 google-pricing-html failure: entities landed, the changes
+  // INSERT did not, and the next tick diffed the re-added model to nothing.
+  it('leaves the entity set untouched when the change insert fails', async () => {
+    await insertRows(db, 'changes', [change(2)])
+    await expect(applyDiff(db, 'xai-greenhouse', writes(2))).rejects.toThrow()
+    expect(await db.select().from(schema.entities)).toHaveLength(0)
   })
 })

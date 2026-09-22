@@ -6,7 +6,12 @@ import * as schema from '../../server/db/schema'
 import { contentHash, type PollScope } from '../../server/pipeline/contracts'
 import type { FetchOutcome, SourceFetcher } from '../../server/pipeline/fetch'
 import { MAX_UNJOINED_JOBS } from '../../server/pipeline/parsers/hiring/common'
-import { runRefresh, type RawStore, type RefreshDeps } from '../../server/pipeline/refresh'
+import {
+  describeError,
+  runRefresh,
+  type RawStore,
+  type RefreshDeps,
+} from '../../server/pipeline/refresh'
 import { sourceIdsForScope } from '../../server/pipeline/scopes'
 import { includeSources } from '../../server/pipeline/sources'
 import { collectFleetCounters, latestFetchBySource } from '../../server/utils/fleet-status'
@@ -753,5 +758,15 @@ describe('failures', () => {
 
   it('rejects a source id that is not an include source', async () => {
     await expect(run('survey', ['google-hiring'])).rejects.toThrow('not include sources')
+  })
+})
+
+describe('describeError', () => {
+  it("leads with a wrapped error's cause, which the detail cap would otherwise cut", () => {
+    const d1 = new Error('D1_ERROR: UNIQUE constraint failed: changes.id')
+    const wrapped = new Error(`Failed query: insert into "changes" ${'?, '.repeat(400)}`, {
+      cause: d1,
+    })
+    expect(describeError(wrapped).startsWith(d1.message)).toBe(true)
   })
 })

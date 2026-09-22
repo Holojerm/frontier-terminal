@@ -4,7 +4,14 @@ import type { BatchItem } from 'drizzle-orm/batch'
 import type { z } from 'zod'
 
 import * as tables from '../db/schema'
-import { EntityRow, tableSchemas, type SourceRunRow, type TableName } from './contracts'
+import {
+  EntityRow,
+  tableSchemas,
+  type ChangeRow,
+  type SourceRunRow,
+  type StoredEntityRow,
+  type TableName,
+} from './contracts'
 
 // The write chokepoint. Every pipeline row reaches D1 through insertRows(),
 // which validates it against its zod contract first — so a row missing
@@ -95,6 +102,21 @@ export async function runStatements(db: PipelineDb, statements: readonly Stateme
   }
 }
 
+/** Validated multi-row INSERTs for one table, chunked under the bound-parameter cap. */
+function insertStatements<T extends TableName>(
+  db: PipelineDb,
+  table: T,
+  rows: readonly unknown[],
+): Statement[] {
+  const validated = validateRows(table, rows)
+  if (validated.length === 0) return []
+  const columns = Object.keys(validated[0]!).length
+  const target = STORE_TABLES[table]
+  return chunk(validated, rowsPerStatement(columns)).map((group) =>
+    db.insert(target).values(group as unknown as (typeof target)['$inferInsert'][]),
+  )
+}
+
 /**
  * Validate, then insert. Returns the number of rows written. Plain INSERT on
  * purpose — a primary-key collision (two ticks writing the same change id)
@@ -106,15 +128,9 @@ export async function insertRows<T extends TableName>(
   table: T,
   rows: readonly unknown[],
 ): Promise<number> {
-  const validated = validateRows(table, rows)
-  if (validated.length === 0) return 0
-  const columns = Object.keys(validated[0]!).length
-  const target = STORE_TABLES[table]
-  const statements = chunk(validated, rowsPerStatement(columns)).map((group) =>
-    db.insert(target).values(group as unknown as (typeof target)['$inferInsert'][]),
-  )
+  const statements = insertStatements(db, table, rows)
   await runStatements(db, statements)
-  return validated.length
+  return statements.length === 0 ? 0 : rows.length
 }
 
 /** The current entity set for one source, as contract rows (store-only
@@ -129,51 +145,75 @@ export async function currentEntities(db: PipelineDb, sourceId: string): Promise
 
 /** Rewrite the content of entities whose hash changed. first_seen_at is left
  * alone: it belongs to the row's first appearance, not its latest edit. */
-export async function updateEntities(
+function updateEntityStatements(
   db: PipelineDb,
   sourceId: string,
   rows: readonly EntityRow[],
-): Promise<number> {
-  const validated = rows.map((row) => EntityRow.parse(row))
-  const statements = validated.map((row) =>
-    db
-      .update(tables.entities)
-      .set({
-        entity_type: row.entity_type,
-        provider: row.provider,
-        content_hash: row.content_hash,
-        payload: row.payload,
-        snapshot_id: row.snapshot_id,
-        source_url: row.source_url,
-        fetched_at: row.fetched_at,
-      })
-      .where(
-        and(
-          eq(tables.entities.source_id, sourceId),
-          eq(tables.entities.entity_key, row.entity_key),
+): Statement[] {
+  return rows
+    .map((row) => EntityRow.parse(row))
+    .map((row) =>
+      db
+        .update(tables.entities)
+        .set({
+          entity_type: row.entity_type,
+          provider: row.provider,
+          content_hash: row.content_hash,
+          payload: row.payload,
+          snapshot_id: row.snapshot_id,
+          source_url: row.source_url,
+          fetched_at: row.fetched_at,
+        })
+        .where(
+          and(
+            eq(tables.entities.source_id, sourceId),
+            eq(tables.entities.entity_key, row.entity_key),
+          ),
         ),
-      ),
-  )
-  await runStatements(db, statements)
-  return validated.length
+    )
 }
 
 /** Drop entities a set-typed source no longer lists. */
-export async function deleteEntities(
+function deleteEntityStatements(
   db: PipelineDb,
   sourceId: string,
   entityKeys: readonly string[],
-): Promise<number> {
+): Statement[] {
   // One parameter per key plus one for source_id.
-  const statements = chunk(entityKeys, D1_MAX_BOUND_PARAMS - 1).map((keys) =>
+  return chunk(entityKeys, D1_MAX_BOUND_PARAMS - 1).map((keys) =>
     db
       .delete(tables.entities)
       .where(
         and(eq(tables.entities.source_id, sourceId), inArray(tables.entities.entity_key, keys)),
       ),
   )
-  await runStatements(db, statements)
-  return entityKeys.length
+}
+
+export interface DiffWrites {
+  added: readonly StoredEntityRow[]
+  modified: readonly EntityRow[]
+  removed: readonly string[]
+  changes: readonly ChangeRow[]
+  alerts: readonly unknown[]
+}
+
+/**
+ * One tick's diff, applied as a single db.batch() — which D1 runs as one
+ * transaction. The entity set and the change log must move together: entities
+ * written without their change rows make the next tick diff to nothing, so the
+ * change (and any alert on it) is lost for good. All or nothing means a failed
+ * write is retried whole by the next tick.
+ */
+export async function applyDiff(db: PipelineDb, sourceId: string, writes: DiffWrites) {
+  const statements = [
+    ...insertStatements(db, 'entities', writes.added),
+    ...updateEntityStatements(db, sourceId, writes.modified),
+    ...deleteEntityStatements(db, sourceId, writes.removed),
+    ...insertStatements(db, 'changes', writes.changes),
+    ...insertStatements(db, 'alerts', writes.alerts),
+  ]
+  if (statements.length === 0) return
+  await db.batch(statements as unknown as [Statement, ...Statement[]])
 }
 
 /**
