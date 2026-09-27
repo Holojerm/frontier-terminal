@@ -9,6 +9,8 @@ import {
   type Provider,
 } from './contracts'
 import {
+  normalizeDisclosureTimelines,
+  normalizeDisclosures,
   normalizeFilers,
   normalizeFilings,
   normalizeIncidents,
@@ -18,6 +20,8 @@ import {
   normalizeRecommendations,
   normalizeRevenues,
 } from './normalize'
+import { parseOpenAiMisalignmentReport } from './parsers/disclosures/openai-misalignment-report'
+import { parseOpenAiMisalignmentReports } from './parsers/disclosures/openai-misalignment-reports'
 import { parseAnthropicGreenhouse } from './parsers/hiring/anthropic-greenhouse'
 import { parseOpenaiAshby } from './parsers/hiring/openai-ashby'
 import { parseXaiGreenhouse } from './parsers/hiring/xai-greenhouse'
@@ -176,11 +180,25 @@ const OPENAI_MODEL_PAGE_LANE: Lane = {
   }),
 }
 
+// A derived misalignment report page: the dates the index omits, one row.
+// The page IS the report's current state.
+const MISALIGNMENT_REPORT_PAGE_LANE: Lane = {
+  sides: [],
+  removals: 'set',
+  parse: (text, { prov, snapshotId, derivedKey }) => ({
+    entities: normalizeDisclosureTimelines(
+      parseOpenAiMisalignmentReport(text, derivedKey, prov).rows,
+      snapshotId,
+    ),
+  }),
+}
+
 /** Lanes for derived sources, by id prefix (server/pipeline/derived.ts). */
 const DERIVED_LANES: readonly { prefix: string; lane: Lane }[] = [
   { prefix: 'edgar-submissions-', lane: SUBMISSIONS_LANE },
   { prefix: 'edgar-companyfacts-', lane: COMPANYFACTS_LANE },
   { prefix: 'openai-model-md-', lane: OPENAI_MODEL_PAGE_LANE },
+  { prefix: 'openai-misalignment-report-', lane: MISALIGNMENT_REPORT_PAGE_LANE },
 ]
 
 /** The lane for a source id: a registered one exactly, a derived one by prefix. */
@@ -287,6 +305,19 @@ export const LANES: Readonly<Record<string, Lane>> = {
       }
     },
   },
+  // The disclosure index IS the current set: a report taken down is a
+  // 'removed' change the judge should see, not a window scrolling on. Its
+  // printed date is in each row but never wakes the judge on its own
+  // (judge/pending.ts › isTimestampOnlyChange).
+  'openai-misalignment-reports': set((html, { prov, snapshotId }) => {
+    const { rows, skipped } = parseOpenAiMisalignmentReports(html, prov)
+    return {
+      entities: normalizeDisclosures(rows, snapshotId),
+      note: skipped.length
+        ? `${skipped.length} skipped: ${skipped.map((s) => `${s.entry} (${s.reason})`).join('; ')}`
+        : undefined,
+    }
+  }),
   // A rolling window of daily buckets: a day scrolling out of the window was
   // not un-observed, so no removal is recorded and the series accumulates.
   // meta.as_of rides on the run's detail (`as_of <iso>`) rather than in each

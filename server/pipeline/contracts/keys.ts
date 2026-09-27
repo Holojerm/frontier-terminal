@@ -33,6 +33,21 @@ export function incidentKey(provider: Provider, incidentId: string): string {
   return `incident:${provider}:${incidentId}`
 }
 
+// A disclosure entry is page-scoped (a report slug, a notice id), and a
+// report and a notice could share a word, so both provider and kind key it.
+export function disclosureKey(
+  provider: Provider,
+  kind: 'report' | 'notice',
+  entryId: string,
+): string {
+  return `disclosure:${provider}:${kind}:${entryId}`
+}
+
+// The dates on one report's own page: one row per report.
+export function disclosureTimelineKey(provider: Provider, entryId: string): string {
+  return `disclosure_timeline:${provider}:${entryId}`
+}
+
 // One row per UTC day per model — the same (date, permaslug) fetched again
 // diffs to nothing, so an overlapping window re-fetch is idempotent.
 export function rankingKey(date: string, modelPermaslug: string): string {

@@ -23,6 +23,7 @@ const counters = computed(() => [
   { label: 'hiring', n: movement.value.recent.hiring },
   { label: 'SEC', n: movement.value.recent.sec },
   { label: 'incidents', n: movement.value.recent.incidents },
+  { label: 'disclosures', n: movement.value.recent.disclosures },
 ])
 
 /**

@@ -146,6 +146,18 @@ Emit an alert-tier severity (`notable` or `critical`) ONLY for:
   incidents at ONE provider among the records you were handed, whatever
   their impact — count them. Quote `impact`, `status` and component names
   verbatim.
+- **A lab disclosing misalignment.** A `disclosure` record `added` is a
+  new entry on a lab's own misalignment-disclosure index: a `report` (with
+  `model` and `observed_during`) or a `notice` about an external incident.
+  It is `notable`; quote `title`, `model` and `observed_during` verbatim and
+  never paraphrase the `summary` into a stronger claim than it makes.
+  Never say the lab is less safe than another: only OpenAI publishes such
+  an index, so a count measures disclosure, not behaviour, and no record
+  says otherwise. A `disclosure` record `removed` (the lab took an entry
+  down) is `notable` too. A `disclosure` record `modified` in `summary` or
+  `title` is a revision: a ticker line. A `disclosure_timeline` record is
+  the dates on one report's page; `modified` so that `discovered_on` or
+  `disclosed_on` moved is a ticker line quoting both values.
 - **A cross-axis combination** built from the above (a price cut plus a
   five-role sales surge reads as a GTM push; a flagship price cut plus an
   API-surface incident cluster reads as demand outrunning capacity; an

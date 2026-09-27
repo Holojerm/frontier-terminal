@@ -106,13 +106,16 @@ describe('pending_filers', () => {
 })
 
 describe('derived_sources', () => {
-  it('reads the three templates with their caveat', () => {
+  it('reads the four templates with their caveat', () => {
     const templates = parseDerivedSourcesBlock(sourcesYaml)
     expect(templates.map((t) => [t.id, t.from])).toEqual([
       ['edgar-submissions', 'filer'],
       ['edgar-companyfacts', 'filer'],
       ['openai-model-md', 'openai-priced-model'],
+      ['openai-misalignment-report', 'openai-misalignment-report'],
     ])
+    expect(templates[3]!.url).toBe('https://alignment.openai.com/misalignment-reports/{slug}/')
+    expect(templates[3]!.caveat).toContain('Discovery / Discovered / Discovery date')
     expect(templates[2]!.url).toBe('https://developers.openai.com/api/docs/models/{slug}.md')
     expect(templates[2]!.caveat).toContain('must equal the slug')
     expect(templates[0]!.caveat).toBeNull()
@@ -347,7 +350,7 @@ describe('CIK resolution end to end', () => {
       ['edgar-companyfacts-anthropic', 'edgar-companyfacts', 'revenue', 'anthropic'],
       ['edgar-submissions-anthropic', 'edgar-submissions', 'sec', 'anthropic'],
     ])
-    expect(coverage.sources.filter((s) => !s.derived_from)).toHaveLength(24)
+    expect(coverage.sources.filter((s) => !s.derived_from)).toHaveLength(25)
   })
 })
 

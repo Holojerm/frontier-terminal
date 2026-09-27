@@ -242,6 +242,46 @@
       "raw_bytes": 157467,
       "trim": "none — the whole payload, 1,530 rows over 30 UTC days (2026-08-10 to 2026-09-08), meta.as_of 2026-09-09T12:00:03.352Z.",
       "note": "The first keyed fetch after NUXT_OPENROUTER_API_KEY was set: production survey tick 2026-09-09T12:00Z, copied from R2 raw/openrouter-rankings-daily/2026-09-09T12:01:00.740Z.json. Replaces the fixture constructed from the documented schema at scaffold time."
+    },
+    {
+      "path": "fixtures/disclosures/openai-misalignment-reports.html",
+      "source_id": "openai-misalignment-reports",
+      "source_url": "https://alignment.openai.com/misalignment-reports/",
+      "fetched_at": "2026-09-27T03:20:32Z",
+      "http_status": 200,
+      "raw_bytes": 15997,
+      "trim": "none — committed whole",
+      "note": "Server-rendered HTML (Vercel, ETag + Last-Modified). 9 reports (<details class=\"cb-entry\">: h3 title, <time datetime> on the meta line, Observation copy, relative report link, Model / Observed during / Report updated <dl>) and 3 notices (<details class=\"cb-entry cb-notice\" id=\"notice-*\">: h3 title, <time datetime>, Notice summary, an absolute openai.com update link). The site's rss.xml stops at 2026-07-21 and lists none of these, so this page is the only index."
+    },
+    {
+      "path": "fixtures/disclosures/openai-misalignment-report-an-agent-used-dns-to-reach-an-external-chatbot.html",
+      "source_id": "openai-misalignment-report-an-agent-used-dns-to-reach-an-external-chatbot",
+      "source_url": "https://alignment.openai.com/misalignment-reports/an-agent-used-dns-to-reach-an-external-chatbot/",
+      "fetched_at": "2026-09-27T03:20:33Z",
+      "http_status": 200,
+      "raw_bytes": 56284,
+      "trim": "none — committed whole",
+      "note": "One representative per-report page for the derived openai-misalignment-report-<slug> sources (server/pipeline/derived.ts): the determinism gate runs the shared parser on this page. Metadata cell reads 'Internal research model · RL training' / 'Sample: Sep 20, 2026' / 'Discovery: Sep 20, 2026' / 'Report updated: Sep 25, 2026'."
+    },
+    {
+      "path": "fixtures/disclosures/openai-misalignment-report-self-replicating-prompt-injections-exist.html",
+      "source_id": "openai-misalignment-report-self-replicating-prompt-injections-exist",
+      "source_url": "https://alignment.openai.com/misalignment-reports/self-replicating-prompt-injections-exist/",
+      "fetched_at": "2026-09-27T03:20:33Z",
+      "http_status": 200,
+      "raw_bytes": 89067,
+      "trim": "none — committed whole",
+      "note": "Test fixture: the one report of nine that prints its own 'Disclosure date: Sep 25, 2026' line (label and value in one span), beside 'Discovery date: Jun 27, 2026'."
+    },
+    {
+      "path": "fixtures/disclosures/openai-misalignment-report-uploading-files-to-the-internet-in-order-to-cite-them.html",
+      "source_id": "openai-misalignment-report-uploading-files-to-the-internet-in-order-to-cite-them",
+      "source_url": "https://alignment.openai.com/misalignment-reports/uploading-files-to-the-internet-in-order-to-cite-them/",
+      "fetched_at": "2026-09-27T03:22:19Z",
+      "http_status": 200,
+      "raw_bytes": 105685,
+      "trim": "none — committed whole",
+      "note": "Test fixture: the second page layout (data-source-index paragraphs, no data-web-metadata attributes), and an occurrence line naming two dates ('Samples: Jan 24, 2026 and Oct 22, 2025') that is kept verbatim, never read as one date."
     }
   ]
 }

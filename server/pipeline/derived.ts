@@ -7,15 +7,19 @@ import type { PipelineDb } from './store'
 
 // Sources the store derives for itself: a URL template audited in
 // sources.yaml (`derived_sources`) filled with a key the store already holds.
-// Two keys exist — a lab's CIK from its `filer` row, and a priced OpenAI
-// model slug from openai-pricing-md — and neither is ever typed into code.
+// Three keys exist — a lab's CIK from its `filer` row, a priced OpenAI model
+// slug from openai-pricing-md, and a report slug from the misalignment index
+// (openai-misalignment-reports) — and none is ever typed into code.
 // A derived source is polled, snapshotted, parsed and diffed exactly like a
 // registered one; its lane is matched by id prefix (lanes.ts › laneFor).
+
+const DERIVED_FROM = ['filer', 'openai-priced-model', 'openai-misalignment-report'] as const
+type DerivedFrom = (typeof DERIVED_FROM)[number]
 
 export interface DerivedTemplate {
   id: string
   url: string
-  from: 'filer' | 'openai-priced-model'
+  from: DerivedFrom
   /** The audit's words about the template, folded, for the coverage panel. */
   caveat: string | null
 }
@@ -34,7 +38,7 @@ export function parseDerivedSourcesBlock(yaml: string): DerivedTemplate[] {
     folding = null
     if (!current.url || !current.from)
       throw new Error(`derived_sources ${current.id}: needs url and from`)
-    if (current.from !== 'filer' && current.from !== 'openai-priced-model') {
+    if (!(DERIVED_FROM as readonly string[]).includes(current.from)) {
       throw new Error(`derived_sources ${current.id}: unknown from ${current.from}`)
     }
     out.push({ caveat: null, ...current } as DerivedTemplate)
@@ -118,12 +122,37 @@ export async function openAiPricedSlugs(db: PipelineDb): Promise<string[]> {
   ].sort()
 }
 
+/** Report slugs on the OpenAI misalignment index, sorted. Notices link off-site and are not derived. */
+export async function openAiMisalignmentReportSlugs(db: PipelineDb): Promise<string[]> {
+  const kind = sql<string | null>`json_extract(${tables.entities.payload}, '$.kind')`
+  const id = sql<string | null>`json_extract(${tables.entities.payload}, '$.entry_id')`
+  const rows = await db
+    .select({ id })
+    .from(tables.entities)
+    .where(
+      and(
+        eq(tables.entities.source_id, 'openai-misalignment-reports'),
+        eq(tables.entities.entity_type, 'disclosure'),
+        sql`${kind} = 'report'`,
+      ),
+    )
+  return [
+    ...new Set(
+      rows.map((r) => r.id).filter((s): s is string => !!s && /^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(s)),
+    ),
+  ].sort()
+}
+
 export const derivedSourceId = (template: string, key: string) => `${template}-${key}`
 
 /** Every derived source the store can name right now, in a stable order. */
 export async function deriveSources(db: PipelineDb, sourcesYaml: string): Promise<FetchSource[]> {
   const templates = parseDerivedSourcesBlock(sourcesYaml)
-  const [filers, slugs] = await Promise.all([resolvedFilers(db), openAiPricedSlugs(db)])
+  const [filers, slugs, reports] = await Promise.all([
+    resolvedFilers(db),
+    openAiPricedSlugs(db),
+    openAiMisalignmentReportSlugs(db),
+  ])
   const out: FetchSource[] = []
   for (const t of templates) {
     if (t.from === 'filer') {
@@ -132,6 +161,14 @@ export async function deriveSources(db: PipelineDb, sourcesYaml: string): Promis
           source_id: derivedSourceId(t.id, f.provider),
           url: t.url.replace('{cik}', f.cik),
           ext: 'json',
+        })
+      }
+    } else if (t.from === 'openai-misalignment-report') {
+      for (const slug of reports) {
+        out.push({
+          source_id: derivedSourceId(t.id, slug),
+          url: t.url.replace('{slug}', slug),
+          ext: 'html',
         })
       }
     } else {

@@ -60,6 +60,7 @@ import {
   queryReleases,
   type QueryContext,
 } from './terminal-db'
+import { queryDisclosures } from './terminal-disclosures'
 import { SHARE_WINDOW_DAYS, queryRankings } from './terminal-rankings'
 import { queryRevenue } from './terminal-revenue'
 import { PROVIDER_ORDER } from './terminal-sources'
@@ -125,8 +126,8 @@ const PROVENANCE =
 
 const INSTRUCTIONS =
   `${MCP_SERVER_NAME}: a free, public, read-only investor terminal tracking the frontier AI labs ` +
-  '(OpenAI, Anthropic, Google, xAI) on six axes — API price lists, hiring boards (with the physical-infrastructure buildout cluster), ' +
-  'SEC filings and disclosed revenue, status-page incidents, and OpenRouter demand share with its implied spend share. ' +
+  '(OpenAI, Anthropic, Google, xAI) on seven axes — API price lists, hiring boards (with the physical-infrastructure buildout cluster), ' +
+  'SEC filings and disclosed revenue, status-page incidents, misalignment disclosures, and OpenRouter demand share with its implied spend share. ' +
   'Not investment advice. Start with `describe` (the site map) or `get_overview` (what moved). ' +
   PROVENANCE
 
@@ -392,6 +393,34 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         ...incidents,
         providers: incidents.providers.filter((p) => p.provider === provider),
         incidents: incidents.incidents.filter((i) => i.provider === provider),
+      })
+    },
+  )
+
+  server.registerTool(
+    'get_disclosures',
+    {
+      title: 'Misalignment disclosures',
+      description:
+        'Each lab’s own index of misalignment reports and notices — agents leaving their sandbox, messaging each other through ' +
+        'public services, deceiving in their own summaries. Only OpenAI publishes one (alignment.openai.com/misalignment-reports); ' +
+        'Anthropic, Google and xAI are reported as no_public_feed with the audit’s reason, never as zero. A count measures ' +
+        'disclosure practice, not how often misalignment happens: never rank labs on it. entries carries every report and notice ' +
+        'with title, summary, model and observed_during VERBATIM, and for a report its page’s dates: discovered_on, disclosed_on ' +
+        '(disclosed_basis says whether the page printed it or it is the earliest date the index has shown), and ' +
+        'days_to_disclosure between them. timeline_status says why a report has no dates (not_fetched, title_mismatch). Per ' +
+        'provider, report and notice counts and the median days_to_disclosure over timed_reports. Optional provider filter. ' +
+        PROVENANCE,
+      inputSchema: z.object({ provider: ProviderSchema.optional() }),
+      annotations: READ_ONLY,
+    },
+    async ({ provider }) => {
+      const disclosures = await deps.serve('disclosures', (ctx) => queryDisclosures(deps.db, ctx))
+      if (!provider) return json(disclosures)
+      return json({
+        ...disclosures,
+        providers: disclosures.providers.filter((p) => p.provider === provider),
+        entries: disclosures.entries.filter((e) => e.provider === provider),
       })
     },
   )
