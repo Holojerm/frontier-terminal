@@ -4,6 +4,10 @@
 // determinism harness resolves a registration straight to its bytes.
 
 import manifestJson from '../../fixtures/manifest.json'
+import openaiMisalignmentReportDns from '../../fixtures/disclosures/openai-misalignment-report-an-agent-used-dns-to-reach-an-external-chatbot.html?raw'
+import openaiMisalignmentReportSelfReplicating from '../../fixtures/disclosures/openai-misalignment-report-self-replicating-prompt-injections-exist.html?raw'
+import openaiMisalignmentReportUploading from '../../fixtures/disclosures/openai-misalignment-report-uploading-files-to-the-internet-in-order-to-cite-them.html?raw'
+import openaiMisalignmentReports from '../../fixtures/disclosures/openai-misalignment-reports.html?raw'
 import anthropicGreenhouseDepartments from '../../fixtures/hiring/anthropic-greenhouse-departments.json?raw'
 import anthropicGreenhouse from '../../fixtures/hiring/anthropic-greenhouse.json?raw'
 import openaiAshby from '../../fixtures/hiring/openai-ashby.json?raw'
@@ -36,6 +40,13 @@ import { fixtureProvenance } from '../../server/pipeline/parsers/fixture-provena
 export const manifest = manifestJson
 
 const files: Readonly<Record<string, string>> = {
+  'fixtures/disclosures/openai-misalignment-report-an-agent-used-dns-to-reach-an-external-chatbot.html':
+    openaiMisalignmentReportDns,
+  'fixtures/disclosures/openai-misalignment-report-self-replicating-prompt-injections-exist.html':
+    openaiMisalignmentReportSelfReplicating,
+  'fixtures/disclosures/openai-misalignment-report-uploading-files-to-the-internet-in-order-to-cite-them.html':
+    openaiMisalignmentReportUploading,
+  'fixtures/disclosures/openai-misalignment-reports.html': openaiMisalignmentReports,
   'fixtures/hiring/anthropic-greenhouse-departments.json': anthropicGreenhouseDepartments,
   'fixtures/hiring/anthropic-greenhouse.json': anthropicGreenhouse,
   'fixtures/hiring/openai-ashby.json': openaiAshby,

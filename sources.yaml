@@ -357,6 +357,30 @@ sources:
       update's status (AVAILABLE once resolved). Incident URL composed as
       status.cloud.google.com/ + uri (verified to resolve).
 
+  openai-misalignment-reports:
+    axis: disclosures
+    provider: openai
+    url: https://alignment.openai.com/misalignment-reports/
+    format: SSR HTML — one <details class="cb-entry"> per report, one per notice
+    diff_mechanism: report slug / notice id; title, summary, model and context per entry
+    verdict: include
+    fixture: fixtures/disclosures/openai-misalignment-reports.html
+    caveats: >-
+      A record of what OpenAI chose to disclose, not a count of what
+      happened: a lab with a disclosure page will always show more entries
+      than a lab without one, so the count is never a safety ranking.
+      Live-fetched 2026-09-27: 9 reports and 3 notices. Reports carry the
+      title, one-sentence observation, model and "observed during" context
+      verbatim; notices (Hugging Face, DSEwiki, RubyGems) carry a summary
+      and link to an update on openai.com, which answers 403 to a headless
+      client, so a notice's link is stored as printed and never followed.
+      Most reports are not sandbox escapes: the page covers misalignment
+      broadly (deceptive compaction summaries, cross-sample messaging), and
+      the escapes (DNS, file hosts, leaked keys) are some of the entries.
+      The page's printed date moves when a report is revised, so it is
+      stored but never wakes the judge on its own. The site's rss.xml
+      stops at 2026-07-21 and lists none of these pages.
+
 # CIK whitelist for EDGAR queries. MSFT, SPCX and GOOGL are transcribed from
 # the audit. AMZN and NVDA were null here through the audit and the first live
 # runs — the audit recorded no numbers for them — and were resolved on
@@ -432,6 +456,19 @@ derived_sources:
       catalog and pricing pages omit, beside the same $/MTok prices. The
       page's own "Model ID" must equal the slug it was derived for, or the
       source fails rather than storing a page under the wrong SKU.
+  openai-misalignment-report:
+    url: https://alignment.openai.com/misalignment-reports/{slug}/
+    from: openai-misalignment-report
+    caveats: >-
+      One page per report listed on openai-misalignment-reports. The page's
+      metadata cell carries the dates the index omits, as "Label: value"
+      lines whose labels vary report to report: the discovery date
+      (Discovery / Discovered / Discovery date), the occurrence (Sample,
+      Samples, Incident date, Main incident, Main sample completed — kept
+      verbatim, sometimes two dates) and, on one report of nine, a printed
+      Disclosure date. Time to disclosure reads the discovery date against
+      the printed disclosure date where one exists, else against the
+      earliest date the index has shown for the report.
 
 # Department clusters read off the hiring boards. A cluster is a name match
 # over each board's own department labels: a department belongs when its
@@ -490,6 +527,29 @@ cut:
       page) to any non-browser client, live-checked 2026-09-08 with a
       descriptive User-Agent. Scraping a rendered page would be a
       dependency on a bot wall; the terminal shows the gap instead.
+  anthropic-disclosures:
+    verdict: cut — display "no disclosure index" honestly
+    reason: >-
+      No index of misalignment or containment disclosures, live-checked
+      2026-09-27. Anthropic published one post,
+      anthropic.com/news/investigating-incidents-cybersecurity-evals
+      (2026-07-30: three incidents found across 141,006 cyber-evaluation
+      runs), which is a single article, not a feed the pipeline can diff.
+      alignment.anthropic.com is a research blog with no rss.xml (404).
+      Re-checked by the disclosure-watch routine.
+  google-disclosures:
+    verdict: cut — display "no disclosure index" honestly
+    reason: >-
+      No misalignment or containment disclosure page found for Google or
+      Google DeepMind, live-checked 2026-09-27 (deepmind.google's blog has
+      no rss.xml, 404). Re-checked by the disclosure-watch routine.
+  xai-disclosures:
+    verdict: cut — display "no disclosure index" honestly
+    reason: >-
+      No misalignment or containment disclosure page found; x.ai/safety
+      answers 403 (Cloudflare challenge page) to a non-browser client,
+      live-checked 2026-09-27, the same bot wall as status.x.ai.
+      Re-checked by the disclosure-watch routine.
   mistral:
     verdict: cut — not tracked on any axis
     reason: >-

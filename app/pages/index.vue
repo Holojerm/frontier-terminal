@@ -8,6 +8,7 @@
 
 import { LABS } from '#shared/utils/terminal-lab-summary'
 import type {
+  DisclosuresData,
   HiringHistoryData,
   IncidentsData,
   OverviewData,
@@ -24,7 +25,7 @@ definePageMeta({
     priority: '1.0',
     title: 'Overview',
     summary:
-      'What moved across the frontier AI labs — judged alerts, change counts by axis, flagship API prices, disclosed revenue, demand and implied spend share, open roles and the infrastructure buildout, and status-page incidents.',
+      'What moved across the frontier AI labs — judged alerts, change counts by axis, flagship API prices, disclosed revenue, demand and implied spend share, open roles and the infrastructure buildout, status-page incidents, and misalignment disclosures.',
   },
 })
 
@@ -44,25 +45,40 @@ const description = config.public.appDescription
 // ~40 KB of incident rows this page reduces to a single count. The full catalog
 // and the full list are each one link away on their own page, where they are
 // actually rendered.
-const [overview, prices, revenue, rankings, spend, releases, hiringHistory, incidents] =
-  await Promise.all([
-    useFetch<OverviewData>('/api/overview'),
-    useFetch<PricesData>('/api/prices', { pick: ['as_of', 'computed_at', 'matrix', 'counts'] }),
-    useFetch<RevenueData>('/api/revenue'),
-    useFetch<RankingsData>('/api/rankings'),
-    useFetch<SpendData>('/api/spend'),
-    useFetch<ReleasesData>('/api/releases'),
-    useFetch<HiringHistoryData>('/api/hiring/history'),
-    // No `useFetch<IncidentsData>` here: the explicit generic pins the data type
-    // as well as the response type, so a transform that reshapes cannot satisfy
-    // it. Annotating the transform's input types both ends instead.
-    useFetch('/api/incidents', {
-      transform: ({ incidents: rows, ...rest }: IncidentsData): IncidentsStrip => ({
-        ...rest,
-        incident_count: rows.length,
-      }),
+const [
+  overview,
+  prices,
+  revenue,
+  rankings,
+  spend,
+  releases,
+  hiringHistory,
+  incidents,
+  disclosures,
+] = await Promise.all([
+  useFetch<OverviewData>('/api/overview'),
+  useFetch<PricesData>('/api/prices', { pick: ['as_of', 'computed_at', 'matrix', 'counts'] }),
+  useFetch<RevenueData>('/api/revenue'),
+  useFetch<RankingsData>('/api/rankings'),
+  useFetch<SpendData>('/api/spend'),
+  useFetch<ReleasesData>('/api/releases'),
+  useFetch<HiringHistoryData>('/api/hiring/history'),
+  // No `useFetch<IncidentsData>` here: the explicit generic pins the data type
+  // as well as the response type, so a transform that reshapes cannot satisfy
+  // it. Annotating the transform's input types both ends instead.
+  useFetch('/api/incidents', {
+    transform: ({ incidents: rows, ...rest }: IncidentsData): IncidentsStrip => ({
+      ...rest,
+      incident_count: rows.length,
     }),
-  ])
+  }),
+  useFetch('/api/disclosures', {
+    transform: ({
+      entries: _entries,
+      ...rest
+    }: DisclosuresData): Omit<DisclosuresData, 'entries'> => rest,
+  }),
+])
 
 useSeo({
   // 'exact' because the brand should lead on the landing page — everywhere else
@@ -74,9 +90,17 @@ useSeo({
 })
 
 const failed = computed(() =>
-  [overview, prices, revenue, rankings, spend, releases, hiringHistory, incidents].some(
-    (r) => r.error.value !== null && r.error.value !== undefined,
-  ),
+  [
+    overview,
+    prices,
+    revenue,
+    rankings,
+    spend,
+    releases,
+    hiringHistory,
+    incidents,
+    disclosures,
+  ].some((r) => r.error.value !== null && r.error.value !== undefined),
 )
 
 // The readout row reads the same payloads the panels below render.
@@ -207,6 +231,22 @@ const openIncidents = computed(() =>
         <NuxtLink to="/incidents" class="text-primary underline underline-offset-2">
           All {{ incidents.data.value.incident_count }} incidents in
           {{ incidents.data.value.history_days }} days
+        </NuxtLink>
+      </p>
+    </TerminalPanel>
+
+    <TerminalPanel
+      id="disclosures"
+      title="Disclosures"
+      note="Misalignment reports each lab publishes about its own models, and the median days from discovery to publication. A count measures disclosure, not behaviour."
+    >
+      <TerminalDisclosureTable
+        v-if="disclosures.data.value"
+        :disclosures="disclosures.data.value"
+      />
+      <p class="text-sm">
+        <NuxtLink to="/disclosures" class="text-primary underline underline-offset-2">
+          Every report and notice, with its dates
         </NuxtLink>
       </p>
     </TerminalPanel>

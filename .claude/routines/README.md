@@ -1,8 +1,9 @@
 # Cloud Routines
 
 Repo-shipped definitions for the cloud agents ("routines") that run on a schedule against this
-repo. One is defined: `judge.md`, which reads the Worker's unjudged change rows and sends back
-significance alerts through a gated API. This file, `_shared.md`, and `routines.config.md` are
+repo. Two are defined: `judge.md`, which reads the Worker's unjudged change rows and sends back
+significance alerts through a gated API, and `disclosure-watch.md`, which checks weekly whether
+another lab has started publishing a misalignment disclosure index and files an issue if so. This file, `_shared.md`, and `routines.config.md` are
 the scaffolding every routine reads first.
 
 **All routines ship default-inactive.** Nothing runs until you explicitly enable it.

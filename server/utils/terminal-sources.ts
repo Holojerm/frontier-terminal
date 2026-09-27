@@ -54,6 +54,10 @@ export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
     label: 'Google Cloud status incidents (Gemini / Vertex AI only)',
     role: 'status',
   },
+  'openai-misalignment-reports': {
+    label: 'OpenAI misalignment reports and notices',
+    role: 'primary',
+  },
 }
 
 export const PROVIDER_DISPLAY: Readonly<Record<ProviderId, string>> = {
@@ -79,6 +83,20 @@ export const INCIDENT_SOURCE_IDS: Readonly<Record<'openai' | 'anthropic' | 'goog
   openai: 'openai-status',
   anthropic: 'anthropic-status',
   google: 'google-cloud-status',
+}
+
+/**
+ * Which disclosure index backs each lab, or the sources.yaml cut that says
+ * why none does. Every lab is one or the other, so a lab with no index reads
+ * as the audit's reason and never as a zero.
+ */
+export const DISCLOSURE_SOURCES: Readonly<
+  Record<'openai' | 'anthropic' | 'google' | 'xai', { source_id: string } | { cut_id: string }>
+> = {
+  openai: { source_id: 'openai-misalignment-reports' },
+  anthropic: { cut_id: 'anthropic-disclosures' },
+  google: { cut_id: 'google-disclosures' },
+  xai: { cut_id: 'xai-disclosures' },
 }
 
 export interface RegisteredSource {
@@ -183,6 +201,7 @@ const AXES: readonly SourceAxis[] = [
   'sec',
   'revenue',
   'status',
+  'disclosures',
   'demand-share',
 ]
 const PROVIDERS: readonly (ProviderId | 'all')[] = [
@@ -252,6 +271,11 @@ const DERIVED_LABELS: readonly {
     role: 'sec',
   },
   { prefix: 'openai-model-md-', label: (k) => `OpenAI model page (${k})`, role: 'primary' },
+  {
+    prefix: 'openai-misalignment-report-',
+    label: (k) => `OpenAI misalignment report page (${k})`,
+    role: 'primary',
+  },
 ]
 
 /** The template a derived source id came from, or null for a registered one. */

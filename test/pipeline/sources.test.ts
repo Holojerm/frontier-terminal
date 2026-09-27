@@ -11,7 +11,7 @@ import { fixtureText, manifest } from './fixtures'
 const sourcesYaml = fixtureText('sources.yaml')
 
 describe('includeSources', () => {
-  test('yields the 24 include-verdict sources in sources.yaml order, keyed by manifest source_id', () => {
+  test('yields the 25 include-verdict sources in sources.yaml order, keyed by manifest source_id', () => {
     const sources = includeSources(sourcesYaml, manifest.fixtures)
     expect(sources.map((s) => s.source_id)).toEqual([
       'openai-models-md',
@@ -38,6 +38,7 @@ describe('includeSources', () => {
       'openai-status',
       'anthropic-status',
       'google-cloud-status',
+      'openai-misalignment-reports',
     ])
   })
 

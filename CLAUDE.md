@@ -6,9 +6,9 @@ anything that is not needed on every task lives in [`.claude/docs/`](.claude/doc
 and is read on demand.
 
 Frontier Terminal is a free, public, read-only data site: an investor terminal tracking
-the frontier AI labs (OpenAI, Anthropic, Google, xAI) on six axes — API price lists,
-hiring, SEC filings, disclosed revenue, status-page incidents, and OpenRouter demand
-share. No accounts, no sign-in, no payments. Every datum carries its source URL and
+the frontier AI labs (OpenAI, Anthropic, Google, xAI) on seven axes — API price lists,
+hiring, SEC filings, disclosed revenue, status-page incidents, misalignment disclosures,
+and OpenRouter demand share. No accounts, no sign-in, no payments. Every datum carries its source URL and
 fetch timestamp.
 
 ---

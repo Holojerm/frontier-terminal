@@ -91,6 +91,25 @@ const INCIDENT_FIELDS = [
   'incident_url',
 ] as const
 
+const DISCLOSURE_FIELDS = [
+  'kind',
+  'entry_id',
+  'title',
+  'summary',
+  'model',
+  'observed_during',
+  'listed_on',
+  'entry_url',
+] as const
+
+const DISCLOSURE_TIMELINE_FIELDS = [
+  'entry_id',
+  'title',
+  'lines',
+  'discovered_on',
+  'disclosed_on',
+] as const
+
 function parsePayload(text: string): Row {
   try {
     const value = JSON.parse(text) as unknown
@@ -112,7 +131,15 @@ function project(row: Row, columns: readonly string[]): Row {
 function entityView(
   name: string,
   description: string,
-  entityType: 'model' | 'job' | 'incident' | 'ranking' | 'revenue' | 'filer',
+  entityType:
+    | 'model'
+    | 'job'
+    | 'incident'
+    | 'ranking'
+    | 'revenue'
+    | 'filer'
+    | 'disclosure'
+    | 'disclosure_timeline',
   fields: readonly string[],
 ): ExportTable {
   const columns = [
@@ -201,6 +228,18 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     'Every status-page incident held: title, vendor impact and status verbatim, start and resolution, components. Append-only — an incident that scrolls out of its feed stays.',
     'incident',
     INCIDENT_FIELDS,
+  ),
+  disclosures: entityView(
+    'disclosures',
+    'Every entry on a lab’s own misalignment-disclosure index (only OpenAI publishes one): report or notice, title, summary, model and context verbatim, and the date the index prints beside it. A count measures disclosure, not behaviour.',
+    'disclosure',
+    DISCLOSURE_FIELDS,
+  ),
+  disclosure_timelines: entityView(
+    'disclosure_timelines',
+    'The dates printed on each report’s own page: every "Label: value" line verbatim, the discovery date, and a printed disclosure date where the page has one.',
+    'disclosure_timeline',
+    DISCLOSURE_TIMELINE_FIELDS,
   ),
   rankings_daily: entityView(
     'rankings_daily',

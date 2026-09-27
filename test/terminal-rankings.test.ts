@@ -222,6 +222,9 @@ describe('queryRankings', () => {
       'lmarena',
       'compute-deals',
       'xai-status',
+      'anthropic-disclosures',
+      'google-disclosures',
+      'xai-disclosures',
       'mistral',
     ])
     expect(coverage.cuts.find((c) => c.id === 'artificial-analysis')!.reason).toContain(

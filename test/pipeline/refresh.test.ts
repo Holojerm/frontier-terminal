@@ -134,7 +134,7 @@ describe('scopes', () => {
       'google-pricing-html',
     ])
     expect(sourceIdsForScope('survey', ALL)).toEqual(ALL_IDS)
-    expect(ALL_IDS).toHaveLength(24)
+    expect(ALL_IDS).toHaveLength(25)
     // The status feeds ride the six-hourly survey only, never the EDGAR tick.
     expect(sourceIdsForScope('edgar', ALL)).not.toContain('openai-status')
   })
@@ -144,7 +144,7 @@ describe('baseline', () => {
   it('stores entities for every parser source, zero changes, one snapshot and one raw object each', async () => {
     const report = await run('survey', ALL_IDS)
 
-    expect(report.sources).toHaveLength(24)
+    expect(report.sources).toHaveLength(25)
     expect(report.failed).toBe(0)
     const byId = Object.fromEntries(report.sources.map((s) => [s.source_id, s]))
     // Sides and the cross-check are fetched and snapshotted but yield no entities.
@@ -162,8 +162,8 @@ describe('baseline', () => {
 
     expect(await rows.changes()).toHaveLength(0)
     expect(await rows.alerts()).toHaveLength(0)
-    expect(await rows.snapshots()).toHaveLength(24)
-    expect(await rows.runs()).toHaveLength(24)
+    expect(await rows.snapshots()).toHaveLength(25)
+    expect(await rows.runs()).toHaveLength(25)
     expect(await rows.ops()).toHaveLength(0)
 
     const entities = await rows.entities()
@@ -186,6 +186,8 @@ describe('baseline', () => {
     expect(perSource.get('openai-status')).toBe(25)
     expect(perSource.get('anthropic-status')).toBe(50)
     expect(perSource.get('google-cloud-status')).toBe(1)
+    // The disclosure index: 9 reports and 3 notices, a baseline like any first parse.
+    expect(perSource.get('openai-misalignment-reports')).toBe(12)
     expect(perSource.has('openrouter-models')).toBe(false)
     expect(perSource.get('openrouter-rankings-daily')).toBe(1530)
 
@@ -206,7 +208,7 @@ describe('baseline', () => {
     ])
 
     const keys = await rawKeys()
-    expect(keys).toHaveLength(24)
+    expect(keys).toHaveLength(25)
     expect(keys).toContain(
       (await rows.snapshots()).find((s) => s.source_id === 'xai-models-md')!.raw_key,
     )

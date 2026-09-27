@@ -21,6 +21,9 @@ import './parsers/sec/edgar-companyfacts'
 import './parsers/status/openai-status'
 import './parsers/status/anthropic-status'
 import './parsers/status/google-cloud-status'
+// Misalignment disclosures
+import './parsers/disclosures/openai-misalignment-reports'
+import './parsers/disclosures/openai-misalignment-report'
 // OpenRouter drift check (cross-check only)
 import './parsers/openrouter'
 // OpenRouter usage rankings (demand share)

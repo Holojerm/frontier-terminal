@@ -15,7 +15,14 @@ export const LAB_DISPLAY: Record<ProviderId, string> = {
   other: 'Other',
 }
 
-export type AlertAxis = 'pricing' | 'hiring' | 'sec' | 'revenue' | 'incidents' | 'demand'
+export type AlertAxis =
+  | 'pricing'
+  | 'hiring'
+  | 'sec'
+  | 'revenue'
+  | 'incidents'
+  | 'disclosures'
+  | 'demand'
 
 export const AXIS_DISPLAY: Record<AlertAxis, string> = {
   pricing: 'Prices',
@@ -23,6 +30,7 @@ export const AXIS_DISPLAY: Record<AlertAxis, string> = {
   sec: 'SEC',
   revenue: 'Revenue',
   incidents: 'Incidents',
+  disclosures: 'Disclosures',
   demand: 'Demand',
 }
 
@@ -33,6 +41,7 @@ export const AXIS_PATH: Record<AlertAxis, string> = {
   sec: '/revenue',
   revenue: '/revenue',
   incidents: '/incidents',
+  disclosures: '/disclosures',
   demand: '/rankings',
 }
 
@@ -44,6 +53,8 @@ const AXIS_OF: Record<ChangeView['entity_type'], AlertAxis> = {
   filer: 'sec',
   revenue: 'revenue',
   incident: 'incidents',
+  disclosure: 'disclosures',
+  disclosure_timeline: 'disclosures',
   ranking: 'demand',
 }
 

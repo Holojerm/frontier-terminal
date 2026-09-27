@@ -43,12 +43,13 @@ useSeo({
         <p>
           A free, public, read-only terminal for an equity analyst covering the AI-infrastructure
           complex into the frontier-lab IPO wave. It watches the four frontier model providers —
-          OpenAI, Anthropic, Google, xAI — on six axes: the API price list, the hiring board (with
+          OpenAI, Anthropic, Google, xAI — on seven axes: the API price list, the hiring board (with
           the physical-infrastructure buildout read off it), demand share on OpenRouter and the
-          spend share it implies at list price, status-page incidents, SEC filings, and disclosed
-          revenue. The private-company signals carry the weight before any lab trades; EDGAR is the
-          tripwire for the moment one does, and the revenue panel is wired to fill the day it
-          happens — until then it says “no audited disclosure” rather than printing a run-rate.
+          spend share it implies at list price, status-page incidents, misalignment disclosures, SEC
+          filings, and disclosed revenue. The private-company signals carry the weight before any
+          lab trades; EDGAR is the tripwire for the moment one does, and the revenue panel is wired
+          to fill the day it happens — until then it says “no audited disclosure” rather than
+          printing a run-rate.
         </p>
         <p>
           Every source is polled on a schedule, snapshotted whole, parsed deterministically, and

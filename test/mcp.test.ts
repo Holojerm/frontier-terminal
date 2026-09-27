@@ -161,6 +161,7 @@ describe('tools/list', () => {
       'get_alert',
       'get_alerts',
       'get_coverage',
+      'get_disclosures',
       'get_hiring',
       'get_hiring_history',
       'get_incidents',
@@ -183,6 +184,10 @@ describe('tools/list', () => {
     expect(tools.find((t) => t.name === 'get_prices')!.description).toContain('OpenRouter')
     // The number's limits travel with the tool, in the audit's terms.
     expect(tools.find((t) => t.name === 'get_rankings')!.description).toContain('NOT market share')
+    // A disclosure count is never a safety ranking, and the tool says so.
+    expect(tools.find((t) => t.name === 'get_disclosures')!.description).toContain(
+      'never rank labs on it',
+    )
     expect(tools.find((t) => t.name === 'get_rankings')!.description).toContain('CC BY 4.0')
     expect(tools.find((t) => t.name === 'get_incidents')!.description).toContain(
       'xAI has NO public feed',
@@ -473,7 +478,7 @@ describe('tools/call', () => {
       cuts: { id: string }[]
       exports: { name: string }[]
     }
-    expect(coverage.sources).toHaveLength(24)
+    expect(coverage.sources).toHaveLength(25)
     expect(coverage.sources.find((s) => s.source_id === 'openrouter-models')!.caveat).toContain(
       'never source of record',
     )
