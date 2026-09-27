@@ -164,6 +164,52 @@ export const GoogleCloudIncidentsOutput = z.strictObject({
   rows: z.array(IncidentRow.extend({ provider: z.literal('google') })),
 })
 
+// ---- Misalignment disclosures ---------------------------------------------
+
+const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+const entryId = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
+
+// One row per entry on a disclosure index. Everything a reader sees is the
+// page's own text, stored verbatim: the title, the one-sentence summary, the
+// model and the context it was observed in. `listed_on` is the date the index
+// prints beside the entry; it moves when a report is revised, so a change
+// there alone never wakes the judge (judge/pending.ts), but it is kept,
+// because the earliest one observed is the report's publication date.
+export const DisclosureRow = z.strictObject({
+  provider: providerEnum,
+  kind: z.enum(['report', 'notice']),
+  entry_id: entryId, // report slug, or the notice's id without its "notice-" prefix
+  title: z.string().min(1),
+  summary: z.string().min(1),
+  model: z.string().min(1).nullable(), // reports only
+  observed_during: z.string().min(1).nullable(), // reports only
+  listed_on: isoDate,
+  entry_url: z.url({ protocol: /^https?$/ }),
+  ...provenanceFields,
+})
+export type DisclosureRow = z.infer<typeof DisclosureRow>
+export const DisclosureIndexOutput = z.strictObject({ rows: z.array(DisclosureRow) })
+
+// The dates on one report's own page. `lines` is every "Label: value" line of
+// the page's metadata cell, verbatim and in page order, minus "Report
+// updated" (the index row carries that date). Two dates are read out of it,
+// and only when the value is exactly one date: the discovery date, under any
+// of the labels the vendor uses, and a printed disclosure date. The
+// occurrence line ("Sample", "Incident date", ...) is only ever verbatim.
+export const DisclosureTimelineRow = z.strictObject({
+  provider: providerEnum,
+  entry_id: entryId,
+  title: z.string().min(1), // the page's own title; the read side joins on it
+  lines: z.array(z.strictObject({ label: z.string().min(1), value: z.string().min(1) })),
+  discovered_on: isoDate.nullable(),
+  disclosed_on: isoDate.nullable(),
+  ...provenanceFields,
+})
+export type DisclosureTimelineRow = z.infer<typeof DisclosureTimelineRow>
+export const DisclosureReportPageOutput = z.strictObject({
+  rows: z.array(DisclosureTimelineRow).length(1),
+})
+
 // ---- Cross-check (never source of record) ---------------------------------
 
 export const OpenRouterModelRow = z.strictObject({
@@ -235,6 +281,11 @@ export const parserOutputSchemas = {
   'openai-status': StatuspageIncidentsOutput,
   'anthropic-status': StatuspageIncidentsOutput,
   'google-cloud-status': GoogleCloudIncidentsOutput,
+  'openai-misalignment-reports': DisclosureIndexOutput,
+  // One registration for every derived per-report page (derived.ts); the
+  // committed fixture is one representative page.
+  'openai-misalignment-report-an-agent-used-dns-to-reach-an-external-chatbot':
+    DisclosureReportPageOutput,
   'openrouter-models': OpenRouterOutput,
   'openrouter-rankings-daily': OpenRouterRankingsOutput,
 } as const

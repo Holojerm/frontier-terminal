@@ -26,6 +26,11 @@ export const entityTypeEnum = z.enum([
   // 'filer': a lab's CIK, resolved from its own S-1 hit by the pending_filers
   // patterns in sources.yaml (parsers/sec/pending-filers.ts). One row per lab.
   'filer',
+  // 'disclosure': one entry on a lab's misalignment-disclosure index (a
+  // report or a notice); 'disclosure_timeline': the dates printed on one
+  // report's own page. A lab without an index has neither (sources.yaml cut).
+  'disclosure',
+  'disclosure_timeline',
 ])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])

@@ -26,9 +26,20 @@ export const JUDGE_CHANGE_LIMIT = 200
  * posting. The names are the parser output's (server/pipeline/parsers/hiring):
  * Ashby's `publishedAt` lands as `published_at`, and Greenhouse's
  * `first_published` / `updated_at` as `published_at` / `updated_at`.
- * Model and filing rows carry no such field, so the filter is job-only.
  */
 export const JOB_TIMESTAMP_FIELDS = ['published_at', 'updated_at'] as const
+
+/**
+ * Per entity type, the payload fields a source re-stamps without the entry
+ * changing. A disclosure index prints a "Report updated" date that moves on
+ * any revision; the row keeps it (the earliest one is the publication date),
+ * but a change there alone is not news. Model and filing rows carry no such
+ * field.
+ */
+export const TIMESTAMP_FIELDS: Readonly<Record<string, readonly string[]>> = {
+  job: JOB_TIMESTAMP_FIELDS,
+  disclosure: ['listed_on'],
+}
 
 /**
  * Entity types the judge never sees. 'ranking' rows are a time series — one
@@ -42,7 +53,7 @@ export const JUDGE_EXCLUDED_ENTITY_TYPES = ['ranking'] as const
 /** The WHERE fragment that keeps excluded entity types out of a changes query. */
 export const judgeEligible = () => ne(tables.changes.entity_type, JUDGE_EXCLUDED_ENTITY_TYPES[0])
 
-/** A job `modified` whose before/after differ only in JOB_TIMESTAMP_FIELDS.
+/** A `modified` whose before/after differ only in its type's TIMESTAMP_FIELDS.
  * Typed on plain strings so a raw D1 row qualifies without a parse. */
 export function isTimestampOnlyChange(change: {
   entity_type: string
@@ -50,11 +61,12 @@ export function isTimestampOnlyChange(change: {
   before_json: string | null
   after_json: string | null
 }): boolean {
-  if (change.entity_type !== 'job' || change.change_type !== 'modified') return false
+  const fields = TIMESTAMP_FIELDS[change.entity_type]
+  if (!fields || change.change_type !== 'modified') return false
   if (change.before_json === null || change.after_json === null) return false
   const strip = (json: string) => {
     const value = JSON.parse(json) as Record<string, unknown>
-    for (const field of JOB_TIMESTAMP_FIELDS) delete value[field]
+    for (const field of fields) delete value[field]
     return value
   }
   return stableEquals(strip(change.before_json), strip(change.after_json))

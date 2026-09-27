@@ -37,6 +37,7 @@ const ROUTES = [
   '/rankings',
   '/alerts',
   '/incidents',
+  '/disclosures',
   '/data',
   '/about',
   '/license',

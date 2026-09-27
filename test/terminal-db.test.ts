@@ -127,7 +127,7 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       latest_detected_at: null,
       window_from: null,
       window_hours: 24,
-      recent: { pricing: 0, hiring: 0, sec: 0, incidents: 0, total: 0 },
+      recent: { pricing: 0, hiring: 0, sec: 0, incidents: 0, disclosures: 0, total: 0 },
       total_changes: 0,
       sources_total: 0,
       sources_not_yet_compared: 0,
@@ -191,6 +191,8 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       'prices_latest',
       'jobs_open',
       'incidents',
+      'disclosures',
+      'disclosure_timelines',
       'rankings_daily',
       'filers',
       'revenue_facts',
@@ -234,10 +236,10 @@ describe('after a baseline poll of every source', () => {
     expect(as_of).toMatch(/^2026-09-07T10:0\d:/)
     expect(movement.total_changes).toBe(0)
     expect(movement.latest_detected_at).toBeNull()
-    expect(movement.sources_total).toBe(24)
+    expect(movement.sources_total).toBe(25)
     // Every source has exactly one snapshot => nothing could have been
     // diffed. That is a different sentence from "nothing changed".
-    expect(movement.sources_not_yet_compared).toBe(24)
+    expect(movement.sources_not_yet_compared).toBe(25)
     expect(latest_fetched_at).toMatch(/^2026-09-07T10:0\d:/)
   })
 
@@ -367,7 +369,7 @@ describe('after a baseline poll of every source', () => {
 
   it('coverage: every source has a snapshot, a run, and the audit caveat', async () => {
     const coverage = await queryCoverage(db, await ctx())
-    expect(coverage.sources).toHaveLength(24)
+    expect(coverage.sources).toHaveLength(25)
     for (const s of coverage.sources) {
       expect(s.newest_snapshot!.source_url).toBe(urlOf(s.source_id))
       expect(s.newest_snapshot!.fetched_at).toMatch(/^2026-09-07T10:0\d:/)
@@ -383,7 +385,7 @@ describe('after a baseline poll of every source', () => {
     expect(byId['anthropic-greenhouse-departments']!.role).toBe('join')
     // The resolved CIK URL from the manifest, not the sources.yaml template.
     expect(byId['edgar-submissions-spcx']!.url).toBe(urlOf('edgar-submissions-spcx'))
-    expect(coverage.totals.snapshots).toBe(24)
+    expect(coverage.totals.snapshots).toBe(25)
     expect(coverage.exports.find((e) => e.name === 'jobs_open')!.rows).toBe(65 + 59 + 42)
     expect(coverage.exports.find((e) => e.name === 'incidents')!.rows).toBe(25 + 50 + 1)
     expect(byId['google-cloud-status']).toMatchObject({ entity_count: 1, role: 'status' })
@@ -522,14 +524,21 @@ describe('after a second poll that moves prices, closes a role, and files an S-1
 
   it('the signal band counts each change on its axis inside a stated 24h window', async () => {
     const { movement, alerts, alert_count } = await queryOverview(db, await ctx())
-    expect(movement.recent).toEqual({ pricing: 3, hiring: 1, sec: 1, incidents: 0, total: 5 })
+    expect(movement.recent).toEqual({
+      pricing: 3,
+      hiring: 1,
+      sec: 1,
+      incidents: 0,
+      disclosures: 0,
+      total: 5,
+    })
     expect(movement.total_changes).toBe(5)
     expect(movement.latest_detected_at).toMatch(/^2026-09-07T10:0\d:/)
     expect(Date.parse(movement.latest_detected_at!) - Date.parse(movement.window_from!)).toBe(
       24 * 3_600_000,
     )
-    expect(movement.sources_total).toBe(24)
-    expect(movement.sources_not_yet_compared).toBe(24 - 4) // xai md, xai jobs + its join, edgar-fts
+    expect(movement.sources_total).toBe(25)
+    expect(movement.sources_not_yet_compared).toBe(25 - 4) // xai md, xai jobs + its join, edgar-fts
 
     expect(alert_count).toBe(1)
     expect(alerts).toHaveLength(1)
@@ -610,7 +619,14 @@ describe('the stated window holds when changes span several axes', () => {
     const { movement } = await queryOverview(db, await ctx())
     expect(movement.latest_detected_at).toBe('2026-08-26T16:24:42Z')
     expect(movement.window_from).toBe('2026-08-25T16:24:42.000Z')
-    expect(movement.recent).toEqual({ pricing: 1, hiring: 2, sec: 0, incidents: 0, total: 3 })
+    expect(movement.recent).toEqual({
+      pricing: 1,
+      hiring: 2,
+      sec: 0,
+      incidents: 0,
+      disclosures: 0,
+      total: 3,
+    })
     expect(movement.total_changes).toBe(4)
   })
 })

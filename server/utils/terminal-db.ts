@@ -280,6 +280,8 @@ const AXIS_OF: Readonly<Record<string, keyof Omit<MovementSummary['recent'], 'to
   revenue: 'sec',
   filer: 'sec',
   incident: 'incidents',
+  disclosure: 'disclosures',
+  disclosure_timeline: 'disclosures',
 }
 
 // Ranking rows are a daily time series, not events (~50 new rows a day by
@@ -305,7 +307,7 @@ export async function queryMovement(db: PipelineDb): Promise<MovementSummary> {
   const totalChanges = bounds?.n ?? 0
   const latest = bounds?.latest ?? null
 
-  const recent = { pricing: 0, hiring: 0, sec: 0, incidents: 0, total: 0 }
+  const recent = { pricing: 0, hiring: 0, sec: 0, incidents: 0, disclosures: 0, total: 0 }
   let windowFrom: string | null = null
   if (latest !== null && totalChanges > 0) {
     windowFrom = new Date(Date.parse(latest) - MOVEMENT_WINDOW_HOURS * 3_600_000).toISOString()
@@ -375,6 +377,20 @@ function summarize(entityType: string, payload: Json | null): string {
       payload.resolved_at === null ? 'open' : str(payload.status),
     ]
     return parts.filter((p): p is string => Boolean(p)).join(' · ')
+  }
+  if (entityType === 'disclosure') {
+    return [str(payload.kind) ?? '?', str(payload.title) ?? '?', str(payload.model)]
+      .filter((p): p is string => Boolean(p))
+      .join(' · ')
+  }
+  if (entityType === 'disclosure_timeline') {
+    return [
+      str(payload.title) ?? '?',
+      `discovered ${str(payload.discovered_on) ?? 'not stated'}`,
+      str(payload.disclosed_on) ? `disclosed ${str(payload.disclosed_on)}` : null,
+    ]
+      .filter((p): p is string => Boolean(p))
+      .join(' · ')
   }
   if (entityType === 'ranking') {
     const tokens = num(payload.total_tokens)

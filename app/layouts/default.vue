@@ -95,6 +95,11 @@ const SECTIONS: NavSection[] = [
         to: '/incidents',
         description: 'Status-page history and current API strain.',
       },
+      {
+        label: 'Disclosures',
+        to: '/disclosures',
+        description: 'What the labs publish about their own models misbehaving.',
+      },
     ],
   },
 ]
