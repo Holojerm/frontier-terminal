@@ -55,7 +55,7 @@ export interface Reference {
 
 const SOURCE_DIRS = ['app', 'server', 'shared', 'scripts', 'test']
 const DOC_DIRS = ['.claude/docs', '.claude/commands', '.claude/routines']
-const DOC_FILES = ['CLAUDE.md', 'AGENTS.md', 'DESIGN.md', 'README.md']
+const DOC_FILES = ['AGENTS.md', 'DESIGN.md', 'README.md']
 const CORPUS_EXTRA = [
   'nuxt.config.ts',
   'wrangler.toml',

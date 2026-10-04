@@ -19,7 +19,7 @@
 # WHAT MOVED. `bun run test:a11y` is two Playwright projects, not one —
 # `a11y` (axe over every public route, light and dark) and `csp` (the
 # Content-Security-Policy spec). Moving it moved both, which means the
-# SECURITY-HEADER gate now lives here too. That is the trap CLAUDE.md warns
+# SECURITY-HEADER gate now lives here too. That is the trap AGENTS.md warns
 # about: a broken CSP fails silently, in exactly the way that gate exists to
 # catch. If you ever delete this workflow, you are deleting the CSP gate.
 #

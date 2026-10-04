@@ -98,5 +98,5 @@ nothing to keep a session for. Tools and their descriptions live in `server/util
 
 ## For agents
 
-Read [`CLAUDE.md`](./CLAUDE.md) first. It is the index into `.claude/docs/`, which is read on
+Read [`AGENTS.md`](./AGENTS.md) first. It is the index into `.claude/docs/`, which is read on
 demand rather than all at once.

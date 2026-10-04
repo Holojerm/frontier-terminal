@@ -4,7 +4,7 @@
 //
 // ── Migration drift ─────────────────────────────────────────────────────────
 // The one signal here that has already cost an outage. `wrangler deploy` does
-// not apply D1 migrations (CLAUDE.md › Gotchas), so a push that adds a column
+// not apply D1 migrations (AGENTS.md › Gotchas), so a push that adds a column
 // goes live before the column exists, and stays that way until someone
 // remembers `bun run db:migrate:remote`. On 2026-08-21 that gap was seven
 // minutes of a core route failing on a template fork. Seven minutes is luck,

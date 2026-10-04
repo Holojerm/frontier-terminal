@@ -3,7 +3,7 @@
 The `useSeo()` one-call-per-page contract, how `publicPage` meta feeds both `sitemap.xml` and `llms.txt`, and the structured-data rules.
 
 > **Load this when:** adding or editing a page, writing structured data, or changing crawler behaviour.
-> Canonical index: [CLAUDE.md](../../CLAUDE.md).
+> Canonical index: [AGENTS.md](../../AGENTS.md).
 
 ---
 
