@@ -16,7 +16,13 @@ import type { FetchSource } from './sources'
 
 export type FetchOutcome =
   | { ok: true; status: number; text: string; bytes: number }
-  | { ok: false; status: number | null; detail: string }
+  | {
+      ok: false
+      status: number | null
+      detail: string
+      /** On a 429 only: the server's Retry-After, when it sent a usable one. */
+      retryAfterMs?: number
+    }
   // Nothing was attempted: the host wants a credential this deploy does not
   // have. The refresh records it as a 'skipped' run, not a failure.
   | { ok: false; status: null; detail: string; skipped: true }
@@ -145,9 +151,29 @@ export async function readCappedBody(
 
 const defaultSleep = (ms: number) => new Promise<void>((resolve) => setTimeout(resolve, ms))
 
-/** A 429 or any 5xx is worth another try; every other non-2xx is the source's answer. */
+/** Every 5xx is worth another try; every other non-2xx is the source's answer. */
 function retryable(status: number): boolean {
-  return status === 429 || status >= 500
+  return status >= 500
+}
+
+/**
+ * A 429 is not retried in the tick: the 500 ms and 2 s backoffs are far
+ * shorter than any limiter's window, so retrying only spends the quota that
+ * is already gone. The refresh backs the source off for a cooldown instead
+ * (refresh.ts). The one exception is a Retry-After short enough to sit out
+ * inside the tick.
+ */
+export const RATE_LIMIT_MAX_INLINE_WAIT_MS = 5_000
+
+/** The `HTTP 429` detail prefix the refresh keys its cooldown and alert policy on. */
+export const RATE_LIMITED_DETAIL = 'HTTP 429'
+
+/** Retry-After as milliseconds: delay-seconds or an HTTP date; null when absent or unusable. */
+export function parseRetryAfter(header: string | null, now: number = Date.now()): number | null {
+  const value = header?.trim()
+  if (!value) return null
+  const ms = /^\d+$/.test(value) ? Number(value) * 1000 : Date.parse(value) - now
+  return Number.isFinite(ms) ? Math.max(0, ms) : null
 }
 
 /**
@@ -181,8 +207,12 @@ export function createFetcher(options: FetcherOptions): SourceFetcher {
     }
 
     let last: FetchOutcome = { ok: false, status: null, detail: 'no attempt made' }
+    let waited = false
     for (let attempt = 1; attempt <= attempts; attempt++) {
-      if (attempt > 1) await sleep(FETCH_BACKOFF_MS[attempt - 2] ?? FETCH_BACKOFF_MS.at(-1) ?? 0)
+      if (attempt > 1 && !waited) {
+        await sleep(FETCH_BACKOFF_MS[attempt - 2] ?? FETCH_BACKOFF_MS.at(-1) ?? 0)
+      }
+      waited = false
       try {
         const response = await doFetch(source.url, {
           headers,
@@ -199,6 +229,23 @@ export function createFetcher(options: FetcherOptions): SourceFetcher {
         }
         if (credentialed && response.status >= 300 && response.status < 400) {
           return { ok: false, status: response.status, detail: REDIRECT_REFUSED }
+        }
+        if (response.status === 429) {
+          const retryAfterMs = parseRetryAfter(response.headers.get('retry-after'))
+          last = {
+            ok: false,
+            status: 429,
+            detail:
+              retryAfterMs === null
+                ? RATE_LIMITED_DETAIL
+                : `${RATE_LIMITED_DETAIL} (Retry-After ${Math.ceil(retryAfterMs / 1000)}s)`,
+            ...(retryAfterMs === null ? {} : { retryAfterMs }),
+          }
+          if (retryAfterMs === null || retryAfterMs > RATE_LIMIT_MAX_INLINE_WAIT_MS) return last
+          // Short enough to honour here; it replaces the loop's own backoff.
+          await sleep(retryAfterMs)
+          waited = true
+          continue
         }
         last = { ok: false, status: response.status, detail: `HTTP ${response.status}` }
         if (!retryable(response.status)) return last

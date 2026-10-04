@@ -113,7 +113,7 @@ describe('the disclosures axis end to end', () => {
   it('derives one page per report, joins its dates by title, and measures the days', async () => {
     await run([INDEX_ID], fetcher())
     const ids = await reportPageIds()
-    expect(ids).toHaveLength(9)
+    expect(ids).toHaveLength(12)
     expect(ids).toContain(`openai-misalignment-report-${DNS}`)
 
     // The deception report's URL answers with another report's page: its
@@ -131,7 +131,7 @@ describe('the disclosures axis end to end', () => {
 
     const data = await queryDisclosures(db, await ctx())
     const openai = data.providers.find((p) => p.provider === 'openai')!
-    expect(openai).toMatchObject({ feed: 'ok', reports: 9, notices: 3, timed_reports: 3 })
+    expect(openai).toMatchObject({ feed: 'ok', reports: 12, notices: 3, timed_reports: 3 })
     // 5 (DNS), 90 (printed disclosure date), 114 (uploading): the median is 90.
     expect(openai.median_days_to_disclosure).toBe(90)
     expect(openai.sources[0]!.source_id).toBe(INDEX_ID)
@@ -157,7 +157,7 @@ describe('the disclosures axis end to end', () => {
       timeline_status: 'not_applicable',
     })
     // Newest listed first.
-    expect(data.entries[0]!.listed_on).toBe('2026-09-25')
+    expect(data.entries[0]!.listed_on).toBe('2026-10-02')
     expect(data.entries.at(-1)!.entry_id).toBe('hugging-face')
   })
 
@@ -168,15 +168,16 @@ describe('the disclosures axis end to end', () => {
     const NEW = 'a-new-report'
     const newEntry =
       '<details class="cb-entry" data-date="2026-10-02" data-title="A new report"><summary><div>' +
-      '<h3>A new report</h3><p class="cb-meta">Report · Updated <time datetime="2026-10-02">Oct 2, 2026</time> · RL training</p>' +
+      '<h3>A new report</h3><p class="cb-model">Internal research model · RL training</p>' +
+      '<div class="cb-updated">Report updated <time datetime="2026-10-02">Oct 2, 2026</time></div>' +
       '</div></summary><div class="cb-body"><div><p class="cb-eyebrow">Observation</p>' +
       '<p class="cb-copy">An agent did something new.</p>' +
       `<a class="cb-link" href="/misalignment-reports/${NEW}/">Read full report</a></div>` +
       '<dl><div><dt>Model</dt><dd>Internal research model</dd></div>' +
       '<div><dt>Observed during</dt><dd>RL training</dd></div></dl></div></details>'
     const nextIndex = INDEX.replace(
-      '<time datetime="2026-09-25">Sep 25, 2026</time> · RL training</p>',
-      '<time datetime="2026-10-02">Oct 2, 2026</time> · RL training</p>',
+      'Report updated <time datetime="2026-09-25">Sep 25, 2026</time></div></div><h3>An agent used DNS',
+      'Report updated <time datetime="2026-10-02">Oct 2, 2026</time></div></div><h3>An agent used DNS',
     ).replace('<div id="report-entries">', `<div id="report-entries">${newEntry}`)
     const second = await run([INDEX_ID], fetcher({ [BASE]: nextIndex }))
     expect(second.sources[0]).toMatchObject({ status: 'ok', added: 1, modified: 1 })

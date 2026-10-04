@@ -6,7 +6,9 @@ import {
   MAX_BODY_BYTES,
   REDIRECT_REFUSED,
   SEC_CONTACT_UNSET,
+  RATE_LIMITED_DETAIL,
   createFetcher,
+  parseRetryAfter,
   readCappedBody,
   userAgentFor,
 } from '../../server/pipeline/fetch'
@@ -100,6 +102,51 @@ describe('createFetcher', () => {
     expect(outcome).toMatchObject({ ok: true, text: '# models' })
     expect(calls).toHaveLength(2)
     expect(sleeps).toEqual([500])
+  })
+
+  it('does not retry a 429 in the tick; the refresh backs the source off instead', async () => {
+    sleeps.length = 0
+    const { fetch, calls } = scripted([new Response('slow down', { status: 429 })])
+    const outcome = await createFetcher({ ...APP, fetch, sleep })(XAI)
+    expect(outcome).toEqual({ ok: false, status: 429, detail: RATE_LIMITED_DETAIL })
+    expect(calls).toHaveLength(1)
+    expect(sleeps).toEqual([])
+  })
+
+  it('reports a long Retry-After for the cooldown, and sits out a short one in the tick', async () => {
+    sleeps.length = 0
+    const long = scripted([new Response('', { status: 429, headers: { 'Retry-After': '1800' } })])
+    expect(await createFetcher({ ...APP, fetch: long.fetch, sleep })(XAI)).toEqual({
+      ok: false,
+      status: 429,
+      detail: 'HTTP 429 (Retry-After 1800s)',
+      retryAfterMs: 1_800_000,
+    })
+    expect(long.calls).toHaveLength(1)
+    expect(sleeps).toEqual([])
+
+    const short = scripted([
+      new Response('', { status: 429, headers: { 'Retry-After': '2' } }),
+      new Response('# models'),
+    ])
+    expect(await createFetcher({ ...APP, fetch: short.fetch, sleep })(XAI)).toMatchObject({
+      ok: true,
+      text: '# models',
+    })
+    // The server's wait replaces the fixed backoff rather than adding to it.
+    expect(sleeps).toEqual([2000])
+  })
+
+  it('reads Retry-After as seconds or as an HTTP date, and nothing else', () => {
+    expect(parseRetryAfter('120')).toBe(120_000)
+    expect(
+      parseRetryAfter('Wed, 21 Oct 2026 07:28:00 GMT', Date.parse('2026-10-21T07:27:00Z')),
+    ).toBe(60_000)
+    expect(
+      parseRetryAfter('Wed, 21 Oct 2026 07:28:00 GMT', Date.parse('2026-10-21T08:00:00Z')),
+    ).toBe(0)
+    expect(parseRetryAfter(null)).toBeNull()
+    expect(parseRetryAfter('soon')).toBeNull()
   })
 
   it('does not retry a 4xx — that is the source’s answer', async () => {

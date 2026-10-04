@@ -186,8 +186,8 @@ describe('baseline', () => {
     expect(perSource.get('openai-status')).toBe(25)
     expect(perSource.get('anthropic-status')).toBe(50)
     expect(perSource.get('google-cloud-status')).toBe(1)
-    // The disclosure index: 9 reports and 3 notices, a baseline like any first parse.
-    expect(perSource.get('openai-misalignment-reports')).toBe(12)
+    // The disclosure index: 12 reports and 3 notices, a baseline like any first parse.
+    expect(perSource.get('openai-misalignment-reports')).toBe(15)
     expect(perSource.has('openrouter-models')).toBe(false)
     expect(perSource.get('openrouter-rankings-daily')).toBe(1530)
 
@@ -645,6 +645,64 @@ describe('failures', () => {
       detail: 'xai-models-md: HTTP 503 after 3 attempts',
       path: urlOf('xai-models-md'),
     })
+  })
+
+  it('a 429 backs the source off for a cooldown and mails only once it persists for 6 hours', async () => {
+    const GOOGLE = 'google-pricing-html'
+    let hits = 0
+    const fetcher: SourceFetcher = async () => {
+      hits++
+      return { ok: false, status: 429, detail: 'HTTP 429' }
+    }
+    const at = (iso: string) =>
+      runRefresh({ ...deps(fetcher), now: () => new Date(Date.parse(iso)) }, 'edgar', [GOOGLE])
+    const mails = async () => (await rows.ops()).filter((o) => o.kind === 'source_failed')
+
+    // First 429: recorded as a failed run, not mailed.
+    const first = await at('2026-10-01T00:00:00Z')
+    expect(first.sources[0]).toMatchObject({ status: 'failed', detail: 'HTTP 429' })
+    expect(hits).toBe(1)
+    expect(await mails()).toHaveLength(0)
+
+    // The next 30-minute tick is inside the cooldown: no fetch, no run, no mail.
+    const cooling = await at('2026-10-01T00:30:00Z')
+    expect(cooling.sources).toEqual([])
+    expect(hits).toBe(1)
+    expect(await rows.runs()).toHaveLength(1)
+
+    // Hourly attempts keep failing quietly until the streak is 6 hours old.
+    for (const hour of [1, 2, 3, 4, 5]) await at(`2026-10-01T0${hour}:00:00Z`)
+    expect(await mails()).toHaveLength(0)
+    await at('2026-10-01T06:00:00Z')
+    expect(await mails()).toHaveLength(1)
+    expect((await mails())[0]!.detail).toContain(
+      '429 on every attempt since 2026-10-01T00:00:00.000Z',
+    )
+    // One mail per crossing, not one per attempt.
+    await at('2026-10-01T07:00:00Z')
+    expect(await mails()).toHaveLength(1)
+
+    // A good fetch ends the streak: the next 429 is a first one again.
+    const good = fixtureFetcher({ [GOOGLE]: fixtureText('fixtures/pricing/google-pricing.html') })
+    await runRefresh({ ...deps(good), now: () => new Date('2026-10-01T08:00:00Z') }, 'edgar', [
+      GOOGLE,
+    ])
+    await at('2026-10-01T09:00:00Z')
+    await at('2026-10-01T10:00:00Z')
+    expect(await mails()).toHaveLength(1)
+  })
+
+  it('an index that is empty from the start is quiet, not a mass-removal failure', async () => {
+    const ID = 'openai-misalignment-reports'
+    const empty = fixtureText('fixtures/disclosures/openai-misalignment-reports.html')
+      .replace(/<div id="report-entries">[\s\S]*?<\/section>/, '</section>')
+      .replace(/<div id="notice-entries">[\s\S]*?<\/div><\/section>/, '</section>')
+    const fetcher = fixtureFetcher({ [ID]: empty })
+    const first = await run('survey', [ID], fetcher)
+    expect(first.sources[0]).toMatchObject({ status: 'baseline', detail: '0 entities' })
+    const second = await run('survey', [ID], fixtureFetcher({ [ID]: `${empty}<!-- changed -->` }))
+    expect(second.sources[0]).toMatchObject({ status: 'ok', added: 0, removed: 0 })
+    expect(await rows.ops()).toHaveLength(0)
   })
 
   it('the Greenhouse join race holds its ops event for a tick; a join that stays broken still raises one', async () => {

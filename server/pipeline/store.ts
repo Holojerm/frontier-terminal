@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from 'drizzle-orm'
+import { and, desc, eq, gte, inArray, like } from 'drizzle-orm'
 import type { drizzle } from 'drizzle-orm/d1'
 import type { BatchItem } from 'drizzle-orm/batch'
 import type { z } from 'zod'
@@ -12,6 +12,7 @@ import {
   type StoredEntityRow,
   type TableName,
 } from './contracts'
+import { RATE_LIMITED_DETAIL } from './fetch'
 
 // The write chokepoint. Every pipeline row reaches D1 through insertRows(),
 // which validates it against its zod contract first — so a row missing
@@ -249,6 +250,53 @@ export async function lastRunStatus(db: PipelineDb, sourceId: string): Promise<s
     .orderBy(desc(tables.sourceRuns.started_at))
     .limit(1)
   return row?.status ?? null
+}
+
+/** The newest `limit` runs for a source, newest first. */
+export async function recentRuns(
+  db: PipelineDb,
+  sourceId: string,
+  limit: number,
+): Promise<{ status: string; detail: string | null; started_at: string }[]> {
+  return db
+    .select({
+      status: tables.sourceRuns.status,
+      detail: tables.sourceRuns.detail,
+      started_at: tables.sourceRuns.started_at,
+    })
+    .from(tables.sourceRuns)
+    .where(eq(tables.sourceRuns.source_id, sourceId))
+    .orderBy(desc(tables.sourceRuns.started_at))
+    .limit(limit)
+}
+
+/**
+ * Each source's newest run that ended in a 429, among runs since `sinceIso`.
+ * One query per tick rather than one per source: the cooldown check only
+ * needs to know who was rate-limited recently.
+ */
+export async function latestRateLimitedRuns(
+  db: PipelineDb,
+  sinceIso: string,
+): Promise<Map<string, { status: string; detail: string | null; started_at: string }>> {
+  const rows = await db
+    .select({
+      source_id: tables.sourceRuns.source_id,
+      status: tables.sourceRuns.status,
+      detail: tables.sourceRuns.detail,
+      started_at: tables.sourceRuns.started_at,
+    })
+    .from(tables.sourceRuns)
+    .where(
+      and(
+        eq(tables.sourceRuns.status, 'failed'),
+        like(tables.sourceRuns.detail, `${RATE_LIMITED_DETAIL}%`),
+        gte(tables.sourceRuns.started_at, sinceIso),
+      ),
+    )
+    .orderBy(tables.sourceRuns.started_at)
+  // Ascending, so a later row for the same source overwrites an earlier one.
+  return new Map(rows.map((r) => [r.source_id, r]))
 }
 
 export interface GoodSnapshot {
