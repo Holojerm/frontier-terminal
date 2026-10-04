@@ -369,7 +369,7 @@ sources:
       A record of what OpenAI chose to disclose, not a count of what
       happened: a lab with a disclosure page will always show more entries
       than a lab without one, so the count is never a safety ranking.
-      Live-fetched 2026-09-27: 9 reports and 3 notices. Reports carry the
+      Live-fetched 2026-10-04: 12 reports and 3 notices. Reports carry the
       title, one-sentence observation, model and "observed during" context
       verbatim; notices (Hugging Face, DSEwiki, RubyGems) carry a summary
       and link to an update on openai.com, which answers 403 to a headless

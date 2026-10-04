@@ -16,6 +16,13 @@ import { diff } from './diff'
 import { modelFloorAlerts } from './model-floor'
 import type { SourceFetcher } from './fetch'
 import { derivedKeyOf, laneFor } from './lanes'
+import {
+  cooldownEndsAt,
+  RATE_LIMIT_MAX_COOLDOWN_MS,
+  rateLimitAlertDue,
+  rateLimitSince,
+  type RunSummary,
+} from './rate-limit'
 import { deriveSources, resolvedFilers } from './derived'
 import { manifestFixtures } from './parsers/fixture-provenance'
 import { parsePendingFilersBlock, type PendingFilers } from './parsers/sec/pending-filers'
@@ -30,6 +37,8 @@ import {
   lastRunStatus,
   lastSkippedRunAt,
   latestGoodSnapshot,
+  latestRateLimitedRuns,
+  recentRuns,
   type PipelineDb,
 } from './store'
 
@@ -118,6 +127,10 @@ interface Fetched {
   skipped: boolean
   /** True when a DERIVED url 404d — the document is not published, see rows.ts. */
   absent: boolean
+  /** True when the server answered 429: backed off, alerted only if it persists (rate-limit.ts). */
+  rateLimited: boolean
+  /** True when the source is inside the cooldown a 429 started: not fetched, not recorded. */
+  cooling: boolean
 }
 
 async function fetchAndSnapshot(deps: RefreshDeps, source: FetchSource, now: () => Date) {
@@ -133,6 +146,8 @@ async function fetchAndSnapshot(deps: RefreshDeps, source: FetchSource, now: () 
       // Only for a derived id. An audited url that 404s is breakage — the
       // audit recorded that it resolved — so that one stays a failure.
       absent: outcome.status === 404 && derivedKeyOf(source.source_id) !== null,
+      rateLimited: outcome.status === 429,
+      cooling: false,
     } satisfies Fetched
   }
 
@@ -166,6 +181,8 @@ async function fetchAndSnapshot(deps: RefreshDeps, source: FetchSource, now: () 
     failure: null,
     skipped: false,
     absent: false,
+    rateLimited: false,
+    cooling: false,
   } satisfies Fetched
 }
 
@@ -241,7 +258,7 @@ async function parseAndStore(
       body.snapshot_id,
     )
   }
-  if (parsed.entities.length === 0 && lane.removals === 'set') {
+  if (parsed.entities.length === 0 && before.length > 0 && lane.removals === 'set') {
     // An empty page that parsed cleanly is far more often an outage that
     // returned 200 than a board that really closed every role. An
     // append-only feed is different: an empty window removes nothing.
@@ -358,11 +375,31 @@ export async function runRefresh(
   for (const id of sourceIds) for (const side of laneFor(id)?.sides ?? []) wantedIds.add(side)
   const sources = all.filter((s) => wantedIds.has(s.source_id))
 
+  // Sources a recent 429 put on cooldown. One query for the tick.
+  const rateLimited = await latestRateLimitedRuns(
+    deps.db,
+    new Date(Date.parse(started_at) - RATE_LIMIT_MAX_COOLDOWN_MS).toISOString(),
+  )
+
   const byId = new Map<string, Fetched>()
   for (const source of sources) {
     let fetched: Fetched
     try {
-      fetched = await fetchAndSnapshot(deps, source, now)
+      const cooldownEnd = cooldownEndsAt(rateLimited.get(source.source_id))
+      if (cooldownEnd !== null && Date.parse(started_at) < cooldownEnd) {
+        fetched = {
+          source,
+          fetched_at: now().toISOString(),
+          body: null,
+          failure: null,
+          skipped: false,
+          absent: false,
+          rateLimited: false,
+          cooling: true,
+        }
+      } else {
+        fetched = await fetchAndSnapshot(deps, source, now)
+      }
     } catch (err) {
       fetched = {
         source,
@@ -371,6 +408,8 @@ export async function runRefresh(
         failure: describeError(err),
         skipped: false,
         absent: false,
+        rateLimited: false,
+        cooling: false,
       }
     }
     byId.set(source.source_id, fetched)
@@ -379,6 +418,7 @@ export async function runRefresh(
   const reports: SourceReport[] = []
   for (const source of sources) {
     const fetched = byId.get(source.source_id)!
+    if (fetched.cooling) continue
     let outcome: Outcome
     // A failure the next tick clears was a blip. Only one class is known to
     // self-resolve — the Greenhouse snapshot race — and it says so by type.
@@ -405,11 +445,22 @@ export async function runRefresh(
       // The mail waits a tick for a transient class, so a race that resolves
       // itself before anyone could have acted on it never becomes an alert,
       // and one that does not resolve still does.
-      const persists = !transient || (await lastRunStatus(deps.db, source.source_id)) === 'failed'
+      // A 429 is the vendor's limiter, not breakage: it waits for the streak
+      // to outlast a transient squeeze (rate-limit.ts).
+      let persists: boolean
+      let alertDetail = detail
+      if (fetched.rateLimited) {
+        const history: RunSummary[] = await recentRuns(deps.db, source.source_id, 100)
+        persists = rateLimitAlertDue(history, Date.parse(started_at))
+        const since = rateLimitSince(history)
+        if (since) alertDetail = `${detail}; 429 on every attempt since ${since}`
+      } else {
+        persists = !transient || (await lastRunStatus(deps.db, source.source_id)) === 'failed'
+      }
       if (persists) {
         await recordOpsEvent(deps.db, {
           kind: 'source_failed',
-          detail: `${source.source_id}: ${detail ?? 'unknown failure'}`,
+          detail: `${source.source_id}: ${alertDetail ?? 'unknown failure'}`,
           path: source.url,
         })
       }
