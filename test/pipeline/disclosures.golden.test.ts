@@ -17,7 +17,7 @@ import { parseOpenAiMisalignmentReports } from '../../server/pipeline/parsers/di
 import { fixtureText, provenanceOf } from './fixtures'
 
 // Disclosure lane golden tests. Expected values are read off the committed
-// fixtures (fetched 2026-09-27) and fixtures/manifest.json, never live.
+// fixtures (index fetched 2026-10-04, report pages 2026-09-27) and fixtures/manifest.json, never live.
 
 const INDEX = fixtureText('fixtures/disclosures/openai-misalignment-reports.html')
 const page = (slug: string) =>
@@ -29,10 +29,10 @@ const UPLOADING = 'uploading-files-to-the-internet-in-order-to-cite-them'
 describe('the misalignment index', () => {
   const { rows, skipped } = parseOpenAiMisalignmentReports(INDEX)
 
-  test('9 reports and 3 notices, nothing skipped, provenance from the manifest', () => {
+  test('12 reports and 3 notices, nothing skipped, provenance from the manifest', () => {
     expect(DisclosureIndexOutput.safeParse({ rows }).success).toBe(true)
     expect(skipped).toEqual([])
-    expect(rows.filter((r) => r.kind === 'report')).toHaveLength(9)
+    expect(rows.filter((r) => r.kind === 'report')).toHaveLength(12)
     expect(rows.filter((r) => r.kind === 'notice').map((r) => r.entry_id)).toEqual([
       'rubygems',
       'dsewiki',
@@ -83,19 +83,24 @@ describe('the misalignment index', () => {
     })
   })
 
-  test('an unknown field is reported, never silently stored or dropped', () => {
-    const extra = INDEX.replace(
-      '<div><dt>Model</dt><dd>Internal research model</dd></div>',
-      '<div><dt>Model</dt><dd>Internal research model</dd></div><div><dt>Severity</dt><dd>High</dd></div>',
+  test('a report without a model line keeps its row with no model, nothing invented', () => {
+    const bare = INDEX.replace('<p class="cb-model">Internal research model · RL training</p>', '')
+    const dns = parseOpenAiMisalignmentReports(bare).rows.find((r) => r.entry_id === DNS)!
+    expect(dns).toMatchObject({ model: null, observed_during: null })
+    // A model line with no separator is a model, not a context.
+    const lone = INDEX.replace('Internal research model · RL training', 'Internal research model')
+    expect(parseOpenAiMisalignmentReports(lone).rows.find((r) => r.entry_id === DNS)).toMatchObject(
+      { model: 'Internal research model', observed_during: null },
     )
-    const out = parseOpenAiMisalignmentReports(extra)
-    expect(out.rows).toHaveLength(12)
-    expect(out.skipped).toEqual([
-      {
-        entry: 'An agent used DNS to reach an external chatbot',
-        reason: 'unrecognised field "Severity" not stored',
-      },
-    ])
+  })
+
+  test('an index with no entries yet is an empty result, not a failure', () => {
+    const empty = INDEX.replace(
+      /<div id="report-entries">[\s\S]*?<\/section>/,
+      '</section>',
+    ).replace(/<div id="notice-entries">[\s\S]*?<\/div><\/section>/, '</section>')
+    expect(empty).not.toContain('cb-entry"')
+    expect(parseOpenAiMisalignmentReports(empty)).toEqual({ rows: [], skipped: [] })
   })
 
   test('a redesigned page fails the source instead of emptying it', () => {
@@ -114,11 +119,11 @@ describe('the misalignment index', () => {
     )
     for (const e of entities) expect(contentHash(JSON.parse(e.payload))).toBe(e.content_hash)
 
-    // The DNS report's meta line is the only 2026-09-25 one observed in "RL training".
+    // Bump the DNS report's "Report updated" date alone.
     const revised = parseOpenAiMisalignmentReports(
       INDEX.replace(
-        '<time datetime="2026-09-25">Sep 25, 2026</time> · RL training</p>',
-        '<time datetime="2026-10-02">Oct 2, 2026</time> · RL training</p>',
+        'Report updated <time datetime="2026-09-25">Sep 25, 2026</time></div></div><h3>An agent used DNS',
+        'Report updated <time datetime="2026-10-02">Oct 2, 2026</time></div></div><h3>An agent used DNS',
       ),
     )
     const changes = diff(

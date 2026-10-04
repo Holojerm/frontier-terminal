@@ -14,21 +14,26 @@ import { textOf } from './html-text'
 // `<details class="cb-entry cb-notice" id="notice-<id>">` per notice.
 //
 //   report  <h3>title</h3>
-//           <p class="cb-meta">Report · Updated <time datetime="YYYY-MM-DD">…
+//           <div class="cb-updated">Report updated <time datetime="YYYY-MM-DD">…
+//           <p class="cb-model">Model · Observed-during context</p>
 //           <p class="cb-copy">observation</p>
 //           <a class="cb-link" href="/misalignment-reports/<slug>/">
-//           <dl> Model / Observed during / Report updated </dl>
 //   notice  <h3>title</h3>
 //           <p class="cb-meta">Notice · <time datetime="YYYY-MM-DD">…
 //           <p class="cb-copy">summary</p>
 //           <a class="ap-notice-source" href="https://openai.com/…">
+//
+// Before 2026-10-03 a report carried a `cb-meta` line and a Model / Observed
+// during `<dl>` instead; the page dropped both and every report parsed as
+// "unrecognised", which is how the source failed for a day.
 //
 // Honesty rules:
 //   1. Every string a reader sees is the page's own text, verbatim.
 //   2. An entry whose structure is not recognised is reported in `skipped`,
 //      never dropped silently; a page with entries but no recognised report
 //      throws, so a redesign fails the source instead of emptying it.
-//   3. A <dl> label this parser does not know is reported in `skipped` too.
+//   3. A page that has the index container but no entries at all is an empty
+//      index (no disclosures yet), not a failure.
 //   4. Provenance is an argument. Nothing here reads a clock.
 
 export interface SkippedEntry {
@@ -43,7 +48,10 @@ export interface MisalignmentIndexResult {
 
 const ENTRY = /<details class="([^"]*)"([^>]*)>([\s\S]*?)<\/details>/g
 const REPORT_PATH = /^\/misalignment-reports\/([a-z0-9]+(?:-[a-z0-9]+)*)\/$/
-const KNOWN_REPORT_LABELS = new Set(['Model', 'Observed during', 'Report updated'])
+const INDEX_CONTAINER = /class="cb-index"/
+// "Highly persistent internal model · Internal deployment": model, then the
+// context it was observed in. Split on the last separator.
+const MODEL_SEPARATOR = ' · '
 
 const first = (html: string, re: RegExp): string | null => html.match(re)?.[1] ?? null
 
@@ -62,12 +70,15 @@ export function parseOpenAiMisalignmentReports(
 
     const titleHtml = first(body!, /<h3>([\s\S]*?)<\/h3>/)
     const title = titleHtml === null ? '' : textOf(titleHtml)
-    const listedOn = first(body!, /<p class="cb-meta">[\s\S]*?<time datetime="(\d{4}-\d{2}-\d{2})"/)
+    const listedOn = first(
+      body!,
+      /<(?:p|div) class="cb-(?:updated|meta)">[^<]*<time datetime="(\d{4}-\d{2}-\d{2})"/,
+    )
     const summaryHtml = first(body!, /<p class="cb-copy">([\s\S]*?)<\/p>/)
     const summary = summaryHtml === null ? '' : textOf(summaryHtml)
     const name = title || `(untitled entry ${entries})`
     if (!title || !listedOn || !summary) {
-      skipped.push({ entry: name, reason: 'no title, dated meta line or summary' })
+      skipped.push({ entry: name, reason: 'no title, dated line or summary' })
       continue
     }
 
@@ -102,30 +113,28 @@ export function parseOpenAiMisalignmentReports(
       })
       continue
     }
-    const fields = new Map<string, string>()
-    for (const [, dt, dd] of body!.matchAll(/<dt>([\s\S]*?)<\/dt>\s*<dd>([\s\S]*?)<\/dd>/g)) {
-      const label = textOf(dt!)
-      if (!KNOWN_REPORT_LABELS.has(label)) {
-        skipped.push({ entry: name, reason: `unrecognised field "${label}" not stored` })
-        continue
-      }
-      fields.set(label, textOf(dd!))
-    }
+    const modelLine = textOf(first(body!, /<p class="cb-model">([\s\S]*?)<\/p>/) ?? '')
+    const cut = modelLine.lastIndexOf(MODEL_SEPARATOR)
+    const model = (cut === -1 ? modelLine : modelLine.slice(0, cut)) || null
+    const observedDuring = cut === -1 ? null : modelLine.slice(cut + MODEL_SEPARATOR.length) || null
     rows.push({
       provider: 'openai',
       kind: 'report',
       entry_id: slug,
       title,
       summary,
-      model: fields.get('Model') || null,
-      observed_during: fields.get('Observed during') || null,
+      model,
+      observed_during: observedDuring,
       listed_on: listedOn,
       entry_url: new URL(href, prov.source_url).href,
       ...prov,
     })
   }
 
-  if (entries === 0) throw new Error('misalignment index has no <details class="cb-entry"> entries')
+  if (entries === 0) {
+    if (INDEX_CONTAINER.test(html)) return { rows, skipped }
+    throw new Error('misalignment index has no <details class="cb-entry"> entries')
+  }
   if (!rows.some((r) => r.kind === 'report')) {
     throw new Error(`misalignment index: none of ${entries} entries parsed as a report`)
   }

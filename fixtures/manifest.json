@@ -247,11 +247,11 @@
       "path": "fixtures/disclosures/openai-misalignment-reports.html",
       "source_id": "openai-misalignment-reports",
       "source_url": "https://alignment.openai.com/misalignment-reports/",
-      "fetched_at": "2026-09-27T03:20:32Z",
+      "fetched_at": "2026-10-04T23:33:39Z",
       "http_status": 200,
-      "raw_bytes": 15997,
+      "raw_bytes": 20622,
       "trim": "none — committed whole",
-      "note": "Server-rendered HTML (Vercel, ETag + Last-Modified). 9 reports (<details class=\"cb-entry\">: h3 title, <time datetime> on the meta line, Observation copy, relative report link, Model / Observed during / Report updated <dl>) and 3 notices (<details class=\"cb-entry cb-notice\" id=\"notice-*\">: h3 title, <time datetime>, Notice summary, an absolute openai.com update link). The site's rss.xml stops at 2026-07-21 and lists none of these, so this page is the only index."
+      "note": "Server-rendered HTML (Vercel, ETag + Last-Modified 2026-10-03T17:32:29Z). 12 reports (<details class=\"cb-entry\">: h3 title, <div class=\"cb-updated\"> with a <time datetime>, <p class=\"cb-model\"> reading Model · Observed-during, Observation copy, relative report link) and 3 notices (<details class=\"cb-entry cb-notice\" id=\"notice-*\">: h3 title, <time datetime>, Notice summary, an absolute openai.com update link). Replaces the 2026-09-27 capture: the 2026-10-03 redesign dropped the cb-meta line and the Model / Observed during <dl> from reports. The site's rss.xml stops at 2026-07-21 and lists none of these, so this page is the only index."
     },
     {
       "path": "fixtures/disclosures/openai-misalignment-report-an-agent-used-dns-to-reach-an-external-chatbot.html",
