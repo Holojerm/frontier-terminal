@@ -17,7 +17,7 @@
 // time). The count is computed, not asserted — adding a `my-app` to a file
 // already listed here needs no change to this script.
 //
-// It deliberately does NOT touch prose: README.md and CLAUDE.md explain the
+// It deliberately does NOT touch prose: README.md and AGENTS.md explain the
 // project in their own words, and rewriting them mid-sentence makes the docs
 // read like nonsense.
 
