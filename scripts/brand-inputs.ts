@@ -31,6 +31,8 @@ export const GENERATED_ASSETS = [
   'public/icon-512.png',
   'public/og.png',
   'shared/utils/brand-colors.generated.ts',
+  'public/email-logo.png',
+  'emails/theme.generated.css',
 ] as const
 
 /**
@@ -50,11 +52,8 @@ export const GENERATED_ASSETS = [
  * get flagged stale and re-render them — nothing in `fingerprintOf()` below
  * hashes MASKABLE_COVERAGE itself, only this string.
  *
- * Bumped to '4' when the OG image started waiting for the provider's
- * stylesheets before screenshotting, and set its title at the display face's
- * real weight: every og.png generated before that was a coin flip between the
- * brand face and a system serif, and the ones that lost look fine until you
- * compare them to the site.
+ * Bumped to '4' when public/email-logo.png and emails/theme.generated.css
+ * joined the pipeline, and the `email-*` color roles with them.
  */
 export const GENERATOR_VERSION = '4'
 

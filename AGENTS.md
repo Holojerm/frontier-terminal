@@ -23,6 +23,7 @@ Read the row that matches what you are about to touch. Do not load them all.
 | [`.claude/docs/patterns.md`](.claude/docs/patterns.md) | Worked examples: components, API routes, Drizzle queries, error handling | Writing a new component, route, or query — especially your first change here |
 | [`.claude/docs/seo.md`](.claude/docs/seo.md) | `useSeo()`, `publicPage` meta, structured data, the crawler files | Adding or editing a page |
 | [`.claude/docs/brand.md`](.claude/docs/brand.md) | How every icon is generated from one `Logo.vue` | Redesigning the mark or fixing `brand:check` |
+| [`.claude/docs/email.md`](.claude/docs/email.md) | The Maizzle/Mustache pipeline behind the ops alert digest | Touching `emails/`, `ops-digest.ts`, or adding an email |
 | [`.claude/docs/agent-setup.md`](.claude/docs/agent-setup.md) | MCP servers, skills, slash commands, cloud routines | Configuring tooling |
 | [`.claude/docs/fleet.md`](.claude/docs/fleet.md) | `fleet.json`, `/api/status`, `/api/fleet`, the `ops_events` spool and its digest cron | Touching the manifest, the status/fleet endpoints, or ops alerting |
 | [`DESIGN.md`](DESIGN.md) | The visual design system — source of truth | Writing any UI |
@@ -91,6 +92,8 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 ├── public/                 # Static assets — og.png, favicon.svg, apple-touch-icon.png
 ├── .github/                # Dependabot + browser-suites.yml (axe/CSP — the only CI
 │                           # not in Workers Builds; that image can't launch Chromium)
+│                           # + scheduled-ci.yml (the full gate against main, weekly)
+├── emails/                 # Maizzle sources for the ops digest — compiled by bun run email:build
 ├── fleet.json              # How this app describes itself to the portfolio dashboard — see bun run fleet:check
 ├── drizzle.config.ts       # Drizzle Kit config
 ├── nuxt.config.ts
@@ -218,6 +221,9 @@ bun format:check      # Check formatting without writing
 bun run design:check  # Fail on UI code that bypasses the DESIGN.md token layer
 bun run brand:generate # Rebuild favicon.svg, apple-touch-icon.png and og.png from the brand mark
 bun run brand:check   # Fail when those generated files no longer match the mark
+bun run email:build   # Compile emails/templates/ → server/emails/generated.ts (commit the result)
+bun run email:check   # Fail when the committed module no longer matches the templates
+bun run email:dev     # Maizzle dev server with sample data (email:preview writes the files out)
 bun run mirror:check  # Fail when a comment or doc names a file, symbol, or variable that no longer exists
 bun run seo:check     # Fail on pages that bypass useSeo() or aren't declared public/noindex
 bun run fleet:check   # Fail when fleet.json stops matching wrangler.toml (names, binding ids, crons)
@@ -229,7 +235,7 @@ bun db:generate       # Generate Drizzle migration after schema changes
 bun db:migrate        # Apply migrations to local D1
 bun run db:migrate:remote # Apply migrations to production D1 — nothing does this for you
 bun db:studio         # Open Drizzle Studio (visual DB browser)
-bun run ci            # Lint + format:check + design/brand/mirror/seo/fleet/crons gates + typecheck + test + build —
+bun run ci            # Lint + format:check + design/brand/email/mirror/seo/fleet/crons gates + typecheck + test + build —
                       # Workers Builds runs this. NO browser suites: that image cannot
                       # launch Chromium (see Gotchas).
 bun run ci:browser    # playwright:install + test:a11y — what GitHub Actions runs

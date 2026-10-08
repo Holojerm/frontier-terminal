@@ -61,8 +61,11 @@ bucket_name = "frontier-terminal-blob"
 #     NATIVE_LIMITER in server/utils/rate-limit.ts, which must MATCH the two
 #     numbers below. test/rate-limit.test.ts probes the real binding and fails
 #     if they ever drift.
-#   * `namespace_id` is any positive integer, unique per Cloudflare account —
+#   * `namespace_id` is any positive integer, unique per Cloudflare ACCOUNT —
 #     not an id Cloudflare issues you, and nothing to create in the dashboard.
+#     Two apps on one account sharing a number share one set of counters.
+#     7390 is derived from this app's name (scripts/ratelimit-namespace.ts);
+#     the 60/60s limiter below is hand-picked outside that scheme.
 #     Adding a second limiter means picking a different number here.
 # One block per budget in use, because a block enforces exactly one. Both must
 # appear in NATIVE_LIMITERS in server/utils/rate-limit.ts with the same name and
@@ -71,7 +74,7 @@ bucket_name = "frontier-terminal-blob"
 # 30/60s: the two writers — /export/* and /api/judge/*.
 [[ratelimits]]
 name = "RATE_LIMITER"
-namespace_id = "1001"
+namespace_id = "7390"
 simple = { limit = 30, period = 60 }
 
 # 60/60s: the public read path. Every /api/* route the terminal's pages fetch

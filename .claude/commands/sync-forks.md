@@ -119,10 +119,14 @@ PR must leave the fork with all of them working — see AGENTS.md › Fleet cont
    values (Worker names, D1 `database_name` + `database_id`, KV
    ids, R2 buckets, `[triggers] crons`), and set `stage` honestly — `live` only if the app has
    users it would be bad to lose. Set `features` to what the fork actually kept: a fork with no
-   `users` table is `auth: false` and gets `/api/status` but not `/api/fleet`.
+   `users` table is `auth: false` and gets `/api/status` but not `/api/fleet` (both need
+   `NUXT_FLEET_TOKEN` since the template put `/api/status` behind it).
 2. **`template.syncedSha`** — the template `main` SHA this PR syncs to. This is how "how far
    behind the template is this fork" is computed, so it must be the SHA you actually based the
    sync on, not `HEAD` of whatever you had checked out.
+   **`template.customized`** lists the template files this fork changed on purpose. For every
+   file that differs from the template after the sync, either take the template's copy or add
+   the path here — the dashboard reports any differing file not on this list as seam drift.
 3. **The two gates in CI**: `scripts/check-fleet.ts` and `scripts/check-crons.ts`, with
    `fleet:check` and `crons:check` in the fork's `ci` script (or its GitHub Actions workflow, if
    that is what deploys it). Run both before opening the PR; `crons:check` in particular has
