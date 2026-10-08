@@ -245,8 +245,8 @@ export async function collectStatus(
       versions: {
         nuxt: pkg.dependencies.nuxt,
         wrangler: pkg.devDependencies.wrangler,
-        templateRepo: manifest.template.repo,
-        templateSyncedSha: manifest.template.syncedSha,
+        templateRepo: manifest.template?.repo ?? null,
+        templateSyncedSha: manifest.template?.syncedSha ?? null,
       },
       migrations: {
         repo: { head: repo.at(-1) ?? null, count: repo.length },
