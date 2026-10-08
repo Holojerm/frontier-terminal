@@ -69,6 +69,8 @@ file is derived from that component by `bun run brand:generate`:
 | `public/icon-512.png` | 512×512 | Same treatment, larger — the splash-screen source in `manifest.webmanifest`. |
 | `public/og.png` | 1200×630 | Every link preview of this site — mark, app name, one sentence. |
 | `shared/utils/brand-colors.generated.ts` | — | `theme_color`/`background_color` for `manifest.webmanifest`, resolved from the Color roles table below — a manifest has no color mode either. |
+| `public/email-logo.png` | 64×64 | The header of every transactional email, referenced by absolute URL. PNG because Gmail drops SVG; transparent so it sits on the card. |
+| `emails/theme.generated.css` | — | The Tailwind theme `bun run email:build` compiles emails with — the `email-*` roles below as hex, plus the font stacks. Email clients do not support CSS variables. |
 
 `bun run brand:check` (part of `bun run ci`) fails the build when those files no longer match
 the component. A favicon a redesign behind the app is the normal outcome otherwise; nothing
@@ -107,13 +109,26 @@ is dark-first, so the files that can only pick one pick dark.
 | `og-muted` | `--color-zinc-400` | Share image description and footer | 7.59 |
 | `manifest-theme` | `--color-zinc-950` | `theme_color` in `manifest.webmanifest` — the browser UI tint once installed | — |
 | `manifest-ground` | `--color-zinc-950` | `background_color` in `manifest.webmanifest` — the splash screen before the app paints | — |
+| `email-page` | `--color-zinc-100` | Email background behind the card | — |
+| `email-card` | `--color-zinc-50` | The card itself. Not white: pure white is on the Never list for surfaces, and an email is a surface | — |
+| `email-rule` | `--color-zinc-200` | Card border, the rule above a footnote, and row separators | — |
+| `email-ink` | `--color-zinc-900` | Email headings, and the secondary button | — |
+| `email-body` | `--color-zinc-800` | Email body copy | — |
+| `email-muted` | `--color-zinc-500` | Email captions, footnotes, timestamps, the outside-the-card footer link | — |
+| `email-accent` | `--color-iris-600` | Email primary button, and the mark in `public/email-logo.png` | — |
+| `email-on-accent` | `--color-white` | Text on an email button | — |
+| `email-bad` | `--color-rose-700` | Ops alert tone for failures (`error`, white-on-solid 6.03) | — |
+| `email-warn` | `--color-amber-800` | Ops alert tone for anything unclassified (`warning`, 7.09) | — |
+| `email-good` | `--color-emerald-700` | Ops alert tone for recoveries (`success`, 5.36) | — |
 
 `icon-ink` is the **400**, not the 600 the in-app accent resolves to in light mode: on a
 zinc-950 ground the 600 measures 3.51:1 and the 400 measures 7.01:1. An icon is read at 16px
 on someone else's dark dock, which is the hardest case this palette has.
 
-In-app the mark takes `text-primary` and inherits the color mode for free. These eight exist
-only for the files that can't.
+In-app the mark takes `text-primary` and inherits the color mode for free. These roles exist
+only for the files that can't — a PNG, a JSON manifest, and email, which has neither a color
+mode nor CSS variables. The `email-*` rows follow the semantic assignments in Color: tones use
+the same shades the app does, so a failure reads as `error` in the inbox too.
 
 ### Never
 
