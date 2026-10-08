@@ -37,7 +37,7 @@ instead, because the Workers Builds image cannot launch Chromium — `.github/wo
 | `server/tasks/` | `server/tasks/poll/edgar.ts` every 30 minutes over the SEC feeds and the model catalogs (so a launch shows within half an hour), the two axes worth low latency; `server/tasks/poll/survey.ts` every 6 hours over every included source; `server/tasks/ops/alert.ts` every 30 minutes, draining the `ops_events` spool into one digest email. |
 | `fixtures/` | A captured copy of every source, with fetch timestamps and trim notes in `fixtures/manifest.json`, so the parsers are tested against the real bytes without the network. |
 | `scripts/check-*.ts` | The gates in `bun run ci`: design tokens, brand assets, references, SEO, fleet manifest, cron parity. |
-| `docs/` | `source-audit.md` — every candidate source, fetched and judged, with why the excluded ones were excluded. |
+| `docs/` | `source-audit.md` — every candidate source, fetched and judged, with why the excluded ones were excluded. `thesis-engine.md` — the plan to grow the terminal into a thesis engine, with the lab thesis as the first one. |
 
 ## Deploy
 
