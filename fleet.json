@@ -3,33 +3,58 @@
   "slug": "frontier-terminal",
   "name": "Frontier Terminal",
   "stage": "unreleased",
-  "urls": { "prod": "https://frontierterm.com" },
-  "workers": ["frontier-terminal"],
-  "bindings": {
-    "d1": [{ "name": "frontier-terminal-db", "id": "31a693ed-7e93-48db-8375-40513d667b80" }],
-    "kv": ["ba653082105144bdb3b91a9189a72a3d"],
-    "r2": ["frontier-terminal-blob"]
+  "urls": {
+    "prod": "https://frontierterm.com"
   },
-  "crons": ["*/30 * * * *", "0 */6 * * *", "*/5 * * * *"],
+  "workers": [
+    "frontier-terminal"
+  ],
+  "bindings": {
+    "d1": [
+      {
+        "name": "frontier-terminal-db",
+        "id": "31a693ed-7e93-48db-8375-40513d667b80"
+      }
+    ],
+    "kv": [
+      "ba653082105144bdb3b91a9189a72a3d"
+    ],
+    "r2": [
+      "frontier-terminal-blob"
+    ]
+  },
+  "crons": [
+    "*/30 * * * *",
+    "0 */6 * * *",
+    "*/5 * * * *"
+  ],
   "deploy": "workers-builds",
   "template": {
     "repo": "Holojerm/nuxt-cf-template",
-    "syncedSha": "e95863e",
+    "syncedSha": "d531946",
     "customized": [
       "nuxt.config.ts",
       "server/middleware/auth.ts",
       "server/plugins/error-logger.ts",
       "server/api/status.get.ts",
       "server/api/fleet.get.ts",
-      "server/utils/ops.ts",
       "shared/utils/fleet-manifest.ts",
       "scripts/check-design-tokens.ts",
-      "scripts/check-fleet.ts",
-      "scripts/check-crons.ts",
-      "vitest.config.ts"
+      "scripts/check-fleet.ts"
     ]
   },
-  "features": { "auth": false, "billing": false, "posthog": null, "opsEvents": true },
-  "secrets": ["NUXT_SEC_CONTACT_EMAIL", "NUXT_JUDGE_TOKEN", "NUXT_OPENROUTER_API_KEY"],
-  "links": { "github": "https://github.com/Holojerm/frontier-terminal" }
+  "features": {
+    "auth": false,
+    "billing": false,
+    "posthog": null,
+    "opsEvents": true
+  },
+  "secrets": [
+    "NUXT_SEC_CONTACT_EMAIL",
+    "NUXT_JUDGE_TOKEN",
+    "NUXT_OPENROUTER_API_KEY"
+  ],
+  "links": {
+    "github": "https://github.com/Holojerm/frontier-terminal"
+  }
 }

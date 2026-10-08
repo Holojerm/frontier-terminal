@@ -40,7 +40,9 @@ one and stay on it, because alternating makes each think nothing has been applie
 
 `GET /api/status` reports the gap: `migrations.pending` lists every migration in the repo
 that the deployed database has not applied. It is what the portfolio dashboard polls, and
-the quickest way to check by hand after a deploy — `curl https://<app>/api/status | jq .migrations`.
+the quickest way to check by hand after a deploy —
+`curl -H "Authorization: Bearer $NUXT_FLEET_TOKEN" https://<app>/api/status | jq .migrations`
+(it 404s until `NUXT_FLEET_TOKEN` is set; see `.claude/docs/fleet.md`).
 
 ## NuxtHub rewrites the generated wrangler config
 
