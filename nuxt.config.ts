@@ -502,7 +502,17 @@ export default defineNuxtConfig({
     // Cron expression → task names. Declared once as SCHEDULED_TASKS at the top
     // of this file (so /api/status can report the same map) — the rules for
     // keeping it in step with wrangler.toml are written there.
-    scheduledTasks: SCHEDULED_TASKS,
+    //
+    // Empty under `nuxt dev`, where Nitro would otherwise run these on its own
+    // croner clock. That is not a harmless extra: the tripwire and EDGAR ticks
+    // fetch the live vendor pages into the local database, so a dev server
+    // that happens to be up across a :00/:05/:30 mark grows /prices from an
+    // empty state to ~300 rows mid-run. The browser suites run against
+    // `dev:app`, and axe on that populated table blew the 30s test budget
+    // (Browser suites red on main, 2026-10-05) — a result that depended on the
+    // wall clock and the vendors' networks. Tasks stay runnable on demand
+    // through the dev task endpoint (/_nitro/tasks/<name>).
+    scheduledTasks: isDev ? {} : SCHEDULED_TASKS,
   },
 
   compatibilityDate: '2025-09-01',
