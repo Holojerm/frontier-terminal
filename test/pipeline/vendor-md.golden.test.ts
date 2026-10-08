@@ -20,6 +20,8 @@ import {
   whitelistCikFor,
 } from '../../server/pipeline/parsers/sec/whitelist'
 import { fixtureText, provenanceOf } from './fixtures'
+import catalog1008 from '~/fixtures/pricing/anthropic-models-overview.2026-10-08.md?raw'
+import pricing1008 from '~/fixtures/pricing/anthropic-pricing.2026-10-08.md?raw'
 
 // Vendor .md pricing/catalog + EDGAR golden tests. Fixtures:
 // fixtures/pricing/*.md, fixtures/sec/* (provenance in fixtures/manifest.json).
@@ -176,6 +178,102 @@ describe('vendor-md + sec lane', () => {
       expect(base(row.model_slug).input_per_mtok).toBe(row.input_per_mtok!)
       expect(base(row.model_slug).output_per_mtok).toBe(row.output_per_mtok!)
     }
+  })
+
+  // Live captures of 2026-10-08, kept beside the manifest fixtures: Claude Haiku
+  // 5.5 is priced by prompt length, so the catalog prints "From $0.10 / input
+  // MTok, From $0.50 / output MTok" and the pricing page prints two bands.
+  describe('anthropic: a model priced by prompt length (captures of 2026-10-08)', () => {
+    const prov = {
+      source_url: 'https://platform.claude.com/docs/en/models/overview.md',
+      fetched_at: '2026-10-08T23:43:06Z',
+    }
+    const catalog = parseAnthropicModelsOverviewMd(catalog1008, prov)
+    const priced = parseAnthropicPricingMd(pricing1008, {
+      source_url: 'https://platform.claude.com/docs/en/about-claude/pricing.md',
+      fetched_at: '2026-10-08T23:43:06Z',
+    })
+    const cat = (slug: string) => catalog.rows.find((r) => r.model_slug === slug)!
+    const price = (slug: string, tier: string | null) =>
+      priced.rows.find((r) => r.model_slug === slug && r.tier === tier)!
+
+    test('a "From" price is stored as the printed figures and flagged in the note', () => {
+      expect(VendorMdPricingOutput.safeParse(catalog).success).toBe(true)
+      expect(catalog.rows.map((r) => r.model_slug)).toEqual([
+        'claude-fable-5-1',
+        'claude-haiku-5-5',
+        'claude-opus-5-5',
+        'claude-sonnet-5-5',
+      ])
+      expect(cat('claude-haiku-5-5')).toMatchObject({
+        tier: null,
+        input_per_mtok: 0.1,
+        output_per_mtok: 0.5,
+        context_window: '1M tokens',
+      })
+      expect(cat('claude-haiku-5-5').notes).toBe(
+        'For high-volume, latency-sensitive tasks such as classification, extraction, and routing. Printed as a "From" price: the lowest band, higher for longer prompts',
+      )
+      // A plainly priced model carries no such flag.
+      expect(cat('claude-opus-5-5')).toMatchObject({ input_per_mtok: 4, output_per_mtok: 20 })
+      expect(cat('claude-opus-5-5').notes).toBe(
+        'For long-running agentic coding and knowledge work',
+      )
+    })
+
+    test('the "From" figures are the pricing page’s short-prompt row, which joins on the same key', () => {
+      const short = price('claude-haiku-5-5', null)
+      expect(short.input_per_mtok).toBe(cat('claude-haiku-5-5').input_per_mtok)
+      expect(short.output_per_mtok).toBe(cat('claude-haiku-5-5').output_per_mtok)
+      expect(short.cached_input_per_mtok).toBe(0.01)
+      expect(short.notes).toBe(
+        'short context: prompts up to 100,000 tokens; 5m cache writes $0.125 / MTok; 1h cache writes $0.20 / MTok',
+      )
+      for (const row of catalog.rows) {
+        expect(price(row.model_slug, null).input_per_mtok).toBe(row.input_per_mtok)
+        expect(price(row.model_slug, null).output_per_mtok).toBe(row.output_per_mtok)
+      }
+    })
+
+    test('the long-prompt band is its own tier, never folded into the slug', () => {
+      expect(priced.rows.some((r) => r.model_slug.includes('('))).toBe(false)
+      expect(price('claude-haiku-5-5', 'long_context')).toMatchObject({
+        input_per_mtok: 0.5,
+        output_per_mtok: 2.5,
+        cached_input_per_mtok: 0.05,
+        notes:
+          'long context: prompts over 100,000 tokens; 5m cache writes $0.625 / MTok; 1h cache writes $1 / MTok',
+      })
+      expect(price('claude-haiku-5-5', 'batch')).toMatchObject({
+        input_per_mtok: 0.05,
+        output_per_mtok: 0.25,
+      })
+      expect(price('claude-haiku-5-5', 'batch_long_context')).toMatchObject({
+        input_per_mtok: 0.25,
+        output_per_mtok: 1.25,
+      })
+    })
+
+    test('a pricing cell that is not exactly the plain or the "From" form still fails the source', () => {
+      const withCell = (cell: string) =>
+        catalog1008.replace('From $0.10 / input MTok, From $0.50 / output MTok', cell)
+      expect(() =>
+        parseAnthropicModelsOverviewMd(withCell('$0.10 / input MTok, $0.50 / output MTok'), prov),
+      ).not.toThrow()
+      for (const bad of [
+        'From $0.10 / input MTok, $0.50 / output MTok', // "From" on one side only
+        '$0.10 / input MTok, From $0.50 / output MTok',
+        'From $0.10 / input MTok',
+        'Contact sales',
+        'From $0.10 / MTok',
+        'Starting at $0.10 / input MTok, Starting at $0.50 / output MTok',
+        'from $0.10 / input MTok, from $0.50 / output MTok',
+      ]) {
+        expect(() => parseAnthropicModelsOverviewMd(withCell(bad), prov), bad).toThrow(
+          'unrecognized pricing cell for claude-haiku-5-5',
+        )
+      }
+    })
   })
 
   test("xai: long-context dual rows map to tier 'standard' / 'long_context' under the same model_slug", () => {
