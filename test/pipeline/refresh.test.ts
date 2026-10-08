@@ -694,9 +694,10 @@ describe('failures', () => {
 
   it('an index that is empty from the start is quiet, not a mass-removal failure', async () => {
     const ID = 'openai-misalignment-reports'
-    const empty = fixtureText('fixtures/disclosures/openai-misalignment-reports.html')
-      .replace(/<div id="report-entries">[\s\S]*?<\/section>/, '</section>')
-      .replace(/<div id="notice-entries">[\s\S]*?<\/div><\/section>/, '</section>')
+    const empty = fixtureText('fixtures/disclosures/openai-misalignment-reports.html').replace(
+      /<tbody class="report-entry"[\s\S]*?<\/tbody>/g,
+      '',
+    )
     const fetcher = fixtureFetcher({ [ID]: empty })
     const first = await run('survey', [ID], fetcher)
     expect(first.sources[0]).toMatchObject({ status: 'baseline', detail: '0 entities' })

@@ -167,18 +167,19 @@ describe('the disclosures axis end to end', () => {
 
     const NEW = 'a-new-report'
     const newEntry =
-      '<details class="cb-entry" data-date="2026-10-02" data-title="A new report"><summary><div>' +
-      '<h3>A new report</h3><p class="cb-model">Internal research model · RL training</p>' +
-      '<div class="cb-updated">Report updated <time datetime="2026-10-02">Oct 2, 2026</time></div>' +
-      '</div></summary><div class="cb-body"><div><p class="cb-eyebrow">Observation</p>' +
-      '<p class="cb-copy">An agent did something new.</p>' +
-      `<a class="cb-link" href="/misalignment-reports/${NEW}/">Read full report</a></div>` +
-      '<dl><div><dt>Model</dt><dd>Internal research model</dd></div>' +
-      '<div><dt>Observed during</dt><dd>RL training</dd></div></dl></div></details>'
+      `<tbody class="report-entry" id="report-${NEW}" data-title="A new report" ` +
+      'data-incident="2026-10-01" data-date="2026-10-02" data-created="2026-10-02" data-topics="[]">\n' +
+      `<tr class="entry-main"><th scope="row"><a class="report-title" href="/misalignment-reports/${NEW}/">A new report</a></th>\n` +
+      '<td class="table-date" data-label="Incident date"><time datetime="2026-10-01">10/1/26</time></td>' +
+      '<td class="table-date" data-label="First posted"><time datetime="2026-10-02">10/2/26</time></td>\n' +
+      '<td class="table-date" data-label="Last updated"><time datetime="2026-10-02">10/2/26</time></td></tr>\n' +
+      '<tr class="entry-detail"><td colspan="5"><div class="description-drawer"><div class="description-clip">' +
+      `<a class="description-content" href="/misalignment-reports/${NEW}/"><p>An agent did something new.</p>` +
+      '<p class="report-topics">Internal research model · RL training</p></a></div></div></td></tr>\n</tbody>'
     const nextIndex = INDEX.replace(
-      'Report updated <time datetime="2026-09-25">Sep 25, 2026</time></div></div><h3>An agent used DNS',
-      'Report updated <time datetime="2026-10-02">Oct 2, 2026</time></div></div><h3>An agent used DNS',
-    ).replace('<div id="report-entries">', `<div id="report-entries">${newEntry}`)
+      /(id="report-an-agent-used-dns[\s\S]*?data-label="Last updated"><time datetime=")2026-09-25/,
+      '$12026-10-02',
+    ).replace('<tbody class="report-entry"', `${newEntry}<tbody class="report-entry"`)
     const second = await run([INDEX_ID], fetcher({ [BASE]: nextIndex }))
     expect(second.sources[0]).toMatchObject({ status: 'ok', added: 1, modified: 1 })
 

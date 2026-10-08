@@ -84,31 +84,51 @@ describe('the misalignment index', () => {
   })
 
   test('a report without a model line keeps its row with no model, nothing invented', () => {
-    const bare = INDEX.replace('<p class="cb-model">Internal research model · RL training</p>', '')
+    const bare = INDEX.replace(
+      '<p class="report-topics">Internal research model · RL training</p>',
+      '',
+    )
     const dns = parseOpenAiMisalignmentReports(bare).rows.find((r) => r.entry_id === DNS)!
     expect(dns).toMatchObject({ model: null, observed_during: null })
     // A model line with no separator is a model, not a context.
-    const lone = INDEX.replace('Internal research model · RL training', 'Internal research model')
+    const lone = INDEX.replace(
+      '<p class="report-topics">Internal research model · RL training</p>',
+      '<p class="report-topics">Internal research model</p>',
+    )
     expect(parseOpenAiMisalignmentReports(lone).rows.find((r) => r.entry_id === DNS)).toMatchObject(
       { model: 'Internal research model', observed_during: null },
     )
   })
 
   test('an index with no entries yet is an empty result, not a failure', () => {
-    const empty = INDEX.replace(
-      /<div id="report-entries">[\s\S]*?<\/section>/,
-      '</section>',
-    ).replace(/<div id="notice-entries">[\s\S]*?<\/div><\/section>/, '</section>')
-    expect(empty).not.toContain('cb-entry"')
+    const empty = INDEX.replace(/<tbody class="report-entry"[\s\S]*?<\/tbody>/g, '')
+    expect(empty).not.toContain('report-entry')
+    expect(empty).toContain('class="cb-index"')
     expect(parseOpenAiMisalignmentReports(empty)).toEqual({ rows: [], skipped: [] })
   })
 
   test('a redesigned page fails the source instead of emptying it', () => {
     expect(() => parseOpenAiMisalignmentReports('<html><body>moved</body></html>')).toThrow(
-      'no <details class="cb-entry"> entries',
+      'no <tbody class="report-entry"> entries',
     )
-    const noReports = INDEX.replaceAll('class="cb-link"', 'class="other-link"')
+    // Entries present but no report title link: every one is skipped, none is a report.
+    const noReports = INDEX.replaceAll('class="report-title"', 'class="other-title"')
     expect(() => parseOpenAiMisalignmentReports(noReports)).toThrow('parsed as a report')
+  })
+
+  test('an entry missing its link is skipped by name, not dropped silently', () => {
+    const broken = INDEX.replace(
+      /(id="report-an-agent-used-dns-to-reach-an-external-chatbot"[\s\S]*?)<a class="report-title" href="[^"]*">/,
+      '$1<a class="report-title" href="/elsewhere/">',
+    )
+    const out = parseOpenAiMisalignmentReports(broken)
+    expect(out.rows).toHaveLength(14)
+    expect(out.skipped).toEqual([
+      {
+        entry: 'An agent used DNS to reach an external chatbot',
+        reason: 'report link is not /misalignment-reports/<slug>/: /elsewhere/',
+      },
+    ])
   })
 
   test('keys: provider + kind + entry id; a revision is one modified row', () => {
@@ -119,11 +139,11 @@ describe('the misalignment index', () => {
     )
     for (const e of entities) expect(contentHash(JSON.parse(e.payload))).toBe(e.content_hash)
 
-    // Bump the DNS report's "Report updated" date alone.
+    // Bump the DNS report's "Last updated" date alone.
     const revised = parseOpenAiMisalignmentReports(
       INDEX.replace(
-        'Report updated <time datetime="2026-09-25">Sep 25, 2026</time></div></div><h3>An agent used DNS',
-        'Report updated <time datetime="2026-10-02">Oct 2, 2026</time></div></div><h3>An agent used DNS',
+        /(id="report-an-agent-used-dns[\s\S]*?data-label="Last updated"><time datetime=")2026-09-25/,
+        '$12026-10-02',
       ),
     )
     const changes = diff(
@@ -142,7 +162,7 @@ describe('the misalignment index', () => {
     const before = normalizeDisclosures(rows, 'snap-1')
     const after = normalizeDisclosures(
       parseOpenAiMisalignmentReports(
-        INDEX.replace('insufficient DNS filtering', 'insufficient DNS and proxy filtering'),
+        INDEX.replaceAll('insufficient DNS filtering', 'insufficient DNS and proxy filtering'),
       ).rows,
       'snap-2',
     )

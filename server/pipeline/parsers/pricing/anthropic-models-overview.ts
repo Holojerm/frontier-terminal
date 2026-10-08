@@ -26,8 +26,14 @@ function featureRow(rows: string[][], feature: string): string[] {
   return row
 }
 
-// "$10 / input MTok, $50 / output MTok"
-const PRICING_CELL = /^\$(\d+(?:\.\d+)?) \/ input MTok, \$(\d+(?:\.\d+)?) \/ output MTok$/
+// "$10 / input MTok, $50 / output MTok", or for a model priced by prompt
+// length "From $0.10 / input MTok, From $0.50 / output MTok". "From" is the
+// lowest band: the same figure the pricing page prints for prompts up to
+// 100,000 tokens. Both amounts carry it or neither does; any other cell is
+// still an error.
+const PRICING_CELL =
+  /^(From )?\$(\d+(?:\.\d+)?) \/ input MTok, (From )?\$(\d+(?:\.\d+)?) \/ output MTok$/
+const FROM_NOTE = 'Printed as a "From" price: the lowest band, higher for longer prompts'
 
 // prov defaults to the fixture manifest's record (single-arg behavior is
 // byte-identical for the determinism gate); the refresh orchestrator passes
@@ -51,19 +57,26 @@ export function parseAnthropicModelsOverviewMd(
     if (!slug) throw new Error(`no Claude API alias in column ${col} (${header[col]})`)
     const priceCell = (pricing[col] ?? '').trim()
     const m = priceCell.match(PRICING_CELL)
-    if (!m) throw new Error(`unrecognized pricing cell for ${slug}: ${priceCell}`)
+    if (!m || !m[1] !== !m[3]) {
+      throw new Error(`unrecognized pricing cell for ${slug}: ${priceCell}`)
+    }
+    const description = (descriptions[col] ?? '').trim()
+    // PriceRow has no flag for a floor price, so the figure is the printed one
+    // (tier null, joining anthropic-pricing-md's short-prompt row) and the note
+    // says it is a "From".
+    const notes = m[1] ? (description ? `${description}. ${FROM_NOTE}` : FROM_NOTE) : description
     rows.push({
       provider: 'anthropic',
       model_slug: slug,
       tier: null,
       context_window: (contexts[col] ?? '').trim(), // as printed ("1M tokens", "200K tokens")
-      input_per_mtok: Number(m[1]),
+      input_per_mtok: Number(m[2]),
       cached_input_per_mtok: null, // cache-read price is a footnote multiplier here, not a printed number
-      output_per_mtok: Number(m[2]),
+      output_per_mtok: Number(m[4]),
       currency: 'USD',
       effective_from: null,
       effective_until: null,
-      notes: (descriptions[col] ?? '').trim() || null,
+      notes: notes || null,
       ...prov,
     })
   }

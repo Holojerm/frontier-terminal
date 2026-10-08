@@ -247,11 +247,11 @@
       "path": "fixtures/disclosures/openai-misalignment-reports.html",
       "source_id": "openai-misalignment-reports",
       "source_url": "https://alignment.openai.com/misalignment-reports/",
-      "fetched_at": "2026-10-04T23:33:39Z",
+      "fetched_at": "2026-10-08T23:43:06Z",
       "http_status": 200,
-      "raw_bytes": 20622,
+      "raw_bytes": 43435,
       "trim": "none — committed whole",
-      "note": "Server-rendered HTML (Vercel, ETag + Last-Modified 2026-10-03T17:32:29Z). 12 reports (<details class=\"cb-entry\">: h3 title, <div class=\"cb-updated\"> with a <time datetime>, <p class=\"cb-model\"> reading Model · Observed-during, Observation copy, relative report link) and 3 notices (<details class=\"cb-entry cb-notice\" id=\"notice-*\">: h3 title, <time datetime>, Notice summary, an absolute openai.com update link). Replaces the 2026-09-27 capture: the 2026-10-03 redesign dropped the cb-meta line and the Model / Observed during <dl> from reports. The site's rss.xml stops at 2026-07-21 and lists none of these, so this page is the only index."
+      "note": "Server-rendered HTML (Vercel, ETag + Last-Modified 2026-10-07T18:10:41Z). 12 reports and 3 notices, one <tbody class=\"report-entry\" id=\"report-*|notice-*\"> each: a title row (<a class=\"report-title\"> with the report link, Incident / First posted / Last updated <time datetime> cells) and a description row (<a class=\"description-content\"> holding the observation <p> and, on reports, two <p class=\"report-topics\">: Model · Observed-during, then the topics). Notices have no Last updated cell and link to an openai.com update. Replaces the 2026-10-04 capture: the 2026-10-07 redesign swapped the <details class=\"cb-entry\"> list for a sortable table. The site's rss.xml stops at 2026-07-21 and lists none of these, so this page is the only index."
     },
     {
       "path": "fixtures/disclosures/openai-misalignment-report-an-agent-used-dns-to-reach-an-external-chatbot.html",

@@ -61,6 +61,13 @@ sources:
     caveats: >-
       Audit recorded this page as semantic HTML; scaffold-time fetch
       (2026-08-25) confirmed the .md suffix serves real markdown here too.
+      A model priced by prompt length prints two rows per table ("for
+      prompts up to / over 100,000 tokens"): the short band is the plain
+      row, the long band is tier long_context (batch_long_context in the
+      batch table). The catalog page prints that model's price as "From $X /
+      input MTok, From $Y / output MTok"; anthropic-models-md stores those
+      figures, which are the short band, with a note saying they are a "From"
+      price. A pricing cell in any other shape fails that source.
 
   xai-models-md:
     axis: pricing-catalog
@@ -361,7 +368,7 @@ sources:
     axis: disclosures
     provider: openai
     url: https://alignment.openai.com/misalignment-reports/
-    format: SSR HTML — one <details class="cb-entry"> per report, one per notice
+    format: SSR HTML — one <tbody class="report-entry"> per report, one per notice
     diff_mechanism: report slug / notice id; title, summary, model and context per entry
     verdict: include
     fixture: fixtures/disclosures/openai-misalignment-reports.html
@@ -369,7 +376,7 @@ sources:
       A record of what OpenAI chose to disclose, not a count of what
       happened: a lab with a disclosure page will always show more entries
       than a lab without one, so the count is never a safety ranking.
-      Live-fetched 2026-10-04: 12 reports and 3 notices. Reports carry the
+      Live-fetched 2026-10-08: 12 reports and 3 notices. Reports carry the
       title, one-sentence observation, model and "observed during" context
       verbatim; notices (Hugging Face, DSEwiki, RubyGems) carry a summary
       and link to an update on openai.com, which answers 403 to a headless
