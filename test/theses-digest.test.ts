@@ -1,20 +1,21 @@
 import { describe, expect, it } from 'vitest'
 
-import type { ClaimView, ThesesData } from '#shared/utils/thesis-types'
+import type { ClaimView, ThesesData, ThesisDef, VerdictView } from '#shared/utils/thesis-types'
 
 import type { ClaimStatusChange } from '../server/db/schema'
 import { ANTHROPIC_THESIS } from '../server/theses/anthropic'
+import { CLOUDFLARE_THESIS } from '../server/theses/cloudflare'
 import { buildThesisDigest } from '../server/theses/digest'
 
 // The weekly digest's wording from a typed payload: the subject counts
 // statuses, a claim that moved says what it left, a measured claim shows its
 // week, a quiet week says so, and an unconfirmed material event is listed.
+// Evidence against the thesis leads: weaker claims first, verdicts that count
+// toward a kill condition first, and a failed recipe behind a claim is named.
 
 const NOW = new Date('2026-10-12T13:00:00Z')
-const { claims, ...thesis } = ANTHROPIC_THESIS
-
 const view = (id: string, extra: Partial<ClaimView>): ClaimView => {
-  const c = claims.find((x) => x.id === id)!
+  const c = [...ANTHROPIC_THESIS.claims, ...CLOUDFLARE_THESIS.claims].find((x) => x.id === id)!
   return {
     id,
     n: c.n,
@@ -32,16 +33,16 @@ const view = (id: string, extra: Partial<ClaimView>): ClaimView => {
   }
 }
 
-const data = (views: ClaimView[]): ThesesData => ({
+const data = (views: ClaimView[], def: ThesisDef = ANTHROPIC_THESIS): ThesesData => ({
   as_of: null,
   computed_at: NOW.toISOString(),
   caveat: '',
   theses: [
     {
-      ...thesis,
-      company_name: 'Anthropic',
+      ...def,
+      company_name: def.company,
       ticker: null,
-      comparison_names: ['OpenAI', 'Google', 'xAI'],
+      comparison_names: [],
       claims: views,
     },
   ],
@@ -62,10 +63,16 @@ const change = (
   changed_at: '2026-10-10T00:00:00Z',
 })
 
-const build = (views: ClaimView[], changes: ClaimStatusChange[] = []) =>
+const build = (
+  views: ClaimView[],
+  changes: ClaimStatusChange[] = [],
+  failedRuns: { recipe_id: string; started_at: string; detail: string | null }[] = [],
+  def: ThesisDef = ANTHROPIC_THESIS,
+) =>
   buildThesisDigest({
-    data: data(views),
+    data: data(views, def),
     changes,
+    failedRuns,
     now: NOW,
     appName: 'Frontier Terminal',
     appUrl: 'https://frontierterm.com',
@@ -119,5 +126,62 @@ describe('buildThesisDigest', () => {
     )
     expect(d.text).toContain('! Awaiting confirmation, claim 5')
     expect(d.html).toContain('Awaiting your confirmation')
+  })
+
+  it('orders claims weakest first, a moved claim ahead of its peers', () => {
+    const d = build(
+      [
+        view('anthropic-spend-premium', {}),
+        view('anthropic-demand-growth', { status: 'unresolved' }),
+        view('anthropic-hiring-scale', { status: 'weakening' }),
+        view('anthropic-safety-asset', { status: 'weakening' }),
+        view('anthropic-rival-price-war', { status: 'broken' }),
+      ],
+      [change('anthropic-safety-asset', 'holding', 'weakening')],
+    )
+    const order = [...d.text.matchAll(/^(\d)\. /gm)].map((m) => m[1])
+    expect(order).toEqual(['3', '5', '4', '2', '1'])
+  })
+
+  it('leads the week’s ratings with verdicts that count against the thesis', () => {
+    const cut = (provider: VerdictView['provider'], slug: string): VerdictView => ({
+      subject: `price:${slug}`,
+      change_id: slug,
+      provider,
+      verdict: 'competitive',
+      rationale: `${slug} is the flagship.`,
+      facts: { model_slug: slug, cut_pct: 40 },
+      detected_at: '2026-10-10T06:00:00Z',
+      judged_at: '2026-10-10T07:00:00Z',
+      confirmation: null,
+      source_url: 'https://example.com/pricing',
+      fetched_at: '2026-10-10T06:00:00Z',
+    })
+    const d = build([
+      view('anthropic-rival-price-war', {
+        verdicts: [cut('anthropic', 'claude-opus-5-5'), cut('openai', 'gpt-6-sol')],
+      }),
+    ])
+    expect(d.text).toMatch(/Against · Claim 3 · OpenAI[^\n]*\n[^\n]*\n {2}• Claim 3 · Anthropic/)
+    expect(d.html).toContain('Against')
+  })
+
+  it('names a recipe that failed behind a claim, and a failure is not a quiet week', () => {
+    const d = build(
+      [view('cloudflare-developer-adoption', {}), view('cloudflare-revenue-growth', {})],
+      [],
+      [
+        { recipe_id: 'npm-wrangler', started_at: '2026-10-09T06:00:00Z', detail: 'HTTP 503' },
+        { recipe_id: 'npm-wrangler', started_at: '2026-10-10T06:00:00Z', detail: 'HTTP 429' },
+        { recipe_id: 'npm-wrangler', started_at: '2026-10-01T06:00:00Z', detail: 'too old' },
+      ],
+      CLOUDFLARE_THESIS,
+    )
+    expect(d.text).toContain(
+      '? Data gap, claim 2: npm-wrangler failed 2x this week, so its reading may be stale (HTTP 429)',
+    )
+    expect(d.text).not.toContain('claim 1: ')
+    expect(d.text).not.toContain('No claim changed status')
+    expect(d.html).toContain('Data gaps')
   })
 })

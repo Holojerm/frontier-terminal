@@ -71,15 +71,6 @@ export const SAMPLES: Record<string, EmailSample> = {
           'Anthropic becomes the premium lab for developers and enterprises, and earns it in price, demand and hiring.',
         claims: [
           {
-            n: 1,
-            text: 'Anthropic earns more per token than its rivals',
-            status: 'holding',
-            good: true,
-            moved: null,
-            reason: "1.87× against a floor of 1.30× and OpenAI's 0.84×.",
-            week: '1.81× → 1.87×',
-          },
-          {
             n: 3,
             text: 'Rivals do not force a price war on the premium tier',
             status: 'weakening',
@@ -98,10 +89,20 @@ export const SAMPLES: Record<string, EmailSample> = {
             reason: 'Awaiting the first judge run that covers this claim.',
             week: null,
           },
+          {
+            n: 1,
+            text: 'Anthropic earns more per token than its rivals',
+            status: 'holding',
+            good: true,
+            moved: null,
+            reason: "1.87× against a floor of 1.30× and OpenAI's 0.84×.",
+            week: '1.81× → 1.87×',
+          },
         ],
         verdicts: [
           {
             n: 3,
+            against: true,
             provider: 'OpenAI',
             verdict: 'competitive',
             event: 'gpt-6-sol −40%',
@@ -109,6 +110,7 @@ export const SAMPLES: Record<string, EmailSample> = {
             rationale: 'gpt-6-sol is still the flagship and no newer model appears in the records.',
           },
         ],
+        gaps: [],
         awaiting: [],
       },
     ],
