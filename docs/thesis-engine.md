@@ -6,11 +6,11 @@ Written 2026-10-08. Working copy for discussion: [claude.ai doc](https://claude.
 
 A personal research instrument, built in public on Frontier Terminal. Investment theses are bound to open, sourced datasets and scored against reality over time: measured signals where a number exists, LLM-judged signals where the evidence is fuzzy. It is built for Jeremy first; others can follow, request datasets, and later fork theses.
 
-Frontier Terminal is the engine, and its original thesis is the first one: the AI-infrastructure complex into the frontier-lab IPO wave, read off the seven axes it already tracks.
+Frontier Terminal is the engine, and its first thesis is Anthropic, read off the seven axes it already tracks, with the other frontier labs as its comparison set.
 
 ## Decisions
 
-- **Frontier Terminal is the engine.** Its original thesis is the first thesis; new theses join the same app, not a new one.
+- **Frontier Terminal is the engine.** Anthropic is the first thesis; new theses join the same app, not a new one.
 - **The thesis layer is core.** Datasets exist to test claims, not as a product on their own.
 - **Signals can be measured or judged.** A number from a recipe, or an LLM verdict on grounded change rows, as Frontier Terminal's judge already does.
 - **No public-company line.** Private companies count; the frontier labs are already among the largest. One size floor applies to all.
@@ -20,7 +20,7 @@ Frontier Terminal is the engine, and its original thesis is the first one: the A
 
 ## The model
 
-- **Thesis.** A short statement about one company or a group of them, with a horizon and a position disclosure. Revisions are dated, with a reason.
+- **Thesis.** A short statement about one company, with a horizon, a position disclosure, and a comparison set of direct competitors tracked alongside it. Revisions are dated, with a reason.
 - **Claim.** One of 3–5 things the thesis rests on, each with a kill condition written before the data arrives.
 - **Signal.** The evidence a claim is checked against, measured or judged.
 - **Measured signal.** A number a recipe produces, such as a list price or an open-role count.
@@ -33,7 +33,7 @@ Frontier Terminal is the engine, and its original thesis is the first one: the A
 
 **In**
 
-- First thesis: Frontier Terminal's original, across OpenAI, Anthropic, Google and xAI, with 3–5 claims on the seven axes already tracked.
+- First thesis: Anthropic, bullish, with OpenAI, Google and xAI as its comparison set, on the seven axes already tracked.
 - Second thesis: one company outside the labs (Cloudflare is the candidate), as the test that the engine is general.
 - One recipe per measured signal, every snapshot kept; one rubric per judged signal.
 - Claim status computed from kill conditions.
