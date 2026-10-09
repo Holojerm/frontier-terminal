@@ -7,7 +7,7 @@
 import { and, desc, eq, gte, sql } from 'drizzle-orm'
 
 import type { ClaimDef, ClaimStatus, ThesisDef } from '#shared/utils/thesis-types'
-import type { BigFour } from '#shared/utils/terminal-types'
+import type { CompanyId } from '#shared/utils/companies'
 
 import * as tables from '../db/schema'
 import { contentHash } from '../pipeline/contracts'
@@ -70,7 +70,7 @@ export async function storedVerdicts(db: PipelineDb, claim: ClaimDef) {
     .orderBy(desc(tables.claimVerdicts.detected_at))
   return rows.map((r) => ({
     ...r,
-    provider: r.provider as BigFour,
+    provider: r.provider as CompanyId,
     facts: JSON.parse(r.facts) as Record<string, unknown>,
   })) satisfies StoredVerdict[]
 }

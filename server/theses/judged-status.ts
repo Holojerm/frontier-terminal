@@ -2,15 +2,15 @@
 // the evaluator and GET /api/theses read the same rules. The judge supplies
 // only the verdict; every count and window here is the Worker's.
 
-import type { BigFour } from '#shared/utils/terminal-types'
+import { companyName } from '#shared/utils/companies'
+import type { CompanyId } from '#shared/utils/companies'
 import type { ClaimDef, Confirmation, JudgedSpec } from '#shared/utils/thesis-types'
 
-import { PROVIDER_DISPLAY } from '../utils/terminal-sources'
 import type { ClaimEvaluation } from './status'
 
 export interface StoredVerdict {
   subject: string
-  provider: BigFour
+  provider: CompanyId
   verdict: string
   facts: Record<string, unknown>
   detected_at: string
@@ -25,7 +25,7 @@ export function confirmationOf(spec: JudgedSpec, subject: string): Confirmation 
 
 function competitiveCuts(
   spec: Extract<JudgedSpec, { review: 'flagship-price-cuts' }>,
-  company: BigFour,
+  company: CompanyId,
   verdicts: readonly StoredVerdict[],
   now: string,
 ): ClaimEvaluation {
@@ -38,11 +38,11 @@ function competitiveCuts(
   const matched = recent.some(
     (v) => v.provider === company && rival.some((r) => r.detected_at <= v.detected_at),
   )
-  const name = PROVIDER_DISPLAY[company]
+  const name = companyName(company)
   const listed = rival
     .map(
       (v) =>
-        `${PROVIDER_DISPLAY[v.provider]} ${String(v.facts.model_slug)} −${String(v.facts.cut_pct)}%`,
+        `${companyName(v.provider)} ${String(v.facts.model_slug)} −${String(v.facts.cut_pct)}%`,
     )
     .join(', ')
   if (rival.length === 0) {
@@ -62,7 +62,7 @@ function competitiveCuts(
 
 function confirmedMaterial(
   spec: Extract<JudgedSpec, { review: 'incidents-and-disclosures' }>,
-  company: BigFour,
+  company: CompanyId,
   verdicts: readonly StoredVerdict[],
 ): ClaimEvaluation {
   const material = verdicts.filter((v) => v.verdict === 'material')
@@ -89,7 +89,7 @@ function confirmedMaterial(
   }
   return {
     status: 'holding',
-    reason: `No material ${PROVIDER_DISPLAY[company]} event; ${vs}.`,
+    reason: `No material ${companyName(company)} event; ${vs}.`,
     reading_date: null,
   }
 }
@@ -100,7 +100,7 @@ function confirmedMaterial(
  */
 export function evaluateJudgedClaim(
   claim: ClaimDef,
-  company: BigFour,
+  company: CompanyId,
   verdicts: readonly StoredVerdict[],
   judgedThrough: string | null,
   now: string,

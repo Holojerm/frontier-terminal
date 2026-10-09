@@ -7,6 +7,7 @@
 // premium cannot: it joins today's list prices, so it only ever reads the
 // newest window, and its older readings are the ones earlier runs wrote.
 
+import { companyName, type CompanyId } from '#shared/utils/companies'
 import type { BigFour } from '#shared/utils/terminal-types'
 import type { ClaimDef, SignalSpec } from '#shared/utils/thesis-types'
 
@@ -14,7 +15,7 @@ import type { PipelineDb } from '../pipeline/store'
 import { queryContext, queryHiringHistory } from '../utils/terminal-db'
 import { rankingObservations, type RankingObservation } from '../utils/terminal-rankings'
 import { splitPermaslug, catalogRows, summarizeSpend } from '../utils/terminal-spend'
-import { PROVIDER_DISPLAY, PROVIDER_ORDER } from '../utils/terminal-sources'
+import { PROVIDER_ORDER } from '../utils/terminal-sources'
 import type { Formatter } from './status'
 
 export interface SignalReading {
@@ -130,25 +131,31 @@ async function openRolesIn(
   })
 }
 
+const isLab = (id: CompanyId): id is BigFour => (PROVIDER_ORDER as readonly string[]).includes(id)
+
 /** Readings for one measured claim of a thesis about `company`. */
-export function readSignal(
+export async function readSignal(
   db: PipelineDb,
-  company: BigFour,
+  company: CompanyId,
   claim: ClaimDef,
   deps: SignalDeps,
   historyDays: number,
 ): Promise<SignalReading[]> {
   const spec = claim.spec as Measured
   switch (spec.signal) {
+    // The OpenRouter and job-board signals read lab rows only.
     case 'openrouter-spend-premium':
+      if (!isLab(company)) return []
       return spendPremium(
         db,
         company,
         spec.rule.rule === 'sustained-floor' ? spec.rule.comparator : null,
       )
     case 'openrouter-lab-token-share':
+      if (!isLab(company)) return []
       return labTokenShare(db, company, historyDays)
     case 'open-roles-in-departments':
+      if (!isLab(company)) return []
       return openRolesIn(db, company, spec.departments, deps)
   }
 }
@@ -169,6 +176,6 @@ export function presentation(claim: ClaimDef): { fmt: Formatter; comparatorName:
   const comparator = spec.rule.rule === 'sustained-floor' ? spec.rule.comparator : null
   return {
     fmt: FORMATS[spec.signal],
-    comparatorName: comparator ? PROVIDER_DISPLAY[comparator] : null,
+    comparatorName: comparator ? companyName(comparator) : null,
   }
 }

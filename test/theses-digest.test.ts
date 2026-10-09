@@ -36,7 +36,15 @@ const data = (views: ClaimView[]): ThesesData => ({
   as_of: null,
   computed_at: NOW.toISOString(),
   caveat: '',
-  theses: [{ ...thesis, claims: views }],
+  theses: [
+    {
+      ...thesis,
+      company_name: 'Anthropic',
+      ticker: null,
+      comparison_names: ['OpenAI', 'Google', 'xAI'],
+      claims: views,
+    },
+  ],
 })
 
 const change = (
