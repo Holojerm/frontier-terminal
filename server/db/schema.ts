@@ -1,4 +1,4 @@
-import { index, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 // ─────────────────────────────────────────────
 // Database Schema (Drizzle ORM + Cloudflare D1)
@@ -254,6 +254,44 @@ export const classMapDecisions = sqliteTable(
   (t) => [index('class_map_decisions_cell_idx').on(t.provider, t.class, t.decided_at)],
 )
 
+// Claim readings — one row per (claim, data date): the measured value a
+// thesis claim is checked against (server/theses). The newest date is
+// rewritten while its data is still moving (OpenRouter revises trailing
+// days); a reading whose inputs cannot be recomputed later — the spend
+// premium joins today's list prices — is only ever written for the newest
+// date, so a later price change never rewrites a past week.
+export const claimReadings = sqliteTable(
+  'claim_readings',
+  {
+    thesis_id: text('thesis_id').notNull(),
+    claim_id: text('claim_id').notNull(),
+    date: text('date').notNull(),
+    value: real('value').notNull(),
+    detail: text('detail').notNull(),
+    computed_at: text('computed_at').notNull(),
+    ...provenance,
+  },
+  (t) => [primaryKey({ columns: [t.claim_id, t.date] })],
+)
+
+// Claim status changes — append-only, one row each time a claim's computed
+// status differs from its previous row. The thesis's revision trail and the
+// weekly digest's input; the current status is the newest row per claim.
+export const claimStatusChanges = sqliteTable(
+  'claim_status_changes',
+  {
+    id: text('id').primaryKey(),
+    thesis_id: text('thesis_id').notNull(),
+    claim_id: text('claim_id').notNull(),
+    status: text('status').notNull(), // holding | weakening | broken | unresolved
+    previous_status: text('previous_status'),
+    reading_date: text('reading_date'),
+    reason: text('reason').notNull(),
+    changed_at: text('changed_at').notNull(),
+  },
+  (t) => [index('claim_status_changes_claim_idx').on(t.claim_id, t.changed_at)],
+)
+
 export type Snapshot = typeof snapshots.$inferSelect
 export type Entity = typeof entities.$inferSelect
 export type Change = typeof changes.$inferSelect
@@ -261,3 +299,5 @@ export type Alert = typeof alerts.$inferSelect
 export type SourceRun = typeof sourceRuns.$inferSelect
 export type JudgeRun = typeof judgeRuns.$inferSelect
 export type ClassMapDecision = typeof classMapDecisions.$inferSelect
+export type ClaimReading = typeof claimReadings.$inferSelect
+export type ClaimStatusChange = typeof claimStatusChanges.$inferSelect

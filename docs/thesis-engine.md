@@ -52,7 +52,7 @@ Frontier Terminal is the engine, and its first thesis is Anthropic, read off the
 ## Architecture
 
 - **Home:** this repo and deployment. The pipeline (fetch, normalize, diff, store), D1, R2 and Workers cron are already the bottom half.
-- **New:** theses, claims, kill conditions and claim status beside `snapshots`, `entities` and `changes`; thesis pages; the weekly digest.
+- **New:** thesis definitions in `server/theses/`; `claim_readings` and the append-only `claim_status_changes` beside `snapshots`, `entities` and `changes`, written after each survey tick; `GET /api/theses`; thesis pages; the weekly digest.
 - **Measured signals:** AI writes and repairs extractors at dev time; plain code runs them on the cron.
 - **Judged signals:** the existing judge routine (a claude.ai routine on the subscription, hourly) widens from "is this change significant?" to "what does it mean for this claim?". The Worker re-runs the schema and grounding gate before any verdict is stored.
 - **Fallback runner:** the Mac mini, for sources that block cloud IPs or need a real browser.
