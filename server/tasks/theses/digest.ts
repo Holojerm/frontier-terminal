@@ -5,7 +5,7 @@
 // did not go out.
 
 import { db } from '@nuxthub/db'
-import { gte } from 'drizzle-orm'
+import { and, eq, gte } from 'drizzle-orm'
 
 import sourcesYaml from 'raw:../../../sources.yaml'
 
@@ -35,7 +35,7 @@ export default defineTask({
     }
     const now = new Date()
     const since = new Date(now.getTime() - DIGEST_DAYS * 86_400_000).toISOString()
-    const [data, changes] = await Promise.all([
+    const [data, changes, failedRuns] = await Promise.all([
       queryTheses(
         db,
         queryContext(sourcesYaml, await terminalStamp(db), () => now),
@@ -44,9 +44,19 @@ export default defineTask({
         .select()
         .from(tables.claimStatusChanges)
         .where(gte(tables.claimStatusChanges.changed_at, since)),
+      db
+        .select({
+          recipe_id: tables.recipeRuns.recipe_id,
+          started_at: tables.recipeRuns.started_at,
+          detail: tables.recipeRuns.detail,
+        })
+        .from(tables.recipeRuns)
+        .where(
+          and(eq(tables.recipeRuns.status, 'failed'), gte(tables.recipeRuns.started_at, since)),
+        ),
     ])
     const { appName, appUrl } = useRuntimeConfig().public
-    const digest = buildThesisDigest({ data, changes, now, appName, appUrl })
+    const digest = buildThesisDigest({ data, changes, failedRuns, now, appName, appUrl })
     try {
       await mailer({ ...digest, ids: [] })
     } catch (error) {

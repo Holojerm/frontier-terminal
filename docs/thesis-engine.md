@@ -14,6 +14,8 @@ Frontier Terminal is the engine, and its first thesis is Anthropic, read off the
 - **The thesis layer is core.** Datasets exist to test claims, not as a product on their own.
 - **Signals can be measured or judged.** A number from a recipe, or an LLM verdict on grounded change rows, as Frontier Terminal's judge already does.
 - **No public-company line.** Private companies count; the frontier labs are already among the largest. One size floor applies to all.
+- **The size floor is a $10B valuation:** market cap for a public company, the last priced round for a private one. It applies to the thesis's company, not its comparison set.
+- **Theses build understanding, not trades.** The digest exists to move conviction in a thesis, up or down, with reasons; it does not time entries, size positions or call exits. It leads with what counts against each thesis.
 - **Data and recipes are fully open.** If money ever comes, it comes from the platform, not the data.
 - **Jeremy gates requests.** No queue promise, no SLA.
 - **Hobby-first.** It succeeds if it is useful to one person.
@@ -55,7 +57,7 @@ Frontier Terminal is the engine, and its first thesis is Anthropic, read off the
 - **New:** thesis definitions in `server/theses/`; `claim_readings` and the append-only `claim_status_changes` beside `snapshots`, `entities` and `changes`, written after each survey tick; `GET /api/theses`; thesis pages; the weekly digest.
 - **Measured signals:** AI writes and repairs extractors at dev time; plain code runs them on the cron.
 - **Judged signals:** the existing judge routine (a claude.ai routine on the subscription, hourly) widens from "is this change significant?" to "what does it mean for this claim?". The Worker picks each judged claim's candidate events from the pending changes and computes their numbers (`server/theses/candidates.ts`); the judge returns one verdict per candidate; the Worker re-runs the schema and grounding gate before storing it in `claim_verdicts`.
-- **Digest:** `theses:digest` emails every claim's status, the week's moves and verdicts, and anything awaiting confirmation, Mondays 13:00 UTC (`server/theses/digest.ts`).
+- **Digest:** `theses:digest` emails every claim's status, the week's moves and verdicts, recipe failures behind a claim, and anything awaiting confirmation, Mondays 13:00 UTC (`server/theses/digest.ts`). Evidence against the thesis comes first: claims are ordered broken, weakening, unresolved, holding, and verdicts that count toward a kill condition lead the week's ratings.
 - **Fallback runner:** the Mac mini, for sources that block cloud IPs or need a real browser.
 - **Breakage:** a recipe that fails or returns an outlier is flagged, never silently skipped.
 - **Recipes:** a company outside the four labs gets its data from recipes (`server/theses/recipes/`): a public URL and a plain extractor, run on the survey tick before the theses are evaluated, into `recipe_observations`, with the raw bytes in R2 and a failed run flagged in `recipe_runs` and the ops digest. They never touch the lab tables, panels, alert rules or the lab judge. Recipe signals compute year-over-year growth, trailing sums, and sums of keys; a recipe-items claim has the judge rate each observation (a changelog entry) once.
@@ -73,7 +75,7 @@ Frontier Terminal is the engine, and its first thesis is Anthropic, read off the
 
 **Requests**
 
-- Qualifies only if the source is public, the recipe is re-runnable, it ties to a claim, and the company is above the size floor.
+- Qualifies only if the source is public, the recipe is re-runnable, it ties to a claim, and the thesis's company is valued at $10B or more.
 
 **Conduct**
 
@@ -97,7 +99,7 @@ Frontier Terminal is the engine, and its first thesis is Anthropic, read off the
 
 ## Success at 3 months
 
-- **Required:** the digest is opened every week and has prompted at least one thesis revision or explicit hold.
+- **Required:** the digest is opened every week and has moved conviction in a thesis at least once, recorded as a revision or an explicit hold.
 - **Healthy:** most recipes run without hand-fixing in a typical week.
 - **Signal of more:** qualified outside requests arrive unprompted.
 
@@ -120,7 +122,5 @@ The Dune model: public data and theses free; paid platform. Candidates are priva
 
 ## Open questions
 
-- Which claims carry the lab thesis, and what decisions should the digest feed: entry, sizing, exits or understanding?
 - Is Cloudflare the right second thesis, or would a less familiar company test the engine better?
-- Where is the size floor now that private companies count: valuation, revenue or headcount?
 - Does the weekly digest replace the Atom alert feed or sit beside it?
