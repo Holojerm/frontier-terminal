@@ -5,6 +5,7 @@
 
 import { max } from 'drizzle-orm'
 
+import { COMPANIES, companyName } from '#shared/utils/companies'
 import type { ClaimView, ThesesData } from '#shared/utils/thesis-types'
 
 import * as tables from '../db/schema'
@@ -82,7 +83,13 @@ export async function queryTheses(db: PipelineDb, ctx: QueryContext): Promise<Th
         })),
       })
     }
-    theses.push({ ...thesis, claims: views })
+    theses.push({
+      ...thesis,
+      company_name: companyName(thesis.company),
+      ticker: COMPANIES[thesis.company].ticker,
+      comparison_names: thesis.comparison_set.map(companyName),
+      claims: views,
+    })
   }
   return {
     as_of: ctx.as_of,

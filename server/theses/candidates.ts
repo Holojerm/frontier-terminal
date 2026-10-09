@@ -3,7 +3,7 @@
 // so a verdict can only land on a change the Worker itself would have offered,
 // and the judge is never the source of a cut's size or an outage's length.
 
-import type { BigFour } from '#shared/utils/terminal-types'
+import type { CompanyId } from '#shared/utils/companies'
 import type { ClaimDef, JudgedSpec, ThesisDef } from '#shared/utils/thesis-types'
 
 import type { ChangeRow } from '../pipeline/contracts'
@@ -14,7 +14,7 @@ export interface Candidate {
   /** What a verdict is about: the change for a price cut, the incident or disclosure entity_key otherwise. */
   subject: string
   change: ChangeRow
-  provider: BigFour
+  provider: CompanyId
   facts: Record<string, unknown>
 }
 
@@ -107,7 +107,7 @@ export function claimCandidates(
       claim_id: claim.id,
       subject: spec.review === 'flagship-price-cuts' ? change.id : change.entity_key,
       change,
-      provider: change.provider as BigFour,
+      provider: change.provider as CompanyId,
       facts,
     })
   }

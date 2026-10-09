@@ -5,13 +5,13 @@
 // week, quiet weeks included: a digest that stops arriving is the signal
 // that something broke.
 
+import { companyName } from '#shared/utils/companies'
 import type { ClaimView, ThesesData, VerdictView } from '#shared/utils/thesis-types'
 
 import type { ClaimStatusChange } from '../db/schema'
 import { renderEmail, type RenderedEmail } from '../utils/render-email'
 import { formatOpsTime } from '../utils/ops-digest'
 import { daysBefore } from '../utils/terminal-rankings'
-import { PROVIDER_DISPLAY } from '../utils/terminal-sources'
 import { THESES } from './registry'
 import { presentation } from './signals'
 
@@ -75,7 +75,7 @@ export function buildThesisDigest(input: DigestInput): RenderedEmail & { subject
         .filter((v) => v.judged_at >= since)
         .map((v) => ({
           n: claim.n,
-          provider: PROVIDER_DISPLAY[v.provider],
+          provider: companyName(v.provider),
           verdict: v.verdict,
           event: eventLabel(v),
           url: v.source_url,
@@ -97,7 +97,7 @@ export function buildThesisDigest(input: DigestInput): RenderedEmail & { subject
       .map(([s, n]) => `${n} ${s}`)
       .join(', ')
     return {
-      name: `${PROVIDER_DISPLAY[thesis.company]} (${thesis.stance})`,
+      name: `${companyName(thesis.company)} (${thesis.stance})`,
       statement: thesis.statement,
       counts,
       claims,

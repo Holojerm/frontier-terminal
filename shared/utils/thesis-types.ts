@@ -2,6 +2,7 @@
 // GET /api/theses payload built from them. Shared so a thesis page renders
 // the same types the server computes.
 
+import type { CompanyId } from './companies'
 import type { BigFour, Stamp } from './terminal-types'
 
 export type ClaimStatus = 'holding' | 'weakening' | 'broken' | 'unresolved'
@@ -91,10 +92,10 @@ export interface ClaimDef {
 
 export interface ThesisDef {
   id: string
-  company: BigFour
+  company: CompanyId
   stance: 'bullish' | 'bearish'
   statement: string
-  comparison_set: readonly BigFour[]
+  comparison_set: readonly CompanyId[]
   horizon: string
   position: 'long' | 'short' | 'none'
   opened: string
@@ -130,7 +131,7 @@ export interface ClaimView {
 export interface VerdictView {
   subject: string
   change_id: string
-  provider: BigFour
+  provider: CompanyId
   verdict: string
   rationale: string
   /** What the Worker computed about the event — the judge never supplies a number. */
@@ -143,6 +144,9 @@ export interface VerdictView {
 }
 
 export interface ThesisView extends Omit<ThesisDef, 'claims'> {
+  company_name: string
+  ticker: string | null
+  comparison_names: string[]
   claims: ClaimView[]
 }
 
