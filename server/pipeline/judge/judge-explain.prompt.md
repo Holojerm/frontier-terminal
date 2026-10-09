@@ -244,6 +244,11 @@ claims, each with `claim_id`, the `claim` text, a `rubric`, the allowed
 Worker computed about the event (a cut's size as `cut_pct`, an outage's
 `hours`). With no such block, omit `claims`.
 
+A candidate is a change record or, for some claims, a recipe item (an
+entry read from a company's own changelog or filing); its `change_id` names
+either, and its `facts` carry the item's own fields (`title`, `date`,
+`product` …) — cite those for a recipe item, since it has no change record.
+
 Give every candidate exactly one entry: its `claim_id`, its `change_id`,
 one of that claim's `verdicts` exactly as written, and a `rationale` that
 applies the rubric to this event. Rate each event on its own record and

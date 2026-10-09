@@ -6,17 +6,37 @@
 import type { CompanyId } from '#shared/utils/companies'
 import type { ClaimDef, JudgedSpec, ThesisDef } from '#shared/utils/thesis-types'
 
+import type { RecipeObservation } from '../db/schema'
 import type { ChangeRow } from '../pipeline/contracts'
+import { corpusOf } from '../pipeline/judge/grounding'
+
+/** The record a candidate rests on: a change row, or a recipe observation. */
+export interface CandidateItem {
+  id: string
+  detected_at: string
+  source_url: string
+  fetched_at: string
+  /** All a rationale may cite, besides the facts. */
+  corpus: string
+}
 
 export interface Candidate {
   thesis_id: string
   claim_id: string
-  /** What a verdict is about: the change for a price cut, the incident or disclosure entity_key otherwise. */
+  /** What a verdict is about: the change for a price cut, the incident or disclosure entity_key, the observation for a recipe item. */
   subject: string
-  change: ChangeRow
+  item: CandidateItem
   provider: CompanyId
   facts: Record<string, unknown>
 }
+
+const changeItem = (change: ChangeRow): CandidateItem => ({
+  id: change.id,
+  detected_at: change.detected_at,
+  source_url: change.source_url,
+  fetched_at: change.fetched_at,
+  corpus: corpusOf([change]),
+})
 
 /** provider → the model slug its vendor recommends as the flagship today. */
 export type FlagshipMap = ReadonlyMap<string, string>
@@ -92,7 +112,7 @@ export function claimCandidates(
   flagships: FlagshipMap,
 ): Candidate[] {
   const spec = claim.spec
-  if (spec.kind !== 'judged') return []
+  if (spec.kind !== 'judged' || spec.review === 'recipe-items') return []
   const covered = new Set<string>([thesis.company, ...thesis.comparison_set])
   const out: Candidate[] = []
   for (const change of changes) {
@@ -106,10 +126,39 @@ export function claimCandidates(
       thesis_id: thesis.id,
       claim_id: claim.id,
       subject: spec.review === 'flagship-price-cuts' ? change.id : change.entity_key,
-      change,
+      item: changeItem(change),
       provider: change.provider as CompanyId,
       facts,
     })
   }
   return out
+}
+
+/** A recipe-items claim's candidates: every observation of its recipe on or after judged_from. */
+export function recipeCandidates(
+  thesis: ThesisDef,
+  claim: ClaimDef,
+  observations: readonly RecipeObservation[],
+): Candidate[] {
+  const spec = claim.spec
+  if (spec.kind !== 'judged' || spec.review !== 'recipe-items') return []
+  return observations
+    .filter((o) => o.recipe_id === spec.recipe)
+    .map((o) => {
+      const facts = JSON.parse(o.payload) as Record<string, unknown>
+      return {
+        thesis_id: thesis.id,
+        claim_id: claim.id,
+        subject: o.id,
+        item: {
+          id: o.id,
+          detected_at: o.date,
+          source_url: o.source_url,
+          fetched_at: o.fetched_at,
+          corpus: `${o.key}\n${o.payload}`,
+        },
+        provider: o.company as CompanyId,
+        facts: { ...facts, date: o.date },
+      }
+    })
 }

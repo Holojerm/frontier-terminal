@@ -94,6 +94,36 @@ function confirmedMaterial(
   }
 }
 
+function recentVerdict(
+  spec: Extract<JudgedSpec, { review: 'recipe-items' }>,
+  verdicts: readonly StoredVerdict[],
+  now: string,
+): ClaimEvaluation {
+  const { verdict, days } = spec.rule
+  const reading_date = null
+  if (verdicts.length === 0)
+    return { status: 'unresolved', reason: 'No item rated yet.', reading_date }
+  const ageDays = (d: string) => (Date.parse(now) - Date.parse(d)) / DAY_MS
+  const span = Math.floor(Math.max(...verdicts.map((v) => ageDays(v.detected_at))))
+  const hits = verdicts
+    .filter((v) => v.verdict === verdict && ageDays(v.detected_at) <= days)
+    .sort((a, b) => (a.detected_at < b.detected_at ? 1 : -1))
+  const newest = hits[0]
+  if (newest) {
+    const age = Math.floor(ageDays(newest.detected_at))
+    const line = `${hits.length} rated ${verdict} in the last ${days} days; newest "${String(newest.facts.title)}", ${age} days ago`
+    return { status: age < days / 2 ? 'holding' : 'weakening', reason: `${line}.`, reading_date }
+  }
+  const none = `None rated ${verdict} in the last ${Math.min(span, days)} days rated`
+  if (span >= days) return { status: 'broken', reason: `${none}.`, reading_date }
+  if (span >= days / 2) return { status: 'weakening', reason: `${none}.`, reading_date }
+  return {
+    status: 'unresolved',
+    reason: `${none}; ${span} of ${days} days rated so far.`,
+    reading_date,
+  }
+}
+
 /**
  * Unresolved until a judge run has covered `judged_from`: before that, no
  * change was offered for the claim, and silence would read as holding.
@@ -107,6 +137,8 @@ export function evaluateJudgedClaim(
 ): ClaimEvaluation {
   const spec = claim.spec
   if (spec.kind !== 'judged') throw new Error(`${claim.id} is not a judged claim`)
+  // Recipe items are offered until rated, whatever the change cursor says.
+  if (spec.review === 'recipe-items') return recentVerdict(spec, verdicts, now)
   if (judgedThrough === null || judgedThrough < spec.judged_from) {
     return {
       status: 'unresolved',

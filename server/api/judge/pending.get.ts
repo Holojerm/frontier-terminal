@@ -10,8 +10,9 @@
 // the page, with that page's text to re-map them from
 // (server/pipeline/judge/class-map.ts). `claim_review` lists, per judged
 // thesis claim, the pending changes it offers for a verdict
-// (server/theses/verdicts.ts); it is built from `changes`, so it is empty
-// whenever they are.
+// (server/theses/verdicts.ts): events among `changes`, and recipe items
+// (a changelog entry, say) not yet rated, so it can be non-empty when
+// `changes` is empty.
 
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
@@ -40,7 +41,7 @@ export default defineEventHandler(async (event) => {
     since,
     limit: JUDGE_CHANGE_LIMIT,
     class_map_review,
-    claim_review: claimReview(changes, flagships),
+    claim_review: await claimReview(db, changes, flagships),
     prompt: judgePrompt,
   }
 })

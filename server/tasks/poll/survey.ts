@@ -11,6 +11,7 @@ import { createFetcher } from '../../pipeline/fetch'
 import { unstorageLockStore } from '../../pipeline/lock'
 import { blobRawStore, runPoll } from '../../pipeline/poll'
 import { evaluateTheses } from '../../theses/evaluate'
+import { runRecipes } from '../../theses/recipes/run'
 import { recordOpsEvent } from '../../utils/ops'
 
 export default defineTask({
@@ -32,14 +33,27 @@ export default defineTask({
       }),
       sourcesYaml,
     })
-    // The theses read what this tick stored, so they run after it. A failure
-    // here must not undo or hide the poll, so it is spooled for the digest.
+    // The theses read what this tick stored, so they run after it: recipes
+    // first (their own fetches), then the evaluation. A failure here must not
+    // undo or hide the poll, so it is spooled for the digest.
+    const recipes = await runRecipes(db, {
+      raw: blobRawStore(blob),
+      fetcher: createFetcher({
+        secContactEmail: config.secContactEmail,
+        openrouterApiKey: config.openrouterApiKey,
+        appUrl: config.public.appUrl,
+      }),
+      now: () => new Date(),
+    }).catch(async (error: unknown) => {
+      await recordOpsEvent(db, { kind: 'recipes_run_failed', detail: String(error) })
+      return null
+    })
     const theses = await evaluateTheses(db, { sourcesYaml, now: () => new Date() }).catch(
       async (error: unknown) => {
         await recordOpsEvent(db, { kind: 'theses_evaluate_failed', detail: String(error) })
         return null
       },
     )
-    return { result, theses }
+    return { result, recipes, theses }
   },
 })

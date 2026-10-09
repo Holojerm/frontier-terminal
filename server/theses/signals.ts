@@ -9,13 +9,14 @@
 
 import { companyName, type CompanyId } from '#shared/utils/companies'
 import type { BigFour } from '#shared/utils/terminal-types'
-import type { ClaimDef, SignalSpec } from '#shared/utils/thesis-types'
+import type { ClaimDef, SignalSpec, ValueFormat } from '#shared/utils/thesis-types'
 
 import type { PipelineDb } from '../pipeline/store'
 import { queryContext, queryHiringHistory } from '../utils/terminal-db'
 import { rankingObservations, type RankingObservation } from '../utils/terminal-rankings'
 import { splitPermaslug, catalogRows, summarizeSpend } from '../utils/terminal-spend'
 import { PROVIDER_ORDER } from '../utils/terminal-sources'
+import { readRecipeSignal } from './recipe-signals'
 import type { Formatter } from './status'
 
 export interface SignalReading {
@@ -157,16 +158,34 @@ export async function readSignal(
     case 'open-roles-in-departments':
       if (!isLab(company)) return []
       return openRolesIn(db, company, spec.departments, deps)
+    case 'recipe-yoy-growth':
+    case 'recipe-trailing-sum':
+    case 'recipe-sum-of-keys':
+      return readRecipeSignal(db, spec)
   }
 }
 
 /** Only the newest reading of a signal that cannot be recomputed is written. */
 export const recomputable = (spec: Measured) => spec.signal !== 'openrouter-spend-premium'
 
-const FORMATS: Record<Measured['signal'], Formatter> = {
-  'openrouter-spend-premium': (v) => `${v.toFixed(2)}×`,
-  'openrouter-lab-token-share': (v) => `${(v * 100).toFixed(1)}%`,
-  'open-roles-in-departments': (v) => `${Math.round(v)} open roles`,
+const BY_FORMAT: Record<ValueFormat, Formatter> = {
+  ratio: (v) => `${v.toFixed(2)}×`,
+  percent: (v) => `${(v * 100).toFixed(1)}%`,
+  count: (v) => Math.round(v).toLocaleString('en-US'),
+  usd: (v) => `$${(v / 1e6).toLocaleString('en-US', { maximumFractionDigits: 0 })}M`,
+}
+
+const formatOf = (spec: Measured): Formatter => {
+  switch (spec.signal) {
+    case 'openrouter-spend-premium':
+      return BY_FORMAT.ratio
+    case 'openrouter-lab-token-share':
+      return BY_FORMAT.percent
+    case 'open-roles-in-departments':
+      return (v) => `${Math.round(v)} open roles`
+    default:
+      return BY_FORMAT[spec.format]
+  }
 }
 
 /** How a claim's values read in a status reason, and whose value it is compared with. */
@@ -175,7 +194,7 @@ export function presentation(claim: ClaimDef): { fmt: Formatter; comparatorName:
   if (spec.kind === 'judged') return { fmt: String, comparatorName: null }
   const comparator = spec.rule.rule === 'sustained-floor' ? spec.rule.comparator : null
   return {
-    fmt: FORMATS[spec.signal],
+    fmt: formatOf(spec),
     comparatorName: comparator ? companyName(comparator) : null,
   }
 }

@@ -200,6 +200,7 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       'alerts',
       'claim_readings',
       'claim_verdicts',
+      'recipe_observations',
       'source_runs',
     ])
   })

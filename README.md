@@ -33,11 +33,11 @@ instead, because the Workers Builds image cannot launch Chromium — `.github/wo
 | `server/pipeline/` | Fetch → normalize → diff → store. `parsers/` is one parser per source, `contracts/` the zod row shapes the DB mirrors, `judge/` the one writer that promotes changes to alerts and re-maps price-matrix cells whose vendor sentence changed, `scopes.ts` which sources a given tick covers. |
 | `server/api/` | The read-only JSON API: `overview`, `prices` (+ `prices/[key]`), `hiring` (+ `hiring/history`), `revenue`, `releases`, `incidents`, `rankings`, `spend`, `alerts` (+ `alerts/[id]`), `coverage`, `theses`. Plus `health`, `status`, `fleet` — the ops contract — and `judge/`, bearer-gated, the only route that writes. |
 | `server/routes/` | `robots.txt`, `sitemap.xml`, `llms.txt`, `manifest.webmanifest`, all derived from the route table; `alerts.xml`, the Atom feed; `server/routes/export/[table].csv.get.ts` and its JSON twin, the bulk downloads; `mcp.ts`, the MCP endpoint. |
-| `server/db/schema.ts` | `snapshots` (one row per fetch, the provenance spine), `entities` (current state per source), `changes` and `alerts` (both append-only), `source_runs`, `judge_runs`, `class_map_decisions` (the judge's price-matrix re-mappings), `claim_readings`, `claim_verdicts` and `claim_status_changes` (the thesis layer) — beside the template's `instance_secrets` and `ops_events`. |
+| `server/db/schema.ts` | `snapshots` (one row per fetch, the provenance spine), `entities` (current state per source), `changes` and `alerts` (both append-only), `source_runs`, `judge_runs`, `class_map_decisions` (the judge's price-matrix re-mappings), `claim_readings`, `claim_verdicts`, `claim_status_changes`, `recipe_observations` and `recipe_runs` (the thesis layer) — beside the template's `instance_secrets` and `ops_events`. |
 | `server/tasks/` | `server/tasks/poll/edgar.ts` every 30 minutes over the SEC feeds and the model catalogs (so a launch shows within half an hour), the two axes worth low latency; `server/tasks/poll/survey.ts` every 6 hours over every included source; `server/tasks/ops/alert.ts` every 30 minutes, draining the `ops_events` spool into one digest email. |
 | `fixtures/` | A captured copy of every source, with fetch timestamps and trim notes in `fixtures/manifest.json`, so the parsers are tested against the real bytes without the network. |
 | `scripts/check-*.ts` | The gates in `bun run ci`: design tokens, brand assets, references, SEO, fleet manifest, cron parity. |
-| `server/theses/` | The thesis layer: each thesis's claims and kill conditions (`anthropic.ts`), the measured signals that read the store, the judged claims' candidates and verdict gate, the pure status rules, the evaluator the survey cron runs after each tick, and the weekly digest (`theses:digest`, Mondays 13:00 UTC). |
+| `server/theses/` | The thesis layer: each thesis's claims and kill conditions (`anthropic.ts`), the recipes that read non-lab companies' public sources (`recipes/`), the measured signals that read the store, the judged claims' candidates and verdict gate, the pure status rules, the evaluator the survey cron runs after each tick, and the weekly digest (`theses:digest`, Mondays 13:00 UTC). |
 | `docs/` | `source-audit.md` — every candidate source, fetched and judged, with why the excluded ones were excluded. `thesis-engine.md` — the plan to grow the terminal into a thesis engine, with the lab thesis as the first one. |
 
 ## Deploy
@@ -60,7 +60,7 @@ https://frontierterm.com/export/changes.json
 ```
 
 `snapshots`, `prices_latest`, `jobs_open`, `incidents`, `rankings_daily`, `revenue_facts`,
-`changes`, `alerts`, `claim_readings`, `claim_verdicts`, `source_runs` — each row carrying `source_url` and `fetched_at`. The
+`changes`, `alerts`, `claim_readings`, `claim_verdicts`, `recipe_observations`, `source_runs` — each row carrying `source_url` and `fetched_at`. The
 `/data` page lists them with their columns and current row counts. Alerts are also an Atom
 feed at `/alerts.xml`.
 
