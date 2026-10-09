@@ -13,6 +13,8 @@
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
 
+import sourcesYaml from 'raw:../../../sources.yaml'
+
 import { blobRawReader } from '../../pipeline/judge/class-map'
 import { submitJudgeRun } from '../../pipeline/judge/submit'
 import { requireJudgeToken } from '../../utils/judge-auth'
@@ -34,7 +36,11 @@ export default defineEventHandler(async (event) => {
     throw createError({ statusCode: 413, message: 'Body too large' })
   }
 
-  const report = await submitJudgeRun(db, raw, { source: 'routine', readRaw: blobRawReader(blob) })
+  const report = await submitJudgeRun(db, raw, {
+    source: 'routine',
+    readRaw: blobRawReader(blob),
+    sourcesYaml,
+  })
   if (report.gate_rejection) {
     throw createError({
       statusCode: 422,

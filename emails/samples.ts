@@ -58,4 +58,59 @@ export const SAMPLES: Record<string, EmailSample> = {
       },
     ],
   },
+  'thesis-digest': {
+    ...brand,
+    summary: 'Anthropic: 3 holding, 1 weakening, 1 unresolved · 1 claim moved',
+    generated: 'Oct 12, 13:00 UTC',
+    thesesUrl: `${brand.appUrl}/api/theses`,
+    quiet: false,
+    theses: [
+      {
+        name: 'Anthropic (bullish)',
+        statement:
+          'Anthropic becomes the premium lab for developers and enterprises, and earns it in price, demand and hiring.',
+        claims: [
+          {
+            n: 1,
+            text: 'Anthropic earns more per token than its rivals',
+            status: 'holding',
+            good: true,
+            moved: null,
+            reason: "1.87× against a floor of 1.30× and OpenAI's 0.84×.",
+            week: '1.81× → 1.87×',
+          },
+          {
+            n: 3,
+            text: 'Rivals do not force a price war on the premium tier',
+            status: 'weakening',
+            warn: true,
+            moved: 'holding',
+            reason:
+              '1 of 2 competitive rival cuts in 90 days (OpenAI gpt-6-sol −40%); Anthropic has not matched.',
+            week: null,
+          },
+          {
+            n: 5,
+            text: 'Safety is an asset, not a liability',
+            status: 'unresolved',
+            idle: true,
+            moved: null,
+            reason: 'Awaiting the first judge run that covers this claim.',
+            week: null,
+          },
+        ],
+        verdicts: [
+          {
+            n: 3,
+            provider: 'OpenAI',
+            verdict: 'competitive',
+            event: 'gpt-6-sol −40%',
+            url: 'https://developers.openai.com/api/docs/pricing.md',
+            rationale: 'gpt-6-sol is still the flagship and no newer model appears in the records.',
+          },
+        ],
+        awaiting: [],
+      },
+    ],
+  },
 }

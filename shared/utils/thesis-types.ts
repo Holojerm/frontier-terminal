@@ -31,8 +31,52 @@ export type SignalSpec =
       departments: readonly string[]
       rule: MeasuredRule
     }
-  /** Rated by the judge against a rubric — lands in M2 with the rubric; unresolved until then. */
-  | { kind: 'judged'; rubric: string | null }
+  | JudgedSpec
+
+/** A judged event's verdict, by the review that offered it. */
+export const VERDICTS = {
+  'flagship-price-cuts': ['competitive', 'generational'],
+  'incidents-and-disclosures': ['material', 'not-material'],
+} as const
+
+export type JudgedReview = keyof typeof VERDICTS
+
+/** Your ruling on a material verdict — committed to the thesis, never set by the judge. */
+export interface Confirmation {
+  /** The verdict's subject: the incident or disclosure entity_key. */
+  subject: string
+  decision: 'confirmed' | 'rejected'
+  on: string
+  note: string
+}
+
+/**
+ * A claim the judge rates. The Worker picks the candidate events and computes
+ * every number about them (a cut's size, an outage's hours); the judge only
+ * chooses a verdict per candidate and says why, grounded in the records.
+ */
+export type JudgedSpec = {
+  kind: 'judged'
+  rubric: string
+  /** Changes detected before this date were never offered for this claim. */
+  judged_from: string
+} & (
+  | {
+      review: 'flagship-price-cuts'
+      /** Broken when `count` rival cuts of `min_cut` or more are rated competitive
+       * within `days` and the company makes a competitive cut after one of them;
+       * weakening from the first such rival cut. */
+      rule: { rule: 'competitive-cuts'; min_cut: number; count: number; days: number }
+    }
+  | {
+      review: 'incidents-and-disclosures'
+      /** Candidates: incidents at one of `impacts` lasting `min_hours` or more, and
+       * every new disclosure. Broken by a material verdict on the company that is
+       * confirmed; weakening while one awaits confirmation. */
+      rule: { rule: 'confirmed-material'; impacts: readonly string[]; min_hours: number }
+      confirmations: readonly Confirmation[]
+    }
+)
 
 export interface ClaimDef {
   /** Stable across revisions: readings and status changes are keyed by it. */
@@ -79,6 +123,23 @@ export interface ClaimView {
   latest: (ReadingPoint & { detail: unknown; source_url: string; fetched_at: string }) | null
   /** Oldest first, newest last — up to the history the rule reads. */
   series: ReadingPoint[]
+  /** Judged claims: every verdict the rule reads, newest first. */
+  verdicts: VerdictView[]
+}
+
+export interface VerdictView {
+  subject: string
+  change_id: string
+  provider: BigFour
+  verdict: string
+  rationale: string
+  /** What the Worker computed about the event — the judge never supplies a number. */
+  facts: Record<string, unknown>
+  detected_at: string
+  judged_at: string
+  confirmation: Confirmation['decision'] | null
+  source_url: string
+  fetched_at: string
 }
 
 export interface ThesisView extends Omit<ThesisDef, 'claims'> {

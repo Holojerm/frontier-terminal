@@ -1,6 +1,6 @@
 # Email
 
-How an email is written (Maizzle templates, compiled at build time, filled in with Mustache). This app sends one email — the ops alert digest (`server/utils/ops-digest.ts`, mailed from `server/utils/ops-mail.ts` through the `send_email` binding) — so the pipeline is the template's, trimmed to that one template.
+How an email is written (Maizzle templates, compiled at build time, filled in with Mustache). This app sends two emails, both to its owner through the `send_email` binding (`server/utils/ops-mail.ts`): the ops alert digest (`server/utils/ops-digest.ts`) and the weekly thesis digest (`server/theses/digest.ts`). The pipeline is the template's, trimmed to those two.
 
 > **Load this when:** touching `emails/`, `server/utils/ops-digest.ts`, or adding a second outbound email.
 > Canonical index: [AGENTS.md](../../AGENTS.md).
@@ -21,6 +21,7 @@ At send time `renderEmail(name, data)` in
 emails/
   templates/ops-digest.vue  the HTML — content only
   templates/ops-digest.txt  the plain-text alternative, same tags
+  templates/thesis-digest.* the weekly thesis digest, same pair
   components/Email*.vue     the chrome: EmailLayout, EmailParagraph, EmailButton
   samples.ts                sample data per template — previews and tests
   theme.generated.css       GENERATED from DESIGN.md — see Branding

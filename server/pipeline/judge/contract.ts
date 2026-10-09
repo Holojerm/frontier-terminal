@@ -2,6 +2,7 @@ import { z } from 'zod'
 
 import { AlertRow, contentHash, parseAgentOutput, type AgentGateResult } from '../contracts'
 import type { ChangeRow } from '../contracts'
+import { JudgeClaimVerdict } from '../../theses/verdicts'
 import { JudgeClassMapping } from './class-map'
 
 // The judge lane's contract. The Worker owns the data and every gate; the routine only reasons. What
@@ -24,6 +25,8 @@ export type JudgeAlert = z.infer<typeof JudgeAlert>
 export const JudgeOutput = z.strictObject({
   alerts: JudgeAlert.array(),
   class_map: JudgeClassMapping.array().max(9).default([]),
+  /** Verdicts on judged thesis claims, one per candidate in a CLAIM REVIEW block. */
+  claims: JudgeClaimVerdict.array().max(200).default([]),
 })
 export type JudgeOutput = z.infer<typeof JudgeOutput>
 
