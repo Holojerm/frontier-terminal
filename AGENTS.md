@@ -78,6 +78,7 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 │   ├── plugins/            # Nitro plugins (error logging)
 │   ├── routes/             # Non-/api Nitro routes (robots, sitemap, llms.txt, manifest,
 │   │                       # alerts.xml, export/, mcp.ts)
+│   ├── theses/             # The thesis layer: definitions, signals, status rules, evaluator
 │   ├── tasks/              # Nitro scheduled tasks — cron wiring in nuxt.config + wrangler.toml
 │   └── utils/              # Server utilities, incl. the terminal-*.ts query/serve layer
 ├── shared/                 # Auto-imported in BOTH app/ and server/ (Nuxt 4 `shared/`)

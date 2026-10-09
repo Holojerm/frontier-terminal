@@ -26,7 +26,8 @@ Baselines are as of 2026-10-08. OpenRouter figures cover the week of 2026-10-01 
 ## Caveats
 
 - OpenRouter is one aggregator. Claims 1 and 2 see developer traffic, not enterprise or direct API volume, so a kill there prompts a revision, not a verdict.
-- The 90-day high in claim 4 and the 13-week average in claim 2 need history the terminal is still accumulating; until it exists, those kill conditions read as unresolved.
+- Claims 2 and 4 are rebuilt from history the terminal already holds: rankings since 2026-08-10, the Anthropic job board since 2026-08-25. Until the full 13 weeks or 90 days exist, claim 2 compares against the weeks available once there are at least 4, and claim 4 measures from the highest point seen once there are 30 days; each status says how much history it rests on.
+- Each rule reads weekly checkpoints (the newest reading, then one 7, 14, 21… days back), not every day. A claim is weakening once it is half way to its kill condition: half the run of weeks, half the margin, or half the drop.
 - The public S-1 ends the horizon and opens a revenue claim; until then the revenue axis stays empty.
 
 ## Revisions
@@ -34,3 +35,4 @@ Baselines are as of 2026-10-08. OpenRouter figures cover the week of 2026-10-01 
 | Date | Change | Reason |
 | --- | --- | --- |
 | 2026-10-08 | Opened | First thesis on the engine |
+| 2026-10-08 | Evaluation rules written down: weekly checkpoints, weakening at half way, partial history | Automated in M1 (`server/theses/`) |

@@ -10,11 +10,14 @@ import sourcesYaml from 'raw:../../../sources.yaml'
 import { createFetcher } from '../../pipeline/fetch'
 import { unstorageLockStore } from '../../pipeline/lock'
 import { blobRawStore, runPoll } from '../../pipeline/poll'
+import { evaluateTheses } from '../../theses/evaluate'
+import { recordOpsEvent } from '../../utils/ops'
 
 export default defineTask({
   meta: {
     name: 'poll:survey',
-    description: 'Fetch every include source (pricing, hiring, EDGAR, rankings); diff and store',
+    description:
+      'Fetch every include source (pricing, hiring, EDGAR, rankings); diff and store; evaluate the theses',
   },
   async run() {
     const config = useRuntimeConfig()
@@ -29,6 +32,14 @@ export default defineTask({
       }),
       sourcesYaml,
     })
-    return { result }
+    // The theses read what this tick stored, so they run after it. A failure
+    // here must not undo or hide the poll, so it is spooled for the digest.
+    const theses = await evaluateTheses(db, { sourcesYaml, now: () => new Date() }).catch(
+      async (error: unknown) => {
+        await recordOpsEvent(db, { kind: 'theses_evaluate_failed', detail: String(error) })
+        return null
+      },
+    )
+    return { result, theses }
   },
 })
