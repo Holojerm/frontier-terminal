@@ -4,6 +4,7 @@ import { z } from 'zod'
 import type { BigFour, ModelClassId } from '#shared/utils/terminal-types'
 
 import * as tables from '../../db/schema'
+import { catalogDescription } from '../parsers/pricing/anthropic-models-overview'
 import { recordOpsEvent } from '../../utils/ops'
 import { CLASS_MAP_SOURCES, type ClassEntry } from '../../utils/terminal-classes'
 import { effectiveClassMap } from '../class-map'
@@ -232,7 +233,9 @@ async function listedModels(db: PipelineDb, provider: string): Promise<Map<strin
     const payload = JSON.parse(row.payload) as { model_slug?: unknown; notes?: unknown }
     if (typeof payload.model_slug !== 'string') continue
     const notes = out.get(payload.model_slug) ?? new Set<string>()
-    if (typeof payload.notes === 'string') notes.add(payload.notes.trim())
+    // A row's notes are its catalog description, plus any note the parser
+    // appended (a "From" price); only the description is the vendor's sentence.
+    if (typeof payload.notes === 'string') notes.add(catalogDescription(payload.notes))
     out.set(payload.model_slug, notes)
   }
   return out
