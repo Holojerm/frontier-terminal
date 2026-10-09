@@ -33,7 +33,18 @@ function featureRow(rows: string[][], feature: string): string[] {
 // still an error.
 const PRICING_CELL =
   /^(From )?\$(\d+(?:\.\d+)?) \/ input MTok, (From )?\$(\d+(?:\.\d+)?) \/ output MTok$/
-const FROM_NOTE = 'Printed as a "From" price: the lowest band, higher for longer prompts'
+export const FROM_NOTE = 'Printed as a "From" price: the lowest band, higher for longer prompts'
+
+/**
+ * The catalog description a row's notes carry, without the "From" note this
+ * parser may append to it. The class map treats the description as the
+ * vendor's own sentence and matches it verbatim, so the suffix must come off.
+ */
+export function catalogDescription(notes: string): string {
+  const trimmed = notes.trim()
+  if (trimmed === FROM_NOTE) return ''
+  return trimmed.endsWith(`. ${FROM_NOTE}`) ? trimmed.slice(0, -`. ${FROM_NOTE}`.length) : trimmed
+}
 
 // prov defaults to the fixture manifest's record (single-arg behavior is
 // byte-identical for the determinism gate); the refresh orchestrator passes
