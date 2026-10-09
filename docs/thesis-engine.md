@@ -33,7 +33,7 @@ Frontier Terminal is the engine, and its first thesis is Anthropic, read off the
 
 **In**
 
-- First thesis: Anthropic, bullish, with OpenAI, Google and xAI as its comparison set, on the seven axes already tracked.
+- First thesis: Anthropic, bullish, with OpenAI, Google and xAI as its comparison set, on the seven axes already tracked: [`docs/theses/anthropic.md`](theses/anthropic.md).
 - Second thesis: one company outside the labs (Cloudflare is the candidate), as the test that the engine is general.
 - One recipe per measured signal, every snapshot kept; one rubric per judged signal.
 - Claim status computed from kill conditions.
