@@ -163,16 +163,19 @@ export function daysBefore(date: string, days: number): string {
 const isRanking = eq(tables.entities.entity_type, 'ranking')
 const dateOf = sql<string | null>`json_extract(${tables.entities.payload}, '$.date')`
 
-/** Observations for the newest SERIES_DAYS days — the table grows by ~50 rows
+/** Observations for the newest `days` days — the table grows by ~50 rows
  * a day forever, so the read is bounded by date, never the whole type. */
-export async function rankingObservations(db: PipelineDb): Promise<RankingObservation[]> {
+export async function rankingObservations(
+  db: PipelineDb,
+  days: number = SERIES_DAYS,
+): Promise<RankingObservation[]> {
   const [bounds] = await db
     .select({ newest: max(dateOf) })
     .from(tables.entities)
     .where(isRanking)
   const newest = bounds?.newest ?? null
   if (!newest) return []
-  const cutoff = daysBefore(newest, SERIES_DAYS - 1)
+  const cutoff = daysBefore(newest, days - 1)
 
   const rows = await db
     .select({

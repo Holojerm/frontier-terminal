@@ -294,6 +294,13 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     ],
     [asc(tables.alerts.created_at), asc(tables.alerts.id)],
   ),
+  claim_readings: plainTable(
+    'claim_readings',
+    'One row per thesis claim and data date: the measured value its kill condition is checked against, with the detail behind it (docs/theses/).',
+    tables.claimReadings,
+    ['thesis_id', 'claim_id', 'date', 'value', 'detail', 'computed_at', ...PROVENANCE],
+    [asc(tables.claimReadings.claim_id), asc(tables.claimReadings.date)],
+  ),
   source_runs: plainTable(
     'source_runs',
     'One row per (poll tick, source): what was attempted and how it ended. No fetched_at — a failed run fetched nothing.',
