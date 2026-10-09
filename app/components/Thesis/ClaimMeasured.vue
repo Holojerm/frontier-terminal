@@ -9,7 +9,7 @@ import type { ClaimView } from '#shared/utils/thesis-types'
 const props = defineProps<{ claim: ClaimView }>()
 
 const latest = computed(() => props.claim.latest)
-const kind = computed(() => valueKind(latest.value?.detail))
+const kind = computed(() => valueKind(latest.value?.detail, props.claim.format))
 const format = (v: number) => formatValue(kind.value, v)
 const context = computed(() => detailRows(latest.value?.detail))
 

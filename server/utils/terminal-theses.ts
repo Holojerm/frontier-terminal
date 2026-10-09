@@ -18,6 +18,7 @@ import {
 } from '../theses/evaluate'
 import { confirmationOf } from '../theses/judged-status'
 import { THESES } from '../theses/registry'
+import { valueFormatOf } from '../theses/signals'
 import type { QueryContext } from './terminal-db'
 
 export const THESES_CAVEAT =
@@ -53,6 +54,7 @@ export async function queryTheses(db: PipelineDb, ctx: QueryContext): Promise<Th
         text: claim.text,
         signal_label: claim.signal_label,
         signal_kind: claim.spec.kind,
+        format: valueFormatOf(claim),
         kill_condition: claim.kill_condition,
         status: evaluation.status,
         status_since: change?.status === evaluation.status ? change.changed_at : null,

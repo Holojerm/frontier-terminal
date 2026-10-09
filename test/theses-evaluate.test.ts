@@ -174,7 +174,8 @@ describe('evaluateTheses', () => {
       now: () => new Date('2026-10-08T18:00:00Z'),
     })
     expect(runs.some((r) => r.changed)).toBe(false)
-    expect(await db.select().from(schema.claimStatusChanges)).toHaveLength(5)
+    const log = await db.select().from(schema.claimStatusChanges)
+    expect(log.filter((r) => r.thesis_id === 'anthropic')).toHaveLength(5)
     const after = await db.select().from(schema.claimReadings)
     expect(after.map((r) => r.computed_at)).toEqual(before.map((r) => r.computed_at))
   })

@@ -163,6 +163,8 @@ export interface ClaimView {
   text: string
   signal_label: string
   signal_kind: 'measured' | 'judged'
+  /** How a measured claim's values print; null for a judged claim. */
+  format: ValueFormat | null
   kill_condition: string
   status: ClaimStatus
   /** When the claim entered its current status; null before the first evaluation. */

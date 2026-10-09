@@ -268,7 +268,8 @@ describe('verdicts through the judge submit path', () => {
     expect(byId[SAFETY.id]!.verdicts[0]!.confirmation).toBeNull()
 
     const log = await db.select().from(schema.claimStatusChanges)
-    expect(log.map((r) => [r.claim_id, r.status]).sort()).toEqual([
+    const anthropic = log.filter((r) => r.thesis_id === 'anthropic')
+    expect(anthropic.map((r) => [r.claim_id, r.status]).sort()).toEqual([
       [PRICE_WAR.id, 'weakening'],
       [SAFETY.id, 'weakening'],
     ])

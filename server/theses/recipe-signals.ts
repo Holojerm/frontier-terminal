@@ -9,6 +9,7 @@ import type { SignalSpec } from '#shared/utils/thesis-types'
 
 import * as tables from '../db/schema'
 import type { PipelineDb } from '../pipeline/store'
+import { RECIPES } from './recipes/registry'
 import type { SignalReading } from './signals'
 
 export interface Point {
@@ -112,7 +113,7 @@ export async function readRecipeSignal(db: PipelineDb, spec: RecipeSpec): Promis
           base_value: p.base.value,
           rivals: Object.fromEntries(
             rivals.map(([r, g]) => [
-              r,
+              RECIPES.find((x) => x.id === r)?.company ?? r,
               g.find((q) => Math.abs(dayOf(q.date) - dayOf(p.date)) <= 21)?.value ?? null,
             ]),
           ),
