@@ -257,6 +257,31 @@ describe('a judge re-mapping', () => {
     expect(check).toMatchObject({ model_slug: 'claude-opus-5-5', present: true })
   })
 
+  it('accepts a model’s own description when its row also carries a "From" price note', async () => {
+    // 2026-10-09: Haiku 5.5 replaced Haiku 4.5 with a "From" price, the parser
+    // appended a note to the row's description, and every re-mapping onto the
+    // description was rejected as not the model's own.
+    const HAIKU =
+      'For high-volume, latency-sensitive tasks such as classification, extraction, and routing'
+    const page = LAUNCHED.replace('The fastest model with near-frontier intelligence', HAIKU)
+      .replace(
+        '$1 / input MTok, $5 / output MTok',
+        'From $0.10 / input MTok, From $0.50 / output MTok',
+      )
+      .replaceAll('`claude-haiku-4-5`', '`claude-haiku-5-5`')
+    await poll(page)
+    const [row] = await db
+      .select({ payload: schema.entities.payload })
+      .from(schema.entities)
+      .where(eq(schema.entities.entity_key, 'model:anthropic:claude-haiku-5-5'))
+    expect(JSON.parse(row!.payload).notes).toContain('"From" price')
+
+    const report = await submit([
+      proposal({ class: 'economy', model_slug: 'claude-haiku-5-5', basis: HAIKU }),
+    ])
+    expect(report.class_map).toEqual({ accepted: 1, rejected: [] })
+  })
+
   it('rejects, for its typed reason, everything that is not the vendor’s own sentence', async () => {
     const report = await submit([
       proposal({ provider: 'xai', model_slug: 'grok-4.7', basis_source_id: 'xai-models-md' }),
