@@ -23,8 +23,10 @@
 import { db } from '@nuxthub/db'
 
 import { LAB_PAGES } from '#shared/utils/terminal-lab-summary'
+import { thesisPages } from '#shared/utils/thesis-format'
 import { alertPath } from '#shared/utils/terminal-tiers'
 
+import { THESES } from '../theses/registry'
 import { sitemapResponse, type SitemapEntry } from '../utils/seo'
 import { alertPermalinks, queryPriceKeys } from '../utils/terminal-db'
 
@@ -61,7 +63,7 @@ export default defineEventHandler(async (event) => {
     appUrl: config.public.appUrl,
     indexable: config.public.indexable !== false,
     buildDate: config.buildDate,
-    pages: [...(config.publicPages ?? []), ...LAB_PAGES],
+    pages: [...(config.publicPages ?? []), ...LAB_PAGES, ...thesisPages(THESES)],
     dynamic,
     complete,
   })
