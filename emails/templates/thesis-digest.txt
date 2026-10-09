@@ -1,4 +1,4 @@
-{{! html-only: bad, warn, good, idle, verdicts.length, awaiting.length, url }}
+{{! html-only: bad, warn, good, idle, verdicts.length, gaps.length, awaiting.length, url }}
 {{summary}}.
 
 {{#quiet}}
@@ -16,9 +16,12 @@ No claim changed status and nothing was rated this week.
 {{/week}}
 {{/claims}}
 {{#verdicts}}
-  • Claim {{n}} · {{provider}} · {{verdict}} · {{event}}
+  • {{#against}}Against · {{/against}}Claim {{n}} · {{provider}} · {{verdict}} · {{event}}
     {{rationale}}
 {{/verdicts}}
+{{#gaps}}
+  ? Data gap, claim {{n}}: {{recipe}} failed {{runs}}x this week, so its reading may be stale ({{detail}})
+{{/gaps}}
 {{#awaiting}}
   ! Awaiting confirmation, claim {{n}}: {{event}} ({{subject}})
 {{/awaiting}}

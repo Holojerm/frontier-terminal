@@ -2,7 +2,9 @@
      its statement, and claims[]; each claim exactly one of bad/warn/good/idle (its
      status as a tone), n, text, status, reason, and optional moved (the status it
      left this week) and week (its reading a week ago and now). Each thesis also
-     carries verdicts[] (rated this week) and awaiting[] (material, unconfirmed).
+     carries verdicts[] (rated this week, those counting against the thesis first,
+     each with an optional against), gaps[] (recipes behind a claim that failed this
+     week) and awaiting[] (material, unconfirmed). Claims arrive weakest first.
 
      The tone is four copies of the bar, selected at runtime, because a color has to
      be inlined at build time and the status is only known at runtime. -->
@@ -39,10 +41,16 @@
     <Raw>{{/verdicts.length}}</Raw>
     <Raw>{{#verdicts}}</Raw>
     <div class="border-0 border-t border-solid border-rule py-2">
-      <div class="font-mono text-xs text-muted">Claim <Raw>{{n}}</Raw> &middot; <Raw>{{provider}}</Raw> &middot; <Raw>{{verdict}}</Raw> &middot; <a href="{{url}}" class="text-copy"><Raw>{{event}}</Raw></a></div>
+      <div class="font-mono text-xs text-muted"><Raw>{{#against}}</Raw><span class="font-semibold text-bad">Against</span> &middot; <Raw>{{/against}}</Raw>Claim <Raw>{{n}}</Raw> &middot; <Raw>{{provider}}</Raw> &middot; <Raw>{{verdict}}</Raw> &middot; <a href="{{url}}" class="text-copy"><Raw>{{event}}</Raw></a></div>
       <div class="text-sm leading-normal text-copy [word-break:break-word]"><Raw>{{rationale}}</Raw></div>
     </div>
     <Raw>{{/verdicts}}</Raw>
+    <Raw>{{#gaps.length}}</Raw>
+    <p class="m-0 mb-1 mt-4 text-[15px] font-semibold text-ink">Data gaps</p>
+    <Raw>{{/gaps.length}}</Raw>
+    <Raw>{{#gaps}}</Raw>
+    <div class="py-1 text-sm leading-normal text-copy [word-break:break-word]">Claim <Raw>{{n}}</Raw>: <span class="font-mono text-xs"><Raw>{{recipe}}</Raw></span> failed <Raw>{{runs}}</Raw>&times; this week, so its reading may be stale. <span class="font-mono text-xs text-muted"><Raw>{{detail}}</Raw></span></div>
+    <Raw>{{/gaps}}</Raw>
     <Raw>{{#awaiting.length}}</Raw>
     <p class="m-0 mb-1 mt-4 text-[15px] font-semibold text-ink">Awaiting your confirmation</p>
     <Raw>{{/awaiting.length}}</Raw>
