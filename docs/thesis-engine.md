@@ -58,6 +58,8 @@ Frontier Terminal is the engine, and its first thesis is Anthropic, read off the
 - **Digest:** `theses:digest` emails every claim's status, the week's moves and verdicts, and anything awaiting confirmation, Mondays 13:00 UTC (`server/theses/digest.ts`).
 - **Fallback runner:** the Mac mini, for sources that block cloud IPs or need a real browser.
 - **Breakage:** a recipe that fails or returns an outlier is flagged, never silently skipped.
+- **Recipes:** a company outside the four labs gets its data from recipes (`server/theses/recipes/`): a public URL and a plain extractor, run on the survey tick before the theses are evaluated, into `recipe_observations`, with the raw bytes in R2 and a failed run flagged in `recipe_runs` and the ops digest. They never touch the lab tables, panels, alert rules or the lab judge. Recipe signals compute year-over-year growth, trailing sums, and sums of keys; a recipe-items claim has the judge rate each observation (a changelog entry) once.
+- **Adding a company:** add it to `shared/utils/companies.ts`; one file per recipe in `server/theses/recipes/` with a fixture and a test, listed in its registry; one thesis file in `server/theses/` listed in its registry; its journal page under `docs/theses/`.
 - **Generalize late:** the parser contracts name the four labs today; they widen when the second thesis needs it, not before.
 
 ## Rules of the road

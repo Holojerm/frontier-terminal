@@ -47,11 +47,13 @@ configuration gap rather than retrying.
    `class_map_review` is `{ cells, pages }`: price-matrix cells whose vendor sentence left the
    page, and the page text to re-map them from. It is usually `{ "cells": [], "pages": [] }`.
    `claim_review` lists, per judged thesis claim, the pending changes it wants a verdict on;
-   it is usually `[]`, and always `[]` when `changes` is.
+   it is usually `[]`. It can hold candidates when `changes` is empty: recipe items (a
+   changelog entry, say) are offered until they are rated.
    A 404 means the Worker has no judge token set; a 401 means the token does not match.
    Either is a configuration gap: journal it and stop.
 
-3. **If `changes` is an empty array and `class_map_review.cells` is empty, stop now.** Journal
+3. **If `changes` is an empty array, `class_map_review.cells` is empty, and `claim_review` is
+   empty, stop now.** Journal
    one line (`- no action needed (0 pending changes)`) and finish. This is the common case.
 
 4. Otherwise judge. The `prompt` field is the complete judge prompt, ending in the marker line
