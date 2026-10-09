@@ -9,6 +9,7 @@ import { COMPANIES, companyName } from '#shared/utils/companies'
 import type { ClaimView, ThesesData } from '#shared/utils/thesis-types'
 
 import * as tables from '../db/schema'
+import { contentHash } from '../pipeline/contracts'
 import type { PipelineDb } from '../pipeline/store'
 import {
   currentEvaluation,
@@ -25,13 +26,20 @@ export const THESES_CAVEAT =
   'A research journal, not investment advice. Statuses are computed from the terminal’s own stored data against kill conditions written before the data arrived; ' +
   'OpenRouter is one aggregator’s traffic, not market share. Judged claims stay unresolved until the judge rates them.'
 
-/** Newest reading and verdict writes — part of the cache key, because both land after the poll tick that stamps the cache. */
+/** The thesis definitions themselves: a deploy that adds a thesis, moves a
+ * threshold or commits a confirmation must not be served a payload cached
+ * before it. */
+const DEFINITIONS = contentHash(THESES).slice(0, 12)
+
+/** Newest reading and verdict writes plus the definitions — the cache key's
+ * variant, because readings and verdicts land after the poll tick that
+ * stamps the cache, and definitions change on deploy. */
 export async function thesesStamp(db: PipelineDb): Promise<string> {
   const [[readings], [verdicts]] = await Promise.all([
     db.select({ at: max(tables.claimReadings.computed_at) }).from(tables.claimReadings),
     db.select({ at: max(tables.claimVerdicts.judged_at) }).from(tables.claimVerdicts),
   ])
-  return `${readings?.at ?? 'none'}|${verdicts?.at ?? 'none'}`
+  return `${DEFINITIONS}|${readings?.at ?? 'none'}|${verdicts?.at ?? 'none'}`
 }
 
 export async function queryTheses(db: PipelineDb, ctx: QueryContext): Promise<ThesesData> {
