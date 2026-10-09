@@ -303,13 +303,13 @@ default, because the prose pages are for reading. Never set arbitrary sizes (`te
 - **Inputs:** 1px border, `bg-default`. Focus shows a 2px primary ring, never a glow.
 - **Focus:** every interactive element has a visible focus-visible ring. Never `outline: none`
   without a replacement.
-- **Navigation:** at most **five** things across the header, and they are grouped rather
+- **Navigation:** at most **six** things across the header, and they are grouped rather
   than listed. This site has ten pages; ten inline links put `Prices` at the same weight as
   `About` and made the reader scan instead of choose. The six reading pages sit under two
   `UNavigationMenu` triggers named for the questions they answer — **Economics** (prices,
   revenue, demand) and **Operations** (hiring, releases, incidents) — with a one-line
   description per child, because a name alone does not tell a first-time reader what
-  "Demand" measures. `Overview` and `Alerts` stay top-level: they are the two entry points.
+  "Demand" measures. `Overview`, `Alerts` and `Theses` stay top-level: they are the entry points.
   Reference pages (`About`, `Data`) live in the footer, where a reader already looks for
   exports and the disclaimer.
 

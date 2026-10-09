@@ -1,0 +1,49 @@
+name: Dataset request
+description: Propose a public number that would test a thesis claim.
+title: 'Dataset: '
+labels: ['dataset-request']
+body:
+  - type: markdown
+    attributes:
+      value: |
+        A claim can only be tested by a number the terminal can fetch, store and cite.
+        Every datum here carries its source URL and fetch time, so the source must be
+        public: no login, no paywall, no scraping a page that forbids it.
+  - type: input
+    id: company
+    attributes:
+      label: Company
+      description: The company the thesis is about.
+      placeholder: Cloudflare
+    validations:
+      required: true
+  - type: textarea
+    id: claim
+    attributes:
+      label: Thesis and claim it would test
+      description: Which thesis, and which claim (or a new one). Say what would make the claim weaker or broken.
+    validations:
+      required: true
+  - type: input
+    id: source
+    attributes:
+      label: Public source URL
+      description: A URL anyone can open without signing in.
+      placeholder: https://
+    validations:
+      required: true
+  - type: textarea
+    id: number
+    attributes:
+      label: What number it yields, and how often
+      description: The figure, its unit, and how often the source updates it.
+      placeholder: Open roles per department, updated daily
+    validations:
+      required: true
+  - type: checkboxes
+    id: public
+    attributes:
+      label: The source is public
+      options:
+        - label: The source needs no login, and its terms allow this use.
+          required: true

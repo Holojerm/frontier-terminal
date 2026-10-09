@@ -36,6 +36,8 @@ const ROUTES = [
   '/releases',
   '/rankings',
   '/alerts',
+  '/theses',
+  '/theses/anthropic',
   '/incidents',
   '/disclosures',
   '/data',

@@ -29,8 +29,8 @@ const repo = manifest.links.github
  * said which pages answer "what does this cost" and which answer "what is this
  * lab doing". The six reading pages now group under those two questions.
  *
- * `Overview` and `Alerts` stay top-level because they are the two entry points
- * — the state of things, and what changed in it. `Labs` is the third way in:
+ * `Overview`, `Alerts` and `Theses` stay top-level because they are the entry points
+ * — the state of things, what changed in it, and the claims checked against it. `Labs` is the third way in:
  * one lab across every axis. `Data` and `About` drop to the footer, which is
  * already where a reader looks for exports and the disclaimer.
  */
@@ -49,6 +49,7 @@ interface NavSection {
 
 const OVERVIEW: NavLink = { label: 'Overview', to: '/' }
 const ALERTS: NavLink = { label: 'Alerts', to: '/alerts' }
+const THESES: NavLink = { label: 'Theses', to: '/theses' }
 
 const SECTIONS: NavSection[] = [
   {
@@ -116,13 +117,14 @@ const headerItems: NavigationMenuItem[] = [
   OVERVIEW,
   ...SECTIONS.map((section) => ({ label: section.label, children: section.links })),
   ALERTS,
+  THESES,
 ]
 
 // The drawer is the whole site map rather than a copy of the header: below
 // `md` it is the only navigation affordance there is, so the reference pages
 // belong in it even though the header hands them to the footer.
 const drawerSections: NavSection[] = [
-  { links: [OVERVIEW, ALERTS] },
+  { links: [OVERVIEW, ALERTS, THESES] },
   ...SECTIONS,
   { label: 'Reference', links: REFERENCE },
 ]
