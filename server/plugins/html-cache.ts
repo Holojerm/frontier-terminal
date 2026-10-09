@@ -66,7 +66,9 @@ export default defineNitroPlugin((nitro) => {
 
     try {
       const stamp = await sharedTerminalStamp(() => terminalStamp(db))
-      const key = htmlCacheKey(event.path, stamp, new Date().getUTCFullYear())
+      // Keyed by build as well as poll, so a deploy never serves the last build's HTML.
+      const build = useRuntimeConfig().public.buildSha || 'dev'
+      const key = htmlCacheKey(`/${build}${event.path}`, stamp, new Date().getUTCFullYear())
       // Remembered so render:response stores under the key it missed on,
       // rather than re-reading a stamp that may have moved mid-render.
       event.context.htmlCacheKey = key

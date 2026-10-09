@@ -43,7 +43,11 @@ export async function terminalPayload<T>(
     throw createError({ statusCode: 503, message: 'Database unavailable', cause: error })
   }
   const context = queryContext(sourcesYaml, stamp)
-  return cachedTerminal(kv, variant ? `${name}:${variant}` : name, stamp, () => query(context))
+  // The build is part of the key: a deploy that changes what a query returns
+  // must not be served the previous build's payload until the next poll.
+  const build = useRuntimeConfig().public.buildSha || 'dev'
+  const keyName = `${name}@${build}${variant ? `:${variant}` : ''}`
+  return cachedTerminal(kv, keyName, stamp, () => query(context))
 }
 
 /** `terminalPayload`, plus the edge Cache-Control every JSON route sends. */
