@@ -1,17 +1,20 @@
-// The thesis layer's one writer: after each survey tick, store every measured
-// claim's readings and append a status-change row for any claim whose
-// status moved. Readings are upserted (a recomputed day whose inputs were
+// The thesis layer's status writer: after each survey tick (and after each
+// judge run, for the judged claims), store every measured claim's readings
+// and append a status-change row for any claim whose status moved. Readings are upserted (a recomputed day whose inputs were
 // revised is rewritten; an identical one is left alone, computed_at and
 // all); status changes are append-only.
 
 import { and, desc, eq, gte, sql } from 'drizzle-orm'
 
 import type { ClaimDef, ClaimStatus, ThesisDef } from '#shared/utils/thesis-types'
+import type { BigFour } from '#shared/utils/terminal-types'
 
 import * as tables from '../db/schema'
 import { contentHash } from '../pipeline/contracts'
+import { judgedThrough } from '../pipeline/judge/pending'
 import { chunk, D1_MAX_BOUND_PARAMS, type PipelineDb } from '../pipeline/store'
 import { daysBefore } from '../utils/terminal-rankings'
+import { evaluateJudgedClaim, type StoredVerdict } from './judged-status'
 import { THESES } from './registry'
 import { presentation, readSignal, recomputable, type SignalDeps } from './signals'
 import { evaluateClaim, historyDays, type ClaimEvaluation, type StoredReading } from './status'
@@ -56,6 +59,32 @@ export async function storedReadings(
 export function evaluationOf(claim: ClaimDef, readings: readonly StoredReading[]): ClaimEvaluation {
   const { fmt, comparatorName } = presentation(claim)
   return evaluateClaim(claim, readings, fmt, comparatorName)
+}
+
+/** Every verdict stored for a judged claim, newest first. */
+export async function storedVerdicts(db: PipelineDb, claim: ClaimDef) {
+  const rows = await db
+    .select()
+    .from(tables.claimVerdicts)
+    .where(eq(tables.claimVerdicts.claim_id, claim.id))
+    .orderBy(desc(tables.claimVerdicts.detected_at))
+  return rows.map((r) => ({
+    ...r,
+    provider: r.provider as BigFour,
+    facts: JSON.parse(r.facts) as Record<string, unknown>,
+  })) satisfies StoredVerdict[]
+}
+
+/** A claim's status now, from whatever its kind stores. */
+export async function currentEvaluation(
+  db: PipelineDb,
+  thesis: ThesisDef,
+  claim: ClaimDef,
+  now: Date,
+): Promise<ClaimEvaluation> {
+  if (claim.spec.kind === 'measured') return evaluationOf(claim, await storedReadings(db, claim))
+  const [verdicts, through] = await Promise.all([storedVerdicts(db, claim), judgedThrough(db)])
+  return evaluateJudgedClaim(claim, thesis.company, verdicts, through, now.toISOString())
 }
 
 async function writeReadings(
@@ -112,12 +141,14 @@ export async function evaluateTheses(
   db: PipelineDb,
   deps: SignalDeps,
   theses: readonly ThesisDef[] = THESES,
+  opts: { judgedOnly?: boolean } = {},
 ): Promise<ClaimRun[]> {
   const runs: ClaimRun[] = []
   for (const thesis of theses) {
     for (const claim of thesis.claims) {
+      if (opts.judgedOnly && claim.spec.kind !== 'judged') continue
       const written = await writeReadings(db, thesis, claim, deps)
-      const evaluation = evaluationOf(claim, await storedReadings(db, claim))
+      const evaluation = await currentEvaluation(db, thesis, claim, deps.now())
       const previous = await latestStatusChange(db, claim.id)
       const changed = previous?.status !== evaluation.status
       if (changed) {

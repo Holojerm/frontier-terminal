@@ -50,7 +50,13 @@ export const ANTHROPIC_THESIS: ThesisDef = {
         'Two competitive cuts of 30% or more on rival flagships within 90 days, and Anthropic matches one',
       spec: {
         kind: 'judged',
-        rubric: null,
+        review: 'flagship-price-cuts',
+        judged_from: '2026-10-09',
+        rule: { rule: 'competitive-cuts', min_cut: 0.3, count: 2, days: 90 },
+        rubric:
+          'competitive: the cut lands on the model the vendor still recommends as its flagship, and nothing in the records shows a newer model from that vendor replacing it, so it is a price move against rivals. ' +
+          'generational: the records show a newer model from the same vendor arriving with or before the cut, so the old model is being stepped down. ' +
+          'When the records cannot tell the two apart, rate generational: a price war needs evidence.',
       },
     },
     {
@@ -76,7 +82,13 @@ export const ANTHROPIC_THESIS: ThesisDef = {
         'The judge rates an event material and Jeremy confirms: a multi-hour flagship API outage, or a disclosure Anthropic calls high severity',
       spec: {
         kind: 'judged',
-        rubric: null,
+        review: 'incidents-and-disclosures',
+        judged_from: '2026-10-09',
+        rule: { rule: 'confirmed-material', impacts: ['major', 'critical', 'high'], min_hours: 2 },
+        rubric:
+          'material: the incident title or components show it hit the vendor API or a flagship model, not only a consumer app, console, dashboard or billing; or the disclosure record itself labels the event high severity. ' +
+          'not-material: everything else. The Worker has already checked the impact (major, critical or high) and the duration (two hours or more).',
+        confirmations: [],
       },
     },
   ],

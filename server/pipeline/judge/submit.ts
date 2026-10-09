@@ -4,6 +4,8 @@ import * as tables from '../../db/schema'
 import { recordOpsEvent } from '../../utils/ops'
 import { ChangeRow } from '../contracts'
 import { D1_MAX_BOUND_PARAMS, chunk, insertRows, type PipelineDb } from '../store'
+import { applyClaimVerdicts, type VerdictReport } from '../../theses/verdicts'
+import { evaluateTheses } from '../../theses/evaluate'
 import { applyClassMappings, type RawReader } from './class-map'
 import { buildAlertRows, gateJudgeSubmission } from './contract'
 import { groundAlerts } from './grounding'
@@ -33,6 +35,8 @@ export interface JudgeRunReport {
     accepted: number
     rejected: { reason: string; detail: string; cell: string; model_slug: string }[]
   }
+  /** Verdicts on judged thesis claims (server/theses/verdicts.ts). */
+  claims: VerdictReport
 }
 
 async function loadChanges(db: PipelineDb, ids: readonly string[]): Promise<ChangeRow[]> {
@@ -62,7 +66,7 @@ const NO_PAGES: RawReader = async () => null
 export async function submitJudgeRun(
   db: PipelineDb,
   raw: string,
-  opts: { source?: string; now?: Date; readRaw?: RawReader } = {},
+  opts: { source?: string; now?: Date; readRaw?: RawReader; sourcesYaml?: string } = {},
 ): Promise<JudgeRunReport> {
   const started_at = (opts.now ?? new Date()).toISOString()
   const source = opts.source ?? 'routine'
@@ -95,6 +99,7 @@ export async function submitJudgeRun(
       rejections: [],
       gate_rejection: { reason: gate.reason, detail: gate.detail },
       class_map: { accepted: 0, rejected: [] },
+      claims: { accepted: 0, inserted: 0, rejected: [] },
     }
   }
 
@@ -156,7 +161,27 @@ export async function submitJudgeRun(
     opts.now ?? new Date(),
   )
 
+  // Verdicts land after the cursor row, so a judged claim's status reads
+  // this run as coverage; the status log is updated here rather than
+  // waiting for the next survey tick.
+  const now = opts.now ?? new Date()
+  const claims = await applyClaimVerdicts(db, body.claims, now)
+  if (claims.rejected.length > 0) {
+    const [first] = claims.rejected
+    await recordOpsEvent(db, {
+      kind: 'judge_rejected',
+      detail: `${claims.rejected.length} claim verdict(s) rejected; first: ${first!.reason} — ${first!.detail} (${first!.claim_id})`,
+      path: JUDGE_OPS_PATH,
+    })
+  }
+  if (opts.sourcesYaml) {
+    await evaluateTheses(db, { sourcesYaml: opts.sourcesYaml, now: () => now }, undefined, {
+      judgedOnly: true,
+    })
+  }
+
   return {
+    claims,
     changes_seen: body.change_ids_seen.length,
     accepted: accepted.length,
     inserted,
