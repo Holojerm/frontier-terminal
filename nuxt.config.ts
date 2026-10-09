@@ -159,6 +159,7 @@ const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:alert', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
   '*/5 * * * *': ['poll:tripwire'],
+  '0 13 * * 1': ['theses:digest'],
 }
 
 /**

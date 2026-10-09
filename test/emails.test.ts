@@ -17,6 +17,7 @@ const NAMES = Object.keys(EMAILS) as EmailName[]
 /** The link each email exists to put in front of someone, as the sample builds it. */
 const ACTION_URL: Record<EmailName, (data: Record<string, unknown>) => string> = {
   'ops-digest': (d) => String(d.logsUrl),
+  'thesis-digest': (d) => String(d.thesesUrl),
 }
 
 /** Every string in a sample replaced by markup that would break out of its context. */

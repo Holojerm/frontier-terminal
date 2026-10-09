@@ -1,0 +1,29 @@
+{{! html-only: bad, warn, good, idle, verdicts.length, awaiting.length, url }}
+{{summary}}.
+
+{{#quiet}}
+No claim changed status and nothing was rated this week.
+
+{{/quiet}}
+{{#theses}}
+{{name}}: {{statement}}
+
+{{#claims}}
+{{n}}. {{text}} [{{status}}{{#moved}}, was {{moved}}{{/moved}}]
+   {{reason}}
+{{#week}}
+   Week: {{week}}
+{{/week}}
+{{/claims}}
+{{#verdicts}}
+  • Claim {{n}} · {{provider}} · {{verdict}} · {{event}}
+    {{rationale}}
+{{/verdicts}}
+{{#awaiting}}
+  ! Awaiting confirmation, claim {{n}}: {{event}} ({{subject}})
+{{/awaiting}}
+
+{{/theses}}
+Theses: {{thesesUrl}}
+Generated {{generated}}
+{{appUrl}}

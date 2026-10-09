@@ -115,10 +115,11 @@ head_sampling_rate = 1
 #                   status pages, OpenRouter rankings
 #   "*/5 * * * *"   poll:tripwire — parses the four model catalogs and polls
 #                   them off-cycle only when they differ from the store
+#   "0 13 * * 1"    theses:digest — the weekly thesis digest email (server/theses/digest.ts)
 #
 # Cron triggers run on UTC, and changes take up to 15 minutes to propagate.
 [triggers]
-crons = ["*/30 * * * *", "0 */6 * * *", "*/5 * * * *"]
+crons = ["*/30 * * * *", "0 */6 * * *", "*/5 * * * *", "0 13 * * 1"]
 
 # ─── Ops alert email ─────────────────────────────────────────────────────────
 # Outbound mail for the ops digest (server/tasks/ops/alert.ts). Pinned to a

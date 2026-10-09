@@ -8,7 +8,10 @@
 // `class_map_review` is the common case and the routine's signal to stop.
 // `class_map_review` lists the price-matrix cells whose vendor sentence left
 // the page, with that page's text to re-map them from
-// (server/pipeline/judge/class-map.ts).
+// (server/pipeline/judge/class-map.ts). `claim_review` lists, per judged
+// thesis claim, the pending changes it offers for a verdict
+// (server/theses/verdicts.ts); it is built from `changes`, so it is empty
+// whenever they are.
 
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
@@ -17,6 +20,7 @@ import judgePrompt from 'raw:../../pipeline/judge/judge-explain.prompt.md'
 
 import { blobRawReader, classMapReview } from '../../pipeline/judge/class-map'
 import { JUDGE_CHANGE_LIMIT, pendingChanges } from '../../pipeline/judge/pending'
+import { claimReview, flagshipMap } from '../../theses/verdicts'
 import { requireJudgeToken } from '../../utils/judge-auth'
 
 export default defineEventHandler(async (event) => {
@@ -24,9 +28,10 @@ export default defineEventHandler(async (event) => {
   setResponseHeader(event, 'Cache-Control', 'no-store')
   await requireJudgeToken(event)
 
-  const [{ changes, total_pending, since }, class_map_review] = await Promise.all([
+  const [{ changes, total_pending, since }, class_map_review, flagships] = await Promise.all([
     pendingChanges(db, JUDGE_CHANGE_LIMIT),
     classMapReview(db, blobRawReader(blob)),
+    flagshipMap(db),
   ])
   return {
     schema: 1,
@@ -35,6 +40,7 @@ export default defineEventHandler(async (event) => {
     since,
     limit: JUDGE_CHANGE_LIMIT,
     class_map_review,
+    claim_review: claimReview(changes, flagships),
     prompt: judgePrompt,
   }
 })

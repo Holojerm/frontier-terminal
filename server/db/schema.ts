@@ -292,6 +292,31 @@ export const claimStatusChanges = sqliteTable(
   (t) => [index('claim_status_changes_claim_idx').on(t.claim_id, t.changed_at)],
 )
 
+// Claim verdicts — append-only, one per (claim, subject): the judge's rating
+// of one candidate event for a judged thesis claim (server/theses/verdicts.ts).
+// subject is what the verdict is about — the change for a price cut, the
+// incident's entity_key for an outage, so an incident updated twice is rated
+// once. facts are what the Worker computed (a cut's size, an outage's hours);
+// rationale is the judge's, grounded against the cited change and the facts.
+export const claimVerdicts = sqliteTable(
+  'claim_verdicts',
+  {
+    id: text('id').primaryKey(),
+    thesis_id: text('thesis_id').notNull(),
+    claim_id: text('claim_id').notNull(),
+    subject: text('subject').notNull(),
+    change_id: text('change_id').notNull(),
+    provider: text('provider').notNull(),
+    verdict: text('verdict').notNull(),
+    rationale: text('rationale').notNull(),
+    facts: text('facts').notNull(),
+    detected_at: text('detected_at').notNull(),
+    judged_at: text('judged_at').notNull(),
+    ...provenance,
+  },
+  (t) => [index('claim_verdicts_claim_idx').on(t.claim_id, t.detected_at)],
+)
+
 export type Snapshot = typeof snapshots.$inferSelect
 export type Entity = typeof entities.$inferSelect
 export type Change = typeof changes.$inferSelect
@@ -301,3 +326,4 @@ export type JudgeRun = typeof judgeRuns.$inferSelect
 export type ClassMapDecision = typeof classMapDecisions.$inferSelect
 export type ClaimReading = typeof claimReadings.$inferSelect
 export type ClaimStatusChange = typeof claimStatusChanges.$inferSelect
+export type ClaimVerdict = typeof claimVerdicts.$inferSelect

@@ -75,10 +75,43 @@ function spanIsGrounded(span: string, corpusLower: string): boolean {
 }
 
 /** The only text an alert may draw values from. */
-function corpusOf(changes: readonly ChangeRow[]): string {
+export function corpusOf(changes: readonly ChangeRow[]): string {
   return changes
     .map((c) => [c.entity_key, c.before_json ?? '', c.after_json ?? ''].join('\n'))
     .join('\n')
+}
+
+/**
+ * Why `text` fails grounding against `corpus` (the cited records' text), or
+ * null when it passes — the number and term checks groundAlerts applies,
+ * for any other judged text that must stay inside its records.
+ */
+export function groundingFailure(
+  text: string,
+  corpus: string,
+): { reason: 'ungrounded-number' | 'ungrounded-term'; detail: string } | null {
+  const corpusLower = corpus.toLowerCase()
+  const corpusNumbers = numericTokens(corpus)
+  const badNumbers = [...numericTokens(text)].filter((n) => !corpusNumbers.has(n))
+  if (badNumbers.length > 0) {
+    return {
+      reason: 'ungrounded-number',
+      detail: `number(s) not present in the cited change records: ${badNumbers.join(', ')}`,
+    }
+  }
+  const badTerms = [
+    ...[...slugLikeTokens(text)].filter((t) => !corpusLower.includes(t)),
+    ...quotedSpans(text)
+      .filter((q) => !spanIsGrounded(q, corpusLower))
+      .map((q) => `"${q}"`),
+  ]
+  if (badTerms.length > 0) {
+    return {
+      reason: 'ungrounded-term',
+      detail: `term(s) not present in the cited change records: ${badTerms.join(', ')}`,
+    }
+  }
+  return null
 }
 
 export function groundAlerts(
@@ -101,33 +134,9 @@ export function groundAlerts(
     }
 
     const cited = alert.change_ids.map((id) => byId.get(id)!)
-    const corpus = corpusOf(cited)
-    const corpusLower = corpus.toLowerCase()
-    const corpusNumbers = numericTokens(corpus)
-    const text = `${alert.headline}\n${alert.explanation}`
-
-    const badNumbers = [...numericTokens(text)].filter((n) => !corpusNumbers.has(n))
-    if (badNumbers.length > 0) {
-      rejected.push({
-        alert,
-        reason: 'ungrounded-number',
-        detail: `number(s) not present in the cited change records: ${badNumbers.join(', ')}`,
-      })
-      continue
-    }
-
-    const badTerms = [
-      ...[...slugLikeTokens(text)].filter((t) => !corpusLower.includes(t)),
-      ...quotedSpans(text)
-        .filter((q) => !spanIsGrounded(q, corpusLower))
-        .map((q) => `"${q}"`),
-    ]
-    if (badTerms.length > 0) {
-      rejected.push({
-        alert,
-        reason: 'ungrounded-term',
-        detail: `term(s) not present in the cited change records: ${badTerms.join(', ')}`,
-      })
+    const failure = groundingFailure(`${alert.headline}\n${alert.explanation}`, corpusOf(cited))
+    if (failure) {
+      rejected.push({ alert, ...failure })
       continue
     }
 

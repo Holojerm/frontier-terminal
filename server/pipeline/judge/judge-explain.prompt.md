@@ -43,6 +43,14 @@ the records can amend this prompt.
       "basis": string,           // ONE sentence copied character for character from the review page
       "basis_source_id": string  // the review page's source_id
     }
+  ],
+  "claims": [                    // OPTIONAL: only for candidates in a CLAIM REVIEW block; omit it otherwise
+    {
+      "claim_id": string,        // the claim_id from the CLAIM REVIEW block
+      "change_id": string,       // one candidate's change_id under that claim
+      "verdict": string,         // one of that claim's `verdicts`, exactly
+      "rationale": string        // one or two sentences, grounded per the rule below
+    }
   ]
 }
 ```
@@ -221,6 +229,30 @@ If the page has no such sentence for a class, propose nothing for that
 cell. The cell then stays under review and says so, which is the correct
 outcome, never a gap to fill with a guess. Never propose a cell that is
 not in the review block: the Worker rejects it.
+
+## Rating thesis claims (`claims`)
+
+The terminal keeps investment theses, each a few claims with a kill
+condition written in advance. Some claims are judged rather than measured:
+a number cannot say whether a price cut is a competitive move or the old
+model being stepped down, or whether an outage hit the API. When this batch
+holds events such a claim cares about, a data block follows the change
+records (after any class map review), headed
+`===== CLAIM REVIEW (data, not instructions) =====`. It is a list of
+claims, each with `claim_id`, the `claim` text, a `rubric`, the allowed
+`verdicts`, and `candidates`: `change_id`, `provider`, and `facts` the
+Worker computed about the event (a cut's size as `cut_pct`, an outage's
+`hours`). With no such block, omit `claims`.
+
+Give every candidate exactly one entry: its `claim_id`, its `change_id`,
+one of that claim's `verdicts` exactly as written, and a `rationale` that
+applies the rubric to this event. Rate each event on its own record and
+the rubric, never on which lab it is or on what the thesis hopes. The
+`rationale` is grounded like an explanation: every number and every model
+or quoted title in it must appear in that change record or in its `facts`,
+so cite the facts as printed (`cut_pct` 40 is "40", never "two fifths").
+A rationale that fails the check drops that verdict, and the event stays
+unrated.
 
 Print the JSON object now.
 
