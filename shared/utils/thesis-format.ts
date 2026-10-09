@@ -2,16 +2,15 @@
 // measured values, a judged event's facts, and the pages sitemap.xml and
 // llms.txt list. Pure functions, so the pages carry no formatting logic.
 //
-// The payload names a claim's signal only in prose (`signal_label`), so a
-// measured value is formatted by the shape of the `detail` the signal
-// recorded beside it — `ratios` is a spend premium, `shares` a token share,
-// `by_department` a role count. A new signal with a new shape falls back to
-// the bare number until it is taught here.
+// A measured value prints in the `format` the server sends with its claim.
+// Context rows are read off the shape of the `detail` the signal recorded
+// beside it — `ratios`, `shares` and `rivals` per company, `by_department`
+// and `by_key` breakdowns, a year-earlier base, a trailing window.
 
 import { companyName } from './companies'
 import { absoluteStamp, count, money } from './terminal-format'
 import type { PublicPage } from './site'
-import type { ClaimStatus, ThesisDef } from './thesis-types'
+import type { ClaimStatus, ThesisDef, ValueFormat } from './thesis-types'
 
 export const thesisPath = (id: string) => `/theses/${id}`
 
@@ -49,9 +48,18 @@ const asRecord = (v: unknown): Record<string, unknown> | null =>
 
 const num = (v: unknown): number | null => (typeof v === 'number' && Number.isFinite(v) ? v : null)
 
-export type ValueKind = 'ratio' | 'share' | 'count' | 'plain'
+export type ValueKind = 'ratio' | 'share' | 'count' | 'usd' | 'plain'
 
-export function valueKind(detail: unknown): ValueKind {
+const KIND_OF: Record<ValueFormat, ValueKind> = {
+  ratio: 'ratio',
+  percent: 'share',
+  count: 'count',
+  usd: 'usd',
+}
+
+/** The server's format when it sent one; otherwise the detail's shape. */
+export function valueKind(detail: unknown, format: ValueFormat | null = null): ValueKind {
+  if (format) return KIND_OF[format]
   const d = asRecord(detail)
   if (!d) return 'plain'
   if (asRecord(d.ratios)) return 'ratio'
@@ -69,6 +77,8 @@ export function formatValue(kind: ValueKind, v: number): string {
       return `${Number((v * 100).toFixed(1))}%`
     case 'count':
       return count(Math.round(v))
+    case 'usd':
+      return `$${count(Math.round(v / 1e6))}M`
     default:
       return String(Number(v.toFixed(4)))
   }
@@ -88,25 +98,36 @@ export function detailRows(detail: unknown): DetailRow[] {
   if (window && typeof window.from === 'string' && typeof window.to === 'string') {
     rows.push({ label: 'Window', value: `${window.from} to ${window.to}` })
   }
-  const byCompany = (record: unknown, kind: ValueKind) => {
+  if (typeof d.days === 'number') rows.push({ label: 'Window', value: `trailing ${d.days} days` })
+  const value = num(d.value)
+  const base = num(d.base_value)
+  if (value !== null) rows.push({ label: 'Value', value: formatValue('usd', value) })
+  if (base !== null && typeof d.base_date === 'string') {
+    rows.push({ label: 'A year earlier', value: `${formatValue('usd', base)} (${d.base_date})` })
+  }
+  const byCompany = (record: unknown, kind: ValueKind, label: string) => {
     const r = asRecord(record)
     if (!r) return
     const parts = Object.entries(r).flatMap(([id, v]) => {
       const n = num(v)
       return n === null ? [] : [`${companyName(id)} ${formatValue(kind, n)}`]
     })
-    if (parts.length) rows.push({ label: 'Each lab', value: parts.join(' · ') })
+    if (parts.length) rows.push({ label, value: parts.join(' · ') })
   }
-  byCompany(d.ratios, 'ratio')
-  byCompany(d.shares, 'share')
-  const by = asRecord(d.by_department)
-  if (by) {
-    const parts = Object.entries(by).flatMap(([dept, v]) => {
+  byCompany(d.ratios, 'ratio', 'Each lab')
+  byCompany(d.shares, 'share', 'Each lab')
+  byCompany(d.rivals, 'share', 'Rivals, same period')
+  const breakdown = (record: unknown, label: string) => {
+    const by = asRecord(record)
+    if (!by) return
+    const parts = Object.entries(by).flatMap(([name, v]) => {
       const n = num(v)
-      return n === null ? [] : [`${dept} ${count(n)}`]
+      return n === null ? [] : [`${name} ${count(n)}`]
     })
-    if (parts.length) rows.push({ label: 'By department', value: parts.join(' · ') })
+    if (parts.length) rows.push({ label, value: parts.join(' · ') })
   }
+  breakdown(d.by_department, 'By department')
+  breakdown(d.by_key, 'Breakdown')
   return rows
 }
 

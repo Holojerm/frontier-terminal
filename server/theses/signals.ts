@@ -188,6 +188,22 @@ const formatOf = (spec: Measured): Formatter => {
   }
 }
 
+/** The value format a measured claim's readings print in, for the pages. */
+export function valueFormatOf(claim: ClaimDef): ValueFormat | null {
+  const spec = claim.spec
+  if (spec.kind === 'judged') return null
+  switch (spec.signal) {
+    case 'openrouter-spend-premium':
+      return 'ratio'
+    case 'openrouter-lab-token-share':
+      return 'percent'
+    case 'open-roles-in-departments':
+      return 'count'
+    default:
+      return spec.format
+  }
+}
+
 /** How a claim's values read in a status reason, and whose value it is compared with. */
 export function presentation(claim: ClaimDef): { fmt: Formatter; comparatorName: string | null } {
   const spec = claim.spec

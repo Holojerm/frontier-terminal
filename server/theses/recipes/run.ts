@@ -72,7 +72,7 @@ async function runOne(
   }
   let observations
   try {
-    observations = recipe.extract(fetched.text)
+    observations = recipe.extract(fetched.text, { date: fetched_at.slice(0, 10) })
   } catch (error) {
     return {
       recipe_id: recipe.id,
