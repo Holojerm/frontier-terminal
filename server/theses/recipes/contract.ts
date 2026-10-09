@@ -4,7 +4,8 @@
 // else. The extractor is written (and repaired) with AI at dev time; on the
 // schedule it is ordinary code, tested against a committed fixture.
 //
-// Rules for an extractor: deterministic, no clock, no network. Throw on a
+// Rules for an extractor: deterministic, no clock (the run's date is passed
+// in), no network. Throw on a
 // shape it does not recognize — a run that cannot read its source is
 // flagged as failed, never stored as an empty result.
 
@@ -29,7 +30,8 @@ export interface Recipe {
   url(ctx: { now: Date; newest: string | null }): string
   /** Stored raw-payload extension: json, xml, md, html. */
   ext: string
-  extract(body: string): Observation[]
+  /** `date` is the run's UTC date (YYYY-MM-DD), for sources that report a current state, not a dated series. */
+  extract(body: string, ctx: { date: string }): Observation[]
   /** The source's terms, where it states a license the data carries. */
   license?: string
 }
