@@ -102,7 +102,7 @@ describe('claim candidates', () => {
       [OPENAI_CUT, NON_FLAGSHIP_CUT],
       FLAGSHIPS,
     )
-    expect(got.map((c) => c.change.id)).toEqual([OPENAI_CUT.id])
+    expect(got.map((c) => c.item.id)).toEqual([OPENAI_CUT.id])
     expect(got[0]!.facts.cut_pct).toBe(40)
     expect(got[0]!.subject).toBe(OPENAI_CUT.id)
   })
@@ -194,8 +194,8 @@ describe('verdicts through the judge submit path', () => {
       await db.insert(schema.changes).values(c)
   })
 
-  it('lists the candidates in the CLAIM REVIEW block', () => {
-    const review = claimReview([OPENAI_CUT, NON_FLAGSHIP_CUT, LONG_OUTAGE], FLAGSHIPS)
+  it('lists the candidates in the CLAIM REVIEW block', async () => {
+    const review = await claimReview(db, [OPENAI_CUT, NON_FLAGSHIP_CUT, LONG_OUTAGE], FLAGSHIPS)
     expect(review.map((r) => [r.claim_id, r.candidates.length])).toEqual([
       ['anthropic-rival-price-war', 1],
       ['anthropic-safety-asset', 1],

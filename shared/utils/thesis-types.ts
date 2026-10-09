@@ -22,6 +22,12 @@ export type MeasuredRule =
    * last `days`; weakening past half the drop. Unresolved with fewer than
    * `min_days` of history. */
   | { rule: 'drawdown-from-high'; drop: number; days: number; min_days: number }
+  /** For readings that are periods (quarters), not days: broken when the
+   * newest `periods` readings all sit below `floor`; weakening while fewer do. */
+  | { rule: 'below-floor-periods'; floor: number; periods: number }
+
+/** How a reading's value prints. */
+export type ValueFormat = 'ratio' | 'percent' | 'count' | 'usd'
 
 export type SignalSpec =
   | { kind: 'measured'; signal: 'openrouter-spend-premium'; rule: MeasuredRule }
@@ -32,15 +38,48 @@ export type SignalSpec =
       departments: readonly string[]
       rule: MeasuredRule
     }
+  /** Recipe signals (server/theses/recipes/): computed from recipe_observations. */
+  | {
+      kind: 'measured'
+      /** Each period's value against the same period a year earlier, as a growth rate. */
+      signal: 'recipe-yoy-growth'
+      recipe: string
+      key: string
+      /** Recipes whose same-period growth is shown beside it (the comparison set). */
+      compare_recipes: readonly string[]
+      format: ValueFormat
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** The sum of a daily series over the trailing `days`, per day. */
+      signal: 'recipe-trailing-sum'
+      recipe: string
+      key: string
+      days: number
+      format: ValueFormat
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** The sum of several keys' values on each date (e.g. departments). */
+      signal: 'recipe-sum-of-keys'
+      recipe: string
+      keys: readonly string[]
+      format: ValueFormat
+      rule: MeasuredRule
+    }
   | JudgedSpec
 
-/** A judged event's verdict, by the review that offered it. */
+/** A judged event's verdict, by the review that offered it (recipe-items claims declare their own). */
 export const VERDICTS = {
   'flagship-price-cuts': ['competitive', 'generational'],
   'incidents-and-disclosures': ['material', 'not-material'],
 } as const
 
-export type JudgedReview = keyof typeof VERDICTS
+/** The verdicts a judged claim accepts. */
+export const verdictsOf = (spec: JudgedSpec): readonly string[] =>
+  spec.review === 'recipe-items' ? spec.verdicts : VERDICTS[spec.review]
 
 /** Your ruling on a material verdict — committed to the thesis, never set by the judge. */
 export interface Confirmation {
@@ -76,6 +115,15 @@ export type JudgedSpec = {
        * confirmed; weakening while one awaits confirmation. */
       rule: { rule: 'confirmed-material'; impacts: readonly string[]; min_hours: number }
       confirmations: readonly Confirmation[]
+    }
+  | {
+      /** Every observation of `recipe` is a candidate (a changelog entry, say), rated once. */
+      review: 'recipe-items'
+      recipe: string
+      verdicts: readonly string[]
+      /** Broken when no item was rated `verdict` in the last `days` (once that much has
+       * been rated); weakening when none was in the last half of them. */
+      rule: { rule: 'recent-verdict'; verdict: string; days: number }
     }
 )
 

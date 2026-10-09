@@ -133,6 +133,25 @@ function drawdownFromHigh(
   }
 }
 
+function belowFloorPeriods(
+  rule: Extract<MeasuredRule, { rule: 'below-floor-periods' }>,
+  readings: readonly StoredReading[],
+  fmt: Formatter,
+): ClaimEvaluation {
+  const desc = [...readings].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
+  const now = desc[0]
+  if (!now) return unresolved('No reading yet.')
+  let run = 0
+  while (run < Math.min(desc.length, rule.periods) && desc[run]!.value < rule.floor) run++
+  const vs = `${fmt(now.value)} for the period ending ${now.date}, against a floor of ${fmt(rule.floor)}`
+  if (run === 0) return { status: 'holding', reason: `${vs}.`, reading_date: now.date }
+  return {
+    status: run >= rule.periods ? 'broken' : 'weakening',
+    reason: `${vs}: below for ${run} of ${rule.periods} straight periods.`,
+    reading_date: now.date,
+  }
+}
+
 /** The claim's status from its readings, oldest-to-newest order not required. */
 export function evaluateClaim(
   claim: ClaimDef,
@@ -149,6 +168,8 @@ export function evaluateClaim(
       return belowTrailingAverage(spec.rule, readings, fmt)
     case 'drawdown-from-high':
       return drawdownFromHigh(spec.rule, readings, fmt)
+    case 'below-floor-periods':
+      return belowFloorPeriods(spec.rule, readings, fmt)
   }
 }
 
@@ -157,6 +178,11 @@ export function historyDays(claim: ClaimDef): number {
   const spec = claim.spec
   if (spec.kind === 'judged') return 0
   const r = spec.rule
-  const days = r.rule === 'drawdown-from-high' ? r.days : 7 * r.weeks
+  const days =
+    r.rule === 'drawdown-from-high'
+      ? r.days
+      : r.rule === 'below-floor-periods'
+        ? 92 * r.periods
+        : 7 * r.weeks
   return days + 7 + CHECKPOINT_SLACK_DAYS
 }

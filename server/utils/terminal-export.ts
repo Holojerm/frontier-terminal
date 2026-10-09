@@ -321,6 +321,28 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     ],
     [asc(tables.claimVerdicts.detected_at), asc(tables.claimVerdicts.id)],
   ),
+  recipe_observations: plainTable(
+    'recipe_observations',
+    'What each thesis recipe read from its public source (server/theses/recipes/): one row per recipe, key and date, with the value, the fields kept beside it, and the R2 key of the raw bytes.',
+    tables.recipeObservations,
+    [
+      'id',
+      'recipe_id',
+      'company',
+      'key',
+      'date',
+      'value',
+      'payload',
+      'raw_key',
+      'first_seen_at',
+      ...PROVENANCE,
+    ],
+    [
+      asc(tables.recipeObservations.recipe_id),
+      asc(tables.recipeObservations.key),
+      asc(tables.recipeObservations.date),
+    ],
+  ),
   source_runs: plainTable(
     'source_runs',
     'One row per (poll tick, source): what was attempted and how it ended. No fetched_at — a failed run fetched nothing.',
