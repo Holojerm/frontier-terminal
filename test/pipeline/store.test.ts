@@ -124,9 +124,32 @@ describe('applyDiff', () => {
 
   // The 2026-09-22 google-pricing-html failure: entities landed, the changes
   // INSERT did not, and the next tick diffed the re-added model to nothing.
-  it('leaves the entity set untouched when the change insert fails', async () => {
-    await insertRows(db, 'changes', [change(2)])
-    await expect(applyDiff(db, 'xai-greenhouse', writes(2))).rejects.toThrow()
+  it('leaves the entity set and change log untouched when a later insert fails', async () => {
+    const alert = {
+      id: 'alert-2',
+      severity: 'info',
+      headline: 'h',
+      explanation: 'e',
+      change_ids: JSON.stringify([change(2).id]),
+      rule: 's1-floor',
+      created_at: PROV.fetched_at,
+      ...PROV,
+    }
+    await insertRows(db, 'alerts', [alert])
+    await expect(
+      applyDiff(db, 'xai-greenhouse', { ...writes(2), alerts: [alert] }),
+    ).rejects.toThrow()
     expect(await db.select().from(schema.entities)).toHaveLength(0)
+    expect(await db.select().from(schema.changes)).toHaveLength(0)
+  })
+
+  // edgar-fts and edgar-fts-openai both returned one filing; the second
+  // source's identical change id hit the primary key and every tick rolled
+  // back from 2026-10-09 on.
+  it('applies the diff when another source already logged the same change', async () => {
+    await insertRows(db, 'changes', [change(3)])
+    await applyDiff(db, 'xai-greenhouse', writes(3))
+    expect(await db.select().from(schema.entities)).toHaveLength(1)
+    expect(await db.select().from(schema.changes)).toHaveLength(1)
   })
 })
