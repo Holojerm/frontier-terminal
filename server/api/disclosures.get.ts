@@ -1,7 +1,7 @@
 // GET /api/disclosures — each lab's own misalignment-disclosure index:
 // every report and notice in the lab's words, the discovery and publication
 // dates printed on each report's page, and the median days between them.
-// Anthropic, Google and xAI publish no index and are stated cuts.
+// Anthropic, Google, xAI and Meta publish no index and are stated cuts.
 
 import { queryDisclosures } from '../utils/terminal-disclosures'
 import { serveTerminal, terminalDb } from '../utils/terminal-handler'

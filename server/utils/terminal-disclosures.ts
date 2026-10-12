@@ -20,7 +20,7 @@
 import { eq, inArray } from 'drizzle-orm'
 
 import type {
-  BigFour,
+  LabId,
   DisclosureProviderView,
   DisclosuresData,
   DisclosureTimeline,
@@ -62,7 +62,7 @@ export function entryFromPayload(
   if (!kind || !entry_id || !title || !summary || !listed_on || !entry_url) return null
   return {
     entity_key: base.entity_key,
-    provider: base.provider as BigFour,
+    provider: base.provider as LabId,
     kind,
     entry_id,
     title,

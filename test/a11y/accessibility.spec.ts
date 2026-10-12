@@ -30,6 +30,7 @@ const ROUTES = [
   '/labs/anthropic',
   '/labs/google',
   '/labs/xai',
+  '/labs/meta',
   '/prices',
   '/revenue',
   '/hiring',

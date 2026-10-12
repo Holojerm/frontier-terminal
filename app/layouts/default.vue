@@ -54,8 +54,8 @@ const THESES: NavLink = { label: 'Theses', to: '/theses' }
 const SECTIONS: NavSection[] = [
   {
     label: 'Labs',
-    // No description: the label is the whole meaning, and four lines saying
-    // "on every axis" under four lab names is a menu repeating itself.
+    // No description: the label is the whole meaning, and a line saying
+    // "on every axis" under each lab name is a menu repeating itself.
     links: LABS.map((lab) => ({ label: LAB_DISPLAY[lab], to: labPath(lab) })),
   },
   {

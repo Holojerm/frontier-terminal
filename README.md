@@ -1,7 +1,7 @@
 # Frontier Terminal
 
 A free, public, read-only investor terminal tracking the frontier AI labs — OpenAI, Anthropic,
-Google, xAI — on seven axes: API price lists, hiring boards (with the physical-infrastructure
+Google, xAI, Meta — on seven axes: API price lists, hiring boards (with the physical-infrastructure
 buildout cluster), SEC filings, disclosed revenue, status-page incidents, misalignment
 disclosures, and OpenRouter demand share with the spend share it implies. Every number carries the URL it was read from and when.
 Not investment advice.

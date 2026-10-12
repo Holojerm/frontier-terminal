@@ -9,10 +9,10 @@ enabled: false
 
 ## Purpose
 
-Once a week, re-check whether Anthropic, Google (or Google DeepMind) or xAI has started
+Once a week, re-check whether Anthropic, Google (or Google DeepMind), xAI or Meta has started
 publishing an index of misalignment or containment disclosures of the kind OpenAI runs at
 `alignment.openai.com/misalignment-reports/`. Today each of them is a stated cut in
-`sources.yaml` (`anthropic-disclosures`, `google-disclosures`, `xai-disclosures`), and the
+`sources.yaml` (`anthropic-disclosures`, `google-disclosures`, `xai-disclosures`, `meta-disclosures`), and the
 terminal shows "no disclosure index" with the audit's reason. When that stops being true, the
 owner should hear about it the same week.
 
@@ -26,11 +26,11 @@ Most weeks nothing has changed. That run must be short.
 
 1. Read `_shared.md` and `routines.config.md` first; their rules override everything below.
 
-2. Read the three `*-disclosures` entries under `cut:` in `sources.yaml` and the
+2. Read the four `*-disclosures` entries under `cut:` in `sources.yaml` and the
    "misalignment disclosures" addendum in `docs/source-audit.md`. They say what was checked
    last time and why each lab is cut.
 
-3. For each of the three labs, look for a page **on the lab's own domain** that lists more
+3. For each of the four labs, look for a page **on the lab's own domain** that lists more
    than one disclosure of its models misbehaving: sandbox or containment escapes, unauthorized
    access to outside systems, agents using public services to communicate, deceptive or
    concealing behaviour found in training or deployment. Search the web for the lab's name with

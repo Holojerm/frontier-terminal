@@ -11,7 +11,7 @@
 import { eq } from 'drizzle-orm'
 
 import type {
-  BigFour,
+  LabId,
   RevenueData,
   RevenueFilerView,
   RevenuePeriod,
@@ -249,7 +249,7 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
         null,
     }
     providers.push({
-      provider: provider as BigFour,
+      provider: provider as LabId,
       display,
       disclosure: periods.length ? filer.relation : 'no_rows',
       filer: view,

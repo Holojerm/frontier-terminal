@@ -5,6 +5,7 @@
 // labs are rows that say so. The landing page's Disclosures panel is the
 // summary of this.
 
+import { LAB_DISPLAY } from '#shared/utils/terminal-labs'
 import type { DisclosureView, DisclosuresData } from '#shared/utils/terminal-types'
 
 definePageMeta({
@@ -26,12 +27,7 @@ useSeo({
   dateModified: disclosures.value?.as_of,
 })
 
-const PROVIDER: Record<string, string> = {
-  openai: 'OpenAI',
-  anthropic: 'Anthropic',
-  google: 'Google',
-  xai: 'xAI',
-}
+const PROVIDER: Record<string, string> = LAB_DISPLAY
 
 const reports = computed(() => disclosures.value?.entries.filter((e) => e.kind === 'report') ?? [])
 const notices = computed(() => disclosures.value?.entries.filter((e) => e.kind === 'notice') ?? [])

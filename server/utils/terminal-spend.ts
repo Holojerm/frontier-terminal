@@ -18,7 +18,7 @@
 import { eq } from 'drizzle-orm'
 
 import type {
-  BigFour,
+  LabId,
   DateWindow,
   SourceRef,
   SpendData,
@@ -27,6 +27,7 @@ import type {
 } from '#shared/utils/terminal-types'
 
 import * as tables from '../db/schema'
+import { providerOfOpenRouterId } from '../pipeline/parsers/openrouter'
 import type { PipelineDb } from '../pipeline/store'
 import { sourceStamps, type QueryContext } from './terminal-db'
 import { byString, num, parseJson, str } from './terminal-json'
@@ -47,7 +48,7 @@ export const SPEND_CAVEAT =
 /** A stored price row as the join needs it. */
 export interface SkuPrice {
   entity_key: string
-  provider: BigFour
+  provider: LabId
   model_slug: string
   tier: string | null
   input_per_mtok: number | null
@@ -55,14 +56,6 @@ export interface SkuPrice {
   effective_from: string | null
   source_url: string
   fetched_at: string
-}
-
-/** OpenRouter's vendor prefixes for the four labs. */
-const VENDOR_PREFIX: Readonly<Record<string, BigFour>> = {
-  openai: 'openai',
-  anthropic: 'anthropic',
-  google: 'google',
-  'x-ai': 'xai',
 }
 
 /**
@@ -87,11 +80,11 @@ export function slugTokens(slug: string): string {
 /** Vendor and bare slug of a rankings permaslug, or null for a non-lab vendor or the `other` row. */
 export function splitPermaslug(
   permaslug: string,
-): { provider: BigFour; slug: string; free: boolean } | null {
+): { provider: LabId; slug: string; free: boolean } | null {
   const i = permaslug.indexOf('/')
   if (i === -1) return null
-  const provider = VENDOR_PREFIX[permaslug.slice(0, i)]
-  if (!provider) return null
+  const provider = providerOfOpenRouterId(permaslug)
+  if (provider === 'other') return null
   const slug = permaslug.slice(i + 1)
   return { provider, slug, free: slug.endsWith(':free') }
 }
@@ -102,7 +95,7 @@ const isStandard = (r: SkuPrice) => r.tier === null || r.tier === 'standard'
 /** The catalog row a permaslug reads its price from: same lab, same token
  * bag, a current (no effective_from) standard-tier priced row first. */
 export function matchSku(
-  provider: BigFour,
+  provider: LabId,
   slug: string,
   catalog: readonly SkuPrice[],
 ): SkuPrice | null {
@@ -157,7 +150,7 @@ export function summarizeSpend(
     )
   }
 
-  const byProvider = new Map<BigFour, SpendModel[]>(PROVIDER_ORDER.map((p) => [p, []]))
+  const byProvider = new Map<LabId, SpendModel[]>(PROVIDER_ORDER.map((p) => [p, []]))
   for (const [permaslug, tokens] of tokensByModel) {
     const split = splitPermaslug(permaslug)!
     const sku = split.free ? null : matchSku(split.provider, split.slug, catalog)
@@ -254,7 +247,7 @@ export async function catalogRows(db: PipelineDb): Promise<SkuPrice[]> {
     if (!p || !slug) continue
     out.push({
       entity_key: row.entity_key,
-      provider: row.provider as BigFour,
+      provider: row.provider as LabId,
       model_slug: slug,
       tier: str(p.tier),
       input_per_mtok: num(p.input_per_mtok),

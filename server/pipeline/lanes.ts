@@ -29,6 +29,8 @@ import { parseOpenRouterRankings } from './parsers/openrouter-rankings'
 import { parseAnthropicModelsOverviewMd } from './parsers/pricing/anthropic-models-overview'
 import { parseAnthropicPricingMd } from './parsers/pricing/anthropic-pricing'
 import { parseGooglePricingPage } from './parsers/pricing/google-pricing'
+import { parseMetaModelsMd } from './parsers/pricing/meta-models'
+import { parseMetaPricingMd } from './parsers/pricing/meta-pricing'
 import { parseOpenAiModelsMd } from './parsers/pricing/openai-models'
 import { parseOpenAiModelPage } from './parsers/pricing/openai-model-page'
 import { parseOpenAiPricingMd } from './parsers/pricing/openai-pricing'
@@ -243,6 +245,15 @@ export const LANES: Readonly<Record<string, Lane>> = {
       ...normalizePrices(parseXaiModelsMd(text, ctx.prov).rows, ctx.snapshotId),
       ...checked('xai-models-md', text, ctx),
     ],
+  })),
+  'meta-models-md': set((text, ctx) => ({
+    entities: [
+      ...normalizePrices(parseMetaModelsMd(text, ctx.prov).rows, ctx.snapshotId),
+      ...checked('meta-models-md', text, ctx),
+    ],
+  })),
+  'meta-pricing-md': set((text, { prov, snapshotId }) => ({
+    entities: normalizePrices(parseMetaPricingMd(text, prov).rows, snapshotId),
   })),
   'google-pricing-html': set((html, { prov, snapshotId }) => {
     const { rows, skipped } = parseGooglePricingPage(html, prov)

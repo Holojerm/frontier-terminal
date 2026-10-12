@@ -8,7 +8,7 @@
 // newest window, and its older readings are the ones earlier runs wrote.
 
 import { companyName, type CompanyId } from '#shared/utils/companies'
-import type { BigFour } from '#shared/utils/terminal-types'
+import type { LabId } from '#shared/utils/terminal-types'
 import type { ClaimDef, SignalSpec, ValueFormat } from '#shared/utils/thesis-types'
 
 import type { PipelineDb } from '../pipeline/store'
@@ -42,13 +42,13 @@ const newestProv = (rows: readonly RankingObservation[]) =>
 /** Spend share ÷ token share per lab, newest 7-day window, today's list prices. */
 async function spendPremium(
   db: PipelineDb,
-  company: BigFour,
-  comparator: BigFour | null,
+  company: LabId,
+  comparator: LabId | null,
 ): Promise<SignalReading[]> {
   const [rows, catalog] = await Promise.all([rankingObservations(db), catalogRows(db)])
   const summary = summarizeSpend(rows, catalog)
   if (!summary.window) return []
-  const ratios: Partial<Record<BigFour, number>> = {}
+  const ratios: Partial<Record<LabId, number>> = {}
   for (const p of summary.providers) {
     if (p.share_low === null || p.share_high === null || !p.token_share) continue
     ratios[p.provider] = round((p.share_low + p.share_high) / 2 / p.token_share)
@@ -80,7 +80,7 @@ async function spendPremium(
 /** The company's share of the four labs' tokens over each trailing 7 days present. */
 async function labTokenShare(
   db: PipelineDb,
-  company: BigFour,
+  company: LabId,
   days: number,
 ): Promise<SignalReading[]> {
   const rows = (await rankingObservations(db, days)).filter((r) =>
@@ -91,8 +91,8 @@ async function labTokenShare(
   for (let i = 6; i < dates.length; i++) {
     const window = new Set(dates.slice(i - 6, i + 1))
     const inWindow = rows.filter((r) => window.has(r.date))
-    const tokens = Object.fromEntries(PROVIDER_ORDER.map((p) => [p, 0])) as Record<BigFour, number>
-    for (const r of inWindow) tokens[r.provider as BigFour] += r.total_tokens
+    const tokens = Object.fromEntries(PROVIDER_ORDER.map((p) => [p, 0])) as Record<LabId, number>
+    for (const r of inWindow) tokens[r.provider as LabId] += r.total_tokens
     const lab = PROVIDER_ORDER.reduce((n, p) => n + tokens[p], 0)
     if (lab === 0) continue
     const shares = Object.fromEntries(PROVIDER_ORDER.map((p) => [p, round(tokens[p] / lab)]))
@@ -111,7 +111,7 @@ async function labTokenShare(
 /** Open roles in the named departments at the end of each day, from the job change log. */
 async function openRolesIn(
   db: PipelineDb,
-  company: BigFour,
+  company: LabId,
   departments: readonly string[],
   deps: SignalDeps,
 ): Promise<SignalReading[]> {
@@ -132,7 +132,7 @@ async function openRolesIn(
   })
 }
 
-const isLab = (id: CompanyId): id is BigFour => (PROVIDER_ORDER as readonly string[]).includes(id)
+const isLab = (id: CompanyId): id is LabId => (PROVIDER_ORDER as readonly string[]).includes(id)
 
 /** Readings for one measured claim of a thesis about `company`. */
 export async function readSignal(

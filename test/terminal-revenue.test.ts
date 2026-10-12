@@ -33,12 +33,13 @@ const filers = parseRevenueFilersBlock(sourcesYaml)
 const SPCX_CIK = '0001181412'
 
 describe('revenue_filers', () => {
-  it('reads the block: three nulls and SPCX as xAI’s parent', () => {
+  it('reads the block: four nulls and SPCX as xAI’s parent', () => {
     expect([...filers.entries()]).toEqual([
       ['openai', null],
       ['anthropic', null],
       ['google', null],
       ['xai', { ticker: 'SPCX', relation: 'parent' }],
+      ['meta', null],
     ])
     expect(revenueProviderFor(SPCX_CIK, filers, whitelist)).toBe('xai')
     expect(revenueProviderFor('0000789019', filers, whitelist)).toBe('other') // MSFT: whitelisted, not a filer

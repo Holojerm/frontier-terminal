@@ -118,7 +118,7 @@ const joined = computed(() => props.spend.providers.filter((p) => p.models.lengt
 
       <p class="text-xs text-toned">
         {{ compactTokens(spend.totals.other_tokens) }} of
-        {{ compactTokens(spend.totals.tokens) }} tokens went to models outside the four labs and are
+        {{ compactTokens(spend.totals.tokens) }} tokens went to models outside the five labs and are
         not priced.
       </p>
 

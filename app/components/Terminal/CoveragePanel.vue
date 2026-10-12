@@ -4,6 +4,7 @@
 // attached to it. An analyst reads it to decide whether a number can be
 // trusted, not every visit — which is why it sits last.
 
+import { LAB_DISPLAY } from '#shared/utils/terminal-labs'
 import type { CoverageData, SourceCoverage } from '#shared/utils/terminal-types'
 
 defineProps<{ coverage: CoverageData }>()
@@ -21,14 +22,7 @@ const STATUS = {
   absent: { color: 'neutral', icon: 'i-lucide-file-question', label: 'no page' },
 } as const
 
-const PROVIDER: Record<string, string> = {
-  openai: 'OpenAI',
-  anthropic: 'Anthropic',
-  google: 'Google',
-  xai: 'xAI',
-  all: 'market-wide',
-  other: 'other',
-}
+const PROVIDER: Record<string, string> = { ...LAB_DISPLAY, all: 'market-wide', other: 'other' }
 
 const roleNote = (s: SourceCoverage) =>
   s.derived_from

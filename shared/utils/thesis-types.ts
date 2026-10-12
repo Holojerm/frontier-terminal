@@ -3,7 +3,7 @@
 // the same types the server computes.
 
 import type { CompanyId } from './companies'
-import type { BigFour, Stamp } from './terminal-types'
+import type { LabId, Stamp } from './terminal-types'
 
 export type ClaimStatus = 'holding' | 'weakening' | 'broken' | 'unresolved'
 
@@ -13,7 +13,7 @@ export type ClaimStatus = 'holding' | 'weakening' | 'broken' | 'unresolved'
 export type MeasuredRule =
   /** Broken when the value sits below `floor` (or below the comparator's own
    * value) at `weeks` consecutive checkpoints; weakening while that run is shorter. */
-  | { rule: 'sustained-floor'; floor: number; comparator: BigFour | null; weeks: number }
+  | { rule: 'sustained-floor'; floor: number; comparator: LabId | null; weeks: number }
   /** Broken when the value sits more than `margin` below the mean of the
    * previous `weeks` checkpoints; weakening past half the margin. Unresolved
    * with fewer than `min_weeks` checkpoints of history. */

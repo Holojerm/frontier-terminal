@@ -5,17 +5,12 @@
 // where later reprices live.
 
 import { money } from '#shared/utils/terminal-format'
+import { LAB_DISPLAY } from '#shared/utils/terminal-labs'
 import type { ReleaseView } from '#shared/utils/terminal-types'
 
 defineProps<{ rows: ReleaseView[] }>()
 
-const DISPLAY: Record<string, string> = {
-  openai: 'OpenAI',
-  anthropic: 'Anthropic',
-  google: 'Google',
-  xai: 'xAI',
-  other: 'Other',
-}
+const DISPLAY: Record<string, string> = LAB_DISPLAY
 
 const priced = (r: ReleaseView) => r.input_per_mtok !== null || r.output_per_mtok !== null
 </script>

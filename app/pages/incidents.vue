@@ -4,6 +4,7 @@
 // from. The landing page's Capacity strain panel is the summary of this.
 
 import { absoluteStamp } from '#shared/utils/terminal-format'
+import { LAB_DISPLAY } from '#shared/utils/terminal-labs'
 import type { IncidentView, IncidentsData } from '#shared/utils/terminal-types'
 
 definePageMeta({
@@ -27,12 +28,7 @@ useSeo({
 
 const now = useNow()
 
-const PROVIDER: Record<string, string> = {
-  openai: 'OpenAI',
-  anthropic: 'Anthropic',
-  google: 'Google',
-  xai: 'xAI',
-}
+const PROVIDER: Record<string, string> = LAB_DISPLAY
 
 /** Minutes between start and resolution, as printed by the feed; null while open. */
 const durationLabel = (i: IncidentView): string | null => {
@@ -42,7 +38,9 @@ const durationLabel = (i: IncidentView): string | null => {
   return minutes < 60 ? `${minutes}m` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`
 }
 
-const cut = computed(() => incidents.value?.providers.find((p) => p.feed === 'no_public_feed'))
+const cuts = computed(
+  () => incidents.value?.providers.filter((p) => p.feed === 'no_public_feed') ?? [],
+)
 const caveats = computed(
   () => incidents.value?.providers.filter((p) => p.caveat && p.feed !== 'no_public_feed') ?? [],
 )
@@ -72,8 +70,8 @@ const caveats = computed(
     />
 
     <template v-else-if="incidents">
-      <ul v-if="cut || caveats.length" class="space-y-1 text-sm text-muted">
-        <li v-if="cut">
+      <ul v-if="cuts.length || caveats.length" class="space-y-1 text-sm text-muted">
+        <li v-for="cut in cuts" :key="cut.provider">
           <TerminalCaveatMark :label="`${cut.display}: no public feed`" :text="cut.reason ?? ''" />
         </li>
         <li v-for="p in caveats" :key="p.provider">

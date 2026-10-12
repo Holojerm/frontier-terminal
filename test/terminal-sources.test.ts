@@ -18,7 +18,7 @@ describe('readSourceRegistry', () => {
       .map((s) => s.source_id)
       .sort()
     expect(registry.sources.map((s) => s.source_id).sort()).toEqual(pipelineIds)
-    expect(registry.sources).toHaveLength(25)
+    expect(registry.sources).toHaveLength(28)
     // The one id sources.yaml spells differently from the manifest.
     expect(byId['edgar-submissions-spcx']!.yaml_id).toBe('edgar-submissions')
   })
@@ -59,6 +59,11 @@ describe('readSourceRegistry', () => {
         'Source: OpenRouter (openrouter.ai/rankings), as of {meta.as_of}. Licensed under CC BY 4.0.',
     })
     expect(byId['openai-models-md']!.license).toBeNull()
+    expect(byId['meta-pricing-md']).toMatchObject({
+      axis: 'pricing-catalog',
+      provider: 'meta',
+      url: 'https://dev.meta.ai/docs/pricing-rate-limits.md',
+    })
   })
 
   it('lists the deliberate cuts with their reasons', () => {
@@ -77,6 +82,9 @@ describe('readSourceRegistry', () => {
       'anthropic-disclosures',
       'google-disclosures',
       'xai-disclosures',
+      'meta-hiring',
+      'meta-status',
+      'meta-disclosures',
       'mistral',
     ])
   })

@@ -152,6 +152,8 @@ describe('runPoll between survey instants', () => {
       'anthropic-pricing-md',
       'xai-models-md',
       'google-pricing-html',
+      'meta-models-md',
+      'meta-pricing-md',
       'edgar-fts',
       'edgar-fts-openai',
       'edgar-submissions-spcx',
@@ -159,6 +161,7 @@ describe('runPoll between survey instants', () => {
       'edgar-submissions-amzn',
       'edgar-submissions-nvda',
       'edgar-submissions-googl',
+      'edgar-submissions-meta',
       'edgar-companyfacts-spcx',
     ])
     expect(outcome.result.failed).toBe(0)

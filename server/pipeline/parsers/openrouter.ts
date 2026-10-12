@@ -14,6 +14,10 @@ const prefixToProvider: Record<string, Provider> = {
   anthropic: 'anthropic',
   google: 'google',
   'x-ai': 'xai',
+  // Meta publishes under two prefixes: its API models (meta/muse-*) and the
+  // open-weight Llama line (meta-llama/*), which third parties serve.
+  meta: 'meta',
+  'meta-llama': 'meta',
 }
 
 /** The lab behind an OpenRouter id ("anthropic/claude-…") from its prefix;

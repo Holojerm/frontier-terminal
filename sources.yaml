@@ -97,6 +97,42 @@ sources:
       Jan 1, 2027."). The .md trick returns a JS shell and the models page
       is client-rendered — only this pricing page is genuine SSR.
 
+  meta-models-md:
+    axis: pricing-catalog
+    provider: meta
+    url: https://dev.meta.ai/docs/models.md
+    format: Markdown tables
+    diff_mechanism: body hash (ETag, Last-Modified)
+    verdict: include
+    fixture: fixtures/pricing/meta-models.md
+    caveats: >-
+      Catalog only, like openai-models-md: the page prints model ids,
+      descriptions and context windows but no prices; they come from
+      meta-pricing-md. Live-fetched 2026-10-12. llama.developer.meta.com
+      301-redirects to dev.meta.ai; the source is registered at the final
+      URL. Only the two token-priced text lines (Muse Wonder, Muse Spark) are
+      parsed. Muse Image, Muse Voice Transcribe and SAM are billed per image,
+      per hour or per frame, and Muse Glimmer is open-weight with no API at
+      all.
+
+  meta-pricing-md:
+    axis: pricing-catalog
+    provider: meta
+    url: https://dev.meta.ai/docs/pricing-rate-limits.md
+    format: Markdown tables (Standard / Contributor mode columns per model line)
+    diff_mechanism: body hash (ETag, Last-Modified)
+    verdict: include
+    fixture: fixtures/pricing/meta-pricing.md
+    caveats: >-
+      One table per model line, priced per line, not per version: every
+      Muse Spark version shares one price, so the parser fans the line's row
+      out to each model id the table's "Models:" sentence names. Contributor
+      mode is a separate model id (muse-spark-1.3-contributor) at a far lower
+      price in exchange for Meta training on the caller's content; it is
+      stored under its own id, never as a discount on the Standard row. Web
+      search grounding, image, audio and segmentation prices are not $/MTok
+      and are not parsed. Muse Wonder is in preview.
+
   openrouter-models:
     axis: pricing-cross-check
     provider: all
@@ -127,7 +163,10 @@ sources:
       endpoint's default window is the trailing 30 completed UTC days, so
       every 6-hourly survey tick re-reads the same days and a late revision
       lands as a modified row. Rate limits 30 req/min per key, 500/day per
-      account; this terminal uses four a day.
+      account; this terminal uses four a day. Meta's share counts both of
+      its prefixes: its own API models (meta/*) and the open-weight Llama
+      line (meta-llama/*), which third parties host and bill for, so it is
+      demand for Meta's models, not traffic Meta serves.
 
   openai-ashby:
     axis: hiring
@@ -288,6 +327,22 @@ sources:
       Google's parent; its filings segment Google Cloud, never Gemini, so
       nothing here is a lab revenue figure (see revenue_filers).
 
+  edgar-submissions-meta:
+    axis: sec
+    provider: all
+    url: https://data.sec.gov/submissions/CIK0001326801.json
+    format: JSON
+    diff_mechanism: accession numbers
+    verdict: include, narrowly scoped
+    fixture: fixtures/sec/edgar-submissions-meta.json
+    caveats: >-
+      Whitelisted CIK, same form filter as edgar-submissions. Meta is the
+      one tracked lab that is itself a public issuer, so its 10-Q/10-K and
+      8-K land here as they are filed — the capex guidance that funds the
+      lab is in them. Its segments are Family of Apps and Reality Labs
+      (10-Q for the quarter ended 2026-06-30, Note 12), never the model
+      API, so nothing here is a lab revenue figure (see revenue_filers).
+
   edgar-companyfacts-spcx:
     axis: revenue
     provider: all
@@ -397,13 +452,16 @@ sources:
 # data.sec.gov/submissions/CIK0001045810.json -> "NVIDIA CORP". The same
 # check re-confirmed MSFT and GOOGL. NEVER fill an entry in from memory: a
 # wrong CIK here silently suppresses the highest-value alert this product
-# fires, and a null at least fails visibly.
+# fires, and a null at least fails visibly. META was resolved on 2026-10-12
+# the same way: company_tickers.json -> 1326801, round-tripped through
+# data.sec.gov/submissions/CIK0001326801.json -> "Meta Platforms, Inc.".
 cik_whitelist:
   MSFT: "0000789019"
   AMZN: "0001018724"
   NVDA: "0001045810"
   SPCX: "0001181412"
   GOOGL: "0001652044"
+  META: "0001326801"
 
 # Disclosed-revenue filers. One entry per tracked lab: null while the lab has
 # no audited, primary-source disclosure — the /revenue panel then says so and
@@ -420,6 +478,7 @@ revenue_filers:
   xai:
     ticker: SPCX
     relation: parent
+  meta: null # Meta Platforms (META) is public but segments Family of Apps and Reality Labs, never its model API
 
 # Labs with no CIK yet, and how to recognise theirs the moment it exists.
 # An S-1-family hit on either edgar-fts query whose FILER name (EDGAR's
@@ -557,6 +616,32 @@ cut:
       answers 403 (Cloudflare challenge page) to a non-browser client,
       live-checked 2026-09-27, the same bot wall as status.x.ai.
       Re-checked by the disclosure-watch routine.
+  meta-hiring:
+    verdict: cut — display "no public feed" honestly
+    reason: >-
+      None usable, live-checked 2026-10-12: metacareers.com is a
+      client-rendered app over an internal GraphQL endpoint with no
+      documented API, and no Greenhouse or Ashby board exists for Meta or
+      Meta Superintelligence Labs (meta, msl, metaai,
+      metasuperintelligencelabs all 404). A Meta-wide count would conflate
+      Facebook, Instagram, WhatsApp and Reality Labs hiring with the lab and
+      mislead, the same reasoning that cuts Google hiring.
+  meta-status:
+    verdict: cut — display "no public feed" honestly
+    reason: >-
+      No incident history, live-checked 2026-10-12. Meta Model API's
+      api.meta.ai/v1/status is a current-state probe ({is_alive,
+      service_status, model_statuses}) with no incident list, so a count
+      would only see outages that overlap a poll. metastatus.com covers Meta
+      business products (Ads Manager, WhatsApp Business API), not the model
+      API, and is a client-rendered page.
+  meta-disclosures:
+    verdict: cut — display "no disclosure index" honestly
+    reason: >-
+      No misalignment or containment disclosure page found, live-checked
+      2026-10-12: ai.meta.com/safety and research.meta.ai/safety answer 404,
+      research.meta.ai has no rss.xml, and the developer docs' llms.txt lists
+      no safety or incident page. Re-checked by the disclosure-watch routine.
   mistral:
     verdict: cut — not tracked on any axis
     reason: >-

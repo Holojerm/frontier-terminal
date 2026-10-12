@@ -16,6 +16,8 @@ import xaiGreenhouse from '../../fixtures/hiring/xai-greenhouse.json?raw'
 import anthropicModelsOverview from '../../fixtures/pricing/anthropic-models-overview.md?raw'
 import anthropicPricing from '../../fixtures/pricing/anthropic-pricing.md?raw'
 import googlePricing from '../../fixtures/pricing/google-pricing.html?raw'
+import metaModels from '../../fixtures/pricing/meta-models.md?raw'
+import metaPricing from '../../fixtures/pricing/meta-pricing.md?raw'
 import openaiModels from '../../fixtures/pricing/openai-models.md?raw'
 import openaiModelPage from '../../fixtures/pricing/openai-model-gpt-5.6-sol.md?raw'
 import openaiPricing from '../../fixtures/pricing/openai-pricing.md?raw'
@@ -27,6 +29,7 @@ import edgarFtsOpenai from '../../fixtures/sec/edgar-fts-openai.json?raw'
 import edgarFts from '../../fixtures/sec/edgar-fts.json?raw'
 import edgarSubmissionsAmzn from '../../fixtures/sec/edgar-submissions-amzn.json?raw'
 import edgarSubmissionsGoogl from '../../fixtures/sec/edgar-submissions-googl.json?raw'
+import edgarSubmissionsMeta from '../../fixtures/sec/edgar-submissions-meta.json?raw'
 import edgarSubmissionsMsft from '../../fixtures/sec/edgar-submissions-msft.json?raw'
 import edgarSubmissionsNvda from '../../fixtures/sec/edgar-submissions-nvda.json?raw'
 import edgarSubmissionsSpcx from '../../fixtures/sec/edgar-submissions-spcx.json?raw'
@@ -55,6 +58,8 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/pricing/anthropic-models-overview.md': anthropicModelsOverview,
   'fixtures/pricing/anthropic-pricing.md': anthropicPricing,
   'fixtures/pricing/google-pricing.html': googlePricing,
+  'fixtures/pricing/meta-models.md': metaModels,
+  'fixtures/pricing/meta-pricing.md': metaPricing,
   'fixtures/pricing/openai-models.md': openaiModels,
   'fixtures/pricing/openai-model-gpt-5.6-sol.md': openaiModelPage,
   'fixtures/pricing/openai-pricing.md': openaiPricing,
@@ -66,6 +71,7 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/sec/edgar-fts.json': edgarFts,
   'fixtures/sec/edgar-submissions-amzn.json': edgarSubmissionsAmzn,
   'fixtures/sec/edgar-submissions-googl.json': edgarSubmissionsGoogl,
+  'fixtures/sec/edgar-submissions-meta.json': edgarSubmissionsMeta,
   'fixtures/sec/edgar-submissions-msft.json': edgarSubmissionsMsft,
   'fixtures/sec/edgar-submissions-nvda.json': edgarSubmissionsNvda,
   'fixtures/sec/edgar-submissions-spcx.json': edgarSubmissionsSpcx,

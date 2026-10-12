@@ -26,6 +26,7 @@ const EDGAR_SOURCES: readonly string[] = [
   'edgar-submissions-amzn',
   'edgar-submissions-nvda',
   'edgar-submissions-googl',
+  'edgar-submissions-meta',
   'edgar-companyfacts-spcx',
 ]
 
@@ -44,6 +45,8 @@ const LAUNCH_SOURCES: readonly string[] = [
   'anthropic-pricing-md',
   'xai-models-md',
   'google-pricing-html',
+  'meta-models-md',
+  'meta-pricing-md',
 ]
 
 export function sourceIdsForScope(scope: PollScope, all: readonly FetchSource[]): string[] {

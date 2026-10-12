@@ -8,6 +8,8 @@ import {
 } from '../../server/pipeline/contracts'
 import { parseAnthropicModelsOverviewMd } from '../../server/pipeline/parsers/pricing/anthropic-models-overview'
 import { parseAnthropicPricingMd } from '../../server/pipeline/parsers/pricing/anthropic-pricing'
+import { parseMetaModelsMd } from '../../server/pipeline/parsers/pricing/meta-models'
+import { parseMetaPricingMd } from '../../server/pipeline/parsers/pricing/meta-pricing'
 import { parseOpenAiModelsMd } from '../../server/pipeline/parsers/pricing/openai-models'
 import { parseOpenAiPricingMd } from '../../server/pipeline/parsers/pricing/openai-pricing'
 import { parseXaiModelsMd } from '../../server/pipeline/parsers/pricing/xai-models'
@@ -318,6 +320,90 @@ describe('vendor-md + sec lane', () => {
     }
   })
 
+  test('meta: pricing.md fans each line’s price out to every id it names, Contributor ids at the Contributor column', () => {
+    const out = parseMetaPricingMd(fixtureText('fixtures/pricing/meta-pricing.md'))
+    expect(VendorMdPricingOutput.safeParse(out).success).toBe(true)
+    const by = Object.fromEntries(out.rows.map((r) => [r.model_slug, r]))
+    expect(Object.keys(by)).toEqual([
+      'muse-spark-1.1',
+      'muse-spark-1.2',
+      'muse-spark-1.2-contributor',
+      'muse-spark-1.3',
+      'muse-spark-1.3-contributor',
+      'muse-wonder-1.0',
+    ])
+    expect(out.rows.every((r) => r.provider === 'meta' && r.tier === null)).toBe(true)
+    expect(by['muse-wonder-1.0']).toMatchObject({
+      input_per_mtok: 4,
+      cached_input_per_mtok: 0.2,
+      output_per_mtok: 20,
+    })
+    for (const slug of ['muse-spark-1.1', 'muse-spark-1.2', 'muse-spark-1.3']) {
+      expect(by[slug]).toMatchObject({
+        input_per_mtok: 1.25,
+        cached_input_per_mtok: 0.15,
+        output_per_mtok: 4.25,
+        notes: 'Standard mode',
+      })
+    }
+    expect(by['muse-spark-1.3-contributor']).toMatchObject({
+      input_per_mtok: 0.1,
+      cached_input_per_mtok: 0.002,
+      output_per_mtok: 0.2,
+    })
+    expect(by['muse-spark-1.3-contributor']!.notes).toContain('train future Meta models')
+    for (const r of out.rows) {
+      expect(r.source_url).toBe('https://dev.meta.ai/docs/pricing-rate-limits.md')
+      expect(r.fetched_at).toBe(provenanceOf('meta-pricing-md').fetched_at)
+    }
+  })
+
+  test('meta: a line priced for an id in a mode the table marks "Not available" fails, not a null price', () => {
+    const text = fixtureText('fixtures/pricing/meta-pricing.md').replace(
+      'Model: `muse-wonder-1.0`.',
+      'Models: `muse-wonder-1.0` in Standard mode; `muse-wonder-1.0-contributor` in Contributor mode.',
+    )
+    expect(() => parseMetaPricingMd(text)).toThrow('priced "Not available"')
+  })
+
+  test('meta: a reshaped token table fails loudly rather than dropping the line', () => {
+    const text = fixtureText('fixtures/pricing/meta-pricing.md').replace(
+      '| Usage        | Standard mode (per 1M tokens) | Contributor mode (per 1M tokens) |\n|',
+      '| Usage        | Price (per 1M tokens) | Contributor mode (per 1M tokens) |\n|',
+    )
+    expect(() => parseMetaPricingMd(text)).toThrow('unrecognized header')
+  })
+
+  test('meta: models.md lists the Model API ids with their context window and no prices', () => {
+    const out = parseMetaModelsMd(fixtureText('fixtures/pricing/meta-models.md'))
+    expect(VendorMdPricingOutput.safeParse(out).success).toBe(true)
+    // Muse Wonder Full (Muse Code only) and the per-image/per-hour lines are not API text SKUs.
+    expect(out.rows.map((r) => r.model_slug)).toEqual([
+      'muse-spark-1.1',
+      'muse-spark-1.2',
+      'muse-spark-1.2-contributor',
+      'muse-spark-1.3',
+      'muse-spark-1.3-contributor',
+      'muse-wonder-1.0',
+    ])
+    for (const r of out.rows) {
+      expect(r).toMatchObject({
+        provider: 'meta',
+        tier: null,
+        context_window: '1,048,576 tokens',
+        input_per_mtok: null,
+        output_per_mtok: null,
+      })
+    }
+    const wonder = out.rows.find((r) => r.model_slug === 'muse-wonder-1.0')!
+    expect(wonder.notes).toBe('Muse Wonder; Model API: Available (Standard mode only); preview')
+    // The catalog and the price list key the same ids, so the two pages join on modelKey.
+    const priced = parseMetaPricingMd(fixtureText('fixtures/pricing/meta-pricing.md')).rows
+    expect(out.rows.map((r) => modelKey(r.provider, r.model_slug, r.tier))).toEqual(
+      priced.map((r) => modelKey(r.provider, r.model_slug, r.tier)),
+    )
+  })
+
   test('edgar: FTS hits filtered against sources.yaml cik_whitelist; whitelist_cik null on non-matches', () => {
     const out = parseEdgarFts(fixtureText('fixtures/sec/edgar-fts.json'), whitelist)
     expect(EdgarFtsOutput.safeParse(out).success).toBe(true)
@@ -396,7 +482,7 @@ describe('vendor-md + sec lane', () => {
     expect(ftsFlagged.every((r) => r.whitelist_cik === SPCX_CIK)).toBe(true)
   })
 
-  test('cik whitelist: current sources.yaml parses to exactly the 5 entries, every CIK resolved from SEC', () => {
+  test('cik whitelist: current sources.yaml parses to exactly the 6 entries, every CIK resolved from SEC', () => {
     // AMZN and NVDA were null until 2026-08-25, when they were resolved from
     // SEC's ticker map and verified against data.sec.gov — never filled in
     // from memory.
@@ -406,6 +492,7 @@ describe('vendor-md + sec lane', () => {
       ['NVDA', '0001045810'],
       ['SPCX', '0001181412'],
       ['GOOGL', '0001652044'],
+      ['META', '0001326801'],
     ])
   })
 

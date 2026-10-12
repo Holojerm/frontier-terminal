@@ -12,7 +12,7 @@
 // reader is deliberately narrow — the same shape server/pipeline/sources.ts
 // uses — because a YAML dependency for one flat file is not worth carrying.
 
-import type { ProviderId, SourceAxis, SourceRole } from '#shared/utils/terminal-types'
+import type { LabId, ProviderId, SourceAxis, SourceRole } from '#shared/utils/terminal-types'
 
 export interface SourceLabel {
   label: string
@@ -26,6 +26,8 @@ export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
   'anthropic-models-md': { label: 'Anthropic models overview.md', role: 'primary' },
   'anthropic-pricing-md': { label: 'Anthropic pricing.md', role: 'primary' },
   'xai-models-md': { label: 'xAI models.md', role: 'primary' },
+  'meta-models-md': { label: 'Meta models.md', role: 'primary' },
+  'meta-pricing-md': { label: 'Meta pricing and rate limits.md', role: 'primary' },
   'google-pricing-html': { label: 'Google Gemini API pricing', role: 'primary' },
   'openrouter-models': { label: 'OpenRouter /api/v1/models', role: 'cross-check' },
   'openrouter-rankings-daily': { label: 'OpenRouter usage rankings (daily)', role: 'primary' },
@@ -44,6 +46,7 @@ export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
   'edgar-submissions-amzn': { label: 'EDGAR submissions (AMZN)', role: 'sec' },
   'edgar-submissions-nvda': { label: 'EDGAR submissions (NVDA)', role: 'sec' },
   'edgar-submissions-googl': { label: 'EDGAR submissions (GOOGL)', role: 'sec' },
+  'edgar-submissions-meta': { label: 'EDGAR submissions (META)', role: 'sec' },
   'edgar-companyfacts-spcx': {
     label: 'EDGAR XBRL company facts (SPCX — xAI’s parent)',
     role: 'sec',
@@ -65,38 +68,47 @@ export const PROVIDER_DISPLAY: Readonly<Record<ProviderId, string>> = {
   anthropic: 'Anthropic',
   google: 'Google',
   xai: 'xAI',
+  meta: 'Meta',
   other: 'Other',
 }
 
-/** The big four, in the order every panel lists them. */
-export const PROVIDER_ORDER = ['openai', 'anthropic', 'google', 'xai'] as const
+/** The tracked labs, in the order every panel lists them. */
+export const PROVIDER_ORDER = ['openai', 'anthropic', 'google', 'xai', 'meta'] as const
 
-/** Which hiring feeds back each provider — for provenance before rows land. */
-export const HIRING_SOURCE_IDS: Readonly<Record<'openai' | 'anthropic' | 'xai', string[]>> = {
-  openai: ['openai-ashby'],
-  anthropic: ['anthropic-greenhouse', 'anthropic-greenhouse-departments'],
-  xai: ['xai-greenhouse', 'xai-greenhouse-departments'],
+// Each per-axis map below names, for every lab, either the feed that backs
+// it or the sources.yaml cut that says why none does. A lab with no feed
+// reads as the audit's reason and never as a zero.
+
+/** Which hiring feeds back each lab: the board first, then its join. */
+export const HIRING_SOURCES: Readonly<
+  Record<LabId, { source_ids: string[] } | { cut_id: string }>
+> = {
+  openai: { source_ids: ['openai-ashby'] },
+  anthropic: { source_ids: ['anthropic-greenhouse', 'anthropic-greenhouse-departments'] },
+  google: { cut_id: 'google-hiring' },
+  xai: { source_ids: ['xai-greenhouse', 'xai-greenhouse-departments'] },
+  meta: { cut_id: 'meta-hiring' },
 }
 
-/** Which status feed backs each provider — for provenance before rows land. xAI has none (sources.yaml `cut.xai-status`). */
-export const INCIDENT_SOURCE_IDS: Readonly<Record<'openai' | 'anthropic' | 'google', string>> = {
-  openai: 'openai-status',
-  anthropic: 'anthropic-status',
-  google: 'google-cloud-status',
-}
+/** Which status feed backs each lab. */
+export const INCIDENT_SOURCES: Readonly<Record<LabId, { source_id: string } | { cut_id: string }>> =
+  {
+    openai: { source_id: 'openai-status' },
+    anthropic: { source_id: 'anthropic-status' },
+    google: { source_id: 'google-cloud-status' },
+    xai: { cut_id: 'xai-status' },
+    meta: { cut_id: 'meta-status' },
+  }
 
-/**
- * Which disclosure index backs each lab, or the sources.yaml cut that says
- * why none does. Every lab is one or the other, so a lab with no index reads
- * as the audit's reason and never as a zero.
- */
+/** Which disclosure index backs each lab. */
 export const DISCLOSURE_SOURCES: Readonly<
-  Record<'openai' | 'anthropic' | 'google' | 'xai', { source_id: string } | { cut_id: string }>
+  Record<LabId, { source_id: string } | { cut_id: string }>
 > = {
   openai: { source_id: 'openai-misalignment-reports' },
   anthropic: { cut_id: 'anthropic-disclosures' },
   google: { cut_id: 'google-disclosures' },
   xai: { cut_id: 'xai-disclosures' },
+  meta: { cut_id: 'meta-disclosures' },
 }
 
 export interface RegisteredSource {
@@ -209,6 +221,7 @@ const PROVIDERS: readonly (ProviderId | 'all')[] = [
   'anthropic',
   'google',
   'xai',
+  'meta',
   'other',
   'all',
 ]
