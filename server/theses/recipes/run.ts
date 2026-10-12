@@ -4,11 +4,12 @@
 // the survey tick before the theses are evaluated, so readings see this
 // tick's data. One recipe failing never stops the others.
 
-import { and, desc, eq, max, sql } from 'drizzle-orm'
+import { and, desc, eq, lt, max, sql } from 'drizzle-orm'
 
 import * as tables from '../../db/schema'
 import { contentHash, contentHashOfText } from '../../pipeline/contracts'
 import type { SourceFetcher } from '../../pipeline/fetch'
+import { isRateLimitRun, rateLimitAlertDue } from '../../pipeline/rate-limit'
 import type { RawStore } from '../../pipeline/refresh'
 import { chunk, D1_MAX_BOUND_PARAMS, type PipelineDb } from '../../pipeline/store'
 import { recordOpsEvent } from '../../utils/ops'
@@ -130,6 +131,33 @@ async function runOne(
   return { recipe_id: recipe.id, status: 'ok', detail: null, observations: rows.length, url, hash }
 }
 
+// A 429 follows the sources' policy (pipeline/rate-limit.ts): npm's API
+// sheds load for a tick now and then, and a lone 429 is not worth a page.
+async function failureAlertDue(
+  db: PipelineDb,
+  recipeId: string,
+  run: { status: string; detail: string | null },
+  startedAt: Date,
+): Promise<boolean> {
+  if (!isRateLimitRun(run)) return true
+  const history = await db
+    .select({
+      status: tables.recipeRuns.status,
+      detail: tables.recipeRuns.detail,
+      started_at: tables.recipeRuns.started_at,
+    })
+    .from(tables.recipeRuns)
+    .where(
+      and(
+        eq(tables.recipeRuns.recipe_id, recipeId),
+        lt(tables.recipeRuns.started_at, startedAt.toISOString()),
+      ),
+    )
+    .orderBy(desc(tables.recipeRuns.started_at))
+    .limit(50)
+  return rateLimitAlertDue(history, startedAt.getTime())
+}
+
 export async function runRecipes(
   db: PipelineDb,
   deps: { raw: RawStore; fetcher: SourceFetcher; now: () => Date },
@@ -156,7 +184,7 @@ export async function runRecipes(
       observations: r.observations,
       source_url: r.url,
     })
-    if (r.status === 'failed') {
+    if (r.status === 'failed' && (await failureAlertDue(db, recipe.id, r, started_at))) {
       await recordOpsEvent(db, { kind: 'recipe_failed', detail: `${recipe.id}: ${r.detail}` })
     }
     results.push({
