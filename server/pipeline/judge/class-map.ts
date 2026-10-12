@@ -1,7 +1,7 @@
 import { and, desc, eq, inArray } from 'drizzle-orm'
 import { z } from 'zod'
 
-import type { BigFour, ModelClassId } from '#shared/utils/terminal-types'
+import type { LabId, ModelClassId } from '#shared/utils/terminal-types'
 
 import * as tables from '../../db/schema'
 import { catalogDescription } from '../parsers/pricing/anthropic-models-overview'
@@ -43,7 +43,7 @@ const MAX_PAGE_CHARS = 120_000
 
 /** One re-mapping as the model prints it. Everything else is stamped here. */
 export const JudgeClassMapping = z.strictObject({
-  provider: z.enum(['openai', 'anthropic', 'google', 'xai']),
+  provider: z.enum(['openai', 'anthropic', 'google', 'xai', 'meta']),
   class: z.enum(['flagship', 'balanced', 'economy']),
   model_slug: z.string().min(1).max(100),
   basis: z.string().min(1).max(500),
@@ -102,7 +102,7 @@ export async function latestPage(
 }
 
 export interface ReviewCell {
-  provider: BigFour
+  provider: LabId
   class: ModelClassId
   /** The mapping in effect, whose sentence the last poll did not find. */
   current: Pick<ClassEntry, 'model_slug' | 'basis' | 'basis_source_id'>

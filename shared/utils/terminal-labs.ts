@@ -12,6 +12,7 @@ export const LAB_DISPLAY: Record<ProviderId, string> = {
   anthropic: 'Anthropic',
   google: 'Google',
   xai: 'xAI',
+  meta: 'Meta',
   other: 'Other',
 }
 

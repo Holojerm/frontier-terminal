@@ -13,8 +13,8 @@ export interface Prov {
   fetched_at: string
 }
 
-export type ProviderId = 'openai' | 'anthropic' | 'google' | 'xai' | 'other'
-export type BigFour = Exclude<ProviderId, 'other'>
+export type ProviderId = 'openai' | 'anthropic' | 'google' | 'xai' | 'meta' | 'other'
+export type LabId = Exclude<ProviderId, 'other'>
 
 export type SourceAxis =
   | 'pricing-catalog'
@@ -205,7 +205,7 @@ export interface ClassColumn {
  * mapping; `gap` explains an empty cell instead of leaving it blank.
  */
 export interface MatrixCell {
-  provider: BigFour
+  provider: LabId
   class: ModelClassId
   row: PriceRowView | null
   basis: string | null
@@ -228,7 +228,7 @@ export interface MatrixCell {
 
 export interface PriceMatrix {
   classes: ClassColumn[]
-  providers: BigFour[]
+  providers: LabId[]
   cells: MatrixCell[]
   /** Which tier the matrix reads — stated in the UI. */
   tier_note: string
@@ -293,7 +293,7 @@ export interface SourceRef extends Prov {
 export type HiringSource = SourceRef
 
 export interface HiringProviderView {
-  provider: BigFour
+  provider: LabId
   display: string
   /** no_public_feed: an audited cut; no_rows: feed registered, nothing parsed yet. */
   feed: 'ok' | 'no_public_feed' | 'no_rows'
@@ -318,7 +318,7 @@ export interface HiringData extends Stamp {
 export interface IncidentView extends Prov {
   entity_key: string
   source_id: string
-  provider: BigFour
+  provider: LabId
   incident_id: string
   title: string
   /** Vendor vocabulary, verbatim: Statuspage none/minor/major/critical; Google low/medium/high. */
@@ -333,7 +333,7 @@ export interface IncidentView extends Prov {
 }
 
 export interface IncidentProviderView {
-  provider: BigFour
+  provider: LabId
   display: string
   /** no_public_feed: an audited cut; no_rows: feed registered, nothing parsed yet. */
   feed: 'ok' | 'no_public_feed' | 'no_rows'
@@ -386,7 +386,7 @@ export interface DisclosureTimeline extends Prov {
 /** One entry on a lab's own disclosure index, in the lab's own words. */
 export interface DisclosureView extends Prov {
   entity_key: string
-  provider: BigFour
+  provider: LabId
   kind: 'report' | 'notice'
   entry_id: string
   title: string
@@ -406,7 +406,7 @@ export interface DisclosureView extends Prov {
 }
 
 export interface DisclosureProviderView {
-  provider: BigFour
+  provider: LabId
   display: string
   /** no_public_feed: an audited cut (no disclosure index); no_rows: registered, nothing parsed yet. */
   feed: 'ok' | 'no_public_feed' | 'no_rows'
@@ -453,7 +453,7 @@ export interface TopModel extends Prov {
 }
 
 export interface ProviderTopModels {
-  provider: BigFour
+  provider: LabId
   display: string
   models: TopModel[]
 }
@@ -555,7 +555,7 @@ export interface RevenueFilerView {
 }
 
 export interface RevenueProviderView {
-  provider: BigFour
+  provider: LabId
   display: string
   /** none: no audited disclosure on file, nothing shown. parent / issuer: a tagged filer with facts. no_rows: tagged, nothing parsed yet. */
   disclosure: 'none' | 'parent' | 'issuer' | 'no_rows'
@@ -596,7 +596,7 @@ export interface SpendModel {
 }
 
 export interface SpendProviderView {
-  provider: BigFour
+  provider: LabId
   display: string
   tokens: number
   /** Tokens on models that matched a priced SKU. */
@@ -605,7 +605,7 @@ export interface SpendProviderView {
   coverage: number | null
   spend_low: number
   spend_high: number
-  /** This lab's spend_low over the four labs' spend_low, 0..1; null when nothing is priced. */
+  /** This lab's spend_low over the five labs' spend_low, 0..1; null when nothing is priced. */
   share_low: number | null
   share_high: number | null
   /** Token share of the same window, for the decomposition: tokens vs. dollars. */
@@ -620,14 +620,14 @@ export interface SpendData extends Stamp {
   providers: SpendProviderView[]
   totals: {
     tokens: number
-    /** Tokens routed to models outside the four labs — not priced here, stated as the gap. */
+    /** Tokens routed to models outside the five labs — not priced here, stated as the gap. */
     other_tokens: number
     priced_tokens: number
     spend_low: number
     spend_high: number
   }
   /** Labs with tokens in the window but no priced SKU matched: in the token share, out of the dollar share, and said so. */
-  excluded: { provider: BigFour; display: string; reason: string }[]
+  excluded: { provider: LabId; display: string; reason: string }[]
   /** The rankings feed's provenance, citation and caveat travel with the derivation. */
   rankings: Pick<RankingsData, 'provenance' | 'source' | 'meta'>
   /** The pricing sources the SKUs came from. */
@@ -688,7 +688,7 @@ export interface HiringCompare {
  * in the log and are carried as they stand today.
  */
 export interface HiringHistoryProvider {
-  provider: BigFour
+  provider: LabId
   display: string
   feed: 'ok' | 'no_public_feed' | 'no_rows'
   reason: string | null

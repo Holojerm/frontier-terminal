@@ -17,10 +17,10 @@ import {
 } from '#shared/utils/terminal-format'
 import { labPath, summarizeLab, type LabInputs } from '#shared/utils/terminal-lab-summary'
 import { alertPath } from '#shared/utils/terminal-tiers'
-import type { BigFour, Prov } from '#shared/utils/terminal-types'
+import type { LabId, Prov } from '#shared/utils/terminal-types'
 
 const props = defineProps<{
-  labs: readonly BigFour[]
+  labs: readonly LabId[]
   data: LabInputs
   /** The lab column links here; on a lab page it is already the page. */
   linkLabs?: boolean
@@ -33,7 +33,7 @@ const rows = computed(() => props.labs.map((lab) => summarizeLab(lab, props.data
 const signed = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${Math.abs(n)}` : '·')
 const provTitle = (p: Prov | null | undefined) =>
   p ? `${hostOf(p.source_url)} · fetched ${absoluteStamp(p.fetched_at)}` : undefined
-const anchor = (lab: BigFour, id: string) => `${labPath(lab)}#${id}`
+const anchor = (lab: LabId, id: string) => `${labPath(lab)}#${id}`
 </script>
 
 <template>

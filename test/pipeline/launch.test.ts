@@ -233,6 +233,7 @@ describe('tripwire', () => {
     'openai-models-md',
     'xai-models-md',
     'google-pricing-html',
+    'meta-models-md',
   ]
 
   it('yields on the half-hour ticks the other polls own', () => {
@@ -266,7 +267,7 @@ describe('tripwire', () => {
 
   it('polls the catalogs off-cycle when one changes, then cools that source down', async () => {
     await poll(
-      [...TRIPWIRE_BASE, 'anthropic-pricing-md', 'openai-pricing-md'],
+      [...TRIPWIRE_BASE, 'anthropic-pricing-md', 'openai-pricing-md', 'meta-pricing-md'],
       fetcher(),
       '2026-09-22T12:00:00Z',
     )
@@ -287,7 +288,7 @@ describe('tripwire', () => {
     expect(outcome).toMatchObject({ status: 'tripped', by: ['anthropic-models-md'] })
     const tripwireRuns = (await runs()).filter((r) => r.scope === 'tripwire')
     expect(tripwireRuns.map((r) => r.source_id).sort()).toEqual(
-      [...TRIPWIRE_BASE, 'anthropic-pricing-md', 'openai-pricing-md'].sort(),
+      [...TRIPWIRE_BASE, 'anthropic-pricing-md', 'openai-pricing-md', 'meta-pricing-md'].sort(),
     )
     expect((await alerts()).map((a) => a.rule)).toEqual(['model-floor'])
 

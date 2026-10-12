@@ -190,7 +190,7 @@ describe('tools/list', () => {
     )
     expect(tools.find((t) => t.name === 'get_rankings')!.description).toContain('CC BY 4.0')
     expect(tools.find((t) => t.name === 'get_incidents')!.description).toContain(
-      'xAI has NO public feed',
+      'xAI and Meta have NO public incident feed',
     )
     expect(tools.find((t) => t.name === 'get_hiring_history')!.description).toContain(
       'RECONSTRUCTED',
@@ -242,7 +242,7 @@ describe('tools/call', () => {
       counts: { total: number }
       cross_check: { source_id: string } | null
     }
-    expect(all.matrix.providers).toEqual(['openai', 'anthropic', 'google', 'xai'])
+    expect(all.matrix.providers).toEqual(['openai', 'anthropic', 'google', 'xai', 'meta'])
     expect(all.cross_check?.source_id).toBe('openrouter-models')
     for (const row of all.rows) {
       expect(row.source_url).toMatch(/^https:\/\//)
@@ -354,7 +354,13 @@ describe('tools/call', () => {
     }
     expect(all.window_days).toBe(30)
     expect(all.log.changes).toBe(0)
-    expect(all.providers.map((p) => p.provider)).toEqual(['openai', 'anthropic', 'google', 'xai'])
+    expect(all.providers.map((p) => p.provider)).toEqual([
+      'openai',
+      'anthropic',
+      'google',
+      'xai',
+      'meta',
+    ])
     const google = all.providers[2]!
     expect(google).toMatchObject({ feed: 'no_public_feed', dates: [], total: [] })
 
@@ -415,6 +421,7 @@ describe('tools/call', () => {
       ['anthropic', 'ok'],
       ['google', 'ok'],
       ['xai', 'no_public_feed'],
+      ['meta', 'no_public_feed'],
     ])
     expect(all.providers[3]!.reason).toContain('403')
     expect(all.incidents.length).toBeGreaterThan(0)
@@ -478,7 +485,7 @@ describe('tools/call', () => {
       cuts: { id: string }[]
       exports: { name: string }[]
     }
-    expect(coverage.sources).toHaveLength(25)
+    expect(coverage.sources).toHaveLength(28)
     expect(coverage.sources.find((s) => s.source_id === 'openrouter-models')!.caveat).toContain(
       'never source of record',
     )

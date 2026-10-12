@@ -68,6 +68,26 @@
       "trim": "<script> bodies stripped. All 86 tables, model-name headings above table clusters, and the 24 dual-date promo strings ('$X through December 31, 2026.<br>$Y starting January 1, 2027.') preserved."
     },
     {
+      "path": "fixtures/pricing/meta-models.md",
+      "source_id": "meta-models-md",
+      "source_url": "https://dev.meta.ai/docs/models.md",
+      "fetched_at": "2026-10-12T18:02:08Z",
+      "http_status": 200,
+      "raw_bytes": 17303,
+      "trim": "none — committed whole",
+      "note": "Registered 2026-10-12 with Meta as the fifth lab. Six model lines; only Muse Wonder and Muse Spark are token-priced text models on Model API. Last-Modified 2026-10-12T17:52:42Z, ETag present."
+    },
+    {
+      "path": "fixtures/pricing/meta-pricing.md",
+      "source_id": "meta-pricing-md",
+      "source_url": "https://dev.meta.ai/docs/pricing-rate-limits.md",
+      "fetched_at": "2026-10-12T18:02:08Z",
+      "http_status": 200,
+      "raw_bytes": 10987,
+      "trim": "none — committed whole",
+      "note": "Registered 2026-10-12. One $/MTok table per model line (Muse Wonder, Muse Spark) with Standard and Contributor mode columns; image, audio and segmentation tables are not $/MTok and are not parsed."
+    },
+    {
       "path": "fixtures/pricing/openrouter-models.json",
       "source_id": "openrouter-models",
       "source_url": "https://openrouter.ai/api/v1/models",
@@ -192,6 +212,16 @@
       "raw_bytes": 154521,
       "trim": "filings.recent parallel arrays cut to the newest 150 entries (of 1013); filings.files emptied.",
       "note": "Alphabet Inc., whitelisted CIK. Newest 150 filings span 2026-04-27 to 2026-09-16: 2 10-Q, 9 8-K, no 10-K inside the window (Alphabet's 10-K is a January/February filing)."
+    },
+    {
+      "path": "fixtures/sec/edgar-submissions-meta.json",
+      "source_id": "edgar-submissions-meta",
+      "source_url": "https://data.sec.gov/submissions/CIK0001326801.json",
+      "fetched_at": "2026-10-12T18:02:08Z",
+      "http_status": 200,
+      "raw_bytes": 157388,
+      "trim": "filings.recent parallel arrays cut to the newest 150 entries (of 1000); filings.files emptied.",
+      "note": "Meta Platforms, Inc., whitelisted CIK (resolved 2026-10-12 from SEC's company_tickers.json). Newest 150 filings span 2026-03-18 to 2026-10-07: 2 10-Q, 5 8-K, no 10-K inside the window."
     },
     {
       "path": "fixtures/sec/edgar-companyfacts-spcx.json",

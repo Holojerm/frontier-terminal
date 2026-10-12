@@ -85,3 +85,27 @@ Live-fetched with `curl` and the pipeline's descriptive User-Agent at 03:20Z; ra
 Time to disclosure, discovery date to publication, at this fetch: 5 days (DNS chatbot), 38, 69, 90 (printed disclosure date), 114 ×3, 121 and 153 days. Interpretation, marked as such: OpenAI's framework launched on 2026-09-16 with six reports discovered between April and August, so the long lags are a backlog published at launch; the lags of reports discovered after that date are the ones that test the framework. Press reports (Axios, Fortune, SiliconANGLE, 2026-09-16/17) describe a commitment to publish within six business days, or twelve with a minor investigation. That text is on the 403'd openai.com page, so the terminal shows the measured days and does not state the commitment as data.
 
 Most entries are not sandbox escapes. The page covers misalignment broadly; the escapes (a DNS lookup to an outside chatbot, uploads to file hosts, disposable email sign-ups and leaked API keys) are some of the reports. Incidents reported only by third parties or the press (Hugging Face's own write-up, the RubyGems report, statements at the UN) are not ingested, for the reason compute-deal extraction was cut: coverage from the press cannot be made honest. The other three labs are re-checked by the `disclosure-watch` routine (`.claude/routines/disclosure-watch.md`), which files an issue rather than registering a source, because a new source needs this same audit.
+
+## Addendum, 2026-10-12 — Meta
+
+Live-fetched with `curl -L` and the pipeline's descriptive User-Agent at 17:50–18:05Z; raw bodies committed under `fixtures/pricing/` and `fixtures/sec/` (bytes and timestamps in `fixtures/manifest.json`). Checked because Meta now sells its own frontier models through a paid API (Meta Model API: Muse Wonder, Muse Spark), which makes it a lab on the pricing axis in the same sense as the other four, and because it is the one tracked lab that already files with the SEC.
+
+| Axis | Source | Result | Verdict |
+|---|---|---|---|
+| Pricing | `dev.meta.ai/docs/pricing-rate-limits.md` | 200, 10 987 bytes, `text/markdown`, ETag + Last-Modified. One $/MTok table per model line with Standard and Contributor mode columns | **Include** (`meta-pricing-md`) |
+| Pricing | `dev.meta.ai/docs/models.md` | 200, 17 303 bytes, `text/markdown`, ETag + Last-Modified. Model ids, availability per id, context window; no prices | **Include** (`meta-models-md`) — catalog and class-map page |
+| Pricing | `llama.developer.meta.com/*` | 301 to `dev.meta.ai` | Registered at the final URL |
+| Demand | OpenRouter `meta/*` and `meta-llama/*` | 7 `meta/` and 8 `meta-llama/` models in the live model list; 20 `meta/` rows in the rankings fixture, all Muse Spark | **Include** — both prefixes map to `meta` |
+| SEC | `data.sec.gov/submissions/CIK0001326801.json` | 200, "Meta Platforms, Inc."; CIK resolved from `sec.gov/files/company_tickers.json` | **Include** (`edgar-submissions-meta`), whitelisted as `META` |
+| Revenue | 10-Q for the quarter ended 2026-06-30, Note 12 | Two reportable segments, Family of Apps and Reality Labs; no AI or API segment | **None** — `revenue_filers.meta: null` |
+| Hiring | `metacareers.com/jobs` | 200, client-rendered app over an internal GraphQL endpoint | **Cut** |
+| Hiring | Greenhouse / Ashby boards `meta`, `msl`, `metaai`, `metasuperintelligencelabs` | all 404 | **Cut** (`meta-hiring`) |
+| Status | `api.meta.ai/v1/status` | 200, `{"is_alive":true,"service_status":"operational",…,"model_statuses":[]}` — current state only | **Cut** (`meta-status`) |
+| Status | `metastatus.com` | 200, client-rendered page for Meta business products (Ads Manager, WhatsApp Business API) | Not the model API |
+| Disclosures | `ai.meta.com/safety`, `research.meta.ai/safety`, `research.meta.ai/rss.xml` | all 404; `dev.meta.ai/llms.txt` lists no safety or incident page | **Cut** (`meta-disclosures`) |
+
+**Findings.** Meta prices a model line, not a version: every Muse Spark version shares one table, and the sentence above it names the ids the table covers. The parser fans the line's price out to each named id and fails if an id is named in a mode the table marks "Not available". Contributor mode is a separate model id (`muse-spark-1.3-contributor`, $0.10 / $0.20 per MTok against Standard's $1.25 / $4.25) priced low in exchange for Meta training on the caller's content. It is stored as its own SKU, the way OpenRouter lists it, never as a discount on the Standard row. In the rankings fixture, 17 of Meta's 20 OpenRouter rows are Contributor ids, so Meta's demand share mostly reflects traffic at that price.
+
+The class map quotes `models.md`: Muse Wonder is the flagship ("Meta's most capable model…") and Muse Spark 1.3 is the economy cell (the page's cost-sensitive sentence names the Muse Spark line, and marks 1.3 "Recommended for new work"). No balanced tier is named, so that cell is a stated gap.
+
+Interpretation, marked as such: the `meta-llama/*` prefix counts open-weight Llama models that third parties host and bill for. It is demand for Meta's models, not traffic Meta serves or revenue it earns, the same reading that applies to `google/gemma-*`.

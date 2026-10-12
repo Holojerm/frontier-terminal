@@ -28,7 +28,7 @@
 // Prices are never in this file. They come from the store, with the row's
 // own provenance, and the class map only says which row to put where.
 
-import type { BigFour, ClassColumn, ModelClassId } from '#shared/utils/terminal-types'
+import type { LabId, ClassColumn, ModelClassId } from '#shared/utils/terminal-types'
 
 export const MODEL_CLASSES: ClassColumn[] = [
   {
@@ -49,7 +49,7 @@ export const MODEL_CLASSES: ClassColumn[] = [
 ]
 
 export interface ClassEntry {
-  provider: BigFour
+  provider: LabId
   class: ModelClassId
   /** entity model_slug, exactly as the parser stored it. */
   model_slug: string
@@ -70,10 +70,11 @@ export interface ClassEntry {
  * below was transcribed from, and the only ones a judge decision may cite.
  * Google has none: its pricing page prints no recommendation text.
  */
-export const CLASS_MAP_SOURCES: Readonly<Partial<Record<BigFour, string>>> = {
+export const CLASS_MAP_SOURCES: Readonly<Partial<Record<LabId, string>>> = {
   openai: 'openai-models-md',
   anthropic: 'anthropic-models-md',
   xai: 'xai-models-md',
+  meta: 'meta-models-md',
 }
 
 // Verbatim transcriptions from the fixtures fetched 2026-09-22 (the previous
@@ -137,10 +138,30 @@ export const MODEL_CLASS_MAP: ClassEntry[] = [
       'For everything else, including code, use Grok 4.7. It is the most capable model we’ve built.',
     basis_source_id: 'xai-models-md',
   },
+  // Transcribed 2026-10-12. Meta splits its two API text lines by workload,
+  // not by tier: Muse Wonder for capability, Muse Spark for cost-sensitive
+  // volume. The economy sentence names the line; muse-spark-1.3 is the
+  // version the same page marks "Recommended for new work."
+  {
+    provider: 'meta',
+    class: 'flagship',
+    model_slug: 'muse-wonder-1.0',
+    basis:
+      "Muse Wonder is Meta's most capable model, built for complex software engineering and long-horizon agentic work.",
+    basis_source_id: 'meta-models-md',
+  },
+  {
+    provider: 'meta',
+    class: 'economy',
+    model_slug: 'muse-spark-1.3',
+    basis:
+      'high-volume, latency-sensitive, or cost-sensitive work, such as sub-agent tasks, classification, and tight tool loops.',
+    basis_source_id: 'meta-models-md',
+  },
 ]
 
 /** Why a (provider, class) cell has no mapping. Displayed instead of a number. */
-export const CLASS_GAPS: { provider: BigFour; class: ModelClassId; reason: string }[] = [
+export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string }[] = [
   {
     provider: 'xai',
     class: 'balanced',
@@ -169,13 +190,19 @@ export const CLASS_GAPS: { provider: BigFour; class: ModelClassId; reason: strin
     class: 'economy',
     reason: 'Same gap — no published recommendation to map against.',
   },
+  {
+    provider: 'meta',
+    class: 'balanced',
+    reason:
+      'Meta’s models page offers two API text lines — Muse Wonder for capability, Muse Spark for cost-sensitive volume — and names no middle tier.',
+  },
 ]
 
 /**
  * Why a mapped cell has no price. Distinct from a missing mapping: the SKU
  * is the right one, the audited source simply does not print its price.
  */
-export const PRICE_GAPS: Readonly<Partial<Record<BigFour, string>>> = {
+export const PRICE_GAPS: Readonly<Partial<Record<LabId, string>>> = {
   openai:
     'OpenAI’s catalog page (developers.openai.com/api/docs/models.md) prints no prices; they come from the separately polled pricing.md (registered 2026-09-22). No priced row yet means that source has not been polled, and nothing is shown rather than a number from elsewhere.',
 }

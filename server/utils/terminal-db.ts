@@ -28,7 +28,7 @@ import type {
   AlertDetailData,
   AlertView,
   AlertsData,
-  BigFour,
+  LabId,
   ChangeDetailView,
   ChangeView,
   CoverageData,
@@ -93,8 +93,8 @@ import {
 } from './terminal-history'
 import { byString, fieldDiff, fieldTable, num, parseJson, str, type Json } from './terminal-json'
 import {
-  HIRING_SOURCE_IDS,
-  INCIDENT_SOURCE_IDS,
+  HIRING_SOURCES,
+  INCIDENT_SOURCES,
   PROVIDER_DISPLAY,
   PROVIDER_ORDER,
   derivedTemplateOf,
@@ -134,6 +134,10 @@ export function queryContext(
   }
 }
 
+/** The audit's reason for a sources.yaml cut, or null when the id is not registered. */
+const cutReason = (ctx: QueryContext, cutId: string): string | null =>
+  ctx.registry.cuts.find((c) => c.id === cutId)?.reason ?? null
+
 const stampOf = (ctx: QueryContext): Stamp => ({
   as_of: ctx.as_of,
   computed_at: ctx.now().toISOString(),
@@ -144,7 +148,8 @@ const PROVIDER_RANK: Readonly<Record<string, number>> = {
   anthropic: 1,
   google: 2,
   xai: 3,
-  other: 4,
+  meta: 4,
+  other: 5,
 }
 
 // ---- snapshots and runs ------------------------------------------------------
@@ -904,7 +909,7 @@ export function buildMatrix(
         basis_current: current ? current.present : null,
         basis_checked_at: current ? current.fetched_at : null,
         basis_note: current && !current.present ? BASIS_STALE_NOTE : null,
-        gap: priced ? null : row ? (PRICE_GAPS[provider as BigFour] ?? NO_ROW_GAP) : NO_ROW_GAP,
+        gap: priced ? null : row ? (PRICE_GAPS[provider as LabId] ?? NO_ROW_GAP) : NO_ROW_GAP,
         priced,
       })
     }
@@ -949,18 +954,20 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
     sourceStamps(db),
   ])
 
-  const cut = ctx.registry.cuts.find((c) => c.id === 'google-hiring')
   const xaiCaveat = ctx.registry.sources.find((s) => s.source_id === 'xai-greenhouse')?.caveat
 
   const providers: HiringProviderView[] = []
   for (const provider of PROVIDER_ORDER) {
-    if (provider === 'google') {
-      // Honest cut — never a fabricated number (sources.yaml `cut.google-hiring`).
+    const backing = HIRING_SOURCES[provider]
+    if ('cut_id' in backing) {
+      // Honest cut — never a fabricated number (sources.yaml `cut.<lab>-hiring`).
       providers.push({
         provider,
-        display: PROVIDER_DISPLAY.google,
+        display: PROVIDER_DISPLAY[provider],
         feed: 'no_public_feed',
-        reason: cut?.reason ?? 'No public hiring feed exists for Google.',
+        reason:
+          cutReason(ctx, backing.cut_id) ??
+          `No public hiring feed exists for ${PROVIDER_DISPLAY[provider]}.`,
         total: 0,
         departments: [],
         caveat: null,
@@ -985,7 +992,7 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
         fetched_at: s.fetched_at!,
       }))
     // No rows yet: cite the feed snapshots, if any were captured.
-    const feedSources: HiringSource[] = HIRING_SOURCE_IDS[provider]
+    const feedSources: HiringSource[] = backing.source_ids
       .map((id) => {
         const stamp = stamps.get(id)
         return stamp
@@ -1046,7 +1053,7 @@ function incidentFromPayload(
   return {
     entity_key: base.entity_key,
     source_id: base.source_id,
-    provider: base.provider as BigFour,
+    provider: base.provider as LabId,
     incident_id,
     title,
     impact: str(payload.impact) ?? '?',
@@ -1083,8 +1090,8 @@ export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise
     sourceStamps(db),
   ])
 
-  const feedStamps = Object.values(INCIDENT_SOURCE_IDS)
-    .map((id) => stamps.get(id))
+  const feedStamps = Object.values(INCIDENT_SOURCES)
+    .flatMap((b) => ('source_id' in b ? [stamps.get(b.source_id)] : []))
     .filter((s): s is SourceStamp => s !== undefined)
   const windowTo =
     feedStamps
@@ -1104,16 +1111,18 @@ export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise
   }
   all.sort(newestFirst)
 
-  const cut = ctx.registry.cuts.find((c) => c.id === 'xai-status')
   const providers: IncidentProviderView[] = []
   for (const provider of PROVIDER_ORDER) {
-    if (provider === 'xai') {
-      // Honest cut — never a fabricated zero (sources.yaml `cut.xai-status`).
+    const backing = INCIDENT_SOURCES[provider]
+    if ('cut_id' in backing) {
+      // Honest cut — never a fabricated zero (sources.yaml `cut.<lab>-status`).
       providers.push({
         provider,
-        display: PROVIDER_DISPLAY.xai,
+        display: PROVIDER_DISPLAY[provider],
         feed: 'no_public_feed',
-        reason: cut?.reason ?? 'No public status feed is reachable for xAI.',
+        reason:
+          cutReason(ctx, backing.cut_id) ??
+          `No public status feed is reachable for ${PROVIDER_DISPLAY[provider]}.`,
         caveat: null,
         last_window: 0,
         prior_window: 0,
@@ -1123,7 +1132,7 @@ export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise
       })
       continue
     }
-    const sourceId = INCIDENT_SOURCE_IDS[provider]
+    const sourceId = backing.source_id
     const rows = all.filter((i) => i.provider === provider)
     const startedMs = (i: IncidentView) => Date.parse(i.started_at)
     const stamp = stamps.get(sourceId)
@@ -1319,10 +1328,9 @@ export async function queryHiringHistory(
 
   // One grid from the earliest board snapshot; each provider's series is cut
   // to start at its own.
-  const boards = PROVIDER_ORDER.filter((p): p is Exclude<BigFour, 'google'> => p !== 'google')
   const earliest =
-    boards
-      .map((p) => firstOf.get(HIRING_SOURCE_IDS[p][0]!) ?? null)
+    Object.values(HIRING_SOURCES)
+      .flatMap((b) => ('source_ids' in b ? [firstOf.get(b.source_ids[0]!) ?? null] : []))
       .filter((s): s is string => s !== null)
       .sort(byString)[0] ?? null
   const grid = earliest ? dailyInstants(dayOf(earliest), now) : []
@@ -1332,18 +1340,20 @@ export async function queryHiringHistory(
     grid.map((g) => g.at),
   )
 
-  const cut = ctx.registry.cuts.find((c) => c.id === 'google-hiring')
   const xaiCaveat = ctx.registry.sources.find((s) => s.source_id === 'xai-greenhouse')?.caveat
 
   const providers: HiringHistoryProvider[] = []
   for (const provider of PROVIDER_ORDER) {
-    if (provider === 'google') {
-      // Honest cut — never a fabricated series (sources.yaml `cut.google-hiring`).
+    const backing = HIRING_SOURCES[provider]
+    if ('cut_id' in backing) {
+      // Honest cut — never a fabricated series (sources.yaml `cut.<lab>-hiring`).
       providers.push({
         provider,
-        display: PROVIDER_DISPLAY.google,
+        display: PROVIDER_DISPLAY[provider],
         feed: 'no_public_feed',
-        reason: cut?.reason ?? 'No public hiring feed exists for Google.',
+        reason:
+          cutReason(ctx, backing.cut_id) ??
+          `No public hiring feed exists for ${PROVIDER_DISPLAY[provider]}.`,
         caveat: null,
         dates: [],
         total: [],
@@ -1357,12 +1367,12 @@ export async function queryHiringHistory(
       })
       continue
     }
-    const [primary, join] = HIRING_SOURCE_IDS[provider] as [string, string | undefined]
+    const [primary, join] = backing.source_ids as [string, string | undefined]
     const from = firstOf.get(primary) ?? null
     const own = from ? grid.filter((g) => g.date >= dayOf(from)) : []
     const { total, departments } = departmentSeries(byInstant, own, provider)
     const dates = own.map((g) => g.date)
-    const sources: HiringSource[] = HIRING_SOURCE_IDS[provider]
+    const sources: HiringSource[] = backing.source_ids
       .map((id) => {
         const stamp = stamps.get(id)
         return stamp
