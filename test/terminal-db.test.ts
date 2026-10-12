@@ -272,7 +272,7 @@ describe('after a baseline poll of every source', () => {
     expect(grok.fetched_at).toMatch(/^2026-09-07T10:0\d:/)
 
     // The two Anthropic pages carry the same SKU key: one row, the other cited.
-    const sonnet = prices.rows.filter((r) => r.entity_key === 'model:anthropic:claude-sonnet-5')
+    const sonnet = prices.rows.filter((r) => r.entity_key === 'model:anthropic:claude-sonnet-5-5')
     expect(sonnet).toHaveLength(1)
     expect(sonnet[0]!.also_listed_by).toHaveLength(1)
     expect(['anthropic-models-md', 'anthropic-pricing-md']).toContain(sonnet[0]!.source_id)
@@ -344,7 +344,7 @@ describe('after a baseline poll of every source', () => {
 
     const anthropic = cell('anthropic', 'balanced')
     expect(anthropic.priced).toBe(true)
-    expect(anthropic.row!.model_slug).toBe('claude-sonnet-5')
+    expect(anthropic.row!.model_slug).toBe('claude-sonnet-5-5')
 
     // Meta's catalog (no prices) and price list share a key per model id, as OpenAI's do.
     const meta = cell('meta', 'flagship')

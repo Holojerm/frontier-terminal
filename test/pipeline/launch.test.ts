@@ -15,7 +15,8 @@ import { fixtureText, manifest } from './fixtures'
 // and rewrites its "start with" sentence, and the terminal has to (1) poll the
 // catalog within minutes, (2) alert the new model without waiting on the
 // judge, and (3) keep telling the owner about a matrix cell that still shows
-// the old flagship. The rewrite is the Opus 5.5 launch of 2026-09-22.
+// the old flagship. The rewrite replays the Opus 5.5 launch of 2026-09-22 as a
+// hypothetical Opus 6 on the committed (Opus 5.5) pages.
 
 const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
@@ -69,24 +70,24 @@ async function poll(ids: readonly string[], f: SourceFetcher, at: string) {
 
 // ── The launch, as a rewrite of the committed pages ─────────────────────────
 
-const OPUS_5_PRICE_ROW = /^\| Claude Opus 5 +\|.*$/m
-const OPUS_5_BATCH_ROW = /^\| Claude Opus 5 +\| \$2\.50 \/ MTok.*\n/m
+const OPUS_PRICE_ROW = /^\| Claude Opus 5\.5 +\|.*$/m
+const OPUS_BATCH_ROW = /^\| Claude Opus 5\.5 +\| \$2 \/ MTok.*\n/m
 
 const pricing = fixtureText('fixtures/pricing/anthropic-pricing.md')
-/** The pricing page with a Claude Opus 5.5 row listed beside Opus 5, at Opus 5's prices. */
+/** The pricing page with a Claude Opus 6 row listed beside Opus 5.5, at Opus 5.5's prices. */
 const pricingLaunched = () => {
-  const row = pricing.match(OPUS_5_PRICE_ROW)![0]
-  return pricing.replace(row, `${row}\n${row.replace('Claude Opus 5 ', 'Claude Opus 5.5')}`)
+  const row = pricing.match(OPUS_PRICE_ROW)![0]
+  return pricing.replace(row, `${row}\n${row.replace('Claude Opus 5.5', 'Claude Opus 6  ')}`)
 }
-/** The pricing page without Opus 5's batch row, so restoring it is a new tier of a known model. */
-const pricingWithoutOpus5Batch = () => pricing.replace(OPUS_5_BATCH_ROW, '')
+/** The pricing page without Opus 5.5's batch row, so restoring it is a new tier of a known model. */
+const pricingWithoutOpusBatch = () => pricing.replace(OPUS_BATCH_ROW, '')
 
 const models = fixtureText('fixtures/pricing/anthropic-models-overview.md')
-const START_WITH = 'start with [Claude Opus 5]'
-/** The models page after the vendor re-points "start with" at Opus 5.5. */
+const START_WITH = 'start with [Claude Opus 5.5]'
+/** The models page after the vendor re-points "start with" at Opus 6. */
 const modelsRepointed = () => {
   expect(models).toContain(START_WITH)
-  return models.replace(START_WITH, 'start with [Claude Opus 5.5]')
+  return models.replace(START_WITH, 'start with [Claude Opus 6]')
 }
 
 const alerts = () => db.select().from(schema.alerts)
@@ -123,14 +124,14 @@ describe('model-floor', () => {
     expect(alert).toMatchObject({
       rule: 'model-floor',
       severity: 'notable',
-      headline: 'Anthropic lists a new model, claude-opus-5-5 — $5.00 in / $25.00 out per MTok',
+      headline: 'Anthropic lists a new model, claude-opus-6 — $4.00 in / $20.00 out per MTok',
       source_url: idToUrl.get('anthropic-pricing-md'),
     })
     const cited = JSON.parse(alert!.change_ids) as string[]
     const changes = await db.select().from(schema.changes)
     expect(cited).toEqual(
       changes
-        .filter((c) => c.entity_key.startsWith('model:anthropic:claude-opus-5-5'))
+        .filter((c) => c.entity_key.startsWith('model:anthropic:claude-opus-6'))
         .map((c) => c.id),
     )
 
@@ -149,7 +150,7 @@ describe('model-floor', () => {
   it('stays silent on a new tier of a model the same page already listed', async () => {
     await poll(
       ['anthropic-pricing-md'],
-      fetcher({ 'anthropic-pricing-md': pricingWithoutOpus5Batch() }),
+      fetcher({ 'anthropic-pricing-md': pricingWithoutOpusBatch() }),
       '2026-09-22T12:00:00Z',
     )
     const report = await poll(['anthropic-pricing-md'], fetcher(), '2026-09-22T18:00:00Z')
@@ -187,12 +188,12 @@ describe('launch watch', () => {
       expect.objectContaining({
         provider: 'anthropic',
         class: 'flagship',
-        model_slug: 'claude-opus-5',
+        model_slug: 'claude-opus-5-5',
       }),
     ])
     const still = (await ops()).filter((e) => e.kind === 'class_basis_still_stale')
     expect(still).toHaveLength(1)
-    expect(still[0]!.detail).toContain('anthropic flagship still shows claude-opus-5')
+    expect(still[0]!.detail).toContain('anthropic flagship still shows claude-opus-5-5')
 
     // The marker holds it to one line until it expires.
     await checkLaunchCoverage(db, kv, new Date('2026-09-22T20:00:00Z'))
@@ -211,7 +212,7 @@ describe('launch watch', () => {
     await db.delete(schema.alerts)
     const kv = memoryKv()
     const coverage = await checkLaunchCoverage(db, kv, at)
-    expect(coverage.unalerted.map((m) => m.model_slug)).toEqual(['claude-opus-5-5'])
+    expect(coverage.unalerted.map((m) => m.model_slug)).toEqual(['claude-opus-6'])
     await checkLaunchCoverage(db, kv, new Date('2026-09-22T21:30:00Z'))
     expect((await ops()).filter((e) => e.kind === 'launch_unalerted')).toHaveLength(1)
 

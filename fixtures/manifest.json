@@ -34,18 +34,18 @@
       "path": "fixtures/pricing/anthropic-models-overview.md",
       "source_id": "anthropic-models-md",
       "source_url": "https://platform.claude.com/docs/en/models/overview.md",
-      "fetched_at": "2026-09-22T04:10:11Z",
+      "fetched_at": "2026-10-12T18:31:04Z",
       "http_status": 200,
-      "raw_bytes": 16849,
+      "raw_bytes": 19747,
       "trim": "none — committed whole"
     },
     {
       "path": "fixtures/pricing/anthropic-pricing.md",
       "source_id": "anthropic-pricing-md",
       "source_url": "https://platform.claude.com/docs/en/about-claude/pricing.md",
-      "fetched_at": "2026-09-22T04:10:11Z",
+      "fetched_at": "2026-10-12T18:32:54Z",
       "http_status": 200,
-      "raw_bytes": 45062,
+      "raw_bytes": 50272,
       "trim": "none — committed whole",
       "note": "Audit listed this page as HTML; live fetch confirms the .md suffix serves real markdown here too."
     },

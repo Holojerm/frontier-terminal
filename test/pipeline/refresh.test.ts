@@ -175,7 +175,7 @@ describe('baseline', () => {
     expect(perSource.get('xai-greenhouse')).toBe(42)
     expect(perSource.get('anthropic-greenhouse')).toBe(59)
     expect(perSource.get('openai-ashby')).toBe(65)
-    expect(perSource.get('anthropic-pricing-md')).toBe(34)
+    expect(perSource.get('anthropic-pricing-md')).toBe(42)
     // 16 price rows (8 models × 2 tiers) + the flagship class-map check.
     expect(perSource.get('xai-models-md')).toBe(17)
     // 6 catalog rows + the flagship and economy class-map checks.
@@ -208,7 +208,7 @@ describe('baseline', () => {
 
     // The two Anthropic pages share model keys and coexist because the
     // current set is scoped per source.
-    const sonnet = entities.filter((e) => e.entity_key === 'model:anthropic:claude-sonnet-5')
+    const sonnet = entities.filter((e) => e.entity_key === 'model:anthropic:claude-sonnet-5-5')
     expect(sonnet.map((e) => e.source_id).sort()).toEqual([
       'anthropic-models-md',
       'anthropic-pricing-md',
