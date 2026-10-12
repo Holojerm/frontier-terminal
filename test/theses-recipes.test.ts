@@ -180,6 +180,26 @@ describe('runRecipes', () => {
     const ops = await db.select().from(schema.opsEvents)
     expect(ops.map((o) => o.kind)).toContain('recipe_failed')
   })
+
+  // npm's downloads API sheds load for a tick now and then (2026-10-09, -11).
+  it("alerts on a 429 only once the streak outlasts the sources' six hours", async () => {
+    const limited: SourceFetcher = async () => ({
+      ok: false,
+      status: 429,
+      detail: 'HTTP 429 (Retry-After 0s) after 3 attempts',
+    })
+    const recipe = { ...RIVAL, id: 'test-limited' }
+    const failedAlerts = async () =>
+      (await db.select().from(schema.opsEvents)).filter((o) =>
+        o.detail?.startsWith('test-limited:'),
+      ).length
+    const at = (h: number) => () => new Date(NOW.getTime() + h * 3_600_000)
+
+    await runRecipes(db, { raw, fetcher: limited, now: at(0) }, [recipe])
+    expect(await failedAlerts()).toBe(0)
+    await runRecipes(db, { raw, fetcher: limited, now: at(6) }, [recipe])
+    expect(await failedAlerts()).toBe(1)
+  })
 })
 
 describe('recipe signals and recipe-item claims', () => {

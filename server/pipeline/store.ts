@@ -108,14 +108,16 @@ function insertStatements<T extends TableName>(
   db: PipelineDb,
   table: T,
   rows: readonly unknown[],
+  { skipExisting = false } = {},
 ): Statement[] {
   const validated = validateRows(table, rows)
   if (validated.length === 0) return []
   const columns = Object.keys(validated[0]!).length
   const target = STORE_TABLES[table]
-  return chunk(validated, rowsPerStatement(columns)).map((group) =>
-    db.insert(target).values(group as unknown as (typeof target)['$inferInsert'][]),
-  )
+  return chunk(validated, rowsPerStatement(columns)).map((group) => {
+    const insert = db.insert(target).values(group as unknown as (typeof target)['$inferInsert'][])
+    return skipExisting ? insert.onConflictDoNothing() : insert
+  })
 }
 
 /**
@@ -210,7 +212,11 @@ export async function applyDiff(db: PipelineDb, sourceId: string, writes: DiffWr
     ...insertStatements(db, 'entities', writes.added),
     ...updateEntityStatements(db, sourceId, writes.modified),
     ...deleteEntityStatements(db, sourceId, writes.removed),
-    ...insertStatements(db, 'changes', writes.changes),
+    // A change id is a hash of (entity, before, after) with no source in it, so
+    // two sources that see the same filing produce the same id. The row is
+    // already logged; a conflict here used to roll back the whole tick and
+    // wedge the second source forever (edgar-fts-openai, 2026-10-09).
+    ...insertStatements(db, 'changes', writes.changes, { skipExisting: true }),
     ...insertStatements(db, 'alerts', writes.alerts),
   ]
   if (statements.length === 0) return
