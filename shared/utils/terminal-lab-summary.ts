@@ -8,7 +8,7 @@ import { alertLabs } from './terminal-labs'
 import { LAB_DISPLAY } from './terminal-labs'
 import type {
   AlertView,
-  BigFour,
+  LabId,
   ClusterSeries,
   HiringHistoryData,
   HiringHistoryProvider,
@@ -25,13 +25,13 @@ import type {
   SpendProviderView,
 } from './terminal-types'
 
-export const LABS: readonly BigFour[] = ['openai', 'anthropic', 'google', 'xai'] as const
+export const LABS: readonly LabId[] = ['openai', 'anthropic', 'google', 'xai', 'meta'] as const
 
-export function isLab(s: string): s is BigFour {
+export function isLab(s: string): s is LabId {
   return (LABS as readonly string[]).includes(s)
 }
 
-export const labPath = (lab: BigFour) => `/labs/${lab}`
+export const labPath = (lab: LabId) => `/labs/${lab}`
 
 /**
  * The lab pages, in the shape `definePageMeta({ publicPage })` produces for a
@@ -60,7 +60,7 @@ export interface LabInputs {
 }
 
 export interface LabSummary {
-  lab: BigFour
+  lab: LabId
   display: string
   /** The flagship cell of the like-for-like matrix, priced or not. */
   flagship: MatrixCell | null
@@ -80,7 +80,7 @@ export interface LabSummary {
   alerts: AlertView[]
 }
 
-export function summarizeLab(lab: BigFour, input: LabInputs): LabSummary {
+export function summarizeLab(lab: LabId, input: LabInputs): LabSummary {
   const revenue = input.revenue?.providers.find((p) => p.provider === lab) ?? null
   const hiring = input.hiring?.providers.find((p) => p.provider === lab) ?? null
   const hasFeed = hiring !== null && hiring.feed === 'ok' && hiring.total.length > 0

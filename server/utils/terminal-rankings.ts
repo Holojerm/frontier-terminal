@@ -12,7 +12,7 @@
 import { and, desc, eq, like, max, sql } from 'drizzle-orm'
 
 import type {
-  BigFour,
+  LabId,
   DateWindow,
   Prov,
   ProviderId,
@@ -58,6 +58,7 @@ const emptyTokens = (): Record<ProviderId, number> => ({
   anthropic: 0,
   google: 0,
   xai: 0,
+  meta: 0,
   other: 0,
 })
 
@@ -122,7 +123,7 @@ export function summarizeRankings(rows: readonly RankingObservation[]): Rankings
         source_url: newest.source_url,
         fetched_at: newest.fetched_at,
       }))
-    return { provider: provider as BigFour, display: PROVIDER_DISPLAY[provider], models }
+    return { provider: provider as LabId, display: PROVIDER_DISPLAY[provider], models }
   })
 
   const seriesDates = dates.slice(-SERIES_DAYS)

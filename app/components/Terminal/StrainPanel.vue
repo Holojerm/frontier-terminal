@@ -6,8 +6,8 @@
 // history begins: a Statuspage feed is a rolling window, and a prior-30
 // count that starts after the window does is partial, not low.
 //
-// xAI ships as a stated cut (sources.yaml `cut.xai-status`), the way
-// Google hiring does — a 403 is not a zero.
+// xAI and Meta ship as stated cuts (sources.yaml `cut.xai-status`,
+// `cut.meta-status`), the way Google hiring does — no feed is not a zero.
 
 import { absoluteStamp, relativeStamp } from '#shared/utils/terminal-format'
 import type { IncidentProviderView, IncidentsData } from '#shared/utils/terminal-types'

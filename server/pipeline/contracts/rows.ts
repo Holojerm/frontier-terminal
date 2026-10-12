@@ -6,7 +6,7 @@ import { provenanceFields } from './provenance'
 // it column for column, and server/pipeline/store.ts validates every row
 // against it before D1 sees the row.
 
-export const providerEnum = z.enum(['openai', 'anthropic', 'google', 'xai', 'other'])
+export const providerEnum = z.enum(['openai', 'anthropic', 'google', 'xai', 'meta', 'other'])
 // 'ranking' is a time series (one row per UTC day and model), not an event:
 // server/pipeline/judge/pending.ts and queryMovement() both exclude it.
 // 'revenue' is one XBRL fact (a filer, a tag, a period, a filing) — an event

@@ -7,12 +7,12 @@
 
 import { absoluteStamp, money } from '#shared/utils/terminal-format'
 import { LAB_DISPLAY as DISPLAY } from '#shared/utils/terminal-labs'
-import type { BigFour, MatrixCell, PriceMatrix } from '#shared/utils/terminal-types'
+import type { LabId, MatrixCell, PriceMatrix } from '#shared/utils/terminal-types'
 
 const props = defineProps<{
   matrix: PriceMatrix
   /** Which rows to draw; every provider by default. A lab page draws its own alone. */
-  providers?: BigFour[]
+  providers?: LabId[]
   /** Drop the method footnote — the axis page carries it. */
   compact?: boolean
 }>()

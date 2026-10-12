@@ -2,7 +2,7 @@
 // The flagship column of the like-for-like matrix, turned on its side: one
 // cell per lab across the page instead of one row per lab down it. The
 // front page asks one question of pricing — what does each lab's "start
-// here" model cost — and four cells answer it in one line of height.
+// here" model cost — and one cell per lab answers it in one line of height.
 
 import { money } from '#shared/utils/terminal-format'
 import { LAB_DISPLAY } from '#shared/utils/terminal-labs'
@@ -23,7 +23,7 @@ const cells = computed(() =>
 </script>
 
 <template>
-  <dl class="grid grid-cols-2 gap-4 md:grid-cols-4">
+  <dl class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
     <div
       v-for="c in cells"
       :key="c.provider"

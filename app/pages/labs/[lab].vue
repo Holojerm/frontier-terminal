@@ -3,7 +3,7 @@
 // each axis panel filtered to the lab. The panels are the same components
 // the axis pages render, handed a payload narrowed to one provider, so a
 // number here is the same number there — same query, same cache, same
-// provenance. The lab is a route parameter; a name outside the four is a 404.
+// provenance. The lab is a route parameter; a name outside the tracked labs is a 404.
 
 import { sharePct, ppLabel } from '#shared/utils/terminal-format'
 import { isLab, summarizeLab } from '#shared/utils/terminal-lab-summary'
@@ -20,7 +20,7 @@ import type {
 } from '#shared/utils/terminal-types'
 
 // Inert for a dynamic route: the collecting hook skips paths with a
-// parameter, and sitemap.xml / llms.txt append the four lab pages from
+// parameter, and sitemap.xml / llms.txt append the lab pages from
 // shared/utils/terminal-lab-summary.ts. Declared anyway — the seo gate's
 // invariant is per-page.
 definePageMeta({
@@ -48,7 +48,7 @@ const lab = labParam
 // rows in them.
 //
 // EXPLICIT `key` PER LAB, and it is load-bearing. Nuxt derives an automatic key
-// from the call site, not from what a transform closes over — so all four lab
+// from the call site, not from what a transform closes over — so all the lab
 // pages would share one cache entry and a client-side navigation between them
 // would render the first lab's rows under the second lab's heading.
 const [prices, revenue, rankings, spend, hiring, incidents, releases, alerts] = await Promise.all([

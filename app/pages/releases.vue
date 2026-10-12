@@ -13,7 +13,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Releases',
     summary:
-      'Every model SKU first listed on OpenAI, Anthropic, Google or xAI’s pricing pages since watching began, newest first, with the price printed beside it and its source URL.',
+      'Every model SKU first listed on OpenAI, Anthropic, Google, xAI or Meta’s pricing pages since watching began, newest first, with the price printed beside it and its source URL.',
   },
 })
 

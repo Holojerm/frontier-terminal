@@ -5,6 +5,7 @@
 // the fetch each point was read from.
 
 import { absoluteStamp, money } from '#shared/utils/terminal-format'
+import { LAB_DISPLAY } from '#shared/utils/terminal-labs'
 import type { PriceHistoryData, PricePoint } from '#shared/utils/terminal-types'
 
 // A dynamic route is one pattern, not N pages, so the sitemap hook skips it;
@@ -44,13 +45,7 @@ const name = computed(() => {
   return `${h.model_slug}${h.tier ? ` (${h.tier})` : ''}`
 })
 
-const DISPLAY: Record<string, string> = {
-  openai: 'OpenAI',
-  anthropic: 'Anthropic',
-  google: 'Google',
-  xai: 'xAI',
-  other: 'Other',
-}
+const DISPLAY: Record<string, string> = LAB_DISPLAY
 
 // A price series with a source URL on every point is a Dataset, not a page
 // that happens to contain numbers, and "what does <model> cost" is the query

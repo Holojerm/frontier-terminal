@@ -16,7 +16,7 @@ export default defineTask({
   meta: {
     name: 'poll:tripwire',
     description:
-      'Parse the four model catalogs; poll them off-cycle when they differ from the store',
+      'Parse each lab’s model catalog; poll them off-cycle when they differ from the store',
   },
   async run() {
     const config = useRuntimeConfig()

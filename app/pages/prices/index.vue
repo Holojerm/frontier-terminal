@@ -10,7 +10,7 @@ definePageMeta({
     priority: '0.9',
     title: 'Prices',
     summary:
-      'Every API price and catalog row per SKU for OpenAI, Anthropic, Google and xAI, with the change against the previous revision and the URL each was read from.',
+      'Every API price and catalog row per SKU for OpenAI, Anthropic, Google, xAI and Meta, with the change against the previous revision and the URL each was read from.',
   },
 })
 
