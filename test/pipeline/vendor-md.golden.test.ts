@@ -117,11 +117,13 @@ describe('vendor-md + sec lane', () => {
     const priced = parseAnthropicPricingMd(fixtureText('fixtures/pricing/anthropic-pricing.md'))
     expect(VendorMdPricingOutput.safeParse(priced).success).toBe(true)
 
-    // 17 models in "Model pricing" (tier null) + the same 17 in "Batch
-    // processing" (tier "batch").
-    expect(priced.rows.length).toBe(34)
-    expect(priced.rows.filter((r) => r.tier === null).length).toBe(17)
-    expect(priced.rows.filter((r) => r.tier === 'batch').length).toBe(17)
+    // 20 models in "Model pricing" (tier null) + the same 20 in "Batch
+    // processing" (tier "batch"), and Haiku 5.5's long-prompt band in each.
+    expect(priced.rows.length).toBe(42)
+    expect(priced.rows.filter((r) => r.tier === null).length).toBe(20)
+    expect(priced.rows.filter((r) => r.tier === 'batch').length).toBe(20)
+    expect(priced.rows.filter((r) => r.tier === 'long_context').length).toBe(1)
+    expect(priced.rows.filter((r) => r.tier === 'batch_long_context').length).toBe(1)
 
     const base = (slug: string) =>
       priced.rows.find((r) => r.model_slug === slug && r.tier === null)!
@@ -135,7 +137,7 @@ describe('vendor-md + sec lane', () => {
     expect(base('claude-haiku-3-5').cached_input_per_mtok).toBe(0.08)
     expect(base('claude-haiku-3-5').output_per_mtok).toBe(4)
     // Printed caveat travels with the row; cache-write prices ride verbatim.
-    expect(base('claude-haiku-3-5').notes).toContain('retired, except on Bedrock and Google Cloud')
+    expect(base('claude-haiku-3-5').notes).toContain('retired, except on Google Cloud')
     expect(base('claude-fable-5').notes).toBe(
       '5m cache writes $12.50 / MTok; 1h cache writes $20 / MTok',
     )
@@ -161,15 +163,14 @@ describe('vendor-md + sec lane', () => {
     expect(VendorMdPricingOutput.safeParse(catalog).success).toBe(true)
     expect(catalog.rows.map((r) => r.model_slug)).toEqual([
       'claude-fable-5-1',
-      'claude-haiku-4-5',
-      'claude-opus-5',
-      'claude-sonnet-5',
+      'claude-haiku-5-5',
+      'claude-opus-5-5',
+      'claude-sonnet-5-5',
     ])
     const cat = (slug: string) => catalog.rows.find((r) => r.model_slug === slug)!
     expect(cat('claude-fable-5-1').context_window).toBe('1M tokens')
-    expect(cat('claude-haiku-4-5').context_window).toBe('200K tokens')
-    expect(cat('claude-haiku-4-5').input_per_mtok).toBe(1)
-    expect(cat('claude-haiku-4-5').output_per_mtok).toBe(5)
+    expect(cat('claude-opus-5-5').input_per_mtok).toBe(4)
+    expect(cat('claude-opus-5-5').output_per_mtok).toBe(20)
     expect(cat('claude-fable-5-1').source_url).toBe(
       'https://platform.claude.com/docs/en/models/overview.md',
     )
