@@ -31,24 +31,26 @@ const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const PAGE_URL = 'https://platform.claude.com/docs/en/models/overview.md'
 
+// The committed page is the Opus 5.5 generation; the launch rewritten onto it
+// is a hypothetical Opus 6.
 const OLD_FLAGSHIP =
-  "If you're unsure which model to use, start with Claude Opus 5 for most workloads."
-const NEW_FLAGSHIP =
   "If you're unsure which model to use, start with Claude Opus 5.5 for most workloads."
+const NEW_FLAGSHIP =
+  "If you're unsure which model to use, start with Claude Opus 6 for most workloads."
 const OLD_BALANCED = 'The best combination of speed and intelligence'
 const NEW_BALANCED = 'Our best balance of speed and intelligence'
 
 const OLD_LINE =
-  'start with [Claude Opus 5](https://platform.claude.com/docs/en/models/opus-5/overview) for most'
-const NEW_LINE =
   'start with [Claude Opus 5.5](https://platform.claude.com/docs/en/models/opus-5-5/overview) for most'
+const NEW_LINE =
+  'start with [Claude Opus 6](https://platform.claude.com/docs/en/models/opus-6/overview) for most'
 
 const FIXTURE = fixtureText('fixtures/pricing/anthropic-models-overview.md')
 
-/** The committed page as a launch rewrites it: Opus 5 becomes Opus 5.5, Sonnet's line changes. */
+/** The committed page as a launch rewrites it: Opus 5.5 becomes Opus 6, Sonnet's line changes. */
 function launched(page: string): string {
   let text = page.replace(OLD_LINE, NEW_LINE)
-  text = text.replaceAll('`claude-opus-5`', '`claude-opus-5-5`')
+  text = text.replaceAll('`claude-opus-5-5`', '`claude-opus-6`')
   return text.replace(OLD_BALANCED, NEW_BALANCED)
 }
 const LAUNCHED = launched(FIXTURE)
@@ -82,7 +84,7 @@ function poll(text: string) {
 const proposal = (over: Record<string, unknown> = {}) => ({
   provider: 'anthropic',
   class: 'flagship',
-  model_slug: 'claude-opus-5-5',
+  model_slug: 'claude-opus-6',
   basis: NEW_FLAGSHIP,
   basis_source_id: 'anthropic-models-md',
   ...over,
@@ -122,9 +124,9 @@ beforeEach(async () => {
 describe('naming', () => {
   it('a sentence names a slug only when no version number continues it', () => {
     const terra = 'Choose GPT-5.6 Terra to balance intelligence and cost'
-    expect(basisNamesModel(NEW_FLAGSHIP, 'claude-opus-5-5')).toBe(true)
-    expect(basisNamesModel(NEW_FLAGSHIP, 'claude-opus-5')).toBe(false)
-    expect(basisNamesModel(OLD_FLAGSHIP, 'claude-opus-5')).toBe(true)
+    expect(basisNamesModel(OLD_FLAGSHIP, 'claude-opus-5-5')).toBe(true)
+    expect(basisNamesModel(OLD_FLAGSHIP, 'claude-opus-5')).toBe(false)
+    expect(basisNamesModel(NEW_FLAGSHIP, 'claude-opus-6')).toBe(true)
     expect(basisNamesModel(terra, 'gpt-5.6-terra')).toBe(true)
     expect(basisNamesModel('For everything else, use Grok 4.7.', 'grok-4')).toBe(false)
   })
@@ -142,7 +144,7 @@ describe('overlayClassMap', () => {
   const decision = (over: Record<string, string>) => ({
     provider: 'anthropic',
     class: 'flagship',
-    model_slug: 'claude-opus-5-5',
+    model_slug: 'claude-opus-6',
     basis: NEW_FLAGSHIP,
     basis_source_id: 'anthropic-models-md',
     decided_at: '2026-09-22T05:00:00.000Z',
@@ -156,7 +158,7 @@ describe('overlayClassMap', () => {
 
   it('puts the newest decision per cell in the seed entry’s place and fills a gap', () => {
     const map = overlayClassMap(MODEL_CLASS_MAP, [
-      decision({ model_slug: 'claude-opus-5-1', decided_at: '2026-09-22T04:30:00.000Z' }),
+      decision({ model_slug: 'claude-opus-5-5', decided_at: '2026-09-22T04:30:00.000Z' }),
       decision({}),
       decision({ provider: 'xai', class: 'economy', model_slug: 'grok-4.3', basis: 'x' }),
     ])
@@ -165,7 +167,7 @@ describe('overlayClassMap', () => {
     expect(flagship).toEqual({
       provider: 'anthropic',
       class: 'flagship',
-      model_slug: 'claude-opus-5-5',
+      model_slug: 'claude-opus-6',
       basis: NEW_FLAGSHIP,
       basis_source_id: 'anthropic-models-md',
       verified_at: '2026-09-22T04:00:02.000Z',
@@ -194,8 +196,8 @@ describe('the review the judge is handed', () => {
     const review = await classMapReview(db, readRaw, NOW)
     const cells = review.cells.map((c) => `${c.provider}:${c.class}:${c.current.model_slug}`)
     expect(cells).toEqual([
-      'anthropic:balanced:claude-sonnet-5',
-      'anthropic:flagship:claude-opus-5',
+      'anthropic:balanced:claude-sonnet-5-5',
+      'anthropic:flagship:claude-opus-5-5',
     ])
     expect(review.pages.map((p) => p.source_id)).toEqual(['anthropic-models-md'])
     // Links flattened, so the judge copies what the Worker will match against.
@@ -217,7 +219,7 @@ describe('a judge re-mapping', () => {
   })
 
   it('is accepted when the sentence is on the page and names the model, and the matrix follows', async () => {
-    const balanced = { class: 'balanced', model_slug: 'claude-sonnet-5', basis: NEW_BALANCED }
+    const balanced = { class: 'balanced', model_slug: 'claude-sonnet-5-5', basis: NEW_BALANCED }
     const report = await submit([proposal(), proposal(balanced)])
     expect(report.gate_rejection).toBeNull()
     expect(report.class_map).toEqual({ accepted: 2, rejected: [] })
@@ -228,7 +230,7 @@ describe('a judge re-mapping', () => {
       .where(eq(schema.classMapDecisions.class, 'flagship'))
     expect(decision).toMatchObject({
       provider: 'anthropic',
-      model_slug: 'claude-opus-5-5',
+      model_slug: 'claude-opus-6',
       basis: NEW_FLAGSHIP,
       decided_by: 'judge',
       decided_at: NOW.toISOString(),
@@ -239,13 +241,13 @@ describe('a judge re-mapping', () => {
     // The map in effect, the review, and the matrix all move with it.
     const map = await effectiveClassMap(db)
     const flagship = map.find((e) => e.provider === 'anthropic' && e.class === 'flagship')
-    expect(flagship?.model_slug).toBe('claude-opus-5-5')
+    expect(flagship?.model_slug).toBe('claude-opus-6')
     expect((await classMapReview(db, readRaw, NOW)).cells).toEqual([])
 
     const ctx = queryContext(sourcesYaml, await terminalStamp(db), () => NOW)
     const { matrix } = await queryPrices(db, ctx)
     const cell = matrix.cells.find((c) => c.provider === 'anthropic' && c.class === 'flagship')
-    expect(cell?.row?.model_slug).toBe('claude-opus-5-5')
+    expect(cell?.row?.model_slug).toBe('claude-opus-6')
     expect(cell?.basis).toBe(NEW_FLAGSHIP)
     expect(cell?.basis_current).toBe(true)
     expect(cell?.basis_note).toBeNull()
@@ -254,30 +256,30 @@ describe('a judge re-mapping', () => {
     const prov = { source_url: PAGE_URL, fetched_at: NOW.toISOString() }
     const rows = recommendationRows('anthropic-models-md', LAUNCHED, prov, map)
     const check = rows.find((r) => r.class === 'flagship')
-    expect(check).toMatchObject({ model_slug: 'claude-opus-5-5', present: true })
+    expect(check).toMatchObject({ model_slug: 'claude-opus-6', present: true })
   })
 
   it('accepts a model’s own description when its row also carries a "From" price note', async () => {
     // 2026-10-09: Haiku 5.5 replaced Haiku 4.5 with a "From" price, the parser
     // appended a note to the row's description, and every re-mapping onto the
-    // description was rejected as not the model's own.
-    const HAIKU =
+    // description was rejected as not the model's own. Replayed here as a
+    // hypothetical Haiku 6 that keeps the "From" price.
+    const HAIKU_5_5 =
       'For high-volume, latency-sensitive tasks such as classification, extraction, and routing'
-    const page = LAUNCHED.replace('The fastest model with near-frontier intelligence', HAIKU)
-      .replace(
-        '$1 / input MTok, $5 / output MTok',
-        'From $0.10 / input MTok, From $0.50 / output MTok',
-      )
-      .replaceAll('`claude-haiku-4-5`', '`claude-haiku-5-5`')
+    const HAIKU_6 = 'For high-volume, latency-sensitive tasks at the lowest cost per token'
+    const page = LAUNCHED.replace(HAIKU_5_5, HAIKU_6).replaceAll(
+      '`claude-haiku-5-5`',
+      '`claude-haiku-6`',
+    )
     await poll(page)
     const [row] = await db
       .select({ payload: schema.entities.payload })
       .from(schema.entities)
-      .where(eq(schema.entities.entity_key, 'model:anthropic:claude-haiku-5-5'))
+      .where(eq(schema.entities.entity_key, 'model:anthropic:claude-haiku-6'))
     expect(JSON.parse(row!.payload).notes).toContain('"From" price')
 
     const report = await submit([
-      proposal({ class: 'economy', model_slug: 'claude-haiku-5-5', basis: HAIKU }),
+      proposal({ class: 'economy', model_slug: 'claude-haiku-6', basis: HAIKU_6 }),
     ])
     expect(report.class_map).toEqual({ accepted: 1, rejected: [] })
   })
@@ -286,9 +288,9 @@ describe('a judge re-mapping', () => {
     const report = await submit([
       proposal({ provider: 'xai', model_slug: 'grok-4.7', basis_source_id: 'xai-models-md' }),
       proposal({ basis_source_id: 'anthropic-pricing-md' }),
-      proposal({ basis: 'Start with Claude Opus 5.5 for most workloads.' }),
+      proposal({ basis: 'Start with Claude Opus 6 for most workloads.' }),
       proposal({ model_slug: 'claude-opus-9' }),
-      proposal({ model_slug: 'claude-sonnet-5' }),
+      proposal({ model_slug: 'claude-sonnet-5-5' }),
     ])
     expect(report.class_map.accepted).toBe(0)
     expect(report.class_map.rejected.map((r) => r.reason)).toEqual([
@@ -303,8 +305,8 @@ describe('a judge re-mapping', () => {
   })
 
   it('an old slug is never re-attached to the new sentence', async () => {
-    // claude-opus-5 left the table with the rewrite, so it is not a listed model.
-    const report = await submit([proposal({ model_slug: 'claude-opus-5' })])
+    // claude-opus-5-5 left the table with the rewrite, so it is not a listed model.
+    const report = await submit([proposal({ model_slug: 'claude-opus-5-5' })])
     expect(report.class_map.rejected.map((r) => r.reason)).toEqual(['unknown-model'])
   })
 

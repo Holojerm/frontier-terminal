@@ -82,10 +82,12 @@ export const CLASS_MAP_SOURCES: Readonly<Partial<Record<LabId, string>>> = {
 // vendors had rewritten their recommendation — GPT-6 Astra, Grok 4.7, and a
 // new Opus 5 / Fable 5.1 sentence — while the matrix kept showing the old
 // slugs). The rule stays "the vendor's start-here model": Anthropic's page
-// now names Opus 5 as the start-here and Fable 5.1 as the escalation for
-// work that still falls short on Opus 5, so Opus 5 remains the flagship
-// cell and Fable 5.1 is in the full catalog. When a check flips
-// `basis_current` off, re-transcribe here and refresh the fixture.
+// names Opus as the start-here and Fable 5.1 as the escalation for work
+// that still falls short on it, so Opus is the flagship cell and Fable 5.1
+// is in the full catalog. Anthropic re-transcribed 2026-10-12: the 5.5
+// generation replaced Opus 5, Sonnet 5 and Haiku 4.5 in the comparison
+// table, and Haiku's old "fastest model" description is gone. When a check
+// flips `basis_current` off, re-transcribe here and refresh the fixture.
 export const MODEL_CLASS_MAP: ClassEntry[] = [
   {
     provider: 'openai',
@@ -112,22 +114,23 @@ export const MODEL_CLASS_MAP: ClassEntry[] = [
   {
     provider: 'anthropic',
     class: 'flagship',
-    model_slug: 'claude-opus-5',
-    basis: "If you're unsure which model to use, start with Claude Opus 5 for most workloads.",
+    model_slug: 'claude-opus-5-5',
+    basis: "If you're unsure which model to use, start with Claude Opus 5.5 for most workloads.",
     basis_source_id: 'anthropic-models-md',
   },
   {
     provider: 'anthropic',
     class: 'balanced',
-    model_slug: 'claude-sonnet-5',
+    model_slug: 'claude-sonnet-5-5',
     basis: 'The best combination of speed and intelligence',
     basis_source_id: 'anthropic-models-md',
   },
   {
     provider: 'anthropic',
     class: 'economy',
-    model_slug: 'claude-haiku-4-5',
-    basis: 'The fastest model with near-frontier intelligence',
+    model_slug: 'claude-haiku-5-5',
+    basis:
+      'For high-volume, latency-sensitive tasks such as classification, extraction, and routing',
     basis_source_id: 'anthropic-models-md',
   },
   {
