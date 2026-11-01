@@ -110,6 +110,7 @@ beforeEach(async () => {
     schema.entities,
     schema.snapshots,
     schema.opsEvents,
+    schema.classMapDecisions,
   ]) {
     await db.delete(table)
   }
@@ -368,6 +369,51 @@ describe('second run', () => {
     await run('survey', ['xai-models-md'], fixtureFetcher({ 'xai-models-md': rewritten }))
     expect(await rows.changes()).toHaveLength(1)
     expect(await rows.ops()).toHaveLength(1)
+  })
+
+  it('class-map drift: a judge re-map re-runs the check on an unchanged page', async () => {
+    const md = fixtureText('fixtures/pricing/xai-models.md')
+    const rewritten = md.replace(
+      'use Grok 4.7. It is the most capable model',
+      'use Grok 4.8. It is the most capable model',
+    )
+    await run('survey', ['xai-models-md'])
+    await run('survey', ['xai-models-md'], fixtureFetcher({ 'xai-models-md': rewritten }))
+    const flagship = async () =>
+      JSON.parse(
+        (await rows.entities()).find((e) => e.entity_key === 'recommendation:xai:flagship')!
+          .payload,
+      )
+    expect(await flagship()).toMatchObject({ model_slug: 'grok-4.7', present: false })
+
+    // The judge re-maps the cell from the edited page; the page itself does not change again.
+    await db.insert(schema.classMapDecisions).values({
+      id: 'xai:flagship:test',
+      provider: 'xai',
+      class: 'flagship',
+      model_slug: 'grok-4.8',
+      basis: 'use Grok 4.8. It is the most capable model',
+      basis_source_id: 'xai-models-md',
+      decided_at: new Date(tick).toISOString(),
+      decided_by: 'judge',
+      source_url: urlOf('xai-models-md'),
+      fetched_at: new Date(tick).toISOString(),
+    })
+    const report = await run(
+      'survey',
+      ['xai-models-md'],
+      fixtureFetcher({ 'xai-models-md': rewritten }),
+    )
+    expect(report.sources[0]).toMatchObject({ status: 'ok', modified: 1 })
+    expect(await flagship()).toMatchObject({ model_slug: 'grok-4.8', present: true })
+
+    // Checked against the map in effect, the next identical page is quiet again.
+    const again = await run(
+      'survey',
+      ['xai-models-md'],
+      fixtureFetcher({ 'xai-models-md': rewritten }),
+    )
+    expect(again.sources[0]!.status).toBe('unchanged')
   })
 
   it('re-parses a Greenhouse board when only its /departments join changed', async () => {
