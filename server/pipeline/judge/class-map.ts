@@ -9,7 +9,7 @@ import { recordOpsEvent } from '../../utils/ops'
 import { CLASS_MAP_SOURCES, type ClassEntry } from '../../utils/terminal-classes'
 import { effectiveClassMap } from '../class-map'
 import type { SourceRunRow } from '../contracts'
-import { flattenMdLinks } from '../recommendations'
+import { basisOnPage, flattenMdLinks } from '../recommendations'
 import type { PipelineDb } from '../store'
 
 // The judge's second job: re-mapping a like-for-like matrix cell whose vendor
@@ -282,7 +282,7 @@ export async function applyClassMappings(
       reject('no-page', `no stored snapshot of ${expected}`)
       continue
     }
-    if (!page.text.includes(mapping.basis)) {
+    if (!basisOnPage(page.text, mapping.basis)) {
       reject('basis-not-on-page', `sentence not found verbatim on ${expected}`)
       continue
     }

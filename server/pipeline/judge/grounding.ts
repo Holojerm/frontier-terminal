@@ -10,7 +10,8 @@ import type { JudgeAlert } from './contract'
 //   2. every number printed in headline+explanation appears in the cited
 //      rows' before_json/after_json/entity_key ("$" and thousands-commas
 //      stripped, numeric value compared — "$7.50" grounds 7.5; a derived
-//      figure like "-33%" does not),
+//      figure like "-33%" does not), or is the dotted version a cited slug
+//      spells with a dash ("Opus 5.5" grounds against claude-opus-5-5),
 //   3. every slug-like token carrying a digit ("grok-4.6", "gemini-2.5-pro",
 //      "s-1") and every "double-quoted span" (how the prompt tells the model
 //      to cite job titles) appears verbatim, case-insensitively, in them —
@@ -74,6 +75,23 @@ function spanIsGrounded(span: string, corpusLower: string): boolean {
   return trimmed.length > 0 && corpusLower.includes(trimmed)
 }
 
+/**
+ * Versions a slug spells with a dash, read as the dotted number a headline
+ * prints: claude-opus-5-5 → 5.5. Records carry only the slug, so without this
+ * the Opus 5.5 launch alert — a `critical` flagship price cut — was rejected
+ * as an invented number (issue #54). Only slugs count, so a date's
+ * "2026-10" never grounds 2026.1.
+ */
+export function slugVersions(text: string): Set<string> {
+  const versions = new Set<string>()
+  for (const slug of slugLikeTokens(text)) {
+    for (const m of slug.matchAll(/(?<![\d.])(\d+)-(\d+)(?![\d.])/g)) {
+      versions.add(String(Number(`${m[1]}.${m[2]}`)))
+    }
+  }
+  return versions
+}
+
 /** The only text an alert may draw values from. */
 export function corpusOf(changes: readonly ChangeRow[]): string {
   return changes
@@ -91,7 +109,7 @@ export function groundingFailure(
   corpus: string,
 ): { reason: 'ungrounded-number' | 'ungrounded-term'; detail: string } | null {
   const corpusLower = corpus.toLowerCase()
-  const corpusNumbers = numericTokens(corpus)
+  const corpusNumbers = new Set([...numericTokens(corpus), ...slugVersions(corpus)])
   const badNumbers = [...numericTokens(text)].filter((n) => !corpusNumbers.has(n))
   if (badNumbers.length > 0) {
     return {

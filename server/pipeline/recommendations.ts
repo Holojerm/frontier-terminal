@@ -13,11 +13,26 @@ import { RecommendationRow, type Provenance } from './contracts'
 // Presence is a literal substring match after flattening markdown links to
 // their text, the same rule the golden test applies to the fixture. Nothing
 // smarter: a fuzzy match would report a sentence the vendor changed as still
-// present, which is the exact failure this exists to catch.
+// present, which is the exact failure this exists to catch. The one exception
+// is quote typography: Anthropic's page swapped "you're" for "you’re" on
+// 2026-10-27 and the flagship cell read as re-pointed (issue #83). A curly
+// apostrophe is a rendering choice, not a changed recommendation.
 
 /** `[text](url)` → `text`; nothing else is touched. */
 export function flattenMdLinks(md: string): string {
   return md.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
+}
+
+/** Typographic single and double quotes → their ASCII forms. */
+export function foldQuotes(text: string): string {
+  return text
+    .replace(/[\u2018\u2019\u201A\u201B\u2032]/g, "'")
+    .replace(/[\u201C\u201D\u201E\u201F\u2033]/g, '"')
+}
+
+/** Whether the basis sentence is on a link-flattened page, quote typography aside. */
+export function basisOnPage(flatPage: string, basis: string): boolean {
+  return foldQuotes(flatPage).includes(foldQuotes(basis))
 }
 
 /** One row per class-map entry resting on this source; empty for a source none cite.
@@ -30,14 +45,14 @@ export function recommendationRows(
 ): RecommendationRow[] {
   const entries = classMap.filter((e) => e.basis_source_id === sourceId)
   if (entries.length === 0) return []
-  const flat = flattenMdLinks(text)
+  const flat = foldQuotes(flattenMdLinks(text))
   return entries.map((e) =>
     RecommendationRow.parse({
       provider: e.provider,
       class: e.class,
       model_slug: e.model_slug,
       basis: e.basis,
-      present: flat.includes(e.basis),
+      present: flat.includes(foldQuotes(e.basis)),
       ...prov,
     }),
   )
