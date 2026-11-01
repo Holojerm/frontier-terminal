@@ -13,7 +13,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Revenue',
     summary:
-      'Disclosed revenue per frontier lab from SEC XBRL company facts — the parent’s consolidated figure where a public parent files, and an explicit “no audited disclosure” where none does. Press run-rates are deliberately not shown.',
+      'Disclosed revenue per frontier lab from SEC XBRL filings — the parent’s consolidated figure or the one segment it reports where a public parent files, and an explicit “no audited disclosure” where none does. Press run-rates are deliberately not shown.',
   },
 })
 
@@ -32,8 +32,8 @@ useSeo({
     <header class="space-y-2">
       <h1 class="text-4xl text-highlighted">Revenue</h1>
       <p class="max-w-2xl text-muted">
-        Revenue read from EDGAR’s XBRL company facts, each value linked to its filing. Press
-        run-rates are not shown.
+        Revenue read from EDGAR’s XBRL data, each value linked to its filing. Press run-rates are
+        not shown.
       </p>
     </header>
 
@@ -74,7 +74,10 @@ useSeo({
             company-facts feeds are derived and polled from the next tick. Its reported revenue then
             appears above as an <em>issuer</em> filing, with the resolving filing linked. A public
             parent that consolidates a lab is tagged as a <em>parent</em> in the registry instead,
-            and its series is labelled as the parent’s wherever it is shown.
+            and its series is labelled as the parent’s wherever it is shown. Where the parent
+            reports the lab’s business inside one segment — Google inside Alphabet’s Google Cloud —
+            the series is that segment’s, read off each 10-Q and 10-K’s own XBRL on the six-hourly
+            survey, and labelled as the segment, not the lab.
           </p>
         </div>
       </TerminalPanel>

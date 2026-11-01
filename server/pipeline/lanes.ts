@@ -40,6 +40,7 @@ import { FTS_SOURCES, parseEdgarFts } from './parsers/sec/edgar-fts'
 import { resolveFilers, type PendingFilers } from './parsers/sec/pending-filers'
 import { SUBMISSIONS_SOURCES, parseEdgarSubmissions } from './parsers/sec/edgar-submissions'
 import { revenueProviderFor, type RevenueFilers } from './parsers/sec/revenue-filers'
+import { parseXbrlSegment, segmentTarget } from './parsers/sec/xbrl-segment'
 import { isPeriodicForm, isS1FloorForm } from './parsers/sec/s1-floor'
 import { parseAnthropicStatus } from './parsers/status/anthropic-status'
 import { parseGoogleCloudStatus } from './parsers/status/google-cloud-status'
@@ -172,6 +173,26 @@ function companyfactsLanes(): Record<string, Lane> {
   return lanes
 }
 
+// A derived segment instance: one 10-Q/10-K's revenue on the filer's tagged
+// segment member. A filing is never un-filed, and the prior-year comparative
+// a 10-K drops is still what the earlier filing reported: append-only.
+const XBRL_SEGMENT_LANE: Lane = {
+  sides: [],
+  removals: 'append-only',
+  parse: (text, { prov, snapshotId, whitelist, revenueFilers, derivedKey }) => {
+    const target = segmentTarget(derivedKey ?? '', revenueFilers, whitelist)
+    const { rows, form, period_end } = parseXbrlSegment(text, target, prov)
+    return {
+      entities: normalizeRevenues(
+        rows,
+        snapshotId,
+        revenueProviderFor(target.cik, revenueFilers, whitelist),
+      ),
+      note: `${form} for ${period_end ?? 'an unstated period'}: ${rows.length} facts on ${target.segment}`,
+    }
+  },
+}
+
 // A derived OpenAI model page: one SKU row that must be the slug it was
 // derived for (the parser checks). The page IS the SKU's current state.
 const OPENAI_MODEL_PAGE_LANE: Lane = {
@@ -199,6 +220,7 @@ const MISALIGNMENT_REPORT_PAGE_LANE: Lane = {
 const DERIVED_LANES: readonly { prefix: string; lane: Lane }[] = [
   { prefix: 'edgar-submissions-', lane: SUBMISSIONS_LANE },
   { prefix: 'edgar-companyfacts-', lane: COMPANYFACTS_LANE },
+  { prefix: 'xbrl-segment-', lane: XBRL_SEGMENT_LANE },
   { prefix: 'openai-model-md-', lane: OPENAI_MODEL_PAGE_LANE },
   { prefix: 'openai-misalignment-report-', lane: MISALIGNMENT_REPORT_PAGE_LANE },
 ]

@@ -449,9 +449,9 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
     {
       title: 'Disclosed revenue (primary source only)',
       description:
-        'Revenue each lab, or the public parent that consolidates it, has reported to the SEC, read from EDGAR’s XBRL company facts. ' +
+        'Revenue each lab, or the public parent that consolidates it, has reported to the SEC, read from EDGAR’s XBRL data. ' +
         'disclosure is none (no audited disclosure on file — nothing is shown, and press run-rates are deliberately absent), parent ' +
-        '(a public parent’s consolidated figure, labelled as the parent’s: today xAI via SpaceX/SPCX, whose XBRL carries no xAI segment), ' +
+        '(a public parent’s figure, labelled as the parent’s: xAI via SpaceX/SPCX consolidated, whose XBRL carries no xAI segment; Google via Alphabet/GOOGL’s Google Cloud segment, filer.segment set, which is the segment’s revenue, not Gemini’s), ' +
         'issuer (the lab files for itself — tagged in sources.yaml, or resolved at poll time from its own S-1 by the pending_filers patterns, ' +
         'in which case filer.tagged_by is resolved and filer.resolved_from names the filing) or no_rows (tagged, nothing parsed yet). periods are the filer’s own USD values per ' +
         '(start, end) from the newest filing that reported them, each with the tag, form, accession and a link to the filing index; ' +

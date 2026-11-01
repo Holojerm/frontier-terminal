@@ -279,6 +279,12 @@ const DERIVED_LABELS: readonly {
     role: 'sec',
   },
   {
+    prefix: 'xbrl-segment-',
+    label: (k) =>
+      `EDGAR XBRL segment facts (${k.split('-')[0]!.toUpperCase()} filing ${k.slice(-20)})`,
+    role: 'sec',
+  },
+  {
     prefix: 'edgar-companyfacts-',
     label: (k) => `EDGAR XBRL company facts (${k}, resolved filer)`,
     role: 'sec',

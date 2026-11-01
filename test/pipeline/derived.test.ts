@@ -106,18 +106,20 @@ describe('pending_filers', () => {
 })
 
 describe('derived_sources', () => {
-  it('reads the four templates with their caveat', () => {
+  it('reads the five templates with their caveat', () => {
     const templates = parseDerivedSourcesBlock(sourcesYaml)
     expect(templates.map((t) => [t.id, t.from])).toEqual([
       ['edgar-submissions', 'filer'],
       ['edgar-companyfacts', 'filer'],
+      ['xbrl-segment', 'segment-filing'],
       ['openai-model-md', 'openai-priced-model'],
       ['openai-misalignment-report', 'openai-misalignment-report'],
     ])
-    expect(templates[3]!.url).toBe('https://alignment.openai.com/misalignment-reports/{slug}/')
-    expect(templates[3]!.caveat).toContain('Discovery / Discovered / Discovery date')
-    expect(templates[2]!.url).toBe('https://developers.openai.com/api/docs/models/{slug}.md')
-    expect(templates[2]!.caveat).toContain('must equal the slug')
+    expect(templates[4]!.url).toBe('https://alignment.openai.com/misalignment-reports/{slug}/')
+    expect(templates[4]!.caveat).toContain('Discovery / Discovered / Discovery date')
+    expect(templates[3]!.url).toBe('https://developers.openai.com/api/docs/models/{slug}.md')
+    expect(templates[3]!.caveat).toContain('must equal the slug')
+    expect(templates[2]!.caveat).toContain('not the lab')
     expect(templates[0]!.caveat).toBeNull()
   })
 
