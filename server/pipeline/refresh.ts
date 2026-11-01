@@ -223,7 +223,13 @@ async function parseAndStore(
   }
   // A department renamed with no job touched still changes the joined rows.
   const sideChanged = lane.sides.some((id) => !byId.get(id)!.body!.unchanged)
-  if (body.unchanged && !sideChanged) return quiet('unchanged', null, body.snapshot_id)
+  if (
+    body.unchanged &&
+    !sideChanged &&
+    !(await classMapMoved(deps.db, source.source_id, classMap))
+  ) {
+    return quiet('unchanged', null, body.snapshot_id)
+  }
 
   const parsed = lane.parse(body.text, {
     prov: { source_url: source.url, fetched_at },
@@ -309,6 +315,34 @@ async function parseAndStore(
     modified: modified.length,
     alerts: alerts.length,
   }
+}
+
+/** True when the class map in effect cites this source for a cell its stored
+ * drift check was not run against. The judge re-maps a cell after the vendor
+ * edits the page, so the page is usually unchanged by the next tick; without
+ * this the check would keep testing the old sentence until the vendor edits
+ * the page again, and the cell would read as stale the whole time. */
+async function classMapMoved(
+  db: PipelineDb,
+  sourceId: string,
+  classMap: readonly ClassEntry[],
+): Promise<boolean> {
+  const cited = classMap.filter((e) => e.basis_source_id === sourceId)
+  if (cited.length === 0) return false
+  const checked = new Map<string, string>()
+  for (const row of await currentEntities(db, sourceId)) {
+    if (row.entity_type !== 'recommendation') continue
+    const p = JSON.parse(row.payload) as {
+      provider?: string
+      class?: string
+      model_slug?: string
+      basis?: string
+    }
+    checked.set(`${p.provider}:${p.class}`, `${p.model_slug}\n${p.basis}`)
+  }
+  return cited.some(
+    (e) => checked.get(`${e.provider}:${e.class}`) !== `${e.model_slug}\n${e.basis}`,
+  )
 }
 
 /** One line per 'recommendation' change whose after-state lost the sentence. */

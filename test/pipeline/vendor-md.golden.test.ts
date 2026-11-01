@@ -37,23 +37,25 @@ describe('vendor-md + sec lane', () => {
   test('openai: pricing.md yields one row per model, service tier and context band, promo bounds kept as notes', () => {
     const out = parseOpenAiPricingMd(fixtureText('fixtures/pricing/openai-pricing.md'))
     expect(VendorMdPricingOutput.safeParse(out).success).toBe(true)
-    expect(out.rows).toHaveLength(134)
+    expect(out.rows).toHaveLength(163)
     expect(out.rows.every((r) => r.provider === 'openai' && r.context_window === null)).toBe(true)
     const tiers = new Map<string | null, number>()
     for (const r of out.rows) tiers.set(r.tier, (tiers.get(r.tier) ?? 0) + 1)
     expect([...tiers.entries()].sort()).toEqual([
       [null, 37],
-      ['batch', 35],
-      ['batch_long_context', 7],
-      ['fast', 19],
-      ['fast_long_context', 4],
-      ['flex', 17],
-      ['flex_long_context', 7],
-      ['long_context', 8],
+      ['batch', 36],
+      ['batch_long_context', 11],
+      ['fast', 23],
+      ['fast_long_context', 8],
+      ['flex', 21],
+      ['flex_long_context', 11],
+      ['long_context', 12],
+      ['ultrafast', 2],
+      ['ultrafast_long_context', 2],
     ])
     const row = (slug: string, tier: string | null) =>
       out.rows.find((r) => r.model_slug === slug && r.tier === tier)!
-    // "| gpt-5.6-sol | $4.00 | $0.40 | $5.00 | $20.00 | $8.00 | $0.80 | $10.00 | $30.00 |"
+    // "| gpt-5.6-sol | $4.00 | $20.00 | $0.40 | $5.00 | $10.00 | $8.00 | $30.00 | $0.80 | ..."
     expect(row('gpt-5.6-sol', null)).toMatchObject({
       input_per_mtok: 4,
       cached_input_per_mtok: 0.4,
@@ -66,7 +68,20 @@ describe('vendor-md + sec lane', () => {
       notes: 'long context',
     })
     expect(row('gpt-5.6-sol', 'batch').input_per_mtok).toBe(2)
+    expect(row('gpt-5.6-sol', 'flex').output_per_mtok).toBe(10)
     expect(row('gpt-5.6-sol', 'fast').output_per_mtok).toBe(40)
+    expect(row('gpt-6.1-sol', 'ultrafast')).toMatchObject({
+      input_per_mtok: 12,
+      output_per_mtok: 60,
+    })
+    // A legacy table prints one band: its rows are the tier's short-context row.
+    // "| gpt-4o-mini | $0.15 | $0.60 | $0.075 |"
+    expect(row('gpt-4o-mini', null)).toMatchObject({
+      input_per_mtok: 0.15,
+      cached_input_per_mtok: 0.075,
+      output_per_mtok: 0.6,
+    })
+    expect(row('gpt-4o-mini', 'batch').cached_input_per_mtok).toBeNull()
     // "| gpt-5.5 (<272K context length) | $5.00 | ..." — the bound is a note, not a window.
     expect(row('gpt-5.5', null)).toMatchObject({
       input_per_mtok: 5,
