@@ -14,11 +14,11 @@
       "path": "fixtures/pricing/openai-pricing.md",
       "source_id": "openai-pricing-md",
       "source_url": "https://developers.openai.com/api/docs/pricing.md",
-      "fetched_at": "2026-09-22T04:10:32Z",
+      "fetched_at": "2026-11-01T20:57:21Z",
       "http_status": 200,
-      "raw_bytes": 23063,
+      "raw_bytes": 23508,
       "trim": "none — committed whole",
-      "note": "Not in the audit: the docs origin began serving pricing as markdown after 2026-08-25 (Last-Modified 2026-09-22T00:54:52Z, ETag present). Four $/MTok tables under '### Standard / Batch / Flex / Fast pricing data' with short- and long-context columns; the grouped tables below them (cyber, audio, image, realtime, tools) are not parsed."
+      "note": "Not in the audit: the docs origin began serving pricing as markdown after 2026-08-25. Recaptured 2026-11-01 (Last-Modified 2026-11-01T04:06:53Z) after the 2026-10-23 redesign: columns reordered with 30m/12h cache-write pairs, Flex moved under '### Batch pricing data' as '#### Flex', an Ultrafast tier added, and legacy models split into a second Input | Output | Cached input table per tier. The grouped tables below them (cyber, audio, image, realtime, tools) are not parsed."
     },
     {
       "path": "fixtures/pricing/openai-model-gpt-5.6-sol.md",
