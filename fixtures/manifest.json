@@ -68,6 +68,16 @@
       "trim": "<script> bodies stripped. All 86 tables, model-name headings above table clusters, and the 24 dual-date promo strings ('$X through December 31, 2026.<br>$Y starting January 1, 2027.') preserved."
     },
     {
+      "path": "fixtures/pricing/google-models.md",
+      "source_id": "google-models-md",
+      "source_url": "https://ai.google.dev/gemini-api/docs/models.md.txt",
+      "fetched_at": "2026-11-01T22:17:25Z",
+      "http_status": 200,
+      "raw_bytes": 20894,
+      "trim": "none — committed whole",
+      "note": "Not in the audit: the docs origin serves the models page as text/markdown at the .md.txt suffix (the .md suffix is a JS shell). The source of Google's class-map sentences; no prices are parsed from it."
+    },
+    {
       "path": "fixtures/pricing/meta-models.md",
       "source_id": "meta-models-md",
       "source_url": "https://dev.meta.ai/docs/models.md",

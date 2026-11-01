@@ -29,6 +29,7 @@ export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
   'meta-models-md': { label: 'Meta models.md', role: 'primary' },
   'meta-pricing-md': { label: 'Meta pricing and rate limits.md', role: 'primary' },
   'google-pricing-html': { label: 'Google Gemini API pricing', role: 'primary' },
+  'google-models-md': { label: 'Google Gemini API models.md', role: 'primary' },
   'openrouter-models': { label: 'OpenRouter /api/v1/models', role: 'cross-check' },
   'openrouter-rankings-daily': { label: 'OpenRouter usage rankings (daily)', role: 'primary' },
   'openai-ashby': { label: 'OpenAI Ashby job board', role: 'primary' },
