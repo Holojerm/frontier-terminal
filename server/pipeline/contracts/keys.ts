@@ -64,15 +64,19 @@ export function filerKey(provider: Provider): string {
 // reported it. The accession number is part of the key because a 10-K
 // restates the prior year's quarters — the same period from two filings is
 // two observations, and a value that differs between them is a restatement
-// the reader should be able to see, not a silent overwrite.
+// the reader should be able to see, not a silent overwrite. A segment fact
+// carries its member, so one filing's segment and consolidated values for a
+// period are two rows; a consolidated key is unchanged.
 export function revenueKey(
   cik: string,
   tag: string,
   accessionNo: string,
   start: string,
   end: string,
+  segment?: string,
 ): string {
-  return `revenue:${cik}:${tag}:${accessionNo}:${start}:${end}`
+  const base = `revenue:${cik}:${tag}:${accessionNo}:${start}:${end}`
+  return segment ? `${base}:${segment}` : base
 }
 
 // Canonical serialization backing contentHash. Exported so consumers

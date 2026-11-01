@@ -89,6 +89,7 @@ export const CONTENT_TYPES: Readonly<Record<string, string>> = {
   json: 'application/json',
   md: 'text/markdown',
   html: 'text/html',
+  xml: 'application/xml',
 }
 
 export function rawKeyFor(source: FetchSource, fetchedAt: string): string {

@@ -9,12 +9,18 @@ import type { CikWhitelist } from './whitelist'
 // `relation` is the one judgment the block records: `issuer` when the lab
 // files for itself, `parent` when a public parent consolidates it — and a
 // parent's series is the parent's, labelled so wherever it is shown.
+// `segment`, optional, narrows a parent to one business segment it reports
+// (an XBRL StatementBusinessSegmentsAxis member): the series is then that
+// segment's, read from each filing's own instance (parsers/sec/xbrl-segment.ts),
+// never the parent's consolidated top line.
 
 export type FilerRelation = 'issuer' | 'parent'
 
 export interface RevenueFiler {
   ticker: string
   relation: FilerRelation
+  /** The segment member the series is read on (goog:GoogleCloudMember); absent for a consolidated series. */
+  segment?: string
 }
 
 /** Provider -> filer, or null where the block says the lab has no disclosure. */
@@ -23,15 +29,17 @@ export type RevenueFilers = ReadonlyMap<Provider, RevenueFiler | null>
 const LAB_PROVIDERS: readonly Provider[] = ['openai', 'anthropic', 'google', 'xai', 'meta']
 
 /** Narrow block reader: `  provider: null` or `  provider:` followed by
- * `    ticker:` and `    relation:` lines. Any indented line that fits
- * neither shape throws — a drift here must not silently untag a filer. */
+ * `    ticker:`, `    relation:` and an optional `    segment:` line. Any
+ * indented line that fits none of these throws — a drift here must not
+ * silently untag a filer. */
 export function parseRevenueFilersBlock(yaml: string): Map<Provider, RevenueFiler | null> {
   const lines = yaml.split('\n')
   const start = lines.findIndex((l) => /^revenue_filers:\s*(#.*)?$/.test(l))
   if (start === -1) throw new Error('sources.yaml has no revenue_filers block')
 
   const map = new Map<Provider, RevenueFiler | null>()
-  let current: { provider: Provider; ticker?: string; relation?: string } | null = null
+  let current: { provider: Provider; ticker?: string; relation?: string; segment?: string } | null =
+    null
   const flush = () => {
     if (!current) return
     if (current.ticker === undefined || current.relation === undefined) {
@@ -40,7 +48,14 @@ export function parseRevenueFilersBlock(yaml: string): Map<Provider, RevenueFile
     if (current.relation !== 'issuer' && current.relation !== 'parent') {
       throw new Error(`revenue_filers ${current.provider}: relation must be issuer or parent`)
     }
-    map.set(current.provider, { ticker: current.ticker, relation: current.relation })
+    if (current.segment !== undefined && current.relation !== 'parent') {
+      throw new Error(`revenue_filers ${current.provider}: a segment is only read off a parent`)
+    }
+    map.set(current.provider, {
+      ticker: current.ticker,
+      relation: current.relation,
+      ...(current.segment !== undefined && { segment: current.segment }),
+    })
     current = null
   }
   for (let i = start + 1; i < lines.length; i++) {
@@ -64,8 +79,13 @@ export function parseRevenueFilersBlock(yaml: string): Map<Provider, RevenueFile
       else current.relation = field[2]!
       continue
     }
+    const segment = line.match(/^ {4}segment:\s*([a-z][a-z0-9-]*:[A-Za-z0-9]+Member)\s*(#.*)?$/)
+    if (segment && current) {
+      current.segment = segment[1]!
+      continue
+    }
     throw new Error(
-      `revenue_filers line ${i + 1} is not \`  provider: null\` or \`    ticker|relation: value\`: ${JSON.stringify(line)}`,
+      `revenue_filers line ${i + 1} is not \`  provider: null\` or \`    ticker|relation|segment: value\`: ${JSON.stringify(line)}`,
     )
   }
   flush()

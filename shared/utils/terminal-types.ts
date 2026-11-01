@@ -540,6 +540,10 @@ export interface RevenueFilerView {
   entity_name: string | null
   /** issuer: the lab files for itself. parent: a public parent consolidates it, and the series is the parent's. */
   relation: 'issuer' | 'parent'
+  /** The parent's segment member the series is read on (goog:GoogleCloudMember); null for a consolidated series. */
+  segment: string | null
+  /** The segment as a reader names it (Google Cloud); null with `segment`. */
+  segment_label: string | null
   /** How the filer was tagged: the audited file, or resolved at poll time from a registration filing (pending_filers). */
   tagged_by: 'sources.yaml' | 'resolved'
   /** For a resolved filer: the filing the CIK was read from. */

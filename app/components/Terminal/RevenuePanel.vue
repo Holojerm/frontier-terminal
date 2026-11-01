@@ -2,8 +2,9 @@
 // Disclosed revenue per lab, primary source only. Three states, each said
 // in words: no audited disclosure (nothing shown, and the press run-rate
 // that would fill the space is named as deliberately absent); a public
-// parent's consolidated figure, labelled as the parent's; the lab's own
-// filing. Every value links to the filing that reported it.
+// parent's figure — consolidated, or one segment it reports — labelled as
+// the parent's; the lab's own filing. Every value links to the filing that
+// reported it.
 
 import { compactUsd, count, periodLabel } from '#shared/utils/terminal-format'
 import type { RevenueData, RevenueProviderView } from '#shared/utils/terminal-types'
@@ -19,11 +20,13 @@ const filerName = (p: RevenueProviderView) =>
   `${p.filer?.entity_name ?? p.filer?.ticker ?? p.display} (${p.filer?.ticker ?? `CIK ${p.filer?.cik}`})`
 
 const relationLine = (p: RevenueProviderView) =>
-  p.filer?.relation === 'parent'
-    ? `${filerName(p)} consolidated — the parent’s top line, not ${p.display}’s`
-    : p.filer
-      ? `${filerName(p)} — the lab’s own filing${p.filer.tagged_by === 'resolved' && p.filer.resolved_from ? `, CIK resolved from its ${p.filer.resolved_from.form} of ${p.filer.resolved_from.file_date}` : ''}`
-      : ''
+  p.filer?.relation === 'parent' && p.filer.segment_label
+    ? `${filerName(p)}, ${p.filer.segment_label} segment — the parent’s segment, not ${p.display}’s own revenue`
+    : p.filer?.relation === 'parent'
+      ? `${filerName(p)} consolidated — the parent’s top line, not ${p.display}’s`
+      : p.filer
+        ? `${filerName(p)} — the lab’s own filing${p.filer.tagged_by === 'resolved' && p.filer.resolved_from ? `, CIK resolved from its ${p.filer.resolved_from.form} of ${p.filer.resolved_from.file_date}` : ''}`
+        : ''
 </script>
 
 <template>
@@ -44,7 +47,13 @@ const relationLine = (p: RevenueProviderView) =>
             size="sm"
             :icon="p.disclosure === 'issuer' ? 'i-lucide-file-check' : 'i-lucide-git-branch'"
           >
-            {{ p.disclosure === 'issuer' ? 'issuer filing' : 'parent filing' }}
+            {{
+              p.disclosure === 'issuer'
+                ? 'issuer filing'
+                : p.filer?.segment_label
+                  ? 'parent segment'
+                  : 'parent filing'
+            }}
           </UBadge>
           <UBadge v-else color="neutral" variant="subtle" size="sm" icon="i-lucide-eye-off">
             no audited disclosure
@@ -62,7 +71,7 @@ const relationLine = (p: RevenueProviderView) =>
         <TerminalEmptyState
           v-else-if="p.disclosure === 'no_rows'"
           title="Filer tagged, nothing parsed yet."
-          body="Its XBRL facts land on the first company-facts poll."
+          body="Its XBRL facts land on the next EDGAR poll that reads them."
         />
 
         <template v-else>

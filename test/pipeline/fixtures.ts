@@ -25,6 +25,7 @@ import openrouterModels from '../../fixtures/pricing/openrouter-models.json?raw'
 import openrouterRankings from '../../fixtures/rankings/openrouter-rankings-daily.json?raw'
 import xaiModels from '../../fixtures/pricing/xai-models.md?raw'
 import edgarCompanyfactsSpcx from '../../fixtures/sec/edgar-companyfacts-spcx.json?raw'
+import xbrlSegmentGoogl from '../../fixtures/sec/xbrl-segment-googl-2026-10-29.xml?raw'
 import edgarFtsOpenai from '../../fixtures/sec/edgar-fts-openai.json?raw'
 import edgarFts from '../../fixtures/sec/edgar-fts.json?raw'
 import edgarSubmissionsAmzn from '../../fixtures/sec/edgar-submissions-amzn.json?raw'
@@ -75,6 +76,7 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/sec/edgar-submissions-msft.json': edgarSubmissionsMsft,
   'fixtures/sec/edgar-submissions-nvda.json': edgarSubmissionsNvda,
   'fixtures/sec/edgar-submissions-spcx.json': edgarSubmissionsSpcx,
+  'fixtures/sec/xbrl-segment-googl-2026-10-29.xml': xbrlSegmentGoogl,
   'fixtures/status/anthropic-status.json': anthropicStatus,
   'fixtures/status/google-cloud-status.json': googleCloudStatus,
   'fixtures/status/openai-status.json': openaiStatus,

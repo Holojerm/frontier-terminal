@@ -33,15 +33,16 @@ const filers = parseRevenueFilersBlock(sourcesYaml)
 const SPCX_CIK = '0001181412'
 
 describe('revenue_filers', () => {
-  it('reads the block: four nulls and SPCX as xAI’s parent', () => {
+  it('reads the block: three nulls, SPCX as xAI’s parent, Alphabet’s Google Cloud segment as Google’s', () => {
     expect([...filers.entries()]).toEqual([
       ['openai', null],
       ['anthropic', null],
-      ['google', null],
+      ['google', { ticker: 'GOOGL', relation: 'parent', segment: 'goog:GoogleCloudMember' }],
       ['xai', { ticker: 'SPCX', relation: 'parent' }],
       ['meta', null],
     ])
     expect(revenueProviderFor(SPCX_CIK, filers, whitelist)).toBe('xai')
+    expect(revenueProviderFor('0001652044', filers, whitelist)).toBe('google')
     expect(revenueProviderFor('0000789019', filers, whitelist)).toBe('other') // MSFT: whitelisted, not a filer
   })
 
@@ -186,7 +187,7 @@ describe('queryRevenue against a seeded store', () => {
     ])
   })
 
-  it('three labs say no disclosure; xAI carries SpaceX’s consolidated series as the parent’s', async () => {
+  it('two labs say no disclosure; xAI carries SpaceX’s consolidated series as the parent’s', async () => {
     const ctx = queryContext(
       sourcesYaml,
       await terminalStamp(db),
@@ -195,9 +196,15 @@ describe('queryRevenue against a seeded store', () => {
     const revenue = await queryRevenue(db, ctx)
     expect(revenue.rule).toContain('deliberately not shown')
     const by = Object.fromEntries(revenue.providers.map((p) => [p.provider, p]))
-    for (const p of ['openai', 'anthropic', 'google'] as const) {
+    for (const p of ['openai', 'anthropic'] as const) {
       expect(by[p]).toMatchObject({ disclosure: 'none', filer: null, periods: [], sources: [] })
     }
+    // Tagged, but no segment instance fetched in this store (test/pipeline/xbrl-segment.test.ts).
+    expect(by.google).toMatchObject({ disclosure: 'no_rows', periods: [] })
+    expect(by.google!.filer).toMatchObject({
+      segment: 'goog:GoogleCloudMember',
+      source_id: 'xbrl-segment',
+    })
     const xai = by.xai!
     expect(xai.disclosure).toBe('parent')
     expect(xai.filer).toMatchObject({

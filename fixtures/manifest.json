@@ -312,6 +312,16 @@
       "raw_bytes": 105685,
       "trim": "none — committed whole",
       "note": "Test fixture: the second page layout (data-source-index paragraphs, no data-web-metadata attributes), and an occurrence line naming two dates ('Samples: Jan 24, 2026 and Oct 22, 2025') that is kept verbatim, never read as one date."
+    },
+    {
+      "path": "fixtures/sec/xbrl-segment-googl-2026-10-29.xml",
+      "source_id": "xbrl-segment-googl-2026-10-29-0001652044-26-000084",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000084/goog-20260930_htm.xml",
+      "fetched_at": "2026-11-01T22:15:59Z",
+      "http_status": 200,
+      "raw_bytes": 3161339,
+      "trim": "Kept the xbrl root and its namespaces, every dei fact under 2 KB, the units they and the kept facts reference, and the Revenues / RevenueFromContractWithCustomerExcludingAssessedTax / SalesRevenueNet / OperatingIncomeLoss facts on contexts that carry no dimension or a StatementBusinessSegmentsAxis member — with those 77 contexts. Every other fact and context is cut; the kept elements are byte-identical.",
+      "note": "One representative per-filing instance for the derived xbrl-segment-<ticker>-<filed>-<accession> sources (server/pipeline/derived.ts): Alphabet's 10-Q for the quarter ended 2026-09-30, filed 2026-10-29. Google Cloud (goog:GoogleCloudMember) revenue is tagged RevenueFromContractWithCustomerExcludingAssessedTax on four single-member contexts — 2026-Q3 $30,709M, 2025-Q3 $15,157M, 2026 nine months $75,505M, 2025 nine months $41,041M — each fact twice (two statements). OperatingIncomeLoss for the segment sits on two-member contexts (OperatingSegmentsMember beside it), which the parser skips; consolidated and Google Services revenue are the distractors."
     }
   ]
 }
