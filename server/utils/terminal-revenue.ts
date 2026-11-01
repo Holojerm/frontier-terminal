@@ -27,7 +27,7 @@ import { byString, num, parseJson, str } from './terminal-json'
 import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
 
 export const REVENUE_RULE =
-  'Primary source only: audited SEC disclosures read from EDGAR’s XBRL company facts, each value linked to the filing that reported it. ' +
+  'Primary source only: audited SEC disclosures read from EDGAR’s XBRL data — company facts for a consolidated figure, the filing’s own instance for a segment — each value linked to the filing that reported it. ' +
   'No audited disclosure on file means nothing is shown — press-reported run-rates are deliberately not shown.'
 
 const DAY_MS = 86_400_000
@@ -46,6 +46,16 @@ export function submissionsSourceId(ticker: string): string {
   return `edgar-submissions-${ticker.toLowerCase()}`
 }
 
+/** Prefix of a segment filer's per-filing sources (server/pipeline/derived.ts). */
+export function segmentSourcePrefix(ticker: string): string {
+  return `xbrl-segment-${ticker.toLowerCase()}-`
+}
+
+/** goog:GoogleCloudMember -> Google Cloud: the member's local name, unsuffixed and spaced. */
+export function segmentLabel(member: string): string {
+  return (member.split(':')[1] ?? member).replace(/Member$/, '').replace(/([a-z])([A-Z])/g, '$1 $2')
+}
+
 const daysBetween = (start: string, end: string) =>
   Math.round((Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / DAY_MS) + 1
 
@@ -54,7 +64,7 @@ export function revenuePeriodFromPayload(
   entity_key: string,
   payload: string,
   prov: { source_url: string; fetched_at: string },
-): (RevenuePeriod & { cik: string; entity_name: string | null }) | null {
+): (RevenuePeriod & { cik: string; entity_name: string | null; segment: string | null }) | null {
   const p = parseJson(payload)
   if (!p) return null
   const cik = str(p.cik)
@@ -72,6 +82,7 @@ export function revenuePeriodFromPayload(
     entity_key,
     cik,
     entity_name: str(p.entity_name),
+    segment: str(p.segment),
     start,
     end,
     days: daysBetween(start, end),
@@ -205,15 +216,28 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
 
     const cik = filer.ticker ? (ctx.whitelist.get(filer.ticker) ?? null) : (auto?.cik ?? null)
     const feedKey = filer.ticker ?? provider
-    const factsId = companyfactsSourceId(feedKey)
+    // A segment series is read per filing, never from company facts: its
+    // feeds are the newest per-filing source and the submissions feed that
+    // named the filing.
+    const segment = tagged?.segment ?? null
+    const factsId = segment
+      ? ([...stamps.keys()]
+          .filter((id) => id.startsWith(segmentSourcePrefix(feedKey)))
+          .sort()
+          .at(-1) ?? null)
+      : companyfactsSourceId(feedKey)
     const registered = ctx.registry.sources.find((s) => s.source_id === factsId)
     const parsed = rows
       .filter((r) => r.provider === provider)
       .map((r) => revenuePeriodFromPayload(r.entity_key, r.payload, r))
-      .filter((r): r is NonNullable<typeof r> => r !== null && (cik === null || r.cik === cik))
+      .filter(
+        (r): r is NonNullable<typeof r> =>
+          r !== null && (cik === null || r.cik === cik) && r.segment === segment,
+      )
     const { periods, superseded, tags } = splitPeriods(parsed)
 
     const sources: SourceRef[] = [factsId, submissionsSourceId(feedKey)]
+      .filter((id): id is string => id !== null)
       .map((id) => {
         const stamp = stamps.get(id)
         return stamp
@@ -242,10 +266,13 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
               filing_url: filingIndexUrl(cik, auto.accession_no),
             }
           : null,
-      source_id: factsId,
+      segment,
+      segment_label: segment ? segmentLabel(segment) : null,
+      source_id: factsId ?? 'xbrl-segment',
       caveat:
         registered?.caveat ??
-        ctx.derivedTemplates.find((t) => t.id === 'edgar-companyfacts')?.caveat ??
+        ctx.derivedTemplates.find((t) => t.id === (segment ? 'xbrl-segment' : 'edgar-companyfacts'))
+          ?.caveat ??
         null,
     }
     providers.push({
@@ -271,5 +298,10 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
 const stripFiler = ({
   cik: _cik,
   entity_name: _name,
+  segment: _segment,
   ...period
-}: RevenuePeriod & { cik: string; entity_name: string | null }): RevenuePeriod => period
+}: RevenuePeriod & {
+  cik: string
+  entity_name: string | null
+  segment: string | null
+}): RevenuePeriod => period

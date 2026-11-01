@@ -324,8 +324,9 @@ sources:
     fixture: fixtures/sec/edgar-submissions-googl.json
     caveats: >-
       Whitelisted CIK, same form filter as edgar-submissions. Alphabet is
-      Google's parent; its filings segment Google Cloud, never Gemini, so
-      nothing here is a lab revenue figure (see revenue_filers).
+      Google's parent; its filings segment Google Cloud, never Gemini. Each
+      10-Q/10-K listed here derives an xbrl-segment source (derived_sources)
+      that reads the Google Cloud segment's revenue off the filing itself.
 
   edgar-submissions-meta:
     axis: sec
@@ -470,11 +471,21 @@ cik_whitelist:
 # source above with a committed fixture, and set ticker + relation here.
 # relation is `issuer` when the lab itself files (the S-1 public-flip
 # moment) and `parent` when a public parent consolidates it, in which case
-# the series is the parent's and is labelled as such.
+# the series is the parent's and is labelled as such. A parent may name
+# `segment`, an XBRL StatementBusinessSegmentsAxis member: the series is then
+# that one segment's, read off each 10-Q/10-K's own instance (the
+# xbrl-segment template below), never the consolidated top line — so no
+# companyfacts source is registered for it.
 revenue_filers:
   openai: null
   anthropic: null
-  google: null # Alphabet (GOOGL) is public but segments Google Cloud, never Gemini — a consolidated figure would mislead
+  # Alphabet reports no Gemini line. Google Cloud is the segment Gemini API
+  # and Vertex AI revenue lands in, beside Workspace and GCP — the nearest
+  # audited figure, labelled as the segment's, never as Gemini's.
+  google:
+    ticker: GOOGL
+    relation: parent
+    segment: goog:GoogleCloudMember
   xai:
     ticker: SPCX
     relation: parent
@@ -513,6 +524,24 @@ derived_sources:
   edgar-companyfacts:
     url: https://data.sec.gov/api/xbrl/companyfacts/CIK{cik}.json
     from: filer
+  xbrl-segment:
+    url: https://www.sec.gov/Archives/edgar/data/{cik_number}/{accession_digits}/{prefix}-{period}_htm.xml
+    from: segment-filing
+    caveats: >-
+      The segment's revenue as the parent reported it, not the lab's: Google
+      Cloud carries Gemini API and Vertex AI sales beside Workspace and GCP,
+      and Alphabet does not split them. One source per 10-Q/10-K among the
+      four newest in the filer's submissions feed, so a first poll covers a
+      full fiscal year and its comparatives; the lane is append-only, so
+      older periods stay once read. The file is the instance SEC extracts
+      from an inline-XBRL filing, named {prefix}-{period}_htm.xml after the
+      primary document: prefix is the segment member's namespace prefix
+      (goog), period the last calendar quarter-end before the filing date.
+      Both hold for all 13 Alphabet 10-Q/10-K in the feed at 2026-11-01; a
+      filer whose names differ 404s and fails the source rather than
+      storing a wrong period. Only revenue on a context whose one dimension
+      is the segment member is kept. Fetched on the six-hourly survey: a
+      filing never changes after it is accepted.
   openai-model-md:
     url: https://developers.openai.com/api/docs/models/{slug}.md
     from: openai-priced-model

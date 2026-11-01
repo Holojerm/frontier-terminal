@@ -197,7 +197,7 @@ export function normalizeRevenue(
   provider: Provider,
 ): EntityRow {
   return toEntity(
-    revenueKey(row.cik, row.tag, row.accession_no, row.start, row.end),
+    revenueKey(row.cik, row.tag, row.accession_no, row.start, row.end, row.segment),
     'revenue',
     provider,
     snapshotId,

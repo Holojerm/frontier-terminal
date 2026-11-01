@@ -1,0 +1,1127 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xbrl
+  xml:lang="en-US"
+  xmlns="http://www.xbrl.org/2003/instance"
+  xmlns:country="http://xbrl.sec.gov/country/2026"
+  xmlns:dei="http://xbrl.sec.gov/dei/2026"
+  xmlns:ecd="http://xbrl.sec.gov/ecd/2026"
+  xmlns:goog="http://www.google.com/20260930"
+  xmlns:iso4217="http://www.xbrl.org/2003/iso4217"
+  xmlns:link="http://www.xbrl.org/2003/linkbase"
+  xmlns:srt="http://fasb.org/srt/2026"
+  xmlns:us-gaap="http://fasb.org/us-gaap/2026"
+  xmlns:xbrldi="http://xbrl.org/2006/xbrldi"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+    <link:schemaRef xlink:href="goog-20260930.xsd" xlink:type="simple"/>
+        <context id="c-1">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-2">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">us-gaap:CommonClassAMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-3">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:CapitalClassCMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-4">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:DepositarySharesSeriesAMandatoryConvertiblePreferredStockMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-5">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:DepositarySharesSeriesBMandatoryConvertiblePreferredStockMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-6">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A2.375SeniorNotesDue2028Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-7">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A2.500SeniorNotesDue2029Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-8">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A4.125SeniorNotesDue2029Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-9">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A3.200SeniorNotesDue2030Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-10">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A2.875SeniorNotesDue2031Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-11">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A3.450SeniorNotesDue2032Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-12">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A4.625SeniorNotesDue2032Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-13">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A3.000SeniorNotesDue2033Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-14">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A3.125SeniorNotesDue2034Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-15">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A3.625SeniorNotesDue2034Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-16">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A3.375SeniorNotesDue2037Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-17">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A3.500SeniorNotesDue2038Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-18">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A4.100SeniorNotesDue2039Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-19">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A5.500SeniorNotesDue2041Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-20">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A4.000SeniorNotesDue2044Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-21">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A3.875SeniorNotesDue2045Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-22">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A4.500SeniorNotesDue2045Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-23">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A4.000SeniorNotesDue2054Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-24">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A5.875SeniorNotesDue2058Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-25">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A4.800SeniorNotesDue2063Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-26">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A4.375SeniorNotesDue2064Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-27">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:A6.125SeniorNotesDue2126Member</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-28">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">us-gaap:CommonClassAMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <instant>2026-10-21</instant>
+        </period>
+    </context>
+    <context id="c-29">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">us-gaap:CommonClassBMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <instant>2026-10-21</instant>
+        </period>
+    </context>
+    <context id="c-30">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">goog:CapitalClassCMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <instant>2026-10-21</instant>
+        </period>
+    </context>
+    <context id="c-40">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+        </entity>
+        <period>
+            <startDate>2025-07-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-41">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+        </entity>
+        <period>
+            <startDate>2026-07-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-42">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+        </entity>
+        <period>
+            <startDate>2025-01-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-92">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:GoogleSearchOtherMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-07-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-93">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:GoogleSearchOtherMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-07-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-94">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:GoogleSearchOtherMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-01-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-95">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:GoogleSearchOtherMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-96">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:YouTubeAdvertisingRevenueMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-07-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-97">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:YouTubeAdvertisingRevenueMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-07-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-98">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:YouTubeAdvertisingRevenueMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-01-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-99">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:YouTubeAdvertisingRevenueMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-100">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:GoogleNetworkMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-07-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-101">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:GoogleNetworkMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-07-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-102">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:GoogleNetworkMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-01-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-103">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:GoogleNetworkMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-104">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:GoogleAdvertisingRevenueMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-07-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-105">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:GoogleAdvertisingRevenueMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-07-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-106">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:GoogleAdvertisingRevenueMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-01-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-107">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:GoogleAdvertisingRevenueMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-108">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:SubscriptionsPlatformsAndDevicesRevenueMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-07-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-109">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:SubscriptionsPlatformsAndDevicesRevenueMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-07-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-110">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:SubscriptionsPlatformsAndDevicesRevenueMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-01-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-111">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ProductOrServiceAxis">goog:SubscriptionsPlatformsAndDevicesRevenueMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-112">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-07-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-113">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-07-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-114">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-01-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-115">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-116">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleCloudMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-07-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-117">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleCloudMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-07-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-118">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleCloudMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-01-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-119">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleCloudMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-120">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">us-gaap:AllOtherSegmentsMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-07-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-121">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">us-gaap:AllOtherSegmentsMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-07-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-122">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">us-gaap:AllOtherSegmentsMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-01-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-123">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">us-gaap:AllOtherSegmentsMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-578">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ConsolidationItemsAxis">us-gaap:OperatingSegmentsMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-07-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-579">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ConsolidationItemsAxis">us-gaap:OperatingSegmentsMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-07-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-580">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ConsolidationItemsAxis">us-gaap:OperatingSegmentsMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-01-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-581">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ConsolidationItemsAxis">us-gaap:OperatingSegmentsMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleServicesMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-582">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ConsolidationItemsAxis">us-gaap:OperatingSegmentsMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleCloudMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-07-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-583">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ConsolidationItemsAxis">us-gaap:OperatingSegmentsMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleCloudMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-07-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-584">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ConsolidationItemsAxis">us-gaap:OperatingSegmentsMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleCloudMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-01-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-585">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ConsolidationItemsAxis">us-gaap:OperatingSegmentsMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">goog:GoogleCloudMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-586">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ConsolidationItemsAxis">us-gaap:OperatingSegmentsMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">us-gaap:AllOtherSegmentsMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-07-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-587">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ConsolidationItemsAxis">us-gaap:OperatingSegmentsMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">us-gaap:AllOtherSegmentsMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-07-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-588">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ConsolidationItemsAxis">us-gaap:OperatingSegmentsMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">us-gaap:AllOtherSegmentsMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-01-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+    <context id="c-589">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001652044</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ConsolidationItemsAxis">us-gaap:OperatingSegmentsMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementBusinessSegmentsAxis">us-gaap:AllOtherSegmentsMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+    <unit id="shares">
+        <measure>shares</measure>
+    </unit>
+    <unit id="usd">
+        <measure>iso4217:USD</measure>
+    </unit>
+    <dei:AmendmentFlag contextRef="c-1" id="f-102">false</dei:AmendmentFlag>
+    <dei:DocumentFiscalYearFocus contextRef="c-1" id="f-103">2026</dei:DocumentFiscalYearFocus>
+    <dei:DocumentFiscalPeriodFocus contextRef="c-1" id="f-104">Q3</dei:DocumentFiscalPeriodFocus>
+    <dei:EntityCentralIndexKey contextRef="c-1" id="f-105">0001652044</dei:EntityCentralIndexKey>
+    <dei:CurrentFiscalYearEndDate contextRef="c-1" id="f-106">--12-31</dei:CurrentFiscalYearEndDate>
+    <dei:DocumentType contextRef="c-1" id="f-1">10-Q</dei:DocumentType>
+    <dei:DocumentQuarterlyReport contextRef="c-1" id="f-2">true</dei:DocumentQuarterlyReport>
+    <dei:DocumentPeriodEndDate contextRef="c-1" id="f-3">2026-09-30</dei:DocumentPeriodEndDate>
+    <dei:DocumentTransitionReport contextRef="c-1" id="f-4">false</dei:DocumentTransitionReport>
+    <dei:EntityFileNumber contextRef="c-1" id="f-5">001-37580</dei:EntityFileNumber>
+    <dei:EntityRegistrantName contextRef="c-1" id="f-6">Alphabet Inc.</dei:EntityRegistrantName>
+    <dei:EntityIncorporationStateCountryCode contextRef="c-1" id="f-7">DE</dei:EntityIncorporationStateCountryCode>
+    <dei:EntityTaxIdentificationNumber contextRef="c-1" id="f-8">61-1767919</dei:EntityTaxIdentificationNumber>
+    <dei:EntityAddressCityOrTown contextRef="c-1" id="f-10">Mountain View</dei:EntityAddressCityOrTown>
+    <dei:EntityAddressStateOrProvince contextRef="c-1" id="f-11">CA</dei:EntityAddressStateOrProvince>
+    <dei:EntityAddressPostalZipCode contextRef="c-1" id="f-12">94043</dei:EntityAddressPostalZipCode>
+    <dei:CityAreaCode contextRef="c-1" id="f-13">650</dei:CityAreaCode>
+    <dei:LocalPhoneNumber contextRef="c-1" id="f-14">253-0000</dei:LocalPhoneNumber>
+    <dei:TradingSymbol contextRef="c-2" id="f-16">GOOGL</dei:TradingSymbol>
+    <dei:SecurityExchangeName contextRef="c-2" id="f-17">NASDAQ</dei:SecurityExchangeName>
+    <dei:TradingSymbol contextRef="c-3" id="f-19">GOOG</dei:TradingSymbol>
+    <dei:SecurityExchangeName contextRef="c-3" id="f-20">NASDAQ</dei:SecurityExchangeName>
+    <dei:TradingSymbol contextRef="c-4" id="f-22">GOOGM</dei:TradingSymbol>
+    <dei:SecurityExchangeName contextRef="c-4" id="f-23">NASDAQ</dei:SecurityExchangeName>
+    <dei:TradingSymbol contextRef="c-5" id="f-25">GOOGN</dei:TradingSymbol>
+    <dei:SecurityExchangeName contextRef="c-5" id="f-26">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-6" id="f-28">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-6" id="f-29">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-7" id="f-31">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-7" id="f-32">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-8" id="f-34">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-8" id="f-35">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-9" id="f-37">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-9" id="f-38">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-10" id="f-40">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-10" id="f-41">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-11" id="f-43">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-11" id="f-44">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-12" id="f-46">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-12" id="f-47">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-13" id="f-49">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-13" id="f-50">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-14" id="f-52">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-14" id="f-53">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-15" id="f-55">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-15" id="f-56">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-16" id="f-58">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-16" id="f-59">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-17" id="f-61">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-17" id="f-62">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-18" id="f-64">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-18" id="f-65">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-19" id="f-67">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-19" id="f-68">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-20" id="f-70">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-20" id="f-71">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-21" id="f-73">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-21" id="f-74">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-22" id="f-76">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-22" id="f-77">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-23" id="f-79">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-23" id="f-80">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-24" id="f-82">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-24" id="f-83">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-25" id="f-85">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-25" id="f-86">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-26" id="f-88">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-26" id="f-89">NASDAQ</dei:SecurityExchangeName>
+    <dei:NoTradingSymbolFlag contextRef="c-27" id="f-91">true</dei:NoTradingSymbolFlag>
+    <dei:SecurityExchangeName contextRef="c-27" id="f-92">NASDAQ</dei:SecurityExchangeName>
+    <dei:EntityCurrentReportingStatus contextRef="c-1" id="f-93">Yes</dei:EntityCurrentReportingStatus>
+    <dei:EntityInteractiveDataCurrent contextRef="c-1" id="f-94">Yes</dei:EntityInteractiveDataCurrent>
+    <dei:EntityFilerCategory contextRef="c-1" id="f-95">Large Accelerated Filer</dei:EntityFilerCategory>
+    <dei:EntitySmallBusiness contextRef="c-1" id="f-96">false</dei:EntitySmallBusiness>
+    <dei:EntityEmergingGrowthCompany contextRef="c-1" id="f-97">false</dei:EntityEmergingGrowthCompany>
+    <dei:EntityShellCompany contextRef="c-1" id="f-98">false</dei:EntityShellCompany>
+    <dei:EntityCommonStockSharesOutstanding contextRef="c-28" decimals="-6" id="f-99" unitRef="shares">5888000000</dei:EntityCommonStockSharesOutstanding>
+    <dei:EntityCommonStockSharesOutstanding contextRef="c-29" decimals="-6" id="f-100" unitRef="shares">827000000</dei:EntityCommonStockSharesOutstanding>
+    <dei:EntityCommonStockSharesOutstanding contextRef="c-30" decimals="-6" id="f-101" unitRef="shares">5579000000</dei:EntityCommonStockSharesOutstanding>
+    <us-gaap:Revenues contextRef="c-40" decimals="-6" id="f-213" unitRef="usd">102346000000</us-gaap:Revenues>
+    <us-gaap:Revenues contextRef="c-41" decimals="-6" id="f-214" unitRef="usd">127577000000</us-gaap:Revenues>
+    <us-gaap:Revenues contextRef="c-42" decimals="-6" id="f-215" unitRef="usd">289007000000</us-gaap:Revenues>
+    <us-gaap:Revenues contextRef="c-1" decimals="-6" id="f-216" unitRef="usd">357269000000</us-gaap:Revenues>
+    <us-gaap:OperatingIncomeLoss contextRef="c-40" decimals="-6" id="f-237" unitRef="usd">31228000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-41" decimals="-6" id="f-238" unitRef="usd">40576000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-42" decimals="-6" id="f-239" unitRef="usd">93105000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-1" decimals="-6" id="f-240" unitRef="usd">121042000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-92" decimals="-6" id="f-550" unitRef="usd">56567000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-93" decimals="-6" id="f-551" unitRef="usd">63350000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-94" decimals="-6" id="f-552" unitRef="usd">161459000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-95" decimals="-6" id="f-553" unitRef="usd">187020000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-96" decimals="-6" id="f-554" unitRef="usd">10261000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-97" decimals="-6" id="f-555" unitRef="usd">11207000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-98" decimals="-6" id="f-556" unitRef="usd">28984000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-99" decimals="-6" id="f-557" unitRef="usd">32145000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-100" decimals="-6" id="f-558" unitRef="usd">7354000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-101" decimals="-6" id="f-559" unitRef="usd">7455000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-102" decimals="-6" id="f-560" unitRef="usd">21964000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-103" decimals="-6" id="f-561" unitRef="usd">21729000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-104" decimals="-6" id="f-562" unitRef="usd">74182000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-105" decimals="-6" id="f-563" unitRef="usd">82012000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-106" decimals="-6" id="f-564" unitRef="usd">212407000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-107" decimals="-6" id="f-565" unitRef="usd">240894000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-108" decimals="-6" id="f-566" unitRef="usd">12870000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-109" decimals="-6" id="f-567" unitRef="usd">14290000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-110" decimals="-6" id="f-568" unitRef="usd">34452000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-111" decimals="-6" id="f-569" unitRef="usd">39585000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-112" decimals="-6" id="f-570" unitRef="usd">87052000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-113" decimals="-6" id="f-571" unitRef="usd">96302000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-114" decimals="-6" id="f-572" unitRef="usd">246859000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-115" decimals="-6" id="f-573" unitRef="usd">280479000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-116" decimals="-6" id="f-574" unitRef="usd">15157000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-117" decimals="-6" id="f-575" unitRef="usd">30709000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-118" decimals="-6" id="f-576" unitRef="usd">41041000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-119" decimals="-6" id="f-577" unitRef="usd">75505000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-120" decimals="-6" id="f-578" unitRef="usd">344000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-121" decimals="-6" id="f-579" unitRef="usd">372000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-122" decimals="-6" id="f-580" unitRef="usd">1167000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-123" decimals="-6" id="f-581" unitRef="usd">1165000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:Revenues contextRef="c-40" decimals="-6" id="f-586" unitRef="usd">102346000000</us-gaap:Revenues>
+    <us-gaap:Revenues contextRef="c-41" decimals="-6" id="f-587" unitRef="usd">127577000000</us-gaap:Revenues>
+    <us-gaap:Revenues contextRef="c-42" decimals="-6" id="f-588" unitRef="usd">289007000000</us-gaap:Revenues>
+    <us-gaap:Revenues contextRef="c-1" decimals="-6" id="f-589" unitRef="usd">357269000000</us-gaap:Revenues>
+    <us-gaap:Revenues contextRef="c-40" decimals="-6" id="f-631" unitRef="usd">102346000000</us-gaap:Revenues>
+    <us-gaap:Revenues contextRef="c-41" decimals="-6" id="f-633" unitRef="usd">127577000000</us-gaap:Revenues>
+    <us-gaap:Revenues contextRef="c-42" decimals="-6" id="f-635" unitRef="usd">289007000000</us-gaap:Revenues>
+    <us-gaap:Revenues contextRef="c-1" decimals="-6" id="f-637" unitRef="usd">357269000000</us-gaap:Revenues>
+    <us-gaap:Revenues contextRef="c-40" decimals="-6" id="f-978" unitRef="usd">102346000000</us-gaap:Revenues>
+    <us-gaap:Revenues contextRef="c-41" decimals="-6" id="f-980" unitRef="usd">127577000000</us-gaap:Revenues>
+    <us-gaap:Revenues contextRef="c-42" decimals="-6" id="f-1026" unitRef="usd">289007000000</us-gaap:Revenues>
+    <us-gaap:Revenues contextRef="c-1" decimals="-6" id="f-1028" unitRef="usd">357269000000</us-gaap:Revenues>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-112" decimals="-6" id="f-1964" unitRef="usd">87052000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-113" decimals="-6" id="f-1965" unitRef="usd">96302000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-114" decimals="-6" id="f-1966" unitRef="usd">246859000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-115" decimals="-6" id="f-1967" unitRef="usd">280479000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-116" decimals="-6" id="f-1968" unitRef="usd">15157000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-117" decimals="-6" id="f-1969" unitRef="usd">30709000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-118" decimals="-6" id="f-1970" unitRef="usd">41041000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-119" decimals="-6" id="f-1971" unitRef="usd">75505000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-120" decimals="-6" id="f-1972" unitRef="usd">344000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-121" decimals="-6" id="f-1973" unitRef="usd">372000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-122" decimals="-6" id="f-1974" unitRef="usd">1167000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax contextRef="c-123" decimals="-6" id="f-1975" unitRef="usd">1165000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+    <us-gaap:Revenues contextRef="c-40" decimals="-6" id="f-1980" unitRef="usd">102346000000</us-gaap:Revenues>
+    <us-gaap:Revenues contextRef="c-41" decimals="-6" id="f-1981" unitRef="usd">127577000000</us-gaap:Revenues>
+    <us-gaap:Revenues contextRef="c-42" decimals="-6" id="f-1982" unitRef="usd">289007000000</us-gaap:Revenues>
+    <us-gaap:Revenues contextRef="c-1" decimals="-6" id="f-1983" unitRef="usd">357269000000</us-gaap:Revenues>
+    <us-gaap:OperatingIncomeLoss contextRef="c-578" decimals="-6" id="f-1984" unitRef="usd">33527000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-579" decimals="-6" id="f-1985" unitRef="usd">39157000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-580" decimals="-6" id="f-1986" unitRef="usd">99272000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-581" decimals="-6" id="f-1987" unitRef="usd">119290000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-582" decimals="-6" id="f-1988" unitRef="usd">3594000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-583" decimals="-6" id="f-1989" unitRef="usd">11121000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-584" decimals="-6" id="f-1990" unitRef="usd">8597000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-585" decimals="-6" id="f-1991" unitRef="usd">26533000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-586" decimals="-6" id="f-1992" unitRef="usd">-1426000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-587" decimals="-6" id="f-1993" unitRef="usd">-2047000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-588" decimals="-6" id="f-1994" unitRef="usd">-3898000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-589" decimals="-6" id="f-1995" unitRef="usd">-5946000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-40" decimals="-6" id="f-2000" unitRef="usd">31228000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-41" decimals="-6" id="f-2001" unitRef="usd">40576000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-42" decimals="-6" id="f-2002" unitRef="usd">93105000000</us-gaap:OperatingIncomeLoss>
+    <us-gaap:OperatingIncomeLoss contextRef="c-1" decimals="-6" id="f-2003" unitRef="usd">121042000000</us-gaap:OperatingIncomeLoss>
+</xbrl>

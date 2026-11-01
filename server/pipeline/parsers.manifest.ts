@@ -19,6 +19,7 @@ import './parsers/pricing/meta-pricing'
 import './parsers/sec/edgar-fts'
 import './parsers/sec/edgar-submissions'
 import './parsers/sec/edgar-companyfacts'
+import './parsers/sec/xbrl-segment'
 // Status pages (capacity strain)
 import './parsers/status/openai-status'
 import './parsers/status/anthropic-status'

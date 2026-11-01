@@ -110,11 +110,15 @@ export type FilerRow = z.infer<typeof FilerRow>
 
 // ---- Revenue (XBRL company facts) -----------------------------------------
 
-// One duration fact from data.sec.gov/api/xbrl/companyfacts: the filer's
-// value for one revenue tag over one period, as one filing reported it.
-// Values are the filer's own XBRL numbers in USD, never scaled or rounded;
-// `tag` travels with the row because filers switch tags between years and
-// the reader, not the parser, decides which tag a period is read from.
+// One duration fact from data.sec.gov/api/xbrl/companyfacts, or from one
+// filing's XBRL instance (parsers/sec/xbrl-segment.ts): the filer's value for
+// one revenue tag over one period, as one filing reported it. Values are the
+// filer's own XBRL numbers in USD, never scaled or rounded; `tag` travels with
+// the row because filers switch tags between years and the reader, not the
+// parser, decides which tag a period is read from. `segment` is the
+// StatementBusinessSegmentsAxis member a segment fact was reported on, absent
+// on a consolidated fact — absent rather than null so the companyfacts rows
+// keep the content hash they were stored under.
 export const RevenueRow = z.strictObject({
   cik: z.string().regex(/^\d{10}$/),
   entity_name: z.string().min(1),
@@ -130,11 +134,16 @@ export const RevenueRow = z.strictObject({
   form: z.string().min(1),
   filed: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   frame: z.string().nullable(), // SEC's calendar frame (CY2026Q2) when the fact is the canonical one for it
+  segment: z
+    .string()
+    .regex(/^[a-z][a-z0-9-]*:[A-Za-z0-9]+Member$/)
+    .optional(),
   whitelist_cik: z.string().nullable(),
   ...provenanceFields,
 })
 export type RevenueRow = z.infer<typeof RevenueRow>
 export const EdgarCompanyfactsOutput = z.strictObject({ rows: z.array(RevenueRow) })
+export const XbrlSegmentOutput = z.strictObject({ rows: z.array(RevenueRow) })
 
 // ---- Status pages (capacity strain) ---------------------------------------
 
@@ -281,6 +290,9 @@ export const parserOutputSchemas = {
   'edgar-submissions-googl': EdgarSubmissionsOutput,
   'edgar-submissions-meta': EdgarSubmissionsOutput,
   'edgar-companyfacts-spcx': EdgarCompanyfactsOutput,
+  // One registration for every derived per-filing segment instance
+  // (derived.ts); the committed fixture is one representative 10-Q.
+  'xbrl-segment-googl-2026-10-29-0001652044-26-000084': XbrlSegmentOutput,
   'openai-status': StatuspageIncidentsOutput,
   'anthropic-status': StatuspageIncidentsOutput,
   'google-cloud-status': GoogleCloudIncidentsOutput,
