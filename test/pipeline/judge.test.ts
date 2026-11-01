@@ -6,7 +6,7 @@ import * as schema from '../../server/db/schema'
 import { AlertRow, ChangeRow, contentHash } from '../../server/pipeline/contracts'
 import { diff } from '../../server/pipeline/diff'
 import { buildAlertRows, gateJudgeSubmission } from '../../server/pipeline/judge/contract'
-import { groundAlerts } from '../../server/pipeline/judge/grounding'
+import { groundAlerts, groundingFailure } from '../../server/pipeline/judge/grounding'
 import {
   isTimestampOnlyChange,
   isUntrackedFilingChange,
@@ -605,6 +605,25 @@ describe('gate + grounding, without the store', () => {
     )
     expect(accepted).toEqual([])
     expect(rejected[0]!.reason).toBe('ungrounded-number')
+  })
+})
+
+describe('groundingFailure: versions a slug spells with a dash', () => {
+  const opus = '{"entity_key":"model:anthropic:claude-opus-5-5","input_per_mtok":4}'
+
+  it('"Opus 5.5" grounds against claude-opus-5-5 (issue #54)', () => {
+    expect(groundingFailure('Anthropic launches Claude Opus 5.5 at $4 input', opus)).toBeNull()
+  })
+
+  it('a version no cited slug spells is still invented', () => {
+    expect(groundingFailure('Anthropic launches Claude Opus 5.6', opus)?.reason).toBe(
+      'ungrounded-number',
+    )
+  })
+
+  it('a dashed date is not a version', () => {
+    const dated = '{"entity_key":"filing:anthropic:x","filed":"2026-10-09"}'
+    expect(groundingFailure('Filed in 2026.1', dated)?.reason).toBe('ungrounded-number')
   })
 })
 

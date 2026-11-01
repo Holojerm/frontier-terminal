@@ -140,6 +140,23 @@ describe('naming', () => {
   })
 })
 
+describe('quote typography', () => {
+  const prov = { source_url: PAGE_URL, fetched_at: NOW.toISOString() }
+  const flagship = (page: string) =>
+    recommendationRows('anthropic-models-md', page, prov).find((r) => r.class === 'flagship')
+
+  it('a curly apostrophe on the page keeps the recommendation present (issue #83)', () => {
+    const curled = FIXTURE.replace("If you're unsure", 'If you’re unsure')
+    expect(curled).not.toBe(FIXTURE)
+    expect(flagship(FIXTURE)?.present).toBe(true)
+    expect(flagship(curled)?.present).toBe(true)
+  })
+
+  it('a reworded recommendation still reads as gone', () => {
+    expect(flagship(LAUNCHED)?.present).toBe(false)
+  })
+})
+
 describe('overlayClassMap', () => {
   const decision = (over: Record<string, string>) => ({
     provider: 'anthropic',
@@ -281,6 +298,11 @@ describe('a judge re-mapping', () => {
     const report = await submit([
       proposal({ class: 'economy', model_slug: 'claude-haiku-6', basis: HAIKU_6 }),
     ])
+    expect(report.class_map).toEqual({ accepted: 1, rejected: [] })
+  })
+
+  it('accepts the sentence with its apostrophe curled where the page has it straight', async () => {
+    const report = await submit([proposal({ basis: NEW_FLAGSHIP.replace("'", '’') })])
     expect(report.class_map).toEqual({ accepted: 1, rejected: [] })
   })
 
