@@ -4,8 +4,9 @@
 // attached to it. An analyst reads it to decide whether a number can be
 // trusted, not every visit — which is why it sits last.
 
+import { companyName } from '#shared/utils/companies'
 import { LAB_DISPLAY } from '#shared/utils/terminal-labs'
-import type { CoverageData, SourceCoverage } from '#shared/utils/terminal-types'
+import type { CoverageData, RecipeCoverage, SourceCoverage } from '#shared/utils/terminal-types'
 import type { TableColumn } from '~/types/terminal-ui'
 
 defineProps<{ coverage: CoverageData }>()
@@ -42,6 +43,17 @@ const columns: TableColumn[] = [
   { key: 'entity_count', label: 'Rows', numeric: true },
   { key: 'caveat', label: 'Caveat' },
 ]
+
+const recipeColumns: TableColumn[] = [
+  { key: 'recipe_id', label: 'Recipe' },
+  { key: 'newest', label: 'Newest fetch stored' },
+  { key: 'run', label: 'Last run', class: 'whitespace-nowrap' },
+  { key: 'observations', label: 'Observations', numeric: true },
+  { key: 'caveat', label: 'Caveat' },
+]
+
+const auditNote = (r: RecipeCoverage) =>
+  [r.caveat, r.terms && `Terms: ${r.terms}`].filter(Boolean).join(' ') || null
 </script>
 
 <template>
@@ -99,6 +111,72 @@ const columns: TableColumn[] = [
         <span v-else class="text-xs text-muted">—</span>
       </template>
     </TerminalTable>
+
+    <div v-if="coverage.recipes.length" class="space-y-2 border-t border-default pt-3">
+      <div class="space-y-1 px-3">
+        <h3 class="text-sm text-highlighted">Thesis recipes</h3>
+        <p class="text-xs text-muted">
+          Sources the theses read that are not lab axes, such as GPU rental prices and filers
+          outside the labs. They store outside the lab tables; the raw bytes of every changed fetch
+          go to R2.
+        </p>
+      </div>
+      <TerminalTable
+        caption="Every thesis recipe: newest fetch stored, last run, observations, caveat"
+        :columns="recipeColumns"
+        :rows="coverage.recipes"
+        :row-key="(r) => r.recipe_id"
+        align="top"
+      >
+        <template #cell-recipe_id="{ row: r }">
+          <a
+            :href="r.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-highlighted underline underline-offset-2"
+            >{{ r.recipe_id }}</a
+          >
+          <span class="block text-xs text-muted">
+            {{ companyName(r.company) }} · {{ r.description }}
+          </span>
+        </template>
+        <template #cell-newest="{ row: r }">
+          <TerminalProvenanceTag
+            v-if="r.newest"
+            stamp
+            :source-url="r.newest.source_url"
+            :fetched-at="r.newest.fetched_at"
+          />
+          <TerminalGap v-else inline title="Nothing stored" />
+        </template>
+        <template #cell-run="{ row: r }">
+          <template v-if="r.last_run">
+            <UBadge
+              :color="STATUS[r.last_run.status].color"
+              :icon="STATUS[r.last_run.status].icon"
+              variant="subtle"
+              size="sm"
+            >
+              {{ STATUS[r.last_run.status].label }}
+            </UBadge>
+            <TerminalCaveatMark
+              v-if="r.last_run.detail"
+              :name="`Detail of the last ${r.recipe_id} run`"
+              :text="r.last_run.detail"
+            />
+          </template>
+          <span v-else class="text-xs text-muted">no run</span>
+        </template>
+        <template #cell-caveat="{ row: r }">
+          <TerminalCaveatMark
+            v-if="auditNote(r)"
+            :name="`Caveat for ${r.recipe_id}`"
+            :text="auditNote(r)!"
+          />
+          <span v-else class="text-xs text-muted">—</span>
+        </template>
+      </TerminalTable>
+    </div>
 
     <div v-if="coverage.cuts.length" class="space-y-2 border-t border-default p-3">
       <h3 class="text-sm text-highlighted">Excluded sources</h3>

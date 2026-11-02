@@ -696,6 +696,154 @@ derived_sources:
       the printed disclosure date where one exists, else against the
       earliest date the index has shown for the report.
 
+# Thesis recipes (server/theses/recipes/) audited in docs/source-audit.md.
+# A recipe runs on the survey tick and stores into recipe_observations, never
+# the lab tables, so it is registered here rather than under `sources:`;
+# /api/coverage lists every recipe and reads its caveat and terms from this
+# block. Recipes added before the block (the Cloudflare thesis's) carry their
+# audit on their thesis journal page. Fixture provenance: fixtures/manifest.json.
+#
+# GPU rental prices (live-fetched 2026-11-02). Each is a first-party price
+# page or a documented price API; third-party aggregators and marketplaces
+# are never inputs (cut block). `terms` is what the provider's own terms say
+# about automated reading, checked on the same day.
+recipe_sources:
+  gpu-lambda:
+    company: lambda
+    url: https://lambda.ai/pricing
+    format: SSR HTML (HubSpot), one instance table per tab (8x, 4x, 2x, 1x), USD per GPU-hour
+    verdict: include
+    terms: >-
+      robots.txt allows /pricing. The Terms of Service bar "web crawling which
+      is not restricted to a rate so as not to impair or otherwise disrupt the
+      servers being crawled"; one fetch per survey tick is that rate.
+    caveats: >-
+      Only "Instances pricing" is read: self-serve, on demand. The 1-Click
+      Clusters table above it prices 2-week-to-1-year terms and is skipped.
+      Prices exclude sales tax.
+  gpu-coreweave:
+    company: coreweave
+    url: https://www.coreweave.com/pricing
+    format: SSR HTML (Webflow), one list item per instance, USD per instance-hour
+    verdict: include
+    terms: >-
+      robots.txt allows /pricing. The Terms of Service (docs.coreweave.com)
+      say nothing about automated access; no separate website terms resolve.
+    caveats: >-
+      Priced per 8-GPU instance ("On-Demand Price: $49.24 / Hour") and
+      divided by the printed GPU count. The page renders its GPU list twice;
+      identical rows collapse, and two rows that disagree fail the run.
+  gpu-nebius:
+    company: nebius
+    url: https://nebius.com/prices
+    format: SSR HTML, "NVIDIA GPU Instances" table, column "On-demand, GPU-hour"
+    verdict: include
+    terms: >-
+      robots.txt allows /prices. The Terms of Use (docs.nebius.com/legal)
+      say nothing about automated access.
+    caveats: >-
+      The preemptible column ("from $0.79") is dynamic spot pricing and is
+      not read.
+  gpu-crusoe:
+    company: crusoe
+    url: https://www.crusoe.ai/cloud/pricing
+    format: SSR HTML (Webflow), a column of GPU names beside one column per price header
+    verdict: include
+    terms: >-
+      robots.txt allows /cloud/pricing. The acceptable use policy
+      (legal.crusoe.ai) bars "disruptive crawling or scraping".
+    caveats: >-
+      Names and on-demand prices are separate lists matched by position;
+      the extractor checks the header reads "GPU model On-demand Current
+      spot" and that the two lists are the same length. B200 is "Contact
+      sales" on demand, so Crusoe has no B200 price. The self-serve
+      deployments table lower on the page prices dedicated inference
+      endpoints and is skipped.
+  gpu-together:
+    company: together
+    url: https://www.together.ai/pricing
+    format: SSR HTML (Webflow), GPU Clusters table, column "ON-Demand", USD per GPU-hour
+    verdict: include
+    terms: >-
+      robots.txt allows everything for every crawler but Google-Extended.
+      The Terms of Service say nothing about automated access.
+    caveats: >-
+      Only the GPU Clusters table is read. The dedicated endpoints table
+      ($5.49 for an H100 at this fetch) is a managed inference product and is
+      skipped.
+  gpu-digitalocean:
+    company: digitalocean
+    url: https://www.digitalocean.com/pricing/gpu-droplets
+    format: SSR HTML (Next.js), one card per GPU, labelled On-Demand Price or 12 Month Reserved Price
+    verdict: include
+    terms: >-
+      robots.txt allows /pricing. The Terms of Service Agreement says
+      nothing about automated access.
+    caveats: >-
+      Only cards labelled "On-Demand Price" are read. The price sits in a
+      wrapper whose component is named StrikeThrough but carries no style at
+      this fetch; if the page starts striking it out for a promotion, the
+      printed price is still the one stored.
+  gpu-verda:
+    company: verda
+    url: https://verda.com/pricing
+    format: SSR HTML, the on-demand "GPU instances" table, USD per instance-hour
+    verdict: include
+    terms: >-
+      robots.txt allows everything. The Terms and Conditions bar "malicious
+      automated use", not reading a page. Verda was DataCrunch; datacrunch.io
+      redirects here.
+    caveats: >-
+      Two H100 rows differ only in CPUs and RAM; both are kept, keyed by that
+      configuration. The page's USD/EUR toggle serves USD by default. The
+      instant clusters and serverless containers tables are other products.
+  gpu-azure:
+    company: microsoft
+    url: https://prices.azure.com/api/retail/prices?$filter=serviceName%20eq%20'Virtual%20Machines'%20and%20priceType%20eq%20'Consumption'%20and%20contains(armSkuName,'H100')
+    format: JSON, Azure Retail Prices API (documented, unauthenticated), one item per SKU, region and meter
+    verdict: include
+    terms: >-
+      A public API Microsoft documents for unauthenticated price lookup.
+      prices.azure.com has no robots.txt (404).
+    caveats: >-
+      Linux pay-as-you-go only: Windows, Spot and Low Priority meters are
+      skipped. The ND H100 v5 family is the 8-GPU SXM board; its price is
+      divided by 8. The NC H100 v5 families are H100 NVL cards, kept and not
+      counted. GPUs per VM come from Azure's VM size pages
+      (AZURE_GPUS_PER_VM), not the API; an unknown size fails the run. Azure
+      prices B200 only as GB200 systems, so it has no B200 price. The answer
+      must fit one page; a NextPageLink fails the run.
+  gpu-oracle:
+    company: oracle
+    url: https://apexapps.oracle.com/pls/apex/cetools/api/v1/products/?currencyCode=USD
+    format: JSON, Oracle Cloud Price List API (documented on docs.oracle.com), one item per part number
+    verdict: include
+    terms: >-
+      A public API Oracle's documentation points to for list prices.
+      apexapps.oracle.com/robots.txt answers 403 to every client tried, so
+      there is no file to read; www.oracle.com's robots.txt does not cover
+      this host.
+    caveats: >-
+      Global list prices with no region. Only "Compute - GPU" parts metered
+      "GPU Per Hour" are read; the NVIDIA AI Enterprise licence is software
+      and is skipped, and "H100T" is not a part Oracle documents, so it is
+      not read as an H100.
+  sec-revenue-crwv:
+    company: coreweave
+    url: https://data.sec.gov/api/xbrl/companyfacts/CIK0001769628.json
+    format: JSON, SEC EDGAR XBRL company facts
+    verdict: include
+    terms: >-
+      SEC fair-access policy: a User-Agent naming a contact, under 10
+      requests a second (server/pipeline/fetch.ts).
+    caveats: >-
+      CIK from sec.gov/files/company_tickers.json (CRWV -> 1769628). The
+      fourth quarter is the 10-K year less its three 10-Q quarters, marked
+      derived. Nebius (NBIS) files under IFRS, so no us-gaap revenue tag
+      exists to read; IREN's revenue is mostly bitcoin mining and Applied
+      Digital leases data-center capacity (to CoreWeave among others), so
+      neither is a GPU-rental comparable. CoreWeave is shown alone.
+
 # Department clusters read off the hiring boards. A cluster is a name match
 # over each board's own department labels: a department belongs when its
 # name contains one of `terms` as a whole word (case-insensitive) and none of
@@ -818,3 +966,55 @@ cut:
       in the docs' llms.txt (MAI-2026-001 to 003) cover SDK and product
       vulnerabilities, not model behaviour. Re-checked weekly by
       the gap-watch routine.
+  gpu-runpod:
+    verdict: cut — GPU price source not ingested
+    reason: >-
+      runpod.io/pricing is server-rendered and robots.txt allows it, but the
+      Terms of Service bar using "any automated system, including without
+      limitation, any spider, robot, cheat utility, scraper, or offline
+      reader that accesses the Site", read 2026-11-02.
+  gpu-aws:
+    verdict: cut — GPU price source not ingested
+    reason: >-
+      The documented Price List bulk file for EC2 in us-east-1 is 481,649,899
+      bytes, over the pipeline's 32 MB body cap, and the Price List Query API
+      needs AWS credentials. The 58 KB JSON behind the on-demand pricing page
+      (b0.p.awsstatic.com) is an undocumented page backend, the kind of
+      surface this audit has never registered. Checked 2026-11-02.
+  gpu-google-cloud:
+    verdict: cut — GPU price source not ingested
+    reason: >-
+      cloud.google.com/compute/gpus-pricing redirects to a client-rendered
+      page with no prices in its HTML, and the Cloud Billing Catalog API
+      needs an API key. Checked 2026-11-02.
+  gpu-vultr:
+    verdict: cut — GPU price source not ingested
+    reason: >-
+      api.vultr.com/robots.txt is "Disallow: /" for every agent, and the
+      plans API lists its HGX H100 and B200 plans with no locations, so they
+      cannot be ordered on demand. Checked 2026-11-02.
+  gpu-jarvislabs:
+    verdict: cut — GPU price source not ingested
+    reason: >-
+      jarvislabs.ai/pricing is server-rendered, but its terms page renders
+      client-side and its text could not be read headless, so the terms were
+      not checked. Checked 2026-11-02.
+  gpu-scaleway:
+    verdict: cut — GPU price source not ingested
+    reason: >-
+      scaleway.com/en/pricing/gpu/ answers 403 to a non-browser client.
+      Checked 2026-11-02.
+  gpu-fluidstack-hyperbolic:
+    verdict: cut — GPU price source not ingested
+    reason: >-
+      fluidstack.io/pricing and hyperbolic.ai/pricing answer 404. Checked
+      2026-11-02.
+  gpu-aggregators:
+    verdict: cross-check only, never an input
+    reason: >-
+      Vast.ai's offers API is a marketplace of third-party hosts, and
+      comparison sites restate other providers' prices; neither is a
+      first-party price. The audit compared Vast.ai's median H100 SXM offer
+      with the recipes' median once (docs/source-audit.md); nothing from
+      either is stored. Index values from licensed vendors (Bloomberg, LSEG
+      and the like) are never ingested.

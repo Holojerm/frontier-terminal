@@ -17,6 +17,10 @@ export interface StoredReading {
   value: number
   /** The comparator's value on the same date, where the rule has one. */
   compare: number | null
+  /** Set when the signal could compute a number but not one the rule may read
+   * (too few providers behind a median). The newest such reading leaves the
+   * claim unresolved; older ones are skipped. */
+  void_reason?: string | null
 }
 
 export interface ClaimEvaluation {
@@ -152,15 +156,57 @@ function belowFloorPeriods(
   }
 }
 
+function sustainedDrawdown(
+  rule: Extract<MeasuredRule, { rule: 'sustained-drawdown' }>,
+  readings: readonly StoredReading[],
+  fmt: Formatter,
+): ClaimEvaluation {
+  const asc = [...readings].sort((a, b) => (a.date < b.date ? -1 : a.date > b.date ? 1 : 0))
+  const now = asc.at(-1)
+  if (!now) return unresolved('No reading yet.')
+  const needDays = rule.days + 7 * (rule.weeks - 1)
+  const span = dayDiff(now.date, asc[0]!.date)
+  const history = `${Math.min(span, needDays)} of ${needDays} days of history`
+  const highBefore = (r: StoredReading) => {
+    const from = daysBefore(r.date, rule.days)
+    return asc
+      .filter((x) => x.date >= from && x.date <= r.date)
+      .reduce((h, x) => (x.value >= h.value ? x : h))
+  }
+  const dropAt = (r: StoredReading) => {
+    const high = highBefore(r)
+    return high.value > 0 ? 1 - r.value / high.value : 0
+  }
+  const high = highBefore(now)
+  const drop = dropAt(now)
+  const where = `${fmt(now.value)}, ${Math.round(drop * 100)}% below the high of ${fmt(high.value)} on ${high.date} (kill at ${fmt(high.value * (1 - rule.drop))})`
+  if (span < needDays) {
+    return unresolved(`${where}; ${history}, needs ${needDays}.`, now.date)
+  }
+  const cps = weeklyCheckpoints(asc, rule.weeks)
+  let run = 0
+  while (run < cps.length && dropAt(cps[run]!) >= rule.drop) run++
+  const status: ClaimStatus =
+    run >= rule.weeks ? 'broken' : run > 0 || drop >= rule.drop / 2 ? 'weakening' : 'holding'
+  return {
+    status,
+    reason: `${where}: at or past the kill line at ${run} of ${rule.weeks} straight weekly checkpoints; ${history}.`,
+    reading_date: now.date,
+  }
+}
+
 /** The claim's status from its readings, oldest-to-newest order not required. */
 export function evaluateClaim(
   claim: ClaimDef,
-  readings: readonly StoredReading[],
+  all: readonly StoredReading[],
   fmt: Formatter,
   comparatorName: string | null = null,
 ): ClaimEvaluation {
   const spec = claim.spec
   if (spec.kind === 'judged') return unresolved('Judged signal: rated from M2 on.')
+  const newest = all.reduce<StoredReading | null>((n, r) => (!n || r.date > n.date ? r : n), null)
+  if (newest?.void_reason) return unresolved(newest.void_reason, newest.date)
+  const readings = all.filter((r) => !r.void_reason)
   switch (spec.rule.rule) {
     case 'sustained-floor':
       return sustainedFloor(spec.rule, readings, fmt, comparatorName)
@@ -170,6 +216,8 @@ export function evaluateClaim(
       return drawdownFromHigh(spec.rule, readings, fmt)
     case 'below-floor-periods':
       return belowFloorPeriods(spec.rule, readings, fmt)
+    case 'sustained-drawdown':
+      return sustainedDrawdown(spec.rule, readings, fmt)
   }
 }
 
@@ -183,6 +231,8 @@ export function historyDays(claim: ClaimDef): number {
       ? r.days
       : r.rule === 'below-floor-periods'
         ? 92 * r.periods
-        : 7 * r.weeks
+        : r.rule === 'sustained-drawdown'
+          ? r.days + 7 * r.weeks
+          : 7 * r.weeks
   return days + 7 + CHECKPOINT_SLACK_DAYS
 }

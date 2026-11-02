@@ -162,6 +162,7 @@ describe('tools/list', () => {
       'get_alerts',
       'get_coverage',
       'get_disclosures',
+      'get_gpu_prices',
       'get_hiring',
       'get_hiring_history',
       'get_incidents',

@@ -28,6 +28,16 @@ import openaiModelPage from '../../fixtures/pricing/openai-model-gpt-5.6-sol.md?
 import openaiPricing from '../../fixtures/pricing/openai-pricing.md?raw'
 import openrouterModels from '../../fixtures/pricing/openrouter-models.json?raw'
 import openrouterRankings from '../../fixtures/rankings/openrouter-rankings-daily.json?raw'
+import gpuAzure from '../../fixtures/recipes/gpu-azure.json?raw'
+import gpuCoreweave from '../../fixtures/recipes/gpu-coreweave.html?raw'
+import gpuCrusoe from '../../fixtures/recipes/gpu-crusoe.html?raw'
+import gpuDigitalocean from '../../fixtures/recipes/gpu-digitalocean.html?raw'
+import gpuLambda from '../../fixtures/recipes/gpu-lambda.html?raw'
+import gpuNebius from '../../fixtures/recipes/gpu-nebius.html?raw'
+import gpuOracle from '../../fixtures/recipes/gpu-oracle.json?raw'
+import gpuTogether from '../../fixtures/recipes/gpu-together.html?raw'
+import gpuVerda from '../../fixtures/recipes/gpu-verda.html?raw'
+import secCompanyfactsCrwv from '../../fixtures/recipes/sec-companyfacts-crwv.json?raw'
 import xaiModels from '../../fixtures/pricing/xai-models.md?raw'
 import edgarCompanyfactsSpcx from '../../fixtures/sec/edgar-companyfacts-spcx.json?raw'
 import xbrlSegmentGoogl from '../../fixtures/sec/xbrl-segment-googl-2026-10-29.xml?raw'
@@ -80,6 +90,16 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/pricing/openrouter-models.json': openrouterModels,
   'fixtures/pricing/xai-models.md': xaiModels,
   'fixtures/rankings/openrouter-rankings-daily.json': openrouterRankings,
+  'fixtures/recipes/gpu-azure.json': gpuAzure,
+  'fixtures/recipes/gpu-coreweave.html': gpuCoreweave,
+  'fixtures/recipes/gpu-crusoe.html': gpuCrusoe,
+  'fixtures/recipes/gpu-digitalocean.html': gpuDigitalocean,
+  'fixtures/recipes/gpu-lambda.html': gpuLambda,
+  'fixtures/recipes/gpu-nebius.html': gpuNebius,
+  'fixtures/recipes/gpu-oracle.json': gpuOracle,
+  'fixtures/recipes/gpu-together.html': gpuTogether,
+  'fixtures/recipes/gpu-verda.html': gpuVerda,
+  'fixtures/recipes/sec-companyfacts-crwv.json': secCompanyfactsCrwv,
   'fixtures/sec/edgar-companyfacts-spcx.json': edgarCompanyfactsSpcx,
   'fixtures/sec/edgar-fts-openai.json': edgarFtsOpenai,
   'fixtures/sec/edgar-fts.json': edgarFts,

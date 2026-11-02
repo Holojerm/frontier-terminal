@@ -142,9 +142,19 @@ export interface CutSourceEntry {
   reason: string
 }
 
+/** A thesis recipe's audit entry (sources.yaml `recipe_sources`). */
+export interface RecipeSourceEntry {
+  recipe_id: string
+  url: string | null
+  verdict: string
+  terms: string | null
+  caveat: string | null
+}
+
 export interface SourceRegistry {
   sources: RegisteredSource[]
   cuts: CutSourceEntry[]
+  recipes: RecipeSourceEntry[]
 }
 
 // sources.yaml keys whose fixture id (the id every table row carries) is spelt
@@ -162,7 +172,7 @@ interface Block {
 }
 
 /**
- * Parse one top-level block (`sources:` or `cut:`) into its entries. Handles
+ * Parse one top-level block (`sources:`, `cut:`, `recipe_sources:`) into its entries. Handles
  * the three value shapes the file uses: a scalar on the key's line, `null`,
  * and a `>-` folded block whose continuation lines are indented deeper than
  * the key. Folding joins lines with one space, which is what YAML does for
@@ -274,7 +284,15 @@ export function readSourceRegistry(sourcesYaml: string): SourceRegistry {
     reason: block.fields.reason ?? '',
   }))
 
-  return { sources, cuts }
+  const recipes: RecipeSourceEntry[] = readBlock(lines, 'recipe_sources').map((block) => ({
+    recipe_id: block.id,
+    url: block.fields.url ?? null,
+    verdict: block.fields.verdict ?? '',
+    terms: block.fields.terms ?? null,
+    caveat: block.fields.caveats ?? null,
+  }))
+
+  return { sources, cuts, recipes }
 }
 
 /** Derived source ids (server/pipeline/derived.ts) are named by their template. */

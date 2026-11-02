@@ -154,7 +154,7 @@ export function buildThesisDigest(input: DigestInput): RenderedEmail & { subject
       .map(([s, n]) => `${n} ${s}`)
       .join(', ')
     return {
-      name: `${companyName(thesis.company)} (${thesis.stance})`,
+      name: `${thesis.title ?? companyName(thesis.company)} (${thesis.stance})`,
       statement: thesis.statement,
       counts,
       claims,
