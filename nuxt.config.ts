@@ -169,11 +169,16 @@ const securityHeaders = {
 //   */5        — launch tripwire, layers/terminal/server/tasks/poll/tripwire.ts: parses the
 //                model catalogs, polls them only when they differ from the
 //                store, and yields on the half-hour ticks above.
+//              — social: social:alerts queues critical alerts
+//                (layers/terminal/server/pipeline/social.ts), social:post sends
+//                what is due (layers/social). Both no-op without a Buffer key.
+//   0 13 * * 1 — weekly thesis digest email, and social:digest queues the
+//                weekly what-moved thread.
 const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:alert', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
-  '*/5 * * * *': ['poll:tripwire'],
-  '0 13 * * 1': ['theses:digest'],
+  '*/5 * * * *': ['poll:tripwire', 'social:alerts', 'social:post'],
+  '0 13 * * 1': ['theses:digest', 'social:digest'],
 }
 
 /**
