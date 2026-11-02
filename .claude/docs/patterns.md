@@ -94,6 +94,24 @@ const pending = await db.select().from(schema.opsEvents).where(isNull(schema.ops
 await db.run(sql`SELECT * FROM users`)
 ```
 
+### Vendored layers
+
+A fork takes a template feature that has moved into `layers/<name>/` by vendoring it:
+`bun run layers:pull <name>` copies the template's `layers/<name>/` at one commit into this
+repo, and `layers.lock.json` records that commit and a content hash. Nuxt auto-registers
+`layers/`, so nothing else needs configuring. `bun run layers:check` (part of `ci`) fails if
+a vendored copy has been edited. `--remote` also re-downloads each commit and confirms the
+hash is the template's.
+
+- **Updating**: `bun run layers:pull --all` re-pulls every locked layer at its recorded ref
+  (`main` unless you passed `--ref`). The PR diff is exactly what the template changed.
+- **Customizing**: app files shadow a layer's components, pages and API routes. `server/utils`
+  cannot be shadowed (the layer's export wins), so change server behaviour through an
+  extension point or upstream in the template.
+- **Why not `extends: ['github:…']`**: NuxtHub's merged schema types leave layers under
+  `node_modules` untyped, so a remote layer's tables lose their types.
+- **In the template itself**, layers are authored, not vendored: its lock stays empty.
+
 ---
 
 
