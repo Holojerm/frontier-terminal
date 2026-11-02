@@ -3,36 +3,36 @@
 
 import { POSITION_LABEL } from '#shared/utils/thesis-format'
 import type { ThesisView } from '#shared/utils/thesis-types'
+import type { Fact } from '~/types/terminal-ui'
 
-defineProps<{ thesis: ThesisView }>()
+const props = defineProps<{ thesis: ThesisView }>()
+
+const items = computed<Fact[]>(() => [
+  {
+    key: 'stance',
+    label: 'Stance',
+    value: props.thesis.stance === 'bullish' ? 'Bullish' : 'Bearish',
+  },
+  { key: 'position', label: 'Position', value: POSITION_LABEL[props.thesis.position] },
+  { key: 'opened', label: 'Opened', value: props.thesis.opened },
+  { key: 'horizon', label: 'Horizon', value: props.thesis.horizon, wide: true },
+])
 </script>
 
 <template>
-  <dl class="grid grid-cols-2 gap-x-6 gap-y-3 text-sm sm:grid-cols-3">
-    <div class="space-y-0.5">
-      <dt class="text-toned">Stance</dt>
-      <dd class="flex items-center gap-1.5 text-highlighted">
+  <TerminalFacts :items="items">
+    <template #stance>
+      <span class="inline-flex items-center gap-1">
         <UIcon
           :name="thesis.stance === 'bullish' ? 'i-lucide-trending-up' : 'i-lucide-trending-down'"
           class="size-4"
           aria-hidden="true"
         />
-        {{ thesis.stance === 'bullish' ? 'Bullish' : 'Bearish' }}
-      </dd>
-    </div>
-    <div class="space-y-0.5">
-      <dt class="text-toned">Position</dt>
-      <dd class="text-highlighted">{{ POSITION_LABEL[thesis.position] }}</dd>
-    </div>
-    <div class="space-y-0.5">
-      <dt class="text-toned">Opened</dt>
-      <dd class="text-highlighted">
-        <time :datetime="thesis.opened">{{ thesis.opened }}</time>
-      </dd>
-    </div>
-    <div class="col-span-full space-y-0.5">
-      <dt class="text-toned">Horizon</dt>
-      <dd class="text-highlighted">{{ thesis.horizon }}</dd>
-    </div>
-  </dl>
+        {{ items[0]!.value }}
+      </span>
+    </template>
+    <template #opened>
+      <time :datetime="thesis.opened">{{ thesis.opened }}</time>
+    </template>
+  </TerminalFacts>
 </template>

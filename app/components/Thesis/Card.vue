@@ -11,42 +11,38 @@ const counts = computed(() => statusCounts(props.thesis.claims))
 </script>
 
 <template>
-  <article
-    :aria-labelledby="`thesis-${thesis.id}`"
-    class="space-y-4 rounded border border-default p-4 sm:p-6"
-  >
-    <header class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-      <h2 :id="`thesis-${thesis.id}`" class="text-2xl text-highlighted">
-        <NuxtLink :to="thesisPath(thesis.id)" class="hover:underline">{{
-          thesis.company_name
-        }}</NuxtLink>
-      </h2>
-      <span v-if="thesis.ticker" class="font-mono text-sm text-toned">{{ thesis.ticker }}</span>
-    </header>
+  <TerminalCard :id="`thesis-${thesis.id}`" :level="2">
+    <template #title>
+      <NuxtLink
+        :to="thesisPath(thesis.id)"
+        class="text-base hover:underline hover:underline-offset-2"
+        >{{ thesis.company_name }}</NuxtLink
+      >
+      <span v-if="thesis.ticker" class="ml-2 font-mono text-muted">{{ thesis.ticker }}</span>
+    </template>
+    <template #meta>
+      {{ thesis.claims.length }} {{ thesis.claims.length === 1 ? 'claim' : 'claims' }}
+    </template>
 
-    <p class="max-w-2xl text-default">{{ thesis.statement }}</p>
+    <p class="max-w-2xl text-sm text-default">{{ thesis.statement }}</p>
 
     <ThesisMeta :thesis="thesis" />
 
-    <div class="space-y-2">
-      <p class="text-sm text-toned">
-        {{ thesis.claims.length }} {{ thesis.claims.length === 1 ? 'claim' : 'claims' }}
-      </p>
-      <ul class="flex flex-wrap gap-2" aria-label="Claims by status">
-        <li v-for="c in counts" :key="c.status">
-          <ThesisStatusBadge :status="c.status" :count="c.n" size="sm" />
-        </li>
-      </ul>
-    </div>
+    <ul class="flex flex-wrap gap-2" aria-label="Claims by status">
+      <li v-for="c in counts" :key="c.status">
+        <ThesisStatusBadge :status="c.status" :count="c.n" size="sm" />
+      </li>
+    </ul>
 
     <UButton
       :to="thesisPath(thesis.id)"
       color="neutral"
       variant="outline"
+      size="sm"
       trailing-icon="i-lucide-arrow-right"
       :aria-label="`Read the ${thesis.company_name} thesis`"
     >
       Read the thesis
     </UButton>
-  </article>
+  </TerminalCard>
 </template>

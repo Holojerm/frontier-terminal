@@ -2,11 +2,13 @@
 // The hiring axis over time: open roles per lab per day, reconstructed by
 // undoing the change log backwards from each board's current listing, and
 // the department mix now against the comparison instant. Google is a stated
-// cut and xAI's board carries its entity-blend caveat, both as on the
-// landing page.
+// cut and xAI's board carries its entity-blend caveat, both stated in the
+// by-lab table the overview leads with.
 
-import { absoluteStamp, count } from '#shared/utils/terminal-format'
+import { absoluteStamp, count, signed } from '#shared/utils/terminal-format'
+import { dayLabel } from '#shared/utils/thesis-format'
 import type { HiringHistoryData, HiringHistoryProvider } from '#shared/utils/terminal-types'
+import type { TableColumn } from '~/types/terminal-ui'
 
 const NO_DEPARTMENT = '(no department)'
 
@@ -48,13 +50,7 @@ const chart = computed(() => {
   }
 })
 
-const xLabel = (d: string) => absoluteStamp(`${d}T00:00:00Z`, now.value).replace(/ \d\d:\d\dZ$/, '')
-
-const signed = (n: number) => (n > 0 ? `+${n}` : String(n))
-
 const anyLog = computed(() => (hiring.value?.log.changes ?? 0) > 0)
-
-const showTable = ref(false)
 
 // Rows that held still say nothing; hide them unless asked.
 const movedOnly = ref(true)
@@ -63,46 +59,45 @@ const compareRows = (p: HiringHistoryProvider) =>
 const unchanged = (p: HiringHistoryProvider) =>
   (p.compare?.departments ?? []).filter((d) => d.now === d.then).length
 
-/** One entry per board with something to disclose: an entity blend, or no feed at all. */
-const caveats = computed(() =>
-  (hiring.value?.providers ?? []).flatMap((p) => {
-    if (p.feed === 'no_public_feed') {
-      return [{ provider: p.provider, label: `${p.display}: no public feed`, text: p.reason ?? '' }]
-    }
-    if (p.caveat) {
-      return [{ provider: p.provider, label: `${p.display}: entity-blended board`, text: p.caveat }]
-    }
-    return []
-  }),
+const dailyColumns = computed<TableColumn[]>(() => [
+  { key: 'date', label: 'Date', class: 'font-mono' },
+  ...chart.value.series.map((x) => ({ key: x.id, label: x.label, numeric: true })),
+])
+const dailyRows = computed(() =>
+  chart.value.x.map((date, i) => ({
+    date,
+    ...Object.fromEntries(
+      chart.value.series.map((x) => [x.id, x.values[i] === null ? '—' : count(x.values[i]!)]),
+    ),
+  })),
 )
+
+const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
+  { key: 'department', label: 'Department', class: 'max-w-48 truncate text-default' },
+  { key: 'then', label: p.compare?.at ?? 'Then', numeric: true, class: 'text-muted' },
+  { key: 'now', label: 'Now', numeric: true },
+  { key: 'delta', label: 'Δ', numeric: true, class: 'text-highlighted' },
+]
 </script>
 
 <template>
-  <div class="space-y-12">
-    <header class="space-y-2">
-      <h1 class="text-4xl text-highlighted">Hiring</h1>
-      <p class="max-w-2xl text-muted">
-        Open roles per day, per lab, reconstructed from each board’s change log. Nothing is
-        estimated.
-      </p>
-    </header>
-
-    <UAlert
-      v-if="error"
-      color="error"
-      variant="soft"
-      icon="i-lucide-database-zap"
-      title="Hiring history could not be read"
-      description="The history endpoint failed to respond. No stale or inferred number is shown in its place."
-    />
-
-    <template v-else-if="hiring">
-      <!-- Every board caveat once, here, so the panels below carry only a mark. -->
-      <ul v-if="caveats.length" class="space-y-1 text-sm text-muted">
-        <li v-for="c in caveats" :key="c.provider">
-          <TerminalCaveatMark :label="c.label" :text="c.text" />
-        </li>
-      </ul>
+  <TerminalPage
+    title="Hiring"
+    lede="Open roles per day, per lab, reconstructed from each board’s change log. Nothing is estimated."
+    :as-of="hiring?.as_of"
+    :error="Boolean(error)"
+    error-title="Hiring history could not be read"
+    error-body="The history endpoint failed to respond. No stale or inferred number is shown in its place."
+  >
+    <template v-if="hiring">
+      <TerminalPanel
+        id="labs"
+        title="By lab"
+        note="Open roles per board, the infrastructure cluster, and the department that moved most."
+        flush
+      >
+        <TerminalHiringSummary :history="hiring" />
+      </TerminalPanel>
 
       <TerminalPanel
         id="series"
@@ -118,62 +113,29 @@ const caveats = computed(() =>
           :x="chart.x"
           :series="chart.series"
           :format="count"
-          :x-label="xLabel"
+          :x-label="dayLabel"
           :title="`Open roles per day at ${chart.series.map((s) => s.label).join(', ')} from ${chart.x[0]} to ${chart.x.at(-1)}`"
         />
-        <TerminalEmptyState
+        <TerminalGap
           v-else
           title="No series to draw yet."
-          body="A series needs a board with a current listing and at least two days on record. Each board’s first poll sets its baseline."
+          reason="A series needs a board with a current listing and at least two days on record. Each board’s first poll sets its baseline."
           :action="{ label: 'See coverage', to: '/data#coverage' }"
         />
 
-        <UCollapsible v-if="chart.x.length > 1" v-model:open="showTable" class="space-y-2">
-          <UButton
-            variant="link"
-            color="neutral"
-            size="sm"
-            trailing-icon="i-lucide-chevron-down"
-            class="px-0 text-toned"
-            :label="showTable ? 'Hide the daily table' : 'Show the daily table'"
+        <TerminalExpand
+          v-if="chart.x.length > 1"
+          show="Show the daily table"
+          hide="Hide the daily table"
+        >
+          <TerminalTable
+            caption="Open roles at the end of each day, per lab"
+            :columns="dailyColumns"
+            :rows="dailyRows"
+            :row-key="(r) => r.date"
+            nested
           />
-          <template #content>
-            <div class="overflow-x-auto">
-              <table class="w-full text-sm">
-                <caption class="sr-only">
-                  Open roles at the end of each day, per lab
-                </caption>
-                <thead>
-                  <tr class="border-b border-default text-left">
-                    <th scope="col" class="py-2 pr-4 font-medium text-muted">Date</th>
-                    <th
-                      v-for="s in chart.series"
-                      :key="s.id"
-                      scope="col"
-                      class="py-2 pr-4 text-right font-medium text-muted"
-                    >
-                      {{ s.label }}
-                    </th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr v-for="(d, i) in chart.x" :key="d" class="border-b border-default">
-                    <th scope="row" class="py-1 pr-4 text-left font-normal">
-                      <time :datetime="d">{{ d }}</time>
-                    </th>
-                    <td
-                      v-for="s in chart.series"
-                      :key="s.id"
-                      class="py-1 pr-4 text-right font-mono"
-                    >
-                      {{ s.values[i] === null ? '—' : count(s.values[i]!) }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
-          </template>
-        </UCollapsible>
+        </TerminalExpand>
       </TerminalPanel>
 
       <TerminalPanel
@@ -190,111 +152,58 @@ const caveats = computed(() =>
         :note="`Open roles by department, now against ${hiring.window_days} days ago or the first day on record.`"
       >
         <UCheckbox v-model="movedOnly" label="Only departments that moved" />
-        <div class="grid gap-4 md:grid-cols-2">
-          <article
+        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+          <TerminalCard
             v-for="p in hiring.providers"
             :id="p.provider"
             :key="p.provider"
-            :aria-labelledby="`mix-${p.provider}`"
-            class="space-y-3 rounded border border-default bg-elevated p-4"
+            :title="p.display"
+            :sources="p.sources"
           >
-            <header class="flex flex-wrap items-baseline justify-between gap-2">
-              <h3 :id="`mix-${p.provider}`" class="text-lg text-highlighted">
-                {{ p.display }}
-                <TerminalCaveatMark
-                  v-if="p.caveat"
-                  label="blended board"
-                  :text="p.caveat"
-                  class="ml-1"
-                />
-              </h3>
-              <span v-if="p.compare" class="text-sm text-toned">
-                <span class="font-mono text-highlighted">{{ p.compare.total_now }}</span> open,
+            <template #meta>
+              <TerminalCaveatMark v-if="p.caveat" label="blended board" :text="p.caveat" />
+              <span v-if="p.compare">
+                <span class="font-mono text-highlighted">{{ count(p.compare.total_now) }}</span>
+                open,
                 <span class="font-mono">{{
                   signed(p.compare.total_now - p.compare.total_then)
                 }}</span>
-                since {{ p.compare.at }} ({{ p.compare.days }}d)
+                since {{ p.compare.at }}
               </span>
-            </header>
+            </template>
 
-            <!-- Honest cut: no public feed, never a fabricated series. -->
-            <p
-              v-if="p.feed === 'no_public_feed'"
-              class="flex items-center gap-1 text-sm text-toned"
-            >
-              No public feed
-              <TerminalCaveatMark
-                :name="`Why ${p.display} has no hiring feed`"
-                :text="p.reason ?? ''"
-              />
-            </p>
-
-            <TerminalEmptyState
-              v-else-if="p.feed === 'no_rows'"
-              title="No parsed roles yet."
-              :body="
-                p.sources.length
-                  ? 'The feed is snapshotted; rows appear when its parser runs.'
-                  : 'This board has not been polled yet.'
-              "
-            />
+            <TerminalGap v-if="feedGap('hiring', p)" inline v-bind="feedGap('hiring', p)!" />
 
             <template v-else-if="p.compare">
-              <p v-if="compareRows(p).length === 0" class="text-xs text-toned">
+              <p v-if="compareRows(p).length === 0" class="text-xs text-muted">
                 No department moved; {{ unchanged(p) }} unchanged.
               </p>
-              <div v-else class="overflow-x-auto">
-                <table class="w-full text-xs">
-                  <caption class="sr-only">
-                    {{
-                      p.display
-                    }}
-                    open roles by department, then and now
-                  </caption>
-                  <thead>
-                    <tr class="border-b border-default text-left">
-                      <th scope="col" class="py-1 pr-2 font-medium text-toned">Department</th>
-                      <th scope="col" class="py-1 pr-2 text-right font-medium text-toned">
-                        {{ p.compare.at }}
-                      </th>
-                      <th scope="col" class="py-1 pr-2 text-right font-medium text-toned">Now</th>
-                      <th scope="col" class="py-1 text-right font-medium text-toned">Δ</th>
-                    </tr>
-                  </thead>
-                  <tbody>
-                    <tr
-                      v-for="d in compareRows(p)"
-                      :key="d.department"
-                      class="border-b border-default"
-                    >
-                      <th
-                        scope="row"
-                        class="max-w-48 truncate py-1 pr-2 text-left font-normal text-default"
-                        :title="d.department"
-                      >
-                        {{ d.department }}
-                      </th>
-                      <td class="py-1 pr-2 text-right font-mono text-toned">{{ d.then }}</td>
-                      <td class="py-1 pr-2 text-right font-mono text-default">{{ d.now }}</td>
-                      <td
-                        class="py-1 text-right font-mono"
-                        :class="d.now === d.then ? 'text-toned' : 'text-highlighted'"
-                      >
-                        {{ d.now === d.then ? '·' : signed(d.now - d.then) }}
-                      </td>
-                    </tr>
-                  </tbody>
-                </table>
-              </div>
+              <TerminalTable
+                v-else
+                :caption="`${p.display} open roles by department, then and now`"
+                :columns="deptColumns(p)"
+                :rows="
+                  compareRows(p).map((d) => ({
+                    ...d,
+                    delta: d.now === d.then ? '±0' : signed(d.now - d.then),
+                  }))
+                "
+                :row-key="(d) => d.department"
+                nested
+              >
+                <template #cell-department="{ row: d }">
+                  <span :title="d.department">{{ d.department }}</span>
+                </template>
+              </TerminalTable>
               <p
                 v-if="movedOnly && compareRows(p).length && unchanged(p)"
-                class="text-xs text-toned"
+                class="text-xs text-muted"
               >
                 {{ unchanged(p) }} unchanged hidden.
               </p>
               <p
                 v-if="p.join_from && p.compare.at < p.join_from.slice(0, 10)"
-                class="text-xs text-toned"
+                class="text-xs text-muted"
               >
                 Departments joined from {{ absoluteStamp(p.join_from, now) }}; earlier rows read “{{
                   NO_DEPARTMENT
@@ -302,25 +211,15 @@ const caveats = computed(() =>
               </p>
               <p
                 v-if="p.baseline_at && p.series_from && p.baseline_at > p.series_from"
-                class="text-xs text-toned"
+                class="text-xs text-muted"
               >
                 Rows before the {{ absoluteStamp(p.baseline_at, now) }} baseline are imported
                 history, carried as they stand today.
               </p>
             </template>
-
-            <ul v-if="p.sources.length" class="space-y-1">
-              <li v-for="s in p.sources" :key="s.source_id">
-                <TerminalProvenanceTag
-                  :label="s.label"
-                  :source-url="s.source_url"
-                  :fetched-at="s.fetched_at"
-                />
-              </li>
-            </ul>
-          </article>
+          </TerminalCard>
         </div>
       </TerminalPanel>
     </template>
-  </div>
+  </TerminalPage>
 </template>

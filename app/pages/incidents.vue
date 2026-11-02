@@ -1,11 +1,12 @@
 <script setup lang="ts">
 // Every status-page incident in the last 90 days, newest first, each linked
 // to the vendor's own incident page and stamped with the fetch it was read
-// from. The landing page's Capacity strain panel is the summary of this.
+// from, under the per-lab summary the overview leads with.
 
 import { absoluteStamp } from '#shared/utils/terminal-format'
-import { LAB_DISPLAY } from '#shared/utils/terminal-labs'
+import { labName } from '#shared/utils/terminal-labs'
 import type { IncidentView, IncidentsData } from '#shared/utils/terminal-types'
+import type { TableColumn } from '~/types/terminal-ui'
 
 definePageMeta({
   publicPage: {
@@ -41,8 +42,6 @@ useSeo({
 
 const now = useNow()
 
-const PROVIDER: Record<string, string> = LAB_DISPLAY
-
 /** Minutes between start and resolution, as printed by the feed; null while open. */
 const durationLabel = (i: IncidentView): string | null => {
   if (i.resolved_at === null) return null
@@ -51,51 +50,47 @@ const durationLabel = (i: IncidentView): string | null => {
   return minutes < 60 ? `${minutes}m` : `${Math.floor(minutes / 60)}h ${minutes % 60}m`
 }
 
-const cuts = computed(
-  () => incidents.value?.providers.filter((p) => p.feed === 'no_public_feed') ?? [],
-)
-const caveats = computed(
-  () => incidents.value?.providers.filter((p) => p.caveat && p.feed !== 'no_public_feed') ?? [],
-)
+const columns: TableColumn[] = [
+  { key: 'started', label: 'Started', class: 'whitespace-nowrap font-mono text-xs' },
+  { key: 'provider', label: 'Lab', class: 'whitespace-nowrap' },
+  { key: 'title', label: 'Incident' },
+  { key: 'impact', label: 'Impact', class: 'font-mono text-xs' },
+  { key: 'status', label: 'Status' },
+  { key: 'duration', label: 'Duration', numeric: true, class: 'text-xs' },
+  { key: 'source', label: 'Read from' },
+]
 </script>
 
 <template>
-  <div class="space-y-8">
-    <header class="space-y-2">
-      <h1 class="text-4xl text-highlighted">Incidents</h1>
-      <p class="max-w-2xl text-muted">
-        Every status-page incident, in the vendor’s own words, linked to the incident page it was
-        read from. Per-lab summary on the
-        <NuxtLink to="/#strain" class="text-primary underline underline-offset-2"
-          >Capacity strain</NuxtLink
-        >
-        panel.
-      </p>
-    </header>
+  <TerminalPage
+    title="Incidents"
+    lede="Every status-page incident, in the vendor’s own words, linked to the incident page it was read from."
+    :as-of="incidents?.as_of"
+    :error="Boolean(error)"
+    error-title="Incidents could not be read"
+    error-body="The incidents endpoint failed to respond."
+  >
+    <template v-if="incidents">
+      <TerminalPanel
+        id="labs"
+        title="By lab"
+        :note="`Newest ${incidents.window_days} days against the prior ${incidents.window_days}. A count is what the vendor chose to post, not an SLA.`"
+        flush
+      >
+        <TerminalStrainTable :incidents="incidents" />
+        <template #foot>
+          Counted by the vendor’s posted start time, back from
+          <time :datetime="incidents.window_to" :title="incidents.window_to">{{
+            absoluteStamp(incidents.window_to, now)
+          }}</time
+          >. Impact and status are each vendor’s own words, not normalized.
+        </template>
+      </TerminalPanel>
 
-    <UAlert
-      v-if="error"
-      color="error"
-      variant="soft"
-      icon="i-lucide-database-zap"
-      title="Incidents could not be read"
-      description="The incidents endpoint failed to respond."
-    />
-
-    <template v-else-if="incidents">
-      <ul v-if="cuts.length || caveats.length" class="space-y-1 text-sm text-muted">
-        <li v-for="cut in cuts" :key="cut.provider">
-          <TerminalCaveatMark :label="`${cut.display}: no public feed`" :text="cut.reason ?? ''" />
-        </li>
-        <li v-for="p in caveats" :key="p.provider">
-          <TerminalCaveatMark :label="`${p.display} feed caveat`" :text="p.caveat!" />
-        </li>
-      </ul>
-
-      <TerminalEmptyState
+      <TerminalGap
         v-if="incidents.incidents.length === 0"
         title="No incidents in the window."
-        :body="`No incident started in the last ${incidents.history_days} days on any polled feed.`"
+        :reason="`No incident started in the last ${incidents.history_days} days on any polled feed.`"
         :action="{ label: 'Coverage', to: '/data#coverage' }"
       />
 
@@ -104,78 +99,54 @@ const caveats = computed(
         id="incidents"
         :title="`Last ${incidents.history_days} days`"
         :note="`${incidents.incidents.length} incidents, newest first, to ${absoluteStamp(incidents.window_to, now)}.`"
+        flush
       >
-        <div class="overflow-x-auto md:overflow-visible">
-          <table class="w-full text-sm">
-            <caption class="sr-only">
-              Status-page incidents in the last
-              {{
-                incidents.history_days
-              }}
-              days, newest first
-            </caption>
-            <thead class="bg-default md:sticky md:top-0">
-              <tr class="border-b border-default text-left">
-                <th scope="col" class="py-2 pr-4 font-medium text-muted">Started</th>
-                <th scope="col" class="py-2 pr-4 font-medium text-muted">Provider</th>
-                <th scope="col" class="py-2 pr-4 font-medium text-muted">Incident</th>
-                <th scope="col" class="py-2 pr-4 font-medium text-muted">Impact</th>
-                <th scope="col" class="py-2 pr-4 font-medium text-muted">Status</th>
-                <th scope="col" class="py-2 pr-4 text-right font-medium text-muted">Duration</th>
-                <th scope="col" class="py-2 font-medium text-muted">Read from</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="i in incidents.incidents"
-                :key="i.entity_key"
-                class="border-b border-default align-top"
-              >
-                <td class="whitespace-nowrap py-2 pr-4 font-mono text-xs">
-                  <time :datetime="i.started_at" :title="i.started_at">
-                    {{ absoluteStamp(i.started_at, now) }}
-                  </time>
-                </td>
-                <td class="py-2 pr-4">{{ PROVIDER[i.provider] ?? i.provider }}</td>
-                <th scope="row" class="py-2 pr-4 text-left font-normal">
-                  <a
-                    :href="i.incident_url"
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    class="text-highlighted underline underline-offset-2"
-                    >{{ i.title }}</a
-                  >
-                  <span v-if="i.components.length" class="block text-xs text-muted">
-                    {{ i.components.join(' · ') }}
-                  </span>
-                </th>
-                <td class="py-2 pr-4 font-mono text-xs">{{ i.impact }}</td>
-                <td class="py-2 pr-4">
-                  <UBadge
-                    v-if="i.resolved_at === null"
-                    color="warning"
-                    variant="subtle"
-                    size="sm"
-                    icon="i-lucide-activity"
-                  >
-                    open · {{ i.status }}
-                  </UBadge>
-                  <span v-else class="font-mono text-xs text-toned">{{ i.status }}</span>
-                </td>
-                <td class="py-2 pr-4 text-right font-mono text-xs">
-                  {{ durationLabel(i) ?? '—' }}
-                </td>
-                <td class="py-2">
-                  <TerminalProvenanceTag :source-url="i.source_url" :fetched-at="i.fetched_at" />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="text-xs text-muted">
-          Duration is resolution minus start, as the feed states them.
-        </p>
+        <TerminalTable
+          :caption="`Status-page incidents in the last ${incidents.history_days} days, newest first`"
+          :columns="columns"
+          :rows="incidents.incidents"
+          :row-key="(i) => i.entity_key"
+          row-header="title"
+          sticky
+          align="top"
+        >
+          <template #cell-started="{ row: i }">
+            <time :datetime="i.started_at" :title="i.started_at">
+              {{ absoluteStamp(i.started_at, now) }}
+            </time>
+          </template>
+          <template #cell-provider="{ row: i }">{{ labName(i.provider) }}</template>
+          <template #cell-title="{ row: i }">
+            <a
+              :href="i.incident_url"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-highlighted underline underline-offset-2"
+              >{{ i.title }}</a
+            >
+            <span v-if="i.components.length" class="block text-xs text-muted">
+              {{ i.components.join(' · ') }}
+            </span>
+          </template>
+          <template #cell-status="{ row: i }">
+            <UBadge
+              v-if="i.resolved_at === null"
+              color="warning"
+              variant="subtle"
+              size="sm"
+              icon="i-lucide-activity"
+            >
+              open · {{ i.status }}
+            </UBadge>
+            <span v-else class="font-mono text-xs text-muted">{{ i.status }}</span>
+          </template>
+          <template #cell-duration="{ row: i }">{{ durationLabel(i) ?? '—' }}</template>
+          <template #cell-source="{ row: i }">
+            <TerminalProvenanceTag :source-url="i.source_url" :fetched-at="i.fetched_at" />
+          </template>
+        </TerminalTable>
+        <template #foot>Duration is resolution minus start, as the feed states them.</template>
       </TerminalPanel>
     </template>
-  </div>
+  </TerminalPage>
 </template>

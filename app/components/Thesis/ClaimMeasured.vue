@@ -26,38 +26,32 @@ const chart = computed(() => ({
   ],
 }))
 const newestFirst = computed(() => [...series.value].reverse())
-
-const showTable = ref(false)
 </script>
 
 <template>
-  <div class="space-y-4">
-    <TerminalEmptyState
+  <div class="space-y-3">
+    <TerminalGap
       v-if="!latest"
       title="No reading yet."
-      body="The signal has produced no number for this claim. Its status is unresolved until it does."
+      reason="The signal has produced no number for this claim. Its status is unresolved until it does."
     />
 
     <template v-else>
-      <div class="space-y-1">
-        <h3 class="text-sm text-toned">Latest reading</h3>
-        <p class="flex flex-wrap items-baseline gap-x-3">
-          <span class="font-display text-3xl text-highlighted">{{ format(latest.value) }}</span>
-          <span class="text-sm text-muted">
-            for <time :datetime="latest.date">{{ latest.date }}</time>
-          </span>
-        </p>
-        <dl v-if="context.length" class="space-y-0.5 text-sm">
-          <div v-for="row in context" :key="row.label" class="flex flex-wrap gap-x-2">
-            <dt class="text-muted">{{ row.label }}</dt>
-            <dd class="font-mono text-default">{{ row.value }}</dd>
-          </div>
-        </dl>
-        <p class="text-xs text-toned">
-          Source:
-          <TerminalProvenanceTag :source-url="latest.source_url" :fetched-at="latest.fetched_at" />
-        </p>
-      </div>
+      <dl>
+        <TerminalFigure
+          label="Latest reading"
+          :value="format(latest.value)"
+          :sub="`for ${latest.date}`"
+          :source="latest"
+        />
+      </dl>
+      <TerminalFacts
+        v-if="context.length"
+        layout="list"
+        :items="
+          context.map((row) => ({ key: row.label, label: row.label, value: row.value, mono: true }))
+        "
+      />
 
       <TerminalLineChart
         v-if="series.length > 1"
@@ -69,43 +63,25 @@ const showTable = ref(false)
       />
       <p v-else class="text-sm text-muted">One reading so far. A trend needs at least two.</p>
 
-      <UCollapsible v-if="series.length > 1" v-model:open="showTable" class="space-y-2">
-        <UButton
-          variant="link"
-          color="neutral"
-          size="sm"
-          trailing-icon="i-lucide-chevron-down"
-          class="px-0 text-toned"
-          :label="showTable ? 'Hide the readings' : 'Show the readings'"
-        />
-        <template #content>
-          <div class="overflow-x-auto">
-            <table class="w-full text-sm">
-              <caption class="sr-only">
-                {{
-                  claim.signal_label
-                }}, newest first
-              </caption>
-              <thead>
-                <tr class="border-b border-default text-left">
-                  <th scope="col" class="py-2 pr-4 font-medium text-muted">Date</th>
-                  <th scope="col" class="py-2 text-right font-medium text-muted">Value</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="p in newestFirst" :key="p.date" class="border-b border-default">
-                  <th scope="row" class="py-1 pr-4 text-left font-normal">
-                    <time :datetime="p.date" :title="absoluteStamp(`${p.date}T00:00:00Z`)">{{
-                      p.date
-                    }}</time>
-                  </th>
-                  <td class="py-1 text-right font-mono">{{ format(p.value) }}</td>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-        </template>
-      </UCollapsible>
+      <TerminalExpand v-if="series.length > 1" show="Show the readings" hide="Hide the readings">
+        <TerminalTable
+          :caption="`${claim.signal_label}, newest first`"
+          :columns="[
+            { key: 'date', label: 'Date', class: 'font-mono' },
+            { key: 'value', label: 'Value', numeric: true },
+          ]"
+          :rows="newestFirst"
+          :row-key="(p) => p.date"
+          nested
+        >
+          <template #cell-date="{ row: p }">
+            <time :datetime="p.date" :title="absoluteStamp(`${p.date}T00:00:00Z`)">{{
+              p.date
+            }}</time>
+          </template>
+          <template #cell-value="{ row: p }">{{ format(p.value) }}</template>
+        </TerminalTable>
+      </TerminalExpand>
     </template>
   </div>
 </template>

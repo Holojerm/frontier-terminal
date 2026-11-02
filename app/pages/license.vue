@@ -41,14 +41,11 @@ useSeo({
 </script>
 
 <template>
-  <div class="space-y-12">
-    <header class="space-y-2">
-      <h1 class="text-4xl text-highlighted">License</h1>
-      <p class="max-w-2xl text-muted">
-        The compilation, the underlying facts, and the code are licensed separately.
-      </p>
-    </header>
-
+  <TerminalPage
+    title="License"
+    lede="The compilation, the underlying facts, and the code are licensed separately."
+    narrow
+  >
     <TerminalPanel id="compilation" title="The compilation">
       <div class="max-w-2xl space-y-3 text-default">
         <p>
@@ -63,7 +60,7 @@ useSeo({
           >. It may be quoted, charted, republished, and used for training, with attribution.
         </p>
         <p class="text-sm text-muted">Copy this line:</p>
-        <p class="rounded-md bg-elevated p-3 font-mono text-sm text-highlighted">
+        <p class="rounded border border-default p-3 font-mono text-sm text-highlighted">
           {{ attribution }}
         </p>
       </div>
@@ -88,34 +85,28 @@ useSeo({
       title="Sources that state their own terms"
       note="Verbatim from sources.yaml. Most sources state no terms, and none are supplied for them."
     >
-      <div v-if="licensed.length" class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <caption class="sr-only">
-            Tracked sources with a stated data license
-          </caption>
-          <thead>
-            <tr class="border-b border-default text-left">
-              <th scope="col" class="py-2 pr-4 font-medium text-muted">Source</th>
-              <th scope="col" class="py-2 font-medium text-muted">Stated license</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="source in licensed" :key="source.source_id" class="border-b border-default">
-              <th scope="row" class="py-3 pr-4 text-left font-normal">
-                <a
-                  :href="source.url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-primary underline underline-offset-2"
-                  >{{ source.label }}</a
-                >
-              </th>
-              <td class="py-3 text-muted">{{ source.license }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <p v-else class="text-sm text-muted">No tracked source states a license of its own.</p>
+      <TerminalTable
+        v-if="licensed.length"
+        caption="Tracked sources with a stated data license"
+        :columns="[
+          { key: 'label', label: 'Source' },
+          { key: 'license', label: 'Stated license', class: 'text-muted' },
+        ]"
+        :rows="licensed"
+        :row-key="(s) => s.source_id"
+        :edge="false"
+      >
+        <template #cell-label="{ row: source }">
+          <a
+            :href="source.url"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary underline underline-offset-2"
+            >{{ source.label }}</a
+          >
+        </template>
+      </TerminalTable>
+      <TerminalGap v-else inline title="No tracked source states a license of its own." />
       <p class="max-w-2xl text-sm text-muted">
         Where a source requires a specific attribution string, the page showing its numbers prints
         it verbatim — see
@@ -145,5 +136,5 @@ useSeo({
         reproduced.
       </p>
     </TerminalPanel>
-  </div>
+  </TerminalPage>
 </template>

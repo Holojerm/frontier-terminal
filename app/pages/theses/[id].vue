@@ -45,56 +45,45 @@ useSeo({
 </script>
 
 <template>
-  <div class="space-y-12">
-    <UAlert
-      v-if="error || !data"
-      color="error"
-      variant="soft"
-      icon="i-lucide-database-zap"
-      title="This thesis could not be read"
-      description="The theses endpoint failed to respond. No stale or inferred status is shown in its place."
-    />
+  <TerminalPage
+    :back="{ label: 'All theses', to: '/theses' }"
+    :as-of="data?.as_of"
+    :error="Boolean(error) || !data"
+    error-title="This thesis could not be read"
+    error-body="The theses endpoint failed to respond. No stale or inferred status is shown in its place."
+  >
+    <template #title>
+      {{ thesis?.company_name ?? 'Thesis' }}
+      <span v-if="thesis?.ticker" class="ml-2 font-mono text-lg text-muted">{{
+        thesis.ticker
+      }}</span>
+    </template>
+    <template v-if="thesis" #lede>{{ thesis.statement }}</template>
+    <template v-if="thesis" #header>
+      <ThesisMeta :thesis="thesis" />
+      <p v-if="thesis.comparison_names.length" class="text-sm text-muted">
+        Compared with {{ thesis.comparison_names.join(', ') }}.
+      </p>
+      <UButton
+        :href="journalUrl(manifest.links.github, thesis.doc_path)"
+        target="_blank"
+        rel="noopener noreferrer"
+        variant="link"
+        color="primary"
+        size="sm"
+        trailing-icon="i-lucide-external-link"
+        class="px-0 underline underline-offset-2"
+      >
+        Read the journal page on GitHub
+      </UButton>
+    </template>
 
-    <template v-else-if="thesis">
-      <header class="space-y-4">
-        <UButton
-          to="/theses"
-          variant="link"
-          color="neutral"
-          size="sm"
-          icon="i-lucide-arrow-left"
-          class="px-0 text-toned"
-        >
-          All theses
-        </UButton>
-        <div class="flex flex-wrap items-baseline gap-x-3 gap-y-1">
-          <h1 class="text-4xl text-highlighted">{{ thesis.company_name }}</h1>
-          <span v-if="thesis.ticker" class="font-mono text-lg text-toned">{{ thesis.ticker }}</span>
-        </div>
-        <p class="max-w-2xl text-lg text-default">{{ thesis.statement }}</p>
-        <ThesisMeta :thesis="thesis" />
-        <p v-if="thesis.comparison_names.length" class="text-sm text-muted">
-          Compared with {{ thesis.comparison_names.join(', ') }}.
-        </p>
-        <UButton
-          :href="journalUrl(manifest.links.github, thesis.doc_path)"
-          target="_blank"
-          rel="noopener noreferrer"
-          variant="link"
-          color="primary"
-          size="sm"
-          trailing-icon="i-lucide-external-link"
-          class="px-0 underline underline-offset-2"
-        >
-          Read the journal page on GitHub
-        </UButton>
-      </header>
-
+    <template v-if="thesis && data">
       <section aria-label="Claims" class="space-y-6">
         <ThesisClaim v-for="claim in thesis.claims" :key="claim.id" :claim="claim" />
       </section>
 
       <ThesisFooter :caveat="data.caveat" />
     </template>
-  </div>
+  </TerminalPage>
 </template>
