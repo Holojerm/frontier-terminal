@@ -26,12 +26,14 @@ import { includeSources, type FetchSource } from './sources'
 // and xAI publish none, OpenAI's is 740 KB, and the catalog is the page the
 // terminal quotes anyway.
 
-/** The pages a launch lands on first: one catalog per lab (Google's is its price list). */
+/** The pages a launch lands on first: one catalog per lab (Google's is its price list),
+ * plus Google's models page, which carries its class-map sentences. */
 export const TRIPWIRE_SOURCES: readonly string[] = [
   'anthropic-models-md',
   'openai-models-md',
   'xai-models-md',
   'google-pricing-html',
+  'google-models-md',
   'meta-models-md',
 ]
 

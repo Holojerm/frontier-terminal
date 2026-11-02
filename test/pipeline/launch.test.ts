@@ -234,6 +234,7 @@ describe('tripwire', () => {
     'openai-models-md',
     'xai-models-md',
     'google-pricing-html',
+    'google-models-md',
     'meta-models-md',
   ]
 

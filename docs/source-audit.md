@@ -10,6 +10,7 @@ Five parallel audit agents live-fetched every candidate source (curl + WebFetch,
 | Pricing + catalog | Anthropic | `platform.claude.com/docs/en/models/overview.md` + `/docs/en/about-claude/pricing` | Markdown + semantic HTML table | body hash (no validators) | **Include** |
 | Pricing + catalog | xAI | `docs.x.ai/developers/models.md` (+ per-model `.md`) | Markdown tables | body hash (1h cache TTL) | **Include** |
 | Pricing + catalog | Google | `ai.google.dev/gemini-api/docs/pricing` | SSR HTML, 86 tables | If-Modified-Since (real `Last-Modified`) | **Include — hardest parse** |
+| Class-map basis | Google | `ai.google.dev/gemini-api/docs/models.md.txt` (added 2026-11-01) | Markdown model cards | recommendation rows | **Include** — read only for the flagship / economy sentences; no prices |
 | Pricing cross-check | (all 4) | `openrouter.ai/api/v1/models` | JSON, 419 models | 5-min cache, field diff | **Include as cross-check only** |
 | Hiring | OpenAI | `api.ashbyhq.com/posting-api/job-board/openai` | JSON (5/5; dept+team inline; ~12 MB) | UUID ids, `publishedAt`, ETag | **Include** — 757 roles |
 | Hiring | Anthropic | `boards-api.greenhouse.io/v1/boards/anthropic/jobs` (+`/departments` join) | JSON | numeric ids, `updated_at`, ETag | **Include** — 537 roles |

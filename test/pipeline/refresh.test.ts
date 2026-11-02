@@ -134,11 +134,12 @@ describe('scopes', () => {
       'anthropic-pricing-md',
       'xai-models-md',
       'google-pricing-html',
+      'google-models-md',
       'meta-models-md',
       'meta-pricing-md',
     ])
     expect(sourceIdsForScope('survey', ALL)).toEqual(ALL_IDS)
-    expect(ALL_IDS).toHaveLength(28)
+    expect(ALL_IDS).toHaveLength(29)
     // The status feeds ride the six-hourly survey only, never the EDGAR tick.
     expect(sourceIdsForScope('edgar', ALL)).not.toContain('openai-status')
   })
@@ -148,7 +149,7 @@ describe('baseline', () => {
   it('stores entities for every parser source, zero changes, one snapshot and one raw object each', async () => {
     const report = await run('survey', ALL_IDS)
 
-    expect(report.sources).toHaveLength(28)
+    expect(report.sources).toHaveLength(29)
     expect(report.failed).toBe(0)
     const byId = Object.fromEntries(report.sources.map((s) => [s.source_id, s]))
     // Sides and the cross-check are fetched and snapshotted but yield no entities.
@@ -166,8 +167,8 @@ describe('baseline', () => {
 
     expect(await rows.changes()).toHaveLength(0)
     expect(await rows.alerts()).toHaveLength(0)
-    expect(await rows.snapshots()).toHaveLength(28)
-    expect(await rows.runs()).toHaveLength(28)
+    expect(await rows.snapshots()).toHaveLength(29)
+    expect(await rows.runs()).toHaveLength(29)
     expect(await rows.ops()).toHaveLength(0)
 
     const entities = await rows.entities()
@@ -179,6 +180,8 @@ describe('baseline', () => {
     expect(perSource.get('anthropic-pricing-md')).toBe(42)
     // 16 price rows (8 models × 2 tiers) + the flagship class-map check.
     expect(perSource.get('xai-models-md')).toBe(17)
+    // No prices: only the flagship and economy class-map checks.
+    expect(perSource.get('google-models-md')).toBe(2)
     // 6 catalog rows + the flagship and economy class-map checks.
     expect(perSource.get('meta-models-md')).toBe(8)
     // 6 priced ids: Muse Wonder, three Muse Spark versions, two Contributor ids.
@@ -216,7 +219,7 @@ describe('baseline', () => {
     ])
 
     const keys = await rawKeys()
-    expect(keys).toHaveLength(28)
+    expect(keys).toHaveLength(29)
     expect(keys).toContain(
       (await rows.snapshots()).find((s) => s.source_id === 'xai-models-md')!.raw_key,
     )

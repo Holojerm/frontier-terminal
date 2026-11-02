@@ -10,7 +10,7 @@ import { includeSources } from '../server/pipeline/sources'
 import { AlertRow, contentHash } from '../server/pipeline/contracts'
 import { insertRows } from '../server/pipeline/store'
 import { terminalStamp } from '../server/utils/terminal-cache'
-import { MODEL_CLASS_MAP } from '../server/utils/terminal-classes'
+import { MODEL_CLASS_MAP, NO_ROW_GAP } from '../server/utils/terminal-classes'
 import {
   alertPermalinks,
   queryAlert,
@@ -247,10 +247,10 @@ describe('after a baseline poll of every source', () => {
     expect(as_of).toMatch(/^2026-09-07T10:0\d:/)
     expect(movement.total_changes).toBe(0)
     expect(movement.latest_detected_at).toBeNull()
-    expect(movement.sources_total).toBe(28)
+    expect(movement.sources_total).toBe(29)
     // Every source has exactly one snapshot => nothing could have been
     // diffed. That is a different sentence from "nothing changed".
-    expect(movement.sources_not_yet_compared).toBe(28)
+    expect(movement.sources_not_yet_compared).toBe(29)
     expect(latest_fetched_at).toMatch(/^2026-09-07T10:0\d:/)
   })
 
@@ -333,10 +333,23 @@ describe('after a baseline poll of every source', () => {
     expect(openai.basis_current).toBe(true)
     expect(openai.gap).toBeNull()
 
-    // Google has prices in the store but no vendor sentence to map against.
+    // Google's sentence is on its models page; the 2026-08-25 pricing
+    // fixture predates the SKU it names, so the cell is mapped but unpriced.
     const google = cell('google', 'flagship')
+    expect(google.basis_source_id).toBe('google-models-md')
+    expect(google.basis_current).toBe(true)
     expect(google.row).toBeNull()
-    expect(google.gap).toContain('no recommendation text')
+    expect(google.gap).toBe(NO_ROW_GAP)
+
+    const googleEconomy = cell('google', 'economy')
+    expect(googleEconomy.row!.model_slug).toBe('gemini-3.5-flash-lite')
+    expect(googleEconomy.priced).toBe(true)
+    expect(googleEconomy.row!.source_url).toBe(urlOf('google-pricing-html'))
+
+    // Google publishes no current-generation price-performance sentence.
+    const googleBalanced = cell('google', 'balanced')
+    expect(googleBalanced.basis).toBeNull()
+    expect(googleBalanced.gap).toContain('Gemini 2.5 Flash')
 
     const xaiEconomy = cell('xai', 'economy')
     expect(xaiEconomy.row).toBeNull()
@@ -393,7 +406,7 @@ describe('after a baseline poll of every source', () => {
 
   it('coverage: every source has a snapshot, a run, and the audit caveat', async () => {
     const coverage = await queryCoverage(db, await ctx())
-    expect(coverage.sources).toHaveLength(28)
+    expect(coverage.sources).toHaveLength(29)
     for (const s of coverage.sources) {
       expect(s.newest_snapshot!.source_url).toBe(urlOf(s.source_id))
       expect(s.newest_snapshot!.fetched_at).toMatch(/^2026-09-07T10:0\d:/)
@@ -409,7 +422,7 @@ describe('after a baseline poll of every source', () => {
     expect(byId['anthropic-greenhouse-departments']!.role).toBe('join')
     // The resolved CIK URL from the manifest, not the sources.yaml template.
     expect(byId['edgar-submissions-spcx']!.url).toBe(urlOf('edgar-submissions-spcx'))
-    expect(coverage.totals.snapshots).toBe(28)
+    expect(coverage.totals.snapshots).toBe(29)
     expect(coverage.exports.find((e) => e.name === 'jobs_open')!.rows).toBe(65 + 59 + 42)
     expect(coverage.exports.find((e) => e.name === 'incidents')!.rows).toBe(25 + 50 + 1)
     expect(byId['google-cloud-status']).toMatchObject({ entity_count: 1, role: 'status' })
@@ -561,8 +574,8 @@ describe('after a second poll that moves prices, closes a role, and files an S-1
     expect(Date.parse(movement.latest_detected_at!) - Date.parse(movement.window_from!)).toBe(
       24 * 3_600_000,
     )
-    expect(movement.sources_total).toBe(28)
-    expect(movement.sources_not_yet_compared).toBe(28 - 4) // xai md, xai jobs + its join, edgar-fts
+    expect(movement.sources_total).toBe(29)
+    expect(movement.sources_not_yet_compared).toBe(29 - 4) // xai md, xai jobs + its join, edgar-fts
 
     expect(alert_count).toBe(1)
     expect(alerts).toHaveLength(1)
