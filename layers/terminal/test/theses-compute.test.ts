@@ -323,6 +323,8 @@ const fetcher: SourceFetcher = async (source) => {
 }
 const raw = { put: async (key: string, body: string) => void (await env.BLOB.put(key, body)) }
 
+// 30s, not the 10s default: seeding row by row and running every recipe took
+// 7.6s in Workers Builds on a fast run and timed out on a slow one.
 beforeAll(async () => {
   const rows = []
   for (const [provider, source_id, slug, input, output] of FLAGSHIPS) {
@@ -388,7 +390,7 @@ beforeAll(async () => {
     RECIPES.filter((r) => r.id in FIXTURES),
   )
   expect(results.every((r) => r.status === 'ok')).toBe(true)
-})
+}, 30_000)
 
 const deps = { sourcesYaml, now: () => NOW }
 const readingOf = async (claim_id: string) => {
