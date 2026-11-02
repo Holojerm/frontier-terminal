@@ -369,6 +369,10 @@ screen the way a terminal function key does. The data below it is the content.
   nothing to show keeps its label and its source cells and states the gap in one cell spanning
   the rest. `UTable` cannot express either — every cell is a `td` and a `colspan` does not
   remove its neighbors — so every table is `TerminalTable`.
+- **Scroll:** a table scrolls in its own box, never the page. The box is capped at 70% of the
+  viewport height and scrolls both ways; the header sticks to the top of the box. A box that
+  scrolls is a named, focusable region so a keyboard can scroll it. A page is as long as its
+  panels, not its longest table.
 - **Deltas:** a sign the reader can see, never a color: `+12`, `−3` (U+2212), `±0`. Formatted
   once, in `shared/utils/terminal-format.ts`. A delta takes `text-muted` beside its figure;
   green and red would read as good and bad, and a price rise is neither.
@@ -383,7 +387,7 @@ feed with nothing to show live once in `app/utils/feed-gap.ts`.
 |---|---|---|
 | `TerminalPage` | The page header (optional back link, `h1`, lede, as-of stamp, a header slot) and the one error alert | Per-page headers in three sizes; thirteen copies of the error `UAlert` |
 | `TerminalPanel` | The shell every reading sits in: 1px border, a `bg-muted` header strip with the `h2` title, a one-line note and a `#meta` slot, the body, and a footer for sources and the "more" link | Bare `section`s, the one `bg-elevated` band, fourteen hand-written "more" links |
-| `TerminalTable` | Semantic table: caption, row header, numeric alignment, a spanning gap cell, sticky header | Eighteen hand-rolled tables with drifting padding and header tokens |
+| `TerminalTable` | Semantic table: caption, row header, numeric alignment, a spanning gap cell, its own scroll box with a sticky header | Eighteen hand-rolled tables with drifting padding and header tokens |
 | `TerminalCard` | One lab, one filing, one claim — a bordered tile inside a panel, with a title row and a sources footer | Seven per-lab `article`s |
 | `TerminalGap` | A stated absence: inline (in a table cell, reason behind an info control) or block (dashed box, title, reason, one action) | `EmptyState` and six re-codings of the feed states |
 | `TerminalSources` | The provenance footer: one `TerminalProvenanceTag` per source, caveat controls, license | Three layouts of the same footer |

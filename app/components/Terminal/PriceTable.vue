@@ -80,7 +80,6 @@ function deltaText(row: PriceRowView): string | null {
     </div>
 
     <TerminalGap v-if="rows.length === 0" title="No rows match the filter." />
-    <!-- Sticky header: the catalog runs to hundreds of rows. -->
     <TerminalTable
       v-else
       caption="Every SKU in the store with prices in dollars per million tokens, the newest change, and provenance"
@@ -89,7 +88,6 @@ function deltaText(row: PriceRowView): string | null {
       :row-key="(r) => r.entity_key"
       row-header="model_slug"
       :edge="false"
-      :sticky="!bare"
       align="top"
     >
       <template #cell-provider="{ row: r }">{{ labName(r.provider) }}</template>
