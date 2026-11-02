@@ -7,7 +7,10 @@ import { drizzle } from 'drizzle-orm/d1'
 import { afterEach, describe, expect, it } from 'vitest'
 
 import * as schema from '../../../server/db/schema'
-import { clearExtensionsForTest, registerFleetExtraContributor } from '../../../server/utils/extensions'
+import {
+  clearExtensionsForTest,
+  registerFleetExtraContributor,
+} from '../../../server/utils/extensions'
 import { collectFleetCounters } from '../../../server/utils/fleet-status'
 import { collectTerminalCounters } from '../server/utils/fleet-counters'
 
