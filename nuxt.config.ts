@@ -7,15 +7,29 @@ import type { PublicPage } from './shared/utils/site'
 
 // ─── Security headers ────────────────────────────────────────────────────────
 //
-// This site loads nothing from a third party — no analytics, no checkout, no
-// bot challenge — so the policy is 'self' almost everywhere, and `test/csp/`
-// pins it that way in a real Chromium: adding an external origin has to be a
-// decision someone makes in this file, not a violation someone silences.
+// This site loads nothing from a third party except Cloudflare's own Web
+// Analytics beacon (injected at the edge) — no checkout, no bot challenge — so
+// the policy is 'self' almost everywhere, and `test/csp/` pins it that way in a
+// real Chromium: adding an external origin has to be a decision someone makes
+// in this file, not a violation someone silences.
 //
 // Why `routeRules` and not a Nitro middleware: the only thing a middleware buys
 // here is a per-request nonce, and we cannot spend one (see `script-src`). What
 // it costs is a handler invocation on every request, including the static assets
 // Cloudflare would otherwise serve without waking the Worker.
+
+/**
+ * Cloudflare Web Analytics. With it on for the zone (the default for a new
+ * site), Cloudflare injects the beacon into every HTML response at the edge, so
+ * no code in app/ loads it — and without these hosts every page logs a CSP
+ * violation and the dashboard reads zero visits. `script-src` for
+ * beacon.min.js, `connect-src` for the /cdn-cgi/rum reports, as listed on
+ * Cloudflare's own CSP page. Cookieless.
+ */
+const CF_WEB_ANALYTICS = {
+  script: ['https://static.cloudflareinsights.com'],
+  connect: ['https://cloudflareinsights.com'],
+} as const
 
 // `nuxt dev` sets NODE_ENV=development, `nuxt build` sets production.
 //
@@ -54,11 +68,11 @@ const CSP: Record<string, string[]> = {
   // lint, typecheck and this repo's own tests, then white-screen production
   // after a routine `bun update`.
   //
-  // What survives: script-src still refuses every *external* origin, so an
-  // injected `<script src="//evil.tld/x.js">` does not load. Paired with
-  // object-src/base-uri below, the classic bypasses stay shut. test/csp/ pins
-  // the external-host list to exactly empty.
-  'script-src': ["'self'", "'unsafe-inline'"],
+  // What survives: script-src still refuses every *external* origin except the
+  // Web Analytics beacon, so an injected `<script src="//evil.tld/x.js">` does
+  // not load. Paired with object-src/base-uri below, the classic bypasses stay
+  // shut. test/csp/ pins the external-host list to exactly that one.
+  'script-src': ["'self'", "'unsafe-inline'", ...CF_WEB_ANALYTICS.script],
 
   // Vue SSR emits inline style attributes and Vite dev injects <style> blocks;
   // there is no build flag that stops either.
@@ -80,7 +94,7 @@ const CSP: Record<string, string[]> = {
   // host, and dropping it changed nothing in test/csp. It is also not a cheap
   // addition — `ws:` is a bare scheme source, so it would permit a socket to
   // *any* host, which is a strange thing to hand a dev server.
-  'connect-src': ["'self'"],
+  'connect-src': ["'self'", ...CF_WEB_ANALYTICS.connect],
 
   // Nothing on this site frames anything, so production refuses every frame.
   // X-Frame-Options / frame-ancestors govern the opposite direction and do not
