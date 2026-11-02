@@ -323,7 +323,7 @@ export const claimVerdicts = sqliteTable(
 // quarter end, a day). Rewritten only when a re-read gives a different value
 // or payload, so fetched_at says when this value was last read, and raw_key
 // points at the stored bytes it was read from. Kept apart from `entities`:
-// these companies are not the terminal's four labs, and none of the lab
+// these companies are not the terminal's labs, and none of the lab
 // panels, alert rules or the lab judge read this table.
 export const recipeObservations = sqliteTable(
   'recipe_observations',

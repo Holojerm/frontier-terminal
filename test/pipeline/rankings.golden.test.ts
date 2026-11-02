@@ -76,18 +76,20 @@ describe('parseOpenRouterRankings on the fetched fixture', () => {
     expect(providerOfOpenRouterId('x-ai/grok-4.6')).toBe('xai')
     expect(providerOfOpenRouterId('meta/muse-spark-1.3-20260902')).toBe('meta')
     expect(providerOfOpenRouterId('meta-llama/llama-4-maverick')).toBe('meta')
+    expect(providerOfOpenRouterId('mistralai/mistral-large-4-0')).toBe('mistral')
     expect(providerOfOpenRouterId('deepseek/deepseek-v4')).toBe('other')
     expect(providerOfOpenRouterId('other')).toBe('other')
     expect(providerOfOpenRouterId('')).toBe('other')
     const byProvider = new Map<string, number>()
     for (const r of out.rows) byProvider.set(r.provider, (byProvider.get(r.provider) ?? 0) + 1)
     expect(Object.fromEntries(byProvider)).toEqual({
-      other: 778,
+      other: 764,
       anthropic: 198,
       openai: 239,
       google: 263,
       xai: 32,
       meta: 20,
+      mistral: 14,
     })
   })
 

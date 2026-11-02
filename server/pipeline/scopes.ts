@@ -48,6 +48,8 @@ const LAUNCH_SOURCES: readonly string[] = [
   'google-models-md',
   'meta-models-md',
   'meta-pricing-md',
+  'mistral-models-md',
+  'mistral-pricing-md',
 ]
 
 export function sourceIdsForScope(scope: PollScope, all: readonly FetchSource[]): string[] {

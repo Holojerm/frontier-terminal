@@ -77,7 +77,7 @@ async function spendPremium(
   ]
 }
 
-/** The company's share of the four labs' tokens over each trailing 7 days present. */
+/** The company's share of the tracked labs' tokens over each trailing 7 days present. */
 async function labTokenShare(
   db: PipelineDb,
   company: LabId,

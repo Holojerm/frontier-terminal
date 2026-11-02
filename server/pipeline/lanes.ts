@@ -23,6 +23,7 @@ import {
 import { parseOpenAiMisalignmentReport } from './parsers/disclosures/openai-misalignment-report'
 import { parseOpenAiMisalignmentReports } from './parsers/disclosures/openai-misalignment-reports'
 import { parseAnthropicGreenhouse } from './parsers/hiring/anthropic-greenhouse'
+import { parseMistralAshby } from './parsers/hiring/mistral-ashby'
 import { parseOpenaiAshby } from './parsers/hiring/openai-ashby'
 import { parseXaiGreenhouse } from './parsers/hiring/xai-greenhouse'
 import { parseOpenRouterRankings } from './parsers/openrouter-rankings'
@@ -31,6 +32,8 @@ import { parseAnthropicPricingMd } from './parsers/pricing/anthropic-pricing'
 import { parseGooglePricingPage } from './parsers/pricing/google-pricing'
 import { parseMetaModelsMd } from './parsers/pricing/meta-models'
 import { parseMetaPricingMd } from './parsers/pricing/meta-pricing'
+import { parseMistralModelsMd } from './parsers/pricing/mistral-models'
+import { parseMistralPricingMd } from './parsers/pricing/mistral-pricing'
 import { parseOpenAiModelsMd } from './parsers/pricing/openai-models'
 import { parseOpenAiModelPage } from './parsers/pricing/openai-model-page'
 import { parseOpenAiPricingMd } from './parsers/pricing/openai-pricing'
@@ -44,6 +47,7 @@ import { parseXbrlSegment, segmentTarget } from './parsers/sec/xbrl-segment'
 import { isPeriodicForm, isS1FloorForm } from './parsers/sec/s1-floor'
 import { parseAnthropicStatus } from './parsers/status/anthropic-status'
 import { parseGoogleCloudStatus } from './parsers/status/google-cloud-status'
+import { parseMistralStatus } from './parsers/status/mistral-status'
 import { parseOpenaiStatus } from './parsers/status/openai-status'
 import { recommendationRows } from './recommendations'
 import type { ClassEntry } from '../utils/terminal-classes'
@@ -277,6 +281,13 @@ export const LANES: Readonly<Record<string, Lane>> = {
   'meta-pricing-md': set((text, { prov, snapshotId }) => ({
     entities: normalizePrices(parseMetaPricingMd(text, prov).rows, snapshotId),
   })),
+  // No class-map check: Mistral's pages print no tier sentence to watch.
+  'mistral-models-md': set((text, { prov, snapshotId }) => ({
+    entities: normalizePrices(parseMistralModelsMd(text, prov).rows, snapshotId),
+  })),
+  'mistral-pricing-md': set((text, { prov, snapshotId }) => ({
+    entities: normalizePrices(parseMistralPricingMd(text, prov).rows, snapshotId),
+  })),
   'google-pricing-html': set((html, { prov, snapshotId }) => {
     const { rows, skipped } = parseGooglePricingPage(html, prov)
     return {
@@ -289,6 +300,9 @@ export const LANES: Readonly<Record<string, Lane>> = {
   'google-models-md': set((text, ctx) => ({ entities: checked('google-models-md', text, ctx) })),
   'openai-ashby': set((text, { prov, snapshotId }) => ({
     entities: normalizeJobs(parseOpenaiAshby(text, prov).rows, snapshotId),
+  })),
+  'mistral-ashby': set((text, { prov, snapshotId }) => ({
+    entities: normalizeJobs(parseMistralAshby(text, prov).rows, snapshotId),
   })),
   'anthropic-greenhouse': {
     sides: ['anthropic-greenhouse-departments'],
@@ -328,6 +342,13 @@ export const LANES: Readonly<Record<string, Lane>> = {
     removals: 'append-only',
     parse: (text, { prov, snapshotId }) => ({
       entities: normalizeIncidents(parseAnthropicStatus(text, prov).rows, snapshotId),
+    }),
+  },
+  'mistral-status': {
+    sides: [],
+    removals: 'append-only',
+    parse: (text, { prov, snapshotId }) => ({
+      entities: normalizeIncidents(parseMistralStatus(text, prov).rows, snapshotId),
     }),
   },
   'google-cloud-status': {

@@ -7,6 +7,7 @@ import {
   jobKey,
 } from '../../server/pipeline/contracts'
 import { parseAnthropicGreenhouse } from '../../server/pipeline/parsers/hiring/anthropic-greenhouse'
+import { parseMistralAshby } from '../../server/pipeline/parsers/hiring/mistral-ashby'
 import { JoinRaceError, MAX_UNJOINED_JOBS } from '../../server/pipeline/parsers/hiring/common'
 import { parseOpenaiAshby } from '../../server/pipeline/parsers/hiring/openai-ashby'
 import { parseXaiGreenhouse } from '../../server/pipeline/parsers/hiring/xai-greenhouse'
@@ -54,6 +55,28 @@ describe('hiring lane', () => {
 
     // Rows sorted by job_id — stable output order for the determinism gate.
     expect(out.rows[0]?.job_id).toBe('00207abc-49b7-465c-a219-f7c1140f8047')
+  })
+
+  test('ashby mistral: the mistral.ai board in the same shape — 19 rows across all 10 departments', () => {
+    const out = parseMistralAshby(fixtureText('fixtures/hiring/mistral-ashby.json'))
+    expect(AshbyJobsOutput.safeParse(out).success).toBe(true)
+    expect(out.rows).toHaveLength(19)
+    for (const row of out.rows) {
+      expect(row.provider).toBe('mistral')
+      expect(row.department).not.toBeNull()
+      expect(row.source_url).toBe('https://api.ashbyhq.com/posting-api/job-board/mistral.ai')
+      expect(row.fetched_at).toBe('2026-11-02T02:42:15Z')
+    }
+    expect(new Set(out.rows.map((r) => r.department)).size).toBe(10)
+    expect(out.rows[0]).toMatchObject({
+      job_id: '036efa0f-73c4-4737-b4ad-c4e834e5b31c',
+      title: 'Product Manager, Vibe',
+      department: 'Product',
+      team: 'Product Management',
+      location: 'Paris',
+      published_at: '2026-07-01T15:57:14.002+00:00',
+      company_name: null,
+    })
   })
 
   test('greenhouse anthropic: parses fixtures/hiring/anthropic-greenhouse.json — 59 rows, department from the /departments join', () => {

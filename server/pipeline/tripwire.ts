@@ -35,6 +35,7 @@ export const TRIPWIRE_SOURCES: readonly string[] = [
   'google-pricing-html',
   'google-models-md',
   'meta-models-md',
+  'mistral-models-md',
 ]
 
 /** What a tripped tick polls: the catalogs plus the price lists launches also land on. */
@@ -43,6 +44,7 @@ export const TRIPWIRE_REFRESH: readonly string[] = [
   'anthropic-pricing-md',
   'openai-pricing-md',
   'meta-pricing-md',
+  'mistral-pricing-md',
 ]
 
 const TICK_MS = 5 * 60 * 1000

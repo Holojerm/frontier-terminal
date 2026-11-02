@@ -33,13 +33,14 @@ const filers = parseRevenueFilersBlock(sourcesYaml)
 const SPCX_CIK = '0001181412'
 
 describe('revenue_filers', () => {
-  it('reads the block: three nulls, SPCX as xAI’s parent, Alphabet’s Google Cloud segment as Google’s', () => {
+  it('reads the block: four nulls, SPCX as xAI’s parent, Alphabet’s Google Cloud segment as Google’s', () => {
     expect([...filers.entries()]).toEqual([
       ['openai', null],
       ['anthropic', null],
       ['google', { ticker: 'GOOGL', relation: 'parent', segment: 'goog:GoogleCloudMember' }],
       ['xai', { ticker: 'SPCX', relation: 'parent' }],
       ['meta', null],
+      ['mistral', null],
     ])
     expect(revenueProviderFor(SPCX_CIK, filers, whitelist)).toBe('xai')
     expect(revenueProviderFor('0001652044', filers, whitelist)).toBe('google')
@@ -56,8 +57,8 @@ describe('revenue_filers', () => {
     expect(() => parseRevenueFilersBlock('revenue_filers:\n  openai: null\n')).toThrow(
       'no entry for anthropic',
     )
-    expect(() => parseRevenueFilersBlock('revenue_filers:\n  mistral: null\n')).toThrow(
-      'unknown provider mistral',
+    expect(() => parseRevenueFilersBlock('revenue_filers:\n  deepseek: null\n')).toThrow(
+      'unknown provider deepseek',
     )
   })
 })

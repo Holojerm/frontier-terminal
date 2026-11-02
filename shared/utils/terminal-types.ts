@@ -13,7 +13,7 @@ export interface Prov {
   fetched_at: string
 }
 
-export type ProviderId = 'openai' | 'anthropic' | 'google' | 'xai' | 'meta' | 'other'
+export type ProviderId = 'openai' | 'anthropic' | 'google' | 'xai' | 'meta' | 'mistral' | 'other'
 export type LabId = Exclude<ProviderId, 'other'>
 
 export type SourceAxis =
@@ -609,7 +609,7 @@ export interface SpendProviderView {
   coverage: number | null
   spend_low: number
   spend_high: number
-  /** This lab's spend_low over the five labs' spend_low, 0..1; null when nothing is priced. */
+  /** This lab's spend_low over the six labs' spend_low, 0..1; null when nothing is priced. */
   share_low: number | null
   share_high: number | null
   /** Token share of the same window, for the decomposition: tokens vs. dollars. */
@@ -624,7 +624,7 @@ export interface SpendData extends Stamp {
   providers: SpendProviderView[]
   totals: {
     tokens: number
-    /** Tokens routed to models outside the five labs — not priced here, stated as the gap. */
+    /** Tokens routed to models outside the six labs — not priced here, stated as the gap. */
     other_tokens: number
     priced_tokens: number
     spend_low: number

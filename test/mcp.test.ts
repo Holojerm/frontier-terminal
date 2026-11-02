@@ -242,7 +242,14 @@ describe('tools/call', () => {
       counts: { total: number }
       cross_check: { source_id: string } | null
     }
-    expect(all.matrix.providers).toEqual(['openai', 'anthropic', 'google', 'xai', 'meta'])
+    expect(all.matrix.providers).toEqual([
+      'openai',
+      'anthropic',
+      'google',
+      'xai',
+      'meta',
+      'mistral',
+    ])
     expect(all.cross_check?.source_id).toBe('openrouter-models')
     for (const row of all.rows) {
       expect(row.source_url).toMatch(/^https:\/\//)
@@ -360,6 +367,7 @@ describe('tools/call', () => {
       'google',
       'xai',
       'meta',
+      'mistral',
     ])
     const google = all.providers[2]!
     expect(google).toMatchObject({ feed: 'no_public_feed', dates: [], total: [] })
@@ -422,6 +430,7 @@ describe('tools/call', () => {
       ['google', 'ok'],
       ['xai', 'no_public_feed'],
       ['meta', 'no_public_feed'],
+      ['mistral', 'ok'],
     ])
     expect(all.providers[3]!.reason).toContain('403')
     expect(all.incidents.length).toBeGreaterThan(0)
@@ -485,7 +494,7 @@ describe('tools/call', () => {
       cuts: { id: string }[]
       exports: { name: string }[]
     }
-    expect(coverage.sources).toHaveLength(29)
+    expect(coverage.sources).toHaveLength(33)
     expect(coverage.sources.find((s) => s.source_id === 'openrouter-models')!.caveat).toContain(
       'never source of record',
     )

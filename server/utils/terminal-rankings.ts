@@ -59,6 +59,7 @@ const emptyTokens = (): Record<ProviderId, number> => ({
   google: 0,
   xai: 0,
   meta: 0,
+  mistral: 0,
   other: 0,
 })
 
