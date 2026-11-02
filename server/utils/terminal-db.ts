@@ -286,6 +286,7 @@ const AXIS_OF: Readonly<Record<string, keyof Omit<MovementSummary['recent'], 'to
   filing: 'sec',
   revenue: 'sec',
   filer: 'sec',
+  document: 'sec',
   incident: 'incidents',
   disclosure: 'disclosures',
   disclosure_timeline: 'disclosures',

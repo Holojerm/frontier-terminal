@@ -156,3 +156,14 @@ Live-fetched with `curl` at 02:40–02:55Z; one page committed as `fixtures/pric
 **Verdict.** Include as the derived source `google-model-md-<slug>`, keyed from the priced Standard rows `google-pricing-html` stores. The first number in the token-limits row is stored as the context window, exactly as printed, and the whole cell is the row's note. Google's label (input token limit or unified context window) and the max output therefore travel with the number. The parser reads only the table whose `Model code` names the slug it was derived for, and fails otherwise. A 404 is `absent`, as it is for OpenAI. The page has no prices, so the pricing row stays the row of record. The catalog view gives its window to every tier of the slug and cites the model page in `context_window_source`.
 
 Interpretation, marked as such: for most cards the number is an input limit, not the unified window OpenAI and Anthropic print. The note keeps that distinction visible rather than normalising it away.
+
+## Addendum, 2026-11-02 — revenue from a registration statement
+
+Anthropic, PBC filed its S-1 on 2026-10-26 (accession 0001628280-26-067168), and the pipeline resolved its CIK (0002130357) from it. The revenue panel stayed empty because the filing tags no financials in XBRL: its XBRL package is 3 KB and holds only the filing-fee exhibit (`exfilingfees-s1_htm.xml`), and company facts for the CIK carry only the `ffd` taxonomy. Tagged financials arrive with the first 10-Q after listing.
+
+| Source | Fetched | Finding | Verdict |
+|---|---|---|---|
+| `www.sec.gov/Archives/edgar/data/2130357/000162828026067168/0001628280-26-067168-index.htm` | 200, 33 KB HTML | Document table: sequence 1 is `anthropicpbc-sx1.htm`, Type S-1 | **Include** (`filing-index` template) — the only place the document name is stated; the submissions feed lists the accession alone |
+| `…/anthropicpbc-sx1.htm` | 200, 14 MB HTML | The audited Consolidated Statements of Operations (F-7) prints Revenue for FY2023–FY2025 and the six months ended 2025-06-30 and 2026-06-30 (unaudited), in millions | **Include** (`prospectus-revenue` template) — parsed in under 20 ms |
+
+Interpretation, marked as such: other publications will cite the S-1's figures, and they are audited figures in a filing the SEC accepted, so the panel's "primary source only" rule holds. The values are labelled as read from the printed statement (not XBRL), interim periods are marked unaudited, and a later filing's value for the same period — an S-1/A, or the first 10-Q's XBRL — supersedes them.

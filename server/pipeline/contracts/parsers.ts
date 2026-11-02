@@ -122,7 +122,10 @@ export type FilerRow = z.infer<typeof FilerRow>
 export const RevenueRow = z.strictObject({
   cik: z.string().regex(/^\d{10}$/),
   entity_name: z.string().min(1),
-  taxonomy: z.literal('us-gaap'),
+  // 'prospectus': read off the statement of operations printed in a
+  // registration filing whose XBRL tags no financials (prospectus-revenue.ts);
+  // `tag` is then the statement's own row label, verbatim.
+  taxonomy: z.enum(['us-gaap', 'prospectus']),
   tag: z.string().min(1),
   unit: z.literal('USD'),
   start: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
@@ -139,11 +142,31 @@ export const RevenueRow = z.strictObject({
     .regex(/^[a-z][a-z0-9-]*:[A-Za-z0-9]+Member$/)
     .optional(),
   whitelist_cik: z.string().nullable(),
+  // Set only on a prospectus row for an interim period: registration
+  // statements print interim financials unaudited. Absent on XBRL rows.
+  unaudited: z.literal(true).optional(),
   ...provenanceFields,
 })
 export type RevenueRow = z.infer<typeof RevenueRow>
 export const EdgarCompanyfactsOutput = z.strictObject({ rows: z.array(RevenueRow) })
 export const XbrlSegmentOutput = z.strictObject({ rows: z.array(RevenueRow) })
+export const ProspectusRevenueOutput = z.strictObject({ rows: z.array(RevenueRow) })
+
+// The primary document of one registration filing, read off EDGAR's filing
+// index (filing-index.ts): the name a prospectus-revenue source is derived
+// from. The submissions feed lists the accession but not the document.
+export const RegistrationDocumentRow = z.strictObject({
+  provider: providerEnum,
+  cik: z.string().regex(/^\d{10}$/),
+  entity_name: z.string().min(1),
+  accession_no: z.string().regex(/^\d{10}-\d{2}-\d{6}$/),
+  form: z.string().min(1),
+  filed: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  document: z.string().regex(/^[A-Za-z0-9._-]+\.htm$/),
+  ...provenanceFields,
+})
+export type RegistrationDocumentRow = z.infer<typeof RegistrationDocumentRow>
+export const FilingIndexOutput = z.strictObject({ rows: z.array(RegistrationDocumentRow) })
 
 // ---- Status pages (capacity strain) ---------------------------------------
 
@@ -296,6 +319,10 @@ export const parserOutputSchemas = {
   'edgar-submissions-googl': EdgarSubmissionsOutput,
   'edgar-submissions-meta': EdgarSubmissionsOutput,
   'edgar-companyfacts-spcx': EdgarCompanyfactsOutput,
+  // One registration each for every derived filing-index and
+  // prospectus-revenue source (derived.ts); the fixtures are Anthropic's S-1.
+  'filing-index-anthropic-s-1-2026-10-26-0001628280-26-067168': FilingIndexOutput,
+  'prospectus-revenue-anthropic-s-1-2026-10-26-0001628280-26-067168': ProspectusRevenueOutput,
   // One registration for every derived per-filing segment instance
   // (derived.ts); the committed fixture is one representative 10-Q.
   'xbrl-segment-googl-2026-10-29-0001652044-26-000084': XbrlSegmentOutput,

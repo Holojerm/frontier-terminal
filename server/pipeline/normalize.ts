@@ -4,6 +4,7 @@ import {
   contentHash,
   disclosureKey,
   disclosureTimelineKey,
+  documentKey,
   filerKey,
   filingKey,
   incidentKey,
@@ -22,6 +23,7 @@ import {
   type Provider,
   type RankingRow,
   type RecommendationRow,
+  type RegistrationDocumentRow,
   type RevenueRow,
 } from './contracts'
 
@@ -183,6 +185,18 @@ export function normalizeRecommendations(
 export function normalizeFilers(rows: readonly FilerRow[], snapshotId: string): EntityRow[] {
   return collapse(
     rows.map((row) => toEntity(filerKey(row.provider), 'filer', row.provider, snapshotId, row)),
+  )
+}
+
+// One row per registration filing; a filing index never changes once accepted.
+export function normalizeDocuments(
+  rows: readonly RegistrationDocumentRow[],
+  snapshotId: string,
+): EntityRow[] {
+  return collapse(
+    rows.map((row) =>
+      toEntity(documentKey(row.accession_no), 'document', row.provider, snapshotId, row),
+    ),
   )
 }
 
