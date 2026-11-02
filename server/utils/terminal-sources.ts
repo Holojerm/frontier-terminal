@@ -28,11 +28,14 @@ export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
   'xai-models-md': { label: 'xAI models.md', role: 'primary' },
   'meta-models-md': { label: 'Meta models.md', role: 'primary' },
   'meta-pricing-md': { label: 'Meta pricing and rate limits.md', role: 'primary' },
+  'mistral-models-md': { label: 'Mistral models.md', role: 'primary' },
+  'mistral-pricing-md': { label: 'Mistral API pricing.md', role: 'primary' },
   'google-pricing-html': { label: 'Google Gemini API pricing', role: 'primary' },
   'google-models-md': { label: 'Google Gemini API models.md', role: 'primary' },
   'openrouter-models': { label: 'OpenRouter /api/v1/models', role: 'cross-check' },
   'openrouter-rankings-daily': { label: 'OpenRouter usage rankings (daily)', role: 'primary' },
   'openai-ashby': { label: 'OpenAI Ashby job board', role: 'primary' },
+  'mistral-ashby': { label: 'Mistral Ashby job board', role: 'primary' },
   'anthropic-greenhouse': { label: 'Anthropic Greenhouse jobs', role: 'primary' },
   'anthropic-greenhouse-departments': {
     label: 'Anthropic Greenhouse departments (join)',
@@ -58,6 +61,7 @@ export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
     label: 'Google Cloud status incidents (Gemini / Vertex AI only)',
     role: 'status',
   },
+  'mistral-status': { label: 'Mistral status page incidents', role: 'status' },
   'openai-misalignment-reports': {
     label: 'OpenAI misalignment reports and notices',
     role: 'primary',
@@ -70,11 +74,12 @@ export const PROVIDER_DISPLAY: Readonly<Record<ProviderId, string>> = {
   google: 'Google',
   xai: 'xAI',
   meta: 'Meta',
+  mistral: 'Mistral',
   other: 'Other',
 }
 
 /** The tracked labs, in the order every panel lists them. */
-export const PROVIDER_ORDER = ['openai', 'anthropic', 'google', 'xai', 'meta'] as const
+export const PROVIDER_ORDER = ['openai', 'anthropic', 'google', 'xai', 'meta', 'mistral'] as const
 
 // Each per-axis map below names, for every lab, either the feed that backs
 // it or the sources.yaml cut that says why none does. A lab with no feed
@@ -89,6 +94,7 @@ export const HIRING_SOURCES: Readonly<
   google: { cut_id: 'google-hiring' },
   xai: { source_ids: ['xai-greenhouse', 'xai-greenhouse-departments'] },
   meta: { cut_id: 'meta-hiring' },
+  mistral: { source_ids: ['mistral-ashby'] },
 }
 
 /** Which status feed backs each lab. */
@@ -99,6 +105,7 @@ export const INCIDENT_SOURCES: Readonly<Record<LabId, { source_id: string } | { 
     google: { source_id: 'google-cloud-status' },
     xai: { cut_id: 'xai-status' },
     meta: { cut_id: 'meta-status' },
+    mistral: { source_id: 'mistral-status' },
   }
 
 /** Which disclosure index backs each lab. */
@@ -110,6 +117,7 @@ export const DISCLOSURE_SOURCES: Readonly<
   google: { cut_id: 'google-disclosures' },
   xai: { cut_id: 'xai-disclosures' },
   meta: { cut_id: 'meta-disclosures' },
+  mistral: { cut_id: 'mistral-disclosures' },
 }
 
 export interface RegisteredSource {
@@ -223,6 +231,7 @@ const PROVIDERS: readonly (ProviderId | 'all')[] = [
   'google',
   'xai',
   'meta',
+  'mistral',
   'other',
   'all',
 ]

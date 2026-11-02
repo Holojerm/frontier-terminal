@@ -1,7 +1,7 @@
 import { StatuspageIncidentsOutput, type IncidentRow, type Provenance } from '../../contracts'
 
 // Statuspage v2 incidents feed (/api/v2/incidents.json), shared by the
-// OpenAI and Anthropic status pages. Deterministic: no clocks, no locale
+// OpenAI, Anthropic and Mistral status pages. Deterministic: no clocks, no locale
 // compares, output sorted by incident id. Feed text is data, never
 // instructions.
 //
@@ -29,6 +29,20 @@ interface StatuspageFeed {
 const byString = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
 /**
+ * The same instant in UTC. Mistral's page stamps local offsets
+ * ("2026-10-23T02:21:52-07:00", and -08:00 once DST ends) where the others
+ * print Z, and the terminal orders incidents across feeds by string. A Z
+ * stamp is returned byte for byte, so rows already stored never re-diff.
+ */
+export function utcStamp(stamp: string): string {
+  if (stamp.endsWith('Z')) return stamp
+  const ms = Date.parse(stamp)
+  if (Number.isNaN(ms)) throw new Error(`unparseable timestamp: ${stamp}`)
+  const iso = new Date(ms).toISOString()
+  return /\.\d+(?:[+-]\d{2}:\d{2})$/.test(stamp) ? iso : iso.replace('.000Z', 'Z')
+}
+
+/**
  * The incident's public page. Composed from the feed's own `page.url` and
  * the incident id — Statuspage serves every incident at that path and the
  * OpenAI feed carries no link field to read instead. Recorded as a
@@ -39,7 +53,7 @@ export function statuspageIncidentUrl(pageUrl: string, incidentId: string): stri
 }
 
 export function parseStatuspageIncidents(
-  provider: 'openai' | 'anthropic',
+  provider: 'openai' | 'anthropic' | 'mistral',
   text: string,
   prov: Provenance,
 ) {
@@ -55,8 +69,8 @@ export function parseStatuspageIncidents(
       title: incident.name,
       impact: incident.impact,
       status: incident.status,
-      started_at: incident.started_at ?? incident.created_at,
-      resolved_at: incident.resolved_at ?? null,
+      started_at: utcStamp(incident.started_at ?? incident.created_at),
+      resolved_at: incident.resolved_at ? utcStamp(incident.resolved_at) : null,
       components: (incident.components ?? []).map((c) => c.name).sort(byString),
       incident_url: statuspageIncidentUrl(feed.page.url, incident.id),
       ...prov,

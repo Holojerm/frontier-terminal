@@ -25,7 +25,14 @@ import type {
   SpendProviderView,
 } from './terminal-types'
 
-export const LABS: readonly LabId[] = ['openai', 'anthropic', 'google', 'xai', 'meta'] as const
+export const LABS: readonly LabId[] = [
+  'openai',
+  'anthropic',
+  'google',
+  'xai',
+  'meta',
+  'mistral',
+] as const
 
 export function isLab(s: string): s is LabId {
   return (LABS as readonly string[]).includes(s)

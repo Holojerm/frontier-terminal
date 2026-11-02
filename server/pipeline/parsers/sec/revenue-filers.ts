@@ -26,7 +26,14 @@ export interface RevenueFiler {
 /** Provider -> filer, or null where the block says the lab has no disclosure. */
 export type RevenueFilers = ReadonlyMap<Provider, RevenueFiler | null>
 
-const LAB_PROVIDERS: readonly Provider[] = ['openai', 'anthropic', 'google', 'xai', 'meta']
+const LAB_PROVIDERS: readonly Provider[] = [
+  'openai',
+  'anthropic',
+  'google',
+  'xai',
+  'meta',
+  'mistral',
+]
 
 /** Narrow block reader: `  provider: null` or `  provider:` followed by
  * `    ticker:`, `    relation:` and an optional `    segment:` line. Any

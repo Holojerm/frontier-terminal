@@ -10,6 +10,8 @@ import { parseAnthropicModelsOverviewMd } from '../../server/pipeline/parsers/pr
 import { parseAnthropicPricingMd } from '../../server/pipeline/parsers/pricing/anthropic-pricing'
 import { parseMetaModelsMd } from '../../server/pipeline/parsers/pricing/meta-models'
 import { parseMetaPricingMd } from '../../server/pipeline/parsers/pricing/meta-pricing'
+import { parseMistralModelsMd } from '../../server/pipeline/parsers/pricing/mistral-models'
+import { parseMistralPricingMd } from '../../server/pipeline/parsers/pricing/mistral-pricing'
 import { parseOpenAiModelsMd } from '../../server/pipeline/parsers/pricing/openai-models'
 import { parseOpenAiPricingMd } from '../../server/pipeline/parsers/pricing/openai-pricing'
 import { parseXaiModelsMd } from '../../server/pipeline/parsers/pricing/xai-models'
@@ -418,6 +420,87 @@ describe('vendor-md + sec lane', () => {
     expect(out.rows.map((r) => modelKey(r.provider, r.model_slug, r.tier))).toEqual(
       priced.map((r) => modelKey(r.provider, r.model_slug, r.tier)),
     )
+  })
+
+  test('mistral: pricing.md keeps the per-MTok lines of Mistral’s own models, never a resold one', () => {
+    const out = parseMistralPricingMd(fixtureText('fixtures/pricing/mistral-pricing.md'))
+    expect(VendorMdPricingOutput.safeParse(out).success).toBe(true)
+    const by = Object.fromEntries(out.rows.map((r) => [r.model_slug, r]))
+    // OCR (per page), Voxtral transcribe (per minute), TTS (per character),
+    // the free moderation model and the three Z.ai / DeepSeek rows are absent.
+    expect(Object.keys(by)).toEqual([
+      'codestral-2508',
+      'codestral-embed-2505',
+      'ministral-14b-2512',
+      'ministral-3b-2512',
+      'ministral-8b-2512',
+      'mistral-embed-2312',
+      'mistral-large-4',
+      'mistral-small-2603',
+      'voxtral-small-2507',
+    ])
+    expect(out.rows.every((r) => r.provider === 'mistral' && r.tier === null)).toBe(true)
+    expect(by['mistral-large-4']).toMatchObject({
+      input_per_mtok: 0.7,
+      cached_input_per_mtok: 0.07,
+      output_per_mtok: 2.1,
+      notes: 'Mistral Large 4; Generalist models',
+    })
+    expect(by['mistral-small-2603']).toMatchObject({
+      input_per_mtok: 0.15,
+      cached_input_per_mtok: null,
+      output_per_mtok: 0.6,
+    })
+    // Voxtral Small's per-minute audio line is dropped; its token lines stay.
+    expect(by['voxtral-small-2507']).toMatchObject({ input_per_mtok: 0.1, output_per_mtok: 0.4 })
+    // An embedding model prints an input price only.
+    expect(by['mistral-embed-2312']).toMatchObject({ input_per_mtok: 0.1, output_per_mtok: null })
+    for (const r of out.rows) {
+      expect(r.source_url).toBe('https://docs.mistral.ai/inference/pricing.md')
+      expect(r.fetched_at).toBe(provenanceOf('mistral-pricing-md').fetched_at)
+    }
+  })
+
+  test('mistral: a price line in a unit the parser does not know fails, not a dropped price', () => {
+    const text = fixtureText('fixtures/pricing/mistral-pricing.md').replace(
+      'Output $2.1 /M Tokens',
+      'Output $2.1 /K Tokens',
+    )
+    expect(() => parseMistralPricingMd(text)).toThrow('unrecognized price line')
+  })
+
+  test('mistral: models.md lists current first-party ids with their context, no prices', () => {
+    const out = parseMistralModelsMd(fixtureText('fixtures/pricing/mistral-models.md'))
+    expect(VendorMdPricingOutput.safeParse(out).success).toBe(true)
+    const slugs = out.rows.map((r) => r.model_slug)
+    expect(slugs).toHaveLength(16)
+    // Third-party resold models, no-API rows and the deprecated table are not catalog rows.
+    for (const absent of ['zai-glm-5-3', 'deepseek-v4-1-flash-1017', 'mistral-medium-3-5']) {
+      expect(slugs).not.toContain(absent)
+    }
+    expect(out.rows.find((r) => r.model_slug === 'mistral-large-4')).toMatchObject({
+      provider: 'mistral',
+      context_window: '1M',
+      input_per_mtok: null,
+      output_per_mtok: null,
+      notes: 'Mistral Large 4; Public Preview',
+    })
+    // "--" is the page's blank, not a context window.
+    expect(
+      out.rows.find((r) => r.model_slug === 'voxtral-mini-transcribe-realtime-3-0')!.context_window,
+    ).toBeNull()
+    // Every priced id is in the catalog, so the two pages join on modelKey.
+    const priced = parseMistralPricingMd(fixtureText('fixtures/pricing/mistral-pricing.md')).rows
+    const keys = new Set(out.rows.map((r) => modelKey(r.provider, r.model_slug, r.tier)))
+    for (const r of priced) expect(keys).toContain(modelKey(r.provider, r.model_slug, r.tier))
+  })
+
+  test('mistral: a third-party row from a maker the parsers do not know fails the catalog parse', () => {
+    const text = fixtureText('fixtures/pricing/mistral-models.md').replace(
+      '| [Z.ai GLM 5.3](/models/zai-glm-5-3) | `zai-glm-5-3` |',
+      '| [Qwen 4](/models/qwen-4) | `qwen-4` |',
+    )
+    expect(() => parseMistralModelsMd(text)).toThrow('not in THIRD_PARTY_MAKERS')
   })
 
   test('edgar: FTS hits filtered against sources.yaml cik_whitelist; whitelist_cik null on non-matches', () => {

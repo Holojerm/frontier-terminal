@@ -21,7 +21,14 @@ export interface PendingFilers {
   exclude: string[]
 }
 
-const LAB_PROVIDERS: readonly Provider[] = ['openai', 'anthropic', 'google', 'xai', 'meta']
+const LAB_PROVIDERS: readonly Provider[] = [
+  'openai',
+  'anthropic',
+  'google',
+  'xai',
+  'meta',
+  'mistral',
+]
 
 /** Narrow block reader: `  exclude: a, b` and `  provider:` / `    name_pattern: …`. */
 export function parsePendingFilersBlock(yaml: string): PendingFilers {

@@ -155,6 +155,8 @@ describe('runPoll between survey instants', () => {
       'google-models-md',
       'meta-models-md',
       'meta-pricing-md',
+      'mistral-models-md',
+      'mistral-pricing-md',
       'edgar-fts',
       'edgar-fts-openai',
       'edgar-submissions-spcx',
