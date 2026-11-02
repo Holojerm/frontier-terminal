@@ -32,6 +32,7 @@ import type {
   ChangeDetailView,
   ChangeView,
   CoverageData,
+  RecipeCoverage,
   DeptCount,
   HiringData,
   HiringHistoryData,
@@ -65,6 +66,7 @@ import { parseDerivedSourcesBlock, type DerivedTemplate } from '../pipeline/deri
 import { parseRevenueFilersBlock, type RevenueFilers } from '../pipeline/parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock, type CikWhitelist } from '../pipeline/parsers/sec/whitelist'
 import { effectiveClassMap } from '../pipeline/class-map'
+import { RECIPES } from '../theses/recipes/registry'
 import type { PipelineDb } from '../pipeline/store'
 import type { DataFreshness } from './seo'
 import {
@@ -1493,6 +1495,73 @@ export async function queryReleases(db: PipelineDb, ctx: QueryContext): Promise<
 
 // ---- coverage --------------------------------------------------------------
 
+/** Newest recipe run (of `ids`, or of every recipe) — a cache key's variant, because
+ * recipes run on the survey tick after the poll has stamped the cache. */
+export async function recipeRunsStamp(db: PipelineDb, ids?: readonly string[]): Promise<string> {
+  const [row] = await db
+    .select({ at: max(tables.recipeRuns.started_at) })
+    .from(tables.recipeRuns)
+    .where(ids ? inArray(tables.recipeRuns.recipe_id, [...ids]) : undefined)
+  return row?.at ?? 'none'
+}
+
+/** Every thesis recipe with its last run and what it has stored, beside its audit entry. */
+async function recipeCoverage(db: PipelineDb, ctx: QueryContext): Promise<RecipeCoverage[]> {
+  const [runs, counts, newest] = await Promise.all([
+    db
+      .select({
+        recipe_id: tables.recipeRuns.recipe_id,
+        status: tables.recipeRuns.status,
+        started_at: tables.recipeRuns.started_at,
+        detail: tables.recipeRuns.detail,
+        source_url: tables.recipeRuns.source_url,
+      })
+      .from(tables.recipeRuns)
+      .where(
+        sql`${tables.recipeRuns.started_at} = (select max(r2.started_at) from recipe_runs r2 where r2.recipe_id = ${tables.recipeRuns.recipe_id})`,
+      ),
+    db
+      .select({ recipe_id: tables.recipeObservations.recipe_id, n: count() })
+      .from(tables.recipeObservations)
+      .groupBy(tables.recipeObservations.recipe_id),
+    db
+      .selectDistinct({
+        recipe_id: tables.recipeObservations.recipe_id,
+        source_url: tables.recipeObservations.source_url,
+        fetched_at: tables.recipeObservations.fetched_at,
+      })
+      .from(tables.recipeObservations)
+      .where(
+        sql`${tables.recipeObservations.fetched_at} = (select max(o2.fetched_at) from recipe_observations o2 where o2.recipe_id = ${tables.recipeObservations.recipe_id})`,
+      ),
+  ])
+  const runOf = new Map(runs.map((r) => [r.recipe_id, r]))
+  const countOf = new Map(counts.map((r) => [r.recipe_id, r.n]))
+  const newestOf = new Map(newest.map((r) => [r.recipe_id, r]))
+  return RECIPES.map((recipe) => {
+    const run = runOf.get(recipe.id)
+    const stored = newestOf.get(recipe.id)
+    const audit = ctx.registry.recipes.find((r) => r.recipe_id === recipe.id)
+    return {
+      recipe_id: recipe.id,
+      company: recipe.company,
+      description: recipe.description,
+      url: run?.source_url || recipe.url({ now: ctx.now(), newest: null }),
+      last_run: run
+        ? {
+            status: run.status as 'ok' | 'unchanged' | 'failed',
+            started_at: run.started_at,
+            detail: run.detail,
+          }
+        : null,
+      observations: countOf.get(recipe.id) ?? 0,
+      newest: stored ? { source_url: stored.source_url, fetched_at: stored.fetched_at } : null,
+      caveat: audit?.caveat ?? null,
+      terms: audit?.terms ?? null,
+    }
+  })
+}
+
 export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<CoverageData> {
   const [stamps, runs, counts, totals] = await Promise.all([
     sourceStamps(db),
@@ -1592,6 +1661,7 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
     ...stampOf(ctx),
     sources,
     cuts: ctx.registry.cuts.map((c) => ({ id: c.id, verdict: c.verdict, reason: c.reason })),
+    recipes: await recipeCoverage(db, ctx),
     totals,
     exports,
     latest_fetched_at: latest,

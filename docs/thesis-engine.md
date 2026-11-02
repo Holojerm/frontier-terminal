@@ -22,7 +22,7 @@ Frontier Terminal is the engine, and its first thesis is Anthropic, read off the
 
 ## The model
 
-- **Thesis.** A short statement about one company, with a horizon, a position disclosure, and a comparison set of direct competitors tracked alongside it. Revisions are dated, with a reason.
+- **Thesis.** A short statement about one company, with a horizon, a position disclosure, and a comparison set of direct competitors tracked alongside it. Revisions are dated, with a reason. A thesis can instead be about a group taken as one subject (the Compute thesis is about the frontier labs together); the group is a `group` entry in `shared/utils/companies.ts`, and the thesis carries its own title.
 - **Claim.** One of 3–5 things the thesis rests on, each with a kill condition written before the data arrives.
 - **Signal.** The evidence a claim is checked against, measured or judged.
 - **Measured signal.** A number a recipe produces, such as a list price or an open-role count.
@@ -61,7 +61,7 @@ Frontier Terminal is the engine, and its first thesis is Anthropic, read off the
 - **Fallback runner:** the Mac mini, for sources that block cloud IPs or need a real browser.
 - **Breakage:** a recipe that fails or returns an outlier is flagged, never silently skipped.
 - **Recipes:** a company outside the four labs gets its data from recipes (`server/theses/recipes/`): a public URL and a plain extractor, run on the survey tick before the theses are evaluated, into `recipe_observations`, with the raw bytes in R2 and a failed run flagged in `recipe_runs` and the ops digest. They never touch the lab tables, panels, alert rules or the lab judge. Recipe signals compute year-over-year growth, trailing sums, and sums of keys; a recipe-items claim has the judge rate each observation (a changelog entry) once.
-- **Adding a company:** add it to `shared/utils/companies.ts`; one file per recipe in `server/theses/recipes/` with a fixture and a test, listed in its registry; one thesis file in `server/theses/` listed in its registry; its journal page under `docs/theses/`.
+- **Adding a company:** add it to `shared/utils/companies.ts`; one file per recipe in `server/theses/recipes/` with a fixture and a test, listed in its registry; one thesis file in `server/theses/` listed in its registry; its journal page under `docs/theses/`. A recipe audited after 2026-11-02 also gets an entry in `sources.yaml` `recipe_sources` (its terms and caveats), which `/api/coverage` shows beside its last run.
 - **Generalize late:** the parser contracts name the four labs today; they widen when the second thesis needs it, not before.
 
 ## Rules of the road

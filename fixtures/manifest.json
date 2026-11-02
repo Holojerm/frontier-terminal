@@ -401,6 +401,96 @@
       "raw_bytes": 3161339,
       "trim": "Kept the xbrl root and its namespaces, every dei fact under 2 KB, the units they and the kept facts reference, and the Revenues / RevenueFromContractWithCustomerExcludingAssessedTax / SalesRevenueNet / OperatingIncomeLoss facts on contexts that carry no dimension or a StatementBusinessSegmentsAxis member — with those 77 contexts. Every other fact and context is cut; the kept elements are byte-identical.",
       "note": "One representative per-filing instance for the derived xbrl-segment-<ticker>-<filed>-<accession> sources (server/pipeline/derived.ts): Alphabet's 10-Q for the quarter ended 2026-09-30, filed 2026-10-29. Google Cloud (goog:GoogleCloudMember) revenue is tagged RevenueFromContractWithCustomerExcludingAssessedTax on four single-member contexts — 2026-Q3 $30,709M, 2025-Q3 $15,157M, 2026 nine months $75,505M, 2025 nine months $41,041M — each fact twice (two statements). OperatingIncomeLoss for the segment sits on two-member contexts (OperatingSegmentsMember beside it), which the parser skips; consolidated and Google Services revenue are the distractors."
+    },
+    {
+      "path": "fixtures/recipes/gpu-lambda.html",
+      "source_id": "gpu-lambda",
+      "source_url": "https://lambda.ai/pricing",
+      "fetched_at": "2026-11-02T03:55:06Z",
+      "http_status": 200,
+      "raw_bytes": 87019,
+      "trim": "script, style, svg and noscript blocks removed; the extractor drops the same blocks before reading, so it reads the trimmed and the live page alike"
+    },
+    {
+      "path": "fixtures/recipes/gpu-coreweave.html",
+      "source_id": "gpu-coreweave",
+      "source_url": "https://www.coreweave.com/pricing",
+      "fetched_at": "2026-11-02T03:55:06Z",
+      "http_status": 200,
+      "raw_bytes": 444165,
+      "trim": "script, style, svg and noscript blocks removed; the extractor drops the same blocks before reading, so it reads the trimmed and the live page alike"
+    },
+    {
+      "path": "fixtures/recipes/gpu-nebius.html",
+      "source_id": "gpu-nebius",
+      "source_url": "https://nebius.com/prices",
+      "fetched_at": "2026-11-02T03:55:06Z",
+      "http_status": 200,
+      "raw_bytes": 274621,
+      "trim": "script, style, svg and noscript blocks removed; the extractor drops the same blocks before reading, so it reads the trimmed and the live page alike"
+    },
+    {
+      "path": "fixtures/recipes/gpu-crusoe.html",
+      "source_id": "gpu-crusoe",
+      "source_url": "https://www.crusoe.ai/cloud/pricing",
+      "fetched_at": "2026-11-02T03:55:07Z",
+      "http_status": 200,
+      "raw_bytes": 319873,
+      "trim": "script, style, svg and noscript blocks removed; the extractor drops the same blocks before reading, so it reads the trimmed and the live page alike"
+    },
+    {
+      "path": "fixtures/recipes/gpu-together.html",
+      "source_id": "gpu-together",
+      "source_url": "https://www.together.ai/pricing",
+      "fetched_at": "2026-11-02T03:55:07Z",
+      "http_status": 200,
+      "raw_bytes": 636403,
+      "trim": "script, style, svg and noscript blocks removed; the extractor drops the same blocks before reading, so it reads the trimmed and the live page alike"
+    },
+    {
+      "path": "fixtures/recipes/gpu-digitalocean.html",
+      "source_id": "gpu-digitalocean",
+      "source_url": "https://www.digitalocean.com/pricing/gpu-droplets",
+      "fetched_at": "2026-11-02T03:55:08Z",
+      "http_status": 200,
+      "raw_bytes": 248988,
+      "trim": "script, style, svg and noscript blocks removed; the extractor drops the same blocks before reading, so it reads the trimmed and the live page alike"
+    },
+    {
+      "path": "fixtures/recipes/gpu-verda.html",
+      "source_id": "gpu-verda",
+      "source_url": "https://verda.com/pricing",
+      "fetched_at": "2026-11-02T03:55:08Z",
+      "http_status": 200,
+      "raw_bytes": 430705,
+      "trim": "script, style, svg and noscript blocks removed; the extractor drops the same blocks before reading, so it reads the trimmed and the live page alike"
+    },
+    {
+      "path": "fixtures/recipes/gpu-azure.json",
+      "source_id": "gpu-azure",
+      "source_url": "https://prices.azure.com/api/retail/prices?$filter=serviceName%20eq%20'Virtual%20Machines'%20and%20priceType%20eq%20'Consumption'%20and%20contains(armSkuName,'H100')",
+      "fetched_at": "2026-11-02T03:55:09Z",
+      "http_status": 200,
+      "raw_bytes": 445316,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/recipes/gpu-oracle.json",
+      "source_id": "gpu-oracle",
+      "source_url": "https://apexapps.oracle.com/pls/apex/cetools/api/v1/products/?currencyCode=USD",
+      "fetched_at": "2026-11-02T03:55:09Z",
+      "http_status": 200,
+      "raw_bytes": 201009,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/recipes/sec-companyfacts-crwv.json",
+      "source_id": "sec-revenue-crwv",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001769628.json",
+      "fetched_at": "2026-11-02T04:00:59Z",
+      "http_status": 200,
+      "raw_bytes": 501063,
+      "trim": "facts reduced to the three us-gaap revenue tags the extractor reads (RevenueFromContractWithCustomerExcludingAssessedTax, …IncludingAssessedTax, Revenues); cik and entityName kept"
     }
   ]
 }

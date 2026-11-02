@@ -6,7 +6,7 @@
 import { max } from 'drizzle-orm'
 
 import { COMPANIES, companyName } from '#shared/utils/companies'
-import type { ClaimView, ThesesData } from '#shared/utils/thesis-types'
+import type { ClaimView, ReadingPoint, ThesesData } from '#shared/utils/thesis-types'
 
 import * as tables from '../db/schema'
 import { contentHash } from '../pipeline/contracts'
@@ -40,6 +40,20 @@ export async function thesesStamp(db: PipelineDb): Promise<string> {
     db.select({ at: max(tables.claimVerdicts.judged_at) }).from(tables.claimVerdicts),
   ])
   return `${DEFINITIONS}|${readings?.at ?? 'none'}|${verdicts?.at ?? 'none'}`
+}
+
+/** A reading as the chart and table show it, noting a change of mapped flagship. */
+function seriesPoint(r: { date: string; value: number; detail: string }): ReadingPoint {
+  const changed = (JSON.parse(r.detail) as { flagship_changed?: Record<string, unknown> | null })
+    .flagship_changed
+  if (!changed) return { date: r.date, value: r.value }
+  const labs = Object.entries(changed)
+    .map(([lab, c]) => {
+      const { from, to } = c as { from: string; to: string }
+      return `${companyName(lab)} ${from} → ${to}`
+    })
+    .join('; ')
+  return { date: r.date, value: r.value, note: `Flagship changed: ${labs}` }
 }
 
 export async function queryTheses(db: PipelineDb, ctx: QueryContext): Promise<ThesesData> {
@@ -76,7 +90,7 @@ export async function queryTheses(db: PipelineDb, ctx: QueryContext): Promise<Th
               fetched_at: newest.fetched_at,
             }
           : null,
-        series: readings.map((r) => ({ date: r.date, value: r.value })),
+        series: readings.filter((r) => !r.void_reason).map(seriesPoint),
         verdicts: verdicts.map((v) => ({
           subject: v.subject,
           change_id: v.change_id,
@@ -95,6 +109,7 @@ export async function queryTheses(db: PipelineDb, ctx: QueryContext): Promise<Th
     }
     theses.push({
       ...thesis,
+      title: thesis.title ?? companyName(thesis.company),
       company_name: companyName(thesis.company),
       ticker: COMPANIES[thesis.company].ticker,
       comparison_names: thesis.comparison_set.map(companyName),

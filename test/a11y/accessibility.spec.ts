@@ -44,6 +44,7 @@ const ROUTES = [
   '/theses',
   '/theses/anthropic',
   '/theses/cloudflare',
+  '/theses/compute',
   '/incidents',
   '/disclosures',
   '/data',

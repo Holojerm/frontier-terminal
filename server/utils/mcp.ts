@@ -58,9 +58,11 @@ import {
   queryPriceHistory,
   queryPrices,
   queryReleases,
+  recipeRunsStamp,
   type QueryContext,
 } from './terminal-db'
 import { queryDisclosures } from './terminal-disclosures'
+import { gpuRunsStamp, queryGpuPrices } from './terminal-gpu'
 import { SHARE_WINDOW_DAYS, queryRankings } from './terminal-rankings'
 import { queryRevenue } from './terminal-revenue'
 import { PROVIDER_ORDER } from './terminal-sources'
@@ -498,12 +500,45 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
       description:
         'Every registered source: its audited URL, role (primary, join, cross-check, sec), the audit’s caveat in its own words, ' +
         'newest snapshot (with HTTP status and byte count), how the last poll ended (ok, unchanged, failed, baseline), snapshot count ' +
-        'and how many current rows came from it. cuts lists what is deliberately NOT tracked and why. totals are table row counts; ' +
+        'and how many current rows came from it. recipes lists the thesis recipes (GPU rental prices, filers outside the labs), which store ' +
+        'outside the lab tables: each one’s last run, observation count, newest stored fetch, and its audit caveat and terms. ' +
+        'cuts lists what is deliberately NOT tracked and why. totals are table row counts; ' +
         'exports describes the CSV/JSON bulk downloads at /export/<table>.csv|json. ' +
         PROVENANCE,
       annotations: READ_ONLY,
     },
-    async () => json(await deps.serve('coverage', (ctx) => queryCoverage(deps.db, ctx))),
+    async () =>
+      json(
+        await deps.serve(
+          'coverage',
+          (ctx) => queryCoverage(deps.db, ctx),
+          await recipeRunsStamp(deps.db),
+        ),
+      ),
+  )
+
+  server.registerTool(
+    'get_gpu_prices',
+    {
+      title: 'GPU rental prices',
+      description:
+        'On-demand H100 and B200 rental prices from first-party price pages and documented price APIs (Lambda, CoreWeave, Nebius, ' +
+        'Crusoe, Together AI, DigitalOcean, Verda, Azure, Oracle), normalized to usd_per_gpu_hour: an instance price divided by its GPUs, ' +
+        'with gpus_per_instance, instance_usd_per_hour, region and config kept as printed. medians counts each provider once, at the ' +
+        'median of its own counted rows; PCIe and NVL cards have counted=false. failed names providers whose page failed today; they are ' +
+        'left out, never carried forward. These are list prices, not transaction prices (see caveat). The Compute thesis divides the ' +
+        'flagship token price by the H100 median. ' +
+        PROVENANCE,
+      annotations: READ_ONLY,
+    },
+    async () =>
+      json(
+        await deps.serve(
+          'gpu-prices',
+          (ctx) => queryGpuPrices(deps.db, ctx),
+          await gpuRunsStamp(deps.db),
+        ),
+      ),
   )
 
   server.registerTool(

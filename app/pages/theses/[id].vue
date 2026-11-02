@@ -31,7 +31,7 @@ if (data.value && !thesis.value) {
   throw createError({ statusCode: 404, statusMessage: 'No such thesis', fatal: true })
 }
 
-const name = thesis.value?.company_name ?? 'Thesis'
+const name = thesis.value?.title ?? 'Thesis'
 
 useSeo({
   title: `${name} thesis`,
@@ -53,7 +53,7 @@ useSeo({
     error-body="The theses endpoint failed to respond. No stale or inferred status is shown in its place."
   >
     <template #title>
-      {{ thesis?.company_name ?? 'Thesis' }}
+      {{ thesis?.title ?? 'Thesis' }}
       <span v-if="thesis?.ticker" class="ml-2 font-mono text-lg text-muted">{{
         thesis.ticker
       }}</span>

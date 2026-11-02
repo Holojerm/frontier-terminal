@@ -5,5 +5,6 @@ import type { ThesisDef } from '#shared/utils/thesis-types'
 
 import { ANTHROPIC_THESIS } from './anthropic'
 import { CLOUDFLARE_THESIS } from './cloudflare'
+import { COMPUTE_THESIS } from './compute'
 
-export const THESES: readonly ThesisDef[] = [ANTHROPIC_THESIS, CLOUDFLARE_THESIS]
+export const THESES: readonly ThesisDef[] = [ANTHROPIC_THESIS, CLOUDFLARE_THESIS, COMPUTE_THESIS]

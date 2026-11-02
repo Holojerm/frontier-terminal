@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { includeSources } from '../server/pipeline/sources'
+import { GPU_RECIPES } from '../server/theses/recipes/registry'
+import { SEC_REVENUE_CRWV } from '../server/theses/recipes/sec-revenue'
 import { SOURCE_LABELS, labelOf, readSourceRegistry } from '../server/utils/terminal-sources'
 import { fixtureText, manifest } from './pipeline/fixtures'
 
@@ -86,7 +88,29 @@ describe('readSourceRegistry', () => {
       'meta-status',
       'meta-disclosures',
       'mistral-disclosures',
+      'gpu-runpod',
+      'gpu-aws',
+      'gpu-google-cloud',
+      'gpu-vultr',
+      'gpu-jarvislabs',
+      'gpu-scaleway',
+      'gpu-fluidstack-hyperbolic',
+      'gpu-aggregators',
     ])
+  })
+
+  it('carries an audit entry for every GPU recipe and the CoreWeave filer, at the URL each fetches', () => {
+    const audited = new Map(registry.recipes.map((r) => [r.recipe_id, r]))
+    for (const recipe of [...GPU_RECIPES, SEC_REVENUE_CRWV]) {
+      const entry = audited.get(recipe.id)
+      expect(entry, recipe.id).toBeDefined()
+      expect(entry!.verdict).toBe('include')
+      expect(entry!.terms).toBeTruthy()
+      expect(entry!.url).toBe(recipe.url({ now: new Date(), newest: null }))
+    }
+    expect([...audited.keys()].sort()).toEqual(
+      [...GPU_RECIPES, SEC_REVENUE_CRWV].map((r) => r.id).sort(),
+    )
   })
 
   it('fails loudly on a file with no sources block', () => {

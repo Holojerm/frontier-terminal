@@ -108,3 +108,9 @@ export const SEC_REVENUE_NET = secRevenue(
 )
 export const SEC_REVENUE_AKAM = secRevenue('sec-revenue-akam', 'akamai', '0001086222', 'Akamai')
 export const SEC_REVENUE_FSLY = secRevenue('sec-revenue-fsly', 'fastly', '0001517413', 'Fastly')
+export const SEC_REVENUE_CRWV = secRevenue(
+  'sec-revenue-crwv',
+  'coreweave',
+  '0001769628',
+  'CoreWeave',
+)

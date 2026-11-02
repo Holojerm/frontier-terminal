@@ -246,6 +246,14 @@ describe('queryRankings', () => {
       'meta-status',
       'meta-disclosures',
       'mistral-disclosures',
+      'gpu-runpod',
+      'gpu-aws',
+      'gpu-google-cloud',
+      'gpu-vultr',
+      'gpu-jarvislabs',
+      'gpu-scaleway',
+      'gpu-fluidstack-hyperbolic',
+      'gpu-aggregators',
     ])
     expect(coverage.cuts.find((c) => c.id === 'artificial-analysis')!.reason).toContain(
       '"Internal use only; no redistribution."',
