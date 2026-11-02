@@ -37,12 +37,12 @@ const widthPct = (share: number | null) =>
     <TerminalEmptyState
       v-if="rankings.status === 'not_configured'"
       title="Not configured."
-      body="The OpenRouter rankings dataset needs NUXT_OPENROUTER_API_KEY; without it the source is skipped every poll and nothing is fetched anonymously. The feed is registered and the panel appears the first tick after the key is set."
+      body="The OpenRouter rankings dataset needs NUXT_OPENROUTER_API_KEY, which this deploy does not set. Nothing is fetched anonymously."
     />
     <TerminalEmptyState
       v-else-if="rankings.status === 'no_rows'"
       title="No rankings rows yet."
-      body="The feed is registered; rows land on its first successful poll."
+      body="The feed is registered; no poll has succeeded yet."
     />
 
     <template v-else>
@@ -128,7 +128,7 @@ const widthPct = (share: number | null) =>
         <span v-else-if="rankings.source.license">· {{ rankings.source.license }}</span>
       </p>
       <p v-if="!compact">
-        Also published, not ingested (license or no data endpoint):
+        Evaluated, not ingested (license or no data endpoint):
         <template v-for="(ref, i) in EXTERNAL" :key="ref.url">
           <a
             :href="ref.url"

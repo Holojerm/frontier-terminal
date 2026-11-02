@@ -69,7 +69,7 @@ const SECTIONS: NavSection[] = [
       {
         label: 'Revenue',
         to: '/revenue',
-        description: 'What each lab has actually disclosed to the SEC.',
+        description: 'What each lab has disclosed to the SEC.',
       },
       {
         label: 'Demand',
@@ -89,7 +89,7 @@ const SECTIONS: NavSection[] = [
       {
         label: 'Releases',
         to: '/releases',
-        description: 'Every SKU first seen since watching began.',
+        description: 'Every SKU first listed since tracking began.',
       },
       {
         label: 'Incidents',
@@ -99,7 +99,7 @@ const SECTIONS: NavSection[] = [
       {
         label: 'Disclosures',
         to: '/disclosures',
-        description: 'What the labs publish about their own models misbehaving.',
+        description: 'Misalignment reports the labs publish about their own models.',
       },
     ],
   },

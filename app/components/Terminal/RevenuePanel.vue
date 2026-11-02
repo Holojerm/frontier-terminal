@@ -21,11 +21,11 @@ const filerName = (p: RevenueProviderView) =>
 
 const relationLine = (p: RevenueProviderView) =>
   p.filer?.relation === 'parent' && p.filer.segment_label
-    ? `${filerName(p)}, ${p.filer.segment_label} segment — the parent’s segment, not ${p.display}’s own revenue`
+    ? `${filerName(p)}, ${p.filer.segment_label} segment: a parent segment, not ${p.display}’s revenue`
     : p.filer?.relation === 'parent'
-      ? `${filerName(p)} consolidated — the parent’s top line, not ${p.display}’s`
+      ? `${filerName(p)} consolidated: the parent’s revenue, not ${p.display}’s`
       : p.filer
-        ? `${filerName(p)} — the lab’s own filing${p.filer.tagged_by === 'resolved' && p.filer.resolved_from ? `, CIK resolved from its ${p.filer.resolved_from.form} of ${p.filer.resolved_from.file_date}` : ''}`
+        ? `${filerName(p)}: the lab’s own filing${p.filer.tagged_by === 'resolved' && p.filer.resolved_from ? `, CIK resolved from its ${p.filer.resolved_from.form} of ${p.filer.resolved_from.file_date}` : ''}`
         : ''
 </script>
 
@@ -64,14 +64,14 @@ const relationLine = (p: RevenueProviderView) =>
              filled the space named as deliberately absent. -->
         <TerminalEmptyState
           v-if="p.disclosure === 'none'"
-          title="No SEC filing carries this lab’s revenue."
-          body="Press-reported run-rates are not shown."
+          title="No SEC filing reports this lab’s revenue."
+          body="Press-reported run-rates are excluded."
         />
 
         <TerminalEmptyState
           v-else-if="p.disclosure === 'no_rows'"
-          title="Filer tagged, nothing parsed yet."
-          body="Its XBRL facts land on the next EDGAR poll that reads them."
+          title="Filer tagged; no XBRL facts parsed yet."
+          body="They appear on the next EDGAR poll."
         />
 
         <template v-else>

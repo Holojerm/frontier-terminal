@@ -27,8 +27,8 @@ import { byString, num, parseJson, str } from './terminal-json'
 import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
 
 export const REVENUE_RULE =
-  'Primary source only: audited SEC disclosures read from EDGAR’s XBRL data — company facts for a consolidated figure, the filing’s own instance for a segment — each value linked to the filing that reported it. ' +
-  'No audited disclosure on file means nothing is shown — press-reported run-rates are deliberately not shown.'
+  'Audited SEC disclosures only, from EDGAR’s XBRL data: company facts for a consolidated figure, the filing’s own XBRL instance for a segment. Each value links to the filing that reported it. ' +
+  'With no audited disclosure on file, nothing is shown. Press-reported run-rates are excluded.'
 
 const DAY_MS = 86_400_000
 

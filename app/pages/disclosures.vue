@@ -44,10 +44,9 @@ const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, str
     <header class="space-y-2">
       <h1 class="text-4xl text-highlighted">Disclosures</h1>
       <p class="max-w-2xl text-muted">
-        What the labs publish about their own models misbehaving — reports and notices, in the lab’s
-        words, each linked to the page it was read from. This measures disclosure practice, not how
-        often misalignment happens: a lab without an index shows no entries because it publishes
-        none.
+        Reports and notices the labs publish about misalignment in their own models, in each lab’s
+        words, each linked to its source page. This measures disclosure practice, not how often
+        misalignment occurs: a lab with no index shows no entries because it publishes none.
       </p>
     </header>
 
@@ -72,7 +71,7 @@ const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, str
       <TerminalEmptyState
         v-if="disclosures.entries.length === 0"
         title="No disclosures parsed yet."
-        body="The index is registered; the first poll will fill this page."
+        body="The index is registered; entries appear after its first poll."
         :action="{ label: 'Coverage', to: '/data#coverage' }"
       />
 
@@ -130,7 +129,7 @@ const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, str
                       <TerminalCaveatMark
                         v-if="r.timeline.disclosed_basis === 'first_listed'"
                         :name="`How the disclosure date of ${r.title} was read`"
-                        text="The report page prints no disclosure date. This is the earliest date the index has shown beside the report in every observation this terminal holds."
+                        text="The report page prints no disclosure date. This is the earliest date the index has listed beside the report in any stored snapshot."
                       />
                     </td>
                     <td class="py-2 pr-4 text-right font-mono text-xs text-highlighted">
@@ -165,8 +164,8 @@ const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, str
             </table>
           </div>
           <p class="text-xs text-muted">
-            Days run from the discovery date to the publication date, both as the report page prints
-            them. The occurrence line (sample, incident date) is shown verbatim and never read as a
+            Days run from the discovery date to the publication date, both as printed on the report
+            page. The occurrence line (sample, incident date) is shown verbatim and not parsed as a
             date.
           </p>
         </TerminalPanel>
@@ -175,7 +174,7 @@ const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, str
           v-if="notices.length"
           id="notices"
           title="Notices"
-          note="External incidents the lab has posted about; each links to an update on the lab’s own site."
+          note="External incidents the lab has posted about, each linked to an update on its own site."
         >
           <ul class="space-y-3 text-sm">
             <li v-for="n in notices" :key="n.entity_key" class="space-y-1">

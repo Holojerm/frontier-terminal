@@ -16,7 +16,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Hiring',
     summary:
-      'Open roles per day at OpenAI, Anthropic and xAI reconstructed from each job board’s change log, the physical-infrastructure buildout cluster per lab, the department mix now against 30 days ago, and the caveats per board.',
+      'Open roles per day at OpenAI, Anthropic, and xAI, reconstructed from each job board’s change log; the physical-infrastructure buildout cluster per lab; the department mix now against 30 days ago; and per-board caveats.',
   },
 })
 
@@ -93,7 +93,7 @@ const caveats = computed(() =>
       variant="soft"
       icon="i-lucide-database-zap"
       title="Hiring history could not be read"
-      description="The history endpoint failed to respond. Nothing is shown rather than a stale or inferred number."
+      description="The history endpoint failed to respond. No stale or inferred number is shown in its place."
     />
 
     <template v-else-if="hiring">
@@ -124,7 +124,7 @@ const caveats = computed(() =>
         <TerminalEmptyState
           v-else
           title="No series to draw yet."
-          body="A series needs a board with a current listing and at least two days on record. The first poll of each board writes its baseline; the days after it fill the line."
+          body="A series needs a board with a current listing and at least two days on record. Each board’s first poll sets its baseline."
           :action="{ label: 'See coverage', to: '/data#coverage' }"
         />
 
@@ -234,7 +234,7 @@ const caveats = computed(() =>
               title="No parsed roles yet."
               :body="
                 p.sources.length
-                  ? 'The feed has been snapshotted; rows land when its parser lane runs.'
+                  ? 'The feed is snapshotted; rows appear when its parser runs.'
                   : 'This board has not been polled yet.'
               "
             />

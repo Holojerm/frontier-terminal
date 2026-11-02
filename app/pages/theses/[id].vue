@@ -52,7 +52,7 @@ useSeo({
       variant="soft"
       icon="i-lucide-database-zap"
       title="This thesis could not be read"
-      description="The theses endpoint failed to respond. Nothing is shown rather than a stale or inferred status."
+      description="The theses endpoint failed to respond. No stale or inferred status is shown in its place."
     />
 
     <template v-else-if="thesis">
