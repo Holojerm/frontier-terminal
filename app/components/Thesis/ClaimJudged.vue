@@ -34,7 +34,7 @@ function ruling(v: VerdictView) {
     <TerminalEmptyState
       v-if="claim.verdicts.length === 0"
       title="No verdicts yet."
-      body="The judge rates each candidate event this claim watches. Until one is rated, the claim holds by default."
+      body="No candidate event for this claim has been rated. The claim holds by default until one is."
     />
 
     <ul v-else class="space-y-3">

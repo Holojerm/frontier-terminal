@@ -24,11 +24,11 @@ const fromProspectus = (p: RevenueProviderView) => p.periods.some((r) => r.basis
 
 const relationLine = (p: RevenueProviderView) =>
   p.filer?.relation === 'parent' && p.filer.segment_label
-    ? `${filerName(p)}, ${p.filer.segment_label} segment — the parent’s segment, not ${p.display}’s own revenue`
+    ? `${filerName(p)}, ${p.filer.segment_label} segment: a parent segment, not ${p.display}’s revenue`
     : p.filer?.relation === 'parent'
-      ? `${filerName(p)} consolidated — the parent’s top line, not ${p.display}’s`
+      ? `${filerName(p)} consolidated: the parent’s revenue, not ${p.display}’s`
       : p.filer
-        ? `${filerName(p)} — the lab’s own filing${p.filer.tagged_by === 'resolved' && p.filer.resolved_from ? `, CIK resolved from its ${p.filer.resolved_from.form} of ${p.filer.resolved_from.file_date}` : ''}`
+        ? `${filerName(p)}: the lab’s own filing${p.filer.tagged_by === 'resolved' && p.filer.resolved_from ? `, CIK resolved from its ${p.filer.resolved_from.form} of ${p.filer.resolved_from.file_date}` : ''}`
         : ''
 </script>
 
@@ -67,21 +67,21 @@ const relationLine = (p: RevenueProviderView) =>
              filled the space named as deliberately absent. -->
         <TerminalEmptyState
           v-if="p.disclosure === 'none'"
-          title="No SEC filing carries this lab’s revenue."
-          body="Press-reported run-rates are not shown."
+          title="No SEC filing reports this lab’s revenue."
+          body="Press-reported run-rates are excluded."
         />
 
         <TerminalEmptyState
           v-else-if="p.disclosure === 'no_rows'"
           :title="
             p.filer?.relation === 'issuer'
-              ? 'Registration filed; no revenue read yet.'
-              : 'Filer tagged, nothing parsed yet.'
+              ? 'S-1 filed; no revenue read yet.'
+              : 'Filer tagged; no XBRL facts parsed yet.'
           "
           :body="
             p.filer?.relation === 'issuer'
-              ? 'An S-1 that tags no financials is read from its statement of operations on the next six-hourly poll; tagged XBRL follows with the first 10-Q.'
-              : 'Its XBRL facts land on the next EDGAR poll that reads them.'
+              ? 'Read from the S-1’s statement of operations on the next survey poll. XBRL follows with the first 10-Q.'
+              : 'They appear on the next EDGAR poll.'
           "
         />
 

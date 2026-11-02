@@ -75,8 +75,8 @@ const bars = (p: IncidentProviderView) => [
           title="No parsed incidents yet."
           :body="
             p.sources.length
-              ? 'The feed has been snapshotted; rows land when its parser lane runs.'
-              : 'This status page has not been polled yet.'
+              ? 'The feed is snapshotted but not parsed yet.'
+              : 'The status page has not been polled.'
           "
         />
 
@@ -143,7 +143,7 @@ const bars = (p: IncidentProviderView) => [
       <time :datetime="incidents.window_to" :title="incidents.window_to">{{
         absoluteStamp(incidents.window_to, now)
       }}</time
-      >. Impact and status are each vendor’s own words, not normalized across vendors.
+      >. Impact and status are each vendor’s own words, not normalized.
     </p>
   </div>
 </template>

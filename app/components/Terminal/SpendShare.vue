@@ -45,12 +45,12 @@ const joined = computed(() => props.spend.providers.filter((p) => p.models.lengt
     <TerminalEmptyState
       v-else-if="spend.status === 'no_rows'"
       title="No rankings rows yet."
-      body="The rankings feed is registered; the join runs on its first successful poll."
+      body="The rankings feed is registered; no poll has succeeded yet."
     />
 
     <template v-else>
       <p v-if="spend.window" class="text-xs text-toned">
-        {{ spend.window.from }} → {{ spend.window.to }} · at list price, implied not observed
+        {{ spend.window.from }} → {{ spend.window.to }} · at list price; implied, not observed
       </p>
 
       <div class="overflow-x-auto">
@@ -108,10 +108,10 @@ const joined = computed(() => props.spend.providers.filter((p) => p.models.lengt
         v-if="spend.excluded.length"
         class="flex flex-wrap items-center gap-x-1 text-xs text-toned"
       >
-        Not priceable, so out of the dollar share:
+        Not priceable, excluded from the dollar share:
         {{ spend.excluded.map((e) => e.display).join(', ') }}
         <TerminalCaveatMark
-          name="Why some labs are out of the dollar share"
+          name="Why some labs are excluded from the dollar share"
           :text="spend.excluded.map((e) => `${e.display}: ${e.reason}.`).join(' ')"
         />
       </p>
@@ -129,7 +129,7 @@ const joined = computed(() => props.spend.providers.filter((p) => p.models.lengt
           size="sm"
           trailing-icon="i-lucide-chevron-down"
           class="px-0 text-toned"
-          :label="showJoin ? 'Hide the join per model' : 'Show the join per model'"
+          :label="showJoin ? 'Hide the per-model join' : 'Show the per-model join'"
         />
         <template #content>
           <div class="space-y-4">
@@ -197,7 +197,7 @@ const joined = computed(() => props.spend.providers.filter((p) => p.models.lengt
 
       <p v-if="compact" class="text-sm">
         <NuxtLink to="/rankings#spend" class="text-primary underline underline-offset-2">
-          The join per model
+          Per-model join
         </NuxtLink>
       </p>
     </template>

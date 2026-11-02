@@ -66,7 +66,7 @@ const priorPartial = (p: IncidentProviderView) =>
               <TerminalCaveatMark
                 v-if="priorPartial(p)"
                 :name="`Why ${p.display}’s prior window is partial`"
-                :text="`Held history begins ${absoluteStamp(p.coverage_from!, now)}; the prior window is partial until the feed has been polled through it.`"
+                :text="`History held since ${absoluteStamp(p.coverage_from!, now)}; the prior window is partial until polling covers it.`"
               />
             </td>
             <td

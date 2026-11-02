@@ -34,14 +34,13 @@ const counters = computed(() => [
 const quietReason = computed(() => {
   const m = movement.value
   if (m.recent.total > 0) return null
-  if (m.sources_total === 0)
-    return 'No source polled yet. The second poll produces the first comparison.'
+  if (m.sources_total === 0) return 'No source polled yet. Comparison starts on the second poll.'
   const compared = m.sources_total - m.sources_not_yet_compared
   if (m.total_changes === 0 && compared === 0) {
     return `First observation: ${m.sources_total} sources, one snapshot each. Nothing to compare yet.`
   }
   if (m.total_changes === 0) {
-    return `No change on record across ${compared} of ${m.sources_total} compared sources.`
+    return `No change on record; ${compared} of ${m.sources_total} sources compared.`
   }
   return `No change in the last ${m.window_hours}h. ${m.total_changes} on record overall.`
 })

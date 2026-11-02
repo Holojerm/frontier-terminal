@@ -598,7 +598,7 @@ export async function queryOverview(db: PipelineDb, ctx: QueryContext): Promise<
 // ---- prices ----------------------------------------------------------------
 
 const MATRIX_TIER_NOTE =
-  'List price on each vendor’s standard tier — batch, long-context, promo-window and cached-only rows are excluded (they are in the full catalog).'
+  'List price on each vendor’s standard tier. Batch, long-context, promo-window, and cached-only rows are excluded; they are in the full catalog.'
 
 const isStandardTier = (tier: string | null): boolean => tier === null || tier === 'standard'
 
@@ -909,7 +909,7 @@ export function buildMatrix(
           basis_current: null,
           basis_checked_at: null,
           basis_note: null,
-          gap: gap?.reason ?? 'No mapping — the vendor publishes no recommendation to transcribe.',
+          gap: gap?.reason ?? 'No mapping. The vendor publishes no recommendation to transcribe.',
           priced: false,
         })
         continue

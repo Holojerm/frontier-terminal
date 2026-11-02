@@ -38,8 +38,8 @@ export function alertEntryId(appUrl: string, alertId: string): string {
 
 const SUBTITLE = {
   alert:
-    'Judged and rule-fired alerts over the change log — notable and critical only. Every entry links to the source it was read from.',
-  all: 'Alerts and the ticker over the change log — every severity. Every entry links to the source it was read from.',
+    'Alerts on the change log, judged or rule-fired; notable and critical only. Each entry links to the source it was read from.',
+  all: 'Alerts and ticker entries on the change log, every severity. Each entry links to the source it was read from.',
 } as const
 
 export function buildAlertsAtom(input: AlertsFeedInput): string {

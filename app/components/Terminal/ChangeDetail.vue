@@ -29,7 +29,7 @@ const EMPTY = '∅'
     <div class="overflow-x-auto">
       <table class="w-full text-left text-xs">
         <caption class="sr-only">
-          Fields of the record before and after the change
+          Record fields before and after the change
         </caption>
         <thead>
           <tr class="border-b border-default text-toned">

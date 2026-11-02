@@ -186,25 +186,25 @@ export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string 
     provider: 'xai',
     class: 'balanced',
     reason:
-      'xAI’s models page recommends one model and stops — no balanced tier is published, and the cheaper grok SKUs carry no positioning to transcribe.',
+      'xAI’s models page recommends one model and names no balanced tier. The cheaper grok SKUs have no positioning statement to transcribe.',
   },
   {
     provider: 'xai',
     class: 'economy',
     reason:
-      'Same gap: xAI publishes prices for grok-4.3 and grok-build-0.1 (see the full catalog) but no statement that either is the cost-sensitive choice.',
+      'xAI publishes prices for grok-4.3 and grok-build-0.1 (full catalog) but no statement that either is the cost-sensitive choice.',
   },
   {
     provider: 'google',
     class: 'balanced',
     reason:
-      'Google’s only price-performance sentence (“Our best price-performance model”) is on Gemini 2.5 Flash, a previous generation the same page steers new projects away from; no current model carries one. Every Gemini SKU is in the full catalog.',
+      'Google’s only price-performance sentence (“Our best price-performance model”) describes Gemini 2.5 Flash, a previous generation; the same page directs new projects to its latest models. No current model has such a sentence. Every Gemini SKU is in the full catalog.',
   },
   {
     provider: 'meta',
     class: 'balanced',
     reason:
-      'Meta’s models page offers two API text lines — Muse Wonder for capability, Muse Spark for cost-sensitive volume — and names no middle tier.',
+      'Meta’s models page lists two API text lines, Muse Wonder for capability and Muse Spark for cost-sensitive volume, and names no middle tier.',
   },
   // Checked 2026-11-01 across models.md, the model selection guide and each
   // model's own page. Mistral Large 4 is the printed replacement for the one
@@ -219,13 +219,13 @@ export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string 
   {
     provider: 'mistral',
     class: 'balanced',
-    reason: 'Same gap: no Mistral page names a middle tier.',
+    reason: 'No Mistral page names a middle tier.',
   },
   {
     provider: 'mistral',
     class: 'economy',
     reason:
-      'Same gap: Mistral prints speed and performance ratings, not a cost-sensitive recommendation, and its cheapest generalists carry no positioning to transcribe.',
+      'Mistral prints speed and performance ratings, not a cost-sensitive recommendation. Its cheapest generalists have no positioning statement to transcribe.',
   },
 ]
 
@@ -235,11 +235,11 @@ export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string 
  */
 export const PRICE_GAPS: Readonly<Partial<Record<LabId, string>>> = {
   openai:
-    'OpenAI’s catalog page (developers.openai.com/api/docs/models.md) prints no prices; they come from the separately polled pricing.md (registered 2026-09-22). No priced row yet means that source has not been polled, and nothing is shown rather than a number from elsewhere.',
+    'OpenAI’s catalog page (developers.openai.com/api/docs/models.md) prints no prices. Prices come from pricing.md, polled separately (registered 2026-09-22). No priced row means that source has not been polled yet; no price from another source is shown.',
 }
 
 /** The generic reason when a mapped SKU has simply not been stored yet. */
-export const NO_ROW_GAP = 'No row for this SKU in the store yet — the source has not been polled.'
+export const NO_ROW_GAP = 'No stored row for this SKU. The source has not been polled.'
 
 /**
  * Shown on a cell whose vendor sentence was not found on the page at the
@@ -247,4 +247,4 @@ export const NO_ROW_GAP = 'No row for this SKU in the store yet — the source h
  * is in doubt is whether that SKU still answers the column's question.
  */
 export const BASIS_STALE_NOTE =
-  'The vendor page no longer carries the sentence this mapping rests on, so the class assignment is under review. The price shown is still the stored price for this SKU; the vendor may now recommend a different one — see the full catalog.'
+  'At the last poll, the vendor page no longer contained the sentence this mapping quotes. The class assignment is under review. The price shown is the stored price for this SKU; the vendor may now recommend a different one (full catalog).'

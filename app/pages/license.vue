@@ -18,7 +18,7 @@ definePageMeta({
     priority: '0.4',
     title: 'License',
     summary:
-      'The compilation is CC BY 4.0 and the code is MIT; the underlying facts belong to their publishers. The attribution string to copy, and the licence each source states for itself.',
+      'The compilation is CC BY 4.0 and the code is MIT; the underlying facts belong to their publishers. The attribution line to copy, and the license each source states for itself.',
   },
 })
 
@@ -45,22 +45,22 @@ useSeo({
     <header class="space-y-2">
       <h1 class="text-4xl text-highlighted">License</h1>
       <p class="max-w-2xl text-muted">
-        Three different things are licensed here, and they are not the same thing.
+        The compilation, the underlying facts, and the code are licensed separately.
       </p>
     </header>
 
     <TerminalPanel id="compilation" title="The compilation">
       <div class="max-w-2xl space-y-3 text-default">
         <p>
-          The tables, the change log, the alerts and the bulk exports — which rows exist, keyed,
-          timestamped and joined — are this site’s own work, published under
+          The tables, the change log, the alerts, and the bulk exports — which rows exist, keyed,
+          timestamped, and joined — are this site’s own work, published under
           <a
             :href="DATA_LICENSE.url"
             target="_blank"
             rel="noopener noreferrer license"
             class="text-primary underline underline-offset-2"
             >{{ DATA_LICENSE.name }}</a
-          >. Quote it, chart it, republish it, train on it. Attribution is the condition.
+          >. It may be quoted, charted, republished, and used for training, with attribution.
         </p>
         <p class="text-sm text-muted">Copy this line:</p>
         <p class="rounded-md bg-elevated p-3 font-mono text-sm text-highlighted">
@@ -73,12 +73,12 @@ useSeo({
       <div class="max-w-2xl space-y-3 text-default">
         <p>
           A price on Anthropic’s pricing page is Anthropic’s. A filing is EDGAR’s. An incident is
-          the vendor’s own post. Nothing here relicenses any of that, and the licence above does not
-          reach it — it covers the compilation, not the contents.
+          the vendor’s own post. Nothing here relicenses any of that; the license above covers the
+          compilation, not the contents.
         </p>
         <p>
-          This is why every row carries the URL it was read from and the moment it was read. If you
-          need terms for a particular number, the row tells you whose door to knock on.
+          Every row carries its source URL and fetch timestamp, so the terms for any number come
+          from the publisher that row names.
         </p>
       </div>
     </TerminalPanel>
@@ -86,12 +86,12 @@ useSeo({
     <TerminalPanel
       id="sources"
       title="Sources that state their own terms"
-      note="Verbatim from sources.yaml. Most sources state none, and this page will not invent one on their behalf."
+      note="Verbatim from sources.yaml. Most sources state no terms, and none are supplied for them."
     >
       <div v-if="licensed.length" class="overflow-x-auto">
         <table class="w-full text-sm">
           <caption class="sr-only">
-            Tracked sources with a stated data licence
+            Tracked sources with a stated data license
           </caption>
           <thead>
             <tr class="border-b border-default text-left">
@@ -115,12 +115,10 @@ useSeo({
           </tbody>
         </table>
       </div>
-      <p v-else class="text-sm text-muted">
-        No tracked source currently states a licence of its own.
-      </p>
+      <p v-else class="text-sm text-muted">No tracked source states a license of its own.</p>
       <p class="max-w-2xl text-sm text-muted">
-        Where a source requires a specific attribution string, the page that shows its numbers
-        prints that string verbatim — see
+        Where a source requires a specific attribution string, the page showing its numbers prints
+        it verbatim — see
         <NuxtLink to="/rankings" class="text-primary underline underline-offset-2"
           >demand share</NuxtLink
         >.
@@ -129,7 +127,7 @@ useSeo({
 
     <TerminalPanel id="code" title="The code">
       <p class="max-w-2xl text-default">
-        The pipeline, the parsers and this site are
+        The pipeline, the parsers, and this site are
         <a
           :href="CODE_LICENSE.url"
           target="_blank"
@@ -144,7 +142,7 @@ useSeo({
           class="text-primary underline underline-offset-2"
           >{{ repo }}</a
         >. The source registry and every parser are in the repo, so any number here can be
-        reproduced rather than taken on trust.
+        reproduced.
       </p>
     </TerminalPanel>
   </div>

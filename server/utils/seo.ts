@@ -268,13 +268,13 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
   sections.push(
     '## Agents',
     '',
-    `- [MCP endpoint](${appUrl}/mcp): read-only tools over the same data — overview, prices and price history, hiring and its history, releases, incidents, disclosures, demand share, alerts, coverage, status — with provenance on every row. Streamable HTTP, no auth. \`claude mcp add --transport http frontier-terminal ${appUrl}/mcp\``,
+    `- [MCP endpoint](${appUrl}/mcp): read-only tools over the same data (overview, prices and price history, hiring and its history, releases, incidents, disclosures, demand share, alerts, coverage, and status), with provenance on every row. Streamable HTTP, no auth. \`claude mcp add --transport http frontier-terminal ${appUrl}/mcp\``,
     '',
     '## License',
     '',
-    `- The compilation — the tables, the change log, the alerts and the exports — is licensed ${DATA_LICENSE.short} (${DATA_LICENSE.url}). Quoting or republishing it is fine; attribution is the condition.`,
+    `- The compilation (the tables, the change log, the alerts, and the exports) is licensed ${DATA_LICENSE.short} (${DATA_LICENSE.url}). It may be quoted or republished on condition of attribution.`,
     `- Attribution: ${attributionLine(input.appName, appUrl)}`,
-    '- The underlying facts belong to whoever published them. Every row carries the URL it was read from, and one source (the OpenRouter rankings feed) carries an attribution string of its own that the demand-share page prints verbatim.',
+    '- The underlying facts belong to their publishers. Every row includes the URL it was read from. One source, the OpenRouter rankings feed, requires its own attribution string; the demand-share page prints it verbatim.',
     ...(input.repoUrl
       ? [`- The code is ${CODE_LICENSE.short} (${CODE_LICENSE.url}): ${input.repoUrl}`]
       : []),

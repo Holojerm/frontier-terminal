@@ -257,6 +257,6 @@ describe('S-1 revenue end to end', () => {
     expect(anthropic.tags).toEqual([])
     expect(anthropic.sources[0]!.source_id).toBe(REGISTRATION_FIXTURE.prospectusSourceId)
     expect(anthropic.filer!.caveat).toContain('tags no financial XBRL')
-    expect(revenue.rule).toContain('statement of operations printed in the S-1')
+    expect(revenue.rule).toContain('printed statement of operations')
   })
 })
