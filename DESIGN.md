@@ -30,8 +30,12 @@ see where that number came from. The design serves that and nothing else.
   flight-deck instrumentation, where every marking is a reading
 - **Audience:** investors and operators who check it daily, know the domain, and want the
   number and its provenance rather than a narrative about them
-- **Density:** dense in data, comfortable in prose. Tables and panels pack; the few pages of
-  running text keep a reading rhythm.
+- **Density:** terminal-dense in data, comfortable in prose. Panels tile across a wide screen
+  the way a monitor wall does, tables run at `text-sm` with tight rows, and the few pages of
+  running text keep a reading column.
+- **One design language:** every page is built from the primitives in Component behavior ›
+  Terminal primitives. A page that hand-rolls a table, a card, an empty state, or a source
+  footer is a page that will drift; the primitive is the fix, not a local copy.
 - **Motion:** minimal. Motion confirms, it never decorates.
 - **Iconography:** Lucide (`i-lucide-*`), bundled locally via `@iconify-json/lucide`. Line
   icons at default weight — never emoji, never a second icon family.
@@ -271,13 +275,39 @@ wider per character: an `h1` of "Frontier Terminal" at 3rem mono overruns a phon
 says anything. Body copy stays at `text-base` with a 1.65 line height — looser than Tailwind's
 default, because the prose pages are for reading. Never set arbitrary sizes (`text-[13px]`).
 
+### Roles
+
+A size names a role, and each role has one size. The primitives apply these; a page never
+picks a heading size of its own.
+
+| Role | Size | Token | Set by |
+|---|---|---|---|
+| Page title (`h1`) | `text-2xl` | `text-highlighted` | `TerminalPage` |
+| Page lede | `text-sm` | `text-muted` | `TerminalPage` |
+| Panel title (`h2`) | `text-sm` | `text-highlighted` | `TerminalPanel` |
+| Panel note | `text-xs` | `text-toned` | `TerminalPanel` |
+| Card title (`h3`) | `text-sm` | `text-highlighted` | `TerminalCard` |
+| Figure value | `text-lg` mono, `text-xl` from `sm` | `text-highlighted` | `TerminalFigure` |
+| Table header | `text-xs` | `text-muted` | `TerminalTable` |
+| Table body | `text-sm`, `text-xs` nested | `text-default` | `TerminalTable` |
+| Provenance, captions | `text-xs` | `text-toned` | `TerminalSources`, `TerminalProvenanceTag` |
+
+An `h1` at `text-2xl` rather than `4xl`: this is an instrument, and a page title names the
+screen the way a terminal function key does. The data below it is the content.
+
 ---
 
 ## Space, shape, elevation
 
 - **Spacing:** standard Tailwind scale only — 1, 2, 3, 4, 6, 8, 12, 16, 24. No invented values.
-- **Container:** `72rem` max width (`--ui-container`), narrower than the 80rem default. Use
-  `<UContainer>` for page shells — it reads this variable; a hardcoded `max-w-*` will not.
+- **Container:** `90rem` max width (`--ui-container`), wider than the 80rem default, so two
+  or three panels sit side by side on a desktop screen. Use `<UContainer>` for page shells — it
+  reads this variable; a hardcoded `max-w-*` will not. Running text never takes the full
+  width: prose sits in `max-w-2xl`, and `TerminalPage`'s `narrow` prop caps a prose page at
+  `max-w-3xl`.
+- **Rhythm:** `gap-6` between panels, `p-3` inside them, `py-2 px-3` per table cell. Panels
+  tile with `grid gap-6 lg:grid-cols-2` (or `xl:grid-cols-3` for small ones); below `lg`
+  everything is one column.
 - **Radius:** `0.25rem` base (`--ui-radius`). Tight. Nothing is a pill except avatars and badges.
 - **Borders:** 1px, `border-default`. Structure comes from borders and spacing, not shadows.
 - **Elevation:** dark mode elevates with lighter surfaces (`bg-elevated`), never shadows.
@@ -304,24 +334,22 @@ default, because the prose pages are for reading. Never set arbitrary sizes (`te
 - **Inputs:** 1px border, `bg-default`. Focus shows a 2px primary ring, never a glow.
 - **Focus:** every interactive element has a visible focus-visible ring. Never `outline: none`
   without a replacement.
-- **Navigation:** at most **six** things across the header, and they are grouped rather
-  than listed. This site has ten pages; ten inline links put `Prices` at the same weight as
-  `About` and made the reader scan instead of choose. The six reading pages sit under two
-  `UNavigationMenu` triggers named for the questions they answer — **Economics** (prices,
-  revenue, demand) and **Operations** (hiring, releases, incidents) — with a one-line
-  description per child, because a name alone does not tell a first-time reader what
-  "Demand" measures. `Overview`, `Alerts` and `Theses` stay top-level: they are the entry points.
-  Reference pages (`About`, `Data`) live in the footer, where a reader already looks for
-  exports and the disclaimer.
+- **Navigation:** two rows, like a terminal's command line over its function keys. The top
+  row is the mark, a **Labs** menu (one lab across every axis), and the color-mode toggle.
+  Below it, from `lg` up, the **axis bar**: one flat `UNavigationMenu` of every reading page
+  in reading order — Overview, Prices, Revenue, Demand, Hiring, Releases, Incidents,
+  Disclosures — then Alerts and Theses, with the active page marked. Flat rather than grouped:
+  a reader who checks daily wants one click to an axis, not a menu to open, and ten short
+  labels fit one row at `lg`. Reference pages (`About`, `Data`, `License`) live in the footer,
+  where a reader already looks for exports and the disclaimer.
 
-  Inline from `md` up — not `sm`, which the grouped header overruns; below that everything
-  collapses into a right-side `USlideover` behind an `i-lucide-menu` trigger. The drawer
-  carries the *whole* site map including the footer's reference pages, because below `md`
-  it is the only navigation affordance there is. Drawer rows are `size="lg"` and `block`,
-  left-aligned — full-width rows are the easiest thing on a screen to hit — and each group
-  is introduced by a real heading, not a styled `div`. The drawer closes on route change,
-  not on click, so redirects close it too. Never let the header wrap to two lines or scroll
-  sideways.
+  Below `lg` the axis bar collapses into a right-side `USlideover` behind an `i-lucide-menu`
+  trigger. The drawer carries the *whole* site map including the labs and the footer's
+  reference pages, because below `lg` it is the only navigation affordance there is. Drawer
+  rows are `size="lg"` and `block`, left-aligned — full-width rows are the easiest thing on a
+  screen to hit — and each group is introduced by a real heading, not a styled `div`. The
+  drawer closes on route change, not on click, so redirects close it too. Never let either
+  row wrap to two lines or scroll sideways.
 - **Links:** inline prose links are `text-primary` **and** underlined (see Accessibility ›
   Contrast). Standalone links in navigation or footers are colour-only by design.
 - **Long-form content:** markdown renders through NuxtUI's `Prose*`
@@ -329,11 +357,45 @@ default, because the prose pages are for reading. Never set arbitrary sizes (`te
   and are overridden in `app.config.ts` under `ui.prose`: `h1`–`h3` drop `font-bold` in favour
   of the display face's own 500, and inline links get a real `underline` instead of a
   hover-only bottom border. Measure is `max-w-2xl` — a reading column, not the full container.
-- **Empty states:** one line of `text-muted` explanation plus one action. No illustrations.
+- **Empty states and gaps:** one line saying what is absent, one saying why, at most one
+  action. No illustrations. A gap is a finding — "No public feed", "No SEC filing reports
+  this lab's revenue" — so it is stated in the place the number would have been, never as a
+  zero and never as a bare dash. `TerminalGap` renders both forms.
 - **Alerts:** the description renders at full opacity. NuxtUI dims it to 90%, which takes
   info-700 on its own tint from 5.06:1 to 3.9:1 — below AA — for the one line of an alert that
   carries the actual content.
-- **Tables:** `font-mono` for numeric columns, right-aligned. Row separators, not zebra striping.
+- **Tables:** `font-mono` for numeric columns, right-aligned. Row separators, not zebra
+  striping. The first column is the row header (`<th scope="row">`). A row whose source has
+  nothing to show keeps its label and its source cells and states the gap in one cell spanning
+  the rest. `UTable` cannot express either — every cell is a `td` and a `colspan` does not
+  remove its neighbors — so every table is `TerminalTable`.
+- **Deltas:** a sign the reader can see, never a color: `+12`, `−3` (U+2212), `±0`. Formatted
+  once, in `shared/utils/terminal-format.ts`. A delta takes `text-muted` beside its figure;
+  green and red would read as good and bad, and a price rise is neither.
+
+### Terminal primitives
+
+Every page is composed from these, in `app/components/Terminal/`. They own the classes; a page
+passes data and copy. Their prop shapes live in `app/types/terminal-ui.ts`, and the words for a
+feed with nothing to show live once in `app/utils/feed-gap.ts`.
+
+| Primitive | What it is | Replaces |
+|---|---|---|
+| `TerminalPage` | The page header (optional back link, `h1`, lede, as-of stamp, a header slot) and the one error alert | Per-page headers in three sizes; thirteen copies of the error `UAlert` |
+| `TerminalPanel` | The shell every reading sits in: 1px border, a `bg-muted` header strip with the `h2` title, a one-line note and a `#meta` slot, the body, and a footer for sources and the "more" link | Bare `section`s, the one `bg-elevated` band, fourteen hand-written "more" links |
+| `TerminalTable` | Semantic table: caption, row header, numeric alignment, a spanning gap cell, sticky header | Eighteen hand-rolled tables with drifting padding and header tokens |
+| `TerminalCard` | One lab, one filing, one claim — a bordered tile inside a panel, with a title row and a sources footer | Seven per-lab `article`s |
+| `TerminalGap` | A stated absence: inline (in a table cell, reason behind an info control) or block (dashed box, title, reason, one action) | `EmptyState` and six re-codings of the feed states |
+| `TerminalSources` | The provenance footer: one `TerminalProvenanceTag` per source, caveat controls, license | Three layouts of the same footer |
+| `TerminalFigure` | A labelled reading: label, value, delta, a sub-line, and its provenance | Ad-hoc large numbers in four sizes |
+| `TerminalFacts` | Label/value pairs as a `dl` grid | Four hand-built `dl`s |
+| `TerminalBar` | A share bar: one track, one fill, decorative (`aria-hidden`) — the number beside it is the reading | Three bars at three heights |
+| `TerminalPrice` | The in/out price pair in $ per million tokens | Four renderings with two label tokens |
+| `TerminalExpand` | The full table behind a reading, closed by default, kept in the document | Three hand-built "Show the table" toggles and a `<details>` |
+
+Surfaces: the page and every panel body are `bg-default`, so secondary text there is
+`text-muted`. The panel header strip is `bg-muted`, so its note is `text-toned`. Nothing on
+a reading page sits on `bg-elevated`; that surface is for popovers and the drawer.
 
 ---
 

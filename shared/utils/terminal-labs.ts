@@ -27,6 +27,9 @@ export const LAB_SITE: Record<Exclude<ProviderId, 'other'>, string> = {
   mistral: 'https://mistral.ai',
 }
 
+/** A provider id as a reader sees it; an id outside the registry reads as itself. */
+export const labName = (id: string): string => (LAB_DISPLAY as Record<string, string>)[id] ?? id
+
 export type AlertAxis =
   | 'pricing'
   | 'hiring'

@@ -9,6 +9,7 @@ import {
   pctChange,
   pctLabel,
   relativeStamp,
+  signed,
 } from '../shared/utils/terminal-format'
 
 // How a stored value reads. The rule is relative inside a day, absolute
@@ -70,5 +71,14 @@ describe('small helpers', () => {
     expect(hostOf('https://www.example.com/x')).toBe('example.com')
     expect(hostOf('not a url')).toBe('not a url')
     expect(count(1234567)).toBe('1,234,567')
+  })
+})
+
+describe('signed', () => {
+  it('always shows the sign, with a true minus and a visible zero', () => {
+    expect(signed(12)).toBe('+12')
+    expect(signed(-3)).toBe('−3')
+    expect(signed(0)).toBe('±0')
+    expect(signed(1234)).toBe('+1,234')
   })
 })

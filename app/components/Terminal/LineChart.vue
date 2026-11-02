@@ -165,7 +165,9 @@ const readout = computed(() => {
 </script>
 
 <template>
-  <figure class="space-y-2">
+  <!-- Capped: the SVG scales with its box, so an uncapped chart on a wide
+       screen sets its 10-unit labels at twice the body size. -->
+  <figure class="max-w-4xl space-y-2">
     <figcaption v-if="series.length > 1" class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-toned">
       <span v-for="(s, k) in series" :key="s.id" class="inline-flex items-center gap-1.5">
         <span :class="INK[k] ?? INK[2]" aria-hidden="true">

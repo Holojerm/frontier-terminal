@@ -1,16 +1,16 @@
 <script setup lang="ts">
 // The app shell for every page. One layout: there is no signed-in state to
-// adapt to, so the header is the mark, the section links, and the
-// color-mode toggle; the footer is the disclaimer, the reference pages, and
-// the machine-readable exits (feed, repo).
-//
-// Navigation follows DESIGN.md › Component behavior: inline links from `md`
-// up, a right-side slideover behind a menu button below that. The drawer
-// closes on route change, not on click, so a redirect closes it too.
+// adapt to. DESIGN.md › Component behavior › Navigation: a top row with the
+// mark, the Labs menu and the color-mode toggle, and under it from `lg` the
+// axis bar — every reading page in reading order, flat, one click each. Below
+// `lg` the axis bar becomes a right-side drawer that carries the whole site
+// map. The drawer closes on route change, not on click, so a redirect closes
+// it too. The footer is the disclaimer, the reference pages, and the
+// machine-readable exits (feed, repo).
 
-import type { NavigationMenuItem } from '@nuxt/ui'
+import type { DropdownMenuItem, NavigationMenuItem } from '@nuxt/ui'
 
-import { LABS, labPath } from '#shared/utils/terminal-lab-summary'
+import { LABS, isLab, labPath } from '#shared/utils/terminal-lab-summary'
 import { LAB_DISPLAY } from '#shared/utils/terminal-labs'
 import manifest from '~~/fleet.json'
 
@@ -21,89 +21,26 @@ const appName = config.public.appName
 const year = new Date().getFullYear()
 const repo = manifest.links.github
 
-/**
- * Every link in the shell, declared once.
- *
- * Ten flat entries across the header was a list, not a navigation: it put
- * `Prices` and `Incidents` at the same weight as `About`, and nothing in it
- * said which pages answer "what does this cost" and which answer "what is this
- * lab doing". The six reading pages now group under those two questions.
- *
- * `Overview`, `Alerts` and `Theses` stay top-level because they are the entry points
- * — the state of things, what changed in it, and the claims checked against it. `Labs` is the third way in:
- * one lab across every axis. `Data` and `About` drop to the footer, which is
- * already where a reader looks for exports and the disclaimer.
- */
 interface NavLink {
   label: string
   to: string
-  /** One line, shown in the header dropdown. Reading pages only. */
-  description?: string
 }
 
-interface NavSection {
-  /** Omitted for the ungrouped entry points at the top of the drawer. */
-  label?: string
-  links: NavLink[]
-}
-
-const OVERVIEW: NavLink = { label: 'Overview', to: '/' }
-const ALERTS: NavLink = { label: 'Alerts', to: '/alerts' }
-const THESES: NavLink = { label: 'Theses', to: '/theses' }
-
-const SECTIONS: NavSection[] = [
-  {
-    label: 'Labs',
-    // No description: the label is the whole meaning, and a line saying
-    // "on every axis" under each lab name is a menu repeating itself.
-    links: LABS.map((lab) => ({ label: LAB_DISPLAY[lab], to: labPath(lab) })),
-  },
-  {
-    label: 'Economics',
-    links: [
-      {
-        label: 'Prices',
-        to: '/prices',
-        description: 'List price per SKU, like for like, with the delta.',
-      },
-      {
-        label: 'Revenue',
-        to: '/revenue',
-        description: 'What each lab has disclosed to the SEC.',
-      },
-      {
-        label: 'Demand',
-        to: '/rankings',
-        description: 'OpenRouter token share, and the spend it implies.',
-      },
-    ],
-  },
-  {
-    label: 'Operations',
-    links: [
-      {
-        label: 'Hiring',
-        to: '/hiring',
-        description: 'Open roles by department, and the buildout behind them.',
-      },
-      {
-        label: 'Releases',
-        to: '/releases',
-        description: 'Every SKU first listed since tracking began.',
-      },
-      {
-        label: 'Incidents',
-        to: '/incidents',
-        description: 'Status-page history and current API strain.',
-      },
-      {
-        label: 'Disclosures',
-        to: '/disclosures',
-        description: 'Misalignment reports the labs publish about their own models.',
-      },
-    ],
-  },
+/** Every reading page in reading order: the state of things, then each axis, then what changed and the claims checked against it. */
+const AXES: NavLink[] = [
+  { label: 'Overview', to: '/' },
+  { label: 'Prices', to: '/prices' },
+  { label: 'Revenue', to: '/revenue' },
+  { label: 'Demand', to: '/rankings' },
+  { label: 'Hiring', to: '/hiring' },
+  { label: 'Releases', to: '/releases' },
+  { label: 'Incidents', to: '/incidents' },
+  { label: 'Disclosures', to: '/disclosures' },
+  { label: 'Alerts', to: '/alerts' },
+  { label: 'Theses', to: '/theses' },
 ]
+
+const LAB_LINKS: NavLink[] = LABS.map((lab) => ({ label: LAB_DISPLAY[lab], to: labPath(lab) }))
 
 const REFERENCE: NavLink[] = [
   { label: 'About', to: '/about' },
@@ -111,21 +48,25 @@ const REFERENCE: NavLink[] = [
   { label: 'License', to: '/license' },
 ]
 
-// A section with `children` renders as a dropdown; one with `to` renders as a
-// plain link. Both come from the same objects the drawer and footer read.
-const headerItems: NavigationMenuItem[] = [
-  OVERVIEW,
-  ...SECTIONS.map((section) => ({ label: section.label, children: section.links })),
-  ALERTS,
-  THESES,
-]
+// A child page keeps its axis lit: /prices/<sku> under Prices, /alerts/<id>
+// under Alerts. The routes are siblings in the router, not nested, so the
+// link's own active state would not.
+const isActive = (to: string) =>
+  to === '/' ? route.path === '/' : route.path === to || route.path.startsWith(`${to}/`)
 
-// The drawer is the whole site map rather than a copy of the header: below
-// `md` it is the only navigation affordance there is, so the reference pages
-// belong in it even though the header hands them to the footer.
-const drawerSections: NavSection[] = [
-  { links: [OVERVIEW, ALERTS, THESES] },
-  ...SECTIONS,
+const axisItems = computed<NavigationMenuItem[]>(() =>
+  AXES.map((a) => ({ ...a, active: isActive(a.to) })),
+)
+
+const currentLab = computed(() => {
+  const param = String(route.params.lab ?? '')
+  return route.path.startsWith('/labs/') && isLab(param) ? LAB_DISPLAY[param] : null
+})
+const labItems: DropdownMenuItem[][] = [LAB_LINKS.map((l) => ({ label: l.label, to: l.to }))]
+
+const drawerSections: { label: string; links: NavLink[] }[] = [
+  { label: 'Terminal', links: AXES },
+  { label: 'Labs', links: LAB_LINKS },
   { label: 'Reference', links: REFERENCE },
 ]
 
@@ -152,24 +93,29 @@ watch(
 
     <header class="border-b border-default">
       <UContainer>
-        <div class="flex h-16 items-center justify-between gap-4">
-          <!-- The mark and the wordmark both come from BrandLogo, which is also
-               what every generated icon is derived from (DESIGN.md › Brand mark). -->
-          <NuxtLink to="/" class="min-touch flex items-center" :aria-label="`${appName} — home`">
-            <BrandLogo />
-          </NuxtLink>
-
-          <nav aria-label="Primary" class="hidden md:block">
-            <!-- Vertical content because each child carries a description: the
-                 default horizontal panel spreads three of those across the
-                 viewport, which is a menu pretending to be a landing page. -->
-            <UNavigationMenu :items="headerItems" content-orientation="vertical" />
-          </nav>
+        <div class="flex h-14 items-center justify-between gap-4">
+          <div class="flex min-w-0 items-center gap-4">
+            <!-- The mark and the wordmark both come from BrandLogo, which is also
+                 what every generated icon is derived from (DESIGN.md › Brand mark). -->
+            <NuxtLink to="/" class="min-touch flex items-center" :aria-label="`${appName} — home`">
+              <BrandLogo />
+            </NuxtLink>
+            <UDropdownMenu :items="labItems" :content="{ align: 'start' }">
+              <UButton
+                color="neutral"
+                variant="ghost"
+                size="sm"
+                trailing-icon="i-lucide-chevron-down"
+                class="min-touch hidden sm:inline-flex"
+                :label="currentLab ?? 'Labs'"
+              />
+            </UDropdownMenu>
+          </div>
 
           <div class="flex items-center gap-2">
             <UColorModeButton class="min-touch" />
             <UButton
-              class="min-touch md:hidden"
+              class="min-touch lg:hidden"
               icon="i-lucide-menu"
               color="neutral"
               variant="ghost"
@@ -179,23 +125,28 @@ watch(
           </div>
         </div>
       </UContainer>
+
+      <div class="hidden border-t border-default lg:block">
+        <UContainer>
+          <nav aria-label="Primary">
+            <UNavigationMenu :items="axisItems" variant="link" highlight class="-mx-2.5" />
+          </nav>
+        </UContainer>
+      </div>
     </header>
 
     <USlideover v-model:open="drawer" title="Navigation" description="Sections of the terminal">
       <template #body>
         <nav aria-label="Primary, drawer">
           <div class="space-y-6">
-            <div v-for="(section, index) in drawerSections" :key="section.label ?? index">
+            <div v-for="section in drawerSections" :key="section.label">
               <!-- A real heading, not a styled div: the drawer is a list of
                    lists, and a screen reader should be able to jump between
                    them (DESIGN.md › Accessibility › Structure and labels).
                    `text-toned`, not `text-dimmed`: dimmed is the disabled and
                    placeholder token and is legitimately under AA, which is the
                    wrong thing for 12px type that carries the structure. -->
-              <h3
-                v-if="section.label"
-                class="mb-1 px-2.5 text-xs uppercase tracking-wide text-toned"
-              >
+              <h3 class="mb-1 px-2.5 text-xs uppercase tracking-wide text-toned">
                 {{ section.label }}
               </h3>
               <ul class="space-y-1">
@@ -203,7 +154,7 @@ watch(
                   <UButton
                     :to="link.to"
                     variant="ghost"
-                    color="neutral"
+                    :color="isActive(link.to) ? 'primary' : 'neutral'"
                     size="lg"
                     block
                     class="justify-start"
@@ -223,14 +174,14 @@ watch(
          The focus-visible rule protects elements a user can Tab to; `main` is only
          ever focused programmatically by the skip link, and a ring around the whole
          page region reads as a rendering bug. design-check-ignore -->
-    <UContainer id="main" as="main" tabindex="-1" class="flex-1 py-8 focus:outline-none">
+    <UContainer id="main" as="main" tabindex="-1" class="flex-1 py-6 focus:outline-none">
       <slot />
     </UContainer>
 
-    <footer class="mt-16 border-t border-default">
+    <footer class="mt-12 border-t border-default">
       <UContainer>
         <div
-          class="flex flex-col gap-4 py-8 text-sm text-muted sm:flex-row sm:items-center sm:justify-between"
+          class="flex flex-col gap-4 py-6 text-sm text-muted sm:flex-row sm:items-center sm:justify-between"
         >
           <p>© {{ year }} {{ appName }} · Not investment advice.</p>
           <ul class="flex flex-wrap gap-4">

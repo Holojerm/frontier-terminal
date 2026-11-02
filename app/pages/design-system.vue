@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import type { Fact, TableColumn } from '~/types/terminal-ui'
+
 // Living style guide — every token and component state from DESIGN.md on one
 // page, in both color modes. This is the verification surface: after editing
 // DESIGN.md and running /design-sync, screenshot this route to confirm the
@@ -85,6 +87,27 @@ const semanticColors = [
   'neutral',
 ] as const
 const buttonVariants = ['solid', 'outline', 'soft', 'subtle', 'ghost', 'link'] as const
+
+// DESIGN.md › Terminal primitives, with sample rows: one priced, one stated gap.
+const SAMPLE_PROV = {
+  source_url: 'https://example.com/pricing',
+  fetched_at: '2026-11-01T12:00:00Z',
+}
+const sampleColumns: TableColumn[] = [
+  { key: 'lab', label: 'Lab' },
+  { key: 'open', label: 'Open roles', numeric: true },
+  { key: 'delta', label: 'Δ 30d', numeric: true },
+  { key: 'source', label: 'Source', keep: true },
+]
+const sampleRows = [
+  { lab: 'Lab A', open: '812', delta: '+14', feed: 'ok' },
+  { lab: 'Lab B', open: '', delta: '', feed: 'no_public_feed' },
+]
+const sampleFacts: Fact[] = [
+  { key: 'stance', label: 'Stance', value: 'Bullish' },
+  { key: 'opened', label: 'Opened', value: '2026-09-01', mono: true },
+  { key: 'horizon', label: 'Horizon', value: 'Two quarters', wide: true },
+]
 
 useSeo({
   title: 'Design system',
@@ -358,6 +381,68 @@ useSeo({
           <a href="#" class="text-primary underline underline-offset-4">Focusable link</a>
         </div>
       </div>
+    </section>
+
+    <!-- ── Terminal primitives ───────────────────────────────────────── -->
+    <section class="space-y-6">
+      <h2 class="text-2xl text-highlighted">Terminal primitives</h2>
+      <div class="grid gap-6 lg:grid-cols-2">
+        <TerminalPanel
+          id="ds-panel"
+          title="Panel with a table"
+          note="A flush panel: the table runs to the border. One row states its gap."
+          :more="{ label: 'The fuller reading', to: '/design-system' }"
+          flush
+        >
+          <template #meta>as of Nov 1 12:00Z</template>
+          <TerminalTable
+            caption="Sample rows"
+            :columns="sampleColumns"
+            :rows="sampleRows"
+            :row-key="(r) => r.lab"
+            :gap="(r) => r.feed !== 'ok'"
+          >
+            <template #cell-source>
+              <TerminalSources :sources="[SAMPLE_PROV]" />
+            </template>
+            <template #gap>
+              <TerminalGap inline title="No public feed" reason="The audit cut this source." />
+            </template>
+          </TerminalTable>
+        </TerminalPanel>
+
+        <TerminalPanel id="ds-card" title="Panel with cards" note="A padded panel holding tiles.">
+          <TerminalCard id="ds-card-a" title="Lab A" :sources="[SAMPLE_PROV]">
+            <template #meta>
+              <UBadge color="success" variant="subtle" size="sm" icon="i-lucide-file-check">
+                issuer filing
+              </UBadge>
+            </template>
+            <p class="flex items-center gap-3 text-sm">
+              <span class="w-24"><TerminalBar :value="0.42" :max="0.5" /></span>
+              <span class="font-mono text-highlighted">42.0%</span>
+              <TerminalPrice :input="3" :output="15" />
+            </p>
+          </TerminalCard>
+          <TerminalGap
+            title="No rows yet."
+            reason="The block form of a gap, with one action."
+            :action="{ label: 'See coverage', to: '/design-system' }"
+          />
+        </TerminalPanel>
+      </div>
+
+      <dl class="grid grid-cols-2 gap-x-6 gap-y-4 rounded border border-default p-3 sm:grid-cols-4">
+        <TerminalFigure
+          label="Figure"
+          value="$4.00 / $20.00"
+          sub="in / out"
+          :source="SAMPLE_PROV"
+        />
+        <TerminalFigure label="With delta" value="645" delta="+12 in 21d" sub="a sub-line" />
+        <TerminalFigure label="Stated gap" :gap="{ title: 'None filed', reason: 'No filing.' }" />
+      </dl>
+      <TerminalFacts :items="sampleFacts" />
     </section>
   </div>
 </template>
