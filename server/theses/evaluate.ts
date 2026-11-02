@@ -51,8 +51,12 @@ export async function storedReadings(
     )
     .orderBy(tables.claimReadings.date)
   return rows.map((r) => {
-    const detail = JSON.parse(r.detail) as { compare?: unknown }
-    return { ...r, compare: typeof detail.compare === 'number' ? detail.compare : null }
+    const detail = JSON.parse(r.detail) as { compare?: unknown; void_reason?: unknown }
+    return {
+      ...r,
+      compare: typeof detail.compare === 'number' ? detail.compare : null,
+      void_reason: typeof detail.void_reason === 'string' ? detail.void_reason : null,
+    }
   })
 }
 

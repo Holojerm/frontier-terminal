@@ -26,6 +26,12 @@ const chart = computed(() => ({
   ],
 }))
 const newestFirst = computed(() => [...series.value].reverse())
+const hasNotes = computed(() => series.value.some((p) => p.note))
+const columns = computed(() => [
+  { key: 'date', label: 'Date', class: 'font-mono' },
+  { key: 'value', label: 'Value', numeric: true },
+  ...(hasNotes.value ? [{ key: 'note', label: 'Note' }] : []),
+])
 </script>
 
 <template>
@@ -66,10 +72,7 @@ const newestFirst = computed(() => [...series.value].reverse())
       <TerminalExpand v-if="series.length > 1" show="Show the readings" hide="Hide the readings">
         <TerminalTable
           :caption="`${claim.signal_label}, newest first`"
-          :columns="[
-            { key: 'date', label: 'Date', class: 'font-mono' },
-            { key: 'value', label: 'Value', numeric: true },
-          ]"
+          :columns="columns"
           :rows="newestFirst"
           :row-key="(p) => p.date"
           nested
@@ -80,6 +83,7 @@ const newestFirst = computed(() => [...series.value].reverse())
             }}</time>
           </template>
           <template #cell-value="{ row: p }">{{ format(p.value) }}</template>
+          <template #cell-note="{ row: p }">{{ p.note ?? '' }}</template>
         </TerminalTable>
       </TerminalExpand>
     </template>

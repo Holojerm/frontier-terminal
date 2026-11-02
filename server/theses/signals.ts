@@ -16,6 +16,12 @@ import { queryContext, queryHiringHistory } from '../utils/terminal-db'
 import { rankingObservations, type RankingObservation } from '../utils/terminal-rankings'
 import { splitPermaslug, catalogRows, summarizeSpend } from '../utils/terminal-spend'
 import { PROVIDER_ORDER } from '../utils/terminal-sources'
+import {
+  clusterRolesAcrossLabs,
+  flagshipBlendedPrice,
+  flagshipPriceToGpu,
+  labsCombinedShare,
+} from './compute-signals'
 import { readRecipeSignal } from './recipe-signals'
 import type { Formatter } from './status'
 
@@ -162,46 +168,65 @@ export async function readSignal(
     case 'recipe-trailing-sum':
     case 'recipe-sum-of-keys':
       return readRecipeSignal(db, spec)
+    case 'flagship-blended-price':
+      return flagshipBlendedPrice(db, claim.id, spec, deps)
+    case 'flagship-price-to-gpu':
+      return flagshipPriceToGpu(db, claim.id, spec, deps)
+    case 'openrouter-labs-combined-share':
+      return labsCombinedShare(db, historyDays)
+    case 'cluster-roles-across-labs':
+      return clusterRolesAcrossLabs(db, spec, deps)
   }
 }
 
-/** Only the newest reading of a signal that cannot be recomputed is written. */
-export const recomputable = (spec: Measured) => spec.signal !== 'openrouter-spend-premium'
+/** Signals that join today's state (list prices, the class map) cannot be
+ * recomputed for a past day: only their newest reading is written. */
+export const recomputable = (spec: Measured) =>
+  spec.signal !== 'openrouter-spend-premium' &&
+  spec.signal !== 'flagship-blended-price' &&
+  spec.signal !== 'flagship-price-to-gpu'
 
 const BY_FORMAT: Record<ValueFormat, Formatter> = {
   ratio: (v) => `${v.toFixed(2)}×`,
   percent: (v) => `${(v * 100).toFixed(1)}%`,
   count: (v) => Math.round(v).toLocaleString('en-US'),
   usd: (v) => `$${(v / 1e6).toLocaleString('en-US', { maximumFractionDigits: 0 })}M`,
+  usd_per_mtok: (v) => `$${v.toFixed(2)}/MTok`,
+  gpu_hours_per_mtok: (v) => `${v.toFixed(2)} GPU-h/MTok`,
 }
 
 const formatOf = (spec: Measured): Formatter => {
   switch (spec.signal) {
-    case 'openrouter-spend-premium':
-      return BY_FORMAT.ratio
-    case 'openrouter-lab-token-share':
-      return BY_FORMAT.percent
     case 'open-roles-in-departments':
+    case 'cluster-roles-across-labs':
       return (v) => `${Math.round(v)} open roles`
     default:
-      return BY_FORMAT[spec.format]
+      return BY_FORMAT[valueFormatOfSpec(spec)]
+  }
+}
+
+function valueFormatOfSpec(spec: Measured): ValueFormat {
+  switch (spec.signal) {
+    case 'openrouter-spend-premium':
+      return 'ratio'
+    case 'openrouter-lab-token-share':
+    case 'openrouter-labs-combined-share':
+      return 'percent'
+    case 'open-roles-in-departments':
+    case 'cluster-roles-across-labs':
+      return 'count'
+    case 'flagship-blended-price':
+      return 'usd_per_mtok'
+    case 'flagship-price-to-gpu':
+      return 'gpu_hours_per_mtok'
+    default:
+      return spec.format
   }
 }
 
 /** The value format a measured claim's readings print in, for the pages. */
 export function valueFormatOf(claim: ClaimDef): ValueFormat | null {
-  const spec = claim.spec
-  if (spec.kind === 'judged') return null
-  switch (spec.signal) {
-    case 'openrouter-spend-premium':
-      return 'ratio'
-    case 'openrouter-lab-token-share':
-      return 'percent'
-    case 'open-roles-in-departments':
-      return 'count'
-    default:
-      return spec.format
-  }
+  return claim.spec.kind === 'judged' ? null : valueFormatOfSpec(claim.spec)
 }
 
 /** How a claim's values read in a status reason, and whose value it is compared with. */

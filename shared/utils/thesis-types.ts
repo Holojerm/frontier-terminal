@@ -25,9 +25,22 @@ export type MeasuredRule =
   /** For readings that are periods (quarters), not days: broken when the
    * newest `periods` readings all sit below `floor`; weakening while fewer do. */
   | { rule: 'below-floor-periods'; floor: number; periods: number }
+  /** Broken when each of the newest `weeks` checkpoints sits `drop` or more
+   * below the high of the `days` up to it; weakening while that run is
+   * shorter, or the newest is past half the drop. Unresolved until every
+   * one of those checkpoints has its full window of history behind it. */
+  | { rule: 'sustained-drawdown'; drop: number; days: number; weeks: number }
 
 /** How a reading's value prints. */
-export type ValueFormat = 'ratio' | 'percent' | 'count' | 'usd'
+export type ValueFormat =
+  | 'ratio'
+  | 'percent'
+  | 'count'
+  | 'usd'
+  /** A token price, USD per million tokens. */
+  | 'usd_per_mtok'
+  /** A token price over a GPU rental price: GPU-hours one million tokens buy. */
+  | 'gpu_hours_per_mtok'
 
 export type SignalSpec =
   | { kind: 'measured'; signal: 'openrouter-spend-premium'; rule: MeasuredRule }
@@ -36,6 +49,43 @@ export type SignalSpec =
       kind: 'measured'
       signal: 'open-roles-in-departments'
       departments: readonly string[]
+      rule: MeasuredRule
+    }
+  /** The Compute thesis's signals (server/theses/compute-signals.ts). */
+  | {
+      kind: 'measured'
+      /** Median across labs of the mapped flagship's blended list price,
+       * (input × input_weight + output × output_weight) ÷ the weights' sum. */
+      signal: 'flagship-blended-price'
+      input_weight: number
+      output_weight: number
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** That median ÷ the median `gpu` on-demand price per GPU-hour across the
+       * GPU price recipes, each provider counted once; `context_gpu`'s ratio is
+       * recorded beside it and never read by the rule. */
+      signal: 'flagship-price-to-gpu'
+      input_weight: number
+      output_weight: number
+      gpu: 'H100' | 'B200'
+      context_gpu: 'H100' | 'B200'
+      /** Fewer included `gpu` providers than this and the reading cannot count. */
+      min_providers: number
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** The tracked labs' combined share of every OpenRouter token, trailing 7 days. */
+      signal: 'openrouter-labs-combined-share'
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** A sources.yaml department cluster's open roles, summed over every lab with a hiring feed. */
+      signal: 'cluster-roles-across-labs'
+      cluster: string
       rule: MeasuredRule
     }
   /** Recipe signals (server/theses/recipes/): computed from recipe_observations. */
@@ -140,6 +190,8 @@ export interface ClaimDef {
 
 export interface ThesisDef {
   id: string
+  /** The page title, where the thesis is named for an idea rather than its company. */
+  title?: string
   company: CompanyId
   stance: 'bullish' | 'bearish'
   statement: string
@@ -155,6 +207,8 @@ export interface ThesisDef {
 export interface ReadingPoint {
   date: string
   value: number
+  /** Why this reading reads differently from the one before (the mapped flagship changed). */
+  note?: string
 }
 
 export interface ClaimView {
@@ -193,7 +247,9 @@ export interface VerdictView {
   fetched_at: string
 }
 
-export interface ThesisView extends Omit<ThesisDef, 'claims'> {
+export interface ThesisView extends Omit<ThesisDef, 'claims' | 'title'> {
+  /** The thesis's title, or its company's name when it has none. */
+  title: string
   company_name: string
   ticker: string | null
   comparison_names: string[]
