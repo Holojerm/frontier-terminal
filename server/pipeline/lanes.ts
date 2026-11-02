@@ -284,6 +284,9 @@ export const LANES: Readonly<Record<string, Lane>> = {
       note: skipped.length ? `${skipped.length} sections/tables skipped` : undefined,
     }
   }),
+  // Prices come from the pricing page above; this page is polled only for
+  // the sentences Google's class-map cells rest on.
+  'google-models-md': set((text, ctx) => ({ entities: checked('google-models-md', text, ctx) })),
   'openai-ashby': set((text, { prov, snapshotId }) => ({
     entities: normalizeJobs(parseOpenaiAshby(text, prov).rows, snapshotId),
   })),

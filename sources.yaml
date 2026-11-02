@@ -94,8 +94,27 @@ sources:
     caveats: >-
       Model names live in headings above table clusters; prices carry
       dual-date promo strings ("$0.75 through Dec 31, 2026. $1.50 starting
-      Jan 1, 2027."). The .md trick returns a JS shell and the models page
-      is client-rendered — only this pricing page is genuine SSR.
+      Jan 1, 2027."). The .md trick returns a JS shell and, at the audit,
+      the models page was client-rendered — this pricing page is the only
+      SSR source of prices (the models page's markdown, which arrived later,
+      prints none: google-models-md).
+
+  google-models-md:
+    axis: pricing-catalog
+    provider: google
+    url: https://ai.google.dev/gemini-api/docs/models.md.txt
+    format: Markdown (model cards + endpoint tables)
+    diff_mechanism: recommendation rows (class-map sentences present / absent)
+    verdict: include — class-map basis only
+    fixture: fixtures/pricing/google-models.md
+    caveats: >-
+      Did not exist at the 2026-08-25 audit; live-checked 2026-11-01 as
+      real markdown (text/markdown) at the .md.txt suffix — the bare .md
+      suffix is still a JS shell. Read only for the vendor sentences the
+      class map quotes; prices and the catalog come from
+      google-pricing-html. Each model card is one markdown link wrapping
+      heading and description, so a sentence sits under its model's name
+      but does not repeat it.
 
   meta-models-md:
     axis: pricing-catalog

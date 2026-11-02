@@ -352,7 +352,7 @@ describe('CIK resolution end to end', () => {
       ['edgar-companyfacts-anthropic', 'edgar-companyfacts', 'revenue', 'anthropic'],
       ['edgar-submissions-anthropic', 'edgar-submissions', 'sec', 'anthropic'],
     ])
-    expect(coverage.sources.filter((s) => !s.derived_from)).toHaveLength(28)
+    expect(coverage.sources.filter((s) => !s.derived_from)).toHaveLength(29)
   })
 })
 

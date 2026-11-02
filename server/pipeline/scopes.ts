@@ -45,6 +45,7 @@ const LAUNCH_SOURCES: readonly string[] = [
   'anthropic-pricing-md',
   'xai-models-md',
   'google-pricing-html',
+  'google-models-md',
   'meta-models-md',
   'meta-pricing-md',
 ]

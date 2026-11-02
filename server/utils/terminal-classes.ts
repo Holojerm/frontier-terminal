@@ -22,8 +22,8 @@
 //     (server/pipeline/judge/class-map.ts). This file is the seed; the
 //     newest decision per cell overrides it (server/pipeline/class-map.ts);
 //   - a provider that publishes no such recommendation gets a stated gap,
-//     never a guess (xAI names one model and stops; Google's pricing page
-//     carries no recommendation text at all).
+//     never a guess (xAI names one model and stops; Google names no
+//     intelligence-for-cost model on a current generation).
 //
 // Prices are never in this file. They come from the store, with the row's
 // own provenance, and the class map only says which row to put where.
@@ -68,13 +68,13 @@ export interface ClassEntry {
 /**
  * The page each provider's class map may rest on — the sources the seed
  * below was transcribed from, and the only ones a judge decision may cite.
- * Google has none: its pricing page prints no recommendation text.
  */
 export const CLASS_MAP_SOURCES: Readonly<Partial<Record<LabId, string>>> = {
   openai: 'openai-models-md',
   anthropic: 'anthropic-models-md',
   xai: 'xai-models-md',
   meta: 'meta-models-md',
+  google: 'google-models-md',
 }
 
 // Verbatim transcriptions from the fixtures fetched 2026-09-22 (the previous
@@ -161,6 +161,23 @@ export const MODEL_CLASS_MAP: ClassEntry[] = [
       'high-volume, latency-sensitive, or cost-sensitive work, such as sub-agent tasks, classification, and tight tool loops.',
     basis_source_id: 'meta-models-md',
   },
+  // Transcribed 2026-11-01, when Google's models page first served markdown.
+  // Each sentence is the description on that model's own card.
+  {
+    provider: 'google',
+    class: 'flagship',
+    model_slug: 'gemini-4-argon',
+    basis:
+      'Our flagship reasoning model with a unified 1M context window and long decodes up to 1M tokens.',
+    basis_source_id: 'google-models-md',
+  },
+  {
+    provider: 'google',
+    class: 'economy',
+    model_slug: 'gemini-3.5-flash-lite',
+    basis: 'Our fastest, most cost-effective 3.5 model for high-throughput execution.',
+    basis_source_id: 'google-models-md',
+  },
 ]
 
 /** Why a (provider, class) cell has no mapping. Displayed instead of a number. */
@@ -179,19 +196,9 @@ export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string 
   },
   {
     provider: 'google',
-    class: 'flagship',
-    reason:
-      'Google’s pricing page prints prices but no recommendation text; no Gemini model is mapped until a vendor sentence exists to transcribe. Every Gemini SKU is in the full catalog.',
-  },
-  {
-    provider: 'google',
     class: 'balanced',
-    reason: 'Same gap — no published recommendation to map against.',
-  },
-  {
-    provider: 'google',
-    class: 'economy',
-    reason: 'Same gap — no published recommendation to map against.',
+    reason:
+      'Google’s only price-performance sentence (“Our best price-performance model”) is on Gemini 2.5 Flash, a previous generation the same page steers new projects away from; no current model carries one. Every Gemini SKU is in the full catalog.',
   },
   {
     provider: 'meta',
