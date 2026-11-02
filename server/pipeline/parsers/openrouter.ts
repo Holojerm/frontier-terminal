@@ -18,6 +18,7 @@ const prefixToProvider: Record<string, Provider> = {
   // open-weight Llama line (meta-llama/*), which third parties serve.
   meta: 'meta',
   'meta-llama': 'meta',
+  mistralai: 'mistral',
 }
 
 /** The lab behind an OpenRouter id ("anthropic/claude-…") from its prefix;

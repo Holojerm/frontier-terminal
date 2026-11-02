@@ -1,4 +1,4 @@
-// Every company a thesis can be about or compared with. The five labs are
+// Every company a thesis can be about or compared with. The six labs are
 // also the terminal's providers (terminal-sources.ts); the rest exist only
 // for the thesis layer, so the lab panels never see them.
 
@@ -15,6 +15,7 @@ export const COMPANIES = {
   google: { name: 'Google', ticker: 'GOOGL', kind: 'lab' },
   xai: { name: 'xAI', ticker: null, kind: 'lab' },
   meta: { name: 'Meta', ticker: 'META', kind: 'lab' },
+  mistral: { name: 'Mistral', ticker: null, kind: 'lab' },
   cloudflare: { name: 'Cloudflare', ticker: 'NET', kind: 'company' },
   akamai: { name: 'Akamai', ticker: 'AKAM', kind: 'company' },
   fastly: { name: 'Fastly', ticker: 'FSLY', kind: 'company' },

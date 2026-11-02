@@ -13,8 +13,9 @@ import {
   isGeminiProduct,
   parseGoogleCloudStatus,
 } from '../../server/pipeline/parsers/status/google-cloud-status'
+import { parseMistralStatus } from '../../server/pipeline/parsers/status/mistral-status'
 import { parseOpenaiStatus } from '../../server/pipeline/parsers/status/openai-status'
-import { statuspageIncidentUrl } from '../../server/pipeline/parsers/status/statuspage'
+import { statuspageIncidentUrl, utcStamp } from '../../server/pipeline/parsers/status/statuspage'
 import { fixtureText, provenanceOf } from './fixtures'
 
 // Status lane golden tests. Expected values are read straight from the
@@ -24,6 +25,7 @@ import { fixtureText, provenanceOf } from './fixtures'
 const openaiText = fixtureText('fixtures/status/openai-status.json')
 const anthropicText = fixtureText('fixtures/status/anthropic-status.json')
 const googleText = fixtureText('fixtures/status/google-cloud-status.json')
+const mistralText = fixtureText('fixtures/status/mistral-status.json')
 
 const DETECTED_AT = '2026-09-08T22:00:00Z'
 
@@ -96,6 +98,46 @@ describe('status lane', () => {
       'Claude Cowork',
       'claude.ai',
     ])
+  })
+
+  test('mistral: 50 incidents (the page cap), no components, local offsets read as UTC', () => {
+    const out = parseMistralStatus(mistralText)
+    expect(StatuspageIncidentsOutput.safeParse(out).success).toBe(true)
+    expect(out.rows).toHaveLength(50)
+
+    const prov = provenanceOf('mistral-status')
+    for (const row of out.rows) {
+      expect(row.provider).toBe('mistral')
+      expect(row.source_url).toBe('https://status.mistral.ai/api/v2/incidents.json')
+      expect(row.fetched_at).toBe(prov.fetched_at)
+      expect(row.components).toEqual([])
+      // The feed mixes -07:00 and -08:00; every stored stamp is UTC.
+      expect(row.started_at).toMatch(/Z$/)
+      expect(row.resolved_at).toMatch(/Z$/)
+    }
+    const impacts = new Map<string, number>()
+    for (const r of out.rows) impacts.set(r.impact, (impacts.get(r.impact) ?? 0) + 1)
+    expect(Object.fromEntries(impacts)).toEqual({ minor: 41, major: 6, critical: 3 })
+
+    expect(
+      out.rows.find((r) => r.incident_id === 'e5fd508c-3299-4b85-9d88-8e94fc245522'),
+    ).toMatchObject({
+      title: 'Mistral Small 4 Availability Degradation',
+      impact: 'minor',
+      status: 'resolved',
+      started_at: '2026-10-23T09:21:52Z',
+      resolved_at: '2026-10-23T12:11:30Z',
+      incident_url: 'https://status.mistral.ai/incidents/e5fd508c-3299-4b85-9d88-8e94fc245522',
+    })
+    expect(out.rows[0]?.incident_id).toBe('04b18f96-1aa1-4a69-b578-75ace96ca212')
+  })
+
+  test('statuspage stamps: a Z stamp passes byte for byte, an offset becomes the same instant in UTC', () => {
+    expect(utcStamp('2026-09-03T13:26:04.191Z')).toBe('2026-09-03T13:26:04.191Z')
+    expect(utcStamp('2026-09-08T14:39:27Z')).toBe('2026-09-08T14:39:27Z')
+    expect(utcStamp('2026-10-23T02:21:52-07:00')).toBe('2026-10-23T09:21:52Z')
+    expect(utcStamp('2026-11-03T02:21:52.5-08:00')).toBe('2026-11-03T10:21:52.500Z')
+    expect(() => utcStamp('yesterday')).toThrow('unparseable timestamp')
   })
 
   test('google: keeps only the 1 of 6 incidents naming a Gemini / Vertex AI product, and counts the rest', () => {

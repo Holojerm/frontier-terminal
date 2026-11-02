@@ -206,6 +206,27 @@ export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string 
     reason:
       'Meta’s models page offers two API text lines — Muse Wonder for capability, Muse Spark for cost-sensitive volume — and names no middle tier.',
   },
+  // Checked 2026-11-01 across models.md, the model selection guide and each
+  // model's own page. Mistral Large 4 is the printed replacement for the one
+  // model called "frontier-class" (Medium 3.5, deprecated 2026-10-31), but a
+  // replacement column is not a sentence, so no cell is mapped from it.
+  {
+    provider: 'mistral',
+    class: 'flagship',
+    reason:
+      'Mistral’s docs name no flagship or start-here model: Mistral Large 4 is “a state-of-the-art, open-weight, general-purpose multimodal model,” and the one “frontier-class” sentence belongs to the deprecated Medium 3.5. Every Mistral SKU is in the full catalog.',
+  },
+  {
+    provider: 'mistral',
+    class: 'balanced',
+    reason: 'Same gap: no Mistral page names a middle tier.',
+  },
+  {
+    provider: 'mistral',
+    class: 'economy',
+    reason:
+      'Same gap: Mistral prints speed and performance ratings, not a cost-sensitive recommendation, and its cheapest generalists carry no positioning to transcribe.',
+  },
 ]
 
 /**

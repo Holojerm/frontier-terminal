@@ -31,6 +31,7 @@ const ROUTES = [
   '/labs/google',
   '/labs/xai',
   '/labs/meta',
+  '/labs/mistral',
   '/prices',
   '/revenue',
   '/hiring',

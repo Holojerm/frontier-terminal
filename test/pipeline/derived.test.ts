@@ -96,7 +96,7 @@ describe('pending_filers', () => {
 
   it('refuses a drifted block', () => {
     expect(() =>
-      parsePendingFilersBlock('pending_filers:\n  mistral:\n    name_pattern: x\n'),
+      parsePendingFilersBlock('pending_filers:\n  deepseek:\n    name_pattern: x\n'),
     ).toThrow('unknown provider')
     expect(() =>
       parsePendingFilersBlock('pending_filers:\n  openai:\n    name_pattern: (\n'),
@@ -352,7 +352,7 @@ describe('CIK resolution end to end', () => {
       ['edgar-companyfacts-anthropic', 'edgar-companyfacts', 'revenue', 'anthropic'],
       ['edgar-submissions-anthropic', 'edgar-submissions', 'sec', 'anthropic'],
     ])
-    expect(coverage.sources.filter((s) => !s.derived_from)).toHaveLength(29)
+    expect(coverage.sources.filter((s) => !s.derived_from)).toHaveLength(33)
   })
 })
 

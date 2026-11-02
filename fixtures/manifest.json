@@ -98,6 +98,26 @@
       "note": "Registered 2026-10-12. One $/MTok table per model line (Muse Wonder, Muse Spark) with Standard and Contributor mode columns; image, audio and segmentation tables are not $/MTok and are not parsed."
     },
     {
+      "path": "fixtures/pricing/mistral-models.md",
+      "source_id": "mistral-models-md",
+      "source_url": "https://docs.mistral.ai/models.md",
+      "fetched_at": "2026-11-02T02:42:15Z",
+      "http_status": 200,
+      "raw_bytes": 17332,
+      "trim": "none — committed whole",
+      "note": "Registered 2026-11-01 with Mistral as the sixth lab. 24 current rows (three third-party resold models, five with no API name) and a deprecated-and-retired table. Netlify ETag, no Last-Modified."
+    },
+    {
+      "path": "fixtures/pricing/mistral-pricing.md",
+      "source_id": "mistral-pricing-md",
+      "source_url": "https://docs.mistral.ai/inference/pricing.md",
+      "fetched_at": "2026-11-02T02:42:15Z",
+      "http_status": 200,
+      "raw_bytes": 3741,
+      "trim": "none — committed whole",
+      "note": "One table per model family; each price cell joins 'Input $X /M Tokens', 'Cached input …' and 'Output …' lines with <br>. OCR, audio and TTS rows are priced per page, minute or character and are not parsed; three Generalist rows are third-party models Mistral resells."
+    },
+    {
       "path": "fixtures/pricing/openrouter-models.json",
       "source_id": "openrouter-models",
       "source_url": "https://openrouter.ai/api/v1/models",
@@ -114,6 +134,15 @@
       "http_status": 200,
       "raw_bytes": 12420417,
       "trim": "2 jobs per department (65 of 757), full job objects incl. department/team/descriptionHtml. All 33 departments represented."
+    },
+    {
+      "path": "fixtures/hiring/mistral-ashby.json",
+      "source_id": "mistral-ashby",
+      "source_url": "https://api.ashbyhq.com/posting-api/job-board/mistral.ai",
+      "fetched_at": "2026-11-02T02:42:15Z",
+      "http_status": 200,
+      "raw_bytes": 2818961,
+      "trim": "2 jobs per department (19 of 229), full job objects incl. department/team/descriptionHtml. All 10 departments represented."
     },
     {
       "path": "fixtures/hiring/anthropic-greenhouse.json",
@@ -272,6 +301,16 @@
       "raw_bytes": 158658,
       "trim": "none — committed whole",
       "note": "Google Cloud's own format: a bare array of {id, number, begin, end, severity, status_impact, external_desc, affected_products[{title}], uri, updates[]}. 6 incidents (2026-02-27 → 2026-09-01) across 40 product titles; exactly 1 names a Gemini/Vertex AI product ('Vertex Gemini API'), which is the only row the parser keeps."
+    },
+    {
+      "path": "fixtures/status/mistral-status.json",
+      "source_id": "mistral-status",
+      "source_url": "https://status.mistral.ai/api/v2/incidents.json",
+      "fetched_at": "2026-11-02T02:42:15Z",
+      "http_status": 200,
+      "raw_bytes": 55613,
+      "trim": "none — committed whole",
+      "note": "Statuspage v2 shape: {page, incidents[]}. 50 incidents (the page cap; 2025-10-07 → 2026-10-30), none open; no `components` field, so Vibe and Le Chat incidents count alongside API ones."
     },
     {
       "path": "fixtures/rankings/openrouter-rankings-daily.json",

@@ -11,7 +11,7 @@ import { fixtureText, manifest } from './fixtures'
 const sourcesYaml = fixtureText('sources.yaml')
 
 describe('includeSources', () => {
-  test('yields the 29 include-verdict sources in sources.yaml order, keyed by manifest source_id', () => {
+  test('yields the 33 include-verdict sources in sources.yaml order, keyed by manifest source_id', () => {
     const sources = includeSources(sourcesYaml, manifest.fixtures)
     expect(sources.map((s) => s.source_id)).toEqual([
       'openai-models-md',
@@ -23,6 +23,8 @@ describe('includeSources', () => {
       'google-models-md',
       'meta-models-md',
       'meta-pricing-md',
+      'mistral-models-md',
+      'mistral-pricing-md',
       'openrouter-models',
       'openrouter-rankings-daily',
       'openai-ashby',
@@ -30,6 +32,7 @@ describe('includeSources', () => {
       'anthropic-greenhouse-departments',
       'xai-greenhouse',
       'xai-greenhouse-departments',
+      'mistral-ashby',
       'edgar-fts',
       'edgar-fts-openai',
       'edgar-submissions-spcx',
@@ -42,6 +45,7 @@ describe('includeSources', () => {
       'openai-status',
       'anthropic-status',
       'google-cloud-status',
+      'mistral-status',
       'openai-misalignment-reports',
     ])
   })

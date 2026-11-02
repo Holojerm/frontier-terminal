@@ -10,6 +10,7 @@ import openaiMisalignmentReportUploading from '../../fixtures/disclosures/openai
 import openaiMisalignmentReports from '../../fixtures/disclosures/openai-misalignment-reports.html?raw'
 import anthropicGreenhouseDepartments from '../../fixtures/hiring/anthropic-greenhouse-departments.json?raw'
 import anthropicGreenhouse from '../../fixtures/hiring/anthropic-greenhouse.json?raw'
+import mistralAshby from '../../fixtures/hiring/mistral-ashby.json?raw'
 import openaiAshby from '../../fixtures/hiring/openai-ashby.json?raw'
 import xaiGreenhouseDepartments from '../../fixtures/hiring/xai-greenhouse-departments.json?raw'
 import xaiGreenhouse from '../../fixtures/hiring/xai-greenhouse.json?raw'
@@ -19,6 +20,8 @@ import googleModels from '../../fixtures/pricing/google-models.md?raw'
 import googlePricing from '../../fixtures/pricing/google-pricing.html?raw'
 import metaModels from '../../fixtures/pricing/meta-models.md?raw'
 import metaPricing from '../../fixtures/pricing/meta-pricing.md?raw'
+import mistralModels from '../../fixtures/pricing/mistral-models.md?raw'
+import mistralPricing from '../../fixtures/pricing/mistral-pricing.md?raw'
 import openaiModels from '../../fixtures/pricing/openai-models.md?raw'
 import openaiModelPage from '../../fixtures/pricing/openai-model-gpt-5.6-sol.md?raw'
 import openaiPricing from '../../fixtures/pricing/openai-pricing.md?raw'
@@ -37,6 +40,7 @@ import edgarSubmissionsNvda from '../../fixtures/sec/edgar-submissions-nvda.json
 import edgarSubmissionsSpcx from '../../fixtures/sec/edgar-submissions-spcx.json?raw'
 import anthropicStatus from '../../fixtures/status/anthropic-status.json?raw'
 import googleCloudStatus from '../../fixtures/status/google-cloud-status.json?raw'
+import mistralStatus from '../../fixtures/status/mistral-status.json?raw'
 import openaiStatus from '../../fixtures/status/openai-status.json?raw'
 import sourcesYaml from '../../sources.yaml?raw'
 
@@ -54,6 +58,7 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/disclosures/openai-misalignment-reports.html': openaiMisalignmentReports,
   'fixtures/hiring/anthropic-greenhouse-departments.json': anthropicGreenhouseDepartments,
   'fixtures/hiring/anthropic-greenhouse.json': anthropicGreenhouse,
+  'fixtures/hiring/mistral-ashby.json': mistralAshby,
   'fixtures/hiring/openai-ashby.json': openaiAshby,
   'fixtures/hiring/xai-greenhouse-departments.json': xaiGreenhouseDepartments,
   'fixtures/hiring/xai-greenhouse.json': xaiGreenhouse,
@@ -63,6 +68,8 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/pricing/google-pricing.html': googlePricing,
   'fixtures/pricing/meta-models.md': metaModels,
   'fixtures/pricing/meta-pricing.md': metaPricing,
+  'fixtures/pricing/mistral-models.md': mistralModels,
+  'fixtures/pricing/mistral-pricing.md': mistralPricing,
   'fixtures/pricing/openai-models.md': openaiModels,
   'fixtures/pricing/openai-model-gpt-5.6-sol.md': openaiModelPage,
   'fixtures/pricing/openai-pricing.md': openaiPricing,
@@ -81,6 +88,7 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/sec/xbrl-segment-googl-2026-10-29.xml': xbrlSegmentGoogl,
   'fixtures/status/anthropic-status.json': anthropicStatus,
   'fixtures/status/google-cloud-status.json': googleCloudStatus,
+  'fixtures/status/mistral-status.json': mistralStatus,
   'fixtures/status/openai-status.json': openaiStatus,
   'sources.yaml': sourcesYaml,
 }

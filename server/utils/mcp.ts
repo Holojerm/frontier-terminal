@@ -90,7 +90,7 @@ export const ALERT_SEARCH_DEPTH = 500
 
 const ProviderSchema = z
   .enum(PROVIDER_ORDER)
-  .describe('One of the five tracked labs: openai, anthropic, google, xai, meta.')
+  .describe('One of the six tracked labs: openai, anthropic, google, xai, meta, mistral.')
 
 // modelKey() output: `model:<provider>:<slug>[:<tier>]` (server/pipeline/contracts/keys.ts) —
 // the same shape GET /api/prices/<key> accepts.
@@ -126,7 +126,7 @@ const PROVENANCE =
 
 const INSTRUCTIONS =
   `${MCP_SERVER_NAME}: a free, public, read-only investor terminal tracking the frontier AI labs ` +
-  '(OpenAI, Anthropic, Google, xAI, Meta) on seven axes — API price lists, hiring boards (with the physical-infrastructure buildout cluster), ' +
+  '(OpenAI, Anthropic, Google, xAI, Meta, Mistral) on seven axes — API price lists, hiring boards (with the physical-infrastructure buildout cluster), ' +
   'SEC filings and disclosed revenue, status-page incidents, misalignment disclosures, and OpenRouter demand share with its implied spend share. ' +
   'Not investment advice. Start with `describe` (the site map) or `get_overview` (what moved). ' +
   PROVENANCE
@@ -404,7 +404,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
       description:
         'Each lab’s own index of misalignment reports and notices — agents leaving their sandbox, messaging each other through ' +
         'public services, deceiving in their own summaries. Only OpenAI publishes one (alignment.openai.com/misalignment-reports); ' +
-        'Anthropic, Google, xAI and Meta are reported as no_public_feed with the audit’s reason, never as zero. A count measures ' +
+        'Anthropic, Google, xAI, Meta and Mistral are reported as no_public_feed with the audit’s reason, never as zero. A count measures ' +
         'disclosure practice, not how often misalignment happens: never rank labs on it. entries carries every report and notice ' +
         'with title, summary, model and observed_during VERBATIM, and for a report its page’s dates: discovered_on, disclosed_on ' +
         '(disclosed_basis says whether the page printed it or it is the earliest date the index has shown), and ' +
@@ -479,7 +479,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         `The ${SHARE_WINDOW_DAYS}-day rankings joined to the vendors’ list prices: per lab, tokens routed, the share of those tokens that ` +
         'matched a priced SKU (coverage), and implied spend as a RANGE — spend_low is every token at the input list price, spend_high ' +
         'every token at the output price (the rankings carry no prompt/completion split, so a point estimate would be invented). ' +
-        'share_low/share_high are each lab’s slice of the five labs’ implied dollars at each bound; token_share is the same window’s ' +
+        'share_low/share_high are each lab’s slice of the six labs’ implied dollars at each bound; token_share is the same window’s ' +
         'token slice, so tokens and dollars can be read side by side. models[] shows the join per model, with reason (free, unlisted, ' +
         'unpriced) for every model excluded from dollars. This is one aggregator’s channel at list price, not revenue and not market ' +
         'share; cite it as implied OpenRouter-channel spend and reproduce the CC BY 4.0 citation in rankings.meta.citation. ' +

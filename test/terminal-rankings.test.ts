@@ -74,9 +74,10 @@ describe('summarizeRankings', () => {
       ['google', null, null],
       ['xai', null, null],
       ['meta', null, null],
+      ['mistral', null, null],
       ['other', null, null],
     ])
-    expect(s.top_models.map((t) => t.models)).toEqual([[], [], [], [], []])
+    expect(s.top_models.map((t) => t.models)).toEqual([[], [], [], [], [], []])
     expect(s.series).toEqual([])
   })
 
@@ -126,6 +127,7 @@ describe('summarizeRankings', () => {
       'google',
       'xai',
       'meta',
+      'mistral',
     ])
     expect(s.top_models.flatMap((t) => t.models.map((m) => m.model_permaslug))).not.toContain(
       'other',
@@ -138,7 +140,15 @@ describe('summarizeRankings', () => {
     expect(s.series[0]!.date).toBe(day(SERIES_DAYS - 1))
     expect(s.series.at(-1)).toEqual({
       date: day(0),
-      tokens: { openai: 300, anthropic: 300, google: 100, xai: 50, meta: 0, other: 250 },
+      tokens: {
+        openai: 300,
+        anthropic: 300,
+        google: 100,
+        xai: 50,
+        meta: 0,
+        mistral: 0,
+        other: 250,
+      },
       total: 1000,
     })
   })
@@ -235,7 +245,7 @@ describe('queryRankings', () => {
       'meta-hiring',
       'meta-status',
       'meta-disclosures',
-      'mistral',
+      'mistral-disclosures',
     ])
     expect(coverage.cuts.find((c) => c.id === 'artificial-analysis')!.reason).toContain(
       '"Internal use only; no redistribution."',

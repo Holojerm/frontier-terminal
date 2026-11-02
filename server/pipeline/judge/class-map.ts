@@ -43,7 +43,7 @@ const MAX_PAGE_CHARS = 120_000
 
 /** One re-mapping as the model prints it. Everything else is stamped here. */
 export const JudgeClassMapping = z.strictObject({
-  provider: z.enum(['openai', 'anthropic', 'google', 'xai', 'meta']),
+  provider: z.enum(['openai', 'anthropic', 'google', 'xai', 'meta', 'mistral']),
   class: z.enum(['flagship', 'balanced', 'economy']),
   model_slug: z.string().min(1).max(100),
   basis: z.string().min(1).max(500),

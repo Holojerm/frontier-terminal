@@ -268,6 +268,7 @@ export const OpenRouterRankingsOutput = z.strictObject({
 
 export const parserOutputSchemas = {
   'openai-ashby': AshbyJobsOutput,
+  'mistral-ashby': AshbyJobsOutput,
   'anthropic-greenhouse': GreenhouseJobsOutput,
   'xai-greenhouse': GreenhouseJobsOutput,
   'openai-models-md': VendorMdPricingOutput,
@@ -281,6 +282,8 @@ export const parserOutputSchemas = {
   'google-pricing-html': GooglePricingOutput,
   'meta-models-md': VendorMdPricingOutput,
   'meta-pricing-md': VendorMdPricingOutput,
+  'mistral-models-md': VendorMdPricingOutput,
+  'mistral-pricing-md': VendorMdPricingOutput,
   'edgar-fts': EdgarFtsOutput,
   'edgar-fts-openai': EdgarFtsOutput,
   'edgar-submissions-spcx': EdgarSubmissionsOutput,
@@ -296,6 +299,7 @@ export const parserOutputSchemas = {
   'openai-status': StatuspageIncidentsOutput,
   'anthropic-status': StatuspageIncidentsOutput,
   'google-cloud-status': GoogleCloudIncidentsOutput,
+  'mistral-status': StatuspageIncidentsOutput,
   'openai-misalignment-reports': DisclosureIndexOutput,
   // One registration for every derived per-report page (derived.ts); the
   // committed fixture is one representative page.

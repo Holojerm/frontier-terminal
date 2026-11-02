@@ -152,6 +152,45 @@ sources:
       search grounding, image, audio and segmentation prices are not $/MTok
       and are not parsed. Muse Wonder is in preview.
 
+  mistral-models-md:
+    axis: pricing-catalog
+    provider: mistral
+    url: https://docs.mistral.ai/models.md
+    format: Markdown tables (current models; deprecated and retired models)
+    diff_mechanism: body hash (ETag)
+    verdict: include
+    fixture: fixtures/pricing/mistral-models.md
+    caveats: >-
+      Did not exist at the 2026-09-08 audit (the .md links answered 404);
+      live-checked 2026-11-01 as real markdown. Catalog only: model, API
+      name, status (GA / Public Preview), context and a summary; prices come
+      from mistral-pricing-md. Only the current table is parsed, and only
+      rows with an API name: Shieldstral and the Timestral models print
+      none. Rows the page labels "third-party" (Z.ai GLM, DeepSeek) are
+      models Mistral resells, not Mistral's, and are never stored as
+      Mistral SKUs; a third-party row from a maker the parser does not
+      know fails the parse so a person decides. No sentence names a
+      flagship, middle or cost tier, so all three of Mistral's class-map
+      cells are stated gaps (terminal-classes.ts CLASS_GAPS).
+
+  mistral-pricing-md:
+    axis: pricing-catalog
+    provider: mistral
+    url: https://docs.mistral.ai/inference/pricing.md
+    format: Markdown tables, one per model family; price lines joined by <br> in one cell
+    diff_mechanism: body hash (ETag)
+    verdict: include
+    fixture: fixtures/pricing/mistral-pricing.md
+    caveats: >-
+      Live-checked 2026-11-01. Only the per-million-token lines are parsed
+      (Input, Cached input, Output). OCR is priced per 1,000 pages, audio
+      per minute and TTS per million characters, so those rows are skipped,
+      and Voxtral Small keeps only its token lines. The Generalist table
+      opens with three third-party models Mistral resells (Z.ai GLM 5.3,
+      GLM 5.3 Flash, DeepSeek V4.1 Flash); they are skipped by maker name,
+      the same list mistral-models-md checks against the page's own
+      "third-party" label.
+
   openrouter-models:
     axis: pricing-cross-check
     provider: all
@@ -251,6 +290,20 @@ sources:
       Departments are the board owner's own labels, not an independent
       entity split: they narrow how much SpaceX could be hiding in the blend,
       they do not prove none is.
+
+  mistral-ashby:
+    axis: hiring
+    provider: mistral
+    url: https://api.ashbyhq.com/posting-api/job-board/mistral.ai
+    format: JSON (dept+team inline; ~2.8 MB)
+    diff_mechanism: UUID ids, publishedAt, ETag
+    verdict: include
+    fixture: fixtures/hiring/mistral-ashby.json
+    caveats: >-
+      229 roles at 2026-11-01. The board is named mistral.ai, as the Apply
+      links on mistral.ai/careers show; the 2026-09-08 audit checked
+      "mistral", which is 404, and cut hiring on that. Same posting API and
+      shape as openai-ashby.
 
   edgar-fts:
     axis: sec
@@ -439,6 +492,23 @@ sources:
       update's status (AVAILABLE once resolved). Incident URL composed as
       status.cloud.google.com/ + uri (verified to resolve).
 
+  mistral-status:
+    axis: status
+    provider: mistral
+    url: https://status.mistral.ai/api/v2/incidents.json
+    format: JSON (Statuspage v2, {page, incidents[]})
+    diff_mechanism: incident ids; status/resolved_at per incident
+    verdict: include
+    fixture: fixtures/status/mistral-status.json
+    caveats: >-
+      Live-fetched 2026-11-01: exactly 50 incidents (2025-10-07 to
+      2026-10-30), the page's window cap. No components field, so the count
+      is "Mistral operations": Vibe and Le Chat incidents (8 of 50 by name)
+      count alongside API and model ones, as on OpenAI's page. Incident URL
+      composed as page.url + /incidents/{id}, the Statuspage path; those
+      HTML pages answer 403 (Cloudflare challenge) to a headless client, so
+      unlike the other status pages they could not be checked to resolve.
+
   openai-misalignment-reports:
     axis: disclosures
     provider: openai
@@ -509,6 +579,7 @@ revenue_filers:
     ticker: SPCX
     relation: parent
   meta: null # Meta Platforms (META) is public but segments Family of Apps and Reality Labs, never its model API
+  mistral: null # private; no EDGAR filer (2026-11-01: "Mistral AI" appears only in CoreWeave's S-1/A as a customer)
 
 # Labs with no CIK yet, and how to recognise theirs the moment it exists.
 # An S-1-family hit on either edgar-fts query whose FILER name (EDGAR's
@@ -690,16 +761,11 @@ cut:
       2026-10-12: ai.meta.com/safety and research.meta.ai/safety answer 404,
       research.meta.ai has no rss.xml, and the developer docs' llms.txt lists
       no safety or incident page. Re-checked by the disclosure-watch routine.
-  mistral:
-    verdict: cut — not tracked on any axis
+  mistral-disclosures:
+    verdict: cut — display "no disclosure index" honestly
     reason: >-
-      No supported surface on either primary axis, live-checked 2026-09-08.
-      Hiring: api.ashbyhq.com/posting-api/job-board/mistral answers 404
-      (the board at jobs.ashbyhq.com/mistral is a 7 KB HTML shell over an
-      internal GraphQL endpoint, not the posting API). Pricing:
-      mistral.ai/pricing is a 485 KB client-side HTML app (same bytes at
-      docs.mistral.ai/deployment/laplateforme/pricing) with no markdown or
-      JSON endpoint; docs.mistral.ai/llms.txt lists a Pricing and a Models
-      Overview .md page, but both links answer 404 with a 462 KB HTML shell.
-      An HTML parse in the Google style is conceivable; with no hiring feed
-      to pair it with, a fifth lab on one axis is not worth the parser.
+      No misalignment or containment disclosure page found, live-checked
+      2026-11-01: mistral.ai/safety answers 404, and the security advisories
+      in the docs' llms.txt (MAI-2026-001 to 003) cover SDK and product
+      vulnerabilities, not model behaviour. Re-checked by the
+      disclosure-watch routine.

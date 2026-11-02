@@ -13,6 +13,7 @@ export const LAB_DISPLAY: Record<ProviderId, string> = {
   google: 'Google',
   xai: 'xAI',
   meta: 'Meta',
+  mistral: 'Mistral',
   other: 'Other',
 }
 

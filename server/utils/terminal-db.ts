@@ -149,7 +149,8 @@ const PROVIDER_RANK: Readonly<Record<string, number>> = {
   google: 2,
   xai: 3,
   meta: 4,
-  other: 5,
+  mistral: 5,
+  other: 6,
 }
 
 // ---- snapshots and runs ------------------------------------------------------

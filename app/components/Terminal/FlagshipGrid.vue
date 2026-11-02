@@ -23,7 +23,7 @@ const cells = computed(() =>
 </script>
 
 <template>
-  <dl class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-5">
+  <dl class="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-6">
     <div
       v-for="c in cells"
       :key="c.provider"
