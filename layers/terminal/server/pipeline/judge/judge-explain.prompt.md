@@ -135,7 +135,10 @@ Emit an alert-tier severity (`notable` or `critical`) ONLY for:
   `form` and `entity_name` verbatim — the value is the filer's own number in
   USD, never rescaled to billions. Say whose revenue it is: the
   `entity_name` is the filer, and a parent's consolidated figure is not the
-  lab's.
+  lab's. A `revenue` record whose `taxonomy` is `prospectus`, and an
+  `offering` record (the price range and listing on a registration filing's
+  cover), have already been alerted by the deterministic prospectus-floor
+  rule; cite them only as context combined with other changes.
 - **A vendor changing its own recommendation.** A `recommendation` record
   `modified` so that `present` is `false`: the vendor's docs no longer carry
   the sentence (`basis`) that positioned `model_slug` as the `class` model.

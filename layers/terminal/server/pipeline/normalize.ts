@@ -8,6 +8,7 @@ import {
   filerKey,
   filingKey,
   incidentKey,
+  offeringKey,
   jobKey,
   modelKey,
   stableStringify,
@@ -19,6 +20,7 @@ import {
   type FilerRow,
   type FilingRow,
   type IncidentRow,
+  type OfferingRow,
   type PriceRow,
   type Provider,
   type RankingRow,
@@ -196,6 +198,14 @@ export function normalizeDocuments(
   return collapse(
     rows.map((row) =>
       toEntity(documentKey(row.accession_no), 'document', row.provider, snapshotId, row),
+    ),
+  )
+}
+
+export function normalizeOfferings(rows: readonly OfferingRow[], snapshotId: string): EntityRow[] {
+  return collapse(
+    rows.map((row) =>
+      toEntity(offeringKey(row.accession_no), 'offering', row.provider, snapshotId, row),
     ),
   )
 }

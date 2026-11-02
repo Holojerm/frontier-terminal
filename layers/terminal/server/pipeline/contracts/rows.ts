@@ -42,6 +42,9 @@ export const entityTypeEnum = z.enum([
   // 'document': a registration filing's primary document name, read off its
   // EDGAR filing index — the key a prospectus-revenue source is derived from.
   'document',
+  // 'offering': the terms a registration filing's cover states — amendment
+  // number, price range, listing — one row per filing (prospectus-offering.ts).
+  'offering',
 ])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])
@@ -52,6 +55,7 @@ export const alertRuleEnum = z.enum([
   'periodic-floor',
   'cik-resolved',
   'model-floor',
+  'prospectus-floor',
 ])
 // 'skipped': the source needs a credential the deploy does not have, so
 // nothing was attempted — distinct from 'failed' so a missing key is a

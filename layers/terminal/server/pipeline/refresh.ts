@@ -14,6 +14,7 @@ import {
 } from './contracts'
 import { diff } from './diff'
 import { modelFloorAlerts } from './model-floor'
+import { prospectusFloorAlerts } from './prospectus-floor'
 import type { SourceFetcher } from './fetch'
 import { derivedKeyOf, laneFor } from './lanes'
 import {
@@ -39,6 +40,7 @@ import {
   latestGoodSnapshot,
   latestRateLimitedRuns,
   recentRuns,
+  unstoredAlerts,
   type PipelineDb,
 } from './store'
 
@@ -252,7 +254,7 @@ async function parseAndStore(
   })
 
   const before = await currentEntities(deps.db, source.source_id)
-  if (body.first) {
+  if (body.first && !lane.firstIsNews?.(derivedKeyOf(source.source_id), fetched_at)) {
     // First observation: record what is there, not a wall of "added" events
     // for things that happened before we were watching — a status feed's
     // whole backlog, a filer's recent window. Decided by "no earlier good
@@ -285,10 +287,11 @@ async function parseAndStore(
 
   // Alerts are computed before anything is written, so the whole diff lands
   // in one transaction — see applyDiff.
-  const alerts = [
+  const alerts = await unstoredAlerts(deps.db, [
     ...(lane.alerts?.(changes) ?? []),
     ...(await modelFloorAlerts(deps.db, source.source_id, changes)),
-  ]
+    ...(await prospectusFloorAlerts(deps.db, changes)),
+  ])
   await applyDiff(deps.db, source.source_id, {
     added: added.map((c) => toStored(afterByKey.get(c.entity_key)!)),
     modified: modified.map((c) => afterByKey.get(c.entity_key)!),

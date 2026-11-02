@@ -15,6 +15,7 @@ import {
   normalizeFilers,
   normalizeFilings,
   normalizeIncidents,
+  normalizeOfferings,
   normalizeJobs,
   normalizePrices,
   normalizeRankings,
@@ -45,7 +46,9 @@ import { FTS_SOURCES, parseEdgarFts } from './parsers/sec/edgar-fts'
 import { archivesCik, parseFilingIndex, registrationTarget } from './parsers/sec/filing-index'
 import { resolveFilers, type PendingFilers } from './parsers/sec/pending-filers'
 import { SUBMISSIONS_SOURCES, parseEdgarSubmissions } from './parsers/sec/edgar-submissions'
+import { parseProspectusOffering } from './parsers/sec/prospectus-offering'
 import { parseProspectusRevenue } from './parsers/sec/prospectus-revenue'
+import { freshRegistrationKey } from './prospectus-floor'
 import { revenueProviderFor, type RevenueFilers } from './parsers/sec/revenue-filers'
 import { parseXbrlSegment, segmentTarget } from './parsers/sec/xbrl-segment'
 import { isPeriodicForm, isS1FloorForm } from './parsers/sec/s1-floor'
@@ -103,6 +106,14 @@ export interface Lane {
    * no removal is recorded and the entity stays.
    */
   removals: 'set' | 'append-only'
+  /**
+   * A source's first parse is normally a quiet baseline: what was there
+   * before we watched is not news. True when this source's first parse IS
+   * the event — a registration document is its own source, so its first and
+   * only content is the filing itself. Called with the derived key and the
+   * fetch time.
+   */
+  firstIsNews?: (derivedKey: string | null, fetchedAt: string) => boolean
   parse(text: string, ctx: ParseContext): ParseResult
   alerts?: (changes: readonly ChangeRow[]) => AlertRow[]
 }
@@ -256,12 +267,20 @@ const FILING_INDEX_LANE: Lane = {
 const PROSPECTUS_REVENUE_LANE: Lane = {
   sides: [],
   removals: 'append-only',
+  firstIsNews: freshRegistrationKey,
   parse: (text, { prov, snapshotId, derivedKey }) => {
     const target = registrationTarget(derivedKey ?? '')
-    const rows = parseProspectusRevenue(text, target, archivesCik(prov.source_url), prov)
+    const cik = archivesCik(prov.source_url)
+    const rows = parseProspectusRevenue(text, target, cik, prov)
+    const offering = parseProspectusOffering(text, target, cik, rows[0]!.entity_name, prov)
     return {
-      entities: normalizeRevenues(rows, snapshotId, target.provider),
-      note: `${rows.length} periods, row "${rows[0]!.tag}"`,
+      entities: [
+        ...normalizeRevenues(rows, snapshotId, target.provider),
+        ...normalizeOfferings(offering ? [offering] : [], snapshotId),
+      ],
+      note:
+        `${rows.length} periods, row "${rows[0]!.tag}"` +
+        (offering ? '' : '; cover states no price range or price'),
     }
   },
 }
@@ -443,6 +462,9 @@ export function asOfFromDetail(detail: string | null): string | null {
   return detail?.match(/as_of (\S+)/)?.[1] ?? null
 }
 
+/** EDGAR full-text search suffixes each display name with "(CIK 0002130357)"; the submissions feed does not. */
+const filerName = (name: string) => name.replace(/\s*\(CIK \d+\)\s*$/, '')
+
 /**
  * The one deterministic significance rule (boundary table, judge row): a
  * NEW S-1/424B4 filing on a whitelisted CIK always alerts, no model in the
@@ -465,16 +487,20 @@ export function s1FloorAlerts(changes: readonly ChangeRow[]): AlertRow[] {
     })
     if (filing.whitelist_cik === null || !isS1FloorForm(filing.form)) continue
 
-    const filer = filing.display_names[0] ?? `CIK ${filing.whitelist_cik}`
+    const names = filing.display_names.map(filerName)
+    const filer = names[0] ?? `CIK ${filing.whitelist_cik}`
     alerts.push(
       AlertRow.parse({
-        id: contentHash({ rule: 's1-floor', change_id: change.id }),
+        // One alert per filing: the FTS tripwire and the filer's submissions
+        // feed both list it, and whichever parses second finds this id stored.
+        id: contentHash({ rule: 's1-floor', accession_no: filing.accession_no }),
         severity: 'critical',
         headline: `${filing.form} filed by ${filer} (${filing.file_date})`,
         explanation:
           `Accession ${filing.accession_no}: form ${filing.form} filed ${filing.file_date} by ` +
-          `whitelisted CIK ${filing.whitelist_cik} (${filing.display_names.join(', ')}). ` +
-          'An S-1/424B4 on a whitelisted filer always alerts — the s1-floor rule, no model in the loop.',
+          `whitelisted CIK ${filing.whitelist_cik} (${names.join(', ')}). ` +
+          'An S-1/424B4 on a whitelisted filer always alerts — the s1-floor rule, no model in the loop. ' +
+          'What the filing says follows in a prospectus-floor alert once its document is parsed.',
         change_ids: JSON.stringify([change.id]),
         rule: 's1-floor',
         created_at: change.detected_at,
