@@ -22,7 +22,7 @@
 // `_hub_migrations` instead, and both work — which is exactly why this reads
 // whichever one exists rather than assuming.
 
-import { and, count, gt, isNull, max, sql } from 'drizzle-orm'
+import { and, count, gt, isNull, sql } from 'drizzle-orm'
 import type { drizzle } from 'drizzle-orm/d1'
 
 import { FleetManifestSchema } from '#shared/utils/fleet-manifest'
