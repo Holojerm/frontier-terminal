@@ -1,6 +1,8 @@
 // The disclosed-revenue axis: what a lab, or the public parent that
-// consolidates it, has reported to the SEC in XBRL — and, for the labs that
-// have reported nothing, exactly that. Primary source only: a press
+// consolidates it, has reported to the SEC — in XBRL, or, for a lab whose
+// registration statement tags no financials, in the statement of operations
+// that statement prints — and, for the labs that have reported nothing,
+// exactly that. Primary source only: a press
 // run-rate is a claim about a number, not the number, and the panel says so
 // instead of printing one.
 //
@@ -27,7 +29,7 @@ import { byString, num, parseJson, str } from './terminal-json'
 import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
 
 export const REVENUE_RULE =
-  'Primary source only: audited SEC disclosures read from EDGAR’s XBRL data — company facts for a consolidated figure, the filing’s own instance for a segment — each value linked to the filing that reported it. ' +
+  'Primary source only: audited SEC disclosures read from EDGAR’s XBRL data — company facts for a consolidated figure, the filing’s own instance for a segment — or, for a lab whose S-1 tags no financials, the statement of operations printed in the S-1 itself, until its first 10-Q is tagged. Each value is linked to the filing that reported it; interim periods from an S-1 are unaudited and marked so. ' +
   'No audited disclosure on file means nothing is shown — press-reported run-rates are deliberately not shown.'
 
 const DAY_MS = 86_400_000
@@ -44,6 +46,11 @@ export function companyfactsSourceId(ticker: string): string {
 
 export function submissionsSourceId(ticker: string): string {
   return `edgar-submissions-${ticker.toLowerCase()}`
+}
+
+/** Prefix of a resolved lab's per-registration-filing revenue sources (server/pipeline/derived.ts). */
+export function prospectusSourcePrefix(provider: string): string {
+  return `prospectus-revenue-${provider}-`
 }
 
 /** Prefix of a segment filer's per-filing sources (server/pipeline/derived.ts). */
@@ -95,6 +102,8 @@ export function revenuePeriodFromPayload(
     tag,
     val,
     frame: str(p.frame),
+    basis: p.taxonomy === 'prospectus' ? 'prospectus' : 'xbrl',
+    unaudited: p.unaudited === true,
     source_url: prov.source_url,
     fetched_at: prov.fetched_at,
   }
@@ -144,7 +153,10 @@ export function splitPeriods<T extends RevenuePeriod>(
     byString(b.end, a.end) || b.days - a.days || byString(b.filed, a.filed)
   periods.sort(order)
   superseded.sort(order)
-  const tags = [...new Set(rows.map((r) => r.tag))].sort((a, b) => tagRank(a) - tagRank(b))
+  // Only XBRL tags are tags; a prospectus row's label is said by its basis.
+  const tags = [...new Set(rows.filter((r) => r.basis === 'xbrl').map((r) => r.tag))].sort(
+    (a, b) => tagRank(a) - tagRank(b),
+  )
   return { periods, superseded, tags }
 }
 
@@ -236,7 +248,15 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
       )
     const { periods, superseded, tags } = splitPeriods(parsed)
 
-    const sources: SourceRef[] = [factsId, submissionsSourceId(feedKey)]
+    // An issuer resolved from its own S-1 also has a source per registration
+    // filing whose statement of operations was read; the newest is cited.
+    const prospectusId = auto
+      ? ([...stamps.keys()]
+          .filter((id) => id.startsWith(prospectusSourcePrefix(provider)))
+          .sort((a, b) => (a.slice(-20) < b.slice(-20) ? -1 : 1))
+          .at(-1) ?? null)
+      : null
+    const sources: SourceRef[] = [prospectusId, factsId, submissionsSourceId(feedKey)]
       .filter((id): id is string => id !== null)
       .map((id) => {
         const stamp = stamps.get(id)
@@ -271,8 +291,15 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
       source_id: factsId ?? 'xbrl-segment',
       caveat:
         registered?.caveat ??
-        ctx.derivedTemplates.find((t) => t.id === (segment ? 'xbrl-segment' : 'edgar-companyfacts'))
-          ?.caveat ??
+        ctx.derivedTemplates.find(
+          (t) =>
+            t.id ===
+            (segment
+              ? 'xbrl-segment'
+              : periods.some((p) => p.basis === 'prospectus')
+                ? 'prospectus-revenue'
+                : 'edgar-companyfacts'),
+        )?.caveat ??
         null,
     }
     providers.push({

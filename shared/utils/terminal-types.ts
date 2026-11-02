@@ -532,10 +532,15 @@ export interface RevenuePeriod extends Prov {
   accession_no: string
   /** EDGAR's filing index for the accession — composed from cik + accession, verified to resolve. */
   filing_url: string
+  /** The XBRL tag, or for a prospectus value the statement's own row label. */
   tag: string
   val: number
   /** SEC's calendar frame when the fact is the canonical one for it (CY2026Q2). */
   frame: string | null
+  /** xbrl: tagged data. prospectus: read off the statement printed in a registration filing that tags no financials. */
+  basis: 'xbrl' | 'prospectus'
+  /** An interim period from a registration statement, which prints it unaudited. */
+  unaudited: boolean
 }
 
 export interface RevenueFilerView {

@@ -27,6 +27,10 @@ export function filingKey(accessionNo: string): string {
   return `filing:${accessionNo}`
 }
 
+export function documentKey(accessionNo: string): string {
+  return `document:${accessionNo}`
+}
+
 // Status-page incident ids are page-scoped (Statuspage ULIDs/short ids,
 // Google Cloud's own ids), so the provider is part of the key.
 export function incidentKey(provider: Provider, incidentId: string): string {

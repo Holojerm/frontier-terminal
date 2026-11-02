@@ -24,6 +24,8 @@ import './parsers/sec/edgar-fts'
 import './parsers/sec/edgar-submissions'
 import './parsers/sec/edgar-companyfacts'
 import './parsers/sec/xbrl-segment'
+import './parsers/sec/filing-index'
+import './parsers/sec/prospectus-revenue'
 // Status pages (capacity strain)
 import './parsers/status/openai-status'
 import './parsers/status/anthropic-status'

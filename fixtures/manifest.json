@@ -128,6 +128,26 @@
       "note": "One table per model family; each price cell joins 'Input $X /M Tokens', 'Cached input …' and 'Output …' lines with <br>. OCR, audio and TTS rows are priced per page, minute or character and are not parsed; three Generalist rows are third-party models Mistral resells."
     },
     {
+      "path": "fixtures/sec/filing-index-anthropic-s-1.html",
+      "source_id": "filing-index-anthropic-s-1-2026-10-26-0001628280-26-067168",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/0001628280-26-067168-index.htm",
+      "fetched_at": "2026-11-02T02:55:07Z",
+      "http_status": 200,
+      "raw_bytes": 33494,
+      "trim": "none — committed whole",
+      "note": "One representative page for the derived filing-index-<provider>-<form>-<filed>-<accession> sources: Anthropic, PBC's S-1. Sequence 1 is anthropicpbc-sx1.htm, Type S-1; the only XBRL in the filing is the filing-fee exhibit (exfilingfees-s1_htm.xml, 3,961 bytes)."
+    },
+    {
+      "path": "fixtures/sec/prospectus-anthropic-s-1.html",
+      "source_id": "prospectus-revenue-anthropic-s-1-2026-10-26-0001628280-26-067168",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm",
+      "fetched_at": "2026-11-02T02:52:21Z",
+      "http_status": 200,
+      "raw_bytes": 14169252,
+      "trim": "Two excerpts of the 14 MB document, bytes unchanged: the F-pages index entry for Consolidated Statements of Operations (a title with no units line, which the parser must skip), and the audited statement itself — the registrant line, title, units line and the whole table. The parser was also run on the untrimmed document and returned the same five periods.",
+      "note": "One representative document for the derived prospectus-revenue sources. Revenue: $41M (FY2023), $386M (FY2024), $4,585M (FY2025), $1,163M and $16,286M (six months ended 2025-06-30 and 2026-06-30, unaudited)."
+    },
+    {
       "path": "fixtures/pricing/openrouter-models.json",
       "source_id": "openrouter-models",
       "source_url": "https://openrouter.ai/api/v1/models",

@@ -278,6 +278,10 @@ export function readSourceRegistry(sourcesYaml: string): SourceRegistry {
 }
 
 /** Derived source ids (server/pipeline/derived.ts) are named by their template. */
+/** `anthropic-s-1-a-…` -> `S-1/A`: the form slug a registration key carries (parsers/sec/filing-index.ts). */
+const registrationForm = (key: string) =>
+  (key.match(/^[a-z]+-(s-1-a|s-1|424b4)-/)?.[1] ?? '').toUpperCase().replace(/-A$/, '/A')
+
 const DERIVED_LABELS: readonly {
   prefix: string
   label: (key: string) => string
@@ -292,6 +296,17 @@ const DERIVED_LABELS: readonly {
     prefix: 'xbrl-segment-',
     label: (k) =>
       `EDGAR XBRL segment facts (${k.split('-')[0]!.toUpperCase()} filing ${k.slice(-20)})`,
+    role: 'sec',
+  },
+  {
+    prefix: 'filing-index-',
+    label: (k) => `EDGAR filing index (${k.split('-')[0]} ${registrationForm(k)}, ${k.slice(-20)})`,
+    role: 'sec',
+  },
+  {
+    prefix: 'prospectus-revenue-',
+    label: (k) =>
+      `${registrationForm(k)} statement of operations (${k.split('-')[0]}, ${k.slice(-20)})`,
     role: 'sec',
   },
   {

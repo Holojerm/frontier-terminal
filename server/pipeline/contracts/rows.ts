@@ -39,6 +39,9 @@ export const entityTypeEnum = z.enum([
   // report's own page. A lab without an index has neither (sources.yaml cut).
   'disclosure',
   'disclosure_timeline',
+  // 'document': a registration filing's primary document name, read off its
+  // EDGAR filing index — the key a prospectus-revenue source is derived from.
+  'document',
 ])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])
