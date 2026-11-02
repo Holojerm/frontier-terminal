@@ -69,7 +69,7 @@
 
 :root {
   --ui-radius: 0.25rem;
-  --ui-container: 72rem;
+  --ui-container: 90rem;
 
   /* Semantic shades. NuxtUI defaults these to 500, which fails WCAG AA in light
    * mode in both directions that matter: the color as text on its own 10% tint
