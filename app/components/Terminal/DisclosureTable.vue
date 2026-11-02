@@ -17,7 +17,7 @@ const days = (n: number) => (Number.isInteger(n) ? `${n}d` : `${n.toFixed(1)}d`)
   <div class="overflow-x-auto">
     <table class="w-full text-sm">
       <caption class="sr-only">
-        Misalignment disclosures per lab: reports and notices on the lab’s own index, and the median
+        Misalignment disclosures per lab: reports and notices on the lab’s own index, and median
         days from discovery to publication
       </caption>
       <thead>

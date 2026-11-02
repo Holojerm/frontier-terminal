@@ -84,7 +84,7 @@ function deltaText(row: PriceRowView): string | null {
       :columns="columns"
       sticky="header"
       :ui="{ root: 'md:overflow-visible', td: 'align-top', th: 'whitespace-nowrap' }"
-      empty="No rows match the current filter."
+      empty="No rows match the filter."
     >
       <template #model_slug-cell="{ row }">
         <NuxtLink
@@ -161,7 +161,7 @@ function deltaText(row: PriceRowView): string | null {
     </UTable>
 
     <p v-if="!prices.changes_available" class="text-xs text-muted">
-      No change events yet, so no deltas: a delta needs two revisions of a row.
+      No deltas yet: a delta needs two revisions of a row.
     </p>
 
     <UAlert
@@ -169,7 +169,7 @@ function deltaText(row: PriceRowView): string | null {
       color="info"
       variant="soft"
       icon="i-lucide-scale"
-      :title="`${prices.cross_check.label}: snapshotted, never shown as a price`"
+      :title="`${prices.cross_check.label}: snapshotted, not shown as a price`"
     >
       <template #description>
         <span>{{ prices.cross_check.caveat }}</span>

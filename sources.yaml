@@ -705,9 +705,9 @@ cut:
       artificialanalysis.ai/data-api (read 2026-09-08) states the free API
       tier is "Internal use only; no redistribution." and that redistribution
       rights come only with a commercial package ("Commercial redistribution
-      with attribution"). A public terminal republishes by definition, so the
-      site is linked as a reference beside the demand-share panel and no
-      figure from it is stored or shown.
+      with attribution"). This site republishes what it shows, so
+      artificialanalysis.ai is linked as a reference beside the demand-share
+      panel; no figure from it is stored or shown.
   lmarena:
     verdict: cut — external link only, never ingested
     reason: >-
@@ -718,16 +718,16 @@ cut:
   compute-deals:
     verdict: stretch goal only (new-post tier, no extraction claims)
     reason: >-
-      RSS detection solvable for 4 sources (Anthropic = SPA no feed; xAI =
-      hard 403), but the deals that matter break in the press before any
-      company feed — honest coverage is impossible, so extraction is cut.
+      RSS detection works for 4 sources (Anthropic: SPA, no feed; xAI: hard
+      403). Material deals are reported in the press before any company feed,
+      so complete coverage is not possible and extraction is cut.
   xai-status:
     verdict: cut — display "no public feed" honestly
     reason: >-
       status.x.ai/api/v2/incidents.json answers 403 (Cloudflare challenge
       page) to any non-browser client, live-checked 2026-09-08 with a
-      descriptive User-Agent. Scraping a rendered page would be a
-      dependency on a bot wall; the terminal shows the gap instead.
+      descriptive User-Agent. Scraping the rendered page would depend on
+      passing a bot wall, so the gap is shown instead.
   anthropic-disclosures:
     verdict: cut — display "no disclosure index" honestly
     reason: >-
@@ -758,9 +758,9 @@ cut:
       client-rendered app over an internal GraphQL endpoint with no
       documented API, and no Greenhouse or Ashby board exists for Meta or
       Meta Superintelligence Labs (meta, msl, metaai,
-      metasuperintelligencelabs all 404). A Meta-wide count would conflate
-      Facebook, Instagram, WhatsApp and Reality Labs hiring with the lab and
-      mislead, the same reasoning that cuts Google hiring.
+      metasuperintelligencelabs all 404). A Meta-wide count would mix
+      Facebook, Instagram, WhatsApp, and Reality Labs hiring with the lab’s,
+      as with Google hiring.
   meta-status:
     verdict: cut — display "no public feed" honestly
     reason: >-

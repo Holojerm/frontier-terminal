@@ -12,7 +12,7 @@ definePageMeta({
     priority: '0.6',
     title: 'Data',
     summary:
-      'Every source behind the terminal with its newest snapshot, last poll and caveat, and bulk downloads of every table — snapshots, prices, open jobs, incidents, the change log, alerts, poll runs — as CSV or JSON, with provenance columns on every row.',
+      'Every source behind the terminal with its newest snapshot, last poll, and caveat, and CSV or JSON downloads of every table (snapshots, prices, open jobs, incidents, the change log, alerts, poll runs), with provenance columns on every row.',
   },
 })
 
@@ -52,7 +52,7 @@ const datasets = (coverage.value?.exports ?? []).map((table) =>
 useSeo({
   title: 'Data',
   description:
-    'Download the terminal’s tables as CSV or JSON: snapshots, prices, open jobs, incidents, the change log, alerts and poll runs, each row with its source URL.',
+    'Download the terminal’s tables as CSV or JSON: snapshots, prices, open jobs, incidents, the change log, alerts, and poll runs, each row with its source URL.',
   dateModified: coverage.value?.as_of,
   schema: [
     dataCatalogSchema(site, {
@@ -70,8 +70,8 @@ useSeo({
     <header class="space-y-2">
       <h1 class="text-4xl text-highlighted">Data</h1>
       <p class="max-w-2xl text-muted">
-        Every source the terminal reads, and every table it holds, streamed whole as CSV or JSON.
-        Each row carries the URL it was read from and when.
+        Every source the terminal reads, and every table it holds as a CSV or JSON download. Each
+        row carries its source URL and fetch timestamp.
       </p>
     </header>
 
@@ -154,8 +154,8 @@ useSeo({
 
     <TerminalPanel id="license" title="Terms">
       <p class="max-w-2xl text-sm text-default">
-        The compilation is licensed {{ DATA_LICENSE.short }}. The underlying facts belong to whoever
-        published them.
+        The compilation is licensed {{ DATA_LICENSE.short }}. The underlying facts belong to their
+        publishers.
         <NuxtLink to="/license" class="text-primary underline underline-offset-2"
           >Full terms and the attribution line</NuxtLink
         >.

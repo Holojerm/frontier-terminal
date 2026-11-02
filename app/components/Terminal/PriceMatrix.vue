@@ -61,7 +61,7 @@ function cell(provider: string, klass: string): MatrixCell | undefined {
                     />
                   </div>
                   <p v-if="cell(p, k.id)!.basis_current === false" class="text-xs text-warning">
-                    Mapping under review — the vendor rewrote its recommendation
+                    Mapping under review: the cited sentence is no longer on the vendor page
                     <span v-if="cell(p, k.id)!.basis_checked_at"
                       >(checked {{ absoluteStamp(cell(p, k.id)!.basis_checked_at!) }})</span
                     >
@@ -109,8 +109,8 @@ function cell(provider: string, klass: string): MatrixCell | undefined {
     </div>
 
     <p v-if="!compact" class="text-xs text-muted">
-      {{ matrix.tier_note }} A model sits in a column because the vendor’s own docs recommend it
-      there; the info control beside it quotes the sentence.
+      {{ matrix.tier_note }} Each placement follows the vendor’s own docs; the info control quotes
+      the sentence.
     </p>
   </div>
 </template>

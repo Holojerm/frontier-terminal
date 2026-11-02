@@ -13,7 +13,7 @@ definePageMeta({
     priority: '0.5',
     title: 'About',
     summary:
-      'What Frontier Terminal tracks, the provenance rule every number obeys, the disclosed caveats per source, data latency, and where the code lives.',
+      'What Frontier Terminal tracks, the provenance rule every number follows, per-source caveats, data latency, and where the code lives.',
   },
 })
 
@@ -26,7 +26,7 @@ const { data: coverage } = await useFetch<CoverageData>('/api/coverage')
 useSeo({
   title: 'About',
   description:
-    'What Frontier Terminal is, the provenance rule behind every number, each source’s disclosed caveat, how stale a figure can be, and the open-source repo.',
+    'What Frontier Terminal tracks, the provenance rule behind every number, per-source caveats, data latency, and the open-source repo.',
   dateModified: coverage.value?.as_of,
 })
 </script>
@@ -41,20 +41,19 @@ useSeo({
     <TerminalPanel id="what" title="What this is">
       <div class="max-w-2xl space-y-3 text-default">
         <p>
-          A free, public, read-only terminal for an equity analyst covering the AI-infrastructure
-          complex into the frontier-lab IPO wave. It watches the six frontier model providers —
-          OpenAI, Anthropic, Google, xAI, Meta, Mistral — on seven axes: the API price list, the
-          hiring board (with the physical-infrastructure buildout read off it), demand share on
-          OpenRouter and the spend share it implies at list price, status-page incidents,
-          misalignment disclosures, SEC filings, and disclosed revenue. The private-company signals
-          carry the weight before any lab trades; EDGAR is the tripwire for the moment one does, and
-          the revenue panel is wired to fill the day it happens — until then it says “no audited
-          disclosure” rather than printing a run-rate.
+          A free, public, read-only terminal for equity analysts covering AI infrastructure through
+          the frontier-lab IPO wave. It tracks six frontier model providers — OpenAI, Anthropic,
+          Google, xAI, Meta, Mistral — on seven axes: API prices, hiring (and the
+          physical-infrastructure buildout within it), OpenRouter demand share and the spend share
+          it implies at list price, status-page incidents, misalignment disclosures, SEC filings,
+          and disclosed revenue. Until a lab lists, the private-company signals carry the weight.
+          EDGAR is polled for the first public filing, and the revenue panel fills from it; until
+          then it shows “no audited disclosure”, not a run-rate.
         </p>
         <p>
           Every source is polled on a schedule, snapshotted whole, parsed deterministically, and
-          diffed against its previous state. What you read here is the current state plus the change
-          log; an alert is a claim about change rows and nothing else.
+          diffed against its previous state. Pages show the current state and the change log; an
+          alert is a claim about change rows only.
         </p>
       </div>
     </TerminalPanel>
@@ -65,23 +64,22 @@ useSeo({
           <strong class="text-highlighted"
             >No number without a source URL and a fetch timestamp.</strong
           >
-          Every figure on every page links to the exact URL it was read from and carries the UTC
-          instant it was fetched. A datum you cannot re-fetch is a claim, not data, and the store
-          refuses to hold one.
+          Every figure links to the exact URL it was read from and carries the UTC instant it was
+          fetched. A datum that cannot be re-fetched is a claim, not data, and is not stored.
         </p>
         <p>
-          Where a source does not publish a figure, the terminal says so instead of guessing:
-          OpenAI’s catalog page prints no prices, Google has no public hiring feed, OpenRouter’s
-          price list is a third-party restatement held out as a cross-check, and its usage rankings
-          are one aggregator’s traffic, never market share. Timestamps read relative inside a day;
-          the exact value is one hover away and in the page markup.
+          Where a source publishes no figure, the page says so: OpenAI’s catalog page prints no
+          prices, Google has no public hiring feed, OpenRouter’s price list is a third-party
+          restatement kept as a cross-check, and its usage rankings are one aggregator’s traffic,
+          not market share. Timestamps under a day old read as relative; the exact value is in the
+          hover text and the page markup.
         </p>
       </div>
     </TerminalPanel>
 
     <TerminalPanel id="caveats" title="Caveats">
       <p class="max-w-2xl text-sm text-default">
-        Every source carries the audit’s caveat in its own words, and every deliberate cut its
+        Each source carries the audit’s caveat in its own words; each deliberate cut carries its
         reason. Both are read from the source registry at request time and listed on the
         <NuxtLink to="/data#coverage" class="text-primary underline underline-offset-2"
           >coverage table</NuxtLink
@@ -94,23 +92,23 @@ useSeo({
         <dt class="text-muted">SEC filings</dt>
         <dd class="text-default">
           The EDGAR feeds — the S-1 full-text tripwire, one submissions feed per whitelisted CIK,
-          and XBRL company facts for each tagged revenue filer — are polled every 30 minutes: the
-          one axis where latency is worth polling for.
+          and XBRL company facts for each tagged revenue filer — are polled every 30 minutes, the
+          one axis where latency matters.
         </dd>
         <dt class="text-muted">Pricing and hiring</dt>
         <dd class="text-default">
-          Every source, EDGAR included, is surveyed every 6 hours. The overlap is deliberate: a
-          stalled tripwire goes covered, not blind.
+          Every source, EDGAR included, is polled every 6 hours. The overlap is deliberate: a
+          stalled feed stays covered.
         </dd>
         <dt class="text-muted">Pages</dt>
         <dd class="text-default">
-          Each payload is cached for five minutes, keyed by the newest poll tick, so a poll
-          invalidates the cache by construction. The tick a page reflects is printed on it.
+          Each payload is cached for five minutes, keyed by the newest poll tick, so a new poll
+          invalidates the cache. Each page prints the tick it reflects.
         </dd>
         <dt class="text-muted">Confidential filings</dt>
         <dd class="text-default">
-          A confidential draft registration is structurally invisible on EDGAR until it flips
-          public. The terminal catches the flip and says so; it cannot see the draft.
+          A confidential draft registration does not appear on EDGAR until it is made public. The
+          terminal reports the public filing when it appears; the draft itself is not visible.
         </dd>
       </dl>
     </TerminalPanel>
@@ -118,8 +116,8 @@ useSeo({
     <TerminalPanel id="disclaimer" title="Not investment advice">
       <p class="max-w-2xl text-sm text-default">
         This is a data terminal, not a recommendation. It reports what public sources say and when
-        they said it. Nothing here is personalised, nothing here is a solicitation, and the judged
-        alerts are a model’s reading of change rows, labelled as such.
+        they said it. Nothing here is personalized or a solicitation. Judged alerts are a model’s
+        reading of change rows and are labeled as such.
       </p>
     </TerminalPanel>
 
@@ -148,7 +146,7 @@ useSeo({
           <NuxtLink to="/alerts.xml" external class="text-primary underline underline-offset-2">
             Atom feed
           </NuxtLink>
-          <span class="text-muted"> — alerts, for a reader that wants to be told.</span>
+          <span class="text-muted"> — notable and critical alerts.</span>
         </li>
       </ul>
     </TerminalPanel>
@@ -160,9 +158,9 @@ useSeo({
     >
       <div class="max-w-2xl space-y-3 text-sm">
         <p class="text-default">
-          Point Claude, ChatGPT or any MCP client at the endpoint below. Each tool returns the
-          matching API payload with its provenance intact, through the same cache and the same
-          per-address rate limit as the site.
+          Point Claude, ChatGPT, or any MCP client at the endpoint below. Each tool returns the
+          matching API payload with provenance intact, through the site’s cache and per-address rate
+          limit.
         </p>
         <pre
           class="overflow-x-auto rounded-md border border-default bg-muted p-3 font-mono text-xs text-default"

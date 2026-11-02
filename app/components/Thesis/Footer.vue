@@ -17,7 +17,7 @@ const requestUrl = datasetRequestUrl(manifest.links.github)
     <p class="text-sm text-muted">{{ caveat }}</p>
     <p class="text-sm text-muted">Not investment advice.</p>
     <p class="text-sm text-muted">
-      A claim you would like tested needs a public number behind it.
+      Testing a claim needs a public number.
       <a
         :href="requestUrl"
         target="_blank"

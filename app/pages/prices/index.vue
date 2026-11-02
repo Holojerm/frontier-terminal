@@ -10,7 +10,7 @@ definePageMeta({
     priority: '0.9',
     title: 'Prices',
     summary:
-      'Every API price and catalog row per SKU for OpenAI, Anthropic, Google, xAI, Meta and Mistral, with the change against the previous revision and the URL each was read from.',
+      'Every API price and catalog row per SKU for OpenAI, Anthropic, Google, xAI, Meta, and Mistral, with the change against the previous revision and the URL each was read from.',
   },
 })
 
@@ -50,7 +50,7 @@ useSeo({
       <TerminalPanel
         id="matrix"
         title="Like-for-like"
-        note="Flagship, balanced and economy on each vendor’s own recommendation."
+        note="Flagship, balanced, and economy on each vendor’s own recommendation."
       >
         <TerminalPriceMatrix :matrix="prices.matrix" />
       </TerminalPanel>
@@ -63,7 +63,7 @@ useSeo({
         <TerminalEmptyState
           v-if="prices.rows.length === 0"
           title="No model rows yet."
-          body="Pricing rows land on the first poll of each vendor page."
+          body="Pricing rows appear after the first poll of each vendor page."
           :action="{ label: 'See coverage', to: '/data#coverage' }"
         />
         <TerminalPriceTable v-else :prices="prices" :provider="provider" />

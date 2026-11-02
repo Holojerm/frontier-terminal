@@ -13,7 +13,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Incidents',
     summary:
-      'Status-page incidents posted by OpenAI, Anthropic and Google (Gemini / Vertex AI only) over the last 90 days — impact, status, components, start and resolution, each linked to the vendor’s incident page.',
+      'Status-page incidents posted by OpenAI, Anthropic, and Google (Gemini / Vertex AI only) over the last 90 days — impact, status, components, start and resolution, each linked to the vendor’s incident page.',
   },
 })
 
@@ -82,7 +82,7 @@ const caveats = computed(
       <TerminalEmptyState
         v-if="incidents.incidents.length === 0"
         title="No incidents in the window."
-        :body="`Nothing started in the last ${incidents.history_days} days across the polled feeds.`"
+        :body="`No incident started in the last ${incidents.history_days} days on any polled feed.`"
         :action="{ label: 'Coverage', to: '/data#coverage' }"
       />
 

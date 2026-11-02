@@ -195,7 +195,7 @@ describe('queryRevenue against a seeded store', () => {
       () => new Date('2026-09-07T12:00:00Z'),
     )
     const revenue = await queryRevenue(db, ctx)
-    expect(revenue.rule).toContain('deliberately not shown')
+    expect(revenue.rule).toContain('Press-reported run-rates are excluded.')
     const by = Object.fromEntries(revenue.providers.map((p) => [p.provider, p]))
     for (const p of ['openai', 'anthropic'] as const) {
       expect(by[p]).toMatchObject({ disclosure: 'none', filer: null, periods: [], sources: [] })

@@ -26,9 +26,9 @@ const PROVIDER: Record<string, string> = { ...LAB_DISPLAY, all: 'market-wide', o
 
 const roleNote = (s: SourceCoverage) =>
   s.derived_from
-    ? `derived at poll time from the ${s.derived_from} template — a key the store already held, filled into an audited URL`
+    ? `derived from the ${s.derived_from} template: a stored key filled into an audited URL`
     : s.role === 'join'
-      ? 'join table — fetched to enrich another source, yields no rows of its own'
+      ? 'join table: enriches another source, no rows of its own'
       : s.role === 'cross-check'
         ? 'cross-check only — never a source of record'
         : null
@@ -113,7 +113,7 @@ const roleNote = (s: SourceCoverage) =>
     </div>
 
     <div v-if="coverage.cuts.length" class="space-y-2">
-      <h3 class="text-lg text-highlighted">Not tracked, on purpose</h3>
+      <h3 class="text-lg text-highlighted">Excluded sources</h3>
       <ul class="space-y-1 text-sm">
         <li v-for="cut in coverage.cuts" :key="cut.id" class="flex flex-wrap items-center gap-x-2">
           <span class="font-mono text-default">{{ cut.id }}</span>
@@ -124,7 +124,7 @@ const roleNote = (s: SourceCoverage) =>
     </div>
 
     <p class="text-xs text-muted">
-      Each label links to the exact URL fetched; the age beside it carries the exact UTC timestamp.
+      Each label links to the exact URL fetched; each age’s tooltip gives the exact UTC timestamp.
     </p>
   </div>
 </template>

@@ -19,8 +19,8 @@ defineProps<{ providers: ProviderTopModels[] }>()
       <h3 :id="`top-${p.provider}`" class="text-lg text-highlighted">{{ p.display }}</h3>
       <TerminalEmptyState
         v-if="p.models.length === 0"
-        title="No models in the window."
-        body="None of this lab’s models made OpenRouter’s daily top 50 on these days."
+        title="No ranked models in the window."
+        body="None placed in OpenRouter’s daily top 50 on these days."
       />
       <ol v-else class="space-y-1">
         <li

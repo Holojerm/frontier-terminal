@@ -35,7 +35,7 @@ const showTable = ref(false)
     <TerminalEmptyState
       v-if="!latest"
       title="No reading yet."
-      body="The signal has not produced a number for this claim, so its status stays unresolved until it does."
+      body="The signal has produced no number for this claim. Its status is unresolved until it does."
     />
 
     <template v-else>

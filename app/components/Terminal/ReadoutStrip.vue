@@ -41,7 +41,7 @@ const anchor = (lab: LabId, id: string) => `${labPath(lab)}#${id}`
     <table class="w-full text-sm">
       <caption class="sr-only">
         Each lab on every axis: flagship price, disclosed revenue, demand share, open roles,
-        incidents, and its newest alert
+        incidents, and newest alert
       </caption>
       <thead>
         <tr class="border-b border-default text-left text-xs text-toned">
