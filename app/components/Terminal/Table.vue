@@ -96,7 +96,7 @@ const value = (row: T, key: string) => {
           caption
         }}
       </caption>
-      <thead :class="sticky ? 'bg-default md:sticky md:top-0' : undefined">
+      <thead :class="sticky ? 'bg-default md:sticky md:top-(--header-offset)' : undefined">
         <tr class="border-b border-default text-left">
           <th
             v-for="c in columns"
