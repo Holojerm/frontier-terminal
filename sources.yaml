@@ -697,8 +697,9 @@ cut:
     verdict: cut — display "no public feed" honestly
     reason: >-
       None usable: careers.google.com is an auth-walled SPA; the DeepMind
-      Greenhouse board is vestigial (10 jobs). Alphabet-wide numbers would
-      conflate Search/Ads/Cloud with Gemini and mislead.
+      Greenhouse board, vestigial at the audit (10 jobs), answers 404 since
+      (re-checked 2026-11-01). Alphabet-wide numbers would conflate
+      Search/Ads/Cloud with Gemini and mislead.
   artificial-analysis:
     verdict: cut — external link only, never ingested
     reason: >-
@@ -715,6 +716,8 @@ cut:
       app with no documented data endpoint, dataset download, or data license.
       Scraping a page with no stated license would be a claim about that page,
       not data; it is linked as a reference beside the demand-share panel.
+      Re-checked 2026-11-01: arena.ai now answers 403 (Cloudflare challenge
+      page) to a non-browser client.
   compute-deals:
     verdict: stretch goal only (new-post tier, no extraction claims)
     reason: >-
@@ -737,20 +740,25 @@ cut:
       (2026-07-30: three incidents found across 141,006 cyber-evaluation
       runs), which is a single article, not a feed the pipeline can diff.
       alignment.anthropic.com is a research blog with no rss.xml (404).
-      Re-checked by the disclosure-watch routine.
+      Re-checked 2026-11-01: its "Agentic Misalignment in Summer 2026" post
+      reports failures in experimental scenarios and says "These are not
+      real-world incidents" — research, not a disclosure index. Re-checked
+      weekly by the gap-watch routine.
   google-disclosures:
     verdict: cut — display "no disclosure index" honestly
     reason: >-
       No misalignment or containment disclosure page found for Google or
-      Google DeepMind, live-checked 2026-09-27 (deepmind.google's blog has
-      no rss.xml, 404). Re-checked by the disclosure-watch routine.
+      Google DeepMind, live-checked 2026-09-27. Re-checked 2026-11-01: the
+      blog feed the audit found missing now lives at
+      deepmind.google/blog/rss.xml (200), but it is the general blog, not a
+      disclosure index. Re-checked weekly by the gap-watch routine.
   xai-disclosures:
     verdict: cut — display "no disclosure index" honestly
     reason: >-
       No misalignment or containment disclosure page found; x.ai/safety
       answers 403 (Cloudflare challenge page) to a non-browser client,
-      live-checked 2026-09-27, the same bot wall as status.x.ai.
-      Re-checked by the disclosure-watch routine.
+      live-checked 2026-09-27 and again 2026-11-01, the same bot wall as
+      status.x.ai. Re-checked weekly by the gap-watch routine.
   meta-hiring:
     verdict: cut — display "no public feed" honestly
     reason: >-
@@ -776,12 +784,12 @@ cut:
       No misalignment or containment disclosure page found, live-checked
       2026-10-12: ai.meta.com/safety and research.meta.ai/safety answer 404,
       research.meta.ai has no rss.xml, and the developer docs' llms.txt lists
-      no safety or incident page. Re-checked by the disclosure-watch routine.
+      no safety or incident page. Re-checked weekly by the gap-watch routine.
   mistral-disclosures:
     verdict: cut — display "no disclosure index" honestly
     reason: >-
       No misalignment or containment disclosure page found, live-checked
       2026-11-01: mistral.ai/safety answers 404, and the security advisories
       in the docs' llms.txt (MAI-2026-001 to 003) cover SDK and product
-      vulnerabilities, not model behaviour. Re-checked by the
-      disclosure-watch routine.
+      vulnerabilities, not model behaviour. Re-checked weekly by
+      the gap-watch routine.

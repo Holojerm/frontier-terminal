@@ -14,7 +14,9 @@ configured" and skip the dependent work (journaling the gap).
 ## Product context
 
 Frontier Terminal is a free, public, read-only investor terminal tracking the frontier AI
-labs — OpenAI, Anthropic, Google, xAI — along three axes. **Pricing**: each lab's published
+labs — OpenAI, Anthropic, Google, xAI, Meta, Mistral — on seven axes: API prices, hiring, SEC filings,
+disclosed revenue, status-page incidents, misalignment disclosures and OpenRouter demand share.
+The three below carry most of the judge's signal. **Pricing**: each lab's published
 API price list, parsed into one row per model and tier (input, cached input, output per
 million tokens; context window; promo windows as their own rows). **Hiring**: the labs' own
 job boards (Ashby for OpenAI, Greenhouse for Anthropic and xAI), one row per posting with
