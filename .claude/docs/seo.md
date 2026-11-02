@@ -18,7 +18,7 @@ The `useSeo()` one-call-per-page contract, how `publicPage` meta feeds both `sit
 - **Every `publicPage` value is a literal.** Nuxt reads `definePageMeta` by static extraction;
   an imported constant makes it drop the whole key, and the page leaves both files with no
   error (`/theses` did, for a month). The gate fails a non-literal value.
-- **The URL list crawlers see is `crawlerPages()`** in `server/utils/crawler-pages.ts`: the
+- **The URL list crawlers see is `crawlerPages()`** in `layers/terminal/server/utils/crawler-pages.ts`: the
   route-table pages plus the lab and thesis pages. sitemap.xml, `/llms.txt`, and the MCP
   `describe` tool all read it, so the three cannot list different sites.
 - **Sitemap `lastmod` for a data page is its newest change row**, not the deploy:

@@ -37,10 +37,16 @@ export default defineConfig({
       // relying on auto-imports, which typecheck everywhere but are not always
       // injected at runtime — see AGENTS.md › Gotchas.
       '#shared': fileURLToPath(new URL('./shared', import.meta.url)),
+      // Nuxt's alias for the app's server/ dir. Layer code reaches core utils
+      // through it, so it resolves against whichever app the layer is in.
+      '#server': fileURLToPath(new URL('./server', import.meta.url)),
+      // Nuxt's `#layers/<name>` aliases, for the few core files that import a
+      // fork-owned layer (fleet-status, the ops alert task, the sitemap route).
+      '#layers': fileURLToPath(new URL('./layers', import.meta.url)),
     },
   },
   test: {
-    include: ['test/**/*.test.ts', 'server/**/*.test.ts'],
+    include: ['test/**/*.test.ts', 'server/**/*.test.ts', 'layers/*/test/**/*.test.ts'],
     setupFiles: ['./test/setup.ts'],
   },
 })

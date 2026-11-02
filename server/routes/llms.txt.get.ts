@@ -16,7 +16,7 @@
 //
 // Suppressed on non-indexable deploys for the same reason robots.txt is.
 
-import { llmsTxtInput } from '../utils/crawler-pages'
+import { llmsTxtInput } from '#layers/terminal/server/utils/crawler-pages'
 import { llmsTxtResponse } from '../utils/seo'
 
 export default defineEventHandler((event) => {

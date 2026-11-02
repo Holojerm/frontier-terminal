@@ -6,7 +6,7 @@
 // its axis page leads with, so the overview is the axis pages' summaries and
 // nothing else. Nine cached endpoints, fetched in parallel on the server.
 
-import { LABS } from '#shared/utils/terminal-lab-summary'
+import { LABS } from '#layers/terminal/shared/utils/terminal-lab-summary'
 import type {
   DisclosuresData,
   HiringHistoryData,
@@ -17,7 +17,7 @@ import type {
   ReleasesData,
   RevenueData,
   SpendData,
-} from '#shared/utils/terminal-types'
+} from '#layers/terminal/shared/utils/terminal-types'
 
 definePageMeta({
   publicPage: {

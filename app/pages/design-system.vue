@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import type { Fact, TableColumn } from '~/types/terminal-ui'
+import type { Fact, TableColumn } from '#layers/terminal/app/types/terminal-ui'
 
 // Living style guide — every token and component state from DESIGN.md on one
 // page, in both color modes. This is the verification surface: after editing

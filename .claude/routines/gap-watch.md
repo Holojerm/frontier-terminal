@@ -11,7 +11,7 @@ enabled: false
 
 The terminal states its gaps instead of guessing: every source the audit cut is listed under
 `cut:` in `sources.yaml` with the reason it was cut, and every matrix cell with no mapping
-is listed in `CLASS_GAPS` in `server/utils/terminal-classes.ts` with the reason no vendor
+is listed in `CLASS_GAPS` in `layers/terminal/server/utils/terminal-classes.ts` with the reason no vendor
 sentence answers it. The pipeline re-checks only what is mapped (a mapped cell's sentence is
 re-read on every poll); nothing re-reads a gap. Each reason is a dated fact about a vendor page
 ("answers 404", "names no middle tier"), and those facts expire: Google's flagship cell sat
@@ -32,7 +32,7 @@ Most weeks nothing has changed. That run must be short.
 2. Build the checklist:
 
    - every entry under `cut:` in `sources.yaml` (id, verdict, reason);
-   - every entry of `CLASS_GAPS` in `server/utils/terminal-classes.ts` (provider, class,
+   - every entry of `CLASS_GAPS` in `layers/terminal/server/utils/terminal-classes.ts` (provider, class,
      reason), and the page that provider's class map rests on (`CLASS_MAP_SOURCES` in the
      same file, resolved to a URL through `sources.yaml`; a provider with no entry there has
      no page yet, so search its own docs for one).

@@ -30,12 +30,12 @@ Kill conditions were registered on 2026-11-02, before any reading existed, and a
 
 ## Method
 
-- **Blended price.** (3 × input + 1 × output) ÷ 4, in USD per million tokens, at each lab's standard-tier list price for its mapped flagship. The flagship is the price matrix's flagship cell: the model the vendor's own page names as the place to start (`server/utils/terminal-classes.ts`, with the judge's re-mappings laid over it). A lab with no mapped flagship, or a mapped one with no input and output price, is left out and named.
+- **Blended price.** (3 × input + 1 × output) ÷ 4, in USD per million tokens, at each lab's standard-tier list price for its mapped flagship. The flagship is the price matrix's flagship cell: the model the vendor's own page names as the place to start (`layers/terminal/server/utils/terminal-classes.ts`, with the judge's re-mappings laid over it). A lab with no mapped flagship, or a mapped one with no input and output price, is left out and named.
 - **GPU price.** The on-demand list price of an NVIDIA H100, in USD per GPU-hour. An instance price is divided by its GPUs. Only SXM/HGX boards count, plus rows that name no form factor (Crusoe, Oracle). PCIe and NVL cards are stored and not counted, so the median compares the same board across providers. Reserved, spot, preemptible, dedicated-endpoint and multi-week cluster prices are other products and are not read.
 - **Median.** Each provider counts once, at the median of its own counted rows (sizes, configurations, regions). The reading is the median of those provider values. Azure's 82 regional SXM rows are one vote, like Crusoe's single row.
 - **Quorum.** Claim 1 needs at least 5 H100 providers with a price that day. With fewer, the reading is stored, marked void, and the claim is unresolved; a void reading never feeds the 26-week high.
 - **B200.** The same ratio over the B200 median is recorded beside claim 1 and never read by its rule.
-- **Sources.** Every number is stored with its source URL and fetch time: list prices in the price tables, GPU prices in `recipe_observations` (one recipe per provider, `server/theses/recipes/gpu-*.ts`), raw bytes in R2. The audit, terms and exclusions are in [`docs/source-audit.md`](../source-audit.md) and `sources.yaml` (`recipe_sources`, `cut`).
+- **Sources.** Every number is stored with its source URL and fetch time: list prices in the price tables, GPU prices in `recipe_observations` (one recipe per provider, `layers/terminal/server/theses/recipes/gpu-*.ts`), raw bytes in R2. The audit, terms and exclusions are in [`docs/source-audit.md`](../source-audit.md) and `sources.yaml` (`recipe_sources`, `cut`).
 
 ## How the status is set
 
