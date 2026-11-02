@@ -180,3 +180,25 @@
     }
   }
 }
+
+/* --ui-header-height is the top row only; at lg the axis nav row (h-12 plus
+ * its border) sits under it. --header-offset is the whole sticky header, for
+ * scroll-padding and anything pinned below it. */
+:root {
+  --ui-header-height: 3.5rem;
+  --header-offset: calc(var(--ui-header-height) + 1px);
+}
+
+@media (min-width: 64rem) {
+  :root {
+    --header-offset: calc(var(--ui-header-height) + 3rem + 2px);
+  }
+}
+
+/* The header is sticky, so an in-page jump (skip link, heading anchor) would
+ * otherwise land its target underneath it. */
+@layer base {
+  html {
+    scroll-padding-top: var(--header-offset);
+  }
+}
