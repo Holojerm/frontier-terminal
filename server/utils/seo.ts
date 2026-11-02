@@ -203,10 +203,13 @@ function newest(dates: (string | null | undefined)[]): string | null {
  * `path → YYYY-MM-DD` for every data page the freshness rows can date. A
  * page absent from the result (/about, /license, the theses) keeps the build
  * date, which is the honest answer for a page whose content is its template.
+ *
+ * `labPages` maps a page that reads only some labs — a lab page, a compare
+ * page — to those labs; it is dated by their newest change on any axis.
  */
 export function dataLastmods(
   freshness: DataFreshness,
-  labPaths: Record<string, string>,
+  labPages: Record<string, readonly string[]>,
 ): Record<string, string> {
   const out: Record<string, string> = {}
   const set = (path: string, at: string | null) => {
@@ -222,8 +225,8 @@ export function dataLastmods(
   set('/alerts', freshness.alertsAt)
   const everything = newest([...freshness.changes.map((c) => c.at), freshness.alertsAt])
   for (const path of ALL_AXIS_PAGES) set(path, everything)
-  for (const [lab, path] of Object.entries(labPaths)) {
-    set(path, newest(freshness.changes.filter((c) => c.provider === lab).map((c) => c.at)))
+  for (const [path, labs] of Object.entries(labPages)) {
+    set(path, newest(freshness.changes.filter((c) => labs.includes(c.provider)).map((c) => c.at)))
   }
   return out
 }

@@ -14,22 +14,25 @@
 //
 // Dynamic routes are the other half, and they cannot work that way: one
 // route-table entry describes N URLs, so the hook skips them by design. The
-// alert permalinks (/alerts/:id) and the SKU pages (/prices/[key]) are
-// enumerated from D1 here, each with its own lastmod — an alert row is
-// append-only, so its created_at is exact; a SKU's is the date of its newest
-// observation. The data pages (/prices, /hiring, a lab page, …) are dated by
+// alert permalinks (/alerts/:id), the SKU pages (/prices/[key]) and the
+// filing pages (/filings/[accession]) are enumerated from D1 here, each with
+// its own lastmod — an alert row is append-only, so its created_at is exact; a
+// SKU's is the date of its newest observation; a filing's is the date it was
+// filed. The data pages (/prices, /hiring, a lab page, …) are dated by
 // their own newest change row (server/utils/seo.ts › dataLastmods), not the
 // deploy. A failed query degrades to the static list, build-dated, with a
 // no-store header (crawlerCacheControl) rather than a 500.
 
 import { db } from '@nuxthub/db'
 
-import { LAB_PAGES } from '#shared/utils/terminal-lab-summary'
+import { filingPath, revenueFilings } from '#shared/utils/terminal-filings'
 import { alertPath } from '#shared/utils/terminal-tiers'
 
-import { crawlerPages } from '../utils/crawler-pages'
+import { crawlerPages, labScopedPages } from '../utils/crawler-pages'
 import { dataLastmods, sitemapResponse, type SitemapEntry } from '../utils/seo'
 import { alertPermalinks, queryDataFreshness, queryPriceKeys } from '../utils/terminal-db'
+import { terminalPayload } from '../utils/terminal-handler'
+import { queryRevenue } from '../utils/terminal-revenue'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
@@ -40,15 +43,15 @@ export default defineEventHandler(async (event) => {
   let lastmods: Record<string, string> = {}
   let complete = true
   try {
-    const [alerts, skus, freshness] = await Promise.all([
+    const [alerts, skus, freshness, revenue] = await Promise.all([
       alertPermalinks(db),
       queryPriceKeys(db),
       queryDataFreshness(db),
+      // Through the KV entry /api/revenue fills, so the sitemap lists exactly
+      // the filings the page's own fetch will find.
+      terminalPayload('revenue', (ctx) => queryRevenue(db, ctx)),
     ])
-    lastmods = dataLastmods(
-      freshness,
-      Object.fromEntries(LAB_PAGES.map((page) => [page.lab, page.path])),
-    )
+    lastmods = dataLastmods(freshness, labScopedPages())
     dynamic = [
       ...alerts.map((alert) => ({
         path: alertPath(alert.id),
@@ -62,6 +65,14 @@ export default defineEventHandler(async (event) => {
         changefreq: 'daily' as const,
         priority: '0.6',
         lastmod: sku.lastmod,
+      })),
+      ...revenueFilings(revenue).map((filing) => ({
+        path: filingPath(filing.accession_no),
+        // A filing is fixed once filed; a later restatement is marked on it,
+        // but the reported values never change.
+        changefreq: 'yearly' as const,
+        priority: '0.6',
+        lastmod: filing.filed,
       })),
     ]
   } catch (error) {

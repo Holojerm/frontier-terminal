@@ -5,6 +5,7 @@
 // number here is the same number there — same query, same cache, same
 // provenance. The lab is a route parameter; a name outside the tracked labs is a 404.
 
+import { COMPARE_PAIRS, comparePath, pairTitle } from '#shared/utils/terminal-compare'
 import { isLab, summarizeLab } from '#shared/utils/terminal-lab-summary'
 import { alertLabs, LAB_SITE } from '#shared/utils/terminal-labs'
 import type {
@@ -172,6 +173,7 @@ const pricesOf = computed(() =>
 const topModels = computed(() => rankings.data.value?.top_models ?? [])
 const labReleases = computed(() => releases.data.value?.rows ?? [])
 const labIncidents = computed(() => incidents.data.value?.incidents.length ?? 0)
+const pairs = COMPARE_PAIRS.filter((pair) => pair.includes(lab))
 </script>
 
 <template>
@@ -309,5 +311,21 @@ const labIncidents = computed(() => incidents.data.value?.incidents.length ?? 0)
         <TerminalStrainTable v-if="incidentsOf" :incidents="incidentsOf" />
       </TerminalPanel>
     </div>
+
+    <TerminalPanel
+      id="compare"
+      title="Compare"
+      :note="`${display} side by side with each other lab.`"
+    >
+      <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+        <li v-for="pair in pairs" :key="comparePath(pair)">
+          <NuxtLink
+            :to="comparePath(pair)"
+            class="text-default underline underline-offset-2 hover:text-highlighted"
+            >{{ pairTitle(pair) }}</NuxtLink
+          >
+        </li>
+      </ul>
+    </TerminalPanel>
   </TerminalPage>
 </template>
