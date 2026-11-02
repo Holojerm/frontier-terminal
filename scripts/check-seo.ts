@@ -38,10 +38,11 @@ import { readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
 
 import { DESCRIPTION_MAX, DESCRIPTION_MIN } from '../shared/utils/seo-bounds'
+import { ownLayerDirs } from './lib/layers'
 import { seoDescription, useSeoArgument } from './lib/seo-source'
 
 const ROOT = resolve(import.meta.dir, '..')
-const PAGES_DIR = join(ROOT, 'app', 'pages')
+const PAGES_DIRS = [join(ROOT, 'app', 'pages'), ...ownLayerDirs(join('app', 'pages'))]
 
 interface Problem {
   file: string
@@ -99,7 +100,7 @@ function nonLiteralPublicPageValue(source: string): string | null {
 
 const problems: Problem[] = []
 
-for (const file of walk(PAGES_DIR)) {
+for (const file of PAGES_DIRS.flatMap((dir) => walk(dir))) {
   const relativePath = relative(ROOT, file)
   const raw = readFileSync(file, 'utf8')
   const source = stripComments(raw)

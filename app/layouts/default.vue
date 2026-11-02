@@ -10,8 +10,8 @@
 
 import type { DropdownMenuItem, NavigationMenuItem } from '@nuxt/ui'
 
-import { LABS, isLab, labPath } from '#shared/utils/terminal-lab-summary'
-import { LAB_DISPLAY } from '#shared/utils/terminal-labs'
+import { LABS, isLab, labPath } from '#layers/terminal/shared/utils/terminal-lab-summary'
+import { LAB_DISPLAY } from '#layers/terminal/shared/utils/terminal-labs'
 import manifest from '~~/fleet.json'
 
 const config = useRuntimeConfig()

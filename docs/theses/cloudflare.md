@@ -13,7 +13,7 @@ A research journal entry, not investment advice. The model behind it: [`docs/the
 
 ## Claims
 
-Baselines are as of 2026-10-09. Every signal reads a recipe (`server/theses/recipes/`), not the lab pipeline.
+Baselines are as of 2026-10-09. Every signal reads a recipe (`layers/terminal/server/theses/recipes/`), not the lab pipeline.
 
 | # | Claim | Signal | Baseline | Kill condition |
 | --- | --- | --- | --- | --- |

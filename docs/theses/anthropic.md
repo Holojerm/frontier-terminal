@@ -36,14 +36,14 @@ Claims 3 and 5 are rated by the judge routine, hourly, from 2026-10-09 on. The W
 
 - **Claim 3.** An event is a price cut on a lab's flagship: the model its vendor recommends as the place to start (the terminal's class map). The cut is the larger fall of the input and output list prices. The judge rates each cut competitive (the model still leads, nothing replaces it) or generational (a newer model is taking its place), and rates generational when the records cannot tell.
 - **Claim 5.** An event is an incident whose impact is major, critical or high and that lasted two hours or more, or a new entry on a lab's misalignment-disclosure index. The judge rates it material when it hit the API or a flagship model rather than a consumer app, console or billing, or when the disclosure itself says high severity. Anthropic publishes no disclosure index today, so for Anthropic only incidents can count. Rivals' events are rated too, for comparison.
-- **Confirming.** A material Anthropic event leaves claim 5 weakening until you rule on it: add `{ subject, decision, on, note }` to the claim's `confirmations` in `server/theses/anthropic.ts` and a row below. Confirmed breaks the claim; rejected sets it aside.
+- **Confirming.** A material Anthropic event leaves claim 5 weakening until you rule on it: add `{ subject, decision, on, note }` to the claim's `confirmations` in `layers/terminal/server/theses/anthropic.ts` and a row below. Confirmed breaks the claim; rejected sets it aside.
 
 ## Revisions
 
 | Date | Change | Reason |
 | --- | --- | --- |
 | 2026-10-08 | Opened | First thesis on the engine |
-| 2026-10-08 | Evaluation rules written down: weekly checkpoints, weakening at half way, partial history | Automated in M1 (`server/theses/`) |
+| 2026-10-08 | Evaluation rules written down: weekly checkpoints, weakening at half way, partial history | Automated in M1 (`layers/terminal/server/theses/`) |
 | 2026-10-09 | Judged claims 3 and 5 get their rubrics and candidate rules; "multi-hour" set at two hours | Automated in M2 |
 | 2026-10-12 | Meta joins the comparison set; claims 1 and 2 read among five labs | Meta became the terminal's fifth lab, so its OpenRouter tokens now count in both shares and its flagship cuts and incidents are rival events. The 2026-10-08 baselines above are among four labs |
 | 2026-11-01 | Mistral joins the comparison set; claims 1 and 2 read among six labs | Mistral became the terminal's sixth lab, so its OpenRouter tokens count in both shares and its incidents are rival events. It has no flagship class-map cell, so claim 3 sees no Mistral flagship cut until one is mapped |

@@ -25,7 +25,7 @@ export function pathForLog(path: string | undefined): string | undefined {
  * An error's message with whatever it wrapped folded in.
  *
  * `createError({ cause })` is how this app rethrows a failure it could not
- * handle — server/utils/terminal-handler.ts turns any D1 fault into one
+ * handle — layers/terminal/server/utils/terminal-handler.ts turns any D1 fault into one
  * `503 Database unavailable` and hangs the real error off `cause`. The digest
  * that reaches a human carried only the wrapper, so every distinct way the
  * database can fail arrived as the same sentence and the mail said nothing a

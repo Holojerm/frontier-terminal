@@ -1,0 +1,175 @@
+<script setup lang="ts">
+// What the store holds and how to take it away: one row per exportable
+// table with its columns, its current row count, and CSV/JSON downloads.
+
+import { DATA_LICENSE } from '#shared/utils/license'
+import { count } from '../../shared/utils/terminal-format'
+import type { CoverageData } from '../../shared/utils/terminal-types'
+import type { TableColumn } from '../types/terminal-ui'
+
+definePageMeta({
+  publicPage: {
+    changefreq: 'weekly',
+    priority: '0.6',
+    title: 'Data',
+    summary:
+      'Every source behind the terminal with its newest snapshot, last poll, and caveat, and CSV or JSON downloads of every table (snapshots, prices, open jobs, incidents, the change log, alerts, poll runs), with provenance columns on every row.',
+  },
+})
+
+const { data: coverage, error } = await useFetch<CoverageData>('/api/coverage')
+
+const pageUrl = usePageUrl()
+const site = useSiteContext()
+
+// This page is the site's data catalog, so it says so in the graph: one
+// DataCatalog node and one Dataset per exportable table, each with the CSV and
+// JSON downloads as real DataDownload URLs.
+//
+// Dataset is the only schema.org type with a search index of its own rather
+// than a rich-result treatment, and it is the type this site actually is. The
+// nodes are built from the same `coverage.exports` the table below renders —
+// if a table stops being listed it stops being described, which is the only
+// way to keep the graph from claiming a download that 404s.
+const datasets = (coverage.value?.exports ?? []).map((table) =>
+  datasetSchema(site, {
+    url: pageUrl,
+    slug: table.name,
+    name: `${site.appName} — ${table.name}`,
+    description: table.description,
+    dateModified: coverage.value?.as_of,
+    variableMeasured: table.columns,
+    rows: table.rows,
+    distribution: [
+      { encodingFormat: 'text/csv', contentUrl: `${site.appUrl}/export/${table.name}.csv` },
+      {
+        encodingFormat: 'application/json',
+        contentUrl: `${site.appUrl}/export/${table.name}.json`,
+      },
+    ],
+  }),
+)
+
+useSeo({
+  title: 'Data',
+  description:
+    'Download the terminal’s tables as CSV or JSON: snapshots, prices, open jobs, incidents, the change log, alerts, and poll runs, each row with its source URL.',
+  dateModified: coverage.value?.as_of,
+  schema: [
+    dataCatalogSchema(site, {
+      description:
+        'Every table behind the terminal, streamed whole as CSV or JSON. Each row carries the URL it was read from and when.',
+      dateModified: coverage.value?.as_of,
+    }),
+    ...datasets,
+  ],
+})
+
+const EXPORT_COLUMNS: TableColumn[] = [
+  { key: 'name', label: 'Table' },
+  { key: 'rows', label: 'Rows', numeric: true },
+  { key: 'columns', label: 'Columns', class: 'font-mono text-xs text-muted' },
+  { key: 'download', label: 'Download' },
+]
+</script>
+
+<template>
+  <TerminalPage
+    title="Data"
+    lede="Every source the terminal reads, and every table it holds as a CSV or JSON download. Each row carries its source URL and fetch timestamp."
+    :as-of="coverage?.as_of"
+    :error="Boolean(error)"
+    error-title="Table counts could not be read"
+    error-body="The downloads below still work; only the row counts are unavailable."
+  >
+    <TerminalPanel
+      id="coverage"
+      title="Coverage"
+      note="Every source: newest snapshot, last poll, snapshot count, rows, and the audit’s caveat."
+      flush
+    >
+      <TerminalCoveragePanel v-if="coverage" :coverage="coverage" />
+      <template #foot>
+        Each label links to the exact URL fetched; each age’s tooltip gives the exact UTC timestamp.
+      </template>
+    </TerminalPanel>
+
+    <TerminalPanel
+      id="tables"
+      title="Tables"
+      note="Each table streamed whole, with provenance columns on every row."
+      flush
+    >
+      <TerminalTable
+        caption="Exportable tables with row counts and download links"
+        :columns="EXPORT_COLUMNS"
+        :rows="coverage?.exports ?? []"
+        :row-key="(t) => t.name"
+        align="top"
+      >
+        <template #cell-name="{ row: t }">
+          <span class="font-mono text-highlighted">{{ t.name }}</span>
+          <span class="block max-w-md text-xs text-muted">{{ t.description }}</span>
+        </template>
+        <template #cell-rows="{ row: t }">{{ count(t.rows) }}</template>
+        <template #cell-columns="{ row: t }">{{ t.columns.join(', ') }}</template>
+        <template #cell-download="{ row: t }">
+          <span class="flex gap-2">
+            <UButton
+              :to="`/export/${t.name}.csv`"
+              external
+              size="sm"
+              variant="outline"
+              color="neutral"
+              icon="i-lucide-download"
+              label="CSV"
+            />
+            <UButton
+              :to="`/export/${t.name}.json`"
+              external
+              size="sm"
+              variant="outline"
+              color="neutral"
+              icon="i-lucide-braces"
+              label="JSON"
+            />
+          </span>
+        </template>
+      </TerminalTable>
+      <template v-if="coverage" #foot>
+        Data as of poll tick
+        <time v-if="coverage.as_of" :datetime="coverage.as_of">{{ coverage.as_of }}</time>
+        <span v-else>— no poll has run yet</span>. Exports are served live; the counts above are
+        cached for up to five minutes.
+      </template>
+    </TerminalPanel>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+      <TerminalPanel id="license" title="Terms">
+        <p class="max-w-2xl text-sm text-default">
+          The compilation is licensed {{ DATA_LICENSE.short }}. The underlying facts belong to their
+          publishers.
+          <NuxtLink to="/license" class="text-primary underline underline-offset-2"
+            >Full terms and the attribution line</NuxtLink
+          >.
+        </p>
+      </TerminalPanel>
+
+      <TerminalPanel id="feed" title="Feed">
+        <p class="text-sm text-default">
+          Alerts as Atom at
+          <NuxtLink to="/alerts.xml" external class="text-primary underline underline-offset-2">
+            /alerts.xml</NuxtLink
+          >;
+          <NuxtLink
+            to="/alerts.xml?include=ticker"
+            external
+            class="font-mono text-primary underline underline-offset-2"
+            >?include=ticker</NuxtLink
+          >
+          adds the ticker.
+        </p>
+      </TerminalPanel>
+    </div>
+  </TerminalPage>
+</template>

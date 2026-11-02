@@ -19,9 +19,9 @@ import { kv } from '@nuxthub/kv'
 import { FleetManifestSchema } from '#shared/utils/fleet-manifest'
 
 import rawManifest from '../../../fleet.json'
-import { checkJudgeSilence } from '../../pipeline/judge/watchdog'
-import { checkLaunchCoverage } from '../../pipeline/launch-watch'
-import { unstorageLockStore } from '../../pipeline/lock'
+import { checkJudgeSilence } from '#layers/terminal/server/pipeline/judge/watchdog'
+import { checkLaunchCoverage } from '#layers/terminal/server/pipeline/launch-watch'
+import { unstorageLockStore } from '#layers/terminal/server/pipeline/lock'
 import { getOpsMailer } from '../../utils/ops-mail'
 import { drainOpsEvents } from '../../utils/ops'
 
