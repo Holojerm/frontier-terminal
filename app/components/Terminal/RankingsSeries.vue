@@ -8,6 +8,7 @@
 
 import { compactTokens } from '#shared/utils/terminal-format'
 import type { ProviderId, RankingDay } from '#shared/utils/terminal-types'
+import type { TableColumn } from '~/types/terminal-ui'
 
 const props = defineProps<{ series: RankingDay[] }>()
 
@@ -107,11 +108,17 @@ const describe = (day: RankingDay) =>
   `${day.date}: ${STACK.map((s) => `${s.label} ${compactTokens(day.tokens[s.id])}`).join(', ')} — total ${compactTokens(day.total)}`
 
 const uid = useId()
+
+const tableColumns: TableColumn[] = [
+  { key: 'date', label: 'Date', class: 'font-mono' },
+  ...STACK.map((x) => ({ key: x.id, label: x.label, numeric: true })),
+  { key: 'total', label: 'Total', numeric: true },
+]
 </script>
 
 <template>
-  <div class="space-y-3">
-    <ul class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-toned" aria-label="Legend">
+  <div class="max-w-4xl space-y-3">
+    <ul class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted" aria-label="Legend">
       <li v-for="s in STACK" :key="s.id" class="flex items-center gap-1.5">
         <span class="inline-block size-3 rounded-sm" :class="s.swatch" aria-hidden="true" />
         {{ s.label }}
@@ -139,7 +146,7 @@ const uid = useId()
           :y2="y(t)"
         />
       </g>
-      <g class="fill-current text-toned" font-size="10" text-anchor="end">
+      <g class="fill-current text-muted" font-size="10" text-anchor="end">
         <text v-for="t in ticks" :key="t" :x="PAD.left - 6" :y="y(t) + 3">
           {{ compactTokens(t) }}
         </text>
@@ -160,43 +167,24 @@ const uid = useId()
         />
       </g>
 
-      <g class="fill-current text-toned" font-size="10" text-anchor="middle">
+      <g class="fill-current text-muted" font-size="10" text-anchor="middle">
         <text v-for="l in xLabels" :key="l.i" :x="l.x" :y="H - 8">{{ l.text }}</text>
       </g>
     </svg>
 
-    <details class="text-sm">
-      <summary class="cursor-pointer text-toned">Table view</summary>
-      <div class="mt-2 overflow-x-auto">
-        <table class="w-full text-xs">
-          <caption class="sr-only">
-            Tokens routed per UTC day by lab
-          </caption>
-          <thead>
-            <tr class="border-b border-default text-left">
-              <th scope="col" class="py-1 pr-3 font-medium text-muted">Date</th>
-              <th
-                v-for="s in STACK"
-                :key="s.id"
-                scope="col"
-                class="py-1 pr-3 text-right font-medium text-muted"
-              >
-                {{ s.label }}
-              </th>
-              <th scope="col" class="py-1 text-right font-medium text-muted">Total</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="d in series" :key="d.date" class="border-b border-default">
-              <th scope="row" class="py-1 pr-3 text-left font-mono font-normal">{{ d.date }}</th>
-              <td v-for="s in STACK" :key="s.id" class="py-1 pr-3 text-right font-mono">
-                {{ compactTokens(d.tokens[s.id]) }}
-              </td>
-              <td class="py-1 text-right font-mono">{{ compactTokens(d.total) }}</td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-    </details>
+    <TerminalExpand show="Show the daily table" hide="Hide the daily table">
+      <TerminalTable
+        caption="Tokens routed per UTC day by lab"
+        :columns="tableColumns"
+        :rows="series"
+        :row-key="(d) => d.date"
+        nested
+      >
+        <template v-for="s in STACK" :key="s.id" #[`cell-${s.id}`]="{ row: d }">
+          {{ compactTokens(d.tokens[s.id]) }}
+        </template>
+        <template #cell-total="{ row: d }">{{ compactTokens(d.total) }}</template>
+      </TerminalTable>
+    </TerminalExpand>
   </div>
 </template>

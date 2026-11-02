@@ -5,6 +5,7 @@
 import { DATA_LICENSE } from '#shared/utils/license'
 import { count } from '#shared/utils/terminal-format'
 import type { CoverageData } from '#shared/utils/terminal-types'
+import type { TableColumn } from '~/types/terminal-ui'
 
 definePageMeta({
   publicPage: {
@@ -63,119 +64,112 @@ useSeo({
     ...datasets,
   ],
 })
+
+const EXPORT_COLUMNS: TableColumn[] = [
+  { key: 'name', label: 'Table' },
+  { key: 'rows', label: 'Rows', numeric: true },
+  { key: 'columns', label: 'Columns', class: 'font-mono text-xs text-muted' },
+  { key: 'download', label: 'Download' },
+]
 </script>
 
 <template>
-  <div class="space-y-8">
-    <header class="space-y-2">
-      <h1 class="text-4xl text-highlighted">Data</h1>
-      <p class="max-w-2xl text-muted">
-        Every source the terminal reads, and every table it holds as a CSV or JSON download. Each
-        row carries its source URL and fetch timestamp.
-      </p>
-    </header>
-
-    <UAlert
-      v-if="error"
-      color="error"
-      variant="soft"
-      icon="i-lucide-database-zap"
-      title="Table counts could not be read"
-      description="The downloads below still work; only the row counts are unavailable."
-    />
-
+  <TerminalPage
+    title="Data"
+    lede="Every source the terminal reads, and every table it holds as a CSV or JSON download. Each row carries its source URL and fetch timestamp."
+    :as-of="coverage?.as_of"
+    :error="Boolean(error)"
+    error-title="Table counts could not be read"
+    error-body="The downloads below still work; only the row counts are unavailable."
+  >
     <TerminalPanel
       id="coverage"
       title="Coverage"
       note="Every source: newest snapshot, last poll, snapshot count, rows, and the audit’s caveat."
+      flush
     >
       <TerminalCoveragePanel v-if="coverage" :coverage="coverage" />
+      <template #foot>
+        Each label links to the exact URL fetched; each age’s tooltip gives the exact UTC timestamp.
+      </template>
     </TerminalPanel>
 
-    <TerminalPanel id="tables" title="Tables">
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <caption class="sr-only">
-            Exportable tables with row counts and download links
-          </caption>
-          <thead>
-            <tr class="border-b border-default text-left">
-              <th scope="col" class="py-2 pr-4 font-medium text-muted">Table</th>
-              <th scope="col" class="py-2 pr-4 text-right font-medium text-muted">Rows</th>
-              <th scope="col" class="py-2 pr-4 font-medium text-muted">Columns</th>
-              <th scope="col" class="py-2 font-medium text-muted">Download</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr
-              v-for="t in coverage?.exports ?? []"
-              :key="t.name"
-              class="border-b border-default align-top"
-            >
-              <th scope="row" class="py-3 pr-4 text-left font-normal">
-                <span class="font-mono text-highlighted">{{ t.name }}</span>
-                <span class="block max-w-md text-xs text-muted">{{ t.description }}</span>
-              </th>
-              <td class="py-3 pr-4 text-right font-mono">{{ count(t.rows) }}</td>
-              <td class="py-3 pr-4 font-mono text-xs text-muted">{{ t.columns.join(', ') }}</td>
-              <td class="py-3">
-                <div class="flex gap-2">
-                  <UButton
-                    :to="`/export/${t.name}.csv`"
-                    external
-                    size="sm"
-                    variant="outline"
-                    color="neutral"
-                    icon="i-lucide-download"
-                    label="CSV"
-                  />
-                  <UButton
-                    :to="`/export/${t.name}.json`"
-                    external
-                    size="sm"
-                    variant="outline"
-                    color="neutral"
-                    icon="i-lucide-braces"
-                    label="JSON"
-                  />
-                </div>
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-      <p v-if="coverage" class="text-xs text-muted">
+    <TerminalPanel
+      id="tables"
+      title="Tables"
+      note="Each table streamed whole, with provenance columns on every row."
+      flush
+    >
+      <TerminalTable
+        caption="Exportable tables with row counts and download links"
+        :columns="EXPORT_COLUMNS"
+        :rows="coverage?.exports ?? []"
+        :row-key="(t) => t.name"
+        align="top"
+      >
+        <template #cell-name="{ row: t }">
+          <span class="font-mono text-highlighted">{{ t.name }}</span>
+          <span class="block max-w-md text-xs text-muted">{{ t.description }}</span>
+        </template>
+        <template #cell-rows="{ row: t }">{{ count(t.rows) }}</template>
+        <template #cell-columns="{ row: t }">{{ t.columns.join(', ') }}</template>
+        <template #cell-download="{ row: t }">
+          <span class="flex gap-2">
+            <UButton
+              :to="`/export/${t.name}.csv`"
+              external
+              size="sm"
+              variant="outline"
+              color="neutral"
+              icon="i-lucide-download"
+              label="CSV"
+            />
+            <UButton
+              :to="`/export/${t.name}.json`"
+              external
+              size="sm"
+              variant="outline"
+              color="neutral"
+              icon="i-lucide-braces"
+              label="JSON"
+            />
+          </span>
+        </template>
+      </TerminalTable>
+      <template v-if="coverage" #foot>
         Data as of poll tick
         <time v-if="coverage.as_of" :datetime="coverage.as_of">{{ coverage.as_of }}</time>
         <span v-else>— no poll has run yet</span>. Exports are served live; the counts above are
         cached for up to five minutes.
-      </p>
+      </template>
     </TerminalPanel>
 
-    <TerminalPanel id="license" title="Terms">
-      <p class="max-w-2xl text-sm text-default">
-        The compilation is licensed {{ DATA_LICENSE.short }}. The underlying facts belong to their
-        publishers.
-        <NuxtLink to="/license" class="text-primary underline underline-offset-2"
-          >Full terms and the attribution line</NuxtLink
-        >.
-      </p>
-    </TerminalPanel>
+    <div class="grid gap-6 lg:grid-cols-2">
+      <TerminalPanel id="license" title="Terms">
+        <p class="max-w-2xl text-sm text-default">
+          The compilation is licensed {{ DATA_LICENSE.short }}. The underlying facts belong to their
+          publishers.
+          <NuxtLink to="/license" class="text-primary underline underline-offset-2"
+            >Full terms and the attribution line</NuxtLink
+          >.
+        </p>
+      </TerminalPanel>
 
-    <TerminalPanel id="feed" title="Feed">
-      <p class="text-sm text-default">
-        Alerts as Atom at
-        <NuxtLink to="/alerts.xml" external class="text-primary underline underline-offset-2">
-          /alerts.xml</NuxtLink
-        >;
-        <NuxtLink
-          to="/alerts.xml?include=ticker"
-          external
-          class="font-mono text-primary underline underline-offset-2"
-          >?include=ticker</NuxtLink
-        >
-        adds the ticker.
-      </p>
-    </TerminalPanel>
-  </div>
+      <TerminalPanel id="feed" title="Feed">
+        <p class="text-sm text-default">
+          Alerts as Atom at
+          <NuxtLink to="/alerts.xml" external class="text-primary underline underline-offset-2">
+            /alerts.xml</NuxtLink
+          >;
+          <NuxtLink
+            to="/alerts.xml?include=ticker"
+            external
+            class="font-mono text-primary underline underline-offset-2"
+            >?include=ticker</NuxtLink
+          >
+          adds the ticker.
+        </p>
+      </TerminalPanel>
+    </div>
+  </TerminalPage>
 </template>

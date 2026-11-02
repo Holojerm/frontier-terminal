@@ -5,8 +5,9 @@
 // labs are rows that say so. The landing page's Disclosures panel is the
 // summary of this.
 
-import { LAB_DISPLAY } from '#shared/utils/terminal-labs'
+import { labName } from '#shared/utils/terminal-labs'
 import type { DisclosureView, DisclosuresData } from '#shared/utils/terminal-types'
+import type { TableColumn } from '~/types/terminal-ui'
 
 definePageMeta({
   publicPage: {
@@ -40,10 +41,25 @@ useSeo({
   ],
 })
 
-const PROVIDER: Record<string, string> = LAB_DISPLAY
-
 const reports = computed(() => disclosures.value?.entries.filter((e) => e.kind === 'report') ?? [])
 const notices = computed(() => disclosures.value?.entries.filter((e) => e.kind === 'notice') ?? [])
+
+const REPORT_COLUMNS: TableColumn[] = [
+  { key: 'provider', label: 'Lab', class: 'whitespace-nowrap' },
+  { key: 'title', label: 'Report', class: 'max-w-md' },
+  { key: 'model', label: 'Model · observed', class: 'text-xs' },
+  { key: 'discovered', label: 'Discovered', class: 'whitespace-nowrap font-mono text-xs' },
+  { key: 'disclosed', label: 'Disclosed', class: 'whitespace-nowrap font-mono text-xs' },
+  { key: 'days', label: 'Days', numeric: true, class: 'text-xs text-highlighted' },
+  { key: 'source', label: 'Read from', keep: true },
+]
+
+const NOTICE_COLUMNS: TableColumn[] = [
+  { key: 'listed_on', label: 'Listed', class: 'whitespace-nowrap font-mono text-xs text-muted' },
+  { key: 'provider', label: 'Lab', class: 'whitespace-nowrap' },
+  { key: 'title', label: 'Notice' },
+  { key: 'source', label: 'Read from' },
+]
 
 const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, string> = {
   not_applicable: '—',
@@ -53,38 +69,28 @@ const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, str
 </script>
 
 <template>
-  <div class="space-y-8">
-    <header class="space-y-2">
-      <h1 class="text-4xl text-highlighted">Disclosures</h1>
-      <p class="max-w-2xl text-muted">
-        Reports and notices the labs publish about misalignment in their own models, in each lab’s
-        words, each linked to its source page. This measures disclosure practice, not how often
-        misalignment occurs: a lab with no index shows no entries because it publishes none.
-      </p>
-    </header>
-
-    <UAlert
-      v-if="error"
-      color="error"
-      variant="soft"
-      icon="i-lucide-database-zap"
-      title="Disclosures could not be read"
-      description="The disclosures endpoint failed to respond."
-    />
-
-    <template v-else-if="disclosures">
+  <TerminalPage
+    title="Disclosures"
+    lede="Reports and notices the labs publish about misalignment in their own models, in each lab’s words, each linked to its source page. This measures disclosure practice, not how often misalignment occurs: a lab with no index shows no entries because it publishes none."
+    :as-of="disclosures?.as_of"
+    :error="Boolean(error)"
+    error-title="Disclosures could not be read"
+    error-body="The disclosures endpoint failed to respond."
+  >
+    <template v-if="disclosures">
       <TerminalPanel
         id="labs"
         title="By lab"
         note="Median days from the discovery date a report prints to the date it was published."
+        flush
       >
         <TerminalDisclosureTable :disclosures="disclosures" />
       </TerminalPanel>
 
-      <TerminalEmptyState
+      <TerminalGap
         v-if="disclosures.entries.length === 0"
         title="No disclosures parsed yet."
-        body="The index is registered; entries appear after its first poll."
+        reason="The index is registered; entries appear after its first poll."
         :action="{ label: 'Coverage', to: '/data#coverage' }"
       />
 
@@ -93,94 +99,67 @@ const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, str
           id="reports"
           title="Reports"
           :note="`${reports.length} reports, newest listed first.`"
+          flush
         >
-          <div class="overflow-x-auto md:overflow-visible">
-            <table class="w-full text-sm">
-              <caption class="sr-only">
-                Misalignment reports, newest listed first, with discovery and disclosure dates
-              </caption>
-              <thead class="bg-default md:sticky md:top-0">
-                <tr class="border-b border-default text-left">
-                  <th scope="col" class="py-2 pr-4 font-medium text-muted">Lab</th>
-                  <th scope="col" class="py-2 pr-4 font-medium text-muted">Report</th>
-                  <th scope="col" class="py-2 pr-4 font-medium text-muted">Model · observed</th>
-                  <th scope="col" class="py-2 pr-4 font-medium text-muted">Discovered</th>
-                  <th scope="col" class="py-2 pr-4 font-medium text-muted">Disclosed</th>
-                  <th scope="col" class="py-2 pr-4 text-right font-medium text-muted">Days</th>
-                  <th scope="col" class="py-2 font-medium text-muted">Read from</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr
-                  v-for="r in reports"
-                  :key="r.entity_key"
-                  class="border-b border-default align-top"
-                >
-                  <td class="py-2 pr-4">{{ PROVIDER[r.provider] ?? r.provider }}</td>
-                  <th scope="row" class="max-w-md py-2 pr-4 text-left font-normal">
-                    <a
-                      :href="r.entry_url"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="text-highlighted underline underline-offset-2"
-                      >{{ r.title }}</a
-                    >
-                    <span class="block text-xs text-muted">{{ r.summary }}</span>
-                    <span v-if="r.timeline?.lines.length" class="block text-xs text-toned">
-                      {{ r.timeline.lines.map((l) => `${l.label}: ${l.value}`).join(' · ') }}
-                    </span>
-                  </th>
-                  <td class="py-2 pr-4 text-xs">
-                    {{ [r.model, r.observed_during].filter(Boolean).join(' · ') || '—' }}
-                  </td>
-                  <template v-if="r.timeline">
-                    <td class="whitespace-nowrap py-2 pr-4 font-mono text-xs">
-                      {{ r.timeline.discovered_on ?? 'not stated' }}
-                    </td>
-                    <td class="whitespace-nowrap py-2 pr-4 font-mono text-xs">
-                      {{ r.timeline.disclosed_on ?? '—' }}
-                      <TerminalCaveatMark
-                        v-if="r.timeline.disclosed_basis === 'first_listed'"
-                        :name="`How the disclosure date of ${r.title} was read`"
-                        text="The report page prints no disclosure date. This is the earliest date the index has listed beside the report in any stored snapshot."
-                      />
-                    </td>
-                    <td class="py-2 pr-4 text-right font-mono text-xs text-highlighted">
-                      {{ r.timeline.days_to_disclosure ?? '—' }}
-                    </td>
-                    <td class="py-2">
-                      <span class="inline-flex flex-col gap-1">
-                        <TerminalProvenanceTag
-                          :source-url="r.source_url"
-                          :fetched-at="r.fetched_at"
-                        />
-                        <TerminalProvenanceTag
-                          :source-url="r.timeline.source_url"
-                          :fetched-at="r.timeline.fetched_at"
-                        />
-                      </span>
-                    </td>
-                  </template>
-                  <template v-else>
-                    <td colspan="3" class="py-2 pr-4 text-xs text-toned">
-                      {{ TIMELINE_GAP[r.timeline_status as keyof typeof TIMELINE_GAP] }}
-                    </td>
-                    <td class="py-2">
-                      <TerminalProvenanceTag
-                        :source-url="r.source_url"
-                        :fetched-at="r.fetched_at"
-                      />
-                    </td>
-                  </template>
-                </tr>
-              </tbody>
-            </table>
-          </div>
-          <p class="text-xs text-muted">
+          <TerminalTable
+            caption="Misalignment reports, newest listed first, with discovery and disclosure dates"
+            :columns="REPORT_COLUMNS"
+            :rows="reports"
+            :row-key="(r) => r.entity_key"
+            row-header="title"
+            :gap="(r) => !r.timeline"
+            :gap-columns="['discovered', 'disclosed', 'days']"
+            sticky
+            align="top"
+          >
+            <template #cell-provider="{ row: r }">{{ labName(r.provider) }}</template>
+            <template #cell-title="{ row: r }">
+              <a
+                :href="r.entry_url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-highlighted underline underline-offset-2"
+                >{{ r.title }}</a
+              >
+              <span class="block text-xs text-muted">{{ r.summary }}</span>
+              <span v-if="r.timeline?.lines.length" class="block text-xs text-muted">
+                {{ r.timeline.lines.map((l) => `${l.label}: ${l.value}`).join(' · ') }}
+              </span>
+            </template>
+            <template #cell-model="{ row: r }">
+              {{ [r.model, r.observed_during].filter(Boolean).join(' · ') || '—' }}
+            </template>
+            <template #cell-discovered="{ row: r }">
+              {{ r.timeline!.discovered_on ?? 'not stated' }}
+            </template>
+            <template #cell-disclosed="{ row: r }">
+              {{ r.timeline!.disclosed_on ?? '—' }}
+              <TerminalCaveatMark
+                v-if="r.timeline!.disclosed_basis === 'first_listed'"
+                :name="`How the disclosure date of ${r.title} was read`"
+                text="The report page prints no disclosure date. This is the earliest date the index has listed beside the report in any stored snapshot."
+              />
+            </template>
+            <template #cell-days="{ row: r }">{{ r.timeline!.days_to_disclosure ?? '—' }}</template>
+            <template #cell-source="{ row: r }">
+              <span class="flex flex-col gap-1">
+                <TerminalProvenanceTag :source-url="r.source_url" :fetched-at="r.fetched_at" />
+                <TerminalProvenanceTag
+                  v-if="r.timeline"
+                  :source-url="r.timeline.source_url"
+                  :fetched-at="r.timeline.fetched_at"
+                />
+              </span>
+            </template>
+            <template #gap="{ row: r }">
+              {{ TIMELINE_GAP[r.timeline_status as keyof typeof TIMELINE_GAP] }}
+            </template>
+          </TerminalTable>
+          <template #foot>
             Days run from the discovery date to the publication date, both as printed on the report
             page. The occurrence line (sample, incident date) is shown verbatim and not parsed as a
             date.
-          </p>
+          </template>
         </TerminalPanel>
 
         <TerminalPanel
@@ -188,27 +167,33 @@ const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, str
           id="notices"
           title="Notices"
           note="External incidents the lab has posted about, each linked to an update on its own site."
+          flush
         >
-          <ul class="space-y-3 text-sm">
-            <li v-for="n in notices" :key="n.entity_key" class="space-y-1">
-              <p>
-                <a
-                  :href="n.entry_url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  class="text-highlighted underline underline-offset-2"
-                  >{{ n.title }}</a
-                >
-                <span class="ml-2 font-mono text-xs text-toned">
-                  {{ PROVIDER[n.provider] ?? n.provider }} · {{ n.listed_on }}
-                </span>
-              </p>
-              <p class="text-muted">{{ n.summary }}</p>
+          <TerminalTable
+            caption="Notices, newest listed first"
+            :columns="NOTICE_COLUMNS"
+            :rows="notices"
+            :row-key="(n) => n.entity_key"
+            row-header="title"
+            align="top"
+          >
+            <template #cell-provider="{ row: n }">{{ labName(n.provider) }}</template>
+            <template #cell-title="{ row: n }">
+              <a
+                :href="n.entry_url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="text-highlighted underline underline-offset-2"
+                >{{ n.title }}</a
+              >
+              <span class="block text-xs text-muted">{{ n.summary }}</span>
+            </template>
+            <template #cell-source="{ row: n }">
               <TerminalProvenanceTag :source-url="n.source_url" :fetched-at="n.fetched_at" />
-            </li>
-          </ul>
+            </template>
+          </TerminalTable>
         </TerminalPanel>
       </template>
     </template>
-  </div>
+  </TerminalPage>
 </template>

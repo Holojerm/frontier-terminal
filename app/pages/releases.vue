@@ -30,47 +30,38 @@ const now = useNow()
 </script>
 
 <template>
-  <div class="space-y-8">
-    <header class="space-y-2">
-      <h1 class="text-4xl text-highlighted">Releases</h1>
-      <p class="max-w-2xl text-muted">
-        SKUs new on a tracked vendor page, with the price printed beside them that day.
-      </p>
-    </header>
-
-    <UAlert
-      v-if="error"
-      color="error"
-      variant="soft"
-      icon="i-lucide-database-zap"
-      title="Releases could not be read"
-      description="The releases endpoint failed to respond."
-    />
-
-    <template v-else-if="releases">
-      <TerminalEmptyState
+  <TerminalPage
+    title="Releases"
+    lede="SKUs new on a tracked vendor page, with the price printed beside them that day."
+    :as-of="releases?.as_of"
+    :error="Boolean(error)"
+    error-title="Releases could not be read"
+    error-body="The releases endpoint failed to respond."
+  >
+    <template v-if="releases">
+      <TerminalGap
         v-if="releases.rows.length === 0"
         title="No new SKUs since tracking began."
-        :body="
+        :reason="
           releases.log_from
             ? `Pages tracked since ${absoluteStamp(releases.log_from, now)}. The baseline records what was already listed; nothing has been added since.`
             : 'No pricing page has been polled yet. The first poll records a baseline; later polls record new listings.'
         "
         :action="{ label: 'See the full catalog', to: '/prices' }"
       />
-      <template v-else>
-        <p class="text-sm text-muted">
-          {{ releases.rows.length }} listing{{ releases.rows.length === 1 ? '' : 's' }} since
-          <time v-if="releases.log_from" :datetime="releases.log_from">
-            {{ absoluteStamp(releases.log_from, now) }}</time
-          >.
-          <template v-if="releases.excluded_baseline">
-            {{ releases.excluded_baseline }} baseline rows — SKUs already listed when a page was
-            first fetched — are excluded.
-          </template>
-        </p>
+      <TerminalPanel
+        v-else
+        id="listings"
+        title="Listings"
+        :note="`${releases.rows.length} listing${releases.rows.length === 1 ? '' : 's'}${releases.log_from ? ` since ${absoluteStamp(releases.log_from, now)}` : ''}, newest first.`"
+        flush
+      >
         <TerminalReleaseList :rows="releases.rows" />
-      </template>
+        <template v-if="releases.excluded_baseline" #foot>
+          {{ releases.excluded_baseline }} baseline rows — SKUs already listed when a page was first
+          fetched — are excluded.
+        </template>
+      </TerminalPanel>
     </template>
-  </div>
+  </TerminalPage>
 </template>

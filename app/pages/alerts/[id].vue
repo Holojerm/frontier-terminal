@@ -87,8 +87,8 @@ useSeo({
 </script>
 
 <template>
-  <article class="space-y-8">
-    <header class="space-y-3">
+  <TerminalPage :back="{ label: 'All alerts', to: '/alerts' }" :title="alert.headline">
+    <template #header>
       <div class="flex flex-wrap items-center gap-2 text-xs">
         <UBadge
           :color="SEVERITY_BADGE[alert.severity].color"
@@ -100,41 +100,33 @@ useSeo({
         </UBadge>
         <TerminalCaveatMark :label="tier" :text="TIER_TEXT[tier]" />
         <TerminalCaveatMark :label="alert.rule" :text="RULE_TEXT[alert.rule]" />
-        <time :datetime="alert.created_at" :title="alert.created_at" class="ml-auto text-toned">
+        <time :datetime="alert.created_at" :title="alert.created_at" class="text-muted">
           {{ absoluteStamp(alert.created_at) }}
         </time>
       </div>
-      <h1 class="text-3xl text-highlighted">{{ alert.headline }}</h1>
-      <p class="max-w-2xl text-default">{{ alert.explanation }}</p>
-      <div class="flex flex-wrap items-baseline gap-x-4 gap-y-1">
-        <TerminalProvenanceTag :source-url="alert.source_url" :fetched-at="alert.fetched_at" />
-        <span class="font-mono text-xs text-toned break-all">{{ alert.id }}</span>
-      </div>
-    </header>
+      <p class="max-w-3xl text-default">{{ alert.explanation }}</p>
+      <TerminalSources :sources="[alert]">
+        <span class="font-mono break-all">{{ alert.id }}</span>
+      </TerminalSources>
+    </template>
 
     <TerminalPanel
       id="cited"
       title="Cited change rows"
       note="Every field of every cited row, before and after."
     >
-      <div v-if="alert.changes.length" class="space-y-4">
+      <div v-if="alert.changes.length" class="grid gap-3 lg:grid-cols-2">
         <TerminalChangeDetail v-for="change in alert.changes" :key="change.id" :change="change" />
       </div>
-      <p v-if="alert.missing_change_ids.length" class="text-sm text-toned">
+      <p v-if="alert.missing_change_ids.length" class="text-sm text-muted">
         {{ alert.missing_change_ids.length }} cited change id(s) are not in the change log:
         <span class="font-mono break-all">{{ alert.missing_change_ids.join(', ') }}</span>
       </p>
-      <TerminalEmptyState
+      <TerminalGap
         v-if="!alert.changes.length && !alert.missing_change_ids.length"
         title="No change rows cited."
-        body="An alert without cited rows cannot be checked; this one is listed as stored."
+        reason="An alert without cited rows cannot be checked; this one is listed as stored."
       />
     </TerminalPanel>
-
-    <p class="text-sm">
-      <NuxtLink to="/alerts" class="text-primary underline underline-offset-2">
-        All alerts and the ticker
-      </NuxtLink>
-    </p>
-  </article>
+  </TerminalPage>
 </template>

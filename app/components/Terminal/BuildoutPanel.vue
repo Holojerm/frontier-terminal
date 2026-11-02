@@ -5,18 +5,15 @@
 // summed listed under the number — the sum is checkable, never a black box.
 // The line chart (full page) draws the cluster per day across the boards.
 
-import { absoluteStamp, count } from '#shared/utils/terminal-format'
+import { count, signed } from '#shared/utils/terminal-format'
+import { dayLabel } from '#shared/utils/thesis-format'
 import type { ClusterSeries, HiringHistoryData } from '#shared/utils/terminal-types'
 
 const props = defineProps<{
   history: HiringHistoryData
   /** The cluster id to show; the first registered one by default. */
   clusterId?: string
-  /** On the landing page: the cards and a link, no chart. */
-  compact?: boolean
 }>()
-
-const now = useNow()
 
 const clusterOf = (p: HiringHistoryData['providers'][number]): ClusterSeries | null =>
   p.clusters.find((c) => c.id === (props.clusterId ?? p.clusters[0]?.id)) ?? null
@@ -45,8 +42,6 @@ const chart = computed(() => {
   }
 })
 
-const xLabel = (d: string) => absoluteStamp(`${d}T00:00:00Z`, now.value).replace(/ \d\d:\d\dZ$/, '')
-const signed = (n: number) => (n > 0 ? `+${n}` : String(n))
 const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
   const total = p.total.at(-1) ?? 0
   return total === 0 ? '' : `${Math.round((n / total) * 100)}% of the board`
@@ -54,35 +49,28 @@ const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
 </script>
 
 <template>
-  <div class="space-y-4">
+  <div class="space-y-3">
     <TerminalLineChart
-      v-if="!compact && chart.series.length && chart.x.length > 1"
+      v-if="chart.series.length && chart.x.length > 1"
       :x="chart.x"
       :series="chart.series"
       :format="count"
-      :x-label="xLabel"
+      :x-label="dayLabel"
       :title="`Open ${label} roles per day at ${chart.series.map((s) => s.label).join(', ')} from ${chart.x[0]} to ${chart.x.at(-1)}`"
     />
 
-    <div class="grid gap-4 md:grid-cols-2">
-      <article
+    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <TerminalCard
         v-for="p in history.providers"
+        :id="`buildout-${p.provider}`"
         :key="p.provider"
-        :aria-labelledby="`buildout-${p.provider}`"
-        class="space-y-3 rounded border border-default bg-elevated p-4"
+        :title="p.display"
+        :sources="p.sources"
       >
-        <header class="flex flex-wrap items-baseline justify-between gap-2">
-          <h3 :id="`buildout-${p.provider}`" class="text-lg text-highlighted">
-            {{ p.display }}
-            <TerminalCaveatMark
-              v-if="p.caveat"
-              label="blended board"
-              :text="p.caveat"
-              class="ml-1"
-            />
-          </h3>
-          <span v-if="p.feed === 'ok' && clusterOf(p)" class="text-sm text-toned">
-            <span class="font-mono text-highlighted">{{ clusterOf(p)!.now }}</span>
+        <template #meta>
+          <TerminalCaveatMark v-if="p.caveat" label="blended board" :text="p.caveat" />
+          <span v-if="p.feed === 'ok' && clusterOf(p)">
+            <span class="font-mono text-highlighted">{{ count(clusterOf(p)!.now) }}</span>
             open
             <template v-if="clusterOf(p)!.then !== null">
               ·
@@ -90,58 +78,46 @@ const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
               since {{ clusterOf(p)!.then_at }}
             </template>
           </span>
-        </header>
-
-        <p v-if="p.feed === 'no_public_feed'" class="flex items-center gap-1 text-sm text-toned">
-          No public feed
-          <TerminalCaveatMark
-            :name="`Why ${p.display} has no hiring feed`"
-            :text="p.reason ?? ''"
-          />
-        </p>
-
-        <TerminalEmptyState
-          v-else-if="p.feed === 'no_rows' || !clusterOf(p)"
-          title="No parsed roles yet."
-          body="Counted from the board’s current listing once it is parsed."
-        />
-
-        <template v-else>
-          <TerminalEmptyState
-            v-if="clusterOf(p)!.departments.length === 0"
-            title="No department on this board matches the cluster."
-            body="The zero reflects department labels, not hiring."
-          />
-          <template v-else>
-            <p class="text-xs text-toned">{{ shareOfBoard(p, clusterOf(p)!.now) }}</p>
-            <ul class="space-y-1">
-              <li
-                v-for="d in clusterOf(p)!.departments"
-                :key="d.department"
-                class="flex items-baseline justify-between gap-2 text-xs"
-              >
-                <span class="truncate text-default" :title="d.department">{{ d.department }}</span>
-                <span class="whitespace-nowrap font-mono text-default">
-                  {{ d.now }}
-                  <span v-if="clusterOf(p)!.then !== null && d.now !== d.then" class="text-toned">{{
-                    signed(d.now - d.then)
-                  }}</span>
-                </span>
-              </li>
-            </ul>
-          </template>
         </template>
 
-        <ul v-if="p.sources.length" class="space-y-1">
-          <li v-for="s in p.sources" :key="s.source_id">
-            <TerminalProvenanceTag
-              :label="s.label"
-              :source-url="s.source_url"
-              :fetched-at="s.fetched_at"
-            />
-          </li>
-        </ul>
-      </article>
+        <TerminalGap v-if="feedGap('hiring', p)" inline v-bind="feedGap('hiring', p)!" />
+        <TerminalGap
+          v-else-if="!clusterOf(p)"
+          inline
+          title="No parsed roles yet"
+          reason="Counted from the board’s current listing once it is parsed."
+        />
+        <TerminalGap
+          v-else-if="clusterOf(p)!.departments.length === 0"
+          inline
+          title="No department on this board matches the cluster."
+          reason="The zero reflects department labels, not hiring."
+        />
+        <template v-else>
+          <p class="text-xs text-muted">{{ shareOfBoard(p, clusterOf(p)!.now) }}</p>
+          <TerminalTable
+            :caption="`${p.display} ${label} roles by the board’s own department label`"
+            :columns="[
+              { key: 'department', label: 'Department', class: 'max-w-48 truncate text-default' },
+              { key: 'now', label: 'Open', numeric: true },
+              { key: 'delta', label: 'Δ', numeric: true, class: 'text-muted' },
+            ]"
+            :rows="
+              clusterOf(p)!.departments.map((d) => ({
+                ...d,
+                delta:
+                  clusterOf(p)!.then !== null && d.now !== d.then ? signed(d.now - d.then) : '',
+              }))
+            "
+            :row-key="(d) => d.department"
+            nested
+          >
+            <template #cell-department="{ row: d }">
+              <span :title="d.department">{{ d.department }}</span>
+            </template>
+          </TerminalTable>
+        </template>
+      </TerminalCard>
     </div>
 
     <p class="text-xs text-muted">

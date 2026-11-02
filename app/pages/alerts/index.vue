@@ -43,14 +43,16 @@ const tickerFeed = `/alerts.xml?${TICKER_FEED_QUERY}`
 </script>
 
 <template>
-  <div class="space-y-12">
-    <header class="space-y-2">
-      <h1 class="text-4xl text-highlighted">Alerts</h1>
-      <p class="max-w-2xl text-muted">
-        Alerts are material changes: a price move, a new SKU, a hiring shift, a filing. The ticker
-        lists minor changes. Each cites the change rows it rests on.
-      </p>
-      <p class="max-w-2xl text-sm text-muted">
+  <TerminalPage
+    title="Alerts"
+    lede="Alerts are material changes: a price move, a new SKU, a hiring shift, a filing. The ticker lists minor changes. Each cites the change rows it rests on."
+    :as-of="alerts?.as_of"
+    :error="failed"
+    error-title="Alerts could not be read"
+    error-body="The alerts endpoint failed to respond. The section that did load is shown."
+  >
+    <template #header>
+      <p class="text-sm text-muted">
         <NuxtLink to="/alerts.xml" external class="text-primary underline underline-offset-2">
           Atom feed</NuxtLink
         >
@@ -63,42 +65,38 @@ const tickerFeed = `/alerts.xml?${TICKER_FEED_QUERY}`
         >
         adds the ticker.
       </p>
-    </header>
+    </template>
 
-    <UAlert
-      v-if="failed"
-      color="error"
-      variant="soft"
-      icon="i-lucide-database-zap"
-      title="Alerts could not be read"
-      description="The alerts endpoint failed to respond. The section that did load is shown."
-    />
-
-    <TerminalPanel id="alerts" title="Alerts" note="Notable and critical, newest first.">
+    <TerminalPanel
+      id="alerts"
+      title="Alerts"
+      note="Notable and critical, newest first."
+      :flush="Boolean(alerts?.rows.length)"
+    >
       <template v-if="alerts">
-        <TerminalEmptyState
+        <TerminalGap
           v-if="alerts.rows.length === 0"
           title="No alerts yet."
-          body="Alerts are raised on change rows that meet the materiality bar. An empty list after a baseline is expected."
+          reason="Alerts are raised on change rows that meet the materiality bar. An empty list after a baseline is expected."
           :action="{ label: 'Recent changes', to: '/#signal' }"
         />
-        <template v-else>
-          <TerminalSignalTable :alerts="shown" />
-          <div class="flex flex-wrap items-baseline gap-x-4 text-sm">
-            <UButton
-              v-if="remaining > 0"
-              variant="link"
-              size="sm"
-              class="px-0"
-              :label="`Show ${Math.min(PAGE, remaining)} more`"
-              @click="shownCount += PAGE"
-            />
-            <span class="text-xs text-muted">
-              {{ shown.length }} of {{ alerts.total }}; each row opens the explanation, rule, and
-              cited change rows.
-            </span>
-          </div>
-        </template>
+        <TerminalSignalTable v-else :alerts="shown" />
+      </template>
+      <template v-if="alerts?.rows.length" #foot>
+        <span class="flex flex-wrap items-baseline gap-x-4">
+          <UButton
+            v-if="remaining > 0"
+            variant="link"
+            size="sm"
+            class="px-0"
+            :label="`Show ${Math.min(PAGE, remaining)} more`"
+            @click="shownCount += PAGE"
+          />
+          <span>
+            {{ shown.length }} of {{ alerts.total }}; each row opens the explanation, rule, and
+            cited change rows.
+          </span>
+        </span>
       </template>
     </TerminalPanel>
 
@@ -108,26 +106,27 @@ const tickerFeed = `/alerts.xml?${TICKER_FEED_QUERY}`
       note="Single role adds and closes, retitles, location changes."
     >
       <template v-if="ticker">
-        <TerminalEmptyState
+        <TerminalGap
           v-if="ticker.rows.length === 0"
           title="Nothing on the ticker."
-          body="An empty ticker is normal."
+          reason="An empty ticker is normal."
         />
-        <template v-else>
-          <p class="text-sm text-muted">Showing {{ ticker.rows.length }} of {{ ticker.total }}.</p>
-          <!-- A feed, so a scroll region: nobody reads line 157, and the page
-               should not be 157 lines tall so that they can. tabindex="0" so
-               a keyboard can scroll it (axe: scrollable-region-focusable). -->
-          <div
-            class="max-h-96 overflow-y-auto rounded border border-default p-3"
-            tabindex="0"
-            role="region"
-            aria-label="Ticker lines"
-          >
-            <TerminalTickerList :alerts="ticker.rows" />
-          </div>
-        </template>
+        <!-- A feed, so a scroll region: nobody reads line 157, and the page
+             should not be 157 lines tall so that they can. tabindex="0" so
+             a keyboard can scroll it (axe: scrollable-region-focusable). -->
+        <div
+          v-else
+          class="max-h-96 overflow-y-auto"
+          tabindex="0"
+          role="region"
+          aria-label="Ticker lines"
+        >
+          <TerminalTickerList :alerts="ticker.rows" />
+        </div>
+      </template>
+      <template v-if="ticker?.rows.length" #meta>
+        {{ ticker.rows.length }} of {{ ticker.total }}
       </template>
     </TerminalPanel>
-  </div>
+  </TerminalPage>
 </template>

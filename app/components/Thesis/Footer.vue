@@ -12,20 +12,21 @@ const requestUrl = datasetRequestUrl(manifest.links.github)
 </script>
 
 <template>
-  <section aria-labelledby="thesis-notes" class="max-w-2xl space-y-3">
-    <h2 id="thesis-notes" class="text-xl text-highlighted">Notes</h2>
-    <p class="text-sm text-muted">{{ caveat }}</p>
-    <p class="text-sm text-muted">Not investment advice.</p>
-    <p class="text-sm text-muted">
-      Testing a claim needs a public number.
-      <a
-        :href="requestUrl"
-        target="_blank"
-        rel="noopener noreferrer"
-        class="text-primary underline underline-offset-2"
-        >Request a dataset</a
-      >
-      on GitHub.
-    </p>
-  </section>
+  <TerminalPanel id="thesis-notes" title="Notes">
+    <div class="max-w-2xl space-y-2 text-sm text-muted">
+      <p>{{ caveat }}</p>
+      <p>Not investment advice.</p>
+      <p>
+        Testing a claim needs a public number.
+        <a
+          :href="requestUrl"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-primary underline underline-offset-2"
+          >Request a dataset</a
+        >
+        on GitHub.
+      </p>
+    </div>
+  </TerminalPanel>
 </template>

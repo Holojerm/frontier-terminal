@@ -32,12 +32,7 @@ useSeo({
 </script>
 
 <template>
-  <div class="space-y-12">
-    <header class="space-y-2">
-      <h1 class="text-4xl text-highlighted">About</h1>
-      <p class="max-w-2xl text-muted">{{ config.public.appDescription }}</p>
-    </header>
-
+  <TerminalPage title="About" :lede="config.public.appDescription" narrow>
     <TerminalPanel id="what" title="What this is">
       <div class="max-w-2xl space-y-3 text-default">
         <p>
@@ -175,5 +170,5 @@ useSeo({
         </p>
       </div>
     </TerminalPanel>
-  </div>
+  </TerminalPage>
 </template>
