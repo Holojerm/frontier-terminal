@@ -7,11 +7,12 @@
 // list price, disclosed as both.
 
 import { compactTokens, compactUsd, sharePct } from '#shared/utils/terminal-format'
-import type { SpendData, SpendProviderView } from '#shared/utils/terminal-types'
+import type { SpendData, SpendModel, SpendProviderView } from '#shared/utils/terminal-types'
+import type { TableColumn } from '~/types/terminal-ui'
 
 const props = defineProps<{
   spend: SpendData
-  /** On the landing page: the rows and a link, no per-model join. */
+  /** On the landing page: the rows only, no per-model join or coverage column. */
   compact?: boolean
 }>()
 
@@ -26,87 +27,86 @@ const range = (a: number | null, b: number | null, f: (n: number) => string) => 
 }
 
 const widest = computed(() => Math.max(...props.spend.providers.map((p) => p.share_high ?? 0), 0))
-const widthPct = (share: number | null) =>
-  `${widest.value > 0 && share !== null ? Math.max(1, Math.round((share / widest.value) * 100)) : 0}%`
 
 const priced = (p: SpendProviderView) => p.priced_tokens > 0
 
-const showJoin = ref(false)
+const columns = computed<TableColumn[]>(() => [
+  { key: 'display', label: 'Lab' },
+  { key: 'share', label: 'Spend share' },
+  { key: 'dollars', label: 'Implied $', numeric: true },
+  { key: 'tokens', label: 'Token share', numeric: true, class: 'text-muted' },
+  ...(props.compact
+    ? []
+    : [{ key: 'coverage', label: 'Priced', numeric: true, class: 'text-muted' }]),
+])
+
+const JOIN_COLUMNS: TableColumn[] = [
+  { key: 'model_permaslug', label: 'OpenRouter model', class: 'font-mono' },
+  { key: 'tokens', label: 'Tokens', numeric: true },
+  { key: 'sku', label: 'Catalog SKU' },
+  { key: 'prices', label: 'In / out $/Mtok', numeric: true },
+  { key: 'implied', label: 'Implied $', numeric: true },
+]
+
 const joined = computed(() => props.spend.providers.filter((p) => p.models.length))
+
+const skuText = (m: SpendModel) =>
+  m.reason === 'unpriced'
+    ? 'listed, no published price'
+    : m.reason === 'free'
+      ? 'OpenRouter free tier'
+      : 'no catalog SKU matched'
 </script>
 
 <template>
-  <div class="space-y-4">
-    <TerminalEmptyState
+  <div class="space-y-3">
+    <TerminalGap
       v-if="spend.status === 'not_configured'"
       title="Not configured."
-      body="The join needs the OpenRouter rankings, which need NUXT_OPENROUTER_API_KEY; nothing is fetched anonymously."
+      reason="The join needs the OpenRouter rankings, which need NUXT_OPENROUTER_API_KEY; nothing is fetched anonymously."
     />
-    <TerminalEmptyState
+    <TerminalGap
       v-else-if="spend.status === 'no_rows'"
       title="No rankings rows yet."
-      body="The rankings feed is registered; no poll has succeeded yet."
+      reason="The rankings feed is registered; no poll has succeeded yet."
     />
 
     <template v-else>
-      <p v-if="spend.window" class="text-xs text-toned">
+      <p v-if="spend.window" class="text-xs text-muted">
         {{ spend.window.from }} → {{ spend.window.to }} · at list price; implied, not observed
       </p>
 
-      <div class="overflow-x-auto">
-        <table class="w-full text-sm">
-          <caption class="sr-only">
-            Implied OpenRouter-channel spend per lab, as a range, beside token share and price
-            coverage
-          </caption>
-          <thead>
-            <tr class="border-b border-default text-left">
-              <th scope="col" class="py-2 pr-3 font-medium text-toned">Lab</th>
-              <th scope="col" class="py-2 pr-3 font-medium text-toned">Spend share</th>
-              <th scope="col" class="py-2 pr-3 text-right font-medium text-toned">Implied $</th>
-              <th scope="col" class="py-2 pr-3 text-right font-medium text-toned">Token share</th>
-              <th v-if="!compact" scope="col" class="py-2 text-right font-medium text-toned">
-                Priced
-              </th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr v-for="p in spend.providers" :key="p.provider" class="border-b border-default">
-              <th scope="row" class="py-2 pr-3 text-left font-normal text-default">
-                {{ p.display }}
-              </th>
-              <td class="py-2 pr-3">
-                <div v-if="priced(p)" class="flex items-center gap-2">
-                  <span class="h-3 w-24 overflow-hidden rounded bg-muted" aria-hidden="true">
-                    <span
-                      class="block h-full bg-primary"
-                      :style="{ width: widthPct(p.share_high) }"
-                    />
-                  </span>
-                  <span class="whitespace-nowrap font-mono text-highlighted">
-                    {{ range(p.share_low, p.share_high, sharePct) }}
-                  </span>
-                </div>
-                <span v-else class="text-xs text-toned">not priceable — see below</span>
-              </td>
-              <td class="whitespace-nowrap py-2 pr-3 text-right font-mono text-default">
-                {{ priced(p) ? range(p.spend_low, p.spend_high, compactUsd) : '—' }}
-              </td>
-              <td class="whitespace-nowrap py-2 pr-3 text-right font-mono text-toned">
-                {{ sharePct(p.token_share) }}
-                <span class="text-xs">· {{ compactTokens(p.tokens) }}</span>
-              </td>
-              <td v-if="!compact" class="whitespace-nowrap py-2 text-right font-mono text-toned">
-                {{ sharePct(p.coverage) }}
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
+      <TerminalTable
+        caption="Implied OpenRouter-channel spend per lab, as a range, beside token share and price coverage"
+        :columns="columns"
+        :rows="spend.providers"
+        :row-key="(p) => p.provider"
+        :edge="false"
+      >
+        <template #cell-display="{ row: p }">
+          <span class="text-default">{{ p.display }}</span>
+        </template>
+        <template #cell-share="{ row: p }">
+          <span v-if="priced(p)" class="flex items-center gap-2">
+            <span class="w-24 shrink-0"><TerminalBar :value="p.share_high" :max="widest" /></span>
+            <span class="whitespace-nowrap font-mono text-highlighted">
+              {{ range(p.share_low, p.share_high, sharePct) }}
+            </span>
+          </span>
+          <TerminalGap v-else inline title="Not priceable" />
+        </template>
+        <template #cell-dollars="{ row: p }">
+          {{ priced(p) ? range(p.spend_low, p.spend_high, compactUsd) : '—' }}
+        </template>
+        <template #cell-tokens="{ row: p }">
+          {{ sharePct(p.token_share) }} · {{ compactTokens(p.tokens) }}
+        </template>
+        <template #cell-coverage="{ row: p }">{{ sharePct(p.coverage) }}</template>
+      </TerminalTable>
 
       <p
         v-if="spend.excluded.length"
-        class="flex flex-wrap items-center gap-x-1 text-xs text-toned"
+        class="flex flex-wrap items-center gap-x-1 text-xs text-muted"
       >
         Not priceable, excluded from the dollar share:
         {{ spend.excluded.map((e) => e.display).join(', ') }}
@@ -116,122 +116,73 @@ const joined = computed(() => props.spend.providers.filter((p) => p.models.lengt
         />
       </p>
 
-      <p class="text-xs text-toned">
+      <p class="text-xs text-muted">
         {{ compactTokens(spend.totals.other_tokens) }} of
         {{ compactTokens(spend.totals.tokens) }} tokens went to models outside the six labs and are
         not priced.
       </p>
 
-      <UCollapsible v-if="!compact && joined.length" v-model:open="showJoin" class="space-y-2">
-        <UButton
-          variant="link"
-          color="neutral"
-          size="sm"
-          trailing-icon="i-lucide-chevron-down"
-          class="px-0 text-toned"
-          :label="showJoin ? 'Hide the per-model join' : 'Show the per-model join'"
-        />
-        <template #content>
-          <div class="space-y-4">
-            <div v-for="p in joined" :key="p.provider" class="overflow-x-auto">
-              <h3 class="mb-1 text-sm text-highlighted">{{ p.display }}</h3>
-              <table class="w-full text-xs">
-                <caption class="sr-only">
-                  {{
-                    p.display
-                  }}
-                  ranked models joined to catalog SKUs
-                </caption>
-                <thead>
-                  <tr class="border-b border-default text-left">
-                    <th scope="col" class="py-1 pr-2 font-medium text-toned">OpenRouter model</th>
-                    <th scope="col" class="py-1 pr-2 text-right font-medium text-toned">Tokens</th>
-                    <th scope="col" class="py-1 pr-2 font-medium text-toned">Catalog SKU</th>
-                    <th scope="col" class="py-1 pr-2 text-right font-medium text-toned">
-                      In / out $/Mtok
-                    </th>
-                    <th scope="col" class="py-1 text-right font-medium text-toned">Implied $</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  <tr
-                    v-for="m in p.models"
-                    :key="m.model_permaslug"
-                    class="border-b border-default"
-                  >
-                    <th scope="row" class="py-1 pr-2 text-left font-mono font-normal text-default">
-                      {{ m.model_permaslug }}
-                    </th>
-                    <td class="py-1 pr-2 text-right font-mono text-toned">
-                      {{ compactTokens(m.tokens) }}
-                    </td>
-                    <td class="py-1 pr-2 text-toned">
-                      <NuxtLink
-                        v-if="m.matched_key && !m.reason"
-                        :to="`/prices/${encodeURIComponent(m.matched_key)}`"
-                        class="font-mono underline underline-offset-2 hover:text-default"
-                        >{{ m.matched_key }}</NuxtLink
-                      >
-                      <span v-else-if="m.reason === 'unpriced'" :title="m.matched_key ?? ''">
-                        listed, no published price
-                      </span>
-                      <span v-else-if="m.reason === 'free'">OpenRouter free tier</span>
-                      <span v-else>no catalog SKU matched</span>
-                    </td>
-                    <td class="whitespace-nowrap py-1 pr-2 text-right font-mono text-toned">
-                      <template v-if="!m.reason">
-                        {{ m.input_per_mtok ?? '—' }} / {{ m.output_per_mtok ?? '—' }}
-                      </template>
-                      <template v-else>—</template>
-                    </td>
-                    <td class="whitespace-nowrap py-1 text-right font-mono text-default">
-                      {{ range(m.spend_low, m.spend_high, compactUsd) }}
-                    </td>
-                  </tr>
-                </tbody>
-              </table>
-            </div>
+      <TerminalExpand
+        v-if="!compact && joined.length"
+        show="Show the per-model join"
+        hide="Hide the per-model join"
+      >
+        <div class="space-y-4">
+          <div v-for="p in joined" :key="p.provider" class="space-y-1">
+            <h3 class="text-sm text-highlighted">{{ p.display }}</h3>
+            <TerminalTable
+              :caption="`${p.display} ranked models joined to catalog SKUs`"
+              :columns="JOIN_COLUMNS"
+              :rows="p.models"
+              :row-key="(m) => m.model_permaslug"
+              nested
+            >
+              <template #cell-tokens="{ row: m }">{{ compactTokens(m.tokens) }}</template>
+              <template #cell-sku="{ row: m }">
+                <NuxtLink
+                  v-if="m.matched_key && !m.reason"
+                  :to="`/prices/${encodeURIComponent(m.matched_key)}`"
+                  class="font-mono underline underline-offset-2 hover:text-highlighted"
+                  >{{ m.matched_key }}</NuxtLink
+                >
+                <span v-else class="text-muted" :title="m.matched_key ?? ''">{{ skuText(m) }}</span>
+              </template>
+              <template #cell-prices="{ row: m }">
+                <template v-if="!m.reason">
+                  {{ m.input_per_mtok ?? '—' }} / {{ m.output_per_mtok ?? '—' }}
+                </template>
+                <template v-else>—</template>
+              </template>
+              <template #cell-implied="{ row: m }">
+                {{ range(m.spend_low, m.spend_high, compactUsd) }}
+              </template>
+            </TerminalTable>
           </div>
-        </template>
-      </UCollapsible>
-
-      <p v-if="compact" class="text-sm">
-        <NuxtLink to="/rankings#spend" class="text-primary underline underline-offset-2">
-          Per-model join
-        </NuxtLink>
-      </p>
+        </div>
+      </TerminalExpand>
     </template>
 
     <!-- Caveat, citation and provenance ship in every state. -->
-    <div class="space-y-1 text-xs text-toned">
-      <p class="flex flex-wrap items-center gap-x-2">
-        <span>Implied OpenRouter-channel spend at list price — not revenue, not market share</span>
-        <TerminalCaveatMark name="Full caveat for the implied spend share" :text="spend.caveat" />
-        <a
-          v-if="spend.rankings.meta.citation"
-          href="https://openrouter.ai/rankings"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="underline underline-offset-2 hover:text-default"
-          :title="spend.rankings.meta.citation"
-          >CC BY 4.0</a
-        >
-      </p>
-      <p class="flex flex-wrap items-center gap-x-3 gap-y-1">
-        <TerminalProvenanceTag
-          v-if="spend.rankings.provenance"
-          :label="spend.rankings.source.label"
-          :source-url="spend.rankings.provenance.source_url"
-          :fetched-at="spend.rankings.provenance.fetched_at"
-        />
-        <TerminalProvenanceTag
-          v-for="s in spend.price_sources"
-          :key="s.source_id"
-          :label="s.label"
-          :source-url="s.source_url"
-          :fetched-at="s.fetched_at"
-        />
-      </p>
-    </div>
+    <TerminalSources
+      :sources="[
+        ...(spend.rankings.provenance
+          ? [{ label: spend.rankings.source.label, ...spend.rankings.provenance }]
+          : []),
+        ...spend.price_sources,
+      ]"
+      :caveats="[
+        { label: 'Implied at list price — not revenue, not market share', text: spend.caveat },
+      ]"
+    >
+      <a
+        v-if="spend.rankings.meta.citation"
+        href="https://openrouter.ai/rankings"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="underline underline-offset-2 hover:text-default"
+        :title="spend.rankings.meta.citation"
+        >CC BY 4.0</a
+      >
+    </TerminalSources>
   </div>
 </template>

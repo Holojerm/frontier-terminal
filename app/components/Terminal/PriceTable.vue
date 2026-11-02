@@ -5,23 +5,28 @@
 // link to its own page, and its provenance. Batch, long-context and promo
 // rows sit here, not in the matrix.
 
-import type { TableColumn } from '@nuxt/ui'
-
 import { money, pctChange, pctLabel } from '#shared/utils/terminal-format'
+import { labName } from '#shared/utils/terminal-labs'
 import type { PriceRowView, PricesData } from '#shared/utils/terminal-types'
+import type { TableColumn } from '~/types/terminal-ui'
 
 const props = defineProps<{
   prices: PricesData
   /** Initial provider filter, e.g. from `/prices?provider=xai`. */
   provider?: string
+  /** On a lab page: the rows alone, no filters and no cross-check note. */
+  bare?: boolean
 }>()
 
 const pricedOnly = ref(true)
 const provider = ref(props.provider ?? 'all')
 
 const providers = computed(() => [
-  { label: 'All providers', value: 'all' },
-  ...[...new Set(props.prices.rows.map((r) => r.provider))].map((p) => ({ label: p, value: p })),
+  { label: 'All labs', value: 'all' },
+  ...[...new Set(props.prices.rows.map((r) => r.provider))].map((p) => ({
+    label: labName(p),
+    value: p,
+  })),
 ])
 
 const rows = computed(() =>
@@ -33,20 +38,18 @@ const rows = computed(() =>
 )
 const hidden = computed(() => props.prices.rows.length - rows.value.length)
 
-const numeric = { class: { th: 'text-right', td: 'text-right font-mono' } }
-
-const columns: TableColumn<PriceRowView>[] = [
-  { accessorKey: 'provider', header: 'Provider' },
-  { accessorKey: 'model_slug', header: 'Model' },
-  { accessorKey: 'tier', header: 'Tier' },
-  { accessorKey: 'context_window', header: 'Context' },
-  { accessorKey: 'input_per_mtok', header: 'In $/Mtok', meta: numeric },
-  { accessorKey: 'cached_input_per_mtok', header: 'Cached in', meta: numeric },
-  { accessorKey: 'output_per_mtok', header: 'Out $/Mtok', meta: numeric },
-  { id: 'delta', header: 'Δ vs previous' },
-  { id: 'history', header: 'History' },
-  { id: 'window', header: 'Window' },
-  { id: 'source', header: 'Source' },
+const columns: TableColumn[] = [
+  { key: 'provider', label: 'Lab', class: 'whitespace-nowrap text-muted' },
+  { key: 'model_slug', label: 'Model' },
+  { key: 'tier', label: 'Tier', class: 'text-muted' },
+  { key: 'context_window', label: 'Context', class: 'text-muted' },
+  { key: 'input_per_mtok', label: 'In $/Mtok', numeric: true },
+  { key: 'cached_input_per_mtok', label: 'Cached in', numeric: true, class: 'text-muted' },
+  { key: 'output_per_mtok', label: 'Out $/Mtok', numeric: true },
+  { key: 'delta', label: 'Δ vs previous', class: 'text-xs' },
+  { key: 'history', label: 'History' },
+  { key: 'window', label: 'Window', class: 'whitespace-nowrap text-xs text-muted' },
+  { key: 'source', label: 'Source' },
 ]
 
 /** One phrase describing the newest change on the row, or null when there is none. */
@@ -67,105 +70,92 @@ function deltaText(row: PriceRowView): string | null {
 </script>
 
 <template>
-  <div class="space-y-4">
-    <div class="flex flex-wrap items-center gap-4 text-sm">
+  <div class="space-y-3">
+    <div v-if="!bare" class="flex flex-wrap items-center gap-4 text-sm">
       <UCheckbox v-model="pricedOnly" label="Priced rows only" />
-      <UFormField label="Provider" class="flex items-center gap-2" :ui="{ label: 'text-sm' }">
+      <UFormField label="Lab" class="flex items-center gap-2" :ui="{ label: 'text-sm' }">
         <USelect v-model="provider" :items="providers" size="sm" class="w-40" />
       </UFormField>
       <span v-if="hidden > 0" class="text-xs text-muted">{{ hidden }} row(s) filtered out</span>
     </div>
 
-    <!-- Sticky header: the catalog runs to hundreds of rows. The root is
-         the horizontal scroll container on a phone, where a sticky header
-         has nothing to stick to; from md up it scrolls with the page. -->
-    <UTable
-      :data="rows"
+    <TerminalGap v-if="rows.length === 0" title="No rows match the filter." />
+    <!-- Sticky header: the catalog runs to hundreds of rows. -->
+    <TerminalTable
+      v-else
+      caption="Every SKU in the store with prices in dollars per million tokens, the newest change, and provenance"
       :columns="columns"
-      sticky="header"
-      :ui="{ root: 'md:overflow-visible', td: 'align-top', th: 'whitespace-nowrap' }"
-      empty="No rows match the filter."
+      :rows="rows"
+      :row-key="(r) => r.entity_key"
+      row-header="model_slug"
+      :edge="false"
+      :sticky="!bare"
+      align="top"
     >
-      <template #model_slug-cell="{ row }">
+      <template #cell-provider="{ row: r }">{{ labName(r.provider) }}</template>
+      <template #cell-model_slug="{ row: r }">
         <NuxtLink
-          :to="`/prices/${row.original.entity_key}`"
+          :to="`/prices/${r.entity_key}`"
           class="font-mono underline underline-offset-2"
-          :class="row.original.removed ? 'text-muted line-through' : 'text-highlighted'"
+          :class="r.removed ? 'text-muted line-through' : 'text-highlighted'"
         >
-          {{ row.original.model_slug }}
+          {{ r.model_slug }}
         </NuxtLink>
-        <TerminalCaveatMark
-          v-if="row.original.notes"
-          :name="`Notes for ${row.original.model_slug}`"
-          :text="row.original.notes"
-        />
-        <span v-if="row.original.also_listed_by.length" class="block text-xs text-muted">
-          also on {{ row.original.also_listed_by.join(', ') }}
+        <TerminalCaveatMark v-if="r.notes" :name="`Notes for ${r.model_slug}`" :text="r.notes" />
+        <span v-if="r.also_listed_by.length" class="block text-xs text-muted">
+          also on {{ r.also_listed_by.join(', ') }}
         </span>
       </template>
-      <template #tier-cell="{ row }">
-        <span class="text-muted">{{ row.original.tier ?? '—' }}</span>
-      </template>
-      <template #context_window-cell="{ row }">
-        <span class="text-muted">{{ row.original.context_window ?? '—' }}</span>
-        <span v-if="row.original.context_window_source" class="block">
+      <template #cell-context_window="{ row: r }">
+        {{ r.context_window ?? '—' }}
+        <span v-if="r.context_window_source" class="block">
           <TerminalProvenanceTag
-            :source-url="row.original.context_window_source.source_url"
-            :fetched-at="row.original.context_window_source.fetched_at"
+            :source-url="r.context_window_source.source_url"
+            :fetched-at="r.context_window_source.fetched_at"
             label="window source"
           />
         </span>
       </template>
-      <template #input_per_mtok-cell="{ row }">{{ money(row.original.input_per_mtok) }}</template>
-      <template #cached_input_per_mtok-cell="{ row }">
-        <span class="text-muted">{{ money(row.original.cached_input_per_mtok) }}</span>
+      <template #cell-input_per_mtok="{ row: r }">{{ money(r.input_per_mtok) }}</template>
+      <template #cell-cached_input_per_mtok="{ row: r }">
+        {{ money(r.cached_input_per_mtok) }}
       </template>
-      <template #output_per_mtok-cell="{ row }">{{ money(row.original.output_per_mtok) }}</template>
-      <template #delta-cell="{ row }">
-        <span
-          v-if="row.original.delta"
-          class="text-xs"
-          :title="`change detected ${row.original.delta.detected_at}`"
-        >
-          {{ deltaText(row.original) }}
+      <template #cell-output_per_mtok="{ row: r }">{{ money(r.output_per_mtok) }}</template>
+      <template #cell-delta="{ row: r }">
+        <span v-if="r.delta" :title="`change detected ${r.delta.detected_at}`">
+          {{ deltaText(r) }}
         </span>
         <span v-else class="text-muted">—</span>
       </template>
-      <template #history-cell="{ row }">
+      <template #cell-history="{ row: r }">
         <NuxtLink
-          v-if="row.original.spark"
-          :to="`/prices/${row.original.entity_key}`"
+          v-if="r.spark"
+          :to="`/prices/${r.entity_key}`"
           class="inline-flex items-center gap-2 text-xs text-muted"
-          :title="`${row.original.revisions} observations of ${row.original.spark.field.replace(/_per_mtok$/, '')} price — open the SKU page`"
+          :title="`${r.revisions} observations of ${r.spark.field.replace(/_per_mtok$/, '')} price — open the SKU page`"
         >
-          <TerminalSparkline :values="row.original.spark.values" />
-          <span>{{ row.original.revisions }}×</span>
+          <TerminalSparkline :values="r.spark.values" />
+          <span>{{ r.revisions }}×</span>
         </NuxtLink>
         <span v-else class="text-muted">—</span>
       </template>
-      <template #window-cell="{ row }">
-        <span
-          v-if="row.original.effective_from || row.original.effective_until"
-          class="text-xs text-muted"
-        >
-          {{ row.original.effective_from ?? '…' }} → {{ row.original.effective_until ?? '…' }}
-        </span>
-        <span v-else class="text-muted">—</span>
+      <template #cell-window="{ row: r }">
+        <template v-if="r.effective_from || r.effective_until">
+          {{ r.effective_from ?? '…' }} → {{ r.effective_until ?? '…' }}
+        </template>
+        <template v-else>—</template>
       </template>
-      <template #source-cell="{ row }">
-        <TerminalProvenanceTag
-          :source-url="row.original.source_url"
-          :fetched-at="row.original.fetched_at"
-        />
+      <template #cell-source="{ row: r }">
+        <TerminalProvenanceTag :source-url="r.source_url" :fetched-at="r.fetched_at" />
       </template>
-    </UTable>
+    </TerminalTable>
 
     <p v-if="!prices.changes_available" class="text-xs text-muted">
       No deltas yet: a delta needs two revisions of a row.
     </p>
 
     <UAlert
-      v-if="prices.cross_check"
+      v-if="!bare && prices.cross_check"
       color="info"
       variant="soft"
       icon="i-lucide-scale"
