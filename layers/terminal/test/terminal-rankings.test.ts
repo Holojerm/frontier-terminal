@@ -190,6 +190,7 @@ const skippedFetcher: SourceFetcher = async () => ({
 beforeEach(async () => {
   for (const table of [
     schema.sourceRuns,
+    schema.sourceStats,
     schema.alerts,
     schema.changes,
     schema.entities,
@@ -302,7 +303,7 @@ describe('queryRankings', () => {
     // The export view flattens the same rows.
     const view = EXPORT_TABLES.rankings_daily!
     expect(await view.count(db)).toBe(1530)
-    const [first] = await view.page(db, 0, 1)
+    const [first] = await view.page(db, null, 1)
     expect(Object.keys(first!)).toEqual(view.columns)
     expect(first).not.toHaveProperty('entity_type')
     expect(first!.model_permaslug).toEqual(expect.any(String))

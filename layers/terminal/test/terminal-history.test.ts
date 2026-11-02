@@ -413,7 +413,13 @@ const xaiJobsWithout = (id: number) => {
 
 describe('the history queries on an empty store', () => {
   beforeEach(async () => {
-    for (const table of [schema.sourceRuns, schema.changes, schema.entities, schema.snapshots]) {
+    for (const table of [
+      schema.sourceRuns,
+      schema.sourceStats,
+      schema.changes,
+      schema.entities,
+      schema.snapshots,
+    ]) {
       await db.delete(table)
     }
   })
@@ -439,7 +445,13 @@ describe('the history queries on an empty store', () => {
 
 describe('after a baseline and a second poll', () => {
   beforeEach(async () => {
-    for (const table of [schema.sourceRuns, schema.changes, schema.entities, schema.snapshots]) {
+    for (const table of [
+      schema.sourceRuns,
+      schema.sourceStats,
+      schema.changes,
+      schema.entities,
+      schema.snapshots,
+    ]) {
       await db.delete(table)
     }
     tick = Date.parse('2026-09-07T10:00:00Z')

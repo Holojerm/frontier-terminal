@@ -15,6 +15,7 @@ import crwv from '~~/fixtures/recipes/sec-companyfacts-crwv.json?raw'
 import type { ClaimDef } from '../shared/utils/thesis-types'
 
 import * as schema from '~~/server/db/schema'
+import { insertRows } from '../server/pipeline/store'
 import type { SourceFetcher } from '../server/pipeline/fetch'
 import {
   blendedPrice,
@@ -369,16 +370,18 @@ beforeAll(async () => {
     )
   }
   for (const row of rows) await db.insert(schema.entities).values(row)
-  await db.insert(schema.snapshots).values({
-    id: 'snap-anthropic-greenhouse',
-    source_id: 'anthropic-greenhouse',
-    content_hash: 'h',
-    raw_key: 'raw/h',
-    http_status: 200,
-    bytes: 1,
-    source_url: BOARD_URL,
-    fetched_at: '2026-08-25T11:10:43Z',
-  })
+  await insertRows(db, 'snapshots', [
+    {
+      id: 'snap-anthropic-greenhouse',
+      source_id: 'anthropic-greenhouse',
+      content_hash: 'a'.repeat(64),
+      raw_key: 'raw/h',
+      http_status: 200,
+      bytes: 1,
+      source_url: BOARD_URL,
+      fetched_at: '2026-08-25T11:10:43Z',
+    },
+  ])
   const results = await runRecipes(
     db,
     { raw, fetcher, now: () => NOW },

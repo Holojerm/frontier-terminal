@@ -45,6 +45,7 @@ beforeEach(async () => {
   await db.delete(schema.entities)
   await db.delete(schema.changes)
   await db.delete(schema.snapshots)
+  await db.delete(schema.sourceStats)
 })
 
 describe('insertRows', () => {
@@ -151,5 +152,69 @@ describe('applyDiff', () => {
     await applyDiff(db, 'xai-greenhouse', writes(3))
     expect(await db.select().from(schema.entities)).toHaveLength(1)
     expect(await db.select().from(schema.changes)).toHaveLength(1)
+  })
+})
+
+describe('source_stats', () => {
+  const snapshot = (fetched_at: string) => ({
+    id: `xai-greenhouse:${fetched_at}`,
+    source_id: 'xai-greenhouse',
+    content_hash: contentHash({ fetched_at }),
+    raw_key: `raw/xai-greenhouse/${fetched_at}.json`,
+    http_status: 200,
+    bytes: 10,
+    source_url: PROV.source_url,
+    fetched_at,
+  })
+  const run = (started_at: string) => ({
+    id: `survey:xai-greenhouse:${started_at}`,
+    scope: 'survey',
+    source_id: 'xai-greenhouse',
+    started_at,
+    status: 'ok',
+    detail: null,
+    snapshot_id: null,
+    added: 0,
+    removed: 0,
+    modified: 0,
+    source_url: PROV.source_url,
+  })
+  const stats = async () => (await db.select().from(schema.sourceStats))[0]
+
+  beforeEach(async () => {
+    await db.delete(schema.sourceRuns)
+  })
+
+  it('counts every snapshot and keeps the first and newest, whatever order they arrive in', async () => {
+    await insertRows(db, 'snapshots', [snapshot('2026-09-07T12:00:00.000Z')])
+    await insertRows(db, 'snapshots', [
+      snapshot('2026-09-07T10:00:00.000Z'),
+      snapshot('2026-09-07T11:00:00.000Z'),
+    ])
+    expect(await stats()).toMatchObject({
+      snapshot_count: 3,
+      first_fetched_at: '2026-09-07T10:00:00.000Z',
+      last_fetched_at: '2026-09-07T12:00:00.000Z',
+      run_count: 0,
+    })
+  })
+
+  it('counts runs into the same row', async () => {
+    await insertRows(db, 'snapshots', [snapshot('2026-09-07T10:00:00.000Z')])
+    await insertRows(db, 'source_runs', [run('2026-09-07T10:00:00.000Z')])
+    await insertRows(db, 'source_runs', [run('2026-09-07T16:00:00.000Z')])
+    expect(await stats()).toMatchObject({
+      snapshot_count: 1,
+      run_count: 2,
+      last_run_at: '2026-09-07T16:00:00.000Z',
+    })
+  })
+
+  it('does not count a snapshot whose insert failed', async () => {
+    await insertRows(db, 'snapshots', [snapshot('2026-09-07T10:00:00.000Z')])
+    await expect(
+      insertRows(db, 'snapshots', [snapshot('2026-09-07T10:00:00.000Z')]),
+    ).rejects.toThrow()
+    expect((await stats())!.snapshot_count).toBe(1)
   })
 })
