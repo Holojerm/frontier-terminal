@@ -65,6 +65,7 @@ beforeEach(async () => {
   for (const table of [
     schema.judgeRuns,
     schema.sourceRuns,
+    schema.sourceStats,
     schema.alerts,
     schema.changes,
     schema.entities,

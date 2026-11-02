@@ -40,7 +40,12 @@ export const snapshots = sqliteTable(
     bytes: integer('bytes'),
     ...provenance,
   },
-  (t) => [index('snapshots_source_fetched_idx').on(t.source_id, t.fetched_at)],
+  (t) => [
+    index('snapshots_source_fetched_idx').on(t.source_id, t.fetched_at),
+    // (fetched_at, id) is the export's keyset order; without it every page
+    // sorts the whole table.
+    index('snapshots_fetched_id_idx').on(t.fetched_at, t.id),
+  ],
 )
 
 // Entities — the CURRENT row per (source, entity_key). Rows are inserted when
@@ -95,7 +100,7 @@ export const changes = sqliteTable(
     ...provenance,
   },
   (t) => [
-    index('changes_detected_at_idx').on(t.detected_at),
+    index('changes_detected_id_idx').on(t.detected_at, t.id),
     index('changes_entity_key_idx').on(t.entity_key),
   ],
 )
@@ -114,7 +119,7 @@ export const alerts = sqliteTable(
     created_at: text('created_at').notNull(),
     ...provenance,
   },
-  (t) => [index('alerts_created_at_idx').on(t.created_at)],
+  (t) => [index('alerts_created_id_idx').on(t.created_at, t.id)],
 )
 
 // Source runs — one row per (tick, source): what each poll attempted and how
@@ -139,9 +144,27 @@ export const sourceRuns = sqliteTable(
   },
   (t) => [
     index('source_runs_source_started_idx').on(t.source_id, t.started_at),
-    index('source_runs_started_at_idx').on(t.started_at),
+    index('source_runs_started_id_idx').on(t.started_at, t.id),
+    // Baseline runs are a handful among tens of thousands; this finds them
+    // without scanning the rest.
+    index('source_runs_status_source_idx').on(t.status, t.source_id, t.started_at),
   ],
 )
+
+// Source stats — one row per source: how many snapshots and runs it has, and
+// the first and newest of each. snapshots and source_runs grow by a row per
+// source per tick forever, so any per-source aggregate over them reads every
+// row ever written; this table answers the same questions in one row per
+// source. insertRows() keeps it in step, in the same batch as the row it
+// counts, so nothing else writes snapshots or runs without it.
+export const sourceStats = sqliteTable('source_stats', {
+  source_id: text('source_id').primaryKey(),
+  snapshot_count: integer('snapshot_count').notNull().default(0),
+  first_fetched_at: text('first_fetched_at'),
+  last_fetched_at: text('last_fetched_at'),
+  run_count: integer('run_count').notNull().default(0),
+  last_run_at: text('last_run_at'),
+})
 
 // Judge runs — one row per POST /api/judge/alerts (layers/terminal/server/pipeline/judge).
 // judged_through is the cursor GET /api/judge/pending reads: a change is

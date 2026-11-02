@@ -97,6 +97,7 @@ const runs = () => db.select().from(schema.sourceRuns)
 beforeEach(async () => {
   for (const table of [
     schema.sourceRuns,
+    schema.sourceStats,
     schema.alerts,
     schema.changes,
     schema.entities,

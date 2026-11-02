@@ -105,6 +105,7 @@ const ftsWithNewHits = (hits: { adsh: string; cik: string; name: string; form: s
 beforeEach(async () => {
   for (const table of [
     schema.sourceRuns,
+    schema.sourceStats,
     schema.alerts,
     schema.changes,
     schema.entities,

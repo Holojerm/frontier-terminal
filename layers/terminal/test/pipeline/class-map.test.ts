@@ -108,6 +108,7 @@ async function opsKinds(): Promise<string[]> {
 beforeEach(async () => {
   for (const table of [
     schema.sourceRuns,
+    schema.sourceStats,
     schema.snapshots,
     schema.entities,
     schema.changes,

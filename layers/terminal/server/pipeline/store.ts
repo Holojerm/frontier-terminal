@@ -1,6 +1,7 @@
-import { and, desc, eq, gte, inArray, like } from 'drizzle-orm'
+import { and, desc, eq, gte, inArray, like, sql } from 'drizzle-orm'
 import type { drizzle } from 'drizzle-orm/d1'
 import type { BatchItem } from 'drizzle-orm/batch'
+import type { SQLiteColumn } from 'drizzle-orm/sqlite-core'
 import type { z } from 'zod'
 
 import * as tables from '#server/db/schema'
@@ -114,10 +115,61 @@ function insertStatements<T extends TableName>(
   if (validated.length === 0) return []
   const columns = Object.keys(validated[0]!).length
   const target = STORE_TABLES[table]
-  return chunk(validated, rowsPerStatement(columns)).map((group) => {
+  const inserts = chunk(validated, rowsPerStatement(columns)).map((group) => {
     const insert = db.insert(target).values(group as unknown as (typeof target)['$inferInsert'][])
     return skipExisting ? insert.onConflictDoNothing() : insert
   })
+  // A skipped duplicate must not be counted, and this cannot tell which rows
+  // were skipped — so skipExisting is for tables source_stats does not count.
+  if (skipExisting) return inserts
+  return [...inserts, ...statsStatements(db, table, validated)]
+}
+
+const stats = tables.sourceStats
+
+/** The stored stamp or the incoming one, whichever `fn` picks; NULL never wins. */
+const keep = (fn: 'min' | 'max', column: SQLiteColumn) => {
+  const incoming = sql`excluded.${sql.identifier(column.name)}`
+  return sql`${sql.raw(fn)}(coalesce(${column}, ${incoming}), ${incoming})`
+}
+
+/** One source_stats upsert per snapshot or run, so the counts move with the rows. */
+function statsStatements(db: PipelineDb, table: TableName, rows: readonly unknown[]): Statement[] {
+  if (table === 'snapshots') {
+    return (rows as readonly StoreRow<'snapshots'>[]).map((row) =>
+      db
+        .insert(stats)
+        .values({
+          source_id: row.source_id,
+          snapshot_count: 1,
+          first_fetched_at: row.fetched_at,
+          last_fetched_at: row.fetched_at,
+        })
+        .onConflictDoUpdate({
+          target: stats.source_id,
+          set: {
+            snapshot_count: sql`${stats.snapshot_count} + 1`,
+            first_fetched_at: keep('min', stats.first_fetched_at),
+            last_fetched_at: keep('max', stats.last_fetched_at),
+          },
+        }),
+    )
+  }
+  if (table === 'source_runs') {
+    return (rows as readonly StoreRow<'source_runs'>[]).map((row) =>
+      db
+        .insert(stats)
+        .values({ source_id: row.source_id, run_count: 1, last_run_at: row.started_at })
+        .onConflictDoUpdate({
+          target: stats.source_id,
+          set: {
+            run_count: sql`${stats.run_count} + 1`,
+            last_run_at: keep('max', stats.last_run_at),
+          },
+        }),
+    )
+  }
+  return []
 }
 
 /**

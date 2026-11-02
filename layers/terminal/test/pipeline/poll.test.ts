@@ -100,6 +100,7 @@ beforeEach(async () => {
   warn = vi.spyOn(console, 'warn').mockImplementation(() => {})
   for (const table of [
     schema.sourceRuns,
+    schema.sourceStats,
     schema.snapshots,
     schema.entities,
     schema.changes,
