@@ -32,7 +32,7 @@
   "deploy": "workers-builds",
   "template": {
     "repo": "Holojerm/nuxt-cf-template",
-    "syncedSha": "7911079",
+    "syncedSha": "3ad2f16",
     "customized": [
       "nuxt.config.ts",
       "server/middleware/auth.ts",
