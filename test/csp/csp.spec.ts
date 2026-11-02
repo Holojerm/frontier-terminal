@@ -132,6 +132,24 @@ test.describe('the directives that make the policy worth having', () => {
     expect(csp).toContain("connect-src 'self'")
   })
 
+  test('the edge-injected Web Analytics beacon is allowed', async ({ page }) => {
+    // Cloudflare injects this at the edge, so dev never loads it and only the
+    // policy text can be checked. Without both hosts every production page logs
+    // a violation and the analytics dashboard reads zero.
+    const response = await page.goto('/')
+    const csp = response!.headers()['content-security-policy'] ?? ''
+
+    const scriptSrc = /script-src ([^;]+)/.exec(csp)?.[1] ?? ''
+    expect(scriptSrc, 'beacon.min.js would be refused').toContain(
+      'https://static.cloudflareinsights.com',
+    )
+
+    const connectSrc = /connect-src ([^;]+)/.exec(csp)?.[1] ?? ''
+    expect(connectSrc, 'the /cdn-cgi/rum reports would be refused').toContain(
+      'https://cloudflareinsights.com',
+    )
+  })
+
   test("eval stays blocked — 'unsafe-eval' must never be added", async ({ page }) => {
     const response = await page.goto('/')
     const csp = response!.headers()['content-security-policy'] ?? ''
@@ -145,7 +163,7 @@ test.describe('the directives that make the policy worth having', () => {
     ).not.toContain('unsafe-eval')
   })
 
-  test('no external origin has crept into script-src', async ({ page }) => {
+  test('no external origin has crept into script-src beyond the one we chose', async ({ page }) => {
     const response = await page.goto('/')
     const csp = response!.headers()['content-security-policy'] ?? ''
     const scriptSrc = /script-src ([^;]+)/.exec(csp)?.[1] ?? ''
@@ -154,10 +172,12 @@ test.describe('the directives that make the policy worth having', () => {
     // adding a tag manager, a chat widget or a font CDN means adding a host
     // here, and that should be a decision someone makes on purpose — argued
     // for in nuxt.config.ts, not appended to make a build go green.
+    // static.cloudflareinsights.com is the Web Analytics beacon the zone
+    // injects at the edge.
     const externalHosts = scriptSrc
       .split(/\s+/)
       .filter((source) => source.startsWith('http') || source.startsWith('//'))
 
-    expect(externalHosts).toEqual([])
+    expect(externalHosts).toEqual(['https://static.cloudflareinsights.com'])
   })
 })
