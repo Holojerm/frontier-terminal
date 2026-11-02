@@ -7,9 +7,10 @@
 
 import { env } from 'cloudflare:test'
 import { drizzle } from 'drizzle-orm/d1'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '../server/db/schema'
+import { clearExtensionsForTest, registerFleetExtraContributor } from '../server/utils/extensions'
 import {
   collectFleetCounters,
   compareMigrations,
@@ -91,21 +92,32 @@ describe('collectFleetCounters', () => {
     await env.DB.exec('DELETE FROM ops_events')
   })
 
+  describe('extra contributors', () => {
+    afterEach(() => clearExtensionsForTest())
+
+    it('merges every contributor into `extra` and leaves the rest of the shape alone', async () => {
+      registerFleetExtraContributor({ key: 'a', collect: async () => ({ athletes: 3, plans: 5 }) })
+      registerFleetExtraContributor({
+        key: 'b',
+        collect: async (_db, now) => ({ sessionsLogged: now.getTime() === NOW.getTime() ? 7 : 0 }),
+      })
+
+      const counters = await collectFleetCounters(db, NOW)
+      expect(counters.extra).toEqual({ athletes: 3, plans: 5, sessionsLogged: 7 })
+      expect(Object.keys(counters).sort()).toEqual(['extra', 'opsEvents'])
+    })
+
+    it('replaces rather than duplicates a contributor registered twice', async () => {
+      registerFleetExtraContributor({ key: 'k', collect: async () => ({ a: 1 }) })
+      registerFleetExtraContributor({ key: 'k', collect: async () => ({ a: 2 }) })
+      expect((await collectFleetCounters(db, NOW)).extra).toEqual({ a: 2 })
+    })
+  })
+
   it('is all zeros on an empty database', async () => {
     expect(await collectFleetCounters(db, NOW)).toEqual({
       opsEvents: { pending: 0, last24h: 0 },
-      extra: {
-        snapshots: 0,
-        entities: 0,
-        changes: 0,
-        alerts: 0,
-        lastOkTickEdgarMs: 0,
-        lastOkTickSurveyMs: 0,
-        lastFailureMs: 0,
-        lastTripwireRunMs: 0,
-        launchStaleCells: 0,
-        launchUnalerted: 0,
-      },
+      extra: {},
     })
   })
 

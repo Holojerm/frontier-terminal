@@ -94,6 +94,24 @@ const pending = await db.select().from(schema.opsEvents).where(isNull(schema.ops
 await db.run(sql`SELECT * FROM users`)
 ```
 
+### Product code reaches core through registries
+
+Core files stay the template's. The product (`layers/terminal/`) registers what is its own from
+Nitro plugins; tests call the same `register…()` function, because plugins don't run under vitest.
+
+- **Fleet counters**: `registerFleetExtraContributor({ key, collect })` in
+  `server/utils/extensions.ts`; the numbers land in `extra` on `GET /api/fleet`. Counts only.
+  See `layers/terminal/server/plugins/fleet-counters.ts`.
+- **Native rate-limit budgets**: `rateLimit()` delegates to Cloudflare's binding only when a call
+  site's numbers equal a registered budget. Core registers `NATIVE_LIMITER` (30/60s); the terminal
+  adds `RATE_LIMITER_60` with `registerNativeLimiter()` next to its `[[ratelimits]]` block
+  (`layers/terminal/server/plugins/rate-limits.ts`). Named budgets that stay on KV, such as
+  `PERMALINK_LIMIT`, live in `layers/terminal/server/utils/rate-limits.ts`.
+- **Dynamic public pages and robots paths**: `registerPublicPageSource()` and
+  `registerRobotsDisallow()` in `server/utils/public-pages.ts`. See `seo.md`.
+
+Where the app still differs from a template-owned file, `docs/template-divergence.md` says why.
+
 ### Vendored layers
 
 A fork takes a template feature that has moved into `layers/<name>/` by vendoring it:

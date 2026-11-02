@@ -14,7 +14,9 @@ import {
 } from '../../server/pipeline/refresh'
 import { sourceIdsForScope } from '../../server/pipeline/scopes'
 import { includeSources } from '../../server/pipeline/sources'
+import { registerFleetExtraContributor } from '~~/server/utils/extensions'
 import { collectFleetCounters, latestFetchBySource } from '~~/server/utils/fleet-status'
+import { collectTerminalCounters } from '../../server/utils/fleet-counters'
 import { fixtureText, manifest } from './fixtures'
 
 // The refresh end-to-end against the real D1 and R2 test bindings, driven by
@@ -239,6 +241,8 @@ describe('baseline', () => {
 
   it('feeds the fleet counters and the per-source freshness on /api/status', async () => {
     await run('edgar', ['edgar-fts', 'edgar-submissions-spcx'])
+    // The Nitro plugin that does this does not run under vitest.
+    registerFleetExtraContributor({ key: 'terminal', collect: collectTerminalCounters })
     const { extra } = await collectFleetCounters(db, now())
     expect(extra.snapshots).toBe(2)
     expect(extra.changes).toBe(0)

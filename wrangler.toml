@@ -67,9 +67,10 @@ bucket_name = "frontier-terminal-blob"
 #     7390 is derived from this app's name (scripts/ratelimit-namespace.ts);
 #     the 60/60s limiter below is hand-picked outside that scheme.
 #     Adding a second limiter means picking a different number here.
-# One block per budget in use, because a block enforces exactly one. Both must
-# appear in NATIVE_LIMITERS in server/utils/rate-limit.ts with the same name and
-# the same two numbers, and no two may share a (limit, period) pair.
+# One block per budget in use, because a block enforces exactly one. The first
+# is NATIVE_LIMITER in server/utils/rate-limit.ts; every other is registered with
+# registerNativeLimiter() (layers/terminal/server/utils/rate-limits.ts) under the
+# same name and the same two numbers, and no two may share a (limit, period) pair.
 #
 # 30/60s: the two writers — /export/* and /api/judge/*.
 [[ratelimits]]
