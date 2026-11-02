@@ -30,3 +30,22 @@ Three pieces:
   sent. Rows are marked notified only after the send resolves, so a mail
   hiccup retries instead of losing the alert. Always `await` the record call:
   a 5xx is exactly the path that ends the request before a floated promise runs.
+
+## Social posting (layers/social)
+
+Critical alerts and a Monday what-moved thread post to the app's X and Bluesky
+accounts through Buffer. `social:alerts` and `social:digest` queue rows
+(`layers/terminal/server/pipeline/social.ts`); `social:post` sends them.
+
+- **Secrets:** `NUXT_SOCIAL_BUFFER_API_KEY` (1Password "Buffer API — Frontier
+  Terminal"), `NUXT_SOCIAL_CHANNEL_X`, `NUXT_SOCIAL_CHANNEL_BLUESKY`. With no key <!-- refs-check-ignore: runtimeConfig.social.channelBluesky in layers/social -->
+  every task returns before touching D1.
+- **Kill switch:** `NUXT_SOCIAL_ENABLED=1` sends. Unset is a dry run — due rows
+  become `dry-run`, so switching on never flushes a backlog. Delete the secret to
+  stop posting at the next tick.
+- **Suppress a judged alert** inside its one-hour hold:
+  `UPDATE social_posts SET status = 'suppressed' WHERE kind = 'alert' AND ref = '<alert id>'`.
+- **`unknown` rows** (network error or 5xx mid-send) are never retried and land in
+  the ops digest as `social_unknown`. Check Buffer; set `sent` or `queued` by hand.
+- Add the secrets to `fleet.json` `secrets` once they are set — listing them
+  before then reports a false `secret_missing`.

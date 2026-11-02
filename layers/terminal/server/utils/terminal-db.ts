@@ -281,7 +281,7 @@ export async function tableCounts(db: PipelineDb): Promise<TableCounts> {
 
 export const MOVEMENT_WINDOW_HOURS = 24
 
-const AXIS_OF: Readonly<Record<string, keyof Omit<MovementSummary['recent'], 'total'>>> = {
+export const AXIS_OF: Readonly<Record<string, keyof Omit<MovementSummary['recent'], 'total'>>> = {
   model: 'pricing',
   recommendation: 'pricing',
   job: 'hiring',
