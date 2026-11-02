@@ -20,11 +20,24 @@ definePageMeta({
 
 const { data: disclosures, error } = await useFetch<DisclosuresData>('/api/disclosures')
 
+const site = useSiteContext()
+
 useSeo({
-  title: 'Disclosures',
+  title: 'AI misalignment disclosures by lab',
   description:
     'Misalignment reports and notices the frontier AI labs publish, verbatim, with discovery and disclosure dates and the source and fetch time on every row.',
   dateModified: disclosures.value?.as_of,
+  schema: [
+    datasetSchema(site, {
+      url: usePageUrl(),
+      name: 'Frontier AI lab misalignment disclosures',
+      description:
+        'Every entry on a frontier lab’s own misalignment-disclosure index: report or notice, title, summary, model, and context verbatim, with the date the index prints. A count measures disclosure, not behavior.',
+      dateModified: disclosures.value?.as_of,
+      variableMeasured: ['kind', 'title', 'model', 'listed_on'],
+      distribution: exportDistribution(site, 'disclosures'),
+    }),
+  ],
 })
 
 const PROVIDER: Record<string, string> = LAB_DISPLAY

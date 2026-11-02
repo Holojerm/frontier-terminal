@@ -19,11 +19,24 @@ definePageMeta({
 
 const { data: revenue, error } = await useFetch<RevenueData>('/api/revenue')
 
+const site = useSiteContext()
+
 useSeo({
-  title: 'Revenue',
+  title: 'AI lab revenue from SEC filings',
   description:
-    'Revenue the frontier AI labs have disclosed to the SEC, per reported period with the filing linked, and a stated gap where no audited figure exists.',
+    'Revenue OpenAI, Anthropic, Google, xAI, Meta, and Mistral have disclosed to the SEC, per period with the filing linked, and a stated gap where none is audited.',
   dateModified: revenue.value?.as_of,
+  schema: [
+    datasetSchema(site, {
+      url: usePageUrl(),
+      name: 'Frontier AI lab revenue disclosed to the SEC',
+      description:
+        'Revenue per reporting period for each frontier AI lab, or the public parent that consolidates it, as tagged in its own SEC filings, with the filing behind every value. Press run-rates are excluded.',
+      dateModified: revenue.value?.as_of,
+      variableMeasured: ['val', 'start', 'end', 'form', 'accession_no'],
+      distribution: exportDistribution(site, 'revenue_facts'),
+    }),
+  ],
 })
 </script>
 

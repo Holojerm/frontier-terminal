@@ -20,11 +20,24 @@ const { data: prices, error } = await useFetch<PricesData>('/api/prices')
 const route = useRoute()
 const provider = typeof route.query.provider === 'string' ? route.query.provider : undefined
 
+const site = useSiteContext()
+
 useSeo({
-  title: 'Prices',
+  title: 'LLM API pricing by lab',
   description:
-    'API pricing per million tokens across the frontier labs: the like-for-like matrix, the full SKU catalog, and each row’s source URL and fetch time.',
+    'API prices per million tokens for GPT, Claude, Gemini, Grok, Llama, and Mistral models: a like-for-like matrix and every SKU, each with source and fetch time.',
   dateModified: prices.value?.as_of,
+  schema: [
+    datasetSchema(site, {
+      url: usePageUrl(),
+      name: 'Frontier AI lab API prices per million tokens',
+      description:
+        'The current list price of every API SKU OpenAI, Anthropic, Google, xAI, Meta, and Mistral publish, per million input, cached-input, and output tokens, as read from each vendor’s own pricing page.',
+      dateModified: prices.value?.as_of,
+      variableMeasured: ['input_per_mtok', 'cached_input_per_mtok', 'output_per_mtok'],
+      distribution: exportDistribution(site, 'prices_latest'),
+    }),
+  ],
 })
 </script>
 

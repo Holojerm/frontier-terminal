@@ -64,9 +64,11 @@ const coverage = computed(() => {
   return `${first.at}/${history.value?.removed ? last.at : '..'}`
 })
 
+const lab = DISPLAY[history.value?.provider ?? 'other'] ?? ''
+
 useSeo({
-  title: `${name.value} price history`,
-  description: `Every observed API price for ${name.value} per million tokens, point by point, with the source URL and fetch time behind each one.`,
+  title: `${lab} ${name.value} API pricing history`.trim(),
+  description: `Every observed ${lab} API price for ${name.value} per million tokens, point by point, with the source URL and fetch time behind each one.`,
   breadcrumb: [{ name: 'Prices', path: '/prices' }],
   dateModified: history.value?.as_of,
   schema: [

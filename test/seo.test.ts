@@ -26,7 +26,9 @@ import {
   breadcrumbSchema,
   dataCatalogSchema,
   datasetSchema,
+  exportDistribution,
   jsonLdGraph,
+  labOrganizationSchema,
   organizationSchema,
   webPageSchema,
   websiteSchema,
@@ -599,5 +601,35 @@ describe('dataLastmods', () => {
     expect(out['/incidents']).toBeUndefined()
     expect(out['/about']).toBeUndefined()
     expect(dataLastmods({ changes: [], alertsAt: null }, LABS)).toEqual({})
+  })
+})
+
+describe('lab pages and axis datasets', () => {
+  it('names the lab a page is about as its own Organization', () => {
+    const lab = labOrganizationSchema({ name: 'Anthropic', url: 'https://www.anthropic.com' })
+    const page = webPageSchema(SITE, {
+      url: 'https://example.com/labs/anthropic',
+      title: 'Anthropic',
+      description: 'Anthropic on every axis.',
+      about: lab,
+    })
+    expect(page?.about).toEqual({
+      '@type': 'Organization',
+      name: 'Anthropic',
+      url: 'https://www.anthropic.com',
+    })
+    expect(
+      webPageSchema(SITE, { url: 'https://example.com/x', title: 'x', description: 'x' }),
+    ).not.toHaveProperty('about')
+  })
+
+  it('points an export distribution at both formats the export route serves', () => {
+    expect(exportDistribution(SITE, 'revenue_facts')).toEqual([
+      { encodingFormat: 'text/csv', contentUrl: 'https://example.com/export/revenue_facts.csv' },
+      {
+        encodingFormat: 'application/json',
+        contentUrl: 'https://example.com/export/revenue_facts.json',
+      },
+    ])
   })
 })

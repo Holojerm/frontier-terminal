@@ -24,7 +24,7 @@ const [{ data: alerts, error: alertsError }, { data: ticker, error: tickerError 
   ])
 
 useSeo({
-  title: 'Alerts',
+  title: 'AI lab pricing, hiring, and filing alerts',
   description:
     'Every alert raised on pricing, hiring, and SEC changes at the frontier AI labs, split into alerts and a ticker, each citing its change rows and sources.',
   dateModified: alerts.value?.as_of,

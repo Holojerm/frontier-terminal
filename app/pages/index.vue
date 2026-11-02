@@ -84,7 +84,7 @@ useSeo({
   // 'exact' because the brand should lead on the landing page — everywhere else
   // useSeo appends `· AppName` for you.
   titleMode: 'exact',
-  title: config.public.appName,
+  title: `${config.public.appName}: sourced data on the frontier AI labs`,
   description,
   dateModified: overview.data.value?.as_of,
 })
