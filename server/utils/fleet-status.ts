@@ -131,6 +131,13 @@ export async function collectFleetCounters(db: FleetDb, now = new Date()): Promi
     const [row] = await db.select({ total: count() }).from(table)
     return row?.total ?? 0
   }
+  // From source_stats: count(*) over snapshots reads every row ever taken.
+  const snapshotTotal = async () => {
+    const [row] = await db
+      .select({ total: sql<number>`coalesce(sum(${tables.sourceStats.snapshot_count}), 0)` })
+      .from(tables.sourceStats)
+    return row?.total ?? 0
+  }
   // Newest tick per scope that fetched anything at all (not 'failed'), and the
   // newest failure — as epoch ms because `extra` is numbers only. 0 = never.
   const lastTick = async (scope: string, failed: boolean) => {
@@ -151,7 +158,7 @@ export async function collectFleetCounters(db: FleetDb, now = new Date()): Promi
   return {
     opsEvents: { pending: pendingOps?.total ?? 0, last24h: recentOps?.total ?? 0 },
     extra: {
-      snapshots: await total(tables.snapshots),
+      snapshots: await snapshotTotal(),
       entities: await total(tables.entities),
       changes: await total(tables.changes),
       alerts: await total(tables.alerts),
@@ -168,9 +175,8 @@ export async function collectFleetCounters(db: FleetDb, now = new Date()): Promi
 /** Newest fetched_at per source — the freshness a reader of /api/status wants. */
 export async function latestFetchBySource(db: FleetDb): Promise<Record<string, string>> {
   const rows = await db
-    .select({ source_id: tables.snapshots.source_id, at: max(tables.snapshots.fetched_at) })
-    .from(tables.snapshots)
-    .groupBy(tables.snapshots.source_id)
+    .select({ source_id: tables.sourceStats.source_id, at: tables.sourceStats.last_fetched_at })
+    .from(tables.sourceStats)
   const out: Record<string, string> = {}
   for (const row of rows) if (row.at) out[row.source_id] = row.at
   return out

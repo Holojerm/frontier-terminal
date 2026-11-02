@@ -164,18 +164,14 @@ export interface SourceStamp {
   snapshot_count: number
 }
 
-/** Newest snapshot per source, with how many that source has. */
+/**
+ * Newest snapshot per source, with how many that source has. Read through
+ * source_stats: one index seek per source instead of a scan of every
+ * snapshot. CROSS JOIN, here and in the two queries like it below, is
+ * SQLite's way of fixing the loop order — given a plain join, the planner
+ * walks the big table and probes source_stats, which reads every row again.
+ */
 export async function sourceStamps(db: PipelineDb): Promise<Map<string, SourceStamp>> {
-  const newest = db
-    .select({
-      source_id: tables.snapshots.source_id,
-      at: max(tables.snapshots.fetched_at).as('at'),
-      n: count().as('n'),
-    })
-    .from(tables.snapshots)
-    .groupBy(tables.snapshots.source_id)
-    .as('newest')
-
   const rows = await db
     .select({
       source_id: tables.snapshots.source_id,
@@ -183,14 +179,14 @@ export async function sourceStamps(db: PipelineDb): Promise<Map<string, SourceSt
       fetched_at: tables.snapshots.fetched_at,
       http_status: tables.snapshots.http_status,
       bytes: tables.snapshots.bytes,
-      n: newest.n,
+      n: tables.sourceStats.snapshot_count,
     })
-    .from(tables.snapshots)
-    .innerJoin(
-      newest,
+    .from(tables.sourceStats)
+    .crossJoin(tables.snapshots)
+    .where(
       and(
-        eq(tables.snapshots.source_id, newest.source_id),
-        eq(tables.snapshots.fetched_at, newest.at),
+        eq(tables.snapshots.source_id, tables.sourceStats.source_id),
+        eq(tables.snapshots.fetched_at, tables.sourceStats.last_fetched_at),
       ),
     )
     .orderBy(asc(tables.snapshots.source_id), desc(tables.snapshots.id))
@@ -206,23 +202,34 @@ export async function sourceStamps(db: PipelineDb): Promise<Map<string, SourceSt
         http_status: row.http_status,
         bytes: row.bytes,
       },
-      snapshot_count: Number(row.n),
+      snapshot_count: row.n,
     })
   }
   return out
 }
 
+/** First snapshot per source — when watching it began. */
+async function firstSnapshotPerSource(
+  db: PipelineDb,
+): Promise<{ source_id: string; source_url: string; fetched_at: string }[]> {
+  return db
+    .selectDistinct({
+      source_id: tables.snapshots.source_id,
+      source_url: tables.snapshots.source_url,
+      fetched_at: tables.snapshots.fetched_at,
+    })
+    .from(tables.sourceStats)
+    .crossJoin(tables.snapshots)
+    .where(
+      and(
+        eq(tables.snapshots.source_id, tables.sourceStats.source_id),
+        eq(tables.snapshots.fetched_at, tables.sourceStats.first_fetched_at),
+      ),
+    )
+}
+
 /** Newest run per source — how the last poll of it ended. */
 export async function lastRuns(db: PipelineDb): Promise<Map<string, SourceRunStamp>> {
-  const newest = db
-    .select({
-      source_id: tables.sourceRuns.source_id,
-      at: max(tables.sourceRuns.started_at).as('at'),
-    })
-    .from(tables.sourceRuns)
-    .groupBy(tables.sourceRuns.source_id)
-    .as('newest_run')
-
   const rows = await db
     .select({
       source_id: tables.sourceRuns.source_id,
@@ -232,12 +239,12 @@ export async function lastRuns(db: PipelineDb): Promise<Map<string, SourceRunSta
       scope: tables.sourceRuns.scope,
       source_url: tables.sourceRuns.source_url,
     })
-    .from(tables.sourceRuns)
-    .innerJoin(
-      newest,
+    .from(tables.sourceStats)
+    .crossJoin(tables.sourceRuns)
+    .where(
       and(
-        eq(tables.sourceRuns.source_id, newest.source_id),
-        eq(tables.sourceRuns.started_at, newest.at),
+        eq(tables.sourceRuns.source_id, tables.sourceStats.source_id),
+        eq(tables.sourceRuns.started_at, tables.sourceStats.last_run_at),
       ),
     )
     .orderBy(asc(tables.sourceRuns.source_id), desc(tables.sourceRuns.id))
@@ -258,22 +265,24 @@ export async function lastRuns(db: PipelineDb): Promise<Map<string, SourceRunSta
 
 export async function tableCounts(db: PipelineDb): Promise<TableCounts> {
   const total = async (
-    table:
-      | typeof tables.snapshots
-      | typeof tables.entities
-      | typeof tables.changes
-      | typeof tables.alerts
-      | typeof tables.sourceRuns,
+    table: typeof tables.entities | typeof tables.changes | typeof tables.alerts,
   ) => {
     const [row] = await db.select({ total: count() }).from(table)
     return row?.total ?? 0
   }
+  // snapshots and source_runs from source_stats: count(*) reads every row.
+  const [logged] = await db
+    .select({
+      snapshots: sql<number>`coalesce(sum(${tables.sourceStats.snapshot_count}), 0)`,
+      source_runs: sql<number>`coalesce(sum(${tables.sourceStats.run_count}), 0)`,
+    })
+    .from(tables.sourceStats)
   return {
-    snapshots: await total(tables.snapshots),
+    snapshots: logged?.snapshots ?? 0,
     entities: await total(tables.entities),
     changes: await total(tables.changes),
     alerts: await total(tables.alerts),
-    source_runs: await total(tables.sourceRuns),
+    source_runs: logged?.source_runs ?? 0,
   }
 }
 
@@ -339,9 +348,9 @@ export async function queryMovement(db: PipelineDb): Promise<MovementSummary> {
   }
 
   const perSource = await db
-    .select({ source_id: tables.snapshots.source_id, n: count() })
-    .from(tables.snapshots)
-    .groupBy(tables.snapshots.source_id)
+    .select({ n: tables.sourceStats.snapshot_count })
+    .from(tables.sourceStats)
+    .where(sql`${tables.sourceStats.snapshot_count} > 0`)
 
   return {
     latest_detected_at: latest,
@@ -686,11 +695,8 @@ async function modelChanges(db: PipelineDb): Promise<ChangeRow[]> {
 
 /** Earliest fetch per source URL — when watching began, for the opening history point. */
 async function firstSnapshotByUrl(db: PipelineDb): Promise<Map<string, string>> {
-  const rows = await db
-    .select({ source_url: tables.snapshots.source_url, at: min(tables.snapshots.fetched_at) })
-    .from(tables.snapshots)
-    .groupBy(tables.snapshots.source_url)
-  return new Map(rows.filter((r) => r.at !== null).map((r) => [r.source_url, r.at!]))
+  const rows = await firstSnapshotPerSource(db)
+  return new Map(rows.map((r) => [r.source_url, r.fetched_at]))
 }
 
 /** Newest change per (entity_key, source_url), from a list already sorted oldest first. */
@@ -1327,13 +1333,7 @@ export const HIRING_WINDOW_DAYS = 30
 /** Baseline (source_url, fetched_at) pairs: first snapshot per source, plus runs marked baseline. */
 async function loadBaselineInstants(db: PipelineDb): Promise<Set<string>> {
   const [firsts, runs] = await Promise.all([
-    db
-      .select({
-        source_url: tables.snapshots.source_url,
-        fetched_at: min(tables.snapshots.fetched_at),
-      })
-      .from(tables.snapshots)
-      .groupBy(tables.snapshots.source_url),
+    firstSnapshotPerSource(db),
     db
       .select({ status: tables.sourceRuns.status, snapshot_id: tables.sourceRuns.snapshot_id })
       .from(tables.sourceRuns)
@@ -1354,9 +1354,7 @@ async function loadBaselineInstants(db: PipelineDb): Promise<Set<string>> {
     )
   }
   const snapshots = [
-    ...firsts
-      .filter((f) => f.fetched_at !== null)
-      .map((f) => ({ id: '', source_url: f.source_url, fetched_at: f.fetched_at! })),
+    ...firsts.map((f) => ({ id: '', source_url: f.source_url, fetched_at: f.fetched_at })),
     ...marked,
   ]
   return baselineInstants(snapshots, runs)
@@ -1379,9 +1377,8 @@ export async function queryHiringHistory(
       .where(isJob),
     db.select().from(tables.changes).where(eq(tables.changes.entity_type, 'job')),
     db
-      .select({ source_id: tables.snapshots.source_id, at: min(tables.snapshots.fetched_at) })
-      .from(tables.snapshots)
-      .groupBy(tables.snapshots.source_id),
+      .select({ source_id: tables.sourceStats.source_id, at: tables.sourceStats.first_fetched_at })
+      .from(tables.sourceStats),
     db
       .select({ source_id: tables.sourceRuns.source_id, at: min(tables.sourceRuns.started_at) })
       .from(tables.sourceRuns)

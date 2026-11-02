@@ -34,6 +34,7 @@ function mapStore() {
 
 beforeEach(async () => {
   await db.delete(schema.sourceRuns)
+  await db.delete(schema.sourceStats)
 })
 
 describe('terminalStamp', () => {

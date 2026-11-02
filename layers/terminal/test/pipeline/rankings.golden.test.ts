@@ -208,6 +208,7 @@ const opsKinds = async () => (await db.select().from(schema.opsEvents)).map((o) 
 beforeEach(async () => {
   for (const table of [
     schema.sourceRuns,
+    schema.sourceStats,
     schema.alerts,
     schema.changes,
     schema.entities,

@@ -184,6 +184,7 @@ const ctx = async () =>
 beforeEach(async () => {
   for (const table of [
     schema.sourceRuns,
+    schema.sourceStats,
     schema.alerts,
     schema.changes,
     schema.entities,
