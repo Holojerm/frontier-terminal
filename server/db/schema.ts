@@ -80,3 +80,4 @@ export type NewOpsEvent = typeof opsEvents.$inferInsert
 // on its own; this line is what makes core's types and drizzle-kit see them.
 // The terminal layer owns the pipeline and thesis tables.
 export * from '../../layers/terminal/server/db/schema'
+export * from '../../layers/social/server/db/schema'
