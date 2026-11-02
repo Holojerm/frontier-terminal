@@ -7,6 +7,9 @@
 //     the source URL and fetch time. A judged alert waits an hour first, so
 //     a bad call can be suppressed before it is public.
 //   - a weekly thread: what moved, by axis, and the week's critical alerts.
+//
+// On X the link goes in a self-reply, never the lead post: X ranks posts
+// carrying an external link lower. Bluesky does not, so it keeps one post.
 
 import { and, count, desc, eq, gte, ne, sql } from 'drizzle-orm'
 
@@ -41,6 +44,16 @@ const DAY_MS = 86_400_000
 
 const alertUrl = (origin: string, id: string) => absoluteUrl(origin, `/alerts/${id}`)
 
+/** Services whose lead post must not carry a link — see the header. */
+const LINK_IN_REPLY: Record<SocialService, boolean> = { x: true, bluesky: false }
+
+/** `text` with its link, either inline or as the reply under it. */
+export function withLink(service: SocialService, text: string, url: string): string[] {
+  return LINK_IN_REPLY[service]
+    ? [fitSocialText(service, text), `Source and details: ${url}`]
+    : [fitSocialText(service, text, url)]
+}
+
 /** Queue every recent critical alert. Returns how many rows were new. */
 export async function enqueueCriticalAlerts(
   db: PipelineDb,
@@ -72,7 +85,7 @@ export async function enqueueCriticalAlerts(
       ref: alert.id,
       notBefore: new Date(Date.parse(alert.created_at) + hold),
       compose: (service) => ({
-        posts: [fitSocialText(service, alert.headline, alertUrl(origin, alert.id))],
+        posts: withLink(service, alert.headline, alertUrl(origin, alert.id)),
       }),
     })
   }
@@ -129,7 +142,8 @@ export function composeWeeklyDigest(
   ]
     .filter(Boolean)
     .join('\n\n')
-  const posts = [fitSocialText(service, lead, absoluteUrl(origin, '/alerts'))]
+  const posts = withLink(service, lead, absoluteUrl(origin, '/alerts'))
+  // Replies already sit under the lead, so each critical keeps its link inline.
   for (const alert of digest.criticals) {
     posts.push(fitSocialText(service, alert.headline, alertUrl(origin, alert.id)))
   }
