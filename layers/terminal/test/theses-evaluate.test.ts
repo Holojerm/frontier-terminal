@@ -3,6 +3,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
+import { insertRows } from '../server/pipeline/store'
 import { evaluateTheses } from '../server/theses/evaluate'
 import { queryContext } from '../server/utils/terminal-db'
 import { daysBefore } from '../server/utils/terminal-rankings'
@@ -123,16 +124,18 @@ beforeAll(async () => {
     ),
   )
   for (const row of [...rankings, ...catalog, ...jobs]) await db.insert(schema.entities).values(row)
-  await db.insert(schema.snapshots).values({
-    id: 'snap-anthropic-greenhouse',
-    source_id: 'anthropic-greenhouse',
-    content_hash: 'h',
-    raw_key: 'raw/h',
-    http_status: 200,
-    bytes: 1,
-    source_url: BOARD_URL,
-    fetched_at: '2026-08-25T11:10:43Z',
-  })
+  await insertRows(db, 'snapshots', [
+    {
+      id: 'snap-anthropic-greenhouse',
+      source_id: 'anthropic-greenhouse',
+      content_hash: 'a'.repeat(64),
+      raw_key: 'raw/h',
+      http_status: 200,
+      bytes: 1,
+      source_url: BOARD_URL,
+      fetched_at: '2026-08-25T11:10:43Z',
+    },
+  ])
 })
 
 const deps = { sourcesYaml, now: () => NOW }

@@ -14,8 +14,8 @@
 // Pure functions of the Drizzle client, so layers/terminal/test/terminal-export.test.ts can
 // drive them against the workerd D1 and read the bytes back.
 
-import { asc, count, eq, type SQL } from 'drizzle-orm'
-import type { SQLiteTable } from 'drizzle-orm/sqlite-core'
+import { and, asc, count, eq, sql, type SQL } from 'drizzle-orm'
+import type { SQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core'
 
 import * as tables from '#server/db/schema'
 import type { PipelineDb } from '../pipeline/store'
@@ -28,9 +28,29 @@ export interface ExportTable {
   name: string
   description: string
   columns: readonly string[]
-  /** One page of rows in a stable order, already reduced to `columns`. */
-  page(db: PipelineDb, offset: number, limit: number): Promise<Row[]>
+  /**
+   * One page of rows in a stable order, already reduced to `columns`: the
+   * first page for `after` null, else the rows that follow `after` (the last
+   * row of the previous page). Keyset, not OFFSET — an offset page re-reads
+   * every row before it, so streaming a table was quadratic in its size.
+   */
+  page(db: PipelineDb, after: Row | null, limit: number): Promise<Row[]>
   count(db: PipelineDb): Promise<number>
+}
+
+/** A unique sort key: the columns a keyset page orders by and resumes after. */
+type Key = readonly [SQLiteColumn, ...SQLiteColumn[]]
+
+/** Rows strictly after `after` in the order of `key`, as one row-value compare
+ * so SQLite can seek the composite index instead of filtering. */
+function afterKey(key: Key, after: Row | null): SQL | undefined {
+  if (after === null) return undefined
+  const columns = sql.join([...key], sql`, `)
+  const values = sql.join(
+    key.map((c) => sql`${after[c.name]}`),
+    sql`, `,
+  )
+  return sql`(${columns}) > (${values})`
 }
 
 const PROVENANCE = ['source_url', 'fetched_at'] as const
@@ -153,18 +173,18 @@ function entityView(
     ...PROVENANCE,
   ]
   const ofType = eq(tables.entities.entity_type, entityType)
+  const key = [tables.entities.source_id, tables.entities.entity_key] as const
   return {
     name,
     description,
     columns,
-    async page(db, offset, limit) {
+    async page(db, after, limit) {
       const rows = await db
         .select()
         .from(tables.entities)
-        .where(ofType)
-        .orderBy(asc(tables.entities.source_id), asc(tables.entities.entity_key))
+        .where(and(ofType, afterKey(key, after)))
+        .orderBy(...key.map((c) => asc(c)))
         .limit(limit)
-        .offset(offset)
       return rows.map(({ payload, ...rest }) =>
         project({ ...parsePayload(payload), ...rest }, columns),
       )
@@ -181,27 +201,36 @@ function plainTable(
   description: string,
   table: SQLiteTable,
   columns: readonly string[],
-  order: SQL[],
+  key: Key,
+  total?: SQL<number>,
 ): ExportTable {
   return {
     name,
     description,
     columns,
-    async page(db, offset, limit) {
+    async page(db, after, limit) {
       const rows = await db
         .select()
         .from(table)
-        .orderBy(...order)
+        .where(afterKey(key, after))
+        .orderBy(...key.map((c) => asc(c)))
         .limit(limit)
-        .offset(offset)
       return rows.map((row) => project(row as Row, columns))
     },
     async count(db) {
+      if (total) {
+        const [row] = await db.select({ total }).from(tables.sourceStats)
+        return Number(row?.total ?? 0)
+      }
       const [row] = await db.select({ total: count() }).from(table)
       return row?.total ?? 0
     },
   }
 }
+
+// The two tables that gain a row per source per tick are counted from
+// source_stats; a count(*) over either reads every row ever written.
+const loggedTotal = (column: SQLiteColumn) => sql<number>`coalesce(sum(${column}), 0)`
 
 export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   snapshots: plainTable(
@@ -209,7 +238,8 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     'One row per fetch of every source: content hash, HTTP status, byte count, and the R2 key of the raw payload.',
     tables.snapshots,
     ['id', 'source_id', 'content_hash', 'raw_key', 'http_status', 'bytes', ...PROVENANCE],
-    [asc(tables.snapshots.fetched_at), asc(tables.snapshots.id)],
+    [tables.snapshots.fetched_at, tables.snapshots.id],
+    loggedTotal(tables.sourceStats.snapshot_count),
   ),
   prices_latest: entityView(
     'prices_latest',
@@ -276,7 +306,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
       'detected_at',
       ...PROVENANCE,
     ],
-    [asc(tables.changes.detected_at), asc(tables.changes.id)],
+    [tables.changes.detected_at, tables.changes.id],
   ),
   alerts: plainTable(
     'alerts',
@@ -292,14 +322,14 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
       'created_at',
       ...PROVENANCE,
     ],
-    [asc(tables.alerts.created_at), asc(tables.alerts.id)],
+    [tables.alerts.created_at, tables.alerts.id],
   ),
   claim_readings: plainTable(
     'claim_readings',
     'One row per thesis claim and data date: the measured value its kill condition is checked against, with the detail behind it (docs/theses/).',
     tables.claimReadings,
     ['thesis_id', 'claim_id', 'date', 'value', 'detail', 'computed_at', ...PROVENANCE],
-    [asc(tables.claimReadings.claim_id), asc(tables.claimReadings.date)],
+    [tables.claimReadings.claim_id, tables.claimReadings.date],
   ),
   claim_verdicts: plainTable(
     'claim_verdicts',
@@ -319,7 +349,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
       'judged_at',
       ...PROVENANCE,
     ],
-    [asc(tables.claimVerdicts.detected_at), asc(tables.claimVerdicts.id)],
+    [tables.claimVerdicts.detected_at, tables.claimVerdicts.id],
   ),
   recipe_observations: plainTable(
     'recipe_observations',
@@ -337,10 +367,12 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
       'first_seen_at',
       ...PROVENANCE,
     ],
+    // id last: (recipe_id, key, date) is not unique, and a keyset needs a key that is.
     [
-      asc(tables.recipeObservations.recipe_id),
-      asc(tables.recipeObservations.key),
-      asc(tables.recipeObservations.date),
+      tables.recipeObservations.recipe_id,
+      tables.recipeObservations.key,
+      tables.recipeObservations.date,
+      tables.recipeObservations.id,
     ],
   ),
   source_runs: plainTable(
@@ -360,7 +392,8 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
       'modified',
       'source_url',
     ],
-    [asc(tables.sourceRuns.started_at), asc(tables.sourceRuns.id)],
+    [tables.sourceRuns.started_at, tables.sourceRuns.id],
+    loggedTotal(tables.sourceStats.run_count),
   ),
 }
 
@@ -443,11 +476,13 @@ export function csvLine(values: readonly unknown[]): string {
 // ---- streaming -------------------------------------------------------------
 
 async function* pages(db: PipelineDb, table: ExportTable): AsyncGenerator<Row[]> {
-  for (let offset = 0; ; offset += EXPORT_PAGE_SIZE) {
-    const rows = await table.page(db, offset, EXPORT_PAGE_SIZE)
+  let after: Row | null = null
+  for (;;) {
+    const rows = await table.page(db, after, EXPORT_PAGE_SIZE)
     if (rows.length === 0) return
     yield rows
     if (rows.length < EXPORT_PAGE_SIZE) return
+    after = rows.at(-1)!
   }
 }
 
