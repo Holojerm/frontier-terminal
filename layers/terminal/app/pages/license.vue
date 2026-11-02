@@ -63,6 +63,12 @@ useSeo({
         <p class="rounded border border-default p-3 font-mono text-sm text-highlighted">
           {{ attribution }}
         </p>
+        <p class="text-sm text-default">
+          Can’t meet the attribution condition, or need terms your compliance team has signed?
+          <NuxtLink to="/contact" class="text-primary underline underline-offset-2"
+            >License it commercially</NuxtLink
+          >.
+        </p>
       </div>
     </TerminalPanel>
 
