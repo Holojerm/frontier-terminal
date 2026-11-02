@@ -47,5 +47,5 @@ accounts through Buffer. `social:alerts` and `social:digest` queue rows
   `UPDATE social_posts SET status = 'suppressed' WHERE kind = 'alert' AND ref = '<alert id>'`.
 - **`unknown` rows** (network error or 5xx mid-send) are never retried and land in
   the ops digest as `social_unknown`. Check Buffer; set `sent` or `queued` by hand.
-- Add the secrets to `fleet.json` `secrets` once they are set — listing them
-  before then reports a false `secret_missing`.
+- `fleet.json` lists the key, the X channel and the switch, so the dashboard
+  flags any of them going missing. A Bluesky channel joins that list when one is set.
