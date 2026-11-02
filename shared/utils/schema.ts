@@ -57,7 +57,9 @@ export function organizationSchema(site: SiteContext): JsonLdNode | null {
     '@id': `${site.appUrl}/${SCHEMA_IDS.organization}`,
     name: site.appName,
     url: site.appUrl,
-    logo: `${site.appUrl}/og.png`,
+    // Square: a logo is read as a mark, and the 1200×630 social card was
+    // being cropped into one.
+    logo: `${site.appUrl}/icon-512.png`,
     // The repo is the only other place this entity exists on the open web.
     // Without it an answer engine has a name and a domain and no way to tell
     // that the code producing the numbers is the code it can go read.

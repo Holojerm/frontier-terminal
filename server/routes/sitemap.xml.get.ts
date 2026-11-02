@@ -17,18 +17,19 @@
 // alert permalinks (/alerts/:id) and the SKU pages (/prices/[key]) are
 // enumerated from D1 here, each with its own lastmod — an alert row is
 // append-only, so its created_at is exact; a SKU's is the date of its newest
-// observation. A failed query degrades to the static list with a no-store
-// header (server/utils/seo.ts › crawlerCacheControl) rather than a 500.
+// observation. The data pages (/prices, /hiring, a lab page, …) are dated by
+// their own newest change row (server/utils/seo.ts › dataLastmods), not the
+// deploy. A failed query degrades to the static list, build-dated, with a
+// no-store header (crawlerCacheControl) rather than a 500.
 
 import { db } from '@nuxthub/db'
 
 import { LAB_PAGES } from '#shared/utils/terminal-lab-summary'
-import { thesisPages } from '#shared/utils/thesis-format'
 import { alertPath } from '#shared/utils/terminal-tiers'
 
-import { THESES } from '../theses/registry'
-import { sitemapResponse, type SitemapEntry } from '../utils/seo'
-import { alertPermalinks, queryPriceKeys } from '../utils/terminal-db'
+import { crawlerPages } from '../utils/crawler-pages'
+import { dataLastmods, sitemapResponse, type SitemapEntry } from '../utils/seo'
+import { alertPermalinks, queryDataFreshness, queryPriceKeys } from '../utils/terminal-db'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()
@@ -36,9 +37,18 @@ export default defineEventHandler(async (event) => {
   setResponseHeader(event, 'Content-Type', 'application/xml; charset=utf-8')
 
   let dynamic: SitemapEntry[] = []
+  let lastmods: Record<string, string> = {}
   let complete = true
   try {
-    const [alerts, skus] = await Promise.all([alertPermalinks(db), queryPriceKeys(db)])
+    const [alerts, skus, freshness] = await Promise.all([
+      alertPermalinks(db),
+      queryPriceKeys(db),
+      queryDataFreshness(db),
+    ])
+    lastmods = dataLastmods(
+      freshness,
+      Object.fromEntries(LAB_PAGES.map((page) => [page.lab, page.path])),
+    )
     dynamic = [
       ...alerts.map((alert) => ({
         path: alertPath(alert.id),
@@ -63,7 +73,8 @@ export default defineEventHandler(async (event) => {
     appUrl: config.public.appUrl,
     indexable: config.public.indexable !== false,
     buildDate: config.buildDate,
-    pages: [...(config.publicPages ?? []), ...LAB_PAGES, ...thesisPages(THESES)],
+    lastmods,
+    pages: crawlerPages(config.publicPages),
     dynamic,
     complete,
   })
