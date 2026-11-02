@@ -36,13 +36,18 @@ export const AI_CRAWLERS: { agent: string; purpose: string }[] = [
   { agent: 'CCBot', purpose: 'Common Crawl — corpus most open models train on' },
 ]
 
-/** Paths no crawler should spend budget on: the JSON API and the MCP endpoint are not pages. */
-const DISALLOWED = ['/api/', '/mcp']
+/**
+ * Paths no crawler should spend budget on: the JSON API is not a page. The MCP
+ * endpoint is added by the terminal layer with registerRobotsDisallow().
+ */
+const DISALLOWED = ['/api/']
 
 export interface RobotsInput {
   appUrl: string
   indexable: boolean
   allowAiCrawlers: boolean
+  /** Extra paths to disallow beyond the core list — see registerRobotsDisallow(). */
+  disallow?: readonly string[]
 }
 
 export function buildRobotsTxt(input: RobotsInput): string {
@@ -56,7 +61,8 @@ export function buildRobotsTxt(input: RobotsInput): string {
     return ['User-agent: *', 'Disallow: /', ''].join('\n')
   }
 
-  const lines = ['User-agent: *', 'Allow: /', ...DISALLOWED.map((path) => `Disallow: ${path}`), '']
+  const disallowed = [...new Set([...DISALLOWED, ...(input.disallow ?? [])])]
+  const lines = ['User-agent: *', 'Allow: /', ...disallowed.map((path) => `Disallow: ${path}`), '']
 
   lines.push(
     input.allowAiCrawlers
@@ -67,7 +73,7 @@ export function buildRobotsTxt(input: RobotsInput): string {
   for (const { agent } of AI_CRAWLERS) {
     lines.push(`User-agent: ${agent}`)
     if (input.allowAiCrawlers) {
-      lines.push('Allow: /', ...DISALLOWED.map((path) => `Disallow: ${path}`))
+      lines.push('Allow: /', ...disallowed.map((path) => `Disallow: ${path}`))
     } else {
       lines.push('Disallow: /')
     }
@@ -279,6 +285,12 @@ export interface LlmsTxtTable {
   description: string
 }
 
+/** A heading with links, contributed by a public page source. */
+export interface LlmsTxtSection {
+  heading: string
+  links: { path: string; title: string; description: string }[]
+}
+
 export interface LlmsTxtInput {
   appName: string
   appUrl: string
@@ -294,6 +306,8 @@ export interface LlmsTxtInput {
   tables?: LlmsTxtTable[]
   /** Public source repository, for the licensing section. */
   repoUrl?: string
+  /** After the data tables, before Agents — see server/utils/public-pages.ts. */
+  sections?: LlmsTxtSection[]
 }
 
 /**
@@ -332,6 +346,15 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
       `- [Alerts feed](${appUrl}/alerts.xml): Atom, one entry per alert; add \`?include=ticker\` for the info tier.`,
       '',
     )
+  }
+
+  for (const section of input.sections ?? []) {
+    if (section.links.length === 0) continue
+    sections.push(`## ${section.heading}`, '')
+    for (const link of section.links) {
+      sections.push(`- [${link.title}](${absoluteUrl(appUrl, link.path)}): ${link.description}`)
+    }
+    sections.push('')
   }
 
   sections.push(

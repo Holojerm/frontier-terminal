@@ -20,14 +20,18 @@ Three pieces:
   migrations the repo has vs the ones production applied (`migrations.pending`
   non-empty = the deploy-before-migrate outage, live), the cron map Nitro runs.
   `GET /api/fleet` is counters only (the ops spool today; the pipeline's own
-  counters as they arrive) behind `NUXT_FLEET_TOKEN`; 404 when unset. Add a
-  counter to `collectFleetCounters()`'s `extra`, not a second endpoint.
+  counters as they arrive) behind `NUXT_FLEET_TOKEN`; 404 when unset. Never edit
+  `collectFleetCounters()` to add a counter, and don't add a second endpoint: register a
+  contributor from a Nitro plugin with `registerFleetExtraContributor({ key, collect })`
+  (`server/utils/extensions.ts`, a trimmed copy of the template's registry). The pipeline's
+  numbers are registered that way by `layers/terminal/server/plugins/fleet-counters.ts`
+  and land in `extra`.
 - **Ops alerting.** Anything worth waking the owner up for calls
   `recordOpsEvent(db, { kind, detail, path })` — the error plugin already does
   for every 5xx — and `server/tasks/ops/alert.ts` drains the spool into one
   digest email every 30 minutes via the `[[send_email]] ALERT_EMAIL` binding.
   Unconfigured = one `ops_alert_unconfigured` log line per tick and nothing
-  sent. Rows are marked notified only after the send resolves, so a mail
+  sent, but the retention sweep (`pruneOpsEvents()`) still runs. Rows are marked notified only after the send resolves, so a mail
   hiccup retries instead of losing the alert. Always `await` the record call:
   a 5xx is exactly the path that ends the request before a floated promise runs.
 

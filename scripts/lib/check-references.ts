@@ -1,15 +1,25 @@
 // Reference resolution — does the thing this comment names still exist?
 //
 // This header is exempt from its own rule (`refs-check-ignore`, which covers
-// the whole comment block): the names below are worked examples, not claims
-// about the repo the file happens to sit in.
+// the whole comment block): the names below are worked examples and quoted
+// history, not claims about the repo the file happens to sit in. They resolve
+// here and several do not in a fork — `isSameMailbox()` and referral.ts exist
+// in no fork without billing — so checking them would mean every fork editing
+// this narrative on arrival, which is the opposite of a file a template owns.
 //
-// This repo's comments carry the *why*, not just the *what*, and that density
+// This repo's comments are 39% of its source lines, and that density is the
+// point: an agent reading a file cold gets the *why*, not just the *what*. It
 // is also the failure mode. A comment that says "see server/utils/foo.ts" or
 // "the same rule `isSameMailbox()` applies" is a promise nothing enforces, and
 // a rename six months later turns it into a confident lie. That is strictly
 // worse than no comment: an agent trusts it and goes hunting for a file that
 // is not there, or worse, reasons about a rule that no longer exists.
+//
+// The split of AGENTS.md into `.claude/docs/` made this urgent rather than
+// theoretical — a dozen comments pointed at "AGENTS.md › Gotchas", a heading
+// that moved. Running this for the first time also found a pointer that had
+// ALREADY been dead on main (`server/utils/onboarding.ts` cited reasoning
+// AGENTS.md gives for `user_signed_up`, which AGENTS.md never mentioned).
 //
 // ── The rule, deliberately narrow ───────────────────────────────────────────
 // A reference fails only when it resolves to NOTHING IN THIS REPO. Not "is not
@@ -56,12 +66,13 @@ export interface Reference {
 // `layers` holds the app's Nuxt layers (each with its own app/server/shared/test).
 const SOURCE_DIRS = ['app', 'server', 'shared', 'scripts', 'test', 'emails', 'layers']
 const DOC_DIRS = ['.claude/docs', '.claude/commands', '.claude/routines']
-const DOC_FILES = ['AGENTS.md', 'DESIGN.md', 'README.md']
+const DOC_FILES = ['AGENTS.md', 'TEARDOWN.md', 'DESIGN.md', 'README.md']
 const CORPUS_EXTRA = [
   'nuxt.config.ts',
   'wrangler.toml',
   '.env.example',
   'package.json',
+  'content.config.ts',
   // Root config files are source too, and docs legitimately name what they
   // set. `NUXT_PORT` is only ever written in playwright.config.ts, so without
   // these a true statement about the browser suites read as a dead variable.
@@ -279,6 +290,7 @@ export function collectReferences(root: string): Reference[] {
 function buildCorpus(root: string): string {
   const files = [
     ...SOURCE_DIRS.flatMap((d) => walk(join(root, d), ['.ts', '.vue', '.json'])),
+    ...walk(join(root, 'mcp/src'), ['.ts']),
     ...walk(join(root, 'server/db/migrations'), ['.sql']),
     ...CORPUS_EXTRA.map((f) => join(root, f)),
   ]
@@ -304,7 +316,7 @@ export interface DeadReference extends Reference {
  * source as literal strings — Nuxt builds the name from the key path, so
  * `runtimeConfig.resend.apiKey` is `NUXT_RESEND_API_KEY` and refs-check-ignore
  * `runtimeConfig.public.appName` is `NUXT_PUBLIC_APP_NAME`. (Both are examples;
- * this fork has no Resend key.) A doc naming one is making a
+ * a fork without Resend has no such variable.) A doc naming one is making a
  * true claim the corpus cannot confirm, so without this every env var a fork
  * documents reads as dead.
  *

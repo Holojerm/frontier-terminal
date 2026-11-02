@@ -8,7 +8,9 @@ import { checkLaunchCoverage, launchCoverage } from '../../server/pipeline/launc
 import type { LockStore } from '../../server/pipeline/lock'
 import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
 import { isPollInstant, runTripwire } from '../../server/pipeline/tripwire'
+import { registerFleetExtraContributor } from '~~/server/utils/extensions'
 import { collectFleetCounters } from '~~/server/utils/fleet-status'
+import { collectTerminalCounters } from '../../server/utils/fleet-counters'
 import { fixtureText, manifest } from './fixtures'
 
 // Launch day, end to end on the workerd D1/R2 bindings: a lab ships a model
@@ -224,6 +226,8 @@ describe('launch watch', () => {
   it('puts both counts on /api/fleet', async () => {
     await launchDay()
     await db.delete(schema.alerts)
+    // The Nitro plugin that does this does not run under vitest.
+    registerFleetExtraContributor({ key: 'terminal', collect: collectTerminalCounters })
     const counters = await collectFleetCounters(db, new Date('2026-09-22T21:00:00Z'))
     expect(counters.extra).toMatchObject({ launchStaleCells: 1, launchUnalerted: 1 })
   })

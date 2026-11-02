@@ -26,11 +26,17 @@ The `useSeo()` one-call-per-page contract, how `publicPage` meta feeds both `sit
   it renders, a lab page reads its own provider's rows, and `/` and `/data` read everything.
   A new axis page adds its row there. Pages it cannot date keep the build date.
 - **A dynamic route cannot reach either file that way.** The collecting hook skips any path
-  containing `:`, because `/provider/[slug]` is one pattern rather than N URLs. Enumerate those
-  server-side in `server/routes/sitemap.xml.get.ts` and pass them as `dynamic` entries with a
-  real per-URL `lastmod` — `sitemapResponse()` in `server/utils/seo.ts` takes them. The page
-  still declares `publicPage` (the gate's invariant is per-page), with a comment saying the
-  values are inert.
+  containing `:`, because `/provider/[slug]` is one pattern rather than N URLs. Any set of URLs
+  the app owns as data is registered, not hand-added to the routes: from a Nitro plugin,
+  `registerPublicPageSource({ key, list(db, { buildDate }), llmsHeading?, defaults? })`
+  (`server/utils/public-pages.ts`) puts each returned `{ path, title?, description?, lastmod? }`
+  in `sitemap.xml` with its own `lastmod`. The alert, SKU and filing pages are one source,
+  `layers/terminal/server/utils/terminal-page-source.ts`, registered by
+  `layers/terminal/server/plugins/public-pages.ts`; it sets no `llmsHeading` because `/llms.txt`
+  is a static map that never wakes D1. A source that throws is logged, skipped, and makes the
+  sitemap `no-store`. `registerRobotsDisallow(['/mcp'])` adds private paths to `robots.txt`.
+  The page still declares `publicPage` (the gate's invariant is per-page), with a comment
+  saying the values are inert.
 - **Never write JSON-LD for content that isn't rendered.** Structured data describing
   invisible content is a manual-action risk with Google and a lie an answer engine will repeat.
 - **Numbers go into schema as numbers**, never display strings — a price is `12` and `USD`,

@@ -18,7 +18,9 @@
 // the exception it was trying to record.
 import { db } from '@nuxthub/db'
 
-import { errorDetail, pathForLog } from '../utils/log'
+import { errorDetail } from '#layers/terminal/server/utils/error-detail'
+
+import { pathForLog } from '../utils/log'
 import { recordOpsEvent } from '../utils/ops'
 
 export default defineNitroPlugin((nitro) => {
