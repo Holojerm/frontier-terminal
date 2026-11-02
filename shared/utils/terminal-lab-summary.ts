@@ -46,6 +46,7 @@ export const labPath = (lab: LabId) => `/labs/${lab}`
  * table cannot list these; sitemap.xml and llms.txt append them from here.
  */
 export const LAB_PAGES = LABS.map((lab) => ({
+  lab,
   path: labPath(lab),
   changefreq: 'daily' as const,
   priority: '0.9',

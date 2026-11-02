@@ -224,9 +224,6 @@ export function factRows(facts: Record<string, unknown>): DetailRow[] {
 
 // ---- crawler listing ----------------------------------------------------------
 
-export const THESES_INDEX_SUMMARY =
-  'Open investment theses on public companies, each a set of claims checked against a kill condition written before the data arrived.'
-
 /**
  * The thesis pages, in the shape `definePageMeta({ publicPage })` produces for
  * a static page. /theses/[id] is one pattern, not N URLs, so the route table

@@ -10,6 +10,7 @@ import { includeSources } from '../server/pipeline/sources'
 import { terminalStamp } from '../server/utils/terminal-cache'
 import {
   queryContext,
+  queryDataFreshness,
   queryHiringHistory,
   queryPriceHistory,
   queryPriceKeys,
@@ -421,6 +422,7 @@ describe('the history queries on an empty store', () => {
     const c = await ctx()
     expect(await queryPriceHistory(db, c, GROK)).toBeNull()
     expect(await queryPriceKeys(db)).toEqual([])
+    expect(await queryDataFreshness(db)).toEqual({ changes: [], alertsAt: null })
     const releases = await queryReleases(db, c)
     expect(releases).toMatchObject({ rows: [], excluded_baseline: 0, log_from: null })
     const hiring = await queryHiringHistory(db, c)
@@ -507,6 +509,14 @@ describe('after a baseline and a second poll', () => {
     expect(byKey['model:xai:grok-5-preview:standard']).toBe('2026-09-08')
     expect(byKey['model:anthropic:claude-sonnet-5']).toBe('2026-09-07')
     expect(keys.map((k) => k.entity_key)).toEqual([...keys.map((k) => k.entity_key)].sort())
+  })
+
+  it('sitemap freshness: the newest change per entity type and lab', async () => {
+    const { changes } = await queryDataFreshness(db)
+    const xaiModels = changes.find((c) => c.entity_type === 'model' && c.provider === 'xai')
+    expect(xaiModels?.at.slice(0, 10)).toBe('2026-09-08')
+    const pairs = changes.map((c) => `${c.entity_type}:${c.provider}`)
+    expect(new Set(pairs).size).toBe(pairs.length)
   })
 
   it('hiring history: the closed role counts on the day before, not after', async () => {
