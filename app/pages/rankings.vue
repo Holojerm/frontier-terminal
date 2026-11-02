@@ -21,11 +21,24 @@ const [{ data: rankings, error }, { data: spend }] = await Promise.all([
   useFetch<SpendData>('/api/spend'),
 ])
 
+const site = useSiteContext()
+
 useSeo({
-  title: 'Demand share',
+  title: 'OpenRouter token share by AI lab',
   description:
     'Token share per frontier lab on OpenRouter — a public proxy for demand while the labs are private — with a 30-day series and top models per lab. CC BY 4.0.',
   dateModified: rankings.value?.as_of,
+  schema: [
+    datasetSchema(site, {
+      url: usePageUrl(),
+      name: 'OpenRouter tokens per model per day',
+      description:
+        'Total tokens routed through OpenRouter per UTC day and model, from OpenRouter’s public usage rankings. One channel’s share, not market share. Source: OpenRouter (openrouter.ai/rankings).',
+      dateModified: rankings.value?.as_of,
+      variableMeasured: ['date', 'model_permaslug', 'total_tokens'],
+      distribution: exportDistribution(site, 'rankings_daily'),
+    }),
+  ],
 })
 </script>
 

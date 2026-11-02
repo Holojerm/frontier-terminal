@@ -7,7 +7,7 @@
 
 import { sharePct, ppLabel } from '#shared/utils/terminal-format'
 import { isLab, summarizeLab } from '#shared/utils/terminal-lab-summary'
-import { alertLabs } from '#shared/utils/terminal-labs'
+import { alertLabs, LAB_SITE } from '#shared/utils/terminal-labs'
 import type {
   AlertsData,
   HiringHistoryData,
@@ -110,8 +110,11 @@ const summary = computed(() => summarizeLab(lab, data.value))
 const display = summary.value.display
 
 useSeo({
-  title: display,
+  // The words an analyst types ("Anthropic API pricing", "xAI revenue"), not
+  // the bare lab name, which matches every page on the web about the lab.
+  title: `${display}: API pricing, revenue, hiring, outages`,
   description: `${display} on every axis: API price, SEC revenue, OpenRouter demand share, open roles, status-page incidents, and every alert that cites it.`,
+  about: labOrganizationSchema({ name: display, url: LAB_SITE[lab] }),
   breadcrumb: [{ name: display, path: `/labs/${lab}` }],
   dateModified: alerts.data.value?.as_of,
 })

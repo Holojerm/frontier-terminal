@@ -19,11 +19,24 @@ definePageMeta({
 
 const { data: incidents, error } = await useFetch<IncidentsData>('/api/incidents')
 
+const site = useSiteContext()
+
 useSeo({
-  title: 'Incidents',
+  title: 'AI API outages and status incidents',
   description:
     'Status-page incidents at the frontier AI labs over the last 90 days, as each vendor posted them, with source feed and fetch time on every row.',
   dateModified: incidents.value?.as_of,
+  schema: [
+    datasetSchema(site, {
+      url: usePageUrl(),
+      name: 'Frontier AI lab status-page incidents',
+      description:
+        'Every incident the frontier AI labs posted to their own status pages: title, impact and status verbatim, start and resolution times, and affected components.',
+      dateModified: incidents.value?.as_of,
+      variableMeasured: ['impact', 'status', 'started_at', 'resolved_at', 'components'],
+      distribution: exportDistribution(site, 'incidents'),
+    }),
+  ],
 })
 
 const now = useNow()

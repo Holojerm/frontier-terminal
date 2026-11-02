@@ -17,6 +17,16 @@ export const LAB_DISPLAY: Record<ProviderId, string> = {
   other: 'Other',
 }
 
+/** Each lab's own homepage: the identity a lab page's structured data points at. */
+export const LAB_SITE: Record<Exclude<ProviderId, 'other'>, string> = {
+  openai: 'https://openai.com',
+  anthropic: 'https://www.anthropic.com',
+  google: 'https://ai.google',
+  xai: 'https://x.ai',
+  meta: 'https://ai.meta.com',
+  mistral: 'https://mistral.ai',
+}
+
 export type AlertAxis =
   | 'pricing'
   | 'hiring'
