@@ -65,7 +65,7 @@
     </table>
     <template #footnote>
       Sent every Monday by the theses:digest cron. Confirm or reject a material event by adding it
-      to the claim's confirmations in server/theses/. Generated <Raw>{{generated}}</Raw>.
+      to the claim's confirmations in layers/terminal/server/theses/. Generated <Raw>{{generated}}</Raw>.
     </template>
   </EmailLayout>
 </template>

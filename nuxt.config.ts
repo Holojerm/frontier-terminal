@@ -162,11 +162,11 @@ const securityHeaders = {
 //
 //   */30       — ops digest, server/tasks/ops/alert.ts. Silence is the healthy
 //                state: an empty spool costs one indexed SELECT per tick.
-//              — EDGAR tick, server/tasks/poll/edgar.ts: the SEC feeds and the
+//              — EDGAR tick, layers/terminal/server/tasks/poll/edgar.ts: the SEC feeds and the
 //                model catalogs, the two axes where latency is worth polling for.
-//   0 */6      — full survey, server/tasks/poll/survey.ts: every include
-//                source. Scope policy: server/pipeline/scopes.ts.
-//   */5        — launch tripwire, server/tasks/poll/tripwire.ts: parses the
+//   0 */6      — full survey, layers/terminal/server/tasks/poll/survey.ts: every include
+//                source. Scope policy: layers/terminal/server/pipeline/scopes.ts.
+//   */5        — launch tripwire, layers/terminal/server/tasks/poll/tripwire.ts: parses the
 //                model catalogs, polls them only when they differ from the
 //                store, and yields on the half-hour ticks above.
 const SCHEDULED_TASKS: Record<string, string[]> = {
@@ -247,7 +247,7 @@ export default defineNuxtConfig({
         { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
         { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
         { rel: 'manifest', href: '/manifest.webmanifest' },
-        // Feed autodiscovery. server/routes/alerts.xml.get.ts has existed since
+        // Feed autodiscovery. layers/terminal/server/routes/alerts.xml.get.ts has existed since
         // the alerts axis shipped, but a feed reader finds a feed by reading
         // this tag off any page of the site — without it, /alerts.xml is a URL
         // you have to already know, which is the same as not publishing one.
@@ -444,15 +444,15 @@ export default defineNuxtConfig({
     alertEmailFrom: '',
     // SEC fair-access policy requires a contact email in the User-Agent of
     // every request to sec.gov hosts. Empty = the EDGAR sources are skipped
-    // with a 'failed' run, never fetched anonymously (server/pipeline/fetch.ts).
+    // with a 'failed' run, never fetched anonymously (layers/terminal/server/pipeline/fetch.ts).
     // A Worker secret: `wrangler secret put NUXT_SEC_CONTACT_EMAIL`.
     secContactEmail: '',
-    // Bearer the judge routine presents to /api/judge/* (server/utils/judge-auth.ts).
+    // Bearer the judge routine presents to /api/judge/* (layers/terminal/server/utils/judge-auth.ts).
     // Unset = those routes 404 and no judge exists. Same shape and floor as the
     // fleet token; a Worker secret: `wrangler secret put NUXT_JUDGE_TOKEN`.
     judgeToken: '',
     // OpenRouter API key for the usage-rankings dataset (the demand-share axis,
-    // server/pipeline/fetch.ts). Sent as a bearer to openrouter.ai/api/v1/datasets/*
+    // layers/terminal/server/pipeline/fetch.ts). Sent as a bearer to openrouter.ai/api/v1/datasets/*
     // only. Empty = that source is recorded 'skipped' every tick and the panel
     // says "not configured"; nothing is fetched anonymously. A Worker secret:
     // `op read "op://…" | bunx wrangler secret put NUXT_OPENROUTER_API_KEY`.

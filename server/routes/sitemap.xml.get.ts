@@ -25,14 +25,18 @@
 
 import { db } from '@nuxthub/db'
 
-import { filingPath, revenueFilings } from '#shared/utils/terminal-filings'
-import { alertPath } from '#shared/utils/terminal-tiers'
+import { filingPath, revenueFilings } from '#layers/terminal/shared/utils/terminal-filings'
+import { alertPath } from '#layers/terminal/shared/utils/terminal-tiers'
 
-import { crawlerPages, labScopedPages } from '../utils/crawler-pages'
+import { crawlerPages, labScopedPages } from '#layers/terminal/server/utils/crawler-pages'
 import { dataLastmods, sitemapResponse, type SitemapEntry } from '../utils/seo'
-import { alertPermalinks, queryDataFreshness, queryPriceKeys } from '../utils/terminal-db'
-import { terminalPayload } from '../utils/terminal-handler'
-import { queryRevenue } from '../utils/terminal-revenue'
+import {
+  alertPermalinks,
+  queryDataFreshness,
+  queryPriceKeys,
+} from '#layers/terminal/server/utils/terminal-db'
+import { terminalPayload } from '#layers/terminal/server/utils/terminal-handler'
+import { queryRevenue } from '#layers/terminal/server/utils/terminal-revenue'
 
 export default defineEventHandler(async (event) => {
   const config = useRuntimeConfig()

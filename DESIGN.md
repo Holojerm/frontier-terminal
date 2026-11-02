@@ -374,14 +374,14 @@ screen the way a terminal function key does. The data below it is the content.
   scrolls is a named, focusable region so a keyboard can scroll it. A page is as long as its
   panels, not its longest table.
 - **Deltas:** a sign the reader can see, never a color: `+12`, `−3` (U+2212), `±0`. Formatted
-  once, in `shared/utils/terminal-format.ts`. A delta takes `text-muted` beside its figure;
+  once, in `layers/terminal/shared/utils/terminal-format.ts`. A delta takes `text-muted` beside its figure;
   green and red would read as good and bad, and a price rise is neither.
 
 ### Terminal primitives
 
-Every page is composed from these, in `app/components/Terminal/`. They own the classes; a page
-passes data and copy. Their prop shapes live in `app/types/terminal-ui.ts`, and the words for a
-feed with nothing to show live once in `app/utils/feed-gap.ts`.
+Every page is composed from these, in `layers/terminal/app/components/Terminal/`. They own the classes; a page
+passes data and copy. Their prop shapes live in `layers/terminal/app/types/terminal-ui.ts`, and the words for a
+feed with nothing to show live once in `layers/terminal/app/utils/feed-gap.ts`.
 
 | Primitive | What it is | Replaces |
 |---|---|---|
@@ -411,7 +411,7 @@ its limit, in that order.
 
 Scope: everything a visitor or a crawler reads. That means page text, panel titles and notes,
 empty states, alerts, `useSeo()` titles and descriptions, `publicPage` summaries, `/llms.txt`,
-export-table descriptions, and the gap strings in `server/utils/terminal-classes.ts`. Code
+export-table descriptions, and the gap strings in `layers/terminal/server/utils/terminal-classes.ts`. Code
 comments are not copy.
 
 ### Principles

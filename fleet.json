@@ -41,7 +41,9 @@
       "server/api/fleet.get.ts",
       "shared/utils/fleet-manifest.ts",
       "scripts/check-design-tokens.ts",
-      "scripts/check-fleet.ts"
+      "scripts/check-fleet.ts",
+      "scripts/check-seo.ts",
+      "scripts/lib/layers.ts"
     ]
   },
   "features": {

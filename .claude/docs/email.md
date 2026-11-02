@@ -1,6 +1,6 @@
 # Email
 
-How an email is written (Maizzle templates, compiled at build time, filled in with Mustache). This app sends two emails, both to its owner through the `send_email` binding (`server/utils/ops-mail.ts`): the ops alert digest (`server/utils/ops-digest.ts`) and the weekly thesis digest (`server/theses/digest.ts`). The pipeline is the template's, trimmed to those two.
+How an email is written (Maizzle templates, compiled at build time, filled in with Mustache). This app sends two emails, both to its owner through the `send_email` binding (`server/utils/ops-mail.ts`): the ops alert digest (`server/utils/ops-digest.ts`) and the weekly thesis digest (`layers/terminal/server/theses/digest.ts`). The pipeline is the template's, trimmed to those two.
 
 > **Load this when:** touching `emails/`, `server/utils/ops-digest.ts`, or adding a second outbound email.
 > Canonical index: [AGENTS.md](../../AGENTS.md).

@@ -344,7 +344,7 @@ sources:
     caveats: >-
       Same UA + rate rules as edgar-fts. The parser keeps only the tracked
       forms (S-1, 424B4, 10-Q, 10-K, 8-K and their amendments —
-      server/pipeline/parsers/sec/forms.ts); Form 4, 144, 3, 13G and D rows
+      layers/terminal/server/pipeline/parsers/sec/forms.ts); Form 4, 144, 3, 13G and D rows
       are dropped at parse so insider trades and notices never reach the
       judge as "an SEC change". SPCX is xAI's parent since the 2025 merger:
       its periodic filings are where any xAI segment disclosure would land.
@@ -585,7 +585,7 @@ revenue_filers:
 # An S-1-family hit on either edgar-fts query whose FILER name (EDGAR's
 # display_names, never the query term) matches `name_pattern` as a
 # case-insensitive regex, and matches none of `exclude`, resolves the lab's
-# CIK from that filing (server/pipeline/parsers/sec/pending-filers.ts). The
+# CIK from that filing (layers/terminal/server/pipeline/parsers/sec/pending-filers.ts). The
 # resolution is stored as a `filer` row with the filing it came from, fires
 # the cik-resolved alert, joins the CIK whitelist for every later tick, and
 # derives the lab's submissions and company-facts feeds (derived_sources).
@@ -696,7 +696,7 @@ derived_sources:
       the printed disclosure date where one exists, else against the
       earliest date the index has shown for the report.
 
-# Thesis recipes (server/theses/recipes/) audited in docs/source-audit.md.
+# Thesis recipes (layers/terminal/server/theses/recipes/) audited in docs/source-audit.md.
 # A recipe runs on the survey tick and stores into recipe_observations, never
 # the lab tables, so it is registered here rather than under `sources:`;
 # /api/coverage lists every recipe and reads its caveat and terms from this
@@ -835,7 +835,7 @@ recipe_sources:
     verdict: include
     terms: >-
       SEC fair-access policy: a User-Agent naming a contact, under 10
-      requests a second (server/pipeline/fetch.ts).
+      requests a second (layers/terminal/server/pipeline/fetch.ts).
     caveats: >-
       CIK from sec.gov/files/company_tickers.json (CRWV -> 1769628). The
       fourth quarter is the 10-K year less its three 10-Q quarters, marked
@@ -849,8 +849,8 @@ recipe_sources:
 # name contains one of `terms` as a whole word (case-insensitive) and none of
 # `exclude`. The matched departments ship beside every cluster count so a
 # reader can see exactly which labels were summed. The judge prompt
-# (server/pipeline/judge/judge-explain.prompt.md) names the same terms;
-# test/terminal-clusters.test.ts fails when the two drift.
+# (layers/terminal/server/pipeline/judge/judge-explain.prompt.md) names the same terms;
+# layers/terminal/test/terminal-clusters.test.ts fails when the two drift.
 department_clusters:
   physical-infrastructure:
     label: Physical infrastructure

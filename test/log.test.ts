@@ -30,7 +30,7 @@ describe('pathForLog', () => {
 
 describe('errorDetail', () => {
   it('folds the cause into the wrapper, which is the whole point', () => {
-    // What server/utils/terminal-handler.ts throws when D1 is unreachable.
+    // What layers/terminal/server/utils/terminal-handler.ts throws when D1 is unreachable.
     const wrapped = Object.assign(new Error('Database unavailable'), {
       cause: new Error('D1_ERROR: network connection lost'),
     })

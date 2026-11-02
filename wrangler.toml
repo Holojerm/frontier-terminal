@@ -110,12 +110,12 @@ head_sampling_rate = 1
 # `bun run crons:check` (part of `bun run ci`) fails the build on a mismatch.
 #
 #   "*/30 * * * *"  ops:alert  — drains the ops_events spool into a digest email
-#                   poll:edgar — the two SEC feeds (server/pipeline/scopes.ts)
+#                   poll:edgar — the two SEC feeds (layers/terminal/server/pipeline/scopes.ts)
 #   "0 */6 * * *"   poll:survey — every include source: pricing, hiring, EDGAR,
 #                   status pages, OpenRouter rankings
 #   "*/5 * * * *"   poll:tripwire — parses the four model catalogs and polls
 #                   them off-cycle only when they differ from the store
-#   "0 13 * * 1"    theses:digest — the weekly thesis digest email (server/theses/digest.ts)
+#   "0 13 * * 1"    theses:digest — the weekly thesis digest email (layers/terminal/server/theses/digest.ts)
 #
 # Cron triggers run on UTC, and changes take up to 15 minutes to propagate.
 [triggers]
@@ -166,13 +166,13 @@ NUXT_ALERT_EMAIL_FROM = "frontier-terminal@frontierterm.com"
 #                                route 404s and the app is simply not on the dashboard.
 #   NUXT_FLEET_TOKEN_PREVIOUS    only during a rotation — server/utils/fleet-auth.ts.
 #   NUXT_SEC_CONTACT_EMAIL       contact address sec.gov's fair-access policy requires in
-#                                the User-Agent (server/pipeline/fetch.ts). Unset = the
+#                                the User-Agent (layers/terminal/server/pipeline/fetch.ts). Unset = the
 #                                EDGAR sources are skipped as 'failed', never fetched
 #                                anonymously. A secret because it is a personal address.
 #   NUXT_JUDGE_TOKEN             bearer the judge routine presents to /api/judge/*
-#                                (server/utils/judge-auth.ts). 32+ chars. Unset = those
+#                                (layers/terminal/server/utils/judge-auth.ts). 32+ chars. Unset = those
 #                                routes 404 and no judge exists.
 #   NUXT_OPENROUTER_API_KEY      bearer for openrouter.ai/api/v1/datasets/* — the usage
 #                                rankings behind the demand-share panel
-#                                (server/pipeline/fetch.ts). Unset = that source is
+#                                (layers/terminal/server/pipeline/fetch.ts). Unset = that source is
 #                                recorded 'skipped' each tick, never fetched anonymously.

@@ -32,7 +32,7 @@ import rawManifest from '../../fleet.json'
 import pkg from '../../package.json'
 import journal from '../db/migrations/meta/_journal.json'
 import * as tables from '../db/schema'
-import { launchCoverage } from '../pipeline/launch-watch'
+import { launchCoverage } from '#layers/terminal/server/pipeline/launch-watch'
 
 /** The Drizzle client, passed in explicitly. */
 export type FleetDb = ReturnType<typeof drizzle<typeof tables>>
