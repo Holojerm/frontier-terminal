@@ -56,6 +56,11 @@ doesn't exist are the owner's calls. Shipping the template's `/terms` and `/priv
 with no billing is worse than shipping nothing: a privacy policy naming a payment processor you
 don't use is inaccurate in a legally meaningful way.
 
+Never overwrite a path in the template's `app-owned.json`: the fork owns it by design. A path in
+the fork's `fleet.json` › `template.customized` is a declared divergence: port the template's
+change into it by hand, or say why not. Every other template-owned file should end the sync
+byte-identical to the template; fleet's drift view counts the ones that are not.
+
 ## Migrations: assume a collision
 
 Every fork has its own migration sequence. **Never copy a migration file from the template.**
@@ -116,7 +121,7 @@ The template ships three things the portfolio dashboard (`fleet`) depends on, an
 PR must leave the fork with all of them working — see AGENTS.md › Fleet contract:
 
 1. **`fleet.json`** at the repo root, matching `wrangler.toml`. Write it from the fork's real
-   values (Worker names, D1 `database_name` + `database_id`, KV
+   values (Worker names including `mcp/` if present, D1 `database_name` + `database_id`, KV
    ids, R2 buckets, `[triggers] crons`), and set `stage` honestly — `live` only if the app has
    users it would be bad to lose. Set `features` to what the fork actually kept: a fork with no
    `users` table is `auth: false` and gets `/api/status` but not `/api/fleet` (both need

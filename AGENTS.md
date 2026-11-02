@@ -25,6 +25,7 @@ Read the row that matches what you are about to touch. Do not load them all.
 | [`.claude/docs/brand.md`](.claude/docs/brand.md) | How every icon is generated from one `Logo.vue` | Redesigning the mark or fixing `brand:check` |
 | [`.claude/docs/email.md`](.claude/docs/email.md) | The Maizzle/Mustache pipeline behind the ops alert digest | Touching `emails/`, `ops-digest.ts`, or adding an email |
 | [`.claude/docs/agent-setup.md`](.claude/docs/agent-setup.md) | MCP servers, skills, slash commands, cloud routines | Configuring tooling |
+| [`docs/template-divergence.md`](docs/template-divergence.md) | Why each template-owned file differs from `nuxt-cf-template`, or is absent | Syncing the template, or touching a file listed in `fleet.json` › `template.customized` |
 | [`.claude/docs/fleet.md`](.claude/docs/fleet.md) | `fleet.json`, `/api/status`, `/api/fleet`, the `ops_events` spool and its digest cron | Touching the manifest, the status/fleet endpoints, or ops alerting |
 | [`DESIGN.md`](DESIGN.md) | The visual design system — source of truth | Writing any UI |
 
