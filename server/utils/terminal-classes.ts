@@ -219,13 +219,13 @@ export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string 
   {
     provider: 'mistral',
     class: 'balanced',
-    reason: 'Same gap: no Mistral page names a middle tier.',
+    reason: 'No Mistral page names a middle tier.',
   },
   {
     provider: 'mistral',
     class: 'economy',
     reason:
-      'Same gap: Mistral prints speed and performance ratings, not a cost-sensitive recommendation, and its cheapest generalists carry no positioning to transcribe.',
+      'Mistral prints speed and performance ratings, not a cost-sensitive recommendation. Its cheapest generalists have no positioning statement to transcribe.',
   },
 ]
 
