@@ -5,8 +5,9 @@
 // parent's figure — consolidated, or one segment it reports — labelled as
 // the parent's; the lab's own filing — XBRL, or the statement of operations
 // printed in an S-1 that tags none. Every value links to the filing that
-// reported it.
+// reported it, and to its page here.
 
+import { filingPath } from '#shared/utils/terminal-filings'
 import { compactUsd, count, periodLabel } from '#shared/utils/terminal-format'
 import type { RevenueData, RevenueProviderView } from '#shared/utils/terminal-types'
 import type { TableColumn } from '~/types/terminal-ui'
@@ -123,15 +124,22 @@ const badge = (p: RevenueProviderView) =>
               <span :title="`USD ${count(r.val)}`">{{ compactUsd(r.val) }}</span>
             </template>
             <template #cell-filing="{ row: r }">
+              <NuxtLink
+                :to="filingPath(r.accession_no)"
+                class="underline underline-offset-2 hover:text-default"
+                :title="`Every period accession ${r.accession_no} reported`"
+                >{{ r.form }}</NuxtLink
+              >
+              filed <time :datetime="r.filed">{{ r.filed }}</time>
+              ·
               <a
                 :href="r.filing_url"
                 target="_blank"
                 rel="noopener noreferrer"
                 class="underline underline-offset-2 hover:text-default"
                 :title="`Accession ${r.accession_no} · ${r.basis === 'xbrl' ? 'tag' : 'row'} ${r.tag}`"
-                >{{ r.form }}</a
+                >EDGAR</a
               >
-              filed <time :datetime="r.filed">{{ r.filed }}</time>
             </template>
           </TerminalTable>
 
