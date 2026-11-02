@@ -32,6 +32,9 @@ const ROUTES = [
   '/labs/xai',
   '/labs/meta',
   '/labs/mistral',
+  // Two of the fifteen pairs: one with every axis populated, one mostly gaps.
+  '/compare/openai-vs-anthropic',
+  '/compare/meta-vs-mistral',
   '/prices',
   '/revenue',
   '/hiring',
@@ -49,11 +52,17 @@ const ROUTES = [
 ]
 
 // One template, N URLs — pages the sweep cannot enumerate ahead of a server:
-// the SKU pages the sitemap reads from the store (server/routes/
-// sitemap.xml.get.ts) and the alert permalinks (/alerts/[id]). They are
+// the SKU pages and filing pages the sitemap reads from the store (server/
+// routes/sitemap.xml.get.ts) and the alert permalinks (/alerts/[id]). They are
 // scanned through the static routes' shared components; the patterns are
-// what the coverage test recognises.
-const DYNAMIC = [/^\/prices\/model:/, /^\/alerts\/[0-9a-f]{64}$/]
+// what the coverage test recognises. The compare pages are one template over
+// fifteen pairs; the two in ROUTES stand for the rest.
+const DYNAMIC = [
+  /^\/prices\/model:/,
+  /^\/alerts\/[0-9a-f]{64}$/,
+  /^\/filings\/\d{10}-\d{2}-\d{6}$/,
+  /^\/compare\/[a-z]+-vs-[a-z]+$/,
+]
 
 const COLOR_MODES = ['light', 'dark'] as const
 

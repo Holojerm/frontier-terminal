@@ -576,7 +576,13 @@ describe('dataLastmods', () => {
     ],
     alertsAt: '2026-11-02T00:05:00.000Z',
   }
-  const LABS = { openai: '/labs/openai', anthropic: '/labs/anthropic', meta: '/labs/meta' }
+  const LABS = {
+    '/labs/openai': ['openai'],
+    '/labs/anthropic': ['anthropic'],
+    '/labs/meta': ['meta'],
+    '/compare/openai-vs-anthropic': ['openai', 'anthropic'],
+    '/compare/meta-vs-mistral': ['meta', 'mistral'],
+  }
 
   it('dates each axis page by the newest change of its own entity types', () => {
     const out = dataLastmods(FRESHNESS, LABS)
@@ -593,11 +599,13 @@ describe('dataLastmods', () => {
     expect(out['/data']).toBe('2026-11-02')
     expect(out['/labs/anthropic']).toBe('2026-11-01')
     expect(out['/labs/openai']).toBe('2026-10-30')
+    expect(out['/compare/openai-vs-anthropic']).toBe('2026-11-01')
   })
 
   it('leaves a page it cannot date to the build date rather than inventing one', () => {
     const out = dataLastmods(FRESHNESS, LABS)
     expect(out['/labs/meta']).toBeUndefined()
+    expect(out['/compare/meta-vs-mistral']).toBeUndefined()
     expect(out['/incidents']).toBeUndefined()
     expect(out['/about']).toBeUndefined()
     expect(dataLastmods({ changes: [], alertsAt: null }, LABS)).toEqual({})
