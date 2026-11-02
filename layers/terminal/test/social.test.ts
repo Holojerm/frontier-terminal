@@ -82,21 +82,32 @@ describe('enqueueCriticalAlerts', () => {
     expect(byRef.judged!.notBefore.getTime()).toBe(
       Date.parse('2026-11-05T11:00:00.000Z') + JUDGED_HOLD_MS,
     )
+    // X: the link rides in a self-reply, so the lead post carries none.
     expect(JSON.parse(byRef.rule!.body)).toEqual({
-      posts: [`Headline rule ${ORIGIN}/alerts/rule`],
+      posts: ['Headline rule', `Source and details: ${ORIGIN}/alerts/rule`],
     })
   })
 
-  it('keeps a long headline inside the limit, link intact', async () => {
+  it('keeps the link inline on Bluesky', async () => {
+    await db
+      .insert(schema.alerts)
+      .values(alert('b', 'critical', 's1-floor', '2026-11-05T10:00:00.000Z'))
+    await enqueueCriticalAlerts(db, { bluesky: 'chan-b' }, ORIGIN)
+    const [row] = await db.select().from(schema.socialPosts)
+    expect(JSON.parse(row!.body).posts).toEqual([`Headline b ${ORIGIN}/alerts/b`])
+  })
+
+  it('keeps a long headline inside the limit', async () => {
     const long = 'OpenAI files an S-1 '.repeat(30).trim()
     await db
       .insert(schema.alerts)
       .values(alert('long', 'critical', 's1-floor', '2026-11-05T10:00:00.000Z', long))
     await enqueueCriticalAlerts(db, CHANNELS, ORIGIN)
     const [row] = await db.select().from(schema.socialPosts)
-    const [text] = JSON.parse(row!.body).posts as string[]
+    const [text, reply] = JSON.parse(row!.body).posts as string[]
     expect(socialLength('x', text!)).toBeLessThanOrEqual(280)
-    expect(text!.endsWith(`… ${ORIGIN}/alerts/long`)).toBe(true)
+    expect(text!.endsWith('…')).toBe(true)
+    expect(reply).toBe(`Source and details: ${ORIGIN}/alerts/long`)
   })
 
   it('treats the epoch as inclusive', async () => {
@@ -128,7 +139,8 @@ describe('weekly digest', () => {
     const [row] = await db.select().from(schema.socialPosts)
     expect(row).toMatchObject({ kind: 'digest', ref: '2026-11-09' })
     expect(JSON.parse(row!.body).posts).toEqual([
-      `The frontier labs, week to Nov 9: 3 tracked changes.\n\nPricing 1 · Hiring 2\n\nAlerts: 1 critical alert, 1 notable. ${ORIGIN}/alerts`,
+      'The frontier labs, week to Nov 9: 3 tracked changes.\n\nPricing 1 · Hiring 2\n\nAlerts: 1 critical alert, 1 notable.',
+      `Source and details: ${ORIGIN}/alerts`,
       `Headline a1 ${ORIGIN}/alerts/a1`,
     ])
   })
