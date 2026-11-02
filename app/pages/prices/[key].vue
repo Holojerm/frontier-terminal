@@ -148,7 +148,7 @@ const diffText = (p: PricePoint) =>
       variant="soft"
       icon="i-lucide-database-zap"
       title="Price history could not be read"
-      description="The history endpoint failed to respond. Nothing is shown rather than a stale or inferred number."
+      description="The history endpoint failed to respond. No stale or inferred number is shown in its place."
     />
 
     <template v-else-if="history">
@@ -174,14 +174,14 @@ const diffText = (p: PricePoint) =>
         <TerminalEmptyState
           v-else
           title="No published price on any observation."
-          body="This SKU is catalog-only on the audited page: the row exists, the number does not."
+          body="This SKU is catalog-only on the audited page: listed there without a price."
         />
       </TerminalPanel>
 
       <TerminalPanel
         id="points"
         title="Point by point"
-        note="Each row is one observation: what the page said, when it was read, and the URL it was read from."
+        note="One observation per row: what the page said, when it was read, and the source URL."
       >
         <div class="overflow-x-auto">
           <table class="w-full text-sm">
@@ -236,9 +236,9 @@ const diffText = (p: PricePoint) =>
           </table>
         </div>
         <p class="text-xs text-muted">
-          A “first snapshot” point is the state the earliest change row says came before it, held
-          since the source was first fetched: any move in between would be in the log. A “current”
-          point is the row as it stands on the newest fetch that rewrote it.
+          A “first snapshot” point is the state the earliest change row records as its prior value,
+          held since the source was first fetched; any move in between would appear in the log. A
+          “current” point is the row as of the newest fetch that rewrote it.
         </p>
       </TerminalPanel>
     </template>

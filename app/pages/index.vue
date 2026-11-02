@@ -25,7 +25,7 @@ definePageMeta({
     priority: '1.0',
     title: 'Overview',
     summary:
-      'What moved across the frontier AI labs — judged alerts, change counts by axis, flagship API prices, disclosed revenue, demand and implied spend share, open roles and the infrastructure buildout, status-page incidents, and misalignment disclosures.',
+      'What moved across the frontier AI labs: judged alerts, change counts by axis, flagship API prices, disclosed revenue, demand and implied spend share, open roles and the infrastructure buildout, status-page incidents, and misalignment disclosures.',
   },
 })
 
@@ -140,7 +140,7 @@ const openIncidents = computed(() =>
       variant="soft"
       icon="i-lucide-database-zap"
       title="Part of the terminal could not be read"
-      description="A data endpoint failed to respond. The panels that did load are shown."
+      description="A data endpoint failed to respond. Panels that loaded are shown."
     />
 
     <TerminalSignalBand v-if="overview.data.value" :overview="overview.data.value" />
@@ -194,7 +194,7 @@ const openIncidents = computed(() =>
       v-if="recent.length"
       id="releases"
       title="Recent releases"
-      note="SKUs that appeared on a watched vendor page, with the launch price."
+      note="SKUs new on a tracked vendor page, with the launch price."
     >
       <TerminalReleaseList :rows="recent" />
       <p v-if="releases.data.value" class="text-sm">
@@ -238,7 +238,7 @@ const openIncidents = computed(() =>
     <TerminalPanel
       id="disclosures"
       title="Disclosures"
-      note="Misalignment reports each lab publishes about its own models, and the median days from discovery to publication. A count measures disclosure, not behaviour."
+      note="Misalignment reports each lab publishes about its own models, and median days from discovery to publication. A count measures disclosure, not behavior."
     >
       <TerminalDisclosureTable
         v-if="disclosures.data.value"

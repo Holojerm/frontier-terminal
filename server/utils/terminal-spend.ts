@@ -41,9 +41,9 @@ import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
 
 export const SPEND_CAVEAT =
   'Implied, not observed: tokens OpenRouter routed in the window × each vendor’s published list price for the matched SKU. ' +
-  'One aggregator’s channel, not market revenue; direct API and enterprise volume never route here. ' +
-  'The rankings carry total tokens with no prompt/completion split, so every dollar figure is a range — every token at the input price (low) to every token at the output price (high). ' +
-  'Models the catalog does not list, and OpenRouter free-tier variants, count in tokens and not in dollars; coverage says how much of each lab’s traffic was priceable.'
+  'One aggregator’s channel, not market revenue; direct API and enterprise volume do not pass through OpenRouter. ' +
+  'The rankings report total tokens with no prompt/completion split, so each dollar figure is a range: every token at the input price (low) to every token at the output price (high). ' +
+  'Models the catalog does not list, and OpenRouter free-tier variants, count in tokens but not in dollars; coverage states the share of each lab’s traffic that could be priced.'
 
 /** A stored price row as the join needs it. */
 export interface SkuPrice {

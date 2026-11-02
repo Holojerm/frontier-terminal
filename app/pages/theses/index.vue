@@ -31,8 +31,8 @@ useSeo({
     <header class="space-y-2">
       <h1 class="text-4xl text-highlighted">Theses</h1>
       <p class="max-w-2xl text-muted">
-        A thesis is a position held in public: claims, each with the condition that would kill it,
-        written before the data arrived. The terminal checks them against its own numbers.
+        A thesis is a public position: a set of claims, each with a kill condition written before
+        the data arrived, checked against the terminal’s own numbers.
       </p>
     </header>
 
@@ -42,7 +42,7 @@ useSeo({
       variant="soft"
       icon="i-lucide-database-zap"
       title="Theses could not be read"
-      description="The theses endpoint failed to respond. Nothing is shown rather than a stale or inferred status."
+      description="The theses endpoint failed to respond. No stale or inferred status is shown in its place."
     />
 
     <template v-else-if="theses">

@@ -38,7 +38,7 @@ defineProps<{ revenue: RevenueData }>()
             <TerminalCaveatMark
               v-if="p.disclosure === 'parent' && p.filer"
               label="parent"
-              :text="`${p.filer.entity_name ?? p.filer.ticker ?? ''} (${p.filer.ticker ?? `CIK ${p.filer.cik}`}) consolidated — the parent’s top line, not ${p.display}’s.`"
+              :text="`${p.filer.entity_name ?? p.filer.ticker ?? ''} (${p.filer.ticker ?? `CIK ${p.filer.cik}`}) consolidated: the parent’s revenue, not ${p.display}’s.`"
               class="ml-1"
             />
           </th>
@@ -67,10 +67,10 @@ defineProps<{ revenue: RevenueData }>()
             </td>
           </template>
           <td v-else-if="p.disclosure === 'none'" colspan="3" class="py-2 pr-3 text-xs text-toned">
-            No SEC filing carries this lab’s revenue
+            No SEC filing reports this lab’s revenue
           </td>
           <td v-else colspan="3" class="py-2 pr-3 text-xs text-toned">
-            Filer tagged, nothing parsed yet
+            Filer tagged; no XBRL facts parsed yet
           </td>
           <td class="py-2">
             <TerminalProvenanceTag

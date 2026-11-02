@@ -51,7 +51,7 @@ const priced = (r: ReleaseView) => r.input_per_mtok !== null || r.output_per_mto
           <span class="text-default"> {{ money(r.output_per_mtok) }}</span>
           <span class="text-xs text-muted"> out</span>
         </template>
-        <span v-else class="text-xs text-muted">catalog only — no price printed</span>
+        <span v-else class="text-xs text-muted">catalog only; no price printed</span>
       </div>
     </li>
   </ol>

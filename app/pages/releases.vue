@@ -13,7 +13,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Releases',
     summary:
-      'Every model SKU first listed on OpenAI, Anthropic, Google, xAI, Meta or Mistral’s pricing pages since watching began, newest first, with the price printed beside it and its source URL.',
+      'Every model SKU first listed on OpenAI, Anthropic, Google, xAI, Meta, or Mistral’s pricing pages since tracking began, newest first, with the price printed beside it and its source URL.',
   },
 })
 
@@ -34,7 +34,7 @@ const now = useNow()
     <header class="space-y-2">
       <h1 class="text-4xl text-highlighted">Releases</h1>
       <p class="max-w-2xl text-muted">
-        SKUs that appeared on a watched vendor page, with the price printed beside them that day.
+        SKUs new on a tracked vendor page, with the price printed beside them that day.
       </p>
     </header>
 
@@ -50,11 +50,11 @@ const now = useNow()
     <template v-else-if="releases">
       <TerminalEmptyState
         v-if="releases.rows.length === 0"
-        title="No new SKUs since watching began."
+        title="No new SKUs since tracking began."
         :body="
           releases.log_from
-            ? `Pages have been watched since ${absoluteStamp(releases.log_from, now)}; a baseline records what was already listed, and nothing has been added since.`
-            : 'No pricing page has been polled yet. The first poll writes a baseline; a later one can see a new listing.'
+            ? `Pages tracked since ${absoluteStamp(releases.log_from, now)}. The baseline records what was already listed; nothing has been added since.`
+            : 'No pricing page has been polled yet. The first poll records a baseline; later polls record new listings.'
         "
         :action="{ label: 'See the full catalog', to: '/prices' }"
       />

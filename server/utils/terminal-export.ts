@@ -213,37 +213,37 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   prices_latest: entityView(
     'prices_latest',
-    'The current price/catalog row per SKU and source — what each vendor page says right now.',
+    'The current price and catalog row per SKU and source, as each vendor page states it at the latest poll.',
     'model',
     PRICE_FIELDS,
   ),
   jobs_open: entityView(
     'jobs_open',
-    'Every role currently listed on the tracked boards. A role that closes leaves this view and lands in changes.',
+    'Every role currently listed on the tracked boards. A closed role leaves this table and is recorded in changes.',
     'job',
     JOB_FIELDS,
   ),
   incidents: entityView(
     'incidents',
-    'Every status-page incident held: title, vendor impact and status verbatim, start and resolution, components. Append-only — an incident that scrolls out of its feed stays.',
+    'Every stored status-page incident: title, vendor impact and status verbatim, start and resolution, and components. Append-only: an incident that drops out of its feed is kept.',
     'incident',
     INCIDENT_FIELDS,
   ),
   disclosures: entityView(
     'disclosures',
-    'Every entry on a lab’s own misalignment-disclosure index (only OpenAI publishes one): report or notice, title, summary, model and context verbatim, and the date the index prints beside it. A count measures disclosure, not behaviour.',
+    'Every entry on a lab’s own misalignment-disclosure index (only OpenAI publishes one): report or notice, title, summary, model, and context verbatim, and the date the index prints beside it. A count measures disclosure, not behavior.',
     'disclosure',
     DISCLOSURE_FIELDS,
   ),
   disclosure_timelines: entityView(
     'disclosure_timelines',
-    'The dates printed on each report’s own page: every "Label: value" line verbatim, the discovery date, and a printed disclosure date where the page has one.',
+    'The dates printed on each report’s own page: every “Label: value” line verbatim, the discovery date, and a printed disclosure date where the page has one.',
     'disclosure_timeline',
     DISCLOSURE_TIMELINE_FIELDS,
   ),
   rankings_daily: entityView(
     'rankings_daily',
-    'One row per UTC day and model from OpenRouter’s usage rankings: total tokens routed. CC BY 4.0 — cite "Source: OpenRouter (openrouter.ai/rankings)".',
+    'One row per UTC day and model from OpenRouter’s usage rankings: total tokens routed. CC BY 4.0; cite “Source: OpenRouter (openrouter.ai/rankings)”.',
     'ranking',
     RANKING_FIELDS,
   ),
@@ -255,13 +255,13 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   revenue_facts: entityView(
     'revenue_facts',
-    'One row per XBRL revenue fact from EDGAR company facts: filer, tag, period, value in USD, and the filing that reported it. Append-only — a restatement is a new row under its own accession.',
+    'One row per XBRL revenue fact from EDGAR company facts: filer, tag, period, value in USD, and the filing that reported it. Append-only: a restatement is a new row under its own accession.',
     'revenue',
     REVENUE_FIELDS,
   ),
   changes: plainTable(
     'changes',
-    'Append-only change log: added / removed / modified per entity, with the before and after payloads.',
+    'Append-only change log: each entity added, removed, or modified, with the before and after payloads.',
     tables.changes,
     [
       'id',
@@ -345,7 +345,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   source_runs: plainTable(
     'source_runs',
-    'One row per (poll tick, source): what was attempted and how it ended. No fetched_at — a failed run fetched nothing.',
+    'One row per poll tick and source: what was attempted and the outcome. No fetched_at column; a failed run fetched nothing.',
     tables.sourceRuns,
     [
       'id',

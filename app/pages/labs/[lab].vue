@@ -184,7 +184,7 @@ const labIncidents = computed(() => incidents.data.value?.incidents.length ?? 0)
       variant="soft"
       icon="i-lucide-database-zap"
       title="Part of this page could not be read"
-      description="A data endpoint failed to respond. The panels that did load are shown."
+      description="A data endpoint failed to respond. Panels that loaded are shown."
     />
 
     <TerminalPanel
@@ -229,7 +229,7 @@ const labIncidents = computed(() => incidents.data.value?.incidents.length ?? 0)
       v-if="labReleases.length"
       id="releases"
       title="Releases"
-      note="SKUs first seen on a watched page, with the launch price."
+      note="SKUs first listed on a tracked page, with the launch price."
     >
       <TerminalReleaseList :rows="labReleases" />
     </TerminalPanel>
@@ -283,7 +283,7 @@ const labIncidents = computed(() => incidents.data.value?.incidents.length ?? 0)
       <TerminalHiringSummary v-if="hiringOf" :history="hiringOf" />
       <p class="text-sm">
         <NuxtLink :to="`/hiring#${lab}`" class="text-primary underline underline-offset-2">
-          Department mix, the buildout cluster and the daily series
+          Department mix, the buildout cluster, and the daily series
         </NuxtLink>
       </p>
     </TerminalPanel>

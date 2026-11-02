@@ -126,9 +126,7 @@ const uid = useId()
       :aria-describedby="`${uid}-desc`"
     >
       <title :id="`${uid}-title`">Tokens routed per UTC day, stacked by lab</title>
-      <desc :id="`${uid}-desc`">
-        {{ series.length }} days; the table below carries every value.
-      </desc>
+      <desc :id="`${uid}-desc`">{{ series.length }} days; every value is in the table below.</desc>
 
       <!-- gridlines: hairline, recessive -->
       <g class="stroke-current text-muted" stroke-width="1" stroke-opacity="0.35">
