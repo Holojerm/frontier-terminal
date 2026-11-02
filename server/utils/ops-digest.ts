@@ -31,7 +31,7 @@ export interface OpsDigestRenderOptions {
 /** Rows shown per kind. Enough to tell "one broken route" from "everything". */
 export const OPS_DIGEST_ROWS_PER_KIND = 5
 
-/** `source_fetch_failed` → `Source fetch failed`. Kinds are snake_case log ids. */
+/** `paddle_webhook_rejected` → `Paddle webhook rejected`. Kinds are snake_case log ids. */
 export function opsKindLabel(kind: string): string {
   const words = kind.replace(/[_-]+/g, ' ').trim()
   return words.charAt(0).toUpperCase() + words.slice(1)
