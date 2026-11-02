@@ -85,6 +85,11 @@ export function pctLabel(pct: number): string {
   return `${sign}${Math.abs(rounded)}%`
 }
 
+/** '+12' / '−3' / '±0' — a signed count, the sign always visible (U+2212 for minus). */
+export function signed(n: number): string {
+  return n > 0 ? `+${count(n)}` : n < 0 ? `−${count(Math.abs(n))}` : '±0'
+}
+
 /** '1,234' — grouped integer for counts. */
 export function count(n: number): string {
   return n.toLocaleString('en-US')
