@@ -1,10 +1,10 @@
 <script setup lang="ts">
-// The terminal's front page. Reading order is priority order: what moved,
-// then what things cost, then what has actually been disclosed, then who is
-// winning demand and where the implied dollars go, then who is hiring, then
-// how strained the APIs are. Department mix, the buildout series, the full
-// catalog and source coverage are each one link away on their own page.
-// Eight cached endpoints, fetched in parallel on the server.
+// The terminal's front page. Reading order is priority order: every lab on
+// every axis, then what moved, then what things cost, then what has been
+// disclosed, who is winning demand and where the implied dollars go, who is
+// hiring, and how strained the APIs are. Each panel is the same component
+// its axis page leads with, so the overview is the axis pages' summaries and
+// nothing else. Nine cached endpoints, fetched in parallel on the server.
 
 import { LABS } from '#shared/utils/terminal-lab-summary'
 import type {
@@ -125,58 +125,83 @@ const openIncidents = computed(() =>
 </script>
 
 <template>
-  <div class="space-y-12">
-    <header class="space-y-4">
-      <div class="space-y-1">
-        <h1 class="text-2xl text-highlighted">{{ config.public.appName }}</h1>
-        <p class="max-w-2xl text-sm text-muted">{{ description }}</p>
-      </div>
-      <TerminalReadoutStrip :labs="LABS" :data="readout" link-labs />
-    </header>
+  <TerminalPage
+    :title="config.public.appName"
+    :lede="description"
+    :as-of="overview.data.value?.as_of"
+    :error="failed"
+  >
+    <TerminalPanel
+      id="readout"
+      title="Readout"
+      note="Each lab on every axis. Each figure links to the lab page, where its source is cited."
+      flush
+    >
+      <TerminalReadoutStrip :labs="LABS" :data="readout" />
+    </TerminalPanel>
 
-    <UAlert
-      v-if="failed"
-      color="error"
-      variant="soft"
-      icon="i-lucide-database-zap"
-      title="Part of the terminal could not be read"
-      description="A data endpoint failed to respond. Panels that loaded are shown."
-    />
+    <div class="grid gap-6 lg:grid-cols-2">
+      <TerminalSignalBand v-if="overview.data.value" :overview="overview.data.value" />
 
-    <TerminalSignalBand v-if="overview.data.value" :overview="overview.data.value" />
+      <TerminalPanel
+        id="releases"
+        title="Recent releases"
+        note="SKUs new on a tracked vendor page, with the launch price."
+        :more="
+          releases.data.value
+            ? { label: `All ${releases.data.value.rows.length} releases`, to: '/releases' }
+            : undefined
+        "
+        :flush="recent.length > 0"
+      >
+        <TerminalReleaseList v-if="recent.length" :rows="recent" />
+        <TerminalGap v-else title="No new SKU since tracking began." />
+      </TerminalPanel>
+    </div>
 
     <TerminalPanel
       id="pricing"
-      title="Flagship API price"
-      note="$ per million tokens, on each vendor’s own “start here” model."
+      title="API prices"
+      note="$ per million tokens, like for like on each vendor’s own recommendation."
+      :more="
+        prices.data.value
+          ? { label: `All ${prices.data.value.counts.priced} priced SKUs`, to: '/prices' }
+          : undefined
+      "
+      flush
     >
-      <TerminalFlagshipGrid v-if="prices.data.value" :matrix="prices.data.value.matrix" />
-      <p v-if="prices.data.value" class="text-sm">
-        <NuxtLink to="/prices" class="text-primary underline underline-offset-2">
-          Balanced and economy tiers, and all
-          {{ prices.data.value.counts.priced }} priced SKUs
-        </NuxtLink>
-      </p>
+      <TerminalPriceMatrix v-if="prices.data.value" :matrix="prices.data.value.matrix" />
     </TerminalPanel>
 
-    <TerminalPanel
-      id="revenue"
-      title="Disclosed revenue"
-      note="What each lab, or its public parent, has reported to the SEC."
-    >
-      <TerminalRevenueTable v-if="revenue.data.value" :revenue="revenue.data.value" />
-      <p class="text-sm">
-        <NuxtLink to="/revenue" class="text-primary underline underline-offset-2">
-          Every period, restatements and filings
-        </NuxtLink>
-      </p>
-    </TerminalPanel>
+    <div class="grid gap-6 lg:grid-cols-2">
+      <TerminalPanel
+        id="revenue"
+        title="Disclosed revenue"
+        note="What each lab, or its public parent, has reported to the SEC."
+        :more="{ label: 'Every period, restatements and filings', to: '/revenue' }"
+        flush
+      >
+        <TerminalRevenueTable v-if="revenue.data.value" :revenue="revenue.data.value" />
+      </TerminalPanel>
 
-    <div class="grid gap-12 lg:grid-cols-2">
+      <TerminalPanel
+        id="disclosures"
+        title="Disclosures"
+        note="Misalignment reports each lab publishes about its own models. A count measures disclosure, not behavior."
+        :more="{ label: 'Every report and notice', to: '/disclosures' }"
+        flush
+      >
+        <TerminalDisclosureTable
+          v-if="disclosures.data.value"
+          :disclosures="disclosures.data.value"
+        />
+      </TerminalPanel>
+
       <TerminalPanel
         id="demand"
         title="Demand share"
         note="Share of OpenRouter tokens, newest 7 days. A proxy, not market share."
+        :more="{ label: '30-day series and top models', to: '/rankings' }"
       >
         <TerminalDemandShare v-if="rankings.data.value" :rankings="rankings.data.value" compact />
       </TerminalPanel>
@@ -185,70 +210,44 @@ const openIncidents = computed(() =>
         id="spend"
         title="Implied spend share"
         note="The same tokens at list price. A range, because some SKUs are unpriced."
+        :more="{ label: 'Per-model join', to: '/rankings#spend' }"
       >
         <TerminalSpendShare v-if="spend.data.value" :spend="spend.data.value" compact />
       </TerminalPanel>
+
+      <TerminalPanel
+        id="hiring"
+        title="Hiring"
+        note="Open roles per board, the infrastructure cluster, and the department that moved most."
+        :more="{ label: 'Roles per day, buildout, department mix', to: '/hiring' }"
+        flush
+      >
+        <TerminalHiringSummary
+          v-if="hiringHistory.data.value"
+          :history="hiringHistory.data.value"
+        />
+      </TerminalPanel>
+
+      <TerminalPanel
+        id="strain"
+        title="Capacity strain"
+        :note="
+          incidents.data.value
+            ? `Status-page incidents, newest ${incidents.data.value.window_days} days against the prior ${incidents.data.value.window_days}. ${openIncidents} open now.`
+            : 'Status-page incidents, newest 30 days against the prior 30.'
+        "
+        :more="
+          incidents.data.value
+            ? {
+                label: `All ${incidents.data.value.incident_count} incidents in ${incidents.data.value.history_days} days`,
+                to: '/incidents',
+              }
+            : undefined
+        "
+        flush
+      >
+        <TerminalStrainTable v-if="incidents.data.value" :incidents="incidents.data.value" />
+      </TerminalPanel>
     </div>
-
-    <TerminalPanel
-      v-if="recent.length"
-      id="releases"
-      title="Recent releases"
-      note="SKUs new on a tracked vendor page, with the launch price."
-    >
-      <TerminalReleaseList :rows="recent" />
-      <p v-if="releases.data.value" class="text-sm">
-        <NuxtLink to="/releases" class="text-primary underline underline-offset-2">
-          All {{ releases.data.value.rows.length }} releases
-        </NuxtLink>
-      </p>
-    </TerminalPanel>
-
-    <TerminalPanel
-      id="hiring"
-      title="Hiring"
-      note="Open roles per board, the infrastructure cluster, and the department that moved most."
-    >
-      <TerminalHiringSummary v-if="hiringHistory.data.value" :history="hiringHistory.data.value" />
-      <p class="text-sm">
-        <NuxtLink to="/hiring" class="text-primary underline underline-offset-2">
-          Roles per day, buildout series, department mix
-        </NuxtLink>
-      </p>
-    </TerminalPanel>
-
-    <TerminalPanel
-      id="strain"
-      title="Capacity strain"
-      :note="
-        incidents.data.value
-          ? `Status-page incidents, newest ${incidents.data.value.window_days} days against the prior ${incidents.data.value.window_days}. ${openIncidents} open now.`
-          : 'Status-page incidents, newest 30 days against the prior 30.'
-      "
-    >
-      <TerminalStrainTable v-if="incidents.data.value" :incidents="incidents.data.value" />
-      <p v-if="incidents.data.value" class="text-sm">
-        <NuxtLink to="/incidents" class="text-primary underline underline-offset-2">
-          All {{ incidents.data.value.incident_count }} incidents in
-          {{ incidents.data.value.history_days }} days
-        </NuxtLink>
-      </p>
-    </TerminalPanel>
-
-    <TerminalPanel
-      id="disclosures"
-      title="Disclosures"
-      note="Misalignment reports each lab publishes about its own models, and median days from discovery to publication. A count measures disclosure, not behavior."
-    >
-      <TerminalDisclosureTable
-        v-if="disclosures.data.value"
-        :disclosures="disclosures.data.value"
-      />
-      <p class="text-sm">
-        <NuxtLink to="/disclosures" class="text-primary underline underline-offset-2">
-          Every report and notice, with its dates
-        </NuxtLink>
-      </p>
-    </TerminalPanel>
-  </div>
+  </TerminalPage>
 </template>

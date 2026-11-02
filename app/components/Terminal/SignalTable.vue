@@ -17,70 +17,66 @@ import {
 } from '#shared/utils/terminal-labs'
 import { alertPath } from '#shared/utils/terminal-tiers'
 import type { AlertView } from '#shared/utils/terminal-types'
+import type { TableColumn } from '~/types/terminal-ui'
 
-defineProps<{ alerts: AlertView[] }>()
+const props = defineProps<{ alerts: AlertView[] }>()
 
 const now = useNow()
 
-const labs = (a: AlertView) => {
-  const ids = alertLabs(a)
-  return ids.length ? ids.map((id) => LAB_DISPLAY[id]).join(', ') : null
-}
-const axis = (a: AlertView) => {
-  const id = alertAxis(a)
-  return id ? AXIS_DISPLAY[id] : null
-}
+const rows = computed(() =>
+  props.alerts.map((a) => {
+    const labs = alertLabs(a)
+    const axis = alertAxis(a)
+    return {
+      alert: a,
+      labs: labs.length ? labs.map((id) => LAB_DISPLAY[id]).join(', ') : null,
+      axis: axis ? AXIS_DISPLAY[axis] : null,
+      delta: alertDelta(a),
+    }
+  }),
+)
+
+// The headline is the row header: it names the row, and a screen reader
+// moving down the table hears what moved rather than a timestamp.
+const columns: TableColumn[] = [
+  { key: 'when', label: 'When', class: 'whitespace-nowrap font-mono text-xs text-muted' },
+  { key: 'labs', label: 'Lab', class: 'whitespace-nowrap' },
+  { key: 'axis', label: 'Axis', class: 'whitespace-nowrap text-muted' },
+  { key: 'headline', label: 'What moved', class: 'min-w-64' },
+  { key: 'delta', label: 'Δ', numeric: true, class: 'text-xs' },
+]
 </script>
 
 <template>
-  <div class="overflow-x-auto">
-    <table class="w-full text-sm">
-      <caption class="sr-only">
-        Alerts, newest first: time, lab, axis, headline and the figure that moved
-      </caption>
-      <thead>
-        <tr class="border-b border-default text-left text-xs text-toned">
-          <th scope="col" class="py-2 pr-3 font-medium">When</th>
-          <th scope="col" class="py-2 pr-3 font-medium">Lab</th>
-          <th scope="col" class="py-2 pr-3 font-medium">Axis</th>
-          <th scope="col" class="py-2 pr-3 font-medium">What moved</th>
-          <th scope="col" class="py-2 text-right font-medium">Δ</th>
-        </tr>
-      </thead>
-      <tbody>
-        <tr
-          v-for="alert in alerts"
-          :id="alert.id"
-          :key="alert.id"
-          class="border-b border-default align-top"
-        >
-          <td class="whitespace-nowrap py-2 pr-3 font-mono text-xs text-toned">
-            <time :datetime="alert.created_at" :title="alert.created_at">
-              {{ relativeStamp(alert.created_at, now) }}
-            </time>
-          </td>
-          <td class="whitespace-nowrap py-2 pr-3 text-default">{{ labs(alert) ?? '—' }}</td>
-          <td class="whitespace-nowrap py-2 pr-3 text-toned">{{ axis(alert) ?? '—' }}</td>
-          <th scope="row" class="min-w-64 py-2 pr-3 text-left font-normal">
-            <UIcon
-              :name="SEVERITY_BADGE[alert.severity].icon"
-              :class="alert.severity === 'critical' ? 'text-error' : 'text-warning'"
-              class="mr-1 inline-block size-3.5 align-[-2px]"
-              :aria-label="alert.severity"
-            />
-            <NuxtLink
-              :to="alertPath(alert.id)"
-              :title="alert.headline"
-              class="text-highlighted underline decoration-1 underline-offset-2 hover:text-primary"
-            >
-              {{ clipHeadline(alert.headline) }}
-            </NuxtLink>
-          </th>
-          <td class="whitespace-nowrap py-2 text-right font-mono text-xs text-default">
-            {{ alertDelta(alert) ?? '' }}
-          </td>
-        </tr>
-      </tbody>
-    </table>
-  </div>
+  <TerminalTable
+    caption="Alerts, newest first: time, lab, axis, headline, and the figure that moved"
+    :columns="columns"
+    :rows="rows"
+    :row-key="(r) => r.alert.id"
+    :row-id="(r) => r.alert.id"
+    row-header="headline"
+    align="top"
+  >
+    <template #cell-headline="{ row }">
+      <UIcon
+        :name="SEVERITY_BADGE[row.alert.severity].icon"
+        :class="row.alert.severity === 'critical' ? 'text-error' : 'text-warning'"
+        class="mr-1 inline-block size-3.5 align-[-2px]"
+        :aria-label="row.alert.severity"
+      />
+      <NuxtLink
+        :to="alertPath(row.alert.id)"
+        :title="row.alert.headline"
+        class="text-highlighted underline decoration-1 underline-offset-2 hover:text-primary"
+      >
+        {{ clipHeadline(row.alert.headline) }}
+      </NuxtLink>
+    </template>
+    <template #cell-when="{ row }">
+      <time :datetime="row.alert.created_at" :title="row.alert.created_at">
+        {{ relativeStamp(row.alert.created_at, now) }}
+      </time>
+    </template>
+    <template #cell-delta="{ row }">{{ row.delta ?? '' }}</template>
+  </TerminalTable>
 </template>

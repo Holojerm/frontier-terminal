@@ -9,6 +9,7 @@
 
 import { compactUsd, count, periodLabel } from '#shared/utils/terminal-format'
 import type { RevenueData, RevenueProviderView } from '#shared/utils/terminal-types'
+import type { TableColumn } from '~/types/terminal-ui'
 
 defineProps<{ revenue: RevenueData }>()
 
@@ -30,55 +31,62 @@ const relationLine = (p: RevenueProviderView) =>
       : p.filer
         ? `${filerName(p)}: the lab’s own filing${p.filer.tagged_by === 'resolved' && p.filer.resolved_from ? `, CIK resolved from its ${p.filer.resolved_from.form} of ${p.filer.resolved_from.file_date}` : ''}`
         : ''
+
+const PERIOD_COLUMNS: TableColumn[] = [
+  { key: 'period', label: 'Period', class: 'text-default' },
+  { key: 'val', label: 'Revenue', numeric: true, class: 'text-highlighted' },
+  { key: 'filing', label: 'Filing', class: 'whitespace-nowrap text-muted' },
+]
+
+const BADGE = {
+  issuer: { color: 'success', icon: 'i-lucide-file-check', label: 'issuer filing' },
+  parent: { color: 'warning', icon: 'i-lucide-git-branch', label: 'parent filing' },
+  segment: { color: 'warning', icon: 'i-lucide-git-branch', label: 'parent segment' },
+  none: { color: 'neutral', icon: 'i-lucide-eye-off', label: 'no audited disclosure' },
+} as const
+
+const badge = (p: RevenueProviderView) =>
+  p.disclosure === 'issuer'
+    ? BADGE.issuer
+    : p.disclosure === 'parent'
+      ? p.filer?.segment_label
+        ? BADGE.segment
+        : BADGE.parent
+      : BADGE.none
 </script>
 
 <template>
-  <div class="space-y-4">
-    <div class="grid gap-4 md:grid-cols-2">
-      <article
+  <div class="space-y-3">
+    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+      <TerminalCard
         v-for="p in revenue.providers"
+        :id="`revenue-${p.provider}`"
         :key="p.provider"
-        :aria-labelledby="`revenue-${p.provider}`"
-        class="space-y-3 rounded border border-default bg-elevated p-4"
+        :title="p.display"
+        :sources="p.sources"
       >
-        <header class="flex flex-wrap items-baseline justify-between gap-2">
-          <h3 :id="`revenue-${p.provider}`" class="text-lg text-highlighted">{{ p.display }}</h3>
-          <UBadge
-            v-if="p.disclosure === 'parent' || p.disclosure === 'issuer'"
-            :color="p.disclosure === 'issuer' ? 'success' : 'warning'"
-            variant="subtle"
-            size="sm"
-            :icon="p.disclosure === 'issuer' ? 'i-lucide-file-check' : 'i-lucide-git-branch'"
-          >
-            {{
-              p.disclosure === 'issuer'
-                ? 'issuer filing'
-                : p.filer?.segment_label
-                  ? 'parent segment'
-                  : 'parent filing'
-            }}
+        <template #meta>
+          <UBadge :color="badge(p).color" :icon="badge(p).icon" variant="subtle" size="sm">
+            {{ badge(p).label }}
           </UBadge>
-          <UBadge v-else color="neutral" variant="subtle" size="sm" icon="i-lucide-eye-off">
-            no audited disclosure
-          </UBadge>
-        </header>
+        </template>
 
         <!-- The honest gap: nothing shown, and the number that would have
              filled the space named as deliberately absent. -->
-        <TerminalEmptyState
+        <TerminalGap
           v-if="p.disclosure === 'none'"
           title="No SEC filing reports this lab’s revenue."
-          body="Press-reported run-rates are excluded."
+          reason="Press-reported run-rates are excluded."
         />
 
-        <TerminalEmptyState
+        <TerminalGap
           v-else-if="p.disclosure === 'no_rows'"
           :title="
             p.filer?.relation === 'issuer'
               ? 'S-1 filed; no revenue read yet.'
               : 'Filer tagged; no XBRL facts parsed yet.'
           "
-          :body="
+          :reason="
             p.filer?.relation === 'issuer'
               ? 'Read from the S-1’s statement of operations on the next survey poll. XBRL follows with the first 10-Q.'
               : 'They appear on the next EDGAR poll.'
@@ -86,7 +94,7 @@ const relationLine = (p: RevenueProviderView) =>
         />
 
         <template v-else>
-          <p class="text-sm text-toned">
+          <p class="text-sm text-muted">
             {{ relationLine(p) }}
             <a
               v-if="p.filer?.resolved_from"
@@ -98,81 +106,56 @@ const relationLine = (p: RevenueProviderView) =>
             >
           </p>
 
-          <div class="overflow-x-auto">
-            <table class="w-full text-xs">
-              <caption class="sr-only">
-                {{
-                  p.display
-                }}
-                reported revenue by period, newest first
-              </caption>
-              <thead>
-                <tr class="border-b border-default text-left">
-                  <th scope="col" class="py-1 pr-2 font-medium text-toned">Period</th>
-                  <th scope="col" class="py-1 pr-2 text-right font-medium text-toned">Revenue</th>
-                  <th scope="col" class="py-1 font-medium text-toned">Filing</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr v-for="r in shown(p)" :key="r.entity_key" class="border-b border-default">
-                  <th scope="row" class="py-1 pr-2 text-left font-normal text-default">
-                    <time :datetime="r.start">{{ r.start }}</time> →
-                    <time :datetime="r.end">{{ r.end }}</time>
-                    <span class="text-toned"> · {{ periodLabel(r.days) }}</span>
-                    <span v-if="r.unaudited" class="text-toned"> · unaudited</span>
-                  </th>
-                  <td
-                    class="py-1 pr-2 text-right font-mono text-highlighted"
-                    :title="`USD ${count(r.val)}`"
-                  >
-                    {{ compactUsd(r.val) }}
-                  </td>
-                  <td class="whitespace-nowrap py-1 text-toned">
-                    <a
-                      :href="r.filing_url"
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      class="underline underline-offset-2 hover:text-default"
-                      :title="`Accession ${r.accession_no} · ${r.basis === 'xbrl' ? 'tag' : 'row'} ${r.tag}`"
-                      >{{ r.form }}</a
-                    >
-                    <span> filed </span>
-                    <time :datetime="r.filed">{{ r.filed }}</time>
-                  </td>
-                </tr>
-              </tbody>
-            </table>
+          <TerminalTable
+            :caption="`${p.display} reported revenue by period, newest first`"
+            :columns="PERIOD_COLUMNS"
+            :rows="shown(p)"
+            :row-key="(r) => r.entity_key"
+            nested
+          >
+            <template #cell-period="{ row: r }">
+              <time :datetime="r.start">{{ r.start }}</time> →
+              <time :datetime="r.end">{{ r.end }}</time>
+              <span class="text-muted"> · {{ periodLabel(r.days) }}</span>
+              <span v-if="r.unaudited" class="text-muted"> · unaudited</span>
+            </template>
+            <template #cell-val="{ row: r }">
+              <span :title="`USD ${count(r.val)}`">{{ compactUsd(r.val) }}</span>
+            </template>
+            <template #cell-filing="{ row: r }">
+              <a
+                :href="r.filing_url"
+                target="_blank"
+                rel="noopener noreferrer"
+                class="underline underline-offset-2 hover:text-default"
+                :title="`Accession ${r.accession_no} · ${r.basis === 'xbrl' ? 'tag' : 'row'} ${r.tag}`"
+                >{{ r.form }}</a
+              >
+              filed <time :datetime="r.filed">{{ r.filed }}</time>
+            </template>
+          </TerminalTable>
+
+          <div class="space-y-1 text-xs text-muted">
+            <p v-if="overflow(p)">+ {{ overflow(p) }} more periods</p>
+            <p v-if="p.superseded.length">
+              {{ p.superseded.length }} earlier value{{ p.superseded.length === 1 ? '' : 's' }} for
+              these periods restated by a later filing — see the revenue_facts export.
+            </p>
+            <p v-if="fromProspectus(p)">
+              Read from the S-1’s Consolidated Statements of Operations: the filing tags no
+              financials in XBRL. A later filing’s value for the same period replaces it.
+            </p>
+            <p v-if="p.tags.length">
+              XBRL tag{{ p.tags.length === 1 ? '' : 's' }}:
+              <code class="text-default">{{ p.tags.join(', ') }}</code>
+            </p>
           </div>
-          <p v-if="overflow(p)" class="text-xs text-toned">+ {{ overflow(p) }} more periods</p>
-          <p v-if="p.superseded.length" class="text-xs text-toned">
-            {{ p.superseded.length }} earlier value{{ p.superseded.length === 1 ? '' : 's' }} for
-            these periods restated by a later filing — see the revenue_facts export.
-          </p>
-          <p v-if="fromProspectus(p)" class="text-xs text-toned">
-            Read from the S-1’s Consolidated Statements of Operations: the filing tags no financials
-            in XBRL. A later filing’s value for the same period replaces it.
-          </p>
-          <p v-if="p.tags.length" class="text-xs text-toned">
-            XBRL tag{{ p.tags.length === 1 ? '' : 's' }}:
-            <code class="text-default">{{ p.tags.join(', ') }}</code>
-          </p>
         </template>
 
-        <div class="flex flex-wrap items-center gap-x-3 gap-y-1">
-          <TerminalProvenanceTag
-            v-for="s in p.sources"
-            :key="s.source_id"
-            :label="s.label"
-            :source-url="s.source_url"
-            :fetched-at="s.fetched_at"
-          />
-          <TerminalCaveatMark
-            v-if="p.filer?.caveat"
-            :name="`Caveat for ${p.display} revenue`"
-            :text="p.filer.caveat"
-          />
-        </div>
-      </article>
+        <template v-if="p.filer?.caveat" #foot>
+          <TerminalCaveatMark :name="`Caveat for ${p.display} revenue`" :text="p.filer.caveat" />
+        </template>
+      </TerminalCard>
     </div>
 
     <p class="text-xs text-muted">{{ revenue.rule }}</p>
