@@ -237,8 +237,19 @@ describe('S-1 revenue end to end', () => {
       url: prospectusProv.source_url,
       ext: 'html',
     })
+    // A registration document is its own source: its first parse is the
+    // filing itself, so it records changes and alerts rather than baselining.
     const report = await run([prospectus.source_id], f)
-    expect(report.sources[0]).toMatchObject({ status: 'baseline' })
+    expect(report.sources[0]).toMatchObject({ status: 'ok', alerts: 1 })
+    const [alert] = await db.select().from(schema.alerts)
+    expect(alert).toMatchObject({ rule: 'prospectus-floor', severity: 'critical' })
+    expect(alert!.headline).toBe(
+      'Anthropic, PBC S-1: $16,286 million revenue for the six months ended 2026-06-30; price range still blank',
+    )
+    expect(alert!.explanation).toContain(
+      'against $1,163 million a year earlier (unaudited). The cover lists the Nasdaq Global Select Market under the symbol “ANT”.',
+    )
+    expect(alert!.explanation).toContain('the roadshow has not launched')
 
     const revenue = await queryRevenue(db, await ctx())
     const anthropic = revenue.providers.find((p) => p.provider === 'anthropic')!

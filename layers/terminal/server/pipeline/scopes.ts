@@ -1,4 +1,5 @@
 import type { PollScope } from './contracts'
+import { freshRegistrationKey } from './prospectus-floor'
 import type { FetchSource } from './sources'
 
 // Which sources each cron tick polls. One file, so the two tasks under
@@ -52,7 +53,32 @@ const LAUNCH_SOURCES: readonly string[] = [
   'mistral-pricing-md',
 ]
 
-export function sourceIdsForScope(scope: PollScope, all: readonly FetchSource[]): string[] {
+// A fresh registration filing's index and document ride the edgar tick until
+// each has parsed once, so what an S-1 amendment says reaches an alert within
+// an hour of the filing rather than at the next six-hourly survey. After that
+// only the survey re-checks them: a filed document never changes, and a
+// prospectus runs to 14 MB.
+export const REGISTRATION_PREFIXES = ['filing-index-', 'prospectus-revenue-']
+
+export function isRegistrationSource(id: string): boolean {
+  return REGISTRATION_PREFIXES.some((p) => id.startsWith(p))
+}
+
+function freshRegistration(id: string, now: Date): boolean {
+  const prefix = REGISTRATION_PREFIXES.find((p) => id.startsWith(p))
+  return prefix !== undefined && freshRegistrationKey(id.slice(prefix.length), now.toISOString())
+}
+
+/**
+ * The source ids a tick polls. `parsed` is the registration sources that have
+ * already parsed once (store.ts › sourcesWithGoodRun); the edgar tick skips them.
+ */
+export function sourceIdsForScope(
+  scope: PollScope,
+  all: readonly FetchSource[],
+  now: Date = new Date(),
+  parsed: ReadonlySet<string> = new Set(),
+): string[] {
   const ids = all.map((s) => s.source_id)
   if (scope === 'survey') return ids
   const missing = [...EDGAR_SOURCES, ...LAUNCH_SOURCES].filter((id) => !ids.includes(id))
@@ -62,7 +88,8 @@ export function sourceIdsForScope(scope: PollScope, all: readonly FetchSource[])
   // Derived EDGAR feeds (a resolved lab's submissions and company facts —
   // layers/terminal/server/pipeline/derived.ts) ride the same tick as the static ones.
   const derived = ids.filter((id) => id.startsWith('edgar-') && !EDGAR_SOURCES.includes(id))
-  return [...EDGAR_SOURCES, ...derived, ...LAUNCH_SOURCES]
+  const registrations = ids.filter((id) => freshRegistration(id, now) && !parsed.has(id))
+  return [...EDGAR_SOURCES, ...derived, ...registrations, ...LAUNCH_SOURCES]
 }
 
 const EDGAR_PERIOD_MS = 30 * 60 * 1000

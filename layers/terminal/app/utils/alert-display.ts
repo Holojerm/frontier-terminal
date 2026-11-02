@@ -23,6 +23,8 @@ export const RULE_TEXT: Record<AlertView['rule'], string> = {
     'Rule-based: a registration filing whose filer matches a pending lab’s name resolves that lab’s CIK and alerts.',
   'periodic-floor': 'Rule-based: every new 10-Q/10-K on a whitelisted CIK alerts.',
   'model-floor': 'Rule-based: a model no vendor catalog has listed before always alerts.',
+  'prospectus-floor':
+    'Rule-based: a lab’s new registration filing alerts with what its own document states — revenue, the period it runs to, and the price range on its cover.',
   'agent-judge':
     'Judged by a model, which may cite only fields present in the referenced change rows.',
 }
