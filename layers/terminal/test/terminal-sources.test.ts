@@ -46,7 +46,7 @@ describe('readSourceRegistry', () => {
     expect(byId['google-pricing-html']).toMatchObject({
       axis: 'pricing-catalog',
       provider: 'google',
-      url: 'https://ai.google.dev/gemini-api/docs/pricing',
+      url: 'https://aistudio.google.com/docs/pricing.md',
     })
     expect(byId['google-pricing-html']!.verdict).toMatch(/^include/)
     expect(byId['edgar-fts']).toMatchObject({ axis: 'sec', provider: 'all' })

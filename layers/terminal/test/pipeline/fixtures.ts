@@ -18,7 +18,7 @@ import anthropicModelsOverview from '~~/fixtures/pricing/anthropic-models-overvi
 import anthropicPricing from '~~/fixtures/pricing/anthropic-pricing.md?raw'
 import googleModelPage from '~~/fixtures/pricing/google-model-gemini-4-argon.md?raw'
 import googleModels from '~~/fixtures/pricing/google-models.md?raw'
-import googlePricing from '~~/fixtures/pricing/google-pricing.html?raw'
+import googlePricing from '~~/fixtures/pricing/google-pricing.md?raw'
 import metaModels from '~~/fixtures/pricing/meta-models.md?raw'
 import metaPricing from '~~/fixtures/pricing/meta-pricing.md?raw'
 import mistralModels from '~~/fixtures/pricing/mistral-models.md?raw'
@@ -79,7 +79,7 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/pricing/anthropic-pricing.md': anthropicPricing,
   'fixtures/pricing/google-models.md': googleModels,
   'fixtures/pricing/google-model-gemini-4-argon.md': googleModelPage,
-  'fixtures/pricing/google-pricing.html': googlePricing,
+  'fixtures/pricing/google-pricing.md': googlePricing,
   'fixtures/pricing/meta-models.md': metaModels,
   'fixtures/pricing/meta-pricing.md': metaPricing,
   'fixtures/pricing/mistral-models.md': mistralModels,
