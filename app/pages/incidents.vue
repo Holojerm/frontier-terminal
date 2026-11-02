@@ -107,7 +107,6 @@ const columns: TableColumn[] = [
           :rows="incidents.incidents"
           :row-key="(i) => i.entity_key"
           row-header="title"
-          sticky
           align="top"
         >
           <template #cell-started="{ row: i }">

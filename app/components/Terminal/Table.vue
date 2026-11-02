@@ -11,6 +11,11 @@
 // Cells render `row[key]` unless a `#cell-<key>` slot is given. `nested` is
 // the smaller form for a table inside a card: `text-xs`, tighter rows, no
 // outer inset.
+//
+// A table scrolls in its own box, never the page: the box is capped at 70% of
+// the viewport, the header sticks to the top of the box, and a wide table
+// scrolls sideways inside it. A box that does scroll is a named, focusable
+// region so a keyboard can scroll it (WCAG 2.1.1; axe scrollable-region-focusable).
 
 import type { TableColumn } from '~/types/terminal-ui'
 
@@ -32,8 +37,6 @@ const props = withDefaults(
      * border and needs the inset; one inside a padded body already has it.
      */
     edge?: boolean
-    /** Header sticks to the viewport from `md` up, for long lists. */
-    sticky?: boolean
     /** Which column names the row (`<th scope="row">`); the first by default. */
     rowHeader?: string
     /** `top` for rows whose cells wrap to several lines. */
@@ -69,6 +72,24 @@ const pad = computed(() =>
       : 'px-3 py-2',
 )
 
+// Measured on the client: SSR renders the box without a tab stop, and a
+// table that fits never gets one.
+const box = ref<HTMLElement | null>(null)
+const scrolls = ref(false)
+let observer: ResizeObserver | undefined
+onMounted(() => {
+  const el = box.value
+  if (!el) return
+  const measure = () => {
+    scrolls.value = el.scrollHeight > el.clientHeight + 1 || el.scrollWidth > el.clientWidth + 1
+  }
+  observer = new ResizeObserver(measure)
+  observer.observe(el)
+  if (el.firstElementChild) observer.observe(el.firstElementChild)
+  measure()
+})
+onBeforeUnmount(() => observer?.disconnect())
+
 /** The row's header cell: the column named by `rowHeader`, else the first. */
 const isHeader = (c: TableColumn) => c.key === (props.rowHeader ?? props.columns[0]?.key)
 
@@ -89,15 +110,23 @@ const value = (row: T, key: string) => {
 </script>
 
 <template>
-  <div :class="sticky ? 'overflow-x-auto md:overflow-visible' : 'overflow-x-auto'">
+  <div
+    ref="box"
+    class="max-h-[70dvh] overflow-auto rounded-sm focus-visible:outline-2 focus-visible:outline-primary"
+    :tabindex="scrolls ? 0 : undefined"
+    :role="scrolls ? 'region' : undefined"
+    :aria-label="scrolls ? caption : undefined"
+  >
     <table class="w-full" :class="nested ? 'text-xs' : 'text-sm'">
       <caption class="sr-only">
         {{
           caption
         }}
       </caption>
-      <thead :class="sticky ? 'bg-default md:sticky md:top-0' : undefined">
-        <tr class="border-b border-default text-left">
+      <!-- The rule under the header is a shadow, not a border: a collapsed
+           border stays behind when the header sticks. -->
+      <thead class="sticky top-0 z-10 bg-default shadow-[inset_0_-1px_0_var(--ui-border)]">
+        <tr class="text-left">
           <th
             v-for="c in columns"
             :key="c.key"

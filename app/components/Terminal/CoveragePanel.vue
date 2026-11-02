@@ -51,7 +51,6 @@ const columns: TableColumn[] = [
       :columns="columns"
       :rows="coverage.sources"
       :row-key="(s) => s.source_id"
-      sticky
       align="top"
     >
       <template #cell-label="{ row: s }">

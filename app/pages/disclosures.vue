@@ -109,7 +109,6 @@ const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, str
             row-header="title"
             :gap="(r) => !r.timeline"
             :gap-columns="['discovered', 'disclosed', 'days']"
-            sticky
             align="top"
           >
             <template #cell-provider="{ row: r }">{{ labName(r.provider) }}</template>
