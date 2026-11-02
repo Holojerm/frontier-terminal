@@ -110,3 +110,33 @@ Live-fetched with `curl -L` and the pipeline's descriptive User-Agent at 17:50�
 The class map quotes `models.md`: Muse Wonder is the flagship ("Meta's most capable model…") and Muse Spark 1.3 is the economy cell (the page's cost-sensitive sentence names the Muse Spark line, and marks 1.3 "Recommended for new work"). No balanced tier is named, so that cell is a stated gap.
 
 Interpretation, marked as such: the `meta-llama/*` prefix counts open-weight Llama models that third parties host and bill for. It is demand for Meta's models, not traffic Meta serves or revenue it earns, the same reading that applies to `google/gemma-*`.
+
+## Addendum, 2026-11-01 — Mistral re-check
+
+Live-fetched with `curl -L` and the pipeline's descriptive User-Agent at 02:37–02:50Z on 2026-11-02 (UTC). Re-checked because both facts behind the 2026-09-08 cut changed: the docs `.md` pages now resolve, and Meta's addition (2026-10-12) made a lab without every axis a normal shape for this terminal. Nothing was committed under `fixtures/` yet; a build would capture fresh bytes.
+
+| Axis | Source | Result | Verdict |
+|---|---|---|---|
+| Pricing | `docs.mistral.ai/inference/pricing.md` | 200, 3 741 bytes, `text/markdown`, Netlify ETag, no Last-Modified. One table per family (Generalist, OCR, Audio, Code, Embedding, Moderation, Time series); each row is model, API name, and a `<br>`-joined price cell ("Input $0.7 /M Tokens<br>Cached input $0.07 /M Tokens<br>Output $2.1 /M Tokens") | **Include** |
+| Pricing | `docs.mistral.ai/models.md` | 200, 17 332 bytes, `text/markdown`, ETag. 24 current rows (model, API name, status GA / Public Preview, context, summary) and a deprecated-and-retired table with deprecation, retirement and replacement columns | **Include** — catalog and class-map page |
+| Pricing | `docs.mistral.ai/models/{slug}.md` | 200, under 1.1 KB each: API names (including `-latest` aliases), release date, context, parameters, a pricing line, license | Not needed — `models.md` and `pricing.md` carry the same fields |
+| Pricing | `docs.mistral.ai/inference/model-selection-guide.md` | 200, 4 666 bytes: the same models with 0–5 speed and performance ratings | Not used for the class map — a rating is not a sentence |
+| Hiring | `api.ashbyhq.com/posting-api/job-board/mistral.ai` | 200, 2.86 MB JSON, ETag; **229 listed roles**, the same posting-API shape as OpenAI's board. Departments: Solutions 72, Engineering & Infra 43, Science 29, Human Resources 28, Business 20, Legal 13. Paris 135, Palo Alto 18, New York 12, London 11 | **Include** |
+| Hiring | `api.ashbyhq.com/posting-api/job-board/mistral`, `jobs.ashbyhq.com/mistral` | 404, 404 | The board name is `mistral.ai` (the "Apply" links on `mistral.ai/careers` point there). The 2026-09-08 audit checked the wrong slug |
+| Hiring | Greenhouse `mistral`; Lever `mistral` | 404; 200 with `[]` | Not used |
+| Status | `status.mistral.ai/api/v2/incidents.json` | 200, 55 613 bytes, Statuspage v2, ETag. 50 incidents (the page cap), 2025-10-07 → 2026-10-30; impacts 41 minor / 6 major / 3 critical; none open; no `components` field | **Include** |
+| Status | `status.mistral.ai/`, `/incidents/{id}`, `/history.rss` | 403 (Cloudflare challenge), 403, 401 to a headless client | Incident links are composed, as for OpenAI, but cannot be checked headless |
+| Demand | OpenRouter `mistralai/*` | 21 models in the live model list (Large 4, Medium 3.5, Small 2603, Ministral 3, Codestral, …); 14 `mistralai/mistral-nemo` rows in the committed rankings fixture | **Include** — prefix maps to `mistral` |
+| SEC | `efts.sec.gov` "Mistral AI"; `company_tickers.json` | 2 hits, both CoreWeave S-1/A (2025-03) naming Mistral as a customer; no Mistral AI filer among the EDGAR entities named "Mistral" | **Cut** — private French company; no `pending_filers` pattern |
+| Revenue | — | No filer | **None** — `revenue_filers.mistral: null` |
+| Disclosures | `mistral.ai/safety`; `docs.mistral.ai/resources/security-advisories.md` | 404; the advisories (MAI-2026-001…003) are SDK and product vulnerabilities, not model behaviour | **Cut** |
+
+**Findings.** Mistral's price list is not all Mistral's: the Generalist table opens with three third-party models it resells (`zai-glm-5-3-flash`, `deepseek-v4-1-flash-1017`, `zai-glm-5-3`), and `models.md` labels each "A third-party … model from Z.ai/DeepSeek". A parser keeps them out of Mistral's SKUs by that label, or stores them with their maker, never as Mistral models. Prices print per million tokens, per 1 000 pages (OCR), per minute (audio) or per million characters (TTS); only the `/M Tokens` rows fit the price matrix. Shieldstral and the Timestral models have no API name and no price. Dates in the deprecated table are mostly ISO, but one row prints "April 30, 2026", so the parser reads both forms.
+
+The status feed mixes products: 8 of 50 incident names mention Vibe or Le Chat, and with no components field the count is "Mistral operations", the same reading as OpenAI's.
+
+The class map has no quotable sentence. No page names a start-here, flagship or cost tier for Mistral's own text models. `mistral-large-4` is described as "A state-of-the-art, open-weight, general-purpose multimodal model." and `mistral-small-2603` as a "Hybrid model unifying instruct, reasoning, and coding in a single efficient model." The one "frontier-class" sentence belongs to `mistral-medium-3-5`, deprecated 2026-10-31 with Mistral Large 4 as its printed replacement. So flagship, balanced and economy would all ship as stated gaps, or the flagship cell would rest on the replacement column rather than a sentence; that is a rule change for the class map, not a transcription.
+
+Interpretation, marked as such: the case that cut Mistral is gone. It now has four axes with supported surfaces (pricing, hiring, incidents, demand), which is more than Meta has, and the largest hiring category (Solutions, 31%) is the same kind of signal as Anthropic's Sales share. The remaining costs are two markdown parsers, a third-party filter, and empty class-map cells.
+
+**Verdict: include on pricing, hiring, incidents and demand. Cut SEC, revenue and disclosures, and leave the class map as stated gaps. Waiting on a product go-ahead before building, because a sixth lab is a scope decision.** Until then `cut.mistral` in `sources.yaml` keeps its 2026-09-08 reason, which this re-check found wrong on hiring.
