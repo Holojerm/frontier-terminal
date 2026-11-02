@@ -247,8 +247,8 @@ function deleteEntityStatements(
 /**
  * The alerts whose id is not stored yet. A deterministic rule keys its alert
  * on the event (an accession, a slug), and two sources can see one event in
- * the same tick; the second to parse must not re-insert it, or the plain
- * INSERT in applyDiff fails its whole batch.
+ * the same tick; the second to parse must not count or re-insert it. applyDiff
+ * also skips a conflicting id, for the race this read cannot see.
  */
 export async function unstoredAlerts<T extends { id: string }>(
   db: PipelineDb,
@@ -294,7 +294,10 @@ export async function applyDiff(db: PipelineDb, sourceId: string, writes: DiffWr
     // already logged; a conflict here used to roll back the whole tick and
     // wedge the second source forever (edgar-fts-openai, 2026-10-09).
     ...insertStatements(db, 'changes', writes.changes, { skipExisting: true }),
-    ...insertStatements(db, 'alerts', writes.alerts),
+    // Same for alerts: unstoredAlerts filters ids already stored, but two
+    // sources parsing one filing concurrently both pass that read before
+    // either writes (edgar-fts-openai, 2026-11-02).
+    ...insertStatements(db, 'alerts', writes.alerts, { skipExisting: true }),
   ]
   if (statements.length === 0) return
   await db.batch(statements as unknown as [Statement, ...Statement[]])

@@ -773,7 +773,7 @@ describe('failures', () => {
     expect(await mails()).toHaveLength(1)
 
     // A good fetch ends the streak: the next 429 is a first one again.
-    const good = fixtureFetcher({ [GOOGLE]: fixtureText('fixtures/pricing/google-pricing.html') })
+    const good = fixtureFetcher({ [GOOGLE]: fixtureText('fixtures/pricing/google-pricing.md') })
     await runRefresh({ ...deps(good), now: () => new Date('2026-10-01T08:00:00Z') }, 'edgar', [
       GOOGLE,
     ])

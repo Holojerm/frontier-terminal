@@ -126,21 +126,12 @@ describe('applyDiff', () => {
   // The 2026-09-22 google-pricing-html failure: entities landed, the changes
   // INSERT did not, and the next tick diffed the re-added model to nothing.
   it('leaves the entity set and change log untouched when a later insert fails', async () => {
-    const alert = {
-      id: 'alert-2',
-      severity: 'info',
-      headline: 'h',
-      explanation: 'e',
-      change_ids: JSON.stringify([change(2).id]),
-      rule: 's1-floor',
-      created_at: PROV.fetched_at,
-      ...PROV,
-    }
-    await insertRows(db, 'alerts', [alert])
-    await expect(
-      applyDiff(db, 'xai-greenhouse', { ...writes(2), alerts: [alert] }),
-    ).rejects.toThrow()
-    expect(await db.select().from(schema.entities)).toHaveLength(0)
+    // Enough entities to span several INSERT statements; the last one is
+    // already stored, so the final statement fails after the first succeeded.
+    const many = Array.from({ length: 40 }, (_, i) => entity(100 + i))
+    await insertRows(db, 'entities', [many.at(-1)!])
+    await expect(applyDiff(db, 'xai-greenhouse', { ...writes(2), added: many })).rejects.toThrow()
+    expect(await db.select().from(schema.entities)).toHaveLength(1)
     expect(await db.select().from(schema.changes)).toHaveLength(0)
   })
 
@@ -152,6 +143,25 @@ describe('applyDiff', () => {
     await applyDiff(db, 'xai-greenhouse', writes(3))
     expect(await db.select().from(schema.entities)).toHaveLength(1)
     expect(await db.select().from(schema.changes)).toHaveLength(1)
+  })
+
+  // edgar-fts-openai, 2026-11-02: a concurrent source stored the alert between
+  // this source's unstoredAlerts read and its write.
+  it('applies the diff when another source already stored the same alert', async () => {
+    const alert = {
+      id: 'alert:filing:0000000000-26-000001',
+      severity: 'critical',
+      headline: 'S-1 filed',
+      explanation: 'A registration statement was filed.',
+      change_ids: JSON.stringify([change(4).id]),
+      rule: 's1-floor',
+      created_at: PROV.fetched_at,
+      ...PROV,
+    }
+    await insertRows(db, 'alerts', [alert])
+    await applyDiff(db, 'xai-greenhouse', { ...writes(4), alerts: [alert] })
+    expect(await db.select().from(schema.entities)).toHaveLength(1)
+    expect(await db.select().from(schema.alerts)).toHaveLength(1)
   })
 })
 

@@ -65,7 +65,8 @@ describe('includeSources', () => {
     )
     expect(byId.get('openai-models-md')!.ext).toBe('md')
     expect(byId.get('openai-ashby')!.ext).toBe('json')
-    expect(byId.get('google-pricing-html')!.ext).toBe('html')
+    expect(byId.get('google-pricing-html')!.ext).toBe('md')
+    expect(byId.get('openai-misalignment-reports')!.ext).toBe('html')
   })
 
   test('the cut block never yields a source', () => {
