@@ -580,11 +580,32 @@ describe('s1-floor', () => {
       source_url: urlOf('edgar-fts'),
       fetched_at: change.fetched_at,
     })
+    // Full-text search suffixes the name with its CIK; the headline drops it.
     expect(alert!.headline).toBe(
-      'S-1/A filed by SPACE EXPLORATION TECHNOLOGIES CORP  (SPCX)  (CIK 0001181412) (2026-09-01)',
+      'S-1/A filed by SPACE EXPLORATION TECHNOLOGIES CORP  (SPCX) (2026-09-01)',
     )
     expect(alert!.explanation).toContain('Accession 0001628280-26-099999')
     expect(alert!.explanation).toContain(`CIK ${SPCX_CIK}`)
+
+    // The filer's own submissions feed lists the same filing: one alert, not two.
+    const subs = JSON.parse(fixtureText('fixtures/sec/edgar-submissions-spcx.json')) as {
+      filings: { recent: Record<string, unknown[]> }
+    }
+    const values: Record<string, unknown> = {
+      accessionNumber: '0001628280-26-099999',
+      form: 'S-1/A',
+      filingDate: '2026-09-01',
+    }
+    subs.filings.recent = Object.fromEntries(
+      Object.entries(subs.filings.recent).map(([k, v]) => [k, [values[k] ?? '', ...v]]),
+    )
+    const second = await run(
+      'edgar',
+      ['edgar-submissions-spcx'],
+      fixtureFetcher({ 'edgar-submissions-spcx': JSON.stringify(subs) }),
+    )
+    expect(second.sources[0]).toMatchObject({ status: 'ok', added: 1, alerts: 0 })
+    expect(await rows.alerts()).toHaveLength(1)
   })
 })
 

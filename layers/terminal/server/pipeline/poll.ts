@@ -3,9 +3,10 @@ import type { PollScope } from './contracts'
 import { withPollLock, type LockRetry, type LockStore } from './lock'
 import { manifestFixtures } from './parsers/fixture-provenance'
 import { runRefresh, type RawStore, type RefreshDeps, type RefreshReport } from './refresh'
-import { isSurveyInstant, sourceIdsForScope } from './scopes'
+import { isRegistrationSource, isSurveyInstant, sourceIdsForScope } from './scopes'
 import { deriveSources } from './derived'
 import { includeSources } from './sources'
+import { sourcesWithGoodRun } from './store'
 
 // What a poll task does, minus the bindings: decide whether this tick is
 // ours, take the lock, resolve the scope, run the refresh, say one line about
@@ -61,6 +62,10 @@ export async function runPoll(scope: PollScope, deps: PollDeps): Promise<PollOut
 
   const retry: LockRetry =
     scope === 'survey' ? (surveyLockRetry ?? SURVEY_LOCK_RETRY) : { retries: 0, delayMs: 0 }
+  const sources = [
+    ...includeSources(deps.sourcesYaml, manifestFixtures),
+    ...(await deriveSources(deps.db, deps.sourcesYaml)),
+  ]
   const outcome = await withPollLock(
     lock,
     `${scope}@${now.toISOString()}`,
@@ -68,10 +73,15 @@ export async function runPoll(scope: PollScope, deps: PollDeps): Promise<PollOut
       runRefresh(
         refreshDeps,
         scope,
-        sourceIdsForScope(scope, [
-          ...includeSources(deps.sourcesYaml, manifestFixtures),
-          ...(await deriveSources(deps.db, deps.sourcesYaml)),
-        ]),
+        sourceIdsForScope(
+          scope,
+          sources,
+          now,
+          await sourcesWithGoodRun(
+            deps.db,
+            sources.map((s) => s.source_id).filter(isRegistrationSource),
+          ),
+        ),
       ),
     retry,
   )

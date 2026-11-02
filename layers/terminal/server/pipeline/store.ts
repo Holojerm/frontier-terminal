@@ -192,6 +192,31 @@ function deleteEntityStatements(
   )
 }
 
+/**
+ * The alerts whose id is not stored yet. A deterministic rule keys its alert
+ * on the event (an accession, a slug), and two sources can see one event in
+ * the same tick; the second to parse must not re-insert it, or the plain
+ * INSERT in applyDiff fails its whole batch.
+ */
+export async function unstoredAlerts<T extends { id: string }>(
+  db: PipelineDb,
+  alerts: readonly T[],
+): Promise<T[]> {
+  const unique = [...new Map(alerts.map((a) => [a.id, a])).values()]
+  if (unique.length === 0) return []
+  const stored = await db
+    .select({ id: tables.alerts.id })
+    .from(tables.alerts)
+    .where(
+      inArray(
+        tables.alerts.id,
+        unique.map((a) => a.id),
+      ),
+    )
+  const seen = new Set(stored.map((r) => r.id))
+  return unique.filter((a) => !seen.has(a.id))
+}
+
 export interface DiffWrites {
   added: readonly StoredEntityRow[]
   modified: readonly EntityRow[]
@@ -309,6 +334,25 @@ export interface GoodSnapshot {
   id: string
   content_hash: string
   raw_key: string
+}
+
+/** Which of these sources have parsed at least once ('ok', 'unchanged' or 'baseline'). */
+export async function sourcesWithGoodRun(
+  db: PipelineDb,
+  sourceIds: readonly string[],
+): Promise<Set<string>> {
+  if (sourceIds.length === 0) return new Set()
+  const good: SourceRunRow['status'][] = ['ok', 'unchanged', 'baseline']
+  const rows = await db
+    .selectDistinct({ source_id: tables.sourceRuns.source_id })
+    .from(tables.sourceRuns)
+    .where(
+      and(
+        inArray(tables.sourceRuns.source_id, [...sourceIds]),
+        inArray(tables.sourceRuns.status, good),
+      ),
+    )
+  return new Set(rows.map((r) => r.source_id))
 }
 
 /**

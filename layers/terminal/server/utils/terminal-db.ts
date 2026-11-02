@@ -420,6 +420,24 @@ function summarize(entityType: string, payload: Json | null): string {
       `resolved from ${str(payload.resolved_form) ?? '?'} ${str(payload.resolved_file_date) ?? ''}`.trim(),
     ].join(' · ')
   }
+  if (entityType === 'offering') {
+    const low = num(payload.price_low)
+    const high = num(payload.price_high)
+    const price = num(payload.price)
+    const amendment = num(payload.amendment_no)
+    return [
+      str(payload.entity_name) ?? '?',
+      `${str(payload.form) ?? '?'}${amendment === null ? '' : ` (Amendment No. ${amendment})`}`,
+      price !== null
+        ? `priced at ${money(price)}`
+        : low !== null && high !== null
+          ? `range ${money(low)}–${money(high)}`
+          : 'range blank',
+      str(payload.symbol),
+    ]
+      .filter((p): p is string => Boolean(p))
+      .join(' · ')
+  }
   if (entityType === 'revenue') {
     const val = num(payload.val)
     return [

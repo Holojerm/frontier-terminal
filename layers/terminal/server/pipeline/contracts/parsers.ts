@@ -168,6 +168,30 @@ export const RegistrationDocumentRow = z.strictObject({
 export type RegistrationDocumentRow = z.infer<typeof RegistrationDocumentRow>
 export const FilingIndexOutput = z.strictObject({ rows: z.array(RegistrationDocumentRow) })
 
+// The offering terms one registration filing's cover states
+// (prospectus-offering.ts). Every field is read off the filing itself; null
+// is "the cover leaves it blank", which on a preliminary prospectus is the
+// news: the range is set in the amendment that starts the roadshow.
+export const OfferingRow = z.strictObject({
+  provider: providerEnum,
+  cik: z.string().regex(/^\d{10}$/),
+  entity_name: z.string().min(1),
+  accession_no: z.string().regex(/^\d{10}-\d{2}-\d{6}$/),
+  form: z.string().min(1),
+  filed: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+  /** "AMENDMENT NO. 1 TO FORM S-1" -> 1; null on an original filing. */
+  amendment_no: z.int().positive().nullable(),
+  /** The estimated range per share, in USD; both null while the cover leaves it blank. */
+  price_low: z.number().positive().nullable(),
+  price_high: z.number().positive().nullable(),
+  /** A final prospectus's (424B4) offering price per share. */
+  price: z.number().positive().nullable(),
+  exchange: z.string().min(1).nullable(),
+  symbol: z.string().min(1).nullable(),
+  ...provenanceFields,
+})
+export type OfferingRow = z.infer<typeof OfferingRow>
+
 // ---- Status pages (capacity strain) ---------------------------------------
 
 // One row per incident the vendor posted. Vocabulary is stored VERBATIM per

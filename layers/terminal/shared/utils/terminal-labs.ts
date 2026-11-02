@@ -66,6 +66,8 @@ const AXIS_OF: Record<ChangeView['entity_type'], AlertAxis> = {
   recommendation: 'pricing',
   filing: 'sec',
   filer: 'sec',
+  document: 'sec',
+  offering: 'sec',
   revenue: 'revenue',
   incident: 'incidents',
   disclosure: 'disclosures',

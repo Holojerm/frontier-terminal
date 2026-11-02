@@ -144,7 +144,7 @@
       "fetched_at": "2026-11-02T02:52:21Z",
       "http_status": 200,
       "raw_bytes": 14169252,
-      "trim": "Two excerpts of the 14 MB document, bytes unchanged: the F-pages index entry for Consolidated Statements of Operations (a title with no units line, which the parser must skip), and the audited statement itself — the registrant line, title, units line and the whole table. The parser was also run on the untrimmed document and returned the same five periods.",
+      "trim": "Three excerpts of the 14 MB document, bytes unchanged: the facing page and prospectus cover (the first 102,399 bytes — amendment line, blank price range, listing and symbol), the F-pages index entry for Consolidated Statements of Operations (a title with no units line, which the parser must skip), and the audited statement itself — the registrant line, title, units line and the whole table. The parser was also run on the untrimmed document and returned the same five periods.",
       "note": "One representative document for the derived prospectus-revenue sources. Revenue: $41M (FY2023), $386M (FY2024), $4,585M (FY2025), $1,163M and $16,286M (six months ended 2025-06-30 and 2026-06-30, unaudited)."
     },
     {

@@ -806,6 +806,8 @@ export interface ChangeView extends Prov {
     | 'filer'
     | 'disclosure'
     | 'disclosure_timeline'
+    | 'document'
+    | 'offering'
   provider: ProviderId
   change_type: 'added' | 'removed' | 'modified'
   detected_at: string
@@ -820,7 +822,13 @@ export interface AlertView extends Prov {
   severity: AlertSeverity
   headline: string
   explanation: string
-  rule: 'agent-judge' | 's1-floor' | 'periodic-floor' | 'cik-resolved' | 'model-floor'
+  rule:
+    | 'agent-judge'
+    | 's1-floor'
+    | 'periodic-floor'
+    | 'cik-resolved'
+    | 'model-floor'
+    | 'prospectus-floor'
   created_at: string
   change_ids: string[]
   /** The cited rows, resolved; ids that resolve to nothing are listed in `missing`. */
