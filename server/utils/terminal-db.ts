@@ -66,6 +66,7 @@ import { parseRevenueFilersBlock, type RevenueFilers } from '../pipeline/parsers
 import { parseCikWhitelistBlock, type CikWhitelist } from '../pipeline/parsers/sec/whitelist'
 import { effectiveClassMap } from '../pipeline/class-map'
 import type { PipelineDb } from '../pipeline/store'
+import type { DataFreshness } from './seo'
 import {
   BASIS_STALE_NOTE,
   CLASS_GAPS,
@@ -1248,6 +1249,30 @@ export async function queryPriceHistory(
  * Every SKU key the store has a page for, with the newest observation as
  * its lastmod — the sitemap's dynamic entries.
  */
+/**
+ * The newest change per entity type and lab, and the newest alert: what
+ * sitemap.xml dates each data page by (server/utils/seo.ts › dataLastmods).
+ * One grouped scan rather than a query per page, because the sitemap asks
+ * for every page at once.
+ */
+export async function queryDataFreshness(db: PipelineDb): Promise<DataFreshness> {
+  const [changes, alerts] = await Promise.all([
+    db
+      .select({
+        entity_type: tables.changes.entity_type,
+        provider: tables.changes.provider,
+        at: max(tables.changes.detected_at),
+      })
+      .from(tables.changes)
+      .groupBy(tables.changes.entity_type, tables.changes.provider),
+    db.select({ at: max(tables.alerts.created_at) }).from(tables.alerts),
+  ])
+  return {
+    changes: changes.flatMap((row) => (row.at ? [{ ...row, at: row.at }] : [])),
+    alertsAt: alerts[0]?.at ?? null,
+  }
+}
+
 export async function queryPriceKeys(
   db: PipelineDb,
 ): Promise<{ entity_key: string; lastmod: string }[]> {

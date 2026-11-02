@@ -164,11 +164,77 @@ export interface CrawlerDocument {
   cacheControl: string
 }
 
+/** The newest change row per entity type and lab, and the newest alert. */
+export interface DataFreshness {
+  changes: { entity_type: string; provider: string; at: string }[]
+  /** ISO 8601, or null when no alert has fired. */
+  alertsAt: string | null
+}
+
+/**
+ * Which change rows each data page renders, by `changes.entity_type`. A page
+ * listed here takes its sitemap lastmod from its own newest change, not from
+ * the deploy: every deploy restamping twenty pages as changed today is the
+ * pattern that teaches a crawler to ignore lastmod, and it hid the fact that
+ * /rankings really does change daily while /disclosures changes monthly.
+ */
+export const PAGE_ENTITY_TYPES: Record<string, readonly string[]> = {
+  '/prices': ['model', 'recommendation'],
+  '/releases': ['model'],
+  '/hiring': ['job'],
+  '/incidents': ['incident'],
+  '/rankings': ['ranking'],
+  '/revenue': ['revenue', 'filer', 'filing'],
+  '/disclosures': ['disclosure'],
+}
+
+/** Pages that summarise every axis, so change whenever anything does. */
+const ALL_AXIS_PAGES = ['/', '/data']
+
+function newest(dates: (string | null | undefined)[]): string | null {
+  let best: string | null = null
+  for (const d of dates) {
+    if (d && (!best || Date.parse(d) > Date.parse(best))) best = d
+  }
+  return best
+}
+
+/**
+ * `path → YYYY-MM-DD` for every data page the freshness rows can date. A
+ * page absent from the result (/about, /license, the theses) keeps the build
+ * date, which is the honest answer for a page whose content is its template.
+ */
+export function dataLastmods(
+  freshness: DataFreshness,
+  labPaths: Record<string, string>,
+): Record<string, string> {
+  const out: Record<string, string> = {}
+  const set = (path: string, at: string | null) => {
+    if (at) out[path] = at.slice(0, 10)
+  }
+
+  for (const [path, types] of Object.entries(PAGE_ENTITY_TYPES)) {
+    set(
+      path,
+      newest(freshness.changes.filter((c) => types.includes(c.entity_type)).map((c) => c.at)),
+    )
+  }
+  set('/alerts', freshness.alertsAt)
+  const everything = newest([...freshness.changes.map((c) => c.at), freshness.alertsAt])
+  for (const path of ALL_AXIS_PAGES) set(path, everything)
+  for (const [lab, path] of Object.entries(labPaths)) {
+    set(path, newest(freshness.changes.filter((c) => c.provider === lab).map((c) => c.at)))
+  }
+  return out
+}
+
 export interface SitemapResponseInput {
   appUrl: string
   indexable: boolean
-  /** `runtimeConfig.buildDate` — the lastmod every static page shares. */
+  /** `runtimeConfig.buildDate` — the lastmod of a static page with no entry in `lastmods`. */
   buildDate: string
+  /** Per-path lastmod for data pages, from dataLastmods(). */
+  lastmods?: Record<string, string>
   /** Collected from `definePageMeta({ publicPage })` at build time. */
   pages: PublicPage[]
   /** URLs with no route-table entry — one per dynamic record, with its own lastmod. */
@@ -193,7 +259,7 @@ export function sitemapResponse(input: SitemapResponseInput): CrawlerDocument {
       path: page.path,
       changefreq: page.changefreq,
       priority: page.priority,
-      lastmod: input.buildDate,
+      lastmod: input.lastmods?.[page.path] ?? input.buildDate,
     })),
     ...(input.dynamic ?? []),
   ]
@@ -268,7 +334,7 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
   sections.push(
     '## Agents',
     '',
-    `- [MCP endpoint](${appUrl}/mcp): read-only tools over the same data (overview, prices and price history, hiring and its history, releases, incidents, disclosures, demand share, alerts, coverage, and status), with provenance on every row. Streamable HTTP, no auth. \`claude mcp add --transport http frontier-terminal ${appUrl}/mcp\``,
+    `- [MCP endpoint](${appUrl}/mcp): read-only tools over the same data (overview, prices and price history, hiring and its history, releases, incidents, disclosures, disclosed revenue, demand share and implied spend share, alerts, coverage, and status), with provenance on every row. Streamable HTTP, no auth. \`claude mcp add --transport http frontier-terminal ${appUrl}/mcp\``,
     '',
     '## License',
     '',

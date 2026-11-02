@@ -16,12 +16,8 @@
 //
 // Suppressed on non-indexable deploys for the same reason robots.txt is.
 
-import { LAB_PAGES } from '#shared/utils/terminal-lab-summary'
-import { thesisPages } from '#shared/utils/thesis-format'
-import manifest from '../../fleet.json'
-import { THESES } from '../theses/registry'
+import { llmsTxtInput } from '../utils/crawler-pages'
 import { llmsTxtResponse } from '../utils/seo'
-import { EXPORT_TABLES } from '../utils/terminal-export'
 
 export default defineEventHandler((event) => {
   const config = useRuntimeConfig()
@@ -34,15 +30,12 @@ export default defineEventHandler((event) => {
   }
 
   const { body, cacheControl } = llmsTxtResponse({
-    appName: config.public.appName,
-    appUrl: config.public.appUrl,
-    description: config.public.appDescription,
-    pages: [...(config.publicPages ?? []), ...LAB_PAGES, ...thesisPages(THESES)],
-    tables: Object.values(EXPORT_TABLES).map((table) => ({
-      name: table.name,
-      description: table.description,
-    })),
-    repoUrl: manifest.links.github ?? '',
+    ...llmsTxtInput({
+      appName: config.public.appName,
+      appUrl: config.public.appUrl,
+      appDescription: config.public.appDescription,
+      publicPages: config.publicPages,
+    }),
     complete: true,
   })
 

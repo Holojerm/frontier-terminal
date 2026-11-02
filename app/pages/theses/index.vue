@@ -3,7 +3,6 @@
 // into the claim-by-claim page. Nothing here knows which companies exist;
 // the list is whatever /api/theses returns.
 
-import { THESES_INDEX_SUMMARY } from '#shared/utils/thesis-format'
 import type { ThesesData } from '#shared/utils/thesis-types'
 
 definePageMeta({
@@ -11,7 +10,8 @@ definePageMeta({
     changefreq: 'daily',
     priority: '0.8',
     title: 'Theses',
-    summary: THESES_INDEX_SUMMARY,
+    summary:
+      'Open investment theses on public companies, each a set of claims checked against a kill condition written before the data arrived.',
   },
 })
 

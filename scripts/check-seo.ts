@@ -21,6 +21,10 @@
 //      busywork with a build failure attached.
 //   5. Exactly one <h1> per page. Cheap to check, and the single most common
 //      real regression in a component-composed page.
+//   6. Every `publicPage` value is a literal. Nuxt reads definePageMeta by
+//      static extraction, which cannot follow an imported constant; it drops
+//      the whole key and the page leaves sitemap.xml and llms.txt with no
+//      error. /theses spent a month out of both that way.
 //
 // Escape hatch: `seo-check-ignore` in a comment on the same line or the line
 // above, matching the design-token gate's convention.
@@ -68,6 +72,29 @@ function ignored(source: string, needle: string): boolean {
     const previous = lines[index - 1] ?? ''
     return line.includes('seo-check-ignore') || previous.includes('seo-check-ignore')
   })
+}
+
+/**
+ * The first `key: value` inside `publicPage: { … }` whose value is not a
+ * plain string or number literal, or null when every value is one.
+ */
+function nonLiteralPublicPageValue(source: string): string | null {
+  const start = source.search(/\bpublicPage\s*:\s*\{/)
+  if (start === -1) return null
+  const open = source.indexOf('{', start)
+  let depth = 0
+  let end = open
+  for (; end < source.length; end++) {
+    if (source[end] === '{') depth++
+    else if (source[end] === '}' && --depth === 0) break
+  }
+  const body = source.slice(open + 1, end)
+  const literal = /^(?:'[^'\n]*'|"[^"\n]*"|`[^`$]*`|-?\d+(?:\.\d+)?|true|false)\s*,?\s*$/
+  for (const match of body.matchAll(/(\w+)\s*:\s*([\s\S]*?)(?=\n\s*\w+\s*:|$)/g)) {
+    const value = match[2]!.trim()
+    if (!literal.test(value)) return `${match[1]}: ${value.split('\n')[0]}`
+  }
+  return null
 }
 
 const problems: Problem[] = []
@@ -211,6 +238,19 @@ for (const file of walk(PAGES_DIR)) {
       detail: `${h1Count} found`,
       remedy: 'one h1 per page — demote the rest to h2',
     })
+  }
+
+  // ── 6. publicPage is extractable ─────────────────────────────────────────
+  if (declaresPublic) {
+    const offender = nonLiteralPublicPageValue(source)
+    if (offender) {
+      problems.push({
+        file: relativePath,
+        rule: 'non-literal publicPage value',
+        detail: `\`${offender}\` — static extraction drops the whole publicPage key`,
+        remedy: 'inline the string; definePageMeta cannot read an import, a call, or `${…}`',
+      })
+    }
   }
 }
 

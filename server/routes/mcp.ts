@@ -10,6 +10,7 @@
 import { db } from '@nuxthub/db'
 import { toWebRequest } from 'h3'
 
+import { llmsTxtInput } from '../utils/crawler-pages'
 import { createTerminalMcpHandler } from '../utils/mcp'
 import { llmsTxtResponse } from '../utils/seo'
 import { terminalPayload } from '../utils/terminal-handler'
@@ -25,10 +26,12 @@ export default defineEventHandler(async (event) => {
   if (!handler) {
     const config = useRuntimeConfig(event)
     const { body: llmsTxt } = llmsTxtResponse({
-      appName: config.public.appName,
-      appUrl: config.public.appUrl,
-      description: config.public.appDescription,
-      pages: config.publicPages ?? [],
+      ...llmsTxtInput({
+        appName: config.public.appName,
+        appUrl: config.public.appUrl,
+        appDescription: config.public.appDescription,
+        publicPages: config.publicPages,
+      }),
       complete: true,
     })
     handler = createTerminalMcpHandler({

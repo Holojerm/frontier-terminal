@@ -15,6 +15,16 @@ The `useSeo()` one-call-per-page contract, how `publicPage` meta feeds both `sit
   That one declaration is what puts a page in **both** `sitemap.xml` and `llms.txt` —
   there is no list to update. A page without it is in neither, which is the right
   default. `noindex: true` and `publicPage` are mutually exclusive and the gate enforces it.
+- **Every `publicPage` value is a literal.** Nuxt reads `definePageMeta` by static extraction;
+  an imported constant makes it drop the whole key, and the page leaves both files with no
+  error (`/theses` did, for a month). The gate fails a non-literal value.
+- **The URL list crawlers see is `crawlerPages()`** in `server/utils/crawler-pages.ts`: the
+  route-table pages plus the lab and thesis pages. sitemap.xml, `/llms.txt`, and the MCP
+  `describe` tool all read it, so the three cannot list different sites.
+- **Sitemap `lastmod` for a data page is its newest change row**, not the deploy:
+  `PAGE_ENTITY_TYPES` in `server/utils/seo.ts` maps each axis page to the `changes.entity_type`s
+  it renders, a lab page reads its own provider's rows, and `/` and `/data` read everything.
+  A new axis page adds its row there. Pages it cannot date keep the build date.
 - **A dynamic route cannot reach either file that way.** The collecting hook skips any path
   containing `:`, because `/provider/[slug]` is one pattern rather than N URLs. Enumerate those
   server-side in `server/routes/sitemap.xml.get.ts` and pass them as `dynamic` entries with a

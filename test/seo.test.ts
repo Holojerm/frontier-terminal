@@ -12,6 +12,7 @@ import {
   buildRobotsTxt,
   buildSitemap,
   crawlerCacheControl,
+  dataLastmods,
   llmsTxtResponse,
   sitemapResponse,
   AI_CRAWLERS,
@@ -417,6 +418,18 @@ describe('the crawler files when a dynamic query fails', () => {
     expect(body).toContain('<lastmod>2026-06-18</lastmod>')
   })
 
+  it('dates a data page by its lastmod entry and the rest by the build', () => {
+    const { body } = sitemapResponse({
+      ...SITEMAP,
+      lastmods: { '/filings': '2026-08-01' },
+      complete: true,
+    })
+    expect(body).toContain(
+      '<loc>https://example.com/filings</loc>\n    <lastmod>2026-08-01</lastmod>',
+    )
+    expect(body).not.toContain('2026-08-22')
+  })
+
   it('applies the same rule to llms.txt', () => {
     expect(llmsTxtResponse({ ...LLMS, complete: true }).cacheControl).toBe(CRAWLER_CACHE_CONTROL)
     expect(llmsTxtResponse({ ...LLMS, complete: false }).cacheControl).toBe(DEGRADED_CACHE_CONTROL)
@@ -547,5 +560,44 @@ describe('canonicalRedirect', () => {
   it('ignores hosts that are not ours and an unset origin', () => {
     expect(canonicalRedirect(origin, get('evil.example'))).toBeNull()
     expect(canonicalRedirect('', get('x.workers.dev'))).toBeNull()
+  })
+})
+
+describe('dataLastmods', () => {
+  const FRESHNESS = {
+    changes: [
+      { entity_type: 'model', provider: 'openai', at: '2026-10-30T21:30:43.819Z' },
+      { entity_type: 'model', provider: 'anthropic', at: '2026-10-23T03:30:27.962Z' },
+      { entity_type: 'recommendation', provider: 'anthropic', at: '2026-11-01T21:30:44.951Z' },
+      { entity_type: 'disclosure', provider: 'openai', at: '2026-10-21T00:00:43.791Z' },
+      { entity_type: 'job', provider: 'xai', at: '2026-10-31T18:01:19.109Z' },
+    ],
+    alertsAt: '2026-11-02T00:05:00.000Z',
+  }
+  const LABS = { openai: '/labs/openai', anthropic: '/labs/anthropic', meta: '/labs/meta' }
+
+  it('dates each axis page by the newest change of its own entity types', () => {
+    const out = dataLastmods(FRESHNESS, LABS)
+    expect(out['/prices']).toBe('2026-11-01')
+    expect(out['/releases']).toBe('2026-10-30')
+    expect(out['/disclosures']).toBe('2026-10-21')
+    expect(out['/hiring']).toBe('2026-10-31')
+    expect(out['/alerts']).toBe('2026-11-02')
+  })
+
+  it('dates the cross-axis pages by anything at all, and a lab by its own rows', () => {
+    const out = dataLastmods(FRESHNESS, LABS)
+    expect(out['/']).toBe('2026-11-02')
+    expect(out['/data']).toBe('2026-11-02')
+    expect(out['/labs/anthropic']).toBe('2026-11-01')
+    expect(out['/labs/openai']).toBe('2026-10-30')
+  })
+
+  it('leaves a page it cannot date to the build date rather than inventing one', () => {
+    const out = dataLastmods(FRESHNESS, LABS)
+    expect(out['/labs/meta']).toBeUndefined()
+    expect(out['/incidents']).toBeUndefined()
+    expect(out['/about']).toBeUndefined()
+    expect(dataLastmods({ changes: [], alertsAt: null }, LABS)).toEqual({})
   })
 })
