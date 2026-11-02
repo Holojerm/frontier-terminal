@@ -88,10 +88,12 @@ describe('agent output gate', () => {
     if (!gate.ok) return
     expect(gate.value.rows).toHaveLength(90)
     expect(new Set(gate.value.rows.map((r) => r.model_slug)).size).toBe(31)
-    // Provenance was stamped by code from fixtures/manifest.json, so the
-    // whole file carries exactly the manifest's pair and nothing else.
+    // Provenance was stamped by code from the manifest entry of the day — the
+    // 2026-08-25 HTML fixture — so the whole file carries that one pair.
     const pairs = new Set(gate.value.rows.map((r) => `${r.source_url} ${r.fetched_at}`))
-    expect([...pairs]).toEqual([`${provenance.source_url} ${provenance.fetched_at}`])
+    expect([...pairs]).toEqual([
+      'https://ai.google.dev/gemini-api/docs/pricing 2026-08-25T11:10:42Z',
+    ])
   })
 
   test('instruction-like strings inside fields are data: they pass through untouched and change nothing else', () => {

@@ -1,4 +1,5 @@
 import { env } from 'cloudflare:test'
+import { like } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
@@ -336,13 +337,17 @@ describe('after a baseline poll of every source', () => {
     expect(openai.basis_current).toBe(true)
     expect(openai.gap).toBeNull()
 
-    // Google's sentence is on its models page; the 2026-08-25 pricing
-    // fixture predates the SKU it names, so the cell is mapped but unpriced.
+    // Google's sentence is on its models page, and the pricing page prices the
+    // SKU it names: the current row of a promo, not the scheduled one.
     const google = cell('google', 'flagship')
     expect(google.basis_source_id).toBe('google-models-md')
     expect(google.basis_current).toBe(true)
-    expect(google.row).toBeNull()
-    expect(google.gap).toBe(NO_ROW_GAP)
+    expect(google.row!.model_slug).toBe('gemini-4-argon')
+    expect(google.priced).toBe(true)
+    expect(google.row!.input_per_mtok).toBe(2)
+    expect(google.row!.output_per_mtok).toBe(10)
+    expect(google.row!.effective_until).toBe('2026-12-01')
+    expect(google.gap).toBeNull()
 
     const googleEconomy = cell('google', 'economy')
     expect(googleEconomy.row!.model_slug).toBe('gemini-3.5-flash-lite')
@@ -383,6 +388,18 @@ describe('after a baseline poll of every source', () => {
 
     // List price only — a long-context or batch sibling never fills a cell.
     for (const c of matrix.cells) if (c.row) expect([null, 'standard']).toContain(c.row.tier)
+
+    // The same mapping with its SKU unstored is the middle state: mapped, unpriced.
+    await db
+      .delete(schema.entities)
+      .where(like(schema.entities.entity_key, 'model:google:gemini-4-argon%'))
+    const after = await queryPrices(db, await ctx())
+    const unpriced = after.matrix.cells.find(
+      (c) => c.provider === 'google' && c.class === 'flagship',
+    )!
+    expect(unpriced.basis_source_id).toBe('google-models-md')
+    expect(unpriced.row).toBeNull()
+    expect(unpriced.gap).toBe(NO_ROW_GAP)
   })
 
   it('hiring: department mix from the current set, SpaceXAI blend surfaced on xai', async () => {

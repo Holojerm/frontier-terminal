@@ -85,19 +85,23 @@ sources:
   google-pricing-html:
     axis: pricing-catalog
     provider: google
-    url: https://ai.google.dev/gemini-api/docs/pricing
-    format: SSR HTML, 86 tables
-    diff_mechanism: If-Modified-Since (real Last-Modified)
+    url: https://aistudio.google.com/docs/pricing.md
+    format: Markdoc (86 tables, one tab per tier)
+    diff_mechanism: body hash (no validators)
     verdict: include — hardest parse
-    fixture: fixtures/pricing/google-pricing.html
+    fixture: fixtures/pricing/google-pricing.md
     parse_mode: agent  # the one agent-parsed source; output gated by GooglePricingOutput
     caveats: >-
       Model names live in headings above table clusters; prices carry
       dual-date promo strings ("$0.75 through Dec 31, 2026. $1.50 starting
-      Jan 1, 2027."). The .md trick returns a JS shell and, at the audit,
-      the models page was client-rendered — this pricing page is the only
-      SSR source of prices (the models page's markdown, which arrived later,
-      prints none: google-models-md).
+      Jan 1, 2027."). Until 2026-11-02 this was the SSR HTML page at
+      ai.google.dev/gemini-api/docs/pricing; that URL now 301s to a
+      client-rendered AI Studio page with no tables, and the same content is
+      served as Markdoc at the .md suffix (live-checked 2026-11-02 against
+      the rendered page: same tiers, same prices). The id keeps its -html
+      suffix because the stored entities are keyed on it. The ai.google.dev
+      .md.txt export is not used: it flattens the line breaks the promo
+      split relies on and still lists tiers the live page dropped.
 
   google-models-md:
     axis: pricing-catalog

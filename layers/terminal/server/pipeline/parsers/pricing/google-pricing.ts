@@ -2,22 +2,34 @@ import type { z } from 'zod'
 import { GooglePricingOutput as ContractGooglePricingOutput, registerParser } from '../../contracts'
 import { fixtureProvenance } from '../fixture-provenance'
 
-// google-pricing — https://ai.google.dev/gemini-api/docs/pricing
+// google-pricing — https://aistudio.google.com/docs/pricing.md
 //
-// Deterministic parse — no model in the loop. The page is
-// server-rendered and regular: one `<h2 id="<slug>">` per model, the API code
-// in a `<code>` element directly under it, then one `<table>` per tier under
-// an `<h3>` (Standard / Batch / Flex / Priority). Every table is three columns
-// (label, Free Tier, Paid Tier) and the Paid Tier header names the unit —
-// "per 1M tokens in USD" for the tables this parser reads; per image / per
-// second / per request for the ones it reports as skipped.
+// Deterministic parse — no model in the loop. Two renderings of one page, told
+// apart by their headings:
 //
-// No DOM library: tags are scanned with regexes over the raw string. The page
-// prints unescaped `<= 200k tokens` inside cells, so the tag regex only
-// accepts `<` followed by a letter or `/`.
+//   Markdoc (from 2026-11-02, when ai.google.dev/gemini-api/docs/pricing began
+//   301-ing to a client-rendered AI Studio page): one `## Name {% id="<slug>" %}`
+//   per model, the API code(s) in backticks inside the `{% left-column %}` under
+//   it, then one `{% table %}` per tier inside a `{% tab title="Standard" %}`.
+//   Rows are separated by `---` lines and cells open with `* `; a line ending in
+//   two or more spaces is a hard break, the <br> of the HTML rendering.
+//
+//   SSR HTML (until 2026-11-02): one `<h2 id="<slug>">` per model, the API code
+//   in a `<code>` element directly under it, then one `<table>` per tier under
+//   an `<h3>`. Kept because the hand-verified ground truth is on that fixture.
+//
+// Either way every table is three columns (label, Free Tier, Paid Tier) and the
+// Paid Tier header names the unit — "per 1M tokens in USD" for the tables this
+// parser reads; per image / per second / per request for the ones it reports
+// as skipped. Tiers are Standard / Batch / Flex / Priority / Contributor.
+//
+// No DOM or Markdown library: both are scanned with regexes over the raw
+// string. The page prints unescaped `<= 200k tokens` inside cells, so the HTML
+// tag regex only accepts `<` followed by a letter or `/`.
 //
 // Honesty rules, in order of precedence:
-//   1. A slug is only ever the verbatim text of a <code> element.
+//   1. A slug is only ever the verbatim text of a <code> element (HTML) or a
+//      backtick span in the heading's left column (Markdoc).
 //   2. A price is only ever a `$` amount printed in the cell; a cell that
 //      prints no per-token amount yields null and a note carrying its text.
 //   3. A section or table whose structure is not recognised is reported in
@@ -81,6 +93,18 @@ const BR = /<br\s*\/?>/g
 const TAG = /<\/?[a-zA-Z][^>]*>/g
 const FOOTNOTE = /<sup>[^<]*<\/sup>/g
 
+const MD_H2 = /^## .*\{% id="([^"]+)" %\}[ \t]*$/gm
+const MD_LEFT_COLUMN = /\{% left-column[^%]*%\}([\s\S]*?)\{% \/left-column %\}/
+const MD_CODE = /`([^`\n]+)`/g
+const MD_TAB_OR_TABLE =
+  /\{% tab title="([^"]*)" %\}|\{% \/tab %\}|\{% table %\}([\s\S]*?)\{% \/table %\}/g
+const MD_ROW_RULE = /^[ \t]*---[ \t]*$/m
+const MD_CELL = /^[ \t]*\* (.*)$/
+const MD_HARD_BREAK = /(?: {2,}|\\)$/
+const MD_SUP = /\{% sup %\}[\s\S]*?\{% \/sup %\}/g
+const MD_TAG = /\{%[\s\S]*?%\}/g
+const MD_LINK = /\[([^\]]*)\]\([^)]*\)/g
+
 const ENTITIES: Record<string, string> = {
   '&nbsp;': ' ',
   '&amp;': '&',
@@ -120,6 +144,54 @@ function cellLines(fragment: string): string[] {
     .split(BR)
     .map(text)
     .filter((l) => l.length > 0)
+}
+
+/** One visible Markdoc line as the HTML rendering's text() would print it. */
+function mdText(fragment: string): string {
+  return fragment
+    .replace(MD_SUP, '')
+    .replace(MD_TAG, '')
+    .replace(MD_LINK, '$1')
+    .replace(/\*\*/g, '')
+    .replace(/(^|[^\\])\*([^*\s][^*]*)\*/g, '$1$2')
+    .replace(/`/g, '')
+    .replace(/\\([\\`*_[\]])/g, '$1')
+    .replace(/&[a-z#0-9]+;/g, (e) => ENTITIES[e] ?? e)
+    .replace(/\s+/g, ' ')
+    .trim()
+}
+
+/** One `---`-delimited Markdoc row -> its cells, each as visible lines. A
+ * soft-wrapped source line joins the line before it; a hard break (trailing
+ * spaces, or the trailing backslash some cards use) or a blank line ends it. */
+function mdRowCells(chunk: string): string[][] {
+  const cells: string[][] = []
+  let cell: string[] | null = null
+  let buffer: string[] = []
+  const flush = () => {
+    const line = mdText(buffer.join(' '))
+    if (cell && line.length > 0) cell.push(line)
+    buffer = []
+  }
+  for (const raw of chunk.split('\n')) {
+    const broken = MD_HARD_BREAK.test(raw)
+    const line = raw.replace(/\\+$/, '')
+    const opened = line.match(MD_CELL)
+    if (opened) {
+      flush()
+      cell = []
+      cells.push(cell)
+      buffer.push(opened[1]!)
+    } else if (line.trim().length === 0) {
+      flush()
+      continue
+    } else if (cell) {
+      buffer.push(line.trim())
+    }
+    if (broken) flush()
+  }
+  flush()
+  return cells
 }
 
 /** "December 31, 2026" -> "2026-12-31"; null for anything else. */
@@ -198,8 +270,30 @@ type TableParse =
   | { kind: 'token'; cells: Map<PriceField, ParsedCell> }
   | { kind: 'skip'; reason: string }
 
-function parseTable(tableHtml: string): TableParse {
+/** A table in either rendering: header texts, then body rows of cells of
+ * visible lines. */
+interface Table {
+  headers: string[]
+  rows: string[][][]
+}
+
+function htmlTable(tableHtml: string): Table {
   const headers = [...tableHtml.matchAll(TH)].map((m) => text(m[1]!))
+  const rows = [...tableHtml.matchAll(TR)]
+    .map((tr) => [...tr[1]!.matchAll(TD)].map((m) => cellLines(m[1]!)))
+    .filter((tds) => tds.length > 0) // header row
+  return { headers, rows }
+}
+
+function markdownTable(body: string): Table {
+  const [head = [], ...rows] = body
+    .split(MD_ROW_RULE)
+    .map(mdRowCells)
+    .filter((cells) => cells.length > 0)
+  return { headers: head.map((lines) => lines.join(' ')), rows }
+}
+
+function parseTable({ headers, rows }: Table): TableParse {
   const paidCol = headers.indexOf(TOKEN_HEADER)
   if (paidCol === -1) {
     const unit = headers.filter((h) => h.length > 0).join(' / ') || '(no header)'
@@ -207,18 +301,16 @@ function parseTable(tableHtml: string): TableParse {
   }
 
   const cells = new Map<PriceField, ParsedCell>()
-  for (const tr of tableHtml.matchAll(TR)) {
-    const tds = [...tr[1]!.matchAll(TD)].map((m) => m[1]!)
-    if (tds.length === 0) continue // header row
+  for (const tds of rows) {
     if (tds.length !== headers.length) {
       return { kind: 'skip', reason: `row has ${tds.length} cells, header has ${headers.length}` }
     }
-    const field = FIELD_BY_LABEL[text(tds[0]!)]
+    const field = FIELD_BY_LABEL[tds[0]!.join(' ')]
     if (!field) continue
     if (cells.has(field)) {
       return { kind: 'skip', reason: `two rows map to ${field}` }
     }
-    cells.set(field, parseCell(field, cellLines(tds[paidCol]!)))
+    cells.set(field, parseCell(field, tds[paidCol]!))
   }
   if (cells.size === 0) {
     return { kind: 'skip', reason: 'no input / output / context-caching rows' }
@@ -273,33 +365,65 @@ function tableRows(tier: string | null, cells: Map<PriceField, ParsedCell>): Row
   ]
 }
 
-interface Section {
-  id: string
-  html: string
+/** In page order: a tier heading or tab (null when a tab closes), or a table. */
+type Part = { tier: string | null } | { table: Table }
+
+/** One model section, or the reason it cannot be priced. */
+type Section = { id: string; skip: string } | { id: string; slugs: string[]; parts: Part[] }
+
+/** Each `<h2 id>` section up to the next. Sections are cut at the heading, so
+ * a section's codes are the ones above its first table. */
+function htmlSections(html: string): Section[] {
+  const heads = [...html.matchAll(H2)]
+  return heads.map((head, i): Section => {
+    const id = head[1]!
+    const body = html.slice(head.index!, heads[i + 1]?.index ?? html.length)
+    const firstTable = body.indexOf('<table')
+    if (firstTable === -1) return { id, skip: 'no pricing table' }
+    const slugs = [...body.slice(0, firstTable).matchAll(CODE)].map((m) => m[1]!.trim())
+    if (slugs.length === 0) return { id, skip: 'no <code> model id under the heading' }
+    const parts = [...body.matchAll(H3_OR_TABLE)].map((m): Part =>
+      m[0].startsWith('<h3') ? { tier: text(m[1]!).toLowerCase() } : { table: htmlTable(m[0]) },
+    )
+    return { id, slugs, parts }
+  })
 }
 
-function splitSections(html: string): Section[] {
-  const heads = [...html.matchAll(H2)]
-  return heads.map((head, i) => ({
-    id: head[1]!,
-    html: html.slice(head.index!, heads[i + 1]?.index ?? html.length),
-  }))
+/** Each `## … {% id %}` section up to the next. Codes come from the heading's
+ * left column only: a deprecation callout further down names other models in
+ * backticks too. */
+function markdownSections(md: string): Section[] {
+  const heads = [...md.matchAll(MD_H2)]
+  return heads.map((head, i): Section => {
+    const id = head[1]!
+    const body = md.slice(head.index!, heads[i + 1]?.index ?? md.length)
+    if (!body.includes('{% table %}')) return { id, skip: 'no pricing table' }
+    const column = body.match(MD_LEFT_COLUMN)?.[1] ?? ''
+    const slugs = [...new Set([...column.matchAll(MD_CODE)].map((m) => m[1]!.trim()))]
+    if (slugs.length === 0) return { id, skip: 'no `code` model id under the heading' }
+    const parts = [...body.matchAll(MD_TAB_OR_TABLE)].map((m): Part => {
+      if (m[1] !== undefined) return { tier: m[1].toLowerCase() }
+      if (m[2] === undefined) return { tier: null }
+      return { table: markdownTable(m[2]) }
+    })
+    return { id, slugs, parts }
+  })
 }
 
 /**
- * Parse the Gemini API pricing page. `prov` is stamped verbatim onto every
- * row. Rows come back in page order (model, then tier, a current-window row
- * immediately before its scheduled one); `skipped` lists every section or
- * tier table that produced no rows, with the reason.
+ * Parse the Gemini API pricing page, in either rendering. `prov` is stamped
+ * verbatim onto every row. Rows come back in page order (model, then tier, a
+ * current-window row immediately before its scheduled one); `skipped` lists
+ * every section or tier table that produced no rows, with the reason.
  *
- * Throws only when the page has no `<h2 id>` sections at all — a page whose
+ * Throws only when the page has no model sections at all — a page whose
  * structure vanished must fail loudly rather than emit an empty snapshot.
  */
-export function parseGooglePricingPage(html: string, prov: Provenance): GooglePricingResult {
-  const sections = splitSections(html)
+export function parseGooglePricingPage(page: string, prov: Provenance): GooglePricingResult {
+  const sections = page.includes('{% id="') ? markdownSections(page) : htmlSections(page)
   if (sections.length === 0) {
     throw new Error(
-      'google-pricing: no <h2 id="..."> model sections found — page structure changed',
+      'google-pricing: no `## … {% id %}` or <h2 id="..."> model sections found — page structure changed',
     )
   }
 
@@ -307,26 +431,21 @@ export function parseGooglePricingPage(html: string, prov: Provenance): GooglePr
   const skipped: SkippedSection[] = []
 
   for (const section of sections) {
-    const firstTable = section.html.indexOf('<table')
-    if (firstTable === -1) {
-      skipped.push({ slug: section.id, reason: 'no pricing table' })
+    if ('skip' in section) {
+      skipped.push({ slug: section.id, reason: section.skip })
       continue
     }
-    const slugs = [...section.html.slice(0, firstTable).matchAll(CODE)].map((m) => m[1]!.trim())
-    if (slugs.length === 0) {
-      skipped.push({ slug: section.id, reason: 'no <code> model id under the heading' })
-      continue
-    }
+    const { slugs } = section
 
     const cores: RowCore[] = []
     const tableSkips: string[] = []
     let tier: string | null = null
-    for (const part of section.html.matchAll(H3_OR_TABLE)) {
-      if (part[0].startsWith('<h3')) {
-        tier = text(part[1]!).toLowerCase()
+    for (const part of section.parts) {
+      if ('tier' in part) {
+        tier = part.tier
         continue
       }
-      const parsed = parseTable(part[0])
+      const parsed = parseTable(part.table)
       if (parsed.kind === 'skip') {
         tableSkips.push(`${tier ?? 'untiered'} table: ${parsed.reason}`)
         continue
@@ -364,18 +483,19 @@ export function parseGooglePricingPage(html: string, prov: Provenance): GooglePr
 }
 
 /** Rows only. Prefer parseGooglePricingPage where `skipped` can be surfaced. */
-export function parseGooglePricing(html: string, prov: Provenance): GooglePricingRow[] {
-  return parseGooglePricingPage(html, prov).rows
+export function parseGooglePricing(page: string, prov: Provenance): GooglePricingRow[] {
+  return parseGooglePricingPage(page, prov).rows
 }
 
 // Registered so the determinism harness runs it twice on its fixture like every
 // other fixed parser. Until 2026-09-07 this source was agent-parsed and stayed
-// out of the registry on purpose; it is deterministic now.
+// out of the registry on purpose; it is deterministic now. The source id keeps
+// its -html suffix: its stored entities and change history are keyed on it.
 registerParser({
   name: 'google-pricing-html',
   lane: 'vendor-md',
-  fixturePath: 'fixtures/pricing/google-pricing.html',
+  fixturePath: 'fixtures/pricing/google-pricing.md',
   sideFixturePaths: [],
   schema: GooglePricingOutput,
-  parse: (html) => ({ rows: parseGooglePricing(html, fixtureProvenance('google-pricing-html')) }),
+  parse: (page) => ({ rows: parseGooglePricing(page, fixtureProvenance('google-pricing-html')) }),
 })

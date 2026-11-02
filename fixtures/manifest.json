@@ -59,13 +59,13 @@
       "trim": "none — committed whole"
     },
     {
-      "path": "fixtures/pricing/google-pricing.html",
+      "path": "fixtures/pricing/google-pricing.md",
       "source_id": "google-pricing-html",
-      "source_url": "https://ai.google.dev/gemini-api/docs/pricing",
-      "fetched_at": "2026-08-25T11:10:42Z",
+      "source_url": "https://aistudio.google.com/docs/pricing.md",
+      "fetched_at": "2026-11-02T17:44:38Z",
       "http_status": 200,
-      "raw_bytes": 248451,
-      "trim": "<script> bodies stripped. All 86 tables, model-name headings above table clusters, and the 24 dual-date promo strings ('$X through December 31, 2026.<br>$Y starting January 1, 2027.') preserved."
+      "raw_bytes": 101560,
+      "trim": "none — committed whole. Replaces the 2026-08-25 HTML fixture (still committed as the parser's hand-verified ground truth) after the HTML page moved to a client-rendered app."
     },
     {
       "path": "fixtures/pricing/google-models.md",

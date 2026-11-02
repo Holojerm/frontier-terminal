@@ -1,16 +1,18 @@
 /// <reference types="vite/client" />
 
-// Deterministic Google pricing parser, checked against two snapshots of the
-// page: the 2026-08-25 fixture (with hand-verified ground truth in
-// fixtures/pricing/google-pricing.expected.json) and
-// the 2026-09-07 page, which adds models and drops others — proof the parser
-// reads structure rather than one snapshot's bytes.
+// Deterministic Google pricing parser, checked against three snapshots of the
+// page: the 2026-08-25 HTML fixture (with hand-verified ground truth in
+// fixtures/pricing/google-pricing.expected.json), the 2026-09-07 HTML page,
+// which adds models and drops others — proof the parser reads structure rather
+// than one snapshot's bytes — and the 2026-11-02 Markdoc rendering the source
+// moved to when the HTML page became a client-rendered app.
 
 import { describe, expect, it } from 'vitest'
 
 import live from '~/fixtures/pricing/google-pricing.2026-09-07.html?raw'
 import expected from '~/fixtures/pricing/google-pricing.expected.json'
 import fixture from '~/fixtures/pricing/google-pricing.html?raw'
+import markdoc from '~/fixtures/pricing/google-pricing.md?raw'
 import {
   GooglePricingOutput,
   parseGooglePricing,
@@ -21,6 +23,10 @@ import {
 const SOURCE_URL = 'https://ai.google.dev/gemini-api/docs/pricing'
 const FIXTURE_PROV = { source_url: SOURCE_URL, fetched_at: '2026-08-25T11:10:42Z' }
 const LIVE_PROV = { source_url: SOURCE_URL, fetched_at: '2026-09-07T00:00:00Z' }
+const MARKDOC_PROV = {
+  source_url: 'https://aistudio.google.com/docs/pricing.md',
+  fetched_at: '2026-11-02T17:44:38Z',
+}
 
 const PRICE_FIELDS = ['input_per_mtok', 'cached_input_per_mtok', 'output_per_mtok'] as const
 
@@ -233,11 +239,101 @@ describe('parseGooglePricing on the 2026-09-07 page', () => {
   })
 })
 
+describe('parseGooglePricing on the 2026-11-02 Markdoc page', () => {
+  const { rows, skipped } = parseGooglePricingPage(markdoc, MARKDOC_PROV)
+  const byKey = new Map(rows.map((r) => [rowKey(r), r]))
+
+  it('parses every priced section and reports the rest', () => {
+    expect(rows).toHaveLength(111)
+    expect(GooglePricingOutput.safeParse({ rows }).success).toBe(true)
+    expect(skipped).toEqual([
+      { slug: 'lyria-3-5', reason: 'no `code` model id under the heading' },
+      { slug: 'lyria-3', reason: 'no `code` model id under the heading' },
+      { slug: 'gemma-4', reason: 'no `code` model id under the heading' },
+      { slug: 'pricing-for-tools', reason: 'no `code` model id under the heading' },
+      { slug: 'pricing-for-agents', reason: 'no `code` model id under the heading' },
+      { slug: 'notes', reason: 'no pricing table' },
+    ])
+  })
+
+  it('is grounded: every slug is a backtick span, every price is printed on the page', () => {
+    const spans = new Set([...markdoc.matchAll(/`([^`\n]+)`/g)].map((m) => m[1]!.trim()))
+    const numbers = numericTokens(markdoc)
+    for (const row of rows) {
+      expect(spans.has(row.model_slug), `slug ${row.model_slug} not in backticks`).toBe(true)
+      for (const field of PRICE_FIELDS) {
+        const value = row[field]
+        if (value !== null) expect(numbers.has(String(value))).toBe(true)
+      }
+    }
+  })
+
+  it('splits a promo cell on its trailing-space hard break', () => {
+    expect(byKey.get('gemini-4-argon|standard|null|2026-12-01')).toMatchObject({
+      input_per_mtok: 2,
+      cached_input_per_mtok: 0.1,
+      output_per_mtok: 10,
+    })
+    expect(byKey.get('gemini-4-argon|standard|2026-12-01|null')).toMatchObject({
+      input_per_mtok: 4,
+      cached_input_per_mtok: 0.2,
+      output_per_mtok: 20,
+    })
+  })
+
+  it('splits a promo cell on its trailing-backslash hard break', () => {
+    expect(byKey.get('gemini-robotics-er-2-preview|standard|null|2027-01-01')).toMatchObject({
+      input_per_mtok: 1,
+      cached_input_per_mtok: 0.1,
+      output_per_mtok: 5,
+    })
+    expect(byKey.get('gemini-robotics-er-2-preview|standard|2027-01-01|null')).toMatchObject({
+      input_per_mtok: 2,
+      output_per_mtok: 10,
+    })
+  })
+
+  it('reads codes from the left column only, not a callout naming the same model', () => {
+    // The deprecation callout repeats `gemini-2.5-flash-image`; counted twice,
+    // every tier would be emitted twice.
+    const image = rows.filter((r) => r.model_slug === 'gemini-2.5-flash-image')
+    expect(image.map((r) => r.tier)).toEqual(['standard', 'batch', 'flex', 'priority'])
+  })
+
+  it('prices each code of a multi-code heading, untiered when the table sits outside a tab', () => {
+    for (const slug of [
+      'gemini-3.8-live',
+      'gemini-3.8-live-extended-thinking',
+      'gemini-3.1-flash-live-preview',
+    ]) {
+      expect(byKey.get(`${slug}|null|null|null`)).toMatchObject({
+        input_per_mtok: 0.75,
+        output_per_mtok: 4.5,
+      })
+    }
+  })
+
+  it('prints notes as the HTML rendering did: no emphasis, links or footnote markers', () => {
+    const batch = byKey.get('gemini-3-flash-preview|batch|null|null')!
+    expect(batch.notes).toContain('cached_input: Same as Standard | $0.05 (text / image / video)')
+    expect(byKey.get('gemini-2.5-pro|standard|null|null')!.notes).toContain(
+      'input: $1.25, prompts <= 200k tokens | $2.50, prompts > 200k tokens',
+    )
+    for (const row of rows) expect(row.notes ?? '').not.toMatch(/\{%|\]\(|\*\*/)
+  })
+
+  it('is deterministic', async () => {
+    const a = await sha256(parseGooglePricing(markdoc, MARKDOC_PROV))
+    const b = await sha256(parseGooglePricing(markdoc, MARKDOC_PROV))
+    expect(a).toBe(b)
+  })
+})
+
 describe('parseGooglePricing structure guards', () => {
   it('fails loudly when the page has no model sections at all', () => {
     expect(() =>
       parseGooglePricing('<html><body><p>moved</p></body></html>', FIXTURE_PROV),
-    ).toThrow(/no <h2 id/)
+    ).toThrow(/model sections found/)
   })
 
   it('reports a section whose table shape it does not recognise instead of dropping it', () => {
@@ -287,6 +383,7 @@ describe('fixture hygiene', () => {
   it.each([
     ['google-pricing.html', fixture],
     ['google-pricing.2026-09-07.html', live],
+    ['google-pricing.md', markdoc],
   ])('%s carries no scripts and no key-shaped strings', (_name, html) => {
     expect(html).not.toMatch(/<script\b/i)
     expect(html).not.toMatch(/AIza[0-9A-Za-z_-]{35}/)
