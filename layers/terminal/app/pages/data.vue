@@ -3,6 +3,7 @@
 // table with its columns, its current row count, and CSV/JSON downloads.
 
 import { DATA_LICENSE } from '#shared/utils/license'
+import { mailto } from '../../shared/utils/contact'
 import { count } from '../../shared/utils/terminal-format'
 import type { CoverageData } from '../../shared/utils/terminal-types'
 import type { TableColumn } from '../types/terminal-ui'
@@ -142,6 +143,25 @@ const EXPORT_COLUMNS: TableColumn[] = [
         <span v-else>— no poll has run yet</span>. Exports are served live; the counts above are
         cached for up to five minutes.
       </template>
+    </TerminalPanel>
+
+    <TerminalPanel id="commercial" title="Commercial use">
+      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+        <p class="max-w-2xl text-sm text-default">
+          Need these tables under terms of your own, on a schedule you can depend on, with full
+          history, or covering something we don’t?
+          <NuxtLink to="/contact" class="text-primary underline underline-offset-2"
+            >That is a paid arrangement</NuxtLink
+          >.
+        </p>
+        <UButton
+          :to="mailto('Data licensing')"
+          external
+          icon="i-lucide-mail"
+          label="Email us"
+          class="self-start sm:self-auto"
+        />
+      </div>
     </TerminalPanel>
 
     <div class="grid gap-6 lg:grid-cols-2">

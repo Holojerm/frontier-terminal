@@ -46,6 +46,7 @@ const REFERENCE: NavLink[] = [
   { label: 'About', to: '/about' },
   { label: 'Data', to: '/data' },
   { label: 'License', to: '/license' },
+  { label: 'Contact', to: '/contact' },
 ]
 
 // A child page keeps its axis lit: /prices/<sku> under Prices, /alerts/<id>
