@@ -22,9 +22,8 @@
 // `_hub_migrations` instead, and both work — which is exactly why this reads
 // whichever one exists rather than assuming.
 
-import { and, count, eq, gt, isNull, max, ne, sql } from 'drizzle-orm'
+import { and, count, gt, isNull, max, sql } from 'drizzle-orm'
 import type { drizzle } from 'drizzle-orm/d1'
-import type { SQLiteTable } from 'drizzle-orm/sqlite-core'
 
 import { FleetManifestSchema } from '#shared/utils/fleet-manifest'
 
@@ -32,7 +31,7 @@ import rawManifest from '../../fleet.json'
 import pkg from '../../package.json'
 import journal from '../db/migrations/meta/_journal.json'
 import * as tables from '../db/schema'
-import { launchCoverage } from '#layers/terminal/server/pipeline/launch-watch'
+import { getFleetExtraContributors } from './extensions'
 
 /** The Drizzle client, passed in explicitly. */
 export type FleetDb = ReturnType<typeof drizzle<typeof tables>>
@@ -104,9 +103,11 @@ function tagOf(name: string): string {
 //
 // Everything a portfolio dashboard wants to put on a card, in one query-light
 // call. Counts only — no rows, no ids — so the payload is safe to store for
-// months in someone else's database. `extra` is where the data pipeline adds
-// its own (snapshots taken, sources fetched, …): add to this function rather
-// than inventing a second endpoint, so one token and one route cover the fleet.
+// months in someone else's database. The product adds its own (snapshots taken,
+// sources fetched, …) by registering a contributor in server/utils/extensions.ts
+// rather than editing this function or inventing a second endpoint, so one
+// token and one route cover the fleet:
+//   registerFleetExtraContributor    → plain numbers merged into `extra`
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
@@ -127,48 +128,14 @@ export async function collectFleetCounters(db: FleetDb, now = new Date()): Promi
     .from(tables.opsEvents)
     .where(and(gt(tables.opsEvents.createdAt, dayAgo)))
 
-  const total = async (table: SQLiteTable) => {
-    const [row] = await db.select({ total: count() }).from(table)
-    return row?.total ?? 0
-  }
-  // From source_stats: count(*) over snapshots reads every row ever taken.
-  const snapshotTotal = async () => {
-    const [row] = await db
-      .select({ total: sql<number>`coalesce(sum(${tables.sourceStats.snapshot_count}), 0)` })
-      .from(tables.sourceStats)
-    return row?.total ?? 0
-  }
-  // Newest tick per scope that fetched anything at all (not 'failed'), and the
-  // newest failure — as epoch ms because `extra` is numbers only. 0 = never.
-  const lastTick = async (scope: string, failed: boolean) => {
-    const [row] = await db
-      .select({ at: max(tables.sourceRuns.started_at) })
-      .from(tables.sourceRuns)
-      .where(
-        and(
-          scope ? eq(tables.sourceRuns.scope, scope) : undefined,
-          failed ? eq(tables.sourceRuns.status, 'failed') : ne(tables.sourceRuns.status, 'failed'),
-        ),
-      )
-    return row?.at ? Date.parse(row.at) : 0
-  }
-
-  const coverage = await launchCoverage(db, now)
+  const extra: Record<string, number> = {}
+  const extras = getFleetExtraContributors()
+  const extraValues = await Promise.all(extras.map((c) => c.collect(db, now)))
+  for (const values of extraValues) Object.assign(extra, values)
 
   return {
     opsEvents: { pending: pendingOps?.total ?? 0, last24h: recentOps?.total ?? 0 },
-    extra: {
-      snapshots: await snapshotTotal(),
-      entities: await total(tables.entities),
-      changes: await total(tables.changes),
-      alerts: await total(tables.alerts),
-      lastOkTickEdgarMs: await lastTick('edgar', false),
-      lastOkTickSurveyMs: await lastTick('survey', false),
-      lastFailureMs: await lastTick('', true),
-      lastTripwireRunMs: await lastTick('tripwire', false),
-      launchStaleCells: coverage.stale_cells.length,
-      launchUnalerted: coverage.unalerted.length,
-    },
+    extra,
   }
 }
 
