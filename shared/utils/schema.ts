@@ -92,7 +92,14 @@ export function websiteSchema(site: SiteContext): JsonLdNode | null {
  */
 export function webPageSchema(
   site: SiteContext,
-  page: { url: string; title: string; description: string; dateModified?: string | null },
+  page: {
+    url: string
+    title: string
+    description: string
+    dateModified?: string | null
+    /** The entity the page is about, e.g. the lab on a lab page. */
+    about?: JsonLdNode | null
+  },
 ): JsonLdNode | null {
   if (!site.appUrl || !page.url) return null
   return {
@@ -104,7 +111,32 @@ export function webPageSchema(
     isPartOf: { '@id': `${site.appUrl}/${SCHEMA_IDS.website}` },
     inLanguage: 'en',
     ...(page.dateModified ? { dateModified: page.dateModified } : {}),
+    ...(page.about ? { about: page.about } : {}),
   }
+}
+
+/**
+ * The lab a lab page is about, as its own Organization. Without it a lab
+ * page's graph names only this site, so "Anthropic" on the page is a string
+ * to an answer engine rather than the company it already knows.
+ */
+export function labOrganizationSchema(lab: { name: string; url: string }): JsonLdNode {
+  return { '@type': 'Organization', name: lab.name, url: lab.url }
+}
+
+/**
+ * The CSV and JSON downloads of one /export table, as a Dataset
+ * `distribution`. Both always resolve: the export route serves every table
+ * in EXPORT_TABLES in both formats.
+ */
+export function exportDistribution(
+  site: SiteContext,
+  table: string,
+): { encodingFormat: string; contentUrl: string }[] {
+  return [
+    { encodingFormat: 'text/csv', contentUrl: `${site.appUrl}/export/${table}.csv` },
+    { encodingFormat: 'application/json', contentUrl: `${site.appUrl}/export/${table}.json` },
+  ]
 }
 
 /**

@@ -48,6 +48,14 @@ The `useSeo()` one-call-per-page contract, how `publicPage` meta feeds both `sit
   `coverage.exports` the page renders; `/prices/[key]` emits one for the price series. Every
   `distribution` must be a URL that actually resolves — a 404 in a DataDownload is worse than
   omitting it.
+- **An axis page whose table has an export emits its own `Dataset`** (`/prices`, `/revenue`,
+  `/incidents`, `/rankings`, `/disclosures`), with `exportDistribution()` for the downloads and
+  `variableMeasured` naming real export columns. A lab page sets `about` to
+  `labOrganizationSchema()`, so the lab is an entity in the graph rather than a string.
+- **Titles carry the query, H1s carry the name.** `useSeo({ title })` is what a search result
+  and an answer engine's citation print, so it names what an analyst types ("AI lab revenue
+  from SEC filings", "Anthropic: API pricing, revenue, hiring, outages"); the page's `<h1>` stays
+  the short label.
 - **A dated claim is an `Article`.** Alert permalinks use `articleSchema()` with `citation` set to
   the source URLs of the change rows the page renders, so a quote lands back on the primary
   documents.

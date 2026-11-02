@@ -45,6 +45,8 @@ export interface SeoInput {
   dateModified?: string | null
   /** Page-specific JSON-LD nodes, merged into the site graph. */
   schema?: (JsonLdNode | null)[]
+  /** The entity this page is about, set as the WebPage's `about`. */
+  about?: JsonLdNode | null
   /** Breadcrumb trail below Home, which is prepended for you. */
   breadcrumb?: { name: string; path: string }[]
 }
@@ -129,6 +131,7 @@ export function useSeo(input: SeoInput): void {
             title,
             description: input.description,
             dateModified: input.dateModified,
+            about: input.about,
           }),
           // A Home-only breadcrumb is noise; emit one only for a real trail.
           trail.length > 1 ? breadcrumbSchema(site, trail) : null,
