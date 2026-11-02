@@ -91,9 +91,12 @@ watch(
       Skip to content
     </a>
 
-    <header class="border-b border-default">
+    <!-- Sticky so the nav stays one reach away on long pages. main.css derives
+         --header-offset from these row heights; anything else pinned below the
+         header should use top-(--header-offset). -->
+    <header class="sticky top-0 z-40 border-b border-default bg-default/75 backdrop-blur">
       <UContainer>
-        <div class="flex h-14 items-center justify-between gap-4">
+        <div class="flex h-(--ui-header-height) items-center justify-between gap-4">
           <div class="flex min-w-0 items-center gap-4">
             <!-- The mark and the wordmark both come from BrandLogo, which is also
                  what every generated icon is derived from (DESIGN.md › Brand mark). -->
@@ -128,7 +131,7 @@ watch(
 
       <div class="hidden border-t border-default lg:block">
         <UContainer>
-          <nav aria-label="Primary">
+          <nav aria-label="Primary" class="flex h-12 items-center">
             <UNavigationMenu :items="axisItems" variant="link" highlight class="-mx-2.5" />
           </nav>
         </UContainer>
