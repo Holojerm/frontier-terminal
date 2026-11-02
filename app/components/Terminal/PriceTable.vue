@@ -108,6 +108,13 @@ function deltaText(row: PriceRowView): string | null {
       </template>
       <template #context_window-cell="{ row }">
         <span class="text-muted">{{ row.original.context_window ?? '—' }}</span>
+        <span v-if="row.original.context_window_source" class="block">
+          <TerminalProvenanceTag
+            :source-url="row.original.context_window_source.source_url"
+            :fetched-at="row.original.context_window_source.fetched_at"
+            label="window source"
+          />
+        </span>
       </template>
       <template #input_per_mtok-cell="{ row }">{{ money(row.original.input_per_mtok) }}</template>
       <template #cached_input_per_mtok-cell="{ row }">

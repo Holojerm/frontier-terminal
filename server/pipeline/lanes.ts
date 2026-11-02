@@ -29,6 +29,7 @@ import { parseXaiGreenhouse } from './parsers/hiring/xai-greenhouse'
 import { parseOpenRouterRankings } from './parsers/openrouter-rankings'
 import { parseAnthropicModelsOverviewMd } from './parsers/pricing/anthropic-models-overview'
 import { parseAnthropicPricingMd } from './parsers/pricing/anthropic-pricing'
+import { parseGoogleModelPage } from './parsers/pricing/google-model-page'
 import { parseGooglePricingPage } from './parsers/pricing/google-pricing'
 import { parseMetaModelsMd } from './parsers/pricing/meta-models'
 import { parseMetaPricingMd } from './parsers/pricing/meta-pricing'
@@ -207,6 +208,16 @@ const OPENAI_MODEL_PAGE_LANE: Lane = {
   }),
 }
 
+// A derived Google model page: the context window the pricing page omits,
+// one unpriced row under the slug's Standard key (the parser checks the slug).
+const GOOGLE_MODEL_PAGE_LANE: Lane = {
+  sides: [],
+  removals: 'set',
+  parse: (text, { prov, snapshotId, derivedKey }) => ({
+    entities: normalizePrices(parseGoogleModelPage(text, derivedKey ?? '', prov).rows, snapshotId),
+  }),
+}
+
 // A derived misalignment report page: the dates the index omits, one row.
 // The page IS the report's current state.
 const MISALIGNMENT_REPORT_PAGE_LANE: Lane = {
@@ -226,6 +237,7 @@ const DERIVED_LANES: readonly { prefix: string; lane: Lane }[] = [
   { prefix: 'edgar-companyfacts-', lane: COMPANYFACTS_LANE },
   { prefix: 'xbrl-segment-', lane: XBRL_SEGMENT_LANE },
   { prefix: 'openai-model-md-', lane: OPENAI_MODEL_PAGE_LANE },
+  { prefix: 'google-model-md-', lane: GOOGLE_MODEL_PAGE_LANE },
   { prefix: 'openai-misalignment-report-', lane: MISALIGNMENT_REPORT_PAGE_LANE },
 ]
 

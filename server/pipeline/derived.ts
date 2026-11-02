@@ -10,8 +10,9 @@ import type { PipelineDb } from './store'
 
 // Sources the store derives for itself: a URL template audited in
 // sources.yaml (`derived_sources`) filled with a key the store already holds.
-// Four keys exist — a lab's CIK from its `filer` row, a priced OpenAI model
-// slug from openai-pricing-md, a report slug from the misalignment index
+// Five keys exist — a lab's CIK from its `filer` row, a priced OpenAI model
+// slug from openai-pricing-md, a priced Google model slug from
+// google-pricing-html, a report slug from the misalignment index
 // (openai-misalignment-reports), and a segment filer's recent 10-Q/10-K from
 // its submissions feed — and none is ever typed into code.
 // A derived source is polled, snapshotted, parsed and diffed exactly like a
@@ -20,6 +21,7 @@ import type { PipelineDb } from './store'
 const DERIVED_FROM = [
   'filer',
   'openai-priced-model',
+  'google-priced-model',
   'openai-misalignment-report',
   'segment-filing',
 ] as const
@@ -109,8 +111,13 @@ export async function resolvedFilers(db: PipelineDb): Promise<ResolvedFiler[]> {
   return out.sort((a, b) => (a.provider < b.provider ? -1 : a.provider > b.provider ? 1 : 0))
 }
 
-/** Priced Standard-tier slugs on the OpenAI pricing page, sorted. */
-export async function openAiPricedSlugs(db: PipelineDb): Promise<string[]> {
+/** Priced slugs on one pricing page's Standard tier, sorted. OpenAI's Standard rows carry tier null; Google's say "standard". */
+async function pricedSlugs(
+  db: PipelineDb,
+  sourceId: string,
+  provider: Provider,
+  standardTier: string | null,
+): Promise<string[]> {
   const slug = sql<string | null>`json_extract(${tables.entities.payload}, '$.model_slug')`
   const tier = sql<string | null>`json_extract(${tables.entities.payload}, '$.tier')`
   const input = sql<number | null>`json_extract(${tables.entities.payload}, '$.input_per_mtok')`
@@ -119,17 +126,25 @@ export async function openAiPricedSlugs(db: PipelineDb): Promise<string[]> {
     .from(tables.entities)
     .where(
       and(
-        eq(tables.entities.source_id, 'openai-pricing-md'),
+        eq(tables.entities.source_id, sourceId),
         eq(tables.entities.entity_type, 'model'),
-        sql`${tier} IS NULL`,
+        standardTier === null ? sql`${tier} IS NULL` : sql`${tier} = ${standardTier}`,
         sql`${input} IS NOT NULL`,
-        like(tables.entities.entity_key, 'model:openai:%'),
+        like(tables.entities.entity_key, `model:${provider}:%`),
       ),
     )
   return [
     ...new Set(rows.map((r) => r.slug).filter((s): s is string => !!s && /^[a-z0-9.-]+$/.test(s))),
   ].sort()
 }
+
+/** Priced Standard-tier slugs on the OpenAI pricing page, sorted. */
+export const openAiPricedSlugs = (db: PipelineDb) =>
+  pricedSlugs(db, 'openai-pricing-md', 'openai', null)
+
+/** Priced Standard-tier slugs on the Google pricing page, sorted. */
+export const googlePricedSlugs = (db: PipelineDb) =>
+  pricedSlugs(db, 'google-pricing-html', 'google', 'standard')
 
 /** Report slugs on the OpenAI misalignment index, sorted. Notices link off-site and are not derived. */
 export async function openAiMisalignmentReportSlugs(db: PipelineDb): Promise<string[]> {
@@ -213,9 +228,10 @@ export const derivedSourceId = (template: string, key: string) => `${template}-$
 /** Every derived source the store can name right now, in a stable order. */
 export async function deriveSources(db: PipelineDb, sourcesYaml: string): Promise<FetchSource[]> {
   const templates = parseDerivedSourcesBlock(sourcesYaml)
-  const [filers, slugs, reports, segments] = await Promise.all([
+  const [filers, slugs, googleSlugs, reports, segments] = await Promise.all([
     resolvedFilers(db),
     openAiPricedSlugs(db),
+    googlePricedSlugs(db),
     openAiMisalignmentReportSlugs(db),
     segmentFilings(db, sourcesYaml),
   ])
@@ -247,6 +263,14 @@ export async function deriveSources(db: PipelineDb, sourcesYaml: string): Promis
           source_id: derivedSourceId(t.id, slug),
           url: t.url.replace('{slug}', slug),
           ext: 'html',
+        })
+      }
+    } else if (t.from === 'google-priced-model') {
+      for (const slug of googleSlugs) {
+        out.push({
+          source_id: derivedSourceId(t.id, slug),
+          url: t.url.replace('{slug}', slug),
+          ext: 'md',
         })
       }
     } else {

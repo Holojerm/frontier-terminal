@@ -637,6 +637,7 @@ function priceRowFromPayload(
     model_slug: str(payload.model_slug) ?? '?',
     tier: str(payload.tier),
     context_window: str(payload.context_window),
+    context_window_source: null,
     input_per_mtok: num(payload.input_per_mtok),
     cached_input_per_mtok: num(payload.cached_input_per_mtok),
     output_per_mtok: num(payload.output_per_mtok),
@@ -742,6 +743,32 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
     winner!.revisions = points.length
     winner!.spark = sparkOf(points)
     rows.push(winner!)
+  }
+
+  // A row whose source prints no window takes the one another stored row of
+  // the same model prints, and cites it: Google's pricing page omits windows
+  // that its model pages print, and a window holds for every tier.
+  const windows = new Map<string, PriceRowView>()
+  for (const r of [...byKey.values()].flat()) {
+    if (r.context_window === null) continue
+    const k = `${r.provider}:${r.model_slug}`
+    const held = windows.get(k)
+    if (
+      !held ||
+      held.fetched_at < r.fetched_at ||
+      (held.fetched_at === r.fetched_at && r.source_id < held.source_id)
+    )
+      windows.set(k, r)
+  }
+  for (const r of rows) {
+    const from = r.context_window === null ? windows.get(`${r.provider}:${r.model_slug}`) : null
+    if (!from) continue
+    r.context_window = from.context_window
+    r.context_window_source = {
+      source_id: from.source_id,
+      source_url: from.source_url,
+      fetched_at: from.fetched_at,
+    }
   }
 
   // A delisted SKU: its newest change is a removal and no current row exists.
@@ -1491,13 +1518,15 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
     const { label, role } = labelOf(source_id)
     const provider = source_id.startsWith('openai-')
       ? 'openai'
-      : ((PROVIDER_ORDER.find((p) => source_id.endsWith(`-${p}`)) ?? 'all') as ProviderId | 'all')
+      : source_id.startsWith('google-')
+        ? 'google'
+        : ((PROVIDER_ORDER.find((p) => source_id.endsWith(`-${p}`)) ?? 'all') as ProviderId | 'all')
     sources.push({
       source_id,
       label,
       provider,
       axis:
-        template === 'openai-model-md'
+        template === 'openai-model-md' || template === 'google-model-md'
           ? 'pricing-catalog'
           : template === 'edgar-companyfacts'
             ? 'revenue'
