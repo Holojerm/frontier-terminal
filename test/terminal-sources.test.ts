@@ -70,7 +70,7 @@ describe('readSourceRegistry', () => {
     const google = registry.cuts.find((c) => c.id === 'google-hiring')!
     expect(google.verdict).toContain('no public feed')
     expect(google.reason).toContain('auth-walled SPA')
-    expect(google.reason).toContain('DeepMind Greenhouse board is vestigial')
+    expect(google.reason).toContain('DeepMind Greenhouse board, vestigial at the audit')
     const xai = registry.cuts.find((c) => c.id === 'xai-status')!
     expect(xai.reason).toContain('403')
     expect(registry.cuts.map((c) => c.id)).toEqual([
