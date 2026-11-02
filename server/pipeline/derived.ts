@@ -4,17 +4,20 @@ import * as tables from '../db/schema'
 import type { Provider } from './contracts'
 import { parseRevenueFilersBlock } from './parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock } from './parsers/sec/whitelist'
+import { registrationFormSlug, registrationKey } from './parsers/sec/filing-index'
 import { periodBefore, segmentKey } from './parsers/sec/xbrl-segment'
 import type { FetchSource } from './sources'
 import type { PipelineDb } from './store'
 
 // Sources the store derives for itself: a URL template audited in
 // sources.yaml (`derived_sources`) filled with a key the store already holds.
-// Five keys exist — a lab's CIK from its `filer` row, a priced OpenAI model
+// Seven keys exist — a lab's CIK from its `filer` row, a priced OpenAI model
 // slug from openai-pricing-md, a priced Google model slug from
 // google-pricing-html, a report slug from the misalignment index
-// (openai-misalignment-reports), and a segment filer's recent 10-Q/10-K from
-// its submissions feed — and none is ever typed into code.
+// (openai-misalignment-reports), a segment filer's recent 10-Q/10-K from
+// its submissions feed, a resolved lab's registration filings from its
+// submissions feed, and each such filing's primary document from its filing
+// index — and none is ever typed into code.
 // A derived source is polled, snapshotted, parsed and diffed exactly like a
 // registered one; its lane is matched by id prefix (lanes.ts › laneFor).
 
@@ -24,6 +27,8 @@ const DERIVED_FROM = [
   'google-priced-model',
   'openai-misalignment-report',
   'segment-filing',
+  'registration-filing',
+  'registration-document',
 ] as const
 type DerivedFrom = (typeof DERIVED_FROM)[number]
 
@@ -223,18 +228,114 @@ export async function segmentFilings(
   return out
 }
 
+/** Registration filings an index source is derived for, per resolved lab: the S-1 and its latest amendments. */
+export const REGISTRATION_FILINGS_PER_FILER = 3
+
+export interface RegistrationFiling {
+  provider: Provider
+  cik: string
+  form: string
+  accession_no: string
+  file_date: string
+}
+
+/**
+ * The newest S-1 / S-1/A / 424B4 per lab resolved from its own S-1, read from
+ * the filings its derived submissions feed stored. A lab tagged in
+ * sources.yaml files XBRL under a ticker and is read from company facts.
+ */
+export async function registrationFilings(db: PipelineDb): Promise<RegistrationFiling[]> {
+  const form = sql<string | null>`json_extract(${tables.entities.payload}, '$.form')`
+  const fileDate = sql<string | null>`json_extract(${tables.entities.payload}, '$.file_date')`
+  const accession = sql<string | null>`json_extract(${tables.entities.payload}, '$.accession_no')`
+  const out: RegistrationFiling[] = []
+  for (const filer of await resolvedFilers(db)) {
+    const rows = await db
+      .select({ accession, fileDate, form })
+      .from(tables.entities)
+      .where(
+        and(
+          eq(tables.entities.source_id, `edgar-submissions-${filer.provider}`),
+          eq(tables.entities.entity_type, 'filing'),
+          inArray(form, ['S-1', 'S-1/A', '424B4']),
+        ),
+      )
+      .orderBy(desc(fileDate), desc(accession))
+      .limit(REGISTRATION_FILINGS_PER_FILER)
+    for (const r of rows) {
+      if (!r.accession || !/^\d{10}-\d{2}-\d{6}$/.test(r.accession)) continue
+      if (!r.fileDate || !/^\d{4}-\d{2}-\d{2}$/.test(r.fileDate)) continue
+      if (!r.form || !registrationFormSlug(r.form)) continue
+      out.push({
+        provider: filer.provider,
+        cik: filer.cik,
+        form: r.form,
+        accession_no: r.accession,
+        file_date: r.fileDate,
+      })
+    }
+  }
+  return out
+}
+
+export interface RegistrationDocument extends RegistrationFiling {
+  document: string
+}
+
+/** The primary documents the filing-index sources located. */
+export async function registrationDocuments(db: PipelineDb): Promise<RegistrationDocument[]> {
+  const rows = await db
+    .select({ payload: tables.entities.payload })
+    .from(tables.entities)
+    .where(
+      and(
+        eq(tables.entities.entity_type, 'document'),
+        like(tables.entities.source_id, 'filing-index-%'),
+      ),
+    )
+  const out: RegistrationDocument[] = []
+  for (const row of rows) {
+    try {
+      const p = JSON.parse(row.payload) as Record<string, unknown>
+      const s = (k: string) => (typeof p[k] === 'string' ? (p[k] as string) : null)
+      const [provider, cik, form, accession_no, file_date, document] = [
+        s('provider'),
+        s('cik'),
+        s('form'),
+        s('accession_no'),
+        s('filed'),
+        s('document'),
+      ]
+      if (!provider || !cik || !form || !accession_no || !file_date || !document) continue
+      if (!registrationFormSlug(form) || !/^[A-Za-z0-9._-]+\.htm$/.test(document)) continue
+      out.push({ provider: provider as Provider, cik, form, accession_no, file_date, document })
+    } catch {
+      continue
+    }
+  }
+  return out.sort((a, b) => (a.accession_no < b.accession_no ? -1 : 1))
+}
+
+const archivesPath = (url: string, f: { cik: string; accession_no: string }) =>
+  url
+    .replace('{cik_number}', String(Number(f.cik)))
+    .replace('{accession_digits}', f.accession_no.replace(/-/g, ''))
+
 export const derivedSourceId = (template: string, key: string) => `${template}-${key}`
 
 /** Every derived source the store can name right now, in a stable order. */
 export async function deriveSources(db: PipelineDb, sourcesYaml: string): Promise<FetchSource[]> {
   const templates = parseDerivedSourcesBlock(sourcesYaml)
-  const [filers, slugs, googleSlugs, reports, segments] = await Promise.all([
-    resolvedFilers(db),
-    openAiPricedSlugs(db),
-    googlePricedSlugs(db),
-    openAiMisalignmentReportSlugs(db),
-    segmentFilings(db, sourcesYaml),
-  ])
+  const [filers, slugs, googleSlugs, reports, segments, registrations, documents] =
+    await Promise.all([
+      resolvedFilers(db),
+      openAiPricedSlugs(db),
+      googlePricedSlugs(db),
+      openAiMisalignmentReportSlugs(db),
+      segmentFilings(db, sourcesYaml),
+      registrationFilings(db),
+      registrationDocuments(db),
+    ])
   const out: FetchSource[] = []
   for (const t of templates) {
     if (t.from === 'filer') {
@@ -255,6 +356,28 @@ export async function deriveSources(db: PipelineDb, sourcesYaml: string): Promis
             .replace('{prefix}', f.segment.split(':')[0]!)
             .replace('{period}', periodBefore(f.file_date).replace(/-/g, '')),
           ext: 'xml',
+        })
+      }
+    } else if (t.from === 'registration-filing') {
+      for (const f of registrations) {
+        out.push({
+          source_id: derivedSourceId(
+            t.id,
+            registrationKey(f.provider, f.form, f.file_date, f.accession_no),
+          ),
+          url: archivesPath(t.url, f).replace('{accession_no}', f.accession_no),
+          ext: 'html',
+        })
+      }
+    } else if (t.from === 'registration-document') {
+      for (const d of documents) {
+        out.push({
+          source_id: derivedSourceId(
+            t.id,
+            registrationKey(d.provider, d.form, d.file_date, d.accession_no),
+          ),
+          url: archivesPath(t.url, d).replace('{document}', d.document),
+          ext: 'html',
         })
       }
     } else if (t.from === 'openai-misalignment-report') {

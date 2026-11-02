@@ -11,6 +11,7 @@ import {
 import {
   normalizeDisclosureTimelines,
   normalizeDisclosures,
+  normalizeDocuments,
   normalizeFilers,
   normalizeFilings,
   normalizeIncidents,
@@ -41,8 +42,10 @@ import { parseOpenAiPricingMd } from './parsers/pricing/openai-pricing'
 import { parseXaiModelsMd } from './parsers/pricing/xai-models'
 import { COMPANYFACTS_SOURCES, parseEdgarCompanyfacts } from './parsers/sec/edgar-companyfacts'
 import { FTS_SOURCES, parseEdgarFts } from './parsers/sec/edgar-fts'
+import { archivesCik, parseFilingIndex, registrationTarget } from './parsers/sec/filing-index'
 import { resolveFilers, type PendingFilers } from './parsers/sec/pending-filers'
 import { SUBMISSIONS_SOURCES, parseEdgarSubmissions } from './parsers/sec/edgar-submissions'
+import { parseProspectusRevenue } from './parsers/sec/prospectus-revenue'
 import { revenueProviderFor, type RevenueFilers } from './parsers/sec/revenue-filers'
 import { parseXbrlSegment, segmentTarget } from './parsers/sec/xbrl-segment'
 import { isPeriodicForm, isS1FloorForm } from './parsers/sec/s1-floor'
@@ -232,10 +235,43 @@ const MISALIGNMENT_REPORT_PAGE_LANE: Lane = {
 }
 
 /** Lanes for derived sources, by id prefix (server/pipeline/derived.ts). */
+// A derived filing index: the one primary document of a registration filing.
+const FILING_INDEX_LANE: Lane = {
+  sides: [],
+  removals: 'set',
+  parse: (text, { prov, snapshotId, derivedKey }) => {
+    const target = registrationTarget(derivedKey ?? '')
+    return {
+      entities: normalizeDocuments(
+        parseFilingIndex(text, target, archivesCik(prov.source_url), prov),
+        snapshotId,
+      ),
+    }
+  },
+}
+
+// A derived registration document: the revenue its audited statement of
+// operations prints. A filing never changes once accepted, and an amendment
+// is its own source, so the lane is append-only like the other revenue lanes.
+const PROSPECTUS_REVENUE_LANE: Lane = {
+  sides: [],
+  removals: 'append-only',
+  parse: (text, { prov, snapshotId, derivedKey }) => {
+    const target = registrationTarget(derivedKey ?? '')
+    const rows = parseProspectusRevenue(text, target, archivesCik(prov.source_url), prov)
+    return {
+      entities: normalizeRevenues(rows, snapshotId, target.provider),
+      note: `${rows.length} periods, row "${rows[0]!.tag}"`,
+    }
+  },
+}
+
 const DERIVED_LANES: readonly { prefix: string; lane: Lane }[] = [
   { prefix: 'edgar-submissions-', lane: SUBMISSIONS_LANE },
   { prefix: 'edgar-companyfacts-', lane: COMPANYFACTS_LANE },
   { prefix: 'xbrl-segment-', lane: XBRL_SEGMENT_LANE },
+  { prefix: 'filing-index-', lane: FILING_INDEX_LANE },
+  { prefix: 'prospectus-revenue-', lane: PROSPECTUS_REVENUE_LANE },
   { prefix: 'openai-model-md-', lane: OPENAI_MODEL_PAGE_LANE },
   { prefix: 'google-model-md-', lane: GOOGLE_MODEL_PAGE_LANE },
   { prefix: 'openai-misalignment-report-', lane: MISALIGNMENT_REPORT_PAGE_LANE },

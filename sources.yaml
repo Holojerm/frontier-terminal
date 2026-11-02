@@ -633,6 +633,31 @@ derived_sources:
       storing a wrong period. Only revenue on a context whose one dimension
       is the segment member is kept. Fetched on the six-hourly survey: a
       filing never changes after it is accepted.
+  filing-index:
+    url: https://www.sec.gov/Archives/edgar/data/{cik_number}/{accession_digits}/{accession_no}-index.htm
+    from: registration-filing
+    caveats: >-
+      EDGAR's index page for one registration filing (S-1, S-1/A or 424B4)
+      by a lab resolved from its own S-1, the three newest in its
+      submissions feed. Read only for the primary document's name — the
+      sequence-1 document whose Type is the filing's form — which the
+      submissions feed does not carry. The page's CIK and form must match
+      the filing it was derived for. Fetched on the six-hourly survey.
+  prospectus-revenue:
+    url: https://www.sec.gov/Archives/edgar/data/{cik_number}/{accession_digits}/{document}
+    from: registration-document
+    caveats: >-
+      Revenue as printed in the registration statement's audited
+      Consolidated Statements of Operations, read from the document itself
+      because the filing tags no financial XBRL (Anthropic's S-1 of
+      2026-10-26 tags only its filing-fee exhibit, and company facts carry
+      nothing else). Live-checked 2026-11-02: the 14 MB document parses in
+      under 20 ms. Periods come from the statement's own column headers;
+      interim columns are marked unaudited, as a registration statement's
+      interim financials are. Stored under the statement's row label
+      ("Revenue"), not an XBRL tag. A later filing's value for the same
+      period — an S-1/A, or the first 10-Q's XBRL — supersedes it. Fetched
+      on the six-hourly survey.
   openai-model-md:
     url: https://developers.openai.com/api/docs/models/{slug}.md
     from: openai-priced-model

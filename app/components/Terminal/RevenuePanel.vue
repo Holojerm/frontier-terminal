@@ -3,7 +3,8 @@
 // in words: no audited disclosure (nothing shown, and the press run-rate
 // that would fill the space is named as deliberately absent); a public
 // parent's figure — consolidated, or one segment it reports — labelled as
-// the parent's; the lab's own filing. Every value links to the filing that
+// the parent's; the lab's own filing — XBRL, or the statement of operations
+// printed in an S-1 that tags none. Every value links to the filing that
 // reported it.
 
 import { compactUsd, count, periodLabel } from '#shared/utils/terminal-format'
@@ -18,6 +19,8 @@ const overflow = (p: RevenueProviderView) => Math.max(0, p.periods.length - MAX_
 
 const filerName = (p: RevenueProviderView) =>
   `${p.filer?.entity_name ?? p.filer?.ticker ?? p.display} (${p.filer?.ticker ?? `CIK ${p.filer?.cik}`})`
+
+const fromProspectus = (p: RevenueProviderView) => p.periods.some((r) => r.basis === 'prospectus')
 
 const relationLine = (p: RevenueProviderView) =>
   p.filer?.relation === 'parent' && p.filer.segment_label
@@ -70,8 +73,16 @@ const relationLine = (p: RevenueProviderView) =>
 
         <TerminalEmptyState
           v-else-if="p.disclosure === 'no_rows'"
-          title="Filer tagged; no XBRL facts parsed yet."
-          body="They appear on the next EDGAR poll."
+          :title="
+            p.filer?.relation === 'issuer'
+              ? 'S-1 filed; no revenue read yet.'
+              : 'Filer tagged; no XBRL facts parsed yet.'
+          "
+          :body="
+            p.filer?.relation === 'issuer'
+              ? 'Read from the S-1’s statement of operations on the next survey poll. XBRL follows with the first 10-Q.'
+              : 'They appear on the next EDGAR poll.'
+          "
         />
 
         <template v-else>
@@ -108,6 +119,7 @@ const relationLine = (p: RevenueProviderView) =>
                     <time :datetime="r.start">{{ r.start }}</time> →
                     <time :datetime="r.end">{{ r.end }}</time>
                     <span class="text-toned"> · {{ periodLabel(r.days) }}</span>
+                    <span v-if="r.unaudited" class="text-toned"> · unaudited</span>
                   </th>
                   <td
                     class="py-1 pr-2 text-right font-mono text-highlighted"
@@ -121,7 +133,7 @@ const relationLine = (p: RevenueProviderView) =>
                       target="_blank"
                       rel="noopener noreferrer"
                       class="underline underline-offset-2 hover:text-default"
-                      :title="`Accession ${r.accession_no} · tag ${r.tag}`"
+                      :title="`Accession ${r.accession_no} · ${r.basis === 'xbrl' ? 'tag' : 'row'} ${r.tag}`"
                       >{{ r.form }}</a
                     >
                     <span> filed </span>
@@ -135,6 +147,10 @@ const relationLine = (p: RevenueProviderView) =>
           <p v-if="p.superseded.length" class="text-xs text-toned">
             {{ p.superseded.length }} earlier value{{ p.superseded.length === 1 ? '' : 's' }} for
             these periods restated by a later filing — see the revenue_facts export.
+          </p>
+          <p v-if="fromProspectus(p)" class="text-xs text-toned">
+            Read from the S-1’s Consolidated Statements of Operations: the filing tags no financials
+            in XBRL. A later filing’s value for the same period replaces it.
           </p>
           <p v-if="p.tags.length" class="text-xs text-toned">
             XBRL tag{{ p.tags.length === 1 ? '' : 's' }}:
