@@ -280,6 +280,9 @@ export const parserOutputSchemas = {
   'anthropic-pricing-md': VendorMdPricingOutput,
   'xai-models-md': VendorMdPricingOutput,
   'google-pricing-html': GooglePricingOutput,
+  // One registration for every derived per-model page (derived.ts); the
+  // committed fixture is one representative page.
+  'google-model-md-gemini-4-argon': GooglePricingOutput,
   'meta-models-md': VendorMdPricingOutput,
   'meta-pricing-md': VendorMdPricingOutput,
   'mistral-models-md': VendorMdPricingOutput,

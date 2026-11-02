@@ -11,6 +11,7 @@ Five parallel audit agents live-fetched every candidate source (curl + WebFetch,
 | Pricing + catalog | xAI | `docs.x.ai/developers/models.md` (+ per-model `.md`) | Markdown tables | body hash (1h cache TTL) | **Include** |
 | Pricing + catalog | Google | `ai.google.dev/gemini-api/docs/pricing` | SSR HTML, 86 tables | If-Modified-Since (real `Last-Modified`) | **Include — hardest parse** |
 | Class-map basis | Google | `ai.google.dev/gemini-api/docs/models.md.txt` (added 2026-11-01) | Markdown model cards | recommendation rows | **Include** — read only for the flagship / economy sentences; no prices |
+| Context windows | Google | `ai.google.dev/gemini-api/docs/models/{slug}.md.txt`, one per priced Standard SKU (added 2026-11-02) | Markdown property table | body hash | **Include** (derived `google-model-md-<slug>`) — token limits only; no prices |
 | Pricing cross-check | (all 4) | `openrouter.ai/api/v1/models` | JSON, 419 models | 5-min cache, field diff | **Include as cross-check only** |
 | Hiring | OpenAI | `api.ashbyhq.com/posting-api/job-board/openai` | JSON (5/5; dept+team inline; ~12 MB) | UUID ids, `publishedAt`, ETag | **Include** — 757 roles |
 | Hiring | Anthropic | `boards-api.greenhouse.io/v1/boards/anthropic/jobs` (+`/departments` join) | JSON | numeric ids, `updated_at`, ETag | **Include** — 537 roles |
@@ -140,3 +141,18 @@ The class map has no quotable sentence. No page names a start-here, flagship or 
 Interpretation, marked as such: the case that cut Mistral is gone. It now has four axes with supported surfaces (pricing, hiring, incidents, demand), which is more than Meta has, and the largest hiring category (Solutions, 31%) is the same kind of signal as Anthropic's Sales share. The remaining costs are two markdown parsers, a third-party filter, and empty class-map cells.
 
 **Verdict: include on pricing (`mistral-models-md`, `mistral-pricing-md`), hiring (`mistral-ashby`), incidents (`mistral-status`) and demand (OpenRouter `mistralai/*`). Cut disclosures (`mistral-disclosures`); revenue is `null` and no SEC feed is registered. All three class-map cells are stated gaps.** The product go-ahead was given on 2026-11-01, and `cut.mistral` is retired.
+
+## Addendum, 2026-11-02 — Google per-model pages
+
+Live-fetched with `curl` at 02:40–02:55Z; one page committed as `fixtures/pricing/google-model-gemini-4-argon.md` (bytes and timestamp in `fixtures/manifest.json`). Checked because the pricing page prints no context windows, so all of Google's price rows stored `context_window: null`.
+
+| Check | Result |
+|---|---|
+| URL rule | `https://ai.google.dev/gemini-api/docs/models/<slug>.md.txt`, where `<slug>` is the `<code>` id under the model's heading on the pricing page. 30 of the 33 slugs with a priced Standard table return 200 `text/markdown`; `gemini-3.5-transcribe-live`, `gemini-omni-1.1-flash` and `gemini-3.1-pro-preview-customtools` return 404 (the last is listed as a version on the `gemini-3.1-pro-preview` page). An unknown slug returns 404 with an HTML body. |
+| Format | A `Property \| Description` table per model. Its `Model code` cell names the id and its `Token limits` row holds the limits. Most cards print `**Input token limit** 1,048,576 **Output token limit** 65,536`. `gemini-4-argon` prints `**Context window (unified input and output token limit)** 1,048,576 **Max output** 65,536 (default synchronous) / up to 1,048,576 (with long decode)`. The embedding cards print an input token limit and an output dimension size. `gemini-3.5-transcribe` has no token-limits row. |
+| Multi-model pages | `gemini-robotics-er-2-preview` and `gemini-robotics-er-2-streaming-preview` each serve one page with three model tables, one per id. |
+| Prices | None. Each card links to the pricing page instead. |
+
+**Verdict.** Include as the derived source `google-model-md-<slug>`, keyed from the priced Standard rows `google-pricing-html` stores. The first number in the token-limits row is stored as the context window, exactly as printed, and the whole cell is the row's note. Google's label (input token limit or unified context window) and the max output therefore travel with the number. The parser reads only the table whose `Model code` names the slug it was derived for, and fails otherwise. A 404 is `absent`, as it is for OpenAI. The page has no prices, so the pricing row stays the row of record. The catalog view gives its window to every tier of the slug and cites the model page in `context_window_source`.
+
+Interpretation, marked as such: for most cards the number is an input limit, not the unified window OpenAI and Anthropic print. The note keeps that distinction visible rather than normalising it away.

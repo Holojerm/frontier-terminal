@@ -300,6 +300,7 @@ const DERIVED_LABELS: readonly {
     role: 'sec',
   },
   { prefix: 'openai-model-md-', label: (k) => `OpenAI model page (${k})`, role: 'primary' },
+  { prefix: 'google-model-md-', label: (k) => `Google model page (${k})`, role: 'primary' },
   {
     prefix: 'openai-misalignment-report-',
     label: (k) => `OpenAI misalignment report page (${k})`,

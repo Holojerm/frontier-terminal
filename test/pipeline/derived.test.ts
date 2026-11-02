@@ -7,12 +7,14 @@ import type { FilingRow } from '../../server/pipeline/contracts'
 import {
   deriveSources,
   derivedSourceId,
+  googlePricedSlugs,
   openAiPricedSlugs,
   parseDerivedSourcesBlock,
   resolvedFilers,
 } from '../../server/pipeline/derived'
 import type { FetchOutcome, SourceFetcher } from '../../server/pipeline/fetch'
 import { derivedKeyOf, laneFor } from '../../server/pipeline/lanes'
+import { parseGoogleModelPage } from '../../server/pipeline/parsers/pricing/google-model-page'
 import { parseOpenAiModelPage } from '../../server/pipeline/parsers/pricing/openai-model-page'
 import {
   filerNameOf,
@@ -106,17 +108,20 @@ describe('pending_filers', () => {
 })
 
 describe('derived_sources', () => {
-  it('reads the five templates with their caveat', () => {
+  it('reads the six templates with their caveat', () => {
     const templates = parseDerivedSourcesBlock(sourcesYaml)
     expect(templates.map((t) => [t.id, t.from])).toEqual([
       ['edgar-submissions', 'filer'],
       ['edgar-companyfacts', 'filer'],
       ['xbrl-segment', 'segment-filing'],
       ['openai-model-md', 'openai-priced-model'],
+      ['google-model-md', 'google-priced-model'],
       ['openai-misalignment-report', 'openai-misalignment-report'],
     ])
-    expect(templates[4]!.url).toBe('https://alignment.openai.com/misalignment-reports/{slug}/')
-    expect(templates[4]!.caveat).toContain('Discovery / Discovered / Discovery date')
+    expect(templates[5]!.url).toBe('https://alignment.openai.com/misalignment-reports/{slug}/')
+    expect(templates[5]!.caveat).toContain('Discovery / Discovered / Discovery date')
+    expect(templates[4]!.url).toBe('https://ai.google.dev/gemini-api/docs/models/{slug}.md.txt')
+    expect(templates[4]!.caveat).toContain('reads as absent')
     expect(templates[3]!.url).toBe('https://developers.openai.com/api/docs/models/{slug}.md')
     expect(templates[3]!.caveat).toContain('must equal the slug')
     expect(templates[2]!.caveat).toContain('not the lab')
@@ -135,6 +140,76 @@ describe('derived_sources', () => {
     expect(labelOf('openai-model-md-gpt-5.6-sol')).toEqual({
       label: 'OpenAI model page (gpt-5.6-sol)',
       role: 'primary',
+    })
+    expect(laneFor('google-model-md-gemini-4-argon')).toBeDefined()
+    expect(derivedKeyOf('google-model-md-gemini-4-argon')).toBe('gemini-4-argon')
+    expect(labelOf('google-model-md-gemini-4-argon').label).toBe(
+      'Google model page (gemini-4-argon)',
+    )
+  })
+})
+
+describe('the Google model page parser', () => {
+  it('reads the unified context window and keeps the whole token-limits cell as the note', () => {
+    const text = fixtureText('fixtures/pricing/google-model-gemini-4-argon.md')
+    const { rows } = parseGoogleModelPage(text, 'gemini-4-argon')
+    expect(rows).toEqual([
+      {
+        provider: 'google',
+        model_slug: 'gemini-4-argon',
+        tier: 'standard',
+        context_window: '1,048,576',
+        input_per_mtok: null,
+        cached_input_per_mtok: null,
+        output_per_mtok: null,
+        currency: 'USD',
+        effective_from: null,
+        effective_until: null,
+        notes:
+          'Context window (unified input and output token limit) 1,048,576 Max output 65,536 (default synchronous) / up to 1,048,576 (with long decode)',
+        source_url: 'https://ai.google.dev/gemini-api/docs/models/gemini-4-argon.md.txt',
+        fetched_at: '2026-11-02T02:54:53Z',
+      },
+    ])
+  })
+
+  // Excerpt of the live gemini-robotics-er-2-preview page (2026-11-02): the
+  // common "Input token limit" wording, and one page carrying two models.
+  const robotics = [
+    '### Gemini Robotics ER 2 Preview',
+    '',
+    '| Property | Description |',
+    '|---|---|',
+    '| Model code | `gemini-robotics-er-2-preview` |',
+    '| Token limits^[\\[\\*\\]](https://ai.google.dev/gemini-api/docs/tokens)^ | **Input token limit** 131,072 **Output token limit** 65,536 |',
+    '| Latest update | July 2026 |',
+    '',
+    '### Gemini Robotics ER 2 Streaming Preview',
+    '',
+    '| Property | Description |',
+    '|---|---|',
+    '| Model code | `gemini-robotics-er-2-streaming-preview` |',
+    '| Token limits^[\\[\\*\\]](https://ai.google.dev/gemini-api/docs/tokens)^ | **Input token limit** 32,768 **Output token limit** 8,192 |',
+    '',
+  ].join('\n')
+
+  it('reads the table whose model code is the derived slug; refuses a page for another slug', () => {
+    const [row] = parseGoogleModelPage(robotics, 'gemini-robotics-er-2-streaming-preview').rows
+    expect(row).toMatchObject({
+      context_window: '32,768',
+      notes: 'Input token limit 32,768 Output token limit 8,192',
+    })
+    expect(() => parseGoogleModelPage(robotics, 'gemini-2.5-pro')).toThrow(
+      'model page is for gemini-robotics-er-2-preview, gemini-robotics-er-2-streaming-preview, derived for gemini-2.5-pro',
+    )
+    expect(() => parseGoogleModelPage('# Nothing\n', 'gemini-2.5-pro')).toThrow('Model code')
+  })
+
+  it('a card without a token-limits row stores no window rather than guessing one', () => {
+    const page = '| Property | Description |\n|---|---|\n| Model code | `gemini-3.5-transcribe` |\n'
+    expect(parseGoogleModelPage(page, 'gemini-3.5-transcribe').rows[0]).toMatchObject({
+      context_window: null,
+      notes: null,
     })
   })
 })
@@ -190,13 +265,16 @@ function fetcher(overrides: Record<string, string | FetchOutcome> = {}): SourceF
   byUrl.set(`https://data.sec.gov/submissions/CIK${ANTHROPIC_CIK}.json`, spcxSubs)
   byUrl.set(`https://data.sec.gov/api/xbrl/companyfacts/CIK${ANTHROPIC_CIK}.json`, spcxFacts)
   const modelPage = fixtureText('fixtures/pricing/openai-model-gpt-5.6-sol.md')
+  const googlePage = fixtureText('fixtures/pricing/google-model-gemini-4-argon.md')
   return async (source) => {
     const override = overrides[source.source_id]
     if (override !== undefined && typeof override !== 'string') return override
     let text = override ?? byUrl.get(source.url)
-    // Every other derived model page: the sol page with its id rewritten.
+    // Every other derived model page: the sol (or argon) page with its id rewritten.
     const m = source.url.match(/\/models\/([^/]+)\.md$/)
     if (text === undefined && m) text = modelPage.replaceAll('gpt-5.6-sol', m[1]!)
+    const g = source.url.match(/\/gemini-api\/docs\/models\/([^/]+)\.md\.txt$/)
+    if (text === undefined && g) text = googlePage.replaceAll('gemini-4-argon', g[1]!)
     if (text === undefined) return { ok: false, status: 404, detail: 'HTTP 404' }
     return { ok: true, status: 200, text, bytes: text.length }
   }
@@ -439,5 +517,64 @@ describe('OpenAI model pages end to end', () => {
     )
     expect(report.sources[0]).toMatchObject({ status: 'failed' })
     expect((await db.select().from(schema.opsEvents)).map((o) => o.kind)).toContain('source_failed')
+  })
+})
+
+describe('Google model pages end to end', () => {
+  it('the pricing page derives one page per priced Standard SKU; every tier of the slug shows its window, citing the page', async () => {
+    await run(['google-pricing-html'], fetcher(), 'survey')
+    const slugs = await googlePricedSlugs(db)
+    expect(slugs).toContain('gemini-2.5-pro')
+    expect(slugs).toContain('gemini-embedding-001')
+    expect(slugs).not.toContain('gemini-2.5-flash-native-audio-preview-12-2025') // no Standard table
+    const derived = (await deriveSources(db, sourcesYaml)).filter((d) =>
+      d.source_id.startsWith('google-model-md-'),
+    )
+    expect(derived.map((d) => d.source_id)).toEqual(
+      slugs.map((s) => derivedSourceId('google-model-md', s)),
+    )
+    expect(derived[0]!.ext).toBe('md')
+
+    const pro = 'google-model-md-gemini-2.5-pro'
+    const report = await run([pro], fetcher(), 'survey')
+    expect(report.sources.map((s) => [s.source_id, s.status])).toEqual([[pro, 'baseline']])
+
+    const prices = await queryPrices(db, await ctx())
+    const url = 'https://ai.google.dev/gemini-api/docs/models/gemini-2.5-pro.md.txt'
+    const standard = prices.rows.find(
+      (r) => r.entity_key === 'model:google:gemini-2.5-pro:standard',
+    )!
+    // The pricing page keeps the row — it carries the prices — and the
+    // window it does not print is the model page's, cited as such.
+    expect(standard.source_id).toBe('google-pricing-html')
+    expect(standard.input_per_mtok).not.toBeNull()
+    expect(standard.also_listed_by).toEqual([pro])
+    expect(standard.context_window).toBe('1,048,576')
+    expect(standard.context_window_source).toMatchObject({ source_id: pro, source_url: url })
+    const batch = prices.rows.find((r) => r.entity_key === 'model:google:gemini-2.5-pro:batch')!
+    expect(batch.context_window_source).toMatchObject({ source_id: pro, source_url: url })
+    // No page fetched for this slug yet, so no window and nothing cited.
+    const flash = prices.rows.find(
+      (r) => r.entity_key === 'model:google:gemini-2.5-flash:standard',
+    )!
+    expect(flash.context_window).toBeNull()
+    expect(flash.context_window_source).toBeNull()
+    // The model page never becomes its own catalog row.
+    expect(prices.rows.filter((r) => r.source_id === pro)).toEqual([])
+
+    // A priced id Google wrote no page for is absent, not failed.
+    const missing = 'google-model-md-gemini-embedding-001'
+    const gone = await run(
+      [missing],
+      fetcher({ [missing]: { ok: false, status: 404, detail: 'HTTP 404' } }),
+      'survey',
+    )
+    expect(gone.sources[0]).toMatchObject({ status: 'absent' })
+    const coverage = await queryCoverage(db, await ctx())
+    expect(coverage.sources.find((c) => c.source_id === missing)).toMatchObject({
+      provider: 'google',
+      axis: 'pricing-catalog',
+      derived_from: 'google-model-md',
+    })
   })
 })
