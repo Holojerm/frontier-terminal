@@ -42,30 +42,26 @@ useSeo({
 </script>
 
 <template>
-  <div class="space-y-12">
-    <header class="space-y-2">
-      <h1 class="text-4xl text-highlighted">Prices</h1>
-      <p class="max-w-2xl text-muted">
-        $ per million tokens, read from each vendor’s own published page.
-      </p>
-    </header>
-
-    <UAlert
-      v-if="error"
-      color="error"
-      variant="soft"
-      icon="i-lucide-database-zap"
-      title="Prices could not be read"
-      description="The pricing endpoint failed to respond."
-    />
-
-    <template v-else-if="prices">
+  <TerminalPage
+    title="Prices"
+    lede="$ per million tokens, read from each vendor’s own published page."
+    :as-of="prices?.as_of"
+    :error="Boolean(error)"
+    error-title="Prices could not be read"
+    error-body="The pricing endpoint failed to respond."
+  >
+    <template v-if="prices">
       <TerminalPanel
         id="matrix"
         title="Like-for-like"
         note="Flagship, balanced, and economy on each vendor’s own recommendation."
+        flush
       >
         <TerminalPriceMatrix :matrix="prices.matrix" />
+        <template #foot>
+          {{ prices.matrix.tier_note }} Each placement follows the vendor’s own docs; the info
+          control quotes the sentence.
+        </template>
       </TerminalPanel>
 
       <TerminalPanel
@@ -73,14 +69,14 @@ useSeo({
         title="Full catalog"
         :note="`${prices.counts.priced} priced, ${prices.counts.catalog_only} catalog-only${prices.counts.removed ? `, ${prices.counts.removed} delisted` : ''}.`"
       >
-        <TerminalEmptyState
+        <TerminalGap
           v-if="prices.rows.length === 0"
           title="No model rows yet."
-          body="Pricing rows appear after the first poll of each vendor page."
+          reason="Pricing rows appear after the first poll of each vendor page."
           :action="{ label: 'See coverage', to: '/data#coverage' }"
         />
         <TerminalPriceTable v-else :prices="prices" :provider="provider" />
       </TerminalPanel>
     </template>
-  </div>
+  </TerminalPage>
 </template>

@@ -27,35 +27,25 @@ useSeo({
 </script>
 
 <template>
-  <div class="space-y-12">
-    <header class="space-y-2">
-      <h1 class="text-4xl text-highlighted">Theses</h1>
-      <p class="max-w-2xl text-muted">
-        A thesis is a public position: a set of claims, each with a kill condition written before
-        the data arrived, checked against the terminal’s own numbers.
-      </p>
-    </header>
-
-    <UAlert
-      v-if="error"
-      color="error"
-      variant="soft"
-      icon="i-lucide-database-zap"
-      title="Theses could not be read"
-      description="The theses endpoint failed to respond. No stale or inferred status is shown in its place."
-    />
-
-    <template v-else-if="theses">
-      <TerminalEmptyState
+  <TerminalPage
+    title="Theses"
+    lede="A thesis is a public position: a set of claims, each with a kill condition written before the data arrived, checked against the terminal’s own numbers."
+    :as-of="theses?.as_of"
+    :error="Boolean(error)"
+    error-title="Theses could not be read"
+    error-body="The theses endpoint failed to respond. No stale or inferred status is shown in its place."
+  >
+    <template v-if="theses">
+      <TerminalGap
         v-if="theses.theses.length === 0"
         title="No theses are open."
-        body="Each one opens with its claims and kill conditions already written."
+        reason="Each one opens with its claims and kill conditions already written."
       />
-      <div v-else class="grid gap-4 lg:grid-cols-2">
+      <div v-else class="grid gap-6 lg:grid-cols-2">
         <ThesisCard v-for="thesis in theses.theses" :key="thesis.id" :thesis="thesis" />
       </div>
 
       <ThesisFooter :caveat="theses.caveat" />
     </template>
-  </div>
+  </TerminalPage>
 </template>

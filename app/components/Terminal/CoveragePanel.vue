@@ -6,6 +6,7 @@
 
 import { LAB_DISPLAY } from '#shared/utils/terminal-labs'
 import type { CoverageData, SourceCoverage } from '#shared/utils/terminal-types'
+import type { TableColumn } from '~/types/terminal-ui'
 
 defineProps<{ coverage: CoverageData }>()
 
@@ -32,88 +33,75 @@ const roleNote = (s: SourceCoverage) =>
       : s.role === 'cross-check'
         ? 'cross-check only — never a source of record'
         : null
+
+const columns: TableColumn[] = [
+  { key: 'label', label: 'Source' },
+  { key: 'snapshot', label: 'Newest snapshot' },
+  { key: 'run', label: 'Last poll', class: 'whitespace-nowrap' },
+  { key: 'snapshot_count', label: 'Snapshots', numeric: true },
+  { key: 'entity_count', label: 'Rows', numeric: true },
+  { key: 'caveat', label: 'Caveat' },
+]
 </script>
 
 <template>
-  <div class="space-y-4">
-    <div class="overflow-x-auto md:overflow-visible">
-      <table class="w-full text-sm">
-        <caption class="sr-only">
-          Every registered source: newest snapshot, last poll status, snapshot count, rows, caveat
-        </caption>
-        <thead class="bg-default md:sticky md:top-0">
-          <tr class="border-b border-default text-left">
-            <th scope="col" class="py-2 pr-4 font-medium text-muted">Source</th>
-            <th scope="col" class="py-2 pr-4 font-medium text-muted">Newest snapshot</th>
-            <th scope="col" class="py-2 pr-4 font-medium text-muted">Last poll</th>
-            <th scope="col" class="py-2 pr-4 text-right font-medium text-muted">Snapshots</th>
-            <th scope="col" class="py-2 pr-4 text-right font-medium text-muted">Rows</th>
-            <th scope="col" class="py-2 font-medium text-muted">Caveat</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr
-            v-for="s in coverage.sources"
-            :key="s.source_id"
-            class="border-b border-default align-top"
+  <div>
+    <TerminalTable
+      caption="Every registered source: newest snapshot, last poll status, snapshot count, rows, caveat"
+      :columns="columns"
+      :rows="coverage.sources"
+      :row-key="(s) => s.source_id"
+      sticky
+      align="top"
+    >
+      <template #cell-label="{ row: s }">
+        <a
+          :href="s.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="text-highlighted underline underline-offset-2"
+          >{{ s.label }}</a
+        >
+        <span class="block text-xs text-muted">
+          {{ PROVIDER[s.provider] ?? s.provider }} · {{ s.axis }}
+          <template v-if="roleNote(s)"> · {{ roleNote(s) }}</template>
+        </span>
+      </template>
+      <template #cell-snapshot="{ row: s }">
+        <TerminalProvenanceTag
+          v-if="s.newest_snapshot"
+          stamp
+          :source-url="s.newest_snapshot.source_url"
+          :fetched-at="s.newest_snapshot.fetched_at"
+        />
+        <TerminalGap v-else inline title="Never fetched" />
+      </template>
+      <template #cell-run="{ row: s }">
+        <template v-if="s.last_run">
+          <UBadge
+            :color="STATUS[s.last_run.status].color"
+            :icon="STATUS[s.last_run.status].icon"
+            variant="subtle"
+            size="sm"
           >
-            <th scope="row" class="py-2 pr-4 text-left font-normal">
-              <a
-                :href="s.url"
-                target="_blank"
-                rel="noopener noreferrer"
-                class="text-highlighted underline underline-offset-2"
-                >{{ s.label }}</a
-              >
-              <span class="block text-xs text-muted">
-                {{ PROVIDER[s.provider] ?? s.provider }} · {{ s.axis }}
-                <template v-if="roleNote(s)"> · {{ roleNote(s) }}</template>
-              </span>
-            </th>
-            <td class="py-2 pr-4">
-              <TerminalProvenanceTag
-                v-if="s.newest_snapshot"
-                stamp
-                :source-url="s.newest_snapshot.source_url"
-                :fetched-at="s.newest_snapshot.fetched_at"
-              />
-              <span v-else class="text-xs text-muted">never fetched</span>
-            </td>
-            <td class="py-2 pr-4">
-              <template v-if="s.last_run">
-                <UBadge
-                  :color="STATUS[s.last_run.status].color"
-                  :icon="STATUS[s.last_run.status].icon"
-                  variant="subtle"
-                  size="sm"
-                >
-                  {{ STATUS[s.last_run.status].label }}
-                </UBadge>
-                <TerminalCaveatMark
-                  v-if="s.last_run.detail"
-                  :name="`Detail of the last ${s.label} poll`"
-                  :text="s.last_run.detail"
-                />
-              </template>
-              <span v-else class="text-xs text-muted">no run</span>
-            </td>
-            <td class="py-2 pr-4 text-right font-mono">{{ s.snapshot_count }}</td>
-            <td class="py-2 pr-4 text-right font-mono">{{ s.entity_count }}</td>
-            <td class="py-2">
-              <TerminalCaveatMark
-                v-if="s.caveat"
-                :name="`Caveat for ${s.label}`"
-                :text="s.caveat"
-              />
-              <span v-else class="text-xs text-muted">—</span>
-            </td>
-          </tr>
-        </tbody>
-      </table>
-    </div>
+            {{ STATUS[s.last_run.status].label }}
+          </UBadge>
+          <TerminalCaveatMark
+            v-if="s.last_run.detail"
+            :name="`Detail of the last ${s.label} poll`"
+            :text="s.last_run.detail"
+          />
+        </template>
+        <span v-else class="text-xs text-muted">no run</span>
+      </template>
+      <template #cell-caveat="{ row: s }">
+        <TerminalCaveatMark v-if="s.caveat" :name="`Caveat for ${s.label}`" :text="s.caveat" />
+        <span v-else class="text-xs text-muted">—</span>
+      </template>
+    </TerminalTable>
 
-    <div v-if="coverage.cuts.length" class="space-y-2">
-      <h3 class="text-lg text-highlighted">Excluded sources</h3>
+    <div v-if="coverage.cuts.length" class="space-y-2 border-t border-default p-3">
+      <h3 class="text-sm text-highlighted">Excluded sources</h3>
       <ul class="space-y-1 text-sm">
         <li v-for="cut in coverage.cuts" :key="cut.id" class="flex flex-wrap items-center gap-x-2">
           <span class="font-mono text-default">{{ cut.id }}</span>
@@ -122,9 +110,5 @@ const roleNote = (s: SourceCoverage) =>
         </li>
       </ul>
     </div>
-
-    <p class="text-xs text-muted">
-      Each label links to the exact URL fetched; each age’s tooltip gives the exact UTC timestamp.
-    </p>
   </div>
 </template>

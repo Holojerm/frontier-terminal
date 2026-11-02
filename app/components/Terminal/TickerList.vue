@@ -24,7 +24,7 @@ const now = useNow()
       <time
         :datetime="alert.created_at"
         :title="alert.created_at"
-        class="w-20 shrink-0 font-mono text-xs text-toned"
+        class="w-20 shrink-0 font-mono text-xs text-muted"
       >
         {{ relativeStamp(alert.created_at, now) }}
       </time>

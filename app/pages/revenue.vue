@@ -41,25 +41,15 @@ useSeo({
 </script>
 
 <template>
-  <div class="space-y-12">
-    <header class="space-y-2">
-      <h1 class="text-4xl text-highlighted">Revenue</h1>
-      <p class="max-w-2xl text-muted">
-        Revenue read from EDGAR’s XBRL data, each value linked to its filing. Press run-rates are
-        not shown.
-      </p>
-    </header>
-
-    <UAlert
-      v-if="error"
-      color="error"
-      variant="soft"
-      icon="i-lucide-database-zap"
-      title="Revenue could not be read"
-      description="The revenue endpoint failed to respond."
-    />
-
-    <template v-else-if="revenue">
+  <TerminalPage
+    title="Revenue"
+    lede="Revenue read from EDGAR’s XBRL data, each value linked to its filing. Press run-rates are not shown."
+    :as-of="revenue?.as_of"
+    :error="Boolean(error)"
+    error-title="Revenue could not be read"
+    error-body="The revenue endpoint failed to respond."
+  >
+    <template v-if="revenue">
       <TerminalPanel
         id="disclosed"
         title="Disclosed revenue, per lab"
@@ -96,5 +86,5 @@ useSeo({
         </div>
       </TerminalPanel>
     </template>
-  </div>
+  </TerminalPage>
 </template>

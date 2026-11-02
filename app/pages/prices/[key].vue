@@ -5,8 +5,9 @@
 // the fetch each point was read from.
 
 import { absoluteStamp, money } from '#shared/utils/terminal-format'
-import { LAB_DISPLAY } from '#shared/utils/terminal-labs'
+import { labName } from '#shared/utils/terminal-labs'
 import type { PriceHistoryData, PricePoint } from '#shared/utils/terminal-types'
+import type { TableColumn } from '~/types/terminal-ui'
 
 // A dynamic route is one pattern, not N pages, so the sitemap hook skips it;
 // server/routes/sitemap.xml.get.ts enumerates the keys itself. These values
@@ -45,8 +46,6 @@ const name = computed(() => {
   return `${h.model_slug}${h.tier ? ` (${h.tier})` : ''}`
 })
 
-const DISPLAY: Record<string, string> = LAB_DISPLAY
-
 // A price series with a source URL on every point is a Dataset, not a page
 // that happens to contain numbers, and "what does <model> cost" is the query
 // this site most wants to be the answer to. `temporalCoverage` is taken from
@@ -64,7 +63,7 @@ const coverage = computed(() => {
   return `${first.at}/${history.value?.removed ? last.at : '..'}`
 })
 
-const lab = DISPLAY[history.value?.provider ?? 'other'] ?? ''
+const lab = history.value ? labName(history.value.provider) : ''
 
 useSeo({
   title: `${lab} ${name.value} API pricing history`.trim(),
@@ -75,7 +74,7 @@ useSeo({
     datasetSchema(site, {
       url: usePageUrl(),
       name: `${name.value} — API price history`,
-      description: `Every observed list price for ${name.value}, per million tokens, as read from ${DISPLAY[history.value?.provider ?? 'other'] ?? 'the provider'}’s own pricing page, with the source URL and fetch time behind each observation.`,
+      description: `Every observed list price for ${name.value}, per million tokens, as read from ${labName(history.value?.provider ?? 'the provider')}’s own pricing page, with the source URL and fetch time behind each observation.`,
       dateModified: history.value?.as_of,
       temporalCoverage: coverage.value,
       variableMeasured: ['input_per_mtok', 'cached_input_per_mtok', 'output_per_mtok'],
@@ -125,35 +124,37 @@ const diffText = (p: PricePoint) =>
   p.diff
     .map((d) => `${d.field.replace(/_per_mtok$/, '')} ${d.before ?? '∅'} → ${d.after ?? '∅'}`)
     .join('; ')
+
+const POINT_COLUMNS: TableColumn[] = [
+  { key: 'at', label: 'Observed', class: 'whitespace-nowrap' },
+  { key: 'kind', label: 'Event' },
+  { key: 'input_per_mtok', label: 'In $/Mtok', numeric: true },
+  { key: 'cached_input_per_mtok', label: 'Cached in', numeric: true, class: 'text-muted' },
+  { key: 'output_per_mtok', label: 'Out $/Mtok', numeric: true },
+  { key: 'diff', label: 'What changed', class: 'font-mono text-xs text-muted' },
+  { key: 'source', label: 'Source' },
+]
 </script>
 
 <template>
-  <div class="space-y-8">
-    <header class="space-y-2">
-      <p class="text-sm">
-        <NuxtLink to="/prices" class="text-primary underline underline-offset-2">Prices</NuxtLink>
-      </p>
-      <h1 class="text-4xl text-highlighted">
-        <span class="font-mono">{{ name }}</span>
-      </h1>
-      <p v-if="history" class="max-w-2xl text-muted">
-        {{ DISPLAY[history.provider] ?? history.provider }} ·
-        <span class="font-mono">{{ history.entity_key }}</span>
-        <template v-if="history.context_window"> · {{ history.context_window }} context</template>
-        <template v-if="history.removed"> · delisted</template>
-      </p>
-    </header>
+  <TerminalPage
+    :back="{ label: 'Prices', to: '/prices' }"
+    :as-of="history?.as_of"
+    :error="Boolean(error)"
+    error-title="Price history could not be read"
+    error-body="The history endpoint failed to respond. No stale or inferred number is shown in its place."
+  >
+    <template #title
+      ><span class="font-mono">{{ name }}</span></template
+    >
+    <template v-if="history" #lede>
+      {{ labName(history.provider) }} ·
+      <span class="font-mono">{{ history.entity_key }}</span>
+      <template v-if="history.context_window"> · {{ history.context_window }} context</template>
+      <template v-if="history.removed"> · delisted</template>
+    </template>
 
-    <UAlert
-      v-if="error"
-      color="error"
-      variant="soft"
-      icon="i-lucide-database-zap"
-      title="Price history could not be read"
-      description="The history endpoint failed to respond. No stale or inferred number is shown in its place."
-    />
-
-    <template v-else-if="history">
+    <template v-if="history">
       <TerminalPanel
         id="chart"
         title="$ per million tokens"
@@ -168,15 +169,15 @@ const diffText = (p: PricePoint) =>
           :x-label="xLabel"
           :title="`${name}: ${chart.series.map((s) => s.label).join(', ')} price per million tokens over ${chart.x.length} observations`"
         />
-        <TerminalEmptyState
+        <TerminalGap
           v-else-if="chart.series.length"
           title="One priced observation."
-          body="A line needs two. The table below holds the one point and its source."
+          reason="A line needs two. The table below holds the one point and its source."
         />
-        <TerminalEmptyState
+        <TerminalGap
           v-else
           title="No published price on any observation."
-          body="This SKU is catalog-only on the audited page: listed there without a price."
+          reason="This SKU is catalog-only on the audited page: listed there without a price."
         />
       </TerminalPanel>
 
@@ -184,65 +185,48 @@ const diffText = (p: PricePoint) =>
         id="points"
         title="Point by point"
         note="One observation per row: what the page said, when it was read, and the source URL."
+        flush
       >
-        <div class="overflow-x-auto">
-          <table class="w-full text-sm">
-            <caption class="sr-only">
-              Every observation of this SKU with prices and provenance
-            </caption>
-            <thead>
-              <tr class="border-b border-default text-left">
-                <th scope="col" class="py-2 pr-4 font-medium text-muted">Observed</th>
-                <th scope="col" class="py-2 pr-4 font-medium text-muted">Event</th>
-                <th scope="col" class="py-2 pr-4 text-right font-medium text-muted">In $/Mtok</th>
-                <th scope="col" class="py-2 pr-4 text-right font-medium text-muted">Cached in</th>
-                <th scope="col" class="py-2 pr-4 text-right font-medium text-muted">Out $/Mtok</th>
-                <th scope="col" class="py-2 pr-4 font-medium text-muted">What changed</th>
-                <th scope="col" class="py-2 font-medium text-muted">Source</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr
-                v-for="p in history.points"
-                :key="`${p.kind}:${p.at}:${p.source_id}`"
-                class="border-b border-default align-top"
-              >
-                <td class="py-2 pr-4 whitespace-nowrap">
-                  <time :datetime="p.at" :title="p.at">{{ absoluteStamp(p.at, now) }}</time>
-                </td>
-                <td class="py-2 pr-4">
-                  <UBadge
-                    :color="KIND[p.kind].color"
-                    :icon="KIND[p.kind].icon"
-                    variant="subtle"
-                    size="sm"
-                  >
-                    {{ KIND[p.kind].label }}
-                  </UBadge>
-                </td>
-                <td class="py-2 pr-4 text-right font-mono">{{ money(p.input_per_mtok) }}</td>
-                <td class="py-2 pr-4 text-right font-mono text-muted">
-                  {{ money(p.cached_input_per_mtok) }}
-                </td>
-                <td class="py-2 pr-4 text-right font-mono">{{ money(p.output_per_mtok) }}</td>
-                <td class="py-2 pr-4 font-mono text-xs text-muted">{{ diffText(p) || '—' }}</td>
-                <td class="py-2">
-                  <TerminalProvenanceTag
-                    :label="p.source_id"
-                    :source-url="p.source_url"
-                    :fetched-at="p.fetched_at"
-                  />
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-        <p class="text-xs text-muted">
+        <TerminalTable
+          caption="Every observation of this SKU with prices and provenance"
+          :columns="POINT_COLUMNS"
+          :rows="history.points"
+          :row-key="(p) => `${p.kind}:${p.at}:${p.source_id}`"
+          align="top"
+        >
+          <template #cell-at="{ row: p }">
+            <time :datetime="p.at" :title="p.at">{{ absoluteStamp(p.at, now) }}</time>
+          </template>
+          <template #cell-kind="{ row: p }">
+            <UBadge
+              :color="KIND[p.kind].color"
+              :icon="KIND[p.kind].icon"
+              variant="subtle"
+              size="sm"
+            >
+              {{ KIND[p.kind].label }}
+            </UBadge>
+          </template>
+          <template #cell-input_per_mtok="{ row: p }">{{ money(p.input_per_mtok) }}</template>
+          <template #cell-cached_input_per_mtok="{ row: p }">
+            {{ money(p.cached_input_per_mtok) }}
+          </template>
+          <template #cell-output_per_mtok="{ row: p }">{{ money(p.output_per_mtok) }}</template>
+          <template #cell-diff="{ row: p }">{{ diffText(p) || '—' }}</template>
+          <template #cell-source="{ row: p }">
+            <TerminalProvenanceTag
+              :label="p.source_id"
+              :source-url="p.source_url"
+              :fetched-at="p.fetched_at"
+            />
+          </template>
+        </TerminalTable>
+        <template #foot>
           A “first snapshot” point is the state the earliest change row records as its prior value,
           held since the source was first fetched; any move in between would appear in the log. A
           “current” point is the row as of the newest fetch that rewrote it.
-        </p>
+        </template>
       </TerminalPanel>
     </template>
-  </div>
+  </TerminalPage>
 </template>

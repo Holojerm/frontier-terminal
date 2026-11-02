@@ -43,40 +43,33 @@ useSeo({
 </script>
 
 <template>
-  <div class="space-y-12">
-    <header class="space-y-2">
-      <h1 class="text-4xl text-highlighted">Demand share</h1>
-      <p class="max-w-2xl text-muted">
-        Tokens routed through OpenRouter, per lab. One aggregator’s traffic, not market share.
-      </p>
-    </header>
+  <TerminalPage
+    title="Demand share"
+    lede="Tokens routed through OpenRouter, per lab. One aggregator’s traffic, not market share."
+    :as-of="rankings?.as_of"
+    :error="Boolean(error)"
+    error-title="Rankings could not be read"
+    error-body="The rankings endpoint failed to respond."
+  >
+    <template v-if="rankings">
+      <div class="grid gap-6 lg:grid-cols-2">
+        <TerminalPanel
+          id="share"
+          title="7-day share"
+          :note="`${rankings.meta.coverage.days} day${rankings.meta.coverage.days === 1 ? '' : 's'} on record. Share of OpenRouter’s daily top 50 plus its “other” row.`"
+        >
+          <TerminalDemandShare :rankings="rankings" />
+        </TerminalPanel>
 
-    <UAlert
-      v-if="error"
-      color="error"
-      variant="soft"
-      icon="i-lucide-database-zap"
-      title="Rankings could not be read"
-      description="The rankings endpoint failed to respond."
-    />
-
-    <template v-else-if="rankings">
-      <TerminalPanel
-        id="share"
-        title="7-day share"
-        :note="`${rankings.meta.coverage.days} day${rankings.meta.coverage.days === 1 ? '' : 's'} on record. Share of OpenRouter’s daily top 50 plus its “other” row.`"
-      >
-        <TerminalDemandShare :rankings="rankings" />
-      </TerminalPanel>
-
-      <TerminalPanel
-        v-if="spend"
-        id="spend"
-        title="Implied spend share"
-        note="The window’s tokens at each vendor’s list price, as a low–high range."
-      >
-        <TerminalSpendShare :spend="spend" />
-      </TerminalPanel>
+        <TerminalPanel
+          v-if="spend"
+          id="spend"
+          title="Implied spend share"
+          note="The window’s tokens at each vendor’s list price, as a low–high range."
+        >
+          <TerminalSpendShare :spend="spend" />
+        </TerminalPanel>
+      </div>
 
       <TerminalPanel
         v-if="rankings.status === 'ok'"
@@ -96,5 +89,5 @@ useSeo({
         <TerminalRankingsTopModels :providers="rankings.top_models" />
       </TerminalPanel>
     </template>
-  </div>
+  </TerminalPage>
 </template>

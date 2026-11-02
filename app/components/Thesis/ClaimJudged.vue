@@ -28,23 +28,25 @@ function ruling(v: VerdictView) {
 </script>
 
 <template>
-  <div class="space-y-4">
-    <h3 class="text-sm text-toned">Verdicts, newest first</h3>
+  <div class="space-y-3">
+    <h3 class="text-sm text-highlighted">Verdicts, newest first</h3>
 
-    <TerminalEmptyState
+    <TerminalGap
       v-if="claim.verdicts.length === 0"
       title="No verdicts yet."
-      body="No candidate event for this claim has been rated. The claim holds by default until one is."
+      reason="No candidate event for this claim has been rated. The claim holds by default until one is."
     />
 
-    <ul v-else class="space-y-3">
-      <li
+    <div v-else class="space-y-3">
+      <TerminalCard
         v-for="v in claim.verdicts"
+        :id="`verdict-${v.change_id}-${v.subject}`"
         :key="`${v.change_id}-${v.subject}`"
-        class="space-y-3 rounded border border-default bg-elevated p-4"
+        :level="4"
+        :title="companyName(v.provider)"
+        :sources="[v]"
       >
-        <div class="flex flex-wrap items-center gap-2">
-          <span class="text-highlighted">{{ companyName(v.provider) }}</span>
+        <template #meta>
           <UBadge
             :color="THREATENS.has(v.verdict) ? 'warning' : 'neutral'"
             variant="subtle"
@@ -62,24 +64,30 @@ function ruling(v: VerdictView) {
           >
             {{ ruling(v)!.label }}
           </UBadge>
-        </div>
+        </template>
 
         <p class="text-sm text-default">{{ v.rationale }}</p>
 
-        <dl v-if="factRows(v.facts).length" class="space-y-0.5 text-sm">
-          <div v-for="row in factRows(v.facts)" :key="row.label" class="flex flex-wrap gap-x-2">
-            <dt class="text-toned">{{ row.label }}</dt>
-            <dd class="font-mono text-default">{{ row.value }}</dd>
-          </div>
-        </dl>
+        <TerminalFacts
+          v-if="factRows(v.facts).length"
+          layout="list"
+          :items="
+            factRows(v.facts).map((row) => ({
+              key: row.label,
+              label: row.label,
+              value: row.value,
+              mono: true,
+            }))
+          "
+        />
 
-        <p class="text-xs text-toned">
-          Detected <time :datetime="v.detected_at">{{ absoluteStamp(v.detected_at) }}</time
-          >, rated <time :datetime="v.judged_at">{{ absoluteStamp(v.judged_at) }}</time
-          >. Source:
-          <TerminalProvenanceTag :source-url="v.source_url" :fetched-at="v.fetched_at" />
-        </p>
-      </li>
-    </ul>
+        <template #foot>
+          <span>
+            Detected <time :datetime="v.detected_at">{{ absoluteStamp(v.detected_at) }}</time
+            >, rated <time :datetime="v.judged_at">{{ absoluteStamp(v.judged_at) }}</time>
+          </span>
+        </template>
+      </TerminalCard>
+    </div>
   </div>
 </template>
