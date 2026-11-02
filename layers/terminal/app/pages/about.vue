@@ -138,6 +138,12 @@ useSeo({
           <span class="text-muted"> — every table as CSV or JSON.</span>
         </li>
         <li>
+          <NuxtLink to="/contact" class="text-primary underline underline-offset-2"
+            >Commercial licensing</NuxtLink
+          >
+          <span class="text-muted"> — your own terms, a dependable feed, custom coverage.</span>
+        </li>
+        <li>
           <NuxtLink to="/alerts.xml" external class="text-primary underline underline-offset-2">
             Atom feed
           </NuxtLink>
