@@ -4,44 +4,50 @@
 
 import { compactTokens, sharePct } from '#shared/utils/terminal-format'
 import type { ProviderTopModels } from '#shared/utils/terminal-types'
+import type { TableColumn } from '~/types/terminal-ui'
 
 defineProps<{ providers: ProviderTopModels[] }>()
+
+const COLUMNS: TableColumn[] = [
+  { key: 'model_permaslug', label: 'Model', class: 'max-w-64 truncate' },
+  { key: 'tokens', label: 'Tokens', numeric: true },
+  { key: 'share', label: 'Of lab', numeric: true, class: 'text-muted' },
+]
 </script>
 
 <template>
-  <div class="grid gap-4 md:grid-cols-2">
-    <article
+  <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+    <TerminalCard
       v-for="p in providers"
+      :id="`top-${p.provider}`"
       :key="p.provider"
-      :aria-labelledby="`top-${p.provider}`"
-      class="space-y-3 rounded border border-default bg-elevated p-4"
+      :title="p.display"
+      :sources="p.models[0] ? [p.models[0]] : []"
     >
-      <h3 :id="`top-${p.provider}`" class="text-lg text-highlighted">{{ p.display }}</h3>
-      <TerminalEmptyState
+      <TerminalGap
         v-if="p.models.length === 0"
+        inline
         title="No ranked models in the window."
-        body="None placed in OpenRouter’s daily top 50 on these days."
+        reason="None placed in OpenRouter’s daily top 50 on these days."
       />
-      <ol v-else class="space-y-1">
-        <li
-          v-for="m in p.models"
-          :key="m.model_permaslug"
-          class="grid grid-cols-[1fr_auto_auto] items-baseline gap-3 text-xs"
-        >
-          <span class="truncate font-mono text-default" :title="m.model_permaslug">
-            {{ m.model_permaslug }}
-          </span>
-          <span class="font-mono text-highlighted">{{ compactTokens(m.tokens) }}</span>
-          <span class="font-mono text-toned" title="share of this lab’s window tokens">
-            {{ sharePct(m.share_of_provider) }}
-          </span>
-        </li>
-      </ol>
-      <TerminalProvenanceTag
-        v-if="p.models[0]"
-        :source-url="p.models[0].source_url"
-        :fetched-at="p.models[0].fetched_at"
-      />
-    </article>
+      <TerminalTable
+        v-else
+        :caption="`${p.display} most-routed models, tokens and share of the lab’s own total`"
+        :columns="COLUMNS"
+        :rows="p.models"
+        :row-key="(m) => m.model_permaslug"
+        nested
+      >
+        <template #cell-model_permaslug="{ row: m }">
+          <span class="font-mono text-default" :title="m.model_permaslug">{{
+            m.model_permaslug
+          }}</span>
+        </template>
+        <template #cell-tokens="{ row: m }">
+          <span class="text-highlighted">{{ compactTokens(m.tokens) }}</span>
+        </template>
+        <template #cell-share="{ row: m }">{{ sharePct(m.share_of_provider) }}</template>
+      </TerminalTable>
+    </TerminalCard>
   </div>
 </template>
