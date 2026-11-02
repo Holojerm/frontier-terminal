@@ -55,7 +55,10 @@
   "secrets": [
     "NUXT_SEC_CONTACT_EMAIL",
     "NUXT_JUDGE_TOKEN",
-    "NUXT_OPENROUTER_API_KEY"
+    "NUXT_OPENROUTER_API_KEY",
+    "NUXT_SOCIAL_BUFFER_API_KEY",
+    "NUXT_SOCIAL_CHANNEL_X",
+    "NUXT_SOCIAL_ENABLED"
   ],
   "links": {
     "github": "https://github.com/Holojerm/frontier-terminal"
