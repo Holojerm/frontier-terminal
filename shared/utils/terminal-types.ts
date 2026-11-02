@@ -173,6 +173,12 @@ export interface PriceRowView extends Prov {
   model_slug: string
   tier: string | null
   context_window: string | null
+  /**
+   * Set when context_window is not printed by the row's own source: the
+   * stored row of the same model it was read from (a Google model page
+   * prints the window its pricing page omits, for every tier).
+   */
+  context_window_source: (Prov & { source_id: string }) | null
   input_per_mtok: number | null
   cached_input_per_mtok: number | null
   output_per_mtok: number | null
