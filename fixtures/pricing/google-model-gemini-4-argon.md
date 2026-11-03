@@ -1,22 +1,226 @@
-<br />
+> ## AI Agent Context
+> Get the complete documentation index at: https://aistudio.google.com/llms.txt
+> Use this file to discover all available pages.
+> For the full documentation in a single file, fetch: https://aistudio.google.com/llms-full.txt
+
+# Gemini 4 Argon
 
 Gemini 4 Argon (`gemini-4-argon`) is our flagship reasoning model, built for complex software engineering, deep mathematical and scientific problem solving, autonomous multi-step agents, and long decode up to 1M tokens.
-[Try in Google AI Studio](https://aistudio.google.com/prompts/new_chat?model=gemini-4-argon)
 
-## Documentation
+{% button href="https://aistudio.google.com/prompts/new_chat?model=gemini-4-argon" variant="ais" %}Try in Google AI Studio{% /button %}
 
-Visit the [Latest model](https://ai.google.dev/gemini-api/docs/latest-model) page for full coverage of features, API changes, and migration guidance.
+## Documentation  {% id="documentation" %}
 
-## gemini-4-argon
+Visit the [Latest model](/docs/latest-model) page for full coverage of features, API changes, and migration guidance.
 
-| Property | Description |
-|---|---|
-| Model code | `gemini-4-argon` |
-| Supported data types | **Inputs** Text, Image, Video, Audio, and PDF **Output** Text |
-| Token limits^[\[\*\]](https://ai.google.dev/gemini-api/docs/tokens)^ | **Context window (unified input and output token limit)** 1,048,576 **Max output** 65,536 (default synchronous) / up to 1,048,576 (with [long decode](https://ai.google.dev/gemini-api/docs/long-decode)) |
-| Capabilities | **[Agentic video understanding](https://ai.google.dev/gemini-api/docs/video-understanding#agentic-video-understanding)** Supported (defaults to `static`) **[Audio generation](https://ai.google.dev/gemini-api/docs/speech-generation)** Not supported **[Caching](https://ai.google.dev/gemini-api/docs/caching)** Supported (Implicit only) Note: Explicit caching is not supported. **[Code execution](https://ai.google.dev/gemini-api/docs/code-execution)** Supported **[Computer use](https://ai.google.dev/gemini-api/docs/computer-use)** Supported **[File search](https://ai.google.dev/gemini-api/docs/file-search)** Supported **[Function calling](https://ai.google.dev/gemini-api/docs/function-calling)** Supported **[Grounding with Google Maps](https://ai.google.dev/gemini-api/docs/maps-grounding)** Supported **[Image generation](https://ai.google.dev/gemini-api/docs/image-generation)** Not supported **[Live API](https://ai.google.dev/gemini-api/docs/live-api)** Not supported **[Search grounding](https://ai.google.dev/gemini-api/docs/google-search)** Supported **[Structured outputs](https://ai.google.dev/gemini-api/docs/structured-output)** Supported **[Thinking](https://ai.google.dev/gemini-api/docs/thinking)** Supported (low, medium, high) **[URL context](https://ai.google.dev/gemini-api/docs/url-context)** Supported |
-| Consumption options | **[Batch API](https://ai.google.dev/gemini-api/docs/batch-api)** Supported **[Flex inference](https://ai.google.dev/gemini-api/docs/flex-inference)** Supported **[Priority inference](https://ai.google.dev/gemini-api/docs/priority-inference)** Supported |
-| Versions | Read the [model version patterns](https://ai.google.dev/gemini-api/docs/models#model-versions) for more details. - Stable: `gemini-4-argon` |
-| Latest update | October 2026 |
-| Model card | [Model card](https://deepmind.google/models/model-cards/gemini-4-argon/) |
-| Pricing | [Pricing](https://ai.google.dev/gemini-api/docs/pricing#gemini-4-argon) |
+## gemini-4-argon  {% id="gemini-4-argon" %}
+
+{% table variant="model" %}
+  * Property
+  * Description
+
+  ---
+
+  *     {% section class="model-property" %}
+  {% icon name="id_card" /%}Model code
+
+    {% /section %}
+
+  * `gemini-4-argon`
+
+  ---
+
+  *     {% section class="model-property" %}
+  {% icon name="save" /%}Supported data types
+
+    {% /section %}
+
+  *     **Inputs** Text, Image, Video, Audio, and PDF
+
+    **Output** Text
+
+
+  ---
+
+  *     {% section class="model-property" %}
+  {% icon name="token_auto" /%}Token limits{% sup %}[[*]](/docs/tokens){% /sup %}
+
+    {% /section %}
+
+  *     **Context window (unified input and output token limit)** 1,048,576
+
+    **Max output** 65,536 (default synchronous) / up to 1,048,576 (with [long decode](/docs/long-decode))
+
+
+  ---
+
+  *     {% section class="model-property" %}
+  {% icon name="handyman" /%}Capabilities
+
+    {% /section %}
+
+  *     {% section class="three-column-grid" %}
+  {% section %}
+  **Agentic video understanding**
+
+  {% badge label=Supported (defaults to static) type="supported" /%}
+
+  {% /section %}
+
+  {% section %}
+  **Audio generation**
+
+  {% badge type="not-supported" /%}
+
+  {% /section %}
+
+  {% section %}
+  **Batch API**
+
+  {% badge type="supported" /%}
+
+  {% /section %}
+
+  {% section %}
+  **Caching**
+
+  {% badge label=Supported (Implicit only) type="supported" /%}
+
+  Note: Explicit caching is not supported.
+
+  {% /section %}
+
+  {% section %}
+  **Code execution**
+
+  {% badge type="supported" /%}
+
+  {% /section %}
+
+  {% section %}
+  **Computer use**
+
+  {% badge type="supported" /%}
+
+  {% /section %}
+
+  {% section %}
+  **File search**
+
+  {% badge type="supported" /%}
+
+  {% /section %}
+
+  {% section %}
+  **Flex inference**
+
+  {% badge type="supported" /%}
+
+  {% /section %}
+
+  {% section %}
+  **Function calling**
+
+  {% badge type="supported" /%}
+
+  {% /section %}
+
+  {% section %}
+  **Grounding with Google Maps**
+
+  {% badge type="supported" /%}
+
+  {% /section %}
+
+  {% section %}
+  **Image generation**
+
+  {% badge type="not-supported" /%}
+
+  {% /section %}
+
+  {% section %}
+  **Live API**
+
+  {% badge type="not-supported" /%}
+
+  {% /section %}
+
+  {% section %}
+  **Priority inference**
+
+  {% badge type="supported" /%}
+
+  {% /section %}
+
+  {% section %}
+  **Search grounding**
+
+  {% badge type="supported" /%}
+
+  {% /section %}
+
+  {% section %}
+  **Structured outputs**
+
+  {% badge type="supported" /%}
+
+  {% /section %}
+
+  {% section %}
+  **Thinking**
+
+  {% badge label=Supported (low, medium, high) type="supported" /%}
+
+  {% /section %}
+
+  {% section %}
+  **URL context**
+
+  {% badge type="supported" /%}
+
+  {% /section %}
+
+    {% /section %}
+
+
+  ---
+
+  *     {% section class="model-property" %}
+  {% icon name="123" /%}Versions
+
+    {% /section %}
+
+  *     Read the [model version patterns](/docs/models#model-versions) for more details.
+
+    *   Stable: `gemini-4-argon`
+
+
+  ---
+
+  *     {% section class="model-property" %}
+  {% icon name="calendar_month" /%}Latest update
+
+    {% /section %}
+
+  * October 2026
+
+  ---
+
+  *     {% section class="model-property" %}
+  {% icon name="id_card" /%}Model card
+
+    {% /section %}
+
+  * [Model card](https://deepmind.google/models/model-cards/gemini-4-argon/)
+
+  ---
+
+  *     {% section class="model-property" %}
+  {% icon name="paid" /%}Pricing
+
+    {% /section %}
+
+  * [Pricing](/docs/pricing#gemini-4-argon)
+{% /table %}
+

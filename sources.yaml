@@ -106,19 +106,20 @@ sources:
   google-models-md:
     axis: pricing-catalog
     provider: google
-    url: https://ai.google.dev/gemini-api/docs/models.md.txt
-    format: Markdown (model cards + endpoint tables)
+    url: https://aistudio.google.com/docs/models.md
+    format: Markdoc (model cards + endpoint tables)
     diff_mechanism: recommendation rows (class-map sentences present / absent)
     verdict: include — class-map basis only
     fixture: fixtures/pricing/google-models.md
     caveats: >-
-      Did not exist at the 2026-08-25 audit; live-checked 2026-11-01 as
-      real markdown (text/markdown) at the .md.txt suffix — the bare .md
-      suffix is still a JS shell. Read only for the vendor sentences the
-      class map quotes; prices and the catalog come from
-      google-pricing-html. Each model card is one markdown link wrapping
-      heading and description, so a sentence sits under its model's name
-      but does not repeat it.
+      Did not exist at the 2026-08-25 audit. Until 2026-11-03 this was
+      ai.google.dev/gemini-api/docs/models.md.txt; that URL now 301s to
+      aistudio.google.com/docs/models.md.txt, which 404s, and the same page
+      is served as Markdoc at the .md suffix, as google-pricing-html was
+      the day before. Read only for the vendor sentences the class map
+      quotes; prices and the catalog come from google-pricing-html. Each
+      model card is a `{% card %}` tag whose description attribute is the
+      sentence, beside a title attribute naming the model.
 
   meta-models-md:
     axis: pricing-catalog
@@ -672,12 +673,13 @@ derived_sources:
       page's own "Model ID" must equal the slug it was derived for, or the
       source fails rather than storing a page under the wrong SKU.
   google-model-md:
-    url: https://ai.google.dev/gemini-api/docs/models/{slug}.md.txt
+    url: https://aistudio.google.com/docs/models/{slug}.md
     from: google-priced-model
     caveats: >-
       One page per priced Standard-tier SKU on google-pricing-html (about
-      30), served as text/markdown at the .md.txt suffix like
-      google-models-md. Each carries the context window the pricing page
+      30), served as Markdoc at AI Studio's .md suffix like
+      google-models-md (until 2026-11-03, markdown at ai.google.dev's
+      .md.txt suffix, which now 404s). Each carries the context window the pricing page
       omits, in a "Token limits" row printed either as an input token limit
       or, on newer cards, as a unified input-and-output context window; the
       first number is stored as printed and the whole cell, with the max
@@ -759,7 +761,9 @@ recipe_sources:
     caveats: >-
       Names and on-demand prices are separate lists matched by position;
       the extractor checks the header reads "GPU model On-demand Current
-      spot" and that the two lists are the same length. B200 is "Contact
+      spot" or, from 2026-11-03, "GPU model Current on-demand New on-demand
+      starting <date>" (a scheduled change: Dec 1, 2026), reads only the
+      first price column, and checks the two lists are the same length. B200 is "Contact
       sales" on demand, so Crusoe has no B200 price. The self-serve
       deployments table lower on the page prices dedicated inference
       endpoints and is skipped.

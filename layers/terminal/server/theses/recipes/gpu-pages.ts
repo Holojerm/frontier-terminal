@@ -112,12 +112,19 @@ export function nebiusRows(body: string): GpuRow[] {
 
 /**
  * Crusoe: "GPU instances pricing" lays out a column of GPU names and one
- * column of prices per header (On-demand, Current spot), matched by position.
+ * column of prices per header, matched by position. The first price column is
+ * today's on-demand price under either header the page has used: "On-demand,
+ * Current spot" (until 2026-11-03) or "Current on-demand, New on-demand
+ * starting <date>" (a scheduled price change, announced 2026-11-03). Only the
+ * first column is read; a price that has not taken effect is not a price.
  */
+const CRUSOE_HEADER =
+  /GPU model (?:On-demand Current spot|Current on-demand New on-demand starting [A-Z][a-z]+ \d{1,2}, \d{4})$/
+
 export function crusoeRows(body: string): GpuRow[] {
   const gpus = section(contentOf(body), 'GPU instances pricing', 'CPU instances pricing')
   const header = cellText(gpus.slice(0, gpus.indexOf('data-sort-name')))
-  if (!/GPU model On-demand Current spot$/.test(header)) {
+  if (!CRUSOE_HEADER.test(header)) {
     throw new Error(`GPU instances header reads "${header.slice(-60)}"`)
   }
   const names = [...gpus.matchAll(/data-sort-name="([^"]+)"[\s\S]*?pricing-tag[^>]*>([^<]*)</g)]

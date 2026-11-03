@@ -122,7 +122,7 @@ describe('derived_sources', () => {
     ])
     expect(templates[7]!.url).toBe('https://alignment.openai.com/misalignment-reports/{slug}/')
     expect(templates[7]!.caveat).toContain('Discovery / Discovered / Discovery date')
-    expect(templates[6]!.url).toBe('https://ai.google.dev/gemini-api/docs/models/{slug}.md.txt')
+    expect(templates[6]!.url).toBe('https://aistudio.google.com/docs/models/{slug}.md')
     expect(templates[6]!.caveat).toContain('reads as absent')
     expect(templates[5]!.url).toBe('https://developers.openai.com/api/docs/models/{slug}.md')
     expect(templates[5]!.caveat).toContain('must equal the slug')
@@ -171,8 +171,8 @@ describe('the Google model page parser', () => {
         effective_until: null,
         notes:
           'Context window (unified input and output token limit) 1,048,576 Max output 65,536 (default synchronous) / up to 1,048,576 (with long decode)',
-        source_url: 'https://ai.google.dev/gemini-api/docs/models/gemini-4-argon.md.txt',
-        fetched_at: '2026-11-02T02:54:53Z',
+        source_url: 'https://aistudio.google.com/docs/models/gemini-4-argon.md',
+        fetched_at: '2026-11-03T16:24:36Z',
       },
     ])
   })
@@ -207,6 +207,53 @@ describe('the Google model page parser', () => {
       'model page is for gemini-robotics-er-2-preview, gemini-robotics-er-2-streaming-preview, derived for gemini-2.5-pro',
     )
     expect(() => parseGoogleModelPage('# Nothing\n', 'gemini-2.5-pro')).toThrow('Model code')
+  })
+
+  // Excerpt of the live AI Studio gemini-robotics-er-2-preview page
+  // (2026-11-03): the Markdoc rendering, a bare `{% table %}` per model, and
+  // the footnote as a plain link rather than inside `{% sup %}`.
+  const markdocCard = (code: string, input: string) =>
+    [
+      '  {% table %}',
+      '  * Property',
+      '  * Description',
+      '',
+      '  ---',
+      '',
+      '  *   {% section class="model-property" %}',
+      '  {% icon name="id_card" /%}Model code',
+      '',
+      '  {% /section %}',
+      '',
+      `  * \`${code}\``,
+      '',
+      '  ---',
+      '',
+      '  *   {% section class="model-property" %}',
+      '  {% icon name="token_auto" /%}Token limits[[*]](/docs/tokens)',
+      '',
+      '  {% /section %}',
+      '',
+      `  *   **Input token limit** ${input}`,
+      '',
+      '  **Output token limit** 65,536',
+      '',
+      '  {% /table %}',
+      '',
+    ].join('\n')
+  const roboticsMarkdoc =
+    markdocCard('gemini-robotics-er-2-preview', '131,072') +
+    markdocCard('gemini-robotics-er-1.6-preview', '32,768')
+
+  it('reads the Markdoc rendering the same way, table by model code', () => {
+    const [row] = parseGoogleModelPage(roboticsMarkdoc, 'gemini-robotics-er-1.6-preview').rows
+    expect(row).toMatchObject({
+      context_window: '32,768',
+      notes: 'Input token limit 32,768 Output token limit 65,536',
+    })
+    expect(() => parseGoogleModelPage(roboticsMarkdoc, 'gemini-2.5-pro')).toThrow(
+      'model page is for gemini-robotics-er-2-preview, gemini-robotics-er-1.6-preview, derived for gemini-2.5-pro',
+    )
   })
 
   it('a card without a token-limits row stores no window rather than guessing one', () => {
@@ -275,10 +322,11 @@ function fetcher(overrides: Record<string, string | FetchOutcome> = {}): SourceF
     if (override !== undefined && typeof override !== 'string') return override
     let text = override ?? byUrl.get(source.url)
     // Every other derived model page: the sol (or argon) page with its id rewritten.
+    // Both vendors end in /models/<slug>.md, so Google's host is matched first.
+    const g = source.url.match(/^https:\/\/aistudio\.google\.com\/docs\/models\/([^/]+)\.md$/)
+    if (text === undefined && g) text = googlePage.replaceAll('gemini-4-argon', g[1]!)
     const m = source.url.match(/\/models\/([^/]+)\.md$/)
     if (text === undefined && m) text = modelPage.replaceAll('gpt-5.6-sol', m[1]!)
-    const g = source.url.match(/\/gemini-api\/docs\/models\/([^/]+)\.md\.txt$/)
-    if (text === undefined && g) text = googlePage.replaceAll('gemini-4-argon', g[1]!)
     if (text === undefined) return { ok: false, status: 404, detail: 'HTTP 404' }
     return { ok: true, status: 200, text, bytes: text.length }
   }
@@ -545,7 +593,7 @@ describe('Google model pages end to end', () => {
     expect(report.sources.map((s) => [s.source_id, s.status])).toEqual([[pro, 'baseline']])
 
     const prices = await queryPrices(db, await ctx())
-    const url = 'https://ai.google.dev/gemini-api/docs/models/gemini-2.5-pro.md.txt'
+    const url = 'https://aistudio.google.com/docs/models/gemini-2.5-pro.md'
     const standard = prices.rows.find(
       (r) => r.entity_key === 'model:google:gemini-2.5-pro:standard',
     )!
