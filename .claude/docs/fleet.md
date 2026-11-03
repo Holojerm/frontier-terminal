@@ -32,7 +32,9 @@ Three pieces:
   digest email every 30 minutes via the `[[send_email]] ALERT_EMAIL` binding.
   Unconfigured = one `ops_alert_unconfigured` log line per tick and nothing
   sent, but the retention sweep (`pruneOpsEvents()`) still runs. Rows are marked notified only after the send resolves, so a mail
-  hiccup retries instead of losing the alert. Always `await` the record call:
+  hiccup retries instead of losing the alert. Before draining, the same tick runs
+  the watchdogs that spool their own events. One is `deploy_drift`: production's
+  `build.sha` is behind main's head on GitHub for a full tick, meaning a merge never deployed. Always `await` the record call:
   a 5xx is exactly the path that ends the request before a floated promise runs.
 
 ## Social posting (layers/social)

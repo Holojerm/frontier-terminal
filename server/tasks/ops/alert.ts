@@ -19,6 +19,7 @@ import { kv } from '@nuxthub/kv'
 import { FleetManifestSchema } from '#shared/utils/fleet-manifest'
 
 import rawManifest from '../../../fleet.json'
+import { checkDeployDrift, fetchMainHead } from '#layers/terminal/server/pipeline/deploy-watch'
 import { checkJudgeSilence } from '#layers/terminal/server/pipeline/judge/watchdog'
 import { checkLaunchCoverage } from '#layers/terminal/server/pipeline/launch-watch'
 import { unstorageLockStore } from '#layers/terminal/server/pipeline/lock'
@@ -47,6 +48,15 @@ export default defineTask({
     if (launch.stale_cells.length || launch.unalerted.length) {
       console.warn(JSON.stringify({ kind: 'launch_gap', ...launch }))
     }
+    // And a merge whose deploy never landed: this build's sha against main's head.
+    const head = manifest.links?.github ? await fetchMainHead(manifest.links.github) : null
+    const drift = await checkDeployDrift(
+      db,
+      unstorageLockStore(kv),
+      useRuntimeConfig().buildSha,
+      head,
+    )
+    if (drift.verdict === 'drift') console.warn(JSON.stringify({ kind: 'deploy_drift', ...drift }))
 
     const env = (context as CloudflareTaskContext | undefined)?.cloudflare?.env
     const mailer = getOpsMailer(env)

@@ -194,6 +194,14 @@ move every time the branch did. `bun dev:app` bypasses the proxy entirely.
 
 CI/CD runs on Cloudflare Workers Builds (repo connected in the dashboard under Worker → Settings → Build). The Worker's name in the dashboard must exactly match `name` in the root `wrangler.toml`, or every build fails before it starts. Build settings live in the dashboard, not in the repo: build command `bun run ci`, deploy command `bunx wrangler --cwd .output deploy`.
 
+**A build that fails to start is not retried.** "Build failed to initialize and was timed out" means the build environment never came up, and Workers Builds leaves production on the previous commit. The ops digest reports it as `deploy_drift` (`layers/terminal/server/pipeline/deploy-watch.ts`) once main has been ahead of `/api/status` → `build.sha` for one tick. To retry without an empty commit, start a build on the `main` trigger with the **full** sha. A short sha fails at clone with "error occurred while fetching repository":
+
+```bash
+cf builds triggers list --external-script-id "$(cf workers scripts search --name frontier-terminal | jq -r '.[0].id')"
+cf builds create <main-trigger-uuid> --body "{\"branch\":\"main\",\"commit_hash\":\"$(git rev-parse origin/main)\"}"
+cf builds logs get <build-uuid>
+```
+
 ## The browser suites run in GitHub Actions, NOT in `bun run ci`
 
 They used to be in `ci`. They were moved on 2026-08-22, because Workers Builds
