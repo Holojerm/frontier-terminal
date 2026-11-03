@@ -161,14 +161,16 @@ export const MODEL_CLASS_MAP: ClassEntry[] = [
       'high-volume, latency-sensitive, or cost-sensitive work, such as sub-agent tasks, classification, and tight tool loops.',
     basis_source_id: 'meta-models-md',
   },
-  // Transcribed 2026-11-01, when Google's models page first served markdown.
+  // Transcribed 2026-11-01, when Google's models page first served markdown;
+  // the flagship sentence re-transcribed 2026-11-03, when the page moved to
+  // AI Studio and its card read "shared" where it had read "unified".
   // Each sentence is the description on that model's own card.
   {
     provider: 'google',
     class: 'flagship',
     model_slug: 'gemini-4-argon',
     basis:
-      'Our flagship reasoning model with a unified 1M context window and long decodes up to 1M tokens.',
+      'Our flagship reasoning model with a shared 1M context window and long decodes up to 1M tokens.',
     basis_source_id: 'google-models-md',
   },
   {
