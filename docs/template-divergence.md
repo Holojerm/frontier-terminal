@@ -15,7 +15,6 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 - `app/types/auth.d.ts` — session type augmentation; no accounts (fleet.json features.auth is false)
 - `app/utils/` — helpers for the removed account, admin, checkout, pricing and changelog pages
 - `server/api/account/` — account endpoints (export, notifications, sessions); no accounts (fleet.json features.auth is false)
-- `server/api/account.delete.ts` — account deletion; no accounts (fleet.json features.auth is false)
 - `server/api/auth/` — sign-in endpoints (OAuth, magic link, logout); no accounts (fleet.json features.auth is false)
 - `server/utils/account-email.ts` — account emails; no accounts (fleet.json features.auth is false)
 - `server/utils/account.ts` — account deletion and export; no accounts (fleet.json features.auth is false)
@@ -35,46 +34,31 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 
 - `app/pages/admin/` — admin console; no accounts to administer
 - `server/api/admin/` — admin endpoints; no accounts to administer
-- `server/utils/admin-grants.ts` — comped-access grants; no accounts
 - `server/utils/admin.ts` — admin gate; no accounts
 - `server/utils/audit.ts` — append-only audit trail of privileged actions; no accounts
-- `shared/utils/comps.ts` — comped-access rules; no accounts
 
 ## Removed: billing and entitlements
 
-- `app/components/Billing/` — past-due banners; no billing (fleet.json features.billing is false)
-- `app/pages/pricing.vue` — pricing page; no billing (fleet.json features.billing is false)
-- `server/api/billing/` — entitlement and portal endpoints; no billing (fleet.json features.billing is false)
-- `server/routes/paddle/` — Paddle webhook; no billing (fleet.json features.billing is false)
-- `server/utils/billing-notifications.ts` — billing emails; no billing (fleet.json features.billing is false)
-- `server/utils/billing-state.ts` — subscription state machine; no billing (fleet.json features.billing is false)
-- `server/utils/billing.ts` — billing helpers; no billing (fleet.json features.billing is false)
-- `server/utils/entitlement-view.ts` — entitlement view; no billing (fleet.json features.billing is false)
-- `server/utils/entitlements.ts` — entitlements table helpers; no billing (fleet.json features.billing is false)
-- `server/utils/paddle-api.ts` — Paddle API client; no billing (fleet.json features.billing is false)
-- `server/utils/paddle-prices.ts` — Paddle price lookups; no billing (fleet.json features.billing is false)
-- `server/utils/paddle-refs.ts` — Paddle id mapping; no billing (fleet.json features.billing is false)
-- `server/utils/paddle.ts` — Paddle webhook verification; no billing (fleet.json features.billing is false)
-- `app/composables/useEntitlement.ts` — entitlement composable; no billing (fleet.json features.billing is false)
-- `app/composables/usePaddle.ts` — Paddle.js loader; no billing (fleet.json features.billing is false)
 - `server/utils/sql.ts` — SQL fragments shared by the entitlement code; no billing (fleet.json features.billing is false)
+- `server/utils/access-gate.ts` — the seam billing registers its paid-access check through; no billing (fleet.json features.billing is false) and no gated pages
+- `server/utils/billing-outcome.ts` — the seam billing's webhook calls after an event; no billing (fleet.json features.billing is false)
+- `server/utils/earned-access.ts` — the seam referral rewards grant access through; no billing or referrals
+- `server/utils/entitlement-view-fields.ts` — the seam features add fields to the billing view through; no billing (fleet.json features.billing is false)
 
 ## Removed: onboarding, referrals and lifecycle email
 
 - `app/components/Onboarding/` — onboarding checklist; nothing to onboard
-- `app/components/Referral/` — referral share card; no accounts (fleet.json features.auth is false)
 - `server/api/onboarding.get.ts` — onboarding state; no accounts (fleet.json features.auth is false)
 - `server/api/onboarding/` — onboarding activation; no accounts (fleet.json features.auth is false)
-- `server/api/referral/` — referral endpoint; no accounts (fleet.json features.auth is false)
 - `server/utils/onboarding.ts` — onboarding signals; no accounts (fleet.json features.auth is false)
-- `server/utils/referral.ts` — referral codes and rewards; no accounts (fleet.json features.auth is false)
 - `server/utils/lifecycle-emails.ts` — lifecycle email bodies; no customers to email
 - `server/utils/lifecycle-steps.ts` — lifecycle email schedule; no customers to email
 - `server/utils/lifecycle.ts` — lifecycle email sender; no customers to email
 - `server/tasks/lifecycle-email.ts` — lifecycle email cron; no customers to email
 - `shared/utils/onboarding-steps.ts` — onboarding step list; no accounts (fleet.json features.auth is false)
 - `shared/utils/onboarding.ts` — onboarding rules; no accounts (fleet.json features.auth is false)
-- `shared/utils/referral.ts` — referral rules; no accounts (fleet.json features.auth is false)
+- `shared/utils/referral-code.ts` — referral code alphabet and shape, read by attribution.ts; no accounts (fleet.json features.auth is false)
+- `server/utils/signup-contributors.ts` — the seam features add columns and welcome grants to a new account through; no accounts (fleet.json features.auth is false)
 
 ## Removed: customer email and notifications
 
@@ -94,6 +78,8 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 - `app/plugins/posthog.client.ts` — PostHog client; fleet.json features.posthog is null
 - `server/routes/ingest/` — PostHog reverse proxy; fleet.json features.posthog is null
 - `server/utils/posthog.ts` — PostHog server client; fleet.json features.posthog is null
+- `server/utils/ingest-headers.ts` — header allowlist for the PostHog relay; fleet.json features.posthog is null
+- `server/utils/ingest-relay.ts` — the PostHog relay's forwarding and optional rate limit; fleet.json features.posthog is null
 - `app/composables/useFlag.ts` — PostHog feature flags; fleet.json features.posthog is null
 - `app/composables/useFragmentParams.ts` — reads credentials from the URL fragment of sign-in and unsubscribe links; no accounts (fleet.json features.auth is false)
 - `shared/utils/attribution.ts` — signup attribution shapes; no signups
@@ -129,8 +115,18 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 - `server/routes/llms.txt.get.ts` — no blog; a static map (no D1) that adds the data tables, the MCP endpoint and the licence block, shared with the MCP describe tool via crawler-pages.ts
 - `server/routes/sitemap.xml.get.ts` — no blog; dates each data page from its newest change row (dataLastmods) and lists the layer's static lab, compare and thesis pages
 - `server/tasks/ops/alert.ts` — runs the judge-silence and launch-coverage watchdogs before the mailer check (upstream candidate: an ops-check registry)
-- `server/utils/extensions.ts` — trimmed to the fleet extra-counter registry; account, admin, onboarding and purge contributors belong to the removed subsystems
+- `server/utils/extensions.ts` — trimmed to the fleet extra-counter registry; account, admin, onboarding and purge contributors, and the deletion guard and resolver, view-as, funnel-stage, lifecycle-step, access-gate, billing-outcome, earned-access, entitlement-view and signup registries, belong to the removed subsystems
 - `server/utils/fleet-status.ts` — no users, entitlements or funnel counters; adds collectStatus() and latestFetchBySource() for the public status payload
 - `server/utils/seo.ts` — adds per-page lastmods, the data-tables and licence blocks of llms.txt; no blog, support or legal-entity lines
 - `shared/utils/schema.ts` — Dataset, DataCatalog and lab Organization nodes in place of Offer, SoftwareApplication and BlogPosting
 - `shared/utils/site.ts` — adds canonicalRedirect() (workers.dev to the custom domain) and strips characters XML 1.0 cannot carry in escapeXml (upstream candidate: the XML stripping)
+
+## Layers
+
+Vendored: `social` (pinned in `layers.lock.json`). Fork-owned, never in the lock: `terminal`.
+
+Left out on purpose, so the absence is a decision and not a gap:
+
+- `billing`, `referral`: no payments or accounts. Their core seams are not carried either (see the billing and onboarding sections above).
+- `feedback`: there are no accounts to attribute a message to. `/contact`, shipped by the `terminal` layer, is the channel.
+- `files`: the site takes no uploads.

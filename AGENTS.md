@@ -234,6 +234,7 @@ bun run mirror:check  # Fail when a comment or doc names a file, symbol, or vari
 bun run seo:check     # Fail on pages that bypass useSeo() or aren't declared public/noindex
 bun run fleet:check   # Fail when fleet.json stops matching wrangler.toml (names, binding ids, crons)
 bun run crons:check   # Fail when [triggers] crons and nitro.scheduledTasks disagree, or a task has no file
+bun run methods:check # Fail when a GET/HEAD/DELETE route reads a request body (a Workers handler never receives one)
 bun run test:a11y     # Playwright/Chromium browser suites: axe over every public route
                       # (light + dark) AND the Content-Security-Policy spec (test/csp/)
 bun typecheck         # TypeScript type checking
