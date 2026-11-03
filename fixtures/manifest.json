@@ -70,22 +70,22 @@
     {
       "path": "fixtures/pricing/google-models.md",
       "source_id": "google-models-md",
-      "source_url": "https://ai.google.dev/gemini-api/docs/models.md.txt",
-      "fetched_at": "2026-11-01T22:17:25Z",
+      "source_url": "https://aistudio.google.com/docs/models.md",
+      "fetched_at": "2026-11-03T16:24:35Z",
       "http_status": 200,
-      "raw_bytes": 20894,
+      "raw_bytes": 22093,
       "trim": "none — committed whole",
-      "note": "Not in the audit: the docs origin serves the models page as text/markdown at the .md.txt suffix (the .md suffix is a JS shell). The source of Google's class-map sentences; no prices are parsed from it."
+      "note": "Not in the audit: the models page as Markdoc at AI Studio's .md suffix. Replaces the 2026-11-01 capture of ai.google.dev/gemini-api/docs/models.md.txt, which 301s to aistudio.google.com/docs/models.md.txt and 404s from 2026-11-03. The source of Google's class-map sentences, each a card's description attribute; no prices are parsed from it."
     },
     {
       "path": "fixtures/pricing/google-model-gemini-4-argon.md",
       "source_id": "google-model-md-gemini-4-argon",
-      "source_url": "https://ai.google.dev/gemini-api/docs/models/gemini-4-argon.md.txt",
-      "fetched_at": "2026-11-02T02:54:53Z",
+      "source_url": "https://aistudio.google.com/docs/models/gemini-4-argon.md",
+      "fetched_at": "2026-11-03T16:24:36Z",
       "http_status": 200,
-      "raw_bytes": 2935,
+      "raw_bytes": 4153,
       "trim": "none — committed whole",
-      "note": "One representative per-model page for the derived google-model-md-<slug> sources (server/pipeline/derived.ts): the determinism gate runs the shared parser on this page. Carries the context window the pricing page omits (1,048,576) and the max output, in the newer 'Context window (unified input and output token limit)' wording; most cards print 'Input token limit' / 'Output token limit' instead."
+      "note": "One representative per-model page for the derived google-model-md-<slug> sources (server/pipeline/derived.ts): the determinism gate runs the shared parser on this page. Carries the context window the pricing page omits (1,048,576) and the max output, in the newer 'Context window (unified input and output token limit)' wording; most cards print 'Input token limit' / 'Output token limit' instead. Markdoc since 2026-11-03, when the ai.google.dev .md.txt export began to 404."
     },
     {
       "path": "fixtures/pricing/meta-models.md",
@@ -433,9 +433,9 @@
       "path": "fixtures/recipes/gpu-crusoe.html",
       "source_id": "gpu-crusoe",
       "source_url": "https://www.crusoe.ai/cloud/pricing",
-      "fetched_at": "2026-11-02T03:55:07Z",
+      "fetched_at": "2026-11-03T16:25:33Z",
       "http_status": 200,
-      "raw_bytes": 319873,
+      "raw_bytes": 317450,
       "trim": "script, style, svg and noscript blocks removed; the extractor drops the same blocks before reading, so it reads the trimmed and the live page alike"
     },
     {

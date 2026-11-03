@@ -16,6 +16,7 @@ import type { ClaimDef } from '../shared/utils/thesis-types'
 
 import * as schema from '~~/server/db/schema'
 import { insertRows } from '../server/pipeline/store'
+import { crusoeRows } from '../server/theses/recipes/gpu-pages'
 import type { SourceFetcher } from '../server/pipeline/fetch'
 import {
   blendedPrice,
@@ -63,6 +64,25 @@ const counted = (id: string, gpu: string) =>
     .map((o) => o.value)
 
 describe('GPU price recipes', () => {
+  // From 2026-11-03 Crusoe prints today's price beside a scheduled one
+  // ("New on-demand starting Dec 1, 2026"); before, beside spot.
+  it('Crusoe: reads the current on-demand column under either header, and no other', () => {
+    const h100 = (html: string) =>
+      crusoeRows(html)
+        .filter((r) => r.gpu === 'H100')
+        .map((r) => r.usd_per_gpu_hour)
+    expect(h100(crusoe)).toEqual([3.9]) // not the $4.50 it moves to on Dec 1
+    const scheduled =
+      '<div class="pricing-heading is-d">Current on-demand</div><div><div class="pricing-heading is-d">New on-demand</div><div class="pricing_up">starting Dec 1, 2026</div></div>'
+    const spot =
+      '<div class="pricing-heading is-d">On-demand</div><div class="pricing-heading is-d">Current spot</div>'
+    expect(crusoe).toContain(scheduled)
+    expect(h100(crusoe.replace(scheduled, spot))).toEqual([3.9])
+    expect(() => crusoeRows(crusoe.replace('>Current on-demand<', '>Reserved<'))).toThrow(
+      'GPU instances header reads',
+    )
+  })
+
   it('reads each provider’s on-demand H100 and B200 prices per GPU-hour', () => {
     expect(counted('gpu-lambda', 'H100').sort()).toEqual([3.99, 4.09, 4.19, 4.29])
     expect(counted('gpu-lambda', 'B200').sort()).toEqual([6.69, 6.79, 6.89, 6.99])
