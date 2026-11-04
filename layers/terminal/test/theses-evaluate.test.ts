@@ -161,6 +161,7 @@ describe('evaluateTheses', () => {
       'anthropic-enterprise-lead',
       'anthropic-sdk-downloads',
       'anthropic-enterprise-growth',
+      'anthropic-revenue-growth',
     ]) {
       expect(by[id]!.status, id).toBe('unresolved')
     }
@@ -185,7 +186,7 @@ describe('evaluateTheses', () => {
     })
     expect(runs.some((r) => r.changed)).toBe(false)
     const log = await db.select().from(schema.claimStatusChanges)
-    expect(log.filter((r) => r.thesis_id === 'anthropic')).toHaveLength(8)
+    expect(log.filter((r) => r.thesis_id === 'anthropic')).toHaveLength(9)
     const after = await db.select().from(schema.claimReadings)
     expect(after.map((r) => r.computed_at)).toEqual(before.map((r) => r.computed_at))
   })
@@ -203,7 +204,8 @@ describe('evaluateTheses', () => {
       'unresolved',
       'holding',
       'unresolved',
-      // Claims 6–8 read recipes this store has no rows for.
+      // Claims 6–8 read recipes this store has no rows for; claim 9, revenue it has none of.
+      'unresolved',
       'unresolved',
       'unresolved',
       'unresolved',

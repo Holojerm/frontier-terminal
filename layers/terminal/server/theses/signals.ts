@@ -23,6 +23,7 @@ import {
   labsCombinedShare,
 } from './compute-signals'
 import { readRecipeSignal } from './recipe-signals'
+import { secRevenueGrowth } from './sec-signals'
 import type { Formatter } from './status'
 
 export interface SignalReading {
@@ -164,6 +165,9 @@ export async function readSignal(
     case 'open-roles-in-departments':
       if (!isLab(company)) return []
       return openRolesIn(db, company, spec.departments, deps)
+    case 'sec-revenue-yoy-growth':
+      if (!isLab(company)) return []
+      return secRevenueGrowth(db, company, deps)
     case 'recipe-yoy-growth':
     case 'recipe-trailing-sum':
     case 'recipe-sum-of-keys':
@@ -214,6 +218,7 @@ function valueFormatOfSpec(spec: Measured): ValueFormat {
       return 'ratio'
     case 'openrouter-lab-token-share':
     case 'openrouter-labs-combined-share':
+    case 'sec-revenue-yoy-growth':
       return 'percent'
     case 'open-roles-in-departments':
     case 'cluster-roles-across-labs':
