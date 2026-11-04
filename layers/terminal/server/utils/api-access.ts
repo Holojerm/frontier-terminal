@@ -18,13 +18,17 @@ import { rateLimit } from '#server/utils/rate-limit'
 
 import { REQUEST_BUDGETS } from '../../shared/utils/institutional'
 import type { ApiKeyTier } from './api-key-token'
-import { createUsageCounter } from './api-key-usage'
+import { createUsageCounter, type UsageCounter } from './api-key-usage'
 import { KEY_REFUSALS, verifyApiKey, type ApiKey } from './api-keys'
 
 /** `event.context` key the resolved caller is kept under: ApiKey, or null for anonymous. */
 const CONTEXT_KEY = 'terminalApiKey'
 
-const usage = createUsageCounter()
+// Made on first use, not at module load: the counter's isolate id comes from
+// crypto.randomUUID(), and Workers refuse random values in global scope (the
+// deploy fails validation with error 10021).
+let counter: UsageCounter | null = null
+const usage = (): UsageCounter => (counter ??= createUsageCounter())
 
 /**
  * The key this request presents, or null when it presents none. A request
@@ -57,8 +61,8 @@ export async function requestApiKey(event: H3Event): Promise<ApiKey | null> {
     // The same URL answers differently with a key (its limit, its license label).
     setResponseHeader(event, 'Vary', 'Authorization')
     const now = new Date()
-    usage.count(key.id, now)
-    if (usage.due(now)) event.waitUntil(usage.flush(kv, now).catch(logUsageFailure))
+    usage().count(key.id, now)
+    if (usage().due(now)) event.waitUntil(usage().flush(kv, now).catch(logUsageFailure))
   }
   return key
 }
