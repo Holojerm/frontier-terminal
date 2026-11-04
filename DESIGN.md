@@ -300,14 +300,18 @@ screen the way a terminal function key does. The data below it is the content.
 ## Space, shape, elevation
 
 - **Spacing:** standard Tailwind scale only — 1, 2, 3, 4, 6, 8, 12, 16, 24. No invented values.
-- **Container:** `90rem` max width (`--ui-container`), wider than the 80rem default, so two
-  or three panels sit side by side on a desktop screen. Use `<UContainer>` for page shells — it
+- **Container:** `120rem` max width (`--ui-container`), tuned for 1440–1920px screens: two
+  panels side by side on a laptop, three on a wide monitor, and no dead margin either side of
+  a 1920px window. Use `<UContainer>` for page shells — it
   reads this variable; a hardcoded `max-w-*` will not. Running text never takes the full
   width: prose sits in `max-w-2xl`, and `TerminalPage`'s `narrow` prop caps a prose page at
   `max-w-3xl`.
 - **Rhythm:** `gap-6` between panels, `p-3` inside them, `py-2 px-3` per table cell. Panels
-  tile with `grid gap-6 lg:grid-cols-2` (or `xl:grid-cols-3` for small ones); below `lg`
-  everything is one column.
+  tile with `grid gap-6 lg:grid-cols-2` (add `2xl:grid-cols-3` for small ones); below `lg`
+  everything is one column. Panels that share a row carry tables of the same row count, so
+  neither leaves a block of empty panel under the shorter one.
+- **Gaps are smaller than data:** a lab with nothing to show takes one line, never a card or a
+  panel of its own the size of a lab that has figures. Several such labs share one line.
 - **Radius:** `0.25rem` base (`--ui-radius`). Tight. Nothing is a pill except avatars and badges.
 - **Borders:** 1px, `border-default`. Structure comes from borders and spacing, not shadows.
 - **Elevation:** dark mode elevates with lighter surfaces (`bg-elevated`), never shadows.
@@ -371,10 +375,21 @@ screen the way a terminal function key does. The data below it is the content.
   nothing to show keeps its label and its source cells and states the gap in one cell spanning
   the rest. `UTable` cannot express either — every cell is a `td` and a `colspan` does not
   remove its neighbors — so every table is `TerminalTable`.
-- **Scroll:** a table scrolls in its own box, never the page. The box is capped at 70% of the
-  viewport height and scrolls both ways; the header sticks to the top of the box. A box that
-  scrolls is a named, focusable region so a keyboard can scroll it. A page is as long as its
-  panels, not its longest table.
+- **Scroll:** a page never scrolls a box inside a scroll for its main reading. The page's
+  primary table — the release list, the incident log, the price catalog, the alerts — runs as
+  long as its rows (`TerminalTable` `flow`), with its header sticky under the site header.
+  A secondary table in a multi-panel layout scrolls in its own box, capped at 70% of the
+  viewport height, header sticky to the box. A box that scrolls is a named, focusable region
+  so a keyboard can scroll it.
+- **Source cells:** a citation in a table cell is one line: the host as a link, the age and
+  exact fetch stamp in its tooltip and a screen-reader `<time>`. The panel footer prints every
+  source with its visible age, so provenance stays within reach while a row stays one line.
+- **Tabs:** a page whose panels answer several separate questions (one lab across every axis;
+  hiring's openings, buildout, departments and pay) splits them into `TerminalTabs`. The open
+  tab is in `?tab=`, every tab renders on the server and stays in the document, and an
+  anchor into a closed tab opens it. The overview and single-question pages never tab.
+- **Charts:** drawn at their box's own pixel width, so a chart fills its panel and its labels
+  stay `10px` at any width.
 - **Deltas:** a sign the reader can see, never a color: `+12`, `−3` (U+2212), `±0`. Formatted
   once, in `layers/terminal/shared/utils/terminal-format.ts`. A delta takes `text-muted` beside its figure;
   green and red would read as good and bad, and a price rise is neither.
@@ -398,6 +413,7 @@ feed with nothing to show live once in `layers/terminal/app/utils/feed-gap.ts`.
 | `TerminalBar` | A share bar: one track, one fill, decorative (`aria-hidden`) — the number beside it is the reading | Three bars at three heights |
 | `TerminalPrice` | The in/out price pair in $ per million tokens | Four renderings with two label tokens |
 | `TerminalExpand` | The full table behind a reading, closed by default, kept in the document | Three hand-built "Show the table" toggles and a `<details>` |
+| `TerminalTabs` | A page's sections as tabs: `?tab=` in the URL, every tab server-rendered, anchors open their tab | Fifteen stacked panels on the lab page |
 
 Surfaces: the page and every panel body are `bg-default`, so secondary text there is
 `text-muted`. The panel header strip is `bg-muted`, so its note is `text-toned`. Nothing on

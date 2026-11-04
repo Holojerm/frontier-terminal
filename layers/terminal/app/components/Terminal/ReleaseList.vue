@@ -8,7 +8,11 @@ import { labName } from '../../../shared/utils/terminal-labs'
 import type { ReleaseView } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
-defineProps<{ rows: ReleaseView[] }>()
+defineProps<{
+  rows: ReleaseView[]
+  /** The page's primary table: it runs with the page instead of its own scroll box. */
+  flow?: boolean
+}>()
 
 const columns: TableColumn[] = [
   { key: 'seen', label: 'First seen', class: 'whitespace-nowrap font-mono text-xs text-muted' },
@@ -27,6 +31,7 @@ const priced = (r: ReleaseView) => r.input_per_mtok !== null || r.output_per_mto
     :rows="rows"
     :row-key="(r) => r.change_id"
     row-header="model"
+    :flow="flow"
   >
     <template #cell-seen="{ row: r }">
       <time :datetime="r.first_seen_at" :title="r.first_seen_at">{{
@@ -34,15 +39,23 @@ const priced = (r: ReleaseView) => r.input_per_mtok !== null || r.output_per_mto
       }}</time>
     </template>
     <template #cell-model="{ row: r }">
-      <span class="flex flex-wrap items-center gap-x-2">
+      <!-- The slug and its note mark never part: a mark that wraps under the
+           slug made every row a line taller. -->
+      <span class="flex flex-wrap items-baseline gap-x-2">
         <span class="text-muted">{{ labName(r.provider) }}</span>
-        <NuxtLink
-          :to="`/prices/${r.entity_key}`"
-          class="font-mono text-highlighted underline underline-offset-2"
-        >
-          {{ r.model_slug }}
-        </NuxtLink>
-        <TerminalCaveatMark v-if="r.notes" :name="`Notes for ${r.model_slug}`" :text="r.notes" />
+        <!-- No whitespace between the slug and its mark: the mark stays on the
+             slug's last line, and a long slug still breaks at its hyphens. -->
+        <span
+          ><NuxtLink
+            :to="`/prices/${r.entity_key}`"
+            class="font-mono text-highlighted underline underline-offset-2"
+            >{{ r.model_slug }}</NuxtLink
+          ><TerminalCaveatMark
+            v-if="r.notes"
+            :name="`Notes for ${r.model_slug}`"
+            :text="r.notes"
+            class="ml-1 align-middle"
+        /></span>
       </span>
       <!-- Optional chaining: a payload cached before this field existed may be served for up to five minutes after a deploy. -->
       <span

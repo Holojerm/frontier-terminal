@@ -75,30 +75,32 @@ const columns: TableColumn[] = [
     error-body="The incidents endpoint failed to respond."
   >
     <template v-if="incidents">
-      <TerminalPanel
-        id="labs"
-        title="By lab"
-        :note="`Newest ${incidents.window_days} days against the prior ${incidents.window_days}. A count is what the vendor chose to post, not an SLA.`"
-        flush
-      >
-        <TerminalStrainTable :incidents="incidents" />
-        <template #foot>
-          Counted by the vendor’s posted start time, back from
-          <time :datetime="incidents.window_to" :title="incidents.window_to">{{
-            absoluteStamp(incidents.window_to, now)
-          }}</time
-          >. Impact and status are each vendor’s own words, not normalized.
-        </template>
-      </TerminalPanel>
+      <div class="grid gap-6" :class="limits?.pages.length ? 'xl:grid-cols-2' : undefined">
+        <TerminalPanel
+          id="labs"
+          title="By lab"
+          :note="`Newest ${incidents.window_days} days against the prior ${incidents.window_days}. A count is what the vendor chose to post, not an SLA.`"
+          flush
+        >
+          <TerminalStrainTable :incidents="incidents" />
+          <template #foot>
+            Counted by the vendor’s posted start time, back from
+            <time :datetime="incidents.window_to" :title="incidents.window_to">{{
+              absoluteStamp(incidents.window_to, now)
+            }}</time
+            >. Impact and status are each vendor’s own words, not normalized.
+          </template>
+        </TerminalPanel>
 
-      <TerminalPanel
-        v-if="limits?.pages.length"
-        id="limits"
-        title="Published rate limits"
-        note="The limits each lab publishes, and when one last changed. Each lab’s page has the full table."
-      >
-        <TerminalLimitsSummary :limits="limits" />
-      </TerminalPanel>
+        <TerminalPanel
+          v-if="limits?.pages.length"
+          id="limits"
+          title="Published rate limits"
+          note="The limits each lab publishes, and when one last changed. Each lab’s page has the full table."
+        >
+          <TerminalLimitsSummary :limits="limits" />
+        </TerminalPanel>
+      </div>
 
       <TerminalGap
         v-if="incidents.incidents.length === 0"
@@ -121,6 +123,7 @@ const columns: TableColumn[] = [
           :row-key="(i) => i.entity_key"
           row-header="title"
           align="top"
+          flow
         >
           <template #cell-started="{ row: i }">
             <time :datetime="i.started_at" :title="i.started_at">

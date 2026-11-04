@@ -115,7 +115,7 @@ useSeo({
       title="Cited change rows"
       note="Every field of every cited row, before and after."
     >
-      <div v-if="alert.changes.length" class="grid gap-3 lg:grid-cols-2">
+      <div v-if="alert.changes.length" class="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
         <TerminalChangeDetail v-for="change in alert.changes" :key="change.id" :change="change" />
       </div>
       <p v-if="alert.missing_change_ids.length" class="text-sm text-muted">

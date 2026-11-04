@@ -113,6 +113,16 @@ const failed = computed(() =>
   ),
 )
 
+// The lab page's tabs, in its order, so the two read the same way. The
+// readout above them stays visible on every tab.
+const tabs = [
+  { value: 'prices', label: 'Prices' },
+  { value: 'revenue', label: 'Revenue' },
+  { value: 'demand', label: 'Demand' },
+  { value: 'hiring', label: 'Hiring' },
+  { value: 'operations', label: 'Operations' },
+]
+
 const readout = computed(() => ({
   prices: prices.data.value,
   revenue: revenue.data.value,
@@ -139,71 +149,81 @@ const readout = computed(() => ({
       <TerminalReadoutStrip :labs="pair" :data="readout" />
     </TerminalPanel>
 
-    <TerminalPanel
-      id="prices"
-      title="API prices"
-      note="$ per million tokens, like for like on each vendor’s own recommendation."
-      :more="{ label: 'Every SKU, both labs', to: '/prices' }"
-      flush
-    >
-      <TerminalPriceMatrix
-        v-if="prices.data.value"
-        :matrix="prices.data.value.matrix"
-        :providers="[a, b]"
-      />
-    </TerminalPanel>
+    <TerminalTabs :tabs="tabs">
+      <template #prices>
+        <TerminalPanel
+          id="prices"
+          title="API prices"
+          note="$ per million tokens, like for like on each vendor’s own recommendation."
+          :more="{ label: 'Every SKU, both labs', to: '/prices' }"
+          flush
+        >
+          <TerminalPriceMatrix
+            v-if="prices.data.value"
+            :matrix="prices.data.value.matrix"
+            :providers="[a, b]"
+          />
+        </TerminalPanel>
+      </template>
 
-    <TerminalPanel
-      id="revenue"
-      title="Disclosed revenue"
-      note="What each lab, or its public parent, has reported to the SEC."
-      :more="{ label: 'Every lab’s revenue', to: '/revenue' }"
-    >
-      <TerminalRevenuePanel v-if="revenue.data.value" :revenue="revenue.data.value" />
-    </TerminalPanel>
+      <template #revenue>
+        <TerminalPanel
+          id="revenue"
+          title="Disclosed revenue"
+          note="What each lab, or its public parent, has reported to the SEC."
+          :more="{ label: 'Every lab’s revenue', to: '/revenue' }"
+        >
+          <TerminalRevenuePanel v-if="revenue.data.value" :revenue="revenue.data.value" />
+        </TerminalPanel>
+      </template>
 
-    <div class="grid gap-6 lg:grid-cols-2">
-      <TerminalPanel
-        id="demand"
-        title="Demand share"
-        note="Share of all OpenRouter tokens, newest 7 days. A proxy, not market share."
-        :more="{ label: 'Every lab, and the 30-day series', to: '/rankings' }"
-      >
-        <TerminalDemandShare v-if="rankings.data.value" :rankings="rankings.data.value" compact />
-      </TerminalPanel>
+      <template #demand>
+        <TerminalPanel
+          id="demand"
+          title="Demand share"
+          note="Share of all OpenRouter tokens, newest 7 days. A proxy, not market share."
+          :more="{ label: 'Every lab, and the 30-day series', to: '/rankings' }"
+        >
+          <TerminalDemandShare v-if="rankings.data.value" :rankings="rankings.data.value" compact />
+        </TerminalPanel>
+      </template>
 
-      <TerminalPanel
-        id="incidents"
-        title="Capacity strain"
-        :note="
-          incidents.data.value
-            ? `Status-page incidents, newest ${incidents.data.value.window_days} days against the prior ${incidents.data.value.window_days}.`
-            : 'Status-page incidents.'
-        "
-        :more="{ label: 'Every incident', to: '/incidents' }"
-        flush
-      >
-        <TerminalStrainTable v-if="incidents.data.value" :incidents="incidents.data.value" />
-      </TerminalPanel>
-    </div>
+      <template #hiring>
+        <TerminalPanel
+          id="hiring"
+          title="Hiring"
+          note="Open roles now, the change over the window, and the department that moved most."
+          :more="{ label: 'Department mix and roles per day', to: '/hiring' }"
+          flush
+        >
+          <TerminalHiringSummary v-if="hiring.data.value" :history="hiring.data.value" />
+        </TerminalPanel>
 
-    <TerminalPanel
-      id="hiring"
-      title="Hiring"
-      note="Open roles now, the change over the window, and the department that moved most."
-      :more="{ label: 'Department mix and roles per day', to: '/hiring' }"
-      flush
-    >
-      <TerminalHiringSummary v-if="hiring.data.value" :history="hiring.data.value" />
-    </TerminalPanel>
+        <TerminalPanel
+          id="buildout"
+          title="Infrastructure buildout"
+          note="Open roles in the physical-infrastructure departments, with the board labels summed."
+        >
+          <TerminalBuildoutPanel v-if="hiring.data.value" :history="hiring.data.value" />
+        </TerminalPanel>
+      </template>
 
-    <TerminalPanel
-      id="buildout"
-      title="Infrastructure buildout"
-      note="Open roles in the physical-infrastructure departments, with the board labels summed."
-    >
-      <TerminalBuildoutPanel v-if="hiring.data.value" :history="hiring.data.value" />
-    </TerminalPanel>
+      <template #operations>
+        <TerminalPanel
+          id="incidents"
+          title="Capacity strain"
+          :note="
+            incidents.data.value
+              ? `Status-page incidents, newest ${incidents.data.value.window_days} days against the prior ${incidents.data.value.window_days}.`
+              : 'Status-page incidents.'
+          "
+          :more="{ label: 'Every incident', to: '/incidents' }"
+          flush
+        >
+          <TerminalStrainTable v-if="incidents.data.value" :incidents="incidents.data.value" />
+        </TerminalPanel>
+      </template>
+    </TerminalTabs>
 
     <p class="text-sm text-muted">
       Each lab in full:

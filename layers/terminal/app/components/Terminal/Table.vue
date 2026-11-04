@@ -12,10 +12,12 @@
 // the smaller form for a table inside a card: `text-xs`, tighter rows, no
 // outer inset.
 //
-// A table scrolls in its own box, never the page: the box is capped at 70% of
-// the viewport, the header sticks to the top of the box, and a wide table
-// scrolls sideways inside it. A box that does scroll is a named, focusable
-// region so a keyboard can scroll it (WCAG 2.1.1; axe scrollable-region-focusable).
+// A secondary table scrolls in its own box: capped at 70% of the viewport,
+// the header sticky to the top of the box, a wide table scrolling sideways
+// inside it. The page's primary table (`flow`) runs as long as its rows
+// instead, so the page never scrolls a box inside a scroll. A box that does
+// scroll is a named, focusable region so a keyboard can scroll it (WCAG
+// 2.1.1; axe scrollable-region-focusable).
 
 import type { TableColumn } from '../../types/terminal-ui'
 
@@ -41,6 +43,12 @@ const props = withDefaults(
     rowHeader?: string
     /** `top` for rows whose cells wrap to several lines. */
     align?: 'baseline' | 'top'
+    /**
+     * The page's primary table: no scroll box, it runs as long as its rows and
+     * its header sticks under the site header instead. Below `lg` it still
+     * scrolls sideways in its own box, where the header does not stick.
+     */
+    flow?: boolean | 'top'
   }>(),
   // Vue casts an absent boolean prop to false; `edge` reads absent as true.
   { edge: true },
@@ -63,6 +71,9 @@ const gapKeys = computed(
       .filter((c) => !c.keep)
       .map((c) => c.key),
 )
+
+// Source cells inside a table render on one line (ProvenanceTag reads this).
+provide(IN_TERMINAL_TABLE, true)
 
 const pad = computed(() =>
   props.nested
@@ -112,7 +123,8 @@ const value = (row: T, key: string) => {
 <template>
   <div
     ref="box"
-    class="max-h-[70dvh] overflow-auto rounded-sm focus-visible:outline-2 focus-visible:outline-primary"
+    class="rounded-sm focus-visible:outline-2 focus-visible:outline-primary"
+    :class="flow ? 'max-lg:overflow-x-auto' : 'max-h-[70dvh] overflow-auto'"
     :tabindex="scrolls ? 0 : undefined"
     :role="scrolls ? 'region' : undefined"
     :aria-label="scrolls ? caption : undefined"
@@ -125,7 +137,10 @@ const value = (row: T, key: string) => {
       </caption>
       <!-- The rule under the header is a shadow, not a border: a collapsed
            border stays behind when the header sticks. -->
-      <thead class="sticky top-0 z-10 bg-default shadow-[inset_0_-1px_0_var(--ui-border)]">
+      <thead
+        class="z-10 bg-default shadow-[inset_0_-1px_0_var(--ui-border)]"
+        :class="flow ? 'lg:sticky lg:top-(--header-offset)' : 'sticky top-0'"
+      >
         <tr class="text-left">
           <th
             v-for="c in columns"
