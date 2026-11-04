@@ -1,12 +1,13 @@
 <script setup lang="ts">
 // What the store holds and how to take it away: one row per exportable
-// table with its columns, its current row count, and CSV/JSON downloads.
+// table with its columns, its current row count, and CSV/JSON downloads,
+// then the data dictionary that documents every column of them.
 
 import { DATA_LICENSE } from '#shared/utils/license'
 import { mailto } from '../../shared/utils/contact'
 import { count } from '../../shared/utils/terminal-format'
 import { INFO_FEED_QUERY } from '../../shared/utils/terminal-tiers'
-import type { CoverageData, SourceAxis } from '../../shared/utils/terminal-types'
+import type { CoverageData, DataDictionary, SourceAxis } from '../../shared/utils/terminal-types'
 import type { TableColumn } from '../types/terminal-ui'
 
 definePageMeta({
@@ -15,11 +16,21 @@ definePageMeta({
     priority: '0.6',
     title: 'Data',
     summary:
-      'Every source behind the terminal with its newest snapshot, last poll, and caveat, and CSV or JSON downloads of every table (snapshots, prices, open jobs, incidents, the change log, alerts, poll runs), with provenance columns on every row.',
+      'Every source behind the terminal with its newest snapshot, last check, and caveat. CSV or JSON downloads of every table (prices, open jobs, incidents, SEC facts, changes, alerts), each row with its source URL. A data dictionary gives each column’s type, unit, and meaning.',
   },
 })
 
-const { data: coverage, error } = await useFetch<CoverageData>('/api/coverage')
+const [{ data: coverage, error }, { data: dictionary }] = await Promise.all([
+  useFetch<CoverageData>('/api/coverage'),
+  useFetch<DataDictionary>('/export/dictionary.json'),
+])
+
+/** Tables whose dictionary section is open; a download row's Columns link adds its table. */
+const openTables = ref<string[]>([])
+
+const refusesAsOf = computed(() =>
+  (dictionary.value?.tables ?? []).filter((t) => t.as_of.mode === 'refused').map((t) => t.name),
+)
 
 const pageUrl = usePageUrl()
 const site = useSiteContext()
@@ -84,7 +95,7 @@ const datasets = (coverage.value?.exports ?? []).map((table) =>
 useSeo({
   title: 'Data',
   description:
-    'Download the terminal’s tables as CSV or JSON: snapshots, prices, open jobs, incidents, the change log, alerts, and poll runs, each row with its source URL.',
+    'Every terminal table as CSV or JSON, each row with its source URL, and a data dictionary of every column’s type, unit, and meaning.',
   dateModified: coverage.value?.as_of,
   schema: [
     dataCatalogSchema(site, {
@@ -145,7 +156,7 @@ const EXPORT_COLUMNS: TableColumn[] = [
         <template #cell-rows="{ row: t }">{{ count(t.rows) }}</template>
         <template #cell-columns="{ row: t }">{{ t.columns.join(', ') }}</template>
         <template #cell-download="{ row: t }">
-          <span class="flex gap-2">
+          <span class="flex flex-wrap gap-2">
             <UButton
               :to="`/export/${t.name}.csv`"
               external
@@ -173,6 +184,15 @@ const EXPORT_COLUMNS: TableColumn[] = [
               :aria-label="`Sample of ${t.name}, CSV`"
               label="Sample"
             />
+            <UButton
+              :to="`#dictionary-${t.name}`"
+              size="sm"
+              variant="link"
+              color="neutral"
+              :aria-label="`Column dictionary for ${t.name}`"
+              label="Columns"
+              @click="openTables = [...new Set([...openTables, t.name])]"
+            />
           </span>
         </template>
       </TerminalTable>
@@ -192,6 +212,35 @@ const EXPORT_COLUMNS: TableColumn[] = [
           >/rankings</NuxtLink
         >
         and the raw rows stay with OpenRouter.
+      </template>
+    </TerminalPanel>
+
+    <TerminalPanel
+      id="dictionary"
+      title="Data dictionary"
+      note="Every exported column: type, unit, whether it can be null, whether it is a key, and what it holds."
+    >
+      <TerminalDictionary v-if="dictionary" v-model:open="openTables" :dictionary="dictionary" />
+      <TerminalGap
+        v-else
+        title="Dictionary unavailable"
+        reason="We couldn’t read the column dictionary. The downloads above still work."
+      />
+      <template #foot>
+        Machine-readable at
+        <NuxtLink
+          to="/export/dictionary.json"
+          external
+          class="font-mono text-primary underline underline-offset-2"
+          >/export/dictionary.json</NuxtLink
+        >
+        and
+        <NuxtLink
+          to="/export/dictionary.csv"
+          external
+          class="font-mono text-primary underline underline-offset-2"
+          >/export/dictionary.csv</NuxtLink
+        >, one row per table and column.
       </template>
     </TerminalPanel>
 
@@ -224,10 +273,13 @@ const EXPORT_COLUMNS: TableColumn[] = [
             change log cannot confirm.
           </li>
           <li>
-            Every table above except <span class="font-mono">claim_readings</span> and
-            <span class="font-mono">recipe_observations</span>, which are rewritten in place with no
-            history. Tables of current rows are rebuilt from the change log and gain an
-            <span class="font-mono">as_of_verified</span> column.
+            Every table above except
+            <template v-for="(name, i) in refusesAsOf" :key="name"
+              ><span class="font-mono">{{ name }}</span
+              >{{ i < refusesAsOf.length - 1 ? ', ' : '' }}</template
+            >. Append-only tables are cut at the instant. Tables of current rows are rebuilt from
+            the change log and gain an <span class="font-mono">as_of_verified</span> column. The
+            data dictionary gives each table’s rule, or why it answers 400.
           </li>
           <li>
             The MCP tools for those routes take an <span class="font-mono">as_of</span> argument.

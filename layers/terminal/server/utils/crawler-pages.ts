@@ -14,6 +14,7 @@ import manifest from '~~/fleet.json'
 import { THESES } from '../theses/registry'
 import type { LlmsTxtInput, LlmsTxtSection } from '#server/utils/seo'
 import { AS_OF_ROUTES } from './terminal-asof'
+import { DICTIONARY_NAME } from './terminal-dictionary'
 import { EXPORT_TABLES } from './terminal-export'
 
 /** The route-table pages plus the dynamic ones enumerable without a query. */
@@ -45,9 +46,31 @@ export function llmsTxtInput(config: {
       description: table.description,
     })),
     repoUrl: manifest.links.github ?? '',
-    sections: [POINT_IN_TIME],
+    sections: [DICTIONARY, POINT_IN_TIME],
   }
 }
+
+/** The per-column documentation of the tables above (terminal-dictionary.ts). */
+const DICTIONARY: LlmsTxtSection = {
+  heading: 'Data dictionary',
+  links: [
+    {
+      path: `/export/${DICTIONARY_NAME}.json`,
+      title: 'Data dictionary (JSON)',
+      description:
+        'Every exported column of every table, with its type (text, integer, number, ISO-8601 timestamp, date, JSON, boolean), unit, whether it can be null, whether it is part of the row key or provenance, and what it holds. Each table also says how ?as_of= answers. The same entries are on /data, one section per table.',
+    },
+    {
+      path: `/export/${DICTIONARY_NAME}.csv`,
+      title: 'Data dictionary (CSV)',
+      description: 'The same entries, one row per table and column.',
+    },
+  ],
+}
+
+const refusingAsOf = Object.values(EXPORT_TABLES)
+  .filter((t) => t.pointInTime === 'refused')
+  .map((t) => t.name)
 
 const EXAMPLE_AS_OF = '2026-10-01T00:00:00Z'
 
@@ -63,7 +86,7 @@ const POINT_IN_TIME: LlmsTxtSection = {
     {
       path: `/export/changes.csv?as_of=${EXAMPLE_AS_OF}`,
       title: 'Exports as_of',
-      description: `The same parameter on /export/<table>: append-only tables are cut at the instant; current-row tables are rebuilt from the change log with an as_of_verified column; claim_readings and recipe_observations answer 400, being rewritten in place with no history.`,
+      description: `The same parameter on /export/<table>: append-only tables are cut at the instant. Current-row tables are rebuilt from the change log with an as_of_verified column. ${refusingAsOf.join(', ')} answer 400, and the data dictionary says why for each.`,
     },
   ],
 }
