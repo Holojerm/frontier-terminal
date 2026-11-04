@@ -208,8 +208,8 @@ export default defineNuxtConfig({
   modules: [
     '@nuxt/ui',
     '@nuxthub/core',
-    // nuxt-mcp rewrites `.mcp.json` — a *tracked* file — with the live dev
-    // server URL every time a dev server boots. Helpful when you started that
+    // nuxt-mcp rewrites the local MCP config (untracked, copied from `.mcp.json.example`) with
+    // the live dev server URL every time a dev server boots. Helpful when you started that
     // server yourself; destructive in automation, because `bun run test:a11y`
     // boots one too. An agent or CI run would finish with a dirty tree, and a
     // `git add -A` would sweep a throwaway port into the commit, clobbering the
