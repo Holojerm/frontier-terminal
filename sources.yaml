@@ -1155,6 +1155,151 @@ recipe_sources:
       Dates after the run are Epoch's projections and are marked so.
       Epoch revises past estimates; the newest file wins, and the raw
       bytes of each version are kept.
+  sec-msft-openai:
+    company: openai
+    url: https://data.sec.gov/submissions/CIK0000789019.json
+    format: JSON submissions feed, then the newest 10-Q or 10-K instance ({prefix}-{period}_htm.xml); every fact on msft:OpenAIGlobalLlcMember
+    verdict: include
+    terms: >-
+      SEC fair-access policy: a User-Agent naming a contact, under 10
+      requests a second (layers/terminal/server/pipeline/fetch.ts). Two
+      requests a tick: the submissions feed, then the newest 10-Q or 10-K's
+      instance file.
+    caveats: >-
+      Microsoft's numbers, not OpenAI's: its recognized gain or loss (us-
+      gaap:NonoperatingIncomeExpense), stake, revenue and receivables from
+      OpenAI and funding commitment. Microsoft uses hypothetical liquidation
+      at book value and books dilution gains in the same line, so the figure
+      divided by the stake is not OpenAI's result. Tagged facts are rounded
+      to $0.1B except the quarter's own; equity-method results may lag by up
+      to three months.
+  sec-amzn-anthropic:
+    company: anthropic
+    url: https://data.sec.gov/submissions/CIK0001018724.json
+    format: JSON submissions feed, then the newest 10-Q or 10-K instance; every fact on amzn:AnthropicMember
+    verdict: include
+    terms: >-
+      SEC fair-access policy: a User-Agent naming a contact, under 10
+      requests a second (layers/terminal/server/pipeline/fetch.ts). Two
+      requests a tick: the submissions feed, then the newest 10-Q or 10-K's
+      instance file.
+    caveats: >-
+      Amazon's numbers, not Anthropic's: upward adjustments to its Anthropic
+      preferred stock, shares held, the credit facility and the remaining
+      performance obligation Anthropic added. Amazon tags only some of its
+      Anthropic disclosures: the preferred's carrying value and the notes'
+      fair value are in the filing's text, not on this member. Its marks
+      follow observable prices and 12% is an ownership cap, so none of this
+      is Anthropic's valuation.
+  limits-openai-gpt-6-astra:
+    company: openai
+    url: https://developers.openai.com/api/docs/models/gpt-6-astra.md
+    format: Markdown, the per-model page's "Rate limits" table (Tier, RPM, TPM, Batch queue limit)
+    verdict: include
+    terms: >-
+      Same host as the lab's catalog and pricing docs
+      (developers.openai.com); robots.txt allows the path. Read 2026-11-04.
+    caveats: >-
+      Keyed on tier name: OpenAI cut five numbered tiers to Build, Launch
+      and Grow on 2026-10-06, a relabel more than a capacity change. The
+      model is OpenAI's flagship, balanced or economy pick at 2026-11-04
+      (terminal-classes.ts); a later pick needs a new recipe. Limits are
+      tier design and abuse control as much as capacity.
+  limits-openai-gpt-5-6-terra:
+    company: openai
+    url: https://developers.openai.com/api/docs/models/gpt-5.6-terra.md
+    format: Markdown, the per-model page's "Rate limits" table (Tier, RPM, TPM, Batch queue limit)
+    verdict: include
+    terms: >-
+      Same host as the lab's catalog and pricing docs
+      (developers.openai.com); robots.txt allows the path. Read 2026-11-04.
+    caveats: >-
+      Keyed on tier name: OpenAI cut five numbered tiers to Build, Launch
+      and Grow on 2026-10-06, a relabel more than a capacity change. The
+      model is OpenAI's flagship, balanced or economy pick at 2026-11-04
+      (terminal-classes.ts); a later pick needs a new recipe. Limits are
+      tier design and abuse control as much as capacity.
+  limits-openai-gpt-5-6-luna:
+    company: openai
+    url: https://developers.openai.com/api/docs/models/gpt-5.6-luna.md
+    format: Markdown, the per-model page's "Rate limits" table (Tier, RPM, TPM, Batch queue limit)
+    verdict: include
+    terms: >-
+      Same host as the lab's catalog and pricing docs
+      (developers.openai.com); robots.txt allows the path. Read 2026-11-04.
+    caveats: >-
+      Keyed on tier name: OpenAI cut five numbered tiers to Build, Launch
+      and Grow on 2026-10-06, a relabel more than a capacity change. The
+      model is OpenAI's flagship, balanced or economy pick at 2026-11-04
+      (terminal-classes.ts); a later pick needs a new recipe. Limits are
+      tier design and abuse control as much as capacity.
+  limits-anthropic:
+    company: anthropic
+    url: https://platform.claude.com/docs/en/api/rate-limits.md
+    format: Markdown, one Model | RPM | ITPM | OTPM table per tier tab (Start, Build, Scale), batch limits per tier, the spend cap per tier
+    verdict: include
+    terms: >-
+      Same host as the lab's catalog and pricing docs (platform.claude.com);
+      robots.txt allows the path. Read 2026-11-04.
+    caveats: >-
+      The page says limits are "designed to prevent API abuse"; new
+      organizations may start in an unpublished evaluation tier. Release
+      notes date past changes (2026-06-26: limits raised and tiers
+      consolidated). Each change is a dated snapshot of the whole table.
+  limits-xai:
+    company: xai
+    url: https://docs.x.ai/developers/rate-limits.md
+    format: Markdown, Model | RPS | TPM with every tier packed per cell ("T0: 150, …"), and the spend threshold per tier
+    verdict: include
+    terms: >-
+      Same host as the lab's catalog and pricing docs (docs.x.ai);
+      robots.txt allows the path. Read 2026-11-04.
+    caveats: >-
+      The page says limits scale exponentially with tier: a designed curve,
+      so a change is more likely pricing than strain. No validators and no
+      rate-limit entries in the release notes, so the dated snapshots are
+      the only change record.
+  limits-meta:
+    company: meta
+    url: https://dev.meta.ai/docs/pricing-rate-limits.md
+    format: Markdown, one Model | RPM | TPM | Other limits table, no tiers
+    verdict: include
+    terms: >-
+      Same host as the lab's catalog and pricing docs (dev.meta.ai);
+      robots.txt allows the path. Read 2026-11-04.
+    caveats: >-
+      The same page as meta-pricing-md. Limits apply per team, not per key.
+      "Other limits" (streams for transcription) is kept as text. Each
+      change is a dated snapshot of the whole table.
+  pay-openai:
+    company: openai
+    url: https://api.ashbyhq.com/posting-api/job-board/openai?includeCompensation=true
+    format: JSON, Ashby posting API with compensation (14 MB), summaryComponents per job
+    verdict: include
+    terms: >-
+      Ashby documents includeCompensation on the public posting API;
+      api.ashbyhq.com has no robots.txt (401). Read 2026-11-04.
+    caveats: >-
+      Posted bands, not offers; US postings only; equity excluded. The
+      median midpoint of each USD annual band, overall and for research and
+      software engineering by hand-mapped departments (pay-bands.ts); sales
+      is left out because Anthropic posts on-target earnings and OpenAI base
+      pay. Read the change in a cell over time, not the gap between labs.
+  pay-anthropic:
+    company: anthropic
+    url: https://boards-api.greenhouse.io/v1/boards/anthropic/jobs?content=true&pay_transparency=true
+    format: JSON, Greenhouse job board with content and pay_input_ranges (10 MB)
+    verdict: include
+    terms: >-
+      Greenhouse: "Job Board data is publicly available, so authentication
+      is not required for any GET endpoints." robots.txt disallows only
+      /embed/. Read 2026-11-04.
+    caveats: >-
+      Posted bands, not offers; US postings only; equity excluded. The
+      median midpoint of each USD annual band, overall and for research and
+      software engineering by hand-mapped departments (pay-bands.ts); sales
+      is left out because Anthropic posts on-target earnings and OpenAI base
+      pay. Read the change in a cell over time, not the gap between labs.
 
 # Department clusters read off the hiring boards. A cluster is a name match
 # over each board's own department labels: a department belongs when its

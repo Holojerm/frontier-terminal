@@ -16,9 +16,12 @@ import {
   GPU_VERDA,
 } from './gpu-pages'
 import { GREENHOUSE_CLOUDFLARE } from './greenhouse-departments'
+import { INVESTEE_RECIPES } from './investee-facts'
 import { NPM_LAB_RECIPES, NPM_WRANGLER } from './npm-downloads'
+import { PAY_RECIPES } from './pay-bands'
 import { PYPI_LAB_RECIPES } from './pypi-downloads'
 import { RAMP_AI_INDEX } from './ramp-ai-index'
+import { RATE_LIMIT_RECIPES } from './rate-limits'
 import {
   SEC_REVENUE_AKAM,
   SEC_REVENUE_CRWV,
@@ -55,4 +58,8 @@ export const RECIPES: readonly Recipe[] = [
   ...GITHUB_AGENT_RECIPES,
   EPOCH_DATA_CENTERS,
   EPOCH_DATA_CENTER_TIMELINES,
+  // Parents' filings, rate limits and posted pay, audited 2026-11-04.
+  ...INVESTEE_RECIPES,
+  ...RATE_LIMIT_RECIPES,
+  ...PAY_RECIPES,
 ]

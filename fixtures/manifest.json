@@ -545,6 +545,78 @@
       "http_status": 200,
       "raw_bytes": 195555,
       "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/recipes/limits-anthropic.md",
+      "source_id": "limits-anthropic",
+      "source_url": "https://platform.claude.com/docs/en/api/rate-limits.md",
+      "fetched_at": "2026-11-04T05:13:51Z",
+      "http_status": 200,
+      "raw_bytes": 37504,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/recipes/limits-xai.md",
+      "source_id": "limits-xai",
+      "source_url": "https://docs.x.ai/developers/rate-limits.md",
+      "fetched_at": "2026-11-04T05:13:51Z",
+      "http_status": 200,
+      "raw_bytes": 6075,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/recipes/limits-meta.md",
+      "source_id": "limits-meta",
+      "source_url": "https://dev.meta.ai/docs/pricing-rate-limits.md",
+      "fetched_at": "2026-11-04T05:13:51Z",
+      "http_status": 200,
+      "raw_bytes": 11196,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/recipes/limits-openai-gpt-6-astra.md",
+      "source_id": "limits-openai-gpt-6-astra",
+      "source_url": "https://developers.openai.com/api/docs/models/gpt-6-astra.md",
+      "fetched_at": "2026-11-04T05:13:51Z",
+      "http_status": 200,
+      "raw_bytes": 3704,
+      "trim": "none — committed whole; the terra and luna recipes read the same page shape"
+    },
+    {
+      "path": "fixtures/recipes/pay-openai.json",
+      "source_id": "pay-openai",
+      "source_url": "https://api.ashbyhq.com/posting-api/job-board/openai?includeCompensation=true",
+      "fetched_at": "2026-11-04T05:15:20Z",
+      "http_status": 200,
+      "raw_bytes": 14225651,
+      "trim": "each job reduced to title, department and compensation.summaryComponents, the fields the extractor reads; all 813 jobs kept"
+    },
+    {
+      "path": "fixtures/recipes/pay-anthropic.json",
+      "source_id": "pay-anthropic",
+      "source_url": "https://boards-api.greenhouse.io/v1/boards/anthropic/jobs?content=true&pay_transparency=true",
+      "fetched_at": "2026-11-04T05:15:20Z",
+      "http_status": 200,
+      "raw_bytes": 10232025,
+      "trim": "each job reduced to id, title, departments (id, name) and pay_input_ranges without their blurb; content dropped; all 681 jobs kept"
+    },
+    {
+      "path": "fixtures/recipes/sec-msft-openai.xml",
+      "source_id": "sec-msft-openai",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526436133/msft-20260930_htm.xml",
+      "fetched_at": "2026-11-04T05:16:15Z",
+      "http_status": 200,
+      "raw_bytes": 7251916,
+      "trim": "the root element, the 4 contexts naming msft:OpenAIGlobalLlcMember, their 2 units and the 8 facts on them; values untouched"
+    },
+    {
+      "path": "fixtures/recipes/sec-amzn-anthropic.xml",
+      "source_id": "sec-amzn-anthropic",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000040/amzn-20260930_htm.xml",
+      "fetched_at": "2026-11-04T05:16:50Z",
+      "http_status": 200,
+      "raw_bytes": 1670834,
+      "trim": "the root element, the 7 contexts naming amzn:AnthropicMember, their 2 units and the 8 facts on them; values untouched"
     }
   ]
 }
