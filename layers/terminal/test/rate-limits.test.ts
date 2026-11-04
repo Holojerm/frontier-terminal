@@ -24,6 +24,24 @@ import {
 
 const fake = (): NativeRateLimiter => ({ limit: async () => ({ success: true }) })
 
+// Whether the binding lets one call past `limit` through. Its windows are
+// aligned to the wall clock, and under CI load 1,200 calls can straddle a
+// boundary, which resets the count and lets the extra call through (this
+// failed main's Workers Build after #171). A run that crosses one is repeated.
+async function allowsOneMore(limiter: NativeRateLimiter, limit: number): Promise<boolean> {
+  const window = () => Math.floor(Date.now() / 60_000)
+  for (let attempt = 1; ; attempt++) {
+    const started = window()
+    // Unique per run: the binding's counters outlive an individual `it`.
+    const key = `drift-check:${crypto.randomUUID()}`
+    for (let i = 0; i < limit; i++) {
+      expect((await limiter.limit({ key })).success, `request ${i + 1} was refused`).toBe(true)
+    }
+    const allowed = (await limiter.limit({ key })).success
+    if (window() === started || attempt === 3) return allowed
+  }
+}
+
 afterEach(() => clearNativeLimitersForTest())
 
 describe('READ_PATH_LIMITER', () => {
@@ -58,13 +76,8 @@ describe('READ_PATH_LIMITER', () => {
       READ_PATH_LIMITER.binding
     ]
     expect(limiter, `no [[ratelimits]] block named ${READ_PATH_LIMITER.binding}`).toBeDefined()
-    // Unique per run: the binding's counters outlive an individual `it`.
-    const key = `drift-check:${crypto.randomUUID()}`
-    for (let i = 0; i < READ_PATH_LIMITER.limit; i++) {
-      expect((await limiter!.limit({ key })).success, `request ${i + 1} was refused`).toBe(true)
-    }
     expect(
-      (await limiter!.limit({ key })).success,
+      await allowsOneMore(limiter!, READ_PATH_LIMITER.limit),
       `request ${READ_PATH_LIMITER.limit + 1} was allowed — wrangler.toml permits more than the spec`,
     ).toBe(false)
   })
@@ -99,12 +112,8 @@ describe('KEYED_READ_LIMITERS', () => {
         spec.binding
       ]
       expect(limiter, `no [[ratelimits]] block named ${spec.binding}`).toBeDefined()
-      const key = `drift-check:${crypto.randomUUID()}`
-      for (let i = 0; i < spec.limit; i++) {
-        expect((await limiter!.limit({ key })).success, `request ${i + 1} was refused`).toBe(true)
-      }
       expect(
-        (await limiter!.limit({ key })).success,
+        await allowsOneMore(limiter!, spec.limit),
         `request ${spec.limit + 1} was allowed on ${spec.binding}`,
       ).toBe(false)
     }
