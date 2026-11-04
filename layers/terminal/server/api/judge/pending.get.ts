@@ -12,17 +12,22 @@
 // thesis claim, the pending changes it offers for a verdict
 // (layers/terminal/server/theses/verdicts.ts): events among `changes`, and recipe items
 // (a changelog entry, say) not yet rated, so it can be non-empty when
-// `changes` is empty.
+// `changes` is empty. `hiring` gives, per lab with job changes pending, the
+// board and department sizes and which moves clear the materiality floor
+// that POST /api/judge/alerts enforces (layers/terminal/server/pipeline/hiring-floor.ts).
 
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
 
 import judgePrompt from 'raw:../../pipeline/judge/judge-explain.prompt.md'
+import sourcesYaml from 'raw:~~/sources.yaml'
 
+import { hiringBoards } from '../../pipeline/hiring-floor'
 import { blobRawReader, classMapReview } from '../../pipeline/judge/class-map'
 import { JUDGE_CHANGE_LIMIT, pendingChanges } from '../../pipeline/judge/pending'
 import { claimReview, flagshipMap } from '../../theses/verdicts'
 import { requireJudgeToken } from '../../utils/judge-auth'
+import { parseDepartmentClusters } from '../../utils/terminal-clusters'
 
 export default defineEventHandler(async (event) => {
   await rateLimit(event, { name: 'judge', limit: 30, windowSeconds: 60 })
@@ -34,14 +39,19 @@ export default defineEventHandler(async (event) => {
     classMapReview(db, blobRawReader(blob)),
     flagshipMap(db),
   ])
+  const [claim_review, hiring] = await Promise.all([
+    claimReview(db, changes, flagships),
+    hiringBoards(db, changes, parseDepartmentClusters(sourcesYaml)),
+  ])
   return {
     schema: 1,
     changes,
     total_pending,
     since,
     limit: JUDGE_CHANGE_LIMIT,
+    hiring,
     class_map_review,
-    claim_review: await claimReview(db, changes, flagships),
+    claim_review,
     prompt: judgePrompt,
   }
 })

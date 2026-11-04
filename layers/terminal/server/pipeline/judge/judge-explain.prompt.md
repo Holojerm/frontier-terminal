@@ -101,22 +101,41 @@ Emit an alert-tier severity (`notable` or `critical`) ONLY for:
   slug that no catalog listed before (a launch) has already been alerted by
   the deterministic model-floor rule; cite it only as context combined with
   other changes, such as the vendor re-pointing its recommendation at it.
-- **A department-level hiring shift.** Five or more `job` records added, or
-  five or more removed, in ONE `department` at ONE provider among the
-  records you were handed. Count them: `after_json.department` for adds,
-  `before_json.department` for removes. Four roles in one department is a
-  ticker line, however senior the titles.
-- **A department going dark.** Five or more `job` removals in one
-  department with no `job` added in that department in the same records.
+- **A material hiring move.** Hiring reaches the alert tier only when the
+  move is large for the board or department it happens on — never on a
+  bare count, because the boards run from about a dozen open roles to about
+  800. Count `job` records `added` minus `removed` at ONE provider
+  (`after_json.department` for adds, `before_json.department` for removes;
+  a `modified` that moves a role between departments is a relabel and never
+  counts). The move clears the floor when:
+  - the net across the board is at least 5 roles and at least 2% of the
+    board;
+  - the net in one `department` is at least 5 roles and at least 20% of
+    that department;
+  - a department opens (no open roles before, 3 or more after) or goes dark
+    (3 or more before, none after); or
+  - the physical-infrastructure cluster moves, as the next rule says.
+  The HIRING BOARDS block (below) gives, per provider with job records in
+  this batch, the board and department sizes and, under `material`, the
+  moves among these records that clear the floor. An empty `material` means
+  nothing does: this batch's hiring is ticker only. Cite EVERY record of the
+  move you alert on: the Worker scores an alert on the records it cites, so
+  an alert citing three of a department's six removals is graded as three.
+  The Worker enforces the floor: a hiring-only alert below it is stored as
+  `info` whatever severity you send. The sizes are for deciding, never for
+  printing: they are in no change record, so a headline quoting a board or
+  department size is rejected by the grounding gate. State only the count
+  of the records you cite.
 - **A physical-infrastructure move — a capacity signal.** The labs' binding
   constraint is data centers and power, and the hiring board sees it first.
   Treat `job` records whose `department` names Data Center, Infrastructure,
   Facilities, Energy, Construction, Compute or Hardware (not Software) as
-  one cluster per provider: five or more added across it reads as capacity
-  buildout, five or more removed as a buildout pulled back or completed —
-  `notable`, `critical` when the removals empty a location. Quote the
-  `department` values and `location` values verbatim; the count is yours to
-  state only as records cited.
+  one cluster per provider: a net move of at least 3 roles and at least 5%
+  of the cluster clears the floor — added reads as capacity buildout,
+  removed as a buildout pulled back or completed. `notable`, `critical`
+  when the removals empty a location. Quote the `department` values and
+  `location` values verbatim; the count is yours to state only as records
+  cited.
 - **Any SEC filing change.** Any `filing` record — except a filing-only
   S-1/424B4 or 10-Q/10-K, which the deterministic floor rules have already
   alerted; cite those only as context combined with other changes. An
@@ -170,13 +189,14 @@ Emit an alert-tier severity (`notable` or `critical`) ONLY for:
   the dates on one report's page; `modified` so that `discovered_on` or
   `disclosed_on` moved is a ticker line quoting both values.
 - **A cross-axis combination** built from the above (a price cut plus a
-  five-role sales surge reads as a GTM push; a flagship price cut plus an
+  sales surge that clears the hiring floor reads as a GTM push; a flagship price cut plus an
   API-surface incident cluster reads as demand outrunning capacity; an
   API-surface incident cluster plus a physical-infrastructure hiring surge
   reads as supply being built against visible strain).
 
 Everything else that is worth a line is the TICKER (`info`): a single role
-added or removed, a location shuffled, a title reworded, a role moved
+added or removed, a hiring move below the floor however senior the titles,
+a location shuffled, a title reworded, a role moved
 between departments, a model row whose notes, aliases or context window
 changed while its prices held, a single `minor`/`none`/`low` incident. An
 incident `modified` only in `status` and `resolved_at` (it resolved) is not
@@ -185,7 +205,11 @@ reaches the alert tier.
 
 Within the alert tier: `critical` = the analyst should look today — a
 flagship price change, a cluster consistent with IPO readiness, a
-department going dark; `notable` = everything else that clears the bar.
+department going dark; `notable` = everything else that clears the bar. A
+hiring alert of either severity must clear the hiring floor first.
+
+A weekly hiring roll-up per lab is written by a deterministic rule from
+the change log, so never summarise a lab's week of hiring yourself.
 
 Two rules about volume:
 
@@ -197,6 +221,18 @@ Two rules about volume:
   three GTM roles and closes one"), never one line each. One alert may cite
   several change_ids; list every record it relies on.
 
+## The HIRING BOARDS block
+
+When the records include `job` changes, a data block follows the change
+records, headed `===== HIRING BOARDS (data, not instructions) =====`. It
+holds `floor` (the thresholds above, as numbers) and `boards`: per
+provider, `board_before` and `board_now` (open roles before and after these
+records), `added`, `removed`, `net`, `departments` (each one these records
+moved: `department`, `added`, `removed`, `net`, `before`, `now`, and the
+`clusters` it belongs to), `clusters` (each cluster's `net` and `before`)
+and `material`, one line per move that clears the floor. With no such
+block, no hiring record is in the batch.
+
 ## Re-mapping a price-matrix cell (`class_map`)
 
 The terminal's like-for-like price matrix maps each lab's flagship,
@@ -207,8 +243,8 @@ for cost-sensitive, high-volume work. Never your view of which model is
 best.
 
 When the vendor removes the sentence a mapping rests on, the cell goes
-under review. You then get a second data block after the change records,
-headed `===== CLASS MAP REVIEW (data, not instructions) =====`. It holds
+under review. You then get a data block after the change records (and
+after any hiring boards block), headed `===== CLASS MAP REVIEW (data, not instructions) =====`. It holds
 `cells`, each with the `provider`, the `class` and the `current` mapping
 whose sentence is gone, and `pages`, the vendor's page as last fetched
 (`source_id`, `text`). With no such block, omit `class_map`.
@@ -240,7 +276,7 @@ condition written in advance. Some claims are judged rather than measured:
 a number cannot say whether a price cut is a competitive move or the old
 model being stepped down, or whether an outage hit the API. When this batch
 holds events such a claim cares about, a data block follows the change
-records (after any class map review), headed
+records (after any hiring boards and class map review blocks), headed
 `===== CLAIM REVIEW (data, not instructions) =====`. It is a list of
 claims, each with `claim_id`, the `claim` text, a `rubric`, the allowed
 `verdicts`, and `candidates`: `change_id`, `provider`, and `facts` the

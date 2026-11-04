@@ -58,7 +58,8 @@ export const entityTypeEnum = z.enum([
 ])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])
-// The deterministic rules (layers/terminal/server/pipeline/lanes.ts, model-floor.ts) and the judge lane.
+// The deterministic rules (layers/terminal/server/pipeline/lanes.ts, model-floor.ts, prospectus-floor.ts,
+// hiring-rollup.ts) and the judge lane.
 export const alertRuleEnum = z.enum([
   'agent-judge',
   's1-floor',
@@ -66,6 +67,7 @@ export const alertRuleEnum = z.enum([
   'cik-resolved',
   'model-floor',
   'prospectus-floor',
+  'hiring-rollup',
 ])
 // 'skipped': the source needs a credential the deploy does not have, so
 // nothing was attempted — distinct from 'failed' so a missing key is a
