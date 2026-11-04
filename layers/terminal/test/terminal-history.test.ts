@@ -438,7 +438,8 @@ describe('the history queries on an empty store', () => {
       expect(p.dates).toEqual([])
       expect(p.compare).toBeNull()
     }
-    expect(hiring.providers[2]).toMatchObject({ provider: 'google', feed: 'no_public_feed' })
+    expect(hiring.providers[2]).toMatchObject({ provider: 'google', feed: 'no_rows' })
+    expect(hiring.providers[4]).toMatchObject({ provider: 'meta', feed: 'no_public_feed' })
     expect(hiring.providers[3]!.caveat).toContain('SpaceXAI')
   })
 })
@@ -569,7 +570,10 @@ describe('after a baseline and a second poll', () => {
       'Hardware',
     ])
     expect(openai.clusters[0]!.departments).toEqual([])
+    // Google's labels are its own enum names; HARDWARE_ENGINEERING is a whole-word Hardware match.
     const google = hiring.providers.find((p) => p.provider === 'google')!
-    expect(google.clusters).toEqual([])
+    expect(google.clusters.map((c) => c.departments.map((d) => d.department))).toEqual([
+      ['HARDWARE_ENGINEERING'],
+    ])
   })
 })

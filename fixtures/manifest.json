@@ -175,6 +175,16 @@
       "trim": "2 jobs per department (19 of 229), full job objects incl. department/team/descriptionHtml. All 10 departments represented."
     },
     {
+      "path": "fixtures/hiring/google-careers.xml",
+      "source_id": "google-careers",
+      "source_url": "https://www.google.com/about/careers/applications/jobs/feed.xml",
+      "fetched_at": "2026-11-04T13:49:13Z",
+      "http_status": 200,
+      "raw_bytes": 20379364,
+      "trim": "31 of 3,380 <job> elements kept whole, in feed order, header and <updated> untouched: up to 2 DeepMind roles per category label (all 15 labels, incl. the two multi-category roles) plus one multi-location role (27 DeepMind of 142), and the first 2 Google and 2 YouTube roles so the employer filter has something to drop.",
+      "note": "Last-Modified: Wed, 04 Nov 2026 13:24:39 GMT. Employers in the full feed: Google 3,065, YouTube 173, DeepMind 142. careers.google.com/jobs/feed.xml 301s here."
+    },
+    {
       "path": "fixtures/hiring/anthropic-greenhouse.json",
       "source_id": "anthropic-greenhouse",
       "source_url": "https://boards-api.greenhouse.io/v1/boards/anthropic/jobs",
@@ -341,6 +351,16 @@
       "raw_bytes": 55613,
       "trim": "none — committed whole",
       "note": "Statuspage v2 shape: {page, incidents[]}. 50 incidents (the page cap; 2025-10-07 → 2026-10-30), none open; no `components` field, so Vibe and Le Chat incidents count alongside API ones."
+    },
+    {
+      "path": "fixtures/status/xai-status.xml",
+      "source_id": "xai-status",
+      "source_url": "https://status.x.ai/feed.xml",
+      "fetched_at": "2026-11-04T13:49:14Z",
+      "http_status": 200,
+      "raw_bytes": 340615,
+      "trim": "none — committed whole",
+      "note": "RSS 2.0, \"SpaceXAI System Status\". 316 <item>s, one per (component, incident), folding to 97 incident guids (2026-08-06 → 2026-11-03), all resolved; categories are severity then status (disruption 90, outage 5, info 2 by incident)."
     },
     {
       "path": "fixtures/rankings/openrouter-rankings-daily.json",

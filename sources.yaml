@@ -311,6 +311,30 @@ sources:
       "mistral", which is 404, and cut hiring on that. Same posting API and
       shape as openai-ashby.
 
+  google-careers:
+    axis: hiring
+    provider: google
+    url: https://www.google.com/about/careers/applications/jobs/feed.xml
+    format: XML job feed (<jobs><job>…), Alphabet-wide, ~20 MB
+    diff_mechanism: numeric jobid; Last-Modified on the whole file
+    verdict: include — filtered to employer DeepMind only
+    fixture: fixtures/hiring/google-careers.xml
+    caveats: >-
+      DeepMind roles only: the feed lists every Alphabet posting (3,380 on
+      2026-11-04: Google 3,065, YouTube 173, DeepMind 142), and a
+      Google-wide count would mix Search, Ads and Cloud hiring with the
+      lab's. The parser keeps rows whose <employer> is "DeepMind", the
+      same set deepmind.google/careers links to (company=DeepMind on the
+      results page, 142 that day), and counts the rest in the run note.
+      Gemini work staffed under the Google employer is not counted.
+      Departments are Google's own category labels, verbatim
+      (SOFTWARE_ENGINEERING); a role filed under several keeps all of them.
+      careers.google.com/jobs/feed.xml 301s here. robots.txt for
+      www.google.com disallows only the results page's page= parameters for
+      every agent, not the feed; Google's Terms of Service bar automated
+      access only "in violation of the machine-readable instructions on our
+      web pages (for example, robots.txt files…)". Read 2026-11-04.
+
   edgar-fts:
     axis: sec
     provider: all
@@ -514,6 +538,33 @@ sources:
       composed as page.url + /incidents/{id}, the Statuspage path; those
       HTML pages answer 403 (Cloudflare challenge) to a headless client, so
       unlike the other status pages they could not be checked to resolve.
+
+  xai-status:
+    axis: status
+    provider: xai
+    url: https://status.x.ai/feed.xml
+    format: RSS 2.0, one <item> per (component, incident)
+    diff_mechanism: incident guid; status/resolved date per incident
+    verdict: include
+    fixture: fixtures/status/xai-status.xml
+    caveats: >-
+      The page is "SpaceXAI System Status" and covers every SpaceXSI
+      product, Cursor's included. Live-fetched 2026-11-04: 316 items folding
+      to 97 incidents (2026-08-06 to 2026-11-03), all resolved; 48 of the 97
+      name only Cursor-branded components (Cursor IDE, CLI, Cloud Agents,
+      Bugbot, Automations, cursor.com), 25 only Grok, API and other
+      components, 24 both. Read the component list, not just the count,
+      as with xAI's blended hiring board. Impact is the feed's own severity
+      (disruption / outage / info), not Statuspage's scale. The feed is a
+      window, so older history is what this pipeline accumulates. The
+      Statuspage-style /api/v2/incidents.json and the HTML pages still
+      answer 403 (Cloudflare challenge) to a headless client and robots.txt
+      disallows /api/; this feed answers 200 and robots.txt allows it. The
+      consumer terms (updated 2026-10-27) and the Acceptable Use Policy bar
+      "unauthorized automated or non-human means"; a published RSS feed
+      that robots.txt allows is read as authorized. Incident links are the
+      feed's own, per component; they answer 403 to a headless client and
+      could not be checked to resolve.
 
   openai-misalignment-reports:
     axis: disclosures
@@ -1323,13 +1374,6 @@ department_clusters:
 
 # Deliberate cuts — honesty is the feature (docs/source-audit.md verdicts).
 cut:
-  google-hiring:
-    verdict: cut — display "no public feed" honestly
-    reason: >-
-      None usable: careers.google.com is an auth-walled SPA; the DeepMind
-      Greenhouse board, vestigial at the audit (10 jobs), answers 404 since
-      (re-checked 2026-11-01). Alphabet-wide numbers would conflate
-      Search/Ads/Cloud with Gemini and mislead.
   artificial-analysis:
     verdict: cut — external link only, never ingested
     reason: >-
@@ -1354,13 +1398,6 @@ cut:
       RSS detection works for 4 sources (Anthropic: SPA, no feed; xAI: hard
       403). Material deals are reported in the press before any company feed,
       so complete coverage is not possible and extraction is cut.
-  xai-status:
-    verdict: cut — display "no public feed" honestly
-    reason: >-
-      status.x.ai/api/v2/incidents.json answers 403 (Cloudflare challenge
-      page) to any non-browser client, live-checked 2026-09-08 with a
-      descriptive User-Agent. Scraping the rendered page would depend on
-      passing a bot wall, so the gap is shown instead.
   anthropic-disclosures:
     verdict: cut — display "no disclosure index" honestly
     reason: >-
@@ -1392,22 +1429,23 @@ cut:
   meta-hiring:
     verdict: cut — display "no public feed" honestly
     reason: >-
-      None usable, live-checked 2026-10-12: metacareers.com is a
-      client-rendered app over an internal GraphQL endpoint with no
-      documented API, and no Greenhouse or Ashby board exists for Meta or
-      Meta Superintelligence Labs (meta, msl, metaai,
-      metasuperintelligencelabs all 404). A Meta-wide count would mix
-      Facebook, Instagram, WhatsApp, and Reality Labs hiring with the lab’s,
-      as with Google hiring.
+      Meta forbids automated collection: metacareers.com/robots.txt opens
+      with "Collection of data on Facebook through automated means is
+      prohibited unless you have express written permission", and the jobs
+      it lists (a sitemap of 1,335 job pages, re-checked 2026-11-04) carry no
+      lab or team label without opening each page. There is no API and no
+      Greenhouse, Ashby or Lever board for Meta or Meta Superintelligence
+      Labs (all 404). A Meta-wide count would also mix Facebook, Instagram,
+      WhatsApp and Reality Labs hiring with the lab's.
   meta-status:
     verdict: cut — display "no public feed" honestly
     reason: >-
-      No incident history, live-checked 2026-10-12. Meta Model API's
-      api.meta.ai/v1/status is a current-state probe ({is_alive,
-      service_status, model_statuses}) with no incident list, so a count
-      would only see outages that overlap a poll. metastatus.com covers Meta
-      business products (Ads Manager, WhatsApp Business API), not the model
-      API, and is a client-rendered page.
+      Meta publishes no incident history for its Model API, re-checked
+      2026-11-04. api.meta.ai/v1/status and the dev.meta.ai/status page
+      report only the current state ({is_alive, service_status,
+      model_statuses}), so a count would see only outages that overlap a
+      poll. metastatus.com covers Meta's business products (Ads Manager,
+      WhatsApp Business API), not the model API.
   meta-disclosures:
     verdict: cut — display "no disclosure index" honestly
     reason: >-

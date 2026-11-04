@@ -230,8 +230,9 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
       title: 'Open roles',
       description:
         'Open roles per lab, counted from the CURRENT job-board set (a role missing from the board is closed), by department. ' +
-        'feed says what the number is: ok, no_rows (feed registered, nothing parsed yet), or no_public_feed — Google and Meta, which have no ' +
-        'public hiring feed, so their total is 0 with the audit’s reason rather than a guess. xAI’s board is blended with SpaceX ' +
+        'feed says what the number is: ok, no_rows (feed registered, nothing parsed yet), or no_public_feed — Meta, which has no ' +
+        'public hiring feed it permits reading, so its total is 0 with the audit’s reason rather than a guess. Google counts DeepMind’s roles only ' +
+        '(company_names says so), not Alphabet’s. xAI’s board is blended with SpaceX ' +
         '(every row carries company_name "SpaceXAI", now "SpaceXSI"); the caveat and company_names travel with the row so you can say so. ' +
         'Optional provider filter. ' +
         PROVENANCE,
@@ -334,7 +335,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         `against ${HIRING_WINDOW_DAYS} days back, or the series start when that is younger (days says which). log is the change ` +
         'rows the series rests on. clusters[] sums named department clusters from sources.yaml — physical-infrastructure (Data Center, ' +
         'Infrastructure, Facilities, Energy, Construction, Compute, Hardware; not Software) is the capacity-buildout signal — with the ' +
-        'matched department labels listed so the sum is checkable. Google and Meta are audited cuts (feed no_public_feed, reason given) with an ' +
+        'matched department labels listed so the sum is checkable. Meta is an audited cut (feed no_public_feed, reason given) with an ' +
         'empty series; xAI carries the SpaceXAI blend caveat. Optional provider filter. ' +
         PROVENANCE,
       inputSchema: z.object({ provider: ProviderSchema.optional() }),
@@ -384,8 +385,8 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         `incidents lists every one started inside ${INCIDENT_HISTORY_DAYS} days, newest first, with impact in the vendor’s own ` +
         'vocabulary (never mapped across vendors) and a link. Windows anchor on window_to, the newest status fetch, not the ' +
         'clock. Not an SLA and not comparable across vendors: OpenAI’s feed mixes ChatGPT with API incidents and has no component ' +
-        'field. xAI and Meta have NO public incident feed (xAI’s status API answers 403 to non-browsers; Meta publishes ' +
-        'only a current-state probe) and are reported as no_public_feed with the reason, never as zero incidents. Optional provider filter narrows providers and incidents. ' +
+        'field; xAI’s RSS history covers Cursor’s products alongside Grok and the API (read components). Meta has NO public incident ' +
+        'history (only a current-state probe) and is reported as no_public_feed with the reason, never as zero incidents. Optional provider filter narrows providers and incidents. ' +
         PROVENANCE,
       inputSchema: z.object({ provider: ProviderSchema.optional() }),
       annotations: READ_ONLY,

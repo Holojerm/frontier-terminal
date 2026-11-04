@@ -10,6 +10,7 @@ import openaiMisalignmentReportUploading from '~~/fixtures/disclosures/openai-mi
 import openaiMisalignmentReports from '~~/fixtures/disclosures/openai-misalignment-reports.html?raw'
 import anthropicGreenhouseDepartments from '~~/fixtures/hiring/anthropic-greenhouse-departments.json?raw'
 import anthropicGreenhouse from '~~/fixtures/hiring/anthropic-greenhouse.json?raw'
+import googleCareers from '~~/fixtures/hiring/google-careers.xml?raw'
 import mistralAshby from '~~/fixtures/hiring/mistral-ashby.json?raw'
 import openaiAshby from '~~/fixtures/hiring/openai-ashby.json?raw'
 import xaiGreenhouseDepartments from '~~/fixtures/hiring/xai-greenhouse-departments.json?raw'
@@ -68,6 +69,7 @@ import edgarSubmissionsSpcx from '~~/fixtures/sec/edgar-submissions-spcx.json?ra
 import anthropicStatus from '~~/fixtures/status/anthropic-status.json?raw'
 import googleCloudStatus from '~~/fixtures/status/google-cloud-status.json?raw'
 import mistralStatus from '~~/fixtures/status/mistral-status.json?raw'
+import xaiStatus from '~~/fixtures/status/xai-status.xml?raw'
 import openaiStatus from '~~/fixtures/status/openai-status.json?raw'
 import sourcesYaml from '~~/sources.yaml?raw'
 
@@ -85,6 +87,7 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/disclosures/openai-misalignment-reports.html': openaiMisalignmentReports,
   'fixtures/hiring/anthropic-greenhouse-departments.json': anthropicGreenhouseDepartments,
   'fixtures/hiring/anthropic-greenhouse.json': anthropicGreenhouse,
+  'fixtures/hiring/google-careers.xml': googleCareers,
   'fixtures/hiring/mistral-ashby.json': mistralAshby,
   'fixtures/hiring/openai-ashby.json': openaiAshby,
   'fixtures/hiring/xai-greenhouse-departments.json': xaiGreenhouseDepartments,
@@ -143,6 +146,7 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/status/anthropic-status.json': anthropicStatus,
   'fixtures/status/google-cloud-status.json': googleCloudStatus,
   'fixtures/status/mistral-status.json': mistralStatus,
+  'fixtures/status/xai-status.xml': xaiStatus,
   'fixtures/status/openai-status.json': openaiStatus,
   'sources.yaml': sourcesYaml,
 }

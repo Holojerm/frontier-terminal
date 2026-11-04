@@ -191,7 +191,7 @@ describe('tools/list', () => {
     )
     expect(tools.find((t) => t.name === 'get_rankings')!.description).toContain('CC BY 4.0')
     expect(tools.find((t) => t.name === 'get_incidents')!.description).toContain(
-      'xAI and Meta have NO public incident feed',
+      'Meta has NO public incident',
     )
     expect(tools.find((t) => t.name === 'get_hiring_history')!.description).toContain(
       'RECONSTRUCTED',
@@ -266,17 +266,26 @@ describe('tools/call', () => {
     expect(xai.counts.total).toBeLessThan(all.counts.total)
   })
 
-  it('get_hiring: counts from the current set, and Google is an honest cut', async () => {
-    const google = (await tool('get_hiring', { provider: 'google' })).structuredContent as {
+  it('get_hiring: counts from the current set, and Meta is an honest cut', async () => {
+    const meta = (await tool('get_hiring', { provider: 'meta' })).structuredContent as {
       providers: { provider: string; feed: string; total: number; reason: string | null }[]
     }
-    expect(google.providers).toHaveLength(1)
-    expect(google.providers[0]).toMatchObject({
-      provider: 'google',
+    expect(meta.providers).toHaveLength(1)
+    expect(meta.providers[0]).toMatchObject({
+      provider: 'meta',
       feed: 'no_public_feed',
       total: 0,
     })
-    expect(google.providers[0]!.reason).toBeTruthy()
+    expect(meta.providers[0]!.reason).toBeTruthy()
+
+    const google = (await tool('get_hiring', { provider: 'google' })).structuredContent as {
+      providers: { feed: string; total: number; company_names: string[] }[]
+    }
+    expect(google.providers[0]).toMatchObject({
+      feed: 'ok',
+      total: 27,
+      company_names: ['DeepMind'],
+    })
 
     const xai = (await tool('get_hiring', { provider: 'xai' })).structuredContent as {
       providers: { total: number; caveat: string | null; company_names: string[] }[]
@@ -345,7 +354,7 @@ describe('tools/call', () => {
     expect(missing.content[0]!.text).toContain('get_prices')
   })
 
-  it('get_hiring_history: the current set reconstructed per day, Google an honest cut, filterable', async () => {
+  it('get_hiring_history: the current set reconstructed per day, Meta an honest cut, filterable', async () => {
     const all = (await tool('get_hiring_history')).structuredContent as {
       window_days: number
       log: { changes: number }
@@ -370,8 +379,8 @@ describe('tools/call', () => {
       'meta',
       'mistral',
     ])
-    const google = all.providers[2]!
-    expect(google).toMatchObject({ feed: 'no_public_feed', dates: [], total: [] })
+    const meta = all.providers[4]!
+    expect(meta).toMatchObject({ feed: 'no_public_feed', dates: [], total: [] })
 
     const xai = (await tool('get_hiring_history', { provider: 'xai' }))
       .structuredContent as typeof all
@@ -404,7 +413,7 @@ describe('tools/call', () => {
     expect(limited).toMatchObject({ rows: [], total: 0 })
   })
 
-  it('get_incidents: three feeds with provenance, xAI a stated cut, filterable', async () => {
+  it('get_incidents: five feeds with provenance, Meta a stated cut, filterable', async () => {
     const all = (await tool('get_incidents')).structuredContent as {
       window_to: string
       window_days: number
@@ -429,11 +438,11 @@ describe('tools/call', () => {
       ['openai', 'ok'],
       ['anthropic', 'ok'],
       ['google', 'ok'],
-      ['xai', 'no_public_feed'],
+      ['xai', 'ok'],
       ['meta', 'no_public_feed'],
       ['mistral', 'ok'],
     ])
-    expect(all.providers[3]!.reason).toContain('403')
+    expect(all.providers[4]!.reason).toContain('current state')
     expect(all.incidents.length).toBeGreaterThan(0)
     for (const i of all.incidents) {
       expect(i.source_url).toMatch(/^https:\/\//)
@@ -495,12 +504,12 @@ describe('tools/call', () => {
       cuts: { id: string }[]
       exports: { name: string }[]
     }
-    expect(coverage.sources).toHaveLength(33)
+    expect(coverage.sources).toHaveLength(35)
     expect(coverage.sources.find((s) => s.source_id === 'openrouter-models')!.caveat).toContain(
       'never source of record',
     )
     expect(coverage.sources.every((s) => s.newest_snapshot !== null)).toBe(true)
-    expect(coverage.cuts.map((c) => c.id)).toContain('google-hiring')
+    expect(coverage.cuts.map((c) => c.id)).toContain('meta-hiring')
     expect(coverage.exports.map((e) => e.name)).toContain('alerts')
   })
 

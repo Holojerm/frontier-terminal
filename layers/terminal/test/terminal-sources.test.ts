@@ -21,7 +21,7 @@ describe('readSourceRegistry', () => {
       .map((s) => s.source_id)
       .sort()
     expect(registry.sources.map((s) => s.source_id).sort()).toEqual(pipelineIds)
-    expect(registry.sources).toHaveLength(33)
+    expect(registry.sources).toHaveLength(35)
     // The one id sources.yaml spells differently from the manifest.
     expect(byId['edgar-submissions-spcx']!.yaml_id).toBe('edgar-submissions')
   })
@@ -70,18 +70,15 @@ describe('readSourceRegistry', () => {
   })
 
   it('lists the deliberate cuts with their reasons', () => {
-    const google = registry.cuts.find((c) => c.id === 'google-hiring')!
-    expect(google.verdict).toContain('no public feed')
-    expect(google.reason).toContain('auth-walled SPA')
-    expect(google.reason).toContain('DeepMind Greenhouse board, vestigial at the audit')
-    const xai = registry.cuts.find((c) => c.id === 'xai-status')!
-    expect(xai.reason).toContain('403')
+    const meta = registry.cuts.find((c) => c.id === 'meta-hiring')!
+    expect(meta.verdict).toContain('no public feed')
+    expect(meta.reason).toContain('Collection of data on Facebook through automated means')
+    const status = registry.cuts.find((c) => c.id === 'meta-status')!
+    expect(status.reason).toContain('current state')
     expect(registry.cuts.map((c) => c.id)).toEqual([
-      'google-hiring',
       'artificial-analysis',
       'lmarena',
       'compute-deals',
-      'xai-status',
       'anthropic-disclosures',
       'google-disclosures',
       'xai-disclosures',
