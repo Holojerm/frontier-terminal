@@ -13,6 +13,7 @@ import { blobRawStore, runPoll } from '../../pipeline/poll'
 import { evaluateTheses } from '../../theses/evaluate'
 import { runRecipes } from '../../theses/recipes/run'
 import { recordOpsEvent } from '#server/utils/ops'
+import { warmAfterPoll } from '../../utils/cache-warm-task'
 
 export default defineTask({
   meta: {
@@ -20,7 +21,7 @@ export default defineTask({
     description:
       'Fetch every include source (pricing, hiring, EDGAR, rankings); diff and store; evaluate the theses',
   },
-  async run() {
+  async run({ context }) {
     const config = useRuntimeConfig()
     const result = await runPoll('survey', {
       db,
@@ -56,6 +57,7 @@ export default defineTask({
         return null
       },
     )
+    await warmAfterPoll(context)
     return { result, recipes, theses }
   },
 })

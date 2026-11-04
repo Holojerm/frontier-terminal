@@ -22,8 +22,13 @@ import {
   pollStampAt,
   type AsOfPayload,
 } from './terminal-asof'
-import { serverTimingHeader, timed, type ServerTiming, type ServerTimings } from './server-timing'
-import { cachedTerminal, sharedTerminalStamp, terminalStamp } from './terminal-cache'
+import { serverTimingHeader, timed, type ServerTiming } from './server-timing'
+import {
+  cachedTerminal,
+  sharedTerminalStamp,
+  terminalStamp,
+  type CacheOptions,
+} from './terminal-cache'
 import { queryContext, type QueryContext } from './terminal-db'
 
 /** Five minutes at the edge too — the same window as the KV entry. */
@@ -46,11 +51,11 @@ export async function terminalPayload<T>(
   // The cache key must include anything that changes the payload. A route
   // with input (alerts?limit=) passes it here.
   variant = '',
-  timings?: ServerTimings,
+  options: CacheOptions = {},
 ): Promise<T> {
-  const stamp = await timed(timings, 'stamp', liveStamp)
+  const stamp = await timed(options.timings, 'stamp', liveStamp)
   const context = queryContext(sourcesYaml, stamp)
-  return cachedTerminal(kv, cacheName(name, variant), stamp, () => query(context), timings)
+  return cachedTerminal(kv, cacheName(name, variant), stamp, () => query(context), options)
 }
 
 /**
@@ -65,9 +70,9 @@ export async function terminalPayloadAt<T extends object | null>(
   at: string,
   query: (context: QueryContext) => Promise<T>,
   variant = '',
-  timings?: ServerTimings,
+  options: CacheOptions = {},
 ): Promise<AsOfPayload<T>> {
-  const stamp = await timed(timings, 'stamp', liveStamp)
+  const stamp = await timed(options.timings, 'stamp', liveStamp)
   try {
     await assertKnowable(db, at)
   } catch (error) {
@@ -88,7 +93,7 @@ export async function terminalPayloadAt<T extends object | null>(
         data === null ? null : { ...data, point_in_time: pointInTimeMeta(at, context.notes) }
       ) as AsOfPayload<T>
     },
-    timings,
+    options,
   )
 }
 
@@ -144,9 +149,9 @@ export async function serveTerminal<T>(
 ): Promise<T> {
   refuseAsOf(event, name)
   setResponseHeader(event, 'Cache-Control', TERMINAL_CACHE_CONTROL)
-  const timings: ServerTiming[] = []
-  const payload = await terminalPayload(name, query, variant, timings)
-  setResponseHeader(event, 'Server-Timing', serverTimingHeader(timings))
+  const options = requestCacheOptions(event)
+  const payload = await terminalPayload(name, query, variant, options)
+  setResponseHeader(event, 'Server-Timing', serverTimingHeader(options.timings))
   return payload
 }
 
@@ -159,13 +164,18 @@ export async function serveTerminalAsOf<T extends object | null>(
 ): Promise<T | AsOfPayload<T>> {
   const { as_of } = await getValidatedQuery(event, parseAsOfQuery)
   setResponseHeader(event, 'Cache-Control', TERMINAL_CACHE_CONTROL)
-  const timings: ServerTiming[] = []
+  const options = requestCacheOptions(event)
   const payload =
     as_of === undefined
-      ? await terminalPayload(name, query, variant, timings)
-      : await terminalPayloadAt(name, as_of, query, variant, timings)
-  setResponseHeader(event, 'Server-Timing', serverTimingHeader(timings))
+      ? await terminalPayload(name, query, variant, options)
+      : await terminalPayloadAt(name, as_of, query, variant, options)
+  setResponseHeader(event, 'Server-Timing', serverTimingHeader(options.timings))
   return payload
+}
+
+/** Timed, and with the KV write after the response: what a request-bound read gets. */
+function requestCacheOptions(event: H3Event): CacheOptions & { timings: ServerTiming[] } {
+  return { timings: [], defer: (promise) => event.waitUntil(promise) }
 }
 
 /** The Drizzle client, for routes that stream rather than cache. */

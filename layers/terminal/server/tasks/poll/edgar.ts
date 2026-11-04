@@ -19,13 +19,14 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 import { createFetcher } from '../../pipeline/fetch'
 import { unstorageLockStore } from '../../pipeline/lock'
 import { blobRawStore, runPoll } from '../../pipeline/poll'
+import { warmAfterPoll } from '../../utils/cache-warm-task'
 
 export default defineTask({
   meta: {
     name: 'poll:edgar',
     description: 'Fetch the EDGAR feeds and the model catalogs (launch detection); diff and store',
   },
-  async run() {
+  async run({ context }) {
     const config = useRuntimeConfig()
     const result = await runPoll('edgar', {
       db,
@@ -37,6 +38,7 @@ export default defineTask({
       }),
       sourcesYaml,
     })
+    await warmAfterPoll(context)
     return { result }
   },
 })

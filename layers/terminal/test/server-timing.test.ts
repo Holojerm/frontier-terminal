@@ -51,7 +51,7 @@ describe('cachedTerminal timings', () => {
   it('reports kv miss, compute and the write on a miss; kv hit alone on a hit', async () => {
     const store = mapStore()
     const miss: ServerTiming[] = []
-    await cachedTerminal(store, 'prices', 's1', async () => ({ rows: 1 }), miss)
+    await cachedTerminal(store, 'prices', 's1', async () => ({ rows: 1 }), { timings: miss })
     expect(miss.map((t) => [t.name, t.desc])).toEqual([
       ['kv', 'miss'],
       ['compute', undefined],
@@ -59,7 +59,22 @@ describe('cachedTerminal timings', () => {
     ])
 
     const hit: ServerTiming[] = []
-    await cachedTerminal(store, 'prices', 's1', async () => ({ rows: 2 }), hit)
+    await cachedTerminal(store, 'prices', 's1', async () => ({ rows: 2 }), { timings: hit })
     expect(hit.map((t) => [t.name, t.desc])).toEqual([['kv', 'hit']])
+  })
+
+  it('hands the write to defer instead of awaiting it, and the entry still lands', async () => {
+    const store = mapStore()
+    const deferred: Promise<unknown>[] = []
+    const timings: ServerTiming[] = []
+    const value = await cachedTerminal(store, 'prices', 's1', async () => 'fresh', {
+      timings,
+      defer: (p) => deferred.push(p),
+    })
+    expect(value).toBe('fresh')
+    expect(timings.map((t) => t.name)).toEqual(['kv', 'compute'])
+    expect(deferred).toHaveLength(1)
+    await Promise.all(deferred)
+    expect(await cachedTerminal(store, 'prices', 's1', async () => 'recomputed')).toBe('fresh')
   })
 })
