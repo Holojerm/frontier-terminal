@@ -1,9 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { includeSources } from '../server/pipeline/sources'
-import { RAMP_AI_INDEX } from '../server/theses/recipes/ramp-ai-index'
-import { GPU_RECIPES, RECIPES } from '../server/theses/recipes/registry'
-import { SEC_REVENUE_CRWV } from '../server/theses/recipes/sec-revenue'
+import { RECIPES } from '../server/theses/recipes/registry'
 import { SOURCE_LABELS, labelOf, readSourceRegistry } from '../server/utils/terminal-sources'
 import { fixtureText, manifest } from './pipeline/fixtures'
 
@@ -107,31 +105,23 @@ describe('readSourceRegistry', () => {
     ])
   })
 
-  it('carries an audit entry for every recipe audited since 2026-11-02, at the URL each fetches', () => {
-    // The Cloudflare thesis's recipes predate the block; their audit is on its journal page.
-    const before = new Set([
-      'sec-revenue-net',
-      'sec-revenue-akam',
-      'sec-revenue-fsly',
-      'npm-wrangler',
-      'greenhouse-cloudflare',
-      'cloudflare-changelog-ai',
-    ])
+  it('carries an audit entry for every recipe in the registry, at the URL each fetches', () => {
+    // No exemptions: a recipe with no entry has no terms reading or rights,
+    // and /contact would list it under no licence group.
     const audited = new Map(registry.recipes.map((r) => [r.recipe_id, r]))
-    const due = RECIPES.filter((r) => !before.has(r.id))
-    for (const recipe of due) {
+    for (const recipe of RECIPES) {
       const entry = audited.get(recipe.id)
       expect(entry, recipe.id).toBeDefined()
       expect(entry!.verdict).toMatch(/^include/)
-      expect(entry!.terms).toBeTruthy()
+      expect(entry!.terms, recipe.id).toBeTruthy()
+      expect(entry!.rights, recipe.id).not.toBeNull()
       const url = recipe.url({ now: new Date(), newest: null })
       // A URL that carries the run's dates is registered as a template on the same host.
       if (entry!.url.includes('{'))
         expect(new URL(entry!.url).host, recipe.id).toBe(new URL(url).host)
       else expect(entry!.url, recipe.id).toBe(url)
     }
-    expect([...audited.keys()].sort()).toEqual(due.map((r) => r.id).sort())
-    expect(due).toEqual(expect.arrayContaining([...GPU_RECIPES, SEC_REVENUE_CRWV, RAMP_AI_INDEX]))
+    expect([...audited.keys()].sort()).toEqual(RECIPES.map((r) => r.id).sort())
   })
 
   it('records the terms reading and the licensing stance for every source and audited recipe', () => {
@@ -144,9 +134,17 @@ describe('readSourceRegistry', () => {
     for (const r of registry.recipes) expect(r.rights, r.recipe_id).not.toBeNull()
     expect(byId['openrouter-rankings-daily']!.rights).toBe('upstream')
     expect(byId['openrouter-rankings-daily']!.terms).toContain('competing free API')
-    expect(registry.recipes.find((r) => r.recipe_id === 'ramp-ai-index')!.rights).toBe(
-      'not-cleared',
-    )
+    const recipeRights = Object.fromEntries(registry.recipes.map((r) => [r.recipe_id, r.rights]))
+    expect(recipeRights['ramp-ai-index']).toBe('not-cleared')
+    // The Cloudflare thesis's recipes, which predate the block.
+    expect(recipeRights).toMatchObject({
+      'sec-revenue-net': 'ours',
+      'sec-revenue-akam': 'ours',
+      'sec-revenue-fsly': 'ours',
+      'npm-wrangler': 'upstream',
+      'greenhouse-cloudflare': 'ours',
+      'cloudflare-changelog-ai': 'not-cleared',
+    })
     expect(() =>
       readSourceRegistry(yaml.replace('    rights: ours\n', '    rights: ours-ish\n')),
     ).toThrow(/unknown rights ours-ish/)
