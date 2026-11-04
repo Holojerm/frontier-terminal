@@ -42,7 +42,7 @@ const rows = computed(() =>
       Epoch’s data on {{ data.snapshot }}.
     </p>
     <TerminalTable
-      caption="Estimated data-center power per lab, by Epoch AI's named users"
+      caption="Estimated data-center power per lab, by Epoch AI’s named users"
       :columns="columns"
       :rows="rows"
       :row-key="(r) => r.key"
@@ -53,7 +53,7 @@ const rows = computed(() =>
       :key="l"
       inline
       :title="`${LAB_DISPLAY[l]}: no site counted`"
-      reason="Epoch names this lab as a user only at #speculative, which is not counted."
+      reason="Epoch names this lab as a user only at #speculative, which we don’t count."
     />
     <TerminalSources
       :sources="data.source ? [data.source] : []"

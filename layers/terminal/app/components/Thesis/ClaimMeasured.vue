@@ -39,7 +39,7 @@ const columns = computed(() => [
     <TerminalGap
       v-if="!latest"
       title="No reading yet."
-      reason="The signal has produced no number for this claim. Its status is unresolved until it does."
+      reason="We don’t have a number for this claim yet. Its status stays unresolved until we do."
     />
 
     <!-- From lg the reading sits beside its series: stacked, a claim was a

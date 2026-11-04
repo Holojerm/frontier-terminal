@@ -55,7 +55,7 @@ const columns = computed<TableColumn[]>(() => [
       <TerminalCaveatMark
         v-if="priorPartial(p)"
         :name="`Why ${p.display}’s prior window is partial`"
-        :text="`History held since ${absoluteStamp(p.coverage_from!, now)}; the prior window is partial until polling covers it.`"
+        :text="`We have history since ${absoluteStamp(p.coverage_from!, now)}. The prior window is partial until our checks cover all of it.`"
       />
     </template>
     <template #cell-open="{ row: p }">

@@ -75,7 +75,7 @@ const priced = (r: ReleaseView) => r.input_per_mtok !== null || r.output_per_mto
     </template>
     <template #cell-price="{ row: r }">
       <TerminalPrice v-if="priced(r)" :input="r.input_per_mtok" :output="r.output_per_mtok" />
-      <TerminalGap v-else inline title="Catalog only; no price printed" />
+      <TerminalGap v-else inline title="Catalog only, no price listed" />
     </template>
     <template #cell-source="{ row: r }">
       <TerminalProvenanceTag :source-url="r.source_url" :fetched-at="r.fetched_at" />

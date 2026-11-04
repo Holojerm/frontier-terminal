@@ -30,12 +30,12 @@ const widest = computed(() => Math.max(...props.rankings.shares.map((s) => s.sha
     <TerminalGap
       v-if="rankings.status === 'not_configured'"
       title="Not configured."
-      reason="The OpenRouter rankings dataset needs NUXT_OPENROUTER_API_KEY, which this deploy does not set. Nothing is fetched anonymously."
+      reason="The OpenRouter rankings dataset needs NUXT_OPENROUTER_API_KEY, which this deploy doesn’t set. We don’t fetch it without one."
     />
     <TerminalGap
       v-else-if="rankings.status === 'no_rows'"
-      title="No rankings rows yet."
-      reason="The feed is registered; no poll has succeeded yet."
+      title="No rankings data yet."
+      reason="We haven’t fetched it successfully yet."
     />
 
     <template v-else>
@@ -77,8 +77,10 @@ const widest = computed(() => Math.max(...props.rankings.shares.map((s) => s.sha
       "
       :caveats="[
         {
-          label: 'OpenRouter share, not market share',
-          text: rankings.source.caveat ?? 'One aggregator’s traffic, not the market’s.',
+          label: 'OpenRouter traffic only',
+          text:
+            rankings.source.caveat ??
+            'One aggregator’s traffic. Treat it as a rough read on demand.',
         },
       ]"
     >
@@ -108,7 +110,7 @@ const widest = computed(() => Math.max(...props.rankings.shares.map((s) => s.sha
       <span v-else-if="rankings.source.license">{{ rankings.source.license }}</span>
     </TerminalSources>
     <p v-if="!compact" class="text-xs text-muted">
-      Evaluated, not ingested (license or no data endpoint):
+      Considered and left out (license terms, or no data feed):
       <template v-for="(ref, i) in EXTERNAL" :key="ref.url">
         <a
           :href="ref.url"

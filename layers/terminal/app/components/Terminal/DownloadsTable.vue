@@ -52,8 +52,8 @@ const sources = computed(() =>
     <TerminalTable
       :caption="
         kind === 'agent'
-          ? 'Coding-agent package downloads, newest 28 days'
-          : 'SDK downloads per lab, newest 28 days'
+          ? 'Coding-agent package downloads, last 28 days'
+          : 'SDK downloads per lab, last 28 days'
       "
       :columns="columns"
       :rows="rows"
@@ -78,7 +78,7 @@ const sources = computed(() =>
       :sources="sources"
       :caveats="[{ text: caveat, label: 'downloads, not users' }]"
     >
-      <span>Each package links to the series it was read from.</span>
+      <span>Each package links to the download data we read.</span>
     </TerminalSources>
   </div>
 </template>

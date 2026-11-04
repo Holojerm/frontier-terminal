@@ -45,7 +45,7 @@ const rows = computed(() =>
 const columns: TableColumn[] = [
   { key: 'when', label: 'When', class: 'whitespace-nowrap font-mono text-xs text-muted' },
   { key: 'labs', label: 'Lab', class: 'whitespace-nowrap' },
-  { key: 'axis', label: 'Axis', class: 'whitespace-nowrap text-muted' },
+  { key: 'axis', label: 'Topic', class: 'whitespace-nowrap text-muted' },
   { key: 'headline', label: 'What moved', class: 'min-w-64' },
   { key: 'delta', label: 'Δ', numeric: true, class: 'text-xs' },
 ]
@@ -53,7 +53,7 @@ const columns: TableColumn[] = [
 
 <template>
   <TerminalTable
-    caption="Alerts, newest first: time, lab, axis, headline, and the figure that moved"
+    caption="Alerts, newest first, with the time, lab, topic, headline, and the figure that moved"
     :columns="columns"
     :rows="rows"
     :row-key="(r) => r.alert.id"

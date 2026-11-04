@@ -18,21 +18,21 @@ export const CHANGE_BADGE = {
 } as const satisfies Record<ChangeView['change_type'], { color: string; icon: string }>
 
 export const RULE_TEXT: Record<AlertView['rule'], string> = {
-  's1-floor': 'Rule-based: every new S-1/424B4 on a whitelisted CIK alerts.',
+  's1-floor': 'Set by a fixed rule. Every new S-1/424B4 from a company we track is an alert.',
   'cik-resolved':
-    'Rule-based: a registration filing whose filer matches a pending lab’s name resolves that lab’s CIK and alerts.',
-  'periodic-floor': 'Rule-based: every new 10-Q/10-K on a whitelisted CIK alerts.',
-  'model-floor': 'Rule-based: a model no vendor catalog has listed before always alerts.',
+    'Set by a fixed rule. When a registration filing’s company name matches a lab we haven’t found on EDGAR yet, we link the two and raise an alert.',
+  'periodic-floor': 'Set by a fixed rule. Every new 10-Q/10-K from a company we track is an alert.',
+  'model-floor':
+    'Set by a fixed rule. A model no vendor catalog has listed before is always an alert.',
   'prospectus-floor':
-    'Rule-based: a lab’s new registration filing alerts with what its own document states — revenue, the period it runs to, and the price range on its cover.',
+    'Set by a fixed rule. A lab’s new registration filing is an alert, with what the filing itself states (revenue, the period it covers, and the price range on its cover).',
   'hiring-rollup':
-    'Rule-based: one hiring roll-up per lab per week, notable only when the week’s moves clear the hiring materiality floor.',
-  'agent-judge':
-    'Judged by a model, which may cite only fields present in the referenced change rows.',
+    'Set by a fixed rule. One hiring summary per lab per week. It’s notable only when the week’s moves pass our hiring threshold.',
+  'agent-judge': 'Judged by a model. It can cite only fields from the changes it links to.',
 }
 
 export const TIER_TEXT = {
   alert:
-    'Alert tier (notable, critical): a price move, a new SKU, a department-level hiring shift, a physical-infrastructure hiring move, a filing, or a new revenue fact.',
-  info: 'Minor changes (severity info): what moved, low stakes — a role added or closed, a title reworded, a location shuffled.',
+    'Alerts (notable or critical) cover price moves, new SKUs, department-level hiring shifts, physical-infrastructure hiring moves, filings, and new revenue figures.',
+  info: 'Minor changes (severity info) are low-stakes moves, like a role added or closed, a title reworded, or a location changed.',
 } as const

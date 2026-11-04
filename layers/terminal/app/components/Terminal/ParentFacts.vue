@@ -49,7 +49,7 @@ const rowsOf = (p: ParentsData['parents'][number]) =>
           <code class="text-xs">{{ p.member }}</code>
         </template>
         <TerminalTable
-          :caption="`${p.parent}'s tagged facts on ${LAB_DISPLAY[p.lab]}, newest filing`"
+          :caption="`${p.parent}’s XBRL figures for ${LAB_DISPLAY[p.lab]}, from its newest filing`"
           :columns="columns"
           :rows="rowsOf(p)"
           :row-key="(r) => r.key"

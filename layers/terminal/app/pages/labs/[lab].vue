@@ -38,7 +38,7 @@ definePageMeta({
     priority: '0.9',
     title: 'Lab',
     summary:
-      'One frontier lab on every axis: flagship API price, disclosed revenue, OpenRouter demand and implied spend share, open roles and the infrastructure buildout, status-page incidents, and the alerts that cite it.',
+      'One frontier lab across everything we track, including flagship API price, disclosed revenue, OpenRouter demand and implied spend share, open roles, the infrastructure buildout, status-page incidents, and the alerts that cite it.',
   },
 })
 
@@ -163,7 +163,7 @@ useSeo({
   // The words an analyst types ("Anthropic API pricing", "xAI revenue"), not
   // the bare lab name, which matches every page on the web about the lab.
   title: `${display}: API pricing, revenue, hiring, outages`,
-  description: `${display} on every axis: API price, SEC revenue, OpenRouter demand share, open roles, status-page incidents, and every alert that cites it.`,
+  description: `${display} at a glance: API price, SEC revenue, OpenRouter demand share, open roles, status-page incidents, and every alert that cites it.`,
   about: labOrganizationSchema({ name: display, url: LAB_SITE[lab] }),
   breadcrumb: [{ name: display, path: `/labs/${lab}` }],
   dateModified: alerts.data.value?.as_of,
@@ -321,7 +321,7 @@ const tabs = computed(() => [
         <TerminalPanel
           id="prices"
           title="API prices"
-          note="$ per million tokens: the like-for-like classes, then every priced SKU on the vendor’s page."
+          note="$ per million tokens. The like-for-like classes come first, then every priced SKU on the vendor’s page."
           :more="
             labRows.length > (pricesOf?.rows.length ?? 0)
               ? {
@@ -364,7 +364,7 @@ const tabs = computed(() => [
             v-if="parents.data.value?.parents.length"
             id="parents"
             title="What its investor discloses"
-            note="Facts a public investor tags with this lab in its newest 10-Q or 10-K: the investor’s figures, not the lab’s."
+            note="Facts a public investor tags with this lab in its newest 10-Q or 10-K. These are the investor’s own figures. They aren’t the lab’s revenue."
             :more="{ label: 'Every lab’s revenue', to: '/revenue#parents' }"
           >
             <TerminalParentFacts :parents="parents.data.value" />
@@ -377,7 +377,7 @@ const tabs = computed(() => [
           <TerminalPanel
             id="demand"
             title="Top models on OpenRouter"
-            note="Most-routed models, newest 7 days; the percentage is of this lab’s own tokens. A proxy, not market share."
+            note="Most-routed models over the last 7 days, as a share of this lab’s own tokens. It’s one aggregator’s traffic, so treat it as a rough read."
             :more="{ label: 'Every lab, and the 30-day series', to: '/rankings' }"
           >
             <TerminalRankingsTopModels
@@ -390,7 +390,7 @@ const tabs = computed(() => [
           <TerminalPanel
             id="spend"
             title="Implied spend share"
-            note="This lab’s OpenRouter tokens at its list prices, per model. Shares are of the tracked labs’ total, not of all OpenRouter traffic."
+            note="This lab’s OpenRouter tokens at its list prices, per model. Shares are of the tracked labs’ total (not all OpenRouter traffic)."
           >
             <TerminalSpendShare v-if="spendOf" :spend="spendOf" />
             <TerminalGap v-else title="No rankings rows yet." />
@@ -430,7 +430,7 @@ const tabs = computed(() => [
           <TerminalPanel
             id="hiring"
             title="Hiring"
-            note="Open roles now, the change over the window, and the infrastructure cluster."
+            note="Open roles now, the change over the window, and infrastructure roles."
             :more="{ label: 'Department mix, buildout, daily series', to: `/hiring#${lab}` }"
             flush
           >
@@ -468,7 +468,7 @@ const tabs = computed(() => [
             title="Capacity strain"
             :note="
               incidents.data.value
-                ? `Status-page incidents, newest ${incidents.data.value.window_days} days against the prior ${incidents.data.value.window_days}.`
+                ? `Status-page incidents in the last ${incidents.data.value.window_days} days, against the ${incidents.data.value.window_days} before.`
                 : 'Status-page incidents.'
             "
             flush
@@ -532,7 +532,7 @@ const tabs = computed(() => [
           v-if="limits.data.value?.pages.length"
           id="limits"
           title="Published rate limits"
-          note="As the lab’s docs print them, per model and tier; a new snapshot only when a limit changes."
+          note="As the lab’s docs print them, per model and tier. We record a new version only when a limit changes."
           :more="{ label: 'Every lab', to: '/incidents#limits' }"
         >
           <TerminalLimitsTable

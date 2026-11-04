@@ -352,7 +352,7 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
       )
     }
     sections.push(
-      `- [Alerts feed](${appUrl}/alerts.xml): Atom, one entry per alert; add \`?include=info\` for the minor changes (severity info).`,
+      `- [Alerts feed](${appUrl}/alerts.xml): Atom, one entry per alert. Add \`?include=info\` to get the minor changes too (severity info).`,
       '',
     )
   }
@@ -383,8 +383,8 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
     '',
     '## About',
     '',
-    '- Not investment advice. Every figure carries the URL it was read from and when.',
-    '- Structured data for each page is published as schema.org JSON-LD in the page head; the bulk tables are described as schema.org Dataset nodes on /data.',
+    '- Not investment advice. Every number links to the page we read it from and shows when we read it (UTC).',
+    '- Each page publishes schema.org JSON-LD in its head. The bulk tables are described as schema.org Dataset nodes on /data.',
     '',
   )
 

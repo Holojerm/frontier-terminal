@@ -23,8 +23,8 @@ import { valueFormatOf } from '../theses/signals'
 import type { QueryContext } from './terminal-db'
 
 export const THESES_CAVEAT =
-  'A research journal, not investment advice. Statuses are computed from the terminal’s own stored data against kill conditions written before the data arrived. ' +
-  'OpenRouter is one aggregator’s traffic, not market share. A judged claim is unresolved until the judge rates it.'
+  'This is a research journal. It isn’t investment advice. Each status is computed from our stored data against kill conditions written before the data arrived. ' +
+  'OpenRouter is one aggregator’s traffic, so treat it as a rough read on demand. A judged claim stays unresolved until the judge rates it.'
 
 /** The thesis definitions themselves: a deploy that adds a thesis, moves a
  * threshold or commits a confirmation must not be served a payload cached

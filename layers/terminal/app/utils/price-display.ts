@@ -7,10 +7,10 @@ import type { MatrixCell } from '../../shared/utils/terminal-types'
 
 /** The vendor sentence behind a cell, and the last poll's word on whether it is still there. */
 export function basisText(c: MatrixCell, label: string): string {
-  const mapped = `Mapped to “${label}” on the vendor's own words: “${c.basis}” (${c.basis_source_id}).`
+  const mapped = `We map this to “${label}” because the vendor says “${c.basis}” (${c.basis_source_id}).`
   if (c.basis_current === false) return `${mapped} ${c.basis_note ?? ''}`.trim()
   if (c.basis_current === true && c.basis_checked_at) {
-    return `${mapped} Sentence confirmed on the page at the ${absoluteStamp(c.basis_checked_at)} poll.`
+    return `${mapped} Still on the page at our ${absoluteStamp(c.basis_checked_at)} check.`
   }
   return mapped
 }

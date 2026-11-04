@@ -46,7 +46,7 @@ const rows = computed(() =>
     </TerminalTable>
     <TerminalSources
       :sources="limits.pages.map((p) => p.source)"
-      :caveats="[{ text: limits.caveat, label: 'policy, not a gauge' }]"
+      :caveats="[{ text: limits.caveat, label: 'stated policy only' }]"
     />
   </div>
 </template>

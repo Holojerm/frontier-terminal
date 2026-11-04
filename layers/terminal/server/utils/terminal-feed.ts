@@ -47,8 +47,8 @@ export function alertEntryId(appUrl: string, alertId: string): string {
 
 const SUBTITLE = {
   alert:
-    'Alerts on the change log, judged or rule-fired; notable and critical only. Each entry links to the source it was read from.',
-  all: 'Alerts and minor changes on the change log, every severity. Each entry links to the source it was read from.',
+    'Notable and critical alerts on what changed, raised by the judge or by a fixed rule. Each entry links to the page we read it from.',
+  all: 'Every alert and minor change, at every severity. Each entry links to the page we read it from.',
 } as const
 
 export function buildAlertsAtom(input: AlertsFeedInput): string {
@@ -84,7 +84,7 @@ export function buildAlertsAtom(input: AlertsFeedInput): string {
     '<?xml version="1.0" encoding="UTF-8"?>',
     '<feed xmlns="http://www.w3.org/2005/Atom">',
     `  <id>${escapeXml(feedId)}</id>`,
-    `  <title>${escapeXml(`${input.appName} — ${tier === 'all' ? 'alerts and minor changes' : 'alerts'}`)}</title>`,
+    `  <title>${escapeXml(`${input.appName} ${tier === 'all' ? 'alerts and minor changes' : 'alerts'}`)}</title>`,
     `  <subtitle>${escapeXml(SUBTITLE[tier])}</subtitle>`,
     `  <updated>${escapeXml(updated)}</updated>`,
     `  <author><name>${escapeXml(input.appName)}</name></author>`,

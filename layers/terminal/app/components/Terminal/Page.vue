@@ -23,8 +23,8 @@ withDefaults(
     lede: undefined,
     asOf: null,
     back: undefined,
-    errorTitle: 'Part of this page could not be read',
-    errorBody: 'A data endpoint failed to respond. Panels that loaded are shown.',
+    errorTitle: 'Part of this page didn’t load',
+    errorBody: 'One of our data requests failed. We show the panels that loaded.',
   },
 )
 </script>

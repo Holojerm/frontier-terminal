@@ -15,7 +15,7 @@ definePageMeta({
     priority: '0.6',
     title: 'Data',
     summary:
-      'Every source behind the terminal with its newest snapshot, last poll, and caveat, and CSV or JSON downloads of every table (snapshots, prices, open jobs, incidents, the change log, alerts, poll runs), with provenance columns on every row.',
+      'Every source we read, with its last check and caveat, and CSV or JSON downloads of every table (snapshots, prices, open jobs, incidents, the change log, alerts, and poll runs). Every row has its source URL and fetch time.',
   },
 })
 
@@ -64,7 +64,7 @@ const datasets = (coverage.value?.exports ?? []).map((table) =>
   datasetSchema(site, {
     url: pageUrl,
     slug: table.name,
-    name: `${site.appName} — ${table.name}`,
+    name: `${table.name} (${site.appName})`,
     description: table.description,
     dateModified: coverage.value?.as_of,
     variableMeasured: table.columns,
@@ -89,7 +89,7 @@ useSeo({
   schema: [
     dataCatalogSchema(site, {
       description:
-        'Every table behind the terminal, streamed whole as CSV or JSON. Each row carries the URL it was read from and when.',
+        'Every table behind the terminal as a full CSV or JSON download. Each row has the URL we read it from and when.',
       dateModified: coverage.value?.as_of,
     }),
     ...datasets,
@@ -107,28 +107,28 @@ const EXPORT_COLUMNS: TableColumn[] = [
 <template>
   <TerminalPage
     title="Data"
-    lede="Every source the terminal reads, and every table it holds as a CSV or JSON download. Each row carries its source URL and fetch timestamp."
+    lede="Every source we read, and every table we hold as a CSV or JSON download. Each row has its source URL and the time we fetched it."
     :as-of="coverage?.as_of"
     :error="Boolean(error)"
-    error-title="Table counts could not be read"
-    error-body="The downloads below still work; only the row counts are unavailable."
+    error-title="Row counts didn’t load"
+    error-body="The downloads below still work. Only the row counts are missing."
   >
     <TerminalPanel
       id="coverage"
       title="Coverage"
-      note="Every source: newest snapshot, last poll, snapshot count, rows, the audit’s caveat, and the terms and robots.txt it is read under."
+      note="Each source with its newest snapshot, last check, snapshot count, rows, the audit’s caveat, and the terms and robots.txt we read it under."
       flush
     >
       <TerminalCoveragePanel v-if="coverage" :coverage="coverage" />
       <template #foot>
-        Each label links to the exact URL fetched; each age’s tooltip gives the exact UTC timestamp.
+        Each label links to the URL we fetched. Hover over an age for the full UTC timestamp.
       </template>
     </TerminalPanel>
 
     <TerminalPanel
       id="tables"
       title="Tables"
-      note="Each table streamed whole, with provenance columns on every row."
+      note="Each table in full, with its source URL and fetch time on every row."
       flush
     >
       <TerminalTable
@@ -177,17 +177,17 @@ const EXPORT_COLUMNS: TableColumn[] = [
         </template>
       </TerminalTable>
       <template v-if="coverage" #foot>
-        Data as of poll tick
-        <time v-if="coverage.as_of" :datetime="coverage.as_of">{{ coverage.as_of }}</time>
-        <span v-else>— no poll has run yet</span>. Exports are served live; the counts above are
-        cached for up to five minutes. Each sample is the table’s first 50 rows in export order
-        (oldest first where it is keyed by time), at
+        Data as of the last check<template v-if="coverage.as_of"
+          >, <time :datetime="coverage.as_of">{{ coverage.as_of }}</time></template
+        ><span v-else> (none has run yet)</span>. Exports are live. The counts above can be up to
+        five minutes old. Each sample is the table’s first 50 rows in export order (oldest first
+        when the table is ordered by time), at
         <span class="font-mono">/export/sample/&lt;table&gt;.csv</span> or
         <span class="font-mono">.json</span>. <span class="font-mono">entity_securities</span> maps
-        each lab and tracked filer to its issuer, CIK and symbol, and says so when a lab is private.
-        <span class="font-mono">rankings_daily</span> is no longer exported: OpenRouter licenses its
-        rankings CC BY 4.0 but says they are not to be re-served as a competing free API, so the
-        per-lab shares stay on
+        each lab and tracked company to its issuer, CIK, and ticker symbol, and says so when a lab
+        is private. We no longer export <span class="font-mono">rankings_daily</span>. OpenRouter
+        licenses its rankings CC BY 4.0 but says they aren’t to be re-served as a competing free
+        API. So the per-lab shares stay on
         <NuxtLink to="/rankings" class="text-primary underline underline-offset-2"
           >/rankings</NuxtLink
         >
@@ -198,7 +198,7 @@ const EXPORT_COLUMNS: TableColumn[] = [
     <TerminalPanel
       id="point-in-time"
       title="Point in time"
-      note="What the terminal knew at an instant, for a backtest."
+      note="What we knew at a given moment, for a backtest."
     >
       <div class="flex max-w-3xl flex-col gap-3 text-sm text-default">
         <p>
@@ -209,9 +209,8 @@ const EXPORT_COLUMNS: TableColumn[] = [
             external
             class="font-mono text-primary underline underline-offset-2"
             >/api/prices?as_of=2026-10-01T00:00:00Z</NuxtLink
-          >. The answer is what this store held at that instant: a row counts from when it was
-          fetched, and a judge alert from when a judge run could have written it, not from the event
-          it describes.
+          >. You get what we held at that moment. A row counts from when we fetched it. A judged
+          alert counts from when the model could have written it, not from the event it describes.
         </p>
         <ul class="flex list-disc flex-col gap-1 pl-5">
           <li>
@@ -219,14 +218,14 @@ const EXPORT_COLUMNS: TableColumn[] = [
             <span class="font-mono">/api/prices/&lt;key&gt;</span>,
             <span class="font-mono">/api/hiring</span>,
             <span class="font-mono">/api/hiring/history</span> and
-            <span class="font-mono">/api/revenue</span> rebuild their payload and add
-            <span class="font-mono">point_in_time</span>: how it was rebuilt, and any keys the
-            change log cannot confirm.
+            <span class="font-mono">/api/revenue</span> rebuild their response and add a
+            <span class="font-mono">point_in_time</span> field. It says how the answer was rebuilt
+            and lists any keys the change log can’t confirm.
           </li>
           <li>
-            Every table above except <span class="font-mono">claim_readings</span> and
-            <span class="font-mono">recipe_observations</span>, which are rewritten in place with no
-            history. Tables of current rows are rebuilt from the change log and gain an
+            Every table above, except <span class="font-mono">claim_readings</span> and
+            <span class="font-mono">recipe_observations</span>. Those are overwritten in place and
+            keep no history. Tables of current rows are rebuilt from the change log and gain an
             <span class="font-mono">as_of_verified</span> column.
           </li>
           <li>
@@ -234,7 +233,7 @@ const EXPORT_COLUMNS: TableColumn[] = [
           </li>
         </ul>
         <p class="text-muted">
-          Any other route answers 400 rather than return today’s data under an earlier date.
+          Any other route returns a 400 instead of today’s data under an earlier date.
         </p>
       </div>
     </TerminalPanel>
@@ -245,8 +244,8 @@ const EXPORT_COLUMNS: TableColumn[] = [
           Need the parts of these tables that are ours under signed terms, on a schedule you can
           depend on, with full history, or covering something we don’t?
           <NuxtLink to="/contact" class="text-primary underline underline-offset-2"
-            >That is a paid arrangement</NuxtLink
-          >; upstream CC BY data keeps its own terms, and some sources are in no paid offer.
+            >That’s a paid arrangement</NuxtLink
+          >. Upstream CC BY data keeps its own terms, and some sources aren’t in any paid offer.
         </p>
         <UButton
           :to="mailto('Data licensing')"
@@ -271,17 +270,17 @@ const EXPORT_COLUMNS: TableColumn[] = [
 
       <TerminalPanel id="feed" title="Feed">
         <p class="text-sm text-default">
-          Alerts as Atom at
+          Alerts as an Atom feed at
           <NuxtLink to="/alerts.xml" external class="text-primary underline underline-offset-2">
             /alerts.xml</NuxtLink
-          >;
+          >. Add
           <NuxtLink
             :to="`/alerts.xml?${INFO_FEED_QUERY}`"
             external
             class="font-mono text-primary underline underline-offset-2"
             >?{{ INFO_FEED_QUERY }}</NuxtLink
           >
-          adds the minor changes.
+          for the minor changes.
         </p>
       </TerminalPanel>
     </div>

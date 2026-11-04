@@ -34,7 +34,7 @@ function ruling(v: VerdictView) {
     <TerminalGap
       v-if="claim.verdicts.length === 0"
       title="No verdicts yet."
-      reason="No candidate event for this claim has been rated. The claim holds by default until one is."
+      reason="No event for this claim has been rated yet. The claim holds until one is."
     />
 
     <div v-else class="grid items-start gap-3 lg:grid-cols-2">

@@ -73,7 +73,7 @@ useSeo({
   schema: [
     datasetSchema(site, {
       url: usePageUrl(),
-      name: `${name.value} — API price history`,
+      name: `${name.value} API price history`,
       description: `Every observed list price for ${name.value}, per million tokens, as read from ${labName(history.value?.provider ?? 'the provider')}’s own pricing page, with the source URL and fetch time behind each observation.`,
       dateModified: history.value?.as_of,
       temporalCoverage: coverage.value,
@@ -93,7 +93,7 @@ const KIND: Record<
   PricePoint['kind'],
   { label: string; color: 'neutral' | 'success' | 'warning' | 'info'; icon: string }
 > = {
-  baseline: { label: 'first snapshot', color: 'info', icon: 'i-lucide-flag' },
+  baseline: { label: 'first seen', color: 'info', icon: 'i-lucide-flag' },
   added: { label: 'listed', color: 'success', icon: 'i-lucide-plus' },
   modified: { label: 'revised', color: 'warning', icon: 'i-lucide-pencil' },
   removed: { label: 'delisted', color: 'neutral', icon: 'i-lucide-minus' },
@@ -141,8 +141,8 @@ const POINT_COLUMNS: TableColumn[] = [
     :back="{ label: 'Prices', to: '/prices' }"
     :as-of="history?.as_of"
     :error="Boolean(error)"
-    error-title="Price history could not be read"
-    error-body="The history endpoint failed to respond. No stale or inferred number is shown in its place."
+    error-title="Price history didn’t load"
+    error-body="We won’t show an old number in its place. Try reloading in a minute."
   >
     <template #title
       ><span class="font-mono">{{ name }}</span></template
@@ -179,7 +179,7 @@ const POINT_COLUMNS: TableColumn[] = [
         <TerminalGap
           v-else
           title="No published price on any observation."
-          reason="This SKU is catalog-only on the audited page: listed there without a price."
+          reason="The vendor’s page lists this SKU without a price."
         />
       </TerminalPanel>
 
@@ -224,9 +224,9 @@ const POINT_COLUMNS: TableColumn[] = [
           </template>
         </TerminalTable>
         <template #foot>
-          A “first snapshot” point is the state the earliest change row records as its prior value,
-          held since the source was first fetched; any move in between would appear in the log. A
-          “current” point is the row as of the newest fetch that rewrote it.
+          A “first seen” point is the price before our first recorded change. It held from our first
+          check of the page, and any move in between would show up as its own row. A “current” point
+          is the price as of the latest check that changed it.
         </template>
       </TerminalPanel>
     </div>

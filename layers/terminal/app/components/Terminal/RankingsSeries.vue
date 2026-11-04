@@ -106,7 +106,7 @@ const xLabels = computed(() =>
 )
 
 const describe = (day: RankingDay) =>
-  `${day.date}: ${STACK.map((s) => `${s.label} ${compactTokens(day.tokens[s.id])}`).join(', ')} — total ${compactTokens(day.total)}`
+  `${day.date}: ${STACK.map((s) => `${s.label} ${compactTokens(day.tokens[s.id])}`).join(', ')}. Total ${compactTokens(day.total)}`
 
 const uid = useId()
 
@@ -136,7 +136,7 @@ const tableColumns: TableColumn[] = [
       :aria-describedby="`${uid}-desc`"
     >
       <title :id="`${uid}-title`">Tokens routed per UTC day, stacked by lab</title>
-      <desc :id="`${uid}-desc`">{{ series.length }} days; every value is in the table below.</desc>
+      <desc :id="`${uid}-desc`">{{ series.length }} days. Every value is in the table below.</desc>
 
       <!-- gridlines: hairline, recessive -->
       <g class="stroke-current text-muted" stroke-width="1" stroke-opacity="0.35">

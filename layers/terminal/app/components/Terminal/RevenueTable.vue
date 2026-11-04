@@ -21,8 +21,8 @@ const gapText = (p: RevenueProviderView) =>
   p.disclosure === 'none'
     ? 'No SEC filing reports this lab’s revenue'
     : p.filer?.relation === 'issuer'
-      ? 'S-1 filed; no revenue read yet'
-      : 'Filer tagged; no XBRL facts parsed yet'
+      ? 'S-1 filed. No revenue read yet'
+      : 'Filer known. No XBRL revenue read yet'
 </script>
 
 <template>
@@ -38,7 +38,7 @@ const gapText = (p: RevenueProviderView) =>
       <TerminalCaveatMark
         v-if="p.disclosure === 'parent' && p.filer"
         label="parent"
-        :text="`${p.filer.entity_name ?? p.filer.ticker ?? ''} (${p.filer.ticker ?? `CIK ${p.filer.cik}`}) consolidated: the parent’s revenue, not ${p.display}’s.`"
+        :text="`${p.filer.entity_name ?? p.filer.ticker ?? ''} (${p.filer.ticker ?? `CIK ${p.filer.cik}`}), consolidated. That’s the whole parent’s revenue, not ${p.display}’s.`"
         class="ml-1"
       />
     </template>

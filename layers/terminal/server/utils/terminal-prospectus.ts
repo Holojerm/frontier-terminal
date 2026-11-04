@@ -42,8 +42,8 @@ import { filingIndexUrl, prospectusSourcePrefix } from './terminal-revenue'
 import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
 
 export const PROSPECTUS_RULE =
-  'Read from the lab’s own registration statements (S-1 and its amendments) as printed: the statement of operations line by line, the contractual-commitment schedules, the 10%-customer tables, “The Offering” share counts and the risk-factor headings. ' +
-  'Each period once, from the newest filing that reports it; a figure the filing leaves blank is not shown, and nothing is estimated. Interim periods are unaudited and marked.'
+  'Read from the lab’s own registration statements (S-1 and its amendments) as printed. That covers the statement of operations line by line, the contractual-commitment schedules, the 10%-customer tables, “The Offering” share counts, and the risk-factor headings. ' +
+  'Each period appears once, from the newest filing that reports it. If the filing leaves a figure blank, we show none, and we never estimate. Interim periods are unaudited and marked.'
 
 const DETAIL_TYPES = ['statement', 'commitment', 'concentration', 'shares', 'risk_factors'] as const
 

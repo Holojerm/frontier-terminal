@@ -41,7 +41,7 @@ const columns: TableColumn[] = [
 
 <template>
   <TerminalTable
-    caption="Each lab on every axis: flagship price, disclosed revenue, demand share, open roles, incidents, and newest alert"
+    caption="Each lab’s flagship price, disclosed revenue, demand share, open roles, incidents, and newest alert"
     :columns="columns"
     :rows="rows"
     :row-key="(r) => r.lab"

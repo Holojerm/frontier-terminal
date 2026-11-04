@@ -33,26 +33,26 @@ const PROVIDER: Record<string, string> = { ...LAB_DISPLAY, all: 'market-wide', o
 
 const roleNote = (s: SourceCoverage) =>
   s.derived_from
-    ? `derived from the ${s.derived_from} template: a stored key filled into an audited URL`
+    ? `built from the ${s.derived_from} template (a stored key filled into an audited URL)`
     : s.role === 'join'
-      ? 'join table: enriches another source, no rows of its own'
+      ? 'join table that adds to another source (no rows of its own)'
       : s.role === 'cross-check'
-        ? 'cross-check only — never a source of record'
+        ? 'cross-check only, never a source of record'
         : null
 
 const columns: TableColumn[] = [
   { key: 'label', label: 'Source' },
-  { key: 'snapshot', label: 'Newest snapshot' },
-  { key: 'run', label: 'Last poll', class: 'whitespace-nowrap' },
-  { key: 'snapshot_count', label: 'Snapshots', numeric: true },
+  { key: 'snapshot', label: 'Last fetched' },
+  { key: 'run', label: 'Last check', class: 'whitespace-nowrap' },
+  { key: 'snapshot_count', label: 'Copies stored', numeric: true },
   { key: 'entity_count', label: 'Rows', numeric: true },
   { key: 'caveat', label: 'Caveat and terms' },
 ]
 
 const recipeColumns: TableColumn[] = [
   { key: 'recipe_id', label: 'Recipe' },
-  { key: 'newest', label: 'Newest fetch stored' },
-  { key: 'run', label: 'Last run', class: 'whitespace-nowrap' },
+  { key: 'newest', label: 'Last fetched' },
+  { key: 'run', label: 'Last check', class: 'whitespace-nowrap' },
   { key: 'observations', label: 'Observations', numeric: true },
   { key: 'caveat', label: 'Caveat and terms' },
 ]
@@ -61,8 +61,8 @@ const recipeColumns: TableColumn[] = [
 // the same three facts for a lab source and a recipe.
 const RIGHTS_NOTE: Record<SourceRights, string> = {
   ours: 'Licensable on our terms.',
-  upstream: 'Stays under its upstream licence.',
-  'not-cleared': 'Free site only; not in any paid offer.',
+  upstream: 'Stays under its upstream license.',
+  'not-cleared': 'Free site only. Not in any paid offer.',
 }
 const auditNote = (r: SourceCoverage | RecipeCoverage) =>
   [r.caveat, r.terms && `Terms: ${r.terms}`, r.rights && RIGHTS_NOTE[r.rights]]
@@ -73,7 +73,7 @@ const auditNote = (r: SourceCoverage | RecipeCoverage) =>
 <template>
   <div>
     <TerminalTable
-      caption="Every registered source: newest snapshot, last poll status, snapshot count, rows, caveat"
+      caption="Every source we track, when we last fetched and checked it, the copies and rows we’ve stored, and its caveats"
       :columns="columns"
       :rows="coverage.sources"
       :row-key="(s) => s.source_id"
@@ -113,7 +113,7 @@ const auditNote = (r: SourceCoverage | RecipeCoverage) =>
           </UBadge>
           <TerminalCaveatMark
             v-if="s.last_run.detail"
-            :name="`Detail of the last ${s.label} poll`"
+            :name="`Detail of the last ${s.label} check`"
             :text="s.last_run.detail"
           />
         </template>
@@ -133,13 +133,13 @@ const auditNote = (r: SourceCoverage | RecipeCoverage) =>
       <div class="space-y-1 px-3">
         <h3 class="text-sm text-highlighted">Thesis recipes</h3>
         <p class="text-xs text-muted">
-          Sources the theses read that are not lab axes, such as GPU rental prices and filers
-          outside the labs. They store outside the lab tables; the raw bytes of every changed fetch
-          go to R2.
+          Other sources the theses read, such as GPU rental prices and companies outside the labs.
+          We store them apart from the lab tables and keep the raw bytes of every fetch that
+          changed.
         </p>
       </div>
       <TerminalTable
-        caption="Every thesis recipe: newest fetch stored, last run, observations, caveat"
+        caption="Every thesis recipe, when we last fetched and ran it, its observations, and its caveats"
         :columns="recipeColumns"
         :rows="coverage.recipes"
         :row-key="(r) => r.recipe_id"
@@ -201,7 +201,7 @@ const auditNote = (r: SourceCoverage | RecipeCoverage) =>
         <li v-for="cut in coverage.cuts" :key="cut.id" class="flex flex-wrap items-center gap-x-2">
           <span class="font-mono text-default">{{ cut.id }}</span>
           <span class="text-muted">{{ cut.verdict }}</span>
-          <TerminalCaveatMark :name="`Why ${cut.id} is not tracked`" :text="cut.reason" />
+          <TerminalCaveatMark :name="`Why we don’t track ${cut.id}`" :text="cut.reason" />
         </li>
       </ul>
     </div>

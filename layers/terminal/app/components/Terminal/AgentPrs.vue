@@ -37,7 +37,7 @@ const rows = computed(() =>
 <template>
   <div class="space-y-3">
     <TerminalTable
-      caption="Public GitHub pull requests per day from each lab's coding agent"
+      caption="Public GitHub pull requests per day from each lab’s coding agent"
       :columns="columns"
       :rows="rows"
       :row-key="(r) => r.recipe_id"
@@ -51,7 +51,7 @@ const rows = computed(() =>
         <TerminalGap
           inline
           title="No day counted yet"
-          reason="Counted once a day from the search API."
+          reason="We count them once a day with GitHub’s search API."
         />
       </template>
     </TerminalTable>

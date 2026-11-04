@@ -37,7 +37,7 @@ useSeo({
       url: usePageUrl(),
       name: 'OpenRouter tokens per lab per day',
       description:
-        'Total tokens routed through OpenRouter per UTC day, folded into each frontier lab’s share, from OpenRouter’s public usage rankings. One channel’s share, not market share. Source: OpenRouter (openrouter.ai/rankings), licensed CC BY 4.0.',
+        'Total tokens routed through OpenRouter per UTC day, folded into each frontier lab’s share, from OpenRouter’s public usage rankings. It covers one aggregator’s traffic only. Source: OpenRouter (openrouter.ai/rankings), licensed CC BY 4.0.',
       dateModified: rankings.value?.as_of,
       temporalCoverage: rankings.value?.meta.coverage.first_date
         ? `${rankings.value.meta.coverage.first_date}/${rankings.value.meta.coverage.last_date ?? '..'}`
@@ -61,11 +61,11 @@ const tabs = computed(() => [
 <template>
   <TerminalPage
     title="Demand"
-    lede="Tokens routed through OpenRouter per lab, then enterprise adoption, SDK downloads and coding-agent activity: each a different window on demand, none of them market share."
+    lede="Tokens routed through OpenRouter per lab, then enterprise adoption, SDK downloads, and coding-agent activity. Each shows a different slice of demand. None of them is market share."
     :as-of="rankings?.as_of"
     :error="Boolean(error)"
-    error-title="Rankings could not be read"
-    error-body="The rankings endpoint failed to respond."
+    error-title="Rankings didn’t load"
+    error-body="Try reloading in a minute."
   >
     <TerminalTabs :tabs="tabs">
       <template #openrouter>
@@ -74,7 +74,7 @@ const tabs = computed(() => [
             <TerminalPanel
               id="share"
               title="7-day share"
-              :note="`${rankings.meta.coverage.days} day${rankings.meta.coverage.days === 1 ? '' : 's'} on record. Share of all OpenRouter tokens: its daily top 50 plus its “other” row.`"
+              :note="`${rankings.meta.coverage.days} day${rankings.meta.coverage.days === 1 ? '' : 's'} on record. Share of all OpenRouter tokens, counting its daily top 50 and its “other” row.`"
             >
               <TerminalDemandShare :rankings="rankings" />
             </TerminalPanel>
@@ -83,7 +83,7 @@ const tabs = computed(() => [
               v-if="spend"
               id="spend"
               title="Implied spend share"
-              note="The window’s tokens at each vendor’s list price, as a low–high range. Shares are of the tracked labs’ total, not of all OpenRouter traffic, so the token share here is larger than the one beside it."
+              note="The same tokens at each vendor’s list price, as a low–high range. Shares are of the tracked labs’ total (not all OpenRouter traffic), so each token share here is larger than the one beside it."
             >
               <TerminalSpendShare :spend="spend" />
             </TerminalPanel>
@@ -102,7 +102,7 @@ const tabs = computed(() => [
             v-if="rankings.status === 'ok'"
             id="models"
             title="Top models per lab"
-            note="Most-routed models per lab; the percentage is of the lab’s own total."
+            note="Most-routed models per lab. Each percentage is of the lab’s own total."
           >
             <TerminalRankingsTopModels :providers="rankings.top_models" />
           </TerminalPanel>
@@ -114,7 +114,7 @@ const tabs = computed(() => [
           <TerminalPanel
             id="enterprise"
             title="Enterprise adoption"
-            note="Share of US businesses on Ramp paying each vendor, monthly, from card and bill-pay spend: the enterprise side OpenRouter does not see."
+            note="Share of US businesses on Ramp paying each vendor, monthly, from card and bill-pay spend. It covers the enterprise side that OpenRouter doesn’t see."
           >
             <TerminalAdoptionRamp :ramp="adoption.ramp" :caveat="adoption.caveats.ramp" />
           </TerminalPanel>
@@ -127,7 +127,7 @@ const tabs = computed(() => [
             <TerminalPanel
               id="developers"
               title="SDK downloads"
-              note="Each lab’s official SDKs on npm and PyPI, the newest 28 days against the 28 before."
+              note="Each lab’s official SDKs on npm and PyPI, the last 28 days against the 28 before."
             >
               <TerminalDownloadsTable
                 :downloads="adoption.downloads"

@@ -13,7 +13,7 @@ definePageMeta({
     priority: '0.9',
     title: 'Alerts',
     summary:
-      'Alerts raised on the change log, split by materiality: notable and critical alerts, then the minor changes (severity info). Each cites its change rows and source. Atom at /alerts.xml (add ?include=info for the minor changes).',
+      'Alerts on what changed at the frontier labs. Notable and critical alerts come first, then minor changes (severity info). Each cites the changes behind it and their sources. Atom feed at /alerts.xml (add ?include=info for minor changes).',
   },
 })
 
@@ -26,7 +26,7 @@ const [{ data: alerts, error: alertsError }, { data: minor, error: minorError }]
 useSeo({
   title: 'AI lab pricing, hiring, and filing alerts',
   description:
-    'Every alert raised on pricing, hiring, and SEC changes at the frontier AI labs, split into alerts and minor changes, each citing its change rows and sources.',
+    'Every alert on pricing, hiring, and SEC changes at the frontier AI labs, split into alerts and minor changes, each citing the changes and sources behind it.',
   dateModified: alerts.value?.as_of,
 })
 
@@ -50,11 +50,11 @@ const infoFeed = `/alerts.xml?${INFO_FEED_QUERY}`
 <template>
   <TerminalPage
     title="Alerts"
-    lede="Alerts are material changes: a price move, a new SKU, a hiring shift, a filing. Minor changes are listed below them. Each cites the change rows it rests on."
+    lede="Alerts are material changes, like a price move, a new SKU, a hiring shift, or a filing. Minor changes are listed separately. Each one cites the changes it’s based on."
     :as-of="alerts?.as_of"
     :error="failed"
-    error-title="Alerts could not be read"
-    error-body="The alerts endpoint failed to respond. The section that did load is shown."
+    error-title="Alerts didn’t load"
+    error-body="Some sections may be missing. Try reloading in a minute."
   >
     <template #header>
       <p class="text-sm text-muted">
@@ -86,7 +86,7 @@ const infoFeed = `/alerts.xml?${INFO_FEED_QUERY}`
           <TerminalGap
             v-if="alerts.rows.length === 0"
             title="No alerts yet."
-            reason="Alerts are raised on change rows that meet the materiality bar. An empty list after a baseline is expected."
+            reason="An alert needs a change big enough to matter. Right after our first check, an empty list is normal."
             :action="{ label: 'Recent changes', to: '/#signal' }"
           />
           <TerminalSignalTable v-else :alerts="shown" flow />
@@ -102,8 +102,8 @@ const infoFeed = `/alerts.xml?${INFO_FEED_QUERY}`
               @click="shownCount += PAGE"
             />
             <span>
-              {{ shown.length }} of {{ alerts.total }}; each row opens the explanation, rule, and
-              cited change rows.
+              {{ shown.length }} of {{ alerts.total }}. Open a row for the explanation, the rule,
+              and the changes it cites.
             </span>
           </span>
         </template>
