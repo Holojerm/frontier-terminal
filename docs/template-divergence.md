@@ -114,7 +114,7 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 - `server/plugins/error-logger.ts` — no PostHog $exception capture or session lookup; logs errorDetail() from the terminal layer so the cause of a D1 fault reaches the digest
 - `server/routes/llms.txt.get.ts` — no blog; a static map (no D1) that adds the data tables, the MCP endpoint and the licence block, shared with the MCP describe tool via crawler-pages.ts
 - `server/routes/sitemap.xml.get.ts` — no blog; dates each data page from its newest change row (dataLastmods) and lists the layer's static lab, compare and thesis pages
-- `server/tasks/ops/alert.ts` — runs the judge-silence and launch-coverage watchdogs before the mailer check (upstream candidate: an ops-check registry)
+- `server/tasks/ops/alert.ts` — runs the judge-silence, launch-coverage and deploy-drift watchdogs before the mailer check (upstream candidate: an ops-check registry)
 - `server/utils/extensions.ts` — trimmed to the fleet extra-counter registry; account, admin, onboarding and purge contributors, and the deletion guard and resolver, view-as, funnel-stage, lifecycle-step, access-gate, billing-outcome, earned-access, entitlement-view and signup registries, belong to the removed subsystems
 - `server/utils/fleet-status.ts` — no users, entitlements or funnel counters; adds collectStatus() and latestFetchBySource() for the public status payload
 - `server/utils/seo.ts` — adds per-page lastmods, the data-tables and licence blocks of llms.txt; no blog, support or legal-entity lines
