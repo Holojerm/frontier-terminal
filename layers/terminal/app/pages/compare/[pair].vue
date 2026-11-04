@@ -46,7 +46,7 @@ const key = `${a}-${b}`
 
 // Narrowed in `transform`, on the server, so the other labs' rows never reach
 // the hydration payload; the shapes are unchanged. The explicit per-pair key
-// is load-bearing for the reason labs/[lab].vue gives: an automatic key is
+// is load-bearing for the reason labs/[lab]/index.vue gives: an automatic key is
 // per call site, so two compare pages would share one cache entry.
 const [prices, revenue, rankings, hiring, incidents, alerts] = await Promise.all([
   useFetch('/api/prices', {

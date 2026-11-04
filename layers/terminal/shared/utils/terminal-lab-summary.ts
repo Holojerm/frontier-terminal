@@ -54,6 +54,18 @@ export const LAB_PAGES = LABS.map((lab) => ({
   summary: `${LAB_DISPLAY[lab]} on every axis the terminal tracks: flagship API price, disclosed revenue, OpenRouter demand and implied spend share, open roles and the infrastructure buildout, status-page incidents, and the alerts that cite it.`,
 }))
 
+export const tearSheetPath = (lab: LabId) => `/labs/${lab}/tear-sheet`
+
+/** The printable one-page sheets, one per lab, listed the way LAB_PAGES is. */
+export const TEAR_SHEET_PAGES = LABS.map((lab) => ({
+  lab,
+  path: tearSheetPath(lab),
+  changefreq: 'daily' as const,
+  priority: '0.6',
+  title: `${LAB_DISPLAY[lab]} tear sheet`,
+  summary: `${LAB_DISPLAY[lab]} on one printable page: API prices and the last change, disclosed revenue, hyperscaler filings that name it, OpenRouter demand share, open roles, incidents, the newest alerts, and every source with its fetch time.`,
+}))
+
 export interface LabInputs {
   /** Only `matrix` is read, so a page may `pick` it and keep the catalog out of its payload. */
   prices?: Pick<PricesData, 'matrix'> | null

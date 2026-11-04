@@ -6,7 +6,12 @@
 
 import { relativeStamp } from '../../../shared/utils/terminal-format'
 import { clipHeadline } from '../../../shared/utils/terminal-labs'
-import { labPath, summarizeLab, type LabInputs } from '../../../shared/utils/terminal-lab-summary'
+import {
+  labPath,
+  summarizeLab,
+  tearSheetPath,
+  type LabInputs,
+} from '../../../shared/utils/terminal-lab-summary'
 import { alertPath } from '../../../shared/utils/terminal-tiers'
 import type { LabId } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
@@ -47,11 +52,19 @@ const columns: TableColumn[] = [
     :row-key="(r) => r.lab"
   >
     <template #cell-lab="{ row }">
+      <!-- Two stacked links, so each is at least 24px tall (WCAG 2.5.8). -->
       <NuxtLink
         :to="labPath(row.lab)"
-        class="whitespace-nowrap font-medium hover:underline hover:underline-offset-2"
+        class="inline-flex min-h-6 items-center whitespace-nowrap font-medium hover:underline hover:underline-offset-2"
       >
         {{ row.display }}
+      </NuxtLink>
+      <NuxtLink
+        :to="tearSheetPath(row.lab)"
+        :aria-label="`${row.display} tear sheet`"
+        class="flex min-h-6 items-center whitespace-nowrap text-xs text-muted underline underline-offset-2 hover:text-highlighted"
+      >
+        Tear sheet
       </NuxtLink>
     </template>
     <template v-for="axis in READOUT_AXES" :key="axis" #[`cell-${axis}`]="{ row }">
