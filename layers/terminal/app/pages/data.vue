@@ -16,6 +16,7 @@ import { INFO_FEED_QUERY } from '../../shared/utils/terminal-tiers'
 import type {
   CoverageData,
   DataDictionary,
+  ExportTableInfo,
   PricesData,
   SourceAxis,
 } from '../../shared/utils/terminal-types'
@@ -165,11 +166,15 @@ const EXPORT_COLUMNS: TableColumn[] = [
       :note="`Tables that grow over time download the last ${LICENSE_WINDOW_DAYS} days. Full history has every row, each with its license. Every row has its source URL and fetch time.`"
       flush
     >
-      <TerminalTable
+      <!-- Everything below the coverage table hydrates when scrolled into view.
+           The server HTML is already complete; hydrating the download buttons
+           and the dictionary at load only lengthened the first long task. -->
+      <LazyTerminalTable
+        hydrate-on-visible
         caption="Exportable tables with row counts and download links"
         :columns="EXPORT_COLUMNS"
         :rows="coverage?.exports ?? []"
-        :row-key="(t) => t.name"
+        :row-key="(t: ExportTableInfo) => t.name"
         align="top"
       >
         <template #cell-name="{ row: t }">
@@ -228,7 +233,7 @@ const EXPORT_COLUMNS: TableColumn[] = [
             />
           </span>
         </template>
-      </TerminalTable>
+      </LazyTerminalTable>
       <template v-if="coverage" #foot>
         Data as of the last check<template v-if="coverage.as_of"
           >, <time :datetime="coverage.as_of">{{ coverage.as_of }}</time></template
@@ -254,7 +259,12 @@ const EXPORT_COLUMNS: TableColumn[] = [
       title="Data dictionary"
       note="Every exported column: type, unit, whether it can be null, whether it is a key, and what it holds."
     >
-      <TerminalDictionary v-if="dictionary" v-model:open="openTables" :dictionary="dictionary" />
+      <LazyTerminalDictionary
+        v-if="dictionary"
+        v-model:open="openTables"
+        hydrate-on-visible
+        :dictionary="dictionary"
+      />
       <TerminalGap
         v-else
         title="Dictionary unavailable"
@@ -314,7 +324,7 @@ const EXPORT_COLUMNS: TableColumn[] = [
       note="Before we started checking, we read the Internet Archive’s copies of each lab’s own pricing page."
       flush
     >
-      <TerminalPriceReach :reach="prices.reach" />
+      <LazyTerminalPriceReach hydrate-on-visible :reach="prices.reach" />
       <template #foot>
         Rows from an archived copy are marked on each SKU’s page, in
         <span class="font-mono">/api/prices/&lt;key&gt;</span>, and in the
@@ -397,7 +407,8 @@ const EXPORT_COLUMNS: TableColumn[] = [
       </div>
     </TerminalPanel>
 
-    <TerminalInstitutions
+    <LazyTerminalInstitutions
+      hydrate-on-visible
       :schema-version="dictionary?.schema_version"
       :changelog="dictionary?.changelog ?? []"
     />
