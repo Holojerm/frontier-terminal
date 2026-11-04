@@ -13,7 +13,7 @@ import { toWebRequest } from 'h3'
 import { llmsTxtInput } from '../utils/crawler-pages'
 import { createTerminalMcpHandler } from '../utils/mcp'
 import { llmsTxtResponse } from '#server/utils/seo'
-import { terminalPayload } from '../utils/terminal-handler'
+import { terminalPayload, terminalPayloadAt } from '../utils/terminal-handler'
 
 // Built on first use, per isolate: runtime config is fixed for the life of
 // the isolate, and the modern-era handler is meant to be constructed once.
@@ -37,6 +37,7 @@ export default defineEventHandler(async (event) => {
     handler = createTerminalMcpHandler({
       db,
       serve: terminalPayload,
+      serveAt: terminalPayloadAt,
       llmsTxt,
       appUrl: config.public.appUrl.replace(/\/+$/, ''),
       status: {

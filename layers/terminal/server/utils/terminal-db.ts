@@ -81,6 +81,16 @@ import {
 import { clusterSeries, parseDepartmentClusters, type DepartmentCluster } from './terminal-clusters'
 import { EXPORT_TABLES } from './terminal-export'
 import {
+  ALERTS_METHOD,
+  ENTITY_METHOD,
+  alertsKnownAt,
+  judgeCutoffAt,
+  pointInTimeNotes,
+  rewindEntities,
+  type PointInTimeNotes,
+  type Rewound,
+} from './terminal-asof'
+import {
   baselineInstants,
   byDetectedAt,
   compareWindow,
@@ -116,15 +126,25 @@ export interface QueryContext {
   whitelist: CikWhitelist
   /** sources.yaml derived_sources — the templates, for naming derived sources on the coverage panel. */
   derivedTemplates: DerivedTemplate[]
-  /** Newest source_runs.started_at, already read for the cache key. */
+  /** Newest source_runs.started_at, already read for the cache key — at or before `at` when one is set. */
   as_of: string | null
   now: () => Date
+  /**
+   * The instant a point-in-time request (`?as_of=`) asks about, or null for
+   * now. A query that honours it must read every table as of that instant
+   * (layers/terminal/server/utils/terminal-asof.ts); a route whose query
+   * does not is refused before it runs (terminal-handler.ts › serveTerminal).
+   */
+  at: string | null
+  /** How a point-in-time payload was rebuilt; terminalPayload attaches it. */
+  notes: PointInTimeNotes
 }
 
 export function queryContext(
   sourcesYaml: string,
   as_of: string | null,
   now: () => Date = () => new Date(),
+  at: string | null = null,
 ): QueryContext {
   return {
     registry: readSourceRegistry(sourcesYaml),
@@ -134,8 +154,26 @@ export function queryContext(
     derivedTemplates: parseDerivedSourcesBlock(sourcesYaml),
     as_of,
     now,
+    at,
+    notes: pointInTimeNotes(),
   }
 }
+
+/** The entity set of `type` (or one key) at ctx.at, noted on the payload's point_in_time. */
+export async function rewound(
+  db: PipelineDb,
+  ctx: QueryContext & { at: string },
+  type: string,
+  key?: string,
+): Promise<Rewound> {
+  const r = await rewindEntities(db, type, ctx.at, key)
+  ctx.notes.method.add(ENTITY_METHOD)
+  for (const k of r.unverified) ctx.notes.unverified.add(k)
+  return r
+}
+
+const atOf = (ctx: QueryContext): (QueryContext & { at: string }) | null =>
+  ctx.at === null ? null : (ctx as QueryContext & { at: string })
 
 /** The audit's reason for a sources.yaml cut, or null when the id is not registered. */
 const cutReason = (ctx: QueryContext, cutId: string): string | null =>
@@ -161,7 +199,8 @@ const PROVIDER_RANK: Readonly<Record<string, number>> = {
 export interface SourceStamp {
   source_id: string
   newest: SnapshotStamp
-  snapshot_count: number
+  /** Null in a point-in-time read: counting snapshots up to T reads every one of them. */
+  snapshot_count: number | null
 }
 
 /**
@@ -171,7 +210,15 @@ export interface SourceStamp {
  * SQLite's way of fixing the loop order — given a plain join, the planner
  * walks the big table and probes source_stats, which reads every row again.
  */
-export async function sourceStamps(db: PipelineDb): Promise<Map<string, SourceStamp>> {
+export async function sourceStamps(
+  db: PipelineDb,
+  at: string | null = null,
+): Promise<Map<string, SourceStamp>> {
+  // As of T, the newest snapshot at or before it: one index seek per source
+  // on (source_id, fetched_at), as the subquery is correlated to the outer row.
+  const newestAt = at
+    ? sql`(select s.fetched_at from snapshots s where s.source_id = ${tables.sourceStats.source_id} and s.fetched_at <= ${at} order by s.fetched_at desc limit 1)`
+    : tables.sourceStats.last_fetched_at
   const rows = await db
     .select({
       source_id: tables.snapshots.source_id,
@@ -186,7 +233,7 @@ export async function sourceStamps(db: PipelineDb): Promise<Map<string, SourceSt
     .where(
       and(
         eq(tables.snapshots.source_id, tables.sourceStats.source_id),
-        eq(tables.snapshots.fetched_at, tables.sourceStats.last_fetched_at),
+        eq(tables.snapshots.fetched_at, newestAt),
       ),
     )
     .orderBy(asc(tables.snapshots.source_id), desc(tables.snapshots.id))
@@ -202,7 +249,7 @@ export async function sourceStamps(db: PipelineDb): Promise<Map<string, SourceSt
         http_status: row.http_status,
         bytes: row.bytes,
       },
-      snapshot_count: row.n,
+      snapshot_count: at ? null : row.n,
     })
   }
   return out
@@ -547,7 +594,11 @@ export async function queryAlerts(
   limit: number,
   tier: AlertTierFilter = 'all',
 ): Promise<AlertsData> {
-  const where = tierWhere(tier)
+  let where = tierWhere(tier)
+  if (ctx.at !== null) {
+    where = and(where, alertsKnownAt(ctx.at, await judgeCutoffAt(db, ctx.at)))
+    ctx.notes.method.add(ALERTS_METHOD)
+  }
   const rows = await db
     .select()
     .from(tables.alerts)
@@ -727,14 +778,24 @@ function toDelta(change: typeof tables.changes.$inferSelect): PriceDeltaView {
   }
 }
 
+const PRICES_METHOD =
+  'The like-for-like matrix maps classes with the hand-transcribed class map in today’s code, overlaid with the judge’s class-map decisions made by as_of.'
+
 export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<PricesData> {
+  const pit = atOf(ctx)
+  const models = pit ? rewound(db, pit, 'model') : null
+  if (pit) ctx.notes.method.add(PRICES_METHOD)
   const [entities, history, stamps, firsts, checks, classMap] = await Promise.all([
-    db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'model')),
-    modelChanges(db),
-    sourceStamps(db),
+    models
+      ? models.then((m) => m.rows)
+      : db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'model')),
+    models ? models.then((m) => m.changes) : modelChanges(db),
+    sourceStamps(db, ctx.at),
     firstSnapshotByUrl(db),
-    db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'recommendation')),
-    effectiveClassMap(db),
+    pit
+      ? rewound(db, pit, 'recommendation').then((r) => r.rows)
+      : db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'recommendation')),
+    effectiveClassMap(db, ctx.at),
   ])
   const changes = newestPerSource(history)
   const entitiesByKey = groupByKey(entities)
@@ -981,34 +1042,73 @@ export function buildMatrix(
 
 // ---- hiring ----------------------------------------------------------------
 
+/** queryHiring's three grouped reads, over the job set rebuilt at ctx.at. */
+async function hiringAggregatesAt(
+  db: PipelineDb,
+  ctx: QueryContext & { at: string },
+): Promise<
+  [
+    { provider: string; department: string | null; n: number }[],
+    { provider: string; company: string | null }[],
+    { provider: string; source_id: string; source_url: string; fetched_at: string | null }[],
+    Map<string, SourceStamp>,
+  ]
+> {
+  const [jobs, stamps] = await Promise.all([rewound(db, ctx, 'job'), sourceStamps(db, ctx.at)])
+  const departments = new Map<string, { provider: string; department: string | null; n: number }>()
+  const companies = new Map<string, { provider: string; company: string | null }>()
+  const sources = new Map<
+    string,
+    { provider: string; source_id: string; source_url: string; fetched_at: string | null }
+  >()
+  for (const e of jobs.rows) {
+    const payload = parseJson(e.payload)
+    const department = str(payload?.department)
+    const company = str(payload?.company_name)
+    const d = departments.get(`${e.provider}\n${department}`)
+    if (d) d.n++
+    else departments.set(`${e.provider}\n${department}`, { provider: e.provider, department, n: 1 })
+    companies.set(`${e.provider}\n${company}`, { provider: e.provider, company })
+    const k = `${e.provider}\n${e.source_id}\n${e.source_url}`
+    const s = sources.get(k)
+    const { provider, source_id, source_url, fetched_at } = e
+    if (!s) sources.set(k, { provider, source_id, source_url, fetched_at })
+    else if (s.fetched_at === null || fetched_at > s.fetched_at) s.fetched_at = fetched_at
+  }
+  return [[...departments.values()], [...companies.values()], [...sources.values()], stamps]
+}
+
 export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<HiringData> {
   const department = sql<string | null>`json_extract(${tables.entities.payload}, '$.department')`
   const company = sql<string | null>`json_extract(${tables.entities.payload}, '$.company_name')`
   const isJob = eq(tables.entities.entity_type, 'job')
 
-  const [departments, companies, sources, stamps] = await Promise.all([
-    db
-      .select({ provider: tables.entities.provider, department, n: count() })
-      .from(tables.entities)
-      .where(isJob)
-      .groupBy(tables.entities.provider, department),
-    db
-      .select({ provider: tables.entities.provider, company })
-      .from(tables.entities)
-      .where(isJob)
-      .groupBy(tables.entities.provider, company),
-    db
-      .select({
-        provider: tables.entities.provider,
-        source_id: tables.entities.source_id,
-        source_url: tables.entities.source_url,
-        fetched_at: max(tables.entities.fetched_at),
-      })
-      .from(tables.entities)
-      .where(isJob)
-      .groupBy(tables.entities.provider, tables.entities.source_id, tables.entities.source_url),
-    sourceStamps(db),
-  ])
+  const pit = atOf(ctx)
+  const [departments, companies, sources, stamps] = pit
+    ? await hiringAggregatesAt(db, pit)
+    : await Promise.all([
+        db
+          .select({ provider: tables.entities.provider, department, n: count() })
+          .from(tables.entities)
+          .where(isJob)
+          .groupBy(tables.entities.provider, department),
+        db
+          .select({ provider: tables.entities.provider, company })
+          .from(tables.entities)
+          .where(isJob)
+          .groupBy(tables.entities.provider, company),
+        db
+          .select({
+            provider: tables.entities.provider,
+            source_id: tables.entities.source_id,
+            source_url: tables.entities.source_url,
+            fetched_at: max(tables.entities.fetched_at),
+          })
+          .from(tables.entities)
+          .where(isJob)
+          .groupBy(tables.entities.provider, tables.entities.source_id, tables.entities.source_url),
+        sourceStamps(db),
+      ])
 
   const xaiCaveat = ctx.registry.sources.find((s) => s.source_id === 'xai-greenhouse')?.caveat
 
@@ -1234,15 +1334,23 @@ export async function queryPriceHistory(
   ctx: QueryContext,
   key: string,
 ): Promise<PriceHistoryData | null> {
+  const pit = atOf(ctx)
+  const sku = pit ? rewound(db, pit, 'model', key) : null
   const [entities, changes, firsts] = await Promise.all([
-    db
-      .select()
-      .from(tables.entities)
-      .where(and(eq(tables.entities.entity_type, 'model'), eq(tables.entities.entity_key, key))),
-    db
-      .select()
-      .from(tables.changes)
-      .where(and(eq(tables.changes.entity_type, 'model'), eq(tables.changes.entity_key, key))),
+    sku
+      ? sku.then((r) => r.rows)
+      : db
+          .select()
+          .from(tables.entities)
+          .where(
+            and(eq(tables.entities.entity_type, 'model'), eq(tables.entities.entity_key, key)),
+          ),
+    sku
+      ? sku.then((r) => r.changes)
+      : db
+          .select()
+          .from(tables.changes)
+          .where(and(eq(tables.changes.entity_type, 'model'), eq(tables.changes.entity_key, key))),
     firstSnapshotByUrl(db),
   ])
   if (entities.length === 0 && changes.length === 0) return null
@@ -1366,16 +1474,30 @@ export async function queryHiringHistory(
 ): Promise<HiringHistoryData> {
   const department = sql<string | null>`json_extract(${tables.entities.payload}, '$.department')`
   const isJob = eq(tables.entities.entity_type, 'job')
+  // As of T: the job set rebuilt at T and the log up to it, so the series
+  // ends at T exactly as /api/hiring?as_of=T counts it.
+  const pit = atOf(ctx)
+  const jobs = pit ? rewound(db, pit, 'job') : null
   const [roles, changes, firstSnapshots, baselines, stamps] = await Promise.all([
-    db
-      .select({
-        entity_key: tables.entities.entity_key,
-        provider: tables.entities.provider,
-        department,
-      })
-      .from(tables.entities)
-      .where(isJob),
-    db.select().from(tables.changes).where(eq(tables.changes.entity_type, 'job')),
+    jobs
+      ? jobs.then((r) =>
+          r.rows.map((e) => ({
+            entity_key: e.entity_key,
+            provider: e.provider,
+            department: str(parseJson(e.payload)?.department),
+          })),
+        )
+      : db
+          .select({
+            entity_key: tables.entities.entity_key,
+            provider: tables.entities.provider,
+            department,
+          })
+          .from(tables.entities)
+          .where(isJob),
+    jobs
+      ? jobs.then((r) => r.changes)
+      : db.select().from(tables.changes).where(eq(tables.changes.entity_type, 'job')),
     db
       .select({ source_id: tables.sourceStats.source_id, at: tables.sourceStats.first_fetched_at })
       .from(tables.sourceStats),
@@ -1384,17 +1506,20 @@ export async function queryHiringHistory(
       .from(tables.sourceRuns)
       .where(eq(tables.sourceRuns.status, 'baseline'))
       .groupBy(tables.sourceRuns.source_id),
-    sourceStamps(db),
+    sourceStamps(db, ctx.at),
   ])
 
+  // A source first fetched after T did not exist yet.
+  const known = <R extends { at: string | null }>(r: R) =>
+    r.at !== null && (ctx.at === null || r.at <= ctx.at)
   const current: OpenRole[] = roles.map((r) => ({
     entity_key: r.entity_key,
     provider: r.provider,
     department: r.department ?? NO_DEPARTMENT,
   }))
-  const firstOf = new Map(firstSnapshots.map((s) => [s.source_id, s.at]))
-  const baselineOf = new Map(baselines.map((b) => [b.source_id, b.at]))
-  const now = ctx.now().toISOString()
+  const firstOf = new Map(firstSnapshots.filter(known).map((s) => [s.source_id, s.at]))
+  const baselineOf = new Map(baselines.filter(known).map((b) => [b.source_id, b.at]))
+  const now = ctx.at ?? ctx.now().toISOString()
   const sorted = [...changes].sort(byDetectedAt)
 
   // One grid from the earliest board snapshot; each provider's series is cut

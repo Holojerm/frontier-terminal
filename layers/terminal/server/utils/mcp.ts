@@ -43,6 +43,7 @@ import { ALERT_TIER_FILTERS } from '../../shared/utils/terminal-tiers'
 
 import type { PipelineDb } from '../pipeline/store'
 import { collectStatus, type StatusConfig } from '#server/utils/fleet-status'
+import { PointInTimeError, parseAsOfQuery, type AsOfPayload } from './terminal-asof'
 import {
   HIRING_WINDOW_DAYS,
   INCIDENT_HISTORY_DAYS,
@@ -78,6 +79,17 @@ export interface McpDeps {
    * payload, exactly as the JSON routes key it.
    */
   serve<T>(name: string, query: (ctx: QueryContext) => Promise<T>, variant?: string): Promise<T>
+  /**
+   * `serve` as of the instant `at`, for a tool given `as_of`: the route passes
+   * terminalPayloadAt(), which refuses an instant before the first snapshot
+   * with a 400 and adds point_in_time to the payload.
+   */
+  serveAt<T extends object | null>(
+    name: string,
+    at: string,
+    query: (ctx: QueryContext) => Promise<T>,
+    variant?: string,
+  ): Promise<AsOfPayload<T>>
   /** The site's llms.txt body — the same bytes GET /llms.txt serves. */
   llmsTxt: string
   /** Canonical origin, no trailing slash. */
@@ -121,6 +133,30 @@ function failure(message: string): CallToolResult {
 }
 
 const READ_ONLY = { readOnlyHint: true, idempotentHint: true, openWorldHint: false } as const
+
+// Validated in the handler (parseAsOfQuery), not in the schema: a transform
+// does not survive the conversion to the JSON Schema a client is shown.
+const AsOfSchema = z
+  .string()
+  .optional()
+  .describe(
+    'Optional point in time, an ISO-8601 timestamp with a zone (e.g. 2026-10-01T12:00:00Z): the payload as the terminal ' +
+      'knew it then, rebuilt from stored history, with point_in_time saying how (method) and which keys the change log ' +
+      'cannot confirm (unverified). Omit for now.',
+  )
+
+/** A 400 from a point-in-time read (a bad or too-early as_of) is the caller's to fix: say it as a tool error. */
+async function asOfErrors(run: () => Promise<CallToolResult>): Promise<CallToolResult> {
+  try {
+    return await run()
+  } catch (error) {
+    const status = (error as { statusCode?: unknown }).statusCode
+    if (error instanceof Error && (error instanceof PointInTimeError || status === 400)) {
+      return failure(error.message)
+    }
+    throw error
+  }
+}
 
 const PROVENANCE =
   'Every row carries source_url (the exact page it was read from) and fetched_at (UTC). ' +
@@ -166,6 +202,18 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
     () => ({ content: [{ type: 'text', text: deps.llmsTxt }] }),
   )
 
+  /** A payload now, or as of `as_of` when the tool was given one. */
+  const read = async <T extends object | null>(
+    name: string,
+    as_of: string | undefined,
+    query: (ctx: QueryContext) => Promise<T>,
+    variant?: string,
+  ) => {
+    if (as_of === undefined) return deps.serve(name, query, variant)
+    const at = parseAsOfQuery({ as_of }).as_of!
+    return deps.serveAt(name, at, query, variant)
+  }
+
   server.registerTool(
     'get_overview',
     {
@@ -197,31 +245,32 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'cross_check is OpenRouter: snapshotted as a drift check ' +
         'on the vendor pages, never a price of record. Optional provider filter narrows rows and matrix to one lab. ' +
         PROVENANCE,
-      inputSchema: z.object({ provider: ProviderSchema.optional() }),
+      inputSchema: z.object({ provider: ProviderSchema.optional(), as_of: AsOfSchema }),
       annotations: READ_ONLY,
     },
-    async ({ provider }) => {
-      const prices = await deps.serve('prices', (ctx) => queryPrices(deps.db, ctx))
-      if (!provider) return json(prices)
-      const rows = prices.rows.filter((r) => r.provider === provider)
-      const priced = (r: (typeof rows)[number]) =>
-        r.input_per_mtok !== null || r.output_per_mtok !== null
-      return json({
-        ...prices,
-        rows,
-        matrix: {
-          ...prices.matrix,
-          providers: [provider],
-          cells: prices.matrix.cells.filter((c) => c.provider === provider),
-        },
-        counts: {
-          total: rows.length,
-          priced: rows.filter((r) => !r.removed && priced(r)).length,
-          catalog_only: rows.filter((r) => !r.removed && !priced(r)).length,
-          removed: rows.filter((r) => r.removed).length,
-        },
-      })
-    },
+    ({ provider, as_of }) =>
+      asOfErrors(async () => {
+        const prices = await read('prices', as_of, (ctx) => queryPrices(deps.db, ctx))
+        if (!provider) return json(prices)
+        const rows = prices.rows.filter((r) => r.provider === provider)
+        const priced = (r: (typeof rows)[number]) =>
+          r.input_per_mtok !== null || r.output_per_mtok !== null
+        return json({
+          ...prices,
+          rows,
+          matrix: {
+            ...prices.matrix,
+            providers: [provider],
+            cells: prices.matrix.cells.filter((c) => c.provider === provider),
+          },
+          counts: {
+            total: rows.length,
+            priced: rows.filter((r) => !r.removed && priced(r)).length,
+            catalog_only: rows.filter((r) => !r.removed && !priced(r)).length,
+            removed: rows.filter((r) => r.removed).length,
+          },
+        })
+      }),
   )
 
   server.registerTool(
@@ -235,14 +284,18 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         '(every row carries company_name "SpaceXAI", now "SpaceXSI"); the caveat and company_names travel with the row so you can say so. ' +
         'Optional provider filter. ' +
         PROVENANCE,
-      inputSchema: z.object({ provider: ProviderSchema.optional() }),
+      inputSchema: z.object({ provider: ProviderSchema.optional(), as_of: AsOfSchema }),
       annotations: READ_ONLY,
     },
-    async ({ provider }) => {
-      const hiring = await deps.serve('hiring', (ctx) => queryHiring(deps.db, ctx))
-      if (!provider) return json(hiring)
-      return json({ ...hiring, providers: hiring.providers.filter((p) => p.provider === provider) })
-    },
+    ({ provider, as_of }) =>
+      asOfErrors(async () => {
+        const hiring = await read('hiring', as_of, (ctx) => queryHiring(deps.db, ctx))
+        if (!provider) return json(hiring)
+        return json({
+          ...hiring,
+          providers: hiring.providers.filter((p) => p.provider === provider),
+        })
+      }),
   )
 
   server.registerTool(
@@ -261,22 +314,25 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         limit: z.number().int().min(1).max(ALERT_SEARCH_DEPTH).default(20),
         tier: z.enum(ALERT_TIER_FILTERS).default('all'),
         severity: z.enum(['info', 'notable', 'critical']).optional(),
+        as_of: AsOfSchema,
       }),
       annotations: READ_ONLY,
     },
-    async ({ limit, tier, severity }) => {
-      const depth = severity ? ALERT_SEARCH_DEPTH : limit
-      const alerts = await deps.serve(
-        'alerts',
-        (ctx) => queryAlerts(deps.db, ctx, depth, tier),
-        `${tier}:${depth}`,
-      )
-      if (!severity) return json(alerts)
-      return json({
-        ...alerts,
-        rows: alerts.rows.filter((a) => a.severity === severity).slice(0, limit),
-      })
-    },
+    ({ limit, tier, severity, as_of }) =>
+      asOfErrors(async () => {
+        const depth = severity ? ALERT_SEARCH_DEPTH : limit
+        const alerts = await read(
+          'alerts',
+          as_of,
+          (ctx) => queryAlerts(deps.db, ctx, depth, tier),
+          `${tier}:${depth}`,
+        )
+        if (!severity) return json(alerts)
+        return json({
+          ...alerts,
+          rows: alerts.rows.filter((a) => a.severity === severity).slice(0, limit),
+        })
+      }),
   )
 
   server.registerTool(
@@ -308,18 +364,24 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'not change. removed=true when the newest observation is a delisting. Keys come from get_prices (entity_key); an unknown key is ' +
         'an error, not an empty series. ' +
         PROVENANCE,
-      inputSchema: z.object({ key: SkuKeySchema }),
+      inputSchema: z.object({ key: SkuKeySchema, as_of: AsOfSchema }),
       annotations: READ_ONLY,
     },
-    async ({ key }) => {
-      const history = await deps.serve(
-        'price-history',
-        (ctx) => queryPriceHistory(deps.db, ctx, key),
-        key,
-      )
-      if (history === null) return failure(`No SKU with key ${key}. Keys are listed by get_prices.`)
-      return json(history)
-    },
+    ({ key, as_of }) =>
+      asOfErrors(async () => {
+        const history = await read(
+          'price-history',
+          as_of,
+          (ctx) => queryPriceHistory(deps.db, ctx, key),
+          key,
+        )
+        if (history === null) {
+          return failure(
+            `No SKU with key ${key}${as_of ? ` as of ${as_of}` : ''}. Keys are listed by get_prices.`,
+          )
+        }
+        return json(history)
+      }),
   )
 
   server.registerTool(
@@ -337,17 +399,20 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'matched department labels listed so the sum is checkable. Google and Meta are audited cuts (feed no_public_feed, reason given) with an ' +
         'empty series; xAI carries the SpaceXAI blend caveat. Optional provider filter. ' +
         PROVENANCE,
-      inputSchema: z.object({ provider: ProviderSchema.optional() }),
+      inputSchema: z.object({ provider: ProviderSchema.optional(), as_of: AsOfSchema }),
       annotations: READ_ONLY,
     },
-    async ({ provider }) => {
-      const history = await deps.serve('hiring-history', (ctx) => queryHiringHistory(deps.db, ctx))
-      if (!provider) return json(history)
-      return json({
-        ...history,
-        providers: history.providers.filter((p) => p.provider === provider),
-      })
-    },
+    ({ provider, as_of }) =>
+      asOfErrors(async () => {
+        const history = await read('hiring-history', as_of, (ctx) =>
+          queryHiringHistory(deps.db, ctx),
+        )
+        if (!provider) return json(history)
+        return json({
+          ...history,
+          providers: history.providers.filter((p) => p.provider === provider),
+        })
+      }),
   )
 
   server.registerTool(
@@ -462,17 +527,18 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'days distinguishes a quarter (~91) from a half (~182) or a year (~365) — nothing is derived across periods. superseded lists ' +
         'values a later filing restated. Never call a parent’s number the lab’s. Optional provider filter. ' +
         PROVENANCE,
-      inputSchema: z.object({ provider: ProviderSchema.optional() }),
+      inputSchema: z.object({ provider: ProviderSchema.optional(), as_of: AsOfSchema }),
       annotations: READ_ONLY,
     },
-    async ({ provider }) => {
-      const revenue = await deps.serve('revenue', (ctx) => queryRevenue(deps.db, ctx))
-      if (!provider) return json(revenue)
-      return json({
-        ...revenue,
-        providers: revenue.providers.filter((p) => p.provider === provider),
-      })
-    },
+    ({ provider, as_of }) =>
+      asOfErrors(async () => {
+        const revenue = await read('revenue', as_of, (ctx) => queryRevenue(deps.db, ctx))
+        if (!provider) return json(revenue)
+        return json({
+          ...revenue,
+          providers: revenue.providers.filter((p) => p.provider === provider),
+        })
+      }),
   )
 
   server.registerTool(

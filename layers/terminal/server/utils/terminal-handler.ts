@@ -12,6 +12,16 @@ import type { H3Event } from 'h3'
 
 import sourcesYaml from 'raw:~~/sources.yaml'
 
+import {
+  AS_OF_PARAM,
+  PointInTimeError,
+  asOfRefusal,
+  assertKnowable,
+  parseAsOfQuery,
+  pointInTimeMeta,
+  pollStampAt,
+  type AsOfPayload,
+} from './terminal-asof'
 import { cachedTerminal, sharedTerminalStamp, terminalStamp } from './terminal-cache'
 import { queryContext, type QueryContext } from './terminal-db'
 
@@ -36,29 +46,109 @@ export async function terminalPayload<T>(
   // with input (alerts?limit=) passes it here.
   variant = '',
 ): Promise<T> {
-  let stamp: string | null
+  const stamp = await liveStamp()
+  const context = queryContext(sourcesYaml, stamp)
+  return cachedTerminal(kv, cacheName(name, variant), stamp, () => query(context))
+}
+
+/**
+ * `terminalPayload` as of the instant `at` (a validated `as_of`): the query
+ * runs with ctx.at set and the payload carries `point_in_time`. The entry is
+ * keyed on `at` as well as the live stamp, so a historical payload and the
+ * live one never share a key, and a poll still rotates both — a late write
+ * about an earlier instant (a judge alert) is picked up on the next tick.
+ */
+export async function terminalPayloadAt<T extends object | null>(
+  name: string,
+  at: string,
+  query: (context: QueryContext) => Promise<T>,
+  variant = '',
+): Promise<AsOfPayload<T>> {
+  const stamp = await liveStamp()
   try {
-    stamp = await sharedTerminalStamp(() => terminalStamp(db))
+    await assertKnowable(db, at)
+  } catch (error) {
+    if (error instanceof PointInTimeError) {
+      throw createError({ statusCode: 400, message: error.message })
+    }
+    throw error
+  }
+  const context = queryContext(sourcesYaml, await pollStampAt(db, at), undefined, at)
+  return cachedTerminal(kv, cacheName(name, `${variant}|${AS_OF_PARAM}=${at}`), stamp, async () => {
+    const data = await query(context)
+    // null is "not known at T" (an unknown SKU), which the route turns into its 404.
+    return (
+      data === null ? null : { ...data, point_in_time: pointInTimeMeta(at, context.notes) }
+    ) as AsOfPayload<T>
+  })
+}
+
+async function liveStamp(): Promise<string | null> {
+  try {
+    return await sharedTerminalStamp(() => terminalStamp(db))
   } catch (error) {
     throw createError({ statusCode: 503, message: 'Database unavailable', cause: error })
   }
-  const context = queryContext(sourcesYaml, stamp)
-  // The build is part of the key: a deploy that changes what a query returns
-  // must not be served the previous build's payload until the next poll.
-  const build = useRuntimeConfig().public.buildSha || 'dev'
-  const keyName = `${name}@${build}${variant ? `:${variant}` : ''}`
-  return cachedTerminal(kv, keyName, stamp, () => query(context))
 }
 
-/** `terminalPayload`, plus the edge Cache-Control every JSON route sends. */
+// The build is part of the key: a deploy that changes what a query returns
+// must not be served the previous build's payload until the next poll.
+function cacheName(name: string, variant: string): string {
+  const build = useRuntimeConfig().public.buildSha || 'dev'
+  return `${name}@${build}${variant ? `:${variant}` : ''}`
+}
+
+/** Why each route that cannot answer `as_of` cannot, keyed by its cache name. */
+const AS_OF_REFUSALS: Readonly<Record<string, string>> = {
+  overview:
+    'its movement window and table totals are kept for the present only (source_stats counts are not dated).',
+  coverage: 'per-source counts and recipe state are current-state counters with no history.',
+  theses:
+    'claim readings are rewritten in place as trailing data is revised, and statuses are recomputed with the thesis definitions in today’s code. The judge’s verdicts are at /export/claim_verdicts.csv?as_of=.',
+  alert:
+    'one alert is never rewritten, so its row is the same at every instant after it was raised; use /api/alerts?as_of= to see which alerts existed then.',
+}
+
+/** A 400 for a route that does not rebuild its payload as of T. Never ignore it. */
+export function refuseAsOf(event: H3Event, name: string): void {
+  if (getQuery(event)[AS_OF_PARAM] === undefined) return
+  throw createError({
+    statusCode: 400,
+    message: asOfRefusal(
+      event.path.split('?')[0]!,
+      AS_OF_REFUSALS[name] ?? 'this payload is not rebuilt from stored history yet.',
+      '/export/<table> for every append-only table',
+    ),
+  })
+}
+
+/**
+ * `terminalPayload`, plus the edge Cache-Control every JSON route sends. A
+ * route served through here does not answer `as_of`, so a request carrying
+ * one is refused rather than handed today's payload.
+ */
 export async function serveTerminal<T>(
   event: H3Event,
   name: string,
   query: (context: QueryContext) => Promise<T>,
   variant = '',
 ): Promise<T> {
+  refuseAsOf(event, name)
   setResponseHeader(event, 'Cache-Control', TERMINAL_CACHE_CONTROL)
   return terminalPayload(name, query, variant)
+}
+
+/** `serveTerminal` for a route whose query honours ctx.at: live without `as_of`, rebuilt with it. */
+export async function serveTerminalAsOf<T extends object | null>(
+  event: H3Event,
+  name: string,
+  query: (context: QueryContext) => Promise<T>,
+  variant = '',
+): Promise<T | AsOfPayload<T>> {
+  const { as_of } = await getValidatedQuery(event, parseAsOfQuery)
+  setResponseHeader(event, 'Cache-Control', TERMINAL_CACHE_CONTROL)
+  if (as_of === undefined) return terminalPayload(name, query, variant)
+  return terminalPayloadAt(name, as_of, query, variant)
 }
 
 /** The Drizzle client, for routes that stream rather than cache. */

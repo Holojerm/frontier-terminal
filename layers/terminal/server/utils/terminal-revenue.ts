@@ -24,7 +24,7 @@ import type {
 import * as tables from '#server/db/schema'
 import { REVENUE_TAGS } from '../pipeline/parsers/sec/edgar-companyfacts'
 import type { PipelineDb } from '../pipeline/store'
-import { sourceStamps, type QueryContext } from './terminal-db'
+import { rewound, sourceStamps, type QueryContext } from './terminal-db'
 import { byString, num, parseJson, str } from './terminal-json'
 import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
 
@@ -181,22 +181,30 @@ function resolvedFilerFromPayload(payload: string): ResolvedFilerView | null {
 }
 
 export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<RevenueData> {
+  // As of T every read is rewound (terminal-asof.ts): facts and filers as the
+  // store held them, the newest snapshot per source at or before T. A new
+  // read added here must be rewound too, or a historical payload mixes in today.
+  const at = ctx.at
   const [rows, filerRows, stamps] = await Promise.all([
-    db
-      .select({
-        entity_key: tables.entities.entity_key,
-        provider: tables.entities.provider,
-        payload: tables.entities.payload,
-        source_url: tables.entities.source_url,
-        fetched_at: tables.entities.fetched_at,
-      })
-      .from(tables.entities)
-      .where(eq(tables.entities.entity_type, 'revenue')),
-    db
-      .select({ provider: tables.entities.provider, payload: tables.entities.payload })
-      .from(tables.entities)
-      .where(eq(tables.entities.entity_type, 'filer')),
-    sourceStamps(db),
+    at !== null
+      ? rewound(db, { ...ctx, at }, 'revenue').then((r) => r.rows)
+      : db
+          .select({
+            entity_key: tables.entities.entity_key,
+            provider: tables.entities.provider,
+            payload: tables.entities.payload,
+            source_url: tables.entities.source_url,
+            fetched_at: tables.entities.fetched_at,
+          })
+          .from(tables.entities)
+          .where(eq(tables.entities.entity_type, 'revenue')),
+    at !== null
+      ? rewound(db, { ...ctx, at }, 'filer').then((r) => r.rows)
+      : db
+          .select({ provider: tables.entities.provider, payload: tables.entities.payload })
+          .from(tables.entities)
+          .where(eq(tables.entities.entity_type, 'filer')),
+    sourceStamps(db, at),
   ])
   const resolved = new Map<string, ResolvedFilerView>()
   for (const row of filerRows) {
@@ -244,7 +252,10 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
       .map((r) => revenuePeriodFromPayload(r.entity_key, r.payload, r))
       .filter(
         (r): r is NonNullable<typeof r> =>
-          r !== null && (cik === null || r.cik === cik) && r.segment === segment,
+          r !== null &&
+          (cik === null || r.cik === cik) &&
+          r.segment === segment &&
+          (at === null || r.filed <= at.slice(0, 10)),
       )
     const { periods, superseded, tags } = splitPeriods(parsed)
 
