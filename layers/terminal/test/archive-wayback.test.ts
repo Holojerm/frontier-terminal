@@ -11,7 +11,8 @@ import {
   waybackClient,
   waybackStamp,
 } from '../server/pipeline/archive/wayback'
-import { ARCHIVE_ERAS, ARCHIVE_UNTIL } from '../server/pipeline/archive/eras'
+import { ARCHIVE_ERAS, ARCHIVE_NOT_COVERED, ARCHIVE_UNTIL } from '../server/pipeline/archive/eras'
+import { LABS } from '../shared/utils/terminal-lab-summary'
 import { archiveRows, captureId } from '../server/pipeline/archive/rows'
 import { usdPerMillion } from '../server/pipeline/parsers/pricing/html-table'
 import { archivedPriceHistory, type ArchivedPrice } from '../server/utils/terminal-history'
@@ -248,5 +249,13 @@ describe('archived price history', () => {
     ])
     expect(points[0]!.source_id).toBe('wayback:openai-pricing-2023')
     expect(points[1]!.diff).toEqual([{ field: 'input_per_mtok', before: '30', after: '10' }])
+  })
+})
+
+describe('archive reach', () => {
+  test('every lab is either read from the Archive or says why not', () => {
+    const covered = new Set<string>(ARCHIVE_ERAS.map((e) => e.provider))
+    const stated = new Set(ARCHIVE_NOT_COVERED.map((n) => n.provider))
+    expect(LABS.filter((lab) => !covered.has(lab) && !stated.has(lab))).toEqual([])
   })
 })
