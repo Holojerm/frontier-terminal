@@ -1,8 +1,9 @@
 <script setup lang="ts">
 // One SKU's price over time: every observation the store holds for the
-// key — the change rows, the current row, and the state as of the source's
-// first snapshot — as a step chart and as the point-by-point table with
-// the fetch each point was read from.
+// key — the Internet Archive's captures of the lab's page from before we
+// watched it, then the change rows, the current row, and the state as of the
+// source's first snapshot — as a step chart and as the point-by-point table
+// with the fetch each point was read from.
 
 import { absoluteStamp, money } from '../../../shared/utils/terminal-format'
 import { labName } from '../../../shared/utils/terminal-labs'
@@ -60,7 +61,8 @@ const coverage = computed(() => {
   if (!first || !last) return null
   // Open-ended while the SKU is still listed: the series has a start and no
   // end until the day it is delisted.
-  return `${first.at}/${history.value?.removed ? last.at : '..'}`
+  const closed = history.value?.removed || history.value?.archive_only
+  return `${first.at}/${closed ? last.at : '..'}`
 })
 
 const lab = history.value ? labName(history.value.provider) : ''
@@ -93,6 +95,7 @@ const KIND: Record<
   PricePoint['kind'],
   { label: string; color: 'neutral' | 'success' | 'warning' | 'info'; icon: string }
 > = {
+  archived: { label: 'Internet Archive', color: 'neutral', icon: 'i-lucide-archive' },
   baseline: { label: 'first seen', color: 'info', icon: 'i-lucide-flag' },
   added: { label: 'listed', color: 'success', icon: 'i-lucide-plus' },
   modified: { label: 'revised', color: 'warning', icon: 'i-lucide-pencil' },
@@ -115,6 +118,8 @@ const chart = computed(() => {
   ].filter((s) => s.values.some((v) => v !== null))
   return { x: pts.map((p) => p.at), series }
 })
+
+const archivedCount = computed(() => points.value.filter((p) => p.basis === 'archived').length)
 
 const now = useNow()
 const xLabel = (x: string) => absoluteStamp(x, now.value)
@@ -152,6 +157,9 @@ const POINT_COLUMNS: TableColumn[] = [
       <span class="font-mono">{{ history.entity_key }}</span>
       <template v-if="history.context_window"> · {{ history.context_window }} context</template>
       <template v-if="history.removed"> · delisted</template>
+      <template v-if="history.archive_only">
+        · only in the Internet Archive, from before we started checking the page</template
+      >
     </template>
 
     <!-- Chart and its table side by side from xl: the table is the chart's
@@ -224,6 +232,13 @@ const POINT_COLUMNS: TableColumn[] = [
           </template>
         </TerminalTable>
         <template #foot>
+          <template v-if="archivedCount">
+            The {{ archivedCount }} “Internet Archive” point{{ archivedCount === 1 ? '' : 's' }}
+            come from the Internet Archive’s copy of the lab’s own pricing page, from before we
+            started checking it. Each is the first copy we read that showed that price. We read
+            about one copy a week, so a change can be up to a week earlier than shown. The source
+            link opens that copy.
+          </template>
           A “first seen” point is the price before our first recorded change. It held from our first
           check of the page, and any move in between would show up as its own row. A “current” point
           is the price as of the latest check that changed it.

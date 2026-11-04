@@ -10,6 +10,7 @@ import { SCHEMA_VERSION, SCHEMA_VERSION_HEADER } from './data-schema'
 import { PointInTimeError, assertKnowable } from './terminal-asof'
 import { DICTIONARY_NAME, dataDictionary, dictionaryCsv } from './terminal-dictionary'
 import {
+  ARCHIVED_EXPORTS,
   EXPORT_TABLES,
   LICENSE_COLUMN,
   csvChunks,
@@ -83,7 +84,8 @@ export async function serveExport(event: H3Event, options: { sample?: boolean } 
   const { as_of, history } = await getValidatedQuery(event, parseExportQuery)
   let rebuilt: ExportTable = full
   if (as_of !== undefined) {
-    await badRequestOn(() => assertKnowable(terminalDb, as_of))
+    if (!ARCHIVED_EXPORTS.has(full.name))
+      await badRequestOn(() => assertKnowable(terminalDb, as_of))
     rebuilt = await badRequestOn(
       () => full.at(terminalDb, as_of),
       (reason) =>

@@ -91,6 +91,15 @@ import {
   type Rewound,
 } from './terminal-asof'
 import {
+  ARCHIVED_AS_OF_METHOD,
+  archivedCatalogAt,
+  archivedPriceKeys,
+  archivedRowsForKey,
+  beforeLiveFloor,
+  queryPriceReach,
+} from './terminal-archive'
+import {
+  archivedPriceHistory,
   baselineInstants,
   byDetectedAt,
   compareWindow,
@@ -844,9 +853,10 @@ const PRICES_METHOD =
 
 export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<PricesData> {
   const pit = atOf(ctx)
+  if (pit && (await beforeLiveFloor(db, pit.at))) return archivedPrices(db, pit)
   const models = pit ? rewound(db, pit, 'model') : null
   if (pit) ctx.notes.method.add(PRICES_METHOD)
-  const [entities, history, stamps, firsts, checks, classMap] = await Promise.all([
+  const [entities, history, stamps, firsts, checks, classMap, reach] = await Promise.all([
     models
       ? models.then((m) => m.rows)
       : db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'model')),
@@ -857,6 +867,7 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
       ? rewound(db, pit, 'recommendation').then((r) => r.rows)
       : db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'recommendation')),
     effectiveClassMap(db, ctx.at),
+    queryPriceReach(db, ctx.registry),
   ])
   const changes = newestPerSource(history)
   const entitiesByKey = groupByKey(entities)
@@ -970,6 +981,7 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
       removed: rows.filter((r) => r.removed).length,
     },
     changes_available: changes.size > 0,
+    reach,
     cross_check: openrouter
       ? {
           source_id: 'openrouter-models',
@@ -978,6 +990,48 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
           snapshot: openrouter.newest,
         }
       : null,
+  }
+}
+
+/**
+ * /api/prices as of an instant before this site's first fetch: each lab's
+ * price list from its newest readable Internet Archive capture by then
+ * (terminal-archive.ts). The matrix maps today's classes, which name no
+ * archived-era model, so it is built over no rows and every cell says so.
+ */
+async function archivedPrices(
+  db: PipelineDb,
+  ctx: QueryContext & { at: string },
+): Promise<PricesData> {
+  const [catalog, reach] = await Promise.all([
+    archivedCatalogAt(db, ctx.at),
+    queryPriceReach(db, ctx.registry),
+  ])
+  ctx.notes.method.add(ARCHIVED_AS_OF_METHOD)
+  for (const c of catalog.captures) {
+    ctx.notes.method.add(
+      `${c.provider}: Internet Archive capture of ${c.captured_at} (${c.source_url}).`,
+    )
+  }
+  const rows = catalog.rows.sort((a, b) => {
+    const p = (PROVIDER_RANK[a.provider] ?? 9) - (PROVIDER_RANK[b.provider] ?? 9)
+    if (p !== 0) return p
+    if (a.model_slug !== b.model_slug) return byString(a.model_slug, b.model_slug)
+    return byString(a.tier ?? '', b.tier ?? '')
+  })
+  return {
+    ...stampOf(ctx),
+    rows,
+    matrix: buildMatrix([]),
+    counts: {
+      total: rows.length,
+      priced: rows.filter(pricedRow).length,
+      catalog_only: rows.filter((r) => !pricedRow(r)).length,
+      removed: 0,
+    },
+    changes_available: false,
+    reach,
+    cross_check: null,
   }
 }
 
@@ -1414,21 +1468,39 @@ export async function queryPriceHistory(
           .where(and(eq(tables.changes.entity_type, 'model'), eq(tables.changes.entity_key, key))),
     firstSnapshotByUrl(db),
   ])
-  if (entities.length === 0 && changes.length === 0) return null
-
-  const points = priceHistory(
-    entities,
-    changes,
-    (url) => sourceIdForUrl(url, ctx),
-    (url) => firsts.get(url) ?? null,
+  // Archived points stop where live observation starts: a capture the
+  // Archive took after our first fetch adds nothing we did not see ourselves.
+  const liveFrom = [...firsts.values()].sort()[0] ?? null
+  const cut = ctx.at !== null && (liveFrom === null || ctx.at < liveFrom) ? ctx.at : liveFrom
+  const archivedRows = (await archivedRowsForKey(db, key, cut)).filter(
+    (r) => liveFrom === null || r.captured_at < liveFrom,
   )
+  const archived = archivedPriceHistory(archivedRows)
+  if (entities.length === 0 && changes.length === 0 && archived.length === 0) return null
+  if (ctx.at !== null && archived.length > 0 && (liveFrom === null || ctx.at < liveFrom)) {
+    ctx.notes.method.add(ARCHIVED_AS_OF_METHOD)
+  }
+
+  const points = [
+    ...archived,
+    ...priceHistory(
+      entities,
+      changes,
+      (url) => sourceIdForUrl(url, ctx),
+      (url) => firsts.get(url) ?? null,
+    ),
+  ]
   // Identity fields from the newest payload on record.
   const newest = [...changes].sort(byDetectedAt).at(-1)
   const payload =
     parseJson(entities[0]?.payload ?? null) ??
     parseJson(newest?.after_json ?? null) ??
-    parseJson(newest?.before_json ?? null)
-  const provider = (entities[0]?.provider ?? newest?.provider ?? 'other') as ProviderId
+    parseJson(newest?.before_json ?? null) ??
+    parseJson(archivedRows.at(-1)?.payload ?? null)
+  const provider = (entities[0]?.provider ??
+    newest?.provider ??
+    key.split(':')[1] ??
+    'other') as ProviderId
   return {
     ...stampOf(ctx),
     entity_key: key,
@@ -1438,6 +1510,7 @@ export async function queryPriceHistory(
     context_window: str(payload?.context_window),
     points,
     removed: entities.length === 0 && newest?.change_type === 'removed',
+    archive_only: points.length > 0 && points.every((p) => p.basis === 'archived'),
   }
 }
 
@@ -1472,7 +1545,7 @@ export async function queryDataFreshness(db: PipelineDb): Promise<DataFreshness>
 export async function queryPriceKeys(
   db: PipelineDb,
 ): Promise<{ entity_key: string; lastmod: string }[]> {
-  const [current, logged] = await Promise.all([
+  const [current, logged, archived] = await Promise.all([
     db
       .select({ entity_key: tables.entities.entity_key, at: max(tables.entities.fetched_at) })
       .from(tables.entities)
@@ -1483,9 +1556,10 @@ export async function queryPriceKeys(
       .from(tables.changes)
       .where(eq(tables.changes.entity_type, 'model'))
       .groupBy(tables.changes.entity_key),
+    archivedPriceKeys(db),
   ])
   const newest = new Map<string, string>()
-  for (const row of [...current, ...logged]) {
+  for (const row of [...current, ...logged, ...archived]) {
     if (!row.at) continue
     const seen = newest.get(row.entity_key)
     if (!seen || Date.parse(row.at) > Date.parse(seen)) newest.set(row.entity_key, row.at)

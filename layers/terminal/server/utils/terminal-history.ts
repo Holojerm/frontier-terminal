@@ -96,6 +96,7 @@ export function priceHistory(
   ): PricePoint => ({
     at: when,
     kind,
+    basis: 'live',
     source_id: sourceIdOf(source_url),
     input_per_mtok: num(payload.input_per_mtok),
     cached_input_per_mtok: num(payload.cached_input_per_mtok),
@@ -141,6 +142,56 @@ export function priceHistory(
   return points.sort(
     (a, b) => at(a.at) - at(b.at) || Number(a.kind === 'current') - Number(b.kind === 'current'),
   )
+}
+
+/** What archivedPriceHistory reads: archived_prices rows of one key. */
+export type ArchivedPrice = Pick<
+  typeof tables.archivedPrices.$inferSelect,
+  | 'capture_id'
+  | 'entity_key'
+  | 'content_hash'
+  | 'payload'
+  | 'captured_at'
+  | 'source_url'
+  | 'fetched_at'
+>
+
+/** archive_captures.id is `<era>:<timestamp>`; the point's source_id names the era. */
+export const archiveSourceId = (captureId: string) => `wayback:${captureId.split(':')[0]}`
+
+/**
+ * One SKU's Internet Archive observations as points, oldest first: the first
+ * capture that printed each new state of the row. A capture repeating the
+ * state before it adds nothing, so a price that held for a year is one point,
+ * not fifty. Captures are sampled (layers/terminal/server/pipeline/archive/wayback.ts › sampleCaptures), so a
+ * point's `at` is the first sampled capture showing that state, not the day
+ * the lab changed it.
+ */
+export function archivedPriceHistory(rows: readonly ArchivedPrice[]): PricePoint[] {
+  const sorted = [...rows].sort(
+    (a, b) => at(a.captured_at) - at(b.captured_at) || byString(a.capture_id, b.capture_id),
+  )
+  const points: PricePoint[] = []
+  let prev: ArchivedPrice | null = null
+  for (const r of sorted) {
+    if (prev && prev.content_hash === r.content_hash) continue
+    const payload = parseJson(r.payload)
+    if (!payload) continue
+    points.push({
+      at: r.captured_at,
+      kind: 'archived',
+      basis: 'archived',
+      source_id: archiveSourceId(r.capture_id),
+      input_per_mtok: num(payload.input_per_mtok),
+      cached_input_per_mtok: num(payload.cached_input_per_mtok),
+      output_per_mtok: num(payload.output_per_mtok),
+      diff: prev ? fieldDiff(parseJson(prev.payload), payload) : [],
+      source_url: r.source_url,
+      fetched_at: r.fetched_at,
+    })
+    prev = r
+  }
+  return points
 }
 
 /** The sparkline's series: input prices when any exist, else output; null under two points. */

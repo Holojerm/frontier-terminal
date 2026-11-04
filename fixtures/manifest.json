@@ -772,6 +772,76 @@
       "raw_bytes": 108883,
       "trim": "filings.recent parallel arrays cut to the newest 150 entries (of 674); filings.files emptied.",
       "note": "Alibaba Group Holding Ltd, whitelisted CIK (resolved 2026-11-04 from SEC's company_tickers.json). Newest 150 filings span 2025-06-16 to 2026-10-13: 79 6-K, two 20-F (2025-06-26, 2026-05-20), no 10-Q, 10-K or 8-K."
+    },
+    {
+      "path": "fixtures/pricing/wayback/openai-pricing-2023-07.html",
+      "source_id": "wayback-openai-pricing-2023-20230713090946",
+      "source_url": "https://web.archive.org/web/20230713090946id_/https://openai.com/pricing",
+      "fetched_at": "2026-11-04T21:10:14.580Z",
+      "http_status": 200,
+      "raw_bytes": 114354,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped, 114354 -> 13684 bytes; the era parser reads only visible headings, tables and text, and gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://openai.com/pricing taken 20230713090946 (era openai-pricing-2023, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/openai-pricing-2024-04.html",
+      "source_id": "wayback-openai-pricing-2023-20240425015034",
+      "source_url": "https://web.archive.org/web/20240425015034id_/https://openai.com/pricing",
+      "fetched_at": "2026-11-04T21:13:46.487Z",
+      "http_status": 200,
+      "raw_bytes": 215448,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped, 215448 -> 35854 bytes; the era parser reads only visible headings, tables and text, and gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://openai.com/pricing taken 20240425015034 (era openai-pricing-2023, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/openai-api-pricing-2024-12.html",
+      "source_id": "wayback-openai-api-pricing-2024-20241212110340",
+      "source_url": "https://web.archive.org/web/20241212110340id_/https://openai.com/api/pricing/",
+      "fetched_at": "2026-11-04T21:16:18.744Z",
+      "http_status": 200,
+      "raw_bytes": 1449112,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but the feature-group title class and its button label, which the parser keys on, 1449112 -> 34887 bytes; the era parser reads only visible headings, tables and text, and gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://openai.com/api/pricing taken 20241212110340 (era openai-api-pricing-2024, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/openai-docs-pricing-2026-03.html",
+      "source_id": "wayback-openai-docs-pricing-2026-20260304030314",
+      "source_url": "https://web.archive.org/web/20260304030314id_/https://developers.openai.com/api/docs/pricing",
+      "fetched_at": "2026-11-04T21:17:26.422Z",
+      "http_status": 200,
+      "raw_bytes": 358877,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped, 358877 -> 50933 bytes; the era parser reads only visible headings, tables and text, and gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://developers.openai.com/api/docs/pricing taken 20260304030314 (era openai-docs-pricing-2026, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/openai-pricing-2026-07.md",
+      "source_id": "wayback-openai-pricing-md-2026-20260729122800",
+      "source_url": "https://web.archive.org/web/20260729122800id_/https://developers.openai.com/api/docs/pricing.md",
+      "fetched_at": "2026-11-04T21:19:00.635Z",
+      "http_status": 200,
+      "raw_bytes": 22245,
+      "trim": "none — committed whole",
+      "note": "Internet Archive capture of https://developers.openai.com/api/docs/pricing.md taken 20260729122800 (era openai-pricing-md-2026, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/anthropic-models-2024-06.html",
+      "source_id": "wayback-anthropic-models-2024c-20240620143535",
+      "source_url": "https://web.archive.org/web/20240620143535id_/https://docs.anthropic.com/en/docs/about-claude/models",
+      "fetched_at": "2026-11-04T21:20:17.572Z",
+      "http_status": 200,
+      "raw_bytes": 1013373,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but the inline-math markers the parser undoes, 1013373 -> 12220 bytes; the era parser reads only visible headings, tables and text, and gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://docs.anthropic.com/en/docs/about-claude/models taken 20240620143535 (era anthropic-models-2024c, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/anthropic-pricing-2025-06.html",
+      "source_id": "wayback-anthropic-pricing-docs-2025-20250610103300",
+      "source_url": "https://web.archive.org/web/20250610103300id_/https://docs.anthropic.com/en/docs/about-claude/pricing",
+      "fetched_at": "2026-11-04T21:24:23.627Z",
+      "http_status": 200,
+      "raw_bytes": 2071541,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but the inline-math markers the parser undoes, 2071541 -> 16617 bytes; the era parser reads only visible headings, tables and text, and gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://docs.anthropic.com/en/docs/about-claude/pricing taken 20250610103300 (era anthropic-pricing-docs-2025, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
     }
   ]
 }

@@ -480,3 +480,36 @@ DeepSeek's RSS feed gives each incident's start and its newest status, and no en
 **Shares.** Each lab's demand share is now read off each stored row's model id at query time, not off the provider column written when the row was parsed. Rankings rows older than OpenRouter's 30-day window are never re-parsed, so the column keeps the prefix map of the day they were stored, and a lab added later would count as "other" before that day and as itself after it.
 
 **Verdict: track DeepSeek, Alibaba and Moonshot AI as labs.** Include `deepseek-pricing-md`, `deepseek-status` (+ `deepseek-status-atom`), `alibaba-pricing-html`, `alibaba-models-html`, `moonshot-models-md` and `edgar-submissions-baba`, and map `deepseek/*`, `qwen/*` and `moonshotai/*` on OpenRouter. Cut `deepseek-hiring`, `deepseek-disclosures`, `alibaba-hiring`, `alibaba-status`, `alibaba-disclosures`, `moonshot-pricing`, `moonshot-hiring`, `moonshot-status` and `moonshot-disclosures`. `revenue_filers` is null for all three.
+
+## Addendum, 2026-11-04: Internet Archive (API price history before 2026-08-25)
+
+Checked for the price-history backfill (`scripts/wayback-backfill.ts`, eras in `layers/terminal/server/pipeline/archive/eras.ts`). Our own capture starts 2026-08-25. The Wayback Machine holds the labs' own pricing pages from before then. Every CDX listing and capture below was fetched on 2026-11-04 with a User-Agent naming this site, one request at a time, 4 seconds apart.
+
+**Terms.** archive.org/about/terms.php is now a script shell, so the terms were read from the Archive's own capture of that page (dated 31 Dec 2014, unchanged since). Access to the Collections is "granted for scholarship and research purposes only". Use must be "limited to noninfringing or fair use under copyright law". Users agree "not to interfere with the work of other users or Archive personnel, servers, or resources", and published research should list the Archive in its bibliography. The Archive claims no license over the pages it holds; they stay the labs'. We take only the price facts each lab printed about its own API. web.archive.org/robots.txt is a 404 and archive.org/robots.txt disallows only `/control/` and `/report/`. A page a site owner excluded isn't replayed, so it never reaches us. The CDX server's documentation (the wayback-cdx-server README in github.com/internetarchive/wayback) states no rate limit, so we pace ourselves and back off on a 429 or 5xx.
+
+**Rights.** `not-cleared` (`sources.yaml › archive_sources › wayback-pricing`). Archived rows are CC BY-NC 4.0 as full history, and a licensee's key doesn't relabel them (`ARCHIVED_EXPORTS` in `terminal-export.ts`), because the Archive's terms are for scholarship and research.
+
+**Method.** For each era's URL, the CDX API lists 200 captures with `collapse=digest`. The pages re-render a nonce or build id daily, so the backfill reads the first capture of each week, raw (`id_`), and parses it with that era's parser. A capture the parser can't read is skipped with the parser's own reason (`archive_captures.detail`). A capture with no closing `</html>` (the Archive keeps some cut at 1 MiB) is skipped too, because a truncated list would read as delistings.
+
+| Lab | Era (URL) | Window | Shape | Read | Skipped |
+|---|---|---|---|---|---|
+| OpenAI | openai.com/pricing | 2023-01 → 2024-05-02 | HTML tables per family, $/1K then $/1M tokens | 54 | 1 (Feb 2023: no token tables) |
+| OpenAI | openai.com/api/pricing | 2024-05-02 → 2025-01-28 | div grid, standard and Batch API, cached input from Oct 2024 | 29 | 1 (truncated) |
+| OpenAI | developers.openai.com/api/docs/pricing | 2026-02-01 → 2026-03-08 | Text tokens table per tier tab | 4 | 0 |
+| OpenAI | developers.openai.com/api/docs/pricing.md | 2026-07-29 → 2026-08-25 | markdown, one cache-writes column | 2 | 0 |
+| Anthropic | docs.anthropic.com/claude/docs/models-overview | 2024-03-01 → 2024-05-21 | comparison table, cost row | 6 | 0 |
+| Anthropic | docs.anthropic.com/en/docs/models-overview | 2024-05-21 → 2024-06-20 | comparison table, cost row | 2 | 0 |
+| Anthropic | docs.anthropic.com/en/docs/about-claude/models | 2024-06-20 → 2025-02-24 | comparison tables, cost row | 27 | 0 |
+| Anthropic | …/about-claude/models/all-models | 2025-02-24 → 2025-05-12 | comparison tables, cost row | 8 | 2 (cost row gone) |
+| Anthropic | docs.anthropic.com/en/docs/about-claude/pricing | 2025-05-12 → 2025-09-19 | the live pricing tables, as HTML | 10 | 2 (five-column table) |
+| Anthropic | docs.claude.com/en/docs/about-claude/pricing | 2025-09-19 → 2025-11-19 | same | 7 | 0 |
+| Anthropic | platform.claude.com/docs/en/about-claude/pricing | 2025-11-19 → 2026-06-11 | same | 21 | 6 (5 with a cut-short batch row, 1 replayed as another capture) |
+| Anthropic | platform.claude.com/docs/en/about-claude/pricing.md | 2026-06-11 → 2026-08-25 | the markdown the live parser reads | 1 | 0 |
+
+Totals on the local run: 171 captures read (2,726 rows, 260 SKU keys, 187 of them keys the live pages still list), 12 skipped. Captures are 0.1 to 2.3 MB; all of them come to about 142 MB in R2.
+
+**Findings.** In 2024 Anthropic's docs rendered "$0.25 / $1.25" as KaTeX math (the two dollar signs read as a formula), so the cell showed "0.25/1.25". The parser puts the TeX source back (`unrenderInlineMath`) instead of skipping half a year of Haiku prices. The 2023 OpenAI page named GPT-4 and GPT-3.5 Turbo SKUs by context length ("8K context" under GPT-4). Those four labels map to the ids the same page's docs named (gpt-4, gpt-4-32k, gpt-3.5-turbo, gpt-3.5-turbo-16k), and the label stays in notes. Anthropic's older name order ("Claude 3.5 Haiku") is rewritten to the current one before the live slug rule runs, so both land on `model:anthropic:claude-haiku-3-5`. A row OpenAI priced per modality (gpt-4o-audio-preview: text and audio) isn't read, and the capture names it.
+
+**Gaps.** OpenAI 2025-01-28 → 2026-02-01: the page changed layout, then the Archive holds only a Cloudflare check page, and platform.openai.com/docs/pricing is a script shell with no prices. OpenAI 2026-03-08 → 2026-07-29: tabbed per-family tables not read yet. Anthropic before 2024-03: Claude 2 prices were a PDF rate card. Google, xAI and Mistral are archived but not read yet. Meta had no first-party price list before the live source.
+
+**Verdict.** Include, as a one-off backfill (never on a cron), `rights: not-cleared`.

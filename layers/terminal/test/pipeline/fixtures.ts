@@ -85,6 +85,13 @@ import deepseekStatus from '~~/fixtures/status/deepseek-status.xml?raw'
 import deepseekStatusAtom from '~~/fixtures/status/deepseek-status-atom.xml?raw'
 import xaiStatus from '~~/fixtures/status/xai-status.xml?raw'
 import openaiStatus from '~~/fixtures/status/openai-status.json?raw'
+import waybackAnthropicModels2024 from '~~/fixtures/pricing/wayback/anthropic-models-2024-06.html?raw'
+import waybackAnthropicPricing2025 from '~~/fixtures/pricing/wayback/anthropic-pricing-2025-06.html?raw'
+import waybackOpenaiApiPricing2024 from '~~/fixtures/pricing/wayback/openai-api-pricing-2024-12.html?raw'
+import waybackOpenaiDocsPricing2026 from '~~/fixtures/pricing/wayback/openai-docs-pricing-2026-03.html?raw'
+import waybackOpenaiPricing2023 from '~~/fixtures/pricing/wayback/openai-pricing-2023-07.html?raw'
+import waybackOpenaiPricing2024 from '~~/fixtures/pricing/wayback/openai-pricing-2024-04.html?raw'
+import waybackOpenaiPricingMd2026 from '~~/fixtures/pricing/wayback/openai-pricing-2026-07.md?raw'
 import sourcesYaml from '~~/sources.yaml?raw'
 
 import { fixtureProvenance } from '../../server/pipeline/parsers/fixture-provenance'
@@ -176,6 +183,13 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/status/deepseek-status-atom.xml': deepseekStatusAtom,
   'fixtures/status/xai-status.xml': xaiStatus,
   'fixtures/status/openai-status.json': openaiStatus,
+  'fixtures/pricing/wayback/anthropic-models-2024-06.html': waybackAnthropicModels2024,
+  'fixtures/pricing/wayback/anthropic-pricing-2025-06.html': waybackAnthropicPricing2025,
+  'fixtures/pricing/wayback/openai-api-pricing-2024-12.html': waybackOpenaiApiPricing2024,
+  'fixtures/pricing/wayback/openai-docs-pricing-2026-03.html': waybackOpenaiDocsPricing2026,
+  'fixtures/pricing/wayback/openai-pricing-2023-07.html': waybackOpenaiPricing2023,
+  'fixtures/pricing/wayback/openai-pricing-2024-04.html': waybackOpenaiPricing2024,
+  'fixtures/pricing/wayback/openai-pricing-2026-07.md': waybackOpenaiPricingMd2026,
   'sources.yaml': sourcesYaml,
 }
 

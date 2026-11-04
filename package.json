@@ -29,6 +29,7 @@
     "webhooks:list": "bun run scripts/webhooks.ts list",
     "webhooks:remove": "bun run scripts/webhooks.ts remove",
     "webhooks:test": "bun run scripts/webhooks.ts test",
+    "backfill:wayback": "bun run scripts/wayback-backfill.ts",
     "rename": "bun run scripts/rename.ts",
     "design:check": "bun run scripts/check-design-tokens.ts",
     "brand:generate": "bun run scripts/generate-brand-assets.ts",

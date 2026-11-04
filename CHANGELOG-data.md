@@ -23,6 +23,18 @@ whose columns don't match the releases in
 `layers/terminal/server/utils/data-schema.ts`, or whose version bump is smaller
 than its changes need.
 
+## 1.2.0 (2026-11-04)
+
+Two new tables for API price history from before we watched the labs, read
+from the Internet Archive's copies of each lab's own pricing page:
+
+- `archived_prices`: one row per SKU per copy we could read, keyed like the
+  live prices. `source_url` is the copy, `captured_at` when the Archive saw
+  the page, `fetched_at` when we read the copy, and `basis` is always
+  `archived`.
+- `archive_captures`: every copy the backfill considered, read or skipped
+  with the reason.
+
 ## 1.1.0 (2026-11-04)
 
 New: alert webhooks for licensees. We POST each new alert at or above the

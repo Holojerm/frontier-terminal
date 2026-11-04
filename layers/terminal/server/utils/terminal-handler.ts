@@ -25,6 +25,7 @@ import {
   type AsOfPayload,
 } from './terminal-asof'
 import { cacheControlFor, resolvedApiKey } from './api-access'
+import { assertArchiveKnowable } from './terminal-archive'
 import { serverTimingHeader, timed, type ServerTiming } from './server-timing'
 import { paidLicensed, withSchemaVersion } from './terminal-envelope'
 import {
@@ -82,11 +83,14 @@ export async function terminalPayloadAt<T extends object | null>(
    * `filed`: the query reads filed facts by their filing date (event time), so
    * an instant before our first snapshot is still answerable and is not refused.
    */
-  options: CacheOptions & { filed?: boolean } = {},
+  options: CacheOptions & { filed?: boolean; archived?: boolean } = {},
 ): Promise<AsOfPayload<T>> {
   const stamp = await timed(options.timings, 'stamp', liveStamp)
   try {
-    if (!options.filed) await assertKnowable(db, at)
+    // `archived`: a price route, which answers an instant before our first
+    // snapshot from the Internet Archive backfill (terminal-archive.ts).
+    if (options.archived) await assertArchiveKnowable(db, at)
+    else if (!options.filed) await assertKnowable(db, at)
   } catch (error) {
     if (error instanceof PointInTimeError) {
       throw createError({ statusCode: 400, message: error.message })
@@ -174,12 +178,17 @@ export async function serveTerminal<T>(
   return envelopeFor(event, payload)
 }
 
-/** `serveTerminal` for a route whose query honours ctx.at: live without `as_of`, rebuilt with it. */
+/**
+ * `serveTerminal` for a route whose query honours ctx.at: live without `as_of`,
+ * rebuilt with it. `archived`: the query answers an instant before the first
+ * snapshot from the archived price history, so only one before that is refused.
+ */
 export async function serveTerminalAsOf<T extends object | null>(
   event: H3Event,
   name: string,
   query: (context: QueryContext) => Promise<T>,
   variant = '',
+  archived = false,
 ): Promise<T | AsOfPayload<T>> {
   const { as_of } = await getValidatedQuery(event, parseAsOfQuery)
   setResponseHeader(event, 'Cache-Control', cacheControlFor(event, TERMINAL_CACHE_CONTROL))
@@ -187,7 +196,7 @@ export async function serveTerminalAsOf<T extends object | null>(
   const payload =
     as_of === undefined
       ? await terminalPayload(name, query, variant, options)
-      : await terminalPayloadAt(name, as_of, query, variant, options)
+      : await terminalPayloadAt(name, as_of, query, variant, { ...options, archived })
   setResponseHeader(event, 'Server-Timing', serverTimingHeader(options.timings))
   return envelopeFor(event, payload)
 }

@@ -77,6 +77,16 @@ useSeo({
         />
         <TerminalPriceTable v-else :prices="prices" :provider="provider" flow />
       </TerminalPanel>
+
+      <TerminalPanel
+        v-if="prices.reach?.length"
+        id="history"
+        title="How far back"
+        note="Each SKU’s page shows its full price history. Before we started checking, it comes from the Internet Archive’s copies of the lab’s own pricing page."
+        flush
+      >
+        <TerminalPriceReach :reach="prices.reach" />
+      </TerminalPanel>
     </template>
   </TerminalPage>
 </template>

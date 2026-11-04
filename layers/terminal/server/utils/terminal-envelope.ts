@@ -17,8 +17,25 @@ export function withSchemaVersion<T>(payload: T): T {
   return { schema_version: SCHEMA_VERSION, ...payload }
 }
 
-/** `payload` relabeled for a licensee: its `license` field, and an as_of label of CC BY-NC. */
+// How an Internet Archive row shows in a payload: a history point's basis, or
+// an as_of catalog row's source_id (terminal-history.ts › archiveSourceId).
+const ARCHIVED_MARKERS = ['"basis":"archived"', '"source_id":"wayback:']
+
+/** Whether any row in `payload` was read from the Internet Archive. */
+export function carriesArchived(payload: object): boolean {
+  const json = JSON.stringify(payload)
+  return ARCHIVED_MARKERS.some((marker) => json.includes(marker))
+}
+
+/**
+ * `payload` relabeled for a licensee: its `license` field, and an as_of label
+ * of CC BY-NC. A payload carrying Internet Archive rows keeps its public
+ * labels: the Archive grants access for scholarship and research
+ * (sources.yaml › wayback-pricing, rights not-cleared), so a key can't license
+ * them, the same rule as ARCHIVED_EXPORTS.
+ */
 export function paidLicensed<T extends object>(payload: T, now: Date = new Date()): T {
+  if (carriesArchived(payload)) return payload
   const out = { ...payload } as Record<string, unknown>
   if ('license' in out) out.license = licenseSplit(now, PAID_LICENSE)
   const pit = out.point_in_time

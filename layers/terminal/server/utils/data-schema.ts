@@ -449,6 +449,46 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
     summary:
       'New: alert webhooks for licensees. Each POST carries schema_version, the alert with the columns of the alerts table plus permalink, source_urls and its cited rows of the changes table, and the license for your key. No table columns changed.',
   },
+  {
+    version: '1.2.0',
+    date: '2026-11-04',
+    summary:
+      'Two tables for the price history from before we watched the labs, read from the Internet Archive’s copies of each lab’s own pricing page: archived_prices (one row per SKU per copy) and archive_captures (every copy considered, read or skipped with the reason).',
+    tables: {
+      archived_prices: {
+        added: [
+          'id',
+          'capture_id',
+          'entity_key',
+          'provider',
+          'content_hash',
+          'payload',
+          'captured_at',
+          'original_url',
+          'basis',
+          'source_url',
+          'fetched_at',
+        ],
+      },
+      archive_captures: {
+        added: [
+          'id',
+          'era',
+          'provider',
+          'original_url',
+          'captured_at',
+          'status',
+          'detail',
+          'content_hash',
+          'raw_key',
+          'bytes',
+          'rows',
+          'source_url',
+          'fetched_at',
+        ],
+      },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version
@@ -506,13 +546,15 @@ export function replaySchema(
   )
   for (const release of releases.slice(1)) {
     for (const [name, change] of Object.entries(release.tables ?? {})) {
+      // A new table lists its columns in export order, provenance included.
+      const fresh = !(name in out)
       let columns = out[name] ?? []
       for (const [from, to] of Object.entries(change.renamed ?? {})) {
         columns = columns.map((c) => (c === from ? to : c))
       }
       columns = columns.filter((c) => !change.removed?.includes(c))
       for (const added of change.added ?? []) {
-        const at = columns.indexOf('source_url')
+        const at = fresh ? -1 : columns.indexOf('source_url')
         if (at === -1) columns.push(added)
         else columns.splice(at, 0, added)
       }

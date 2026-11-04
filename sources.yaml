@@ -2101,6 +2101,46 @@ track_record_sources:
       article, so a match is rated on its headline alone. Headlines belong
       to their outlets.
 
+# Archives read once, by hand, to backfill history from before the live
+# pipeline watched a page (scripts/wayback-backfill.ts; never on a cron).
+# Same fields as recipe_sources. Eras, windows and gaps per lab:
+# layers/terminal/server/pipeline/archive/eras.ts. Audit: docs/source-audit.md
+# › Internet Archive.
+archive_sources:
+  wayback-pricing:
+    url: https://web.archive.org/cdx/search/cdx
+    format: CDX JSON (one row per capture), then each capture's raw bytes via https://web.archive.org/web/<timestamp>id_/<url>
+    verdict: include
+    terms: >-
+      The Internet Archive's Terms of Use (archive.org/about/terms.php, dated
+      31 Dec 2014, read through the Archive's own capture because the live
+      page is a script shell) grant access to the Collections "for
+      scholarship and research purposes only", require use "limited to
+      noninfringing or fair use under copyright law", ask users "not to
+      interfere with the work of other users or Archive personnel, servers,
+      or resources", and request that published research list the Archive
+      in its bibliography. The archived pages belong to the labs that
+      published them; the Archive claims no license over them. What we
+      take is the price facts each lab printed about its own API, never
+      the page text. web.archive.org/robots.txt is a 404 and
+      archive.org/robots.txt disallows only /control/ and /report/; a page
+      a site owner has excluded is not served by the Wayback Machine at all,
+      so it never reaches us. The CDX API documentation states no rate; we
+      send one request at a time, 4 seconds apart, back off for 30 s, 2 min
+      and 5 min on a 429 or 5xx, and name this site in the User-Agent.
+      Taken once per backfill run: one capture per lab page per week,
+      2023-01 to 2026-08-25. Read 2026-11-04.
+    rights: not-cleared
+    caveats: >-
+      A capture is the page as the Archive's crawler saw it, at the moment
+      it saw it, so a price change is dated to the first weekly capture
+      that shows it: up to a week late. Captures the Archive took of a
+      challenge page, a script shell, or a page in a shape no era parser
+      reads are skipped with the reason (archive_captures), never guessed.
+      Archived rows carry basis archived, the capture URL as source_url, and
+      CC BY-NC 4.0 even under a licensee's key: the Archive's terms are for
+      scholarship and research, so they stay off anything sold.
+
 # Department clusters read off the hiring boards. A cluster is a name match
 # over each board's own department labels: a department belongs when its
 # name contains one of `terms` as a whole word (case-insensitive) and none of
