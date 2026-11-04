@@ -352,7 +352,7 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
       )
     }
     sections.push(
-      `- [Alerts feed](${appUrl}/alerts.xml): Atom, one entry per alert; add \`?include=ticker\` for the info tier.`,
+      `- [Alerts feed](${appUrl}/alerts.xml): Atom, one entry per alert; add \`?include=info\` for the minor changes (severity info).`,
       '',
     )
   }

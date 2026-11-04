@@ -62,10 +62,12 @@ https://frontierterm.com/export/prices_latest.csv
 https://frontierterm.com/export/changes.json
 ```
 
-`snapshots`, `prices_latest`, `jobs_open`, `incidents`, `rankings_daily`, `revenue_facts`,
-`changes`, `alerts`, `claim_readings`, `claim_verdicts`, `recipe_observations`, `source_runs` — each row carrying `source_url` and `fetched_at`. The
-`/data` page lists them with their columns and current row counts. Alerts are also an Atom
-feed at `/alerts.xml`.
+`snapshots`, `prices_latest`, `jobs_open`, `incidents`, `revenue_facts`,
+`changes`, `alerts`, `claim_readings`, `claim_verdicts`, `recipe_observations`, `source_runs` — each row carrying `source_url` and `fetched_at` —
+and `entity_securities`, which maps each lab and tracked filer to its issuer, CIK and symbol. The
+`/data` page lists them with their columns and current row counts; `/export/sample/<table>.csv`
+is the first 50 rows of any of them. OpenRouter's per-model rankings are shown as per-lab shares
+but not bulk-exported (see `docs/source-audit.md`). Alerts are also an Atom feed at `/alerts.xml`.
 
 ## Connect an agent
 

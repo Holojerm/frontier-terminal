@@ -277,7 +277,7 @@ const tabs = computed(() => [
           <TerminalPanel
             id="alerts"
             title="Alerts"
-            :note="`Alerts and ticker lines whose cited rows name ${display}, newest first.`"
+            :note="`Alerts and minor changes whose cited rows name ${display}, newest first.`"
             :more="
               summary.alerts.length > labAlerts.length
                 ? { label: `All ${summary.alerts.length} on the alerts page`, to: '/alerts' }

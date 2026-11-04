@@ -26,6 +26,16 @@ export type SourceAxis =
   | 'disclosures'
   | 'demand-share'
 export type SourceRole = 'primary' | 'join' | 'cross-check' | 'sec' | 'status'
+/**
+ * What a paid licence could cover, per sources.yaml `rights:`. `ours`: facts
+ * the publisher states about itself, read under terms and a robots.txt that
+ * allow it, so the compilation is ours to license. `upstream`: someone else's
+ * dataset under its own licence (CC BY and the like), which travels with it.
+ * `not-cleared`: no stated licence, unread terms, or a robots/terms
+ * restriction, so it stays on the free site and out of any paid offer.
+ */
+export const SOURCE_RIGHTS = ['ours', 'upstream', 'not-cleared'] as const
+export type SourceRights = (typeof SOURCE_RIGHTS)[number]
 export type RunStatus = 'ok' | 'unchanged' | 'failed' | 'baseline' | 'skipped' | 'absent'
 
 /** Where the numbers on a page stand in time. Every payload carries one. */
@@ -72,6 +82,13 @@ export interface SourceCoverage {
    * exactly the kind of claim the provenance rule exists to prevent.
    */
   license: string | null
+  /**
+   * The audit's reading of the source's terms and robots.txt, what is taken
+   * and how often, verbatim from sources.yaml. A derived source carries the
+   * entry of the registered source its template belongs to.
+   */
+  terms: string | null
+  rights: SourceRights | null
   /** The audited URL this source is fetched from. */
   url: string
   newest_snapshot: SnapshotStamp | null
@@ -122,6 +139,7 @@ export interface RecipeCoverage {
   /** The audit's words from sources.yaml recipe_sources; null for a recipe audited on its thesis page. */
   caveat: string | null
   terms: string | null
+  rights: SourceRights | null
 }
 
 export interface CoverageData extends Stamp {
@@ -134,6 +152,8 @@ export interface CoverageData extends Stamp {
   exports: ExportTableInfo[]
   /** Newest fetch across every source. */
   latest_fetched_at: string | null
+  /** Oldest fetch on record: where every table's history starts. */
+  first_fetched_at: string | null
 }
 
 // ---- overview / signal -----------------------------------------------------
@@ -170,9 +190,9 @@ export interface OverviewData extends Stamp {
   /** Newest alert-tier rows first (notable, critical), with their cited change rows. */
   alerts: AlertView[]
   alert_count: number
-  /** Newest ticker-tier rows first (info) — what moved, low stakes. */
-  ticker: AlertView[]
-  ticker_count: number
+  /** Newest minor changes first (severity info) — what moved, low stakes. */
+  info: AlertView[]
+  info_count: number
   totals: TableCounts
   latest_fetched_at: string | null
 }

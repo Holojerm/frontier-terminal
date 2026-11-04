@@ -1,21 +1,24 @@
-// Ticker versus alert: the one materiality split every surface agrees on.
+// Minor changes versus alerts: the one materiality split every surface agrees on.
 //
 // The severity enum (layers/terminal/server/pipeline/contracts/rows.ts › severityEnum) is the
-// stored datum; the tier is a reading of it. `info` is the ticker — what
+// stored datum; the tier is a reading of it. `info` is the minor-changes tier — what
 // moved, low stakes: a role added, a title reworded, a location shuffled.
+// It was called the ticker until 2026-11-04; a fund reads a `ticker` field as a
+// security symbol, so no public surface uses the word for it now, and the old
+// `ticker` value is accepted as an alias wherever a URL could carry it.
 // `notable` and `critical` are alerts — what an analyst should read: a price
 // move, a new SKU, a department-level hiring shift, a filing. One function so
 // the landing band, /alerts, the Atom feed and the sitemap cannot drift.
 
 export type AlertSeverity = 'info' | 'notable' | 'critical'
-export type AlertTier = 'alert' | 'ticker'
+export type AlertTier = 'alert' | 'info'
 
 /** What a reader can ask for: one tier, or everything. */
-export const ALERT_TIER_FILTERS = ['alert', 'ticker', 'all'] as const
+export const ALERT_TIER_FILTERS = ['alert', 'info', 'all'] as const
 export type AlertTierFilter = (typeof ALERT_TIER_FILTERS)[number]
 
 const TIER_OF: Readonly<Record<AlertSeverity, AlertTier>> = {
-  info: 'ticker',
+  info: 'info',
   notable: 'alert',
   critical: 'alert',
 }
@@ -35,5 +38,16 @@ export function alertPath(id: string): string {
   return `/alerts/${id}`
 }
 
-/** The Atom feed carries alerts by default; this query flag adds the ticker. */
-export const TICKER_FEED_QUERY = 'include=ticker'
+/**
+ * A tier filter as a request spells it: `ticker` is the pre-2026-11-04 name
+ * of `info`, kept so a saved URL or a client built against it still works.
+ */
+export function tierFilterOf(value: unknown): unknown {
+  return value === 'ticker' ? 'info' : value
+}
+
+/** The Atom feed carries alerts by default; this query flag adds the minor changes. */
+export const INFO_FEED_QUERY = 'include=info'
+
+/** What the minor-changes tier is called wherever a reader sees it. */
+export const INFO_TIER_LABEL = 'Minor changes'

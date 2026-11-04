@@ -183,6 +183,26 @@ export interface DatasetInput {
   distribution?: readonly { encodingFormat: string; contentUrl: string }[]
   /** Rows, where the count is known and cheap. */
   rows?: number | null
+  /** URLs of the upstream sources the rows were read from (schema.org `isBasedOn`). */
+  isBasedOn?: readonly string[]
+}
+
+/**
+ * `temporalCoverage` from the first observation to now: an ISO 8601 interval
+ * open at the end (`2026-08-25/..`), because the series is still being
+ * written. Null when nothing has been observed.
+ */
+export function openTemporalCoverage(first: string | null | undefined): string | null {
+  return first ? `${first.slice(0, 10)}/..` : null
+}
+
+function publisherRef(site: SiteContext): JsonLdNode {
+  return {
+    '@type': 'Organization',
+    '@id': `${site.appUrl}/${SCHEMA_IDS.organization}`,
+    name: site.appName,
+    url: site.appUrl,
+  }
 }
 
 /**
@@ -206,10 +226,15 @@ export function datasetSchema(site: SiteContext, dataset: DatasetInput): JsonLdN
     description: dataset.description,
     license: DATA_LICENSE.url,
     isAccessibleForFree: true,
-    creator: { '@id': `${site.appUrl}/${SCHEMA_IDS.organization}` },
-    publisher: { '@id': `${site.appUrl}/${SCHEMA_IDS.organization}` },
+    // Named inline as well as by @id: Dataset Search reads a creator's name
+    // off the node and does not always resolve a bare reference.
+    creator: publisherRef(site),
+    publisher: publisherRef(site),
     includedInDataCatalog: { '@id': dataCatalogId(site) },
     inLanguage: 'en',
+    // The repo holds the code and the audit behind every row.
+    ...(site.repoUrl ? { sameAs: site.repoUrl } : {}),
+    ...(dataset.isBasedOn?.length ? { isBasedOn: [...dataset.isBasedOn] } : {}),
     ...(dataset.dateModified ? { dateModified: dataset.dateModified } : {}),
     ...(dataset.temporalCoverage ? { temporalCoverage: dataset.temporalCoverage } : {}),
     ...(dataset.variableMeasured?.length

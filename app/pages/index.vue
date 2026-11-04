@@ -111,7 +111,7 @@ const readout = computed(() => ({
   spend: spend.data.value,
   hiring: hiringHistory.data.value,
   incidents: incidents.data.value,
-  alerts: [...(overview.data.value?.alerts ?? []), ...(overview.data.value?.ticker ?? [])].sort(
+  alerts: [...(overview.data.value?.alerts ?? []), ...(overview.data.value?.info ?? [])].sort(
     (a, b) => b.created_at.localeCompare(a.created_at),
   ),
 }))
