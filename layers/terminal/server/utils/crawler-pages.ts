@@ -14,6 +14,7 @@ import manifest from '~~/fleet.json'
 import { THESES } from '../theses/registry'
 import type { LlmsTxtInput, LlmsTxtSection } from '#server/utils/seo'
 import { REQUEST_BUDGETS } from '../../shared/utils/institutional'
+import { WEBHOOK_HEADERS, WEBHOOK_RETRY_HOURS } from '../../shared/utils/webhooks'
 import { BREAKING_NOTICE_DAYS, SCHEMA_VERSION } from './data-schema'
 import { AS_OF_ROUTES } from './terminal-asof'
 import { DICTIONARY_NAME } from './terminal-dictionary'
@@ -93,9 +94,9 @@ const POINT_IN_TIME: LlmsTxtSection = {
   ],
 }
 
-/** Licensee keys, the bulk feed, and the schema version (/data#institutions, /data#schema). */
+/** Licensee keys, webhooks, the bulk feed, and the schema version (/data#institutions, /data#schema). */
 const INSTITUTIONS: LlmsTxtSection = {
-  heading: 'Bulk feed, API keys, and schema versions',
+  heading: 'Bulk feed, API keys, webhooks, and schema versions',
   links: [
     {
       path: '/export/bulk/manifest.json',
@@ -107,6 +108,11 @@ const INSTITUTIONS: LlmsTxtSection = {
       path: '/data#institutions',
       title: 'API keys for licensees',
       description: `Licensees send Authorization: Bearer <key>. A key raises the rate limit from ${REQUEST_BUDGETS.anonymous.read} requests a minute per IP to ${REQUEST_BUDGETS.research.read} (research) or ${REQUEST_BUDGETS.systematic.read} (systematic) per key, lists the full-history bulk files, and labels rows older than the window with the paid license instead of CC BY-NC 4.0. It never changes the data. A bad, expired, or revoked key gets a 401. Keys are issued by email, never self-serve.`,
+    },
+    {
+      path: '/data#webhooks',
+      title: 'Alert webhooks for licensees',
+      description: `A licensee can get alerts POSTed to an https URL instead of polling, at or above a chosen severity (critical, notable, or info). The JSON body has schema_version, the alert with its permalink, source URLs and cited change rows, and the license for the key. ${WEBHOOK_HEADERS.signature} is sha256= and the hex HMAC-SHA256 of the raw body, keyed with a per-webhook secret. ${WEBHOOK_HEADERS.delivery} stays the same across retries, and ${WEBHOOK_HEADERS.timestamp} matches sent_at in the body. Deliveries are retried with backoff for ${WEBHOOK_RETRY_HOURS} hours, and never sent before the alert is on the public site. Set up by email, never self-serve.`,
     },
     {
       path: '/data#schema',

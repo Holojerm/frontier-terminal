@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // /data's two panels for licensees: how an API key works, its rate limits, the
-// bulk feed, the saved pages, and what the paid license covers; then the
+// bulk feed, the saved pages, webhooks (Webhooks.vue), and what the paid license covers; then the
 // export schema's version and changelog. The limits are the numbers the server
 // enforces (REQUEST_BUDGETS) and the changelog is the dictionary's, so neither
 // can drift from what a client gets. No prices: those are by email.
@@ -49,7 +49,7 @@ const link = 'text-primary underline underline-offset-2'
   <TerminalPanel
     id="institutions"
     title="For institutions"
-    note="API keys for licensees: higher rate limits, the full history under a paid license, and a daily bulk feed."
+    note="API keys for licensees: higher rate limits, the full history under a paid license, a daily bulk feed, and alert webhooks."
   >
     <div class="flex max-w-3xl flex-col gap-4 text-sm text-default">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -134,6 +134,8 @@ const link = 'text-primary underline underline-offset-2'
           else’s dataset, gets a 403.
         </p>
       </section>
+
+      <TerminalWebhooks :schema-version="schemaVersion" />
 
       <section class="space-y-2" aria-labelledby="institutions-scope">
         <h3 id="institutions-scope" class="text-highlighted">What the paid license covers</h3>

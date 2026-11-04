@@ -195,6 +195,7 @@ const SCHEDULED_TASKS: Record<string, string[]> = {
     'press:briefs',
     'cache:warm',
     'track-record:search',
+    'webhooks:deliver',
   ],
   '0 13 * * 1': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
   '41 * * * *': ['bulk:build'],
