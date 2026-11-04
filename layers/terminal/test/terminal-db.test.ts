@@ -206,6 +206,8 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       'prospectus_shares',
       'prospectus_risk_factors',
       'changes',
+      'archived_prices',
+      'archive_captures',
       'alerts',
       'claim_readings',
       'claim_verdicts',

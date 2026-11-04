@@ -231,6 +231,24 @@ describe('what a key changes', () => {
     )
   })
 
+  it('never relabels a payload carrying Internet Archive rows', () => {
+    const history = {
+      points: [{ basis: 'archived' }, { basis: 'live' }],
+      license: licenseSplit(NOW),
+    }
+    expect(paidLicensed(history, NOW)).toBe(history)
+    const catalog = {
+      rows: [{ source_id: 'wayback:openai-pricing-2023' }],
+      license: licenseSplit(NOW),
+      point_in_time: { requested: '2024-01-01T00:00:00Z', license: HISTORY_LICENSE.id },
+    }
+    expect(paidLicensed(catalog, NOW)).toBe(catalog)
+    expect(
+      paidLicensed({ points: [{ basis: 'live' }], license: licenseSplit(NOW) }, NOW).license.older
+        .id,
+    ).toBe(PAID_LICENSE.id)
+  })
+
   it('serves saved pages only for sources that are ours to license', () => {
     const registry = readSourceRegistry(sourcesYaml)
     const ours = registry.sources.find((s) => s.rights === 'ours')!

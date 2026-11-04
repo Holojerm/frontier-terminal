@@ -279,6 +279,21 @@ function rightsOf(id: string, value: string | null | undefined): SourceRights | 
   return value as SourceRights
 }
 
+/** An archive read once to backfill history (sources.yaml `archive_sources`). */
+export type ArchiveSourceEntry = TrackRecordSourceEntry
+
+/** sources.yaml `archive_sources`: what a backfill read, under what terms. */
+export function readArchiveSources(sourcesYaml: string): ArchiveSourceEntry[] {
+  return readBlock(sourcesYaml.split('\n'), 'archive_sources').map((block) => ({
+    id: block.id,
+    url: block.fields.url ?? null,
+    verdict: block.fields.verdict ?? '',
+    terms: block.fields.terms ?? null,
+    rights: rightsOf(block.id, block.fields.rights),
+    caveat: block.fields.caveats ?? null,
+  }))
+}
+
 /** Every include source and every deliberate cut, as sources.yaml states them. */
 export function readSourceRegistry(sourcesYaml: string): SourceRegistry {
   const lines = sourcesYaml.split('\n')

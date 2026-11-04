@@ -368,6 +368,8 @@ export interface PricesData extends Stamp {
   matrix: PriceMatrix
   counts: { total: number; priced: number; catalog_only: number; removed: number }
   changes_available: boolean
+  /** How far back price history reaches per lab, archived and live. */
+  reach: PriceReach[]
   /** OpenRouter: snapshotted for drift checks, never rendered as a price. */
   cross_check: {
     source_id: string
@@ -386,13 +388,39 @@ export interface PricesData extends Stamp {
  */
 export interface PricePoint extends Prov {
   at: string
-  kind: 'baseline' | 'added' | 'modified' | 'removed' | 'current'
+  /**
+   * 'archived': read from the Internet Archive's capture of the lab's own page
+   * (archived_prices), before this site watched it. `at` is the capture time,
+   * source_url the Wayback capture, fetched_at when we read the capture back.
+   */
+  kind: 'archived' | 'baseline' | 'added' | 'modified' | 'removed' | 'current'
+  /** 'archived' on an Internet Archive point; 'live' on every point this site observed. */
+  basis: 'archived' | 'live'
   source_id: string
   input_per_mtok: number | null
   cached_input_per_mtok: number | null
   output_per_mtok: number | null
   /** Scalar fields that differ from the previous revision (modified points only). */
   diff: FieldDiff[]
+}
+
+/**
+ * How far one lab's price history reaches. archived_from is the earliest
+ * Internet Archive capture we could read; live_from the first time this site
+ * fetched the lab's own pricing page. Either is null when there is none.
+ */
+export interface PriceReach {
+  provider: LabId
+  archived_from: string | null
+  archived_until: string | null
+  /** Captures read and stored, and captures skipped because they could not be read confidently. */
+  archived_parsed: number
+  archived_skipped: number
+  live_from: string | null
+  /** Stretches before live_from with no readable capture, and why. */
+  gaps: { from: string; until: string; reason: string }[]
+  /** Set when the lab's archived pages are not read at all. */
+  not_covered: string | null
 }
 
 export interface PriceHistoryData extends Stamp {
@@ -405,6 +433,8 @@ export interface PriceHistoryData extends Stamp {
   points: PricePoint[]
   /** True when the newest observation is a removal and no current row exists. */
   removed: boolean
+  /** True when every point is archived: the SKU was gone (or renamed) before this site watched the page. */
+  archive_only: boolean
 }
 
 // ---- hiring ----------------------------------------------------------------

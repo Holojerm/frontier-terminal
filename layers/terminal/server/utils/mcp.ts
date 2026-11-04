@@ -99,7 +99,7 @@ export interface McpDeps {
     query: (ctx: QueryContext) => Promise<T>,
     variant?: string,
     /** `filed`: read by filing date, so an instant before the first snapshot is answered. */
-    opts?: { filed?: boolean },
+    opts?: { filed?: boolean; archived?: boolean },
   ): Promise<AsOfPayload<T>>
   /** The site's llms.txt body — the same bytes GET /llms.txt serves. */
   llmsTxt: string
@@ -225,7 +225,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
     as_of: string | undefined,
     query: (ctx: QueryContext) => Promise<T>,
     variant?: string,
-    opts?: { filed?: boolean },
+    opts?: { filed?: boolean; archived?: boolean },
   ) => {
     if (as_of === undefined) return deps.serve(name, query, variant)
     const at = parseAsOfQuery({ as_of }).as_of!
@@ -262,13 +262,17 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'context_window_source is set when the window comes from another page than the row cites (Google prints windows on its model pages, not its pricing page). ' +
         'cross_check is OpenRouter: snapshotted as a drift check ' +
         'on the vendor pages, never a price of record. Optional provider filter narrows rows and matrix to one lab. ' +
+        'reach says how far each lab’s price history goes back. An as_of before our first fetch is answered from the Internet Archive’s ' +
+        'captures of each lab’s own pricing page (source_id wayback:<era>, point_in_time says which capture), with an empty matrix. ' +
         PROVENANCE,
       inputSchema: z.object({ provider: ProviderSchema.optional(), as_of: AsOfSchema }),
       annotations: READ_ONLY,
     },
     ({ provider, as_of }) =>
       asOfErrors(async () => {
-        const prices = await read('prices', as_of, (ctx) => queryPrices(deps.db, ctx))
+        const prices = await read('prices', as_of, (ctx) => queryPrices(deps.db, ctx), '', {
+          archived: true,
+        })
         if (!provider) return json(prices)
         const rows = prices.rows.filter((r) => r.provider === provider)
         const priced = (r: (typeof rows)[number]) =>
@@ -382,7 +386,8 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'added, modified with the changed fields in diff, removed, or current), the three USD-per-million-token figures, and the fetch ' +
         'each was read from. A series is one price per revision of the vendor page, not a daily sample — a flat line is a page that did ' +
         'not change. removed=true when the newest observation is a delisting. Keys come from get_prices (entity_key); an unknown key is ' +
-        'an error, not an empty series. ' +
+        'an error, not an empty series. Points with kind archived (basis archived) come first: read from the Internet Archive’s capture ' +
+        'of the lab’s own page before we watched it; at is the capture time, source_url the capture. archive_only=true when every point is archived. ' +
         PROVENANCE,
       inputSchema: z.object({ key: SkuKeySchema, as_of: AsOfSchema }),
       annotations: READ_ONLY,
@@ -394,6 +399,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
           as_of,
           (ctx) => queryPriceHistory(deps.db, ctx, key),
           key,
+          { archived: true },
         )
         if (history === null) {
           return failure(
