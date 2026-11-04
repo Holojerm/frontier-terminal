@@ -20,6 +20,7 @@ Read the row that matches what you are about to touch. Do not load them all.
 | Doc | Covers | Load it when |
 | --- | --- | --- |
 | [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md) | Silent failure modes — wrong-file databases, migrations that never run, empty sitemaps, rate limiters that quietly do nothing | Something "works" but produces no output; or you touch D1, migrations, deploy config, cron, `definePageMeta`, or a worktree |
+| [`.claude/docs/voice.md`](.claude/docs/voice.md) | How copy should sound, the AI patterns to cut, and the quote/number rules that never change | Writing or editing anything a visitor reads: page text, panel notes, SEO strings, `llms.txt`, gap strings, README |
 | [`.claude/docs/patterns.md`](.claude/docs/patterns.md) | Worked examples: components, API routes, Drizzle queries, error handling | Writing a new component, route, or query — especially your first change here |
 | [`.claude/docs/seo.md`](.claude/docs/seo.md) | `useSeo()`, `publicPage` meta, structured data, the crawler files | Adding or editing a page |
 | [`.claude/docs/brand.md`](.claude/docs/brand.md) | How every icon is generated from one `Logo.vue` | Redesigning the mark or fixing `brand:check` |
