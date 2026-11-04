@@ -5,8 +5,9 @@
 
 import { serveTerminalAsOf, terminalDb } from '../utils/terminal-handler'
 import { queryRevenue } from '../utils/terminal-revenue'
+import { rateLimitTerminal } from '../utils/api-access'
 
 export default defineEventHandler(async (event) => {
-  await rateLimit(event, { name: 'revenue', limit: 60, windowSeconds: 60 })
+  await rateLimitTerminal(event, { name: 'revenue', limit: 60, windowSeconds: 60 })
   return serveTerminalAsOf(event, 'revenue', (ctx) => queryRevenue(terminalDb, ctx))
 })

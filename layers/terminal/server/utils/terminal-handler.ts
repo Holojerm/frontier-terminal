@@ -24,7 +24,9 @@ import {
   pollStampAt,
   type AsOfPayload,
 } from './terminal-asof'
+import { cacheControlFor, resolvedApiKey } from './api-access'
 import { serverTimingHeader, timed, type ServerTiming } from './server-timing'
+import { paidLicensed, withSchemaVersion } from './terminal-envelope'
 import {
   cachedTerminal,
   sharedTerminalStamp,
@@ -165,11 +167,11 @@ export async function serveTerminal<T>(
   variant = '',
 ): Promise<T> {
   refuseAsOf(event, name)
-  setResponseHeader(event, 'Cache-Control', TERMINAL_CACHE_CONTROL)
+  setResponseHeader(event, 'Cache-Control', cacheControlFor(event, TERMINAL_CACHE_CONTROL))
   const options = requestCacheOptions(event)
   const payload = await terminalPayload(name, query, variant, options)
   setResponseHeader(event, 'Server-Timing', serverTimingHeader(options.timings))
-  return payload
+  return envelopeFor(event, payload)
 }
 
 /** `serveTerminal` for a route whose query honours ctx.at: live without `as_of`, rebuilt with it. */
@@ -180,14 +182,14 @@ export async function serveTerminalAsOf<T extends object | null>(
   variant = '',
 ): Promise<T | AsOfPayload<T>> {
   const { as_of } = await getValidatedQuery(event, parseAsOfQuery)
-  setResponseHeader(event, 'Cache-Control', TERMINAL_CACHE_CONTROL)
+  setResponseHeader(event, 'Cache-Control', cacheControlFor(event, TERMINAL_CACHE_CONTROL))
   const options = requestCacheOptions(event)
   const payload =
     as_of === undefined
       ? await terminalPayload(name, query, variant, options)
       : await terminalPayloadAt(name, as_of, query, variant, options)
   setResponseHeader(event, 'Server-Timing', serverTimingHeader(options.timings))
-  return payload
+  return envelopeFor(event, payload)
 }
 
 /** Timed, and with the KV write after the response: what a request-bound read gets. */
@@ -207,14 +209,27 @@ export async function serveTerminalFiled<T extends object | null>(
   variant = '',
 ): Promise<T | AsOfPayload<T>> {
   const { as_of } = await getValidatedQuery(event, parseAsOfQuery)
-  setResponseHeader(event, 'Cache-Control', TERMINAL_CACHE_CONTROL)
+  setResponseHeader(event, 'Cache-Control', cacheControlFor(event, TERMINAL_CACHE_CONTROL))
   const options = requestCacheOptions(event)
   const payload =
     as_of === undefined
       ? await terminalPayload(name, query, variant, options)
       : await terminalPayloadAt(name, as_of, query, variant, { ...options, filed: true })
   setResponseHeader(event, 'Server-Timing', serverTimingHeader(options.timings))
-  return payload
+  return envelopeFor(event, payload)
+}
+
+/**
+ * What a route returns: the payload with its schema version, and for a
+ * licensee's key the license that key holds on older data (PAID_LICENSE) in
+ * place of CC BY-NC. Nothing else in the payload changes with a key.
+ */
+export function envelopeFor<T>(event: H3Event, payload: T): T {
+  const versioned = withSchemaVersion(payload)
+  if (!resolvedApiKey(event) || versioned === null || typeof versioned !== 'object') {
+    return versioned
+  }
+  return paidLicensed(versioned)
 }
 
 /** The Drizzle client, for routes that stream rather than cache. */

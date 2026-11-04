@@ -37,6 +37,7 @@ import {
   LICENSE_WINDOW_DAYS,
   licenseWindowStart,
   rowLicense,
+  type LicenseRef,
 } from '#shared/utils/license'
 import { riskFactorChanges } from '../pipeline/parsers/sec/prospectus-risk-factors'
 import type { PipelineDb } from '../pipeline/store'
@@ -1214,6 +1215,8 @@ export interface LicenseWindow {
   windowed: boolean
   /** Rows older than the window may be in it, each labeled in LICENSE_COLUMN. */
   split: boolean
+  /** What those older rows are labeled: HISTORY_LICENSE, or PAID_LICENSE for a licensee's key. */
+  older: LicenseRef
 }
 
 /**
@@ -1230,28 +1233,31 @@ export function licenseWindow(
   table: ExportTable,
   query: { as_of?: string; history?: HistoryQuery },
   from: string = licenseWindowStart(),
+  older: LicenseRef = HISTORY_LICENSE,
 ): LicenseWindow {
   const rule = historyRule(name)
   const label = (dated: (row: Row) => string | null) =>
     licensedOf(table, (row) => {
       const published = rule.published === null ? null : row[rule.published]
-      return rowLicense(dated(row), typeof published === 'string' ? published : null, from).id
+      return rowLicense(dated(row), typeof published === 'string' ? published : null, from, older)
+        .id
     })
 
   const { as_of } = query
   if (rule.kind === 'whole') {
-    if (as_of === undefined || as_of >= from) return { table, from, windowed: false, split: false }
-    return { table: label(() => as_of), from, windowed: false, split: true }
+    if (as_of === undefined || as_of >= from)
+      return { table, from, windowed: false, split: false, older }
+    return { table: label(() => as_of), from, windowed: false, split: true, older }
   }
   if (query.history === 'full') {
-    return { table: label((row) => rowDate(rule, row)), from, windowed: false, split: true }
+    return { table: label((row) => rowDate(rule, row)), from, windowed: false, split: true, older }
   }
   if (as_of !== undefined && as_of < from) {
     throw new PointInTimeError(
       `as_of ${as_of} is before ${from}, the start of the trailing ${LICENSE_WINDOW_DAYS} days, which is all /export/${name} serves by default. Add ${HISTORY_PARAM}=full for the full history, licensed ${HISTORY_LICENSE.short} for our compilation (see /license).`,
     )
   }
-  return { table: windowOf(table, rule, from), from, windowed: true, split: false }
+  return { table: windowOf(table, rule, from), from, windowed: true, split: false, older }
 }
 
 /**
@@ -1262,8 +1268,8 @@ export function licenseWindow(
 export function licenseHeaders(window: LicenseWindow): Record<string, string> {
   if (window.split) {
     return {
-      Link: `<${HISTORY_LICENSE.url}>; rel="license", <${DATA_LICENSE.url}>; rel="license", </license>; rel="terms-of-service"`,
-      'X-License': `${HISTORY_LICENSE.id} for rows dated before ${window.from} that we first published on or after ${LICENSE_SPLIT_EFFECTIVE}, ${DATA_LICENSE.id} for the rest. The ${LICENSE_COLUMN} column labels each row.`,
+      Link: `<${window.older.url}>; rel="license", <${DATA_LICENSE.url}>; rel="license", </license>; rel="terms-of-service"`,
+      'X-License': `${window.older.id} for rows dated before ${window.from} that we first published on or after ${LICENSE_SPLIT_EFFECTIVE}, ${DATA_LICENSE.id} for the rest. The ${LICENSE_COLUMN} column labels each row.`,
     }
   }
   return {

@@ -10,6 +10,7 @@ import { ALERT_TIER_FILTERS, tierFilterOf } from '../../shared/utils/terminal-ti
 
 import { queryAlerts } from '../utils/terminal-db'
 import { serveTerminalAsOf, terminalDb } from '../utils/terminal-handler'
+import { rateLimitTerminal } from '../utils/api-access'
 
 const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(500).default(200),
@@ -17,7 +18,7 @@ const querySchema = z.object({
 })
 
 export default defineEventHandler(async (event) => {
-  await rateLimit(event, { name: 'alerts', limit: 60, windowSeconds: 60 })
+  await rateLimitTerminal(event, { name: 'alerts', limit: 60, windowSeconds: 60 })
   const { limit, tier } = await getValidatedQuery(event, querySchema.parse)
   return serveTerminalAsOf(
     event,

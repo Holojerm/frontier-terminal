@@ -6,9 +6,10 @@
 
 import { trackRecordStamp, queryTrackRecord } from '../utils/terminal-track-record'
 import { serveTerminalAsOf, terminalDb } from '../utils/terminal-handler'
+import { rateLimitTerminal } from '../utils/api-access'
 
 export default defineEventHandler(async (event) => {
-  await rateLimit(event, { name: 'track-record', limit: 60, windowSeconds: 60 })
+  await rateLimitTerminal(event, { name: 'track-record', limit: 60, windowSeconds: 60 })
   // Searches and ratings land between polls, so they key the cache too.
   const variant = await trackRecordStamp(terminalDb)
   return serveTerminalAsOf(

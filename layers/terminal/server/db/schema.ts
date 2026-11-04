@@ -1,4 +1,12 @@
-import { index, integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import {
+  index,
+  integer,
+  primaryKey,
+  real,
+  sqliteTable,
+  text,
+  uniqueIndex,
+} from 'drizzle-orm/sqlite-core'
 
 // The Frontier Terminal tables: the fetch pipeline's spine (snapshots, entities,
 // changes, alerts, source and judge runs, the class map) and the thesis engine's
@@ -446,6 +454,24 @@ export const trackRecordVerdicts = sqliteTable(
   ],
 )
 
+// Licensee API keys, issued by the owner with `bun run keys:issue`. Only the
+// SHA-256 of a key is stored, so a leaked table grants nothing. Never exported,
+// never served: layers/terminal/server/utils/api-keys.ts reads it by hash.
+export const apiKeys = sqliteTable(
+  'api_keys',
+  {
+    id: text('id').primaryKey(),
+    key_hash: text('key_hash').notNull(),
+    client: text('client').notNull(),
+    tier: text('tier').notNull(), // research | systematic
+    issued_at: text('issued_at').notNull(),
+    expires_at: text('expires_at').notNull(),
+    revoked: integer('revoked', { mode: 'boolean' }).notNull().default(false),
+    revoked_at: text('revoked_at'),
+  },
+  (t) => [uniqueIndex('api_keys_hash_idx').on(t.key_hash)],
+)
+
 export type Snapshot = typeof snapshots.$inferSelect
 export type Entity = typeof entities.$inferSelect
 export type Change = typeof changes.$inferSelect
@@ -460,3 +486,4 @@ export type RecipeObservation = typeof recipeObservations.$inferSelect
 export type RecipeRun = typeof recipeRuns.$inferSelect
 export type FiledFact = typeof filedFacts.$inferSelect
 export type FiledFactRead = typeof filedFactReads.$inferSelect
+export type ApiKeyRow = typeof apiKeys.$inferSelect

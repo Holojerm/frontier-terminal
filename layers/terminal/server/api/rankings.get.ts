@@ -5,8 +5,9 @@
 
 import { serveTerminal, terminalDb } from '../utils/terminal-handler'
 import { queryRankings } from '../utils/terminal-rankings'
+import { rateLimitTerminal } from '../utils/api-access'
 
 export default defineEventHandler(async (event) => {
-  await rateLimit(event, { name: 'rankings', limit: 60, windowSeconds: 60 })
+  await rateLimitTerminal(event, { name: 'rankings', limit: 60, windowSeconds: 60 })
   return serveTerminal(event, 'rankings', (ctx) => queryRankings(terminalDb, ctx))
 })

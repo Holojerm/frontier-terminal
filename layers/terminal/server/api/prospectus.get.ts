@@ -5,8 +5,9 @@
 
 import { serveTerminal, terminalDb } from '../utils/terminal-handler'
 import { queryProspectus } from '../utils/terminal-prospectus'
+import { rateLimitTerminal } from '../utils/api-access'
 
 export default defineEventHandler(async (event) => {
-  await rateLimit(event, { name: 'prospectus', limit: 60, windowSeconds: 60 })
+  await rateLimitTerminal(event, { name: 'prospectus', limit: 60, windowSeconds: 60 })
   return serveTerminal(event, 'prospectus', (ctx) => queryProspectus(terminalDb, ctx))
 })

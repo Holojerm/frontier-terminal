@@ -197,6 +197,7 @@ const SCHEDULED_TASKS: Record<string, string[]> = {
     'track-record:search',
   ],
   '0 13 * * 1': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
+  '41 * * * *': ['bulk:build'],
 }
 
 /**

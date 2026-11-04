@@ -7,6 +7,7 @@ import { z } from 'zod'
 import { PERMALINK_LIMIT } from '../../utils/rate-limits'
 import { queryPriceHistory } from '../../utils/terminal-db'
 import { serveTerminalAsOf, terminalDb } from '../../utils/terminal-handler'
+import { rateLimitTerminal } from '../../utils/api-access'
 
 // modelKey() output: `model:<provider>:<slug>[:<tier>]` (layers/terminal/server/pipeline/contracts/keys.ts).
 const keySchema = z
@@ -19,7 +20,11 @@ export default defineEventHandler(async (event) => {
   // 120 did not clear the 378 SKU permalinks the sitemap lists, so two thirds
   // of every crawl were answered with a throttle. PERMALINK_LIMIT is sized to
   // the family.
-  await rateLimit(event, { name: 'price-history', limit: PERMALINK_LIMIT, windowSeconds: 60 })
+  await rateLimitTerminal(event, {
+    name: 'price-history',
+    limit: PERMALINK_LIMIT,
+    windowSeconds: 60,
+  })
   const parsed = keySchema.safeParse(getRouterParam(event, 'key'))
   if (!parsed.success) throw createError({ statusCode: 400, message: 'Not a SKU key' })
   const key = parsed.data
