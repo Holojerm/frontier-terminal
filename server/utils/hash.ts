@@ -82,14 +82,3 @@ export function clientIp(event: H3Event): string | undefined {
     getRequestHeader(event, 'x-forwarded-for')?.split(',')[0]?.trim()
   )
 }
-
-/**
- * Salted hash of the caller's IP, or null when it is unknown. For audit rows
- * (same salt and construction as `feedback.ip_hash`, so the two are comparable
- * in an investigation) and for rate-limit buckets on public surfaces, where it
- * keeps visitor IPs out of KV: the key still separates callers and nothing
- * readable comes back out.
- */
-export async function clientIpHash(event: H3Event): Promise<string | null> {
-  return saltedHash(clientIp(event), useRuntimeConfig(event).sessionPassword)
-}
