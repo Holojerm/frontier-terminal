@@ -366,6 +366,11 @@ const EXPORT_COLUMNS: TableColumn[] = [
       </div>
     </TerminalPanel>
 
+    <TerminalInstitutions
+      :schema-version="dictionary?.schema_version"
+      :changelog="dictionary?.changelog ?? []"
+    />
+
     <div class="grid gap-6 lg:grid-cols-2">
       <TerminalPanel id="license" title="Terms">
         <p class="max-w-2xl text-sm text-default">

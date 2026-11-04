@@ -14,7 +14,17 @@ import {
   dataDictionary,
   dictionaryCsv,
 } from '../server/utils/terminal-dictionary'
+import {
+  BREAKING_NOTICE_DAYS,
+  SCHEMA_RELEASES,
+  SCHEMA_VERSION,
+  bumpCovers,
+  bumpNeeded,
+  bumpOf,
+  replaySchema,
+} from '../server/utils/data-schema'
 import { ENTITY_SECURITIES } from '../server/utils/terminal-entities'
+import changelogMd from '~~/CHANGELOG-data.md?raw'
 import {
   EXPORT_HISTORY,
   EXPORT_TABLES,
@@ -173,5 +183,64 @@ describe('the data dictionary', () => {
         'whole',
       ]).trimEnd(),
     )
+  })
+})
+
+// The schema version can't drift either. Replaying every release over the
+// 1.0.0 baseline has to give the columns /export serves today, so a column
+// added, dropped, or renamed without a release in data-schema.ts fails here.
+describe('the schema version', () => {
+  it('matches the exported columns, release by release', () => {
+    const replayed = replaySchema()
+    const exported = Object.fromEntries(
+      Object.values(EXPORT_TABLES).map((t) => [t.name, [...t.columns]]),
+    )
+    for (const name of new Set([...Object.keys(replayed), ...Object.keys(exported)])) {
+      expect(
+        replayed[name],
+        `${name}'s columns changed. Add a release to SCHEMA_RELEASES in layers/terminal/server/utils/data-schema.ts (adding is minor, removing or renaming is major) and an entry to CHANGELOG-data.md`,
+      ).toEqual(exported[name])
+    }
+  })
+
+  it('bumps each release by at least what its changes need', () => {
+    expect(SCHEMA_RELEASES[0]!.version).toBe('1.0.0')
+    for (let i = 1; i < SCHEMA_RELEASES.length; i++) {
+      const before = SCHEMA_RELEASES[i - 1]!
+      const release = SCHEMA_RELEASES[i]!
+      const made = bumpOf(before.version, release.version)
+      expect(made, `${release.version} doesn't follow ${before.version}`).not.toBeNull()
+      expect(
+        bumpCovers(made!, bumpNeeded(release)),
+        `${release.version} is a ${made} release, but its changes need ${bumpNeeded(release)}`,
+      ).toBe(true)
+      expect(release.date >= before.date, release.version).toBe(true)
+    }
+    expect(SCHEMA_VERSION).toBe(SCHEMA_RELEASES.at(-1)!.version)
+    expect(bumpOf('1.4.2', '2.0.0')).toBe('major')
+    expect(bumpOf('1.4.2', '1.5.0')).toBe('minor')
+    expect(bumpOf('1.4.2', '1.4.3')).toBe('patch')
+    expect(bumpOf('1.4.2', '1.6.0')).toBeNull()
+    expect(
+      bumpNeeded({ version: '', date: '', summary: '', tables: { x: { removed: ['a'] } } }),
+    ).toBe('major')
+    expect(
+      bumpNeeded({ version: '', date: '', summary: '', tables: { x: { added: ['a'] } } }),
+    ).toBe('minor')
+  })
+
+  it('is served in the dictionary, with the changelog newest first', () => {
+    const dictionary = dataDictionary()
+    expect(dictionary.schema_version).toBe(SCHEMA_VERSION)
+    expect(dictionary.changelog.map((r) => r.version)).toEqual(
+      [...SCHEMA_RELEASES].reverse().map((r) => r.version),
+    )
+  })
+
+  it('has every release in CHANGELOG-data.md, with its date', () => {
+    for (const release of SCHEMA_RELEASES) {
+      expect(changelogMd, release.version).toContain(`## ${release.version} (${release.date})`)
+    }
+    expect(changelogMd).toContain(`${BREAKING_NOTICE_DAYS} days`)
   })
 })

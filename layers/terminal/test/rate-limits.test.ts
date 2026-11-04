@@ -14,7 +14,13 @@ import {
   registerNativeLimiter,
   type NativeRateLimiter,
 } from '../../../server/utils/rate-limit'
-import { PERMALINK_LIMIT, READ_PATH_LIMITER } from '../server/utils/rate-limits'
+import {
+  KEYED_EXPORT_LIMIT,
+  KEYED_READ_LIMITERS,
+  PAYLOAD_LIMIT,
+  PERMALINK_LIMIT,
+  READ_PATH_LIMITER,
+} from '../server/utils/rate-limits'
 
 const fake = (): NativeRateLimiter => ({ limit: async () => ({ success: true }) })
 
@@ -61,5 +67,46 @@ describe('READ_PATH_LIMITER', () => {
       (await limiter!.limit({ key })).success,
       `request ${READ_PATH_LIMITER.limit + 1} was allowed — wrangler.toml permits more than the spec`,
     ).toBe(false)
+  })
+})
+
+describe('KEYED_READ_LIMITERS', () => {
+  it('registers each tier beside the read path, and routes its budget to its own binding', () => {
+    registerNativeLimiter(READ_PATH_LIMITER)
+    for (const spec of Object.values(KEYED_READ_LIMITERS)) registerNativeLimiter(spec)
+    const natives = Object.fromEntries(getNativeLimiters().map((s) => [s.binding, fake()]))
+    for (const spec of Object.values(KEYED_READ_LIMITERS)) {
+      expect(chooseBackendAmong(natives, spec)).toEqual({
+        backend: 'native',
+        native: natives[spec.binding],
+      })
+    }
+    // A key's export budget is the read path's pair, and its payload budget
+    // the research tier's, so both run native.
+    expect(chooseBackendAmong(natives, { limit: KEYED_EXPORT_LIMIT, windowSeconds: 60 })).toEqual({
+      backend: 'native',
+      native: natives[READ_PATH_LIMITER.binding],
+    })
+    expect(chooseBackendAmong(natives, { limit: PAYLOAD_LIMIT, windowSeconds: 60 })).toEqual({
+      backend: 'native',
+      native: natives[KEYED_READ_LIMITERS.research.binding],
+    })
+  })
+
+  it('matches the [[ratelimits]] blocks in wrangler.toml', async () => {
+    for (const spec of Object.values(KEYED_READ_LIMITERS)) {
+      const limiter = (env as unknown as Record<string, NativeRateLimiter | undefined>)[
+        spec.binding
+      ]
+      expect(limiter, `no [[ratelimits]] block named ${spec.binding}`).toBeDefined()
+      const key = `drift-check:${crypto.randomUUID()}`
+      for (let i = 0; i < spec.limit; i++) {
+        expect((await limiter!.limit({ key })).success, `request ${i + 1} was refused`).toBe(true)
+      }
+      expect(
+        (await limiter!.limit({ key })).success,
+        `request ${spec.limit + 1} was allowed on ${spec.binding}`,
+      ).toBe(false)
+    }
   })
 })

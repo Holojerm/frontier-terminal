@@ -4,9 +4,10 @@
 import { recipeRunsStamp } from '../utils/terminal-db'
 import { serveTerminal, terminalDb } from '../utils/terminal-handler'
 import { queryPay, VIEW_RECIPES } from '../utils/terminal-recipe-views'
+import { rateLimitTerminal } from '../utils/api-access'
 
 export default defineEventHandler(async (event) => {
-  await rateLimit(event, { name: 'pay', limit: 60, windowSeconds: 60 })
+  await rateLimitTerminal(event, { name: 'pay', limit: 60, windowSeconds: 60 })
   const variant = await recipeRunsStamp(terminalDb, VIEW_RECIPES.pay)
   return serveTerminal(event, 'pay', () => queryPay(terminalDb), variant)
 })

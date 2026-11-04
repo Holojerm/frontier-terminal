@@ -8,6 +8,7 @@ import { z } from 'zod'
 import { PERMALINK_LIMIT } from '../../utils/rate-limits'
 import { queryAlert } from '../../utils/terminal-db'
 import { serveTerminal, terminalDb } from '../../utils/terminal-handler'
+import { rateLimitTerminal } from '../../utils/api-access'
 
 const idSchema = z.string().regex(/^[0-9a-f]{64}$/)
 
@@ -16,7 +17,11 @@ export default defineEventHandler(async (event) => {
   // 184 alert permalinks in the sitemap spent /api/alerts' budget as it went,
   // so a crawl took the alerts index down for the rest of that minute for the
   // same IP — and the permalinks with it, from the 61st onwards.
-  await rateLimit(event, { name: 'alert-detail', limit: PERMALINK_LIMIT, windowSeconds: 60 })
+  await rateLimitTerminal(event, {
+    name: 'alert-detail',
+    limit: PERMALINK_LIMIT,
+    windowSeconds: 60,
+  })
   const id = idSchema.safeParse(getRouterParam(event, 'id'))
   if (!id.success) throw createError({ statusCode: 404, message: 'No such alert' })
 

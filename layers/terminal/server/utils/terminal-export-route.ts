@@ -4,7 +4,9 @@
 
 import type { H3Event } from 'h3'
 
-import { licenseSplit } from '#shared/utils/license'
+import { HISTORY_LICENSE, PAID_LICENSE, licenseSplit } from '#shared/utils/license'
+import { cacheControlFor, rateLimitTerminal } from './api-access'
+import { SCHEMA_VERSION, SCHEMA_VERSION_HEADER } from './data-schema'
 import { PointInTimeError, assertKnowable } from './terminal-asof'
 import { DICTIONARY_NAME, dataDictionary, dictionaryCsv } from './terminal-dictionary'
 import {
@@ -46,14 +48,23 @@ export async function serveExport(event: H3Event, options: { sample?: boolean } 
   if (parsed?.name === DICTIONARY_NAME && !options.sample) {
     const dictionary = dataDictionary()
     setResponseHeader(event, 'Cache-Control', 'public, max-age=300')
+    setResponseHeader(event, SCHEMA_VERSION_HEADER, SCHEMA_VERSION)
     if (parsed.format === 'json') return dictionary
     setResponseHeader(event, 'Content-Type', 'text/csv; charset=utf-8')
     setResponseHeader(event, 'Content-Disposition', 'attachment; filename="dictionary.csv"')
     return dictionaryCsv(dictionary)
   }
 
-  // Exports walk whole tables; 30/min matches the native limiter's budget.
-  await rateLimit(event, { name: 'export', limit: 30, windowSeconds: 60 })
+  // Exports walk whole tables; 30/min matches the native limiter's budget. A
+  // key gets KEYED_EXPORT_LIMIT, and the bulk feed for the rest.
+  const key = await rateLimitTerminal(event, {
+    name: 'export',
+    limit: 30,
+    windowSeconds: 60,
+    budget: 'export',
+  })
+  // A key changes the license on rows older than the window, nothing else.
+  const older = key ? PAID_LICENSE : HISTORY_LICENSE
 
   if (parsed && Object.hasOwn(WITHDRAWN_EXPORTS, parsed.name)) {
     throw createError({ statusCode: 410, message: WITHDRAWN_EXPORTS[parsed.name] })
@@ -81,7 +92,7 @@ export async function serveExport(event: H3Event, options: { sample?: boolean } 
   }
 
   const window = await badRequestOn(async () =>
-    licenseWindow(full.name, rebuilt, { as_of, history }),
+    licenseWindow(full.name, rebuilt, { as_of, history }, undefined, older),
   )
   // A sample is the first rows of what the same URL without /sample serves.
   const table = options.sample ? sampleOf(window.table) : window.table
@@ -101,17 +112,21 @@ export async function serveExport(event: H3Event, options: { sample?: boolean } 
   }
   // Rows can change every tick; a proxy may hold an export for a minute.
   // The query string is part of any proxy's key, so as_of never shares one.
-  setResponseHeader(event, 'Cache-Control', 'public, max-age=60')
+  setResponseHeader(event, 'Cache-Control', cacheControlFor(event, 'public, max-age=60'))
+  // A JSON export is a bare array unless it carries its license, so the
+  // schema version travels as a header on every one.
+  setResponseHeader(event, SCHEMA_VERSION_HEADER, SCHEMA_VERSION)
 
   const chunks =
     parsed.format === 'csv'
       ? csvChunks(terminalDb, table, filter.where)
       : window.split
         ? jsonEnvelopeChunks(terminalDb, table, filter.where, {
+            schema_version: SCHEMA_VERSION,
             table: full.name,
             as_of: as_of ?? null,
             history: history ?? 'recent',
-            license: licenseSplit(),
+            license: licenseSplit(undefined, older),
             license_column: LICENSE_COLUMN,
           })
         : jsonChunks(terminalDb, table, filter.where)

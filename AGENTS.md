@@ -196,7 +196,11 @@ Each of these has a full contract in its own doc — this is the one-line versio
   writer — `layers/terminal/server/utils/judge-auth.ts`), `/api/ops/events` (the ops-triage
   routine's read of the ops spool, `NUXT_OPS_TOKEN`) and `/api/press/*` (the press-drafts
   routine; it names reporters, `NUXT_PRESS_TOKEN`). No session; a route that takes input validates it
-  with Zod and calls `rateLimit()`.
+  with Zod and calls `rateLimit()` (`rateLimitTerminal()` on the public product routes).
+  Licensees may send an owner-issued API key (`Authorization: Bearer ftk_…`, `bun run keys:issue`):
+  it only raises the rate limit, lists the full-history bulk files, labels older rows with the paid
+  license, and opens `/export/payloads/*` (systematic, `rights: ours` sources). It never changes the
+  data, and a bad key is a 401, never anonymous. → `layers/terminal/server/utils/api-access.ts`
 - **SEO & AEO** — every page calls `useSeo()` exactly once and declares `publicPage`;
   `bun run seo:check` fails the build otherwise. → [`seo.md`](.claude/docs/seo.md)
 - **Performance** — server-side `useFetch` for initial loads, `defineAsyncComponent` for
@@ -248,6 +252,8 @@ bun db:generate       # Generate Drizzle migration after schema changes
 bun db:migrate        # Apply migrations to local D1
 bun run db:migrate:remote # Apply migrations to production D1 (Workers Builds runs it via deploy:ci)
 bun db:studio         # Open Drizzle Studio (visual DB browser)
+bun run keys:issue -- --client "<name>" --tier research|systematic --months 12 [--remote]
+                      # Licensee API key: prints the key once, stores its SHA-256 (keys:list, keys:revoke)
 bun run ci            # Every gate, concurrently (scripts/ci.ts): format (writes), lint, design/brand/email/mirror/seo/fleet/crons
                       # gates, typecheck, test, build — Workers Builds runs this. NO browser suites: that image cannot
                       # launch Chromium (see Gotchas). CI_SERIAL=1 runs the gates one at a time.

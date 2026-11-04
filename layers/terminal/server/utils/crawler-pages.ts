@@ -13,6 +13,8 @@ import { thesisPages } from '../../shared/utils/thesis-format'
 import manifest from '~~/fleet.json'
 import { THESES } from '../theses/registry'
 import type { LlmsTxtInput, LlmsTxtSection } from '#server/utils/seo'
+import { REQUEST_BUDGETS } from '../../shared/utils/institutional'
+import { BREAKING_NOTICE_DAYS, SCHEMA_VERSION } from './data-schema'
 import { AS_OF_ROUTES } from './terminal-asof'
 import { DICTIONARY_NAME } from './terminal-dictionary'
 import { EXPORT_TABLES } from './terminal-export'
@@ -46,7 +48,7 @@ export function llmsTxtInput(config: {
       description: table.description,
     })),
     repoUrl: manifest.links.github ?? '',
-    sections: [DICTIONARY, POINT_IN_TIME],
+    sections: [DICTIONARY, POINT_IN_TIME, INSTITUTIONS],
   }
 }
 
@@ -87,6 +89,29 @@ const POINT_IN_TIME: LlmsTxtSection = {
       path: `/export/changes.csv?as_of=${EXAMPLE_AS_OF}`,
       title: 'Exports as_of',
       description: `The same parameter works on /export/<table>. Tables that only grow are cut at that moment. Current-state tables are rebuilt from the change log, with an as_of_verified column. ${refusingAsOf.join(', ')} answer 400, and the data dictionary says why for each.`,
+    },
+  ],
+}
+
+/** Licensee keys, the bulk feed, and the schema version (/data#institutions, /data#schema). */
+const INSTITUTIONS: LlmsTxtSection = {
+  heading: 'Bulk feed, API keys, and schema versions',
+  links: [
+    {
+      path: '/export/bulk/manifest.json',
+      title: 'Bulk manifest',
+      description:
+        'One gzipped CSV per table, rebuilt once a day. Each entry has the file URL, rows, bytes, SHA-256, generated_at, schema_version, and license. Without a key it lists the trailing-window files (CC BY 4.0). Sync by comparing SHA-256s. The manifest and files answer If-None-Match with a 304.',
+    },
+    {
+      path: '/data#institutions',
+      title: 'API keys for licensees',
+      description: `Licensees send Authorization: Bearer <key>. A key raises the rate limit from ${REQUEST_BUDGETS.anonymous.read} requests a minute per IP to ${REQUEST_BUDGETS.research.read} (research) or ${REQUEST_BUDGETS.systematic.read} (systematic) per key, lists the full-history bulk files, and labels rows older than the window with the paid license instead of CC BY-NC 4.0. It never changes the data. A bad, expired, or revoked key gets a 401. Keys are issued by email, never self-serve.`,
+    },
+    {
+      path: '/data#schema',
+      title: `Schema version ${SCHEMA_VERSION}`,
+      description: `Every export and /api JSON response states schema_version (a field, or the X-Schema-Version header on CSV and JSON arrays). Adding a column is a minor version. Removing or renaming one is a major version with ${BREAKING_NOTICE_DAYS} days’ notice to licensees. The changelog is under changelog in /export/dictionary.json.`,
     },
   ],
 }

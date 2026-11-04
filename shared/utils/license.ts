@@ -48,6 +48,18 @@ export const HISTORY_LICENSE: LicenseRef = {
   url: 'https://creativecommons.org/licenses/by-nc/4.0/',
 }
 
+/**
+ * What a licensee's API key labels the history with, in place of
+ * HISTORY_LICENSE: the same rows, with commercial use permitted under the
+ * licensee's signed terms. Sold by email, never self-serve (/data#institutions).
+ */
+export const PAID_LICENSE: LicenseRef = {
+  id: 'LicenseRef-FrontierTerminal-Commercial',
+  name: 'Frontier Terminal commercial data license',
+  short: 'Frontier Terminal commercial license',
+  url: '/data#institutions',
+}
+
 /** The code that produces it. */
 export const CODE_LICENSE: LicenseRef = {
   id: 'MIT',
@@ -83,10 +95,11 @@ export function rowLicense(
   dated: string | null,
   published: string | null,
   windowStart: string,
+  older: LicenseRef = HISTORY_LICENSE,
 ): LicenseRef {
   if (dated === null || dated >= windowStart) return DATA_LICENSE
   if (published !== null && published < LICENSE_SPLIT_EFFECTIVE) return DATA_LICENSE
-  return HISTORY_LICENSE
+  return older
 }
 
 /** The `license` field every API response carries: the split, with the day the window starts today. */
@@ -104,7 +117,17 @@ export const LICENSE_SPLIT_NOTE =
   'Upstream data keeps its own license, and the facts belong to their publishers. ' +
   'Commercial use of the full history needs a paid license (/contact).'
 
-export function licenseSplit(now: Date = new Date()): LicenseSplit {
+/** The note a licensee's key gets: its own license on the history, in place of CC BY-NC. */
+export const PAID_LICENSE_SPLIT_NOTE =
+  `Our compilation and derived numbers dated on or after recent.from are ${DATA_LICENSE.short}. ` +
+  `Older ones are licensed to the holder of this API key under the ${PAID_LICENSE.short}, which permits commercial use for its term. ` +
+  'Upstream data keeps its own license, and the facts belong to their publishers.'
+
+/** `older` is HISTORY_LICENSE for everyone but a licensee's key (PAID_LICENSE). */
+export function licenseSplit(
+  now: Date = new Date(),
+  older: LicenseRef = HISTORY_LICENSE,
+): LicenseSplit {
   return {
     recent: {
       id: DATA_LICENSE.id,
@@ -113,12 +136,12 @@ export function licenseSplit(now: Date = new Date()): LicenseSplit {
       from: licenseWindowStart(now),
     },
     older: {
-      id: HISTORY_LICENSE.id,
-      url: HISTORY_LICENSE.url,
+      id: older.id,
+      url: older.url,
       published_from: LICENSE_SPLIT_EFFECTIVE,
     },
     terms: '/license',
-    note: LICENSE_SPLIT_NOTE,
+    note: older === HISTORY_LICENSE ? LICENSE_SPLIT_NOTE : PAID_LICENSE_SPLIT_NOTE,
   }
 }
 
@@ -137,8 +160,12 @@ export function withLicense<T>(payload: T, now: Date = new Date()): T {
  * when the instant is older than the window, CC BY otherwise. The payload's
  * `license` field says which rows the NC label doesn't reach.
  */
-export function asOfLicense(at: string, now: Date = new Date()): string {
-  return at < licenseWindowStart(now) ? HISTORY_LICENSE.id : DATA_LICENSE.id
+export function asOfLicense(
+  at: string,
+  now: Date = new Date(),
+  older: LicenseRef = HISTORY_LICENSE,
+): string {
+  return at < licenseWindowStart(now) ? older.id : DATA_LICENSE.id
 }
 
 /**

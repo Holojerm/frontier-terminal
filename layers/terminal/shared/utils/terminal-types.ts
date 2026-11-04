@@ -160,11 +160,30 @@ export interface DictionaryTable {
 }
 
 export interface DataDictionary {
+  /** The export schema's version (layers/terminal/server/utils/data-schema.ts). */
+  schema_version: string
   types: Record<DictionaryType, string>
   provenance: string
   /** The license split, and the license column a full-history download adds. */
   license: string
   tables: DictionaryTable[]
+  /** Every schema release, newest first. */
+  changelog: SchemaChangelogEntry[]
+}
+
+/** One release of the export schema: what it added, removed, or renamed, per table. */
+export interface SchemaChangelogEntry {
+  version: string
+  /** UTC day the release reached /export. */
+  date: string
+  summary: string
+  tables: {
+    name: string
+    added: string[]
+    removed: string[]
+    renamed: { from: string; to: string }[]
+    note: string | null
+  }[]
 }
 
 export interface CutSource {

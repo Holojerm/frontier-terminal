@@ -5,8 +5,9 @@
 
 import { queryDisclosures } from '../utils/terminal-disclosures'
 import { serveTerminal, terminalDb } from '../utils/terminal-handler'
+import { rateLimitTerminal } from '../utils/api-access'
 
 export default defineEventHandler(async (event) => {
-  await rateLimit(event, { name: 'disclosures', limit: 60, windowSeconds: 60 })
+  await rateLimitTerminal(event, { name: 'disclosures', limit: 60, windowSeconds: 60 })
   return serveTerminal(event, 'disclosures', (ctx) => queryDisclosures(terminalDb, ctx))
 })

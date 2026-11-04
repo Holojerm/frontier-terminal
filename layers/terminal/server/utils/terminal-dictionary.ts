@@ -22,6 +22,7 @@ import {
   LICENSE_SPLIT_EFFECTIVE,
   LICENSE_WINDOW_DAYS,
 } from '#shared/utils/license'
+import { SCHEMA_VERSION, schemaChangelog } from './data-schema'
 import { ALERTS_METHOD } from './terminal-asof'
 import {
   EXPORT_TABLES,
@@ -1210,10 +1211,12 @@ function dictionaryTable(table: ExportTable): DictionaryTable {
 /** The whole dictionary, in export order. Pure: no database, so it can never be half-true. */
 export function dataDictionary(): DataDictionary {
   return {
+    schema_version: SCHEMA_VERSION,
     types: { ...DATA_TYPES },
     provenance: PROVENANCE_NOTE,
     license: LICENSE_NOTE,
     tables: Object.values(EXPORT_TABLES).map(dictionaryTable),
+    changelog: schemaChangelog(),
   }
 }
 

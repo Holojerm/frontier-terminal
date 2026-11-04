@@ -690,7 +690,8 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'cuts lists what is deliberately NOT tracked and why. totals are table row counts; ' +
         'exports describes the CSV/JSON bulk downloads at /export/<table>.csv|json; history says whether a table downloads whole or, by default, ' +
         `only its last ${LICENSE_WINDOW_DAYS} days (add ?history=full for every row, labeled per row with its license). Each column’s type, unit, nullability, ` +
-        'meaning and license-window date are in the data dictionary at /export/dictionary.json. ' +
+        'meaning and license-window date are in the data dictionary at /export/dictionary.json, with the schema_version and its changelog. ' +
+        'Every table is also a daily gzipped CSV listed, with its SHA-256, in /export/bulk/manifest.json. ' +
         PROVENANCE,
       annotations: READ_ONLY,
     },

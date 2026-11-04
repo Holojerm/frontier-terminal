@@ -5,9 +5,10 @@
 
 import { filedFactsStamp, queryExposure } from '../utils/terminal-exposure'
 import { serveTerminalFiled, terminalDb } from '../utils/terminal-handler'
+import { rateLimitTerminal } from '../utils/api-access'
 
 export default defineEventHandler(async (event) => {
-  await rateLimit(event, { name: 'exposure', limit: 60, windowSeconds: 60 })
+  await rateLimitTerminal(event, { name: 'exposure', limit: 60, windowSeconds: 60 })
   const variant = await filedFactsStamp(terminalDb)
   return serveTerminalFiled(event, 'exposure', (ctx) => queryExposure(terminalDb, ctx), variant)
 })
