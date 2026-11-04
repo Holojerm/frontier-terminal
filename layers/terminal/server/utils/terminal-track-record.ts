@@ -1,4 +1,4 @@
-// The /track-record payload: for each material alert since TRACK_RECORD_FROM,
+// The track-record payload (the Track record tab on /alerts): for each material alert since TRACK_RECORD_FROM,
 // when we saw the change against the first same-event press article and
 // newsroom post. A side shows a time only when the judge rated a candidate
 // the same event and every earlier candidate was rated not; anything short of

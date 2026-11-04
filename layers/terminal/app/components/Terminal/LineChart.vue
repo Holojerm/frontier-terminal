@@ -127,9 +127,14 @@ const lastPoint = (s: Series) => {
   return null
 }
 
-// Direct end labels ride the lines when they do not collide; otherwise the
-// legend and the readout carry identity (dataviz: never nudge labels apart).
+// Direct end labels ride the lines when they fit and do not collide; otherwise
+// the legend and the readout carry identity (dataviz: never nudge labels
+// apart, never clip them). A single line needs none: the title names it.
+// 10px labels run about 6 units a character; 8 more is the gap to the line.
+const LABEL_CHAR = 6
 const endLabels = computed(() => {
+  if (props.series.length < 2) return []
+  if (props.series.some((s) => s.label.length * LABEL_CHAR + 8 > PAD.value.r)) return []
   const ends = props.series.map((s) => ({ label: s.label, at: lastPoint(s) }))
   const ys = ends.map((e) => e.at?.y ?? null).filter((y): y is number => y !== null)
   for (let a = 0; a < ys.length; a++) {

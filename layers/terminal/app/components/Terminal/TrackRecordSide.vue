@@ -9,7 +9,12 @@ import type {
   TrackRecordState,
 } from '../../../shared/utils/terminal-types'
 
-const props = defineProps<{ side: TrackRecordSide; row: TrackRecordRow }>()
+const props = defineProps<{
+  side: TrackRecordSide
+  row: TrackRecordRow
+  /** Both sides share one search window: the row's second side shows a dash while it is open. */
+  quietWindow?: boolean
+}>()
 
 const now = useNow()
 
@@ -27,14 +32,17 @@ const STATE_TEXT: Record<Exclude<TrackRecordState, 'matched'>, string> = {
 const reason = computed(() => {
   const s = props.side
   if (s.state === 'matched') return null
+  if (s.state === 'window-open') {
+    return props.quietWindow
+      ? { text: '—', detail: null }
+      : { text: `Searched after ${absoluteStamp(props.row.window_to, now.value)}`, detail: null }
+  }
   const detail =
-    s.state === 'window-open'
-      ? `We search after ${absoluteStamp(props.row.window_to, now.value)}.`
-      : s.state === 'not-yet-rated'
-        ? `${s.rated} of ${s.candidates} rated so far.`
-        : s.state === 'no-match'
-          ? `${s.candidates} found, none the same event.`
-          : s.detail
+    s.state === 'not-yet-rated'
+      ? `${s.rated} of ${s.candidates} rated so far.`
+      : s.state === 'no-match'
+        ? `${s.candidates} found, none the same event.`
+        : s.detail
   return { text: STATE_TEXT[s.state], detail }
 })
 </script>

@@ -544,6 +544,8 @@ export default defineNuxtConfig({
   // default rather than by remembering to come back here.
   routeRules: {
     '/**': { headers: securityHeaders },
+    // The track record became a tab on /alerts; the old page's links still land.
+    '/track-record': { redirect: { to: '/alerts?tab=track-record', statusCode: 301 } },
   },
 
   // Nitro — Cloudflare Workers preset for production build

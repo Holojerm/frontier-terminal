@@ -131,7 +131,7 @@ useSeo({
         <dt class="text-muted">Against the press</dt>
         <dd class="text-default">
           The
-          <NuxtLink to="/track-record" class="text-primary underline underline-offset-2"
+          <NuxtLink to="/alerts?tab=track-record" class="text-primary underline underline-offset-2"
             >track record</NuxtLink
           >
           times each notable or critical alert against the first press report and the lab’s own
