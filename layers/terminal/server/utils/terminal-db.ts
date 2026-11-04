@@ -1264,7 +1264,7 @@ function incidentFromPayload(
     provider: base.provider as LabId,
     incident_id,
     title,
-    impact: str(payload.impact) ?? '?',
+    impact: str(payload.impact),
     status: str(payload.status) ?? '?',
     started_at,
     resolved_at: str(payload.resolved_at),

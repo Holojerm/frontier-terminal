@@ -436,9 +436,13 @@ export const LANES: Readonly<Record<string, Lane>> = {
   'anthropic-status': {
     sides: [],
     removals: 'append-only',
-    parse: (text, { prov, snapshotId }) => ({
-      entities: normalizeIncidents(parseAnthropicStatus(text, prov).rows, snapshotId),
-    }),
+    parse: (text, { prov, snapshotId }) => {
+      const { rows, maintenances } = parseAnthropicStatus(text, prov)
+      return {
+        entities: normalizeIncidents(rows, snapshotId),
+        note: maintenances ? `${maintenances} scheduled maintenances skipped` : undefined,
+      }
+    },
   },
   'mistral-status': {
     sides: [],

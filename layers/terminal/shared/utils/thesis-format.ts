@@ -304,6 +304,10 @@ export function factRows(facts: Record<string, unknown>): DetailRow[] {
   if ('resolved_at' in facts && facts.resolved_at === null && 'started_at' in facts) {
     set('resolved_at', FACT_LABELS.resolved_at!, 'not yet')
   }
+  // An impact of null is a feed that publishes none (Anthropic's Atom history).
+  if ('impact' in facts && facts.impact === null && 'started_at' in facts) {
+    set('impact', FACT_LABELS.impact!, 'not published')
+  }
 
   const known = FACT_ORDER.flatMap((k) => (rows.has(k) ? [rows.get(k)!] : []))
   const rest = [...rows].filter(([k]) => !FACT_ORDER.includes(k)).map(([, row]) => row)

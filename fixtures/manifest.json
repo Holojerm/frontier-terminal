@@ -333,14 +333,14 @@
       "note": "Statuspage v2 shape: {page, incidents[]}. 25 incidents (2026-08-05 → 2026-09-08); no `components`, `started_at` or `shortlink` on this page, and one open incident (status monitoring) has no `resolved_at` key at all rather than null."
     },
     {
-      "path": "fixtures/status/anthropic-status.json",
+      "path": "fixtures/status/anthropic-status.xml",
       "source_id": "anthropic-status",
-      "source_url": "https://status.claude.com/api/v2/incidents.json",
-      "fetched_at": "2026-09-08T21:57:32Z",
+      "source_url": "https://status.claude.com/history.atom",
+      "fetched_at": "2026-11-04T14:44:02Z",
       "http_status": 200,
-      "raw_bytes": 190515,
+      "raw_bytes": 40895,
       "trim": "none — committed whole",
-      "note": "status.anthropic.com/api/v2/incidents.json 301-redirects here; the final URL is the one registered. Statuspage v2 shape with `components` (claude.ai, Claude API (api.anthropic.com), Claude Code, Claude Cowork, Claude Console) and `started_at`. 50 incidents (2026-07-21 → 2026-09-03), all resolved — the page's window cap, so history beyond 50 is only what this pipeline accumulates."
+      "note": "Statuspage's Atom incident history, which robots.txt allows; the JSON API this source read until 2026-11-04 sits under the disallowed /api/. 25 entries (2026-09-03 → 2026-10-28), all resolved. Each entry: id tag:status.claude.com,2005:Incident/<n>, published, updated, a link to /incidents/<code> (the same code the API used as its id), title, and HTML content listing every update newest first as 'Mon D, HH:MM UTC' + a bold word (Investigating, Identified, Monitoring, Update, Resolved) + text. No impact field, no component list (no entry has a 'This incident affected:' line), no year on the update stamps, minute precision."
     },
     {
       "path": "fixtures/status/google-cloud-status.json",

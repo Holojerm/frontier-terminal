@@ -175,7 +175,10 @@ Emit an alert-tier severity (`notable` or `critical`) ONLY for:
   API (api.anthropic.com)", "Vertex Gemini API"); or three or more `added`
   incidents at ONE provider among the records you were handed, whatever
   their impact — count them. Quote `impact`, `status` and component names
-  verbatim.
+  verbatim. An `impact` of `null` means the feed publishes none (Anthropic's
+  status feed): never infer a severity from the title or the wording, and
+  never call such an incident major or critical; it counts toward the
+  three-or-more rule only.
 - **A lab disclosing misalignment.** A `disclosure` record `added` is a
   new entry on a lab's own misalignment-disclosure index: a `report` (with
   `model` and `observed_during`) or a `notice` about an external incident.

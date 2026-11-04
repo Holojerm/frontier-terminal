@@ -90,14 +90,21 @@ function incidentOrDisclosure(
       : null
   }
   if (change.entity_type !== 'incident' || change.change_type === 'removed') return null
-  if (typeof row.impact !== 'string' || !rule.impacts.includes(row.impact)) return null
+  // A feed that publishes no impact (Anthropic's Atom history) leaves the
+  // duration test, and the rubric, to decide; nothing guesses a level for it.
+  const impact = typeof row.impact === 'string' ? row.impact : null
+  if (
+    impact === null ? rule.impact_unpublished !== 'duration-alone' : !rule.impacts.includes(impact)
+  ) {
+    return null
+  }
   const start = typeof row.started_at === 'string' ? Date.parse(row.started_at) : NaN
   const endText = typeof row.resolved_at === 'string' ? row.resolved_at : change.fetched_at
   const hours = (Date.parse(endText) - start) / 3_600_000
   if (!Number.isFinite(hours) || hours < rule.min_hours) return null
   return {
     title: row.title ?? null,
-    impact: row.impact,
+    impact,
     started_at: row.started_at,
     resolved_at: row.resolved_at ?? null,
     hours: Math.round(hours * 10) / 10,

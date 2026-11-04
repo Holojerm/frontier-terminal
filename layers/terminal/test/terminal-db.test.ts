@@ -454,7 +454,7 @@ describe('after a baseline poll of every source', () => {
     expect(byId['edgar-submissions-spcx']!.url).toBe(urlOf('edgar-submissions-spcx'))
     expect(coverage.totals.snapshots).toBe(35)
     expect(coverage.exports.find((e) => e.name === 'jobs_open')!.rows).toBe(65 + 59 + 42 + 19 + 27)
-    expect(coverage.exports.find((e) => e.name === 'incidents')!.rows).toBe(25 + 50 + 1 + 50 + 97)
+    expect(coverage.exports.find((e) => e.name === 'incidents')!.rows).toBe(25 + 25 + 1 + 50 + 97)
     expect(byId['google-cloud-status']).toMatchObject({ entity_count: 1, role: 'status' })
     expect(byId['google-cloud-status']!.last_run!.detail).toBe(
       '1 entities; 5 incidents skipped: no Gemini / Vertex AI product',
@@ -481,12 +481,17 @@ describe('after a baseline poll of every source', () => {
       source_url: urlOf('openai-status'),
     })
 
-    // Anthropic: the 50-incident cap begins 2026-07-21, inside the prior window.
+    // Anthropic: the Atom feed's 25 entries begin 2026-09-03, inside the
+    // newest window, so the prior window is empty, not low. The feed
+    // publishes no impact, and none is invented.
     const anthropic = byProvider.anthropic!
-    expect(anthropic.coverage_from).toBe('2026-07-21T15:35:03.985Z')
+    expect(anthropic.coverage_from).toBe('2026-09-03T13:26:00.000Z')
     expect(anthropic.last_window).toBeGreaterThan(0)
-    expect(anthropic.prior_window).toBeGreaterThan(0)
+    expect(anthropic.prior_window).toBe(0)
     expect(anthropic.open).toEqual([])
+    const anthropicRows = incidents.incidents.filter((i) => i.provider === 'anthropic')
+    expect(anthropicRows.length).toBeGreaterThan(0)
+    expect(anthropicRows.every((i) => i.impact === null)).toBe(true)
 
     // Google: the one Gemini incident is from February — held, but outside 90 days.
     const google = byProvider.google!

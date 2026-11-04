@@ -49,7 +49,7 @@ Live-fetched with `curl -A "Mozilla/5.0 (compatible; FrontierTerminal/1.0; +http
 | Axis | Provider | Source of record | Format | Diff mechanism | Verdict |
 |---|---|---|---|---|---|
 | Status | OpenAI | `status.openai.com/api/v2/incidents.json` | JSON, Statuspage v2 (`{page, incidents[]}`) | incident id + `status`/`resolved_at` | **Include** — 25 incidents in the feed (2026-08-05 → 2026-09-08), impacts none/minor/major, 1 open (`monitoring`, no `resolved_at` key) |
-| Status | Anthropic | `status.claude.com/api/v2/incidents.json` (`status.anthropic.com` 301s here) | JSON, Statuspage v2 with `components` and `started_at` | same | **Include** — exactly 50 incidents (2026-07-21 → 2026-09-03), the page's cap; impacts 30 minor / 14 major / 3 critical / 3 none; components: claude.ai, Claude API (api.anthropic.com), Claude Code, Claude Cowork, Claude Console |
+| Status | Anthropic | `status.claude.com/api/v2/incidents.json` (`status.anthropic.com` 301s here) | JSON, Statuspage v2 with `components` and `started_at` | same | **Include**, superseded 2026-11-04 by the Atom feed (robots.txt bars `/api/`; see that addendum) — exactly 50 incidents (2026-07-21 → 2026-09-03), the page's cap; impacts 30 minor / 14 major / 3 critical / 3 none; components: claude.ai, Claude API (api.anthropic.com), Claude Code, Claude Cowork, Claude Console |
 | Status | Google | `status.cloud.google.com/incidents.json` | JSON array, Google Cloud's own format (`begin`/`end`/`severity`/`status_impact`/`affected_products[]`) | incident id + `end` | **Include, filtered** — keep only incidents whose `affected_products[].title` contains "Gemini" (case-insensitive) or equals "Vertex AI". 6 incidents across 40 product titles in the feed; 1 kept (`Vertex Gemini API`, 2026-02-27, severity low). An Alphabet-wide count would conflate Compute/BigQuery/Spanner with Gemini — the same reasoning that cut Google hiring |
 | Status | xAI | `status.x.ai/api/v2/incidents.json` | — | — | **Cut** — HTTP 403 (Cloudflare challenge HTML, 5503 bytes) to a non-browser client with a descriptive UA. Displayed as "no public feed", as Google hiring is. Superseded 2026-11-04: `xai-status` reads the RSS history (addendum below) |
 
@@ -335,7 +335,7 @@ Each `sources:` entry in `sources.yaml` now carries `terms` (terms and robots.tx
 |---|---|---|---|---|
 | OpenAI docs (`openai-models-md`, `openai-pricing-md`), status, misalignment reports | `openai.com/policies` answers 403 to a headless client: **not read** | developers.openai.com allows all; status.openai.com and alignment.openai.com have none (404) | catalog every 5 min, prices 30 min, status and reports 6 h | not-cleared |
 | Anthropic docs (`anthropic-models-md`, `anthropic-pricing-md`) | Consumer Terms bar "To crawl, scrape, or otherwise harvest data or information from our Services", which include "associated apps, software, and websites"; Commercial Terms have no such clause | platform.claude.com disallows only `/api/` | catalog 5 min, prices 30 min | not-cleared |
-| Anthropic status (`anthropic-status`) | as above | status.claude.com **disallows `/api/`**, the feed's path, though `status.claude.com/api` documents the endpoints | 6 h | not-cleared |
+| Anthropic status (`anthropic-status`) | as above | status.claude.com disallows `/api/` and `/embed/`; since 2026-11-04 the source reads `/history.atom`, outside both (next addendum) | 6 h | not-cleared |
 | xAI docs (`xai-models-md`), xAI status (`xai-status`) | x.ai answers 403 headless; read in a browser by the coverage-gaps addendum above, the Acceptable Use Policy bars "unauthorized automated or non-human means" | docs.x.ai allows all (`Content-Signal: ai-input=yes`); status.x.ai allows the feed, disallows `/api/` | 5 min; status 6 h | not-cleared |
 | Google careers feed (`google-careers`) | Google ToS, as for the docs | www.google.com disallows only the results page's `page=` parameters | 6 h, DeepMind rows only | ours |
 | Google docs (`google-pricing-html`, `google-models-md`), Google Cloud status | Google ToS bars automated access "in violation of the machine-readable instructions on our web pages (for example, robots.txt files…)" | aistudio.google.com allows `/docs/`; status.cloud.google.com allows all | 5 min; status 6 h | ours |
@@ -354,3 +354,32 @@ Recipes gained `rights` too: GPU price pages and APIs, SEC and posted pay are `o
 ### Entities and securities
 
 `/export/entity_securities.csv` maps each lab and tracked filer to its securities: Anthropic → Anthropic, PBC, CIK 0002130357, proposed symbol ANT on the Nasdaq Global Select Market per its S-1 cover (registered, not trading), and AMZN as a disclosed investor. OpenAI is private, with MSFT as a disclosed investor. Google → Alphabet GOOGL and GOOG; Meta → META; xAI → SPCX as parent, with the blend caveat; Mistral is private. MSFT, AMZN, NVDA and CRWV are filers in their own right. Every CIK comes from `cik_whitelist`, a recipe, or the lab's own S-1. Every symbol and exchange is the one EDGAR's submissions feed lists for that CIK, and `layers/terminal/test/terminal-entities.test.ts` checks both. Alphabet's Anthropic stake is not mapped, because its filings never name the investee (`alphabet-anthropic-stake`). Oracle, Cloudflare, Akamai and Fastly have no row: no submissions feed is read for them, so their symbols are not sourced here.
+
+## Addendum, 2026-11-04 — Anthropic status: the Atom feed, not the JSON API
+
+`status.claude.com/robots.txt`, fetched 2026-11-04:
+
+```
+User-agent: *
+Disallow: /api/
+Disallow: /embed/
+```
+
+The `anthropic-status` source had read `/api/v2/incidents.json` since 2026-09-08, against the rule this audit applies everywhere else (robots.txt says no → skip). It now reads `status.claude.com/history.atom`, which robots.txt allows. Fetched at 14:44Z: 200, `application/atom+xml`, 40,895 bytes, committed whole as `fixtures/status/anthropic-status.xml`.
+
+| Field | JSON API (before) | Atom feed (now) |
+|---|---|---|
+| Incident id | `id` | The code in the entry's `/incidents/<code>` link: the same code, so every entity key carries over |
+| Title | `name` | `title` |
+| Status | `status` | The newest lifecycle word in the content (Investigating, Identified, Monitoring, Resolved, Postmortem). "Update" marks an update that left the status as it was, and is skipped |
+| Start | `started_at` (ms) | The oldest update's stamp, to the minute |
+| Resolution | `resolved_at` (ms) | The "Resolved" update's stamp, to the minute |
+| Components | `components[]` | Only a "This incident affected: …" paragraph. None of the 25 entries has one, so the list is empty |
+| Impact | `impact` (none/minor/major/critical) | **Not published.** Stored as null and shown as "not published", never inferred from the wording |
+| Window | 50 incidents | 25 entries (2026-09-03 → 2026-10-28) |
+
+Update stamps print no year ("Oct 28, 20:05 UTC"). The parser takes the year that puts the stamp at or before the entry's own `updated` time. On the overlapping incidents, start and resolution match the API's to the minute (`461yvfrzpwtt`: 13:26:04.191Z / 16:23:12.052Z then, 13:26 / 16:23 now).
+
+**What was lost.** Impact and component names on every Anthropic incident read from now on. Incidents that had already left the Atom window keep what the API gave them. The first poll at the new URL rewrites the incidents still in the window without logging changes (`refresh.ts`, a source that moved URL), so dropping impact is not reported as 25 modified incidents. The Anthropic thesis's claim 5 picked incidents by impact; it now takes Anthropic's on duration alone and leaves materiality to the rubric (`docs/theses/anthropic.md`, revision 2026-11-04).
+
+**Verdict.** Include `history.atom`. The `/api/` URL is gone from code, config and fixtures.

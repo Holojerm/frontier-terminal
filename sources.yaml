@@ -709,28 +709,39 @@ sources:
   anthropic-status:
     axis: status
     provider: anthropic
-    url: https://status.claude.com/api/v2/incidents.json
-    format: JSON (Statuspage v2, {page, incidents[]} with components)
-    diff_mechanism: incident ids; status/resolved_at per incident
+    url: https://status.claude.com/history.atom
+    format: Atom (Statuspage incident history; HTML content lists each update)
+    diff_mechanism: incident ids (the code in each entry's /incidents/ link); status/resolved_at per incident
     verdict: include
     terms: >-
-      status.claude.com/robots.txt disallows /api/ for every agent, the path
-      this feed is on, although status.claude.com/api documents the same
-      endpoints for programmatic use. Anthropic's Consumer Terms bar scraping
-      its Services (see anthropic-models-md). Taken: incident id, title,
-      impact, status, components, start and resolution, every 6 hours. Not in
-      a paid offer. Read 2026-11-04.
+      status.claude.com/robots.txt disallows /api/ and /embed/ for every
+      agent; this Atom feed (/history.atom) is outside both, which is why the
+      source moved here from the JSON API on 2026-11-04. Anthropic's Consumer
+      Terms bar scraping its Services (see anthropic-models-md). Taken:
+      incident id, title, status, start and resolution (no impact is
+      published), every 6 hours. Not in a paid offer. Read 2026-11-04.
     rights: not-cleared
-    fixture: fixtures/status/anthropic-status.json
+    fixture: fixtures/status/anthropic-status.xml
     caveats: >-
-      Registered at the final URL: status.anthropic.com 301-redirects to
-      status.claude.com. Live-fetched 2026-09-08: exactly 50 incidents
-      (2026-07-21 to 2026-09-03), which is the page's window cap — counts
-      before that date are partial until the pipeline has polled through
-      it. Components name the surface (Claude API, claude.ai, Claude Code,
-      Claude Cowork, Console); consumer-app incidents count alongside API
-      ones, so read the component list, not just the count. Incident URL
-      composed as page.url + /incidents/{id} (verified to resolve).
+      Read from the Atom feed since 2026-11-04 because status.claude.com's
+      robots.txt has "User-agent: *", "Disallow: /api/", "Disallow: /embed/",
+      which bars the JSON API this source used before. status.anthropic.com
+      301-redirects to this host. Live-fetched 2026-11-04: 25 entries
+      (2026-09-03 to 2026-10-28), a shorter window than the API's 50; older
+      incidents are what this pipeline already holds. The feed publishes no
+      impact, so Anthropic's impact is null ("not published") and is never
+      inferred from wording. Incidents that had left the Atom window by the
+      switch keep the impact and components the API gave them; those still
+      in it were re-read from the feed and carry neither. Components are read only from a "This
+      incident affected:" line, which no entry carries today, so the list is
+      empty and consumer-app incidents (claude.ai, Claude Code, Cowork,
+      connectors) count alongside API ones: read the title. Status is the
+      newest update's word ("Update" means unchanged and is skipped), start
+      the oldest update's stamp, resolution the "Resolved" update's stamp;
+      stamps print no year and stop at the minute, so the year is the one at
+      or before the entry's updated time. Ids are the same Statuspage codes
+      the API used, so history carries over. Incident URL read from the
+      entry's link.
 
   google-cloud-status:
     axis: status

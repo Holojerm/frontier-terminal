@@ -36,7 +36,7 @@ useSeo({
       url: usePageUrl(),
       name: 'Frontier AI lab status-page incidents',
       description:
-        'Every incident the frontier AI labs posted to their own status pages: title, impact and status verbatim, start and resolution times, and affected components.',
+        'Every incident the frontier AI labs posted to their own status pages: title, impact and status verbatim (impact null where a feed publishes none), start and resolution times, and affected components.',
       dateModified: incidents.value?.as_of,
       variableMeasured: ['impact', 'status', 'started_at', 'resolved_at', 'components'],
       distribution: exportDistribution(site, 'incidents'),
@@ -140,6 +140,10 @@ const columns: TableColumn[] = [
               {{ i.components.join(' · ') }}
             </span>
           </template>
+          <template #cell-impact="{ row: i }">
+            <span v-if="i.impact === null" class="font-sans text-muted">not published</span>
+            <template v-else>{{ i.impact }}</template>
+          </template>
           <template #cell-status="{ row: i }">
             <UBadge
               v-if="i.resolved_at === null"
@@ -157,7 +161,10 @@ const columns: TableColumn[] = [
             <TerminalProvenanceTag :source-url="i.source_url" :fetched-at="i.fetched_at" />
           </template>
         </TerminalTable>
-        <template #foot>Duration is resolution minus start, as the feed states them.</template>
+        <template #foot>
+          Duration is resolution minus start, as the feed states them. Anthropic’s feed states them
+          to the minute and publishes no impact, so its impact reads “not published”.
+        </template>
       </TerminalPanel>
     </template>
   </TerminalPage>
