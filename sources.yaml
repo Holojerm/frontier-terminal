@@ -1132,6 +1132,7 @@ recipe_sources:
   greenhouse-cloudflare:
     company: cloudflare
     url: https://boards-api.greenhouse.io/v1/boards/cloudflare/departments
+    raw_bytes: 426131 # measured 2026-11-04, decompressed (payload-budget.test.ts)
     format: JSON, Greenhouse job board departments, each with its open jobs (id and title only)
     verdict: include
     terms: >-
@@ -1149,6 +1150,7 @@ recipe_sources:
   cloudflare-changelog-ai:
     company: cloudflare
     url: https://developers.cloudflare.com/changelog/rss/index.xml
+    raw_bytes: 8882476 # measured 2026-11-04, decompressed (payload-budget.test.ts)
     format: RSS, Cloudflare's developer changelog (every product, about 9 MB), one item per entry
     verdict: include
     terms: >-
@@ -1805,6 +1807,7 @@ recipe_sources:
   newsroom-openai:
     company: openai
     url: https://openai.com/news/rss.xml
+    raw_bytes: 825679 # measured 2026-11-04, decompressed (payload-budget.test.ts)
     format: RSS 2.0, OpenAI News, every post since 2015 (about 820 KB)
     verdict: include
     terms: >-
@@ -1823,6 +1826,7 @@ recipe_sources:
   newsroom-google-deepmind:
     company: google
     url: https://deepmind.google/blog/rss.xml
+    raw_bytes: 70164 # measured 2026-11-04, decompressed (payload-budget.test.ts)
     format: RSS 2.0, Google DeepMind News, the newest 100 posts
     verdict: include
     terms: >-
@@ -1840,6 +1844,7 @@ recipe_sources:
   newsroom-meta:
     company: meta
     url: https://about.fb.com/feed/
+    raw_bytes: 126944 # measured 2026-11-04, decompressed (payload-budget.test.ts)
     format: RSS 2.0, Meta Newsroom, the newest 10 posts
     verdict: include
     terms: >-
@@ -1859,6 +1864,7 @@ recipe_sources:
   newsroom-mistral:
     company: mistral
     url: https://mistral.ai/news/rss
+    raw_bytes: 27293 # measured 2026-11-04, decompressed (payload-budget.test.ts)
     format: RSS 2.0, Mistral Blog, every post since 2023
     verdict: include
     terms: >-
