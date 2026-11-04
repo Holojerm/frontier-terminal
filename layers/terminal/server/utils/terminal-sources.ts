@@ -165,10 +165,21 @@ export interface RecipeSourceEntry {
   caveat: string | null
 }
 
+/** A source the track record queries per alert (sources.yaml `track_record_sources`). */
+export interface TrackRecordSourceEntry {
+  id: string
+  url: string | null
+  verdict: string
+  terms: string | null
+  rights: SourceRights | null
+  caveat: string | null
+}
+
 export interface SourceRegistry {
   sources: RegisteredSource[]
   cuts: CutSourceEntry[]
   recipes: RecipeSourceEntry[]
+  track_record: TrackRecordSourceEntry[]
 }
 
 // sources.yaml keys whose fixture id (the id every table row carries) is spelt
@@ -317,7 +328,18 @@ export function readSourceRegistry(sourcesYaml: string): SourceRegistry {
     caveat: block.fields.caveats ?? null,
   }))
 
-  return { sources, cuts, recipes }
+  const track_record: TrackRecordSourceEntry[] = readBlock(lines, 'track_record_sources').map(
+    (block) => ({
+      id: block.id,
+      url: block.fields.url ?? null,
+      verdict: block.fields.verdict ?? '',
+      terms: block.fields.terms ?? null,
+      rights: rightsOf(block.id, block.fields.rights),
+      caveat: block.fields.caveats ?? null,
+    }),
+  )
+
+  return { sources, cuts, recipes, track_record }
 }
 
 /** Derived source ids (layers/terminal/server/pipeline/derived.ts) are named by their template. */

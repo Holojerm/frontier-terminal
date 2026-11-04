@@ -373,6 +373,79 @@ export const filedFactReads = sqliteTable(
   (t) => [index('filed_fact_reads_doc_idx').on(t.ticker, t.kind, t.started_at)],
 )
 
+// ─────────────────────────────────────────────
+// Track record tables (layers/terminal/server/pipeline/track-record/)
+// ─────────────────────────────────────────────
+// For each material alert: when the terminal saw the change, against when the
+// press (GDELT) and the lab's own newsroom first carried it. All three are
+// append-only, so the /track-record page and its exports answer as_of by the
+// column that says when each row was written.
+
+// One row per search for an alert's candidates: a GDELT query, or a read of
+// the stored newsroom posts. A failed GDELT search is kept (the page says so)
+// and retried; an ok one is never repeated.
+export const trackRecordSearches = sqliteTable(
+  'track_record_searches',
+  {
+    id: text('id').primaryKey(),
+    alert_id: text('alert_id').notNull(),
+    source: text('source').notNull(), // gdelt | newsroom
+    query: text('query').notNull(),
+    window_start: text('window_start').notNull(),
+    window_end: text('window_end').notNull(),
+    status: text('status').notNull(), // ok | failed | skipped
+    detail: text('detail'),
+    candidates: integer('candidates').notNull(),
+    searched_at: text('searched_at').notNull(),
+    raw_key: text('raw_key'),
+    source_url: text('source_url').notNull(),
+  },
+  (t) => [index('track_record_searches_alert_idx').on(t.alert_id, t.source, t.searched_at)],
+)
+
+// One row per (alert, kind, url): an article or newsroom post inside the
+// alert's window that matched its search terms. A candidate is not a match;
+// a match is a same-event verdict below.
+export const trackRecordCandidates = sqliteTable(
+  'track_record_candidates',
+  {
+    id: text('id').primaryKey(),
+    alert_id: text('alert_id').notNull(),
+    kind: text('kind').notNull(), // press | newsroom
+    title: text('title').notNull(),
+    snippet: text('snippet'),
+    outlet: text('outlet').notNull(),
+    url: text('url').notNull(),
+    published_at: text('published_at').notNull(),
+    search_id: text('search_id').notNull(),
+    found_at: text('found_at').notNull(),
+    ...provenance,
+  },
+  (t) => [
+    index('track_record_candidates_alert_idx').on(t.alert_id, t.kind, t.published_at),
+    index('track_record_candidates_found_idx').on(t.found_at, t.id),
+  ],
+)
+
+// One verdict per candidate: the judge routine's same-event rating, gated
+// and grounded by the Worker (track-record/review.ts).
+export const trackRecordVerdicts = sqliteTable(
+  'track_record_verdicts',
+  {
+    id: text('id').primaryKey(),
+    candidate_id: text('candidate_id').notNull(),
+    alert_id: text('alert_id').notNull(),
+    same_event: integer('same_event', { mode: 'boolean' }).notNull(),
+    rationale: text('rationale').notNull(),
+    judged_at: text('judged_at').notNull(),
+    ...provenance,
+  },
+  (t) => [
+    index('track_record_verdicts_alert_idx').on(t.alert_id),
+    index('track_record_verdicts_judged_idx').on(t.judged_at, t.id),
+  ],
+)
+
 export type Snapshot = typeof snapshots.$inferSelect
 export type Entity = typeof entities.$inferSelect
 export type Change = typeof changes.$inferSelect

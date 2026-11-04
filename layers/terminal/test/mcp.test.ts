@@ -186,6 +186,7 @@ describe('tools/list', () => {
       'get_revenue',
       'get_spend',
       'get_status',
+      'get_track_record',
     ])
     for (const t of tools) {
       expect(t.annotations).toMatchObject({ readOnlyHint: true })

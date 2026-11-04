@@ -118,6 +118,8 @@ describe('the table registry', () => {
       'alerts',
       'claim_readings',
       'claim_verdicts',
+      'track_record_candidates',
+      'track_record_verdicts',
       'recipe_observations',
       'filed_facts',
       'exposure_quarters',

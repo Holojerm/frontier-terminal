@@ -1799,6 +1799,104 @@ recipe_sources:
       software engineering by hand-mapped departments (pay-bands.ts); sales
       is left out because Anthropic posts on-target earnings and OpenAI base
       pay. Read the change in a cell over time, not the gap between labs.
+  # The labs' own newsroom feeds, for the track record (when a lab announced
+  # something itself). Live-fetched 2026-11-04. Anthropic and xAI publish no
+  # feed (cut block).
+  newsroom-openai:
+    company: openai
+    url: https://openai.com/news/rss.xml
+    format: RSS 2.0, OpenAI News, every post since 2015 (about 820 KB)
+    verdict: include
+    terms: >-
+      OpenAI's Terms of Use (effective 2026-01-01) cover "associated software
+      applications and websites" and bar users who "Automatically or
+      programmatically extract data or Output". openai.com/robots.txt
+      disallows only /microsoft-for-startups/. Taken: title, link,
+      publication time and the first 400 characters of each post's
+      description, every 6 hours. Not in a paid offer while the terms bar
+      automated extraction. Read 2026-11-04.
+    rights: not-cleared
+    caveats: >-
+      Posts from 2026-08-01 on are kept. The feed answered 200 to our
+      User-Agent while other openai.com pages answer 403, so it could close
+      to us without notice.
+  newsroom-google-deepmind:
+    company: google
+    url: https://deepmind.google/blog/rss.xml
+    format: RSS 2.0, Google DeepMind News, the newest 100 posts
+    verdict: include
+    terms: >-
+      Google's Terms of Service (policies.google.com/terms) bar automated
+      access "in violation of the machine-readable instructions on our web
+      pages (for example, robots.txt files…)"; deepmind.google/robots.txt
+      allows everything. Taken: title, link, publication time and the first
+      400 characters of each post's description, every 6 hours. Read
+      2026-11-04.
+    rights: ours
+    caveats: >-
+      This is DeepMind's blog. Gemini API price changes are often posted
+      only on the developer docs and blogs. Posts from 2026-08-01 on are
+      kept.
+  newsroom-meta:
+    company: meta
+    url: https://about.fb.com/feed/
+    format: RSS 2.0, Meta Newsroom, the newest 10 posts
+    verdict: include
+    terms: >-
+      The newsroom's footer links Meta's terms at facebook.com/terms.php,
+      which render only in a browser, so they were not read. ai.meta.com's
+      robots.txt opens with "Collection of data on Facebook through
+      automated means is prohibited unless you have express written
+      permission". about.fb.com/robots.txt allows /feed/. Taken: title,
+      link, publication time and the first 400 characters of each post's
+      description, every 6 hours. Not cleared for a paid offer until the
+      terms are read. Read 2026-11-04.
+    rights: not-cleared
+    caveats: >-
+      This is Meta's company newsroom. ai.meta.com/blog publishes no
+      feed. The feed holds only the newest 10 posts (back to 2026-10-13
+      on the first fetch), so earlier posts were never seen.
+  newsroom-mistral:
+    company: mistral
+    url: https://mistral.ai/news/rss
+    format: RSS 2.0, Mistral Blog, every post since 2023
+    verdict: include
+    terms: >-
+      Mistral's terms (legal.mistral.ai: consumer, commercial, usage policy)
+      say nothing about automated access to its site. mistral.ai/robots.txt
+      allows everything. Taken: title, link, publication time and the first
+      400 characters of each post's description, every 6 hours. Read
+      2026-11-04.
+    rights: ours
+    caveats: >-
+      Recent posts are stamped close to 12:00 UTC, so read a Mistral post's
+      time as a date. Posts from 2026-08-01 on are kept.
+
+# Sources the track record reads that are not recipes: queried per alert,
+# not polled. Same fields as recipe_sources. /contact groups them by rights.
+track_record_sources:
+  gdelt-doc:
+    url: https://api.gdeltproject.org/api/v2/doc/doc
+    format: JSON, GDELT DOC 2.0 API in artlist mode, up to 75 articles per query
+    verdict: include
+    terms: >-
+      GDELT's terms (gdeltproject.org/about.html): "all datasets released by
+      the GDELT Project are available for unlimited and unrestricted use for
+      any academic, commercial, or governmental use of any kind without
+      fee", and any redistribution "must include a citation to the GDELT
+      Project and a link to this website (https://www.gdeltproject.org/)".
+      api.gdeltproject.org has no robots.txt (404). The API asks for "one
+      every 5 seconds". Taken: each article's URL, title, outlet domain,
+      language and the time GDELT first saw it, one query per material
+      alert, at most one query every 5 minutes. Read 2026-11-04.
+    rights: upstream
+    caveats: >-
+      The time is when GDELT's crawler first saw the article, not when the
+      outlet published it, and GDELT doesn't crawl every outlet (paywalled
+      wires and newsletters are thin). The DOC API searches only the last
+      three months. It returns no article text, and we never fetch the
+      article, so a match is rated on its headline alone. Headlines belong
+      to their outlets.
 
 # Department clusters read off the hiring boards. A cluster is a name match
 # over each board's own department labels: a department belongs when its
@@ -2141,3 +2239,20 @@ cut:
       private company" and gains "largely from a private company". Naming
       it Anthropic would rest on press reports instead of the filings.
       Checked 2026-11-04.
+  anthropic-newsroom:
+    verdict: cut (no feed)
+    reason: >-
+      anthropic.com publishes no RSS or Atom feed. /rss.xml and /news/rss.xml
+      answer 404, and the /news page links none. Its robots.txt allows
+      everything, but the Consumer Terms bar users "To crawl, scrape, or
+      otherwise harvest data or information from our Services", so we don't
+      read the HTML page instead. The track record shows no newsroom time
+      for Anthropic. Checked 2026-11-04.
+  xai-newsroom:
+    verdict: cut (no feed)
+    reason: >-
+      x.ai publishes no RSS or Atom feed. /news/rss.xml answers 404, and the
+      /news page links none. xAI's Acceptable Use Policy bars "Accessing the
+      Services through unauthorized automated or non-human means", so we
+      don't read the HTML page instead. The track record shows no newsroom
+      time for xAI. Checked 2026-11-04.

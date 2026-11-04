@@ -5,6 +5,7 @@ import { recordOpsEvent } from '#server/utils/ops'
 import { ChangeRow } from '../contracts'
 import { D1_MAX_BOUND_PARAMS, chunk, insertRows, type PipelineDb } from '../store'
 import { applyClaimVerdicts, type VerdictReport } from '../../theses/verdicts'
+import { applyTrackRecordVerdicts, type TrackRecordVerdictReport } from '../track-record/review'
 import { evaluateTheses } from '../../theses/evaluate'
 import { parseDepartmentClusters, type DepartmentCluster } from '../../utils/terminal-clusters'
 import { clampHiringAlerts, type FloorClamp } from '../hiring-floor'
@@ -42,6 +43,8 @@ export interface JudgeRunReport {
   }
   /** Verdicts on judged thesis claims (layers/terminal/server/theses/verdicts.ts). */
   claims: VerdictReport
+  /** Same-event ratings of track-record candidates (layers/terminal/server/pipeline/track-record/review.ts). */
+  track_record: TrackRecordVerdictReport
 }
 
 async function loadChanges(db: PipelineDb, ids: readonly string[]): Promise<ChangeRow[]> {
@@ -113,6 +116,7 @@ export async function submitJudgeRun(
       gate_rejection: { reason: gate.reason, detail: gate.detail },
       class_map: { accepted: 0, rejected: [] },
       claims: { accepted: 0, inserted: 0, rejected: [] },
+      track_record: { accepted: 0, inserted: 0, rejected: [] },
     }
   }
 
@@ -193,6 +197,15 @@ export async function submitJudgeRun(
       path: JUDGE_OPS_PATH,
     })
   }
+  const track_record = await applyTrackRecordVerdicts(db, body.track_record, now)
+  if (track_record.rejected.length > 0) {
+    const [first] = track_record.rejected
+    await recordOpsEvent(db, {
+      kind: 'judge_rejected',
+      detail: `${track_record.rejected.length} track-record rating(s) rejected; first: ${first!.reason} — ${first!.detail} (${first!.candidate_id})`,
+      path: JUDGE_OPS_PATH,
+    })
+  }
   if (opts.sourcesYaml) {
     await evaluateTheses(db, { sourcesYaml: opts.sourcesYaml, now: () => now }, undefined, {
       judgedOnly: true,
@@ -201,6 +214,7 @@ export async function submitJudgeRun(
 
   return {
     claims,
+    track_record,
     changes_seen: body.change_ids_seen.length,
     accepted: accepted.length,
     inserted,

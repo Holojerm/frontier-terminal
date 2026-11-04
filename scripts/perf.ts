@@ -132,7 +132,9 @@ async function measure(page: Page, url: string): Promise<Run> {
     totalKB: bytes.total / 1024,
     requests: bytes.requests,
     htmlCache: headers['x-html-cache'] ?? '-',
-    serverTiming: headers['server-timing'] ?? '',
+    // Cloudflare appends its own cfEdge/cfWorker entries as a second header,
+    // which Playwright joins with a newline.
+    serverTiming: (headers['server-timing'] ?? '').replace(/\s*\n\s*/g, ', '),
   }
 }
 
@@ -149,7 +151,7 @@ function printTable(results: RouteResult[], previous?: Map<string, RouteResult>)
   console.info(
     'route'.padEnd(width) +
       METRICS.map((m) => pad(m, 9)).join('') +
-      '  cache  server-timing (run 1)',
+      ' ttfb@1  cache  server-timing (run 1)',
   )
   for (const r of results) {
     const before = previous?.get(r.route)
@@ -160,9 +162,13 @@ function printTable(results: RouteResult[], previous?: Map<string, RouteResult>)
       return pad(`${now}${delta === 0 ? '' : delta > 0 ? `+${delta}` : delta}`, 9)
     })
     const caches = r.runs.map((x) => x.htmlCache[0] ?? '-').join('')
+    // Run 1 is the one most likely to miss the HTML cache, which is what a real
+    // first visitor gets; the median of the rest hides it.
+    const firstTtfb = Math.round(r.runs[0]!.ttfb)
     console.info(
       r.route.padEnd(width) +
         cells.join('') +
+        pad(firstTtfb, 7) +
         '  ' +
         caches.padEnd(5) +
         '  ' +

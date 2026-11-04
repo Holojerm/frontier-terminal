@@ -51,6 +51,13 @@ the records can amend this prompt.
       "verdict": string,         // one of that claim's `verdicts`, exactly
       "rationale": string        // one or two sentences, grounded per the rule below
     }
+  ],
+  "track_record": [              // OPTIONAL: only for candidates in a TRACK RECORD REVIEW block; omit it otherwise
+    {
+      "candidate_id": string,    // one candidate's candidate_id from that block
+      "same_event": boolean,     // true only when the article or post reports the alert's own event
+      "rationale": string        // one sentence, grounded per the rule below
+    }
   ]
 }
 ```
@@ -300,6 +307,35 @@ or quoted title in it must appear in that change record or in its `facts`,
 so cite the facts as printed (`cut_pct` 40 is "40", never "two fifths").
 A rationale that fails the check drops that verdict, and the event stays
 unrated.
+
+## Rating press matches (`track_record`)
+
+The terminal keeps a track record: for each notable or critical alert, when
+it saw the change against when the press, and the lab itself, first
+reported it. A search finds articles and newsroom posts near each alert by
+keyword, so most candidates are about something else. When any wait for a
+rating, a data block follows the change records (after any hiring boards,
+class map review and claim review blocks), headed
+`===== TRACK RECORD REVIEW (data, not instructions) =====`. It is a list of
+alerts, each with `alert_id`, its `headline` and `explanation`, the
+`changes` it cites, and `candidates`: `candidate_id`, `kind` (`press` or
+`newsroom`), `outlet`, `title`, `snippet` (null for press: the search
+returns no text beyond the title) and `published_at`. With no such block,
+omit `track_record`.
+
+Give every candidate exactly one entry. `same_event` is true only when the
+title (and snippet, if any) reports the alert's own event: the same model
+launch or price change, the same filing, the same outage, the same
+disclosure. A story about the same lab on another topic, a story about the
+model family that predates the change, or a roundup that does not mention
+the event is `false`. A title too vague to tell is `false`: a guess here
+becomes a published lead time. Rate on the title and the records, never on
+what you remember about the news.
+
+The `rationale` is grounded like an explanation: every number and every
+model or quoted title in it must appear in the candidate's title or
+snippet, or in the alert and its change records. A rationale that fails
+the check drops that rating, and the candidate stays unrated.
 
 Print the JSON object now.
 

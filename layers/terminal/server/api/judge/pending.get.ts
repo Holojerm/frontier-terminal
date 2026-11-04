@@ -15,6 +15,10 @@
 // `changes` is empty. `hiring` gives, per lab with job changes pending, the
 // board and department sizes and which moves clear the materiality floor
 // that POST /api/judge/alerts enforces (layers/terminal/server/pipeline/hiring-floor.ts).
+// `track_record_review` lists, per material alert, the press articles and
+// newsroom posts found around it that still need a same-event rating
+// (layers/terminal/server/pipeline/track-record/review.ts); like
+// `claim_review`, it can be non-empty when `changes` is empty.
 
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
@@ -25,6 +29,7 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 import { hiringBoards } from '../../pipeline/hiring-floor'
 import { blobRawReader, classMapReview } from '../../pipeline/judge/class-map'
 import { JUDGE_CHANGE_LIMIT, pendingChanges } from '../../pipeline/judge/pending'
+import { trackRecordReview } from '../../pipeline/track-record/review'
 import { claimReview, flagshipMap } from '../../theses/verdicts'
 import { requireJudgeToken } from '../../utils/judge-auth'
 import { parseDepartmentClusters } from '../../utils/terminal-clusters'
@@ -34,11 +39,13 @@ export default defineEventHandler(async (event) => {
   setResponseHeader(event, 'Cache-Control', 'no-store')
   await requireJudgeToken(event)
 
-  const [{ changes, total_pending, since }, class_map_review, flagships] = await Promise.all([
-    pendingChanges(db, JUDGE_CHANGE_LIMIT),
-    classMapReview(db, blobRawReader(blob)),
-    flagshipMap(db),
-  ])
+  const [{ changes, total_pending, since }, class_map_review, flagships, track_record_review] =
+    await Promise.all([
+      pendingChanges(db, JUDGE_CHANGE_LIMIT),
+      classMapReview(db, blobRawReader(blob)),
+      flagshipMap(db),
+      trackRecordReview(db),
+    ])
   const [claim_review, hiring] = await Promise.all([
     claimReview(db, changes, flagships),
     hiringBoards(db, changes, parseDepartmentClusters(sourcesYaml)),
@@ -52,6 +59,7 @@ export default defineEventHandler(async (event) => {
     hiring,
     class_map_review,
     claim_review,
+    track_record_review,
     prompt: judgePrompt,
   }
 })

@@ -184,7 +184,14 @@ const securityHeaders = {
 const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:alert', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
-  '*/5 * * * *': ['poll:tripwire', 'social:alerts', 'social:post', 'press:briefs', 'cache:warm'],
+  '*/5 * * * *': [
+    'poll:tripwire',
+    'social:alerts',
+    'social:post',
+    'press:briefs',
+    'cache:warm',
+    'track-record:search',
+  ],
   '0 13 * * 1': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
 }
 
@@ -232,6 +239,15 @@ export default defineNuxtConfig({
   // NuxtUI semantic tokens (text-foreground, bg-background, etc.) won't apply
   // and pages render unstyled. See app/assets/css/main.css.
   css: ['~/assets/css/main.css'],
+
+  // Inline that CSS into the document instead of linking it. It is the only
+  // render-blocking request, and as a <link> it starts alongside ~30 JS
+  // modulepreloads that split the bandwidth: on a throttled phone it finished
+  // ~1.7s after the HTML, and first paint waited for it (`bun run perf`,
+  // 2026-11-04). Inline, the page paints from the HTML alone. The cost is ~30KB
+  // compressed per document, which no other request was saving: every page
+  // load fetched the same file cold.
+  features: { inlineStyles: true },
 
   // Document-level defaults every page inherits.
   app: {
