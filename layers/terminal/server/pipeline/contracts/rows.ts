@@ -91,7 +91,8 @@ export const sourceRunStatusEnum = z.enum([
   'absent',
 ])
 // 'tripwire': an off-cycle poll of the model catalogs (layers/terminal/server/pipeline/tripwire.ts).
-export const pollScopeEnum = z.enum(['edgar', 'survey', 'tripwire'])
+// 'careers': the sources too big to share the survey's invocation (CAREERS_SOURCES in scopes.ts).
+export const pollScopeEnum = z.enum(['edgar', 'survey', 'tripwire', 'careers'])
 export type PollScope = z.infer<typeof pollScopeEnum>
 
 const sha256Hex = z.string().regex(/^[0-9a-f]{64}$/)

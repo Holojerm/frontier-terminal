@@ -22,7 +22,7 @@ import {
   resolveFilers,
 } from '../../server/pipeline/parsers/sec/pending-filers'
 import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
-import { sourceIdsForScope } from '../../server/pipeline/scopes'
+import { CAREERS_SOURCES, sourceIdsForScope } from '../../server/pipeline/scopes'
 import { includeSources } from '../../server/pipeline/sources'
 import { terminalStamp } from '../../server/utils/terminal-cache'
 import { queryContext, queryCoverage, queryPrices } from '../../server/utils/terminal-db'
@@ -410,7 +410,10 @@ describe('CIK resolution end to end', () => {
     const all = [...ALL, ...derived]
     const next = sourceIdsForScope('edgar', all)
     expect(next).toContain('edgar-companyfacts-anthropic')
-    expect(sourceIdsForScope('survey', all)).toEqual(all.map((s) => s.source_id))
+    expect(sourceIdsForScope('survey', all)).toEqual(
+      all.map((s) => s.source_id).filter((id) => !CAREERS_SOURCES.includes(id)),
+    )
+    expect(sourceIdsForScope('survey', all)).toContain('edgar-companyfacts-anthropic')
 
     const second = await run(next, fetcher())
     const byId = Object.fromEntries(second.sources.map((s) => [s.source_id, s]))

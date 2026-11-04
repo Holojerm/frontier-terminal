@@ -114,6 +114,14 @@ describe('hiring lane', () => {
     )
   })
 
+  test('google careers: parsing twice reads the same rows (the shared tag patterns keep no state between calls)', () => {
+    const feed = fixtureText('fixtures/hiring/google-careers.xml')
+    const first = parseGoogleCareers(feed)
+    // A different document in between, so a leftover lastIndex would show.
+    parseGoogleCareers(feed.replaceAll('<employer>Google<', '<employer>DeepMind<'))
+    expect(parseGoogleCareers(feed)).toEqual(first)
+  })
+
   test('google careers: a feed with no DeepMind role, or no <jobs> root, fails rather than reading as zero', () => {
     const feed = fixtureText('fixtures/hiring/google-careers.xml')
     expect(() =>

@@ -165,7 +165,10 @@ const securityHeaders = {
 //              — EDGAR tick, layers/terminal/server/tasks/poll/edgar.ts: the SEC feeds and the
 //                model catalogs, the two axes where latency is worth polling for.
 //   0 */6      — full survey, layers/terminal/server/tasks/poll/survey.ts: every include
-//                source. Scope policy: layers/terminal/server/pipeline/scopes.ts.
+//                source but the careers lane's. Scope policy: layers/terminal/server/pipeline/scopes.ts.
+//   17 */6     — careers lane, layers/terminal/server/tasks/poll/careers.ts: the ~20 MB
+//                Google careers feed in an invocation of its own, so its memory
+//                never shares the survey's 128 MB.
 //   */5        — launch tripwire, layers/terminal/server/tasks/poll/tripwire.ts: parses the
 //                model catalogs, polls them only when they differ from the
 //                store, and yields on the half-hour ticks above.
@@ -184,6 +187,7 @@ const securityHeaders = {
 const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:alert', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
+  '17 */6 * * *': ['poll:careers'],
   '*/5 * * * *': [
     'poll:tripwire',
     'social:alerts',

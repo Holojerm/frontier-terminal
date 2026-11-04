@@ -97,10 +97,11 @@ export const FETCH_BACKOFF_MS: readonly number[] = [500, 2000]
 export const FETCH_TIMEOUT_MS = 30_000
 
 /**
- * Largest body the pipeline will hold. The biggest real source is OpenAI's
- * Ashby job board at ~13.5 MB, so this is roughly a 2x headroom; a Worker
- * isolate has 128 MB and a body also becomes a JS string, so "no cap at all"
- * is one upstream accident away from an OOM the logs cannot explain.
+ * Largest body the pipeline will hold. The biggest real source is Google's
+ * careers feed at ~20 MB, which runs on a tick of its own for that reason
+ * (CAREERS_SOURCES in scopes.ts); OpenAI's Ashby board is next at ~13.5 MB.
+ * A Worker isolate has 128 MB and a body also becomes a JS string, so "no cap
+ * at all" is one upstream accident away from an OOM the logs cannot explain.
  */
 export const MAX_BODY_BYTES = 32 * 1024 * 1024
 
@@ -121,6 +122,8 @@ export const REDIRECT_REFUSED = 'refused a redirect on a credentialed request'
  * the decoded text. Those agree for well-formed UTF-8, and where they differ
  * the wire count is the honest one.
  */
+const EMPTY = new Uint8Array(0)
+
 export async function readCappedBody(
   response: Response,
   maxBytes: number,
@@ -149,12 +152,16 @@ export async function readCappedBody(
     chunks.push(value)
   }
 
+  // Each chunk is let go as it is copied, so a 20 MB body is not held twice
+  // over while it is joined.
   const joined = new Uint8Array(bytes)
   let at = 0
-  for (const chunk of chunks) {
-    joined.set(chunk, at)
-    at += chunk.byteLength
+  for (let i = 0; i < chunks.length; i++) {
+    joined.set(chunks[i]!, at)
+    at += chunks[i]!.byteLength
+    chunks[i] = EMPTY
   }
+  chunks.length = 0
   return { text: new TextDecoder().decode(joined), bytes }
 }
 
