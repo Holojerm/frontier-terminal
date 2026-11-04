@@ -58,7 +58,15 @@ export interface ExportTable {
   at(db: PipelineDb, at: string): Promise<ExportTable>
   /** Why `at` refuses, or null when it answers. */
   asOfRefusal: string | null
+  /**
+   * How `at` answers: `cut` keeps the rows written by T (an append-only table),
+   * `rebuilt` replays the change log back to T (a table of current rows),
+   * `refused` is asOfRefusal. The data dictionary states it per table.
+   */
+  pointInTime: PointInTimeMode
 }
+
+export type PointInTimeMode = 'cut' | 'rebuilt' | 'refused'
 
 /**
  * The equality filters a request asks for, as one SQL condition. A parameter
@@ -262,9 +270,11 @@ function entityView(
         count: async () => rows.length,
         at: () => Promise.reject(new PointInTimeError('already a point-in-time view')),
         asOfRefusal: null,
+        pointInTime: 'rebuilt',
       }
     },
     asOfRefusal: null,
+    pointInTime: 'rebuilt',
     async page(db, after, limit) {
       const rows = await db
         .select()
@@ -357,6 +367,7 @@ function partsView<C>(
     // exploded view through the change log is not built, so it says so.
     at: () => Promise.reject(new PointInTimeError(PARTS_AS_OF_REFUSAL)),
     asOfRefusal: PARTS_AS_OF_REFUSAL,
+    pointInTime: 'refused',
   }
 }
 
@@ -431,9 +442,11 @@ function plainTable(
         count: () => Promise.reject(new Error('not counted as of T')),
         at: () => Promise.reject(new PointInTimeError('already a point-in-time view')),
         asOfRefusal: null,
+        pointInTime: 'cut',
       }
     },
     asOfRefusal: typeof writtenBy === 'string' ? writtenBy : null,
+    pointInTime: typeof writtenBy === 'string' ? 'refused' : 'cut',
     async count(db) {
       if (total) {
         const [row] = await db.select({ total }).from(tables.sourceStats)
@@ -465,6 +478,7 @@ function staticTable(
     },
     at: () => Promise.reject(new PointInTimeError(asOfRefusal)),
     asOfRefusal,
+    pointInTime: 'refused',
   }
 }
 
@@ -536,7 +550,9 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     'filers',
     'One row per lab whose CIK we found in its own registration filing (sources.yaml pending_filers). Each row has the CIK, EDGAR’s name for the filer, and the filing we read it from.',
     'filer',
-    ['provider', 'cik', 'name', 'resolved_form', 'resolved_accession', 'resolved_file_date'],
+    // provider is already a leading column of every entity view; naming it
+    // again printed it twice in the CSV header.
+    ['cik', 'name', 'resolved_form', 'resolved_accession', 'resolved_file_date'],
   ),
   revenue_facts: entityView(
     'revenue_facts',
