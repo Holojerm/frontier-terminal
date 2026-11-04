@@ -349,8 +349,9 @@ export interface IncidentView extends Prov {
   provider: LabId
   incident_id: string
   title: string
-  /** Vendor vocabulary, verbatim: Statuspage none/minor/major/critical; Google low/medium/high. */
-  impact: string
+  /** Vendor vocabulary, verbatim: Statuspage none/minor/major/critical; Google low/medium/high.
+   * null where the feed publishes none (Anthropic's Atom history): never inferred. */
+  impact: string | null
   status: string
   started_at: string
   /** null while the incident is open. */

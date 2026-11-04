@@ -449,7 +449,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         '(last_window) against the same span before (prior_window), what is open now, and coverage_from — where held history ' +
         'begins; a Statuspage feed is a rolling window, so prior_window is partial until the pipeline has polled through it. ' +
         `incidents lists every one started inside ${INCIDENT_HISTORY_DAYS} days, newest first, with impact in the vendor’s own ` +
-        'vocabulary (never mapped across vendors) and a link. Windows anchor on window_to, the newest status fetch, not the ' +
+        'vocabulary (never mapped across vendors; null for Anthropic, whose Atom feed publishes none) and a link. Windows anchor on window_to, the newest status fetch, not the ' +
         'clock. Not an SLA and not comparable across vendors: OpenAI’s feed mixes ChatGPT with API incidents and has no component ' +
         'field; xAI’s RSS history covers Cursor’s products alongside Grok and the API (read components). Meta has NO public incident ' +
         'history (only a current-state probe) and is reported as no_public_feed with the reason, never as zero incidents. Optional provider filter narrows providers and incidents. ' +

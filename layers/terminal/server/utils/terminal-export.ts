@@ -471,7 +471,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   incidents: entityView(
     'incidents',
-    'Every stored status-page incident: title, vendor impact and status verbatim, start and resolution, and components. Append-only: an incident that drops out of its feed is kept.',
+    'Every stored status-page incident: title, vendor impact and status verbatim (impact null where the feed publishes none, as Anthropic’s Atom feed does), start and resolution, and components. Append-only: an incident that drops out of its feed is kept.',
     'incident',
     INCIDENT_FIELDS,
   ),

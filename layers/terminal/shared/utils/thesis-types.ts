@@ -191,9 +191,16 @@ export type JudgedSpec = {
   | {
       review: 'incidents-and-disclosures'
       /** Candidates: incidents at one of `impacts` lasting `min_hours` or more, and
-       * every new disclosure. Broken by a material verdict on the company that is
-       * confirmed; weakening while one awaits confirmation. */
-      rule: { rule: 'confirmed-material'; impacts: readonly string[]; min_hours: number }
+       * every new disclosure. An incident whose feed publishes no impact (null) is
+       * taken on duration alone under 'duration-alone', and the rubric decides; under
+       * 'excluded' it is never a candidate. Broken by a material verdict on the
+       * company that is confirmed; weakening while one awaits confirmation. */
+      rule: {
+        rule: 'confirmed-material'
+        impacts: readonly string[]
+        min_hours: number
+        impact_unpublished: 'duration-alone' | 'excluded'
+      }
       confirmations: readonly Confirmation[]
     }
   | {

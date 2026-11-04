@@ -389,6 +389,8 @@ export interface GoodSnapshot {
   id: string
   content_hash: string
   raw_key: string
+  /** The URL that snapshot was fetched from: a source can move (sources.yaml). */
+  source_url: string
 }
 
 /** Which of these sources have parsed at least once ('ok', 'unchanged' or 'baseline'). */
@@ -427,6 +429,7 @@ export async function latestGoodSnapshot(
       id: tables.snapshots.id,
       content_hash: tables.snapshots.content_hash,
       raw_key: tables.snapshots.raw_key,
+      source_url: tables.snapshots.source_url,
     })
     .from(tables.sourceRuns)
     .innerJoin(tables.snapshots, eq(tables.snapshots.id, tables.sourceRuns.snapshot_id))
