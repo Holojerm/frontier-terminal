@@ -84,7 +84,7 @@ const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, str
         note="Median days from the discovery date a report prints to the date it was published."
         flush
       >
-        <TerminalDisclosureTable :disclosures="disclosures" />
+        <TerminalDisclosureTable :disclosures="disclosures" collapse-gaps />
       </TerminalPanel>
 
       <TerminalGap
@@ -110,6 +110,7 @@ const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, str
             :gap="(r) => !r.timeline"
             :gap-columns="['discovered', 'disclosed', 'days']"
             align="top"
+            flow
           >
             <template #cell-provider="{ row: r }">{{ labName(r.provider) }}</template>
             <template #cell-title="{ row: r }">

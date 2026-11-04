@@ -42,50 +42,61 @@ const columns = computed(() => [
       reason="The signal has produced no number for this claim. Its status is unresolved until it does."
     />
 
-    <template v-else>
-      <dl>
-        <TerminalFigure
-          label="Latest reading"
-          :value="format(latest.value)"
-          :sub="`for ${latest.date}`"
-          :source="latest"
+    <!-- From lg the reading sits beside its series: stacked, a claim was a
+         tall narrow column with the chart a screen below its number. -->
+    <div v-else class="grid gap-x-6 gap-y-3 lg:grid-cols-3">
+      <div class="space-y-3">
+        <dl>
+          <TerminalFigure
+            label="Latest reading"
+            :value="format(latest.value)"
+            :sub="`for ${latest.date}`"
+            :source="latest"
+          />
+        </dl>
+        <TerminalFacts
+          v-if="context.length"
+          layout="list"
+          :items="
+            context.map((row) => ({
+              key: row.label,
+              label: row.label,
+              value: row.value,
+              mono: true,
+            }))
+          "
         />
-      </dl>
-      <TerminalFacts
-        v-if="context.length"
-        layout="list"
-        :items="
-          context.map((row) => ({ key: row.label, label: row.label, value: row.value, mono: true }))
-        "
-      />
+      </div>
 
-      <TerminalLineChart
-        v-if="series.length > 1"
-        :x="chart.x"
-        :series="chart.series"
-        :format="format"
-        :x-label="dayLabel"
-        :title="`${claim.signal_label}, ${series.length} readings from ${chart.x[0]} to ${chart.x.at(-1)}`"
-      />
-      <p v-else class="text-sm text-muted">One reading so far. A trend needs at least two.</p>
+      <div class="space-y-3 lg:col-span-2">
+        <TerminalLineChart
+          v-if="series.length > 1"
+          :x="chart.x"
+          :series="chart.series"
+          :format="format"
+          :x-label="dayLabel"
+          :title="`${claim.signal_label}, ${series.length} readings from ${chart.x[0]} to ${chart.x.at(-1)}`"
+        />
+        <p v-else class="text-sm text-muted">One reading so far. A trend needs at least two.</p>
 
-      <TerminalExpand v-if="series.length > 1" show="Show the readings" hide="Hide the readings">
-        <TerminalTable
-          :caption="`${claim.signal_label}, newest first`"
-          :columns="columns"
-          :rows="newestFirst"
-          :row-key="(p) => p.date"
-          nested
-        >
-          <template #cell-date="{ row: p }">
-            <time :datetime="p.date" :title="absoluteStamp(`${p.date}T00:00:00Z`)">{{
-              p.date
-            }}</time>
-          </template>
-          <template #cell-value="{ row: p }">{{ format(p.value) }}</template>
-          <template #cell-note="{ row: p }">{{ p.note ?? '' }}</template>
-        </TerminalTable>
-      </TerminalExpand>
-    </template>
+        <TerminalExpand v-if="series.length > 1" show="Show the readings" hide="Hide the readings">
+          <TerminalTable
+            :caption="`${claim.signal_label}, newest first`"
+            :columns="columns"
+            :rows="newestFirst"
+            :row-key="(p) => p.date"
+            nested
+          >
+            <template #cell-date="{ row: p }">
+              <time :datetime="p.date" :title="absoluteStamp(`${p.date}T00:00:00Z`)">{{
+                p.date
+              }}</time>
+            </template>
+            <template #cell-value="{ row: p }">{{ format(p.value) }}</template>
+            <template #cell-note="{ row: p }">{{ p.note ?? '' }}</template>
+          </TerminalTable>
+        </TerminalExpand>
+      </div>
+    </div>
   </div>
 </template>

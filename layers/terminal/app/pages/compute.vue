@@ -2,6 +2,8 @@
 // The compute axis: what renting a GPU costs, and how much data-center power
 // is coming online and for whom. Both read the thesis recipes (GPU price
 // pages and Epoch AI's dataset), every figure with its source and fetch time.
+// Three panels, so no tabs; the site list is the page's long table and runs
+// with the page rather than in a box.
 
 import { count } from '../../shared/utils/terminal-format'
 import type { DataCentersData } from '../../shared/utils/recipe-views'
@@ -86,6 +88,7 @@ const sites = computed(() =>
           :rows="sites"
           :row-key="(s) => s.name"
           nested
+          flow
         />
         <template #foot>
           <TerminalSources :sources="power.source ? [power.source] : []">

@@ -29,7 +29,11 @@ const props = withDefaults(
   { step: false },
 )
 
-const W = 640
+// The drawing width is the box's own width in CSS pixels, measured on mount,
+// so the chart fills its panel and its 10-unit labels stay 10px at any
+// width. A fixed viewBox scaled with the box instead: capped, it left half a
+// wide panel empty; uncapped, it set the labels at twice the body size.
+const W = useChartWidth('box')
 const H = 220
 // Room on the right for direct end labels when there is more than one series.
 const PAD = computed(() => ({ l: 52, r: props.series.length > 1 ? 84 : 20, t: 12, b: 28 }))
@@ -59,7 +63,7 @@ const xAt = (i: number): number => {
   const t0 = times.value[0] ?? 0
   const t1 = times.value.at(-1) ?? t0
   const span = t1 - t0
-  const inner = W - PAD.value.l - PAD.value.r
+  const inner = W.value - PAD.value.l - PAD.value.r
   if (span <= 0) return PAD.value.l + inner / 2
   return PAD.value.l + ((times.value[i]! - t0) / span) * inner
 }
@@ -134,7 +138,7 @@ function onMove(e: PointerEvent) {
   const el = svg.value
   if (!el || props.x.length === 0) return
   const rect = el.getBoundingClientRect()
-  const px = ((e.clientX - rect.left) / rect.width) * W
+  const px = ((e.clientX - rect.left) / rect.width) * W.value
   let best = 0
   let dist = Infinity
   for (let i = 0; i < props.x.length; i++) {
@@ -152,8 +156,8 @@ const readout = computed(() => {
   if (i === null) return null
   return {
     x: xAt(i),
-    left: `${((xAt(i) / W) * 100).toFixed(1)}%`,
-    flip: xAt(i) / W > 0.6,
+    left: `${((xAt(i) / W.value) * 100).toFixed(1)}%`,
+    flip: xAt(i) / W.value > 0.6,
     label: props.xLabel(props.x[i]!),
     rows: props.series.map((s, k) => ({
       ink: INK[k] ?? INK[2],
@@ -165,9 +169,7 @@ const readout = computed(() => {
 </script>
 
 <template>
-  <!-- Capped: the SVG scales with its box, so an uncapped chart on a wide
-       screen sets its 10-unit labels at twice the body size. -->
-  <figure class="max-w-4xl space-y-2">
+  <figure class="space-y-2">
     <figcaption v-if="series.length > 1" class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-toned">
       <span v-for="(s, k) in series" :key="s.id" class="inline-flex items-center gap-1.5">
         <span :class="INK[k] ?? INK[2]" aria-hidden="true">
@@ -179,10 +181,12 @@ const readout = computed(() => {
       </span>
     </figcaption>
 
-    <div class="relative">
+    <div ref="box" class="relative">
       <svg
         ref="svg"
         :viewBox="`0 0 ${W} ${H}`"
+        :height="H"
+        preserveAspectRatio="xMinYMid meet"
         class="block w-full"
         role="img"
         :aria-label="title"

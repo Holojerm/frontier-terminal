@@ -28,8 +28,11 @@ const topMover = (p: HiringHistoryProvider) => {
   return best
 }
 
-const clusterLabel = computed(
-  () => props.history.providers.map(cluster).find((c) => c !== null)?.label ?? 'Infrastructure',
+// The cluster's full name ("Physical infrastructure") is the widest header
+// in the table and pushed it past a half-width panel; the panel note names
+// it, so the header takes the short form.
+const clusterLabel = computed(() =>
+  props.history.providers.some((p) => cluster(p) !== null) ? 'Infra' : 'Infrastructure',
 )
 const days = computed(
   () => props.history.providers.find((p) => p.compare)?.compare?.days ?? props.history.window_days,

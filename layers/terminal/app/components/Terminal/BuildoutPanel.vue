@@ -42,6 +42,11 @@ const chart = computed(() => {
   }
 })
 
+// A lab with no public board gets one line under the cards, not a card of its
+// own: an empty tile the size of a full one reads as a missing reading.
+const fed = computed(() => props.history.providers.filter((p) => !feedGap('hiring', p)))
+const unfed = computed(() => props.history.providers.filter((p) => feedGap('hiring', p)))
+
 const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
   const total = p.total.at(-1) ?? 0
   return total === 0 ? '' : `${Math.round((n / total) * 100)}% of the board`
@@ -49,7 +54,7 @@ const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
 </script>
 
 <template>
-  <div class="space-y-3">
+  <div class="@container space-y-3">
     <TerminalLineChart
       v-if="chart.series.length && chart.x.length > 1"
       :x="chart.x"
@@ -59,9 +64,9 @@ const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
       :title="`Open ${label} roles per day at ${chart.series.map((s) => s.label).join(', ')} from ${chart.x[0]} to ${chart.x.at(-1)}`"
     />
 
-    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+    <div class="grid gap-3 @2xl:grid-cols-2 @6xl:grid-cols-4">
       <TerminalCard
-        v-for="p in history.providers"
+        v-for="p in fed"
         :id="`buildout-${p.provider}`"
         :key="p.provider"
         :title="p.display"
@@ -80,9 +85,8 @@ const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
           </span>
         </template>
 
-        <TerminalGap v-if="feedGap('hiring', p)" inline v-bind="feedGap('hiring', p)!" />
         <TerminalGap
-          v-else-if="!clusterOf(p)"
+          v-if="!clusterOf(p)"
           inline
           title="No parsed roles yet"
           reason="Counted from the board’s current listing once it is parsed."
@@ -119,6 +123,13 @@ const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
         </template>
       </TerminalCard>
     </div>
+
+    <p v-if="unfed.length" class="flex flex-wrap gap-x-6 gap-y-1 text-xs">
+      <span v-for="p in unfed" :id="`buildout-${p.provider}`" :key="p.provider">
+        <span class="mr-1 text-default">{{ p.display }}</span>
+        <TerminalGap inline v-bind="feedGap('hiring', p)!" />
+      </span>
+    </p>
 
     <p class="text-xs text-muted">
       A department counts when the board’s own label contains Data Center, Infrastructure,

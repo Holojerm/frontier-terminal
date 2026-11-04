@@ -37,7 +37,7 @@ function ruling(v: VerdictView) {
       reason="No candidate event for this claim has been rated. The claim holds by default until one is."
     />
 
-    <div v-else class="space-y-3">
+    <div v-else class="grid items-start gap-3 lg:grid-cols-2">
       <TerminalCard
         v-for="v in claim.verdicts"
         :id="`verdict-${v.change_id}-${v.subject}`"

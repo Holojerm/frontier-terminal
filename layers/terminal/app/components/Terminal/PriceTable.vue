@@ -16,6 +16,8 @@ const props = defineProps<{
   provider?: string
   /** On a lab page: the rows alone, no filters and no cross-check note. */
   bare?: boolean
+  /** The page's primary table: it runs with the page instead of its own scroll box. */
+  flow?: boolean
 }>()
 
 const pricedOnly = ref(true)
@@ -79,6 +81,25 @@ function deltaText(row: PriceRowView): string | null {
       <span v-if="hidden > 0" class="text-xs text-muted">{{ hidden }} row(s) filtered out</span>
     </div>
 
+    <!-- Above the rows: under a catalog that runs with the page, nobody
+         reached it. -->
+    <UAlert
+      v-if="!bare && prices.cross_check"
+      color="info"
+      variant="soft"
+      icon="i-lucide-scale"
+      :title="`${prices.cross_check.label}: snapshotted, not shown as a price`"
+    >
+      <template #description>
+        <span>{{ prices.cross_check.caveat }}</span>
+        <TerminalProvenanceTag
+          class="mt-1 block"
+          :source-url="prices.cross_check.snapshot.source_url"
+          :fetched-at="prices.cross_check.snapshot.fetched_at"
+        />
+      </template>
+    </UAlert>
+
     <TerminalGap v-if="rows.length === 0" title="No rows match the filter." />
     <TerminalTable
       v-else
@@ -89,17 +110,24 @@ function deltaText(row: PriceRowView): string | null {
       row-header="model_slug"
       :edge="false"
       align="top"
+      :flow="flow"
     >
       <template #cell-provider="{ row: r }">{{ labName(r.provider) }}</template>
       <template #cell-model_slug="{ row: r }">
-        <NuxtLink
-          :to="`/prices/${r.entity_key}`"
-          class="font-mono underline underline-offset-2"
-          :class="r.removed ? 'text-muted line-through' : 'text-highlighted'"
-        >
-          {{ r.model_slug }}
-        </NuxtLink>
-        <TerminalCaveatMark v-if="r.notes" :name="`Notes for ${r.model_slug}`" :text="r.notes" />
+        <!-- No whitespace between the slug and its mark: the mark stays on the
+             slug's last line, and a long slug still breaks at its hyphens. -->
+        <span
+          ><NuxtLink
+            :to="`/prices/${r.entity_key}`"
+            class="font-mono underline underline-offset-2"
+            :class="r.removed ? 'text-muted line-through' : 'text-highlighted'"
+            >{{ r.model_slug }}</NuxtLink
+          ><TerminalCaveatMark
+            v-if="r.notes"
+            :name="`Notes for ${r.model_slug}`"
+            :text="r.notes"
+            class="ml-1 align-middle"
+        /></span>
         <span v-if="r.also_listed_by.length" class="block text-xs text-muted">
           also on {{ r.also_listed_by.join(', ') }}
         </span>
@@ -151,22 +179,5 @@ function deltaText(row: PriceRowView): string | null {
     <p v-if="!prices.changes_available" class="text-xs text-muted">
       No deltas yet: a delta needs two revisions of a row.
     </p>
-
-    <UAlert
-      v-if="!bare && prices.cross_check"
-      color="info"
-      variant="soft"
-      icon="i-lucide-scale"
-      :title="`${prices.cross_check.label}: snapshotted, not shown as a price`"
-    >
-      <template #description>
-        <span>{{ prices.cross_check.caveat }}</span>
-        <TerminalProvenanceTag
-          class="mt-1 block"
-          :source-url="prices.cross_check.snapshot.source_url"
-          :fetched-at="prices.cross_check.snapshot.fetched_at"
-        />
-      </template>
-    </UAlert>
   </div>
 </template>

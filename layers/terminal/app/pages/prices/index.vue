@@ -75,7 +75,7 @@ useSeo({
           reason="Pricing rows appear after the first poll of each vendor page."
           :action="{ label: 'See coverage', to: '/data#coverage' }"
         />
-        <TerminalPriceTable v-else :prices="prices" :provider="provider" />
+        <TerminalPriceTable v-else :prices="prices" :provider="provider" flow />
       </TerminalPanel>
     </template>
   </TerminalPage>

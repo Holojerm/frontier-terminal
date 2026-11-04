@@ -154,7 +154,9 @@ const POINT_COLUMNS: TableColumn[] = [
       <template v-if="history.removed"> · delisted</template>
     </template>
 
-    <template v-if="history">
+    <!-- Chart and its table side by side from xl: the table is the chart's
+         keyboard-reachable twin, so it belongs beside it, not a screen below. -->
+    <div v-if="history" class="grid items-start gap-6 xl:grid-cols-2">
       <TerminalPanel
         id="chart"
         title="$ per million tokens"
@@ -227,6 +229,6 @@ const POINT_COLUMNS: TableColumn[] = [
           “current” point is the row as of the newest fetch that rewrote it.
         </template>
       </TerminalPanel>
-    </template>
+    </div>
   </TerminalPage>
 </template>
