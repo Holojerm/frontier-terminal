@@ -223,8 +223,8 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         `The signal band. movement counts change rows by axis (pricing, hiring, sec) inside a ${MOVEMENT_WINDOW_HOURS}h window ` +
         'anchored to the NEWEST detection (window_from..latest_detected_at), not to the clock — so a quiet weekend still reports Friday’s moves. ' +
         'total_changes is the all-time denominator; sources_not_yet_compared counts sources with a single snapshot (nothing to diff yet). ' +
-        'alerts are the newest notable/critical rows with their cited change rows and alert_count the total on file; ticker is the ' +
-        'info tier (what moved, low stakes) and ticker_count its total. ' +
+        'alerts are the newest notable/critical rows with their cited change rows and alert_count the total on file; info is the ' +
+        'minor-changes tier (severity info: what moved, low stakes) and info_count its total. ' +
         'A change row is a diff between two snapshots, never a re-read of current state. ' +
         PROVENANCE,
       annotations: READ_ONLY,
@@ -303,25 +303,26 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
   server.registerTool(
     'get_alerts',
     {
-      title: 'Alerts and ticker',
+      title: 'Alerts and minor changes',
       description:
         'Alerts newest first, each citing the change rows it is a claim about (changes, resolved; missing_change_ids if any did not resolve). ' +
-        'Severity reads as a tier: info is the ticker (what moved, low stakes — a role added, a title reworded); notable and critical are alerts ' +
-        '(a price move, a new SKU, a department-level hiring shift, a filing). tier selects alert, ticker, or all (default all). ' +
+        'Severity reads as a tier: info is minor changes (what moved, low stakes — a role added, a title reworded); notable and critical are alerts ' +
+        '(a price move, a new SKU, a department-level hiring shift, a filing). tier selects alert, info, or all (default all); ticker is an old name for info. ' +
         'rule is s1-floor (deterministic: a registration statement appeared on EDGAR), periodic-floor (deterministic: a 10-Q/10-K on a ' +
         'whitelisted CIK), cik-resolved (deterministic: a pending lab’s own S-1 appeared and its CIK was read off it), model-floor (deterministic: a model slug no vendor catalog listed before), prospectus-floor (deterministic: what a lab’s new registration filing states — revenue and the price range on its cover), hiring-rollup (deterministic: one per lab per week, the board’s net change and the departments that moved most) or agent-judge (a model’s reading of change rows, labelled as such). total is the count on file for the chosen tier. ' +
         `With a severity filter, the newest ${ALERT_SEARCH_DEPTH} rows of the tier are searched and up to limit returned. ` +
         PROVENANCE,
       inputSchema: z.object({
         limit: z.number().int().min(1).max(ALERT_SEARCH_DEPTH).default(20),
-        tier: z.enum(ALERT_TIER_FILTERS).default('all'),
+        tier: z.enum([...ALERT_TIER_FILTERS, 'ticker']).default('all'),
         severity: z.enum(['info', 'notable', 'critical']).optional(),
         as_of: AsOfSchema,
       }),
       annotations: READ_ONLY,
     },
-    ({ limit, tier, severity, as_of }) =>
+    ({ limit, tier: asked, severity, as_of }) =>
       asOfErrors(async () => {
+        const tier = asked === 'ticker' ? 'info' : asked
         const depth = severity ? ALERT_SEARCH_DEPTH : limit
         const alerts = await read(
           'alerts',

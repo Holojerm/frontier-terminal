@@ -1,11 +1,11 @@
 <script setup lang="ts">
 // The lead band: what changed, as a table an analyst can scan in one
-// breath. Alert rows first, then the ticker as one line, then the raw
+// breath. Alert rows first, then the minor changes as one line, then the raw
 // change counts by axis, then an explicit quiet state — a terminal that
 // cannot say "nothing moved" is a terminal you have to re-read every morning.
 
 import { relativeStamp } from '../../../shared/utils/terminal-format'
-import { alertPath } from '../../../shared/utils/terminal-tiers'
+import { alertPath, INFO_TIER_LABEL } from '../../../shared/utils/terminal-tiers'
 import type { OverviewData } from '../../../shared/utils/terminal-types'
 
 const props = defineProps<{ overview: OverviewData }>()
@@ -16,7 +16,7 @@ const SHOWN = 5
 const now = useNow()
 const movement = computed(() => props.overview.movement)
 const shown = computed(() => props.overview.alerts.slice(0, SHOWN))
-const newestTicker = computed(() => props.overview.ticker[0] ?? null)
+const newestInfo = computed(() => props.overview.info[0] ?? null)
 
 const counters = computed(() => [
   { label: 'prices', n: movement.value.recent.pricing },
@@ -50,7 +50,7 @@ const quietReason = computed(() => {
   <TerminalPanel
     id="signal"
     title="Signal"
-    note="What changed: judged alerts, the ticker, and raw change counts by axis."
+    note="What changed: judged alerts, minor changes, and raw change counts by axis."
     :more="
       overview.alert_count > shown.length
         ? { label: `All ${overview.alert_count} alerts`, to: '/alerts' }
@@ -76,24 +76,24 @@ const quietReason = computed(() => {
     <TerminalSignalTable v-if="shown.length" :alerts="shown" />
 
     <div class="space-y-2 p-3" :class="shown.length ? 'border-t border-default' : undefined">
-      <!-- 2. The ticker, as one line: how much low-stakes movement, and the newest of it. -->
-      <p v-if="newestTicker" class="flex flex-wrap items-baseline gap-x-2 text-sm text-muted">
+      <!-- 2. The minor changes, as one line: how much low-stakes movement, and the newest of it. -->
+      <p v-if="newestInfo" class="flex flex-wrap items-baseline gap-x-2 text-sm text-muted">
         <NuxtLink
-          to="/alerts#ticker"
+          to="/alerts#minor-changes"
           class="whitespace-nowrap underline underline-offset-2 hover:text-default"
         >
-          Ticker · {{ overview.ticker_count }}
+          {{ INFO_TIER_LABEL }} · {{ overview.info_count }}
         </NuxtLink>
         <span class="min-w-0 truncate">
-          <time :datetime="newestTicker.created_at" class="font-mono text-xs">
-            {{ relativeStamp(newestTicker.created_at, now) }}
+          <time :datetime="newestInfo.created_at" class="font-mono text-xs">
+            {{ relativeStamp(newestInfo.created_at, now) }}
           </time>
           <NuxtLink
-            :to="alertPath(newestTicker.id)"
-            :title="newestTicker.headline"
+            :to="alertPath(newestInfo.id)"
+            :title="newestInfo.headline"
             class="ml-2 hover:text-default"
           >
-            {{ newestTicker.headline }}
+            {{ newestInfo.headline }}
           </NuxtLink>
         </span>
       </p>

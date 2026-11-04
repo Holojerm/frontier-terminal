@@ -134,6 +134,24 @@ describe('readSourceRegistry', () => {
     expect(due).toEqual(expect.arrayContaining([...GPU_RECIPES, SEC_REVENUE_CRWV, RAMP_AI_INDEX]))
   })
 
+  it('records the terms reading and the licensing stance for every source and audited recipe', () => {
+    // A fund's compliance review asks this per source; a source registered
+    // without it would ship data nobody has checked the right to serve.
+    for (const s of registry.sources) {
+      expect(s.terms, s.yaml_id).toMatch(/robots\.txt/)
+      expect(s.rights, s.yaml_id).not.toBeNull()
+    }
+    for (const r of registry.recipes) expect(r.rights, r.recipe_id).not.toBeNull()
+    expect(byId['openrouter-rankings-daily']!.rights).toBe('upstream')
+    expect(byId['openrouter-rankings-daily']!.terms).toContain('competing free API')
+    expect(registry.recipes.find((r) => r.recipe_id === 'ramp-ai-index')!.rights).toBe(
+      'not-cleared',
+    )
+    expect(() =>
+      readSourceRegistry(yaml.replace('    rights: ours\n', '    rights: ours-ish\n')),
+    ).toThrow(/unknown rights ours-ish/)
+  })
+
   it('fails loudly on a file with no sources block', () => {
     expect(() => readSourceRegistry('cut:\n  x:\n    verdict: cut\n')).toThrow(
       'zero include sources',

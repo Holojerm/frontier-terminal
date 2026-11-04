@@ -29,6 +29,7 @@ import {
   exportDistribution,
   jsonLdGraph,
   labOrganizationSchema,
+  openTemporalCoverage,
   organizationSchema,
   webPageSchema,
   websiteSchema,
@@ -221,6 +222,21 @@ describe('datasetSchema / dataCatalogSchema', () => {
     expect(dataCatalogSchema(SITE, { description: 'Everything.' })?.['@id']).toBe(
       'https://example.com/data#data-catalog',
     )
+  })
+
+  it('names its creator, credits its upstream sources and points at the repo', () => {
+    const node = datasetSchema(SITE, {
+      ...TABLE,
+      isBasedOn: ['https://openrouter.ai/rankings'],
+      temporalCoverage: openTemporalCoverage('2026-08-25T23:08:00.000Z'),
+    })
+    expect(node?.license).toBe('https://creativecommons.org/licenses/by/4.0/')
+    expect(node?.creator).toMatchObject({ '@type': 'Organization', name: SITE.appName })
+    expect(node?.publisher).toEqual(node?.creator)
+    expect(node?.isBasedOn).toEqual(['https://openrouter.ai/rankings'])
+    expect(node?.temporalCoverage).toBe('2026-08-25/..')
+    expect(node?.sameAs).toBe(SITE.repoUrl)
+    expect(openTemporalCoverage(null)).toBeNull()
   })
 
   it('turns a download into a DataDownload with a real contentUrl', () => {

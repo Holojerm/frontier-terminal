@@ -12,7 +12,14 @@
 // reader is deliberately narrow — the same shape layers/terminal/server/pipeline/sources.ts
 // uses — because a YAML dependency for one flat file is not worth carrying.
 
-import type { LabId, ProviderId, SourceAxis, SourceRole } from '../../shared/utils/terminal-types'
+import {
+  SOURCE_RIGHTS,
+  type LabId,
+  type ProviderId,
+  type SourceAxis,
+  type SourceRights,
+  type SourceRole,
+} from '../../shared/utils/terminal-types'
 
 export interface SourceLabel {
   label: string
@@ -136,6 +143,9 @@ export interface RegisteredSource {
   license: string | null
   /** Required citation template; `{meta.as_of}` is filled by the query that serves it. */
   citation: string | null
+  /** The audit's terms and robots.txt reading; what is taken and how often. */
+  terms: string | null
+  rights: SourceRights | null
 }
 
 export interface CutSourceEntry {
@@ -150,6 +160,7 @@ export interface RecipeSourceEntry {
   url: string | null
   verdict: string
   terms: string | null
+  rights: SourceRights | null
   caveat: string | null
 }
 
@@ -248,6 +259,14 @@ const PROVIDERS: readonly (ProviderId | 'all')[] = [
   'all',
 ]
 
+function rightsOf(id: string, value: string | null | undefined): SourceRights | null {
+  if (value == null) return null
+  if (!(SOURCE_RIGHTS as readonly string[]).includes(value)) {
+    throw new Error(`sources.yaml ${id}: unknown rights ${value}`)
+  }
+  return value as SourceRights
+}
+
 /** Every include source and every deliberate cut, as sources.yaml states them. */
 export function readSourceRegistry(sourcesYaml: string): SourceRegistry {
   const lines = sourcesYaml.split('\n')
@@ -276,6 +295,8 @@ export function readSourceRegistry(sourcesYaml: string): SourceRegistry {
       caveat: block.fields.caveats ?? null,
       license: block.fields.license ?? null,
       citation: block.fields.citation ?? null,
+      terms: block.fields.terms ?? null,
+      rights: rightsOf(block.id, block.fields.rights),
     })
   }
   if (sources.length === 0) throw new Error('sources.yaml yielded zero include sources')
@@ -291,6 +312,7 @@ export function readSourceRegistry(sourcesYaml: string): SourceRegistry {
     url: block.fields.url ?? null,
     verdict: block.fields.verdict ?? '',
     terms: block.fields.terms ?? null,
+    rights: rightsOf(block.id, block.fields.rights),
     caveat: block.fields.caveats ?? null,
   }))
 
@@ -342,6 +364,21 @@ const DERIVED_LABELS: readonly {
     role: 'primary',
   },
 ]
+
+/**
+ * The registered source whose terms a derived template's fetches fall under:
+ * the same host, read under the same terms (sources.yaml derived_sources).
+ */
+export const DERIVED_TERMS_FROM: Readonly<Record<string, string>> = {
+  'edgar-submissions': 'edgar-submissions',
+  'edgar-companyfacts': 'edgar-companyfacts-spcx',
+  'xbrl-segment': 'edgar-submissions',
+  'filing-index': 'edgar-submissions',
+  'prospectus-revenue': 'edgar-submissions',
+  'openai-model-md': 'openai-models-md',
+  'google-model-md': 'google-models-md',
+  'openai-misalignment-report': 'openai-misalignment-reports',
+}
 
 /** The template a derived source id came from, or null for a registered one. */
 export function derivedTemplateOf(sourceId: string): string | null {

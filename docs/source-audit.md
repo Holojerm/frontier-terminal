@@ -302,3 +302,55 @@ xAI's feed covers every SpaceXSI product, Cursor's included: 48 of the 97 incide
 **Class map.** `docs.mistral.ai/models.md`, `pricing.md` and the model selection guide are byte-identical to the 2026-11-02 fixtures, and the Large 4, Small 4 and Ministral 3 pages name no tier; the one "Flagship" on Mistral's pages is a transcription model (Voxtral Small Transcribe 3). xAI's models page still answers "Which model should I choose?" with Grok 4.7 alone, and the grok-4.3, grok-4.20 and grok-build-0.1 pages describe capability, not cost. Google's models page is identical to its fixture: its one current price-performance sentence ("Frontier-class performance rivaling larger models at a fraction of the cost") is printed on two cards, Gemini 3.1 Flash-Lite and Gemini 3 Flash (Preview), so it names no single model. All seven unmapped cells stay stated gaps, with reasons that now say this.
 
 **Verdict: include `google-careers` (DeepMind only) and `xai-status`; retire `cut.google-hiring` and `cut.xai-status`. `meta-hiring` and `meta-status` stand, with their reasons rewritten to the facts above. No class cell is mapped.**
+
+## Addendum, 2026-11-04 — distribution terms
+
+Prompted by listing the dataset with alt-data directories, whose buyers' compliance teams ask, per source, under what terms it was read and whether it can be sold. Every terms page and robots.txt below was fetched today with the pipeline's descriptive User-Agent; nothing was signed up for or submitted.
+
+### OpenRouter rankings: re-serving
+
+The licence, `openrouter.ai/docs/cookbook/administration/data-api` (fetched as `.md`, "License and citation"):
+
+> Data returned by the Data API is licensed under Creative Commons Attribution 4.0 International (CC BY 4.0). You may copy, redistribute, and build on it, including commercially, with attribution to OpenRouter.
+
+The same page, under the `rankings-daily` endpoint's "Acceptable use and attribution":
+
+> The dataset is intended for analysis, reporting, and visualisation. It is not intended to be re-served as a competing free API.
+
+The fetch needs an API key, so the account terms apply as well. `openrouter.ai/terms` (last updated 2026-08-31), section 7, bars accessing the service "for purposes of reselling API access to Models or otherwise developing a competing service". robots.txt allows `/`.
+
+**Decision: partly inconsistent, so what is re-served changed.** The per-lab shares, the per-lab top models over the share window, the per-lab daily series on `/rankings`, `/api/rankings` and the MCP `get_rankings` tool are analysis and visualisation. They stay, with the required citation. The `rankings_daily` export served every stored `(date, model_permaslug, total_tokens)` row, keyless and accumulating past OpenRouter's own 30-day window. That is the dataset itself behind a free endpoint, which is the one use the page names as unintended. Interpretation, marked as such: CC BY 4.0 itself would allow it, and the sentence reads as a statement of intent rather than a licence condition. But the account terms bind the key the feed is fetched with, and a fund's reviewer will read the two together. So:
+
+- `rankings_daily` is withdrawn from `/export`. A request answers 410 with the reason, and `/data` says why.
+- The `changes` export drops `entity_type = 'ranking'` rows, whose before/after JSON is the same per-model row.
+- Nothing is deleted from the store: the rows still feed the shares and the theses.
+
+`openrouter-models` (the per-model price list) is a different endpoint. The CC BY grant covers "the aggregated data these endpoints return", the Data API datasets, and section 7 also bars scripts that "scrape or copy any information on the Site or the Services". It stays a cross-check that is never shown as a source of record, and it is `not-cleared` for any paid offer.
+
+### Terms per core source
+
+Each `sources:` entry in `sources.yaml` now carries `terms` (terms and robots.txt as read, what is taken, how often) and `rights`, as `recipe_sources` already did. Summary:
+
+| Source | Terms read | robots.txt | Taken, how often | `rights` |
+|---|---|---|---|---|
+| OpenAI docs (`openai-models-md`, `openai-pricing-md`), status, misalignment reports | `openai.com/policies` answers 403 to a headless client: **not read** | developers.openai.com allows all; status.openai.com and alignment.openai.com have none (404) | catalog every 5 min, prices 30 min, status and reports 6 h | not-cleared |
+| Anthropic docs (`anthropic-models-md`, `anthropic-pricing-md`) | Consumer Terms bar "To crawl, scrape, or otherwise harvest data or information from our Services", which include "associated apps, software, and websites"; Commercial Terms have no such clause | platform.claude.com disallows only `/api/` | catalog 5 min, prices 30 min | not-cleared |
+| Anthropic status (`anthropic-status`) | as above | status.claude.com **disallows `/api/`**, the feed's path, though `status.claude.com/api` documents the endpoints | 6 h | not-cleared |
+| xAI docs (`xai-models-md`), xAI status (`xai-status`) | x.ai answers 403 headless; read in a browser by the coverage-gaps addendum above, the Acceptable Use Policy bars "unauthorized automated or non-human means" | docs.x.ai allows all (`Content-Signal: ai-input=yes`); status.x.ai allows the feed, disallows `/api/` | 5 min; status 6 h | not-cleared |
+| Google careers feed (`google-careers`) | Google ToS, as for the docs | www.google.com disallows only the results page's `page=` parameters | 6 h, DeepMind rows only | ours |
+| Google docs (`google-pricing-html`, `google-models-md`), Google Cloud status | Google ToS bars automated access "in violation of the machine-readable instructions on our web pages (for example, robots.txt files…)" | aistudio.google.com allows `/docs/`; status.cloud.google.com allows all | 5 min; status 6 h | ours |
+| Meta docs (`meta-models-md`, `meta-pricing-md`) | no website terms found for dev.meta.ai (two candidate URLs 404); the Meta Model API terms govern API calls | allows `/docs/` | 5 / 30 min | not-cleared |
+| Mistral docs (`mistral-models-md`, `mistral-pricing-md`) | legal.mistral.ai consumer, commercial and usage terms: no clause on automated access | none (404) | 5 / 30 min | ours |
+| Mistral status | as above | answers a Cloudflare challenge (403): **not read** | 6 h | not-cleared |
+| OpenRouter models / rankings | see above | allows `/` | 6 h | not-cleared / upstream |
+| Ashby boards (OpenAI, Mistral) | documented public posting API; Ashby's terms say nothing on it | none (401) | 6 h | ours |
+| Greenhouse boards (Anthropic, xAI, + departments) | "Job Board data is publicly available, so authentication is not required for any GET endpoints." | disallows only `/embed/` | 6 h | ours |
+| EDGAR (full-text search, submissions, company facts) | US government work (17 U.S.C. 105); SEC fair access: declared User-Agent, 10 requests a second | efts.sec.gov 403; data.sec.gov none (404) | 30 min | ours |
+
+The rule behind `ours`: both the terms and robots.txt were read, and neither restricts what is taken. Stored job rows carry no posting body and no names of people (the parser schema is strict). Greenhouse payloads have had each job's `metadata` (a named Team Lead and work email) removed before archiving since 2026-11-04 (`layers/terminal/server/pipeline/redact.ts`), but earlier R2 objects still hold it, so archived job-board payloads are not part of any "source bytes" offer until they are scrubbed. "Not read" is not "restricted": OpenAI and Meta can move to `ours` once someone reads their terms in a browser. The Anthropic status feed's robots.txt is the one live robots conflict found. It is a documented endpoint polled four times a day and stays on the free site; whether to keep polling it is the owner's call.
+
+Recipes gained `rights` too: GPU price pages and APIs, SEC and posted pay are `ours`, except `gpu-oracle`, whose robots.txt could not be read. Epoch, PyPI (PSF CC BY 4.0 via pypistats) and npm are `upstream`. The Ramp AI Index (no licence; robots.txt disallows `/*.csv`), the GitHub PR counts ("research publications must be open access") and the published rate limits (read off the lab docs above) are `not-cleared`. `/contact` lists the three groups from these fields, and `/data`'s coverage table shows each source's terms beside its caveat.
+
+### Entities and securities
+
+`/export/entity_securities.csv` maps each lab and tracked filer to its securities: Anthropic → Anthropic, PBC, CIK 0002130357, proposed symbol ANT on the Nasdaq Global Select Market per its S-1 cover (registered, not trading), and AMZN as a disclosed investor. OpenAI is private, with MSFT as a disclosed investor. Google → Alphabet GOOGL and GOOG; Meta → META; xAI → SPCX as parent, with the blend caveat; Mistral is private. MSFT, AMZN, NVDA and CRWV are filers in their own right. Every CIK comes from `cik_whitelist`, a recipe, or the lab's own S-1. Every symbol and exchange is the one EDGAR's submissions feed lists for that CIK, and `layers/terminal/test/terminal-entities.test.ts` checks both. Alphabet's Anthropic stake is not mapped, because its filings never name the investee (`alphabet-anthropic-stake`). Oracle, Cloudflare, Akamai and Fastly have no row: no submissions feed is read for them, so their symbols are not sourced here.

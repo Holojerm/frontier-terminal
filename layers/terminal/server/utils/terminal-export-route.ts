@@ -12,7 +12,9 @@ import {
   exportTable,
   jsonChunks,
   parseExportPath,
+  sampleOf,
   streamOf,
+  WITHDRAWN_EXPORTS,
   type ExportTable,
 } from './terminal-export'
 import { terminalDb } from './terminal-handler'
@@ -27,12 +29,17 @@ export const AS_OF_EXPORTS = Object.values(EXPORT_TABLES)
   .filter((t) => t.asOfRefusal === null)
   .map((t) => t.name)
 
-export async function serveExport(event: H3Event) {
+/** `sample`: the first SAMPLE_ROWS rows only, for /export/sample/<table>.<format>. */
+export async function serveExport(event: H3Event, options: { sample?: boolean } = {}) {
   // Exports walk whole tables; 30/min matches the native limiter's budget.
   await rateLimit(event, { name: 'export', limit: 30, windowSeconds: 60 })
 
   const parsed = parseExportPath(event.path)
-  const found = parsed && exportTable(parsed.name)
+  if (parsed && Object.hasOwn(WITHDRAWN_EXPORTS, parsed.name)) {
+    throw createError({ statusCode: 410, message: WITHDRAWN_EXPORTS[parsed.name] })
+  }
+  const full = parsed && exportTable(parsed.name)
+  const found = full && options.sample ? sampleOf(full) : full
   if (!parsed || !found) {
     throw createError({ statusCode: 404, message: `No export at ${event.path.split('?')[0]}` })
   }
@@ -55,7 +62,9 @@ export async function serveExport(event: H3Event) {
 
   const { chunks, contentType } = FORMATS[parsed.format]
   setResponseHeader(event, 'Content-Type', contentType)
-  const suffix = as_of === undefined ? '' : `.as_of_${as_of.replace(/[:.]/g, '-')}`
+  const suffix =
+    (options.sample ? '-sample' : '') +
+    (as_of === undefined ? '' : `.as_of_${as_of.replace(/[:.]/g, '-')}`)
   setResponseHeader(
     event,
     'Content-Disposition',

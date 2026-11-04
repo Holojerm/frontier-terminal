@@ -34,6 +34,5 @@ export const RULE_TEXT: Record<AlertView['rule'], string> = {
 export const TIER_TEXT = {
   alert:
     'Alert tier (notable, critical): a price move, a new SKU, a department-level hiring shift, a physical-infrastructure hiring move, a filing, or a new revenue fact.',
-  ticker:
-    'Ticker tier (info): what moved, low stakes — a role added or closed, a title reworded, a location shuffled.',
+  info: 'Minor changes (severity info): what moved, low stakes — a role added or closed, a title reworded, a location shuffled.',
 } as const

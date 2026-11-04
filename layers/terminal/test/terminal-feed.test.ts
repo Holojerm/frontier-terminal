@@ -101,7 +101,7 @@ describe('buildAlertsAtom', () => {
     expect(xml).toContain('<summary type="text">it&apos;s &lt;/feed&gt;</summary>')
   })
 
-  it('is the alert tier by default: a distinct feed id, self link and title once the ticker is included', () => {
+  it('is the alert tier by default: a distinct feed id, self link and title once the minor changes are included', () => {
     const alerts = [alert(), alert({ id: 't1', severity: 'info', headline: 'One role added' })]
     const base = buildAlertsAtom({ ...SITE, alerts: [alerts[0]!], fallbackUpdated: 'x' })
     expect(base).toContain('<id>https://example.com/alerts.xml</id>')
@@ -109,18 +109,19 @@ describe('buildAlertsAtom', () => {
     expect(base).toContain('notable and critical only')
     expect(base).not.toContain('<category term="info"')
 
-    const withTicker = buildAlertsAtom({ ...SITE, alerts, tier: 'all', fallbackUpdated: 'x' })
-    assertBalanced(withTicker)
-    expect(feedPath('all')).toBe('/alerts.xml?include=ticker')
-    expect(withTicker).toContain('<id>https://example.com/alerts.xml?include=ticker</id>')
-    expect(withTicker).toContain(
-      '<link rel="self" type="application/atom+xml" href="https://example.com/alerts.xml?include=ticker"/>',
+    const withMinor = buildAlertsAtom({ ...SITE, alerts, tier: 'all', fallbackUpdated: 'x' })
+    assertBalanced(withMinor)
+    expect(feedPath('all')).toBe('/alerts.xml?include=info')
+    // The Atom id is permanent, so it keeps the query flag the feed launched with.
+    expect(withMinor).toContain('<id>https://example.com/alerts.xml?include=ticker</id>')
+    expect(withMinor).toContain(
+      '<link rel="self" type="application/atom+xml" href="https://example.com/alerts.xml?include=info"/>',
     )
-    expect(withTicker).toContain('<title>Frontier Terminal — alerts and ticker</title>')
-    expect(withTicker).toContain('<category term="info" label="severity"/>')
-    expect(withTicker).toContain('<id>https://example.com/alerts/t1</id>')
+    expect(withMinor).toContain('<title>Frontier Terminal — alerts and minor changes</title>')
+    expect(withMinor).toContain('<category term="info" label="severity"/>')
+    expect(withMinor).toContain('<id>https://example.com/alerts/t1</id>')
     // The HTML alternate for both documents is the one alerts page.
-    expect(withTicker).toContain(
+    expect(withMinor).toContain(
       '<link rel="alternate" type="text/html" href="https://example.com/alerts"/>',
     )
   })

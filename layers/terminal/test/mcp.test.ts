@@ -234,13 +234,14 @@ describe('tools/call', () => {
       movement: { recent: { sec: number }; window_hours: number }
       alerts: { source_url: string; fetched_at: string; changes: { source_url: string }[] }[]
       alert_count: number
-      ticker_count: number
+      info_count: number
     }
     expect(overview.as_of).toMatch(/^2026-09-07T10:/)
     expect(overview.movement.window_hours).toBe(24)
     expect(overview.movement.recent.sec).toBe(1)
     expect(overview.alert_count).toBe(1)
-    expect(overview.ticker_count).toBe(0)
+    expect(overview.info_count).toBe(0)
+    expect(overview).not.toHaveProperty('ticker')
     const [alert] = overview.alerts
     expect(alert!.source_url).toMatch(/^https:\/\//)
     expect(alert!.fetched_at).toMatch(/^2026-/)
@@ -315,8 +316,11 @@ describe('tools/call', () => {
     expect(listed.total).toBe(1)
     expect(listed.rows[0]).toMatchObject({ rule: 's1-floor', severity: 'critical' })
 
-    const ticker = (await tool('get_alerts', { tier: 'ticker' })).structuredContent as typeof listed
-    expect(ticker).toMatchObject({ tier: 'ticker', rows: [], total: 0 })
+    const minor = (await tool('get_alerts', { tier: 'info' })).structuredContent as typeof listed
+    expect(minor).toMatchObject({ tier: 'info', rows: [], total: 0 })
+    // `ticker` is the tier's old name, still accepted.
+    const legacy = (await tool('get_alerts', { tier: 'ticker' })).structuredContent as typeof listed
+    expect(legacy).toMatchObject({ tier: 'info', rows: [], total: 0 })
 
     const critical = (await tool('get_alerts', { severity: 'critical' }))
       .structuredContent as typeof listed

@@ -110,6 +110,7 @@ import {
   INCIDENT_SOURCES,
   PROVIDER_DISPLAY,
   PROVIDER_ORDER,
+  DERIVED_TERMS_FROM,
   derivedTemplateOf,
   labelOf,
   readSourceRegistry,
@@ -700,13 +701,13 @@ export async function alertPermalinks(db: PipelineDb, limit = 5000): Promise<Ale
 // ---- overview --------------------------------------------------------------
 
 export const OVERVIEW_ALERTS = 10
-export const OVERVIEW_TICKER = 8
+export const OVERVIEW_INFO = 8
 
 export async function queryOverview(db: PipelineDb, ctx: QueryContext): Promise<OverviewData> {
-  const [movement, alerts, ticker, totals, stamps] = await Promise.all([
+  const [movement, alerts, info, totals, stamps] = await Promise.all([
     queryMovement(db),
     queryAlerts(db, ctx, OVERVIEW_ALERTS, 'alert'),
-    queryAlerts(db, ctx, OVERVIEW_TICKER, 'ticker'),
+    queryAlerts(db, ctx, OVERVIEW_INFO, 'info'),
     tableCounts(db),
     sourceStamps(db),
   ])
@@ -720,8 +721,8 @@ export async function queryOverview(db: PipelineDb, ctx: QueryContext): Promise<
     movement,
     alerts: alerts.rows,
     alert_count: alerts.total,
-    ticker: ticker.rows,
-    ticker_count: ticker.total,
+    info: info.rows,
+    info_count: info.total,
     totals,
     latest_fetched_at: latest,
   }
@@ -1749,12 +1750,13 @@ async function recipeCoverage(db: PipelineDb, ctx: QueryContext): Promise<Recipe
       newest: stored ? { source_url: stored.source_url, fetched_at: stored.fetched_at } : null,
       caveat: audit?.caveat ?? null,
       terms: audit?.terms ?? null,
+      rights: audit?.rights ?? null,
     }
   })
 }
 
 export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<CoverageData> {
-  const [stamps, runs, counts, totals] = await Promise.all([
+  const [stamps, runs, counts, totals, [first]] = await Promise.all([
     sourceStamps(db),
     lastRuns(db),
     db
@@ -1762,6 +1764,7 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
       .from(tables.entities)
       .groupBy(tables.entities.source_id),
     tableCounts(db),
+    db.select({ at: min(tables.sourceStats.first_fetched_at) }).from(tables.sourceStats),
   ])
   const entityCount = new Map(counts.map((c) => [c.source_id, c.n]))
 
@@ -1776,6 +1779,8 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
       role,
       caveat: source.caveat,
       license: source.license,
+      terms: source.terms,
+      rights: source.rights,
       // The manifest carries the resolved URL (query strings, the CIK) where
       // sources.yaml has a template.
       url: manifestFixtures.find((f) => f.source_id === source.source_id)?.source_url ?? source.url,
@@ -1802,6 +1807,7 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
     const template = derivedTemplateOf(source_id)
     if (registered.has(source_id) || !template) continue
     const { label, role } = labelOf(source_id)
+    const parent = ctx.registry.sources.find((s) => s.yaml_id === DERIVED_TERMS_FROM[template])
     const provider = source_id.startsWith('openai-')
       ? 'openai'
       : source_id.startsWith('google-')
@@ -1822,6 +1828,8 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
       // A derived source has no registry entry and so states no licence of its
       // own; it inherits whatever the source it was derived from stated.
       license: null,
+      terms: parent?.terms ?? null,
+      rights: parent?.rights ?? null,
       // The newest snapshot's url, or — when there is no snapshot because the
       // fetch 404s — the url the last run went to.
       url: stamp?.newest.source_url ?? runs.get(source_id)?.source_url ?? '',
@@ -1856,5 +1864,6 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
     totals,
     exports,
     latest_fetched_at: latest,
+    first_fetched_at: first?.at ?? null,
   }
 }

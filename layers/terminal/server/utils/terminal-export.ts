@@ -1,7 +1,7 @@
 // Bulk exports of the store: every table, as CSV or JSON, streamed in pages
 // so a 100k-row changes table never has to fit in Worker memory at once.
 //
-// The entity views (prices_latest, jobs_open, incidents, rankings_daily, revenue_facts) flatten the JSON payload
+// The entity views (prices_latest, jobs_open, incidents, revenue_facts) flatten the JSON payload
 // into columns, because a CSV with a JSON blob in one cell is not a
 // spreadsheet anyone can sort. Provenance columns are always present and
 // always last: source_url and fetched_at on every table except source_runs,
@@ -33,6 +33,7 @@ import {
   judgeCutoffAt,
   rewindEntities,
 } from './terminal-asof'
+import { ENTITY_SECURITIES, ENTITY_SECURITY_COLUMNS } from './terminal-entities'
 import { byString } from './terminal-json'
 
 export const EXPORT_PAGE_SIZE = 200
@@ -119,8 +120,6 @@ const PRICE_FIELDS = [
   'effective_until',
   'notes',
 ] as const
-
-const RANKING_FIELDS = ['date', 'model_permaslug', 'total_tokens'] as const
 
 const REVENUE_FIELDS = [
   'cik',
@@ -354,8 +353,15 @@ function partsView<C>(
         .where(ofType)
       return rows.reduce((n, r) => n + explode(parsePayload(r.payload), context).length, 0)
     },
+    // #142 (as_of) and #144 (these views) merged in parallel; rewinding an
+    // exploded view through the change log is not built, so it says so.
+    at: () => Promise.reject(new PointInTimeError(PARTS_AS_OF_REFUSAL)),
+    asOfRefusal: PARTS_AS_OF_REFUSAL,
   }
 }
+
+const PARTS_AS_OF_REFUSAL =
+  'a registration-statement view is exploded from the current filing rows, and rewinding it is not built yet.'
 
 const FILING_FIELDS = ['cik', 'entity_name', 'accession_no', 'form', 'filed'] as const
 const filing = (p: Row): Row => Object.fromEntries(FILING_FIELDS.map((f) => [f, p[f] ?? null]))
@@ -392,6 +398,8 @@ function plainTable(
   writtenBy: WrittenBy | string,
   total?: SQL<number>,
   filters?: Readonly<Record<string, SQLiteColumn>>,
+  /** Rows this export never serves, whatever the request asks for. */
+  scope?: SQL,
 ): ExportTable {
   const pageWhere =
     (filter: SQL | undefined) =>
@@ -399,7 +407,7 @@ function plainTable(
       const rows = await db
         .select()
         .from(table)
-        .where(and(filter, afterKey(key, after), where))
+        .where(and(filter, afterKey(key, after), where, scope))
         .orderBy(...key.map((c) => asc(c)))
         .limit(limit)
       return rows.map((row) => project(row as Row, columns))
@@ -431,11 +439,48 @@ function plainTable(
         const [row] = await db.select({ total }).from(tables.sourceStats)
         return Number(row?.total ?? 0)
       }
-      const [row] = await db.select({ total: count() }).from(table)
+      const [row] = await db.select({ total: count() }).from(table).where(scope)
       return row?.total ?? 0
     },
   }
 }
+
+/** A table that lives in code, not D1: a few hand-checked rows, each with its own source. */
+function staticTable(
+  name: string,
+  description: string,
+  columns: readonly string[],
+  rows: readonly object[],
+  asOfRefusal: string,
+): ExportTable {
+  return {
+    name,
+    description,
+    columns,
+    async page(_db, after) {
+      return after === null ? rows.map((row) => project(row as Row, columns)) : []
+    },
+    async count() {
+      return rows.length
+    },
+    at: () => Promise.reject(new PointInTimeError(asOfRefusal)),
+    asOfRefusal,
+  }
+}
+
+/**
+ * Tables that were exported and no longer are, with the reason a request for
+ * one is told (410, not 404: the URL existed). See docs/source-audit.md.
+ */
+export const WITHDRAWN_EXPORTS: Readonly<Record<string, string>> = {
+  rankings_daily:
+    'OpenRouter licenses its rankings CC BY 4.0 but says the dataset "is not intended to be re-served as a competing free API", so the raw per-model daily rows are no longer bulk-exported. Per-lab shares and top models stay at /rankings and /api/rankings; the rows themselves are at openrouter.ai/api/v1/datasets/rankings-daily with an OpenRouter key.',
+}
+
+// OpenRouter's per-model daily rows reach the change log as `ranking` changes
+// with the row in before_json/after_json; the changes export leaves them out
+// for the same reason rankings_daily is withdrawn.
+const notRanking = sql`${tables.changes.entity_type} <> 'ranking'`
 
 // The two tables that gain a row per source per tick are counted from
 // source_stats; a count(*) over either reads every row ever written.
@@ -486,12 +531,6 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     'The dates printed on each report’s own page: every “Label: value” line verbatim, the discovery date, and a printed disclosure date where the page has one.',
     'disclosure_timeline',
     DISCLOSURE_TIMELINE_FIELDS,
-  ),
-  rankings_daily: entityView(
-    'rankings_daily',
-    'One row per UTC day and model from OpenRouter’s usage rankings: total tokens routed. CC BY 4.0; cite “Source: OpenRouter (openrouter.ai/rankings)”.',
-    'ranking',
-    RANKING_FIELDS,
   ),
   filers: entityView(
     'filers',
@@ -642,7 +681,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   changes: plainTable(
     'changes',
-    'Append-only change log: each entity added, removed, or modified, with the before and after payloads.',
+    'Append-only change log: each entity added, removed, or modified, with the before and after payloads. OpenRouter ranking rows are left out (see rankings_daily on /data).',
     tables.changes,
     [
       'id',
@@ -659,6 +698,9 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     ],
     [tables.changes.detected_at, tables.changes.id],
     byColumn(tables.changes.detected_at),
+    undefined,
+    undefined,
+    notRanking,
   ),
   alerts: plainTable(
     'alerts',
@@ -756,9 +798,36 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     byColumn(tables.sourceRuns.started_at),
     loggedTotal(tables.sourceStats.run_count),
   ),
+  entity_securities: staticTable(
+    'entity_securities',
+    'Each tracked lab and SEC filer mapped to the securities that carry it: the issuer, CIK, symbol and exchange as EDGAR lists them, how the entity relates to the security (itself, its parent, a disclosed investor), and the source of each row. A private lab with no security has a row saying so.',
+    ENTITY_SECURITY_COLUMNS,
+    ENTITY_SECURITIES,
+    'a hand-checked table kept in code; each row is dated by its checked_on.',
+  ),
 }
 
 export const EXPORT_TABLE_NAMES = Object.keys(EXPORT_TABLES)
+
+/** Rows in a sample file: the first rows of the table in export order, oldest first where the key is a time. */
+export const SAMPLE_ROWS = 50
+
+/** The same table cut to its first SAMPLE_ROWS rows, for /export/sample/<table>.<format>. */
+export function sampleOf(table: ExportTable): ExportTable {
+  return {
+    ...table,
+    filters: undefined,
+    async page(db, after, _limit, where) {
+      return after === null ? table.page(db, null, SAMPLE_ROWS, where) : []
+    },
+    async count(db) {
+      return Math.min(SAMPLE_ROWS, await table.count(db))
+    },
+    async at(db, at) {
+      return sampleOf(await table.at(db, at))
+    },
+  }
+}
 
 export function exportTable(name: string): ExportTable | null {
   return Object.prototype.hasOwnProperty.call(EXPORT_TABLES, name) ? EXPORT_TABLES[name]! : null

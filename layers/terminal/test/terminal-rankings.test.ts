@@ -308,12 +308,8 @@ describe('queryRankings', () => {
     expect(r.series[0]!.tokens.other).toBe(7_891_874_126_459)
     expect(r.series[0]!.tokens.openai).toBe(1_299_773_079_324)
 
-    // The export view flattens the same rows.
-    const view = EXPORT_TABLES.rankings_daily!
-    expect(await view.count(db)).toBe(1530)
-    const [first] = await view.page(db, null, 1)
-    expect(Object.keys(first!)).toEqual(view.columns)
-    expect(first).not.toHaveProperty('entity_type')
-    expect(first!.model_permaslug).toEqual(expect.any(String))
+    // The per-model rows are read here, never bulk-exported (OpenRouter's
+    // "not … a competing free API"; docs/source-audit.md).
+    expect(EXPORT_TABLES).not.toHaveProperty('rankings_daily')
   })
 })
