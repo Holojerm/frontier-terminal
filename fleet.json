@@ -32,7 +32,7 @@
   "deploy": "workers-builds",
   "template": {
     "repo": "Holojerm/nuxt-cf-template",
-    "syncedSha": "333d7c9",
+    "syncedSha": "d8a3df5",
     "customized": [
       "app/components/Auth/",
       "app/components/Onboarding/",
@@ -97,6 +97,7 @@
       "server/utils/extensions.ts",
       "server/utils/fleet-funnel.ts",
       "server/utils/fleet-status.ts",
+      "server/utils/hash.ts",
       "server/utils/ingest-headers.ts",
       "server/utils/ingest-relay.ts",
       "server/utils/lifecycle-emails.ts",

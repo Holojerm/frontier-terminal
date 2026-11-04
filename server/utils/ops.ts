@@ -21,6 +21,7 @@ import * as tables from '../db/schema'
 import type { OpsEvent } from '../db/schema'
 
 import { groupOpsRows, opsDigestSubject, renderOpsDigest } from './ops-digest'
+import { logEvent } from './log'
 
 export type OpsDb = ReturnType<typeof drizzle<typeof tables>>
 
@@ -60,8 +61,36 @@ export async function recordOpsEvent(db: OpsDb, input: OpsEventInput): Promise<v
       path: input.path ?? null,
     })
   } catch (err) {
-    console.error(JSON.stringify({ kind: 'ops_event_write_failed', error: String(err) }))
+    logEvent('error', 'ops_event_write_failed', { error: String(err) })
   }
+}
+
+const lastUnauthenticatedRecord = new Map<string, number>()
+
+/** At most one row per key per minute, per isolate. */
+export const UNAUTHENTICATED_OPS_INTERVAL_MS = 60_000
+
+/**
+ * `recordOpsEvent` for a path anyone can hit without credentials, such as a
+ * webhook rejecting a bad signature. Unthrottled, a script could write a D1 row
+ * per request and wake the owner's digest and the ops-triage routine at will.
+ */
+export async function recordUnauthenticatedOpsEvent(
+  db: OpsDb,
+  input: OpsEventInput,
+  now: number = Date.now(),
+): Promise<boolean> {
+  const key = `${input.kind}|${input.detail ?? ''}`
+  const last = lastUnauthenticatedRecord.get(key)
+  if (last !== undefined && now - last < UNAUTHENTICATED_OPS_INTERVAL_MS) return false
+  lastUnauthenticatedRecord.set(key, now)
+  await recordOpsEvent(db, input)
+  return true
+}
+
+/** Test-only. */
+export function resetUnauthenticatedOpsThrottleForTest(): void {
+  lastUnauthenticatedRecord.clear()
 }
 
 export interface OpsDigestOptions {
@@ -153,7 +182,7 @@ export async function drainOpsEvents(
       }
     } catch (err) {
       error = String(err)
-      console.error(JSON.stringify({ kind: 'ops_alert_send_failed', error }))
+      logEvent('error', 'ops_alert_send_failed', { error })
     }
   }
 

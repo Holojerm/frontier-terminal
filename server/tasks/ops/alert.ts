@@ -25,6 +25,7 @@ import { checkLaunchCoverage } from '#layers/terminal/server/pipeline/launch-wat
 import { unstorageLockStore } from '#layers/terminal/server/pipeline/lock'
 import { getOpsMailer } from '../../utils/ops-mail'
 import { drainOpsEvents, pruneOpsEvents } from '../../utils/ops'
+import { logEvent } from '../../utils/log'
 
 interface CloudflareTaskContext {
   cloudflare?: { env?: Record<string, unknown> }
@@ -41,12 +42,12 @@ export default defineTask({
     // The judge watchdog spools its own event, so it runs before the mailer
     // check: an unconfigured digest still records that the judge went quiet.
     const judge = await checkJudgeSilence(db, unstorageLockStore(kv))
-    if (judge === 'silent') console.warn(JSON.stringify({ kind: 'judge_silent' }))
+    if (judge === 'silent') logEvent('warn', 'judge_silent')
     // Same reason: a launch the site has stored but does not show is recorded
     // whether or not the digest can be mailed.
     const launch = await checkLaunchCoverage(db, unstorageLockStore(kv))
     if (launch.stale_cells.length || launch.unalerted.length) {
-      console.warn(JSON.stringify({ kind: 'launch_gap', ...launch }))
+      logEvent('warn', 'launch_gap', { ...launch })
     }
     // And a merge whose deploy never landed: this build's sha against main's head.
     const head = manifest.links?.github ? await fetchMainHead(manifest.links.github) : null
@@ -56,14 +57,14 @@ export default defineTask({
       useRuntimeConfig().public.buildSha,
       head,
     )
-    if (drift.verdict === 'drift') console.warn(JSON.stringify({ kind: 'deploy_drift', ...drift }))
+    if (drift.verdict === 'drift') logEvent('warn', 'deploy_drift', { ...drift })
 
     const env = (context as CloudflareTaskContext | undefined)?.cloudflare?.env
     const mailer = getOpsMailer(env)
     if (!mailer) {
       // Nothing can be sent, but the spool must not grow without bound.
       const pruned = await pruneOpsEvents(db)
-      console.warn(JSON.stringify({ kind: 'ops_alert_unconfigured', pruned }))
+      logEvent('warn', 'ops_alert_unconfigured', { pruned })
       return { result: { skipped: 'unconfigured', pruned } }
     }
 
@@ -75,7 +76,7 @@ export default defineTask({
     })
     // Quiet ticks stay quiet — only say something when something happened.
     if (outcome.sent || outcome.error) {
-      console.warn(JSON.stringify({ kind: 'ops_alert_run', ...outcome }))
+      logEvent('warn', 'ops_alert_run', { ...outcome })
     }
     return { result: outcome }
   },
