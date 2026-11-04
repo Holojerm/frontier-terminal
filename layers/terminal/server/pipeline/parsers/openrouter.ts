@@ -19,6 +19,10 @@ const prefixToProvider: Record<string, Provider> = {
   meta: 'meta',
   'meta-llama': 'meta',
   mistralai: 'mistral',
+  deepseek: 'deepseek',
+  // Alibaba's Qwen models publish under qwen/*; no alibaba/* id is listed.
+  qwen: 'alibaba',
+  moonshotai: 'moonshot',
 }
 
 /** The lab behind an OpenRouter id ("anthropic/claude-…") from its prefix;

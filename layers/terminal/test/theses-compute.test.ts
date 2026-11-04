@@ -315,7 +315,7 @@ const FLAGSHIPS = [
   ['meta', 'meta-pricing-md', 'muse-wonder-1.0', 1.25, 4.25],
 ] as const
 
-// Per day: the six labs 600 of 1,000 tokens, everyone else 400.
+// Per day: the tracked labs 600 of 1,000 tokens, everyone else 400.
 const DAILY_TOKENS = {
   'openai/gpt-6-astra': 250,
   'anthropic/claude-opus-5-5': 150,
@@ -323,7 +323,7 @@ const DAILY_TOKENS = {
   'x-ai/grok-4.7': 50,
   'meta/muse-wonder-1.0': 20,
   'mistralai/mistral-large-4': 10,
-  'deepseek/deepseek-v4': 300,
+  'z-ai/glm-5.3': 300,
   other: 100,
 } as const
 const PROVIDER_OF: Record<string, string> = {
@@ -445,7 +445,13 @@ describe('the Compute thesis on a seeded store', () => {
     expect(detail.void_reason).toBeNull()
     expect(detail.context).toMatchObject({ gpu: 'B200', gpu_median: 8.55, ratio: 0.7018 })
     expect(Object.keys(detail.context.providers)).toHaveLength(6)
-    expect(detail.no_flagship).toEqual({ mistral: 'no mapped flagship' })
+    // The three labs added 2026-11-04 are outside the set claims 1 and 2 opened on.
+    expect(detail.no_flagship).toEqual({
+      mistral: 'no mapped flagship',
+      deepseek: 'outside the labs this claim counts',
+      alibaba: 'outside the labs this claim counts',
+      moonshot: 'outside the labs this claim counts',
+    })
   })
 
   it('claim 2: the median flagship blended price, citing every flagship’s own row', async () => {
@@ -456,7 +462,7 @@ describe('the Compute thesis on a seeded store', () => {
     expect(detail.flagship_changed).toBeNull()
   })
 
-  it('claim 3: the six labs’ combined share of every token, rebuilt from the rankings', async () => {
+  it('claim 3: the tracked labs’ combined share of every token, rebuilt from the rankings', async () => {
     const { all, newest } = await readingOf('compute-labs-demand-share')
     expect(newest.value).toBe(0.6)
     expect(newest.date).toBe(NEWEST_RANKING)
@@ -468,9 +474,12 @@ describe('the Compute thesis on a seeded store', () => {
     expect(newest.value).toBe(10)
     expect(detail.by_lab).toEqual({ anthropic: 10 })
     expect(Object.keys(detail.no_feed).sort()).toEqual([
+      'alibaba',
+      'deepseek',
       'google',
       'meta',
       'mistral',
+      'moonshot',
       'openai',
       'xai',
     ])

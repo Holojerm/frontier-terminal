@@ -34,12 +34,16 @@ const ROUTES = [
   '/labs/xai',
   '/labs/meta',
   '/labs/mistral',
+  '/labs/deepseek',
+  '/labs/alibaba',
+  '/labs/moonshot',
   // Every lab's printable sheet, read from the same list the sitemap uses, so a
   // newly tracked lab's sheet is scanned with no edit here.
   ...TEAR_SHEET_PAGES.map((page) => page.path),
-  // Two of the fifteen pairs: one with every axis populated, one mostly gaps.
+  // Three of the thirty-six pairs: one with every axis populated, two mostly gaps.
   '/compare/openai-vs-anthropic',
   '/compare/meta-vs-mistral',
+  '/compare/alibaba-vs-moonshot',
   '/prices',
   '/revenue',
   '/exposure',
@@ -66,7 +70,7 @@ const ROUTES = [
 // routes/sitemap.xml.get.ts) and the alert permalinks (/alerts/[id]). They are
 // scanned through the static routes' shared components; the patterns are
 // what the coverage test recognises. The compare pages are one template over
-// fifteen pairs; the two in ROUTES stand for the rest.
+// thirty-six pairs; the three in ROUTES stand for the rest.
 const DYNAMIC = [
   /^\/prices\/model:/,
   /^\/alerts\/[0-9a-f]{64}$/,

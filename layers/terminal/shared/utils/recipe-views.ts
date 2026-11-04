@@ -167,6 +167,9 @@ export const LAB_OF_NAME: Readonly<Record<string, LabId>> = {
   google: 'google',
   'google-deepmind': 'google',
   meta: 'meta',
+  deepseek: 'deepseek',
+  alibaba: 'alibaba',
+  'moonshot-ai': 'moonshot',
 }
 
 /** "EquityMethodInvestmentOwnershipPercentage" → "Equity method investment ownership percentage". */

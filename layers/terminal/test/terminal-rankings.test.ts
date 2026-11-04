@@ -51,7 +51,7 @@ function synthetic(days: number): RankingObservation[] {
       },
       { date, provider: 'google', model_permaslug: 'google/a', total_tokens: 100, ...PROV },
       { date, provider: 'xai', model_permaslug: 'x-ai/a', total_tokens: 50, ...PROV },
-      { date, provider: 'other', model_permaslug: 'deepseek/a', total_tokens: 150, ...PROV },
+      { date, provider: 'other', model_permaslug: 'z-ai/a', total_tokens: 150, ...PROV },
       { date, provider: 'other', model_permaslug: 'other', total_tokens: 100, ...PROV },
     )
   }
@@ -75,9 +75,12 @@ describe('summarizeRankings', () => {
       ['xai', null, null],
       ['meta', null, null],
       ['mistral', null, null],
+      ['deepseek', null, null],
+      ['alibaba', null, null],
+      ['moonshot', null, null],
       ['other', null, null],
     ])
-    expect(s.top_models.map((t) => t.models)).toEqual([[], [], [], [], [], []])
+    expect(s.top_models.map((t) => t.models)).toEqual([[], [], [], [], [], [], [], [], []])
     expect(s.series).toEqual([])
   })
 
@@ -128,6 +131,9 @@ describe('summarizeRankings', () => {
       'xai',
       'meta',
       'mistral',
+      'deepseek',
+      'alibaba',
+      'moonshot',
     ])
     expect(s.top_models.flatMap((t) => t.models.map((m) => m.model_permaslug))).not.toContain(
       'other',
@@ -147,6 +153,9 @@ describe('summarizeRankings', () => {
         xai: 50,
         meta: 0,
         mistral: 0,
+        deepseek: 0,
+        alibaba: 0,
+        moonshot: 0,
         other: 250,
       },
       total: 1000,
@@ -245,6 +254,15 @@ describe('queryRankings', () => {
       'meta-status',
       'meta-disclosures',
       'mistral-disclosures',
+      'deepseek-hiring',
+      'deepseek-disclosures',
+      'alibaba-hiring',
+      'alibaba-status',
+      'alibaba-disclosures',
+      'moonshot-pricing',
+      'moonshot-hiring',
+      'moonshot-status',
+      'moonshot-disclosures',
       'gpu-runpod',
       'gpu-aws',
       'gpu-google-cloud',
@@ -307,7 +325,7 @@ describe('queryRankings', () => {
     expect(r.series).toHaveLength(30)
     expect(r.series[0]!.date).toBe('2026-08-10')
     expect(r.series.at(-1)!.date).toBe('2026-09-08')
-    expect(r.series[0]!.tokens.other).toBe(7_891_874_126_459)
+    expect(r.series[0]!.tokens.other).toBe(4_749_891_595_607)
     expect(r.series[0]!.tokens.openai).toBe(1_299_773_079_324)
 
     // The per-model rows are read here, never bulk-exported (OpenRouter's

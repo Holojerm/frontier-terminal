@@ -37,7 +37,10 @@ import { parseGoogleModelPage } from './parsers/pricing/google-model-page'
 import { parseGooglePricingPage } from './parsers/pricing/google-pricing'
 import { parseMetaModelsMd } from './parsers/pricing/meta-models'
 import { parseMetaPricingMd } from './parsers/pricing/meta-pricing'
+import { parseAlibabaPricingHtml } from './parsers/pricing/alibaba-pricing'
+import { parseDeepseekPricingMd } from './parsers/pricing/deepseek-pricing'
 import { parseMistralModelsMd } from './parsers/pricing/mistral-models'
+import { parseMoonshotModelsMd } from './parsers/pricing/moonshot-models'
 import { parseMistralPricingMd } from './parsers/pricing/mistral-pricing'
 import { parseOpenAiModelsMd } from './parsers/pricing/openai-models'
 import { parseOpenAiModelPage } from './parsers/pricing/openai-model-page'
@@ -54,6 +57,7 @@ import { revenueProviderFor, type RevenueFilers } from './parsers/sec/revenue-fi
 import { parseXbrlSegment, segmentTarget } from './parsers/sec/xbrl-segment'
 import { isPeriodicForm, isS1FloorForm } from './parsers/sec/s1-floor'
 import { parseAnthropicStatus } from './parsers/status/anthropic-status'
+import { DEEPSEEK_ATOM, parseDeepseekStatus } from './parsers/status/deepseek-status'
 import { parseGoogleCloudStatus } from './parsers/status/google-cloud-status'
 import { parseMistralStatus } from './parsers/status/mistral-status'
 import { parseOpenaiStatus } from './parsers/status/openai-status'
@@ -375,6 +379,25 @@ export const LANES: Readonly<Record<string, Lane>> = {
   'mistral-pricing-md': set((text, { prov, snapshotId }) => ({
     entities: normalizePrices(parseMistralPricingMd(text, prov).rows, snapshotId),
   })),
+  // Catalog and prices on one page; no class-map check: it prints no tier sentence.
+  'deepseek-pricing-md': set((text, { prov, snapshotId }) => ({
+    entities: normalizePrices(parseDeepseekPricingMd(text, prov).rows, snapshotId),
+  })),
+  'alibaba-pricing-html': set((html, { prov, snapshotId }) => ({
+    entities: normalizePrices(parseAlibabaPricingHtml(html, prov).rows, snapshotId),
+  })),
+  // Prices come from the pricing page above; this page is polled only for
+  // the sentences Alibaba's class-map cells rest on.
+  'alibaba-models-html': set((html, ctx) => ({
+    entities: checked('alibaba-models-html', html, ctx),
+  })),
+  // Catalog only: Moonshot's price tables are not in the served page.
+  'moonshot-models-md': set((text, ctx) => ({
+    entities: [
+      ...normalizePrices(parseMoonshotModelsMd(text, ctx.prov).rows, ctx.snapshotId),
+      ...checked('moonshot-models-md', text, ctx),
+    ],
+  })),
   'google-pricing-html': set((html, { prov, snapshotId }) => {
     const { rows, skipped } = parseGooglePricingPage(html, prov)
     return {
@@ -449,6 +472,18 @@ export const LANES: Readonly<Record<string, Lane>> = {
     removals: 'append-only',
     parse: (text, { prov, snapshotId }) => ({
       entities: normalizeIncidents(parseMistralStatus(text, prov).rows, snapshotId),
+    }),
+  },
+  // The RSS feed gives each incident's start; its Atom twin, fetched in the
+  // same tick, gives a resolved incident's end.
+  'deepseek-status': {
+    sides: [DEEPSEEK_ATOM],
+    removals: 'append-only',
+    parse: (text, { prov, snapshotId, side }) => ({
+      entities: normalizeIncidents(
+        parseDeepseekStatus(text, side(DEEPSEEK_ATOM), prov).rows,
+        snapshotId,
+      ),
     }),
   },
   'xai-status': {
@@ -581,7 +616,7 @@ export function periodicFloorAlerts(changes: readonly ChangeRow[]): AlertRow[] {
         explanation:
           `Accession ${filing.accession_no}: form ${filing.form} filed ${filing.file_date} by ` +
           `whitelisted CIK ${filing.whitelist_cik} (${filing.display_names.join(', ')}). ` +
-          'A 10-Q/10-K on a whitelisted filer always alerts — the periodic-floor rule, no model in the loop. ' +
+          'A 10-Q, 10-K or 20-F on a whitelisted filer always alerts — the periodic-floor rule, no model in the loop. ' +
           'Where the filer is a tagged revenue filer, its XBRL revenue facts refresh on the /revenue panel at the next company-facts poll.',
         change_ids: JSON.stringify([change.id]),
         rule: 'periodic-floor',

@@ -131,6 +131,7 @@ describe('scopes', () => {
       'edgar-submissions-googl',
       'edgar-submissions-meta',
       'edgar-submissions-orcl',
+      'edgar-submissions-baba',
       'edgar-companyfacts-spcx',
       'openai-models-md',
       'openai-pricing-md',
@@ -143,6 +144,10 @@ describe('scopes', () => {
       'meta-pricing-md',
       'mistral-models-md',
       'mistral-pricing-md',
+      'deepseek-pricing-md',
+      'alibaba-pricing-html',
+      'alibaba-models-html',
+      'moonshot-models-md',
     ])
     // google-careers is ~20 MB: it runs alone on the careers tick, never inside the survey.
     expect(sourceIdsForScope('survey', ALL)).toEqual(
@@ -150,7 +155,7 @@ describe('scopes', () => {
     )
     expect(sourceIdsForScope('careers', ALL)).toEqual(['google-careers'])
     expect(sourceIdsForScope('edgar', ALL)).not.toContain('google-careers')
-    expect(ALL_IDS).toHaveLength(36)
+    expect(ALL_IDS).toHaveLength(43)
     // The status feeds ride the six-hourly survey only, never the EDGAR tick.
     expect(sourceIdsForScope('edgar', ALL)).not.toContain('openai-status')
   })
@@ -160,13 +165,14 @@ describe('baseline', () => {
   it('stores entities for every parser source, zero changes, one snapshot and one raw object each', async () => {
     const report = await run('survey', ALL_IDS)
 
-    expect(report.sources).toHaveLength(36)
+    expect(report.sources).toHaveLength(43)
     expect(report.failed).toBe(0)
     const byId = Object.fromEntries(report.sources.map((s) => [s.source_id, s]))
     // Sides and the cross-check are fetched and snapshotted but yield no entities.
     for (const id of [
       'anthropic-greenhouse-departments',
       'xai-greenhouse-departments',
+      'deepseek-status-atom',
       'openrouter-models',
     ]) {
       expect(byId[id]).toMatchObject({ status: 'ok', added: 0 })
@@ -178,8 +184,8 @@ describe('baseline', () => {
 
     expect(await rows.changes()).toHaveLength(0)
     expect(await rows.alerts()).toHaveLength(0)
-    expect(await rows.snapshots()).toHaveLength(36)
-    expect(await rows.runs()).toHaveLength(36)
+    expect(await rows.snapshots()).toHaveLength(43)
+    expect(await rows.runs()).toHaveLength(43)
     expect(await rows.ops()).toHaveLength(0)
 
     const entities = await rows.entities()
@@ -202,6 +208,16 @@ describe('baseline', () => {
     // 9 token-priced ids; OCR, audio-only and TTS rows print other units.
     expect(perSource.get('mistral-pricing-md')).toBe(9)
     expect(perSource.get('mistral-ashby')).toBe(19)
+    // Two models at peak and off-peak; the page prints no tier sentence.
+    expect(perSource.get('deepseek-pricing-md')).toBe(4)
+    // Qwen-Max, -Plus and -Flash in the Singapore tab, one row per request band.
+    expect(perSource.get('alibaba-pricing-html')).toBe(48)
+    // No prices: the three class-map checks.
+    expect(perSource.get('alibaba-models-html')).toBe(3)
+    // 3 unpriced catalog rows + the flagship class-map check.
+    expect(perSource.get('moonshot-models-md')).toBe(4)
+    // The two 20-F annual reports; the 6-Ks are not tracked.
+    expect(perSource.get('edgar-submissions-baba')).toBe(2)
     // DeepMind roles only; the fixture's Google and YouTube roles are skipped.
     expect(perSource.get('google-careers')).toBe(27)
     // Tracked forms only (parsers/sec/forms.ts): 13 of SPCX's 81 recent filings.
@@ -218,6 +234,7 @@ describe('baseline', () => {
     expect(perSource.get('mistral-status')).toBe(50)
     // 316 RSS items, one per (component, incident), fold to 97 incidents.
     expect(perSource.get('xai-status')).toBe(97)
+    expect(perSource.get('deepseek-status')).toBe(28)
     // The disclosure index: 12 reports and 3 notices, a baseline like any first parse.
     expect(perSource.get('openai-misalignment-reports')).toBe(15)
     expect(perSource.has('openrouter-models')).toBe(false)
@@ -240,7 +257,7 @@ describe('baseline', () => {
     ])
 
     const keys = await rawKeys()
-    expect(keys).toHaveLength(36)
+    expect(keys).toHaveLength(43)
     expect(keys).toContain(
       (await rows.snapshots()).find((s) => s.source_id === 'xai-models-md')!.raw_key,
     )

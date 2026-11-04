@@ -75,6 +75,8 @@ export const CLASS_MAP_SOURCES: Readonly<Partial<Record<LabId, string>>> = {
   xai: 'xai-models-md',
   meta: 'meta-models-md',
   google: 'google-models-md',
+  alibaba: 'alibaba-models-html',
+  moonshot: 'moonshot-models-md',
 }
 
 // Verbatim transcriptions from the fixtures fetched 2026-09-22 (the previous
@@ -180,6 +182,39 @@ export const MODEL_CLASS_MAP: ClassEntry[] = [
     basis: 'Our fastest, most cost-effective 3.5 model for high-throughput execution.',
     basis_source_id: 'google-models-md',
   },
+  // Transcribed 2026-11-04 from Alibaba Cloud's "Recommended models" page,
+  // whose text-generation row names three Qwen models, each with the use it is
+  // recommended for. The flagship cell reads "complex reasoning and coding" as
+  // the page's answer for hard work, as OpenAI's flagship sentence does.
+  {
+    provider: 'alibaba',
+    class: 'flagship',
+    model_slug: 'qwen3.8-max',
+    basis: 'Complex reasoning and coding',
+    basis_source_id: 'alibaba-models-html',
+  },
+  {
+    provider: 'alibaba',
+    class: 'balanced',
+    model_slug: 'qwen3.7-plus',
+    basis: 'Balanced performance, speed, and cost',
+    basis_source_id: 'alibaba-models-html',
+  },
+  {
+    provider: 'alibaba',
+    class: 'economy',
+    model_slug: 'qwen3.8-flash',
+    basis: 'Fast and cost-effective',
+    basis_source_id: 'alibaba-models-html',
+  },
+  // Transcribed 2026-11-04. The served page prints no price (PRICE_GAPS).
+  {
+    provider: 'moonshot',
+    class: 'flagship',
+    model_slug: 'kimi-k3.1-pro',
+    basis: "Kimi's most capable flagship to date",
+    basis_source_id: 'moonshot-models-md',
+  },
 ]
 
 /** Why a (provider, class) cell has no mapping. Displayed instead of a number. */
@@ -231,6 +266,37 @@ export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string 
     reason:
       'Mistral rates its models on speed and performance but never says which to use for cost-sensitive work. Its cheapest general-purpose models don’t say what they’re for.',
   },
+  // Checked 2026-11-04. DeepSeek's one catalog page is its price list.
+  {
+    provider: 'deepseek',
+    class: 'flagship',
+    reason:
+      'DeepSeek’s models and pricing page lists two API models, deepseek-flash and deepseek-v4-pro, side by side with their versions, context and prices. No sentence says which one to start with. Both are in the full catalog.',
+  },
+  {
+    provider: 'deepseek',
+    class: 'balanced',
+    reason:
+      'DeepSeek sells two models and names no middle tier. The page compares them only on features, concurrency and price.',
+  },
+  {
+    provider: 'deepseek',
+    class: 'economy',
+    reason:
+      'deepseek-flash is the cheaper of DeepSeek’s two models, but no DeepSeek page says to use it for cost-sensitive work. Its off-peak prices, half the peak rate, are in the full catalog.',
+  },
+  {
+    provider: 'moonshot',
+    class: 'balanced',
+    reason:
+      'Moonshot’s model list names Kimi K3.1 Pro its flagship, a high-speed variant with “same intelligence, about 2-3× the speed”, and the previous-generation K3. None is described by cost.',
+  },
+  {
+    provider: 'moonshot',
+    class: 'economy',
+    reason:
+      'No Moonshot page names a model for cost-sensitive work. The K2 models that cost less are closed to new users and retire by the end of December 2026.',
+  },
 ]
 
 /**
@@ -238,6 +304,8 @@ export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string 
  * is the right one, the audited source simply does not print its price.
  */
 export const PRICE_GAPS: Readonly<Partial<Record<LabId, string>>> = {
+  moonshot:
+    'Moonshot’s pricing page (platform.kimi.ai/docs/pricing/chat) draws its price tables in the browser: the page as served, in Markdown and in HTML, holds an empty table. We read no price for any Kimi model rather than run the page’s scripts or read an aggregator’s.',
   openai:
     'OpenAI’s catalog page (developers.openai.com/api/docs/models.md) prints no prices. We read prices from a separate page, pricing.md (added 2026-09-22). No price here means we haven’t read that page yet. We don’t fill in a price from any other source.',
 }

@@ -23,6 +23,7 @@ import type { LabId } from '../../shared/utils/terminal-types'
 
 import * as tables from '#server/db/schema'
 import type { PipelineDb } from '../pipeline/store'
+import { PROVIDER_ORDER } from './terminal-sources'
 import { EPOCH_DATA_CENTERS } from '../theses/recipes/epoch-data-centers'
 import { GITHUB_AGENT_RECIPES } from '../theses/recipes/github-agent-prs'
 import { INVESTEE_RECIPES } from '../theses/recipes/investee-facts'
@@ -36,8 +37,7 @@ type Row = typeof tables.recipeObservations.$inferSelect
 
 const DAY_MS = 86_400_000
 const dayOf = (d: string) => Date.parse(`${d}T00:00:00Z`) / DAY_MS
-const isLab = (c: CompanyId): c is LabId =>
-  ['openai', 'anthropic', 'google', 'xai', 'meta', 'mistral'].includes(c)
+const isLab = (c: CompanyId): c is LabId => (PROVIDER_ORDER as readonly string[]).includes(c)
 
 async function rowsOf(db: PipelineDb, ids: readonly string[]): Promise<Row[]> {
   if (ids.length === 0) return []

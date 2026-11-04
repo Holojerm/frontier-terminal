@@ -1,7 +1,7 @@
 # Frontier Terminal
 
 A free, public, read-only investor terminal for the frontier AI labs (OpenAI, Anthropic, Google,
-xAI, Meta, and Mistral). It tracks API price lists, hiring (including data center and
+xAI, Meta, Mistral, DeepSeek, Alibaba's Qwen, and Moonshot AI's Kimi). It tracks API price lists, hiring (including data center and
 infrastructure roles), SEC filings, disclosed revenue, status-page incidents, misalignment
 disclosures, and OpenRouter demand share with the spend share it implies. Every number links to
 the page we read it from and shows when we read it. Not investment advice.

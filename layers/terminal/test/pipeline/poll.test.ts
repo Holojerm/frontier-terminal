@@ -158,6 +158,10 @@ describe('runPoll between survey instants', () => {
       'meta-pricing-md',
       'mistral-models-md',
       'mistral-pricing-md',
+      'deepseek-pricing-md',
+      'alibaba-pricing-html',
+      'alibaba-models-html',
+      'moonshot-models-md',
       'edgar-fts',
       'edgar-fts-openai',
       'edgar-submissions-spcx',
@@ -167,6 +171,7 @@ describe('runPoll between survey instants', () => {
       'edgar-submissions-googl',
       'edgar-submissions-meta',
       'edgar-submissions-orcl',
+      'edgar-submissions-baba',
       'edgar-companyfacts-spcx',
     ])
     expect(outcome.result.failed).toBe(0)

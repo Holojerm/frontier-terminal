@@ -10,7 +10,7 @@ definePageMeta({
     priority: '0.9',
     title: 'Prices',
     summary:
-      'Every API price and catalog entry per SKU for OpenAI, Anthropic, Google, xAI, Meta, and Mistral, with the change since the previous price and the URL we read it from.',
+      'Every API price and catalog entry per SKU for OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Alibaba, and Moonshot AI, with the change since the previous price and the URL we read it from.',
   },
 })
 
@@ -25,14 +25,14 @@ const site = useSiteContext()
 useSeo({
   title: 'LLM API pricing by lab',
   description:
-    'API prices per million tokens for GPT, Claude, Gemini, Grok, Llama, and Mistral models: a like-for-like matrix and every SKU, each with source and fetch time.',
+    'API prices per million tokens for GPT, Claude, Gemini, Grok, Llama, Mistral, DeepSeek, and Qwen: a like-for-like matrix and every SKU, with source and time.',
   dateModified: prices.value?.as_of,
   schema: [
     datasetSchema(site, {
       url: usePageUrl(),
       name: 'Frontier AI lab API prices per million tokens',
       description:
-        'The current list price of every API SKU OpenAI, Anthropic, Google, xAI, Meta, and Mistral publish, per million input, cached-input, and output tokens, as read from each vendor’s own pricing page.',
+        'The current list price of every API SKU OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, and Alibaba publish, per million input, cached-input, and output tokens, as read from each vendor’s own pricing page.',
       dateModified: prices.value?.as_of,
       variableMeasured: ['input_per_mtok', 'cached_input_per_mtok', 'output_per_mtok'],
       distribution: exportDistribution(site, 'prices_latest'),

@@ -26,8 +26,9 @@ import { includeSources, type FetchSource } from './sources'
 // and xAI publish none, OpenAI's is 740 KB, and the catalog is the page the
 // terminal quotes anyway.
 
-/** The pages a launch lands on first: one catalog per lab (Google's is its price list),
- * plus Google's models page, which carries its class-map sentences. */
+/** The pages a launch lands on first: one catalog per lab (Google's and DeepSeek's are
+ * their price lists; Alibaba's is its recommended-models page), plus Google's models
+ * page, which carries its class-map sentences. */
 export const TRIPWIRE_SOURCES: readonly string[] = [
   'anthropic-models-md',
   'openai-models-md',
@@ -36,6 +37,9 @@ export const TRIPWIRE_SOURCES: readonly string[] = [
   'google-models-md',
   'meta-models-md',
   'mistral-models-md',
+  'deepseek-pricing-md',
+  'alibaba-models-html',
+  'moonshot-models-md',
 ]
 
 /** What a tripped tick polls: the catalogs plus the price lists launches also land on. */
@@ -45,6 +49,8 @@ export const TRIPWIRE_REFRESH: readonly string[] = [
   'openai-pricing-md',
   'meta-pricing-md',
   'mistral-pricing-md',
+  // Half a megabyte of HTML: on the tripped poll and the half-hourly tick, not every five minutes.
+  'alibaba-pricing-html',
 ]
 
 const TICK_MS = 5 * 60 * 1000

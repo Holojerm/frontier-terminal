@@ -28,6 +28,9 @@ const LAB_PROVIDERS: readonly Provider[] = [
   'xai',
   'meta',
   'mistral',
+  'deepseek',
+  'alibaba',
+  'moonshot',
 ]
 
 /** Narrow block reader: `  exclude: a, b` and `  provider:` / `    name_pattern: …`. */

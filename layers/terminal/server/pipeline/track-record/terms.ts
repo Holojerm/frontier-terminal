@@ -25,6 +25,9 @@ export const LAB_NAMES: Readonly<Record<string, readonly string[]>> = {
   xai: ['xAI', 'Grok'],
   meta: ['Meta', 'Llama'],
   mistral: ['Mistral'],
+  deepseek: ['DeepSeek'],
+  alibaba: ['Alibaba', 'Qwen'],
+  moonshot: ['Moonshot AI', 'Kimi'],
 }
 
 /** The press name for a whitelisted filer's CIK (sources.yaml cik_whitelist). */

@@ -61,6 +61,8 @@ export type SignalSpec =
       signal: 'flagship-blended-price'
       input_weight: number
       output_weight: number
+      /** The labs counted; a tracked lab outside it is left out and named. Every lab when absent. */
+      labs?: readonly LabId[]
       rule: MeasuredRule
     }
   | {
@@ -73,6 +75,8 @@ export type SignalSpec =
       output_weight: number
       gpu: 'H100' | 'B200'
       context_gpu: 'H100' | 'B200'
+      /** As for flagship-blended-price: the labs whose flagships make the median. */
+      labs?: readonly LabId[]
       /** Fewer included `gpu` providers than this and the reading cannot count. */
       min_providers: number
       rule: MeasuredRule

@@ -145,10 +145,10 @@ describe('an empty store renders an honest empty state, never a throw', () => {
     expect(overview.latest_fetched_at).toBeNull()
   })
 
-  it('prices: eighteen matrix cells, each with a stated gap and no invented number', async () => {
+  it('prices: twenty-seven matrix cells, each with a stated gap and no invented number', async () => {
     const prices = await queryPrices(db, await ctx())
     expect(prices.rows).toEqual([])
-    expect(prices.matrix.cells).toHaveLength(18)
+    expect(prices.matrix.cells).toHaveLength(27)
     for (const cell of prices.matrix.cells) {
       expect(cell.priced).toBe(false)
       expect(cell.row).toBeNull()
@@ -158,7 +158,7 @@ describe('an empty store renders an honest empty state, never a throw', () => {
     expect(prices.cross_check).toBeNull()
   })
 
-  it('hiring: Meta is a stated cut; the other five say no rows, not zero roles', async () => {
+  it('hiring: four labs are stated cuts; the other five say no rows, not zero roles', async () => {
     const hiring = await queryHiring(db, await ctx())
     expect(hiring.providers.map((p) => p.provider)).toEqual([
       'openai',
@@ -167,11 +167,16 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       'xai',
       'meta',
       'mistral',
+      'deepseek',
+      'alibaba',
+      'moonshot',
     ])
     const meta = hiring.providers[4]!
     expect(meta.feed).toBe('no_public_feed')
     expect(meta.reason).toContain('metacareers.com')
-    expect(hiring.providers.filter((p) => p.feed === 'no_public_feed')).toHaveLength(1)
+    expect(
+      hiring.providers.filter((p) => p.feed === 'no_public_feed').map((p) => p.provider),
+    ).toEqual(['meta', 'deepseek', 'alibaba', 'moonshot'])
     for (const p of hiring.providers.filter((p) => p.feed !== 'no_public_feed')) {
       expect(p.feed).toBe('no_rows')
       expect(p.total).toBe(0)
@@ -219,7 +224,7 @@ describe('an empty store renders an honest empty state, never a throw', () => {
     ])
   })
 
-  it('incidents: Meta is a stated cut; the other five say no rows, not zero incidents', async () => {
+  it('incidents: three labs are stated cuts; the other six say no rows, not zero incidents', async () => {
     const incidents = await queryIncidents(db, await ctx())
     expect(incidents.providers.map((p) => p.provider)).toEqual([
       'openai',
@@ -228,11 +233,16 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       'xai',
       'meta',
       'mistral',
+      'deepseek',
+      'alibaba',
+      'moonshot',
     ])
     const meta = incidents.providers[4]!
     expect(meta.feed).toBe('no_public_feed')
     expect(meta.reason).toContain('current state')
-    expect(incidents.providers.filter((p) => p.feed === 'no_public_feed')).toHaveLength(1)
+    expect(
+      incidents.providers.filter((p) => p.feed === 'no_public_feed').map((p) => p.provider),
+    ).toEqual(['meta', 'alibaba', 'moonshot'])
     for (const p of incidents.providers.filter((p) => p.feed !== 'no_public_feed')) {
       expect(p.feed).toBe('no_rows')
       expect(p.last_window).toBe(0)
@@ -256,10 +266,10 @@ describe('after a baseline poll of every source', () => {
     expect(as_of).toMatch(/^2026-09-07T10:0\d:/)
     expect(movement.total_changes).toBe(0)
     expect(movement.latest_detected_at).toBeNull()
-    expect(movement.sources_total).toBe(36)
+    expect(movement.sources_total).toBe(43)
     // Every source has exactly one snapshot => nothing could have been
     // diffed. That is a different sentence from "nothing changed".
-    expect(movement.sources_not_yet_compared).toBe(36)
+    expect(movement.sources_not_yet_compared).toBe(43)
     expect(latest_fetched_at).toMatch(/^2026-09-07T10:0\d:/)
   })
 
@@ -310,7 +320,17 @@ describe('after a baseline poll of every source', () => {
 
   it('matrix: mapped-and-priced, mapped-but-unpriced, and unmapped are three states', async () => {
     const { matrix } = await queryPrices(db, await ctx())
-    expect(matrix.providers).toEqual(['openai', 'anthropic', 'google', 'xai', 'meta', 'mistral'])
+    expect(matrix.providers).toEqual([
+      'openai',
+      'anthropic',
+      'google',
+      'xai',
+      'meta',
+      'mistral',
+      'deepseek',
+      'alibaba',
+      'moonshot',
+    ])
     expect(matrix.classes.map((c) => c.id)).toEqual(['flagship', 'balanced', 'economy'])
     const cell = (p: string, k: string) =>
       matrix.cells.find((c) => c.provider === p && c.class === k)!
@@ -391,6 +411,27 @@ describe('after a baseline poll of every source', () => {
     }
     expect(cell('mistral', 'flagship').gap).toContain('name no flagship')
 
+    // DeepSeek prints prices and no tier sentence: three stated gaps.
+    for (const k of ['flagship', 'balanced', 'economy']) {
+      expect(cell('deepseek', k)).toMatchObject({ row: null, priced: false, basis: null })
+    }
+    // Alibaba's sentences are on its recommended-models page; its price list prices them.
+    const qwen = cell('alibaba', 'flagship')
+    expect(qwen).toMatchObject({ priced: true, basis_source_id: 'alibaba-models-html' })
+    expect(qwen.row).toMatchObject({
+      model_slug: 'qwen3.8-max',
+      input_per_mtok: 2,
+      output_per_mtok: 6,
+    })
+    expect(qwen.row!.source_url).toBe(urlOf('alibaba-pricing-html'))
+    expect(cell('alibaba', 'balanced').row!.model_slug).toBe('qwen3.7-plus')
+    expect(cell('alibaba', 'economy').row!.model_slug).toBe('qwen3.8-flash')
+    // Moonshot names a flagship, but the served page prints no price: mapped, unpriced.
+    const kimi = cell('moonshot', 'flagship')
+    expect(kimi).toMatchObject({ priced: false, basis_current: true })
+    expect(kimi.row!.model_slug).toBe('kimi-k3.1-pro')
+    expect(kimi.gap).toContain('draws its price tables in the browser')
+
     // List price only — a long-context or batch sibling never fills a cell.
     for (const c of matrix.cells) if (c.row) expect([null, 'standard']).toContain(c.row.tier)
 
@@ -440,7 +481,7 @@ describe('after a baseline poll of every source', () => {
 
   it('coverage: every source has a snapshot, a run, and the audit caveat', async () => {
     const coverage = await queryCoverage(db, await ctx())
-    expect(coverage.sources).toHaveLength(36)
+    expect(coverage.sources).toHaveLength(43)
     for (const s of coverage.sources) {
       expect(s.newest_snapshot!.source_url).toBe(urlOf(s.source_id))
       expect(s.newest_snapshot!.fetched_at).toMatch(/^2026-09-07T10:0\d:/)
@@ -456,9 +497,11 @@ describe('after a baseline poll of every source', () => {
     expect(byId['anthropic-greenhouse-departments']!.role).toBe('join')
     // The resolved CIK URL from the manifest, not the sources.yaml template.
     expect(byId['edgar-submissions-spcx']!.url).toBe(urlOf('edgar-submissions-spcx'))
-    expect(coverage.totals.snapshots).toBe(36)
+    expect(coverage.totals.snapshots).toBe(43)
     expect(coverage.exports.find((e) => e.name === 'jobs_open')!.rows).toBe(65 + 59 + 42 + 19 + 27)
-    expect(coverage.exports.find((e) => e.name === 'incidents')!.rows).toBe(25 + 25 + 1 + 50 + 97)
+    expect(coverage.exports.find((e) => e.name === 'incidents')!.rows).toBe(
+      25 + 25 + 1 + 50 + 97 + 28,
+    )
     expect(byId['google-cloud-status']).toMatchObject({ entity_count: 1, role: 'status' })
     expect(byId['google-cloud-status']!.last_run!.detail).toBe(
       '1 entities; 5 incidents skipped: no Gemini / Vertex AI product',
@@ -616,8 +659,8 @@ describe('after a second poll that moves prices, closes a role, and files an S-1
     expect(Date.parse(movement.latest_detected_at!) - Date.parse(movement.window_from!)).toBe(
       24 * 3_600_000,
     )
-    expect(movement.sources_total).toBe(36)
-    expect(movement.sources_not_yet_compared).toBe(36 - 4) // xai md, xai jobs + its join, edgar-fts
+    expect(movement.sources_total).toBe(43)
+    expect(movement.sources_not_yet_compared).toBe(43 - 4) // xai md, xai jobs + its join, edgar-fts
 
     expect(alert_count).toBe(1)
     expect(alerts).toHaveLength(1)

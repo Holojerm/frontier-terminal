@@ -10,7 +10,7 @@ export const ANTHROPIC_THESIS: ThesisDef = {
   stance: 'bullish',
   statement:
     'Anthropic becomes the premium lab for developers and enterprises, and earns it in price, demand and hiring.',
-  comparison_set: ['openai', 'google', 'xai', 'meta', 'mistral'],
+  comparison_set: ['openai', 'google', 'xai', 'meta', 'mistral', 'deepseek', 'alibaba', 'moonshot'],
   horizon:
     "Until Anthropic's first annual report (10-K) as a listed company, or 2027-12-31 if none",
   position: 'none',
@@ -21,7 +21,7 @@ export const ANTHROPIC_THESIS: ThesisDef = {
       id: 'anthropic-spend-premium',
       n: 1,
       text: 'Anthropic earns more per token than its rivals',
-      signal_label: 'OpenRouter spend share ÷ token share, among the six labs',
+      signal_label: 'OpenRouter spend share ÷ token share, among the nine tracked labs',
       kill_condition: "Below 1.3×, or below OpenAI's ratio, for 4 straight weeks",
       spec: {
         kind: 'measured',
@@ -34,7 +34,7 @@ export const ANTHROPIC_THESIS: ThesisDef = {
       n: 2,
       text: 'Developer demand is growing, not only price',
       signal_label:
-        "Anthropic's share of the six tracked labs' OpenRouter tokens (not of all OpenRouter tokens), trailing 7 days",
+        "Anthropic's share of the nine tracked labs' OpenRouter tokens (not of all OpenRouter tokens), trailing 7 days",
       kill_condition: 'More than 5 points below its trailing 13-week average',
       spec: {
         kind: 'measured',

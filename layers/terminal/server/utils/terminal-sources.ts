@@ -37,6 +37,16 @@ export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
   'meta-pricing-md': { label: 'Meta pricing and rate limits.md', role: 'primary' },
   'mistral-models-md': { label: 'Mistral models.md', role: 'primary' },
   'mistral-pricing-md': { label: 'Mistral API pricing.md', role: 'primary' },
+  'deepseek-pricing-md': { label: 'DeepSeek models and pricing.md', role: 'primary' },
+  'alibaba-pricing-html': {
+    label: 'Alibaba Cloud Model Studio pricing (Singapore, international)',
+    role: 'primary',
+  },
+  'alibaba-models-html': {
+    label: 'Alibaba Cloud Model Studio recommended models',
+    role: 'primary',
+  },
+  'moonshot-models-md': { label: 'Moonshot AI (Kimi) model list.md', role: 'primary' },
   'google-pricing-html': { label: 'Google Gemini API pricing', role: 'primary' },
   'google-models-md': { label: 'Google Gemini API models.md', role: 'primary' },
   'openrouter-models': { label: 'OpenRouter /api/v1/models', role: 'cross-check' },
@@ -60,6 +70,7 @@ export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
   'edgar-submissions-googl': { label: 'EDGAR submissions (GOOGL)', role: 'sec' },
   'edgar-submissions-meta': { label: 'EDGAR submissions (META)', role: 'sec' },
   'edgar-submissions-orcl': { label: 'EDGAR submissions (ORCL)', role: 'sec' },
+  'edgar-submissions-baba': { label: 'EDGAR submissions (BABA, Qwen’s parent)', role: 'sec' },
   'edgar-companyfacts-spcx': {
     label: 'EDGAR XBRL company facts (SPCX, xAI’s parent)',
     role: 'sec',
@@ -71,6 +82,11 @@ export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
     role: 'status',
   },
   'mistral-status': { label: 'Mistral status page incidents', role: 'status' },
+  'deepseek-status': { label: 'DeepSeek status page incident history (RSS)', role: 'status' },
+  'deepseek-status-atom': {
+    label: 'DeepSeek status page incident history (Atom, for end times)',
+    role: 'join',
+  },
   'xai-status': { label: 'xAI status page incident history (RSS)', role: 'status' },
   'openai-misalignment-reports': {
     label: 'OpenAI misalignment reports and notices',
@@ -85,11 +101,24 @@ export const PROVIDER_DISPLAY: Readonly<Record<ProviderId, string>> = {
   xai: 'xAI',
   meta: 'Meta',
   mistral: 'Mistral',
+  deepseek: 'DeepSeek',
+  alibaba: 'Alibaba',
+  moonshot: 'Moonshot AI',
   other: 'Other',
 }
 
 /** The tracked labs, in the order every panel lists them. */
-export const PROVIDER_ORDER = ['openai', 'anthropic', 'google', 'xai', 'meta', 'mistral'] as const
+export const PROVIDER_ORDER = [
+  'openai',
+  'anthropic',
+  'google',
+  'xai',
+  'meta',
+  'mistral',
+  'deepseek',
+  'alibaba',
+  'moonshot',
+] as const
 
 // Each per-axis map below names, for every lab, either the feed that backs
 // it or the sources.yaml cut that says why none does. A lab with no feed
@@ -105,6 +134,9 @@ export const HIRING_SOURCES: Readonly<
   xai: { source_ids: ['xai-greenhouse', 'xai-greenhouse-departments'] },
   meta: { cut_id: 'meta-hiring' },
   mistral: { source_ids: ['mistral-ashby'] },
+  deepseek: { cut_id: 'deepseek-hiring' },
+  alibaba: { cut_id: 'alibaba-hiring' },
+  moonshot: { cut_id: 'moonshot-hiring' },
 }
 
 /** Which status feed backs each lab. */
@@ -116,6 +148,9 @@ export const INCIDENT_SOURCES: Readonly<Record<LabId, { source_id: string } | { 
     xai: { source_id: 'xai-status' },
     meta: { cut_id: 'meta-status' },
     mistral: { source_id: 'mistral-status' },
+    deepseek: { source_id: 'deepseek-status' },
+    alibaba: { cut_id: 'alibaba-status' },
+    moonshot: { cut_id: 'moonshot-status' },
   }
 
 /** Which disclosure index backs each lab. */
@@ -128,6 +163,9 @@ export const DISCLOSURE_SOURCES: Readonly<
   xai: { cut_id: 'xai-disclosures' },
   meta: { cut_id: 'meta-disclosures' },
   mistral: { cut_id: 'mistral-disclosures' },
+  deepseek: { cut_id: 'deepseek-disclosures' },
+  alibaba: { cut_id: 'alibaba-disclosures' },
+  moonshot: { cut_id: 'moonshot-disclosures' },
 }
 
 export interface RegisteredSource {
@@ -267,6 +305,9 @@ const PROVIDERS: readonly (ProviderId | 'all')[] = [
   'xai',
   'meta',
   'mistral',
+  'deepseek',
+  'alibaba',
+  'moonshot',
   'other',
   'all',
 ]

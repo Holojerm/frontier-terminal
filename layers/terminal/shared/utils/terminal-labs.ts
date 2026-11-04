@@ -14,6 +14,9 @@ export const LAB_DISPLAY: Record<ProviderId, string> = {
   xai: 'xAI',
   meta: 'Meta',
   mistral: 'Mistral',
+  deepseek: 'DeepSeek',
+  alibaba: 'Alibaba',
+  moonshot: 'Moonshot AI',
   other: 'Other',
 }
 
@@ -25,6 +28,9 @@ export const LAB_SITE: Record<Exclude<ProviderId, 'other'>, string> = {
   xai: 'https://x.ai',
   meta: 'https://ai.meta.com',
   mistral: 'https://mistral.ai',
+  deepseek: 'https://www.deepseek.com',
+  alibaba: 'https://qwen.ai',
+  moonshot: 'https://www.moonshot.ai',
 }
 
 /** A provider id as a reader sees it; an id outside the registry reads as itself. */

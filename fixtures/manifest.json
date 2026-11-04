@@ -702,6 +702,76 @@
       "http_status": 200,
       "raw_bytes": 3161339,
       "trim": "the root element, the dei CIK, type and period facts, every unit, and the dimensional RPO facts with their contexts; values untouched."
+    },
+    {
+      "path": "fixtures/pricing/deepseek-pricing.md",
+      "source_id": "deepseek-pricing-md",
+      "source_url": "https://api-docs.deepseek.com/quick_start/pricing.md",
+      "fetched_at": "2026-11-04T20:59:14Z",
+      "http_status": 200,
+      "raw_bytes": 13663,
+      "trim": "none — committed whole",
+      "note": "Registered 2026-11-04 with DeepSeek as a tracked lab. One transposed table: deepseek-flash (DeepSeek-V4.1-Flash-1017) and deepseek-v4-pro, USD per million tokens at peak and off-peak, cache hit and miss. ETag and Last-Modified."
+    },
+    {
+      "path": "fixtures/pricing/alibaba-pricing.html",
+      "source_id": "alibaba-pricing-html",
+      "source_url": "https://www.alibabacloud.com/help/en/model-studio/model-pricing",
+      "fetched_at": "2026-11-04T20:59:14Z",
+      "http_status": 200,
+      "raw_bytes": 505999,
+      "trim": "none — committed whole",
+      "note": "Registered 2026-11-04 with Alibaba as a tracked lab. International site, USD. One <h3> per model line, one <h4> tab per region; the Singapore tab's International rows of Qwen-Max, Qwen-Plus and Qwen-Flash are parsed. No ETag or Last-Modified; a per-request trace id changes the bytes on every fetch."
+    },
+    {
+      "path": "fixtures/pricing/alibaba-models.html",
+      "source_id": "alibaba-models-html",
+      "source_url": "https://www.alibabacloud.com/help/en/model-studio/models",
+      "fetched_at": "2026-11-04T20:59:22Z",
+      "http_status": 200,
+      "raw_bytes": 42792,
+      "trim": "none — committed whole",
+      "note": "The 'Recommended models' page, read only for the three sentences Alibaba's class-map cells quote. No ETag or Last-Modified."
+    },
+    {
+      "path": "fixtures/pricing/moonshot-models.md",
+      "source_id": "moonshot-models-md",
+      "source_url": "https://platform.kimi.ai/docs/models.md",
+      "fetched_at": "2026-11-04T20:59:28Z",
+      "http_status": 200,
+      "raw_bytes": 2434,
+      "trim": "none — committed whole",
+      "note": "Registered 2026-11-04 with Moonshot AI as a tracked lab. Three current ids (Multi-modal Model table) and 18 deprecated; no prices and no context column. platform.moonshot.ai redirects here."
+    },
+    {
+      "path": "fixtures/status/deepseek-status.xml",
+      "source_id": "deepseek-status",
+      "source_url": "https://status.deepseek.com/history.rss",
+      "fetched_at": "2026-11-04T21:04:45Z",
+      "http_status": 200,
+      "raw_bytes": 18912,
+      "trim": "none — committed whole",
+      "note": "RSS 2.0 from Flashduty: 28 incidents, 2026-08-04 to 2026-11-03, all resolved; start (pubDate, +08:00), newest status and components per item, no impact, no end. Weak ETag."
+    },
+    {
+      "path": "fixtures/status/deepseek-status-atom.xml",
+      "source_id": "deepseek-status-atom",
+      "source_url": "https://status.deepseek.com/history.atom",
+      "fetched_at": "2026-11-04T21:04:46Z",
+      "http_status": 200,
+      "raw_bytes": 18982,
+      "trim": "none — committed whole",
+      "note": "The same 28 incidents as Atom 1.0; each entry's <updated> (+08:00) is the newest update, the resolution for a resolved incident. Weak ETag."
+    },
+    {
+      "path": "fixtures/sec/edgar-submissions-baba.json",
+      "source_id": "edgar-submissions-baba",
+      "source_url": "https://data.sec.gov/submissions/CIK0001577552.json",
+      "fetched_at": "2026-11-04T21:13:58Z",
+      "http_status": 200,
+      "raw_bytes": 108883,
+      "trim": "filings.recent parallel arrays cut to the newest 150 entries (of 674); filings.files emptied.",
+      "note": "Alibaba Group Holding Ltd, whitelisted CIK (resolved 2026-11-04 from SEC's company_tickers.json). Newest 150 filings span 2025-06-16 to 2026-10-13: 79 6-K, two 20-F (2025-06-26, 2026-05-20), no 10-Q, 10-K or 8-K."
     }
   ]
 }

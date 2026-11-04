@@ -118,7 +118,7 @@ const skuText = (m: SpendModel) =>
 
       <p class="text-xs text-muted">
         {{ compactTokens(spend.totals.other_tokens) }} of
-        {{ compactTokens(spend.totals.tokens) }} tokens went to models outside the six labs and are
+        {{ compactTokens(spend.totals.tokens) }} tokens went to models outside the nine labs and are
         not priced.
       </p>
 

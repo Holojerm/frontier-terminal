@@ -34,8 +34,9 @@ fixes). The paths are globs, and the fix may touch nothing else.
 ## Product context
 
 Frontier Terminal is a free, public, read-only investor terminal tracking the frontier AI
-labs — OpenAI, Anthropic, Google, xAI, Meta, Mistral — on seven axes: API prices, hiring, SEC filings,
-disclosed revenue, status-page incidents, misalignment disclosures and OpenRouter demand share.
+labs — OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Alibaba (Qwen), Moonshot AI
+(Kimi) — on seven axes: API prices, hiring, SEC filings, disclosed revenue, status-page
+incidents, misalignment disclosures and OpenRouter demand share.
 The three below carry most of the judge's signal. **Pricing**: each lab's published
 API price list, parsed into one row per model and tier (input, cached input, output per
 million tokens; context window; promo windows as their own rows). **Hiring**: the labs' own

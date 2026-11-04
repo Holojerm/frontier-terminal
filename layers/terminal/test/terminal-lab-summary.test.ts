@@ -66,7 +66,7 @@ describe('summarizeLab', () => {
 })
 
 describe('lab pages', () => {
-  it('lists the six labs with a summary a crawler can read', () => {
+  it('lists the nine labs with a summary a crawler can read', () => {
     expect(LAB_PAGES.map((p) => p.path)).toEqual([
       '/labs/openai',
       '/labs/anthropic',
@@ -74,8 +74,12 @@ describe('lab pages', () => {
       '/labs/xai',
       '/labs/meta',
       '/labs/mistral',
+      '/labs/deepseek',
+      '/labs/alibaba',
+      '/labs/moonshot',
     ])
     expect(isLab('xai')).toBe(true)
-    expect(isLab('deepseek')).toBe(false)
+    expect(isLab('deepseek')).toBe(true)
+    expect(isLab('cohere')).toBe(false)
   })
 })

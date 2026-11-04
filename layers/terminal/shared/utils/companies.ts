@@ -1,4 +1,4 @@
-// Every company a thesis can be about or compared with. The six labs are
+// Every company a thesis can be about or compared with. The tracked labs are
 // also the terminal's providers (terminal-sources.ts); the rest exist only
 // for the thesis layer, so the lab panels never see them. A group is a
 // basket a thesis can be about as one subject (the Compute thesis is about
@@ -18,6 +18,9 @@ export const COMPANIES = {
   xai: { name: 'xAI', ticker: null, kind: 'lab' },
   meta: { name: 'Meta', ticker: 'META', kind: 'lab' },
   mistral: { name: 'Mistral', ticker: null, kind: 'lab' },
+  deepseek: { name: 'DeepSeek', ticker: null, kind: 'lab' },
+  alibaba: { name: 'Alibaba', ticker: 'BABA', kind: 'lab' },
+  moonshot: { name: 'Moonshot AI', ticker: null, kind: 'lab' },
   cloudflare: { name: 'Cloudflare', ticker: 'NET', kind: 'company' },
   akamai: { name: 'Akamai', ticker: 'AKAM', kind: 'company' },
   fastly: { name: 'Fastly', ticker: 'FSLY', kind: 'company' },
