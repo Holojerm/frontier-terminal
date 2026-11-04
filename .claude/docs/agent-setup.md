@@ -11,7 +11,8 @@ This project ships with Claude Code configuration in `.mcp.json.example` and `.c
 
 ## MCP Servers (`.mcp.json.example`)
 
-`.mcp.json` itself is **untracked** (`.gitignore`). Copy the example once:
+`.mcp.json` itself is **untracked** (`.gitignore`). `bun dev` creates it from the example the
+first time it's missing; to copy it by hand instead:
 
 ```bash
 cp .mcp.json.example .mcp.json
