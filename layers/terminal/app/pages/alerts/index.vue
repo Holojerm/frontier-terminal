@@ -5,7 +5,7 @@
 // feed at /alerts.xml carries the alerts; ?include=info adds the minor changes.
 
 import { INFO_FEED_QUERY, INFO_TIER_LABEL } from '../../../shared/utils/terminal-tiers'
-import type { AlertsData } from '../../../shared/utils/terminal-types'
+import type { AlertsData, TrackRecordData } from '../../../shared/utils/terminal-types'
 
 definePageMeta({
   publicPage: {
@@ -17,11 +17,19 @@ definePageMeta({
   },
 })
 
-const [{ data: alerts, error: alertsError }, { data: minor, error: minorError }] =
+const [{ data: alerts, error: alertsError }, { data: minor, error: minorError }, { data: record }] =
   await Promise.all([
     useFetch<AlertsData>('/api/alerts', { query: { tier: 'alert' } }),
     useFetch<AlertsData>('/api/alerts', { query: { tier: 'info' } }),
+    useFetch<TrackRecordData>('/api/track-record'),
   ])
+
+// Two views on the same alerts: the list, and the track record, which times
+// each material alert against the first press report and the lab's own post.
+const tabs = [
+  { value: 'alerts', label: 'Alerts' },
+  { value: 'track-record', label: 'Track record' },
+]
 
 useSeo({
   title: 'AI lab pricing, hiring, and filing alerts',
@@ -72,69 +80,81 @@ const infoFeed = `/alerts.xml?${INFO_FEED_QUERY}`
       </p>
     </template>
 
-    <!-- Side by side only where the alert table keeps its headline column
+    <TerminalTabs :tabs="tabs">
+      <template #alerts>
+        <!-- Side by side only where the alert table keeps its headline column
          readable at two-thirds of the container. -->
-    <div class="grid items-start gap-6 2xl:grid-cols-3">
-      <TerminalPanel
-        id="alerts"
-        class="2xl:col-span-2"
-        title="Alerts"
-        note="Notable and critical, newest first."
-        :flush="Boolean(alerts?.rows.length)"
-      >
-        <template v-if="alerts">
-          <TerminalGap
-            v-if="alerts.rows.length === 0"
-            title="No alerts yet."
-            reason="An alert needs a change big enough to matter. Right after our first check, an empty list is normal."
-            :action="{ label: 'Recent changes', to: '/#signal' }"
-          />
-          <TerminalSignalTable v-else :alerts="shown" flow />
-        </template>
-        <template v-if="alerts?.rows.length" #foot>
-          <span class="flex flex-wrap items-baseline gap-x-4">
-            <UButton
-              v-if="remaining > 0"
-              variant="link"
-              size="sm"
-              class="px-0"
-              :label="`Show ${Math.min(PAGE, remaining)} more`"
-              @click="shownCount += PAGE"
-            />
-            <span>
-              {{ shown.length }} of {{ alerts.total }}. Open a row for the explanation, the rule,
-              and the changes it cites.
-            </span>
-          </span>
-        </template>
-      </TerminalPanel>
+        <div class="grid items-start gap-6 2xl:grid-cols-3">
+          <TerminalPanel
+            id="alerts"
+            class="2xl:col-span-2"
+            title="Alerts"
+            note="Notable and critical, newest first."
+            :flush="Boolean(alerts?.rows.length)"
+          >
+            <template v-if="alerts">
+              <TerminalGap
+                v-if="alerts.rows.length === 0"
+                title="No alerts yet."
+                reason="An alert needs a change big enough to matter. Right after our first check, an empty list is normal."
+                :action="{ label: 'Recent changes', to: '/#signal' }"
+              />
+              <TerminalSignalTable v-else :alerts="shown" flow />
+            </template>
+            <template v-if="alerts?.rows.length" #foot>
+              <span class="flex flex-wrap items-baseline gap-x-4">
+                <UButton
+                  v-if="remaining > 0"
+                  variant="link"
+                  size="sm"
+                  class="px-0"
+                  :label="`Show ${Math.min(PAGE, remaining)} more`"
+                  @click="shownCount += PAGE"
+                />
+                <span>
+                  {{ shown.length }} of {{ alerts.total }}. Open a row for the explanation, the
+                  rule, and the changes it cites.
+                </span>
+              </span>
+            </template>
+          </TerminalPanel>
 
-      <TerminalPanel
-        id="minor-changes"
-        :title="INFO_TIER_LABEL"
-        note="Single role adds and closes, retitles, location changes."
-      >
-        <template v-if="minor">
-          <TerminalGap
-            v-if="minor.rows.length === 0"
-            title="No minor changes."
-            reason="An empty list here is normal."
-          />
-          <TerminalTickerList v-else :alerts="minorShown" />
-        </template>
-        <template v-if="minor?.rows.length" #meta>
-          {{ minor.rows.length }} of {{ minor.total }}
-        </template>
-        <template v-if="minorRemaining > 0" #foot>
-          <UButton
-            variant="link"
-            size="sm"
-            class="px-0"
-            :label="`Show ${Math.min(PAGE, minorRemaining)} more`"
-            @click="minorCount += PAGE"
-          />
-        </template>
-      </TerminalPanel>
-    </div>
+          <TerminalPanel
+            id="minor-changes"
+            :title="INFO_TIER_LABEL"
+            note="Single role adds and closes, retitles, location changes."
+          >
+            <template v-if="minor">
+              <TerminalGap
+                v-if="minor.rows.length === 0"
+                title="No minor changes."
+                reason="An empty list here is normal."
+              />
+              <TerminalTickerList v-else :alerts="minorShown" />
+            </template>
+            <template v-if="minor?.rows.length" #meta>
+              {{ minor.rows.length }} of {{ minor.total }}
+            </template>
+            <template v-if="minorRemaining > 0" #foot>
+              <UButton
+                variant="link"
+                size="sm"
+                class="px-0"
+                :label="`Show ${Math.min(PAGE, minorRemaining)} more`"
+                @click="minorCount += PAGE"
+              />
+            </template>
+          </TerminalPanel>
+        </div>
+      </template>
+      <template #track-record>
+        <TerminalTrackRecord v-if="record" :record="record" />
+        <TerminalGap
+          v-else
+          title="The track record didn’t load."
+          reason="Try reloading in a minute."
+        />
+      </template>
+    </TerminalTabs>
   </TerminalPage>
 </template>

@@ -378,7 +378,7 @@ export const filedFactReads = sqliteTable(
 // ─────────────────────────────────────────────
 // For each material alert: when the terminal saw the change, against when the
 // press (GDELT) and the lab's own newsroom first carried it. All three are
-// append-only, so the /track-record page and its exports answer as_of by the
+// append-only, so the track-record tab and its exports answer as_of by the
 // column that says when each row was written.
 
 // One row per search for an alert's candidates: a GDELT query, or a read of

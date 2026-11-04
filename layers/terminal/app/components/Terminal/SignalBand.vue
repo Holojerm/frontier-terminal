@@ -125,7 +125,9 @@ const quietReason = computed(() => {
 
       <p class="text-sm text-muted">
         Did we see these before the press?
-        <NuxtLink to="/track-record" class="underline underline-offset-2 hover:text-default"
+        <NuxtLink
+          to="/alerts?tab=track-record"
+          class="underline underline-offset-2 hover:text-default"
           >Track record</NuxtLink
         >
       </p>

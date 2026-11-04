@@ -43,7 +43,7 @@ const ROUTES = [
   '/rankings',
   '/compute',
   '/alerts',
-  '/track-record',
+  '/alerts?tab=track-record',
   '/theses',
   '/theses/anthropic',
   '/theses/cloudflare',
