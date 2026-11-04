@@ -46,10 +46,11 @@ const STACK: { id: ProviderId; label: string; cls: string; opacity: number; swat
   { id: 'other', label: 'Other', cls: 'text-dimmed', opacity: 0.6, swatch: 'bg-accented' },
 ]
 
-const W = 720
+// Drawn at the box's own width (useChartWidth), so the bars fill the panel.
+const W = useChartWidth('box', 720)
 const H = 240
 const PAD = { top: 8, right: 8, bottom: 24, left: 44 }
-const plotW = W - PAD.left - PAD.right
+const plotW = computed(() => W.value - PAD.left - PAD.right)
 const plotH = H - PAD.top - PAD.bottom
 const GAP = 2
 
@@ -65,7 +66,7 @@ const yMax = computed(() => niceCeil(Math.max(0, ...props.series.map((d) => d.to
 const ticks = computed(() => [0, 0.25, 0.5, 0.75, 1].map((f) => f * yMax.value))
 const y = (v: number) => PAD.top + plotH - (v / yMax.value) * plotH
 
-const slot = computed(() => (props.series.length ? plotW / props.series.length : plotW))
+const slot = computed(() => (props.series.length ? plotW.value / props.series.length : plotW.value))
 const barW = computed(() => Math.min(24, Math.max(4, slot.value - 4)))
 const x = (i: number) => PAD.left + i * slot.value + (slot.value - barW.value) / 2
 
@@ -117,7 +118,7 @@ const tableColumns: TableColumn[] = [
 </script>
 
 <template>
-  <div class="max-w-4xl space-y-3">
+  <div ref="box" class="space-y-3">
     <ul class="flex flex-wrap gap-x-4 gap-y-1 text-xs text-muted" aria-label="Legend">
       <li v-for="s in STACK" :key="s.id" class="flex items-center gap-1.5">
         <span class="inline-block size-3 rounded-sm" :class="s.swatch" aria-hidden="true" />
@@ -127,7 +128,9 @@ const tableColumns: TableColumn[] = [
 
     <svg
       :viewBox="`0 0 ${W} ${H}`"
-      class="w-full"
+      :height="H"
+      preserveAspectRatio="xMinYMid meet"
+      class="block w-full"
       role="img"
       :aria-labelledby="`${uid}-title`"
       :aria-describedby="`${uid}-desc`"

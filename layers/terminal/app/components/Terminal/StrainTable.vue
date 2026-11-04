@@ -62,23 +62,25 @@ const columns = computed<TableColumn[]>(() => [
       <span :class="p.open.length ? 'text-warning' : undefined">{{ p.open.length }}</span>
     </template>
     <template #cell-incident="{ row: p }">
-      <template v-if="p.open[0]">
+      <!-- One line: the title truncates (its full text is the tooltip) so an
+           open incident does not make its row three lines tall. -->
+      <span v-if="p.open[0]" class="flex max-w-64 min-w-0 items-baseline gap-1">
         <a
           :href="p.open[0].incident_url"
           target="_blank"
           rel="noopener noreferrer"
-          class="text-default underline decoration-1 underline-offset-2 hover:text-highlighted"
+          class="min-w-0 truncate text-default underline decoration-1 underline-offset-2 hover:text-highlighted"
           :title="p.open[0].title"
           >{{ p.open[0].title }}</a
         >
-        <span class="ml-1 whitespace-nowrap text-muted">
+        <span class="whitespace-nowrap text-muted">
           {{ p.open[0].impact ?? 'impact not published' }} · since
           <time :datetime="p.open[0].started_at" :title="p.open[0].started_at">{{
             relativeStamp(p.open[0].started_at, now)
           }}</time>
+          <template v-if="p.open.length > 1"> +{{ p.open.length - 1 }}</template>
         </span>
-        <span v-if="p.open.length > 1" class="text-muted"> +{{ p.open.length - 1 }}</span>
-      </template>
+      </span>
       <span v-else class="text-muted">none</span>
     </template>
     <template #cell-source="{ row: p }">

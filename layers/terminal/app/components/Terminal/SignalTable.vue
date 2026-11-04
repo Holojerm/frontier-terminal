@@ -19,7 +19,11 @@ import { alertPath } from '../../../shared/utils/terminal-tiers'
 import type { AlertView } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
-const props = defineProps<{ alerts: AlertView[] }>()
+const props = defineProps<{
+  alerts: AlertView[]
+  /** The page's primary table: it runs with the page instead of its own scroll box. */
+  flow?: boolean
+}>()
 
 const now = useNow()
 
@@ -56,6 +60,7 @@ const columns: TableColumn[] = [
     :row-id="(r) => r.alert.id"
     row-header="headline"
     align="top"
+    :flow="flow"
   >
     <template #cell-headline="{ row }">
       <UIcon

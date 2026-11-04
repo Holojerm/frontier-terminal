@@ -34,7 +34,11 @@ const now = useNow()
       >
         {{ alert.headline }}
       </NuxtLink>
-      <TerminalProvenanceTag :source-url="alert.source_url" :fetched-at="alert.fetched_at" />
+      <TerminalProvenanceTag
+        :source-url="alert.source_url"
+        :fetched-at="alert.fetched_at"
+        compact
+      />
     </li>
   </ol>
 </template>

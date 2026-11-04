@@ -41,7 +41,7 @@ useSeo({
         title="No theses are open."
         reason="Each one opens with its claims and kill conditions already written."
       />
-      <div v-else class="grid gap-6 lg:grid-cols-2">
+      <div v-else class="grid gap-6 lg:grid-cols-2 2xl:grid-cols-3">
         <ThesisCard v-for="thesis in theses.theses" :key="thesis.id" :thesis="thesis" />
       </div>
 

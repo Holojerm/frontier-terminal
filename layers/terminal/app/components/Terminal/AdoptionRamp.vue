@@ -61,22 +61,27 @@ const rows = computed(() =>
 </script>
 
 <template>
-  <div class="space-y-3">
-    <TerminalLineChart
-      v-if="ramp.months.length > 1"
-      :x="ramp.months"
-      :series="chartSeries"
-      :format="pct"
-      :x-label="monthLabel"
-      :title="`Share of US businesses on Ramp paying ${chartSeries.map((s) => s.label).join(', ')}, monthly, ${monthLabel(ramp.months[0]!)} to ${monthLabel(ramp.months.at(-1)!)}`"
-    />
-    <TerminalTable
-      :caption="`Share of US businesses on Ramp paying each vendor, ${monthLabel(ramp.months.at(-1)!)}`"
-      :columns="columns"
-      :rows="rows"
-      :row-key="(r) => r.key"
-      nested
-    />
+  <!-- Chart and table side by side once the panel is wide enough for both,
+       so a full-width panel is not a short chart over a long empty row. -->
+  <div class="@container space-y-3">
+    <div class="grid gap-4 @4xl:grid-cols-3 @4xl:items-start">
+      <TerminalLineChart
+        v-if="ramp.months.length > 1"
+        class="@4xl:col-span-2"
+        :x="ramp.months"
+        :series="chartSeries"
+        :format="pct"
+        :x-label="monthLabel"
+        :title="`Share of US businesses on Ramp paying ${chartSeries.map((s) => s.label).join(', ')}, monthly, ${monthLabel(ramp.months[0]!)} to ${monthLabel(ramp.months.at(-1)!)}`"
+      />
+      <TerminalTable
+        :caption="`Share of US businesses on Ramp paying each vendor, ${monthLabel(ramp.months.at(-1)!)}`"
+        :columns="columns"
+        :rows="rows"
+        :row-key="(r) => r.key"
+        nested
+      />
+    </div>
     <TerminalSources
       :sources="[ramp.source]"
       :caveats="[{ text: caveat, label: 'adoption, not spend' }]"

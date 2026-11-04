@@ -77,6 +77,19 @@ const dailyRows = computed(() =>
   })),
 )
 
+// Labs with no public board: one line in the department tab, not a card each.
+const fed = computed(() => (hiring.value?.providers ?? []).filter((p) => !feedGap('hiring', p)))
+const unfed = computed(() => (hiring.value?.providers ?? []).filter((p) => feedGap('hiring', p)))
+
+// Four questions, one tab each: how many roles, what is being built, which
+// teams moved, and what the roles pay.
+const tabs = computed(() => [
+  { value: 'openings', label: 'Openings' },
+  { value: 'infrastructure', label: 'Infrastructure' },
+  { value: 'departments', label: 'Departments' },
+  ...(pay.value?.boards.length ? [{ value: 'pay', label: 'Pay' }] : []),
+])
+
 const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
   { key: 'department', label: 'Department', class: 'max-w-48 truncate text-default' },
   { key: 'then', label: p.compare?.at ?? 'Then', numeric: true, class: 'text-muted' },
@@ -94,156 +107,167 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
     error-title="Hiring history could not be read"
     error-body="The history endpoint failed to respond. No stale or inferred number is shown in its place."
   >
-    <template v-if="hiring">
-      <TerminalPanel
-        id="labs"
-        title="By lab"
-        note="Open roles per board, the infrastructure cluster, and the department that moved most."
-        flush
-      >
-        <TerminalHiringSummary :history="hiring" />
-      </TerminalPanel>
-
-      <TerminalPanel
-        id="series"
-        title="Open roles over time"
-        :note="
-          anyLog
-            ? `${count(hiring.log.changes)} job change rows from ${hiring.log.from?.slice(0, 10)} to ${hiring.log.to?.slice(0, 10)}, applied backwards from each board’s current listing.`
-            : 'No job change rows yet; each board shows its current listing only.'
-        "
-      >
-        <TerminalLineChart
-          v-if="chart.series.length && chart.x.length > 1"
-          :x="chart.x"
-          :series="chart.series"
-          :format="count"
-          :x-label="dayLabel"
-          :title="`Open roles per day at ${chart.series.map((s) => s.label).join(', ')} from ${chart.x[0]} to ${chart.x.at(-1)}`"
-        />
-        <TerminalGap
-          v-else
-          title="No series to draw yet."
-          reason="A series needs a board with a current listing and at least two days on record. Each board’s first poll sets its baseline."
-          :action="{ label: 'See coverage', to: '/data#coverage' }"
-        />
-
-        <TerminalExpand
-          v-if="chart.x.length > 1"
-          show="Show the daily table"
-          hide="Hide the daily table"
+    <TerminalTabs v-if="hiring" :tabs="tabs">
+      <template #openings>
+        <TerminalPanel
+          id="labs"
+          title="By lab"
+          note="Open roles per board, the infrastructure cluster, and the department that moved most."
+          flush
         >
-          <TerminalTable
-            caption="Open roles at the end of each day, per lab"
-            :columns="dailyColumns"
-            :rows="dailyRows"
-            :row-key="(r) => r.date"
-            nested
+          <TerminalHiringSummary :history="hiring" />
+        </TerminalPanel>
+
+        <TerminalPanel
+          id="series"
+          title="Open roles over time"
+          :note="
+            anyLog
+              ? `${count(hiring.log.changes)} job change rows from ${hiring.log.from?.slice(0, 10)} to ${hiring.log.to?.slice(0, 10)}, applied backwards from each board’s current listing.`
+              : 'No job change rows yet; each board shows its current listing only.'
+          "
+        >
+          <TerminalLineChart
+            v-if="chart.series.length && chart.x.length > 1"
+            :x="chart.x"
+            :series="chart.series"
+            :format="count"
+            :x-label="dayLabel"
+            :title="`Open roles per day at ${chart.series.map((s) => s.label).join(', ')} from ${chart.x[0]} to ${chart.x.at(-1)}`"
           />
-        </TerminalExpand>
-      </TerminalPanel>
+          <TerminalGap
+            v-else
+            title="No series to draw yet."
+            reason="A series needs a board with a current listing and at least two days on record. Each board’s first poll sets its baseline."
+            :action="{ label: 'See coverage', to: '/data#coverage' }"
+          />
 
-      <TerminalPanel
-        id="buildout"
-        title="Physical-infrastructure buildout"
-        note="Data-center, facilities, energy, construction, compute and hardware roles per lab per day."
-      >
-        <TerminalBuildoutPanel :history="hiring" />
-      </TerminalPanel>
-
-      <TerminalPanel
-        v-if="power?.snapshot"
-        id="power"
-        title="Data-center power"
-        note="Epoch AI’s estimate of the power each lab’s data centers draw: what the buildout roles are building."
-        :more="{ label: 'Every site, and GPU rental prices', to: '/compute' }"
-      >
-        <TerminalDataCenterPower :data="power" />
-      </TerminalPanel>
-
-      <TerminalPanel
-        id="departments"
-        title="Department mix, now against earlier"
-        :note="`Open roles by department, now against ${hiring.window_days} days ago or the first day on record.`"
-      >
-        <UCheckbox v-model="movedOnly" label="Only departments that moved" />
-        <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
-          <TerminalCard
-            v-for="p in hiring.providers"
-            :id="p.provider"
-            :key="p.provider"
-            :title="p.display"
-            :sources="p.sources"
+          <TerminalExpand
+            v-if="chart.x.length > 1"
+            show="Show the daily table"
+            hide="Hide the daily table"
           >
-            <template #meta>
-              <TerminalCaveatMark v-if="p.caveat" label="blended board" :text="p.caveat" />
-              <span v-if="p.compare">
-                <span class="font-mono text-highlighted">{{ count(p.compare.total_now) }}</span>
-                open,
-                <span class="font-mono">{{
-                  signed(p.compare.total_now - p.compare.total_then)
-                }}</span>
-                since {{ p.compare.at }}
-              </span>
-            </template>
+            <TerminalTable
+              caption="Open roles at the end of each day, per lab"
+              :columns="dailyColumns"
+              :rows="dailyRows"
+              :row-key="(r) => r.date"
+              nested
+            />
+          </TerminalExpand>
+        </TerminalPanel>
+      </template>
 
-            <TerminalGap v-if="feedGap('hiring', p)" inline v-bind="feedGap('hiring', p)!" />
+      <template #infrastructure>
+        <TerminalPanel
+          id="buildout"
+          title="Physical-infrastructure buildout"
+          note="Data-center, facilities, energy, construction, compute and hardware roles per lab per day."
+        >
+          <TerminalBuildoutPanel :history="hiring" />
+        </TerminalPanel>
 
-            <template v-else-if="p.compare">
-              <p v-if="compareRows(p).length === 0" class="text-xs text-muted">
-                No department moved; {{ unchanged(p) }} unchanged.
-              </p>
-              <TerminalTable
-                v-else
-                :caption="`${p.display} open roles by department, then and now`"
-                :columns="deptColumns(p)"
-                :rows="
-                  compareRows(p).map((d) => ({
-                    ...d,
-                    delta: d.now === d.then ? '±0' : signed(d.now - d.then),
-                  }))
-                "
-                :row-key="(d) => d.department"
-                nested
-              >
-                <template #cell-department="{ row: d }">
-                  <span :title="d.department">{{ d.department }}</span>
-                </template>
-              </TerminalTable>
-              <p
-                v-if="movedOnly && compareRows(p).length && unchanged(p)"
-                class="text-xs text-muted"
-              >
-                {{ unchanged(p) }} unchanged hidden.
-              </p>
-              <p
-                v-if="p.join_from && p.compare.at < p.join_from.slice(0, 10)"
-                class="text-xs text-muted"
-              >
-                Departments joined from {{ absoluteStamp(p.join_from, now) }}; earlier rows read “{{
-                  NO_DEPARTMENT
-                }}”.
-              </p>
-              <p
-                v-if="p.baseline_at && p.series_from && p.baseline_at > p.series_from"
-                class="text-xs text-muted"
-              >
-                Rows before the {{ absoluteStamp(p.baseline_at, now) }} baseline are imported
-                history, carried as they stand today.
-              </p>
-            </template>
-          </TerminalCard>
-        </div>
-      </TerminalPanel>
+        <TerminalPanel
+          v-if="power?.snapshot"
+          id="power"
+          title="Data-center power"
+          note="Epoch AI’s estimate of the power each lab’s data centers draw: what the buildout roles are building."
+          :more="{ label: 'Every site, and GPU rental prices', to: '/compute' }"
+        >
+          <TerminalDataCenterPower :data="power" />
+        </TerminalPanel>
+      </template>
 
-      <TerminalPanel
-        v-if="pay?.boards.length"
-        id="pay"
-        title="Posted pay"
-        note="The median midpoint of the US salary bands each board posts, for all roles, research and software engineering."
-      >
-        <TerminalPayTable :pay="pay" />
-      </TerminalPanel>
-    </template>
+      <template #departments>
+        <TerminalPanel
+          id="departments"
+          title="Department mix, now against earlier"
+          :note="`Open roles by department, now against ${hiring.window_days} days ago or the first day on record.`"
+        >
+          <UCheckbox v-model="movedOnly" label="Only departments that moved" />
+          <div class="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
+            <TerminalCard
+              v-for="p in fed"
+              :id="p.provider"
+              :key="p.provider"
+              :title="p.display"
+              :sources="p.sources"
+            >
+              <template #meta>
+                <TerminalCaveatMark v-if="p.caveat" label="blended board" :text="p.caveat" />
+                <span v-if="p.compare">
+                  <span class="font-mono text-highlighted">{{ count(p.compare.total_now) }}</span>
+                  open,
+                  <span class="font-mono">{{
+                    signed(p.compare.total_now - p.compare.total_then)
+                  }}</span>
+                  since {{ p.compare.at }}
+                </span>
+              </template>
+
+              <template v-if="p.compare">
+                <p v-if="compareRows(p).length === 0" class="text-xs text-muted">
+                  No department moved; {{ unchanged(p) }} unchanged.
+                </p>
+                <TerminalTable
+                  v-else
+                  :caption="`${p.display} open roles by department, then and now`"
+                  :columns="deptColumns(p)"
+                  :rows="
+                    compareRows(p).map((d) => ({
+                      ...d,
+                      delta: d.now === d.then ? '±0' : signed(d.now - d.then),
+                    }))
+                  "
+                  :row-key="(d) => d.department"
+                  nested
+                >
+                  <template #cell-department="{ row: d }">
+                    <span :title="d.department">{{ d.department }}</span>
+                  </template>
+                </TerminalTable>
+                <p
+                  v-if="movedOnly && compareRows(p).length && unchanged(p)"
+                  class="text-xs text-muted"
+                >
+                  {{ unchanged(p) }} unchanged hidden.
+                </p>
+                <p
+                  v-if="p.join_from && p.compare.at < p.join_from.slice(0, 10)"
+                  class="text-xs text-muted"
+                >
+                  Departments joined from {{ absoluteStamp(p.join_from, now) }}; earlier rows read
+                  “{{ NO_DEPARTMENT }}”.
+                </p>
+                <p
+                  v-if="p.baseline_at && p.series_from && p.baseline_at > p.series_from"
+                  class="text-xs text-muted"
+                >
+                  Rows before the {{ absoluteStamp(p.baseline_at, now) }} baseline are imported
+                  history, carried as they stand today.
+                </p>
+              </template>
+            </TerminalCard>
+          </div>
+          <p v-if="unfed.length" class="flex flex-wrap gap-x-6 gap-y-1 text-xs">
+            <span v-for="p in unfed" :id="p.provider" :key="p.provider">
+              <span class="mr-1 text-default">{{ p.display }}</span>
+              <TerminalGap inline v-bind="feedGap('hiring', p)!" />
+            </span>
+          </p>
+        </TerminalPanel>
+      </template>
+
+      <template #pay>
+        <TerminalPanel
+          v-if="pay?.boards.length"
+          id="pay"
+          title="Posted pay"
+          note="The median midpoint of the US salary bands each board posts, for all roles, research and software engineering."
+        >
+          <TerminalPayTable :pay="pay" />
+        </TerminalPanel>
+      </template>
+    </TerminalTabs>
   </TerminalPage>
 </template>

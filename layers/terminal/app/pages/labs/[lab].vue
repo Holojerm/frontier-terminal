@@ -8,6 +8,8 @@
 import { COMPARE_PAIRS, comparePath, pairTitle } from '../../../shared/utils/terminal-compare'
 import { isLab, summarizeLab } from '../../../shared/utils/terminal-lab-summary'
 import { alertLabs, LAB_SITE } from '../../../shared/utils/terminal-labs'
+import { absoluteStamp } from '../../../shared/utils/terminal-format'
+import type { TableColumn } from '../../types/terminal-ui'
 import type {
   AlertsData,
   HiringHistoryData,
@@ -221,6 +223,32 @@ const topModels = computed(() => rankings.data.value?.top_models ?? [])
 const labReleases = computed(() => releases.data.value?.rows ?? [])
 const labIncidents = computed(() => incidents.data.value?.incidents.length ?? 0)
 const pairs = COMPARE_PAIRS.filter((pair) => pair.includes(lab))
+
+// The incidents behind the strain count, newest first: already this lab's
+// rows, narrowed on the server above.
+const now = useNow()
+const INCIDENTS_SHOWN = 10
+const recentIncidents = computed(() =>
+  (incidents.data.value?.incidents ?? []).slice(0, INCIDENTS_SHOWN),
+)
+const incidentColumns: TableColumn[] = [
+  { key: 'started', label: 'Started', class: 'whitespace-nowrap font-mono text-xs' },
+  { key: 'title', label: 'Incident' },
+  { key: 'status', label: 'Status', class: 'whitespace-nowrap font-mono text-xs text-muted' },
+  { key: 'source', label: 'Read from' },
+]
+
+// Fifteen panels answer six separate questions, so each question is a tab.
+// Every tab renders on the server; the panel ids are unchanged, so an old
+// anchor (`#revenue`, `#limits`) opens the tab that holds it.
+const tabs = computed(() => [
+  { value: 'overview', label: 'Overview', badge: summary.value.alerts.length || undefined },
+  { value: 'prices', label: 'Prices', badge: labRows.value.length || undefined },
+  { value: 'revenue', label: 'Revenue' },
+  { value: 'demand', label: 'Demand' },
+  { value: 'hiring', label: 'Hiring' },
+  { value: 'operations', label: 'Operations', badge: labIncidents.value || undefined },
+])
 </script>
 
 <template>
@@ -243,205 +271,276 @@ const pairs = COMPARE_PAIRS.filter((pair) => pair.includes(lab))
       </dl>
     </template>
 
-    <TerminalPanel
-      id="alerts"
-      title="Alerts"
-      :note="`Alerts and ticker lines whose cited rows name ${display}, newest first.`"
-      :more="
-        summary.alerts.length > labAlerts.length
-          ? { label: `All ${summary.alerts.length} on the alerts page`, to: '/alerts' }
-          : undefined
-      "
-      :flush="labAlerts.length > 0"
-    >
-      <TerminalSignalTable v-if="labAlerts.length" :alerts="labAlerts" />
-      <TerminalGap v-else title="No alert cites this lab yet." />
-    </TerminalPanel>
+    <TerminalTabs :tabs="tabs">
+      <template #overview>
+        <div class="grid gap-6 xl:grid-cols-2">
+          <TerminalPanel
+            id="alerts"
+            title="Alerts"
+            :note="`Alerts and minor changes whose cited rows name ${display}, newest first.`"
+            :more="
+              summary.alerts.length > labAlerts.length
+                ? { label: `All ${summary.alerts.length} on the alerts page`, to: '/alerts' }
+                : undefined
+            "
+            :flush="labAlerts.length > 0"
+          >
+            <TerminalSignalTable v-if="labAlerts.length" :alerts="labAlerts" />
+            <TerminalGap v-else title="No alert cites this lab yet." />
+          </TerminalPanel>
 
-    <TerminalPanel
-      id="prices"
-      title="API prices"
-      note="$ per million tokens: the like-for-like classes, then every priced SKU on the vendor’s page."
-      :more="
-        labRows.length > (pricesOf?.rows.length ?? 0)
-          ? {
-              label: `All ${labRows.length} ${display} SKUs`,
-              to: `/prices?provider=${lab}#catalog`,
-            }
-          : undefined
-      "
-      flush
-    >
-      <template v-if="prices.data.value">
-        <TerminalPriceMatrix :matrix="prices.data.value.matrix" :providers="[lab]" />
-        <div class="border-t border-default p-3">
-          <TerminalGap
-            v-if="labRows.length === 0"
-            title="No SKU rows for this lab yet."
-            :action="{ label: 'See coverage', to: '/data#coverage' }"
-          />
-          <TerminalPriceTable v-else :prices="pricesOf!" bare />
+          <TerminalPanel
+            id="releases"
+            title="Releases"
+            note="SKUs first listed on a tracked page, with the launch price."
+            :flush="labReleases.length > 0"
+          >
+            <TerminalReleaseList v-if="labReleases.length" :rows="labReleases" />
+            <TerminalGap v-else title="No new SKU since tracking began." />
+          </TerminalPanel>
+        </div>
+
+        <TerminalPanel
+          id="compare"
+          title="Compare"
+          :note="`${display} side by side with each other lab.`"
+        >
+          <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
+            <li v-for="pair in pairs" :key="comparePath(pair)">
+              <NuxtLink
+                :to="comparePath(pair)"
+                class="text-default underline underline-offset-2 hover:text-highlighted"
+                >{{ pairTitle(pair) }}</NuxtLink
+              >
+            </li>
+          </ul>
+        </TerminalPanel>
+      </template>
+
+      <template #prices>
+        <TerminalPanel
+          id="prices"
+          title="API prices"
+          note="$ per million tokens: the like-for-like classes, then every priced SKU on the vendor’s page."
+          :more="
+            labRows.length > (pricesOf?.rows.length ?? 0)
+              ? {
+                  label: `All ${labRows.length} ${display} SKUs`,
+                  to: `/prices?provider=${lab}#catalog`,
+                }
+              : undefined
+          "
+          flush
+        >
+          <template v-if="prices.data.value">
+            <TerminalPriceMatrix :matrix="prices.data.value.matrix" :providers="[lab]" />
+            <div class="border-t border-default p-3">
+              <TerminalGap
+                v-if="labRows.length === 0"
+                title="No SKU rows for this lab yet."
+                :action="{ label: 'See coverage', to: '/data#coverage' }"
+              />
+              <TerminalPriceTable v-else :prices="pricesOf!" bare />
+            </div>
+          </template>
+        </TerminalPanel>
+      </template>
+
+      <template #revenue>
+        <div
+          class="grid gap-6"
+          :class="parents.data.value?.parents.length ? '2xl:grid-cols-2' : undefined"
+        >
+          <TerminalPanel
+            id="revenue"
+            title="Disclosed revenue"
+            note="What the lab, or its public parent, has reported to the SEC."
+            :more="{ label: 'Every lab’s revenue', to: '/revenue' }"
+          >
+            <TerminalRevenuePanel v-if="revenueOf" :revenue="revenueOf" />
+          </TerminalPanel>
+
+          <TerminalPanel
+            v-if="parents.data.value?.parents.length"
+            id="parents"
+            title="What its investor discloses"
+            note="Facts a public investor tags with this lab in its newest 10-Q or 10-K: the investor’s figures, not the lab’s."
+            :more="{ label: 'Every lab’s revenue', to: '/revenue#parents' }"
+          >
+            <TerminalParentFacts :parents="parents.data.value" />
+          </TerminalPanel>
         </div>
       </template>
-    </TerminalPanel>
 
-    <div class="grid gap-6 lg:grid-cols-2">
-      <TerminalPanel
-        id="revenue"
-        title="Disclosed revenue"
-        note="What the lab, or its public parent, has reported to the SEC."
-        :more="{ label: 'Every lab’s revenue', to: '/revenue' }"
-      >
-        <TerminalRevenuePanel v-if="revenueOf" :revenue="revenueOf" />
-      </TerminalPanel>
-
-      <TerminalPanel
-        id="releases"
-        title="Releases"
-        note="SKUs first listed on a tracked page, with the launch price."
-        :flush="labReleases.length > 0"
-      >
-        <TerminalReleaseList v-if="labReleases.length" :rows="labReleases" />
-        <TerminalGap v-else title="No new SKU since tracking began." />
-      </TerminalPanel>
-
-      <TerminalPanel
-        id="demand"
-        title="Top models on OpenRouter"
-        note="Most-routed models, newest 7 days; the percentage is of this lab’s own tokens. A proxy, not market share."
-        :more="{ label: 'Every lab, and the 30-day series', to: '/rankings' }"
-      >
-        <TerminalRankingsTopModels
-          v-if="rankings.data.value?.status === 'ok' && topModels.length"
-          :providers="topModels"
-        />
-        <TerminalGap v-else title="No rankings rows yet." />
-      </TerminalPanel>
-
-      <TerminalPanel
-        id="spend"
-        title="Implied spend share"
-        note="This lab’s OpenRouter tokens at its list prices, per model. Shares are of the tracked labs’ total, not of all OpenRouter traffic."
-      >
-        <TerminalSpendShare v-if="spendOf" :spend="spendOf" />
-        <TerminalGap v-else title="No rankings rows yet." />
-      </TerminalPanel>
-
-      <TerminalPanel
-        id="hiring"
-        title="Hiring"
-        note="Open roles now, the change over the window, and the infrastructure cluster."
-        :more="{ label: 'Department mix, buildout, daily series', to: `/hiring#${lab}` }"
-        flush
-      >
-        <TerminalHiringSummary v-if="hiringOf" :history="hiringOf" />
-      </TerminalPanel>
-
-      <TerminalPanel
-        id="incidents"
-        title="Capacity strain"
-        :note="
-          incidents.data.value
-            ? `Status-page incidents, newest ${incidents.data.value.window_days} days against the prior ${incidents.data.value.window_days}.`
-            : 'Status-page incidents.'
-        "
-        :more="
-          labIncidents
-            ? {
-                label: `All ${labIncidents} incidents in ${incidents.data.value?.history_days} days`,
-                to: '/incidents',
-              }
-            : undefined
-        "
-        flush
-      >
-        <TerminalStrainTable v-if="incidentsOf" :incidents="incidentsOf" />
-      </TerminalPanel>
-    </div>
-
-    <div class="grid gap-6 lg:grid-cols-2">
-      <TerminalPanel
-        v-if="rampHasLab"
-        id="enterprise"
-        title="Enterprise adoption"
-        note="Share of US businesses on Ramp paying this lab, monthly, beside any AI vendor."
-        :more="{ label: 'Every vendor', to: '/rankings#enterprise' }"
-      >
-        <TerminalAdoptionRamp
-          :ramp="adoption.data.value!.ramp!"
-          :caveat="adoption.data.value!.caveats.ramp"
-          :labs="[lab]"
-        />
-      </TerminalPanel>
-
-      <TerminalPanel
-        v-if="adoption.data.value?.downloads.length"
-        id="downloads"
-        title="Downloads"
-        note="This lab’s SDKs and coding agent on npm and PyPI, the newest 28 days against the 28 before."
-        :more="{ label: 'Every lab’s packages', to: '/rankings#developers' }"
-      >
-        <TerminalDownloadsTable
-          :downloads="adoption.data.value.downloads"
-          :caveat="adoption.data.value.caveats.downloads"
-        />
-      </TerminalPanel>
-
-      <TerminalPanel
-        v-if="parents.data.value?.parents.length"
-        id="parents"
-        title="What its investor discloses"
-        note="Facts a public investor tags with this lab in its newest 10-Q or 10-K: the investor’s figures, not the lab’s."
-        :more="{ label: 'Every lab’s revenue', to: '/revenue#parents' }"
-      >
-        <TerminalParentFacts :parents="parents.data.value" />
-      </TerminalPanel>
-
-      <TerminalPanel
-        v-if="pay.data.value?.boards.length"
-        id="pay"
-        title="Posted pay"
-        note="Median midpoint of the US salary bands on this lab’s job board."
-        :more="{ label: 'Hiring', to: '/hiring#pay' }"
-      >
-        <TerminalPayTable :pay="pay.data.value" />
-      </TerminalPanel>
-
-      <TerminalPanel
-        v-if="power.data.value?.labs.length"
-        id="power"
-        title="Data-center power"
-        note="Epoch AI’s estimate of the sites that name this lab as a user."
-        :more="{ label: 'Every lab, and every site', to: '/compute' }"
-      >
-        <TerminalDataCenterPower :data="power.data.value" />
-      </TerminalPanel>
-    </div>
-
-    <TerminalPanel
-      v-if="limits.data.value?.pages.length"
-      id="limits"
-      title="Published rate limits"
-      note="As the lab’s docs print them, per model and tier; a new snapshot only when a limit changes."
-      :more="{ label: 'Every lab', to: '/incidents#limits' }"
-    >
-      <TerminalLimitsTable :pages="limits.data.value.pages" :caveat="limits.data.value.caveat" />
-    </TerminalPanel>
-
-    <TerminalPanel
-      id="compare"
-      title="Compare"
-      :note="`${display} side by side with each other lab.`"
-    >
-      <ul class="flex flex-wrap gap-x-6 gap-y-2 text-sm">
-        <li v-for="pair in pairs" :key="comparePath(pair)">
-          <NuxtLink
-            :to="comparePath(pair)"
-            class="text-default underline underline-offset-2 hover:text-highlighted"
-            >{{ pairTitle(pair) }}</NuxtLink
+      <template #demand>
+        <div class="grid gap-6 lg:grid-cols-2">
+          <TerminalPanel
+            id="demand"
+            title="Top models on OpenRouter"
+            note="Most-routed models, newest 7 days; the percentage is of this lab’s own tokens. A proxy, not market share."
+            :more="{ label: 'Every lab, and the 30-day series', to: '/rankings' }"
           >
-        </li>
-      </ul>
-    </TerminalPanel>
+            <TerminalRankingsTopModels
+              v-if="rankings.data.value?.status === 'ok' && topModels.length"
+              :providers="topModels"
+            />
+            <TerminalGap v-else title="No rankings rows yet." />
+          </TerminalPanel>
+
+          <TerminalPanel
+            id="spend"
+            title="Implied spend share"
+            note="This lab’s OpenRouter tokens at its list prices, per model. Shares are of the tracked labs’ total, not of all OpenRouter traffic."
+          >
+            <TerminalSpendShare v-if="spendOf" :spend="spendOf" />
+            <TerminalGap v-else title="No rankings rows yet." />
+          </TerminalPanel>
+
+          <TerminalPanel
+            v-if="rampHasLab"
+            id="enterprise"
+            title="Enterprise adoption"
+            note="Share of US businesses on Ramp paying this lab, monthly, beside any AI vendor."
+            :more="{ label: 'Every vendor', to: '/rankings#enterprise' }"
+          >
+            <TerminalAdoptionRamp
+              :ramp="adoption.data.value!.ramp!"
+              :caveat="adoption.data.value!.caveats.ramp"
+              :labs="[lab]"
+            />
+          </TerminalPanel>
+
+          <TerminalPanel
+            v-if="adoption.data.value?.downloads.length"
+            id="downloads"
+            title="Downloads"
+            note="This lab’s SDKs and coding agent on npm and PyPI, the newest 28 days against the 28 before."
+            :more="{ label: 'Every lab’s packages', to: '/rankings#developers' }"
+          >
+            <TerminalDownloadsTable
+              :downloads="adoption.data.value.downloads"
+              :caveat="adoption.data.value.caveats.downloads"
+            />
+          </TerminalPanel>
+        </div>
+      </template>
+
+      <template #hiring>
+        <div class="grid gap-6 lg:grid-cols-2">
+          <TerminalPanel
+            id="hiring"
+            title="Hiring"
+            note="Open roles now, the change over the window, and the infrastructure cluster."
+            :more="{ label: 'Department mix, buildout, daily series', to: `/hiring#${lab}` }"
+            flush
+          >
+            <TerminalHiringSummary v-if="hiringOf" :history="hiringOf" />
+          </TerminalPanel>
+
+          <TerminalPanel
+            v-if="pay.data.value?.boards.length"
+            id="pay"
+            title="Posted pay"
+            note="Median midpoint of the US salary bands on this lab’s job board."
+            :more="{ label: 'Hiring', to: '/hiring#pay' }"
+          >
+            <TerminalPayTable :pay="pay.data.value" />
+          </TerminalPanel>
+
+          <TerminalPanel
+            v-if="power.data.value?.labs.length"
+            id="power"
+            title="Data-center power"
+            note="Epoch AI’s estimate of the sites that name this lab as a user."
+            :more="{ label: 'Every lab, and every site', to: '/compute' }"
+          >
+            <TerminalDataCenterPower :data="power.data.value" />
+          </TerminalPanel>
+        </div>
+      </template>
+
+      <template #operations>
+        <!-- Stacked: one lab's strain is one row, and beside the incident list
+             it stretched to the list's height. -->
+        <div class="grid gap-6">
+          <TerminalPanel
+            id="incidents"
+            title="Capacity strain"
+            :note="
+              incidents.data.value
+                ? `Status-page incidents, newest ${incidents.data.value.window_days} days against the prior ${incidents.data.value.window_days}.`
+                : 'Status-page incidents.'
+            "
+            flush
+          >
+            <TerminalStrainTable v-if="incidentsOf" :incidents="incidentsOf" />
+          </TerminalPanel>
+
+          <TerminalPanel
+            v-if="recentIncidents.length"
+            id="recent-incidents"
+            title="Recent incidents"
+            :note="`Newest ${recentIncidents.length} of ${labIncidents} in ${incidents.data.value?.history_days} days, as the vendor posted them.`"
+            :more="
+              labIncidents > recentIncidents.length
+                ? { label: `All ${labIncidents} incidents`, to: '/incidents' }
+                : undefined
+            "
+            flush
+          >
+            <TerminalTable
+              :caption="`${display} status-page incidents, newest first`"
+              :columns="incidentColumns"
+              :rows="recentIncidents"
+              :row-key="(i) => i.entity_key"
+              row-header="title"
+            >
+              <template #cell-started="{ row: i }">
+                <time :datetime="i.started_at" :title="i.started_at">
+                  {{ absoluteStamp(i.started_at, now) }}
+                </time>
+              </template>
+              <template #cell-title="{ row: i }">
+                <a
+                  :href="i.incident_url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="text-highlighted underline underline-offset-2"
+                  >{{ i.title }}</a
+                >
+              </template>
+              <template #cell-status="{ row: i }">
+                <UBadge
+                  v-if="i.resolved_at === null"
+                  color="warning"
+                  variant="subtle"
+                  size="sm"
+                  icon="i-lucide-activity"
+                >
+                  open · {{ i.status }}
+                </UBadge>
+                <template v-else>{{ i.status }}</template>
+              </template>
+              <template #cell-source="{ row: i }">
+                <TerminalProvenanceTag :source-url="i.source_url" :fetched-at="i.fetched_at" />
+              </template>
+            </TerminalTable>
+          </TerminalPanel>
+        </div>
+
+        <TerminalPanel
+          v-if="limits.data.value?.pages.length"
+          id="limits"
+          title="Published rate limits"
+          note="As the lab’s docs print them, per model and tier; a new snapshot only when a limit changes."
+          :more="{ label: 'Every lab', to: '/incidents#limits' }"
+        >
+          <TerminalLimitsTable
+            :pages="limits.data.value.pages"
+            :caveat="limits.data.value.caveat"
+          />
+        </TerminalPanel>
+      </template>
+    </TerminalTabs>
   </TerminalPage>
 </template>
