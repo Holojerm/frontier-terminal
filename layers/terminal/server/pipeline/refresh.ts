@@ -43,6 +43,7 @@ import {
   unstoredAlerts,
   type PipelineDb,
 } from './store'
+import { redactPayload } from './redact'
 
 // One poll tick: fetch → hash → snapshot → parse → normalize → diff → store,
 // per source, with every stage's outcome written to source_runs.
@@ -154,7 +155,8 @@ async function fetchAndSnapshot(deps: RefreshDeps, source: FetchSource, now: () 
     } satisfies Fetched
   }
 
-  const content_hash = contentHashOfText(outcome.text)
+  const text = redactPayload(source.url, outcome.text)
+  const content_hash = contentHashOfText(text)
   const latest = await latestGoodSnapshot(deps.db, source.source_id)
   const unchanged = latest !== null && latest.content_hash === content_hash
 
@@ -162,7 +164,7 @@ async function fetchAndSnapshot(deps: RefreshDeps, source: FetchSource, now: () 
   // object already in R2, and skip the write.
   const raw_key = unchanged ? latest.raw_key : rawKeyFor(source, fetched_at)
   if (!unchanged) {
-    await deps.raw.put(raw_key, outcome.text, CONTENT_TYPES[source.ext] ?? 'text/plain')
+    await deps.raw.put(raw_key, text, CONTENT_TYPES[source.ext] ?? 'text/plain')
   }
 
   const snapshot_id = `${source.source_id}:${fetched_at}`
@@ -180,7 +182,7 @@ async function fetchAndSnapshot(deps: RefreshDeps, source: FetchSource, now: () 
   ])
   return {
     ...base,
-    body: { text: outcome.text, snapshot_id, unchanged, first: latest === null },
+    body: { text, snapshot_id, unchanged, first: latest === null },
     failure: null,
     skipped: false,
     absent: false,

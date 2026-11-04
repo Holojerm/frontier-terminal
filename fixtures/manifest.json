@@ -181,7 +181,7 @@
       "fetched_at": "2026-08-25T11:10:43Z",
       "http_status": 200,
       "raw_bytes": 383405,
-      "trim": "jobs filtered to exactly the ids kept in the departments fixture trim (59 of 536) so the department join is fixture-complete. meta kept verbatim (total reflects the untrimmed board). Live board was 536 roles vs 537 at audit time — normal drift.",
+      "trim": "jobs filtered to exactly the ids kept in the departments fixture trim (59 of 536) so the department join is fixture-complete. meta kept verbatim (total reflects the untrimmed board). Live board was 536 roles vs 537 at audit time — normal drift. Each job’s `metadata` removed (2026-11-04): it named people (xAI’s Team Lead), and the pipeline redacts it before storage (layers/terminal/server/pipeline/redact.ts).",
       "note": "The jobs endpoint carries no department field; department comes only from the /departments join."
     },
     {
@@ -191,7 +191,7 @@
       "fetched_at": "2026-08-25T11:10:43Z",
       "http_status": 200,
       "raw_bytes": 385396,
-      "trim": "all departments kept (id/name/parent_id/child_ids intact); each embedded jobs list trimmed to first 3 full job objects."
+      "trim": "all departments kept (id/name/parent_id/child_ids intact); each embedded jobs list trimmed to first 3 full job objects. Each job’s `metadata` removed (2026-11-04): it named people (xAI’s Team Lead), and the pipeline redacts it before storage (layers/terminal/server/pipeline/redact.ts)."
     },
     {
       "path": "fixtures/hiring/xai-greenhouse.json",
@@ -200,7 +200,7 @@
       "fetched_at": "2026-08-25T23:08:17Z",
       "http_status": 200,
       "raw_bytes": 264125,
-      "trim": "jobs filtered to exactly the ids kept in the departments fixture trim (42 of 255) so the department join is fixture-complete. meta kept verbatim (total reflects the untrimmed board). Live board was 255 roles vs 262 at audit time — normal drift.",
+      "trim": "jobs filtered to exactly the ids kept in the departments fixture trim (42 of 255) so the department join is fixture-complete. meta kept verbatim (total reflects the untrimmed board). Live board was 255 roles vs 262 at audit time — normal drift. Each job’s `metadata` removed (2026-11-04): it named people (xAI’s Team Lead), and the pipeline redacts it before storage (layers/terminal/server/pipeline/redact.ts).",
       "note": "Every row carries company_name 'SpaceXAI' — entity-blended SpaceX/xAI board; this caveat must ship visibly wherever the data surfaces. The jobs endpoint carries no department field; department comes only from the /departments join."
     },
     {
@@ -210,7 +210,7 @@
       "fetched_at": "2026-08-25T23:08:17Z",
       "http_status": 200,
       "raw_bytes": 266512,
-      "trim": "all 26 departments kept (id/name/parent_id/child_ids intact); each embedded jobs list trimmed to first 3 full job objects. 16 departments carry jobs; the untrimmed payload maps all 255 board jobs.",
+      "trim": "all 26 departments kept (id/name/parent_id/child_ids intact); each embedded jobs list trimmed to first 3 full job objects. 16 departments carry jobs; the untrimmed payload maps all 255 board jobs. Each job’s `metadata` removed (2026-11-04): it named people (xAI’s Team Lead), and the pipeline redacts it before storage (layers/terminal/server/pipeline/redact.ts).",
       "note": "Join table for xai-greenhouse. Department names are the evidence for the SpaceXAI caveat: the set is xAI-shaped (Data Center 121, Human Data 36, Engineering 23, …) with no aerospace/launch function."
     },
     {
