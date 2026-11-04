@@ -172,10 +172,9 @@ const PRINT_INK = [
   'print:[--ui-border:black]',
   'print:[--ui-border-muted:black]',
   'print:[--ui-border-accented:black]',
-  // The sheet sets at 72% on paper, so 12px type prints near 6.5pt as tear
-  // sheets do. That fits a lab with every axis populated on one Letter page,
-  // with room to spare (alert permalinks print as their first 8 hex digits).
-  'print:[zoom:0.72]',
+  // No print zoom: body type prints at 10.5pt and captions at 9pt. The
+  // figures fill the first Letter page; for a lab with every axis populated,
+  // the alerts and the sources run onto a second. Sections never split.
 ].join(' ')
 </script>
 
@@ -370,7 +369,9 @@ const PRINT_INK = [
         </TearSheetSection>
       </div>
 
-      <footer class="space-y-1 border-t border-default pt-2 text-xs text-muted">
+      <footer
+        class="space-y-1 border-t border-default pt-2 text-xs text-muted print:break-inside-avoid"
+      >
         <h2 class="text-xs text-highlighted">Sources (fetch times UTC)</h2>
         <ol v-if="sheet.sources.length">
           <li v-for="s in sheet.sources" :id="`source-${s.n}`" :key="s.n">
