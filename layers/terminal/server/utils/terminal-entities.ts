@@ -1,5 +1,5 @@
 // Which securities carry each tracked lab and filer: the table a fund joins
-// this data to its own book with. Four of the six labs are private, so most
+// this data to its own book with. Six of the nine labs are private, so most
 // rows say how a lab reaches a listed security (a parent, a disclosed
 // investor) or that none does.
 //
@@ -170,6 +170,48 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     listing_status: 'private',
     note: 'No EDGAR filer. “Mistral AI” appears in S-1-family filings only as a CoreWeave customer (two S-1/A, March 2025).',
     source_url: 'https://efts.sec.gov/LATEST/search-index?q=%22Mistral%20AI%22&forms=S-1,S-1/A',
+    checked_on: CHECKED,
+  },
+  {
+    entity: 'deepseek',
+    entity_name: 'DeepSeek',
+    entity_kind: 'lab',
+    relationship: 'none',
+    issuer: null,
+    cik: null,
+    symbol: null,
+    exchange: null,
+    listing_status: 'private',
+    note: 'No EDGAR filer. “DeepSeek” appears in S-1-family filings only in other companies’ prospectuses (7 hits, among them WhiteFiber, SharonAI and Gloo).',
+    source_url: 'https://efts.sec.gov/LATEST/search-index?q=%22DeepSeek%22&forms=S-1,S-1/A',
+    checked_on: CHECKED,
+  },
+  {
+    entity: 'alibaba',
+    entity_name: 'Alibaba',
+    entity_kind: 'lab',
+    relationship: 'parent',
+    issuer: 'Alibaba Group Holding Ltd',
+    cik: '0001577552',
+    symbol: 'BABA',
+    exchange: 'NYSE',
+    listing_status: 'listed',
+    note: 'A blend. Qwen is built and sold by Alibaba Cloud, part of the Cloud Intelligence Group segment, beside all of Alibaba’s e-commerce. Alibaba files 20-F annual reports and 6-K notices, and reports in RMB. The NYSE line is American depositary shares; BABAF and BBAAY trade over the counter.',
+    source_url: submissions('0001577552'),
+    checked_on: CHECKED,
+  },
+  {
+    entity: 'moonshot',
+    entity_name: 'Moonshot AI',
+    entity_kind: 'lab',
+    relationship: 'none',
+    issuer: null,
+    cik: null,
+    symbol: null,
+    exchange: null,
+    listing_status: 'private',
+    note: 'No EDGAR filer, and no S-1-family filing names “Moonshot AI”.',
+    source_url: 'https://efts.sec.gov/LATEST/search-index?q=%22Moonshot%20AI%22&forms=S-1,S-1/A',
     checked_on: CHECKED,
   },
   {

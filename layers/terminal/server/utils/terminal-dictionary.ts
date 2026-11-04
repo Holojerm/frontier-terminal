@@ -83,7 +83,8 @@ const REBUILT_NOTE =
 
 const PROVIDER: ColumnDoc = {
   type: 'text',
-  meaning: 'The lab the row belongs to: openai, anthropic, google, xai, meta, mistral, or other.',
+  meaning:
+    'The lab the row belongs to: openai, anthropic, google, xai, meta, mistral, deepseek, alibaba, moonshot, or other.',
 }
 
 const SOURCE_NAME: ColumnDoc = {
@@ -1205,7 +1206,7 @@ export const COLUMN_DOCS: Readonly<Record<string, TableDoc>> = {
       entity_name: { type: 'text', meaning: 'The lab’s or filer’s name.' },
       entity_kind: {
         type: 'text',
-        meaning: 'lab (one of the six) or filer (a company whose filings the site reads).',
+        meaning: 'lab (one of the nine) or filer (a company whose filings the site reads).',
       },
       relationship: {
         type: 'text',

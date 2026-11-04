@@ -20,8 +20,9 @@ import type {
 
 describe('compare pairs', () => {
   it('lists every unordered pair once, in LABS order', () => {
-    expect(COMPARE_PAIRS).toHaveLength(15)
-    expect(new Set(COMPARE_PAIRS.map((p) => comparePath(p))).size).toBe(15)
+    // Nine labs: 9 × 8 / 2.
+    expect(COMPARE_PAIRS).toHaveLength(36)
+    expect(new Set(COMPARE_PAIRS.map((p) => comparePath(p))).size).toBe(36)
     expect(COMPARE_PAGES[0]).toMatchObject({
       path: '/compare/openai-vs-anthropic',
       title: 'OpenAI vs Anthropic',
@@ -38,7 +39,11 @@ describe('compare pairs', () => {
       canonical: false,
     })
     expect(parsePair('openai-vs-openai')).toBeNull()
-    expect(parsePair('openai-vs-deepseek')).toBeNull()
+    expect(parsePair('openai-vs-deepseek')).toEqual({
+      pair: ['openai', 'deepseek'],
+      canonical: true,
+    })
+    expect(parsePair('openai-vs-cohere')).toBeNull()
     expect(parsePair('openai')).toBeNull()
     expect(parsePair('openai-vs-anthropic-vs-xai')).toBeNull()
   })

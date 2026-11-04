@@ -242,6 +242,9 @@ describe('tripwire', () => {
     'google-models-md',
     'meta-models-md',
     'mistral-models-md',
+    'deepseek-pricing-md',
+    'alibaba-models-html',
+    'moonshot-models-md',
   ]
 
   it('yields on the half-hour ticks the other polls own', () => {
@@ -281,6 +284,7 @@ describe('tripwire', () => {
         'openai-pricing-md',
         'meta-pricing-md',
         'mistral-pricing-md',
+        'alibaba-pricing-html',
       ],
       fetcher(),
       '2026-09-22T12:00:00Z',
@@ -308,6 +312,7 @@ describe('tripwire', () => {
         'openai-pricing-md',
         'meta-pricing-md',
         'mistral-pricing-md',
+        'alibaba-pricing-html',
       ].sort(),
     )
     expect((await alerts()).map((a) => a.rule)).toEqual(['model-floor'])

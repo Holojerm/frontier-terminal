@@ -191,8 +191,9 @@ const columns: TableColumn[] = [
         <p>
           A report from more than {{ record.window_days }} days before we saw it isn’t searched, so
           an old story can’t show as a lag here. Anthropic and xAI publish no newsroom feed, so
-          their rows show no newsroom time. Meta’s feed holds only its newest 10 posts. Mistral
-          stamps its posts near noon UTC, so read those times as dates.
+          their rows show no newsroom time, and we don’t read DeepSeek’s, Alibaba’s or Moonshot AI’s
+          newsrooms yet. Meta’s feed holds only its newest 10 posts. Mistral stamps its posts near
+          noon UTC, so read those times as dates.
         </p>
         <p>
           All times are UTC. Leads are rounded to a tenth of an hour. A lead isn’t a trading signal,

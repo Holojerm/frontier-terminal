@@ -32,6 +32,9 @@ export const LABS: readonly LabId[] = [
   'xai',
   'meta',
   'mistral',
+  'deepseek',
+  'alibaba',
+  'moonshot',
 ] as const
 
 export function isLab(s: string): s is LabId {

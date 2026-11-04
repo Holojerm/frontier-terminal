@@ -207,7 +207,10 @@ const PROVIDER_RANK: Readonly<Record<string, number>> = {
   xai: 3,
   meta: 4,
   mistral: 5,
-  other: 6,
+  deepseek: 6,
+  alibaba: 7,
+  moonshot: 8,
+  other: 9,
 }
 
 // ---- snapshots and runs ------------------------------------------------------

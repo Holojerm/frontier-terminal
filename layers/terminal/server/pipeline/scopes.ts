@@ -39,6 +39,7 @@ const EDGAR_SOURCES: readonly string[] = [
   'edgar-submissions-googl',
   'edgar-submissions-meta',
   'edgar-submissions-orcl',
+  'edgar-submissions-baba',
   'edgar-companyfacts-spcx',
 ]
 
@@ -62,6 +63,10 @@ const LAUNCH_SOURCES: readonly string[] = [
   'meta-pricing-md',
   'mistral-models-md',
   'mistral-pricing-md',
+  'deepseek-pricing-md',
+  'alibaba-pricing-html',
+  'alibaba-models-html',
+  'moonshot-models-md',
 ]
 
 // Alphabet's whole careers feed, ~20 MB of XML, read for DeepMind's ~140 roles.

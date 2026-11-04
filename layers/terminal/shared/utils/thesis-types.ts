@@ -15,9 +15,17 @@ export type MeasuredRule =
    * value) at `weeks` consecutive checkpoints; weakening while that run is shorter. */
   | { rule: 'sustained-floor'; floor: number; comparator: LabId | null; weeks: number }
   /** Broken when the value sits more than `margin` below the mean of the
-   * previous `weeks` checkpoints; weakening past half the margin. Unresolved
-   * with fewer than `min_weeks` checkpoints of history. */
-  | { rule: 'below-trailing-average'; margin: number; weeks: number; min_weeks: number }
+   * previous `weeks` checkpoints; weakening past half the margin. With
+   * `relative`, `margin` is a fraction of that mean, so a share keeps the same
+   * bar when the set it is a share of grows. Unresolved with fewer than
+   * `min_weeks` checkpoints of history. */
+  | {
+      rule: 'below-trailing-average'
+      margin: number
+      relative?: boolean
+      weeks: number
+      min_weeks: number
+    }
   /** Broken when the value has fallen `drop` or more from its high over the
    * last `days`; weakening past half the drop. Unresolved with fewer than
    * `min_days` of history. */
@@ -61,6 +69,8 @@ export type SignalSpec =
       signal: 'flagship-blended-price'
       input_weight: number
       output_weight: number
+      /** The labs counted; a tracked lab outside it is left out and named. Every lab when absent. */
+      labs?: readonly LabId[]
       rule: MeasuredRule
     }
   | {
@@ -73,6 +83,8 @@ export type SignalSpec =
       output_weight: number
       gpu: 'H100' | 'B200'
       context_gpu: 'H100' | 'B200'
+      /** As for flagship-blended-price: the labs whose flagships make the median. */
+      labs?: readonly LabId[]
       /** Fewer included `gpu` providers than this and the reading cannot count. */
       min_providers: number
       rule: MeasuredRule

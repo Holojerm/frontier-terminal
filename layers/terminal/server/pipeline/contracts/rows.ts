@@ -13,6 +13,9 @@ export const providerEnum = z.enum([
   'xai',
   'meta',
   'mistral',
+  'deepseek',
+  'alibaba',
+  'moonshot',
   'other',
 ])
 // 'ranking' is a time series (one row per UTC day and model), not an event:

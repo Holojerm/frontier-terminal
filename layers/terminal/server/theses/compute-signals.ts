@@ -64,7 +64,7 @@ export interface FlagshipState {
 /** Each lab's mapped flagship at its blended list price, from the price matrix the site shows. */
 async function flagshipState(
   db: PipelineDb,
-  weights: { input_weight: number; output_weight: number },
+  weights: { input_weight: number; output_weight: number; labs?: readonly LabId[] },
   deps: SignalDeps,
 ): Promise<FlagshipState> {
   const prices = await queryPrices(db, queryContext(deps.sourcesYaml, null, deps.now))
@@ -72,6 +72,10 @@ async function flagshipState(
   const excluded: FlagshipState['excluded'] = {}
   for (const cell of prices.matrix.cells) {
     if (cell.class !== 'flagship') continue
+    if (weights.labs && !weights.labs.includes(cell.provider)) {
+      excluded[cell.provider] = 'outside the labs this claim counts'
+      continue
+    }
     const row = cell.row
     if (!row || cell.basis === null) {
       excluded[cell.provider] = 'no mapped flagship'

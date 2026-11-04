@@ -67,7 +67,7 @@ describe('slugTokens', () => {
 })
 
 describe('splitPermaslug', () => {
-  it('maps the four vendor prefixes and nothing else', () => {
+  it('maps the lab vendor prefixes and nothing else', () => {
     expect(splitPermaslug('x-ai/grok-4.6-20260810')).toEqual({
       provider: 'xai',
       slug: 'grok-4.6-20260810',
@@ -78,7 +78,12 @@ describe('splitPermaslug', () => {
       slug: 'gpt-oss-120b:free',
       free: true,
     })
-    expect(splitPermaslug('deepseek/deepseek-v4-pro-20260813')).toBeNull()
+    expect(splitPermaslug('deepseek/deepseek-v4-pro-20260813')).toEqual({
+      provider: 'deepseek',
+      slug: 'deepseek-v4-pro-20260813',
+      free: false,
+    })
+    expect(splitPermaslug('z-ai/glm-5.3-20260901')).toBeNull()
     expect(splitPermaslug('other')).toBeNull()
   })
 })
@@ -124,7 +129,7 @@ describe('summarizeSpend', () => {
     obs('2026-09-08', 'google/gemma-4-31b-it-20260402', 5 * M), // unlisted
     obs('2026-09-08', 'openai/gpt-5.6-sol-20260709', 30 * M), // unpriced
     obs('2026-09-08', 'x-ai/grok-4.6-20260810:free', 1 * M), // free tier
-    obs('2026-09-08', 'deepseek/deepseek-v4-pro-20260813', 40 * M), // other
+    obs('2026-09-08', 'z-ai/glm-5.3-20260901', 40 * M), // other
     obs('2026-09-08', 'other', 4 * M),
     obs('2026-08-01', 'anthropic/claude-sonnet-5-20260630', 999 * M), // outside the window
     // Seven quiet days so the window (the newest seven present) excludes 08-01.
@@ -134,7 +139,7 @@ describe('summarizeSpend', () => {
   it('prices what it can, as a range, and names what it cannot', () => {
     const s = summarizeSpend(rows, catalog)
     expect(s.window).toEqual({ from: '2026-09-02', to: '2026-09-08' })
-    // Tokens: every row in the window; other = deepseek + the aggregated row.
+    // Tokens: every row in the window; other = z-ai + the aggregated row.
     expect(s.totals).toEqual({
       tokens: 110 * M,
       other_tokens: 44 * M,

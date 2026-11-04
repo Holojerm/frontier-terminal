@@ -38,11 +38,11 @@ useSeo({
       <div class="max-w-2xl space-y-3 text-default">
         <p>
           A free, public, read-only terminal for equity analysts who cover AI infrastructure through
-          the frontier-lab IPO wave. We track six frontier model providers (OpenAI, Anthropic,
-          Google, xAI, Meta, and Mistral). For each one we follow API prices, hiring (including the
-          roles that build data centers and power), OpenRouter demand share and the spend share it
-          implies at list price, status-page incidents, misalignment disclosures, SEC filings, and
-          disclosed revenue.
+          the frontier-lab IPO wave. We track nine frontier model providers (OpenAI, Anthropic,
+          Google, xAI, Meta, Mistral, DeepSeek, Alibaba’s Qwen, and Moonshot AI’s Kimi). For each
+          one we follow API prices, hiring (including the roles that build data centers and power),
+          OpenRouter demand share and the spend share it implies at list price, status-page
+          incidents, misalignment disclosures, SEC filings, and disclosed revenue.
         </p>
         <p>
           Most of these labs are still private. Until one files to go public, hiring, prices, and

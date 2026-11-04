@@ -23,6 +23,10 @@ import googlePricing from '~~/fixtures/pricing/google-pricing.md?raw'
 import metaModels from '~~/fixtures/pricing/meta-models.md?raw'
 import metaPricing from '~~/fixtures/pricing/meta-pricing.md?raw'
 import mistralModels from '~~/fixtures/pricing/mistral-models.md?raw'
+import alibabaModels from '~~/fixtures/pricing/alibaba-models.html?raw'
+import alibabaPricing from '~~/fixtures/pricing/alibaba-pricing.html?raw'
+import deepseekPricing from '~~/fixtures/pricing/deepseek-pricing.md?raw'
+import moonshotModels from '~~/fixtures/pricing/moonshot-models.md?raw'
 import mistralPricing from '~~/fixtures/pricing/mistral-pricing.md?raw'
 import openaiModels from '~~/fixtures/pricing/openai-models.md?raw'
 import openaiModelPage from '~~/fixtures/pricing/openai-model-gpt-5.6-sol.md?raw'
@@ -70,12 +74,15 @@ import edgarSubmissionsAmzn from '~~/fixtures/sec/edgar-submissions-amzn.json?ra
 import edgarSubmissionsGoogl from '~~/fixtures/sec/edgar-submissions-googl.json?raw'
 import edgarSubmissionsMeta from '~~/fixtures/sec/edgar-submissions-meta.json?raw'
 import edgarSubmissionsOrcl from '~~/fixtures/sec/edgar-submissions-orcl.json?raw'
+import edgarSubmissionsBaba from '~~/fixtures/sec/edgar-submissions-baba.json?raw'
 import edgarSubmissionsMsft from '~~/fixtures/sec/edgar-submissions-msft.json?raw'
 import edgarSubmissionsNvda from '~~/fixtures/sec/edgar-submissions-nvda.json?raw'
 import edgarSubmissionsSpcx from '~~/fixtures/sec/edgar-submissions-spcx.json?raw'
 import anthropicStatus from '~~/fixtures/status/anthropic-status.xml?raw'
 import googleCloudStatus from '~~/fixtures/status/google-cloud-status.json?raw'
 import mistralStatus from '~~/fixtures/status/mistral-status.json?raw'
+import deepseekStatus from '~~/fixtures/status/deepseek-status.xml?raw'
+import deepseekStatusAtom from '~~/fixtures/status/deepseek-status-atom.xml?raw'
 import xaiStatus from '~~/fixtures/status/xai-status.xml?raw'
 import openaiStatus from '~~/fixtures/status/openai-status.json?raw'
 import waybackAnthropicModels2024 from '~~/fixtures/pricing/wayback/anthropic-models-2024-06.html?raw'
@@ -114,6 +121,10 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/pricing/meta-models.md': metaModels,
   'fixtures/pricing/meta-pricing.md': metaPricing,
   'fixtures/pricing/mistral-models.md': mistralModels,
+  'fixtures/pricing/alibaba-models.html': alibabaModels,
+  'fixtures/pricing/alibaba-pricing.html': alibabaPricing,
+  'fixtures/pricing/deepseek-pricing.md': deepseekPricing,
+  'fixtures/pricing/moonshot-models.md': moonshotModels,
   'fixtures/pricing/mistral-pricing.md': mistralPricing,
   'fixtures/pricing/openai-models.md': openaiModels,
   'fixtures/pricing/openai-model-gpt-5.6-sol.md': openaiModelPage,
@@ -157,6 +168,7 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/sec/edgar-submissions-googl.json': edgarSubmissionsGoogl,
   'fixtures/sec/edgar-submissions-meta.json': edgarSubmissionsMeta,
   'fixtures/sec/edgar-submissions-orcl.json': edgarSubmissionsOrcl,
+  'fixtures/sec/edgar-submissions-baba.json': edgarSubmissionsBaba,
   'fixtures/sec/edgar-submissions-msft.json': edgarSubmissionsMsft,
   'fixtures/sec/edgar-submissions-nvda.json': edgarSubmissionsNvda,
   'fixtures/sec/edgar-submissions-spcx.json': edgarSubmissionsSpcx,
@@ -167,6 +179,8 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/status/anthropic-status.xml': anthropicStatus,
   'fixtures/status/google-cloud-status.json': googleCloudStatus,
   'fixtures/status/mistral-status.json': mistralStatus,
+  'fixtures/status/deepseek-status.xml': deepseekStatus,
+  'fixtures/status/deepseek-status-atom.xml': deepseekStatusAtom,
   'fixtures/status/xai-status.xml': xaiStatus,
   'fixtures/status/openai-status.json': openaiStatus,
   'fixtures/pricing/wayback/anthropic-models-2024-06.html': waybackAnthropicModels2024,

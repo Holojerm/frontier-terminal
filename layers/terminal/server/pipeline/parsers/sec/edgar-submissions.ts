@@ -15,8 +15,8 @@ import { parseCikWhitelistBlock, whitelistCikFor, type CikWhitelist } from './wh
 // accession number. The filer's CIK is zero-padded to EDGAR's canonical 10
 // digits before whitelist matching — a format normalization, not a lookup.
 //
-// One parser, five registrations: SPCX (xAI's parent) and the four
-// hyperscalers on the CIK whitelist. Each registration is its own source id
+// One parser, one registration per whitelisted filer: SPCX (xAI's parent),
+// BABA (Qwen's parent) and the hyperscalers. Each registration is its own source id
 // with its own fixture so the determinism gate runs every feed.
 
 interface SubmissionsDoc {
@@ -81,7 +81,7 @@ export function parseEdgarSubmissions(
   return { rows: EdgarSubmissionsOutput.parse({ rows }).rows, skipped }
 }
 
-/** The seven submissions feeds: source id -> committed fixture. */
+/** The eight submissions feeds: source id -> committed fixture. */
 export const SUBMISSIONS_SOURCES: Readonly<Record<string, string>> = {
   'edgar-submissions-spcx': 'fixtures/sec/edgar-submissions-spcx.json',
   'edgar-submissions-msft': 'fixtures/sec/edgar-submissions-msft.json',
@@ -90,6 +90,7 @@ export const SUBMISSIONS_SOURCES: Readonly<Record<string, string>> = {
   'edgar-submissions-googl': 'fixtures/sec/edgar-submissions-googl.json',
   'edgar-submissions-meta': 'fixtures/sec/edgar-submissions-meta.json',
   'edgar-submissions-orcl': 'fixtures/sec/edgar-submissions-orcl.json',
+  'edgar-submissions-baba': 'fixtures/sec/edgar-submissions-baba.json',
 }
 
 // prov defaults to the fixture manifest's record (fixture-only behavior is

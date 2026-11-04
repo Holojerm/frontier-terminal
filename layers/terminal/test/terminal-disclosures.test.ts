@@ -96,7 +96,7 @@ describe('pure half', () => {
 })
 
 describe('the disclosures axis end to end', () => {
-  it('before any poll: OpenAI has no rows yet, the other five are stated cuts', async () => {
+  it('before any poll: OpenAI has no rows yet, the other eight are stated cuts', async () => {
     const data = await queryDisclosures(db, await ctx())
     expect(data.entries).toEqual([])
     expect(data.providers.map((p) => [p.provider, p.feed])).toEqual([
@@ -106,6 +106,9 @@ describe('the disclosures axis end to end', () => {
       ['xai', 'no_public_feed'],
       ['meta', 'no_public_feed'],
       ['mistral', 'no_public_feed'],
+      ['deepseek', 'no_public_feed'],
+      ['alibaba', 'no_public_feed'],
+      ['moonshot', 'no_public_feed'],
     ])
     const anthropic = data.providers.find((p) => p.provider === 'anthropic')!
     // The audit's words, never a zero dressed as a count.

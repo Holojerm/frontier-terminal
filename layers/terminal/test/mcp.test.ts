@@ -204,7 +204,7 @@ describe('tools/list', () => {
     )
     expect(tools.find((t) => t.name === 'get_rankings')!.description).toContain('CC BY 4.0')
     expect(tools.find((t) => t.name === 'get_incidents')!.description).toContain(
-      'Meta has NO public incident',
+      'Meta, Alibaba and Moonshot AI have NO incident history',
     )
     expect(tools.find((t) => t.name === 'get_hiring_history')!.description).toContain(
       'RECONSTRUCTED',
@@ -264,6 +264,9 @@ describe('tools/call', () => {
       'xai',
       'meta',
       'mistral',
+      'deepseek',
+      'alibaba',
+      'moonshot',
     ])
     expect(all.cross_check?.source_id).toBe('openrouter-models')
     for (const row of all.rows) {
@@ -395,6 +398,9 @@ describe('tools/call', () => {
       'xai',
       'meta',
       'mistral',
+      'deepseek',
+      'alibaba',
+      'moonshot',
     ])
     const meta = all.providers[4]!
     expect(meta).toMatchObject({ feed: 'no_public_feed', dates: [], total: [] })
@@ -458,6 +464,9 @@ describe('tools/call', () => {
       ['xai', 'ok'],
       ['meta', 'no_public_feed'],
       ['mistral', 'ok'],
+      ['deepseek', 'ok'],
+      ['alibaba', 'no_public_feed'],
+      ['moonshot', 'no_public_feed'],
     ])
     expect(all.providers[4]!.reason).toContain('current state')
     expect(all.incidents.length).toBeGreaterThan(0)
@@ -548,7 +557,7 @@ describe('tools/call', () => {
       cuts: { id: string }[]
       exports: { name: string }[]
     }
-    expect(coverage.sources).toHaveLength(36)
+    expect(coverage.sources).toHaveLength(43)
     expect(coverage.sources.find((s) => s.source_id === 'openrouter-models')!.caveat).toContain(
       'never source of record',
     )

@@ -21,6 +21,7 @@ const SUBMISSIONS: Record<string, string> = {
   '0001326801': 'fixtures/sec/edgar-submissions-meta.json',
   '0001341439': 'fixtures/sec/edgar-submissions-orcl.json',
   '0001181412': 'fixtures/sec/edgar-submissions-spcx.json',
+  '0001577552': 'fixtures/sec/edgar-submissions-baba.json',
 }
 
 describe('ENTITY_SECURITIES', () => {

@@ -13,7 +13,17 @@ export interface Prov {
   fetched_at: string
 }
 
-export type ProviderId = 'openai' | 'anthropic' | 'google' | 'xai' | 'meta' | 'mistral' | 'other'
+export type ProviderId =
+  | 'openai'
+  | 'anthropic'
+  | 'google'
+  | 'xai'
+  | 'meta'
+  | 'mistral'
+  | 'deepseek'
+  | 'alibaba'
+  | 'moonshot'
+  | 'other'
 export type LabId = Exclude<ProviderId, 'other'>
 
 export type SourceAxis =
@@ -774,10 +784,10 @@ export interface SpendProviderView {
   coverage: number | null
   spend_low: number
   spend_high: number
-  /** This lab's spend_low over the six labs' spend_low, 0..1; null when nothing is priced. */
+  /** This lab's spend_low over the tracked labs' spend_low, 0..1; null when nothing is priced. */
   share_low: number | null
   share_high: number | null
-  /** This lab's tokens over the six labs' tokens in the same window, for the decomposition:
+  /** This lab's tokens over the tracked labs' tokens in the same window, for the decomposition:
    * tokens vs. dollars. Not the rankings' share, which is of all OpenRouter tokens. */
   token_share: number | null
   models: SpendModel[]
@@ -790,7 +800,7 @@ export interface SpendData extends Stamp {
   providers: SpendProviderView[]
   totals: {
     tokens: number
-    /** Tokens routed to models outside the six labs — not priced here, stated as the gap. */
+    /** Tokens routed to models outside the tracked labs — not priced here, stated as the gap. */
     other_tokens: number
     priced_tokens: number
     spend_low: number

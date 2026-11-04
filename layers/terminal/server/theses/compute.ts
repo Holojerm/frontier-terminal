@@ -8,6 +8,15 @@ import type { ThesisDef } from '../../shared/utils/thesis-types'
 /** Three input tokens to one output token: the blend every price claim here uses. */
 const BLEND = { input_weight: 3, output_weight: 1 } as const
 
+/**
+ * The labs claims 1 and 2 were registered on. Their readings are stored as
+ * taken (the class map is code, so a past median cannot be recomputed), and a
+ * median over a set that grew would step on the day a lab joined: Alibaba's
+ * $3.00 flagship would have moved it from $8.00 to $6.00, a 25% fall that is
+ * the registry's, not the market's. A lab added later is left out and named.
+ */
+const PRICE_LABS = ['openai', 'anthropic', 'google', 'xai', 'meta', 'mistral'] as const
+
 export const COMPUTE_THESIS: ThesisDef = {
   id: 'compute',
   title: 'Compute',
@@ -43,6 +52,7 @@ export const COMPUTE_THESIS: ThesisDef = {
         kind: 'measured',
         signal: 'flagship-price-to-gpu',
         ...BLEND,
+        labs: PRICE_LABS,
         gpu: 'H100',
         context_gpu: 'B200',
         min_providers: 5,
@@ -54,12 +64,13 @@ export const COMPUTE_THESIS: ThesisDef = {
       n: 2,
       text: 'Flagship prices avoid a broad collapse',
       signal_label:
-        'Median flagship blended token price, (3 × input + output) ÷ 4, across labs with a mapped flagship',
+        'Median flagship blended token price, (3 × input + output) ÷ 4, across the six labs it opened with that have a mapped flagship',
       kill_condition: 'It stays 30% or more below its 180-day high for 4 straight weekly readings',
       spec: {
         kind: 'measured',
         signal: 'flagship-blended-price',
         ...BLEND,
+        labs: PRICE_LABS,
         rule: { rule: 'sustained-drawdown', drop: 0.3, days: 180, weeks: 4 },
       },
     },
@@ -68,7 +79,7 @@ export const COMPUTE_THESIS: ThesisDef = {
       n: 3,
       text: 'Frontier labs keep their demand share',
       signal_label:
-        'Combined OpenRouter token share of the six tracked labs, trailing 7 days (one aggregator’s traffic, not market share)',
+        'Combined OpenRouter token share of the nine tracked labs, trailing 7 days (one aggregator’s traffic, not market share)',
       kill_condition: 'It stays 30% or more below its 90-day high for 4 straight weekly readings',
       spec: {
         kind: 'measured',

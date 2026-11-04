@@ -390,6 +390,10 @@ export const GoogleCloudIncidentsOutput = z.strictObject({
 export const XaiStatusIncidentsOutput = z.strictObject({
   rows: z.array(IncidentRow.extend({ provider: z.literal('xai') })),
 })
+// status.deepseek.com's RSS history, joined to its Atom twin for each resolved incident's end.
+export const DeepseekStatusIncidentsOutput = z.strictObject({
+  rows: z.array(IncidentRow.extend({ provider: z.literal('deepseek') })),
+})
 
 // ---- Misalignment disclosures ---------------------------------------------
 
@@ -506,6 +510,9 @@ export const parserOutputSchemas = {
   'meta-pricing-md': VendorMdPricingOutput,
   'mistral-models-md': VendorMdPricingOutput,
   'mistral-pricing-md': VendorMdPricingOutput,
+  'deepseek-pricing-md': VendorMdPricingOutput,
+  'alibaba-pricing-html': VendorMdPricingOutput,
+  'moonshot-models-md': VendorMdPricingOutput,
   'edgar-fts': EdgarFtsOutput,
   'edgar-fts-openai': EdgarFtsOutput,
   'edgar-submissions-spcx': EdgarSubmissionsOutput,
@@ -515,6 +522,7 @@ export const parserOutputSchemas = {
   'edgar-submissions-googl': EdgarSubmissionsOutput,
   'edgar-submissions-meta': EdgarSubmissionsOutput,
   'edgar-submissions-orcl': EdgarSubmissionsOutput,
+  'edgar-submissions-baba': EdgarSubmissionsOutput,
   'edgar-companyfacts-spcx': EdgarCompanyfactsOutput,
   // One registration each for every derived filing-index and
   // prospectus-revenue source (derived.ts); the fixtures are Anthropic's S-1.
@@ -530,6 +538,7 @@ export const parserOutputSchemas = {
   'google-cloud-status': GoogleCloudIncidentsOutput,
   'mistral-status': StatuspageIncidentsOutput,
   'xai-status': XaiStatusIncidentsOutput,
+  'deepseek-status': DeepseekStatusIncidentsOutput,
   'openai-misalignment-reports': DisclosureIndexOutput,
   // One registration for every derived per-report page (derived.ts); the
   // committed fixture is one representative page.

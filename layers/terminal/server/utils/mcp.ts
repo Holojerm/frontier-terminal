@@ -115,7 +115,9 @@ export const ALERT_SEARCH_DEPTH = 500
 
 const ProviderSchema = z
   .enum(PROVIDER_ORDER)
-  .describe('One of the six tracked labs: openai, anthropic, google, xai, meta, mistral.')
+  .describe(
+    'One of the nine tracked labs: openai, anthropic, google, xai, meta, mistral, deepseek, alibaba, moonshot.',
+  )
 
 // modelKey() output: `model:<provider>:<slug>[:<tier>]` (layers/terminal/server/pipeline/contracts/keys.ts) —
 // the same shape GET /api/prices/<key> accepts.
@@ -181,7 +183,7 @@ const PROVENANCE =
 
 const INSTRUCTIONS =
   `${MCP_SERVER_NAME}: a free, public, read-only investor terminal tracking the frontier AI labs ` +
-  '(OpenAI, Anthropic, Google, xAI, Meta, Mistral) on seven axes — API price lists, hiring boards (with the physical-infrastructure buildout cluster), ' +
+  '(OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Alibaba (Qwen), Moonshot AI (Kimi)) on seven axes — API price lists, hiring boards (with the physical-infrastructure buildout cluster), ' +
   'SEC filings and disclosed revenue, status-page incidents, misalignment disclosures, and OpenRouter demand share with its implied spend share. ' +
   'Not investment advice. Start with `describe` (the site map) or `get_overview` (what moved). ' +
   PROVENANCE
@@ -301,8 +303,8 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
       title: 'Open roles',
       description:
         'Open roles per lab, counted from the CURRENT job-board set (a role missing from the board is closed), by department. ' +
-        'feed says what the number is: ok, no_rows (feed registered, nothing parsed yet), or no_public_feed — Meta, which has no ' +
-        'public hiring feed it permits reading, so its total is 0 with the audit’s reason rather than a guess. Google counts DeepMind’s roles only ' +
+        'feed says what the number is: ok, no_rows (feed registered, nothing parsed yet), or no_public_feed — Meta, DeepSeek, Alibaba and Moonshot AI, which ' +
+        'have no public hiring feed we can read, so each total is 0 with the audit’s reason rather than a guess. Google counts DeepMind’s roles only ' +
         '(company_names says so), not Alphabet’s. xAI’s board is blended with SpaceX ' +
         '(every row carries company_name "SpaceXAI", now "SpaceXSI"); the caveat and company_names travel with the row so you can say so. ' +
         'Optional provider filter. ' +
@@ -422,8 +424,8 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         `against ${HIRING_WINDOW_DAYS} days back, or the series start when that is younger (days says which). log is the change ` +
         'rows the series rests on. clusters[] sums named department clusters from sources.yaml — physical-infrastructure (Data Center, ' +
         'Infrastructure, Facilities, Energy, Construction, Compute, Hardware; not Software) is the capacity-buildout signal — with the ' +
-        'matched department labels listed so the sum is checkable. Meta is an audited cut (feed no_public_feed, reason given) with an ' +
-        'empty series; xAI carries the SpaceXAI blend caveat. Optional provider filter. ' +
+        'matched department labels listed so the sum is checkable. Meta, DeepSeek, Alibaba and Moonshot AI are audited cuts (feed ' +
+        'no_public_feed, reason given) with empty series; xAI carries the SpaceXAI blend caveat. Optional provider filter. ' +
         PROVENANCE,
       inputSchema: z.object({ provider: ProviderSchema.optional(), as_of: AsOfSchema }),
       annotations: READ_ONLY,
@@ -468,15 +470,16 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
     {
       title: 'Status-page incidents',
       description:
-        'Capacity strain as the vendor chose to post it: three status feeds (OpenAI and Anthropic Statuspage, Google Cloud ' +
+        'Capacity strain as the vendor chose to post it: one status feed per lab that has one (OpenAI and Mistral Statuspage, ' +
+        'Anthropic’s Atom history, xAI’s and DeepSeek’s RSS histories, Google Cloud ' +
         `filtered to Gemini / Vertex AI products). Per provider, incidents started in the newest ${INCIDENT_WINDOW_DAYS} days ` +
         '(last_window) against the same span before (prior_window), what is open now, and coverage_from — where held history ' +
         'begins; a Statuspage feed is a rolling window, so prior_window is partial until the pipeline has polled through it. ' +
         `incidents lists every one started inside ${INCIDENT_HISTORY_DAYS} days, newest first, with impact in the vendor’s own ` +
-        'vocabulary (never mapped across vendors; null for Anthropic, whose Atom feed publishes none) and a link. Windows anchor on window_to, the newest status fetch, not the ' +
+        'vocabulary (never mapped across vendors; null for Anthropic and DeepSeek, whose feeds publish none) and a link. Windows anchor on window_to, the newest status fetch, not the ' +
         'clock. Not an SLA and not comparable across vendors: OpenAI’s feed mixes ChatGPT with API incidents and has no component ' +
-        'field; xAI’s RSS history covers Cursor’s products alongside Grok and the API (read components). Meta has NO public incident ' +
-        'history (only a current-state probe) and is reported as no_public_feed with the reason, never as zero incidents. Optional provider filter narrows providers and incidents. ' +
+        'field; xAI’s RSS history covers Cursor’s products alongside Grok and the API (read components). DeepSeek’s titles are Chinese with the English in parentheses. Meta, ' +
+        'Alibaba and Moonshot AI have NO incident history we can read and are reported as no_public_feed with the reason, never as zero incidents. Optional provider filter narrows providers and incidents. ' +
         PROVENANCE,
       inputSchema: z.object({ provider: ProviderSchema.optional() }),
       annotations: READ_ONLY,
@@ -499,7 +502,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
       description:
         'Each lab’s own index of misalignment reports and notices — agents leaving their sandbox, messaging each other through ' +
         'public services, deceiving in their own summaries. Only OpenAI publishes one (alignment.openai.com/misalignment-reports); ' +
-        'Anthropic, Google, xAI, Meta and Mistral are reported as no_public_feed with the audit’s reason, never as zero. A count measures ' +
+        'every other lab is reported as no_public_feed with the audit’s reason, never as zero. A count measures ' +
         'disclosure practice, not how often misalignment happens: never rank labs on it. entries carries every report and notice ' +
         'with title, summary, model and observed_during VERBATIM, and for a report its page’s dates: discovered_on, disclosed_on ' +
         '(disclosed_basis says whether the page printed it or it is the earliest date the index has shown), and ' +
@@ -546,7 +549,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
       description:
         'Revenue each lab, or the public parent that consolidates it, has reported to the SEC, read from EDGAR’s XBRL data. ' +
         'disclosure is none (no audited disclosure on file — nothing is shown, and press run-rates are deliberately absent), parent ' +
-        '(a public parent’s figure, labelled as the parent’s: xAI via SpaceX/SPCX consolidated, whose XBRL carries no xAI segment; Google via Alphabet/GOOGL’s Google Cloud segment, filer.segment set, which is the segment’s revenue, not Gemini’s), ' +
+        '(a public parent’s figure, labelled as the parent’s: xAI via SpaceX/SPCX consolidated, whose XBRL carries no xAI segment; Google via Alphabet/GOOGL’s Google Cloud segment, filer.segment set, which is the segment’s revenue, not Gemini’s; Alibaba shows none: its parent reports in RMB and only annually in XBRL), ' +
         'issuer (the lab files for itself — tagged in sources.yaml, or resolved at poll time from its own S-1 by the pending_filers patterns, ' +
         'in which case filer.tagged_by is resolved and filer.resolved_from names the filing) or no_rows (tagged, nothing parsed yet). periods are the filer’s own USD values per ' +
         '(start, end) from the newest filing that reported them, each with the tag, form, accession and a link to the filing index; ' +
@@ -674,8 +677,8 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         `The ${SHARE_WINDOW_DAYS}-day rankings joined to the vendors’ list prices: per lab, tokens routed, the share of those tokens that ` +
         'matched a priced SKU (coverage), and implied spend as a RANGE — spend_low is every token at the input list price, spend_high ' +
         'every token at the output price (the rankings carry no prompt/completion split, so a point estimate would be invented). ' +
-        'share_low/share_high are each lab’s slice of the six labs’ implied dollars at each bound; token_share is the same window’s ' +
-        'slice of the six labs’ tokens (NOT of all OpenRouter tokens, which get_rankings reports), so tokens and dollars can be read side by side. models[] shows the join per model, with reason (free, unlisted, ' +
+        'share_low/share_high are each lab’s slice of the tracked labs’ implied dollars at each bound; token_share is the same window’s ' +
+        'slice of the tracked labs’ tokens (NOT of all OpenRouter tokens, which get_rankings reports), so tokens and dollars can be read side by side. models[] shows the join per model, with reason (free, unlisted, ' +
         'unpriced) for every model excluded from dollars. This is one aggregator’s channel at list price, not revenue and not market ' +
         'share; cite it as implied OpenRouter-channel spend and reproduce the CC BY 4.0 citation in rankings.meta.citation. ' +
         PROVENANCE,

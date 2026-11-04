@@ -26,6 +26,7 @@ import type {
 import * as tables from '#server/db/schema'
 import { asOfFromDetail } from '../pipeline/lanes'
 import { manifestFixtures } from '../pipeline/parsers/fixture-provenance'
+import { providerOfOpenRouterId } from '../pipeline/parsers/openrouter'
 import type { PipelineDb } from '../pipeline/store'
 import { lastRuns, sourceStamps, type QueryContext } from './terminal-db'
 import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
@@ -60,6 +61,9 @@ const emptyTokens = (): Record<ProviderId, number> => ({
   xai: 0,
   meta: 0,
   mistral: 0,
+  deepseek: 0,
+  alibaba: 0,
+  moonshot: 0,
   other: 0,
 })
 
@@ -166,7 +170,14 @@ const isRanking = eq(tables.entities.entity_type, 'ranking')
 const dateOf = sql<string | null>`json_extract(${tables.entities.payload}, '$.date')`
 
 /** Observations for the newest `days` days — the table grows by ~50 rows
- * a day forever, so the read is bounded by date, never the whole type. */
+ * a day forever, so the read is bounded by date, never the whole type.
+ *
+ * The lab is read off the permaslug here, not off the stored provider column.
+ * Rows older than OpenRouter's 30-day window are never re-parsed, so the
+ * column keeps the prefix map of the day they were stored: a lab added later
+ * (DeepSeek, Alibaba and Moonshot AI on 2026-11-04) would count from that day
+ * on and as "other" before it, a step in every share that is the registry's,
+ * not the market's. */
 export async function rankingObservations(
   db: PipelineDb,
   days: number = SERIES_DAYS,
@@ -181,7 +192,6 @@ export async function rankingObservations(
 
   const rows = await db
     .select({
-      provider: tables.entities.provider,
       payload: tables.entities.payload,
       source_url: tables.entities.source_url,
       fetched_at: tables.entities.fetched_at,
@@ -208,7 +218,7 @@ export async function rankingObservations(
     }
     out.push({
       date: p.date,
-      provider: row.provider as ProviderId,
+      provider: providerOfOpenRouterId(p.model_permaslug),
       model_permaslug: p.model_permaslug,
       total_tokens: p.total_tokens,
       source_url: row.source_url,

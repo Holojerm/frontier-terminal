@@ -294,6 +294,121 @@ sources:
       the same list mistral-models-md checks against the page's own
       "third-party" label.
 
+  deepseek-pricing-md:
+    axis: pricing-catalog
+    provider: deepseek
+    url: https://api-docs.deepseek.com/quick_start/pricing.md
+    format: Markdown, one transposed table (a column per model, a row per field)
+    diff_mechanism: body hash (ETag, Last-Modified)
+    verdict: include
+    terms: >-
+      DeepSeek's Terms of Use (cdn.deepseek.com/policies/en-US, last updated
+      2026-03-27) cover its "websites" and bar "capturing, copying any
+      content of the Services, including but not limited to using any robots,
+      spiders, or other automatic setups". api-docs.deepseek.com/robots.txt
+      allows everything. Taken: model ids, versions, context and $/MTok
+      prices, every 5 minutes (the launch tripwire). Kept on the free site
+      only, as Anthropic's docs are; not in a paid offer. Read 2026-11-04.
+    rights: not-cleared
+    fixture: fixtures/pricing/deepseek-pricing.md
+    caveats: >-
+      Live-fetched 2026-11-04: catalog and prices on one page, in USD (the
+      Chinese page, api-docs.deepseek.com/zh-cn, is not read). Two API
+      models, deepseek-flash (serving DeepSeek-V4.1-Flash-1017) and
+      deepseek-v4-pro. Prices come in two time bands: peak (01:00-04:00 and
+      06:00-10:00 UTC on weekdays) and off-peak, which the page says is half
+      the peak rate and covers most hours of the week. The peak price is the
+      list price and the standard row; off-peak is stored as its own
+      off_peak tier. Cache-miss input is the input price, cache-hit input
+      the cached-input price. Search and Fetch are priced per request and
+      not parsed. No sentence names a flagship, middle or cost tier, so all
+      three of DeepSeek's class-map cells are stated gaps.
+
+  alibaba-pricing-html:
+    axis: pricing-catalog
+    provider: alibaba
+    url: https://www.alibabacloud.com/help/en/model-studio/model-pricing
+    format: server-rendered HTML (~500 KB), one table per model line and region tab
+    diff_mechanism: parsed rows (the page carries a per-request trace id, so its body hash changes on every fetch)
+    verdict: include
+    terms: >-
+      Alibaba Cloud's international Website Terms of Use (last updated
+      2026-03-20) say "Systematic retrieval of Content from the Services to
+      create or compile, directly or indirectly, a collection, compilation,
+      database or directory (whether through robots, spiders, automatic
+      devices or manual processes) without written permission from Alibaba
+      Cloud is prohibited". www.alibabacloud.com/robots.txt allows /help/.
+      Taken: $/MTok list prices for the Qwen-Max, Qwen-Plus and Qwen-Flash
+      lines, every 30 minutes, not on the five-minute tripwire. Kept on the
+      free site only, as Anthropic's docs are; not in a paid offer. Read
+      2026-11-04.
+    rights: not-cleared
+    fixture: fixtures/pricing/alibaba-pricing.html
+    caveats: >-
+      Live-fetched 2026-11-04 from the international site, priced in USD;
+      the China site (help.aliyun.com, CNY) is not read. Only the
+      Singapore tab's "International" deployment rows are parsed: Beijing,
+      Hong Kong, Frankfurt, Virginia and Tokyo print other prices for the
+      same ids. Only the Qwen-Max, Qwen-Plus and Qwen-Flash lines are read.
+      The specialised lines (Omni, VL, OCR, Coder, Translation and others),
+      the open-weight section and the third-party section (DeepSeek, Kimi,
+      GLM and MiniMax models Alibaba resells) are not Alibaba's list price
+      for a Qwen text model. Prices are tiered by input tokens per request:
+      the first band is the standard row and each later band its own tier
+      (input_256k_1m). Where non-thinking and thinking output are priced
+      apart, the non-thinking price is the output price and the other is
+      in notes. "List price $X (Limited-time 20% off)" stores X and notes
+      the promotion, which states no end date. The page prints no context
+      window.
+
+  alibaba-models-html:
+    axis: pricing-catalog
+    provider: alibaba
+    url: https://www.alibabacloud.com/help/en/model-studio/models
+    format: server-rendered HTML, one card per recommended model
+    diff_mechanism: class-map sentence check
+    verdict: include (class-map page for alibaba-pricing-html)
+    terms: >-
+      Same terms and robots.txt as alibaba-pricing-html. Taken: whether the
+      three sentences the class map quotes are still on the page, every 5
+      minutes (the launch tripwire). Not in a paid offer. Read 2026-11-04.
+    rights: not-cleared
+    fixture: fixtures/pricing/alibaba-models.html
+    caveats: >-
+      Read only for the vendor sentences the class map quotes: the
+      "Recommended models" card for each of qwen3.8-max ("Complex reasoning
+      and coding"), qwen3.7-plus ("Balanced performance, speed, and cost")
+      and qwen3.8-flash ("Fast and cost-effective"). The same page
+      recommends third-party models (DeepSeek, GLM, Kimi, MiniMax), which
+      are not Alibaba SKUs. Prices come from alibaba-pricing-html.
+
+  moonshot-models-md:
+    axis: pricing-catalog
+    provider: moonshot
+    url: https://platform.kimi.ai/docs/models.md
+    format: Markdown tables (current models; deprecated models)
+    diff_mechanism: body hash
+    verdict: include (catalog only)
+    terms: >-
+      Moonshot AI's Terms of Service for the Kimi Open Platform
+      (platform.kimi.ai/docs/agreement/modeluse.md, last updated
+      2026-07-30) define the Services to include "documentation, and
+      websites" and bar users from "Use any method to extract data from the
+      Services other than as permitted through the APIs". robots.txt
+      allows /docs. Taken: model ids and descriptions, every 5 minutes (the
+      launch tripwire). Kept on the free site only, as Anthropic's docs
+      are; not in a paid offer. Read 2026-11-04.
+    rights: not-cleared
+    fixture: fixtures/pricing/moonshot-models.md
+    caveats: >-
+      Live-fetched 2026-11-04. platform.moonshot.ai redirects to
+      platform.kimi.ai; the source is registered at the final URL. Catalog
+      only, and with no prices at all: the pricing page's tables are drawn
+      in the browser, so the served page carries none (cut
+      moonshot-pricing). Only the "Multi-modal Model" table is read (three
+      ids open to new users); the "Deprecated Models" table under it is
+      not. No context column is printed.
+
   openrouter-models:
     axis: pricing-cross-check
     provider: all
@@ -347,7 +462,10 @@ sources:
       account; this terminal uses four a day. Meta's share counts both of
       its prefixes: its own API models (meta/*) and the open-weight Llama
       line (meta-llama/*), which third parties host and bill for, so it is
-      demand for Meta's models, not traffic Meta serves.
+      demand for Meta's models, not traffic Meta serves. The same holds for
+      DeepSeek (deepseek/*), Alibaba (qwen/*) and Moonshot AI
+      (moonshotai/*), whose open-weight models third parties serve beside
+      the labs' own APIs.
 
   openai-ashby:
     axis: hiring
@@ -671,6 +789,27 @@ sources:
       obligations are read for the exposure series (filed_fact_sources). Its
       fiscal year ends May 31.
 
+  edgar-submissions-baba:
+    axis: sec
+    provider: all
+    url: https://data.sec.gov/submissions/CIK0001577552.json
+    format: JSON
+    diff_mechanism: accession numbers
+    verdict: include, narrowly scoped
+    terms: >-
+      Same terms, robots.txt and frequency as edgar-submissions. Read
+      2026-11-04.
+    rights: ours
+    fixture: fixtures/sec/edgar-submissions-baba.json
+    caveats: >-
+      Whitelisted CIK, same form filter as edgar-submissions, which keeps
+      Alibaba's 20-F annual report (fiscal year ends March 31) and drops
+      its 6-Ks: 79 of the newest 150 filings, mostly results releases,
+      buyback tallies and notices. Alibaba is a foreign private issuer and
+      files no 10-Q. Qwen is one product of the Cloud Intelligence Group
+      segment, so nothing here is a lab revenue figure (see
+      revenue_filers).
+
   edgar-companyfacts-spcx:
     axis: revenue
     provider: all
@@ -814,6 +953,52 @@ sources:
       HTML pages answer 403 (Cloudflare challenge) to a headless client, so
       unlike the other status pages they could not be checked to resolve.
 
+  deepseek-status:
+    axis: status
+    provider: deepseek
+    url: https://status.deepseek.com/history.rss
+    format: RSS 2.0, one <item> per incident
+    diff_mechanism: incident ids; status/resolved_at per incident
+    verdict: include
+    terms: >-
+      DeepSeek's Terms of Use bar robots and spiders that capture the
+      content of its websites (see deepseek-pricing-md).
+      status.deepseek.com has no robots.txt (the path answers the status
+      app's own page). Taken: incident id, title, status, components,
+      start and end, every 6 hours. Kept on the free site only; not in a
+      paid offer. Read 2026-11-04.
+    rights: not-cleared
+    fixture: fixtures/status/deepseek-status.xml
+    caveats: >-
+      Live-fetched 2026-11-04: 28 incidents, 2026-08-04 to 2026-11-03, all
+      resolved. The page is hosted on Flashduty; its /api/v2 path is 404.
+      Titles are Chinese with the English in full-width parentheses and
+      are stored as printed. The feed prints a start (pubDate) and the
+      newest status, never an impact or an end: impact stays null, and a
+      resolved incident's end is read from deepseek-status-atom. Components
+      include the chat app and search service beside the two API models,
+      so the count is "DeepSeek operations", as OpenAI's is.
+
+  deepseek-status-atom:
+    axis: status
+    provider: deepseek
+    url: https://status.deepseek.com/history.atom
+    format: Atom 1.0, one <entry> per incident
+    diff_mechanism: incident ids
+    verdict: include (join table for deepseek-status)
+    terms: >-
+      Same terms and robots.txt as deepseek-status. Taken: each incident's
+      newest update time, every 6 hours. Read 2026-11-04.
+    rights: not-cleared
+    fixture: fixtures/status/deepseek-status-atom.xml
+    caveats: >-
+      The same incidents as the RSS feed, with no start time. Each entry's
+      <updated> is the incident's newest update; for a resolved incident
+      that is the update that resolved it. On 2026-11-04 it matched, to
+      the second, the close time the status page prints for all 8
+      incidents shown there. An update posted after resolution (a
+      postmortem note) would move it, and the end with it.
+
   xai-status:
     axis: status
     provider: xai
@@ -896,7 +1081,9 @@ sources:
 # data.sec.gov/submissions/CIK0001326801.json -> "Meta Platforms, Inc.".
 # ORCL was resolved on 2026-11-04 the same way: company_tickers.json ->
 # 1341439, round-tripped through data.sec.gov/submissions/CIK0001341439.json
-# -> "ORACLE CORP".
+# -> "ORACLE CORP". BABA was resolved on 2026-11-04 the same way:
+# company_tickers.json -> 1577552, round-tripped through
+# data.sec.gov/submissions/CIK0001577552.json -> "Alibaba Group Holding Ltd".
 cik_whitelist:
   MSFT: "0000789019"
   AMZN: "0001018724"
@@ -905,6 +1092,7 @@ cik_whitelist:
   GOOGL: "0001652044"
   META: "0001326801"
   ORCL: "0001341439"
+  BABA: "0001577552"
 
 # Disclosed-revenue filers. One entry per tracked lab: null while the lab has
 # no audited, primary-source disclosure — the /revenue panel then says so and
@@ -933,6 +1121,15 @@ revenue_filers:
     relation: parent
   meta: null # Meta Platforms (META) is public but segments Family of Apps and Reality Labs, never its model API
   mistral: null # private; no EDGAR filer (2026-11-01: "Mistral AI" appears only in CoreWeave's S-1/A as a customer)
+  deepseek: null # private; no EDGAR filer (2026-11-04: "DeepSeek" appears only in 7 other companies' S-1-family filings)
+  # Alibaba (BABA) files 20-F and 6-K, not 10-K and 10-Q. Model Studio revenue
+  # lands in the Cloud Intelligence Group segment, which is all of Alibaba Cloud,
+  # and Alibaba reports it in RMB, with tagged XBRL only in the annual 20-F: its
+  # quarterly results are 6-K press releases. A Google-style segment series would
+  # be one point a year in a currency this panel never converts, so none is shown
+  # (docs/source-audit.md, 2026-11-04). Its filings are read (edgar-submissions-baba).
+  alibaba: null
+  moonshot: null # private; no EDGAR filer (2026-11-04: no S-1-family filing names "Moonshot AI")
 
 # Labs with no CIK yet, and how to recognise theirs the moment it exists.
 # An S-1-family hit on either edgar-fts query whose FILER name (EDGAR's
@@ -2157,6 +2354,79 @@ cut:
       the docs' llms.txt (MAI-2026-001 to 003) cover SDK and product
       vulnerabilities and say nothing about model behavior. We re-check every
       week.
+  deepseek-hiring:
+    verdict: cut (shown as "no public feed")
+    reason: >-
+      DeepSeek publishes no job board we can read (checked 2026-11-04).
+      Greenhouse, Ashby and Lever boards named deepseek or deepseek.ai all
+      answer 404, deepseek.com/en/careers is a 404 page, and the site
+      links no careers page.
+  deepseek-disclosures:
+    verdict: cut (shown as "no disclosure index")
+    reason: >-
+      We found no misalignment or containment disclosure page (checked
+      2026-11-04). deepseek.com/safety answers 404, and the API docs'
+      news pages announce releases. We re-check every week.
+  alibaba-hiring:
+    verdict: cut (shown as "no public feed")
+    reason: >-
+      Alibaba's careers site (talent.alibaba.com, where careers.alibaba.com
+      redirects) is a client-rendered app with no job in its HTML, no
+      robots.txt (404) and no feed. It lists jobs for all of Alibaba Group,
+      and nothing in it separates the Qwen team. Greenhouse and Ashby
+      boards named qwen or alibaba answer 404 (checked 2026-11-04).
+  alibaba-status:
+    verdict: cut (shown as "no public feed")
+    reason: >-
+      status.alibabacloud.com is drawn in the browser from a script bundle
+      and serves no incident in its HTML. Its /rss path answers 403, its
+      /history path 404, and it has no robots.txt (checked 2026-11-04).
+      It covers every Alibaba Cloud product, not Model Studio alone.
+  alibaba-disclosures:
+    verdict: cut (shown as "no disclosure index")
+    reason: >-
+      We found no misalignment or containment disclosure page for Qwen or
+      Alibaba Cloud Model Studio (checked 2026-11-04). qwen.ai/safety
+      redirects to the home page of a client-rendered site. We re-check
+      every week.
+  moonshot-pricing:
+    verdict: cut (price fields stay null; shown as a stated gap)
+    reason: >-
+      Moonshot's pricing pages (platform.kimi.ai/docs/pricing/chat and
+      /batch, checked 2026-11-04) draw their price tables in the browser.
+      The page as served holds an empty <table> in both its .md and HTML
+      forms, and the China page (platform.kimi.com, CNY) is built the same
+      way. The prices exist only in the page's script bundle, an
+      undocumented page backend, and the platform terms bar extracting
+      data "other than as permitted through the APIs". Model ids come from
+      moonshot-models-md; no Kimi price is stored, and none is taken from
+      an aggregator.
+  moonshot-hiring:
+    verdict: cut (shown as "no public feed")
+    reason: >-
+      careers.kimi.ai (linked from moonshot.ai) is a client-rendered app
+      whose sitemap lists 10 static pages and no job (checked 2026-11-04).
+      Greenhouse, Ashby and Lever boards named moonshotai and moonshot.ai
+      answer 404. The Ashby board "moonshot" (5 roles) belongs to a
+      different company, a crypto trading app.
+  moonshot-status:
+    verdict: cut (shown as "no public feed")
+    reason: >-
+      status.moonshot.cn is a Statuspage site whose robots.txt disallows
+      /api/, the only machine-readable path, and whose RSS and Atom history
+      feeds are switched off (they redirect to an inactive feed that
+      answers 404). There is no status page at a moonshot.ai or kimi.ai
+      host (checked 2026-11-04). Read once for this audit, its incident
+      JSON held 50 incidents in under three months, every one marked
+      critical: 25 Kimi Code latency and speed alarms and 18 search-service
+      error alarms. Its counts would not compare with the other labs' even
+      if it could be read.
+  moonshot-disclosures:
+    verdict: cut (shown as "no disclosure index")
+    reason: >-
+      We found no misalignment or containment disclosure page (checked
+      2026-11-04). moonshot.ai/safety and kimi.ai/safety redirect to each
+      site's home page. We re-check every week.
   gpu-runpod:
     verdict: cut (GPU prices not stored)
     reason: >-

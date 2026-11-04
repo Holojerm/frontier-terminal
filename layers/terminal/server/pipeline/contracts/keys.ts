@@ -4,7 +4,17 @@ import { createHash } from 'node:crypto'
 // accession numbers. A change event must be reproducible from two
 // snapshots, so keys are pure functions of source-native identifiers.
 
-export type Provider = 'openai' | 'anthropic' | 'google' | 'xai' | 'meta' | 'mistral' | 'other'
+export type Provider =
+  | 'openai'
+  | 'anthropic'
+  | 'google'
+  | 'xai'
+  | 'meta'
+  | 'mistral'
+  | 'deepseek'
+  | 'alibaba'
+  | 'moonshot'
+  | 'other'
 
 export function jobKey(provider: Provider, jobId: string | number): string {
   return `job:${provider}:${jobId}`

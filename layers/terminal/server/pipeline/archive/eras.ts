@@ -213,6 +213,21 @@ export const ARCHIVE_NOT_COVERED: readonly { provider: string; reason: string }[
     provider: 'meta',
     reason: 'Meta had no API price list of its own before the page we check now.',
   },
+  {
+    provider: 'deepseek',
+    reason:
+      'DeepSeek became a tracked lab on 2026-11-04, after the backfill was built. We haven’t checked the Archive’s copies of its pricing page yet.',
+  },
+  {
+    provider: 'alibaba',
+    reason:
+      'Alibaba became a tracked lab on 2026-11-04, after the backfill was built. We haven’t checked the Archive’s copies of its Model Studio pricing page yet.',
+  },
+  {
+    provider: 'moonshot',
+    reason:
+      'Moonshot AI’s pricing page draws its tables with scripts, so neither the live page nor an archived copy holds prices we can read.',
+  },
 ]
 
 export function eraById(id: string): ArchiveEra | null {
