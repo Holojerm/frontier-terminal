@@ -310,7 +310,7 @@ export const recipeRuns = sqliteTable(
     id: text('id').primaryKey(),
     recipe_id: text('recipe_id').notNull(),
     started_at: text('started_at').notNull(),
-    status: text('status').notNull(), // ok | unchanged | failed
+    status: text('status').notNull(), // ok | unchanged | failed | skipped
     detail: text('detail'),
     content_hash: text('content_hash'),
     observations: integer('observations').notNull(),

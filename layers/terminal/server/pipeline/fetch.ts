@@ -35,6 +35,13 @@ export const SEC_HOSTS: readonly string[] = ['efts.sec.gov', 'data.sec.gov', 'ww
 export const SEC_CONTACT_UNSET = 'NUXT_SEC_CONTACT_EMAIL unset'
 
 export const OPENROUTER_KEY_UNSET = 'NUXT_OPENROUTER_API_KEY not set'
+export const GITHUB_TOKEN_UNSET = 'NUXT_GITHUB_TOKEN not set'
+
+/** GitHub's search API: anonymous calls share a per-IP limit a Worker's egress cannot own. */
+export function needsGithubToken(url: string): boolean {
+  const u = new URL(url)
+  return u.hostname === 'api.github.com' && u.pathname.startsWith('/search/')
+}
 
 /** OpenRouter's dataset endpoints (the usage rankings) take a bearer key;
  * its public model list does not and is fetched as audited, anonymously. */
@@ -71,6 +78,8 @@ export function userAgentFor(url: string, options: UserAgentOptions): string | n
 export interface FetcherOptions extends UserAgentOptions {
   /** NUXT_OPENROUTER_API_KEY — sent only to openrouter.ai/api/v1/datasets/*. Never logged. */
   openrouterApiKey?: string
+  /** NUXT_GITHUB_TOKEN — sent only to api.github.com/search/*. Never logged. */
+  githubToken?: string
   fetch?: typeof globalThis.fetch
   sleep?: (ms: number) => Promise<void>
   attempts?: number
@@ -199,11 +208,19 @@ export function createFetcher(options: FetcherOptions): SourceFetcher {
     // key to whatever host answered it — the fetch spec strips Authorization
     // across origins, but that is the platform's promise to keep, not ours to
     // depend on for a secret.
-    const credentialed = needsOpenRouterKey(source.url)
-    if (credentialed) {
+    const openrouter = needsOpenRouterKey(source.url)
+    const github = needsGithubToken(source.url)
+    const credentialed = openrouter || github
+    if (openrouter) {
       const key = options.openrouterApiKey?.trim() ?? ''
       if (!key) return { ok: false, status: null, detail: OPENROUTER_KEY_UNSET, skipped: true }
       headers.Authorization = `Bearer ${key}`
+    }
+    if (github) {
+      const token = options.githubToken?.trim() ?? ''
+      if (!token) return { ok: false, status: null, detail: GITHUB_TOKEN_UNSET, skipped: true }
+      headers.Authorization = `Bearer ${token}`
+      headers.Accept = 'application/vnd.github+json'
     }
 
     let last: FetchOutcome = { ok: false, status: null, detail: 'no attempt made' }

@@ -466,6 +466,11 @@ export default defineNuxtConfig({
     // says "not configured"; nothing is fetched anonymously. A Worker secret:
     // `op read "op://…" | bunx wrangler secret put NUXT_OPENROUTER_API_KEY`.
     openrouterApiKey: '',
+    // Bearer for GitHub's search API, which the coding-agent PR recipes read
+    // (layers/terminal/server/theses/recipes/github-agent-prs.ts). A fine-grained
+    // token with no permissions is enough: public data only. Empty = those
+    // recipes record 'skipped'; nothing is fetched anonymously.
+    githubToken: '',
     // Public vars (access via useRuntimeConfig().public.myVar)
     // NUXT_PUBLIC_APP_NAME in wrangler.toml [vars] overrides this at runtime
     public: {

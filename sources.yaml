@@ -851,6 +851,309 @@ recipe_sources:
       exists to read; IREN's revenue is mostly bitcoin mining and Applied
       Digital leases data-center capacity (to CoreWeave among others), so
       neither is a GPU-rental comparable. CoreWeave is shown alone.
+  ramp-ai-index:
+    company: frontier-labs
+    url: https://ramp.com/data/ai-index
+    format: Next.js HTML; the props object streamed in self.__next_f.push chunks (adoptionOverall, adoptionVendor, dataVersion), monthly
+    verdict: include, derived numbers only
+    terms: >-
+      robots.txt allows /data/ (it disallows /*.csv). Ramp publishes no
+      website terms, and the Acceptable Use Policy's "bulk scraping" bar
+      covers its AI-enabled Services. The page states no license, so only
+      the monthly overall and per-vendor rates are kept, each with this URL
+      and its fetch time; the industry, size and state tables are not.
+      Read 2026-11-04.
+    caveats: >-
+      US businesses on Ramp (over 85,000), counted as adopters for any
+      positive AI spend in the month by card or bill pay: adoption, not
+      spend, and not the whole economy. Google and Meta are not in the
+      vendor series. Ramp restates past months between releases, so each
+      release is also kept whole under <key>@<date first seen>. The page's
+      bytes differ on every fetch (a trace id); a release is new only when
+      the series or its dataVersion changes.
+  npm-openai:
+    company: openai
+    url: https://api.npmjs.org/downloads/range/{start}:{end}/openai
+    format: JSON, npm downloads API (documented in the npm/registry repository), one row per day
+    verdict: include
+    terms: >-
+      npm's open-source terms bar automating access to the Website, then:
+      "You may replicate data from the Public Registry using the Public
+      APIs per this Agreement." No robots.txt on api.npmjs.org. Read
+      2026-11-04.
+    caveats: >-
+      Every tarball fetch counts, CI and mirrors included, so read the
+      trend, not the level. A range longer than 18 months is clipped
+      without an error; whole days of zeros are npm outages, not demand.
+  npm-anthropic-sdk:
+    company: anthropic
+    url: https://api.npmjs.org/downloads/range/{start}:{end}/@anthropic-ai/sdk
+    format: JSON, npm downloads API (documented in the npm/registry repository), one row per day
+    verdict: include
+    terms: >-
+      npm's open-source terms bar automating access to the Website, then:
+      "You may replicate data from the Public Registry using the Public
+      APIs per this Agreement." No robots.txt on api.npmjs.org. Read
+      2026-11-04.
+    caveats: >-
+      Every tarball fetch counts, CI and mirrors included, so read the
+      trend, not the level. A range longer than 18 months is clipped
+      without an error; whole days of zeros are npm outages, not demand.
+  npm-google-genai:
+    company: google
+    url: https://api.npmjs.org/downloads/range/{start}:{end}/@google/genai
+    format: JSON, npm downloads API (documented in the npm/registry repository), one row per day
+    verdict: include
+    terms: >-
+      npm's open-source terms bar automating access to the Website, then:
+      "You may replicate data from the Public Registry using the Public
+      APIs per this Agreement." No robots.txt on api.npmjs.org. Read
+      2026-11-04.
+    caveats: >-
+      Every tarball fetch counts, CI and mirrors included, so read the
+      trend, not the level. A range longer than 18 months is clipped
+      without an error; whole days of zeros are npm outages, not demand.
+  npm-mistral:
+    company: mistral
+    url: https://api.npmjs.org/downloads/range/{start}:{end}/@mistralai/mistralai
+    format: JSON, npm downloads API (documented in the npm/registry repository), one row per day
+    verdict: include
+    terms: >-
+      npm's open-source terms bar automating access to the Website, then:
+      "You may replicate data from the Public Registry using the Public
+      APIs per this Agreement." No robots.txt on api.npmjs.org. Read
+      2026-11-04.
+    caveats: >-
+      Every tarball fetch counts, CI and mirrors included, so read the
+      trend, not the level. A range longer than 18 months is clipped
+      without an error; whole days of zeros are npm outages, not demand.
+  npm-claude-code:
+    company: anthropic
+    url: https://api.npmjs.org/downloads/range/{start}:{end}/@anthropic-ai/claude-code
+    format: JSON, npm downloads API (documented in the npm/registry repository), one row per day
+    verdict: include
+    terms: >-
+      npm's open-source terms bar automating access to the Website, then:
+      "You may replicate data from the Public Registry using the Public
+      APIs per this Agreement." No robots.txt on api.npmjs.org. Read
+      2026-11-04.
+    caveats: >-
+      Every tarball fetch counts, CI and mirrors included, so read the
+      trend, not the level. A range longer than 18 months is clipped
+      without an error; whole days of zeros are npm outages, not demand.
+  npm-codex:
+    company: openai
+    url: https://api.npmjs.org/downloads/range/{start}:{end}/@openai/codex
+    format: JSON, npm downloads API (documented in the npm/registry repository), one row per day
+    verdict: include
+    terms: >-
+      npm's open-source terms bar automating access to the Website, then:
+      "You may replicate data from the Public Registry using the Public
+      APIs per this Agreement." No robots.txt on api.npmjs.org. Read
+      2026-11-04.
+    caveats: >-
+      Every tarball fetch counts, CI and mirrors included, so read the
+      trend, not the level. A range longer than 18 months is clipped
+      without an error; whole days of zeros are npm outages, not demand.
+  npm-gemini-cli:
+    company: google
+    url: https://api.npmjs.org/downloads/range/{start}:{end}/@google/gemini-cli
+    format: JSON, npm downloads API (documented in the npm/registry repository), one row per day
+    verdict: include
+    terms: >-
+      npm's open-source terms bar automating access to the Website, then:
+      "You may replicate data from the Public Registry using the Public
+      APIs per this Agreement." No robots.txt on api.npmjs.org. Read
+      2026-11-04.
+    caveats: >-
+      Every tarball fetch counts, CI and mirrors included, so read the
+      trend, not the level. A range longer than 18 months is clipped
+      without an error; whole days of zeros are npm outages, not demand.
+  npm-claude-agent-sdk:
+    company: anthropic
+    url: https://api.npmjs.org/downloads/range/{start}:{end}/@anthropic-ai/claude-agent-sdk
+    format: JSON, npm downloads API (documented in the npm/registry repository), one row per day
+    verdict: include
+    terms: >-
+      npm's open-source terms bar automating access to the Website, then:
+      "You may replicate data from the Public Registry using the Public
+      APIs per this Agreement." No robots.txt on api.npmjs.org. Read
+      2026-11-04.
+    caveats: >-
+      Every tarball fetch counts, CI and mirrors included, so read the
+      trend, not the level. A range longer than 18 months is clipped
+      without an error; whole days of zeros are npm outages, not demand.
+  npm-openai-agents:
+    company: openai
+    url: https://api.npmjs.org/downloads/range/{start}:{end}/@openai/agents
+    format: JSON, npm downloads API (documented in the npm/registry repository), one row per day
+    verdict: include
+    terms: >-
+      npm's open-source terms bar automating access to the Website, then:
+      "You may replicate data from the Public Registry using the Public
+      APIs per this Agreement." No robots.txt on api.npmjs.org. Read
+      2026-11-04.
+    caveats: >-
+      Every tarball fetch counts, CI and mirrors included, so read the
+      trend, not the level. A range longer than 18 months is clipped
+      without an error; whole days of zeros are npm outages, not demand.
+  pypi-openai:
+    company: openai
+    url: https://pypistats.org/api/packages/openai/overall?mirrors=false
+    format: JSON, pypistats.org overall series, category without_mirrors, one row per day
+    verdict: include
+    terms: >-
+      pypistats publishes no terms (404) and no robots.txt; its API page
+      asks bulk users to query BigQuery instead, which seven packages a day
+      is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
+      Read 2026-11-04.
+    caveats: >-
+      Known mirrors are excluded; CI installs are not. 180 days of history
+      only, so the series starts at the first run.
+  pypi-anthropic:
+    company: anthropic
+    url: https://pypistats.org/api/packages/anthropic/overall?mirrors=false
+    format: JSON, pypistats.org overall series, category without_mirrors, one row per day
+    verdict: include
+    terms: >-
+      pypistats publishes no terms (404) and no robots.txt; its API page
+      asks bulk users to query BigQuery instead, which seven packages a day
+      is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
+      Read 2026-11-04.
+    caveats: >-
+      Known mirrors are excluded; CI installs are not. 180 days of history
+      only, so the series starts at the first run.
+  pypi-google-genai:
+    company: google
+    url: https://pypistats.org/api/packages/google-genai/overall?mirrors=false
+    format: JSON, pypistats.org overall series, category without_mirrors, one row per day
+    verdict: include
+    terms: >-
+      pypistats publishes no terms (404) and no robots.txt; its API page
+      asks bulk users to query BigQuery instead, which seven packages a day
+      is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
+      Read 2026-11-04.
+    caveats: >-
+      Known mirrors are excluded; CI installs are not. 180 days of history
+      only, so the series starts at the first run.
+  pypi-mistralai:
+    company: mistral
+    url: https://pypistats.org/api/packages/mistralai/overall?mirrors=false
+    format: JSON, pypistats.org overall series, category without_mirrors, one row per day
+    verdict: include
+    terms: >-
+      pypistats publishes no terms (404) and no robots.txt; its API page
+      asks bulk users to query BigQuery instead, which seven packages a day
+      is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
+      Read 2026-11-04.
+    caveats: >-
+      Known mirrors are excluded; CI installs are not. 180 days of history
+      only, so the series starts at the first run.
+  pypi-xai-sdk:
+    company: xai
+    url: https://pypistats.org/api/packages/xai-sdk/overall?mirrors=false
+    format: JSON, pypistats.org overall series, category without_mirrors, one row per day
+    verdict: include
+    terms: >-
+      pypistats publishes no terms (404) and no robots.txt; its API page
+      asks bulk users to query BigQuery instead, which seven packages a day
+      is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
+      Read 2026-11-04.
+    caveats: >-
+      Known mirrors are excluded; CI installs are not. 180 days of history
+      only, so the series starts at the first run.
+  pypi-claude-agent-sdk:
+    company: anthropic
+    url: https://pypistats.org/api/packages/claude-agent-sdk/overall?mirrors=false
+    format: JSON, pypistats.org overall series, category without_mirrors, one row per day
+    verdict: include
+    terms: >-
+      pypistats publishes no terms (404) and no robots.txt; its API page
+      asks bulk users to query BigQuery instead, which seven packages a day
+      is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
+      Read 2026-11-04.
+    caveats: >-
+      Known mirrors are excluded; CI installs are not. 180 days of history
+      only, so the series starts at the first run.
+  pypi-openai-agents:
+    company: openai
+    url: https://pypistats.org/api/packages/openai-agents/overall?mirrors=false
+    format: JSON, pypistats.org overall series, category without_mirrors, one row per day
+    verdict: include
+    terms: >-
+      pypistats publishes no terms (404) and no robots.txt; its API page
+      asks bulk users to query BigQuery instead, which seven packages a day
+      is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
+      Read 2026-11-04.
+    caveats: >-
+      Known mirrors are excluded; CI installs are not. 180 days of history
+      only, so the series starts at the first run.
+  github-prs-claude-code:
+    company: anthropic
+    url: https://api.github.com/search/issues?q=is:pr "Generated with Claude Code" created:{yesterday}&per_page=1
+    format: JSON, GitHub search API total_count for one UTC day; incomplete_results must be false
+    verdict: include, one trend per agent
+    terms: >-
+      GitHub Acceptable Use Policies section 7: "Scraping does not refer to
+      the collection of information through our API", and research
+      publications must be open access. Needs NUXT_GITHUB_TOKEN: the
+      anonymous limit is per IP. Read 2026-11-04.
+    caveats: >-
+      Public repositories only. Claude Code adds the footer to PR descriptions by default; users can turn it off, so the count is a floor. The phrase is searched in titles and bodies, so a PR quoting it is counted too. Each agent leaves a different trace,
+      so agents are never compared as shares.
+  github-prs-codex:
+    company: openai
+    url: https://api.github.com/search/issues?q=is:pr head:codex/ created:{yesterday}&per_page=1
+    format: JSON, GitHub search API total_count for one UTC day; incomplete_results must be false
+    verdict: include, one trend per agent
+    terms: >-
+      GitHub Acceptable Use Policies section 7: "Scraping does not refer to
+      the collection of information through our API", and research
+      publications must be open access. Needs NUXT_GITHUB_TOKEN: the
+      anonymous limit is per IP. Read 2026-11-04.
+    caveats: >-
+      Public repositories only. A branch-name convention only: no bot author and no trailer by default, so the count includes any branch named codex/ and misses Codex work on other branches. Each agent leaves a different trace,
+      so agents are never compared as shares.
+  github-prs-jules:
+    company: google
+    url: https://api.github.com/search/issues?q=is:pr author:app/google-labs-jules created:{yesterday}&per_page=1
+    format: JSON, GitHub search API total_count for one UTC day; incomplete_results must be false
+    verdict: include, one trend per agent
+    terms: >-
+      GitHub Acceptable Use Policies section 7: "Scraping does not refer to
+      the collection of information through our API", and research
+      publications must be open access. Needs NUXT_GITHUB_TOKEN: the
+      anonymous limit is per IP. Read 2026-11-04.
+    caveats: >-
+      Public repositories only. Jules opens PRs as its own app by default (changeable since 2026-02-19), so the count is structural rather than opt-in. Each agent leaves a different trace,
+      so agents are never compared as shares.
+  epoch-data-centers:
+    company: frontier-labs
+    url: https://epoch.ai/data/data_centers/data_centers.csv
+    format: CSV, one row per site (96 at the audit), RFC 4180 with multi-line source fields
+    verdict: include
+    terms: >-
+      "Epoch AI's data is free to use, distribute, and reproduce provided
+      the source and authors are credited under the Creative Commons
+      Attribution license" (CC BY 4.0). robots.txt allows /data/. Read
+      2026-11-04.
+    caveats: >-
+      Epoch's estimates: 80% of power estimates fall within a factor of
+      1.4, compute is mostly derived from power, and coverage starts with
+      sites operational in 2024 or later. Owner and Users differ (Colossus
+      is owned by SpaceXAI and used by Anthropic) and carry confidence
+      tags, kept verbatim; attribute by Users at #confident or #likely.
+  epoch-data-center-timelines:
+    company: frontier-labs
+    url: https://epoch.ai/data/data_centers/data_center_timelines.csv
+    format: CSV, one row per site and dated estimate (575 at the audit, 2018-12 to 2030-01)
+    verdict: include
+    terms: >-
+      Same license and robots.txt as epoch-data-centers. Read 2026-11-04.
+    caveats: >-
+      Dates after the run are Epoch's projections and are marked so.
+      Epoch revises past estimates; the newest file wins, and the raw
+      bytes of each version are kept.
 
 # Department clusters read off the hiring boards. A cluster is a name match
 # over each board's own department labels: a department belongs when its

@@ -34,4 +34,10 @@ export interface Recipe {
   extract(body: string, ctx: { date: string }): Observation[]
   /** The source's terms, where it states a license the data carries. */
   license?: string
+  /**
+   * What a change is judged on, for a body that differs on every fetch
+   * (a per-request trace id). The raw bytes are still stored whole, but
+   * only when this changes. Throws like `extract` on a shape it cannot read.
+   */
+  fingerprint?(body: string): string
 }

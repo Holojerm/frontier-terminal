@@ -112,7 +112,7 @@ export interface RecipeCoverage {
   /** The URL the last run fetched; the recipe's own URL before any run. */
   url: string
   last_run: {
-    status: 'ok' | 'unchanged' | 'failed'
+    status: 'ok' | 'unchanged' | 'failed' | 'skipped'
     started_at: string
     detail: string | null
   } | null

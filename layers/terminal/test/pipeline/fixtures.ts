@@ -37,6 +37,12 @@ import gpuNebius from '~~/fixtures/recipes/gpu-nebius.html?raw'
 import gpuOracle from '~~/fixtures/recipes/gpu-oracle.json?raw'
 import gpuTogether from '~~/fixtures/recipes/gpu-together.html?raw'
 import gpuVerda from '~~/fixtures/recipes/gpu-verda.html?raw'
+import rampAiIndex from '~~/fixtures/recipes/ramp-ai-index.html?raw'
+import epochDataCenters from '~~/fixtures/recipes/epoch-data-centers.csv?raw'
+import epochTimelines from '~~/fixtures/recipes/epoch-data-center-timelines.csv?raw'
+import githubPrsCopilot from '~~/fixtures/recipes/github-prs-copilot.json?raw'
+import npmClaudeCode from '~~/fixtures/recipes/npm-claude-code.json?raw'
+import pypiAnthropic from '~~/fixtures/recipes/pypi-anthropic.json?raw'
 import secCompanyfactsCrwv from '~~/fixtures/recipes/sec-companyfacts-crwv.json?raw'
 import xaiModels from '~~/fixtures/pricing/xai-models.md?raw'
 import edgarCompanyfactsSpcx from '~~/fixtures/sec/edgar-companyfacts-spcx.json?raw'
@@ -99,6 +105,12 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/recipes/gpu-oracle.json': gpuOracle,
   'fixtures/recipes/gpu-together.html': gpuTogether,
   'fixtures/recipes/gpu-verda.html': gpuVerda,
+  'fixtures/recipes/ramp-ai-index.html': rampAiIndex,
+  'fixtures/recipes/epoch-data-centers.csv': epochDataCenters,
+  'fixtures/recipes/epoch-data-center-timelines.csv': epochTimelines,
+  'fixtures/recipes/github-prs-copilot.json': githubPrsCopilot,
+  'fixtures/recipes/npm-claude-code.json': npmClaudeCode,
+  'fixtures/recipes/pypi-anthropic.json': pypiAnthropic,
   'fixtures/recipes/sec-companyfacts-crwv.json': secCompanyfactsCrwv,
   'fixtures/sec/edgar-companyfacts-spcx.json': edgarCompanyfactsSpcx,
   'fixtures/sec/edgar-fts-openai.json': edgarFtsOpenai,
