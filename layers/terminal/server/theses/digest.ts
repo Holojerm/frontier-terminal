@@ -52,7 +52,12 @@ export function recipesOf(def: ClaimDef): string[] {
   const spec = def.spec
   if (spec.kind === 'judged') return spec.review === 'recipe-items' ? [spec.recipe] : []
   if (spec.signal === 'recipe-yoy-growth') return [spec.recipe, ...spec.compare_recipes]
-  if (spec.signal === 'recipe-trailing-sum' || spec.signal === 'recipe-sum-of-keys') {
+  if (
+    spec.signal === 'recipe-trailing-sum' ||
+    spec.signal === 'recipe-sum-of-keys' ||
+    spec.signal === 'recipe-key-ratio' ||
+    spec.signal === 'recipe-snapshot-total'
+  ) {
     return [spec.recipe]
   }
   return []

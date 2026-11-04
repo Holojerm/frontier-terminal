@@ -27,6 +27,7 @@ Kill conditions were registered on 2026-11-02, before any reading existed, and a
 | 3 | Frontier labs keep their demand share | Measured: the six labs' combined share of every OpenRouter token, trailing 7 days | 20.7% (week to 2026-11-01), against a high of 29.4% (week to 2026-08-17) and a low of 17.0% (week to 2026-10-05) | It stays 30% or more below its 90-day high for 4 straight weekly readings |
 | 4 | The physical buildout continues | Measured: open physical-infrastructure roles, summed across labs with a usable hiring feed | 196 (xAI 172, Anthropic 24, OpenAI 0), 5% below the 206 of 2026-10-24. Google and Meta have no public feed; Mistral's feed has stored nothing yet | The count falls 40% or more from its 90-day high |
 | 5 | Rented compute demand keeps growing | Measured: CoreWeave quarterly revenue against the same quarter a year earlier, from SEC filings | Q2 2026: $2,575M, up 112% on Q2 2025 ($1,212M); Q1 2026 up 112% | Growth is below 30% for 2 straight quarters |
+| 6 | Data-center power keeps coming online | Measured: Epoch AI's estimate of current power across the AI data centers it tracks, held from one dataset update to the next | 15,078 MW across 96 sites (Epoch, updated 2026-11-01; first stored 2026-11-04) | 20% or more below its 180-day high for 4 straight weekly readings |
 
 ## Method
 
@@ -62,6 +63,7 @@ Kill conditions were registered on 2026-11-02, before any reading existed, and a
 - **Claim 3 starts near its kill line.** The first reading is 29.5% below the 90-day high of the week to 2026-08-17 and has been lower (42% below at 2026-10-05). The rule needs 111 days of history before it can break, and 2026-08-17 leaves the 90-day window on 2026-11-15.
 - **Hiring feeds cover three labs.** Google and Meta have no public feed, and Mistral's feed is registered but has stored nothing yet. Their roles are not imputed. xAI's board is blended with SpaceX (every row says SpaceXAI) and supplies most of the count, so claim 4 mostly reads xAI's data-center hiring. When Mistral's board starts reporting, the sum steps up from that day; the reading's per-lab breakdown shows it. The cluster's department terms are in `sources.yaml` (`department_clusters`).
 - **CoreWeave stands alone.** Nebius files under IFRS (no us-gaap revenue tag to read), IREN's revenue is mostly bitcoin mining, and Applied Digital leases data-center capacity rather than renting GPUs. No comparable is shown. CoreWeave's revenue is concentrated in a few customers, including labs this thesis is about.
+- **Claim 6 is Epoch's estimate, and starts unresolved.** 80% of Epoch's power estimates fall within a factor of 1.4; coverage starts with sites operational in 2024 or later, so older fleets are missing. Epoch also revises and adds sites, so the total can step either way on an update. The rule needs 180 days of stored history behind four weekly readings, so the claim cannot break before about 2027-05-29. It was added on 2026-11-04, after the other claims, with the first reading in view.
 - **Mistral has no flagship.** Its docs name no start-here model (`CLASS_GAPS`), so claims 1 and 2 read five labs.
 
 ## Revisions
@@ -69,3 +71,4 @@ Kill conditions were registered on 2026-11-02, before any reading existed, and a
 | Date | Change | Reason |
 | --- | --- | --- |
 | 2026-11-02 | Opened | Third thesis; the first about a group of companies rather than one |
+| 2026-11-04 | Claim 6 added: Epoch AI data-center power | A supply number beside claim 4's hiring proxy, from the dataset audited that day (`docs/source-audit.md`) |

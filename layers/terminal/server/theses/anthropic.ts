@@ -91,5 +91,58 @@ export const ANTHROPIC_THESIS: ThesisDef = {
         confirmations: [],
       },
     },
+    // Claims 6–8, added 2026-11-04 from the sources audited that day. Their
+    // history already existed when the kill conditions were written; the
+    // journal says so.
+    {
+      id: 'anthropic-enterprise-lead',
+      n: 6,
+      text: 'Businesses pay for Anthropic at least as often as OpenAI',
+      signal_label:
+        'Ramp AI Index: share of US businesses on Ramp paying Anthropic ÷ paying OpenAI, monthly',
+      kill_condition: 'Below 1.0× for 3 straight months',
+      spec: {
+        kind: 'measured',
+        signal: 'recipe-key-ratio',
+        recipe: 'ramp-ai-index',
+        key: 'anthropic',
+        over_key: 'openai',
+        format: 'ratio',
+        rule: { rule: 'below-floor-periods', floor: 1, periods: 3 },
+      },
+    },
+    {
+      id: 'anthropic-sdk-downloads',
+      n: 7,
+      text: "Developers keep building on Anthropic's API",
+      signal_label: 'npm downloads of @anthropic-ai/sdk, trailing 28 days',
+      kill_condition: '30% or more below its 90-day high for 4 straight weeks',
+      spec: {
+        kind: 'measured',
+        signal: 'recipe-trailing-sum',
+        recipe: 'npm-anthropic-sdk',
+        key: '@anthropic-ai/sdk',
+        days: 28,
+        format: 'count',
+        rule: { rule: 'sustained-drawdown', drop: 0.3, days: 90, weeks: 4 },
+      },
+    },
+    {
+      id: 'anthropic-enterprise-growth',
+      n: 8,
+      text: 'Business adoption of Anthropic keeps growing',
+      signal_label:
+        'Ramp AI Index: share of US businesses on Ramp paying Anthropic, against the same month a year earlier',
+      kill_condition: 'Growth below 25% for 2 straight months',
+      spec: {
+        kind: 'measured',
+        signal: 'recipe-yoy-growth',
+        recipe: 'ramp-ai-index',
+        key: 'anthropic',
+        compare_recipes: [],
+        format: 'percent',
+        rule: { rule: 'below-floor-periods', floor: 0.25, periods: 2 },
+      },
+    },
   ],
 }

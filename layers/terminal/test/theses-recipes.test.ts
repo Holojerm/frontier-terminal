@@ -8,7 +8,14 @@ import * as schema from '~~/server/db/schema'
 import type { FetchOutcome, SourceFetcher } from '../server/pipeline/fetch'
 import { evaluateTheses } from '../server/theses/evaluate'
 import { evaluateJudgedClaim } from '../server/theses/judged-status'
-import { trailingSum, yoyGrowth, type Point } from '../server/theses/recipe-signals'
+import {
+  keyRatio,
+  readRecipeSignal,
+  snapshotTotals,
+  trailingSum,
+  yoyGrowth,
+  type Point,
+} from '../server/theses/recipe-signals'
 import type { Recipe } from '../server/theses/recipes/contract'
 import { runRecipes } from '../server/theses/recipes/run'
 import { applyClaimVerdicts, claimReview } from '../server/theses/verdicts'
@@ -148,6 +155,34 @@ describe('recipe arithmetic', () => {
       ).map((x) => [x.date, x.value]),
     ).toEqual([['2026-10-03', 6]])
   })
+
+  const k = (key: string, date: string, value: number) => ({ ...p(date, value), key })
+
+  it('divides one key by another on the dates both carry', () => {
+    const r = keyRatio(
+      [k('a', '2026-08-01', 43.53), k('b', '2026-08-01', 39.51), k('a', '2026-09-01', 43.77)],
+      'a',
+      'b',
+    )
+    expect(r.map((x) => [x.date, x.value, x.numerator, x.denominator])).toEqual([
+      ['2026-08-01', 1.1017, 43.53, 39.51],
+    ])
+  })
+
+  it('holds each snapshot total until the next, skipping release keys', () => {
+    const t = snapshotTotals([
+      k('site-a', '2026-11-01', 100),
+      k('site-b', '2026-11-01', 50),
+      k('site-a@2026-11-01', '2026-11-01', 999),
+      k('site-a', '2026-11-04', 120),
+    ])
+    expect(t.map((x) => [x.date, x.value, x.snapshot])).toEqual([
+      ['2026-11-01', 150, '2026-11-01'],
+      ['2026-11-02', 150, '2026-11-01'],
+      ['2026-11-03', 150, '2026-11-01'],
+      ['2026-11-04', 120, '2026-11-04'],
+    ])
+  })
 })
 
 describe('runRecipes', () => {
@@ -244,6 +279,51 @@ describe('runRecipes', () => {
 })
 
 describe('recipe signals and recipe-item claims', () => {
+  it('reads a key ratio and a held snapshot total out of the store', async () => {
+    const ratioRecipe: Recipe = {
+      ...REVENUE,
+      id: 'test-ratio',
+      url: () => 'https://example.test/ratio.json',
+      extract: () => [
+        { key: 'anthropic', date: '2026-09-01', value: 43.77, payload: {} },
+        { key: 'openai', date: '2026-09-01', value: 40.63, payload: {} },
+        { key: 'anthropic@2026-11-04', date: '2026-09-01', value: 43.77, payload: {} },
+      ],
+    }
+    const sitesRecipe: Recipe = {
+      ...REVENUE,
+      id: 'test-sites',
+      url: () => 'https://example.test/sites.json',
+      extract: () => [
+        { key: 'Colossus 2', date: '2026-11-01', value: 946, payload: {} },
+        { key: 'Abilene', date: '2026-11-01', value: 824, payload: {} },
+      ],
+    }
+    await runRecipes(db, { raw, fetcher: async () => json({}), now: () => NOW }, [
+      ratioRecipe,
+      sitesRecipe,
+    ])
+    const ratio = await readRecipeSignal(db, {
+      kind: 'measured',
+      signal: 'recipe-key-ratio',
+      recipe: 'test-ratio',
+      key: 'anthropic',
+      over_key: 'openai',
+      format: 'ratio',
+      rule: { rule: 'below-floor-periods', floor: 1, periods: 3 },
+    })
+    expect(ratio.map((r) => [r.date, r.value])).toEqual([['2026-09-01', 1.0773]])
+    expect(ratio[0]!.detail).toMatchObject({ anthropic: 43.77, openai: 40.63 })
+    const total = await readRecipeSignal(db, {
+      kind: 'measured',
+      signal: 'recipe-snapshot-total',
+      recipe: 'test-sites',
+      format: 'megawatts',
+      rule: { rule: 'sustained-drawdown', drop: 0.2, days: 180, weeks: 4 },
+    })
+    expect(total.map((r) => [r.date, r.value])).toEqual([['2026-11-01', 1770]])
+  })
+
   it('reads growth from observations, with the comparison set beside it', async () => {
     const runs = await evaluateTheses(db, { sourcesYaml, now: () => NOW }, [THESIS])
     expect(runs.find((r) => r.claim_id === 'test-growth')).toMatchObject({ status: 'weakening' })

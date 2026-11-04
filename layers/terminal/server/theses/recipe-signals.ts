@@ -45,6 +45,45 @@ export function yoyGrowth(points: readonly Point[]): (Point & { base: Point })[]
   return out.sort((a, b) => (a.date < b.date ? -1 : 1))
 }
 
+/** `key` ÷ `over` on every date both carry. */
+export function keyRatio(points: readonly (Point & { key: string })[], key: string, over: string) {
+  const denominators = new Map(points.filter((p) => p.key === over).map((p) => [p.date, p.value]))
+  const out: (Point & { numerator: number; denominator: number })[] = []
+  for (const p of points) {
+    const d = denominators.get(p.date)
+    if (p.key !== key || !d) continue
+    out.push({ ...p, value: round(p.value / d), numerator: p.value, denominator: d })
+  }
+  return out.sort((a, b) => (a.date < b.date ? -1 : 1))
+}
+
+/** The sum of each snapshot's keys, held day by day until the next snapshot. */
+export function snapshotTotals(points: readonly (Point & { key: string })[]) {
+  const byDate = new Map<string, (Point & { key: string })[]>()
+  for (const p of points) {
+    if (p.key.includes('@')) continue
+    byDate.set(p.date, [...(byDate.get(p.date) ?? []), p])
+  }
+  const snapshots = [...byDate.entries()].sort(([a], [b]) => (a < b ? -1 : 1))
+  const out: (Point & { snapshot: string; keys: number })[] = []
+  snapshots.forEach(([date, ps], i) => {
+    const newest = ps.reduce((a, b) => (b.fetched_at > a.fetched_at ? b : a))
+    const total = ps.reduce((n, p) => n + p.value, 0)
+    const until = snapshots[i + 1]?.[0] ?? null
+    for (let d = dayOf(date); until === null ? d === dayOf(date) : d < dayOf(until); d++) {
+      out.push({
+        date: new Date(d * DAY_MS).toISOString().slice(0, 10),
+        value: total,
+        source_url: newest.source_url,
+        fetched_at: newest.fetched_at,
+        snapshot: date,
+        keys: ps.length,
+      })
+    }
+  })
+  return out
+}
+
 /** The sum over the trailing `days`, for every date whose whole window is present. */
 export function trailingSum(points: readonly Point[], days: number): Point[] {
   const byDay = new Map(points.map((p) => [dayOf(p.date), p]))
@@ -68,7 +107,7 @@ export function trailingSum(points: readonly Point[], days: number): Point[] {
 async function points(
   db: PipelineDb,
   recipe: string,
-  keys: readonly string[],
+  keys: readonly string[] | null,
 ): Promise<(Point & { key: string })[]> {
   const rows = await db
     .select()
@@ -76,7 +115,7 @@ async function points(
     .where(
       and(
         eq(tables.recipeObservations.recipe_id, recipe),
-        inArray(tables.recipeObservations.key, [...keys]),
+        keys ? inArray(tables.recipeObservations.key, [...keys]) : undefined,
       ),
     )
   return rows
@@ -92,7 +131,14 @@ async function points(
 
 type RecipeSpec = Extract<
   SignalSpec,
-  { signal: 'recipe-yoy-growth' | 'recipe-trailing-sum' | 'recipe-sum-of-keys' }
+  {
+    signal:
+      | 'recipe-yoy-growth'
+      | 'recipe-trailing-sum'
+      | 'recipe-sum-of-keys'
+      | 'recipe-key-ratio'
+      | 'recipe-snapshot-total'
+  }
 >
 
 export async function readRecipeSignal(db: PipelineDb, spec: RecipeSpec): Promise<SignalReading[]> {
@@ -128,6 +174,30 @@ export async function readRecipeSignal(db: PipelineDb, spec: RecipeSpec): Promis
         date: p.date,
         value: p.value,
         detail: { days: spec.days, compare: null },
+        source_url: p.source_url,
+        fetched_at: p.fetched_at,
+      }))
+    case 'recipe-key-ratio':
+      return keyRatio(
+        await points(db, spec.recipe, [spec.key, spec.over_key]),
+        spec.key,
+        spec.over_key,
+      ).map((p) => ({
+        date: p.date,
+        value: p.value,
+        detail: {
+          [spec.key]: p.numerator,
+          [spec.over_key]: p.denominator,
+          compare: null,
+        },
+        source_url: p.source_url,
+        fetched_at: p.fetched_at,
+      }))
+    case 'recipe-snapshot-total':
+      return snapshotTotals(await points(db, spec.recipe, null)).map((p) => ({
+        date: p.date,
+        value: p.value,
+        detail: { snapshot: p.snapshot, keys: p.keys, compare: null },
         source_url: p.source_url,
         fetched_at: p.fetched_at,
       }))
