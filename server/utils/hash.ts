@@ -19,6 +19,8 @@
 // timingSafeEqual, all correct, and all of them a place where the next one
 // could quietly not be.
 
+import type { H3Event } from 'h3'
+
 const encoder = new TextEncoder()
 
 /** Bytes → lowercase hex. The tail of every digest in this codebase. */
@@ -67,4 +69,16 @@ export function timingSafeEqual(a: string, b: string): boolean {
 export async function saltedHash(value: string | undefined | null, salt: string) {
   if (!value) return null
   return sha256Hex(`${salt}:${value}`)
+}
+
+/**
+ * The caller's IP as Cloudflare sees it: `cf-connecting-ip` is set by the edge
+ * and cannot be spoofed by the client; the first `x-forwarded-for` hop is only
+ * a local-dev fallback.
+ */
+export function clientIp(event: H3Event): string | undefined {
+  return (
+    getRequestHeader(event, 'cf-connecting-ip') ??
+    getRequestHeader(event, 'x-forwarded-for')?.split(',')[0]?.trim()
+  )
 }

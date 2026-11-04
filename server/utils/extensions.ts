@@ -12,6 +12,7 @@
 
 import type { drizzle } from 'drizzle-orm/d1'
 import type * as tables from '../db/schema'
+import { createRegistry } from './registry'
 
 /** The Drizzle client shape — matches the `db` NuxtHub auto-imports. */
 export type ExtensionDb = ReturnType<typeof drizzle<typeof tables>>
@@ -30,17 +31,13 @@ export interface FleetExtraContributor {
   collect: (db: ExtensionDb, now: Date) => Promise<Record<string, number>>
 }
 
-// Keyed by contributor key, so registering twice (plugin + test, or a dev
-// reload) replaces rather than duplicates.
-const fleetExtraContributors = new Map<string, FleetExtraContributor>()
+const fleetExtraContributors = createRegistry<FleetExtraContributor>()
 
-export function registerFleetExtraContributor(contributor: FleetExtraContributor): void {
-  fleetExtraContributors.set(contributor.key, contributor)
-}
+export const registerFleetExtraContributor = (c: FleetExtraContributor): void =>
+  fleetExtraContributors.set(c.key, c)
 
-export function getFleetExtraContributors(): FleetExtraContributor[] {
-  return [...fleetExtraContributors.values()]
-}
+export const getFleetExtraContributors = (): FleetExtraContributor[] =>
+  fleetExtraContributors.values()
 
 /** Test-only: forget every registration, to exercise core with no features. */
 export function clearExtensionsForTest(): void {

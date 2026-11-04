@@ -20,7 +20,7 @@ import { db } from '@nuxthub/db'
 
 import { errorDetail } from '#layers/terminal/server/utils/error-detail'
 
-import { pathForLog } from '../utils/log'
+import { pathForLog, logEvent } from '../utils/log'
 import { recordOpsEvent } from '../utils/ops'
 
 export default defineNitroPlugin((nitro) => {
@@ -32,17 +32,14 @@ export default defineNitroPlugin((nitro) => {
     // errorDetail, not err.message: the message alone is the wrapper's, and
     // the wrapper is usually the least specific thing known about the failure.
     const detail = errorDetail(error)
-    console.error(
-      JSON.stringify({
-        kind: 'server_error',
-        status,
-        message: detail,
-        stack: err.stack,
-        // Never event.path verbatim — see server/utils/log.ts.
-        path: pathForLog(event?.path),
-        method: event?.method,
-      }),
-    )
+    logEvent('error', 'server_error', {
+      status,
+      message: detail,
+      stack: err.stack,
+      // Never event.path verbatim — see server/utils/log.ts.
+      path: pathForLog(event?.path),
+      method: event?.method,
+    })
 
     await recordOpsEvent(db, {
       kind: 'server_error',
