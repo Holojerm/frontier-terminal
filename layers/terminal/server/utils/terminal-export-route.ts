@@ -5,6 +5,7 @@
 import type { H3Event } from 'h3'
 
 import { PointInTimeError, assertKnowable, parseAsOfQuery } from './terminal-asof'
+import { DICTIONARY_NAME, dataDictionary, dictionaryCsv } from './terminal-dictionary'
 import {
   EXPORT_TABLES,
   csvChunks,
@@ -31,10 +32,23 @@ export const AS_OF_EXPORTS = Object.values(EXPORT_TABLES)
 
 /** `sample`: the first SAMPLE_ROWS rows only, for /export/sample/<table>.<format>. */
 export async function serveExport(event: H3Event, options: { sample?: boolean } = {}) {
+  const parsed = parseExportPath(event.path)
+
+  // /export/dictionary.<format> lands on these catch-alls too (see
+  // parseExportPath). It reads no database, so it skips the export budget,
+  // which /data's server render would otherwise spend on every view.
+  if (parsed?.name === DICTIONARY_NAME && !options.sample) {
+    const dictionary = dataDictionary()
+    setResponseHeader(event, 'Cache-Control', 'public, max-age=300')
+    if (parsed.format === 'json') return dictionary
+    setResponseHeader(event, 'Content-Type', 'text/csv; charset=utf-8')
+    setResponseHeader(event, 'Content-Disposition', 'attachment; filename="dictionary.csv"')
+    return dictionaryCsv(dictionary)
+  }
+
   // Exports walk whole tables; 30/min matches the native limiter's budget.
   await rateLimit(event, { name: 'export', limit: 30, windowSeconds: 60 })
 
-  const parsed = parseExportPath(event.path)
   if (parsed && Object.hasOwn(WITHDRAWN_EXPORTS, parsed.name)) {
     throw createError({ statusCode: 410, message: WITHDRAWN_EXPORTS[parsed.name] })
   }
