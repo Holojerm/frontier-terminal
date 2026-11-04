@@ -102,6 +102,11 @@ describe('readSourceRegistry', () => {
       'github-commit-search',
       'kalshi',
       'polymarket',
+      'google-rate-limits',
+      'mistral-rate-limits',
+      'xai-pay-bands',
+      'mistral-pay-bands',
+      'alphabet-anthropic-stake',
     ])
   })
 

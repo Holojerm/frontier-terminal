@@ -260,6 +260,11 @@ describe('queryRankings', () => {
       'github-commit-search',
       'kalshi',
       'polymarket',
+      'google-rate-limits',
+      'mistral-rate-limits',
+      'xai-pay-bands',
+      'mistral-pay-bands',
+      'alphabet-anthropic-stake',
     ])
     expect(coverage.cuts.find((c) => c.id === 'artificial-analysis')!.reason).toContain(
       '"Internal use only; no redistribution."',
