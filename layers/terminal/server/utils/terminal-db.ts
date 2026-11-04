@@ -113,7 +113,9 @@ import {
   DERIVED_TERMS_FROM,
   derivedTemplateOf,
   labelOf,
+  readFiledFactSources,
   readSourceRegistry,
+  type FiledFactSourceEntry,
   type SourceRegistry,
 } from './terminal-sources'
 
@@ -127,6 +129,8 @@ export interface QueryContext {
   whitelist: CikWhitelist
   /** sources.yaml derived_sources — the templates, for naming derived sources on the coverage panel. */
   derivedTemplates: DerivedTemplate[]
+  /** sources.yaml filed_fact_sources — the hyperscalers the exposure series read. */
+  filedFactSources: (FiledFactSourceEntry & { cik: string })[]
   /** Newest source_runs.started_at, already read for the cache key — at or before `at` when one is set. */
   as_of: string | null
   now: () => Date
@@ -147,12 +151,14 @@ export function queryContext(
   now: () => Date = () => new Date(),
   at: string | null = null,
 ): QueryContext {
+  const whitelist = parseCikWhitelistBlock(sourcesYaml)
   return {
     registry: readSourceRegistry(sourcesYaml),
     clusters: parseDepartmentClusters(sourcesYaml),
     revenueFilers: parseRevenueFilersBlock(sourcesYaml),
-    whitelist: parseCikWhitelistBlock(sourcesYaml),
+    whitelist,
     derivedTemplates: parseDerivedSourcesBlock(sourcesYaml),
+    filedFactSources: readFiledFactSources(sourcesYaml, whitelist),
     as_of,
     now,
     at,

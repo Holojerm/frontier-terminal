@@ -581,10 +581,10 @@ describe('vendor-md + sec lane', () => {
     expect(ftsFlagged.every((r) => r.whitelist_cik === SPCX_CIK)).toBe(true)
   })
 
-  test('cik whitelist: current sources.yaml parses to exactly the 6 entries, every CIK resolved from SEC', () => {
+  test('cik whitelist: current sources.yaml parses to exactly the 7 entries, every CIK resolved from SEC', () => {
     // AMZN and NVDA were null until 2026-08-25, when they were resolved from
     // SEC's ticker map and verified against data.sec.gov — never filled in
-    // from memory.
+    // from memory. ORCL was resolved the same way on 2026-11-04.
     expect([...whitelist.entries()]).toEqual([
       ['MSFT', '0000789019'],
       ['AMZN', '0001018724'],
@@ -592,6 +592,7 @@ describe('vendor-md + sec lane', () => {
       ['SPCX', '0001181412'],
       ['GOOGL', '0001652044'],
       ['META', '0001326801'],
+      ['ORCL', '0001341439'],
     ])
   })
 

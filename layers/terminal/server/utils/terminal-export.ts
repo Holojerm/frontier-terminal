@@ -20,7 +20,7 @@
 // Pure functions of the Drizzle client, so layers/terminal/test/terminal-export.test.ts can
 // drive them against the workerd D1 and read the bytes back.
 
-import { and, asc, count, eq, lte, sql, type SQL } from 'drizzle-orm'
+import { and, asc, count, eq, lt, lte, sql, type SQL } from 'drizzle-orm'
 import type { SQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core'
 
 import * as tables from '#server/db/schema'
@@ -34,6 +34,8 @@ import {
   rewindEntities,
 } from './terminal-asof'
 import { ENTITY_SECURITIES, ENTITY_SECURITY_COLUMNS } from './terminal-entities'
+import { buildSeries } from '../exposure/series'
+import { filedBefore } from './terminal-exposure'
 import { byString } from './terminal-json'
 
 export const EXPORT_PAGE_SIZE = 200
@@ -482,6 +484,93 @@ function staticTable(
   }
 }
 
+const EXPOSURE_COLUMNS = [
+  'series_id',
+  'ticker',
+  'filer',
+  'group',
+  'label',
+  'concept',
+  'dims',
+  'kind',
+  'unit',
+  'start',
+  'end',
+  'value',
+  'derived',
+  'less_start',
+  'less_end',
+  'less_value',
+  'less_accession_no',
+  'accession_no',
+  'form',
+  'filed',
+  'filing_url',
+  ...PROVENANCE,
+] as const
+
+/**
+ * Every exposure series point (layers/terminal/server/exposure/series.ts),
+ * built in memory from filed_facts: a few thousand facts at most. As of T it
+ * is built from the facts filed before T's UTC day.
+ */
+function exposureView(name: string, description: string): ExportTable {
+  const build = async (db: PipelineDb, at: string | null): Promise<Row[]> => {
+    const facts = await db
+      .select()
+      .from(tables.filedFacts)
+      .where(at ? lt(tables.filedFacts.filed, filedBefore(at)) : undefined)
+    return buildSeries(facts).flatMap((s) =>
+      s.points.map((p) => ({
+        series_id: s.id,
+        ticker: s.ticker,
+        filer: s.filer,
+        group: s.group,
+        label: s.label,
+        concept: s.concept,
+        dims: s.dims,
+        kind: s.kind,
+        unit: s.unit,
+        start: p.start,
+        end: p.end,
+        value: p.value,
+        derived: p.derived,
+        less_start: p.less?.start ?? null,
+        less_end: p.less?.end ?? null,
+        less_value: p.less?.value ?? null,
+        less_accession_no: p.less?.accession_no ?? null,
+        accession_no: p.accession_no,
+        form: p.form,
+        filed: p.filed,
+        filing_url: p.filing_url,
+        source_url: p.source_url,
+        fetched_at: p.fetched_at,
+      })),
+    )
+  }
+  const view = (at: string | null): ExportTable => ({
+    name,
+    description,
+    columns: EXPOSURE_COLUMNS,
+    async page(db, after, limit) {
+      const rows = await build(db, at)
+      const from =
+        after === null
+          ? 0
+          : rows.findIndex((r) => r.series_id === after.series_id && r.end === after.end) + 1
+      return rows.slice(from, from + limit)
+    },
+    count: async (db) => (await build(db, at)).length,
+    at: (_db, instant) =>
+      at === null
+        ? Promise.resolve(view(instant))
+        : Promise.reject(new PointInTimeError('already a point-in-time view')),
+    asOfRefusal: null,
+    pointInTime: 'cut',
+  })
+  return view(null)
+}
+
 /**
  * Tables that were exported and no longer are, with the reason a request for
  * one is told (410, not 404: the URL existed). See docs/source-audit.md.
@@ -792,6 +881,37 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     'a recipe observation is rewritten in place when a re-read gives a different value, and the value it replaced is not kept.',
     undefined,
     { recipe_id: tables.recipeObservations.recipe_id },
+  ),
+  filed_facts: plainTable(
+    'filed_facts',
+    'Every XBRL fact the exposure series read from Microsoft, Alphabet, Amazon, Meta, and Oracle: capex, finance leases, backlog, and what Microsoft and Amazon tag on OpenAI and Anthropic. One row per fact per filing, so a restated value keeps the row it replaced. Rows are never edited.',
+    tables.filedFacts,
+    [
+      'id',
+      'ticker',
+      'cik',
+      'concept',
+      'dims',
+      'start',
+      'end',
+      'value',
+      'unit',
+      'form',
+      'filed',
+      'accession_no',
+      'basis',
+      'raw_key',
+      'first_seen_at',
+      ...PROVENANCE,
+    ],
+    [tables.filedFacts.filed, tables.filedFacts.id],
+    async (_db, at) => lt(tables.filedFacts.filed, filedBefore(at)),
+    undefined,
+    { ticker: tables.filedFacts.ticker },
+  ),
+  exposure_quarters: exposureView(
+    'exposure_quarters',
+    'The series on /exposure, one row per series and period: quarterly capex, backlog at each period end, and the OpenAI and Anthropic lines, from 2020. Each value is the newest filing’s. A derived quarter is a year-to-date figure less the one a quarter shorter, which the less_ columns name.',
   ),
   source_runs: plainTable(
     'source_runs',

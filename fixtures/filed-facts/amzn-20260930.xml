@@ -1,0 +1,205 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xbrl
+  xml:lang="en-US"
+  xmlns="http://www.xbrl.org/2003/instance"
+  xmlns:amzn="http://www.amazon.com/20260930"
+  xmlns:country="http://xbrl.sec.gov/country/2026"
+  xmlns:dei="http://xbrl.sec.gov/dei/2026"
+  xmlns:ecd="http://xbrl.sec.gov/ecd/2026"
+  xmlns:iso4217="http://www.xbrl.org/2003/iso4217"
+  xmlns:link="http://www.xbrl.org/2003/linkbase"
+  xmlns:srt="http://fasb.org/srt/2026"
+  xmlns:us-gaap="http://fasb.org/us-gaap/2026"
+  xmlns:utr="http://www.xbrl.org/2009/utr"
+  xmlns:xbrldi="http://xbrl.org/2006/xbrldi"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<context id="c-1">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001018724</identifier>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+<context id="c-49">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001018724</identifier>
+            <segment>
+                <xbrldi:typedMember dimension="us-gaap:RevenueRemainingPerformanceObligationExpectedTimingOfSatisfactionStartDateAxis">
+                    <us-gaap:date.domain>2026-10-01</us-gaap:date.domain>
+                </xbrldi:typedMember>
+            </segment>
+        </entity>
+        <period>
+            <instant>2026-09-30</instant>
+        </period>
+    </context>
+<context id="c-50">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001018724</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:MajorCustomersAxis">amzn:OpenAIGroupPBCMember</xbrldi:explicitMember>
+                <xbrldi:typedMember dimension="us-gaap:RevenueRemainingPerformanceObligationExpectedTimingOfSatisfactionStartDateAxis">
+                    <us-gaap:date.domain>2026-10-01</us-gaap:date.domain>
+                </xbrldi:typedMember>
+            </segment>
+        </entity>
+        <period>
+            <instant>2026-03-31</instant>
+        </period>
+    </context>
+<context id="c-52">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001018724</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:MajorCustomersAxis">amzn:AnthropicMember</xbrldi:explicitMember>
+                <xbrldi:typedMember dimension="us-gaap:RevenueRemainingPerformanceObligationExpectedTimingOfSatisfactionStartDateAxis">
+                    <us-gaap:date.domain>2026-10-01</us-gaap:date.domain>
+                </xbrldi:typedMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-04-01</startDate>
+            <endDate>2026-06-30</endDate>
+        </period>
+    </context>
+<context id="c-53">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001018724</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:MajorCustomersAxis">amzn:AnthropicMember</xbrldi:explicitMember>
+                <xbrldi:typedMember dimension="us-gaap:RevenueRemainingPerformanceObligationExpectedTimingOfSatisfactionStartDateAxis">
+                    <us-gaap:date.domain>2026-10-01</us-gaap:date.domain>
+                </xbrldi:typedMember>
+            </segment>
+        </entity>
+        <period>
+            <instant>2026-06-30</instant>
+        </period>
+    </context>
+<context id="c-70">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001018724</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:ShortTermDebtTypeAxis">us-gaap:LineOfCreditMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="dei:LegalEntityAxis">amzn:AnthropicMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <instant>2026-06-30</instant>
+        </period>
+    </context>
+<context id="c-71">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001018724</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:ShortTermDebtTypeAxis">us-gaap:LineOfCreditMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="dei:LegalEntityAxis">amzn:AnthropicMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-06-30</endDate>
+        </period>
+    </context>
+<context id="c-72">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001018724</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ScheduleOfEquityMethodInvestmentEquityMethodInvesteeNameAxis">amzn:AnthropicMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-01-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+<context id="c-73">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001018724</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ScheduleOfEquityMethodInvestmentEquityMethodInvesteeNameAxis">amzn:AnthropicMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-01-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+<context id="c-76">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0001018724</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="us-gaap:InvestmentIssuerNameAxis">amzn:AnthropicMember</xbrldi:explicitMember>
+                <xbrldi:explicitMember dimension="us-gaap:StatementClassOfStockAxis">us-gaap:PreferredStockMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <instant>2026-09-30</instant>
+        </period>
+    </context>
+<unit id="shares">
+        <measure>shares</measure>
+    </unit>
+<unit id="usd">
+        <measure>iso4217:USD</measure>
+    </unit>
+<unit id="usdPerShare">
+        <divide>
+            <unitNumerator>
+                <measure>iso4217:USD</measure>
+            </unitNumerator>
+            <unitDenominator>
+                <measure>shares</measure>
+            </unitDenominator>
+        </divide>
+    </unit>
+<unit id="mwh">
+        <measure>utr:MWh</measure>
+    </unit>
+<unit id="number">
+        <measure>pure</measure>
+    </unit>
+<unit id="complaint">
+        <measure>amzn:complaint</measure>
+    </unit>
+<unit id="case">
+        <measure>amzn:case</measure>
+    </unit>
+<unit id="lawsuit">
+        <measure>amzn:lawsuit</measure>
+    </unit>
+<unit id="eur">
+        <measure>iso4217:EUR</measure>
+    </unit>
+<unit id="chf">
+        <measure>iso4217:CHF</measure>
+    </unit>
+<unit id="cad">
+        <measure>iso4217:CAD</measure>
+    </unit>
+<unit id="gbp">
+        <measure>iso4217:GBP</measure>
+    </unit>
+<unit id="extension">
+        <measure>amzn:extension</measure>
+    </unit>
+<unit id="segment">
+        <measure>amzn:segment</measure>
+    </unit>
+<dei:EntityCentralIndexKey contextRef="c-1" id="f-64">0001018724</dei:EntityCentralIndexKey>
+<dei:DocumentType contextRef="c-1" id="f-1">10-Q</dei:DocumentType>
+<dei:DocumentPeriodEndDate contextRef="c-1" id="f-3">2026-09-30</dei:DocumentPeriodEndDate>
+<us-gaap:RevenueRemainingPerformanceObligation contextRef="c-49" decimals="-9" id="f-600" unitRef="usd">578000000000</us-gaap:RevenueRemainingPerformanceObligation>
+<us-gaap:RevenueRemainingPerformanceObligation contextRef="c-50" decimals="-8" id="f-602" unitRef="usd">38000000000.0</us-gaap:RevenueRemainingPerformanceObligation>
+<amzn:RevenueRemainingPerformanceObligationAmountPeriodIncreaseDecrease contextRef="c-52" decimals="-8" id="f-605" unitRef="usd">100000000000.0</amzn:RevenueRemainingPerformanceObligationAmountPeriodIncreaseDecrease>
+<us-gaap:RevenueRemainingPerformanceObligationExpectedTimingOfSatisfactionPeriod1 contextRef="c-53" id="f-606">P10Y</us-gaap:RevenueRemainingPerformanceObligationExpectedTimingOfSatisfactionPeriod1>
+<us-gaap:LineOfCreditFacilityMaximumBorrowingCapacity contextRef="c-70" decimals="-8" id="f-670" unitRef="usd">20000000000.0</us-gaap:LineOfCreditFacilityMaximumBorrowingCapacity>
+<us-gaap:LineOfCreditFacilityExpirationPeriod contextRef="c-71" id="f-671">P30M</us-gaap:LineOfCreditFacilityExpirationPeriod>
+<us-gaap:LineOfCreditFacilityCurrentBorrowingCapacity contextRef="c-70" decimals="-8" id="f-673" unitRef="usd">15000000000.0</us-gaap:LineOfCreditFacilityCurrentBorrowingCapacity>
+<us-gaap:EquitySecuritiesWithoutReadilyDeterminableFairValueUpwardPriceAdjustmentAnnualAmount contextRef="c-72" decimals="-8" id="f-675" unitRef="usd">7200000000</us-gaap:EquitySecuritiesWithoutReadilyDeterminableFairValueUpwardPriceAdjustmentAnnualAmount>
+<us-gaap:EquitySecuritiesWithoutReadilyDeterminableFairValueUpwardPriceAdjustmentAnnualAmount contextRef="c-73" decimals="-8" id="f-676" unitRef="usd">62800000000</us-gaap:EquitySecuritiesWithoutReadilyDeterminableFairValueUpwardPriceAdjustmentAnnualAmount>
+<us-gaap:InvestmentOwnedBalanceShares contextRef="c-76" decimals="-6" id="f-679" unitRef="shares">164000000</us-gaap:InvestmentOwnedBalanceShares>
+</xbrl>

@@ -12,7 +12,7 @@
 // leak.
 //
 // Stateless and JSON on both protocol eras. Each request gets a fresh
-// McpServer — sixteen registrations, cheap — so a Worker isolate holds no
+// McpServer — twenty registrations, cheap — so a Worker isolate holds no
 // session, and a client that reconnects to a different isolate notices
 // nothing. Legacy (2025-era) clients, which is every shipping client today,
 // are served through a per-request WebStandardStreamableHTTPServerTransport
@@ -66,6 +66,7 @@ import { queryDisclosures } from './terminal-disclosures'
 import { gpuRunsStamp, queryGpuPrices } from './terminal-gpu'
 import { SHARE_WINDOW_DAYS, queryRankings } from './terminal-rankings'
 import { queryProspectus } from './terminal-prospectus'
+import { filedFactsStamp, queryExposure } from './terminal-exposure'
 import { queryRevenue } from './terminal-revenue'
 import { PROVIDER_ORDER } from './terminal-sources'
 import { querySpend } from './terminal-spend'
@@ -90,6 +91,8 @@ export interface McpDeps {
     at: string,
     query: (ctx: QueryContext) => Promise<T>,
     variant?: string,
+    /** `filed`: read by filing date, so an instant before the first snapshot is answered. */
+    opts?: { filed?: boolean },
   ): Promise<AsOfPayload<T>>
   /** The site's llms.txt body — the same bytes GET /llms.txt serves. */
   llmsTxt: string
@@ -209,10 +212,11 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
     as_of: string | undefined,
     query: (ctx: QueryContext) => Promise<T>,
     variant?: string,
+    opts?: { filed?: boolean },
   ) => {
     if (as_of === undefined) return deps.serve(name, query, variant)
     const at = parseAsOfQuery({ as_of }).as_of!
-    return deps.serveAt(name, at, query, variant)
+    return deps.serveAt(name, at, query, variant, opts)
   }
 
   server.registerTool(
@@ -540,6 +544,49 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         return json({
           ...revenue,
           providers: revenue.providers.filter((p) => p.provider === provider),
+        })
+      }),
+  )
+
+  server.registerTool(
+    'get_exposure',
+    {
+      title: 'Hyperscaler capex, backlog and lab stakes (filed XBRL)',
+      description:
+        'Quarterly series from 2020 built from the filed XBRL facts of Microsoft, Alphabet, Amazon, Meta and Oracle: capex (the cash line each tags, with finance leases ' +
+        'beside it where the filer counts them, never added), remaining performance obligations (total, plus Microsoft commercial and Google Cloud where tagged), ' +
+        'and every fact Microsoft tags on OpenAI (msft:OpenAIGlobalLlcMember) and Amazon on Anthropic (amzn:AnthropicMember). Each series names its concept and dims; ' +
+        'points are oldest first, each from the newest filing that reported it, with accession, form, filing date and filing_url. derived marks a quarter computed as a ' +
+        'year-to-date figure less the one a quarter shorter (less names it). superseded lists values a later filing restated. These are the filer’s numbers: ' +
+        'Microsoft’s OpenAI line is what Microsoft recognized, not OpenAI’s result, and Amazon’s marks are not Anthropic’s valuation. gaps lists what the filings ' +
+        'don’t tag (Alphabet never names Anthropic). as_of keeps the facts filed before that UTC day, back to 2020. Optional group (capex, rpo, openai, anthropic) ' +
+        'and ticker filters. ' +
+        PROVENANCE,
+      inputSchema: z.object({
+        group: z.enum(['capex', 'rpo', 'openai', 'anthropic']).optional(),
+        ticker: z.enum(['MSFT', 'GOOGL', 'AMZN', 'META', 'ORCL']).optional(),
+        as_of: AsOfSchema,
+      }),
+      annotations: READ_ONLY,
+    },
+    ({ group, ticker, as_of }) =>
+      asOfErrors(async () => {
+        const variant = await filedFactsStamp(deps.db)
+        const exposure = await read(
+          'exposure',
+          as_of,
+          (ctx) => queryExposure(deps.db, ctx),
+          variant,
+          { filed: true },
+        )
+        return json({
+          ...exposure,
+          series: exposure.series.filter(
+            (s) => (!group || s.group === group) && (!ticker || s.ticker === ticker),
+          ),
+          gaps: exposure.gaps.filter(
+            (g) => (!group || g.group === group) && (!ticker || g.ticker === ticker),
+          ),
         })
       }),
   )

@@ -319,6 +319,60 @@ export const recipeRuns = sqliteTable(
   (t) => [index('recipe_runs_recipe_idx').on(t.recipe_id, t.started_at)],
 )
 
+// Filed facts — append-only. One row per XBRL fact a public filer reported in
+// one filing: (ticker, concept, dimensions, period, accession). A restatement
+// arrives under a later accession as its own row, so the value it replaced
+// stays readable as superseded. Read from company facts (non-dimensional
+// facts) and from each 10-Q/10-K's own instance (the dimensional ones company
+// facts drops) by layers/terminal/server/exposure/ingest.ts. `filed` is the
+// filing's date, so a read as of T keeps the rows filed before T's day.
+export const filedFacts = sqliteTable(
+  'filed_facts',
+  {
+    id: text('id').primaryKey(),
+    ticker: text('ticker').notNull(),
+    cik: text('cik').notNull(),
+    concept: text('concept').notNull(),
+    dims: text('dims').notNull(), // '' when the context names no dimension
+    start: text('start'), // null for a balance (an instant)
+    end: text('end').notNull(),
+    value: real('value').notNull(),
+    unit: text('unit').notNull(),
+    form: text('form').notNull(),
+    filed: text('filed').notNull(),
+    accession_no: text('accession_no').notNull(),
+    basis: text('basis').notNull(), // companyfacts | instance
+    raw_key: text('raw_key').notNull(),
+    first_seen_at: text('first_seen_at').notNull(),
+    ...provenance,
+  },
+  (t) => [
+    index('filed_facts_series_idx').on(t.ticker, t.concept, t.end),
+    index('filed_facts_filed_idx').on(t.filed, t.id),
+  ],
+)
+
+// Filed-fact reads — one row per document fetch: a filer's company facts, or
+// one filing's instance. An instance read `ok` is never fetched again (a
+// filing never changes once accepted); company facts are re-read on a
+// schedule and skipped when their hash has not moved.
+export const filedFactReads = sqliteTable(
+  'filed_fact_reads',
+  {
+    id: text('id').primaryKey(),
+    ticker: text('ticker').notNull(),
+    kind: text('kind').notNull(), // companyfacts | instance
+    accession_no: text('accession_no'), // null for company facts
+    status: text('status').notNull(), // ok | unchanged | failed
+    detail: text('detail'),
+    content_hash: text('content_hash'),
+    facts: integer('facts').notNull(),
+    started_at: text('started_at').notNull(),
+    source_url: text('source_url').notNull(),
+  },
+  (t) => [index('filed_fact_reads_doc_idx').on(t.ticker, t.kind, t.started_at)],
+)
+
 export type Snapshot = typeof snapshots.$inferSelect
 export type Entity = typeof entities.$inferSelect
 export type Change = typeof changes.$inferSelect
@@ -331,3 +385,5 @@ export type ClaimStatusChange = typeof claimStatusChanges.$inferSelect
 export type ClaimVerdict = typeof claimVerdicts.$inferSelect
 export type RecipeObservation = typeof recipeObservations.$inferSelect
 export type RecipeRun = typeof recipeRuns.$inferSelect
+export type FiledFact = typeof filedFacts.$inferSelect
+export type FiledFactRead = typeof filedFactReads.$inferSelect

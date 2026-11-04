@@ -37,6 +37,7 @@ const ROUTES = [
   '/compare/meta-vs-mistral',
   '/prices',
   '/revenue',
+  '/exposure',
   '/hiring',
   '/releases',
   '/rankings',

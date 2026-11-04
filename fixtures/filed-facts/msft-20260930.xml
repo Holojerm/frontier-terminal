@@ -1,0 +1,161 @@
+<?xml version="1.0" encoding="utf-8"?>
+<xbrl
+  xmlns="http://www.xbrl.org/2003/instance"
+  xmlns:country="http://xbrl.sec.gov/country/2026"
+  xmlns:dei="http://xbrl.sec.gov/dei/2026"
+  xmlns:ecd="http://xbrl.sec.gov/ecd/2026"
+  xmlns:iso4217="http://www.xbrl.org/2003/iso4217"
+  xmlns:link="http://www.xbrl.org/2003/linkbase"
+  xmlns:msft="http://www.microsoft.com/20260930"
+  xmlns:srt="http://fasb.org/srt/2026"
+  xmlns:us-gaap="http://fasb.org/us-gaap/2026"
+  xmlns:xbrldi="http://xbrl.org/2006/xbrldi"
+  xmlns:xhtml="http://www.w3.org/1999/xhtml"
+  xmlns:xlink="http://www.w3.org/1999/xlink"
+  xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
+<context id="C_0a877315-7305-4e5a-b619-d6dec622b2e1">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0000789019</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ScheduleOfEquityMethodInvestmentEquityMethodInvesteeNameAxis">msft:OpenAIGlobalLlcMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2025-07-01</startDate>
+            <endDate>2025-09-30</endDate>
+        </period>
+    </context>
+<context id="C_0ff5915c-58be-4a43-b259-dced30518827">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0000789019</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ScheduleOfEquityMethodInvestmentEquityMethodInvesteeNameAxis">msft:OpenAIGlobalLlcMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <instant>2026-06-30</instant>
+        </period>
+    </context>
+<context id="C_14d92389-1e9c-4226-9783-71dfc28f3f1b">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0000789019</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ScheduleOfEquityMethodInvestmentEquityMethodInvesteeNameAxis">msft:OpenAIGlobalLlcMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <instant>2026-09-30</instant>
+        </period>
+    </context>
+<context id="C_29087c8f-ba21-49d1-8838-26ed91a3b593">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0000789019</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:MajorCustomersAxis">msft:CommercialCustomersMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <instant>2026-09-30</instant>
+        </period>
+    </context>
+<context id="C_4ca01806-c4cd-49d2-87c6-16fd7f17ad5d">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0000789019</identifier>
+        </entity>
+        <period>
+            <startDate>2026-07-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+<context id="C_79c16b0e-81c4-4603-a375-ed3f5beee2c6">
+        <entity>
+            <identifier scheme="http://www.sec.gov/CIK">0000789019</identifier>
+            <segment>
+                <xbrldi:explicitMember dimension="srt:ScheduleOfEquityMethodInvestmentEquityMethodInvesteeNameAxis">msft:OpenAIGlobalLlcMember</xbrldi:explicitMember>
+            </segment>
+        </entity>
+        <period>
+            <startDate>2026-07-01</startDate>
+            <endDate>2026-09-30</endDate>
+        </period>
+    </context>
+<unit id="U_EUR">
+        <measure>iso4217:EUR</measure>
+    </unit>
+<unit id="U_pure">
+        <measure>pure</measure>
+    </unit>
+<unit id="U_Segment">
+        <measure>msft:Segment</measure>
+    </unit>
+<unit id="U_shares">
+        <measure>shares</measure>
+    </unit>
+<unit id="U_UnitedStatesOfAmericaDollarsShare">
+        <divide>
+            <unitNumerator>
+                <measure>iso4217:USD</measure>
+            </unitNumerator>
+            <unitDenominator>
+                <measure>shares</measure>
+            </unitDenominator>
+        </divide>
+    </unit>
+<unit id="U_USD">
+        <measure>iso4217:USD</measure>
+    </unit>
+<dei:EntityCentralIndexKey
+      contextRef="C_4ca01806-c4cd-49d2-87c6-16fd7f17ad5d"
+      id="F_e2f9c85b-8e80-4023-8276-904f87bf1792">0000789019</dei:EntityCentralIndexKey>
+<dei:DocumentType
+      contextRef="C_4ca01806-c4cd-49d2-87c6-16fd7f17ad5d"
+      id="F_a55f3941-2c47-45f7-adcf-d3c8381d340a">10-Q</dei:DocumentType>
+<dei:DocumentPeriodEndDate
+      contextRef="C_4ca01806-c4cd-49d2-87c6-16fd7f17ad5d"
+      id="F_57a7e867-a3d9-401a-b3fa-9688f4bb7be5">2026-09-30</dei:DocumentPeriodEndDate>
+<us-gaap:EquityMethodInvestmentOwnershipPercentage
+      contextRef="C_14d92389-1e9c-4226-9783-71dfc28f3f1b"
+      decimals="2"
+      id="F_ea676aa0-c44d-4a4e-ac26-b3424ce3912a"
+      unitRef="U_pure">0.24</us-gaap:EquityMethodInvestmentOwnershipPercentage>
+<us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax
+      contextRef="C_79c16b0e-81c4-4603-a375-ed3f5beee2c6"
+      decimals="-8"
+      id="F_efad1029-847f-4591-ab68-e6d5e74e8e26"
+      unitRef="U_USD">10000000000</us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax>
+<us-gaap:AccountsReceivableNet
+      contextRef="C_14d92389-1e9c-4226-9783-71dfc28f3f1b"
+      decimals="-8"
+      id="F_d8ab1fac-750d-4d05-96fe-6dbd27b2e9b6"
+      unitRef="U_USD">7200000000</us-gaap:AccountsReceivableNet>
+<us-gaap:AccountsReceivableNet
+      contextRef="C_0ff5915c-58be-4a43-b259-dced30518827"
+      decimals="-8"
+      id="F_3800859e-44bb-4f07-a521-60940d8bafbc"
+      unitRef="U_USD">6000000000</us-gaap:AccountsReceivableNet>
+<msft:EquityMethodInvestmentsTotalFundingCommitments
+      contextRef="C_14d92389-1e9c-4226-9783-71dfc28f3f1b"
+      decimals="-8"
+      id="F_93f74526-1fd8-4688-9f1f-dcc9e61d40c1"
+      unitRef="U_USD">13000000000</msft:EquityMethodInvestmentsTotalFundingCommitments>
+<msft:EquityMethodInvestmentsFunded
+      contextRef="C_14d92389-1e9c-4226-9783-71dfc28f3f1b"
+      decimals="-8"
+      id="F_113b3fc2-86c9-4490-aad3-3e4fb0832fd9"
+      unitRef="U_USD">12000000000</msft:EquityMethodInvestmentsFunded>
+<us-gaap:NonoperatingIncomeExpense
+      contextRef="C_79c16b0e-81c4-4603-a375-ed3f5beee2c6"
+      decimals="-6"
+      id="F_a91e96b3-5309-48ea-a40d-637585087bdc"
+      unitRef="U_USD">272000000</us-gaap:NonoperatingIncomeExpense>
+<us-gaap:NonoperatingIncomeExpense
+      contextRef="C_0a877315-7305-4e5a-b619-d6dec622b2e1"
+      decimals="-8"
+      id="F_9d515df5-5b82-4e70-b005-da011fbe7d60"
+      unitRef="U_USD">-4100000000</us-gaap:NonoperatingIncomeExpense>
+<us-gaap:RevenueRemainingPerformanceObligation
+      contextRef="C_29087c8f-ba21-49d1-8838-26ed91a3b593"
+      decimals="-9"
+      id="F_c9c2c427-09ef-46d4-8c7f-d43ed630a643"
+      unitRef="U_USD">677000000000</us-gaap:RevenueRemainingPerformanceObligation>
+</xbrl>

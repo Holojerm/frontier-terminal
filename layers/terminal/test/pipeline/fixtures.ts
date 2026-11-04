@@ -46,6 +46,11 @@ import limitsXai from '~~/fixtures/recipes/limits-xai.md?raw'
 import payAnthropic from '~~/fixtures/recipes/pay-anthropic.json?raw'
 import payOpenai from '~~/fixtures/recipes/pay-openai.json?raw'
 import secAmznAnthropic from '~~/fixtures/recipes/sec-amzn-anthropic.xml?raw'
+import filedFactsAmznCompanyfacts from '~~/fixtures/filed-facts/companyfacts-amzn.json?raw'
+import filedFactsMsftCompanyfacts from '~~/fixtures/filed-facts/companyfacts-msft.json?raw'
+import filedFactsAmznInstance from '~~/fixtures/filed-facts/amzn-20260930.xml?raw'
+import filedFactsGooglInstance from '~~/fixtures/filed-facts/goog-20260930.xml?raw'
+import filedFactsMsftInstance from '~~/fixtures/filed-facts/msft-20260930.xml?raw'
 import secMsftOpenai from '~~/fixtures/recipes/sec-msft-openai.xml?raw'
 import epochDataCenters from '~~/fixtures/recipes/epoch-data-centers.csv?raw'
 import epochTimelines from '~~/fixtures/recipes/epoch-data-center-timelines.csv?raw'
@@ -64,6 +69,7 @@ import edgarFts from '~~/fixtures/sec/edgar-fts.json?raw'
 import edgarSubmissionsAmzn from '~~/fixtures/sec/edgar-submissions-amzn.json?raw'
 import edgarSubmissionsGoogl from '~~/fixtures/sec/edgar-submissions-googl.json?raw'
 import edgarSubmissionsMeta from '~~/fixtures/sec/edgar-submissions-meta.json?raw'
+import edgarSubmissionsOrcl from '~~/fixtures/sec/edgar-submissions-orcl.json?raw'
 import edgarSubmissionsMsft from '~~/fixtures/sec/edgar-submissions-msft.json?raw'
 import edgarSubmissionsNvda from '~~/fixtures/sec/edgar-submissions-nvda.json?raw'
 import edgarSubmissionsSpcx from '~~/fixtures/sec/edgar-submissions-spcx.json?raw'
@@ -125,6 +131,11 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/recipes/pay-anthropic.json': payAnthropic,
   'fixtures/recipes/pay-openai.json': payOpenai,
   'fixtures/recipes/sec-amzn-anthropic.xml': secAmznAnthropic,
+  'fixtures/filed-facts/companyfacts-amzn.json': filedFactsAmznCompanyfacts,
+  'fixtures/filed-facts/companyfacts-msft.json': filedFactsMsftCompanyfacts,
+  'fixtures/filed-facts/amzn-20260930.xml': filedFactsAmznInstance,
+  'fixtures/filed-facts/goog-20260930.xml': filedFactsGooglInstance,
+  'fixtures/filed-facts/msft-20260930.xml': filedFactsMsftInstance,
   'fixtures/recipes/sec-msft-openai.xml': secMsftOpenai,
   'fixtures/recipes/epoch-data-centers.csv': epochDataCenters,
   'fixtures/recipes/epoch-data-center-timelines.csv': epochTimelines,
@@ -138,6 +149,7 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/sec/edgar-submissions-amzn.json': edgarSubmissionsAmzn,
   'fixtures/sec/edgar-submissions-googl.json': edgarSubmissionsGoogl,
   'fixtures/sec/edgar-submissions-meta.json': edgarSubmissionsMeta,
+  'fixtures/sec/edgar-submissions-orcl.json': edgarSubmissionsOrcl,
   'fixtures/sec/edgar-submissions-msft.json': edgarSubmissionsMsft,
   'fixtures/sec/edgar-submissions-nvda.json': edgarSubmissionsNvda,
   'fixtures/sec/edgar-submissions-spcx.json': edgarSubmissionsSpcx,

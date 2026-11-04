@@ -11,7 +11,7 @@ import { fixtureText, manifest } from './fixtures'
 const sourcesYaml = fixtureText('sources.yaml')
 
 describe('includeSources', () => {
-  test('yields the 35 include-verdict sources in sources.yaml order, keyed by manifest source_id', () => {
+  test('yields the 36 include-verdict sources in sources.yaml order, keyed by manifest source_id', () => {
     const sources = includeSources(sourcesYaml, manifest.fixtures)
     expect(sources.map((s) => s.source_id)).toEqual([
       'openai-models-md',
@@ -42,6 +42,7 @@ describe('includeSources', () => {
       'edgar-submissions-nvda',
       'edgar-submissions-googl',
       'edgar-submissions-meta',
+      'edgar-submissions-orcl',
       'edgar-companyfacts-spcx',
       'openai-status',
       'anthropic-status',

@@ -70,11 +70,15 @@ export async function terminalPayloadAt<T extends object | null>(
   at: string,
   query: (context: QueryContext) => Promise<T>,
   variant = '',
-  options: CacheOptions = {},
+  /**
+   * `filed`: the query reads filed facts by their filing date (event time), so
+   * an instant before our first snapshot is still answerable and is not refused.
+   */
+  options: CacheOptions & { filed?: boolean } = {},
 ): Promise<AsOfPayload<T>> {
   const stamp = await timed(options.timings, 'stamp', liveStamp)
   try {
-    await assertKnowable(db, at)
+    if (!options.filed) await assertKnowable(db, at)
   } catch (error) {
     if (error instanceof PointInTimeError) {
       throw createError({ statusCode: 400, message: error.message })
@@ -176,6 +180,28 @@ export async function serveTerminalAsOf<T extends object | null>(
 /** Timed, and with the KV write after the response: what a request-bound read gets. */
 function requestCacheOptions(event: H3Event): CacheOptions & { timings: ServerTiming[] } {
   return { timings: [], defer: (promise) => event.waitUntil(promise) }
+}
+
+/**
+ * `serveTerminalAsOf` for a route that reads filed facts by filing date
+ * (terminal-exposure.ts): `as_of` may name any instant, before the store's
+ * first snapshot included.
+ */
+export async function serveTerminalFiled<T extends object | null>(
+  event: H3Event,
+  name: string,
+  query: (context: QueryContext) => Promise<T>,
+  variant = '',
+): Promise<T | AsOfPayload<T>> {
+  const { as_of } = await getValidatedQuery(event, parseAsOfQuery)
+  setResponseHeader(event, 'Cache-Control', TERMINAL_CACHE_CONTROL)
+  const options = requestCacheOptions(event)
+  const payload =
+    as_of === undefined
+      ? await terminalPayload(name, query, variant, options)
+      : await terminalPayloadAt(name, as_of, query, variant, { ...options, filed: true })
+  setResponseHeader(event, 'Server-Timing', serverTimingHeader(options.timings))
+  return payload
 }
 
 /** The Drizzle client, for routes that stream rather than cache. */

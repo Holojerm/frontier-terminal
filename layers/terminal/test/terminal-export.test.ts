@@ -99,7 +99,7 @@ beforeAll(async () => {
 })
 
 describe('the table registry', () => {
-  it('serves exactly the twenty tables and nothing else', () => {
+  it('serves exactly the twenty-two tables and nothing else', () => {
     expect(Object.keys(EXPORT_TABLES)).toEqual([
       'snapshots',
       'prices_latest',
@@ -119,6 +119,8 @@ describe('the table registry', () => {
       'claim_readings',
       'claim_verdicts',
       'recipe_observations',
+      'filed_facts',
+      'exposure_quarters',
       'source_runs',
       'entity_securities',
     ])

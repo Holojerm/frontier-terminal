@@ -19,6 +19,7 @@ const SUBMISSIONS: Record<string, string> = {
   '0001045810': 'fixtures/sec/edgar-submissions-nvda.json',
   '0001652044': 'fixtures/sec/edgar-submissions-googl.json',
   '0001326801': 'fixtures/sec/edgar-submissions-meta.json',
+  '0001341439': 'fixtures/sec/edgar-submissions-orcl.json',
   '0001181412': 'fixtures/sec/edgar-submissions-spcx.json',
 }
 
