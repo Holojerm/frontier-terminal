@@ -6,6 +6,7 @@
 import { absoluteStamp } from '../../shared/utils/terminal-format'
 import { labName } from '../../shared/utils/terminal-labs'
 import type { IncidentView, IncidentsData } from '../../shared/utils/terminal-types'
+import type { LimitsData } from '../../shared/utils/recipe-views'
 import type { TableColumn } from '../types/terminal-ui'
 
 definePageMeta({
@@ -18,7 +19,10 @@ definePageMeta({
   },
 })
 
-const { data: incidents, error } = await useFetch<IncidentsData>('/api/incidents')
+const [{ data: incidents, error }, { data: limits }] = await Promise.all([
+  useFetch<IncidentsData>('/api/incidents'),
+  useFetch<LimitsData>('/api/limits'),
+])
 
 const site = useSiteContext()
 
@@ -85,6 +89,15 @@ const columns: TableColumn[] = [
           }}</time
           >. Impact and status are each vendor’s own words, not normalized.
         </template>
+      </TerminalPanel>
+
+      <TerminalPanel
+        v-if="limits?.pages.length"
+        id="limits"
+        title="Published rate limits"
+        note="The limits each lab publishes, and when one last changed. Each lab’s page has the full table."
+      >
+        <TerminalLimitsSummary :limits="limits" />
       </TerminalPanel>
 
       <TerminalGap

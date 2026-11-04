@@ -34,8 +34,37 @@ export interface ExportTable {
    * row of the previous page). Keyset, not OFFSET — an offset page re-reads
    * every row before it, so streaming a table was quadratic in its size.
    */
-  page(db: PipelineDb, after: Row | null, limit: number): Promise<Row[]>
+  page(db: PipelineDb, after: Row | null, limit: number, where?: SQL): Promise<Row[]>
   count(db: PipelineDb): Promise<number>
+  /** Query parameters this table can be narrowed by (`?recipe_id=`), each an equality on a column. */
+  filters?: Readonly<Record<string, SQLiteColumn>>
+}
+
+/**
+ * The equality filters a request asks for, as one SQL condition. A parameter
+ * the table does not declare is an error, never silently ignored: an export
+ * that ignores `?recipe_id=` hands back the whole table under a name that
+ * says otherwise.
+ */
+export function exportFilter(
+  table: ExportTable,
+  query: Record<string, unknown>,
+): { where: SQL | undefined } | { error: string } {
+  const conditions: SQL[] = []
+  for (const [name, raw] of Object.entries(query)) {
+    const column = table.filters?.[name]
+    if (!column) {
+      const allowed = Object.keys(table.filters ?? {})
+      return {
+        error: `${table.name} cannot be filtered by ${name}${allowed.length ? `; it accepts ${allowed.join(', ')}` : ''}`,
+      }
+    }
+    if (typeof raw !== 'string' || !/^[\w.@-]{1,100}$/.test(raw)) {
+      return { error: `${name} must be one id of letters, digits, '.', '@' or '-'` }
+    }
+    conditions.push(eq(column, raw))
+  }
+  return { where: conditions.length ? and(...conditions) : undefined }
 }
 
 /** A unique sort key: the columns a keyset page orders by and resumes after. */
@@ -203,16 +232,18 @@ function plainTable(
   columns: readonly string[],
   key: Key,
   total?: SQL<number>,
+  filters?: Readonly<Record<string, SQLiteColumn>>,
 ): ExportTable {
   return {
     name,
     description,
     columns,
-    async page(db, after, limit) {
+    filters,
+    async page(db, after, limit, where) {
       const rows = await db
         .select()
         .from(table)
-        .where(afterKey(key, after))
+        .where(and(afterKey(key, after), where))
         .orderBy(...key.map((c) => asc(c)))
         .limit(limit)
       return rows.map((row) => project(row as Row, columns))
@@ -374,6 +405,8 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
       tables.recipeObservations.date,
       tables.recipeObservations.id,
     ],
+    undefined,
+    { recipe_id: tables.recipeObservations.recipe_id },
   ),
   source_runs: plainTable(
     'source_runs',
@@ -475,10 +508,10 @@ export function csvLine(values: readonly unknown[]): string {
 
 // ---- streaming -------------------------------------------------------------
 
-async function* pages(db: PipelineDb, table: ExportTable): AsyncGenerator<Row[]> {
+async function* pages(db: PipelineDb, table: ExportTable, where?: SQL): AsyncGenerator<Row[]> {
   let after: Row | null = null
   for (;;) {
-    const rows = await table.page(db, after, EXPORT_PAGE_SIZE)
+    const rows = await table.page(db, after, EXPORT_PAGE_SIZE, where)
     if (rows.length === 0) return
     yield rows
     if (rows.length < EXPORT_PAGE_SIZE) return
@@ -486,17 +519,25 @@ async function* pages(db: PipelineDb, table: ExportTable): AsyncGenerator<Row[]>
   }
 }
 
-export async function* csvChunks(db: PipelineDb, table: ExportTable): AsyncGenerator<string> {
+export async function* csvChunks(
+  db: PipelineDb,
+  table: ExportTable,
+  where?: SQL,
+): AsyncGenerator<string> {
   yield csvLine(table.columns)
-  for await (const rows of pages(db, table)) {
+  for await (const rows of pages(db, table, where)) {
     yield rows.map((row) => csvLine(table.columns.map((c) => row[c]))).join('')
   }
 }
 
-export async function* jsonChunks(db: PipelineDb, table: ExportTable): AsyncGenerator<string> {
+export async function* jsonChunks(
+  db: PipelineDb,
+  table: ExportTable,
+  where?: SQL,
+): AsyncGenerator<string> {
   yield '[\n'
   let first = true
-  for await (const rows of pages(db, table)) {
+  for await (const rows of pages(db, table, where)) {
     const body = rows.map((row) => JSON.stringify(row)).join(',\n')
     yield `${first ? '' : ',\n'}${body}`
     first = false

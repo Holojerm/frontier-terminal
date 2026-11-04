@@ -8,6 +8,7 @@
 import { absoluteStamp, count, signed } from '../../shared/utils/terminal-format'
 import { dayLabel } from '../../shared/utils/thesis-format'
 import type { HiringHistoryData, HiringHistoryProvider } from '../../shared/utils/terminal-types'
+import type { DataCentersData, PayData } from '../../shared/utils/recipe-views'
 import type { TableColumn } from '../types/terminal-ui'
 
 const NO_DEPARTMENT = '(no department)'
@@ -22,7 +23,11 @@ definePageMeta({
   },
 })
 
-const { data: hiring, error } = await useFetch<HiringHistoryData>('/api/hiring/history')
+const [{ data: hiring, error }, { data: pay }, { data: power }] = await Promise.all([
+  useFetch<HiringHistoryData>('/api/hiring/history'),
+  useFetch<PayData>('/api/pay'),
+  useFetch<DataCentersData>('/api/datacenters'),
+])
 
 useSeo({
   title: 'AI lab hiring: open roles over time',
@@ -147,6 +152,16 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
       </TerminalPanel>
 
       <TerminalPanel
+        v-if="power?.snapshot"
+        id="power"
+        title="Data-center power"
+        note="Epoch AI’s estimate of the power each lab’s data centers draw: what the buildout roles are building."
+        :more="{ label: 'Every site, and GPU rental prices', to: '/compute' }"
+      >
+        <TerminalDataCenterPower :data="power" />
+      </TerminalPanel>
+
+      <TerminalPanel
         id="departments"
         title="Department mix, now against earlier"
         :note="`Open roles by department, now against ${hiring.window_days} days ago or the first day on record.`"
@@ -219,6 +234,15 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
             </template>
           </TerminalCard>
         </div>
+      </TerminalPanel>
+
+      <TerminalPanel
+        v-if="pay?.boards.length"
+        id="pay"
+        title="Posted pay"
+        note="The median midpoint of the US salary bands each board posts, for all roles, research and software engineering."
+      >
+        <TerminalPayTable :pay="pay" />
       </TerminalPanel>
     </template>
   </TerminalPage>

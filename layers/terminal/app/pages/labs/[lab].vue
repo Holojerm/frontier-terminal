@@ -18,6 +18,13 @@ import type {
   RevenueData,
   SpendData,
 } from '../../../shared/utils/terminal-types'
+import type {
+  AdoptionData,
+  DataCentersData,
+  LimitsData,
+  ParentsData,
+  PayData,
+} from '../../../shared/utils/recipe-views'
 
 // Inert for a dynamic route: the collecting hook skips paths with a
 // parameter, and sitemap.xml / llms.txt append the lab pages from
@@ -95,6 +102,46 @@ const [prices, revenue, rankings, spend, hiring, incidents, releases, alerts] = 
     }),
   }),
 ])
+
+// The thesis recipes' panels, each narrowed to this lab on the server.
+const [adoption, limits, pay, parents, power] = await Promise.all([
+  useFetch<AdoptionData>('/api/adoption', {
+    key: `lab-adoption:${lab}`,
+    transform: (d: AdoptionData): AdoptionData => ({
+      ...d,
+      downloads: d.downloads.filter((x) => x.lab === lab),
+      agent_prs: d.agent_prs.filter((x) => x.lab === lab),
+    }),
+  }),
+  useFetch<LimitsData>('/api/limits', {
+    key: `lab-limits:${lab}`,
+    transform: (d: LimitsData): LimitsData => ({
+      ...d,
+      pages: d.pages.filter((p) => p.lab === lab),
+    }),
+  }),
+  useFetch<PayData>('/api/pay', {
+    key: `lab-pay:${lab}`,
+    transform: (d: PayData): PayData => ({ ...d, boards: d.boards.filter((b) => b.lab === lab) }),
+  }),
+  useFetch<ParentsData>('/api/parents', {
+    key: `lab-parents:${lab}`,
+    transform: (d: ParentsData): ParentsData => ({
+      ...d,
+      parents: d.parents.filter((p) => p.lab === lab),
+    }),
+  }),
+  useFetch<DataCentersData>('/api/datacenters', {
+    key: `lab-power:${lab}`,
+    transform: (d: DataCentersData): DataCentersData => ({
+      ...d,
+      labs: d.labs.filter((l) => l.lab === lab),
+    }),
+  }),
+])
+const rampHasLab = computed(
+  () => adoption.data.value?.ramp?.series.some((s) => s.lab === lab) ?? false,
+)
 
 const data = computed(() => ({
   prices: prices.data.value,
@@ -311,6 +358,75 @@ const pairs = COMPARE_PAIRS.filter((pair) => pair.includes(lab))
         <TerminalStrainTable v-if="incidentsOf" :incidents="incidentsOf" />
       </TerminalPanel>
     </div>
+
+    <div class="grid gap-6 lg:grid-cols-2">
+      <TerminalPanel
+        v-if="rampHasLab"
+        id="enterprise"
+        title="Enterprise adoption"
+        note="Share of US businesses on Ramp paying this lab, monthly, beside any AI vendor."
+        :more="{ label: 'Every vendor', to: '/rankings#enterprise' }"
+      >
+        <TerminalAdoptionRamp
+          :ramp="adoption.data.value!.ramp!"
+          :caveat="adoption.data.value!.caveats.ramp"
+          :labs="[lab]"
+        />
+      </TerminalPanel>
+
+      <TerminalPanel
+        v-if="adoption.data.value?.downloads.length"
+        id="downloads"
+        title="Downloads"
+        note="This lab’s SDKs and coding agent on npm and PyPI, the newest 28 days against the 28 before."
+        :more="{ label: 'Every lab’s packages', to: '/rankings#developers' }"
+      >
+        <TerminalDownloadsTable
+          :downloads="adoption.data.value.downloads"
+          :caveat="adoption.data.value.caveats.downloads"
+        />
+      </TerminalPanel>
+
+      <TerminalPanel
+        v-if="parents.data.value?.parents.length"
+        id="parents"
+        title="What its investor discloses"
+        note="Facts a public investor tags with this lab in its newest 10-Q or 10-K: the investor’s figures, not the lab’s."
+        :more="{ label: 'Every lab’s revenue', to: '/revenue#parents' }"
+      >
+        <TerminalParentFacts :parents="parents.data.value" />
+      </TerminalPanel>
+
+      <TerminalPanel
+        v-if="pay.data.value?.boards.length"
+        id="pay"
+        title="Posted pay"
+        note="Median midpoint of the US salary bands on this lab’s job board."
+        :more="{ label: 'Hiring', to: '/hiring#pay' }"
+      >
+        <TerminalPayTable :pay="pay.data.value" />
+      </TerminalPanel>
+
+      <TerminalPanel
+        v-if="power.data.value?.labs.length"
+        id="power"
+        title="Data-center power"
+        note="Epoch AI’s estimate of the sites that name this lab as a user."
+        :more="{ label: 'Every lab, and every site', to: '/compute' }"
+      >
+        <TerminalDataCenterPower :data="power.data.value" />
+      </TerminalPanel>
+    </div>
+
+    <TerminalPanel
+      v-if="limits.data.value?.pages.length"
+      id="limits"
+      title="Published rate limits"
+      note="As the lab’s docs print them, per model and tier; a new snapshot only when a limit changes."
+      :more="{ label: 'Every lab', to: '/incidents#limits' }"
+    >
+      <TerminalLimitsTable :pages="limits.data.value.pages" :caveat="limits.data.value.caveat" />
+    </TerminalPanel>
 
     <TerminalPanel
       id="compare"
