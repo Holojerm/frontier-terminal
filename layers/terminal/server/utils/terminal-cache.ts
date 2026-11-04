@@ -86,11 +86,17 @@ export function terminalCacheKey(name: string, stamp: string | null): string {
 }
 
 /**
- * Serve `name` for the tick `stamp` from the store, computing and storing it
- * on a miss. `compute` runs at most once per (name, stamp) per five minutes
- * under normal conditions; under a failing store it runs every time, which
- * is slower and still correct.
+ * How long a KV read may take before the recompute starts alongside it.
+ *
+ * A key this colo has read recently answers in 3–20ms. A key it has not —
+ * the normal case on this site, where the cache:warm cron writes from one
+ * data centre and readers arrive in others — took 0.5–2.6s in production on
+ * 2026-11-04, whatever the value's size, while the recompute it stands in for
+ * takes 10–700ms. Past this budget the read is almost certainly cold, so the
+ * reader gets whichever of the two finishes first.
  */
+export const KV_HEDGE_MS = 100
+
 export interface CacheOptions {
   /** Collects Server-Timing stages for the caller's response. */
   timings?: ServerTimings
@@ -100,29 +106,40 @@ export interface CacheOptions {
    * was paying on top of the recompute for a value they already had.
    */
   defer?: (promise: Promise<unknown>) => void
+  /** Overrides KV_HEDGE_MS; tests use it to make the race deterministic. */
+  hedgeMs?: number
 }
 
+type Read<T> = { found: true; value: T } | { found: false }
+
+/**
+ * Serve `name` for the tick `stamp` from the store, computing and storing it
+ * on a miss. `compute` runs at most once per (name, stamp) per five minutes
+ * under normal conditions; under a failing store it runs every time, which
+ * is slower and still correct. A slow read is hedged (KV_HEDGE_MS).
+ */
 export async function cachedTerminal<T>(
   store: CacheStore,
   name: string,
   stamp: string | null,
   compute: () => Promise<T>,
-  { timings, defer }: CacheOptions = {},
+  { timings, defer, hedgeMs = KV_HEDGE_MS }: CacheOptions = {},
 ): Promise<T> {
   const key = terminalCacheKey(name, stamp)
-  try {
-    const hit = await timed(timings, 'kv', () => store.get(key))
-    const found = hit !== null && hit !== undefined
-    const last = timings?.at(-1)
-    if (last) last.desc = found ? 'hit' : 'miss'
-    if (found) return hit as T
-  } catch (error) {
-    console.warn(JSON.stringify({ kind: 'terminal_cache_unavailable', name, error: String(error) }))
-  }
+  const startedAt = Date.now()
+  const read: Promise<Read<T>> = store.get(key).then(
+    (hit) =>
+      hit !== null && hit !== undefined ? { found: true, value: hit as T } : { found: false },
+    (error: unknown) => {
+      console.warn(
+        JSON.stringify({ kind: 'terminal_cache_unavailable', name, error: String(error) }),
+      )
+      return { found: false }
+    },
+  )
+  const mark = (desc: string) => timings?.push({ name: 'kv', dur: Date.now() - startedAt, desc })
 
-  const value = await timed(timings, 'compute', compute)
-
-  const write = async () => {
+  const write = async (value: T) => {
     try {
       await store.set(key, value, { ttl: TERMINAL_CACHE_TTL_SECONDS })
     } catch (error) {
@@ -131,7 +148,49 @@ export async function cachedTerminal<T>(
       )
     }
   }
-  if (defer) defer(write())
-  else await timed(timings, 'kv-put', write)
-  return value
+  const persist = async (value: T) => {
+    if (defer) defer(write(value))
+    else await timed(timings, 'kv-put', () => write(value))
+  }
+
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const slow = new Promise<'slow'>((resolve) => {
+    timer = setTimeout(() => resolve('slow'), hedgeMs)
+  })
+  const first = await Promise.race([read, slow])
+  clearTimeout(timer)
+
+  if (first !== 'slow') {
+    mark(first.found ? 'hit' : 'miss')
+    if (first.found) return first.value
+    const value = await timed(timings, 'compute', compute)
+    await persist(value)
+    return value
+  }
+
+  // Cold read: race it against the recompute, first success wins. A failed
+  // recompute still loses to a hit, and the loser is left to finish. The value
+  // is written only if the read turns out to be a miss.
+  const computed = timed(timings, 'compute', compute)
+  const fromRead = read.then((r) =>
+    r.found
+      ? { value: r.value, via: 'slow-hit' }
+      : computed.then((value) => ({ value, via: 'slow' })),
+  )
+  const fromCompute = computed.then((value) => ({ value, via: 'slow' }))
+  let winner: { value: T; via: string }
+  try {
+    winner = await Promise.any([fromRead, fromCompute])
+  } catch (error) {
+    throw error instanceof AggregateError ? error.errors[0] : error
+  }
+  mark(winner.via)
+  const settle = read.then(async (r) => {
+    if (!r.found) await write(winner.value)
+  })
+  // Without a waitUntil there is nothing to hold the request open for the
+  // write, and waiting would hand the reader the slow read back.
+  if (defer) defer(settle)
+  else void settle
+  return winner.value
 }
