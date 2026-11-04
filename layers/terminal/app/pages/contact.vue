@@ -46,6 +46,9 @@ const groups = computed(() => {
   for (const r of coverage.value?.recipes ?? []) {
     if (r.rights) out[r.rights].push({ key: r.recipe_id, name: r.recipe_id })
   }
+  for (const t of coverage.value?.track_record ?? []) {
+    if (t.rights) out[t.rights].push({ key: t.id, name: t.id })
+  }
   return out
 })
 

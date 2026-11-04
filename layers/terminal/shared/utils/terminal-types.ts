@@ -163,6 +163,14 @@ export interface CutSource {
 }
 
 /** One thesis recipe (layers/terminal/server/theses/recipes/): how its last run ended and what it has stored. */
+export interface TrackRecordSource {
+  id: string
+  url: string | null
+  terms: string | null
+  rights: SourceRights | null
+  caveat: string | null
+}
+
 export interface RecipeCoverage {
   recipe_id: string
   company: string
@@ -189,6 +197,8 @@ export interface CoverageData extends Stamp {
   cuts: CutSource[]
   /** The thesis recipes, which store outside the lab tables. */
   recipes: RecipeCoverage[]
+  /** Sources the track record queries per alert (GDELT), with their audit entry. */
+  track_record: TrackRecordSource[]
   totals: TableCounts
   exports: ExportTableInfo[]
   /** Newest fetch across every source. */
@@ -966,4 +976,79 @@ export interface GpuPricesData extends Stamp {
   failed: { provider: string; provider_name: string; detail: string }[]
   method: string
   caveat: string
+}
+
+// ---- track record ------------------------------------------------------------
+
+/**
+ * Where one side of an alert's track record stands. `matched` is the only
+ * state with a time: everything else says why there is none.
+ */
+export type TrackRecordState =
+  | 'window-open'
+  | 'not-searched'
+  | 'search-failed'
+  | 'not-searchable'
+  | 'no-feed'
+  | 'none-found'
+  | 'not-yet-rated'
+  | 'no-match'
+  | 'matched'
+
+export interface TrackRecordHit {
+  title: string
+  outlet: string
+  url: string
+  /** When GDELT first saw the article, or the post's own publication time. */
+  published_at: string
+  /** The judge's same-event rationale. */
+  rationale: string
+  /** The GDELT query or newsroom feed the candidate came from, and when it was read. */
+  source_url: string
+  fetched_at: string
+}
+
+export interface TrackRecordSide {
+  state: TrackRecordState
+  /** The reason for `search-failed` or `not-searchable`. */
+  detail: string | null
+  hit: TrackRecordHit | null
+  /** Hours from the saw-it time to the hit: positive when we saw it first. */
+  lead_hours: number | null
+  candidates: number
+  rated: number
+}
+
+export interface TrackRecordRow {
+  alert_id: string
+  severity: AlertSeverity
+  headline: string
+  created_at: string
+  providers: ProviderId[]
+  /** When we saw it: the earliest cited change row (a removal counts from when we noticed it). */
+  saw_at: string
+  saw_source_url: string
+  window_from: string
+  window_to: string
+  press: TrackRecordSide
+  newsroom: TrackRecordSide
+}
+
+export interface TrackRecordTally {
+  matched: number
+  led: number
+  lagged: number
+  /** Same hour either way: |lead| under 0.05 h. */
+  tied: number
+  median_lead_hours: number | null
+  not_yet_rated: number
+}
+
+export interface TrackRecordData extends Stamp {
+  from: string
+  window_days: number
+  rows: TrackRecordRow[]
+  press: TrackRecordTally
+  newsroom: TrackRecordTally
+  window_open: number
 }

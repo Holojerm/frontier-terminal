@@ -184,7 +184,14 @@ const securityHeaders = {
 const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:alert', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
-  '*/5 * * * *': ['poll:tripwire', 'social:alerts', 'social:post', 'press:briefs', 'cache:warm'],
+  '*/5 * * * *': [
+    'poll:tripwire',
+    'social:alerts',
+    'social:post',
+    'press:briefs',
+    'cache:warm',
+    'track-record:search',
+  ],
   '0 13 * * 1': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
 }
 

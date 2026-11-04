@@ -1,0 +1,79 @@
+// When the terminal saw an alert's change, and the window searched around it.
+// Pure functions of the cited change rows and the clock.
+
+import type { ChangeRow } from '../contracts'
+import { GDELT_HORIZON_DAYS } from './gdelt'
+
+/** The first alert day the track record covers. */
+export const TRACK_RECORD_FROM = '2026-09-08'
+
+/** Days searched either side of the saw-it time. */
+export const WINDOW_DAYS = 7
+
+const DAY_MS = 86_400_000
+
+export interface SawIt {
+  at: string
+  source_url: string
+  change_id: string
+}
+
+/**
+ * When a row's change was first in hand. An added or modified row carries
+ * the fetch that observed it. A removal carries the last fetch that still
+ * listed the entity (diff.ts keeps the before side's provenance), which can
+ * be weeks old, so a removal counts from the run that noticed it was gone.
+ */
+export function seenAt(change: Pick<ChangeRow, 'change_type' | 'fetched_at' | 'detected_at'>) {
+  return new Date(change.change_type === 'removed' ? change.detected_at : change.fetched_at)
+}
+
+/** When the terminal saw it: the earliest cited change row by seenAt. Ties keep the smallest id. */
+export function sawIt(changes: readonly ChangeRow[]): SawIt | null {
+  let first: ChangeRow | null = null
+  for (const c of changes) {
+    const t = seenAt(c).getTime()
+    const f = first ? seenAt(first).getTime() : Infinity
+    if (t < f || (t === f && first && c.id < first.id)) first = c
+  }
+  return first
+    ? { at: seenAt(first).toISOString(), source_url: first.source_url, change_id: first.id }
+    : null
+}
+
+export interface TrackWindow {
+  start: string
+  end: string
+}
+
+export function trackWindow(saw: string, days: number = WINDOW_DAYS): TrackWindow {
+  const t = Date.parse(saw)
+  return {
+    start: new Date(t - days * DAY_MS).toISOString(),
+    end: new Date(t + days * DAY_MS).toISOString(),
+  }
+}
+
+/** Searched once the window has closed, and only while GDELT still covers its start. */
+export function searchState(window: TrackWindow, now: Date): 'open' | 'due' | 'beyond-horizon' {
+  if (now.getTime() < Date.parse(window.end)) return 'open'
+  if (now.getTime() - Date.parse(window.start) > GDELT_HORIZON_DAYS * DAY_MS) {
+    return 'beyond-horizon'
+  }
+  return 'due'
+}
+
+/** Hours from the saw-it time to `at`: positive when the terminal saw it first. */
+export function leadHours(saw: string, at: string): number {
+  // `|| 0` turns a rounded -0 into 0, which prints and compares as zero.
+  return Math.round((Date.parse(at) - Date.parse(saw)) / 360_000) / 10 || 0
+}
+
+export function median(values: readonly number[]): number | null {
+  if (values.length === 0) return null
+  const sorted = [...values].sort((a, b) => a - b)
+  const mid = Math.floor(sorted.length / 2)
+  return sorted.length % 2
+    ? sorted[mid]!
+    : Math.round(((sorted[mid - 1]! + sorted[mid]!) / 2) * 10) / 10
+}

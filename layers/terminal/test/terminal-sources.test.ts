@@ -102,6 +102,8 @@ describe('readSourceRegistry', () => {
       'xai-pay-bands',
       'mistral-pay-bands',
       'alphabet-anthropic-stake',
+      'anthropic-newsroom',
+      'xai-newsroom',
     ])
   })
 
@@ -145,6 +147,17 @@ describe('readSourceRegistry', () => {
       'greenhouse-cloudflare': 'ours',
       'cloudflare-changelog-ai': 'not-cleared',
     })
+    // The track record's newsroom feeds, and GDELT, which is queried per alert.
+    expect(recipeRights).toMatchObject({
+      'newsroom-openai': 'not-cleared',
+      'newsroom-google-deepmind': 'ours',
+      'newsroom-meta': 'not-cleared',
+      'newsroom-mistral': 'ours',
+    })
+    expect(registry.track_record).toEqual([
+      expect.objectContaining({ id: 'gdelt-doc', rights: 'upstream', verdict: 'include' }),
+    ])
+    expect(registry.track_record[0]!.terms).toContain('one every 5 seconds')
     expect(() =>
       readSourceRegistry(yaml.replace('    rights: ours\n', '    rights: ours-ish\n')),
     ).toThrow(/unknown rights ours-ish/)

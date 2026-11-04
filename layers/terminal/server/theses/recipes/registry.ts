@@ -17,6 +17,7 @@ import {
 } from './gpu-pages'
 import { GREENHOUSE_CLOUDFLARE } from './greenhouse-departments'
 import { INVESTEE_RECIPES } from './investee-facts'
+import { NEWSROOM_RECIPES } from './newsrooms'
 import { NPM_LAB_RECIPES, NPM_WRANGLER } from './npm-downloads'
 import { PAY_RECIPES } from './pay-bands'
 import { PYPI_LAB_RECIPES } from './pypi-downloads'
@@ -62,4 +63,6 @@ export const RECIPES: readonly Recipe[] = [
   ...INVESTEE_RECIPES,
   ...RATE_LIMIT_RECIPES,
   ...PAY_RECIPES,
+  // The labs' newsroom feeds the track record reads, audited 2026-11-04.
+  ...NEWSROOM_RECIPES,
 ]

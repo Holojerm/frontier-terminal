@@ -69,6 +69,7 @@ import { queryProspectus } from './terminal-prospectus'
 import { queryRevenue } from './terminal-revenue'
 import { PROVIDER_ORDER } from './terminal-sources'
 import { querySpend } from './terminal-spend'
+import { queryTrackRecord, trackRecordStamp } from './terminal-track-record'
 
 /** What the server needs from its host — the route supplies the real thing, the test a fixture. */
 export interface McpDeps {
@@ -542,6 +543,36 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
           providers: revenue.providers.filter((p) => p.provider === provider),
         })
       }),
+  )
+
+  server.registerTool(
+    'get_track_record',
+    {
+      title: 'Track record: did we see it before the press?',
+      description:
+        'For each notable or critical alert since 2026-09-08: saw_at (when the terminal saw the change: the fetch of the earliest cited ' +
+        'change row, or for a removal the run that noticed it), and two sides, press (the first article GDELT indexed) and newsroom ' +
+        '(the first post on the lab’s own newsroom feed; Anthropic and xAI publish none). A side has a time only when its state is matched: ' +
+        'the judge rated that candidate the same event and every earlier candidate not. lead_hours is that time minus saw_at, ' +
+        'positive when the terminal saw it first. Other states say why there is no time: window-open (searched once 7 days have passed), ' +
+        'not-searched, search-failed, not-searchable, no-feed, none-found, not-yet-rated (never a guessed lead), no-match. ' +
+        'press.published_at is when GDELT’s crawler first saw the article, not when the outlet published it, and GDELT misses outlets. ' +
+        'A lead is not a trading signal. press and newsroom tally led, lagged, tied and the median lead over matched rows. ' +
+        PROVENANCE,
+      inputSchema: z.object({ as_of: AsOfSchema }),
+      annotations: READ_ONLY,
+    },
+    ({ as_of }) =>
+      asOfErrors(async () =>
+        json(
+          await read(
+            'track-record',
+            as_of,
+            (ctx) => queryTrackRecord(deps.db, ctx),
+            await trackRecordStamp(deps.db),
+          ),
+        ),
+      ),
   )
 
   server.registerTool(

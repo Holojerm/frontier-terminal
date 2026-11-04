@@ -128,6 +128,15 @@ useSeo({
           Pages refresh within five minutes of a new check. Each page shows the time of the check it
           reflects.
         </dd>
+        <dt class="text-muted">Against the press</dt>
+        <dd class="text-default">
+          The
+          <NuxtLink to="/track-record" class="text-primary underline underline-offset-2"
+            >track record</NuxtLink
+          >
+          times each notable or critical alert against the first press report and the lab’s own
+          post. It shows the alerts where the press was first too.
+        </dd>
         <dt class="text-muted">Confidential filings</dt>
         <dd class="text-default">
           A confidential draft registration doesn’t appear on EDGAR until the company makes it
