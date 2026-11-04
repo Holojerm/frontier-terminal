@@ -144,7 +144,7 @@ const GROUPS: { rights: SourceRights; title: string; body: string }[] = [
           <p class="max-w-2xl text-muted">{{ g.body }}</p>
           <p v-if="groups[g.rights].length" class="max-w-2xl text-default">
             <template v-for="(s, i) in groups[g.rights]" :key="s.key"
-              ><span class="whitespace-nowrap">{{ s.name }}</span
+              ><span class="sm:whitespace-nowrap">{{ s.name }}</span
               ><template v-if="i < groups[g.rights].length - 1">; </template></template
             >.
           </p>

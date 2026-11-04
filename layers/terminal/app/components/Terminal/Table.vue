@@ -123,7 +123,7 @@ const value = (row: T, key: string) => {
 <template>
   <div
     ref="box"
-    class="rounded-sm focus-visible:outline-2 focus-visible:outline-primary"
+    class="relative rounded-sm focus-visible:outline-2 focus-visible:outline-primary"
     :class="flow ? 'max-lg:overflow-x-auto' : 'max-h-[70dvh] overflow-auto'"
     :tabindex="scrolls ? 0 : undefined"
     :role="scrolls ? 'region' : undefined"
