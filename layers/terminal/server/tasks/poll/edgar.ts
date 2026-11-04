@@ -17,10 +17,11 @@ import { kv } from '@nuxthub/kv'
 import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { recordOpsEvent } from '#server/utils/ops'
-import { runFiledFacts } from '../../exposure/ingest'
+import { filedFactsSkip, runFiledFacts } from '../../exposure/ingest'
 import { createFetcher } from '../../pipeline/fetch'
 import { unstorageLockStore } from '../../pipeline/lock'
 import { blobRawStore, runPoll } from '../../pipeline/poll'
+import { paceSec } from '../../pipeline/sec-pace'
 import { warmAfterPoll } from '../../utils/cache-warm-task'
 
 export default defineTask({
@@ -31,10 +32,14 @@ export default defineTask({
   },
   async run({ context }) {
     const config = useRuntimeConfig()
-    const fetcher = createFetcher({
-      secContactEmail: config.secContactEmail,
-      appUrl: config.public.appUrl,
-    })
+    // One paced fetcher for the tick, so the SEC spacing counts the poll's
+    // feeds and the filed facts together (pipeline/sec-pace.ts).
+    const fetcher = paceSec(
+      createFetcher({
+        secContactEmail: config.secContactEmail,
+        appUrl: config.public.appUrl,
+      }),
+    )
     const result = await runPoll('edgar', {
       db,
       raw: blobRawStore(blob),
@@ -42,19 +47,24 @@ export default defineTask({
       fetcher,
       sourcesYaml,
     })
-    // The hyperscaler filed facts (layers/terminal/server/exposure/) run on
-    // every tick, the survey instant included, outside the poll lock: their
-    // writes are append-only with deterministic ids, so an overlap stores
-    // nothing twice. A failure is spooled, never thrown over the poll.
-    const filedFacts = await runFiledFacts(db, {
-      raw: blobRawStore(blob),
-      fetcher,
-      now: new Date(),
-      sourcesYaml,
-    }).catch(async (error: unknown) => {
-      await recordOpsEvent(db, { kind: 'filed_facts_run_failed', detail: String(error) })
-      return null
-    })
+    // The hyperscaler filed facts (layers/terminal/server/exposure/) run after
+    // a poll that ran, and not at all when it yielded to the survey or found
+    // the lock held: two invocations fetching SEC at once broke its 10/s limit
+    // on 2026-11-04 (18 instance reads answered 429 at 18:01). A failure is
+    // spooled, never thrown over the poll.
+    const skip = filedFactsSkip(result, fetcher.secRateLimited !== null)
+    if (skip) console.warn(JSON.stringify({ kind: 'filed_facts_skipped', reason: skip }))
+    const filedFacts = skip
+      ? null
+      : await runFiledFacts(db, {
+          raw: blobRawStore(blob),
+          fetcher,
+          now: new Date(),
+          sourcesYaml,
+        }).catch(async (error: unknown) => {
+          await recordOpsEvent(db, { kind: 'filed_facts_run_failed', detail: String(error) })
+          return null
+        })
     await warmAfterPoll(context)
     return { result, filedFacts }
   },
