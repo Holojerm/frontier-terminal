@@ -830,6 +830,7 @@ export interface AlertView extends Prov {
     | 'cik-resolved'
     | 'model-floor'
     | 'prospectus-floor'
+    | 'hiring-rollup'
   created_at: string
   change_ids: string[]
   /** The cited rows, resolved; ids that resolve to nothing are listed in `missing`. */

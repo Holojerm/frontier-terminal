@@ -6,12 +6,15 @@ import { ChangeRow } from '../contracts'
 import { D1_MAX_BOUND_PARAMS, chunk, insertRows, type PipelineDb } from '../store'
 import { applyClaimVerdicts, type VerdictReport } from '../../theses/verdicts'
 import { evaluateTheses } from '../../theses/evaluate'
+import { parseDepartmentClusters, type DepartmentCluster } from '../../utils/terminal-clusters'
+import { clampHiringAlerts, type FloorClamp } from '../hiring-floor'
 import { applyClassMappings, type RawReader } from './class-map'
 import { buildAlertRows, gateJudgeSubmission } from './contract'
 import { groundAlerts } from './grounding'
 
 // POST /api/judge/alerts, minus the request: raw body -> schema gate ->
-// grounding against the cited change rows as D1 holds them -> stamping ->
+// grounding against the cited change rows as D1 holds them -> the hiring
+// materiality floor (layers/terminal/server/pipeline/hiring-floor.ts) -> stamping ->
 // the one write chokepoint -> a judge_runs row. Every model-output
 // rejection is a return value and an ops event, never an exception; only
 // D1 itself can throw here.
@@ -28,6 +31,8 @@ export interface JudgeRunReport {
   /** Grounded-out alerts: real model output that cited something it couldn't. */
   rejected: number
   rejections: { reason: string; detail: string; headline: string }[]
+  /** Hiring alerts sent as notable/critical and stored as info: below the materiality floor. */
+  clamped: FloorClamp[]
   /** Whole-body rejection at the schema gate — nothing reached grounding. */
   gate_rejection: { reason: string; detail: string } | null
   /** Re-mappings of matrix cells under review (layers/terminal/server/pipeline/judge/class-map.ts). */
@@ -66,7 +71,14 @@ const NO_PAGES: RawReader = async () => null
 export async function submitJudgeRun(
   db: PipelineDb,
   raw: string,
-  opts: { source?: string; now?: Date; readRaw?: RawReader; sourcesYaml?: string } = {},
+  opts: {
+    source?: string
+    now?: Date
+    readRaw?: RawReader
+    sourcesYaml?: string
+    /** The buildout clusters the floor reads; parsed from sourcesYaml when omitted. */
+    clusters?: readonly DepartmentCluster[]
+  } = {},
 ): Promise<JudgeRunReport> {
   const started_at = (opts.now ?? new Date()).toISOString()
   const source = opts.source ?? 'routine'
@@ -97,6 +109,7 @@ export async function submitJudgeRun(
       inserted: 0,
       rejected: 0,
       rejections: [],
+      clamped: [],
       gate_rejection: { reason: gate.reason, detail: gate.detail },
       class_map: { accepted: 0, rejected: [] },
       claims: { accepted: 0, inserted: 0, rejected: [] },
@@ -117,7 +130,13 @@ export async function submitJudgeRun(
     headline: r.alert.headline,
   }))
 
-  const rows = buildAlertRows(accepted, cited)
+  // The floor runs after grounding and only lowers severity: whatever the
+  // routine sent, a hiring move below it is stored as a ticker line.
+  const clusters =
+    opts.clusters ?? (opts.sourcesYaml ? parseDepartmentClusters(opts.sourcesYaml) : [])
+  const floored = await clampHiringAlerts(db, accepted, cited, clusters)
+
+  const rows = buildAlertRows(floored.alerts, cited)
   // Dedupe on the stamped id: the same headline over the same change ids is
   // the same alert, and a routine that judged twice is not an error.
   const existing = await existingAlertIds(
@@ -187,6 +206,7 @@ export async function submitJudgeRun(
     inserted,
     rejected: rejected.length,
     rejections,
+    clamped: floored.clamped,
     gate_rejection: null,
     class_map: {
       accepted: classMap.accepted,

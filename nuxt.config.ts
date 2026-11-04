@@ -173,12 +173,13 @@ const securityHeaders = {
 //                (layers/terminal/server/pipeline/social.ts), social:post sends
 //                what is due (layers/social). Both no-op without a Buffer key.
 //   0 13 * * 1 — weekly thesis digest email, and social:digest queues the
-//                weekly what-moved thread.
+//                weekly what-moved thread. alerts:hiring-rollup writes one
+//                hiring alert per lab for the week that just ended.
 const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:alert', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
   '*/5 * * * *': ['poll:tripwire', 'social:alerts', 'social:post'],
-  '0 13 * * 1': ['theses:digest', 'social:digest'],
+  '0 13 * * 1': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
 }
 
 /**
