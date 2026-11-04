@@ -234,3 +234,43 @@ Live-fetched 04:00–04:50Z on 2026-11-04 (UTC) with the pipeline's descriptive 
 - **Neither prediction market licenses republication.** The liquid markets would be the only market-implied valuation and IPO-date signal available. They stay linked references, as Artificial Analysis and arena.ai are, unless Kalshi or Polymarket grants written permission.
 
 Interpretation, marked as such: Ramp and the registries attack the "OpenRouter is one aggregator" caveat from two directions, enterprise spend and developer installs. Epoch replaces Compute claim 4's hiring proxy with a measured, if estimated, supply series. Neither prediction market can be ingested.
+
+## Addendum, 2026-11-04 — hyperscaler filings, rate limits, posted pay
+
+Live-fetched 05:00–05:30Z on 2026-11-04 (UTC); SEC documents with the pipeline's contact User-Agent, everything else with its descriptive one. Three more ways to read the private labs from primary sources.
+
+**Hyperscaler filings.** XBRL company facts cannot carry any of this: every lab-specific fact is dimensional or a custom tag, and companyfacts drops both. A reader has to parse the filing's own XBRL instance.
+
+| Filer | What it discloses | Tagging | Verdict |
+|---|---|---|---|
+| Microsoft | Its recognized gain or loss from OpenAI each quarter: Q3 2025 −$4.1B, Q4 2025 +$10.0B ("primarily relate to the dilution gain from the OpenAI Recapitalization"), Q1 2026 −$19M, Q3 2026 +$272M ("Other income (expense), net included $272 million of net gains … from investments in OpenAI"); stake 27% falling to 24%; $12.0B funded of a $13.0B commitment | `us-gaap:NonoperatingIncomeExpense` and `us-gaap:EquityMethodInvestmentOwnershipPercentage` on `srt:ScheduleOfEquityMethodInvestmentEquityMethodInvesteeNameAxis` = `msft:OpenAIGlobalLlcMember`, rounded to $0.1B | **Include** from the instance XML, as Microsoft's figure |
+| Amazon | Names "Anthropic, PBC": upward adjustments to its Anthropic preferred stock (Q1 2026 $12.3B, Q2 2026 $50.5B, about zero in Q3 2026), the preferred's carrying value ($92.5B, 164M shares) and the notes' fair value ($146.2B, gains to other comprehensive income); a 12% ownership cap | `amzn:AnthropicMember` on a few facts only, under the equity-method investee axis; the notes' fair value carries no dimension | **Include** as the filing's own "Anthropic" paragraph, stored as text per quarter |
+| Alphabet | "a $40.0 billion investment in a private company"; never names it | — | **Cut** (`alphabet-anthropic-stake`) |
+
+Neither derived number holds. Microsoft accounts for OpenAI with hypothetical liquidation at book value "because our liquidation rights and priorities differ from our underlying ownership interest", books dilution gains in the same line, and may record "on a lag of up to three months", so dividing its figure by its stake is not OpenAI's loss. Amazon's two marks disagree (the preferred at its last observable price, about $564 a share; the notes at full fair value, about $795 a preferred-equivalent), it discloses no total share count, and 12% is a cap rather than a stake, so neither is Anthropic's valuation. Both are shown as the filer's numbers.
+
+**Published rate limits.**
+
+| Lab | Source | Result | Verdict |
+|---|---|---|---|
+| OpenAI | `developers.openai.com/api/docs/models/{slug}.md`, already fetched for the catalog | A `## Rate limits` table per model: Tier, RPM, TPM, Batch queue limit. The fixture of 2026-09-22 shows Tier 1 to 5; live shows Build, Launch, Grow ("Oct 6 — Simplified API usage tiers from five to three") | **Include**, keyed on tier name |
+| Anthropic | `platform.claude.com/docs/en/api/rate-limits.md` | One table per tier (Start, Build, Scale): Model, RPM, ITPM, OTPM; 30 rows. Release notes date past changes (2026-06-26 "We've raised rate limits across the Claude API"). No validators | **Include** |
+| xAI | `docs.x.ai/developers/rate-limits.md` | 13 models × 5 tiers (T0–T4), RPS and TPM packed per cell; robots.txt allows `/` | **Include** |
+| Meta | `dev.meta.ai/docs/pricing-rate-limits.md`, already fetched for pricing | Model, RPM, TPM, Other limits; 9 rows, no tiers | **Include** |
+| Google | `aistudio.google.com/docs/rate-limits.md` | Per-model RPM, TPM and RPD are console-only ("can be viewed in Google AI Studio") | **Cut** (`google-rate-limits`) |
+| Mistral | `docs.mistral.ai/admin/billing-usage/usage-limits.md` | Limits shown only in the signed-in Admin Panel | **Cut** (`mistral-rate-limits`) |
+
+Interpretation, marked as such: published limits are tier design and abuse control (Anthropic's page says they are "designed to prevent API abuse"), and they move in announced steps. They are a dated step series beside the status-page incidents, never a capacity gauge.
+
+**Posted pay.** US pay-transparency laws put salary bands in postings. The midpoint of each USD annual band, then the median per role family:
+
+| | OpenAI (Ashby, `includeCompensation=true`, 14.2 MB) | Anthropic (Greenhouse, `content=true&pay_transparency=true`, 10.2 MB) |
+|---|---|---|
+| Roles with a usable USD annual band | 631 of 813 (78%) | 535 of 681 (79%) |
+| All | $307.5K | $350.0K |
+| Research (OpenAI "Research"; Anthropic "AI Research & Engineering") | $370.5K (n=53) | $505.0K (n=59) |
+| Software engineering (OpenAI "Applied AI"; Anthropic "Engineering & Design - Product", "Software Engineering - Infrastructure") | $355.5K (n=112) | $405.0K (n=87) |
+
+Sales is not compared: Anthropic posts on-target earnings and OpenAI base pay. xAI's structured pay field is empty on every role (`xai-pay-bands`) and Mistral posts no pay (`mistral-pay-bands`). Greenhouse's docs: "Job Board data is publicly available, so authentication is not required for any GET endpoints"; Ashby documents `includeCompensation`. Bands are posted ranges, not offers; they cover US postings only and exclude equity, the larger part of pay at these labs. The signal is a cell's change over time, not the gap between labs. The department mapping is kept by hand: "Applied AI" means product engineering at OpenAI and solutions architects at Anthropic.
+
+The xai board's `company_name` now reads "SpaceXSI" on all 300 roles; the hiring caveat says so.

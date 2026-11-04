@@ -232,7 +232,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'Open roles per lab, counted from the CURRENT job-board set (a role missing from the board is closed), by department. ' +
         'feed says what the number is: ok, no_rows (feed registered, nothing parsed yet), or no_public_feed — Google and Meta, which have no ' +
         'public hiring feed, so their total is 0 with the audit’s reason rather than a guess. xAI’s board is blended with SpaceX ' +
-        '(every row carries company_name "SpaceXAI"); the caveat and company_names travel with the row so you can say so. ' +
+        '(every row carries company_name "SpaceXAI", now "SpaceXSI"); the caveat and company_names travel with the row so you can say so. ' +
         'Optional provider filter. ' +
         PROVENANCE,
       inputSchema: z.object({ provider: ProviderSchema.optional() }),
