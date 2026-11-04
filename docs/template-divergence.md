@@ -111,6 +111,7 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 - `scripts/check-design-tokens.ts` — the app's own palette ramp in the allowed-color list is `iris`, not `clay`
 - `scripts/check-mirrors.ts` — reference pass only; the template's mirror pass compares server/utils/users.ts with mcp/src/server.ts, neither of which exists here (upstream candidate: skip a mirror whose files are absent)
 - `scripts/check-seo.ts` — no content/blog pass; adds a rule that every publicPage value is a literal, because Nuxt drops the whole key otherwise (upstream candidate)
+- `scripts/ci.ts` — the gate list matches this app's checks: no `forkless:check` (not a template fork shape with optional billing/referral layers to strip)
 - `scripts/generate-brand-assets.ts` — display face at weight 500 and waits for the font stylesheets before shooting the OG image (upstream candidate: the stylesheet wait)
 - `server/api/status.get.ts` — public, with per-source freshness: the status payload is built by collectStatus() in fleet-status.ts, which the MCP get_status tool shares
 - `server/plugins/error-logger.ts` — no PostHog $exception capture or session lookup; logs errorDetail() from the terminal layer so the cause of a D1 fault reaches the digest
