@@ -43,8 +43,9 @@ instead, because the Workers Builds image cannot launch Chromium — `.github/wo
 
 ## Deploy
 
-Pushing to `main` builds and deploys through Workers Builds. **Migrations are not applied for
-you**: after any schema change, run `bun run db:migrate:remote`. `GET /api/status` reports
+Pushing to `main` builds and deploys through Workers Builds. Its deploy command,
+`bun run deploy:ci`, applies pending D1 migrations first, so a migration that fails stops the
+deploy. A manual `bun run deploy` skips them; run `bun run db:migrate:remote` after one. `GET /api/status` reports
 `migrations.pending` so the gap is visible from outside.
 
 Bindings live in `wrangler.toml` (one environment, no preview). `fleet.json` must match it —
