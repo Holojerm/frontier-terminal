@@ -2,11 +2,13 @@ import { describe, expect, test } from 'vitest'
 
 import {
   AshbyJobsOutput,
+  CareersFeedJobsOutput,
   GreenhouseJobsOutput,
   contentHash,
   jobKey,
 } from '../../server/pipeline/contracts'
 import { parseAnthropicGreenhouse } from '../../server/pipeline/parsers/hiring/anthropic-greenhouse'
+import { parseGoogleCareers } from '../../server/pipeline/parsers/hiring/google-careers'
 import { parseMistralAshby } from '../../server/pipeline/parsers/hiring/mistral-ashby'
 import { JoinRaceError, MAX_UNJOINED_JOBS } from '../../server/pipeline/parsers/hiring/common'
 import { parseOpenaiAshby } from '../../server/pipeline/parsers/hiring/openai-ashby'
@@ -77,6 +79,47 @@ describe('hiring lane', () => {
       published_at: '2026-07-01T15:57:14.002+00:00',
       company_name: null,
     })
+  })
+
+  test('google careers: keeps the 27 DeepMind roles of 31, counts the other employers, keeps labels verbatim', () => {
+    const out = parseGoogleCareers(fixtureText('fixtures/hiring/google-careers.xml'))
+    expect(CareersFeedJobsOutput.safeParse({ rows: out.rows }).success).toBe(true)
+    expect(out.rows).toHaveLength(27)
+    expect(out.skipped).toBe('Google 2, YouTube 2')
+    for (const row of out.rows) {
+      expect(row.provider).toBe('google')
+      expect(row.company_name).toBe('DeepMind')
+      expect(row.department).not.toBeNull()
+      expect(row.source_url).toBe('https://www.google.com/about/careers/applications/jobs/feed.xml')
+      expect(row.fetched_at).toBe('2026-11-04T13:49:13Z')
+    }
+    expect(new Set(out.rows.map((r) => r.department)).size).toBe(15)
+    expect(out.rows[0]).toMatchObject({
+      job_id: '102723867012670150',
+      title: 'Research Scientist, Multimodal Alignment, Safety and Fairness, DeepMind',
+      department: 'JOB_CATEGORY_UNSPECIFIED',
+      team: null,
+      location: 'Mountain View, CA, USA; Kirkland, WA, USA; New York, NY, USA',
+      employment_type: 'FULL_TIME',
+      published_at: '2026-10-23T22:06:45.460Z',
+      updated_at: null,
+    })
+    // A role filed under three categories keeps all three, in feed order.
+    expect(out.rows.find((r) => r.job_id === '98284566535381702')?.department).toBe(
+      'BUSINESS_STRATEGY, INFORMATION_TECHNOLOGY, JOB_CATEGORY_UNSPECIFIED',
+    )
+    // An empty <state/> is left out rather than printed as a blank part.
+    expect(out.rows.find((r) => r.job_id === '126767008036332230')?.location).toBe(
+      'Mountain View, CA, USA; New York, NY, USA; Zürich, Switzerland',
+    )
+  })
+
+  test('google careers: a feed with no DeepMind role, or no <jobs> root, fails rather than reading as zero', () => {
+    const feed = fixtureText('fixtures/hiring/google-careers.xml')
+    expect(() =>
+      parseGoogleCareers(feed.replaceAll('<employer>DeepMind<', '<employer>Google<')),
+    ).toThrow('no DeepMind roles')
+    expect(() => parseGoogleCareers('<html></html>')).toThrow('no <jobs> root')
   })
 
   test('greenhouse anthropic: parses fixtures/hiring/anthropic-greenhouse.json — 59 rows, department from the /departments join', () => {

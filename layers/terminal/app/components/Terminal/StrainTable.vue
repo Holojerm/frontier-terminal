@@ -4,7 +4,7 @@
 // A count is a proxy for what the vendor chose to post — never an SLA — so
 // each row carries the feed's caveat, and a prior-window count that starts
 // after the history does is marked partial, not low. A feed the audit cut is
-// a row that says so (sources.yaml `cut.xai-status`, `cut.meta-status`).
+// a row that says so (sources.yaml `cut.meta-status`).
 
 import { absoluteStamp, relativeStamp } from '../../../shared/utils/terminal-format'
 import type { IncidentProviderView, IncidentsData } from '../../../shared/utils/terminal-types'

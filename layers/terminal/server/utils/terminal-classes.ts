@@ -188,19 +188,19 @@ export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string 
     provider: 'xai',
     class: 'balanced',
     reason:
-      'xAI’s models page recommends one model and names no balanced tier. The cheaper grok SKUs have no positioning statement to transcribe.',
+      'xAI’s models page answers “Which model should I choose?” with one model, Grok 4.7, and names no balanced tier. The cheaper SKUs’ own pages describe capability (“Fast, reliable model with strong tool calling”), not a cost tradeoff.',
   },
   {
     provider: 'xai',
     class: 'economy',
     reason:
-      'xAI publishes prices for grok-4.3 and grok-build-0.1 (full catalog) but no statement that either is the cost-sensitive choice.',
+      'xAI prices grok-4.3, the grok-4.20 models and grok-build-0.1 below Grok 4.7 (full catalog), but neither its models page nor any model page says which is the choice for cost-sensitive work.',
   },
   {
     provider: 'google',
     class: 'balanced',
     reason:
-      'Google’s only price-performance sentence (“Our best price-performance model”) describes Gemini 2.5 Flash, a previous generation; the same page directs new projects to its latest models. No current model has such a sentence. Every Gemini SKU is in the full catalog.',
+      'Google’s models page names no single intelligence-for-cost model. “Our best price-performance model” describes Gemini 2.5 Flash, a previous generation the page steers new projects away from, and “Frontier-class performance rivaling larger models at a fraction of the cost” is printed word for word on two cards, Gemini 3.1 Flash-Lite and Gemini 3 Flash (Preview). Every Gemini SKU is in the full catalog.',
   },
   {
     provider: 'meta',
@@ -208,20 +208,22 @@ export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string 
     reason:
       'Meta’s models page lists two API text lines, Muse Wonder for capability and Muse Spark for cost-sensitive volume, and names no middle tier.',
   },
-  // Checked 2026-11-01 across models.md, the model selection guide and each
-  // model's own page. Mistral Large 4 is the printed replacement for the one
+  // Checked 2026-11-01 and again 2026-11-04 (pages unchanged) across
+  // models.md, the model selection guide and each model's own page. Mistral
+  // Large 4 is the printed replacement for the one
   // model called "frontier-class" (Medium 3.5, deprecated 2026-10-31), but a
   // replacement column is not a sentence, so no cell is mapped from it.
   {
     provider: 'mistral',
     class: 'flagship',
     reason:
-      'Mistral’s docs name no flagship or start-here model: Mistral Large 4 is “a state-of-the-art, open-weight, general-purpose multimodal model,” and the one “frontier-class” sentence belongs to the deprecated Medium 3.5. Every Mistral SKU is in the full catalog.',
+      'Mistral’s docs name no flagship or start-here text model: Mistral Large 4 is “a state-of-the-art, open-weight, general-purpose multimodal model,” the one “frontier-class” sentence belongs to the deprecated Medium 3.5, and the one “Flagship” is a transcription model (Voxtral Small Transcribe 3). Every Mistral SKU is in the full catalog.',
   },
   {
     provider: 'mistral',
     class: 'balanced',
-    reason: 'No Mistral page names a middle tier.',
+    reason:
+      'No Mistral page names a middle tier: the model selection guide rates speed and performance from 0 to 5 and says nothing about cost tradeoffs.',
   },
   {
     provider: 'mistral',

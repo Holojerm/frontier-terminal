@@ -144,7 +144,7 @@ describe('scopes', () => {
       'mistral-pricing-md',
     ])
     expect(sourceIdsForScope('survey', ALL)).toEqual(ALL_IDS)
-    expect(ALL_IDS).toHaveLength(33)
+    expect(ALL_IDS).toHaveLength(35)
     // The status feeds ride the six-hourly survey only, never the EDGAR tick.
     expect(sourceIdsForScope('edgar', ALL)).not.toContain('openai-status')
   })
@@ -154,7 +154,7 @@ describe('baseline', () => {
   it('stores entities for every parser source, zero changes, one snapshot and one raw object each', async () => {
     const report = await run('survey', ALL_IDS)
 
-    expect(report.sources).toHaveLength(33)
+    expect(report.sources).toHaveLength(35)
     expect(report.failed).toBe(0)
     const byId = Object.fromEntries(report.sources.map((s) => [s.source_id, s]))
     // Sides and the cross-check are fetched and snapshotted but yield no entities.
@@ -172,8 +172,8 @@ describe('baseline', () => {
 
     expect(await rows.changes()).toHaveLength(0)
     expect(await rows.alerts()).toHaveLength(0)
-    expect(await rows.snapshots()).toHaveLength(33)
-    expect(await rows.runs()).toHaveLength(33)
+    expect(await rows.snapshots()).toHaveLength(35)
+    expect(await rows.runs()).toHaveLength(35)
     expect(await rows.ops()).toHaveLength(0)
 
     const entities = await rows.entities()
@@ -196,6 +196,8 @@ describe('baseline', () => {
     // 9 token-priced ids; OCR, audio-only and TTS rows print other units.
     expect(perSource.get('mistral-pricing-md')).toBe(9)
     expect(perSource.get('mistral-ashby')).toBe(19)
+    // DeepMind roles only; the fixture's Google and YouTube roles are skipped.
+    expect(perSource.get('google-careers')).toBe(27)
     // Tracked forms only (parsers/sec/forms.ts): 13 of SPCX's 81 recent filings.
     expect(perSource.get('edgar-submissions-spcx')).toBe(13)
     expect(perSource.get('edgar-submissions-msft')).toBe(9)
@@ -208,6 +210,8 @@ describe('baseline', () => {
     expect(perSource.get('anthropic-status')).toBe(50)
     expect(perSource.get('google-cloud-status')).toBe(1)
     expect(perSource.get('mistral-status')).toBe(50)
+    // 316 RSS items, one per (component, incident), fold to 97 incidents.
+    expect(perSource.get('xai-status')).toBe(97)
     // The disclosure index: 12 reports and 3 notices, a baseline like any first parse.
     expect(perSource.get('openai-misalignment-reports')).toBe(15)
     expect(perSource.has('openrouter-models')).toBe(false)
@@ -230,7 +234,7 @@ describe('baseline', () => {
     ])
 
     const keys = await rawKeys()
-    expect(keys).toHaveLength(33)
+    expect(keys).toHaveLength(35)
     expect(keys).toContain(
       (await rows.snapshots()).find((s) => s.source_id === 'xai-models-md')!.raw_key,
     )
@@ -908,7 +912,7 @@ describe('failures', () => {
   })
 
   it('rejects a source id that is not an include source', async () => {
-    await expect(run('survey', ['google-hiring'])).rejects.toThrow('not include sources')
+    await expect(run('survey', ['meta-hiring'])).rejects.toThrow('not include sources')
   })
 })
 

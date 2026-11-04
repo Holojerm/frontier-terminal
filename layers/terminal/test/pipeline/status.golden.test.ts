@@ -3,6 +3,7 @@ import { describe, expect, test } from 'vitest'
 import {
   GoogleCloudIncidentsOutput,
   StatuspageIncidentsOutput,
+  XaiStatusIncidentsOutput,
   contentHash,
   incidentKey,
 } from '../../server/pipeline/contracts'
@@ -16,6 +17,7 @@ import {
 import { parseMistralStatus } from '../../server/pipeline/parsers/status/mistral-status'
 import { parseOpenaiStatus } from '../../server/pipeline/parsers/status/openai-status'
 import { statuspageIncidentUrl, utcStamp } from '../../server/pipeline/parsers/status/statuspage'
+import { parseXaiStatus, rfc822ToIso } from '../../server/pipeline/parsers/status/xai-status'
 import { fixtureText, provenanceOf } from './fixtures'
 
 // Status lane golden tests. Expected values are read straight from the
@@ -26,6 +28,7 @@ const openaiText = fixtureText('fixtures/status/openai-status.json')
 const anthropicText = fixtureText('fixtures/status/anthropic-status.json')
 const googleText = fixtureText('fixtures/status/google-cloud-status.json')
 const mistralText = fixtureText('fixtures/status/mistral-status.json')
+const xaiText = fixtureText('fixtures/status/xai-status.xml')
 
 const DETECTED_AT = '2026-09-08T22:00:00Z'
 
@@ -130,6 +133,62 @@ describe('status lane', () => {
       incident_url: 'https://status.mistral.ai/incidents/e5fd508c-3299-4b85-9d88-8e94fc245522',
     })
     expect(out.rows[0]?.incident_id).toBe('04b18f96-1aa1-4a69-b578-75ace96ca212')
+  })
+
+  test('xai: 316 RSS items fold to 97 incidents, one row per guid with every component listed', () => {
+    const out = parseXaiStatus(xaiText)
+    expect(XaiStatusIncidentsOutput.safeParse(out).success).toBe(true)
+    expect(out.rows).toHaveLength(97)
+
+    const prov = provenanceOf('xai-status')
+    for (const row of out.rows) {
+      expect(row.provider).toBe('xai')
+      expect(row.source_url).toBe('https://status.x.ai/feed.xml')
+      expect(row.fetched_at).toBe(prov.fetched_at)
+      expect(row.components.length).toBeGreaterThan(0)
+      expect(row.status).toBe('resolved')
+      expect(row.started_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}Z$/)
+      expect(row.resolved_at).toMatch(/Z$/)
+    }
+    const impacts = new Map<string, number>()
+    for (const r of out.rows) impacts.set(r.impact, (impacts.get(r.impact) ?? 0) + 1)
+    expect(Object.fromEntries(impacts)).toEqual({ disruption: 90, outage: 5, info: 2 })
+
+    // Nine component items, one incident; the link is the first component's by name.
+    expect(out.rows.find((r) => r.incident_id === '8nlyd6t95xjm')).toMatchObject({
+      title: 'Degraded performance and errors across Cursor services',
+      impact: 'disruption',
+      started_at: '2026-10-13T00:22:00Z',
+      resolved_at: '2026-10-13T03:07:41Z',
+      components: [
+        'Automations',
+        'Bugbot',
+        'CLI',
+        'Cloud Agents',
+        'Cursor IDE (Desktop)',
+        'Cursor IDE (iOS)',
+        'Grok Bot',
+        'Origin',
+        'cursor.com',
+      ],
+      incident_url: 'https://status.x.ai/automations/8nlyd6t95xjm',
+    })
+    // Titles are stored as the feed prints them, entities decoded once.
+    expect(out.rows.find((r) => r.incident_id === 'ps_b88ca87004b1d3b9')?.title).toBe(
+      '3 "Slow clones from GH due to Github degradation"',
+    )
+    expect(out.rows[0]?.incident_id).toBe('0cn36t8pvhfj')
+  })
+
+  test('xai: component items that disagree, or a date in another format, fail the parse', () => {
+    const first = xaiText.indexOf('<category>disruption</category>')
+    expect(() =>
+      parseXaiStatus(
+        xaiText.slice(0, first) + '<category>outage</category>' + xaiText.slice(first + 31),
+      ),
+    ).toThrow('differs between its component items')
+    expect(rfc822ToIso('Tue, 03 Nov 2026 21:40:43 GMT')).toBe('2026-11-03T21:40:43Z')
+    expect(() => rfc822ToIso('2026-11-03T21:40:43Z')).toThrow('unparseable date')
   })
 
   test('statuspage stamps: a Z stamp passes byte for byte, an offset becomes the same instant in UTC', () => {
