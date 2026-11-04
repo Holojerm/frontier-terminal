@@ -157,6 +157,13 @@ describe('evaluateTheses', () => {
     expect(by['anthropic-hiring-scale']!.status).toBe('holding')
     expect(by['anthropic-rival-price-war']!.status).toBe('unresolved')
     expect(by['anthropic-safety-asset']!.status).toBe('unresolved')
+    for (const id of [
+      'anthropic-enterprise-lead',
+      'anthropic-sdk-downloads',
+      'anthropic-enterprise-growth',
+    ]) {
+      expect(by[id]!.status, id).toBe('unresolved')
+    }
     expect(runs.every((r) => r.changed)).toBe(true)
 
     const readings = await db.select().from(schema.claimReadings)
@@ -178,7 +185,7 @@ describe('evaluateTheses', () => {
     })
     expect(runs.some((r) => r.changed)).toBe(false)
     const log = await db.select().from(schema.claimStatusChanges)
-    expect(log.filter((r) => r.thesis_id === 'anthropic')).toHaveLength(5)
+    expect(log.filter((r) => r.thesis_id === 'anthropic')).toHaveLength(8)
     const after = await db.select().from(schema.claimReadings)
     expect(after.map((r) => r.computed_at)).toEqual(before.map((r) => r.computed_at))
   })
@@ -195,6 +202,10 @@ describe('evaluateTheses', () => {
       'holding',
       'unresolved',
       'holding',
+      'unresolved',
+      // Claims 6–8 read recipes this store has no rows for.
+      'unresolved',
+      'unresolved',
       'unresolved',
     ])
     const premium = thesis.claims[0]!

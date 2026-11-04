@@ -428,6 +428,7 @@ describe('the Compute thesis on a seeded store', () => {
       'compute-labs-demand-share': 'holding',
       'compute-physical-buildout': 'unresolved',
       'compute-rented-demand': 'holding',
+      'compute-datacenter-power': 'unresolved',
     })
   })
 
