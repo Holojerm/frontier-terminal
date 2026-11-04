@@ -56,19 +56,45 @@ const lab = labParam
 // the HTML. The shapes are unchanged: these return the same types, with fewer
 // rows in them.
 //
+// Where a panel shows only the first few rows, the transform keeps only those
+// and records how many there were, so the "All N" links still count the full
+// list.
+//
 // EXPLICIT `key` PER LAB, and it is load-bearing. Nuxt derives an automatic key
 // from the call site, not from what a transform closes over — so all the lab
 // pages would share one cache entry and a client-side navigation between them
 // would render the first lab's rows under the second lab's heading.
+const ALERTS_SHOWN = 10
+const CATALOG_ROWS = 15
+const INCIDENTS_SHOWN = 10
+type LabPrices = PricesData & { lab_skus: number }
+type LabIncidents = IncidentsData & { incident_count: number }
+
+// No explicit generic on the reshaping fetches: it would pin the data type to
+// the response type, which a transform that adds a field cannot satisfy.
 const [prices, revenue, rankings, spend, hiring, incidents, releases, alerts] = await Promise.all([
-  useFetch<PricesData>('/api/prices', {
+  useFetch('/api/prices', {
     key: `lab-prices:${lab}`,
-    transform: (d: PricesData): PricesData => ({
+    transform: (d: PricesData): LabPrices => {
+      const rows = d.rows.filter((r) => r.provider === lab)
+      return {
+        ...d,
+        // A readout, not the catalog: priced rows only, a page of them; the
+        // rest are on /prices with this lab preselected.
+        rows: rows
+          .filter((r) => r.input_per_mtok !== null || r.output_per_mtok !== null)
+          .slice(0, CATALOG_ROWS),
+        lab_skus: rows.length,
+      }
+    },
+  }),
+  useFetch<RevenueData>('/api/revenue', {
+    key: `lab-revenue:${lab}`,
+    transform: (d: RevenueData): RevenueData => ({
       ...d,
-      rows: d.rows.filter((r) => r.provider === lab),
+      providers: d.providers.filter((p) => p.provider === lab),
     }),
   }),
-  useFetch<RevenueData>('/api/revenue'),
   useFetch<RankingsData>('/api/rankings', {
     key: `lab-rankings:${lab}`,
     transform: (d: RankingsData): RankingsData => ({
@@ -76,14 +102,32 @@ const [prices, revenue, rankings, spend, hiring, incidents, releases, alerts] = 
       top_models: d.top_models.filter((m) => m.provider === lab),
     }),
   }),
-  useFetch<SpendData>('/api/spend'),
-  useFetch<HiringHistoryData>('/api/hiring/history'),
-  useFetch<IncidentsData>('/api/incidents', {
-    key: `lab-incidents:${lab}`,
-    transform: (d: IncidentsData): IncidentsData => ({
+  useFetch<SpendData>('/api/spend', {
+    key: `lab-spend:${lab}`,
+    transform: (d: SpendData): SpendData => ({
       ...d,
-      incidents: d.incidents.filter((i) => i.provider === lab),
+      providers: d.providers.filter((p) => p.provider === lab),
+      excluded: d.excluded.filter((e) => e.provider === lab),
     }),
+  }),
+  useFetch<HiringHistoryData>('/api/hiring/history', {
+    key: `lab-hiring:${lab}`,
+    transform: (d: HiringHistoryData): HiringHistoryData => ({
+      ...d,
+      providers: d.providers.filter((p) => p.provider === lab),
+    }),
+  }),
+  useFetch('/api/incidents', {
+    key: `lab-incidents:${lab}`,
+    transform: (d: IncidentsData): LabIncidents => {
+      const rows = d.incidents.filter((i) => i.provider === lab)
+      return {
+        ...d,
+        providers: d.providers.filter((p) => p.provider === lab),
+        incidents: rows.slice(0, INCIDENTS_SHOWN),
+        incident_count: rows.length,
+      }
+    },
   }),
   useFetch<ReleasesData>('/api/releases', {
     key: `lab-releases:${lab}`,
@@ -92,16 +136,16 @@ const [prices, revenue, rankings, spend, hiring, incidents, releases, alerts] = 
       rows: d.rows.filter((r) => r.provider === lab),
     }),
   }),
-  // The big one: /api/alerts at tier=all&limit=200 is ~600KB, most of this
-  // page's weight. `alertLabs` is the same predicate summarizeLab applies
-  // below, so this narrows to exactly the rows the page was going to keep.
+  // The big one: /api/alerts at tier=all&limit=200 is ~600KB. `alertLabs` is
+  // the same predicate summarizeLab applies below; the page renders the newest
+  // ALERTS_SHOWN of the lab's rows, and `total` becomes the lab's count.
   useFetch<AlertsData>('/api/alerts', {
     key: `lab-alerts:${lab}`,
     query: { tier: 'all', limit: 200 },
-    transform: (d: AlertsData): AlertsData => ({
-      ...d,
-      rows: d.rows.filter((a) => alertLabs(a).includes(lab)),
-    }),
+    transform: (d: AlertsData): AlertsData => {
+      const rows = d.rows.filter((a) => alertLabs(a).includes(lab))
+      return { ...d, rows: rows.slice(0, ALERTS_SHOWN), total: rows.length }
+    },
   }),
 ])
 
@@ -138,6 +182,8 @@ const [adoption, limits, pay, parents, power] = await Promise.all([
     transform: (d: DataCentersData): DataCentersData => ({
       ...d,
       labs: d.labs.filter((l) => l.lab === lab),
+      // Every tracked site (~13 KB); only /compute's site table reads it.
+      site_list: [],
     }),
   }),
 ])
@@ -175,8 +221,9 @@ const failed = computed(() =>
   ),
 )
 
-const ALERTS_SHOWN = 10
-const labAlerts = computed(() => summary.value.alerts.slice(0, ALERTS_SHOWN))
+// Already the newest ALERTS_SHOWN; the fetch cut them and kept the count.
+const labAlerts = computed(() => summary.value.alerts)
+const alertCount = computed(() => alerts.data.value?.total ?? 0)
 
 // Each axis payload, narrowed to this lab. The components take the whole
 // payload shape so the stamps, rules and citations travel with the rows.
@@ -204,33 +251,17 @@ const incidentsOf = computed(() =>
     ? { ...incidents.data.value, providers: [summary.value.incidents] }
     : null,
 )
-// A readout, not the catalog: priced rows only, a page of them, the rest on
-// /prices with this lab preselected.
-const CATALOG_ROWS = 15
-// Already this lab's rows — the fetch above narrowed them server-side.
-const labRows = computed(() => prices.data.value?.rows ?? [])
-const pricesOf = computed(() =>
-  prices.data.value
-    ? {
-        ...prices.data.value,
-        rows: labRows.value
-          .filter((r) => r.input_per_mtok !== null || r.output_per_mtok !== null)
-          .slice(0, CATALOG_ROWS),
-      }
-    : null,
-)
+// Already the page of priced rows the readout shows; `lab_skus` counts them all.
+const labSkus = computed(() => prices.data.value?.lab_skus ?? 0)
 const topModels = computed(() => rankings.data.value?.top_models ?? [])
 const labReleases = computed(() => releases.data.value?.rows ?? [])
-const labIncidents = computed(() => incidents.data.value?.incidents.length ?? 0)
+const labIncidents = computed(() => incidents.data.value?.incident_count ?? 0)
 const pairs = COMPARE_PAIRS.filter((pair) => pair.includes(lab))
 
 // The incidents behind the strain count, newest first: already this lab's
-// rows, narrowed on the server above.
+// newest INCIDENTS_SHOWN, cut on the server above.
 const now = useNow()
-const INCIDENTS_SHOWN = 10
-const recentIncidents = computed(() =>
-  (incidents.data.value?.incidents ?? []).slice(0, INCIDENTS_SHOWN),
-)
+const recentIncidents = computed(() => incidents.data.value?.incidents ?? [])
 const incidentColumns: TableColumn[] = [
   { key: 'started', label: 'Started', class: 'whitespace-nowrap font-mono text-xs' },
   { key: 'title', label: 'Incident' },
@@ -242,8 +273,8 @@ const incidentColumns: TableColumn[] = [
 // Every tab renders on the server; the panel ids are unchanged, so an old
 // anchor (`#revenue`, `#limits`) opens the tab that holds it.
 const tabs = computed(() => [
-  { value: 'overview', label: 'Overview', badge: summary.value.alerts.length || undefined },
-  { value: 'prices', label: 'Prices', badge: labRows.value.length || undefined },
+  { value: 'overview', label: 'Overview', badge: alertCount.value || undefined },
+  { value: 'prices', label: 'Prices', badge: labSkus.value || undefined },
   { value: 'revenue', label: 'Revenue' },
   { value: 'demand', label: 'Demand' },
   { value: 'hiring', label: 'Hiring' },
@@ -288,8 +319,8 @@ const tabs = computed(() => [
             title="Alerts"
             :note="`Alerts and minor changes whose cited rows name ${display}, newest first.`"
             :more="
-              summary.alerts.length > labAlerts.length
-                ? { label: `All ${summary.alerts.length} on the alerts page`, to: '/alerts' }
+              alertCount > labAlerts.length
+                ? { label: `All ${alertCount} on the alerts page`, to: '/alerts' }
                 : undefined
             "
             :flush="labAlerts.length > 0"
@@ -332,9 +363,9 @@ const tabs = computed(() => [
           title="API prices"
           note="$ per million tokens. The like-for-like classes come first, then every priced SKU on the vendor’s page."
           :more="
-            labRows.length > (pricesOf?.rows.length ?? 0)
+            labSkus > (prices.data.value?.rows.length ?? 0)
               ? {
-                  label: `All ${labRows.length} ${display} SKUs`,
+                  label: `All ${labSkus} ${display} SKUs`,
                   to: `/prices?provider=${lab}#catalog`,
                 }
               : undefined
@@ -345,11 +376,11 @@ const tabs = computed(() => [
             <TerminalPriceMatrix :matrix="prices.data.value.matrix" :providers="[lab]" />
             <div class="border-t border-default p-3">
               <TerminalGap
-                v-if="labRows.length === 0"
+                v-if="labSkus === 0"
                 title="No SKU rows for this lab yet."
                 :action="{ label: 'See coverage', to: '/data#coverage' }"
               />
-              <TerminalPriceTable v-else :prices="pricesOf!" bare />
+              <TerminalPriceTable v-else :prices="prices.data.value" bare />
             </div>
           </template>
         </TerminalPanel>
