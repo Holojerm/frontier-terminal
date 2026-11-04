@@ -3,6 +3,8 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
+import { asOfLicense, licenseWindowStart, rowLicense, withLicense } from '~~/shared/utils/license'
+import { PointInTimeError } from '../server/utils/terminal-asof'
 import { contentHash, contentHashOfText } from '../server/pipeline/contracts'
 import { insertRows } from '../server/pipeline/store'
 import {
@@ -15,8 +17,14 @@ import {
   defuseFormula,
   exportFilter,
   exportTable,
+  historyRule,
   jsonChunks,
+  jsonEnvelopeChunks,
+  licenseHeaders,
+  licenseWindow,
   parseExportPath,
+  parseExportQuery,
+  windowOf,
   sampleOf,
   SAMPLE_ROWS,
   streamOf,
@@ -310,5 +318,167 @@ describe('streamOf', () => {
     const text = await new Response(stream).text()
     expect(text.split('\r\n')[0]).toBe(exportTable('snapshots')!.columns.join(','))
     expect(text).toContain('raw/xai-models-md/2026-09-07T10:00:01.000Z.md')
+  })
+})
+
+describe('the license window', () => {
+  // Fixed instants, so the window never moves under the test.
+  const FROM = '2026-09-08'
+
+  function incident(id: string, started_at: string | null, first_seen_at: string) {
+    const payload = { incident_id: id, title: `Incident ${id}`, started_at }
+    return {
+      source_id: 'anthropic-status',
+      entity_key: `incident:anthropic:${id}`,
+      entity_type: 'incident',
+      provider: 'anthropic',
+      snapshot_id: 'xai-models-md:2026-09-07T10:00:01.000Z',
+      content_hash: contentHash(payload),
+      payload: JSON.stringify(payload),
+      first_seen_at,
+      source_url: 'https://status.claude.com/history.atom',
+      fetched_at: first_seen_at,
+    }
+  }
+
+  beforeAll(async () => {
+    await insertRows(db, 'entities', [
+      // Old, and published before the split: CC BY for good.
+      incident('a-old', '2026-01-01T00:00:00Z', '2026-09-07T10:00:01.000Z'),
+      // Old, and first published after the split: CC BY-NC once outside the window.
+      incident('b-old-late', '2026-01-02T00:00:00Z', '2026-12-01T00:00:00.000Z'),
+      incident('c-new', '2026-09-20T00:00:00Z', '2026-09-20T00:00:01.000Z'),
+      // No start in the feed: dated by when we first stored it.
+      incident('d-undated', null, '2026-09-21T00:00:00.000Z'),
+    ])
+  })
+
+  it('states the window from today, 90 days back, as a day', () => {
+    expect(licenseWindowStart(new Date('2026-11-04T12:00:00Z'))).toBe('2026-08-06')
+    expect(rowLicense('2026-09-01', '2026-12-01T00:00:00Z', '2026-08-06').id).toBe('CC-BY-4.0')
+    expect(rowLicense('2026-01-01', '2026-11-03T23:59:59Z', '2026-08-06').id).toBe('CC-BY-4.0')
+    expect(rowLicense('2026-01-01', '2026-11-04T00:00:00Z', '2026-08-06').id).toBe('CC-BY-NC-4.0')
+  })
+
+  it('puts the split beside every API payload, and labels an old as_of CC BY-NC', () => {
+    const now = new Date('2026-11-04T12:00:00Z')
+    expect(withLicense({ as_of: 'x' }, now)).toMatchObject({
+      as_of: 'x',
+      license: {
+        recent: { id: 'CC-BY-4.0', days: 90, from: '2026-08-06' },
+        older: { id: 'CC-BY-NC-4.0', published_from: '2026-11-04' },
+        terms: '/license',
+      },
+    })
+    expect(withLicense(null, now)).toBeNull()
+    expect(withLicense([1], now)).toEqual([1])
+    expect(asOfLicense('2026-08-05T23:59:59.000Z', now)).toBe('CC-BY-NC-4.0')
+    expect(asOfLicense('2026-08-06T00:00:00.000Z', now)).toBe('CC-BY-4.0')
+  })
+
+  it('cuts a time-indexed table in SQL, on its own date column', async () => {
+    const snapshots = exportTable('snapshots')!
+    const rule = historyRule('snapshots')
+    expect(await collect(csvChunks(db, windowOf(snapshots, rule, FROM)))).toBe(
+      `${snapshots.columns.join(',')}\r\n`,
+    )
+    const kept = JSON.parse(await collect(jsonChunks(db, windowOf(snapshots, rule, '2026-09-07'))))
+    expect(kept).toHaveLength(1)
+  })
+
+  it('cuts an entity view row by row, resuming across pages', async () => {
+    const incidents = exportTable('incidents')!
+    const recent = windowOf(incidents, historyRule('incidents'), FROM)
+    const all = JSON.parse(await collect(jsonChunks(db, recent))) as { entity_key: string }[]
+    expect(all.map((r) => r.entity_key)).toEqual([
+      'incident:anthropic:c-new',
+      'incident:anthropic:d-undated',
+    ])
+    // One row a page: each page skips the old rows before it.
+    const first = await recent.page(db, null, 1)
+    const second = await recent.page(db, first.at(-1)!, 1)
+    expect([...first, ...second].map((r) => r.entity_key)).toEqual(all.map((r) => r.entity_key))
+    expect(await recent.page(db, second.at(-1)!, 1)).toEqual([])
+  })
+
+  it('serves every row behind history=full, each labeled with its license', async () => {
+    const incidents = exportTable('incidents')!
+    const window = licenseWindow('incidents', incidents, { history: 'full' }, FROM)
+    expect(window).toMatchObject({ split: true, windowed: false })
+    const rows = JSON.parse(await collect(jsonChunks(db, window.table))) as Record<
+      string,
+      unknown
+    >[]
+    expect(Object.fromEntries(rows.map((r) => [r.entity_key, r.license]))).toEqual({
+      'incident:anthropic:a-old': 'CC-BY-4.0',
+      'incident:anthropic:b-old-late': 'CC-BY-NC-4.0',
+      'incident:anthropic:c-new': 'CC-BY-4.0',
+      'incident:anthropic:d-undated': 'CC-BY-4.0',
+    })
+    expect(Object.keys(rows[0]!)).toEqual(window.table.columns)
+    const csv = await collect(csvChunks(db, window.table))
+    expect(csv.split('\r\n')[0]).toContain(',license,source_url,fetched_at')
+
+    const headers = licenseHeaders(window)
+    expect(headers.Link).toContain('https://creativecommons.org/licenses/by-nc/4.0/')
+    expect(headers['X-License']).toMatch(/^CC-BY-NC-4\.0 for rows dated before 2026-09-08/)
+  })
+
+  it('wraps a full-history JSON download in its license', async () => {
+    const window = licenseWindow('incidents', exportTable('incidents')!, { history: 'full' }, FROM)
+    const body = JSON.parse(
+      await collect(
+        jsonEnvelopeChunks(db, window.table, undefined, { table: 'incidents', license: { x: 1 } }),
+      ),
+    ) as { table: string; license: unknown; rows: unknown[] }
+    expect(body.table).toBe('incidents')
+    expect(body.license).toEqual({ x: 1 })
+    expect(body.rows).toHaveLength(4)
+  })
+
+  it('serves the window by default and says so, and leaves a whole table whole', () => {
+    const recent = licenseWindow('changes', exportTable('changes')!, {}, FROM)
+    expect(recent).toMatchObject({ windowed: true, split: false })
+    expect(licenseHeaders(recent)).toMatchObject({
+      'X-License': 'CC-BY-4.0',
+      'X-History': expect.stringContaining('history=full'),
+    })
+    const prices = exportTable('prices_latest')!
+    for (const history of [undefined, 'full'] as const) {
+      const window = licenseWindow('prices_latest', prices, { history }, FROM)
+      expect(window.table).toBe(prices)
+      expect(licenseHeaders(window)['X-History']).toBeUndefined()
+    }
+  })
+
+  it('refuses an as_of before the window unless history=full, and labels a whole table rebuilt then', () => {
+    const old = '2026-09-01T00:00:00.000Z'
+    expect(() => licenseWindow('changes', exportTable('changes')!, { as_of: old }, FROM)).toThrow(
+      PointInTimeError,
+    )
+    expect(
+      licenseWindow('changes', exportTable('changes')!, { as_of: old, history: 'full' }, FROM)
+        .split,
+    ).toBe(true)
+    const prices = licenseWindow(
+      'prices_latest',
+      exportTable('prices_latest')!,
+      { as_of: old },
+      FROM,
+    )
+    expect(prices.split).toBe(true)
+    expect(prices.table.columns).toContain('license')
+    const recent = '2026-09-10T00:00:00.000Z'
+    expect(
+      licenseWindow('changes', exportTable('changes')!, { as_of: recent }, FROM).windowed,
+    ).toBe(true)
+  })
+
+  it('reads history off the query, recent or full, and refuses anything else', () => {
+    expect(parseExportQuery({})).toEqual({})
+    expect(parseExportQuery({ history: 'full' })).toEqual({ history: 'full' })
+    expect(() => parseExportQuery({ history: 'all' })).toThrow(/recent \(the default\) or full/)
+    // exportFilter leaves it to the window, as it leaves as_of to ExportTable.at.
+    expect(exportFilter(exportTable('changes')!, { history: 'full' })).toEqual({ where: undefined })
   })
 })

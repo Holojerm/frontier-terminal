@@ -3,7 +3,15 @@
 // primitives). The `h1` is one size on every page; the as-of stamp is the
 // payload's own, so a reader sees how fresh the screen is before reading it.
 // The error alert names what failed and never shows a stale number instead.
+// A data page (anything not `narrow` prose) ends with the data license, since
+// most of them show history older than its CC BY window.
 
+import {
+  DATA_LICENSE,
+  HISTORY_LICENSE,
+  LICENSE_SPLIT_EFFECTIVE,
+  LICENSE_WINDOW_DAYS,
+} from '#shared/utils/license'
 import { absoluteStamp, exactStamp } from '../../../shared/utils/terminal-format'
 
 withDefaults(
@@ -68,5 +76,14 @@ withDefaults(
     />
 
     <slot />
+
+    <p v-if="!narrow" class="max-w-3xl text-xs text-muted">
+      Data from the last {{ LICENSE_WINDOW_DAYS }} days is {{ DATA_LICENSE.short }}. Older data is
+      {{ HISTORY_LICENSE.short }}, except what we published before {{ LICENSE_SPLIT_EFFECTIVE }},
+      which stays {{ DATA_LICENSE.short }}.
+      <NuxtLink to="/license" class="text-primary underline underline-offset-2"
+        >How you can reuse it</NuxtLink
+      >.
+    </p>
   </div>
 </template>

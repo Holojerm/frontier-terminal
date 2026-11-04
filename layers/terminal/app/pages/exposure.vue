@@ -37,7 +37,7 @@ useSeo({
         'Quarterly capex and remaining performance obligations for five hyperscalers since 2020, and the figures Microsoft and Amazon tag on OpenAI and Anthropic, each value with the filing it came from.',
       dateModified: data.value?.as_of,
       variableMeasured: ['value', 'start', 'end', 'accession_no', 'filed'],
-      distribution: exportDistribution(site, 'exposure_quarters'),
+      distribution: exportDistribution(site, 'exposure_quarters', { fullHistory: true }),
     }),
   ],
 })
@@ -190,6 +190,13 @@ const filerLine = computed(() =>
             <NuxtLink to="/export/filed_facts.csv" external class="text-primary underline"
               >filed_facts</NuxtLink
             >. Add <code>?as_of=</code> to see only what was filed before a date.
+          </p>
+          <p>
+            Those downloads give you the last 90 days of periods. Add
+            <code>?history=full</code> for the series back to 2020. That history is CC BY-NC 4.0 for
+            data we publish from 2026-11-04 on, so commercial use needs a
+            <NuxtLink to="/license" class="text-primary underline">paid license</NuxtLink>. This
+            page shows all of it, free to read.
           </p>
         </div>
       </TerminalPanel>

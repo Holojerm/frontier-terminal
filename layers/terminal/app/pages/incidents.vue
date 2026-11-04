@@ -39,7 +39,7 @@ useSeo({
         'Every incident the frontier AI labs posted to their own status pages: title, impact and status verbatim (impact left blank where a feed publishes none), start and resolution times, and affected components.',
       dateModified: incidents.value?.as_of,
       variableMeasured: ['impact', 'status', 'started_at', 'resolved_at', 'components'],
-      distribution: exportDistribution(site, 'incidents'),
+      distribution: exportDistribution(site, 'incidents', { fullHistory: true }),
     }),
   ],
 })

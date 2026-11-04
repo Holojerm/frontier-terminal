@@ -41,7 +41,7 @@ useSeo({
         'Revenue per reporting period for each frontier AI lab, or the public parent that consolidates it, as tagged in its own SEC filings, with the filing behind every value. Press run-rates are excluded.',
       dateModified: revenue.value?.as_of,
       variableMeasured: ['val', 'start', 'end', 'form', 'accession_no'],
-      distribution: exportDistribution(site, 'revenue_facts'),
+      distribution: exportDistribution(site, 'revenue_facts', { fullHistory: true }),
     }),
   ],
 })

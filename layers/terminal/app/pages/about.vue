@@ -14,7 +14,7 @@ definePageMeta({
     priority: '0.5',
     title: 'About',
     summary:
-      'What Frontier Terminal tracks, who runs it, the provenance rule every number follows, per-source caveats, data latency, the corrections log, and where the code lives.',
+      'What Frontier Terminal tracks, who runs it, the provenance rule every number follows, per-source caveats, data latency, the corrections log, the data license, and where the code lives.',
   },
 })
 
@@ -197,10 +197,22 @@ useSeo({
           <span class="text-muted"> of every table, as CSV or JSON.</span>
         </li>
         <li>
+          <NuxtLink to="/license" class="text-primary underline underline-offset-2"
+            >License</NuxtLink
+          >
+          <span class="text-muted">
+            for our data. The last 90 days are CC BY 4.0. Older data is CC BY-NC 4.0, except what we
+            published before 2026-11-04.</span
+          >
+        </li>
+        <li>
           <NuxtLink to="/contact" class="text-primary underline underline-offset-2"
             >Commercial licensing</NuxtLink
           >
-          <span class="text-muted"> for your own terms, a dependable feed, or new coverage.</span>
+          <span class="text-muted">
+            for commercial use of the full history, your own terms, a dependable feed, or new
+            coverage.</span
+          >
         </li>
         <li>
           <NuxtLink to="/alerts.xml" external class="text-primary underline underline-offset-2">
