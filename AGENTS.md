@@ -245,9 +245,10 @@ bun db:generate       # Generate Drizzle migration after schema changes
 bun db:migrate        # Apply migrations to local D1
 bun run db:migrate:remote # Apply migrations to production D1 (Workers Builds runs it via deploy:ci)
 bun db:studio         # Open Drizzle Studio (visual DB browser)
-bun run ci            # Lint + format:check + design/brand/email/mirror/seo/fleet/crons gates + typecheck + test + build —
-                      # Workers Builds runs this. NO browser suites: that image cannot
-                      # launch Chromium (see Gotchas).
+bun run ci            # Every gate, concurrently (scripts/ci.ts): format (writes), lint, design/brand/email/mirror/seo/fleet/crons
+                      # gates, typecheck, test, build — Workers Builds runs this. NO browser suites: that image cannot
+                      # launch Chromium (see Gotchas). CI_SERIAL=1 runs the gates one at a time.
+bun run ci:fast       # While iterating: format (writes), cheap gates + typecheck + tests touched since origin/main, no build
 bun run ci:browser    # playwright:install + test:a11y — what GitHub Actions runs
 bun run deploy        # Manual deploy to Cloudflare via wrangler (normally unnecessary —
                       # Workers Builds deploys automatically on push to main).
@@ -255,8 +256,12 @@ bun run deploy        # Manual deploy to Cloudflare via wrangler (normally unnec
 ```
 
 `bun run ci` is the merge gate. It is a gate on finished work, not a precondition for
-starting — run it when you have something to merge, and again after any change you think
-is trivial. If it fails, fix the failure; do not work around it.
+starting: iterate with `bun run ci:fast`, run `bun run ci` once before pushing, and again after any
+change you think is trivial. It runs every gate even after one fails and prints only the failures.
+If it fails, fix the failure; do not work around it. Both modes run the formatter in write mode,
+so formatting never fails a local run; commit what it rewrote. GitHub Actions still runs
+`format:check`. Edits made through Claude Code are formatted by a PostToolUse hook
+(`scripts/format-edited.ts`).
 
 ---
 
