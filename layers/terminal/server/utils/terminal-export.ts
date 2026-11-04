@@ -354,8 +354,15 @@ function partsView<C>(
         .where(ofType)
       return rows.reduce((n, r) => n + explode(parsePayload(r.payload), context).length, 0)
     },
+    // #142 (as_of) and #144 (these views) merged in parallel; rewinding an
+    // exploded view through the change log is not built, so it says so.
+    at: () => Promise.reject(new PointInTimeError(PARTS_AS_OF_REFUSAL)),
+    asOfRefusal: PARTS_AS_OF_REFUSAL,
   }
 }
+
+const PARTS_AS_OF_REFUSAL =
+  'a registration-statement view is exploded from the current filing rows, and rewinding it is not built yet.'
 
 const FILING_FIELDS = ['cik', 'entity_name', 'accession_no', 'form', 'filed'] as const
 const filing = (p: Row): Row => Object.fromEntries(FILING_FIELDS.map((f) => [f, p[f] ?? null]))
