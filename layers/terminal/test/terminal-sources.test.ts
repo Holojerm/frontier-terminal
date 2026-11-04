@@ -96,6 +96,11 @@ describe('readSourceRegistry', () => {
       'gpu-scaleway',
       'gpu-fluidstack-hyperbolic',
       'gpu-aggregators',
+      'vscode-marketplace',
+      'open-vsx',
+      'github-commit-search',
+      'kalshi',
+      'polymarket',
     ])
   })
 
