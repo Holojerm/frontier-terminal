@@ -32,7 +32,8 @@ export const ANTHROPIC_THESIS: ThesisDef = {
       id: 'anthropic-demand-growth',
       n: 2,
       text: 'Developer demand is growing, not only price',
-      signal_label: "Anthropic's share of the six labs' OpenRouter tokens, trailing 7 days",
+      signal_label:
+        "Anthropic's share of the six tracked labs' OpenRouter tokens (not of all OpenRouter tokens), trailing 7 days",
       kill_condition: 'More than 5 points below its trailing 13-week average',
       spec: {
         kind: 'measured',

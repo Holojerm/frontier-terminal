@@ -484,7 +484,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'matched a priced SKU (coverage), and implied spend as a RANGE — spend_low is every token at the input list price, spend_high ' +
         'every token at the output price (the rankings carry no prompt/completion split, so a point estimate would be invented). ' +
         'share_low/share_high are each lab’s slice of the six labs’ implied dollars at each bound; token_share is the same window’s ' +
-        'token slice, so tokens and dollars can be read side by side. models[] shows the join per model, with reason (free, unlisted, ' +
+        'slice of the six labs’ tokens (NOT of all OpenRouter tokens, which get_rankings reports), so tokens and dollars can be read side by side. models[] shows the join per model, with reason (free, unlisted, ' +
         'unpriced) for every model excluded from dollars. This is one aggregator’s channel at list price, not revenue and not market ' +
         'share; cite it as implied OpenRouter-channel spend and reproduce the CC BY 4.0 citation in rankings.meta.citation. ' +
         PROVENANCE,

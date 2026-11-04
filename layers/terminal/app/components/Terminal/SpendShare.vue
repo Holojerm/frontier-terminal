@@ -32,9 +32,9 @@ const priced = (p: SpendProviderView) => p.priced_tokens > 0
 
 const columns = computed<TableColumn[]>(() => [
   { key: 'display', label: 'Lab' },
-  { key: 'share', label: 'Spend share' },
+  { key: 'share', label: 'Share of lab spend' },
   { key: 'dollars', label: 'Implied $', numeric: true },
-  { key: 'tokens', label: 'Token share', numeric: true, class: 'text-muted' },
+  { key: 'tokens', label: 'Share of lab tokens', numeric: true, class: 'text-muted' },
   ...(props.compact
     ? []
     : [{ key: 'coverage', label: 'Priced', numeric: true, class: 'text-muted' }]),
@@ -77,7 +77,7 @@ const skuText = (m: SpendModel) =>
       </p>
 
       <TerminalTable
-        caption="Implied OpenRouter-channel spend per lab, as a range, beside token share and price coverage"
+        caption="Implied OpenRouter-channel spend per lab as a share of the tracked labs’ total, as a range, beside its share of those labs’ tokens and price coverage"
         :columns="columns"
         :rows="spend.providers"
         :row-key="(p) => p.provider"
