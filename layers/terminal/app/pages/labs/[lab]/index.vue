@@ -5,11 +5,11 @@
 // number here is the same number there — same query, same cache, same
 // provenance. The lab is a route parameter; a name outside the tracked labs is a 404.
 
-import { COMPARE_PAIRS, comparePath, pairTitle } from '../../../shared/utils/terminal-compare'
-import { isLab, summarizeLab } from '../../../shared/utils/terminal-lab-summary'
-import { alertLabs, LAB_SITE } from '../../../shared/utils/terminal-labs'
-import { absoluteStamp } from '../../../shared/utils/terminal-format'
-import type { TableColumn } from '../../types/terminal-ui'
+import { COMPARE_PAIRS, comparePath, pairTitle } from '../../../../shared/utils/terminal-compare'
+import { isLab, summarizeLab, tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
+import { alertLabs, LAB_SITE } from '../../../../shared/utils/terminal-labs'
+import { absoluteStamp } from '../../../../shared/utils/terminal-format'
+import type { TableColumn } from '../../../types/terminal-ui'
 import type {
   AlertsData,
   HiringHistoryData,
@@ -19,14 +19,14 @@ import type {
   ReleasesData,
   RevenueData,
   SpendData,
-} from '../../../shared/utils/terminal-types'
+} from '../../../../shared/utils/terminal-types'
 import type {
   AdoptionData,
   DataCentersData,
   LimitsData,
   ParentsData,
   PayData,
-} from '../../../shared/utils/recipe-views'
+} from '../../../../shared/utils/recipe-views'
 
 // Inert for a dynamic route: the collecting hook skips paths with a
 // parameter, and sitemap.xml / llms.txt append the lab pages from
@@ -254,6 +254,15 @@ const tabs = computed(() => [
 <template>
   <TerminalPage :title="display" :as-of="alerts.data.value?.as_of" :error="failed">
     <template #header>
+      <UButton
+        :to="tearSheetPath(lab)"
+        color="neutral"
+        variant="outline"
+        size="sm"
+        icon="i-lucide-file-text"
+      >
+        One-page tear sheet
+      </UButton>
       <dl
         class="grid grid-cols-2 gap-x-6 gap-y-4 rounded border border-default p-3 sm:grid-cols-3 lg:grid-cols-5"
       >
