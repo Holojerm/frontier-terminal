@@ -5,6 +5,7 @@
 // has no primary source for most of these companies yet, and this page's
 // job is to say so precisely and to be ready the day that changes.
 
+import type { ProspectusData } from '../../shared/utils/terminal-prospectus'
 import type { RevenueData } from '../../shared/utils/terminal-types'
 import type { ParentsData } from '../../shared/utils/recipe-views'
 
@@ -14,21 +15,23 @@ definePageMeta({
     priority: '0.8',
     title: 'Revenue',
     summary:
-      'Disclosed revenue per frontier lab from SEC XBRL filings: the parent’s consolidated figure or the one segment it reports where a public parent files, and “no audited disclosure” where none does. Press run-rates are excluded.',
+      'Disclosed revenue per frontier lab from SEC XBRL filings: the parent’s consolidated figure or the one segment it reports where a public parent files, and “no audited disclosure” where none does. For a lab that files its own S-1: the whole statement of operations, commitments, customer concentration, share counts and risk-factor changes. Press run-rates are excluded.',
   },
 })
 
-const [{ data: revenue, error }, { data: parents }] = await Promise.all([
-  useFetch<RevenueData>('/api/revenue'),
-  useFetch<ParentsData>('/api/parents'),
-])
+const [{ data: revenue, error }, { data: parents }, { data: prospectus, error: prospectusError }] =
+  await Promise.all([
+    useFetch<RevenueData>('/api/revenue'),
+    useFetch<ParentsData>('/api/parents'),
+    useFetch<ProspectusData>('/api/prospectus'),
+  ])
 
 const site = useSiteContext()
 
 useSeo({
   title: 'AI lab revenue from SEC filings',
   description:
-    'Revenue OpenAI, Anthropic, Google, xAI, Meta, and Mistral have disclosed to the SEC, per period with the filing linked, and a stated gap where none is audited.',
+    'AI lab revenue disclosed to the SEC, per period with the filing linked, and the rest of a lab’s own S-1: costs, losses, commitments and risk factors.',
   dateModified: revenue.value?.as_of,
   schema: [
     datasetSchema(site, {
@@ -61,6 +64,20 @@ useSeo({
       >
         <TerminalRevenuePanel :revenue="revenue" />
       </TerminalPanel>
+
+      <TerminalProspectusPanel
+        v-for="issuer in prospectus?.issuers ?? []"
+        :key="issuer.provider"
+        :issuer="issuer"
+      />
+      <UAlert
+        v-if="prospectusError"
+        color="warning"
+        variant="subtle"
+        icon="i-lucide-triangle-alert"
+        title="Registration-statement detail could not be read"
+        description="The prospectus endpoint failed to respond. Revenue above is unaffected."
+      />
 
       <TerminalPanel
         v-if="parents?.parents.length"

@@ -494,6 +494,57 @@ function summarize(entityType: string, payload: Json | null): string {
       .filter((p): p is string => Boolean(p))
       .join(' · ')
   }
+  if (entityType === 'statement') {
+    const lines = Array.isArray(payload.lines) ? payload.lines : []
+    return [
+      str(payload.entity_name) ?? '?',
+      str(payload.form),
+      `statement of operations ${str(payload.start) ?? '?'} → ${str(payload.end) ?? '?'}`,
+      `${lines.length} lines`,
+    ]
+      .filter((p): p is string => Boolean(p))
+      .join(' · ')
+  }
+  if (entityType === 'commitment') {
+    return [
+      str(payload.entity_name) ?? '?',
+      str(payload.form),
+      `${String(payload.schedule ?? '?').replace(/_/g, ' ')}${str(payload.as_of) ? ` as of ${str(payload.as_of)}` : ''}`,
+    ]
+      .filter((p): p is string => Boolean(p))
+      .join(' · ')
+  }
+  if (entityType === 'concentration') {
+    const customers = Array.isArray(payload.customers) ? payload.customers.length : 0
+    return [
+      str(payload.entity_name) ?? '?',
+      str(payload.form),
+      `${payload.basis === 'accounts_receivable' ? 'receivables' : 'revenue'} concentration · ${customers} customers at 10% or more`,
+    ]
+      .filter((p): p is string => Boolean(p))
+      .join(' · ')
+  }
+  if (entityType === 'shares') {
+    return [str(payload.entity_name) ?? '?', str(payload.form), 'share counts in “The Offering”']
+      .filter((p): p is string => Boolean(p))
+      .join(' · ')
+  }
+  if (entityType === 'risk_factors') {
+    const sections = Array.isArray(payload.sections) ? payload.sections : []
+    const headings = sections.reduce(
+      (n: number, s: unknown) =>
+        n +
+        (typeof s === 'object' &&
+        s !== null &&
+        Array.isArray((s as { headings?: unknown }).headings)
+          ? (s as { headings: unknown[] }).headings.length
+          : 0),
+      0,
+    )
+    return [str(payload.entity_name) ?? '?', str(payload.form), `${headings} risk-factor headings`]
+      .filter((p): p is string => Boolean(p))
+      .join(' · ')
+  }
   if (entityType === 'revenue') {
     const val = num(payload.val)
     return [
