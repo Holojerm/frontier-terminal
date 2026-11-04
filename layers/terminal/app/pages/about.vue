@@ -5,6 +5,7 @@
 
 import manifest from '~~/fleet.json'
 
+import { CORRECTIONS } from '../../shared/utils/corrections'
 import type { CoverageData } from '../../shared/utils/terminal-types'
 
 definePageMeta({
@@ -13,7 +14,7 @@ definePageMeta({
     priority: '0.5',
     title: 'About',
     summary:
-      'What Frontier Terminal tracks, the provenance rule every number follows, per-source caveats, data latency, and where the code lives.',
+      'What Frontier Terminal tracks, who runs it, the provenance rule every number follows, per-source caveats, data latency, the corrections log, and where the code lives.',
   },
 })
 
@@ -26,7 +27,7 @@ const { data: coverage } = await useFetch<CoverageData>('/api/coverage')
 useSeo({
   title: 'About',
   description:
-    'What Frontier Terminal tracks, the provenance rule behind every number, per-source caveats, data latency, and the open-source repo.',
+    'What Frontier Terminal tracks, who runs it, the provenance rule behind every number, per-source caveats, data latency, and every correction made.',
   dateModified: coverage.value?.as_of,
 })
 </script>
@@ -49,6 +50,32 @@ useSeo({
           Every source is polled on a schedule, snapshotted whole, parsed deterministically, and
           diffed against its previous state. Pages show the current state and the change log; an
           alert is a claim about change rows only.
+        </p>
+      </div>
+    </TerminalPanel>
+
+    <TerminalPanel id="author" title="Who runs it">
+      <div class="max-w-2xl space-y-3 text-default">
+        <p>
+          Built and run by
+          <a
+            href="https://linkedin.com/in/jeremy-ettlinger"
+            target="_blank"
+            rel="noopener noreferrer"
+            class="text-primary underline underline-offset-2"
+            >Jeremy Ettlinger</a
+          >, a software engineer in New York who builds data platforms for institutional finance,
+          previously at FactSet. Frontier Terminal is an independent project, not affiliated with
+          any lab, bank or employer, and paid by no one.
+        </p>
+        <p class="text-sm text-muted">
+          Positions are disclosed on each thesis, and nothing is traded in a name within 48 hours of
+          a significant data change on it. Write to
+          <a
+            href="mailto:contact@frontierterm.com"
+            class="text-primary underline underline-offset-2"
+            >contact@frontierterm.com</a
+          >.
         </p>
       </div>
     </TerminalPanel>
@@ -106,6 +133,30 @@ useSeo({
           terminal reports the public filing when it appears; the draft itself is not visible.
         </dd>
       </dl>
+    </TerminalPanel>
+
+    <TerminalPanel
+      id="corrections"
+      title="Corrections"
+      note="Every fix that changed or restored a published number. History is never rewritten."
+    >
+      <ul class="max-w-2xl space-y-3 text-sm">
+        <li v-for="c in CORRECTIONS" :key="c.on + c.area">
+          <p class="text-muted">
+            <span class="font-mono">{{ c.on }}</span> · {{ c.area }}
+          </p>
+          <p class="text-default">
+            {{ c.what }}
+            <a
+              :href="c.fix"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-primary underline underline-offset-2"
+              >The fix</a
+            >
+          </p>
+        </li>
+      </ul>
     </TerminalPanel>
 
     <TerminalPanel id="disclaimer" title="Not investment advice">
