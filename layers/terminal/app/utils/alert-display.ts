@@ -25,6 +25,8 @@ export const RULE_TEXT: Record<AlertView['rule'], string> = {
   'model-floor': 'Rule-based: a model no vendor catalog has listed before always alerts.',
   'prospectus-floor':
     'Rule-based: a lab’s new registration filing alerts with what its own document states — revenue, the period it runs to, and the price range on its cover.',
+  'hiring-rollup':
+    'Rule-based: one hiring roll-up per lab per week, notable only when the week’s moves clear the hiring materiality floor.',
   'agent-judge':
     'Judged by a model, which may cite only fields present in the referenced change rows.',
 }
