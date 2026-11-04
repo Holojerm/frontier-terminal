@@ -11,14 +11,28 @@
 // The CSV defuses cells a spreadsheet would execute (see defuseFormula); the
 // JSON is verbatim, because nothing executes a JSON string.
 //
+// `?as_of=` (ExportTable.at) serves a table as the store held it at that instant:
+// an append-only table by the column that says when each row was written,
+// read as a range on the index its keyset already pages; an entity view
+// rebuilt from the change log (terminal-asof.ts); and a table rewritten in
+// place with no log refused with a 400, since its past is gone.
+//
 // Pure functions of the Drizzle client, so layers/terminal/test/terminal-export.test.ts can
 // drive them against the workerd D1 and read the bytes back.
 
-import { and, asc, count, eq, sql, type SQL } from 'drizzle-orm'
+import { and, asc, count, eq, lte, sql, type SQL } from 'drizzle-orm'
 import type { SQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core'
 
 import * as tables from '#server/db/schema'
 import type { PipelineDb } from '../pipeline/store'
+import {
+  AS_OF_PARAM,
+  PointInTimeError,
+  alertsKnownAt,
+  judgeCutoffAt,
+  rewindEntities,
+} from './terminal-asof'
+import { byString } from './terminal-json'
 
 export const EXPORT_PAGE_SIZE = 200
 
@@ -38,6 +52,10 @@ export interface ExportTable {
   count(db: PipelineDb): Promise<number>
   /** Query parameters this table can be narrowed by (`?recipe_id=`), each an equality on a column. */
   filters?: Readonly<Record<string, SQLiteColumn>>
+  /** The table as the store held it at `at`; throws PointInTimeError when its past is not kept. */
+  at(db: PipelineDb, at: string): Promise<ExportTable>
+  /** Why `at` refuses, or null when it answers. */
+  asOfRefusal: string | null
 }
 
 /**
@@ -52,6 +70,7 @@ export function exportFilter(
 ): { where: SQL | undefined } | { error: string } {
   const conditions: SQL[] = []
   for (const [name, raw] of Object.entries(query)) {
+    if (name === AS_OF_PARAM) continue // ExportTable.at, not a column filter
     const column = table.filters?.[name]
     if (!column) {
       const allowed = Object.keys(table.filters ?? {})
@@ -66,6 +85,9 @@ export function exportFilter(
   }
   return { where: conditions.length ? and(...conditions) : undefined }
 }
+
+/** How an append-only table answers `as_of`: the rows written by `at`. */
+type WrittenBy = (db: PipelineDb, at: string) => Promise<SQL | undefined>
 
 /** A unique sort key: the columns a keyset page orders by and resumes after. */
 type Key = readonly [SQLiteColumn, ...SQLiteColumn[]]
@@ -207,6 +229,42 @@ function entityView(
     name,
     description,
     columns,
+    async at(db, at) {
+      // The current set is the view; as of T it is rebuilt in memory (one
+      // type's rows and change log) and paged by the same keyset.
+      const rewound = await rewindEntities(db, entityType, at)
+      const unverified = new Set(rewound.unverified)
+      const columnsAt = [...columns.slice(0, -2), 'as_of_verified', ...PROVENANCE]
+      const rows = rewound.rows.map(({ payload, ...rest }) =>
+        project(
+          {
+            ...parsePayload(payload),
+            ...rest,
+            as_of_verified: !unverified.has(rest.entity_key),
+          },
+          columnsAt,
+        ),
+      )
+      const keyOf = (r: Row) => [String(r.source_id), String(r.entity_key)] as const
+      return {
+        name,
+        description,
+        columns: columnsAt,
+        async page(_db, after, limit) {
+          if (after === null) return rows.slice(0, limit)
+          const [s, k] = keyOf(after)
+          const from = rows.findIndex((r) => {
+            const [rs, rk] = keyOf(r)
+            return byString(rs, s) > 0 || (rs === s && byString(rk, k) > 0)
+          })
+          return from === -1 ? [] : rows.slice(from, from + limit)
+        },
+        count: async () => rows.length,
+        at: () => Promise.reject(new PointInTimeError('already a point-in-time view')),
+        asOfRefusal: null,
+      }
+    },
+    asOfRefusal: null,
     async page(db, after, limit) {
       const rows = await db
         .select()
@@ -231,23 +289,43 @@ function plainTable(
   table: SQLiteTable,
   columns: readonly string[],
   key: Key,
+  writtenBy: WrittenBy | string,
   total?: SQL<number>,
   filters?: Readonly<Record<string, SQLiteColumn>>,
 ): ExportTable {
+  const pageWhere =
+    (filter: SQL | undefined) =>
+    async (db: PipelineDb, after: Row | null, limit: number, where?: SQL) => {
+      const rows = await db
+        .select()
+        .from(table)
+        .where(and(filter, afterKey(key, after), where))
+        .orderBy(...key.map((c) => asc(c)))
+        .limit(limit)
+      return rows.map((row) => project(row as Row, columns))
+    }
   return {
     name,
     description,
     columns,
     filters,
-    async page(db, after, limit, where) {
-      const rows = await db
-        .select()
-        .from(table)
-        .where(and(afterKey(key, after), where))
-        .orderBy(...key.map((c) => asc(c)))
-        .limit(limit)
-      return rows.map((row) => project(row as Row, columns))
+    page: pageWhere(undefined),
+    async at(db, at) {
+      if (typeof writtenBy === 'string') throw new PointInTimeError(writtenBy)
+      const filter = await writtenBy(db, at)
+      return {
+        name,
+        description,
+        columns,
+        filters,
+        page: pageWhere(filter),
+        // A count up to T would read every row up to T; nothing asks for it.
+        count: () => Promise.reject(new Error('not counted as of T')),
+        at: () => Promise.reject(new PointInTimeError('already a point-in-time view')),
+        asOfRefusal: null,
+      }
     },
+    asOfRefusal: typeof writtenBy === 'string' ? writtenBy : null,
     async count(db) {
       if (total) {
         const [row] = await db.select({ total }).from(tables.sourceStats)
@@ -263,6 +341,12 @@ function plainTable(
 // source_stats; a count(*) over either reads every row ever written.
 const loggedTotal = (column: SQLiteColumn) => sql<number>`coalesce(sum(${column}), 0)`
 
+/** Rows whose own timestamp (the leading keyset column, so an index range) is at or before T. */
+const byColumn =
+  (column: SQLiteColumn): WrittenBy =>
+  async (_db, at) =>
+    lte(column, at)
+
 export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   snapshots: plainTable(
     'snapshots',
@@ -270,6 +354,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     tables.snapshots,
     ['id', 'source_id', 'content_hash', 'raw_key', 'http_status', 'bytes', ...PROVENANCE],
     [tables.snapshots.fetched_at, tables.snapshots.id],
+    byColumn(tables.snapshots.fetched_at),
     loggedTotal(tables.sourceStats.snapshot_count),
   ),
   prices_latest: entityView(
@@ -338,6 +423,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
       ...PROVENANCE,
     ],
     [tables.changes.detected_at, tables.changes.id],
+    byColumn(tables.changes.detected_at),
   ),
   alerts: plainTable(
     'alerts',
@@ -354,6 +440,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
       ...PROVENANCE,
     ],
     [tables.alerts.created_at, tables.alerts.id],
+    async (db, at) => alertsKnownAt(at, await judgeCutoffAt(db, at)),
   ),
   claim_readings: plainTable(
     'claim_readings',
@@ -361,6 +448,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     tables.claimReadings,
     ['thesis_id', 'claim_id', 'date', 'value', 'detail', 'computed_at', ...PROVENANCE],
     [tables.claimReadings.claim_id, tables.claimReadings.date],
+    'a claim reading is rewritten in place while its data is revised, and the value it replaced is not kept.',
   ),
   claim_verdicts: plainTable(
     'claim_verdicts',
@@ -381,6 +469,9 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
       ...PROVENANCE,
     ],
     [tables.claimVerdicts.detected_at, tables.claimVerdicts.id],
+    // Judged after the change it rates; held back until it was judged.
+    async (_db, at) =>
+      and(lte(tables.claimVerdicts.detected_at, at), lte(tables.claimVerdicts.judged_at, at)),
   ),
   recipe_observations: plainTable(
     'recipe_observations',
@@ -405,6 +496,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
       tables.recipeObservations.date,
       tables.recipeObservations.id,
     ],
+    'a recipe observation is rewritten in place when a re-read gives a different value, and the value it replaced is not kept.',
     undefined,
     { recipe_id: tables.recipeObservations.recipe_id },
   ),
@@ -426,6 +518,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
       'source_url',
     ],
     [tables.sourceRuns.started_at, tables.sourceRuns.id],
+    byColumn(tables.sourceRuns.started_at),
     loggedTotal(tables.sourceStats.run_count),
   ),
 }

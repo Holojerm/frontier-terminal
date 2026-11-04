@@ -1,4 +1,4 @@
-import { desc } from 'drizzle-orm'
+import { desc, lte } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { MODEL_CLASS_MAP, type ClassEntry } from '../utils/terminal-classes'
@@ -49,10 +49,15 @@ function fromDecision(d: Decision): ClassEntry {
   }
 }
 
-export async function effectiveClassMap(db: PipelineDb): Promise<ClassEntry[]> {
+/** `at` reads the map as it stood then: decisions made by that instant (a point-in-time /api/prices). */
+export async function effectiveClassMap(
+  db: PipelineDb,
+  at: string | null = null,
+): Promise<ClassEntry[]> {
   const decisions = await db
     .select()
     .from(tables.classMapDecisions)
+    .where(at ? lte(tables.classMapDecisions.decided_at, at) : undefined)
     .orderBy(desc(tables.classMapDecisions.decided_at))
   return overlayClassMap(MODEL_CLASS_MAP, decisions)
 }

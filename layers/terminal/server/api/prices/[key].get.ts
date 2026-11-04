@@ -1,12 +1,12 @@
 // GET /api/prices/<entity_key> — one SKU's observations: every change row
 // plus the current entity row, each with the fetch it was read from. The
-// key is part of the cache key.
+// key is part of the cache key. `as_of` cuts the series at that instant.
 
 import { z } from 'zod'
 
 import { PERMALINK_LIMIT } from '../../utils/rate-limits'
 import { queryPriceHistory } from '../../utils/terminal-db'
-import { serveTerminal, terminalDb } from '../../utils/terminal-handler'
+import { serveTerminalAsOf, terminalDb } from '../../utils/terminal-handler'
 
 // modelKey() output: `model:<provider>:<slug>[:<tier>]` (layers/terminal/server/pipeline/contracts/keys.ts).
 const keySchema = z
@@ -24,7 +24,7 @@ export default defineEventHandler(async (event) => {
   if (!parsed.success) throw createError({ statusCode: 400, message: 'Not a SKU key' })
   const key = parsed.data
 
-  const history = await serveTerminal(
+  const history = await serveTerminalAsOf(
     event,
     'price-history',
     (ctx) => queryPriceHistory(terminalDb, ctx, key),

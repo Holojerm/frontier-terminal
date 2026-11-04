@@ -145,6 +145,50 @@ const EXPORT_COLUMNS: TableColumn[] = [
       </template>
     </TerminalPanel>
 
+    <TerminalPanel
+      id="point-in-time"
+      title="Point in time"
+      note="What the terminal knew at an instant, for a backtest."
+    >
+      <div class="flex max-w-3xl flex-col gap-3 text-sm text-default">
+        <p>
+          Add <code class="font-mono text-highlighted">?as_of=</code> with an ISO-8601 timestamp and
+          a timezone, such as
+          <NuxtLink
+            to="/api/prices?as_of=2026-10-01T00:00:00Z"
+            external
+            class="font-mono text-primary underline underline-offset-2"
+            >/api/prices?as_of=2026-10-01T00:00:00Z</NuxtLink
+          >. The answer is what this store held at that instant: a row counts from when it was
+          fetched, and a judge alert from when a judge run could have written it, not from the event
+          it describes.
+        </p>
+        <ul class="flex list-disc flex-col gap-1 pl-5">
+          <li>
+            <span class="font-mono">/api/alerts</span>, <span class="font-mono">/api/prices</span>,
+            <span class="font-mono">/api/prices/&lt;key&gt;</span>,
+            <span class="font-mono">/api/hiring</span>,
+            <span class="font-mono">/api/hiring/history</span> and
+            <span class="font-mono">/api/revenue</span> rebuild their payload and add
+            <span class="font-mono">point_in_time</span>: how it was rebuilt, and any keys the
+            change log cannot confirm.
+          </li>
+          <li>
+            Every table above except <span class="font-mono">claim_readings</span> and
+            <span class="font-mono">recipe_observations</span>, which are rewritten in place with no
+            history. Tables of current rows are rebuilt from the change log and gain an
+            <span class="font-mono">as_of_verified</span> column.
+          </li>
+          <li>
+            The MCP tools for those routes take an <span class="font-mono">as_of</span> argument.
+          </li>
+        </ul>
+        <p class="text-muted">
+          Any other route answers 400 rather than return today’s data under an earlier date.
+        </p>
+      </div>
+    </TerminalPanel>
+
     <TerminalPanel id="commercial" title="Commercial use">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p class="max-w-2xl text-sm text-default">
