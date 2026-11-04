@@ -274,7 +274,7 @@ const pairs = COMPARE_PAIRS.filter((pair) => pair.includes(lab))
       <TerminalPanel
         id="spend"
         title="Implied spend share"
-        note="This lab’s OpenRouter tokens at its list prices, per model."
+        note="This lab’s OpenRouter tokens at its list prices, per model. Shares are of the tracked labs’ total, not of all OpenRouter traffic."
       >
         <TerminalSpendShare v-if="spendOf" :spend="spendOf" />
         <TerminalGap v-else title="No rankings rows yet." />

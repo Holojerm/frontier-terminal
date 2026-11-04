@@ -645,7 +645,8 @@ export interface SpendProviderView {
   /** This lab's spend_low over the six labs' spend_low, 0..1; null when nothing is priced. */
   share_low: number | null
   share_high: number | null
-  /** Token share of the same window, for the decomposition: tokens vs. dollars. */
+  /** This lab's tokens over the six labs' tokens in the same window, for the decomposition:
+   * tokens vs. dollars. Not the rankings' share, which is of all OpenRouter tokens. */
   token_share: number | null
   models: SpendModel[]
 }

@@ -102,7 +102,7 @@ export function readoutCells(
       ? cell('demand', 'demand', {
           value: sharePct(d.share),
           delta: d.delta_pp === null ? null : ppLabel(d.delta_pp),
-          sub: 'OpenRouter, 7 days',
+          sub: 'of all OpenRouter tokens, 7 days',
           source: rankingsSource ?? null,
         })
       : cell('demand', 'demand', { gap: { title: 'No rankings rows yet' } })

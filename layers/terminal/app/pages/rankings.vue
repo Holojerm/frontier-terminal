@@ -56,7 +56,7 @@ useSeo({
         <TerminalPanel
           id="share"
           title="7-day share"
-          :note="`${rankings.meta.coverage.days} day${rankings.meta.coverage.days === 1 ? '' : 's'} on record. Share of OpenRouter’s daily top 50 plus its “other” row.`"
+          :note="`${rankings.meta.coverage.days} day${rankings.meta.coverage.days === 1 ? '' : 's'} on record. Share of all OpenRouter tokens: its daily top 50 plus its “other” row.`"
         >
           <TerminalDemandShare :rankings="rankings" />
         </TerminalPanel>
@@ -65,7 +65,7 @@ useSeo({
           v-if="spend"
           id="spend"
           title="Implied spend share"
-          note="The window’s tokens at each vendor’s list price, as a low–high range."
+          note="The window’s tokens at each vendor’s list price, as a low–high range. Shares are of the tracked labs’ total, not of all OpenRouter traffic, so the token share here is larger than the one beside it."
         >
           <TerminalSpendShare :spend="spend" />
         </TerminalPanel>
