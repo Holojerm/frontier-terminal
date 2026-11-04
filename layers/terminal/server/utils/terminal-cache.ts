@@ -14,6 +14,7 @@ import { max } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import type { PipelineDb } from '../pipeline/store'
+import { timed, type ServerTimings } from './server-timing'
 
 /** The slice of unstorage's Storage the cache uses — lets tests pass a Map-backed fake. */
 export interface CacheStore {
@@ -95,19 +96,23 @@ export async function cachedTerminal<T>(
   name: string,
   stamp: string | null,
   compute: () => Promise<T>,
+  timings?: ServerTimings,
 ): Promise<T> {
   const key = terminalCacheKey(name, stamp)
   try {
-    const hit = await store.get(key)
-    if (hit !== null && hit !== undefined) return hit as T
+    const hit = await timed(timings, 'kv', () => store.get(key))
+    const found = hit !== null && hit !== undefined
+    const last = timings?.at(-1)
+    if (last) last.desc = found ? 'hit' : 'miss'
+    if (found) return hit as T
   } catch (error) {
     console.warn(JSON.stringify({ kind: 'terminal_cache_unavailable', name, error: String(error) }))
   }
 
-  const value = await compute()
+  const value = await timed(timings, 'compute', compute)
 
   try {
-    await store.set(key, value, { ttl: TERMINAL_CACHE_TTL_SECONDS })
+    await timed(timings, 'kv-put', () => store.set(key, value, { ttl: TERMINAL_CACHE_TTL_SECONDS }))
   } catch (error) {
     console.warn(
       JSON.stringify({ kind: 'terminal_cache_write_failed', name, error: String(error) }),

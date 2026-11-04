@@ -22,6 +22,7 @@ import {
   pollStampAt,
   type AsOfPayload,
 } from './terminal-asof'
+import { serverTimingHeader, timed, type ServerTiming, type ServerTimings } from './server-timing'
 import { cachedTerminal, sharedTerminalStamp, terminalStamp } from './terminal-cache'
 import { queryContext, type QueryContext } from './terminal-db'
 
@@ -45,10 +46,11 @@ export async function terminalPayload<T>(
   // The cache key must include anything that changes the payload. A route
   // with input (alerts?limit=) passes it here.
   variant = '',
+  timings?: ServerTimings,
 ): Promise<T> {
-  const stamp = await liveStamp()
+  const stamp = await timed(timings, 'stamp', liveStamp)
   const context = queryContext(sourcesYaml, stamp)
-  return cachedTerminal(kv, cacheName(name, variant), stamp, () => query(context))
+  return cachedTerminal(kv, cacheName(name, variant), stamp, () => query(context), timings)
 }
 
 /**
@@ -63,8 +65,9 @@ export async function terminalPayloadAt<T extends object | null>(
   at: string,
   query: (context: QueryContext) => Promise<T>,
   variant = '',
+  timings?: ServerTimings,
 ): Promise<AsOfPayload<T>> {
-  const stamp = await liveStamp()
+  const stamp = await timed(timings, 'stamp', liveStamp)
   try {
     await assertKnowable(db, at)
   } catch (error) {
@@ -74,13 +77,19 @@ export async function terminalPayloadAt<T extends object | null>(
     throw error
   }
   const context = queryContext(sourcesYaml, await pollStampAt(db, at), undefined, at)
-  return cachedTerminal(kv, cacheName(name, `${variant}|${AS_OF_PARAM}=${at}`), stamp, async () => {
-    const data = await query(context)
-    // null is "not known at T" (an unknown SKU), which the route turns into its 404.
-    return (
-      data === null ? null : { ...data, point_in_time: pointInTimeMeta(at, context.notes) }
-    ) as AsOfPayload<T>
-  })
+  return cachedTerminal(
+    kv,
+    cacheName(name, `${variant}|${AS_OF_PARAM}=${at}`),
+    stamp,
+    async () => {
+      const data = await query(context)
+      // null is "not known at T" (an unknown SKU), which the route turns into its 404.
+      return (
+        data === null ? null : { ...data, point_in_time: pointInTimeMeta(at, context.notes) }
+      ) as AsOfPayload<T>
+    },
+    timings,
+  )
 }
 
 async function liveStamp(): Promise<string | null> {
@@ -135,7 +144,10 @@ export async function serveTerminal<T>(
 ): Promise<T> {
   refuseAsOf(event, name)
   setResponseHeader(event, 'Cache-Control', TERMINAL_CACHE_CONTROL)
-  return terminalPayload(name, query, variant)
+  const timings: ServerTiming[] = []
+  const payload = await terminalPayload(name, query, variant, timings)
+  setResponseHeader(event, 'Server-Timing', serverTimingHeader(timings))
+  return payload
 }
 
 /** `serveTerminal` for a route whose query honours ctx.at: live without `as_of`, rebuilt with it. */
@@ -147,8 +159,13 @@ export async function serveTerminalAsOf<T extends object | null>(
 ): Promise<T | AsOfPayload<T>> {
   const { as_of } = await getValidatedQuery(event, parseAsOfQuery)
   setResponseHeader(event, 'Cache-Control', TERMINAL_CACHE_CONTROL)
-  if (as_of === undefined) return terminalPayload(name, query, variant)
-  return terminalPayloadAt(name, as_of, query, variant)
+  const timings: ServerTiming[] = []
+  const payload =
+    as_of === undefined
+      ? await terminalPayload(name, query, variant, timings)
+      : await terminalPayloadAt(name, as_of, query, variant, timings)
+  setResponseHeader(event, 'Server-Timing', serverTimingHeader(timings))
+  return payload
 }
 
 /** The Drizzle client, for routes that stream rather than cache. */
