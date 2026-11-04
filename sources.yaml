@@ -1026,3 +1026,44 @@ cut:
       with the recipes' median once (docs/source-audit.md); nothing from
       either is stored. Index values from licensed vendors (Bloomberg, LSEG
       and the like) are never ingested.
+  vscode-marketplace:
+    verdict: cut — install counts not ingested
+    reason: >-
+      The install counts come from
+      marketplace.visualstudio.com/_apis/public/gallery/extensionquery, an
+      undocumented endpoint that robots.txt disallows ("Disallow: /_apis/").
+      The Terms of Use bar "'spidering' or 'scraping' the Offerings Sites"
+      as well. Checked 2026-11-04.
+  open-vsx:
+    verdict: cross-check only, never an input
+    reason: >-
+      open-vsx.org/api is documented and robots.txt allows it, but it serves
+      only VS Code forks (Copilot is not listed) and only a cumulative
+      downloadCount, which appears to include updates: Claude Code 64.2M here
+      against 29.5M installs on the Marketplace page. Checked 2026-11-04.
+  github-commit-search:
+    verdict: cut — PR search is the instrument
+    reason: >-
+      api.github.com/search/commits returns a different total on each call
+      for a one-week window (7.35M, 9.90M, 9.91M for "Co-Authored-By:
+      Claude", 2026-10-01..07), always with incomplete_results true. It
+      searches default branches only, counts commits mirrored across repos
+      more than once, and trips the secondary rate limit within a few calls.
+      PR search returns exact, repeatable counts and is used instead.
+      Checked 2026-11-04.
+  kalshi:
+    verdict: cut — external link only, never ingested
+    reason: >-
+      The Data Terms of Use (linked from kalshi.com, read 2026-11-04) say
+      "You may access content only for your personal use for non-commercial
+      purposes" and bar "publicly displaying, publishing" market data
+      without written authorization. The Developer Agreement limits API use
+      to "facilitating a members own trading on the Exchange".
+  polymarket:
+    verdict: cut — external link only, never ingested
+    reason: >-
+      The Terms of Service (effective 2026-08-11, read 2026-11-04) bar
+      crawlers "to scrape or otherwise remove data" and any redistribution
+      of the Data to "any Capital Market Client or market data distributor,
+      unless otherwise agreed to in writing". A CC-BY republication cannot
+      keep downstream users out of either group.

@@ -255,6 +255,11 @@ describe('queryRankings', () => {
       'gpu-scaleway',
       'gpu-fluidstack-hyperbolic',
       'gpu-aggregators',
+      'vscode-marketplace',
+      'open-vsx',
+      'github-commit-search',
+      'kalshi',
+      'polymarket',
     ])
     expect(coverage.cuts.find((c) => c.id === 'artificial-analysis')!.reason).toContain(
       '"Internal use only; no redistribution."',
