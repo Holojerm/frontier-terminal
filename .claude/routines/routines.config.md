@@ -11,6 +11,24 @@ configured" and skip the dependent work (journaling the gap).
 | GitHub repo | Holojerm/frontier-terminal |
 | Analytics sources | Cloudflare Workers analytics for the production Worker |
 
+## Autonomy grants
+
+Routines above tier 1 act only where they are listed here (`_shared.md` › Autonomy tiers).
+Delete a line to take the grant back.
+
+| Routine | Tier | Granted on |
+| --- | --- | --- |
+| ops-triage | 2 | 2026-11-03 |
+
+## Mechanical fixes
+
+The failure classes a tier-2 routine may fix and merge itself (`_shared.md` › Mechanical
+fixes). The paths are globs, and the fix may touch nothing else.
+
+| Routine | Failure class (ops `kind` + cause) | Paths the fix may touch | Done-bar beyond `_shared.md` |
+| --- | --- | --- | --- |
+| ops-triage | `source_failed` / `recipe_failed` repeating across polls because the vendor moved or reshaped the page (a redirect or 404 to a new URL, a renamed header, a new table or markup format). #117 is the worked example. | `layers/terminal/server/pipeline/parsers/**`, `layers/terminal/server/theses/recipes/**`, `fixtures/**`, `sources.yaml` (only the failing source's URL and notes), `docs/source-audit.md`, `layers/terminal/test/**` | Re-capture the fixture from a live fetch and record the fetch time in `fixtures/manifest.json`. The parser's output on the new fixture must keep the old fixture's entity keys, and any value that changed must be quoted from the new page in the PR body. Never touch `terminal-classes.ts`: a re-transcribed class-map sentence is the owner's call. |
+
 ## Product context
 
 Frontier Terminal is a free, public, read-only investor terminal tracking the frontier AI
