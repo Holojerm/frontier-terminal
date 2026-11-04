@@ -101,6 +101,8 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 - `scripts/x-post.ts` — posts to X directly with OAuth 1.0a credentials; this app posts through layers/social (Buffer)
 - `scripts/lib/oauth1.ts` — OAuth 1.0a signing for x-post.ts
 - `server/utils/purge.ts` — retention for the single-use credential tables (magic-link tokens, MCP connect codes); this app has neither (ops events are pruned by pruneOpsEvents)
+- `scripts/check-forkless.ts` (and the `forkless:check` / `ci:forkless` steps) — the template's proof that a fork can drop billing, referral and lifecycle email; it builds those forks in temp copies, so it is the template's gate, not a fork's
+- `server/types/extension-types.ts`, `test/lib/layers.ts` — what the template's full extensions registry and its billing-aware browser specs import; this app's trimmed `extensions.ts` and its own a11y/CSP route lists use neither
 
 ## Customized: kept on purpose
 
