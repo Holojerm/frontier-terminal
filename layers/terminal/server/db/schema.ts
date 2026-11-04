@@ -538,6 +538,63 @@ export const webhookDeliveries = sqliteTable(
   ],
 )
 
+// ─────────────────────────────────────────────
+// Archived price history (layers/terminal/server/pipeline/archive/)
+// ─────────────────────────────────────────────
+// Price history from before this site watched the labs, read from the
+// Internet Archive's captures of each lab's own pricing page. Kept apart from
+// snapshots/entities/changes on purpose: those say what this store saw and
+// when, and a capture we fetched in 2026 of a page as it stood in 2023 is
+// neither. Nothing here moves the live floor (source_stats) or reaches the
+// judge, the alert rules, or the live catalog.
+
+// One row per Wayback capture the backfill considered: parsed, or skipped
+// with the reason. The id is `<era>:<14-digit timestamp>`, so a re-run skips
+// what it already holds. captured_at is when the Archive saw the page (the
+// time the prices were valid); fetched_at is when we read the capture back.
+export const archiveCaptures = sqliteTable(
+  'archive_captures',
+  {
+    id: text('id').primaryKey(),
+    era: text('era').notNull(),
+    provider: text('provider').notNull(),
+    original_url: text('original_url').notNull(),
+    captured_at: text('captured_at').notNull(),
+    status: text('status').notNull(), // parsed | skipped
+    detail: text('detail'),
+    content_hash: text('content_hash'),
+    raw_key: text('raw_key'),
+    bytes: integer('bytes'),
+    rows: integer('rows').notNull(),
+    ...provenance, // source_url: the Wayback capture URL (it embeds original_url)
+  },
+  (t) => [index('archive_captures_provider_idx').on(t.provider, t.status, t.captured_at)],
+)
+
+// One row per (capture, SKU): what the archived page priced. payload is the
+// PriceRow minus its provenance, the shape entities.payload carries, so the
+// read side renders both with one function. Never a live row: basis is
+// always 'archived'.
+export const archivedPrices = sqliteTable(
+  'archived_prices',
+  {
+    id: text('id').primaryKey(),
+    capture_id: text('capture_id').notNull(),
+    entity_key: text('entity_key').notNull(),
+    provider: text('provider').notNull(),
+    content_hash: text('content_hash').notNull(),
+    payload: text('payload').notNull(),
+    captured_at: text('captured_at').notNull(),
+    original_url: text('original_url').notNull(),
+    basis: text('basis').notNull(), // 'archived'
+    ...provenance,
+  },
+  (t) => [
+    index('archived_prices_key_idx').on(t.entity_key, t.captured_at),
+    index('archived_prices_captured_id_idx').on(t.captured_at, t.id),
+  ],
+)
+
 export type Snapshot = typeof snapshots.$inferSelect
 export type Entity = typeof entities.$inferSelect
 export type Change = typeof changes.$inferSelect

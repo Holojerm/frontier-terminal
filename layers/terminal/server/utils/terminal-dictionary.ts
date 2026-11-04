@@ -1045,6 +1045,118 @@ export const COLUMN_DOCS: Readonly<Record<string, TableDoc>> = {
     },
   },
 
+  archived_prices: {
+    asOf: 'Rows with captured_at at or before as_of: when the Internet Archive saw the page, not when we read the copy (fetched_at, always later). So a backtest gets the page as it stood then, which this site did not hold at the time.',
+    columns: {
+      id: {
+        type: 'text',
+        key: true,
+        meaning: 'The first 32 hex characters of the SHA-256 of capture_id and entity_key.',
+      },
+      capture_id: {
+        type: 'text',
+        meaning:
+          'The copy the row was read from: <era>:<14-digit Wayback timestamp>, as in archive_captures.',
+      },
+      entity_key: {
+        type: 'text',
+        meaning:
+          'The SKU: model:<provider>:<slug>[:<tier>], the same key the live prices use, so /prices/<key> shows this row before the live ones.',
+      },
+      provider: PROVIDER,
+      content_hash: {
+        type: 'text',
+        meaning: 'SHA-256 (hex) of payload. Two copies with the same hash printed the same row.',
+      },
+      payload: {
+        type: 'json',
+        meaning:
+          'The row as the page printed it, in the prices_latest fields: model_slug, tier, the three $/MTok prices (null where the page printed none), currency, and notes.',
+      },
+      captured_at: {
+        type: 'timestamp',
+        meaning:
+          'When the Internet Archive captured the page, in UTC: the moment these prices were on it.',
+      },
+      original_url: { type: 'text', meaning: 'The lab’s own pricing page the Archive captured.' },
+      basis: {
+        type: 'text',
+        meaning: 'Always archived: read from a copy, not observed by this site.',
+      },
+      source_url: {
+        type: 'text',
+        provenance: true,
+        meaning:
+          'The Wayback Machine copy (https://web.archive.org/web/<timestamp>id_/<original_url>).',
+      },
+      fetched_at: {
+        type: 'timestamp',
+        provenance: true,
+        meaning: 'When we read the copy back from the Archive, in UTC.',
+      },
+    },
+  },
+
+  archive_captures: {
+    asOf: 'Rows with captured_at at or before as_of: when the Internet Archive saw the page, not when we read the copy.',
+    columns: {
+      id: {
+        type: 'text',
+        key: true,
+        meaning: 'The copy: <era>:<14-digit Wayback timestamp>.',
+      },
+      era: {
+        type: 'text',
+        meaning:
+          'Which shape of the lab’s pricing page the copy is read as (layers/terminal/server/pipeline/archive/eras.ts).',
+      },
+      provider: PROVIDER,
+      original_url: { type: 'text', meaning: 'The lab’s own pricing page the Archive captured.' },
+      captured_at: {
+        type: 'timestamp',
+        meaning: 'When the Internet Archive captured the page, in UTC.',
+      },
+      status: {
+        type: 'text',
+        meaning: 'parsed (its rows are in archived_prices) or skipped (no rows; detail says why).',
+      },
+      detail: {
+        type: 'text',
+        nullable: true,
+        meaning: 'Why a skipped copy was skipped, in the parser’s or the fetch’s own words.',
+      },
+      content_hash: {
+        type: 'text',
+        nullable: true,
+        meaning: 'SHA-256 (hex) of the copy’s text. Null when the fetch failed.',
+      },
+      raw_key: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'Key of the saved copy in this site’s object store (R2). Null when the fetch failed.',
+      },
+      bytes: {
+        type: 'integer',
+        nullable: true,
+        unit: 'bytes',
+        meaning: 'Size of the copy as read. Null when the fetch failed.',
+      },
+      rows: { type: 'integer', meaning: 'How many archived_prices rows the copy gave.' },
+      source_url: {
+        type: 'text',
+        provenance: true,
+        meaning:
+          'The Wayback Machine copy (https://web.archive.org/web/<timestamp>id_/<original_url>).',
+      },
+      fetched_at: {
+        type: 'timestamp',
+        provenance: true,
+        meaning: 'When we read the copy (or tried to), in UTC.',
+      },
+    },
+  },
+
   source_runs: {
     asOf: 'Rows with started_at at or before as_of.',
     columns: {

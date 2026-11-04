@@ -1,6 +1,7 @@
 // GET /api/prices/<entity_key> — one SKU's observations: every change row
 // plus the current entity row, each with the fetch it was read from. The
 // key is part of the cache key. `as_of` cuts the series at that instant.
+// Archived points (the Internet Archive backfill) come first, basis 'archived'.
 
 import { z } from 'zod'
 
@@ -34,6 +35,7 @@ export default defineEventHandler(async (event) => {
     'price-history',
     (ctx) => queryPriceHistory(terminalDb, ctx, key),
     key,
+    true,
   )
   if (history === null) throw createError({ statusCode: 404, message: 'SKU not found' })
   return history

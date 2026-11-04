@@ -13,7 +13,12 @@ import {
 import { mailto } from '../../shared/utils/contact'
 import { count } from '../../shared/utils/terminal-format'
 import { INFO_FEED_QUERY } from '../../shared/utils/terminal-tiers'
-import type { CoverageData, DataDictionary, SourceAxis } from '../../shared/utils/terminal-types'
+import type {
+  CoverageData,
+  DataDictionary,
+  PricesData,
+  SourceAxis,
+} from '../../shared/utils/terminal-types'
 import type { TableColumn } from '../types/terminal-ui'
 
 definePageMeta({
@@ -26,9 +31,11 @@ definePageMeta({
   },
 })
 
-const [{ data: coverage, error }, { data: dictionary }] = await Promise.all([
+const [{ data: coverage, error }, { data: dictionary }, { data: prices }] = await Promise.all([
   useFetch<CoverageData>('/api/coverage'),
   useFetch<DataDictionary>('/export/dictionary.json'),
+  // Only the reach table rides to the client; the catalog stays on the server.
+  useFetch<PricesData>('/api/prices', { pick: ['reach'] }),
 ])
 
 /** Tables whose dictionary section is open; a download row's Columns link adds its table. */
@@ -301,6 +308,23 @@ const EXPORT_COLUMNS: TableColumn[] = [
     </TerminalPanel>
 
     <TerminalPanel
+      v-if="prices?.reach?.length"
+      id="price-history"
+      title="How far price history goes back"
+      note="Before we started checking, we read the Internet Archive’s copies of each lab’s own pricing page."
+      flush
+    >
+      <TerminalPriceReach :reach="prices.reach" />
+      <template #foot>
+        Rows from an archived copy are marked on each SKU’s page, in
+        <span class="font-mono">/api/prices/&lt;key&gt;</span>, and in the
+        <span class="font-mono">archived_prices</span> table above. Their source link is the copy.
+        We skip a copy we can’t read with confidence. Archived rows are older than the license
+        window, so they’re {{ HISTORY_LICENSE.short }}.
+      </template>
+    </TerminalPanel>
+
+    <TerminalPanel
       id="point-in-time"
       title="Point in time"
       note="What we knew at a given moment, for a backtest."
@@ -335,6 +359,13 @@ const EXPORT_COLUMNS: TableColumn[] = [
             >. Tables that only grow are cut at that moment. Tables of current rows are rebuilt from
             the change log and gain an <span class="font-mono">as_of_verified</span> column. The
             data dictionary gives each table’s rule, or why it answers 400.
+          </li>
+          <li>
+            Before our first fetch, <span class="font-mono">/api/prices</span> and
+            <span class="font-mono">/api/prices/&lt;key&gt;</span> answer from the Internet
+            Archive’s copies instead, and <span class="font-mono">point_in_time</span> names the
+            copy each lab’s prices came from. That’s when the Archive saw the page, not when we knew
+            it. Every other route refuses a date that early.
           </li>
           <li>
             The MCP tools for those routes take an <span class="font-mono">as_of</span> argument.

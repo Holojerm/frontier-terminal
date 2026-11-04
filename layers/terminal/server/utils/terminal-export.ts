@@ -824,6 +824,46 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     undefined,
     notRanking,
   ),
+  archived_prices: plainTable(
+    'archived_prices',
+    'Price history from before we watched the labs: one row per SKU per Internet Archive copy of the lab’s own pricing page that we could read. source_url is the copy, captured_at when the Archive saw the page, fetched_at when we read the copy. Never mixed into the live tables.',
+    tables.archivedPrices,
+    [
+      'id',
+      'capture_id',
+      'entity_key',
+      'provider',
+      'content_hash',
+      'payload',
+      'captured_at',
+      'original_url',
+      'basis',
+      ...PROVENANCE,
+    ],
+    [tables.archivedPrices.captured_at, tables.archivedPrices.id],
+    byColumn(tables.archivedPrices.captured_at),
+  ),
+  archive_captures: plainTable(
+    'archive_captures',
+    'Every Internet Archive copy the price-history backfill considered: read (with how many rows it gave) or skipped, with the reason. A skipped copy gave no rows; nothing on it was guessed.',
+    tables.archiveCaptures,
+    [
+      'id',
+      'era',
+      'provider',
+      'original_url',
+      'captured_at',
+      'status',
+      'detail',
+      'content_hash',
+      'raw_key',
+      'bytes',
+      'rows',
+      ...PROVENANCE,
+    ],
+    [tables.archiveCaptures.captured_at, tables.archiveCaptures.id],
+    byColumn(tables.archiveCaptures.captured_at),
+  ),
   alerts: plainTable(
     'alerts',
     'Every alert fired, with the change ids it cites and the rule that produced it.',
@@ -994,6 +1034,16 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
 
 export const EXPORT_TABLE_NAMES = Object.keys(EXPORT_TABLES)
 
+/**
+ * The tables read from Internet Archive copies (terminal-archive.ts). They
+ * answer as_of by when the Archive saw the page, so an instant before our
+ * first snapshot is not refused, and no paid license relabels them.
+ */
+export const ARCHIVED_EXPORTS: ReadonlySet<string> = new Set([
+  'archived_prices',
+  'archive_captures',
+])
+
 // ---- the license window ----------------------------------------------------
 
 /** A table of current rows or a lookup: every export serves all of it. */
@@ -1075,6 +1125,18 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
     'detected_at, when we saw the change',
     'detected_at',
     tables.changes.detected_at,
+  ),
+  archived_prices: windowed(
+    ['captured_at'],
+    'captured_at, when the Internet Archive saw the page',
+    'fetched_at',
+    tables.archivedPrices.captured_at,
+  ),
+  archive_captures: windowed(
+    ['captured_at'],
+    'captured_at, when the Internet Archive saw the page',
+    'fetched_at',
+    tables.archiveCaptures.captured_at,
   ),
   alerts: windowed(
     ['created_at'],
@@ -1233,9 +1295,13 @@ export function licenseWindow(
   table: ExportTable,
   query: { as_of?: string; history?: HistoryQuery },
   from: string = licenseWindowStart(),
-  older: LicenseRef = HISTORY_LICENSE,
+  requested: LicenseRef = HISTORY_LICENSE,
 ): LicenseWindow {
   const rule = historyRule(name)
+  // A licensee's key never relabels these: they were read from the Internet
+  // Archive, whose terms grant access for scholarship and research
+  // (sources.yaml › archive_sources › wayback-pricing, rights not-cleared).
+  const older = ARCHIVED_EXPORTS.has(name) ? HISTORY_LICENSE : requested
   const label = (dated: (row: Row) => string | null) =>
     licensedOf(table, (row) => {
       const published = rule.published === null ? null : row[rule.published]
