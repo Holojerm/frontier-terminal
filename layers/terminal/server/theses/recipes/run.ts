@@ -20,7 +20,8 @@ const OBSERVATION_COLUMNS = 11
 
 export interface RecipeRunResult {
   recipe_id: string
-  status: 'ok' | 'unchanged' | 'failed'
+  /** skipped: the source needs a secret this deploy does not have; nothing was fetched. */
+  status: 'ok' | 'unchanged' | 'failed' | 'skipped'
   detail: string | null
   observations: number
 }
@@ -58,7 +59,7 @@ async function runOne(
   if (!fetched.ok) {
     return {
       recipe_id: recipe.id,
-      status: 'failed',
+      status: 'skipped' in fetched ? 'skipped' : 'failed',
       detail: fetched.detail,
       observations: 0,
       url,
@@ -66,7 +67,19 @@ async function runOne(
     }
   }
   const fetched_at = deps.now.toISOString()
-  const hash = contentHashOfText(fetched.text)
+  let hash: string
+  try {
+    hash = contentHashOfText(recipe.fingerprint?.(fetched.text) ?? fetched.text)
+  } catch (error) {
+    return {
+      recipe_id: recipe.id,
+      status: 'failed',
+      detail: `extract: ${String(error)}`,
+      observations: 0,
+      url,
+      hash: null,
+    }
+  }
   const raw_key = `recipes/${recipe.id}/${hash}.${recipe.ext}`
   if (hash === (await lastHash(db, recipe.id))) {
     return { recipe_id: recipe.id, status: 'unchanged', detail: null, observations: 0, url, hash }

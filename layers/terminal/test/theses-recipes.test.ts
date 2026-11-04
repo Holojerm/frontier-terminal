@@ -200,6 +200,24 @@ describe('runRecipes', () => {
     await runRecipes(db, { raw, fetcher: limited, now: at(6) }, [recipe])
     expect(await failedAlerts()).toBe(1)
   })
+
+  it('judges change on a fingerprint when the bytes carry per-request noise', async () => {
+    let body = { trace: 'a', values: { '2026-06-30': 1 } }
+    const noisy: SourceFetcher = async () => json(body)
+    const recipe: Recipe = {
+      ...REVENUE,
+      id: 'test-noisy',
+      extract: (text) => quarters((JSON.parse(text) as typeof body).values),
+      fingerprint: (text) => JSON.stringify((JSON.parse(text) as typeof body).values),
+    }
+    const run = async () =>
+      (await runRecipes(db, { raw, fetcher: noisy, now: () => NOW }, [recipe]))[0]!.status
+    expect(await run()).toBe('ok')
+    body = { ...body, trace: 'b' }
+    expect(await run()).toBe('unchanged')
+    body = { trace: 'c', values: { '2026-06-30': 2 } }
+    expect(await run()).toBe('ok')
+  })
 })
 
 describe('recipe signals and recipe-item claims', () => {

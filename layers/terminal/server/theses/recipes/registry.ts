@@ -3,6 +3,8 @@
 
 import { CLOUDFLARE_CHANGELOG } from './cloudflare-changelog'
 import type { Recipe } from './contract'
+import { EPOCH_DATA_CENTERS, EPOCH_DATA_CENTER_TIMELINES } from './epoch-data-centers'
+import { GITHUB_AGENT_RECIPES } from './github-agent-prs'
 import { GPU_AZURE, GPU_ORACLE } from './gpu-apis'
 import {
   GPU_COREWEAVE,
@@ -14,7 +16,9 @@ import {
   GPU_VERDA,
 } from './gpu-pages'
 import { GREENHOUSE_CLOUDFLARE } from './greenhouse-departments'
-import { NPM_WRANGLER } from './npm-downloads'
+import { NPM_LAB_RECIPES, NPM_WRANGLER } from './npm-downloads'
+import { PYPI_LAB_RECIPES } from './pypi-downloads'
+import { RAMP_AI_INDEX } from './ramp-ai-index'
 import {
   SEC_REVENUE_AKAM,
   SEC_REVENUE_CRWV,
@@ -44,4 +48,11 @@ export const RECIPES: readonly Recipe[] = [
   CLOUDFLARE_CHANGELOG,
   SEC_REVENUE_CRWV,
   ...GPU_RECIPES,
+  // Demand and supply beside OpenRouter, audited 2026-11-04 (docs/source-audit.md).
+  RAMP_AI_INDEX,
+  ...NPM_LAB_RECIPES,
+  ...PYPI_LAB_RECIPES,
+  ...GITHUB_AGENT_RECIPES,
+  EPOCH_DATA_CENTERS,
+  EPOCH_DATA_CENTER_TIMELINES,
 ]

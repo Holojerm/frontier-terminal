@@ -1,7 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
 import { includeSources } from '../server/pipeline/sources'
-import { GPU_RECIPES } from '../server/theses/recipes/registry'
+import { RAMP_AI_INDEX } from '../server/theses/recipes/ramp-ai-index'
+import { GPU_RECIPES, RECIPES } from '../server/theses/recipes/registry'
 import { SEC_REVENUE_CRWV } from '../server/theses/recipes/sec-revenue'
 import { SOURCE_LABELS, labelOf, readSourceRegistry } from '../server/utils/terminal-sources'
 import { fixtureText, manifest } from './pipeline/fixtures'
@@ -104,18 +105,31 @@ describe('readSourceRegistry', () => {
     ])
   })
 
-  it('carries an audit entry for every GPU recipe and the CoreWeave filer, at the URL each fetches', () => {
+  it('carries an audit entry for every recipe audited since 2026-11-02, at the URL each fetches', () => {
+    // The Cloudflare thesis's recipes predate the block; their audit is on its journal page.
+    const before = new Set([
+      'sec-revenue-net',
+      'sec-revenue-akam',
+      'sec-revenue-fsly',
+      'npm-wrangler',
+      'greenhouse-cloudflare',
+      'cloudflare-changelog-ai',
+    ])
     const audited = new Map(registry.recipes.map((r) => [r.recipe_id, r]))
-    for (const recipe of [...GPU_RECIPES, SEC_REVENUE_CRWV]) {
+    const due = RECIPES.filter((r) => !before.has(r.id))
+    for (const recipe of due) {
       const entry = audited.get(recipe.id)
       expect(entry, recipe.id).toBeDefined()
-      expect(entry!.verdict).toBe('include')
+      expect(entry!.verdict).toMatch(/^include/)
       expect(entry!.terms).toBeTruthy()
-      expect(entry!.url).toBe(recipe.url({ now: new Date(), newest: null }))
+      const url = recipe.url({ now: new Date(), newest: null })
+      // A URL that carries the run's dates is registered as a template on the same host.
+      if (entry!.url.includes('{'))
+        expect(new URL(entry!.url).host, recipe.id).toBe(new URL(url).host)
+      else expect(entry!.url, recipe.id).toBe(url)
     }
-    expect([...audited.keys()].sort()).toEqual(
-      [...GPU_RECIPES, SEC_REVENUE_CRWV].map((r) => r.id).sort(),
-    )
+    expect([...audited.keys()].sort()).toEqual(due.map((r) => r.id).sort())
+    expect(due).toEqual(expect.arrayContaining([...GPU_RECIPES, SEC_REVENUE_CRWV, RAMP_AI_INDEX]))
   })
 
   it('fails loudly on a file with no sources block', () => {
