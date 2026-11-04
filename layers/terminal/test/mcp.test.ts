@@ -7,6 +7,7 @@ import type { SourceFetcher } from '../server/pipeline/fetch'
 import { runRefresh, type RawStore } from '../server/pipeline/refresh'
 import { includeSources } from '../server/pipeline/sources'
 import { ALERT_SEARCH_DEPTH, createTerminalMcpHandler, type McpDeps } from '../server/utils/mcp'
+import { assertKnowable, pointInTimeMeta, pollStampAt } from '../server/utils/terminal-asof'
 import { terminalStamp } from '../server/utils/terminal-cache'
 import { queryContext } from '../server/utils/terminal-db'
 import { fixtureText, manifest } from './pipeline/fixtures'
@@ -64,6 +65,15 @@ const deps: McpDeps = {
   db,
   serve: async (_name, query) =>
     query(queryContext(sourcesYaml, await terminalStamp(db), FIXED_NOW)),
+  // terminalPayloadAt without the KV cache.
+  serveAt: async (_name, at, query) => {
+    await assertKnowable(db, at)
+    const ctx = queryContext(sourcesYaml, await pollStampAt(db, at), FIXED_NOW, at)
+    const data = await query(ctx)
+    return (
+      data === null ? null : { ...data, point_in_time: pointInTimeMeta(at, ctx.notes) }
+    ) as never
+  },
   llmsTxt: LLMS,
   appUrl: 'https://example.com',
   status: {
@@ -473,6 +483,33 @@ describe('tools/call', () => {
     expect(rankings.meta.coverage.days).toBe(30)
     const total = rankings.shares.reduce((n, s) => n + (s.share ?? 0), 0)
     expect(total).toBeCloseTo(1, 6)
+  })
+
+  it('as_of: a point-in-time payload says how it was rebuilt; a bad or too-early instant is a tool error', async () => {
+    const later = new Date(Date.parse('2026-09-07T11:00:00Z')).toISOString()
+    const alerts = (await tool('get_alerts', { as_of: '2026-09-07T11:00:00Z' }))
+      .structuredContent as {
+      total: number
+      point_in_time: { requested: string; method: string[]; unverified: string[] }
+    }
+    expect(alerts.total).toBe(1)
+    expect(alerts.point_in_time.requested).toBe(later)
+    expect(alerts.point_in_time.method.join(' ')).toContain('created_at')
+
+    const prices = (await tool('get_prices', { provider: 'xai', as_of: later }))
+      .structuredContent as {
+      rows: unknown[]
+      point_in_time: { unverified: string[] }
+    }
+    expect(prices.rows.length).toBeGreaterThan(0)
+    expect(prices.point_in_time.unverified).toEqual([])
+
+    const early = await tool('get_hiring', { as_of: '2026-09-07T09:00:00Z' })
+    expect(early.isError).toBe(true)
+    expect(early.content[0]!.text).toContain('before the first snapshot')
+    const vague = await tool('get_revenue', { as_of: '2026-09-07' })
+    expect(vague.isError).toBe(true)
+    expect(vague.content[0]!.text).toContain('timezone')
   })
 
   it('rejects arguments the schema does not allow', async () => {

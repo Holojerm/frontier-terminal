@@ -12,7 +12,8 @@ import { thesisPages } from '../../shared/utils/thesis-format'
 
 import manifest from '~~/fleet.json'
 import { THESES } from '../theses/registry'
-import type { LlmsTxtInput } from '#server/utils/seo'
+import type { LlmsTxtInput, LlmsTxtSection } from '#server/utils/seo'
+import { AS_OF_ROUTES } from './terminal-asof'
 import { EXPORT_TABLES } from './terminal-export'
 
 /** The route-table pages plus the dynamic ones enumerable without a query. */
@@ -44,5 +45,25 @@ export function llmsTxtInput(config: {
       description: table.description,
     })),
     repoUrl: manifest.links.github ?? '',
+    sections: [POINT_IN_TIME],
   }
+}
+
+const EXAMPLE_AS_OF = '2026-10-01T00:00:00Z'
+
+/** `?as_of=` on the routes and exports that answer it (terminal-asof.ts). */
+const POINT_IN_TIME: LlmsTxtSection = {
+  heading: 'Point in time',
+  links: [
+    {
+      path: `/api/prices?as_of=${EXAMPLE_AS_OF}`,
+      title: 'API as_of',
+      description: `Add \`?as_of=<ISO-8601 timestamp with zone>\` to ${AS_OF_ROUTES.join(', ')} for what the terminal knew at that instant — knowledge time, not event time: a row counts from its fetch, a judge alert from a judge run that could have written it. The payload's as_of becomes the poll tick in force then, and point_in_time says how it was rebuilt and which keys the change log cannot confirm (unverified). Every other route answers 400 rather than ignore it.`,
+    },
+    {
+      path: `/export/changes.csv?as_of=${EXAMPLE_AS_OF}`,
+      title: 'Exports as_of',
+      description: `The same parameter on /export/<table>: append-only tables are cut at the instant; current-row tables are rebuilt from the change log with an as_of_verified column; claim_readings and recipe_observations answer 400, being rewritten in place with no history.`,
+    },
+  ],
 }
