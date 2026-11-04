@@ -1,9 +1,9 @@
 ---
 schedule: "37 */6 * * *"
-model: claude-sonnet-5
+model: claude-opus-5-5
 connectors: [github]
 tier: 2
-enabled: false
+enabled: true
 ---
 
 # Ops Triage
