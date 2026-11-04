@@ -36,6 +36,7 @@ const cheap = [
   'fleet:check',
   'crons:check',
   'methods:check',
+  'globals:check',
   'layers:check',
 ].map((s) => run(s))
 
