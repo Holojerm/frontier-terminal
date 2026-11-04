@@ -48,3 +48,14 @@ describe('press briefs', () => {
     expect(brief.text).toContain('Tips Desk, Paper (tips desk)')
   })
 })
+
+describe('press drafts', () => {
+  it('composes the same note the mailto link carries', async () => {
+    const { pressDraft } = await import('../server/pipeline/press')
+    const [ada] = parsePressList(LIST)
+    const d = pressDraft(ALERT, ada!, 'https://frontierterm.com')
+    expect(d).toMatchObject({ to: 'ada@example.com', desk: false, subject: ALERT.headline })
+    const href = pressNote(ALERT, ada!, 'https://frontierterm.com').href
+    expect(decodeURIComponent(href.split('&body=')[1]!)).toBe(d.body)
+  })
+})

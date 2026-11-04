@@ -458,6 +458,9 @@ export default defineNuxtConfig({
     // { name, outlet, email?, tips_email?, priority }. A Worker secret because it
     // names people and this repo is public. `wrangler secret put NUXT_PRESS_LIST`.
     pressList: '',
+    // Bearer the press-drafts routine presents to /api/press/* (its own, not the
+    // judge's). Unset = those routes 404. `wrangler secret put NUXT_PRESS_TOKEN`; 32+ chars.
+    pressToken: '',
     // SEC fair-access policy requires a contact email in the User-Agent of
     // every request to sec.gov hosts. Empty = the EDGAR sources are skipped
     // with a 'failed' run, never fetched anonymously (layers/terminal/server/pipeline/fetch.ts).

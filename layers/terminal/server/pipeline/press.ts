@@ -1,8 +1,9 @@
-// Press briefs: when a registration filing parses (a prospectus-floor alert),
-// mail the owner one ready-to-send note per reporter, each a mailto: link with
-// the subject and body filled in from the alert. Nothing is sent to a reporter
-// by the Worker. The send_email binding can only reach the verified owner
-// address, and a person should decide that a note goes out.
+// Press notes: when a registration filing parses (a prospectus-floor alert),
+// one note per reporter, composed here from the alert. Two paths deliver them
+// to the owner, never to a reporter: the press:briefs task mails a brief of
+// mailto: links within minutes, and the press-drafts routine
+// (.claude/routines/press-drafts.md) reads /api/press/pending and saves each
+// note as a Gmail draft. A person decides that a note goes out.
 //
 // The press list is a Worker secret (NUXT_PRESS_LIST, JSON), not in the repo:
 // it is a list of people, and this repository is public.
@@ -20,6 +21,9 @@ import type { PipelineDb } from './store'
 export const PRESS_EPOCH = '2026-11-05T00:00:00.000Z'
 
 const LOOKBACK = 10
+
+/** KV key: every draft for this alert is saved in Gmail. */
+export const draftedKey = (id: string) => `press:drafted:${id}`
 
 const Contact = z.object({
   name: z.string().min(1),
@@ -52,14 +56,11 @@ export interface PressAlert {
   explanation: string
 }
 
-const firstName = (c: PressContact) => (c.email ? c.name.split(/\s+/)[0]! : null)
-
-export function pressNote(alert: PressAlert, contact: PressContact, origin: string) {
-  const to = contact.email ?? contact.tips_email!
-  const greeting = firstName(contact) ? `Hi ${firstName(contact)},` : 'Hello,'
-  const subject = alert.headline
+/** One reporter's note, composed from the alert alone: no model writes it. */
+export function pressDraft(alert: PressAlert, contact: PressContact, origin: string) {
+  const first = contact.email ? contact.name.split(/\s+/)[0] : null
   const body = [
-    greeting,
+    first ? `Hi ${first},` : 'Hello,',
     '',
     `${alert.headline}.`,
     '',
@@ -71,8 +72,20 @@ export function pressNote(alert: PressAlert, contact: PressContact, origin: stri
     'Jeremy Ettlinger',
     'Frontier Terminal · frontierterm.com',
   ].join('\n')
-  const href = `mailto:${to}?subject=${encodeURIComponent(subject)}&body=${encodeURIComponent(body)}`
-  return { to, href, desk: !contact.email }
+  return {
+    name: contact.name,
+    outlet: contact.outlet,
+    to: contact.email ?? contact.tips_email!,
+    desk: !contact.email,
+    subject: alert.headline,
+    body,
+  }
+}
+
+export function pressNote(alert: PressAlert, contact: PressContact, origin: string) {
+  const d = pressDraft(alert, contact, origin)
+  const href = `mailto:${d.to}?subject=${encodeURIComponent(d.subject)}&body=${encodeURIComponent(d.body)}`
+  return { to: d.to, href, desk: d.desk }
 }
 
 const esc = (s: string) =>
@@ -93,13 +106,13 @@ export function pressBrief(
     '',
     alert.explanation,
     '',
-    `${notes.length} drafts. Open one, read it, send it:`,
+    `${notes.length} notes. The press-drafts routine puts them in Gmail as drafts within the hour; or open one here, read it, send it:`,
     ...notes.map((n) => `- ${n.c.name}, ${n.c.outlet}${n.desk ? ' (tips desk)' : ''}: ${n.href}`),
   ].join('\n')
   const html = [
     `<p><strong><a href="${esc(permalink)}">${esc(alert.headline)}</a></strong></p>`,
     `<p>${esc(alert.explanation)}</p>`,
-    `<p>${notes.length} drafts. Open one, read it, send it:</p>`,
+    `<p>${notes.length} notes. The press-drafts routine puts them in Gmail as drafts within the hour; or open one here, read it, send it:</p>`,
     '<ul>',
     ...notes.map(
       (n) =>
@@ -110,10 +123,10 @@ export function pressBrief(
   return { subject, html, text, ids: [alert.id] }
 }
 
-/** Registration-filing alerts since the epoch that have no brief yet. */
+/** Registration-filing alerts since the epoch that `done` has not seen yet. */
 export async function pendingPressAlerts(
   db: PipelineDb,
-  briefed: (id: string) => Promise<boolean>,
+  done: (id: string) => Promise<boolean>,
 ): Promise<PressAlert[]> {
   const rows = await db
     .select({
@@ -131,6 +144,6 @@ export async function pendingPressAlerts(
     .orderBy(desc(tables.alerts.created_at))
     .limit(LOOKBACK)
   const out: PressAlert[] = []
-  for (const r of rows) if (!(await briefed(r.id))) out.push(r)
+  for (const r of rows) if (!(await done(r.id))) out.push(r)
   return out
 }
