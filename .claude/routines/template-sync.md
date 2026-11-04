@@ -2,7 +2,7 @@
 schedule: "0 14 * * 3"
 model: claude-sonnet-5
 connectors: [github]
-enabled: false
+enabled: true
 ---
 
 # Template Sync
