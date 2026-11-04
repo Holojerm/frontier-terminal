@@ -38,6 +38,14 @@ import gpuOracle from '~~/fixtures/recipes/gpu-oracle.json?raw'
 import gpuTogether from '~~/fixtures/recipes/gpu-together.html?raw'
 import gpuVerda from '~~/fixtures/recipes/gpu-verda.html?raw'
 import rampAiIndex from '~~/fixtures/recipes/ramp-ai-index.html?raw'
+import limitsAnthropic from '~~/fixtures/recipes/limits-anthropic.md?raw'
+import limitsMeta from '~~/fixtures/recipes/limits-meta.md?raw'
+import limitsOpenaiAstra from '~~/fixtures/recipes/limits-openai-gpt-6-astra.md?raw'
+import limitsXai from '~~/fixtures/recipes/limits-xai.md?raw'
+import payAnthropic from '~~/fixtures/recipes/pay-anthropic.json?raw'
+import payOpenai from '~~/fixtures/recipes/pay-openai.json?raw'
+import secAmznAnthropic from '~~/fixtures/recipes/sec-amzn-anthropic.xml?raw'
+import secMsftOpenai from '~~/fixtures/recipes/sec-msft-openai.xml?raw'
 import epochDataCenters from '~~/fixtures/recipes/epoch-data-centers.csv?raw'
 import epochTimelines from '~~/fixtures/recipes/epoch-data-center-timelines.csv?raw'
 import githubPrsCopilot from '~~/fixtures/recipes/github-prs-copilot.json?raw'
@@ -106,6 +114,14 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/recipes/gpu-together.html': gpuTogether,
   'fixtures/recipes/gpu-verda.html': gpuVerda,
   'fixtures/recipes/ramp-ai-index.html': rampAiIndex,
+  'fixtures/recipes/limits-anthropic.md': limitsAnthropic,
+  'fixtures/recipes/limits-meta.md': limitsMeta,
+  'fixtures/recipes/limits-openai-gpt-6-astra.md': limitsOpenaiAstra,
+  'fixtures/recipes/limits-xai.md': limitsXai,
+  'fixtures/recipes/pay-anthropic.json': payAnthropic,
+  'fixtures/recipes/pay-openai.json': payOpenai,
+  'fixtures/recipes/sec-amzn-anthropic.xml': secAmznAnthropic,
+  'fixtures/recipes/sec-msft-openai.xml': secMsftOpenai,
   'fixtures/recipes/epoch-data-centers.csv': epochDataCenters,
   'fixtures/recipes/epoch-data-center-timelines.csv': epochTimelines,
   'fixtures/recipes/github-prs-copilot.json': githubPrsCopilot,

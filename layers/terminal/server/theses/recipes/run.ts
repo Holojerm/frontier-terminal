@@ -54,8 +54,23 @@ async function runOne(
   recipe: Recipe,
   deps: { raw: RawStore; fetcher: SourceFetcher; now: Date },
 ): Promise<RecipeRunResult & { url: string; hash: string | null }> {
-  const url = recipe.url({ now: deps.now, newest: await newestDate(db, recipe.id) })
-  const fetched = await deps.fetcher({ source_id: recipe.id, url, ext: recipe.ext })
+  let url = recipe.url({ now: deps.now, newest: await newestDate(db, recipe.id) })
+  let fetched = await deps.fetcher({ source_id: recipe.id, url, ext: recipe.ext })
+  if (fetched.ok && recipe.follow) {
+    try {
+      url = recipe.follow(fetched.text)
+    } catch (error) {
+      return {
+        recipe_id: recipe.id,
+        status: 'failed',
+        detail: `follow: ${String(error)}`,
+        observations: 0,
+        url,
+        hash: null,
+      }
+    }
+    fetched = await deps.fetcher({ source_id: recipe.id, url, ext: recipe.ext })
+  }
   if (!fetched.ok) {
     return {
       recipe_id: recipe.id,
@@ -110,7 +125,11 @@ async function runOne(
   await deps.raw.put(
     raw_key,
     fetched.text,
-    recipe.ext === 'json' ? 'application/json' : 'text/plain',
+    recipe.ext === 'json'
+      ? 'application/json'
+      : recipe.ext === 'xml'
+        ? 'application/xml'
+        : 'text/plain',
   )
   const rows = observations.map((o) => ({
     id: contentHash({ recipe: recipe.id, key: o.key, date: o.date }),

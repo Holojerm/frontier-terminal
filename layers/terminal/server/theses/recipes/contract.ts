@@ -40,4 +40,11 @@ export interface Recipe {
    * only when this changes. Throws like `extract` on a shape it cannot read.
    */
   fingerprint?(body: string): string
+  /**
+   * For a source found through another: `url` is fetched first and this
+   * names the document to read from its body (an EDGAR submissions feed →
+   * the newest filing). Everything else (hash, raw bytes, extract, the
+   * stored source URL) is about the followed document.
+   */
+  follow?(body: string): string
 }
