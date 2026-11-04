@@ -273,7 +273,8 @@ sources:
     fixture: fixtures/hiring/xai-greenhouse.json
     caveats: >-
       262 roles at audit time; 255 at the 2026-08-25T23:08Z join re-fetch.
-      Every row carries company_name "SpaceXAI" — the board is an
+      Every row carries company_name "SpaceXAI" ("SpaceXSI" on all 300
+      rows by 2026-11-04) — the board is an
       entity-blended SpaceX/xAI artifact of the 2025 merger, and presenting
       it as pure xAI hiring would mislead. Caveat must ship visibly wherever
       this data surfaces. What the /departments join adds is bounded
@@ -1370,3 +1371,39 @@ cut:
       of the Data to "any Capital Market Client or market data distributor,
       unless otherwise agreed to in writing". A CC-BY republication cannot
       keep downstream users out of either group.
+  google-rate-limits:
+    verdict: cut — per-minute limits not published
+    reason: >-
+      aistudio.google.com/docs/rate-limits.md (ai.google.dev's page now
+      redirects there) publishes the spend cap per tier and batch enqueued
+      tokens, but says per-model RPM, TPM and RPD "can be viewed in Google
+      AI Studio", behind a sign-in; robots.txt disallows /rate-limit.
+      Checked 2026-11-04.
+  mistral-rate-limits:
+    verdict: cut — no public limits
+    reason: >-
+      docs.mistral.ai/admin/billing-usage/usage-limits.md says limits are
+      shown in the Admin Panel (admin.mistral.ai), which needs a login; no
+      numbers are published. Checked 2026-11-04.
+  xai-pay-bands:
+    verdict: cut — pay in free text only
+    reason: >-
+      The xai Greenhouse board's structured pay field (pay_input_ranges) is
+      empty on all 300 roles. Pay appears only as free text after
+      "COMPENSATION AND BENEFITS:", parseable as an annual USD band on 81
+      (27%), with Research at n=11, and the board blends SpaceX roles.
+      Checked 2026-11-04.
+  mistral-pay-bands:
+    verdict: cut — no posted pay
+    reason: >-
+      The mistral Ashby board with includeCompensation=true returns no
+      compensation on any of 231 roles, and none of the 35 US-located
+      postings states pay in its description. Checked 2026-11-04.
+  alphabet-anthropic-stake:
+    verdict: cut — Alphabet never names the investee
+    reason: >-
+      "Anthropic" appears in none of six Alphabet 10-Q/10-K filings
+      (Q2 2025 to Q3 2026). They describe "a $40.0 billion investment in a
+      private company" and gains "largely from a private company"; naming
+      it Anthropic would rest on the press, not the filing. Checked
+      2026-11-04.
