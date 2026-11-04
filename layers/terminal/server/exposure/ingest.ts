@@ -1,5 +1,6 @@
-// One run of the filed-facts reader, on every edgar tick (every 30 minutes):
-// for each hyperscaler in sources.yaml `filed_fact_sources`,
+// One run of the filed-facts reader, after each edgar tick's poll (every 30
+// minutes, never at the survey instant: filedFactsSkip): for each hyperscaler
+// in sources.yaml `filed_fact_sources`,
 //
 //   1. its submissions feed, for the 10-Q/10-K list (small, every run);
 //   2. its company facts, every six hours, or every run while a filing from
@@ -13,15 +14,25 @@
 // Facts are append-only (filed_facts). The raw bytes of every document that
 // produced facts go to R2 first, so each row's raw_key resolves. Then the
 // filed-fact rule (alerts.ts) runs over each filer that gained facts.
+//
+// Every request goes to SEC, under its fair-access limit (pipeline/sec-pace.ts).
+// When SEC answers 429 the run stops fetching: the rest of the run is deferred,
+// the 429 is stored as a failed read so the next runs sit out the cooldown
+// (pipeline/rate-limit.ts, a longer Retry-After extends it), and the tick
+// raises one summarised ops event rather than one per document. The 429'd
+// document is read again after the cooldown, not held back a day.
 
-import { and, desc, eq, inArray, min } from 'drizzle-orm'
+import { and, desc, eq, inArray, like, min } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
 import { contentHash, contentHashOfText } from '../pipeline/contracts'
-import type { SourceFetcher } from '../pipeline/fetch'
+import { RATE_LIMITED_DETAIL, type FetchOutcome, type SourceFetcher } from '../pipeline/fetch'
 import { parseCikWhitelistBlock } from '../pipeline/parsers/sec/whitelist'
+import type { PollOutcome } from '../pipeline/poll'
+import { cooldownEndsAt, isRateLimitRun } from '../pipeline/rate-limit'
 import type { RawStore } from '../pipeline/refresh'
+import type { FetchSource } from '../pipeline/sources'
 import { chunk, D1_MAX_BOUND_PARAMS, runStatements, type PipelineDb } from '../pipeline/store'
 import { readFiledFactSources } from '../utils/terminal-sources'
 import { FRESH_DAYS, filedFactAlert } from './alerts'
@@ -57,9 +68,32 @@ export interface FiledFactsReport {
     facts: number
   }[]
   alerts: number
+  /** Requests not made this run because SEC answered 429 (the 429'd one included). */
+  deferred: number
+  /** Set when an earlier 429's cooldown kept this run from fetching at all. */
+  cooling_until: string | null
+}
+
+/**
+ * Why the edgar tick leaves the filed facts out, or null to run them. They run
+ * only after a poll that ran: at the survey instant the poll yields, and the
+ * survey is fetching every SEC feed in another invocation; a held lock means
+ * another poll is fetching right now. A 429 from SEC earlier in the tick means
+ * SEC wants less, not more. The next tick, thirty minutes on, picks them up.
+ */
+export function filedFactsSkip(poll: PollOutcome, secRateLimited: boolean): string | null {
+  if (poll.status === 'yielded') return `poll yielded to the ${poll.to}`
+  if (poll.status === 'skipped') return `poll lock held by ${poll.heldBy}`
+  if (secRateLimited) return 'SEC answered 429 earlier this tick'
+  return null
 }
 
 type Filer = ReturnType<typeof readFiledFactSources>[number]
+
+/** A fetch that answers null when it was deferred: SEC has answered 429 this run. */
+type SecFetch = (source: FetchSource, read: ReadKey) => Promise<FetchOutcome | null>
+
+type ReadKey = Pick<Read, 'ticker' | 'kind' | 'accession_no'>
 
 interface Read {
   ticker: string
@@ -140,15 +174,16 @@ async function storeFacts(
 async function readCompanyfacts(
   db: PipelineDb,
   filer: Filer,
+  fetchSec: SecFetch,
   deps: FiledFactsDeps,
   now: string,
-): Promise<Read> {
+): Promise<Read | null> {
   const base = { ticker: filer.ticker, kind: 'companyfacts' as const, accession_no: null }
-  const fetched = await deps.fetcher({
-    source_id: `${filer.id}-companyfacts`,
-    url: filer.url,
-    ext: 'json',
-  })
+  const fetched = await fetchSec(
+    { source_id: `${filer.id}-companyfacts`, url: filer.url, ext: 'json' },
+    base,
+  )
+  if (!fetched) return null
   if (!fetched.ok) {
     return {
       ...base,
@@ -205,15 +240,16 @@ async function readInstance(
   db: PipelineDb,
   filer: Filer,
   doc: InstanceDocument,
+  fetchSec: SecFetch,
   deps: FiledFactsDeps,
   now: string,
-): Promise<Read> {
+): Promise<Read | null> {
   const base = { ticker: filer.ticker, kind: 'instance' as const, accession_no: doc.accession_no }
-  const fetched = await deps.fetcher({
-    source_id: `${filer.id}-${doc.accession_no}`,
-    url: doc.url,
-    ext: 'xml',
-  })
+  const fetched = await fetchSec(
+    { source_id: `${filer.id}-${doc.accession_no}`, url: doc.url, ext: 'xml' },
+    base,
+  )
+  if (!fetched) return null
   if (!fetched.ok) {
     return {
       ...base,
@@ -259,12 +295,17 @@ async function readInstance(
   }
 }
 
-/** Accessions with an ok instance read, and those that failed within FAILED_RETRY_MS. */
+/**
+ * Accessions with an ok instance read, and those that failed within
+ * FAILED_RETRY_MS. A 429 is not the document failing: it waits out the
+ * cooldown with the rest of the run instead.
+ */
 async function instanceState(db: PipelineDb, ticker: string, now: Date) {
   const rows = await db
     .select({
       accession_no: tables.filedFactReads.accession_no,
       status: tables.filedFactReads.status,
+      detail: tables.filedFactReads.detail,
       started_at: tables.filedFactReads.started_at,
     })
     .from(tables.filedFactReads)
@@ -277,7 +318,7 @@ async function instanceState(db: PipelineDb, ticker: string, now: Date) {
   for (const r of rows) {
     if (!r.accession_no) continue
     if (r.status === 'ok') done.add(r.accession_no)
-    else if (r.started_at >= retryFrom) failedRecently.add(r.accession_no)
+    else if (r.started_at >= retryFrom && !isRateLimitRun(r)) failedRecently.add(r.accession_no)
   }
   return { done, failedRecently }
 }
@@ -364,15 +405,45 @@ export async function runFiledFacts(
   deps: FiledFactsDeps,
 ): Promise<FiledFactsReport> {
   const now = deps.now.toISOString()
+  const coolingUntil = await cooldownUntil(db, deps.now)
+  if (coolingUntil) return { reads: [], alerts: 0, deferred: 0, cooling_until: coolingUntil }
+
   const filers = readFiledFactSources(deps.sourcesYaml, parseCikWhitelistBlock(deps.sourcesYaml))
   const reads: Read[] = []
   const queue: { filer: Filer; docs: InstanceDocument[] }[] = []
 
+  // After the first 429 nothing else is fetched; each request the run would
+  // still have made is counted instead.
+  let throttled: Read | null = null
+  let deferred = 0
+  const fetchSec: SecFetch = async (source, read) => {
+    if (throttled) {
+      deferred++
+      return null
+    }
+    const outcome = await deps.fetcher(source)
+    if (outcome.ok || outcome.status !== 429) return outcome
+    deferred++
+    throttled = {
+      ...read,
+      status: 'failed',
+      detail: outcome.detail,
+      content_hash: null,
+      facts: 0,
+      source_url: source.url,
+    }
+    return null
+  }
+
   for (const filer of filers) {
     const url = submissionsUrl(filer.cik)
-    const sub = await deps.fetcher({ source_id: `${filer.id}-submissions`, url, ext: 'json' })
+    const sub = await fetchSec(
+      { source_id: `${filer.id}-submissions`, url, ext: 'json' },
+      { ticker: filer.ticker, kind: 'submissions', accession_no: null },
+    )
+    // A deferred submissions feed (null) leaves no list to work from this run.
     let docs: InstanceDocument[] = []
-    if (!sub.ok) {
+    if (sub && !sub.ok) {
       reads.push({
         ticker: filer.ticker,
         kind: 'submissions',
@@ -383,7 +454,7 @@ export async function runFiledFacts(
         facts: 0,
         source_url: url,
       })
-    } else {
+    } else if (sub) {
       try {
         docs = instanceDocuments(sub.text, filer.cik, SERIES_SINCE)
       } catch (error) {
@@ -405,7 +476,10 @@ export async function runFiledFacts(
       !last ||
       deps.now.getTime() - Date.parse(last.started_at) >= COMPANYFACTS_INTERVAL_MS ||
       (await companyfactsBehind(db, filer.ticker, docs, deps.now))
-    if (due) reads.push(await readCompanyfacts(db, filer, deps, now))
+    if (due) {
+      const read = await readCompanyfacts(db, filer, fetchSec, deps, now)
+      if (read) reads.push(read)
+    }
 
     if (filer.instances && docs.length) {
       const { done, failedRecently } = await instanceState(db, filer.ticker, deps.now)
@@ -423,13 +497,16 @@ export async function runFiledFacts(
       const doc = q.docs.shift()
       if (!doc || budget === 0) continue
       budget--
-      reads.push(await readInstance(db, q.filer, doc, deps, now))
+      const read = await readInstance(db, q.filer, doc, fetchSec, deps, now)
+      if (read) reads.push(read)
     }
   }
 
+  // The 429 is stored with the reads: it is what the next runs' cooldown keys on.
+  const limited = throttled as Read | null
   await runStatements(
     db,
-    reads.map((r) =>
+    [...reads, ...(limited ? [limited] : [])].map((r) =>
       db.insert(tables.filedFactReads).values({ id: crypto.randomUUID(), ...r, started_at: now }),
     ),
   )
@@ -437,7 +514,16 @@ export async function runFiledFacts(
     // An instance failure retries a day later; say so once, not every run.
     await recordOpsEvent(db, {
       kind: 'filed_facts_failed',
-      detail: `${r.ticker} ${r.kind}${r.accession_no ? ` ${r.accession_no}` : ''}: ${r.detail}`,
+      detail: `${readName(r)}: ${r.detail}`,
+    })
+  }
+  if (limited) {
+    const until = cooldownEndsAt({ ...limited, started_at: now })
+    await recordOpsEvent(db, {
+      kind: 'filed_facts_deferred',
+      detail:
+        `filed facts: ${deferred} requests deferred after SEC 429 on ${readName(limited)}` +
+        ` (${limited.detail}); next read after ${new Date(until!).toISOString()}`,
     })
   }
 
@@ -456,7 +542,33 @@ export async function runFiledFacts(
       facts,
     })),
     alerts,
+    deferred,
+    cooling_until: null,
   }
+}
+
+const readName = (r: ReadKey) =>
+  `${r.ticker} ${r.kind}${r.accession_no ? ` ${r.accession_no}` : ''}`
+
+/** When the newest SEC 429 still holds the reader off, the time it lifts (ISO); else null. */
+async function cooldownUntil(db: PipelineDb, now: Date): Promise<string | null> {
+  const [last] = await db
+    .select({
+      status: tables.filedFactReads.status,
+      detail: tables.filedFactReads.detail,
+      started_at: tables.filedFactReads.started_at,
+    })
+    .from(tables.filedFactReads)
+    .where(
+      and(
+        eq(tables.filedFactReads.status, 'failed'),
+        like(tables.filedFactReads.detail, `${RATE_LIMITED_DETAIL}%`),
+      ),
+    )
+    .orderBy(desc(tables.filedFactReads.started_at))
+    .limit(1)
+  const until = cooldownEndsAt(last)
+  return until !== null && now.getTime() < until ? new Date(until).toISOString() : null
 }
 
 /** The newest read per filer and how many instances it has read: the coverage the page states. */
