@@ -11,7 +11,7 @@
 // On X the link goes in a self-reply, never the lead post: X ranks posts
 // carrying an external link lower. Bluesky does not, so it keeps one post.
 
-import { and, count, desc, eq, gte, ne, sql } from 'drizzle-orm'
+import { and, count, desc, eq, ne, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import {

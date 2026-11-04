@@ -15,10 +15,6 @@
 // Everything else goes to stderr, so `bun run keys:issue -- … | pbcopy` copies
 // the key alone.
 
-import { Database } from 'bun:sqlite'
-import { existsSync } from 'node:fs'
-import { join } from 'node:path'
-
 import {
   API_KEY_TIERS,
   expiryAfter,
@@ -29,70 +25,9 @@ import {
   keyRefusal,
 } from '../layers/terminal/server/utils/api-key-token'
 import { USAGE_PREFIX } from '../layers/terminal/server/utils/api-key-usage'
+import { ROOT, fail, lit, parseArgs, runSql } from './lib/d1-cli'
 
-const ROOT = join(import.meta.dir, '..')
-const LOCAL_DB = join(ROOT, '.data/db/sqlite.db')
-const D1_NAME = 'frontier-terminal-db'
-
-type Row = Record<string, unknown>
-
-function fail(message: string): never {
-  console.error(message)
-  process.exit(1)
-}
-
-function args(argv: string[]): { command: string; flags: Map<string, string | true> } {
-  const [command = '', ...rest] = argv.filter((a) => a !== '--')
-  const flags = new Map<string, string | true>()
-  for (let i = 0; i < rest.length; i++) {
-    const arg = rest[i]!
-    if (!arg.startsWith('--')) fail(`Unexpected argument: ${arg}`)
-    const next = rest[i + 1]
-    if (next !== undefined && !next.startsWith('--')) {
-      flags.set(arg.slice(2), next)
-      i++
-    } else {
-      flags.set(arg.slice(2), true)
-    }
-  }
-  return { command, flags }
-}
-
-/** A SQL string literal. The values here are the owner's own input, quoted all the same. */
-const lit = (value: string | number | null) =>
-  value === null
-    ? 'NULL'
-    : typeof value === 'number'
-      ? String(value)
-      : `'${value.replace(/'/g, "''")}'`
-
-function runRemote(sql: string): Row[] {
-  const result = Bun.spawnSync(
-    ['bunx', 'wrangler', 'd1', 'execute', D1_NAME, '--remote', '--json', '--command', sql],
-    { cwd: ROOT, stderr: 'inherit' },
-  )
-  if (result.exitCode !== 0) fail('wrangler d1 execute failed (see above).')
-  const out = JSON.parse(result.stdout.toString()) as { results?: Row[] }[]
-  return out.flatMap((r) => r.results ?? [])
-}
-
-function runLocal(sql: string): Row[] {
-  if (!existsSync(LOCAL_DB)) {
-    fail(`No local database at ${LOCAL_DB}. Start \`bun dev\` once to create and migrate it.`)
-  }
-  const db = new Database(LOCAL_DB)
-  try {
-    return db.query(sql).all() as Row[]
-  } catch (error) {
-    fail(
-      `${String(error)}\nIf api_keys is missing, start \`bun dev\` once: it applies the migrations.`,
-    )
-  } finally {
-    db.close()
-  }
-}
-
-const run = (remote: boolean, sql: string) => (remote ? runRemote(sql) : runLocal(sql))
+const run = runSql
 
 async function issue(flags: Map<string, string | true>, remote: boolean) {
   const client = flags.get('client')
@@ -232,7 +167,7 @@ function list(remote: boolean) {
   }
 }
 
-const { command, flags } = args(process.argv.slice(2))
+const { command, flags } = parseArgs(process.argv.slice(2))
 const remote = flags.get('remote') === true
 if (command === 'issue') await issue(flags, remote)
 else if (command === 'revoke') revoke(flags, remote)

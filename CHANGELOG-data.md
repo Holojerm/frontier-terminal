@@ -23,6 +23,19 @@ whose columns don't match the releases in
 `layers/terminal/server/utils/data-schema.ts`, or whose version bump is smaller
 than its changes need.
 
+## 1.1.0 (2026-11-04)
+
+New: alert webhooks for licensees. We POST each new alert at or above the
+severity you chose to an https URL you give us. The body is versioned like the
+exports, and its `schema_version` field is this one.
+
+- `alert` has the columns of the `alerts` table except `change_ids`, plus
+  `permalink`, `source_urls` and `change_count`. `alert.changes` holds the
+  cited rows of the `changes` table (up to 100, all of them on the permalink).
+- `license` is the same license split a request with your key gets.
+- `event`, `delivery_id` and `sent_at` sit beside them, inside the signed body.
+- No table columns changed.
+
 ## 1.0.0 (2026-11-04)
 
 First versioned schema. Every export, bulk file, and API response states its

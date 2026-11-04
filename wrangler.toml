@@ -139,6 +139,8 @@ head_sampling_rate = 1
 #                   moves the payload cache key
 #                   track-record:search — one GDELT query for the oldest alert
 #                   whose window closed (layers/terminal/server/pipeline/track-record/)
+#                   webhooks:deliver — queues new alerts for licensee webhooks and
+#                   sends the due ones (layers/terminal/server/utils/webhook-outbox.ts)
 #   "0 13 * * 1"    theses:digest — the weekly thesis digest email (layers/terminal/server/theses/digest.ts)
 #                   social:digest — queues the weekly what-moved thread
 #                   alerts:hiring-rollup — one hiring alert per lab for the week

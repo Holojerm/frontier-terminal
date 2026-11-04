@@ -55,3 +55,35 @@ accounts through Buffer. `social:alerts` and `social:digest` queue rows
   the ops digest as `social_unknown`. Check Buffer; set `sent` or `queued` by hand.
 - `fleet.json` lists the key, the X channel and the switch, so the dashboard
   flags any of them going missing. A Bluesky channel joins that list when one is set.
+
+## Alert webhooks (licensees)
+
+Licensees with an API key can get alerts POSTed to an https URL
+(`/data#webhooks`). The owner sets them up from the CLI, like keys:
+
+```bash
+bun run webhooks:add -- --key key_0a1b2c3d4e --url https://hooks.example.com/ft --severity notable [--remote]
+bun run webhooks:list [-- --remote]
+bun run webhooks:test -- --id whk_0a1b2c3d4e [--remote]
+bun run webhooks:remove -- --id whk_0a1b2c3d4e [--remote]
+```
+
+- **Secret:** `NUXT_WEBHOOK_SIGNING_KEY` (32+ characters, 1Password "Frontier
+  Terminal webhook signing key"). Each webhook's signing secret is
+  HMAC-derived from it and the webhook id, so D1 stores no secret, only a
+  SHA-256 fingerprint. `add` and `test` need the same value as the Worker:
+  `NUXT_WEBHOOK_SIGNING_KEY="$(op read 'op://Private/Frontier Terminal webhook signing key/password')" bun run webhooks:add -- … --remote`.
+  Rotating it breaks every webhook: each one goes `failing` with an ops event,
+  and has to be removed and re-added with a new secret for the client.
+- **Cron:** `webhooks:deliver` on the */5 tick (`layers/terminal/server/utils/webhook-outbox.ts`).
+  Unset key = it returns before touching D1. The first run records every
+  recent alert as seen and sends nothing.
+- **Timing:** a delivery waits until the poll stamp is past the moment the
+  cron first saw the alert, so the public pages already list it. A judged
+  alert also waits out the social hold, from the same instant. Suppressing its
+  social post (above) suppresses the webhook too, and so does deleting the alert.
+- **Failures:** retried with backoff for 24 hours. Then the webhook is marked
+  `failing`, one `webhook_failing` ops event goes out, and its queued
+  deliveries wait. A passing `webhooks:test` makes it active again; anything
+  queued more than 24 hours ago is dropped as `expired`.
+- **Revoking the key** (`keys:revoke`) stops its webhooks at the next run.

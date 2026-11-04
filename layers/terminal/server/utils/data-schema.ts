@@ -443,6 +443,12 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
     summary:
       'First versioned schema. Every export, bulk file, and API response states its schema_version from here on. A full-history export adds a license column before source_url, and a rebuilt export (?as_of=) adds as_of_verified. Neither changes the default columns.',
   },
+  {
+    version: '1.1.0',
+    date: '2026-11-04',
+    summary:
+      'New: alert webhooks for licensees. Each POST carries schema_version, the alert with the columns of the alerts table plus permalink, source_urls and its cited rows of the changes table, and the license for your key. No table columns changed.',
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version
