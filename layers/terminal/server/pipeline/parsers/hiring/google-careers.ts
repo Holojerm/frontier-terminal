@@ -16,16 +16,29 @@ export const GOOGLE_LAB_EMPLOYER = 'DeepMind'
 
 const JOB = /<job>([\s\S]*?)<\/job>/g
 
+// One compiled pattern per tag, not one per call: the feed has ~3,400 jobs
+// and every one is read for its employer, id and title.
+const TAG_PATTERNS = new Map<string, RegExp>()
+function tagPattern(tag: string): RegExp {
+  let re = TAG_PATTERNS.get(tag)
+  if (!re) {
+    re = new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`, 'g')
+    TAG_PATTERNS.set(tag, re)
+  }
+  re.lastIndex = 0
+  return re
+}
+
 /** The text of the first <tag> in an element, XML entities decoded once; null when absent or empty. */
 function field(xml: string, tag: string): string | null {
-  const m = xml.match(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`))
+  const m = tagPattern(tag).exec(xml)
   if (!m) return null
   const text = decodeEntities(m[1]!).trim()
   return text === '' ? null : text
 }
 
 function all(xml: string, tag: string): string[] {
-  return [...xml.matchAll(new RegExp(`<${tag}>([\\s\\S]*?)</${tag}>`, 'g'))].map((m) => m[1]!)
+  return Array.from(xml.matchAll(tagPattern(tag)), (m) => m[1]!)
 }
 
 /** "London, UK"; "Mountain View, CA, USA; New York, NY, USA" — the feed's own fields, in its order. */

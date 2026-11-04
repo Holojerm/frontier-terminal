@@ -183,6 +183,43 @@ describe('runPoll between survey instants', () => {
   })
 })
 
+describe('the careers lane', () => {
+  it('the survey leaves google-careers to its own tick', async () => {
+    const { all } = deps('2026-09-09T00:00:08Z')
+    const outcome = await runPoll('survey', all)
+    expect(outcome.status).toBe('ran')
+    if (outcome.status !== 'ran') return
+    expect(outcome.result.sources.map((s) => s.source_id)).not.toContain('google-careers')
+  })
+
+  it('runs google-careers alone, under its own scope', async () => {
+    const { all, fetcher } = deps('2026-09-09T00:17:02Z')
+    const outcome = await runPoll('careers', all)
+    expect(outcome.status).toBe('ran')
+    if (outcome.status !== 'ran') return
+    expect(outcome.result.scope).toBe('careers')
+    expect(outcome.result.sources.map((s) => [s.source_id, s.status])).toEqual([
+      ['google-careers', 'baseline'],
+    ])
+    expect(fetcher.calls).toBe(1)
+    const runs = await db.select().from(schema.sourceRuns)
+    expect(runs.map((r) => [r.scope, r.source_id])).toEqual([['careers', 'google-careers']])
+  })
+
+  it('retries a held lock like the survey, and a skip is an ops event', async () => {
+    const { all, fetcher, lock } = deps('2026-09-09T00:17:02Z')
+    lock.value = 'tripwire@2026-09-09T00:15:01.000Z'
+    const outcome = await runPoll('careers', all)
+    expect(outcome).toEqual({ status: 'skipped', heldBy: 'tripwire@2026-09-09T00:15:01.000Z' })
+    expect(lock.gets).toBe(3)
+    expect(fetcher.calls).toBe(0)
+    const ops = await db.select().from(schema.opsEvents)
+    expect(ops.map((o) => o.detail)).toEqual([
+      'careers: lock held by tripwire@2026-09-09T00:15:01.000Z after 2 retries',
+    ])
+  })
+})
+
 describe('runPoll when the survey cannot get the lock', () => {
   it('retries, then records an ops event naming the holder', async () => {
     const { all, fetcher, lock } = deps('2026-09-09T06:00:04Z')

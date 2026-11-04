@@ -11,9 +11,19 @@ import type { FetchSource } from './sources'
 //                          (LAUNCH_SOURCES): the two axes where latency is
 //                          worth polling for. The scope keeps its stored name
 //                          'edgar' (pollScopeEnum, source_runs, /api/status).
-//   survey  0 */6 * * *    every include source. It re-checks EDGAR on purpose:
-//                          an unchanged re-fetch diffs to zero, and the overlap
-//                          means a stalled edgar tick goes covered, not blind.
+//   survey  0 */6 * * *    every include source but the careers lane's. It
+//                          re-checks EDGAR on purpose: an unchanged re-fetch
+//                          diffs to zero, and the overlap means a stalled
+//                          edgar tick goes covered, not blind.
+//   careers 17 */6 * * *   CAREERS_SOURCES, alone in their own invocation.
+//
+// A Worker invocation has 128 MB, and a payload is held as bytes, as a string,
+// and again while it is hashed and archived. The 2026-11-04 18:00 survey was
+// killed for memory (exceededMemory, 4.9 s CPU) on google-careers' first tick,
+// and a kill loses every source the tick had not yet recorded. A source that
+// big runs on its own tick, so its footprint can never take the survey down.
+// Minute 17 is one no other trigger fires on (the five-minute crons land on
+// :15 and :20), and well after the survey has released the poll lock.
 //
 // Because 6h is a multiple of 30m the two are due at the same instant every
 // sixth hour. The survey is a superset, so at that instant edgar yields
@@ -54,6 +64,9 @@ const LAUNCH_SOURCES: readonly string[] = [
   'mistral-pricing-md',
 ]
 
+// Alphabet's whole careers feed, ~20 MB of XML, read for DeepMind's ~140 roles.
+export const CAREERS_SOURCES: readonly string[] = ['google-careers']
+
 // A fresh registration filing's index and document ride the edgar tick until
 // each has parsed once, so what an S-1 amendment says reaches an alert within
 // an hour of the filing rather than at the next six-hourly survey. After that
@@ -81,7 +94,14 @@ export function sourceIdsForScope(
   parsed: ReadonlySet<string> = new Set(),
 ): string[] {
   const ids = all.map((s) => s.source_id)
-  if (scope === 'survey') return ids
+  if (scope === 'careers') {
+    const missing = CAREERS_SOURCES.filter((id) => !ids.includes(id))
+    if (missing.length) {
+      throw new Error(`careers scope names sources not in sources.yaml: ${missing.join(', ')}`)
+    }
+    return [...CAREERS_SOURCES]
+  }
+  if (scope === 'survey') return ids.filter((id) => !CAREERS_SOURCES.includes(id))
   const missing = [...EDGAR_SOURCES, ...LAUNCH_SOURCES].filter((id) => !ids.includes(id))
   if (missing.length) {
     throw new Error(`edgar scope names sources not in sources.yaml: ${missing.join(', ')}`)

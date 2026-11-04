@@ -144,7 +144,12 @@ describe('scopes', () => {
       'mistral-models-md',
       'mistral-pricing-md',
     ])
-    expect(sourceIdsForScope('survey', ALL)).toEqual(ALL_IDS)
+    // google-careers is ~20 MB: it runs alone on the careers tick, never inside the survey.
+    expect(sourceIdsForScope('survey', ALL)).toEqual(
+      ALL_IDS.filter((id) => id !== 'google-careers'),
+    )
+    expect(sourceIdsForScope('careers', ALL)).toEqual(['google-careers'])
+    expect(sourceIdsForScope('edgar', ALL)).not.toContain('google-careers')
     expect(ALL_IDS).toHaveLength(36)
     // The status feeds ride the six-hourly survey only, never the EDGAR tick.
     expect(sourceIdsForScope('edgar', ALL)).not.toContain('openai-status')
@@ -952,6 +957,52 @@ describe('failures', () => {
       detail: 'side source xai-greenhouse-departments unavailable this tick',
     })
     expect(await rows.entities()).toHaveLength(0)
+  })
+
+  it('records each source before fetching the next, so a tick that dies keeps what it finished', async () => {
+    const fixtures = fixtureFetcher()
+    const order: string[] = []
+    const runsBefore = new Map<string, number>()
+    const fetcher: SourceFetcher = async (source) => {
+      order.push(source.source_id)
+      runsBefore.set(source.source_id, (await rows.runs()).length)
+      return fixtures(source)
+    }
+    await run('survey', ['openai-models-md', 'xai-greenhouse', 'xai-models-md'], fetcher)
+
+    // Each source is fetched only after the one before it was recorded. The
+    // board's /departments side is fetched right before the board, once, and
+    // reused when its own turn comes.
+    expect(order).toEqual([
+      'openai-models-md',
+      'xai-models-md',
+      'xai-greenhouse-departments',
+      'xai-greenhouse',
+    ])
+    expect(runsBefore.get('openai-models-md')).toBe(0)
+    expect(runsBefore.get('xai-models-md')).toBe(1)
+    expect(runsBefore.get('xai-greenhouse-departments')).toBe(2)
+    expect(runsBefore.get('xai-greenhouse')).toBe(2)
+    expect((await rows.runs()).map((r) => r.source_id)).toContain('xai-greenhouse-departments')
+    expect((await rows.runs()).map((r) => r.status)).not.toContain('failed')
+  })
+
+  it('a parser that throws fails its own source only; the sources after it still commit', async () => {
+    const report = await run(
+      'survey',
+      ['openai-models-md', 'google-careers', 'xai-models-md'],
+      fixtureFetcher({ 'google-careers': '<jobs><job><employer>DeepMind</employer></job></jobs>' }),
+    )
+    expect(report.sources.map((s) => [s.source_id, s.status])).toEqual([
+      ['openai-models-md', 'baseline'],
+      ['xai-models-md', 'baseline'],
+      ['google-careers', 'failed'],
+    ])
+    expect((await rows.runs()).map((r) => r.source_id).sort()).toEqual([
+      'google-careers',
+      'openai-models-md',
+      'xai-models-md',
+    ])
   })
 
   it('rejects a source id that is not an include source', async () => {

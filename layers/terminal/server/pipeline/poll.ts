@@ -10,8 +10,8 @@ import { sourcesWithGoodRun } from './store'
 
 // What a poll task does, minus the bindings: decide whether this tick is
 // ours, take the lock, resolve the scope, run the refresh, say one line about
-// it. Both layers/terminal/server/tasks/poll/* call this so the tasks are two thin shims over
-// one behaviour.
+// it. The edgar, survey and careers tasks (layers/terminal/server/tasks/poll/) call this so
+// they are thin shims over one behaviour.
 //
 // At the shared six-hourly instant edgar yields without touching the lock:
 // the survey re-fetches EDGAR (scopes.ts), so nothing is lost, and the
@@ -30,9 +30,13 @@ export interface PollDeps extends Omit<RefreshDeps, 'db'> {
  * cron invocation. Covers KV's eventual consistency and a stale key from a
  * crashed tick (at most the 10-min TTL, usually far less). Edgar never
  * retries — at the shared instant it has already yielded, and otherwise its
- * next tick is thirty minutes away.
+ * next tick is thirty minutes away. The careers lane is six-hourly too, so it
+ * retries the same way.
  */
 export const SURVEY_LOCK_RETRY: LockRetry = { retries: 5, delayMs: 15_000 }
+
+/** The six-hourly scopes: a lost tick is six hours stale, so they retry the lock and report a skip. */
+const SIX_HOURLY: ReadonlySet<PollScope> = new Set(['survey', 'careers'])
 
 export type PollOutcome =
   | { status: 'ran'; result: RefreshReport }
@@ -60,8 +64,9 @@ export async function runPoll(scope: PollScope, deps: PollDeps): Promise<PollOut
     return { status: 'yielded', to: 'survey' }
   }
 
-  const retry: LockRetry =
-    scope === 'survey' ? (surveyLockRetry ?? SURVEY_LOCK_RETRY) : { retries: 0, delayMs: 0 }
+  const retry: LockRetry = SIX_HOURLY.has(scope)
+    ? (surveyLockRetry ?? SURVEY_LOCK_RETRY)
+    : { retries: 0, delayMs: 0 }
   const sources = [
     ...includeSources(deps.sourcesYaml, manifestFixtures),
     ...(await deriveSources(deps.db, deps.sourcesYaml)),
@@ -90,10 +95,10 @@ export async function runPoll(scope: PollScope, deps: PollDeps): Promise<PollOut
     console.warn(JSON.stringify({ kind: 'poll_skipped', scope, heldBy: outcome.heldBy }))
     // A skipped survey is six hours of stale pricing and hiring — the owner
     // hears about it. A skipped edgar tick is covered thirty minutes later.
-    if (scope === 'survey') {
+    if (SIX_HOURLY.has(scope)) {
       await recordOpsEvent(deps.db, {
         kind: 'poll_skipped',
-        detail: `survey: lock held by ${outcome.heldBy} after ${retry.retries} retries`,
+        detail: `${scope}: lock held by ${outcome.heldBy} after ${retry.retries} retries`,
       })
     }
     return { status: 'skipped', heldBy: outcome.heldBy }

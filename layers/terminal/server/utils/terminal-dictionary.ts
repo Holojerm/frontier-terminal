@@ -1031,7 +1031,7 @@ export const COLUMN_DOCS: Readonly<Record<string, TableDoc>> = {
       scope: {
         type: 'text',
         meaning:
-          'Which poll ran it: edgar, survey, or tripwire (an off-cycle poll of the model catalogs).',
+          'Which poll ran it: edgar, survey, careers (the large careers feeds, on a six-hourly tick of their own), or tripwire (an off-cycle poll of the model catalogs).',
       },
       source_id: SOURCE_NAME,
       started_at: {
