@@ -91,7 +91,7 @@ useSeo({
         </p>
         <p>
           Where a source publishes no figure, the page says so: OpenAI’s catalog page prints no
-          prices, Google has no public hiring feed, OpenRouter’s price list is a third-party
+          prices, Meta has no public hiring feed, OpenRouter’s price list is a third-party
           restatement kept as a cross-check, and its usage rankings are one aggregator’s traffic,
           not market share. Timestamps under a day old read as relative; the exact value is in the
           hover text and the page markup.
