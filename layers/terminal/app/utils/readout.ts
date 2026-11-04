@@ -13,10 +13,18 @@ import {
   signed,
 } from '../../shared/utils/terminal-format'
 import { labPath, type LabSummary } from '../../shared/utils/terminal-lab-summary'
-import type { Prov } from '../../shared/utils/terminal-types'
+import type { Prov, RevenueProviderView } from '../../shared/utils/terminal-types'
 import type { GapRef } from '../types/terminal-ui'
 
 import { feedGap } from './feed-gap'
+
+/** Whose revenue a figure is when it is not the lab's own: a parent's segment, or the whole parent. */
+export function revenueScope(view: RevenueProviderView | null): string {
+  if (view?.disclosure !== 'parent') return ''
+  const f = view.filer
+  if (f?.segment_label) return ` · ${f.segment_label} segment`
+  return f?.ticker ? ` · all of ${f.ticker}, parent` : ' · parent'
+}
 
 export const READOUT_AXES = ['prices', 'revenue', 'demand', 'hiring', 'incidents'] as const
 export type ReadoutAxis = (typeof READOUT_AXES)[number]
@@ -75,7 +83,7 @@ export function readoutCells(
   const revenue = r.newest
     ? cell('revenue', 'revenue', {
         value: compactUsd(r.newest.val),
-        sub: `${periodLabel(r.newest.days)} to ${r.newest.end}${r.view?.disclosure === 'parent' ? ' · parent' : ''}`,
+        sub: `${periodLabel(r.newest.days)} to ${r.newest.end}${revenueScope(r.view)}`,
         source: r.newest,
       })
     : cell('revenue', 'revenue', {

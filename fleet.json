@@ -141,7 +141,9 @@
     "NUXT_GITHUB_TOKEN",
     "NUXT_SOCIAL_BUFFER_API_KEY",
     "NUXT_SOCIAL_CHANNEL_X",
-    "NUXT_SOCIAL_ENABLED"
+    "NUXT_SOCIAL_ENABLED",
+    "NUXT_PRESS_LIST",
+    "NUXT_PRESS_TOKEN"
   ],
   "links": {
     "github": "https://github.com/Holojerm/frontier-terminal"

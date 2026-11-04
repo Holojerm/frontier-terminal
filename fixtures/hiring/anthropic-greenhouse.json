@@ -16,14 +16,6 @@
       "location": {
         "name": "New York City, NY; San Francisco, CA | New York City, NY"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4461450008,
       "updated_at": "2026-08-21T21:32:54-04:00",
       "requisition_id": "3356",
@@ -49,14 +41,6 @@
       "location": {
         "name": "New York City, NY; San Francisco, CA | New York City, NY | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "Hybrid (Travel-Required)",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4461444008,
       "updated_at": "2026-08-21T12:49:35-04:00",
       "requisition_id": "3355",
@@ -82,14 +66,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": null,
-          "value_type": "single_select"
-        }
-      ],
       "id": 5021015008,
       "updated_at": "2026-08-24T18:32:15-04:00",
       "requisition_id": "11616",
@@ -115,14 +91,6 @@
       "location": {
         "name": "San Francisco, CA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5176201008,
       "updated_at": "2026-08-21T12:50:05-04:00",
       "requisition_id": "261696",
@@ -148,14 +116,6 @@
       "location": {
         "name": "London, UK"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5142966008,
       "updated_at": "2026-08-21T12:50:01-04:00",
       "requisition_id": "261144",
@@ -181,14 +141,6 @@
       "location": {
         "name": "Dublin, IE"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5142971008,
       "updated_at": "2026-08-21T12:50:00-04:00",
       "requisition_id": "261145",
@@ -214,14 +166,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5074052008,
       "updated_at": "2026-08-21T12:49:50-04:00",
       "requisition_id": "12080",
@@ -247,14 +191,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5164551008,
       "updated_at": "2026-08-21T12:50:03-04:00",
       "requisition_id": "261493",
@@ -280,14 +216,6 @@
       "location": {
         "name": "New York City, NY; San Francisco, CA; Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5240487008,
       "updated_at": "2026-08-21T12:50:22-04:00",
       "requisition_id": "262851",
@@ -313,14 +241,6 @@
       "location": {
         "name": "Austin, TX | Remote-Friendly, United States"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "Remote",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5391983008,
       "updated_at": "2026-08-21T12:51:03-04:00",
       "requisition_id": "PIP-266854",
@@ -346,14 +266,6 @@
       "location": {
         "name": "Alberta, CAN | Remote-Friendly, Canada"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "Remote",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5391974008,
       "updated_at": "2026-08-21T12:51:03-04:00",
       "requisition_id": "266853",
@@ -379,14 +291,6 @@
       "location": {
         "name": "Sydney, Australia"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5227413008,
       "updated_at": "2026-08-21T12:50:15-04:00",
       "requisition_id": "262483",
@@ -412,14 +316,6 @@
       "location": {
         "name": "Remote-Friendly (Travel-Required) | San Francisco, CA | New York City, NY"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5215141008,
       "updated_at": "2026-08-21T12:50:13-04:00",
       "requisition_id": "P-4736",
@@ -445,14 +341,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4956672008,
       "updated_at": "2026-08-21T12:49:43-04:00",
       "requisition_id": "10520",
@@ -478,14 +366,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": null,
-          "value_type": "single_select"
-        }
-      ],
       "id": 5125387008,
       "updated_at": "2026-08-21T12:49:58-04:00",
       "requisition_id": "260876",
@@ -511,14 +391,6 @@
       "location": {
         "name": "San Francisco, CA | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5076754008,
       "updated_at": "2026-08-21T12:49:40-04:00",
       "requisition_id": "10123",
@@ -544,14 +416,6 @@
       "location": {
         "name": "San Francisco, CA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": null,
-          "value_type": "single_select"
-        }
-      ],
       "id": 5013366008,
       "updated_at": "2026-08-21T12:49:46-04:00",
       "requisition_id": "11497",
@@ -577,14 +441,6 @@
       "location": {
         "name": "Washington, DC"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5382274008,
       "updated_at": "2026-08-21T12:50:47-04:00",
       "requisition_id": "266472",
@@ -610,14 +466,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": null,
-          "value_type": "single_select"
-        }
-      ],
       "id": 5097186008,
       "updated_at": "2026-08-21T12:49:52-04:00",
       "requisition_id": "260121",
@@ -643,14 +491,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "Hybrid (Travel-Required)",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4423394008,
       "updated_at": "2026-08-21T12:49:35-04:00",
       "requisition_id": "3326",
@@ -676,14 +516,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5286362008,
       "updated_at": "2026-08-21T12:50:29-04:00",
       "requisition_id": "4534",
@@ -709,14 +541,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5288959008,
       "updated_at": "2026-08-21T12:50:31-04:00",
       "requisition_id": "266111",
@@ -742,14 +566,6 @@
       "location": {
         "name": "New York City, NY | Seattle, WA; San Francisco, CA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5116820008,
       "updated_at": "2026-08-21T12:49:56-04:00",
       "requisition_id": "PIP-260679",
@@ -775,14 +591,6 @@
       "location": {
         "name": "New York City, NY; San Francisco, CA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5251832008,
       "updated_at": "2026-08-21T12:50:23-04:00",
       "requisition_id": "262897",
@@ -808,14 +616,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4931772008,
       "updated_at": "2026-08-21T12:49:40-04:00",
       "requisition_id": "10290",
@@ -841,14 +641,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4020350008,
       "updated_at": "2026-08-21T12:49:34-04:00",
       "requisition_id": "1408",
@@ -874,14 +666,6 @@
       "location": {
         "name": "San Francisco, CA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5097490008,
       "updated_at": "2026-08-21T12:49:52-04:00",
       "requisition_id": "260135",
@@ -907,14 +691,6 @@
       "location": {
         "name": "New York City, NY; San Francisco, CA; Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4979585008,
       "updated_at": "2026-08-21T12:49:44-04:00",
       "requisition_id": "PIP-10485",
@@ -940,14 +716,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5252781008,
       "updated_at": "2026-08-21T12:50:24-04:00",
       "requisition_id": "262904",
@@ -973,14 +741,6 @@
       "location": {
         "name": "San Francisco, CA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": null,
-          "value_type": "single_select"
-        }
-      ],
       "id": 5106199008,
       "updated_at": "2026-08-21T12:49:54-04:00",
       "requisition_id": "260494",
@@ -1006,14 +766,6 @@
       "location": {
         "name": "San Francisco, CA | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4935314008,
       "updated_at": "2026-08-21T12:49:41-04:00",
       "requisition_id": "10313",
@@ -1039,14 +791,6 @@
       "location": {
         "name": "London, UK"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5231200008,
       "updated_at": "2026-08-21T12:50:17-04:00",
       "requisition_id": "262607",
@@ -1072,14 +816,6 @@
       "location": {
         "name": "San Francisco, CA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "Remote",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5018472008,
       "updated_at": "2026-08-21T12:49:46-04:00",
       "requisition_id": "11567",
@@ -1105,14 +841,6 @@
       "location": {
         "name": "Remote-Friendly (Travel-Required) | San Francisco, CA | Seattle, WA | New York City, NY"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "Hybrid (Travel-Required)",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4017331008,
       "updated_at": "2026-08-21T12:49:34-04:00",
       "requisition_id": "1354",
@@ -1138,14 +866,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5096878008,
       "updated_at": "2026-08-21T12:49:52-04:00",
       "requisition_id": "260105",
@@ -1171,14 +891,6 @@
       "location": {
         "name": "New York City, NY | Seattle, WA; San Francisco, CA | New York City, NY | Seattle, WA; Washington, DC"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4595463008,
       "updated_at": "2026-08-24T11:48:12-04:00",
       "requisition_id": "PIP-3668",
@@ -1204,14 +916,6 @@
       "location": {
         "name": "San Francisco, CA | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4991194008,
       "updated_at": "2026-08-21T12:49:45-04:00",
       "requisition_id": "11312",
@@ -1237,14 +941,6 @@
       "location": {
         "name": "Sydney, Australia"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": null,
-          "value_type": "single_select"
-        }
-      ],
       "id": 5215130008,
       "updated_at": "2026-08-21T12:50:13-04:00",
       "requisition_id": "P-4734",
@@ -1270,14 +966,6 @@
       "location": {
         "name": "San Francisco, CA | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4989155008,
       "updated_at": "2026-08-21T12:49:45-04:00",
       "requisition_id": "11295",
@@ -1303,14 +991,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4887959008,
       "updated_at": "2026-08-21T12:49:40-04:00",
       "requisition_id": "PIP-10128",
@@ -1336,14 +1016,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5286348008,
       "updated_at": "2026-08-21T12:50:29-04:00",
       "requisition_id": "4533",
@@ -1369,14 +1041,6 @@
       "location": {
         "name": "Remote-Friendly (Travel-Required) | San Francisco, CA | Seattle, WA | New York City, NY"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "Hybrid (Travel-Required)",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4502508008,
       "updated_at": "2026-08-21T12:49:36-04:00",
       "requisition_id": "3446",
@@ -1402,14 +1066,6 @@
       "location": {
         "name": "San Francisco, CA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "Hybrid (Travel-Required)",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4593216008,
       "updated_at": "2026-08-21T12:49:37-04:00",
       "requisition_id": "3666",
@@ -1435,14 +1091,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4899511008,
       "updated_at": "2026-08-21T12:49:35-04:00",
       "requisition_id": "PIP-3231",
@@ -1468,14 +1116,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5065894008,
       "updated_at": "2026-08-21T12:49:49-04:00",
       "requisition_id": "PIP-11983",
@@ -1501,14 +1141,6 @@
       "location": {
         "name": "London, UK"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5073998008,
       "updated_at": "2026-08-21T12:49:50-04:00",
       "requisition_id": "PIP-12078",
@@ -1534,14 +1166,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4970314008,
       "updated_at": "2026-08-21T12:49:41-04:00",
       "requisition_id": "10367",
@@ -1567,14 +1191,6 @@
       "location": {
         "name": "San Francisco, CA, New York City, NY, Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4572744008,
       "updated_at": "2026-08-21T12:49:35-04:00",
       "requisition_id": "PIP-3231",
@@ -1600,14 +1216,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": null,
-          "value_type": "single_select"
-        }
-      ],
       "id": 5026097008,
       "updated_at": "2026-08-21T19:09:57-04:00",
       "requisition_id": "PIP-11751",
@@ -1633,14 +1241,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4951844008,
       "updated_at": "2026-08-21T12:49:42-04:00",
       "requisition_id": "10485",
@@ -1666,14 +1266,6 @@
       "location": {
         "name": "San Francisco, CA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4778843008,
       "updated_at": "2026-08-21T12:49:40-04:00",
       "requisition_id": "3959",
@@ -1699,14 +1291,6 @@
       "location": {
         "name": "Austin, TX; Boston, MA; New York City, NY; San Francisco, CA; Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": null,
-          "value_type": "single_select"
-        }
-      ],
       "id": 5017903008,
       "updated_at": "2026-08-21T12:49:46-04:00",
       "requisition_id": "11556",
@@ -1732,14 +1316,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5370615008,
       "updated_at": "2026-08-21T12:50:44-04:00",
       "requisition_id": "266369",
@@ -1765,14 +1341,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": null,
-          "value_type": "single_select"
-        }
-      ],
       "id": 5013743008,
       "updated_at": "2026-08-21T12:49:46-04:00",
       "requisition_id": "11510",
@@ -1798,14 +1366,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": null,
-          "value_type": "single_select"
-        }
-      ],
       "id": 5108695008,
       "updated_at": "2026-08-21T12:49:54-04:00",
       "requisition_id": "260535",
@@ -1831,14 +1391,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY | Seattle, WA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 4989788008,
       "updated_at": "2026-08-21T12:49:45-04:00",
       "requisition_id": "11302",
@@ -1864,14 +1416,6 @@
       "location": {
         "name": "San Francisco, CA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5149802008,
       "updated_at": "2026-08-21T12:50:01-04:00",
       "requisition_id": "261238",
@@ -1897,14 +1441,6 @@
       "location": {
         "name": "San Francisco, CA | New York City, NY"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5281348008,
       "updated_at": "2026-08-21T12:50:28-04:00",
       "requisition_id": "266019",
@@ -1930,14 +1466,6 @@
       "location": {
         "name": "San Francisco, CA"
       },
-      "metadata": [
-        {
-          "id": 4036944008,
-          "name": "Location Type",
-          "value": "On-Site",
-          "value_type": "single_select"
-        }
-      ],
       "id": 5194810008,
       "updated_at": "2026-08-21T12:50:08-04:00",
       "requisition_id": "261966",
