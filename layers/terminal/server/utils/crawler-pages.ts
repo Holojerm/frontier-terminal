@@ -7,7 +7,7 @@
 
 import type { PublicPage } from '#shared/utils/site'
 import { COMPARE_PAGES } from '../../shared/utils/terminal-compare'
-import { LAB_PAGES } from '../../shared/utils/terminal-lab-summary'
+import { LAB_PAGES, TEAR_SHEET_PAGES } from '../../shared/utils/terminal-lab-summary'
 import { thesisPages } from '../../shared/utils/thesis-format'
 
 import manifest from '~~/fleet.json'
@@ -22,13 +22,19 @@ import { EXPORT_TABLES } from './terminal-export'
 
 /** The route-table pages plus the dynamic ones enumerable without a query. */
 export function crawlerPages(publicPages: PublicPage[] | undefined): PublicPage[] {
-  return [...(publicPages ?? []), ...LAB_PAGES, ...COMPARE_PAGES, ...thesisPages(THESES)]
+  return [
+    ...(publicPages ?? []),
+    ...LAB_PAGES,
+    ...TEAR_SHEET_PAGES,
+    ...COMPARE_PAGES,
+    ...thesisPages(THESES),
+  ]
 }
 
 /** The pages that read only some labs, dated by those labs' changes (seo.ts › dataLastmods). */
 export function labScopedPages(): Record<string, readonly string[]> {
   return Object.fromEntries([
-    ...LAB_PAGES.map((page) => [page.path, [page.lab]] as const),
+    ...[...LAB_PAGES, ...TEAR_SHEET_PAGES].map((page) => [page.path, [page.lab]] as const),
     ...COMPARE_PAGES.map((page) => [page.path, page.labs] as const),
   ])
 }

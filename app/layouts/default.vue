@@ -133,7 +133,7 @@ watch(
          each navigation. Visually hidden until focused. -->
     <a
       href="#main"
-      class="sr-only focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-sm focus:bg-elevated focus:px-4 focus:py-2 focus:text-highlighted focus:ring-2 focus:ring-primary"
+      class="sr-only print:hidden focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-sm focus:bg-elevated focus:px-4 focus:py-2 focus:text-highlighted focus:ring-2 focus:ring-primary"
     >
       Skip to content
     </a>
@@ -141,7 +141,9 @@ watch(
     <!-- Sticky so the nav stays one reach away on long pages. main.css derives
          --header-offset from these row heights; anything else pinned below the
          header should use top-(--header-offset). -->
-    <header class="sticky top-0 z-40 border-b border-default bg-default/75 backdrop-blur">
+    <header
+      class="sticky top-0 z-40 border-b print:hidden border-default bg-default/75 backdrop-blur"
+    >
       <UContainer>
         <div class="flex h-(--ui-header-height) items-center justify-between gap-4">
           <div class="flex min-w-0 items-center gap-4">
@@ -219,16 +221,18 @@ watch(
       </template>
     </USlideover>
 
+    <!-- On paper the header and footer are hidden, so a printed page (the lab
+         tear sheets) is the content alone. -->
     <!-- tabindex="-1" so the skip link moves focus here, not just the scroll
          position — without it the next Tab lands back at the top of the nav.
          The focus-visible rule protects elements a user can Tab to; `main` is only
          ever focused programmatically by the skip link, and a ring around the whole
          page region reads as a rendering bug. design-check-ignore -->
-    <UContainer id="main" as="main" tabindex="-1" class="flex-1 py-6 focus:outline-none">
+    <UContainer id="main" as="main" tabindex="-1" class="flex-1 py-6 focus:outline-none print:py-0">
       <slot />
     </UContainer>
 
-    <footer class="mt-12 border-t border-default">
+    <footer class="mt-12 border-t border-default print:hidden">
       <UContainer>
         <div
           class="flex flex-col gap-4 py-6 text-sm text-muted sm:flex-row sm:items-center sm:justify-between"

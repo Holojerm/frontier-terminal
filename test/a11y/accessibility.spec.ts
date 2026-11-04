@@ -14,6 +14,8 @@ import AxeBuilder from '@axe-core/playwright'
 import type { Result } from 'axe-core'
 import { expect, test } from '@playwright/test'
 
+import { TEAR_SHEET_PAGES } from '../../layers/terminal/shared/utils/terminal-lab-summary'
+
 // /design-system is deliberately excluded: it is a token gallery, so it renders
 // `text-dimmed` swatches on their own. Dimmed is the placeholder/disabled token
 // and is legitimately below 4.5:1 — scanning that page would report the design
@@ -32,6 +34,9 @@ const ROUTES = [
   '/labs/xai',
   '/labs/meta',
   '/labs/mistral',
+  // Every lab's printable sheet, read from the same list the sitemap uses, so a
+  // newly tracked lab's sheet is scanned with no edit here.
+  ...TEAR_SHEET_PAGES.map((page) => page.path),
   // Two of the fifteen pairs: one with every axis populated, one mostly gaps.
   '/compare/openai-vs-anthropic',
   '/compare/meta-vs-mistral',
