@@ -119,6 +119,37 @@ export function htmlSections(html: string): HtmlSection[] {
   return sections
 }
 
+/**
+ * Every table in the document laid out on a grid: a cell with rowspan or
+ * colspan fills each slot it covers, so a price printed once across two model
+ * columns, or a band label printed once beside three rows, is read in every
+ * row and column it applies to. Header and body rows alike, in order.
+ */
+export function htmlGridTables(html: string): string[][][] {
+  const out: string[][][] = []
+  for (const t of stripInvisible(html).matchAll(/<table\b[^>]*>([\s\S]*?)<\/table>/gi)) {
+    const grid: string[][] = []
+    const rows = [...t[1]!.matchAll(/<tr\b[^>]*>([\s\S]*?)<\/tr>/gi)].map((m) => m[1]!)
+    rows.forEach((tr, r) => {
+      grid[r] ??= []
+      let c = 0
+      for (const m of tr.matchAll(/<(td|th)\b([^>]*)>([\s\S]*?)<\/\1>/gi)) {
+        while (grid[r]![c] !== undefined) c++
+        const rowspan = Number(m[2]!.match(/rowspan="?(\d+)/i)?.[1] ?? 1)
+        const colspan = Number(m[2]!.match(/colspan="?(\d+)/i)?.[1] ?? 1)
+        const text = htmlText(m[3]!)
+        for (let dr = 0; dr < rowspan; dr++) {
+          grid[r + dr] ??= []
+          for (let dc = 0; dc < colspan; dc++) grid[r + dr]![c + dc] = text
+        }
+        c += colspan
+      }
+    })
+    out.push(grid.filter((row) => row.length > 0).map((row) => Array.from(row, (x) => x ?? '')))
+  }
+  return out
+}
+
 /** The tables under the first heading whose text is exactly `heading`. Throws when absent. */
 export function htmlTablesUnder(sections: readonly HtmlSection[], heading: string): string[][][] {
   const s = sections.find((x) => x.heading === heading)

@@ -92,6 +92,29 @@ import waybackOpenaiDocsPricing2026 from '~~/fixtures/pricing/wayback/openai-doc
 import waybackOpenaiPricing2023 from '~~/fixtures/pricing/wayback/openai-pricing-2023-07.html?raw'
 import waybackOpenaiPricing2024 from '~~/fixtures/pricing/wayback/openai-pricing-2024-04.html?raw'
 import waybackOpenaiPricingMd2026 from '~~/fixtures/pricing/wayback/openai-pricing-2026-07.md?raw'
+import waybackOpenaiApiPricing2025 from '~~/fixtures/pricing/wayback/openai-api-pricing-2025-01.html?raw'
+import waybackOpenaiDocsPricing2026b from '~~/fixtures/pricing/wayback/openai-docs-pricing-2026-03b.html?raw'
+import waybackOpenaiDocsPricing202607 from '~~/fixtures/pricing/wayback/openai-docs-pricing-2026-07.html?raw'
+import waybackGooglePricing202406 from '~~/fixtures/pricing/wayback/google-pricing-2024-06.html?raw'
+import waybackGooglePricing202408 from '~~/fixtures/pricing/wayback/google-pricing-2024-08.html?raw'
+import waybackGooglePricing202501 from '~~/fixtures/pricing/wayback/google-pricing-2025-01.html?raw'
+import waybackGoogleDocsPricing202506 from '~~/fixtures/pricing/wayback/google-docs-pricing-2025-06.html?raw'
+import waybackGoogleDocsPricing202509 from '~~/fixtures/pricing/wayback/google-docs-pricing-2025-09.html?raw'
+import waybackXaiApi202503 from '~~/fixtures/pricing/wayback/xai-api-2025-03.html?raw'
+import waybackXaiDocsModels202512 from '~~/fixtures/pricing/wayback/xai-docs-models-2025-12.html?raw'
+import waybackXaiModels202603 from '~~/fixtures/pricing/wayback/xai-models-2026-03.md?raw'
+import waybackXaiModels202606 from '~~/fixtures/pricing/wayback/xai-models-2026-06.md?raw'
+import waybackMistralDocsPricing202404 from '~~/fixtures/pricing/wayback/mistral-docs-pricing-2024-04.html?raw'
+import waybackMistralTechnology202406 from '~~/fixtures/pricing/wayback/mistral-technology-2024-06.html?raw'
+import waybackMistralTechnology202502 from '~~/fixtures/pricing/wayback/mistral-technology-2025-02.html?raw'
+import waybackDeepseekPlatform202405 from '~~/fixtures/pricing/wayback/deepseek-platform-pricing-2024-05.html?raw'
+import waybackDeepseekPricing202412 from '~~/fixtures/pricing/wayback/deepseek-pricing-2024-12.html?raw'
+import waybackDeepseekPricing202503 from '~~/fixtures/pricing/wayback/deepseek-pricing-2025-03.html?raw'
+import waybackDeepseekPricing202512 from '~~/fixtures/pricing/wayback/deepseek-pricing-2025-12.html?raw'
+import waybackDeepseekPricing202605 from '~~/fixtures/pricing/wayback/deepseek-pricing-2026-05.html?raw'
+import waybackDeepseekPricing202608 from '~~/fixtures/pricing/wayback/deepseek-pricing-2026-08.html?raw'
+import waybackAlibabaPricing202601 from '~~/fixtures/pricing/wayback/alibaba-model-pricing-2026-01.html?raw'
+import waybackAlibabaPricing202608 from '~~/fixtures/pricing/wayback/alibaba-model-pricing-2026-08.html?raw'
 import sourcesYaml from '~~/sources.yaml?raw'
 
 import { fixtureProvenance } from '../../server/pipeline/parsers/fixture-provenance'
@@ -190,6 +213,29 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/pricing/wayback/openai-pricing-2023-07.html': waybackOpenaiPricing2023,
   'fixtures/pricing/wayback/openai-pricing-2024-04.html': waybackOpenaiPricing2024,
   'fixtures/pricing/wayback/openai-pricing-2026-07.md': waybackOpenaiPricingMd2026,
+  'fixtures/pricing/wayback/openai-api-pricing-2025-01.html': waybackOpenaiApiPricing2025,
+  'fixtures/pricing/wayback/openai-docs-pricing-2026-03b.html': waybackOpenaiDocsPricing2026b,
+  'fixtures/pricing/wayback/openai-docs-pricing-2026-07.html': waybackOpenaiDocsPricing202607,
+  'fixtures/pricing/wayback/google-pricing-2024-06.html': waybackGooglePricing202406,
+  'fixtures/pricing/wayback/google-pricing-2024-08.html': waybackGooglePricing202408,
+  'fixtures/pricing/wayback/google-pricing-2025-01.html': waybackGooglePricing202501,
+  'fixtures/pricing/wayback/google-docs-pricing-2025-06.html': waybackGoogleDocsPricing202506,
+  'fixtures/pricing/wayback/google-docs-pricing-2025-09.html': waybackGoogleDocsPricing202509,
+  'fixtures/pricing/wayback/xai-api-2025-03.html': waybackXaiApi202503,
+  'fixtures/pricing/wayback/xai-docs-models-2025-12.html': waybackXaiDocsModels202512,
+  'fixtures/pricing/wayback/xai-models-2026-03.md': waybackXaiModels202603,
+  'fixtures/pricing/wayback/xai-models-2026-06.md': waybackXaiModels202606,
+  'fixtures/pricing/wayback/mistral-docs-pricing-2024-04.html': waybackMistralDocsPricing202404,
+  'fixtures/pricing/wayback/mistral-technology-2024-06.html': waybackMistralTechnology202406,
+  'fixtures/pricing/wayback/mistral-technology-2025-02.html': waybackMistralTechnology202502,
+  'fixtures/pricing/wayback/deepseek-platform-pricing-2024-05.html': waybackDeepseekPlatform202405,
+  'fixtures/pricing/wayback/deepseek-pricing-2024-12.html': waybackDeepseekPricing202412,
+  'fixtures/pricing/wayback/deepseek-pricing-2025-03.html': waybackDeepseekPricing202503,
+  'fixtures/pricing/wayback/deepseek-pricing-2025-12.html': waybackDeepseekPricing202512,
+  'fixtures/pricing/wayback/deepseek-pricing-2026-05.html': waybackDeepseekPricing202605,
+  'fixtures/pricing/wayback/deepseek-pricing-2026-08.html': waybackDeepseekPricing202608,
+  'fixtures/pricing/wayback/alibaba-model-pricing-2026-01.html': waybackAlibabaPricing202601,
+  'fixtures/pricing/wayback/alibaba-model-pricing-2026-08.html': waybackAlibabaPricing202608,
   'sources.yaml': sourcesYaml,
 }
 

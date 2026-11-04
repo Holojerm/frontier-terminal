@@ -98,9 +98,7 @@ export function archiveRows(
     capture: {
       ...skippedCapture(era, capture, fetchedAt, '', stored),
       status: 'parsed',
-      detail: passed.length
-        ? `not read (priced per modality): ${passed.join(', ')}`.slice(0, 500)
-        : null,
+      detail: passed.length ? `not read: ${passed.join(', ')}`.slice(0, 500) : null,
       rows: prices.length,
     },
     prices,

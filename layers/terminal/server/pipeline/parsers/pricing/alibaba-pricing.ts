@@ -40,7 +40,7 @@ const SLUG = /^[a-z0-9][a-z0-9.-]*$/
 const BAND = /^(\d+[KM]?)<Token≤(\d+[KM])$/
 const PRICE = /^(?:List price )?\$(\d+(?:\.\d+)?)(?: \((Limited-time \d+% off)\))?$/
 
-interface Cell {
+export interface Cell {
   html: string
   text: string
 }
@@ -60,7 +60,7 @@ function section(html: string, level: number, text: string): string {
 }
 
 /** Rows of a <thead> or <tbody> laid out on a grid: a rowspan or colspan cell fills every slot it covers. */
-function grid(fragment: string): Cell[][] {
+export function grid(fragment: string): Cell[][] {
   const out: Cell[][] = []
   const rows = [...fragment.matchAll(/<tr[^>]*>([\s\S]*?)<\/tr>/g)].map((m) => m[1]!)
   rows.forEach((tr, r) => {
@@ -82,7 +82,7 @@ function grid(fragment: string): Cell[][] {
 }
 
 /** Each column's label: its header cells' text top to bottom, a repeat (a rowspan) said once. */
-function columnLabels(head: Cell[][]): string[] {
+export function columnLabels(head: Cell[][]): string[] {
   const width = Math.max(...head.map((r) => r.length))
   return Array.from({ length: width }, (_, c) => {
     const parts: string[] = []
@@ -109,7 +109,7 @@ function price(text: string): { usd: number | null; promo: string | null } {
 }
 
 /** null for the first band (or an untiered model); otherwise `input_<from>_<to>`. */
-function bandTier(text: string): string | null {
+export function bandTier(text: string): string | null {
   if (text === 'No tiered pricing') return null
   const m = text.match(BAND)
   if (!m) throw new Error(`alibaba-pricing: unrecognized input band: ${text}`)

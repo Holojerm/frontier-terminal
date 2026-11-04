@@ -842,6 +842,236 @@
       "raw_bytes": 2071541,
       "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but the inline-math markers the parser undoes, 2071541 -> 16617 bytes; the era parser reads only visible headings, tables and text, and gives the same rows on the raw capture",
       "note": "Internet Archive capture of https://docs.anthropic.com/en/docs/about-claude/pricing taken 20250610103300 (era anthropic-pricing-docs-2025, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/openai-docs-pricing-2026-07.html",
+      "source_id": "wayback-openai-docs-pricing-2026b-20260717100803",
+      "source_url": "https://web.archive.org/web/20260717100803id_/https://developers.openai.com/api/docs/pricing",
+      "fetched_at": "2026-11-04T22:55:09.353Z",
+      "http_status": 200,
+      "raw_bytes": 583216,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but props, which the parser reads, 583216 -> 88892 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://developers.openai.com/api/docs/pricing taken 20260717100803 (era openai-docs-pricing-2026b, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/openai-docs-pricing-2026-03b.html",
+      "source_id": "wayback-openai-docs-pricing-2026b-20260308031250",
+      "source_url": "https://web.archive.org/web/20260308031250id_/https://developers.openai.com/api/docs/pricing/",
+      "fetched_at": "2026-11-04T22:53:52.310Z",
+      "http_status": 200,
+      "raw_bytes": 370160,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped, 370160 -> 49322 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://developers.openai.com/api/docs/pricing/ taken 20260308031250 (era openai-docs-pricing-2026b, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/openai-api-pricing-2025-01.html",
+      "source_id": "wayback-openai-api-pricing-2025-20250128220305",
+      "source_url": "https://web.archive.org/web/20250128220305id_/https://openai.com/api/pricing/",
+      "fetched_at": "2026-11-04T22:53:31.004Z",
+      "http_status": 200,
+      "raw_bytes": 1487741,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but class, aria-label, which the parser reads, 1487741 -> 47249 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://openai.com/api/pricing/ taken 20250128220305 (era openai-api-pricing-2025, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/google-pricing-2024-08.html",
+      "source_id": "wayback-google-pricing-2024-20240812213720",
+      "source_url": "https://web.archive.org/web/20240812213720id_/https://ai.google.dev/pricing",
+      "fetched_at": "2026-11-04T22:57:18.725Z",
+      "http_status": 200,
+      "raw_bytes": 191200,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but id, which the parser reads, 191200 -> 33187 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://ai.google.dev/pricing taken 20240812213720 (era google-pricing-2024, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/google-pricing-2025-01.html",
+      "source_id": "wayback-google-pricing-2024-20250113073052",
+      "source_url": "https://web.archive.org/web/20250113073052id_/https://ai.google.dev/pricing",
+      "fetched_at": "2026-11-04T22:58:40.380Z",
+      "http_status": 200,
+      "raw_bytes": 280492,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but id, which the parser reads, 280492 -> 61673 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://ai.google.dev/pricing taken 20250113073052 (era google-pricing-2024, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/google-pricing-2024-06.html",
+      "source_id": "wayback-google-pricing-2024-20240615034357",
+      "source_url": "https://web.archive.org/web/20240615034357id_/https://ai.google.dev/pricing",
+      "fetched_at": "2026-11-04T22:56:48.423Z",
+      "http_status": 200,
+      "raw_bytes": 168512,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but id, which the parser reads, 168512 -> 28134 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://ai.google.dev/pricing taken 20240615034357 (era google-pricing-2024, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/google-docs-pricing-2025-06.html",
+      "source_id": "wayback-google-docs-pricing-2025-20250607103454",
+      "source_url": "https://web.archive.org/web/20250607103454id_/https://ai.google.dev/gemini-api/docs/pricing",
+      "fetched_at": "2026-11-04T23:00:14.420Z",
+      "http_status": 200,
+      "raw_bytes": 153703,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but id, href, which the parser reads, 153703 -> 51618 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://ai.google.dev/gemini-api/docs/pricing taken 20250607103454 (era google-docs-pricing-2025, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/google-docs-pricing-2025-09.html",
+      "source_id": "wayback-google-docs-pricing-2025-20250918150943",
+      "source_url": "https://web.archive.org/web/20250918150943id_/https://ai.google.dev/gemini-api/docs/pricing",
+      "fetched_at": "2026-11-04T23:01:20.011Z",
+      "http_status": 200,
+      "raw_bytes": 116420,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but id, href, which the parser reads, 116420 -> 51899 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://ai.google.dev/gemini-api/docs/pricing taken 20250918150943 (era google-docs-pricing-2025, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/xai-api-2025-03.html",
+      "source_id": "wayback-xai-api-2025-20250320104541",
+      "source_url": "https://web.archive.org/web/20250320104541id_/https://x.ai/api",
+      "fetched_at": "2026-11-04T23:06:26.855Z",
+      "http_status": 200,
+      "raw_bytes": 247129,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped, 247129 -> 7833 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://x.ai/api taken 20250320104541 (era xai-api-2025, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/xai-docs-models-2025-12.html",
+      "source_id": "wayback-xai-docs-models-2025-20251202224031",
+      "source_url": "https://web.archive.org/web/20251202224031id_/https://docs.x.ai/docs/models",
+      "fetched_at": "2026-11-04T23:08:08.803Z",
+      "http_status": 200,
+      "raw_bytes": 237436,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped, 237436 -> 21807 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://docs.x.ai/docs/models taken 20251202224031 (era xai-docs-models-2025, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/xai-models-2026-03.md",
+      "source_id": "wayback-xai-models-md-2026-20260312220938",
+      "source_url": "https://web.archive.org/web/20260312220938id_/https://docs.x.ai/developers/models.md",
+      "fetched_at": "2026-11-04T23:08:39.646Z",
+      "http_status": 200,
+      "raw_bytes": 13103,
+      "trim": "none — committed whole",
+      "note": "Internet Archive capture of https://docs.x.ai/developers/models.md taken 20260312220938 (era xai-models-md-2026, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/xai-models-2026-06.md",
+      "source_id": "wayback-xai-models-md-2026-20260616001005",
+      "source_url": "https://web.archive.org/web/20260616001005id_/https://docs.x.ai/developers/models.md",
+      "fetched_at": "2026-11-04T23:09:02.598Z",
+      "http_status": 200,
+      "raw_bytes": 3856,
+      "trim": "none — committed whole",
+      "note": "Internet Archive capture of https://docs.x.ai/developers/models.md taken 20260616001005 (era xai-models-md-2026, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/mistral-docs-pricing-2024-04.html",
+      "source_id": "wayback-mistral-docs-pricing-2023-20240413034939",
+      "source_url": "https://web.archive.org/web/20240413034939id_/https://docs.mistral.ai/platform/pricing/",
+      "fetched_at": "2026-11-04T23:10:49.283Z",
+      "http_status": 200,
+      "raw_bytes": 18444,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped, 18444 -> 3812 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://docs.mistral.ai/platform/pricing/ taken 20240413034939 (era mistral-docs-pricing-2023, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/mistral-technology-2024-06.html",
+      "source_id": "wayback-mistral-technology-2024-20240615101417",
+      "source_url": "https://web.archive.org/web/20240615101417id_/https://mistral.ai/technology/",
+      "fetched_at": "2026-11-04T23:11:24.252Z",
+      "http_status": 200,
+      "raw_bytes": 36580,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped, 36580 -> 18139 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://mistral.ai/technology/ taken 20240615101417 (era mistral-technology-2024, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/mistral-technology-2025-02.html",
+      "source_id": "wayback-mistral-technology-2024-20250203181801",
+      "source_url": "https://web.archive.org/web/20250203181801id_/https://mistral.ai/technology/",
+      "fetched_at": "2026-11-04T23:13:11.640Z",
+      "http_status": 200,
+      "raw_bytes": 44492,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped, 44492 -> 23660 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://mistral.ai/technology/ taken 20250203181801 (era mistral-technology-2024, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/deepseek-platform-pricing-2024-05.html",
+      "source_id": "wayback-deepseek-platform-pricing-2024-20240525232726",
+      "source_url": "https://web.archive.org/web/20240525232726id_/https://platform.deepseek.com:443/api-docs/pricing/",
+      "fetched_at": "2026-11-04T23:13:19.726Z",
+      "http_status": 200,
+      "raw_bytes": 18115,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but rowspan, colspan, which the parser reads, 18115 -> 3815 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://platform.deepseek.com:443/api-docs/pricing/ taken 20240525232726 (era deepseek-platform-pricing-2024, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/deepseek-pricing-2024-12.html",
+      "source_id": "wayback-deepseek-api-docs-pricing-2024-20241226115837",
+      "source_url": "https://web.archive.org/web/20241226115837id_/https://api-docs.deepseek.com/quick_start/pricing",
+      "fetched_at": "2026-11-04T23:14:13.316Z",
+      "http_status": 200,
+      "raw_bytes": 22960,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but rowspan, colspan, which the parser reads, 22960 -> 5151 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://api-docs.deepseek.com/quick_start/pricing taken 20241226115837 (era deepseek-api-docs-pricing-2024, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/deepseek-pricing-2025-03.html",
+      "source_id": "wayback-deepseek-api-docs-pricing-2024-20250325062124",
+      "source_url": "https://web.archive.org/web/20250325062124id_/https://api-docs.deepseek.com/quick_start/pricing",
+      "fetched_at": "2026-11-04T23:14:53.682Z",
+      "http_status": 200,
+      "raw_bytes": 23482,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but rowspan, colspan, which the parser reads, 23482 -> 5538 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://api-docs.deepseek.com/quick_start/pricing taken 20250325062124 (era deepseek-api-docs-pricing-2024, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/deepseek-pricing-2025-12.html",
+      "source_id": "wayback-deepseek-api-docs-pricing-2024-20251201114852",
+      "source_url": "https://web.archive.org/web/20251201114852id_/https://api-docs.deepseek.com/quick_start/pricing",
+      "fetched_at": "2026-11-04T23:15:44.142Z",
+      "http_status": 200,
+      "raw_bytes": 24612,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but rowspan, colspan, which the parser reads, 24612 -> 5429 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://api-docs.deepseek.com/quick_start/pricing taken 20251201114852 (era deepseek-api-docs-pricing-2024, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/deepseek-pricing-2026-05.html",
+      "source_id": "wayback-deepseek-api-docs-pricing-2024-20260501050639",
+      "source_url": "https://web.archive.org/web/20260501050639id_/https://api-docs.deepseek.com/quick_start/pricing",
+      "fetched_at": "2026-11-04T23:16:13.410Z",
+      "http_status": 200,
+      "raw_bytes": 21399,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but rowspan, colspan, which the parser reads, 21399 -> 5096 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://api-docs.deepseek.com/quick_start/pricing taken 20260501050639 (era deepseek-api-docs-pricing-2024, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/deepseek-pricing-2026-08.html",
+      "source_id": "wayback-deepseek-api-docs-pricing-2024-20260816171438",
+      "source_url": "https://web.archive.org/web/20260816171438id_/https://api-docs.deepseek.com/quick_start/pricing/",
+      "fetched_at": "2026-11-04T23:16:50.897Z",
+      "http_status": 200,
+      "raw_bytes": 22252,
+      "trim": "scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but rowspan, colspan, which the parser reads, 22252 -> 5254 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://api-docs.deepseek.com/quick_start/pricing/ taken 20260816171438 (era deepseek-api-docs-pricing-2024, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/alibaba-model-pricing-2026-01.html",
+      "source_id": "wayback-alibaba-model-pricing-2026-20260116072901",
+      "source_url": "https://web.archive.org/web/20260116072901id_/https://www.alibabacloud.com/help/en/model-studio/model-pricing",
+      "fetched_at": "2026-11-04T23:17:00.492Z",
+      "http_status": 200,
+      "raw_bytes": 665247,
+      "trim": "cut to the \"Text generation - Qwen\" section through the end of the Qwen-Flash line (the three lines the parser reads), then scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but rowspan, colspan, which the parser reads, 665247 -> 34823 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://www.alibabacloud.com/help/en/model-studio/model-pricing taken 20260116072901 (era alibaba-model-pricing-2026, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/pricing/wayback/alibaba-model-pricing-2026-08.html",
+      "source_id": "wayback-alibaba-model-pricing-2026-20260811054610",
+      "source_url": "https://web.archive.org/web/20260811054610id_/https://www.alibabacloud.com/help/en/model-studio/model-pricing",
+      "fetched_at": "2026-11-04T23:18:01.418Z",
+      "http_status": 200,
+      "raw_bytes": 1208414,
+      "trim": "cut to the \"Text generation - Qwen\" section through the end of the Qwen-Flash line (the three lines the parser reads), then scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but rowspan, colspan, which the parser reads, 1208414 -> 103624 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://www.alibabacloud.com/help/en/model-studio/model-pricing taken 20260811054610 (era alibaba-model-pricing-2026, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
     }
   ]
 }
