@@ -73,8 +73,11 @@ useSeo({
           with any lab, bank, or employer, and no one pays for it.
         </p>
         <p class="text-sm text-muted">
-          Jeremy discloses positions on each thesis and doesn’t trade a name within 48 hours of a
-          significant data change on it. Write to
+          Jeremy follows a written trading policy. Each thesis shows his position. He doesn’t trade
+          a covered company within 48 hours after a notable or critical alert on it, holds positions
+          at least 30 days, doesn’t trade against a published thesis before revising it, and doesn’t
+          take IPO allocations in a covered company. The full policy is available on request. Write
+          to
           <a
             href="mailto:contact@frontierterm.com"
             class="text-primary underline underline-offset-2"

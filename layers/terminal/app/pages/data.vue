@@ -272,6 +272,35 @@ const EXPORT_COLUMNS: TableColumn[] = [
     </TerminalPanel>
 
     <TerminalPanel
+      id="spreadsheets"
+      title="Use in a spreadsheet"
+      note="Every CSV link above works as a live source. The examples use the latest prices."
+    >
+      <div class="flex max-w-3xl flex-col gap-3 text-sm text-default">
+        <p>
+          <strong class="text-highlighted">Google Sheets.</strong> Paste this into a cell. Sheets
+          refreshes it about once an hour.
+        </p>
+        <pre
+          class="overflow-x-auto rounded-md border border-default bg-muted p-3 font-mono text-xs text-default"
+        ><code>=IMPORTDATA("{{ site.appUrl }}/export/prices_latest.csv")</code></pre>
+        <p>
+          <strong class="text-highlighted">Excel.</strong> Go to Data, then From Web, and paste the
+          CSV link. Excel loads it through Power Query. Refresh it from Data, then Refresh All, or
+          set a refresh interval under Query Properties.
+        </p>
+        <pre
+          class="overflow-x-auto rounded-md border border-default bg-muted p-3 font-mono text-xs text-default"
+        ><code>{{ site.appUrl }}/export/prices_latest.csv</code></pre>
+        <p class="text-muted">
+          Swap in any table name from the list above. Tables that grow over time give the last
+          {{ LICENSE_WINDOW_DAYS }} days. Add <span class="font-mono">?history=full</span> for every
+          row, under the full-history license.
+        </p>
+      </div>
+    </TerminalPanel>
+
+    <TerminalPanel
       id="point-in-time"
       title="Point in time"
       note="What we knew at a given moment, for a backtest."
