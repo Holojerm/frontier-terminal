@@ -175,13 +175,16 @@ const securityHeaders = {
 //              — press:briefs mails the owner click-to-send notes for each new
 //                registration filing (layers/terminal/server/pipeline/press.ts);
 //                no-op without NUXT_PRESS_LIST.
+//              — cache:warm re-renders the public pages once per (build, poll
+//                stamp) so readers hit warm KV payloads
+//                (layers/terminal/server/utils/cache-warm.ts).
 //   0 13 * * 1 — weekly thesis digest email, and social:digest queues the
 //                weekly what-moved thread. alerts:hiring-rollup writes one
 //                hiring alert per lab for the week that just ended.
 const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:alert', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
-  '*/5 * * * *': ['poll:tripwire', 'social:alerts', 'social:post', 'press:briefs'],
+  '*/5 * * * *': ['poll:tripwire', 'social:alerts', 'social:post', 'press:briefs', 'cache:warm'],
   '0 13 * * 1': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
 }
 

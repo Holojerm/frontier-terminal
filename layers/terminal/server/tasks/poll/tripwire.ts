@@ -11,6 +11,7 @@ import { createFetcher } from '../../pipeline/fetch'
 import { unstorageLockStore } from '../../pipeline/lock'
 import { blobRawStore } from '../../pipeline/poll'
 import { runTripwire } from '../../pipeline/tripwire'
+import { warmAfterPoll } from '../../utils/cache-warm-task'
 
 export default defineTask({
   meta: {
@@ -18,7 +19,7 @@ export default defineTask({
     description:
       'Parse each lab’s model catalog; poll them off-cycle when they differ from the store',
   },
-  async run() {
+  async run({ context }) {
     const config = useRuntimeConfig()
     const result = await runTripwire({
       db,
@@ -42,6 +43,7 @@ export default defineTask({
         }),
       )
     }
+    await warmAfterPoll(context)
     return { result }
   },
 })

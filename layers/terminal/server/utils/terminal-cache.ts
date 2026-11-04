@@ -91,12 +91,23 @@ export function terminalCacheKey(name: string, stamp: string | null): string {
  * under normal conditions; under a failing store it runs every time, which
  * is slower and still correct.
  */
+export interface CacheOptions {
+  /** Collects Server-Timing stages for the caller's response. */
+  timings?: ServerTimings
+  /**
+   * The request's waitUntil. Given one, the write on a miss runs after the
+   * response is sent: a KV put costs 200–350ms in production, which a reader
+   * was paying on top of the recompute for a value they already had.
+   */
+  defer?: (promise: Promise<unknown>) => void
+}
+
 export async function cachedTerminal<T>(
   store: CacheStore,
   name: string,
   stamp: string | null,
   compute: () => Promise<T>,
-  timings?: ServerTimings,
+  { timings, defer }: CacheOptions = {},
 ): Promise<T> {
   const key = terminalCacheKey(name, stamp)
   try {
@@ -111,12 +122,16 @@ export async function cachedTerminal<T>(
 
   const value = await timed(timings, 'compute', compute)
 
-  try {
-    await timed(timings, 'kv-put', () => store.set(key, value, { ttl: TERMINAL_CACHE_TTL_SECONDS }))
-  } catch (error) {
-    console.warn(
-      JSON.stringify({ kind: 'terminal_cache_write_failed', name, error: String(error) }),
-    )
+  const write = async () => {
+    try {
+      await store.set(key, value, { ttl: TERMINAL_CACHE_TTL_SECONDS })
+    } catch (error) {
+      console.warn(
+        JSON.stringify({ kind: 'terminal_cache_write_failed', name, error: String(error) }),
+      )
+    }
   }
+  if (defer) defer(write())
+  else await timed(timings, 'kv-put', write)
   return value
 }
