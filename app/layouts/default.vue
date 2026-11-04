@@ -2,7 +2,8 @@
 // The app shell for every page. One layout: there is no signed-in state to
 // adapt to. DESIGN.md › Component behavior › Navigation: a top row with the
 // mark, the Labs menu and the color-mode toggle, and under it from `lg` the
-// axis bar — every reading page in reading order, flat, one click each. Below
+// axis bar: the entry points as links, and the axes grouped under Economics
+// and Operations, each a menu that opens on hover or click. Below
 // `lg` the axis bar becomes a right-side drawer that carries the whole site
 // map. The drawer closes on route change, not on click, so a redirect closes
 // it too. The footer is the disclaimer, the reference pages, and the
@@ -26,18 +27,50 @@ interface NavLink {
   to: string
 }
 
-/** Every reading page in reading order: the state of things, then each axis, then what changed and the claims checked against it. */
-const AXES: NavLink[] = [
-  { label: 'Overview', to: '/' },
-  { label: 'Prices', to: '/prices' },
-  { label: 'Revenue', to: '/revenue' },
-  { label: 'Demand', to: '/rankings' },
-  { label: 'Hiring', to: '/hiring' },
-  { label: 'Releases', to: '/releases' },
-  { label: 'Incidents', to: '/incidents' },
-  { label: 'Disclosures', to: '/disclosures' },
-  { label: 'Alerts', to: '/alerts' },
-  { label: 'Theses', to: '/theses' },
+interface NavGroup {
+  label: string
+  links: (NavLink & { description: string })[]
+}
+
+// Eleven flat axes no longer fit one row at `lg`, and a flat row weighed
+// Prices the same as Disclosures. The axes group under the two questions
+// they answer: what the labs' business costs and earns (Economics), and what
+// the labs are doing (Operations). The entry points stay one click.
+const OVERVIEW: NavLink = { label: 'Overview', to: '/' }
+const ALERTS: NavLink = { label: 'Alerts', to: '/alerts' }
+const THESES: NavLink = { label: 'Theses', to: '/theses' }
+
+const GROUPS: NavGroup[] = [
+  {
+    label: 'Economics',
+    links: [
+      { label: 'Prices', to: '/prices', description: 'List price per SKU, like for like.' },
+      {
+        label: 'Revenue',
+        to: '/revenue',
+        description: 'SEC filings, and what investors disclose.',
+      },
+      { label: 'Demand', to: '/rankings', description: 'OpenRouter, Ramp, downloads, agents.' },
+      { label: 'Compute', to: '/compute', description: 'GPU rental prices and data-center power.' },
+    ],
+  },
+  {
+    label: 'Operations',
+    links: [
+      { label: 'Hiring', to: '/hiring', description: 'Open roles, buildout and posted pay.' },
+      { label: 'Releases', to: '/releases', description: 'Every SKU first listed.' },
+      {
+        label: 'Incidents',
+        to: '/incidents',
+        description: 'Status pages and published rate limits.',
+      },
+      {
+        label: 'Disclosures',
+        to: '/disclosures',
+        description: 'Misalignment reports the labs publish.',
+      },
+    ],
+  },
 ]
 
 const LAB_LINKS: NavLink[] = LABS.map((lab) => ({ label: LAB_DISPLAY[lab], to: labPath(lab) }))
@@ -55,9 +88,16 @@ const REFERENCE: NavLink[] = [
 const isActive = (to: string) =>
   to === '/' ? route.path === '/' : route.path === to || route.path.startsWith(`${to}/`)
 
-const axisItems = computed<NavigationMenuItem[]>(() =>
-  AXES.map((a) => ({ ...a, active: isActive(a.to) })),
-)
+const axisItems = computed<NavigationMenuItem[]>(() => [
+  { ...OVERVIEW, active: isActive(OVERVIEW.to) },
+  ...GROUPS.map((g) => ({
+    label: g.label,
+    active: g.links.some((l) => isActive(l.to)),
+    children: g.links.map((l) => ({ ...l, active: isActive(l.to) })),
+  })),
+  { ...ALERTS, active: isActive(ALERTS.to) },
+  { ...THESES, active: isActive(THESES.to) },
+])
 
 const currentLab = computed(() => {
   const param = String(route.params.lab ?? '')
@@ -66,7 +106,8 @@ const currentLab = computed(() => {
 const labItems: DropdownMenuItem[][] = [LAB_LINKS.map((l) => ({ label: l.label, to: l.to }))]
 
 const drawerSections: { label: string; links: NavLink[] }[] = [
-  { label: 'Terminal', links: AXES },
+  { label: 'Terminal', links: [OVERVIEW, ALERTS, THESES] },
+  ...GROUPS,
   { label: 'Labs', links: LAB_LINKS },
   { label: 'Reference', links: REFERENCE },
 ]

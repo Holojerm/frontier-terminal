@@ -4,7 +4,14 @@
 
 import type { H3Event } from 'h3'
 
-import { csvChunks, exportTable, jsonChunks, parseExportPath, streamOf } from './terminal-export'
+import {
+  csvChunks,
+  exportFilter,
+  exportTable,
+  jsonChunks,
+  parseExportPath,
+  streamOf,
+} from './terminal-export'
 import { terminalDb } from './terminal-handler'
 
 const FORMATS = {
@@ -22,6 +29,9 @@ export async function serveExport(event: H3Event) {
     throw createError({ statusCode: 404, message: `No export at ${event.path.split('?')[0]}` })
   }
 
+  const filter = exportFilter(table, getQuery(event))
+  if ('error' in filter) throw createError({ statusCode: 400, message: filter.error })
+
   const { chunks, contentType } = FORMATS[parsed.format]
   setResponseHeader(event, 'Content-Type', contentType)
   setResponseHeader(
@@ -31,5 +41,5 @@ export async function serveExport(event: H3Event) {
   )
   // Rows can change every tick; a proxy may hold an export for a minute.
   setResponseHeader(event, 'Cache-Control', 'public, max-age=60')
-  return sendStream(event, streamOf(chunks(terminalDb, table)))
+  return sendStream(event, streamOf(chunks(terminalDb, table, filter.where)))
 }

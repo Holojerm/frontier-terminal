@@ -336,16 +336,18 @@ screen the way a terminal function key does. The data below it is the content.
   without a replacement.
 - **Navigation:** two rows, like a terminal's command line over its function keys. The top
   row is the mark, a **Labs** menu (one lab across every axis), and the color-mode toggle.
-  Below it, from `lg` up, the **axis bar**: one flat `UNavigationMenu` of every reading page
-  in reading order — Overview, Prices, Revenue, Demand, Hiring, Releases, Incidents,
-  Disclosures — then Alerts and Theses, with the active page marked. Flat rather than grouped:
-  a reader who checks daily wants one click to an axis, not a menu to open, and ten short
-  labels fit one row at `lg`. Reference pages (`About`, `Data`, `License`) live in the footer,
-  where a reader already looks for exports and the disclaimer.
+  Below it, from `lg` up, the **axis bar**: one `UNavigationMenu` with the entry points as
+  links — Overview, then Alerts and Theses — and the axes grouped under two menus by the
+  question they answer: **Economics** (Prices, Revenue, Demand, Compute) and **Operations**
+  (Hiring, Releases, Incidents, Disclosures), each item with a one-line description. A group
+  is marked active when any page in it is. Grouped rather than flat since the eleventh axis:
+  a flat row no longer fit one line at `lg` and weighed every axis the same. Reference pages
+  (`About`, `Data`, `License`) live in the footer, where a reader already looks for exports
+  and the disclaimer.
 
   Below `lg` the axis bar collapses into a right-side `USlideover` behind an `i-lucide-menu`
-  trigger. The drawer carries the *whole* site map including the labs and the footer's
-  reference pages, because below `lg` it is the only navigation affordance there is. Drawer
+  trigger. The drawer carries the *whole* site map, the entry points, both axis groups, the
+  labs and the footer's reference pages, because below `lg` it is the only navigation affordance there is. Drawer
   rows are `size="lg"` and `block`, left-aligned — full-width rows are the easiest thing on a
   screen to hit — and each group is introduced by a real heading, not a styled `div`. The
   drawer closes on route change, not on click, so redirects close it too. Never let either

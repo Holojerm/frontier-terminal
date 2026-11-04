@@ -6,6 +6,7 @@
 // job is to say so precisely and to be ready the day that changes.
 
 import type { RevenueData } from '../../shared/utils/terminal-types'
+import type { ParentsData } from '../../shared/utils/recipe-views'
 
 definePageMeta({
   publicPage: {
@@ -17,7 +18,10 @@ definePageMeta({
   },
 })
 
-const { data: revenue, error } = await useFetch<RevenueData>('/api/revenue')
+const [{ data: revenue, error }, { data: parents }] = await Promise.all([
+  useFetch<RevenueData>('/api/revenue'),
+  useFetch<ParentsData>('/api/parents'),
+])
 
 const site = useSiteContext()
 
@@ -56,6 +60,15 @@ useSeo({
         note="Each period once, from the newest filing; restated values are listed as superseded."
       >
         <TerminalRevenuePanel :revenue="revenue" />
+      </TerminalPanel>
+
+      <TerminalPanel
+        v-if="parents?.parents.length"
+        id="parents"
+        title="What the parents disclose"
+        note="Every fact Microsoft and Amazon tag with OpenAI or Anthropic in their newest 10-Q or 10-K: the parent’s figures, never the lab’s revenue or valuation."
+      >
+        <TerminalParentFacts :parents="parents" />
       </TerminalPanel>
 
       <TerminalPanel

@@ -13,6 +13,7 @@ import {
   csvChunks,
   csvLine,
   defuseFormula,
+  exportFilter,
   exportTable,
   jsonChunks,
   parseExportPath,
@@ -213,6 +214,29 @@ describe('JSON', () => {
     const runs = JSON.parse(await collect(jsonChunks(db, exportTable('source_runs')!)))
     expect(runs).toHaveLength(1)
     expect(runs[0]).toMatchObject({ status: 'baseline', source_url: PROV.source_url })
+  })
+})
+
+describe('filters', () => {
+  it('narrows a table by a declared column, and refuses anything else', async () => {
+    const recipes = exportTable('recipe_observations')!
+    const ok = exportFilter(recipes, { recipe_id: 'ramp-ai-index' })
+    expect('where' in ok && ok.where).toBeTruthy()
+    expect(exportFilter(recipes, {})).toEqual({ where: undefined })
+    expect(exportFilter(recipes, { recipe: 'x' })).toEqual({
+      error: 'recipe_observations cannot be filtered by recipe; it accepts recipe_id',
+    })
+    expect(exportFilter(recipes, { recipe_id: "x' or 1=1" })).toMatchObject({
+      error: expect.stringMatching(/one id/),
+    })
+    expect(exportFilter(exportTable('alerts')!, { x: '1' })).toEqual({
+      error: 'alerts cannot be filtered by x',
+    })
+    // An empty recipe table filters to an empty export, not an error.
+    const rows = JSON.parse(
+      await collect(jsonChunks(db, recipes, 'where' in ok ? ok.where : undefined)),
+    )
+    expect(rows).toEqual([])
   })
 })
 

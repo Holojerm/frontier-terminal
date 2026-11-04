@@ -40,6 +40,7 @@ const ROUTES = [
   '/hiring',
   '/releases',
   '/rankings',
+  '/compute',
   '/alerts',
   '/theses',
   '/theses/anthropic',
