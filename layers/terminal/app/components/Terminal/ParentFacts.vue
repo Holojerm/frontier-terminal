@@ -22,7 +22,7 @@ const value = (f: ParentFact) => {
 
 const columns: TableColumn[] = [
   { key: 'label', label: 'Fact' },
-  { key: 'period', label: 'Period' },
+  { key: 'period', label: 'Period', class: 'whitespace-nowrap' },
   { key: 'value', label: 'As reported', numeric: true },
 ]
 const rowsOf = (p: ParentsData['parents'][number]) =>

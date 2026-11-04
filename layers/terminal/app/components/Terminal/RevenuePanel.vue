@@ -12,7 +12,26 @@ import { compactUsd, count, periodLabel } from '../../../shared/utils/terminal-f
 import type { RevenueData, RevenueProviderView } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
-defineProps<{ revenue: RevenueData }>()
+const props = defineProps<{ revenue: RevenueData }>()
+
+// A lab with no audited disclosure has nothing to tile, so it is named once in
+// the line under the cards rather than given a card as tall as one holding
+// eight periods. One card takes the whole width; more tile 2-up, then 3-up.
+const reported = computed(() => props.revenue.providers.filter((p) => p.disclosure !== 'none'))
+const unreported = computed(() => props.revenue.providers.filter((p) => p.disclosure === 'none'))
+const unreportedSources = computed(() => unreported.value.flatMap((p) => p.sources))
+const unreportedCaveats = computed(() =>
+  unreported.value.flatMap((p) =>
+    p.filer?.caveat ? [{ name: `Caveat for ${p.display} revenue`, text: p.filer.caveat }] : [],
+  ),
+)
+const grid = computed(() =>
+  reported.value.length > 2
+    ? 'lg:grid-cols-2 2xl:grid-cols-3'
+    : reported.value.length === 2
+      ? 'lg:grid-cols-2'
+      : '',
+)
 
 const MAX_PERIODS = 8
 
@@ -34,7 +53,7 @@ const relationLine = (p: RevenueProviderView) =>
         : ''
 
 const PERIOD_COLUMNS: TableColumn[] = [
-  { key: 'period', label: 'Period', class: 'text-default' },
+  { key: 'period', label: 'Period', class: 'whitespace-nowrap text-default' },
   { key: 'val', label: 'Revenue', numeric: true, class: 'text-highlighted' },
   { key: 'filing', label: 'Filing', class: 'whitespace-nowrap text-muted' },
 ]
@@ -58,9 +77,9 @@ const badge = (p: RevenueProviderView) =>
 
 <template>
   <div class="space-y-3">
-    <div class="grid gap-3 md:grid-cols-2 xl:grid-cols-3">
+    <div v-if="reported.length" class="grid gap-3" :class="grid">
       <TerminalCard
-        v-for="p in revenue.providers"
+        v-for="p in reported"
         :id="`revenue-${p.provider}`"
         :key="p.provider"
         :title="p.display"
@@ -72,16 +91,8 @@ const badge = (p: RevenueProviderView) =>
           </UBadge>
         </template>
 
-        <!-- The honest gap: nothing shown, and the number that would have
-             filled the space named as deliberately absent. -->
         <TerminalGap
-          v-if="p.disclosure === 'none'"
-          title="No SEC filing reports this lab’s revenue."
-          reason="Press-reported run-rates are excluded."
-        />
-
-        <TerminalGap
-          v-else-if="p.disclosure === 'no_rows'"
+          v-if="p.disclosure === 'no_rows'"
           :title="
             p.filer?.relation === 'issuer'
               ? 'S-1 filed; no revenue read yet.'
@@ -164,6 +175,25 @@ const badge = (p: RevenueProviderView) =>
           <TerminalCaveatMark :name="`Caveat for ${p.display} revenue`" :text="p.filer.caveat" />
         </template>
       </TerminalCard>
+    </div>
+
+    <!-- The honest gap: nothing shown, and the number that would have filled
+         the space named as deliberately absent. Each lab keeps its anchor. -->
+    <div
+      v-if="unreported.length"
+      class="space-y-2 rounded border border-dashed border-default p-3 font-sans"
+    >
+      <p class="text-sm">
+        <span class="text-highlighted">
+          No SEC filing reports revenue for
+          <template v-for="(p, i) in unreported" :key="p.provider"
+            ><span v-if="i > 0">{{ i === unreported.length - 1 ? ' or ' : ', ' }}</span
+            ><span :id="`revenue-${p.provider}`">{{ p.display }}</span></template
+          >.
+        </span>
+        <span class="ml-1 text-muted">Press-reported run-rates are excluded.</span>
+      </p>
+      <TerminalSources :sources="unreportedSources" :caveats="unreportedCaveats" />
     </div>
 
     <p class="text-xs text-muted">{{ revenue.rule }}</p>

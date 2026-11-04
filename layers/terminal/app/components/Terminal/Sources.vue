@@ -10,10 +10,17 @@ withDefaults(defineProps<{ sources?: Citation[]; caveats?: CaveatRef[] }>(), {
   sources: () => [],
   caveats: () => [],
 })
+
+// In a table cell the citation and its caveat control stay on one line, so
+// the row stays one line tall.
+const inTable = inject(IN_TERMINAL_TABLE, false)
 </script>
 
 <template>
-  <div class="flex flex-wrap items-center gap-x-3 gap-y-1 text-xs text-toned">
+  <div
+    class="flex items-center gap-x-3 gap-y-1 text-xs text-toned"
+    :class="inTable ? 'flex-nowrap whitespace-nowrap' : 'flex-wrap'"
+  >
     <TerminalProvenanceTag
       v-for="s in sources"
       :key="s.source_id ?? s.source_url"

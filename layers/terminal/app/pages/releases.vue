@@ -56,7 +56,7 @@ const now = useNow()
         :note="`${releases.rows.length} listing${releases.rows.length === 1 ? '' : 's'}${releases.log_from ? ` since ${absoluteStamp(releases.log_from, now)}` : ''}, newest first.`"
         flush
       >
-        <TerminalReleaseList :rows="releases.rows" />
+        <TerminalReleaseList :rows="releases.rows" flow />
         <template v-if="releases.excluded_baseline" #foot>
           {{ releases.excluded_baseline }} baseline rows — SKUs already listed when a page was first
           fetched — are excluded.

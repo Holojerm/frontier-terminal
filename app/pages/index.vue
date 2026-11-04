@@ -183,38 +183,6 @@ const openIncidents = computed(() =>
       >
         <TerminalRevenueTable v-if="revenue.data.value" :revenue="revenue.data.value" />
       </TerminalPanel>
-
-      <TerminalPanel
-        id="disclosures"
-        title="Disclosures"
-        note="Misalignment reports each lab publishes about its own models. A count measures disclosure, not behavior."
-        :more="{ label: 'Every report and notice', to: '/disclosures' }"
-        flush
-      >
-        <TerminalDisclosureTable
-          v-if="disclosures.data.value"
-          :disclosures="disclosures.data.value"
-        />
-      </TerminalPanel>
-
-      <TerminalPanel
-        id="demand"
-        title="Demand share"
-        note="Share of all OpenRouter tokens, newest 7 days. A proxy, not market share."
-        :more="{ label: '30-day series and top models', to: '/rankings' }"
-      >
-        <TerminalDemandShare v-if="rankings.data.value" :rankings="rankings.data.value" compact />
-      </TerminalPanel>
-
-      <TerminalPanel
-        id="spend"
-        title="Implied spend share"
-        note="The tracked labs’ tokens at list price, as shares of those labs’ total, not of all OpenRouter traffic. A range, because some SKUs are unpriced."
-        :more="{ label: 'Per-model join', to: '/rankings#spend' }"
-      >
-        <TerminalSpendShare v-if="spend.data.value" :spend="spend.data.value" compact />
-      </TerminalPanel>
-
       <TerminalPanel
         id="hiring"
         title="Hiring"
@@ -227,9 +195,33 @@ const openIncidents = computed(() =>
           :history="hiringHistory.data.value"
         />
       </TerminalPanel>
+    </div>
 
+    <div class="grid gap-6 lg:grid-cols-2">
+      <TerminalPanel
+        id="demand"
+        title="Demand share"
+        note="Share of all OpenRouter tokens, newest 7 days. A proxy, not market share."
+        :more="{ label: '30-day series and top models', to: '/rankings' }"
+      >
+        <TerminalDemandShare v-if="rankings.data.value" :rankings="rankings.data.value" compact />
+      </TerminalPanel>
+      <TerminalPanel
+        id="spend"
+        title="Implied spend share"
+        note="The tracked labs’ tokens at list price, as shares of those labs’ total, not of all OpenRouter traffic. A range, because some SKUs are unpriced."
+        :more="{ label: 'Per-model join', to: '/rankings#spend' }"
+      >
+        <TerminalSpendShare v-if="spend.data.value" :spend="spend.data.value" compact />
+      </TerminalPanel>
+    </div>
+
+    <!-- The strain table carries the open incident and its source; the
+         disclosure counts are three short figures. Split 3:2, not 1:1. -->
+    <div class="grid gap-6 lg:grid-cols-5">
       <TerminalPanel
         id="strain"
+        class="lg:col-span-3"
         title="Capacity strain"
         :note="
           incidents.data.value
@@ -247,6 +239,19 @@ const openIncidents = computed(() =>
         flush
       >
         <TerminalStrainTable v-if="incidents.data.value" :incidents="incidents.data.value" />
+      </TerminalPanel>
+      <TerminalPanel
+        id="disclosures"
+        class="lg:col-span-2"
+        title="Disclosures"
+        note="Misalignment reports each lab publishes about its own models. A count measures disclosure, not behavior."
+        :more="{ label: 'Every report and notice', to: '/disclosures' }"
+        flush
+      >
+        <TerminalDisclosureTable
+          v-if="disclosures.data.value"
+          :disclosures="disclosures.data.value"
+        />
       </TerminalPanel>
     </div>
   </TerminalPage>

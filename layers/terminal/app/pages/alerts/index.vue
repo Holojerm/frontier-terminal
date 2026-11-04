@@ -39,6 +39,11 @@ const PAGE = 25
 const shownCount = ref(PAGE)
 const shown = computed(() => alerts.value?.rows.slice(0, shownCount.value) ?? [])
 const remaining = computed(() => (alerts.value?.rows.length ?? 0) - shown.value.length)
+// The ticker pages the same way: a scroll box inside a scrolling page hid
+// its rows from find-in-page and made the page scroll twice.
+const tickerCount = ref(PAGE)
+const tickerShown = computed(() => ticker.value?.rows.slice(0, tickerCount.value) ?? [])
+const tickerRemaining = computed(() => (ticker.value?.rows.length ?? 0) - tickerShown.value.length)
 const tickerFeed = `/alerts.xml?${TICKER_FEED_QUERY}`
 </script>
 
@@ -67,66 +72,69 @@ const tickerFeed = `/alerts.xml?${TICKER_FEED_QUERY}`
       </p>
     </template>
 
-    <TerminalPanel
-      id="alerts"
-      title="Alerts"
-      note="Notable and critical, newest first."
-      :flush="Boolean(alerts?.rows.length)"
-    >
-      <template v-if="alerts">
-        <TerminalGap
-          v-if="alerts.rows.length === 0"
-          title="No alerts yet."
-          reason="Alerts are raised on change rows that meet the materiality bar. An empty list after a baseline is expected."
-          :action="{ label: 'Recent changes', to: '/#signal' }"
-        />
-        <TerminalSignalTable v-else :alerts="shown" />
-      </template>
-      <template v-if="alerts?.rows.length" #foot>
-        <span class="flex flex-wrap items-baseline gap-x-4">
+    <!-- Side by side only where the alert table keeps its headline column
+         readable at two-thirds of the container. -->
+    <div class="grid items-start gap-6 2xl:grid-cols-3">
+      <TerminalPanel
+        id="alerts"
+        class="2xl:col-span-2"
+        title="Alerts"
+        note="Notable and critical, newest first."
+        :flush="Boolean(alerts?.rows.length)"
+      >
+        <template v-if="alerts">
+          <TerminalGap
+            v-if="alerts.rows.length === 0"
+            title="No alerts yet."
+            reason="Alerts are raised on change rows that meet the materiality bar. An empty list after a baseline is expected."
+            :action="{ label: 'Recent changes', to: '/#signal' }"
+          />
+          <TerminalSignalTable v-else :alerts="shown" flow />
+        </template>
+        <template v-if="alerts?.rows.length" #foot>
+          <span class="flex flex-wrap items-baseline gap-x-4">
+            <UButton
+              v-if="remaining > 0"
+              variant="link"
+              size="sm"
+              class="px-0"
+              :label="`Show ${Math.min(PAGE, remaining)} more`"
+              @click="shownCount += PAGE"
+            />
+            <span>
+              {{ shown.length }} of {{ alerts.total }}; each row opens the explanation, rule, and
+              cited change rows.
+            </span>
+          </span>
+        </template>
+      </TerminalPanel>
+
+      <TerminalPanel
+        id="ticker"
+        title="Ticker"
+        note="Single role adds and closes, retitles, location changes."
+      >
+        <template v-if="ticker">
+          <TerminalGap
+            v-if="ticker.rows.length === 0"
+            title="Nothing on the ticker."
+            reason="An empty ticker is normal."
+          />
+          <TerminalTickerList v-else :alerts="tickerShown" />
+        </template>
+        <template v-if="ticker?.rows.length" #meta>
+          {{ ticker.rows.length }} of {{ ticker.total }}
+        </template>
+        <template v-if="tickerRemaining > 0" #foot>
           <UButton
-            v-if="remaining > 0"
             variant="link"
             size="sm"
             class="px-0"
-            :label="`Show ${Math.min(PAGE, remaining)} more`"
-            @click="shownCount += PAGE"
+            :label="`Show ${Math.min(PAGE, tickerRemaining)} more`"
+            @click="tickerCount += PAGE"
           />
-          <span>
-            {{ shown.length }} of {{ alerts.total }}; each row opens the explanation, rule, and
-            cited change rows.
-          </span>
-        </span>
-      </template>
-    </TerminalPanel>
-
-    <TerminalPanel
-      id="ticker"
-      title="Ticker"
-      note="Single role adds and closes, retitles, location changes."
-    >
-      <template v-if="ticker">
-        <TerminalGap
-          v-if="ticker.rows.length === 0"
-          title="Nothing on the ticker."
-          reason="An empty ticker is normal."
-        />
-        <!-- A feed, so a scroll region: nobody reads line 157, and the page
-             should not be 157 lines tall so that they can. tabindex="0" so
-             a keyboard can scroll it (axe: scrollable-region-focusable). -->
-        <div
-          v-else
-          class="max-h-96 overflow-y-auto"
-          tabindex="0"
-          role="region"
-          aria-label="Ticker lines"
-        >
-          <TerminalTickerList :alerts="ticker.rows" />
-        </div>
-      </template>
-      <template v-if="ticker?.rows.length" #meta>
-        {{ ticker.rows.length }} of {{ ticker.total }}
-      </template>
-    </TerminalPanel>
+        </template>
+      </TerminalPanel>
+    </div>
   </TerminalPage>
 </template>
