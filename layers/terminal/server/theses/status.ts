@@ -102,11 +102,11 @@ function belowTrailingAverage(
   }
   const avg = prior.reduce((n, r) => n + r.value, 0) / prior.length
   const gap = avg - now.value
-  const status: ClaimStatus =
-    gap > rule.margin ? 'broken' : gap > rule.margin / 2 ? 'weakening' : 'holding'
+  const margin = rule.relative ? avg * rule.margin : rule.margin
+  const status: ClaimStatus = gap > margin ? 'broken' : gap > margin / 2 ? 'weakening' : 'holding'
   return {
     status,
-    reason: `${fmt(now.value)} against a trailing average of ${fmt(avg)} (kill below ${fmt(avg - rule.margin)}); ${history}.`,
+    reason: `${fmt(now.value)} against a trailing average of ${fmt(avg)} (kill below ${fmt(avg - margin)}); ${history}.`,
     reading_date: now.date,
   }
 }

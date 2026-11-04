@@ -35,11 +35,17 @@ export const ANTHROPIC_THESIS: ThesisDef = {
       text: 'Developer demand is growing, not only price',
       signal_label:
         "Anthropic's share of the nine tracked labs' OpenRouter tokens (not of all OpenRouter tokens), trailing 7 days",
-      kill_condition: 'More than 5 points below its trailing 13-week average',
+      kill_condition: 'More than 20% below its trailing 13-week average',
       spec: {
         kind: 'measured',
         signal: 'openrouter-lab-token-share',
-        rule: { rule: 'below-trailing-average', margin: 0.05, weeks: 13, min_weeks: 4 },
+        rule: {
+          rule: 'below-trailing-average',
+          margin: 0.2,
+          relative: true,
+          weeks: 13,
+          min_weeks: 4,
+        },
       },
     },
     {

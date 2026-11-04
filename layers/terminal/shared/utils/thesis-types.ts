@@ -15,9 +15,17 @@ export type MeasuredRule =
    * value) at `weeks` consecutive checkpoints; weakening while that run is shorter. */
   | { rule: 'sustained-floor'; floor: number; comparator: LabId | null; weeks: number }
   /** Broken when the value sits more than `margin` below the mean of the
-   * previous `weeks` checkpoints; weakening past half the margin. Unresolved
-   * with fewer than `min_weeks` checkpoints of history. */
-  | { rule: 'below-trailing-average'; margin: number; weeks: number; min_weeks: number }
+   * previous `weeks` checkpoints; weakening past half the margin. With
+   * `relative`, `margin` is a fraction of that mean, so a share keeps the same
+   * bar when the set it is a share of grows. Unresolved with fewer than
+   * `min_weeks` checkpoints of history. */
+  | {
+      rule: 'below-trailing-average'
+      margin: number
+      relative?: boolean
+      weeks: number
+      min_weeks: number
+    }
   /** Broken when the value has fallen `drop` or more from its high over the
    * last `days`; weakening past half the drop. Unresolved with fewer than
    * `min_days` of history. */

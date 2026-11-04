@@ -87,6 +87,18 @@ describe('below trailing average', () => {
     expect(at(0.27)).toBe('weakening')
     expect(at(0.24)).toBe('broken')
   })
+
+  it('reads a relative margin as a fraction of the average, so a smaller share keeps the bar', () => {
+    const relative = { ...rule, margin: 0.2, relative: true }
+    const at = (avg: number, now: number) =>
+      evaluateClaim(claim(relative), weekly('2026-10-08', [avg, avg, avg, avg, now]), fmt).status
+    // 20% of 0.25 is 5 points; 20% of 0.10 is 2 points.
+    expect(at(0.25, 0.21)).toBe('weakening')
+    expect(at(0.25, 0.19)).toBe('broken')
+    expect(at(0.1, 0.095)).toBe('holding')
+    expect(at(0.1, 0.085)).toBe('weakening')
+    expect(at(0.1, 0.079)).toBe('broken')
+  })
 })
 
 describe('drawdown from high', () => {
