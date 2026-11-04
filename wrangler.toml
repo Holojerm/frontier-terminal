@@ -120,6 +120,8 @@ head_sampling_rate = 1
 #                   due posts through Buffer (layers/social)
 #                   cache:warm — re-renders the public pages after a deploy or poll
 #                   moves the payload cache key
+#                   track-record:search — one GDELT query for the oldest alert
+#                   whose window closed (layers/terminal/server/pipeline/track-record/)
 #   "0 13 * * 1"    theses:digest — the weekly thesis digest email (layers/terminal/server/theses/digest.ts)
 #                   social:digest — queues the weekly what-moved thread
 #                   alerts:hiring-rollup — one hiring alert per lab for the week

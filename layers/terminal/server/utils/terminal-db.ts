@@ -1861,6 +1861,13 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
     sources,
     cuts: ctx.registry.cuts.map((c) => ({ id: c.id, verdict: c.verdict, reason: c.reason })),
     recipes: await recipeCoverage(db, ctx),
+    track_record: ctx.registry.track_record.map(({ id, url, terms, rights, caveat }) => ({
+      id,
+      url,
+      terms,
+      rights,
+      caveat,
+    })),
     totals,
     exports,
     latest_fetched_at: latest,

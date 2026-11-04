@@ -385,3 +385,24 @@ Update stamps print no year ("Oct 28, 20:05 UTC"). The parser takes the year tha
 **What was lost.** Impact and component names on every Anthropic incident read from now on. Incidents that had already left the Atom window keep what the API gave them. The first poll at the new URL rewrites the incidents still in the window without logging changes (`refresh.ts`, a source that moved URL), so dropping impact is not reported as 25 modified incidents. The Anthropic thesis's claim 5 picked incidents by impact; it now takes Anthropic's on duration alone and leaves materiality to the rubric (`docs/theses/anthropic.md`, revision 2026-11-04).
 
 **Verdict.** Include `history.atom`. The `/api/` URL is gone from code, config and fixtures.
+
+## Addendum, 2026-11-04: track record (GDELT and the lab newsrooms)
+
+Checked for `/track-record`, which times each notable or critical alert against the first press report and the lab's own post. Live-fetched with the pipeline's User-Agent between 16:45Z and 17:00Z. Terms and robots.txt read the same day.
+
+| Source | URL | Fetch | robots.txt | Terms | Rights |
+|---|---|---|---|---|---|
+| GDELT DOC 2.0 | `api.gdeltproject.org/api/v2/doc/doc` (artlist, JSON) | 200, 10 articles for `"gpt-6.1-sol"` over 2026-09-22 → 2026-10-06; many 429s around it | none (404) | "unlimited and unrestricted use for any academic, commercial, or governmental use", with a citation and link required on redistribution | `upstream` |
+| OpenAI News | `openai.com/news/rss.xml` | 200, RSS 2.0, 1,356 items back to 2015, 823 KB | allows it (disallows only `/microsoft-for-startups/`) | Terms of Use (effective 2026-01-01) cover "associated software applications and websites" and bar users who "Automatically or programmatically extract data or Output" | `not-cleared` |
+| Google DeepMind | `deepmind.google/blog/rss.xml` | 200, RSS 2.0, newest 100 posts | allows everything | Google's ToS bar automated access only against robots.txt | `ours` |
+| Meta Newsroom | `about.fb.com/feed/` | 200, RSS 2.0, newest 10 posts (back to 2026-10-13) | allows `/feed/` | facebook.com/terms.php renders only in a browser, so it wasn't read. ai.meta.com's robots.txt notice bars automated collection "on Facebook" | `not-cleared` |
+| Mistral | `mistral.ai/news/rss` (`/rss.xml` redirects here) | 200, RSS 2.0, 93 posts back to 2023 | allows everything | legal.mistral.ai says nothing about automated access | `ours` |
+| Anthropic | `anthropic.com/rss.xml`, `/news/rss.xml` | 404, and `/news` links no feed | allows everything | Consumer Terms bar crawling and scraping | **cut** |
+| xAI | `x.ai/news/rss.xml` | 404, and `/news` links no feed | allows everything except `/tools/` | AUP bars "unauthorized automated or non-human means" | **cut** |
+| Meta AI blog | `ai.meta.com/blog/rss/` | 404, no feed | n/a | n/a | not used (the company newsroom stands in) |
+
+**Findings.** GDELT answers more than one query every five seconds with minutes of 429s, not seconds. From one IP, a query every 30 to 90 seconds still drew 429s for several minutes after the first burst. The search therefore runs one query per five-minute tick and never retries a 429 inside a tick. A Worker's egress IP is shared, so production may see 429s it didn't cause. GDELT's `seendate` is when its crawler first saw the article, not the outlet's publication time. The artlist returns no article text, so a candidate is judged on its headline, and GDELT spaces out punctuation in titles ("GPT - 6 . 1 Sol"). The DOC API searches only the last three months. Mistral stamps recent posts near 12:00 UTC, so its post times are dates. None of the feeds is paywalled and no news outlet is fetched directly.
+
+**Saw-it time.** The brief asked for the fetch time of the earliest cited change row. A removal's row carries the provenance of the last fetch that still listed the entity (`layers/terminal/server/pipeline/diff.ts`), which was up to 51 days before the removal on the alerts checked. A removal therefore counts from its `detected_at`, the run that found it gone. Added and modified rows use `fetched_at`, which matched `detected_at` to the hour on every alert since 2026-09-08.
+
+**Verdict.** Include GDELT (per alert, `track_record_sources`) and the four feeds (recipes, `recipe_sources`). OpenAI and Meta stay `not-cleared` and out of any paid offer. Anthropic and xAI have no newsroom time on the page, and the cut block says why.

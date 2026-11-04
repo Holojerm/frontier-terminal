@@ -735,6 +735,97 @@ export const COLUMN_DOCS: Readonly<Record<string, TableDoc>> = {
     },
   },
 
+  track_record_candidates: {
+    asOf: 'Rows with found_at at or before as_of.',
+    columns: {
+      id: {
+        type: 'text',
+        key: true,
+        meaning: 'SHA-256 (hex) of alert_id, kind and url: one row per alert, kind and URL.',
+      },
+      alert_id: { type: 'text', meaning: 'The alerts.id the candidate was found for.' },
+      kind: {
+        type: 'text',
+        meaning:
+          'press, an article GDELT indexed, or newsroom, a post on the lab’s own newsroom feed.',
+      },
+      title: {
+        type: 'text',
+        meaning:
+          'The headline as GDELT or the feed gives it. GDELT spaces out punctuation (“GPT - 6 . 1”), and we keep that as read.',
+      },
+      snippet: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'The first 400 characters of a newsroom post’s description. Null for press, since GDELT returns no article text.',
+      },
+      outlet: {
+        type: 'text',
+        meaning: 'The site’s domain, as GDELT names it or from the post’s link.',
+      },
+      url: { type: 'text', meaning: 'The article or post itself.' },
+      published_at: {
+        type: 'timestamp',
+        meaning:
+          'For press, when GDELT’s crawler first saw the article (not when the outlet published it). For a newsroom post, its own publication time. UTC.',
+      },
+      search_id: {
+        type: 'text',
+        meaning:
+          'The search that found it. Searches aren’t exported. The page shows each one’s outcome.',
+      },
+      found_at: { type: 'timestamp', meaning: 'When the search that found it ran, in UTC.' },
+      source_url: {
+        type: 'text',
+        provenance: true,
+        meaning: 'The GDELT query URL, or the newsroom feed the post was read from.',
+      },
+      fetched_at: {
+        type: 'timestamp',
+        provenance: true,
+        meaning: 'When that query or feed was fetched, in UTC.',
+      },
+    },
+  },
+
+  track_record_verdicts: {
+    asOf: 'Rows with judged_at at or before as_of.',
+    columns: {
+      id: {
+        type: 'text',
+        key: true,
+        meaning: 'SHA-256 (hex) of candidate_id: one verdict per candidate.',
+      },
+      candidate_id: { type: 'text', meaning: 'The track_record_candidates.id rated.' },
+      alert_id: { type: 'text', meaning: 'The alert the candidate was found for.' },
+      same_event: {
+        type: 'boolean',
+        meaning:
+          'True when the judge read the headline (and snippet) as reporting the alert’s own event. A vague headline is rated false.',
+      },
+      rationale: {
+        type: 'text',
+        meaning:
+          'The judge’s reason, at most 400 characters, grounded against the headline and the alert’s change rows.',
+      },
+      judged_at: {
+        type: 'timestamp',
+        meaning: 'When the judge run that wrote the verdict ran, in UTC.',
+      },
+      source_url: {
+        type: 'text',
+        provenance: true,
+        meaning: 'The candidate’s own URL (the article or post rated).',
+      },
+      fetched_at: {
+        type: 'timestamp',
+        provenance: true,
+        meaning: 'When the candidate was fetched, in UTC.',
+      },
+    },
+  },
+
   recipe_observations: {
     columns: {
       id: {

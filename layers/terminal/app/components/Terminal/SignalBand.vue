@@ -122,6 +122,13 @@ const quietReason = computed(() => {
 
       <!-- 4. Quiet state, said plainly and with its reason. -->
       <p v-if="quietReason" class="text-sm text-muted">{{ quietReason }}</p>
+
+      <p class="text-sm text-muted">
+        Did we see these before the press?
+        <NuxtLink to="/track-record" class="underline underline-offset-2 hover:text-default"
+          >Track record</NuxtLink
+        >
+      </p>
     </div>
   </TerminalPanel>
 </template>

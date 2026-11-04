@@ -263,6 +263,8 @@ describe('queryRankings', () => {
       'xai-pay-bands',
       'mistral-pay-bands',
       'alphabet-anthropic-stake',
+      'anthropic-newsroom',
+      'xai-newsroom',
     ])
     expect(coverage.cuts.find((c) => c.id === 'artificial-analysis')!.reason).toContain(
       '"Internal use only; no redistribution."',
