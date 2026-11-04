@@ -166,7 +166,7 @@ const badge = (p: RevenueProviderView) =>
             </p>
             <p v-if="p.tags.length">
               XBRL tag{{ p.tags.length === 1 ? '' : 's' }}:
-              <code class="text-default">{{ p.tags.join(', ') }}</code>
+              <code class="break-all text-default">{{ p.tags.join(', ') }}</code>
             </p>
           </div>
         </template>

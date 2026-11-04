@@ -42,8 +42,10 @@ const exact = computed(() => exactStamp(props.fetchedAt))
 <template>
   <span
     v-if="oneLine && !stamp"
-    class="inline-flex max-w-full items-baseline whitespace-nowrap text-xs text-toned"
+    class="relative inline-flex max-w-full items-baseline whitespace-nowrap text-xs text-toned"
   >
+    <!-- relative: the sr-only <time> below is absolutely positioned; without a
+         positioned parent it escapes a table's scroll box and widens the page. -->
     <a
       :href="sourceUrl"
       target="_blank"
