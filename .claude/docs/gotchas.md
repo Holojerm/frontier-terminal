@@ -13,7 +13,7 @@ Sharp edges that have bitten this template before — read before forking or bef
 
 NuxtHub serves the dev DB from `.data/db/sqlite.db`. Wrangler's own local D1 sandbox lives at `.wrangler/state/v3/d1/`. Migrations applied via `bun run db:migrate` or direct writes via `wrangler d1 execute --local` land in the **wrangler** path, which the dev server does NOT read. Anything that writes to the local dev DB from outside the app must open the NuxtHub path directly with `bun:sqlite`. The two only converge in production.
 
-## Nothing applies migrations to production D1 — you have to
+## Production D1 is migrated only by `deploy:ci`
 
 Locally this is invisible: NuxtHub's dev plugin (`applyMigrationsDuringDev`) applies
 `server/db/migrations/` to `.data/db/sqlite.db` on every dev boot, so schema changes just
@@ -26,8 +26,24 @@ The `.sql` files are copied into `.output/server/db/migrations/` and the generat
 `wrangler.json` points `migrations_dir` at them — but nothing ever runs them.
 
 So a deploy that adds a table ships a Worker querying a table that does not exist, and the
-failure surfaces as a 500 on a route that worked perfectly in dev. Run it yourself, after
-the first deploy and after every schema change:
+failure surfaces as a 500 on a route that worked perfectly in dev.
+
+**Workers Builds closes that gap with its deploy command, `bun run deploy:ci`.** It runs
+`db:migrate:remote`, then `wrangler --cwd .output deploy`, so the schema lands before the
+code that needs it. Three consequences:
+
+- The build token needs **D1 Edit**. The token Workers Builds generates has only Workers
+  Scripts, KV, R2 and Routes permissions. Without D1 Edit the migrate step fails and the
+  deploy never runs. The app keeps serving the previous build, and `deploy_drift` reports it.
+- Migrations must be **expand-only**: add tables and nullable or defaulted columns. The
+  previous build serves traffic between the migrate step and the deploy, and it serves
+  everything if the deploy fails. Drop or rename only in a later release, once no deployed
+  code reads the old shape.
+- `migrations_table` matters. The script reads the root `wrangler.toml` (default
+  `d1_migrations`), so do not alternate it with the `_hub_migrations` table that
+  `.output/server/wrangler.json` names.
+
+A manual `bun run deploy` still skips migrations. Run this yourself after one:
 
 ```bash
 bun run db:migrate:remote
@@ -192,7 +208,7 @@ move every time the branch did. `bun dev:app` bypasses the proxy entirely.
 
 ## Workers Builds: dashboard Worker name must match `wrangler.toml`
 
-CI/CD runs on Cloudflare Workers Builds (repo connected in the dashboard under Worker → Settings → Build). The Worker's name in the dashboard must exactly match `name` in the root `wrangler.toml`, or every build fails before it starts. Build settings live in the dashboard, not in the repo: build command `bun run ci`, deploy command `bunx wrangler --cwd .output deploy`.
+CI/CD runs on Cloudflare Workers Builds (repo connected in the dashboard under Worker → Settings → Build). The Worker's name in the dashboard must exactly match `name` in the root `wrangler.toml`, or every build fails before it starts. Build settings live in the dashboard, not in the repo: build command `bun run ci`, deploy command `bun run deploy:ci` (migrates production D1, then deploys; needs D1 Edit on the build token, see above).
 
 **A build that fails to start is not retried.** "Build failed to initialize and was timed out" means the build environment never came up, and Workers Builds leaves production on the previous commit. The ops digest reports it as `deploy_drift` (`layers/terminal/server/pipeline/deploy-watch.ts`) once main has been ahead of `/api/status` → `build.sha` for one tick. To retry without an empty commit, start a build on the `main` trigger with the **full** sha. A short sha fails at clone with "error occurred while fetching repository":
 
