@@ -511,8 +511,8 @@ describe('the Compute thesis on a seeded store', () => {
     expect(azureRow.observations).toBeGreaterThan(100)
     expect(azureRow.terms).toMatch(/documents for unauthenticated price lookup/)
     expect(azureRow.newest?.fetched_at).toBe(NOW.toISOString())
-    // A recipe audited on its thesis page has no entry, and says so by having none.
-    expect(coverage.recipes.find((r) => r.recipe_id === 'npm-wrangler')!.caveat).toBeNull()
+    expect(coverage.recipes.every((r) => r.rights !== null)).toBe(true)
+    expect(coverage.recipes.find((r) => r.recipe_id === 'npm-wrangler')!.rights).toBe('upstream')
     expect(coverage.cuts.map((c) => c.id)).toContain('gpu-runpod')
   })
 

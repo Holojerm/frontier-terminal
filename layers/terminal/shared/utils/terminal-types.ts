@@ -136,7 +136,7 @@ export interface RecipeCoverage {
   observations: number
   /** Newest stored observation's fetch. */
   newest: Prov | null
-  /** The audit's words from sources.yaml recipe_sources; null for a recipe audited on its thesis page. */
+  /** The audit's words from sources.yaml recipe_sources; null only for a recipe with no entry, which a test forbids. */
   caveat: string | null
   terms: string | null
   rights: SourceRights | null
