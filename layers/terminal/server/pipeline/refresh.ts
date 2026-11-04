@@ -125,6 +125,8 @@ interface Fetched {
     unchanged: boolean
     /** No earlier good run for this source: whatever parses is the baseline. */
     first: boolean
+    /** The URL the last good run read, when the source has since moved to another. */
+    movedFrom: string | null
   } | null
   failure: string | null
   /** True when the fetcher refused for want of a credential (nothing attempted). */
@@ -182,7 +184,13 @@ async function fetchAndSnapshot(deps: RefreshDeps, source: FetchSource, now: () 
   ])
   return {
     ...base,
-    body: { text, snapshot_id, unchanged, first: latest === null },
+    body: {
+      text,
+      snapshot_id,
+      unchanged,
+      first: latest === null,
+      movedFrom: latest !== null && latest.source_url !== source.url ? latest.source_url : null,
+    },
     failure: null,
     skipped: false,
     absent: false,
@@ -282,11 +290,18 @@ async function parseAndStore(
   }
 
   const all = diff(before, parsed.entities, fetched_at)
-  const changes = lane.removals === 'set' ? all : all.filter((c) => c.change_type !== 'removed')
+  const kept = lane.removals === 'set' ? all : all.filter((c) => c.change_type !== 'removed')
   const afterByKey = new Map(parsed.entities.map((e) => [e.entity_key, e]))
-  const added = changes.filter((c) => c.change_type === 'added')
-  const modified = changes.filter((c) => c.change_type === 'modified')
-  const removed = changes.filter((c) => c.change_type === 'removed')
+  const added = kept.filter((c) => c.change_type === 'added')
+  const modified = kept.filter((c) => c.change_type === 'modified')
+  const removed = kept.filter((c) => c.change_type === 'removed')
+  // A source that moved to a new URL reads the same entities from another
+  // document, and what differs is the representation, not the world:
+  // anthropic-status leaving the Statuspage JSON API (robots.txt disallows
+  // /api/) for its Atom feed loses impact and components on every incident
+  // still in the window. Those rows are rewritten in place without a change
+  // row, as a baseline would; an added or removed key still logs.
+  const changes = body.movedFrom ? kept.filter((c) => c.change_type !== 'modified') : kept
 
   // Alerts are computed before anything is written, so the whole diff lands
   // in one transaction — see applyDiff.
@@ -313,13 +328,16 @@ async function parseAndStore(
     })
   }
 
+  const moved = body.movedFrom
+    ? `moved from ${body.movedFrom}: ${modified.length} ${modified.length === 1 ? 'row' : 'rows'} re-read in place, not logged as changes`
+    : null
   return {
     status: 'ok',
-    detail: note,
+    detail: [moved, note].filter(Boolean).join('; ') || null,
     snapshot_id: body.snapshot_id,
     added: added.length,
     removed: removed.length,
-    modified: modified.length,
+    modified: body.movedFrom ? 0 : modified.length,
     alerts: alerts.length,
   }
 }

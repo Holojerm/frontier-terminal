@@ -67,7 +67,7 @@ import edgarSubmissionsMeta from '~~/fixtures/sec/edgar-submissions-meta.json?ra
 import edgarSubmissionsMsft from '~~/fixtures/sec/edgar-submissions-msft.json?raw'
 import edgarSubmissionsNvda from '~~/fixtures/sec/edgar-submissions-nvda.json?raw'
 import edgarSubmissionsSpcx from '~~/fixtures/sec/edgar-submissions-spcx.json?raw'
-import anthropicStatus from '~~/fixtures/status/anthropic-status.json?raw'
+import anthropicStatus from '~~/fixtures/status/anthropic-status.xml?raw'
 import googleCloudStatus from '~~/fixtures/status/google-cloud-status.json?raw'
 import mistralStatus from '~~/fixtures/status/mistral-status.json?raw'
 import xaiStatus from '~~/fixtures/status/xai-status.xml?raw'
@@ -145,7 +145,7 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/sec/filing-index-anthropic-s-1.html': filingIndexAnthropic,
   'fixtures/sec/prospectus-anthropic-s-1.html': prospectusAnthropic,
   'fixtures/sec/prospectus-anthropic-s-1-a.html': prospectusAnthropicAmended,
-  'fixtures/status/anthropic-status.json': anthropicStatus,
+  'fixtures/status/anthropic-status.xml': anthropicStatus,
   'fixtures/status/google-cloud-status.json': googleCloudStatus,
   'fixtures/status/mistral-status.json': mistralStatus,
   'fixtures/status/xai-status.xml': xaiStatus,

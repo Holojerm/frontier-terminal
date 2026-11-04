@@ -111,18 +111,18 @@ describe('buildThesisDigest', () => {
           provider: 'anthropic',
           verdict: 'material',
           rationale: 'Hit the API for 3.5 hours.',
-          facts: { title: 'Elevated errors on Claude API', impact: 'major', hours: 3.5 },
+          facts: { title: 'Elevated errors on Claude API', impact: null, hours: 3.5 },
           detected_at: '2026-10-10T06:00:00Z',
           judged_at: '2026-10-10T07:00:00Z',
           confirmation: null,
-          source_url: 'https://status.claude.com/api/v2/incidents.json',
+          source_url: 'https://status.claude.com/history.atom',
           fetched_at: '2026-10-10T06:00:00Z',
         },
       ],
     })
     const d = build([safety])
     expect(d.text).toContain(
-      'Claim 5 · Anthropic · material · "Elevated errors on Claude API" (3.5h, major)',
+      'Claim 5 · Anthropic · material · "Elevated errors on Claude API" (3.5h, impact not published)',
     )
     expect(d.text).toContain('! Awaiting confirmation, claim 5')
     expect(d.html).toContain('Awaiting your confirmation')

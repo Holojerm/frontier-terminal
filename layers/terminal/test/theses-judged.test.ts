@@ -73,12 +73,13 @@ const LONG_OUTAGE = change(
     entity_key: 'incident:anthropic:abc',
     entity_type: 'incident',
     provider: 'anthropic',
-    source_url: 'https://status.claude.com/api/v2/incidents.json',
+    source_url: 'https://status.claude.com/history.atom',
   },
   null,
   {
     title: 'Elevated errors on Claude API',
-    impact: 'major',
+    // The Atom feed publishes no impact: this qualifies on duration alone.
+    impact: null,
     started_at: '2026-10-10T01:00:00Z',
     resolved_at: '2026-10-10T04:30:00Z',
   },
@@ -91,6 +92,38 @@ const SHORT_OUTAGE = change(
     impact: 'critical',
     started_at: '2026-10-10T01:00:00Z',
     resolved_at: '2026-10-10T01:30:00Z',
+  },
+)
+
+// A rival feed that states an impact is still held to the impact bar.
+const RIVAL_MINOR = change(
+  { entity_key: 'incident:openai:ghi', entity_type: 'incident', provider: 'openai' },
+  null,
+  {
+    title: 'Slow file uploads',
+    impact: 'minor',
+    started_at: '2026-10-10T01:00:00Z',
+    resolved_at: '2026-10-10T06:00:00Z',
+  },
+)
+const RIVAL_MAJOR = change(
+  { entity_key: 'incident:openai:jkl', entity_type: 'incident', provider: 'openai' },
+  null,
+  {
+    title: 'Elevated API errors',
+    impact: 'major',
+    started_at: '2026-10-10T01:00:00Z',
+    resolved_at: '2026-10-10T03:00:00Z',
+  },
+)
+const SHORT_UNRATED = change(
+  { entity_key: 'incident:anthropic:mno', entity_type: 'incident', provider: 'anthropic' },
+  null,
+  {
+    title: 'Brief errors',
+    impact: null,
+    started_at: '2026-10-10T01:00:00Z',
+    resolved_at: '2026-10-10T02:00:00Z',
   },
 )
 
@@ -107,10 +140,25 @@ describe('claim candidates', () => {
     expect(got[0]!.subject).toBe(OPENAI_CUT.id)
   })
 
-  it('offers only incidents at the impact bar lasting two hours, keyed by incident', () => {
-    const got = claimCandidates(ANTHROPIC_THESIS, SAFETY, [LONG_OUTAGE, SHORT_OUTAGE], FLAGSHIPS)
-    expect(got.map((c) => c.subject)).toEqual(['incident:anthropic:abc'])
-    expect(got[0]!.facts.hours).toBe(3.5)
+  it('offers incidents lasting two hours, at the impact bar where the feed states one, keyed by incident', () => {
+    const got = claimCandidates(
+      ANTHROPIC_THESIS,
+      SAFETY,
+      [LONG_OUTAGE, SHORT_OUTAGE, RIVAL_MINOR, RIVAL_MAJOR, SHORT_UNRATED],
+      FLAGSHIPS,
+    )
+    expect(got.map((c) => c.subject)).toEqual(['incident:anthropic:abc', 'incident:openai:jkl'])
+    expect(got[0]!.facts).toMatchObject({ hours: 3.5, impact: null })
+    expect(got[1]!.facts).toMatchObject({ hours: 2, impact: 'major' })
+  })
+
+  it("leaves an unpublished impact out under 'excluded'", () => {
+    const spec = SAFETY.spec as Extract<JudgedSpec, { review: 'incidents-and-disclosures' }>
+    const strict: ClaimDef = {
+      ...SAFETY,
+      spec: { ...spec, rule: { ...spec.rule, impact_unpublished: 'excluded' } },
+    }
+    expect(claimCandidates(ANTHROPIC_THESIS, strict, [LONG_OUTAGE], FLAGSHIPS)).toEqual([])
   })
 
   it('offers nothing detected before the claim was first judged', () => {
@@ -220,7 +268,7 @@ describe('verdicts through the judge submit path', () => {
           claim_id: SAFETY.id,
           change_id: LONG_OUTAGE.id,
           verdict: 'material',
-          rationale: '"Elevated errors on Claude API" at major impact for 3.5 hours.',
+          rationale: '"Elevated errors on Claude API" for 3.5 hours.',
         },
         // Not a candidate: gpt-6-luna is not the flagship.
         {
