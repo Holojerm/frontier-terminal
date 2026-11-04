@@ -82,7 +82,10 @@ describe('archived pricing pages', () => {
     expect(prices(find(out.rows, 'o1-preview'))).toEqual([15, 7.5, 60])
     expect(prices(find(out.rows, 'gpt-4-32k'))).toEqual([60, null, 120])
     // Audio-preview rows price text and audio separately: passed over, and named.
-    expect(out.passed).toEqual(['gpt-4o-audio-preview', 'gpt-4o-audio-preview-2024-10-01'])
+    expect(out.passed).toEqual([
+      'gpt-4o-audio-preview (priced per modality)',
+      'gpt-4o-audio-preview-2024-10-01 (priced per modality)',
+    ])
     expect(out.rows.some((r) => r.model_slug.includes('audio'))).toBe(false)
   })
 

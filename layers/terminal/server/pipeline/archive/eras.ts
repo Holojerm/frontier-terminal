@@ -17,12 +17,29 @@ import {
   parseAnthropicModelsOverviewHtml,
   parseAnthropicPricingHtml,
 } from '../parsers/pricing/wayback-anthropic'
+import { parseAlibabaPricingHtmlArchived } from '../parsers/pricing/wayback-alibaba'
+import { parseDeepseekPricingHtml } from '../parsers/pricing/wayback-deepseek'
+import {
+  parseGoogleDocsPricingHtml,
+  parseGooglePricingCards,
+} from '../parsers/pricing/wayback-google'
+import {
+  parseMistralDocsPricingHtml,
+  parseMistralTechnologyHtml,
+} from '../parsers/pricing/wayback-mistral'
 import {
   parseOpenAiDocsPricingHtml,
+  parseOpenAiDocsPricingIslands,
   parseOpenAiPricingHtml2023,
+  parseOpenAiPricingHtml2025,
   parseOpenAiPricingMd2026,
   parseOpenAiPricingHtml2024,
 } from '../parsers/pricing/wayback-openai'
+import {
+  parseXaiApiPage,
+  parseXaiDocsModelsHtml,
+  parseXaiModelsMdArchived,
+} from '../parsers/pricing/wayback-xai'
 
 /** The day the live pipeline began watching the labs' pages (docs/source-audit.md). */
 export const ARCHIVE_UNTIL = '2026-08-25T00:00:00.000Z'
@@ -30,7 +47,14 @@ export const ARCHIVE_UNTIL = '2026-08-25T00:00:00.000Z'
 /** The earliest instant the backfill looks at. */
 export const ARCHIVE_FROM = '2023-01-01T00:00:00.000Z'
 
-export type ArchiveProvider = 'openai' | 'anthropic'
+export type ArchiveProvider =
+  | 'openai'
+  | 'anthropic'
+  | 'google'
+  | 'xai'
+  | 'mistral'
+  | 'deepseek'
+  | 'alibaba'
 
 export interface ArchiveEra {
   id: string
@@ -70,6 +94,16 @@ export const ARCHIVE_ERAS: readonly ArchiveEra[] = [
     parse: parseOpenAiPricingHtml2024,
   },
   {
+    id: 'openai-api-pricing-2025',
+    provider: 'openai',
+    url: 'https://openai.com/api/pricing',
+    from: '2025-01-28T00:00:00.000Z',
+    until: '2025-02-14T00:00:00.000Z',
+    shape:
+      'openai.com/api/pricing: the 2024 feature groups with each row opening on its own column header',
+    parse: parseOpenAiPricingHtml2025,
+  },
+  {
     id: 'openai-docs-pricing-2026',
     provider: 'openai',
     url: 'https://developers.openai.com/api/docs/pricing',
@@ -77,6 +111,16 @@ export const ARCHIVE_ERAS: readonly ArchiveEra[] = [
     until: '2026-03-08T00:00:00.000Z',
     shape: 'developers.openai.com/api/docs/pricing: one Text tokens table per service tier',
     parse: parseOpenAiDocsPricingHtml,
+  },
+  {
+    id: 'openai-docs-pricing-2026b',
+    provider: 'openai',
+    url: 'https://developers.openai.com/api/docs/pricing',
+    from: '2026-03-08T00:00:00.000Z',
+    until: '2026-07-29T00:00:00.000Z',
+    shape:
+      'developers.openai.com/api/docs/pricing: per-tier tabs showing the latest models, the full list in each tab’s server-rendered island props',
+    parse: parseOpenAiDocsPricingIslands,
   },
   {
     id: 'openai-pricing-md-2026',
@@ -160,6 +204,100 @@ export const ARCHIVE_ERAS: readonly ArchiveEra[] = [
     shape: 'platform.claude.com pricing.md: the markdown the live parser reads',
     parse: md(parseAnthropicPricingMd),
   },
+  {
+    id: 'google-pricing-2024',
+    provider: 'google',
+    url: 'https://ai.google.dev/pricing',
+    from: '2023-12-01T00:00:00.000Z',
+    until: '2025-02-11T00:00:00.000Z',
+    shape:
+      'ai.google.dev/pricing: one card per model, pay-as-you-go prices in running text by prompt length',
+    parse: parseGooglePricingCards,
+  },
+  {
+    id: 'google-docs-pricing-2025',
+    provider: 'google',
+    url: 'https://ai.google.dev/gemini-api/docs/pricing',
+    from: '2025-02-11T00:00:00.000Z',
+    until: ARCHIVE_UNTIL,
+    shape:
+      'ai.google.dev/gemini-api/docs/pricing: an h2 per model, a three-column table per service tier, read by the live parser',
+    parse: parseGoogleDocsPricingHtml,
+  },
+  {
+    id: 'xai-api-2025',
+    provider: 'xai',
+    url: 'https://x.ai/api',
+    from: '2024-11-04T00:00:00.000Z',
+    until: '2025-07-11T00:00:00.000Z',
+    shape: 'x.ai/api: one card per model, text input, image input and output per million tokens',
+    parse: parseXaiApiPage,
+  },
+  {
+    id: 'xai-docs-models-2025',
+    provider: 'xai',
+    url: 'https://docs.x.ai/docs/models',
+    from: '2025-07-11T00:00:00.000Z',
+    until: '2026-02-05T00:00:00.000Z',
+    shape: 'docs.x.ai/docs/models: a Model Pricing table, input and output per million tokens',
+    parse: parseXaiDocsModelsHtml,
+  },
+  {
+    id: 'xai-models-md-2026',
+    provider: 'xai',
+    url: 'https://docs.x.ai/developers/models.md',
+    from: '2026-03-12T00:00:00.000Z',
+    until: ARCHIVE_UNTIL,
+    shape: 'docs.x.ai/developers/models.md: a markdown price table, three successive layouts',
+    parse: parseXaiModelsMdArchived,
+  },
+  {
+    id: 'mistral-docs-pricing-2023',
+    provider: 'mistral',
+    url: 'https://docs.mistral.ai/platform/pricing',
+    from: '2023-12-01T00:00:00.000Z',
+    until: '2024-04-14T00:00:00.000Z',
+    shape: 'docs.mistral.ai/platform/pricing: a table per API, EUR only, then USD and EUR columns',
+    parse: parseMistralDocsPricingHtml,
+  },
+  {
+    id: 'mistral-technology-2024',
+    provider: 'mistral',
+    url: 'https://mistral.ai/technology/',
+    from: '2024-04-14T00:00:00.000Z',
+    until: '2025-03-21T00:00:00.000Z',
+    shape: 'mistral.ai/technology: pay-as-you-go tables per family, a USD table and its EUR twin',
+    parse: parseMistralTechnologyHtml,
+  },
+  {
+    id: 'deepseek-platform-pricing-2024',
+    provider: 'deepseek',
+    url: 'https://platform.deepseek.com/api-docs/pricing',
+    from: '2024-05-01T00:00:00.000Z',
+    until: '2024-11-04T00:00:00.000Z',
+    shape: 'platform.deepseek.com/api-docs/pricing: a row per model, a USD table and a CNY table',
+    parse: parseDeepseekPricingHtml,
+  },
+  {
+    id: 'deepseek-api-docs-pricing-2024',
+    provider: 'deepseek',
+    url: 'https://api-docs.deepseek.com/quick_start/pricing',
+    from: '2024-11-04T00:00:00.000Z',
+    until: ARCHIVE_UNTIL,
+    shape:
+      'api-docs.deepseek.com/quick_start/pricing: a row per model, then a column per model with time-of-day bands',
+    parse: parseDeepseekPricingHtml,
+  },
+  {
+    id: 'alibaba-model-pricing-2026',
+    provider: 'alibaba',
+    url: 'https://www.alibabacloud.com/help/en/model-studio/model-pricing',
+    from: '2026-01-16T00:00:00.000Z',
+    until: ARCHIVE_UNTIL,
+    shape:
+      'Model Studio model-pricing: per Qwen line, an International tab, later a Singapore tab with a deployment-scope column',
+    parse: parseAlibabaPricingHtmlArchived,
+  },
 ]
 
 /** Stretches with no readable archived price list, and why. Printed on /data and in the audit. */
@@ -171,62 +309,85 @@ export const ARCHIVE_GAPS: readonly {
 }[] = [
   {
     provider: 'openai',
-    from: '2025-01-28',
+    from: '2025-02-01',
     until: '2026-02-01',
     reason:
-      'In late January 2025 openai.com/api/pricing changed its layout, and we don’t read the new one yet. From March 2025 the Archive only has a Cloudflare check page there. Its copies of platform.openai.com/docs/pricing have no prices in them.',
-  },
-  {
-    provider: 'openai',
-    from: '2026-03-08',
-    until: '2026-07-29',
-    reason:
-      'In March 2026 developers.openai.com/api/docs/pricing switched to tabbed tables per model family, and we don’t read those yet. The Archive’s first copy of the markdown version is from 2026-07-29.',
+      'From February 2025 the Archive’s copies of openai.com/api/pricing hold only the page shell, then a short list of flagship models by marketing name (“GPT-4.1”, “OpenAI o3”). That list isn’t the price list, so we don’t read it. The copies of platform.openai.com/docs/pricing and its model pages are script shells with no prices.',
   },
   {
     provider: 'anthropic',
     from: '2023-01-01',
     until: '2024-03-01',
     reason:
-      'Anthropic published Claude 2 prices as a PDF rate card. The Archive has no page with them as text.',
+      'Anthropic published Claude 2 prices as a PDF rate card. The Archive’s copies of anthropic.com/product and the docs’ model pages from 2023 show no prices as text.',
+  },
+  {
+    provider: 'google',
+    from: '2023-01-01',
+    until: '2024-06-15',
+    reason:
+      'Until January 2024 the Archive’s copies of ai.google.dev/pricing show no prices. Until April 2024 Gemini was priced per 1,000 characters, and we don’t convert units. The Gemini 1.5 prices shown in April and May 2024 weren’t billed yet (“Billing starts May 30, 2024”).',
+  },
+  {
+    provider: 'xai',
+    from: '2023-01-01',
+    until: '2025-03-20',
+    reason:
+      'Until March 2025 x.ai/api showed no per-token prices, and the Archive’s copies of docs.x.ai from that time show none either.',
+  },
+  {
+    provider: 'xai',
+    from: '2025-04-17',
+    until: '2025-07-28',
+    reason:
+      'From April 2025 x.ai/api lists only its featured models and hides the rest behind a button the Archive didn’t save. Read as a price list, the hidden models would look dropped. docs.x.ai’s copies show no prices until late July 2025.',
+  },
+  {
+    provider: 'xai',
+    from: '2025-12-21',
+    until: '2026-03-12',
+    reason:
+      'From late December 2025 the Archive’s copies of docs.x.ai hold the price table before its scripts filled it in, and x.ai/api still lists featured models only. The markdown version starts 2026-03-12.',
+  },
+  {
+    provider: 'mistral',
+    from: '2023-01-01',
+    until: '2024-02-26',
+    reason:
+      'Until late February 2024 docs.mistral.ai priced the API in euros only. We store prices as printed and don’t convert currencies.',
+  },
+  {
+    provider: 'mistral',
+    from: '2025-02-04',
+    until: '2026-08-25',
+    reason:
+      'From March 2025 mistral.ai/pricing lists prices by product name (“Mistral Medium 3”) with no API model name, and we don’t guess which model a name means. The Archive’s first copy of the docs price list is from 2026-08-13, as HTML we don’t read.',
+  },
+  {
+    provider: 'deepseek',
+    from: '2023-01-01',
+    until: '2024-05-25',
+    reason: 'The Archive’s first copy of DeepSeek’s pricing page is from May 2024.',
+  },
+  {
+    provider: 'alibaba',
+    from: '2023-01-01',
+    until: '2026-01-16',
+    reason:
+      'Before 2026 Alibaba printed its prices inside the Model Studio model list, by region, with tiered prices explained under each table. We don’t read that page yet. The Archive’s first copy of the model-pricing page is from 2026-01-16.',
   },
 ]
 
 /** Labs whose archived pricing pages are not read yet, and why. Printed on /data and in the audit. */
 export const ARCHIVE_NOT_COVERED: readonly { provider: string; reason: string }[] = [
   {
-    provider: 'google',
-    reason:
-      'Google’s old pricing page prices each model by input type and prompt length in running text. We don’t read those copies yet.',
-  },
-  {
-    provider: 'xai',
-    reason:
-      'The Archive has copies (x.ai/api from November 2024, docs.x.ai from January 2025). We don’t read them yet.',
-  },
-  {
-    provider: 'mistral',
-    reason:
-      'The Archive has copies (docs.mistral.ai from December 2023, mistral.ai/pricing from March 2025). We don’t read them yet.',
-  },
-  {
     provider: 'meta',
     reason: 'Meta had no API price list of its own before the page we check now.',
   },
   {
-    provider: 'deepseek',
-    reason:
-      'DeepSeek became a tracked lab on 2026-11-04, after the backfill was built. We haven’t checked the Archive’s copies of its pricing page yet.',
-  },
-  {
-    provider: 'alibaba',
-    reason:
-      'Alibaba became a tracked lab on 2026-11-04, after the backfill was built. We haven’t checked the Archive’s copies of its Model Studio pricing page yet.',
-  },
-  {
     provider: 'moonshot',
     reason:
-      'Moonshot AI’s pricing page draws its tables with scripts, so neither the live page nor an archived copy holds prices we can read.',
+      'Moonshot AI’s pricing pages draw their tables with scripts. Every Archive copy of platform.moonshot.ai (from June 2025) and platform.kimi.ai (from March 2026) holds the page shell or its headings only. platform.moonshot.cn prices in yuan, and we don’t convert currencies.',
   },
 ]
 
