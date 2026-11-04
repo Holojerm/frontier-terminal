@@ -63,11 +63,11 @@ const asOf = (rows: readonly Row[]) => newestRow(rows)?.fetched_at ?? null
 // ── Adoption: Ramp, package downloads, coding-agent PRs ─────────────────────
 
 export const RAMP_CAVEAT =
-  'Share of US businesses on Ramp with any positive spend on the vendor in the month, by card or bill pay: adoption, not spend, and not the whole economy. Ramp restates past months between releases; this is the newest release, and each earlier one is kept in the export. Google and Meta are not in Ramp’s vendor series.'
+  'Share of US businesses on Ramp that spent anything with the vendor in the month, by card or bill pay. It measures adoption, not spend, and covers Ramp’s customers only. Ramp restates past months between releases. This is the newest release, and each earlier one is in the export. Google and Meta aren’t in Ramp’s vendor series.'
 export const DOWNLOADS_CAVEAT =
-  'Every download counts, CI and bots included; npm’s outage days read as zero. Read the change, not the level, and never as users.'
+  'Every download counts, including CI and bots. Days when npm’s stats were down read as zero. Watch the trend instead of the level, and don’t read downloads as users.'
 export const AGENT_PRS_CAVEAT =
-  'Public repositories only, one trend per agent. Each agent leaves a different trace (a default-on PR footer users can turn off, a bot author, a branch name), so the counts are not shares of one market.'
+  'Public repositories only, one trend per agent. Each agent leaves a different trace (a default-on PR footer users can turn off, a bot author, a branch name), so the counts can’t be read as shares of one market.'
 
 const AGENT_PACKAGES = new Set(['@anthropic-ai/claude-code', '@openai/codex', '@google/gemini-cli'])
 
@@ -187,7 +187,7 @@ export async function queryAdoption(db: PipelineDb): Promise<AdoptionData> {
 // ── Rate limits ─────────────────────────────────────────────────────────────
 
 export const LIMITS_CAVEAT =
-  'The limits each lab publishes in its docs: tier design and abuse control as much as capacity, changed in announced steps. A new snapshot is stored only when a limit changes. Google and Mistral publish no per-model limits.'
+  'The limits each lab publishes in its docs. They reflect tier design and abuse control as much as capacity, and they change in announced steps. We store a new reading only when a limit changes. Google and Mistral publish no per-model limits.'
 
 function snapshotRows(rows: readonly Row[]): { metrics: string[]; rows: LimitRow[] } {
   const metrics: string[] = []
@@ -243,7 +243,7 @@ export async function queryLimits(db: PipelineDb): Promise<LimitsData> {
 // ── Posted pay ──────────────────────────────────────────────────────────────
 
 export const PAY_CAVEAT =
-  'The median midpoint of each posted US annual salary band. Bands are posted ranges, not offers, and exclude equity, the larger part of pay at these labs. Departments are mapped by hand per board, and sales is left out (Anthropic posts on-target earnings, OpenAI base pay), so read each cell’s change over time, not the gap between labs. xAI and Mistral post no usable pay.'
+  'The median midpoint of each posted US annual salary band. Bands are posted ranges, not offers, and leave out equity, which is the larger part of pay at these labs. We map departments by hand for each board and leave out sales (Anthropic posts on-target earnings, OpenAI base pay). So compare each cell with itself over time instead of comparing labs. xAI and Mistral post no usable pay.'
 
 const PAY_LABELS: Record<string, string> = {
   all: 'All roles',
@@ -303,7 +303,7 @@ export async function queryPay(db: PipelineDb): Promise<PayData> {
 // ── Parents' filings ────────────────────────────────────────────────────────
 
 export const PARENTS_CAVEAT =
-  'The parent’s own figures from its newest 10-Q or 10-K, never the lab’s. Microsoft accounts for OpenAI at hypothetical liquidation value and books dilution gains in the same line, so dividing by the stake is not OpenAI’s result; Amazon’s marks follow observable prices, and 12% is a cap rather than a stake, so none of this is Anthropic’s valuation.'
+  'The parent’s own figures from its newest 10-Q or 10-K. None of them are the lab’s. Microsoft accounts for OpenAI at hypothetical liquidation value and books dilution gains in the same line, so dividing by the stake doesn’t give OpenAI’s result. Amazon’s marks follow observable prices, and 12% is a cap instead of a stake, so none of this is Anthropic’s valuation.'
 
 const CONCEPT_LABELS: Record<string, string> = {
   NonoperatingIncomeExpense: 'Gain or loss recognized (other income)',
@@ -391,7 +391,7 @@ export async function queryParents(db: PipelineDb): Promise<ParentsData> {
 // ── Data-center power (Epoch AI) ────────────────────────────────────────────
 
 export const DATACENTERS_CAVEAT =
-  'Epoch AI’s estimates (CC BY 4.0): 80% of power estimates fall within a factor of 1.4, and coverage starts with sites operational in 2024 or later. A site counts for every lab Epoch names as a user at #confident or #likely, in full, so a shared site (Colossus 2: Anthropic and SpaceXAI) counts for each and the labs do not add up to the total.'
+  'Epoch AI’s estimates (CC BY 4.0). 80% of power estimates fall within a factor of 1.4, and coverage starts with sites operational in 2024 or later. A site counts in full for every lab Epoch names as a user at #confident or #likely. So a shared site (Colossus 2, used by Anthropic and SpaceXAI) counts for each, and the labs don’t add up to the total.'
 
 const ATTRIBUTED = /#(confident|likely)\b/
 

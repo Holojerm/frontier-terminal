@@ -89,12 +89,12 @@ const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
           v-if="!clusterOf(p)"
           inline
           title="No parsed roles yet"
-          reason="Counted from the board’s current listing once it is parsed."
+          reason="We count them once we’ve read the board’s current listing."
         />
         <TerminalGap
           v-else-if="clusterOf(p)!.departments.length === 0"
           inline
-          title="No department on this board matches the cluster."
+          title="No department on this board matches the list below."
           reason="The zero reflects department labels, not hiring."
         />
         <template v-else>
@@ -132,8 +132,8 @@ const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
     </p>
 
     <p class="text-xs text-muted">
-      A department counts when the board’s own label contains Data Center, Infrastructure,
-      Facilities, Energy, Construction, Compute, or Hardware, and not “Software”.
+      We count a department when the board’s own label contains Data Center, Infrastructure,
+      Facilities, Energy, Construction, Compute, or Hardware, unless it also says “Software”.
     </p>
   </div>
 </template>

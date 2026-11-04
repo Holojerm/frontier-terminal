@@ -28,7 +28,7 @@ defineProps<{ claim: ClaimView }>()
     <TerminalFacts
       :items="[
         { key: 'kill', label: 'Kill condition', value: claim.kill_condition },
-        { key: 'signal', label: 'Signal', value: claim.signal_label },
+        { key: 'signal', label: 'Evidence', value: claim.signal_label },
       ]"
       :cols="2"
     />

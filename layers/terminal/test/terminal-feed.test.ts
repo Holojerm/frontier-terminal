@@ -58,7 +58,7 @@ describe('buildAlertsAtom', () => {
       ),
     ).toBe(true)
     expect(xml).toContain(`<id>https://example.com${ALERTS_FEED_PATH}</id>`)
-    expect(xml).toContain('<title>Frontier Terminal — alerts</title>')
+    expect(xml).toContain('<title>Frontier Terminal alerts</title>')
     expect(xml).toContain('<author><name>Frontier Terminal</name></author>')
     // The feed's updated is the newest entry's timestamp.
     expect(xml).toContain('<updated>2026-09-07T10:00:05.000Z</updated>')
@@ -105,8 +105,8 @@ describe('buildAlertsAtom', () => {
     const alerts = [alert(), alert({ id: 't1', severity: 'info', headline: 'One role added' })]
     const base = buildAlertsAtom({ ...SITE, alerts: [alerts[0]!], fallbackUpdated: 'x' })
     expect(base).toContain('<id>https://example.com/alerts.xml</id>')
-    expect(base).toContain('<title>Frontier Terminal — alerts</title>')
-    expect(base).toContain('notable and critical only')
+    expect(base).toContain('<title>Frontier Terminal alerts</title>')
+    expect(base).toContain('Notable and critical alerts')
     expect(base).not.toContain('<category term="info"')
 
     const withMinor = buildAlertsAtom({ ...SITE, alerts, tier: 'all', fallbackUpdated: 'x' })
@@ -117,7 +117,7 @@ describe('buildAlertsAtom', () => {
     expect(withMinor).toContain(
       '<link rel="self" type="application/atom+xml" href="https://example.com/alerts.xml?include=info"/>',
     )
-    expect(withMinor).toContain('<title>Frontier Terminal — alerts and minor changes</title>')
+    expect(withMinor).toContain('<title>Frontier Terminal alerts and minor changes</title>')
     expect(withMinor).toContain('<category term="info" label="severity"/>')
     expect(withMinor).toContain('<id>https://example.com/alerts/t1</id>')
     // The HTML alternate for both documents is the one alerts page.

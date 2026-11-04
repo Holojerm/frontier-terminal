@@ -30,7 +30,7 @@ const delta = computed(() => cellDelta(props.cell))
       />
     </div>
     <p v-if="cell.basis_current === false" class="text-xs text-warning">
-      Mapping under review: the cited sentence is no longer on the vendor page<template
+      Mapping under review. The sentence we cite is no longer on the vendor’s page<template
         v-if="cell.basis_checked_at"
       >
         (checked {{ absoluteStamp(cell.basis_checked_at) }})</template

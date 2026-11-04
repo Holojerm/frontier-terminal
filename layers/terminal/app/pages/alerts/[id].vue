@@ -16,7 +16,7 @@ definePageMeta({
     changefreq: 'yearly',
     priority: '0.6',
     title: 'Alert',
-    summary: 'One alert with the change rows it cites, each with its source URL and fetch time.',
+    summary: 'One alert with the changes it cites, each with its source URL and fetch time.',
   },
 })
 
@@ -112,20 +112,20 @@ useSeo({
 
     <TerminalPanel
       id="cited"
-      title="Cited change rows"
-      note="Every field of every cited row, before and after."
+      title="Cited changes"
+      note="Every field of each cited change, before and after."
     >
       <div v-if="alert.changes.length" class="grid gap-3 lg:grid-cols-2 2xl:grid-cols-3">
         <TerminalChangeDetail v-for="change in alert.changes" :key="change.id" :change="change" />
       </div>
       <p v-if="alert.missing_change_ids.length" class="text-sm text-muted">
-        {{ alert.missing_change_ids.length }} cited change id(s) are not in the change log:
+        {{ alert.missing_change_ids.length }} cited change ID(s) aren’t in the change log:
         <span class="font-mono break-all">{{ alert.missing_change_ids.join(', ') }}</span>
       </p>
       <TerminalGap
         v-if="!alert.changes.length && !alert.missing_change_ids.length"
-        title="No change rows cited."
-        reason="An alert without cited rows cannot be checked; this one is listed as stored."
+        title="No changes cited."
+        reason="Without cited changes, this alert can’t be checked. It’s shown as stored."
       />
     </TerminalPanel>
   </TerminalPage>

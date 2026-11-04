@@ -29,11 +29,11 @@ useSeo({
 <template>
   <TerminalPage
     title="Theses"
-    lede="A thesis is a public position: a set of claims, each with a kill condition written before the data arrived, checked against the terminal’s own numbers."
+    lede="A thesis is a public position. It’s a set of claims, each with a kill condition written before the data arrived, checked against our own numbers."
     :as-of="theses?.as_of"
     :error="Boolean(error)"
-    error-title="Theses could not be read"
-    error-body="The theses endpoint failed to respond. No stale or inferred status is shown in its place."
+    error-title="Theses didn’t load"
+    error-body="We won’t show an old status in its place. Try reloading in a minute."
   >
     <template v-if="theses">
       <TerminalGap

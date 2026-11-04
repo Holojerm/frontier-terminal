@@ -53,7 +53,7 @@ const hasRows = (p: HiringHistoryProvider) => p.feed === 'ok' && p.total.length 
 
 <template>
   <TerminalTable
-    caption="Open roles per lab, the change over the comparison window, the infrastructure cluster, and the department that moved most"
+    caption="Open roles per lab, the change over the comparison window, infrastructure roles, and the department that moved most"
     :columns="columns"
     :rows="history.providers"
     :row-key="(p) => p.provider"

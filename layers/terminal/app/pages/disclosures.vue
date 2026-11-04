@@ -15,7 +15,7 @@ definePageMeta({
     priority: '0.7',
     title: 'Disclosures',
     summary:
-      'Misalignment reports and notices the frontier labs publish about their own models — agents leaving their sandbox, messaging through public services, deceiving in their summaries — with the days from discovery to publication. Only OpenAI publishes an index.',
+      'Misalignment reports and notices the frontier labs publish about their own models (agents leaving their sandbox, messaging through public services, deceiving in their summaries), with the days from discovery to publication. Only OpenAI publishes an index.',
   },
 })
 
@@ -33,7 +33,7 @@ useSeo({
       url: usePageUrl(),
       name: 'Frontier AI lab misalignment disclosures',
       description:
-        'Every entry on a frontier lab’s own misalignment-disclosure index: report or notice, title, summary, model, and context verbatim, with the date the index prints. A count measures disclosure, not behavior.',
+        'Every entry on a frontier lab’s own misalignment-disclosure index: report or notice, title, summary, model, and context verbatim, with the date the index prints. A count reflects what a lab discloses, so it doesn’t measure how often models misbehave.',
       dateModified: disclosures.value?.as_of,
       variableMeasured: ['kind', 'title', 'model', 'listed_on'],
       distribution: exportDistribution(site, 'disclosures'),
@@ -63,19 +63,19 @@ const NOTICE_COLUMNS: TableColumn[] = [
 
 const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, string> = {
   not_applicable: '—',
-  not_fetched: 'report page not polled yet',
-  title_mismatch: 'report page title differs; dates not attached',
+  not_fetched: 'report page not checked yet',
+  title_mismatch: 'report page title doesn’t match, so no dates shown',
 }
 </script>
 
 <template>
   <TerminalPage
     title="Disclosures"
-    lede="Reports and notices the labs publish about misalignment in their own models, in each lab’s words, each linked to its source page. This measures disclosure practice, not how often misalignment occurs: a lab with no index shows no entries because it publishes none."
+    lede="Reports and notices the labs publish about misalignment in their own models, in each lab’s words and linked to the source page. This shows what each lab discloses, not how often misalignment happens. A lab with no index shows no entries because it publishes none."
     :as-of="disclosures?.as_of"
     :error="Boolean(error)"
-    error-title="Disclosures could not be read"
-    error-body="The disclosures endpoint failed to respond."
+    error-title="Disclosures didn’t load"
+    error-body="Try reloading in a minute."
   >
     <template v-if="disclosures">
       <TerminalPanel
@@ -89,8 +89,8 @@ const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, str
 
       <TerminalGap
         v-if="disclosures.entries.length === 0"
-        title="No disclosures parsed yet."
-        reason="The index is registered; entries appear after its first poll."
+        title="No disclosures read yet."
+        reason="We track the index. Entries appear after our first check of it."
         :action="{ label: 'Coverage', to: '/data#coverage' }"
       />
 
@@ -137,7 +137,7 @@ const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, str
               <TerminalCaveatMark
                 v-if="r.timeline!.disclosed_basis === 'first_listed'"
                 :name="`How the disclosure date of ${r.title} was read`"
-                text="The report page prints no disclosure date. This is the earliest date the index has listed beside the report in any stored snapshot."
+                text="The report page prints no disclosure date. This is the earliest date the index listed beside the report in any copy we’ve saved."
               />
             </template>
             <template #cell-days="{ row: r }">{{ r.timeline!.days_to_disclosure ?? '—' }}</template>
@@ -157,8 +157,8 @@ const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, str
           </TerminalTable>
           <template #foot>
             Days run from the discovery date to the publication date, both as printed on the report
-            page. The occurrence line (sample, incident date) is shown verbatim and not parsed as a
-            date.
+            page. The occurrence line (sample, incident date) is shown as printed. We don’t read it
+            as a date.
           </template>
         </TerminalPanel>
 

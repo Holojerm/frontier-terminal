@@ -15,7 +15,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Incidents',
     summary:
-      'Status-page incidents posted by OpenAI, Anthropic, and Google (Gemini / Vertex AI only) over the last 90 days — impact, status, components, start and resolution, each linked to the vendor’s incident page.',
+      'Status-page incidents posted by OpenAI, Anthropic, and Google (Gemini / Vertex AI only) over the last 90 days. Each shows impact, status, components, start, and resolution, linked to the vendor’s incident page.',
   },
 })
 
@@ -36,7 +36,7 @@ useSeo({
       url: usePageUrl(),
       name: 'Frontier AI lab status-page incidents',
       description:
-        'Every incident the frontier AI labs posted to their own status pages: title, impact and status verbatim (impact null where a feed publishes none), start and resolution times, and affected components.',
+        'Every incident the frontier AI labs posted to their own status pages: title, impact and status verbatim (impact left blank where a feed publishes none), start and resolution times, and affected components.',
       dateModified: incidents.value?.as_of,
       variableMeasured: ['impact', 'status', 'started_at', 'resolved_at', 'components'],
       distribution: exportDistribution(site, 'incidents'),
@@ -71,24 +71,24 @@ const columns: TableColumn[] = [
     lede="Every status-page incident, in the vendor’s own words, linked to the incident page it was read from."
     :as-of="incidents?.as_of"
     :error="Boolean(error)"
-    error-title="Incidents could not be read"
-    error-body="The incidents endpoint failed to respond."
+    error-title="Incidents didn’t load"
+    error-body="Try reloading in a minute."
   >
     <template v-if="incidents">
       <div class="grid gap-6" :class="limits?.pages.length ? 'xl:grid-cols-2' : undefined">
         <TerminalPanel
           id="labs"
           title="By lab"
-          :note="`Newest ${incidents.window_days} days against the prior ${incidents.window_days}. A count is what the vendor chose to post, not an SLA.`"
+          :note="`The last ${incidents.window_days} days against the ${incidents.window_days} before. A count is what the vendor chose to post, not an SLA.`"
           flush
         >
           <TerminalStrainTable :incidents="incidents" />
           <template #foot>
-            Counted by the vendor’s posted start time, back from
+            Counted by the vendor’s posted start time, going back from
             <time :datetime="incidents.window_to" :title="incidents.window_to">{{
               absoluteStamp(incidents.window_to, now)
             }}</time
-            >. Impact and status are each vendor’s own words, not normalized.
+            >. Impact and status are in each vendor’s own words.
           </template>
         </TerminalPanel>
 
@@ -105,7 +105,7 @@ const columns: TableColumn[] = [
       <TerminalGap
         v-if="incidents.incidents.length === 0"
         title="No incidents in the window."
-        :reason="`No incident started in the last ${incidents.history_days} days on any polled feed.`"
+        :reason="`No incident started in the last ${incidents.history_days} days on any feed we check.`"
         :action="{ label: 'Coverage', to: '/data#coverage' }"
       />
 

@@ -116,7 +116,7 @@ export async function assertKnowable(db: PipelineDb, at: string): Promise<void> 
   if (first === null) throw new PointInTimeError('as_of: nothing has been fetched yet')
   if (at < first) {
     throw new PointInTimeError(
-      `as_of ${at} is before the first snapshot (${first}); the terminal knew nothing then`,
+      `as_of ${at} is before the first snapshot (${first}), so we had no data then`,
     )
   }
 }
@@ -166,7 +166,7 @@ export function alertsKnownAt(at: string, judgeCutoff: string | null): SQL {
 }
 
 export const ALERTS_METHOD =
-  'Alerts with created_at at or before as_of. A judge alert (rule agent-judge) is written by a judge run after the changes it cites, and is held back until a judge run that accepted alerts had started (judge_runs.started_at); one that a later run wrote about an older change can still appear early, because an alert row does not record which run wrote it.'
+  'Alerts with created_at at or before as_of. A judge alert (rule agent-judge) is written by a judge run after the changes it cites, and is held back until a judge run that accepted alerts had started (judge_runs.started_at). One that a later run wrote about an older change can still appear early, because an alert row doesn’t record which run wrote it.'
 
 // ---- the entity set at T -----------------------------------------------------
 
@@ -321,7 +321,7 @@ function afterOf(change: Change): State | null {
 }
 
 export const ENTITY_METHOD =
-  'Entity rows rebuilt from the current set and the change log: per key, the content the first change after as_of replaced, else the current row if it was written by then. Keys in unverified are where the newest change at or before as_of disagrees with that reading; the log skips a repeated identical transition, so a gap can exist that no row shows.'
+  'Entity rows rebuilt from the current set and the change log: per key, the content the first change after as_of replaced, else the current row if it was written by then. Keys in unverified are where the newest change at or before as_of disagrees with that reading. The log skips a repeated identical change, so a gap can exist that no row shows.'
 
 /** First snapshot per source URL: when a source's baseline could have been written. */
 export async function firstFetchByUrl(db: PipelineDb): Promise<Map<string, FirstFetch>> {

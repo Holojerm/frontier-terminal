@@ -32,11 +32,11 @@ const now = useNow()
 <template>
   <TerminalPage
     title="Releases"
-    lede="SKUs new on a tracked vendor page, with the price printed beside them that day."
+    lede="SKUs newly listed on a vendor’s pricing page, with the price shown beside them that day."
     :as-of="releases?.as_of"
     :error="Boolean(error)"
-    error-title="Releases could not be read"
-    error-body="The releases endpoint failed to respond."
+    error-title="Releases didn’t load"
+    error-body="Try reloading in a minute."
   >
     <template v-if="releases">
       <TerminalGap
@@ -44,8 +44,8 @@ const now = useNow()
         title="No new SKUs since tracking began."
         :reason="
           releases.log_from
-            ? `Pages tracked since ${absoluteStamp(releases.log_from, now)}. The baseline records what was already listed; nothing has been added since.`
-            : 'No pricing page has been polled yet. The first poll records a baseline; later polls record new listings.'
+            ? `We’ve tracked these pages since ${absoluteStamp(releases.log_from, now)}. Our first check recorded what was already listed, and nothing new has appeared since.`
+            : 'We haven’t checked any pricing page yet. The first check records what’s already listed. Later checks record new listings.'
         "
         :action="{ label: 'See the full catalog', to: '/prices' }"
       />
@@ -58,8 +58,8 @@ const now = useNow()
       >
         <TerminalReleaseList :rows="releases.rows" flow />
         <template v-if="releases.excluded_baseline" #foot>
-          {{ releases.excluded_baseline }} baseline rows — SKUs already listed when a page was first
-          fetched — are excluded.
+          We leave out {{ releases.excluded_baseline }} SKUs that were already listed when we first
+          checked their page.
         </template>
       </TerminalPanel>
     </template>

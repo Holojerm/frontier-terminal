@@ -51,7 +51,7 @@ const superseded = computed(() => {
   const s = statement.value.superseded
   if (!s.length) return null
   const filings = [...new Set(s.map((p) => filingLabel(p)))]
-  return `${s.length} period${s.length === 1 ? '' : 's'} also reported in the ${filings.join(' and the ')}; each column above is from the newest filing that reports it. The prospectus_statements export has both.`
+  return `${s.length} period${s.length === 1 ? '' : 's'} also reported in the ${filings.join(' and the ')}. Each column above comes from the newest filing that reports it. The prospectus_statements export has both.`
 })
 
 // ── commitments ────────────────────────────────────────────────────────────
@@ -173,7 +173,7 @@ const diffCounts = (changes: { kind: string }[]) => {
   <TerminalPanel
     :id="id"
     :title="`${issuer.display}’s registration statement`"
-    :note="`What ${issuer.entity_name}’s S-1 and its amendments print beyond revenue. Each figure is the filing’s own, from the newest filing that states it.`"
+    :note="`What ${issuer.entity_name}’s S-1 and its amendments print beyond revenue. Each figure comes from the newest filing that states it.`"
   >
     <template #meta>
       <span class="font-mono">CIK {{ issuer.cik }}</span>
@@ -182,7 +182,7 @@ const diffCounts = (changes: { kind: string }[]) => {
     <section :aria-labelledby="`${id}-statement`" class="space-y-2">
       <h3 :id="`${id}-statement`" class="text-sm text-highlighted">Statement of operations</h3>
       <p class="text-xs text-muted">
-        $ millions; shares in thousands; per-share figures in $. A dash is the statement’s own.
+        $ millions, shares in thousands, and per-share figures in $. Dashes are the statement’s own.
       </p>
       <TerminalTable
         :caption="`${issuer.display} consolidated statement of operations by period, newest first`"
@@ -206,7 +206,7 @@ const diffCounts = (changes: { kind: string }[]) => {
         v-if="!issuer.commitments.length"
         inline
         title="No commitment schedule printed."
-        reason="The filings read print no contractual-obligations table or commitments note with figures."
+        reason="The filings we read print no contractual-obligations table or commitments note with figures."
       />
       <div v-for="c in bucketed" :key="`${c.schedule}-${c.as_of}`" class="space-y-1">
         <p class="text-xs text-default">
@@ -245,14 +245,14 @@ const diffCounts = (changes: { kind: string }[]) => {
         v-if="!issuer.concentration.length"
         inline
         title="No 10%-customer table printed."
-        reason="The filings read disclose no customer concentration."
+        reason="The filings we read disclose no customer concentration."
       />
       <div v-for="c in issuer.concentration" :key="c.basis" class="space-y-1">
         <p class="text-xs text-default">
           {{ c.basis === 'revenue' ? 'Share of revenue' : 'Share of accounts receivable' }}
           <span class="text-muted"
-            >· customers at 10% or more, named as the {{ filingLabel(c) }} names them; “&lt;10%” is
-            its “*”</span
+            >· customers at 10% or more, named as the {{ filingLabel(c) }} names them. “&lt;10%”
+            stands for its “*”</span
           >
         </p>
         <TerminalTable

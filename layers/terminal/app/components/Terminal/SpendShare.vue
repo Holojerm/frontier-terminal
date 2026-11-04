@@ -63,21 +63,21 @@ const skuText = (m: SpendModel) =>
     <TerminalGap
       v-if="spend.status === 'not_configured'"
       title="Not configured."
-      reason="The join needs the OpenRouter rankings, which need NUXT_OPENROUTER_API_KEY; nothing is fetched anonymously."
+      reason="This needs the OpenRouter rankings, which need NUXT_OPENROUTER_API_KEY. We don’t fetch them without one."
     />
     <TerminalGap
       v-else-if="spend.status === 'no_rows'"
-      title="No rankings rows yet."
-      reason="The rankings feed is registered; no poll has succeeded yet."
+      title="No rankings data yet."
+      reason="We haven’t fetched the rankings successfully yet."
     />
 
     <template v-else>
       <p v-if="spend.window" class="text-xs text-muted">
-        {{ spend.window.from }} → {{ spend.window.to }} · at list price; implied, not observed
+        {{ spend.window.from }} → {{ spend.window.to }} · estimated at list prices
       </p>
 
       <TerminalTable
-        caption="Implied OpenRouter-channel spend per lab as a share of the tracked labs’ total, as a range, beside its share of those labs’ tokens and price coverage"
+        caption="Each lab’s implied spend through OpenRouter as a range and as a share of the tracked labs’ total, with its token share and how much of it we could price"
         :columns="columns"
         :rows="spend.providers"
         :row-key="(p) => p.provider"
@@ -108,10 +108,10 @@ const skuText = (m: SpendModel) =>
         v-if="spend.excluded.length"
         class="flex flex-wrap items-center gap-x-1 text-xs text-muted"
       >
-        Not priceable, excluded from the dollar share:
+        Left out of the dollar share because we can’t price them:
         {{ spend.excluded.map((e) => e.display).join(', ') }}
         <TerminalCaveatMark
-          name="Why some labs are excluded from the dollar share"
+          name="Why some labs are left out of the dollar share"
           :text="spend.excluded.map((e) => `${e.display}: ${e.reason}.`).join(' ')"
         />
       </p>
@@ -124,14 +124,14 @@ const skuText = (m: SpendModel) =>
 
       <TerminalExpand
         v-if="!compact && joined.length"
-        show="Show the per-model join"
-        hide="Hide the per-model join"
+        show="Show the per-model breakdown"
+        hide="Hide the per-model breakdown"
       >
         <div class="space-y-4">
           <div v-for="p in joined" :key="p.provider" class="space-y-1">
             <h3 class="text-sm text-highlighted">{{ p.display }}</h3>
             <TerminalTable
-              :caption="`${p.display} ranked models joined to catalog SKUs`"
+              :caption="`${p.display} ranked models matched to catalog SKUs`"
               :columns="JOIN_COLUMNS"
               :rows="p.models"
               :row-key="(m) => m.model_permaslug"
@@ -170,9 +170,7 @@ const skuText = (m: SpendModel) =>
           : []),
         ...spend.price_sources,
       ]"
-      :caveats="[
-        { label: 'Implied at list price — not revenue, not market share', text: spend.caveat },
-      ]"
+      :caveats="[{ label: 'Not revenue or market share', text: spend.caveat }]"
     >
       <a
         v-if="spend.rankings.meta.citation"

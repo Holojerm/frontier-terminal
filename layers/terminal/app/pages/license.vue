@@ -49,15 +49,15 @@ useSeo({
     <TerminalPanel id="compilation" title="The compilation">
       <div class="max-w-2xl space-y-3 text-default">
         <p>
-          The tables, the change log, the alerts, and the bulk exports — which rows exist, keyed,
-          timestamped, and joined — are this site’s own work, published under
+          The tables, the change log, the alerts, and the bulk exports are our own work (which rows
+          exist, and how they’re timestamped and joined). We publish them under
           <a
             :href="DATA_LICENSE.url"
             target="_blank"
             rel="noopener noreferrer license"
             class="text-primary underline underline-offset-2"
             >{{ DATA_LICENSE.name }}</a
-          >. It may be quoted, charted, republished, and used for training, with attribution.
+          >. You can quote, chart, republish, and train on them, with attribution.
         </p>
         <p class="text-sm text-muted">Copy this line:</p>
         <p class="rounded border border-default p-3 font-mono text-sm text-highlighted">
@@ -76,11 +76,11 @@ useSeo({
       <div class="max-w-2xl space-y-3 text-default">
         <p>
           A price on Anthropic’s pricing page is Anthropic’s. A filing is EDGAR’s. An incident is
-          the vendor’s own post. Nothing here relicenses any of that; the license above covers the
+          the vendor’s own post. Nothing here relicenses any of that. The license above covers the
           compilation, not the contents.
         </p>
         <p>
-          Every row carries its source URL and fetch timestamp, so the terms for any number come
+          Every row shows its source URL and when we fetched it, so the terms for any number come
           from the publisher that row names.
         </p>
       </div>
@@ -89,7 +89,7 @@ useSeo({
     <TerminalPanel
       id="sources"
       title="Sources that state their own terms"
-      note="Verbatim from sources.yaml. Most sources state no terms, and none are supplied for them."
+      note="Each license as the source states it. Most sources state no terms, and we don’t fill any in."
     >
       <TerminalTable
         v-if="licensed.length"
@@ -114,32 +114,31 @@ useSeo({
       </TerminalTable>
       <TerminalGap v-else inline title="No tracked source states a license of its own." />
       <p class="max-w-2xl text-sm text-muted">
-        Where a source requires a specific attribution string, the page showing its numbers prints
-        it verbatim — see
+        When a source asks for a specific attribution line, the page with its numbers prints it word
+        for word (see
         <NuxtLink to="/rankings" class="text-primary underline underline-offset-2"
           >demand share</NuxtLink
-        >.
+        >).
       </p>
     </TerminalPanel>
 
     <TerminalPanel id="code" title="The code">
       <p class="max-w-2xl text-default">
-        The pipeline, the parsers, and this site are
+        The pipeline, the parsers, and this site are under the
         <a
           :href="CODE_LICENSE.url"
           target="_blank"
           rel="noopener noreferrer license"
           class="text-primary underline underline-offset-2"
           >{{ CODE_LICENSE.name }}</a
-        >:
+        >, at
         <a
           :href="repo"
           target="_blank"
           rel="noopener noreferrer"
           class="text-primary underline underline-offset-2"
           >{{ repo }}</a
-        >. The source registry and every parser are in the repo, so any number here can be
-        reproduced.
+        >. Every source and parser is in the repo, so you can reproduce any number here.
       </p>
     </TerminalPanel>
   </TerminalPage>

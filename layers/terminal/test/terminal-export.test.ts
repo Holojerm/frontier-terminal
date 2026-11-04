@@ -237,7 +237,7 @@ describe('filters', () => {
     expect('where' in ok && ok.where).toBeTruthy()
     expect(exportFilter(recipes, {})).toEqual({ where: undefined })
     expect(exportFilter(recipes, { recipe: 'x' })).toEqual({
-      error: 'recipe_observations cannot be filtered by recipe; it accepts recipe_id',
+      error: 'recipe_observations cannot be filtered by recipe. It accepts recipe_id',
     })
     expect(exportFilter(recipes, { recipe_id: "x' or 1=1" })).toMatchObject({
       error: expect.stringMatching(/one id/),

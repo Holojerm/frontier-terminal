@@ -10,7 +10,7 @@ definePageMeta({
     priority: '0.9',
     title: 'Prices',
     summary:
-      'Every API price and catalog row per SKU for OpenAI, Anthropic, Google, xAI, Meta, and Mistral, with the change against the previous revision and the URL each was read from.',
+      'Every API price and catalog entry per SKU for OpenAI, Anthropic, Google, xAI, Meta, and Mistral, with the change since the previous price and the URL we read it from.',
   },
 })
 
@@ -47,8 +47,8 @@ useSeo({
     lede="$ per million tokens, read from each vendor’s own published page."
     :as-of="prices?.as_of"
     :error="Boolean(error)"
-    error-title="Prices could not be read"
-    error-body="The pricing endpoint failed to respond."
+    error-title="Prices didn’t load"
+    error-body="Try reloading in a minute."
   >
     <template v-if="prices">
       <TerminalPanel
@@ -59,8 +59,8 @@ useSeo({
       >
         <TerminalPriceMatrix :matrix="prices.matrix" />
         <template #foot>
-          {{ prices.matrix.tier_note }} Each placement follows the vendor’s own docs; the info
-          control quotes the sentence.
+          {{ prices.matrix.tier_note }} Each placement follows the vendor’s own docs. The info
+          button quotes the sentence.
         </template>
       </TerminalPanel>
 
@@ -72,7 +72,7 @@ useSeo({
         <TerminalGap
           v-if="prices.rows.length === 0"
           title="No model rows yet."
-          reason="Pricing rows appear after the first poll of each vendor page."
+          reason="Prices appear after our first check of each vendor page."
           :action="{ label: 'See coverage', to: '/data#coverage' }"
         />
         <TerminalPriceTable v-else :prices="prices" :provider="provider" flow />

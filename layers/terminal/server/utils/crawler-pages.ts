@@ -81,12 +81,12 @@ const POINT_IN_TIME: LlmsTxtSection = {
     {
       path: `/api/prices?as_of=${EXAMPLE_AS_OF}`,
       title: 'API as_of',
-      description: `Add \`?as_of=<ISO-8601 timestamp with zone>\` to ${AS_OF_ROUTES.join(', ')} for what the terminal knew at that instant — knowledge time, not event time: a row counts from its fetch, a judge alert from a judge run that could have written it. The payload's as_of becomes the poll tick in force then, and point_in_time says how it was rebuilt and which keys the change log cannot confirm (unverified). Every other route answers 400 rather than ignore it.`,
+      description: `Add \`?as_of=<ISO-8601 timestamp with zone>\` to ${AS_OF_ROUTES.join(', ')} to see what we knew at that moment. That’s when we fetched the data, not when the event happened. A row counts from its fetch, and a judge alert from a judge run that could have written it. The response’s as_of becomes our last check before that moment, and point_in_time says how the answer was rebuilt and which keys the change log can’t confirm (unverified). Every other route answers 400 instead of ignoring it.`,
     },
     {
       path: `/export/changes.csv?as_of=${EXAMPLE_AS_OF}`,
       title: 'Exports as_of',
-      description: `The same parameter on /export/<table>: append-only tables are cut at the instant. Current-row tables are rebuilt from the change log with an as_of_verified column. ${refusingAsOf.join(', ')} answer 400, and the data dictionary says why for each.`,
+      description: `The same parameter works on /export/<table>. Tables that only grow are cut at that moment. Current-state tables are rebuilt from the change log, with an as_of_verified column. ${refusingAsOf.join(', ')} answer 400, and the data dictionary says why for each.`,
     },
   ],
 }

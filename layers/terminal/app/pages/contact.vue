@@ -19,7 +19,7 @@ definePageMeta({
     priority: '0.5',
     title: 'Contact',
     summary:
-      'Commercial data licensing — a signed licence for the compilation and derived numbers that are ours, a dependable feed, full history and source payloads, custom coverage — with upstream CC BY data passed on under its own terms, plus corrections and press. Write to contact@frontierterm.com.',
+      'Commercial data licensing: signed terms for our compilation and the numbers we derive, a dependable feed, full history with the source pages, and custom coverage. Upstream CC BY data keeps its own terms. Corrections and press too. Write to contact@frontierterm.com.',
   },
 })
 
@@ -28,7 +28,7 @@ const { data: coverage, error } = await useFetch<CoverageData>('/api/coverage')
 useSeo({
   title: 'Contact',
   description:
-    'License Frontier Terminal’s compilation: signed terms for what is ours, a dependable feed, full history, custom coverage. Corrections and press too.',
+    'License Frontier Terminal’s data with signed terms, a dependable feed, full history, or custom coverage. Corrections and press go to the same address.',
 })
 
 interface Named {
@@ -53,17 +53,17 @@ const GROUPS: { rights: SourceRights; title: string; body: string }[] = [
   {
     rights: 'ours',
     title: 'Ours to license',
-    body: 'Facts each publisher states about itself (prices, open roles, incidents, filings), read under terms and a robots.txt that allow it. The compilation is ours: the keyed and timestamped rows, the change log, the alerts and every number we derive. The facts stay their publishers’.',
+    body: 'Facts each publisher states about itself (prices, open roles, incidents, filings), read under terms and a robots.txt that allow it. The compilation is ours. That means the timestamped rows, the change log, the alerts, and every number we derive. The facts still belong to their publishers.',
   },
   {
     rights: 'upstream',
     title: 'Passed on under upstream terms',
-    body: 'Someone else’s dataset under its own licence. We pass it on with the attribution its licence requires and cannot sign that condition away. Per-lab shares we compute from it are still derived from CC BY data.',
+    body: 'Someone else’s dataset under its own license. We pass it on with the attribution that license requires, and we can’t sign that condition away. Per-lab shares we compute from it still count as derived from CC BY data.',
   },
   {
     rights: 'not-cleared',
     title: 'Not in any paid offer',
-    body: 'No stated licence (the Ramp AI Index), terms we could not read, or a robots.txt or terms restriction on automated reading. These stay on the free site and out of anything we sell.',
+    body: 'Sources with no stated license (the Ramp AI Index), terms we couldn’t read, or terms or a robots.txt that restrict automated reading. These stay on the free site and out of anything we sell.',
   },
 ]
 </script>
@@ -71,34 +71,30 @@ const GROUPS: { rights: SourceRights; title: string; body: string }[] = [
 <template>
   <TerminalPage
     title="Contact"
-    lede="Building a product, a fund process or a report on this data? Write to us."
+    lede="Building a product, a fund process, or a report on this data? Write to us."
     narrow
   >
     <TerminalPanel id="commercial" title="Paying for the data">
       <div class="max-w-2xl space-y-4 text-default">
         <p>
-          Everything on the site stays free under {{ DATA_LICENSE.short }}. A paid arrangement is
-          for what the public site cannot promise, and covers only what is ours to license (see
-          below). Tell us what you need — for example:
+          Everything on the site stays free under {{ DATA_LICENSE.short }}. A paid arrangement
+          covers what the public site can’t promise, and only what’s ours to license (see below).
+          Tell us what you need. Here’s what we can offer.
         </p>
         <ul class="list-disc space-y-2 pl-5">
           <li>
-            <strong class="text-highlighted">Signed terms for what is ours.</strong> A licence your
-            compliance team has signed for our compilation and derived numbers, on attribution terms
-            that suit you. Upstream CC BY data keeps its own attribution condition.
+            A signed license for our compilation and the numbers we derive, on attribution terms
+            that suit your compliance team. Upstream CC BY data keeps its own attribution condition.
           </li>
           <li>
-            <strong class="text-highlighted">Delivery you can depend on.</strong> A feed with a
-            committed schedule instead of a public endpoint behind a per-address rate limit.
+            A feed on a committed schedule, instead of a public endpoint with a rate limit per IP
+            address.
           </li>
           <li>
-            <strong class="text-highlighted">History and source bytes.</strong> The full change log
-            and the captured payload behind every number, for the sources we can license.
+            The full change log and the saved copy of each page behind every number, for the sources
+            we can license.
           </li>
-          <li>
-            <strong class="text-highlighted">Coverage we don’t have.</strong> Another lab, another
-            source, another axis.
-          </li>
+          <li>Another lab, source, or kind of data we don’t cover yet.</li>
         </ul>
         <UButton
           :to="mailto('Data licensing')"
@@ -116,8 +112,8 @@ const GROUPS: { rights: SourceRights; title: string; body: string }[] = [
 
     <TerminalPanel
       id="rights"
-      title="What a licence can cover"
-      note="Per source, from the terms and robots.txt each was read under. The full reading is in the coverage table on /data."
+      title="What a license can cover"
+      note="Grouped by the terms and robots.txt we read each source under. The coverage table on /data has the details."
     >
       <UAlert
         v-if="error"
@@ -143,7 +139,7 @@ const GROUPS: { rights: SourceRights; title: string; body: string }[] = [
           >
           ·
           <NuxtLink to="/license" class="text-primary underline underline-offset-2"
-            >Licence and attribution</NuxtLink
+            >License and attribution</NuxtLink
           >
         </p>
       </div>
@@ -152,15 +148,15 @@ const GROUPS: { rights: SourceRights; title: string; body: string }[] = [
     <TerminalPanel id="other" title="Everything else">
       <div class="max-w-2xl space-y-3 text-sm text-default">
         <p>
-          <strong class="text-highlighted">A number looks wrong.</strong>
+          If a number looks wrong,
           <a :href="mailto('Correction')" class="text-primary underline underline-offset-2"
-            >Send a correction</a
+            >send a correction</a
           >
-          with the page and, if you have it, the row’s source URL — every row prints the one it was
-          read from.
+          with the page and, if you have it, the row’s source URL. Every row shows the URL we read
+          it from.
         </p>
         <p>
-          <strong class="text-highlighted">Press and everything else.</strong> The same address:
+          Press and anything else go to
           <a :href="mailto('Hello')" class="text-primary underline underline-offset-2">{{
             CONTACT_EMAIL
           }}</a

@@ -43,7 +43,7 @@ const rows = computed(() =>
 <template>
   <div class="space-y-3">
     <TerminalTable
-      caption="Posted US salary bands: median band midpoint per role family"
+      caption="Median midpoint of posted US salary bands, per role family"
       :columns="columns"
       :rows="rows"
       :row-key="(r) => r.id"

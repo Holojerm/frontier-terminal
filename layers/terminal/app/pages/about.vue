@@ -37,19 +37,23 @@ useSeo({
     <TerminalPanel id="what" title="What this is">
       <div class="max-w-2xl space-y-3 text-default">
         <p>
-          A free, public, read-only terminal for equity analysts covering AI infrastructure through
-          the frontier-lab IPO wave. It tracks six frontier model providers — OpenAI, Anthropic,
-          Google, xAI, Meta, Mistral — on seven axes: API prices, hiring (and the
-          physical-infrastructure buildout within it), OpenRouter demand share and the spend share
-          it implies at list price, status-page incidents, misalignment disclosures, SEC filings,
-          and disclosed revenue. Until a lab lists, the private-company signals carry the weight.
-          EDGAR is polled for the first public filing, and the revenue panel fills from it; until
-          then it shows “no audited disclosure”, not a run-rate.
+          A free, public, read-only terminal for equity analysts who cover AI infrastructure through
+          the frontier-lab IPO wave. We track six frontier model providers (OpenAI, Anthropic,
+          Google, xAI, Meta, and Mistral). For each one we follow API prices, hiring (including the
+          roles that build data centers and power), OpenRouter demand share and the spend share it
+          implies at list price, status-page incidents, misalignment disclosures, SEC filings, and
+          disclosed revenue.
         </p>
         <p>
-          Every source is polled on a schedule, snapshotted whole, parsed deterministically, and
-          diffed against its previous state. Pages show the current state and the change log; an
-          alert is a claim about change rows only.
+          Most of these labs are still private. Until one files to go public, hiring, prices, and
+          usage are the best data there is. We check EDGAR for the first public filing, and the
+          revenue panel fills in from it. Until then the panel says “no audited disclosure” instead
+          of showing a run-rate.
+        </p>
+        <p>
+          We check every source on a schedule, keep a copy of each page we read, and record what
+          changed since the last check. Pages show what each source says now and what has changed.
+          An alert only ever describes those recorded changes.
         </p>
       </div>
     </TerminalPanel>
@@ -65,12 +69,12 @@ useSeo({
             class="text-primary underline underline-offset-2"
             >Jeremy Ettlinger</a
           >, a software engineer in New York who builds data platforms for institutional finance,
-          previously at FactSet. Frontier Terminal is an independent project, not affiliated with
-          any lab, bank or employer, and paid by no one.
+          previously at FactSet. Frontier Terminal is an independent project. It isn’t affiliated
+          with any lab, bank, or employer, and no one pays for it.
         </p>
         <p class="text-sm text-muted">
-          Positions are disclosed on each thesis, and nothing is traded in a name within 48 hours of
-          a significant data change on it. Write to
+          Jeremy discloses positions on each thesis and doesn’t trade a name within 48 hours of a
+          significant data change on it. Write to
           <a
             href="mailto:contact@frontierterm.com"
             class="text-primary underline underline-offset-2"
@@ -83,29 +87,26 @@ useSeo({
     <TerminalPanel id="provenance" title="The provenance rule">
       <div class="max-w-2xl space-y-3 text-default">
         <p>
-          <strong class="text-highlighted"
-            >No number without a source URL and a fetch timestamp.</strong
-          >
-          Every figure links to the exact URL it was read from and carries the UTC instant it was
-          fetched. A datum that cannot be re-fetched is a claim, not data, and is not stored.
+          Every number links to the page we read it from and shows when we read it (UTC). If we
+          can’t fetch it again, we don’t store it.
         </p>
         <p>
-          Where a source publishes no figure, the page says so: OpenAI’s catalog page prints no
-          prices, Meta has no public hiring feed, OpenRouter’s price list is a third-party
-          restatement kept as a cross-check, and its usage rankings are one aggregator’s traffic,
-          not market share. Timestamps under a day old read as relative; the exact value is in the
-          hover text and the page markup.
+          When a source publishes no figure, the page says so. OpenAI’s catalog page doesn’t list
+          prices. Meta has no public hiring feed. OpenRouter’s price list is a third party’s copy of
+          vendor prices, so we only use it as a cross-check. Its usage rankings are one aggregator’s
+          traffic, so we don’t treat them as market share. Timestamps under a day old show as
+          relative times. The full timestamp is in the hover text and the page markup.
         </p>
       </div>
     </TerminalPanel>
 
     <TerminalPanel id="caveats" title="Caveats">
       <p class="max-w-2xl text-sm text-default">
-        Each source carries the audit’s caveat in its own words; each deliberate cut carries its
-        reason. Both are read from the source registry at request time and listed on the
+        Each source shows the caveat from our audit, in the audit’s own words. Each source we chose
+        not to use shows why. Both are in the
         <NuxtLink to="/data#coverage" class="text-primary underline underline-offset-2"
           >coverage table</NuxtLink
-        >, behind the info control on each row.
+        >, behind the info button on each row.
       </p>
     </TerminalPanel>
 
@@ -113,24 +114,24 @@ useSeo({
       <dl class="grid max-w-2xl gap-x-6 gap-y-2 text-sm sm:grid-cols-[auto_1fr]">
         <dt class="text-muted">SEC filings</dt>
         <dd class="text-default">
-          The EDGAR feeds — the S-1 full-text tripwire, one submissions feed per whitelisted CIK,
-          and XBRL company facts for each tagged revenue filer — are polled every 30 minutes, the
-          one axis where latency matters.
+          We check EDGAR every 30 minutes. That covers the full-text search for new S-1s, the
+          filings of each company we track, and XBRL (the SEC’s tagged financial data) for each
+          company that reports revenue. Filings are where minutes matter.
         </dd>
         <dt class="text-muted">Pricing and hiring</dt>
         <dd class="text-default">
-          Every source, EDGAR included, is polled every 6 hours. The overlap is deliberate: a
-          stalled feed stays covered.
+          We also check every source, EDGAR included, every 6 hours. That way a stuck feed still
+          gets picked up.
         </dd>
         <dt class="text-muted">Pages</dt>
         <dd class="text-default">
-          Each payload is cached for five minutes, keyed by the newest poll tick, so a new poll
-          invalidates the cache. Each page prints the tick it reflects.
+          Pages refresh within five minutes of a new check. Each page shows the time of the check it
+          reflects.
         </dd>
         <dt class="text-muted">Confidential filings</dt>
         <dd class="text-default">
-          A confidential draft registration does not appear on EDGAR until it is made public. The
-          terminal reports the public filing when it appears; the draft itself is not visible.
+          A confidential draft registration doesn’t appear on EDGAR until the company makes it
+          public. We report the public filing when it appears. We can’t see the draft.
         </dd>
       </dl>
     </TerminalPanel>
@@ -161,9 +162,9 @@ useSeo({
 
     <TerminalPanel id="disclaimer" title="Not investment advice">
       <p class="max-w-2xl text-sm text-default">
-        This is a data terminal, not a recommendation. It reports what public sources say and when
-        they said it. Nothing here is personalized or a solicitation. Judged alerts are a model’s
-        reading of change rows and are labeled as such.
+        This isn’t investment advice. We report what public sources say and when they said it.
+        Nothing here is personalized or a solicitation. Judged alerts are a model’s reading of the
+        changes we record, and they’re labeled that way.
       </p>
     </TerminalPanel>
 
@@ -178,27 +179,25 @@ useSeo({
           >
             Source on GitHub
           </a>
-          <span class="text-muted">
-            — MIT licensed; the source registry and every parser are in the repo.</span
-          >
+          <span class="text-muted"> (MIT). Every source and parser is in the repo.</span>
         </li>
         <li>
           <NuxtLink to="/data" class="text-primary underline underline-offset-2"
             >Bulk exports</NuxtLink
           >
-          <span class="text-muted"> — every table as CSV or JSON.</span>
+          <span class="text-muted"> of every table, as CSV or JSON.</span>
         </li>
         <li>
           <NuxtLink to="/contact" class="text-primary underline underline-offset-2"
             >Commercial licensing</NuxtLink
           >
-          <span class="text-muted"> — your own terms, a dependable feed, custom coverage.</span>
+          <span class="text-muted"> for your own terms, a dependable feed, or new coverage.</span>
         </li>
         <li>
           <NuxtLink to="/alerts.xml" external class="text-primary underline underline-offset-2">
             Atom feed
           </NuxtLink>
-          <span class="text-muted"> — notable and critical alerts.</span>
+          <span class="text-muted"> of notable and critical alerts.</span>
         </li>
       </ul>
     </TerminalPanel>
@@ -210,9 +209,9 @@ useSeo({
     >
       <div class="max-w-2xl space-y-3 text-sm">
         <p class="text-default">
-          Point Claude, ChatGPT, or any MCP client at the endpoint below. Each tool returns the
-          matching API payload with provenance intact, through the site’s cache and per-address rate
-          limit.
+          Point Claude, ChatGPT, or any MCP client at the endpoint below. Each tool returns the same
+          data as the matching API route, with every source URL and fetch time. It shares the site’s
+          cache and the same rate limit per IP address.
         </p>
         <pre
           class="overflow-x-auto rounded-md border border-default bg-muted p-3 font-mono text-xs text-default"

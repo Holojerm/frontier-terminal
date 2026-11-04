@@ -45,11 +45,11 @@ const fromProspectus = (p: RevenueProviderView) => p.periods.some((r) => r.basis
 
 const relationLine = (p: RevenueProviderView) =>
   p.filer?.relation === 'parent' && p.filer.segment_label
-    ? `${filerName(p)}, ${p.filer.segment_label} segment: a parent segment, not ${p.display}’s revenue`
+    ? `${filerName(p)}, ${p.filer.segment_label} segment. That’s a parent segment, not ${p.display}’s own revenue.`
     : p.filer?.relation === 'parent'
-      ? `${filerName(p)} consolidated: the parent’s revenue, not ${p.display}’s`
+      ? `${filerName(p)}, consolidated. That’s the whole parent’s revenue, not ${p.display}’s.`
       : p.filer
-        ? `${filerName(p)}: the lab’s own filing${p.filer.tagged_by === 'resolved' && p.filer.resolved_from ? `, CIK resolved from its ${p.filer.resolved_from.form} of ${p.filer.resolved_from.file_date}` : ''}`
+        ? `${filerName(p)}. The lab’s own filing.${p.filer.tagged_by === 'resolved' && p.filer.resolved_from ? ` We found its CIK through its ${p.filer.resolved_from.form} of ${p.filer.resolved_from.file_date}` : ''}`
         : ''
 
 const PERIOD_COLUMNS: TableColumn[] = [
@@ -95,13 +95,13 @@ const badge = (p: RevenueProviderView) =>
           v-if="p.disclosure === 'no_rows'"
           :title="
             p.filer?.relation === 'issuer'
-              ? 'S-1 filed; no revenue read yet.'
-              : 'Filer tagged; no XBRL facts parsed yet.'
+              ? 'S-1 filed. No revenue read yet.'
+              : 'Filer known. No XBRL revenue read yet.'
           "
           :reason="
             p.filer?.relation === 'issuer'
-              ? 'Read from the S-1’s statement of operations on the next survey poll. XBRL follows with the first 10-Q.'
-              : 'They appear on the next EDGAR poll.'
+              ? 'We read it from the S-1’s statement of operations on our next check. XBRL (the SEC’s tagged financial data) follows with the first 10-Q.'
+              : 'It shows up after our next EDGAR check.'
           "
         />
 
@@ -138,7 +138,7 @@ const badge = (p: RevenueProviderView) =>
               <NuxtLink
                 :to="filingPath(r.accession_no)"
                 class="underline underline-offset-2 hover:text-default"
-                :title="`Every period accession ${r.accession_no} reported`"
+                :title="`Every period in accession ${r.accession_no}`"
                 >{{ r.form }}</NuxtLink
               >
               filed <time :datetime="r.filed">{{ r.filed }}</time>
@@ -158,11 +158,11 @@ const badge = (p: RevenueProviderView) =>
             <p v-if="overflow(p)">+ {{ overflow(p) }} more periods</p>
             <p v-if="p.superseded.length">
               {{ p.superseded.length }} earlier value{{ p.superseded.length === 1 ? '' : 's' }} for
-              these periods restated by a later filing — see the revenue_facts export.
+              these periods restated by a later filing. The revenue_facts export has them.
             </p>
             <p v-if="fromProspectus(p)">
-              Read from the S-1’s Consolidated Statements of Operations: the filing tags no
-              financials in XBRL. A later filing’s value for the same period replaces it.
+              Read from the S-1’s Consolidated Statements of Operations, because the filing has no
+              XBRL financials. A later filing’s figure for the same period replaces it.
             </p>
             <p v-if="p.tags.length">
               XBRL tag{{ p.tags.length === 1 ? '' : 's' }}:
@@ -187,11 +187,13 @@ const badge = (p: RevenueProviderView) =>
         <span class="text-highlighted">
           No SEC filing reports revenue for
           <template v-for="(p, i) in unreported" :key="p.provider"
-            ><span v-if="i > 0">{{ i === unreported.length - 1 ? ' or ' : ', ' }}</span
+            ><span v-if="i > 0">{{
+              i < unreported.length - 1 ? ', ' : unreported.length > 2 ? ', or ' : ' or '
+            }}</span
             ><span :id="`revenue-${p.provider}`">{{ p.display }}</span></template
           >.
         </span>
-        <span class="ml-1 text-muted">Press-reported run-rates are excluded.</span>
+        <span class="ml-1 text-muted">We don’t use run-rates from press reports.</span>
       </p>
       <TerminalSources :sources="unreportedSources" :caveats="unreportedCaveats" />
     </div>

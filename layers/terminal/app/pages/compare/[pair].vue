@@ -136,14 +136,14 @@ const readout = computed(() => ({
 <template>
   <TerminalPage
     :title="title"
-    :lede="`${LAB_DISPLAY[a]} and ${LAB_DISPLAY[b]} on each axis the terminal tracks. Each lab’s full reading is on its own page.`"
+    :lede="`${LAB_DISPLAY[a]} and ${LAB_DISPLAY[b]} side by side on everything we track. Each lab’s own page has the full detail.`"
     :as-of="alerts.data.value?.as_of"
     :error="failed"
   >
     <TerminalPanel
       id="readout"
       title="Readout"
-      note="Both labs on every axis. Each figure links to the lab page, where its source is cited."
+      note="Both labs at a glance. Every figure links to the lab’s page, which cites its source."
       flush
     >
       <TerminalReadoutStrip :labs="pair" :data="readout" />
@@ -181,7 +181,7 @@ const readout = computed(() => ({
         <TerminalPanel
           id="demand"
           title="Demand share"
-          note="Share of all OpenRouter tokens, newest 7 days. A proxy, not market share."
+          note="Share of OpenRouter tokens over the last 7 days. It’s one aggregator’s traffic, so treat it as a rough read on demand."
           :more="{ label: 'Every lab, and the 30-day series', to: '/rankings' }"
         >
           <TerminalDemandShare v-if="rankings.data.value" :rankings="rankings.data.value" compact />
@@ -202,7 +202,7 @@ const readout = computed(() => ({
         <TerminalPanel
           id="buildout"
           title="Infrastructure buildout"
-          note="Open roles in the physical-infrastructure departments, with the board labels summed."
+          note="Open roles in physical-infrastructure departments, added up across each board’s department names."
         >
           <TerminalBuildoutPanel v-if="hiring.data.value" :history="hiring.data.value" />
         </TerminalPanel>
@@ -214,7 +214,7 @@ const readout = computed(() => ({
           title="Capacity strain"
           :note="
             incidents.data.value
-              ? `Status-page incidents, newest ${incidents.data.value.window_days} days against the prior ${incidents.data.value.window_days}.`
+              ? `Status-page incidents in the last ${incidents.data.value.window_days} days, against the ${incidents.data.value.window_days} before.`
               : 'Status-page incidents.'
           "
           :more="{ label: 'Every incident', to: '/incidents' }"

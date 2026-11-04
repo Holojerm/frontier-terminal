@@ -15,7 +15,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Revenue',
     summary:
-      'Disclosed revenue per frontier lab from SEC XBRL filings: the parent’s consolidated figure or the one segment it reports where a public parent files, and “no audited disclosure” where none does. For a lab that files its own S-1: the whole statement of operations, commitments, customer concentration, share counts and risk-factor changes. Press run-rates are excluded.',
+      'Disclosed revenue per frontier lab from SEC XBRL filings. Where a public parent files, we show its consolidated figure or the one segment it reports. Where none does, we say “no audited disclosure”. For a lab that files its own S-1, we show the full statement of operations, commitments, customer concentration, share counts, and risk-factor changes. We leave out press run-rates.',
   },
 })
 
@@ -50,17 +50,17 @@ useSeo({
 <template>
   <TerminalPage
     title="Revenue"
-    lede="Revenue read from EDGAR’s XBRL data, each value linked to its filing. Press run-rates are not shown."
+    lede="Revenue from XBRL (the SEC’s tagged financial data) on EDGAR, with each value linked to its filing. We don’t show press run-rates."
     :as-of="revenue?.as_of"
     :error="Boolean(error)"
-    error-title="Revenue could not be read"
-    error-body="The revenue endpoint failed to respond."
+    error-title="Revenue didn’t load"
+    error-body="Try reloading in a minute."
   >
     <template v-if="revenue">
       <TerminalPanel
         id="disclosed"
         title="Disclosed revenue, per lab"
-        note="Each period once, from the newest filing; restated values are listed as superseded."
+        note="Each period once, from the newest filing. Restated values are marked as superseded."
       >
         <TerminalRevenuePanel :revenue="revenue" />
       </TerminalPanel>
@@ -83,7 +83,7 @@ useSeo({
         v-if="parents?.parents.length"
         id="parents"
         title="What the parents disclose"
-        note="Every fact Microsoft and Amazon tag with OpenAI or Anthropic in their newest 10-Q or 10-K: the parent’s figures, never the lab’s revenue or valuation."
+        note="Every fact Microsoft and Amazon tag with OpenAI or Anthropic in their newest 10-Q or 10-K. These are the parent’s own figures, never the lab’s revenue or valuation."
       >
         <TerminalParentFacts :parents="parents" />
       </TerminalPanel>
@@ -95,23 +95,24 @@ useSeo({
       >
         <div class="max-w-2xl space-y-3 text-sm text-default">
           <p>
-            EDGAR is polled every 30 minutes: the S-1 full-text tripwire, one submissions feed per
-            whitelisted CIK (S-1, 424B4, 10-Q, 10-K, and 8-K), and XBRL company facts for every
-            tagged revenue filer. A new S-1/424B4 or 10-Q/10-K on a whitelisted CIK raises an alert
-            by rule.
+            We check EDGAR every 30 minutes. That covers the full-text search for new S-1s, the
+            filings of each company we track (S-1, 424B4, 10-Q, 10-K, and 8-K), and the XBRL data of
+            each company that reports revenue. A new S-1, 424B4, 10-Q, or 10-K from a company we
+            track always raises an alert.
           </p>
           <p>
-            When a lab files for itself, no manual step is needed. Two full-text queries search for
-            S-1s mentioning Anthropic and OpenAI. When one is filed by an entity whose name matches
-            the lab’s pattern in the source registry, the CIK is read from that filing, a critical
-            alert is raised, the CIK joins the whitelist, and the filer’s submissions and XBRL
-            company-facts feeds are polled from the next tick. Its reported revenue then appears
-            above as an <em>issuer</em> filing, with the resolving filing linked. A public parent
-            that consolidates a lab is tagged <em>parent</em> in the registry instead, and its
-            series is labeled as the parent’s wherever it appears. Where the parent reports the
-            lab’s business inside one segment — Google inside Alphabet’s Google Cloud — the series
-            is that segment’s, read from each 10-Q and 10-K’s own XBRL on the six-hourly poll, and
-            labeled as the segment, not the lab.
+            When a lab files for itself, nobody has to do anything. Two full-text searches look for
+            S-1s that mention Anthropic or OpenAI. When one comes from a company whose name matches
+            the lab, we read its CIK (the SEC’s company ID) from the filing and raise a critical
+            alert. From the next check on, we track that company’s filings and XBRL data. Its
+            revenue then shows up above as an <em>issuer</em> filing, linked to the filing that
+            identified it. A public parent that consolidates a lab is marked <em>parent</em>
+            instead, and its numbers are labeled as the parent’s everywhere they appear.
+          </p>
+          <p>
+            Some parents report the lab’s business inside one segment (Google inside Alphabet’s
+            Google Cloud). There the numbers are that segment’s, read from the XBRL in each 10-Q and
+            10-K on our 6-hour check, and labeled as the segment instead of the lab.
           </p>
         </div>
       </TerminalPanel>

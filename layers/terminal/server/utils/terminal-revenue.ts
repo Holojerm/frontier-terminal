@@ -29,7 +29,7 @@ import { byString, num, parseJson, str } from './terminal-json'
 import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
 
 export const REVENUE_RULE =
-  'Audited SEC disclosures only, from EDGAR’s XBRL data: company facts for a consolidated figure, the filing’s own XBRL instance for a segment. A lab whose S-1 tags no financials is read from the S-1’s printed statement of operations until its first tagged 10-Q; interim periods from it are unaudited and marked. Each value links to the filing that reported it. ' +
+  'Audited SEC disclosures only, from EDGAR’s XBRL data (the SEC’s tagged financial data). Consolidated figures come from company facts, and segment figures from the filing’s own XBRL. If a lab’s S-1 has no tagged financials, we read its printed statement of operations until its first tagged 10-Q. Interim periods from it are unaudited and marked. Each value links to the filing that reported it. ' +
   'With no audited disclosure on file, nothing is shown. Press-reported run-rates are excluded.'
 
 const DAY_MS = 86_400_000

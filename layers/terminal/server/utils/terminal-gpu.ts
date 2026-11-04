@@ -16,13 +16,13 @@ import { recipeRunsStamp, type QueryContext } from './terminal-db'
 import { byString } from './terminal-json'
 
 export const GPU_PRICES_METHOD =
-  'On-demand list prices from first-party price pages and documented price APIs, normalized to USD per GPU-hour (an instance price divided by its GPUs). ' +
-  'Each provider counts once, at the median of its own counted rows (configurations and regions); the figure shown is the median across providers. ' +
-  'SXM and HGX boards, and rows that print no form factor, are counted; PCIe and NVL cards are kept and not counted, so the median compares like with like.'
+  'On-demand list prices from first-party price pages and documented price APIs, in USD per GPU-hour (an instance price divided by its GPUs). ' +
+  'Each provider counts once, at the median of its own counted rows (configurations and regions). The figure shown is the median across providers. ' +
+  'We count SXM and HGX boards and rows that print no form factor. We keep PCIe and NVL cards but leave them out of the median, so it compares like with like.'
 
 export const GPU_PRICES_CAVEAT =
-  'List prices, not what anyone pays: reserved terms, spot markets and negotiated contracts are lower, and a marketplace such as Vast.ai listed H100 SXM offers about half the first-party median when this source set was audited. ' +
-  'A provider whose page failed today is named and left out, never carried forward.'
+  'These are list prices. Reserved terms, spot markets, and negotiated contracts are lower. When we audited these sources, a marketplace such as Vast.ai listed H100 SXM offers at about half the first-party median. ' +
+  'If a provider’s page failed today, we name it and leave it out. We don’t carry an old price forward.'
 
 export const gpuRunsStamp = (db: PipelineDb) =>
   recipeRunsStamp(

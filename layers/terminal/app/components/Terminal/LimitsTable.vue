@@ -49,6 +49,6 @@ const pagesShown = computed(() => props.pages)
       />
       <TerminalSources :sources="[p.source]" />
     </div>
-    <TerminalSources :caveats="[{ text: caveat, label: 'policy, not a gauge' }]" />
+    <TerminalSources :caveats="[{ text: caveat, label: 'stated policy only' }]" />
   </div>
 </template>

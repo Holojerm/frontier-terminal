@@ -85,7 +85,7 @@ export function exportFilter(
     if (!column) {
       const allowed = Object.keys(table.filters ?? {})
       return {
-        error: `${table.name} cannot be filtered by ${name}${allowed.length ? `; it accepts ${allowed.join(', ')}` : ''}`,
+        error: `${table.name} cannot be filtered by ${name}${allowed.length ? `. It accepts ${allowed.join(', ')}` : ''}`,
       }
     }
     if (typeof raw !== 'string' || !/^[\w.@-]{1,100}$/.test(raw)) {
@@ -372,7 +372,7 @@ function partsView<C>(
 }
 
 const PARTS_AS_OF_REFUSAL =
-  'a registration-statement view is exploded from the current filing rows, and rewinding it is not built yet.'
+  'this view is built from the current filing rows, and we can’t rebuild its past versions yet.'
 
 const FILING_FIELDS = ['cik', 'entity_name', 'accession_no', 'form', 'filed'] as const
 const filing = (p: Row): Row => Object.fromEntries(FILING_FIELDS.map((f) => [f, p[f] ?? null]))
@@ -488,7 +488,7 @@ function staticTable(
  */
 export const WITHDRAWN_EXPORTS: Readonly<Record<string, string>> = {
   rankings_daily:
-    'OpenRouter licenses its rankings CC BY 4.0 but says the dataset "is not intended to be re-served as a competing free API", so the raw per-model daily rows are no longer bulk-exported. Per-lab shares and top models stay at /rankings and /api/rankings; the rows themselves are at openrouter.ai/api/v1/datasets/rankings-daily with an OpenRouter key.',
+    'OpenRouter licenses its rankings CC BY 4.0 but says the dataset "is not intended to be re-served as a competing free API", so we no longer offer the raw per-model daily rows as a download. Per-lab shares and top models are still at /rankings and /api/rankings. You can get the rows from openrouter.ai/api/v1/datasets/rankings-daily with an OpenRouter key.',
 }
 
 // OpenRouter's per-model daily rows reach the change log as `ranking` changes
@@ -509,7 +509,7 @@ const byColumn =
 export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   snapshots: plainTable(
     'snapshots',
-    'One row per fetch of every source: content hash, HTTP status, byte count, and the R2 key of the raw payload.',
+    'One row per fetch of every source, with its content hash, HTTP status, byte count, and the R2 key of the raw response.',
     tables.snapshots,
     ['id', 'source_id', 'content_hash', 'raw_key', 'http_status', 'bytes', ...PROVENANCE],
     [tables.snapshots.fetched_at, tables.snapshots.id],
@@ -518,37 +518,37 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   prices_latest: entityView(
     'prices_latest',
-    'The current price and catalog row per SKU and source, as each vendor page states it at the latest poll.',
+    'The current price and catalog row per SKU and source, as each vendor page stated it at our last check.',
     'model',
     PRICE_FIELDS,
   ),
   jobs_open: entityView(
     'jobs_open',
-    'Every role currently listed on the tracked boards. A closed role leaves this table and is recorded in changes.',
+    'Every role currently listed on the job boards we track. A closed role leaves this table and shows up in changes.',
     'job',
     JOB_FIELDS,
   ),
   incidents: entityView(
     'incidents',
-    'Every stored status-page incident: title, vendor impact and status verbatim (impact null where the feed publishes none, as Anthropic’s Atom feed does), start and resolution, and components. Append-only: an incident that drops out of its feed is kept.',
+    'Every status-page incident we’ve stored, with the vendor’s title, impact, and status verbatim, start and resolution, and components. Impact is null where the feed publishes none (Anthropic’s Atom feed doesn’t). We keep an incident after it drops out of its feed.',
     'incident',
     INCIDENT_FIELDS,
   ),
   disclosures: entityView(
     'disclosures',
-    'Every entry on a lab’s own misalignment-disclosure index (only OpenAI publishes one): report or notice, title, summary, model, and context verbatim, and the date the index prints beside it. A count measures disclosure, not behavior.',
+    'Every entry on a lab’s own misalignment-disclosure index (only OpenAI publishes one). Each row has the report or notice, title, summary, model, and context verbatim, and the date the index prints beside it. A count measures what a lab disclosed, not how its models behaved.',
     'disclosure',
     DISCLOSURE_FIELDS,
   ),
   disclosure_timelines: entityView(
     'disclosure_timelines',
-    'The dates printed on each report’s own page: every “Label: value” line verbatim, the discovery date, and a printed disclosure date where the page has one.',
+    'The dates printed on each report’s own page. That’s every “Label: value” line verbatim, the discovery date, and the disclosure date where the page prints one.',
     'disclosure_timeline',
     DISCLOSURE_TIMELINE_FIELDS,
   ),
   filers: entityView(
     'filers',
-    'One row per lab whose CIK was resolved at poll time from its own registration filing (sources.yaml pending_filers): the CIK, EDGAR’s name for the filer, and the filing it was read from.',
+    'One row per lab whose CIK we found in its own registration filing (sources.yaml pending_filers). Each row has the CIK, EDGAR’s name for the filer, and the filing we read it from.',
     'filer',
     // provider is already a leading column of every entity view; naming it
     // again printed it twice in the CSV header.
@@ -556,13 +556,13 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   revenue_facts: entityView(
     'revenue_facts',
-    'One row per XBRL revenue fact from EDGAR company facts: filer, tag, period, value in USD, and the filing that reported it. Append-only: a restatement is a new row under its own accession.',
+    'One row per XBRL revenue fact from EDGAR company facts, with the filer, tag, period, value in USD, and the filing that reported it. Rows are never edited. A restatement is a new row under its own accession.',
     'revenue',
     REVENUE_FIELDS,
   ),
   prospectus_statements: partsView(
     'prospectus_statements',
-    'Every line of the statement of operations printed in a lab’s own registration filing (S-1, S-1/A), one row per filing, period and line: the line verbatim, a canonical key where known, and the value in USD, shares or USD per share. Null is a dash. Interim periods are unaudited.',
+    'Every line of the statement of operations in a lab’s own registration filing (S-1, S-1/A). One row per filing, period, and line, with the line verbatim, a standard key where we have one, and the value in USD, shares, or USD per share. Null means the filing printed a dash. Interim periods are unaudited.',
     'statement',
     [...FILING_FIELDS, 'start', 'end', 'unaudited', 'units', 'line_key', 'label', 'val', 'unit'],
     (p) =>
@@ -581,7 +581,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   prospectus_commitments: partsView(
     'prospectus_commitments',
-    'Contractual commitments a lab’s registration filing prints: MD&A’s contractual-obligations table, the commitments note’s purchase-commitment schedule, and the one-figure totals, as of each date stated. One row per schedule line and year bucket, bucket “Total” for the line’s total. approximate marks a figure the filing calls approximate; statement quotes its sentence.',
+    'Contractual commitments printed in a lab’s registration filing. That covers the contractual-obligations table in MD&A (management’s discussion and analysis), the purchase-commitment schedule in the commitments note, and the one-figure totals, as of each date stated. One row per schedule line and year bucket, with bucket “Total” for the line’s total. approximate marks a figure the filing calls approximate, and statement quotes its sentence.',
     'commitment',
     [
       ...FILING_FIELDS,
@@ -612,7 +612,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   prospectus_concentration: partsView(
     'prospectus_concentration',
-    'Customers at or above 10% of revenue or of accounts receivable, from a lab’s registration filing: one row per filing, basis, customer and period or balance date, named as the filing names them. A null pct is the filing’s “*”: under 10%, not zero.',
+    'Customers at or above 10% of revenue or of accounts receivable, from a lab’s registration filing. One row per filing, basis, customer, and period or balance date, with customers named as the filing names them. A null pct is the filing’s “*”, which means under 10% (not zero).',
     'concentration',
     [...FILING_FIELDS, 'basis', 'customer', 'start', 'end', 'unaudited', 'pct'],
     (p) => {
@@ -633,7 +633,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   prospectus_shares: partsView(
     'prospectus_shares',
-    'Share counts from a lab’s registration filing: each row of “The Offering” (shares offered, and each class outstanding after the offering, with the underwriters’ option where stated) and the pre-offering counts it is based on. Null while the filing leaves a count blank.',
+    'Share counts from a lab’s registration filing. Each row of “The Offering” (shares offered, and each class outstanding after the offering, with the underwriters’ option where stated), plus the pre-offering counts it’s based on. Null while the filing leaves a count blank.',
     'shares',
     [...FILING_FIELDS, 'measure', 'as_of', 'label', 'shares', 'with_option'],
     (p) => [
@@ -658,7 +658,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   prospectus_risk_factors: partsView(
     'prospectus_risk_factors',
-    'Every risk-factor heading in a lab’s registration filing, verbatim and in order, with what it is against the same filer’s previous filing: unchanged, added, reworded (previous holds the earlier words), or removed (a heading the previous filing printed and this one does not, listed after this filing’s own).',
+    'Every risk-factor heading in a lab’s registration filing, verbatim and in order. Each is compared with the same filer’s previous filing and marked unchanged, added, reworded (previous holds the earlier words), or removed. A removed heading is one the previous filing printed and this one doesn’t, listed after this filing’s own.',
     'risk_factors',
     [...FILING_FIELDS, 'section', 'heading', 'change', 'previous'],
     (p, prior) => {
@@ -697,7 +697,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   changes: plainTable(
     'changes',
-    'Append-only change log: each entity added, removed, or modified, with the before and after payloads. OpenRouter ranking rows are left out (see rankings_daily on /data).',
+    'The change log. Every tracked item added, removed, or modified, with its before and after values. Rows are never edited. OpenRouter ranking rows are left out (see rankings_daily on /data).',
     tables.changes,
     [
       'id',
@@ -745,7 +745,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   claim_verdicts: plainTable(
     'claim_verdicts',
-    'Append-only: the judge’s verdict on each candidate event for a judged thesis claim, with its grounded rationale and the facts the Worker computed (a cut’s size, an outage’s hours).',
+    'The judge’s verdict on each candidate event for a judged thesis claim, with its rationale and the facts we computed (a price cut’s size, an outage’s hours). Rows are never edited.',
     tables.claimVerdicts,
     [
       'id',
@@ -768,7 +768,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   recipe_observations: plainTable(
     'recipe_observations',
-    'What each thesis recipe read from its public source (layers/terminal/server/theses/recipes/): one row per recipe, key and date, with the value, the fields kept beside it, and the R2 key of the raw bytes.',
+    'What each thesis recipe read from its public source (layers/terminal/server/theses/recipes/). One row per recipe, key, and date, with the value, the fields kept beside it, and the R2 key of the raw bytes.',
     tables.recipeObservations,
     [
       'id',
@@ -795,7 +795,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   source_runs: plainTable(
     'source_runs',
-    'One row per poll tick and source: what was attempted and the outcome. No fetched_at column; a failed run fetched nothing.',
+    'One row per check of each source, with what we tried and what happened. There’s no fetched_at column, since a failed run fetched nothing.',
     tables.sourceRuns,
     [
       'id',
@@ -816,10 +816,10 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   entity_securities: staticTable(
     'entity_securities',
-    'Each tracked lab and SEC filer mapped to the securities that carry it: the issuer, CIK, symbol and exchange as EDGAR lists them, how the entity relates to the security (itself, its parent, a disclosed investor), and the source of each row. A private lab with no security has a row saying so.',
+    'Each lab and SEC filer we track, mapped to the securities that carry it. Each row has the issuer, CIK, symbol, and exchange as EDGAR lists them, how the lab or filer relates to the security (itself, its parent, a disclosed investor), and the row’s source. A private lab with no security has a row saying so.',
     ENTITY_SECURITY_COLUMNS,
     ENTITY_SECURITIES,
-    'a hand-checked table kept in code; each row is dated by its checked_on.',
+    'it’s a hand-checked table kept in code, and each row is dated by its checked_on.',
   ),
 }
 

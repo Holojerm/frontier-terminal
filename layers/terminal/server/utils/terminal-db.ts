@@ -468,7 +468,7 @@ function summarize(entityType: string, payload: Json | null): string {
       payload.present === false
         ? 'vendor sentence no longer on the page'
         : 'vendor sentence on the page'
-    return `${str(payload.class) ?? '?'} → ${str(payload.model_slug) ?? '?'} — ${verdict}`
+    return `${str(payload.class) ?? '?'} → ${str(payload.model_slug) ?? '?'} · ${verdict}`
   }
   if (entityType === 'filer') {
     return [
@@ -731,7 +731,7 @@ export async function queryOverview(db: PipelineDb, ctx: QueryContext): Promise<
 // ---- prices ----------------------------------------------------------------
 
 const MATRIX_TIER_NOTE =
-  'List price on each vendor’s standard tier. Batch, long-context, promo-window, and cached-only rows are excluded; they are in the full catalog.'
+  'List price on each vendor’s standard tier. Batch, long-context, promo-window, and cached-only prices are left out here. They’re in the full catalog.'
 
 const isStandardTier = (tier: string | null): boolean => tier === null || tier === 'standard'
 
@@ -1049,7 +1049,7 @@ export function buildMatrix(
           basis_current: null,
           basis_checked_at: null,
           basis_note: null,
-          gap: gap?.reason ?? 'No mapping. The vendor publishes no recommendation to transcribe.',
+          gap: gap?.reason ?? 'No mapping. The vendor doesn’t name a model for this class.',
           priced: false,
         })
         continue

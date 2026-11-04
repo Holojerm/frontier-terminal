@@ -34,23 +34,25 @@ const counters = computed(() => [
 const quietReason = computed(() => {
   const m = movement.value
   if (m.recent.total > 0) return null
-  if (m.sources_total === 0) return 'No source polled yet. Comparison starts on the second poll.'
+  if (m.sources_total === 0) {
+    return 'We haven’t checked any source yet. Changes show up from the second check.'
+  }
   const compared = m.sources_total - m.sources_not_yet_compared
   if (m.total_changes === 0 && compared === 0) {
-    return `First observation: ${m.sources_total} sources, one snapshot each. Nothing to compare yet.`
+    return `We’ve read each of ${m.sources_total} sources once. Nothing to compare yet.`
   }
   if (m.total_changes === 0) {
-    return `No change on record; ${compared} of ${m.sources_total} sources compared.`
+    return `No changes yet. ${compared} of ${m.sources_total} sources compared so far.`
   }
-  return `No change in the last ${m.window_hours}h. ${m.total_changes} on record overall.`
+  return `No changes in the last ${m.window_hours}h. ${m.total_changes} on record overall.`
 })
 </script>
 
 <template>
   <TerminalPanel
     id="signal"
-    title="Signal"
-    note="What changed: judged alerts, minor changes, and raw change counts by axis."
+    title="What changed"
+    note="Alerts, minor changes, and a count of every change by source type."
     :more="
       overview.alert_count > shown.length
         ? { label: `All ${overview.alert_count} alerts`, to: '/alerts' }
@@ -61,7 +63,7 @@ const quietReason = computed(() => {
     <template #meta>
       <span class="flex flex-wrap items-baseline gap-x-3">
         <span v-if="overview.latest_fetched_at">
-          newest fetch
+          last checked
           <time :datetime="overview.latest_fetched_at" :title="overview.latest_fetched_at">
             {{ relativeStamp(overview.latest_fetched_at, now) }}
           </time>

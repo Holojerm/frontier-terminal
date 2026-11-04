@@ -55,8 +55,8 @@ const sites = computed(() =>
     lede="What a GPU-hour rents for, and how much data-center power each lab is bringing online."
     :as-of="gpu?.as_of"
     :error="Boolean(error)"
-    error-title="GPU prices could not be read"
-    error-body="The GPU prices endpoint failed to respond."
+    error-title="GPU prices didn’t load"
+    error-body="Try reloading in a minute."
   >
     <TerminalPanel
       v-if="gpu"
@@ -72,7 +72,7 @@ const sites = computed(() =>
       <TerminalPanel
         id="power"
         title="Data-center power per lab"
-        note="Epoch AI’s estimate, attributed by the users it names at #confident or #likely."
+        note="Epoch AI’s estimate, credited to each lab Epoch names as a user at #confident or #likely."
       >
         <TerminalDataCenterPower :data="power" />
       </TerminalPanel>
@@ -80,7 +80,7 @@ const sites = computed(() =>
       <TerminalPanel
         id="sites"
         title="Every site"
-        :note="`${count(power.sites)} sites in Epoch’s data of ${power.snapshot}, largest first; owner and users as Epoch writes them.`"
+        :note="`${count(power.sites)} sites in Epoch’s data as of ${power.snapshot}, largest first. Owner and users are as Epoch writes them.`"
       >
         <TerminalTable
           caption="AI data centers tracked by Epoch AI, with estimated power and named users"

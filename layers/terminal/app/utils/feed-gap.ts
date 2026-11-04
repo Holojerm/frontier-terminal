@@ -43,7 +43,9 @@ export function feedGap(axis: FeedAxis, p: FeedRow): GapRef | null {
   }
   return {
     title: UNPARSED[axis],
-    reason: p.sources.length ? 'Snapshotted; rows appear when its parser runs.' : 'Not polled yet.',
+    reason: p.sources.length
+      ? 'We’ve fetched it but haven’t read any rows from it yet.'
+      : 'Not checked yet.',
     name: `Why ${p.display} shows no rows`,
   }
 }

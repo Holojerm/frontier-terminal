@@ -82,8 +82,8 @@ const relation =
   filing.filer.relation === 'issuer'
     ? `${filing.display}’s own filing.`
     : filing.filer.segment_label
-      ? `${filer} reports ${filing.filer.segment_label} as a segment: the parent’s segment, not ${filing.display}’s revenue.`
-      : `${filer} consolidates ${filing.display}: the parent’s revenue, not ${filing.display}’s.`
+      ? `${filer} reports ${filing.filer.segment_label} as a segment. These are the parent’s segment figures, not ${filing.display}’s revenue.`
+      : `${filer} consolidates ${filing.display}. This is the parent’s revenue, not ${filing.display}’s.`
 
 const fromProspectus = filing.periods.some((p) => p.basis === 'prospectus')
 
@@ -157,8 +157,8 @@ const rowKey = (r: FilingPeriod) => r.entity_key
     <TerminalPanel
       id="periods"
       title="Reported revenue"
-      :note="`Every period this ${filing.form} reported, newest first. A comparative a later filing restated is marked.`"
-      :more="{ label: `${filing.display} on every axis`, to: labPath(filing.provider) }"
+      :note="`Every period this ${filing.form} reported, newest first. We mark any earlier-period figure that a later filing restated.`"
+      :more="{ label: `Everything on ${filing.display}`, to: labPath(filing.provider) }"
       flush
     >
       <TerminalTable
@@ -216,13 +216,14 @@ const rowKey = (r: FilingPeriod) => r.entity_key
 
     <div class="space-y-1 text-xs text-muted">
       <p v-if="fromProspectus">
-        Read from the filing’s Consolidated Statements of Operations: it tags no financials in XBRL.
-        A later filing’s value for the same period replaces it on the revenue page, which also
-        carries
+        Read from the filing’s Consolidated Statements of Operations, because the filing tags no
+        financials in XBRL. A later filing’s value for the same period replaces it on the revenue
+        page. That page also has
         <NuxtLink
           :to="`/revenue#prospectus-${filing.provider}`"
           class="underline underline-offset-2 hover:text-default"
-          >the rest of the statement, commitments, customer concentration and risk factors</NuxtLink
+          >the rest of the statement, commitments, customer concentration, and risk
+          factors</NuxtLink
         >.
       </p>
       <p>{{ data?.rule }}</p>
@@ -232,7 +233,7 @@ const rowKey = (r: FilingPeriod) => r.entity_key
       v-if="others.length"
       id="other-filings"
       title="Other filings"
-      :note="`Every other revenue-bearing filing read for ${filing.display}, newest first.`"
+      :note="`Every other filing with revenue we’ve read for ${filing.display}, newest first.`"
     >
       <ul class="space-y-1 text-sm">
         <li v-for="o in others" :key="o.accession_no">

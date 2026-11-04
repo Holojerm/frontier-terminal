@@ -88,7 +88,7 @@ function deltaText(row: PriceRowView): string | null {
       color="info"
       variant="soft"
       icon="i-lucide-scale"
-      :title="`${prices.cross_check.label}: snapshotted, not shown as a price`"
+      :title="`We keep ${prices.cross_check.label} as a cross-check and don’t show its prices`"
     >
       <template #description>
         <span>{{ prices.cross_check.caveat }}</span>
@@ -103,7 +103,7 @@ function deltaText(row: PriceRowView): string | null {
     <TerminalGap v-if="rows.length === 0" title="No rows match the filter." />
     <TerminalTable
       v-else
-      caption="Every SKU in the store with prices in dollars per million tokens, the newest change, and provenance"
+      caption="Every SKU we track, with prices in dollars per million tokens, the newest change, and its source"
       :columns="columns"
       :rows="rows"
       :row-key="(r) => r.entity_key"
@@ -158,7 +158,7 @@ function deltaText(row: PriceRowView): string | null {
           v-if="r.spark"
           :to="`/prices/${r.entity_key}`"
           class="inline-flex items-center gap-2 text-xs text-muted"
-          :title="`${r.revisions} observations of ${r.spark.field.replace(/_per_mtok$/, '')} price — open the SKU page`"
+          :title="`${r.revisions} observations of ${r.spark.field.replace(/_per_mtok$/, '')} price. Open the SKU page`"
         >
           <TerminalSparkline :values="r.spark.values" />
           <span>{{ r.revisions }}×</span>
@@ -177,7 +177,7 @@ function deltaText(row: PriceRowView): string | null {
     </TerminalTable>
 
     <p v-if="!prices.changes_available" class="text-xs text-muted">
-      No deltas yet: a delta needs two revisions of a row.
+      No price changes yet. We need two versions of a row to show one.
     </p>
   </div>
 </template>

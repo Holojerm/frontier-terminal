@@ -188,19 +188,19 @@ export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string 
     provider: 'xai',
     class: 'balanced',
     reason:
-      'xAI’s models page answers “Which model should I choose?” with one model, Grok 4.7, and names no balanced tier. The cheaper SKUs’ own pages describe capability (“Fast, reliable model with strong tool calling”), not a cost tradeoff.',
+      'xAI’s models page answers “Which model should I choose?” with one model, Grok 4.7. It names no balanced tier. The cheaper SKUs’ own pages describe what each can do (“Fast, reliable model with strong tool calling”) and say nothing about cost.',
   },
   {
     provider: 'xai',
     class: 'economy',
     reason:
-      'xAI prices grok-4.3, the grok-4.20 models and grok-build-0.1 below Grok 4.7 (full catalog), but neither its models page nor any model page says which is the choice for cost-sensitive work.',
+      'xAI prices grok-4.3, the grok-4.20 models, and grok-build-0.1 below Grok 4.7 (full catalog). No xAI page says which one to use for cost-sensitive work.',
   },
   {
     provider: 'google',
     class: 'balanced',
     reason:
-      'Google’s models page names no single intelligence-for-cost model. “Our best price-performance model” describes Gemini 2.5 Flash, a previous generation the page steers new projects away from, and “Frontier-class performance rivaling larger models at a fraction of the cost” is printed word for word on two cards, Gemini 3.1 Flash-Lite and Gemini 3 Flash (Preview). Every Gemini SKU is in the full catalog.',
+      'Google’s models page names no single intelligence-for-cost model. “Our best price-performance model” describes Gemini 2.5 Flash, an older generation the page steers new projects away from. “Frontier-class performance rivaling larger models at a fraction of the cost” is printed word for word on two cards, Gemini 3.1 Flash-Lite and Gemini 3 Flash (Preview). Every Gemini SKU is in the full catalog.',
   },
   {
     provider: 'meta',
@@ -217,19 +217,19 @@ export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string 
     provider: 'mistral',
     class: 'flagship',
     reason:
-      'Mistral’s docs name no flagship or start-here text model: Mistral Large 4 is “a state-of-the-art, open-weight, general-purpose multimodal model,” the one “frontier-class” sentence belongs to the deprecated Medium 3.5, and the one “Flagship” is a transcription model (Voxtral Small Transcribe 3). Every Mistral SKU is in the full catalog.',
+      'Mistral’s docs name no flagship or start-here text model. Mistral Large 4 is “a state-of-the-art, open-weight, general-purpose multimodal model.” The one “frontier-class” sentence is about the deprecated Medium 3.5. The one model labeled “Flagship” is a transcription model (Voxtral Small Transcribe 3). Every Mistral SKU is in the full catalog.',
   },
   {
     provider: 'mistral',
     class: 'balanced',
     reason:
-      'No Mistral page names a middle tier: the model selection guide rates speed and performance from 0 to 5 and says nothing about cost tradeoffs.',
+      'No Mistral page names a middle tier. The model selection guide rates speed and performance from 0 to 5 and says nothing about cost.',
   },
   {
     provider: 'mistral',
     class: 'economy',
     reason:
-      'Mistral prints speed and performance ratings, not a cost-sensitive recommendation. Its cheapest generalists have no positioning statement to transcribe.',
+      'Mistral rates its models on speed and performance but never says which to use for cost-sensitive work. Its cheapest general-purpose models don’t say what they’re for.',
   },
 ]
 
@@ -239,11 +239,11 @@ export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string 
  */
 export const PRICE_GAPS: Readonly<Partial<Record<LabId, string>>> = {
   openai:
-    'OpenAI’s catalog page (developers.openai.com/api/docs/models.md) prints no prices. Prices come from pricing.md, polled separately (registered 2026-09-22). No priced row means that source has not been polled yet; no price from another source is shown.',
+    'OpenAI’s catalog page (developers.openai.com/api/docs/models.md) prints no prices. We read prices from a separate page, pricing.md (added 2026-09-22). No price here means we haven’t read that page yet. We don’t fill in a price from any other source.',
 }
 
 /** The generic reason when a mapped SKU has simply not been stored yet. */
-export const NO_ROW_GAP = 'No stored row for this SKU. The source has not been polled.'
+export const NO_ROW_GAP = 'Nothing stored for this SKU yet. We haven’t checked its source.'
 
 /**
  * Shown on a cell whose vendor sentence was not found on the page at the
@@ -251,4 +251,4 @@ export const NO_ROW_GAP = 'No stored row for this SKU. The source has not been p
  * is in doubt is whether that SKU still answers the column's question.
  */
 export const BASIS_STALE_NOTE =
-  'At the last poll, the vendor page no longer contained the sentence this mapping quotes. The class assignment is under review. The price shown is the stored price for this SKU; the vendor may now recommend a different one (full catalog).'
+  'At our last check, the vendor’s page no longer had the sentence this mapping quotes. The mapping is under review. The price shown is still this SKU’s price, but the vendor may now recommend a different model (full catalog).'

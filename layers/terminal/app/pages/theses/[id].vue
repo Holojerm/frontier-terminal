@@ -49,8 +49,8 @@ useSeo({
     :back="{ label: 'All theses', to: '/theses' }"
     :as-of="data?.as_of"
     :error="Boolean(error) || !data"
-    error-title="This thesis could not be read"
-    error-body="The theses endpoint failed to respond. No stale or inferred status is shown in its place."
+    error-title="This thesis didn’t load"
+    error-body="We won’t show an old status in its place. Try reloading in a minute."
   >
     <template #title>
       {{ thesis?.title ?? 'Thesis' }}

@@ -25,7 +25,7 @@ definePageMeta({
     priority: '1.0',
     title: 'Overview',
     summary:
-      'What moved across the frontier AI labs: judged alerts, change counts by axis, flagship API prices, disclosed revenue, demand and implied spend share, open roles and the infrastructure buildout, status-page incidents, and misalignment disclosures.',
+      'What changed at the frontier AI labs, with judged alerts, change counts, flagship API prices, disclosed revenue, demand and implied spend share, open roles, the infrastructure buildout, status-page incidents, and misalignment disclosures.',
   },
 })
 
@@ -134,7 +134,7 @@ const openIncidents = computed(() =>
     <TerminalPanel
       id="readout"
       title="Readout"
-      note="Each lab on every axis. Each figure links to the lab page, where its source is cited."
+      note="Each lab at a glance. Every figure links to the lab’s page, which cites its source."
       flush
     >
       <TerminalReadoutStrip :labs="LABS" :data="readout" />
@@ -146,7 +146,7 @@ const openIncidents = computed(() =>
       <TerminalPanel
         id="releases"
         title="Recent releases"
-        note="SKUs new on a tracked vendor page, with the launch price."
+        note="SKUs newly listed on a vendor’s pricing page, with the launch price."
         :more="
           releases.data.value
             ? { label: `All ${releases.data.value.rows.length} releases`, to: '/releases' }
@@ -178,7 +178,7 @@ const openIncidents = computed(() =>
         id="revenue"
         title="Disclosed revenue"
         note="What each lab, or its public parent, has reported to the SEC."
-        :more="{ label: 'Every period, restatements and filings', to: '/revenue' }"
+        :more="{ label: 'Every period, restatement, and filing', to: '/revenue' }"
         flush
       >
         <TerminalRevenueTable v-if="revenue.data.value" :revenue="revenue.data.value" />
@@ -186,7 +186,7 @@ const openIncidents = computed(() =>
       <TerminalPanel
         id="hiring"
         title="Hiring"
-        note="Open roles per board, the infrastructure cluster, and the department that moved most."
+        note="Open roles per board, infrastructure roles, and the department that changed most."
         :more="{ label: 'Roles per day, buildout, department mix', to: '/hiring' }"
         flush
       >
@@ -201,7 +201,7 @@ const openIncidents = computed(() =>
       <TerminalPanel
         id="demand"
         title="Demand share"
-        note="Share of all OpenRouter tokens, newest 7 days. A proxy, not market share."
+        note="Share of OpenRouter tokens over the last 7 days. It’s one aggregator’s traffic, so treat it as a rough read on demand."
         :more="{ label: '30-day series and top models', to: '/rankings' }"
       >
         <TerminalDemandShare v-if="rankings.data.value" :rankings="rankings.data.value" compact />
@@ -209,7 +209,7 @@ const openIncidents = computed(() =>
       <TerminalPanel
         id="spend"
         title="Implied spend share"
-        note="The tracked labs’ tokens at list price, as shares of those labs’ total, not of all OpenRouter traffic. A range, because some SKUs are unpriced."
+        note="The tracked labs’ tokens at list price, as a share of those labs’ total (not all OpenRouter traffic). It’s a range because some SKUs have no published price."
         :more="{ label: 'Per-model join', to: '/rankings#spend' }"
       >
         <TerminalSpendShare v-if="spend.data.value" :spend="spend.data.value" compact />
@@ -225,8 +225,8 @@ const openIncidents = computed(() =>
         title="Capacity strain"
         :note="
           incidents.data.value
-            ? `Status-page incidents, newest ${incidents.data.value.window_days} days against the prior ${incidents.data.value.window_days}. ${openIncidents} open now.`
-            : 'Status-page incidents, newest 30 days against the prior 30.'
+            ? `Status-page incidents in the last ${incidents.data.value.window_days} days, against the ${incidents.data.value.window_days} before. ${openIncidents} open now.`
+            : 'Status-page incidents in the last 30 days, against the 30 before.'
         "
         :more="
           incidents.data.value
@@ -244,7 +244,7 @@ const openIncidents = computed(() =>
         id="disclosures"
         class="lg:col-span-2"
         title="Disclosures"
-        note="Misalignment reports each lab publishes about its own models. A count measures disclosure, not behavior."
+        note="Misalignment reports each lab publishes about its own models. A count shows what a lab chose to disclose, so it can’t tell you how often models misbehave."
         :more="{ label: 'Every report and notice', to: '/disclosures' }"
         flush
       >

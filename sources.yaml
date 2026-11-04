@@ -1801,171 +1801,170 @@ department_clusters:
 # Deliberate cuts — honesty is the feature (docs/source-audit.md verdicts).
 cut:
   artificial-analysis:
-    verdict: cut — external link only, never ingested
+    verdict: cut (link only, nothing stored)
     reason: >-
-      artificialanalysis.ai/data-api (read 2026-09-08) states the free API
-      tier is "Internal use only; no redistribution." and that redistribution
-      rights come only with a commercial package ("Commercial redistribution
-      with attribution"). This site republishes what it shows, so
-      artificialanalysis.ai is linked as a reference beside the demand-share
-      panel; no figure from it is stored or shown.
+      artificialanalysis.ai/data-api (read 2026-09-08) says the free API tier
+      is "Internal use only; no redistribution." Redistribution rights come
+      only with a commercial package ("Commercial redistribution with
+      attribution"). We republish what we show, so we link to
+      artificialanalysis.ai beside the demand-share panel and store or show
+      none of its figures.
   lmarena:
-    verdict: cut — external link only, never ingested
+    verdict: cut (link only, nothing stored)
     reason: >-
-      arena.ai (formerly lmarena.ai; read 2026-09-08) publishes a leaderboard
+      arena.ai (formerly lmarena.ai, read 2026-09-08) publishes a leaderboard
       app with no documented data endpoint, dataset download, or data license.
-      Scraping a page with no stated license would be a claim about that page,
-      not data; it is linked as a reference beside the demand-share panel.
-      Re-checked 2026-11-01: arena.ai now answers 403 (Cloudflare challenge
-      page) to a non-browser client.
+      We don't scrape a page with no stated license, so we link to it beside
+      the demand-share panel. When we re-checked on 2026-11-01, arena.ai
+      answered 403 (a Cloudflare challenge page) to a non-browser client.
   compute-deals:
-    verdict: stretch goal only (new-post tier, no extraction claims)
+    verdict: stretch goal only (new posts, no deal terms)
     reason: >-
-      RSS detection works for 4 sources (Anthropic: SPA, no feed; xAI: hard
-      403). Material deals are reported in the press before any company feed,
-      so complete coverage is not possible and extraction is cut.
+      We can spot new posts by RSS for 4 sources. Anthropic's site has no feed
+      and xAI answers 403. The press reports material deals before any company
+      feed does, so coverage can't be complete, and we don't extract deal
+      terms.
   anthropic-disclosures:
-    verdict: cut — display "no disclosure index" honestly
+    verdict: cut (shown as "no disclosure index")
     reason: >-
-      No index of misalignment or containment disclosures, live-checked
-      2026-09-27. Anthropic published one post,
+      No index of misalignment or containment disclosures (checked
+      2026-09-27). Anthropic published one post,
       anthropic.com/news/investigating-incidents-cybersecurity-evals
-      (2026-07-30: three incidents found across 141,006 cyber-evaluation
-      runs), which is a single article, not a feed the pipeline can diff.
-      alignment.anthropic.com is a research blog with no rss.xml (404).
-      Re-checked 2026-11-01: its "Agentic Misalignment in Summer 2026" post
-      reports failures in experimental scenarios and says "These are not
-      real-world incidents" — research, not a disclosure index. Re-checked
-      weekly by the gap-watch routine.
+      (2026-07-30, three incidents found across 141,006 cyber-evaluation
+      runs). It's a single article, so there's no feed to check for new ones.
+      alignment.anthropic.com is a research blog with no rss.xml (404). When
+      we re-checked on 2026-11-01, its "Agentic Misalignment in Summer 2026"
+      post reported failures in experimental scenarios and said "These are
+      not real-world incidents". That's research. It isn't a disclosure
+      index. We re-check every week.
   google-disclosures:
-    verdict: cut — display "no disclosure index" honestly
+    verdict: cut (shown as "no disclosure index")
     reason: >-
-      No misalignment or containment disclosure page found for Google or
-      Google DeepMind, live-checked 2026-09-27. Re-checked 2026-11-01: the
-      blog feed the audit found missing now lives at
-      deepmind.google/blog/rss.xml (200), but it is the general blog, not a
-      disclosure index. Re-checked weekly by the gap-watch routine.
+      We found no misalignment or containment disclosure page for Google or
+      Google DeepMind (checked 2026-09-27). When we re-checked on 2026-11-01,
+      the blog feed the audit couldn't find was at
+      deepmind.google/blog/rss.xml (200), but it's the general blog. We
+      re-check every week.
   xai-disclosures:
-    verdict: cut — display "no disclosure index" honestly
+    verdict: cut (shown as "no disclosure index")
     reason: >-
-      No misalignment or containment disclosure page found; x.ai/safety
-      answers 403 (Cloudflare challenge page) to a non-browser client,
-      live-checked 2026-09-27 and again 2026-11-01, the same bot wall as
-      status.x.ai. Re-checked weekly by the gap-watch routine.
+      We found no misalignment or containment disclosure page. x.ai/safety
+      answers 403 (a Cloudflare challenge page) to a non-browser client, the
+      same block as status.x.ai (checked 2026-09-27 and again 2026-11-01). We
+      re-check every week.
   meta-hiring:
-    verdict: cut — display "no public feed" honestly
+    verdict: cut (shown as "no public feed")
     reason: >-
-      Meta forbids automated collection: metacareers.com/robots.txt opens
+      Meta forbids automated collection. metacareers.com/robots.txt opens
       with "Collection of data on Facebook through automated means is
-      prohibited unless you have express written permission", and the jobs
-      it lists (a sitemap of 1,335 job pages, re-checked 2026-11-04) carry no
-      lab or team label without opening each page. There is no API and no
-      Greenhouse, Ashby or Lever board for Meta or Meta Superintelligence
-      Labs (all 404). A Meta-wide count would also mix Facebook, Instagram,
-      WhatsApp and Reality Labs hiring with the lab's.
+      prohibited unless you have express written permission". Its job
+      sitemap (1,335 job pages, re-checked 2026-11-04) shows no lab or team
+      for a job unless you open each page. There's no API and no Greenhouse,
+      Ashby, or Lever board for Meta or Meta Superintelligence Labs (all
+      404). A Meta-wide count would also mix in hiring for Facebook,
+      Instagram, WhatsApp, and Reality Labs.
   meta-status:
-    verdict: cut — display "no public feed" honestly
+    verdict: cut (shown as "no public feed")
     reason: >-
-      Meta publishes no incident history for its Model API, re-checked
-      2026-11-04. api.meta.ai/v1/status and the dev.meta.ai/status page
+      Meta publishes no incident history for its Model API (re-checked
+      2026-11-04). api.meta.ai/v1/status and the dev.meta.ai/status page
       report only the current state ({is_alive, service_status,
-      model_statuses}), so a count would see only outages that overlap a
-      poll. metastatus.com covers Meta's business products (Ads Manager,
-      WhatsApp Business API), not the model API.
+      model_statuses}), so a count from them would miss any outage between
+      our checks. metastatus.com covers Meta's business products (Ads
+      Manager, WhatsApp Business API) and not the model API.
   meta-disclosures:
-    verdict: cut — display "no disclosure index" honestly
+    verdict: cut (shown as "no disclosure index")
     reason: >-
-      No misalignment or containment disclosure page found, live-checked
-      2026-10-12: ai.meta.com/safety and research.meta.ai/safety answer 404,
+      We found no misalignment or containment disclosure page (checked
+      2026-10-12). ai.meta.com/safety and research.meta.ai/safety answer 404,
       research.meta.ai has no rss.xml, and the developer docs' llms.txt lists
-      no safety or incident page. Re-checked weekly by the gap-watch routine.
+      no safety or incident page. We re-check every week.
   mistral-disclosures:
-    verdict: cut — display "no disclosure index" honestly
+    verdict: cut (shown as "no disclosure index")
     reason: >-
-      No misalignment or containment disclosure page found, live-checked
-      2026-11-01: mistral.ai/safety answers 404, and the security advisories
-      in the docs' llms.txt (MAI-2026-001 to 003) cover SDK and product
-      vulnerabilities, not model behaviour. Re-checked weekly by
-      the gap-watch routine.
+      We found no misalignment or containment disclosure page (checked
+      2026-11-01). mistral.ai/safety answers 404. The security advisories in
+      the docs' llms.txt (MAI-2026-001 to 003) cover SDK and product
+      vulnerabilities and say nothing about model behavior. We re-check every
+      week.
   gpu-runpod:
-    verdict: cut — GPU price source not ingested
+    verdict: cut (GPU prices not stored)
     reason: >-
       runpod.io/pricing is server-rendered and robots.txt allows it, but the
-      Terms of Service bar using "any automated system, including without
-      limitation, any spider, robot, cheat utility, scraper, or offline
-      reader that accesses the Site", read 2026-11-02.
+      Terms of Service (read 2026-11-02) bar using "any automated system,
+      including without limitation, any spider, robot, cheat utility,
+      scraper, or offline reader that accesses the Site".
   gpu-aws:
-    verdict: cut — GPU price source not ingested
+    verdict: cut (GPU prices not stored)
     reason: >-
       The documented Price List bulk file for EC2 in us-east-1 is 481,649,899
-      bytes, over the pipeline's 32 MB body cap, and the Price List Query API
-      needs AWS credentials. The 58 KB JSON behind the on-demand pricing page
-      (b0.p.awsstatic.com) is an undocumented page backend, the kind of
-      surface this audit has never registered. Checked 2026-11-02.
+      bytes, over our 32 MB download limit. The Price List Query API needs AWS
+      credentials. The 58 KB JSON behind the on-demand pricing page
+      (b0.p.awsstatic.com) is an undocumented backend for that page, and we
+      don't use those as sources. Checked 2026-11-02.
   gpu-google-cloud:
-    verdict: cut — GPU price source not ingested
+    verdict: cut (GPU prices not stored)
     reason: >-
       cloud.google.com/compute/gpus-pricing redirects to a client-rendered
       page with no prices in its HTML, and the Cloud Billing Catalog API
       needs an API key. Checked 2026-11-02.
   gpu-vultr:
-    verdict: cut — GPU price source not ingested
+    verdict: cut (GPU prices not stored)
     reason: >-
-      api.vultr.com/robots.txt is "Disallow: /" for every agent, and the
-      plans API lists its HGX H100 and B200 plans with no locations, so they
-      cannot be ordered on demand. Checked 2026-11-02.
+      api.vultr.com/robots.txt is "Disallow: /" for every agent. The plans API
+      lists its HGX H100 and B200 plans with no locations, so you can't order
+      them on demand. Checked 2026-11-02.
   gpu-jarvislabs:
-    verdict: cut — GPU price source not ingested
+    verdict: cut (GPU prices not stored)
     reason: >-
-      jarvislabs.ai/pricing is server-rendered, but its terms page renders
-      client-side and its text could not be read headless, so the terms were
-      not checked. Checked 2026-11-02.
+      jarvislabs.ai/pricing is server-rendered, but its terms page only
+      renders in a browser. We couldn't read the terms, so we don't use the
+      page. Checked 2026-11-02.
   gpu-scaleway:
-    verdict: cut — GPU price source not ingested
+    verdict: cut (GPU prices not stored)
     reason: >-
       scaleway.com/en/pricing/gpu/ answers 403 to a non-browser client.
       Checked 2026-11-02.
   gpu-fluidstack-hyperbolic:
-    verdict: cut — GPU price source not ingested
+    verdict: cut (GPU prices not stored)
     reason: >-
       fluidstack.io/pricing and hyperbolic.ai/pricing answer 404. Checked
       2026-11-02.
   gpu-aggregators:
-    verdict: cross-check only, never an input
+    verdict: cross-check only (nothing stored)
     reason: >-
-      Vast.ai's offers API is a marketplace of third-party hosts, and
-      comparison sites restate other providers' prices; neither is a
-      first-party price. The audit compared Vast.ai's median H100 SXM offer
-      with the recipes' median once (docs/source-audit.md); nothing from
-      either is stored. Index values from licensed vendors (Bloomberg, LSEG
-      and the like) are never ingested.
+      Vast.ai's offers API is a marketplace of third-party hosts. Comparison
+      sites restate other providers' prices. Neither is a first-party price.
+      The audit compared Vast.ai's median H100 SXM offer with our median once
+      (docs/source-audit.md), and we store nothing from either. We never take
+      index values from licensed vendors (Bloomberg, LSEG, and the like).
   vscode-marketplace:
-    verdict: cut — install counts not ingested
+    verdict: cut (install counts not stored)
     reason: >-
       The install counts come from
       marketplace.visualstudio.com/_apis/public/gallery/extensionquery, an
       undocumented endpoint that robots.txt disallows ("Disallow: /_apis/").
-      The Terms of Use bar "'spidering' or 'scraping' the Offerings Sites"
-      as well. Checked 2026-11-04.
+      The Terms of Use also bar "'spidering' or 'scraping' the Offerings
+      Sites". Checked 2026-11-04.
   open-vsx:
-    verdict: cross-check only, never an input
+    verdict: cross-check only (nothing stored)
     reason: >-
-      open-vsx.org/api is documented and robots.txt allows it, but it serves
-      only VS Code forks (Copilot is not listed) and only a cumulative
-      downloadCount, which appears to include updates: Claude Code 64.2M here
-      against 29.5M installs on the Marketplace page. Checked 2026-11-04.
+      open-vsx.org/api is documented and robots.txt allows it. But it serves
+      only VS Code forks (Copilot isn't listed), and only a cumulative
+      downloadCount that appears to include updates. Claude Code shows 64.2M
+      here against 29.5M installs on the Marketplace page. Checked 2026-11-04.
   github-commit-search:
-    verdict: cut — PR search is the instrument
+    verdict: cut (we use PR search instead)
     reason: >-
       api.github.com/search/commits returns a different total on each call
       for a one-week window (7.35M, 9.90M, 9.91M for "Co-Authored-By:
       Claude", 2026-10-01..07), always with incomplete_results true. It
       searches default branches only, counts commits mirrored across repos
-      more than once, and trips the secondary rate limit within a few calls.
-      PR search returns exact, repeatable counts and is used instead.
+      more than once, and hits the secondary rate limit within a few calls.
+      PR search returns exact, repeatable counts, so we use it instead.
       Checked 2026-11-04.
   kalshi:
-    verdict: cut — external link only, never ingested
+    verdict: cut (link only, nothing stored)
     reason: >-
       The Data Terms of Use (linked from kalshi.com, read 2026-11-04) say
       "You may access content only for your personal use for non-commercial
@@ -1973,46 +1972,46 @@ cut:
       without written authorization. The Developer Agreement limits API use
       to "facilitating a members own trading on the Exchange".
   polymarket:
-    verdict: cut — external link only, never ingested
+    verdict: cut (link only, nothing stored)
     reason: >-
       The Terms of Service (effective 2026-08-11, read 2026-11-04) bar
       crawlers "to scrape or otherwise remove data" and any redistribution
       of the Data to "any Capital Market Client or market data distributor,
-      unless otherwise agreed to in writing". A CC-BY republication cannot
-      keep downstream users out of either group.
+      unless otherwise agreed to in writing". We publish under CC BY, which
+      can't keep downstream users out of either group.
   google-rate-limits:
-    verdict: cut — per-minute limits not published
+    verdict: cut (per-minute limits not published)
     reason: >-
       aistudio.google.com/docs/rate-limits.md (ai.google.dev's page now
       redirects there) publishes the spend cap per tier and batch enqueued
-      tokens, but says per-model RPM, TPM and RPD "can be viewed in Google
-      AI Studio", behind a sign-in; robots.txt disallows /rate-limit.
-      Checked 2026-11-04.
+      tokens. It says per-model RPM, TPM and RPD "can be viewed in Google
+      AI Studio", which needs a sign-in, and robots.txt disallows
+      /rate-limit. Checked 2026-11-04.
   mistral-rate-limits:
-    verdict: cut — no public limits
+    verdict: cut (no public limits)
     reason: >-
       docs.mistral.ai/admin/billing-usage/usage-limits.md says limits are
-      shown in the Admin Panel (admin.mistral.ai), which needs a login; no
+      shown in the Admin Panel (admin.mistral.ai), which needs a login. No
       numbers are published. Checked 2026-11-04.
   xai-pay-bands:
-    verdict: cut — pay in free text only
+    verdict: cut (pay only in free text)
     reason: >-
       The xai Greenhouse board's structured pay field (pay_input_ranges) is
       empty on all 300 roles. Pay appears only as free text after
-      "COMPENSATION AND BENEFITS:", parseable as an annual USD band on 81
-      (27%), with Research at n=11, and the board blends SpaceX roles.
-      Checked 2026-11-04.
+      "COMPENSATION AND BENEFITS:". We could read an annual USD band from 81
+      of them (27%), only 11 in Research, and the board mixes in SpaceX
+      roles. Checked 2026-11-04.
   mistral-pay-bands:
-    verdict: cut — no posted pay
+    verdict: cut (no posted pay)
     reason: >-
       The mistral Ashby board with includeCompensation=true returns no
       compensation on any of 231 roles, and none of the 35 US-located
       postings states pay in its description. Checked 2026-11-04.
   alphabet-anthropic-stake:
-    verdict: cut — Alphabet never names the investee
+    verdict: cut (Alphabet never names the investee)
     reason: >-
       "Anthropic" appears in none of six Alphabet 10-Q/10-K filings
       (Q2 2025 to Q3 2026). They describe "a $40.0 billion investment in a
-      private company" and gains "largely from a private company"; naming
-      it Anthropic would rest on the press, not the filing. Checked
-      2026-11-04.
+      private company" and gains "largely from a private company". Naming
+      it Anthropic would rest on press reports instead of the filings.
+      Checked 2026-11-04.

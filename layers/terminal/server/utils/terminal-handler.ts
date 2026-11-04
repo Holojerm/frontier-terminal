@@ -106,7 +106,7 @@ const AS_OF_REFUSALS: Readonly<Record<string, string>> = {
   theses:
     'claim readings are rewritten in place as trailing data is revised, and statuses are recomputed with the thesis definitions in today’s code. The judge’s verdicts are at /export/claim_verdicts.csv?as_of=.',
   alert:
-    'one alert is never rewritten, so its row is the same at every instant after it was raised; use /api/alerts?as_of= to see which alerts existed then.',
+    'an alert is never rewritten, so its row is the same at every moment after it was raised. Use /api/alerts?as_of= to see which alerts existed then.',
 }
 
 /** A 400 for a route that does not rebuild its payload as of T. Never ignore it. */
@@ -116,7 +116,7 @@ export function refuseAsOf(event: H3Event, name: string): void {
     statusCode: 400,
     message: asOfRefusal(
       event.path.split('?')[0]!,
-      AS_OF_REFUSALS[name] ?? 'this payload is not rebuilt from stored history yet.',
+      AS_OF_REFUSALS[name] ?? 'this response isn’t rebuilt from stored history yet.',
       '/export/<table> for every append-only table',
     ),
   })

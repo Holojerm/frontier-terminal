@@ -90,16 +90,16 @@ export function readoutCells(
         gap:
           r.view?.disclosure === 'no_rows'
             ? {
-                title: 'Not parsed yet',
+                title: 'Not read yet',
                 reason:
                   r.view.filer?.relation === 'issuer'
-                    ? 'S-1 filed; no revenue read yet.'
-                    : 'Filer tagged; no XBRL facts parsed yet.',
+                    ? 'S-1 filed. No revenue read yet.'
+                    : 'Filer known. No XBRL revenue read yet.',
               }
             : {
                 title: 'None filed',
                 reason:
-                  'No SEC filing reports this lab’s revenue. Press-reported run-rates are excluded.',
+                  'No SEC filing reports this lab’s revenue. We don’t use run-rates from press reports.',
                 name: `Why ${s.display} has no SEC revenue`,
               },
       })
@@ -113,7 +113,7 @@ export function readoutCells(
           sub: 'of all OpenRouter tokens, 7 days',
           source: rankingsSource ?? null,
         })
-      : cell('demand', 'demand', { gap: { title: 'No rankings rows yet' } })
+      : cell('demand', 'demand', { gap: { title: 'No rankings data yet' } })
 
   const h = s.hiring
   const hiring =

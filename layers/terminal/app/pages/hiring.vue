@@ -19,7 +19,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Hiring',
     summary:
-      'Open roles per day at OpenAI, Anthropic, and xAI, reconstructed from each job board’s change log; the physical-infrastructure buildout cluster per lab; the department mix now against 30 days ago; and per-board caveats.',
+      'Open roles per day at OpenAI, Anthropic, and xAI, rebuilt from each job board’s change log. Also infrastructure hiring per lab, the department mix now against 30 days ago, and each board’s caveats.',
   },
 })
 
@@ -101,18 +101,18 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
 <template>
   <TerminalPage
     title="Hiring"
-    lede="Open roles per day, per lab, reconstructed from each board’s change log. Nothing is estimated."
+    lede="Open roles per day for each lab, rebuilt from the changes we’ve recorded on each job board. We don’t estimate anything."
     :as-of="hiring?.as_of"
     :error="Boolean(error)"
-    error-title="Hiring history could not be read"
-    error-body="The history endpoint failed to respond. No stale or inferred number is shown in its place."
+    error-title="Hiring history didn’t load"
+    error-body="We won’t show an old number in its place. Try reloading in a minute."
   >
     <TerminalTabs v-if="hiring" :tabs="tabs">
       <template #openings>
         <TerminalPanel
           id="labs"
           title="By lab"
-          note="Open roles per board, the infrastructure cluster, and the department that moved most."
+          note="Open roles per board, infrastructure roles, and the department that changed most."
           flush
         >
           <TerminalHiringSummary :history="hiring" />
@@ -123,8 +123,8 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
           title="Open roles over time"
           :note="
             anyLog
-              ? `${count(hiring.log.changes)} job change rows from ${hiring.log.from?.slice(0, 10)} to ${hiring.log.to?.slice(0, 10)}, applied backwards from each board’s current listing.`
-              : 'No job change rows yet; each board shows its current listing only.'
+              ? `${count(hiring.log.changes)} recorded job changes from ${hiring.log.from?.slice(0, 10)} to ${hiring.log.to?.slice(0, 10)}, worked backwards from each board’s current listing.`
+              : 'No job changes recorded yet. Each board shows only its current listing.'
           "
         >
           <TerminalLineChart
@@ -138,7 +138,7 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
           <TerminalGap
             v-else
             title="No series to draw yet."
-            reason="A series needs a board with a current listing and at least two days on record. Each board’s first poll sets its baseline."
+            reason="A line needs a board with a current listing and at least two days of data. Our first check of each board sets its starting point."
             :action="{ label: 'See coverage', to: '/data#coverage' }"
           />
 
@@ -162,7 +162,7 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
         <TerminalPanel
           id="buildout"
           title="Physical-infrastructure buildout"
-          note="Data-center, facilities, energy, construction, compute and hardware roles per lab per day."
+          note="Data-center, facilities, energy, construction, compute, and hardware roles per lab per day."
         >
           <TerminalBuildoutPanel :history="hiring" />
         </TerminalPanel>
@@ -171,7 +171,7 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
           v-if="power?.snapshot"
           id="power"
           title="Data-center power"
-          note="Epoch AI’s estimate of the power each lab’s data centers draw: what the buildout roles are building."
+          note="Epoch AI’s estimate of the power each lab’s data centers draw. That’s what the buildout roles are building."
           :more="{ label: 'Every site, and GPU rental prices', to: '/compute' }"
         >
           <TerminalDataCenterPower :data="power" />
@@ -207,7 +207,7 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
 
               <template v-if="p.compare">
                 <p v-if="compareRows(p).length === 0" class="text-xs text-muted">
-                  No department moved; {{ unchanged(p) }} unchanged.
+                  No department changed. {{ unchanged(p) }} unchanged.
                 </p>
                 <TerminalTable
                   v-else
@@ -236,15 +236,15 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
                   v-if="p.join_from && p.compare.at < p.join_from.slice(0, 10)"
                   class="text-xs text-muted"
                 >
-                  Departments joined from {{ absoluteStamp(p.join_from, now) }}; earlier rows read
-                  “{{ NO_DEPARTMENT }}”.
+                  We have departments from {{ absoluteStamp(p.join_from, now) }} on. Earlier rows
+                  show “{{ NO_DEPARTMENT }}”.
                 </p>
                 <p
                   v-if="p.baseline_at && p.series_from && p.baseline_at > p.series_from"
                   class="text-xs text-muted"
                 >
-                  Rows before the {{ absoluteStamp(p.baseline_at, now) }} baseline are imported
-                  history, carried as they stand today.
+                  Rows before our first check on {{ absoluteStamp(p.baseline_at, now) }} are
+                  imported history, shown as they stand today.
                 </p>
               </template>
             </TerminalCard>
@@ -263,7 +263,7 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
           v-if="pay?.boards.length"
           id="pay"
           title="Posted pay"
-          note="The median midpoint of the US salary bands each board posts, for all roles, research and software engineering."
+          note="The median midpoint of the US salary bands each board posts, for all roles, for research, and for software engineering."
         >
           <TerminalPayTable :pay="pay" />
         </TerminalPanel>
