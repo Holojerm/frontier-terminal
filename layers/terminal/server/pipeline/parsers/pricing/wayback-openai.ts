@@ -1,5 +1,6 @@
 import { VendorMdPricingOutput, modelKey, type PriceRow, type Provenance } from '../../contracts'
 import {
+  decodeEntities,
   htmlSections,
   htmlText,
   htmlTablesUnder,
@@ -234,7 +235,7 @@ export function parseOpenAiPricingHtml2024(html: string, prov: Provenance) {
       for (;;) {
         const modal = text.match(MODALITY_ROW)
         if (modal) {
-          passed.push(modal[1]!)
+          passed.push(`${modal[1]!} (priced per modality)`)
           text = text.slice(modal[0].length)
           continue
         }
@@ -256,6 +257,105 @@ export function parseOpenAiPricingHtml2024(html: string, prov: Provenance) {
   }
   // The passed-over rows go on the capture's record, not on every price row:
   // a row's content hash must change only when its own prices do.
+  return { ...finish(rows, 'openai.com/api/pricing'), passed: [...new Set(passed)].sort() }
+}
+
+// ---- openai.com/api/pricing, 2025-01-28 to 2025-03-03 -------------------------
+
+/**
+ * Ids the late-January 2025 page misprinted, and the id it meant. The o3-mini
+ * family printed its dated snapshot as "03-mini-2025-01-31" (a zero for the
+ * letter o) under the "OpenAI o3-mini" heading, beside o3-mini at the same
+ * prices; the API id is o3-mini-2025-01-31. Only these exact strings are
+ * mapped, and the printed form stays in notes.
+ */
+const MISPRINTS: Readonly<Record<string, string>> = { '03-mini-2025-01-31': 'o3-mini-2025-01-31' }
+
+const ROW_START_2025 =
+  / ([a-z0-9][a-z0-9.-]*) (?:Pricing(?: Pricing with Batch API\**)?|Input Output) (?=\$|(?:Text|Audio|Image|Video)\**\s)/g
+// "Other models": "gpt-4-turbo Input Output $10.00 / 1M tokens $30.00 / 1M tokens",
+// the column header printed in the row, cached input labelled after output.
+const USD_AMOUNT = String.raw`\$(\d[\d,]*(?:\.\d+)?)`
+const OTHER_ROW_2025 = new RegExp(
+  String.raw`^ ([a-z0-9][a-z0-9.-]*) Input Output ${USD_AMOUNT} / 1M tokens ${USD_AMOUNT} / 1M tokens(?: ${USD_AMOUNT} / 1M cached\* tokens)?(?= |$)`,
+)
+const ROW_2025 = new RegExp(
+  String.raw`^ ([a-z0-9][a-z0-9.-]*) (Pricing Pricing with Batch API\**|Pricing)((?: ${AMOUNT})+)`,
+)
+const MODALITY_ROW_2025 = new RegExp(
+  String.raw`^ ([a-z0-9][a-z0-9.-]*) (?:Pricing Pricing with Batch API\**|Pricing)((?: (?:Text|Audio|Image|Video)\**(?: ${AMOUNT})+)+)`,
+)
+
+/**
+ * The late-January 2025 redesign of openai.com/api/pricing: the same feature
+ * groups and the same price runs as 2024, but each row now opens with its
+ * own column header ("gpt-4o Pricing Pricing with Batch API* $2.50 / 1M input
+ * tokens …") instead of sharing one above the list. The prices are read by
+ * the 2024 rules (rowsFor). From March 2025 the page became a summary of a
+ * few flagship models by marketing name, which this parser does not read.
+ */
+export function parseOpenAiPricingHtml2025(html: string, prov: Provenance) {
+  const groups = featureGroups(html)
+  const visible = htmlText(stripInvisible(html))
+  if (groups.length === 0 && !PRICED.test(visible)) {
+    throw new Error('the capture holds the page shell only: its prices are in scripts')
+  }
+  if (groups.length === 0 && /Our latest models/.test(visible)) {
+    throw new Error('the page lists a few flagship models by marketing name, not the price list')
+  }
+  const rows: PriceRow[] = []
+  const passed: string[] = []
+  for (const section of groups) {
+    if (EXCLUDED.test(section.title)) continue
+    const text = ` ${section.text} `
+    const before = rows.length
+    const passedBefore = passed.length
+    for (const start of text.matchAll(ROW_START_2025)) {
+      const rest = text.slice(start.index)
+      const other = rest.match(OTHER_ROW_2025)
+      if (other) {
+        const slug = other[1]!
+        if (!MODEL_ID.test(slug)) throw new Error(`unrecognised model id: ${slug}`)
+        const usd = (a: string) => usdPerMillion(`$${a.replace(/,/g, '')}`, 1_000_000)
+        rows.push({
+          ...base(slug, prov),
+          input_per_mtok: usd(other[2]!),
+          output_per_mtok: usd(other[3]!),
+          cached_input_per_mtok: other[4] ? usd(other[4]) : null,
+        })
+        continue
+      }
+      const modal = rest.match(MODALITY_ROW_2025)
+      if (modal) {
+        passed.push(`${modal[1]!} (priced per modality)`)
+        continue
+      }
+      const m = rest.match(ROW_2025)
+      if (!m) throw new Error(`${section.title}: ${start[1]}: a row this parser does not read`)
+      const printed = m[1]!
+      const slug = MISPRINTS[printed] ?? printed
+      const header = m[2]!.startsWith('Pricing Pricing with Batch API') ? HEADERS[0] : HEADERS[1]
+      const prices = amounts(m[3]!)
+      // One row (o1-preview-2024-09-12) printed its output price as "$60.00 / 1M
+      // tokens", without the word output. Which price it is would be inferred
+      // from its position, so the row is not read, and the capture names it.
+      if (prices.some((p) => p.label === '')) {
+        passed.push(`${printed} (a price printed without its input or output label)`)
+        continue
+      }
+      const read = rowsFor(slug, prices, header, prov)
+      rows.push(
+        ...(slug === printed
+          ? read
+          : read.map((r) => ({ ...r, notes: `printed as "${printed}"` }))),
+      )
+    }
+    if (rows.length === before && passed.length === passedBefore && PRICED.test(section.text)) {
+      throw new Error(
+        `${section.title || 'untitled section'}: prices in a layout this parser does not read`,
+      )
+    }
+  }
   return { ...finish(rows, 'openai.com/api/pricing'), passed: [...new Set(passed)].sort() }
 }
 
@@ -336,11 +436,17 @@ export function parseOpenAiDocsPricingHtml(html: string, prov: Provenance) {
       // notes as openai-pricing-md keeps it, never read as a window.
       const m = cells[0]!.match(/^([a-z0-9][a-z0-9.-]*)(?: \((.+)\))?$/)
       if (!m) throw new Error(`unrecognised model id: ${cells[0]}`)
-      const price = (cell: string) => (cell === '-' ? null : usdPerMillion(cell, 1_000_000))
+      // "-" and "/" mark a price the tier does not offer; an empty cell prints none either.
+      const price = (cell: string) =>
+        cell === '-' || cell === '/' || cell === '' ? null : usdPerMillion(cell, 1_000_000)
+      // "gpt-5.4 (>272K context length)", a row of its own from March 2026: the
+      // long-context price, filed under the tier openai-pricing-md gives it.
+      const long = m[2]?.startsWith('>') ?? false
+      const tier = TIER_TABS[label]!
       rows.push({
         ...base(m[1]!, prov),
-        notes: m[2] ? `short context: ${m[2]}` : null,
-        tier: TIER_TABS[label]!,
+        notes: m[2] ? `${long ? 'long' : 'short'} context: ${m[2]}` : null,
+        tier: long ? (tier ? `${tier}_long_context` : 'long_context') : tier,
         input_per_mtok: price(cells[1]!),
         cached_input_per_mtok: price(cells[2]!),
         output_per_mtok: price(cells[3]!),
@@ -366,6 +472,157 @@ function textTokenLeads(html: string): string[] {
     prev = m.index + m[0].length
   }
   return out
+}
+
+// ---- developers.openai.com/api/docs/pricing, 2026-03-08 to 2026-07-29 (HTML) --
+
+/** The `tier` prop of each text-token price list -> the tier openai-pricing-md writes. */
+const ISLAND_TIERS: Readonly<Record<string, string | null>> = {
+  standard: null,
+  batch: 'batch',
+  flex: 'flex',
+  priority: 'priority',
+}
+
+/** A price cell in the island props: a number, or one of the marks the page prints for "no price". */
+function islandPrice(cell: unknown, where: string): number | null {
+  if (typeof cell === 'number' && Number.isFinite(cell) && cell >= 0) return cell
+  if (cell === null || cell === '' || cell === '-' || cell === '/') return null
+  throw new Error(`${where}: unrecognised price cell ${JSON.stringify(cell)}`)
+}
+
+/** Astro's prop encoding: [0, value] is a plain value, [1, [...]] an array of encoded values. */
+function unwrap(encoded: unknown): unknown {
+  if (!Array.isArray(encoded) || encoded.length !== 2)
+    throw new Error('island props: not [tag, value]')
+  const [tag, value] = encoded as [unknown, unknown]
+  if (tag === 0) return value
+  if (tag === 1 && Array.isArray(value)) return value.map(unwrap)
+  throw new Error(`island props: unknown tag ${String(tag)}`)
+}
+
+/** The short-context column names of the page's visible text-token tables, after Model. */
+function visibleColumns(sections: readonly HtmlSection[]): string[][] {
+  const out: string[][] = []
+  for (const table of textTokenTables(sections)) {
+    const header = table.header
+    const outputAt = header.indexOf('Output')
+    if (outputAt === -1) throw new Error(`no Output column: ${header.join(' | ')}`)
+    out.push(header.slice(1, outputAt + 1))
+  }
+  return out
+}
+
+/**
+ * The visible text-token tables: a "Short context" super-header row, then a
+ * Model | Input | … header. Image and audio token tables have no super-header.
+ */
+function textTokenTables(sections: readonly HtmlSection[]) {
+  const out: { header: string[]; body: string[][] }[] = []
+  for (const s of sections) {
+    for (const table of s.tables) {
+      const h = table.findIndex((r) => r[0] === 'Model' && r[1] === 'Input')
+      if (h < 1 || !table.slice(0, h).some((r) => r.includes('Short context'))) continue
+      out.push({ header: table[h]!, body: table.slice(h + 1) })
+    }
+  }
+  return out
+}
+
+/**
+ * From March 2026 the docs pricing page showed only "Our latest models" in
+ * each service-tier tab and drew the full list behind a "View all" button.
+ * The full list is still in the server-rendered HTML: each tab's table is an
+ * <astro-island> whose `props` attribute holds that tab's tier and its rows
+ * (model, then one number per short-context column). Those props are read
+ * here, and nothing from the island's script.
+ *
+ * The props name no columns, so the columns are taken from the page's own
+ * visible tables (Model | Input | Cached input | [Cache writes |] Output):
+ * every visible table must agree on them, each props row must have exactly
+ * that many cells, and every visible row's short-context prices must equal
+ * the same model's props row in some tier. A page where any of that fails
+ * is skipped. Long-context columns, printed only for the latest models, are
+ * not read here, as the March 2026 era before this one did not read them.
+ */
+export function parseOpenAiDocsPricingIslands(html: string, prov: Provenance) {
+  const sections = htmlSections(html)
+  // The first captures of this window still print every model in one table per tier.
+  if (textTokenTables(sections).length === 0) return parseOpenAiDocsPricingHtml(html, prov)
+  const layouts = visibleColumns(sections)
+  const columns = layouts[0]!
+  if (layouts.some((l) => !same(l, columns))) {
+    throw new Error(
+      `visible tables disagree on columns: ${layouts.map((l) => l.join('|')).join(' vs ')}`,
+    )
+  }
+  const at = (name: string) => columns.indexOf(name)
+  if (at('Input') !== 0 || at('Cached input') !== 1 || at('Output') !== columns.length - 1) {
+    throw new Error(`unknown column layout: ${columns.join(' | ')}`)
+  }
+
+  const rows: PriceRow[] = []
+  const seen = new Set<string>()
+  const printed = new Map<string, (number | null)[]>()
+  for (const m of html.matchAll(/<astro-island\b([^>]*)>/g)) {
+    const raw = m[1]!.match(/\sprops="([^"]*)"/)?.[1]
+    if (!raw) continue
+    const props = JSON.parse(decodeEntities(raw)) as Record<string, unknown>
+    if (!('tier' in props) || !('rows' in props)) continue
+    const tierName = unwrap(props.tier)
+    if (typeof tierName !== 'string' || !(tierName in ISLAND_TIERS)) {
+      throw new Error(`unknown tier prop ${JSON.stringify(tierName)}`)
+    }
+    if (seen.has(tierName)) throw new Error(`two ${tierName} price lists`)
+    seen.add(tierName)
+    const list = unwrap(props.rows)
+    if (!Array.isArray(list)) throw new Error(`${tierName}: rows is not a list`)
+    for (const listed of list as unknown[][]) {
+      // Once the page added a Cache writes column (mid-2026), rows for older
+      // models kept the three prices they had before it: Input, Cached input,
+      // Output, the layout of this same list in March 2026. Such a row is read
+      // in that layout, with no cache-write price; any other width throws.
+      const short = listed.length === 4 && columns.length === 4 && at('Cache writes') === 2
+      const cells = short ? [listed[0], listed[1], listed[2], null, listed[3]] : listed
+      if (cells.length !== columns.length + 1) {
+        throw new Error(
+          `${tierName}: a row has ${listed.length} cells, expected ${columns.length + 1}`,
+        )
+      }
+      const name = cells[0]
+      const mm =
+        typeof name === 'string' ? name.match(/^([a-z0-9][a-z0-9.-]*)(?: \((.+)\))?$/) : null
+      if (!mm) throw new Error(`${tierName}: unrecognised model id: ${String(name)}`)
+      const where = `${tierName} ${mm[1]}`
+      const priced = cells.slice(1).map((c) => islandPrice(c, where))
+      printed.set(`${tierName}:${mm[1]}`, priced)
+      rows.push({
+        ...base(mm[1]!, prov),
+        tier: ISLAND_TIERS[tierName]!,
+        notes: mm[2] ? `short context: ${mm[2]}` : null,
+        input_per_mtok: priced[at('Input')]!,
+        cached_input_per_mtok: priced[at('Cached input')]!,
+        output_per_mtok: priced[at('Output')]!,
+      })
+    }
+  }
+  if (!seen.has('standard')) throw new Error('no standard-tier price list in the page')
+
+  // Every visible row must be one of the props rows, cell for cell.
+  const tiers = [...seen]
+  const cell = (c: string) =>
+    c === '-' || c === '' || c === '/' ? null : usdPerMillion(c, 1_000_000)
+  for (const { body } of textTokenTables(sections)) {
+    for (const r of body) {
+      const visible = r.slice(1, columns.length + 1).map(cell)
+      const match = tiers.some((t) => {
+        const held = printed.get(`${t}:${r[0]}`)
+        return held !== undefined && held.every((p, i) => p === visible[i])
+      })
+      if (!match) throw new Error(`visible row ${r[0]} matches no price list in the page`)
+    }
+  }
+  return finish(rows, 'developers.openai.com/api/docs/pricing')
 }
 
 // ---- developers.openai.com/api/docs/pricing.md, 2026-07 to the live start ----
