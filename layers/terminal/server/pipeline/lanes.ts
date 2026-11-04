@@ -25,6 +25,7 @@ import {
 import { parseOpenAiMisalignmentReport } from './parsers/disclosures/openai-misalignment-report'
 import { parseOpenAiMisalignmentReports } from './parsers/disclosures/openai-misalignment-reports'
 import { parseAnthropicGreenhouse } from './parsers/hiring/anthropic-greenhouse'
+import { parseGoogleCareers } from './parsers/hiring/google-careers'
 import { parseMistralAshby } from './parsers/hiring/mistral-ashby'
 import { parseOpenaiAshby } from './parsers/hiring/openai-ashby'
 import { parseXaiGreenhouse } from './parsers/hiring/xai-greenhouse'
@@ -56,6 +57,7 @@ import { parseAnthropicStatus } from './parsers/status/anthropic-status'
 import { parseGoogleCloudStatus } from './parsers/status/google-cloud-status'
 import { parseMistralStatus } from './parsers/status/mistral-status'
 import { parseOpenaiStatus } from './parsers/status/openai-status'
+import { parseXaiStatus } from './parsers/status/xai-status'
 import { recommendationRows } from './recommendations'
 import type { ClassEntry } from '../utils/terminal-classes'
 import type { CikWhitelist } from './parsers/sec/whitelist'
@@ -371,6 +373,15 @@ export const LANES: Readonly<Record<string, Lane>> = {
   'mistral-ashby': set((text, { prov, snapshotId }) => ({
     entities: normalizeJobs(parseMistralAshby(text, prov).rows, snapshotId),
   })),
+  // The feed is Alphabet-wide; only DeepMind's roles become rows, and the
+  // rest are counted in the run note.
+  'google-careers': set((text, { prov, snapshotId }) => {
+    const { rows, skipped } = parseGoogleCareers(text, prov)
+    return {
+      entities: normalizeJobs(rows, snapshotId),
+      note: skipped ? `not DeepMind, skipped: ${skipped}` : undefined,
+    }
+  }),
   'anthropic-greenhouse': {
     sides: ['anthropic-greenhouse-departments'],
     removals: 'set',
@@ -416,6 +427,13 @@ export const LANES: Readonly<Record<string, Lane>> = {
     removals: 'append-only',
     parse: (text, { prov, snapshotId }) => ({
       entities: normalizeIncidents(parseMistralStatus(text, prov).rows, snapshotId),
+    }),
+  },
+  'xai-status': {
+    sides: [],
+    removals: 'append-only',
+    parse: (text, { prov, snapshotId }) => ({
+      entities: normalizeIncidents(parseXaiStatus(text, prov).rows, snapshotId),
     }),
   },
   'google-cloud-status': {

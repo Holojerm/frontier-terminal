@@ -235,11 +235,9 @@ describe('queryRankings', () => {
     expect(row.last_run!.status).toBe('skipped')
     expect(row.axis).toBe('demand-share')
     expect(coverage.cuts.map((c) => c.id)).toEqual([
-      'google-hiring',
       'artificial-analysis',
       'lmarena',
       'compute-deals',
-      'xai-status',
       'anthropic-disclosures',
       'google-disclosures',
       'xai-disclosures',

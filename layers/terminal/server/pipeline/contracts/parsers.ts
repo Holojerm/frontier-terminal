@@ -30,6 +30,10 @@ export const AshbyJobsOutput = z.strictObject({ rows: z.array(AshbyJobRow) })
 export const GreenhouseJobRow = z.strictObject(jobRowCore)
 export const GreenhouseJobsOutput = z.strictObject({ rows: z.array(GreenhouseJobRow) })
 
+// Google's careers feed (XML): the same row shape, one lab-scoped employer.
+export const CareersFeedJobRow = z.strictObject(jobRowCore)
+export const CareersFeedJobsOutput = z.strictObject({ rows: z.array(CareersFeedJobRow) })
+
 // ---- Pricing + catalog ----------------------------------------------------
 
 export const PriceRow = z.strictObject({
@@ -219,6 +223,10 @@ export const StatuspageIncidentsOutput = z.strictObject({ rows: z.array(Incident
 export const GoogleCloudIncidentsOutput = z.strictObject({
   rows: z.array(IncidentRow.extend({ provider: z.literal('google') })),
 })
+// status.x.ai's RSS history: one item per (component, incident), folded to one row per incident.
+export const XaiStatusIncidentsOutput = z.strictObject({
+  rows: z.array(IncidentRow.extend({ provider: z.literal('xai') })),
+})
 
 // ---- Misalignment disclosures ---------------------------------------------
 
@@ -318,6 +326,7 @@ export const parserOutputSchemas = {
   'mistral-ashby': AshbyJobsOutput,
   'anthropic-greenhouse': GreenhouseJobsOutput,
   'xai-greenhouse': GreenhouseJobsOutput,
+  'google-careers': CareersFeedJobsOutput,
   'openai-models-md': VendorMdPricingOutput,
   'openai-pricing-md': VendorMdPricingOutput,
   // One registration for every derived per-model page (derived.ts); the
@@ -354,6 +363,7 @@ export const parserOutputSchemas = {
   'anthropic-status': StatuspageIncidentsOutput,
   'google-cloud-status': GoogleCloudIncidentsOutput,
   'mistral-status': StatuspageIncidentsOutput,
+  'xai-status': XaiStatusIncidentsOutput,
   'openai-misalignment-reports': DisclosureIndexOutput,
   // One registration for every derived per-report page (derived.ts); the
   // committed fixture is one representative page.

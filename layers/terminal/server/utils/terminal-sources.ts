@@ -36,6 +36,7 @@ export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
   'openrouter-rankings-daily': { label: 'OpenRouter usage rankings (daily)', role: 'primary' },
   'openai-ashby': { label: 'OpenAI Ashby job board', role: 'primary' },
   'mistral-ashby': { label: 'Mistral Ashby job board', role: 'primary' },
+  'google-careers': { label: 'Google careers feed (DeepMind roles only)', role: 'primary' },
   'anthropic-greenhouse': { label: 'Anthropic Greenhouse jobs', role: 'primary' },
   'anthropic-greenhouse-departments': {
     label: 'Anthropic Greenhouse departments (join)',
@@ -62,6 +63,7 @@ export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
     role: 'status',
   },
   'mistral-status': { label: 'Mistral status page incidents', role: 'status' },
+  'xai-status': { label: 'xAI status page incident history (RSS)', role: 'status' },
   'openai-misalignment-reports': {
     label: 'OpenAI misalignment reports and notices',
     role: 'primary',
@@ -91,7 +93,7 @@ export const HIRING_SOURCES: Readonly<
 > = {
   openai: { source_ids: ['openai-ashby'] },
   anthropic: { source_ids: ['anthropic-greenhouse', 'anthropic-greenhouse-departments'] },
-  google: { cut_id: 'google-hiring' },
+  google: { source_ids: ['google-careers'] },
   xai: { source_ids: ['xai-greenhouse', 'xai-greenhouse-departments'] },
   meta: { cut_id: 'meta-hiring' },
   mistral: { source_ids: ['mistral-ashby'] },
@@ -103,7 +105,7 @@ export const INCIDENT_SOURCES: Readonly<Record<LabId, { source_id: string } | { 
     openai: { source_id: 'openai-status' },
     anthropic: { source_id: 'anthropic-status' },
     google: { source_id: 'google-cloud-status' },
-    xai: { cut_id: 'xai-status' },
+    xai: { source_id: 'xai-status' },
     meta: { cut_id: 'meta-status' },
     mistral: { source_id: 'mistral-status' },
   }
