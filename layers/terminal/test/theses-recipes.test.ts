@@ -218,6 +218,29 @@ describe('runRecipes', () => {
     body = { trace: 'c', values: { '2026-06-30': 2 } }
     expect(await run()).toBe('ok')
   })
+
+  it('follows the first body to the document it names, and stores that URL', async () => {
+    const seen: string[] = []
+    const follower: SourceFetcher = async (source) => {
+      seen.push(source.url)
+      return source.url.endsWith('/index.json')
+        ? json({ newest: 'https://example.test/filing.json' })
+        : json({ '2026-06-30': 7 })
+    }
+    const recipe: Recipe = {
+      ...REVENUE,
+      id: 'test-follow',
+      url: () => 'https://example.test/index.json',
+      follow: (text) => (JSON.parse(text) as { newest: string }).newest,
+    }
+    const [run] = await runRecipes(db, { raw, fetcher: follower, now: () => NOW }, [recipe])
+    expect(run).toMatchObject({ status: 'ok', observations: 1 })
+    expect(seen).toEqual(['https://example.test/index.json', 'https://example.test/filing.json'])
+    const rows = await db.select().from(schema.recipeObservations)
+    expect(rows.find((r) => r.recipe_id === 'test-follow')!.source_url).toBe(
+      'https://example.test/filing.json',
+    )
+  })
 })
 
 describe('recipe signals and recipe-item claims', () => {
