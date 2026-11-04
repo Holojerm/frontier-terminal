@@ -53,7 +53,7 @@ export default defineTask({
     const drift = await checkDeployDrift(
       db,
       unstorageLockStore(kv),
-      useRuntimeConfig().buildSha,
+      useRuntimeConfig().public.buildSha,
       head,
     )
     if (drift.verdict === 'drift') console.warn(JSON.stringify({ kind: 'deploy_drift', ...drift }))

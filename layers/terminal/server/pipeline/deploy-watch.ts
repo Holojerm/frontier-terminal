@@ -9,7 +9,7 @@ import type { LockStore } from './lock'
 // retry that, nothing in the app noticed, and production served the previous
 // commit for seven hours while the sources the fix repaired kept failing.
 // So every digest tick asks GitHub for main's head and compares it with the
-// sha this build was cut from (runtimeConfig.buildSha).
+// sha this build was cut from (runtimeConfig.public.buildSha).
 //
 // A normal deploy takes ten to fifteen minutes, so one disagreeing tick is a
 // deploy in flight. The first tick that sees a given head undeployed records
