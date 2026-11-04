@@ -200,7 +200,7 @@ const openIncidents = computed(() =>
       <TerminalPanel
         id="demand"
         title="Demand share"
-        note="Share of OpenRouter tokens, newest 7 days. A proxy, not market share."
+        note="Share of all OpenRouter tokens, newest 7 days. A proxy, not market share."
         :more="{ label: '30-day series and top models', to: '/rankings' }"
       >
         <TerminalDemandShare v-if="rankings.data.value" :rankings="rankings.data.value" compact />
@@ -209,7 +209,7 @@ const openIncidents = computed(() =>
       <TerminalPanel
         id="spend"
         title="Implied spend share"
-        note="The same tokens at list price. A range, because some SKUs are unpriced."
+        note="The tracked labs’ tokens at list price, as shares of those labs’ total, not of all OpenRouter traffic. A range, because some SKUs are unpriced."
         :more="{ label: 'Per-model join', to: '/rankings#spend' }"
       >
         <TerminalSpendShare v-if="spend.data.value" :spend="spend.data.value" compact />
