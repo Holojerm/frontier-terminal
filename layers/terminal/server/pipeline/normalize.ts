@@ -9,6 +9,11 @@ import {
   filingKey,
   incidentKey,
   offeringKey,
+  commitmentKey,
+  concentrationKey,
+  riskFactorsKey,
+  sharesKey,
+  statementKey,
   jobKey,
   modelKey,
   stableStringify,
@@ -21,6 +26,7 @@ import {
   type FilingRow,
   type IncidentRow,
   type OfferingRow,
+  type ProspectusOutput,
   type PriceRow,
   type Provider,
   type RankingRow,
@@ -208,6 +214,60 @@ export function normalizeOfferings(rows: readonly OfferingRow[], snapshotId: str
       toEntity(offeringKey(row.accession_no), 'offering', row.provider, snapshotId, row),
     ),
   )
+}
+
+// What else one registration document prints (parsers/sec/prospectus.ts),
+// keyed per filing — and per period for the statement — so an amendment's
+// rows sit beside the original's rather than replacing them.
+export function normalizeProspectusDetails(
+  out: Pick<
+    ProspectusOutput,
+    'statements' | 'commitments' | 'concentration' | 'shares' | 'risk_factors'
+  >,
+  snapshotId: string,
+): EntityRow[] {
+  const rf = out.risk_factors
+  return collapse([
+    ...out.statements.map((r) =>
+      toEntity(
+        statementKey(r.cik, r.accession_no, r.start, r.end),
+        'statement',
+        r.provider,
+        snapshotId,
+        r,
+      ),
+    ),
+    ...out.commitments.map((r) =>
+      toEntity(
+        commitmentKey(r.accession_no, r.schedule, r.as_of),
+        'commitment',
+        r.provider,
+        snapshotId,
+        r,
+      ),
+    ),
+    ...out.concentration.map((r) =>
+      toEntity(
+        concentrationKey(r.accession_no, r.basis),
+        'concentration',
+        r.provider,
+        snapshotId,
+        r,
+      ),
+    ),
+    ...(out.shares
+      ? [
+          toEntity(
+            sharesKey(out.shares.accession_no),
+            'shares',
+            out.shares.provider,
+            snapshotId,
+            out.shares,
+          ),
+        ]
+      : []),
+    toEntity(riskFactorsKey(rf.accession_no), 'risk_factors', rf.provider, snapshotId, rf),
+  ])
 }
 
 // A revenue fact's provider is the lab whose filer reported it, resolved by

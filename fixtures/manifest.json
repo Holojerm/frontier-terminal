@@ -141,11 +141,21 @@
       "path": "fixtures/sec/prospectus-anthropic-s-1.html",
       "source_id": "prospectus-revenue-anthropic-s-1-2026-10-26-0001628280-26-067168",
       "source_url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm",
-      "fetched_at": "2026-11-02T02:52:21Z",
+      "fetched_at": "2026-11-04T13:19:14Z",
       "http_status": 200,
-      "raw_bytes": 14169252,
-      "trim": "Three excerpts of the 14 MB document, bytes unchanged: the facing page and prospectus cover (the first 102,399 bytes — amendment line, blank price range, listing and symbol), the F-pages index entry for Consolidated Statements of Operations (a title with no units line, which the parser must skip), and the audited statement itself — the registrant line, title, units line and the whole table. The parser was also run on the untrimmed document and returned the same five periods.",
-      "note": "One representative document for the derived prospectus-revenue sources. Revenue: $41M (FY2023), $386M (FY2024), $4,585M (FY2025), $1,163M and $16,286M (six months ended 2025-06-30 and 2026-06-30, unaudited)."
+      "raw_bytes": 14169258,
+      "trim": "97 excerpts of the 14 MB document, bytes unchanged and in document order: the facing page and prospectus cover (the first 102,399 bytes — amendment line, blank price range, listing and symbol); “The Offering” table and its pre-offering basis sentence; the Risk Factors title, each “Risks Related to …” subsection line, each bold-italic heading with the one body line after it, and the next section title; MD&A’s contractual-obligations sentences and table (its figures blank in this filing); the F-pages index entry for Consolidated Statements of Operations (a title with no units line, which the parser must skip); the audited statement — the registrant line, title, units line and the whole table; the notes’ two customer-concentration tables with their footnote; and the commitments note from its schedule to its interim total. Every prospectus parser was also run on the untrimmed document and returned output identical to its run on this file. Re-fetched 2026-11-04 to cut the added excerpts; the three excerpts of the 2026-11-02 trim are byte-identical in it.",
+      "note": "One representative document for the derived prospectus-revenue sources. Revenue: $41M (FY2023), $386M (FY2024), $4,585M (FY2025), $1,163M and $16,286M (six months ended 2025-06-30 and 2026-06-30, unaudited). 88 risk-factor headings in six subsections; purchase commitments $54,559M as of 2025-12-31 and approximately $265.6 billion as of 2026-06-30; MD&A's obligations table and every share count blank."
+    },
+    {
+      "path": "fixtures/sec/prospectus-anthropic-s-1-a.html",
+      "source_id": "prospectus-revenue-anthropic-s-1-a-2026-11-02-0001628280-26-068676",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/anthropicpbc-sx1ax1.htm",
+      "fetched_at": "2026-11-04T13:19:13Z",
+      "http_status": 200,
+      "raw_bytes": 14311205,
+      "trim": "97 excerpts of the 14 MB document, bytes unchanged and in document order, cut exactly as the S-1's: the facing page and cover (the first 105,116 bytes), “The Offering” and its basis sentence, the risk-factor title, subsections and headings, MD&A's contractual obligations, the F-pages index entry and the audited statement of operations, the concentration tables and the commitments note. Every prospectus parser was also run on the untrimmed document and returned output identical to its run on this file.",
+      "note": "Anthropic, PBC's Amendment No. 1 to Form S-1, the composite prospectus parser's fixture. Nine months ended 2026-09-30 (unaudited): revenue $33,242M, total operating expenses $34,502M, operating loss $1,260M, net loss $104,039M. Contractual obligations $319,993M as of 2026-09-30 ($313,819M purchase commitments); aggregate approximately $895.4 billion. Price range and share counts still blank. 88 risk-factor headings; against the S-1, eight reworded and none added or removed."
     },
     {
       "path": "fixtures/pricing/openrouter-models.json",

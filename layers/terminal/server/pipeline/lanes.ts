@@ -17,6 +17,7 @@ import {
   normalizeIncidents,
   normalizeOfferings,
   normalizeJobs,
+  normalizeProspectusDetails,
   normalizePrices,
   normalizeRankings,
   normalizeRecommendations,
@@ -46,8 +47,7 @@ import { FTS_SOURCES, parseEdgarFts } from './parsers/sec/edgar-fts'
 import { archivesCik, parseFilingIndex, registrationTarget } from './parsers/sec/filing-index'
 import { resolveFilers, type PendingFilers } from './parsers/sec/pending-filers'
 import { SUBMISSIONS_SOURCES, parseEdgarSubmissions } from './parsers/sec/edgar-submissions'
-import { parseProspectusOffering } from './parsers/sec/prospectus-offering'
-import { parseProspectusRevenue } from './parsers/sec/prospectus-revenue'
+import { parseProspectus } from './parsers/sec/prospectus'
 import { freshRegistrationKey } from './prospectus-floor'
 import { revenueProviderFor, type RevenueFilers } from './parsers/sec/revenue-filers'
 import { parseXbrlSegment, segmentTarget } from './parsers/sec/xbrl-segment'
@@ -57,6 +57,7 @@ import { parseGoogleCloudStatus } from './parsers/status/google-cloud-status'
 import { parseMistralStatus } from './parsers/status/mistral-status'
 import { parseOpenaiStatus } from './parsers/status/openai-status'
 import { recommendationRows } from './recommendations'
+import { currentEntities, type PipelineDb } from './store'
 import type { ClassEntry } from '../utils/terminal-classes'
 import type { CikWhitelist } from './parsers/sec/whitelist'
 
@@ -114,6 +115,13 @@ export interface Lane {
    * fetch time.
    */
   firstIsNews?: (derivedKey: string | null, fetchedAt: string) => boolean
+  /**
+   * True when a source whose bytes are unchanged must be parsed again: its
+   * stored rows predate something the lane now reads from the same bytes. A
+   * filed document never changes, so without this a lane that learns to read
+   * more of one would never read the documents already on file.
+   */
+  stale?: (db: PipelineDb, sourceId: string) => Promise<boolean>
   parse(text: string, ctx: ParseContext): ParseResult
   alerts?: (changes: readonly ChangeRow[]) => AlertRow[]
 }
@@ -262,25 +270,35 @@ const FILING_INDEX_LANE: Lane = {
 }
 
 // A derived registration document: the revenue its audited statement of
-// operations prints. A filing never changes once accepted, and an amendment
-// is its own source, so the lane is append-only like the other revenue lanes.
+// operations prints, the cover terms, and the rest of what the document says
+// (parsers/sec/prospectus.ts). A filing never changes once accepted, and an
+// amendment is its own source, so the lane is append-only like the other
+// revenue lanes. A document parsed before the lane read risk factors is
+// parsed again once: the new rows arrive as additions, and the revenue and
+// cover rows diff to nothing.
 const PROSPECTUS_REVENUE_LANE: Lane = {
   sides: [],
   removals: 'append-only',
   firstIsNews: freshRegistrationKey,
+  stale: async (db, sourceId) => {
+    const rows = await currentEntities(db, sourceId)
+    return rows.length > 0 && !rows.some((r) => r.entity_type === 'risk_factors')
+  },
   parse: (text, { prov, snapshotId, derivedKey }) => {
     const target = registrationTarget(derivedKey ?? '')
-    const cik = archivesCik(prov.source_url)
-    const rows = parseProspectusRevenue(text, target, cik, prov)
-    const offering = parseProspectusOffering(text, target, cik, rows[0]!.entity_name, prov)
+    const out = parseProspectus(text, target, archivesCik(prov.source_url), prov)
+    const headings = out.risk_factors.sections.reduce((n, s) => n + s.headings.length, 0)
     return {
       entities: [
-        ...normalizeRevenues(rows, snapshotId, target.provider),
-        ...normalizeOfferings(offering ? [offering] : [], snapshotId),
+        ...normalizeRevenues(out.revenue, snapshotId, target.provider),
+        ...normalizeOfferings(out.offering ? [out.offering] : [], snapshotId),
+        ...normalizeProspectusDetails(out, snapshotId),
       ],
       note:
-        `${rows.length} periods, row "${rows[0]!.tag}"` +
-        (offering ? '' : '; cover states no price range or price'),
+        `${out.revenue.length} periods, row "${out.revenue[0]!.tag}"` +
+        (out.offering ? '' : '; cover states no price range or price') +
+        `; ${out.statements[0]!.lines.length} statement lines, ${out.commitments.length} commitment schedules, ` +
+        `${out.concentration.length} concentration tables, ${headings} risk-factor headings`,
     }
   },
 }

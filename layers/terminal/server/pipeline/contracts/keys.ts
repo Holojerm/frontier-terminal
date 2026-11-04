@@ -35,6 +35,28 @@ export function offeringKey(accessionNo: string): string {
   return `offering:${accessionNo}`
 }
 
+// What else one registration filing prints. A statement is per period, like
+// revenue: the same period in a later filing is a second row.
+export function statementKey(cik: string, accessionNo: string, start: string, end: string): string {
+  return `statement:${cik}:${accessionNo}:${start}:${end}`
+}
+
+export function commitmentKey(accessionNo: string, schedule: string, asOf: string | null): string {
+  return `commitment:${accessionNo}:${schedule}:${asOf ?? 'undated'}`
+}
+
+export function concentrationKey(accessionNo: string, basis: string): string {
+  return `concentration:${accessionNo}:${basis}`
+}
+
+export function sharesKey(accessionNo: string): string {
+  return `shares:${accessionNo}`
+}
+
+export function riskFactorsKey(accessionNo: string): string {
+  return `risk_factors:${accessionNo}`
+}
+
 // Status-page incident ids are page-scoped (Statuspage ULIDs/short ids,
 // Google Cloud's own ids), so the provider is part of the key.
 export function incidentKey(provider: Provider, incidentId: string): string {

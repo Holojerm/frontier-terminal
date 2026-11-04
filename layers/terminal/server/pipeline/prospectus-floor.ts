@@ -1,8 +1,16 @@
 import { like } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import { AlertRow, OfferingRow, RevenueRow, contentHash, type ChangeRow } from './contracts'
+import {
+  AlertRow,
+  OfferingRow,
+  RevenueRow,
+  RiskFactorsRow,
+  contentHash,
+  type ChangeRow,
+} from './contracts'
 import { registrationTarget } from './parsers/sec/filing-index'
+import { riskFactorChanges, type RiskFactorChange } from './parsers/sec/prospectus-risk-factors'
 import type { PipelineDb } from './store'
 
 // The prospectus-floor rule: a lab's new registration filing, once its
@@ -13,7 +21,11 @@ import type { PipelineDb } from './store'
 //
 // The s1-floor alert fires the moment the filing is listed and can only say
 // that it exists. This one follows within two edgar ticks (the filing index,
-// then the document) and carries the substance.
+// then the document) and carries the substance — including which risk-factor
+// headings an amendment added or removed against the filing before it. When
+// the headings arrive on their own (a document read again after the lane
+// learned to read them), they alert on their own, and only if a heading was
+// added or removed: a reworded heading is recorded, not announced.
 //
 // A filing older than FRESH_DAYS never alerts: a registration source derived
 // for a filing the store had not seen (a new derived template, a newly
@@ -118,6 +130,7 @@ interface Filing {
   filed: string
   offering: OfferingRow | null
   revenue: RevenueRow[]
+  risk: RiskFactorsRow | null
 }
 
 const label = (f: Filing) => (f.offering ? formLabel(f.offering) : f.form)
@@ -145,7 +158,8 @@ async function priorFiling(db: PipelineDb, filing: Filing): Promise<Filing | nul
     if (typeof p.filed !== 'string' || p.filed > filing.filed) continue
     const offering = row.type === 'offering' ? OfferingRow.parse(p) : null
     const revenue = row.type === 'revenue' ? RevenueRow.parse(p) : null
-    const head = offering ?? revenue
+    const risk = row.type === 'risk_factors' ? RiskFactorsRow.parse(p) : null
+    const head = offering ?? revenue ?? risk
     if (!head) continue
     const entry = byAccession.get(head.accession_no) ?? {
       cik: head.cik,
@@ -155,9 +169,11 @@ async function priorFiling(db: PipelineDb, filing: Filing): Promise<Filing | nul
       filed: head.filed,
       offering: null,
       revenue: [],
+      risk: null,
     }
     if (offering) entry.offering = offering
     if (revenue) entry.revenue.push(revenue)
+    if (risk) entry.risk = risk
     byAccession.set(head.accession_no, entry)
   }
   const sorted = [...byAccession.values()].sort((a, b) =>
@@ -181,12 +197,14 @@ function addedFilings(changes: readonly ChangeRow[]): { filing: Filing; changes:
     if (change.change_type !== 'added' || !change.after_json) continue
     let offering: OfferingRow | null = null
     let revenue: RevenueRow | null = null
+    let risk: RiskFactorsRow | null = null
     if (change.entity_type === 'offering') offering = parseRow(OfferingRow, change)
+    else if (change.entity_type === 'risk_factors') risk = parseRow(RiskFactorsRow, change)
     else if (change.entity_type === 'revenue') {
       revenue = parseRow(RevenueRow, change)
       if (revenue.taxonomy !== 'prospectus') continue
     } else continue
-    const head = (offering ?? revenue)!
+    const head = (offering ?? revenue ?? risk)!
     const entry = out.get(head.accession_no) ?? {
       filing: {
         cik: head.cik,
@@ -196,16 +214,41 @@ function addedFilings(changes: readonly ChangeRow[]): { filing: Filing; changes:
         filed: head.filed,
         offering: null,
         revenue: [],
+        risk: null,
       },
       changes: [],
     }
     if (offering) entry.filing.offering = offering
     if (revenue) entry.filing.revenue.push(revenue)
+    if (risk) entry.filing.risk = risk
     entry.changes.push(change)
     out.set(head.accession_no, entry)
   }
   return [...out.values()]
 }
+
+const quote = (h: string) => `“${h}”`
+
+/** One sentence on what the risk-factor headings did against the previous filing. */
+export function riskSentence(
+  changes: readonly RiskFactorChange[],
+  count: number,
+  priorLabel: string,
+): string {
+  const added = changes.filter((c) => c.kind === 'added')
+  const removed = changes.filter((c) => c.kind === 'removed')
+  const reworded = changes.filter((c) => c.kind === 'reworded')
+  if (!changes.length)
+    return `Its ${count} risk-factor headings are unchanged from the ${priorLabel}.`
+  const parts = [
+    added.length ? `added ${added.map((c) => quote(c.heading)).join('; ')}` : null,
+    removed.length ? `removed ${removed.map((c) => quote(c.heading)).join('; ')}` : null,
+    reworded.length ? `reworded ${reworded.length}` : null,
+  ].filter(Boolean)
+  return `Against the ${priorLabel}, its ${count} risk-factor headings ${parts.join('; ')}.`
+}
+
+const headingCount = (r: RiskFactorsRow) => r.sections.reduce((n, s) => n + s.headings.length, 0)
 
 export async function prospectusFloorAlerts(
   db: PipelineDb,
@@ -220,6 +263,35 @@ export async function prospectusFloorAlerts(
     const prior = await priorFiling(db, filing)
     const before = prior ? latest(prior.revenue) : undefined
     const priorLabel = prior ? `${label(prior)} of ${prior.filed}` : null
+    const risk =
+      filing.risk && prior?.risk && priorLabel ? riskFactorChanges(prior.risk, filing.risk) : null
+
+    if (!o && !now) {
+      // The headings on their own: news only when one was added or removed.
+      if (!risk?.some((c) => c.kind !== 'reworded')) continue
+      const added = risk.filter((c) => c.kind === 'added').length
+      const removed = risk.filter((c) => c.kind === 'removed').length
+      alerts.push(
+        AlertRow.parse({
+          id: contentHash({
+            rule: PROSPECTUS_FLOOR_RULE,
+            accession_no: filing.accession_no,
+            part: 'risk_factors',
+          }),
+          severity: 'notable',
+          headline: `${filing.entity_name} ${label(filing)}: ${added} risk factor${added === 1 ? '' : 's'} added, ${removed} removed against the ${priorLabel}`,
+          explanation:
+            `${filing.entity_name} filed ${label(filing)} on ${filing.filed} (accession ${filing.accession_no}). ` +
+            riskSentence(risk, headingCount(filing.risk!), priorLabel!),
+          change_ids: JSON.stringify(cited.map((c) => c.id).sort()),
+          rule: PROSPECTUS_FLOOR_RULE,
+          created_at: first.detected_at,
+          source_url: first.source_url,
+          fetched_at: first.fetched_at,
+        }),
+      )
+      continue
+    }
 
     const sentences: string[] = [
       `${filing.entity_name} filed ${label(filing)} on ${filing.filed} (accession ${filing.accession_no}).`,
@@ -243,7 +315,7 @@ export async function prospectusFloorAlerts(
       sentences.push(`The cover lists the ${o.exchange} under the symbol “${o.symbol}”.`)
     }
     if (o) sentences.push(`Cover: ${terms(o)}.`, stage(o, prior?.offering ?? null))
-
+    if (risk) sentences.push(riskSentence(risk, headingCount(filing.risk!), priorLabel!))
     const headline = [
       `${filing.entity_name} ${label(filing)}`,
       [

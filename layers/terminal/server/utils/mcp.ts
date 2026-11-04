@@ -64,6 +64,7 @@ import {
 import { queryDisclosures } from './terminal-disclosures'
 import { gpuRunsStamp, queryGpuPrices } from './terminal-gpu'
 import { SHARE_WINDOW_DAYS, queryRankings } from './terminal-rankings'
+import { queryProspectus } from './terminal-prospectus'
 import { queryRevenue } from './terminal-revenue'
 import { PROVIDER_ORDER } from './terminal-sources'
 import { querySpend } from './terminal-spend'
@@ -472,6 +473,32 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         ...revenue,
         providers: revenue.providers.filter((p) => p.provider === provider),
       })
+    },
+  )
+
+  server.registerTool(
+    'get_prospectus',
+    {
+      title: 'What a lab’s own S-1 prints beyond revenue',
+      description:
+        'For each lab that has filed its own registration statement (today Anthropic’s S-1 and S-1/A), what the document prints, read as printed: ' +
+        'statement.periods and statement.lines are the whole statement of operations — every line verbatim with a canonical key where known ' +
+        '(revenue, total_operating_expenses, operating_income, net_income, eps_basic_diluted, weighted_shares_basic_diluted) — in dollars, shares or dollars per share, ' +
+        'each period from the newest filing that reports it (statement.superseded keeps the earlier filing’s figures); interim periods are unaudited. ' +
+        'statement.not_printed names lines an analyst may look for that the statement does not print (Anthropic prints no cost of revenue or gross profit, ' +
+        'so there is no gross margin — do not derive one). commitments are the contractual-obligation and purchase-commitment schedules with their as-of date ' +
+        'and year buckets; approximate marks a figure the filing itself calls approximate, and statement quotes the sentence. concentration lists customers ' +
+        'at or above 10% of revenue or receivables, named as the filing names them; a null share is under 10%, not zero. shares are “The Offering” counts, null ' +
+        'while the filing leaves them blank. risk_factors.latest is every heading in the newest filing; risk_factors.diffs is each amendment against the filing ' +
+        'before it — added, removed, or reworded with the earlier words. Nothing is estimated. Optional provider filter. ' +
+        PROVENANCE,
+      inputSchema: z.object({ provider: ProviderSchema.optional() }),
+      annotations: READ_ONLY,
+    },
+    async ({ provider }) => {
+      const data = await deps.serve('prospectus', (ctx) => queryProspectus(deps.db, ctx))
+      if (!provider) return json(data)
+      return json({ ...data, issuers: data.issuers.filter((i) => i.provider === provider) })
     },
   )
 

@@ -45,6 +45,16 @@ export const entityTypeEnum = z.enum([
   // 'offering': the terms a registration filing's cover states — amendment
   // number, price range, listing — one row per filing (prospectus-offering.ts).
   'offering',
+  // What else a registration document prints (parsers/sec/prospectus-*.ts):
+  // 'statement', the statement of operations for one period (one row per
+  // filing and period); 'commitment', one contractual-commitment schedule;
+  // 'concentration', one 10%-customer table; 'shares', "The Offering" share
+  // counts; 'risk_factors', every risk-factor heading. One filing each.
+  'statement',
+  'commitment',
+  'concentration',
+  'shares',
+  'risk_factors',
 ])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])

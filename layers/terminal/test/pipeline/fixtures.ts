@@ -57,6 +57,7 @@ import edgarCompanyfactsSpcx from '~~/fixtures/sec/edgar-companyfacts-spcx.json?
 import xbrlSegmentGoogl from '~~/fixtures/sec/xbrl-segment-googl-2026-10-29.xml?raw'
 import filingIndexAnthropic from '~~/fixtures/sec/filing-index-anthropic-s-1.html?raw'
 import prospectusAnthropic from '~~/fixtures/sec/prospectus-anthropic-s-1.html?raw'
+import prospectusAnthropicAmended from '~~/fixtures/sec/prospectus-anthropic-s-1-a.html?raw'
 import edgarFtsOpenai from '~~/fixtures/sec/edgar-fts-openai.json?raw'
 import edgarFts from '~~/fixtures/sec/edgar-fts.json?raw'
 import edgarSubmissionsAmzn from '~~/fixtures/sec/edgar-submissions-amzn.json?raw'
@@ -140,6 +141,7 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/sec/xbrl-segment-googl-2026-10-29.xml': xbrlSegmentGoogl,
   'fixtures/sec/filing-index-anthropic-s-1.html': filingIndexAnthropic,
   'fixtures/sec/prospectus-anthropic-s-1.html': prospectusAnthropic,
+  'fixtures/sec/prospectus-anthropic-s-1-a.html': prospectusAnthropicAmended,
   'fixtures/status/anthropic-status.json': anthropicStatus,
   'fixtures/status/google-cloud-status.json': googleCloudStatus,
   'fixtures/status/mistral-status.json': mistralStatus,

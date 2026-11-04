@@ -217,7 +217,13 @@ const rowKey = (r: FilingPeriod) => r.entity_key
     <div class="space-y-1 text-xs text-muted">
       <p v-if="fromProspectus">
         Read from the filing’s Consolidated Statements of Operations: it tags no financials in XBRL.
-        A later filing’s value for the same period replaces it on the revenue page.
+        A later filing’s value for the same period replaces it on the revenue page, which also
+        carries
+        <NuxtLink
+          :to="`/revenue#prospectus-${filing.provider}`"
+          class="underline underline-offset-2 hover:text-default"
+          >the rest of the statement, commitments, customer concentration and risk factors</NuxtLink
+        >.
       </p>
       <p>{{ data?.rule }}</p>
     </div>
