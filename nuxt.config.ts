@@ -172,12 +172,15 @@ const securityHeaders = {
 //              — social: social:alerts queues critical alerts
 //                (layers/terminal/server/pipeline/social.ts), social:post sends
 //                what is due (layers/social). Both no-op without a Buffer key.
+//              — press:briefs mails the owner click-to-send notes for each new
+//                registration filing (layers/terminal/server/pipeline/press.ts);
+//                no-op without NUXT_PRESS_LIST.
 //   0 13 * * 1 — weekly thesis digest email, and social:digest queues the
 //                weekly what-moved thread.
 const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:alert', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
-  '*/5 * * * *': ['poll:tripwire', 'social:alerts', 'social:post'],
+  '*/5 * * * *': ['poll:tripwire', 'social:alerts', 'social:post', 'press:briefs'],
   '0 13 * * 1': ['theses:digest', 'social:digest'],
 }
 
@@ -451,6 +454,10 @@ export default defineNuxtConfig({
     // secret, and the [[send_email]] binding pins the destination anyway.
     alertEmailTo: '',
     alertEmailFrom: '',
+    // The press list (layers/terminal/server/pipeline/press.ts): JSON array of
+    // { name, outlet, email?, tips_email?, priority }. A Worker secret because it
+    // names people and this repo is public. `wrangler secret put NUXT_PRESS_LIST`.
+    pressList: '',
     // SEC fair-access policy requires a contact email in the User-Agent of
     // every request to sec.gov hosts. Empty = the EDGAR sources are skipped
     // with a 'failed' run, never fetched anonymously (layers/terminal/server/pipeline/fetch.ts).
