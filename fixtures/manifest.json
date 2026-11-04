@@ -313,6 +313,16 @@
       "note": "Meta Platforms, Inc., whitelisted CIK (resolved 2026-10-12 from SEC's company_tickers.json). Newest 150 filings span 2026-03-18 to 2026-10-07: 2 10-Q, 5 8-K, no 10-K inside the window."
     },
     {
+      "path": "fixtures/sec/edgar-submissions-orcl.json",
+      "source_id": "edgar-submissions-orcl",
+      "source_url": "https://data.sec.gov/submissions/CIK0001341439.json",
+      "fetched_at": "2026-11-04T16:48:12Z",
+      "http_status": 200,
+      "raw_bytes": 159887,
+      "trim": "filings.recent parallel arrays cut to the newest 150 entries (of 1009); filings.files emptied.",
+      "note": "ORACLE CORP, whitelisted CIK (resolved 2026-11-04 from SEC's company_tickers.json). Newest 150 filings span 2025-09-16 to 2026-11-04: 3 10-Q, 1 10-K, 14 8-K inside the window."
+    },
+    {
       "path": "fixtures/sec/edgar-companyfacts-spcx.json",
       "source_id": "edgar-companyfacts-spcx",
       "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001181412.json",
@@ -647,6 +657,51 @@
       "http_status": 200,
       "raw_bytes": 1670834,
       "trim": "the root element, the 7 contexts naming amzn:AnthropicMember, their 2 units and the 8 facts on them; values untouched"
+    },
+    {
+      "path": "fixtures/filed-facts/companyfacts-msft.json",
+      "source_id": "filed-facts-msft",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0000789019.json",
+      "fetched_at": "2026-11-04T16:48:05Z",
+      "http_status": 200,
+      "raw_bytes": 4938072,
+      "trim": "facts.us-gaap cut to the five concepts the reader takes (capex, finance leases, backlog), each unit's facts cut to period ends from 2024-01-01; values untouched."
+    },
+    {
+      "path": "fixtures/filed-facts/companyfacts-amzn.json",
+      "source_id": "filed-facts-amzn",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001018724.json",
+      "fetched_at": "2026-11-04T16:48:07Z",
+      "http_status": 200,
+      "raw_bytes": 4554378,
+      "trim": "facts.us-gaap cut to the five concepts the reader takes, each unit's facts cut to period ends from 2024-01-01; values untouched."
+    },
+    {
+      "path": "fixtures/filed-facts/msft-20260930.xml",
+      "source_id": "filed-facts-msft-instance",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526436133/msft-20260930_htm.xml",
+      "fetched_at": "2026-11-04T16:49:10Z",
+      "http_status": 200,
+      "raw_bytes": 7251916,
+      "trim": "the root element, the dei CIK, type and period facts, every unit, and the facts on msft:OpenAIGlobalLlcMember or a dimensional RPO with their contexts; values untouched."
+    },
+    {
+      "path": "fixtures/filed-facts/amzn-20260930.xml",
+      "source_id": "filed-facts-amzn-instance",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000040/amzn-20260930_htm.xml",
+      "fetched_at": "2026-11-04T16:49:12Z",
+      "http_status": 200,
+      "raw_bytes": 1670834,
+      "trim": "the root element, the dei CIK, type and period facts, every unit, and the facts on amzn:AnthropicMember or a dimensional RPO with their contexts; values untouched."
+    },
+    {
+      "path": "fixtures/filed-facts/goog-20260930.xml",
+      "source_id": "filed-facts-googl-instance",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000084/goog-20260930_htm.xml",
+      "fetched_at": "2026-11-04T16:52:20Z",
+      "http_status": 200,
+      "raw_bytes": 3161339,
+      "trim": "the root element, the dei CIK, type and period facts, every unit, and the dimensional RPO facts with their contexts; values untouched."
     }
   ]
 }

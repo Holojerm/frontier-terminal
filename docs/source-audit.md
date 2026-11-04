@@ -386,6 +386,32 @@ Update stamps print no year ("Oct 28, 20:05 UTC"). The parser takes the year tha
 
 **Verdict.** Include `history.atom`. The `/api/` URL is gone from code, config and fixtures.
 
+## Addendum, 2026-11-04: hyperscaler capex, backlog, and lab stakes from 2020
+
+The `filed_fact_sources` block in `sources.yaml` reads five filers: Microsoft, Alphabet, Amazon, Meta and Oracle. Oracle joins `cik_whitelist`: SEC's `company_tickers.json` gives ORCL → 1341439, and `data.sec.gov/submissions/CIK0001341439.json` answers "ORACLE CORP" (fiscal year end 0531). Its submissions feed is a source (`edgar-submissions-orcl`), so its 10-Q and 10-K raise the periodic-floor alert like the others.
+
+**Company facts** (`data.sec.gov/api/xbrl/companyfacts/CIK##########.json`, 2.8 to 4.9 MB) carry every non-dimensional fact with its accession and filing date, back past 2020. Tags read:
+
+| Filer | Capex | Finance leases (shown beside, never added) | Backlog total |
+|---|---|---|---|
+| MSFT | `PaymentsToAcquirePropertyPlantAndEquipment` ("Additions to property and equipment") | `RightOfUseAssetObtainedInExchangeForFinanceLeaseLiability` | `RevenueRemainingPerformanceObligation` |
+| GOOGL | `PaymentsToAcquirePropertyPlantAndEquipment` ("Purchases of property and equipment") | none | `RevenueRemainingPerformanceObligation` |
+| AMZN | `PaymentsToAcquireProductiveAssets` ("Purchases of property and equipment") | none | plain fact to 2020-06-30, then a typed timing axis (instances) |
+| META | `PaymentsToAcquirePropertyPlantAndEquipment` ("Purchases of property and equipment") | `FinanceLeasePrincipalPayments` | not tagged |
+| ORCL | `PaymentsToAcquirePropertyPlantAndEquipment` ("Capital expenditures") | none | `RevenueRemainingPerformanceObligation` |
+
+Cash-flow lines are tagged year to date, so most quarters are derived (six months less three, and so on) and marked so.
+
+**Instances.** Company facts drop every dimensional fact. Microsoft's commercial backlog (`srt:MajorCustomersAxis=msft:CommercialCustomersMember`, from the 10-Q for 2020-09-30), its facts on `msft:OpenAIGlobalLlcMember` (from the 10-Q for 2024-09-30), Amazon's total backlog after 2020-06-30 (typed `RevenueRemainingPerformanceObligationExpectedTimingOfSatisfactionStartDateAxis`, the day after the period end), its facts on `amzn:AnthropicMember` (from the 10-Q for 2026-03-31), its backlog on `amzn:OpenAIGroupPBCMember`, and Alphabet's Google Cloud backlog (`goog:GoogleCloudMember`, from the 10-Q for 2026-03-31) are read from each 10-Q/10-K instance, named after the primary document in the submissions feed (`msft-10q_20200930.htm` → `msft-10q_20200930_htm.xml`). All 63 instances since 2020 resolved on a local run (2026-11-04). Alphabet's submissions feed lists 10-Q/10-K back to 2023-08 only.
+
+**Spot checks** against each filing's own HTML, two values per series where two exist: all matched, among them Microsoft capex $39,367M (10-Q 2026-10-28) and $3,767M for the quarter to 2020-03-31, Oracle backlog $664B and $33.8B (2020-02-29), Amazon backlog $578B and $34.1B (2020-03-31), Microsoft's OpenAI funding of $13.0B committed and $12.0B paid in, and Amazon's upward marks of $62.8B for the nine months to 2026-09-30. Meta's own "capital expenditures, including principal payments on finance leases" of $34.91B is our two lines added ($33.94B + $0.96B).
+
+Two findings changed labels. Alphabet's $16.8B backlog tagged on an equity-method investee is named in its text as Crux AI, a joint venture. From the first quarter of 2026 Alphabet's backlog also counts contracts of a year or less, so it breaks with earlier quarters.
+
+**Alphabet and Anthropic.** EDGAR full-text search for "Anthropic" in Alphabet's 10-Q and 10-K returns no hits, and no XBRL fact names it. It stays a stated gap (`cut: alphabet-anthropic-stake`).
+
+**Verdict.** Include all five. Terms are the SEC's: US government work, fair-access rate and a declared contact.
+
 ## Addendum, 2026-11-04: track record (GDELT and the lab newsrooms)
 
 Checked for `/track-record`, which times each notable or critical alert against the first press report and the lab's own post. Live-fetched with the pipeline's User-Agent between 16:45Z and 17:00Z. Terms and robots.txt read the same day.

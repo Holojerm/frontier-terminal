@@ -50,6 +50,13 @@ const yMax = computed(() => {
   return niceCeil(max)
 })
 
+// Zero unless a value is negative (a loss), so the axis still starts at zero.
+const yMin = computed(() => {
+  let min = 0
+  for (const s of props.series) for (const v of s.values) if (v !== null && v < min) min = v
+  return min < 0 ? -niceCeil(-min) : 0
+})
+
 /** Round up to 1, 2, 2.5 or 5 × a power of ten, so ticks are clean. */
 function niceCeil(v: number): number {
   if (v <= 0) return 1
@@ -68,9 +75,11 @@ const xAt = (i: number): number => {
   return PAD.value.l + ((times.value[i]! - t0) / span) * inner
 }
 const yAt = (v: number): number =>
-  PAD.value.t + (1 - v / yMax.value) * (H - PAD.value.t - PAD.value.b)
+  PAD.value.t + (1 - (v - yMin.value) / (yMax.value - yMin.value)) * (H - PAD.value.t - PAD.value.b)
 
-const yTicks = computed(() => [0, 0.25, 0.5, 0.75, 1].map((f) => f * yMax.value))
+const yTicks = computed(() =>
+  [0, 0.25, 0.5, 0.75, 1].map((f) => yMin.value + f * (yMax.value - yMin.value)),
+)
 
 /** Up to five x labels, evenly spread over the columns. */
 const xTicks = computed(() => {

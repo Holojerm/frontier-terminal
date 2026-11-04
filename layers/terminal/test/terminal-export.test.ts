@@ -121,6 +121,8 @@ describe('the table registry', () => {
       'track_record_candidates',
       'track_record_verdicts',
       'recipe_observations',
+      'filed_facts',
+      'exposure_quarters',
       'source_runs',
       'entity_securities',
     ])

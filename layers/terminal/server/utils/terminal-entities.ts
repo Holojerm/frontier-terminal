@@ -8,7 +8,7 @@
 // one EDGAR's submissions feed lists for that CIK (fixtures/sec/).
 // layers/terminal/test/terminal-entities.test.ts fails when a row stops
 // matching either. Nothing here is typed in from memory: a filer the terminal
-// reads no filing from (Oracle, for one) has no row.
+// reads no filing from has no row.
 
 export const ENTITY_SECURITY_COLUMNS = [
   'entity',
@@ -182,7 +182,7 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     symbol: 'MSFT',
     exchange: 'Nasdaq',
     listing_status: 'listed',
-    note: 'A filer we track (sources.yaml cik_whitelist). We alert on its filings and read its OpenAI facts (recipe sec-msft-openai). Azure GPU list prices come from recipe gpu-azure.',
+    note: 'A filer we track (sources.yaml cik_whitelist). We alert on its filings and read its OpenAI facts, capex and backlog (/exposure). Azure GPU list prices come from recipe gpu-azure.',
     source_url: submissions('0000789019'),
     checked_on: CHECKED,
   },
@@ -196,7 +196,7 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     symbol: 'AMZN',
     exchange: 'Nasdaq',
     listing_status: 'listed',
-    note: 'A filer we track (sources.yaml cik_whitelist). We alert on its filings and read its Anthropic facts (recipe sec-amzn-anthropic).',
+    note: 'A filer we track (sources.yaml cik_whitelist). We alert on its filings and read its Anthropic facts, capex and backlog (/exposure).',
     source_url: submissions('0001018724'),
     checked_on: CHECKED,
   },
@@ -212,6 +212,20 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     listing_status: 'listed',
     note: 'A filer we track (sources.yaml cik_whitelist). We alert on its filings. No lab relationship is mapped.',
     source_url: submissions('0001045810'),
+    checked_on: CHECKED,
+  },
+  {
+    entity: 'oracle',
+    entity_name: 'Oracle',
+    entity_kind: 'filer',
+    relationship: 'self',
+    issuer: 'ORACLE CORP',
+    cik: '0001341439',
+    symbol: 'ORCL',
+    exchange: 'NYSE',
+    listing_status: 'listed',
+    note: 'A filer we track (sources.yaml cik_whitelist). We alert on its filings and read its capex and backlog (/exposure). Its GPU list prices come from recipe gpu-oracle. EDGAR also lists ORCL-PD for this CIK.',
+    source_url: submissions('0001341439'),
     checked_on: CHECKED,
   },
   {

@@ -55,6 +55,10 @@ export const entityTypeEnum = z.enum([
   'concentration',
   'shares',
   'risk_factors',
+  // 'filed_fact': a hyperscaler series point a new 10-Q/10-K moved
+  // (layers/terminal/server/exposure/alerts.ts). Written only as the change an
+  // alert cites; the facts themselves live in filed_facts, not entities.
+  'filed_fact',
 ])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])
@@ -68,6 +72,7 @@ export const alertRuleEnum = z.enum([
   'model-floor',
   'prospectus-floor',
   'hiring-rollup',
+  'filed-fact-floor',
 ])
 // 'skipped': the source needs a credential the deploy does not have, so
 // nothing was attempted — distinct from 'failed' so a missing key is a

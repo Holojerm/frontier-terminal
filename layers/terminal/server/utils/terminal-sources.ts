@@ -59,6 +59,7 @@ export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
   'edgar-submissions-nvda': { label: 'EDGAR submissions (NVDA)', role: 'sec' },
   'edgar-submissions-googl': { label: 'EDGAR submissions (GOOGL)', role: 'sec' },
   'edgar-submissions-meta': { label: 'EDGAR submissions (META)', role: 'sec' },
+  'edgar-submissions-orcl': { label: 'EDGAR submissions (ORCL)', role: 'sec' },
   'edgar-companyfacts-spcx': {
     label: 'EDGAR XBRL company facts (SPCX, xAI’s parent)',
     role: 'sec',
@@ -416,4 +417,44 @@ export function labelOf(sourceId: string): SourceLabel {
   const d = DERIVED_LABELS.find((x) => sourceId.startsWith(x.prefix))
   if (d) return { label: d.label(sourceId.slice(d.prefix.length)), role: d.role }
   return { label: sourceId, role: 'primary' }
+}
+
+/** A hyperscaler filer whose XBRL facts the exposure series read (sources.yaml `filed_fact_sources`). */
+export interface FiledFactSourceEntry {
+  id: string
+  ticker: string
+  /** Company facts: every non-dimensional fact, with its accession. */
+  url: string
+  /** True when each 10-Q/10-K's own instance is read for the dimensional facts. */
+  instances: boolean
+  terms: string | null
+  rights: SourceRights | null
+  caveat: string | null
+}
+
+/** The `filed_fact_sources` block. Each url must name the CIK cik_whitelist holds for its ticker. */
+export function readFiledFactSources(
+  sourcesYaml: string,
+  whitelist: ReadonlyMap<string, string | null>,
+): (FiledFactSourceEntry & { cik: string })[] {
+  return readBlock(sourcesYaml.split('\n'), 'filed_fact_sources').map((block) => {
+    const ticker = block.fields.ticker
+    const url = block.fields.url
+    if (!ticker || !url) throw new Error(`sources.yaml ${block.id}: needs ticker and url`)
+    const cik = whitelist.get(ticker)
+    if (!cik) throw new Error(`sources.yaml ${block.id}: ${ticker} is not in cik_whitelist`)
+    if (url !== `https://data.sec.gov/api/xbrl/companyfacts/CIK${cik}.json`) {
+      throw new Error(`sources.yaml ${block.id}: url does not name CIK ${cik}`)
+    }
+    return {
+      id: block.id,
+      ticker,
+      cik,
+      url,
+      instances: block.fields.instances === 'true',
+      terms: block.fields.terms ?? null,
+      rights: rightsOf(block.id, block.fields.rights),
+      caveat: block.fields.caveats ?? null,
+    }
+  })
 }

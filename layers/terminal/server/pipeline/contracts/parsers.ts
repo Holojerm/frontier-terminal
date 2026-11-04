@@ -514,6 +514,7 @@ export const parserOutputSchemas = {
   'edgar-submissions-nvda': EdgarSubmissionsOutput,
   'edgar-submissions-googl': EdgarSubmissionsOutput,
   'edgar-submissions-meta': EdgarSubmissionsOutput,
+  'edgar-submissions-orcl': EdgarSubmissionsOutput,
   'edgar-companyfacts-spcx': EdgarCompanyfactsOutput,
   // One registration each for every derived filing-index and
   // prospectus-revenue source (derived.ts); the fixtures are Anthropic's S-1.

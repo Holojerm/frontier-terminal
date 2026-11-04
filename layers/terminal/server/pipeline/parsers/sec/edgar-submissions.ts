@@ -81,7 +81,7 @@ export function parseEdgarSubmissions(
   return { rows: EdgarSubmissionsOutput.parse({ rows }).rows, skipped }
 }
 
-/** The six submissions feeds: source id -> committed fixture. */
+/** The seven submissions feeds: source id -> committed fixture. */
 export const SUBMISSIONS_SOURCES: Readonly<Record<string, string>> = {
   'edgar-submissions-spcx': 'fixtures/sec/edgar-submissions-spcx.json',
   'edgar-submissions-msft': 'fixtures/sec/edgar-submissions-msft.json',
@@ -89,6 +89,7 @@ export const SUBMISSIONS_SOURCES: Readonly<Record<string, string>> = {
   'edgar-submissions-nvda': 'fixtures/sec/edgar-submissions-nvda.json',
   'edgar-submissions-googl': 'fixtures/sec/edgar-submissions-googl.json',
   'edgar-submissions-meta': 'fixtures/sec/edgar-submissions-meta.json',
+  'edgar-submissions-orcl': 'fixtures/sec/edgar-submissions-orcl.json',
 }
 
 // prov defaults to the fixture manifest's record (fixture-only behavior is

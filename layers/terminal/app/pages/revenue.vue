@@ -84,6 +84,7 @@ useSeo({
         id="parents"
         title="What the parents disclose"
         note="Every fact Microsoft and Amazon tag with OpenAI or Anthropic in their newest 10-Q or 10-K. These are the parent’s own figures, never the lab’s revenue or valuation."
+        :more="{ label: 'Every quarter, and hyperscaler capex', to: '/exposure' }"
       >
         <TerminalParentFacts :parents="parents" />
       </TerminalPanel>

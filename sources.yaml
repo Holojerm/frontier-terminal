@@ -653,6 +653,24 @@ sources:
       (10-Q for the quarter ended 2026-06-30, Note 12), never the model
       API, so nothing here is a lab revenue figure (see revenue_filers).
 
+  edgar-submissions-orcl:
+    axis: sec
+    provider: all
+    url: https://data.sec.gov/submissions/CIK0001341439.json
+    format: JSON
+    diff_mechanism: accession numbers
+    verdict: include, narrowly scoped
+    terms: >-
+      Same terms, robots.txt and frequency as edgar-submissions. Read
+      2026-11-04.
+    rights: ours
+    fixture: fixtures/sec/edgar-submissions-orcl.json
+    caveats: >-
+      Whitelisted CIK, same form filter as edgar-submissions. Oracle sells
+      cloud capacity to the labs, so its capex and remaining performance
+      obligations are read for the exposure series (filed_fact_sources). Its
+      fiscal year ends May 31.
+
   edgar-companyfacts-spcx:
     axis: revenue
     provider: all
@@ -876,6 +894,9 @@ sources:
 # fires, and a null at least fails visibly. META was resolved on 2026-10-12
 # the same way: company_tickers.json -> 1326801, round-tripped through
 # data.sec.gov/submissions/CIK0001326801.json -> "Meta Platforms, Inc.".
+# ORCL was resolved on 2026-11-04 the same way: company_tickers.json ->
+# 1341439, round-tripped through data.sec.gov/submissions/CIK0001341439.json
+# -> "ORACLE CORP".
 cik_whitelist:
   MSFT: "0000789019"
   AMZN: "0001018724"
@@ -883,6 +904,7 @@ cik_whitelist:
   SPCX: "0001181412"
   GOOGL: "0001652044"
   META: "0001326801"
+  ORCL: "0001341439"
 
 # Disclosed-revenue filers. One entry per tracked lab: null while the lab has
 # no audited, primary-source disclosure — the /revenue panel then says so and
@@ -1883,6 +1905,110 @@ track_record_sources:
 # reader can see exactly which labels were summed. The judge prompt
 # (layers/terminal/server/pipeline/judge/judge-explain.prompt.md) names the same terms;
 # layers/terminal/test/terminal-clusters.test.ts fails when the two drift.
+
+# Hyperscaler filings read for their filed XBRL facts: capex, remaining
+# performance obligations, and what Microsoft and Amazon tag on OpenAI and
+# Anthropic (layers/terminal/server/exposure/, the /exposure page). Every
+# filer's CIK comes from cik_whitelist; each url must name it. Company facts
+# carry every non-dimensional fact with its accession since the filer began
+# tagging. With `instances: true` each 10-Q/10-K instance since 2020 is read
+# once for the dimensional facts company facts drop (a segment's backlog, a
+# fact on an investee member), named after the filing's primary document in
+# its submissions feed. Checked every 30 minutes; company facts are fetched
+# every six hours, or every check while a filing from the last 14 days is
+# missing from them. Audited 2026-11-04 (docs/source-audit.md).
+filed_fact_sources:
+  filed-facts-msft:
+    ticker: MSFT
+    url: https://data.sec.gov/api/xbrl/companyfacts/CIK0000789019.json
+    instances: true
+    format: JSON company facts; each 10-Q/10-K instance ({primary}_htm.xml)
+    verdict: include
+    terms: >-
+      US government work, not under copyright (17 U.S.C. 105). SEC fair
+      access: a declared User-Agent naming a contact, under 10 requests a
+      second (layers/terminal/server/pipeline/fetch.ts). Taken: capex,
+      finance-lease and backlog facts with their accessions, and every fact
+      on msft:OpenAIGlobalLlcMember. Read 2026-11-04.
+    rights: ours
+    caveats: >-
+      Microsoft's numbers. Its fiscal year ends June 30. Capex is Additions
+      to property and equipment (PaymentsToAcquirePropertyPlantAndEquipment);
+      finance leases signed are RightOfUseAssetObtainedInExchangeForFinanceLeaseLiability,
+      shown beside it and never added. The OpenAI line (NonoperatingIncomeExpense
+      on the member) is what Microsoft recognized, not OpenAI's result. Tagged
+      on the member from the 10-Q for the quarter ended 2024-09-30.
+  filed-facts-googl:
+    ticker: GOOGL
+    url: https://data.sec.gov/api/xbrl/companyfacts/CIK0001652044.json
+    instances: true
+    format: JSON company facts; each 10-Q/10-K instance ({primary}_htm.xml)
+    verdict: include
+    terms: >-
+      Same terms as filed-facts-msft. Taken: capex and backlog facts with
+      their accessions, and the backlog Alphabet tags on a segment or a
+      related party. Read 2026-11-04.
+    rights: ours
+    caveats: >-
+      Alphabet's numbers. Capex is Purchases of property and equipment
+      (PaymentsToAcquirePropertyPlantAndEquipment). The Google Cloud backlog is
+      tagged on goog:GoogleCloudMember only in recent filings. From the first
+      quarter of 2026 its backlog counts contracts of a year or less too, so
+      it isn't comparable with earlier quarters. The $16.8 billion it tags on
+      an equity-method investee is Crux AI, a joint venture its 10-Q names
+      in the text. Alphabet never
+      names Anthropic: EDGAR full-text search finds no 10-Q or 10-K of its
+      that mentions it (2026-11-04), so its stake is a stated gap. The
+      submissions feed lists 10-Q/10-K back to 2023 only, so instance facts
+      start there.
+  filed-facts-amzn:
+    ticker: AMZN
+    url: https://data.sec.gov/api/xbrl/companyfacts/CIK0001018724.json
+    instances: true
+    format: JSON company facts; each 10-Q/10-K instance ({primary}_htm.xml)
+    verdict: include
+    terms: >-
+      Same terms as filed-facts-msft. Taken: capex and backlog facts with
+      their accessions, and every fact on amzn:AnthropicMember. Read
+      2026-11-04.
+    rights: ours
+    caveats: >-
+      Amazon's numbers. Capex is Purchases of property and equipment
+      (PaymentsToAcquireProductiveAssets), gross of proceeds and incentives.
+      From the third quarter of 2020 Amazon tags its total backlog on a typed
+      timing axis (the amount expected from the day after the period end),
+      which company facts drops, so those quarters come from each instance.
+      Its Anthropic marks follow observable prices and aren't Anthropic's
+      valuation.
+  filed-facts-meta:
+    ticker: META
+    url: https://data.sec.gov/api/xbrl/companyfacts/CIK0001326801.json
+    instances: false
+    format: JSON company facts
+    verdict: include
+    terms: >-
+      Same terms as filed-facts-msft. Taken: capex and finance-lease facts
+      with their accessions. Read 2026-11-04.
+    rights: ours
+    caveats: >-
+      Meta's numbers. Capex is Purchases of property and equipment
+      (PaymentsToAcquirePropertyPlantAndEquipment); principal payments on
+      finance leases (FinanceLeasePrincipalPayments) are shown beside it and
+      never added. Meta tags no remaining performance obligations.
+  filed-facts-orcl:
+    ticker: ORCL
+    url: https://data.sec.gov/api/xbrl/companyfacts/CIK0001341439.json
+    instances: false
+    format: JSON company facts
+    verdict: include
+    terms: >-
+      Same terms as filed-facts-msft. Taken: capex and backlog facts with
+      their accessions. Read 2026-11-04.
+    rights: ours
+    caveats: >-
+      Oracle's numbers. Its fiscal year ends May 31. Capex is Capital
+      expenditures (PaymentsToAcquirePropertyPlantAndEquipment). Oracle tags
+      only its total remaining performance obligations, not a cloud figure.
 department_clusters:
   physical-infrastructure:
     label: Physical infrastructure

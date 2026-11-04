@@ -28,6 +28,7 @@ const EDGAR_SOURCES: readonly string[] = [
   'edgar-submissions-nvda',
   'edgar-submissions-googl',
   'edgar-submissions-meta',
+  'edgar-submissions-orcl',
   'edgar-companyfacts-spcx',
 ]
 

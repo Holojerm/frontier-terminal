@@ -1,4 +1,4 @@
-import { and, desc, gt, isNotNull, max, ne } from 'drizzle-orm'
+import { and, desc, gt, isNotNull, max, notInArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { ChangeRow } from '../contracts'
@@ -48,10 +48,13 @@ export const TIMESTAMP_FIELDS: Readonly<Record<string, readonly string[]>> = {
  * Demand-share movement is read off /api/rankings instead. The same set is
  * excluded from the signal band's counts (layers/terminal/server/utils/terminal-db.ts).
  */
-export const JUDGE_EXCLUDED_ENTITY_TYPES = ['ranking'] as const
+// 'filed_fact' changes exist only as the citation of a rule-based alert that
+// is already written (layers/terminal/server/exposure/alerts.ts).
+export const JUDGE_EXCLUDED_ENTITY_TYPES = ['ranking', 'filed_fact'] as const
 
 /** The WHERE fragment that keeps excluded entity types out of a changes query. */
-export const judgeEligible = () => ne(tables.changes.entity_type, JUDGE_EXCLUDED_ENTITY_TYPES[0])
+export const judgeEligible = () =>
+  notInArray(tables.changes.entity_type, [...JUDGE_EXCLUDED_ENTITY_TYPES])
 
 /** A `modified` whose before/after differ only in its type's TIMESTAMP_FIELDS.
  * Typed on plain strings so a raw D1 row qualifies without a parse. */

@@ -568,7 +568,7 @@ export const COLUMN_DOCS: Readonly<Record<string, TableDoc>> = {
         type: 'text',
         key: true,
         meaning:
-          'SHA-256 (hex) of the entity key and the two content hashes, so the same change is never logged twice.',
+          'SHA-256 (hex) of the entity key and the two content hashes, so the same change is never logged twice. A filed_fact change hashes its series, period, and accession instead.',
       },
       entity_key: {
         type: 'text',
@@ -577,7 +577,7 @@ export const COLUMN_DOCS: Readonly<Record<string, TableDoc>> = {
       entity_type: {
         type: 'text',
         meaning:
-          'The kind of row: model, job, incident, disclosure, disclosure_timeline, filer, revenue, filing, document, offering, statement, commitment, concentration, shares, risk_factors, or recommendation. OpenRouter ranking rows are left out.',
+          'The kind of row: model, job, incident, disclosure, disclosure_timeline, filer, revenue, filing, document, offering, statement, commitment, concentration, shares, risk_factors, recommendation, or filed_fact (a hyperscaler series point a new filing moved, cited by its alert). OpenRouter ranking rows are left out.',
       },
       provider: PROVIDER,
       change_type: { type: 'text', meaning: 'added, removed, or modified.' },
@@ -620,7 +620,7 @@ export const COLUMN_DOCS: Readonly<Record<string, TableDoc>> = {
       rule: {
         type: 'text',
         meaning:
-          'What wrote it: agent-judge (the judge routine), or a deterministic rule: s1-floor, periodic-floor, cik-resolved, model-floor, prospectus-floor, hiring-rollup.',
+          'What wrote it: agent-judge (the judge routine), or a deterministic rule: s1-floor, periodic-floor, cik-resolved, model-floor, prospectus-floor, hiring-rollup, filed-fact-floor.',
       },
       created_at: {
         type: 'timestamp',
@@ -879,6 +879,148 @@ export const COLUMN_DOCS: Readonly<Record<string, TableDoc>> = {
         meaning:
           'When the current value was read, in UTC. A re-read that finds the same value does not move it.',
       },
+    },
+  },
+
+  filed_facts: {
+    asOf: 'Rows whose filing date is before the UTC day of as_of. A fact counts from the day after its filing, whenever we read it, so this table answers as_of back to 2019.',
+    columns: {
+      id: {
+        type: 'text',
+        key: true,
+        meaning: 'SHA-256 (hex) of ticker, concept, dims, start, end, and accession_no.',
+      },
+      ticker: { type: 'text', meaning: 'The filer: MSFT, GOOGL, AMZN, META, or ORCL.' },
+      cik: CIK,
+      concept: {
+        type: 'text',
+        meaning:
+          'The XBRL concept with its prefix, e.g. us-gaap:PaymentsToAcquirePropertyPlantAndEquipment.',
+      },
+      dims: {
+        type: 'text',
+        meaning:
+          'The context’s dimensions as axis=member pairs, sorted and joined with “;”. A typed member’s value stands in for the member. Empty for a fact with no dimension.',
+      },
+      start: {
+        type: 'date',
+        nullable: true,
+        meaning: 'The period’s first day. Null for a balance, which is at end.',
+      },
+      end: { type: 'date', meaning: 'The period’s last day, or the balance date.' },
+      value: {
+        type: 'number',
+        unit: 'the row’s unit column',
+        meaning: 'The value as tagged, signed as the filer tagged it.',
+      },
+      unit: {
+        type: 'text',
+        meaning: 'USD, shares, pure (a ratio, 0.24 is 24%), or the measure as written.',
+      },
+      form: { type: 'text', meaning: 'The filing’s form: 10-Q, 10-K, or an amendment.' },
+      filed: { type: 'date', meaning: 'The filing date EDGAR gives the accession.' },
+      accession_no: { type: 'text', meaning: 'The filing’s EDGAR accession number.' },
+      basis: {
+        type: 'text',
+        meaning:
+          'companyfacts (EDGAR’s company facts, every fact with no dimension) or instance (the filing’s own XBRL instance, for a fact with dimensions).',
+      },
+      raw_key: {
+        type: 'text',
+        meaning: 'Key of the document the fact was read from in this site’s object store (R2).',
+      },
+      first_seen_at: { type: 'timestamp', meaning: 'When we first read the fact, in UTC.' },
+      source_url: {
+        type: 'text',
+        provenance: true,
+        meaning: 'The company facts document or the instance file the fact was read from.',
+      },
+      fetched_at: {
+        type: 'timestamp',
+        provenance: true,
+        meaning: 'When that read ran, in UTC. A filed fact is never rewritten.',
+      },
+    },
+  },
+
+  exposure_quarters: {
+    asOf: 'Built from the filed_facts rows filed before the UTC day of as_of, so it answers back to 2019.',
+    columns: {
+      series_id: {
+        type: 'text',
+        key: true,
+        meaning:
+          'The series, e.g. msft-capex or amzn-anthropic-equity-securities-without-readily-determinable-fair-value-upward-price-adjustment-annual-amount.',
+      },
+      ticker: { type: 'text', meaning: 'The filer: MSFT, GOOGL, AMZN, META, or ORCL.' },
+      filer: {
+        type: 'text',
+        meaning: 'The filer’s name. Every value is the filer’s number, never a lab’s.',
+      },
+      group: { type: 'text', meaning: 'capex, rpo (backlog), openai, or anthropic.' },
+      label: { type: 'text', meaning: 'What the series is, in plain words.' },
+      concept: { type: 'text', meaning: 'The XBRL concept the series reads.' },
+      dims: {
+        type: 'text',
+        meaning:
+          'The dimensions of the facts the series reads, as in filed_facts. Several are joined with “ | ” when the filer tagged the line on different axes over time.',
+      },
+      kind: {
+        type: 'text',
+        meaning: 'flow (a value per quarter) or balance (a value at each period end).',
+      },
+      unit: { type: 'text', meaning: 'USD, shares, or pure (a ratio).' },
+      start: {
+        type: 'date',
+        nullable: true,
+        meaning: 'The quarter’s first day. Null for a balance.',
+      },
+      end: { type: 'date', key: true, meaning: 'The quarter’s last day, or the balance date.' },
+      value: {
+        type: 'number',
+        unit: 'the row’s unit column',
+        meaning: 'The value for the quarter or at the date.',
+      },
+      derived: {
+        type: 'boolean',
+        meaning:
+          'True when the quarter is a year-to-date figure less the one a quarter shorter, because the filing tags only year to date.',
+      },
+      less_start: {
+        type: 'date',
+        nullable: true,
+        meaning: 'For a derived quarter, the start of the figure taken away. Null otherwise.',
+      },
+      less_end: {
+        type: 'date',
+        nullable: true,
+        meaning: 'For a derived quarter, the end of the figure taken away. Null otherwise.',
+      },
+      less_value: {
+        type: 'number',
+        unit: 'the row’s unit column',
+        nullable: true,
+        meaning: 'For a derived quarter, the figure taken away. Null otherwise.',
+      },
+      less_accession_no: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'For a derived quarter, the filing the figure taken away came from. Null otherwise.',
+      },
+      accession_no: {
+        type: 'text',
+        meaning: 'The filing the value is from: the newest that reported the period.',
+      },
+      form: { type: 'text', meaning: 'That filing’s form.' },
+      filed: { type: 'date', meaning: 'That filing’s date.' },
+      filing_url: { type: 'text', meaning: 'EDGAR’s index page for that filing.' },
+      source_url: {
+        type: 'text',
+        provenance: true,
+        meaning: 'The company facts document or the instance file the value was read from.',
+      },
+      fetched_at: { type: 'timestamp', provenance: true, meaning: 'When that read ran, in UTC.' },
     },
   },
 

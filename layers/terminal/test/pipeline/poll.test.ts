@@ -166,6 +166,7 @@ describe('runPoll between survey instants', () => {
       'edgar-submissions-nvda',
       'edgar-submissions-googl',
       'edgar-submissions-meta',
+      'edgar-submissions-orcl',
       'edgar-companyfacts-spcx',
     ])
     expect(outcome.result.failed).toBe(0)
