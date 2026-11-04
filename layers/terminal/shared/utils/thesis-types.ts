@@ -90,6 +90,14 @@ export type SignalSpec =
       cluster: string
       rule: MeasuredRule
     }
+  | {
+      kind: 'measured'
+      /** Revenue the lab itself reported to the SEC for each period, against the
+       * period of the same length a year earlier, as a growth rate
+       * (layers/terminal/server/theses/sec-signals.ts). A parent's figure never counts. */
+      signal: 'sec-revenue-yoy-growth'
+      rule: MeasuredRule
+    }
   /** Recipe signals (layers/terminal/server/theses/recipes/): computed from recipe_observations. */
   | {
       kind: 'measured'
