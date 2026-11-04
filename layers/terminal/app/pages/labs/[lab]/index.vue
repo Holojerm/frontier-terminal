@@ -261,7 +261,7 @@ const tabs = computed(() => [
         size="sm"
         icon="i-lucide-file-text"
       >
-        One-page tear sheet
+        Tear sheet
       </UButton>
       <dl
         class="grid grid-cols-2 gap-x-6 gap-y-4 rounded border border-default p-3 sm:grid-cols-3 lg:grid-cols-5"
