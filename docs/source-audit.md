@@ -208,7 +208,7 @@ CoreWeave is shown alone (`sec-revenue-crwv`).
 
 ## Addendum, 2026-11-04 — five candidate datasets beyond OpenRouter
 
-Live-fetched 04:00–04:50Z on 2026-11-04 (UTC) with the pipeline's descriptive User-Agent; every terms page was read the same morning. Checked because every demand signal the theses read is OpenRouter's, which sees developer traffic only (Anthropic claims 1–2 and Compute claim 3 say so). Nothing here is built yet: an include verdict means the source may be built against, and each one gets its `sources.yaml` entry and fixture when it is. The cuts are registered under `cut` now.
+Live-fetched 04:00–04:50Z on 2026-11-04 (UTC) with the pipeline's descriptive User-Agent; every terms page was read the same morning. Checked because every demand signal the theses read is OpenRouter's, which sees developer traffic only (Anthropic claims 1–2 and Compute claim 3 say so). The includes were built the same day as thesis recipes (`layers/terminal/server/theses/recipes/`), each with its `sources.yaml` entry under `recipe_sources` and a fixture under `fixtures/recipes/`; the GitHub recipes record "not configured" until `NUXT_GITHUB_TOKEN` is set. The cuts are under `cut`.
 
 | Candidate | Source | Result | Terms (read the same day) | Verdict |
 |---|---|---|---|---|

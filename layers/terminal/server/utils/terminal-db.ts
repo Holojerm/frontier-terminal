@@ -1564,7 +1564,7 @@ async function recipeCoverage(db: PipelineDb, ctx: QueryContext): Promise<Recipe
       url: run?.source_url || recipe.url({ now: ctx.now(), newest: null }),
       last_run: run
         ? {
-            status: run.status as 'ok' | 'unchanged' | 'failed',
+            status: run.status as NonNullable<RecipeCoverage['last_run']>['status'],
             started_at: run.started_at,
             detail: run.detail,
           }

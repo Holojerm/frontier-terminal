@@ -29,6 +29,7 @@ export default defineTask({
       fetcher: createFetcher({
         secContactEmail: config.secContactEmail,
         openrouterApiKey: config.openrouterApiKey,
+        githubToken: config.githubToken,
         appUrl: config.public.appUrl,
       }),
       sourcesYaml,
@@ -41,6 +42,7 @@ export default defineTask({
       fetcher: createFetcher({
         secContactEmail: config.secContactEmail,
         openrouterApiKey: config.openrouterApiKey,
+        githubToken: config.githubToken,
         appUrl: config.public.appUrl,
       }),
       now: () => new Date(),

@@ -491,6 +491,60 @@
       "http_status": 200,
       "raw_bytes": 501063,
       "trim": "facts reduced to the three us-gaap revenue tags the extractor reads (RevenueFromContractWithCustomerExcludingAssessedTax, …IncludingAssessedTax, Revenues); cik and entityName kept"
+    },
+    {
+      "path": "fixtures/recipes/ramp-ai-index.html",
+      "source_id": "ramp-ai-index",
+      "source_url": "https://ramp.com/data/ai-index",
+      "fetched_at": "2026-11-04T04:52:25Z",
+      "http_status": 200,
+      "raw_bytes": 1756613,
+      "trim": "the page reduced to one self.__next_f.push chunk holding the props object's adoptionOverall, adoptionVendor and dataVersion, values untouched; the live page carries the same object inside a 1.4 MB chunk, and the extractor reads both alike"
+    },
+    {
+      "path": "fixtures/recipes/npm-claude-code.json",
+      "source_id": "npm-claude-code",
+      "source_url": "https://api.npmjs.org/downloads/range/2026-10-20:2026-11-02/@anthropic-ai/claude-code",
+      "fetched_at": "2026-11-04T04:56:38Z",
+      "http_status": 200,
+      "raw_bytes": 654,
+      "trim": "none — committed whole (a 14-day range)"
+    },
+    {
+      "path": "fixtures/recipes/pypi-anthropic.json",
+      "source_id": "pypi-anthropic",
+      "source_url": "https://pypistats.org/api/packages/anthropic/overall?mirrors=false",
+      "fetched_at": "2026-11-04T04:56:38Z",
+      "http_status": 200,
+      "raw_bytes": 14970,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/recipes/github-prs-copilot.json",
+      "source_id": "github-prs",
+      "source_url": "https://api.github.com/search/issues?q=is%3Apr+author%3Aapp%2Fcopilot-swe-agent+created%3A2026-11-02&per_page=1",
+      "fetched_at": "2026-11-04T04:56:39Z",
+      "http_status": 200,
+      "raw_bytes": 5113,
+      "trim": "items emptied (one PR with its author's login and title); total_count and incomplete_results untouched. Fetched anonymously; Copilot's day because its count is exact, the extractor is the same for every agent"
+    },
+    {
+      "path": "fixtures/recipes/epoch-data-centers.csv",
+      "source_id": "epoch-data-centers",
+      "source_url": "https://epoch.ai/data/data_centers/data_centers.csv",
+      "fetched_at": "2026-11-04T04:56:39Z",
+      "http_status": 200,
+      "raw_bytes": 72026,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/recipes/epoch-data-center-timelines.csv",
+      "source_id": "epoch-data-center-timelines",
+      "source_url": "https://epoch.ai/data/data_centers/data_center_timelines.csv",
+      "fetched_at": "2026-11-04T04:56:39Z",
+      "http_status": 200,
+      "raw_bytes": 195555,
+      "trim": "none — committed whole"
     }
   ]
 }
