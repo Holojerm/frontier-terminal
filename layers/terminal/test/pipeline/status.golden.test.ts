@@ -18,14 +18,19 @@ import { parseMistralStatus } from '../../server/pipeline/parsers/status/mistral
 import { parseOpenaiStatus } from '../../server/pipeline/parsers/status/openai-status'
 import { statuspageIncidentUrl, utcStamp } from '../../server/pipeline/parsers/status/statuspage'
 import { parseXaiStatus, rfc822ToIso } from '../../server/pipeline/parsers/status/xai-status'
+import {
+  parseStatuspageAtom,
+  updateStamp,
+} from '../../server/pipeline/parsers/status/statuspage-atom'
 import { fixtureText, provenanceOf } from './fixtures'
 
 // Status lane golden tests. Expected values are read straight from the
 // committed fixtures + fixtures/manifest.json (provenance), never from live
-// sources. Counts below are the feeds as fetched on 2026-09-08.
+// sources. Counts below are the feeds as fetched on 2026-09-08 (Anthropic's
+// Atom feed: 2026-11-04).
 
 const openaiText = fixtureText('fixtures/status/openai-status.json')
-const anthropicText = fixtureText('fixtures/status/anthropic-status.json')
+const anthropicText = fixtureText('fixtures/status/anthropic-status.xml')
 const googleText = fixtureText('fixtures/status/google-cloud-status.json')
 const mistralText = fixtureText('fixtures/status/mistral-status.json')
 const xaiText = fixtureText('fixtures/status/xai-status.xml')
@@ -69,38 +74,109 @@ describe('status lane', () => {
     expect(out.rows[0]?.incident_id).toBe('01KZ9DMQD2GJ8JJWDN7572RH78')
   })
 
-  test('anthropic: 50 incidents (the page cap), components sorted, started_at read from the feed', () => {
+  test('anthropic: 25 Atom entries, ids from the incident link, impact null, every field read from the feed', () => {
     const out = parseAnthropicStatus(anthropicText)
-    expect(StatuspageIncidentsOutput.safeParse(out).success).toBe(true)
-    expect(out.rows).toHaveLength(50)
+    expect(StatuspageIncidentsOutput.safeParse({ rows: out.rows }).success).toBe(true)
+    expect(out.rows).toHaveLength(25)
+    expect(out.maintenances).toBe(0)
 
     const prov = provenanceOf('anthropic-status')
     for (const row of out.rows) {
       expect(row.provider).toBe('anthropic')
-      expect(row.source_url).toBe('https://status.claude.com/api/v2/incidents.json')
+      expect(row.source_url).toBe('https://status.claude.com/history.atom')
       expect(row.fetched_at).toBe(prov.fetched_at)
+      // The Atom feed publishes no impact; it is never inferred from wording.
+      expect(row.impact).toBeNull()
       expect(row.status).toBe('resolved')
       expect(row.resolved_at).not.toBeNull()
-      expect(row.components).toEqual([...row.components].sort())
+      // No entry carries a "This incident affected:" line today.
+      expect(row.components).toEqual([])
+      expect(row.incident_url).toBe(`https://status.claude.com/incidents/${row.incident_id}`)
     }
-    const impacts = new Map<string, number>()
-    for (const r of out.rows) impacts.set(r.impact, (impacts.get(r.impact) ?? 0) + 1)
-    expect(Object.fromEntries(impacts)).toEqual({ minor: 30, major: 14, critical: 3, none: 3 })
 
-    const row = out.rows.find((r) => r.incident_id === '461yvfrzpwtt')
-    expect(row).toMatchObject({
+    // The same incident the JSON API read as 461yvfrzpwtt (started
+    // 13:26:04.191Z, resolved 16:23:12.052Z): same id, same minutes.
+    expect(out.rows.find((r) => r.incident_id === '461yvfrzpwtt')).toMatchObject({
       title: 'Elevated errors for multiple models',
-      impact: 'major',
-      started_at: '2026-09-03T13:26:04.191Z',
-      resolved_at: '2026-09-03T16:23:12.052Z',
+      impact: null,
+      status: 'resolved',
+      started_at: '2026-09-03T13:26:00.000Z',
+      resolved_at: '2026-09-03T16:23:00.000Z',
       incident_url: 'https://status.claude.com/incidents/461yvfrzpwtt',
     })
-    expect(row?.components).toEqual([
-      'Claude API (api.anthropic.com)',
-      'Claude Code',
-      'Claude Cowork',
-      'claude.ai',
+    expect(out.rows[0]?.incident_id).toBe('0ns5clsk8p2x')
+  })
+
+  test('statuspage atom: status skips "Update", a reopened incident is open, components only from their own line', () => {
+    const entry = (code: string, paragraphs: string[]) =>
+      `<entry><id>tag:status.example.com,2005:Incident/1</id>` +
+      `<published>2027-01-01T02:00:00Z</published><updated>2027-01-01T02:00:00Z</updated>` +
+      `<link rel="alternate" type="text/html" href="https://status.example.com/incidents/${code}"/>` +
+      `<title>Errors &amp; latency</title><content type="html">` +
+      paragraphs
+        .map((p) => `&lt;p&gt;${p.replaceAll('<', '&lt;').replaceAll('>', '&gt;')}&lt;/p&gt;`)
+        .join(' ') +
+      `</content></entry>`
+    const update = (mon: string, day: number, time: string, word: string) =>
+      `<small>${mon} <var data-var='date'>${day}</var>, <var data-var='time'>${time}</var> UTC</small><br> <strong>${word}</strong> - text`
+    const feed = (...entries: string[]) => `<feed>${entries.join('')}</feed>`
+    const parse = (text: string) =>
+      parseStatuspageAtom('anthropic', text, {
+        source_url: 'https://status.example.com/history.atom',
+        fetched_at: '2027-01-01T03:00:00Z',
+      })
+
+    const out = parse(
+      feed(
+        // Open across New Year: the December stamps belong to 2026.
+        entry('aaaa', [
+          update('Jan', 1, '01:00', 'Update'),
+          update('Dec', 31, '23:30', 'Identified'),
+          update('Dec', 31, '23:00', 'Investigating'),
+          'This incident affected: Claude API (api.anthropic.com), claude.ai and Claude Code.',
+        ]),
+        // Resolved, then reopened: open again, with no resolution time.
+        entry('bbbb', [
+          update('Jan', 1, '01:30', 'Investigating'),
+          update('Jan', 1, '01:00', 'Resolved'),
+          update('Jan', 1, '00:10', 'Investigating'),
+        ]),
+        entry('cccc', [
+          update('Jan', 1, '00:30', 'Completed'),
+          update('Jan', 1, '00:00', 'Scheduled'),
+        ]),
+      ),
+    )
+    expect(out.maintenances).toBe(1)
+    expect(out.rows).toEqual([
+      expect.objectContaining({
+        incident_id: 'aaaa',
+        title: 'Errors & latency',
+        impact: null,
+        status: 'identified',
+        started_at: '2026-12-31T23:00:00.000Z',
+        resolved_at: null,
+        components: ['Claude API (api.anthropic.com)', 'Claude Code', 'claude.ai'],
+      }),
+      expect.objectContaining({
+        incident_id: 'bbbb',
+        status: 'investigating',
+        started_at: '2027-01-01T00:10:00.000Z',
+        resolved_at: null,
+        components: [],
+      }),
     ])
+
+    expect(() => parse(feed(entry('dddd', [update('Jan', 1, '00:30', 'Degraded')])))).toThrow(
+      'unknown status word "degraded"',
+    )
+    expect(() => parse(feed(entry('eeee', ['Something else entirely'])))).toThrow(
+      'unrecognized paragraph',
+    )
+    expect(() => parse('<html>maintenance page</html>')).toThrow('no <entry> elements')
+    expect(updateStamp('Mar 2, 09:05 UTC', Date.parse('2026-11-04T00:00:00Z'))).toBe(
+      '2026-03-02T09:05:00.000Z',
+    )
   })
 
   test('mistral: 50 incidents (the page cap), no components, local offsets read as UTC', () => {
@@ -118,7 +194,7 @@ describe('status lane', () => {
       expect(row.started_at).toMatch(/Z$/)
       expect(row.resolved_at).toMatch(/Z$/)
     }
-    const impacts = new Map<string, number>()
+    const impacts = new Map<string | null, number>()
     for (const r of out.rows) impacts.set(r.impact, (impacts.get(r.impact) ?? 0) + 1)
     expect(Object.fromEntries(impacts)).toEqual({ minor: 41, major: 6, critical: 3 })
 
@@ -249,7 +325,7 @@ describe('status lane', () => {
       {
         parse: () => parseAnthropicStatus(anthropicText),
         provider: 'anthropic' as const,
-        count: 50,
+        count: 25,
       },
       { parse: () => parseGoogleCloudStatus(googleText), provider: 'google' as const, count: 1 },
     ]

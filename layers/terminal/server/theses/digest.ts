@@ -79,7 +79,10 @@ function weekLine(claim: ClaimView): string | null {
 export function eventLabel(v: VerdictView): string {
   const f = v.facts
   if (typeof f.cut_pct === 'number') return `${String(f.model_slug)} −${f.cut_pct}%`
-  if (typeof f.hours === 'number') return `"${String(f.title)}" (${f.hours}h, ${String(f.impact)})`
+  if (typeof f.hours === 'number') {
+    const impact = typeof f.impact === 'string' ? f.impact : 'impact not published'
+    return `"${String(f.title)}" (${f.hours}h, ${impact})`
+  }
   return `"${String(f.title)}"`
 }
 

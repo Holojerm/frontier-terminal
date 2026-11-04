@@ -86,10 +86,20 @@ export const ANTHROPIC_THESIS: ThesisDef = {
         kind: 'judged',
         review: 'incidents-and-disclosures',
         judged_from: '2026-10-09',
-        rule: { rule: 'confirmed-material', impacts: ['major', 'critical', 'high'], min_hours: 2 },
+        // Anthropic's status feed publishes no impact since 2026-11-04 (the Atom
+        // feed; robots.txt bars the JSON API), so its incidents qualify on
+        // duration alone and the rubric carries materiality. Rivals' feeds
+        // still state one and are still filtered by it.
+        rule: {
+          rule: 'confirmed-material',
+          impacts: ['major', 'critical', 'high'],
+          min_hours: 2,
+          impact_unpublished: 'duration-alone',
+        },
         rubric:
-          'material: the incident title or components show it hit the vendor API or a flagship model, not only a consumer app, console, dashboard or billing; or the disclosure record itself labels the event high severity. ' +
-          'not-material: everything else. The Worker has already checked the impact (major, critical or high) and the duration (two hours or more).',
+          'material: the incident title or components show it hit the vendor API or a flagship model, not only a consumer app, connector, console, dashboard or billing; or the disclosure record itself labels the event high severity. ' +
+          'not-material: everything else, and any incident whose record cannot show what it hit. ' +
+          'The Worker has already checked the duration (two hours or more) and, where the feed publishes one, the impact (major, critical or high). An impact of null means the feed publishes none: never infer a severity from the wording.',
         confirmations: [],
       },
     },

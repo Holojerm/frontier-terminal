@@ -74,7 +74,7 @@ const columns = computed<TableColumn[]>(() => [
           >{{ p.open[0].title }}</a
         >
         <span class="whitespace-nowrap text-muted">
-          {{ p.open[0].impact }} · since
+          {{ p.open[0].impact ?? 'impact not published' }} · since
           <time :datetime="p.open[0].started_at" :title="p.open[0].started_at">{{
             relativeStamp(p.open[0].started_at, now)
           }}</time>

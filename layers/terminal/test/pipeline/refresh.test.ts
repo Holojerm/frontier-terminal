@@ -207,7 +207,7 @@ describe('baseline', () => {
     )
     // A status feed's whole backlog lands as baseline rows, never as 'added'.
     expect(perSource.get('openai-status')).toBe(25)
-    expect(perSource.get('anthropic-status')).toBe(50)
+    expect(perSource.get('anthropic-status')).toBe(25)
     expect(perSource.get('google-cloud-status')).toBe(1)
     expect(perSource.get('mistral-status')).toBe(50)
     // 316 RSS items, one per (component, incident), fold to 97 incidents.
@@ -493,6 +493,48 @@ describe('second run', () => {
     })
     expect(JSON.parse(change!.before_json!).resolved_at).toBeNull()
     expect(JSON.parse(change!.after_json!).resolved_at).toBe('2026-09-08T22:30:00Z')
+  })
+
+  it('a source that moved URL rewrites known rows in place; only a new key is logged', async () => {
+    await run('survey', ['anthropic-status'])
+    // The last good run read another URL, as anthropic-status did before it
+    // left the JSON API for the Atom feed on 2026-11-04.
+    const oldUrl = 'https://status.example.com/incidents.json'
+    await db.update(schema.snapshots).set({ source_url: oldUrl })
+
+    const atom = fixtureText('fixtures/status/anthropic-status.xml')
+    const entry = atom.match(/<entry>[\s\S]*?<\/entry>/)![0]
+    const retitled = (text: string, title: string) =>
+      text.replace(/<title>Issue with spend limits[^<]*<\/title>/, `<title>${title}</title>`)
+    const newEntry = entry.replace('/incidents/phg1y2yh07n2', '/incidents/zzzznewcode1')
+    const moved = retitled(atom, 'Issue with spend limits (re-read)').replace(
+      entry,
+      `${newEntry}\n  ${entry}`,
+    )
+
+    const report = await run(
+      'survey',
+      ['anthropic-status'],
+      fixtureFetcher({ 'anthropic-status': moved }),
+    )
+    expect(report.sources[0]).toMatchObject({ status: 'ok', added: 1, removed: 0, modified: 0 })
+    expect(report.sources[0]!.detail).toBe(
+      `moved from ${oldUrl}: 1 row re-read in place, not logged as changes`,
+    )
+    expect((await rows.changes()).map((c) => [c.entity_key, c.change_type])).toEqual([
+      ['incident:anthropic:zzzznewcode1', 'added'],
+    ])
+    const titles = (await rows.entities()).map((e) => JSON.parse(e.payload).title as string)
+    expect(titles).toContain('Issue with spend limits (re-read)')
+
+    // Settled at the new URL: the next edit is an ordinary logged change.
+    const later = await run(
+      'survey',
+      ['anthropic-status'],
+      fixtureFetcher({ 'anthropic-status': retitled(moved, 'Issue with spend limits (again)') }),
+    )
+    expect(later.sources[0]).toMatchObject({ status: 'ok', added: 0, modified: 1 })
+    expect(later.sources[0]!.detail).toBeNull()
   })
 
   it('a filtered feed with no matching rows is an ordinary tick for an append-only lane, and its first row is then added', async () => {

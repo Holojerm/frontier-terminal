@@ -364,13 +364,15 @@ export type ProspectusOutput = z.infer<typeof ProspectusOutput>
 // none/minor/major/critical and its status investigating/identified/
 // monitoring/resolved/postmortem; Google Cloud severity is low/medium/high
 // and its status is the most recent update's (AVAILABLE once resolved).
+// `impact` is null where the feed publishes none (Statuspage's Atom history,
+// anthropic-status): never inferred from an update's wording.
 // `updated_at` is deliberately absent — Statuspage re-stamps it on every
 // posted update, and a row that changed only there is not a change.
 export const IncidentRow = z.strictObject({
   provider: providerEnum,
   incident_id: z.string().min(1),
   title: z.string().min(1),
-  impact: z.string().min(1),
+  impact: z.string().min(1).nullable(),
   status: z.string().min(1),
   started_at: z.string().min(1),
   resolved_at: z.string().nullable(), // null while open

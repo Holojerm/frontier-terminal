@@ -76,6 +76,17 @@ describe('judged facts', () => {
     expect(rows.find((r) => r.label === 'Title')?.value).toBe('Elevated errors on the API')
   })
 
+  it('says an incident impact is not published when its feed states none', () => {
+    const rows = factRows({
+      title: 'Elevated errors on the API',
+      impact: null,
+      started_at: '2026-10-08T01:00:00Z',
+      resolved_at: '2026-10-08T04:30:00Z',
+      hours: 3.5,
+    })
+    expect(rows.find((r) => r.label === 'Impact')?.value).toBe('not published')
+  })
+
   it('keeps a fact it has no label for, and drops a null one', () => {
     expect(factRows({ severity_note: 'high', kind: null })).toEqual([
       { label: 'Severity note', value: 'high' },
