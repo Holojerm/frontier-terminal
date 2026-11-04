@@ -123,7 +123,8 @@ export function pressBrief(
   return { subject, html, text, ids: [alert.id] }
 }
 
-/** Registration-filing alerts since the epoch that `done` has not seen yet. */
+/** Critical registration-filing alerts since the epoch that `done` has not seen yet. The
+ * rule also raises notable alerts (a reworded risk factor), which are not news. */
 export async function pendingPressAlerts(
   db: PipelineDb,
   done: (id: string) => Promise<boolean>,
@@ -138,6 +139,7 @@ export async function pendingPressAlerts(
     .where(
       and(
         eq(tables.alerts.rule, PROSPECTUS_FLOOR_RULE),
+        eq(tables.alerts.severity, 'critical'),
         sql`datetime(${tables.alerts.created_at}) >= datetime(${PRESS_EPOCH})`,
       ),
     )
