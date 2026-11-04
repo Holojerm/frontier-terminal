@@ -161,6 +161,7 @@ How each gate stays scoped — **match this when you add a gate**:
 | --- | --- |
 | `lint` | `.oxlintrc.json` › `ignorePatterns` lists `.claude/**` |
 | `design:check` / `seo:check` / `brand:check` | Walk `ROOT/app`, `ROOT/app/pages`, and fixed root-relative asset paths |
+| `globals:check` | Walks `ROOT/server` and `ROOT/layers/*/server` |
 | `test` | `vitest.config.ts` › `include` is `test/**` + `server/**`, relative to the checkout |
 | `typecheck` | Nuxt's generated `.nuxt/tsconfig.*` use scoped includes (`../app/**/*`, `../server/**/*`), not a root glob |
 | `test:a11y` | Per-checkout port — see below |
@@ -217,6 +218,44 @@ cf builds triggers list --external-script-id "$(cf workers scripts search --name
 cf builds create <main-trigger-uuid> --body "{\"branch\":\"main\",\"commit_hash\":\"$(git rev-parse origin/main)\"}"
 cf builds logs get <build-uuid>
 ```
+
+## Production can break with CI green — three ways it has, and the guard for each
+
+All three happened on 2026-11-04. Dev, vitest, typecheck and the build pass each one.
+
+| Failure | What happened | Guard |
+| --- | --- | --- |
+| A cron invocation runs out of memory | google-careers (~20 MB) joined the six-hourly survey; the 18:00 tick died `exceededMemory` and lost every source it had not recorded | `layers/terminal/test/pipeline/payload-budget.test.ts`, in `bun run test` |
+| A deploy is refused | #169 called `crypto.randomUUID()` at module load, through a factory's default parameter; Cloudflare rejected the deploy (error 10021) and production stayed on the previous commit | `bun run globals:check`, in `bun run ci` |
+| The deploy lands broken, or never lands | nothing on GitHub turned red for the refused deploy above | `.github/workflows/post-deploy-smoke.yml` runs `bun run smoke` after every push to main |
+
+**Payload budget.** The test sizes every source each cron invocation fetches — the poll
+lanes in `scopes.ts`, the derived families at their production counts, and the survey's
+recipes — from `fixtures/manifest.json` › `raw_bytes`, or `raw_bytes:` on a sources.yaml
+entry with no fixture. It fails when a source over 16 MiB shares a lane, or a lane totals
+over 112 MiB; the test's header gives the evidence for both numbers. The survey sits at
+~109 MiB, so its next big source needs a lane of its own (#164 shows how: a scope, a task, a
+cron string in both files). Sizes are as recorded, so recapturing a grown fixture is what
+lets the gate see upstream growth.
+
+**Module load.** Workers run each module's top level once, in global scope, and refuse
+random values, timers and I/O there; the clock reads 1970 there instead. `globals:check`
+parses `server/` and `layers/*/server/` and flags `crypto.randomUUID`,
+`crypto.getRandomValues`, `Math.random`, `setTimeout`, `setInterval`, `fetch`, `Date.now`
+and an argument-less `new Date()` outside a function, and follows module-scope calls into
+functions it can resolve (same file, or a relative or alias import), up to three calls deep,
+including omitted parameters' defaults. It does not follow Nuxt auto-imports called with no
+import, method calls or re-exports. Fix by making the value on first use, as #170 did;
+`// global-scope-ok: <why>` silences a line that is safe. The gate checks itself on #169's
+pattern before every scan, because the TypeScript parser it uses cannot load in vitest.
+
+**Smoke.** The workflow polls `/api/status` for up to 20 minutes until `build.sha` is the
+pushed commit (a deploy that never lands fails here), then requires `status: ok`, no pending
+migrations, a cron map equal to `SCHEDULED_TASKS`, and a 200 from `/`, `/alerts`,
+`/revenue`, `/exposure`, `/data`, `/api/overview` and `/api/coverage`. A failure is a red
+check on the main commit and a GitHub email to whoever merged. It is not in `deploy:ci`:
+by then the deploy has happened, and a deploy that is refused never reaches that step. Run
+it by hand with `bun run smoke -- --wait 0`.
 
 ## The browser suites run in GitHub Actions, NOT in `bun run ci`
 

@@ -1,0 +1,48 @@
+# Post-deploy smoke test — after every push to main, wait for production to
+# serve that commit, then check it is healthy (scripts/smoke.ts).
+#
+# Workers Builds runs `bun run ci` and deploys, and it reports a build that
+# fails. It does not report a deploy that succeeded but serves a broken app,
+# and nothing on GitHub turned red when #169's deploy was refused by Cloudflare
+# (error 10021) and production stayed on the previous commit. This job fails
+# in both cases, as a red check on the main commit, and GitHub emails the
+# person whose push or merge started it.
+#
+# Cost: one small runner for ~3-5 minutes per merge, most of it waiting.
+
+name: Post-deploy smoke
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+# A newer push to main supersedes this one: production will skip to it, so
+# waiting for this commit's sha would only time out.
+concurrency:
+  group: post-deploy-smoke
+  cancel-in-progress: true
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    # Forks have no production to check.
+    if: github.repository == 'Holojerm/frontier-terminal'
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      # Pinned to commits for the reason browser-suites.yml gives.
+      - uses: actions/checkout@11d5960a326750d5838078e36cf38b85af677262 # v4
+
+      - uses: oven-sh/setup-bun@0c5077e51419868618aeaa5fe8019c62421857d6 # v2
+        with:
+          bun-version: 1.4.0
+
+      # No `bun install`: the script uses bun built-ins and scripts/lib only.
+      # --wait: Workers Builds takes ~3 minutes from push to deploy; 20 allows for a queue.
+      - name: Wait for the deploy, then check production
+        run: bun run scripts/smoke.ts --wait 1200
