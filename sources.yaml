@@ -1032,14 +1032,124 @@ derived_sources:
 # A recipe runs on the survey tick and stores into recipe_observations, never
 # the lab tables, so it is registered here rather than under `sources:`;
 # /api/coverage lists every recipe and reads its caveat and terms from this
-# block. Recipes added before the block (the Cloudflare thesis's) carry their
-# audit on their thesis journal page. Fixture provenance: fixtures/manifest.json.
-#
-# GPU rental prices (live-fetched 2026-11-02). Each is a first-party price
-# page or a documented price API; third-party aggregators and marketplaces
-# are never inputs (cut block). `terms` is what the provider's own terms say
-# about automated reading, checked on the same day.
+# block. Every recipe in the registry has an entry here;
+# layers/terminal/test/terminal-sources.test.ts fails when one does not.
+# Fixture provenance: fixtures/manifest.json.
 recipe_sources:
+  # The Cloudflare thesis (docs/theses/cloudflare.md, opened 2026-10-09).
+  # Its recipes predate this block; terms and robots.txt read 2026-11-04.
+  sec-revenue-net:
+    company: cloudflare
+    url: https://data.sec.gov/api/xbrl/companyfacts/CIK0001477333.json
+    format: JSON, SEC EDGAR XBRL company facts
+    verdict: include
+    terms: >-
+      US government work, not under copyright (17 U.S.C. 105). SEC fair
+      access: "Current max request rate: 10 requests/second", with a
+      declared User-Agent naming a contact
+      (layers/terminal/server/pipeline/fetch.ts). data.sec.gov has no
+      robots.txt (404). Taken: quarterly revenue facts, every 6 hours. Read
+      2026-11-04.
+    rights: ours
+    caveats: >-
+      The newest of three us-gaap revenue tags. The fourth quarter is the
+      10-K year less its three 10-Q quarters, marked derived; a restated
+      period keeps the latest filing's value.
+  sec-revenue-akam:
+    company: akamai
+    url: https://data.sec.gov/api/xbrl/companyfacts/CIK0001086222.json
+    format: JSON, SEC EDGAR XBRL company facts
+    verdict: include
+    terms: >-
+      US government work, not under copyright (17 U.S.C. 105). SEC fair
+      access: "Current max request rate: 10 requests/second", with a
+      declared User-Agent naming a contact
+      (layers/terminal/server/pipeline/fetch.ts). data.sec.gov has no
+      robots.txt (404). Taken: quarterly revenue facts, every 6 hours. Read
+      2026-11-04.
+    rights: ours
+    caveats: >-
+      Comparison set for the Cloudflare thesis. Akamai tags revenue
+      differently from Cloudflare; the newest of three us-gaap tags is used.
+      The fourth quarter is the 10-K year less its three 10-Q quarters,
+      marked derived.
+  sec-revenue-fsly:
+    company: fastly
+    url: https://data.sec.gov/api/xbrl/companyfacts/CIK0001517413.json
+    format: JSON, SEC EDGAR XBRL company facts
+    verdict: include
+    terms: >-
+      US government work, not under copyright (17 U.S.C. 105). SEC fair
+      access: "Current max request rate: 10 requests/second", with a
+      declared User-Agent naming a contact
+      (layers/terminal/server/pipeline/fetch.ts). data.sec.gov has no
+      robots.txt (404). Taken: quarterly revenue facts, every 6 hours. Read
+      2026-11-04.
+    rights: ours
+    caveats: >-
+      Comparison set for the Cloudflare thesis. Fastly tags revenue
+      differently from Cloudflare; the newest of three us-gaap tags is used.
+      The fourth quarter is the 10-K year less its three 10-Q quarters,
+      marked derived.
+  npm-wrangler:
+    company: cloudflare
+    url: https://api.npmjs.org/downloads/range/{start}:{end}/wrangler
+    format: JSON, npm downloads API (documented in the npm/registry repository), one row per day
+    verdict: include
+    terms: >-
+      npm's open-source terms bar automating access to the Website, then:
+      "You may replicate data from the Public Registry using the Public
+      APIs per this Agreement." No robots.txt on api.npmjs.org. Read
+      2026-11-04.
+    rights: upstream
+    caveats: >-
+      Every tarball fetch counts, CI runs and coding agents included, and
+      the count went from 8M to 92M a month in the year to September 2026,
+      so read the trend, not the level. A range longer than 18 months is
+      clipped without an error.
+  greenhouse-cloudflare:
+    company: cloudflare
+    url: https://boards-api.greenhouse.io/v1/boards/cloudflare/departments
+    format: JSON, Greenhouse job board departments, each with its open jobs (id and title only)
+    verdict: include
+    terms: >-
+      Greenhouse: "Job Board data is publicly available, so authentication
+      is not required for any GET endpoints." robots.txt disallows only
+      /embed/. Taken: department names and the count of open roles under
+      each, every 6 hours; the payload carries no job metadata and no names
+      of people. Read 2026-11-04.
+    rights: ours
+    caveats: >-
+      A board is a current state, not a history: the series starts on the
+      first run (2026-10-09). Which departments count as engineering and
+      sales is the thesis's choice; a renamed department drops out until
+      the list is updated.
+  cloudflare-changelog-ai:
+    company: cloudflare
+    url: https://developers.cloudflare.com/changelog/rss/index.xml
+    format: RSS, Cloudflare's developer changelog (every product, about 9 MB), one item per entry
+    verdict: include
+    terms: >-
+      developers.cloudflare.com links Cloudflare's Website and Online
+      Services Terms of Use (effective 2025-08-01). Section 8 bars automated
+      bots that "access, scan, scrape, data mine, copy, or use" the site's
+      content for an AI system "or the operation thereof", unless robots.txt
+      allows the bot's user agent and that agent is used for AI alone;
+      section 6 reserves the site's Materials "Except as expressly
+      authorized". robots.txt allows /changelog/ and declares
+      "Content-Signal: ai-train=yes, search=yes, ai-input=yes". The judge
+      routine rates each entry from its text, and the pipeline's
+      User-Agent is not AI-only, so the two read differently. Taken: title,
+      products, link and the first 400 characters of each Workers AI or
+      Agents entry, every 6 hours. Read 2026-11-04.
+    rights: not-cleared
+    caveats: >-
+      Only entries tagged Workers AI or Agents are kept. The judge rates
+      each from its title and opening text, once.
+  # GPU rental prices (live-fetched 2026-11-02). Each is a first-party price
+  # page or a documented price API; third-party aggregators and marketplaces
+  # are never inputs (cut block). `terms` is what the provider's own terms say
+  # about automated reading, checked on the same day.
   gpu-lambda:
     company: lambda
     url: https://lambda.ai/pricing
