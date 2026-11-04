@@ -11,7 +11,8 @@ export const ANTHROPIC_THESIS: ThesisDef = {
   statement:
     'Anthropic becomes the premium lab for developers and enterprises, and earns it in price, demand and hiring.',
   comparison_set: ['openai', 'google', 'xai', 'meta', 'mistral'],
-  horizon: "Until Anthropic's public S-1, or 2027-06-30 if none",
+  horizon:
+    "Until Anthropic's first annual report (10-K) as a listed company, or 2027-12-31 if none",
   position: 'none',
   opened: '2026-10-08',
   doc_path: 'docs/theses/anthropic.md',
@@ -142,6 +143,20 @@ export const ANTHROPIC_THESIS: ThesisDef = {
         compare_recipes: [],
         format: 'percent',
         rule: { rule: 'below-floor-periods', floor: 0.25, periods: 2 },
+      },
+    },
+    // Claim 9, the revenue claim the journal promised the S-1 would open.
+    // Written 2026-11-04 with the S-1's periods already in view.
+    {
+      id: 'anthropic-revenue-growth',
+      n: 9,
+      text: 'Revenue at least doubles year over year',
+      signal_label: 'Revenue Anthropic reports to the SEC, against the same period a year earlier',
+      kill_condition: 'Growth below 100% in 2 straight reported periods',
+      spec: {
+        kind: 'measured',
+        signal: 'sec-revenue-yoy-growth',
+        rule: { rule: 'below-floor-periods', floor: 1, periods: 2 },
       },
     },
   ],

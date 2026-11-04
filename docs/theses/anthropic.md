@@ -7,7 +7,7 @@ A research journal entry, not investment advice. The model behind it: [`docs/the
 | Stance | Bullish |
 | Statement | Anthropic becomes the premium lab for developers and enterprises, and earns it in price, demand and hiring. |
 | Comparison set | OpenAI, Google, xAI, Meta, Mistral |
-| Horizon | Until Anthropic's public S-1, or 2027-06-30 if none |
+| Horizon | Until Anthropic's first annual report (10-K) as a listed company, or 2027-12-31 if none. First horizon, "Until Anthropic's public S-1, or 2027-06-30 if none", reached 2026-10-26 |
 | Position | None |
 | Opened | 2026-10-08 |
 
@@ -25,6 +25,7 @@ Baselines are as of 2026-10-08. OpenRouter figures cover the week of 2026-10-01 
 | 6 | Businesses pay for Anthropic at least as often as OpenAI | Measured: Ramp AI Index, share of US businesses on Ramp paying Anthropic ÷ paying OpenAI, monthly | 1.08× in September 2026 (43.77% against 40.63%); first above 1.0× in May 2026 | Below 1.0× for 3 straight months |
 | 7 | Developers keep building on Anthropic's API | Measured: npm downloads of `@anthropic-ai/sdk`, trailing 28 days | 183.7M to 2026-11-02, its high; 36M to 2026-03-28 | 30% or more below its 90-day high for 4 straight weeks |
 | 8 | Business adoption of Anthropic keeps growing | Measured: Ramp AI Index, Anthropic's share of US businesses on Ramp against the same month a year earlier | +173% in September 2026 (43.77% against 16.02%) | Growth below 25% for 2 straight months |
+| 9 | Revenue at least doubles year over year | Measured: revenue Anthropic reports to the SEC, against the same-length period a year earlier | +1206% for the nine months to 2026-09-30 ($33.24B against $2.545B, unaudited, S-1/A); +1088% for 2025 ($4.585B against $386M) | Growth below 100% in 2 straight reported periods |
 
 ## Caveats
 
@@ -34,7 +35,8 @@ Baselines are as of 2026-10-08. OpenRouter figures cover the week of 2026-10-01 
 - Claims 6–8 were written on 2026-11-04 with their history already in view: Ramp's series back to July 2023 and npm's 540 days. Their thresholds were set against that history, not before it, unlike claims 1–5.
 - Ramp sees US businesses on Ramp that pay by card or bill pay, counted as adopters for any positive spend in a month: adoption, not spend. Ramp restates past months between releases, and the claims read the newest release; each earlier one is kept beside it. Claims 6 and 8 rest on the same series, so a Ramp revision can move both.
 - npm counts every download, CI included, and had 11 outage days of zero in the last eight months, each of which dents a 28-day sum by about 4%. Claim 7 reads the SDK, not Claude Code, whose series swings too far for a kill line.
-- The public S-1 ends the horizon and opens a revenue claim; until then the revenue axis stays empty.
+- The S-1 (filed 2026-10-26) reached the first horizon. All five claims then on the thesis were holding, each since 2026-10-09; the horizon was extended and claim 9 opened, as planned.
+- Claim 9 reads the periods the revenue page shows: the newest filing's value per period, restatements applied, the lab's own filings only (a parent's figure never counts). Each period is compared with the same-length period a year earlier; where one filing reports several spans to the same date (a quarter and the year to date), the longest is read. The S-1's interim periods are unaudited. Like claims 6–8, its threshold was set with the history in view.
 
 ## How the judged claims are rated
 
@@ -54,3 +56,4 @@ Claims 3 and 5 are rated by the judge routine, hourly, from 2026-10-09 on. The W
 | 2026-10-12 | Meta joins the comparison set; claims 1 and 2 read among five labs | Meta became the terminal's fifth lab, so its OpenRouter tokens now count in both shares and its flagship cuts and incidents are rival events. The 2026-10-08 baselines above are among four labs |
 | 2026-11-01 | Mistral joins the comparison set; claims 1 and 2 read among six labs | Mistral became the terminal's sixth lab, so its OpenRouter tokens count in both shares and its incidents are rival events. It has no flagship class-map cell, so claim 3 sees no Mistral flagship cut until one is mapped |
 | 2026-11-04 | Claims 6–8 added: Ramp adoption lead over OpenAI, `@anthropic-ai/sdk` downloads, Ramp adoption growth | Every demand claim read OpenRouter, which sees developer traffic only; Ramp adds enterprise spend and npm adds developer installs (`docs/source-audit.md`, 2026-11-04). Written with their history in view |
+| 2026-11-04 | Horizon reached and extended; claim 9 added: revenue at least doubles year over year | The public S-1 (2026-10-26) was the first horizon, and every claim was holding at it. The horizon now runs to Anthropic's first 10-K as a listed company, or 2027-12-31; the S-1's revenue opens the claim this journal said it would |
