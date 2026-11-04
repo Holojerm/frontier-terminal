@@ -598,7 +598,8 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'and how many current rows came from it. recipes lists the thesis recipes (GPU rental prices, filers outside the labs), which store ' +
         'outside the lab tables: each one’s last run, observation count, newest stored fetch, and its audit caveat and terms. ' +
         'cuts lists what is deliberately NOT tracked and why. totals are table row counts; ' +
-        'exports describes the CSV/JSON bulk downloads at /export/<table>.csv|json. ' +
+        'exports describes the CSV/JSON bulk downloads at /export/<table>.csv|json. Each column’s type, unit, nullability and meaning ' +
+        'are in the data dictionary at /export/dictionary.json. ' +
         PROVENANCE,
       annotations: READ_ONLY,
     },

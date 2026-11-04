@@ -115,6 +115,47 @@ export interface ExportTableInfo {
   rows: number
 }
 
+/** A column's value type in both export formats (DATA_TYPES says what each means). */
+export type DictionaryType =
+  | 'text'
+  | 'integer'
+  | 'number'
+  | 'timestamp'
+  | 'date'
+  | 'json'
+  | 'boolean'
+
+/** One exported column, as /export/dictionary.json documents it. */
+export interface DictionaryColumn {
+  name: string
+  type: DictionaryType
+  /** What the column holds, in one sentence. */
+  meaning: string
+  unit: string | null
+  nullable: boolean
+  /** key: part of the row's unique key. provenance: where and when the row was read. */
+  role: 'key' | 'provenance' | null
+  /** Present only when the table is requested with ?as_of=. */
+  as_of_only: boolean
+}
+
+export interface DictionaryTable {
+  name: string
+  description: string
+  csv: string
+  json: string
+  /** The columns that identify a row, in order. */
+  key: string[]
+  as_of: { mode: 'cut' | 'rebuilt' | 'refused'; note: string }
+  columns: DictionaryColumn[]
+}
+
+export interface DataDictionary {
+  types: Record<DictionaryType, string>
+  provenance: string
+  tables: DictionaryTable[]
+}
+
 export interface CutSource {
   id: string
   verdict: string
