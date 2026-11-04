@@ -76,6 +76,8 @@ export interface PointInTimeMeta {
   method: string[]
   /** Entity keys whose state at T the change log cannot confirm; their rows are the best reading, flagged. */
   unverified: string[]
+  /** The license the data as of `requested` carries (terminal-handler.ts › asOfLicense); set when served. */
+  license?: string
 }
 
 /** A point-in-time payload: the live shape plus how it was rebuilt; null stays null. */

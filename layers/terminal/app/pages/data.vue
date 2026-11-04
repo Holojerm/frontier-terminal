@@ -3,7 +3,13 @@
 // table with its columns, its current row count, and CSV/JSON downloads,
 // then the data dictionary that documents every column of them.
 
-import { DATA_LICENSE } from '#shared/utils/license'
+import {
+  DATA_LICENSE,
+  HISTORY_LICENSE,
+  HISTORY_PARAM,
+  LICENSE_SPLIT_EFFECTIVE,
+  LICENSE_WINDOW_DAYS,
+} from '#shared/utils/license'
 import { mailto } from '../../shared/utils/contact'
 import { count } from '../../shared/utils/terminal-format'
 import { INFO_FEED_QUERY } from '../../shared/utils/terminal-tiers'
@@ -16,7 +22,7 @@ definePageMeta({
     priority: '0.6',
     title: 'Data',
     summary:
-      'Every source we read, with its last check and caveat. CSV or JSON downloads of every table (prices, open jobs, incidents, SEC facts, changes, and alerts), each row with its source URL. A data dictionary gives each column’s type, unit, and meaning.',
+      'Every source we read, with its last check and caveat. CSV or JSON downloads of every table (prices, open jobs, incidents, SEC facts, changes, and alerts), each row with its source URL. Tables that grow over time download the last 90 days (CC BY 4.0) by default, and the full history (CC BY-NC 4.0) on request. A data dictionary gives each column’s type, unit, and meaning.',
   },
 })
 
@@ -88,6 +94,16 @@ const datasets = (coverage.value?.exports ?? []).map((table) =>
         encodingFormat: 'application/json',
         contentUrl: `${site.appUrl}/export/${table.name}.json`,
       },
+      // The full history is its own download under its own license.
+      ...(table.history === 'windowed'
+        ? [
+            {
+              encodingFormat: 'text/csv',
+              contentUrl: `${site.appUrl}/export/${table.name}.csv?${HISTORY_PARAM}=full`,
+              license: HISTORY_LICENSE.url,
+            },
+          ]
+        : []),
     ],
   }),
 )
@@ -95,12 +111,12 @@ const datasets = (coverage.value?.exports ?? []).map((table) =>
 useSeo({
   title: 'Data',
   description:
-    'Every terminal table as CSV or JSON, each row with its source URL, and a data dictionary of every column’s type, unit, and meaning.',
+    'Every table as CSV or JSON, each row with its source URL, and a dictionary of every column. The last 90 days are CC BY 4.0. The full history is CC BY-NC 4.0.',
   dateModified: coverage.value?.as_of,
   schema: [
     dataCatalogSchema(site, {
       description:
-        'Every table behind the terminal as a full CSV or JSON download. Each row has the URL we read it from and when.',
+        'Every table behind the terminal as a CSV or JSON download. Tables that grow over time download the last 90 days by default (CC BY 4.0) and the full history on request (CC BY-NC 4.0). Each row has the URL we read it from and when.',
       dateModified: coverage.value?.as_of,
     }),
     ...datasets,
@@ -139,7 +155,7 @@ const EXPORT_COLUMNS: TableColumn[] = [
     <TerminalPanel
       id="tables"
       title="Tables"
-      note="Each table in full, with its source URL and fetch time on every row."
+      :note="`Tables that grow over time download the last ${LICENSE_WINDOW_DAYS} days. Full history has every row, each with its license. Every row has its source URL and fetch time.`"
       flush
     >
       <TerminalTable
@@ -176,6 +192,16 @@ const EXPORT_COLUMNS: TableColumn[] = [
               label="JSON"
             />
             <UButton
+              v-if="t.history === 'windowed'"
+              :to="`/export/${t.name}.csv?${HISTORY_PARAM}=full`"
+              external
+              size="sm"
+              variant="link"
+              color="neutral"
+              :aria-label="`Full history of ${t.name}, CSV, licensed ${HISTORY_LICENSE.short}`"
+              label="Full history"
+            />
+            <UButton
               :to="`/export/sample/${t.name}.csv`"
               external
               size="sm"
@@ -200,8 +226,9 @@ const EXPORT_COLUMNS: TableColumn[] = [
         Data as of the last check<template v-if="coverage.as_of"
           >, <time :datetime="coverage.as_of">{{ coverage.as_of }}</time></template
         ><span v-else> (none has run yet)</span>. Exports are live. The counts above can be up to
-        five minutes old. Each sample is the table’s first 50 rows in export order (oldest first
-        when the table is ordered by time), at
+        five minutes old, and count every row, not just the last {{ LICENSE_WINDOW_DAYS }} days.
+        Each sample is the first 50 rows of the default download in export order (oldest first when
+        the table is ordered by time), at
         <span class="font-mono">/export/sample/&lt;table&gt;.csv</span> or
         <span class="font-mono">.json</span>. <span class="font-mono">entity_securities</span> maps
         each lab and tracked company to its issuer, CIK, and ticker symbol, and says so when a lab
@@ -293,10 +320,11 @@ const EXPORT_COLUMNS: TableColumn[] = [
     <TerminalPanel id="commercial" title="Commercial use">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p class="max-w-2xl text-sm text-default">
-          Need the parts of these tables that are ours under signed terms, on a schedule you can
-          depend on, with full history, or covering something we don’t?
+          Using the full history in a product, a fund process, or anything else commercial? That
+          needs a paid license. So do signed terms, a feed you can depend on, and coverage we don’t
+          have yet.
           <NuxtLink to="/contact" class="text-primary underline underline-offset-2"
-            >That’s a paid arrangement</NuxtLink
+            >Write to us</NuxtLink
           >. Upstream CC BY data keeps its own terms, and some sources aren’t in any paid offer.
         </p>
         <UButton
@@ -312,8 +340,11 @@ const EXPORT_COLUMNS: TableColumn[] = [
     <div class="grid gap-6 lg:grid-cols-2">
       <TerminalPanel id="license" title="Terms">
         <p class="max-w-2xl text-sm text-default">
-          The compilation is licensed {{ DATA_LICENSE.short }}. The underlying facts belong to their
-          publishers.
+          The last {{ LICENSE_WINDOW_DAYS }} days are {{ DATA_LICENSE.short }}. Older rows are
+          {{ HISTORY_LICENSE.short }}, except what we published before
+          {{ LICENSE_SPLIT_EFFECTIVE }}, which stays {{ DATA_LICENSE.short }}. A full-history
+          download labels each row in a <span class="font-mono">license</span> column. The
+          underlying facts belong to their publishers.
           <NuxtLink to="/license" class="text-primary underline underline-offset-2"
             >Full terms and the attribution line</NuxtLink
           >.

@@ -112,7 +112,10 @@ export interface ExportTableInfo {
   name: string
   description: string
   columns: string[]
+  /** Whole table. Windowed tables count every row, though the default download is the license window. */
   rows: number
+  /** windowed: the default download is the trailing license window; whole: every row. */
+  history: 'windowed' | 'whole'
 }
 
 /** A column's value type in both export formats (DATA_TYPES says what each means). */
@@ -147,12 +150,20 @@ export interface DictionaryTable {
   /** The columns that identify a row, in order. */
   key: string[]
   as_of: { mode: 'cut' | 'rebuilt' | 'refused'; note: string }
+  /**
+   * How the license window cuts the default download: windowed tables serve
+   * the rows `dated` on or after its first day (?history=full serves all),
+   * whole tables every row.
+   */
+  history: { mode: 'windowed' | 'whole'; dated: string[]; full: string | null; note: string }
   columns: DictionaryColumn[]
 }
 
 export interface DataDictionary {
   types: Record<DictionaryType, string>
   provenance: string
+  /** The license split, and the license column a full-history download adds. */
+  license: string
   tables: DictionaryTable[]
 }
 

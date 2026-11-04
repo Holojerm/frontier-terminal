@@ -11,6 +11,11 @@
 // The CSV defuses cells a spreadsheet would execute (see defuseFormula); the
 // JSON is verbatim, because nothing executes a JSON string.
 //
+// The data license is split by age (shared/utils/license.ts), so a bulk export
+// of a table that grows over time serves the trailing window by default and
+// every row behind `?history=full`, each row then labeled in a `license`
+// column. EXPORT_HISTORY classifies every table and names the date it is cut on.
+//
 // `?as_of=` (ExportTable.at) serves a table as the store held it at that instant:
 // an append-only table by the column that says when each row was written,
 // read as a range on the index its keyset already pages; an entity view
@@ -20,10 +25,19 @@
 // Pure functions of the Drizzle client, so layers/terminal/test/terminal-export.test.ts can
 // drive them against the workerd D1 and read the bytes back.
 
-import { and, asc, count, eq, lt, lte, sql, type SQL } from 'drizzle-orm'
+import { and, asc, count, eq, gte, lt, lte, sql, type SQL } from 'drizzle-orm'
 import type { SQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core'
 
 import * as tables from '#server/db/schema'
+import {
+  DATA_LICENSE,
+  HISTORY_LICENSE,
+  HISTORY_PARAM,
+  LICENSE_SPLIT_EFFECTIVE,
+  LICENSE_WINDOW_DAYS,
+  licenseWindowStart,
+  rowLicense,
+} from '#shared/utils/license'
 import { riskFactorChanges } from '../pipeline/parsers/sec/prospectus-risk-factors'
 import type { PipelineDb } from '../pipeline/store'
 import {
@@ -31,6 +45,7 @@ import {
   PointInTimeError,
   alertsKnownAt,
   judgeCutoffAt,
+  parseAsOfQuery,
   rewindEntities,
 } from './terminal-asof'
 import { ENTITY_SECURITIES, ENTITY_SECURITY_COLUMNS } from './terminal-entities'
@@ -83,6 +98,7 @@ export function exportFilter(
   const conditions: SQL[] = []
   for (const [name, raw] of Object.entries(query)) {
     if (name === AS_OF_PARAM) continue // ExportTable.at, not a column filter
+    if (name === HISTORY_PARAM) continue // the license window (windowOf), not a column filter
     const column = table.filters?.[name]
     if (!column) {
       const allowed = Object.keys(table.filters ?? {})
@@ -977,6 +993,290 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
 
 export const EXPORT_TABLE_NAMES = Object.keys(EXPORT_TABLES)
 
+// ---- the license window ----------------------------------------------------
+
+/** A table of current rows or a lookup: every export serves all of it. */
+export interface WholeRule {
+  kind: 'whole'
+  /** Why it isn't cut by age, for the data dictionary. */
+  why: string
+  /** When a row first appeared here, for labeling a rebuild older than the window. Null where as_of is refused. */
+  published: string | null
+}
+
+/** A table that grows over time: the default export is the rows dated inside the window. */
+export interface WindowedRule {
+  kind: 'windowed'
+  /** The row's own date: the first of these columns that isn't null. */
+  dated: readonly [string, ...string[]]
+  /** What that date is, in the dictionary's words. */
+  basis: string
+  /** When the row first appeared here (rowLicense). */
+  published: string
+  /** `dated[0]` as a column, so the window is a SQL condition; without it rows are filtered as they stream. */
+  column?: SQLiteColumn
+}
+
+export type HistoryRule = WholeRule | WindowedRule
+
+const whole = (why: string, published: string | null = 'first_seen_at'): WholeRule => ({
+  kind: 'whole',
+  why,
+  published,
+})
+
+const windowed = (
+  dated: readonly [string, ...string[]],
+  basis: string,
+  published: string,
+  column?: SQLiteColumn,
+): WindowedRule => ({ kind: 'windowed', dated, basis, published, column })
+
+/**
+ * Every export table's license-window rule. Current-state and reference
+ * tables stay whole; a log, an observation series, or a list of dated events
+ * is windowed on its natural date. layers/terminal/test/terminal-dictionary.test.ts
+ * fails when a table has no rule or a rule names a column the table lacks.
+ */
+export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
+  snapshots: windowed(
+    ['fetched_at'],
+    'fetched_at, when we read the page',
+    'fetched_at',
+    tables.snapshots.fetched_at,
+  ),
+  prices_latest: whole('it holds one current row per SKU.'),
+  jobs_open: whole('it holds the roles listed now.'),
+  incidents: windowed(
+    ['started_at', 'first_seen_at'],
+    'started_at, when the incident began (first_seen_at where the feed gives no start)',
+    'first_seen_at',
+  ),
+  disclosures: windowed(
+    ['listed_on', 'first_seen_at'],
+    'listed_on, the date the index prints (first_seen_at where it prints none)',
+    'first_seen_at',
+  ),
+  disclosure_timelines: windowed(
+    ['disclosed_on', 'discovered_on', 'first_seen_at'],
+    'disclosed_on, else discovered_on, else first_seen_at',
+    'first_seen_at',
+  ),
+  filers: whole('it’s a lookup of one CIK per lab.'),
+  revenue_facts: windowed(['end'], 'end, the period end', 'first_seen_at'),
+  prospectus_statements: windowed(['filed'], 'filed, the filing date', 'first_seen_at'),
+  prospectus_commitments: windowed(['filed'], 'filed, the filing date', 'first_seen_at'),
+  prospectus_concentration: windowed(['filed'], 'filed, the filing date', 'first_seen_at'),
+  prospectus_shares: windowed(['filed'], 'filed, the filing date', 'first_seen_at'),
+  prospectus_risk_factors: windowed(['filed'], 'filed, the filing date', 'first_seen_at'),
+  changes: windowed(
+    ['detected_at'],
+    'detected_at, when we saw the change',
+    'detected_at',
+    tables.changes.detected_at,
+  ),
+  alerts: windowed(
+    ['created_at'],
+    'created_at, when the alert was written',
+    'created_at',
+    tables.alerts.created_at,
+  ),
+  claim_readings: windowed(
+    ['date'],
+    'date, the data date',
+    'computed_at',
+    tables.claimReadings.date,
+  ),
+  claim_verdicts: windowed(
+    ['detected_at'],
+    'detected_at, when we saw the change it rates',
+    'judged_at',
+    tables.claimVerdicts.detected_at,
+  ),
+  track_record_candidates: windowed(
+    ['found_at'],
+    'found_at, when we found the article',
+    'found_at',
+    tables.trackRecordCandidates.found_at,
+  ),
+  track_record_verdicts: windowed(
+    ['judged_at'],
+    'judged_at, when the judge rated it',
+    'judged_at',
+    tables.trackRecordVerdicts.judged_at,
+  ),
+  recipe_observations: windowed(
+    ['date'],
+    'date, the date the value is for',
+    'first_seen_at',
+    tables.recipeObservations.date,
+  ),
+  filed_facts: windowed(['end'], 'end, the period end', 'first_seen_at', tables.filedFacts.end),
+  exposure_quarters: windowed(['end'], 'end, the period end', 'fetched_at'),
+  source_runs: windowed(
+    ['started_at'],
+    'started_at, when the check ran',
+    'started_at',
+    tables.sourceRuns.started_at,
+  ),
+  entity_securities: whole('it’s a hand-checked lookup of labs to securities.', null),
+}
+
+/** The license window's rule for a registered table. */
+export function historyRule(name: string): HistoryRule {
+  const rule = EXPORT_HISTORY[name]
+  if (!rule) throw new Error(`no license-window rule for export ${name}`)
+  return rule
+}
+
+/** A row's own date under its table's rule, or null when every dated column is empty. */
+export function rowDate(rule: WindowedRule, row: Row): string | null {
+  for (const column of rule.dated) {
+    const value = row[column]
+    if (value !== null && value !== undefined && value !== '') return String(value)
+  }
+  return null
+}
+
+/**
+ * The table cut to rows dated on or after `from` (licenseWindowStart): what a
+ * bulk export serves without `?history=full`. A row with no date at all is
+ * kept, since nothing says it is old.
+ */
+export function windowOf(table: ExportTable, rule: HistoryRule, from: string): ExportTable {
+  if (rule.kind === 'whole') return table
+  const { column } = rule
+  const keep = (row: Row) => {
+    const dated = rowDate(rule, row)
+    return dated === null || dated >= from
+  }
+  return {
+    ...table,
+    async page(db, after, limit, where) {
+      if (column) return table.page(db, after, limit, and(where, gte(column, from)))
+      // Not a column of its own (a payload field, a built row): filter each
+      // page, resuming after the last row read, until one is full.
+      const out: Row[] = []
+      let cursor = after
+      for (;;) {
+        const rows = await table.page(db, cursor, limit, where)
+        for (const row of rows) {
+          if (!keep(row)) continue
+          out.push(row)
+          if (out.length === limit) return out
+        }
+        if (rows.length < limit) return out
+        cursor = rows.at(-1)!
+      }
+    },
+    count: () => Promise.reject(new Error('not counted for a window')),
+  }
+}
+
+/** The column a full-history export adds, just before source_url. */
+export const LICENSE_COLUMN = 'license'
+
+/** The columns of `table` with LICENSE_COLUMN before source_url. */
+export function licensedColumns(columns: readonly string[]): string[] {
+  const at = columns.indexOf('source_url')
+  return [...columns.slice(0, at), LICENSE_COLUMN, ...columns.slice(at)]
+}
+
+/** Every row of `table`, each labeled with the SPDX id `licenseOf` gives it. */
+export function licensedOf(table: ExportTable, licenseOf: (row: Row) => string): ExportTable {
+  const columns = licensedColumns(table.columns)
+  return {
+    ...table,
+    columns,
+    async page(db, after, limit, where) {
+      const rows = await table.page(db, after, limit, where)
+      return rows.map((row) => project({ ...row, [LICENSE_COLUMN]: licenseOf(row) }, columns))
+    },
+  }
+}
+
+export type HistoryQuery = 'recent' | 'full'
+
+/** `as_of` and `history` (recent, the default, or full), for getValidatedQuery. */
+export function parseExportQuery(query: unknown): { as_of?: string; history?: HistoryQuery } {
+  const history = (query as Record<string, unknown> | null)?.[HISTORY_PARAM]
+  if (history !== undefined && history !== 'recent' && history !== 'full') {
+    throw new PointInTimeError(`${HISTORY_PARAM} must be recent (the default) or full`)
+  }
+  return { ...parseAsOfQuery(query), ...(history === undefined ? {} : { history }) }
+}
+
+export interface LicenseWindow {
+  table: ExportTable
+  /** The first day of the window (licenseWindowStart). */
+  from: string
+  /** The default export of a table that grows, cut to the window. */
+  windowed: boolean
+  /** Rows older than the window may be in it, each labeled in LICENSE_COLUMN. */
+  split: boolean
+}
+
+/**
+ * Apply the license window to `table` (already rebuilt at `as_of`, if asked):
+ *
+ * - a windowed table serves the rows dated inside the window, or every row
+ *   with its license when `history=full`. An `as_of` before the window has no
+ *   rows inside it, so without `history=full` it is a PointInTimeError.
+ * - a whole table is served whole. Rebuilt at an `as_of` before the window it
+ *   is older data, and its rows are labeled the same way.
+ */
+export function licenseWindow(
+  name: string,
+  table: ExportTable,
+  query: { as_of?: string; history?: HistoryQuery },
+  from: string = licenseWindowStart(),
+): LicenseWindow {
+  const rule = historyRule(name)
+  const label = (dated: (row: Row) => string | null) =>
+    licensedOf(table, (row) => {
+      const published = rule.published === null ? null : row[rule.published]
+      return rowLicense(dated(row), typeof published === 'string' ? published : null, from).id
+    })
+
+  const { as_of } = query
+  if (rule.kind === 'whole') {
+    if (as_of === undefined || as_of >= from) return { table, from, windowed: false, split: false }
+    return { table: label(() => as_of), from, windowed: false, split: true }
+  }
+  if (query.history === 'full') {
+    return { table: label((row) => rowDate(rule, row)), from, windowed: false, split: true }
+  }
+  if (as_of !== undefined && as_of < from) {
+    throw new PointInTimeError(
+      `as_of ${as_of} is before ${from}, the start of the trailing ${LICENSE_WINDOW_DAYS} days, which is all /export/${name} serves by default. Add ${HISTORY_PARAM}=full for the full history, licensed ${HISTORY_LICENSE.short} for our compilation (see /license).`,
+    )
+  }
+  return { table: windowOf(table, rule, from), from, windowed: true, split: false }
+}
+
+/**
+ * The license as HTTP headers, so it reaches a client that never opens the
+ * body: a `Link rel=license` (RFC 4946) to each license that applies, and the
+ * window the rows were cut to.
+ */
+export function licenseHeaders(window: LicenseWindow): Record<string, string> {
+  if (window.split) {
+    return {
+      Link: `<${HISTORY_LICENSE.url}>; rel="license", <${DATA_LICENSE.url}>; rel="license", </license>; rel="terms-of-service"`,
+      'X-License': `${HISTORY_LICENSE.id} for rows dated before ${window.from} that we first published on or after ${LICENSE_SPLIT_EFFECTIVE}, ${DATA_LICENSE.id} for the rest. The ${LICENSE_COLUMN} column labels each row.`,
+    }
+  }
+  return {
+    Link: `<${DATA_LICENSE.url}>; rel="license", </license>; rel="terms-of-service"`,
+    'X-License': DATA_LICENSE.id,
+    ...(window.windowed
+      ? {
+          'X-History': `Rows dated on or after ${window.from}, the trailing ${LICENSE_WINDOW_DAYS} days. Add ?${HISTORY_PARAM}=full for every row.`,
+        }
+      : {}),
+  }
+}
+
 /** Rows in a sample file: the first rows of the table in export order, oldest first where the key is a time. */
 export const SAMPLE_ROWS = 50
 
@@ -1108,6 +1408,21 @@ export async function* jsonChunks(
     first = false
   }
   yield '\n]\n'
+}
+
+/**
+ * jsonChunks inside an object: `head`'s fields, then the rows under `rows`.
+ * A full-history export is served this way so its license travels in the file.
+ */
+export async function* jsonEnvelopeChunks(
+  db: PipelineDb,
+  table: ExportTable,
+  where: SQL | undefined,
+  head: Record<string, unknown>,
+): AsyncGenerator<string> {
+  yield `${JSON.stringify(head).slice(0, -1)},"rows":`
+  yield* jsonChunks(db, table, where)
+  yield '}\n'
 }
 
 /** A byte stream over text chunks; the generator is closed if the reader goes away. */

@@ -36,7 +36,7 @@ useSeo({
         'Every entry on a frontier lab’s own misalignment-disclosure index: report or notice, title, summary, model, and context verbatim, with the date the index prints. A count reflects what a lab discloses, so it doesn’t measure how often models misbehave.',
       dateModified: disclosures.value?.as_of,
       variableMeasured: ['kind', 'title', 'model', 'listed_on'],
-      distribution: exportDistribution(site, 'disclosures'),
+      distribution: exportDistribution(site, 'disclosures', { fullHistory: true }),
     }),
   ],
 })

@@ -25,6 +25,8 @@ const TYPE_LABEL: Record<DictionaryColumn['type'], string> = {
 
 const MODE_LABEL = { cut: 'cut at T', rebuilt: 'rebuilt at T', refused: 'answers 400' } as const
 
+const HISTORY_LABEL = { windowed: 'last 90 days', whole: 'whole table' } as const
+
 const types = computed<Fact[]>(() =>
   Object.entries(props.dictionary.types).map(([type, meaning]) => ({
     key: type,
@@ -74,6 +76,7 @@ watch(() => route.hash, followHash)
 <template>
   <div class="flex flex-col gap-4">
     <p class="max-w-3xl text-sm text-default">{{ dictionary.provenance }}</p>
+    <p class="max-w-3xl text-sm text-default">{{ dictionary.license }}</p>
     <TerminalFacts :items="types" :cols="3" />
 
     <ul class="flex flex-col border-t border-default">
@@ -107,6 +110,12 @@ watch(() => route.hash, followHash)
                 size="sm"
                 :label="`as_of: ${MODE_LABEL[t.as_of.mode]}`"
               />
+              <UBadge
+                variant="subtle"
+                color="neutral"
+                size="sm"
+                :label="`download: ${HISTORY_LABEL[t.history.mode]}`"
+              />
             </span>
           </UButton>
           <template #content>
@@ -116,6 +125,8 @@ watch(() => route.hash, followHash)
                 <dd class="font-mono text-default">{{ t.key.join(', ') }}</dd>
                 <dt class="text-xs text-muted">as_of</dt>
                 <dd class="text-default">{{ t.as_of.note }}</dd>
+                <dt class="text-xs text-muted">Download</dt>
+                <dd class="text-default">{{ t.history.note }}</dd>
               </dl>
               <TerminalTable
                 :caption="`Columns of ${t.name}`"

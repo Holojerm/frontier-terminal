@@ -16,7 +16,7 @@ Frontier Terminal is the engine, and its first thesis is Anthropic, read off the
 - **No public-company line.** Private companies count; the frontier labs are already among the largest. One size floor applies to all.
 - **The size floor is a $10B valuation:** market cap for a public company, the last priced round for a private one. It applies to the thesis's company, not its comparison set.
 - **Theses build understanding, not trades.** The digest exists to move conviction in a thesis, up or down, with reasons; it does not time entries, size positions or call exits. It leads with what counts against each thesis.
-- **Data and recipes are fully open.** If money ever comes, it comes from the platform, not the data.
+- **Data and recipes are fully open.** If money ever comes, it comes from the platform, not the data. *Revised in part 2026-11-04: see [Revisions](#revisions).*
 - **Jeremy gates requests.** No queue promise, no SLA.
 - **Hobby-first.** It succeeds if it is useful to one person.
 
@@ -68,7 +68,7 @@ Frontier Terminal is the engine, and its first thesis is Anthropic, read off the
 
 **Data**
 
-- Recipes are MIT; data is CC-BY.
+- Recipes are MIT; data is CC-BY. *From 2026-11-04: the last 90 days are CC BY, older data CC BY-NC (see [Revisions](#revisions)).*
 - Only public, no-login sources. Terms forbid redistribution → publish the recipe and derived number, not the raw snapshot. robots.txt says no → skip.
 - Every data point carries its source URL, snapshot time and recipe version.
 - Errors are corrected in public with a dated note; history is never rewritten.
@@ -108,6 +108,18 @@ The first is enough to keep going as a hobby.
 ## Monetization, if ever
 
 The Dune model: public data and theses free; paid platform. Candidates are private theses and overlays, faster refresh and more compute, API and exports, alerts, and team seats. None of it is built until others want to fork privately.
+
+## Revisions
+
+**2026-11-04: the data license splits by age.** This partly reverses the decision that data and recipes are fully open and that money comes from the platform, not the data.
+
+- The code and recipes stay MIT. Every page stays free to read, history included.
+- Our compilation and the numbers we derive from the last 90 days stay CC BY 4.0, free for any use.
+- Anything older (the full history) is CC BY-NC 4.0. Commercial use of it needs a paid license (`/contact`).
+- Bulk exports of tables that grow over time default to the last 90 days. `?history=full` serves every row, each labeled with its license.
+- Data published before 2026-11-04 stays CC BY 4.0. Upstream data keeps its own license, and raw public facts such as SEC filings aren't ours to restrict.
+
+Why: revenue can come from the history and from terms, without closing anything. The recent window stays open for any use, and the full history stays open for non-commercial use. The platform ideas above still stand.
 
 ## Risks
 

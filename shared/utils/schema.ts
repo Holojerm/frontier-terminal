@@ -18,7 +18,7 @@
 //      Markup for content that isn't rendered is a manual-action risk with
 //      Google and, more practically, a lie an answer engine will repeat.
 
-import { DATA_LICENSE } from './license'
+import { DATA_LICENSE, HISTORY_LICENSE, HISTORY_PARAM } from './license'
 import { absoluteUrl } from './site'
 
 /** A JSON-LD node. Deliberately loose — schema.org is open-world. */
@@ -124,18 +124,37 @@ export function labOrganizationSchema(lab: { name: string; url: string }): JsonL
   return { '@type': 'Organization', name: lab.name, url: lab.url }
 }
 
+/** One DataDownload. `license` where it differs from the Dataset's own. */
+export interface Distribution {
+  encodingFormat: string
+  contentUrl: string
+  license?: string
+}
+
 /**
  * The CSV and JSON downloads of one /export table, as a Dataset
  * `distribution`. Both always resolve: the export route serves every table
- * in EXPORT_TABLES in both formats.
+ * in EXPORT_TABLES in both formats. `fullHistory`, for a table the license
+ * window cuts (EXPORT_HISTORY), adds the full-history CSV under its own
+ * license: the defaults are the CC BY window, so they carry the Dataset's.
  */
 export function exportDistribution(
   site: SiteContext,
   table: string,
-): { encodingFormat: string; contentUrl: string }[] {
+  options: { fullHistory?: boolean } = {},
+): Distribution[] {
   return [
     { encodingFormat: 'text/csv', contentUrl: `${site.appUrl}/export/${table}.csv` },
     { encodingFormat: 'application/json', contentUrl: `${site.appUrl}/export/${table}.json` },
+    ...(options.fullHistory
+      ? [
+          {
+            encodingFormat: 'text/csv',
+            contentUrl: `${site.appUrl}/export/${table}.csv?${HISTORY_PARAM}=full`,
+            license: HISTORY_LICENSE.url,
+          },
+        ]
+      : []),
   ]
 }
 
@@ -156,6 +175,8 @@ export function dataCatalogSchema(
     name: `${site.appName} data`,
     description: catalog.description,
     license: DATA_LICENSE.url,
+    // The age split: /license says which rows are CC BY-NC (shared/utils/license.ts).
+    usageInfo: absoluteUrl(site.appUrl, '/license'),
     isAccessibleForFree: true,
     publisher: { '@id': `${site.appUrl}/${SCHEMA_IDS.organization}` },
     inLanguage: 'en',
@@ -180,7 +201,7 @@ export interface DatasetInput {
   /** Column names, or the quantities measured. */
   variableMeasured?: readonly string[]
   /** Downloads, as `{ format, url }`. A dataset with none is still a dataset. */
-  distribution?: readonly { encodingFormat: string; contentUrl: string }[]
+  distribution?: readonly Distribution[]
   /** Rows, where the count is known and cheap. */
   rows?: number | null
   /** URLs of the upstream sources the rows were read from (schema.org `isBasedOn`). */
@@ -224,7 +245,11 @@ export function datasetSchema(site: SiteContext, dataset: DatasetInput): JsonLdN
     url: dataset.url,
     name: dataset.name,
     description: dataset.description,
+    // The license of the default downloads (the trailing window). A
+    // full-history download states its own on its DataDownload, and
+    // usageInfo points at the page that explains the split.
     license: DATA_LICENSE.url,
+    usageInfo: absoluteUrl(site.appUrl, '/license'),
     isAccessibleForFree: true,
     // Named inline as well as by @id: Dataset Search reads a creator's name
     // off the node and does not always resolve a bare reference.
@@ -247,6 +272,7 @@ export function datasetSchema(site: SiteContext, dataset: DatasetInput): JsonLdN
             '@type': 'DataDownload',
             encodingFormat: d.encodingFormat,
             contentUrl: d.contentUrl,
+            ...(d.license ? { license: d.license } : {}),
           })),
         }
       : {}),

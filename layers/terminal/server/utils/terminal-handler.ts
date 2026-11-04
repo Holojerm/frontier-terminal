@@ -12,6 +12,8 @@ import type { H3Event } from 'h3'
 
 import sourcesYaml from 'raw:~~/sources.yaml'
 
+import { asOfLicense, withLicense } from '#shared/utils/license'
+
 import {
   AS_OF_PARAM,
   PointInTimeError,
@@ -55,7 +57,11 @@ export async function terminalPayload<T>(
 ): Promise<T> {
   const stamp = await timed(options.timings, 'stamp', liveStamp)
   const context = queryContext(sourcesYaml, stamp)
-  return cachedTerminal(kv, cacheName(name, variant), stamp, () => query(context), options)
+  // The license is added after the cache: its window moves daily, and a
+  // cached payload must not carry yesterday's.
+  return withLicense(
+    await cachedTerminal(kv, cacheName(name, variant), stamp, () => query(context), options),
+  )
 }
 
 /**
@@ -98,6 +104,13 @@ export async function terminalPayloadAt<T extends object | null>(
       ) as AsOfPayload<T>
     },
     options,
+  ).then((payload) =>
+    payload === null
+      ? payload
+      : withLicense({
+          ...payload,
+          point_in_time: { ...payload.point_in_time, license: asOfLicense(at) },
+        }),
   )
 }
 

@@ -39,6 +39,12 @@ import {
 } from '@modelcontextprotocol/server'
 import { z } from 'zod'
 
+import {
+  DATA_LICENSE,
+  HISTORY_LICENSE,
+  LICENSE_SPLIT_EFFECTIVE,
+  LICENSE_WINDOW_DAYS,
+} from '#shared/utils/license'
 import { ALERT_TIER_FILTERS } from '../../shared/utils/terminal-tiers'
 
 import type { PipelineDb } from '../pipeline/store'
@@ -163,9 +169,15 @@ async function asOfErrors(run: () => Promise<CallToolResult>): Promise<CallToolR
   }
 }
 
+const LICENSE =
+  `license names the data license, split by age: our compilation and derived numbers from the last ${LICENSE_WINDOW_DAYS} days are ${DATA_LICENSE.short}, ` +
+  `older ones ${HISTORY_LICENSE.short} (no commercial use without a paid license), except what we published before ${LICENSE_SPLIT_EFFECTIVE}, which stays ${DATA_LICENSE.short}. ` +
+  `A result with as_of older than ${LICENSE_WINDOW_DAYS} days is labeled ${HISTORY_LICENSE.id} in point_in_time.license. Upstream data keeps its own license.`
+
 const PROVENANCE =
   'Every row carries source_url (the exact page it was read from) and fetched_at (UTC). ' +
-  'as_of is the poll tick the payload reflects; computed_at is when it was built (it may then be served from a five-minute cache).'
+  'as_of is the poll tick the payload reflects; computed_at is when it was built (it may then be served from a five-minute cache). ' +
+  LICENSE
 
 const INSTRUCTIONS =
   `${MCP_SERVER_NAME}: a free, public, read-only investor terminal tracking the frontier AI labs ` +
@@ -200,7 +212,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
     {
       title: 'Describe the terminal',
       description:
-        'Orientation: the site’s llms.txt — what it tracks, the provenance rule every number obeys, and the pages behind each tool. ' +
+        'Orientation: the site’s llms.txt — what it tracks, the provenance rule every number obeys, the data license, and the pages behind each tool. ' +
         'Call this first if you have not used this server before.',
       annotations: READ_ONLY,
     },
@@ -676,8 +688,9 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'and how many current rows came from it. recipes lists the thesis recipes (GPU rental prices, filers outside the labs), which store ' +
         'outside the lab tables: each one’s last run, observation count, newest stored fetch, and its audit caveat and terms. ' +
         'cuts lists what is deliberately NOT tracked and why. totals are table row counts; ' +
-        'exports describes the CSV/JSON bulk downloads at /export/<table>.csv|json. Each column’s type, unit, nullability and meaning ' +
-        'are in the data dictionary at /export/dictionary.json. ' +
+        'exports describes the CSV/JSON bulk downloads at /export/<table>.csv|json; history says whether a table downloads whole or, by default, ' +
+        `only its last ${LICENSE_WINDOW_DAYS} days (add ?history=full for every row, labeled per row with its license). Each column’s type, unit, nullability, ` +
+        'meaning and license-window date are in the data dictionary at /export/dictionary.json. ' +
         PROVENANCE,
       annotations: READ_ONLY,
     },

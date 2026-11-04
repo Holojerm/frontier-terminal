@@ -34,7 +34,7 @@ import {
   webPageSchema,
   websiteSchema,
 } from '../shared/utils/schema'
-import { DATA_LICENSE } from '../shared/utils/license'
+import { DATA_LICENSE, HISTORY_LICENSE } from '../shared/utils/license'
 import { absoluteUrl, canonicalPath, escapeXml, normalizeOrigin } from '../shared/utils/site'
 
 const SITE: SiteContext = {
@@ -218,10 +218,22 @@ describe('datasetSchema / dataCatalogSchema', () => {
     const node = datasetSchema(SITE, TABLE)
     expect(node?.includedInDataCatalog).toEqual({ '@id': 'https://example.com/data#data-catalog' })
     expect(node?.license).toBe(DATA_LICENSE.url)
+    expect(node?.usageInfo).toBe('https://example.com/license')
     expect(node?.isAccessibleForFree).toBe(true)
     expect(dataCatalogSchema(SITE, { description: 'Everything.' })?.['@id']).toBe(
       'https://example.com/data#data-catalog',
     )
+  })
+
+  it('gives the full-history download its own license, and the defaults the Dataset’s', () => {
+    const node = datasetSchema(SITE, {
+      ...TABLE,
+      distribution: exportDistribution(SITE, 'changes', { fullHistory: true }),
+    })
+    const downloads = node?.distribution as Record<string, unknown>[]
+    expect(downloads.map((d) => d.license ?? null)).toEqual([null, null, HISTORY_LICENSE.url])
+    expect(downloads[2]!.contentUrl).toBe('https://example.com/export/changes.csv?history=full')
+    expect(exportDistribution(SITE, 'prices_latest')).toHaveLength(2)
   })
 
   it('names its creator, credits its upstream sources and points at the repo', () => {
@@ -514,6 +526,11 @@ describe('buildLlmsTxt', () => {
     expect(text).toContain(
       'Attribution: Source: Frontier Terminal (https://example.com). Licensed under CC BY 4.0.',
     )
+    // The age split: the window, the NC history, and the date it took effect.
+    expect(text).toContain(HISTORY_LICENSE.url)
+    expect(text).toContain('Licensed under CC BY-NC 4.0.')
+    expect(text).toContain('before 2026-11-04 stays CC BY 4.0')
+    expect(text).toContain('https://example.com/contact')
     expect(text).toContain('https://github.com/Holojerm/frontier-terminal')
     expect(text).toContain('https://example.com/license')
   })

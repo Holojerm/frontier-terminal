@@ -15,8 +15,21 @@ import type {
   DictionaryTable,
   DictionaryType,
 } from '../../shared/utils/terminal-types'
+import {
+  DATA_LICENSE,
+  HISTORY_LICENSE,
+  HISTORY_PARAM,
+  LICENSE_SPLIT_EFFECTIVE,
+  LICENSE_WINDOW_DAYS,
+} from '#shared/utils/license'
 import { ALERTS_METHOD } from './terminal-asof'
-import { EXPORT_TABLES, csvLine, type ExportTable } from './terminal-export'
+import {
+  EXPORT_TABLES,
+  LICENSE_COLUMN,
+  csvLine,
+  historyRule,
+  type ExportTable,
+} from './terminal-export'
 
 interface ColumnDoc {
   type: DictionaryType
@@ -54,6 +67,13 @@ export const DATA_TYPES: Readonly<Record<DictionaryType, string>> = {
 
 export const PROVENANCE_NOTE =
   'Every row ends with source_url, the URL it was read from, and fetched_at, when that fetch ran. source_runs has started_at instead, since a failed run fetched nothing. entity_securities has checked_on, since its rows are hand-checked. In a CSV an empty cell is null.'
+
+export const LICENSE_NOTE =
+  `Rows dated in the last ${LICENSE_WINDOW_DAYS} days are ${DATA_LICENSE.short}. ` +
+  `A table that grows over time downloads only those rows by default. Add ?${HISTORY_PARAM}=full for every row. ` +
+  `That download adds a ${LICENSE_COLUMN} column before source_url: ${HISTORY_LICENSE.id} for a row dated before the window that we first published on or after ${LICENSE_SPLIT_EFFECTIVE}, ${DATA_LICENSE.id} for the rest. ` +
+  'Tables of current rows and lookups download whole. Rebuilt at an as_of before the window, they get the same column. ' +
+  'Upstream data keeps its own license.'
 
 const REBUILT_NOTE =
   'Rebuilt from the current rows and the change log. For each key we take the content the first change after as_of replaced, else the current row if it was written by then. The view gains an as_of_verified column. False marks a key whose state the log does not confirm.'
@@ -1141,6 +1161,24 @@ function asOfOf(table: ExportTable, doc: TableDoc): DictionaryTable['as_of'] {
   return { mode: 'cut', note: doc.asOf ?? '' }
 }
 
+function historyOf(table: ExportTable): DictionaryTable['history'] {
+  const rule = historyRule(table.name)
+  if (rule.kind === 'whole') {
+    return {
+      mode: 'whole',
+      dated: [],
+      full: null,
+      note: `Downloads whole, since ${rule.why}`,
+    }
+  }
+  return {
+    mode: 'windowed',
+    dated: [...rule.dated],
+    full: `/export/${table.name}.csv?${HISTORY_PARAM}=full`,
+    note: `Downloads the last ${LICENSE_WINDOW_DAYS} days by default, dated by ${rule.basis}. Add ?${HISTORY_PARAM}=full for every row.`,
+  }
+}
+
 function dictionaryTable(table: ExportTable): DictionaryTable {
   const doc = COLUMN_DOCS[table.name]
   if (!doc) throw new Error(`no data dictionary entry for export ${table.name}`)
@@ -1164,6 +1202,7 @@ function dictionaryTable(table: ExportTable): DictionaryTable {
     json: `/export/${table.name}.json`,
     key: columns.filter((c) => c.role === 'key').map((c) => c.name),
     as_of: asOfOf(table, doc),
+    history: historyOf(table),
     columns,
   }
 }
@@ -1173,6 +1212,7 @@ export function dataDictionary(): DataDictionary {
   return {
     types: { ...DATA_TYPES },
     provenance: PROVENANCE_NOTE,
+    license: LICENSE_NOTE,
     tables: Object.values(EXPORT_TABLES).map(dictionaryTable),
   }
 }
@@ -1187,6 +1227,7 @@ export const DICTIONARY_CSV_COLUMNS = [
   'as_of_only',
   'meaning',
   'table_as_of',
+  'table_history',
 ] as const
 
 /** One CSV row per table and column, in export order. */
@@ -1205,6 +1246,7 @@ export function dictionaryCsv(dictionary: DataDictionary): string {
           c.as_of_only,
           c.meaning,
           t.as_of.mode,
+          t.history.mode,
         ]),
       ),
     ),

@@ -15,7 +15,13 @@ import {
   dictionaryCsv,
 } from '../server/utils/terminal-dictionary'
 import { ENTITY_SECURITIES } from '../server/utils/terminal-entities'
-import { EXPORT_TABLES, csvLine } from '../server/utils/terminal-export'
+import {
+  EXPORT_HISTORY,
+  EXPORT_TABLES,
+  LICENSE_COLUMN,
+  csvLine,
+  licenseWindow,
+} from '../server/utils/terminal-export'
 
 // The dictionary cannot drift from the exports: every exported column has an
 // entry, no entry names a column the export lost, and the as_of columns are
@@ -64,6 +70,47 @@ describe('the data dictionary', () => {
       const asOfOnly = t.columns.filter((c) => c.as_of_only).map((c) => c.name)
       expect(asOfOnly, t.name).toEqual(t.as_of.mode === 'rebuilt' ? ['as_of_verified'] : [])
     }
+  })
+
+  it('classifies every table for the license window, on a date column it really has', () => {
+    expect(Object.keys(EXPORT_HISTORY).sort()).toEqual(Object.keys(EXPORT_TABLES).sort())
+    const dictionary = dataDictionary()
+    expect(dictionary.license).toContain('?history=full')
+    for (const t of dictionary.tables) {
+      const table = EXPORT_TABLES[t.name]!
+      const rule = EXPORT_HISTORY[t.name]!
+      expect(t.history.mode, t.name).toBe(rule.kind)
+      expect(t.history.note.length, t.name).toBeGreaterThan(20)
+      if (rule.kind === 'whole') {
+        expect(t.history.dated, t.name).toEqual([])
+        expect(t.history.full, t.name).toBeNull()
+        // A whole table rebuilt before the window labels rows by when we first published them.
+        if (rule.published !== null) expect(asOfColumns(table), t.name).toContain(rule.published)
+        else expect(table.pointInTime, t.name).toBe('refused')
+        continue
+      }
+      expect(t.history.dated, t.name).toEqual([...rule.dated])
+      expect(t.history.full, t.name).toBe(`/export/${t.name}.csv?history=full`)
+      for (const column of [...rule.dated, rule.published]) {
+        expect(table.columns, `${t.name}.${column}`).toContain(column)
+        const doc = t.columns.find((c) => c.name === column)!
+        // A date, a stamp, or text that holds one of the two (claim_verdicts.detected_at):
+        // either compares to the window's first day as a string.
+        if (doc.type === 'text') expect(doc.meaning, `${t.name}.${column}`).toContain('YYYY-MM-DD')
+        else expect(['date', 'timestamp'], `${t.name}.${column}`).toContain(doc.type)
+      }
+      // A SQL window is on the first dated column itself.
+      if (rule.column) expect(rule.column.name, t.name).toBe(rule.dated[0])
+    }
+  })
+
+  it('names the license column a full-history download adds, before source_url', () => {
+    for (const table of Object.values(EXPORT_TABLES)) {
+      if (EXPORT_HISTORY[table.name]!.kind === 'whole') continue
+      const { columns } = licenseWindow(table.name, table, { history: 'full' }, '2026-08-06').table
+      expect(columns.indexOf(LICENSE_COLUMN), table.name).toBe(columns.indexOf('source_url') - 1)
+    }
+    expect(dataDictionary().license).toContain(`${LICENSE_COLUMN} column`)
   })
 
   it('gives every table a key and two provenance columns, the URL and when', () => {
@@ -123,6 +170,7 @@ describe('the data dictionary', () => {
         false,
         price.meaning,
         'rebuilt',
+        'whole',
       ]).trimEnd(),
     )
   })

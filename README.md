@@ -54,13 +54,22 @@ Bindings live in `wrangler.toml` (one environment, no preview). `fleet.json` mus
 
 ## Take the data
 
-Every table is a bulk download in CSV or JSON, with no key. You get the whole table, streamed, at
-up to 30 requests a minute per IP.
+Every table is a bulk download in CSV or JSON, with no key, streamed, at up to 30 requests a
+minute per IP. A table that grows over time (changes, alerts, snapshots, filed facts, and the
+like) gives you its last 90 days. Add `?history=full` for every row. Tables of current rows and
+lookups (`prices_latest`, `jobs_open`, `filers`, `entity_securities`) download whole.
 
 ```
 https://frontierterm.com/export/prices_latest.csv
 https://frontierterm.com/export/changes.json
+https://frontierterm.com/export/changes.csv?history=full
 ```
+
+The data license depends on age. Our compilation and the numbers we derive from the last 90 days
+are CC BY 4.0. Older ones are CC BY-NC 4.0, so commercial use of the full history needs a paid
+license (see `/contact`). Anything we published before 2026-11-04 stays CC BY 4.0. A full-history
+download labels each row in a `license` column. Upstream data keeps its own license, and the
+underlying facts belong to their publishers. The code is MIT. Details are on `/license`.
 
 The tables are `snapshots`, `prices_latest`, `jobs_open`, `incidents`, `revenue_facts`,
 `changes`, `alerts`, `claim_readings`, `claim_verdicts`, `recipe_observations`, and `source_runs`

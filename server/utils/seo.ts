@@ -6,7 +6,15 @@
 // kind of thing that breaks silently — nobody notices a wrong robots.txt until
 // traffic is already gone.
 
-import { attributionLine, CODE_LICENSE, DATA_LICENSE } from '#shared/utils/license'
+import {
+  attributionLine,
+  CODE_LICENSE,
+  DATA_LICENSE,
+  HISTORY_LICENSE,
+  HISTORY_PARAM,
+  LICENSE_SPLIT_EFFECTIVE,
+  LICENSE_WINDOW_DAYS,
+} from '#shared/utils/license'
 import type { PublicPage } from '#shared/utils/site'
 import { absoluteUrl, escapeXml, normalizeOrigin } from '#shared/utils/site'
 
@@ -352,6 +360,7 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
       )
     }
     sections.push(
+      `- Tables that grow over time download the last ${LICENSE_WINDOW_DAYS} days by default (${DATA_LICENSE.short}). Add \`?${HISTORY_PARAM}=full\` for every row (${HISTORY_LICENSE.short} for older rows, labeled per row in a \`license\` column). Current-state tables and lookups download whole.`,
       `- [Alerts feed](${appUrl}/alerts.xml): Atom, one entry per alert. Add \`?include=info\` to get the minor changes too (severity info).`,
       '',
     )
@@ -373,9 +382,12 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
     '',
     '## License',
     '',
-    `- The compilation (the tables, the change log, the alerts, and the exports) is licensed ${DATA_LICENSE.short} (${DATA_LICENSE.url}). It may be quoted or republished on condition of attribution.`,
+    `- Our data (the tables, the change log, the alerts, the exports, and the numbers we derive) is licensed by age. The last ${LICENSE_WINDOW_DAYS} days are ${DATA_LICENSE.short} (${DATA_LICENSE.url}). You may quote, republish, or use them commercially, with attribution.`,
+    `- Data older than ${LICENSE_WINDOW_DAYS} days (the full history) is ${HISTORY_LICENSE.short} (${HISTORY_LICENSE.url}). Commercial use of it needs a paid license (${appUrl}/contact).`,
+    `- Data we published before ${LICENSE_SPLIT_EFFECTIVE} stays ${DATA_LICENSE.short} at any age. Pages show the full history and are free to read. Every API response and MCP tool result has a \`license\` field naming the split.`,
     `- Attribution: ${attributionLine(input.appName, appUrl)}`,
-    '- The underlying facts belong to their publishers. Every row includes the URL it was read from. One source, the OpenRouter rankings feed, requires its own attribution string; the demand-share page prints it verbatim.',
+    `- Attribution for the full history: ${attributionLine(input.appName, appUrl, HISTORY_LICENSE)}`,
+    '- The underlying facts belong to their publishers, and the license covers our compilation, not the facts. Upstream datasets (OpenRouter, Epoch AI, PyPI, npm, GDELT) keep their own licenses at every age. Every row includes the URL it was read from. The OpenRouter rankings feed requires its own attribution string, and the demand-share page prints it verbatim.',
     ...(input.repoUrl
       ? [`- The code is ${CODE_LICENSE.short} (${CODE_LICENSE.url}): ${input.repoUrl}`]
       : []),

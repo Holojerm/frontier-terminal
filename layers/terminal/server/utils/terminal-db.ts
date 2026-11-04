@@ -79,7 +79,7 @@ import {
   type ClassEntry,
 } from './terminal-classes'
 import { clusterSeries, parseDepartmentClusters, type DepartmentCluster } from './terminal-clusters'
-import { EXPORT_TABLES } from './terminal-export'
+import { EXPORT_TABLES, historyRule } from './terminal-export'
 import {
   ALERTS_METHOD,
   ENTITY_METHOD,
@@ -1853,6 +1853,7 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
       description: table.description,
       columns: [...table.columns],
       rows: await table.count(db),
+      history: historyRule(table.name).kind,
     })),
   )
 

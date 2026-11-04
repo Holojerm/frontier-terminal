@@ -1,7 +1,9 @@
 <script setup lang="ts">
 // How to reach the people behind the terminal — above all, how to pay for the
-// data. The public site stays free and CC BY; this page is where someone who
-// needs more than that finds out what can be bought and who to ask.
+// data. The public site stays free to read, the last 90 days stay CC BY, and
+// the full history is CC BY-NC (shared/utils/license.ts); this page is where
+// someone who needs commercial use of that history, or more, finds out what
+// can be bought and who to ask.
 //
 // What a paid licence can cover is not ours to decide for every row: an
 // upstream CC BY dataset keeps its attribution condition whatever we sign,
@@ -9,7 +11,12 @@
 // three lists below are read from each source's `rights:` in sources.yaml
 // (via /api/coverage), so the offer cannot drift from the audit.
 
-import { DATA_LICENSE } from '#shared/utils/license'
+import {
+  DATA_LICENSE,
+  HISTORY_LICENSE,
+  LICENSE_SPLIT_EFFECTIVE,
+  LICENSE_WINDOW_DAYS,
+} from '#shared/utils/license'
 import { CONTACT_EMAIL, mailto } from '../../shared/utils/contact'
 import type { CoverageData, SourceRights } from '../../shared/utils/terminal-types'
 
@@ -19,7 +26,7 @@ definePageMeta({
     priority: '0.5',
     title: 'Contact',
     summary:
-      'Commercial data licensing: signed terms for our compilation and the numbers we derive, a dependable feed, full history with the source pages, and custom coverage. Upstream CC BY data keeps its own terms. Corrections and press too. Write to contact@frontierterm.com.',
+      'Commercial data licensing: commercial use of the full history (CC BY-NC 4.0 on the free site), signed terms for our compilation and the numbers we derive, a dependable feed, the source pages, and custom coverage. Upstream CC BY data keeps its own terms. Corrections and press too. Write to contact@frontierterm.com.',
   },
 })
 
@@ -28,7 +35,7 @@ const { data: coverage, error } = await useFetch<CoverageData>('/api/coverage')
 useSeo({
   title: 'Contact',
   description:
-    'License Frontier Terminal’s data with signed terms, a dependable feed, full history, or custom coverage. Corrections and press go to the same address.',
+    'License the full history for commercial use, with signed terms, a dependable feed, or custom coverage. Corrections and press go to the same address.',
 })
 
 interface Named {
@@ -80,14 +87,20 @@ const GROUPS: { rights: SourceRights; title: string; body: string }[] = [
     <TerminalPanel id="commercial" title="Paying for the data">
       <div class="max-w-2xl space-y-4 text-default">
         <p>
-          Everything on the site stays free under {{ DATA_LICENSE.short }}. A paid arrangement
-          covers what the public site can’t promise, and only what’s ours to license (see below).
-          Tell us what you need. Here’s what we can offer.
+          Every page stays free to read. Data from the last {{ LICENSE_WINDOW_DAYS }} days is
+          {{ DATA_LICENSE.short }}, free for any use. Older data is {{ HISTORY_LICENSE.short }}, so
+          commercial use of the full history needs a paid license. Anything we published before
+          {{ LICENSE_SPLIT_EFFECTIVE }} stays {{ DATA_LICENSE.short }}. A paid license covers only
+          what’s ours to license (see below). Tell us what you need. Here’s what we can offer.
         </p>
         <ul class="list-disc space-y-2 pl-5">
           <li>
-            A signed license for our compilation and the numbers we derive, on attribution terms
-            that suit your compliance team. Upstream CC BY data keeps its own attribution condition.
+            Commercial use of the full history: our compilation and the numbers we derive, older
+            than {{ LICENSE_WINDOW_DAYS }} days.
+          </li>
+          <li>
+            A signed license on attribution terms that suit your compliance team. Upstream CC BY
+            data keeps its own attribution condition.
           </li>
           <li>
             A feed on a committed schedule, instead of a public endpoint with a rate limit per IP
