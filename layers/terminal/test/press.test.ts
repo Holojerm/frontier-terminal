@@ -23,6 +23,19 @@ describe('press briefs', () => {
     expect(parsePressList(undefined)).toEqual([])
     expect(parsePressList('not json')).toEqual([])
     expect(parsePressList('[{"name":1}]')).toEqual([])
+    expect(parsePressList({ name: 'not a list' })).toEqual([])
+  })
+
+  it('reads the list as Nuxt hands it over, already parsed', () => {
+    expect(parsePressList(JSON.parse(LIST)).map((c) => c.name)).toEqual([
+      'Ada Reporter',
+      'Tips Desk',
+    ])
+  })
+
+  it('drops a malformed contact, not the whole list', () => {
+    const list = [...JSON.parse(LIST), { name: 'Bad Address', outlet: 'X', email: 'not-an-email' }]
+    expect(parsePressList(list).map((c) => c.name)).toEqual(['Ada Reporter', 'Tips Desk'])
   })
 
   it('fills a mailto draft from the alert, greeting a reporter by first name', () => {
