@@ -35,17 +35,22 @@ const Contact = z.object({
 export type PressContact = z.infer<typeof Contact>
 
 /** The secret's contacts that have an address; an unparseable list is no list. */
-export function parsePressList(raw: string | undefined): PressContact[] {
-  if (!raw) return []
-  let json: unknown
-  try {
-    json = JSON.parse(raw)
-  } catch {
-    return []
+export function parsePressList(raw: unknown): PressContact[] {
+  // Nuxt parses a JSON-looking NUXT_* value into the runtime config itself,
+  // so the secret usually arrives as an array, not the string that was set.
+  let json: unknown = raw
+  if (typeof raw === 'string') {
+    try {
+      json = JSON.parse(raw)
+    } catch {
+      return []
+    }
   }
-  const parsed = z.array(Contact).safeParse(json)
-  if (!parsed.success) return []
-  return parsed.data
+  if (!Array.isArray(json)) return []
+  // One malformed entry drops that contact, not the whole list.
+  return json
+    .map((entry) => Contact.safeParse(entry))
+    .flatMap((r) => (r.success ? [r.data] : []))
     .filter((c) => c.email || c.tips_email)
     .sort((a, b) => a.priority - b.priority || a.outlet.localeCompare(b.outlet))
 }
