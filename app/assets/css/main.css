@@ -201,4 +201,12 @@
   html {
     scroll-padding-top: var(--header-offset);
   }
+
+  /* DESIGN.md › Viewport and touch › Overscroll: no rubber-band bounce past
+   * the top or bottom of the page. Vertical only, so the horizontal
+   * swipe-back gesture still navigates. */
+  html,
+  body {
+    overscroll-behavior-y: none;
+  }
 }
