@@ -809,6 +809,11 @@ export interface ChangeView extends Prov {
     | 'disclosure_timeline'
     | 'document'
     | 'offering'
+    | 'statement'
+    | 'commitment'
+    | 'concentration'
+    | 'shares'
+    | 'risk_factors'
   provider: ProviderId
   change_type: 'added' | 'removed' | 'modified'
   detected_at: string

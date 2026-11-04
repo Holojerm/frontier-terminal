@@ -196,6 +196,167 @@ export const OfferingRow = z.strictObject({
 })
 export type OfferingRow = z.infer<typeof OfferingRow>
 
+// ---- What else a registration document prints ------------------------------
+//
+// Read off the same document as the revenue and the cover terms
+// (parsers/sec/prospectus-*.ts), so every row names its filing. A figure the
+// document leaves blank is null, never an estimate; a section the document
+// does not print yields no row.
+
+const ymd = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
+
+const filingFields = {
+  provider: providerEnum,
+  cik: z.string().regex(/^\d{10}$/),
+  entity_name: z.string().min(1),
+  accession_no: z.string().regex(/^\d{10}-\d{2}-\d{6}$/),
+  form: z.string().min(1),
+  filed: ymd,
+} as const
+
+// One row of the statement of operations for one period. `key` is the
+// canonical name when the label is one the parser knows (revenue,
+// total_operating_expenses, operating_income, net_income, …), else the label
+// slugged; `label` is the statement's own words. `val` is in dollars, shares
+// or dollars per share as printed, negative where the statement prints
+// parentheses, and null where it prints a dash.
+export const StatementLine = z.strictObject({
+  key: z.string().regex(/^[a-z0-9_]+$/),
+  label: z.string().min(1),
+  val: z.number().nullable(),
+  unit: z.enum(['USD', 'USD/share', 'shares']),
+})
+export type StatementLine = z.infer<typeof StatementLine>
+
+// The whole statement of operations for one period, as one filing printed it
+// (prospectus-statement.ts). One row per (filing, period), like revenue: a
+// later filing's statement for the same period is a new row, not an overwrite.
+export const StatementRow = z.strictObject({
+  ...filingFields,
+  start: ymd,
+  end: ymd,
+  // Set only on an interim period: registration statements print them unaudited.
+  unaudited: z.literal(true).optional(),
+  /** The statement's units line, verbatim. */
+  units: z.string().min(1),
+  lines: z.array(StatementLine).min(1),
+  ...provenanceFields,
+})
+export type StatementRow = z.infer<typeof StatementRow>
+
+// A contractual-commitment schedule (prospectus-commitments.ts):
+//   - 'contractual_obligations': MD&A's table, every obligation by year due;
+//   - 'purchase_commitments': the commitments note's audited schedule of
+//     non-cancelable purchase commitments by year;
+//   - 'purchase_commitments_interim': the note's one-sentence interim total;
+//   - 'obligations_aggregate': MD&A's one-sentence total of the table plus
+//     short-term and subsequent commitments and leases not yet commenced.
+// Bucket labels are the document's ("2026", "Thereafter"). `approximate`
+// marks a figure the document itself calls approximate; `statement` is the
+// sentence a one-figure schedule was read from, verbatim.
+export const CommitmentLine = z.strictObject({
+  label: z.string().min(1),
+  total: z.number(),
+  buckets: z.array(z.strictObject({ label: z.string().min(1), val: z.number() })),
+})
+export type CommitmentLine = z.infer<typeof CommitmentLine>
+
+export const CommitmentRow = z.strictObject({
+  ...filingFields,
+  schedule: z.enum([
+    'contractual_obligations',
+    'purchase_commitments',
+    'purchase_commitments_interim',
+    'obligations_aggregate',
+  ]),
+  /** The date the schedule is stated as of; null when the sentence names none. */
+  as_of: ymd.nullable(),
+  audited: z.boolean(),
+  approximate: z.boolean(),
+  statement: z.string().min(1).nullable(),
+  lines: z.array(CommitmentLine).min(1),
+  ...provenanceFields,
+})
+export type CommitmentRow = z.infer<typeof CommitmentRow>
+
+// Customers at or above 10% of revenue or of accounts receivable, from the
+// notes' concentration tables (prospectus-concentration.ts). Customers are
+// named as the filing names them ("Customer A"). A null share is the
+// filing's "*": under the 10% threshold, not zero.
+export const ConcentrationRow = z.strictObject({
+  ...filingFields,
+  basis: z.enum(['revenue', 'accounts_receivable']),
+  /** Revenue columns are periods; receivables columns are balances, start null. */
+  columns: z
+    .array(z.strictObject({ start: ymd.nullable(), end: ymd, unaudited: z.boolean() }))
+    .min(1),
+  customers: z
+    .array(
+      z.strictObject({
+        label: z.string().min(1),
+        pct: z.array(z.number().min(0).max(100).nullable()),
+      }),
+    )
+    .min(1),
+  ...provenanceFields,
+})
+export type ConcentrationRow = z.infer<typeof ConcentrationRow>
+
+// Share counts from "The Offering" summary (prospectus-shares.ts): shares
+// offered and outstanding after the offering per row of that table, and the
+// pre-offering basis sentence's counts. A preliminary prospectus leaves most
+// counts blank until the price range is set; a blank is null.
+export const SharesRow = z.strictObject({
+  ...filingFields,
+  lines: z
+    .array(
+      z.strictObject({
+        label: z.string().min(1),
+        shares: z.int().nonnegative().nullable(),
+        /** The count if the underwriters exercise their option in full, where the row states one. */
+        with_option: z.int().nonnegative().nullable(),
+      }),
+    )
+    .min(1),
+  /** The date the pre-offering counts are stated as of. */
+  before_as_of: ymd.nullable(),
+  before: z.array(
+    z.strictObject({ label: z.string().min(1), shares: z.int().nonnegative().nullable() }),
+  ),
+  ...provenanceFields,
+})
+export type SharesRow = z.infer<typeof SharesRow>
+
+// The risk-factor headings one filing prints, grouped under its "Risks
+// Related to …" subsections, verbatim and in order (prospectus-risk-factors.ts).
+// What an amendment added or removed is computed against the previous
+// filing's row (prospectus-floor.ts › riskFactorChanges).
+export const RiskFactorsRow = z.strictObject({
+  ...filingFields,
+  sections: z
+    .array(
+      z.strictObject({
+        title: z.string().min(1),
+        headings: z.array(z.string().min(1)).min(1),
+      }),
+    )
+    .min(1),
+  ...provenanceFields,
+})
+export type RiskFactorsRow = z.infer<typeof RiskFactorsRow>
+
+// Everything the prospectus lane reads from one registration document.
+export const ProspectusOutput = z.strictObject({
+  revenue: z.array(RevenueRow),
+  offering: OfferingRow.nullable(),
+  statements: z.array(StatementRow).min(1),
+  commitments: z.array(CommitmentRow),
+  concentration: z.array(ConcentrationRow),
+  shares: SharesRow.nullable(),
+  risk_factors: RiskFactorsRow,
+})
+export type ProspectusOutput = z.infer<typeof ProspectusOutput>
+
 // ---- Status pages (capacity strain) ---------------------------------------
 
 // One row per incident the vendor posted. Vocabulary is stored VERBATIM per
@@ -356,6 +517,8 @@ export const parserOutputSchemas = {
   // prospectus-revenue source (derived.ts); the fixtures are Anthropic's S-1.
   'filing-index-anthropic-s-1-2026-10-26-0001628280-26-067168': FilingIndexOutput,
   'prospectus-revenue-anthropic-s-1-2026-10-26-0001628280-26-067168': ProspectusRevenueOutput,
+  // The whole lane on the amendment: everything a registration document is read for.
+  'prospectus-revenue-anthropic-s-1-a-2026-11-02-0001628280-26-068676': ProspectusOutput,
   // One registration for every derived per-filing segment instance
   // (derived.ts); the committed fixture is one representative 10-Q.
   'xbrl-segment-googl-2026-10-29-0001652044-26-000084': XbrlSegmentOutput,

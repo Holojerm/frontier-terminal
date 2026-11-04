@@ -231,7 +231,8 @@ async function parseAndStore(
   if (
     body.unchanged &&
     !sideChanged &&
-    !(await classMapMoved(deps.db, source.source_id, classMap))
+    !(await classMapMoved(deps.db, source.source_id, classMap)) &&
+    !(await lane.stale?.(deps.db, source.source_id))
   ) {
     return quiet('unchanged', null, body.snapshot_id)
   }

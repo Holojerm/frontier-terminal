@@ -24,6 +24,7 @@ import { and, asc, count, eq, lte, sql, type SQL } from 'drizzle-orm'
 import type { SQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core'
 
 import * as tables from '#server/db/schema'
+import { riskFactorChanges } from '../pipeline/parsers/sec/prospectus-risk-factors'
 import type { PipelineDb } from '../pipeline/store'
 import {
   AS_OF_PARAM,
@@ -283,6 +284,105 @@ function entityView(
   }
 }
 
+/**
+ * An entity view with one output row per part of a payload — a statement's
+ * lines, a schedule's buckets, a filing's headings. The keyset is the entity's
+ * (source_id, entity_key) plus the part's ordinal, so a page can end inside an
+ * entity. `prepare` reads anything the parts are computed against (an earlier
+ * filing's headings) once per page.
+ */
+function partsView<C>(
+  name: string,
+  description: string,
+  entityType: 'statement' | 'commitment' | 'concentration' | 'shares' | 'risk_factors',
+  fields: readonly string[],
+  explode: (payload: Row, context: C) => Row[],
+  prepare: (db: PipelineDb) => Promise<C>,
+): ExportTable {
+  const columns = [
+    'entity_key',
+    'source_id',
+    'provider',
+    'part',
+    ...fields,
+    'first_seen_at',
+    ...PROVENANCE,
+  ]
+  const ofType = eq(tables.entities.entity_type, entityType)
+  const { source_id, entity_key } = tables.entities
+  const at = (after: Row, strict: boolean) =>
+    strict
+      ? sql`(${source_id}, ${entity_key}) > (${after.source_id}, ${after.entity_key})`
+      : sql`(${source_id}, ${entity_key}) >= (${after.source_id}, ${after.entity_key})`
+  return {
+    name,
+    description,
+    columns,
+    async page(db, after, limit) {
+      const context = await prepare(db)
+      const out: Row[] = []
+      let cursor: { row: Row; strict: boolean } | null = after
+        ? { row: after, strict: false }
+        : null
+      for (;;) {
+        const rows = await db
+          .select()
+          .from(tables.entities)
+          .where(and(ofType, cursor ? at(cursor.row, cursor.strict) : undefined))
+          .orderBy(asc(source_id), asc(entity_key))
+          .limit(limit)
+        for (const { payload, ...rest } of rows) {
+          const resumes =
+            after !== null &&
+            rest.source_id === after.source_id &&
+            rest.entity_key === after.entity_key
+          explode(parsePayload(payload), context).forEach((part, i) => {
+            if (resumes && i <= Number(after.part)) return
+            out.push(project({ ...part, ...rest, part: i }, columns))
+          })
+          if (out.length >= limit) return out.slice(0, limit)
+        }
+        if (rows.length < limit) return out
+        cursor = { row: rows.at(-1)!, strict: true }
+      }
+    },
+    async count(db) {
+      const context = await prepare(db)
+      const rows = await db
+        .select({ payload: tables.entities.payload })
+        .from(tables.entities)
+        .where(ofType)
+      return rows.reduce((n, r) => n + explode(parsePayload(r.payload), context).length, 0)
+    },
+  }
+}
+
+const FILING_FIELDS = ['cik', 'entity_name', 'accession_no', 'form', 'filed'] as const
+const filing = (p: Row): Row => Object.fromEntries(FILING_FIELDS.map((f) => [f, p[f] ?? null]))
+const list = (v: unknown): Row[] => (Array.isArray(v) ? (v as Row[]) : [])
+const none = async () => null
+
+/** Per filing, the previous filing's risk-factor headings by the same filer. */
+async function priorHeadings(db: PipelineDb): Promise<Map<string, Row>> {
+  const rows = await db
+    .select({ payload: tables.entities.payload })
+    .from(tables.entities)
+    .where(eq(tables.entities.entity_type, 'risk_factors'))
+  const filings = rows
+    .map((r) => parsePayload(r.payload))
+    .sort((a, b) =>
+      `${a.cik}${a.filed}${a.accession_no}` < `${b.cik}${b.filed}${b.accession_no}` ? -1 : 1,
+    )
+  const prior = new Map<string, Row>()
+  filings.forEach((f, i) => {
+    const before = filings[i - 1]
+    if (before && before.cik === f.cik) prior.set(String(f.accession_no), before)
+  })
+  return prior
+}
+
+type Sections = { title: string; headings: string[] }[]
+
 function plainTable(
   name: string,
   description: string,
@@ -404,6 +504,141 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     'One row per XBRL revenue fact from EDGAR company facts: filer, tag, period, value in USD, and the filing that reported it. Append-only: a restatement is a new row under its own accession.',
     'revenue',
     REVENUE_FIELDS,
+  ),
+  prospectus_statements: partsView(
+    'prospectus_statements',
+    'Every line of the statement of operations printed in a lab’s own registration filing (S-1, S-1/A), one row per filing, period and line: the line verbatim, a canonical key where known, and the value in USD, shares or USD per share. Null is a dash. Interim periods are unaudited.',
+    'statement',
+    [...FILING_FIELDS, 'start', 'end', 'unaudited', 'units', 'line_key', 'label', 'val', 'unit'],
+    (p) =>
+      list(p.lines).map((l) => ({
+        ...filing(p),
+        start: p.start,
+        end: p.end,
+        unaudited: p.unaudited === true,
+        units: p.units,
+        line_key: l.key,
+        label: l.label,
+        val: l.val,
+        unit: l.unit,
+      })),
+    none,
+  ),
+  prospectus_commitments: partsView(
+    'prospectus_commitments',
+    'Contractual commitments a lab’s registration filing prints: MD&A’s contractual-obligations table, the commitments note’s purchase-commitment schedule, and the one-figure totals, as of each date stated. One row per schedule line and year bucket, bucket “Total” for the line’s total. approximate marks a figure the filing calls approximate; statement quotes its sentence.',
+    'commitment',
+    [
+      ...FILING_FIELDS,
+      'schedule',
+      'as_of',
+      'audited',
+      'approximate',
+      'line',
+      'bucket',
+      'val',
+      'statement',
+    ],
+    (p) =>
+      list(p.lines).flatMap((l) =>
+        [{ label: 'Total', val: l.total }, ...list(l.buckets)].map((b) => ({
+          ...filing(p),
+          schedule: p.schedule,
+          as_of: p.as_of,
+          audited: p.audited,
+          approximate: p.approximate,
+          line: l.label,
+          bucket: b.label,
+          val: b.val,
+          statement: p.statement,
+        })),
+      ),
+    none,
+  ),
+  prospectus_concentration: partsView(
+    'prospectus_concentration',
+    'Customers at or above 10% of revenue or of accounts receivable, from a lab’s registration filing: one row per filing, basis, customer and period or balance date, named as the filing names them. A null pct is the filing’s “*”: under 10%, not zero.',
+    'concentration',
+    [...FILING_FIELDS, 'basis', 'customer', 'start', 'end', 'unaudited', 'pct'],
+    (p) => {
+      const columns = list(p.columns)
+      return list(p.customers).flatMap((c) =>
+        columns.map((col, i) => ({
+          ...filing(p),
+          basis: p.basis,
+          customer: c.label,
+          start: col.start,
+          end: col.end,
+          unaudited: col.unaudited,
+          pct: (c.pct as unknown[])[i] ?? null,
+        })),
+      )
+    },
+    none,
+  ),
+  prospectus_shares: partsView(
+    'prospectus_shares',
+    'Share counts from a lab’s registration filing: each row of “The Offering” (shares offered, and each class outstanding after the offering, with the underwriters’ option where stated) and the pre-offering counts it is based on. Null while the filing leaves a count blank.',
+    'shares',
+    [...FILING_FIELDS, 'measure', 'as_of', 'label', 'shares', 'with_option'],
+    (p) => [
+      ...list(p.lines).map((l) => ({
+        ...filing(p),
+        measure: 'the_offering',
+        as_of: null,
+        label: l.label,
+        shares: l.shares,
+        with_option: l.with_option,
+      })),
+      ...list(p.before).map((l) => ({
+        ...filing(p),
+        measure: 'before_offering',
+        as_of: p.before_as_of,
+        label: l.label,
+        shares: l.shares,
+        with_option: null,
+      })),
+    ],
+    none,
+  ),
+  prospectus_risk_factors: partsView(
+    'prospectus_risk_factors',
+    'Every risk-factor heading in a lab’s registration filing, verbatim and in order, with what it is against the same filer’s previous filing: unchanged, added, reworded (previous holds the earlier words), or removed (a heading the previous filing printed and this one does not, listed after this filing’s own).',
+    'risk_factors',
+    [...FILING_FIELDS, 'section', 'heading', 'change', 'previous'],
+    (p, prior) => {
+      const sections = list(p.sections) as unknown as Sections
+      const before = prior.get(String(p.accession_no))
+      const changes = before
+        ? riskFactorChanges(
+            { sections: list(before.sections) as unknown as Sections },
+            { sections },
+          )
+        : []
+      const of = (heading: string) =>
+        changes.find((c) => c.kind !== 'removed' && c.heading === heading)
+      return [
+        ...sections.flatMap((s) =>
+          s.headings.map((heading) => ({
+            ...filing(p),
+            section: s.title,
+            heading,
+            change: before ? (of(heading)?.kind ?? 'unchanged') : null,
+            previous: of(heading)?.previous ?? null,
+          })),
+        ),
+        ...changes
+          .filter((c) => c.kind === 'removed')
+          .map((c) => ({
+            ...filing(p),
+            section: c.section,
+            heading: c.heading,
+            change: 'removed',
+            previous: null,
+          })),
+      ]
+    },
+    priorHeadings,
   ),
   changes: plainTable(
     'changes',
