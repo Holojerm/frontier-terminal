@@ -10,6 +10,7 @@ import type {
   CoverageData,
   RecipeCoverage,
   SourceCoverage,
+  SourceRights,
 } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
@@ -45,7 +46,7 @@ const columns: TableColumn[] = [
   { key: 'run', label: 'Last poll', class: 'whitespace-nowrap' },
   { key: 'snapshot_count', label: 'Snapshots', numeric: true },
   { key: 'entity_count', label: 'Rows', numeric: true },
-  { key: 'caveat', label: 'Caveat' },
+  { key: 'caveat', label: 'Caveat and terms' },
 ]
 
 const recipeColumns: TableColumn[] = [
@@ -53,11 +54,20 @@ const recipeColumns: TableColumn[] = [
   { key: 'newest', label: 'Newest fetch stored' },
   { key: 'run', label: 'Last run', class: 'whitespace-nowrap' },
   { key: 'observations', label: 'Observations', numeric: true },
-  { key: 'caveat', label: 'Caveat' },
+  { key: 'caveat', label: 'Caveat and terms' },
 ]
 
-const auditNote = (r: RecipeCoverage) =>
-  [r.caveat, r.terms && `Terms: ${r.terms}`].filter(Boolean).join(' ') || null
+// The caveat, then the terms reading and what a paid licence could cover —
+// the same three facts for a lab source and a recipe.
+const RIGHTS_NOTE: Record<SourceRights, string> = {
+  ours: 'Licensable on our terms.',
+  upstream: 'Stays under its upstream licence.',
+  'not-cleared': 'Free site only; not in any paid offer.',
+}
+const auditNote = (r: SourceCoverage | RecipeCoverage) =>
+  [r.caveat, r.terms && `Terms: ${r.terms}`, r.rights && RIGHTS_NOTE[r.rights]]
+    .filter(Boolean)
+    .join(' ') || null
 </script>
 
 <template>
@@ -110,7 +120,11 @@ const auditNote = (r: RecipeCoverage) =>
         <span v-else class="text-xs text-muted">no run</span>
       </template>
       <template #cell-caveat="{ row: s }">
-        <TerminalCaveatMark v-if="s.caveat" :name="`Caveat for ${s.label}`" :text="s.caveat" />
+        <TerminalCaveatMark
+          v-if="auditNote(s)"
+          :name="`Caveat and terms for ${s.label}`"
+          :text="auditNote(s)!"
+        />
         <span v-else class="text-xs text-muted">—</span>
       </template>
     </TerminalTable>

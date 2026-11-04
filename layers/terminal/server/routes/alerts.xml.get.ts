@@ -1,10 +1,12 @@
 // GET /alerts.xml — the alert feed as Atom, for a reader that wants to be
 // told rather than to come and look. Alerts only by default (notable,
-// critical); `?include=ticker` adds the info-tier ticker. Same cached
+// critical); `?include=info` adds the minor changes (`?include=ticker`, the
+// old name, still does). Same cached
 // payloads as /api/alerts; layers/terminal/server/utils/terminal-feed.ts owns the document.
 
 import { z } from 'zod'
 
+import { tierFilterOf } from '../../shared/utils/terminal-tiers'
 import { queryAlerts } from '../utils/terminal-db'
 import { buildAlertsAtom } from '../utils/terminal-feed'
 import { serveTerminal, terminalDb } from '../utils/terminal-handler'
@@ -12,14 +14,14 @@ import { serveTerminal, terminalDb } from '../utils/terminal-handler'
 const FEED_ENTRIES = 100
 
 const querySchema = z.object({
-  include: z.enum(['ticker']).optional(),
+  include: z.preprocess(tierFilterOf, z.enum(['info']).optional()),
 })
 
 export default defineEventHandler(async (event) => {
   await rateLimit(event, { name: 'alerts-feed', limit: 60, windowSeconds: 60 })
   const config = useRuntimeConfig()
   const { include } = await getValidatedQuery(event, querySchema.parse)
-  const tier = include === 'ticker' ? 'all' : 'alert'
+  const tier = include === 'info' ? 'all' : 'alert'
 
   const alerts = await serveTerminal(
     event,

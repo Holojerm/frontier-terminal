@@ -41,7 +41,7 @@ Owned surfaces, already built:
 
 | Channel | URL | Use |
 | --- | --- | --- |
-| Atom alerts feed | `/alerts.xml` (`?include=ticker` for the info tier) | Analysts on Feedly or Inoreader; newsletter writers watching for price cuts |
+| Atom alerts feed | `/alerts.xml` (`?include=info` for the minor changes) | Analysts on Feedly or Inoreader; newsletter writers watching for price cuts |
 | MCP server | `/mcp`, no auth | Analysts using Claude or ChatGPT with tools; one-line install in `/llms.txt` |
 | CSV and JSON exports | `/data`, `/export/<table>.csv` | Spreadsheet users; reproducible notes |
 | `llms.txt` and JSON-LD | `/llms.txt`, every page head | Answer engines choosing what to fetch and quote |

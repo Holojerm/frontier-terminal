@@ -17,7 +17,10 @@ import {
   exportTable,
   jsonChunks,
   parseExportPath,
+  sampleOf,
+  SAMPLE_ROWS,
   streamOf,
+  WITHDRAWN_EXPORTS,
 } from '../server/utils/terminal-export'
 
 // Bulk exports against a real D1: every table has provenance columns, the
@@ -104,7 +107,6 @@ describe('the table registry', () => {
       'incidents',
       'disclosures',
       'disclosure_timelines',
-      'rankings_daily',
       'filers',
       'revenue_facts',
       'prospectus_statements',
@@ -118,8 +120,11 @@ describe('the table registry', () => {
       'claim_verdicts',
       'recipe_observations',
       'source_runs',
+      'entity_securities',
     ])
     expect(exportTable('entities')).toBeNull()
+    expect(exportTable('rankings_daily')).toBeNull()
+    expect(WITHDRAWN_EXPORTS.rankings_daily).toMatch(/competing free API/)
     expect(exportTable('constructor')).toBeNull()
     expect(exportTable('prices_latest')!.name).toBe('prices_latest')
   })
@@ -143,6 +148,9 @@ describe('the table registry', () => {
         expect(table.columns).toContain('source_url')
         expect(table.columns).toContain('started_at')
         expect(table.columns).not.toContain('fetched_at')
+      } else if (name === 'entity_securities') {
+        // Hand-checked rows, not fetches: the day each was checked against its source.
+        expect(tail).toEqual(['source_url', 'checked_on'])
       } else {
         expect(tail, name).toEqual(['source_url', 'fetched_at'])
       }
@@ -242,6 +250,53 @@ describe('filters', () => {
       await collect(jsonChunks(db, recipes, 'where' in ok ? ok.where : undefined)),
     )
     expect(rows).toEqual([])
+  })
+})
+
+describe('what the exports leave out', () => {
+  it('serves no OpenRouter ranking row through the change log', async () => {
+    const change = (id: string, entity_type: string) => ({
+      id,
+      entity_key: `${entity_type}:x:${id}`,
+      entity_type,
+      provider: 'openai',
+      change_type: 'added',
+      before_hash: null,
+      after_hash: contentHash({}),
+      before_json: null,
+      after_json: '{}',
+      detected_at: '2026-09-07T10:00:02.000Z',
+      ...PROV,
+    })
+    await insertRows(db, 'changes', [change('c-rank', 'ranking'), change('c-job', 'job')])
+    const changes = exportTable('changes')!
+    const rows = JSON.parse(await collect(jsonChunks(db, changes))) as { id: string }[]
+    expect(rows.map((r) => r.id)).toEqual(['c-job'])
+    expect(await changes.count(db)).toBe(1)
+  })
+})
+
+describe('samples', () => {
+  it('cut a table to its first rows in export order, with the same columns', async () => {
+    const prices = sampleOf(exportTable('prices_latest')!)
+    const rows = JSON.parse(await collect(jsonChunks(db, prices))) as Record<string, unknown>[]
+    expect(rows).toHaveLength(SAMPLE_ROWS)
+    expect(Object.keys(rows[0]!)).toEqual(prices.columns)
+    expect(rows[0]!.model_slug).toBe('grok-000')
+    expect(await prices.count(db)).toBe(SAMPLE_ROWS)
+    expect(prices.filters).toBeUndefined()
+  })
+})
+
+describe('entity_securities', () => {
+  it('is served from code, every row sourced', async () => {
+    const table = exportTable('entity_securities')!
+    const rows = JSON.parse(await collect(jsonChunks(db, table))) as Record<string, unknown>[]
+    expect(rows.length).toBe(await table.count(db))
+    for (const row of rows) {
+      expect(Object.keys(row)).toEqual(table.columns)
+      expect(row.source_url).toMatch(/^https:\/\//)
+    }
   })
 })
 

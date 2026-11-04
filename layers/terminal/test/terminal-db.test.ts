@@ -198,7 +198,6 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       'incidents',
       'disclosures',
       'disclosure_timelines',
-      'rankings_daily',
       'filers',
       'revenue_facts',
       'prospectus_statements',
@@ -212,6 +211,7 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       'claim_verdicts',
       'recipe_observations',
       'source_runs',
+      'entity_securities',
     ])
   })
 
@@ -788,27 +788,27 @@ describe('the ticker/alert split', () => {
     expect(alerts.rows.map((r) => r.severity)).toEqual(['critical', 'notable'])
     for (const r of alerts.rows) expect(r.changes).toHaveLength(1)
 
-    const ticker = await queryAlerts(db, await ctx(), 50, 'ticker')
-    expect(ticker.total).toBe(9)
-    expect(ticker.rows.every((r) => r.severity === 'info')).toBe(true)
+    const minor = await queryAlerts(db, await ctx(), 50, 'info')
+    expect(minor.total).toBe(9)
+    expect(minor.rows.every((r) => r.severity === 'info')).toBe(true)
     // Newest first within the tier.
-    expect(ticker.rows[0]!.created_at > ticker.rows.at(-1)!.created_at).toBe(true)
+    expect(minor.rows[0]!.created_at > minor.rows.at(-1)!.created_at).toBe(true)
   })
 
-  it('the overview leads with the alert tier and carries the ticker beside it', async () => {
+  it('the overview leads with the alert tier and carries the minor changes beside it', async () => {
     const overview = await queryOverview(db, await ctx())
     expect(overview.alert_count).toBe(3)
     expect(overview.alerts.map((a) => a.severity)).toEqual(['critical', 'notable', 'notable'])
-    expect(overview.ticker_count).toBe(9)
-    expect(overview.ticker).toHaveLength(8) // OVERVIEW_TICKER caps the band; the count says 9
-    expect(overview.ticker.every((a) => a.severity === 'info')).toBe(true)
+    expect(overview.info_count).toBe(9)
+    expect(overview.info).toHaveLength(8) // OVERVIEW_INFO caps the band; the count says 9
+    expect(overview.info.every((a) => a.severity === 'info')).toBe(true)
   })
 
   it('enumerates every permalink for the sitemap with its own tier and date', async () => {
     const links = await alertPermalinks(db)
     expect(links).toHaveLength(12)
     expect(links.filter((l) => l.tier === 'alert')).toHaveLength(3)
-    expect(links.filter((l) => l.tier === 'ticker')).toHaveLength(9)
+    expect(links.filter((l) => l.tier === 'info')).toHaveLength(9)
     expect(links[0]!.created_at).toBe(T(11))
     expect(await alertPermalinks(db, 3)).toHaveLength(3)
   })

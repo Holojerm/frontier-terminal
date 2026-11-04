@@ -2,6 +2,16 @@
 # live-fetched 2026-08-25; full raw reports in transcripts/). This file
 # transcribes the audit; it never re-derives or invents. Fixture provenance
 # (fetch timestamps, trim notes): fixtures/manifest.json.
+#
+# Every include source and recipe carries `terms` (the publisher's terms and
+# robots.txt as read, what is taken, how often) and `rights`, what a paid
+# licence could cover: `ours` (facts the publisher states about itself, read
+# under terms and a robots.txt that allow it; the compilation is ours),
+# `upstream` (someone else's dataset, under its own licence, which travels
+# with it), or `not-cleared` (no stated licence, unread terms, or a robots or
+# terms restriction: free site only, never in a paid offer). /api/coverage
+# and /contact read both. A source is `ours` only when both its terms and its
+# robots.txt were read and neither restricts what is taken.
 
 sources:
   openai-models-md:
@@ -11,6 +21,13 @@ sources:
     format: Markdown tables
     diff_mechanism: body hash (ETag on pricing page)
     verdict: include
+    terms: >-
+      OpenAI's terms of use (openai.com/policies) answer 403 to a headless
+      client, so they were not read. developers.openai.com/robots.txt allows
+      everything. Taken: model ids and catalog fields, every 5 minutes (the
+      launch tripwire). Not cleared for a paid offer until the terms are read.
+      Read 2026-11-04.
+    rights: not-cleared
     fixture: fixtures/pricing/openai-models.md
     caveats: >-
       Catalog only — the page prints no prices; they come from
@@ -25,6 +42,13 @@ sources:
     format: Markdown tables (Standard / Batch / Flex / Fast, short + long context columns)
     diff_mechanism: body hash (ETag present)
     verdict: include
+    terms: >-
+      OpenAI's terms of use (openai.com/policies) answer 403 to a headless
+      client, so they were not read. developers.openai.com/robots.txt allows
+      everything. Taken: $/MTok prices per model, tier and context band, every
+      30 minutes. Not cleared for a paid offer until the terms are read. Read
+      2026-11-04.
+    rights: not-cleared
     fixture: fixtures/pricing/openai-pricing.md
     caveats: >-
       Did not exist at the 2026-08-25 audit; live-checked 2026-09-22 as
@@ -47,6 +71,15 @@ sources:
     format: Markdown tables
     diff_mechanism: body hash (no validators)
     verdict: include
+    terms: >-
+      Anthropic's Consumer Terms (anthropic.com/legal/consumer-terms) bar
+      users "To crawl, scrape, or otherwise harvest data or information from
+      our Services", and define the Services to include "associated apps,
+      software, and websites"; the Commercial Terms carry no such clause.
+      platform.claude.com/robots.txt disallows only /api/. Taken: model ids,
+      context windows and cutoffs, every 5 minutes. Not in a paid offer while
+      the Consumer Terms' scraping bar may reach the docs. Read 2026-11-04.
+    rights: not-cleared
     fixture: fixtures/pricing/anthropic-models-overview.md
     caveats: Catalog fields (context window, cutoff); pair with anthropic-pricing-md for prices.
 
@@ -57,6 +90,15 @@ sources:
     format: Markdown tables
     diff_mechanism: body hash (no validators)
     verdict: include
+    terms: >-
+      Anthropic's Consumer Terms (anthropic.com/legal/consumer-terms) bar
+      users "To crawl, scrape, or otherwise harvest data or information from
+      our Services", and define the Services to include "associated apps,
+      software, and websites"; the Commercial Terms carry no such clause.
+      platform.claude.com/robots.txt disallows only /api/. Taken: $/MTok
+      prices per model and tier, every 30 minutes. Not in a paid offer while
+      the Consumer Terms' scraping bar may reach the docs. Read 2026-11-04.
+    rights: not-cleared
     fixture: fixtures/pricing/anthropic-pricing.md
     caveats: >-
       Audit recorded this page as semantic HTML; scaffold-time fetch
@@ -76,6 +118,14 @@ sources:
     format: Markdown tables
     diff_mechanism: body hash (1h cache TTL)
     verdict: include
+    terms: >-
+      xAI's Acceptable Use Policy bars "Accessing the Services through
+      unauthorized automated or non-human means" (read in a browser; x.ai
+      answers 403 headless). docs.x.ai/robots.txt allows everything and
+      signals ai-input=yes, which is read as authorizing the free site.
+      Taken: model ids, prices and context windows, every 5 minutes. Not in
+      a paid offer while the AUP bar stands. Read 2026-11-04.
+    rights: not-cleared
     fixture: fixtures/pricing/xai-models.md
     caveats: >-
       Long-context dual pricing: models listed with two rows (< 200k / >=
@@ -89,6 +139,15 @@ sources:
     format: Markdoc (86 tables, one tab per tier)
     diff_mechanism: body hash (no validators)
     verdict: include — hardest parse
+    terms: >-
+      Google's Terms of Service (policies.google.com/terms) bar automated
+      access "in violation of the machine-readable instructions on our web
+      pages (for example, robots.txt files…)"; aistudio.google.com/robots.txt
+      allows /docs/. Taken: $/MTok prices per model and tier, every 5 minutes.
+      Prices and catalog fields the vendor states about its own product are
+      facts; the keyed, timestamped compilation and its change log are ours.
+      Read 2026-11-04.
+    rights: ours
     fixture: fixtures/pricing/google-pricing.md
     parse_mode: agent  # the one agent-parsed source; output gated by GooglePricingOutput
     caveats: >-
@@ -110,6 +169,15 @@ sources:
     format: Markdoc (model cards + endpoint tables)
     diff_mechanism: recommendation rows (class-map sentences present / absent)
     verdict: include — class-map basis only
+    terms: >-
+      Google's Terms of Service (policies.google.com/terms) bar automated
+      access "in violation of the machine-readable instructions on our web
+      pages (for example, robots.txt files…)"; aistudio.google.com/robots.txt
+      allows /docs/. Taken: the vendor sentences the class map quotes, every 5
+      minutes. Prices and catalog fields the vendor states about its own
+      product are facts; the keyed, timestamped compilation and its change log
+      are ours. Read 2026-11-04.
+    rights: ours
     fixture: fixtures/pricing/google-models.md
     caveats: >-
       Did not exist at the 2026-08-25 audit. Until 2026-11-03 this was
@@ -128,6 +196,13 @@ sources:
     format: Markdown tables
     diff_mechanism: body hash (ETag, Last-Modified)
     verdict: include
+    terms: >-
+      No website terms found for dev.meta.ai (meta.com/legal/terms and
+      dev.meta.ai/legal/terms answer 404); the Meta Model API terms govern API
+      calls, not reading the docs. robots.txt allows /docs/. Taken: model ids
+      and context windows, every 5 minutes. Not cleared for a paid offer until
+      the terms are read. Read 2026-11-04.
+    rights: not-cleared
     fixture: fixtures/pricing/meta-models.md
     caveats: >-
       Catalog only, like openai-models-md: the page prints model ids,
@@ -146,6 +221,13 @@ sources:
     format: Markdown tables (Standard / Contributor mode columns per model line)
     diff_mechanism: body hash (ETag, Last-Modified)
     verdict: include
+    terms: >-
+      No website terms found for dev.meta.ai (meta.com/legal/terms and
+      dev.meta.ai/legal/terms answer 404); the Meta Model API terms govern API
+      calls, not reading the docs. robots.txt allows /docs/. Taken: $/MTok
+      prices per model line, every 30 minutes. Not cleared for a paid offer
+      until the terms are read. Read 2026-11-04.
+    rights: not-cleared
     fixture: fixtures/pricing/meta-pricing.md
     caveats: >-
       One table per model line, priced per line, not per version: every
@@ -164,6 +246,14 @@ sources:
     format: Markdown tables (current models; deprecated and retired models)
     diff_mechanism: body hash (ETag)
     verdict: include
+    terms: >-
+      Mistral's terms (legal.mistral.ai: consumer, commercial, usage policy)
+      say nothing about automated access to its docs. docs.mistral.ai has no
+      robots.txt (404). Taken: model ids, status and context, every 5 minutes.
+      Prices and catalog fields the vendor states about its own product are
+      facts; the keyed, timestamped compilation and its change log are ours.
+      Read 2026-11-04.
+    rights: ours
     fixture: fixtures/pricing/mistral-models.md
     caveats: >-
       Did not exist at the 2026-09-08 audit (the .md links answered 404);
@@ -185,6 +275,14 @@ sources:
     format: Markdown tables, one per model family; price lines joined by <br> in one cell
     diff_mechanism: body hash (ETag)
     verdict: include
+    terms: >-
+      Mistral's terms (legal.mistral.ai: consumer, commercial, usage policy)
+      say nothing about automated access to its docs. docs.mistral.ai has no
+      robots.txt (404). Taken: $/MTok prices per model, every 30 minutes.
+      Prices and catalog fields the vendor states about its own product are
+      facts; the keyed, timestamped compilation and its change log are ours.
+      Read 2026-11-04.
+    rights: ours
     fixture: fixtures/pricing/mistral-pricing.md
     caveats: >-
       Live-checked 2026-11-01. Only the per-million-token lines are parsed
@@ -203,6 +301,15 @@ sources:
     format: JSON, 419 models
     diff_mechanism: 5-min cache, field diff
     verdict: include as cross-check only
+    terms: >-
+      OpenRouter's Terms of Service (openrouter.ai/terms, last updated
+      2026-08-31), section 7, bar using "scripts, robots or any other means or
+      processes … to scrape or copy any information on the Site or the
+      Services"; the CC BY 4.0 grant covers the Data API datasets only, not
+      this endpoint. robots.txt allows /. Taken: per-model list prices, every
+      6 hours, as a cross-check that is never a source of record. Not in a
+      paid offer. Read 2026-11-04.
+    rights: not-cleared
     fixture: fixtures/pricing/openrouter-models.json
     caveats: >-
       Third-party restatement with no drift SLA and thin xAI coverage (6 vs
@@ -215,6 +322,17 @@ sources:
     format: JSON — top 50 public models per UTC day by total tokens, plus one aggregated "other" row
     diff_mechanism: (date, model_permaslug) keys; a revised total_tokens diffs as modified; append-only window
     verdict: include — needs NUXT_OPENROUTER_API_KEY; recorded as skipped, never fetched anonymously, without it
+    terms: >-
+      CC BY 4.0 (openrouter.ai/docs/cookbook/administration/data-api): "You
+      may copy, redistribute, and build on it, including commercially, with
+      attribution to OpenRouter." The same page: "It is not intended to be
+      re-served as a competing free API." Fetching needs an API key, so the
+      account terms (openrouter.ai/terms) apply too. robots.txt allows /.
+      Taken: tokens per model per UTC day, every 6 hours. Shown as per-lab
+      shares and top models with the required citation; the raw per-model rows
+      are not bulk-exported (docs/source-audit.md, 2026-11-04 addendum). Read
+      2026-11-04.
+    rights: upstream
     fixture: fixtures/rankings/openrouter-rankings-daily.json
     license: CC BY 4.0 (openrouter.ai/docs/cookbook/administration/data-api, read 2026-09-08)
     citation: "Source: OpenRouter (openrouter.ai/rankings), as of {meta.as_of}. Licensed under CC BY 4.0."
@@ -238,6 +356,14 @@ sources:
     format: JSON (dept+team inline; ~12 MB)
     diff_mechanism: UUID ids, publishedAt, ETag
     verdict: include
+    terms: >-
+      Ashby documents this as its public job posting API
+      (developers.ashbyhq.com/docs/public-job-posting-api); Ashby's terms say
+      nothing about reading it. api.ashbyhq.com has no robots.txt (401).
+      Taken: title, department, team, location and dates per open role, every
+      6 hours; no posting body and no names of people. Postings are facts the
+      employer publishes. Read 2026-11-04.
+    rights: ours
     fixture: fixtures/hiring/openai-ashby.json
     caveats: 757 roles at audit time.
 
@@ -248,6 +374,13 @@ sources:
     format: JSON
     diff_mechanism: numeric ids, updated_at, ETag
     verdict: include
+    terms: >-
+      Greenhouse (developers.greenhouse.io/job-board.html): "Job Board data is
+      publicly available, so authentication is not required for any GET
+      endpoints." robots.txt disallows only /embed/. Taken: title, department,
+      location and dates per open role, every 6 hours; no posting body and no
+      names of people. Read 2026-11-04.
+    rights: ours
     fixture: fixtures/hiring/anthropic-greenhouse.json
     caveats: >-
       537 roles at audit time. Department requires the /departments join —
@@ -260,6 +393,10 @@ sources:
     format: JSON
     diff_mechanism: numeric ids
     verdict: include (join table for anthropic-greenhouse)
+    terms: >-
+      Same terms and robots.txt as anthropic-greenhouse. Taken: department
+      names and the job ids under each, every 6 hours. Read 2026-11-04.
+    rights: ours
     fixture: fixtures/hiring/anthropic-greenhouse-departments.json
     caveats: null
 
@@ -270,6 +407,12 @@ sources:
     format: JSON
     diff_mechanism: numeric ids, updated_at, ETag
     verdict: include with disclosed caveat
+    terms: >-
+      Same terms and robots.txt as anthropic-greenhouse. Taken: title,
+      department, location, dates and company_name per open role, every 6
+      hours; no posting body and no names of people. The SpaceX/xAI blend
+      caveat travels with every row. Read 2026-11-04.
+    rights: ours
     fixture: fixtures/hiring/xai-greenhouse.json
     caveats: >-
       262 roles at audit time; 255 at the 2026-08-25T23:08Z join re-fetch.
@@ -291,6 +434,10 @@ sources:
     format: JSON
     diff_mechanism: numeric ids
     verdict: include (join table for xai-greenhouse)
+    terms: >-
+      Same terms and robots.txt as anthropic-greenhouse. Taken: department
+      names and the job ids under each, every 6 hours. Read 2026-11-04.
+    rights: ours
     fixture: fixtures/hiring/xai-greenhouse-departments.json
     caveats: >-
       Departments are the board owner's own labels, not an independent
@@ -304,6 +451,11 @@ sources:
     format: JSON (dept+team inline; ~2.8 MB)
     diff_mechanism: UUID ids, publishedAt, ETag
     verdict: include
+    terms: >-
+      Same API, terms and robots.txt as openai-ashby. Taken: title,
+      department, team, location and dates per open role, every 6 hours; no
+      posting body and no names of people. Read 2026-11-04.
+    rights: ours
     fixture: fixtures/hiring/mistral-ashby.json
     caveats: >-
       229 roles at 2026-11-01. The board is named mistral.ai, as the Apply
@@ -318,6 +470,14 @@ sources:
     format: XML job feed (<jobs><job>…), Alphabet-wide, ~20 MB
     diff_mechanism: numeric jobid; Last-Modified on the whole file
     verdict: include — filtered to employer DeepMind only
+    terms: >-
+      Google's Terms of Service bar automated access only "in violation of
+      the machine-readable instructions on our web pages"; www.google.com's
+      robots.txt disallows only the results page's page= parameters, not the
+      feed. Taken: job id, title, employer, categories, locations and dates
+      for DeepMind rows only, every 6 hours; no posting body and no names of
+      people. Read 2026-11-04.
+    rights: ours
     fixture: fixtures/hiring/google-careers.xml
     caveats: >-
       DeepMind roles only: the feed lists every Alphabet posting (3,380 on
@@ -342,6 +502,15 @@ sources:
     format: JSON
     diff_mechanism: startdt param + accession numbers
     verdict: include, narrowly scoped
+    terms: >-
+      US government work, not under copyright (17 U.S.C. 105). SEC fair-access
+      policy
+      (sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data): a
+      declared User-Agent naming a contact, under 10 requests a second
+      (layers/terminal/server/pipeline/fetch.ts). efts.sec.gov/robots.txt
+      answers 403. Taken: S-1-family hits for "Anthropic" and the filer, every
+      30 minutes. Read 2026-11-04.
+    rights: ours
     fixture: fixtures/sec/edgar-fts.json
     caveats: >-
       UA header required (contact email form), 10 req/s. Open keyword sweeps
@@ -356,6 +525,15 @@ sources:
     format: JSON
     diff_mechanism: startdt param + accession numbers
     verdict: include, narrowly scoped
+    terms: >-
+      US government work, not under copyright (17 U.S.C. 105). SEC fair-access
+      policy
+      (sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data): a
+      declared User-Agent naming a contact, under 10 requests a second
+      (layers/terminal/server/pipeline/fetch.ts). efts.sec.gov/robots.txt
+      answers 403. Taken: S-1-family hits for "OpenAI" and the filer, every 30
+      minutes. Read 2026-11-04.
+    rights: ours
     fixture: fixtures/sec/edgar-fts-openai.json
     caveats: >-
       The OpenAI side of the S-1 tripwire, same UA + rate rules and the same
@@ -370,6 +548,15 @@ sources:
     format: JSON
     diff_mechanism: accession numbers
     verdict: include, narrowly scoped
+    terms: >-
+      US government work, not under copyright (17 U.S.C. 105). SEC fair-access
+      policy
+      (sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data): a
+      declared User-Agent naming a contact, under 10 requests a second
+      (layers/terminal/server/pipeline/fetch.ts). data.sec.gov has no
+      robots.txt (404). Taken: the tracked forms per filing, every 30 minutes.
+      Read 2026-11-04.
+    rights: ours
     fixture: fixtures/sec/edgar-submissions-spcx.json  # SPCX example
     caveats: >-
       Same UA + rate rules as edgar-fts. The parser keeps only the tracked
@@ -386,6 +573,10 @@ sources:
     format: JSON
     diff_mechanism: accession numbers
     verdict: include, narrowly scoped
+    terms: >-
+      Same terms, robots.txt and frequency as edgar-submissions. Read
+      2026-11-04.
+    rights: ours
     fixture: fixtures/sec/edgar-submissions-msft.json
     caveats: >-
       Whitelisted CIK, same form filter as edgar-submissions. Microsoft's
@@ -399,6 +590,10 @@ sources:
     format: JSON
     diff_mechanism: accession numbers
     verdict: include, narrowly scoped
+    terms: >-
+      Same terms, robots.txt and frequency as edgar-submissions. Read
+      2026-11-04.
+    rights: ours
     fixture: fixtures/sec/edgar-submissions-amzn.json
     caveats: >-
       Whitelisted CIK, same form filter as edgar-submissions. Amazon's
@@ -413,6 +608,10 @@ sources:
     format: JSON
     diff_mechanism: accession numbers
     verdict: include, narrowly scoped
+    terms: >-
+      Same terms, robots.txt and frequency as edgar-submissions. Read
+      2026-11-04.
+    rights: ours
     fixture: fixtures/sec/edgar-submissions-nvda.json
     caveats: Whitelisted CIK, same form filter as edgar-submissions.
 
@@ -423,6 +622,10 @@ sources:
     format: JSON
     diff_mechanism: accession numbers
     verdict: include, narrowly scoped
+    terms: >-
+      Same terms, robots.txt and frequency as edgar-submissions. Read
+      2026-11-04.
+    rights: ours
     fixture: fixtures/sec/edgar-submissions-googl.json
     caveats: >-
       Whitelisted CIK, same form filter as edgar-submissions. Alphabet is
@@ -437,6 +640,10 @@ sources:
     format: JSON
     diff_mechanism: accession numbers
     verdict: include, narrowly scoped
+    terms: >-
+      Same terms, robots.txt and frequency as edgar-submissions. Read
+      2026-11-04.
+    rights: ours
     fixture: fixtures/sec/edgar-submissions-meta.json
     caveats: >-
       Whitelisted CIK, same form filter as edgar-submissions. Meta is the
@@ -453,6 +660,15 @@ sources:
     format: JSON (XBRL company facts — facts.{taxonomy}.{tag}.units.USD[])
     diff_mechanism: (tag, accession, start, end) keys; a restated value diffs as modified
     verdict: include — the one revenue filer tagged in revenue_filers
+    terms: >-
+      US government work, not under copyright (17 U.S.C. 105). SEC fair-access
+      policy
+      (sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data): a
+      declared User-Agent naming a contact, under 10 requests a second
+      (layers/terminal/server/pipeline/fetch.ts). data.sec.gov has no
+      robots.txt (404). Taken: every revenue fact with its period and
+      accession, every 30 minutes. Read 2026-11-04.
+    rights: ours
     fixture: fixtures/sec/edgar-companyfacts-spcx.json
     caveats: >-
       SpaceX consolidated revenue, not xAI's: SpaceX is xAI's parent since
@@ -472,6 +688,13 @@ sources:
     format: JSON (Statuspage v2, {page, incidents[]})
     diff_mechanism: incident ids; status/resolved_at per incident
     verdict: include
+    terms: >-
+      OpenAI's terms of use (openai.com/policies) answer 403 to a headless
+      client, so they were not read. status.openai.com has no robots.txt
+      (404). Taken: incident id, title, impact, status, start and resolution,
+      every 6 hours. Not cleared for a paid offer until the terms are read.
+      Read 2026-11-04.
+    rights: not-cleared
     fixture: fixtures/status/openai-status.json
     caveats: >-
       Capacity-strain proxy, not an SLA: a status page records what the
@@ -490,6 +713,14 @@ sources:
     format: Atom (Statuspage incident history; HTML content lists each update)
     diff_mechanism: incident ids (the code in each entry's /incidents/ link); status/resolved_at per incident
     verdict: include
+    terms: >-
+      status.claude.com/robots.txt disallows /api/ and /embed/ for every
+      agent; this Atom feed (/history.atom) is outside both, which is why the
+      source moved here from the JSON API on 2026-11-04. Anthropic's Consumer
+      Terms bar scraping its Services (see anthropic-models-md). Taken:
+      incident id, title, status, start and resolution (no impact is
+      published), every 6 hours. Not in a paid offer. Read 2026-11-04.
+    rights: not-cleared
     fixture: fixtures/status/anthropic-status.xml
     caveats: >-
       Read from the Atom feed since 2026-11-04 because status.claude.com's
@@ -519,6 +750,14 @@ sources:
     format: JSON array (Google Cloud incident format, not Statuspage)
     diff_mechanism: incident ids; end timestamp per incident
     verdict: include — filtered to Gemini / Vertex AI products only
+    terms: >-
+      Google's Terms of Service (policies.google.com/terms) bar automated
+      access "in violation of the machine-readable instructions on our web
+      pages (for example, robots.txt files…)";
+      status.cloud.google.com/robots.txt allows everything. Taken: Gemini and
+      Vertex AI incidents only (id, title, severity, status, start, end),
+      every 6 hours. Read 2026-11-04.
+    rights: ours
     fixture: fixtures/status/google-cloud-status.json
     caveats: >-
       This is the Alphabet-wide Cloud feed; an unfiltered count would
@@ -540,6 +779,13 @@ sources:
     format: JSON (Statuspage v2, {page, incidents[]})
     diff_mechanism: incident ids; status/resolved_at per incident
     verdict: include
+    terms: >-
+      Mistral's terms say nothing about automated access;
+      status.mistral.ai/robots.txt answers a Cloudflare challenge (403), so
+      there is no file to read. Taken: incident id, title, impact, status,
+      start and resolution, every 6 hours. Not cleared for a paid offer until
+      robots.txt can be read. Read 2026-11-04.
+    rights: not-cleared
     fixture: fixtures/status/mistral-status.json
     caveats: >-
       Live-fetched 2026-11-01: exactly 50 incidents (2025-10-07 to
@@ -557,6 +803,15 @@ sources:
     format: RSS 2.0, one <item> per (component, incident)
     diff_mechanism: incident guid; status/resolved date per incident
     verdict: include
+    terms: >-
+      xAI's Acceptable Use Policy bars "Accessing the Services through
+      unauthorized automated or non-human means" (read in a browser; x.ai
+      answers 403 headless). robots.txt allows the feed and disallows
+      /api/. Taken: incident guid, title, severity, components, start and
+      end, every 6 hours. A published feed robots.txt allows is read as
+      authorized for the free site; not in a paid offer while the AUP bar
+      stands. Read 2026-11-04.
+    rights: not-cleared
     fixture: fixtures/status/xai-status.xml
     caveats: >-
       The page is "SpaceXAI System Status" and covers every SpaceXSI
@@ -584,6 +839,14 @@ sources:
     format: SSR HTML — one <tbody class="report-entry"> per report, one per notice
     diff_mechanism: report slug / notice id; title, summary, model and context per entry
     verdict: include
+    terms: >-
+      OpenAI's terms of use (openai.com/policies) answer 403 to a headless
+      client, so they were not read. alignment.openai.com has no robots.txt
+      (404). Taken: each entry's title, one-sentence summary, model and
+      context verbatim, every 6 hours. Short quotations of OpenAI's own words,
+      with the link. Not cleared for a paid offer until the terms are read.
+      Read 2026-11-04.
+    rights: not-cleared
     fixture: fixtures/disclosures/openai-misalignment-reports.html
     caveats: >-
       A record of what OpenAI chose to disclose, not a count of what
@@ -786,6 +1049,7 @@ recipe_sources:
       robots.txt allows /pricing. The Terms of Service bar "web crawling which
       is not restricted to a rate so as not to impair or otherwise disrupt the
       servers being crawled"; one fetch per survey tick is that rate.
+    rights: ours
     caveats: >-
       Only "Instances pricing" is read: self-serve, on demand. The 1-Click
       Clusters table above it prices 2-week-to-1-year terms and is skipped.
@@ -798,6 +1062,7 @@ recipe_sources:
     terms: >-
       robots.txt allows /pricing. The Terms of Service (docs.coreweave.com)
       say nothing about automated access; no separate website terms resolve.
+    rights: ours
     caveats: >-
       Priced per 8-GPU instance ("On-Demand Price: $49.24 / Hour") and
       divided by the printed GPU count. The page renders its GPU list twice;
@@ -810,6 +1075,7 @@ recipe_sources:
     terms: >-
       robots.txt allows /prices. The Terms of Use (docs.nebius.com/legal)
       say nothing about automated access.
+    rights: ours
     caveats: >-
       The preemptible column ("from $0.79") is dynamic spot pricing and is
       not read.
@@ -821,6 +1087,7 @@ recipe_sources:
     terms: >-
       robots.txt allows /cloud/pricing. The acceptable use policy
       (legal.crusoe.ai) bars "disruptive crawling or scraping".
+    rights: ours
     caveats: >-
       Names and on-demand prices are separate lists matched by position;
       the extractor checks the header reads "GPU model On-demand Current
@@ -838,6 +1105,7 @@ recipe_sources:
     terms: >-
       robots.txt allows everything for every crawler but Google-Extended.
       The Terms of Service say nothing about automated access.
+    rights: ours
     caveats: >-
       Only the GPU Clusters table is read. The dedicated endpoints table
       ($5.49 for an H100 at this fetch) is a managed inference product and is
@@ -850,6 +1118,7 @@ recipe_sources:
     terms: >-
       robots.txt allows /pricing. The Terms of Service Agreement says
       nothing about automated access.
+    rights: ours
     caveats: >-
       Only cards labelled "On-Demand Price" are read. The price sits in a
       wrapper whose component is named StrikeThrough but carries no style at
@@ -864,6 +1133,7 @@ recipe_sources:
       robots.txt allows everything. The Terms and Conditions bar "malicious
       automated use", not reading a page. Verda was DataCrunch; datacrunch.io
       redirects here.
+    rights: ours
     caveats: >-
       Two H100 rows differ only in CPUs and RAM; both are kept, keyed by that
       configuration. The page's USD/EUR toggle serves USD by default. The
@@ -876,6 +1146,7 @@ recipe_sources:
     terms: >-
       A public API Microsoft documents for unauthenticated price lookup.
       prices.azure.com has no robots.txt (404).
+    rights: ours
     caveats: >-
       Linux pay-as-you-go only: Windows, Spot and Low Priority meters are
       skipped. The ND H100 v5 family is the 8-GPU SXM board; its price is
@@ -894,6 +1165,7 @@ recipe_sources:
       apexapps.oracle.com/robots.txt answers 403 to every client tried, so
       there is no file to read; www.oracle.com's robots.txt does not cover
       this host.
+    rights: not-cleared
     caveats: >-
       Global list prices with no region. Only "Compute - GPU" parts metered
       "GPU Per Hour" are read; the NVIDIA AI Enterprise licence is software
@@ -907,6 +1179,7 @@ recipe_sources:
     terms: >-
       SEC fair-access policy: a User-Agent naming a contact, under 10
       requests a second (layers/terminal/server/pipeline/fetch.ts).
+    rights: ours
     caveats: >-
       CIK from sec.gov/files/company_tickers.json (CRWV -> 1769628). The
       fourth quarter is the 10-K year less its three 10-Q quarters, marked
@@ -926,6 +1199,7 @@ recipe_sources:
       the monthly overall and per-vendor rates are kept, each with this URL
       and its fetch time; the industry, size and state tables are not.
       Read 2026-11-04.
+    rights: not-cleared
     caveats: >-
       US businesses on Ramp (over 85,000), counted as adopters for any
       positive AI spend in the month by card or bill pay: adoption, not
@@ -944,6 +1218,7 @@ recipe_sources:
       "You may replicate data from the Public Registry using the Public
       APIs per this Agreement." No robots.txt on api.npmjs.org. Read
       2026-11-04.
+    rights: upstream
     caveats: >-
       Every tarball fetch counts, CI and mirrors included, so read the
       trend, not the level. A range longer than 18 months is clipped
@@ -958,6 +1233,7 @@ recipe_sources:
       "You may replicate data from the Public Registry using the Public
       APIs per this Agreement." No robots.txt on api.npmjs.org. Read
       2026-11-04.
+    rights: upstream
     caveats: >-
       Every tarball fetch counts, CI and mirrors included, so read the
       trend, not the level. A range longer than 18 months is clipped
@@ -972,6 +1248,7 @@ recipe_sources:
       "You may replicate data from the Public Registry using the Public
       APIs per this Agreement." No robots.txt on api.npmjs.org. Read
       2026-11-04.
+    rights: upstream
     caveats: >-
       Every tarball fetch counts, CI and mirrors included, so read the
       trend, not the level. A range longer than 18 months is clipped
@@ -986,6 +1263,7 @@ recipe_sources:
       "You may replicate data from the Public Registry using the Public
       APIs per this Agreement." No robots.txt on api.npmjs.org. Read
       2026-11-04.
+    rights: upstream
     caveats: >-
       Every tarball fetch counts, CI and mirrors included, so read the
       trend, not the level. A range longer than 18 months is clipped
@@ -1000,6 +1278,7 @@ recipe_sources:
       "You may replicate data from the Public Registry using the Public
       APIs per this Agreement." No robots.txt on api.npmjs.org. Read
       2026-11-04.
+    rights: upstream
     caveats: >-
       Every tarball fetch counts, CI and mirrors included, so read the
       trend, not the level. A range longer than 18 months is clipped
@@ -1014,6 +1293,7 @@ recipe_sources:
       "You may replicate data from the Public Registry using the Public
       APIs per this Agreement." No robots.txt on api.npmjs.org. Read
       2026-11-04.
+    rights: upstream
     caveats: >-
       Every tarball fetch counts, CI and mirrors included, so read the
       trend, not the level. A range longer than 18 months is clipped
@@ -1028,6 +1308,7 @@ recipe_sources:
       "You may replicate data from the Public Registry using the Public
       APIs per this Agreement." No robots.txt on api.npmjs.org. Read
       2026-11-04.
+    rights: upstream
     caveats: >-
       Every tarball fetch counts, CI and mirrors included, so read the
       trend, not the level. A range longer than 18 months is clipped
@@ -1042,6 +1323,7 @@ recipe_sources:
       "You may replicate data from the Public Registry using the Public
       APIs per this Agreement." No robots.txt on api.npmjs.org. Read
       2026-11-04.
+    rights: upstream
     caveats: >-
       Every tarball fetch counts, CI and mirrors included, so read the
       trend, not the level. A range longer than 18 months is clipped
@@ -1056,6 +1338,7 @@ recipe_sources:
       "You may replicate data from the Public Registry using the Public
       APIs per this Agreement." No robots.txt on api.npmjs.org. Read
       2026-11-04.
+    rights: upstream
     caveats: >-
       Every tarball fetch counts, CI and mirrors included, so read the
       trend, not the level. A range longer than 18 months is clipped
@@ -1070,6 +1353,7 @@ recipe_sources:
       asks bulk users to query BigQuery instead, which seven packages a day
       is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
       Read 2026-11-04.
+    rights: upstream
     caveats: >-
       Known mirrors are excluded; CI installs are not. 180 days of history
       only, so the series starts at the first run.
@@ -1083,6 +1367,7 @@ recipe_sources:
       asks bulk users to query BigQuery instead, which seven packages a day
       is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
       Read 2026-11-04.
+    rights: upstream
     caveats: >-
       Known mirrors are excluded; CI installs are not. 180 days of history
       only, so the series starts at the first run.
@@ -1096,6 +1381,7 @@ recipe_sources:
       asks bulk users to query BigQuery instead, which seven packages a day
       is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
       Read 2026-11-04.
+    rights: upstream
     caveats: >-
       Known mirrors are excluded; CI installs are not. 180 days of history
       only, so the series starts at the first run.
@@ -1109,6 +1395,7 @@ recipe_sources:
       asks bulk users to query BigQuery instead, which seven packages a day
       is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
       Read 2026-11-04.
+    rights: upstream
     caveats: >-
       Known mirrors are excluded; CI installs are not. 180 days of history
       only, so the series starts at the first run.
@@ -1122,6 +1409,7 @@ recipe_sources:
       asks bulk users to query BigQuery instead, which seven packages a day
       is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
       Read 2026-11-04.
+    rights: upstream
     caveats: >-
       Known mirrors are excluded; CI installs are not. 180 days of history
       only, so the series starts at the first run.
@@ -1135,6 +1423,7 @@ recipe_sources:
       asks bulk users to query BigQuery instead, which seven packages a day
       is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
       Read 2026-11-04.
+    rights: upstream
     caveats: >-
       Known mirrors are excluded; CI installs are not. 180 days of history
       only, so the series starts at the first run.
@@ -1148,6 +1437,7 @@ recipe_sources:
       asks bulk users to query BigQuery instead, which seven packages a day
       is not. The upstream PSF table is CC BY 4.0 (docs.pypi.org/api/bigquery/).
       Read 2026-11-04.
+    rights: upstream
     caveats: >-
       Known mirrors are excluded; CI installs are not. 180 days of history
       only, so the series starts at the first run.
@@ -1161,6 +1451,7 @@ recipe_sources:
       the collection of information through our API", and research
       publications must be open access. Needs NUXT_GITHUB_TOKEN: the
       anonymous limit is per IP. Read 2026-11-04.
+    rights: not-cleared
     caveats: >-
       Public repositories only. Claude Code adds the footer to PR descriptions by default; users can turn it off, so the count is a floor. The phrase is searched in titles and bodies, so a PR quoting it is counted too. Each agent leaves a different trace,
       so agents are never compared as shares.
@@ -1174,6 +1465,7 @@ recipe_sources:
       the collection of information through our API", and research
       publications must be open access. Needs NUXT_GITHUB_TOKEN: the
       anonymous limit is per IP. Read 2026-11-04.
+    rights: not-cleared
     caveats: >-
       Public repositories only. A branch-name convention only: no bot author and no trailer by default, so the count includes any branch named codex/ and misses Codex work on other branches. Each agent leaves a different trace,
       so agents are never compared as shares.
@@ -1187,6 +1479,7 @@ recipe_sources:
       the collection of information through our API", and research
       publications must be open access. Needs NUXT_GITHUB_TOKEN: the
       anonymous limit is per IP. Read 2026-11-04.
+    rights: not-cleared
     caveats: >-
       Public repositories only. Jules opens PRs as its own app by default (changeable since 2026-02-19), so the count is structural rather than opt-in. Each agent leaves a different trace,
       so agents are never compared as shares.
@@ -1200,6 +1493,7 @@ recipe_sources:
       the source and authors are credited under the Creative Commons
       Attribution license" (CC BY 4.0). robots.txt allows /data/. Read
       2026-11-04.
+    rights: upstream
     caveats: >-
       Epoch's estimates: 80% of power estimates fall within a factor of
       1.4, compute is mostly derived from power, and coverage starts with
@@ -1213,6 +1507,7 @@ recipe_sources:
     verdict: include
     terms: >-
       Same license and robots.txt as epoch-data-centers. Read 2026-11-04.
+    rights: upstream
     caveats: >-
       Dates after the run are Epoch's projections and are marked so.
       Epoch revises past estimates; the newest file wins, and the raw
@@ -1227,6 +1522,7 @@ recipe_sources:
       requests a second (layers/terminal/server/pipeline/fetch.ts). Two
       requests a tick: the submissions feed, then the newest 10-Q or 10-K's
       instance file.
+    rights: ours
     caveats: >-
       Microsoft's numbers, not OpenAI's: its recognized gain or loss (us-
       gaap:NonoperatingIncomeExpense), stake, revenue and receivables from
@@ -1245,6 +1541,7 @@ recipe_sources:
       requests a second (layers/terminal/server/pipeline/fetch.ts). Two
       requests a tick: the submissions feed, then the newest 10-Q or 10-K's
       instance file.
+    rights: ours
     caveats: >-
       Amazon's numbers, not Anthropic's: upward adjustments to its Anthropic
       preferred stock, shares held, the credit facility and the remaining
@@ -1261,6 +1558,7 @@ recipe_sources:
     terms: >-
       Same host as the lab's catalog and pricing docs
       (developers.openai.com); robots.txt allows the path. Read 2026-11-04.
+    rights: not-cleared
     caveats: >-
       Keyed on tier name: OpenAI cut five numbered tiers to Build, Launch
       and Grow on 2026-10-06, a relabel more than a capacity change. The
@@ -1275,6 +1573,7 @@ recipe_sources:
     terms: >-
       Same host as the lab's catalog and pricing docs
       (developers.openai.com); robots.txt allows the path. Read 2026-11-04.
+    rights: not-cleared
     caveats: >-
       Keyed on tier name: OpenAI cut five numbered tiers to Build, Launch
       and Grow on 2026-10-06, a relabel more than a capacity change. The
@@ -1289,6 +1588,7 @@ recipe_sources:
     terms: >-
       Same host as the lab's catalog and pricing docs
       (developers.openai.com); robots.txt allows the path. Read 2026-11-04.
+    rights: not-cleared
     caveats: >-
       Keyed on tier name: OpenAI cut five numbered tiers to Build, Launch
       and Grow on 2026-10-06, a relabel more than a capacity change. The
@@ -1303,6 +1603,7 @@ recipe_sources:
     terms: >-
       Same host as the lab's catalog and pricing docs (platform.claude.com);
       robots.txt allows the path. Read 2026-11-04.
+    rights: not-cleared
     caveats: >-
       The page says limits are "designed to prevent API abuse"; new
       organizations may start in an unpublished evaluation tier. Release
@@ -1316,6 +1617,7 @@ recipe_sources:
     terms: >-
       Same host as the lab's catalog and pricing docs (docs.x.ai);
       robots.txt allows the path. Read 2026-11-04.
+    rights: not-cleared
     caveats: >-
       The page says limits scale exponentially with tier: a designed curve,
       so a change is more likely pricing than strain. No validators and no
@@ -1329,6 +1631,7 @@ recipe_sources:
     terms: >-
       Same host as the lab's catalog and pricing docs (dev.meta.ai);
       robots.txt allows the path. Read 2026-11-04.
+    rights: not-cleared
     caveats: >-
       The same page as meta-pricing-md. Limits apply per team, not per key.
       "Other limits" (streams for transcription) is kept as text. Each
@@ -1341,6 +1644,7 @@ recipe_sources:
     terms: >-
       Ashby documents includeCompensation on the public posting API;
       api.ashbyhq.com has no robots.txt (401). Read 2026-11-04.
+    rights: ours
     caveats: >-
       Posted bands, not offers; US postings only; equity excluded. The
       median midpoint of each USD annual band, overall and for research and
@@ -1356,6 +1660,7 @@ recipe_sources:
       Greenhouse: "Job Board data is publicly available, so authentication
       is not required for any GET endpoints." robots.txt disallows only
       /embed/. Read 2026-11-04.
+    rights: ours
     caveats: >-
       Posted bands, not offers; US postings only; equity excluded. The
       median midpoint of each USD annual band, overall and for research and

@@ -5,7 +5,8 @@
 import { DATA_LICENSE } from '#shared/utils/license'
 import { mailto } from '../../shared/utils/contact'
 import { count } from '../../shared/utils/terminal-format'
-import type { CoverageData } from '../../shared/utils/terminal-types'
+import { INFO_FEED_QUERY } from '../../shared/utils/terminal-tiers'
+import type { CoverageData, SourceAxis } from '../../shared/utils/terminal-types'
 import type { TableColumn } from '../types/terminal-ui'
 
 definePageMeta({
@@ -32,6 +33,33 @@ const site = useSiteContext()
 // nodes are built from the same `coverage.exports` the table below renders —
 // if a table stops being listed it stops being described, which is the only
 // way to keep the graph from claiming a download that 404s.
+//
+// isBasedOn credits the upstream sources a table is read from, by axis; the
+// tables that span every source (snapshots, changes, alerts) credit none
+// rather than all forty.
+const TABLE_AXES: Record<string, readonly SourceAxis[]> = {
+  prices_latest: ['pricing-catalog', 'pricing-cross-check'],
+  jobs_open: ['hiring'],
+  incidents: ['status'],
+  disclosures: ['disclosures'],
+  disclosure_timelines: ['disclosures'],
+  filers: ['sec'],
+  revenue_facts: ['sec', 'revenue'],
+}
+const basedOn = (table: string): string[] => {
+  const axes = TABLE_AXES[table]
+  const urls =
+    table === 'recipe_observations'
+      ? (coverage.value?.recipes ?? []).map((r) => r.url)
+      : axes
+        ? (coverage.value?.sources ?? [])
+            .filter((s) => !s.derived_from && axes.includes(s.axis))
+            .map((s) => s.url)
+        : []
+  return [...new Set(urls)]
+}
+const temporalCoverage = openTemporalCoverage(coverage.value?.first_fetched_at)
+
 const datasets = (coverage.value?.exports ?? []).map((table) =>
   datasetSchema(site, {
     url: pageUrl,
@@ -41,6 +69,8 @@ const datasets = (coverage.value?.exports ?? []).map((table) =>
     dateModified: coverage.value?.as_of,
     variableMeasured: table.columns,
     rows: table.rows,
+    temporalCoverage,
+    isBasedOn: basedOn(table.name),
     distribution: [
       { encodingFormat: 'text/csv', contentUrl: `${site.appUrl}/export/${table.name}.csv` },
       {
@@ -86,7 +116,7 @@ const EXPORT_COLUMNS: TableColumn[] = [
     <TerminalPanel
       id="coverage"
       title="Coverage"
-      note="Every source: newest snapshot, last poll, snapshot count, rows, and the audit’s caveat."
+      note="Every source: newest snapshot, last poll, snapshot count, rows, the audit’s caveat, and the terms and robots.txt it is read under."
       flush
     >
       <TerminalCoveragePanel v-if="coverage" :coverage="coverage" />
@@ -134,6 +164,15 @@ const EXPORT_COLUMNS: TableColumn[] = [
               icon="i-lucide-braces"
               label="JSON"
             />
+            <UButton
+              :to="`/export/sample/${t.name}.csv`"
+              external
+              size="sm"
+              variant="link"
+              color="neutral"
+              :aria-label="`Sample of ${t.name}, CSV`"
+              label="Sample"
+            />
           </span>
         </template>
       </TerminalTable>
@@ -141,7 +180,18 @@ const EXPORT_COLUMNS: TableColumn[] = [
         Data as of poll tick
         <time v-if="coverage.as_of" :datetime="coverage.as_of">{{ coverage.as_of }}</time>
         <span v-else>— no poll has run yet</span>. Exports are served live; the counts above are
-        cached for up to five minutes.
+        cached for up to five minutes. Each sample is the table’s first 50 rows in export order
+        (oldest first where it is keyed by time), at
+        <span class="font-mono">/export/sample/&lt;table&gt;.csv</span> or
+        <span class="font-mono">.json</span>. <span class="font-mono">entity_securities</span> maps
+        each lab and tracked filer to its issuer, CIK and symbol, and says so when a lab is private.
+        <span class="font-mono">rankings_daily</span> is no longer exported: OpenRouter licenses its
+        rankings CC BY 4.0 but says they are not to be re-served as a competing free API, so the
+        per-lab shares stay on
+        <NuxtLink to="/rankings" class="text-primary underline underline-offset-2"
+          >/rankings</NuxtLink
+        >
+        and the raw rows stay with OpenRouter.
       </template>
     </TerminalPanel>
 
@@ -192,11 +242,11 @@ const EXPORT_COLUMNS: TableColumn[] = [
     <TerminalPanel id="commercial" title="Commercial use">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
         <p class="max-w-2xl text-sm text-default">
-          Need these tables under terms of your own, on a schedule you can depend on, with full
-          history, or covering something we don’t?
+          Need the parts of these tables that are ours under signed terms, on a schedule you can
+          depend on, with full history, or covering something we don’t?
           <NuxtLink to="/contact" class="text-primary underline underline-offset-2"
             >That is a paid arrangement</NuxtLink
-          >.
+          >; upstream CC BY data keeps its own terms, and some sources are in no paid offer.
         </p>
         <UButton
           :to="mailto('Data licensing')"
@@ -226,12 +276,12 @@ const EXPORT_COLUMNS: TableColumn[] = [
             /alerts.xml</NuxtLink
           >;
           <NuxtLink
-            to="/alerts.xml?include=ticker"
+            :to="`/alerts.xml?${INFO_FEED_QUERY}`"
             external
             class="font-mono text-primary underline underline-offset-2"
-            >?include=ticker</NuxtLink
+            >?{{ INFO_FEED_QUERY }}</NuxtLink
           >
-          adds the ticker.
+          adds the minor changes.
         </p>
       </TerminalPanel>
     </div>

@@ -1,8 +1,8 @@
 <script setup lang="ts">
-// The ticker: info-tier rows, one line each. What moved, low stakes — so no
+// The minor changes: info-tier rows, one line each. What moved, low stakes — so no
 // explanation inline and no expandable rows; the headline is the permalink
 // and the explanation and cited rows live there. Provenance still travels on
-// every line, because a ticker line is a datum too.
+// every line, because a minor-change line is a datum too.
 
 import { relativeStamp } from '../../../shared/utils/terminal-format'
 import { alertPath } from '../../../shared/utils/terminal-tiers'

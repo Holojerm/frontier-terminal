@@ -31,14 +31,19 @@ useSeo({
     'Demand for each frontier lab: OpenRouter token share, the share of US businesses on Ramp paying each lab, SDK and coding-agent downloads, agent pull requests.',
   dateModified: rankings.value?.as_of,
   schema: [
+    // No distribution: the per-model rows are not bulk-exported (OpenRouter's
+    // terms; docs/source-audit.md). What the page renders is the per-lab fold.
     datasetSchema(site, {
       url: usePageUrl(),
-      name: 'OpenRouter tokens per model per day',
+      name: 'OpenRouter tokens per lab per day',
       description:
-        'Total tokens routed through OpenRouter per UTC day and model, from OpenRouter’s public usage rankings. One channel’s share, not market share. Source: OpenRouter (openrouter.ai/rankings).',
+        'Total tokens routed through OpenRouter per UTC day, folded into each frontier lab’s share, from OpenRouter’s public usage rankings. One channel’s share, not market share. Source: OpenRouter (openrouter.ai/rankings), licensed CC BY 4.0.',
       dateModified: rankings.value?.as_of,
-      variableMeasured: ['date', 'model_permaslug', 'total_tokens'],
-      distribution: exportDistribution(site, 'rankings_daily'),
+      temporalCoverage: rankings.value?.meta.coverage.first_date
+        ? `${rankings.value.meta.coverage.first_date}/${rankings.value.meta.coverage.last_date ?? '..'}`
+        : null,
+      variableMeasured: ['date', 'provider', 'tokens', 'share'],
+      isBasedOn: ['https://openrouter.ai/rankings'],
     }),
   ],
 })
