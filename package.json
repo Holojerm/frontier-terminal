@@ -41,6 +41,7 @@
     "test": "vitest run",
     "test:watch": "vitest",
     "test:a11y": "playwright test",
+    "perf": "bun run scripts/perf.ts",
     "playwright:install": "playwright install --with-deps chromium",
     "ci:browser": "bun run playwright:install && bun run test:a11y",
     "ci": "bun run scripts/ci.ts",

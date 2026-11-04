@@ -241,6 +241,8 @@ bun run crons:check   # Fail when [triggers] crons and nitro.scheduledTasks disa
 bun run methods:check # Fail when a GET/HEAD/DELETE route reads a request body (a Workers handler never receives one)
 bun run test:a11y     # Playwright/Chromium browser suites: axe over every public route
                       # (light + dark) AND the Content-Security-Policy spec (test/csp/)
+bun run perf          # Page-load harness: throttled cold-cache runs per route, medians, Server-Timing
+                      # stages, --bust to skip the HTML cache, --out/--compare for before/after
 bun typecheck         # TypeScript type checking
 bun db:generate       # Generate Drizzle migration after schema changes
 bun db:migrate        # Apply migrations to local D1

@@ -33,6 +33,7 @@ import {
   isCacheableDocument,
   isStorableResponse,
 } from '../utils/html-cache'
+import { serverTimingHeader, timed, type ServerTiming } from '../utils/server-timing'
 import { sharedTerminalStamp, terminalStamp } from '../utils/terminal-cache'
 
 interface RenderResponse {
@@ -57,6 +58,18 @@ function waitUntil(event: H3Event, p: Promise<unknown>): void {
   else void p.catch(() => {})
 }
 
+/** Adds this request's Server-Timing (see utils/server-timing.ts), with the whole render as `total`. */
+function withServerTiming(response: RenderResponse, event: H3Event): void {
+  const timings = event.context.serverTimings as ServerTiming[] | undefined
+  const startedAt = event.context.renderStartedAt as number | undefined
+  if (!timings || startedAt === undefined) return
+  const total = { name: 'total', dur: Date.now() - startedAt }
+  response.headers = {
+    ...response.headers,
+    'server-timing': serverTimingHeader([...timings, total]),
+  }
+}
+
 export default defineNitroPlugin((nitro) => {
   nitro.hooks.hook('render:before', async (ctx: { event: H3Event; response?: RenderResponse }) => {
     const cache = edgeCache()
@@ -64,8 +77,14 @@ export default defineNitroPlugin((nitro) => {
     const event = ctx.event
     if (!isCacheableDocument({ method: event.method, path: event.path })) return
 
+    const timings: ServerTiming[] = []
+    event.context.serverTimings = timings
+    event.context.renderStartedAt = Date.now()
+
     try {
-      const stamp = await sharedTerminalStamp(() => terminalStamp(db))
+      const stamp = await timed(timings, 'stamp', () =>
+        sharedTerminalStamp(() => terminalStamp(db)),
+      )
       // Keyed by build as well as poll, so a deploy never serves the last build's HTML.
       const build = useRuntimeConfig().public.buildSha || 'dev'
       const key = htmlCacheKey(`/${build}${event.path}`, stamp, new Date().getUTCFullYear())
@@ -73,7 +92,8 @@ export default defineNitroPlugin((nitro) => {
       // rather than re-reading a stamp that may have moved mid-render.
       event.context.htmlCacheKey = key
 
-      const hit = await cache.match(new Request(key))
+      const hit = await timed(timings, 'html-cache', () => cache.match(new Request(key)))
+      timings.at(-1)!.desc = hit ? 'hit' : 'miss'
       if (!hit) return
 
       const sidecar = hit.headers.get(HEADER_SIDECAR)
@@ -100,13 +120,16 @@ export default defineNitroPlugin((nitro) => {
     const key = ctx.event.context.htmlCacheKey as string | undefined
     // Absent means render:before declined this path; htmlCacheServed means a hit
     // already answered it. Either way there is nothing new to store.
-    if (!key || ctx.event.context.htmlCacheServed) return
+    if (!key || ctx.event.context.htmlCacheServed) return withServerTiming(response, ctx.event)
     if (!isStorableResponse(response)) return
 
     const headers = response.headers ?? {}
     // Says which path served this. A cache whose hit rate cannot be observed is
     // a cache nobody notices has stopped working.
     response.headers = { ...headers, [CACHE_STATUS]: 'miss' }
+    // After `headers` is captured for the sidecar: a stored timing would be
+    // replayed on every later hit as if it described that request.
+    withServerTiming(response, ctx.event)
 
     const stored = new Response(response.body as string, {
       headers: {
