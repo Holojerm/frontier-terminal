@@ -4,8 +4,8 @@ Repo-shipped definitions for the cloud agents ("routines") that run on a schedul
 repo. Fork-owned: `judge.md`, which reads the Worker's unjudged change rows and sends back
 significance alerts through a gated API, and `gap-watch.md`, which re-checks weekly whether the
 reason behind each stated gap (a cut source, an unmapped matrix cell) is still true and files an
-issue when one is not. `ops-triage.md`, `issue-triage.md` and `bug-fix.md` come from the
-template. `ops-triage` reads the ops spool every six hours and fixes the vendor-drift class
+issue when one is not. `ops-triage.md`, `issue-triage.md`, `bug-fix.md`, `dependency-merge.md` and
+`template-sync.md` come from the template. `ops-triage` reads the ops spool every six hours and fixes the vendor-drift class
 `routines.config.md` › Mechanical fixes grants it. It also retriggers a deploy that never
 landed, and files everything else as issues for `issue-triage`/`bug-fix` or the owner. This file, `_shared.md`, and `routines.config.md` are
 the scaffolding every routine reads first.
