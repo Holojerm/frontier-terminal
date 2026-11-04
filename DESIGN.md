@@ -423,65 +423,8 @@ a reading page sits on `bg-elevated`; that surface is for popovers and the drawe
 
 ## Voice
 
-The copy reads like an equity research note: declarative, sourced, and short. The reader is an
-analyst who knows the domain and checks the site daily. They want the figure, its source and
-its limit, in that order.
-
-Scope: everything a visitor or a crawler reads. That means page text, panel titles and notes,
-empty states, alerts, `useSeo()` titles and descriptions, `publicPage` summaries, `/llms.txt`,
-export-table descriptions, and the gap strings in `layers/terminal/server/utils/terminal-classes.ts`. Code
-comments are not copy.
-
-### Principles
-
-- **The figure first.** Lead with what is measured, then its source, then its limit. Mechanism
-  (polling, caching, parsing) belongs on About, not in a panel note.
-- **Plain declaratives.** No metaphor, wit, rhetorical contrast or personification. The site
-  reports; it does not "watch", "catch" or "refuse".
-- **Shorter, never vaguer.** A gap is named exactly: which source, what it lacks, what is shown
-  instead. Cutting words must not cut the reason.
-- **Measure, not market.** No superlatives, no "powerful", no calls to action beyond a link
-  label. Say "a proxy" where a figure is one.
-- **Fragments where a terminal would use them.** Panel notes, badges, empty-state titles and
-  table captions may be fragments. Running prose (About, License, thesis bodies) uses full
-  sentences.
-- **US English**, sentence case for headings, typographic quotes and apostrophes (’ “ ”), and
-  the serial comma. Units stated once per panel: "$ per million tokens", "UTC", "days".
-
-### Hard rules
-
-- A quoted vendor sentence is byte-identical to its source — every class-map `basis`, every
-  quotation inside a gap string, every `license` term from `sources.yaml`.
-- Dates, URLs, numbers, accession numbers, tags and "live-checked" facts never change.
-- Per-source `caveats` in `sources.yaml` are the audit's own words (`docs/source-audit.md`) and
-  are not restyled. The `cut:` reasons are copy and follow this section.
-- "Not investment advice" and the provenance rule are stated, never softened.
-
-### Do and don't
-
-| Do | Don't |
-| --- | --- |
-| No SEC filing reports this lab's revenue. | No SEC filing carries this lab's revenue. |
-| Press-reported run-rates are excluded. | We don't do run-rates — they're just press. |
-| A proxy, not market share. | The real picture of who's winning. |
-| Not polled yet. | The source hasn't been polled, so nothing is here for now. |
-| Overlap is deliberate: a stalled feed stays covered. | A stalled tripwire goes covered, not blind. |
-| Alerts as an Atom feed. | Alerts, for a reader that wants to be told. |
-
-### Before and after
-
-> **Before:** Filer tagged, nothing parsed yet. Its XBRL facts land on the next EDGAR poll that
-> reads them.
-> **After:** Filer tagged; no XBRL facts parsed yet. They appear on the next EDGAR poll.
-
-> **Before:** None usable: careers.google.com is an auth-walled SPA; the DeepMind Greenhouse
-> board is vestigial (10 jobs). Alphabet-wide numbers would conflate Search/Ads/Cloud with
-> Gemini and mislead.
-> **After:** No usable feed. careers.google.com is an auth-walled SPA; the DeepMind Greenhouse
-> board lists 10 jobs. Alphabet-wide counts would mix Search, Ads and Cloud with Gemini.
-
-> **Before:** No row for this SKU in the store yet — the source has not been polled.
-> **After:** No stored row for this SKU. The source has not been polled.
+Copy has its own guide: [`.claude/docs/voice.md`](.claude/docs/voice.md). Read it before writing
+anything a visitor reads.
 
 ---
 
