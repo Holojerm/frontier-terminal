@@ -18,6 +18,7 @@ and the ops/fleet contract.
 bun install
 bun dev            # https://frontier-terminal.localhost via portless
 bun run ci         # the merge gate — lint, format, every gate, typecheck, tests, build
+bun run ci:fast    # iterating — cheap gates + typecheck + tests touched since origin/main
 ```
 
 `bun run ci` is what Workers Builds runs on every push. The browser suites (axe over every
