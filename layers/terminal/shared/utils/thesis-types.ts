@@ -41,6 +41,8 @@ export type ValueFormat =
   | 'usd_per_mtok'
   /** A token price over a GPU rental price: GPU-hours one million tokens buy. */
   | 'gpu_hours_per_mtok'
+  /** Electrical power, megawatts. */
+  | 'megawatts'
 
 export type SignalSpec =
   | { kind: 'measured'; signal: 'openrouter-spend-premium'; rule: MeasuredRule }
@@ -116,6 +118,26 @@ export type SignalSpec =
       signal: 'recipe-sum-of-keys'
       recipe: string
       keys: readonly string[]
+      format: ValueFormat
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** One key's value over another's on each date both carry (Anthropic ÷ OpenAI). */
+      signal: 'recipe-key-ratio'
+      recipe: string
+      key: string
+      over_key: string
+      format: ValueFormat
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** The sum of every key (but `@`-keyed releases) for a recipe that stores
+       * snapshots of a current state: each snapshot holds until the next, so
+       * the sum is carried forward day by day between them. */
+      signal: 'recipe-snapshot-total'
+      recipe: string
       format: ValueFormat
       rule: MeasuredRule
     }

@@ -107,5 +107,20 @@ export const COMPUTE_THESIS: ThesisDef = {
         rule: { rule: 'below-floor-periods', floor: 0.3, periods: 2 },
       },
     },
+    {
+      // Added 2026-11-04: a supply number beside claim 4's hiring proxy.
+      id: 'compute-datacenter-power',
+      n: 6,
+      text: 'Data-center power keeps coming online',
+      signal_label: "Epoch AI's estimate of current power across the AI data centers it tracks",
+      kill_condition: '20% or more below its 180-day high for 4 straight weeks',
+      spec: {
+        kind: 'measured',
+        signal: 'recipe-snapshot-total',
+        recipe: 'epoch-data-centers',
+        format: 'megawatts',
+        rule: { rule: 'sustained-drawdown', drop: 0.2, days: 180, weeks: 4 },
+      },
+    },
   ],
 }

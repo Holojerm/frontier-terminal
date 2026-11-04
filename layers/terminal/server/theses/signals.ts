@@ -167,6 +167,8 @@ export async function readSignal(
     case 'recipe-yoy-growth':
     case 'recipe-trailing-sum':
     case 'recipe-sum-of-keys':
+    case 'recipe-key-ratio':
+    case 'recipe-snapshot-total':
       return readRecipeSignal(db, spec)
     case 'flagship-blended-price':
       return flagshipBlendedPrice(db, claim.id, spec, deps)
@@ -193,6 +195,7 @@ const BY_FORMAT: Record<ValueFormat, Formatter> = {
   usd: (v) => `$${(v / 1e6).toLocaleString('en-US', { maximumFractionDigits: 0 })}M`,
   usd_per_mtok: (v) => `$${v.toFixed(2)}/MTok`,
   gpu_hours_per_mtok: (v) => `${v.toFixed(2)} GPU-h/MTok`,
+  megawatts: (v) => `${Math.round(v).toLocaleString('en-US')} MW`,
 }
 
 const formatOf = (spec: Measured): Formatter => {

@@ -56,6 +56,7 @@ export type ValueKind =
   | 'usd'
   | 'usd_per_mtok'
   | 'gpu_hours_per_mtok'
+  | 'megawatts'
   | 'plain'
 
 const KIND_OF: Record<ValueFormat, ValueKind> = {
@@ -65,6 +66,7 @@ const KIND_OF: Record<ValueFormat, ValueKind> = {
   usd: 'usd',
   usd_per_mtok: 'usd_per_mtok',
   gpu_hours_per_mtok: 'gpu_hours_per_mtok',
+  megawatts: 'megawatts',
 }
 
 /** The server's format when it sent one; otherwise the detail's shape. */
@@ -93,6 +95,8 @@ export function formatValue(kind: ValueKind, v: number): string {
       return `$${v.toFixed(2)}/MTok`
     case 'gpu_hours_per_mtok':
       return `${v.toFixed(2)} GPU-h/MTok`
+    case 'megawatts':
+      return `${count(Math.round(v))} MW`
     default:
       return String(Number(v.toFixed(4)))
   }
