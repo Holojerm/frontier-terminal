@@ -389,17 +389,26 @@ function htmlSections(html: string): Section[] {
   })
 }
 
-/** Each `## … {% id %}` section up to the next. Codes come from the heading's
- * left column only: a deprecation callout further down names other models in
- * backticks too. */
+/** The codes block under a heading: its left column or, on a section without
+ * the two-column layout (deprecated models and Lyria since 2026-11), the lines
+ * between the heading and the first `{% hr %}`. Never the body: a deprecation
+ * callout below the rule names other models in backticks too. */
+function markdownCodeBlock(body: string): string {
+  const column = body.match(MD_LEFT_COLUMN)?.[1]
+  if (column !== undefined) return column
+  const rule = body.indexOf('{% hr')
+  return rule === -1 ? '' : body.slice(body.indexOf('\n'), rule)
+}
+
+/** Each `## … {% id %}` section up to the next. */
 function markdownSections(md: string): Section[] {
   const heads = [...md.matchAll(MD_H2)]
   return heads.map((head, i): Section => {
     const id = head[1]!
     const body = md.slice(head.index!, heads[i + 1]?.index ?? md.length)
     if (!body.includes('{% table %}')) return { id, skip: 'no pricing table' }
-    const column = body.match(MD_LEFT_COLUMN)?.[1] ?? ''
-    const slugs = [...new Set([...column.matchAll(MD_CODE)].map((m) => m[1]!.trim()))]
+    const codes = markdownCodeBlock(body)
+    const slugs = [...new Set([...codes.matchAll(MD_CODE)].map((m) => m[1]!.trim()))]
     if (slugs.length === 0) return { id, skip: 'no `code` model id under the heading' }
     const parts = [...body.matchAll(MD_TAB_OR_TABLE)].map((m): Part => {
       if (m[1] !== undefined) return { tier: m[1].toLowerCase() }
@@ -465,7 +474,11 @@ export function parseGooglePricingPage(page: string, prov: Provenance): GooglePr
         rows.push({
           provider: 'google',
           model_slug: slug,
-          tier: core.tier,
+          // A table outside any tier tab is the model's only paid tier. Keying it
+          // `standard` keeps the entity key stable when Google adds or drops the
+          // tab (the Live models lost theirs in the 2026-11-02 Markdoc move), and
+          // matches google-model-page and googlePricedSlugs.
+          tier: core.tier ?? 'standard',
           context_window: null,
           ...core.prices,
           currency: 'USD',
