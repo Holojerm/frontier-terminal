@@ -99,3 +99,55 @@ bun run webhooks:remove -- --id whk_0a1b2c3d4e [--remote]
   deliveries wait. A passing `webhooks:test` makes it active again; anything
   queued more than 24 hours ago is dropped as `expired`.
 - **Revoking the key** (`keys:revoke`) stops its webhooks at the next run.
+
+## Bulk feed: Parquet and S3 grants (licensees)
+
+`bulk:build` (hourly at :41, `layers/terminal/server/utils/terminal-bulk.ts`) writes
+each table's `recent` and `full` cuts as a gzipped CSV and a gzip Parquet file
+(`terminal-parquet.ts`) to `BLOB`, from one pass over the table. The `full`
+files and a manifest are also copied to `frontier-terminal-bulk-licensed`
+(binding `BULK_LICENSED`), which holds nothing else. That bucket is what a
+licensee's S3 credentials open, read-only, so they can never reach the raw
+payloads in `BLOB`. Without the binding the build runs and makes no copies; once
+it appears, the next run rebuilds the `full` cuts to fill the bucket.
+
+How a run spends its time: up to `BUILD_BUDGET_MS` (8 minutes of the cron's
+15) starting cuts, smallest first, reading D1 `BULK_PAGE_SIZE` rows at a time,
+and saving the index (`BULK_INDEX_PATH` in R2) after each cut. It also stops at `D1_READ_BUDGET`
+planned queries, under D1's per-invocation query limit (a full rebuild needed
+~370 on 2026-11-05). A cut that failed today is tried
+last (`index.failures` says why), so it can't stall the rest. A schema release
+rebuilds only the tables it lists. A cold rebuild of every cut fits one run.
+If the feed stalls, compare `bulk_build_failed` ops events with the run's wall
+and CPU time in Workers observability (filter `$workers.event.cron` = `41 * * * *`).
+
+One-time setup (owner):
+
+1. `bunx wrangler r2 bucket create frontier-terminal-bulk-licensed` (no public
+   access, no custom domain).
+2. An account-owned API token that can mint tokens: dashboard › Manage Account ›
+   Account API Tokens › Create Custom Token, permission **Account › Account API
+   Tokens › Edit**, no other. Save it in 1Password as "Frontier Terminal bulk
+   grants" (field `credential`). The `cf` login can't do this: its OAuth scopes
+   don't include token management.
+
+Grants:
+
+```bash
+export BULK_GRANT_API_TOKEN="$(op read 'op://Private/Frontier Terminal bulk grants/credential')"
+bun run bulk:grant -- --key key_0a1b2c3d4e --remote            # prints S3 credentials once
+bun run bulk:grants -- --remote                                # list
+bun run bulk:grant -- --key key_0a1b2c3d4e --revoke --remote   # or --grant grant_…
+bun run bulk:grant -- --sweep --remote                         # revoke grants of revoked/expired keys
+```
+
+- A grant is one account-owned token with "Workers R2 Storage Bucket Item
+  Read" on that bucket only, expiring with the key. Its id is the S3 access
+  key id; the secret is the SHA-256 of its value, printed once and never
+  stored. D1 `bulk_grants` records id, key, token id, created, expires, revoked.
+- `keys:revoke` revokes the key's grants too when `BULK_GRANT_API_TOKEN` is
+  set, and exits non-zero with the command to run when it isn't.
+- An expired key's token has already expired at Cloudflare; `--sweep` deletes
+  it and records why.
+- Check the copy after a build:
+  `bunx wrangler r2 object get frontier-terminal-bulk-licensed/manifest.json --remote --pipe | jq .generated_at`.

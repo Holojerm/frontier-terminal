@@ -1,0 +1,309 @@
+{
+ "total": 19,
+ "data": [
+  {
+   "lei": "254900Z9HH7932FVW892",
+   "legalName": "LAMBDA, INC.",
+   "legalAddress": {
+    "country": "US",
+    "region": "US-DE",
+    "city": "WILMINGTON"
+   },
+   "jurisdiction": "US-DE",
+   "registeredAs": "5221341",
+   "legalForm": "XTIQ",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2026-08-13T03:32:47Z",
+   "nextRenewalDate": "2027-08-13T03:32:47Z"
+  },
+  {
+   "lei": "984500B6DEB8CEBC4Z70",
+   "legalName": "ANTHROPIC, PBC",
+   "legalAddress": {
+    "country": "US",
+    "region": "US-DE",
+    "city": "WILMINGTON"
+   },
+   "jurisdiction": "US-DE",
+   "registeredAs": "4860621",
+   "legalForm": "XTIQ",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2026-01-28T08:07:08Z",
+   "nextRenewalDate": "2027-01-28T08:07:10Z"
+  },
+  {
+   "lei": "984500511DP2B6186053",
+   "legalName": "COREWEAVE, INC.",
+   "legalAddress": {
+    "country": "US",
+    "region": "US-DE",
+    "city": "Wilmington"
+   },
+   "jurisdiction": "US-DE",
+   "registeredAs": "6551467",
+   "legalForm": "XTIQ",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2026-05-01T04:13:48Z",
+   "nextRenewalDate": "2027-05-13T17:02:29Z"
+  },
+  {
+   "lei": "984500C7AD3A48B9FP18",
+   "legalName": "OPENAI OPCO, LLC",
+   "legalAddress": {
+    "country": "US",
+    "region": "US-DE",
+    "city": "WILMINGTON"
+   },
+   "jurisdiction": "US-DE",
+   "registeredAs": "7063675",
+   "legalForm": "HZEH",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2026-02-19T14:10:13Z",
+   "nextRenewalDate": "2027-02-27T17:16:45Z"
+  },
+  {
+   "lei": "894500Q9JNDV9YXSOL64",
+   "legalName": "MISTRAL AI",
+   "legalAddress": {
+    "country": "FR",
+    "region": null,
+    "city": "Paris"
+   },
+   "jurisdiction": "FR",
+   "registeredAs": "952418325",
+   "legalForm": "6CHY",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2025-12-03T06:12:27Z",
+   "nextRenewalDate": "2027-01-15T23:00:00Z"
+  },
+  {
+   "lei": "549300B9WLO96RQCXP87",
+   "legalName": "SPACE EXPLORATION TECHNOLOGIES CORP.",
+   "legalAddress": {
+    "country": "US",
+    "region": "US-TX",
+    "city": "AUSTIN"
+   },
+   "jurisdiction": "US-TX",
+   "registeredAs": "0805421124",
+   "legalForm": "C5K7",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2026-08-19T05:32:54Z",
+   "nextRenewalDate": "2027-08-27T02:31:42Z"
+  },
+  {
+   "lei": "5493007DY18BGNLDWU14",
+   "legalName": "CLOUDFLARE, INC.",
+   "legalAddress": {
+    "country": "US",
+    "region": "US-DE",
+    "city": "DOVER"
+   },
+   "jurisdiction": "US-DE",
+   "registeredAs": "4710875",
+   "legalForm": "XTIQ",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2026-10-28T13:52:47Z",
+   "nextRenewalDate": "2027-11-08T16:47:24Z"
+  },
+  {
+   "lei": "549300E2FZC83FJ3H565",
+   "legalName": "FASTLY, INC.",
+   "legalAddress": {
+    "country": "US",
+    "region": "US-DE",
+    "city": "WILMINGTON"
+   },
+   "jurisdiction": "US-DE",
+   "registeredAs": "4947714",
+   "legalForm": "XTIQ",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2026-05-30T09:24:07Z",
+   "nextRenewalDate": "2027-06-28T13:00:37Z"
+  },
+  {
+   "lei": "549300EPISPY3RE3DL21",
+   "legalName": "DIGITALOCEAN HOLDINGS, INC.",
+   "legalAddress": {
+    "country": "US",
+    "region": "US-DE",
+    "city": "WILMINGTON"
+   },
+   "jurisdiction": "US-DE",
+   "registeredAs": "6032173",
+   "legalForm": "XTIQ",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2026-06-02T14:39:19Z",
+   "nextRenewalDate": "2027-07-01T13:36:34Z"
+  },
+  {
+   "lei": "5493006MHB84DD0ZWV18",
+   "legalName": "ALPHABET INC.",
+   "legalAddress": {
+    "country": "US",
+    "region": "US-DE",
+    "city": "WILMINGTON"
+   },
+   "jurisdiction": "US-DE",
+   "registeredAs": "5786925",
+   "legalForm": "XTIQ",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2026-09-17T12:59:53Z",
+   "nextRenewalDate": "2027-09-17T15:55:34Z"
+  },
+  {
+   "lei": "5493001NTNQJDH60PM02",
+   "legalName": "Alibaba Group Holding Limited",
+   "legalAddress": {
+    "country": "KY",
+    "region": null,
+    "city": "George Town"
+   },
+   "jurisdiction": "KY",
+   "registeredAs": "90722",
+   "legalForm": "UE3G",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2026-04-28T08:44:17Z",
+   "nextRenewalDate": "2027-06-27T07:26:16Z"
+  },
+  {
+   "lei": "549300GGZHJ5Q1B18P93",
+   "legalName": "Nebius Group N.V.",
+   "legalAddress": {
+    "country": "NL",
+    "region": null,
+    "city": "Amsterdam"
+   },
+   "jurisdiction": "NL",
+   "registeredAs": "27265167",
+   "legalForm": "B5PM",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2026-09-16T11:35:13Z",
+   "nextRenewalDate": "2027-02-28T03:23:00Z"
+  },
+  {
+   "lei": "549300S4KLFTLO7GSQ80",
+   "legalName": "NVIDIA CORPORATION",
+   "legalAddress": {
+    "country": "US",
+    "region": "US-DE",
+    "city": "WILMINGTON"
+   },
+   "jurisdiction": "US-DE",
+   "registeredAs": "2862596",
+   "legalForm": "XTIQ",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2026-01-07T01:29:18Z",
+   "nextRenewalDate": "2027-02-06T17:45:00Z"
+  },
+  {
+   "lei": "BQ4BKCS1HXDV9HN80Z93",
+   "legalName": "META PLATFORMS, INC.",
+   "legalAddress": {
+    "country": "US",
+    "region": "US-DE",
+    "city": "WILMINGTON"
+   },
+   "jurisdiction": "US-DE",
+   "registeredAs": "3835815",
+   "legalForm": "XTIQ",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2026-10-14T13:44:59Z",
+   "nextRenewalDate": "2027-10-14T13:45:00Z"
+  },
+  {
+   "lei": "INR2EJN1ERAN0W5ZP974",
+   "legalName": "MICROSOFT CORPORATION",
+   "legalAddress": {
+    "country": "US",
+    "region": "US-WA",
+    "city": "TUMWATER"
+   },
+   "jurisdiction": "US-WA",
+   "registeredAs": "600 413 485",
+   "legalForm": "NHYA",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2026-04-07T09:26:31Z",
+   "nextRenewalDate": "2027-05-04T00:00:00Z"
+  },
+  {
+   "lei": "1Z4GXXU7ZHVWFCD8TV52",
+   "legalName": "ORACLE CORPORATION",
+   "legalAddress": {
+    "country": "US",
+    "region": "US-DE",
+    "city": "WILMINGTON"
+   },
+   "jurisdiction": "US-DE",
+   "registeredAs": "4028125",
+   "legalForm": "XTIQ",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2025-11-26T09:59:05Z",
+   "nextRenewalDate": "2026-11-26T12:41:48Z"
+  },
+  {
+   "lei": "ZXTILKJKG63JELOEG630",
+   "legalName": "AMAZON.COM, INC.",
+   "legalAddress": {
+    "country": "US",
+    "region": "US-DE",
+    "city": "WILMINGTON"
+   },
+   "jurisdiction": "US-DE",
+   "registeredAs": "2620453",
+   "legalForm": "XTIQ",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2026-10-16T05:44:00Z",
+   "nextRenewalDate": "2027-11-07T19:23:00Z"
+  },
+  {
+   "lei": "7ZW8QJWVPR4P1J1KQY45",
+   "legalName": "GOOGLE LLC",
+   "legalAddress": {
+    "country": "US",
+    "region": "US-DE",
+    "city": "WILMINGTON"
+   },
+   "jurisdiction": "US-DE",
+   "registeredAs": "3582691",
+   "legalForm": "HZEH",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2026-05-04T05:14:42Z",
+   "nextRenewalDate": "2027-05-16T21:42:00Z"
+  },
+  {
+   "lei": "OC1LZNN2LF5WTJ5RIL89",
+   "legalName": "AKAMAI TECHNOLOGIES, INC.",
+   "legalAddress": {
+    "country": "US",
+    "region": "US-DE",
+    "city": "WILMINGTON"
+   },
+   "jurisdiction": "US-DE",
+   "registeredAs": "2933637",
+   "legalForm": "XTIQ",
+   "entityStatus": "ACTIVE",
+   "registrationStatus": "ISSUED",
+   "lastUpdateDate": "2025-12-04T11:58:20Z",
+   "nextRenewalDate": "2026-12-18T17:35:11Z"
+  }
+ ]
+}

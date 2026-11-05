@@ -8,6 +8,7 @@
         "@modelcontextprotocol/server": "2.0.0",
         "@nuxt/ui": "^4.10.0",
         "drizzle-orm": "^0.45.2",
+        "hyparquet-writer": "0.17.0",
         "mustache": "^4.2.0",
         "nuxt": "^4.5.2",
         "tailwindcss": "^4.3.3",
@@ -27,6 +28,7 @@
         "@types/mustache": "^4.2.6",
         "axe-core": "^4.13.0",
         "drizzle-kit": "^0.31.10",
+        "hyparquet": "1.31.5",
         "nuxt-mcp": "^0.2.6",
         "oxfmt": "^0.64.0",
         "oxlint": "^1.79.0",
@@ -1354,6 +1356,10 @@
     "httpxy": ["httpxy@0.5.1", "", {}, "sha512-JPhqYiixe1A1I+MXDewWDZqeudBGU8Q9jCHYN8ML+779RQzLjTi78HBvWz4jMxUD6h2/vUL12g4q/mFM0OUw1A=="],
 
     "human-signals": ["human-signals@8.0.1", "", {}, "sha512-eKCa6bwnJhvxj14kZk5NCPc6Hb6BdsU9DZcOnmQKSnO1VKrfV0zCvtttPZUsBvjmNDn8rpcJfpwSYnHBjc95MQ=="],
+
+    "hyparquet": ["hyparquet@1.31.5", "", {}, "sha512-KPVfaxW8xOiO2/4fjeiBfFNEXhGVw9tfcb9ha2iNZdJ3J/yBjEwIeAnTyyuhllFFTb9YO9wg0DfRAOnm6KCvBg=="],
+
+    "hyparquet-writer": ["hyparquet-writer@0.17.0", "", { "dependencies": { "hyparquet": "1.31.5" } }, "sha512-GZ4QeopztjSli/Sz1dSOP/TrSKtwG2ydP2yuPMxeiZnho+PCXF7x+wx8OIVtpQn8rcv559IH1EJMHnTbv0sn+Q=="],
 
     "iconv-lite": ["iconv-lite@0.7.2", "", { "dependencies": { "safer-buffer": ">= 2.1.2 < 3.0.0" } }, "sha512-im9DjEDQ55s9fL4EYzOAv0yMqmMBSZp6G0VvFyTMPKWxiSBHUj9NW/qqLmXUwXrrM7AvqSlTCfvqRb0cM8yYqw=="],
 

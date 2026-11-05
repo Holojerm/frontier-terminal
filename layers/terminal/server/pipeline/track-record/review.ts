@@ -17,6 +17,7 @@ import * as tables from '#server/db/schema'
 import { ChangeRow, contentHash } from '../contracts'
 import { corpusOf, groundingFailure } from '../judge/grounding'
 import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '../store'
+import { candidateTitle } from './gdelt'
 
 /** Candidates offered per alert and kind per run. */
 export const REVIEW_PER_SIDE = 5
@@ -150,7 +151,7 @@ export async function trackRecordReview(
         candidate_id: c.id,
         kind: c.kind as 'press' | 'newsroom',
         outlet: c.outlet,
-        title: c.title,
+        title: candidateTitle(c),
         snippet: c.snippet,
         published_at: c.published_at,
       })),
@@ -176,12 +177,12 @@ export interface TrackRecordVerdictReport {
 
 /** What a rationale may cite: the candidate as shown, the alert's own text, and its change rows. */
 export function reviewCorpus(
-  candidate: Pick<Candidate, 'title' | 'snippet' | 'outlet' | 'published_at'>,
+  candidate: Pick<Candidate, 'kind' | 'title' | 'snippet' | 'outlet' | 'published_at'>,
   alert: Pick<typeof tables.alerts.$inferSelect, 'headline' | 'explanation'>,
   changes: readonly ChangeRow[],
 ): string {
   return [
-    candidate.title,
+    candidateTitle(candidate),
     candidate.snippet ?? '',
     candidate.outlet,
     candidate.published_at,

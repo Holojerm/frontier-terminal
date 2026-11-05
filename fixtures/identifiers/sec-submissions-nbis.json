@@ -1,0 +1,81 @@
+{
+ "cik": "0001513845",
+ "entityType": "other",
+ "sic": "7370",
+ "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+ "ownerOrg": "06 Technology",
+ "insiderTransactionForOwnerExists": 0,
+ "insiderTransactionForIssuerExists": 1,
+ "name": "Nebius Group N.V.",
+ "tickers": [
+  "NBIS"
+ ],
+ "exchanges": [
+  "Nasdaq"
+ ],
+ "ein": "000000000",
+ "lei": null,
+ "description": "",
+ "website": "",
+ "investorWebsite": "",
+ "category": "Large accelerated filer",
+ "fiscalYearEnd": null,
+ "stateOfIncorporation": "P7",
+ "stateOfIncorporationDescription": "Netherlands",
+ "addresses": {
+  "mailing": {
+   "street1": "BURGERWEESHUISPAD 101",
+   "street2": null,
+   "city": "AMSTERDAM",
+   "stateOrCountry": null,
+   "zipCode": "1076 ER",
+   "stateOrCountryDescription": null,
+   "isForeignLocation": 1,
+   "foreignStateTerritory": null,
+   "country": "Netherlands",
+   "countryCode": "P7"
+  },
+  "business": {
+   "street1": "BURGERWEESHUISPAD 101",
+   "street2": null,
+   "city": "AMSTERDAM",
+   "stateOrCountry": null,
+   "zipCode": "1076 ER",
+   "stateOrCountryDescription": null,
+   "isForeignLocation": 1,
+   "foreignStateTerritory": null,
+   "country": "Netherlands",
+   "countryCode": "P7"
+  }
+ },
+ "phone": "31202066970",
+ "flags": "",
+ "formerNames": [
+  {
+   "name": "Yandex N.V.",
+   "from": "2011-04-28T04:00:00.000Z",
+   "to": "2024-08-16T04:00:00.000Z"
+  }
+ ],
+ "filings": {
+  "recent": {
+   "accessionNumber": [],
+   "filingDate": [],
+   "reportDate": [],
+   "acceptanceDateTime": [],
+   "act": [],
+   "form": [],
+   "fileNumber": [],
+   "filmNumber": [],
+   "items": [],
+   "core_type": [],
+   "size": [],
+   "isXBRL": [],
+   "isInlineXBRL": [],
+   "isXBRLNumeric": [],
+   "primaryDocument": [],
+   "primaryDocDescription": []
+  },
+  "files": []
+ }
+}

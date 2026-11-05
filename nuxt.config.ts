@@ -184,6 +184,13 @@ const securityHeaders = {
 //   0 13 * * 1 — weekly thesis digest email, and social:digest queues the
 //                weekly what-moved thread. alerts:hiring-rollup writes one
 //                hiring alert per lab for the week that just ended.
+//   41 * * * * — bulk:build, and reliability:record, which rolls up source runs
+//                and records filing detections for /data#reliability
+//                (layers/terminal/server/pipeline/reliability/). Its deploy smoke
+//                results are reliability:deploys on the */5 tick, which reads
+//                GitHub at most hourly.
+//   0 4 * * *  — seo:indexnow submits the sitemap URLs changed since its last
+//                accepted run to IndexNow (server/utils/indexnow.ts).
 const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:alert', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
@@ -196,9 +203,11 @@ const SCHEDULED_TASKS: Record<string, string[]> = {
     'cache:warm',
     'track-record:search',
     'webhooks:deliver',
+    'reliability:deploys',
   ],
   '0 13 * * 1': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
-  '41 * * * *': ['bulk:build'],
+  '41 * * * *': ['bulk:build', 'reliability:record'],
+  '0 4 * * *': ['seo:indexnow'],
 }
 
 /**
@@ -471,6 +480,9 @@ export default defineNuxtConfig({
     // route 404s. Its own secret, not the fleet token: different consumer, rotated
     // separately. `wrangler secret put NUXT_OPS_TOKEN`; 32+ characters.
     opsToken: '',
+    // IndexNow key, public by design (/indexnow-key.txt serves it). Set in
+    // wrangler.toml [vars] as NUXT_INDEXNOW_KEY. See server/utils/indexnow.ts.
+    indexnowKey: '',
     // Ops alerting — where the cron digest goes (server/tasks/ops/alert.ts).
     // `from` must be on a domain in the Cloudflare account with Email Routing
     // enabled; `to` must be a verified destination address. That combination
@@ -511,6 +523,10 @@ export default defineNuxtConfig({
     // NUXT_PUBLIC_APP_NAME in wrangler.toml [vars] overrides this at runtime
     public: {
       appName: 'Frontier Terminal',
+      // Profiles of this site beyond the repo (which fleet.json supplies),
+      // emitted as Organization.sameAs so the entity is not confused with another
+      // "Frontier Terminal". Env: NUXT_PUBLIC_SAME_AS (JSON array).
+      sameAs: ['https://x.com/frontierterm'] as string[],
       // Stamped at build time; /api/status reports it so a dashboard can tell
       // which commit is live. Public because a sha is not a secret and a
       // footer may want to show it.

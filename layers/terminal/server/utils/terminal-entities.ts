@@ -9,6 +9,10 @@
 // layers/terminal/test/terminal-entities.test.ts fails when a row stops
 // matching either. Nothing here is typed in from memory: a filer the terminal
 // reads no filing from has no row.
+//
+// A parent or investor row cites the filing that discloses the relationship
+// (disclosed_in), and a listed row carries the MIC and composite FIGI that
+// entity_identifiers (terminal-identifiers.ts) verified for its symbol.
 
 export const ENTITY_SECURITY_COLUMNS = [
   'entity',
@@ -21,6 +25,9 @@ export const ENTITY_SECURITY_COLUMNS = [
   'exchange',
   'listing_status',
   'note',
+  'mic',
+  'figi',
+  'disclosed_in',
   'source_url',
   'checked_on',
 ] as const
@@ -44,6 +51,22 @@ export interface EntitySecurity extends Record<Column, string | null> {
 const CHECKED = '2026-11-04'
 const submissions = (cik: string) => `https://data.sec.gov/submissions/CIK${cik}.json`
 
+/** The filing that discloses each parent or investor relationship (fixtures/identifiers/, fixtures/recipes/). */
+export const DISCLOSED = {
+  msftOpenai:
+    'https://www.sec.gov/Archives/edgar/data/789019/000119312526436133/msft-20260930_htm.xml',
+  amznAnthropic:
+    'https://www.sec.gov/Archives/edgar/data/1018724/000101872426000040/amzn-20260930_htm.xml',
+  anthropicNotePurchase:
+    'https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/anthropicpbc-sx1ax1.htm',
+  alphabetSubsidiaries:
+    'https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/googexhibit2101q42025.htm',
+  spacexMerger:
+    'https://www.sec.gov/Archives/edgar/data/1181412/000162828026036936/exhibit21-sx1.htm',
+  alibabaSubsidiaries:
+    'https://www.sec.gov/Archives/edgar/data/1577552/000119312526231755/baba-ex8_1.htm',
+} as const
+
 export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
   {
     entity: 'anthropic',
@@ -56,6 +79,9 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     exchange: 'Nasdaq Global Select Market',
     listing_status: 'registered',
     note: 'Proposed symbol, not yet trading. The S-1 of 2026-10-26 says Anthropic has applied to list its Class A common stock on the Nasdaq Global Select Market under the symbol “ANT.” We took the CIK from that filing (export filers).',
+    mic: 'XNGS',
+    figi: 'BBG0118LR3N0',
+    disclosed_in: null,
     source_url:
       'https://www.sec.gov/Archives/edgar/data/2130357/000162828026067168/anthropicpbc-sx1.htm',
     checked_on: CHECKED,
@@ -70,9 +96,29 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     symbol: 'AMZN',
     exchange: 'Nasdaq',
     listing_status: 'listed',
-    note: 'Amazon tags its Anthropic investment on amzn:AnthropicMember in its 10-Q and 10-K (recipe sec-amzn-anthropic). These are Amazon’s numbers on its exposure, not Anthropic’s. Alphabet’s stake isn’t mapped because its filings never name the investee (sources.yaml cut alphabet-anthropic-stake).',
+    note: 'Amazon tags its Anthropic investment on amzn:AnthropicMember in its 10-Q and 10-K (recipe sec-amzn-anthropic). These are Amazon’s numbers on its exposure, not Anthropic’s.',
+    mic: 'XNGS',
+    figi: 'BBG000BVPV84',
+    disclosed_in: DISCLOSED.amznAnthropic,
     source_url: submissions('0001018724'),
     checked_on: CHECKED,
+  },
+  {
+    entity: 'anthropic',
+    entity_name: 'Anthropic',
+    entity_kind: 'lab',
+    relationship: 'investor',
+    issuer: 'Alphabet Inc.',
+    cik: '0001652044',
+    symbol: 'GOOGL',
+    exchange: 'Nasdaq',
+    listing_status: 'listed',
+    note: 'Anthropic’s S-1/A says it has note purchase agreements with Google (through Google LLC) for convertible notes and preferred stock. Alphabet’s 10-K lists Google LLC as a subsidiary. Alphabet’s own filings never name Anthropic, so there’s no Alphabet-side series (sources.yaml cut alphabet-anthropic-stake). GOOG carries the same issuer.',
+    mic: 'XNGS',
+    figi: 'BBG009S39JX6',
+    disclosed_in: DISCLOSED.anthropicNotePurchase,
+    source_url: submissions('0001652044'),
+    checked_on: '2026-11-05',
   },
   {
     entity: 'openai',
@@ -85,6 +131,9 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     exchange: null,
     listing_status: 'private',
     note: 'No EDGAR filer. If it files an S-1 under its own name, we pick up its CIK at the next check (sources.yaml pending_filers) and add a row to export filers.',
+    mic: null,
+    figi: null,
+    disclosed_in: null,
     source_url: 'https://efts.sec.gov/LATEST/search-index?q=%22OpenAI%22&forms=S-1',
     checked_on: CHECKED,
   },
@@ -99,6 +148,9 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     exchange: 'Nasdaq',
     listing_status: 'listed',
     note: 'Microsoft tags its OpenAI interest on msft:OpenAIGlobalLlcMember in its 10-Q and 10-K (recipe sec-msft-openai). Microsoft’s numbers, not OpenAI’s.',
+    mic: 'XNGS',
+    figi: 'BBG000BPH459',
+    disclosed_in: DISCLOSED.msftOpenai,
     source_url: submissions('0000789019'),
     checked_on: CHECKED,
   },
@@ -113,6 +165,9 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     exchange: 'Nasdaq',
     listing_status: 'listed',
     note: 'Alphabet reports no Gemini line. The nearest audited figure is the Google Cloud segment (export revenue_facts). EDGAR lists GOOGL, GOOG, GOOGM and GOOGN for this CIK.',
+    mic: 'XNGS',
+    figi: 'BBG009S39JX6',
+    disclosed_in: DISCLOSED.alphabetSubsidiaries,
     source_url: submissions('0001652044'),
     checked_on: CHECKED,
   },
@@ -127,6 +182,9 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     exchange: 'Nasdaq',
     listing_status: 'listed',
     note: 'Same issuer as GOOGL.',
+    mic: 'XNGS',
+    figi: 'BBG009S3NB30',
+    disclosed_in: DISCLOSED.alphabetSubsidiaries,
     source_url: submissions('0001652044'),
     checked_on: CHECKED,
   },
@@ -141,6 +199,9 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     exchange: 'Nasdaq',
     listing_status: 'listed',
     note: 'The lab is part of the issuer, whose segments are Family of Apps and Reality Labs, never the model API.',
+    mic: 'XNGS',
+    figi: 'BBG000MM2P62',
+    disclosed_in: null,
     source_url: submissions('0001326801'),
     checked_on: CHECKED,
   },
@@ -155,6 +216,9 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     exchange: 'Nasdaq',
     listing_status: 'listed',
     note: 'A blend. SpaceX has been xAI’s parent since the 2025 merger and files as one registrant, so SPCX includes launch and Starlink along with xAI, and its revenue is the parent’s consolidated figure. The xAI hiring board mixes the two companies too (company_name SpaceXAI).',
+    mic: 'XNGS',
+    figi: 'BBG000NQF3Z5',
+    disclosed_in: DISCLOSED.spacexMerger,
     source_url: submissions('0001181412'),
     checked_on: CHECKED,
   },
@@ -169,6 +233,9 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     exchange: null,
     listing_status: 'private',
     note: 'No EDGAR filer. “Mistral AI” appears in S-1-family filings only as a CoreWeave customer (two S-1/A, March 2025).',
+    mic: null,
+    figi: null,
+    disclosed_in: null,
     source_url: 'https://efts.sec.gov/LATEST/search-index?q=%22Mistral%20AI%22&forms=S-1,S-1/A',
     checked_on: CHECKED,
   },
@@ -183,6 +250,9 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     exchange: null,
     listing_status: 'private',
     note: 'No EDGAR filer. “DeepSeek” appears in S-1-family filings only in other companies’ prospectuses (7 hits, among them WhiteFiber, SharonAI and Gloo).',
+    mic: null,
+    figi: null,
+    disclosed_in: null,
     source_url: 'https://efts.sec.gov/LATEST/search-index?q=%22DeepSeek%22&forms=S-1,S-1/A',
     checked_on: CHECKED,
   },
@@ -197,6 +267,9 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     exchange: 'NYSE',
     listing_status: 'listed',
     note: 'A blend. Qwen is built and sold by Alibaba Cloud, part of the Cloud Intelligence Group segment, beside all of Alibaba’s e-commerce. Alibaba files 20-F annual reports and 6-K notices, and reports in RMB. The NYSE line is American depositary shares; BABAF and BBAAY trade over the counter.',
+    mic: 'XNYS',
+    figi: 'BBG006G2JVL2',
+    disclosed_in: DISCLOSED.alibabaSubsidiaries,
     source_url: submissions('0001577552'),
     checked_on: CHECKED,
   },
@@ -211,6 +284,9 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     exchange: null,
     listing_status: 'private',
     note: 'No EDGAR filer, and no S-1-family filing names “Moonshot AI”.',
+    mic: null,
+    figi: null,
+    disclosed_in: null,
     source_url: 'https://efts.sec.gov/LATEST/search-index?q=%22Moonshot%20AI%22&forms=S-1,S-1/A',
     checked_on: CHECKED,
   },
@@ -225,6 +301,9 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     exchange: 'Nasdaq',
     listing_status: 'listed',
     note: 'A filer we track (sources.yaml cik_whitelist). We alert on its filings and read its OpenAI facts, capex and backlog (/exposure). Azure GPU list prices come from recipe gpu-azure.',
+    mic: 'XNGS',
+    figi: 'BBG000BPH459',
+    disclosed_in: null,
     source_url: submissions('0000789019'),
     checked_on: CHECKED,
   },
@@ -239,6 +318,9 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     exchange: 'Nasdaq',
     listing_status: 'listed',
     note: 'A filer we track (sources.yaml cik_whitelist). We alert on its filings and read its Anthropic facts, capex and backlog (/exposure).',
+    mic: 'XNGS',
+    figi: 'BBG000BVPV84',
+    disclosed_in: null,
     source_url: submissions('0001018724'),
     checked_on: CHECKED,
   },
@@ -253,6 +335,9 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     exchange: 'Nasdaq',
     listing_status: 'listed',
     note: 'A filer we track (sources.yaml cik_whitelist). We alert on its filings. No lab relationship is mapped.',
+    mic: 'XNGS',
+    figi: 'BBG000BBJQV0',
+    disclosed_in: null,
     source_url: submissions('0001045810'),
     checked_on: CHECKED,
   },
@@ -267,6 +352,9 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     exchange: 'NYSE',
     listing_status: 'listed',
     note: 'A filer we track (sources.yaml cik_whitelist). We alert on its filings and read its capex and backlog (/exposure). Its GPU list prices come from recipe gpu-oracle. EDGAR also lists ORCL-PD for this CIK.',
+    mic: 'XNYS',
+    figi: 'BBG000BQLTW7',
+    disclosed_in: null,
     source_url: submissions('0001341439'),
     checked_on: CHECKED,
   },
@@ -281,6 +369,9 @@ export const ENTITY_SECURITIES: readonly EntitySecurity[] = [
     exchange: null,
     listing_status: 'listed',
     note: 'A GPU-rental comparable for the Compute thesis. Revenue comes from company facts (recipe sec-revenue-crwv) and list prices from recipe gpu-coreweave. Issuer name and symbol are as EDGAR full-text search prints them. We don’t read its submissions feed, so no exchange is stated.',
+    mic: 'XNGS',
+    figi: 'BBG011ZTRJ21',
+    disclosed_in: null,
     source_url: 'https://data.sec.gov/api/xbrl/companyfacts/CIK0001769628.json',
     checked_on: CHECKED,
   },

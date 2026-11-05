@@ -23,6 +23,7 @@ import type { AlertSeverity } from '../../shared/utils/terminal-tiers'
 
 import * as tables from '#server/db/schema'
 import { ChangeRow } from '../pipeline/contracts'
+import { candidateTitle } from '../pipeline/track-record/gdelt'
 import { MATERIAL_SEVERITIES, rateLimitedSearch } from '../pipeline/track-record/search'
 import {
   TRACK_RECORD_FROM,
@@ -96,7 +97,7 @@ export function sideOf(
     if (!v) return side('not-yet-rated')
     if (!v.same_event) continue
     const hit: TrackRecordHit = {
-      title: c.title,
+      title: candidateTitle(c),
       outlet: c.outlet,
       url: c.url,
       published_at: c.published_at,

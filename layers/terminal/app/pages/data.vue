@@ -17,6 +17,7 @@ import type {
   CoverageData,
   DataDictionary,
   ExportTableInfo,
+  HiringHistoryData,
   PricesData,
   SourceAxis,
 } from '../../shared/utils/terminal-types'
@@ -32,12 +33,14 @@ definePageMeta({
   },
 })
 
-const [{ data: coverage, error }, { data: dictionary }, { data: prices }] = await Promise.all([
-  useFetch<CoverageData>('/api/coverage'),
-  useFetch<DataDictionary>('/export/dictionary.json'),
-  // Only the reach table rides to the client; the catalog stays on the server.
-  useFetch<PricesData>('/api/prices', { pick: ['reach'] }),
-])
+const [{ data: coverage, error }, { data: dictionary }, { data: prices }, { data: hiring }] =
+  await Promise.all([
+    useFetch<CoverageData>('/api/coverage'),
+    useFetch<DataDictionary>('/export/dictionary.json'),
+    // Only the reach tables ride to the client; the catalog and series stay on the server.
+    useFetch<PricesData>('/api/prices', { pick: ['reach'] }),
+    useFetch<HiringHistoryData>('/api/hiring/history', { pick: ['reach'] }),
+  ])
 
 /** Tables whose dictionary section is open; a download row's Columns link adds its table. */
 const openTables = ref<string[]>([])
@@ -242,11 +245,12 @@ const EXPORT_COLUMNS: TableColumn[] = [
         Each sample is the first 50 rows of the default download in export order (oldest first when
         the table is ordered by time), at
         <span class="font-mono">/export/sample/&lt;table&gt;.csv</span> or
-        <span class="font-mono">.json</span>. <span class="font-mono">entity_securities</span> maps
-        each lab and tracked company to its issuer, CIK, and ticker symbol, and says so when a lab
-        is private. We no longer export <span class="font-mono">rankings_daily</span>. OpenRouter
-        licenses its rankings CC BY 4.0 but says they aren’t to be re-served as a competing free
-        API. So the per-lab shares stay on
+        <span class="font-mono">.json</span>. <span class="font-mono">entity_identifiers</span> has
+        each company’s CIK, LEI, ticker, and FIGI, and
+        <span class="font-mono">entity_securities</span> maps each lab to the securities that carry
+        it. We no longer export <span class="font-mono">rankings_daily</span>. OpenRouter licenses
+        its rankings CC BY 4.0 but says they aren’t to be re-served as a competing free API. So the
+        per-lab shares stay on
         <NuxtLink to="/rankings" class="text-primary underline underline-offset-2"
           >/rankings</NuxtLink
         >
@@ -255,9 +259,41 @@ const EXPORT_COLUMNS: TableColumn[] = [
     </TerminalPanel>
 
     <TerminalPanel
+      id="security-master"
+      title="Joining to your security master"
+      note="One identifier table, and a join column on every table that names a company."
+    >
+      <div class="flex max-w-3xl flex-col gap-3 text-sm text-default">
+        <p v-if="dictionary">{{ dictionary.joining }}</p>
+        <p>
+          Download
+          <NuxtLink
+            to="/export/entity_identifiers.csv"
+            external
+            class="font-mono break-words text-primary underline underline-offset-2"
+            >/export/entity_identifiers.csv</NuxtLink
+          >
+          and
+          <NuxtLink
+            to="/export/entity_securities.csv"
+            external
+            class="font-mono break-words text-primary underline underline-offset-2"
+            >/export/entity_securities.csv</NuxtLink
+          >, or read both at
+          <NuxtLink
+            to="/api/identifiers"
+            external
+            class="font-mono text-primary underline underline-offset-2"
+            >/api/identifiers</NuxtLink
+          >. Each table’s Join on line in the dictionary below names its columns.
+        </p>
+      </div>
+    </TerminalPanel>
+
+    <TerminalPanel
       id="dictionary"
       title="Data dictionary"
-      note="Every exported column: type, unit, whether it can be null, whether it is a key, and what it holds."
+      note="Each table’s grain, update cadence, time columns, history, join columns, and commercial use. Every exported column’s type, unit, whether it can be null, whether it is a key, and what it holds."
     >
       <LazyTerminalDictionary
         v-if="dictionary"
@@ -326,13 +362,34 @@ const EXPORT_COLUMNS: TableColumn[] = [
     >
       <!-- Not lazy: its scroll box gets a keyboard tab stop only once mounted,
            and with no links in its rows nothing else makes it reachable. -->
-      <TerminalPriceReach :reach="prices.reach" />
+      <TerminalArchiveReach :reach="prices.reach" />
       <template #foot>
         Rows from an archived copy are marked on each SKU’s page, in
         <span class="font-mono">/api/prices/&lt;key&gt;</span>, and in the
         <span class="font-mono">archived_prices</span> table above. Their source link is the copy.
         We skip a copy we can’t read with confidence. Archived rows are older than the license
         window, so they’re {{ HISTORY_LICENSE.short }}.
+      </template>
+    </TerminalPanel>
+
+    <TerminalPanel
+      v-if="hiring?.reach?.length"
+      id="hiring-history"
+      title="How far hiring history goes back"
+      note="Before we started reading the boards, we read the Internet Archive’s copies of each lab’s own job board."
+      flush
+    >
+      <!-- Not lazy, like the price-reach table above. -->
+      <TerminalArchiveReach
+        :reach="hiring.reach"
+        caption="How far back each lab’s hiring history reaches"
+      />
+      <template #foot>
+        Open roles per copy, on the whole board and per department, are in the
+        <span class="font-mono">archived_hiring</span> table above and in
+        <span class="font-mono">/api/hiring/history</span> (each lab’s
+        <span class="font-mono">archived</span> points). Their source link is the copy. We skip a
+        copy we can’t read with confidence. Archived rows are {{ HISTORY_LICENSE.short }}.
       </template>
     </TerminalPanel>
 
@@ -414,6 +471,9 @@ const EXPORT_COLUMNS: TableColumn[] = [
       :schema-version="dictionary?.schema_version"
       :changelog="dictionary?.changelog ?? []"
     />
+
+    <!-- Fetches its own payload (/api/reliability). -->
+    <LazyTerminalReliability hydrate-on-visible />
 
     <div class="grid gap-6 lg:grid-cols-2">
       <TerminalPanel id="license" title="Terms">

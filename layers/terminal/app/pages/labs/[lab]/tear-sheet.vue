@@ -79,8 +79,8 @@ const [prices, revenue, rankings, hiring, incidents, alerts, exposure, theses] =
   useFetch<HiringHistoryData>('/api/hiring/history', {
     key: `sheet-hiring:${lab}`,
     transform: (d: HiringHistoryData): HiringHistoryData => ({
-      ...d,
-      providers: d.providers.filter((p) => p.provider === lab),
+      ...withoutArchive(d),
+      providers: withoutArchive(d).providers.filter((p) => p.provider === lab),
     }),
   }),
   useFetch<IncidentsData>('/api/incidents', {

@@ -1,7 +1,8 @@
 // GET /export/bulk/manifest.json — the bulk feed's index: per table, the URL
-// of its gzipped CSV, rows, bytes, SHA-256, build time, schema version, and
-// license. Anonymous callers are listed the trailing-window files (CC BY 4.0);
-// a licensee's key is listed the full-history files. The files are rebuilt
+// of its gzipped CSV and of its Parquet file, rows, bytes, SHA-256, build
+// time, schema version, and license. Anonymous callers are listed the
+// trailing-window files (CC BY 4.0); a licensee's key is listed the
+// full-history files, with their keys in the licensed S3 bucket. The files are rebuilt
 // once a UTC day (layers/terminal/server/utils/terminal-bulk.ts).
 //
 // Sync by comparing each entry's sha256 with the copy you have. The manifest

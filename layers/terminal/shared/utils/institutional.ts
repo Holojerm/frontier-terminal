@@ -22,3 +22,10 @@ export const TIER_LABELS: Readonly<Record<KeyTier, string>> = {
 
 /** The header an anonymous client sends nothing in, and a licensee sends its key in. */
 export const KEY_HEADER_EXAMPLE = 'Authorization: Bearer ftk_…'
+
+/**
+ * The R2 bucket licensees read the full-history bulk files from over S3
+ * (layers/terminal/server/utils/terminal-bulk.ts copies them there). Its
+ * wrangler.toml binding is BULK_LICENSED.
+ */
+export const LICENSED_BUCKET = 'frontier-terminal-bulk-licensed'

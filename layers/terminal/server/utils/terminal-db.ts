@@ -80,6 +80,7 @@ import {
 } from './terminal-classes'
 import { clusterSeries, parseDepartmentClusters, type DepartmentCluster } from './terminal-clusters'
 import { EXPORT_TABLES, historyRule } from './terminal-export'
+import { HIRING_ARCHIVE_CAVEATS, type HiringArchiveProvider } from '../pipeline/archive/hiring-eras'
 import {
   ALERTS_METHOD,
   ENTITY_METHOD,
@@ -92,6 +93,10 @@ import {
 } from './terminal-asof'
 import {
   ARCHIVED_AS_OF_METHOD,
+  ARCHIVED_HIRING_AS_OF_METHOD,
+  HIRING_ARCHIVE_METHOD,
+  archivedHiringPoints,
+  queryHiringReach,
   archivedCatalogAt,
   archivedPriceKeys,
   archivedRowsForKey,
@@ -1199,6 +1204,7 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
   const isJob = eq(tables.entities.entity_type, 'job')
 
   const pit = atOf(ctx)
+  if (pit && (await beforeLiveFloor(db, pit.at))) return archivedHiring(db, pit)
   const [departments, companies, sources, stamps] = pit
     ? await hiringAggregatesAt(db, pit)
     : await Promise.all([
@@ -1293,6 +1299,57 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
     })
   }
 
+  return { ...stampOf(ctx), providers }
+}
+
+/**
+ * /api/hiring as of an instant before this site first read the boards: each
+ * lab's open roles on its newest readable Internet Archive copy by then
+ * (terminal-archive.ts). A copy that states only the board's total has no
+ * department rows; the method note says so.
+ */
+async function archivedHiring(
+  db: PipelineDb,
+  ctx: QueryContext & { at: string },
+): Promise<HiringData> {
+  const points = await archivedHiringPoints(db, ctx.clusters, ctx.at)
+  ctx.notes.method.add(ARCHIVED_HIRING_AS_OF_METHOD)
+  const providers: HiringProviderView[] = PROVIDER_ORDER.map((provider) => {
+    const backing = HIRING_SOURCES[provider]
+    const newest = points.get(provider)?.at(-1)
+    if (newest) {
+      ctx.notes.method.add(
+        `${provider}: Internet Archive copy of ${newest.at} (${newest.source_url}).`,
+      )
+    }
+    return {
+      provider,
+      display: PROVIDER_DISPLAY[provider],
+      feed: 'cut_id' in backing ? 'no_public_feed' : newest ? 'ok' : 'no_rows',
+      reason:
+        'cut_id' in backing
+          ? (cutReason(ctx, backing.cut_id) ??
+            `No public hiring feed exists for ${PROVIDER_DISPLAY[provider]}.`)
+          : null,
+      total: newest?.total ?? 0,
+      departments: (newest?.departments ?? []).map((d) => ({
+        department: d.department,
+        count: d.open_roles,
+      })),
+      caveat: null,
+      company_names: [],
+      sources: newest
+        ? [
+            {
+              source_id: newest.source_id,
+              label: 'Internet Archive copy of the job board',
+              source_url: newest.source_url,
+              fetched_at: newest.fetched_at,
+            },
+          ]
+        : [],
+    }
+  })
   return { ...stampOf(ctx), providers }
 }
 
@@ -1542,9 +1599,14 @@ export async function queryDataFreshness(db: PipelineDb): Promise<DataFreshness>
   }
 }
 
+/**
+ * Every SKU on record with its newest observation. `history` is whether the key
+ * has a revision or an archived capture, i.e. whether its page shows more than
+ * one price. A listing alone ('added') is still one price.
+ */
 export async function queryPriceKeys(
   db: PipelineDb,
-): Promise<{ entity_key: string; lastmod: string }[]> {
+): Promise<{ entity_key: string; lastmod: string; history: boolean }[]> {
   const [current, logged, archived] = await Promise.all([
     db
       .select({ entity_key: tables.entities.entity_key, at: max(tables.entities.fetched_at) })
@@ -1552,7 +1614,11 @@ export async function queryPriceKeys(
       .where(eq(tables.entities.entity_type, 'model'))
       .groupBy(tables.entities.entity_key),
     db
-      .select({ entity_key: tables.changes.entity_key, at: max(tables.changes.detected_at) })
+      .select({
+        entity_key: tables.changes.entity_key,
+        at: max(tables.changes.detected_at),
+        revisions: sql<number>`sum(case when ${tables.changes.change_type} = 'modified' then 1 else 0 end)`,
+      })
       .from(tables.changes)
       .where(eq(tables.changes.entity_type, 'model'))
       .groupBy(tables.changes.entity_key),
@@ -1564,9 +1630,31 @@ export async function queryPriceKeys(
     const seen = newest.get(row.entity_key)
     if (!seen || Date.parse(row.at) > Date.parse(seen)) newest.set(row.entity_key, row.at)
   }
+  const withHistory = new Set([
+    ...logged.filter((row) => Number(row.revisions) > 0).map((row) => row.entity_key),
+    ...archived.map((row) => row.entity_key),
+  ])
   return [...newest]
-    .map(([entity_key, at]) => ({ entity_key, lastmod: dayOf(at) }))
+    .map(([entity_key, at]) => ({
+      entity_key,
+      lastmod: dayOf(at),
+      history: withHistory.has(entity_key),
+    }))
     .sort((a, b) => byString(a.entity_key, b.entity_key))
+}
+
+/**
+ * The SKU pages worth a crawler's budget. A base SKU (`model:<lab>:<slug>`) is
+ * always listed: it is the page that answers "what does <model> cost". A tier
+ * variant (`…:batch`, `…:flex`, `…:priority`) is listed once its price has a
+ * history; until then its page is the base page's table with one cell changed,
+ * and ~450 of those would make templated near-duplicates most of the sitemap.
+ * Unlisted pages stay indexable and linked; they are just not advertised.
+ */
+export function sitemapPriceKeys<T extends { entity_key: string; history: boolean }>(
+  skus: T[],
+): T[] {
+  return skus.filter((sku) => sku.history || sku.entity_key.split(':').length <= 3)
 }
 
 // ---- hiring history --------------------------------------------------------
@@ -1613,7 +1701,7 @@ export async function queryHiringHistory(
   // ends at T exactly as /api/hiring?as_of=T counts it.
   const pit = atOf(ctx)
   const jobs = pit ? rewound(db, pit, 'job') : null
-  const [roles, changes, firstSnapshots, baselines, stamps] = await Promise.all([
+  const [roles, changes, firstSnapshots, baselines, stamps, archived, reach] = await Promise.all([
     jobs
       ? jobs.then((r) =>
           r.rows.map((e) => ({
@@ -1642,6 +1730,8 @@ export async function queryHiringHistory(
       .where(eq(tables.sourceRuns.status, 'baseline'))
       .groupBy(tables.sourceRuns.source_id),
     sourceStamps(db, ctx.at),
+    archivedHiringPoints(db, ctx.clusters, ctx.at),
+    queryHiringReach(db, ctx.registry),
   ])
 
   // A source first fetched after T did not exist yet.
@@ -1695,6 +1785,8 @@ export async function queryHiringHistory(
         baseline_at: null,
         join_from: null,
         sources: [],
+        archived: [],
+        archive_caveat: null,
       })
       continue
     }
@@ -1736,6 +1828,9 @@ export async function queryHiringHistory(
       baseline_at: baselineOf.get(primary) ?? null,
       join_from: join ? (firstOf.get(join) ?? null) : null,
       sources,
+      // Only the copies from before the live series starts: after it, the live board is the record.
+      archived: (archived.get(provider) ?? []).filter((p) => from === null || p.at < from),
+      archive_caveat: HIRING_ARCHIVE_CAVEATS[provider as HiringArchiveProvider] ?? null,
     })
   }
 
@@ -1743,6 +1838,8 @@ export async function queryHiringHistory(
     ...stampOf(ctx),
     window_days: HIRING_WINDOW_DAYS,
     providers,
+    reach,
+    archive_method: HIRING_ARCHIVE_METHOD,
     log: {
       changes: sorted.length,
       from: sorted[0]?.detected_at ?? null,

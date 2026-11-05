@@ -20,7 +20,8 @@
       "ba653082105144bdb3b91a9189a72a3d"
     ],
     "r2": [
-      "frontier-terminal-blob"
+      "frontier-terminal-blob",
+      "frontier-terminal-bulk-licensed"
     ]
   },
   "crons": [
@@ -29,7 +30,8 @@
     "17 */6 * * *",
     "*/5 * * * *",
     "0 13 * * 1",
-    "41 * * * *"
+    "41 * * * *",
+    "0 4 * * *"
   ],
   "deploy": "workers-builds",
   "template": {

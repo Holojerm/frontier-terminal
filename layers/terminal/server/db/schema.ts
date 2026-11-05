@@ -472,6 +472,29 @@ export const apiKeys = sqliteTable(
   (t) => [uniqueIndex('api_keys_hash_idx').on(t.key_hash)],
 )
 
+// S3 read access to the licensed bulk bucket, granted by the owner with
+// `bun run bulk:grant`. Each grant is one Cloudflare API token, read-only and
+// scoped to that bucket, expiring with the key it was granted to. token_id is
+// the token's id, which is also the S3 access key id; the secret is shown once
+// and never stored. Never exported, never served.
+export const bulkGrants = sqliteTable(
+  'bulk_grants',
+  {
+    id: text('id').primaryKey(),
+    api_key_id: text('api_key_id').notNull(),
+    token_id: text('token_id').notNull(),
+    bucket: text('bucket').notNull(),
+    created_at: text('created_at').notNull(),
+    expires_at: text('expires_at').notNull(),
+    revoked_at: text('revoked_at'),
+    revoke_reason: text('revoke_reason'), // owner | key-revoked | key-expired
+  },
+  (t) => [
+    index('bulk_grants_api_key_idx').on(t.api_key_id),
+    uniqueIndex('bulk_grants_token_idx').on(t.token_id),
+  ],
+)
+
 // Alert webhooks, configured by the owner with `bun run webhooks:add`. Each
 // belongs to one API key and stops when that key is revoked or expires. No
 // secret is stored: the signing secret is derived from the Worker secret
@@ -561,6 +584,8 @@ export const archiveCaptures = sqliteTable(
     original_url: text('original_url').notNull(),
     captured_at: text('captured_at').notNull(),
     status: text('status').notNull(), // parsed | skipped
+    // pricing (archived_prices) | hiring (archived_hiring): which table the rows went to.
+    axis: text('axis').notNull().default('pricing'),
     detail: text('detail'),
     content_hash: text('content_hash'),
     raw_key: text('raw_key'),
@@ -595,6 +620,149 @@ export const archivedPrices = sqliteTable(
   ],
 )
 
+// ─────────────────────────────────────────────
+// Reliability (layers/terminal/server/pipeline/reliability/, /data#reliability)
+// ─────────────────────────────────────────────
+// What a due-diligence reviewer asks of the feed itself: how often each source
+// answered, how stale the site got, how fast a filing reached an alert, and
+// whether each deploy passed its smoke test. The reliability:record cron fills
+// all four from stored rows and payloads; nothing here is typed by hand.
+
+// One row per (source, UTC day), rolled up from source_runs so the page reads
+// ~150 rows a day of history instead of every run. Re-rolled for today and
+// yesterday each hour. A good run is ok, unchanged, baseline or absent (an
+// answered check); a skipped run (no secret configured) is not counted.
+// longest_gap_ms is the longest wait for a good run that ended this day,
+// measured from the previous good run, whatever day that was.
+export const sourceRunDays = sqliteTable(
+  'source_run_days',
+  {
+    source_id: text('source_id').notNull(),
+    day: text('day').notNull(), // YYYY-MM-DD, UTC
+    runs: integer('runs').notNull(),
+    good: integer('good').notNull(),
+    first_good_at: text('first_good_at'),
+    last_good_at: text('last_good_at'),
+    // A gap is still open only while the source is still being checked.
+    last_run_at: text('last_run_at').notNull(),
+    longest_gap_ms: integer('longest_gap_ms'),
+    gap_from: text('gap_from'),
+    gap_to: text('gap_to'),
+    rolled_at: text('rolled_at').notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.source_id, t.day] }),
+    index('source_run_days_day_idx').on(t.day),
+  ],
+)
+
+// One row per poll tick (scope, started_at): how many sources it ran and how
+// many answered. The freshness gaps on /data#reliability are the spaces
+// between ticks where most sources answered.
+export const pollTicks = sqliteTable(
+  'poll_ticks',
+  {
+    scope: text('scope').notNull(),
+    started_at: text('started_at').notNull(),
+    runs: integer('runs').notNull(),
+    good: integer('good').notNull(),
+  },
+  (t) => [
+    primaryKey({ columns: [t.scope, t.started_at] }),
+    index('poll_ticks_started_idx').on(t.started_at),
+  ],
+)
+
+// One row per filing a rule alert cited (DETECTION_RULES): the first such
+// alert, and EDGAR's acceptance time read back from the submissions JSON or
+// filing index page already stored in R2 (never a new SEC fetch). status
+// 'missing' records that no stored payload listed it; the cron retries those
+// for two days, then stops. filing_date is EDGAR's, which for a filing
+// accepted after 5:30 p.m. Eastern is the next business day.
+export const filingDetections = sqliteTable(
+  'filing_detections',
+  {
+    accession_no: text('accession_no').primaryKey(),
+    cik: text('cik').notNull(),
+    form: text('form'),
+    alert_id: text('alert_id').notNull(),
+    rule: text('rule').notNull(),
+    headline: text('headline').notNull(),
+    alerted_at: text('alerted_at').notNull(),
+    status: text('status').notNull(), // found | missing
+    accepted_at: text('accepted_at'),
+    filing_date: text('filing_date'),
+    basis: text('basis'), // submissions | filing-index
+    snapshot_id: text('snapshot_id'),
+    source_url: text('source_url'),
+    fetched_at: text('fetched_at'),
+    recorded_at: text('recorded_at').notNull(),
+  },
+  (t) => [index('filing_detections_alerted_idx').on(t.alerted_at)],
+)
+
+// How far the rollup above has rolled: one row, name 'source_runs'.
+// rolled_through is the instant every run before it is counted; the page
+// computes nothing past it, so a backfill in progress never reads as an outage.
+// started is the first day the rollup holds.
+export const rollupState = sqliteTable('rollup_state', {
+  name: text('name').primaryKey(),
+  rolled_through: text('rolled_through').notNull(),
+  started: text('started').notNull(),
+  updated_at: text('updated_at').notNull(),
+})
+
+// One row per run of the post-deploy smoke workflow on main
+// (.github/workflows/post-deploy-smoke.yml), read from GitHub's public
+// Actions API. Upserted by run id: a run seen in progress is rewritten when
+// it completes. source_url is the API page it was read from.
+export const deployChecks = sqliteTable(
+  'deploy_checks',
+  {
+    run_id: text('run_id').primaryKey(),
+    head_sha: text('head_sha').notNull(),
+    status: text('status').notNull(), // queued | in_progress | completed
+    conclusion: text('conclusion'), // success | failure | cancelled | … ; null until completed
+    created_at: text('created_at').notNull(),
+    updated_at: text('updated_at').notNull(),
+    html_url: text('html_url').notNull(),
+    source_url: text('source_url').notNull(),
+    fetched_at: text('fetched_at').notNull(),
+  },
+  (t) => [index('deploy_checks_created_idx').on(t.created_at)],
+)
+
+// One row per (capture, count): what an archived job board listed. Each
+// parsed capture writes one `board` row (open roles on the whole board) and,
+// when the capture lists every role with its department, one `department`
+// row per department, summing to the board row. `label` is the department as
+// the board printed it then; `department` is the live department it files
+// under (layers/terminal/server/pipeline/archive/hiring-eras.ts › liveDepartment), the label itself unless
+// the board's own id ties it to a live one. Counts only: no role, title or
+// person is stored. Never a live row: basis is always 'archived', and
+// nothing here reaches the hiring floor, the roll-up, the judge or a thesis.
+export const archivedHiring = sqliteTable(
+  'archived_hiring',
+  {
+    id: text('id').primaryKey(),
+    capture_id: text('capture_id').notNull(),
+    provider: text('provider').notNull(),
+    scope: text('scope').notNull(), // board | department
+    label: text('label'),
+    department_id: text('department_id'),
+    department: text('department'),
+    open_roles: integer('open_roles').notNull(),
+    captured_at: text('captured_at').notNull(),
+    original_url: text('original_url').notNull(),
+    basis: text('basis').notNull(), // 'archived'
+    ...provenance,
+  },
+  (t) => [
+    index('archived_hiring_provider_idx').on(t.provider, t.scope, t.captured_at),
+    index('archived_hiring_captured_id_idx').on(t.captured_at, t.id),
+  ],
+)
+
 export type Snapshot = typeof snapshots.$inferSelect
 export type Entity = typeof entities.$inferSelect
 export type Change = typeof changes.$inferSelect
@@ -609,6 +777,7 @@ export type RecipeObservation = typeof recipeObservations.$inferSelect
 export type RecipeRun = typeof recipeRuns.$inferSelect
 export type FiledFact = typeof filedFacts.$inferSelect
 export type FiledFactRead = typeof filedFactReads.$inferSelect
+export type ArchivedHiringRow = typeof archivedHiring.$inferSelect
 export type ApiKeyRow = typeof apiKeys.$inferSelect
 export type WebhookRow = typeof webhooks.$inferSelect
 export type WebhookDeliveryRow = typeof webhookDeliveries.$inferSelect

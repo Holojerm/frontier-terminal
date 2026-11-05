@@ -157,7 +157,7 @@ describe('parseGooglePricing on the 2026-08-25 fixture', () => {
     expect(pro.notes).toContain(
       'input: $1.25, prompts <= 200k tokens | $2.50, prompts > 200k tokens',
     )
-    const audio = byKey.get('gemini-2.5-flash-native-audio-preview-12-2025|null|null|null')!
+    const audio = byKey.get('gemini-2.5-flash-native-audio-preview-12-2025|standard|null|null')!
     expect(audio.input_per_mtok).toBe(0.5)
     expect(audio.output_per_mtok).toBe(2)
     expect(audio.notes).toBe(
@@ -247,8 +247,16 @@ describe('parseGooglePricing on the 2026-11-02 Markdoc page', () => {
     expect(rows).toHaveLength(111)
     expect(GooglePricingOutput.safeParse({ rows }).success).toBe(true)
     expect(skipped).toEqual([
-      { slug: 'lyria-3-5', reason: 'no `code` model id under the heading' },
-      { slug: 'lyria-3', reason: 'no `code` model id under the heading' },
+      {
+        slug: 'lyria-3-5',
+        reason:
+          'untiered table: not a per-1M-token table (header: Feature / Free Tier / Paid Tier, per request in USD)',
+      },
+      {
+        slug: 'lyria-3',
+        reason:
+          'untiered table: not a per-1M-token table (header: Feature / Free Tier / Paid Tier, per request in USD)',
+      },
       { slug: 'gemma-4', reason: 'no `code` model id under the heading' },
       { slug: 'pricing-for-tools', reason: 'no `code` model id under the heading' },
       { slug: 'pricing-for-agents', reason: 'no `code` model id under the heading' },
@@ -300,13 +308,13 @@ describe('parseGooglePricing on the 2026-11-02 Markdoc page', () => {
     expect(image.map((r) => r.tier)).toEqual(['standard', 'batch', 'flex', 'priority'])
   })
 
-  it('prices each code of a multi-code heading, untiered when the table sits outside a tab', () => {
+  it('prices each code of a multi-code heading, as standard when the table sits outside a tab', () => {
     for (const slug of [
       'gemini-3.8-live',
       'gemini-3.8-live-extended-thinking',
       'gemini-3.1-flash-live-preview',
     ]) {
-      expect(byKey.get(`${slug}|null|null|null`)).toMatchObject({
+      expect(byKey.get(`${slug}|standard|null|null`)).toMatchObject({
         input_per_mtok: 0.75,
         output_per_mtok: 4.5,
       })
@@ -330,6 +338,37 @@ describe('parseGooglePricing on the 2026-11-02 Markdoc page', () => {
 })
 
 describe('parseGooglePricing structure guards', () => {
+  it('reads a deprecated section with no left column from the line above the rule, not the callout', () => {
+    // The live page dropped the two-column layout on 2.5 Pro and Flash after
+    // 2026-11-02; their rows were swept as removals (#114).
+    const page = [
+      '## Gemini 2.5 Pro  {% id="gemini-2.5-pro" %}',
+      '',
+      '*[`gemini-2.5-pro`](/docs/models/gemini-2.5-pro)*',
+      '',
+      '{% hr /%}',
+      '',
+      '{% callout type="caution" %}',
+      '  Requests route to [Gemini 3.8 Flash (`gemini-3.8-flash`)](/docs/models/gemini-3.8-flash).',
+      '{% /callout %}',
+      '',
+      '{% table %}',
+      '  * Feature',
+      '  * Free Tier',
+      '  * Paid Tier, per 1M tokens in USD',
+      '  ---',
+      '  * Input price',
+      '  * Free of charge',
+      '  * $1.25',
+      '{% /table %}',
+    ].join('\n')
+    const { rows, skipped } = parseGooglePricingPage(page, MARKDOC_PROV)
+    expect(skipped).toEqual([])
+    expect(rows.map((r) => [r.model_slug, r.tier, r.input_per_mtok])).toEqual([
+      ['gemini-2.5-pro', 'standard', 1.25],
+    ])
+  })
+
   it('fails loudly when the page has no model sections at all', () => {
     expect(() =>
       parseGooglePricing('<html><body><p>moved</p></body></html>', FIXTURE_PROV),
@@ -353,7 +392,7 @@ describe('parseGooglePricing structure guards', () => {
     expect(rows).toHaveLength(1)
     expect(rows[0]).toMatchObject({
       model_slug: 'gemini-y',
-      tier: null,
+      tier: 'standard',
       input_per_mtok: 2,
       output_per_mtok: 4,
       notes: 'output: $4 (text) | $8 (audio)',
