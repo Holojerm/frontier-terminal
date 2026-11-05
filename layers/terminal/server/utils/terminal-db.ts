@@ -1542,9 +1542,14 @@ export async function queryDataFreshness(db: PipelineDb): Promise<DataFreshness>
   }
 }
 
+/**
+ * Every SKU on record with its newest observation. `history` is whether the key
+ * has a change row or an archived capture, i.e. whether its page shows more than
+ * the one current price.
+ */
 export async function queryPriceKeys(
   db: PipelineDb,
-): Promise<{ entity_key: string; lastmod: string }[]> {
+): Promise<{ entity_key: string; lastmod: string; history: boolean }[]> {
   const [current, logged, archived] = await Promise.all([
     db
       .select({ entity_key: tables.entities.entity_key, at: max(tables.entities.fetched_at) })
@@ -1564,9 +1569,28 @@ export async function queryPriceKeys(
     const seen = newest.get(row.entity_key)
     if (!seen || Date.parse(row.at) > Date.parse(seen)) newest.set(row.entity_key, row.at)
   }
+  const withHistory = new Set([...logged, ...archived].map((row) => row.entity_key))
   return [...newest]
-    .map(([entity_key, at]) => ({ entity_key, lastmod: dayOf(at) }))
+    .map(([entity_key, at]) => ({
+      entity_key,
+      lastmod: dayOf(at),
+      history: withHistory.has(entity_key),
+    }))
     .sort((a, b) => byString(a.entity_key, b.entity_key))
+}
+
+/**
+ * The SKU pages worth a crawler's budget. A base SKU (`model:<lab>:<slug>`) is
+ * always listed: it is the page that answers "what does <model> cost". A tier
+ * variant (`…:batch`, `…:flex`, `…:priority`) is listed once its price has a
+ * history; until then its page is the base page's table with one cell changed,
+ * and ~450 of those would make templated near-duplicates most of the sitemap.
+ * Unlisted pages stay indexable and linked; they are just not advertised.
+ */
+export function sitemapPriceKeys<T extends { entity_key: string; history: boolean }>(
+  skus: T[],
+): T[] {
+  return skus.filter((sku) => sku.history || sku.entity_key.split(':').length <= 3)
 }
 
 // ---- hiring history --------------------------------------------------------

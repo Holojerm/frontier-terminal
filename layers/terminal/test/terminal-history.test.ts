@@ -15,6 +15,7 @@ import {
   queryPriceHistory,
   queryPriceKeys,
   queryPrices,
+  sitemapPriceKeys,
   queryReleases,
 } from '../server/utils/terminal-db'
 import {
@@ -522,6 +523,20 @@ describe('after a baseline and a second poll', () => {
     expect(byKey['model:xai:grok-5-preview:standard']).toBe('2026-09-08')
     expect(byKey['model:anthropic:claude-sonnet-5']).toBe('2026-09-07')
     expect(keys.map((k) => k.entity_key)).toEqual([...keys.map((k) => k.entity_key)].sort())
+  })
+
+  it('sitemap keys: only a SKU with a change row or capture has a history', async () => {
+    const keys = await queryPriceKeys(db)
+    const history = Object.fromEntries(keys.map((k) => [k.entity_key, k.history]))
+    expect(history[GROK]).toBe(true)
+    expect(history['model:anthropic:claude-sonnet-5']).toBe(false)
+    const listed = sitemapPriceKeys(keys).map((k) => k.entity_key)
+    expect(listed).toContain(GROK)
+    expect(listed).toContain('model:anthropic:claude-sonnet-5')
+    for (const k of keys) {
+      if (!k.history && k.entity_key.split(':').length > 3)
+        expect(listed).not.toContain(k.entity_key)
+    }
   })
 
   it('sitemap freshness: the newest change per entity type and lab', async () => {

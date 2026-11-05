@@ -137,7 +137,11 @@ describe('archived price history', () => {
     expect(h.model_slug).toBe('gpt-4-0314')
     expect(h.points.map((p) => p.kind)).toEqual(['archived'])
     const keys = await queryPriceKeys(db)
-    expect(keys).toContainEqual({ entity_key: 'model:openai:gpt-4-0314', lastmod: '2023-07-01' })
+    expect(keys).toContainEqual({
+      entity_key: 'model:openai:gpt-4-0314',
+      lastmod: '2023-07-01',
+      history: true,
+    })
   })
 
   it(
