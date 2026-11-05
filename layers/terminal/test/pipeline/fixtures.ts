@@ -116,6 +116,20 @@ import waybackAnthropicPricing2025 from '~~/fixtures/pricing/wayback/anthropic-p
 import waybackOpenaiApiPricing2024 from '~~/fixtures/pricing/wayback/openai-api-pricing-2024-12.html?raw'
 import waybackOpenaiDocsPricing2026 from '~~/fixtures/pricing/wayback/openai-docs-pricing-2026-03.html?raw'
 import waybackOpenaiPricing2023 from '~~/fixtures/pricing/wayback/openai-pricing-2023-07.html?raw'
+import waybackHiringAnthropicDepartments202406 from '~~/fixtures/hiring/wayback/anthropic-departments-2024-06.json?raw'
+import waybackHiringAnthropicGreenhouse202406 from '~~/fixtures/hiring/wayback/anthropic-greenhouse-2024-06.html?raw'
+import waybackHiringAnthropicJobBoards202509 from '~~/fixtures/hiring/wayback/anthropic-job-boards-2025-09.html?raw'
+import waybackHiringAnthropicLever202307 from '~~/fixtures/hiring/wayback/anthropic-lever-2023-07.html?raw'
+import waybackHiringDeepmindGreenhouse202503 from '~~/fixtures/hiring/wayback/deepmind-greenhouse-2025-03.html?raw'
+import waybackHiringDeepmindJobBoards202507 from '~~/fixtures/hiring/wayback/deepmind-job-boards-2025-07.html?raw'
+import waybackHiringMistralAshby202609 from '~~/fixtures/hiring/wayback/mistral-ashby-2026-09.html?raw'
+import waybackHiringMistralLever202508 from '~~/fixtures/hiring/wayback/mistral-lever-2025-08.html?raw'
+import waybackHiringOpenaiAshby202507 from '~~/fixtures/hiring/wayback/openai-ashby-2025-07.html?raw'
+import waybackHiringOpenaiAshby202608 from '~~/fixtures/hiring/wayback/openai-ashby-2026-08.html?raw'
+import waybackHiringOpenaiGreenhouse202307 from '~~/fixtures/hiring/wayback/openai-greenhouse-2023-07.html?raw'
+import waybackHiringXaiGreenhouse202502 from '~~/fixtures/hiring/wayback/xai-greenhouse-2025-02.html?raw'
+import waybackHiringXaiJobBoards202509 from '~~/fixtures/hiring/wayback/xai-job-boards-2025-09.html?raw'
+import waybackHiringXaiJobs202502 from '~~/fixtures/hiring/wayback/xai-jobs-2025-02.json?raw'
 import waybackOpenaiPricing2024 from '~~/fixtures/pricing/wayback/openai-pricing-2024-04.html?raw'
 import waybackOpenaiPricingMd2026 from '~~/fixtures/pricing/wayback/openai-pricing-2026-07.md?raw'
 import waybackOpenaiApiPricing2025 from '~~/fixtures/pricing/wayback/openai-api-pricing-2025-01.html?raw'
@@ -291,6 +305,23 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/pricing/wayback/deepseek-pricing-2026-08.html': waybackDeepseekPricing202608,
   'fixtures/pricing/wayback/alibaba-model-pricing-2026-01.html': waybackAlibabaPricing202601,
   'fixtures/pricing/wayback/alibaba-model-pricing-2026-08.html': waybackAlibabaPricing202608,
+  'fixtures/hiring/wayback/anthropic-departments-2024-06.json':
+    waybackHiringAnthropicDepartments202406,
+  'fixtures/hiring/wayback/anthropic-greenhouse-2024-06.html':
+    waybackHiringAnthropicGreenhouse202406,
+  'fixtures/hiring/wayback/anthropic-job-boards-2025-09.html':
+    waybackHiringAnthropicJobBoards202509,
+  'fixtures/hiring/wayback/anthropic-lever-2023-07.html': waybackHiringAnthropicLever202307,
+  'fixtures/hiring/wayback/deepmind-greenhouse-2025-03.html': waybackHiringDeepmindGreenhouse202503,
+  'fixtures/hiring/wayback/deepmind-job-boards-2025-07.html': waybackHiringDeepmindJobBoards202507,
+  'fixtures/hiring/wayback/mistral-ashby-2026-09.html': waybackHiringMistralAshby202609,
+  'fixtures/hiring/wayback/mistral-lever-2025-08.html': waybackHiringMistralLever202508,
+  'fixtures/hiring/wayback/openai-ashby-2025-07.html': waybackHiringOpenaiAshby202507,
+  'fixtures/hiring/wayback/openai-ashby-2026-08.html': waybackHiringOpenaiAshby202608,
+  'fixtures/hiring/wayback/openai-greenhouse-2023-07.html': waybackHiringOpenaiGreenhouse202307,
+  'fixtures/hiring/wayback/xai-greenhouse-2025-02.html': waybackHiringXaiGreenhouse202502,
+  'fixtures/hiring/wayback/xai-job-boards-2025-09.html': waybackHiringXaiJobBoards202509,
+  'fixtures/hiring/wayback/xai-jobs-2025-02.json': waybackHiringXaiJobs202502,
   'sources.yaml': sourcesYaml,
 }
 

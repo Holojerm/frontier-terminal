@@ -8,7 +8,7 @@
 import { readCappedBody } from '../fetch'
 
 export const WAYBACK_USER_AGENT =
-  'FrontierTerminal/1.0 (+https://frontierterm.com; one-off price-history backfill from the Wayback Machine)'
+  'FrontierTerminal/1.0 (+https://frontierterm.com; one-off price and hiring history backfill from the Wayback Machine)'
 
 /** The pause between any two requests to archive.org. ~15 a minute at most. */
 export const WAYBACK_PACE_MS = 4_000

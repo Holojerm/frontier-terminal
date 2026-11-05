@@ -86,8 +86,17 @@ const xTicks = computed(() => {
   const n = props.x.length
   if (n === 0) return []
   const want = Math.min(5, n)
+  // Evenly spaced in time, not in index: an irregular series (weekly archive
+  // copies with months between some) would otherwise bunch its labels.
+  const t = times.value
+  const span = t[n - 1]! - t[0]!
   const idx = new Set<number>()
-  for (let k = 0; k < want; k++) idx.add(Math.round((k * (n - 1)) / Math.max(1, want - 1)))
+  for (let k = 0; k < want; k++) {
+    const target = t[0]! + (k * span) / Math.max(1, want - 1)
+    let best = 0
+    for (let i = 1; i < n; i++) if (Math.abs(t[i]! - target) < Math.abs(t[best]! - target)) best = i
+    idx.add(best)
+  }
   return [...idx].map((i) => ({ i, x: xAt(i), label: props.xLabel(props.x[i]!) }))
 })
 

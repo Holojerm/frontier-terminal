@@ -584,6 +584,8 @@ export const archiveCaptures = sqliteTable(
     original_url: text('original_url').notNull(),
     captured_at: text('captured_at').notNull(),
     status: text('status').notNull(), // parsed | skipped
+    // pricing (archived_prices) | hiring (archived_hiring): which table the rows went to.
+    axis: text('axis').notNull().default('pricing'),
     detail: text('detail'),
     content_hash: text('content_hash'),
     raw_key: text('raw_key'),
@@ -719,6 +721,37 @@ export const deployChecks = sqliteTable(
   (t) => [index('deploy_checks_created_idx').on(t.created_at)],
 )
 
+// One row per (capture, count): what an archived job board listed. Each
+// parsed capture writes one `board` row (open roles on the whole board) and,
+// when the capture lists every role with its department, one `department`
+// row per department, summing to the board row. `label` is the department as
+// the board printed it then; `department` is the live department it files
+// under (layers/terminal/server/pipeline/archive/hiring-eras.ts › liveDepartment), the label itself unless
+// the board's own id ties it to a live one. Counts only: no role, title or
+// person is stored. Never a live row: basis is always 'archived', and
+// nothing here reaches the hiring floor, the roll-up, the judge or a thesis.
+export const archivedHiring = sqliteTable(
+  'archived_hiring',
+  {
+    id: text('id').primaryKey(),
+    capture_id: text('capture_id').notNull(),
+    provider: text('provider').notNull(),
+    scope: text('scope').notNull(), // board | department
+    label: text('label'),
+    department_id: text('department_id'),
+    department: text('department'),
+    open_roles: integer('open_roles').notNull(),
+    captured_at: text('captured_at').notNull(),
+    original_url: text('original_url').notNull(),
+    basis: text('basis').notNull(), // 'archived'
+    ...provenance,
+  },
+  (t) => [
+    index('archived_hiring_provider_idx').on(t.provider, t.scope, t.captured_at),
+    index('archived_hiring_captured_id_idx').on(t.captured_at, t.id),
+  ],
+)
+
 export type Snapshot = typeof snapshots.$inferSelect
 export type Entity = typeof entities.$inferSelect
 export type Change = typeof changes.$inferSelect
@@ -733,6 +766,7 @@ export type RecipeObservation = typeof recipeObservations.$inferSelect
 export type RecipeRun = typeof recipeRuns.$inferSelect
 export type FiledFact = typeof filedFacts.$inferSelect
 export type FiledFactRead = typeof filedFactReads.$inferSelect
+export type ArchivedHiringRow = typeof archivedHiring.$inferSelect
 export type ApiKeyRow = typeof apiKeys.$inferSelect
 export type WebhookRow = typeof webhooks.$inferSelect
 export type WebhookDeliveryRow = typeof webhookDeliveries.$inferSelect

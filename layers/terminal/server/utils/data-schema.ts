@@ -535,6 +535,35 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       },
     },
   },
+  {
+    version: '1.5.0',
+    date: '2026-11-05',
+    summary:
+      'Hiring history from before we read the labs’ job boards, from the Internet Archive’s copies of each lab’s own board: a new archived_hiring table (open roles per copy, on the whole board and per department), and an axis column on archive_captures saying which table a copy’s rows went to.',
+    tables: {
+      archived_hiring: {
+        added: [
+          'id',
+          'capture_id',
+          'provider',
+          'scope',
+          'label',
+          'department_id',
+          'department',
+          'open_roles',
+          'captured_at',
+          'original_url',
+          'basis',
+          'source_url',
+          'fetched_at',
+        ],
+      },
+      archive_captures: {
+        added: ['axis'],
+        note: 'Every existing row is pricing.',
+      },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version
