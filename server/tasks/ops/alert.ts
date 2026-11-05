@@ -23,6 +23,7 @@ import { checkDeployDrift, fetchMainHead } from '#layers/terminal/server/pipelin
 import { checkJudgeSilence } from '#layers/terminal/server/pipeline/judge/watchdog'
 import { checkLaunchCoverage } from '#layers/terminal/server/pipeline/launch-watch'
 import { unstorageLockStore } from '#layers/terminal/server/pipeline/lock'
+import { classifyTerminalOps } from '#layers/terminal/server/utils/ops-severity'
 import { getOpsMailer } from '../../utils/ops-mail'
 import { drainOpsEvents, pruneOpsEvents } from '../../utils/ops'
 import { logEvent } from '../../utils/log'
@@ -73,6 +74,7 @@ export default defineTask({
       appName,
       appUrl: appUrl || undefined,
       workerName: manifest.workers[0],
+      classify: classifyTerminalOps,
     })
     // Quiet ticks stay quiet — only say something when something happened.
     if (outcome.sent || outcome.error) {

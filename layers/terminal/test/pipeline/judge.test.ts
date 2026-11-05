@@ -630,14 +630,14 @@ describe('groundingFailure: versions a slug spells with a dash', () => {
 describe('checkJudgeSilence', () => {
   const NOW = new Date('2026-08-27T12:00:00Z')
   const OLD = '2026-08-25T12:00:00Z' // two days before NOW
-  const FRESH = '2026-08-27T06:00:00Z'
+  const FRESH = '2026-08-27T10:00:00Z' // inside the three-hour window
 
-  it('is quiet with no backlog older than a day', async () => {
+  it('is quiet with no backlog older than the window', async () => {
     await insertRows(db, 'changes', [change(0, FRESH)])
     expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('no-backlog')
   })
 
-  it('is quiet when a judge run landed within the day, whatever is pending', async () => {
+  it('is quiet when a judge run landed within the window, whatever is pending', async () => {
     await insertRows(db, 'changes', [change(0, OLD)])
     await submitJudgeRun(db, body(silence, '2026-08-01T00:00:00Z'), { now: new Date(FRESH) })
     expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('recent-run')
@@ -669,7 +669,17 @@ describe('checkJudgeSilence', () => {
     expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('silent')
   })
 
-  it('records judge_silent once a day for an old backlog with no run', async () => {
+  it('fires after three hours, not a day: the routine runs hourly', async () => {
+    await insertRows(db, 'changes', [change(0, '2026-08-27T08:30:00Z')])
+    await submitJudgeRun(db, body(silence, '2026-08-01T00:00:00Z'), {
+      now: new Date('2026-08-27T08:00:00Z'),
+    })
+    expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('silent')
+    const [event] = await db.select().from(schema.opsEvents)
+    expect(event!.detail).toContain('for 4h (since 2026-08-27T08:00:00')
+  })
+
+  it('records judge_silent once per marker window for an old backlog with no run', async () => {
     await insertRows(db, 'changes', [change(0, OLD)])
     const marker = memoryMarker()
     expect(await checkJudgeSilence(db, marker, NOW)).toBe('silent')
