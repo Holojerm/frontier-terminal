@@ -184,6 +184,7 @@ describe('tools/list', () => {
       'get_prospectus',
       'get_rankings',
       'get_releases',
+      'get_reliability',
       'get_revenue',
       'get_spend',
       'get_status',
