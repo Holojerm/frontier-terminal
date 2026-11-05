@@ -10,5 +10,10 @@ export default defineNuxtConfig({
     // invalidates every webhook secret. A Worker secret:
     // `op read "op://…" | bunx wrangler secret put NUXT_WEBHOOK_SIGNING_KEY`.
     webhookSigningKey: '',
+    // Optional. Authenticates the reliability:deploys read of the public smoke
+    // test runs (layers/terminal/server/pipeline/reliability/deploys.ts), which
+    // GitHub otherwise limits per shared Workers IP. Any token that can read
+    // public repositories; a Worker secret: NUXT_GITHUB_TOKEN.
+    githubToken: '',
   },
 })

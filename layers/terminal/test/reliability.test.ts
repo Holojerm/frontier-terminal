@@ -46,6 +46,7 @@ beforeEach(async () => {
     schema.snapshots,
     schema.filingDetections,
     schema.deployChecks,
+    schema.rollupState,
   ]) {
     await db.delete(table)
   }
@@ -288,13 +289,14 @@ describe('deploy checks', () => {
     expect(repoSlug(REPO)).toBe('Holojerm/frontier-terminal')
   })
 
-  it('stores a page, sends its ETag next time, and parks after a refusal', async () => {
+  it('reads at most hourly, sends its ETag, and parks after a refusal', async () => {
     const store = new Map<string, unknown>()
     const kv = {
       get: async (k: string) => store.get(k) ?? null,
       set: async (k: string, v: unknown) => void store.set(k, v),
     }
     const sent: (string | null)[] = []
+    const auth: (string | null)[] = []
     let answer: () => Response = () =>
       new Response(
         JSON.stringify({
@@ -306,35 +308,61 @@ describe('deploy checks', () => {
         { headers: { etag: 'W/"one"' } },
       )
     const fetcher = (async (_url: string, init?: RequestInit) => {
-      sent.push(new Headers(init?.headers).get('if-none-match'))
+      const headers = new Headers(init?.headers)
+      sent.push(headers.get('if-none-match'))
+      auth.push(headers.get('authorization'))
       return answer()
     }) as typeof fetch
-    const deps = { fetch: fetcher, kv, repoUrl: REPO, now: new Date('2026-11-05T00:00:00Z') }
+    const at = (iso: string) => ({ fetch: fetcher, kv, repoUrl: REPO, now: new Date(iso) })
 
-    expect(await recordDeployChecks(db, deps)).toEqual({ status: 'stored', runs: 2 })
+    // An ETag left from an earlier store isn't sent while no rows are held.
+    store.set('reliability:github:etag', 'W/"stale"')
+    expect(await recordDeployChecks(db, at('2026-11-05T00:00:00Z'))).toEqual({
+      status: 'stored',
+      runs: 2,
+    })
+    // On the five-minute tick, the next read waits out the hour.
+    expect(await recordDeployChecks(db, at('2026-11-05T00:05:00Z'))).toEqual({
+      status: 'not-due',
+      next: '2026-11-05T00:55:00.000Z',
+    })
     // The in-progress run completes: the next page rewrites it.
     answer = () =>
       new Response(
         JSON.stringify({ workflow_runs: [run(10, 'aaa', 'success', '2026-11-04T21:00:00Z')] }),
         { headers: { etag: 'W/"two"' } },
       )
-    expect(await recordDeployChecks(db, deps)).toEqual({ status: 'stored', runs: 1 })
+    expect(await recordDeployChecks(db, at('2026-11-05T01:00:00Z'))).toEqual({
+      status: 'stored',
+      runs: 1,
+    })
     answer = () => new Response(null, { status: 304 })
-    expect(await recordDeployChecks(db, deps)).toEqual({ status: 'not-modified' })
+    expect(await recordDeployChecks(db, at('2026-11-05T02:00:00Z'))).toEqual({
+      status: 'not-modified',
+    })
     expect(sent).toEqual([null, 'W/"one"', 'W/"two"'])
+    // A 304 still says when the rows were last read.
+    const read = await db.select({ at: schema.deployChecks.fetched_at }).from(schema.deployChecks)
+    expect(new Set(read.map((r) => r.at))).toEqual(new Set(['2026-11-05T02:00:00.000Z']))
 
-    const reset = Date.parse('2026-11-05T00:40:00Z') / 1000
+    const reset = Date.parse('2026-11-05T03:40:00Z') / 1000
     answer = () =>
       new Response('rate limited', { status: 403, headers: { 'x-ratelimit-reset': String(reset) } })
-    expect(await recordDeployChecks(db, deps)).toEqual({
+    expect(await recordDeployChecks(db, at('2026-11-05T03:00:00Z'))).toEqual({
       status: 'rate-limited',
-      until: '2026-11-05T00:40:00.000Z',
+      until: '2026-11-05T03:40:00.000Z',
     })
-    expect(await recordDeployChecks(db, deps)).toEqual({
+    expect(await recordDeployChecks(db, at('2026-11-05T03:05:00Z'))).toEqual({
       status: 'parked',
-      until: '2026-11-05T00:40:00.000Z',
+      until: '2026-11-05T03:40:00.000Z',
     })
     expect(sent).toHaveLength(4)
+    // Once the park ends the next read goes out, and a token rides along.
+    answer = () => new Response(null, { status: 304 })
+    expect(
+      await recordDeployChecks(db, { ...at('2026-11-05T03:45:00Z'), token: 'test-token' }),
+    ).toEqual({ status: 'not-modified' })
+    expect(auth.at(-1)).toBe('Bearer test-token')
 
     const rows = await db.select().from(schema.deployChecks)
     expect(rows.find((r) => r.run_id === '10')).toMatchObject({
@@ -522,6 +550,66 @@ describe('queryReliability', () => {
     expect(data.deploys.fetched_at).toBe('2026-10-02T12:00:00.000Z')
     expect(data.corrections.count).toBeGreaterThan(0)
     expect(data.corrections.url).toBe('/about#corrections')
+    expect(data.building).toBeNull()
+  })
+
+  const query = (at: Date) =>
+    queryReliability(
+      db,
+      queryContext(sourcesYaml, '2026-10-03T00:00:00.000Z', () => at),
+      {
+        buildSha: null,
+        repoUrl: REPO,
+        runsUrl: RUNS_URL,
+      },
+    )
+
+  it('says it is still building, with no gap, stale period or tally, until the rollup catches up', async () => {
+    await seedRuns()
+    // One day per chunk and no time budget: the first run stops after Oct 1.
+    const first = await rollSourceRuns(db, NOW, { chunkDays: 1, budgetMs: 0 })
+    expect(first).toMatchObject({ chunks: 1, behind: true, through: '2026-10-02T00:00:00.000Z' })
+
+    const building = await query(NOW)
+    expect(building.building).toEqual({
+      rolled_through: '2026-10-02T00:00:00.000Z',
+      started: '2026-10-01',
+    })
+    // Without the guard, the day not yet rolled read as a 24-hour outage.
+    for (const lane of building.freshness) {
+      expect(lane.periods.every((p) => p.to !== null)).toBe(true)
+    }
+    for (const row of building.sources.rows) {
+      expect(row).toMatchObject({ short: null, long: null, longest_gap: null })
+    }
+
+    // The next run rolls the rest in one go and the figures appear.
+    const second = await rollSourceRuns(db, NOW, { chunkDays: 1 })
+    expect(second).toMatchObject({ behind: false, through: NOW.toISOString() })
+    expect(second.chunks).toBeGreaterThanOrEqual(2)
+    const built = await query(NOW)
+    expect(built.building).toBeNull()
+    expect(built.sources.rows.find((s) => s.source_id === 'edgar-fts')!.long).toEqual({
+      runs: 92,
+      good: 86,
+    })
+  })
+
+  it('measures an open gap to where the rollup counted, never to the clock', async () => {
+    await seedRuns()
+    await rollSourceRuns(db, NOW)
+    // 40 minutes after the roll: caught up, but nothing after 00:10 is counted.
+    const later = await query(new Date(NOW.getTime() + 40 * 60_000))
+    expect(later.building).toBeNull()
+    const failing = later.sources.rows.find((s) => s.source_id === 'edgar-companyfacts-spcx')!
+    expect(failing.longest_gap).toEqual({
+      minutes: 2890,
+      from: '2026-10-01T00:00:00.000Z',
+      to: null,
+    })
+    // Two hours on with no new roll, the section says it is behind again.
+    const stale = await query(new Date(NOW.getTime() + 2 * 3_600_000))
+    expect(stale.building?.rolled_through).toBe(NOW.toISOString())
   })
 })
 

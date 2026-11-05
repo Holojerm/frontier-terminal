@@ -5,10 +5,13 @@
 // Incremental. Each run re-rolls from the start of the newest day already
 // rolled (that day may have gained runs since), and a day's longest gap is
 // measured from the previous good run whatever day it fell on, which the
-// rollup itself supplies. The first run backfills at most MAX_DAYS_PER_RUN
-// days of history and the next ones carry on from there.
+// rollup itself supplies. History is read CHUNK_DAYS at a time, so a backfill
+// never holds months of runs in memory at once, and a run stops after
+// RUN_BUDGET_MS; 90 days measured about a second of CPU, so a fresh deploy
+// catches up in its first run. rollup_state records how far it got, and the
+// page computes nothing past that point.
 
-import { and, gte, lt, max, sql } from 'drizzle-orm'
+import { and, eq, gte, lt, max, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { GOOD_RUN_STATUSES } from '../../../shared/utils/terminal-reliability'
@@ -18,8 +21,12 @@ const DAY_MS = 86_400_000
 
 /** How far back the first run reaches, and how long rolled rows are kept. */
 export const ROLLUP_RETAIN_DAYS = 120
-/** Days rolled in one invocation, so a backfill never holds months of runs in memory at once. */
-export const MAX_DAYS_PER_RUN = 21
+/** Days of runs read and folded at a time. */
+export const CHUNK_DAYS = 15
+/** Wall time after which a run stops between chunks and leaves the rest for the next hour. */
+export const RUN_BUDGET_MS = 25_000
+/** rollup_state's row for this rollup. */
+export const ROLLUP_NAME = 'source_runs'
 
 const GOOD = new Set<string>(GOOD_RUN_STATUSES)
 
@@ -132,18 +139,28 @@ export function rollRuns(
 
 export interface RollupReport {
   from: string | null
+  /** Every run before this instant is counted (rollup_state.rolled_through). */
   through: string | null
   days: number
   ticks: number
+  chunks: number
   /** True when history is left over for the next run. */
   behind: boolean
 }
 
-/** Roll whatever source_runs holds past the rollup's newest day, up to MAX_DAYS_PER_RUN days of it. */
-export async function rollSourceRuns(db: PipelineDb, now: Date): Promise<RollupReport> {
+/**
+ * Roll whatever source_runs holds past the rollup's newest day, CHUNK_DAYS
+ * at a time, until it reaches now or RUN_BUDGET_MS runs out.
+ */
+export async function rollSourceRuns(
+  db: PipelineDb,
+  now: Date,
+  { chunkDays = CHUNK_DAYS, budgetMs = RUN_BUDGET_MS } = {},
+): Promise<RollupReport> {
+  const began = Date.now()
   const today = dayOf(now.toISOString())
   const floor = addDays(today, -ROLLUP_RETAIN_DAYS)
-  const [[rolled], [first]] = await Promise.all([
+  const [[rolled], [first], [state]] = await Promise.all([
     db.select({ day: max(tables.sourceRunDays.day) }).from(tables.sourceRunDays),
     // The oldest run is the first row of the (started_at, id) index.
     db
@@ -152,82 +169,125 @@ export async function rollSourceRuns(db: PipelineDb, now: Date): Promise<RollupR
       .where(gte(tables.sourceRuns.started_at, floor))
       .orderBy(tables.sourceRuns.started_at)
       .limit(1),
+    db.select().from(tables.rollupState).where(eq(tables.rollupState.name, ROLLUP_NAME)),
   ])
-  if (!first) return { from: null, through: null, days: 0, ticks: 0, behind: false }
-  const start = rolled?.day && rolled.day >= floor ? rolled.day : dayOf(first.at)
-  const end = addDays(start, MAX_DAYS_PER_RUN)
-  const behind = end <= today
+  const report: RollupReport = {
+    from: null,
+    through: state?.rolled_through ?? null,
+    days: 0,
+    ticks: 0,
+    chunks: 0,
+    behind: false,
+  }
+  if (!first) return report
+  let start = rolled?.day && rolled.day >= floor ? rolled.day : dayOf(first.at)
+  const started = state && state.started >= floor && state.started <= start ? state.started : start
+  report.from = start
 
-  const [runs, prior] = await Promise.all([
-    db
-      .select({
-        source_id: tables.sourceRuns.source_id,
-        scope: tables.sourceRuns.scope,
-        started_at: tables.sourceRuns.started_at,
-        status: tables.sourceRuns.status,
-      })
-      .from(tables.sourceRuns)
-      .where(
-        and(
-          gte(tables.sourceRuns.started_at, `${start}T00:00:00.000Z`),
-          lt(tables.sourceRuns.started_at, `${end}T00:00:00.000Z`),
-        ),
-      ),
-    db
-      .select({
-        source_id: tables.sourceRunDays.source_id,
-        at: max(tables.sourceRunDays.last_good_at),
-      })
-      .from(tables.sourceRunDays)
-      .where(and(lt(tables.sourceRunDays.day, start), gte(tables.sourceRunDays.day, floor)))
-      .groupBy(tables.sourceRunDays.source_id),
-  ])
+  const prior = await db
+    .select({
+      source_id: tables.sourceRunDays.source_id,
+      at: max(tables.sourceRunDays.last_good_at),
+    })
+    .from(tables.sourceRunDays)
+    .where(and(lt(tables.sourceRunDays.day, start), gte(tables.sourceRunDays.day, floor)))
+    .groupBy(tables.sourceRunDays.source_id)
   const lastGood = new Map(
     prior.filter((p) => p.at !== null).map((p) => [p.source_id, p.at!] as const),
   )
-  const { days, ticks } = rollRuns(runs, lastGood)
-  const rolledAt = now.toISOString()
 
-  const dayRows = days.map((d) => ({ ...d, rolled_at: rolledAt }))
-  const dayInserts = chunk(dayRows, rowsPerStatement(11)).map((group) =>
-    db
-      .insert(tables.sourceRunDays)
-      .values(group)
+  for (;;) {
+    const end = addDays(start, chunkDays)
+    const behind = end <= today
+    const { days, ticks } = await rollChunk(db, start, end, lastGood, now)
+    // Every run before the chunk's end is counted; for the last chunk, every run before now.
+    const through = behind ? `${end}T00:00:00.000Z` : now.toISOString()
+    await db
+      .insert(tables.rollupState)
+      .values({
+        name: ROLLUP_NAME,
+        rolled_through: through,
+        started,
+        updated_at: now.toISOString(),
+      })
       .onConflictDoUpdate({
-        target: [tables.sourceRunDays.source_id, tables.sourceRunDays.day],
-        set: {
-          runs: sql`excluded.runs`,
-          good: sql`excluded.good`,
-          first_good_at: sql`excluded.first_good_at`,
-          last_good_at: sql`excluded.last_good_at`,
-          last_run_at: sql`excluded.last_run_at`,
-          longest_gap_ms: sql`excluded.longest_gap_ms`,
-          gap_from: sql`excluded.gap_from`,
-          gap_to: sql`excluded.gap_to`,
-          rolled_at: sql`excluded.rolled_at`,
-        },
-      }),
-  )
-  const tickInserts = chunk(ticks, rowsPerStatement(4)).map((group) =>
-    db
-      .insert(tables.pollTicks)
-      .values(group)
-      .onConflictDoUpdate({
-        target: [tables.pollTicks.scope, tables.pollTicks.started_at],
-        set: { runs: sql`excluded.runs`, good: sql`excluded.good` },
-      }),
-  )
+        target: tables.rollupState.name,
+        set: { rolled_through: through, started, updated_at: now.toISOString() },
+      })
+    report.through = through
+    report.days += days
+    report.ticks += ticks
+    report.chunks++
+    report.behind = behind
+    if (!behind || Date.now() - began > budgetMs) break
+    start = end
+  }
   await runStatements(db, [
-    ...dayInserts,
-    ...tickInserts,
     db.delete(tables.sourceRunDays).where(lt(tables.sourceRunDays.day, floor)),
     db.delete(tables.pollTicks).where(lt(tables.pollTicks.started_at, floor)),
   ])
-  return {
-    from: start,
-    through: runs.reduce<string | null>((m, r) => (m && m > r.started_at ? m : r.started_at), null),
-    days: dayRows.length,
-    ticks: ticks.length,
-    behind,
+  return report
+}
+
+/** Read, fold and upsert the runs of [start, end); `lastGood` is carried into the next chunk. */
+async function rollChunk(
+  db: PipelineDb,
+  start: string,
+  end: string,
+  lastGood: Map<string, string>,
+  now: Date,
+): Promise<{ days: number; ticks: number }> {
+  const runs = await db
+    .select({
+      source_id: tables.sourceRuns.source_id,
+      scope: tables.sourceRuns.scope,
+      started_at: tables.sourceRuns.started_at,
+      status: tables.sourceRuns.status,
+    })
+    .from(tables.sourceRuns)
+    .where(
+      and(
+        gte(tables.sourceRuns.started_at, `${start}T00:00:00.000Z`),
+        lt(tables.sourceRuns.started_at, `${end}T00:00:00.000Z`),
+      ),
+    )
+  const { days, ticks } = rollRuns(runs, lastGood)
+  for (const d of days) {
+    const prev = lastGood.get(d.source_id)
+    if (d.last_good_at && (!prev || d.last_good_at > prev))
+      lastGood.set(d.source_id, d.last_good_at)
   }
+  const rolledAt = now.toISOString()
+  const dayRows = days.map((d) => ({ ...d, rolled_at: rolledAt }))
+  await runStatements(db, [
+    ...chunk(dayRows, rowsPerStatement(11)).map((group) =>
+      db
+        .insert(tables.sourceRunDays)
+        .values(group)
+        .onConflictDoUpdate({
+          target: [tables.sourceRunDays.source_id, tables.sourceRunDays.day],
+          set: {
+            runs: sql`excluded.runs`,
+            good: sql`excluded.good`,
+            first_good_at: sql`excluded.first_good_at`,
+            last_good_at: sql`excluded.last_good_at`,
+            last_run_at: sql`excluded.last_run_at`,
+            longest_gap_ms: sql`excluded.longest_gap_ms`,
+            gap_from: sql`excluded.gap_from`,
+            gap_to: sql`excluded.gap_to`,
+            rolled_at: sql`excluded.rolled_at`,
+          },
+        }),
+    ),
+    ...chunk(ticks, rowsPerStatement(4)).map((group) =>
+      db
+        .insert(tables.pollTicks)
+        .values(group)
+        .onConflictDoUpdate({
+          target: [tables.pollTicks.scope, tables.pollTicks.started_at],
+          set: { runs: sql`excluded.runs`, good: sql`excluded.good` },
+        }),
+    ),
+  ])
+  return { days: dayRows.length, ticks: ticks.length }
 }

@@ -72,8 +72,9 @@ export interface SourceReliability {
   members: number
   /** How often we say we check it, in minutes. */
   stated_minutes: number
-  short: RunTally
-  long: RunTally
+  /** Null while the rollup is still building: the window isn't fully counted yet. */
+  short: RunTally | null
+  long: RunTally | null
   longest_gap: RunGap | null
   last_good_at: string | null
 }
@@ -142,8 +143,14 @@ export interface ReliabilityData {
   as_of: string | null
   computed_at: string
   days: typeof RELIABILITY_DAYS
+  /**
+   * Set while the daily rollup is more than an hour behind now (a fresh
+   * deploy backfilling history). Gaps, stale periods and window tallies are
+   * withheld until it catches up; started is the first day it holds.
+   */
+  building: { rolled_through: string | null; started: string | null } | null
   sources: {
-    /** The newest run the daily rollup has counted. */
+    /** Every run before this instant is counted (rollup_state). */
     rolled_through: string | null
     /** The first day the rollup holds inside the long window. */
     first_day: string | null
