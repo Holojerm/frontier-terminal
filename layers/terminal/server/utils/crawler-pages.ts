@@ -146,6 +146,12 @@ const INSTITUTIONS: LlmsTxtSection = {
       description: `A licensee can get alerts POSTed to an https URL instead of polling, at or above a chosen severity (critical, notable, or info). The JSON body has schema_version, the alert with its permalink, source URLs and cited change rows, and the license for the key. ${WEBHOOK_HEADERS.signature} is sha256= and the hex HMAC-SHA256 of the raw body, keyed with a per-webhook secret. ${WEBHOOK_HEADERS.delivery} stays the same across retries, and ${WEBHOOK_HEADERS.timestamp} matches sent_at in the body. Deliveries are retried with backoff for ${WEBHOOK_RETRY_HOURS} hours, and never sent before the alert is on the public site. Set up by email, never self-serve.`,
     },
     {
+      path: '/api/reliability',
+      title: 'Reliability',
+      description:
+        'How the feed itself has performed, from stored records. Each source’s good checks over 30 and 90 days and its longest gap between good checks. Periods when our data was older than we say it is. For each filing our rules alerted on, the minutes from EDGAR’s acceptance time to our alert. Each deploy’s smoke test from GitHub Actions. The corrections log. The same figures are on /data#reliability.',
+    },
+    {
       path: '/data#schema',
       title: `Schema version ${SCHEMA_VERSION}`,
       description: `Every export and /api JSON response states schema_version (a field, or the X-Schema-Version header on CSV and JSON arrays). Adding a column is a minor version. Removing or renaming one is a major version with ${BREAKING_NOTICE_DAYS} days’ notice to licensees. The changelog is under changelog in /export/dictionary.json.`,

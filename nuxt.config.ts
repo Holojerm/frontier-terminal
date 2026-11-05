@@ -184,6 +184,9 @@ const securityHeaders = {
 //   0 13 * * 1 — weekly thesis digest email, and social:digest queues the
 //                weekly what-moved thread. alerts:hiring-rollup writes one
 //                hiring alert per lab for the week that just ended.
+//   41 * * * * — bulk:build, and reliability:record, which rolls up source runs
+//                and records filing detections and deploy smoke results for
+//                /data#reliability (layers/terminal/server/pipeline/reliability/).
 const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:alert', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
@@ -198,7 +201,7 @@ const SCHEDULED_TASKS: Record<string, string[]> = {
     'webhooks:deliver',
   ],
   '0 13 * * 1': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
-  '41 * * * *': ['bulk:build'],
+  '41 * * * *': ['bulk:build', 'reliability:record'],
 }
 
 /**
