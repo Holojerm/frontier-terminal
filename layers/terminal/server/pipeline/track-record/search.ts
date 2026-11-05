@@ -16,7 +16,7 @@ import { and, asc, desc, gte, inArray } from 'drizzle-orm'
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
 import { ChangeRow, contentHash, contentHashOfText } from '../contracts'
-import type { SourceFetcher } from '../fetch'
+import { RATE_LIMITED_DETAIL, type SourceFetcher } from '../fetch'
 import type { RawStore } from '../refresh'
 import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '../store'
 import { NEWSROOM_OF } from '../../theses/recipes/newsrooms'
@@ -35,8 +35,18 @@ export const MATERIAL_SEVERITIES = ['notable', 'critical'] as const
 /** GDELT queries per run. */
 export const SEARCHES_PER_RUN = 1
 
-/** Failed GDELT searches after which an alert stops being retried. */
+/**
+ * Failed GDELT searches after which an alert stops being retried. A 429 is
+ * not one: it says GDELT was busy (Workers share egress IPs, so its
+ * per-IP limit trips on other tenants' traffic too), not that the query is
+ * bad, and counting it abandoned the oldest alert after three busy ticks.
+ */
 export const MAX_FAILED_SEARCHES = 3
+
+/** A failed search that GDELT refused with a 429: retried, never counted toward giving up. */
+export function rateLimitedSearch(s: { status: string; detail: string | null }): boolean {
+  return s.status === 'failed' && (s.detail?.startsWith(RATE_LIMITED_DETAIL) ?? false)
+}
 
 /** Newsroom posts kept per alert, earliest first. */
 export const NEWSROOM_CANDIDATE_LIMIT = 10
@@ -150,6 +160,7 @@ async function searchesOf(db: PipelineDb) {
       alert_id: tables.trackRecordSearches.alert_id,
       source: tables.trackRecordSearches.source,
       status: tables.trackRecordSearches.status,
+      detail: tables.trackRecordSearches.detail,
     })
     .from(tables.trackRecordSearches)
     .orderBy(desc(tables.trackRecordSearches.searched_at))
@@ -201,7 +212,7 @@ export async function runTrackRecordSearch(
   for (const s of searches) {
     const key = `${s.alert_id}:${s.source}`
     if (s.status === 'ok' || s.status === 'skipped') done.add(key)
-    else failures.set(key, (failures.get(key) ?? 0) + 1)
+    else if (!rateLimitedSearch(s)) failures.set(key, (failures.get(key) ?? 0) + 1)
   }
 
   let queried = 0

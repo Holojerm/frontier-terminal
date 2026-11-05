@@ -23,7 +23,7 @@ import type { AlertSeverity } from '../../shared/utils/terminal-tiers'
 
 import * as tables from '#server/db/schema'
 import { ChangeRow } from '../pipeline/contracts'
-import { MATERIAL_SEVERITIES } from '../pipeline/track-record/search'
+import { MATERIAL_SEVERITIES, rateLimitedSearch } from '../pipeline/track-record/search'
 import {
   TRACK_RECORD_FROM,
   WINDOW_DAYS,
@@ -80,8 +80,11 @@ export function sideOf(
   if (!ok) {
     const skipped = searches.find((s) => s.status === 'skipped')
     if (skipped) return side(noFeedState, { detail: skipped.detail })
-    const failed = searches.find((s) => s.status === 'failed')
+    const failed = searches.find((s) => s.status === 'failed' && !rateLimitedSearch(s))
     if (failed) return side('search-failed', { detail: failed.detail })
+    if (searches.some(rateLimitedSearch)) {
+      return side('not-searched', { detail: 'GDELT was busy on the last try; it is retried.' })
+    }
     return side('not-searched')
   }
   if (candidates.length === 0) return side('none-found')
