@@ -1,14 +1,17 @@
 <script setup lang="ts">
-// How far each lab's price history reaches: the Internet Archive backfill
-// (captures read and skipped, and the stretches with no readable capture),
-// then the first fetch of the lab's live pricing page. A lab with no
-// archived history says why instead of showing an empty span.
+// How far each lab's history reaches on one axis, prices or hiring: the
+// Internet Archive backfill (captures read and skipped, and the stretches
+// with no readable capture), then the first fetch of the lab's own live page
+// or board. A lab with no archived history says why instead of showing an
+// empty span.
 
 import { labName } from '../../../shared/utils/terminal-labs'
-import type { PriceReach } from '../../../shared/utils/terminal-types'
+import type { ArchiveReach } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
-defineProps<{ reach: PriceReach[] }>()
+withDefaults(defineProps<{ reach: ArchiveReach[]; caption?: string }>(), {
+  caption: 'How far back each lab’s price history reaches',
+})
 
 const COLUMNS: TableColumn[] = [
   { key: 'provider', label: 'Lab' },
@@ -19,12 +22,12 @@ const COLUMNS: TableColumn[] = [
 ]
 
 const day = (iso: string | null) => (iso ? iso.slice(0, 10) : '—')
-const from = (r: PriceReach) => r.archived_from ?? r.live_from
+const from = (r: ArchiveReach) => r.archived_from ?? r.live_from
 </script>
 
 <template>
   <TerminalTable
-    caption="How far back each lab’s price history reaches"
+    :caption="caption"
     :columns="COLUMNS"
     :rows="reach"
     :row-key="(r) => r.provider"

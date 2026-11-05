@@ -23,6 +23,21 @@ whose columns don't match the releases in
 `layers/terminal/server/utils/data-schema.ts`, or whose version bump is smaller
 than its changes need.
 
+## 1.5.0 (2026-11-05)
+
+Hiring history from before we read the labs' job boards, read from the
+Internet Archive's copies of each lab's own board:
+
+- `archived_hiring`: open roles per copy we could read. Each copy has one
+  `board` row with the open roles on the whole board, and one `department`
+  row per department when the copy lists every role. `label` is the
+  department as the board printed it then. `department` is the live
+  department it files under, where the board's own id ties the two.
+  `source_url` is the copy, `captured_at` when the Archive saw the board,
+  `fetched_at` when we read the copy, and `basis` is always `archived`.
+- `archive_captures` gains `axis`: `pricing` (rows in `archived_prices`) or
+  `hiring` (rows in `archived_hiring`). Every existing row is `pricing`.
+
 ## 1.4.0 (2026-11-05)
 
 Identifiers for joining our tables to a security master:

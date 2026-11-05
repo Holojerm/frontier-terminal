@@ -124,6 +124,7 @@ describe('the table registry', () => {
       'prospectus_risk_factors',
       'changes',
       'archived_prices',
+      'archived_hiring',
       'archive_captures',
       'alerts',
       'claim_readings',

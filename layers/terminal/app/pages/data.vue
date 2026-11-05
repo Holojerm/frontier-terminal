@@ -17,6 +17,7 @@ import type {
   CoverageData,
   DataDictionary,
   ExportTableInfo,
+  HiringHistoryData,
   PricesData,
   SourceAxis,
 } from '../../shared/utils/terminal-types'
@@ -32,12 +33,14 @@ definePageMeta({
   },
 })
 
-const [{ data: coverage, error }, { data: dictionary }, { data: prices }] = await Promise.all([
-  useFetch<CoverageData>('/api/coverage'),
-  useFetch<DataDictionary>('/export/dictionary.json'),
-  // Only the reach table rides to the client; the catalog stays on the server.
-  useFetch<PricesData>('/api/prices', { pick: ['reach'] }),
-])
+const [{ data: coverage, error }, { data: dictionary }, { data: prices }, { data: hiring }] =
+  await Promise.all([
+    useFetch<CoverageData>('/api/coverage'),
+    useFetch<DataDictionary>('/export/dictionary.json'),
+    // Only the reach tables ride to the client; the catalog and series stay on the server.
+    useFetch<PricesData>('/api/prices', { pick: ['reach'] }),
+    useFetch<HiringHistoryData>('/api/hiring/history', { pick: ['reach'] }),
+  ])
 
 /** Tables whose dictionary section is open; a download row's Columns link adds its table. */
 const openTables = ref<string[]>([])
@@ -359,13 +362,34 @@ const EXPORT_COLUMNS: TableColumn[] = [
     >
       <!-- Not lazy: its scroll box gets a keyboard tab stop only once mounted,
            and with no links in its rows nothing else makes it reachable. -->
-      <TerminalPriceReach :reach="prices.reach" />
+      <TerminalArchiveReach :reach="prices.reach" />
       <template #foot>
         Rows from an archived copy are marked on each SKU’s page, in
         <span class="font-mono">/api/prices/&lt;key&gt;</span>, and in the
         <span class="font-mono">archived_prices</span> table above. Their source link is the copy.
         We skip a copy we can’t read with confidence. Archived rows are older than the license
         window, so they’re {{ HISTORY_LICENSE.short }}.
+      </template>
+    </TerminalPanel>
+
+    <TerminalPanel
+      v-if="hiring?.reach?.length"
+      id="hiring-history"
+      title="How far hiring history goes back"
+      note="Before we started reading the boards, we read the Internet Archive’s copies of each lab’s own job board."
+      flush
+    >
+      <!-- Not lazy, like the price-reach table above. -->
+      <TerminalArchiveReach
+        :reach="hiring.reach"
+        caption="How far back each lab’s hiring history reaches"
+      />
+      <template #foot>
+        Open roles per copy, on the whole board and per department, are in the
+        <span class="font-mono">archived_hiring</span> table above and in
+        <span class="font-mono">/api/hiring/history</span> (each lab’s
+        <span class="font-mono">archived</span> points). Their source link is the copy. We skip a
+        copy we can’t read with confidence. Archived rows are {{ HISTORY_LICENSE.short }}.
       </template>
     </TerminalPanel>
 

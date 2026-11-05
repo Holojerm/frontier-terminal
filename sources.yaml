@@ -2140,6 +2140,34 @@ archive_sources:
       Archived rows carry basis archived, the capture URL as source_url, and
       CC BY-NC 4.0 even under a licensee's key: the Archive's terms are for
       scholarship and research, so they stay off anything sold.
+  wayback-hiring:
+    url: https://web.archive.org/cdx/search/cdx
+    format: CDX JSON (one row per capture), then each capture's raw bytes via https://web.archive.org/web/<timestamp>id_/<url>
+    verdict: include
+    terms: >-
+      The same Internet Archive Terms of Use, robots.txt and pace as
+      wayback-pricing (the same client, one request at a time, 4 seconds
+      apart, the same back-off and User-Agent). The archived boards belong to
+      the labs that published them, or to Greenhouse, Ashby and Lever, whose
+      pages they are. What we take is how many roles each board listed, in
+      total and per department label: no title, posting text, location or
+      person. Taken once per backfill run: one capture per board URL per week,
+      2023-01 to the day the live lane began reading each lab's board
+      (layers/terminal/server/pipeline/archive/hiring-eras.ts). Read
+      2026-11-05.
+    rights: not-cleared
+    caveats: >-
+      A capture is the board as the Archive's crawler saw it, so a hiring
+      move is dated to the first weekly capture that shows it: up to a week
+      late. A board that pages its list (job-boards.greenhouse.io from 2025,
+      50 roles a page) gives only the board's own stated total, never a
+      count of the page. Captures of an empty board, a script shell or a
+      shape no era parser reads are skipped with the reason
+      (archive_captures, axis hiring). The boards are the ones each lab
+      linked from its careers page at the time; DeepMind's Greenhouse board
+      is not the Google careers feed the live lane reads, and the two counts
+      don't join. Archived counts carry basis archived and CC BY-NC 4.0, and
+      never reach the hiring floor, the weekly roll-up, the judge or a thesis.
 
 # Where entity_identifiers and entity_securities get their identifiers
 # (layers/terminal/server/utils/terminal-identifiers.ts). Read by hand when the

@@ -8,7 +8,7 @@
 import { COMPARE_PAIRS, comparePath, pairTitle } from '../../../../shared/utils/terminal-compare'
 import { isLab, summarizeLab, tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
 import { alertLabs, LAB_SITE } from '../../../../shared/utils/terminal-labs'
-import { absoluteStamp } from '../../../../shared/utils/terminal-format'
+import { absoluteStamp, count } from '../../../../shared/utils/terminal-format'
 import type { TableColumn } from '../../../types/terminal-ui'
 import type {
   AlertsData,
@@ -113,8 +113,9 @@ const [prices, revenue, rankings, spend, hiring, incidents, releases, alerts] = 
   useFetch<HiringHistoryData>('/api/hiring/history', {
     key: `lab-hiring:${lab}`,
     transform: (d: HiringHistoryData): HiringHistoryData => ({
-      ...d,
-      providers: d.providers.filter((p) => p.provider === lab),
+      ...slimArchive(d),
+      reach: [],
+      providers: slimArchive(d).providers.filter((p) => p.provider === lab),
     }),
   }),
   useFetch('/api/incidents', {
@@ -241,6 +242,13 @@ const spendOf = computed(() =>
       }
     : null,
 )
+// The archived board history, as one line under the live summary.
+const archivedHiring = computed(() => {
+  const points = hiring.data.value?.providers[0]?.archived ?? []
+  if (points.length === 0) return null
+  return { copies: points.length, from: points[0]!.at.slice(0, 10), first: points[0]!.total }
+})
+
 const hiringOf = computed(() =>
   hiring.data.value && summary.value.hiring.view
     ? { ...hiring.data.value, providers: [summary.value.hiring.view] }
@@ -475,6 +483,16 @@ const tabs = computed(() => [
             flush
           >
             <TerminalHiringSummary v-if="hiringOf" :history="hiringOf" />
+            <p v-if="archivedHiring" class="px-3 py-2 text-xs text-muted">
+              Before we read the board: {{ count(archivedHiring.copies) }} Internet Archive copies
+              from <span class="font-mono">{{ archivedHiring.from }}</span
+              >, when it listed {{ count(archivedHiring.first) }} open roles.
+              <NuxtLink
+                :to="`/hiring#archived-${lab}`"
+                class="text-default underline underline-offset-2 hover:text-highlighted"
+                >See the archived series</NuxtLink
+              >.
+            </p>
           </TerminalPanel>
 
           <TerminalPanel
