@@ -118,6 +118,20 @@ export function sourceIdsForScope(
   return [...EDGAR_SOURCES, ...derived, ...registrations, ...LAUNCH_SOURCES]
 }
 
+/**
+ * How often we say a source is checked, in minutes (/about#latency): the
+ * edgar tick's feeds and catalogs every 30, everything else on the six-hourly
+ * survey or careers lane. A fresh registration filing rides the edgar tick
+ * only until it parses, so it counts as six-hourly.
+ */
+export function statedIntervalMinutes(sourceId: string): number {
+  const edgarTick =
+    EDGAR_SOURCES.includes(sourceId) ||
+    LAUNCH_SOURCES.includes(sourceId) ||
+    sourceId.startsWith('edgar-')
+  return edgarTick ? 30 : 360
+}
+
 const EDGAR_PERIOD_MS = 30 * 60 * 1000
 const SURVEY_PERIOD_MS = 6 * 60 * 60 * 1000
 

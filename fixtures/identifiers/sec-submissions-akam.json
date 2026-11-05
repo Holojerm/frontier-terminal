@@ -1,0 +1,75 @@
+{
+ "cik": "0001086222",
+ "entityType": "operating",
+ "sic": "7389",
+ "sicDescription": "Services-Business Services, NEC",
+ "ownerOrg": "07 Trade & Services",
+ "insiderTransactionForOwnerExists": 0,
+ "insiderTransactionForIssuerExists": 1,
+ "name": "AKAMAI TECHNOLOGIES INC",
+ "tickers": [
+  "AKAM"
+ ],
+ "exchanges": [
+  "Nasdaq"
+ ],
+ "ein": "043432319",
+ "lei": null,
+ "description": "",
+ "website": "",
+ "investorWebsite": "",
+ "category": "Large accelerated filer",
+ "fiscalYearEnd": "1231",
+ "stateOfIncorporation": "DE",
+ "stateOfIncorporationDescription": "DE",
+ "addresses": {
+  "mailing": {
+   "street1": "145 BROADWAY",
+   "street2": null,
+   "city": "CAMBRIDGE",
+   "stateOrCountry": "MA",
+   "zipCode": "02142",
+   "stateOrCountryDescription": "MA",
+   "isForeignLocation": 0,
+   "foreignStateTerritory": null,
+   "country": null,
+   "countryCode": null
+  },
+  "business": {
+   "street1": "145 BROADWAY",
+   "street2": null,
+   "city": "CAMBRIDGE",
+   "stateOrCountry": "MA",
+   "zipCode": "02142",
+   "stateOrCountryDescription": "MA",
+   "isForeignLocation": null,
+   "foreignStateTerritory": null,
+   "country": null,
+   "countryCode": null
+  }
+ },
+ "phone": "6174443000",
+ "flags": "",
+ "formerNames": [],
+ "filings": {
+  "recent": {
+   "accessionNumber": [],
+   "filingDate": [],
+   "reportDate": [],
+   "acceptanceDateTime": [],
+   "act": [],
+   "form": [],
+   "fileNumber": [],
+   "filmNumber": [],
+   "items": [],
+   "core_type": [],
+   "size": [],
+   "isXBRL": [],
+   "isInlineXBRL": [],
+   "isXBRLNumeric": [],
+   "primaryDocument": [],
+   "primaryDocDescription": []
+  },
+  "files": []
+ }
+}

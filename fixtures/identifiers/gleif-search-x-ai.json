@@ -1,0 +1,18 @@
+{
+ "query": "X.AI",
+ "total": 2,
+ "data": [
+  {
+   "lei": "21380065GV73VIU71K29",
+   "legalName": "KINGDOM X.AI CORPORATION",
+   "country": "KY",
+   "registrationStatus": "ISSUED"
+  },
+  {
+   "lei": "213800FU9I5AMG2C6P81",
+   "legalName": "ALWALEED X.AI CORPORATION",
+   "country": "KY",
+   "registrationStatus": "ISSUED"
+  }
+ ]
+}

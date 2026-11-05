@@ -12,7 +12,7 @@
 // leak.
 //
 // Stateless and JSON on both protocol eras. Each request gets a fresh
-// McpServer — twenty-one registrations, cheap — so a Worker isolate holds no
+// McpServer — twenty-two registrations, cheap — so a Worker isolate holds no
 // session, and a client that reconnects to a different isolate notices
 // nothing. Legacy (2025-era) clients, which is every shipping client today,
 // are served through a per-request WebStandardStreamableHTTPServerTransport
@@ -73,10 +73,15 @@ import { gpuRunsStamp, queryGpuPrices } from './terminal-gpu'
 import { SHARE_WINDOW_DAYS, queryRankings } from './terminal-rankings'
 import { queryProspectus } from './terminal-prospectus'
 import { filedFactsStamp, queryExposure } from './terminal-exposure'
+import { identifiersPayload } from './terminal-identifiers'
 import { queryRevenue } from './terminal-revenue'
 import { PROVIDER_ORDER } from './terminal-sources'
 import { querySpend } from './terminal-spend'
 import { queryTrackRecord, trackRecordStamp } from './terminal-track-record'
+import { queryReliability, reliabilityStamp } from './terminal-reliability'
+import { repoSlug, workflowRunsUrl } from '../pipeline/reliability/deploys'
+import { DETECTION_RULES, RELIABILITY_DAYS } from '../../shared/utils/terminal-reliability'
+import manifest from '~~/fleet.json'
 
 /** What the server needs from its host — the route supplies the real thing, the test a fixture. */
 export interface McpDeps {
@@ -712,6 +717,63 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
           await recipeRunsStamp(deps.db),
         ),
       ),
+  )
+
+  server.registerTool(
+    'get_identifiers',
+    {
+      title: 'Security-master identifiers',
+      description:
+        'identifiers: one row per company the site names (each lab, each SEC filer we read, each comparison company) with its legal name, ' +
+        'country, listing status (listed, registered, subsidiary, private), CIK, LEI and, when listed, ticker, MIC and US composite FIGI. ' +
+        'Each identifier has its own _source_url and _fetched_at, and a null LEI has its reason in lei_note. entity_id is the value of every ' +
+        'provider and company field in the other tools, so join on it. securities: which listed security carries each lab (self, a parent ' +
+        'that consolidates it, or an investor that discloses a stake) with disclosed_in, the filing that says so. A stake is never inferred ' +
+        'from press. Optional entity filter. ' +
+        PROVENANCE,
+      inputSchema: z.object({
+        entity: z
+          .string()
+          .regex(/^[a-z][a-z-]{0,39}$/)
+          .optional()
+          .describe('An entity_id, e.g. anthropic, alphabet, microsoft.'),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ entity }) =>
+      json(await deps.serve('identifiers', async () => identifiersPayload(entity), entity ?? '')),
+  )
+
+  server.registerTool(
+    'get_reliability',
+    {
+      title: 'Reliability: how the feed itself has performed',
+      description:
+        `For due diligence on the feed, computed from stored records. sources: each registered source (derived per-model and per-filing sources folded by template, members > 0) with runs and good runs over the last ${RELIABILITY_DAYS.short} (short) and ${RELIABILITY_DAYS.long} (long) UTC days, ` +
+        'where good is ok, unchanged, baseline or absent (an answered check) and skipped runs are not counted; longest_gap is the longest wait between good runs (to null while still open); stated_minutes is how often we say we check it. Worst first. ' +
+        'freshness: per lane (sec: SEC feeds and model catalogs, stated every 30 minutes; all: every source, stated every 6 hours), the periods our data was past its stated age, from the poll ticks in which most sources answered. ' +
+        `detection: each filing a no-model rule alerted on (${DETECTION_RULES.join(', ')}), its first alert time against EDGAR's acceptance time (accepted_at, read from the stored submissions JSON or filing index; null when no stored payload listed it), ` +
+        'and released_at, when EDGAR made it public (6:00 a.m. Eastern on the filing date for a filing accepted after 5:30 p.m. Eastern). Median and worst minutes for both. ' +
+        'deploys: each run of the post-deploy smoke test on main from GitHub Actions (conclusion success, failure, or cancelled when a newer push superseded it), with build_sha the commit now deployed. ' +
+        'corrections: the count and newest entry of the public corrections log. ' +
+        PROVENANCE,
+      annotations: READ_ONLY,
+    },
+    async () => {
+      const slug = repoSlug(manifest.links.github ?? '')
+      const opts = {
+        buildSha: deps.status.buildSha || null,
+        repoUrl: manifest.links.github ?? '',
+        runsUrl: slug ? workflowRunsUrl(slug) : '',
+      }
+      return json(
+        await deps.serve(
+          'reliability',
+          (ctx) => queryReliability(deps.db, ctx, opts),
+          await reliabilityStamp(deps.db),
+        ),
+      )
+    },
   )
 
   server.registerTool(

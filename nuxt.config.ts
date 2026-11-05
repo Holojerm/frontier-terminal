@@ -184,6 +184,9 @@ const securityHeaders = {
 //   0 13 * * 1 — weekly thesis digest email, and social:digest queues the
 //                weekly what-moved thread. alerts:hiring-rollup writes one
 //                hiring alert per lab for the week that just ended.
+//   41 * * * * — bulk:build, and reliability:record, which rolls up source runs
+//                and records filing detections and deploy smoke results for
+//                /data#reliability (layers/terminal/server/pipeline/reliability/).
 //   0 4 * * *  — seo:indexnow submits the sitemap URLs changed since its last
 //                accepted run to IndexNow (server/utils/indexnow.ts).
 const SCHEDULED_TASKS: Record<string, string[]> = {
@@ -200,7 +203,7 @@ const SCHEDULED_TASKS: Record<string, string[]> = {
     'webhooks:deliver',
   ],
   '0 13 * * 1': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
-  '41 * * * *': ['bulk:build'],
+  '41 * * * *': ['bulk:build', 'reliability:record'],
   '0 4 * * *': ['seo:indexnow'],
 }
 

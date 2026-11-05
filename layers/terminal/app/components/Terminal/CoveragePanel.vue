@@ -77,6 +77,7 @@ const auditNote = (r: SourceCoverage | RecipeCoverage) =>
       :columns="columns"
       :rows="coverage.sources"
       :row-key="(s) => s.source_id"
+      :row-id="(s) => `source-${s.source_id}`"
       align="top"
     >
       <template #cell-label="{ row: s }">

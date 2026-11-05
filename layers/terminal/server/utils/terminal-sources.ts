@@ -335,6 +335,25 @@ export function readArchiveSources(sourcesYaml: string): ArchiveSourceEntry[] {
   }))
 }
 
+/** Where the identifier registry was read from (sources.yaml `identifier_sources`). */
+export interface IdentifierSourceEntry extends TrackRecordSourceEntry {
+  /** The licence the source states, verbatim, or null. */
+  license: string | null
+}
+
+/** sources.yaml `identifier_sources`: who publishes each identifier, under what terms. */
+export function readIdentifierSources(sourcesYaml: string): IdentifierSourceEntry[] {
+  return readBlock(sourcesYaml.split('\n'), 'identifier_sources').map((block) => ({
+    id: block.id,
+    url: block.fields.url ?? null,
+    verdict: block.fields.verdict ?? '',
+    terms: block.fields.terms ?? null,
+    rights: rightsOf(block.id, block.fields.rights),
+    license: block.fields.license ?? null,
+    caveat: block.fields.caveats ?? null,
+  }))
+}
+
 /** Every include source and every deliberate cut, as sources.yaml states them. */
 export function readSourceRegistry(sourcesYaml: string): SourceRegistry {
   const lines = sourcesYaml.split('\n')
