@@ -5,6 +5,8 @@
 // What an article row carries is what GDELT records: url, title, seendate
 // (when GDELT first saw it, UTC), domain, language, sourcecountry. There is
 // no snippet and no publication time, and we never fetch the article itself.
+// The title is stored with GDELT's tokenizing spaces closed (untokenizeTitle);
+// the response bytes, spaces and all, are in R2 under the search's raw_key.
 
 import { z } from 'zod'
 
@@ -68,6 +70,40 @@ export function seenDateIso(seendate: string): string {
   return new Date(`${m[1]}-${m[2]}-${m[3]}T${m[4]}:${m[5]}:${m[6]}Z`).toISOString()
 }
 
+/**
+ * GDELT records a title tokenized: a space either side of punctuation
+ * ("Grok 4 . 7", "4 , 058", "Rolls Out : Benchmark", "( GOOGL )?"). This
+ * closes those gaps so a version or a price reads as the number it is. The
+ * judge grounds a rating's rationale against the title, and "4 . 7" holds
+ * only 4 and 7: on 2026-11-05 every "Grok 4.6" and "GPT Image 2.5" a
+ * rationale quoted was rejected as invented.
+ *
+ * A comma joins digits only before three more (a thousands separator), so
+ * "1 , 2" never becomes the number 12. Hyphens stay spaced: GDELT writes
+ * "state-level" and a "Title - Outlet" separator the same way. The apostrophes
+ * and quote marks GDELT drops are gone for good. Idempotent.
+ */
+export function untokenizeTitle(title: string): string {
+  return title
+    .replace(/(\d) ([./]) (?=\d)/g, '$1$2')
+    .replace(/(\d) , (?=\d{3}(?!\d))/g, '$1,')
+    .replace(/(\d) %/g, '$1%')
+    .replace(/\( /g, '(')
+    .replace(/ +([.,:;?!)])(?!\.\.)/g, '$1')
+    .replace(/\s{2,}/g, ' ')
+    .trim()
+}
+
+/**
+ * A stored candidate's title as the judge and the page show it. Press rows
+ * stored before titles were untokenized at ingest still hold "Grok 4 . 7";
+ * closing the gaps on read keeps them in step with new rows. Newsroom titles
+ * come from the lab's own feed and are shown as written.
+ */
+export function candidateTitle(candidate: { kind: string; title: string }): string {
+  return candidate.kind === 'press' ? untokenizeTitle(candidate.title) : candidate.title
+}
+
 const titleKey = (title: string) =>
   title
     .toLowerCase()
@@ -92,7 +128,7 @@ export function parseGdeltArticles(body: string): PressArticle[] {
     if (!row.success || !row.data.title.trim()) continue
     articles.push({
       url: row.data.url,
-      title: row.data.title.trim(),
+      title: untokenizeTitle(row.data.title),
       outlet: row.data.domain,
       seen_at: seenDateIso(row.data.seendate),
       language: row.data.language ?? null,
