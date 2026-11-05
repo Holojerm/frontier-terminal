@@ -90,9 +90,8 @@ function codesFromStudioLinks(html: string): string {
  * model ids from the AI Studio links (codesFromStudioLinks), and the tier of
  * a page that printed no tier headings at all. Until September 2025 every
  * model had one paid table and no "Standard" / "Batch" heading; that table
- * is the price the live page files under Standard, so its rows take tier
- * `standard` (the key the live pages use) and say so in notes. On a page
- * that does print tier headings, an untiered table stays untiered, as live.
+ * is the price the live page files under Standard; the live parser already
+ * keys an untiered table `standard`, and these rows also say so in notes.
  * Sections the live parser skips for want of a model id are named on the
  * capture; image, video and music tables (per image / second / request) are
  * not token prices and are left out, as live.
@@ -101,11 +100,10 @@ export function parseGoogleDocsPricingHtml(html: string, prov: Provenance) {
   const tiered = TIER_HEADING.test(stripInvisible(html))
   const page = parseGooglePricingPage(codesFromStudioLinks(html), prov)
   const rows = page.rows.map((r) =>
-    tiered || r.tier !== null
+    tiered
       ? r
       : {
           ...r,
-          tier: 'standard',
           notes: [r.notes, 'the only paid price: the page printed no service tiers']
             .filter(Boolean)
             .join('; '),

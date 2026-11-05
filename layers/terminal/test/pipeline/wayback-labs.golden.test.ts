@@ -196,8 +196,8 @@ describe('Google', () => {
     expect(out.rows).toHaveLength(15)
     expect(prices(find(out.rows, 'gemini-2.5-pro', 'standard'))).toEqual([1.25, 0.31, 10])
     expect(prices(find(out.rows, 'gemini-2.5-pro', 'batch'))).toEqual([0.625, 0.31, 5])
-    // A section with no tier headings on a tiered page stays untiered, as live.
-    expect(prices(find(out.rows, 'gemini-1.5-flash', null))).toEqual([0.075, 0.01875, 0.3])
+    // A section with no tier headings on a tiered page is keyed standard, as live.
+    expect(prices(find(out.rows, 'gemini-1.5-flash', 'standard'))).toEqual([0.075, 0.01875, 0.3])
   })
 })
 
