@@ -315,10 +315,7 @@ const code = 'font-mono text-highlighted'
                 >{{ r.headline }}</NuxtLink
               >
               <span class="block text-xs text-muted">
-                <a :href="r.filing_url" target="_blank" rel="noopener noreferrer" :class="link">{{
-                  r.accession_no
-                }}</a>
-                · {{ r.rule }}
+                <span class="font-mono">{{ r.accession_no }}</span> · {{ r.rule }}
               </span>
             </template>
             <template #cell-accepted="{ row: r }">
@@ -335,7 +332,15 @@ const code = 'font-mono text-highlighted'
                   >public <time :datetime="r.released_at!">{{ at(r.released_at!) }}</time></span
                 >
               </template>
-              <span v-else class="font-sans text-muted">not in our copies</span>
+              <span v-else class="font-sans text-muted"
+                >not in our copies (<a
+                  :href="r.filing_url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  class="underline underline-offset-2 hover:text-primary"
+                  >EDGAR index</a
+                >)</span
+              >
             </template>
             <template #cell-alerted="{ row: r }"
               ><time :datetime="r.alerted_at">{{ at(r.alerted_at) }}</time></template
