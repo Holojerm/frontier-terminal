@@ -324,7 +324,9 @@ const EXPORT_COLUMNS: TableColumn[] = [
       note="Before we started checking, we read the Internet Archive’s copies of each lab’s own pricing page."
       flush
     >
-      <LazyTerminalPriceReach hydrate-on-visible :reach="prices.reach" />
+      <!-- Not lazy: its scroll box gets a keyboard tab stop only once mounted,
+           and with no links in its rows nothing else makes it reachable. -->
+      <TerminalPriceReach :reach="prices.reach" />
       <template #foot>
         Rows from an archived copy are marked on each SKU’s page, in
         <span class="font-mono">/api/prices/&lt;key&gt;</span>, and in the
@@ -407,8 +409,8 @@ const EXPORT_COLUMNS: TableColumn[] = [
       </div>
     </TerminalPanel>
 
-    <LazyTerminalInstitutions
-      hydrate-on-visible
+    <!-- Not lazy, like the price-reach table: its rate-limit table has no links. -->
+    <TerminalInstitutions
       :schema-version="dictionary?.schema_version"
       :changelog="dictionary?.changelog ?? []"
     />
