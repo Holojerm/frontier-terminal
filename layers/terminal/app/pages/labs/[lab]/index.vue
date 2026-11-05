@@ -9,6 +9,7 @@ import { COMPARE_PAIRS, comparePath, pairTitle } from '../../../../shared/utils/
 import { isLab, summarizeLab, tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
 import { alertLabs, LAB_SITE } from '../../../../shared/utils/terminal-labs'
 import { absoluteStamp } from '../../../../shared/utils/terminal-format'
+import { labLede } from '../../../../shared/utils/terminal-ledes'
 import type { TableColumn } from '../../../types/terminal-ui'
 import type {
   AlertsData,
@@ -202,6 +203,8 @@ const data = computed(() => ({
 }))
 
 const summary = computed(() => summarizeLab(lab, data.value))
+// The header figures once more as sentences, the form an answer engine quotes.
+const lede = computed(() => labLede(summary.value) ?? undefined)
 const display = summary.value.display
 const figures = computed(() => readoutCells(summary.value, rankings.data.value?.provenance))
 
@@ -283,7 +286,7 @@ const tabs = computed(() => [
 </script>
 
 <template>
-  <TerminalPage :title="display" :as-of="alerts.data.value?.as_of" :error="failed">
+  <TerminalPage :title="display" :lede="lede" :as-of="alerts.data.value?.as_of" :error="failed">
     <template #header>
       <UButton
         :to="tearSheetPath(lab)"
