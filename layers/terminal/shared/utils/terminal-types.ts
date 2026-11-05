@@ -159,14 +159,53 @@ export interface DictionaryTable {
   json: string
   /** The columns that identify a row, in order. */
   key: string[]
+  /** One row per what. */
+  grain: string
+  /** How often rows are added or rewritten. */
+  cadence: string
+  /** event: the column dating what the row describes (null for a bare observation). knowledge: when the row first existed for us. */
+  time: { event: string | null; knowledge: string }
   as_of: { mode: 'cut' | 'rebuilt' | 'refused'; note: string }
   /**
    * How the license window cuts the default download: windowed tables serve
    * the rows `dated` on or after its first day (?history=full serves all),
-   * whole tables every row.
+   * whole tables every row. `start` says where the history begins.
    */
-  history: { mode: 'windowed' | 'whole'; dated: string[]; full: string | null; note: string }
+  history: {
+    mode: 'windowed' | 'whole'
+    dated: string[]
+    full: string | null
+    note: string
+    start: string
+  }
+  /** The identifier columns to join on, and what each joins to. */
+  joins: DictionaryJoin[]
+  /** Whether a licensee can use the rows commercially, from each feeding source's sources.yaml rights. */
+  licensing: {
+    commercial: 'yes' | 'upstream' | 'no' | 'mixed'
+    note: string
+    ours: string[]
+    upstream: { id: string; license: string | null }[]
+    not_cleared: string[]
+  }
   columns: DictionaryColumn[]
+}
+
+export interface DictionaryJoin {
+  column: string
+  /** `table.column`, or `your security master` for an identifier to match outside the site. */
+  to: string
+}
+
+/** One source's commercial-use answer, from its sources.yaml rights. */
+export interface SourceLicensing {
+  id: string
+  /** The sources.yaml block it's in. */
+  group: 'sources' | 'recipes' | 'track_record' | 'archive' | 'filed_facts' | 'identifiers'
+  rights: SourceRights | null
+  /** The licence the source states, verbatim, or null. */
+  license: string | null
+  commercial: string
 }
 
 export interface DataDictionary {
@@ -176,7 +215,13 @@ export interface DataDictionary {
   provenance: string
   /** The license split, and the license column a full-history download adds. */
   license: string
+  /** What event time and knowledge time mean. */
+  time: string
+  /** How to join the tables to a security master. */
+  joining: string
   tables: DictionaryTable[]
+  /** Every source sources.yaml rates, with its commercial-use answer. */
+  sources: SourceLicensing[]
   /** Every schema release, newest first. */
   changelog: SchemaChangelogEntry[]
 }

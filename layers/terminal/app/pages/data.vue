@@ -242,11 +242,12 @@ const EXPORT_COLUMNS: TableColumn[] = [
         Each sample is the first 50 rows of the default download in export order (oldest first when
         the table is ordered by time), at
         <span class="font-mono">/export/sample/&lt;table&gt;.csv</span> or
-        <span class="font-mono">.json</span>. <span class="font-mono">entity_securities</span> maps
-        each lab and tracked company to its issuer, CIK, and ticker symbol, and says so when a lab
-        is private. We no longer export <span class="font-mono">rankings_daily</span>. OpenRouter
-        licenses its rankings CC BY 4.0 but says they aren’t to be re-served as a competing free
-        API. So the per-lab shares stay on
+        <span class="font-mono">.json</span>. <span class="font-mono">entity_identifiers</span> has
+        each company’s CIK, LEI, ticker, and FIGI, and
+        <span class="font-mono">entity_securities</span> maps each lab to the securities that carry
+        it. We no longer export <span class="font-mono">rankings_daily</span>. OpenRouter licenses
+        its rankings CC BY 4.0 but says they aren’t to be re-served as a competing free API. So the
+        per-lab shares stay on
         <NuxtLink to="/rankings" class="text-primary underline underline-offset-2"
           >/rankings</NuxtLink
         >
@@ -255,9 +256,41 @@ const EXPORT_COLUMNS: TableColumn[] = [
     </TerminalPanel>
 
     <TerminalPanel
+      id="security-master"
+      title="Joining to your security master"
+      note="One identifier table, and a join column on every table that names a company."
+    >
+      <div class="flex max-w-3xl flex-col gap-3 text-sm text-default">
+        <p v-if="dictionary">{{ dictionary.joining }}</p>
+        <p>
+          Download
+          <NuxtLink
+            to="/export/entity_identifiers.csv"
+            external
+            class="font-mono break-words text-primary underline underline-offset-2"
+            >/export/entity_identifiers.csv</NuxtLink
+          >
+          and
+          <NuxtLink
+            to="/export/entity_securities.csv"
+            external
+            class="font-mono break-words text-primary underline underline-offset-2"
+            >/export/entity_securities.csv</NuxtLink
+          >, or read both at
+          <NuxtLink
+            to="/api/identifiers"
+            external
+            class="font-mono text-primary underline underline-offset-2"
+            >/api/identifiers</NuxtLink
+          >. Each table’s Join on line in the dictionary below names its columns.
+        </p>
+      </div>
+    </TerminalPanel>
+
+    <TerminalPanel
       id="dictionary"
       title="Data dictionary"
-      note="Every exported column: type, unit, whether it can be null, whether it is a key, and what it holds."
+      note="Each table’s grain, update cadence, time columns, history, join columns, and commercial use. Every exported column’s type, unit, whether it can be null, whether it is a key, and what it holds."
     >
       <LazyTerminalDictionary
         v-if="dictionary"

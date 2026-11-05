@@ -12,8 +12,12 @@
 import type {
   DataDictionary,
   DictionaryColumn,
+  DictionaryJoin,
   DictionaryTable,
   DictionaryType,
+  SourceAxis,
+  SourceLicensing,
+  SourceRights,
 } from '../../shared/utils/terminal-types'
 import {
   DATA_LICENSE,
@@ -22,6 +26,7 @@ import {
   LICENSE_SPLIT_EFFECTIVE,
   LICENSE_WINDOW_DAYS,
 } from '#shared/utils/license'
+import { parseCikWhitelistBlock } from '../pipeline/parsers/sec/whitelist'
 import { SCHEMA_VERSION, schemaChangelog } from './data-schema'
 import { ALERTS_METHOD } from './terminal-asof'
 import {
@@ -31,6 +36,13 @@ import {
   historyRule,
   type ExportTable,
 } from './terminal-export'
+import { JOINING_NOTE } from './terminal-identifiers'
+import {
+  readArchiveSources,
+  readFiledFactSources,
+  readIdentifierSources,
+  readSourceRegistry,
+} from './terminal-sources'
 
 interface ColumnDoc {
   type: DictionaryType
@@ -67,7 +79,7 @@ export const DATA_TYPES: Readonly<Record<DictionaryType, string>> = {
 }
 
 export const PROVENANCE_NOTE =
-  'Every row ends with source_url, the URL it was read from, and fetched_at, when that fetch ran. source_runs has started_at instead, since a failed run fetched nothing. entity_securities has checked_on, since its rows are hand-checked. In a CSV an empty cell is null.'
+  'Every row ends with source_url, the URL it was read from, and fetched_at, when that fetch ran. source_runs has started_at instead, since a failed run fetched nothing. entity_securities has checked_on, since its rows are hand-checked. entity_identifiers also gives each identifier its own source URL and fetch time. In a CSV an empty cell is null.'
 
 export const LICENSE_NOTE =
   `Rows dated in the last ${LICENSE_WINDOW_DAYS} days are ${DATA_LICENSE.short}. ` +
@@ -1240,6 +1252,24 @@ export const COLUMN_DOCS: Readonly<Record<string, TableDoc>> = {
         meaning: 'listed (trading), registered (an S-1 on file, not yet trading), or private.',
       },
       note: { type: 'text', nullable: true, meaning: 'How the mapping was made and its limits.' },
+      mic: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'The ISO 10383 market identifier code OpenFIGI lists the symbol under: XNGS (Nasdaq Global Select Market) or XNYS (New York Stock Exchange). Null with no security.',
+      },
+      figi: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'The symbol’s US composite FIGI, from OpenFIGI. entity_identifiers has the URL and time it was read. Null with no security.',
+      },
+      disclosed_in: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'For a parent or investor row, the URL of the filing that discloses the relationship. Null for self and none.',
+      },
       source_url: {
         type: 'text',
         provenance: true,
@@ -1253,6 +1283,561 @@ export const COLUMN_DOCS: Readonly<Record<string, TableDoc>> = {
       },
     },
   },
+
+  entity_identifiers: {
+    columns: {
+      entity_id: {
+        type: 'text',
+        key: true,
+        meaning:
+          'Our id for the company. It’s the value of provider, company, and entity_securities.entity everywhere else.',
+      },
+      entity_name: { type: 'text', meaning: 'The name the site uses.' },
+      entity_kind: {
+        type: 'text',
+        meaning:
+          'lab (one of the nine), filer (a company whose SEC filings we read), or company (a comparison company in a thesis).',
+      },
+      legal_name: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'The legal name as GLEIF records it, or as the company’s own terms page prints it when GLEIF has no record. Null where we read neither.',
+      },
+      country: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'ISO 3166-1 alpha-2 country of the legal entity: GLEIF’s legal-address country, else the country the company’s own page names. Null where we read neither.',
+      },
+      listing_status: {
+        type: 'text',
+        meaning:
+          'listed (its own shares trade), registered (an S-1 on file, not yet trading), subsidiary (owned by a listed parent, which entity_securities names), or private.',
+      },
+      cik: {
+        ...CIK,
+        nullable: true,
+        meaning: 'The SEC CIK, ten digits, zero-padded. Null for a company that doesn’t file.',
+      },
+      cik_source_url: {
+        type: 'text',
+        nullable: true,
+        provenance: true,
+        meaning: 'Where the CIK was read: SEC’s company_tickers_exchange.json.',
+      },
+      cik_fetched_at: {
+        type: 'timestamp',
+        nullable: true,
+        provenance: true,
+        meaning: 'When we read the CIK, in UTC.',
+      },
+      lei: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'The ISO 17442 Legal Entity Identifier, from GLEIF. Null with the reason in lei_note.',
+      },
+      lei_status: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'GLEIF’s registration status for the LEI (ISSUED, LAPSED, …), as of lei_fetched_at.',
+      },
+      lei_note: {
+        type: 'text',
+        meaning: 'How the LEI was matched to the company, or why there’s none.',
+      },
+      lei_source_url: {
+        type: 'text',
+        nullable: true,
+        provenance: true,
+        meaning:
+          'The GLEIF request the LEI was read from. For a null LEI, the search that found none, where we ran one.',
+      },
+      lei_fetched_at: {
+        type: 'timestamp',
+        nullable: true,
+        provenance: true,
+        meaning: 'When that GLEIF request ran, in UTC.',
+      },
+      ticker: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'The primary symbol as EDGAR lists it, or the proposed one for a registered company. entity_securities lists every symbol we map. Null when not listed.',
+      },
+      exchange: {
+        type: 'text',
+        nullable: true,
+        meaning: 'The exchange as EDGAR’s ticker file lists it. Null when EDGAR gives none.',
+      },
+      mic: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'The ISO 10383 market identifier code OpenFIGI lists the symbol under (XNGS or XNYS). Null when not listed.',
+      },
+      figi: {
+        type: 'text',
+        nullable: true,
+        meaning: 'The symbol’s US composite FIGI, from OpenFIGI. Null when not listed.',
+      },
+      share_class_figi: {
+        type: 'text',
+        nullable: true,
+        meaning: 'The share-class FIGI OpenFIGI gives with it. Null when not listed.',
+      },
+      figi_source_url: {
+        type: 'text',
+        nullable: true,
+        provenance: true,
+        meaning: 'The OpenFIGI mapping API the FIGIs and MIC were read from.',
+      },
+      figi_fetched_at: {
+        type: 'timestamp',
+        nullable: true,
+        provenance: true,
+        meaning: 'When that OpenFIGI request ran, in UTC.',
+      },
+      note: { type: 'text', nullable: true, meaning: 'Anything a join needs to know.' },
+      source_url: {
+        type: 'text',
+        nullable: true,
+        provenance: true,
+        meaning:
+          'Where legal_name and country were read: GLEIF when there’s an LEI, else the company’s own terms page.',
+      },
+      fetched_at: {
+        type: 'timestamp',
+        nullable: true,
+        provenance: true,
+        meaning: 'When source_url was read, in UTC.',
+      },
+    },
+  },
+}
+
+// ---- per-table facts for an institutional reader --------------------------------
+
+/** Which sources a table's rows come from, for its licensing answer. */
+type Feed =
+  /** Records of our own checks (what we fetched and when), whatever the source. */
+  | 'own'
+  /** Every include source in sources.yaml. */
+  | 'all'
+  | 'recipes'
+  | 'track_record'
+  | 'archive'
+  | 'filed_facts'
+  | 'identifiers'
+  | { axes: readonly SourceAxis[] }
+  /** Named sources, by id. */
+  | { ids: readonly string[] }
+
+interface TableMeta {
+  /** One row per what. */
+  grain: string
+  cadence: string
+  /** The column dating the thing the row describes, as the source dates it. Null when the row is only an observation. */
+  event: string | null
+  /** The column dating when we (or the public, for a filing) first had the row. */
+  knowledge: string
+  /** Where the history starts, live and archived. */
+  start: string
+  joins: readonly DictionaryJoin[]
+  feeds: readonly Feed[]
+  /** Which columns come from which source, where a table mixes them by column. */
+  licenseNote?: string
+}
+
+const ID = 'entity_identifiers.entity_id'
+const byProvider: DictionaryJoin = { column: 'provider', to: ID }
+const byCik: DictionaryJoin = { column: 'cik', to: 'entity_identifiers.cik' }
+const byTicker: DictionaryJoin = { column: 'ticker', to: 'entity_identifiers.ticker' }
+
+const LIVE = 'From our first check of each source.'
+const SURVEY = 'Every 6 hours, with the full check of every source.'
+const SEC_FEEDS = 'Every 30 minutes with the SEC feeds, and again every 6 hours.'
+const sec: Feed = { axes: ['sec'] }
+const prospectus = (grain: string): TableMeta => ({
+  grain,
+  cadence: SEC_FEEDS,
+  event: 'filed',
+  knowledge: 'first_seen_at',
+  start: 'From each lab’s first registration filing we read (Anthropic’s S-1 of 2026-10-26).',
+  joins: [byProvider, byCik],
+  feeds: [sec],
+})
+
+export const TABLE_META: Readonly<Record<string, TableMeta>> = {
+  snapshots: {
+    grain: 'One row per fetch of a source.',
+    cadence:
+      'Model catalogs up to every 5 minutes, SEC feeds every 30, everything else every 6 hours.',
+    event: null,
+    knowledge: 'fetched_at',
+    start: LIVE,
+    joins: [],
+    feeds: ['own'],
+  },
+  prices_latest: {
+    grain: 'One row per SKU per source, as of the last check.',
+    cadence: 'Model catalogs every 5 minutes when they change, every source every 6 hours.',
+    event: 'effective_from',
+    knowledge: 'first_seen_at',
+    start:
+      'Current rows only. Past prices are in changes (from our first check) and archived_prices (Internet Archive copies from January 2023).',
+    joins: [byProvider],
+    feeds: [{ axes: ['pricing-catalog', 'pricing-cross-check'] }],
+  },
+  jobs_open: {
+    grain: 'One row per open role per job board.',
+    cadence: SURVEY,
+    event: 'published_at',
+    knowledge: 'first_seen_at',
+    start: 'Current roles only. Roles that closed are in changes, from our first check.',
+    joins: [byProvider],
+    feeds: [{ axes: ['hiring'] }],
+  },
+  incidents: {
+    grain: 'One row per status-page incident.',
+    cadence: SURVEY,
+    event: 'started_at',
+    knowledge: 'first_seen_at',
+    start: 'What each feed listed at our first check, and every incident since.',
+    joins: [byProvider],
+    feeds: [{ axes: ['status'] }],
+  },
+  disclosures: {
+    grain: 'One row per entry on a lab’s misalignment-disclosure index.',
+    cadence: SURVEY,
+    event: 'listed_on',
+    knowledge: 'first_seen_at',
+    start: 'Every entry the index lists, back to its first.',
+    joins: [byProvider],
+    feeds: [{ axes: ['disclosures'] }],
+  },
+  disclosure_timelines: {
+    grain: 'One row per disclosure report page.',
+    cadence: SURVEY,
+    event: 'disclosed_on',
+    knowledge: 'first_seen_at',
+    start: 'Every report the index links to.',
+    joins: [byProvider],
+    feeds: [{ axes: ['disclosures'] }],
+  },
+  filers: {
+    grain: 'One row per lab whose CIK we found in its own registration filing.',
+    cadence: SEC_FEEDS,
+    event: 'resolved_file_date',
+    knowledge: 'first_seen_at',
+    start: 'From the first registration filing we found for each lab.',
+    joins: [byProvider, byCik],
+    feeds: [sec],
+  },
+  revenue_facts: {
+    grain: 'One row per XBRL revenue fact per filing.',
+    cadence: SURVEY,
+    event: 'end',
+    knowledge: 'first_seen_at',
+    start: 'Every revenue fact in EDGAR company facts, as far back as each filer tagged it.',
+    joins: [byProvider, byCik],
+    feeds: [{ axes: ['revenue'] }],
+  },
+  prospectus_statements: prospectus('One row per filing, period, and statement line.'),
+  prospectus_commitments: prospectus('One row per filing, schedule line, and year bucket.'),
+  prospectus_concentration: prospectus('One row per filing, basis, customer, and period.'),
+  prospectus_shares: prospectus('One row per filing and share-count line.'),
+  prospectus_risk_factors: prospectus('One row per filing and risk-factor heading.'),
+  changes: {
+    grain: 'One row per tracked item added, removed, or modified.',
+    cadence: 'A check that finds a difference adds rows. Rows are never edited.',
+    event: null,
+    knowledge: 'detected_at',
+    start: LIVE,
+    joins: [byProvider],
+    feeds: ['all'],
+  },
+  alerts: {
+    grain: 'One row per alert.',
+    cadence:
+      'Written when a check finds a change that meets a rule. Judged alerts follow when the judge runs.',
+    event: null,
+    knowledge: 'created_at',
+    start: LIVE,
+    joins: [],
+    feeds: ['all'],
+  },
+  claim_readings: {
+    grain: 'One row per thesis claim and data date.',
+    cadence: SURVEY,
+    event: 'date',
+    knowledge: 'computed_at',
+    start: 'From the first data date each claim’s recipe reads.',
+    joins: [],
+    feeds: ['all', 'recipes'],
+  },
+  claim_verdicts: {
+    grain: 'One row per candidate event the judge rated for a claim.',
+    cadence: 'When the judge runs.',
+    event: 'detected_at',
+    knowledge: 'judged_at',
+    start: LIVE,
+    joins: [byProvider],
+    feeds: ['all', 'recipes'],
+  },
+  track_record_candidates: {
+    grain: 'One row per article or newsroom post found for an alert.',
+    cadence: 'One search every 5 minutes, for the oldest alert whose window has closed.',
+    event: 'published_at',
+    knowledge: 'found_at',
+    start: 'From the first notable or critical alert.',
+    joins: [],
+    feeds: ['track_record'],
+  },
+  track_record_verdicts: {
+    grain: 'One row per candidate the judge rated.',
+    cadence: 'When the judge runs.',
+    event: null,
+    knowledge: 'judged_at',
+    start: 'From the first rated candidate.',
+    joins: [],
+    feeds: ['track_record'],
+  },
+  recipe_observations: {
+    grain: 'One row per recipe, key, and date.',
+    cadence: SURVEY,
+    event: 'date',
+    knowledge: 'first_seen_at',
+    start:
+      'Depends on the recipe. Some read a full history at their first run, others start at it.',
+    joins: [{ column: 'company', to: ID }],
+    feeds: ['recipes'],
+  },
+  filed_facts: {
+    grain: 'One row per XBRL fact per filing.',
+    cadence: 'Every 30 minutes. Company facts every 6 hours.',
+    event: 'end',
+    knowledge: 'filed',
+    start:
+      'Company facts as far back as the filer tagged them, and each 10-Q and 10-K instance from 2020.',
+    joins: [byTicker, byCik],
+    feeds: ['filed_facts'],
+  },
+  exposure_quarters: {
+    grain: 'One row per series and period.',
+    cadence: 'Rebuilt from filed_facts on each request.',
+    event: 'end',
+    knowledge: 'filed',
+    start: 'From 2020.',
+    joins: [byTicker],
+    feeds: ['filed_facts'],
+  },
+  archived_prices: {
+    grain: 'One row per SKU per Internet Archive copy we could read.',
+    cadence: 'Once per backfill run, not on a schedule.',
+    event: 'captured_at',
+    knowledge: 'fetched_at',
+    start:
+      'Archived only. From the oldest copy we could read. The backfill looks at one copy a week from January 2023 to 2026-08-25.',
+    joins: [byProvider],
+    feeds: ['archive'],
+  },
+  archive_captures: {
+    grain: 'One row per Internet Archive copy the backfill considered.',
+    cadence: 'Once per backfill run, not on a schedule.',
+    event: 'captured_at',
+    knowledge: 'fetched_at',
+    start: 'Archived only. One copy a week per lab page from January 2023 to 2026-08-25.',
+    joins: [byProvider],
+    feeds: ['archive'],
+  },
+  source_runs: {
+    grain: 'One row per check of a source.',
+    cadence:
+      'Model catalogs up to every 5 minutes, SEC feeds every 30, everything else every 6 hours.',
+    event: null,
+    knowledge: 'started_at',
+    start: LIVE,
+    joins: [],
+    feeds: ['own'],
+  },
+  entity_securities: {
+    grain: 'One row per tracked company and security that carries it (or none).',
+    cadence: 'By hand, when a mapping changes.',
+    event: null,
+    knowledge: 'checked_on',
+    start: 'The current mapping only.',
+    joins: [
+      { column: 'entity', to: ID },
+      { column: 'cik', to: 'entity_identifiers.cik' },
+      { column: 'figi', to: 'your security master' },
+    ],
+    feeds: [{ ids: ['sec-identifiers', 'openfigi-mapping'] }],
+    licenseNote: 'figi and mic come from OpenFIGI. Everything else comes from SEC filings.',
+  },
+  entity_identifiers: {
+    grain: 'One row per company we name.',
+    cadence: 'By hand, when a company’s identifiers change.',
+    event: null,
+    knowledge: 'fetched_at',
+    start: 'The current registry only.',
+    joins: [
+      { column: 'cik', to: 'your security master' },
+      { column: 'lei', to: 'your security master' },
+      { column: 'figi', to: 'your security master' },
+      { column: 'ticker', to: 'your security master' },
+    ],
+    feeds: ['identifiers'],
+    licenseNote:
+      'CIK, ticker, and exchange come from SEC, lei from GLEIF, and figi and mic from OpenFIGI. legal_name and country come from GLEIF too, except on a row with no LEI, where they come from the company’s own terms page.',
+  },
+}
+
+export const TIME_NOTE =
+  'Event time is when the thing happened, as the source dates it. Knowledge time is when the row first existed for us (or, for a filing, when it was filed). ?as_of= cuts on knowledge time.'
+
+// ---- commercial use, from sources.yaml rights -----------------------------------
+
+const OURS_TERMS = `A paid license covers the full history. The last ${LICENSE_WINDOW_DAYS} days are ${DATA_LICENSE.short} for anyone.`
+
+const RIGHTS_ANSWER: Readonly<Record<SourceRights, string>> = {
+  ours: `Yes. ${OURS_TERMS}`,
+  upstream: 'Under its own license, which we pass on.',
+  'not-cleared': 'No. It stays on the free site and isn’t in any paid offer.',
+}
+
+interface Rated {
+  id: string
+  group: SourceLicensing['group']
+  axis: SourceAxis | null
+  rights: SourceRights | null
+  license: string | null
+}
+
+/** Every source sources.yaml rates, flattened. */
+function ratedSources(sourcesYaml: string): Rated[] {
+  const registry = readSourceRegistry(sourcesYaml)
+  const flat =
+    (group: SourceLicensing['group']) => (s: { id: string; rights: SourceRights | null }) => ({
+      id: s.id,
+      group,
+      axis: null,
+      rights: s.rights,
+      license: null,
+    })
+  return [
+    ...registry.sources.map((s) => ({
+      id: s.source_id,
+      group: 'sources' as const,
+      axis: s.axis,
+      rights: s.rights,
+      license: s.license,
+    })),
+    ...registry.recipes.map((r) => flat('recipes')({ id: r.recipe_id, rights: r.rights })),
+    ...registry.track_record.map(flat('track_record')),
+    ...readArchiveSources(sourcesYaml).map(flat('archive')),
+    ...readFiledFactSources(sourcesYaml, parseCikWhitelistBlock(sourcesYaml)).map(
+      flat('filed_facts'),
+    ),
+    ...readIdentifierSources(sourcesYaml).map((s) => ({
+      ...flat('identifiers')(s),
+      license: s.license,
+    })),
+  ]
+}
+
+function sourceAnswer(s: Rated): string {
+  if (s.rights === 'upstream' && s.license) return `Under its own license: ${s.license}.`
+  return s.rights ? RIGHTS_ANSWER[s.rights] : 'Not rated in sources.yaml.'
+}
+
+function feeds(f: Feed, s: Rated): boolean {
+  if (f === 'own') return false
+  if (f === 'all') return s.group === 'sources'
+  if (typeof f === 'string') return s.group === f
+  if ('ids' in f) return f.ids.includes(s.id)
+  return s.group === 'sources' && s.axis !== null && f.axes.includes(s.axis)
+}
+
+const fed = (meta: TableMeta, sources: readonly Rated[]) =>
+  sources.filter((s) => meta.feeds.some((f) => feeds(f, s)))
+
+/** A stated licence without its "(where, read when)" note: "CC BY 4.0". */
+const licenseName = (license: string) => license.replace(/\s*\(.*\)\s*$/, '')
+
+/** "a", "a and b", "a, b, and c". */
+const series = (parts: readonly string[]) =>
+  parts.length < 3 ? parts.join(' and ') : `${parts.slice(0, -1).join(', ')}, and ${parts.at(-1)}`
+
+function tableLicensing(meta: TableMeta, sources: readonly Rated[]): DictionaryTable['licensing'] {
+  if (meta.feeds.includes('own')) {
+    return {
+      commercial: 'yes',
+      note: `Yes. These are records of our own checks. ${OURS_TERMS}`,
+      ours: [],
+      upstream: [],
+      not_cleared: [],
+    }
+  }
+  const from = fed(meta, sources)
+  const ours = from.filter((s) => s.rights === 'ours').map((s) => s.id)
+  const upstream = from
+    .filter((s) => s.rights === 'upstream')
+    .map((s) => ({ id: s.id, license: s.license }))
+  const notCleared = from
+    .filter((s) => s.rights !== 'ours' && s.rights !== 'upstream')
+    .map((s) => s.id)
+  const kinds = [ours.length > 0, upstream.length > 0, notCleared.length > 0].filter(Boolean).length
+  const licenses = [
+    ...new Set(upstream.flatMap((u) => (u.license ? [licenseName(u.license)] : []))),
+  ]
+  const upstreamTerms = licenses.length ? ` (${licenses.join('; ')})` : ''
+  if (kinds === 1 && ours.length) {
+    return { commercial: 'yes', note: RIGHTS_ANSWER.ours, ours, upstream, not_cleared: notCleared }
+  }
+  if (kinds === 1 && notCleared.length) {
+    return {
+      commercial: 'no',
+      note: RIGHTS_ANSWER['not-cleared'],
+      ours,
+      upstream,
+      not_cleared: notCleared,
+    }
+  }
+  if (kinds === 1) {
+    return {
+      commercial: 'upstream',
+      note: `Under each source’s own license${upstreamTerms}.`,
+      ours,
+      upstream,
+      not_cleared: notCleared,
+    }
+  }
+  const one = (n: number, singular: string, many: string) => `${n} ${n === 1 ? singular : many}`
+  const parts = [
+    ours.length ? one(ours.length, 'is ours to license', 'are ours to license') : null,
+    upstream.length
+      ? `${one(upstream.length, 'passes', 'pass')} on under upstream terms${upstreamTerms}`
+      : null,
+    notCleared.length
+      ? one(notCleared.length, 'isn’t in any paid offer', 'aren’t in any paid offer')
+      : null,
+  ].filter((p): p is string => p !== null)
+  return {
+    commercial: 'mixed',
+    note: [
+      `It depends on the source. Of the sources it reads, ${series(parts)}.`,
+      'A paid license covers only what comes from sources that are ours.',
+      meta.licenseNote,
+    ]
+      .filter(Boolean)
+      .join(' '),
+    ours,
+    upstream,
+    not_cleared: notCleared,
+  }
 }
 
 // ---- assembly -----------------------------------------------------------------
@@ -1275,7 +1860,7 @@ function asOfOf(table: ExportTable, doc: TableDoc): DictionaryTable['as_of'] {
   return { mode: 'cut', note: doc.asOf ?? '' }
 }
 
-function historyOf(table: ExportTable): DictionaryTable['history'] {
+function historyOf(table: ExportTable): Omit<DictionaryTable['history'], 'start'> {
   const rule = historyRule(table.name)
   if (rule.kind === 'whole') {
     return {
@@ -1293,9 +1878,11 @@ function historyOf(table: ExportTable): DictionaryTable['history'] {
   }
 }
 
-function dictionaryTable(table: ExportTable): DictionaryTable {
+function dictionaryTable(table: ExportTable, sources: readonly Rated[]): DictionaryTable {
   const doc = COLUMN_DOCS[table.name]
   if (!doc) throw new Error(`no data dictionary entry for export ${table.name}`)
+  const meta = TABLE_META[table.name]
+  if (!meta) throw new Error(`no table facts for export ${table.name}`)
   const columns = asOfColumns(table).map((name): DictionaryColumn => {
     const c = doc.columns[name]
     if (!c) throw new Error(`no data dictionary entry for ${table.name}.${name}`)
@@ -1315,20 +1902,38 @@ function dictionaryTable(table: ExportTable): DictionaryTable {
     csv: `/export/${table.name}.csv`,
     json: `/export/${table.name}.json`,
     key: columns.filter((c) => c.role === 'key').map((c) => c.name),
+    grain: meta.grain,
+    cadence: meta.cadence,
+    time: { event: meta.event, knowledge: meta.knowledge },
     as_of: asOfOf(table, doc),
-    history: historyOf(table),
+    history: { ...historyOf(table), start: meta.start },
+    joins: [...meta.joins],
+    licensing: tableLicensing(meta, sources),
     columns,
   }
 }
 
-/** The whole dictionary, in export order. Pure: no database, so it can never be half-true. */
-export function dataDictionary(): DataDictionary {
+/**
+ * The whole dictionary, in export order. Pure: no database, so it can never
+ * be half-true. Licensing is read from `sourcesYaml`'s rights, never retyped.
+ */
+export function dataDictionary(sourcesYaml: string): DataDictionary {
+  const sources = ratedSources(sourcesYaml)
   return {
     schema_version: SCHEMA_VERSION,
     types: { ...DATA_TYPES },
     provenance: PROVENANCE_NOTE,
     license: LICENSE_NOTE,
-    tables: Object.values(EXPORT_TABLES).map(dictionaryTable),
+    time: TIME_NOTE,
+    joining: JOINING_NOTE,
+    tables: Object.values(EXPORT_TABLES).map((t) => dictionaryTable(t, sources)),
+    sources: sources.map((s) => ({
+      id: s.id,
+      group: s.group,
+      rights: s.rights,
+      license: s.license,
+      commercial: sourceAnswer(s),
+    })),
     changelog: schemaChangelog(),
   }
 }

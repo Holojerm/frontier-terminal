@@ -1,0 +1,81 @@
+{
+ "cik": "0001769628",
+ "entityType": "operating",
+ "sic": "7372",
+ "sicDescription": "Services-Prepackaged Software",
+ "ownerOrg": "06 Technology",
+ "insiderTransactionForOwnerExists": 0,
+ "insiderTransactionForIssuerExists": 1,
+ "name": "CoreWeave, Inc.",
+ "tickers": [
+  "CRWV"
+ ],
+ "exchanges": [
+  "Nasdaq"
+ ],
+ "ein": "823060021",
+ "lei": null,
+ "description": "",
+ "website": "",
+ "investorWebsite": "",
+ "category": "Non-accelerated filer",
+ "fiscalYearEnd": "1231",
+ "stateOfIncorporation": "DE",
+ "stateOfIncorporationDescription": "DE",
+ "addresses": {
+  "mailing": {
+   "street1": "290 W. MT. PLEASANT AVENUE, SUITE 4100",
+   "street2": null,
+   "city": "LIVINGSTON",
+   "stateOrCountry": "NJ",
+   "zipCode": "07039",
+   "stateOrCountryDescription": "NJ",
+   "isForeignLocation": 0,
+   "foreignStateTerritory": null,
+   "country": null,
+   "countryCode": null
+  },
+  "business": {
+   "street1": "290 W. MT. PLEASANT AVENUE, SUITE 4100",
+   "street2": null,
+   "city": "LIVINGSTON",
+   "stateOrCountry": "NJ",
+   "zipCode": "07039",
+   "stateOrCountryDescription": "NJ",
+   "isForeignLocation": null,
+   "foreignStateTerritory": null,
+   "country": null,
+   "countryCode": null
+  }
+ },
+ "phone": "(973) 270-9737",
+ "flags": "",
+ "formerNames": [
+  {
+   "name": "Atlantic Crypto Corp",
+   "from": "2019-03-11T04:00:00.000Z",
+   "to": "2019-10-03T04:00:00.000Z"
+  }
+ ],
+ "filings": {
+  "recent": {
+   "accessionNumber": [],
+   "filingDate": [],
+   "reportDate": [],
+   "acceptanceDateTime": [],
+   "act": [],
+   "form": [],
+   "fileNumber": [],
+   "filmNumber": [],
+   "items": [],
+   "core_type": [],
+   "size": [],
+   "isXBRL": [],
+   "isInlineXBRL": [],
+   "isXBRLNumeric": [],
+   "primaryDocument": [],
+   "primaryDocDescription": []
+  },
+  "files": []
+ }
+}

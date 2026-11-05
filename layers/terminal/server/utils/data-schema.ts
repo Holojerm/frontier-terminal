@@ -489,6 +489,52 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       },
     },
   },
+  {
+    version: '1.3.0',
+    date: '2026-11-05',
+    summary:
+      'New: every bulk file also as Parquet (zstd), the same rows and columns typed by the data dictionary, listed under parquet in each manifest entry. Licensees can also read the full-history files over S3 with read-only credentials. No table columns changed.',
+  },
+  {
+    version: '1.4.0',
+    date: '2026-11-05',
+    summary:
+      'Security-master identifiers. entity_identifiers has one row per company we name, with its CIK, LEI, ticker, MIC and FIGI, each with the URL and time we read it. Join any provider or company column to its entity_id. entity_securities gains mic, figi, and disclosed_in, the filing that discloses a parent or an investor. It also gains a row for Alphabet’s stake in Anthropic, from Anthropic’s S-1/A.',
+    tables: {
+      entity_identifiers: {
+        added: [
+          'entity_id',
+          'entity_name',
+          'entity_kind',
+          'legal_name',
+          'country',
+          'listing_status',
+          'cik',
+          'cik_source_url',
+          'cik_fetched_at',
+          'lei',
+          'lei_status',
+          'lei_note',
+          'lei_source_url',
+          'lei_fetched_at',
+          'ticker',
+          'exchange',
+          'mic',
+          'figi',
+          'share_class_figi',
+          'figi_source_url',
+          'figi_fetched_at',
+          'note',
+          'source_url',
+          'fetched_at',
+        ],
+      },
+      entity_securities: {
+        added: ['mic', 'figi', 'disclosed_in'],
+        note: 'A new investor row: anthropic to GOOGL, disclosed in Anthropic’s S-1/A.',
+      },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

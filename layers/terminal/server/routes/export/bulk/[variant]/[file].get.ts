@@ -1,13 +1,21 @@
-// GET /export/bulk/<recent|full>/<table>.csv.gz — one bulk-feed file, as the
-// manifest lists it (/export/bulk/manifest.json). `recent` is open to anyone;
-// `full` needs a licensee's key. Served from R2 with no D1 read. The file's
-// SHA-256 is its ETag, so a client that has it gets a 304.
+// GET /export/bulk/<recent|full>/<table>.<csv.gz|parquet> — one bulk-feed
+// file, as the manifest lists it (/export/bulk/manifest.json). `recent` is
+// open to anyone; `full` needs a licensee's key, in either format. Served from
+// R2 with no D1 read. The file's SHA-256 is its ETag, so a client that has it
+// gets a 304.
 
 import { blob } from '@nuxthub/blob'
 
 import { cacheControlFor, rateLimitTerminal } from '../../../../utils/api-access'
 import { SCHEMA_VERSION_HEADER } from '../../../../utils/data-schema'
-import { bulkFileOf, bulkPath, notModified, readBulkIndex } from '../../../../utils/terminal-bulk'
+import {
+  BULK_CONTENT_TYPES,
+  byteRange,
+  bulkFileOf,
+  bulkPath,
+  notModified,
+  readBulkIndex,
+} from '../../../../utils/terminal-bulk'
 
 export default defineEventHandler(async (event) => {
   const key = await rateLimitTerminal(event, { name: 'bulk-file', limit: 60, windowSeconds: 60 })
@@ -48,11 +56,43 @@ export default defineEventHandler(async (event) => {
     return null
   }
 
-  const body = await blob.get(bulkPath(file.variant, file.table))
-  if (!body) throw createError({ statusCode: 404, message: 'No bulk file at that path' })
   setResponseHeaders(event, {
-    'Content-Type': 'application/gzip',
-    'Content-Disposition': `attachment; filename="${file.table}.${file.variant}.csv.gz"`,
+    'Content-Type': BULK_CONTENT_TYPES[file.format],
+    'Accept-Ranges': 'bytes',
+    'Content-Disposition': `attachment; filename="${file.table}.${file.variant}.${file.format}"`,
   })
+  // [file].head.ts: a Parquet reader asks for the size before it reads anything.
+  if (event.method === 'HEAD') {
+    // A null body would be a 204, which drops Content-Length.
+    return new Response(null, {
+      status: 200,
+      headers: { ...getResponseHeaders(event), 'Content-Length': String(file.bytes) } as Record<
+        string,
+        string
+      >,
+    })
+  }
+
+  const body = await blob.get(bulkPath(file.variant, file.table, file.format))
+  if (!body) throw createError({ statusCode: 404, message: 'No bulk file at that path' })
+  // A Parquet reader over HTTP (DuckDB, pyarrow) fetches the footer first, by range.
+  const ifRange = getRequestHeader(event, 'if-range')
+  const range =
+    ifRange === undefined || ifRange === etag
+      ? byteRange(getRequestHeader(event, 'range'), file.bytes)
+      : null
+  if (range === 'unsatisfiable') {
+    setResponseHeader(event, 'Content-Range', `bytes */${file.bytes}`)
+    throw createError({ statusCode: 416, message: 'That range is outside the file' })
+  }
+  if (range) {
+    setResponseStatus(event, 206)
+    setResponseHeaders(event, {
+      'Content-Range': `bytes ${range.start}-${range.end}/${file.bytes}`,
+      'Content-Length': range.end - range.start + 1,
+    })
+    return sendStream(event, body.slice(range.start, range.end + 1).stream())
+  }
+  setResponseHeader(event, 'Content-Length', file.bytes)
   return sendStream(event, body.stream())
 })

@@ -1,0 +1,706 @@
+[
+ {
+  "fetched_at": "2026-11-05T04:51:36Z",
+  "http_status": 200,
+  "request": [
+   {
+    "idType": "TICKER",
+    "idValue": "MSFT",
+    "exchCode": "US"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "AMZN",
+    "exchCode": "US"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "NVDA",
+    "exchCode": "US"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "ORCL",
+    "exchCode": "US"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "GOOGL",
+    "exchCode": "US"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "GOOG",
+    "exchCode": "US"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "META",
+    "exchCode": "US"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "SPCX",
+    "exchCode": "US"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "BABA",
+    "exchCode": "US"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "CRWV",
+    "exchCode": "US"
+   }
+  ],
+  "response": [
+   {
+    "data": [
+     {
+      "figi": "BBG000BPH459",
+      "name": "MICROSOFT CORP",
+      "ticker": "MSFT",
+      "exchCode": "US",
+      "compositeFIGI": "BBG000BPH459",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001S5TD05",
+      "securityType2": "Common Stock",
+      "securityDescription": "MSFT"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG000BVPV84",
+      "name": "AMAZON.COM INC",
+      "ticker": "AMZN",
+      "exchCode": "US",
+      "compositeFIGI": "BBG000BVPV84",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001S5PQL7",
+      "securityType2": "Common Stock",
+      "securityDescription": "AMZN"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG000BBJQV0",
+      "name": "NVIDIA CORP",
+      "ticker": "NVDA",
+      "exchCode": "US",
+      "compositeFIGI": "BBG000BBJQV0",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001S5TZJ6",
+      "securityType2": "Common Stock",
+      "securityDescription": "NVDA"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG000BQLTW7",
+      "name": "ORACLE CORP",
+      "ticker": "ORCL",
+      "exchCode": "US",
+      "compositeFIGI": "BBG000BQLTW7",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001S5SJG6",
+      "securityType2": "Common Stock",
+      "securityDescription": "ORCL"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG009S39JX6",
+      "name": "ALPHABET INC-CL A",
+      "ticker": "GOOGL",
+      "exchCode": "US",
+      "compositeFIGI": "BBG009S39JX6",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG009S39JY5",
+      "securityType2": "Common Stock",
+      "securityDescription": "GOOGL"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG009S3NB30",
+      "name": "ALPHABET INC-CL C",
+      "ticker": "GOOG",
+      "exchCode": "US",
+      "compositeFIGI": "BBG009S3NB30",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG009S3NB21",
+      "securityType2": "Common Stock",
+      "securityDescription": "GOOG"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG000MM2P62",
+      "name": "META PLATFORMS INC-CLASS A",
+      "ticker": "META",
+      "exchCode": "US",
+      "compositeFIGI": "BBG000MM2P62",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001SQCQC5",
+      "securityType2": "Common Stock",
+      "securityDescription": "META"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG000NQF3Z5",
+      "name": "SPACE EXPLORATION TECHN-CL A",
+      "ticker": "SPCX",
+      "exchCode": "US",
+      "compositeFIGI": "BBG000NQF3Z5",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001SQPN65",
+      "securityType2": "Common Stock",
+      "securityDescription": "SPCX"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG006G2JVL2",
+      "name": "ALIBABA GROUP HOLDING-SP ADR",
+      "ticker": "BABA",
+      "exchCode": "US",
+      "compositeFIGI": "BBG006G2JVL2",
+      "securityType": "ADR",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG006G2JWB1",
+      "securityType2": "Depositary Receipt",
+      "securityDescription": "BABA"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG011ZTRJ21",
+      "name": "COREWEAVE INC-CL A",
+      "ticker": "CRWV",
+      "exchCode": "US",
+      "compositeFIGI": "BBG011ZTRJ21",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG011ZTRJ49",
+      "securityType2": "Common Stock",
+      "securityDescription": "CRWV"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "fetched_at": "2026-11-05T04:51:39Z",
+  "http_status": 200,
+  "request": [
+   {
+    "idType": "TICKER",
+    "idValue": "NET",
+    "exchCode": "US"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "AKAM",
+    "exchCode": "US"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "FSLY",
+    "exchCode": "US"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "NBIS",
+    "exchCode": "US"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "DOCN",
+    "exchCode": "US"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "ANT",
+    "exchCode": "US"
+   }
+  ],
+  "response": [
+   {
+    "data": [
+     {
+      "figi": "BBG001WMKHH5",
+      "name": "CLOUDFLARE INC - CLASS A",
+      "ticker": "NET",
+      "exchCode": "US",
+      "compositeFIGI": "BBG001WMKHH5",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001WMKHJ3",
+      "securityType2": "Common Stock",
+      "securityDescription": "NET"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG000BJQWD2",
+      "name": "AKAMAI TECHNOLOGIES INC",
+      "ticker": "AKAM",
+      "exchCode": "US",
+      "compositeFIGI": "BBG000BJQWD2",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001S7YHX0",
+      "securityType2": "Common Stock",
+      "securityDescription": "AKAM"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG004NLQHL0",
+      "name": "FASTLY INC - CLASS A",
+      "ticker": "FSLY",
+      "exchCode": "US",
+      "compositeFIGI": "BBG004NLQHL0",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG004NLQHM9",
+      "securityType2": "Common Stock",
+      "securityDescription": "FSLY"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG001NVJ6W4",
+      "name": "NEBIUS GROUP NV",
+      "ticker": "NBIS",
+      "exchCode": "US",
+      "compositeFIGI": "BBG001NVJ6W4",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001TBY593",
+      "securityType2": "Common Stock",
+      "securityDescription": "NBIS"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG00ZGF6SS3",
+      "name": "DIGITALOCEAN HOLDINGS INC",
+      "ticker": "DOCN",
+      "exchCode": "US",
+      "compositeFIGI": "BBG00ZGF6SS3",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG00ZGF6TM7",
+      "securityType2": "Common Stock",
+      "securityDescription": "DOCN"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG0118LR3N0",
+      "name": "ANTHROPIC PBC-CL A",
+      "ticker": "ANT",
+      "exchCode": "US",
+      "compositeFIGI": "BBG0118LR3N0",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG0118LR3P8",
+      "securityType2": "Common Stock",
+      "securityDescription": "ANT"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "fetched_at": "2026-11-05T04:51:42Z",
+  "http_status": 200,
+  "request": [
+   {
+    "idType": "TICKER",
+    "idValue": "MSFT",
+    "micCode": "XNGS"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "AMZN",
+    "micCode": "XNGS"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "NVDA",
+    "micCode": "XNGS"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "ORCL",
+    "micCode": "XNYS"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "GOOGL",
+    "micCode": "XNGS"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "GOOG",
+    "micCode": "XNGS"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "META",
+    "micCode": "XNGS"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "SPCX",
+    "micCode": "XNGS"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "BABA",
+    "micCode": "XNYS"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "CRWV",
+    "micCode": "XNGS"
+   }
+  ],
+  "response": [
+   {
+    "data": [
+     {
+      "figi": "BBG000BPHFS9",
+      "name": "MICROSOFT CORP",
+      "ticker": "MSFT",
+      "exchCode": "UW",
+      "compositeFIGI": "BBG000BPH459",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001S5TD05",
+      "securityType2": "Common Stock",
+      "securityDescription": "MSFT"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG000BVQ4Z3",
+      "name": "AMAZON.COM INC",
+      "ticker": "AMZN",
+      "exchCode": "UW",
+      "compositeFIGI": "BBG000BVPV84",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001S5PQL7",
+      "securityType2": "Common Stock",
+      "securityDescription": "AMZN"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG000BBK0R0",
+      "name": "NVIDIA CORP",
+      "ticker": "NVDA",
+      "exchCode": "UW",
+      "compositeFIGI": "BBG000BBJQV0",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001S5TZJ6",
+      "securityType2": "Common Stock",
+      "securityDescription": "NVDA"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG000BQLY10",
+      "name": "ORACLE CORP",
+      "ticker": "ORCL",
+      "exchCode": "UN",
+      "compositeFIGI": "BBG000BQLTW7",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001S5SJG6",
+      "securityType2": "Common Stock",
+      "securityDescription": "ORCL"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG009S4MT03",
+      "name": "ALPHABET INC-CL A",
+      "ticker": "GOOGL",
+      "exchCode": "UW",
+      "compositeFIGI": "BBG009S39JX6",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG009S39JY5",
+      "securityType2": "Common Stock",
+      "securityDescription": "GOOGL"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG009S4MVF2",
+      "name": "ALPHABET INC-CL C",
+      "ticker": "GOOG",
+      "exchCode": "UW",
+      "compositeFIGI": "BBG009S3NB30",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG009S3NB21",
+      "securityType2": "Common Stock",
+      "securityDescription": "GOOG"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG002GPKKZ7",
+      "name": "META PLATFORMS INC-CLASS A",
+      "ticker": "META",
+      "exchCode": "UW",
+      "compositeFIGI": "BBG000MM2P62",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001SQCQC5",
+      "securityType2": "Common Stock",
+      "securityDescription": "META"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG022H91PR9",
+      "name": "SPACE EXPLORATION TECHN-CL A",
+      "ticker": "SPCX",
+      "exchCode": "UW",
+      "compositeFIGI": "BBG000NQF3Z5",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001SQPN65",
+      "securityType2": "Common Stock",
+      "securityDescription": "SPCX"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG006G2JVQ7",
+      "name": "ALIBABA GROUP HOLDING-SP ADR",
+      "ticker": "BABA",
+      "exchCode": "UN",
+      "compositeFIGI": "BBG006G2JVL2",
+      "securityType": "ADR",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG006G2JWB1",
+      "securityType2": "Depositary Receipt",
+      "securityDescription": "BABA"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG01SNG02V7",
+      "name": "COREWEAVE INC-CL A",
+      "ticker": "CRWV",
+      "exchCode": "UW",
+      "compositeFIGI": "BBG011ZTRJ21",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG011ZTRJ49",
+      "securityType2": "Common Stock",
+      "securityDescription": "CRWV"
+     }
+    ]
+   }
+  ]
+ },
+ {
+  "fetched_at": "2026-11-05T04:51:45Z",
+  "http_status": 200,
+  "request": [
+   {
+    "idType": "TICKER",
+    "idValue": "NET",
+    "micCode": "XNYS"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "AKAM",
+    "micCode": "XNGS"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "FSLY",
+    "micCode": "XNGS"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "NBIS",
+    "micCode": "XNGS"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "DOCN",
+    "micCode": "XNYS"
+   },
+   {
+    "idType": "TICKER",
+    "idValue": "ANT",
+    "micCode": "XNGS"
+   }
+  ],
+  "response": [
+   {
+    "data": [
+     {
+      "figi": "BBG00PZV4KF2",
+      "name": "CLOUDFLARE INC - CLASS A",
+      "ticker": "NET",
+      "exchCode": "UN",
+      "compositeFIGI": "BBG001WMKHH5",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001WMKHJ3",
+      "securityType2": "Common Stock",
+      "securityDescription": "NET"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG000BJR6K0",
+      "name": "AKAMAI TECHNOLOGIES INC",
+      "ticker": "AKAM",
+      "exchCode": "UW",
+      "compositeFIGI": "BBG000BJQWD2",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001S7YHX0",
+      "securityType2": "Common Stock",
+      "securityDescription": "AKAM"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG00NZ1XY89",
+      "name": "FASTLY INC - CLASS A",
+      "ticker": "FSLY",
+      "exchCode": "UW",
+      "compositeFIGI": "BBG004NLQHL0",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG004NLQHM9",
+      "securityType2": "Common Stock",
+      "securityDescription": "FSLY"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG001NVJ7H9",
+      "name": "NEBIUS GROUP NV",
+      "ticker": "NBIS",
+      "exchCode": "UW",
+      "compositeFIGI": "BBG001NVJ6W4",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG001TBY593",
+      "securityType2": "Common Stock",
+      "securityDescription": "NBIS"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG00ZGF6SX7",
+      "name": "DIGITALOCEAN HOLDINGS INC",
+      "ticker": "DOCN",
+      "exchCode": "UN",
+      "compositeFIGI": "BBG00ZGF6SS3",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG00ZGF6TM7",
+      "securityType2": "Common Stock",
+      "securityDescription": "DOCN"
+     }
+    ]
+   },
+   {
+    "data": [
+     {
+      "figi": "BBG0268ZFTF2",
+      "name": "ANTHROPIC PBC-CL A",
+      "ticker": "ANT",
+      "exchCode": "UW",
+      "compositeFIGI": "BBG0118LR3N0",
+      "securityType": "Common Stock",
+      "marketSector": "Equity",
+      "shareClassFIGI": "BBG0118LR3P8",
+      "securityType2": "Common Stock",
+      "securityDescription": "ANT"
+     }
+    ]
+   }
+  ]
+ }
+]

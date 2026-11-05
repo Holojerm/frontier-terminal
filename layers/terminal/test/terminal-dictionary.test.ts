@@ -10,6 +10,7 @@ import {
   DATA_TYPES,
   DICTIONARY_CSV_COLUMNS,
   DICTIONARY_NAME,
+  TABLE_META,
   asOfColumns,
   dataDictionary,
   dictionaryCsv,
@@ -25,6 +26,7 @@ import {
 } from '../server/utils/data-schema'
 import { ENTITY_SECURITIES } from '../server/utils/terminal-entities'
 import changelogMd from '~~/CHANGELOG-data.md?raw'
+import { fixtureText } from './pipeline/fixtures'
 import {
   EXPORT_HISTORY,
   EXPORT_TABLES,
@@ -39,6 +41,7 @@ import {
 
 const db = drizzle(env.DB, { schema })
 const T = '2026-10-01T00:00:00.000Z'
+const sourcesYaml = fixtureText('sources.yaml')
 
 describe('the data dictionary', () => {
   it('documents every exported table, and only those', () => {
@@ -69,7 +72,7 @@ describe('the data dictionary', () => {
   })
 
   it('states how each table answers as_of', () => {
-    const dictionary = dataDictionary()
+    const dictionary = dataDictionary(sourcesYaml)
     for (const t of dictionary.tables) {
       const table = EXPORT_TABLES[t.name]!
       expect(t.as_of.mode, t.name).toBe(table.pointInTime)
@@ -84,7 +87,7 @@ describe('the data dictionary', () => {
 
   it('classifies every table for the license window, on a date column it really has', () => {
     expect(Object.keys(EXPORT_HISTORY).sort()).toEqual(Object.keys(EXPORT_TABLES).sort())
-    const dictionary = dataDictionary()
+    const dictionary = dataDictionary(sourcesYaml)
     expect(dictionary.license).toContain('?history=full')
     for (const t of dictionary.tables) {
       const table = EXPORT_TABLES[t.name]!
@@ -120,16 +123,21 @@ describe('the data dictionary', () => {
       const { columns } = licenseWindow(table.name, table, { history: 'full' }, '2026-08-06').table
       expect(columns.indexOf(LICENSE_COLUMN), table.name).toBe(columns.indexOf('source_url') - 1)
     }
-    expect(dataDictionary().license).toContain(`${LICENSE_COLUMN} column`)
+    expect(dataDictionary(sourcesYaml).license).toContain(`${LICENSE_COLUMN} column`)
   })
 
   it('gives every table a key and two provenance columns, the URL and when', () => {
-    for (const t of dataDictionary().tables) {
+    for (const t of dataDictionary(sourcesYaml).tables) {
       expect(t.key.length, t.name).toBeGreaterThan(0)
       const provenance = t.columns.filter((c) => c.role === 'provenance')
       // source_runs carries started_at, entity_securities checked_on, in fetched_at's place.
+      // entity_identifiers dates each identifier: four URL and time pairs.
       expect(provenance.map((c) => c.type).sort(), t.name).toEqual(
-        t.name === 'entity_securities' ? ['date', 'text'] : ['text', 'timestamp'],
+        t.name === 'entity_securities'
+          ? ['date', 'text']
+          : t.name === 'entity_identifiers'
+            ? [...Array(4).fill('text'), ...Array(4).fill('timestamp')]
+            : ['text', 'timestamp'],
       )
       expect(t.columns.at(-1)!.role, t.name).toBe('provenance')
       for (const c of t.columns) {
@@ -140,11 +148,73 @@ describe('the data dictionary', () => {
   })
 
   it('keys entity_securities by entity and symbol, which no two rows share', () => {
-    const t = dataDictionary().tables.find((x) => x.name === 'entity_securities')!
+    const t = dataDictionary(sourcesYaml).tables.find((x) => x.name === 'entity_securities')!
     const keys = ENTITY_SECURITIES.map((row) =>
       t.key.map((k) => row[k as keyof typeof row]).join('\n'),
     )
     expect(new Set(keys).size).toBe(keys.length)
+  })
+
+  it('gives every table its grain, cadence, time columns, history start, and join columns', () => {
+    expect(Object.keys(TABLE_META).sort()).toEqual(Object.keys(EXPORT_TABLES).sort())
+    const identifierColumns = new Set(EXPORT_TABLES.entity_identifiers!.columns)
+    for (const t of dataDictionary(sourcesYaml).tables) {
+      const columns = EXPORT_TABLES[t.name]!.columns
+      for (const field of [t.grain, t.cadence, t.history.start]) {
+        expect(field, t.name).toMatch(/^\S.{8,}\.$/s)
+      }
+      expect(columns, `${t.name} knowledge time`).toContain(t.time.knowledge)
+      if (t.time.event) expect(columns, `${t.name} event time`).toContain(t.time.event)
+      for (const join of t.joins) {
+        expect(columns, `${t.name}.${join.column}`).toContain(join.column)
+        if (join.to === 'your security master') continue
+        const [table, column] = join.to.split('.')
+        expect(table, join.to).toBe('entity_identifiers')
+        expect(identifierColumns.has(column!), join.to).toBe(true)
+      }
+      // A table that names a company joins it to the registry.
+      const named = columns.filter((c) => ['provider', 'company', 'entity'].includes(c))
+      for (const c of named) {
+        expect(
+          t.joins.some((j) => j.column === c),
+          `${t.name}.${c}`,
+        ).toBe(true)
+      }
+    }
+    expect(dataDictionary(sourcesYaml).joining).toContain('entity_identifiers')
+  })
+
+  it('answers commercial use per table and per source from sources.yaml rights', () => {
+    const dictionary = dataDictionary(sourcesYaml)
+    const table = (name: string) => dictionary.tables.find((t) => t.name === name)!
+    // Our own fetch log is ours; the Internet Archive backfill is not cleared.
+    expect(table('snapshots').licensing.commercial).toBe('yes')
+    expect(table('archived_prices').licensing).toMatchObject({
+      commercial: 'no',
+      not_cleared: ['wayback-pricing'],
+    })
+    // The identifiers mix SEC (ours), GLEIF and OpenFIGI (upstream), and labs' own pages (not cleared).
+    const ids = table('entity_identifiers').licensing
+    expect(ids.commercial).toBe('mixed')
+    expect(ids.ours).toEqual(['sec-identifiers'])
+    expect(ids.upstream.map((u) => u.id)).toEqual(['gleif-lei', 'openfigi-mapping'])
+    expect(ids.upstream[0]!.license).toContain('CC0')
+    expect(ids.not_cleared).toEqual(['lab-legal-pages'])
+    // Every recipe lands in exactly one group.
+    const recipes = table('recipe_observations').licensing
+    const recipeSources = dictionary.sources.filter((s) => s.group === 'recipes')
+    expect(recipes.ours.length + recipes.upstream.length + recipes.not_cleared.length).toBe(
+      recipeSources.length,
+    )
+    for (const t of dictionary.tables) {
+      expect(t.licensing.note, t.name).toMatch(/^\S.{8,}\.$/s)
+    }
+    for (const s of dictionary.sources) {
+      expect(s.commercial, s.id).toMatch(/^\S.{8,}[.)]$/s)
+      if (s.rights === 'not-cleared') expect(s.commercial, s.id).toMatch(/^No\./)
+      if (s.rights === 'ours') expect(s.commercial, s.id).toMatch(/^Yes\./)
+    }
+    expect(dictionary.sources.find((s) => s.id === 'gleif-lei')!.commercial).toContain('CC0 1.0')
   })
 
   it('is named in llms.txt, which the MCP describe tool serves', () => {
@@ -161,7 +231,7 @@ describe('the data dictionary', () => {
   })
 
   it('serves the same entries as one CSV row per table and column', () => {
-    const dictionary = dataDictionary()
+    const dictionary = dataDictionary(sourcesYaml)
     const lines = dictionaryCsv(dictionary).split('\r\n')
     expect(lines[0]).toBe(DICTIONARY_CSV_COLUMNS.join(','))
     const columns = dictionary.tables.reduce((n, t) => n + t.columns.length, 0)
@@ -230,7 +300,7 @@ describe('the schema version', () => {
   })
 
   it('is served in the dictionary, with the changelog newest first', () => {
-    const dictionary = dataDictionary()
+    const dictionary = dataDictionary(sourcesYaml)
     expect(dictionary.schema_version).toBe(SCHEMA_VERSION)
     expect(dictionary.changelog.map((r) => r.version)).toEqual(
       [...SCHEMA_RELEASES].reverse().map((r) => r.version),

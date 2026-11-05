@@ -1,6 +1,6 @@
 <script setup lang="ts">
 // /data's two panels for licensees: how an API key works, its rate limits, the
-// bulk feed, the saved pages, webhooks (Webhooks.vue), and what the paid license covers; then the
+// bulk feed and its S3 bucket, the saved pages, webhooks (Webhooks.vue), and what the paid license covers; then the
 // export schema's version and changelog. The limits are the numbers the server
 // enforces (REQUEST_BUDGETS) and the changelog is the dictionary's, so neither
 // can drift from what a client gets. No prices: those are by email.
@@ -14,7 +14,11 @@ import {
   PAID_LICENSE,
 } from '#shared/utils/license'
 import { mailto } from '../../../shared/utils/contact'
-import { KEY_HEADER_EXAMPLE, REQUEST_BUDGETS } from '../../../shared/utils/institutional'
+import {
+  KEY_HEADER_EXAMPLE,
+  LICENSED_BUCKET,
+  REQUEST_BUDGETS,
+} from '../../../shared/utils/institutional'
 import { count } from '../../../shared/utils/terminal-format'
 import type { SchemaChangelogEntry } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
@@ -41,15 +45,39 @@ const limits = [
   { caller: 'Systematic key', ...REQUEST_BUDGETS.systematic },
 ]
 
+const appUrl = useRuntimeConfig().public.appUrl.replace(/\/+$/, '')
+
+const parquetExample = [
+  '-- DuckDB',
+  `SELECT * FROM '${appUrl}/export/bulk/recent/prices_latest.parquet';`,
+  '',
+  '# pandas',
+  `pd.read_parquet("${appUrl}/export/bulk/recent/prices_latest.parquet")`,
+].join('\n')
+
+const s3Example = [
+  '-- DuckDB',
+  "CREATE SECRET (TYPE r2, KEY_ID '<access key id>', SECRET '<secret>', ACCOUNT_ID '<account id>');",
+  `SELECT * FROM 'r2://${LICENSED_BUCKET}/full/changes.parquet';`,
+  '',
+  '# pandas (with s3fs)',
+  `pd.read_parquet("s3://${LICENSED_BUCKET}/full/changes.parquet", storage_options={`,
+  '    "key": "<access key id>", "secret": "<secret>",',
+  '    "client_kwargs": {"endpoint_url": "https://<account id>.r2.cloudflarestorage.com"}})',
+].join('\n')
+
 const code = 'font-mono text-highlighted'
 const link = 'text-primary underline underline-offset-2'
+// A code block that can overflow is a focusable region, so a keyboard can scroll it (DESIGN.md › Scroll).
+const block =
+  'overflow-x-auto rounded-md border border-default bg-muted p-3 font-mono text-xs text-default focus-visible:outline-2 focus-visible:outline-primary'
 </script>
 
 <template>
   <TerminalPanel
     id="institutions"
     title="For institutions"
-    note="API keys for licensees: higher rate limits, the full history under a paid license, a daily bulk feed, and alert webhooks."
+    note="API keys for licensees: higher rate limits, the full history under a paid license, a daily bulk feed in CSV and Parquet (also over S3), and alert webhooks."
   >
     <div class="flex max-w-3xl flex-col gap-4 text-sm text-default">
       <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
@@ -110,8 +138,9 @@ const link = 'text-primary underline underline-offset-2'
           <NuxtLink to="/export/bulk/manifest.json" external :class="`${link} font-mono`"
             >/export/bulk/manifest.json</NuxtLink
           >
-          lists one gzipped CSV per table, rebuilt once a day. Each entry has the file’s URL, rows,
-          bytes, SHA-256, build time, schema version, and license. Compare the SHA-256 with your
+          lists each table as a gzipped CSV and as a Parquet file, rebuilt once a day. Each entry
+          has the file’s URL, rows, bytes, SHA-256, build time, schema version, and license, with
+          the Parquet file’s under <code :class="code">parquet</code>. Compare the SHA-256 with your
           copy and download only what changed. The manifest and the files also answer
           <code :class="code">If-None-Match</code> with a 304.
         </p>
@@ -120,6 +149,47 @@ const link = 'text-primary underline underline-offset-2'
           and all of the rest, under {{ DATA_LICENSE.short }}. With a key you get every row, each
           labeled in a <code :class="code">license</code> column.
         </p>
+        <p>
+          A Parquet file has the same rows and columns as the CSV, typed by the
+          <NuxtLink to="/export/dictionary.json" external :class="`${link} font-mono`"
+            >data dictionary</NuxtLink
+          >
+          and compressed with zstd. Timestamps are UTC instants. The file’s metadata states its
+          license too. DuckDB and pandas read one straight from its URL:
+        </p>
+        <pre
+          :class="block"
+          tabindex="0"
+          role="region"
+          aria-label="Reading a Parquet file with DuckDB and pandas"
+        ><code>{{ parquetExample }}</code></pre>
+        <p class="text-muted">
+          With a key, send it as the <code :class="code">Authorization</code> header (in DuckDB, a
+          secret of <code :class="code">TYPE http</code> with that header) and read the
+          <span class="font-mono">full</span> file instead.
+        </p>
+      </section>
+
+      <section class="space-y-2" aria-labelledby="institutions-s3">
+        <h3 id="institutions-s3" class="text-highlighted">S3 access</h3>
+        <p>
+          Licensees can also read the full-history files from an S3-compatible bucket on Cloudflare
+          R2. Ask with your key and we’ll send read-only credentials: an access key ID, a secret,
+          and the endpoint. They open this one bucket and end when your key does.
+        </p>
+        <p>
+          The bucket is <code :class="code">{{ LICENSED_BUCKET }}</code
+          >. It holds <code :class="code">full/&lt;table&gt;.csv.gz</code>,
+          <code :class="code">full/&lt;table&gt;.parquet</code>, and
+          <code :class="code">manifest.json</code>, the same files the keyed manifest lists. Set the
+          region to <code :class="code">auto</code>.
+        </p>
+        <pre
+          :class="block"
+          tabindex="0"
+          role="region"
+          aria-label="Reading the licensed bucket with DuckDB and pandas"
+        ><code>{{ s3Example }}</code></pre>
       </section>
 
       <section class="space-y-2" aria-labelledby="institutions-payloads">

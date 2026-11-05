@@ -1,0 +1,18 @@
+{
+ "query": "Moonshot AI",
+ "total": 2,
+ "data": [
+  {
+   "lei": "984500897UEF0399DE53",
+   "legalName": "Moonshot AI HK Limited",
+   "country": "HK",
+   "registrationStatus": "ISSUED"
+  },
+  {
+   "lei": "9845005D09BD6A4U1D27",
+   "legalName": "Moonshot AI Ltd",
+   "country": "KY",
+   "registrationStatus": "ISSUED"
+  }
+ ]
+}

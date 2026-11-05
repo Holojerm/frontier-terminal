@@ -1,0 +1,75 @@
+{
+ "cik": "0001517413",
+ "entityType": "operating",
+ "sic": "7372",
+ "sicDescription": "Services-Prepackaged Software",
+ "ownerOrg": "06 Technology",
+ "insiderTransactionForOwnerExists": 0,
+ "insiderTransactionForIssuerExists": 1,
+ "name": "Fastly, Inc.",
+ "tickers": [
+  "FSLY"
+ ],
+ "exchanges": [
+  "Nasdaq"
+ ],
+ "ein": "275411834",
+ "lei": null,
+ "description": "",
+ "website": "",
+ "investorWebsite": "",
+ "category": "Large accelerated filer",
+ "fiscalYearEnd": "1231",
+ "stateOfIncorporation": "DE",
+ "stateOfIncorporationDescription": "DE",
+ "addresses": {
+  "mailing": {
+   "street1": "475 BRANNAN",
+   "street2": "SUITE 300",
+   "city": "SAN FRANCISCO",
+   "stateOrCountry": "CA",
+   "zipCode": "94107",
+   "stateOrCountryDescription": "CA",
+   "isForeignLocation": 0,
+   "foreignStateTerritory": null,
+   "country": null,
+   "countryCode": null
+  },
+  "business": {
+   "street1": "475 BRANNAN",
+   "street2": "SUITE 300",
+   "city": "SAN FRANCISCO",
+   "stateOrCountry": "CA",
+   "zipCode": "94107",
+   "stateOrCountryDescription": "CA",
+   "isForeignLocation": null,
+   "foreignStateTerritory": null,
+   "country": null,
+   "countryCode": null
+  }
+ },
+ "phone": "415-525-3481",
+ "flags": "",
+ "formerNames": [],
+ "filings": {
+  "recent": {
+   "accessionNumber": [],
+   "filingDate": [],
+   "reportDate": [],
+   "acceptanceDateTime": [],
+   "act": [],
+   "form": [],
+   "fileNumber": [],
+   "filmNumber": [],
+   "items": [],
+   "core_type": [],
+   "size": [],
+   "isXBRL": [],
+   "isInlineXBRL": [],
+   "isXBRLNumeric": [],
+   "primaryDocument": [],
+   "primaryDocDescription": []
+  },
+  "files": []
+ }
+}
