@@ -11,7 +11,7 @@ import { alertPath } from '../../shared/utils/terminal-tiers'
 
 import type { PublicPageSource } from '#server/utils/public-pages'
 
-import { alertPermalinks, queryPriceKeys } from './terminal-db'
+import { alertPermalinks, queryPriceKeys, sitemapPriceKeys } from './terminal-db'
 import { terminalPayload } from './terminal-handler'
 import { queryRevenue } from './terminal-revenue'
 
@@ -33,7 +33,7 @@ export const terminalPagesSource: PublicPageSource = {
         priority: alert.tier === 'alert' ? '0.6' : '0.3',
         lastmod: alert.created_at.slice(0, 10),
       })),
-      ...skus.map((sku) => ({
+      ...sitemapPriceKeys(skus).map((sku) => ({
         path: `/prices/${sku.entity_key}`,
         changefreq: 'daily' as const,
         priority: '0.6',
