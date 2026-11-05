@@ -289,18 +289,25 @@ describe('the bulk build', () => {
     expect(store.data.has(BULK_INDEX_PATH)).toBe(true)
   })
 
-  it('drops an index entry from before formats were keyed', async () => {
+  it('keeps serving a CSV from before Parquet until the build replaces it', async () => {
     const store = memoryStore()
     await runBulkBuild({ db, store, now: () => NOW, tables: TABLES })
     const index = await readBulkIndex(store)
     const csv = index.files['recent/snapshots.csv.gz']!
-    const old = { ...csv } as Partial<typeof csv>
+    const old: Partial<typeof csv> = { ...csv, schema_version: '1.2.0' }
     delete old.format
-    await store.put(
-      BULK_INDEX_PATH,
-      JSON.stringify({ files: { ...index.files, 'recent/snapshots': old } }),
-    )
-    expect(Object.keys((await readBulkIndex(store)).files)).not.toContain('recent/snapshots')
+    delete old.license_older
+    await store.put(BULK_INDEX_PATH, JSON.stringify({ files: { 'recent/snapshots': old } }))
+    const before = await readBulkIndex(store)
+    expect(Object.keys(before.files)).toEqual(['recent/snapshots.csv.gz'])
+    expect(bulkFileOf(before, 'recent', 'snapshots.csv.gz')).toMatchObject({
+      format: 'csv.gz',
+      license_older: null,
+    })
+    expect(bulkManifest(before, 'recent', '').tables[0]!.parquet).toBeNull()
+    const report = await runBulkBuild({ db, store, now: () => NOW, tables: TABLES })
+    expect(report.built).toContain('recent/snapshots')
+    expect(Object.keys((await readBulkIndex(store)).files)).toHaveLength(8)
   })
 })
 

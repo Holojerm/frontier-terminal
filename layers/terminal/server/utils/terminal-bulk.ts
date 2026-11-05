@@ -153,12 +153,18 @@ export async function readBulkIndex(store: BulkStore): Promise<BulkIndex> {
   if (!body) return { files: {} }
   try {
     const parsed = JSON.parse(await body.text()) as Partial<BulkIndex>
-    // An entry from before formats were keyed (CSV only) drops out: its cut is rebuilt.
-    const files = Object.fromEntries(
-      Object.entries(parsed.files ?? {}).filter(
-        ([key, f]) => key === indexKey(f.variant, f.table, f.format),
-      ),
-    )
+    const files: Record<string, BulkFile> = {}
+    for (const f of Object.values(parsed.files ?? {})) {
+      // An entry from before Parquet was a CSV keyed `<variant>/<table>`. Its
+      // file is still at the same path, so it keeps being served until the
+      // next build replaces it.
+      const file: BulkFile = {
+        ...f,
+        format: f.format ?? 'csv.gz',
+        license_older: f.license_older ?? null,
+      }
+      files[indexKey(file.variant, file.table, file.format)] = file
+    }
     return { files }
   } catch {
     return { files: {} }
