@@ -251,7 +251,9 @@ async function sourceRows(
     const first = members[0]!
     const label = single
       ? labelOf(first).label
-      : `${labelOf(first).label.replace(/\s*\(.*\)$/, '')}s (${members.length})`
+      : // Count the sources rather than pluralise the label: "statement of
+        // operations" and "filing index" don't take a bare "s".
+        `${labelOf(first).label.replace(/\s*\(.*\)$/, '')} (${members.length} sources)`
     rows.push(
       row(
         single ? first : template,
