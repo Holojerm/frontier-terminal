@@ -1072,6 +1072,266 @@
       "raw_bytes": 1208414,
       "trim": "cut to the \"Text generation - Qwen\" section through the end of the Qwen-Flash line (the three lines the parser reads), then scripts, styles, svg, noscript, template and comments removed (html-table.ts › stripInvisible) and every tag attribute dropped but rowspan, colspan, which the parser reads, 1208414 -> 103624 bytes; the era parser gives the same rows on the raw capture",
       "note": "Internet Archive capture of https://www.alibabacloud.com/help/en/model-studio/model-pricing taken 20260811054610 (era alibaba-model-pricing-2026, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/identifiers/sec-company-tickers-exchange.json",
+      "source_id": "identifiers-sec-company-tickers",
+      "source_url": "https://www.sec.gov/files/company_tickers_exchange.json",
+      "fetched_at": "2026-11-05T04:42:32Z",
+      "http_status": 200,
+      "raw_bytes": 522049,
+      "trim": "data cut to the 22 rows whose CIK is a tracked company (of 10409); fields and values untouched.",
+      "note": "SEC’s CIK, name, ticker and exchange file, fetched with the SEC User-Agent (FrontierTerminal contact@frontierterm.com). The CIK check for entity_identifiers. Anthropic, PBC is listed as ANT with a null exchange (not yet trading)."
+    },
+    {
+      "path": "fixtures/identifiers/sec-submissions-anthropic.json",
+      "source_id": "identifiers-sec-submissions-anthropic",
+      "source_url": "https://data.sec.gov/submissions/CIK0002130357.json",
+      "fetched_at": "2026-11-05T04:51:26Z",
+      "http_status": 200,
+      "raw_bytes": 2491,
+      "trim": "filings.recent parallel arrays emptied (of 8 entries) and filings.files emptied; every header field (cik, name, tickers, exchanges, stateOfIncorporation, addresses) untouched.",
+      "note": "Anthropic, PBC: the jurisdiction check for its LEI match. Fetched with the SEC User-Agent."
+    },
+    {
+      "path": "fixtures/identifiers/sec-submissions-crwv.json",
+      "source_id": "identifiers-sec-submissions-crwv",
+      "source_url": "https://data.sec.gov/submissions/CIK0001769628.json",
+      "fetched_at": "2026-11-05T04:51:27Z",
+      "http_status": 200,
+      "raw_bytes": 157438,
+      "trim": "filings.recent parallel arrays emptied (of 1002 entries) and filings.files emptied; every header field (cik, name, tickers, exchanges, stateOfIncorporation, addresses) untouched.",
+      "note": "CoreWeave, Inc.: the jurisdiction check for its LEI match. Fetched with the SEC User-Agent."
+    },
+    {
+      "path": "fixtures/identifiers/sec-submissions-net.json",
+      "source_id": "identifiers-sec-submissions-net",
+      "source_url": "https://data.sec.gov/submissions/CIK0001477333.json",
+      "fetched_at": "2026-11-05T04:51:27Z",
+      "http_status": 200,
+      "raw_bytes": 158248,
+      "trim": "filings.recent parallel arrays emptied (of 1001 entries) and filings.files emptied; every header field (cik, name, tickers, exchanges, stateOfIncorporation, addresses) untouched.",
+      "note": "Cloudflare, Inc.: the jurisdiction check for its LEI match. Fetched with the SEC User-Agent."
+    },
+    {
+      "path": "fixtures/identifiers/sec-submissions-akam.json",
+      "source_id": "identifiers-sec-submissions-akam",
+      "source_url": "https://data.sec.gov/submissions/CIK0001086222.json",
+      "fetched_at": "2026-11-05T04:51:28Z",
+      "http_status": 200,
+      "raw_bytes": 162614,
+      "trim": "filings.recent parallel arrays emptied (of 1001 entries) and filings.files emptied; every header field (cik, name, tickers, exchanges, stateOfIncorporation, addresses) untouched.",
+      "note": "AKAMAI TECHNOLOGIES INC: the jurisdiction check for its LEI match. Fetched with the SEC User-Agent."
+    },
+    {
+      "path": "fixtures/identifiers/sec-submissions-fsly.json",
+      "source_id": "identifiers-sec-submissions-fsly",
+      "source_url": "https://data.sec.gov/submissions/CIK0001517413.json",
+      "fetched_at": "2026-11-05T04:51:28Z",
+      "http_status": 200,
+      "raw_bytes": 161369,
+      "trim": "filings.recent parallel arrays emptied (of 1003 entries) and filings.files emptied; every header field (cik, name, tickers, exchanges, stateOfIncorporation, addresses) untouched.",
+      "note": "Fastly, Inc.: the jurisdiction check for its LEI match. Fetched with the SEC User-Agent."
+    },
+    {
+      "path": "fixtures/identifiers/sec-submissions-nbis.json",
+      "source_id": "identifiers-sec-submissions-nbis",
+      "source_url": "https://data.sec.gov/submissions/CIK0001513845.json",
+      "fetched_at": "2026-11-05T04:51:29Z",
+      "http_status": 200,
+      "raw_bytes": 83904,
+      "trim": "filings.recent parallel arrays emptied (of 513 entries) and filings.files emptied; every header field (cik, name, tickers, exchanges, stateOfIncorporation, addresses) untouched.",
+      "note": "Nebius Group N.V.: the jurisdiction check for its LEI match. Fetched with the SEC User-Agent."
+    },
+    {
+      "path": "fixtures/identifiers/sec-submissions-docn.json",
+      "source_id": "identifiers-sec-submissions-docn",
+      "source_url": "https://data.sec.gov/submissions/CIK0001582961.json",
+      "fetched_at": "2026-11-05T04:51:29Z",
+      "http_status": 200,
+      "raw_bytes": 108065,
+      "trim": "filings.recent parallel arrays emptied (of 666 entries) and filings.files emptied; every header field (cik, name, tickers, exchanges, stateOfIncorporation, addresses) untouched.",
+      "note": "DigitalOcean Holdings, Inc.: the jurisdiction check for its LEI match. Fetched with the SEC User-Agent."
+    },
+    {
+      "path": "fixtures/identifiers/gleif-lei-records.json",
+      "source_id": "identifiers-gleif-lei-records",
+      "source_url": "https://api.gleif.org/api/v1/lei-records?filter%5Blei%5D=984500C7AD3A48B9FP18,984500B6DEB8CEBC4Z70,7ZW8QJWVPR4P1J1KQY45,BQ4BKCS1HXDV9HN80Z93,894500Q9JNDV9YXSOL64,5493001NTNQJDH60PM02,5493006MHB84DD0ZWV18,549300B9WLO96RQCXP87,INR2EJN1ERAN0W5ZP974,ZXTILKJKG63JELOEG630,549300S4KLFTLO7GSQ80,1Z4GXXU7ZHVWFCD8TV52,984500511DP2B6186053,5493007DY18BGNLDWU14,OC1LZNN2LF5WTJ5RIL89,549300E2FZC83FJ3H565,549300GGZHJ5Q1B18P93,549300EPISPY3RE3DL21,254900Z9HH7932FVW892&page%5Bsize%5D=50",
+      "fetched_at": "2026-11-05T04:51:30Z",
+      "http_status": 200,
+      "raw_bytes": 57262,
+      "trim": "each record cut to its LEI, legal name, legal-address country, region and city, jurisdiction, registeredAs, legal form, entity and registration status, and last-update and renewal dates; values untouched.",
+      "note": "GLEIF’s public API, one request for the 19 LEIs entity_identifiers names. The LEI check."
+    },
+    {
+      "path": "fixtures/identifiers/gleif-search-spacex-super-intelligence.json",
+      "source_id": "identifiers-gleif-search-spacex-super-intelligence",
+      "source_url": "https://api.gleif.org/api/v1/lei-records?filter%5Bfulltext%5D=SpaceX%20Super%20Intelligence&page%5Bsize%5D=15",
+      "fetched_at": "2026-11-05T04:51:31Z",
+      "http_status": 200,
+      "raw_bytes": 450,
+      "trim": "byte-unchanged excerpts around the title page (“X.AI HOLDINGS CORP.”) and the recitals naming xAI the surviving entity and a wholly owned subsidiary of SpaceX, cut at tag boundaries",
+      "note": "GLEIF full-text search for “SpaceX Super Intelligence”: the reason an entity_identifiers row has no LEI."
+    },
+    {
+      "path": "fixtures/identifiers/gleif-search-x-ai.json",
+      "source_id": "identifiers-gleif-search-x-ai",
+      "source_url": "https://api.gleif.org/api/v1/lei-records?filter%5Bfulltext%5D=X.AI&page%5Bsize%5D=15",
+      "fetched_at": "2026-11-05T04:51:32Z",
+      "http_status": 200,
+      "raw_bytes": 5844,
+      "trim": "each record cut to its LEI, legal name, legal-address country and registration status; values untouched.",
+      "note": "GLEIF full-text search for “X.AI”: the reason an entity_identifiers row has no LEI."
+    },
+    {
+      "path": "fixtures/identifiers/gleif-search-hangzhou-deepseek.json",
+      "source_id": "identifiers-gleif-search-hangzhou-deepseek",
+      "source_url": "https://api.gleif.org/api/v1/lei-records?filter%5Bfulltext%5D=Hangzhou%20DeepSeek&page%5Bsize%5D=15",
+      "fetched_at": "2026-11-05T04:51:32Z",
+      "http_status": 200,
+      "raw_bytes": 434,
+      "trim": "each record cut to its LEI, legal name, legal-address country and registration status; values untouched.",
+      "note": "GLEIF full-text search for “Hangzhou DeepSeek”: the reason an entity_identifiers row has no LEI."
+    },
+    {
+      "path": "fixtures/identifiers/gleif-search-deepseek.json",
+      "source_id": "identifiers-gleif-search-deepseek",
+      "source_url": "https://api.gleif.org/api/v1/lei-records?filter%5Bfulltext%5D=DeepSeek&page%5Bsize%5D=15",
+      "fetched_at": "2026-11-05T04:51:33Z",
+      "http_status": 200,
+      "raw_bytes": 5543,
+      "trim": "each record cut to its LEI, legal name, legal-address country and registration status; values untouched.",
+      "note": "GLEIF full-text search for “DeepSeek”: the reason an entity_identifiers row has no LEI."
+    },
+    {
+      "path": "fixtures/identifiers/gleif-search-moonshot-ai.json",
+      "source_id": "identifiers-gleif-search-moonshot-ai",
+      "source_url": "https://api.gleif.org/api/v1/lei-records?filter%5Bfulltext%5D=Moonshot%20AI&page%5Bsize%5D=15",
+      "fetched_at": "2026-11-05T04:51:34Z",
+      "http_status": 200,
+      "raw_bytes": 5788,
+      "trim": "each record cut to its LEI, legal name, legal-address country and registration status; values untouched.",
+      "note": "GLEIF full-text search for “Moonshot AI”: the reason an entity_identifiers row has no LEI."
+    },
+    {
+      "path": "fixtures/identifiers/gleif-search-together-computer.json",
+      "source_id": "identifiers-gleif-search-together-computer",
+      "source_url": "https://api.gleif.org/api/v1/lei-records?filter%5Bfulltext%5D=Together%20Computer&page%5Bsize%5D=15",
+      "fetched_at": "2026-11-05T04:51:35Z",
+      "http_status": 200,
+      "raw_bytes": 434,
+      "trim": "each record cut to its LEI, legal name, legal-address country and registration status; values untouched.",
+      "note": "GLEIF full-text search for “Together Computer”: the reason an entity_identifiers row has no LEI."
+    },
+    {
+      "path": "fixtures/identifiers/openfigi-mapping.json",
+      "source_id": "identifiers-openfigi-mapping",
+      "source_url": "https://api.openfigi.com/v3/mapping",
+      "fetched_at": "2026-11-05T04:51:36Z",
+      "http_status": 200,
+      "raw_bytes": 9408,
+      "trim": "none. Four POSTs committed whole, each with its request body and its own fetched_at.",
+      "note": "OpenFIGI’s public mapping API without a key (10 jobs per request). Two requests ask for each ticker’s US composite listing (exchCode US), two for its listing under the MIC its EDGAR exchange implies. The FIGI and MIC check."
+    },
+    {
+      "path": "fixtures/identifiers/openai-terms-of-use.html",
+      "source_id": "identifiers-openai-terms",
+      "source_url": "https://openai.com/policies/terms-of-use/",
+      "fetched_at": "2026-11-05T04:43:49Z",
+      "http_status": 200,
+      "raw_bytes": 394814,
+      "trim": "byte-unchanged excerpts around “agreement between you and OpenAI OpCo, LLC, a Delaware company”, cut at tag boundaries",
+      "note": "OpenAI’s terms of use: the contracting entity is OpenAI OpCo, LLC, a Delaware company."
+    },
+    {
+      "path": "fixtures/identifiers/xai-terms-of-service.html",
+      "source_id": "identifiers-xai-terms",
+      "source_url": "https://x.ai/legal/terms-of-service",
+      "fetched_at": "2026-11-05T04:43:49Z",
+      "http_status": 200,
+      "raw_bytes": 205141,
+      "trim": "byte-unchanged excerpts around “SpaceX Super Intelligence LLC is a Nevada company”, cut at tag boundaries",
+      "note": "xAI’s terms of service: the contracting entity is SpaceX Super Intelligence LLC, a Nevada company."
+    },
+    {
+      "path": "fixtures/identifiers/mistral-commercial-terms.html",
+      "source_id": "identifiers-mistral-terms",
+      "source_url": "https://legal.mistral.ai/terms/commercial-terms-of-service",
+      "fetched_at": "2026-11-05T04:47:51Z",
+      "http_status": 200,
+      "raw_bytes": 240090,
+      "trim": "a byte-unchanged 1,000-byte window of the page’s inline JSON around “952 418 325”, the sentence naming Mistral AI as the provider of its products",
+      "note": "Mistral’s commercial terms: Mistral AI, incorporated in Paris under number 952 418 325, the number GLEIF lists as its registeredAs."
+    },
+    {
+      "path": "fixtures/identifiers/deepseek-terms-of-use.html",
+      "source_id": "identifiers-deepseek-terms",
+      "source_url": "https://cdn.deepseek.com/policies/en-US/deepseek-terms-of-use.html",
+      "fetched_at": "2026-11-05T04:43:50Z",
+      "http_status": 200,
+      "raw_bytes": 39095,
+      "trim": "byte-unchanged excerpts around “Hangzhou DeepSeek Artificial Intelligence Co., Ltd.”, cut at tag boundaries",
+      "note": "DeepSeek’s terms of use: the services are operated by Hangzhou DeepSeek Artificial Intelligence Co., Ltd."
+    },
+    {
+      "path": "fixtures/identifiers/together-terms-of-service.html",
+      "source_id": "identifiers-together-terms",
+      "source_url": "https://www.together.ai/terms-of-service",
+      "fetched_at": "2026-11-05T04:43:52Z",
+      "http_status": 200,
+      "raw_bytes": 362020,
+      "trim": "byte-unchanged excerpts around “owned and operated by Together Computer, Inc., a Delaware corporation”, cut at tag boundaries",
+      "note": "Together AI’s terms: owned and operated by Together Computer, Inc., a Delaware corporation."
+    },
+    {
+      "path": "fixtures/identifiers/lambda-terms-of-service.html",
+      "source_id": "identifiers-lambda-terms",
+      "source_url": "https://lambda.ai/legal/terms-of-service",
+      "fetched_at": "2026-11-05T04:43:52Z",
+      "http_status": 200,
+      "raw_bytes": 161623,
+      "trim": "byte-unchanged excerpts around “Lambda, Inc. or its Affiliate”, cut at tag boundaries",
+      "note": "Lambda’s terms: a contract with Lambda, Inc., a Delaware company."
+    },
+    {
+      "path": "fixtures/identifiers/alphabet-10-k-2025-ex21.htm",
+      "source_id": "identifiers-alphabet-ex21",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000018/googexhibit2101q42025.htm",
+      "fetched_at": "2026-11-05T04:46:58Z",
+      "http_status": 200,
+      "raw_bytes": 3559,
+      "trim": "none — committed whole",
+      "note": "Exhibit 21.01 to Alphabet’s 10-K for 2025: Google LLC (Delaware) is a subsidiary of the registrant."
+    },
+    {
+      "path": "fixtures/identifiers/spacex-s-1-ex2-1.htm",
+      "source_id": "identifiers-spacex-ex2-1",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1181412/000162828026036936/exhibit21-sx1.htm",
+      "fetched_at": "2026-11-05T04:46:58Z",
+      "http_status": 200,
+      "raw_bytes": 763553,
+      "trim": "byte-unchanged excerpts around the title page (“X.AI HOLDINGS CORP.”) and the recitals naming xAI the surviving entity and a wholly owned subsidiary of SpaceX, cut at tag boundaries",
+      "note": "Exhibit 2.1 to SpaceX’s S-1 (the merger agreement with X.AI Holdings Corp.): xAI survives the merger as a wholly owned subsidiary of SpaceX."
+    },
+    {
+      "path": "fixtures/identifiers/alibaba-20-f-2026-ex8-1.htm",
+      "source_id": "identifiers-alibaba-ex8-1",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1577552/000119312526231755/baba-ex8_1.htm",
+      "fetched_at": "2026-11-05T04:46:59Z",
+      "http_status": 200,
+      "raw_bytes": 50302,
+      "trim": "none — committed whole",
+      "note": "Exhibit 8.1 to Alibaba’s 20-F for fiscal 2026: its subsidiaries, Alibaba Cloud Computing Ltd. among them."
+    },
+    {
+      "path": "fixtures/identifiers/anthropic-s-1-a-note-purchase.htm",
+      "source_id": "identifiers-anthropic-s-1-a-npa",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/anthropicpbc-sx1ax1.htm",
+      "fetched_at": "2026-11-05T04:45:49Z",
+      "http_status": 200,
+      "raw_bytes": 14311196,
+      "trim": "byte-unchanged excerpts around “through Google LLC”, cut at tag boundaries",
+      "note": "Anthropic’s S-1/A: note purchase agreements with Google (through Google LLC) and Amazon (through Amazon Web Services, Inc.)."
     }
   ]
 }

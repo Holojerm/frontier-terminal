@@ -135,6 +135,7 @@ describe('the table registry', () => {
       'exposure_quarters',
       'source_runs',
       'entity_securities',
+      'entity_identifiers',
     ])
     expect(exportTable('entities')).toBeNull()
     expect(exportTable('rankings_daily')).toBeNull()

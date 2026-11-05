@@ -223,6 +223,7 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       'exposure_quarters',
       'source_runs',
       'entity_securities',
+      'entity_identifiers',
     ])
   })
 

@@ -12,7 +12,7 @@
 // leak.
 //
 // Stateless and JSON on both protocol eras. Each request gets a fresh
-// McpServer — twenty-one registrations, cheap — so a Worker isolate holds no
+// McpServer — twenty-two registrations, cheap — so a Worker isolate holds no
 // session, and a client that reconnects to a different isolate notices
 // nothing. Legacy (2025-era) clients, which is every shipping client today,
 // are served through a per-request WebStandardStreamableHTTPServerTransport
@@ -73,6 +73,7 @@ import { gpuRunsStamp, queryGpuPrices } from './terminal-gpu'
 import { SHARE_WINDOW_DAYS, queryRankings } from './terminal-rankings'
 import { queryProspectus } from './terminal-prospectus'
 import { filedFactsStamp, queryExposure } from './terminal-exposure'
+import { identifiersPayload } from './terminal-identifiers'
 import { queryRevenue } from './terminal-revenue'
 import { PROVIDER_ORDER } from './terminal-sources'
 import { querySpend } from './terminal-spend'
@@ -712,6 +713,31 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
           await recipeRunsStamp(deps.db),
         ),
       ),
+  )
+
+  server.registerTool(
+    'get_identifiers',
+    {
+      title: 'Security-master identifiers',
+      description:
+        'identifiers: one row per company the site names (each lab, each SEC filer we read, each comparison company) with its legal name, ' +
+        'country, listing status (listed, registered, subsidiary, private), CIK, LEI and, when listed, ticker, MIC and US composite FIGI. ' +
+        'Each identifier has its own _source_url and _fetched_at, and a null LEI has its reason in lei_note. entity_id is the value of every ' +
+        'provider and company field in the other tools, so join on it. securities: which listed security carries each lab (self, a parent ' +
+        'that consolidates it, or an investor that discloses a stake) with disclosed_in, the filing that says so. A stake is never inferred ' +
+        'from press. Optional entity filter. ' +
+        PROVENANCE,
+      inputSchema: z.object({
+        entity: z
+          .string()
+          .regex(/^[a-z][a-z-]{0,39}$/)
+          .optional()
+          .describe('An entity_id, e.g. anthropic, alphabet, microsoft.'),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ entity }) =>
+      json(await deps.serve('identifiers', async () => identifiersPayload(entity), entity ?? '')),
   )
 
   server.registerTool(

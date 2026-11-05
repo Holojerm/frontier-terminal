@@ -1,0 +1,75 @@
+{
+ "cik": "0002130357",
+ "entityType": "other",
+ "sic": "7372",
+ "sicDescription": "Services-Prepackaged Software",
+ "ownerOrg": "06 Technology",
+ "insiderTransactionForOwnerExists": 0,
+ "insiderTransactionForIssuerExists": 0,
+ "name": "Anthropic, PBC",
+ "tickers": [
+  "ANT"
+ ],
+ "exchanges": [
+  null
+ ],
+ "ein": "861696045",
+ "lei": null,
+ "description": "",
+ "website": "",
+ "investorWebsite": "",
+ "category": "",
+ "fiscalYearEnd": "1231",
+ "stateOfIncorporation": "DE",
+ "stateOfIncorporationDescription": "DE",
+ "addresses": {
+  "mailing": {
+   "street1": "548 MARKET STREET",
+   "street2": "PMB 90375",
+   "city": "SAN FRANCISCO",
+   "stateOrCountry": "CA",
+   "zipCode": "94104",
+   "stateOrCountryDescription": "CA",
+   "isForeignLocation": 0,
+   "foreignStateTerritory": null,
+   "country": null,
+   "countryCode": null
+  },
+  "business": {
+   "street1": "548 MARKET STREET",
+   "street2": "PMB 90375",
+   "city": "SAN FRANCISCO",
+   "stateOrCountry": "CA",
+   "zipCode": "94104",
+   "stateOrCountryDescription": "CA",
+   "isForeignLocation": null,
+   "foreignStateTerritory": null,
+   "country": null,
+   "countryCode": null
+  }
+ },
+ "phone": "415-236-0599",
+ "flags": "",
+ "formerNames": [],
+ "filings": {
+  "recent": {
+   "accessionNumber": [],
+   "filingDate": [],
+   "reportDate": [],
+   "acceptanceDateTime": [],
+   "act": [],
+   "form": [],
+   "fileNumber": [],
+   "filmNumber": [],
+   "items": [],
+   "core_type": [],
+   "size": [],
+   "isXBRL": [],
+   "isInlineXBRL": [],
+   "isXBRLNumeric": [],
+   "primaryDocument": [],
+   "primaryDocDescription": []
+  },
+  "files": []
+ }
+}

@@ -2,9 +2,13 @@ import { describe, expect, it } from 'vitest'
 
 import { parseCikWhitelistBlock } from '../server/pipeline/parsers/sec/whitelist'
 import { SEC_REVENUE_CRWV } from '../server/theses/recipes/sec-revenue'
-import { ENTITY_SECURITIES, ENTITY_SECURITY_COLUMNS } from '../server/utils/terminal-entities'
+import {
+  DISCLOSED,
+  ENTITY_SECURITIES,
+  ENTITY_SECURITY_COLUMNS,
+} from '../server/utils/terminal-entities'
 import { PROVIDER_ORDER } from '../server/utils/terminal-sources'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText, manifest } from './pipeline/fixtures'
 
 // The security map is hand-written, so every number in it is checked against
 // what the terminal already stores: a CIK against sources.yaml or a recipe, a
@@ -84,5 +88,70 @@ describe('ENTITY_SECURITIES', () => {
       .replace(/&#8220;/g, '“')
       .replace(/&#8221;/g, '”')
     expect(prospectus).toMatch(/Nasdaq Global Select Market\s*under the\s*symbol\s*“ANT\.”/)
+  })
+
+  it('gives each security the MIC and FIGI OpenFIGI lists for its symbol', () => {
+    const calls = JSON.parse(fixtureText('fixtures/identifiers/openfigi-mapping.json')) as {
+      request: { idValue: string; exchCode?: string; micCode?: string }[]
+      response: { data?: { figi: string; compositeFIGI: string }[] }[]
+    }[]
+    const hit = (symbol: string, key: 'exchCode' | 'micCode', value: string) =>
+      calls.flatMap((c) =>
+        c.request.flatMap((j, i) =>
+          j.idValue === symbol && j[key] === value ? (c.response[i]!.data ?? []) : [],
+        ),
+      )
+    for (const row of ENTITY_SECURITIES) {
+      if (!row.symbol) {
+        expect(row.figi, row.entity).toBeNull()
+        continue
+      }
+      expect(
+        hit(row.symbol, 'exchCode', 'US').map((d) => d.figi),
+        row.symbol,
+      ).toContain(row.figi)
+      expect(
+        hit(row.symbol, 'micCode', row.mic!).map((d) => d.compositeFIGI),
+        row.symbol,
+      ).toContain(row.figi)
+    }
+  })
+
+  // The evidence each parent or investor row rests on, in the filing it cites.
+  const EVIDENCE: Record<string, RegExp> = {
+    [DISCLOSED.msftOpenai]: /msft:OpenAIGlobalLlcMember/,
+    [DISCLOSED.amznAnthropic]: /amzn:AnthropicMember/,
+    [DISCLOSED.anthropicNotePurchase]:
+      /NPAs with each of Google \(through Google LLC\), Amazon \(through Amazon Web Services, Inc\.\)/,
+    [DISCLOSED.alphabetSubsidiaries]: /Google LLC\s+Delaware/,
+    [DISCLOSED.spacexMerger]:
+      /xAI will continue as the surviving entity of the First Merger .* as a wholly owned subsidiary of SpaceX\./,
+    [DISCLOSED.alibabaSubsidiaries]: /Alibaba Cloud Computing Ltd\. \(PRC\)/,
+  }
+
+  it('cites the filing that discloses every parent and investor, and says what it shows', () => {
+    const manifestFixtures = manifest.fixtures as { path: string; source_url: string }[]
+    for (const row of ENTITY_SECURITIES) {
+      if (row.relationship === 'self' || row.relationship === 'none') {
+        expect(row.disclosed_in, `${row.entity} ${row.symbol}`).toBeNull()
+        continue
+      }
+      // A filing can have more than one excerpt committed; one of them shows it.
+      const url = row.disclosed_in!
+      const bodies = manifestFixtures
+        .filter((f) => f.source_url === url)
+        .map((f) =>
+          fixtureText(f.path)
+            .replace(/<[^>]+>/g, ' ')
+            .replace(/&#8220;|&#8221;/g, '"')
+            .replace(/&#160;|&nbsp;/g, ' ')
+            .replace(/\s+/g, ' '),
+        )
+      expect(bodies.length, url).toBeGreaterThan(0)
+      expect(
+        bodies.some((b) => EVIDENCE[url]!.test(b)),
+        url,
+      ).toBe(true)
+    }
   })
 })
