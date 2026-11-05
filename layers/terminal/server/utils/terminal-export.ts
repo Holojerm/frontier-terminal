@@ -1488,13 +1488,14 @@ export async function* exportPages(
   db: PipelineDb,
   table: ExportTable,
   where?: SQL,
+  pageSize: number = EXPORT_PAGE_SIZE,
 ): AsyncGenerator<Row[]> {
   let after: Row | null = null
   for (;;) {
-    const rows = await table.page(db, after, EXPORT_PAGE_SIZE, where)
+    const rows = await table.page(db, after, pageSize, where)
     if (rows.length === 0) return
     yield rows
-    if (rows.length < EXPORT_PAGE_SIZE) return
+    if (rows.length < pageSize) return
     after = rows.at(-1)!
   }
 }

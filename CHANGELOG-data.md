@@ -23,6 +23,14 @@ whose columns don't match the releases in
 `layers/terminal/server/utils/data-schema.ts`, or whose version bump is smaller
 than its changes need.
 
+## 1.5.1 (2026-11-05)
+
+The Parquet bulk files are compressed with gzip instead of zstd. zstd in the
+Workers runtime failed on any page that compressed to more than about 40 KB,
+so the largest tables (snapshots, jobs_open) had no Parquet file at all.
+Parquet readers pick the codec up from each file, so nothing changes for you.
+No columns changed, and a file built under 1.5.0 is still valid.
+
 ## 1.5.0 (2026-11-05)
 
 Hiring history from before we read the labs' job boards, read from the

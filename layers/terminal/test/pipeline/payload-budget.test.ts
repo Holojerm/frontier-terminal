@@ -9,6 +9,7 @@ import { CAREERS_SOURCES, sourceIdsForScope } from '../../server/pipeline/scopes
 import { includeSources, type FetchSource } from '../../server/pipeline/sources'
 import { TRIPWIRE_REFRESH } from '../../server/pipeline/tripwire'
 import { RECIPES } from '../../server/theses/recipes/registry'
+import { BULK_PAGE_SIZE } from '../../server/utils/terminal-bulk'
 import { PARQUET_ROW_GROUP_BYTES } from '../../server/utils/terminal-parquet'
 
 // The payload-size gate. Every cron invocation is one Worker isolate with
@@ -294,9 +295,10 @@ describe('payload budget', () => {
 })
 
 // The bulk build (tasks/bulk/build.ts, hourly at :41) runs in an invocation of
-// its own and holds one cut of one table at a time: the gzipped CSV and the
-// Parquet file so far, each copied once more when it is finished, plus one
-// Parquet row group of decoded rows. The row group is what grows with a
+// its own. It builds every cut in that one invocation, one after another, and
+// holds one at a time: the gzipped CSV and the Parquet file so far, each
+// copied once more when it is finished, one D1 page (BULK_PAGE_SIZE rows), and
+// one Parquet row group of decoded rows. The row group is what grows with a
 // table's width, so PARQUET_ROW_GROUP_BYTES caps it in characters of cell
 // text, whatever the table.
 //
@@ -306,16 +308,20 @@ describe('payload budget', () => {
 // gzipped CSV and 1.4 MB as Parquet, and the heap grew at most 22 MB while a
 // table was written (source_runs). DECODED_FACTOR sizes a group's heap from its
 // text: UTF-16 doubles it, and each row's object, boxed values, BigInts and
-// Dates add about as much again.
+// Dates add about as much again. WIDEST_ROW is changes' average row as JSON
+// (10.7 MB over 9,836 rows), for the D1 page.
 describe('bulk build memory', () => {
   const LARGEST_CSV_GZ = 2_203_529
-  const LARGEST_PARQUET = 1_366_838
+  const LARGEST_PARQUET = 1_360_569
   const DECODED_FACTOR = 4
+  const WIDEST_ROW = 1_090
 
   test('one cut of a table ten times today’s largest fits the lane budget', () => {
     const files = 10 * (LARGEST_CSV_GZ + LARGEST_PARQUET) * 2
     const rowGroup = PARQUET_ROW_GROUP_BYTES * DECODED_FACTOR
+    const page = BULK_PAGE_SIZE * WIDEST_ROW * DECODED_FACTOR
     expect(rowGroup).toBeLessThanOrEqual(SOURCE_BUDGET)
-    expect(files + rowGroup).toBeLessThan(LANE_BUDGET)
+    expect(page).toBeLessThanOrEqual(SOURCE_BUDGET)
+    expect(files + rowGroup + page).toBeLessThan(LANE_BUDGET)
   })
 })

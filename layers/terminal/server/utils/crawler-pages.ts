@@ -127,7 +127,7 @@ const INSTITUTIONS: LlmsTxtSection = {
       path: '/export/bulk/manifest.json',
       title: 'Bulk manifest',
       description:
-        'One gzipped CSV per table, rebuilt once a day, and the same rows as Parquet (zstd, columns typed by the data dictionary) under parquet. Each entry has the file URL, rows, bytes, SHA-256, generated_at, schema_version, and license. Without a key it lists the trailing-window files (CC BY 4.0). Sync by comparing SHA-256s. The manifest and files answer If-None-Match with a 304, and the files answer Range requests, so DuckDB can read a Parquet URL in place.',
+        'One gzipped CSV per table, rebuilt once a day, and the same rows as Parquet (gzip, columns typed by the data dictionary) under parquet. Each entry has the file URL, rows, bytes, SHA-256, generated_at, schema_version, and license. Without a key it lists the trailing-window files (CC BY 4.0). Sync by comparing SHA-256s. The manifest and files answer If-None-Match with a 304, and the files answer Range requests, so DuckDB can read a Parquet URL in place.',
     },
     {
       path: '/data#institutions-s3',

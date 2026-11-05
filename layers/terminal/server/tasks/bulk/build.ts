@@ -2,7 +2,8 @@
 // Hourly at :41, so it never shares an invocation with the survey (:00) or the
 // careers lane (:17). A run builds only what isn't built yet today, so most
 // hours it reads the index and stops. A file that fails is spooled for the ops
-// digest and retried next hour, with yesterday's copy still served.
+// digest and retried next hour, after everything else, with yesterday's copy
+// still served.
 //
 // The licensed bucket arrives on the env Nitro hands a scheduled task
 // (server/utils/ops-mail.ts says why that beats `cloudflare:workers`). Without

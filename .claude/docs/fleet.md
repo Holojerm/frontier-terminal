@@ -103,13 +103,23 @@ bun run webhooks:remove -- --id whk_0a1b2c3d4e [--remote]
 ## Bulk feed: Parquet and S3 grants (licensees)
 
 `bulk:build` (hourly at :41, `layers/terminal/server/utils/terminal-bulk.ts`) writes
-each table's `recent` and `full` cuts as a gzipped CSV and a zstd Parquet file
+each table's `recent` and `full` cuts as a gzipped CSV and a gzip Parquet file
 (`terminal-parquet.ts`) to `BLOB`, from one pass over the table. The `full`
 files and a manifest are also copied to `frontier-terminal-bulk-licensed`
 (binding `BULK_LICENSED`), which holds nothing else. That bucket is what a
 licensee's S3 credentials open, read-only, so they can never reach the raw
 payloads in `BLOB`. Without the binding the build runs and makes no copies; once
 it appears, the next run rebuilds the `full` cuts to fill the bucket.
+
+How a run spends its time: up to `BUILD_BUDGET_MS` (8 minutes of the cron's
+15) starting cuts, smallest first, reading D1 `BULK_PAGE_SIZE` rows at a time,
+and saving the index (`BULK_INDEX_PATH` in R2) after each cut. It also stops at `D1_READ_BUDGET`
+planned queries, under D1's per-invocation query limit (a full rebuild needed
+~370 on 2026-11-05). A cut that failed today is tried
+last (`index.failures` says why), so it can't stall the rest. A schema release
+rebuilds only the tables it lists. A cold rebuild of every cut fits one run.
+If the feed stalls, compare `bulk_build_failed` ops events with the run's wall
+and CPU time in Workers observability (filter `$workers.event.cron` = `41 * * * *`).
 
 One-time setup (owner):
 
