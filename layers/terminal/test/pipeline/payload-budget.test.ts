@@ -9,6 +9,7 @@ import { CAREERS_SOURCES, sourceIdsForScope } from '../../server/pipeline/scopes
 import { includeSources, type FetchSource } from '../../server/pipeline/sources'
 import { TRIPWIRE_REFRESH } from '../../server/pipeline/tripwire'
 import { RECIPES } from '../../server/theses/recipes/registry'
+import { PARQUET_ROW_GROUP_BYTES } from '../../server/utils/terminal-parquet'
 
 // The payload-size gate. Every cron invocation is one Worker isolate with
 // 128 MB, and the poll loop holds each payload several times over (wire bytes,
@@ -289,5 +290,32 @@ describe('payload budget', () => {
   test('sizes an unrecorded source by its closest sibling', () => {
     expect(sizeOf('npm-openai')?.from).toBe('sized like npm-claude-code')
     expect(sizeOf('limits-openai-gpt-5-6-luna')?.from).toBe('sized like limits-openai-gpt-6-astra')
+  })
+})
+
+// The bulk build (tasks/bulk/build.ts, hourly at :41) runs in an invocation of
+// its own and holds one cut of one table at a time: the gzipped CSV and the
+// Parquet file so far, each copied once more when it is finished, plus one
+// Parquet row group of decoded rows. The row group is what grows with a
+// table's width, so PARQUET_ROW_GROUP_BYTES caps it in characters of cell
+// text, whatever the table.
+//
+// Measured 2026-11-05 on the production feed's full history (every table
+// rebuilt from /export/<table>.json?history=full with the build's own
+// parquetBuilder): the largest files are snapshots' (61,729 rows), 2.2 MB as
+// gzipped CSV and 1.4 MB as Parquet, and the heap grew at most 22 MB while a
+// table was written (source_runs). DECODED_FACTOR sizes a group's heap from its
+// text: UTF-16 doubles it, and each row's object, boxed values, BigInts and
+// Dates add about as much again.
+describe('bulk build memory', () => {
+  const LARGEST_CSV_GZ = 2_203_529
+  const LARGEST_PARQUET = 1_366_838
+  const DECODED_FACTOR = 4
+
+  test('one cut of a table ten times today’s largest fits the lane budget', () => {
+    const files = 10 * (LARGEST_CSV_GZ + LARGEST_PARQUET) * 2
+    const rowGroup = PARQUET_ROW_GROUP_BYTES * DECODED_FACTOR
+    expect(rowGroup).toBeLessThanOrEqual(SOURCE_BUDGET)
+    expect(files + rowGroup).toBeLessThan(LANE_BUDGET)
   })
 })

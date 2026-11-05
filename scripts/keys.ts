@@ -25,6 +25,7 @@ import {
   keyRefusal,
 } from '../layers/terminal/server/utils/api-key-token'
 import { USAGE_PREFIX } from '../layers/terminal/server/utils/api-key-usage'
+import { liveGrantCount, revokeGrants } from './bulk-grant'
 import { ROOT, fail, lit, parseArgs, runSql } from './lib/d1-cli'
 
 const run = runSql
@@ -80,6 +81,17 @@ function revoke(flags: Map<string, string | true>, remote: boolean) {
   console.error(
     `Revoked ${id} (${String(rows[0]!.client)}). Requests with it get a 401 within a minute.`,
   )
+  // The key's S3 grants (scripts/bulk-grant.ts) go with it.
+  if (liveGrantCount(remote, id) === 0) return
+  if (!process.env.BULK_GRANT_API_TOKEN) {
+    console.error(
+      `${id} still has live S3 grants. Revoke them with BULK_GRANT_API_TOKEN set: bun run bulk:grant -- --key ${id} --revoke${remote ? ' --remote' : ''}`,
+    )
+    process.exitCode = 1
+    return
+  }
+  const grants = revokeGrants(remote, `api_key_id = ${lit(id)}`, 'key-revoked')
+  console.error(`Revoked its S3 grants too: ${grants.join(', ')}.`)
 }
 
 /** Requests per key id per day, from the usage shards' KV metadata (api-key-usage.ts). */

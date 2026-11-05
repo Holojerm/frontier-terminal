@@ -108,7 +108,13 @@ const INSTITUTIONS: LlmsTxtSection = {
       path: '/export/bulk/manifest.json',
       title: 'Bulk manifest',
       description:
-        'One gzipped CSV per table, rebuilt once a day. Each entry has the file URL, rows, bytes, SHA-256, generated_at, schema_version, and license. Without a key it lists the trailing-window files (CC BY 4.0). Sync by comparing SHA-256s. The manifest and files answer If-None-Match with a 304.',
+        'One gzipped CSV per table, rebuilt once a day, and the same rows as Parquet (zstd, columns typed by the data dictionary) under parquet. Each entry has the file URL, rows, bytes, SHA-256, generated_at, schema_version, and license. Without a key it lists the trailing-window files (CC BY 4.0). Sync by comparing SHA-256s. The manifest and files answer If-None-Match with a 304, and the files answer Range requests, so DuckDB can read a Parquet URL in place.',
+    },
+    {
+      path: '/data#institutions-s3',
+      title: 'S3 access for licensees',
+      description:
+        'Licensees can also read the full-history files, CSV and Parquet, from an S3-compatible bucket (Cloudflare R2) with read-only credentials issued with their key. The bucket holds full/<table>.csv.gz, full/<table>.parquet, and manifest.json, and nothing else. Credentials end when the key does. Issued by email, never self-serve.',
     },
     {
       path: '/data#institutions',
