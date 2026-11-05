@@ -64,6 +64,10 @@ The `useSeo()` one-call-per-page contract, how `publicPage` meta feeds both `sit
   and an answer engine's citation print, so it names what an analyst types ("AI lab revenue
   from SEC filings", "Anthropic: API pricing, revenue, hiring, outages"); the page's `<h1>` stays
   the short label.
+- **The lede is the quotable sentence.** Lab and SKU pages open with plain sentences built from
+  the figures beside them (`layers/terminal/shared/utils/terminal-ledes.ts`): lab, number, unit,
+  date. Answer engines quote a sentence, not a tile. A missing figure drops its sentence. A
+  price is dated exactly only when we saw it change, otherwise "since at least".
 - **A dated claim is an `Article`.** Alert permalinks use `articleSchema()` with `citation` set to
   the source URLs of the change rows the page renders, so a quote lands back on the primary
   documents.
