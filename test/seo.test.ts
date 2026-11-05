@@ -156,6 +156,15 @@ describe('organizationSchema / websiteSchema / webPageSchema', () => {
     expect(organizationSchema({ ...SITE, repoUrl: '' })).not.toHaveProperty('sameAs')
   })
 
+  it('lists the configured profiles after the repo, once each', () => {
+    const sameAs = ['https://x.com/frontierterm', 'https://github.com/Holojerm/frontier-terminal']
+    expect(organizationSchema({ ...SITE, sameAs })?.sameAs).toEqual([
+      'https://github.com/Holojerm/frontier-terminal',
+      'https://x.com/frontierterm',
+    ])
+    expect(organizationSchema({ ...SITE, repoUrl: '', sameAs })?.sameAs).toEqual(sameAs)
+  })
+
   it('links a page back to the site graph', () => {
     const node = webPageSchema(SITE, {
       url: 'https://example.com/filings',
