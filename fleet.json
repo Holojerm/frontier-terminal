@@ -112,6 +112,7 @@
       "server/utils/notifications.ts",
       "server/utils/onboarding.ts",
       "server/utils/ops-digest.ts",
+      "server/utils/ops-severity.ts",
       "server/utils/ops.ts",
       "server/utils/posthog.ts",
       "server/utils/public-routes.ts",

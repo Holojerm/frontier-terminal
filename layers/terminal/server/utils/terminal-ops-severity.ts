@@ -1,24 +1,25 @@
-// How loud each ops event is, for the digest (server/tasks/ops/alert.ts).
+// This app's tiers for its ops event kinds, registered with core's
+// registry (server/utils/ops-severity.ts) by plugins/ops-severity.ts.
 //
 // The tiers are about what the owner has to do, not how alarming the word in
 // the kind sounds:
 //
 // - critical — the product has stopped doing its job: no data is coming in,
-//   no alert is being judged, or the site is failing requests wholesale. The
+//   no alert is being judged, or the site is failing requests wholesale (core
+//   escalates server_error itself, at SERVER_ERROR_CRITICAL_COUNT). The
 //   digest subject leads with [Critical]; filter on it to make the phone buzz.
 // - warning — one part is degraded or stale. Worth a look today.
 // - info — the system handled it, or it is a setup state already known. These
 //   wait up to a day (OPS_INFO_HOLD_MS) unless something louder goes out first.
 //
 // A kind missing from the table is a warning: a new failure path should be
-// seen before anyone decides it can be quiet.
+// seen before anyone decides it can be quiet. Add a kind here when you add its
+// recordOpsEvent call.
 
-import type { OpsClassifier, OpsKindPolicy } from '#server/utils/ops-digest'
+import type { OpsKindPolicy } from '#server/utils/ops-digest'
+import { registerOpsSeverity } from '#server/utils/ops-severity'
 
-/** A burst of 5xxs inside one digest window means the site is broken, not one route. */
-export const SERVER_ERROR_CRITICAL_COUNT = 10
-
-const POLICIES: Record<string, OpsKindPolicy> = {
+export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   // ── critical ────────────────────────────────────────────────────────────
   judge_silent: {
     severity: 'critical',
@@ -74,14 +75,6 @@ const POLICIES: Record<string, OpsKindPolicy> = {
   source_unconfigured: { severity: 'info' },
 }
 
-const SERVER_ERROR_ACTION =
-  'Many requests are failing at once. Open the logs; check /api/status for pending migrations.'
-
-export const classifyTerminalOps: OpsClassifier = (kind, count) => {
-  if (kind === 'server_error') {
-    return count >= SERVER_ERROR_CRITICAL_COUNT
-      ? { severity: 'critical', action: SERVER_ERROR_ACTION }
-      : { severity: 'warning' }
-  }
-  return POLICIES[kind] ?? { severity: 'warning' }
+export function registerTerminalOpsSeverity(): void {
+  registerOpsSeverity(TERMINAL_OPS_SEVERITY)
 }

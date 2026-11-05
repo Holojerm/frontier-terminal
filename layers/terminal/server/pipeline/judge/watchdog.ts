@@ -17,7 +17,7 @@ import { JUDGE_OPS_PATH } from './submit'
 // before it reaches the API — the only evidence is the absence of
 // judge_runs rows. The routine runs hourly, so three hours of owed changes
 // with no run is three missed runs: an outage, and a critical line in the ops
-// digest (layers/terminal/server/utils/ops-severity.ts). The marker in KV
+// digest (layers/terminal/server/utils/terminal-ops-severity.ts). The marker in KV
 // repeats it every six hours while it lasts rather than every 30-minute tick.
 // The run itself reports success while blocked (a 403 from its environment's
 // proxy ends the run cleanly), so this is the only check that sees it.
