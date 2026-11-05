@@ -2141,6 +2141,66 @@ archive_sources:
       CC BY-NC 4.0 even under a licensee's key: the Archive's terms are for
       scholarship and research, so they stay off anything sold.
 
+# Where entity_identifiers and entity_securities get their identifiers
+# (layers/terminal/server/utils/terminal-identifiers.ts). Read by hand when the
+# registry changes, never on a schedule. Every response is committed under
+# fixtures/identifiers/ and the tests check each value against it.
+identifier_sources:
+  sec-identifiers:
+    url: https://www.sec.gov/files/company_tickers_exchange.json
+    format: JSON (CIK, name, ticker, exchange), each company's submissions feed, and the filing exhibits that name a parent or investor
+    verdict: include
+    terms: >-
+      US government work, not under copyright (17 U.S.C. 105). SEC fair-access
+      policy (sec.gov/search-filings/edgar-search-assistance/accessing-edgar-data):
+      a declared User-Agent naming a contact, under 10 requests a second.
+      sec.gov/robots.txt disallows site paths such as /search/ and /admin/,
+      never /files/ or /Archives/. data.sec.gov has no robots.txt (404).
+      Taken: each company's CIK, ticker and exchange, and the sentences in a
+      filing that name a parent or an investor. Read 2026-11-05.
+    rights: ours
+  gleif-lei:
+    url: https://api.gleif.org/api/v1/lei-records
+    format: JSON:API
+    verdict: include
+    license: CC0 1.0 (gleif.org/en/meta/lei-data-terms-of-use, read 2026-11-05)
+    terms: >-
+      GLEIF's LEI data terms of use (gleif.org/en/meta/lei-data-terms-of-use):
+      "The data available through the Access Service are provided under the
+      CC0 licence". api.gleif.org/robots.txt allows everything. Taken: each
+      company's LEI, legal name, country, jurisdiction, registration number
+      and status. Read 2026-11-05.
+    rights: upstream
+  openfigi-mapping:
+    url: https://api.openfigi.com/v3/mapping
+    format: JSON (POST, 10 jobs a request without a key)
+    verdict: include
+    license: FIGI identifiers are free for any use, commercial or not (openfigi.com/docs/terms-of-service, read 2026-11-05)
+    terms: >-
+      OpenFIGI's terms (openfigi.com/docs/terms-of-service): "FIGI Identifiers
+      may be freely reproduced, distributed, transmitted, used, modified, built
+      upon, or otherwise exploited by anyone for any purpose, commercial or
+      non-commercial". api.openfigi.com has no robots.txt (404) and
+      www.openfigi.com/robots.txt disallows only /search. Taken: each listed
+      ticker's composite and share-class FIGI, and whether it has a listing
+      under the MIC its EDGAR exchange implies. Read 2026-11-05.
+    rights: upstream
+  lab-legal-pages:
+    url: https://openai.com/policies/terms-of-use/
+    format: HTML, one page per company (the registry names each)
+    verdict: include
+    terms: >-
+      Each company's own terms page, read once for the name of the company
+      you contract with: openai.com/policies/terms-of-use,
+      x.ai/legal/terms-of-service,
+      legal.mistral.ai/terms/commercial-terms-of-service,
+      cdn.deepseek.com/policies/en-US/deepseek-terms-of-use.html,
+      together.ai/terms-of-service and lambda.ai/legal/terms-of-service. Each
+      robots.txt allows the page (cdn.deepseek.com has none). We didn't review
+      each site's terms for reuse. Taken: the legal name and where it's
+      incorporated. Read 2026-11-05.
+    rights: not-cleared
+
 # Department clusters read off the hiring boards. A cluster is a name match
 # over each board's own department labels: a department belongs when its
 # name contains one of `terms` as a whole word (case-insensitive) and none of

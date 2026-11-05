@@ -55,8 +55,27 @@ export function llmsTxtInput(config: {
       description: table.description,
     })),
     repoUrl: manifest.links.github ?? '',
-    sections: [DICTIONARY, POINT_IN_TIME, INSTITUTIONS],
+    sections: [DICTIONARY, IDENTIFIERS, POINT_IN_TIME, INSTITUTIONS],
   }
+}
+
+/** The security-master join (terminal-identifiers.ts, /data#security-master). */
+const IDENTIFIERS: LlmsTxtSection = {
+  heading: 'Joining to your security master',
+  links: [
+    {
+      path: '/api/identifiers',
+      title: 'Identifiers API',
+      description:
+        'One row per company we name, with its legal name, country, listing status, CIK, LEI, and for a listed company its ticker, MIC, and US composite FIGI. Each identifier has the URL and time we read it from SEC, GLEIF, or OpenFIGI, and a null LEI says why. securities lists which listed security carries each lab (itself, a parent, or a disclosed investor) and the filing that discloses it. Add ?entity=<id> for one company. The MCP tool is get_identifiers.',
+    },
+    {
+      path: '/export/entity_identifiers.csv',
+      title: 'entity_identifiers export',
+      description:
+        'The same rows as a CSV or JSON download. entity_id is the value of every provider and company column in the other tables, so join on it. Tables with cik or ticker join on those too. The data dictionary names each table’s join columns.',
+    },
+  ],
 }
 
 /** The per-column documentation of the tables above (terminal-dictionary.ts). */
@@ -67,7 +86,7 @@ const DICTIONARY: LlmsTxtSection = {
       path: `/export/${DICTIONARY_NAME}.json`,
       title: 'Data dictionary (JSON)',
       description:
-        'Every exported column of every table, with its type (text, integer, number, ISO-8601 timestamp, date, JSON, boolean), unit, whether it can be null, whether it is part of the row key or provenance, and what it holds. Each table also says how ?as_of= answers. The same entries are on /data, one section per table.',
+        'Every exported column of every table, with its type (text, integer, number, ISO-8601 timestamp, date, JSON, boolean), unit, whether it can be null, whether it is part of the row key or provenance, and what it holds. Each table also gives its grain, update cadence, event-time and knowledge-time columns, how ?as_of= answers, where its history starts, the identifier columns to join on, and whether a licensee can use it commercially (from each source’s rights in sources.yaml). sources lists every source’s commercial-use answer. The same entries are on /data, one section per table.',
     },
     {
       path: `/export/${DICTIONARY_NAME}.csv`,

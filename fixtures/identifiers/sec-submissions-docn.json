@@ -1,0 +1,81 @@
+{
+ "cik": "0001582961",
+ "entityType": "operating",
+ "sic": "7370",
+ "sicDescription": "Services-Computer Programming, Data Processing, Etc.",
+ "ownerOrg": "06 Technology",
+ "insiderTransactionForOwnerExists": 0,
+ "insiderTransactionForIssuerExists": 1,
+ "name": "DigitalOcean Holdings, Inc.",
+ "tickers": [
+  "DOCN"
+ ],
+ "exchanges": [
+  "NYSE"
+ ],
+ "ein": "000000000",
+ "lei": null,
+ "description": "",
+ "website": "",
+ "investorWebsite": "",
+ "category": "Large accelerated filer",
+ "fiscalYearEnd": "1231",
+ "stateOfIncorporation": "DE",
+ "stateOfIncorporationDescription": "DE",
+ "addresses": {
+  "mailing": {
+   "street1": "105 EDGEVIEW DRIVE",
+   "street2": "SUITE 425",
+   "city": "BROOMFIELD",
+   "stateOrCountry": "CO",
+   "zipCode": "80021",
+   "stateOrCountryDescription": "CO",
+   "isForeignLocation": 0,
+   "foreignStateTerritory": null,
+   "country": null,
+   "countryCode": null
+  },
+  "business": {
+   "street1": "105 EDGEVIEW DRIVE",
+   "street2": "SUITE 425",
+   "city": "BROOMFIELD",
+   "stateOrCountry": "CO",
+   "zipCode": "80021",
+   "stateOrCountryDescription": "CO",
+   "isForeignLocation": null,
+   "foreignStateTerritory": null,
+   "country": null,
+   "countryCode": null
+  }
+ },
+ "phone": "6468274366",
+ "flags": "",
+ "formerNames": [
+  {
+   "name": "Digital Ocean, Inc.",
+   "from": "2013-07-31T00:00:00.000Z",
+   "to": "2015-07-14T00:00:00.000Z"
+  }
+ ],
+ "filings": {
+  "recent": {
+   "accessionNumber": [],
+   "filingDate": [],
+   "reportDate": [],
+   "acceptanceDateTime": [],
+   "act": [],
+   "form": [],
+   "fileNumber": [],
+   "filmNumber": [],
+   "items": [],
+   "core_type": [],
+   "size": [],
+   "isXBRL": [],
+   "isInlineXBRL": [],
+   "isXBRLNumeric": [],
+   "primaryDocument": [],
+   "primaryDocDescription": []
+  },
+  "files": []
+ }
+}

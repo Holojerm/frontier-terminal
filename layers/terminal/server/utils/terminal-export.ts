@@ -50,6 +50,7 @@ import {
   rewindEntities,
 } from './terminal-asof'
 import { ENTITY_SECURITIES, ENTITY_SECURITY_COLUMNS } from './terminal-entities'
+import { ENTITY_IDENTIFIERS, ENTITY_IDENTIFIER_COLUMNS } from './terminal-identifiers'
 import { buildSeries } from '../exposure/series'
 import { filedBefore } from './terminal-exposure'
 import { byString } from './terminal-json'
@@ -1030,6 +1031,13 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     ENTITY_SECURITIES,
     'it’s a hand-checked table kept in code, and each row is dated by its checked_on.',
   ),
+  entity_identifiers: staticTable(
+    'entity_identifiers',
+    'One row per company we name: each lab, each SEC filer we read, and each comparison company. Each row has the legal name, country, CIK, LEI, and for a listed company its ticker, MIC, and FIGI. Every identifier has the URL and time we read it. entity_id is the value of every provider and company column, so this is the table to join on.',
+    ENTITY_IDENTIFIER_COLUMNS,
+    ENTITY_IDENTIFIERS,
+    'it’s a registry kept in code, and each identifier is dated by its own fetched_at.',
+  ),
 }
 
 export const EXPORT_TABLE_NAMES = Object.keys(EXPORT_TABLES)
@@ -1183,6 +1191,7 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
     tables.sourceRuns.started_at,
   ),
   entity_securities: whole('it’s a hand-checked lookup of labs to securities.', null),
+  entity_identifiers: whole('it’s a lookup of one row per company.', null),
 }
 
 /** The license window's rule for a registered table. */
