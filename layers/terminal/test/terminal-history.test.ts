@@ -530,6 +530,8 @@ describe('after a baseline and a second poll', () => {
     const history = Object.fromEntries(keys.map((k) => [k.entity_key, k.history]))
     expect(history[GROK]).toBe(true)
     expect(history['model:anthropic:claude-sonnet-5']).toBe(false)
+    // Listed on the second poll and never revised: one price, so not listed.
+    expect(history['model:xai:grok-5-preview:standard']).toBe(false)
     const listed = sitemapPriceKeys(keys).map((k) => k.entity_key)
     expect(listed).toContain(GROK)
     expect(listed).toContain('model:anthropic:claude-sonnet-5')
