@@ -1,12 +1,15 @@
 // An export table as an Apache Parquet file, for the bulk feed
 // (terminal-bulk.ts). Same rows and columns as the CSV, typed by the data
-// dictionary (terminal-dictionary.ts › COLUMN_DOCS), zstd-compressed.
+// dictionary (terminal-dictionary.ts › COLUMN_DOCS), gzip-compressed.
 //
 // The writer is hyparquet-writer: plain JavaScript, so it runs in workerd with
-// no WASM to instantiate. Its own codec is snappy; zstd comes from workerd's
+// no WASM to instantiate. Its own codec is snappy; gzip comes from workerd's
 // node:zlib (nodejs_compat), and on the production tables it writes files
 // about a third smaller than snappy and a quarter smaller than the gzipped
-// CSV. It is fed one row group at a time and flushes each group's bytes out of
+// CSV. Not zstd: workerd's zstdCompressSync throws "Unexpected end of file"
+// once a page compresses to more than ~40 KB, which failed every build of
+// snapshots and jobs_open on 2026-11-05 (layers/terminal/test/terminal-parquet.test.ts
+// keeps a page that size in the tests). It is fed one row group at a time and flushes each group's bytes out of
 // its buffer, so a build holds the compressed file so far plus one group of
 // decoded rows, never the table.
 //
@@ -16,7 +19,7 @@
 // kept (the CSV and JSON keep it as written). A JSON column holds the same
 // JSON value, re-serialized compactly.
 
-import { zstdCompressSync } from 'node:zlib'
+import { gzipSync } from 'node:zlib'
 
 import { ByteWriter, ParquetWriter } from 'hyparquet-writer/src/index.js'
 
@@ -38,9 +41,9 @@ type ColumnSource = Parameters<ParquetWriter['write']>[0]['columnData'][number]
 export const PARQUET_ROW_GROUP_ROWS = 10_000
 export const PARQUET_ROW_GROUP_BYTES = 4 * 1024 * 1024
 
-export const PARQUET_CODEC = 'ZSTD' satisfies WriterOptions['codec']
+export const PARQUET_CODEC = 'GZIP' satisfies WriterOptions['codec']
 const PARQUET_COMPRESSORS: WriterOptions['compressors'] = {
-  ZSTD: (input) => zstdCompressSync(input),
+  GZIP: (input) => gzipSync(input),
 }
 
 /** The prefix of every key-value metadata entry the files carry. */

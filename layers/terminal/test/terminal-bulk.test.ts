@@ -1,7 +1,7 @@
 import { env } from 'cloudflare:test'
 import { drizzle } from 'drizzle-orm/d1'
 import { parquetMetadata, parquetReadObjects } from 'hyparquet'
-import { zstdDecompressSync } from 'node:zlib'
+import { gunzipSync } from 'node:zlib'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
@@ -9,9 +9,14 @@ import { HISTORY_LICENSE, PAID_LICENSE } from '~~/shared/utils/license'
 import { LICENSED_BUCKET } from '../shared/utils/institutional'
 import { contentHashOfText } from '../server/pipeline/contracts'
 import { insertRows } from '../server/pipeline/store'
-import { SCHEMA_VERSION } from '../server/utils/data-schema'
+import { SCHEMA_VERSION, tableChangedAfter } from '../server/utils/data-schema'
 import {
   BULK_INDEX_PATH,
+  BULK_PAGE_SIZE,
+  buildOrder,
+  d1Reads,
+  isCurrent,
+  type BulkIndex,
   LICENSED_MANIFEST_KEY,
   byteRange,
   bulkFileOf,
@@ -25,7 +30,7 @@ import {
   type BulkManifest,
   type BulkStore,
 } from '../server/utils/terminal-bulk'
-import { EXPORT_TABLES } from '../server/utils/terminal-export'
+import { EXPORT_TABLES, type ExportTable } from '../server/utils/terminal-export'
 
 // The bulk feed against a real D1: files land in the store, gzipped CSV and
 // Parquet, with a SHA-256 that matches their bytes, the recent file is the
@@ -78,13 +83,13 @@ async function sha256(body: Uint8Array | string): Promise<string> {
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
-/** A Parquet file's rows and footer, read with hyparquet (zstd through node:zlib). */
+/** A Parquet file's rows and footer, read with hyparquet (gzip through node:zlib). */
 async function readParquet(body: Uint8Array | string | undefined) {
   if (!(body instanceof Uint8Array)) throw new Error('no Parquet file there')
   const file = body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength) as ArrayBuffer
   const rows = await parquetReadObjects({
     file,
-    compressors: { ZSTD: (input) => new Uint8Array(zstdDecompressSync(input)) },
+    compressors: { GZIP: (input) => new Uint8Array(gunzipSync(input)) },
   })
   const metadata = parquetMetadata(file)
   const kv = Object.fromEntries(
@@ -162,7 +167,7 @@ describe('the bulk build', () => {
     )
     expect(rows).toHaveLength(3)
     expect(Object.keys(rows[0]!)).toEqual(csv.columns)
-    expect(metadata.row_groups[0]!.columns[0]!.meta_data!.codec).toBe('ZSTD')
+    expect(metadata.row_groups[0]!.columns[0]!.meta_data!.codec).toBe('GZIP')
     const old = rows.find((r) => r.id === 'xai-models-md:2026-01-02T00:00:00.000Z')!
     expect(old).toMatchObject({
       http_status: 200n,
@@ -287,6 +292,141 @@ describe('the bulk build', () => {
     const third = await runBulkBuild({ db, store, now: () => NOW, tables: TABLES })
     expect(third).toEqual({ built: [], failed: [], deferred: [] })
     expect(store.data.has(BULK_INDEX_PATH)).toBe(true)
+  })
+
+  // 2026-11-05: snapshots failed every run, first, and spent the run's budget,
+  // so each hourly run built about one other table and the feed never caught up.
+  it('lets a table that fails every run go last, so the rest still get built', async () => {
+    // Fails while its files are written, as the zstd pages did: every row has a
+    // value its Parquet column can't hold.
+    const snapshots = EXPORT_TABLES.snapshots!
+    const broken: ExportTable = {
+      ...snapshots,
+      async page(...args) {
+        const rows = await snapshots.page(...args)
+        return rows.map((row) => ({ ...row, bytes: 'Unexpected end of file' }))
+      },
+    }
+    const tables = {
+      snapshots: broken,
+      entity_securities: EXPORT_TABLES.entity_securities!,
+      prices_latest: EXPORT_TABLES.prices_latest!,
+      incidents: EXPORT_TABLES.incidents!,
+    }
+    const store = memoryStore()
+    let clock = NOW.getTime()
+    // Each read of the clock moves it a second, so a run starts two or three cuts.
+    const now = () => new Date((clock += 1_000))
+    const run = () => runBulkBuild({ db, store, now, budgetMs: 2_500, tables })
+
+    // An earlier run today, when snapshots was the first thing it tried.
+    const first = await runBulkBuild({ db, store, now, tables: { snapshots: broken } })
+    expect(first.failed.map((f) => f.file).sort()).toEqual(['full/snapshots', 'recent/snapshots'])
+    const index = await readBulkIndex(store)
+    expect(index.failures?.['full/snapshots']?.error).toContain('Unexpected end of file')
+
+    // The next run starts with what hasn't failed, and makes progress.
+    const second = await run()
+    expect(second.failed).toEqual([])
+    expect(second.built.length).toBeGreaterThan(0)
+
+    // Six good cuts, a couple a run, all before snapshots is tried again.
+    const good = ['entity_securities', 'prices_latest', 'incidents']
+      .flatMap((t) => [`full/${t}`, `recent/${t}`])
+      .sort()
+    const runs = [second]
+    while (runs.flatMap((r) => r.built).length < good.length && runs.length < 6) {
+      runs.push(await run())
+    }
+    expect(runs.flatMap((r) => r.built).sort()).toEqual(good)
+    expect(runs.flatMap((r) => r.failed)).toEqual([])
+    const after = await run()
+    expect(after.built).toEqual([])
+    expect(after.failed.map((f) => f.file)).toContain('full/snapshots')
+  })
+
+  it('saves the index after every cut, so a run cut short keeps what it built', async () => {
+    const store = memoryStore()
+    let puts = 0
+    const counting: BulkStore = {
+      ...store,
+      async put(path, body, options) {
+        if (path === BULK_INDEX_PATH) puts++
+        return store.put(path, body, options)
+      },
+    }
+    const report = await runBulkBuild({ db, store: counting, now: () => NOW, tables: TABLES })
+    expect(puts).toBe(report.built.length)
+  })
+
+  it('stops starting cuts before the run runs out of D1 queries', async () => {
+    const store = memoryStore()
+    const first = await runBulkBuild({ db, store, now: () => NOW, d1ReadBudget: 1, tables: TABLES })
+    expect(first.built).toHaveLength(1)
+    expect(first.deferred).toHaveLength(3)
+    const index = await readBulkIndex(store)
+    const [, built] = first.built[0]!.split('/')
+    const rows = index.files[`full/${built}.csv.gz`]?.rows ?? 0
+    expect(d1Reads(index, built!)).toBe(Math.ceil(rows / BULK_PAGE_SIZE) + 1)
+    expect(d1Reads(index, 'never_built')).toBe(1)
+  })
+
+  it('rebuilds a cold feed of every table in one run with the default budget', async () => {
+    const store = memoryStore()
+    const report = await runBulkBuild({ db, store, now: () => NOW })
+    expect(report.failed).toEqual([])
+    expect(report.deferred).toEqual([])
+    expect(report.built).toHaveLength(Object.keys(EXPORT_TABLES).length * 2)
+  })
+
+  it('builds the smallest cuts first, and today’s failures last', () => {
+    const index = {
+      files: {
+        'full/big.csv.gz': { rows: 60_000 },
+        'full/small.csv.gz': { rows: 10 },
+      } as unknown as BulkIndex['files'],
+      failures: {
+        'full/tiny': { at: '2026-11-04T01:00:00Z', error: 'x' },
+        'full/old': { at: '2026-11-03T01:00:00Z', error: 'x' },
+      },
+    }
+    const cut = (table: string) => ({ key: `full/${table}`, variant: 'full' as const, table })
+    const order = buildOrder(index, ['big', 'small', 'tiny', 'new', 'old'].map(cut), '2026-11-04')
+    expect(order.map((c) => c.table)).toEqual(['new', 'old', 'small', 'big', 'tiny'])
+  })
+
+  it('rebuilds after a schema release only the tables the release changed', async () => {
+    const store = memoryStore()
+    await runBulkBuild({ db, store, now: () => NOW, tables: TABLES })
+    const index = await readBulkIndex(store)
+    const columns = (variant: 'recent' | 'full', table: string) =>
+      index.files[`${variant}/${table}.csv.gz`]!.columns
+    // As if built under 1.3.0: 1.4.0 changed entity_securities, nothing since changed snapshots.
+    for (const f of Object.values(index.files)) f.schema_version = '1.3.0'
+    const today = NOW.toISOString().slice(0, 10)
+    expect(isCurrent(index, 'full', 'snapshots', columns('full', 'snapshots'), today, false)).toBe(
+      true,
+    )
+    expect(
+      isCurrent(
+        index,
+        'full',
+        'entity_securities',
+        columns('full', 'entity_securities'),
+        today,
+        false,
+      ),
+    ).toBe(false)
+    // A different column list, an unknown version, or yesterday's build: rebuilt.
+    expect(isCurrent(index, 'full', 'snapshots', ['id'], today, false)).toBe(false)
+    expect(
+      isCurrent(index, 'full', 'snapshots', columns('full', 'snapshots'), '2026-11-05', false),
+    ).toBe(false)
+    for (const f of Object.values(index.files)) f.schema_version = '0.9.0'
+    expect(isCurrent(index, 'full', 'snapshots', columns('full', 'snapshots'), today, false)).toBe(
+      false,
+    )
+    expect(tableChangedAfter('snapshots', SCHEMA_VERSION)).toBe(false)
   })
 
   it('keeps serving a CSV from before Parquet until the build replaces it', async () => {

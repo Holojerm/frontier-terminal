@@ -154,7 +154,7 @@ const block =
           <NuxtLink to="/export/dictionary.json" external :class="`${link} font-mono`"
             >data dictionary</NuxtLink
           >
-          and compressed with zstd. Timestamps are UTC instants. The file’s metadata states its
+          and compressed with gzip. Timestamps are UTC instants. The file’s metadata states its
           license too. DuckDB and pandas read one straight from its URL:
         </p>
         <pre

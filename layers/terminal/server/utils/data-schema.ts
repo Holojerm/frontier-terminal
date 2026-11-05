@@ -564,6 +564,12 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       },
     },
   },
+  {
+    version: '1.5.1',
+    date: '2026-11-05',
+    summary:
+      'The Parquet bulk files are compressed with gzip instead of zstd, which failed on the largest tables. Readers pick the codec up from each file. No columns changed.',
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version
@@ -602,6 +608,21 @@ export function bumpNeeded(release: SchemaRelease): Bump {
     if (change.added?.length || change.note) need = 'minor'
   }
   return need
+}
+
+/**
+ * Whether a release after `version` changed `table`'s columns or what they
+ * hold. An unparseable or unknown version counts as changed.
+ */
+export function tableChangedAfter(table: string, version: string): boolean {
+  if (!/^\d+\.\d+\.\d+$/.test(version)) return true
+  const [a, b, c] = parse(version)
+  const after = (v: string) => {
+    const [x, y, z] = parse(v)
+    return x !== a ? x > a : y !== b ? y > b : z > c
+  }
+  if (!SCHEMA_RELEASES.some((r) => r.version === version)) return true
+  return SCHEMA_RELEASES.some((r) => after(r.version) && r.tables?.[table] !== undefined)
 }
 
 export function bumpCovers(made: Bump, needed: Bump): boolean {

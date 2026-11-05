@@ -1,5 +1,5 @@
 import { parquetMetadata, parquetReadObjects } from 'hyparquet'
-import { zstdDecompressSync } from 'node:zlib'
+import { gunzipSync } from 'node:zlib'
 import { describe, expect, it } from 'vitest'
 
 import {
@@ -29,7 +29,7 @@ async function read(body: Uint8Array) {
   const file = body.buffer.slice(body.byteOffset, body.byteOffset + body.byteLength) as ArrayBuffer
   const rows = await parquetReadObjects({
     file,
-    compressors: { ZSTD: (input) => new Uint8Array(zstdDecompressSync(input)) },
+    compressors: { GZIP: (input) => new Uint8Array(gunzipSync(input)) },
   })
   return { rows, metadata: parquetMetadata(file) }
 }
@@ -127,6 +127,24 @@ describe('a Parquet file', () => {
     const back = await read(builder.finish().body)
     expect(back.metadata.row_groups.map((g) => Number(g.num_rows))).toEqual([2, 2])
     expect(back.rows).toHaveLength(4)
+  })
+
+  // 2026-11-05: zstd from workerd's node:zlib threw "Unexpected end of file" on
+  // any page that compressed to more than ~40 KB, which every build of
+  // snapshots (a column of SHA-256 hashes) hit. A page of hashes, in workerd.
+  it('writes a page that compresses to well over 64 KB', async () => {
+    const hex = () =>
+      Array.from(crypto.getRandomValues(new Uint8Array(32)), (b) =>
+        b.toString(16).padStart(2, '0'),
+      ).join('')
+    const rows = Array.from({ length: 4_000 }, (_, i) => ({ ...row(i % 5), content_hash: hex() }))
+    const builder = parquetBuilder(TINY, {})
+    builder.add(rows)
+    const { body } = builder.finish()
+    expect(body.byteLength).toBeGreaterThan(128 * 1024)
+    const back = await read(body)
+    expect(back.rows).toHaveLength(4_000)
+    expect(back.rows[3_999]!.content_hash).toBe(rows[3_999]!.content_hash)
   })
 
   it('is a valid file with no rows', async () => {
