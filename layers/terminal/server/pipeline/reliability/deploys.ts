@@ -4,11 +4,16 @@
 // serves it broken. The repo is public, so its runs are readable without a
 // token: no secret, and no write path into the site.
 //
-// One request an hour returns the last 100 runs, so a read GitHub refuses (the
-// unauthenticated REST limit is 60 an hour per IP, and Workers share egress
-// IPs) loses nothing: the next good read fills the gap. The ETag rides on each
-// request, and a 304 doesn't count against that limit. A 403 or 429 parks the
-// reads until GitHub's reset time.
+// One read returns the last 100 runs, so a read GitHub refuses loses nothing:
+// the next good read fills the gap. Refusals are the normal case without a
+// token. The unauthenticated REST limit is 60 an hour per IP, Workers share
+// egress IPs with every other tenant, and the first production read
+// (2026-11-05 06:41) got a 403 with the hour's budget already spent. So the
+// read runs on the five-minute tick, goes out at most once per READ_EVERY_MS
+// once one succeeds, parks until GitHub's reset after a 403 or 429, and sends
+// the stored ETag (a 304 doesn't count against the limit). NUXT_GITHUB_TOKEN,
+// when set, authenticates the read (5,000 an hour, per token); any token
+// that can read public repositories will do.
 
 import { sql } from 'drizzle-orm'
 
@@ -21,6 +26,11 @@ export const GITHUB_USER_AGENT =
 
 const ETAG_KEY = 'reliability:github:etag'
 const BACKOFF_KEY = 'reliability:github:backoff-until'
+const NEXT_KEY = 'reliability:github:next-read'
+/** How often a read goes out once one has succeeded. */
+export const READ_EVERY_MS = 55 * 60 * 1000
+/** How soon a read that failed outright (a timeout, a 5xx) is tried again. */
+const RETRY_FAILED_MS = 15 * 60 * 1000
 /** Longest a refused read parks the next ones, when GitHub names no reset time. */
 const DEFAULT_BACKOFF_MS = 60 * 60 * 1000
 
@@ -110,6 +120,7 @@ export interface ReliabilityKv {
 export type DeployReport =
   | { status: 'stored'; runs: number }
   | { status: 'not-modified' }
+  | { status: 'not-due'; next: string }
   | { status: 'parked'; until: string }
   | { status: 'rate-limited'; until: string }
   | { status: 'failed'; detail: string }
@@ -131,17 +142,34 @@ export function backoffUntil(headers: Headers, now: Date): string {
 /** Read the smoke workflow's runs on main and upsert them. Never throws over a GitHub failure. */
 export async function recordDeployChecks(
   db: PipelineDb,
-  deps: { fetch: typeof fetch; kv: ReliabilityKv; now: Date; repoUrl: string },
+  deps: {
+    fetch: typeof fetch
+    kv: ReliabilityKv
+    now: Date
+    repoUrl: string
+    /** NUXT_GITHUB_TOKEN; empty reads unauthenticated. */
+    token?: string
+  },
 ): Promise<DeployReport> {
   const slug = repoSlug(deps.repoUrl)
   if (!slug) return { status: 'no-repo' }
+  const nowIso = deps.now.toISOString()
   const parked = await deps.kv.get(BACKOFF_KEY)
-  if (typeof parked === 'string' && parked > deps.now.toISOString()) {
-    return { status: 'parked', until: parked }
+  if (typeof parked === 'string' && parked > nowIso) return { status: 'parked', until: parked }
+  const next = await deps.kv.get(NEXT_KEY)
+  if (typeof next === 'string' && next > nowIso) return { status: 'not-due', next }
+  const schedule = (ms: number) => {
+    const at = new Date(deps.now.getTime() + ms).toISOString()
+    return deps.kv.set(NEXT_KEY, at, { ttl: Math.ceil(ms / 1000) })
   }
 
   const url = workflowRunsUrl(slug)
-  const etag = await deps.kv.get(ETAG_KEY)
+  // An ETag is only worth sending for rows we still hold; a 304 to an empty table would keep it empty.
+  const [held] = await db
+    .select({ id: tables.deployChecks.run_id })
+    .from(tables.deployChecks)
+    .limit(1)
+  const etag = held ? await deps.kv.get(ETAG_KEY) : null
   let response: Response
   try {
     response = await deps.fetch(url, {
@@ -149,26 +177,33 @@ export async function recordDeployChecks(
         accept: 'application/vnd.github+json',
         'x-github-api-version': '2022-11-28',
         'user-agent': GITHUB_USER_AGENT,
+        ...(deps.token ? { authorization: `Bearer ${deps.token}` } : {}),
         ...(typeof etag === 'string' ? { 'if-none-match': etag } : {}),
       },
       signal: AbortSignal.timeout(20_000),
     })
   } catch (error) {
+    await schedule(RETRY_FAILED_MS)
     return { status: 'failed', detail: String(error) }
   }
-  if (response.status === 304) return { status: 'not-modified' }
+  if (response.status === 304) {
+    // Nothing changed, but the rows were read now.
+    await db.update(tables.deployChecks).set({ fetched_at: nowIso })
+    await schedule(READ_EVERY_MS)
+    return { status: 'not-modified' }
+  }
   if (response.status === 403 || response.status === 429) {
     const until = backoffUntil(response.headers, deps.now)
     const ttl = Math.max(60, Math.ceil((Date.parse(until) - deps.now.getTime()) / 1000))
     await deps.kv.set(BACKOFF_KEY, until, { ttl })
     return { status: 'rate-limited', until }
   }
-  if (!response.ok) return { status: 'failed', detail: `GitHub answered ${response.status}` }
+  if (!response.ok) {
+    await schedule(RETRY_FAILED_MS)
+    return { status: 'failed', detail: `GitHub answered ${response.status}` }
+  }
 
-  const rows = parseWorkflowRuns(await response.json(), {
-    source_url: url,
-    fetched_at: deps.now.toISOString(),
-  })
+  const rows = parseWorkflowRuns(await response.json(), { source_url: url, fetched_at: nowIso })
   await runStatements(
     db,
     chunk(rows, rowsPerStatement(9)).map((group) =>
@@ -188,7 +223,8 @@ export async function recordDeployChecks(
     ),
   )
   // Stored only after the rows are: an ETag for a page not written would 304 the retry.
-  const next = response.headers.get('etag')
-  if (next) await deps.kv.set(ETAG_KEY, next, { ttl: 7 * 24 * 3600 })
+  const tag = response.headers.get('etag')
+  if (tag) await deps.kv.set(ETAG_KEY, tag, { ttl: 7 * 24 * 3600 })
+  await schedule(READ_EVERY_MS)
   return { status: 'stored', runs: rows.length }
 }

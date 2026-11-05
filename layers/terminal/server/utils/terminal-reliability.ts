@@ -5,7 +5,7 @@
 // and deploy checks (layers/terminal/server/pipeline/reliability/), plus the
 // corrections log. Reads are bounded by the 90-day window on indexed columns.
 
-import { and, desc, gte, inArray, max, min, sql } from 'drizzle-orm'
+import { and, desc, eq, gte, inArray, max, min, sql } from 'drizzle-orm'
 
 import { CORRECTIONS } from '../../shared/utils/corrections'
 import {
@@ -27,7 +27,7 @@ import type { ProviderId, SourceAxis } from '../../shared/utils/terminal-types'
 import * as tables from '#server/db/schema'
 import { manifestFixtures } from '../pipeline/parsers/fixture-provenance'
 import { filingIndexUrl, releasedAt } from '../pipeline/reliability/acceptance'
-import { addDays, dayOf } from '../pipeline/reliability/rollup'
+import { ROLLUP_NAME, addDays, dayOf } from '../pipeline/reliability/rollup'
 import { statedIntervalMinutes } from '../pipeline/scopes'
 import type { PipelineDb } from '../pipeline/store'
 import type { QueryContext } from './terminal-db'
@@ -40,10 +40,16 @@ const DEPLOYS_SHOWN = 300
 /** A source still failing counts as an open gap once it is this many intervals overdue. */
 const OPEN_GAP_INTERVALS = 2
 
-/** A cache variant: the newest rolled tick, deploy read and filing record, which the poll stamp does not see. */
+/** The rollup is still catching up while it is more than this far behind now. */
+export const BUILDING_LAG_MS = 60 * 60 * 1000
+
+/** A cache variant: how far the rollup has rolled, the newest deploy read and filing record, which the poll stamp does not see. */
 export async function reliabilityStamp(db: PipelineDb): Promise<string> {
   const [[t], [d], [f]] = await Promise.all([
-    db.select({ at: max(tables.pollTicks.started_at) }).from(tables.pollTicks),
+    db
+      .select({ at: tables.rollupState.rolled_through })
+      .from(tables.rollupState)
+      .where(eq(tables.rollupState.name, ROLLUP_NAME)),
     db.select({ at: max(tables.deployChecks.fetched_at) }).from(tables.deployChecks),
     db.select({ at: max(tables.filingDetections.recorded_at) }).from(tables.filingDetections),
   ])
@@ -117,9 +123,10 @@ async function sourceTotals(db: PipelineDb, longFrom: string, shortFrom: string)
 }
 
 /**
- * The longer of the longest closed gap and one still open now. A gap is open
- * only while the source is still being checked and failing: a page we stopped
- * deriving (a delisted model) isn't waiting for anything.
+ * The longer of the longest closed gap and one still open at `through` (how
+ * far the rollup has counted, never past it). A gap is open only while the
+ * source is still being checked and failing: a page we stopped deriving (a
+ * delisted model) isn't waiting for anything.
  */
 function longestGap(
   closed:
@@ -127,7 +134,7 @@ function longestGap(
     | undefined,
   totals: Pick<SourceTotals, 'last_good_at' | 'last_run_at'> | undefined,
   statedMinutes: number,
-  now: string,
+  through: string,
 ): RunGap | null {
   const gap: RunGap | null =
     closed?.longest_gap_ms != null && closed.gap_from && closed.gap_to
@@ -139,7 +146,7 @@ function longestGap(
       : null
   const lastGood = totals?.last_good_at ?? null
   if (!lastGood || !totals || totals.last_run_at <= lastGood) return gap
-  const open = minutesBetween(lastGood, now)
+  const open = minutesBetween(lastGood, through)
   if (open < statedMinutes * OPEN_GAP_INTERVALS || (gap && gap.minutes >= open)) return gap
   return { minutes: open, from: lastGood, to: null }
 }
@@ -157,11 +164,11 @@ function derivedAxis(template: string): SourceAxis {
   return 'sec'
 }
 
-const ratio = (t: { runs: number; good: number }) => (t.runs ? t.good / t.runs : 1)
+const ratio = (t: { runs: number; good: number } | null) => (t?.runs ? t.good / t.runs : 1)
 
 /** Worst first: lowest share of good runs in the long window, then the longest gap. Never-checked rows last. */
 function worstFirst(a: SourceReliability, b: SourceReliability): number {
-  if (!a.long.runs !== !b.long.runs) return a.long.runs ? -1 : 1
+  if (!a.long?.runs !== !b.long?.runs) return a.long?.runs ? -1 : 1
   return (
     ratio(a.long) - ratio(b.long) ||
     ratio(a.short) - ratio(b.short) ||
@@ -175,7 +182,8 @@ async function sourceRows(
   ctx: QueryContext,
   longFrom: string,
   shortFrom: string,
-  now: string,
+  /** Where the rollup has counted to; null while it is still building. */
+  through: string | null,
 ): Promise<{ rows: SourceReliability[]; first_day: string | null }> {
   const { totals, gaps } = await sourceTotals(db, longFrom, shortFrom)
   const byId = new Map(totals.map((t) => [t.source_id, t]))
@@ -198,16 +206,19 @@ async function sourceRows(
         .sort()
         .at(-1) ?? null
     // A group's gap is its worst member's.
-    const memberGaps = members
-      .map((id) => longestGap(gaps.get(id), byId.get(id), stated, now))
-      .filter((g): g is RunGap => g !== null)
-      .sort((a, b) => b.minutes - a.minutes)
+    const memberGaps = through
+      ? members
+          .map((id) => longestGap(gaps.get(id), byId.get(id), stated, through))
+          .filter((g): g is RunGap => g !== null)
+          .sort((a, b) => b.minutes - a.minutes)
+      : []
+    // A window's tally is shown only once the rollup covers all of it.
     return {
       ...base,
       source_id,
       stated_minutes: stated,
-      short: { runs: sum('runs_short'), good: sum('good_short') },
-      long: { runs: sum('runs'), good: sum('good') },
+      short: through ? { runs: sum('runs_short'), good: sum('good_short') } : null,
+      long: through ? { runs: sum('runs'), good: sum('good') } : null,
       longest_gap: memberGaps[0] ?? null,
       last_good_at: lastGood,
     }
@@ -260,10 +271,15 @@ async function sourceRows(
   return { rows: rows.sort(worstFirst), first_day: firstDay }
 }
 
+/**
+ * Stale periods per lane, from ticks before `through`. Without a `through`
+ * (the rollup is still building) only closed periods are listed: the time
+ * after the last rolled tick is unread, not stale.
+ */
 async function freshnessLanes(
   db: PipelineDb,
   longFromIso: string,
-  now: string,
+  through: string | null,
 ): Promise<FreshnessLane[]> {
   const t = tables.pollTicks
   return Promise.all(
@@ -297,10 +313,12 @@ async function freshnessLanes(
       ])
       const stale = (from: string, to: string | null): StalePeriod => {
         const due = new Date(Date.parse(from) + lane.stated_minutes * 60_000).toISOString()
-        return { from: due, to, minutes: minutesBetween(due, to ?? now) }
+        return { from: due, to, minutes: minutesBetween(due, to ?? through ?? due) }
       }
       const periods = gaps.map((g) => stale(g.from!, g.to))
-      if (span?.last && minutesBetween(span.last, now) > limit) periods.push(stale(span.last, null))
+      if (through && span?.last && minutesBetween(span.last, through) > limit) {
+        periods.push(stale(span.last, null))
+      }
       periods.sort((a, b) => b.from.localeCompare(a.from))
       return {
         id: lane.id,
@@ -414,19 +432,30 @@ export async function queryReliability(
   const shortFrom = addDays(today, 1 - RELIABILITY_DAYS.short)
   const longFromIso = `${longFrom}T00:00:00.000Z`
 
-  const [sources, freshness, detection, deploy, [rolled]] = await Promise.all([
-    sourceRows(db, ctx, longFrom, shortFrom, now),
-    freshnessLanes(db, longFromIso, now),
+  const [state] = await db
+    .select()
+    .from(tables.rollupState)
+    .where(eq(tables.rollupState.name, ROLLUP_NAME))
+  const rolledThrough = state?.rolled_through ?? null
+  // Until the rollup has caught up, the time after rolled_through is unread,
+  // not stale, so no gap, stale period or window tally reaches past it.
+  const building =
+    rolledThrough === null || nowDate.getTime() - Date.parse(rolledThrough) > BUILDING_LAG_MS
+  const through = building ? null : rolledThrough
+
+  const [sources, freshness, detection, deploy] = await Promise.all([
+    sourceRows(db, ctx, longFrom, shortFrom, through),
+    freshnessLanes(db, longFromIso, through),
     detections(db),
     deploys(db, longFromIso, opts),
-    db.select({ at: max(tables.pollTicks.started_at) }).from(tables.pollTicks),
   ])
   const corrections = [...CORRECTIONS].sort((a, b) => b.on.localeCompare(a.on))
   return {
     as_of: ctx.as_of,
     computed_at: now,
     days: RELIABILITY_DAYS,
-    sources: { rolled_through: rolled?.at ?? null, ...sources },
+    building: building ? { rolled_through: rolledThrough, started: state?.started ?? null } : null,
+    sources: { rolled_through: rolledThrough, ...sources },
     freshness,
     detection,
     deploys: deploy,

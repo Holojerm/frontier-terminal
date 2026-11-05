@@ -185,8 +185,10 @@ const securityHeaders = {
 //                weekly what-moved thread. alerts:hiring-rollup writes one
 //                hiring alert per lab for the week that just ended.
 //   41 * * * * — bulk:build, and reliability:record, which rolls up source runs
-//                and records filing detections and deploy smoke results for
-//                /data#reliability (layers/terminal/server/pipeline/reliability/).
+//                and records filing detections for /data#reliability
+//                (layers/terminal/server/pipeline/reliability/). Its deploy smoke
+//                results are reliability:deploys on the */5 tick, which reads
+//                GitHub at most hourly.
 //   0 4 * * *  — seo:indexnow submits the sitemap URLs changed since its last
 //                accepted run to IndexNow (server/utils/indexnow.ts).
 const SCHEDULED_TASKS: Record<string, string[]> = {
@@ -201,6 +203,7 @@ const SCHEDULED_TASKS: Record<string, string[]> = {
     'cache:warm',
     'track-record:search',
     'webhooks:deliver',
+    'reliability:deploys',
   ],
   '0 13 * * 1': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
   '41 * * * *': ['bulk:build', 'reliability:record'],

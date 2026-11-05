@@ -701,6 +701,17 @@ export const filingDetections = sqliteTable(
   (t) => [index('filing_detections_alerted_idx').on(t.alerted_at)],
 )
 
+// How far the rollup above has rolled: one row, name 'source_runs'.
+// rolled_through is the instant every run before it is counted; the page
+// computes nothing past it, so a backfill in progress never reads as an outage.
+// started is the first day the rollup holds.
+export const rollupState = sqliteTable('rollup_state', {
+  name: text('name').primaryKey(),
+  rolled_through: text('rolled_through').notNull(),
+  started: text('started').notNull(),
+  updated_at: text('updated_at').notNull(),
+})
+
 // One row per run of the post-deploy smoke workflow on main
 // (.github/workflows/post-deploy-smoke.yml), read from GitHub's public
 // Actions API. Upserted by run id: a run seen in progress is rewritten when

@@ -25,10 +25,12 @@ const { data, error } = await useFetch<ReliabilityData>('/api/reliability')
 const at = (iso: string) => absoluteStamp(iso, now.value)
 const repo = manifest.links.github
 
-const pct = (t: RunTally) =>
-  t.runs === 0
-    ? 'None yet'
-    : `${(Math.floor((t.good / t.runs) * 1000) / 10).toLocaleString('en-US', { maximumFractionDigits: 1 })}%`
+const pct = (t: RunTally | null) =>
+  t === null
+    ? 'Building'
+    : t.runs === 0
+      ? 'None yet'
+      : `${(Math.floor((t.good / t.runs) * 1000) / 10).toLocaleString('en-US', { maximumFractionDigits: 1 })}%`
 
 const every = (minutes: number) => (minutes >= 60 ? `${minutes / 60} h` : `${minutes} min`)
 
@@ -83,6 +85,7 @@ const resultOf = (d: DeployCheck) =>
       })
 
 const latency = (m: number | null) => (m === null ? 'none yet' : durationLabel(m))
+const figure = (m: number | null) => (m === null ? 'None yet' : durationLabel(m))
 
 const releasedLater = (r: FilingDetection) =>
   r.released_at !== null && r.accepted_at !== null && r.released_at !== r.accepted_at
@@ -90,10 +93,12 @@ const releasedLater = (r: FilingDetection) =>
 const facts = computed<Fact[]>(() => {
   const d = data.value
   if (!d) return []
-  const all = d.sources.rows.reduce(
-    (t, s) => ({ runs: t.runs + s.short.runs, good: t.good + s.short.good }),
-    { runs: 0, good: 0 },
-  )
+  const all = d.building
+    ? null
+    : d.sources.rows.reduce(
+        (t, s) => ({ runs: t.runs + (s.short?.runs ?? 0), good: t.good + (s.short?.good ?? 0) }),
+        { runs: 0, good: 0 },
+      )
   const sec = d.freshness.find((l) => l.id === 'sec')
   const decided = d.deploys.tally.success + d.deploys.tally.failure
   return [
@@ -101,29 +106,45 @@ const facts = computed<Fact[]>(() => {
     {
       key: 'stale',
       label: 'SEC feeds late, 90 days',
-      value: sec?.checks ? durationLabel(sec.stale_minutes) : 'None yet',
+      value: d.building ? 'Building' : sec?.checks ? durationLabel(sec.stale_minutes) : 'None yet',
       mono: true,
     },
     {
       key: 'acceptance',
       label: 'EDGAR acceptance to alert, median',
-      value: latency(d.detection.acceptance.median_minutes),
+      value: figure(d.detection.acceptance.median_minutes),
       mono: true,
     },
     {
       key: 'release',
       label: 'EDGAR release to alert, median',
-      value: latency(d.detection.release.median_minutes),
+      value: figure(d.detection.release.median_minutes),
       mono: true,
     },
     {
       key: 'deploys',
       label: 'Deploys that passed',
-      value: decided ? `${d.deploys.tally.success} of ${decided}` : 'None yet',
+      value:
+        d.deploys.fetched_at === null
+          ? 'Not read yet'
+          : decided
+            ? `${d.deploys.tally.success} of ${decided}`
+            : 'None yet',
       mono: true,
     },
     { key: 'corrections', label: 'Corrections', value: count(d.corrections.count), mono: true },
   ]
+})
+
+/** While the rollup backfills, what it covers so far, in place of figures that would read as an outage. */
+const buildingReason = computed(() => {
+  const b = data.value?.building
+  if (!b) return ''
+  const through = b.rolled_through
+    ? `Covered through ${at(b.rolled_through)}`
+    : 'Nothing counted yet'
+  const from = b.started ? `, from ${b.started}` : ''
+  return `${through}${from}. History fills in within a run or two of a deploy. Gaps and late periods show once the count reaches the present.`
 })
 
 const link = 'text-primary underline underline-offset-2'
@@ -159,8 +180,9 @@ const code = 'font-mono text-highlighted'
             >.
           </template>
         </p>
+        <TerminalGap v-if="data.building" title="Building history" :reason="buildingReason" />
         <TerminalGap
-          v-if="data.sources.rows.every((s) => s.long.runs === 0)"
+          v-else-if="data.sources.rows.every((s) => !s.long?.runs)"
           title="No checks counted yet"
           reason="The hourly rollup hasn’t run on this database yet."
         />
@@ -170,7 +192,7 @@ const code = 'font-mono text-highlighted'
           :columns="sourceColumns"
           :rows="data.sources.rows"
           :row-key="(s) => s.source_id"
-          :gap="(s) => s.long.runs === 0"
+          :gap="(s) => !s.long?.runs"
           :gap-columns="['short', 'long', 'gap']"
           :edge="false"
           align="top"
@@ -186,13 +208,13 @@ const code = 'font-mono text-highlighted'
           <template #cell-stated="{ row: s }">{{ every(s.stated_minutes) }}</template>
           <template #cell-short="{ row: s }">
             {{ pct(s.short) }}
-            <span class="block text-xs text-muted"
+            <span v-if="s.short" class="block text-xs text-muted"
               >{{ count(s.short.good) }} of {{ count(s.short.runs) }}</span
             >
           </template>
           <template #cell-long="{ row: s }">
             {{ pct(s.long) }}
-            <span class="block text-xs text-muted"
+            <span v-if="s.long" class="block text-xs text-muted"
               >{{ count(s.long.good) }} of {{ count(s.long.runs) }}</span
             >
           </template>
@@ -226,7 +248,8 @@ const code = 'font-mono text-highlighted'
           stretches, over the last {{ data.days.long }} days, when no check ran in which most
           sources answered. A check can run late by the grace shown before we count it.
         </p>
-        <div v-for="lane in data.freshness" :key="lane.id" class="space-y-2">
+        <TerminalGap v-if="data.building" title="Building history" :reason="buildingReason" />
+        <div v-for="lane in data.building ? [] : data.freshness" :key="lane.id" class="space-y-2">
           <p>
             <span class="text-highlighted">{{ lane.label }}</span>
             <span class="text-muted">
@@ -376,9 +399,13 @@ const code = 'font-mono text-highlighted'
           every hour.
         </p>
         <TerminalGap
-          v-if="data.deploys.rows.length === 0"
-          title="No smoke results read yet"
-          reason="The hourly job hasn’t read GitHub yet, or GitHub refused the read. The results are public on GitHub Actions."
+          v-if="data.deploys.fetched_at === null"
+          title="Not read from GitHub yet"
+          reason="GitHub limits reads without a token by IP address, and Cloudflare’s servers share theirs with other sites, so GitHub can refuse our read for a while. We try again every five minutes. The results are public on GitHub Actions meanwhile."
+        />
+        <TerminalGap
+          v-else-if="data.deploys.rows.length === 0"
+          title="No deploys in the last 90 days"
         />
         <template v-else>
           <p>
