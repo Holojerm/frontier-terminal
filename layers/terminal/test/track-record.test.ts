@@ -28,7 +28,11 @@ import {
   reviewCorpus,
   trackRecordReview,
 } from '../server/pipeline/track-record/review'
-import { candidateId, runTrackRecordSearch } from '../server/pipeline/track-record/search'
+import {
+  MAX_FAILED_SEARCHES,
+  candidateId,
+  runTrackRecordSearch,
+} from '../server/pipeline/track-record/search'
 import {
   alertTerms,
   filerName,
@@ -430,6 +434,23 @@ describe('the search run', () => {
     })
     expect(calls).toHaveLength(1)
   })
+
+  it('never gives an alert up over 429s, only over real failures', async () => {
+    const run = (fetcher: SourceFetcher) =>
+      runTrackRecordSearch(db, { raw: memoryRaw().store, fetcher, now: () => NOW })
+    const limited: SourceFetcher = async () => ({ ok: false, status: 429, detail: 'HTTP 429' })
+    for (let i = 0; i < MAX_FAILED_SEARCHES + 2; i++) await run(limited)
+    const calls: string[] = []
+    await run(okFetcher(calls))
+    expect(calls).toHaveLength(1)
+
+    await seed()
+    const broken: SourceFetcher = async () => ({ ok: false, status: 500, detail: 'HTTP 500' })
+    for (let i = 0; i < MAX_FAILED_SEARCHES; i++) await run(broken)
+    const after: string[] = []
+    await run(okFetcher(after))
+    expect(after).toHaveLength(0)
+  })
 })
 
 describe('the same-event gate', () => {
@@ -615,6 +636,14 @@ describe('the page payload', () => {
       state: 'search-failed',
       detail: 'HTTP 500',
     })
+    const busy = { status: 'failed', detail: 'HTTP 429' }
+    expect(sideOf(false, [busy, busy], [], none, SAW)).toMatchObject({
+      state: 'not-searched',
+      detail: expect.stringContaining('retried'),
+    })
+    expect(
+      sideOf(false, [busy, { status: 'failed', detail: 'HTTP 500' }], [], none, SAW).state,
+    ).toBe('search-failed')
     expect(
       sideOf(false, [{ status: 'skipped', detail: 'no feed' }], [], none, SAW, 'no-feed').state,
     ).toBe('no-feed')
