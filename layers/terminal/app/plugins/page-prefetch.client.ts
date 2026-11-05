@@ -7,26 +7,18 @@
 // have trimmed (13 calls and 3.2 s for /labs/anthropic on a throttled phone).
 //
 // On intent (a pointer resting on the link, focus, touchstart, mousedown) this
-// fetches the target page's HTML: one request, often an HTML-cache hit, whose
-// embedded payload already holds every useFetch result, transformed. On the
-// navigation it hands that data to Nuxt through `nuxtApp.static.data`, the slot
-// Nuxt's own payload plugin fills for prerendered routes and the one useFetch's
-// default getCachedData reads on a client navigation. The seeded keys are
-// removed once the page has rendered, so later navigations fetch fresh data.
+// asks /api/page-data for the target page's hydration payload: one request,
+// served from the stamp-keyed HTML cache when the page is there, holding every
+// useFetch result already transformed. On the navigation it hands that data to
+// Nuxt through `nuxtApp.static.data`, the slot Nuxt's own payload plugin fills
+// for prerendered routes and the one useFetch's default getCachedData reads on
+// a client navigation. The seeded keys are removed once the page has rendered,
+// so later navigations fetch fresh data.
 //
-// Why not Nuxt's native payload extraction: it needs `cache`/`swr` route
-// rules, which also turn on Nitro's response cache and fight the HTML cache
-// keyed on build and poll stamp (layers/terminal/server/utils/html-cache.ts).
-//
-// Each prefetch is a page render, which spends the visitor's API rate limit
-// on an HTML-cache miss, so it waits for a resting pointer, runs once per path
-// per TTL, caps concurrency, and skips Save-Data connections.
-//
-// Desktop-class intent only. Measured on a throttled phone, a tap gives about
-// 100 ms of lead and the HTML (markup and inline CSS as well as the payload)
-// outweighs the API calls it replaces, so touch and slow connections keep the
-// plain path. Unthrottled, a 250 ms hover took /hiring 539 -> 118 ms and
-// /revenue 655 -> 129 ms (2026-11-04).
+// Each prefetch can be a page render, which spends the visitor's API rate
+// limit on an HTML-cache miss, so a pointer has to rest on the link, a path
+// runs once per TTL, concurrency and the per-minute count are capped, and
+// Save-Data or slow connections are skipped.
 
 // `parsePayload` is Nuxt's own reviver-aware payload parser; it is not part of
 // the public `#app` exports, so this reaches into the composable directly.
@@ -42,14 +34,10 @@ const MAX_INFLIGHT = 3
  */
 const MAX_PER_MINUTE = 8
 const WAIT_ON_NAVIGATION_MS = 4_000
-const PAYLOAD_RE = /<script[^>]*\bid="__NUXT_DATA__"[^>]*>([\s\S]*?)<\/script>/
 
 type Entry = { at: number; data: Promise<Record<string, unknown> | null> }
 
 export default defineNuxtPlugin((nuxtApp) => {
-  // A touch screen also fires mousedown, just before the click: no lead at all,
-  // and the navigation would then wait on the heavier HTML.
-  if (!matchMedia('(hover: hover) and (pointer: fine)').matches) return
   const router = useRouter()
   const entries = new Map<string, Entry>()
   const started: number[] = []
@@ -63,16 +51,18 @@ export default defineNuxtPlugin((nuxtApp) => {
     return c?.saveData === true || (c?.effectiveType !== undefined && c.effectiveType !== '4g')
   }
 
-  /** The router path a link would navigate to, or null when it isn't one we prefetch. */
+  /**
+   * The path a link would navigate to, or null when it isn't one we prefetch.
+   * A query string is skipped: the HTML cache refuses to key on one, so
+   * /api/page-data does too.
+   */
   const targetOf = (a: HTMLAnchorElement): string | null => {
     if (a.target && a.target !== '_self') return null
     if (a.hasAttribute('download')) return null
     const url = new URL(a.href, location.href)
-    if (url.origin !== location.origin) return null
-    const path = url.pathname + url.search
-    if (path === router.currentRoute.value.fullPath.split('#')[0]) return null
-    const resolved = router.resolve(path)
-    return resolved.matched.length ? resolved.fullPath.split('#')[0]! : null
+    if (url.origin !== location.origin || url.search) return null
+    if (url.pathname === router.currentRoute.value.path) return null
+    return router.resolve(url.pathname).matched.length ? url.pathname : null
   }
 
   const prefetch = (path: string) => {
@@ -84,10 +74,9 @@ export default defineNuxtPlugin((nuxtApp) => {
     if (started.length >= MAX_PER_MINUTE) return
     started.push(Date.now())
     inflight += 1
-    const data = fetch(path, { headers: { accept: 'text/html' }, credentials: 'same-origin' })
+    const data = fetch(`/api/page-data?path=${encodeURIComponent(path)}`)
       .then((res) => (res.ok ? res.text() : null))
-      .then(async (html) => {
-        const json = html?.match(PAYLOAD_RE)?.[1]
+      .then(async (json) => {
         if (!json) return null
         const payload = (await parsePayload(json)) as { data?: Record<string, unknown> }
         return payload.data ?? null
@@ -109,7 +98,8 @@ export default defineNuxtPlugin((nuxtApp) => {
     if (path) prefetch(path)
   }
   const soon = (e: Event) => {
-    if (e instanceof PointerEvent && e.pointerType !== 'mouse' && e.pointerType !== 'pen') return
+    // A touch's pointerover lands with the tap itself; touchstart covers it.
+    if (e instanceof PointerEvent && e.pointerType === 'touch') return
     const a = anchorOf(e)
     if (!a || a === pending) return
     clearTimeout(timer)
@@ -128,12 +118,13 @@ export default defineNuxtPlugin((nuxtApp) => {
   document.addEventListener('pointerover', soon, { passive: true })
   document.addEventListener('pointerout', cancel, { passive: true })
   document.addEventListener('focusin', soon)
+  document.addEventListener('touchstart', now, { passive: true })
   document.addEventListener('mousedown', now)
 
   let seeded: string[] = []
   router.beforeResolve(async (to) => {
-    const entry = entries.get(to.fullPath.split('#')[0]!)
-    if (!entry || Date.now() - entry.at > TTL_MS) return
+    const entry = entries.get(to.path)
+    if (!entry || Date.now() - entry.at > TTL_MS || Object.keys(to.query).length) return
     const data = await Promise.race([
       entry.data,
       new Promise<null>((resolve) => setTimeout(() => resolve(null), WAIT_ON_NAVIGATION_MS)),
