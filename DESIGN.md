@@ -379,7 +379,8 @@ screen the way a terminal function key does. The data below it is the content.
   primary table — the release list, the incident log, the price catalog, the alerts — runs as
   long as its rows (`TerminalTable` `flow`), with its header sticky under the site header.
   A secondary table in a multi-panel layout scrolls in its own box, capped at 70% of the
-  viewport height, header sticky to the box. A box that scrolls is a named, focusable region
+  small viewport height (`70svh`, never `dvh`: a dvh cap resizes as the mobile URL bar shows
+  and hides, and the page jumps mid-scroll), header sticky to the box. A box that scrolls is a named, focusable region
   so a keyboard can scroll it.
 - **Source cells:** a citation in a table cell is one line: the host as a link, the age and
   exact fetch stamp in its tooltip and a screen-reader `<time>`. The panel footer prints every
