@@ -12,7 +12,7 @@
 // leak.
 //
 // Stateless and JSON on both protocol eras. Each request gets a fresh
-// McpServer — twenty-one registrations, cheap — so a Worker isolate holds no
+// McpServer — twenty-two registrations, cheap — so a Worker isolate holds no
 // session, and a client that reconnects to a different isolate notices
 // nothing. Legacy (2025-era) clients, which is every shipping client today,
 // are served through a per-request WebStandardStreamableHTTPServerTransport
@@ -73,10 +73,15 @@ import { gpuRunsStamp, queryGpuPrices } from './terminal-gpu'
 import { SHARE_WINDOW_DAYS, queryRankings } from './terminal-rankings'
 import { queryProspectus } from './terminal-prospectus'
 import { filedFactsStamp, queryExposure } from './terminal-exposure'
+import { identifiersPayload } from './terminal-identifiers'
 import { queryRevenue } from './terminal-revenue'
 import { PROVIDER_ORDER } from './terminal-sources'
 import { querySpend } from './terminal-spend'
 import { queryTrackRecord, trackRecordStamp } from './terminal-track-record'
+import { queryReliability, reliabilityStamp } from './terminal-reliability'
+import { repoSlug, workflowRunsUrl } from '../pipeline/reliability/deploys'
+import { DETECTION_RULES, RELIABILITY_DAYS } from '../../shared/utils/terminal-reliability'
+import manifest from '~~/fleet.json'
 
 /** What the server needs from its host — the route supplies the real thing, the test a fixture. */
 export interface McpDeps {
@@ -99,7 +104,7 @@ export interface McpDeps {
     query: (ctx: QueryContext) => Promise<T>,
     variant?: string,
     /** `filed`: read by filing date, so an instant before the first snapshot is answered. */
-    opts?: { filed?: boolean; archived?: boolean },
+    opts?: { filed?: boolean; archived?: boolean | 'hiring' },
   ): Promise<AsOfPayload<T>>
   /** The site's llms.txt body — the same bytes GET /llms.txt serves. */
   llmsTxt: string
@@ -227,7 +232,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
     as_of: string | undefined,
     query: (ctx: QueryContext) => Promise<T>,
     variant?: string,
-    opts?: { filed?: boolean; archived?: boolean },
+    opts?: { filed?: boolean; archived?: boolean | 'hiring' },
   ) => {
     if (as_of === undefined) return deps.serve(name, query, variant)
     const at = parseAsOfQuery({ as_of }).as_of!
@@ -307,14 +312,17 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'have no public hiring feed we can read, so each total is 0 with the audit’s reason rather than a guess. Google counts DeepMind’s roles only ' +
         '(company_names says so), not Alphabet’s. xAI’s board is blended with SpaceX ' +
         '(every row carries company_name "SpaceXAI", now "SpaceXSI"); the caveat and company_names travel with the row so you can say so. ' +
-        'Optional provider filter. ' +
+        'as_of before our first read of the boards answers from the Internet Archive’s copies of each lab’s own board ' +
+        '(source_id wayback:<era>, point_in_time names each copy; event time, not knowledge time). Optional provider filter. ' +
         PROVENANCE,
       inputSchema: z.object({ provider: ProviderSchema.optional(), as_of: AsOfSchema }),
       annotations: READ_ONLY,
     },
     ({ provider, as_of }) =>
       asOfErrors(async () => {
-        const hiring = await read('hiring', as_of, (ctx) => queryHiring(deps.db, ctx))
+        const hiring = await read('hiring', as_of, (ctx) => queryHiring(deps.db, ctx), '', {
+          archived: 'hiring',
+        })
         if (!provider) return json(hiring)
         return json({
           ...hiring,
@@ -425,20 +433,38 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'rows the series rests on. clusters[] sums named department clusters from sources.yaml — physical-infrastructure (Data Center, ' +
         'Infrastructure, Facilities, Energy, Construction, Compute, Hardware; not Software) is the capacity-buildout signal — with the ' +
         'matched department labels listed so the sum is checkable. Meta, DeepSeek, Alibaba and Moonshot AI are audited cuts (feed ' +
-        'no_public_feed, reason given) with empty series; xAI carries the SpaceXAI blend caveat. Optional provider filter. ' +
+        'no_public_feed, reason given) with empty series; xAI carries the SpaceXAI blend caveat. archived[] is the history from ' +
+        'before the live series: the Internet Archive’s weekly copies of each lab’s own board (basis archived, source_id ' +
+        'wayback:<era>, at = when the Archive saw it, fetched_at = when we read it), with the board total and clusters, CC BY-NC. ' +
+        'Their departments are left out here: GET /api/hiring/history has them, and /export/archived_hiring.csv every row. ' +
+        'reach says how far each lab’s history goes and every gap with its reason; archive_method says the rest. ' +
+        'Optional provider filter. ' +
         PROVENANCE,
       inputSchema: z.object({ provider: ProviderSchema.optional(), as_of: AsOfSchema }),
       annotations: READ_ONLY,
     },
     ({ provider, as_of }) =>
       asOfErrors(async () => {
-        const history = await read('hiring-history', as_of, (ctx) =>
-          queryHiringHistory(deps.db, ctx),
+        const history = await read(
+          'hiring-history',
+          as_of,
+          (ctx) => queryHiringHistory(deps.db, ctx),
+          '',
+          { archived: 'hiring' },
         )
-        if (!provider) return json(history)
-        return json({
+        // An archived copy's departments would put a few hundred kB in a tool
+        // result; the totals and clusters stay, the rest is one request away.
+        const slim = {
           ...history,
-          providers: history.providers.filter((p) => p.provider === provider),
+          providers: history.providers.map((p) => ({
+            ...p,
+            archived: p.archived.map((a) => ({ ...a, departments: null })),
+          })),
+        }
+        if (!provider) return json(slim)
+        return json({
+          ...slim,
+          providers: slim.providers.filter((p) => p.provider === provider),
         })
       }),
   )
@@ -712,6 +738,63 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
           await recipeRunsStamp(deps.db),
         ),
       ),
+  )
+
+  server.registerTool(
+    'get_identifiers',
+    {
+      title: 'Security-master identifiers',
+      description:
+        'identifiers: one row per company the site names (each lab, each SEC filer we read, each comparison company) with its legal name, ' +
+        'country, listing status (listed, registered, subsidiary, private), CIK, LEI and, when listed, ticker, MIC and US composite FIGI. ' +
+        'Each identifier has its own _source_url and _fetched_at, and a null LEI has its reason in lei_note. entity_id is the value of every ' +
+        'provider and company field in the other tools, so join on it. securities: which listed security carries each lab (self, a parent ' +
+        'that consolidates it, or an investor that discloses a stake) with disclosed_in, the filing that says so. A stake is never inferred ' +
+        'from press. Optional entity filter. ' +
+        PROVENANCE,
+      inputSchema: z.object({
+        entity: z
+          .string()
+          .regex(/^[a-z][a-z-]{0,39}$/)
+          .optional()
+          .describe('An entity_id, e.g. anthropic, alphabet, microsoft.'),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ entity }) =>
+      json(await deps.serve('identifiers', async () => identifiersPayload(entity), entity ?? '')),
+  )
+
+  server.registerTool(
+    'get_reliability',
+    {
+      title: 'Reliability: how the feed itself has performed',
+      description:
+        `For due diligence on the feed, computed from stored records. sources: each registered source (derived per-model and per-filing sources folded by template, members > 0) with runs and good runs over the last ${RELIABILITY_DAYS.short} (short) and ${RELIABILITY_DAYS.long} (long) UTC days, ` +
+        'where good is ok, unchanged, baseline or absent (an answered check) and skipped runs are not counted; longest_gap is the longest wait between good runs (to null while still open); stated_minutes is how often we say we check it. Worst first. ' +
+        'freshness: per lane (sec: SEC feeds and model catalogs, stated every 30 minutes; all: every source, stated every 6 hours), the periods our data was past its stated age, from the poll ticks in which most sources answered. ' +
+        `detection: each filing a no-model rule alerted on (${DETECTION_RULES.join(', ')}), its first alert time against EDGAR's acceptance time (accepted_at, read from the stored submissions JSON or filing index; null when no stored payload listed it), ` +
+        'and released_at, when EDGAR made it public (6:00 a.m. Eastern on the filing date for a filing accepted after 5:30 p.m. Eastern). Median and worst minutes for both. ' +
+        'deploys: each run of the post-deploy smoke test on main from GitHub Actions (conclusion success, failure, or cancelled when a newer push superseded it), with build_sha the commit now deployed. ' +
+        'corrections: the count and newest entry of the public corrections log. ' +
+        PROVENANCE,
+      annotations: READ_ONLY,
+    },
+    async () => {
+      const slug = repoSlug(manifest.links.github ?? '')
+      const opts = {
+        buildSha: deps.status.buildSha || null,
+        repoUrl: manifest.links.github ?? '',
+        runsUrl: slug ? workflowRunsUrl(slug) : '',
+      }
+      return json(
+        await deps.serve(
+          'reliability',
+          (ctx) => queryReliability(deps.db, ctx, opts),
+          await reliabilityStamp(deps.db),
+        ),
+      )
+    },
   )
 
   server.registerTool(

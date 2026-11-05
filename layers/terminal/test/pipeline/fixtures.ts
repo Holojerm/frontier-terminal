@@ -78,6 +78,32 @@ import edgarSubmissionsBaba from '~~/fixtures/sec/edgar-submissions-baba.json?ra
 import edgarSubmissionsMsft from '~~/fixtures/sec/edgar-submissions-msft.json?raw'
 import edgarSubmissionsNvda from '~~/fixtures/sec/edgar-submissions-nvda.json?raw'
 import edgarSubmissionsSpcx from '~~/fixtures/sec/edgar-submissions-spcx.json?raw'
+import identifiersAlibaba20F2026Ex81 from '~~/fixtures/identifiers/alibaba-20-f-2026-ex8-1.htm?raw'
+import identifiersAlphabet10K2025Ex21 from '~~/fixtures/identifiers/alphabet-10-k-2025-ex21.htm?raw'
+import identifiersAnthropicS1ANotePurchase from '~~/fixtures/identifiers/anthropic-s-1-a-note-purchase.htm?raw'
+import identifiersDeepseekTermsOfUse from '~~/fixtures/identifiers/deepseek-terms-of-use.html?raw'
+import identifiersGleifLeiRecords from '~~/fixtures/identifiers/gleif-lei-records.json?raw'
+import identifiersGleifSearchDeepseek from '~~/fixtures/identifiers/gleif-search-deepseek.json?raw'
+import identifiersGleifSearchHangzhouDeepseek from '~~/fixtures/identifiers/gleif-search-hangzhou-deepseek.json?raw'
+import identifiersGleifSearchMoonshotAi from '~~/fixtures/identifiers/gleif-search-moonshot-ai.json?raw'
+import identifiersGleifSearchSpacexSuperIntelligence from '~~/fixtures/identifiers/gleif-search-spacex-super-intelligence.json?raw'
+import identifiersGleifSearchTogetherComputer from '~~/fixtures/identifiers/gleif-search-together-computer.json?raw'
+import identifiersGleifSearchXAi from '~~/fixtures/identifiers/gleif-search-x-ai.json?raw'
+import identifiersLambdaTermsOfService from '~~/fixtures/identifiers/lambda-terms-of-service.html?raw'
+import identifiersMistralCommercialTerms from '~~/fixtures/identifiers/mistral-commercial-terms.html?raw'
+import identifiersOpenaiTermsOfUse from '~~/fixtures/identifiers/openai-terms-of-use.html?raw'
+import identifiersOpenfigiMapping from '~~/fixtures/identifiers/openfigi-mapping.json?raw'
+import identifiersSecCompanyTickersExchange from '~~/fixtures/identifiers/sec-company-tickers-exchange.json?raw'
+import identifiersSecSubmissionsAkam from '~~/fixtures/identifiers/sec-submissions-akam.json?raw'
+import identifiersSecSubmissionsAnthropic from '~~/fixtures/identifiers/sec-submissions-anthropic.json?raw'
+import identifiersSecSubmissionsCrwv from '~~/fixtures/identifiers/sec-submissions-crwv.json?raw'
+import identifiersSecSubmissionsDocn from '~~/fixtures/identifiers/sec-submissions-docn.json?raw'
+import identifiersSecSubmissionsFsly from '~~/fixtures/identifiers/sec-submissions-fsly.json?raw'
+import identifiersSecSubmissionsNbis from '~~/fixtures/identifiers/sec-submissions-nbis.json?raw'
+import identifiersSecSubmissionsNet from '~~/fixtures/identifiers/sec-submissions-net.json?raw'
+import identifiersSpacexS1Ex21 from '~~/fixtures/identifiers/spacex-s-1-ex2-1.htm?raw'
+import identifiersTogetherTermsOfService from '~~/fixtures/identifiers/together-terms-of-service.html?raw'
+import identifiersXaiTermsOfService from '~~/fixtures/identifiers/xai-terms-of-service.html?raw'
 import anthropicStatus from '~~/fixtures/status/anthropic-status.xml?raw'
 import googleCloudStatus from '~~/fixtures/status/google-cloud-status.json?raw'
 import mistralStatus from '~~/fixtures/status/mistral-status.json?raw'
@@ -90,6 +116,20 @@ import waybackAnthropicPricing2025 from '~~/fixtures/pricing/wayback/anthropic-p
 import waybackOpenaiApiPricing2024 from '~~/fixtures/pricing/wayback/openai-api-pricing-2024-12.html?raw'
 import waybackOpenaiDocsPricing2026 from '~~/fixtures/pricing/wayback/openai-docs-pricing-2026-03.html?raw'
 import waybackOpenaiPricing2023 from '~~/fixtures/pricing/wayback/openai-pricing-2023-07.html?raw'
+import waybackHiringAnthropicDepartments202406 from '~~/fixtures/hiring/wayback/anthropic-departments-2024-06.json?raw'
+import waybackHiringAnthropicGreenhouse202406 from '~~/fixtures/hiring/wayback/anthropic-greenhouse-2024-06.html?raw'
+import waybackHiringAnthropicJobBoards202509 from '~~/fixtures/hiring/wayback/anthropic-job-boards-2025-09.html?raw'
+import waybackHiringAnthropicLever202307 from '~~/fixtures/hiring/wayback/anthropic-lever-2023-07.html?raw'
+import waybackHiringDeepmindGreenhouse202503 from '~~/fixtures/hiring/wayback/deepmind-greenhouse-2025-03.html?raw'
+import waybackHiringDeepmindJobBoards202507 from '~~/fixtures/hiring/wayback/deepmind-job-boards-2025-07.html?raw'
+import waybackHiringMistralAshby202609 from '~~/fixtures/hiring/wayback/mistral-ashby-2026-09.html?raw'
+import waybackHiringMistralLever202508 from '~~/fixtures/hiring/wayback/mistral-lever-2025-08.html?raw'
+import waybackHiringOpenaiAshby202507 from '~~/fixtures/hiring/wayback/openai-ashby-2025-07.html?raw'
+import waybackHiringOpenaiAshby202608 from '~~/fixtures/hiring/wayback/openai-ashby-2026-08.html?raw'
+import waybackHiringOpenaiGreenhouse202307 from '~~/fixtures/hiring/wayback/openai-greenhouse-2023-07.html?raw'
+import waybackHiringXaiGreenhouse202502 from '~~/fixtures/hiring/wayback/xai-greenhouse-2025-02.html?raw'
+import waybackHiringXaiJobBoards202509 from '~~/fixtures/hiring/wayback/xai-job-boards-2025-09.html?raw'
+import waybackHiringXaiJobs202502 from '~~/fixtures/hiring/wayback/xai-jobs-2025-02.json?raw'
 import waybackOpenaiPricing2024 from '~~/fixtures/pricing/wayback/openai-pricing-2024-04.html?raw'
 import waybackOpenaiPricingMd2026 from '~~/fixtures/pricing/wayback/openai-pricing-2026-07.md?raw'
 import waybackOpenaiApiPricing2025 from '~~/fixtures/pricing/wayback/openai-api-pricing-2025-01.html?raw'
@@ -196,6 +236,35 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/sec/edgar-submissions-nvda.json': edgarSubmissionsNvda,
   'fixtures/sec/edgar-submissions-spcx.json': edgarSubmissionsSpcx,
   'fixtures/sec/xbrl-segment-googl-2026-10-29.xml': xbrlSegmentGoogl,
+  'fixtures/identifiers/alibaba-20-f-2026-ex8-1.htm': identifiersAlibaba20F2026Ex81,
+  'fixtures/identifiers/alphabet-10-k-2025-ex21.htm': identifiersAlphabet10K2025Ex21,
+  'fixtures/identifiers/anthropic-s-1-a-note-purchase.htm': identifiersAnthropicS1ANotePurchase,
+  'fixtures/identifiers/deepseek-terms-of-use.html': identifiersDeepseekTermsOfUse,
+  'fixtures/identifiers/gleif-lei-records.json': identifiersGleifLeiRecords,
+  'fixtures/identifiers/gleif-search-deepseek.json': identifiersGleifSearchDeepseek,
+  'fixtures/identifiers/gleif-search-hangzhou-deepseek.json':
+    identifiersGleifSearchHangzhouDeepseek,
+  'fixtures/identifiers/gleif-search-moonshot-ai.json': identifiersGleifSearchMoonshotAi,
+  'fixtures/identifiers/gleif-search-spacex-super-intelligence.json':
+    identifiersGleifSearchSpacexSuperIntelligence,
+  'fixtures/identifiers/gleif-search-together-computer.json':
+    identifiersGleifSearchTogetherComputer,
+  'fixtures/identifiers/gleif-search-x-ai.json': identifiersGleifSearchXAi,
+  'fixtures/identifiers/lambda-terms-of-service.html': identifiersLambdaTermsOfService,
+  'fixtures/identifiers/mistral-commercial-terms.html': identifiersMistralCommercialTerms,
+  'fixtures/identifiers/openai-terms-of-use.html': identifiersOpenaiTermsOfUse,
+  'fixtures/identifiers/openfigi-mapping.json': identifiersOpenfigiMapping,
+  'fixtures/identifiers/sec-company-tickers-exchange.json': identifiersSecCompanyTickersExchange,
+  'fixtures/identifiers/sec-submissions-akam.json': identifiersSecSubmissionsAkam,
+  'fixtures/identifiers/sec-submissions-anthropic.json': identifiersSecSubmissionsAnthropic,
+  'fixtures/identifiers/sec-submissions-crwv.json': identifiersSecSubmissionsCrwv,
+  'fixtures/identifiers/sec-submissions-docn.json': identifiersSecSubmissionsDocn,
+  'fixtures/identifiers/sec-submissions-fsly.json': identifiersSecSubmissionsFsly,
+  'fixtures/identifiers/sec-submissions-nbis.json': identifiersSecSubmissionsNbis,
+  'fixtures/identifiers/sec-submissions-net.json': identifiersSecSubmissionsNet,
+  'fixtures/identifiers/spacex-s-1-ex2-1.htm': identifiersSpacexS1Ex21,
+  'fixtures/identifiers/together-terms-of-service.html': identifiersTogetherTermsOfService,
+  'fixtures/identifiers/xai-terms-of-service.html': identifiersXaiTermsOfService,
   'fixtures/sec/filing-index-anthropic-s-1.html': filingIndexAnthropic,
   'fixtures/sec/prospectus-anthropic-s-1.html': prospectusAnthropic,
   'fixtures/sec/prospectus-anthropic-s-1-a.html': prospectusAnthropicAmended,
@@ -236,6 +305,23 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/pricing/wayback/deepseek-pricing-2026-08.html': waybackDeepseekPricing202608,
   'fixtures/pricing/wayback/alibaba-model-pricing-2026-01.html': waybackAlibabaPricing202601,
   'fixtures/pricing/wayback/alibaba-model-pricing-2026-08.html': waybackAlibabaPricing202608,
+  'fixtures/hiring/wayback/anthropic-departments-2024-06.json':
+    waybackHiringAnthropicDepartments202406,
+  'fixtures/hiring/wayback/anthropic-greenhouse-2024-06.html':
+    waybackHiringAnthropicGreenhouse202406,
+  'fixtures/hiring/wayback/anthropic-job-boards-2025-09.html':
+    waybackHiringAnthropicJobBoards202509,
+  'fixtures/hiring/wayback/anthropic-lever-2023-07.html': waybackHiringAnthropicLever202307,
+  'fixtures/hiring/wayback/deepmind-greenhouse-2025-03.html': waybackHiringDeepmindGreenhouse202503,
+  'fixtures/hiring/wayback/deepmind-job-boards-2025-07.html': waybackHiringDeepmindJobBoards202507,
+  'fixtures/hiring/wayback/mistral-ashby-2026-09.html': waybackHiringMistralAshby202609,
+  'fixtures/hiring/wayback/mistral-lever-2025-08.html': waybackHiringMistralLever202508,
+  'fixtures/hiring/wayback/openai-ashby-2025-07.html': waybackHiringOpenaiAshby202507,
+  'fixtures/hiring/wayback/openai-ashby-2026-08.html': waybackHiringOpenaiAshby202608,
+  'fixtures/hiring/wayback/openai-greenhouse-2023-07.html': waybackHiringOpenaiGreenhouse202307,
+  'fixtures/hiring/wayback/xai-greenhouse-2025-02.html': waybackHiringXaiGreenhouse202502,
+  'fixtures/hiring/wayback/xai-job-boards-2025-09.html': waybackHiringXaiJobBoards202509,
+  'fixtures/hiring/wayback/xai-jobs-2025-02.json': waybackHiringXaiJobs202502,
   'sources.yaml': sourcesYaml,
 }
 

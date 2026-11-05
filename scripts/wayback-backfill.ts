@@ -1,14 +1,19 @@
 #!/usr/bin/env bun
-// One-off backfill of API price history from the Internet Archive's captures
-// of each lab's own pricing page (layers/terminal/server/pipeline/archive/).
-// Never on a cron: the owner runs it, and re-runs are idempotent.
+// One-off backfill of history from before this site watched the labs, from
+// the Internet Archive's captures of each lab's own pages
+// (layers/terminal/server/pipeline/archive/): API price lists (eras.ts, rows
+// in archived_prices) and job boards (hiring-eras.ts, counts in
+// archived_hiring). Never on a cron: the owner runs it, and re-runs are
+// idempotent.
 //
 //   bun run backfill:wayback -- --plan                     list what would be fetched
 //   bun run backfill:wayback                               local dev DB (.data/db/sqlite.db)
 //   bun run backfill:wayback -- --era openai-api-pricing-2024 --limit 20
+//   bun run backfill:wayback -- --axis hiring              job boards only
 //   bun run backfill:wayback -- --remote                   production D1 + R2, through wrangler
 //
-// Flags: --provider <id>, --era <id>, --cadence-days <n> (default 7: one
+// Flags: --axis pricing|hiring (default both), --provider <id>, --era <id>,
+// --cadence-days <n> (default 7: one
 // capture per week of each era), --limit <n> captures this run, --redo
 // (re-parse captures already recorded, from the saved bytes where we have
 // them), --retry-skipped (re-fetch and re-parse only skipped ones).
@@ -26,14 +31,16 @@ import { Database } from 'bun:sqlite'
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
-import { ARCHIVE_ERAS, type ArchiveEra } from '../layers/terminal/server/pipeline/archive/eras'
+import { ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/eras'
+import { HIRING_ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/hiring-eras'
 import {
   archiveRawKey,
   archiveRows,
   captureId,
+  hiringRows,
   skippedCapture,
+  type ArchiveAxis,
   type ArchiveCaptureRow,
-  type ArchivedPriceRow,
 } from '../layers/terminal/server/pipeline/archive/rows'
 import {
   captureUrl,
@@ -76,6 +83,7 @@ function flagsOf(argv: string[]): Map<string, string | true> {
 
 const KNOWN = new Set([
   'plan',
+  'axis',
   'remote',
   'provider',
   'era',
@@ -155,11 +163,45 @@ function insert(table: string, row: Row, verb = 'INSERT OR REPLACE'): string {
   return `${verb} INTO ${table} (${cols.join(', ')}) VALUES (${cols.map((c) => lit(row[c])).join(', ')})`
 }
 
-function statementsFor(capture: ArchiveCaptureRow, prices: ArchivedPriceRow[]): string[] {
+/** One era of either axis: its window, and how a capture becomes rows in which table. */
+interface Job {
+  axis: ArchiveAxis
+  era: { id: string; provider: string; url: string; from: string; until: string }
+  table: 'archived_prices' | 'archived_hiring'
+  rows(capture: CdxCapture, text: string, bytes: number, fetchedAt: string): Built
+}
+
+interface Built {
+  capture: ArchiveCaptureRow
+  rows: Row[]
+}
+
+const JOBS: readonly Job[] = [
+  ...ARCHIVE_ERAS.map((era): Job => ({
+    axis: 'pricing',
+    era,
+    table: 'archived_prices',
+    rows: (c, text, bytes, at) => {
+      const out = archiveRows(era, c, text, bytes, at)
+      return { capture: out.capture, rows: out.prices }
+    },
+  })),
+  ...HIRING_ARCHIVE_ERAS.map((era): Job => ({
+    axis: 'hiring',
+    era,
+    table: 'archived_hiring',
+    rows: (c, text, bytes, at) => {
+      const out = hiringRows(era, c, text, bytes, at)
+      return { capture: out.capture, rows: out.counts }
+    },
+  })),
+]
+
+function statementsFor(job: Job, built: Built): string[] {
   return [
-    `DELETE FROM archived_prices WHERE capture_id = ${lit(capture.id)}`,
-    insert('archive_captures', capture),
-    ...prices.map((p) => insert('archived_prices', p)),
+    `DELETE FROM ${job.table} WHERE capture_id = ${lit(built.capture.id)}`,
+    insert('archive_captures', built.capture),
+    ...built.rows.map((r) => insert(job.table, r)),
   ]
 }
 
@@ -204,12 +246,17 @@ async function main() {
   if (limit !== Infinity && (!Number.isInteger(limit) || limit < 1)) {
     fail('--limit must be a positive whole number.')
   }
-  const eras = ARCHIVE_ERAS.filter(
-    (e) =>
-      (!flags.has('provider') || e.provider === flags.get('provider')) &&
-      (!flags.has('era') || e.id === flags.get('era')),
+  const axis = flags.get('axis')
+  if (axis !== undefined && axis !== 'pricing' && axis !== 'hiring') {
+    fail('--axis must be pricing or hiring.')
+  }
+  const jobs = JOBS.filter(
+    (j) =>
+      (axis === undefined || j.axis === axis) &&
+      (!flags.has('provider') || j.era.provider === flags.get('provider')) &&
+      (!flags.has('era') || j.era.id === flags.get('era')),
   )
-  if (eras.length === 0) fail('No era matches --provider/--era.')
+  if (jobs.length === 0) fail('No era matches --axis/--provider/--era.')
 
   const remote = flags.has('remote')
   const plan = flags.has('plan')
@@ -226,7 +273,8 @@ async function main() {
 
   let done = 0
   const totals = { parsed: 0, skipped: 0, rows: 0 }
-  for (const era of eras) {
+  for (const job of jobs) {
+    const era = job.era
     const cdx = await client.get(cdxUrl(era.url, era.from, era.until))
     if (!cdx.ok) {
       log(`${era.id}: CDX failed (${cdx.detail}); skipping this era this run.`)
@@ -251,12 +299,14 @@ async function main() {
       if (!wanted) continue
       done++
 
-      const result = await captureRows(era, capture, client, remote, target!)
-      target!.apply(statementsFor(result.capture, result.prices))
+      const result = await captureRows(job, capture, client, remote, target!)
+      target!.apply(statementsFor(job, result))
       if (result.capture.status === 'parsed') {
         totals.parsed++
-        totals.rows += result.prices.length
-        log(`  ${id}: ${result.prices.length} rows`)
+        totals.rows += result.rows.length
+        log(
+          `  ${id}: ${result.rows.length} rows${result.capture.detail ? ` (${result.capture.detail})` : ''}`,
+        )
       } else {
         totals.skipped++
         log(`  ${id}: skipped (${result.capture.detail})`)
@@ -271,44 +321,35 @@ async function main() {
 }
 
 async function captureRows(
-  era: ArchiveEra,
+  job: Job,
   capture: CdxCapture,
   client: ReturnType<typeof waybackClient>,
   remote: boolean,
   target: Target,
-): Promise<{ capture: ArchiveCaptureRow; prices: ArchivedPriceRow[] }> {
+): Promise<Built> {
+  const era = job.era
+  const skip = (at: string, detail: string): Built => ({
+    capture: skippedCapture(era, capture, at, detail, null, job.axis),
+    rows: [],
+  })
   const key = archiveRawKey(era, capture.timestamp)
   const url = captureUrl(capture.timestamp, capture.original)
   let saved = readSaved(key)
   if (!saved) {
     const fetched = await client.get(url)
     const fetched_at = new Date().toISOString()
-    if (!fetched.ok)
-      return { capture: skippedCapture(era, capture, fetched_at, fetched.detail), prices: [] }
-    if (fetched.status !== 200) {
-      return {
-        capture: skippedCapture(era, capture, fetched_at, `archived HTTP ${fetched.status}`),
-        prices: [],
-      }
-    }
+    if (!fetched.ok) return skip(fetched_at, fetched.detail)
+    if (fetched.status !== 200) return skip(fetched_at, `archived HTTP ${fetched.status}`)
     if (
       finalTimestamp(fetched.finalUrl) !== capture.timestamp ||
       !sameOriginal(fetched.finalUrl, capture.original)
     ) {
-      return {
-        capture: skippedCapture(
-          era,
-          capture,
-          fetched_at,
-          `the Archive answered with a different capture: ${fetched.finalUrl}`,
-        ),
-        prices: [],
-      }
+      return skip(fetched_at, `the Archive answered with a different capture: ${fetched.finalUrl}`)
     }
     saved = { text: fetched.text, bytes: fetched.bytes, fetched_at }
     save(key, saved, url)
   }
-  const out = archiveRows(era, capture, saved.text, saved.bytes, saved.fetched_at)
+  const out = job.rows(capture, saved.text, saved.bytes, saved.fetched_at)
   if (remote) target.putRaw(key, blobPath(key))
   return out
 }

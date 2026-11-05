@@ -71,6 +71,7 @@ export function useSiteContext(): SiteContext {
     // the dashboard reads it — a second copy in runtimeConfig would be a second
     // thing to keep true.
     repoUrl: manifest.links.github ?? '',
+    sameAs: config.public.sameAs,
   }
 }
 

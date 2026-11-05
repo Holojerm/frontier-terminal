@@ -1,0 +1,18 @@
+{
+ "query": "DeepSeek",
+ "total": 2,
+ "data": [
+  {
+   "lei": "2549006CPGEVP0GXXO03",
+   "legalName": "Tuttle Capital DeepSeek Global AI Innovation and Disruption ETF",
+   "country": "US",
+   "registrationStatus": "RETIRED"
+  },
+  {
+   "lei": "984500867CGC7EEDU934",
+   "legalName": "DEEPSEEK S.R.L.",
+   "country": "RO",
+   "registrationStatus": "ISSUED"
+  }
+ ]
+}

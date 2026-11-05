@@ -23,6 +23,41 @@ whose columns don't match the releases in
 `layers/terminal/server/utils/data-schema.ts`, or whose version bump is smaller
 than its changes need.
 
+## 1.5.0 (2026-11-05)
+
+Hiring history from before we read the labs' job boards, read from the
+Internet Archive's copies of each lab's own board:
+
+- `archived_hiring`: open roles per copy we could read. Each copy has one
+  `board` row with the open roles on the whole board, and one `department`
+  row per department when the copy lists every role. `label` is the
+  department as the board printed it then. `department` is the live
+  department it files under, where the board's own id ties the two.
+  `source_url` is the copy, `captured_at` when the Archive saw the board,
+  `fetched_at` when we read the copy, and `basis` is always `archived`.
+- `archive_captures` gains `axis`: `pricing` (rows in `archived_prices`) or
+  `hiring` (rows in `archived_hiring`). Every existing row is `pricing`.
+
+## 1.4.0 (2026-11-05)
+
+Identifiers for joining our tables to a security master:
+
+- `entity_identifiers`: one row per company we name (each lab, each SEC filer
+  we read, each comparison company). It has the legal name, country, listing
+  status, CIK, LEI, and for a listed company the ticker, exchange, MIC,
+  composite FIGI and share-class FIGI. Each identifier has its own
+  `_source_url` and `_fetched_at`. A null LEI has its reason in `lei_note`.
+  `entity_id` is the value of every `provider` and `company` column, so join
+  on it. Tables that carry `cik` or `ticker` join on those too.
+- `entity_securities` gains `mic`, `figi`, and `disclosed_in`, the filing that
+  discloses a parent or an investor. It also gains a row for Alphabet’s stake
+  in Anthropic, from the note purchase agreements in Anthropic’s S-1/A.
+- `/api/identifiers` serves both tables, and the MCP server has a
+  `get_identifiers` tool.
+- The data dictionary now gives each table its grain, update cadence, event
+  and knowledge time columns, where its history starts, the identifier
+  columns to join on, and whether a licensee can use it commercially.
+
 ## 1.3.0 (2026-11-05)
 
 New: every bulk file is also a Parquet file. No table columns changed.

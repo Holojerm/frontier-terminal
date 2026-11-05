@@ -1,0 +1,142 @@
+{
+ "fields": [
+  "cik",
+  "name",
+  "ticker",
+  "exchange"
+ ],
+ "data": [
+  [
+   1045810,
+   "NVIDIA CORP",
+   "NVDA",
+   "Nasdaq"
+  ],
+  [
+   789019,
+   "MICROSOFT CORP",
+   "MSFT",
+   "Nasdaq"
+  ],
+  [
+   1652044,
+   "Alphabet Inc.",
+   "GOOGL",
+   "Nasdaq"
+  ],
+  [
+   1018724,
+   "AMAZON COM INC",
+   "AMZN",
+   "Nasdaq"
+  ],
+  [
+   1326801,
+   "Meta Platforms, Inc.",
+   "META",
+   "Nasdaq"
+  ],
+  [
+   1341439,
+   "ORACLE CORP",
+   "ORCL",
+   "NYSE"
+  ],
+  [
+   1577552,
+   "Alibaba Group Holding Ltd",
+   "BABA",
+   "NYSE"
+  ],
+  [
+   1477333,
+   "Cloudflare, Inc.",
+   "NET",
+   "NYSE"
+  ],
+  [
+   1513845,
+   "Nebius Group N.V.",
+   "NBIS",
+   "Nasdaq"
+  ],
+  [
+   1769628,
+   "CoreWeave, Inc.",
+   "CRWV",
+   "Nasdaq"
+  ],
+  [
+   1086222,
+   "AKAMAI TECHNOLOGIES INC",
+   "AKAM",
+   "Nasdaq"
+  ],
+  [
+   1582961,
+   "DigitalOcean Holdings, Inc.",
+   "DOCN",
+   "NYSE"
+  ],
+  [
+   1517413,
+   "Fastly, Inc.",
+   "FSLY",
+   "Nasdaq"
+  ],
+  [
+   1181412,
+   "SPACE EXPLORATION TECHNOLOGIES CORP",
+   "SPCX",
+   "Nasdaq"
+  ],
+  [
+   2130357,
+   "Anthropic, PBC",
+   "ANT",
+   null
+  ],
+  [
+   1652044,
+   "Alphabet Inc.",
+   "GOOG",
+   "Nasdaq"
+  ],
+  [
+   1577552,
+   "Alibaba Group Holding Ltd",
+   "BABAF",
+   "OTC"
+  ],
+  [
+   1326801,
+   "Meta Platforms, Inc.",
+   "METAM",
+   "Nasdaq"
+  ],
+  [
+   1341439,
+   "ORACLE CORP",
+   "ORCL-PD",
+   "NYSE"
+  ],
+  [
+   1577552,
+   "Alibaba Group Holding Ltd",
+   "BBAAY",
+   "OTC"
+  ],
+  [
+   1652044,
+   "Alphabet Inc.",
+   "GOOGM",
+   "Nasdaq"
+  ],
+  [
+   1652044,
+   "Alphabet Inc.",
+   "GOOGN",
+   "Nasdaq"
+  ]
+ ]
+}

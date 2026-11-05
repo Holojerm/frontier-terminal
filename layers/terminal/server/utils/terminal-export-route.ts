@@ -3,6 +3,7 @@
 // parseExportPath for why the route files themselves decide nothing.
 
 import type { H3Event } from 'h3'
+import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { HISTORY_LICENSE, PAID_LICENSE, licenseSplit } from '#shared/utils/license'
 import { cacheControlFor, rateLimitTerminal } from './api-access'
@@ -47,7 +48,7 @@ export async function serveExport(event: H3Event, options: { sample?: boolean } 
   // parseExportPath). It reads no database, so it skips the export budget,
   // which /data's server render would otherwise spend on every view.
   if (parsed?.name === DICTIONARY_NAME && !options.sample) {
-    const dictionary = dataDictionary()
+    const dictionary = dataDictionary(sourcesYaml)
     setResponseHeader(event, 'Cache-Control', 'public, max-age=300')
     setResponseHeader(event, SCHEMA_VERSION_HEADER, SCHEMA_VERSION)
     if (parsed.format === 'json') return dictionary

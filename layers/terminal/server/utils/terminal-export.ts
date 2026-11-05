@@ -50,6 +50,7 @@ import {
   rewindEntities,
 } from './terminal-asof'
 import { ENTITY_SECURITIES, ENTITY_SECURITY_COLUMNS } from './terminal-entities'
+import { ENTITY_IDENTIFIERS, ENTITY_IDENTIFIER_COLUMNS } from './terminal-identifiers'
 import { buildSeries } from '../exposure/series'
 import { filedBefore } from './terminal-exposure'
 import { byString } from './terminal-json'
@@ -843,9 +844,30 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     [tables.archivedPrices.captured_at, tables.archivedPrices.id],
     byColumn(tables.archivedPrices.captured_at),
   ),
+  archived_hiring: plainTable(
+    'archived_hiring',
+    'Hiring history from before we read the labs’ job boards: open roles per Internet Archive copy of each lab’s own board that we could read. One board row per copy, and one row per department when the copy lists every role. source_url is the copy, captured_at when the Archive saw the board, fetched_at when we read the copy. Never mixed into the live tables.',
+    tables.archivedHiring,
+    [
+      'id',
+      'capture_id',
+      'provider',
+      'scope',
+      'label',
+      'department_id',
+      'department',
+      'open_roles',
+      'captured_at',
+      'original_url',
+      'basis',
+      ...PROVENANCE,
+    ],
+    [tables.archivedHiring.captured_at, tables.archivedHiring.id],
+    byColumn(tables.archivedHiring.captured_at),
+  ),
   archive_captures: plainTable(
     'archive_captures',
-    'Every Internet Archive copy the price-history backfill considered: read (with how many rows it gave) or skipped, with the reason. A skipped copy gave no rows; nothing on it was guessed.',
+    'Every Internet Archive copy the price- and hiring-history backfill considered: read (with how many rows it gave) or skipped, with the reason. A skipped copy gave no rows; nothing on it was guessed.',
     tables.archiveCaptures,
     [
       'id',
@@ -859,6 +881,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
       'raw_key',
       'bytes',
       'rows',
+      'axis',
       ...PROVENANCE,
     ],
     [tables.archiveCaptures.captured_at, tables.archiveCaptures.id],
@@ -1030,6 +1053,13 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
     ENTITY_SECURITIES,
     'it’s a hand-checked table kept in code, and each row is dated by its checked_on.',
   ),
+  entity_identifiers: staticTable(
+    'entity_identifiers',
+    'One row per company we name: each lab, each SEC filer we read, and each comparison company. Each row has the legal name, country, CIK, LEI, and for a listed company its ticker, MIC, and FIGI. Every identifier has the URL and time we read it. entity_id is the value of every provider and company column, so this is the table to join on.',
+    ENTITY_IDENTIFIER_COLUMNS,
+    ENTITY_IDENTIFIERS,
+    'it’s a registry kept in code, and each identifier is dated by its own fetched_at.',
+  ),
 }
 
 export const EXPORT_TABLE_NAMES = Object.keys(EXPORT_TABLES)
@@ -1041,6 +1071,7 @@ export const EXPORT_TABLE_NAMES = Object.keys(EXPORT_TABLES)
  */
 export const ARCHIVED_EXPORTS: ReadonlySet<string> = new Set([
   'archived_prices',
+  'archived_hiring',
   'archive_captures',
 ])
 
@@ -1132,6 +1163,12 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
     'fetched_at',
     tables.archivedPrices.captured_at,
   ),
+  archived_hiring: windowed(
+    ['captured_at'],
+    'captured_at, when the Internet Archive saw the board',
+    'fetched_at',
+    tables.archivedHiring.captured_at,
+  ),
   archive_captures: windowed(
     ['captured_at'],
     'captured_at, when the Internet Archive saw the page',
@@ -1183,6 +1220,7 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
     tables.sourceRuns.started_at,
   ),
   entity_securities: whole('it’s a hand-checked lookup of labs to securities.', null),
+  entity_identifiers: whole('it’s a lookup of one row per company.', null),
 }
 
 /** The license window's rule for a registered table. */

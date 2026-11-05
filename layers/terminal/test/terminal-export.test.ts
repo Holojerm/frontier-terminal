@@ -124,6 +124,7 @@ describe('the table registry', () => {
       'prospectus_risk_factors',
       'changes',
       'archived_prices',
+      'archived_hiring',
       'archive_captures',
       'alerts',
       'claim_readings',
@@ -135,6 +136,7 @@ describe('the table registry', () => {
       'exposure_quarters',
       'source_runs',
       'entity_securities',
+      'entity_identifiers',
     ])
     expect(exportTable('entities')).toBeNull()
     expect(exportTable('rankings_daily')).toBeNull()
