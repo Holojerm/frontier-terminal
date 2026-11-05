@@ -33,7 +33,9 @@ The `useSeo()` one-call-per-page contract, how `publicPage` meta feeds both `sit
   in `sitemap.xml` with its own `lastmod`. The alert, SKU and filing pages are one source,
   `layers/terminal/server/utils/terminal-page-source.ts`, registered by
   `layers/terminal/server/plugins/public-pages.ts`; it sets no `llmsHeading` because `/llms.txt`
-  is a static map that never wakes D1. A source that throws is logged, skipped, and makes the
+  is a static map that never wakes D1. SKU pages go through `sitemapPriceKeys()`: every base SKU,
+  but a tier variant (`:batch`, `:flex`, …) only once its price has a history, so templated
+  near-duplicates are not most of the sitemap. A source that throws is logged, skipped, and makes the
   sitemap `no-store`. `registerRobotsDisallow(['/mcp'])` adds private paths to `robots.txt`.
   The page still declares `publicPage` (the gate's invariant is per-page), with a comment
   saying the values are inert.
