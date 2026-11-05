@@ -14,7 +14,9 @@
 //
 // A secondary table scrolls in its own box: capped at 70% of the viewport,
 // the header sticky to the top of the box, a wide table scrolling sideways
-// inside it. The page's primary table (`flow`) runs as long as its rows
+// inside it. The cap is svh, not dvh: dvh follows the mobile URL bar, which
+// shows and hides as the page scrolls, so every capped box resized mid-swipe
+// and everything below it jumped. The page's primary table (`flow`) runs as long as its rows
 // instead, so the page never scrolls a box inside a scroll. A box that does
 // scroll is a named, focusable region so a keyboard can scroll it (WCAG
 // 2.1.1; axe scrollable-region-focusable).
@@ -124,7 +126,7 @@ const value = (row: T, key: string) => {
   <div
     ref="box"
     class="relative rounded-sm focus-visible:outline-2 focus-visible:outline-primary"
-    :class="flow ? 'max-lg:overflow-x-auto' : 'max-h-[70dvh] overflow-auto'"
+    :class="flow ? 'max-lg:overflow-x-auto' : 'max-h-[70svh] overflow-auto'"
     :tabindex="scrolls ? 0 : undefined"
     :role="scrolls ? 'region' : undefined"
     :aria-label="scrolls ? caption : undefined"
