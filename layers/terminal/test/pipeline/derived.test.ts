@@ -582,7 +582,9 @@ describe('Google model pages end to end', () => {
     const slugs = await googlePricedSlugs(db)
     expect(slugs).toContain('gemini-2.5-pro')
     expect(slugs).toContain('gemini-embedding-001')
-    expect(slugs).not.toContain('gemini-2.5-flash-native-audio-preview-12-2025') // no Standard table
+    // An untabbed table is the Standard tier: the Live and native-audio models get pages too.
+    expect(slugs).toContain('gemini-2.5-flash-native-audio-preview-12-2025')
+    expect(slugs).toContain('gemini-3.8-live')
     const derived = (await deriveSources(db, sourcesYaml)).filter((d) =>
       d.source_id.startsWith('google-model-md-'),
     )

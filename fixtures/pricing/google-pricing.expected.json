@@ -40,7 +40,7 @@
     },
     {
       "model_slug": "gemini-2.5-computer-use-preview-10-2025",
-      "tier": null,
+      "tier": "standard",
       "input_per_mtok": 1.25,
       "cached_input_per_mtok": null,
       "output_per_mtok": 10,
@@ -175,7 +175,7 @@
     },
     {
       "model_slug": "gemini-2.5-flash-native-audio-preview-12-2025",
-      "tier": null,
+      "tier": "standard",
       "input_per_mtok": 0.5,
       "cached_input_per_mtok": null,
       "output_per_mtok": 2,
@@ -400,7 +400,7 @@
     },
     {
       "model_slug": "gemini-3.1-flash-live-preview",
-      "tier": null,
+      "tier": "standard",
       "input_per_mtok": 0.75,
       "cached_input_per_mtok": null,
       "output_per_mtok": 4.5,
