@@ -34,8 +34,20 @@ Three pieces:
   sent, but the retention sweep (`pruneOpsEvents()`) still runs. Rows are marked notified only after the send resolves, so a mail
   hiccup retries instead of losing the alert. Before draining, the same tick runs
   the watchdogs that spool their own events. One is `deploy_drift`: production's
-  `build.sha` is behind main's head on GitHub for a full tick, meaning a merge never deployed. Always `await` the record call:
+  `build.sha` is behind main's head on GitHub for a full tick, meaning a merge never deployed. Another is
+  `judge_silent`: owed changes three hours old and no judge run in that time, repeated every six hours
+  while it lasts. Always `await` the record call:
   a 5xx is exactly the path that ends the request before a floated promise runs.
+- **Severity.** Every kind has a tier from core's registry, `server/utils/ops-severity.ts`:
+  `critical` (the product stopped working), `warning` (a part is degraded; also the default for a
+  kind nobody registered), or `info` (the system handled it). Core escalates `server_error` to
+  critical at `SERVER_ERROR_CRITICAL_COUNT` in one digest; this app's kinds (`judge_silent` and
+  `all_sources_failed` are the critical ones) are in `layers/terminal/server/utils/terminal-ops-severity.ts`,
+  registered by `layers/terminal/server/plugins/ops-severity.ts`. The digest leads with the most
+  severe kind, the subject starts `[Critical]`, `[Warning]` or `[Info]` so a mail filter on
+  `subject:"[Critical]"` can mark those important, critical kinds carry a "What to do" line, and a
+  spool of only info rows waits up to `OPS_INFO_HOLD_MS` (a day) unless something louder goes out
+  first. Add a new kind to the table when you add its `recordOpsEvent` call.
 
 ## Social posting (layers/social)
 
