@@ -82,3 +82,13 @@ The `useSeo()` one-call-per-page contract, how `publicPage` meta feeds both `sit
   `noindex`, and sitemap/llms.txt go empty. `NUXT_PUBLIC_ALLOW_AI_CRAWLERS=false`
   blocks the named answer-engine crawlers (`server/utils/seo.ts` › `AI_CRAWLERS`); it defaults
   to **true** because the data is public and sourced, and being quotable is distribution.
+- **IndexNow** (template, `server/utils/indexnow.ts`): `seo:indexnow` runs on the `0 4 * * *` cron,
+  reads the served `/sitemap.xml`, and submits every URL whose `lastmod` is on or after its last
+  accepted run, so Bing (and ChatGPT search, Copilot, DuckDuckGo behind it) recrawls the day's
+  alerts and price moves. The key is `NUXT_INDEXNOW_KEY` in `wrangler.toml` `[vars]`, served at
+  `/indexnow-key.txt`; it is public by design.
+- **`Organization.sameAs`** is the repo (from `fleet.json`) followed by
+  `runtimeConfig.public.sameAs` (the X account). Another project is also called "Frontier
+  Terminal"; these links are what tell an engine which entity is ours.
+- **Search Console / Bing Webmaster verification** is a one-time, owner-login step: the
+  template's `.claude/docs/seo.md` › "Search console verification" has the DNS runbook.

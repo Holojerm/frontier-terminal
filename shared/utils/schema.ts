@@ -30,6 +30,8 @@ export interface SiteContext {
   appUrl: string
   /** Public source repository, from fleet.json. Empty omits `sameAs`. */
   repoUrl: string
+  /** Further profiles (runtimeConfig.public.sameAs), after the repo. */
+  sameAs?: readonly string[]
 }
 
 /** Stable @id anchors so nodes across pages resolve to the same entities. */
@@ -50,6 +52,11 @@ export function dataCatalogId(site: SiteContext): string {
 }
 
 /** The publisher. The site is its own publisher — there is no separate legal entity to name. */
+function organizationSameAs(site: SiteContext): { sameAs?: string[] } {
+  const links = [site.repoUrl, ...(site.sameAs ?? [])].filter(Boolean)
+  return links.length ? { sameAs: [...new Set(links)] } : {}
+}
+
 export function organizationSchema(site: SiteContext): JsonLdNode | null {
   if (!site.appUrl) return null
   return {
@@ -63,7 +70,7 @@ export function organizationSchema(site: SiteContext): JsonLdNode | null {
     // The repo is the only other place this entity exists on the open web.
     // Without it an answer engine has a name and a domain and no way to tell
     // that the code producing the numbers is the code it can go read.
-    ...(site.repoUrl ? { sameAs: [site.repoUrl] } : {}),
+    ...organizationSameAs(site),
   }
 }
 
