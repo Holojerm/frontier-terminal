@@ -7,6 +7,7 @@
 
 import { absoluteStamp, money } from '../../../shared/utils/terminal-format'
 import { labName } from '../../../shared/utils/terminal-labs'
+import { skuLede } from '../../../shared/utils/terminal-ledes'
 import type { PriceHistoryData, PricePoint } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
@@ -66,6 +67,8 @@ const coverage = computed(() => {
 })
 
 const lab = history.value ? labName(history.value.provider) : ''
+// The current price as one sentence, the form an answer engine quotes.
+const summary = computed(() => (history.value ? skuLede(history.value) : null))
 
 useSeo({
   title: `${lab} ${name.value} API pricing history`.trim(),
@@ -153,6 +156,7 @@ const POINT_COLUMNS: TableColumn[] = [
       ><span class="font-mono">{{ name }}</span></template
     >
     <template v-if="history" #lede>
+      <span v-if="summary" class="mb-1 block text-default">{{ summary }}</span>
       {{ labName(history.provider) }} ·
       <span class="font-mono">{{ history.entity_key }}</span>
       <template v-if="history.context_window"> · {{ history.context_window }} context</template>
