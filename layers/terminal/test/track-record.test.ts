@@ -10,18 +10,22 @@ import openaiFeed from '~~/fixtures/recipes/newsroom-openai.xml?raw'
 import * as schema from '~~/server/db/schema'
 import { contentHash, type ChangeRow } from '../server/pipeline/contracts'
 import type { SourceFetcher } from '../server/pipeline/fetch'
+import { groundingFailure } from '../server/pipeline/judge/grounding'
 import { submitJudgeRun } from '../server/pipeline/judge/submit'
 import { insertRows } from '../server/pipeline/store'
 import {
   GDELT_MAX_RECORDS,
   PRESS_CANDIDATE_LIMIT,
+  candidateTitle,
   gdeltStamp,
   gdeltUrl,
   parseGdeltArticles,
+  untokenizeTitle,
 } from '../server/pipeline/track-record/gdelt'
 import {
   applyTrackRecordVerdicts,
   pendingCandidates,
+  reviewCorpus,
   trackRecordReview,
 } from '../server/pipeline/track-record/review'
 import { candidateId, runTrackRecordSearch } from '../server/pipeline/track-record/search'
@@ -226,6 +230,48 @@ describe('GDELT', () => {
     expect(new Set(titles).size).toBe(titles.length)
     const times = articles.map((a) => a.seen_at)
     expect([...times].sort()).toEqual(times)
+  })
+
+  it('stores a title with GDELT’s tokenizing spaces closed', () => {
+    expect(parseGdeltArticles(gdeltFixture)[0]!.title).toBe(
+      'OpenAI DevDay: You Can Now Use GPT - 6.1 Sol and Dots, Plus Big Subscription Changes',
+    )
+  })
+
+  // Titles as production D1 held them on 2026-11-05.
+  it.each([
+    [
+      'Grok 4 . 7 arrives for coding and knowledge work at Grok 4 . 6 prices · Digg',
+      'Grok 4.7 arrives for coding and knowledge work at Grok 4.6 prices · Digg',
+    ],
+    [
+      'Mapping Precision : GPT Image 2 . 5 Solves Spatial Data - GIS user technology news',
+      'Mapping Precision: GPT Image 2.5 Solves Spatial Data - GIS user technology news',
+    ],
+    [
+      'Did You Lose Money on Alphabet Inc . ( GOOGL )? Levi & Korsinsky Urges ...',
+      'Did You Lose Money on Alphabet Inc. (GOOGL)? Levi & Korsinsky Urges ...',
+    ],
+    [
+      '4 , 058 Alphabet Inc . $GOOGL Shares Sold by SFM LLC',
+      '4,058 Alphabet Inc. $GOOGL Shares Sold by SFM LLC',
+    ],
+    [
+      'Meta Platforms ( NASDAQ : META ) Trading 11 . 3 % Higher – Still a Buy ?',
+      'Meta Platforms (NASDAQ: META) Trading 11.3% Higher – Still a Buy?',
+    ],
+    [
+      'OpenAI releases ChatGPT Images 2 . 5 with  sharper detail',
+      'OpenAI releases ChatGPT Images 2.5 with sharper detail',
+    ],
+    ['Gartner $2 . 67 trillion', 'Gartner $2.67 trillion'],
+    ['Pixel Scroll 9 / 21 / 26 And May', 'Pixel Scroll 9/21/26 And May'],
+    // Not a thousands separator, so not one number; a hyphen stays as GDELT wrote it.
+    ['Ranked 1 , 2 and 3', 'Ranked 1, 2 and 3'],
+    ['state - level hacking', 'state - level hacking'],
+  ])('untokenizes %j', (raw, clean) => {
+    expect(untokenizeTitle(raw)).toBe(clean)
+    expect(untokenizeTitle(clean)).toBe(clean)
   })
 
   it('reads an empty result as none, and refuses a plain-text answer', () => {
@@ -445,6 +491,21 @@ describe('the same-event gate', () => {
       NOW,
     )
     expect(again.inserted).toBe(0)
+  })
+
+  it('grounds a version against a press title stored before ingest untokenized it', () => {
+    const alert = { headline: 'xAI launches grok-4.7', explanation: '' }
+    const stored = {
+      title: 'Grok 4 . 7 arrives for coding and knowledge work at Grok 4 . 6 prices · Digg',
+      snippet: null,
+      outlet: 'digg.com',
+      published_at: '2026-10-30T00:00:00.000Z',
+    }
+    const rationale = 'Reports the "Grok 4.7" launch at Grok 4.6 prices.'
+    const corpus = reviewCorpus({ ...stored, kind: 'press' }, alert, [])
+    expect(groundingFailure(rationale, corpus)).toBeNull()
+    // A lab's own feed title is shown as written.
+    expect(candidateTitle({ kind: 'newsroom', title: stored.title })).toBe(stored.title)
   })
 
   it('takes ratings through the judge’s POST body, and refuses a key the contract lacks', async () => {
