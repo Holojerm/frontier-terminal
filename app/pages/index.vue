@@ -29,6 +29,10 @@ definePageMeta({
   },
 })
 
+const RECENT_RELEASES = 5
+/** The newest RECENT_RELEASES, and how many there are in all. */
+type ReleasesStrip = ReleasesData & { release_count: number }
+
 /** What this page needs from /api/incidents: the per-provider counts and a total. */
 type IncidentsStrip = Omit<IncidentsData, 'incidents'> & { incident_count: number }
 
@@ -59,10 +63,31 @@ const [
   useFetch<OverviewData>('/api/overview'),
   useFetch<PricesData>('/api/prices', { pick: ['as_of', 'computed_at', 'matrix', 'counts'] }),
   useFetch<RevenueData>('/api/revenue'),
-  useFetch<RankingsData>('/api/rankings'),
-  useFetch<SpendData>('/api/spend'),
-  useFetch<ReleasesData>('/api/releases'),
-  useFetch<HiringHistoryData>('/api/hiring/history'),
+  // The compact demand and spend panels read shares and totals only: the
+  // 30-day series, the top models and the per-model join are on /rankings.
+  useFetch<RankingsData>('/api/rankings', {
+    transform: (d: RankingsData): RankingsData => ({ ...d, series: [], top_models: [] }),
+  }),
+  useFetch<SpendData>('/api/spend', {
+    transform: (d: SpendData): SpendData => ({
+      ...d,
+      providers: d.providers.map((p) => ({ ...p, models: [] })),
+    }),
+  }),
+  useFetch('/api/releases', {
+    transform: (d: ReleasesData): ReleasesStrip => ({
+      ...d,
+      rows: d.rows.slice(0, RECENT_RELEASES),
+      release_count: d.rows.length,
+    }),
+  }),
+  // The department mix is drawn on /hiring; the summary here never reads it.
+  useFetch<HiringHistoryData>('/api/hiring/history', {
+    transform: (d: HiringHistoryData): HiringHistoryData => ({
+      ...d,
+      providers: d.providers.map((p) => ({ ...p, departments: [] })),
+    }),
+  }),
   // No `useFetch<IncidentsData>` here: the explicit generic pins the data type
   // as well as the response type, so a transform that reshapes cannot satisfy
   // it. Annotating the transform's input types both ends instead.
@@ -116,8 +141,7 @@ const readout = computed(() => ({
   ),
 }))
 
-const RECENT_RELEASES = 5
-const recent = computed(() => releases.data.value?.rows.slice(0, RECENT_RELEASES) ?? [])
+const recent = computed(() => releases.data.value?.rows ?? [])
 
 const openIncidents = computed(() =>
   (incidents.data.value?.providers ?? []).reduce((n, p) => n + p.open.length, 0),
@@ -149,7 +173,7 @@ const openIncidents = computed(() =>
         note="SKUs newly listed on a vendor’s pricing page, with the launch price."
         :more="
           releases.data.value
-            ? { label: `All ${releases.data.value.rows.length} releases`, to: '/releases' }
+            ? { label: `All ${releases.data.value.release_count} releases`, to: '/releases' }
             : undefined
         "
         :flush="recent.length > 0"
