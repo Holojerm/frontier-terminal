@@ -1601,8 +1601,8 @@ export async function queryDataFreshness(db: PipelineDb): Promise<DataFreshness>
 
 /**
  * Every SKU on record with its newest observation. `history` is whether the key
- * has a change row or an archived capture, i.e. whether its page shows more than
- * the one current price.
+ * has a revision or an archived capture, i.e. whether its page shows more than
+ * one price. A listing alone ('added') is still one price.
  */
 export async function queryPriceKeys(
   db: PipelineDb,
@@ -1614,7 +1614,11 @@ export async function queryPriceKeys(
       .where(eq(tables.entities.entity_type, 'model'))
       .groupBy(tables.entities.entity_key),
     db
-      .select({ entity_key: tables.changes.entity_key, at: max(tables.changes.detected_at) })
+      .select({
+        entity_key: tables.changes.entity_key,
+        at: max(tables.changes.detected_at),
+        revisions: sql<number>`sum(case when ${tables.changes.change_type} = 'modified' then 1 else 0 end)`,
+      })
       .from(tables.changes)
       .where(eq(tables.changes.entity_type, 'model'))
       .groupBy(tables.changes.entity_key),
@@ -1626,7 +1630,10 @@ export async function queryPriceKeys(
     const seen = newest.get(row.entity_key)
     if (!seen || Date.parse(row.at) > Date.parse(seen)) newest.set(row.entity_key, row.at)
   }
-  const withHistory = new Set([...logged, ...archived].map((row) => row.entity_key))
+  const withHistory = new Set([
+    ...logged.filter((row) => Number(row.revisions) > 0).map((row) => row.entity_key),
+    ...archived.map((row) => row.entity_key),
+  ])
   return [...newest]
     .map(([entity_key, at]) => ({
       entity_key,
