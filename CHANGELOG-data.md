@@ -23,6 +23,32 @@ whose columns don't match the releases in
 `layers/terminal/server/utils/data-schema.ts`, or whose version bump is smaller
 than its changes need.
 
+## 1.3.0 (2026-11-05)
+
+New: every bulk file is also a Parquet file. No table columns changed.
+
+- Each manifest entry gains `parquet`: the URL, rows, bytes, SHA-256, build
+  time and schema version of `/export/bulk/<recent|full>/<table>.parquet`.
+  It has the same rows and columns as the CSV, in the same order.
+- Columns are typed by the data dictionary: text as UTF-8 strings, integers as
+  INT64, numbers as DOUBLE, dates as DATE, booleans as BOOLEAN, JSON as JSON,
+  and timestamps as UTC instants in microseconds (`TIMESTAMP` with
+  `isAdjustedToUTC`). A vendor timestamp's offset is kept in the CSV and JSON
+  exports only. Cells are verbatim: the apostrophe the CSV puts before a cell
+  a spreadsheet would run as a formula isn't there.
+- Compressed with zstd. Each file's key-value metadata has
+  `frontier_terminal.table`, `.history`, `.schema_version`, `.generated_at`,
+  and `.license` (with `.license_older` where a `license` column labels rows).
+  `archived_prices` and `archive_captures` keep CC BY-NC 4.0 on their older
+  rows there too, with a key.
+- Entries also gain `license_older` (what the `license` column labels rows
+  older than the window) and `s3_key`. The keyed manifest gains `s3`.
+- The bulk files answer `Range` requests, so a Parquet reader can fetch the
+  footer and the columns it needs.
+- Licensees can read the full-history files over S3 (Cloudflare R2) with
+  read-only credentials issued with their key. The bucket holds
+  `full/<table>.csv.gz`, `full/<table>.parquet` and `manifest.json`.
+
 ## 1.2.0 (2026-11-04)
 
 Two new tables for API price history from before we watched the labs, read

@@ -1445,7 +1445,12 @@ export function csvLine(values: readonly unknown[]): string {
 
 // ---- streaming -------------------------------------------------------------
 
-async function* pages(db: PipelineDb, table: ExportTable, where?: SQL): AsyncGenerator<Row[]> {
+/** Every row of `table` in export order, a page at a time. */
+export async function* exportPages(
+  db: PipelineDb,
+  table: ExportTable,
+  where?: SQL,
+): AsyncGenerator<Row[]> {
   let after: Row | null = null
   for (;;) {
     const rows = await table.page(db, after, EXPORT_PAGE_SIZE, where)
@@ -1462,7 +1467,7 @@ export async function* csvChunks(
   where?: SQL,
 ): AsyncGenerator<string> {
   yield csvLine(table.columns)
-  for await (const rows of pages(db, table, where)) {
+  for await (const rows of exportPages(db, table, where)) {
     yield rows.map((row) => csvLine(table.columns.map((c) => row[c]))).join('')
   }
 }
@@ -1474,7 +1479,7 @@ export async function* jsonChunks(
 ): AsyncGenerator<string> {
   yield '[\n'
   let first = true
-  for await (const rows of pages(db, table, where)) {
+  for await (const rows of exportPages(db, table, where)) {
     const body = rows.map((row) => JSON.stringify(row)).join(',\n')
     yield `${first ? '' : ',\n'}${body}`
     first = false
