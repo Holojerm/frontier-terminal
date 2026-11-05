@@ -5,9 +5,14 @@
 // cut and xAI's board carries its entity-blend caveat, both stated in the
 // by-lab table the overview leads with.
 
+import { HISTORY_LICENSE } from '#shared/utils/license'
 import { absoluteStamp, count, signed } from '../../shared/utils/terminal-format'
 import { dayLabel } from '../../shared/utils/thesis-format'
-import type { HiringHistoryData, HiringHistoryProvider } from '../../shared/utils/terminal-types'
+import type {
+  ArchivedHiringPoint,
+  HiringHistoryData,
+  HiringHistoryProvider,
+} from '../../shared/utils/terminal-types'
 import type { DataCentersData, PayData } from '../../shared/utils/recipe-views'
 import type { TableColumn } from '../types/terminal-ui'
 
@@ -19,12 +24,14 @@ definePageMeta({
     priority: '0.8',
     title: 'Hiring',
     summary:
-      'Open roles per day at OpenAI, Anthropic, and xAI, rebuilt from each job board’s change log. Also infrastructure hiring per lab, the department mix now against 30 days ago, and each board’s caveats.',
+      'Open roles per day at OpenAI, Anthropic, and xAI, rebuilt from each job board’s change log. Also infrastructure hiring per lab, the department mix now against 30 days ago, each board’s caveats, and open roles back to 2023 from the Internet Archive’s copies of each board.',
   },
 })
 
 const [{ data: hiring, error }, { data: pay }, { data: power }] = await Promise.all([
-  useFetch<HiringHistoryData>('/api/hiring/history'),
+  // The archived copies' departments stay in the API and the export; this
+  // page draws only their totals and infrastructure counts.
+  useFetch<HiringHistoryData>('/api/hiring/history', { transform: slimArchive }),
   useFetch<PayData>('/api/pay'),
   useFetch<DataCentersData>('/api/datacenters'),
 ])
@@ -54,6 +61,28 @@ const chart = computed(() => {
     }),
   }
 })
+
+// Before we read the boards: one card per lab with archived copies.
+const archivedBoards = computed(() =>
+  (hiring.value?.providers ?? []).filter((p) => p.archived.length > 0),
+)
+const infraOf = (a: ArchivedHiringPoint) => a.clusters?.[0]?.open_roles ?? null
+const monthLabel = (x: string) => x.slice(0, 7)
+const archivedSeries = (p: HiringHistoryProvider) => {
+  const infra = p.archived.map(infraOf)
+  return [
+    { id: 'total', label: 'Open roles', values: p.archived.map((a) => a.total) },
+    ...(infra.some((v) => v !== null)
+      ? [{ id: 'infra', label: 'Infrastructure', values: infra }]
+      : []),
+  ]
+}
+const archivedColumns: TableColumn[] = [
+  { key: 'at', label: 'Copy of', class: 'font-mono whitespace-nowrap' },
+  { key: 'total', label: 'Open roles', numeric: true },
+  { key: 'infra', label: 'Infra', numeric: true },
+  { key: 'source', label: 'Source', keep: true },
+]
 
 const anyLog = computed(() => (hiring.value?.log.changes ?? 0) > 0)
 
@@ -155,6 +184,82 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
               nested
             />
           </TerminalExpand>
+        </TerminalPanel>
+
+        <TerminalPanel
+          v-if="archivedBoards.length || hiring.reach.length"
+          id="archived"
+          title="Before we read the boards"
+          note="Open roles on the Internet Archive’s copies of each lab’s own job board, one a week, until we began reading it ourselves."
+        >
+          <div class="grid gap-3 lg:grid-cols-2">
+            <TerminalCard
+              v-for="p in archivedBoards"
+              :id="`archived-${p.provider}`"
+              :key="p.provider"
+              :title="p.display"
+            >
+              <template #meta>
+                <TerminalCaveatMark
+                  v-if="p.archive_caveat"
+                  label="about these copies"
+                  :text="p.archive_caveat"
+                />
+                <span>
+                  {{ count(p.archived.length) }} copies,
+                  <span class="font-mono">{{ p.archived[0]!.at.slice(0, 10) }}</span> to
+                  <span class="font-mono">{{ p.archived.at(-1)!.at.slice(0, 10) }}</span>
+                </span>
+              </template>
+              <TerminalLineChart
+                v-if="p.archived.length > 1"
+                :x="p.archived.map((a) => a.at)"
+                :series="archivedSeries(p)"
+                :format="count"
+                :x-label="monthLabel"
+                :title="`Open roles on the Internet Archive’s copies of the ${p.display} job board, ${p.archived[0]!.at.slice(0, 10)} to ${p.archived.at(-1)!.at.slice(0, 10)}`"
+              />
+              <TerminalExpand show="Show the copies" hide="Hide the copies">
+                <TerminalTable
+                  :caption="`Open roles on each Internet Archive copy of the ${p.display} job board`"
+                  :columns="archivedColumns"
+                  :rows="p.archived"
+                  :row-key="(a) => `${a.source_id}:${a.at}`"
+                  nested
+                >
+                  <template #cell-at="{ row: a }">{{ a.at.slice(0, 10) }}</template>
+                  <template #cell-total="{ row: a }">{{ count(a.total) }}</template>
+                  <template #cell-infra="{ row: a }">
+                    <span v-if="infraOf(a) !== null">{{ count(infraOf(a)!) }}</span>
+                    <span v-else class="text-muted" title="This copy lists only the board’s total"
+                      >—</span
+                    >
+                  </template>
+                  <template #cell-source="{ row: a }">
+                    <TerminalProvenanceTag
+                      :source-url="a.source_url"
+                      :fetched-at="a.fetched_at"
+                      label="Internet Archive"
+                    />
+                  </template>
+                </TerminalTable>
+              </TerminalExpand>
+            </TerminalCard>
+          </div>
+          <TerminalArchiveReach
+            v-if="hiring.reach.length"
+            :reach="hiring.reach"
+            caption="How far back each lab’s hiring history reaches"
+          />
+          <template #foot>
+            Each copy is the board as the Archive saw it on that day. We read the copies back in
+            2026, so this site didn’t hold these numbers at the time. A copy that lists every role
+            gives departments. A copy that pages its list gives only the board’s own total, with no
+            Infra count. We skip a copy we can’t read with confidence. Every copy, with its
+            departments, is in the
+            <span class="font-mono">archived_hiring</span> table on /data, under
+            {{ HISTORY_LICENSE.short }}.
+          </template>
         </TerminalPanel>
       </template>
 

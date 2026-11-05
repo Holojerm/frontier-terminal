@@ -1110,6 +1110,72 @@ export const COLUMN_DOCS: Readonly<Record<string, TableDoc>> = {
     },
   },
 
+  archived_hiring: {
+    asOf: 'Rows with captured_at at or before as_of: when the Internet Archive saw the board, not when we read the copy (fetched_at, always later). So a backtest gets the board as it stood then, which this site did not hold at the time.',
+    columns: {
+      id: {
+        type: 'text',
+        key: true,
+        meaning:
+          'The first 32 hex characters of the SHA-256 of capture_id and the row’s scope or department.',
+      },
+      capture_id: {
+        type: 'text',
+        meaning:
+          'The copy the count was read from: <era>:<14-digit Wayback timestamp>, as in archive_captures.',
+      },
+      provider: PROVIDER,
+      scope: {
+        type: 'text',
+        meaning:
+          'board (open roles on the whole board; one per copy) or department (one per department, when the copy lists every role; they sum to the board row).',
+      },
+      label: {
+        type: 'text',
+        nullable: true,
+        meaning: 'The department as the board printed it then. Null on the board row.',
+      },
+      department_id: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'The board’s own id for the department (Greenhouse, Ashby), where the copy prints one. Null on the board row and on Lever boards.',
+      },
+      department: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'The live department the row files under: today’s label for the same department_id where the board’s id ties them, else the label as printed. Null on the board row.',
+      },
+      open_roles: {
+        type: 'integer',
+        unit: 'roles',
+        meaning: 'Open roles the copy listed (department rows) or stated (board row).',
+      },
+      captured_at: {
+        type: 'timestamp',
+        meaning:
+          'When the Internet Archive captured the board, in UTC: the moment these roles were open on it.',
+      },
+      original_url: { type: 'text', meaning: 'The lab’s own job board the Archive captured.' },
+      basis: {
+        type: 'text',
+        meaning: 'Always archived: read from a copy, not observed by this site.',
+      },
+      source_url: {
+        type: 'text',
+        provenance: true,
+        meaning:
+          'The Wayback Machine copy (https://web.archive.org/web/<timestamp>id_/<original_url>).',
+      },
+      fetched_at: {
+        type: 'timestamp',
+        provenance: true,
+        meaning: 'When we read the copy back from the Archive, in UTC.',
+      },
+    },
+  },
+
   archive_captures: {
     asOf: 'Rows with captured_at at or before as_of: when the Internet Archive saw the page, not when we read the copy.',
     columns: {
@@ -1121,22 +1187,27 @@ export const COLUMN_DOCS: Readonly<Record<string, TableDoc>> = {
       era: {
         type: 'text',
         meaning:
-          'Which shape of the lab’s pricing page the copy is read as (layers/terminal/server/pipeline/archive/eras.ts).',
+          'Which shape of the lab’s pricing page or job board the copy is read as (layers/terminal/server/pipeline/archive/eras.ts, hiring-eras.ts).',
       },
       provider: PROVIDER,
-      original_url: { type: 'text', meaning: 'The lab’s own pricing page the Archive captured.' },
+      original_url: {
+        type: 'text',
+        meaning: 'The lab’s own pricing page or job board the Archive captured.',
+      },
       captured_at: {
         type: 'timestamp',
         meaning: 'When the Internet Archive captured the page, in UTC.',
       },
       status: {
         type: 'text',
-        meaning: 'parsed (its rows are in archived_prices) or skipped (no rows; detail says why).',
+        meaning:
+          'parsed (its rows are in archived_prices or archived_hiring, by axis) or skipped (no rows; detail says why).',
       },
       detail: {
         type: 'text',
         nullable: true,
-        meaning: 'Why a skipped copy was skipped, in the parser’s or the fetch’s own words.',
+        meaning:
+          'Why a skipped copy was skipped, in the parser’s or the fetch’s own words. On a read job board, what it held beyond the counts (a paged list: total only).',
       },
       content_hash: {
         type: 'text',
@@ -1155,7 +1226,15 @@ export const COLUMN_DOCS: Readonly<Record<string, TableDoc>> = {
         unit: 'bytes',
         meaning: 'Size of the copy as read. Null when the fetch failed.',
       },
-      rows: { type: 'integer', meaning: 'How many archived_prices rows the copy gave.' },
+      rows: {
+        type: 'integer',
+        meaning: 'How many rows the copy gave, in archived_prices or archived_hiring (see axis).',
+      },
+      axis: {
+        type: 'text',
+        meaning:
+          'pricing (a lab’s pricing page; rows in archived_prices) or hiring (a lab’s job board; rows in archived_hiring).',
+      },
       source_url: {
         type: 'text',
         provenance: true,
@@ -1496,7 +1575,8 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     cadence: SURVEY,
     event: 'published_at',
     knowledge: 'first_seen_at',
-    start: 'Current roles only. Roles that closed are in changes, from our first check.',
+    start:
+      'Current roles only. Roles that closed are in changes, from our first check. Open-role counts before then are in archived_hiring (Internet Archive copies from January 2023).',
     joins: [byProvider],
     feeds: [{ axes: ['hiring'] }],
   },
@@ -1642,14 +1722,26 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     start:
       'Archived only. From the oldest copy we could read. The backfill looks at one copy a week from January 2023 to 2026-08-25.',
     joins: [byProvider],
-    feeds: ['archive'],
+    feeds: [{ ids: ['wayback-pricing'] }],
+  },
+  archived_hiring: {
+    grain:
+      'One board row per Internet Archive copy of a lab’s job board we could read, and one row per department when the copy lists every role.',
+    cadence: 'Once per backfill run, not on a schedule.',
+    event: 'captured_at',
+    knowledge: 'fetched_at',
+    start:
+      'Archived only. From the oldest copy we could read (OpenAI 2023-01-08). The backfill looks at one copy a week from January 2023 to the day we began reading each board.',
+    joins: [byProvider],
+    feeds: [{ ids: ['wayback-hiring'] }],
   },
   archive_captures: {
     grain: 'One row per Internet Archive copy the backfill considered.',
     cadence: 'Once per backfill run, not on a schedule.',
     event: 'captured_at',
     knowledge: 'fetched_at',
-    start: 'Archived only. One copy a week per lab page from January 2023 to 2026-08-25.',
+    start:
+      'Archived only. One copy a week per lab pricing page or job board, from January 2023 to the day we began reading it.',
     joins: [byProvider],
     feeds: ['archive'],
   },

@@ -72,8 +72,8 @@ const [prices, revenue, rankings, hiring, incidents, alerts] = await Promise.all
   useFetch<HiringHistoryData>('/api/hiring/history', {
     key: `compare-hiring:${key}`,
     transform: (d: HiringHistoryData): HiringHistoryData => ({
-      ...d,
-      providers: d.providers.filter((p) => inPair(p.provider)),
+      ...withoutArchive(d),
+      providers: withoutArchive(d).providers.filter((p) => inPair(p.provider)),
     }),
   }),
   useFetch('/api/incidents', {

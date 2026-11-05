@@ -83,14 +83,16 @@ export async function terminalPayloadAt<T extends object | null>(
    * `filed`: the query reads filed facts by their filing date (event time), so
    * an instant before our first snapshot is still answerable and is not refused.
    */
-  options: CacheOptions & { filed?: boolean; archived?: boolean } = {},
+  options: CacheOptions & { filed?: boolean; archived?: boolean | 'hiring' } = {},
 ): Promise<AsOfPayload<T>> {
   const stamp = await timed(options.timings, 'stamp', liveStamp)
   try {
-    // `archived`: a price route, which answers an instant before our first
-    // snapshot from the Internet Archive backfill (terminal-archive.ts).
-    if (options.archived) await assertArchiveKnowable(db, at)
-    else if (!options.filed) await assertKnowable(db, at)
+    // `archived`: a price route (true) or a hiring route ('hiring'), which
+    // answers an instant before our first snapshot from the Internet Archive
+    // backfill (terminal-archive.ts).
+    if (options.archived) {
+      await assertArchiveKnowable(db, at, options.archived === 'hiring' ? 'hiring' : 'pricing')
+    } else if (!options.filed) await assertKnowable(db, at)
   } catch (error) {
     if (error instanceof PointInTimeError) {
       throw createError({ statusCode: 400, message: error.message })
@@ -190,7 +192,7 @@ export async function serveTerminalAsOf<T extends object | null>(
   name: string,
   query: (context: QueryContext) => Promise<T>,
   variant = '',
-  archived = false,
+  archived: boolean | 'hiring' = false,
 ): Promise<T | AsOfPayload<T>> {
   const { as_of } = await getValidatedQuery(event, parseAsOfQuery)
   setResponseHeader(event, 'Cache-Control', cacheControlFor(event, TERMINAL_CACHE_CONTROL))

@@ -84,8 +84,8 @@ const [
   // The department mix is drawn on /hiring; the summary here never reads it.
   useFetch<HiringHistoryData>('/api/hiring/history', {
     transform: (d: HiringHistoryData): HiringHistoryData => ({
-      ...d,
-      providers: d.providers.map((p) => ({ ...p, departments: [] })),
+      ...withoutArchive(d),
+      providers: d.providers.map((p) => ({ ...p, departments: [], archived: [] })),
     }),
   }),
   // No `useFetch<IncidentsData>` here: the explicit generic pins the data type

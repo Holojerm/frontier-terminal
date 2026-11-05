@@ -460,11 +460,14 @@ export interface PricePoint extends Prov {
 }
 
 /**
- * How far one lab's price history reaches. archived_from is the earliest
- * Internet Archive capture we could read; live_from the first time this site
- * fetched the lab's own pricing page. Either is null when there is none.
+ * How far one lab's history reaches on one axis (prices, or hiring).
+ * archived_from is the earliest Internet Archive capture we could read;
+ * live_from the first time this site fetched the lab's own page or board.
+ * Either is null when there is none.
  */
-export interface PriceReach {
+export type PriceReach = ArchiveReach
+
+export interface ArchiveReach {
   provider: LabId
   archived_from: string | null
   archived_until: string | null
@@ -933,11 +936,47 @@ export interface HiringHistoryProvider {
   /** Earliest snapshot of the board's /departments join, where one exists: rows before it carry no department. */
   join_from: string | null
   sources: HiringSource[]
+  /** The Internet Archive's copies of the lab's board before we read it live, oldest first. */
+  archived: ArchivedHiringPoint[]
+  /** Where the archived board differs from the live one (another board, another entity mix). */
+  archive_caveat: string | null
+}
+
+/**
+ * One Internet Archive copy of a lab's job board, read into the counts the
+ * live lane derives: `at` is when the Archive saw the board (event time);
+ * fetched_at is when we read the copy back, long after (knowledge time).
+ */
+export interface ArchivedHiringPoint {
+  at: string
+  basis: 'archived'
+  /** wayback:<era>, the board and window the copy belongs to (archive/hiring-eras.ts). */
+  source_id: string
+  /** Open roles on the whole board. */
+  total: number
+  /** Every department with its count, summing to total; null when the copy states only the total. */
+  departments: ArchivedDepartmentCount[] | null
+  /** sources.yaml department_clusters over each row's live department (`departments`: the labels printed); null with departments. */
+  clusters: { id: string; label: string; open_roles: number; departments: string[] }[] | null
+  source_url: string
+  fetched_at: string
+}
+
+export interface ArchivedDepartmentCount {
+  /** The live department it files under: the label, unless the board's own id ties it to a live one. */
+  department: string
+  /** As the board printed it then. */
+  label: string
+  open_roles: number
 }
 
 export interface HiringHistoryData extends Stamp {
   window_days: number
   providers: HiringHistoryProvider[]
+  /** How far each lab's hiring history reaches: the Internet Archive backfill, then the live board. */
+  reach: ArchiveReach[]
+  /** What an archived point is, and event time against knowledge time. */
+  archive_method: string
   /** The change rows the series rests on: how many, and the span they cover. */
   log: { changes: number; from: string | null; to: string | null }
 }
