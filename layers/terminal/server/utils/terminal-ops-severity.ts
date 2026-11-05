@@ -53,6 +53,7 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   theses_evaluate_failed: { severity: 'warning' },
   thesis_digest_failed: { severity: 'warning' },
   bulk_build_failed: { severity: 'warning' },
+  reliability_record_failed: { severity: 'warning' },
   hiring_rollup_failed: { severity: 'warning' },
   track_record_search_failed: { severity: 'warning' },
   press_brief_failed: { severity: 'warning' },

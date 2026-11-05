@@ -448,6 +448,9 @@ const EXPORT_COLUMNS: TableColumn[] = [
       :changelog="dictionary?.changelog ?? []"
     />
 
+    <!-- Fetches its own payload (/api/reliability). -->
+    <LazyTerminalReliability hydrate-on-visible />
+
     <div class="grid gap-6 lg:grid-cols-2">
       <TerminalPanel id="license" title="Terms">
         <p class="max-w-2xl text-sm text-default">
