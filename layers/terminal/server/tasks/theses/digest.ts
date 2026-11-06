@@ -16,12 +16,13 @@ import { getOpsMailer } from '#server/utils/ops-mail'
 import { terminalStamp } from '../../utils/terminal-cache'
 import { queryContext } from '../../utils/terminal-db'
 import { queryTheses } from '../../utils/terminal-theses'
+import { withHeartbeat } from '../../utils/task-heartbeat'
 
 interface CloudflareTaskContext {
   cloudflare?: { env?: Record<string, unknown> }
 }
 
-export default defineTask({
+const task = defineTask({
   meta: {
     name: 'theses:digest',
     description: 'Email the weekly thesis digest: claim statuses, moves, verdicts, confirmations',
@@ -66,3 +67,5 @@ export default defineTask({
     return { result: { sent: true, subject: digest.subject } }
   },
 })
+
+export default withHeartbeat(task)

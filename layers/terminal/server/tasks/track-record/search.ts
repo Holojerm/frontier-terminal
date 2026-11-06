@@ -9,8 +9,9 @@ import { db } from '@nuxthub/db'
 
 import { recordOpsEvent } from '#server/utils/ops'
 import { runTrackRecordSearch } from '../../pipeline/track-record/search'
+import { withHeartbeat } from '../../utils/task-heartbeat'
 
-export default defineTask({
+const task = defineTask({
   meta: {
     name: 'track-record:search',
     description: 'Search the lab newsrooms for the first report of each material alert',
@@ -25,3 +26,5 @@ export default defineTask({
     return { result }
   },
 })
+
+export default withHeartbeat(task)

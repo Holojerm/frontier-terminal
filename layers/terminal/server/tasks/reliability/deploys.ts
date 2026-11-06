@@ -10,8 +10,9 @@ import { kv } from '@nuxthub/kv'
 import manifest from '~~/fleet.json'
 
 import { recordDeployChecks } from '../../pipeline/reliability/deploys'
+import { withHeartbeat } from '../../utils/task-heartbeat'
 
-export default defineTask({
+const task = defineTask({
   meta: {
     name: 'reliability:deploys',
     description: 'Read the post-deploy smoke test results on main from GitHub Actions',
@@ -30,3 +31,5 @@ export default defineTask({
     return { result }
   },
 })
+
+export default withHeartbeat(task)

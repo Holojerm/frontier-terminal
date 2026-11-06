@@ -20,13 +20,16 @@ import { FleetManifestSchema } from '#shared/utils/fleet-manifest'
 
 import rawManifest from '../../../fleet.json'
 import { checkDeployDrift, fetchMainHead } from '#layers/terminal/server/pipeline/deploy-watch'
-import { checkJudgeSilence } from '#layers/terminal/server/pipeline/judge/watchdog'
 import { checkLaunchCoverage } from '#layers/terminal/server/pipeline/launch-watch'
 import { unstorageLockStore } from '#layers/terminal/server/pipeline/lock'
+import { draftedKey } from '#layers/terminal/server/pipeline/press'
+import { checkFreshness } from '#layers/terminal/server/utils/freshness'
+import { freshnessChecks } from '#layers/terminal/server/utils/terminal-freshness'
 import { getOpsMailer } from '../../utils/ops-mail'
 import { drainOpsEvents, pruneOpsEvents } from '../../utils/ops'
 import { classifyOps } from '../../utils/ops-severity'
 import { logEvent } from '../../utils/log'
+import { withHeartbeat } from '#layers/terminal/server/utils/task-heartbeat'
 
 interface CloudflareTaskContext {
   cloudflare?: { env?: Record<string, unknown> }
@@ -34,16 +37,26 @@ interface CloudflareTaskContext {
 
 const manifest = FleetManifestSchema.parse(rawManifest)
 
-export default defineTask({
+const task = defineTask({
   meta: {
     name: 'ops:alert',
     description: 'Email a digest of spooled ops events, then prune old ones',
   },
   async run({ context }) {
-    // The judge watchdog spools its own event, so it runs before the mailer
-    // check: an unconfigured digest still records that the judge went quiet.
-    const judge = await checkJudgeSilence(db, unstorageLockStore(kv))
-    if (judge === 'silent') logEvent('warn', 'judge_silent')
+    // The freshness checks spool their own events, so they run before the
+    // mailer check: an unconfigured digest still records that a part went
+    // quiet. One per scheduled task, plus the judge routine, the GDELT job and
+    // the press-drafts routine (layers/terminal/server/utils/terminal-freshness.ts).
+    const config = useRuntimeConfig()
+    await checkFreshness(
+      db,
+      unstorageLockStore(kv),
+      freshnessChecks({
+        scheduledTasks: config.scheduledTasks,
+        drafted: async (id) => Boolean(await kv.getItem(draftedKey(id))),
+        pressList: config.pressList,
+      }),
+    )
     // Same reason: a launch the site has stored but does not show is recorded
     // whether or not the digest can be mailed.
     const launch = await checkLaunchCoverage(db, unstorageLockStore(kv))
@@ -52,12 +65,7 @@ export default defineTask({
     }
     // And a merge whose deploy never landed: this build's sha against main's head.
     const head = manifest.links?.github ? await fetchMainHead(manifest.links.github) : null
-    const drift = await checkDeployDrift(
-      db,
-      unstorageLockStore(kv),
-      useRuntimeConfig().public.buildSha,
-      head,
-    )
+    const drift = await checkDeployDrift(db, unstorageLockStore(kv), config.public.buildSha, head)
     if (drift.verdict === 'drift') logEvent('warn', 'deploy_drift', { ...drift })
 
     const env = (context as CloudflareTaskContext | undefined)?.cloudflare?.env
@@ -69,7 +77,7 @@ export default defineTask({
       return { result: { skipped: 'unconfigured', pruned } }
     }
 
-    const { appName, appUrl } = useRuntimeConfig().public
+    const { appName, appUrl } = config.public
     const outcome = await drainOpsEvents(db, mailer, {
       appName,
       appUrl: appUrl || undefined,
@@ -85,3 +93,5 @@ export default defineTask({
     return { result: outcome }
   },
 })
+
+export default withHeartbeat(task)

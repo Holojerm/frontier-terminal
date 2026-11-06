@@ -12,8 +12,9 @@ import { SCHEMA_VERSION } from '../../utils/data-schema'
 import { terminalStamp } from '../../utils/terminal-cache'
 import { drainWebhookDeliveries, enqueueWebhookDeliveries } from '../../utils/webhook-outbox'
 import { fetchWebhookSender, signingKeyRefusal } from '../../utils/webhook-sign'
+import { withHeartbeat } from '../../utils/task-heartbeat'
 
-export default defineTask({
+const task = defineTask({
   meta: {
     name: 'webhooks:deliver',
     description: 'Queue new alerts for licensee webhooks and send the due deliveries',
@@ -40,3 +41,5 @@ export default defineTask({
     return { result: { ...queued, ...counts, failing: failing.length } }
   },
 })
+
+export default withHeartbeat(task)

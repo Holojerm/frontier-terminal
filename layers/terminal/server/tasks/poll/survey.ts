@@ -15,8 +15,9 @@ import { evaluateTheses } from '../../theses/evaluate'
 import { runRecipes } from '../../theses/recipes/run'
 import { recordOpsEvent } from '#server/utils/ops'
 import { warmAfterPoll } from '../../utils/cache-warm-task'
+import { withHeartbeat } from '../../utils/task-heartbeat'
 
-export default defineTask({
+const task = defineTask({
   meta: {
     name: 'poll:survey',
     description:
@@ -62,3 +63,5 @@ export default defineTask({
     return { result, recipes, theses }
   },
 })
+
+export default withHeartbeat(task)

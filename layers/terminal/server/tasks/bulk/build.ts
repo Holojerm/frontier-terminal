@@ -14,8 +14,9 @@ import { db } from '@nuxthub/db'
 
 import { recordOpsEvent } from '#server/utils/ops'
 import { licensedStoreOf, runBulkBuild } from '../../utils/terminal-bulk'
+import { withHeartbeat } from '../../utils/task-heartbeat'
 
-export default defineTask({
+const task = defineTask({
   meta: {
     name: 'bulk:build',
     description:
@@ -35,3 +36,5 @@ export default defineTask({
     return { result: report }
   },
 })
+
+export default withHeartbeat(task)

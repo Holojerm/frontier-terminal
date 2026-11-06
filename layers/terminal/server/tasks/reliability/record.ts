@@ -7,8 +7,9 @@ import { db } from '@nuxthub/db'
 
 import { recordOpsEvent } from '#server/utils/ops'
 import { runReliabilityRecord } from '../../pipeline/reliability/record'
+import { withHeartbeat } from '../../utils/task-heartbeat'
 
-export default defineTask({
+const task = defineTask({
   meta: {
     name: 'reliability:record',
     description: 'Roll up source runs by day and record EDGAR acceptance times for rule alerts',
@@ -34,3 +35,5 @@ export default defineTask({
     return { result: report }
   },
 })
+
+export default withHeartbeat(task)

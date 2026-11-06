@@ -7,8 +7,9 @@ import { db } from '@nuxthub/db'
 
 import { readSocialConfig } from '#layers/social/server/utils/social'
 import { enqueueCriticalAlerts } from '../../pipeline/social'
+import { withHeartbeat } from '../../utils/task-heartbeat'
 
-export default defineTask({
+const task = defineTask({
   meta: {
     name: 'social:alerts',
     description: 'Queue critical alerts for the social accounts',
@@ -22,3 +23,5 @@ export default defineTask({
     return { result: { queued } }
   },
 })
+
+export default withHeartbeat(task)
