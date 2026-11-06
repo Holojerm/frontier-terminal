@@ -86,6 +86,7 @@
       "server/tasks/lifecycle-email.ts",
       "server/tasks/ops/alert.ts",
       "server/tasks/purge-expired-tokens.ts",
+      "server/tasks/seo/indexnow.ts",
       "server/utils/access-gate.ts",
       "server/utils/account-email.ts",
       "server/utils/account.ts",

@@ -10,8 +10,9 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 import { recordOpsEvent } from '#server/utils/ops'
 import { writeHiringRollups } from '../../pipeline/hiring-rollup'
 import { parseDepartmentClusters } from '../../utils/terminal-clusters'
+import { withHeartbeat } from '../../utils/task-heartbeat'
 
-export default defineTask({
+const task = defineTask({
   meta: {
     name: 'alerts:hiring-rollup',
     description: 'Write one hiring roll-up alert per lab for the last complete week',
@@ -26,3 +27,5 @@ export default defineTask({
     }
   },
 })
+
+export default withHeartbeat(task)

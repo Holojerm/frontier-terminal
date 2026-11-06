@@ -14,7 +14,8 @@ import {
   pendingChanges,
 } from '../../server/pipeline/judge/pending'
 import { submitJudgeRun } from '../../server/pipeline/judge/submit'
-import { checkJudgeSilence, JUDGE_SILENT_MARKER_KEY } from '../../server/pipeline/judge/watchdog'
+import { judgeFreshnessCheck } from '../../server/pipeline/judge/watchdog'
+import { checkFreshness, freshnessMarkerKey } from '../../server/utils/freshness'
 import type { LockStore } from '../../server/pipeline/lock'
 import { normalizeJobs, normalizePrices } from '../../server/pipeline/normalize'
 import { parseXaiGreenhouse } from '../../server/pipeline/parsers/hiring/xai-greenhouse'
@@ -627,27 +628,30 @@ describe('groundingFailure: versions a slug spells with a dash', () => {
   })
 })
 
-describe('checkJudgeSilence', () => {
+describe('the judge freshness check', () => {
+  // The verdicts the standalone watchdog used to return, from the shared runner.
+  const checkJudgeSilence = async (target: typeof db, marker: LockStore, now: Date) =>
+    (await checkFreshness(target, marker, [judgeFreshnessCheck], now)).judge
   const NOW = new Date('2026-08-27T12:00:00Z')
   const OLD = '2026-08-25T12:00:00Z' // two days before NOW
   const FRESH = '2026-08-27T10:00:00Z' // inside the three-hour window
 
   it('is quiet with no backlog older than the window', async () => {
     await insertRows(db, 'changes', [change(0, FRESH)])
-    expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('no-backlog')
+    expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('not-owed')
   })
 
   it('is quiet when a judge run landed within the window, whatever is pending', async () => {
     await insertRows(db, 'changes', [change(0, OLD)])
     await submitJudgeRun(db, body(silence, '2026-08-01T00:00:00Z'), { now: new Date(FRESH) })
-    expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('recent-run')
+    expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('fresh')
   })
 
   it('does not count a day-old timestamp-only row as a backlog', async () => {
     await insertRows(db, 'changes', [
       jobModified('1', JOB, { ...JOB, updated_at: '2026-08-25T00:00:00Z' }, OLD),
     ])
-    expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('no-backlog')
+    expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('not-owed')
   })
 
   it('does not count day-old tripwire hits on untracked filers as a backlog', async () => {
@@ -658,7 +662,7 @@ describe('checkJudgeSilence', () => {
       filingAdded('0001193125-26-396051', 'Oura Inc.', null, OLD),
       filingAdded('0001193125-26-396052', 'Some Micro-Cap Corp.', null, OLD),
     ])
-    expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('no-backlog')
+    expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('not-owed')
     expect(await db.select().from(schema.opsEvents)).toHaveLength(0)
   })
 
@@ -666,7 +670,7 @@ describe('checkJudgeSilence', () => {
     await insertRows(db, 'changes', [
       filingAdded('0001181412-26-000123', 'SPACE EXPLORATION TECHNOLOGIES CORP', '0001181412', OLD),
     ])
-    expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('silent')
+    expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('stale')
   })
 
   it('fires after three hours, not a day: the routine runs hourly', async () => {
@@ -674,7 +678,7 @@ describe('checkJudgeSilence', () => {
     await submitJudgeRun(db, body(silence, '2026-08-01T00:00:00Z'), {
       now: new Date('2026-08-27T08:00:00Z'),
     })
-    expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('silent')
+    expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('stale')
     const [event] = await db.select().from(schema.opsEvents)
     expect(event!.detail).toContain('for 4h (since 2026-08-27T08:00:00')
   })
@@ -682,8 +686,8 @@ describe('checkJudgeSilence', () => {
   it('records judge_silent once per marker window for an old backlog with no run', async () => {
     await insertRows(db, 'changes', [change(0, OLD)])
     const marker = memoryMarker()
-    expect(await checkJudgeSilence(db, marker, NOW)).toBe('silent')
-    expect(marker.values.get(JUDGE_SILENT_MARKER_KEY)).toBe(NOW.toISOString())
+    expect(await checkJudgeSilence(db, marker, NOW)).toBe('stale')
+    expect(marker.values.get(freshnessMarkerKey('judge'))).toBe(NOW.toISOString())
     expect(await checkJudgeSilence(db, marker, NOW)).toBe('already-notified')
     const events = await db.select().from(schema.opsEvents)
     expect(events.map((e) => e.kind)).toEqual(['judge_silent'])
@@ -702,7 +706,7 @@ describe('checkJudgeSilence', () => {
       rejection_reason: null,
       source: 'routine',
     })
-    expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('no-backlog')
+    expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('not-owed')
   })
 })
 

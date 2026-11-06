@@ -9,6 +9,7 @@ import { kv } from '@nuxthub/kv'
 import { getOpsMailer } from '#server/utils/ops-mail'
 import { recordOpsEvent } from '#server/utils/ops'
 import { parsePressList, pendingPressAlerts, pressBrief } from '../../pipeline/press'
+import { withHeartbeat } from '../../utils/task-heartbeat'
 
 interface CloudflareTaskContext {
   cloudflare?: { env?: Record<string, unknown> }
@@ -16,7 +17,7 @@ interface CloudflareTaskContext {
 
 const briefedKey = (id: string) => `press:briefed:${id}`
 
-export default defineTask({
+const task = defineTask({
   meta: {
     name: 'press:briefs',
     description: 'Mail the owner ready-to-send press notes for each new registration filing',
@@ -48,3 +49,5 @@ export default defineTask({
     return { result: { sent } }
   },
 })
+
+export default withHeartbeat(task)

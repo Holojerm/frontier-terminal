@@ -133,12 +133,13 @@ export function pressBrief(
 export async function pendingPressAlerts(
   db: PipelineDb,
   done: (id: string) => Promise<boolean>,
-): Promise<PressAlert[]> {
+): Promise<(PressAlert & { created_at: string })[]> {
   const rows = await db
     .select({
       id: tables.alerts.id,
       headline: tables.alerts.headline,
       explanation: tables.alerts.explanation,
+      created_at: tables.alerts.created_at,
     })
     .from(tables.alerts)
     .where(
@@ -150,7 +151,7 @@ export async function pendingPressAlerts(
     )
     .orderBy(desc(tables.alerts.created_at))
     .limit(LOOKBACK)
-  const out: PressAlert[] = []
+  const out: (PressAlert & { created_at: string })[] = []
   for (const r of rows) if (!(await done(r.id))) out.push(r)
   return out
 }

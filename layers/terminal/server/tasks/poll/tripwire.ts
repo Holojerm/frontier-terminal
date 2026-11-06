@@ -12,8 +12,9 @@ import { unstorageLockStore } from '../../pipeline/lock'
 import { blobRawStore } from '../../pipeline/poll'
 import { runTripwire } from '../../pipeline/tripwire'
 import { warmAfterPoll } from '../../utils/cache-warm-task'
+import { withHeartbeat } from '../../utils/task-heartbeat'
 
-export default defineTask({
+const task = defineTask({
   meta: {
     name: 'poll:tripwire',
     description:
@@ -47,3 +48,5 @@ export default defineTask({
     return { result }
   },
 })
+
+export default withHeartbeat(task)

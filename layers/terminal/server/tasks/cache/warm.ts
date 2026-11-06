@@ -12,12 +12,13 @@ import { thesisPages } from '../../../shared/utils/thesis-format'
 import { THESES } from '../../theses/registry'
 import { warmCaches, warmPaths } from '../../utils/cache-warm'
 import { terminalStamp } from '../../utils/terminal-cache'
+import { withHeartbeat } from '../../utils/task-heartbeat'
 
 interface CloudflareTaskContext {
   cloudflare?: { context?: { waitUntil?: (promise: Promise<unknown>) => void } }
 }
 
-export default defineTask({
+const task = defineTask({
   meta: {
     name: 'cache:warm',
     description:
@@ -61,3 +62,5 @@ export default defineTask({
     return { result }
   },
 })
+
+export default withHeartbeat(task)

@@ -17,8 +17,9 @@ import {
   INDEXNOW_STATE_KEY,
 } from '../../utils/indexnow'
 import { logEvent } from '../../utils/log'
+import { withHeartbeat } from '#layers/terminal/server/utils/task-heartbeat'
 
-export default defineTask({
+const task = defineTask({
   meta: {
     name: 'seo:indexnow',
     description: 'Submit sitemap URLs changed since the last run to IndexNow (Bing, Yandex, …)',
@@ -71,3 +72,5 @@ export default defineTask({
     }
   },
 })
+
+export default withHeartbeat(task)

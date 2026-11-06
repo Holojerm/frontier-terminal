@@ -23,8 +23,9 @@ import { unstorageLockStore } from '../../pipeline/lock'
 import { blobRawStore, runPoll } from '../../pipeline/poll'
 import { paceSec } from '../../pipeline/sec-pace'
 import { warmAfterPoll } from '../../utils/cache-warm-task'
+import { withHeartbeat } from '../../utils/task-heartbeat'
 
-export default defineTask({
+const task = defineTask({
   meta: {
     name: 'poll:edgar',
     description:
@@ -69,3 +70,5 @@ export default defineTask({
     return { result, filedFacts }
   },
 })
+
+export default withHeartbeat(task)

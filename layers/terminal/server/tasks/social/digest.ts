@@ -6,8 +6,9 @@ import { db } from '@nuxthub/db'
 
 import { readSocialConfig } from '#layers/social/server/utils/social'
 import { enqueueWeeklyDigest } from '../../pipeline/social'
+import { withHeartbeat } from '../../utils/task-heartbeat'
 
-export default defineTask({
+const task = defineTask({
   meta: {
     name: 'social:digest',
     description: 'Queue the weekly what-moved thread for the social accounts',
@@ -20,3 +21,5 @@ export default defineTask({
     return { result: { queued } }
   },
 })
+
+export default withHeartbeat(task)

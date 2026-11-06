@@ -33,6 +33,25 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   },
 
   // ── warning ─────────────────────────────────────────────────────────────
+  // The freshness checks (freshness.ts, terminal-freshness.ts): work is owed
+  // and the part that does it has gone quiet. judge_silent above is the same
+  // rule, louder, because nothing is published without the judge.
+  task_silent: {
+    severity: 'warning',
+    action:
+      'A scheduled task has not completed a run in its window. Look for it in the Worker logs (Logs link below); a cron string out of step with wrangler.toml shows up in `bun run crons:check`.',
+  },
+  gdelt_search_silent: {
+    severity: 'warning',
+    action:
+      "No GDELT search has succeeded while searches are due. Open GitHub › Actions › GDELT search: if its runs stopped, start one with 'Run workflow'; if they run, read the log for 429s or a 4xx from /api/gdelt/*.",
+  },
+  press_drafts_silent: {
+    severity: 'warning',
+    action:
+      "A press note has waited past its window. Open the press-drafts routine's latest session at claude.ai/code/routines.",
+  },
+  freshness_check_failed: { severity: 'warning' },
   deploy_drift: {
     severity: 'warning',
     action:
