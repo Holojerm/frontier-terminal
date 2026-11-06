@@ -21,6 +21,8 @@ import googleModelPage from '~~/fixtures/pricing/google-model-gemini-4-argon.md?
 import googleModels from '~~/fixtures/pricing/google-models.md?raw'
 import googlePricing from '~~/fixtures/pricing/google-pricing.md?raw'
 import metaModels from '~~/fixtures/pricing/meta-models.md?raw'
+import metaMuseSpark from '~~/fixtures/pricing/meta-muse-spark.md?raw'
+import metaMuseWonder from '~~/fixtures/pricing/meta-muse-wonder.md?raw'
 import metaPricing from '~~/fixtures/pricing/meta-pricing.md?raw'
 import mistralModels from '~~/fixtures/pricing/mistral-models.md?raw'
 import alibabaModels from '~~/fixtures/pricing/alibaba-models.html?raw'
@@ -182,6 +184,8 @@ const files: Readonly<Record<string, string>> = {
   'fixtures/pricing/google-model-gemini-4-argon.md': googleModelPage,
   'fixtures/pricing/google-pricing.md': googlePricing,
   'fixtures/pricing/meta-models.md': metaModels,
+  'fixtures/pricing/meta-muse-wonder.md': metaMuseWonder,
+  'fixtures/pricing/meta-muse-spark.md': metaMuseSpark,
   'fixtures/pricing/meta-pricing.md': metaPricing,
   'fixtures/pricing/mistral-models.md': mistralModels,
   'fixtures/pricing/alibaba-models.html': alibabaModels,

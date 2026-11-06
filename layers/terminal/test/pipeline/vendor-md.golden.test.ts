@@ -392,10 +392,19 @@ describe('vendor-md + sec lane', () => {
     expect(() => parseMetaPricingMd(text)).toThrow('unrecognized header')
   })
 
-  test('meta: models.md lists the Model API ids with their context window and no prices', () => {
-    const out = parseMetaModelsMd(fixtureText('fixtures/pricing/meta-models.md'))
+  const metaSide = (id: string) =>
+    fixtureText(
+      {
+        'meta-muse-wonder-md': 'fixtures/pricing/meta-muse-wonder.md',
+        'meta-muse-spark-md': 'fixtures/pricing/meta-muse-spark.md',
+      }[id]!,
+    )
+
+  test('meta: models.md joined with each line’s page lists the Model API ids with their context window and no prices', () => {
+    const out = parseMetaModelsMd(fixtureText('fixtures/pricing/meta-models.md'), metaSide)
     expect(VendorMdPricingOutput.safeParse(out).success).toBe(true)
-    // Muse Wonder Full (Muse Code only) and the per-image/per-hour lines are not API text SKUs.
+    // Muse Wonder Full (Muse Code only), the per-image/per-hour lines and the
+    // open-weight lines are not API text SKUs.
     expect(out.rows.map((r) => r.model_slug)).toEqual([
       'muse-spark-1.1',
       'muse-spark-1.2',
@@ -415,11 +424,31 @@ describe('vendor-md + sec lane', () => {
     }
     const wonder = out.rows.find((r) => r.model_slug === 'muse-wonder-1.0')!
     expect(wonder.notes).toBe('Muse Wonder; Model API: Available (Standard mode only); preview')
+    expect(out.rows.find((r) => r.model_slug === 'muse-spark-1.3-contributor')!.notes).toBe(
+      'Muse Spark 1.3 Contributor; Model API: Contributor mode',
+    )
     // The catalog and the price list key the same ids, so the two pages join on modelKey.
     const priced = parseMetaPricingMd(fixtureText('fixtures/pricing/meta-pricing.md')).rows
     expect(out.rows.map((r) => modelKey(r.provider, r.model_slug, r.tier))).toEqual(
       priced.map((r) => modelKey(r.provider, r.model_slug, r.tier)),
     )
+  })
+
+  test('meta: a new text line without a registered page, or an id its page omits, fails the parse', () => {
+    const models = fixtureText('fixtures/pricing/meta-models.md')
+    const newLine = models.replace(
+      '## Muse Image',
+      '## Muse Nova\n\n| Model ID | Input | Output | Context window |\n| :-- | :-- | :-- | :-- |\n| `muse-nova-1.0` | Text | Text | 262,144 tokens |\n\n## Muse Image',
+    )
+    expect(() => parseMetaModelsMd(newLine, metaSide)).toThrow('Muse Nova')
+    const sparkWithout13 = (id: string) =>
+      id === 'meta-muse-spark-md'
+        ? metaSide(id)
+            .split('\n')
+            .filter((l) => !l.includes('`muse-spark-1.3`'))
+            .join('\n')
+        : metaSide(id)
+    expect(() => parseMetaModelsMd(models, sparkWithout13)).toThrow('muse-spark-1.3')
   })
 
   test('mistral: pricing.md keeps the per-MTok lines of Mistral’s own models, never a resold one', () => {

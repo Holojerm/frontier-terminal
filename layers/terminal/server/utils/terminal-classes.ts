@@ -144,9 +144,12 @@ export const MODEL_CLASS_MAP: ClassEntry[] = [
     basis_source_id: 'xai-models-md',
   },
   // Transcribed 2026-10-12. Meta splits its two API text lines by workload,
-  // not by tier: Muse Wonder for capability, Muse Spark for cost-sensitive
-  // volume. The economy sentence names the line; muse-spark-1.3 is the
-  // version the same page marks "Recommended for new work."
+  // not by tier: Muse Wonder for capability, Muse Spark for work at scale.
+  // The economy sentence names the line; muse-spark-1.3 is the version the
+  // same page says "is recommended for new work." Economy sentence
+  // re-transcribed 2026-11-06, when Meta moved its "Choose Muse Wonder or
+  // Muse Spark" section (and with it "high-volume, latency-sensitive, or
+  // cost-sensitive work") off models.md to its own page.
   {
     provider: 'meta',
     class: 'flagship',
@@ -160,7 +163,7 @@ export const MODEL_CLASS_MAP: ClassEntry[] = [
     class: 'economy',
     model_slug: 'muse-spark-1.3',
     basis:
-      'high-volume, latency-sensitive, or cost-sensitive work, such as sub-agent tasks, classification, and tight tool loops.',
+      "Muse Spark is Meta's model for agentic and coding work at scale, such as multi-step tool loops, software engineering assistants, sub-agent tasks, and long-context reasoning.",
     basis_source_id: 'meta-models-md',
   },
   // Transcribed 2026-11-01, when Google's models page first served markdown;

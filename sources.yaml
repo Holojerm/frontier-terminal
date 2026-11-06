@@ -211,8 +211,46 @@ sources:
       301-redirects to dev.meta.ai; the source is registered at the final
       URL. Only the two token-priced text lines (Muse Wonder, Muse Spark) are
       parsed. Muse Image, Muse Voice Transcribe and SAM are billed per image,
-      per hour or per frame, and Muse Glimmer is open-weight with no API at
-      all.
+      per hour or per frame, and Muse Glimmer and Muse Spark Open are
+      open-weight with no API at all. Since 2026-11-06 this page prints each
+      line's ids and context window but no availability table: those moved
+      to each line's own page (meta-muse-wonder-md, meta-muse-spark-md),
+      which the parser joins. A text line with a context window and no
+      registered page fails the parse rather than being guessed at.
+
+  meta-muse-wonder-md:
+    axis: pricing-catalog
+    provider: meta
+    url: https://dev.meta.ai/docs/muse-wonder.md
+    format: Markdown, one "## Availability" table
+    diff_mechanism: body hash (ETag, Last-Modified)
+    verdict: include (join table for meta-models-md)
+    terms: >-
+      Same terms and robots.txt as meta-models-md. Taken: the Availability
+      table (variant, id, whether pay-as-you-go serves it) and the preview
+      note, whenever meta-models-md is read. Read 2026-11-06.
+    rights: not-cleared
+    fixture: fixtures/pricing/meta-muse-wonder.md
+    caveats: >-
+      Muse Wonder Full is listed with no id and "Not available" on Model
+      API: it is a Muse Code-only variant and not an API SKU.
+
+  meta-muse-spark-md:
+    axis: pricing-catalog
+    provider: meta
+    url: https://dev.meta.ai/docs/muse-spark.md
+    format: Markdown, one "## Availability" table
+    diff_mechanism: body hash (ETag, Last-Modified)
+    verdict: include (join table for meta-models-md)
+    terms: >-
+      Same terms and robots.txt as meta-models-md. Taken: the Availability
+      table (version, id, Standard or Contributor mode on pay-as-you-go),
+      whenever meta-models-md is read. Read 2026-11-06.
+    rights: not-cleared
+    fixture: fixtures/pricing/meta-muse-spark.md
+    caveats: >-
+      The only page that lists the -contributor ids; meta-models-md names
+      the Standard-mode ids alone.
 
   meta-pricing-md:
     axis: pricing-catalog
