@@ -93,19 +93,39 @@ async function storedHashes(deps: PollDeps, sourceId: string): Promise<Map<strin
   return new Map(rows.map((r) => [r.key, r.hash]))
 }
 
-/** True when the page parses to rows other than the ones stored for it. */
-async function differs(deps: PollDeps, source: FetchSource, fetchedAt: string): Promise<boolean> {
+/**
+ * True when the page parses to rows other than the ones stored for it. A lane
+ * with side sources (Meta's catalog joins each text line's own page) has
+ * them fetched in the same tick, as refresh does.
+ */
+async function differs(
+  deps: PollDeps,
+  source: FetchSource,
+  fetchedAt: string,
+  sources: readonly FetchSource[],
+): Promise<boolean> {
   const lane = laneFor(source.source_id)
   if (!lane) return false
   const outcome = await deps.fetcher(source)
   // A failing catalog is the regular poll's to report. The tripwire only
   // speaks up about change.
   if (!outcome.ok) return false
+  const sides = new Map<string, string>()
+  for (const id of lane.sides) {
+    const sideSource = sources.find((s) => s.source_id === id)
+    if (!sideSource)
+      throw new Error(`${source.source_id} joins a source not in sources.yaml: ${id}`)
+    const side = await deps.fetcher(sideSource)
+    if (!side.ok) return false
+    sides.set(id, side.text)
+  }
   const parsed = lane.parse(outcome.text, {
     prov: { source_url: source.url, fetched_at: fetchedAt },
     snapshotId: `tripwire:${source.source_id}`,
     side: (id) => {
-      throw new Error(`tripwire lanes take no side sources (asked for ${id})`)
+      const text = sides.get(id)
+      if (text === undefined) throw new Error(`${source.source_id} did not declare side ${id}`)
+      return text
     },
     whitelist: new Map(),
     revenueFilers: new Map(),
@@ -133,7 +153,7 @@ export async function runTripwire(deps: PollDeps): Promise<TripwireOutcome> {
     if (!source) throw new Error(`tripwire names a source not in sources.yaml: ${id}`)
     if ((await lock.get(cooldownKey(id))) !== null) continue
     try {
-      if (await differs(deps, source, now.toISOString())) by.push(id)
+      if (await differs(deps, source, now.toISOString(), sources)) by.push(id)
     } catch (err) {
       // A parse error here is the regular poll's to record, with the snapshot.
       console.warn(

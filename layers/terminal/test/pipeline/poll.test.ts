@@ -155,6 +155,8 @@ describe('runPoll between survey instants', () => {
       'google-pricing-html',
       'google-models-md',
       'meta-models-md',
+      'meta-muse-wonder-md',
+      'meta-muse-spark-md',
       'meta-pricing-md',
       'mistral-models-md',
       'mistral-pricing-md',

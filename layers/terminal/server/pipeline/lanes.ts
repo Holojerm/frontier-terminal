@@ -35,7 +35,7 @@ import { parseAnthropicModelsOverviewMd } from './parsers/pricing/anthropic-mode
 import { parseAnthropicPricingMd } from './parsers/pricing/anthropic-pricing'
 import { parseGoogleModelPage } from './parsers/pricing/google-model-page'
 import { parseGooglePricingPage } from './parsers/pricing/google-pricing'
-import { parseMetaModelsMd } from './parsers/pricing/meta-models'
+import { META_LINE_PAGES, parseMetaModelsMd } from './parsers/pricing/meta-models'
 import { parseMetaPricingMd } from './parsers/pricing/meta-pricing'
 import { parseAlibabaPricingHtml } from './parsers/pricing/alibaba-pricing'
 import { parseDeepseekPricingMd } from './parsers/pricing/deepseek-pricing'
@@ -363,12 +363,17 @@ export const LANES: Readonly<Record<string, Lane>> = {
       ...checked('xai-models-md', text, ctx),
     ],
   })),
-  'meta-models-md': set((text, ctx) => ({
-    entities: [
-      ...normalizePrices(parseMetaModelsMd(text, ctx.prov).rows, ctx.snapshotId),
-      ...checked('meta-models-md', text, ctx),
-    ],
-  })),
+  // The availability tables are on each text line's own page (meta-models.ts).
+  'meta-models-md': {
+    sides: Object.values(META_LINE_PAGES),
+    removals: 'set',
+    parse: (text, ctx) => ({
+      entities: [
+        ...normalizePrices(parseMetaModelsMd(text, ctx.side, ctx.prov).rows, ctx.snapshotId),
+        ...checked('meta-models-md', text, ctx),
+      ],
+    }),
+  },
   'meta-pricing-md': set((text, { prov, snapshotId }) => ({
     entities: normalizePrices(parseMetaPricingMd(text, prov).rows, snapshotId),
   })),

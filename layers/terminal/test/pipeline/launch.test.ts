@@ -271,9 +271,37 @@ describe('tripwire', () => {
       now: clockAt('2026-09-22T12:05:00Z'),
     })
     expect(outcome).toEqual({ status: 'quiet', checked: TRIPWIRE_BASE })
-    expect(f.calls).toEqual(TRIPWIRE_BASE)
+    // Meta's catalog joins each text line's own page, fetched in the same tick.
+    const META = TRIPWIRE_BASE.indexOf('meta-models-md') + 1
+    expect(f.calls).toEqual([
+      ...TRIPWIRE_BASE.slice(0, META),
+      'meta-muse-wonder-md',
+      'meta-muse-spark-md',
+      ...TRIPWIRE_BASE.slice(META),
+    ])
     expect((await runs()).length).toBe(before.runs)
     expect((await db.select().from(schema.snapshots)).length).toBe(before.snapshots)
+  })
+
+  it('reads a side page that fails as no change, not as a trip', async () => {
+    await poll(TRIPWIRE_BASE, fetcher(), '2026-09-22T12:00:00Z')
+    const ok = fetcher()
+    const sparkDown = Object.assign(
+      async (source: { source_id: string; url: string }) =>
+        source.source_id === 'meta-muse-spark-md'
+          ? { ok: false as const, status: 503, detail: 'HTTP 503' }
+          : ok(source),
+      { calls: ok.calls },
+    )
+    const outcome = await runTripwire({
+      db,
+      raw,
+      fetcher: sparkDown,
+      sourcesYaml,
+      lock: memoryKv(),
+      now: clockAt('2026-09-22T12:05:00Z'),
+    })
+    expect(outcome).toEqual({ status: 'quiet', checked: TRIPWIRE_BASE })
   })
 
   it('polls the catalogs off-cycle when one changes, then cools that source down', async () => {
@@ -308,6 +336,8 @@ describe('tripwire', () => {
     expect(tripwireRuns.map((r) => r.source_id).sort()).toEqual(
       [
         ...TRIPWIRE_BASE,
+        'meta-muse-wonder-md',
+        'meta-muse-spark-md',
         'anthropic-pricing-md',
         'openai-pricing-md',
         'meta-pricing-md',
