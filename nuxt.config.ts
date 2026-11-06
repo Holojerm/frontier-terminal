@@ -508,6 +508,11 @@ export default defineNuxtConfig({
     // Unset = those routes 404 and no judge exists. Same shape and floor as the
     // fleet token; a Worker secret: `wrangler secret put NUXT_JUDGE_TOKEN`.
     judgeToken: '',
+    // Bearer the GitHub Actions GDELT job (scripts/gdelt-search.ts) presents to
+    // /api/gdelt/* (layers/terminal/server/utils/gdelt-auth.ts). The same value is the
+    // repository secret GDELT_TOKEN. Unset = those routes 404 and no GDELT search
+    // runs. `wrangler secret put NUXT_GDELT_TOKEN`; 32+ chars.
+    gdeltToken: '',
     // OpenRouter API key for the usage-rankings dataset (the demand-share axis,
     // layers/terminal/server/pipeline/fetch.ts). Sent as a bearer to openrouter.ai/api/v1/datasets/*
     // only. Empty = that source is recorded 'skipped' every tick and the panel

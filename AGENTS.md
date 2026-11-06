@@ -191,11 +191,13 @@ Each of these has a full contract in its own doc — this is the one-line versio
   is the depth axis of this project; never trade it for a feature.
 - **Errors** — `<UAlert>` on the client, `createError({ statusCode })` on the
   server, never a raw error message to a user. → [`patterns.md`](.claude/docs/patterns.md)
-- **Public API** — every `/api/*` route is public and read-only, with four bearer-gated
-  exceptions: `/api/fleet` (portfolio dashboard), `/api/judge/*` (the judge routine, the one
+- **Public API** — every `/api/*` route is public and read-only, with five bearer-gated
+  exceptions: `/api/fleet` (portfolio dashboard), `/api/judge/*` (the judge routine, a
   writer — `layers/terminal/server/utils/judge-auth.ts`), `/api/ops/events` (the ops-triage
-  routine's read of the ops spool, `NUXT_OPS_TOKEN`) and `/api/press/*` (the press-drafts
-  routine; it names reporters, `NUXT_PRESS_TOKEN`). No session; a route that takes input validates it
+  routine's read of the ops spool, `NUXT_OPS_TOKEN`), `/api/press/*` (the press-drafts
+  routine; it names reporters, `NUXT_PRESS_TOKEN`) and `/api/gdelt/*` (the GitHub Actions job
+  that runs GDELT queries off Cloudflare's shared IPs and posts the answers back, the other
+  writer, `NUXT_GDELT_TOKEN`). No session; a route that takes input validates it
   with Zod and calls `rateLimit()` (`rateLimitTerminal()` on the public product routes).
   Licensees may send an owner-issued API key (`Authorization: Bearer ftk_…`, `bun run keys:issue`):
   it only raises the rate limit, lists the full-history bulk files, labels older rows with the paid
