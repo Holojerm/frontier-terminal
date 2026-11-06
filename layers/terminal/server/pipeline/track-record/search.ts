@@ -4,48 +4,61 @@
 // cited change rows (terms.ts). Candidates only: the judge decides which are
 // the same event (review.ts).
 //
-// Runs on the */5 cron with one GDELT query per run. GDELT asks for one
-// query every 5 seconds and answers a burst with minutes of 429s, so a slow
-// steady drip clears a backlog of a hundred alerts in under nine hours. A 429
-// ends the run and the next one retries. An alert is searched once its
-// window has closed, so both sides of it are in; until then the page says
-// the window is open.
+// The two sides run in different places. The newsroom side reads posts the
+// poll already stored, so the */5 cron does it here (runTrackRecordSearch).
+// The GDELT side does not run on Cloudflare at all: Workers share egress IPs,
+// GDELT limits per IP, and from those IPs 85% of our queries drew a 429 for
+// other tenants' traffic. A GitHub Actions job (scripts/gdelt-search.ts) asks
+// /api/gdelt/pending for the due searches (dueGdeltSearches), queries GDELT
+// itself at GDELT's own pace, and posts each answer to /api/gdelt/result
+// (recordGdeltResult), which stores the bytes and the candidates exactly as
+// the Worker's own fetch did. An alert is searched once its window has
+// closed, so both sides of it are in; until then the page says the window is
+// open.
 
 import { and, asc, desc, gte, inArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
 import { ChangeRow, contentHash, contentHashOfText } from '../contracts'
-import { RATE_LIMITED_DETAIL, type SourceFetcher } from '../fetch'
+import { RATE_LIMITED_DETAIL } from '../fetch'
 import type { RawStore } from '../refresh'
 import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '../store'
 import { NEWSROOM_OF } from '../../theses/recipes/newsrooms'
-import {
-  GDELT_HORIZON_DAYS,
-  GDELT_SPACING_MS,
-  gdeltUrl,
-  parseGdeltArticles,
-  type PressArticle,
-} from './gdelt'
+import { GDELT_HORIZON_DAYS, gdeltUrl, parseGdeltArticles, type PressArticle } from './gdelt'
 import { alertTerms, gdeltQuery, matchesWhat, type SearchTerms } from './terms'
 import { TRACK_RECORD_FROM, sawIt, searchState, trackWindow, type TrackWindow } from './window'
 
 export const MATERIAL_SEVERITIES = ['notable', 'critical'] as const
 
-/** GDELT queries per run. */
-export const SEARCHES_PER_RUN = 1
+/** GDELT searches handed out per /api/gdelt/pending call. */
+export const GDELT_PENDING_LIMIT = 10
 
 /**
- * Failed GDELT searches after which an alert stops being retried. A 429 is
- * not one: it says GDELT was busy (Workers share egress IPs, so its
- * per-IP limit trips on other tenants' traffic too), not that the query is
- * bad, and counting it abandoned the oldest alert after three busy ticks.
+ * Failed GDELT searches after which an alert stops being retried. A busy
+ * GDELT is not one (transientSearch): a 429 or a timeout says GDELT had no
+ * time for us, not that the query is bad, and counting those abandoned the
+ * oldest alert after three busy ticks (24 of 105 alerts on 2026-11-05 for
+ * 429s; one more on 2026-11-06 for timeouts).
  */
 export const MAX_FAILED_SEARCHES = 3
 
-/** A failed search that GDELT refused with a 429: retried, never counted toward giving up. */
-export function rateLimitedSearch(s: { status: string; detail: string | null }): boolean {
-  return s.status === 'failed' && (s.detail?.startsWith(RATE_LIMITED_DETAIL) ?? false)
+/** The detail of a search GDELT did not answer in time. */
+export const TIMEOUT_DETAIL = 'timeout'
+
+/**
+ * A failed search that says GDELT was busy, not that the query failed: a 429,
+ * or no answer in time. Retried, never counted toward giving up, never mailed.
+ * `TimeoutError` matches the rows the Worker's own fetcher wrote before the
+ * search moved to GitHub Actions ("fetch threw: TimeoutError: ...").
+ */
+export function transientSearch(s: { status: string; detail: string | null }): boolean {
+  if (s.status !== 'failed' || !s.detail) return false
+  return (
+    s.detail.startsWith(RATE_LIMITED_DETAIL) ||
+    s.detail.startsWith(TIMEOUT_DETAIL) ||
+    s.detail.includes('TimeoutError')
+  )
 }
 
 /** Newsroom posts kept per alert, earliest first. */
@@ -167,19 +180,15 @@ async function searchesOf(db: PipelineDb) {
 }
 
 export interface SearchDeps {
-  raw: RawStore
-  fetcher: SourceFetcher
   now: () => Date
-  sleep?: (ms: number) => Promise<void>
-  limit?: number
 }
 
 export interface SearchRunReport {
-  searched: number
+  /** Newsroom searches written this run. */
+  newsroom: number
+  /** Searches recorded as skipped: no terms, or a window past GDELT's horizon. */
+  skipped: number
   candidates: number
-  failed: { alert_id: string; detail: string }[]
-  /** True when GDELT answered 429 and the run stopped early. */
-  rate_limited: boolean
 }
 
 interface SearchRow {
@@ -197,50 +206,73 @@ interface SearchRow {
   source_url: string
 }
 
-/** Search every alert that is due, up to `limit` GDELT queries. */
-export async function runTrackRecordSearch(
-  db: PipelineDb,
-  deps: SearchDeps,
-): Promise<SearchRunReport> {
-  const sleep = deps.sleep ?? ((ms: number) => new Promise((r) => setTimeout(r, ms)))
-  const limit = deps.limit ?? SEARCHES_PER_RUN
-  const report: SearchRunReport = { searched: 0, candidates: 0, failed: [], rate_limited: false }
+interface AlertPlan {
+  alert: AlertForSearch
+  window: TrackWindow
+  state: 'due' | 'beyond-horizon'
+  terms: SearchTerms | null
+  gdeltDone: boolean
+  newsroomDone: boolean
+  /** MAX_FAILED_SEARCHES real failures: GDELT is not asked again. */
+  gdeltGivenUp: boolean
+}
 
+/** Every material alert whose window has closed, oldest first, with what is left to do. */
+async function closedAlerts(db: PipelineDb, now: Date): Promise<AlertPlan[]> {
   const [alerts, searches] = await Promise.all([materialAlerts(db), searchesOf(db)])
   const done = new Set<string>()
   const failures = new Map<string, number>()
   for (const s of searches) {
     const key = `${s.alert_id}:${s.source}`
     if (s.status === 'ok' || s.status === 'skipped') done.add(key)
-    else if (!rateLimitedSearch(s)) failures.set(key, (failures.get(key) ?? 0) + 1)
+    else if (!transientSearch(s)) failures.set(key, (failures.get(key) ?? 0) + 1)
   }
-
-  let queried = 0
+  const plans: AlertPlan[] = []
   for (const alert of alerts) {
-    if (queried >= limit) break
     const saw = sawIt(alert.changes)
     if (!saw) continue
     const window = trackWindow(saw.at)
-    const state = searchState(window, deps.now())
+    const state = searchState(window, now)
     if (state === 'open') continue
-    const gdeltKey = `${alert.id}:gdelt`
-    const newsroomKey = `${alert.id}:newsroom`
-    if (done.has(gdeltKey) && done.has(newsroomKey)) continue
-    if ((failures.get(gdeltKey) ?? 0) >= MAX_FAILED_SEARCHES && done.has(newsroomKey)) continue
+    plans.push({
+      alert,
+      window,
+      state,
+      terms: alertTerms(alert.changes),
+      gdeltDone: done.has(`${alert.id}:gdelt`),
+      newsroomDone: done.has(`${alert.id}:newsroom`),
+      gdeltGivenUp: (failures.get(`${alert.id}:gdelt`) ?? 0) >= MAX_FAILED_SEARCHES,
+    })
+  }
+  return plans
+}
 
-    const terms = alertTerms(alert.changes)
+const baseOf = (p: AlertPlan, searched_at: string) => ({
+  alert_id: p.alert.id,
+  window_start: p.window.start,
+  window_end: p.window.end,
+  searched_at,
+})
+
+/**
+ * The cron's half: the newsroom side of every closed alert, and the GDELT
+ * side's skips (no search terms, or a window past GDELT's horizon). Never
+ * fetches anything; the GDELT queries are the Actions job's.
+ */
+export async function runTrackRecordSearch(
+  db: PipelineDb,
+  deps: SearchDeps,
+): Promise<SearchRunReport> {
+  const report: SearchRunReport = { newsroom: 0, skipped: 0, candidates: 0 }
+  for (const p of await closedAlerts(db, deps.now())) {
+    if (p.gdeltDone && p.newsroomDone) continue
     const searched_at = deps.now().toISOString()
-    const base = {
-      alert_id: alert.id,
-      window_start: window.start,
-      window_end: window.end,
-      searched_at,
-    }
+    const base = baseOf(p, searched_at)
 
-    if (!terms) {
+    if (!p.terms) {
       // A ranking or other row with no press shape: nothing to search, said once.
       for (const source of ['gdelt', 'newsroom'] as const) {
-        if (done.has(`${alert.id}:${source}`)) continue
+        if (source === 'gdelt' ? p.gdeltDone : p.newsroomDone) continue
         await insertSearch(db, {
           ...base,
           id: crypto.randomUUID(),
@@ -250,21 +282,22 @@ export async function runTrackRecordSearch(
           detail: 'no search terms for the cited change types',
           candidates: 0,
           raw_key: null,
-          source_url: source === 'gdelt' ? gdeltUrl('', window.start, window.end) : '',
+          source_url: source === 'gdelt' ? gdeltUrl('', p.window.start, p.window.end) : '',
         })
+        report.skipped++
       }
       continue
     }
 
-    if (!done.has(newsroomKey)) {
-      const recipeIds = newsroomsFor(alert.changes)
-      const posts = newsroomCandidates(await newsroomPosts(db, recipeIds, window), terms)
+    if (!p.newsroomDone) {
+      const recipeIds = newsroomsFor(p.alert.changes)
+      const posts = newsroomCandidates(await newsroomPosts(db, recipeIds, p.window), p.terms)
       const search_id = crypto.randomUUID()
       await insertSearch(db, {
         ...base,
         id: search_id,
         source: 'newsroom',
-        query: terms.what.join(' | '),
+        query: p.terms.what.join(' | '),
         status: recipeIds.length ? 'ok' : 'skipped',
         detail: recipeIds.length ? null : 'no newsroom feed for this lab',
         candidates: posts.length,
@@ -273,106 +306,179 @@ export async function runTrackRecordSearch(
       })
       await insertCandidates(
         db,
-        posts.map((p) => ({
-          id: candidateId(alert.id, 'newsroom', p.link),
-          alert_id: alert.id,
+        posts.map((post) => ({
+          id: candidateId(p.alert.id, 'newsroom', post.link),
+          alert_id: p.alert.id,
           kind: 'newsroom',
-          title: p.title,
-          snippet: p.summary || null,
-          outlet: hostOf(p.link),
-          url: p.link,
-          published_at: p.published_at,
+          title: post.title,
+          snippet: post.summary || null,
+          outlet: hostOf(post.link),
+          url: post.link,
+          published_at: post.published_at,
           search_id,
           found_at: searched_at,
-          source_url: p.source_url,
-          fetched_at: p.fetched_at,
+          source_url: post.source_url,
+          fetched_at: post.fetched_at,
         })),
       )
+      report.newsroom++
       report.candidates += posts.length
     }
 
-    if (done.has(gdeltKey) || (failures.get(gdeltKey) ?? 0) >= MAX_FAILED_SEARCHES) continue
-    if (state === 'beyond-horizon') {
+    if (!p.gdeltDone && !p.gdeltGivenUp && p.state === 'beyond-horizon') {
+      const query = gdeltQuery(p.terms)
       await insertSearch(db, {
         ...base,
         id: crypto.randomUUID(),
         source: 'gdelt',
-        query: gdeltQuery(terms),
+        query,
         status: 'skipped',
         detail: `the window starts more than ${GDELT_HORIZON_DAYS} days ago, past what GDELT's DOC API searches`,
         candidates: 0,
         raw_key: null,
-        source_url: gdeltUrl(gdeltQuery(terms), window.start, window.end),
+        source_url: gdeltUrl(query, p.window.start, p.window.end),
       })
-      continue
+      report.skipped++
     }
-
-    if (queried > 0) await sleep(GDELT_SPACING_MS)
-    queried++
-    const query = gdeltQuery(terms)
-    const url = gdeltUrl(query, window.start, window.end)
-    const fetched = await deps.fetcher({ source_id: 'gdelt-doc', url, ext: 'json' })
-    const fetched_at = deps.now().toISOString()
-    let articles: PressArticle[] | null = null
-    let detail: string | null = null
-    let raw_key: string | null = null
-    if (!fetched.ok) {
-      detail = fetched.detail
-    } else {
-      try {
-        articles = parseGdeltArticles(fetched.text)
-        raw_key = `track-record/gdelt/${contentHashOfText(fetched.text)}.json`
-        await deps.raw.put(raw_key, fetched.text, 'application/json')
-      } catch (error) {
-        detail = `parse: ${String(error)}`
-      }
-    }
-    const search_id = crypto.randomUUID()
-    await insertSearch(db, {
-      ...base,
-      searched_at: fetched_at,
-      id: search_id,
-      source: 'gdelt',
-      query,
-      status: articles ? 'ok' : 'failed',
-      detail: detail?.slice(0, 500) ?? null,
-      candidates: articles?.length ?? 0,
-      raw_key,
-      source_url: url,
-    })
-    report.searched++
-    if (!articles) {
-      report.failed.push({ alert_id: alert.id, detail: detail ?? 'unknown' })
-      if (!fetched.ok && fetched.status === 429) {
-        report.rate_limited = true
-        break
-      }
-      await recordOpsEvent(db, {
-        kind: 'track_record_search_failed',
-        detail: `GDELT search for alert ${alert.id}: ${detail}`,
-      })
-      continue
-    }
-    await insertCandidates(
-      db,
-      articles.map((a) => ({
-        id: candidateId(alert.id, 'press', a.url),
-        alert_id: alert.id,
-        kind: 'press',
-        title: a.title,
-        snippet: null,
-        outlet: a.outlet,
-        url: a.url,
-        published_at: a.seen_at,
-        search_id,
-        found_at: fetched_at,
-        source_url: url,
-        fetched_at,
-      })),
-    )
-    report.candidates += articles.length
   }
   return report
+}
+
+export interface DueGdeltSearch {
+  alert_id: string
+  query: string
+  /** The exact URL to fetch; /api/gdelt/result refuses an answer for any other. */
+  url: string
+  window_start: string
+  window_end: string
+}
+
+/** The GDELT searches due now, oldest alert first: what the Actions job asks GDELT. */
+export async function dueGdeltSearches(
+  db: PipelineDb,
+  now: Date,
+  limit: number = GDELT_PENDING_LIMIT,
+): Promise<DueGdeltSearch[]> {
+  const due: DueGdeltSearch[] = []
+  for (const p of await closedAlerts(db, now)) {
+    if (due.length >= limit) break
+    if (p.state !== 'due' || !p.terms || p.gdeltDone || p.gdeltGivenUp) continue
+    const query = gdeltQuery(p.terms)
+    due.push({
+      alert_id: p.alert.id,
+      query,
+      url: gdeltUrl(query, p.window.start, p.window.end),
+      window_start: p.window.start,
+      window_end: p.window.end,
+    })
+  }
+  return due
+}
+
+/** What the Actions job saw when it fetched a due search's URL. */
+export type GdeltAnswer =
+  | { kind: 'http'; status: number; text: string }
+  | { kind: 'timeout' }
+  | { kind: 'error'; message: string }
+
+export interface GdeltResultInput {
+  alert_id: string
+  url: string
+  fetched_at: string
+  answer: GdeltAnswer
+}
+
+export type GdeltResultOutcome =
+  | { recorded: true; status: 'ok' | 'failed'; transient: boolean; candidates: number }
+  | { recorded: false; reason: 'not-due' | 'url-mismatch' }
+
+/**
+ * Store one GDELT answer the Actions job fetched: the search row, the raw
+ * bytes in R2, and the articles as press candidates — the same rows the
+ * Worker's own fetch wrote. Only for a search that is due, at the URL
+ * dueGdeltSearches handed out, so the job can neither pick the query nor
+ * fill a side that is done.
+ */
+export async function recordGdeltResult(
+  db: PipelineDb,
+  raw: RawStore,
+  input: GdeltResultInput,
+  now: Date,
+): Promise<GdeltResultOutcome> {
+  const due = (await dueGdeltSearches(db, now, Number.POSITIVE_INFINITY)).find(
+    (d) => d.alert_id === input.alert_id,
+  )
+  if (!due) return { recorded: false, reason: 'not-due' }
+  if (due.url !== input.url) return { recorded: false, reason: 'url-mismatch' }
+
+  const { answer, fetched_at } = input
+  let articles: PressArticle[] | null = null
+  let detail: string | null = null
+  let raw_key: string | null = null
+  if (answer.kind === 'timeout') {
+    detail = `${TIMEOUT_DETAIL}: GDELT did not answer in time`
+  } else if (answer.kind === 'error') {
+    detail = `fetch threw: ${answer.message}`
+  } else if (answer.status === 429) {
+    detail = RATE_LIMITED_DETAIL
+  } else if (answer.status < 200 || answer.status >= 300) {
+    detail = `HTTP ${answer.status}`
+  } else {
+    try {
+      articles = parseGdeltArticles(answer.text)
+      raw_key = `track-record/gdelt/${contentHashOfText(answer.text)}.json`
+      await raw.put(raw_key, answer.text, 'application/json')
+    } catch (error) {
+      articles = null
+      detail = `parse: ${String(error)}`
+    }
+  }
+
+  const search_id = crypto.randomUUID()
+  const status = articles ? 'ok' : 'failed'
+  const row: SearchRow = {
+    id: search_id,
+    alert_id: due.alert_id,
+    source: 'gdelt',
+    query: due.query,
+    window_start: due.window_start,
+    window_end: due.window_end,
+    status,
+    detail: detail?.slice(0, 500) ?? null,
+    candidates: articles?.length ?? 0,
+    searched_at: fetched_at,
+    raw_key,
+    source_url: due.url,
+  }
+  await insertSearch(db, row)
+  const transient = transientSearch(row)
+  if (!articles) {
+    if (!transient) {
+      await recordOpsEvent(db, {
+        kind: 'track_record_search_failed',
+        detail: `GDELT search for alert ${due.alert_id}: ${detail}`,
+      })
+    }
+    return { recorded: true, status: 'failed', transient, candidates: 0 }
+  }
+  await insertCandidates(
+    db,
+    articles.map((a) => ({
+      id: candidateId(due.alert_id, 'press', a.url),
+      alert_id: due.alert_id,
+      kind: 'press',
+      title: a.title,
+      snippet: null,
+      outlet: a.outlet,
+      url: a.url,
+      published_at: a.seen_at,
+      search_id,
+      found_at: fetched_at,
+      source_url: due.url,
+      fetched_at,
+    })),
+  )
+  return { recorded: true, status: 'ok', transient: false, candidates: articles.length }
 }
 
 const NEWSROOM_URLS: Readonly<Record<string, string>> = Object.fromEntries(

@@ -433,6 +433,8 @@ Checked for `/track-record`, which times each notable or critical alert against 
 
 **Verdict.** Include GDELT (per alert, `track_record_sources`) and the four feeds (recipes, `recipe_sources`). OpenAI and Meta stay `not-cleared` and out of any paid offer. Anthropic and xAI have no newsroom time on the page, and the cut block says why.
 
+**Update, 2026-11-06: GDELT moved off the Worker.** In production 255 of about 300 GDELT queries from the Worker drew a 429, and 6 timed out, at one query per five minutes: GDELT limits per IP, and Workers share egress IPs with other tenants. Cloudflare's dedicated egress IPs are an Enterprise add-on. The queries now run from a GitHub Actions job (`.github/workflows/gdelt-search.yml`, `scripts/gdelt-search.ts`) hourly, one every 6 seconds, at most 10 per run, stopping at the first 429 or timeout. The Worker hands out the exact URLs (`/api/gdelt/pending`) and stores the answers (`/api/gdelt/result`), so the stored rows, bytes and provenance are unchanged.
+
 ## Addendum, 2026-11-04 — DeepSeek, Alibaba (Qwen) and Moonshot AI (Kimi)
 
 Live-fetched with `curl -L` and the pipeline's descriptive User-Agent at 20:30–21:15Z; SEC endpoints with the declared SEC User-Agent. Raw bodies committed under `fixtures/pricing/`, `fixtures/status/` and `fixtures/sec/` at 20:59–21:14Z (bytes, trims and timestamps in `fixtures/manifest.json`). Checked because the three labs' OpenRouter traffic was being counted as "other": in the committed rankings fixture's newest week (to 2026-09-08), `deepseek/*` alone carried 16.8% of all OpenRouter tokens, more than any tracked lab but OpenAI. Each was checked on every axis, English or international pages first.

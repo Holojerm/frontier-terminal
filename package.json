@@ -47,6 +47,7 @@
     "methods:check": "bun run scripts/check-method-bodies.ts",
     "globals:check": "bun run scripts/check-global-scope.ts",
     "smoke": "bun run scripts/smoke.ts",
+    "gdelt:search": "bun run scripts/gdelt-search.ts",
     "layers:pull": "bun run scripts/layers-pull.ts",
     "layers:check": "bun run scripts/check-layers.ts",
     "typecheck": "nuxt typecheck",

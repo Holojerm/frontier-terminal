@@ -2091,7 +2091,8 @@ track_record_sources:
       api.gdeltproject.org has no robots.txt (404). The API asks for "one
       every 5 seconds". Taken: each article's URL, title, outlet domain,
       language and the time GDELT first saw it, one query per material
-      alert, at most one query every 5 minutes. Read 2026-11-04.
+      alert, from a GitHub Actions runner (not Cloudflare's shared IPs), one
+      query every 6 seconds at most, at most 10 an hour. Read 2026-11-04.
     rights: upstream
     caveats: >-
       The time is when GDELT's crawler first saw the article, not when the

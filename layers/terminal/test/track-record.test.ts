@@ -9,7 +9,6 @@ import mistralFeed from '~~/fixtures/recipes/newsroom-mistral.xml?raw'
 import openaiFeed from '~~/fixtures/recipes/newsroom-openai.xml?raw'
 import * as schema from '~~/server/db/schema'
 import { contentHash, type ChangeRow } from '../server/pipeline/contracts'
-import type { SourceFetcher } from '../server/pipeline/fetch'
 import { groundingFailure } from '../server/pipeline/judge/grounding'
 import { submitJudgeRun } from '../server/pipeline/judge/submit'
 import { insertRows } from '../server/pipeline/store'
@@ -29,9 +28,14 @@ import {
   trackRecordReview,
 } from '../server/pipeline/track-record/review'
 import {
+  GDELT_PENDING_LIMIT,
   MAX_FAILED_SEARCHES,
   candidateId,
+  dueGdeltSearches,
+  recordGdeltResult,
   runTrackRecordSearch,
+  transientSearch,
+  type GdeltAnswer,
 } from '../server/pipeline/track-record/search'
 import {
   alertTerms,
@@ -344,6 +348,7 @@ const memoryRaw = () => {
 }
 
 async function seed() {
+  await db.delete(schema.opsEvents)
   await db.delete(schema.trackRecordVerdicts)
   await db.delete(schema.trackRecordCandidates)
   await db.delete(schema.trackRecordSearches)
@@ -374,30 +379,37 @@ async function seed() {
   })
 }
 
-const okFetcher =
-  (calls: string[]): SourceFetcher =>
-  async (source) => {
-    calls.push(source.url)
-    return { ok: true, status: 200, text: gdeltFixture, bytes: gdeltFixture.length }
+const OK: GdeltAnswer = { kind: 'http', status: 200, text: gdeltFixture }
+
+/** One hourly Actions run: the cron's half, then each due GDELT search answered with `answer`. */
+async function searchAll(answer: GdeltAnswer = OK, raw = memoryRaw()) {
+  await runTrackRecordSearch(db, { now: () => NOW })
+  const due = await dueGdeltSearches(db, NOW)
+  const outcomes: Awaited<ReturnType<typeof recordGdeltResult>>[] = []
+  for (const d of due) {
+    const outcome = await recordGdeltResult(
+      db,
+      raw.store,
+      { alert_id: d.alert_id, url: d.url, fetched_at: NOW.toISOString(), answer },
+      NOW,
+    )
+    outcomes.push(outcome)
+    if (outcome.recorded && outcome.transient) break
   }
+  return { due, outcomes }
+}
 
 describe('the search run', () => {
   beforeEach(seed)
 
-  it('searches each material alert once its window has closed, and only those', async () => {
-    const calls: string[] = []
+  it('hands out each material alert once its window has closed, and only those', async () => {
     const raw = memoryRaw()
-    const report = await runTrackRecordSearch(db, {
-      raw: raw.store,
-      fetcher: okFetcher(calls),
-      now: () => NOW,
-      sleep: async () => {},
-      limit: 5,
-    })
+    const { due, outcomes } = await searchAll(OK, raw)
     // The info alert is not material; the 2026-11-01 alert's window is still open.
-    expect(calls).toHaveLength(1)
-    expect(new URL(calls[0]!).searchParams.get('query')).toBe('"gpt 6.1" sourcelang:english')
-    expect(report).toMatchObject({ searched: 1, failed: [], rate_limited: false })
+    expect(due).toHaveLength(1)
+    expect(due[0]!.alert_id).toBe(HASH(1))
+    expect(new URL(due[0]!.url).searchParams.get('query')).toBe('"gpt 6.1" sourcelang:english')
+    expect(outcomes[0]).toMatchObject({ recorded: true, status: 'ok', transient: false })
     expect(raw.put).toHaveLength(1)
 
     const candidates = await db.select().from(schema.trackRecordCandidates)
@@ -408,59 +420,104 @@ describe('the search run', () => {
       outlet: 'openai.com',
       published_at: '2026-09-29T17:00:00.000Z',
     })
-    expect(candidates.filter((c) => c.kind === 'press').length).toBeGreaterThan(0)
+    const press = candidates.filter((c) => c.kind === 'press')
+    expect(press.length).toBeGreaterThan(0)
+    expect(
+      press.every((c) => c.source_url === due[0]!.url && c.fetched_at === NOW.toISOString()),
+    ).toBe(true)
 
     // A second run has nothing left to do.
-    const again: string[] = []
-    await runTrackRecordSearch(db, { raw: raw.store, fetcher: okFetcher(again), now: () => NOW })
-    expect(again).toHaveLength(0)
+    expect(await dueGdeltSearches(db, NOW)).toHaveLength(0)
+    expect(await runTrackRecordSearch(db, { now: () => NOW })).toMatchObject({
+      newsroom: 0,
+      skipped: 0,
+    })
   })
 
-  it('stops on a 429 and retries the alert on the next run', async () => {
-    const limited: SourceFetcher = async () => ({ ok: false, status: 429, detail: 'HTTP 429' })
-    const report = await runTrackRecordSearch(db, {
-      raw: memoryRaw().store,
-      fetcher: limited,
-      now: () => NOW,
-    })
-    expect(report.rate_limited).toBe(true)
+  it('the cron fetches nothing: it writes the newsroom side and leaves GDELT due', async () => {
+    const report = await runTrackRecordSearch(db, { now: () => NOW })
+    expect(report).toMatchObject({ newsroom: 1, candidates: 1 })
     const searches = await db.select().from(schema.trackRecordSearches)
-    expect(searches.find((s) => s.source === 'gdelt')).toMatchObject({ status: 'failed' })
-    const calls: string[] = []
-    await runTrackRecordSearch(db, {
-      raw: memoryRaw().store,
-      fetcher: okFetcher(calls),
-      now: () => NOW,
-    })
-    expect(calls).toHaveLength(1)
+    expect(searches.map((s) => s.source)).toEqual(['newsroom'])
+    expect(await dueGdeltSearches(db, NOW)).toHaveLength(1)
   })
 
-  it('never gives an alert up over 429s, only over real failures', async () => {
-    const run = (fetcher: SourceFetcher) =>
-      runTrackRecordSearch(db, { raw: memoryRaw().store, fetcher, now: () => NOW })
-    const limited: SourceFetcher = async () => ({ ok: false, status: 429, detail: 'HTTP 429' })
-    for (let i = 0; i < MAX_FAILED_SEARCHES + 2; i++) await run(limited)
-    const calls: string[] = []
-    await run(okFetcher(calls))
-    expect(calls).toHaveLength(1)
+  it('caps what one run hands out', async () => {
+    expect(GDELT_PENDING_LIMIT).toBeGreaterThan(0)
+    expect(await dueGdeltSearches(db, NOW, 0)).toHaveLength(0)
+  })
+
+  it('refuses an answer for a search that is not due, or at another URL', async () => {
+    const [due] = await dueGdeltSearches(db, NOW)
+    const post = (alert_id: string, url: string) =>
+      recordGdeltResult(
+        db,
+        memoryRaw().store,
+        { alert_id, url, fetched_at: NOW.toISOString(), answer: OK },
+        NOW,
+      )
+    // The window of alert 2 is still open; alert 3 is not material.
+    expect(await post(HASH(2), due!.url)).toEqual({ recorded: false, reason: 'not-due' })
+    expect(await post(HASH(3), due!.url)).toEqual({ recorded: false, reason: 'not-due' })
+    const other = due!.url.replace('gpt+6.1', 'something+else')
+    expect(await post(HASH(1), other)).toEqual({ recorded: false, reason: 'url-mismatch' })
+    expect(await db.select().from(schema.trackRecordSearches)).toHaveLength(0)
+
+    expect(await post(HASH(1), due!.url)).toMatchObject({ recorded: true, status: 'ok' })
+    expect(await post(HASH(1), due!.url)).toEqual({ recorded: false, reason: 'not-due' })
+  })
+
+  it('records a 429 or a timeout as busy: not mailed, retried on the next run', async () => {
+    for (const busy of [
+      { kind: 'http', status: 429, text: 'slow down' },
+      { kind: 'timeout' },
+    ] as GdeltAnswer[]) {
+      await seed()
+      const { outcomes } = await searchAll(busy)
+      expect(outcomes[0]).toMatchObject({ recorded: true, status: 'failed', transient: true })
+      expect(await db.select().from(schema.opsEvents)).toHaveLength(0)
+      expect(await dueGdeltSearches(db, NOW)).toHaveLength(1)
+    }
+  })
+
+  it('never gives an alert up over 429s or timeouts, only over real failures', async () => {
+    for (let i = 0; i < MAX_FAILED_SEARCHES + 2; i++) {
+      await searchAll({ kind: 'http', status: 429, text: '' })
+      await searchAll({ kind: 'timeout' })
+    }
+    expect(await dueGdeltSearches(db, NOW)).toHaveLength(1)
 
     await seed()
-    const broken: SourceFetcher = async () => ({ ok: false, status: 500, detail: 'HTTP 500' })
-    for (let i = 0; i < MAX_FAILED_SEARCHES; i++) await run(broken)
-    const after: string[] = []
-    await run(okFetcher(after))
-    expect(after).toHaveLength(0)
+    for (let i = 0; i < MAX_FAILED_SEARCHES; i++) {
+      await searchAll({ kind: 'http', status: 500, text: 'oops' })
+    }
+    expect(await dueGdeltSearches(db, NOW)).toHaveLength(0)
+    const events = await db.select().from(schema.opsEvents)
+    expect(events).toHaveLength(MAX_FAILED_SEARCHES)
+    expect(events[0]!.kind).toBe('track_record_search_failed')
+  })
+
+  it('reads the timeouts the Worker’s own fetcher wrote as busy too', () => {
+    const failed = (detail: string) => ({ status: 'failed', detail })
+    expect(
+      transientSearch(
+        failed(
+          'fetch threw: TimeoutError: The operation was aborted due to timeout after 1 attempts',
+        ),
+      ),
+    ).toBe(true)
+    expect(transientSearch(failed('HTTP 429 (Retry-After 60s)'))).toBe(true)
+    expect(transientSearch(failed('timeout: GDELT did not answer in time'))).toBe(true)
+    expect(transientSearch(failed('HTTP 500'))).toBe(false)
+    expect(transientSearch(failed('parse: SyntaxError'))).toBe(false)
+    expect(transientSearch({ status: 'ok', detail: null })).toBe(false)
   })
 })
 
 describe('the same-event gate', () => {
   beforeEach(async () => {
     await seed()
-    await runTrackRecordSearch(db, {
-      raw: memoryRaw().store,
-      fetcher: okFetcher([]),
-      now: () => NOW,
-    })
+    await searchAll()
   })
 
   it('offers candidates earliest first, and none after the first one rated the same event', () => {
@@ -564,11 +621,7 @@ describe('the same-event gate', () => {
 describe('the page payload', () => {
   beforeEach(async () => {
     await seed()
-    await runTrackRecordSearch(db, {
-      raw: memoryRaw().store,
-      fetcher: okFetcher([]),
-      now: () => NOW,
-    })
+    await searchAll()
   })
 
   const ctx = (at: string | null = null) => queryContext(sourcesYaml, null, () => NOW, at)

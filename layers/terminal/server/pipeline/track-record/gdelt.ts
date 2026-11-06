@@ -12,7 +12,7 @@ import { z } from 'zod'
 
 export const GDELT_DOC_URL = 'https://api.gdeltproject.org/api/v2/doc/doc'
 
-/** GDELT asks for "one every 5 seconds"; the search waits this long between queries. */
+/** GDELT asks for "one every 5 seconds"; the Actions job (scripts/gdelt-search.ts) waits this long between queries. */
 export const GDELT_SPACING_MS = 6_000
 
 /** The DOC API searches a rolling three months; older windows are not searched. */

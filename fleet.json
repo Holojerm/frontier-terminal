@@ -154,6 +154,7 @@
     "NUXT_SOCIAL_ENABLED",
     "NUXT_PRESS_LIST",
     "NUXT_PRESS_TOKEN",
+    "NUXT_GDELT_TOKEN",
     "NUXT_WEBHOOK_SIGNING_KEY"
   ],
   "links": {
