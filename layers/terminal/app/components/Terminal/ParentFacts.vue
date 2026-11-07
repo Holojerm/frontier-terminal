@@ -7,11 +7,9 @@ import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type { ParentFact, ParentsData } from '../../../shared/utils/recipe-views'
 import type { TableColumn } from '../../types/terminal-ui'
 
-const props = defineProps<{ parents: ParentsData; labs?: string[] }>()
+const props = defineProps<{ parents: ParentsData }>()
 
-const shown = computed(() =>
-  props.parents.parents.filter((p) => !props.labs || props.labs.includes(p.lab)),
-)
+const shown = computed(() => props.parents.parents)
 
 const value = (f: ParentFact) => {
   if (f.value === null) return f.text ?? ''
