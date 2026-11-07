@@ -15,7 +15,7 @@ import {
   buildOpsDigest,
   drainOpsEvents,
   OPS_EVENT_RETENTION_DAYS,
-  OPS_INFO_HOLD_MS,
+  OPS_HOLD_MS,
   pruneOpsEvents,
   recentOpsEvents,
   recordOpsEvent,
@@ -179,18 +179,63 @@ describe('drainOpsEvents with a classifier', () => {
     )
   })
 
-  it('holds a spool of only info rows, and keeps them pending', async () => {
+  const TICK_MS = 5 * 60_000
+  const ago = (ms: number) => new Date(NOW.getTime() - ms)
+  /** One drain at NOW + `after`, as the five-minute cron would run it. */
+  const drainAt = (mail: (d: OpsDigest) => Promise<void>, after = 0) =>
+    drainOpsEvents(db, mail, { ...RANKED, now: new Date(NOW.getTime() + after) })
+
+  it('mails a critical event on the next drain, with nothing held back', async () => {
+    await spool('judge_silent', 1)
+    const { sent, mail } = collector()
+    const result = await drainAt(mail)
+    expect(result).toMatchObject({ sent: true, pending: 1 })
+    expect(sent[0]!.subject).toBe('[Critical] My App · Judge silent ×1')
+  })
+
+  it('treats a server_error burst as critical and mails it on the next drain', async () => {
+    const burstClassify: OpsClassifier = (kind, count) =>
+      kind === 'server_error' && count >= 10 ? { severity: 'critical' } : classify(kind, count)
+    await spool('server_error', 9)
+    const { sent, mail } = collector()
+    expect(await drainOpsEvents(db, mail, { ...OPTIONS, classify: burstClassify })).toMatchObject({
+      held: true,
+    })
+    await spool('server_error', 1)
+    await drainOpsEvents(db, mail, { ...OPTIONS, classify: burstClassify })
+    expect(sent).toHaveLength(1)
+    expect(sent[0]!.ids).toHaveLength(10)
+  })
+
+  it('collapses warnings inside the hold into one mail, sent when the first is due', async () => {
+    const { sent, mail } = collector()
+    // A burst spread over 20 minutes: each drain in that span holds it.
+    for (let t = 0; t < 20 * 60_000; t += TICK_MS) {
+      await spool('source_failed', 1, new Date(NOW.getTime() + t))
+      expect(await drainAt(mail, t)).toMatchObject({ sent: false, held: true })
+    }
+    expect(sent).toHaveLength(0)
+    // The first drain past the oldest row's hold mails all four at once.
+    const due = Math.ceil(OPS_HOLD_MS.warning / TICK_MS) * TICK_MS
+    expect(await drainAt(mail, due)).toMatchObject({ sent: true })
+    expect(sent).toHaveLength(1)
+    expect(sent[0]!.subject).toBe('[Warning] My App · Source failed ×4')
+    expect(await pendingCount()).toBe(0)
+  })
+
+  it('holds a spool of only info rows for a day, and keeps them pending', async () => {
     await spool('map_noted', 2)
     const { sent, mail } = collector()
-    const result = await drainOpsEvents(db, mail, RANKED)
+    // A warning's hold is long past, and the info rows still wait.
+    const result = await drainAt(mail, OPS_HOLD_MS.warning * 2)
     expect(result).toMatchObject({ sent: false, held: true, pending: 2 })
     expect(sent).toHaveLength(0)
     expect(await pendingCount()).toBe(2)
   })
 
-  it('mails held info rows alongside the next louder event', async () => {
+  it('mails held rows alongside the next louder event that is due', async () => {
     await spool('map_noted', 2)
-    await spool('source_failed', 1)
+    await spool('source_failed', 1, ago(OPS_HOLD_MS.warning))
     const { sent, mail } = collector()
     await drainOpsEvents(db, mail, RANKED)
     expect(sent[0]!.subject).toBe('[Warning] My App · Source failed ×1 + 2 more')
@@ -198,12 +243,41 @@ describe('drainOpsEvents with a classifier', () => {
     expect(await pendingCount()).toBe(0)
   })
 
+  it('sends a fresh warning with a critical event rather than holding it', async () => {
+    await spool('source_failed', 1)
+    await spool('judge_silent', 1)
+    const { sent, mail } = collector()
+    await drainOpsEvents(db, mail, RANKED)
+    expect(sent[0]!.ids).toHaveLength(2)
+  })
+
   it('mails info rows on their own once the hold runs out', async () => {
-    await spool('map_noted', 1, new Date(NOW.getTime() - OPS_INFO_HOLD_MS))
+    await spool('map_noted', 1, ago(OPS_HOLD_MS.info))
     const { sent, mail } = collector()
     const result = await drainOpsEvents(db, mail, RANKED)
     expect(result.sent).toBe(true)
     expect(sent[0]!.subject).toBe('[Info] My App · Map noted ×1')
+  })
+
+  it('never mails a row twice, across drains and tiers', async () => {
+    const { sent, mail } = collector()
+    const at = (ms: number) => new Date(NOW.getTime() + ms)
+    await spool('judge_silent', 1, at(0))
+    for (let t = 0; t < 10 * 60_000; t += TICK_MS) await drainAt(mail, t)
+    await spool('source_failed', 1, at(10 * 60_000))
+    for (let t = 10 * 60_000; t < 60 * 60_000; t += TICK_MS) await drainAt(mail, t)
+    await spool('map_noted', 1, at(60 * 60_000))
+    for (let t = 60 * 60_000; t <= 60 * 60_000 + OPS_HOLD_MS.info; t += 60 * 60_000) {
+      await drainAt(mail, t)
+    }
+    expect(sent.map((d) => d.subject)).toEqual([
+      '[Critical] My App · Judge silent ×1',
+      '[Warning] My App · Source failed ×1',
+      '[Info] My App · Map noted ×1',
+    ])
+    const ids = sent.flatMap((d) => d.ids)
+    expect(new Set(ids).size).toBe(ids.length)
+    expect(await pendingCount()).toBe(0)
   })
 
   it('never holds without a classifier', async () => {

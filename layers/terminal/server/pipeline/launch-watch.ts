@@ -73,7 +73,7 @@ export async function launchCoverage(
 
 const staleMarkerKey = (c: StaleCell) => `launch:stale:${c.provider}:${c.class}:${c.model_slug}`
 
-/** One ops:alert tick: spool an event for each gap not reported recently. */
+/** One ops:watch tick: spool an event for each gap not reported recently. */
 export async function checkLaunchCoverage(
   db: PipelineDb,
   marker: LockStore,
