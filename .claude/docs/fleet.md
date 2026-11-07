@@ -28,17 +28,18 @@ Three pieces:
   and land in `extra`.
 - **Ops alerting.** Anything worth waking the owner up for calls
   `recordOpsEvent(db, { kind, detail, path })` — the error plugin already does
-  for every 5xx — and `server/tasks/ops/alert.ts` drains the spool into one
-  digest email every 30 minutes via the `[[send_email]] ALERT_EMAIL` binding.
-  A critical event doesn't wait for it: `layers/terminal/server/plugins/ops-immediate.ts`
-  hears each row through `onOpsEventRecorded()` and sends the digest right away
-  for a critical kind or a `server_error` burst, at most once per five minutes
-  (`layers/terminal/server/utils/ops-immediate.ts`). Workers Issues
+  for every 5xx — and `server/tasks/ops/alert.ts` drains the spool every five
+  minutes via the `[[send_email]] ALERT_EMAIL` binding. Each row waits for its
+  tier's hold (`OPS_HOLD_MS` in `server/utils/ops.ts`): critical goes on the next
+  drain, so within five minutes; warning waits 25 minutes, so a burst becomes one
+  mail; info waits a day. Once any row is due, one digest carries everything
+  waiting. Workers Issues
   (`[observability.issues]` in wrangler.toml) covers failures that spool nothing,
   such as a request that never returns.
   Unconfigured = one `ops_alert_unconfigured` log line per tick and nothing
   sent, but the retention sweep (`pruneOpsEvents()`) still runs. Rows are marked notified only after the send resolves, so a mail
-  hiccup retries instead of losing the alert. Before draining, the same tick runs
+  hiccup retries instead of losing the alert. Every 30 minutes `ops:watch`
+  (`layers/terminal/server/tasks/ops/watch.ts`) runs
   the watchdogs that spool their own events, mostly the **freshness checks**
   (`layers/terminal/server/utils/freshness.ts`), one rule for
   every part that can go quiet: a check is stale when work has been owed for longer than its limit
@@ -58,13 +59,13 @@ Three pieces:
 - **Severity.** Every kind has a tier from core's registry, `server/utils/ops-severity.ts`:
   `critical` (the product stopped working), `warning` (a part is degraded; also the default for a
   kind nobody registered), or `info` (the system handled it). Core escalates `server_error` to
-  critical at `SERVER_ERROR_CRITICAL_COUNT` in one digest; this app's kinds (`judge_silent` and
+  critical at `SERVER_ERROR_CRITICAL_COUNT` unmailed rows; this app's kinds (`judge_silent` and
   `all_sources_failed` are the critical ones) are in `layers/terminal/server/utils/terminal-ops-severity.ts`,
   registered by `layers/terminal/server/plugins/ops-severity.ts`. The digest leads with the most
   severe kind, the subject starts `[Critical]`, `[Warning]` or `[Info]` so a mail filter on
-  `subject:"[Critical]"` can mark those important, critical kinds carry a "What to do" line, and a
-  spool of only info rows waits up to `OPS_INFO_HOLD_MS` (a day) unless something louder goes out
-  first. Add a new kind to the table when you add its `recordOpsEvent` call.
+  `subject:"[Critical]"` can mark those important, and critical kinds carry a "What to do" line.
+  The tier also sets the hold above. Add a new kind to the table when you add its `recordOpsEvent`
+  call.
 
 ## Social posting (layers/social)
 

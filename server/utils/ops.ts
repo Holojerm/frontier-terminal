@@ -4,7 +4,7 @@
 // failure means for the product (a source failing, the judge going quiet), not
 // just that an invocation errored. Workers Issues covers the second kind. It
 // writes a row here; a cron (server/tasks/ops/alert.ts) drains the rows and
-// emails a digest, and onOpsEventRecorded() lets a fork send sooner.
+// emails a digest once a row has waited out its tier's hold (OPS_HOLD_MS).
 //
 // Back-ported from a fork that ran it in production for a while; the one
 // change is that the digest no longer hardcodes the product's name.
@@ -20,11 +20,11 @@ import type { OpsEvent } from '../db/schema'
 
 import {
   groupOpsRows,
-  opsDigestSeverity,
   opsDigestSubject,
   rankOpsKinds,
   renderOpsDigest,
   type OpsClassifier,
+  type OpsSeverity,
 } from './ops-digest'
 import { logEvent } from './log'
 
@@ -40,14 +40,25 @@ export const OPS_EVENT_RETENTION_DAYS = 7
  */
 export const OPS_DIGEST_SAMPLE_LIMIT = 200
 
-const DAY_MS = 24 * 60 * 60 * 1000
+const MINUTE_MS = 60 * 1000
+const DAY_MS = 24 * 60 * MINUTE_MS
 
 /**
- * How long a spool holding only `info` rows waits before it is mailed on its
- * own. Info rows ride along with any louder digest sooner; alone they make at
- * most one email a day, so the inbox keeps its volume for things that matter.
+ * How long a row of each tier waits for company before the drain mails it. The
+ * cron drains every five minutes, and a digest goes out once any waiting row
+ * has waited out its tier's hold, carrying everything waiting, so quieter rows
+ * ride along with the first louder one.
+ *
+ * - critical: the next drain, so at most five minutes.
+ * - warning: 25 minutes, so a burst (a source flapping, one bad deploy's 5xxs)
+ *   becomes one mail instead of one per drain.
+ * - info: a day; alone, info makes at most one mail a day.
  */
-export const OPS_INFO_HOLD_MS = DAY_MS
+export const OPS_HOLD_MS: Record<OpsSeverity, number> = {
+  critical: 0,
+  warning: 25 * MINUTE_MS,
+  info: DAY_MS,
+}
 
 export interface OpsEventInput {
   kind: string
@@ -74,35 +85,7 @@ export async function recordOpsEvent(db: OpsDb, input: OpsEventInput): Promise<v
     })
   } catch (err) {
     logEvent('error', 'ops_event_write_failed', { error: String(err) })
-    return
   }
-  for (const listener of recordedListeners) {
-    try {
-      await listener(db, input)
-    } catch (err) {
-      logEvent('error', 'ops_event_listener_failed', { kind: input.kind, error: String(err) })
-    }
-  }
-}
-
-/** Runs after a row is spooled. Must not call recordOpsEvent itself. */
-export type OpsEventListener = (db: OpsDb, input: OpsEventInput) => Promise<void>
-
-const recordedListeners: OpsEventListener[] = []
-
-/**
- * Hear about each spooled row as it lands, from a Nitro plugin. The digest
- * cron is every 30 minutes; a listener is how a fork mails a critical event
- * now instead. Same never-throws contract as recordOpsEvent: a listener's
- * failure is logged, never the caller's problem.
- */
-export function onOpsEventRecorded(listener: OpsEventListener): void {
-  recordedListeners.push(listener)
-}
-
-/** Test-only. */
-export function resetOpsEventListenersForTest(): void {
-  recordedListeners.length = 0
 }
 
 const lastUnauthenticatedRecord = new Map<string, number>()
@@ -142,8 +125,8 @@ export interface OpsDigestOptions {
   workerName?: string
   now?: Date
   /**
-   * Ranks kinds by severity, tags the subject, and lets an info-only spool wait
-   * (OPS_INFO_HOLD_MS). Omit it for the unranked digest.
+   * Ranks kinds by severity, tags the subject, and holds each tier for its
+   * OPS_HOLD_MS. Omit it for the unranked digest, which never waits.
    */
   classify?: OpsClassifier
 }
@@ -185,7 +168,7 @@ export interface DrainResult {
   sent: boolean
   /** Rows deleted by the retention sweep. */
   pruned: number
-  /** True when only info rows were waiting and they are being held (OPS_INFO_HOLD_MS). */
+  /** True when rows were waiting but none had waited out its tier's hold (OPS_HOLD_MS). */
   held?: boolean
   error?: string
 }
@@ -215,7 +198,7 @@ export async function drainOpsEvents(
   let sent = false
   let error: string | undefined
 
-  if (holdInfoOnly(pending, options.classify, now)) {
+  if (holdOpsDigest(pending, options.classify, now)) {
     const pruned = await pruneOpsEvents(db, now)
     return { pending: pending.length, sent, pruned, held: true }
   }
@@ -245,19 +228,21 @@ export async function drainOpsEvents(
 }
 
 /**
- * True when every waiting row is `info` and the oldest is younger than
- * OPS_INFO_HOLD_MS. The rows stay pending, so the first louder event (or the
- * hold running out) mails them; nothing is dropped.
+ * True when rows are waiting and no kind's oldest row has waited out the hold
+ * for that kind's tier (OPS_HOLD_MS). A kind is tiered by its count, as the
+ * digest tiers it, so a server_error burst is critical and goes at once. Held
+ * rows stay pending; nothing is dropped.
  */
-export function holdInfoOnly(
+export function holdOpsDigest(
   pending: OpsEvent[],
   classify: OpsClassifier | undefined,
   now: Date,
 ): boolean {
   if (!classify || pending.length === 0) return false
-  if (opsDigestSeverity(groupOpsRows(pending), classify) !== 'info') return false
-  const oldest = Math.min(...pending.map((r) => r.createdAt.getTime()))
-  return now.getTime() - oldest < OPS_INFO_HOLD_MS
+  return groupOpsRows(pending).every(([kind, rows]) => {
+    const oldest = Math.min(...rows.map((r) => r.createdAt.getTime()))
+    return now.getTime() - oldest < OPS_HOLD_MS[classify(kind, rows.length).severity]
+  })
 }
 
 /**
