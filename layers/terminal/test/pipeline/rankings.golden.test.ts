@@ -12,7 +12,7 @@ import {
   type SourceFetcher,
 } from '../../server/pipeline/fetch'
 import { pendingChanges } from '../../server/pipeline/judge/pending'
-import { asOfFromDetail } from '../../server/pipeline/lanes'
+import { asOfFromDetail } from '../../server/pipeline/as-of'
 import { providerOfOpenRouterId } from '../../server/pipeline/parsers/openrouter'
 import { parseOpenRouterRankings } from '../../server/pipeline/parsers/openrouter-rankings'
 import {
