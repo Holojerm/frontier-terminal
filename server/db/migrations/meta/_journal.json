@@ -253,6 +253,13 @@
       "when": 1794068625920,
       "tag": "0035_stamp_indexes",
       "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "6",
+      "when": 1794071546813,
+      "tag": "0036_recipe_entity_indexes",
+      "breakpoints": true
     }
   ]
 }
