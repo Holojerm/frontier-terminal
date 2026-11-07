@@ -356,7 +356,12 @@ export function buildTearSheet(lab: LabId, input: TearSheetInputs): TearSheet {
           label: `Incidents, ${days} days`,
           value: String(i.last_window),
           delta: `${i.prior_window} in the ${days} days before`,
-          lines: [i.open.length ? `${i.open.length} open now.` : 'None open now.'],
+          lines: [
+            i.open.length ? `${i.open.length} open now.` : 'None open now.',
+            ...(i.window_to
+              ? [`Counted to ${shortStamp(i.window_to)}, our last read of the feed.`]
+              : []),
+          ],
           gap: null,
           ref: incidentSource ? cite(incidentSource, incidentSource.label) : null,
         }

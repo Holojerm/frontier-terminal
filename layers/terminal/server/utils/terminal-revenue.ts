@@ -24,7 +24,7 @@ import type {
 import * as tables from '#server/db/schema'
 import { REVENUE_TAGS } from '../pipeline/parsers/sec/edgar-companyfacts'
 import type { PipelineDb } from '../pipeline/store'
-import { rewound, sourceStamps, type QueryContext } from './terminal-db'
+import { readStamps, rewound, type QueryContext } from './terminal-db'
 import { byString, num, parseJson, str } from './terminal-json'
 import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
 
@@ -204,7 +204,8 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
           .select({ provider: tables.entities.provider, payload: tables.entities.payload })
           .from(tables.entities)
           .where(eq(tables.entities.entity_type, 'filer')),
-    sourceStamps(db, at),
+    // Cited as the last read of each source, not a newer fetch that failed to parse.
+    readStamps(db, at),
   ])
   const resolved = new Map<string, ResolvedFilerView>()
   for (const row of filerRows) {
@@ -271,14 +272,7 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
       .filter((id): id is string => id !== null)
       .map((id) => {
         const stamp = stamps.get(id)
-        return stamp
-          ? {
-              source_id: id,
-              label: labelOf(id).label,
-              source_url: stamp.newest.source_url,
-              fetched_at: stamp.newest.fetched_at,
-            }
-          : null
+        return stamp ? { source_id: id, label: labelOf(id).label, ...stamp } : null
       })
       .filter((s): s is SourceRef => s !== null)
 

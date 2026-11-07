@@ -53,6 +53,7 @@ import type {
   PriceMatrix,
   PriceRowView,
   PricesData,
+  Prov,
   ProviderId,
   ReleasesData,
   SnapshotStamp,
@@ -320,6 +321,36 @@ export function confirmedAt(
   if (laneFor(source_id)?.removals !== 'set') return null
   const read = reads.get(source_id)
   return read && Date.parse(read) > Date.parse(fetched_at) ? read : null
+}
+
+/**
+ * Each source as a "data as of" citation: the newest snapshot a run read into
+ * the store, or, for a source never read, its newest snapshot as before. The
+ * newest snapshot alone can be a fetch whose parse failed, and the rows on
+ * the page are still the older read's. The coverage panel keeps sourceStamps:
+ * it reports fetches, not what the data is as of.
+ */
+export function citedReads(
+  stamps: ReadonlyMap<string, SourceStamp>,
+  reads: ReadonlyMap<string, string>,
+): Map<string, Prov> {
+  const out = new Map<string, Prov>()
+  for (const [id, stamp] of stamps) {
+    out.set(id, {
+      source_url: stamp.newest.source_url,
+      fetched_at: reads.get(id) ?? stamp.newest.fetched_at,
+    })
+  }
+  return out
+}
+
+/** sourceStamps and lastReads at `at`, as citedReads. */
+export async function readStamps(
+  db: PipelineDb,
+  at: string | null = null,
+): Promise<Map<string, Prov>> {
+  const [stamps, reads] = await Promise.all([sourceStamps(db, at), lastReads(db, at)])
+  return citedReads(stamps, reads)
 }
 
 /** First snapshot per source — when watching it began. */
@@ -1360,6 +1391,7 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
       ])
 
   const reads = await reading
+  const cited = citedReads(stamps, reads)
   const xaiCaveat = ctx.registry.sources.find((s) => s.source_id === 'xai-greenhouse')?.caveat
 
   const providers: HiringProviderView[] = []
@@ -1400,18 +1432,11 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
         source_url: s.source_url,
         fetched_at: confirmedAt(reads, s.source_id, s.fetched_at!) ?? s.fetched_at!,
       }))
-    // No rows yet: cite the feed snapshots, if any were captured.
+    // No rows yet: cite the feed's last read, or its newest snapshot if never read.
     const feedSources: HiringSource[] = backing.source_ids
       .map((id) => {
-        const stamp = stamps.get(id)
-        return stamp
-          ? {
-              source_id: id,
-              label: labelOf(id).label,
-              source_url: stamp.newest.source_url,
-              fetched_at: stamp.newest.fetched_at,
-            }
-          : null
+        const stamp = cited.get(id)
+        return stamp ? { source_id: id, label: labelOf(id).label, ...stamp } : null
       })
       .filter((s): s is HiringSource => s !== null)
 
@@ -1537,31 +1562,28 @@ const newestFirst = (a: IncidentView, b: IncidentView) =>
 
 /**
  * Incident counts are windows over `started_at` as the vendor posted it,
- * anchored to the newest status-feed fetch rather than the reader's clock —
- * the same reason the signal band anchors to the newest detection. The
- * anchor ships in the payload so the claim is checkable, and each provider
- * reports where its held history begins: a Statuspage feed is a rolling
- * window, so the prior-30-day count is partial until the pipeline has
- * polled through it, and the UI says so rather than printing a low number.
+ * anchored to each lab's own feed — its last successful read — rather than
+ * the reader's clock, the same reason the signal band anchors to the newest
+ * detection. One anchor for every lab let a feed that stopped reading count
+ * a window it never saw as quiet. Each provider ships its anchor
+ * (window_to) so the claim is checkable, and reports where its held history
+ * begins: a Statuspage feed is a rolling window, so the prior-30-day count
+ * is partial until the pipeline has polled through it, and the UI says so
+ * rather than printing a low number.
  */
 export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise<IncidentsData> {
   const [entities, stamps] = await Promise.all([
     db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'incident')),
-    sourceStamps(db),
+    readStamps(db),
   ])
 
-  const feedStamps = Object.values(INCIDENT_SOURCES)
-    .flatMap((b) => ('source_id' in b ? [stamps.get(b.source_id)] : []))
-    .filter((s): s is SourceStamp => s !== undefined)
-  const windowTo =
-    feedStamps
-      .map((s) => s.newest.fetched_at)
-      .sort(byString)
-      .at(-1) ?? ctx.now().toISOString()
-  const toMs = Date.parse(windowTo)
-  const lastFrom = toMs - INCIDENT_WINDOW_DAYS * DAY_MS
-  const priorFrom = toMs - 2 * INCIDENT_WINDOW_DAYS * DAY_MS
-  const historyFrom = toMs - INCIDENT_HISTORY_DAYS * DAY_MS
+  const anchors = Object.values(INCIDENT_SOURCES)
+    .flatMap((b) => ('source_id' in b ? [stamps.get(b.source_id)?.fetched_at] : []))
+    .filter((at): at is string => at !== undefined)
+    .sort(byString)
+  // The list and a feed with no read yet count back from the freshest anchor.
+  const windowTo = anchors.at(-1) ?? ctx.now().toISOString()
+  const historyFrom = Date.parse(windowTo) - INCIDENT_HISTORY_DAYS * DAY_MS
 
   const all: IncidentView[] = []
   for (const e of entities) {
@@ -1584,6 +1606,7 @@ export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise
           cutReason(ctx, backing.cut_id) ??
           `No public status feed is reachable for ${PROVIDER_DISPLAY[provider]}.`,
         caveat: null,
+        window_to: null,
         last_window: 0,
         prior_window: 0,
         open: [],
@@ -1596,15 +1619,12 @@ export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise
     const rows = all.filter((i) => i.provider === provider)
     const startedMs = (i: IncidentView) => Date.parse(i.started_at)
     const stamp = stamps.get(sourceId)
+    const ownTo = stamp?.fetched_at ?? windowTo
+    const toMs = Date.parse(ownTo)
+    const lastFrom = toMs - INCIDENT_WINDOW_DAYS * DAY_MS
+    const priorFrom = toMs - 2 * INCIDENT_WINDOW_DAYS * DAY_MS
     const sources: SourceRef[] = stamp
-      ? [
-          {
-            source_id: sourceId,
-            label: labelOf(sourceId).label,
-            source_url: stamp.newest.source_url,
-            fetched_at: stamp.newest.fetched_at,
-          },
-        ]
+      ? [{ source_id: sourceId, label: labelOf(sourceId).label, ...stamp }]
       : []
     providers.push({
       provider,
@@ -1612,6 +1632,7 @@ export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise
       feed: rows.length > 0 ? 'ok' : 'no_rows',
       reason: null,
       caveat: ctx.registry.sources.find((s) => s.source_id === sourceId)?.caveat ?? null,
+      window_to: ownTo,
       last_window: rows.filter((i) => startedMs(i) > lastFrom && startedMs(i) <= toMs).length,
       prior_window: rows.filter((i) => startedMs(i) > priorFrom && startedMs(i) <= lastFrom).length,
       open: rows.filter((i) => i.resolved_at === null),
@@ -1861,7 +1882,7 @@ export async function queryHiringHistory(
       .from(tables.sourceRuns)
       .where(eq(tables.sourceRuns.status, 'baseline'))
       .groupBy(tables.sourceRuns.source_id),
-    sourceStamps(db, ctx.at),
+    readStamps(db, ctx.at),
     archivedHiringPoints(db, ctx.clusters, ctx.at),
     queryHiringReach(db, ctx.registry),
   ])
@@ -1927,17 +1948,11 @@ export async function queryHiringHistory(
     const own = from ? grid.filter((g) => g.date >= dayOf(from)) : []
     const { total, departments } = departmentSeries(byInstant, own, provider)
     const dates = own.map((g) => g.date)
+    // The series runs to the boards' last read, so that read is what it cites.
     const sources: HiringSource[] = backing.source_ids
       .map((id) => {
         const stamp = stamps.get(id)
-        return stamp
-          ? {
-              source_id: id,
-              label: labelOf(id).label,
-              source_url: stamp.newest.source_url,
-              fetched_at: stamp.newest.fetched_at,
-            }
-          : null
+        return stamp ? { source_id: id, label: labelOf(id).label, ...stamp } : null
       })
       .filter((s): s is HiringSource => s !== null)
     const open = total.at(-1) ?? 0

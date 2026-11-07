@@ -593,6 +593,26 @@ describe('after a baseline poll of every source', () => {
     expect(byProvider.xai!.caveat).toContain('Cursor')
   })
 
+  it('incidents: each lab counts back from its own feed’s last read, never a failed fetch', async () => {
+    const baseline = await queryIncidents(db, await ctx())
+    const xaiRead = baseline.providers.find((p) => p.provider === 'xai')!.window_to!
+    await run(['openai-status'])
+    await run(['xai-status'], fixtureFetcher({ 'xai-status': 'not a feed' }))
+    const failed = (await sourceStamps(db)).get('xai-status')!.newest.fetched_at
+    expect(Date.parse(failed)).toBeGreaterThan(Date.parse(xaiRead))
+
+    const incidents = await queryIncidents(db, await ctx())
+    const byProvider = Object.fromEntries(incidents.providers.map((p) => [p.provider, p]))
+    const openaiRead = (await sourceStamps(db)).get('openai-status')!.newest.fetched_at
+    // The freshest read anchors the list; the failed fetch anchors nothing.
+    expect(incidents.window_to).toBe(openaiRead)
+    expect(byProvider.openai!.window_to).toBe(openaiRead)
+    expect(byProvider.xai!.window_to).toBe(xaiRead)
+    expect(byProvider.xai!.sources[0]!.fetched_at).toBe(xaiRead)
+    expect(Date.parse(byProvider.anthropic!.window_to!)).toBeLessThan(Date.parse(openaiRead))
+    expect(byProvider.meta!.window_to).toBeNull()
+  })
+
   it('alerts: none after a baseline', async () => {
     const alerts = await queryAlerts(db, await ctx(), 50)
     expect(alerts.rows).toEqual([])

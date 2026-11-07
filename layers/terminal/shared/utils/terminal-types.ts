@@ -568,7 +568,13 @@ export interface IncidentProviderView {
   reason: string | null
   /** The audit's caveat for the feed (e.g. Google's product filter), in its own words. */
   caveat: string | null
-  /** Incidents started inside the newest window_days. */
+  /**
+   * Where this lab's windows count back from: its feed's last successful read
+   * (its newest snapshot if never read, the payload's window_to with neither).
+   * Null for an audited cut.
+   */
+  window_to: string | null
+  /** Incidents started inside the window_days to window_to. */
   last_window: number
   /** Incidents started in the window_days before that. */
   prior_window: number
@@ -580,7 +586,7 @@ export interface IncidentProviderView {
 }
 
 export interface IncidentsData extends Stamp {
-  /** The windows count back from here: the newest status-feed fetch, or computed_at before any. */
+  /** The freshest lab's window_to, or computed_at before any read: where the incident list counts back from. Each lab's counts use its own. */
   window_to: string
   window_days: number
   history_days: number
