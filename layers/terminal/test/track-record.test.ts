@@ -46,7 +46,10 @@ import {
   gdeltQuery,
   matchesArticle,
   matchesWhat,
+  mentionVocabulary,
   modelFamily,
+  termsInVocabulary,
+  vocabularyHits,
 } from '../server/pipeline/track-record/terms'
 import {
   leadHours,
@@ -164,6 +167,26 @@ describe('search terms', () => {
       after: { entity_name: 'Space Exploration Technologies Corp.', form: '10-Q' },
     })
     expect(alertTerms([quarterly])!.what).toContain('earnings')
+  })
+
+  it('keeps rows by lab, filer and model-family words, and knows which alerts that covers', () => {
+    const vocabulary = mentionVocabulary(['gpt-6.1-sol', 'claude-opus-5-5', 'o3-pro'])
+    // "claude" folds into the lab name "Claude"; "gpt" is new.
+    expect(vocabulary).toEqual(expect.arrayContaining(['OpenAI', 'Microsoft', 'Claude', 'gpt']))
+    expect(vocabulary).not.toContain('claude')
+    expect(vocabulary).not.toContain('o3')
+    const article = { title: 'GPT-6.1 Sol arrives', url: 'https://x.com/a', names: ['Sam Altman'] }
+    expect(vocabularyHits(article, vocabulary)).toEqual(['gpt'])
+    expect(vocabularyHits({ ...article, title: 'Weather' }, vocabulary)).toEqual([])
+    // A model alert has no `who`: its family has to carry a vocabulary word.
+    expect(termsInVocabulary({ who: [], what: ['gpt 6.1'], also: [] }, vocabulary)).toBe(true)
+    expect(termsInVocabulary({ who: [], what: ['o3 pro'], also: [] }, vocabulary)).toBe(false)
+    expect(termsInVocabulary({ who: ['Acme Robotics'], what: ['IPO'], also: [] }, vocabulary)).toBe(
+      false,
+    )
+    expect(termsInVocabulary({ who: ['OpenAI'], what: ['outage'], also: [] }, vocabulary)).toBe(
+      true,
+    )
   })
 
   it('has no terms for a row with no press shape', () => {
@@ -408,6 +431,9 @@ const memoryRaw = () => {
 async function seed() {
   await db.delete(schema.opsEvents)
   await db.delete(schema.gdeltFiles)
+  await db.delete(schema.gkgMentions)
+  await db.delete(schema.gkgBackfills)
+  await db.delete(schema.entities)
   await db.delete(schema.trackRecordVerdicts)
   await db.delete(schema.trackRecordCandidates)
   await db.delete(schema.trackRecordSearches)
@@ -443,16 +469,21 @@ async function seed() {
  * the way a caught-up job leaves gdelt_files. Generated in SQL: a window needs
  * thousands of rows.
  */
-async function markRead(until: string, except: string = FIXTURE_STAMP) {
+async function markRead(
+  until: string,
+  except: string = FIXTURE_STAMP,
+  mentions: number | null = null,
+) {
   await env.DB.prepare(
     `WITH RECURSIVE t(s) AS (
        SELECT unixepoch(?1) UNION ALL SELECT s + 900 FROM t WHERE s + 900 < unixepoch(?2)
      )
      INSERT OR IGNORE INTO gdelt_files
-       SELECT strftime('%Y%m%d%H%M%S', s, 'unixepoch'), 'u', 'ok', 0, 0, NULL, ?3, ?3 FROM t
+       (stamp, url, status, rows, matched, raw_key, fetched_at, recorded_at, mentions)
+       SELECT strftime('%Y%m%d%H%M%S', s, 'unixepoch'), 'u', 'ok', 0, 0, NULL, ?3, ?3, ?5 FROM t
        WHERE strftime('%Y%m%d%H%M%S', s, 'unixepoch') != ?4`,
   )
-    .bind(GKG_FROM, until, NOW.toISOString(), except)
+    .bind(GKG_FROM, until, NOW.toISOString(), except, mentions)
     .run()
 }
 
@@ -618,6 +649,137 @@ describe('the search run', () => {
     expect(data.rows.find((r) => r.alert_id === HASH(1))!.press).toMatchObject({
       state: 'none-found',
       searched_from: '2026-09-29T19:00:00.000Z',
+    })
+  })
+
+  describe('mentions kept for alerts written later', () => {
+    // The fixture file is read at 19:01, before alert 1 is written at 19:02,
+    // so the job matches nothing to it; a file read at 19:40 backfills it.
+    const READ = new Date('2026-09-29T19:01:00Z')
+    const LATER = new Date('2026-09-29T19:40:00Z')
+    const vocabulary = mentionVocabulary(['gpt-6.1-sol'])
+    const mentionsOf = (rows: readonly string[]) =>
+      rows.flatMap((row) => {
+        const a = parseGkgRow(row)
+        const names = a ? vocabularyHits(a, vocabulary) : []
+        return a && names.length
+          ? [{ record_id: a.record_id, outlet: a.outlet, url: a.url, title: a.title, names }]
+          : []
+      })
+
+    beforeEach(async () => {
+      await db.insert(schema.entities).values({
+        source_id: 'openai-models-md',
+        entity_key: 'model:openai:gpt-6.1-sol:standard',
+        entity_type: 'model',
+        provider: 'openai',
+        content_hash: HASH(7),
+        payload: JSON.stringify({ model_slug: 'gpt-6.1-sol' }),
+        snapshot_id: 's',
+        first_seen_at: SAW,
+        source_url: 'https://developers.openai.com/api/docs/models.md',
+        fetched_at: SAW,
+      })
+      await db
+        .update(schema.alerts)
+        .set({ recorded_at: '2026-09-29T19:02:00.000Z' })
+        .where(eq(schema.alerts.id, HASH(1)))
+    })
+
+    const post = (stamp: string, rows: readonly string[], now: Date) =>
+      recordGkgFile(
+        db,
+        memoryRaw().store,
+        {
+          stamp,
+          fetched_at: now.toISOString(),
+          status: 'ok',
+          rows: rows.length,
+          matches: [],
+          mentions: mentionsOf(rows),
+        },
+        now,
+      )
+
+    it('keeps the rows that name a tracked lab or model, and matches a later alert against them', async () => {
+      expect(await post(FIXTURE_STAMP, fixtureRows, READ)).toMatchObject({ candidates: 0 })
+      const kept = await db.select().from(schema.gkgMentions)
+      expect(kept.length).toBeGreaterThan(0)
+      expect(kept.every((m) => (JSON.parse(m.names) as string[]).length > 0)).toBe(true)
+
+      // The next file: alert 1 is 38 minutes old, so it is backfilled.
+      expect(await post('20260929190000', [], LATER)).toMatchObject({ candidates: 1 })
+      const press = await db.select().from(schema.trackRecordCandidates)
+      expect(press).toEqual([
+        expect.objectContaining({
+          alert_id: HASH(1),
+          outlet: 'cnet.com',
+          published_at: '2026-09-29T18:30:00.000Z',
+          search_id: `gkg:backfill:${FIXTURE_STAMP}`,
+          source_url: gkgUrl(FIXTURE_STAMP),
+        }),
+      ])
+      const [back] = await db
+        .select()
+        .from(schema.gkgBackfills)
+        .where(eq(schema.gkgBackfills.alert_id, HASH(1)))
+      expect(back).toMatchObject({ through_stamp: '20260929190000', covered: 1, candidates: 1 })
+      // Once only.
+      expect(await post('20260929191500', [], new Date('2026-09-29T19:50:00Z'))).toMatchObject({
+        candidates: 0,
+      })
+    })
+
+    /**
+     * Every file in alert 1's window read with mentions kept, those before
+     * 19:00 read before the alert was written (so going forward the search
+     * would begin at 19:00), then the cron's search row.
+     */
+    async function searchedFrom(keptFrom: string | null = null): Promise<string> {
+      await markRead('2026-10-07T00:00:00Z', '', 0)
+      await env.DB.prepare(
+        `UPDATE gdelt_files SET recorded_at = '2026-09-29T18:50:00.000Z' WHERE stamp < '20260929190000'`,
+      ).run()
+      if (keptFrom) {
+        await env.DB.prepare(`UPDATE gdelt_files SET mentions = NULL WHERE stamp < ?1`)
+          .bind(gkgStamp(Date.parse(keptFrom)))
+          .run()
+      }
+      for (const stamp of [FIXTURE_STAMP, '20260929190000']) {
+        await db.delete(schema.gdeltFiles).where(eq(schema.gdeltFiles.stamp, stamp))
+      }
+      await post(FIXTURE_STAMP, fixtureRows, READ)
+      await post('20260929190000', [], LATER)
+      expect((await runTrackRecordSearch(db, { now: () => NOW })).gdelt).toBe(1)
+      const rows = await db.select().from(schema.trackRecordSearches)
+      return rows.find((r) => r.source === 'gdelt' && r.alert_id === HASH(1))!.window_start
+    }
+
+    it('counts a backfilled window as searched from its start once every file in it was kept', async () => {
+      expect(await searchedFrom()).toBe('2026-09-22T17:01:00.000Z')
+    })
+
+    it('still counts from the first kept file when earlier ones were read before mentions were kept', async () => {
+      expect(await searchedFrom('2026-09-25T00:00:00.000Z')).toBe('2026-09-25T00:00:00.000Z')
+    })
+
+    it('counts from the forward match when the alert was never backfilled', async () => {
+      await markRead('2026-10-07T00:00:00Z', '', 0)
+      await env.DB.prepare(
+        `UPDATE gdelt_files SET recorded_at = '2026-09-29T18:50:00.000Z' WHERE stamp < '20260929190000'`,
+      ).run()
+      await runTrackRecordSearch(db, { now: () => NOW })
+      const rows = await db.select().from(schema.trackRecordSearches)
+      expect(rows.find((r) => r.source === 'gdelt' && r.alert_id === HASH(1))!.window_start).toBe(
+        '2026-09-29T19:00:00.000Z',
+      )
+    })
+
+    it('drops kept rows past the retention days', async () => {
+      await post(FIXTURE_STAMP, fixtureRows, READ)
+      const later = new Date('2026-10-08T19:01:00Z')
+      await post('20261008183000', [], later)
+      expect(await db.select().from(schema.gkgMentions)).toEqual([])
     })
   })
 

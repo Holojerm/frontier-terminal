@@ -463,9 +463,44 @@ export const gdeltFiles = sqliteTable(
     raw_key: text('raw_key'),
     fetched_at: text('fetched_at').notNull(),
     recorded_at: text('recorded_at').notNull(),
+    // Rows kept in gkg_mentions from this file; null when it was read before
+    // mentions were kept, which leaves it unsearchable for later alerts.
+    mentions: integer('mentions'),
   },
   (t) => [index('gdelt_files_recorded_idx').on(t.recorded_at)],
 )
+
+// The GKG rows that name a tracked lab, filer or model family, kept
+// MENTION_RETAIN_DAYS so an alert written after its files were read can still
+// be matched against the press from before it (track-record/mentions.ts).
+// Compact: names holds only the vocabulary terms the row carried.
+export const gkgMentions = sqliteTable(
+  'gkg_mentions',
+  {
+    record_id: text('record_id').primaryKey(),
+    stamp: text('stamp').notNull(),
+    seen_at: text('seen_at').notNull(),
+    outlet: text('outlet').notNull(),
+    url: text('url').notNull(),
+    title: text('title').notNull(),
+    names: text('names').notNull(), // JSON array
+    fetched_at: text('fetched_at').notNull(),
+  },
+  (t) => [index('gkg_mentions_seen_idx').on(t.seen_at)],
+)
+
+// One row per alert matched backward against gkg_mentions, once: through the
+// file being recorded when it ran. covered = 0 when the alert's terms fall
+// outside the vocabulary the mentions were kept by, so the rows could not hold
+// every match and the window still counts as searched only from where the
+// forward match began.
+export const gkgBackfills = sqliteTable('gkg_backfills', {
+  alert_id: text('alert_id').primaryKey(),
+  through_stamp: text('through_stamp').notNull(),
+  covered: integer('covered').notNull(),
+  candidates: integer('candidates').notNull(),
+  recorded_at: text('recorded_at').notNull(),
+})
 
 // One row per (alert, kind, url): an article or newsroom post inside the
 // alert's window that matched its search terms. A candidate is not a match;

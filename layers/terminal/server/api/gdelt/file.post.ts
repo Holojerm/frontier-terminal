@@ -1,13 +1,16 @@
 // POST /api/gdelt/file — one GDELT GKG file the Actions job read, for a file
-// /api/gdelt/work handed out: how many rows it held and the rows that matched
-// an alert, verbatim. The Worker parses and matches each row again before it
-// keeps it (recordGkgFile). 409 for a file that is not due or already read.
+// /api/gdelt/work handed out: how many rows it held, the rows that matched
+// an alert, verbatim, and the rows that carry a vocabulary word, compacted.
+// The Worker parses and matches each matched row again before it keeps it,
+// and keeps a mention only when every name it claims is in the vocabulary
+// (recordGkgFile). 409 for a file that is not due or already read.
 
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
 import { z } from 'zod'
 
 import { blobRawStore } from '../../pipeline/poll'
+import { MAX_MENTIONS_PER_FILE } from '../../pipeline/track-record/mentions'
 import { recordGkgFile } from '../../pipeline/track-record/search'
 import { requireGdeltToken } from '../../utils/gdelt-auth'
 
@@ -31,6 +34,20 @@ const Body = z.object({
       }),
     )
     .max(MAX_MATCHES_PER_FILE),
+  // Every row carrying a vocabulary word, compacted, kept for alerts written
+  // later (track-record/mentions.ts). Optional: a job from before them omits it.
+  mentions: z
+    .array(
+      z.object({
+        record_id: z.string().min(1).max(100),
+        outlet: z.string().max(300),
+        url: z.string().url().max(2_000),
+        title: z.string().min(1).max(1_000),
+        names: z.array(z.string().min(1).max(100)).min(1).max(50),
+      }),
+    )
+    .max(MAX_MENTIONS_PER_FILE)
+    .optional(),
 })
 
 export default defineEventHandler(async (event) => {
