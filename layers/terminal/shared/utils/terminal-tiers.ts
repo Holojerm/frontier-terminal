@@ -13,8 +13,13 @@
 export type AlertSeverity = 'info' | 'notable' | 'critical'
 export type AlertTier = 'alert' | 'info'
 
-/** What a reader can ask for: one tier, or everything. */
-export const ALERT_TIER_FILTERS = ['alert', 'info', 'all'] as const
+/**
+ * What a reader can ask for: one tier, everything, or one severity inside the
+ * alert tier (`critical`, the slice to read today, or `notable`). Those narrow a
+ * tier rather than being one, so the two-way split above stays the only
+ * materiality line.
+ */
+export const ALERT_TIER_FILTERS = ['alert', 'critical', 'notable', 'info', 'all'] as const
 export type AlertTierFilter = (typeof ALERT_TIER_FILTERS)[number]
 
 const TIER_OF: Readonly<Record<AlertSeverity, AlertTier>> = {
@@ -30,7 +35,9 @@ export function alertTier(severity: AlertSeverity): AlertTier {
 /** The severities a filter admits; `all` is every severity. */
 export function severitiesOf(filter: AlertTierFilter): AlertSeverity[] {
   const all = Object.keys(TIER_OF) as AlertSeverity[]
-  return filter === 'all' ? all : all.filter((s) => TIER_OF[s] === filter)
+  if (filter === 'all') return all
+  if (filter === 'critical' || filter === 'notable') return [filter]
+  return all.filter((s) => TIER_OF[s] === filter)
 }
 
 /** The permalink of one alert, root-relative. */
@@ -48,6 +55,9 @@ export function tierFilterOf(value: unknown): unknown {
 
 /** The Atom feed carries alerts by default; this query flag adds the minor changes. */
 export const INFO_FEED_QUERY = 'include=info'
+
+/** The Atom feed narrowed to critical alerts; the same spelling /api/alerts and /alerts take. */
+export const CRITICAL_FEED_QUERY = 'tier=critical'
 
 /** What the minor-changes tier is called wherever a reader sees it. */
 export const INFO_TIER_LABEL = 'Minor changes'

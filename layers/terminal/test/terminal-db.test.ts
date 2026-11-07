@@ -14,6 +14,7 @@ import { terminalStamp } from '../server/utils/terminal-cache'
 import { MODEL_CLASS_MAP, NO_ROW_GAP } from '../server/utils/terminal-classes'
 import {
   alertPermalinks,
+  parseAlertCursor,
   queryAlert,
   queryAlerts,
   queryContext,
@@ -839,11 +840,68 @@ describe('the ticker/alert split', () => {
     expect(alerts.rows.map((r) => r.severity)).toEqual(['critical', 'notable'])
     for (const r of alerts.rows) expect(r.changes).toHaveLength(1)
 
+    const critical = await queryAlerts(db, await ctx(), 50, 'critical')
+    expect(critical.tier).toBe('critical')
+    expect(critical.total).toBe(1)
+    expect(critical.rows.map((r) => r.severity)).toEqual(['critical'])
+
     const minor = await queryAlerts(db, await ctx(), 50, 'info')
     expect(minor.total).toBe(9)
     expect(minor.rows.every((r) => r.severity === 'info')).toBe(true)
     // Newest first within the tier.
     expect(minor.rows[0]!.created_at > minor.rows.at(-1)!.created_at).toBe(true)
+  })
+
+  it('queryAlerts filters by the lab and topic of the cited rows', async () => {
+    const price = {
+      ...job(99, T(20)),
+      id: 'price-change',
+      entity_key: 'model:anthropic:haiku',
+      entity_type: 'model',
+      provider: 'anthropic',
+    }
+    await insertRows(db, 'changes', [price])
+    const both = { ...alertRow('critical', price.id, T(21)), id: 'both-labs' }
+    // One alert citing an xAI job and an Anthropic price: found under either lab.
+    both.change_ids = JSON.stringify([price.id, job(0, T(0)).id])
+    await insertRows(db, 'alerts', [alertRow('notable', price.id, T(20)), both])
+
+    const anthropic = await queryAlerts(db, await ctx(), 50, 'all', { lab: 'anthropic' })
+    expect(anthropic.total).toBe(2)
+    expect(anthropic.rows.map((r) => r.id)).toContain('both-labs')
+
+    const xai = await queryAlerts(db, await ctx(), 50, 'all', { lab: 'xai' })
+    expect(xai.total).toBe(13)
+
+    const pricing = await queryAlerts(db, await ctx(), 50, 'alert', { topic: 'pricing' })
+    expect(pricing.total).toBe(2)
+    const hiringCritical = await queryAlerts(db, await ctx(), 50, 'critical', {
+      lab: 'xai',
+      topic: 'hiring',
+    })
+    expect(hiringCritical.rows.map((r) => r.id).sort()).toEqual(
+      ['both-labs', alertRow('critical', job(11, T(11)).id, T(11)).id].sort(),
+    )
+    expect((await queryAlerts(db, await ctx(), 50, 'all', { lab: 'meta' })).total).toBe(0)
+  })
+
+  it('queryAlerts pages by cursor through every alert, newest first, without repeats', async () => {
+    const seen: string[] = []
+    let page = await queryAlerts(db, await ctx(), 5)
+    expect(page.total).toBe(12)
+    seen.push(...page.rows.map((r) => r.id))
+    while (page.next_cursor) {
+      const cursor = parseAlertCursor(page.next_cursor)!
+      page = await queryAlerts(db, await ctx(), 5, 'all', { cursor })
+      expect(page.total).toBe(12)
+      seen.push(...page.rows.map((r) => r.id))
+    }
+    expect(seen).toHaveLength(12)
+    expect(new Set(seen).size).toBe(12)
+    expect(page.rows).toHaveLength(2)
+
+    const exact = await queryAlerts(db, await ctx(), 12)
+    expect(exact.next_cursor).toBeNull()
   })
 
   it('the overview leads with the alert tier and carries the minor changes beside it', async () => {
