@@ -432,8 +432,8 @@ export const filedFactReads = sqliteTable(
 
 // One row per search for an alert's candidates: a match against the kept GKG
 // rows, or a read of the stored newsroom posts. Written once per side, when
-// the window has closed. Rows with status 'failed' came from GDELT's search
-// API before the GKG files (scripts/track-record-cleanup.ts deletes them).
+// the window has closed. The 'failed' rows GDELT's search API left were
+// deleted by a one-off script on 2026-11-07.
 export const trackRecordSearches = sqliteTable(
   'track_record_searches',
   {
