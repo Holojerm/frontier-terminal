@@ -411,7 +411,7 @@ const tabs = computed(() => [
             id="parents"
             title="What its investor discloses"
             note="Facts a public investor tags with this lab in its newest 10-Q or 10-K. These are the investor’s own figures. They aren’t the lab’s revenue."
-            :more="{ label: 'Every lab’s revenue', to: '/revenue#parents' }"
+            :more="{ label: 'Every quarter, on Exposure', to: `/exposure#${lab}` }"
           >
             <TerminalParentFacts :parents="parents.data.value" />
           </TerminalPanel>
