@@ -340,6 +340,12 @@ which is why the fix is a workflow file, something a fork inherits automatically
   suites goes in its `WARM_PATHS`.
 - **The store is filled from fixtures first** (`test/warmup/fill-store.ts`, see
   [`local-data.md`](local-data.md)). Without rows the sweep only judges empty states.
+- **The `ubuntu-latest` runner has 5 GB, not 16.** With real rows, two workers rendering
+  `/prices` at once took it to 4.9 GB and the kernel SIGKILLed the dev server; every later
+  test then failed in ~100ms with `ERR_CONNECTION_REFUSED`. CI runs one worker
+  (`playwright.config.ts`). If that line appears again, sample `free -m` and `ps` in the
+  workflow step before guessing: locally on a Mac the same run peaks near 5 GB total and
+  never trips.
 
 ## Don't add `nuxt-mcp-toolkit` config under `mcp:` in `nuxt.config.ts`
 

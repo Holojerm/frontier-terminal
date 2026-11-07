@@ -54,6 +54,12 @@ export default defineConfig({
   // every one of eighteen tests, and blunts the one signal this timeout exists
   // to give. `globalSetup` absorbs the cold build once instead.
   fullyParallel: true,
+  // One worker on CI. The ubuntu-latest runner this repo gets has 5 GB, and
+  // once the store holds fixture rows (test/warmup/fill-store.ts) two workers
+  // rendering /prices at once (two Chromium tabs, ~1.4 MB of HTML each, plus
+  // the dev server's ~1.8 GB) reached 4.9 GB and the kernel killed the server
+  // mid-run. Measured in CI with free/ps sampling on 2026-11-07.
+  workers: process.env.CI ? 1 : undefined,
   // Runs after `webServer` (Playwright starts that as a plugin, and plugin
   // setup precedes globalSetup), so the server is reachable by then. Warms the
   // client bundle with a real page (test/warmup/) so the first test does not
