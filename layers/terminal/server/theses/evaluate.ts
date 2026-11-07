@@ -17,7 +17,13 @@ import { daysBefore } from '../utils/terminal-rankings'
 import { evaluateJudgedClaim, type StoredVerdict } from './judged-status'
 import { THESES } from './registry'
 import { presentation, readSignal, recomputable, type SignalDeps } from './signals'
-import { evaluateClaim, historyDays, type ClaimEvaluation, type StoredReading } from './status'
+import {
+  evaluateClaim,
+  historyDays,
+  staleGuard,
+  type ClaimEvaluation,
+  type StoredReading,
+} from './status'
 
 const READING_COLUMNS = 8
 
@@ -60,9 +66,18 @@ export async function storedReadings(
   })
 }
 
-export function evaluationOf(claim: ClaimDef, readings: readonly StoredReading[]): ClaimEvaluation {
+export function evaluationOf(
+  claim: ClaimDef,
+  readings: readonly StoredReading[],
+  now: Date,
+): ClaimEvaluation {
   const { fmt, comparatorName } = presentation(claim)
-  return evaluateClaim(claim, readings, fmt, comparatorName)
+  return staleGuard(
+    claim,
+    readings,
+    evaluateClaim(claim, readings, fmt, comparatorName),
+    now.toISOString(),
+  )
 }
 
 /** Every verdict stored for a judged claim, newest first. */
@@ -86,7 +101,9 @@ export async function currentEvaluation(
   claim: ClaimDef,
   now: Date,
 ): Promise<ClaimEvaluation> {
-  if (claim.spec.kind === 'measured') return evaluationOf(claim, await storedReadings(db, claim))
+  if (claim.spec.kind === 'measured') {
+    return evaluationOf(claim, await storedReadings(db, claim), now)
+  }
   const [verdicts, through] = await Promise.all([storedVerdicts(db, claim), judgedThrough(db)])
   return evaluateJudgedClaim(claim, thesis.company, verdicts, through, now.toISOString())
 }
