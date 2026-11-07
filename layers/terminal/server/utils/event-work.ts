@@ -10,7 +10,7 @@
 import { and, asc, eq } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { OpsMailer } from '#server/utils/ops'
+import type { OwnerMailer } from './owner-mail'
 import { drainSocialPosts, type SocialConfig } from '#layers/social/server/utils/social'
 import type { SocialPublisher } from '#layers/social/server/utils/buffer'
 
@@ -57,7 +57,7 @@ export interface WebhookDeps {
 
 export interface PressDeps {
   contacts: readonly PressContact[]
-  mailer: OpsMailer
+  mailer: OwnerMailer
   origin: string
   /** The `press:briefed:<id>` markers: an alert is briefed once. */
   briefed: CacheStore

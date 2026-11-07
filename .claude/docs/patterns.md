@@ -88,7 +88,7 @@ export default defineEventHandler(async (event) => {
 
 ```typescript
 // Good — db and schema are auto-imported, no import statement needed
-const pending = await db.select().from(schema.opsEvents).where(isNull(schema.opsEvents.notifiedAt))
+const recent = await db.select().from(schema.opsEvents).where(gt(schema.opsEvents.createdAt, since))
 
 // Bad — raw SQL unless absolutely necessary
 await db.run(sql`SELECT * FROM users`)

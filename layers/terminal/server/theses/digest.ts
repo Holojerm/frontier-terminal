@@ -19,12 +19,16 @@ import type { CompanyId } from '../../shared/utils/companies'
 
 import type { ClaimStatusChange, RecipeRun } from '#server/db/schema'
 import { renderEmail, type RenderedEmail } from '#server/utils/render-email'
-import { formatOpsTime } from '#server/utils/ops-digest'
 import { daysBefore } from '../utils/terminal-rankings'
 import { THESES } from './registry'
 import { presentation } from './signals'
 
 export const DIGEST_DAYS = 7
+
+function formatDigestTime(d: Date): string {
+  const date = d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' })
+  return `${date}, ${d.toISOString().slice(11, 16)} UTC`
+}
 
 const TONE = { broken: 'bad', weakening: 'warn', holding: 'good', unresolved: 'idle' } as const
 
@@ -179,7 +183,7 @@ export function buildThesisDigest(input: DigestInput): RenderedEmail & { subject
     appName: input.appName,
     appUrl: input.appUrl,
     summary,
-    generated: formatOpsTime(input.now),
+    generated: formatDigestTime(input.now),
     thesesUrl: `${input.appUrl}/api/theses`,
     quiet: moved === 0 && rated === 0 && failed === 0,
     theses,

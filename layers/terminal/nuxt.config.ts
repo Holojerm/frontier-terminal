@@ -5,6 +5,13 @@
 export default defineNuxtConfig({
   $meta: { name: 'terminal' },
   runtimeConfig: {
+    // Owner mail (layers/terminal/server/utils/owner-mail.ts): the weekly thesis
+    // digest and the press brief. `to` must be the verified destination the
+    // [[send_email]] OWNER_EMAIL binding is pinned to; `from` must be on a zone
+    // in the account with Email Routing enabled. Either empty = those mails are
+    // skipped. NUXT_OWNER_EMAIL_TO / NUXT_OWNER_EMAIL_FROM in [vars]; not secrets.
+    ownerEmailTo: '',
+    ownerEmailFrom: '',
     // Derives every alert webhook's signing secret (layers/terminal/server/utils/webhook-sign.ts).
     // Unset = the webhook outbox does nothing. 32+ characters; rotating it
     // invalidates every webhook secret. A Worker secret:

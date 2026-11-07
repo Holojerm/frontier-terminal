@@ -1,8 +1,8 @@
 // POST /api/ops/issues — where the Workers Issues automation (Cloudflare
 // dashboard › frontier-terminal › Issues › Automations, a generic webhook)
 // reports each new or returning issue. Each becomes an ops event, so it lands
-// in the same digest email as every other alert, within five minutes, because
-// `workers_issue` is critical (OPS_HOLD_MS in server/utils/ops.ts).
+// in the same digest email as every other alert, and at once, because
+// `workers_issue` is critical (fleet mails criticals within minutes).
 // Test pings and low-risk bot scans get quieter kinds (workers-issues.ts).
 //
 // Cloudflare authenticates the call by sending the destination's secret in
