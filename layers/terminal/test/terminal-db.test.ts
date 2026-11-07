@@ -12,7 +12,9 @@ import { AlertRow, contentHash } from '../server/pipeline/contracts'
 import { insertRows } from '../server/pipeline/store'
 import { terminalStamp } from '../server/utils/terminal-cache'
 import { MODEL_CLASS_MAP, NO_ROW_GAP } from '../server/utils/terminal-classes'
+import { ENTITY_AXIS } from '../shared/utils/terminal-labs'
 import {
+  AXIS_OF,
   alertPermalinks,
   parseAlertCursor,
   queryAlert,
@@ -786,7 +788,7 @@ describe('after a second poll that moves prices, closes a role, and files an S-1
 describe('the stated window holds when changes span several axes', () => {
   it('anchors to the newest detection, never to the reader’s clock', async () => {
     const src = urlOf('xai-models-md')
-    const change = (id: string, type: 'model' | 'job', at: string) => ({
+    const change = (id: string, type: 'model' | 'job' | 'offering' | 'statement', at: string) => ({
       id: contentHashOfText(id),
       entity_key: `${type}:xai:${id}`,
       entity_type: type,
@@ -805,6 +807,10 @@ describe('the stated window holds when changes span several axes', () => {
       change('b', 'job', '2026-08-26T16:24:42Z'), // newest — anchors the window
       change('c', 'job', '2026-08-26T10:18:56Z'),
       change('d', 'model', '2026-08-25T16:00:00Z'), // 24h24m before — outside
+      // Prospectus rows sit on the SEC bucket; the band once counted them in
+      // the total and on no axis.
+      change('e', 'offering', '2026-08-26T09:00:00Z'),
+      change('f', 'statement', '2026-08-26T09:30:00Z'),
     ])
     const { movement } = await queryOverview(db, await ctx())
     expect(movement.latest_detected_at).toBe('2026-08-26T16:24:42Z')
@@ -812,12 +818,19 @@ describe('the stated window holds when changes span several axes', () => {
     expect(movement.recent).toEqual({
       pricing: 1,
       hiring: 2,
-      sec: 0,
+      sec: 2,
       incidents: 0,
       disclosures: 0,
-      total: 3,
+      total: 5,
     })
-    expect(movement.total_changes).toBe(4)
+    expect(movement.total_changes).toBe(6)
+  })
+
+  it('buckets every entity type that has an axis, so the total is the sum of the axes', () => {
+    for (const [type, axis] of Object.entries(ENTITY_AXIS)) {
+      if (axis === 'demand') expect(AXIS_OF[type]).toBeUndefined()
+      else expect(AXIS_OF[type], type).toBeDefined()
+    }
   })
 })
 

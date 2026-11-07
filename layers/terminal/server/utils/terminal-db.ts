@@ -17,7 +17,7 @@
 
 import { and, asc, count, desc, eq, gt, inArray, lt, max, min, ne, or, sql } from 'drizzle-orm'
 
-import { entityTypesOf, type AlertAxis } from '../../shared/utils/terminal-labs'
+import { ENTITY_AXIS, entityTypesOf, type AlertAxis } from '../../shared/utils/terminal-labs'
 import { laneFor } from '../pipeline/lanes'
 
 import { count as countLabel, money } from '../../shared/utils/terminal-format'
@@ -404,18 +404,32 @@ export async function tableCounts(db: PipelineDb): Promise<TableCounts> {
 
 export const MOVEMENT_WINDOW_HOURS = 24
 
-export const AXIS_OF: Readonly<Record<string, keyof Omit<MovementSummary['recent'], 'total'>>> = {
-  model: 'pricing',
-  recommendation: 'pricing',
-  job: 'hiring',
-  filing: 'sec',
+type BandAxis = keyof Omit<MovementSummary['recent'], 'total'>
+
+// The band has no revenue bucket: revenue is read off the filings the SEC
+// bucket counts. Rankings are not events (isEvent below).
+const BAND_OF: Readonly<Record<AlertAxis, BandAxis | null>> = {
+  pricing: 'pricing',
+  hiring: 'hiring',
+  sec: 'sec',
   revenue: 'sec',
-  filer: 'sec',
-  document: 'sec',
-  incident: 'incidents',
-  disclosure: 'disclosures',
-  disclosure_timeline: 'disclosures',
+  incidents: 'incidents',
+  disclosures: 'disclosures',
+  demand: null,
 }
+
+/**
+ * The band bucket of each change entity type, derived from the shared axis
+ * map so a new entity type is counted on an axis the moment it has one. A
+ * hand-kept copy here missed six SEC types, and the band's total counted
+ * changes no axis showed.
+ */
+export const AXIS_OF: Readonly<Record<string, BandAxis>> = Object.fromEntries(
+  Object.entries(ENTITY_AXIS).flatMap(([type, axis]) => {
+    const band = BAND_OF[axis]
+    return band ? [[type, band]] : []
+  }),
+)
 
 // Ranking rows are a daily time series, not events (~50 new rows a day by
 // construction), so they are out of "what moved" entirely — the window's
@@ -454,9 +468,11 @@ export async function queryMovement(db: PipelineDb): Promise<MovementSummary> {
         and(isEvent(), sql`datetime(${tables.changes.detected_at}) >= datetime(${windowFrom})`),
       )
       .groupBy(tables.changes.entity_type)
+    // The total is the sum of the axes the band prints, never more.
     for (const row of inWindow) {
       const axis = AXIS_OF[row.entity_type]
-      if (axis) recent[axis] += row.n
+      if (!axis) continue
+      recent[axis] += row.n
       recent.total += row.n
     }
   }
