@@ -7,7 +7,6 @@
 
 import type { ProspectusData } from '../../shared/utils/terminal-prospectus'
 import type { ReportedData, RevenueData } from '../../shared/utils/terminal-types'
-import type { ParentsData } from '../../shared/utils/recipe-views'
 
 definePageMeta({
   publicPage: {
@@ -21,22 +20,18 @@ definePageMeta({
 
 const [
   { data: revenue, error },
-  { data: parents },
   { data: prospectus, error: prospectusError },
   { data: reported, error: reportedError },
 ] = await Promise.all([
   useFetch<RevenueData>('/api/revenue'),
-  useFetch<ParentsData>('/api/parents'),
   useFetch<ProspectusData>('/api/prospectus'),
   useFetch<ReportedData>('/api/reported'),
 ])
 
-// Three sources, one tab each: what was filed, what a parent discloses, and
-// what the press reports. The press tab is apart so its unaudited figures
-// never sit beside a filed one.
+// The press tab is apart so its unaudited figures never sit beside a filed
+// one. What a parent tags about its lab is on /exposure, every quarter of it.
 const tabs = computed(() => [
   { value: 'filed', label: 'Filed' },
-  ...(parents.value?.parents.length ? [{ value: 'parents', label: 'Parents' }] : []),
   { value: 'press', label: 'Press', badge: reported.value?.series.length || undefined },
 ])
 
@@ -76,6 +71,10 @@ useSeo({
           id="disclosed"
           title="Disclosed revenue, per lab"
           note="Each period once, from the newest filing. Restated values are marked as superseded."
+          :more="{
+            label: 'What Microsoft and Amazon tag on OpenAI and Anthropic',
+            to: '/exposure',
+          }"
         >
           <TerminalRevenuePanel :revenue="revenue" />
         </TerminalPanel>
@@ -122,18 +121,6 @@ useSeo({
               and 10-K on our 6-hour check, and labeled as the segment instead of the lab.
             </p>
           </div>
-        </TerminalPanel>
-      </template>
-
-      <template #parents>
-        <TerminalPanel
-          v-if="parents?.parents.length"
-          id="parents"
-          title="What the parents disclose"
-          note="Every fact Microsoft and Amazon tag with OpenAI or Anthropic in their newest 10-Q or 10-K. These are the parent’s own figures, never the lab’s revenue or valuation."
-          :more="{ label: 'Every quarter, and hyperscaler capex', to: '/exposure' }"
-        >
-          <TerminalParentFacts :parents="parents" />
         </TerminalPanel>
       </template>
 
