@@ -1,0 +1,13 @@
+diff --git a/dist/db/lib/storage.mjs b/dist/db/lib/storage.mjs
+index 148ad5293a4be89608de1e0f2b1d40b7a35be769..2ca6beca97247d5cc86a1a4425e584916f936b62 100644
+--- a/dist/db/lib/storage.mjs
++++ b/dist/db/lib/storage.mjs
+@@ -15,7 +15,7 @@ export async function getDatabaseMigrationFiles(hub) {
+   if (!hub.db) return [];
+   const dialect = hub.db.dialect;
+   const storage = useDatabaseMigrationsStorage(hub);
+-  const migrationsFiles = (await storage.getKeys()).map((file) => getMigrationMetadata(file)).filter((migration) => migration.dialect === dialect || !migration.dialect);
++  const migrationsFiles = (await storage.getKeys()).sort().map((file) => getMigrationMetadata(file)).filter((migration) => migration.dialect === dialect || !migration.dialect);
+   return migrationsFiles.filter((migration) => {
+     if (!migration.dialect && migrationsFiles.findIndex((m) => m.name === migration.name && m.dialect === dialect) !== -1) {
+       return false;

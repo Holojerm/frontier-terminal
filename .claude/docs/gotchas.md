@@ -13,6 +13,12 @@ Sharp edges that have bitten this template before — read before forking or bef
 
 NuxtHub serves the dev DB from `.data/db/sqlite.db`. Wrangler's own local D1 sandbox lives at `.wrangler/state/v3/d1/`. Migrations applied via `bun run db:migrate` or direct writes via `wrangler d1 execute --local` land in the **wrangler** path, which the dev server does NOT read. Anything that writes to the local dev DB from outside the app must open the NuxtHub path directly with `bun:sqlite`. The two only converge in production.
 
+An empty local DB is normal on a fresh checkout. `bun run dev:seed` (scripts/dev-seed.ts) copies production's last 90 days of `alerts` and `changes` into it from the public `/export` routes; run it with the dev server stopped.
+
+## NuxtHub applies dev migrations in directory order — patched to sort
+
+NuxtHub (0.10.8 through 0.10.12, the latest checked) lists `.data/db/migrations/` with no sort, and on APFS directory order is not name order. A fresh `.data/db/sqlite.db` on a Mac therefore ran `0018` then `0009`, which failed (`no such table: entitlements`) before `0000` ever ran, and every data route returned 503 "Database unavailable". `patches/@nuxthub%2Fcore@0.10.8.patch` adds the `.sort()`. When upgrading NuxtHub, `bun install` fails on the stale patch: re-cut it with `bun patch @nuxthub/core` unless upstream sorts by then. A DB already broken this way is easiest rebuilt: move `.data/db/sqlite.db` aside and start `bun dev`.
+
 ## Production D1 is migrated only by `deploy:ci`
 
 Locally this is invisible: NuxtHub's dev plugin (`applyMigrationsDuringDev`) applies

@@ -229,6 +229,7 @@ Each of these has a full contract in its own doc — this is the one-line versio
 bun dev               # Dev server at https://<portless-name>.localhost (via portless). In a linked
                       # worktree the host is <worktree-dir>.<portless-name>.localhost — printed on start.
 bun dev:app           # Bypass portless and run nuxt dev directly on http://localhost:3000
+bun run dev:seed      # Copy production's last 90 days of alerts + changes into the local DB (dev server stopped)
 bun build             # Build for Cloudflare
 bun lint              # Run oxlint
 bun lint:fix          # Auto-fix lint issues
