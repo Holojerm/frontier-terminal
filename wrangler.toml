@@ -141,8 +141,9 @@ enabled = true
 head_sampling_rate = 1
 
 # Workers Issues: groups uncaught exceptions, failed invocations, 5xx responses
-# and console.error lines into issues, and an automation pushes each new or
-# recurring one to email or an agent. It covers what the ops spool cannot: a
+# and console.error lines into issues, and the account's Workers Issues
+# notification posts each new or recurring one to the fleet dashboard
+# (POST /api/ops/issues there), which raises a critical finding. It covers what the ops spool cannot: a
 # request that never returns, which records no 5xx and so no ops event (the
 # 2026-11-07 hangs). Must stay in this file: a deploy without it turns Issues
 # off. Needs wrangler 4.134+.
