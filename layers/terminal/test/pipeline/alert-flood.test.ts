@@ -26,6 +26,10 @@ const COLD_START_ALERT_CAP = 0
 // One mail per failing source per outage, never one per tick (the #80 shape).
 const OUTAGE_MAILS_PER_SOURCE_CAP = 1
 
+// Each test runs several polls of every fixture source, which takes seconds in
+// workerd and more in Workers Builds, where the build runs alongside vitest.
+const POLLS = { timeout: 60_000 }
+
 const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const raw: RawStore = {
@@ -112,34 +116,42 @@ beforeEach(async () => {
 })
 
 describe('alert flood', () => {
-  it('a cold start alerts at most the cap, and the same bytes again alert nothing', async () => {
-    await tick('2026-09-09T01:30:00Z', fixtureFetcher())
-    const first = await counts()
-    expect(first.alerts).toBeLessThanOrEqual(COLD_START_ALERT_CAP)
-    // Guard against a vacuous pass: the world really was polled.
-    expect((await db.select().from(schema.snapshots)).length).toBeGreaterThan(40)
+  it(
+    'a cold start alerts at most the cap, and the same bytes again alert nothing',
+    POLLS,
+    async () => {
+      await tick('2026-09-09T01:30:00Z', fixtureFetcher())
+      const first = await counts()
+      expect(first.alerts).toBeLessThanOrEqual(COLD_START_ALERT_CAP)
+      // Guard against a vacuous pass: the world really was polled.
+      expect((await db.select().from(schema.snapshots)).length).toBeGreaterThan(40)
 
-    await tick('2026-09-09T07:30:00Z', fixtureFetcher())
-    await tick('2026-09-09T13:30:00Z', fixtureFetcher())
-    const after = await counts()
-    expect(after.alerts).toBe(first.alerts)
-    expect(after.ops).toBe(first.ops)
-  })
+      await tick('2026-09-09T07:30:00Z', fixtureFetcher())
+      await tick('2026-09-09T13:30:00Z', fixtureFetcher())
+      const after = await counts()
+      expect(after.alerts).toBe(first.alerts)
+      expect(after.ops).toBe(first.ops)
+    },
+  )
 
-  it('a day-long total outage mails each source at most once and raises no alerts', async () => {
-    await tick('2026-09-09T01:30:00Z', fixtureFetcher())
-    const baseline = await counts()
+  it(
+    'a day-long total outage mails each source at most once and raises no alerts',
+    POLLS,
+    async () => {
+      await tick('2026-09-09T01:30:00Z', fixtureFetcher())
+      const baseline = await counts()
 
-    const outage = down({ ok: false, status: 429, detail: 'HTTP 429' })
-    for (const hour of ['07', '13', '19']) await tick(`2026-09-09T${hour}:30:00Z`, outage)
-    await tick('2026-09-10T01:30:00Z', outage)
+      const outage = down({ ok: false, status: 429, detail: 'HTTP 429' })
+      for (const hour of ['07', '13', '19']) await tick(`2026-09-09T${hour}:30:00Z`, outage)
+      await tick('2026-09-10T01:30:00Z', outage)
 
-    expect((await counts()).alerts).toBe(baseline.alerts)
-    const perSource = new Map<string, number>()
-    for (const o of await db.select().from(schema.opsEvents)) {
-      if (o.path && world().has(o.path)) perSource.set(o.path, (perSource.get(o.path) ?? 0) + 1)
-    }
-    expect(perSource.size).toBeGreaterThan(0)
-    expect(Math.max(...perSource.values())).toBeLessThanOrEqual(OUTAGE_MAILS_PER_SOURCE_CAP)
-  })
+      expect((await counts()).alerts).toBe(baseline.alerts)
+      const perSource = new Map<string, number>()
+      for (const o of await db.select().from(schema.opsEvents)) {
+        if (o.path && world().has(o.path)) perSource.set(o.path, (perSource.get(o.path) ?? 0) + 1)
+      }
+      expect(perSource.size).toBeGreaterThan(0)
+      expect(Math.max(...perSource.values())).toBeLessThanOrEqual(OUTAGE_MAILS_PER_SOURCE_CAP)
+    },
+  )
 })
