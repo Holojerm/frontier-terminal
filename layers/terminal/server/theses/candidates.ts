@@ -61,6 +61,10 @@ function priceCut(change: ChangeRow, flagships: FlagshipMap): Record<string, unk
   const tier = after.tier ?? null
   if (tier !== null && tier !== 'standard') return null
   if (flagships.get(change.provider) !== after.model_slug) return null
+  // A scheduled price (Google keys it @effective_from) is announced, not in
+  // force; the cut counts when the current row moves on that date.
+  const from = typeof after.effective_from === 'string' ? Date.parse(after.effective_from) : NaN
+  if (from > Date.parse(change.detected_at)) return null
   const input = fall(before.input_per_mtok, after.input_per_mtok)
   const output = fall(before.output_per_mtok, after.output_per_mtok)
   if (input === null && output === null) return null

@@ -7,6 +7,7 @@ import {
   evaluateClaim,
   MAX_READING_AGE_DAYS,
   maxReadingAgeDays,
+  sinceLabSetChange,
   staleGuard,
   weeklyCheckpoints,
   type StoredReading,
@@ -66,6 +67,20 @@ describe('sustained floor', () => {
     expect(three.reason).toContain('below at 3 of 4')
     const four = evaluateClaim(claim(rule), weekly('2026-10-08', [1.2, 1.2, 1.2, 1.2]), fmt)
     expect(four.status).toBe('broken')
+  })
+
+  it('says when the comparator could not be compared, instead of reading as a pass', () => {
+    const [r] = weekly('2026-10-08', [1.85])
+    const e = evaluateClaim(
+      claim(rule),
+      [{ ...r!, compare_unavailable: 'OpenAI had no priced tokens in the window.' }],
+      fmt,
+      'OpenAI',
+    )
+    expect(e.status).toBe('holding')
+    expect(e.reason).toBe(
+      '1.85 against a floor of 1.30. OpenAI had no priced tokens in the window.',
+    )
   })
 
   it('counts falling under the comparator as a breach even above the floor', () => {
@@ -208,5 +223,24 @@ describe('the Anthropic thesis', () => {
   it('keeps claim ids unique — readings and status changes are keyed by them', () => {
     const ids = ANTHROPIC_THESIS.claims.map((c) => c.id)
     expect(new Set(ids).size).toBe(ids.length)
+  })
+})
+
+describe('a lab entering or leaving a median', () => {
+  const at = (date: string, lab_set: string | null) => ({ date, lab_set })
+
+  it('restarts the series at the newest lab-set change', () => {
+    const series = [
+      at('2026-10-01', 'anthropic,google,openai'),
+      at('2026-10-08', 'anthropic,google,openai'),
+      at('2026-10-15', 'anthropic,openai'),
+      at('2026-10-22', 'anthropic,openai'),
+    ]
+    expect(sinceLabSetChange(series).map((r) => r.date)).toEqual(['2026-10-15', '2026-10-22'])
+  })
+
+  it('keeps readings stored before the lab set was recorded', () => {
+    const series = [at('2026-10-01', null), at('2026-10-08', 'anthropic,openai')]
+    expect(sinceLabSetChange(series)).toHaveLength(2)
   })
 })

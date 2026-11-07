@@ -181,6 +181,15 @@ describe('claim candidates', () => {
     expect(claimCandidates(ANTHROPIC_THESIS, strict, [LONG_OUTAGE], FLAGSHIPS)).toEqual([])
   })
 
+  it('does not count a scheduled future price as a cut', () => {
+    const after = JSON.parse(OPENAI_CUT.after_json!) as Record<string, unknown>
+    const scheduled = {
+      ...OPENAI_CUT,
+      after_json: JSON.stringify({ ...after, effective_from: '2026-12-01T00:00:00Z' }),
+    }
+    expect(claimCandidates(ANTHROPIC_THESIS, PRICE_WAR, [scheduled], FLAGSHIPS)).toEqual([])
+  })
+
   it('offers nothing detected before the claim was first judged', () => {
     const early = { ...OPENAI_CUT, detected_at: '2026-10-01T00:00:00Z' }
     expect(claimCandidates(ANTHROPIC_THESIS, PRICE_WAR, [early], FLAGSHIPS)).toEqual([])

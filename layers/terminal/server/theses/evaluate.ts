@@ -20,6 +20,7 @@ import { presentation, readSignal, recomputable, type SignalDeps } from './signa
 import {
   evaluateClaim,
   historyDays,
+  sinceLabSetChange,
   staleGuard,
   type ClaimEvaluation,
   type StoredReading,
@@ -56,14 +57,23 @@ export async function storedReadings(
       ),
     )
     .orderBy(tables.claimReadings.date)
-  return rows.map((r) => {
-    const detail = JSON.parse(r.detail) as { compare?: unknown; void_reason?: unknown }
+  const readings = rows.map((r) => {
+    const detail = JSON.parse(r.detail) as {
+      compare?: unknown
+      void_reason?: unknown
+      compare_unavailable?: unknown
+      lab_set?: unknown
+    }
     return {
       ...r,
       compare: typeof detail.compare === 'number' ? detail.compare : null,
       void_reason: typeof detail.void_reason === 'string' ? detail.void_reason : null,
+      compare_unavailable:
+        typeof detail.compare_unavailable === 'string' ? detail.compare_unavailable : null,
+      lab_set: Array.isArray(detail.lab_set) ? detail.lab_set.join(',') : null,
     }
   })
+  return readings
 }
 
 export function evaluationOf(
@@ -75,7 +85,7 @@ export function evaluationOf(
   return staleGuard(
     claim,
     readings,
-    evaluateClaim(claim, readings, fmt, comparatorName),
+    evaluateClaim(claim, sinceLabSetChange(readings), fmt, comparatorName),
     now.toISOString(),
   )
 }

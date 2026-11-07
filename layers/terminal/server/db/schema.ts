@@ -433,7 +433,11 @@ export const trackRecordSearches = sqliteTable(
     raw_key: text('raw_key'),
     source_url: text('source_url').notNull(),
   },
-  (t) => [index('track_record_searches_alert_idx').on(t.alert_id, t.source, t.searched_at)],
+  (t) => [
+    index('track_record_searches_alert_idx').on(t.alert_id, t.source, t.searched_at),
+    // terminalStamps reads max(searched_at) on every cached request.
+    index('track_record_searches_searched_idx').on(t.searched_at),
+  ],
 )
 
 // One row per GDELT GKG file the press side has read (pipeline/track-record/gkg.ts):

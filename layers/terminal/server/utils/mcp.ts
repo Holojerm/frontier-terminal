@@ -508,8 +508,8 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         '(last_window) against the same span before (prior_window), what is open now, and coverage_from — where held history ' +
         'begins; a Statuspage feed is a rolling window, so prior_window is partial until the pipeline has polled through it. ' +
         `incidents lists every one started inside ${INCIDENT_HISTORY_DAYS} days, newest first, with impact in the vendor’s own ` +
-        'vocabulary (never mapped across vendors; null for Anthropic and DeepSeek, whose feeds publish none) and a link. Windows anchor on window_to, the newest status fetch, not the ' +
-        'clock. Not an SLA and not comparable across vendors: OpenAI’s feed mixes ChatGPT with API incidents and has no component ' +
+        'vocabulary (never mapped across vendors; null for Anthropic and DeepSeek, whose feeds publish none) and a link. Each lab’s window anchors on its own window_to, the last successful read of its status feed, not the ' +
+        'clock, so a feed that stopped answering shows an earlier window_to rather than a quiet stretch. Not an SLA and not comparable across vendors: OpenAI’s feed mixes ChatGPT with API incidents and has no component ' +
         'field; xAI’s RSS history covers Cursor’s products alongside Grok and the API (read components). DeepSeek’s titles are Chinese with the English in parentheses. Meta, ' +
         'Alibaba and Moonshot AI have NO incident history we can read and are reported as no_public_feed with the reason, never as zero incidents. Optional provider filter narrows providers and incidents. ' +
         PROVENANCE,
@@ -712,7 +712,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'matched a priced SKU (coverage), and implied spend as a RANGE — spend_low is every token at the input list price, spend_high ' +
         'every token at the output price (the rankings carry no prompt/completion split, so a point estimate would be invented). ' +
         'share_low/share_high are each lab’s slice of the tracked labs’ implied dollars at each bound; token_share is the same window’s ' +
-        'slice of the tracked labs’ tokens (NOT of all OpenRouter tokens, which get_rankings reports), so tokens and dollars can be read side by side. models[] shows the join per model, with reason (free, unlisted, ' +
+        'slice of the tracked labs’ tokens (NOT of all OpenRouter tokens, which get_rankings reports); priced_token_share is the lab’s slice of the priced tokens only, the same universe as the dollar shares, so compare dollars with priced_token_share. models[] shows the join per model, with reason (free, unlisted, ' +
         'unpriced) for every model excluded from dollars. This is one aggregator’s channel at list price, not revenue and not market ' +
         'share; cite it as implied OpenRouter-channel spend and reproduce the CC BY 4.0 citation in rankings.meta.citation. ' +
         PROVENANCE,

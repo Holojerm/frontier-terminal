@@ -23,6 +23,31 @@ export interface StoredReading {
    * (too few providers behind a median). The newest such reading leaves the
    * claim unresolved; older ones are skipped. */
   void_reason?: string | null
+  /** Set when the comparator had no value on this date, so only the floor was tested. */
+  compare_unavailable?: string | null
+  /** The labs behind a median reading, comma-joined; null for other signals or older rows. */
+  lab_set?: string | null
+}
+
+/**
+ * A median over labs steps when a lab enters or leaves the set, and that step
+ * is the registry's, not the market's. So a rule compares only readings taken
+ * over the newest reading's lab set: the series restarts at the last change.
+ * Readings stored before lab_set was recorded carry none and are kept. The
+ * page still charts the whole series; only the rule reads from the restart.
+ */
+export function sinceLabSetChange<T extends { lab_set?: string | null }>(
+  readings: readonly T[],
+): T[] {
+  const newest = readings.at(-1)?.lab_set
+  if (!newest) return [...readings]
+  let start = readings.length - 1
+  while (start > 0) {
+    const prior = readings[start - 1]!.lab_set ?? null
+    if (prior !== null && prior !== newest) break
+    start--
+  }
+  return readings.slice(start)
 }
 
 export interface ClaimEvaluation {
@@ -80,11 +105,14 @@ function sustainedFloor(
   const vs = `${fmt(now.value)} against a floor of ${fmt(rule.floor)}${
     comparatorName && now.compare !== null ? ` and ${comparatorName}'s ${fmt(now.compare)}` : ''
   }`
-  if (run === 0) return { status: 'holding', reason: `${vs}.`, reading_date: now.date }
+  // Without the comparator only the floor was tested; the reason says so
+  // rather than reading as if both tests passed.
+  const note = now.compare_unavailable ? ` ${now.compare_unavailable}` : ''
+  if (run === 0) return { status: 'holding', reason: `${vs}.${note}`, reading_date: now.date }
   const status: ClaimStatus = run >= rule.weeks ? 'broken' : 'weakening'
   return {
     status,
-    reason: `${vs}: below at ${run} of ${rule.weeks} straight weekly checkpoints.`,
+    reason: `${vs}: below at ${run} of ${rule.weeks} straight weekly checkpoints.${note}`,
     reading_date: now.date,
   }
 }
