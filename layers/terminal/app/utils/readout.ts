@@ -17,6 +17,7 @@ import type { Prov, RevenueProviderView } from '../../shared/utils/terminal-type
 import type { GapRef } from '../types/terminal-ui'
 
 import { feedGap } from './feed-gap'
+import { priceCitation } from './price-display'
 
 /** Whose revenue a figure is when it is not the lab's own: a parent's segment, or the whole parent. */
 export function revenueScope(view: RevenueProviderView | null): string {
@@ -69,7 +70,7 @@ export function readoutCells(
     ? cell('prices', 'prices', {
         value: `${money(f.row!.input_per_mtok)} / ${money(f.row!.output_per_mtok)}`,
         sub: `in / out · ${f.row!.model_slug}`,
-        source: f.row,
+        source: priceCitation(f.row!),
       })
     : cell('prices', 'prices', {
         gap: {

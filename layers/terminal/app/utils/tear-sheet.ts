@@ -25,6 +25,7 @@ import {
 } from '../../shared/utils/terminal-format'
 import { summarizeLab, type LabInputs } from '../../shared/utils/terminal-lab-summary'
 import type { AlertSeverity } from '../../shared/utils/terminal-tiers'
+import { priceCitation } from './price-display'
 import type {
   IncidentsData,
   LabId,
@@ -240,7 +241,7 @@ export function buildTearSheet(lab: LabId, input: TearSheetInputs): TearSheet {
           title: row ? 'No published price' : 'Not mapped',
           reason: cell?.gap ?? null,
         },
-        ref: row ? cite(row, `${s.display} pricing`) : null,
+        ref: row ? cite(priceCitation(row), `${s.display} pricing`) : null,
       }
     }
     return {
@@ -251,7 +252,7 @@ export function buildTearSheet(lab: LabId, input: TearSheetInputs): TearSheet {
       output: money(row.output_per_mtok),
       change: priceChangeLabel(row.delta),
       gap: null,
-      ref: cite(row, `${s.display} pricing`),
+      ref: cite(priceCitation(row), `${s.display} pricing`),
     }
   })
 
