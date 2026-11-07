@@ -155,7 +155,8 @@
     "NUXT_PRESS_LIST",
     "NUXT_PRESS_TOKEN",
     "NUXT_GDELT_TOKEN",
-    "NUXT_WEBHOOK_SIGNING_KEY"
+    "NUXT_WEBHOOK_SIGNING_KEY",
+    "NUXT_ISSUES_WEBHOOK_SECRET"
   ],
   "links": {
     "github": "https://github.com/Holojerm/frontier-terminal"
