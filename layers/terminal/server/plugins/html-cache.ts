@@ -34,7 +34,7 @@ import {
   isStorableResponse,
 } from '../utils/html-cache'
 import { serverTimingHeader, timed, type ServerTiming } from '../utils/server-timing'
-import { sharedTerminalStamp, terminalStamp } from '../utils/terminal-cache'
+import { sharedTerminalStamp, terminalStamps } from '../utils/terminal-cache'
 
 interface RenderResponse {
   body?: unknown
@@ -82,12 +82,14 @@ export default defineNitroPlugin((nitro) => {
     event.context.renderStartedAt = Date.now()
 
     try {
+      // The same composite stamp the KV payloads key on, so a judge run
+      // rotates the HTML too rather than waiting for the next poll.
       const stamp = await timed(timings, 'stamp', () =>
-        sharedTerminalStamp(() => terminalStamp(db)),
+        sharedTerminalStamp(() => terminalStamps(db)),
       )
       // Keyed by build as well as poll, so a deploy never serves the last build's HTML.
       const build = useRuntimeConfig().public.buildSha || 'dev'
-      const key = htmlCacheKey(`/${build}${event.path}`, stamp, new Date().getUTCFullYear())
+      const key = htmlCacheKey(`/${build}${event.path}`, stamp.key, new Date().getUTCFullYear())
       // Remembered so render:response stores under the key it missed on,
       // rather than re-reading a stamp that may have moved mid-render.
       event.context.htmlCacheKey = key

@@ -31,8 +31,9 @@ import { paidLicensed, withSchemaVersion } from './terminal-envelope'
 import {
   cachedTerminal,
   sharedTerminalStamp,
-  terminalStamp,
+  terminalStamps,
   type CacheOptions,
+  type TerminalStamps,
 } from './terminal-cache'
 import { queryContext, type QueryContext } from './terminal-db'
 
@@ -59,11 +60,11 @@ export async function terminalPayload<T>(
   options: CacheOptions = {},
 ): Promise<T> {
   const stamp = await timed(options.timings, 'stamp', liveStamp)
-  const context = queryContext(sourcesYaml, stamp)
+  const context = queryContext(sourcesYaml, stamp.poll)
   // The license is added after the cache: its window moves daily, and a
   // cached payload must not carry yesterday's.
   return withLicense(
-    await cachedTerminal(kv, cacheName(name, variant), stamp, () => query(context), options),
+    await cachedTerminal(kv, cacheName(name, variant), stamp.key, () => query(context), options),
   )
 }
 
@@ -103,7 +104,7 @@ export async function terminalPayloadAt<T extends object | null>(
   return cachedTerminal(
     kv,
     cacheName(name, `${variant}|${AS_OF_PARAM}=${at}`),
-    stamp,
+    stamp.key,
     async () => {
       const data = await query(context)
       // null is "not known at T" (an unknown SKU), which the route turns into its 404.
@@ -122,9 +123,9 @@ export async function terminalPayloadAt<T extends object | null>(
   )
 }
 
-async function liveStamp(): Promise<string | null> {
+async function liveStamp(): Promise<TerminalStamps> {
   try {
-    return await sharedTerminalStamp(() => terminalStamp(db))
+    return await sharedTerminalStamp(() => terminalStamps(db))
   } catch (error) {
     throw createError({ statusCode: 503, message: 'Database unavailable', cause: error })
   }
