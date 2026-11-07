@@ -184,7 +184,8 @@ const LICENSE =
   `A result with as_of older than ${LICENSE_WINDOW_DAYS} days is labeled ${HISTORY_LICENSE.id} in point_in_time.license. Upstream data keeps its own license.`
 
 const PROVENANCE =
-  'Every row carries source_url (the exact page it was read from) and fetched_at (UTC). ' +
+  'Every row carries source_url (the exact page it was read from) and fetched_at (UTC), the fetch that produced its current values; ' +
+  'it only moves when they change. A current price row also carries checked_at, the newest read of that page that still showed it, or null. ' +
   'as_of is the poll tick the payload reflects; computed_at is when it was built (it may then be served from a five-minute cache). ' +
   LICENSE
 

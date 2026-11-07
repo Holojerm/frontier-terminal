@@ -59,7 +59,8 @@ const raw: RawStore = {
   },
 }
 
-let tick = Date.parse('2026-09-07T10:00:00Z')
+const T0 = Date.parse('2026-09-07T10:00:00Z')
+let tick = T0
 const now = () => new Date((tick += 1000))
 const deps = (fetcher: SourceFetcher): RefreshDeps => ({ db, raw, fetcher, sourcesYaml, now })
 const run = (ids: readonly string[], fetcher = fixtureFetcher()) =>
@@ -107,6 +108,9 @@ const ftsWithNewS1 = () => {
 }
 
 beforeEach(async () => {
+  // Every test starts its clock at T0: the tables are wiped below, and a
+  // clock carried across tests pushed later ones past the 10:0x assertions.
+  tick = T0
   for (const table of [
     schema.sourceRuns,
     schema.sourceStats,
@@ -584,6 +588,29 @@ describe('after a baseline poll of every source', () => {
     expect(after.basis_current).toBe(true)
     expect(after.basis_checked_at! > before.basis_checked_at!).toBe(true)
     expect(after.basis_checked_at).toBe(newest)
+  })
+
+  it('prices: a current row is dated to the last read that showed it, not to a failed one', async () => {
+    const grok = async () =>
+      (await queryPrices(db, await ctx())).rows.find(
+        (r) => r.source_id === 'xai-models-md' && r.model_slug === 'grok-4.7' && !r.removed,
+      )!
+    // Read once: nothing later than the row's own fetch.
+    expect((await grok()).checked_at).toBeNull()
+
+    await run(['xai-models-md'])
+    const read = await grok()
+    expect(Date.parse(read.checked_at!)).toBeGreaterThan(Date.parse(read.fetched_at))
+    expect(read.checked_at).toBe((await sourceStamps(db)).get('xai-models-md')!.newest.fetched_at)
+
+    // A fetch that stores its bytes but cannot be read confirms nothing.
+    await run(['xai-models-md'], fixtureFetcher({ 'xai-models-md': 'not a model list' }))
+    const failed = await grok()
+    expect((await sourceStamps(db)).get('xai-models-md')!.newest.fetched_at).not.toBe(
+      read.checked_at,
+    )
+    expect(failed.checked_at).toBe(read.checked_at)
+    expect(failed.fetched_at).toBe(read.fetched_at)
   })
 
   it('matrix: a vendor rewriting its recommendation puts the cell under review, price intact', async () => {

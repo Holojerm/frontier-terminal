@@ -18,6 +18,7 @@
 import { and, asc, count, desc, eq, gt, inArray, lt, max, min, ne, or, sql } from 'drizzle-orm'
 
 import { entityTypesOf, type AlertAxis } from '../../shared/utils/terminal-labs'
+import { laneFor } from '../pipeline/lanes'
 
 import { count as countLabel, money } from '../../shared/utils/terminal-format'
 import {
@@ -279,6 +280,46 @@ export async function sourceStamps(
     })
   }
   return out
+}
+
+/**
+ * The newest poll per source whose page was read into the store, as that
+ * snapshot's fetched_at. A snapshot alone is not enough: a run can store the
+ * bytes and then fail (a parser error, a refused mass removal), and the rows
+ * are still the older page's. One index seek per source on
+ * (source_id, started_at), walking back past failed runs.
+ */
+export async function lastReads(
+  db: PipelineDb,
+  at: string | null = null,
+): Promise<Map<string, string>> {
+  // Raw SQL: drizzle renders an outer column unqualified inside a sql``
+  // subquery of a single-table select, which SQLite finds ambiguous.
+  const readAt = sql<
+    string | null
+  >`(select s.fetched_at from source_runs r join snapshots s on s.id = r.snapshot_id where r.source_id = st.source_id and r.status in ('ok', 'unchanged', 'baseline')${at ? sql` and s.fetched_at <= ${at}` : sql``} order by r.started_at desc limit 1)`
+  const rows = await db.all<{ source_id: string; read_at: string | null }>(
+    sql`select st.source_id as source_id, ${readAt} as read_at from source_stats st`,
+  )
+  const out = new Map<string, string>()
+  for (const row of rows) if (row.read_at) out.set(row.source_id, row.read_at)
+  return out
+}
+
+/**
+ * When a current row was last confirmed: its source's newest read, if later
+ * than the row's own fetch. Only for a source whose stored set mirrors the
+ * page ('set' lanes); an append-only feed keeps rows the page has dropped, so
+ * a newer read of it confirms nothing about them.
+ */
+export function confirmedAt(
+  reads: ReadonlyMap<string, string>,
+  source_id: string,
+  fetched_at: string,
+): string | null {
+  if (laneFor(source_id)?.removals !== 'set') return null
+  const read = reads.get(source_id)
+  return read && Date.parse(read) > Date.parse(fetched_at) ? read : null
 }
 
 /** First snapshot per source — when watching it began. */
@@ -866,6 +907,7 @@ function priceRowFromPayload(
     spark: null,
     source_url: base.source_url,
     fetched_at: base.fetched_at,
+    checked_at: null,
   }
 }
 
@@ -919,12 +961,13 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
   if (pit && (await beforeLiveFloor(db, pit.at))) return archivedPrices(db, pit)
   const models = pit ? rewound(db, pit, 'model') : null
   if (pit) ctx.notes.method.add(PRICES_METHOD)
-  const [entities, history, stamps, firsts, checks, classMap, reach] = await Promise.all([
+  const [entities, history, stamps, reads, firsts, checks, classMap, reach] = await Promise.all([
     models
       ? models.then((m) => m.rows)
       : db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'model')),
     models ? models.then((m) => m.changes) : modelChanges(db),
     sourceStamps(db, ctx.at),
+    lastReads(db, ctx.at),
     firstSnapshotByUrl(db),
     pit
       ? rewound(db, pit, 'recommendation').then((r) => r.rows)
@@ -992,7 +1035,11 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
       source_id: from.source_id,
       source_url: from.source_url,
       fetched_at: from.fetched_at,
+      checked_at: confirmedAt(reads, from.source_id, from.fetched_at),
     }
+  }
+  for (const r of rows) {
+    if (!r.removed) r.checked_at = confirmedAt(reads, r.source_id, r.fetched_at)
   }
 
   // A delisted SKU: its newest change is a removal and no current row exists.
@@ -1036,7 +1083,7 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
   return {
     ...stampOf(ctx),
     rows,
-    matrix: buildMatrix(rows, basisChecks(checks, stamps), classMap),
+    matrix: buildMatrix(rows, basisChecks(checks, reads), classMap),
     counts: {
       total: rows.length,
       priced: rows.filter((r) => !r.removed && pricedRow(r)).length,
@@ -1119,13 +1166,13 @@ export interface BasisCheck {
 
 /**
  * Stored 'recommendation' entities as checks, keyed by provider:class. An
- * entity's fetched_at only moves when its verdict changes, but every good
- * poll writes a snapshot and re-reads the page, so with `stamps` the check is
- * dated to the source's newest snapshot.
+ * entity's fetched_at only moves when its verdict changes, but every read of
+ * the page re-checks it, so with `reads` (lastReads) the check is dated to
+ * the source's newest read.
  */
 export function basisChecks(
   entities: readonly (typeof tables.entities.$inferSelect)[],
-  stamps: ReadonlyMap<string, SourceStamp> = new Map(),
+  reads: ReadonlyMap<string, string> = new Map(),
 ): Map<string, BasisCheck> {
   const out = new Map<string, BasisCheck>()
   for (const e of entities) {
@@ -1135,13 +1182,12 @@ export function basisChecks(
     const klass = str(payload.class)
     const model_slug = str(payload.model_slug)
     if (!provider || !klass || !model_slug || typeof payload.present !== 'boolean') continue
-    const polled = stamps.get(e.source_id)?.newest.fetched_at
     out.set(`${provider}:${klass}`, {
       provider,
       class: klass,
       model_slug,
       present: payload.present,
-      fetched_at: polled && polled > e.fetched_at ? polled : e.fetched_at,
+      fetched_at: confirmedAt(reads, e.source_id, e.fetched_at) ?? e.fetched_at,
     })
   }
   return out
