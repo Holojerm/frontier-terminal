@@ -125,6 +125,7 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 - `server/utils/extensions.ts` — trimmed to the fleet extra-counter registry; account, admin, onboarding and purge contributors, and the deletion guard and resolver, view-as, funnel-stage, lifecycle-step, access-gate, billing-outcome, earned-access, entitlement-view and signup registries, belong to the removed subsystems
 - `server/utils/fleet-status.ts` — no users, entitlements or funnel counters; adds collectStatus() and latestFetchBySource() for the public status payload
 - `server/utils/hash.ts` — no `clientIpHash()`: it salts with the template's session secret, which this app has no use for; nothing here hashes an IP, and `clientIp()` is kept for rate limiting
+- `server/utils/ops.ts` — adds `onOpsEventRecorded()`, a listener run after each spooled row, which the terminal layer uses to mail critical events at once instead of at the next half-hourly digest (upstream candidate)
 - `server/utils/seo.ts` — adds per-page lastmods, the data-tables and licence blocks of llms.txt; no blog, support or legal-entity lines
 - `shared/utils/schema.ts` — Dataset, DataCatalog and lab Organization nodes in place of Offer, SoftwareApplication and BlogPosting
 - `shared/utils/site.ts` — adds canonicalRedirect() (workers.dev to the custom domain) and strips characters XML 1.0 cannot carry in escapeXml (upstream candidate: the XML stripping)
