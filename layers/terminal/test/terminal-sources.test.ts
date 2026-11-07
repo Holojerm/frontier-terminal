@@ -126,7 +126,7 @@ describe('readSourceRegistry', () => {
       expect(entry!.verdict).toMatch(/^include/)
       expect(entry!.terms, recipe.id).toBeTruthy()
       expect(entry!.rights, recipe.id).not.toBeNull()
-      const url = recipe.url({ now: new Date(), newest: null })
+      const url = recipe.url({ now: new Date('2026-11-07T00:00:00Z'), newest: null })
       // A URL that carries the run's dates is registered as a template on the same host.
       if (entry!.url.includes('{'))
         expect(new URL(entry!.url).host, recipe.id).toBe(new URL(url).host)

@@ -62,13 +62,26 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
     const page = await browser.newPage({ baseURL })
     const started = Date.now()
     for (const path of WARM_PATHS) {
-      // Failures are not fatal here. This is a performance measure, not a
-      // check: if the server is genuinely broken, the suites themselves should
-      // be the ones to say so, with a route name and a proper diff.
-      // The first path pays for the shared graph; the rest only for their own
-      // components, so a shorter cap keeps a hung page from eating the job's 20 minutes.
+      // A slow or non-2xx page is not fatal: this is a performance measure, and
+      // the suites report a broken route with its name and a proper diff. A page
+      // that never loads is: every test behind it would burn its own 30s timeout and report the
+      // server's failure as dozens of unrelated ones. The first path pays for the shared graph;
+      // the rest only for their own components, so a shorter cap keeps a hung page from eating
+      // the job's 20 minutes.
       const timeout = path === WARM_PATHS[0] ? 240_000 : 60_000
-      await page.goto(path, { timeout, waitUntil: 'networkidle' }).catch(() => {})
+      const response = await page
+        .goto(path, { timeout, waitUntil: 'networkidle' })
+        .catch((error: unknown) => {
+          throw new Error(
+            `warm-up: ${path} did not load in ${timeout / 1000}s — is the dev server up?`,
+            {
+              cause: error,
+            },
+          )
+        })
+      if (!response?.ok()) {
+        console.warn(`warm-up: ${path} answered ${response?.status()} — drop it from WARM_PATHS`)
+      }
     }
     console.info(
       `warmed ${WARM_PATHS.length} pages in ${Math.round((Date.now() - started) / 1000)}s`,
