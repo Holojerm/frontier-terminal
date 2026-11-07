@@ -3,9 +3,13 @@
 // value, the filing it came from. The front page's reading; every period,
 // restatements and the parent/issuer distinction in full are on /revenue.
 
-import { compactUsd, count, periodLabel } from '../../../shared/utils/terminal-format'
+import { count, periodLabel } from '../../../shared/utils/terminal-format'
 import type { RevenueData, RevenueProviderView } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
+
+const watchlist = useWatchlist()
+
+const figures = useFigures()
 
 defineProps<{ revenue: RevenueData }>()
 
@@ -29,7 +33,7 @@ const gapText = (p: RevenueProviderView) =>
   <TerminalTable
     caption="Newest SEC-reported revenue per lab, with the filing it came from"
     :columns="columns"
-    :rows="revenue.providers"
+    :rows="watchlist.first(revenue.providers, (p) => p.provider)"
     :row-key="(p) => p.provider"
     :gap="(p) => !p.periods[0]"
   >
@@ -49,7 +53,7 @@ const gapText = (p: RevenueProviderView) =>
     </template>
     <template #cell-value="{ row: p }">
       <span class="text-highlighted" :title="`USD ${count(p.periods[0]!.val)}`">
-        {{ compactUsd(p.periods[0]!.val) }}
+        {{ figures.usd(p.periods[0]!.val) }}
       </span>
     </template>
     <template #cell-filing="{ row: p }">

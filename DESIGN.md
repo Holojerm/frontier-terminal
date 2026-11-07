@@ -339,7 +339,7 @@ screen the way a terminal function key does. The data below it is the content.
 - **Focus:** every interactive element has a visible focus-visible ring. Never `outline: none`
   without a replacement.
 - **Navigation:** two rows, like a terminal's command line over its function keys. The top
-  row is the mark, a **Labs** menu (one lab across every axis), and the color-mode toggle.
+  row is the mark, a **Labs** menu (one lab across every axis), and the settings menu.
   Below it, from `lg` up, the **axis bar**: one `UNavigationMenu` with the entry points as
   links — Overview, then Alerts and Theses — and the axes grouped under two menus by the
   question they answer: **Economics** (Prices, Revenue, Demand, Compute) and **Operations**
@@ -391,6 +391,17 @@ screen the way a terminal function key does. The data below it is the content.
   anchor into a closed tab opens it. The overview and single-question pages never tab.
 - **Charts:** drawn at their box's own pixel width, so a chart fills its panel and its labels
   stay `10px` at any width.
+- **Settings:** one `i-lucide-settings-2` button opens `TerminalSettings`, a popover with color
+  mode, time zone, clock, date form, relative ages, dollar-figure form, row spacing, and a lab
+  watchlist. Every setting lives in this browser's localStorage and applies after hydration,
+  because page HTML is cached and shared. The server always renders UTC, compact figures and
+  registry order. Row spacing is the exception: an inline head script sets `data-density` on
+  `<html>` before first paint, and tables style it with `in-data-[density=compact]:`.
+- **Times:** a reading with a time of day goes through `useStamps()`, so it follows the
+  reader's zone and clock and names the zone ('Aug 25 7:08 PM EDT', 'Aug 25 23:08Z' in UTC). The
+  `<time>`'s `datetime` and tooltip keep the exact stored UTC value. A date printed alone (a
+  filing period, a UTC-day chart bucket) is a UTC date and never shifts. Starred labs reorder
+  only lists in registry order, never a ranking, a timeline or a chart's stack.
 - **Deltas:** a sign the reader can see, never a color: `+12`, `−3` (U+2212), `±0`. Formatted
   once, in `layers/terminal/shared/utils/terminal-format.ts`. A delta takes `text-muted` beside its figure;
   green and red would read as good and bad, and a price rise is neither.

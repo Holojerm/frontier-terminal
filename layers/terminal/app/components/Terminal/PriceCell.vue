@@ -4,8 +4,9 @@
 // to price, the stated gap. The info control quotes the vendor sentence
 // behind the placement (layers/terminal/app/utils/price-display.ts).
 
-import { absoluteStamp } from '../../../shared/utils/terminal-format'
 import type { MatrixCell } from '../../../shared/utils/terminal-types'
+
+const stamps = useStamps()
 
 const props = defineProps<{
   cell: MatrixCell
@@ -26,14 +27,14 @@ const delta = computed(() => cellDelta(props.cell))
       <TerminalCaveatMark
         v-if="cell.priced && cell.basis"
         :name="`Why ${row.model_slug} is the ${label}`"
-        :text="basisText(cell, label)"
+        :text="basisText(cell, label, stamps.absolute)"
       />
     </div>
     <p v-if="cell.basis_current === false" class="text-xs text-warning">
       Mapping under review. The sentence we cite is no longer on the vendor’s page<template
         v-if="cell.basis_checked_at"
       >
-        (checked {{ absoluteStamp(cell.basis_checked_at) }})</template
+        (checked {{ stamps.absolute(cell.basis_checked_at) }})</template
       >
     </p>
     <p v-if="cell.priced && row">

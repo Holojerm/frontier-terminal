@@ -11,11 +11,15 @@ import type {
 } from '../../shared/utils/terminal-types'
 
 /** The vendor sentence behind a cell, and the last poll's word on whether it is still there. */
-export function basisText(c: MatrixCell, label: string): string {
+export function basisText(
+  c: MatrixCell,
+  label: string,
+  at: (iso: string) => string = absoluteStamp,
+): string {
   const mapped = `We map this to “${label}” because the vendor says “${c.basis}” (${c.basis_source_id}).`
   if (c.basis_current === false) return `${mapped} ${c.basis_note ?? ''}`.trim()
   if (c.basis_current === true && c.basis_checked_at) {
-    return `${mapped} Still on the page at our last check, ${absoluteStamp(c.basis_checked_at)}.`
+    return `${mapped} Still on the page at our last check, ${at(c.basis_checked_at)}.`
   }
   return mapped
 }

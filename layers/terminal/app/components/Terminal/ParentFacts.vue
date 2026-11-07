@@ -2,10 +2,12 @@
 // What a public parent tags about a private lab in its newest 10-Q or 10-K,
 // fact by fact, as the parent reported it. One card per parent.
 
-import { compactUsd, count } from '../../../shared/utils/terminal-format'
+import { count } from '../../../shared/utils/terminal-format'
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type { ParentFact, ParentsData } from '../../../shared/utils/recipe-views'
 import type { TableColumn } from '../../types/terminal-ui'
+
+const figures = useFigures()
 
 const props = defineProps<{ parents: ParentsData }>()
 
@@ -13,7 +15,7 @@ const shown = computed(() => props.parents.parents)
 
 const value = (f: ParentFact) => {
   if (f.value === null) return f.text ?? ''
-  if (f.unit === 'usd') return compactUsd(f.value)
+  if (f.unit === 'usd') return figures.usd(f.value)
   if (f.unit === 'pure') return `${Math.round(f.value * 1000) / 10}%`
   return count(f.value)
 }

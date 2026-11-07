@@ -3,7 +3,6 @@
 // to the vendor's own incident page and stamped with the fetch it was read
 // from, under the per-lab summary the overview leads with.
 
-import { absoluteStamp } from '../../shared/utils/terminal-format'
 import { labName } from '../../shared/utils/terminal-labs'
 import type { IncidentView, IncidentsData } from '../../shared/utils/terminal-types'
 import type { LimitsData } from '../../shared/utils/recipe-views'
@@ -44,7 +43,7 @@ useSeo({
   ],
 })
 
-const now = useNow()
+const stamps = useStamps()
 
 /** Minutes between start and resolution, as printed by the feed; null while open. */
 const durationLabel = (i: IncidentView): string | null => {
@@ -86,7 +85,7 @@ const columns: TableColumn[] = [
           <template #foot>
             Counted by the vendor’s posted start time, going back from
             <time :datetime="incidents.window_to" :title="incidents.window_to">{{
-              absoluteStamp(incidents.window_to, now)
+              stamps.absolute(incidents.window_to)
             }}</time
             >. Impact and status are in each vendor’s own words.
           </template>
@@ -113,7 +112,7 @@ const columns: TableColumn[] = [
         v-else
         id="incidents"
         :title="`Last ${incidents.history_days} days`"
-        :note="`${incidents.incidents.length} incidents, newest first, to ${absoluteStamp(incidents.window_to, now)}.`"
+        :note="`${incidents.incidents.length} incidents, newest first, to ${stamps.absolute(incidents.window_to)}.`"
         flush
       >
         <TerminalTable
@@ -127,7 +126,7 @@ const columns: TableColumn[] = [
         >
           <template #cell-started="{ row: i }">
             <time :datetime="i.started_at" :title="i.started_at">
-              {{ absoluteStamp(i.started_at, now) }}
+              {{ stamps.absolute(i.started_at) }}
             </time>
           </template>
           <template #cell-provider="{ row: i }">{{ labName(i.provider) }}</template>

@@ -4,15 +4,17 @@
 // for the lines too short or too irregular to chart (a stake, a commitment,
 // a nine-month mark).
 
-import { compactUsd, count } from '../../../shared/utils/terminal-format'
+import { count } from '../../../shared/utils/terminal-format'
 import type { ExposurePoint, ExposureSeries } from '../../../shared/utils/terminal-exposure'
 import type { CaveatRef, Citation, TableColumn } from '../../types/terminal-ui'
+
+const figures = useFigures()
 
 const props = defineProps<{ id: string; title: string; series: ExposureSeries[] }>()
 
 const fmt = (s: ExposureSeries, v: number) =>
   s.unit === 'USD'
-    ? compactUsd(v)
+    ? figures.usd(v)
     : s.unit === 'pure'
       ? `${Math.round(v * 1000) / 10}%`
       : `${count(v)}${s.unit === 'shares' ? ' shares' : ''}`

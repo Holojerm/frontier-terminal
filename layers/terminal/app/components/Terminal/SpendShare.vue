@@ -6,9 +6,13 @@
 // could not price named rather than shown at zero. Third-party channel,
 // list price, disclosed as both.
 
-import { compactTokens, compactUsd, sharePct } from '../../../shared/utils/terminal-format'
+import { sharePct } from '../../../shared/utils/terminal-format'
 import type { SpendData, SpendModel, SpendProviderView } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
+
+const watchlist = useWatchlist()
+
+const figures = useFigures()
 
 const props = defineProps<{
   spend: SpendData
@@ -48,7 +52,12 @@ const JOIN_COLUMNS: TableColumn[] = [
   { key: 'implied', label: 'Implied $', numeric: true },
 ]
 
-const joined = computed(() => props.spend.providers.filter((p) => p.models.length))
+const joined = computed(() =>
+  watchlist.first(
+    props.spend.providers.filter((p) => p.models.length),
+    (p) => p.provider,
+  ),
+)
 
 const skuText = (m: SpendModel) =>
   m.reason === 'unpriced'
@@ -79,7 +88,7 @@ const skuText = (m: SpendModel) =>
       <TerminalTable
         caption="Each lab’s implied spend through OpenRouter as a range and as a share of the priced labs’ total, with its share of every tracked lab’s tokens and how much of it we could price"
         :columns="columns"
-        :rows="spend.providers"
+        :rows="watchlist.first(spend.providers, (p) => p.provider)"
         :row-key="(p) => p.provider"
         :edge="false"
       >
@@ -96,10 +105,10 @@ const skuText = (m: SpendModel) =>
           <TerminalGap v-else inline title="Not priceable" />
         </template>
         <template #cell-dollars="{ row: p }">
-          {{ priced(p) ? range(p.spend_low, p.spend_high, compactUsd) : '—' }}
+          {{ priced(p) ? range(p.spend_low, p.spend_high, figures.usd) : '—' }}
         </template>
         <template #cell-tokens="{ row: p }">
-          {{ sharePct(p.token_share) }} · {{ compactTokens(p.tokens) }}
+          {{ sharePct(p.token_share) }} · {{ figures.tokens(p.tokens) }}
         </template>
         <template #cell-coverage="{ row: p }">{{ sharePct(p.coverage) }}</template>
       </TerminalTable>
@@ -123,9 +132,9 @@ const skuText = (m: SpendModel) =>
       </p>
 
       <p class="text-xs text-muted">
-        {{ compactTokens(spend.totals.other_tokens) }} of
-        {{ compactTokens(spend.totals.tokens) }} tokens went to models outside the nine labs and are
-        not priced.
+        {{ figures.tokens(spend.totals.other_tokens) }} of
+        {{ figures.tokens(spend.totals.tokens) }} tokens went to models outside the nine labs and
+        are not priced.
       </p>
 
       <TerminalExpand
@@ -143,7 +152,7 @@ const skuText = (m: SpendModel) =>
               :row-key="(m) => m.model_permaslug"
               nested
             >
-              <template #cell-tokens="{ row: m }">{{ compactTokens(m.tokens) }}</template>
+              <template #cell-tokens="{ row: m }">{{ figures.tokens(m.tokens) }}</template>
               <template #cell-sku="{ row: m }">
                 <NuxtLink
                   v-if="m.matched_key && !m.reason"
@@ -160,7 +169,7 @@ const skuText = (m: SpendModel) =>
                 <template v-else>—</template>
               </template>
               <template #cell-implied="{ row: m }">
-                {{ range(m.spend_low, m.spend_high, compactUsd) }}
+                {{ range(m.spend_low, m.spend_high, figures.usd) }}
               </template>
             </TerminalTable>
           </div>

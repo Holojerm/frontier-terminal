@@ -12,7 +12,9 @@ import {
   LICENSE_SPLIT_EFFECTIVE,
   LICENSE_WINDOW_DAYS,
 } from '#shared/utils/license'
-import { absoluteStamp, exactStamp } from '../../../shared/utils/terminal-format'
+import { exactStamp } from '../../../shared/utils/terminal-format'
+
+const stamps = useStamps()
 
 withDefaults(
   defineProps<{
@@ -57,7 +59,7 @@ withDefaults(
         </h1>
         <p v-if="asOf" class="text-xs text-muted">
           as of
-          <time :datetime="asOf" :title="exactStamp(asOf)">{{ absoluteStamp(asOf) }}</time>
+          <time :datetime="asOf" :title="exactStamp(asOf)">{{ stamps.absolute(asOf) }}</time>
         </p>
       </div>
       <p v-if="lede || $slots.lede" class="max-w-3xl text-sm text-muted">

@@ -8,17 +8,22 @@
 // reported it, and to its page here.
 
 import { filingPath } from '../../../shared/utils/terminal-filings'
-import { compactUsd, count, periodLabel } from '../../../shared/utils/terminal-format'
+import { count, periodLabel } from '../../../shared/utils/terminal-format'
 import type { RevenueData, RevenueProviderView } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
+
+const watchlist = useWatchlist()
+
+const figures = useFigures()
 
 const props = defineProps<{ revenue: RevenueData }>()
 
 // A lab with no audited disclosure has nothing to tile, so it is named once in
 // the line under the cards rather than given a card as tall as one holding
 // eight periods. One card takes the whole width; more tile 2-up, then 3-up.
-const reported = computed(() => props.revenue.providers.filter((p) => p.disclosure !== 'none'))
-const unreported = computed(() => props.revenue.providers.filter((p) => p.disclosure === 'none'))
+const providers = computed(() => watchlist.first(props.revenue.providers, (p) => p.provider))
+const reported = computed(() => providers.value.filter((p) => p.disclosure !== 'none'))
+const unreported = computed(() => providers.value.filter((p) => p.disclosure === 'none'))
 const unreportedSources = computed(() => unreported.value.flatMap((p) => p.sources))
 const unreportedCaveats = computed(() =>
   unreported.value.flatMap((p) =>
@@ -132,7 +137,7 @@ const badge = (p: RevenueProviderView) =>
               <span v-if="r.unaudited" class="text-muted"> · unaudited</span>
             </template>
             <template #cell-val="{ row: r }">
-              <span :title="`USD ${count(r.val)}`">{{ compactUsd(r.val) }}</span>
+              <span :title="`USD ${count(r.val)}`">{{ figures.usd(r.val) }}</span>
             </template>
             <template #cell-filing="{ row: r }">
               <NuxtLink

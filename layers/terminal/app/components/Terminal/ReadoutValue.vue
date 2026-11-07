@@ -4,14 +4,16 @@
 // stated gap. The figure's title names the source host and fetch instant, so
 // it is one hover from where it came from; the lab page cites it in full.
 
-import { absoluteStamp, hostOf } from '../../../shared/utils/terminal-format'
+import { hostOf } from '../../../shared/utils/terminal-format'
 import type { ReadoutCell } from '../../utils/readout'
+
+const stamps = useStamps()
 
 const props = defineProps<{ cell: ReadoutCell }>()
 
 const title = computed(() =>
   props.cell.source
-    ? `${hostOf(props.cell.source.source_url)} · fetched ${absoluteStamp(props.cell.source.fetched_at)}`
+    ? `${hostOf(props.cell.source.source_url)} · fetched ${stamps.absolute(props.cell.source.fetched_at)}`
     : undefined,
 )
 </script>

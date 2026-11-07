@@ -6,16 +6,17 @@
 // after the history does is marked partial, not low. A feed the audit cut is
 // a row that says so (sources.yaml `cut.meta-status`).
 
-import { absoluteStamp, relativeStamp } from '../../../shared/utils/terminal-format'
 import type { IncidentProviderView, IncidentsData } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
+
+const watchlist = useWatchlist()
 
 // `Omit<…, 'incidents'>` rather than IncidentsData: this table renders the
 // per-provider counts and never the incident list, and saying so lets a page
 // drop that array before it is serialised into the hydration payload.
 const props = defineProps<{ incidents: Omit<IncidentsData, 'incidents'> }>()
 
-const now = useNow()
+const stamps = useStamps()
 const DAY_MS = 86_400_000
 
 /** Start of a lab's prior window: two window lengths back from its own anchor. */
@@ -42,7 +43,7 @@ const columns = computed<TableColumn[]>(() => [
   <TerminalTable
     caption="Status-page incidents per lab: newest window, prior window, open now, and the open incident"
     :columns="columns"
-    :rows="incidents.providers"
+    :rows="watchlist.first(incidents.providers, (p) => p.provider)"
     :row-key="(p) => p.provider"
     :gap="(p) => p.feed !== 'ok'"
   >
@@ -53,7 +54,7 @@ const columns = computed<TableColumn[]>(() => [
       <TerminalCaveatMark
         v-if="p.window_to && p.window_to !== incidents.window_to"
         :name="`Why ${p.display}’s window ends earlier`"
-        :text="`Counted to ${absoluteStamp(p.window_to, now)}, the last time we read ${p.display}’s status feed.`"
+        :text="`Counted to ${stamps.absolute(p.window_to)}, the last time we read ${p.display}’s status feed.`"
       />
     </template>
     <template #cell-prior="{ row: p }">
@@ -61,7 +62,7 @@ const columns = computed<TableColumn[]>(() => [
       <TerminalCaveatMark
         v-if="priorPartial(p)"
         :name="`Why ${p.display}’s prior window is partial`"
-        :text="`We have history since ${absoluteStamp(p.coverage_from!, now)}. The prior window is partial until our checks cover all of it.`"
+        :text="`We have history since ${stamps.absolute(p.coverage_from!)}. The prior window is partial until our checks cover all of it.`"
       />
     </template>
     <template #cell-open="{ row: p }">
@@ -82,7 +83,7 @@ const columns = computed<TableColumn[]>(() => [
         <span class="whitespace-nowrap text-muted">
           {{ p.open[0].impact ?? 'impact not published' }} · since
           <time :datetime="p.open[0].started_at" :title="p.open[0].started_at">{{
-            relativeStamp(p.open[0].started_at, now)
+            stamps.relative(p.open[0].started_at)
           }}</time>
           <template v-if="p.open.length > 1"> +{{ p.open.length - 1 }}</template>
         </span>

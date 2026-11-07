@@ -2,9 +2,13 @@
 // Each lab's most-routed models in the share window. The slug is OpenRouter's
 // permaslug verbatim — a variant ranks as its own row there, so it does here.
 
-import { compactTokens, sharePct } from '../../../shared/utils/terminal-format'
+import { sharePct } from '../../../shared/utils/terminal-format'
 import type { ProviderTopModels } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
+
+const watchlist = useWatchlist()
+
+const figures = useFigures()
 
 defineProps<{ providers: ProviderTopModels[] }>()
 
@@ -24,7 +28,7 @@ const COLUMNS: TableColumn[] = [
       :class="providers.length > 1 ? '@2xl:grid-cols-2 @5xl:grid-cols-3' : undefined"
     >
       <TerminalCard
-        v-for="p in providers"
+        v-for="p in watchlist.first(providers, (p) => p.provider)"
         :id="`top-${p.provider}`"
         :key="p.provider"
         :title="p.display"
@@ -50,7 +54,7 @@ const COLUMNS: TableColumn[] = [
             }}</span>
           </template>
           <template #cell-tokens="{ row: m }">
-            <span class="text-highlighted">{{ compactTokens(m.tokens) }}</span>
+            <span class="text-highlighted">{{ figures.tokens(m.tokens) }}</span>
           </template>
           <template #cell-share="{ row: m }">{{ sharePct(m.share_of_provider) }}</template>
         </TerminalTable>

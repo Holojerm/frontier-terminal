@@ -19,6 +19,8 @@ import {
 } from '../../../shared/utils/terminal-tiers'
 import type { AlertView, AlertsData, TrackRecordData } from '../../../shared/utils/terminal-types'
 
+const watchlist = useWatchlist()
+
 definePageMeta({
   publicPage: {
     changefreq: 'daily',
@@ -67,10 +69,10 @@ const levelItems = [
   { label: 'Critical only', value: 'critical' },
   { label: 'Notable only', value: 'notable' },
 ]
-const labItems = [
+const labItems = computed(() => [
   { label: 'All labs', value: 'all' },
-  ...LABS.map((id) => ({ label: LAB_DISPLAY[id], value: id })),
-]
+  ...watchlist.first(LABS, (id) => id).map((id) => ({ label: LAB_DISPLAY[id], value: id })),
+])
 const topicItems = [
   { label: 'All topics', value: 'all' },
   ...ALERT_AXES.map((axis) => ({ label: AXIS_DISPLAY[axis], value: axis })),

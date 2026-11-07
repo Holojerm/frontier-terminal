@@ -6,7 +6,6 @@
 // cited rows (layers/terminal/shared/utils/terminal-labs.ts), so a row that cites nothing
 // says so with a dash rather than a guess.
 
-import { relativeStamp } from '../../../shared/utils/terminal-format'
 import {
   AXIS_DISPLAY,
   LAB_DISPLAY,
@@ -25,7 +24,7 @@ const props = defineProps<{
   flow?: boolean
 }>()
 
-const now = useNow()
+const stamps = useStamps()
 
 const rows = computed(() =>
   props.alerts.map((a) => {
@@ -79,7 +78,7 @@ const columns: TableColumn[] = [
     </template>
     <template #cell-when="{ row }">
       <time :datetime="row.alert.created_at" :title="row.alert.created_at">
-        {{ relativeStamp(row.alert.created_at, now) }}
+        {{ stamps.relative(row.alert.created_at) }}
       </time>
     </template>
     <template #cell-delta="{ row }">{{ row.delta ?? '' }}</template>

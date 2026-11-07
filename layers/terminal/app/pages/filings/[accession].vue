@@ -5,7 +5,7 @@
 // the cached /api/revenue payload (layers/terminal/shared/utils/terminal-filings.ts), so the
 // figures are the revenue panel's, regrouped by filing.
 
-import { compactUsd, count, periodLabel } from '../../../shared/utils/terminal-format'
+import { count, periodLabel } from '../../../shared/utils/terminal-format'
 import {
   ACCESSION_RE,
   filerName,
@@ -19,6 +19,8 @@ import { labPath } from '../../../shared/utils/terminal-lab-summary'
 import { LAB_SITE } from '../../../shared/utils/terminal-labs'
 import type { RevenueData } from '../../../shared/utils/terminal-types'
 import type { Fact, TableColumn } from '../../types/terminal-ui'
+
+const figures = useFigures()
 
 // Inert for a dynamic route: server/routes/sitemap.xml.get.ts enumerates the
 // filings from the revenue payload instead. Declared anyway — the seo gate's
@@ -177,7 +179,7 @@ const rowKey = (r: FilingPeriod) => r.entity_key
           <span class="sr-only"> ({{ periodLabel(r.days) }})</span>
         </template>
         <template #cell-val="{ row: r }">
-          <span :title="`USD ${count(r.val)}`">{{ compactUsd(r.val) }}</span>
+          <span :title="`USD ${count(r.val)}`">{{ figures.usd(r.val) }}</span>
         </template>
         <template #cell-tag="{ row: r }">
           <code class="break-all text-default">{{ r.tag }}</code>

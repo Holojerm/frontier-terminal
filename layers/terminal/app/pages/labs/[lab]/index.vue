@@ -8,7 +8,7 @@
 import { COMPARE_PAIRS, comparePath, pairTitle } from '../../../../shared/utils/terminal-compare'
 import { isLab, summarizeLab, tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
 import { LAB_SITE } from '../../../../shared/utils/terminal-labs'
-import { absoluteStamp, count } from '../../../../shared/utils/terminal-format'
+import { count } from '../../../../shared/utils/terminal-format'
 import { labLede } from '../../../../shared/utils/terminal-ledes'
 import type { TableColumn } from '../../../types/terminal-ui'
 import type {
@@ -202,7 +202,10 @@ const summary = computed(() => summarizeLab(lab, data.value))
 // The header figures once more as sentences, the form an answer engine quotes.
 const lede = computed(() => labLede(summary.value) ?? undefined)
 const display = summary.value.display
-const figures = computed(() => readoutCells(summary.value, rankings.data.value?.provenance))
+const fmt = useFigures()
+const figures = computed(() =>
+  readoutCells(summary.value, rankings.data.value?.provenance, fmt.usd),
+)
 
 useSeo({
   // The words an analyst types ("Anthropic API pricing", "xAI revenue"), not
@@ -266,7 +269,7 @@ const pairs = COMPARE_PAIRS.filter((pair) => pair.includes(lab))
 
 // The incidents behind the strain count, newest first: already this lab's
 // newest INCIDENTS_SHOWN, cut on the server above.
-const now = useNow()
+const stamps = useStamps()
 const recentIncidents = computed(() => incidents.data.value?.incidents ?? [])
 const incidentColumns: TableColumn[] = [
   { key: 'started', label: 'Started', class: 'whitespace-nowrap font-mono text-xs' },
@@ -553,7 +556,7 @@ const tabs = computed(() => [
             >
               <template #cell-started="{ row: i }">
                 <time :datetime="i.started_at" :title="i.started_at">
-                  {{ absoluteStamp(i.started_at, now) }}
+                  {{ stamps.absolute(i.started_at) }}
                 </time>
               </template>
               <template #cell-title="{ row: i }">

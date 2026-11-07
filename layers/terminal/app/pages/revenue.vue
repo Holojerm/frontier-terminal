@@ -8,6 +8,8 @@
 import type { ProspectusData } from '../../shared/utils/terminal-prospectus'
 import type { ReportedData, RevenueData } from '../../shared/utils/terminal-types'
 
+const watchlist = useWatchlist()
+
 definePageMeta({
   publicPage: {
     changefreq: 'daily',
@@ -80,7 +82,7 @@ useSeo({
         </TerminalPanel>
 
         <TerminalProspectusPanel
-          v-for="issuer in prospectus?.issuers ?? []"
+          v-for="issuer in watchlist.first(prospectus?.issuers ?? [], (i) => i.provider)"
           :key="issuer.provider"
           :issuer="issuer"
         />

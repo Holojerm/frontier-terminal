@@ -52,6 +52,7 @@ export const READOUT_LABEL: Record<ReadoutAxis, string> = {
 export function readoutCells(
   s: LabSummary,
   rankingsSource: Prov | null | undefined,
+  usd: (n: number) => string = compactUsd,
 ): Record<ReadoutAxis, ReadoutCell> {
   const at = (id: string) => `${labPath(s.lab)}#${id}`
   const cell = (axis: ReadoutAxis, id: string, c: Partial<ReadoutCell>): ReadoutCell => ({
@@ -83,7 +84,7 @@ export function readoutCells(
   const r = s.revenue
   const revenue = r.newest
     ? cell('revenue', 'revenue', {
-        value: compactUsd(r.newest.val),
+        value: usd(r.newest.val),
         sub: `${periodLabel(r.newest.days)} to ${r.newest.end}${revenueScope(r.view)}`,
         source: r.newest,
       })

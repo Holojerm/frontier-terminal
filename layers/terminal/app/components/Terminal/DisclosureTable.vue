@@ -11,6 +11,8 @@
 import type { DisclosuresData } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
+const watchlist = useWatchlist()
+
 // Omit the entry list: this table renders the per-lab counts only, and a
 // page can drop the array before it is serialised into the hydration payload.
 const props = defineProps<{
@@ -28,17 +30,16 @@ const columns: TableColumn[] = [
   { key: 'source', label: 'Source', keep: true },
 ]
 
+const providers = computed(() => watchlist.first(props.disclosures.providers, (p) => p.provider))
 const rows = computed(() =>
-  props.collapseGaps
-    ? props.disclosures.providers.filter((p) => p.feed === 'ok')
-    : props.disclosures.providers,
+  props.collapseGaps ? providers.value.filter((p) => p.feed === 'ok') : providers.value,
 )
 
 /** Gap labs grouped by what is missing, for the collapsed line. */
 const gapGroups = computed(() => {
   if (!props.collapseGaps) return []
   const groups = new Map<string, { display: string; reason?: string; name?: string }[]>()
-  for (const p of props.disclosures.providers) {
+  for (const p of providers.value) {
     const gap = feedGap('disclosures', p)
     if (!gap) continue
     const list = groups.get(gap.title) ?? []

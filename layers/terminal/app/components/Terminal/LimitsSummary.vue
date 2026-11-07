@@ -8,6 +8,8 @@ import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type { LimitsData } from '../../../shared/utils/recipe-views'
 import type { TableColumn } from '../../types/terminal-ui'
 
+const watchlist = useWatchlist()
+
 const props = defineProps<{ limits: LimitsData }>()
 
 const columns: TableColumn[] = [
@@ -18,14 +20,16 @@ const columns: TableColumn[] = [
 ]
 
 const rows = computed(() =>
-  props.limits.pages.map((p) => ({
-    ...p,
-    display: LAB_DISPLAY[p.lab],
-    limits: count(p.rows.reduce((n, r) => n + Object.keys(r.values).length, 0)),
-    change: p.previous
-      ? `${count(p.changed)} changed on ${p.snapshot}`
-      : `None since first read, ${p.snapshot}`,
-  })),
+  watchlist
+    .first(props.limits.pages, (p) => p.lab)
+    .map((p) => ({
+      ...p,
+      display: LAB_DISPLAY[p.lab],
+      limits: count(p.rows.reduce((n, r) => n + Object.keys(r.values).length, 0)),
+      change: p.previous
+        ? `${count(p.changed)} changed on ${p.snapshot}`
+        : `None since first read, ${p.snapshot}`,
+    })),
 )
 </script>
 

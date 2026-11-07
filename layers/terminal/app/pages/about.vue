@@ -90,8 +90,9 @@ useSeo({
     <TerminalPanel id="provenance" title="The provenance rule">
       <div class="max-w-2xl space-y-3 text-default">
         <p>
-          Every number links to the page we read it from and shows when we read it (UTC). If we
-          can’t fetch it again, we don’t store it.
+          Every number links to the page we read it from and shows when we read it, in your time
+          zone (the settings menu switches it to UTC or any other). If we can’t fetch it again, we
+          don’t store it.
         </p>
         <p>
           When a source publishes no figure, the page says so. OpenAI’s catalog page doesn’t list
