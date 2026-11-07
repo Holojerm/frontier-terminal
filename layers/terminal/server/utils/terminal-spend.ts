@@ -29,7 +29,7 @@ import type {
 import * as tables from '#server/db/schema'
 import { providerOfOpenRouterId } from '../pipeline/parsers/openrouter'
 import type { PipelineDb } from '../pipeline/store'
-import { sourceStamps, type QueryContext } from './terminal-db'
+import { readStamps, type QueryContext } from './terminal-db'
 import { byString, num, parseJson, str } from './terminal-json'
 import {
   SHARE_WINDOW_DAYS,
@@ -195,6 +195,7 @@ export function summarizeSpend(
     share_low: totalLow > 0 ? s.low / totalLow : null,
     share_high: totalHigh > 0 ? s.high / totalHigh : null,
     token_share: labTokens > 0 ? s.tokens / labTokens : null,
+    priced_token_share: totalPriced > 0 ? s.pricedTokens / totalPriced : null,
     models: s.models,
   }))
 
@@ -265,7 +266,7 @@ export async function querySpend(db: PipelineDb, ctx: QueryContext): Promise<Spe
     rankingObservations(db),
     catalogRows(db),
     queryRankings(db, ctx),
-    sourceStamps(db),
+    readStamps(db),
   ])
   const summary = summarizeSpend(rows, catalog)
 
@@ -275,14 +276,7 @@ export async function querySpend(db: PipelineDb, ctx: QueryContext): Promise<Spe
   const price_sources: SourceRef[] = priceSourceIds
     .map((id) => {
       const stamp = stamps.get(id)
-      return stamp
-        ? {
-            source_id: id,
-            label: labelOf(id).label,
-            source_url: stamp.newest.source_url,
-            fetched_at: stamp.newest.fetched_at,
-          }
-        : null
+      return stamp ? { source_id: id, label: labelOf(id).label, ...stamp } : null
     })
     .filter((s): s is SourceRef => s !== null)
 

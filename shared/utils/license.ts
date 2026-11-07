@@ -156,16 +156,22 @@ export function withLicense<T>(payload: T, now: Date = new Date()): T {
 }
 
 /**
- * The label on an `as_of` payload's data (point_in_time.license): CC BY-NC
- * when the instant is older than the window, CC BY otherwise. The payload's
- * `license` field says which rows the NC label doesn't reach.
+ * The label on an `as_of` payload's data (point_in_time.license), as
+ * rowLicense reads a row dated `at`: CC BY inside the window or when we
+ * published the data before the split, CC BY-NC otherwise. `published`
+ * defaults to `at`, right for a knowledge-time answer (what this store held
+ * at `at` was published by then); an event-time answer (the Internet Archive
+ * backfill, filed facts by filing date) passes when that data first appeared
+ * here instead. The payload's `license` field says which rows the NC label
+ * doesn't reach.
  */
 export function asOfLicense(
   at: string,
   now: Date = new Date(),
   older: LicenseRef = HISTORY_LICENSE,
+  published: string = at,
 ): string {
-  return at < licenseWindowStart(now) ? older.id : DATA_LICENSE.id
+  return rowLicense(at, published, licenseWindowStart(now), older).id
 }
 
 /**

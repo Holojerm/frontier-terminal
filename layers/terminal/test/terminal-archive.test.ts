@@ -19,6 +19,7 @@ import {
   queryPrices,
 } from '../server/utils/terminal-db'
 import { exportTable, licenseWindow } from '../server/utils/terminal-export'
+import { PROVIDER_ORDER } from '../server/utils/terminal-sources'
 import { fixtureText, manifest } from './pipeline/fixtures'
 
 // The archived price history on the read side: archived points before live
@@ -82,6 +83,8 @@ const asOf = async (at: string) =>
 const LIVE_KEY = 'model:openai:gpt-4o'
 
 beforeEach(async () => {
+  // The tables are wiped below, so each test starts its clock again too.
+  tick = Date.parse('2026-09-07T10:00:00Z')
   for (const table of [
     schema.sourceRuns,
     schema.sourceStats,
@@ -167,6 +170,50 @@ describe('archived price history', () => {
     },
   )
 
+  it(
+    'answers a lab fetched later than the others from the archive up to its own first fetch',
+    POLLS,
+    async () => {
+      const { registry } = await live()
+      const openaiPricing = new Set(
+        registry.sources
+          .filter((s) => s.axis === 'pricing-catalog' && s.provider === 'openai')
+          .map((s) => s.source_id),
+      )
+      const ids = ALL.map((s) => s.source_id)
+      await runRefresh(
+        { db, raw, fetcher, sourcesYaml, now },
+        'survey',
+        ids.filter((id) => !openaiPricing.has(id)),
+      )
+      // A capture after the store's first fetch, but before OpenAI's own.
+      await archive('20260907120000', page([['gpt-4o', '$0.002', '$0.008']]))
+      tick += 86_400_000
+      await runRefresh({ db, raw, fetcher, sourcesYaml, now }, 'survey', [...openaiPricing])
+
+      const c = await asOf('2026-09-07T13:00:00.000Z')
+      const prices = await queryPrices(db, c)
+      const openai = prices.rows.filter((r) => r.provider === 'openai')
+      expect(openai.map((r) => [r.entity_key, r.input_per_mtok, r.source_id])).toEqual([
+        ['model:openai:gpt-4o', 2, 'wayback:openai-pricing-2023'],
+      ])
+      expect(
+        prices.rows.some((r) => r.provider === 'xai' && !r.source_id.startsWith('wayback:')),
+      ).toBe(true)
+      // The matrix is built from live rows only.
+      expect(
+        prices.matrix.cells.filter((cell) => cell.provider === 'openai').every((cell) => !cell.row),
+      ).toBe(true)
+      expect([...c.notes.method].join(' ')).toContain('some labs were added later')
+
+      // The SKU's archived points run to OpenAI's first fetch, not the store's.
+      const h = (await queryPriceHistory(db, await live(), LIVE_KEY))!
+      expect(h.points.filter((p) => p.basis === 'archived').map((p) => p.at)).toContain(
+        '2026-09-07T12:00:00.000Z',
+      )
+    },
+  )
+
   it('refuses an instant before the earliest readable capture', async () => {
     await expect(assertArchiveKnowable(db, '2023-05-01T00:00:00.000Z')).rejects.toBeInstanceOf(
       PointInTimeError,
@@ -186,6 +233,8 @@ describe('archived price history', () => {
     })
     expect(reach.find((r) => r.provider === 'openai')!.live_from).toMatch(/^2026-09-07T/)
     expect(reach.find((r) => r.provider === 'meta')!.not_covered).toContain('no API price list')
+    // Every tracked lab has a row, the labs added on 2026-11-04 included.
+    expect(reach.map((r) => r.provider)).toEqual(PROVIDER_ORDER)
   })
 
   it('keeps archived rows CC BY-NC even under a licensee’s key', () => {

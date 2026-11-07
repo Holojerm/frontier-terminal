@@ -9,8 +9,10 @@
 //                            User-Agent to use (the Worker owns all three)
 //   2. fetch each file, unzip it, and match every row against the alerts
 //      whose window covers its quarter hour, with the Worker's own matcher
-//   3. POST /api/gdelt/file  the file's row count and its matched rows,
-//                            verbatim; the Worker matches them again
+//   3. POST /api/gdelt/file  the file's row count, its matched rows verbatim
+//                            (the Worker matches them again), and every row
+//                            carrying a word of the Worker's vocabulary,
+//                            compacted, kept for alerts written later
 //
 // and repeats until nothing is unread or --minutes have passed, so a backlog
 // (the first run starts at GKG_FROM, 2026-09-01) drains over a few runs. The
@@ -37,6 +39,7 @@ import {
 } from '../layers/terminal/server/pipeline/track-record/gkg'
 import {
   matchesArticle,
+  vocabularyHits,
   type SearchTerms,
 } from '../layers/terminal/server/pipeline/track-record/terms'
 
@@ -49,6 +52,16 @@ interface Work {
   user_agent: string
   files: { stamp: string; url: string }[]
   alerts: { alert_id: string; window_start: string; window_end: string; terms: SearchTerms }[]
+  /** Rows carrying one of these are posted as mentions, kept for alerts written later. */
+  vocabulary?: string[]
+}
+
+interface Mention {
+  record_id: string
+  outlet: string
+  url: string
+  title: string
+  names: string[]
 }
 
 const { values } = parseArgs({
@@ -109,21 +122,26 @@ async function fetchFile(url: string, userAgent: string): Promise<Fetched> {
   }
 }
 
-function matchesOf(text: string, stamp: string, alerts: Work['alerts']) {
+function matchesOf(text: string, stamp: string, work: Work) {
   const seen = stampIso(stamp)
-  const covering = alerts.filter((a) => a.window_start <= seen && seen <= a.window_end)
+  const covering = work.alerts.filter((a) => a.window_start <= seen && seen <= a.window_end)
+  const vocabulary = work.vocabulary ?? []
   const lines = text.split('\n').filter((l) => l.trim())
   const matches: { alert_id: string; row: string }[] = []
-  if (covering.length) {
-    for (const row of lines) {
-      const article = parseGkgRow(row)
-      if (!article) continue
-      for (const a of covering) {
-        if (matchesArticle(article, a.terms)) matches.push({ alert_id: a.alert_id, row })
-      }
+  const mentions: Mention[] = []
+  for (const row of lines) {
+    const article = parseGkgRow(row)
+    if (!article) continue
+    for (const a of covering) {
+      if (matchesArticle(article, a.terms)) matches.push({ alert_id: a.alert_id, row })
+    }
+    const names = vocabularyHits(article, vocabulary)
+    if (names.length) {
+      const { record_id, outlet, url, title } = article
+      mentions.push({ record_id, outlet, url, title, names })
     }
   }
-  return { rows: lines.length, matches }
+  return { rows: lines.length, matches, mentions }
 }
 
 let read = 0
@@ -140,10 +158,10 @@ while (!stop && Date.now() - started < budgetMs) {
       stop = `${file.stamp}: ${fetched.why}`
       break
     }
-    const { rows, matches } =
+    const { rows, matches, mentions } =
       fetched.kind === 'ok'
-        ? matchesOf(fetched.text, file.stamp, work.alerts)
-        : { rows: 0, matches: [] }
+        ? matchesOf(fetched.text, file.stamp, work)
+        : { rows: 0, matches: [], mentions: [] }
     const outcome = (await ours('/api/gdelt/file', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -153,6 +171,9 @@ while (!stop && Date.now() - started < budgetMs) {
         status: fetched.kind,
         rows,
         matches,
+        // Only when the Worker handed out a vocabulary: an older Worker has
+        // nothing to keep them by.
+        ...(work.vocabulary ? { mentions } : {}),
       }),
     })) as { candidates: number; duplicates: number; rejected: number }
     read++

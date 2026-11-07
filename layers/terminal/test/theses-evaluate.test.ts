@@ -1,4 +1,5 @@
 import { env } from 'cloudflare:test'
+import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
@@ -153,6 +154,16 @@ describe('evaluateTheses', () => {
     expect(by['anthropic-hiring-scale']!.readings_written).toBeGreaterThan(40)
 
     expect(by['anthropic-spend-premium']!.status).toBe('holding')
+    // The premium divides a share of priced dollars by a share of priced tokens.
+    const [premium] = await db
+      .select()
+      .from(schema.claimReadings)
+      .where(eq(schema.claimReadings.claim_id, 'anthropic-spend-premium'))
+    const detail = JSON.parse(premium!.detail) as Record<string, number | null>
+    expect(premium!.value).toBeCloseTo(
+      (detail.spend_share_low! + detail.spend_share_high!) / 2 / detail.priced_token_share!,
+      3,
+    )
     expect(by['anthropic-demand-growth']!.status).toBe('holding')
     expect(by['anthropic-hiring-scale']!.status).toBe('holding')
     expect(by['anthropic-rival-price-war']!.status).toBe('unresolved')

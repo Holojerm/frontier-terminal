@@ -63,6 +63,19 @@ const OPENAI_CUT = change(
   price('gpt-6-astra', 10, 50),
   price('gpt-6-astra', 6, 30),
 )
+// The same cut as printed by a second source: its own change row and id.
+const OPENAI_CUT_MD = change(
+  {
+    entity_key: 'model:openai:gpt-6-astra',
+    entity_type: 'model',
+    provider: 'openai',
+    source_url: 'https://developers.openai.com/api/docs/models.md',
+    detected_at: '2026-10-10T07:00:00Z',
+    fetched_at: '2026-10-10T07:00:00Z',
+  },
+  { ...price('gpt-6-astra', 10, 50), context_window: 400000 },
+  { ...price('gpt-6-astra', 6, 30), context_window: 400000 },
+)
 const NON_FLAGSHIP_CUT = change(
   { entity_key: 'model:openai:gpt-6-luna', entity_type: 'model', provider: 'openai' },
   price('gpt-6-luna', 0.2, 1),
@@ -137,7 +150,14 @@ describe('claim candidates', () => {
     )
     expect(got.map((c) => c.item.id)).toEqual([OPENAI_CUT.id])
     expect(got[0]!.facts.cut_pct).toBe(40)
-    expect(got[0]!.subject).toBe(OPENAI_CUT.id)
+    expect(got[0]!.subject).toBe('model:openai:gpt-6-astra@6/30@2026-10-10')
+  })
+
+  it('asks once about a cut that two sources print', () => {
+    expect(OPENAI_CUT_MD.id).not.toBe(OPENAI_CUT.id)
+    const got = claimCandidates(ANTHROPIC_THESIS, PRICE_WAR, [OPENAI_CUT, OPENAI_CUT_MD], FLAGSHIPS)
+    expect(got).toHaveLength(1)
+    expect(got[0]!.item.id).toBe(OPENAI_CUT_MD.id)
   })
 
   it('offers incidents lasting two hours, at the impact bar where the feed states one, keyed by incident', () => {
@@ -159,6 +179,15 @@ describe('claim candidates', () => {
       spec: { ...spec, rule: { ...spec.rule, impact_unpublished: 'excluded' } },
     }
     expect(claimCandidates(ANTHROPIC_THESIS, strict, [LONG_OUTAGE], FLAGSHIPS)).toEqual([])
+  })
+
+  it('does not count a scheduled future price as a cut', () => {
+    const after = JSON.parse(OPENAI_CUT.after_json!) as Record<string, unknown>
+    const scheduled = {
+      ...OPENAI_CUT,
+      after_json: JSON.stringify({ ...after, effective_from: '2026-12-01T00:00:00Z' }),
+    }
+    expect(claimCandidates(ANTHROPIC_THESIS, PRICE_WAR, [scheduled], FLAGSHIPS)).toEqual([])
   })
 
   it('offers nothing detected before the claim was first judged', () => {
@@ -199,6 +228,24 @@ describe('judged status rules', () => {
     expect(evaluateJudgedClaim(PRICE_WAR, 'anthropic', two, through, NOW).status).toBe('weakening')
     const matched = [...two, v('anthropic', 'competitive', { detected_at: '2026-10-11T00:00:00Z' })]
     expect(evaluateJudgedClaim(PRICE_WAR, 'anthropic', matched, through, NOW).status).toBe('broken')
+  })
+
+  it('counts a cut once however many verdicts it holds, stored before candidates were keyed by the cut', () => {
+    const through = '2026-10-11T00:00:00Z'
+    // One OpenAI cut rated twice (two sources, two change ids), plus an
+    // Anthropic match: one rival cut of two, so not broken.
+    const doubled = [
+      v('openai', 'competitive', { subject: 'change-a', facts: { model_slug: 'm', cut_pct: 40 } }),
+      v('openai', 'competitive', {
+        subject: 'change-b',
+        detected_at: '2026-10-10T05:00:00Z',
+        facts: { model_slug: 'm', cut_pct: 40 },
+      }),
+      v('anthropic', 'competitive', { detected_at: '2026-10-11T00:00:00Z' }),
+    ]
+    const got = evaluateJudgedClaim(PRICE_WAR, 'anthropic', doubled, through, NOW)
+    expect(got.status).toBe('weakening')
+    expect(got.reason).toMatch(/^1 of 2 competitive rival cuts/)
   })
 
   it('ignores small cuts, generational cuts, and cuts older than the window', () => {
@@ -321,6 +368,11 @@ describe('verdicts through the judge submit path', () => {
       [PRICE_WAR.id, 'weakening'],
       [SAFETY.id, 'weakening'],
     ])
+  })
+
+  it('does not offer a cut again once rated, when a second source prints it', async () => {
+    const review = await claimReview(db, [OPENAI_CUT_MD], FLAGSHIPS)
+    expect(review.map((r) => r.claim_id)).not.toContain(PRICE_WAR.id)
   })
 
   it('rates a subject once: a second run over the same incident inserts nothing', async () => {

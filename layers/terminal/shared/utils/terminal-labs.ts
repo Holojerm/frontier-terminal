@@ -66,7 +66,8 @@ export const AXIS_PATH: Record<AlertAxis, string> = {
   demand: '/rankings',
 }
 
-const AXIS_OF: Record<ChangeView['entity_type'], AlertAxis> = {
+/** The axis each change entity type sits on. The signal band (terminal-db.ts › AXIS_OF) buckets by it too. */
+export const ENTITY_AXIS: Record<ChangeView['entity_type'], AlertAxis> = {
   job: 'hiring',
   model: 'pricing',
   recommendation: 'pricing',
@@ -90,7 +91,9 @@ export const ALERT_AXES = Object.keys(AXIS_DISPLAY) as [AlertAxis, ...AlertAxis[
 
 /** The change entity types that sit on `axis`: what a topic filter matches cited rows against. */
 export function entityTypesOf(axis: AlertAxis): ChangeView['entity_type'][] {
-  return (Object.keys(AXIS_OF) as ChangeView['entity_type'][]).filter((t) => AXIS_OF[t] === axis)
+  return (Object.keys(ENTITY_AXIS) as ChangeView['entity_type'][]).filter(
+    (t) => ENTITY_AXIS[t] === axis,
+  )
 }
 
 /** Distinct labs across the cited rows, in first-cited order. */
@@ -100,7 +103,7 @@ export function alertLabs(alert: Pick<AlertView, 'changes'>): ProviderId[] {
 
 /** The axis the cited rows sit on; null when they resolve to nothing or disagree. */
 export function alertAxis(alert: Pick<AlertView, 'changes'>): AlertAxis | null {
-  const axes = new Set(alert.changes.map((c) => AXIS_OF[c.entity_type]))
+  const axes = new Set(alert.changes.map((c) => ENTITY_AXIS[c.entity_type]))
   return axes.size === 1 ? [...axes][0]! : null
 }
 

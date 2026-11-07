@@ -1557,7 +1557,7 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
   snapshots: {
     grain: 'One row per fetch of a source.',
     cadence:
-      'Model catalogs up to every 5 minutes, SEC feeds every 30, everything else every 6 hours.',
+      'Model catalogs up to every 5 minutes, SEC feeds and lab price lists every 30, everything else every 6 hours.',
     event: null,
     knowledge: 'fetched_at',
     start: LIVE,
@@ -1566,7 +1566,8 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
   },
   prices_latest: {
     grain: 'One row per SKU per source, as of the last check.',
-    cadence: 'Model catalogs every 5 minutes when they change, every source every 6 hours.',
+    cadence:
+      'Model catalogs every 5 minutes when they change, lab price lists every 30 minutes, every source every 6 hours.',
     event: 'effective_from',
     knowledge: 'first_seen_at',
     start:
@@ -1622,7 +1623,8 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
   },
   revenue_facts: {
     grain: 'One row per XBRL revenue fact per filing.',
-    cadence: SURVEY,
+    cadence:
+      'Company facts every 30 minutes with the SEC feeds. Segment revenue from each 10-Q and 10-K every 6 hours.',
     event: 'end',
     knowledge: 'first_seen_at',
     start: 'Every revenue fact in EDGAR company facts, as far back as each filer tagged it.',
@@ -1673,7 +1675,8 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
   },
   track_record_candidates: {
     grain: 'One row per article or newsroom post found for an alert.',
-    cadence: 'One search every 5 minutes, for the oldest alert whose window has closed.',
+    cadence:
+      'Press articles from GDELT’s files, read hourly while an alert’s window is open. Newsroom posts within 5 minutes of the window closing.',
     event: 'published_at',
     knowledge: 'found_at',
     start: 'From the first notable or critical alert.',
@@ -1752,7 +1755,7 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
   source_runs: {
     grain: 'One row per check of a source.',
     cadence:
-      'Model catalogs up to every 5 minutes, SEC feeds every 30, everything else every 6 hours.',
+      'Model catalogs up to every 5 minutes, SEC feeds and lab price lists every 30, everything else every 6 hours.',
     event: null,
     knowledge: 'started_at',
     start: LIVE,

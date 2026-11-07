@@ -2,6 +2,8 @@ import { describe, expect, it } from 'vitest'
 
 import {
   absoluteStamp,
+  compactTokens,
+  compactUsd,
   count,
   exactStamp,
   hostOf,
@@ -71,6 +73,22 @@ describe('small helpers', () => {
     expect(hostOf('https://www.example.com/x')).toBe('example.com')
     expect(hostOf('not a url')).toBe('not a url')
     expect(count(1234567)).toBe('1,234,567')
+  })
+})
+
+describe('compact figures', () => {
+  it('roll over to the next unit rather than print a thousand of this one', () => {
+    expect(compactUsd(999.6e6)).toBe('$1.00B')
+    expect(compactUsd(999.4e6)).toBe('$999M')
+    expect(compactUsd(99.96e6)).toBe('$100M')
+    expect(compactUsd(9.996e6)).toBe('$10.0M')
+    expect(compactUsd(999.6)).toBe('$1.00K')
+    expect(compactUsd(-7.81e9)).toBe('−$7.81B')
+    expect(compactUsd(412)).toBe('$412')
+    expect(compactTokens(999.7e9)).toBe('1.00T')
+    expect(compactTokens(15e6)).toBe('15.0M')
+    expect(compactTokens(910e9)).toBe('910B')
+    expect(compactTokens(42)).toBe('42')
   })
 })
 

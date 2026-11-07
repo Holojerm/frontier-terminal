@@ -1,9 +1,10 @@
-import { and, asc, gt, lt, max } from 'drizzle-orm'
+import { and, lt, max, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import type { FreshnessCheck } from '../../utils/freshness'
 import type { PipelineDb } from '../store'
 import {
+  detectedAfter,
   isTimestampOnlyChange,
   isUntrackedFilingChange,
   judgeEligible,
@@ -60,10 +61,10 @@ async function oldestOwedBefore(db: PipelineDb, cutoff: string): Promise<string 
       and(
         judgeEligible(), // a backlog of ranking rows is not a backlog the judge owes
         lt(tables.changes.detected_at, cutoff),
-        since ? gt(tables.changes.detected_at, since) : undefined,
+        detectedAfter(since),
       ),
     )
-    .orderBy(asc(tables.changes.detected_at))
+    .orderBy(sql`julianday(${tables.changes.detected_at})`)
     .limit(200)
   const owed = oldest.find((row) => !isTimestampOnlyChange(row) && !isUntrackedFilingChange(row))
   return owed?.detected_at ?? null

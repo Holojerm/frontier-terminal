@@ -4,9 +4,11 @@
 //
 // Every rule reads weekly checkpoints rather than every daily reading: a
 // kill condition says "for 4 straight weeks", and seven overlapping trailing
-// windows a week are one observation, not seven. "Weakening" is half way to
-// the kill condition (half the run, half the margin, half the drop), so it
-// warns before it breaks without needing a threshold of its own.
+// windows a week are one observation, not seven. "Weakening" is the first
+// step toward the kill condition: a run rule (N straight weeks or periods)
+// weakens at the first breached checkpoint, a margin or drop rule at half the
+// margin or half the drop. It warns before it breaks without needing a
+// threshold of its own.
 
 import type { ClaimDef, ClaimStatus, MeasuredRule } from '../../shared/utils/thesis-types'
 
@@ -21,6 +23,31 @@ export interface StoredReading {
    * (too few providers behind a median). The newest such reading leaves the
    * claim unresolved; older ones are skipped. */
   void_reason?: string | null
+  /** Set when the comparator had no value on this date, so only the floor was tested. */
+  compare_unavailable?: string | null
+  /** The labs behind a median reading, comma-joined; null for other signals or older rows. */
+  lab_set?: string | null
+}
+
+/**
+ * A median over labs steps when a lab enters or leaves the set, and that step
+ * is the registry's, not the market's. So a rule compares only readings taken
+ * over the newest reading's lab set: the series restarts at the last change.
+ * Readings stored before lab_set was recorded carry none and are kept. The
+ * page still charts the whole series; only the rule reads from the restart.
+ */
+export function sinceLabSetChange<T extends { lab_set?: string | null }>(
+  readings: readonly T[],
+): T[] {
+  const newest = readings.at(-1)?.lab_set
+  if (!newest) return [...readings]
+  let start = readings.length - 1
+  while (start > 0) {
+    const prior = readings[start - 1]!.lab_set ?? null
+    if (prior !== null && prior !== newest) break
+    start--
+  }
+  return readings.slice(start)
 }
 
 export interface ClaimEvaluation {
@@ -78,11 +105,14 @@ function sustainedFloor(
   const vs = `${fmt(now.value)} against a floor of ${fmt(rule.floor)}${
     comparatorName && now.compare !== null ? ` and ${comparatorName}'s ${fmt(now.compare)}` : ''
   }`
-  if (run === 0) return { status: 'holding', reason: `${vs}.`, reading_date: now.date }
+  // Without the comparator only the floor was tested; the reason says so
+  // rather than reading as if both tests passed.
+  const note = now.compare_unavailable ? ` ${now.compare_unavailable}` : ''
+  if (run === 0) return { status: 'holding', reason: `${vs}.${note}`, reading_date: now.date }
   const status: ClaimStatus = run >= rule.weeks ? 'broken' : 'weakening'
   return {
     status,
-    reason: `${vs}: below at ${run} of ${rule.weeks} straight weekly checkpoints.`,
+    reason: `${vs}: below at ${run} of ${rule.weeks} straight weekly checkpoints.${note}`,
     reading_date: now.date,
   }
 }
@@ -137,6 +167,23 @@ function drawdownFromHigh(
   }
 }
 
+/**
+ * A run of periods breaks at a gap this many times the series' cadence: a
+ * month or quarter that was never read. Calendar months and quarters vary by
+ * a few days, so anything short of half a period more is the next period.
+ */
+const PERIOD_GAP_FACTOR = 1.5
+
+/** The series' period, in days: the shortest gap between adjacent readings. */
+function cadenceDays(desc: readonly StoredReading[]): number | null {
+  let shortest: number | null = null
+  for (let i = 1; i < desc.length; i++) {
+    const gap = dayDiff(desc[i - 1]!.date, desc[i]!.date)
+    if (gap > 0 && (shortest === null || gap < shortest)) shortest = gap
+  }
+  return shortest
+}
+
 function belowFloorPeriods(
   rule: Extract<MeasuredRule, { rule: 'below-floor-periods' }>,
   readings: readonly StoredReading[],
@@ -145,8 +192,21 @@ function belowFloorPeriods(
   const desc = [...readings].sort((a, b) => (a.date < b.date ? 1 : a.date > b.date ? -1 : 0))
   const now = desc[0]
   if (!now) return unresolved('No reading yet.')
+  // "Straight" periods: a skipped period between two readings ends the run,
+  // or two quarters a year apart would read as two in a row.
+  const cadence = cadenceDays(desc)
+  const adjacent = (i: number) =>
+    i === 0 ||
+    cadence === null ||
+    dayDiff(desc[i - 1]!.date, desc[i]!.date) <= cadence * PERIOD_GAP_FACTOR
   let run = 0
-  while (run < Math.min(desc.length, rule.periods) && desc[run]!.value < rule.floor) run++
+  while (
+    run < Math.min(desc.length, rule.periods) &&
+    adjacent(run) &&
+    desc[run]!.value < rule.floor
+  ) {
+    run++
+  }
   const vs = `${fmt(now.value)} for the period ending ${now.date}, against a floor of ${fmt(rule.floor)}`
   if (run === 0) return { status: 'holding', reason: `${vs}.`, reading_date: now.date }
   return {
@@ -219,6 +279,70 @@ export function evaluateClaim(
     case 'sustained-drawdown':
       return sustainedDrawdown(spec.rule, readings, fmt)
   }
+}
+
+/**
+ * How old a measured signal's newest reading may get before its claim stops
+ * standing on it. Past this the signal has stopped producing readings — a
+ * source moved, a recipe broke — and the last status would otherwise stand
+ * forever. Each is the signal's normal gap between readings plus its source's
+ * publication lag, with room for a missed week.
+ */
+export const MAX_READING_AGE_DAYS = {
+  /** Polled daily (rankings, job boards, price pages, npm): a week is many missed polls. */
+  daily: 7,
+  /** Monthly, published about six weeks after the month it describes (Ramp AI Index). */
+  monthly: 80,
+  /** Quarterly from SEC filings: a quarter, plus a 10-K's up-to-90 days after year end. */
+  quarterly: 190,
+  /** Epoch's data-center snapshots arrive irregularly, every few weeks. */
+  snapshot: 45,
+} as const
+
+/** Recipes read as period series, by cadence; any other defaults to quarterly, the slowest. */
+const RECIPE_CADENCE: Readonly<Record<string, keyof typeof MAX_READING_AGE_DAYS>> = {
+  'ramp-ai-index': 'monthly',
+  'sec-revenue-net': 'quarterly',
+  'sec-revenue-crwv': 'quarterly',
+}
+
+/** The newest reading age, in days, a measured claim accepts; null for a judged one. */
+export function maxReadingAgeDays(claim: ClaimDef): number | null {
+  const spec = claim.spec
+  if (spec.kind !== 'measured') return null
+  switch (spec.signal) {
+    case 'sec-revenue-yoy-growth':
+      return MAX_READING_AGE_DAYS.quarterly
+    case 'recipe-yoy-growth':
+    case 'recipe-key-ratio':
+      return MAX_READING_AGE_DAYS[RECIPE_CADENCE[spec.recipe] ?? 'quarterly']
+    case 'recipe-snapshot-total':
+      return MAX_READING_AGE_DAYS.snapshot
+    default:
+      return MAX_READING_AGE_DAYS.daily
+  }
+}
+
+/**
+ * Unresolved, naming the reading's age, when the newest reading is older than
+ * the claim's signal allows; otherwise `evaluation` as it stands. A stale
+ * reading says nothing about now, in either direction.
+ */
+export function staleGuard(
+  claim: ClaimDef,
+  readings: readonly StoredReading[],
+  evaluation: ClaimEvaluation,
+  now: string,
+): ClaimEvaluation {
+  const max = maxReadingAgeDays(claim)
+  const newest = readings.reduce<string | null>((n, r) => (!n || r.date > n ? r.date : n), null)
+  if (max === null || newest === null) return evaluation
+  const age = dayDiff(now.slice(0, 10), newest)
+  if (age <= max) return evaluation
+  return unresolved(
+    `Stale: the newest reading is from ${newest}, ${age} days ago, and this signal reads at least every ${max} days. It read ${evaluation.status} then.`,
+    newest,
+  )
 }
 
 /** Days of readings a rule needs on hand to evaluate (plus slack). */

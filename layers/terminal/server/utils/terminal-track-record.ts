@@ -24,7 +24,7 @@ import type { AlertSeverity } from '../../shared/utils/terminal-tiers'
 import * as tables from '#server/db/schema'
 import { ChangeRow } from '../pipeline/contracts'
 import { candidateTitle } from '../pipeline/track-record/gdelt'
-import { MATERIAL_SEVERITIES } from '../pipeline/track-record/search'
+import { MATERIAL_SEVERITIES, searchedInPart } from '../pipeline/track-record/search'
 import {
   TRACK_RECORD_FROM,
   WINDOW_DAYS,
@@ -74,6 +74,7 @@ export function sideOf(
     lead_hours: null,
     candidates: candidates.length,
     rated: candidates.filter((c) => verdicts.has(c.id)).length,
+    searched_from: null,
     ...extra,
   })
   if (windowOpen) return side('window-open')
@@ -108,7 +109,11 @@ export function sideOf(
 }
 
 export function tally(rows: readonly TrackRecordSide[]): TrackRecordTally {
-  const matched = rows.filter((r) => r.lead_hours !== null).map((r) => r.lead_hours!)
+  // A side searched only from part way through its window can only find
+  // press after the gap, which reads as a lead; counting it would tilt the
+  // tally toward "we saw it first".
+  const whole = rows.filter((r) => r.searched_from === null)
+  const matched = whole.filter((r) => r.lead_hours !== null).map((r) => r.lead_hours!)
   return {
     matched: matched.length,
     led: matched.filter((h) => h >= 0.05).length,
@@ -116,7 +121,18 @@ export function tally(rows: readonly TrackRecordSide[]): TrackRecordTally {
     tied: matched.filter((h) => Math.abs(h) < 0.05).length,
     median_lead_hours: median(matched),
     not_yet_rated: rows.filter((r) => r.state === 'not-yet-rated').length,
+    searched_in_part: rows.filter((r) => r.searched_from !== null && r.lead_hours !== null).length,
   }
+}
+
+/** The press side, marked when its search began after its window did (search.ts › pressSearchedFrom). */
+function pressSide(
+  side: TrackRecordSide,
+  ok: Pick<Search, 'window_start'> | undefined,
+  window: { start: string; end: string },
+): TrackRecordSide {
+  if (!ok || side.state === 'window-open' || !searchedInPart(ok, window)) return side
+  return { ...side, searched_from: ok.window_start }
 }
 
 async function inChunks<T>(
@@ -217,12 +233,16 @@ export async function queryTrackRecord(
       window_to: window.end,
       // A failure from GDELT's search API (before the GKG files) says nothing now: every
       // window's files are read, so until they are, the side is not searched yet.
-      press: sideOf(
-        open,
-        own('gdelt').filter((s) => s.status !== 'failed'),
-        kind('press'),
-        verdictOf,
-        saw.at,
+      press: pressSide(
+        sideOf(
+          open,
+          own('gdelt').filter((s) => s.status !== 'failed'),
+          kind('press'),
+          verdictOf,
+          saw.at,
+        ),
+        own('gdelt').find((s) => s.status === 'ok'),
+        window,
       ),
       newsroom: sideOf(open, own('newsroom'), kind('newsroom'), verdictOf, saw.at, 'no-feed'),
     })

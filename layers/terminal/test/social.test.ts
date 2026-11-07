@@ -13,6 +13,7 @@ import {
   composeWeeklyDigest,
   enqueueCriticalAlerts,
   enqueueWeeklyDigest,
+  heldUntil,
   JUDGED_HOLD_MS,
   SOCIAL_EPOCH,
 } from '../server/pipeline/social'
@@ -29,6 +30,7 @@ function alert(
   rule: string,
   created_at: string,
   headline = `Headline ${id}`,
+  recorded_at = created_at,
 ) {
   return {
     id,
@@ -40,6 +42,7 @@ function alert(
     created_at,
     source_url: 'https://example.com',
     fetched_at: created_at,
+    recorded_at,
   }
 }
 
@@ -86,6 +89,50 @@ describe('enqueueCriticalAlerts', () => {
     expect(JSON.parse(byRef.rule!.body)).toEqual({
       posts: ['Headline rule', `Source and details: ${ORIGIN}/alerts/rule`],
     })
+  })
+
+  it('holds a judged alert from when it was written, not from its evidence', async () => {
+    // The judge reads evidence fetched at 11:00 and writes the alert at 11:50:
+    // a hold from created_at would end ten minutes after anyone could see it.
+    await db
+      .insert(schema.alerts)
+      .values(
+        alert(
+          'late',
+          'critical',
+          'agent-judge',
+          '2026-11-05T11:00:00.000Z',
+          'H',
+          '2026-11-05T11:50:00.000Z',
+        ),
+      )
+    await enqueueCriticalAlerts(db, CHANNELS, ORIGIN)
+    const [row] = await db.select().from(schema.socialPosts)
+    expect(row!.notBefore.getTime()).toBe(Date.parse('2026-11-05T11:50:00.000Z') + JUDGED_HOLD_MS)
+    expect(
+      heldUntil({ rule: 'agent-judge', created_at: '2026-11-05T11:00:00Z', recorded_at: null }),
+    ).toBe(Date.parse('2026-11-05T11:00:00Z') + JUDGED_HOLD_MS)
+    expect(
+      heldUntil({
+        rule: 's1-floor',
+        created_at: '2026-11-05T11:00:00Z',
+        recorded_at: '2026-11-05T12:00:00Z',
+      }),
+    ).toBe(Date.parse('2026-11-05T11:00:00Z'))
+  })
+
+  it('stamps an alert row with its write time when the writer sets none', async () => {
+    const { recorded_at: _omit, ...unstamped } = alert(
+      't',
+      'info',
+      's1-floor',
+      '2026-11-05T11:00:00.000Z',
+    )
+    const before = Date.now()
+    await db.insert(schema.alerts).values(unstamped)
+    const [row] = await db.select().from(schema.alerts)
+    expect(row!.recorded_at).toMatch(/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}\.\d{3}Z$/)
+    expect(Date.parse(row!.recorded_at!)).toBeGreaterThanOrEqual(before - 1000)
   })
 
   it('keeps the link inline on Bluesky', async () => {
