@@ -1,27 +1,40 @@
 // Storing figure headlines from the GDELT GKG files. Two ways in: a file read
-// for the first time (recordGkgFile in ../track-record/search.ts passes its
-// figure rows here), and a file the track record read before this side
-// existed, read again for figures only (recordFigureFile). Either way the
-// Worker parses each posted row and matches it again with figureHeadline, so
-// the job can't choose what is kept.
+// for the first time, whose kept rows (../track-record/mentions.ts) recordGkgFile
+// passes here, since a figure headline names a lab and so is always one of them;
+// and a file read before this side existed, read again for figures only
+// (recordFigureFile). Either way the Worker matches each headline again with
+// figureHeadline, so the job can't choose what is kept.
 
 import { and, asc, eq, isNull } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { contentHash } from '../contracts'
-import type { RawStore } from '../refresh'
 import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '../store'
-import { titleKey } from '../track-record/gdelt'
-import { gkgUrl, parseGkgRow, stampIso } from '../track-record/gkg'
+import { gkgUrl, stampIso } from '../track-record/gkg'
 import { figureHeadline } from './figures'
 
-/** Figure rows one file may post. A file holds a handful; this bounds a runaway match. */
+/** Figure headlines one file may post. A file holds a handful; this bounds a runaway match. */
 export const MAX_FIGURES_PER_FILE = 200
 
 /** Files handed out per backfill call: about two minutes of the job's reading. */
 export const FIGURE_FILES_PER_CALL = 24
 
 export const articleId = (url: string) => contentHash({ url })
+
+/** One headline, one key: a wire story on fifty sites is read once. Same key as the track record's. */
+export const titleKey = (title: string) =>
+  title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+
+/** A GKG row as the job reports it: what reported_articles keeps of it. */
+export interface FigureRow {
+  record_id: string
+  outlet: string
+  url: string
+  title: string
+}
 
 export interface FigureRowsOutcome {
   articles: number
@@ -33,53 +46,46 @@ type ArticleRow = typeof tables.reportedArticles.$inferInsert
 const ARTICLE_COLUMNS = 10
 
 /**
- * Keep the posted rows of one GKG file that are figure headlines read in that
- * quarter hour, with the rows themselves in R2. Rows that don't parse, sit in
- * another quarter hour, or don't match are counted as rejected.
+ * Keep the rows of one GKG file whose headline is a lab figure. A row with no
+ * web URL, or whose headline doesn't match, is counted as rejected.
  */
 export async function storeFigureRows(
   db: PipelineDb,
-  raw: RawStore,
-  input: { stamp: string; fetched_at: string; rows: readonly string[] },
+  input: { stamp: string; fetched_at: string; rows: readonly FigureRow[] },
   now: Date,
 ): Promise<FigureRowsOutcome> {
-  const seen_at = stampIso(input.stamp)
-  const kept: string[] = []
   const articles = new Map<string, ArticleRow>()
   let rejected = 0
   for (const row of input.rows) {
-    const article = parseGkgRow(row)
-    if (!article || article.seen_at !== seen_at || !figureHeadline(article.title)) {
+    if (!/^https?:\/\//.test(row.url) || !figureHeadline(row.title)) {
       rejected++
       continue
     }
-    const id = articleId(article.url)
+    const id = articleId(row.url)
     if (articles.has(id)) continue
-    if (!kept.includes(row)) kept.push(row)
     articles.set(id, {
       id,
-      title_key: titleKey(article.title),
-      title: article.title,
-      outlet: article.outlet,
-      url: article.url,
-      published_at: article.seen_at,
+      title_key: titleKey(row.title),
+      title: row.title,
+      outlet: row.outlet,
+      url: row.url,
+      published_at: stampIso(input.stamp),
       found_at: now.toISOString(),
-      raw_key: null,
+      record_id: row.record_id,
       source_url: gkgUrl(input.stamp),
       fetched_at: input.fetched_at,
     })
   }
-  if (articles.size === 0) return { articles: 0, rejected }
-  const raw_key = `reported/gkg/${input.stamp}.tsv`
-  await raw.put(raw_key, `${kept.join('\n')}\n`, 'text/tab-separated-values')
-  const rows = [...articles.values()].map((a) => ({ ...a, raw_key }))
-  for (const part of chunk(rows, Math.floor(D1_MAX_BOUND_PARAMS / ARTICLE_COLUMNS))) {
+  for (const part of chunk(
+    [...articles.values()],
+    Math.floor(D1_MAX_BOUND_PARAMS / ARTICLE_COLUMNS),
+  )) {
     await db.insert(tables.reportedArticles).values(part).onConflictDoNothing()
   }
   return { articles: articles.size, rejected }
 }
 
-/** Files the track record read before figures were looked for, oldest first. */
+/** Files read before figures were looked for, oldest first. */
 export async function figureBackfill(
   db: PipelineDb,
   limit: number = FIGURE_FILES_PER_CALL,
@@ -97,11 +103,10 @@ export type FigureFileOutcome =
   | ({ recorded: true } & FigureRowsOutcome)
   | { recorded: false; reason: 'not-pending' }
 
-/** Store the figure rows of a file already read for the track record, once. */
+/** Store the figure headlines of a file read before this side existed, once. */
 export async function recordFigureFile(
   db: PipelineDb,
-  raw: RawStore,
-  input: { stamp: string; fetched_at: string; figures: readonly string[] },
+  input: { stamp: string; fetched_at: string; figures: readonly FigureRow[] },
   now: Date,
 ): Promise<FigureFileOutcome> {
   const [file] = await db
@@ -113,7 +118,6 @@ export async function recordFigureFile(
   }
   const outcome = await storeFigureRows(
     db,
-    raw,
     { stamp: input.stamp, fetched_at: input.fetched_at, rows: input.figures },
     now,
   )

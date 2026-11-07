@@ -8,21 +8,23 @@ import { and, desc, eq, gte, sql } from 'drizzle-orm'
 
 import type { ClaimDef, ClaimStatus, ThesisDef } from '../../shared/utils/thesis-types'
 import type { CompanyId } from '../../shared/utils/companies'
+import type { HiringHistoryData } from '../../shared/utils/terminal-types'
 
 import * as tables from '#server/db/schema'
 import { contentHash } from '../pipeline/contracts'
 import { judgedThrough } from '../pipeline/judge/pending'
 import { chunk, D1_MAX_BOUND_PARAMS, type PipelineDb } from '../pipeline/store'
 import { daysBefore } from '../utils/terminal-rankings'
+import { hiringHistoryFor } from './compute-signals'
 import { evaluateJudgedClaim, type StoredVerdict } from './judged-status'
 import { THESES } from './registry'
 import { presentation, readSignal, recomputable, type SignalDeps } from './signals'
 import {
   evaluateClaim,
   historyDays,
-  sinceLabSetChange,
   staleGuard,
   type ClaimEvaluation,
+  type MeasuredClaim,
   type StoredReading,
 } from './status'
 
@@ -77,7 +79,7 @@ export async function storedReadings(
 }
 
 export function evaluationOf(
-  claim: ClaimDef,
+  claim: MeasuredClaim,
   readings: readonly StoredReading[],
   now: Date,
 ): ClaimEvaluation {
@@ -85,7 +87,7 @@ export function evaluationOf(
   return staleGuard(
     claim,
     readings,
-    evaluateClaim(claim, sinceLabSetChange(readings), fmt, comparatorName),
+    evaluateClaim(claim, readings, fmt, comparatorName),
     now.toISOString(),
   )
 }
@@ -111,8 +113,9 @@ export async function currentEvaluation(
   claim: ClaimDef,
   now: Date,
 ): Promise<ClaimEvaluation> {
-  if (claim.spec.kind === 'measured') {
-    return evaluationOf(claim, await storedReadings(db, claim), now)
+  const { spec } = claim
+  if (spec.kind === 'measured') {
+    return evaluationOf({ ...claim, spec }, await storedReadings(db, claim), now)
   }
   const [verdicts, through] = await Promise.all([storedVerdicts(db, claim), judgedThrough(db)])
   return evaluateJudgedClaim(claim, thesis.company, verdicts, through, now.toISOString())
@@ -175,10 +178,13 @@ export async function evaluateTheses(
   opts: { judgedOnly?: boolean } = {},
 ): Promise<ClaimRun[]> {
   const runs: ClaimRun[] = []
+  // Two claims read the live hiring history; read it once, and only if one runs.
+  let history: Promise<HiringHistoryData> | undefined
+  const run: SignalDeps = { ...deps, hiringHistory: () => (history ??= hiringHistoryFor(db, deps)) }
   for (const thesis of theses) {
     for (const claim of thesis.claims) {
       if (opts.judgedOnly && claim.spec.kind !== 'judged') continue
-      const written = await writeReadings(db, thesis, claim, deps)
+      const written = await writeReadings(db, thesis, claim, run)
       const evaluation = await currentEvaluation(db, thesis, claim, deps.now())
       const previous = await latestStatusChange(db, claim.id)
       const changed = previous?.status !== evaluation.status

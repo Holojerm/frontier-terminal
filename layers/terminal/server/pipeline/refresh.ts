@@ -4,7 +4,9 @@ import { recordOpsEvent } from '#server/utils/ops'
 import type { ClassEntry } from '../utils/terminal-classes'
 import { effectiveClassMap } from './class-map'
 import {
+  contentHash,
   contentHashOfText,
+  SnapshotRow,
   type ChangeRow,
   type EntityRow,
   type PollScope,
@@ -12,7 +14,7 @@ import {
   type SourceRunRow,
   type StoredEntityRow,
 } from './contracts'
-import { diff, inPlaceRewrites, repeatChangeId } from './diff'
+import { diff, repeatChangeId } from './diff'
 import { modelFloorAlerts } from './model-floor'
 import { prospectusFloorAlerts } from './prospectus-floor'
 import type { SourceFetcher } from './fetch'
@@ -40,16 +42,16 @@ import { includeSources, type FetchSource } from './sources'
 import {
   applyDiff,
   currentEntities,
-  insertRows,
   lastRunStatus,
   lastSkippedRunAt,
-  latestGoodSnapshot,
+  latestGoodSnapshots,
   latestRateLimitedRuns,
   lastRunWithHash,
   recentRuns,
+  recordRun,
   repeatedChangeIds,
   unstoredAlerts,
-  writeBaseline,
+  type GoodSnapshot,
   type PipelineDb,
 } from './store'
 import { redactPayload } from './redact'
@@ -138,15 +140,14 @@ interface Fetched {
   fetched_at: string
   body: {
     text: string
-    snapshot_id: string
+    /** Written with the parse's entity writes, or else with the run row. */
+    snapshot: SnapshotRow
+    /** Set once a write has carried the snapshot, so the run row does not repeat it. */
+    stored: boolean
+    /** Same bytes as `prior`. */
     unchanged: boolean
-    /** No earlier good run for this source: whatever parses is the baseline. */
-    first: boolean
-    /** The URL the last good run read, when the source has since moved to another. */
-    movedFrom: string | null
-    content_hash: string
-    /** The last good run's parse_basis: what else that parse read. */
-    basis: string | null
+    /** The snapshot behind this source's last good run; null before its first. */
+    prior: GoodSnapshot | null
   } | null
   failure: string | null
   /** True when the fetcher refused for want of a credential (nothing attempted). */
@@ -159,7 +160,12 @@ interface Fetched {
   cooling: boolean
 }
 
-async function fetchAndSnapshot(deps: RefreshDeps, source: FetchSource, now: () => Date) {
+async function fetchAndSnapshot(
+  deps: RefreshDeps,
+  source: FetchSource,
+  now: () => Date,
+  prior: GoodSnapshot | null,
+) {
   const outcome = await deps.fetcher(source)
   const fetched_at = now().toISOString()
   const base = { source, fetched_at }
@@ -179,39 +185,34 @@ async function fetchAndSnapshot(deps: RefreshDeps, source: FetchSource, now: () 
 
   const text = redactPayload(source.url, outcome.text)
   const content_hash = contentHashOfText(text)
-  const latest = await latestGoodSnapshot(deps.db, source.source_id)
-  const unchanged = latest !== null && latest.content_hash === content_hash
+  const unchanged = prior !== null && prior.content_hash === content_hash
 
   // Same bytes as the last good snapshot: record that we looked, point at the
   // object already in R2, and skip the write.
-  const raw_key = unchanged ? latest.raw_key : rawKeyFor(source, fetched_at)
+  const raw_key = unchanged ? prior.raw_key : rawKeyFor(source, fetched_at)
   if (!unchanged) {
     await deps.raw.put(raw_key, text, CONTENT_TYPES[source.ext] ?? 'text/plain')
   }
 
-  const snapshot_id = `${source.source_id}:${fetched_at}`
-  await insertRows(deps.db, 'snapshots', [
-    {
-      id: snapshot_id,
-      source_id: source.source_id,
-      content_hash,
-      raw_key,
-      http_status: outcome.status,
-      bytes: outcome.bytes,
-      source_url: source.url,
-      fetched_at,
-    },
-  ])
   return {
     ...base,
     body: {
       text,
-      snapshot_id,
+      // Validated now, so a bad row fails this fetch as it did when the
+      // snapshot was written here, not the run row's write later.
+      snapshot: SnapshotRow.parse({
+        id: `${source.source_id}:${fetched_at}`,
+        source_id: source.source_id,
+        content_hash,
+        raw_key,
+        http_status: outcome.status,
+        bytes: outcome.bytes,
+        source_url: source.url,
+        fetched_at,
+      }),
+      stored: false,
       unchanged,
-      first: latest === null,
-      movedFrom: latest !== null && latest.source_url !== source.url ? latest.source_url : null,
-      content_hash,
-      basis: latest?.parse_basis ?? null,
+      prior,
     },
     failure: null,
     skipped: false,
@@ -242,21 +243,35 @@ const quiet = (
   }) satisfies Outcome
 
 /**
- * What a parse read besides the source's own bytes, stored on its run row:
- * the content hash of each side it joined against, and the lane's context
- * fingerprint (lanes.ts › contextFingerprint).
+ * Whether a parse may be skipped, stored on its run row as two hashes. `input`
+ * is what the parse read: the page, each side it joined against, and the
+ * class-map cells that cite the page (the drift check tests those sentences).
+ * `context` is what it read them with: the parser version, the sources.yaml
+ * blocks the lane reads, and the URL every row cites (lanes.ts ›
+ * contextFingerprint). A new input is news and is logged; a new context alone
+ * is our reading changing, not the world, and is re-read quietly.
  */
 interface ParseBasis {
-  sides: Record<string, string>
+  input: string
   context: string
 }
 
-function readBasis(json: string | null): ParseBasis | null {
-  if (json === null) return null
-  const basis = JSON.parse(json) as Partial<ParseBasis>
-  return basis.sides && typeof basis.context === 'string'
-    ? { sides: basis.sides, context: basis.context }
-    : null
+/**
+ * The class-map cells checked against this source's page, in a stable order.
+ * The judge re-maps a cell after the vendor edits the page, so the page is
+ * usually unchanged by the next tick; without these in the input the check
+ * would keep testing the old sentence until the vendor edits the page again.
+ */
+function citedCells(classMap: readonly ClassEntry[], sourceId: string) {
+  return classMap
+    .filter((e) => e.basis_source_id === sourceId)
+    .map((e) => ({
+      provider: e.provider,
+      class: e.class,
+      model_slug: e.model_slug,
+      basis: e.basis,
+    }))
+    .sort((a, b) => (`${a.provider}:${a.class}` < `${b.provider}:${b.class}` ? -1 : 1))
 }
 
 /**
@@ -287,54 +302,54 @@ async function parseAndStore(
     const status = fetched.skipped ? 'skipped' : fetched.absent ? 'absent' : 'failed'
     return quiet(status, fetched.failure, null)
   }
+  const { snapshot, prior } = body
 
   const lane = laneFor(source.source_id)
   if (!lane) {
     return quiet(
       body.unchanged ? 'unchanged' : 'ok',
       'no parser: fetched for a join or as a cross-check',
-      body.snapshot_id,
+      snapshot.id,
     )
   }
 
   for (const sideId of lane.sides) {
     if (!byId.get(sideId)?.body) {
-      return quiet('failed', `side source ${sideId} unavailable this tick`, body.snapshot_id)
+      return quiet('failed', `side source ${sideId} unavailable this tick`, snapshot.id)
     }
   }
-  const sides = Object.fromEntries(lane.sides.map((id) => [id, byId.get(id)!.body!.content_hash]))
-  const basis: ParseBasis = { sides, context: contextFingerprint(lane, blocks) }
-  const prior = readBasis(body.basis)
-  // A department renamed with no job touched still changes the joined rows.
-  // Compared with the side bytes this source's last good parse joined
-  // against, not with the side's own last run: a side that changed on a tick
-  // this source failed to parse is still unread here. A run from before
-  // bases were recorded falls back to the side's own run.
-  const sideChanged = prior
-    ? lane.sides.some((id) => prior.sides[id] !== sides[id])
-    : lane.sides.some((id) => !byId.get(id)!.body!.unchanged)
-  // The same inputs as the stored rows were read from, but for the context:
-  // a moved URL is new input even with identical bytes, since every row's
-  // source_url must follow it.
-  const sameInputs =
-    body.unchanged &&
-    !sideChanged &&
-    !body.movedFrom &&
-    !(await classMapMoved(deps.db, source.source_id, classMap)) &&
-    !(await lane.stale?.(deps.db, source.source_id))
-  const basisJson = JSON.stringify(basis)
-  if (sameInputs && prior?.context === basis.context) {
-    return quiet('unchanged', null, body.snapshot_id, basisJson)
+  // Sides are compared with the bytes this source's last good parse joined
+  // against, not with the side's own last run: a department renamed on a tick
+  // this board failed to parse is still unread here.
+  const sides = Object.fromEntries(
+    lane.sides.map((id) => [id, byId.get(id)!.body!.snapshot.content_hash]),
+  )
+  const basis: ParseBasis = {
+    input: contentHash({
+      page: snapshot.content_hash,
+      sides,
+      cells: citedCells(classMap, source.source_id),
+    }),
+    context: contextFingerprint(lane, blocks, source.url),
   }
-  // Only the parser or the sources.yaml blocks it reads changed (or the run
-  // predates the fingerprint). Whatever the parse now says differently, the
-  // page did not say it differently: rows are rewritten in place and nothing
-  // is logged, as for a moved URL below.
-  const reread = sameInputs
+  const basisJson = JSON.stringify(basis)
+  const stored = prior?.parse_basis ? (JSON.parse(prior.parse_basis) as Partial<ParseBasis>) : null
+  // A run with no basis of this shape (the first tick after a deploy that
+  // changed it) has only its page bytes to go on: the same bytes are re-read
+  // once, quietly, and new bytes are logged as ever.
+  const sameInput = stored?.input ? stored.input === basis.input : body.unchanged
+  if (sameInput && stored?.context === basis.context) {
+    return quiet('unchanged', null, snapshot.id, basisJson)
+  }
+  // Only the parser, the sources.yaml blocks it reads or the URL changed.
+  // Whatever the parse now says differently, the page did not say it
+  // differently: rows are rewritten in place and nothing is logged.
+  const reread = sameInput
+  const movedFrom = prior && prior.source_url !== source.url ? prior.source_url : null
 
   const parsed = lane.parse(body.text, {
     prov: { source_url: source.url, fetched_at },
-    snapshotId: body.snapshot_id,
+    snapshotId: snapshot.id,
     side: (id) => byId.get(id)!.body!.text,
     ...blocks,
     derivedKey: derivedKeyOf(source.source_id),
@@ -349,20 +364,23 @@ async function parseAndStore(
   })
 
   const before = await currentEntities(deps.db, source.source_id)
-  const all = diff(before, parsed.entities, fetched_at, source.url)
+  const { changes: all, upserts } = diff(before, parsed.entities, fetched_at, source.url)
   const kept = lane.removals === 'set' ? all : all.filter((c) => c.change_type !== 'removed')
-  const afterByKey = new Map(parsed.entities.map((e) => [e.entity_key, e]))
   const added = kept.filter((c) => c.change_type === 'added')
   const modified = kept.filter((c) => c.change_type === 'modified')
   const removed = kept.filter((c) => c.change_type === 'removed')
-  const rewrites = inPlaceRewrites(before, parsed.entities)
-  const entityWrites = {
-    added: added.map((c) => toStored(afterByKey.get(c.entity_key)!)),
-    modified: [...modified.map((c) => afterByKey.get(c.entity_key)!), ...rewrites],
-    removed: removed.map((c) => c.entity_key),
+  const store = async (changes: readonly ChangeRow[], alerts: readonly unknown[]) => {
+    await applyDiff(deps.db, source.source_id, {
+      snapshot,
+      upserts: upserts.map(toStored),
+      removed: removed.map((c) => c.entity_key),
+      changes,
+      alerts,
+    })
+    body.stored = true
   }
 
-  if (body.first && !lane.firstIsNews?.(derivedKeyOf(source.source_id), fetched_at)) {
+  if (!prior && !lane.firstIsNews?.(derivedKeyOf(source.source_id), fetched_at)) {
     // First observation: record what is there, not a wall of "added" events
     // for things that happened before we were watching — a status feed's
     // whole backlog, a filer's recent window. Decided by "no earlier good
@@ -370,11 +388,11 @@ async function parseAndStore(
     // baseline at zero rows, and its first real row must then be 'added'.
     // The current set is usually empty here, and is not only when an
     // earlier baseline wrote its rows and died before its run row.
-    await writeBaseline(deps.db, source.source_id, entityWrites)
+    await store([], [])
     return quiet(
       'baseline',
       [`${parsed.entities.length} entities`, note].filter(Boolean).join('; '),
-      body.snapshot_id,
+      snapshot.id,
       basisJson,
     )
   }
@@ -387,7 +405,7 @@ async function parseAndStore(
       return quiet(
         'failed',
         `parser returned zero rows against ${before.length} current entities; refusing to record a mass removal`,
-        body.snapshot_id,
+        snapshot.id,
       )
     }
     if (
@@ -401,12 +419,12 @@ async function parseAndStore(
       const confirmed =
         last?.status === 'failed' &&
         last.detail?.startsWith(MASS_REMOVAL_DETAIL) === true &&
-        last.content_hash === body.content_hash
+        last.content_hash === snapshot.content_hash
       if (!confirmed) {
         return quiet(
           'failed',
           `${MASS_REMOVAL_DETAIL} ${removed.length} of ${before.length} current entities; refusing to record a mass removal until the next fetch shows the same page`,
-          body.snapshot_id,
+          snapshot.id,
         )
       }
       massRemoval = `removal of ${removed.length} of ${before.length} accepted: the same page was refused on the run before`
@@ -420,11 +438,7 @@ async function parseAndStore(
   // still in the window. Those rows are rewritten in place without a change
   // row, as a baseline would; an added or removed key still logs. A re-read
   // of the same bytes logs nothing at all: no key can be new to the page.
-  const logged = reread
-    ? []
-    : body.movedFrom
-      ? kept.filter((c) => c.change_type !== 'modified')
-      : kept
+  const logged = reread ? [] : movedFrom ? kept.filter((c) => c.change_type !== 'modified') : kept
   // A transition this entity made before and has since left is a new event,
   // and needs an id of its own (diff.ts › repeatChangeId).
   const repeats = await repeatedChangeIds(deps.db, logged)
@@ -437,7 +451,7 @@ async function parseAndStore(
     ...(await modelFloorAlerts(deps.db, source.source_id, changes)),
     ...(await prospectusFloorAlerts(deps.db, changes)),
   ])
-  await applyDiff(deps.db, source.source_id, { ...entityWrites, changes, alerts })
+  await store(changes, alerts)
   // A vendor rewrote a sentence the class map rests on: the owner has a
   // transcription to redo. Once per flip — an unchanged verdict diffs to
   // nothing, so a stale cell does not re-spool every tick.
@@ -450,53 +464,24 @@ async function parseAndStore(
   }
 
   const rows = (n: number) => `${n} ${n === 1 ? 'row' : 'rows'}`
-  const rewritten = modified.length + rewrites.length
-  const reshaped = rewritten + added.length + removed.length
-  const unlogged = reread
-    ? reshaped
+  // Rows rewritten under a key that was already there.
+  const rewritten = upserts.length - added.length
+  const reshaped = upserts.length + removed.length
+  const unlogged = movedFrom
+    ? `moved from ${movedFrom}: ${rows(reread ? reshaped : rewritten)} re-read in place, not logged as changes`
+    : reread && reshaped
       ? `parser or sources.yaml changed: ${rows(reshaped)} re-read in place, not logged as changes`
-      : null
-    : body.movedFrom
-      ? `moved from ${body.movedFrom}: ${rows(rewritten)} re-read in place, not logged as changes`
       : null
   return {
     status: 'ok',
     detail: [massRemoval, unlogged, note].filter(Boolean).join('; ') || null,
-    snapshot_id: body.snapshot_id,
+    snapshot_id: snapshot.id,
     added: reread ? 0 : added.length,
     removed: reread ? 0 : removed.length,
-    modified: reread || body.movedFrom ? 0 : modified.length,
+    modified: reread || movedFrom ? 0 : modified.length,
     alerts: alerts.length,
     basis: basisJson,
   }
-}
-
-/** True when the class map in effect cites this source for a cell its stored
- * drift check was not run against. The judge re-maps a cell after the vendor
- * edits the page, so the page is usually unchanged by the next tick; without
- * this the check would keep testing the old sentence until the vendor edits
- * the page again, and the cell would read as stale the whole time. */
-async function classMapMoved(
-  db: PipelineDb,
-  sourceId: string,
-  classMap: readonly ClassEntry[],
-): Promise<boolean> {
-  const cited = classMap.filter((e) => e.basis_source_id === sourceId)
-  if (cited.length === 0) return false
-  const checked = new Map<string, string>()
-  for (const row of await currentEntities(db, sourceId)) {
-    if (row.entity_type !== 'recommendation') continue
-    const p = JSON.parse(row.payload) as {
-      provider?: string
-      class?: string
-      model_slug?: string
-      basis?: string
-    }
-    checked.set(`${p.provider}:${p.class}`, `${p.model_slug}\n${p.basis}`)
-  }
-  return cited.some(
-    (e) => checked.get(`${e.provider}:${e.class}`) !== `${e.model_slug}\n${e.basis}`,
-  )
 }
 
 /** One line per 'recommendation' change whose after-state lost the sentence. */
@@ -563,10 +548,16 @@ export async function runRefresh(
   for (const id of sourceIds) for (const side of laneFor(id)?.sides ?? []) wantedIds.add(side)
   const sources = all.filter((s) => wantedIds.has(s.source_id))
 
-  // Sources a recent 429 put on cooldown. One query for the tick.
+  // Sources a recent 429 put on cooldown, and each source's last good
+  // snapshot. One query each for the tick: the poll lock keeps another tick
+  // from writing a newer one meanwhile.
   const rateLimited = await latestRateLimitedRuns(
     deps.db,
     new Date(Date.parse(started_at) - RATE_LIMIT_MAX_COOLDOWN_MS).toISOString(),
+  )
+  const priors = await latestGoodSnapshots(
+    deps.db,
+    sources.map((s) => s.source_id),
   )
 
   const fetchOne = async (source: FetchSource): Promise<Fetched> => {
@@ -584,7 +575,7 @@ export async function runRefresh(
           cooling: true,
         }
       }
-      return await fetchAndSnapshot(deps, source, now)
+      return await fetchAndSnapshot(deps, source, now, priors.get(source.source_id) ?? null)
     } catch (err) {
       return {
         source,
@@ -635,7 +626,7 @@ export async function runRefresh(
       )
     } catch (err) {
       transient = err instanceof JoinRaceError
-      outcome = quiet('failed', describeError(err), fetched.body?.snapshot_id ?? null)
+      outcome = quiet('failed', describeError(err), fetched.body?.snapshot.id ?? null)
     }
     const detail = outcome.detail?.slice(0, DETAIL_MAX) ?? null
 
@@ -687,8 +678,9 @@ export async function runRefresh(
         })
       }
     }
-    // Written last, after the entity writes — see latestGoodSnapshot() for why.
-    await insertRows(deps.db, 'source_runs', [
+    // Written last, after the entity writes — see latestGoodSnapshots() for why.
+    await recordRun(
+      deps.db,
       {
         id: `${scope}:${source.source_id}:${started_at}`,
         scope,
@@ -703,7 +695,8 @@ export async function runRefresh(
         source_url: source.url,
         parse_basis: outcome.basis ?? null,
       },
-    ])
+      fetched.body && !fetched.body.stored ? fetched.body.snapshot : null,
+    )
     const { basis: _basis, ...reported } = outcome
     reports.push({ source_id: source.source_id, ...reported, detail })
   }

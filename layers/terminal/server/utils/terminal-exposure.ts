@@ -9,7 +9,7 @@
 // from the day after the filing date keeps a filing accepted late on T's own
 // day out of T.
 
-import { lt, max } from 'drizzle-orm'
+import { lt } from 'drizzle-orm'
 
 import type { ExposureData, ExposureTicker } from '../../shared/utils/terminal-exposure'
 
@@ -25,20 +25,15 @@ export const EXPOSURE_METHOD =
 export const EXPOSURE_RULE =
   'Filed XBRL facts only (the SEC’s tagged financial data), each linked to its filing. Every series is the filer’s own number, never the lab’s. As of a past instant, a fact counts from the day after its filing date.'
 
-/** Newest read of any filer: part of the cache key, so a run that adds facts shows within one tick. */
-export async function filedFactsStamp(db: PipelineDb): Promise<string> {
-  const [row] = await db
-    .select({ at: max(tables.filedFactReads.started_at) })
-    .from(tables.filedFactReads)
-  return row?.at ?? 'none'
-}
-
 /** UTC day of an instant: facts filed before it count at that instant. */
 export const filedBefore = (at: string) => at.slice(0, 10)
 
 export async function queryExposure(db: PipelineDb, ctx: QueryContext): Promise<ExposureData> {
   const at = ctx.at
-  if (at) ctx.notes.method.add(EXPOSURE_METHOD)
+  if (at) {
+    ctx.notes.method.add(EXPOSURE_METHOD)
+    ctx.notes.eventTime = true
+  }
   const [facts, state] = await Promise.all([
     db
       .select({

@@ -289,7 +289,7 @@ describe('deploy checks', () => {
     expect(repoSlug(REPO)).toBe('Holojerm/frontier-terminal')
   })
 
-  it('reads at most hourly, sends its ETag, and parks after a refusal', async () => {
+  it('sends its ETag, and parks after a refusal', async () => {
     const store = new Map<string, unknown>()
     const kv = {
       get: async (k: string) => store.get(k) ?? null,
@@ -320,11 +320,6 @@ describe('deploy checks', () => {
     expect(await recordDeployChecks(db, at('2026-11-05T00:00:00Z'))).toEqual({
       status: 'stored',
       runs: 2,
-    })
-    // On the five-minute tick, the next read waits out the hour.
-    expect(await recordDeployChecks(db, at('2026-11-05T00:05:00Z'))).toEqual({
-      status: 'not-due',
-      next: '2026-11-05T00:55:00.000Z',
     })
     // The in-progress run completes: the next page rewrites it.
     answer = () =>
@@ -369,6 +364,35 @@ describe('deploy checks', () => {
       status: 'completed',
       conclusion: 'success',
     })
+  })
+
+  it('spools a smoke run that newly failed once, and none of the failures on a first read', async () => {
+    await db.delete(schema.opsEvents)
+    let runs = [run(20, 'ccc', 'failure', '2026-11-04T20:00:00Z')]
+    const fetcher = (async () =>
+      new Response(JSON.stringify({ workflow_runs: runs }))) as unknown as typeof fetch
+    const store = new Map<string, unknown>()
+    const kv = {
+      get: async (k: string) => store.get(k) ?? null,
+      set: async (k: string, v: unknown) => void store.set(k, v),
+    }
+    const at = (iso: string) => ({ fetch: fetcher, kv, repoUrl: REPO, now: new Date(iso) })
+    const smokeEvents = async () =>
+      (await db.select().from(schema.opsEvents)).filter((e) => e.kind === 'deploy_smoke_failed')
+
+    await recordDeployChecks(db, at('2026-11-05T00:00:00Z'))
+    expect(await smokeEvents()).toHaveLength(0)
+
+    // A run still going, then failed: one event, when it fails, and only once.
+    runs = [run(21, 'ddd', null, '2026-11-05T00:30:00Z'), ...runs]
+    await recordDeployChecks(db, at('2026-11-05T01:00:00Z'))
+    runs = [run(21, 'ddd', 'failure', '2026-11-05T00:30:00Z'), ...runs.slice(1)]
+    await recordDeployChecks(db, at('2026-11-05T02:00:00Z'))
+    await recordDeployChecks(db, at('2026-11-05T03:00:00Z'))
+    const events = await smokeEvents()
+    expect(events.map((e) => e.detail)).toEqual([
+      `post-deploy smoke test failed on ddd0000: ${REPO}/actions/runs/21`,
+    ])
   })
 
   it('backs off for Retry-After or an hour when GitHub names no reset', () => {
@@ -593,6 +617,34 @@ describe('queryReliability', () => {
       runs: 92,
       good: 86,
     })
+  })
+
+  it('rewrites a rolled day only when its figures move', async () => {
+    await seedRuns()
+    await rollSourceRuns(db, NOW)
+    await insertRows(db, 'source_runs', [
+      {
+        id: 'edgar:edgar-fts:late',
+        scope: 'edgar',
+        source_id: 'edgar-fts',
+        started_at: '2026-10-02T23:59:00.000Z',
+        status: 'failed',
+        detail: null,
+        snapshot_id: null,
+        added: 0,
+        removed: 0,
+        modified: 0,
+        source_url: 'https://efts.sec.gov/LATEST/search-index',
+      },
+    ])
+    const before = await db.select().from(schema.sourceRunDays)
+    await rollSourceRuns(db, new Date(NOW.getTime() + 3_600_000))
+    const after = await db.select().from(schema.sourceRunDays)
+    const fts = (rows: typeof after) =>
+      rows.find((r) => r.source_id === 'edgar-fts' && r.day === '2026-10-02')!
+    expect(fts(after).runs).toBe(fts(before).runs + 1)
+    // rolled_at is the first roll's time on every row, the moved one included.
+    expect(new Set(after.map((r) => r.rolled_at))).toEqual(new Set([NOW.toISOString()]))
   })
 
   it('measures an open gap to where the rollup counted, never to the clock', async () => {

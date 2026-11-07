@@ -36,7 +36,7 @@ import {
 import { riskFactorChanges } from '../pipeline/parsers/sec/prospectus-risk-factors'
 import { OPTIONAL_LINES } from '../pipeline/parsers/sec/prospectus-statement'
 import type { PipelineDb } from '../pipeline/store'
-import { readStamps, type QueryContext } from './terminal-db'
+import { sourceReads, type QueryContext } from './terminal-db'
 import { byString } from './terminal-json'
 import { filingIndexUrl, prospectusSourcePrefix } from './terminal-revenue'
 import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
@@ -230,7 +230,7 @@ export async function queryProspectus(db: PipelineDb, ctx: QueryContext): Promis
       })
       .from(tables.entities)
       .where(inArray(tables.entities.entity_type, [...DETAIL_TYPES])),
-    readStamps(db),
+    sourceReads(db).then((r) => r.cited),
   ])
 
   const issuers: ProspectusIssuerView[] = []

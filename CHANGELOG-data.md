@@ -19,9 +19,10 @@ the `X-Schema-Version` header on a CSV or a JSON array. The same history is on
 - A release that changes no column (a fix to how a value is read) is a patch.
 
 The test in `layers/terminal/test/terminal-dictionary.test.ts` fails a build
-whose columns don't match the releases in
-`layers/terminal/server/utils/data-schema.ts`, or whose version bump is smaller
-than its changes need.
+whose columns or version don't match `schema.lock.json`, or whose version bump
+is smaller than its changes need. `bun run schema:lock` rewrites the lock only
+when the newest release in `layers/terminal/server/utils/data-schema.ts` says
+exactly which columns changed.
 
 ## 1.6.0 (2026-11-07)
 

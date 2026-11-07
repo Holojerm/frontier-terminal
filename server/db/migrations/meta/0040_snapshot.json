@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "902c51ef-ed34-4702-a807-d907c7b6f519",
+  "id": "976ba435-a610-46a9-9bfa-3c64620bdf14",
   "prevId": "576776ac-d421-4523-8ca7-a65356481de6",
   "tables": {
     "alerts": {
@@ -84,6 +84,13 @@
           "columns": [
             "created_at",
             "id"
+          ],
+          "isUnique": false
+        },
+        "alerts_recorded_idx": {
+          "name": "alerts_recorded_idx",
+          "columns": [
+            "recorded_at"
           ],
           "isUnique": false
         }
@@ -1058,6 +1065,13 @@
             "decided_at"
           ],
           "isUnique": false
+        },
+        "class_map_decisions_decided_idx": {
+          "name": "class_map_decisions_decided_idx",
+          "columns": [
+            "decided_at"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {},
@@ -1696,8 +1710,8 @@
           "notNull": false,
           "autoincrement": false
         },
-        "figures_at": {
-          "name": "figures_at",
+        "vocabulary": {
+          "name": "vocabulary",
           "type": "text",
           "primaryKey": false,
           "notNull": false,
@@ -1711,61 +1725,8 @@
             "recorded_at"
           ],
           "isUnique": false
-        },
-        "gdelt_files_figures_idx": {
-          "name": "gdelt_files_figures_idx",
-          "columns": [
-            "figures_at",
-            "stamp"
-          ],
-          "isUnique": false
         }
       },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "gkg_backfills": {
-      "name": "gkg_backfills",
-      "columns": {
-        "alert_id": {
-          "name": "alert_id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "through_stamp": {
-          "name": "through_stamp",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "covered": {
-          "name": "covered",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "candidates": {
-          "name": "candidates",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "recorded_at": {
-          "name": "recorded_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {},
       "foreignKeys": {},
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
@@ -2249,276 +2210,6 @@
           "columns": [
             "recipe_id",
             "started_at"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "reported_articles": {
-      "name": "reported_articles",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "title_key": {
-          "name": "title_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "title": {
-          "name": "title",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "outlet": {
-          "name": "outlet",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "url": {
-          "name": "url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "published_at": {
-          "name": "published_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "found_at": {
-          "name": "found_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "raw_key": {
-          "name": "raw_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "source_url": {
-          "name": "source_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "fetched_at": {
-          "name": "fetched_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "reported_articles_key_idx": {
-          "name": "reported_articles_key_idx",
-          "columns": [
-            "title_key",
-            "published_at"
-          ],
-          "isUnique": false
-        },
-        "reported_articles_found_idx": {
-          "name": "reported_articles_found_idx",
-          "columns": [
-            "found_at",
-            "id"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "reported_figures": {
-      "name": "reported_figures",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "title_key": {
-          "name": "title_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "article_id": {
-          "name": "article_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "lab": {
-          "name": "lab",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "metric": {
-          "name": "metric",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "basis": {
-          "name": "basis",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "currency": {
-          "name": "currency",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "amount": {
-          "name": "amount",
-          "type": "real",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "amount_text": {
-          "name": "amount_text",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "period": {
-          "name": "period",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false,
-          "autoincrement": false
-        },
-        "published_at": {
-          "name": "published_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "judged_at": {
-          "name": "judged_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "source_url": {
-          "name": "source_url",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "fetched_at": {
-          "name": "fetched_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "reported_figures_lab_idx": {
-          "name": "reported_figures_lab_idx",
-          "columns": [
-            "lab",
-            "metric",
-            "published_at"
-          ],
-          "isUnique": false
-        },
-        "reported_figures_judged_idx": {
-          "name": "reported_figures_judged_idx",
-          "columns": [
-            "judged_at",
-            "id"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "reported_reviews": {
-      "name": "reported_reviews",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "title_key": {
-          "name": "title_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "figures": {
-          "name": "figures",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "judged_at": {
-          "name": "judged_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "reported_reviews_judged_idx": {
-          "name": "reported_reviews_judged_idx",
-          "columns": [
-            "judged_at",
-            "id"
           ],
           "isUnique": false
         }
@@ -3395,38 +3086,6 @@
           "columns": [
             "judged_at",
             "id"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "webhook_alert_log": {
-      "name": "webhook_alert_log",
-      "columns": {
-        "alert_id": {
-          "name": "alert_id",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "seen_at": {
-          "name": "seen_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "webhook_alert_log_seen_idx": {
-          "name": "webhook_alert_log_seen_idx",
-          "columns": [
-            "seen_at"
           ],
           "isUnique": false
         }

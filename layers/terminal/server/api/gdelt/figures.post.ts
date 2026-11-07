@@ -1,13 +1,12 @@
-// POST /api/gdelt/figures — the figure rows of one GKG file the track record
+// POST /api/gdelt/figures — the figure headlines of one GKG file the press side
 // read before reported figures existed, for a file /api/gdelt/work listed under
-// `figure_files`. The Worker parses and matches each row again before it keeps
-// it (recordFigureFile). 409 for a file that is not listed or already read.
+// `figure_files`, compacted like a mention. The Worker matches each headline
+// again before it keeps it (recordFigureFile). 409 for a file that is not
+// listed or already read.
 
-import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
 import { z } from 'zod'
 
-import { blobRawStore } from '../../pipeline/poll'
 import { MAX_FIGURES_PER_FILE, recordFigureFile } from '../../pipeline/reported/store'
 import { requireGdeltToken } from '../../utils/gdelt-auth'
 
@@ -17,7 +16,16 @@ const FETCHED_AT_SLACK_MS = 15 * 60_000
 const Body = z.object({
   stamp: z.string().regex(/^\d{14}$/),
   fetched_at: z.string().datetime(),
-  figures: z.array(z.string().max(200_000)).max(MAX_FIGURES_PER_FILE),
+  figures: z
+    .array(
+      z.object({
+        record_id: z.string().min(1).max(100),
+        outlet: z.string().max(300),
+        url: z.string().url().max(2_000),
+        title: z.string().min(1).max(1_000),
+      }),
+    )
+    .max(MAX_FIGURES_PER_FILE),
 })
 
 export default defineEventHandler(async (event) => {
@@ -31,7 +39,6 @@ export default defineEventHandler(async (event) => {
   }
   const outcome = await recordFigureFile(
     db,
-    blobRawStore(blob),
     { ...body, fetched_at: new Date(fetchedAt).toISOString() },
     now,
   )

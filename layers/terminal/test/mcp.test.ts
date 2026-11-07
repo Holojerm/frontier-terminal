@@ -3,13 +3,16 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
+import handlerSource from '~~/layers/terminal/server/utils/terminal-handler.ts?raw'
 import type { SourceFetcher } from '../server/pipeline/fetch'
 import { runRefresh, type RawStore } from '../server/pipeline/refresh'
 import { includeSources } from '../server/pipeline/sources'
 import { ALERT_SEARCH_DEPTH, createTerminalMcpHandler, type McpDeps } from '../server/utils/mcp'
 import { assertKnowable, pointInTimeMeta, pollStampAt } from '../server/utils/terminal-asof'
-import { terminalStamp } from '../server/utils/terminal-cache'
+import { SCHEMA_VERSION } from '../server/utils/data-schema'
+import { terminalStamps } from '../server/utils/terminal-cache'
 import { queryContext } from '../server/utils/terminal-db'
+import { served } from '../server/utils/terminal-envelope'
 import { fixtureText, manifest } from './pipeline/fixtures'
 
 // The MCP endpoint over HTTP, as a client speaks it: a legacy (2025-era)
@@ -63,15 +66,15 @@ const LLMS = '# Frontier Terminal\n\n> A fixture llms.txt.\n'
 
 const deps: McpDeps = {
   db,
+  // terminalPayload and terminalPayloadAt without the KV cache, enveloped as they are.
   serve: async (_name, query) =>
-    query(queryContext(sourcesYaml, await terminalStamp(db), FIXED_NOW)),
-  // terminalPayloadAt without the KV cache.
+    served(await query(queryContext(sourcesYaml, (await terminalStamps(db)).poll, FIXED_NOW))),
   serveAt: async (_name, at, query) => {
     await assertKnowable(db, at)
     const ctx = queryContext(sourcesYaml, await pollStampAt(db, at), FIXED_NOW, at)
     const data = await query(ctx)
     return (
-      data === null ? null : { ...data, point_in_time: pointInTimeMeta(at, ctx.notes) }
+      data === null ? null : served({ ...data, point_in_time: pointInTimeMeta(at, ctx.notes) })
     ) as never
   },
   llmsTxt: LLMS,
@@ -537,6 +540,20 @@ describe('tools/call', () => {
     const vague = await tool('get_revenue', { as_of: '2026-09-07' })
     expect(vague.isError).toBe(true)
     expect(vague.content[0]!.text).toContain('timezone')
+  })
+
+  it('carries schema_version, as the JSON routes do', async () => {
+    // Both payload doors return through served(), so a tool result is
+    // enveloped exactly like the route's; this fake does the same.
+    for (const door of ['terminalPayload', 'terminalPayloadAt']) {
+      const body = handlerSource.split(`export async function ${door}`)[1]!.split('\n}\n')[0]!
+      expect(body).toMatch(/return served\(/)
+    }
+    const now = (await tool('get_prices')).structuredContent!
+    expect(now.schema_version).toBe(SCHEMA_VERSION)
+    expect(Object.keys(now)[0]).toBe('schema_version')
+    const then = (await tool('get_alerts', { as_of: '2026-09-07T11:00:00Z' })).structuredContent!
+    expect(then.schema_version).toBe(SCHEMA_VERSION)
   })
 
   it('rejects arguments the schema does not allow', async () => {

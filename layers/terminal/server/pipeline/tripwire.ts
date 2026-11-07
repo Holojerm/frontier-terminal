@@ -1,6 +1,8 @@
 import { eq } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
+import type { ClassEntry } from '../utils/terminal-classes'
+import { effectiveClassMap } from './class-map'
 import { laneFor } from './lanes'
 import { withPollLock } from './lock'
 import { manifestFixtures } from './parsers/fixture-provenance'
@@ -103,6 +105,7 @@ async function differs(
   source: FetchSource,
   fetchedAt: string,
   sources: readonly FetchSource[],
+  classMap: readonly ClassEntry[],
 ): Promise<boolean> {
   const lane = laneFor(source.source_id)
   if (!lane) return false
@@ -132,6 +135,10 @@ async function differs(
     pendingFilers: { filers: [], exclude: [] },
     resolvedProviders: new Set(),
     derivedKey: null,
+    // The map refresh stores its check rows under. With the seed instead, a
+    // cell a judge re-mapped parses differently from its stored row on every
+    // tick, and the tripwire never goes quiet again.
+    classMap,
   })
   // A page that parses to nothing is an outage page, not a change (refresh
   // refuses to record a mass removal from one either).
@@ -147,13 +154,14 @@ export async function runTripwire(deps: PollDeps): Promise<TripwireOutcome> {
   if (isPollInstant(now)) return { status: 'yielded' }
 
   const sources = includeSources(deps.sourcesYaml, manifestFixtures)
+  const classMap = await effectiveClassMap(deps.db)
   const by: string[] = []
   for (const id of TRIPWIRE_SOURCES) {
     const source = sources.find((s) => s.source_id === id)
     if (!source) throw new Error(`tripwire names a source not in sources.yaml: ${id}`)
     if ((await lock.get(cooldownKey(id))) !== null) continue
     try {
-      if (await differs(deps, source, now.toISOString(), sources)) by.push(id)
+      if (await differs(deps, source, now.toISOString(), sources, classMap)) by.push(id)
     } catch (err) {
       // A parse error here is the regular poll's to record, with the snapshot.
       console.warn(

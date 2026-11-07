@@ -5,19 +5,22 @@
 // token: no secret, and no write path into the site.
 //
 // One read returns the last 100 runs, so a read GitHub refuses loses nothing:
-// the next good read fills the gap. Refusals are the normal case without a
-// token. The unauthenticated REST limit is 60 an hour per IP, Workers share
-// egress IPs with every other tenant, and the first production read
-// (2026-11-05 06:41) got a 403 with the hour's budget already spent. So the
-// read runs on the five-minute tick, goes out at most once per READ_EVERY_MS
-// once one succeeds, parks until GitHub's reset after a 403 or 429, and sends
-// the stored ETag (a 304 doesn't count against the limit). NUXT_GITHUB_TOKEN,
-// when set, authenticates the read (5,000 an hour, per token); any token
-// that can read public repositories will do.
+// the next good read fills the gap. The read runs hourly, authenticated by
+// NUXT_GITHUB_TOKEN (5,000 an hour, per token; any token that can read public
+// repositories will do). Without one, refusals are the normal case: the
+// unauthenticated REST limit is 60 an hour per IP, Workers share egress IPs
+// with every other tenant, and the first production read (2026-11-05 06:41)
+// got a 403 with the hour's budget already spent. So a 403 or 429 parks the
+// read until GitHub's reset, and the stored ETag is sent (a 304 doesn't count
+// against the limit).
+//
+// A newly failed run also spools deploy_smoke_failed: GitHub mails a failed
+// run to whoever triggered it, and under the merge queue that is a bot.
 
-import { sql } from 'drizzle-orm'
+import { inArray, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
+import { recordOpsEvent } from '#server/utils/ops'
 import { chunk, rowsPerStatement, runStatements, type PipelineDb } from '../store'
 
 export const SMOKE_WORKFLOW = 'post-deploy-smoke.yml'
@@ -26,11 +29,8 @@ export const GITHUB_USER_AGENT =
 
 const ETAG_KEY = 'reliability:github:etag'
 const BACKOFF_KEY = 'reliability:github:backoff-until'
-const NEXT_KEY = 'reliability:github:next-read'
-/** How often a read goes out once one has succeeded. */
-export const READ_EVERY_MS = 55 * 60 * 1000
-/** How soon a read that failed outright (a timeout, a 5xx) is tried again. */
-const RETRY_FAILED_MS = 15 * 60 * 1000
+/** Conclusions the page tallies as failed. */
+const FAILED = ['failure', 'timed_out']
 /** Longest a refused read parks the next ones, when GitHub names no reset time. */
 const DEFAULT_BACKOFF_MS = 60 * 60 * 1000
 
@@ -120,7 +120,6 @@ export interface ReliabilityKv {
 export type DeployReport =
   | { status: 'stored'; runs: number }
   | { status: 'not-modified' }
-  | { status: 'not-due'; next: string }
   | { status: 'parked'; until: string }
   | { status: 'rate-limited'; until: string }
   | { status: 'failed'; detail: string }
@@ -156,12 +155,6 @@ export async function recordDeployChecks(
   const nowIso = deps.now.toISOString()
   const parked = await deps.kv.get(BACKOFF_KEY)
   if (typeof parked === 'string' && parked > nowIso) return { status: 'parked', until: parked }
-  const next = await deps.kv.get(NEXT_KEY)
-  if (typeof next === 'string' && next > nowIso) return { status: 'not-due', next }
-  const schedule = (ms: number) => {
-    const at = new Date(deps.now.getTime() + ms).toISOString()
-    return deps.kv.set(NEXT_KEY, at, { ttl: Math.ceil(ms / 1000) })
-  }
 
   const url = workflowRunsUrl(slug)
   // An ETag is only worth sending for rows we still hold; a 304 to an empty table would keep it empty.
@@ -183,13 +176,11 @@ export async function recordDeployChecks(
       signal: AbortSignal.timeout(20_000),
     })
   } catch (error) {
-    await schedule(RETRY_FAILED_MS)
     return { status: 'failed', detail: String(error) }
   }
   if (response.status === 304) {
     // Nothing changed, but the rows were read now.
     await db.update(tables.deployChecks).set({ fetched_at: nowIso })
-    await schedule(READ_EVERY_MS)
     return { status: 'not-modified' }
   }
   if (response.status === 403 || response.status === 429) {
@@ -199,11 +190,21 @@ export async function recordDeployChecks(
     return { status: 'rate-limited', until }
   }
   if (!response.ok) {
-    await schedule(RETRY_FAILED_MS)
     return { status: 'failed', detail: `GitHub answered ${response.status}` }
   }
 
   const rows = parseWorkflowRuns(await response.json(), { source_url: url, fetched_at: nowIso })
+  // Failures not yet stored. None on the first read of an empty table, which would replay them all.
+  const known = held
+    ? await db
+        .select({ id: tables.deployChecks.run_id })
+        .from(tables.deployChecks)
+        .where(inArray(tables.deployChecks.conclusion, FAILED))
+    : null
+  const seen = new Set(known?.map((k) => k.id))
+  const newlyFailed = known
+    ? rows.filter((r) => FAILED.includes(r.conclusion ?? '') && !seen.has(r.run_id))
+    : []
   await runStatements(
     db,
     chunk(rows, rowsPerStatement(9)).map((group) =>
@@ -219,12 +220,21 @@ export async function recordDeployChecks(
             source_url: sql`excluded.source_url`,
             fetched_at: sql`excluded.fetched_at`,
           },
+          // Most of the 100 runs are settled. fetched_at alone is not a change:
+          // the 304 path advances it, and the page reads only its max.
+          setWhere: sql`(${tables.deployChecks.status}, ${tables.deployChecks.conclusion}, ${tables.deployChecks.updated_at}, ${tables.deployChecks.source_url}) is not (excluded.status, excluded.conclusion, excluded.updated_at, excluded.source_url)`,
         }),
     ),
   )
+  // After the rows are stored, so a failed write reports these again on the next read.
+  for (const run of newlyFailed) {
+    await recordOpsEvent(db, {
+      kind: 'deploy_smoke_failed',
+      detail: `post-deploy smoke test failed on ${run.head_sha.slice(0, 7)}: ${run.html_url}`,
+    })
+  }
   // Stored only after the rows are: an ETag for a page not written would 304 the retry.
   const tag = response.headers.get('etag')
   if (tag) await deps.kv.set(ETAG_KEY, tag, { ttl: 7 * 24 * 3600 })
-  await schedule(READ_EVERY_MS)
   return { status: 'stored', runs: rows.length }
 }

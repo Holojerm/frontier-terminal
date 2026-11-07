@@ -4,10 +4,10 @@
 // each lab's newest Internet Archive copy by then (terminal-archive.ts).
 
 import { queryHiring } from '../utils/terminal-db'
-import { serveTerminalAsOf, terminalDb } from '../utils/terminal-handler'
+import { serveTerminal, terminalDb } from '../utils/terminal-handler'
 import { rateLimitTerminal } from '../utils/api-access'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'hiring', limit: 60, windowSeconds: 60 })
-  return serveTerminalAsOf(event, 'hiring', (ctx) => queryHiring(terminalDb, ctx), '', 'hiring')
+  return serveTerminal(event, 'hiring', (ctx) => queryHiring(terminalDb, ctx), { asOf: 'hiring' })
 })

@@ -1,8 +1,7 @@
 // Cron task: read the post-deploy smoke results from GitHub for
 // /data#reliability (layers/terminal/server/pipeline/reliability/deploys.ts).
-// On the five-minute tick, but a read goes out at most hourly once one has
-// succeeded, and not at all while GitHub has refused us. A refusal is
-// expected without a token and only logged.
+// Hourly, and not at all while GitHub has refused us. A refusal is expected
+// without a token and only logged.
 
 import { db } from '@nuxthub/db'
 import { kv } from '@nuxthub/kv'

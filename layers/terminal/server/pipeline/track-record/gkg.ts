@@ -10,7 +10,8 @@
 // and ~8 MB unzipped). What a row carries that the track record uses: the
 // record id, DATE (the quarter hour GDELT read it, UTC), the outlet's domain,
 // the article URL, its <PAGE_TITLE>, and the names GDELT found in its text.
-// The rows that matched an alert are kept whole in R2.
+// Rows naming a tracked lab, filer or model family are kept, compacted, for
+// matching (mentions.ts).
 
 /** The first quarter hour read: the earliest track-record window (2026-09-08) starts 7 days before. */
 export const GKG_FROM = '2026-09-01T00:00:00.000Z'

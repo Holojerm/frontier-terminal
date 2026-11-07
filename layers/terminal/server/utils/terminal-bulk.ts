@@ -5,13 +5,18 @@
 // Two cuts per table. `recent` is what /export/<table>.csv serves by default
 // (the trailing LICENSE_WINDOW_DAYS, CC BY 4.0), and it's what an anonymous
 // caller's manifest lists. `full` is every row, labeled per row with its
-// license, the older ones PAID_LICENSE: only a licensee's key sees it. Each
-// cut is written in both formats from one pass over the table.
+// license, the older ones PAID_LICENSE: only a licensee's key sees it. Both
+// cuts, in both formats, come from one pass over the table: `recent` is the
+// `full` rows dated inside the window, without the license column. A table
+// that isn't cut by age is the same in both, so it is written once and both
+// index entries name that one file.
 //
-// The `full` files are also copied to a second bucket that holds nothing else
-// (LICENSED_BUCKET), with a manifest of their own. A licensee's S3 credentials
-// are scoped to that bucket, read-only (scripts/bulk-grant.ts), so S3 access can
-// never reach the raw payloads or anything anonymous callers can't see either.
+// The `full` files live in a second bucket that holds nothing else
+// (LICENSED_BUCKET), with a manifest of their own, and /export/bulk/full/*
+// serves them from there. A licensee's S3 credentials are scoped to that
+// bucket, read-only (scripts/bulk-grant.ts), so S3 access can never reach the
+// raw payloads or anything anonymous callers can't see either. A Worker
+// without the binding (local dev, tests) keeps them in the blob store.
 //
 // Built by a cron (tasks/bulk/build.ts), not on request. A request for a file
 // is then one R2 read and no D1 at all, however many licensees sync, and each
@@ -44,10 +49,13 @@ import type { PipelineDb } from '../pipeline/store'
 import { SCHEMA_VERSION, tableChangedAfter } from './data-schema'
 import {
   ARCHIVED_EXPORTS,
+  EXPORT_PAGE_SIZE,
   EXPORT_TABLES,
   LICENSE_COLUMN,
   csvLine,
   exportPages,
+  historyRule,
+  inWindow,
   licenseWindow,
   type ExportTable,
 } from './terminal-export'
@@ -74,9 +82,6 @@ export const BULK_INDEX_PATH = 'bulk/index.json'
  */
 export const BUILD_BUDGET_MS = 8 * 60_000
 
-/** Rows per D1 read in a build. Five times /export's page: the build reads every row of every table. */
-export const BULK_PAGE_SIZE = 1_000
-
 /**
  * D1 queries a run may plan for. D1 refuses a Worker invocation's queries past
  * its per-invocation limit (1,000 on Workers Paid), so a run stops starting
@@ -88,7 +93,7 @@ export const D1_READ_BUDGET = 800
 /** The D1 reads a cut of `table` costs: its pages at its row count last time, plus the empty last read. */
 export function d1Reads(index: BulkIndex, table: string): number {
   const rows = index.files[indexKey('full', table, 'csv.gz')]?.rows ?? 0
-  return Math.ceil(rows / BULK_PAGE_SIZE) + 1
+  return Math.ceil(rows / EXPORT_PAGE_SIZE) + 1
 }
 
 export const bulkPath = (variant: BulkVariant, table: string, format: BulkFormat) =>
@@ -119,8 +124,13 @@ export interface BulkFile {
   license_older: string | null
   /** The first day the recent window keeps, or null for a file with every row. */
   from: string | null
-  /** A `full` file that is also in LICENSED_BUCKET. */
-  licensed_copy?: boolean
+  /** Where the bytes are. A whole table's `recent` and `full` entries name the same object. */
+  stored: StoredAt
+}
+
+export interface StoredAt {
+  in: 'blob' | 'licensed'
+  key: string
 }
 
 export interface BulkIndex {
@@ -139,11 +149,12 @@ export interface BulkStore {
   get(pathname: string): Promise<Blob | null>
 }
 
-/** Where the `full` files are copied for S3 access. Only written to. */
-export type LicensedStore = Pick<BulkStore, 'put'>
+/** LICENSED_BUCKET, where the `full` files live for S3 access and /export/bulk/full/*. */
+export type LicensedStore = BulkStore
 
-/** The R2 binding's put, as much of it as the copy uses. */
-interface R2PutBinding {
+/** The R2 binding, as much of it as the feed uses. */
+interface R2Binding {
+  get(key: string): Promise<{ blob(): Promise<Blob> } | null>
   put(
     key: string,
     value: string | Uint8Array,
@@ -162,9 +173,10 @@ interface R2PutBinding {
  */
 export function licensedStoreOf(env: unknown): LicensedStore | null {
   const binding = (env as Record<string, unknown> | null | undefined)?.[LICENSED_BINDING]
-  if (typeof (binding as R2PutBinding | undefined)?.put !== 'function') return null
-  const bucket = binding as R2PutBinding
+  if (typeof (binding as R2Binding | undefined)?.put !== 'function') return null
+  const bucket = binding as R2Binding
   return {
+    get: async (key) => (await bucket.get(key))?.blob() ?? null,
     put: (key, body, options) =>
       bucket.put(key, body, {
         httpMetadata: { contentType: options?.contentType },
@@ -178,21 +190,35 @@ export function licensedStoreOf(env: unknown): LicensedStore | null {
 const indexKey = (variant: BulkVariant, table: string, format: BulkFormat) =>
   `${variant}/${table}.${format}`
 
+type LegacyBulkFile = Omit<BulkFile, 'format' | 'stored'> &
+  Partial<Pick<BulkFile, 'format' | 'stored'>> & { licensed_copy?: boolean }
+
 export async function readBulkIndex(store: BulkStore): Promise<BulkIndex> {
   const body = await store.get(BULK_INDEX_PATH)
   if (!body) return { files: {} }
   try {
     const parsed = JSON.parse(await body.text()) as Partial<BulkIndex>
     const files: Record<string, BulkFile> = {}
-    const failures = parsed.failures ?? {}
-    for (const f of Object.values(parsed.files ?? {})) {
-      // An entry from before Parquet was a CSV keyed `<variant>/<table>`. Its
-      // file is still at the same path, so it keeps being served until the
-      // next build replaces it.
+    // Failures were once keyed per cut (`<variant>/<table>`); a table builds both now.
+    const failures = Object.fromEntries(
+      Object.entries(parsed.failures ?? {}).filter(([key]) => !key.includes('/')),
+    )
+    for (const f of Object.values(parsed.files ?? {}) as LegacyBulkFile[]) {
+      // An entry from before Parquet was a CSV keyed `<variant>/<table>`, and
+      // one from before `stored` was in the blob store, its `full` files also
+      // copied to LICENSED_BUCKET when licensed_copy says so. Those files are
+      // still there, so they keep being served until the next build.
+      const { licensed_copy, ...rest } = f
+      const format = f.format ?? 'csv.gz'
       const file: BulkFile = {
-        ...f,
-        format: f.format ?? 'csv.gz',
+        ...rest,
+        format,
         license_older: f.license_older ?? null,
+        stored:
+          f.stored ??
+          (licensed_copy
+            ? { in: 'licensed', key: licensedKey(f.table, format) }
+            : { in: 'blob', key: bulkPath(f.variant, f.table, format) }),
       }
       files[indexKey(file.variant, file.table, file.format)] = file
     }
@@ -239,45 +265,69 @@ async function sha256Of(body: Uint8Array<ArrayBuffer>): Promise<string> {
   return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, '0')).join('')
 }
 
+/** One file pair a pass writes: the rows of the pass that `keep` keeps, in `table`'s columns. */
+export interface BulkSink {
+  table: ExportTable
+  /** The Parquet file's key-value metadata (parquetMeta). */
+  meta: Readonly<Record<string, string>>
+  keep?: (row: Record<string, unknown>) => boolean
+}
+
 /**
- * `table` as a gzipped CSV and a Parquet file, from one pass over its pages.
- * `meta` is the Parquet file's key-value metadata (terminal-parquet.ts).
+ * Each sink as a gzipped CSV and a Parquet file, all from one pass over
+ * `source`'s pages. A sink's columns are a subset of the source's.
  */
 export async function bulkFiles(
   db: PipelineDb,
-  table: ExportTable,
-  meta: Readonly<Record<string, string>>,
-): Promise<Record<BulkFormat, BuiltFile>> {
-  const gzip = new CompressionStream('gzip')
-  // DOM's lib types CompressionStream's writable side as BufferSource, which
-  // a Uint8Array writer won't take. Same stream at runtime.
-  const gzipped = new Response(gzip.readable as ReadableStream<Uint8Array>).arrayBuffer()
-  const csv = (gzip.writable as WritableStream<Uint8Array>).getWriter()
+  source: ExportTable,
+  sinks: readonly BulkSink[],
+): Promise<Record<BulkFormat, BuiltFile>[]> {
   const encoder = new TextEncoder()
-  const parquet = parquetBuilder(table, meta)
-  // Counted off the pages: a quoted cell can hold a line break, so lines aren't rows.
-  let rows = 0
-  try {
-    await csv.write(encoder.encode(csvLine(table.columns)))
-    for await (const page of exportPages(db, table, undefined, BULK_PAGE_SIZE)) {
-      rows += page.length
-      await csv.write(
-        encoder.encode(page.map((row) => csvLine(table.columns.map((c) => row[c]))).join('')),
-      )
-      parquet.add(page)
+  const open = sinks.map((sink) => {
+    const gzip = new CompressionStream('gzip')
+    return {
+      sink,
+      // DOM's lib types CompressionStream's writable side as BufferSource, which
+      // a Uint8Array writer won't take. Same stream at runtime.
+      gzipped: new Response(gzip.readable as ReadableStream<Uint8Array>).arrayBuffer(),
+      csv: (gzip.writable as WritableStream<Uint8Array>).getWriter(),
+      parquet: parquetBuilder(sink.table, sink.meta),
+      // Counted off the pages: a quoted cell can hold a line break, so lines aren't rows.
+      rows: 0,
     }
-    await csv.close()
+  })
+  try {
+    for (const o of open) await o.csv.write(encoder.encode(csvLine(o.sink.table.columns)))
+    for await (const page of exportPages(db, source)) {
+      for (const o of open) {
+        const rows = o.sink.keep ? page.filter(o.sink.keep) : page
+        if (!rows.length) continue
+        o.rows += rows.length
+        const { columns } = o.sink.table
+        await o.csv.write(
+          encoder.encode(rows.map((row) => csvLine(columns.map((c) => row[c]))).join('')),
+        )
+        o.parquet.add(rows)
+      }
+    }
+    for (const o of open) await o.csv.close()
   } catch (error) {
-    await csv.abort(error).catch(() => {})
-    await gzipped.catch(() => {})
+    for (const o of open) {
+      await o.csv.abort(error).catch(() => {})
+      await o.gzipped.catch(() => {})
+    }
     throw error
   }
-  const csvBody = new Uint8Array(await gzipped)
-  const parquetFile = parquet.finish()
-  return {
-    'csv.gz': { body: csvBody, rows, sha256: await sha256Of(csvBody) },
-    parquet: { ...parquetFile, sha256: await sha256Of(parquetFile.body) },
-  }
+  return Promise.all(
+    open.map(async (o) => {
+      const csvBody = new Uint8Array(await o.gzipped)
+      const parquetFile = o.parquet.finish()
+      return {
+        'csv.gz': { body: csvBody, rows: o.rows, sha256: await sha256Of(csvBody) },
+        parquet: { ...parquetFile, sha256: await sha256Of(parquetFile.body) },
+      }
+    }),
+  )
 }
 
 /** What a Parquet file says about itself, in its key-value metadata. */
@@ -302,17 +352,17 @@ export function parquetMeta(
 }
 
 export interface BulkBuildReport {
-  /** `<variant>/<table>`: each cut built is both its files. */
+  /** Tables built: both cuts, both formats. */
   built: string[]
   failed: { file: string; error: string }[]
-  /** Cuts left for the next run because the budget ran out. */
+  /** Tables left for the next run because the budget ran out. */
   deferred: string[]
 }
 
 /**
  * Whether `variant`'s cut of `table` is already built today, with the columns
- * it has now, and copied everywhere it goes. A file built under an older
- * schema version still counts unless a release since then changed this table.
+ * it has now, and stored where it goes. A file built under an older schema
+ * version still counts unless a release since then changed this table.
  */
 export function isCurrent(
   index: BulkIndex,
@@ -330,42 +380,32 @@ export function isCurrent(
       !tableChangedAfter(table, f.schema_version) &&
       f.columns.length === columns.length &&
       f.columns.every((c, i) => c === columns[i]) &&
-      (variant !== 'full' || !licensed || f.licensed_copy === true)
+      (variant !== 'full' || !licensed || f.stored.in === 'licensed')
     )
   })
 }
 
-interface DueCut {
-  key: string
-  variant: BulkVariant
-  table: string
-}
-
 /**
- * The order a run builds its cuts in: those that haven't failed today first,
- * then by how many rows they had last time, smallest (or never built) first.
- * So the cheap tables are done early, and a table that fails every time is
- * tried once, last, instead of first in every run.
+ * The order a run builds its tables in: those that haven't failed today
+ * first, then by how many rows they had last time, smallest (or never built)
+ * first. So the cheap tables are done early, and a table that fails every
+ * time is tried once, last, instead of first in every run.
  */
-export function buildOrder<C extends DueCut>(
-  index: BulkIndex,
-  cuts: readonly C[],
-  today: string,
-): C[] {
-  const failedToday = (key: string) => index.failures?.[key]?.at.slice(0, 10) === today
-  const rows = (c: C) => index.files[indexKey(c.variant, c.table, 'csv.gz')]?.rows ?? 0
-  return [...cuts].sort(
+export function buildOrder(index: BulkIndex, tables: readonly string[], today: string): string[] {
+  const failedToday = (table: string) => index.failures?.[table]?.at.slice(0, 10) === today
+  const rows = (table: string) => index.files[indexKey('full', table, 'csv.gz')]?.rows ?? 0
+  return [...tables].sort(
     (a, b) =>
-      Number(failedToday(a.key)) - Number(failedToday(b.key)) ||
+      Number(failedToday(a)) - Number(failedToday(b)) ||
       rows(a) - rows(b) ||
-      (a.key < b.key ? -1 : a.key > b.key ? 1 : 0),
+      (a < b ? -1 : a > b ? 1 : 0),
   )
 }
 
 /**
- * Build every cut that isCurrent says isn't, in buildOrder, until the time
- * budget is spent. Saves the index after each cut, then writes the licensed
- * bucket's manifest when a `full` cut changed.
+ * Build every table isCurrent says isn't, in buildOrder, until the time
+ * budget is spent. Saves the index after each table, then writes the licensed
+ * bucket's manifest when anything was built.
  */
 export async function runBulkBuild(deps: {
   db: PipelineDb
@@ -391,70 +431,102 @@ export async function runBulkBuild(deps: {
   const saveIndex = () =>
     deps.store.put(BULK_INDEX_PATH, JSON.stringify(index), { contentType: 'application/json' })
 
-  const due = Object.entries(tables).flatMap(([name, table]) =>
-    BULK_VARIANTS.flatMap((variant) => {
-      const cut = bulkTable(name, table, variant, from)
-      return isCurrent(index, variant, name, cut.table.columns, today, licensed !== null)
-        ? []
-        : [{ key: `${variant}/${name}`, variant, table: name, cut }]
-    }),
-  )
+  const cutsOf = (name: string, table: ExportTable) => ({
+    recent: bulkTable(name, table, 'recent', from),
+    full: bulkTable(name, table, 'full', from),
+  })
+  const due = Object.entries(tables)
+    .filter(([name, table]) => {
+      const cuts = cutsOf(name, table)
+      return !BULK_VARIANTS.every((variant) =>
+        isCurrent(index, variant, name, cuts[variant].table.columns, today, licensed !== null),
+      )
+    })
+    .map(([name]) => name)
   // A table no longer exported drops out of the index (its files stay in R2, unlisted).
   for (const key of Object.keys(index.files)) {
     if (!(index.files[key]!.table in tables)) delete index.files[key]
   }
 
   let reads = 0
-  for (const { key, variant, table: name, cut } of buildOrder(index, due, today)) {
+  for (const name of buildOrder(index, due, today)) {
     const cost = d1Reads(index, name)
     const overReads = reads > 0 && reads + cost > (deps.d1ReadBudget ?? D1_READ_BUDGET)
     if (now().getTime() - start.getTime() > budget || overReads) {
-      report.deferred.push(key)
+      report.deferred.push(name)
       continue
     }
     reads += cost
     try {
       const generatedAt = start.toISOString()
-      const files = await bulkFiles(
+      const cuts = cutsOf(name, tables[name]!)
+      const rule = historyRule(name)
+      const sink = (variant: BulkVariant): BulkSink => ({
+        table: cuts[variant].table,
+        meta: parquetMeta(name, variant, cuts[variant], generatedAt),
+      })
+      // A whole table's two cuts are the same rows: one file pair serves both.
+      const [full, recent = full] = await bulkFiles(
         deps.db,
-        cut.table,
-        parquetMeta(name, variant, cut, generatedAt),
+        cuts.full.table,
+        rule.kind === 'whole'
+          ? [sink('full')]
+          : [sink('full'), { ...sink('recent'), keep: (row) => inWindow(rule, row, from) }],
       )
-      for (const format of BULK_FORMATS) {
-        const { body, sha256 } = files[format]
-        const contentType = BULK_CONTENT_TYPES[format]
-        await deps.store.put(bulkPath(variant, name, format), body, { contentType })
-        if (variant === 'full' && licensed) {
-          await licensed.put(licensedKey(name, format), body, { contentType, sha256 })
+      const built = { full: full!, recent: recent! }
+      // The full pair lives in LICENSED_BUCKET, and a whole table's recent entry names it too.
+      const storedAt = (variant: BulkVariant, format: BulkFormat): StoredAt =>
+        variant === 'recent' && rule.kind !== 'whole'
+          ? { in: 'blob', key: bulkPath('recent', name, format) }
+          : licensed
+            ? { in: 'licensed', key: licensedKey(name, format) }
+            : { in: 'blob', key: bulkPath('full', name, format) }
+
+      const written = new Set<string>()
+      for (const variant of BULK_VARIANTS) {
+        for (const format of BULK_FORMATS) {
+          const { body, sha256 } = built[variant][format]
+          const stored = storedAt(variant, format)
+          const contentType = BULK_CONTENT_TYPES[format]
+          if (written.has(stored.key)) continue
+          written.add(stored.key)
+          if (stored.in === 'licensed') {
+            await licensed!.put(stored.key, body, { contentType, sha256 })
+          } else {
+            await deps.store.put(stored.key, body, { contentType })
+          }
         }
       }
-      for (const format of BULK_FORMATS) {
-        const { body, rows, sha256 } = files[format]
-        index.files[indexKey(variant, name, format)] = {
-          table: name,
-          variant,
-          format,
-          rows,
-          bytes: body.byteLength,
-          sha256,
-          generated_at: generatedAt,
-          schema_version: SCHEMA_VERSION,
-          columns: [...cut.table.columns],
-          license: cut.license,
-          license_older: cut.older?.id ?? null,
-          from: cut.from,
-          ...(variant === 'full' ? { licensed_copy: licensed !== null } : {}),
+      for (const variant of BULK_VARIANTS) {
+        const cut = cuts[variant]
+        for (const format of BULK_FORMATS) {
+          const { body, rows, sha256 } = built[variant][format]
+          index.files[indexKey(variant, name, format)] = {
+            table: name,
+            variant,
+            format,
+            rows,
+            bytes: body.byteLength,
+            sha256,
+            generated_at: generatedAt,
+            schema_version: SCHEMA_VERSION,
+            columns: [...cut.table.columns],
+            license: cut.license,
+            license_older: cut.older?.id ?? null,
+            from: cut.from,
+            stored: storedAt(variant, format),
+          }
         }
       }
-      delete failures[key]
-      report.built.push(key)
+      delete failures[name]
+      report.built.push(name)
     } catch (error) {
-      failures[key] = { at: now().toISOString(), error: String(error) }
-      report.failed.push({ file: key, error: String(error) })
+      failures[name] = { at: now().toISOString(), error: String(error) }
+      report.failed.push({ file: name, error: String(error) })
     }
     await saveIndex()
   }
-  if (licensed && report.built.some((key) => key.startsWith('full/'))) {
+  if (licensed && report.built.length) {
     const manifest = bulkManifest(index, 'full', deps.appUrl ?? '')
     await licensed.put(LICENSED_MANIFEST_KEY, JSON.stringify(manifest, null, 2), {
       contentType: 'application/json',

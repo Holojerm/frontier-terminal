@@ -53,6 +53,5 @@ export async function collectTerminalCounters(
     lastFailureMs: await lastTick('', true),
     lastTripwireRunMs: await lastTick('tripwire', false),
     launchStaleCells: coverage.stale_cells.length,
-    launchUnalerted: coverage.unalerted.length,
   }
 }

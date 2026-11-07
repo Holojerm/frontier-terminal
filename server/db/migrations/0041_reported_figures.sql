@@ -6,7 +6,7 @@ CREATE TABLE `reported_articles` (
 	`url` text NOT NULL,
 	`published_at` text NOT NULL,
 	`found_at` text NOT NULL,
-	`raw_key` text,
+	`record_id` text NOT NULL,
 	`source_url` text NOT NULL,
 	`fetched_at` text NOT NULL
 );

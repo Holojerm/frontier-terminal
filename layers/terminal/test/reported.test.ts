@@ -38,17 +38,12 @@ const NOW = new Date('2026-11-07T12:00:00Z')
 const figureRows = figureRowsFixture.split('\n').filter((l) => l.trim())
 const articles = figureRows.map((row) => ({ row, article: parseGkgRow(row)! }))
 const stampOf = (iso: string) => iso.replace(/[-:TZ]/g, '').slice(0, 14)
+/** A file's fixture rows as the job reports them, compacted like a mention. */
 const rowsAt = (stamp: string) =>
-  articles.filter((a) => stampOf(a.article.seen_at) === stamp).map((a) => a.row)
+  articles
+    .filter((a) => stampOf(a.article.seen_at) === stamp)
+    .map(({ article: { record_id, outlet, url, title } }) => ({ record_id, outlet, url, title }))
 const byTitle = (part: string) => articles.find((a) => a.article.title.includes(part))!
-
-const memoryRaw = () => {
-  const put: { key: string; body: string }[] = []
-  return {
-    put,
-    store: { put: async (key: string, body: string) => void put.push({ key, body }) },
-  }
-}
 
 async function reset() {
   await db.delete(schema.opsEvents)
@@ -73,17 +68,11 @@ async function readBefore(stamp: string, status: 'ok' | 'missing' = 'ok') {
 }
 
 /** Every fixture row stored, as the backfill would leave them. */
-async function storeAll(raw = memoryRaw()) {
+async function storeAll() {
   const stamps = [...new Set(articles.map((a) => stampOf(a.article.seen_at)))]
   for (const stamp of stamps) {
-    await storeFigureRows(
-      db,
-      raw.store,
-      { stamp, fetched_at: NOW.toISOString(), rows: rowsAt(stamp) },
-      NOW,
-    )
+    await storeFigureRows(db, { stamp, fetched_at: NOW.toISOString(), rows: rowsAt(stamp) }, NOW)
   }
-  return raw
 }
 
 beforeEach(reset)
@@ -132,24 +121,23 @@ describe('the headline matcher', () => {
 })
 
 describe('storing figure rows', () => {
-  it('keeps a file’s figure headlines when it is first read, and marks it read for figures', async () => {
+  it('finds a new file’s figure headlines among the rows it keeps, and marks it read for figures', async () => {
     const stamp = '20261102181500'
-    const raw = memoryRaw()
+    await readBefore('20261102180000')
+    const mention = (row: ReturnType<typeof rowsAt>[number]) => ({ ...row, names: ['Anthropic'] })
+    const other = { ...rowsAt('20261001160000')[0]!, title: 'Anthropic opens a Tokyo office' }
     const outcome = await recordGkgFile(
       db,
-      raw.store,
       {
         stamp,
         fetched_at: NOW.toISOString(),
         status: 'ok',
         rows: 1200,
-        matches: [],
-        figures: [...rowsAt(stamp), rowsAt('20261001160000')[0]!],
+        mentions: [...rowsAt(stamp).map(mention), mention(other)],
       },
       NOW,
     )
-    expect(outcome).toMatchObject({ recorded: true, figures: 2, figures_rejected: 1 })
-    expect(raw.put.map((p) => p.key)).toEqual([`reported/gkg/${stamp}.tsv`])
+    expect(outcome).toMatchObject({ recorded: true, mentions: 3, figures: 2 })
     const [file] = await db
       .select()
       .from(schema.gdeltFiles)
@@ -159,9 +147,13 @@ describe('storing figure rows', () => {
     expect(stored).toHaveLength(2)
     expect(stored[0]).toMatchObject({
       published_at: '2026-11-02T18:15:00.000Z',
-      raw_key: `reported/gkg/${stamp}.tsv`,
       source_url: `http://data.gdeltproject.org/gdeltv2/${stamp}.gkg.csv.zip`,
     })
+    expect(stored.map((a) => a.record_id).sort()).toEqual(
+      rowsAt(stamp)
+        .map((r) => r.record_id)
+        .sort(),
+    )
   })
 
   it('backfills a file read before figures existed, once, and skips a missing one', async () => {
@@ -173,17 +165,28 @@ describe('storing figure rows', () => {
       '20261009043000',
     ])
     const post = (stamp: string) =>
-      recordFigureFile(
-        db,
-        memoryRaw().store,
-        { stamp, fetched_at: NOW.toISOString(), figures: rowsAt(stamp) },
-        NOW,
-      )
+      recordFigureFile(db, { stamp, fetched_at: NOW.toISOString(), figures: rowsAt(stamp) }, NOW)
     expect(await post('20261001160000')).toEqual({ recorded: true, articles: 1, rejected: 0 })
     expect(await post('20261001160000')).toEqual({ recorded: false, reason: 'not-pending' })
     expect(await post('20261001161500')).toEqual({ recorded: false, reason: 'not-pending' })
     expect(await post('20261104120000')).toEqual({ recorded: false, reason: 'not-pending' })
     expect((await figureBackfill(db)).map((f) => f.stamp)).toEqual(['20261009043000'])
+  })
+
+  it('refuses a posted row whose headline is no figure', async () => {
+    await readBefore('20261009043000')
+    const [row] = rowsAt('20261009043000')
+    expect(
+      await recordFigureFile(
+        db,
+        {
+          stamp: '20261009043000',
+          fetched_at: NOW.toISOString(),
+          figures: [row!, { ...row!, url: 'https://example.com/x', title: 'OpenAI hires a CFO' }],
+        },
+        NOW,
+      ),
+    ).toEqual({ recorded: true, articles: 1, rejected: 1 })
   })
 })
 

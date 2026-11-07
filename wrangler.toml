@@ -48,12 +48,12 @@ id = "ba653082105144bdb3b91a9189a72a3d"
 binding = "BLOB"
 bucket_name = "frontier-terminal-blob"
 
-# The full-history bulk files (CSV and Parquet) and their manifest, copied here
+# The full-history bulk files (CSV and Parquet) and their manifest, written here
 # by bulk:build and nothing else, so a licensee's read-only S3 token can be
 # scoped to this bucket (scripts/bulk-grant.ts) and never reach BLOB's raw
 # payloads or anything the public can't see. Create it once, before the deploy
 # that adds this block: `bunx wrangler r2 bucket create frontier-terminal-bulk-licensed`.
-# Without the binding the build still runs and makes no S3 copies.
+# Without the binding the build still runs and keeps the full files in BLOB.
 [[r2_buckets]]
 binding = "BULK_LICENSED"
 bucket_name = "frontier-terminal-bulk-licensed"
@@ -202,7 +202,7 @@ crons = [
 # message waits for the hourly events:sweep, never for nothing.
 #
 # YOU MUST CREATE IT FIRST: `wrangler deploy` fails on a queue that does not
-# exist (the dead-letter queue is created for you):
+# exist:
 #
 #     bunx wrangler queues create frontier-terminal-events
 #
@@ -221,11 +221,9 @@ max_batch_timeout = 1
 max_batch_size = 10
 # A handler that throws retries its messages a minute later
 # (event-consumer.ts). Five tries span several minutes of D1 or Buffer
-# trouble; past that the hourly sweep does the same work anyway.
+# trouble; past that the hourly sweep does the same work anyway. No
+# dead-letter queue: a message is only its type, so a dropped one loses nothing.
 max_retries = 5
-# Messages carry no payload beyond their type, so this holds nothing
-# sensitive; read it with `wrangler queues consumer` if it fills.
-dead_letter_queue = "frontier-terminal-events-dlq"
 
 # ─── Ops alert email ─────────────────────────────────────────────────────────
 # Outbound mail for the ops digest (server/tasks/ops/alert.ts). Pinned to a

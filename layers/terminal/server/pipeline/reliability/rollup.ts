@@ -257,15 +257,20 @@ async function rollChunk(
     if (d.last_good_at && (!prev || d.last_good_at > prev))
       lastGood.set(d.source_id, d.last_good_at)
   }
+  // rolled_at is NOT NULL, so an insert still stamps it; nothing reads it, so an update leaves it.
   const rolledAt = now.toISOString()
   const dayRows = days.map((d) => ({ ...d, rolled_at: rolledAt }))
+  const rd = tables.sourceRunDays
+  const pt = tables.pollTicks
+  // Each hour re-rolls the newest day, and most of its rows come out the same:
+  // an update only where a value moved spares D1 the rewrites.
   await runStatements(db, [
     ...chunk(dayRows, rowsPerStatement(11)).map((group) =>
       db
         .insert(tables.sourceRunDays)
         .values(group)
         .onConflictDoUpdate({
-          target: [tables.sourceRunDays.source_id, tables.sourceRunDays.day],
+          target: [rd.source_id, rd.day],
           set: {
             runs: sql`excluded.runs`,
             good: sql`excluded.good`,
@@ -275,8 +280,8 @@ async function rollChunk(
             longest_gap_ms: sql`excluded.longest_gap_ms`,
             gap_from: sql`excluded.gap_from`,
             gap_to: sql`excluded.gap_to`,
-            rolled_at: sql`excluded.rolled_at`,
           },
+          setWhere: sql`(${rd.runs}, ${rd.good}, ${rd.first_good_at}, ${rd.last_good_at}, ${rd.last_run_at}, ${rd.longest_gap_ms}, ${rd.gap_from}, ${rd.gap_to}) is not (excluded.runs, excluded.good, excluded.first_good_at, excluded.last_good_at, excluded.last_run_at, excluded.longest_gap_ms, excluded.gap_from, excluded.gap_to)`,
         }),
     ),
     ...chunk(ticks, rowsPerStatement(4)).map((group) =>
@@ -284,8 +289,9 @@ async function rollChunk(
         .insert(tables.pollTicks)
         .values(group)
         .onConflictDoUpdate({
-          target: [tables.pollTicks.scope, tables.pollTicks.started_at],
+          target: [pt.scope, pt.started_at],
           set: { runs: sql`excluded.runs`, good: sql`excluded.good` },
+          setWhere: sql`(${pt.runs}, ${pt.good}) is not (excluded.runs, excluded.good)`,
         }),
     ),
   ])

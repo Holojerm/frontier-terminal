@@ -150,7 +150,7 @@ describe('the misalignment index', () => {
       entities,
       normalizeDisclosures(revised.rows, 'snap-2'),
       '2026-10-02T06:00:00Z',
-    )
+    ).changes
     expect(changes.map((c) => [c.entity_key, c.change_type])).toEqual([
       [disclosureKey('openai', 'report', DNS), 'modified'],
     ])
@@ -166,7 +166,7 @@ describe('the misalignment index', () => {
       ).rows,
       'snap-2',
     )
-    const [change] = diff(before, after, '2026-10-02T06:00:00Z')
+    const [change] = diff(before, after, '2026-10-02T06:00:00Z').changes
     expect(change!.change_type).toBe('modified')
     expect(isTimestampOnlyChange(change!)).toBe(false)
   })

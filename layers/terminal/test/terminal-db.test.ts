@@ -10,7 +10,7 @@ import { runRefresh, type RawStore, type RefreshDeps } from '../server/pipeline/
 import { includeSources } from '../server/pipeline/sources'
 import { AlertRow, contentHash } from '../server/pipeline/contracts'
 import { insertRows } from '../server/pipeline/store'
-import { terminalStamp } from '../server/utils/terminal-cache'
+import { terminalStamps } from '../server/utils/terminal-cache'
 import { MODEL_CLASS_MAP, NO_ROW_GAP } from '../server/utils/terminal-classes'
 import { ENTITY_AXIS } from '../shared/utils/terminal-labs'
 import type { PriceRowView } from '../shared/utils/terminal-types'
@@ -27,7 +27,7 @@ import {
   queryIncidents,
   queryOverview,
   queryPrices,
-  sourceStamps,
+  sourceReads,
 } from '../server/utils/terminal-db'
 import { fieldDiff, fieldTable } from '../server/utils/terminal-json'
 import { fixtureText, manifest } from './pipeline/fixtures'
@@ -71,7 +71,7 @@ const run = (ids: readonly string[], fetcher = fixtureFetcher()) =>
   runRefresh(deps(fetcher), 'survey', ids)
 
 const FIXED_NOW = () => new Date('2026-09-07T12:00:00Z')
-const ctx = async () => queryContext(sourcesYaml, await terminalStamp(db), FIXED_NOW)
+const ctx = async () => queryContext(sourcesYaml, (await terminalStamps(db)).poll, FIXED_NOW)
 
 // ── Fixture edits for the change scenarios ──────────────────────────────────
 
@@ -501,14 +501,14 @@ describe('after a baseline poll of every source', () => {
     const baseline = await xaiSource()
 
     await run(['xai-greenhouse'])
-    const newest = (await sourceStamps(db)).get('xai-greenhouse')!.newest.fetched_at
+    const newest = (await sourceReads(db)).stamps.get('xai-greenhouse')!.newest.fetched_at
     expect(Date.parse(newest)).toBeGreaterThan(Date.parse(baseline.fetched_at))
     expect((await xaiSource()).fetched_at).toBe(newest)
     expect((await queryOverview(db, await ctx())).latest_fetched_at).toBe(newest)
 
     // An empty board is refused as a mass removal: stored, not read.
     await run(['xai-greenhouse'], fixtureFetcher({ 'xai-greenhouse': '{"jobs":[]}' }))
-    const refused = (await sourceStamps(db)).get('xai-greenhouse')!.newest.fetched_at
+    const refused = (await sourceReads(db)).stamps.get('xai-greenhouse')!.newest.fetched_at
     expect(refused).not.toBe(newest)
     expect((await xaiSource()).fetched_at).toBe(newest)
     // The departments side page was read in the same tick, so "last checked"
@@ -602,12 +602,12 @@ describe('after a baseline poll of every source', () => {
     const xaiRead = baseline.providers.find((p) => p.provider === 'xai')!.window_to!
     await run(['openai-status'])
     await run(['xai-status'], fixtureFetcher({ 'xai-status': 'not a feed' }))
-    const failed = (await sourceStamps(db)).get('xai-status')!.newest.fetched_at
+    const failed = (await sourceReads(db)).stamps.get('xai-status')!.newest.fetched_at
     expect(Date.parse(failed)).toBeGreaterThan(Date.parse(xaiRead))
 
     const incidents = await queryIncidents(db, await ctx())
     const byProvider = Object.fromEntries(incidents.providers.map((p) => [p.provider, p]))
-    const openaiRead = (await sourceStamps(db)).get('openai-status')!.newest.fetched_at
+    const openaiRead = (await sourceReads(db)).stamps.get('openai-status')!.newest.fetched_at
     // The freshest read anchors the list; the failed fetch anchors nothing.
     expect(incidents.window_to).toBe(openaiRead)
     expect(byProvider.openai!.window_to).toBe(openaiRead)
@@ -631,7 +631,7 @@ describe('after a baseline poll of every source', () => {
     const after = (await queryPrices(db, await ctx())).matrix.cells.find(
       (c) => c.provider === 'xai' && c.class === 'flagship',
     )!
-    const newest = (await sourceStamps(db)).get('xai-models-md')!.newest.fetched_at
+    const newest = (await sourceReads(db)).stamps.get('xai-models-md')!.newest.fetched_at
     expect(after.basis_current).toBe(true)
     expect(after.basis_checked_at! > before.basis_checked_at!).toBe(true)
     expect(after.basis_checked_at).toBe(newest)
@@ -648,12 +648,14 @@ describe('after a baseline poll of every source', () => {
     await run(['xai-models-md'])
     const read = await grok()
     expect(Date.parse(read.checked_at!)).toBeGreaterThan(Date.parse(read.fetched_at))
-    expect(read.checked_at).toBe((await sourceStamps(db)).get('xai-models-md')!.newest.fetched_at)
+    expect(read.checked_at).toBe(
+      (await sourceReads(db)).stamps.get('xai-models-md')!.newest.fetched_at,
+    )
 
     // A fetch that stores its bytes but cannot be read confirms nothing.
     await run(['xai-models-md'], fixtureFetcher({ 'xai-models-md': 'not a model list' }))
     const failed = await grok()
-    expect((await sourceStamps(db)).get('xai-models-md')!.newest.fetched_at).not.toBe(
+    expect((await sourceReads(db)).stamps.get('xai-models-md')!.newest.fetched_at).not.toBe(
       read.checked_at,
     )
     expect(failed.checked_at).toBe(read.checked_at)

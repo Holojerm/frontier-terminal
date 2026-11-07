@@ -1,6 +1,6 @@
 // An export table as an Apache Parquet file, for the bulk feed
 // (terminal-bulk.ts). Same rows and columns as the CSV, typed by the data
-// dictionary (terminal-dictionary.ts › COLUMN_DOCS), gzip-compressed.
+// dictionary (each export table's docs, terminal-export.ts), gzip-compressed.
 //
 // The writer is hyparquet-writer: plain JavaScript, so it runs in workerd with
 // no WASM to instantiate. Its own codec is snappy; gzip comes from workerd's
@@ -24,7 +24,6 @@ import { gzipSync } from 'node:zlib'
 import { ByteWriter, ParquetWriter } from 'hyparquet-writer/src/index.js'
 
 import type { DictionaryType } from '../../shared/utils/terminal-types'
-import { COLUMN_DOCS } from './terminal-dictionary'
 import { LICENSE_COLUMN, type ExportTable } from './terminal-export'
 
 type Row = Record<string, unknown>
@@ -65,10 +64,10 @@ const PARQUET_TYPES: Readonly<Record<DictionaryType, Omit<SchemaElement, 'name'>
 }
 
 /** The dictionary type of `table`'s `column`. The license column a full file adds is text. */
-export function columnType(table: string, column: string): DictionaryType {
+export function columnType(table: ExportTable, column: string): DictionaryType {
   if (column === LICENSE_COLUMN) return 'text'
-  const doc = COLUMN_DOCS[table]?.columns[column]
-  if (!doc) throw new Error(`no data dictionary type for ${table}.${column}`)
+  const doc = table.docs[column]
+  if (!doc) throw new Error(`no data dictionary type for ${table.name}.${column}`)
   return doc.type
 }
 
@@ -79,7 +78,7 @@ export function parquetSchema(table: ExportTable): SchemaElement[] {
     ...table.columns.map((name): SchemaElement => ({
       name,
       repetition_type: 'OPTIONAL',
-      ...PARQUET_TYPES[columnType(table.name, name)],
+      ...PARQUET_TYPES[columnType(table, name)],
     })),
   ]
 }
@@ -185,7 +184,7 @@ export function parquetBuilder(
     bytes: PARQUET_ROW_GROUP_BYTES,
   },
 ) {
-  const types = table.columns.map((c) => columnType(table.name, c))
+  const types = table.columns.map((c) => columnType(table, c))
   const writer = new ChunkWriter()
   const parquet = new ParquetWriter({
     writer,

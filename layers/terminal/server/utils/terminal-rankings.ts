@@ -28,7 +28,7 @@ import { asOfFromDetail } from '../pipeline/lanes'
 import { manifestFixtures } from '../pipeline/parsers/fixture-provenance'
 import { providerOfOpenRouterId } from '../pipeline/parsers/openrouter'
 import type { PipelineDb } from '../pipeline/store'
-import { lastReads, lastRuns, sourceStamps, type QueryContext } from './terminal-db'
+import { sourceReads, type QueryContext, type SourceReads } from './terminal-db'
 import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
 
 export const RANKINGS_SOURCE_ID = 'openrouter-rankings-daily'
@@ -229,7 +229,7 @@ export async function rankingObservations(
 }
 
 /** meta.as_of from the newest run whose detail carries one (lanes.ts). */
-async function newestAsOf(db: PipelineDb): Promise<string | null> {
+export async function rankingsAsOf(db: PipelineDb): Promise<string | null> {
   const [row] = await db
     .select({ detail: tables.sourceRuns.detail })
     .from(tables.sourceRuns)
@@ -245,14 +245,34 @@ async function newestAsOf(db: PipelineDb): Promise<string | null> {
 }
 
 export async function queryRankings(db: PipelineDb, ctx: QueryContext): Promise<RankingsData> {
-  const [rows, stamps, reads, runs, as_of] = await Promise.all([
+  const [rows, reads, as_of] = await Promise.all([
     rankingObservations(db),
-    sourceStamps(db),
-    lastReads(db),
-    lastRuns(db),
-    newestAsOf(db),
+    sourceReads(db),
+    rankingsAsOf(db),
   ])
   const summary = summarizeRankings(rows)
+  return {
+    as_of: ctx.as_of,
+    computed_at: ctx.now().toISOString(),
+    ...rankingsMeta(ctx, rows, reads, as_of, summary.coverage),
+    shares: summary.shares,
+    top_models: summary.top_models,
+    series: summary.series,
+  }
+}
+
+/**
+ * Where the rankings came from and how far they reach: the part of the
+ * payload querySpend repeats, built from rows and reads a caller has already
+ * loaded rather than by running queryRankings again.
+ */
+export function rankingsMeta(
+  ctx: QueryContext,
+  rows: readonly RankingObservation[],
+  { stamps, reads, runs }: SourceReads,
+  as_of: string | null,
+  coverage: RankingsCoverage,
+): Pick<RankingsData, 'status' | 'source' | 'provenance' | 'meta'> {
   const registered = ctx.registry.sources.find((s) => s.source_id === RANKINGS_SOURCE_ID)
   const stamp = stamps.get(RANKINGS_SOURCE_ID) ?? null
   const last_run = runs.get(RANKINGS_SOURCE_ID) ?? null
@@ -266,8 +286,6 @@ export async function queryRankings(db: PipelineDb, ctx: QueryContext): Promise<
     registered?.citation?.replace('{meta.as_of}', as_of ?? '(as_of not yet recorded)') ?? null
 
   return {
-    as_of: ctx.as_of,
-    computed_at: ctx.now().toISOString(),
     status,
     source: {
       source_id: RANKINGS_SOURCE_ID,
@@ -288,9 +306,6 @@ export async function queryRankings(db: PipelineDb, ctx: QueryContext): Promise<
           fetched_at: reads.get(RANKINGS_SOURCE_ID) ?? stamp.newest.fetched_at,
         }
       : null,
-    meta: { as_of, citation, coverage: summary.coverage },
-    shares: summary.shares,
-    top_models: summary.top_models,
-    series: summary.series,
+    meta: { as_of, citation, coverage },
   }
 }

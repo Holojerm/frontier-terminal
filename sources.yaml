@@ -2138,13 +2138,14 @@ track_record_sources:
       data.gdeltproject.org serves static files and states no rate limit.
       Taken: every file from 2026-09-01 on, each read once, hourly, from
       a GitHub Actions job (the owner's Mac mini, or a hosted runner while
-      it is down); of each row that
-      matches a material alert, its record id, URL, title, outlet domain,
-      quarter hour and the names GDELT found, with the row itself kept
-      whole in R2. From 2026-11-07 also each row whose headline names a
-      private lab, an amount of money and a financial word (reported
-      figures), with its URL, title, outlet domain and quarter hour, and the
-      row whole in R2; files read before then are read again for these.
+      it is down); of each row naming a tracked lab, filer or model
+      family, its record id, URL, title, outlet domain, quarter hour and
+      which of those names it carried, kept 15 days; of each row that
+      matches a material alert, the same fields as a press candidate.
+      Of each kept row whose headline also names an amount of money and a
+      financial word (reported figures), its record id, URL, title, outlet
+      domain and quarter hour, kept for good; files read before 2026-11-07
+      are read again for these.
       Read 2026-11-07.
     rights: upstream
     caveats: >-

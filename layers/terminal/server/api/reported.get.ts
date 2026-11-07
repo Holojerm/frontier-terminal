@@ -6,12 +6,15 @@
 // every table behind it is append-only.
 
 import { queryReported, reportedStamp } from '../utils/terminal-reported'
-import { serveTerminalAsOf, terminalDb } from '../utils/terminal-handler'
+import { serveTerminal, terminalDb } from '../utils/terminal-handler'
 import { rateLimitTerminal } from '../utils/api-access'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'reported', limit: 60, windowSeconds: 60 })
   // Articles and readings land between polls, so they key the cache too.
   const variant = await reportedStamp(terminalDb)
-  return serveTerminalAsOf(event, 'reported', (ctx) => queryReported(terminalDb, ctx), variant)
+  return serveTerminal(event, 'reported', (ctx) => queryReported(terminalDb, ctx), {
+    variant,
+    asOf: 'snapshot',
+  })
 })

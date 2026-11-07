@@ -10,14 +10,8 @@ import mistralFeed from '~~/fixtures/recipes/newsroom-mistral.xml?raw'
 import openaiFeed from '~~/fixtures/recipes/newsroom-openai.xml?raw'
 import * as schema from '~~/server/db/schema'
 import { contentHash, type ChangeRow } from '../server/pipeline/contracts'
-import { groundingFailure } from '../server/pipeline/judge/grounding'
 import { submitJudgeRun } from '../server/pipeline/judge/submit'
 import { insertRows } from '../server/pipeline/store'
-import {
-  PRESS_CANDIDATE_LIMIT,
-  candidateTitle,
-  untokenizeTitle,
-} from '../server/pipeline/track-record/gdelt'
 import {
   GKG_FROM,
   gkgSlots,
@@ -27,13 +21,14 @@ import {
   stampIso,
   unzipOne,
 } from '../server/pipeline/track-record/gkg'
+import { acceptedMentions } from '../server/pipeline/track-record/mentions'
 import {
   applyTrackRecordVerdicts,
   pendingCandidates,
-  reviewCorpus,
   trackRecordReview,
 } from '../server/pipeline/track-record/review'
 import {
+  PRESS_CANDIDATE_LIMIT,
   candidateId,
   gkgWork,
   recordGkgFile,
@@ -43,11 +38,11 @@ import {
 import {
   alertTerms,
   filerName,
-  gdeltQuery,
   matchesArticle,
   matchesWhat,
   mentionVocabulary,
   modelFamily,
+  termList,
   termsInVocabulary,
   vocabularyHits,
 } from '../server/pipeline/track-record/terms'
@@ -128,7 +123,7 @@ describe('search terms', () => {
   it('builds the same query from the same rows, whatever their order', () => {
     const a = change({ after: { model_slug: 'gpt-6.1-sol' } })
     const b = change({ after: { model_slug: 'gpt-6-astra' } })
-    expect(gdeltQuery(alertTerms([a, b])!)).toBe('("gpt 6.1" OR "gpt 6") sourcelang:english')
+    expect(termList(alertTerms([a, b])!)).toBe('gpt 6.1 | gpt 6')
     expect(alertTerms([b, a])!.what.sort()).toEqual(alertTerms([a, b])!.what.sort())
   })
 
@@ -138,8 +133,8 @@ describe('search terms', () => {
       entity_key: 'job:openai:x',
       after: { title: 'Head of Marketing Technology (MarTech)', department: 'Marketing' },
     })
-    expect(gdeltQuery(alertTerms([job])!)).toBe(
-      'OpenAI Marketing (hiring OR jobs OR "job cuts" OR layoffs OR roles) sourcelang:english',
+    expect(termList(alertTerms([job])!)).toBe(
+      'OpenAI + Marketing + hiring | jobs | job cuts | layoffs | roles',
     )
     const incident = change({
       entity_type: 'incident',
@@ -147,8 +142,8 @@ describe('search terms', () => {
       entity_key: 'incident:anthropic:x',
       after: { title: 'Elevated errors for Claude Sonnet 5.5' },
     })
-    expect(gdeltQuery(alertTerms([incident])!)).toBe(
-      '(Anthropic OR Claude) (outage OR outages OR "elevated errors" OR disruption) sourcelang:english',
+    expect(termList(alertTerms([incident])!)).toBe(
+      'Anthropic | Claude + outage | outages | elevated errors | disruption',
     )
   })
 
@@ -187,6 +182,21 @@ describe('search terms', () => {
     expect(termsInVocabulary({ who: ['OpenAI'], what: ['outage'], also: [] }, vocabulary)).toBe(
       true,
     )
+  })
+
+  it('keeps a posted row with only the names the vocabulary holds', () => {
+    const row = { record_id: 'r', outlet: 'x.com', url: 'https://x.com/a', title: 'T' }
+    // A name the vocabulary lost (a delisted model) is dropped; a row left with none is not kept.
+    expect(
+      acceptedMentions(
+        [
+          { ...row, names: ['gpt', 'sora'] },
+          { ...row, record_id: 's', names: ['sora'] },
+          { ...row, record_id: 't', url: 'ftp://x.com/a', names: ['gpt'] },
+        ],
+        ['OpenAI', 'gpt'],
+      ),
+    ).toEqual([{ ...row, names: ['gpt'] }])
   })
 
   it('has no terms for a row with no press shape', () => {
@@ -332,42 +342,6 @@ describe('GDELT GKG files', () => {
     expect(matchesArticle(slug('openai-research-hiring-spree'), hiring)).toBe(true)
     expect(matchesArticle(slug('openai-research-paper'), hiring)).toBe(false)
   })
-
-  // Titles as production D1 held them on 2026-11-05, from GDELT's search API.
-  it.each([
-    [
-      'Grok 4 . 7 arrives for coding and knowledge work at Grok 4 . 6 prices · Digg',
-      'Grok 4.7 arrives for coding and knowledge work at Grok 4.6 prices · Digg',
-    ],
-    [
-      'Mapping Precision : GPT Image 2 . 5 Solves Spatial Data - GIS user technology news',
-      'Mapping Precision: GPT Image 2.5 Solves Spatial Data - GIS user technology news',
-    ],
-    [
-      'Did You Lose Money on Alphabet Inc . ( GOOGL )? Levi & Korsinsky Urges ...',
-      'Did You Lose Money on Alphabet Inc. (GOOGL)? Levi & Korsinsky Urges ...',
-    ],
-    [
-      '4 , 058 Alphabet Inc . $GOOGL Shares Sold by SFM LLC',
-      '4,058 Alphabet Inc. $GOOGL Shares Sold by SFM LLC',
-    ],
-    [
-      'Meta Platforms ( NASDAQ : META ) Trading 11 . 3 % Higher – Still a Buy ?',
-      'Meta Platforms (NASDAQ: META) Trading 11.3% Higher – Still a Buy?',
-    ],
-    [
-      'OpenAI releases ChatGPT Images 2 . 5 with  sharper detail',
-      'OpenAI releases ChatGPT Images 2.5 with sharper detail',
-    ],
-    ['Gartner $2 . 67 trillion', 'Gartner $2.67 trillion'],
-    ['Pixel Scroll 9 / 21 / 26 And May', 'Pixel Scroll 9/21/26 And May'],
-    // Not a thousands separator, so not one number; a hyphen stays as GDELT wrote it.
-    ['Ranked 1 , 2 and 3', 'Ranked 1, 2 and 3'],
-    ['state - level hacking', 'state - level hacking'],
-  ])('untokenizes %j', (raw, clean) => {
-    expect(untokenizeTitle(raw)).toBe(clean)
-    expect(untokenizeTitle(clean)).toBe(clean)
-  })
 })
 
 describe('newsroom feeds', () => {
@@ -397,6 +371,13 @@ describe('newsroom feeds', () => {
 
 const SAW = '2026-09-29T17:01:00.000Z'
 const NOW = new Date('2026-11-04T12:00:00Z')
+/** Alert 1's window, 7 days either side of SAW. */
+const WINDOW = { start: '2026-09-22T17:01:00.000Z', end: '2026-10-06T17:01:00.000Z' }
+/** When the job reads the fixture file, and when the cron finds alert 1's window closed. */
+const READ = new Date('2026-09-29T19:01:00Z')
+const CLOSE = new Date('2026-10-07T01:00:00Z')
+/** What retentionVocabulary gives for the seeded model. */
+const VOCAB = mentionVocabulary(['gpt-6.1-sol'])
 
 const launch = change({
   id: HASH(101),
@@ -423,16 +404,10 @@ const alertRow = (id: number, c: ChangeRow, severity = 'notable') => ({
   recorded_at: c.fetched_at,
 })
 
-const memoryRaw = () => {
-  const put: string[] = []
-  return { put, store: { put: async (key: string) => void put.push(key) } }
-}
-
 async function seed() {
   await db.delete(schema.opsEvents)
   await db.delete(schema.gdeltFiles)
   await db.delete(schema.gkgMentions)
-  await db.delete(schema.gkgBackfills)
   await db.delete(schema.entities)
   await db.delete(schema.trackRecordVerdicts)
   await db.delete(schema.trackRecordCandidates)
@@ -444,6 +419,19 @@ async function seed() {
   await db
     .insert(schema.alerts)
     .values([alertRow(1, launch), alertRow(2, fresh), alertRow(3, launch, 'info')])
+  // The model on record, so the vocabulary holds "gpt".
+  await db.insert(schema.entities).values({
+    source_id: 'openai-models-md',
+    entity_key: 'model:openai:gpt-6.1-sol:standard',
+    entity_type: 'model',
+    provider: 'openai',
+    content_hash: HASH(7),
+    payload: JSON.stringify({ model_slug: 'gpt-6.1-sol' }),
+    snapshot_id: 's',
+    first_seen_at: SAW,
+    source_url: 'https://developers.openai.com/api/docs/models.md',
+    fetched_at: SAW,
+  })
   await db.insert(schema.recipeObservations).values({
     id: HASH(900),
     recipe_id: 'newsroom-openai',
@@ -465,189 +453,205 @@ async function seed() {
 }
 
 /**
- * Marks every quarter hour from GKG_FROM up to `until` as read, but `except`,
- * the way a caught-up job leaves gdelt_files. Generated in SQL: a window needs
- * thousands of rows.
+ * Marks every quarter hour from GKG_FROM up to (not including) `until` as
+ * read, keeping no row but by `vocabulary` (null: read before rows were
+ * kept), the way a caught-up job leaves gdelt_files. Generated in SQL: a
+ * window needs thousands of rows. A file already recorded is left alone.
  */
-async function markRead(
-  until: string,
-  except: string = FIXTURE_STAMP,
-  mentions: number | null = null,
-) {
+async function markRead(until: string, vocabulary: readonly string[] | null = VOCAB) {
   await env.DB.prepare(
     `WITH RECURSIVE t(s) AS (
        SELECT unixepoch(?1) UNION ALL SELECT s + 900 FROM t WHERE s + 900 < unixepoch(?2)
      )
      INSERT OR IGNORE INTO gdelt_files
-       (stamp, url, status, rows, matched, raw_key, fetched_at, recorded_at, mentions)
-       SELECT strftime('%Y%m%d%H%M%S', s, 'unixepoch'), 'u', 'ok', 0, 0, NULL, ?3, ?3, ?5 FROM t
-       WHERE strftime('%Y%m%d%H%M%S', s, 'unixepoch') != ?4`,
+       (stamp, url, status, rows, matched, raw_key, fetched_at, recorded_at, mentions, vocabulary)
+       SELECT strftime('%Y%m%d%H%M%S', s, 'unixepoch'), 'u', 'ok', 0, 0, NULL, ?3, ?3, ?4, ?5 FROM t`,
   )
-    .bind(GKG_FROM, until, NOW.toISOString(), except, mentions)
+    .bind(
+      GKG_FROM,
+      until,
+      READ.toISOString(),
+      vocabulary ? 0 : null,
+      vocabulary ? JSON.stringify(vocabulary) : null,
+    )
     .run()
 }
 
-/** What the job posts for the fixture file: every row, offered for `alertId`, matching or not. */
-const fixtureFile = (alertId: string = HASH(1)) => ({
-  stamp: FIXTURE_STAMP,
-  fetched_at: NOW.toISOString(),
-  status: 'ok' as const,
-  rows: fixtureRows.length,
-  matches: fixtureRows.map((row) => ({ alert_id: alertId, row })),
-})
+/** The rows the job posts for a file: those carrying a word of `vocabulary`, compacted. */
+const mentionsOf = (rows: readonly string[], vocabulary: readonly string[] = VOCAB) =>
+  rows.flatMap((row) => {
+    const a = parseGkgRow(row)
+    const names = a ? vocabularyHits(a, vocabulary) : []
+    return a && names.length
+      ? [{ record_id: a.record_id, outlet: a.outlet, url: a.url, title: a.title, names }]
+      : []
+  })
 
-/** A caught-up job, then the cron: every file in alert 1's window read, the fixture's matches stored. */
-async function searchAll(raw = memoryRaw()) {
+const post = (stamp: string, rows: readonly string[], now: Date, status: 'ok' | 'missing' = 'ok') =>
+  recordGkgFile(
+    db,
+    { stamp, fetched_at: now.toISOString(), status, rows: rows.length, mentions: mentionsOf(rows) },
+    now,
+  )
+
+/** A caught-up job (the fixture file read at READ), then the cron once alert 1's window has closed. */
+async function searchAll() {
+  await markRead(stampIso(FIXTURE_STAMP))
+  const outcome = await post(FIXTURE_STAMP, fixtureRows, READ)
   await markRead('2026-10-07T00:00:00Z')
-  const outcome = await recordGkgFile(db, raw.store, fixtureFile(), NOW)
-  const report = await runTrackRecordSearch(db, { now: () => NOW })
+  const report = await runTrackRecordSearch(db, { now: () => CLOSE })
   return { outcome, report }
 }
+
+const gdeltSearch = async (alertId = HASH(1)) =>
+  (await db.select().from(schema.trackRecordSearches)).find(
+    (r) => r.source === 'gdelt' && r.alert_id === alertId,
+  )
 
 describe('the search run', () => {
   beforeEach(seed)
 
-  it('keeps a posted row only when the Worker matches it to the alert itself', async () => {
-    const raw = memoryRaw()
-    const { outcome, report } = await searchAll(raw)
-    // Of the four rows, only cnet's headline carries "gpt 6.1".
-    expect(outcome).toEqual({
+  it('keeps the rows of a file that carry a vocabulary word, and matches nothing yet', async () => {
+    await markRead(stampIso(FIXTURE_STAMP))
+    const kept = mentionsOf(fixtureRows).length
+    expect(kept).toBeGreaterThan(0)
+    expect(await post(FIXTURE_STAMP, fixtureRows, READ)).toEqual({
       recorded: true,
-      candidates: 1,
-      duplicates: 0,
-      rejected: 3,
+      mentions: kept,
+      rejected: 0,
       figures: 0,
-      figures_rejected: 0,
     })
-    expect(raw.put).toEqual([`track-record/gkg/${FIXTURE_STAMP}.tsv`])
+    expect(await db.select().from(schema.gkgMentions)).toHaveLength(kept)
+    expect(await db.select().from(schema.trackRecordCandidates)).toEqual([])
+    const [file] = await db
+      .select()
+      .from(schema.gdeltFiles)
+      .where(eq(schema.gdeltFiles.stamp, FIXTURE_STAMP))
+    expect(file).toMatchObject({ status: 'ok', rows: 4, matched: 0, raw_key: null, mentions: kept })
+    expect(JSON.parse(file!.vocabulary!)).toEqual(VOCAB)
+  })
+
+  it('matches an alert against the rows kept for its window once the window has closed', async () => {
+    const { report } = await searchAll()
     expect(report).toMatchObject({ newsroom: 1, gdelt: 1 })
 
     const candidates = await db.select().from(schema.trackRecordCandidates)
     expect(candidates.every((c) => c.alert_id === HASH(1))).toBe(true)
-    const press = candidates.filter((c) => c.kind === 'press')
-    expect(press).toEqual([
+    // Of the fixture's rows, only cnet's headline carries "gpt 6.1".
+    expect(candidates.filter((c) => c.kind === 'press')).toEqual([
       expect.objectContaining({
         outlet: 'cnet.com',
         published_at: '2026-09-29T18:30:00.000Z',
         search_id: `gkg:${FIXTURE_STAMP}`,
         source_url: gkgUrl(FIXTURE_STAMP),
-        fetched_at: NOW.toISOString(),
+        fetched_at: READ.toISOString(),
+        found_at: CLOSE.toISOString(),
       }),
     ])
     expect(candidates.filter((c) => c.kind === 'newsroom')).toEqual([
       expect.objectContaining({ outlet: 'openai.com', published_at: '2026-09-29T17:00:00.000Z' }),
     ])
-    const [file] = await db
-      .select()
-      .from(schema.gdeltFiles)
-      .where(eq(schema.gdeltFiles.stamp, FIXTURE_STAMP))
-    expect(file).toMatchObject({ status: 'ok', rows: 4, matched: 1 })
+    // Every file in the window kept rows by a vocabulary holding "gpt": searched whole.
+    expect(await gdeltSearch()).toMatchObject({
+      status: 'ok',
+      query: 'gpt 6.1',
+      candidates: 1,
+      window_start: WINDOW.start,
+    })
 
     // A second run has nothing left to do.
-    expect(await runTrackRecordSearch(db, { now: () => NOW })).toMatchObject({
+    expect(await runTrackRecordSearch(db, { now: () => CLOSE })).toMatchObject({
       newsroom: 0,
       gdelt: 0,
       skipped: 0,
     })
   })
 
-  it('reads a file once, and only once it is due', async () => {
-    const post = (stamp: string) =>
-      recordGkgFile(db, memoryRaw().store, { ...fixtureFile(), stamp }, NOW)
-    expect(await post(FIXTURE_STAMP)).toMatchObject({ recorded: true })
-    expect(await post(FIXTURE_STAMP)).toEqual({ recorded: false, reason: 'not-due' })
-    // Not yet published, and not a quarter hour.
-    expect(await post('20261104120000')).toEqual({ recorded: false, reason: 'not-due' })
-    expect(await post('20260929183100')).toEqual({ recorded: false, reason: 'not-due' })
+  it('keeps the earliest reports, one per headline, up to the limit', async () => {
+    const at = (h: number) => new Date(Date.parse(WINDOW.start) + h * 3_600_000)
+    const mention = (n: number, h: number, title: string) => ({
+      record_id: `r${n}`,
+      stamp: gkgStamp(at(h).getTime()),
+      seen_at: stampIso(gkgStamp(at(h).getTime())),
+      outlet: 'example.com',
+      url: `https://example.com/${n}`,
+      title,
+      names: JSON.stringify(['gpt']),
+      fetched_at: READ.toISOString(),
+    })
+    const rows = [
+      // Before the window: never a candidate.
+      mention(0, -2, 'GPT-6.1 rumors'),
+      ...Array.from({ length: PRESS_CANDIDATE_LIMIT + 5 }, (_, i) =>
+        mention(i + 1, i + 1, `GPT-6.1 take number ${i + 1}`),
+      ),
+      // The same headline syndicated an hour after its first copy.
+      mention(100, 2.5, 'GPT-6.1 take number 1'),
+      mention(101, 3.5, 'Weather tomorrow'),
+    ]
+    for (let i = 0; i < rows.length; i += 10) {
+      await db.insert(schema.gkgMentions).values(rows.slice(i, i + 10))
+    }
+    await markRead('2026-10-07T00:00:00Z')
+    await runTrackRecordSearch(db, { now: () => CLOSE })
+
+    const press = (await db.select().from(schema.trackRecordCandidates))
+      .filter((c) => c.kind === 'press')
+      .sort((a, b) => a.published_at.localeCompare(b.published_at))
+    expect(press.map((c) => c.url)).toEqual(
+      Array.from({ length: PRESS_CANDIDATE_LIMIT }, (_, i) => `https://example.com/${i + 1}`),
+    )
+    expect((await gdeltSearch())!.candidates).toBe(PRESS_CANDIDATE_LIMIT)
   })
 
-  it('refuses matches for an alert whose window does not cover the file', async () => {
-    // Alert 2's window opens on 2026-10-25; alert 3 is not material.
-    for (const id of [HASH(2), HASH(3)]) {
-      await seed()
-      expect(await recordGkgFile(db, memoryRaw().store, fixtureFile(id), NOW)).toMatchObject({
-        candidates: 0,
-        rejected: 4,
-      })
-    }
-    expect(await db.select().from(schema.trackRecordCandidates)).toHaveLength(0)
-  })
-
-  it('keeps one candidate per headline, and records a quarter hour GDELT never published', async () => {
-    const twice = {
-      ...fixtureFile(),
-      matches: [cnetRow, cnetRow].map((row) => ({ alert_id: HASH(1), row })),
-    }
-    expect(await recordGkgFile(db, memoryRaw().store, twice, NOW)).toMatchObject({
-      candidates: 1,
-      duplicates: 1,
+  it('reads a file only when it is the next one due, and a missing one advances the run', async () => {
+    const at = new Date('2026-09-01T01:00:00Z')
+    // Nothing read yet: only GKG_FROM's quarter hour is next.
+    expect(await post(FIXTURE_STAMP, [], at)).toEqual({ recorded: false, reason: 'not-next' })
+    expect(await post('20260901000000', [], new Date('2026-09-01T00:20:00Z'))).toEqual({
+      recorded: false,
+      reason: 'not-next',
     })
-    const missing = { ...fixtureFile(), stamp: '20260929184500', status: 'missing' as const }
-    expect(await recordGkgFile(db, memoryRaw().store, missing, NOW)).toMatchObject({
-      recorded: true,
-      candidates: 0,
-    })
-    const [file] = await db
+    expect(await post('20260901000000', [], at)).toMatchObject({ recorded: true })
+    expect(await post('20260901000000', [], at)).toEqual({ recorded: false, reason: 'not-next' })
+    // Skipping a quarter hour is refused; GDELT's 404 for it is recorded, and the run goes on.
+    expect(await post('20260901003000', [], at)).toEqual({ recorded: false, reason: 'not-next' })
+    expect(await post('20260901001500', [], at, 'missing')).toMatchObject({ recorded: true })
+    expect(await post('20260901003000', [], at)).toMatchObject({ recorded: true })
+    const [missing] = await db
       .select()
       .from(schema.gdeltFiles)
-      .where(eq(schema.gdeltFiles.stamp, '20260929184500'))
-    expect(file).toMatchObject({ status: 'missing', rows: 0, raw_key: null })
+      .where(eq(schema.gdeltFiles.stamp, '20260901001500'))
+    expect(missing).toMatchObject({ status: 'missing', rows: 0, vocabulary: null })
   })
 
-  it('hands out the oldest unread files, with the alerts whose windows overlap them', async () => {
+  it('hands out the oldest unread files and the vocabulary to keep their rows by', async () => {
     const first = await gkgWork(db, NOW, 2)
     expect(first.files.map((f) => f.stamp)).toEqual(['20260901000000', '20260901001500'])
-    // No material alert's window reaches back to 2026-09-01.
-    expect(first.alerts).toEqual([])
+    expect(first.vocabulary).toEqual(VOCAB)
 
     await markRead('2026-09-29T00:00:00Z')
-    const later = await gkgWork(db, NOW, 1)
-    expect(later.files[0]!.stamp).toBe('20260929000000')
-    expect(later.alerts).toEqual([
-      expect.objectContaining({
-        alert_id: HASH(1),
-        terms: { who: [], what: ['gpt 6.1'], also: [] },
-      }),
-    ])
+    expect((await gkgWork(db, NOW, 1)).files[0]!.stamp).toBe('20260929000000')
   })
 
   it('writes the GDELT side only once every file in the window is read', async () => {
-    expect(await runTrackRecordSearch(db, { now: () => NOW })).toMatchObject({
+    expect(await runTrackRecordSearch(db, { now: () => CLOSE })).toMatchObject({
       newsroom: 1,
       gdelt: 0,
     })
     // Everything read up to a day before the window ends: still not complete.
-    await markRead('2026-10-05T17:01:00Z', '')
-    expect((await runTrackRecordSearch(db, { now: () => NOW })).gdelt).toBe(0)
-    await markRead('2026-10-07T00:00:00Z', '')
-    expect((await runTrackRecordSearch(db, { now: () => NOW })).gdelt).toBe(1)
-    const [row] = await db
-      .select()
-      .from(schema.trackRecordSearches)
-      .where(eq(schema.trackRecordSearches.source, 'gdelt'))
-    expect(row).toMatchObject({
-      status: 'ok',
-      query: '"gpt 6.1" sourcelang:english',
-      candidates: 0,
-    })
+    await markRead('2026-10-05T17:01:00Z')
+    expect((await runTrackRecordSearch(db, { now: () => CLOSE })).gdelt).toBe(0)
+    await markRead('2026-10-07T00:00:00Z')
+    expect((await runTrackRecordSearch(db, { now: () => CLOSE })).gdelt).toBe(1)
+    expect(await gdeltSearch()).toMatchObject({ status: 'ok', candidates: 0 })
   })
 
-  it('records where the press search began when the window’s first files were read before the alert existed', async () => {
-    await markRead('2026-10-07T00:00:00Z', '')
-    // Files up to 18:45 were read before the alert was written at 18:40 (and
-    // the 18:45 one within the job's batch lag after it): never matched to it.
-    await env.DB.prepare(
-      `UPDATE gdelt_files SET recorded_at = '2026-09-29T18:50:00.000Z' WHERE stamp < '20260929190000'`,
-    ).run()
-    await db
-      .update(schema.alerts)
-      .set({ recorded_at: '2026-09-29T18:40:00.000Z' })
-      .where(eq(schema.alerts.id, HASH(1)))
-    expect((await runTrackRecordSearch(db, { now: () => NOW })).gdelt).toBe(1)
-    const rows = await db.select().from(schema.trackRecordSearches)
-    const gdelt = rows.find((r) => r.source === 'gdelt' && r.alert_id === HASH(1))!
-    expect(gdelt.window_start).toBe('2026-09-29T19:00:00.000Z')
-    expect(rows.find((r) => r.source === 'newsroom')!.window_start).toBe('2026-09-22T17:01:00.000Z')
+  it('counts the search from after the last file read before rows were kept', async () => {
+    await markRead('2026-09-25T00:00:00Z', null)
+    await markRead('2026-10-07T00:00:00Z')
+    await runTrackRecordSearch(db, { now: () => CLOSE })
+    expect((await gdeltSearch())!.window_start).toBe('2026-09-25T00:00:00.000Z')
 
     const data = await queryTrackRecord(
       db,
@@ -655,148 +659,47 @@ describe('the search run', () => {
     )
     expect(data.rows.find((r) => r.alert_id === HASH(1))!.press).toMatchObject({
       state: 'none-found',
-      searched_from: '2026-09-29T19:00:00.000Z',
+      searched_from: '2026-09-25T00:00:00.000Z',
     })
   })
 
-  describe('mentions kept for alerts written later', () => {
-    // The fixture file is read at 19:01, before alert 1 is written at 19:02,
-    // so the job matches nothing to it; a file read at 19:40 backfills it.
-    const READ = new Date('2026-09-29T19:01:00Z')
-    const LATER = new Date('2026-09-29T19:40:00Z')
-    const vocabulary = mentionVocabulary(['gpt-6.1-sol'])
-    const mentionsOf = (rows: readonly string[]) =>
-      rows.flatMap((row) => {
-        const a = parseGkgRow(row)
-        const names = a ? vocabularyHits(a, vocabulary) : []
-        return a && names.length
-          ? [{ record_id: a.record_id, outlet: a.outlet, url: a.url, title: a.title, names }]
-          : []
-      })
-
-    beforeEach(async () => {
-      await db.insert(schema.entities).values({
-        source_id: 'openai-models-md',
-        entity_key: 'model:openai:gpt-6.1-sol:standard',
-        entity_type: 'model',
-        provider: 'openai',
-        content_hash: HASH(7),
-        payload: JSON.stringify({ model_slug: 'gpt-6.1-sol' }),
-        snapshot_id: 's',
-        first_seen_at: SAW,
-        source_url: 'https://developers.openai.com/api/docs/models.md',
-        fetched_at: SAW,
-      })
-      await db
-        .update(schema.alerts)
-        .set({ recorded_at: '2026-09-29T19:02:00.000Z' })
-        .where(eq(schema.alerts.id, HASH(1)))
-    })
-
-    const post = (stamp: string, rows: readonly string[], now: Date) =>
-      recordGkgFile(
-        db,
-        memoryRaw().store,
-        {
-          stamp,
-          fetched_at: now.toISOString(),
-          status: 'ok',
-          rows: rows.length,
-          matches: [],
-          mentions: mentionsOf(rows),
-        },
-        now,
-      )
-
-    it('keeps the rows that name a tracked lab or model, and matches a later alert against them', async () => {
-      expect(await post(FIXTURE_STAMP, fixtureRows, READ)).toMatchObject({ candidates: 0 })
-      const kept = await db.select().from(schema.gkgMentions)
-      expect(kept.length).toBeGreaterThan(0)
-      expect(kept.every((m) => (JSON.parse(m.names) as string[]).length > 0)).toBe(true)
-
-      // The next file: alert 1 is 38 minutes old, so it is backfilled.
-      expect(await post('20260929190000', [], LATER)).toMatchObject({ candidates: 1 })
-      const press = await db.select().from(schema.trackRecordCandidates)
-      expect(press).toEqual([
-        expect.objectContaining({
-          alert_id: HASH(1),
-          outlet: 'cnet.com',
-          published_at: '2026-09-29T18:30:00.000Z',
-          search_id: `gkg:backfill:${FIXTURE_STAMP}`,
-          source_url: gkgUrl(FIXTURE_STAMP),
-        }),
-      ])
-      const [back] = await db
-        .select()
-        .from(schema.gkgBackfills)
-        .where(eq(schema.gkgBackfills.alert_id, HASH(1)))
-      expect(back).toMatchObject({ through_stamp: '20260929190000', covered: 1, candidates: 1 })
-      // Once only.
-      expect(await post('20260929191500', [], new Date('2026-09-29T19:50:00Z'))).toMatchObject({
-        candidates: 0,
-      })
-    })
-
-    /**
-     * Every file in alert 1's window read with mentions kept, those before
-     * 19:00 read before the alert was written (so going forward the search
-     * would begin at 19:00), then the cron's search row.
-     */
-    async function searchedFrom(keptFrom: string | null = null): Promise<string> {
-      await markRead('2026-10-07T00:00:00Z', '', 0)
-      await env.DB.prepare(
-        `UPDATE gdelt_files SET recorded_at = '2026-09-29T18:50:00.000Z' WHERE stamp < '20260929190000'`,
-      ).run()
-      if (keptFrom) {
-        await env.DB.prepare(`UPDATE gdelt_files SET mentions = NULL WHERE stamp < ?1`)
-          .bind(gkgStamp(Date.parse(keptFrom)))
-          .run()
-      }
-      for (const stamp of [FIXTURE_STAMP, '20260929190000']) {
-        await db.delete(schema.gdeltFiles).where(eq(schema.gdeltFiles.stamp, stamp))
-      }
-      await post(FIXTURE_STAMP, fixtureRows, READ)
-      await post('20260929190000', [], LATER)
-      expect((await runTrackRecordSearch(db, { now: () => NOW })).gdelt).toBe(1)
-      const rows = await db.select().from(schema.trackRecordSearches)
-      return rows.find((r) => r.source === 'gdelt' && r.alert_id === HASH(1))!.window_start
-    }
-
-    it('counts a backfilled window as searched from its start once every file in it was kept', async () => {
-      expect(await searchedFrom()).toBe('2026-09-22T17:01:00.000Z')
-    })
-
-    it('still counts from the first kept file when earlier ones were read before mentions were kept', async () => {
-      expect(await searchedFrom('2026-09-25T00:00:00.000Z')).toBe('2026-09-25T00:00:00.000Z')
-    })
-
-    it('counts from the forward match when the alert was never backfilled', async () => {
-      await markRead('2026-10-07T00:00:00Z', '', 0)
-      await env.DB.prepare(
-        `UPDATE gdelt_files SET recorded_at = '2026-09-29T18:50:00.000Z' WHERE stamp < '20260929190000'`,
-      ).run()
-      await runTrackRecordSearch(db, { now: () => NOW })
-      const rows = await db.select().from(schema.trackRecordSearches)
-      expect(rows.find((r) => r.source === 'gdelt' && r.alert_id === HASH(1))!.window_start).toBe(
-        '2026-09-29T19:00:00.000Z',
-      )
-    })
-
-    it('drops kept rows past the retention days', async () => {
-      await post(FIXTURE_STAMP, fixtureRows, READ)
-      const later = new Date('2026-10-08T19:01:00Z')
-      await post('20261008183000', [], later)
-      expect(await db.select().from(schema.gkgMentions)).toEqual([])
-    })
+  it('counts the search from when the model family’s word joined the vocabulary', async () => {
+    // Before gpt-6.1-sol was on record, the vocabulary had no "gpt": those files
+    // kept no row for alert 1, though they did for an alert naming OpenAI.
+    const before = mentionVocabulary([])
+    expect(termsInVocabulary({ who: ['OpenAI'], what: ['outage'], also: [] }, before)).toBe(true)
+    await markRead('2026-09-29T17:00:00Z', before)
+    await markRead('2026-10-07T00:00:00Z')
+    await runTrackRecordSearch(db, { now: () => CLOSE })
+    expect((await gdeltSearch())!.window_start).toBe('2026-09-29T17:00:00.000Z')
   })
 
-  it('waits for the last files of a window that has only just closed', () => {
-    const window = { start: '2026-09-22T17:01:00.000Z', end: '2026-10-06T17:01:00.000Z' }
-    // The file for 17:00 holds the window's last minute; it is due at 17:30.
-    expect(windowRead(window, '20261006164500', null)).toBe(false)
-    expect(windowRead(window, '20261006170000', null)).toBe(true)
-    expect(windowRead(window, '20261006170000', '20261006170000')).toBe(false)
-    expect(windowRead(window, '20261007000000', '20261006171500')).toBe(true)
+  it('counts a window searched late only from the rows retention still holds', async () => {
+    await markRead('2026-10-07T00:00:00Z')
+    const late = new Date('2026-10-20T00:00:00Z')
+    await runTrackRecordSearch(db, { now: () => late })
+    // MENTION_RETAIN_DAYS (15) before the clock.
+    expect((await gdeltSearch())!.window_start).toBe('2026-10-05T00:00:00.000Z')
+  })
+
+  it('drops kept rows past the retention days', async () => {
+    await markRead(stampIso(FIXTURE_STAMP))
+    await post(FIXTURE_STAMP, fixtureRows, READ)
+    // Fifteen days on, a file's quarter hour is still held; a minute past it, not.
+    await post('20260929184500', [], new Date('2026-10-14T18:30:00Z'))
+    expect(await db.select().from(schema.gkgMentions)).not.toEqual([])
+    await post('20260929190000', [], new Date('2026-10-14T18:31:00Z'))
+    expect(await db.select().from(schema.gkgMentions)).toEqual([])
+  })
+
+  it('waits for the file holding the window’s last minute', () => {
+    expect(windowRead(WINDOW, null)).toBe(false)
+    expect(windowRead(WINDOW, '20261006164500')).toBe(false)
+    expect(windowRead(WINDOW, '20261006170000')).toBe(true)
+    // A window ending on a quarter hour needs that quarter hour's file too.
+    const even = { ...WINDOW, end: '2026-10-06T17:00:00.000Z' }
+    expect(windowRead(even, '20261006164500')).toBe(false)
+    expect(windowRead(even, '20261006170000')).toBe(true)
   })
 })
 
@@ -855,21 +758,6 @@ describe('the same-event gate', () => {
       NOW,
     )
     expect(again.inserted).toBe(0)
-  })
-
-  it('grounds a version against a press title stored before ingest untokenized it', () => {
-    const alert = { headline: 'xAI launches grok-4.7', explanation: '' }
-    const stored = {
-      title: 'Grok 4 . 7 arrives for coding and knowledge work at Grok 4 . 6 prices · Digg',
-      snippet: null,
-      outlet: 'digg.com',
-      published_at: '2026-10-30T00:00:00.000Z',
-    }
-    const rationale = 'Reports the "Grok 4.7" launch at Grok 4.6 prices.'
-    const corpus = reviewCorpus({ ...stored, kind: 'press' }, alert, [])
-    expect(groundingFailure(rationale, corpus)).toBeNull()
-    // A lab's own feed title is shown as written.
-    expect(candidateTitle({ kind: 'newsroom', title: stored.title })).toBe(stored.title)
   })
 
   it('takes ratings through the judge’s POST body, and refuses a key the contract lacks', async () => {
@@ -973,7 +861,7 @@ describe('the page payload', () => {
 
     // As of before the rating, the same row was unrated.
     const before = await queryTrackRecord(db, ctx('2026-11-04T11:00:00.000Z'))
-    expect(before.rows.find((r) => r.alert_id === HASH(1))!.press.state).toBe('not-searched')
+    expect(before.rows.find((r) => r.alert_id === HASH(1))!.press.state).toBe('not-yet-rated')
   })
 
   it('reads every side state from its searches, candidates and ratings', () => {
@@ -991,10 +879,10 @@ describe('the page payload', () => {
     const none = new Map()
     expect(sideOf(true, ok, [], none, SAW).state).toBe('window-open')
     expect(sideOf(false, [], [], none, SAW).state).toBe('not-searched')
-    expect(sideOf(false, [{ status: 'failed', detail: 'HTTP 500' }], [], none, SAW)).toMatchObject({
-      state: 'search-failed',
-      detail: 'HTTP 500',
-    })
+    // A failure from GDELT's search API, before the GKG files, is no search at all.
+    expect(sideOf(false, [{ status: 'failed', detail: 'HTTP 429' }], [], none, SAW).state).toBe(
+      'not-searched',
+    )
     expect(
       sideOf(false, [{ status: 'skipped', detail: 'no feed' }], [], none, SAW, 'no-feed').state,
     ).toBe('no-feed')

@@ -10,7 +10,7 @@ import { hiringRows } from '../server/pipeline/archive/rows'
 import { runRefresh, type RawStore } from '../server/pipeline/refresh'
 import { includeSources } from '../server/pipeline/sources'
 import { PointInTimeError, pollStampAt } from '../server/utils/terminal-asof'
-import { terminalStamp } from '../server/utils/terminal-cache'
+import { terminalStamps } from '../server/utils/terminal-cache'
 import {
   assertArchiveKnowable,
   queryHiringReach,
@@ -77,7 +77,7 @@ async function archive(timestamp: string, html: string) {
   if (out.counts.length) await db.insert(schema.archivedHiring).values(out.counts)
 }
 
-const live = async () => queryContext(sourcesYaml, await terminalStamp(db))
+const live = async () => queryContext(sourcesYaml, (await terminalStamps(db)).poll)
 const asOf = async (at: string) =>
   queryContext(sourcesYaml, await pollStampAt(db, at), undefined, at)
 

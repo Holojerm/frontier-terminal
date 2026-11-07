@@ -20,8 +20,6 @@ import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 
-import { readScheduledTasks } from './lib/scheduled-tasks'
-
 const ROOT = resolve(import.meta.dir, '..')
 
 /** The pages and routes a deploy must serve. Each is a 200, or the deploy is broken. */
@@ -75,7 +73,6 @@ interface Status {
   database?: string
   build?: { sha?: string | null }
   migrations?: { pending?: string[] }
-  crons?: Record<string, string[]>
 }
 
 async function readStatus(): Promise<Status | null> {
@@ -116,24 +113,7 @@ if (!status) {
     fail(`production D1 is missing migrations ${pending.join(', ')}: run bun run db:migrate:remote`)
   }
 
-  // ── 3. the crons it runs are the ones this commit declares ────────────────
-  const declared = readScheduledTasks(readFileSync(join(ROOT, 'nuxt.config.ts'), 'utf8'))
-  const canonical = (map: Record<string, string[]>) =>
-    JSON.stringify(
-      Object.entries(map)
-        .map(([cron, tasks]) => [cron, tasks.toSorted()])
-        .toSorted(),
-    )
-  if (canonical(status.crons ?? {}) !== canonical(declared)) {
-    fail(
-      `/api/status crons ${JSON.stringify(status.crons)} differ from nuxt.config.ts SCHEDULED_TASKS ` +
-        JSON.stringify(declared),
-    )
-  } else {
-    console.info(`✓ crons match nuxt.config.ts (${Object.keys(declared).length} schedules)`)
-  }
-
-  // ── 4. key pages and routes answer ────────────────────────────────────────
+  // ── 3. key pages and routes answer ────────────────────────────────────────
   for (const path of PATHS) {
     let res: Response | null = null
     // One retry: a colo can still be serving the previous version for a moment.

@@ -12,7 +12,6 @@ import { insertRows } from '../server/pipeline/store'
 import { SCHEMA_VERSION, tableChangedAfter } from '../server/utils/data-schema'
 import {
   BULK_INDEX_PATH,
-  BULK_PAGE_SIZE,
   buildOrder,
   d1Reads,
   isCurrent,
@@ -30,12 +29,12 @@ import {
   type BulkManifest,
   type BulkStore,
 } from '../server/utils/terminal-bulk'
-import { EXPORT_TABLES, type ExportTable } from '../server/utils/terminal-export'
+import { EXPORT_PAGE_SIZE, EXPORT_TABLES, type ExportTable } from '../server/utils/terminal-export'
 
 // The bulk feed against a real D1: files land in the store, gzipped CSV and
 // Parquet, with a SHA-256 that matches their bytes, the recent file is the
 // license window, the full file labels every row, the full files (and only
-// they) are copied to the licensed bucket, and a second run the same day does
+// they) live in the licensed bucket, and a second run the same day does
 // nothing.
 
 const db = drizzle(env.DB, { schema })
@@ -111,17 +110,13 @@ describe('the bulk build', () => {
     const store = memoryStore()
     const report = await runBulkBuild({ db, store, now: () => NOW, tables: TABLES })
     expect(report.failed).toEqual([])
-    expect(report.built.sort()).toEqual([
-      'full/entity_securities',
-      'full/snapshots',
-      'recent/entity_securities',
-      'recent/snapshots',
-    ])
+    expect(report.built.sort()).toEqual(['entity_securities', 'snapshots'])
 
     const index = await readBulkIndex(store)
     expect(Object.keys(index.files)).toHaveLength(8)
     for (const file of Object.values(index.files)) {
-      const body = store.data.get(bulkPath(file.variant, file.table, file.format))!
+      expect(file.stored.in).toBe('blob')
+      const body = store.data.get(file.stored.key)!
       expect(await sha256(body), file.table).toBe(file.sha256)
       expect(file.bytes).toBe((body as Uint8Array).byteLength)
       expect(file.schema_version).toBe(SCHEMA_VERSION)
@@ -144,10 +139,12 @@ describe('the bulk build', () => {
     expect(fullCsv).toContain('CC-BY-4.0')
     expect(fullCsv).not.toContain('CC-BY-NC-4.0')
 
-    // A lookup table is whole in both files.
-    expect(index.files['recent/entity_securities.csv.gz']!.rows).toBe(
-      index.files['full/entity_securities.csv.gz']!.rows,
-    )
+    // A lookup table is whole in both cuts, so both entries name one file.
+    expect(index.files['full/entity_securities.csv.gz']).toEqual({
+      ...index.files['recent/entity_securities.csv.gz'],
+      variant: 'full',
+    })
+    expect(store.data.has(bulkPath('recent', 'entity_securities', 'csv.gz'))).toBe(false)
   })
 
   it('writes the same rows and columns as Parquet, typed, with the license in its metadata', async () => {
@@ -218,7 +215,7 @@ describe('the bulk build', () => {
     expect(rows.map((r) => r.license)).not.toContain('CC-BY-NC-4.0')
   })
 
-  it('copies the full files, and only those, to the licensed bucket with a manifest', async () => {
+  it('keeps the full files, and only those, in the licensed bucket with a manifest', async () => {
     const store = memoryStore()
     const licensed = memoryStore()
     await runBulkBuild({
@@ -238,9 +235,23 @@ describe('the bulk build', () => {
         LICENSED_MANIFEST_KEY,
       ].sort(),
     )
-    expect(licensed.data.get(licensedKey('snapshots', 'parquet'))).toEqual(
-      store.data.get(bulkPath('full', 'snapshots', 'parquet')),
+    // No second copy in the blob store, and a whole table's recent file is the licensed one.
+    expect([...store.data.keys()].sort()).toEqual(
+      [
+        BULK_INDEX_PATH,
+        bulkPath('recent', 'snapshots', 'csv.gz'),
+        bulkPath('recent', 'snapshots', 'parquet'),
+      ].sort(),
     )
+    const index = await readBulkIndex(store)
+    expect(index.files['full/snapshots.parquet']!.stored).toEqual({
+      in: 'licensed',
+      key: licensedKey('snapshots', 'parquet'),
+    })
+    expect(index.files['recent/entity_securities.csv.gz']!.stored).toEqual({
+      in: 'licensed',
+      key: licensedKey('entity_securities', 'csv.gz'),
+    })
     const manifest = JSON.parse(licensed.data.get(LICENSED_MANIFEST_KEY) as string) as BulkManifest
     expect(manifest.history).toBe('full')
     const snapshots = manifest.tables.find((t) => t.table === 'snapshots')!
@@ -248,7 +259,7 @@ describe('the bulk build', () => {
     expect(snapshots.parquet?.s3_key).toBe('full/snapshots.parquet')
     expect(snapshots.url).toBe('https://example.com/export/bulk/full/snapshots.csv.gz')
 
-    // Built today before the bucket was bound, the full cuts are rebuilt once it is.
+    // Built today before the bucket was bound, the tables are rebuilt once it is.
     const earlier = memoryStore()
     await runBulkBuild({ db, store: earlier, now: () => NOW, tables: TABLES })
     const copy = memoryStore()
@@ -259,7 +270,7 @@ describe('the bulk build', () => {
       now: () => NOW,
       tables: TABLES,
     })
-    expect(report.built.sort()).toEqual(['full/entity_securities', 'full/snapshots'])
+    expect(report.built.sort()).toEqual(['entity_securities', 'snapshots'])
     expect(copy.data.has(LICENSED_MANIFEST_KEY)).toBe(true)
   })
 
@@ -275,6 +286,8 @@ describe('the bulk build', () => {
     expect(object?.customMetadata).toEqual({ sha256: digest })
     expect(object?.httpMetadata?.contentType).toBe('application/gzip')
     await object?.arrayBuffer()
+    expect(await (await store.get('full/x.csv.gz'))?.text()).toBe('x')
+    expect(await store.get('full/none.csv.gz')).toBeNull()
     // R2 refuses a body whose hash isn't the one stated.
     await expect(store.put('full/y.csv.gz', body, { sha256: '0'.repeat(64) })).rejects.toThrow()
   })
@@ -321,28 +334,27 @@ describe('the bulk build', () => {
 
     // An earlier run today, when snapshots was the first thing it tried.
     const first = await runBulkBuild({ db, store, now, tables: { snapshots: broken } })
-    expect(first.failed.map((f) => f.file).sort()).toEqual(['full/snapshots', 'recent/snapshots'])
+    expect(first.failed.map((f) => f.file)).toEqual(['snapshots'])
     const index = await readBulkIndex(store)
-    expect(index.failures?.['full/snapshots']?.error).toContain('Unexpected end of file')
+    expect(index.failures?.snapshots?.error).toContain('Unexpected end of file')
 
     // The next run starts with what hasn't failed, and makes progress.
     const second = await run()
     expect(second.failed).toEqual([])
     expect(second.built.length).toBeGreaterThan(0)
 
-    // Six good cuts, a couple a run, all before snapshots is tried again.
-    const good = ['entity_securities', 'prices_latest', 'incidents']
-      .flatMap((t) => [`full/${t}`, `recent/${t}`])
-      .sort()
+    // Three good tables, a couple a run, all before snapshots is tried again.
+    const good = ['entity_securities', 'incidents', 'prices_latest']
     const runs = [second]
     while (runs.flatMap((r) => r.built).length < good.length && runs.length < 6) {
       runs.push(await run())
     }
     expect(runs.flatMap((r) => r.built).sort()).toEqual(good)
-    expect(runs.flatMap((r) => r.failed)).toEqual([])
+    // Snapshots is tried again only in the run that finished the rest.
+    expect(runs.slice(0, -1).flatMap((r) => r.failed)).toEqual([])
     const after = await run()
     expect(after.built).toEqual([])
-    expect(after.failed.map((f) => f.file)).toContain('full/snapshots')
+    expect(after.failed.map((f) => f.file)).toContain('snapshots')
   })
 
   it('saves the index after every cut, so a run cut short keeps what it built', async () => {
@@ -363,11 +375,11 @@ describe('the bulk build', () => {
     const store = memoryStore()
     const first = await runBulkBuild({ db, store, now: () => NOW, d1ReadBudget: 1, tables: TABLES })
     expect(first.built).toHaveLength(1)
-    expect(first.deferred).toHaveLength(3)
+    expect(first.deferred).toHaveLength(1)
     const index = await readBulkIndex(store)
-    const [, built] = first.built[0]!.split('/')
+    const [built] = first.built
     const rows = index.files[`full/${built}.csv.gz`]?.rows ?? 0
-    expect(d1Reads(index, built!)).toBe(Math.ceil(rows / BULK_PAGE_SIZE) + 1)
+    expect(d1Reads(index, built!)).toBe(Math.ceil(rows / EXPORT_PAGE_SIZE) + 1)
     expect(d1Reads(index, 'never_built')).toBe(1)
   })
 
@@ -376,7 +388,7 @@ describe('the bulk build', () => {
     const report = await runBulkBuild({ db, store, now: () => NOW })
     expect(report.failed).toEqual([])
     expect(report.deferred).toEqual([])
-    expect(report.built).toHaveLength(Object.keys(EXPORT_TABLES).length * 2)
+    expect(report.built).toHaveLength(Object.keys(EXPORT_TABLES).length)
   })
 
   it('builds the smallest cuts first, and today’s failures last', () => {
@@ -386,13 +398,12 @@ describe('the bulk build', () => {
         'full/small.csv.gz': { rows: 10 },
       } as unknown as BulkIndex['files'],
       failures: {
-        'full/tiny': { at: '2026-11-04T01:00:00Z', error: 'x' },
-        'full/old': { at: '2026-11-03T01:00:00Z', error: 'x' },
+        tiny: { at: '2026-11-04T01:00:00Z', error: 'x' },
+        old: { at: '2026-11-03T01:00:00Z', error: 'x' },
       },
     }
-    const cut = (table: string) => ({ key: `full/${table}`, variant: 'full' as const, table })
-    const order = buildOrder(index, ['big', 'small', 'tiny', 'new', 'old'].map(cut), '2026-11-04')
-    expect(order.map((c) => c.table)).toEqual(['new', 'old', 'small', 'big', 'tiny'])
+    const order = buildOrder(index, ['big', 'small', 'tiny', 'new', 'old'], '2026-11-04')
+    expect(order).toEqual(['new', 'old', 'small', 'big', 'tiny'])
   })
 
   it('rebuilds after a schema release only the tables the release changed', async () => {
@@ -437,16 +448,32 @@ describe('the bulk build', () => {
     const old: Partial<typeof csv> = { ...csv, schema_version: '1.2.0' }
     delete old.format
     delete old.license_older
-    await store.put(BULK_INDEX_PATH, JSON.stringify({ files: { 'recent/snapshots': old } }))
+    delete old.stored
+    // From before `stored`: a full file copied to the licensed bucket says so.
+    const copied = { ...index.files['full/snapshots.parquet']!, licensed_copy: true }
+    delete (copied as Partial<typeof copied>).stored
+    await store.put(
+      BULK_INDEX_PATH,
+      JSON.stringify({
+        files: { 'recent/snapshots': old, 'full/snapshots.parquet': copied },
+        failures: { 'full/snapshots': { at: NOW.toISOString(), error: 'x' } },
+      }),
+    )
     const before = await readBulkIndex(store)
-    expect(Object.keys(before.files)).toEqual(['recent/snapshots.csv.gz'])
+    expect(Object.keys(before.files)).toEqual(['recent/snapshots.csv.gz', 'full/snapshots.parquet'])
     expect(bulkFileOf(before, 'recent', 'snapshots.csv.gz')).toMatchObject({
       format: 'csv.gz',
       license_older: null,
+      stored: { in: 'blob', key: bulkPath('recent', 'snapshots', 'csv.gz') },
     })
+    expect(bulkFileOf(before, 'full', 'snapshots.parquet')!.stored).toEqual({
+      in: 'licensed',
+      key: licensedKey('snapshots', 'parquet'),
+    })
+    expect(before.failures).toEqual({})
     expect(bulkManifest(before, 'recent', '').tables[0]!.parquet).toBeNull()
     const report = await runBulkBuild({ db, store, now: () => NOW, tables: TABLES })
-    expect(report.built).toContain('recent/snapshots')
+    expect(report.built).toContain('snapshots')
     expect(Object.keys((await readBulkIndex(store)).files)).toHaveLength(8)
   })
 })

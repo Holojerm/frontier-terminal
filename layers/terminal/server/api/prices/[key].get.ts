@@ -7,7 +7,7 @@ import { z } from 'zod'
 
 import { PERMALINK_LIMIT } from '../../utils/rate-limits'
 import { queryPriceHistory } from '../../utils/terminal-db'
-import { serveTerminalAsOf, terminalDb } from '../../utils/terminal-handler'
+import { serveTerminal, terminalDb } from '../../utils/terminal-handler'
 import { rateLimitTerminal } from '../../utils/api-access'
 
 // modelKey() output: `model:<provider>:<slug>[:<tier>]` (layers/terminal/server/pipeline/contracts/keys.ts).
@@ -30,12 +30,11 @@ export default defineEventHandler(async (event) => {
   if (!parsed.success) throw createError({ statusCode: 400, message: 'Not a SKU key' })
   const key = parsed.data
 
-  const history = await serveTerminalAsOf(
+  const history = await serveTerminal(
     event,
     'price-history',
     (ctx) => queryPriceHistory(terminalDb, ctx, key),
-    key,
-    true,
+    { variant: key, asOf: 'pricing' },
   )
   if (history === null) throw createError({ statusCode: 404, message: 'SKU not found' })
   return history
