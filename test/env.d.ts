@@ -9,5 +9,7 @@ declare module 'cloudflare:test' {
     BLOB: R2Bucket
     /** Migrations read from server/db/migrations, applied by test/setup.ts. */
     TEST_MIGRATIONS: D1Migration[]
+    /** Committed fixtures + sources.yaml by repo-relative path (vitest.config.ts). */
+    FIXTURES: Record<string, string>
   }
 }
