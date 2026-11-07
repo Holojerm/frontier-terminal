@@ -356,7 +356,7 @@ export interface PriceRowView extends Prov {
    * stored row of the same model it was read from (a Google model page
    * prints the window its pricing page omits, for every tier).
    */
-  context_window_source: (Prov & { source_id: string }) | null
+  context_window_source: (Prov & { source_id: string; checked_at: string | null }) | null
   input_per_mtok: number | null
   cached_input_per_mtok: number | null
   output_per_mtok: number | null
@@ -372,6 +372,12 @@ export interface PriceRowView extends Prov {
   revisions: number
   /** One price field across those observations, oldest first; null until there are two. */
   spark: { field: 'input_per_mtok' | 'output_per_mtok'; values: (number | null)[] } | null
+  /**
+   * The newest read of `source_id` that still showed this row, when later
+   * than `fetched_at` (which only moves when the row changes); null for a
+   * delisted row or a source that has not been re-read since.
+   */
+  checked_at: string | null
 }
 
 export type ModelClassId = 'flagship' | 'balanced' | 'economy'

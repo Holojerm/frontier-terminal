@@ -208,6 +208,7 @@ function archivedRowView(
     spark: null,
     source_url: r.source_url,
     fetched_at: r.fetched_at,
+    checked_at: null,
   }
 }
 
