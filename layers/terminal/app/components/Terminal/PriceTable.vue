@@ -138,6 +138,7 @@ function deltaText(row: PriceRowView): string | null {
           <TerminalProvenanceTag
             :source-url="r.context_window_source.source_url"
             :fetched-at="r.context_window_source.fetched_at"
+            :checked-at="r.context_window_source.checked_at"
             label="window source"
           />
         </span>
@@ -172,7 +173,11 @@ function deltaText(row: PriceRowView): string | null {
         <template v-else>—</template>
       </template>
       <template #cell-source="{ row: r }">
-        <TerminalProvenanceTag :source-url="r.source_url" :fetched-at="r.fetched_at" />
+        <TerminalProvenanceTag
+          :source-url="r.source_url"
+          :fetched-at="r.fetched_at"
+          :checked-at="r.checked_at"
+        />
       </template>
     </TerminalTable>
 
