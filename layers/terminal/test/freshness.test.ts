@@ -13,6 +13,7 @@ import {
   cronIntervalMs,
   freshnessMarkerKey,
   freshnessOf,
+  expectedMarkerKey,
   taskHeartbeatCheck,
   taskMaxAgeMs,
   type FreshnessCheck,
@@ -274,6 +275,31 @@ describe('task heartbeats', () => {
     expect(() => withHeartbeat({ run: async () => ({}) })).toThrow('no meta.name')
   })
 
+  it('gives a task a deploy just added its full window before calling it silent', async () => {
+    await recordHeartbeat(db, {
+      task: 'ops:alert',
+      started_at: '2026-11-06T10:00:00.000Z',
+      finished_at: '2026-11-06T10:00:00.000Z',
+      error: null,
+    })
+    const sweep = taskHeartbeatCheck('events:sweep', '41 * * * *')
+    const marker = memoryMarker()
+    const at = (iso: string) => new Date(iso)
+    // Seen first at 17:30, before its first :41 run: not owed yet.
+    expect(await checkFreshness(db, marker, [sweep], at('2026-11-07T17:30:00Z'))).toEqual({
+      'task:events:sweep': 'not-owed',
+    })
+    expect(marker.values.get(expectedMarkerKey('events:sweep'))).toBe('2026-11-07T17:30:00.000Z')
+    // Still inside its 90-minute limit an hour later.
+    expect(await checkFreshness(db, marker, [sweep], at('2026-11-07T18:30:00Z'))).toEqual({
+      'task:events:sweep': 'not-owed',
+    })
+    // Two hours with no run: silent.
+    expect(await checkFreshness(db, marker, [sweep], at('2026-11-07T19:31:00Z'))).toEqual({
+      'task:events:sweep': 'stale',
+    })
+  })
+
   it('says nothing before monitoring starts, then flags a task that never ran or keeps throwing', async () => {
     const hourly = taskHeartbeatCheck('bulk:build', '41 * * * *')
     const NOW = new Date('2026-11-06T12:00:00Z')
@@ -288,7 +314,10 @@ describe('task heartbeats', () => {
       finished_at: '2026-11-06T10:00:00.000Z',
       error: null,
     })
-    expect(await checkFreshness(db, memoryMarker(), [hourly], NOW)).toEqual({
+    // A task the checker first expected three hours ago and that still has no row.
+    const expectedEarlier = memoryMarker()
+    expectedEarlier.values.set(expectedMarkerKey('bulk:build'), '2026-11-06T09:00:00.000Z')
+    expect(await checkFreshness(db, expectedEarlier, [hourly], NOW)).toEqual({
       'task:bulk:build': 'stale',
     })
     const [never] = await db.select().from(schema.opsEvents)

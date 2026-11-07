@@ -72,7 +72,7 @@ export interface FreshnessCheck {
   maxAgeMs: number
   /** The route the ops event names, when one is the place to look. */
   path?: string
-  evidence(db: PipelineDb, now: Date): Promise<FreshnessEvidence>
+  evidence(db: PipelineDb, now: Date, marker: MarkerStore): Promise<FreshnessEvidence>
 }
 
 export type FreshnessVerdict =
@@ -134,7 +134,7 @@ export async function checkFreshness(
   for (const check of checks) {
     let evidence: FreshnessEvidence
     try {
-      evidence = await check.evidence(db, now)
+      evidence = await check.evidence(db, now, marker)
     } catch (error) {
       verdicts[check.key] = 'check-failed'
       await recordOpsEvent(db, {
@@ -206,6 +206,33 @@ export function taskMaxAgeMs(expression: string): number {
   return interval + Math.max(30 * MINUTE_MS, interval / 2)
 }
 
+/** Monitoring started with the first heartbeat any task wrote. */
+async function monitoringStart(db: PipelineDb): Promise<string | null> {
+  const [since] = await db
+    .select({ at: min(tables.taskHeartbeats.first_seen_at) })
+    .from(tables.taskHeartbeats)
+  return since?.at ?? null
+}
+
+export const expectedMarkerKey = (task: string) => `freshness:expected:${task}`
+
+/** Long enough to outlive any limit; a task that runs once never reads it again. */
+const EXPECTED_MARKER_TTL_SECONDS = 90 * 24 * 60 * 60
+
+/**
+ * When the checker first saw a task with no heartbeat row. A task added by a
+ * deploy is owed from about then, not from when monitoring started: counting
+ * from monitoring start flagged events:sweep as silent eleven minutes before
+ * its first scheduled run (2026-11-07).
+ */
+async function firstExpected(marker: MarkerStore, task: string, now: Date): Promise<string> {
+  const key = expectedMarkerKey(task)
+  const seen = await marker.get(key)
+  if (seen) return seen
+  await marker.put(key, now.toISOString(), EXPECTED_MARKER_TTL_SECONDS)
+  return now.toISOString()
+}
+
 /** The check a scheduled task gets from its heartbeat. */
 export function taskHeartbeatCheck(task: string, expression: string): FreshnessCheck {
   return {
@@ -213,21 +240,16 @@ export function taskHeartbeatCheck(task: string, expression: string): FreshnessC
     label: `Scheduled task ${task} (${expression})`,
     kind: TASK_SILENT_KIND,
     maxAgeMs: taskMaxAgeMs(expression),
-    async evidence(db) {
+    async evidence(db, now, marker) {
       const [row] = await db
         .select()
         .from(tables.taskHeartbeats)
         .where(eq(tables.taskHeartbeats.task, task))
-      // Monitoring started with the first heartbeat any task wrote; a task
-      // that has never written one is owed since then, not since the epoch.
-      const [since] = await db
-        .select({ at: min(tables.taskHeartbeats.first_seen_at) })
-        .from(tables.taskHeartbeats)
       const lastOk = row?.last_completed_at ?? null
       const failedSince =
         row?.last_failed_at && (!lastOk || row.last_failed_at > lastOk) ? row.last_failed_at : null
       return {
-        owedSince: since?.at ?? null,
+        owedSince: row ? await monitoringStart(db) : await firstExpected(marker, task, now),
         lastOkAt: lastOk,
         note: !row
           ? 'it has never recorded a run'

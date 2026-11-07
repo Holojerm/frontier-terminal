@@ -1993,6 +1993,14 @@ export async function recipeRunsStamp(db: PipelineDb, ids?: readonly string[]): 
 
 /** Every thesis recipe with its last run and what it has stored, beside its audit entry. */
 async function recipeCoverage(db: PipelineDb, ctx: QueryContext): Promise<RecipeCoverage[]> {
+  const o = tables.recipeObservations
+  // A join on each recipe's max, not a correlated subquery per row: the
+  // subquery form re-scanned the recipe for every observation (n² per recipe).
+  const latest = db
+    .select({ recipe_id: o.recipe_id, at: max(o.fetched_at).as('latest_at') })
+    .from(o)
+    .groupBy(o.recipe_id)
+    .as('latest')
   const [runs, counts, newest] = await Promise.all([
     db
       .select({
@@ -2012,14 +2020,12 @@ async function recipeCoverage(db: PipelineDb, ctx: QueryContext): Promise<Recipe
       .groupBy(tables.recipeObservations.recipe_id),
     db
       .selectDistinct({
-        recipe_id: tables.recipeObservations.recipe_id,
-        source_url: tables.recipeObservations.source_url,
-        fetched_at: tables.recipeObservations.fetched_at,
+        recipe_id: o.recipe_id,
+        source_url: o.source_url,
+        fetched_at: o.fetched_at,
       })
-      .from(tables.recipeObservations)
-      .where(
-        sql`${tables.recipeObservations.fetched_at} = (select max(o2.fetched_at) from recipe_observations o2 where o2.recipe_id = ${tables.recipeObservations.recipe_id})`,
-      ),
+      .from(o)
+      .innerJoin(latest, and(eq(o.recipe_id, latest.recipe_id), eq(o.fetched_at, latest.at))),
   ])
   const runOf = new Map(runs.map((r) => [r.recipe_id, r]))
   const countOf = new Map(counts.map((r) => [r.recipe_id, r.n]))
