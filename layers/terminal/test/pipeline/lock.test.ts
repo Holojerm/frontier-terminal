@@ -88,7 +88,22 @@ describe('withPollLock', () => {
     expect(POLL_LOCK_TTL_SECONDS).toBe(600)
     await withPollLock(store, 'survey@t3', async () => {
       const { metadata: _m, ...entry } = (await env.KV.getWithMetadata(POLL_LOCK_KEY)) ?? {}
-      expect(entry.value).toBe('survey@t3')
+      expect(entry.value).toMatch(/^survey@t3 #[0-9a-f-]{36}$/)
+      // An overlapping tick is told the holder, not the token.
+      const inner = await withPollLock(store, 'edgar@t3', async () => 'should not run')
+      expect(inner).toEqual({ skipped: true, heldBy: 'survey@t3' })
     })
+  })
+
+  it('a tick that outlived its TTL leaves the lock a later tick took alone', async () => {
+    let taken: string | null = null
+    await withPollLock(store, 'survey@slow', async () => {
+      // The TTL lapsed mid-tick and the next tick acquired the lock.
+      await env.KV.put(POLL_LOCK_KEY, 'edgar@next #token')
+      taken = await env.KV.get(POLL_LOCK_KEY)
+    })
+    expect(taken).toBe('edgar@next #token')
+    expect(await env.KV.get(POLL_LOCK_KEY)).toBe('edgar@next #token')
+    await env.KV.delete(POLL_LOCK_KEY)
   })
 })
