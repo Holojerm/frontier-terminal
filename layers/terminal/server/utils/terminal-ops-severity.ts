@@ -6,11 +6,13 @@
 //
 // - critical — the product has stopped doing its job: no data is coming in,
 //   no alert is being judged, or the site is failing requests wholesale (core
-//   escalates server_error itself, at SERVER_ERROR_CRITICAL_COUNT). The
-//   digest subject leads with [Critical]; filter on it to make the phone buzz.
-// - warning — one part is degraded or stale. Worth a look today.
-// - info — the system handled it, or it is a setup state already known. These
-//   wait up to a day (OPS_INFO_HOLD_MS) unless something louder goes out first.
+//   escalates server_error itself, at SERVER_ERROR_CRITICAL_COUNT). Mailed at
+//   once, one email per kind per cooldown (ops-throttle.ts); the subject
+//   leads with [Critical], so a filter on it can make the phone buzz.
+// - warning — one part is degraded or stale. Worth a look today: listed in
+//   the daily digest, once per failure streak.
+// - info — the system handled it, or it is a setup state already known.
+//   Listed in the daily digest only when a warning sends it anyway.
 //
 // A kind missing from the table is a warning: a new failure path should be
 // seen before anyone decides it can be quiet. Add a kind here when you add its
@@ -27,8 +29,9 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
       "No alerts are being published. Open the frontier-terminal-judge routine's latest session at claude.ai/code/routines; a 403 on /api/judge/pending means its environment's network allowlist lost the Worker host.",
   },
   // Critical so it is mailed at once (ops-immediate.ts): Issues fires on a new
-  // kind of failure, rarely, and it is the only signal for a failure that
-  // spools nothing else, like a request that never returns.
+  // kind of failure, and it is the only signal for a failure that spools
+  // nothing else, like a request that never returns. Repeats inside the
+  // cooldown are not mailed again.
   workers_issue: {
     severity: 'critical',
     action:
@@ -107,6 +110,8 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   // not back, and the Worker refused it. Persistent staleness from that shows
   // up separately as class_basis_still_stale.
   judge_rejected: { severity: 'info' },
+  // A failure streak the daily digest reported has gone quiet (ops-throttle.ts).
+  ops_recovered: { severity: 'info' },
   class_map_changed: { severity: 'info' },
   class_basis_stale: { severity: 'info' },
   filed_facts_deferred: { severity: 'info' },

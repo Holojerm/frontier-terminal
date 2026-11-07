@@ -1,12 +1,14 @@
-// Cron task: drain the ops spool and email a digest.
+// Cron task: mail what the ops spool says needs mailing, then prune it.
+// Critical events go out at once, one per kind per cooldown; everything else
+// waits for one daily digest (layers/terminal/server/utils/ops-alerts.ts).
 //
 // Scheduled from nuxt.config.ts (SCHEDULED_TASKS → nitro.scheduledTasks) and
 // matched by the [triggers] crons entry in wrangler.toml — both must agree, or
 // Cloudflare delivers a cron Nitro has no task for, or Nitro waits for a cron
 // that never arrives. `bun run crons:check` fails the build on either.
 //
-// Silence is the healthy state: with nothing spooled this is one indexed
-// SELECT, one DELETE, and a return. That is what makes a tight schedule cheap.
+// Silence is the healthy state: outside the digest hour this is one read of
+// the pending rows, one DELETE, and a return.
 //
 // Imports are explicit for the reason server/tasks/purge-expired-tokens.ts
 // spells out: a task is an untested bundling surface that runs unattended, and
@@ -26,10 +28,11 @@ import { draftedKey } from '#layers/terminal/server/pipeline/press'
 import { checkFreshness } from '#layers/terminal/server/utils/freshness'
 import { freshnessChecks } from '#layers/terminal/server/utils/terminal-freshness'
 import { getOpsMailer } from '../../utils/ops-mail'
-import { drainOpsEvents, pruneOpsEvents } from '../../utils/ops'
+import { pruneOpsEvents } from '../../utils/ops'
 import { classifyOps } from '../../utils/ops-severity'
 import { logEvent } from '../../utils/log'
 import { withHeartbeat } from '#layers/terminal/server/utils/task-heartbeat'
+import { runDailyDigest, sendCriticalAlerts } from '#layers/terminal/server/utils/ops-alerts'
 
 interface CloudflareTaskContext {
   cloudflare?: { env?: Record<string, unknown> }
@@ -40,7 +43,7 @@ const manifest = FleetManifestSchema.parse(rawManifest)
 const task = defineTask({
   meta: {
     name: 'ops:alert',
-    description: 'Email a digest of spooled ops events, then prune old ones',
+    description: 'Email critical ops events and the daily digest, then prune old ones',
   },
   async run({ context }) {
     // The freshness checks spool their own events, so they run before the
@@ -78,16 +81,19 @@ const task = defineTask({
     }
 
     const { appName, appUrl } = config.public
-    const outcome = await drainOpsEvents(db, mailer, {
-      appName,
-      appUrl: appUrl || undefined,
-      workerName: manifest.workers[0],
+    const deps = {
+      mailer,
       // Tiers registered by layers and the app from their Nitro plugins
-      // (server/utils/ops-severity.ts). Ranks the digest, tags its subject.
+      // (server/utils/ops-severity.ts). Decides what is critical.
       classify: classifyOps,
-    })
+      options: { appName, appUrl: appUrl || undefined, workerName: manifest.workers[0] },
+    }
+    const critical = await sendCriticalAlerts(db, deps)
+    const daily = await runDailyDigest(db, deps)
+    const pruned = await pruneOpsEvents(db)
+    const outcome = { critical, daily, pruned }
     // Quiet ticks stay quiet — only say something when something happened.
-    if (outcome.sent || outcome.error) {
+    if (critical.sent.length || critical.error || daily.sent || daily.error) {
       logEvent('warn', 'ops_alert_run', { ...outcome })
     }
     return { result: outcome }

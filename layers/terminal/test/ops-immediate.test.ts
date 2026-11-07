@@ -1,5 +1,5 @@
-// A critical ops event is mailed when it is spooled, not up to 30 minutes
-// later; a failing site that spools a 5xx per request still sends one email.
+// A critical ops event is mailed when it is spooled, once per kind per
+// cooldown; warnings stay pending for the daily digest.
 
 import { env } from 'cloudflare:test'
 import { drizzle } from 'drizzle-orm/d1'
@@ -13,72 +13,120 @@ import {
   resetOpsEventListenersForTest,
 } from '~~/server/utils/ops'
 import {
+  SERVER_ERROR_CRITICAL_COUNT,
   classifyOps,
   registerOpsSeverity,
   resetOpsSeverityForTest,
 } from '~~/server/utils/ops-severity'
-import { SERVER_ERROR_CRITICAL_COUNT } from '~~/server/utils/ops-severity'
 import {
   BURST_CHECK_INTERVAL_MS,
-  OPS_IMMEDIATE_CLAIM_KEY,
-  OPS_IMMEDIATE_INTERVAL_SECONDS,
   notifyIfCritical,
   resetOpsImmediateForTest,
   type ImmediateDeps,
 } from '../server/utils/ops-immediate'
-import type { CacheStore } from '../server/utils/terminal-cache'
+import { CRITICAL_COOLDOWN_MS } from '../server/utils/ops-throttle'
 
 const db = drizzle(env.DB, { schema })
 
 function harness(overrides: Partial<ImmediateDeps> = {}) {
   const sent: OpsDigest[] = []
-  const map = new Map<string, unknown>()
-  const ttls = new Map<string, number | undefined>()
-  const store: CacheStore = {
-    get: async (key) => map.get(key) ?? null,
-    set: async (key, value, opts) => {
-      map.set(key, value)
-      ttls.set(key, opts?.ttl)
-    },
-  }
+  let failNext = false
   let clock = Date.parse('2026-11-07T12:00:00Z')
   const deps: ImmediateDeps = {
     classify: classifyOps,
-    mailer: async (d) => void sent.push(d),
-    store,
+    mailer: async (d) => {
+      if (failNext) {
+        failNext = false
+        throw new Error('binding down')
+      }
+      sent.push(d)
+    },
     options: { appName: 'Frontier Terminal' },
     now: () => clock,
     ...overrides,
   }
-  return { deps, sent, map, ttls, advance: (ms: number) => (clock += ms) }
+  return {
+    deps,
+    sent,
+    advance: (ms: number) => (clock += ms),
+    failNextSend: () => (failNext = true),
+  }
+}
+
+async function pendingKinds() {
+  const rows = await db.select().from(schema.opsEvents)
+  return rows.filter((r) => r.notifiedAt === null).map((r) => r.kind)
 }
 
 beforeEach(async () => {
   await db.delete(schema.opsEvents)
+  await db.delete(schema.opsAlertState)
   resetOpsSeverityForTest()
   resetOpsEventListenersForTest()
   resetOpsImmediateForTest()
-  registerOpsSeverity({ all_sources_failed: { severity: 'critical' } })
+  registerOpsSeverity({
+    all_sources_failed: { severity: 'critical' },
+    workers_issue: { severity: 'critical' },
+  })
 })
 
 describe('notifyIfCritical', () => {
-  it('mails a registered critical kind at once and marks the rows', async () => {
-    const { deps, sent, ttls } = harness()
+  it('mails a critical kind at once, carrying only critical rows', async () => {
+    const { deps, sent } = harness()
+    await recordOpsEvent(db, { kind: 'source_failed', detail: 'a: HTTP 403' })
     await recordOpsEvent(db, { kind: 'all_sources_failed', detail: 'survey: all 40 failed' })
 
     expect(await notifyIfCritical(db, { kind: 'all_sources_failed' }, deps)).toBe('sent')
     expect(sent).toHaveLength(1)
     expect(sent[0]!.subject).toContain('[Critical]')
-    const rows = await db.select().from(schema.opsEvents)
-    expect(rows.every((r) => r.notifiedAt !== null)).toBe(true)
-    expect(ttls.get(OPS_IMMEDIATE_CLAIM_KEY)).toBe(OPS_IMMEDIATE_INTERVAL_SECONDS)
+    expect(sent[0]!.text).not.toContain('Source failed')
+    expect(await pendingKinds()).toEqual(['source_failed'])
   })
 
-  it('leaves warnings to the digest', async () => {
+  it('leaves warnings to the daily digest', async () => {
     const { deps, sent } = harness()
     await recordOpsEvent(db, { kind: 'source_failed' })
     expect(await notifyIfCritical(db, { kind: 'source_failed' }, deps)).toBe('not-critical')
     expect(sent).toHaveLength(0)
+  })
+
+  it('dedupes repeats of one kind inside the cooldown, then mails again', async () => {
+    const { deps, sent, advance } = harness()
+    await recordOpsEvent(db, { kind: 'workers_issue', detail: 'first' })
+    expect(await notifyIfCritical(db, { kind: 'workers_issue' }, deps)).toBe('sent')
+
+    for (const detail of ['second', 'third']) {
+      advance(10 * 60_000)
+      await recordOpsEvent(db, { kind: 'workers_issue', detail })
+      expect(await notifyIfCritical(db, { kind: 'workers_issue' }, deps)).toBe('repeat')
+    }
+    expect(sent).toHaveLength(1)
+    // Settled, so neither the tick nor the daily digest mails them later.
+    expect(await pendingKinds()).toEqual([])
+
+    advance(CRITICAL_COOLDOWN_MS)
+    await recordOpsEvent(db, { kind: 'workers_issue', detail: 'next day' })
+    expect(await notifyIfCritical(db, { kind: 'workers_issue' }, deps)).toBe('sent')
+    expect(sent).toHaveLength(2)
+  })
+
+  it('keeps a separate cooldown per kind', async () => {
+    const { deps, sent } = harness()
+    await recordOpsEvent(db, { kind: 'workers_issue' })
+    expect(await notifyIfCritical(db, { kind: 'workers_issue' }, deps)).toBe('sent')
+    await recordOpsEvent(db, { kind: 'all_sources_failed' })
+    expect(await notifyIfCritical(db, { kind: 'all_sources_failed' }, deps)).toBe('sent')
+    expect(sent).toHaveLength(2)
+  })
+
+  it('releases the claim when the send fails, so the next try mails', async () => {
+    const { deps, sent, failNextSend } = harness()
+    await recordOpsEvent(db, { kind: 'workers_issue' })
+    failNextSend()
+    expect(await notifyIfCritical(db, { kind: 'workers_issue' }, deps)).toBe('send-failed')
+    expect(await pendingKinds()).toEqual(['workers_issue'])
+    expect(await notifyIfCritical(db, { kind: 'workers_issue' }, deps)).toBe('sent')
+    expect(sent).toHaveLength(1)
   })
 
   it('treats a 5xx burst as critical, and counts at most once a minute', async () => {
@@ -97,20 +145,11 @@ describe('notifyIfCritical', () => {
     expect(sent).toHaveLength(1)
   })
 
-  it('sends one immediate digest per interval across isolates', async () => {
-    const { deps, sent, map } = harness()
-    map.set(OPS_IMMEDIATE_CLAIM_KEY, true)
-    await recordOpsEvent(db, { kind: 'all_sources_failed' })
-    expect(await notifyIfCritical(db, { kind: 'all_sources_failed' }, deps)).toBe('throttled')
-    expect(sent).toHaveLength(0)
-    const rows = await db.select().from(schema.opsEvents)
-    expect(rows.every((r) => r.notifiedAt === null)).toBe(true)
-  })
-
   it('does nothing without a mailer, leaving the row for the cron', async () => {
     const { deps } = harness({ mailer: null })
     await recordOpsEvent(db, { kind: 'all_sources_failed' })
     expect(await notifyIfCritical(db, { kind: 'all_sources_failed' }, deps)).toBe('unconfigured')
+    expect(await pendingKinds()).toEqual(['all_sources_failed'])
   })
 })
 

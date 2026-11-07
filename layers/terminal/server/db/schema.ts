@@ -903,3 +903,28 @@ export const taskHeartbeats = sqliteTable('task_heartbeats', {
   last_failed_at: text('last_failed_at'),
   last_error: text('last_error'),
 })
+
+// ─────────────────────────────────────────────
+// Ops alert state
+// ─────────────────────────────────────────────
+// What the alert mailer (layers/terminal/server/utils/ops-alerts.ts) remembers
+// between runs, so the inbox hears about a problem once instead of every tick.
+// The ops_events spool stays the complete record; this only decides what is
+// mailed. Three kinds of key:
+//
+//   critical:<kind> — reported_at is when that critical kind was last mailed;
+//                     a repeat inside the cooldown is not mailed again.
+//   digest:daily    — reported_at is when the last daily digest went out.
+//   fp:<kind>:<why> — one failure streak (ops-throttle.ts fingerprints it):
+//                     first and last time it was seen, and whether a digest
+//                     has reported it yet.
+export const opsAlertState = sqliteTable('ops_alert_state', {
+  key: text('key').primaryKey(),
+  kind: text('kind').notNull(),
+  detail: text('detail'),
+  first_seen_at: text('first_seen_at').notNull(),
+  last_seen_at: text('last_seen_at').notNull(),
+  reported_at: text('reported_at'),
+})
+
+export type OpsAlertStateRow = typeof opsAlertState.$inferSelect

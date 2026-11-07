@@ -28,12 +28,18 @@ Three pieces:
   and land in `extra`.
 - **Ops alerting.** Anything worth waking the owner up for calls
   `recordOpsEvent(db, { kind, detail, path })` — the error plugin already does
-  for every 5xx — and `server/tasks/ops/alert.ts` drains the spool into one
-  digest email every 30 minutes via the `[[send_email]] ALERT_EMAIL` binding.
-  A critical event doesn't wait for it: `layers/terminal/server/plugins/ops-immediate.ts`
-  hears each row through `onOpsEventRecorded()` and sends the digest right away
-  for a critical kind or a `server_error` burst, at most once per five minutes
-  (`layers/terminal/server/utils/ops-immediate.ts`). Workers Issues
+  for every 5xx — and `server/tasks/ops/alert.ts` (every 30 minutes) decides
+  what is mailed via the `[[send_email]] ALERT_EMAIL` binding
+  (`layers/terminal/server/utils/ops-alerts.ts`, rules in `ops-throttle.ts`).
+  Critical events are mailed at once, one email per kind per 6-hour cooldown:
+  `layers/terminal/server/plugins/ops-immediate.ts` hears each row through
+  `onOpsEventRecorded()` and sends for a critical kind or a `server_error` burst.
+  Everything else waits for one daily digest at 13:00 UTC, which lists each
+  failure streak (same kind, same normalized reason) once when it starts and
+  notes when it recovers; 403/429/5xx/timeout streaks are listed only after
+  6 hours. A quiet day sends nothing. Streak and cooldown state lives in
+  `ops_alert_state`; every row stays in `ops_events` for the ops-triage
+  routine whether or not it was mailed. Workers Issues
   (`[observability.issues]` in wrangler.toml) covers failures that spool nothing,
   such as a request that never returns.
   Unconfigured = one `ops_alert_unconfigured` log line per tick and nothing
