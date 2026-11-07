@@ -217,8 +217,10 @@ watch(() => route.hash, followHash)
       <template #content>
         <div class="flex flex-col gap-3 pb-4">
           <p class="max-w-3xl text-sm text-muted">
-            Read from each source’s rights in sources.yaml. Coverage above has the terms we read
-            each one under.
+            Read from each source’s rights in sources.yaml.
+            <NuxtLink to="#coverage" class="text-primary underline underline-offset-2"
+              >Coverage</NuxtLink
+            >, under Sources, has the terms we read each one under.
           </p>
           <TerminalTable
             caption="Commercial use of each source"
