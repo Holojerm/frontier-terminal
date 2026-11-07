@@ -23,6 +23,26 @@ export function confirmationOf(spec: JudgedSpec, subject: string): Confirmation 
   return spec.confirmations.findLast((c) => c.subject === subject) ?? null
 }
 
+/**
+ * Verdicts as cut events: one per (provider, model, UTC day seen). A cut
+ * printed by two sources was two change rows, and before candidates were
+ * keyed by the cut (candidates.ts › cutSubject) each got its own verdict;
+ * those rows are still stored, so the count is taken over events, never rows.
+ * The deepest cut stands for its event.
+ */
+export function cutEvents(verdicts: readonly StoredVerdict[]): StoredVerdict[] {
+  const byEvent = new Map<string, StoredVerdict>()
+  for (const v of verdicts) {
+    const day = new Date(v.detected_at).toISOString().slice(0, 10)
+    const key = `${v.provider}|${String(v.facts.model_slug)}|${day}`
+    const held = byEvent.get(key)
+    if (!held || Number(v.facts.cut_pct ?? 0) > Number(held.facts.cut_pct ?? 0)) {
+      byEvent.set(key, v)
+    }
+  }
+  return [...byEvent.values()]
+}
+
 function competitiveCuts(
   spec: Extract<JudgedSpec, { review: 'flagship-price-cuts' }>,
   company: CompanyId,
@@ -30,13 +50,17 @@ function competitiveCuts(
   now: string,
 ): ClaimEvaluation {
   const { min_cut, count, days } = spec.rule
-  const from = new Date(Date.parse(now) - days * DAY_MS).toISOString()
-  const recent = verdicts.filter((v) => v.detected_at >= from && v.verdict === 'competitive')
+  const from = Date.parse(now) - days * DAY_MS
+  const recent = cutEvents(
+    verdicts.filter((v) => Date.parse(v.detected_at) >= from && v.verdict === 'competitive'),
+  )
   const rival = recent.filter(
     (v) => v.provider !== company && Number(v.facts.cut_pct ?? 0) >= min_cut * 100,
   )
   const matched = recent.some(
-    (v) => v.provider === company && rival.some((r) => r.detected_at <= v.detected_at),
+    (v) =>
+      v.provider === company &&
+      rival.some((r) => Date.parse(r.detected_at) <= Date.parse(v.detected_at)),
   )
   const name = companyName(company)
   const listed = rival
