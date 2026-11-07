@@ -14,11 +14,12 @@ export type AlertSeverity = 'info' | 'notable' | 'critical'
 export type AlertTier = 'alert' | 'info'
 
 /**
- * What a reader can ask for: one tier, everything, or `critical`, the slice of
- * the alert tier to read today. `critical` narrows a tier rather than being
- * one, so the two-way split above stays the only materiality line.
+ * What a reader can ask for: one tier, everything, or one severity inside the
+ * alert tier (`critical`, the slice to read today, or `notable`). Those narrow a
+ * tier rather than being one, so the two-way split above stays the only
+ * materiality line.
  */
-export const ALERT_TIER_FILTERS = ['alert', 'critical', 'info', 'all'] as const
+export const ALERT_TIER_FILTERS = ['alert', 'critical', 'notable', 'info', 'all'] as const
 export type AlertTierFilter = (typeof ALERT_TIER_FILTERS)[number]
 
 const TIER_OF: Readonly<Record<AlertSeverity, AlertTier>> = {
@@ -35,7 +36,7 @@ export function alertTier(severity: AlertSeverity): AlertTier {
 export function severitiesOf(filter: AlertTierFilter): AlertSeverity[] {
   const all = Object.keys(TIER_OF) as AlertSeverity[]
   if (filter === 'all') return all
-  if (filter === 'critical') return ['critical']
+  if (filter === 'critical' || filter === 'notable') return [filter]
   return all.filter((s) => TIER_OF[s] === filter)
 }
 

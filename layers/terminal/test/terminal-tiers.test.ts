@@ -28,11 +28,12 @@ describe('alertTier', () => {
     expect([...severitiesOf('alert'), ...severitiesOf('info')].sort()).toEqual(
       [...severitiesOf('all')].sort(),
     )
-    expect(ALERT_TIER_FILTERS).toEqual(['alert', 'critical', 'info', 'all'])
+    expect(ALERT_TIER_FILTERS).toEqual(['alert', 'critical', 'notable', 'info', 'all'])
   })
 
-  it('narrows the alert tier to critical without making critical a tier', () => {
+  it('narrows the alert tier to one severity without making it a tier', () => {
     expect(severitiesOf('critical')).toEqual(['critical'])
+    expect(severitiesOf('notable')).toEqual(['notable'])
     expect(severitiesOf('alert')).toContain('critical')
     expect(alertTier('critical')).toBe('alert')
   })

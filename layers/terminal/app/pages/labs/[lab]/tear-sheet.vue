@@ -16,7 +16,7 @@ import {
   LICENSE_WINDOW_DAYS,
   attributionLine,
 } from '#shared/utils/license'
-import { alertLabs, LAB_SITE } from '../../../../shared/utils/terminal-labs'
+import { LAB_SITE } from '../../../../shared/utils/terminal-labs'
 import { isLab, labPath, tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
 import { alertPath } from '../../../../shared/utils/terminal-tiers'
 import type { ExposureData } from '../../../../shared/utils/terminal-exposure'
@@ -95,11 +95,7 @@ const [prices, revenue, rankings, hiring, incidents, alerts, exposure, theses] =
   // changes can't push the newest alerts out of the window.
   useFetch<AlertsData>('/api/alerts', {
     key: `sheet-alerts:${lab}`,
-    query: { tier: 'alert', limit: 200 },
-    transform: (d: AlertsData): AlertsData => ({
-      ...d,
-      rows: d.rows.filter((a) => alertLabs(a).includes(lab)).slice(0, SHEET_ALERTS),
-    }),
+    query: { tier: 'alert', limit: SHEET_ALERTS, lab },
   }),
   useFetch<ExposureData>('/api/exposure', {
     key: `sheet-exposure:${lab}`,

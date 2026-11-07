@@ -45,6 +45,8 @@ import {
   LICENSE_SPLIT_EFFECTIVE,
   LICENSE_WINDOW_DAYS,
 } from '#shared/utils/license'
+import { ALERT_AXES } from '../../shared/utils/terminal-labs'
+import { LABS } from '../../shared/utils/terminal-lab-summary'
 import { ALERT_TIER_FILTERS } from '../../shared/utils/terminal-tiers'
 
 import type { PipelineDb } from '../pipeline/store'
@@ -338,7 +340,8 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
       description:
         'Alerts newest first, each citing the change rows it is a claim about (changes, resolved; missing_change_ids if any did not resolve). ' +
         'Severity reads as a tier: info is minor changes (what moved, low stakes — a role added, a title reworded); notable and critical are alerts ' +
-        '(a price move, a new SKU, a department-level hiring shift, a filing). tier selects alert, critical (critical alerts only), info, or all (default all); ticker is an old name for info.' +
+        '(a price move, a new SKU, a department-level hiring shift, a filing). tier selects alert, critical or notable (that severity only), info, or all (default all); ticker is an old name for info. ' +
+        'lab and topic keep alerts citing at least one change row from that lab or on that axis (pricing, hiring, sec, revenue, incidents, disclosures, demand). ' +
         'rule is s1-floor (deterministic: a registration statement appeared on EDGAR), periodic-floor (deterministic: a 10-Q/10-K on a ' +
         'whitelisted CIK), cik-resolved (deterministic: a pending lab’s own S-1 appeared and its CIK was read off it), model-floor (deterministic: a model slug no vendor catalog listed before), prospectus-floor (deterministic: what a lab’s new registration filing states — revenue and the price range on its cover), hiring-rollup (deterministic: one per lab per week, the board’s net change and the departments that moved most) or agent-judge (a model’s reading of change rows, labelled as such). total is the count on file for the chosen tier. ' +
         `With a severity filter, the newest ${ALERT_SEARCH_DEPTH} rows of the tier are searched and up to limit returned. ` +
@@ -347,19 +350,21 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         limit: z.number().int().min(1).max(ALERT_SEARCH_DEPTH).default(20),
         tier: z.enum([...ALERT_TIER_FILTERS, 'ticker']).default('all'),
         severity: z.enum(['info', 'notable', 'critical']).optional(),
+        lab: z.enum([...LABS, 'other']).optional(),
+        topic: z.enum(ALERT_AXES).optional(),
         as_of: AsOfSchema,
       }),
       annotations: READ_ONLY,
     },
-    ({ limit, tier: asked, severity, as_of }) =>
+    ({ limit, tier: asked, severity, lab, topic, as_of }) =>
       asOfErrors(async () => {
         const tier = asked === 'ticker' ? 'info' : asked
         const depth = severity ? ALERT_SEARCH_DEPTH : limit
         const alerts = await read(
           'alerts',
           as_of,
-          (ctx) => queryAlerts(deps.db, ctx, depth, tier),
-          `${tier}:${depth}`,
+          (ctx) => queryAlerts(deps.db, ctx, depth, tier, { lab, topic }),
+          lab || topic ? `${tier}:${depth}:${lab ?? ''}:${topic ?? ''}:` : `${tier}:${depth}`,
         )
         if (!severity) return json(alerts)
         return json({
