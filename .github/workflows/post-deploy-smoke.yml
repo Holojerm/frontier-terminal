@@ -31,7 +31,9 @@ jobs:
   smoke:
     # Forks have no production to check.
     if: github.repository == 'Holojerm/frontier-terminal'
-    runs-on: ubuntu-latest
+    # The owner's Mac mini, light slot, so production sees the same single home
+    # IP as gdelt-search; the deploy wait never holds the browser-suites slot.
+    runs-on: [self-hosted, linux, ARM64, mini-light]
     timeout-minutes: 30
 
     steps:
