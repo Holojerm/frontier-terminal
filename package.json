@@ -12,6 +12,7 @@
     "dev": "bun run scripts/dev.ts",
     "dev:app": "nuxt dev",
     "dev:seed": "bun run scripts/dev-seed.ts",
+    "dev:poll": "bun run scripts/dev-poll.ts",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",

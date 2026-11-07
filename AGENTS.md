@@ -20,6 +20,7 @@ Read the row that matches what you are about to touch. Do not load them all.
 | Doc | Covers | Load it when |
 | --- | --- | --- |
 | [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md) | Silent failure modes — wrong-file databases, migrations that never run, empty sitemaps, rate limiters that quietly do nothing | Something "works" but produces no output; or you touch D1, migrations, deploy config, cron, `definePageMeta`, or a worktree |
+| [`.claude/docs/local-data.md`](.claude/docs/local-data.md) | Filling the empty local store: fixtures offline, a live poll, production's alerts | Before judging anything visual locally, or touching the browser suites' setup |
 | [`.claude/docs/voice.md`](.claude/docs/voice.md) | How copy should sound, the AI patterns to cut, and the quote/number rules that never change | Writing or editing anything a visitor reads: page text, panel notes, SEO strings, `llms.txt`, gap strings, README |
 | [`.claude/docs/patterns.md`](.claude/docs/patterns.md) | Worked examples: components, API routes, Drizzle queries, error handling | Writing a new component, route, or query — especially your first change here |
 | [`.claude/docs/seo.md`](.claude/docs/seo.md) | `useSeo()`, `publicPage` meta, structured data, the crawler files | Adding or editing a page |
@@ -229,6 +230,7 @@ Each of these has a full contract in its own doc — this is the one-line versio
 bun dev               # Dev server at https://<portless-name>.localhost (via portless). In a linked
                       # worktree the host is <worktree-dir>.<portless-name>.localhost — printed on start.
 bun dev:app           # Bypass portless and run nuxt dev directly on http://localhost:3000
+bun run dev:poll      # Fill the local store via the running dev server: live sources, or --fixtures offline
 bun run dev:seed      # Copy production's last 90 days of alerts + changes into the local DB (dev server stopped)
 bun build             # Build for Cloudflare
 bun lint              # Run oxlint

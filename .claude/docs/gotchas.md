@@ -13,7 +13,7 @@ Sharp edges that have bitten this template before — read before forking or bef
 
 NuxtHub serves the dev DB from `.data/db/sqlite.db`. Wrangler's own local D1 sandbox lives at `.wrangler/state/v3/d1/`. Migrations applied via `bun run db:migrate` or direct writes via `wrangler d1 execute --local` land in the **wrangler** path, which the dev server does NOT read. Anything that writes to the local dev DB from outside the app must open the NuxtHub path directly with `bun:sqlite`. The two only converge in production.
 
-An empty local DB is normal on a fresh checkout. `bun run dev:seed` (scripts/dev-seed.ts) copies production's last 90 days of `alerts` and `changes` into it from the public `/export` routes; run it with the dev server stopped.
+An empty local DB is normal on a fresh checkout, and it hides bugs. Filling it is in [`local-data.md`](local-data.md).
 
 ## NuxtHub applies dev migrations in directory order — patched to sort
 
@@ -216,6 +216,13 @@ keeps the URL stable when you switch branches inside a worktree.
 `portless run --name` would stack its branch prefix on top: still unique, but the hostname would
 move every time the branch did. `bun dev:app` bypasses the proxy entirely.
 
+**An agent session can't start the proxy.** When it isn't running, portless wants `sudo` to
+bind 443, and a shell with no TTY can't answer the prompt, so `bun dev` exits with "Proxy is
+not running and no TTY is available for sudo". Use `bunx nuxt dev --port <n>` with a port of
+your own (`bun dev:app` assumes 3000, which another checkout may hold). For Playwright
+scripts against `nuxt dev`, wait on `load` and a selector: with devtools on, the HMR
+websocket keeps `networkidle` from ever firing.
+
 > **Historical note.** This section used to warn that `vue-tsc` picked up `.claude/worktrees/`
 > and to fix it with `rm -rf .claude/worktrees/<old>`. That is no longer true on Nuxt 4.5: the
 > generated tsconfigs scope their includes, and a worktree containing deliberately unbuildable
@@ -326,6 +333,13 @@ which is why the fix is a workflow file, something a fork inherits automatically
   took 2s. CI is *always* cold, so the budget is 300s and the server runs with
   `NUXT_TYPECHECK=false` to keep vue-tsc off the critical path — `bun run ci` has already
   typechecked by then.
+- **Listening is not warm.** Vite compiles each page's own components on that page's first
+  browser request, so `test/warmup/global-setup.ts` visits one path per page file before the
+  tests race. Warming only the shell passed on the Mac mini and timed out a different lab or
+  compare page every run on the two-core `ubuntu-latest` fallback. A new page file in the
+  suites goes in its `WARM_PATHS`.
+- **The store is filled from fixtures first** (`test/warmup/fill-store.ts`, see
+  [`local-data.md`](local-data.md)). Without rows the sweep only judges empty states.
 
 ## Don't add `nuxt-mcp-toolkit` config under `mcp:` in `nuxt.config.ts`
 

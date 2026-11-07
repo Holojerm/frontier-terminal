@@ -50,7 +50,7 @@ export default defineConfig({
   // setup precedes globalSetup), so the server is reachable by then. Warms the
   // client bundle with a real page (test/warmup/) so the first test does not
   // pay for the cold Vite build.
-  globalSetup: ['./test/warmup/global-setup.ts'],
+  globalSetup: ['./test/warmup/fill-store.ts', './test/warmup/global-setup.ts'],
   forbidOnly: !!process.env.CI,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
 
