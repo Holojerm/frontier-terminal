@@ -15,7 +15,7 @@
     "dev:poll": "bun run scripts/dev-poll.ts",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
-    "postinstall": "nuxt prepare",
+    "postinstall": "nuxt prepare && bun run email:build",
     "lint": "oxlint .",
     "lint:fix": "oxlint --fix .",
     "format": "oxfmt",
@@ -40,7 +40,6 @@
     "brand:check": "bun run scripts/check-brand.ts",
     "schema:lock": "bun run scripts/schema-lock.ts",
     "email:build": "bun run scripts/email-build.ts",
-    "email:check": "bun run scripts/email-check.ts",
     "email:dev": "bun run scripts/email-dev.ts",
     "email:preview": "bun run scripts/email-preview.ts",
     "mirror:check": "bun run scripts/check-mirrors.ts",
@@ -64,8 +63,10 @@
     "ci:browser": "bun run playwright:install && bun run test:a11y",
     "ci": "bun run scripts/ci.ts",
     "ci:fast": "bun run scripts/ci.ts --fast",
+    "migrations:check": "bun run scripts/check-migrations.ts",
+    "deploy:smoke": "bun run scripts/deploy-smoke.ts",
     "deploy": "nuxt build && wrangler --cwd .output deploy",
-    "deploy:ci": "bun run db:migrate:remote && wrangler --cwd .output deploy"
+    "deploy:ci": "bun run db:migrate:remote && wrangler --cwd .output deploy && bun run deploy:smoke"
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.0.0",
