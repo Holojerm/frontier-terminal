@@ -1,12 +1,10 @@
 // Ops alerting — the "you find out from an alert, not from a user" path.
 //
-// Why this exists at all: Cloudflare cannot alert on Worker logs. Workers Logs
-// is queryable but has no notification hook, Log Explorer carries HTTP
-// requests and not `workers_trace_events`, and the Notifications catalogue has
-// no usable Workers entry. So the only component that both knows a request
-// failed and can do something about it is the Worker itself. It writes a row
-// here; a cron (server/tasks/ops/alert.ts) drains the rows and emails a
-// digest.
+// Why this exists at all: the Worker is the only component that knows what a
+// failure means for the product (a source failing, the judge going quiet), not
+// just that an invocation errored. Workers Issues covers the second kind. It
+// writes a row here; a cron (server/tasks/ops/alert.ts) drains the rows and
+// emails a digest, and onOpsEventRecorded() lets a fork send sooner.
 //
 // Back-ported from a fork that ran it in production for a while; the one
 // change is that the digest no longer hardcodes the product's name.
@@ -76,7 +74,35 @@ export async function recordOpsEvent(db: OpsDb, input: OpsEventInput): Promise<v
     })
   } catch (err) {
     logEvent('error', 'ops_event_write_failed', { error: String(err) })
+    return
   }
+  for (const listener of recordedListeners) {
+    try {
+      await listener(db, input)
+    } catch (err) {
+      logEvent('error', 'ops_event_listener_failed', { kind: input.kind, error: String(err) })
+    }
+  }
+}
+
+/** Runs after a row is spooled. Must not call recordOpsEvent itself. */
+export type OpsEventListener = (db: OpsDb, input: OpsEventInput) => Promise<void>
+
+const recordedListeners: OpsEventListener[] = []
+
+/**
+ * Hear about each spooled row as it lands, from a Nitro plugin. The digest
+ * cron is every 30 minutes; a listener is how a fork mails a critical event
+ * now instead. Same never-throws contract as recordOpsEvent: a listener's
+ * failure is logged, never the caller's problem.
+ */
+export function onOpsEventRecorded(listener: OpsEventListener): void {
+  recordedListeners.push(listener)
+}
+
+/** Test-only. */
+export function resetOpsEventListenersForTest(): void {
+  recordedListeners.length = 0
 }
 
 const lastUnauthenticatedRecord = new Map<string, number>()
