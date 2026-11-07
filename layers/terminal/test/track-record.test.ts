@@ -519,6 +519,7 @@ describe('the search run', () => {
       recorded: true,
       mentions: kept,
       rejected: 0,
+      figures: 0,
     })
     expect(await db.select().from(schema.gkgMentions)).toHaveLength(kept)
     expect(await db.select().from(schema.trackRecordCandidates)).toEqual([])

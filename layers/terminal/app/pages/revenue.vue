@@ -6,7 +6,7 @@
 // job is to say so precisely and to be ready the day that changes.
 
 import type { ProspectusData } from '../../shared/utils/terminal-prospectus'
-import type { RevenueData } from '../../shared/utils/terminal-types'
+import type { ReportedData, RevenueData } from '../../shared/utils/terminal-types'
 import type { ParentsData } from '../../shared/utils/recipe-views'
 
 definePageMeta({
@@ -15,16 +15,21 @@ definePageMeta({
     priority: '0.8',
     title: 'Revenue',
     summary:
-      'Disclosed revenue per frontier lab from SEC XBRL filings. Where a public parent files, we show its consolidated figure or the one segment it reports. Where none does, we say “no audited disclosure”. For a lab that files its own S-1, we show the full statement of operations, commitments, customer concentration, share counts, and risk-factor changes. We leave out press run-rates.',
+      'Disclosed revenue per frontier lab from SEC XBRL filings. Where a public parent files, we show its consolidated figure or the one segment it reports. Where none does, we say “no audited disclosure”. For a lab that files its own S-1, we show the full statement of operations, commitments, customer concentration, share counts, and risk-factor changes. Press reports of revenue, valuations and funding sit in their own section, never mixed with filed figures.',
   },
 })
 
-const [{ data: revenue, error }, { data: parents }, { data: prospectus, error: prospectusError }] =
-  await Promise.all([
-    useFetch<RevenueData>('/api/revenue'),
-    useFetch<ParentsData>('/api/parents'),
-    useFetch<ProspectusData>('/api/prospectus'),
-  ])
+const [
+  { data: revenue, error },
+  { data: parents },
+  { data: prospectus, error: prospectusError },
+  { data: reported, error: reportedError },
+] = await Promise.all([
+  useFetch<RevenueData>('/api/revenue'),
+  useFetch<ParentsData>('/api/parents'),
+  useFetch<ProspectusData>('/api/prospectus'),
+  useFetch<ReportedData>('/api/reported'),
+])
 
 const site = useSiteContext()
 
@@ -50,7 +55,7 @@ useSeo({
 <template>
   <TerminalPage
     title="Revenue"
-    lede="Revenue from XBRL (the SEC’s tagged financial data) on EDGAR, with each value linked to its filing. We don’t show press run-rates."
+    lede="Revenue from XBRL (the SEC’s tagged financial data) on EDGAR, with each value linked to its filing. What the press reports sits in its own section below."
     :as-of="revenue?.as_of"
     :error="Boolean(error)"
     error-title="Revenue didn’t load"
@@ -87,6 +92,22 @@ useSeo({
         :more="{ label: 'Every quarter, and hyperscaler capex', to: '/exposure' }"
       >
         <TerminalParentFacts :parents="parents" />
+      </TerminalPanel>
+
+      <TerminalPanel
+        id="reported"
+        title="Reported in the press"
+        note="Revenue, valuations and funding as news headlines state them. Unaudited, and never mixed with the filed figures above."
+      >
+        <TerminalReportedPanel v-if="reported" :reported="reported" />
+        <UAlert
+          v-else-if="reportedError"
+          color="warning"
+          variant="subtle"
+          icon="i-lucide-triangle-alert"
+          title="Press figures didn’t load"
+          description="Try reloading in a minute. The filed revenue above is unaffected."
+        />
       </TerminalPanel>
 
       <TerminalPanel

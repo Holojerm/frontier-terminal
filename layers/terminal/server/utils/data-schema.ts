@@ -171,6 +171,16 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
     summary:
       'The Parquet bulk files are compressed with gzip instead of zstd, which failed on the largest tables. Readers pick the codec up from each file. No columns changed.',
   },
+  {
+    version: '1.6.0',
+    date: '2026-11-07',
+    summary:
+      'Press reports of the private labs’ revenue, valuations and funding. reported_articles has each GDELT article whose headline names a lab and an amount, and reported_figures has each figure such a headline states, labeled by our judge model and checked against the headline. Unaudited, and never mixed with filed revenue.',
+    tables: {
+      reported_articles: { note: 'New table.' },
+      reported_figures: { note: 'New table.' },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

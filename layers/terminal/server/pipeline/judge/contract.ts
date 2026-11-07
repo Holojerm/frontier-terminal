@@ -3,6 +3,7 @@ import { z } from 'zod'
 import { AlertRow, contentHash, parseAgentOutput, type AgentGateResult } from '../contracts'
 import type { ChangeRow } from '../contracts'
 import { JudgeClaimVerdict } from '../../theses/verdicts'
+import { JudgeFigureReading } from '../reported/review'
 import { JudgeTrackRecordVerdict } from '../track-record/review'
 import { JudgeClassMapping } from './class-map'
 
@@ -30,6 +31,8 @@ export const JudgeOutput = z.strictObject({
   claims: JudgeClaimVerdict.array().max(200).default([]),
   /** Same-event ratings, one per candidate in a TRACK RECORD REVIEW block. */
   track_record: JudgeTrackRecordVerdict.array().max(200).default([]),
+  /** Labeled figures, one reading per headline in a FIGURE REVIEW block. */
+  figures: JudgeFigureReading.array().max(100).default([]),
 })
 export type JudgeOutput = z.infer<typeof JudgeOutput>
 

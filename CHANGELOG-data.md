@@ -24,6 +24,17 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.6.0 (2026-11-07)
+
+Press reports of the private labs’ revenue, valuations and funding, in two new
+tables. `reported_articles` has each GDELT article whose headline names a lab
+we track and an amount of money. `reported_figures` has each figure such a
+headline states, labeled by our judge model with its lab, metric
+(`revenue_run_rate`, `revenue`, `valuation`, `funding`, `funding_total`) and
+basis (`reported`, `sought`, `projected`). A label is kept only when its
+amount and lab are in the headline as written. These are unaudited press
+figures, kept apart from filed revenue.
+
 ## 1.5.1 (2026-11-05)
 
 The Parquet bulk files are compressed with gzip instead of zstd. zstd in the
