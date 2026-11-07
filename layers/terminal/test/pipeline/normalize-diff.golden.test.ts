@@ -174,9 +174,13 @@ describe('normalize-diff lane', () => {
     expect(removed.before_hash).toMatch(/^[0-9a-f]{64}$/)
     expect(removed.after_hash).toBeNull()
     expect(removed.after_json).toBeNull()
-    // Removed rows keep the before-side provenance — the last observation.
+    // A removal is cited to the after snapshot: the poll that found it gone.
     expect(removed.source_url).toBe('https://boards-api.greenhouse.io/v1/boards/xai/jobs')
-    expect(removed.fetched_at).toBe('2026-08-25T23:08:17Z')
+    expect(removed.fetched_at).toBe(DETECTED_AT)
+    const moved = diff(before, after, DETECTED_AT, 'https://job-boards.example/xai').find(
+      (c) => c.change_type === 'removed',
+    )!
+    expect(moved.source_url).toBe('https://job-boards.example/xai')
 
     const added = changes[1]!
     expect(added.before_hash).toBeNull()

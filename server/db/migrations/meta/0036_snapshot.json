@@ -1,8 +1,8 @@
 {
+  "id": "5f538df1-aed7-4947-a5a8-f95c8c81bb91",
+  "prevId": "7231b9a9-7eff-4595-bb37-1953c56bc9ed",
   "version": "6",
   "dialect": "sqlite",
-  "id": "aecb59ff-2b3b-436a-883b-6de612de612c",
-  "prevId": "7231b9a9-7eff-4595-bb37-1953c56bc9ed",
   "tables": {
     "alerts": {
       "name": "alerts",
@@ -1227,13 +1227,6 @@
             "entity_key"
           ],
           "isUnique": false
-        },
-        "entities_type_idx": {
-          "name": "entities_type_idx",
-          "columns": [
-            "entity_type"
-          ],
-          "isUnique": false
         }
       },
       "foreignKeys": {},
@@ -2018,14 +2011,6 @@
             "recipe_id",
             "key",
             "date"
-          ],
-          "isUnique": false
-        },
-        "recipe_observations_fetched_idx": {
-          "name": "recipe_observations_fetched_idx",
-          "columns": [
-            "recipe_id",
-            "fetched_at"
           ],
           "isUnique": false
         }
@@ -3225,9 +3210,9 @@
   "views": {},
   "enums": {},
   "_meta": {
+    "columns": {},
     "schemas": {},
-    "tables": {},
-    "columns": {}
+    "tables": {}
   },
   "internal": {
     "indexes": {}
