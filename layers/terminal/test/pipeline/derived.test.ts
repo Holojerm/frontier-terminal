@@ -537,22 +537,19 @@ describe('OpenAI model pages end to end', () => {
     )
   })
 
-  it('a derived page that 404s is absent, not failed — said once, and shown on the coverage panel', async () => {
+  it('a derived page that 404s is absent, not failed — said only when a page that parsed goes away', async () => {
     await run(['openai-models-md', 'openai-pricing-md'], fetcher(), 'survey')
     const missing = 'openai-model-md-gpt-4o-mini'
     const gone: FetchOutcome = { ok: false, status: 404, detail: 'HTTP 404' }
+    const opsKinds = async () => (await db.select().from(schema.opsEvents)).map((o) => o.kind)
 
     // OpenAI prices SKUs whose model page it never published. That is a fact
-    // about the catalogue, not breakage here, so it is its own status.
+    // about the catalogue, not breakage here, so it is its own status, and
+    // not news: a new SKU's first run raised source_absent (#202).
     const first = await run([missing], fetcher({ [missing]: gone }), 'survey')
     expect(first.sources[0]).toMatchObject({ status: 'absent', detail: 'HTTP 404' })
-    expect((await db.select().from(schema.opsEvents)).map((o) => o.kind)).toEqual(['source_absent'])
-
-    // Still absent next tick, and still absent the tick after: the mail is
-    // for the transition, because five of these never change again.
     await run([missing], fetcher({ [missing]: gone }), 'survey')
-    await run([missing], fetcher({ [missing]: gone }), 'survey')
-    expect((await db.select().from(schema.opsEvents)).map((o) => o.kind)).toEqual(['source_absent'])
+    expect(await opsKinds()).toEqual([])
 
     // Keying the panel on snapshots hid these entirely — a 404 snapshots
     // nothing — so a reader could not see that the SKU has no page.
@@ -564,6 +561,15 @@ describe('OpenAI model pages end to end', () => {
     expect(row!.derived_from).toBe('openai-model-md')
     expect(row!.last_run).toMatchObject({ status: 'absent', detail: 'HTTP 404' })
     expect(row!.url).toBe('https://developers.openai.com/api/docs/models/gpt-4o-mini.md')
+
+    // The page is published, then taken down: that is the event, said once
+    // for the transition, because a page that stays gone never changes again.
+    expect((await run([missing], fetcher(), 'survey')).sources[0]).toMatchObject({
+      status: 'baseline',
+    })
+    await run([missing], fetcher({ [missing]: gone }), 'survey')
+    await run([missing], fetcher({ [missing]: gone }), 'survey')
+    expect(await opsKinds()).toEqual(['source_absent'])
   })
 
   it('an audited url that 404s is still a failure — the audit recorded that it resolved', async () => {
