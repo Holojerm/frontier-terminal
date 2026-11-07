@@ -93,7 +93,7 @@ const columns: TableColumn[] = [
 
     <TerminalPanel
       v-else
-      id="alerts"
+      id="track-record-alerts"
       title="Alerts"
       :note="`${record.rows.length} alerts, newest first. Lead is hours from when we saw it to the report: positive when we were first.`"
       flush
