@@ -105,6 +105,7 @@
       "server/utils/fleet-funnel.ts",
       "server/utils/fleet-status.ts",
       "server/utils/hash.ts",
+      "server/utils/ops.ts",
       "server/utils/ingest-headers.ts",
       "server/utils/ingest-relay.ts",
       "server/utils/lifecycle-emails.ts",

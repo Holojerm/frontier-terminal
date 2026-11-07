@@ -30,6 +30,12 @@ Three pieces:
   `recordOpsEvent(db, { kind, detail, path })` — the error plugin already does
   for every 5xx — and `server/tasks/ops/alert.ts` drains the spool into one
   digest email every 30 minutes via the `[[send_email]] ALERT_EMAIL` binding.
+  A critical event doesn't wait for it: `layers/terminal/server/plugins/ops-immediate.ts`
+  hears each row through `onOpsEventRecorded()` and sends the digest right away
+  for a critical kind or a `server_error` burst, at most once per five minutes
+  (`layers/terminal/server/utils/ops-immediate.ts`). Workers Issues
+  (`[observability.issues]` in wrangler.toml) covers failures that spool nothing,
+  such as a request that never returns.
   Unconfigured = one `ops_alert_unconfigured` log line per tick and nothing
   sent, but the retention sweep (`pruneOpsEvents()`) still runs. Rows are marked notified only after the send resolves, so a mail
   hiccup retries instead of losing the alert. Before draining, the same tick runs
