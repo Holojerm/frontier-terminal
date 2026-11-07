@@ -13,6 +13,8 @@ import type {
   ExposureSeries,
 } from '../../shared/utils/terminal-exposure'
 import {
+  UTC_STYLE,
+  absoluteStamp,
   compactUsd,
   count,
   money,
@@ -20,6 +22,7 @@ import {
   ppLabel,
   sharePct,
   signed,
+  type StampStyle,
 } from '../../shared/utils/terminal-format'
 import { summarizeLab, type LabInputs } from '../../shared/utils/terminal-lab-summary'
 import type { AlertSeverity } from '../../shared/utils/terminal-tiers'
@@ -145,11 +148,12 @@ export function shortUrl(url: string, max = 56): string {
   return clip(`${host}/…/${last}`)
 }
 
-/** '2026-11-04 18:00Z': a fetch time a printed page can carry without a year being dropped. */
-export function shortStamp(iso: string): string {
-  const d = new Date(iso)
-  if (Number.isNaN(d.getTime())) return iso
-  return `${d.toISOString().slice(0, 10)} ${d.toISOString().slice(11, 16)}Z`
+/**
+ * '2026-11-04 18:00Z': a fetch time a printed page can carry without a year
+ * being dropped. Always the ISO date, in the reader's zone and clock.
+ */
+export function shortStamp(iso: string, style: StampStyle = UTC_STYLE): string {
+  return absoluteStamp(iso, null, { ...style, iso: true })
 }
 
 const day = (iso: string) => iso.slice(0, 10)
@@ -191,7 +195,11 @@ function revenueScopeLine(view: RevenueProviderView | null): string | null {
 }
 
 /** Every figure on the sheet, with its footnote numbers resolved against one source list. */
-export function buildTearSheet(lab: LabId, input: TearSheetInputs): TearSheet {
+export function buildTearSheet(
+  lab: LabId,
+  input: TearSheetInputs,
+  style: StampStyle = UTC_STYLE,
+): TearSheet {
   const s = summarizeLab(lab, input)
 
   const sources: SheetSource[] = []
@@ -365,7 +373,7 @@ export function buildTearSheet(lab: LabId, input: TearSheetInputs): TearSheet {
           lines: [
             i.open.length ? `${i.open.length} open now.` : 'None open now.',
             ...(i.window_to
-              ? [`Counted to ${shortStamp(i.window_to)}, our last read of the feed.`]
+              ? [`Counted to ${shortStamp(i.window_to, style)}, our last read of the feed.`]
               : []),
           ],
           gap: null,

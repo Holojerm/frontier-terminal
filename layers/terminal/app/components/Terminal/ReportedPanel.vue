@@ -4,7 +4,6 @@
 // the newest report and a median per quarter for figures given as fact, then
 // every recent headline, talks and forecasts included.
 
-import { absoluteStamp, compactUsd } from '../../../shared/utils/terminal-format'
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type {
   ReportedBasis,
@@ -15,9 +14,11 @@ import type {
 } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
+const figures = useFigures()
+
 const props = defineProps<{ reported: ReportedData }>()
 
-const now = useNow()
+const stamps = useStamps()
 
 const METRIC_LABEL: Record<ReportedMetric, string> = {
   revenue_run_rate: 'Run-rate revenue',
@@ -34,7 +35,7 @@ const BASIS_LABEL: Record<ReportedBasis, string> = {
 }
 
 const money = (amount: number, currency: 'USD' | 'EUR') =>
-  currency === 'EUR' ? compactUsd(amount).replace('$', '€') : compactUsd(amount)
+  currency === 'EUR' ? figures.usd(amount).replace('$', '€') : figures.usd(amount)
 
 const figureLabel = (h: Pick<ReportedHeadline, 'metric' | 'period'>) =>
   h.period ? `${METRIC_LABEL[h.metric]}, ${h.period}` : METRIC_LABEL[h.metric]
@@ -117,7 +118,7 @@ const caveats = [
             class="underline underline-offset-2 hover:text-primary"
           >
             <time :datetime="row.latest.published_at">{{
-              absoluteStamp(row.latest.published_at, now)
+              stamps.absolute(row.latest.published_at)
             }}</time>
           </a>
           <span class="block text-xs text-muted">{{ row.latest.outlet }}</span>
@@ -140,7 +141,7 @@ const caveats = [
     >
       <template #cell-when="{ row }">
         <time :datetime="row.published_at" :title="row.published_at">{{
-          absoluteStamp(row.published_at, now)
+          stamps.absolute(row.published_at)
         }}</time>
       </template>
       <template #cell-lab="{ row }">{{ LAB_DISPLAY[row.lab] }}</template>

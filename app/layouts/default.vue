@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // The app shell for every page. One layout: there is no signed-in state to
 // adapt to. DESIGN.md › Component behavior › Navigation: a top row with the
-// mark, the Labs menu and the color-mode toggle, and under it from `lg` the
+// mark, the Labs menu and the settings menu, and under it from `lg` the
 // axis bar: the entry points as links, and the axes grouped under Economics
 // and Operations, each a menu that opens on hover or click. Below
 // `lg` the axis bar becomes a right-side drawer that carries the whole site
@@ -108,14 +108,24 @@ const currentLab = computed(() => {
   const param = String(route.params.lab ?? '')
   return route.path.startsWith('/labs/') && isLab(param) ? LAB_DISPLAY[param] : null
 })
-const labItems: DropdownMenuItem[][] = [LAB_LINKS.map((l) => ({ label: l.label, to: l.to }))]
+// The reader's starred labs lead both lab lists, marked with a star.
+const watchlist = useWatchlist()
+const labLinks = computed(() => watchlist.first(LAB_LINKS, (l) => l.to.slice('/labs/'.length)))
+const starred = (l: NavLink) => watchlist.has(l.to.slice('/labs/'.length))
+const labItems = computed<DropdownMenuItem[][]>(() => [
+  labLinks.value.map((l) => ({
+    label: l.label,
+    to: l.to,
+    trailingIcon: starred(l) ? 'i-lucide-star' : undefined,
+  })),
+])
 
-const drawerSections: { label: string; links: NavLink[] }[] = [
+const drawerSections = computed<{ label: string; links: NavLink[] }[]>(() => [
   { label: 'Terminal', links: [OVERVIEW, ALERTS, THESES] },
   ...GROUPS,
-  { label: 'Labs', links: LAB_LINKS },
+  { label: 'Labs', links: labLinks.value },
   { label: 'Reference', links: REFERENCE },
-]
+])
 
 const drawer = ref(false)
 watch(
@@ -165,7 +175,7 @@ watch(
           </div>
 
           <div class="flex items-center gap-2">
-            <UColorModeButton class="min-touch" />
+            <TerminalSettings />
             <UButton
               class="min-touch lg:hidden"
               icon="i-lucide-menu"

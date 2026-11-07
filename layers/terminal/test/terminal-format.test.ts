@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import {
+  UTC_STYLE,
   absoluteStamp,
   compactTokens,
   compactUsd,
@@ -12,7 +13,9 @@ import {
   pctLabel,
   relativeStamp,
   signed,
+  zoneName,
 } from '../shared/utils/terminal-format'
+import { DEFAULTS, labsFirst, parsePrefs } from '../shared/utils/reader-prefs'
 
 // How a stored value reads. The rule is relative inside a day, absolute
 // beyond it, exact value always one hover away — and never a relative label
@@ -39,6 +42,76 @@ describe('timestamps', () => {
   it('keeps the exact stored value for the tooltip and an unparseable one verbatim', () => {
     expect(exactStamp('2026-08-25T11:10:41Z')).toBe('2026-08-25T11:10:41Z')
     expect(relativeStamp('not a date', NOW)).toBe('not a date')
+  })
+})
+
+describe('a reader’s zone and clock', () => {
+  const NY = { ...UTC_STYLE, zone: 'America/New_York' }
+
+  it('reads an instant in the reader’s zone, naming it', () => {
+    expect(absoluteStamp('2026-08-25T23:08:00Z', NOW, NY)).toBe('Aug 25 19:08 EDT')
+    expect(absoluteStamp('2026-12-01T15:00:00Z', NOW, NY)).toBe('Dec 1 10:00 EST')
+    expect(absoluteStamp('2026-08-25T23:08:00Z', NOW, { ...UTC_STYLE, zone: 'Asia/Kolkata' })).toBe(
+      'Aug 26 04:38 GMT+5:30',
+    )
+  })
+
+  it('takes the year from the reader’s zone, not UTC’s', () => {
+    const jan1 = Date.parse('2027-01-01T02:00:00Z')
+    // 21:00 on Dec 31 in New York: the same year as the reader's clock there.
+    expect(absoluteStamp('2027-01-01T02:00:00Z', jan1, NY)).toBe('Dec 31 21:00 EST')
+    expect(absoluteStamp('2027-01-01T02:00:00Z', jan1)).toBe('Jan 1 02:00Z')
+  })
+
+  it('prints a 12-hour clock and ISO dates on request', () => {
+    const h12 = { ...NY, hour12: true }
+    expect(absoluteStamp('2026-08-25T23:08:00Z', NOW, h12)).toBe('Aug 25 7:08 PM EDT')
+    expect(absoluteStamp('2026-08-25T04:05:00Z', NOW, h12)).toBe('Aug 25 12:05 AM EDT')
+    expect(absoluteStamp('2026-08-25T16:30:00Z', NOW, { ...UTC_STYLE, hour12: true })).toBe(
+      'Aug 25 4:30 PM UTC',
+    )
+    expect(absoluteStamp('2026-08-25T23:08:00Z', NOW, { ...NY, iso: true })).toBe(
+      '2026-08-25 19:08 EDT',
+    )
+  })
+
+  it('stays absolute when the reader turns ages off', () => {
+    const off = { ...UTC_STYLE, relative: false }
+    expect(relativeStamp('2026-08-25T23:12:00Z', NOW, off)).toBe('Aug 25 23:12Z')
+  })
+
+  it('names the zone for copy', () => {
+    expect(zoneName(UTC_STYLE)).toBe('UTC')
+    expect(zoneName(NY)).toBe('America/New York')
+  })
+})
+
+describe('stored reader settings', () => {
+  it('fall back field by field, so one bad value keeps the rest', () => {
+    expect(parsePrefs(null)).toEqual(DEFAULTS)
+    expect(parsePrefs({ zone: 'Mars/Olympus', clock: '12h', dates: 7 })).toEqual({
+      ...DEFAULTS,
+      clock: '12h',
+    })
+    expect(parsePrefs({ zone: 'Europe/London' }).zone).toBe('Europe/London')
+  })
+
+  it('keep only tracked labs, in registry order', () => {
+    expect(parsePrefs({ watchlist: ['xai', 'nope', 'openai'] }).watchlist).toEqual([
+      'openai',
+      'xai',
+    ])
+  })
+
+  it('put starred labs first without reordering either group', () => {
+    const rows = ['openai', 'anthropic', 'google', 'xai'].map((lab) => ({ lab }))
+    expect(labsFirst(rows, (r) => r.lab, ['google', 'xai']).map((r) => r.lab)).toEqual([
+      'google',
+      'xai',
+      'openai',
+      'anthropic',
+    ])
+    expect(labsFirst(rows, (r) => r.lab, [])).toEqual(rows)
   })
 })
 

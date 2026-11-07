@@ -114,17 +114,22 @@ const [prices, revenue, rankings, hiring, incidents, alerts, exposure, theses] =
   }),
 ])
 
+const stamps = useStamps()
 const sheet = computed(() =>
-  buildTearSheet(lab, {
-    prices: prices.data.value,
-    revenue: revenue.data.value,
-    rankings: rankings.data.value,
-    hiring: hiring.data.value,
-    incidents: incidents.data.value,
-    alerts: alerts.data.value?.rows ?? [],
-    exposure: exposure.data.value,
-    theses: theses.data.value,
-  }),
+  buildTearSheet(
+    lab,
+    {
+      prices: prices.data.value,
+      revenue: revenue.data.value,
+      rankings: rankings.data.value,
+      hiring: hiring.data.value,
+      incidents: incidents.data.value,
+      alerts: alerts.data.value?.rows ?? [],
+      exposure: exposure.data.value,
+      theses: theses.data.value,
+    },
+    stamps.style.value,
+  ),
 )
 const display = sheet.value.display
 const asOf = computed(() => prices.data.value?.as_of ?? alerts.data.value?.as_of ?? null)
@@ -182,9 +187,11 @@ const PRINT_INK = [
         <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
           <p class="text-xs text-muted">
             As of
-            <time v-if="asOf" :datetime="asOf" class="font-mono">{{ shortStamp(asOf) }}</time>
+            <time v-if="asOf" :datetime="asOf" class="font-mono">{{
+              shortStamp(asOf, stamps.style.value)
+            }}</time>
             <span v-else>no check yet</span>
-            · $ per million tokens · times UTC ·
+            · $ per million tokens · times {{ stamps.zone.value }} ·
             <span class="font-mono">{{ shortUrl(absolute(tearSheetPath(lab))) }}</span>
           </p>
           <div class="flex flex-wrap items-center gap-2 print:hidden">
@@ -368,7 +375,7 @@ const PRINT_INK = [
       <footer
         class="space-y-1 border-t border-default pt-2 text-xs text-muted print:break-inside-avoid"
       >
-        <h2 class="text-xs text-highlighted">Sources (fetch times UTC)</h2>
+        <h2 class="text-xs text-highlighted">Sources (fetch times {{ stamps.zone.value }})</h2>
         <ol v-if="sheet.sources.length">
           <li v-for="s in sheet.sources" :id="`source-${s.n}`" :key="s.n">
             <span class="font-mono">{{ s.n }}.</span> {{ s.label }} ·
@@ -381,7 +388,9 @@ const PRINT_INK = [
               >{{ shortUrl(s.url, 44) }}</a
             >
             ·
-            <time :datetime="s.fetched_at" class="font-mono">{{ shortStamp(s.fetched_at) }}</time>
+            <time :datetime="s.fetched_at" class="font-mono">{{
+              shortStamp(s.fetched_at, stamps.style.value)
+            }}</time>
           </li>
         </ol>
         <p v-else>No source loaded.</p>

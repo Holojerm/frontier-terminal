@@ -4,7 +4,6 @@
 // with. Every figure links to the lab page section that carries its full
 // provenance (layers/terminal/app/utils/readout.ts derives the cells for both).
 
-import { relativeStamp } from '../../../shared/utils/terminal-format'
 import { clipHeadline } from '../../../shared/utils/terminal-labs'
 import {
   labPath,
@@ -18,18 +17,22 @@ import type { TableColumn } from '../../types/terminal-ui'
 
 const props = defineProps<{ labs: readonly LabId[]; data: LabInputs }>()
 
-const now = useNow()
+const stamps = useStamps()
+const figures = useFigures()
+const watchlist = useWatchlist()
 
 const rows = computed(() =>
-  props.labs.map((lab) => {
-    const s = summarizeLab(lab, props.data)
-    return {
-      lab,
-      display: s.display,
-      cells: readoutCells(s, props.data.rankings?.provenance),
-      alert: s.alerts[0] ?? null,
-    }
-  }),
+  watchlist
+    .first(props.labs, (lab) => lab)
+    .map((lab) => {
+      const s = summarizeLab(lab, props.data)
+      return {
+        lab,
+        display: s.display,
+        cells: readoutCells(s, props.data.rankings?.provenance, figures.usd),
+        alert: s.alerts[0] ?? null,
+      }
+    }),
 )
 
 const columns: TableColumn[] = [
@@ -73,7 +76,7 @@ const columns: TableColumn[] = [
     <template #cell-alert="{ row }">
       <template v-if="row.alert">
         <time :datetime="row.alert.created_at" class="mr-2 whitespace-nowrap font-mono text-muted">
-          {{ relativeStamp(row.alert.created_at, now) }}
+          {{ stamps.relative(row.alert.created_at) }}
         </time>
         <NuxtLink
           :to="alertPath(row.alert.id)"

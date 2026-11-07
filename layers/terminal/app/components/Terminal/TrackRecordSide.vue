@@ -2,7 +2,6 @@
 // One side of a track-record row (first press, or the lab's newsroom): the
 // matched report with its outlet and time, or the plain reason there is none.
 
-import { absoluteStamp } from '../../../shared/utils/terminal-format'
 import type {
   TrackRecordRow,
   TrackRecordSide,
@@ -16,7 +15,7 @@ const props = defineProps<{
   quietWindow?: boolean
 }>()
 
-const now = useNow()
+const stamps = useStamps()
 
 const STATE_TEXT: Record<Exclude<TrackRecordState, 'matched'>, string> = {
   'window-open': 'Window still open',
@@ -34,7 +33,7 @@ const reason = computed(() => {
   if (s.state === 'window-open') {
     return props.quietWindow
       ? { text: '—', detail: null }
-      : { text: `Searched after ${absoluteStamp(props.row.window_to, now.value)}`, detail: null }
+      : { text: `Searched after ${stamps.absolute(props.row.window_to)}`, detail: null }
   }
   const detail =
     s.state === 'not-yet-rated'
@@ -58,11 +57,11 @@ const reason = computed(() => {
     <span class="block text-xs text-muted">
       {{ side.hit.outlet }} ·
       <time :datetime="side.hit.published_at" :title="side.hit.published_at">{{
-        absoluteStamp(side.hit.published_at, now)
+        stamps.absolute(side.hit.published_at)
       }}</time>
     </span>
     <span v-if="side.searched_from" class="block text-xs text-dimmed"
-      >Searched only from {{ absoluteStamp(side.searched_from, now) }}, so not in the tally.</span
+      >Searched only from {{ stamps.absolute(side.searched_from) }}, so not in the tally.</span
     >
   </template>
   <template v-else-if="reason">

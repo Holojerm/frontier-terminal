@@ -4,10 +4,12 @@
 // things (npm counts every tarball, pypistats drops mirrors) and the levels
 // are not comparable across packages, only each package's own change.
 
-import { compactTokens, pctChange, pctLabel } from '../../../shared/utils/terminal-format'
+import { pctChange, pctLabel } from '../../../shared/utils/terminal-format'
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type { AdoptionData } from '../../../shared/utils/recipe-views'
 import type { TableColumn } from '../../types/terminal-ui'
+
+const figures = useFigures()
 
 const props = defineProps<{
   downloads: AdoptionData['downloads']
@@ -33,7 +35,7 @@ const rows = computed(() =>
       return {
         ...d,
         lab: LAB_DISPLAY[d.lab],
-        last: d.last_28d === null ? '' : compactTokens(d.last_28d),
+        last: d.last_28d === null ? '' : figures.tokens(d.last_28d),
         change: change === null ? '—' : pctLabel(change),
         through: d.through ?? '',
       }

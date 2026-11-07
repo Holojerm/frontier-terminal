@@ -9,6 +9,8 @@ import { labName } from '../../../shared/utils/terminal-labs'
 import type { ArchiveReach } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
+const watchlist = useWatchlist()
+
 withDefaults(defineProps<{ reach: ArchiveReach[]; caption?: string }>(), {
   caption: 'How far back each lab’s price history reaches',
 })
@@ -29,7 +31,7 @@ const from = (r: ArchiveReach) => r.archived_from ?? r.live_from
   <TerminalTable
     :caption="caption"
     :columns="COLUMNS"
-    :rows="reach"
+    :rows="watchlist.first(reach, (r) => r.provider)"
     :row-key="(r) => r.provider"
     align="top"
   >

@@ -5,8 +5,12 @@
 // caveat, the CC BY 4.0 citation, and the two references that were evaluated
 // and NOT ingested all ship visibly, not behind a control.
 
-import { absoluteStamp, ppLabel, sharePct } from '../../../shared/utils/terminal-format'
+import { ppLabel, sharePct } from '../../../shared/utils/terminal-format'
 import type { RankingsData } from '../../../shared/utils/terminal-types'
+
+const watchlist = useWatchlist()
+
+const stamps = useStamps()
 
 const props = defineProps<{
   rankings: RankingsData
@@ -47,7 +51,7 @@ const widest = computed(() => Math.max(...props.rankings.shares.map((s) => s.sha
 
       <ul class="space-y-2">
         <li
-          v-for="s in rankings.shares"
+          v-for="s in watchlist.first(rankings.shares, (s) => s.provider)"
           :key="s.provider"
           class="grid grid-cols-[minmax(5rem,7rem)_1fr_auto] items-center gap-3 text-sm"
         >
@@ -95,7 +99,7 @@ const widest = computed(() => Math.max(...props.rankings.shares.map((s) => s.sha
       <span v-if="rankings.meta.as_of">
         dataset as of
         <time :datetime="rankings.meta.as_of" :title="rankings.meta.as_of">{{
-          absoluteStamp(rankings.meta.as_of)
+          stamps.absolute(rankings.meta.as_of)
         }}</time>
       </span>
       <a

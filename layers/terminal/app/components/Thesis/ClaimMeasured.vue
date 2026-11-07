@@ -2,7 +2,6 @@
 // A measured claim: the newest reading with its provenance, the series behind
 // it, and the same numbers as a table (the chart never gates a value).
 
-import { absoluteStamp } from '../../../shared/utils/terminal-format'
 import { dayLabel, detailRows, formatValue, valueKind } from '../../../shared/utils/thesis-format'
 import type { ClaimView } from '../../../shared/utils/thesis-types'
 
@@ -88,9 +87,7 @@ const columns = computed(() => [
             nested
           >
             <template #cell-date="{ row: p }">
-              <time :datetime="p.date" :title="absoluteStamp(`${p.date}T00:00:00Z`)">{{
-                p.date
-              }}</time>
+              <time :datetime="p.date" :title="dayLabel(p.date)">{{ p.date }}</time>
             </template>
             <template #cell-value="{ row: p }">{{ format(p.value) }}</template>
             <template #cell-note="{ row: p }">{{ p.note ?? '' }}</template>

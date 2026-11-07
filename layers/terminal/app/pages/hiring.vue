@@ -6,7 +6,7 @@
 // by-lab table the overview leads with.
 
 import { HISTORY_LICENSE } from '#shared/utils/license'
-import { absoluteStamp, count, signed } from '../../shared/utils/terminal-format'
+import { count, signed } from '../../shared/utils/terminal-format'
 import { dayLabel } from '../../shared/utils/thesis-format'
 import type {
   ArchivedHiringPoint,
@@ -15,6 +15,8 @@ import type {
 } from '../../shared/utils/terminal-types'
 import type { DataCentersData, PayData } from '../../shared/utils/recipe-views'
 import type { TableColumn } from '../types/terminal-ui'
+
+const watchlist = useWatchlist()
 
 const NO_DEPARTMENT = '(no department)'
 
@@ -43,7 +45,7 @@ useSeo({
   dateModified: hiring.value?.as_of,
 })
 
-const now = useNow()
+const stamps = useStamps()
 
 const boards = computed(() =>
   (hiring.value?.providers ?? []).filter((p) => p.feed === 'ok' && p.dates.length > 0),
@@ -63,9 +65,9 @@ const chart = computed(() => {
 })
 
 // Before we read the boards: one card per lab with archived copies.
-const archivedBoards = computed(() =>
-  (hiring.value?.providers ?? []).filter((p) => p.archived.length > 0),
-)
+// The reader's starred labs first, for every per-lab card on the page.
+const labsFirst = computed(() => watchlist.first(hiring.value?.providers ?? [], (p) => p.provider))
+const archivedBoards = computed(() => labsFirst.value.filter((p) => p.archived.length > 0))
 const infraOf = (a: ArchivedHiringPoint) => a.clusters?.[0]?.open_roles ?? null
 const monthLabel = (x: string) => x.slice(0, 7)
 const archivedSeries = (p: HiringHistoryProvider) => {
@@ -107,8 +109,8 @@ const dailyRows = computed(() =>
 )
 
 // Labs with no public board: one line in the department tab, not a card each.
-const fed = computed(() => (hiring.value?.providers ?? []).filter((p) => !feedGap('hiring', p)))
-const unfed = computed(() => (hiring.value?.providers ?? []).filter((p) => feedGap('hiring', p)))
+const fed = computed(() => labsFirst.value.filter((p) => !feedGap('hiring', p)))
+const unfed = computed(() => labsFirst.value.filter((p) => feedGap('hiring', p)))
 
 // Four questions, one tab each: how many roles, what is being built, which
 // teams moved, and what the roles pay.
@@ -341,15 +343,15 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
                   v-if="p.join_from && p.compare.at < p.join_from.slice(0, 10)"
                   class="text-xs text-muted"
                 >
-                  We have departments from {{ absoluteStamp(p.join_from, now) }} on. Earlier rows
-                  show “{{ NO_DEPARTMENT }}”.
+                  We have departments from {{ stamps.absolute(p.join_from) }} on. Earlier rows show
+                  “{{ NO_DEPARTMENT }}”.
                 </p>
                 <p
                   v-if="p.baseline_at && p.series_from && p.baseline_at > p.series_from"
                   class="text-xs text-muted"
                 >
-                  Rows before our first check on {{ absoluteStamp(p.baseline_at, now) }} are
-                  imported history, shown as they stand today.
+                  Rows before our first check on {{ stamps.absolute(p.baseline_at) }} are imported
+                  history, shown as they stand today.
                 </p>
               </template>
             </TerminalCard>

@@ -13,6 +13,8 @@ import type {
 } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
+const watchlist = useWatchlist()
+
 const props = defineProps<{ history: HiringHistoryData }>()
 
 const cluster = (p: HiringHistoryProvider): ClusterSeries | null => p.clusters[0] ?? null
@@ -55,7 +57,7 @@ const hasRows = (p: HiringHistoryProvider) => p.feed === 'ok' && p.total.length 
   <TerminalTable
     caption="Open roles per lab, the change over the comparison window, infrastructure roles, and the department that moved most"
     :columns="columns"
-    :rows="history.providers"
+    :rows="watchlist.first(history.providers, (p) => p.provider)"
     :row-key="(p) => p.provider"
     :gap="(p) => !hasRows(p)"
   >
