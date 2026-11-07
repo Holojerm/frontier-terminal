@@ -106,7 +106,10 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 
 ## Customized: kept on purpose
 
-- `nuxt.config.ts` — module list, runtimeConfig, security headers, cron map and the product routeRules are this app's
+- `nuxt.config.ts` — module list, runtimeConfig, security headers, cron map and the product routeRules are this app's; `hub.dir` reads `NUXT_HUB_DIR` so the browser suites get their own data dir (upstream candidate)
+- `playwright.config.ts` — the suites' server runs on `.data-browser` (`NUXT_HUB_DIR`, wiped per run) and `test/warmup/fill-store.ts` fills it from fixtures before the warmup (upstream candidate: the separate data dir and a fork-supplied fill step)
+- `test/a11y/accessibility.spec.ts` — the product's route list, and a duplicate-id assertion after axe, which only flags ids that ARIA references (upstream candidate: the assertion)
+- `test/warmup/global-setup.ts` — warms one path per page file the suites visit, not just the shell; a cold page compile ran past 30s on the two-core runner (upstream candidate: the per-page rule)
 - `app/composables/useSeo.ts` — adds dateModified and about inputs and a repoUrl in the site context in place of supportEmail and legalEntity (upstream candidate: dateModified/about)
 - `scripts/check-design-tokens.ts` — the app's own palette ramp in the allowed-color list is `iris`, not `clay`
 - `scripts/check-mirrors.ts` — reference pass only; the template's mirror pass compares server/utils/users.ts with mcp/src/server.ts, neither of which exists here (upstream candidate: skip a mirror whose files are absent)
