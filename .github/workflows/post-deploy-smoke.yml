@@ -28,12 +28,21 @@ permissions:
   contents: read
 
 jobs:
-  smoke:
+  # The owner's Mac mini, light slot, so production sees the same single home
+  # IP as gdelt-search; the deploy wait never holds the browser-suites slot.
+  # While the mini is down it falls back to ubuntu-latest (pick-runner.yml):
+  # a smoke test from a shared IP beats no smoke test.
+  route:
     # Forks have no production to check.
     if: github.repository == 'Holojerm/frontier-terminal'
-    # The owner's Mac mini, light slot, so production sees the same single home
-    # IP as gdelt-search; the deploy wait never holds the browser-suites slot.
-    runs-on: [self-hosted, linux, ARM64, mini-light]
+    uses: ./.github/workflows/pick-runner.yml
+    with:
+      label: mini-light
+
+  smoke:
+    needs: route
+    if: ${{ !cancelled() && github.repository == 'Holojerm/frontier-terminal' }}
+    runs-on: ${{ fromJSON(needs.route.outputs.runner || '"ubuntu-latest"') }}
     timeout-minutes: 30
 
     steps:
