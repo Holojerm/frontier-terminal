@@ -57,3 +57,6 @@ playwright-report/
 test-results/
 
 .claude/worktrees/fu-exports/.data
+
+# Compiled at install by `bun run email:build` (postinstall) — never commit it.
+server/emails/generated.ts

@@ -46,7 +46,7 @@ in both color modes, and the Content-Security-Policy spec) run in GitHub Actions
 
 Pushing to `main` builds and deploys through Workers Builds. Its deploy command,
 `bun run deploy:ci`, applies pending D1 migrations first, so a migration that fails stops the
-deploy. A manual `bun run deploy` skips them, so run `bun run db:migrate:remote` after one.
+deploy; it then runs `deploy:smoke`, which fails the build if `/` or `/api/health` is not serving. A manual `bun run deploy` skips them, so run `bun run db:migrate:remote` after one.
 `GET /api/status` reports `migrations.pending`, so you can see the gap from outside.
 
 Bindings live in `wrangler.toml` (one environment, no preview). `fleet.json` must match it, or
