@@ -20,7 +20,7 @@ import {
 import { parseProspectusRevenue } from '../../server/pipeline/parsers/sec/prospectus-revenue'
 import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
 import { includeSources } from '../../server/pipeline/sources'
-import { terminalStamp } from '../../server/utils/terminal-cache'
+import { terminalStamps } from '../../server/utils/terminal-cache'
 import { queryContext } from '../../server/utils/terminal-db'
 import { queryRevenue } from '../../server/utils/terminal-revenue'
 import { labelOf } from '../../server/utils/terminal-sources'
@@ -179,7 +179,7 @@ function fetcher(): SourceFetcher {
 }
 
 const ctx = async () =>
-  queryContext(sourcesYaml, await terminalStamp(db), () => new Date('2026-11-02T12:00:00Z'))
+  queryContext(sourcesYaml, (await terminalStamps(db)).poll, () => new Date('2026-11-02T12:00:00Z'))
 
 beforeEach(async () => {
   for (const table of [

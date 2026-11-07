@@ -83,15 +83,22 @@ export interface PointInTimeMeta {
 /** A point-in-time payload: the live shape plus how it was rebuilt; null stays null. */
 export type AsOfPayload<T> = T extends null ? null : T & { point_in_time: PointInTimeMeta }
 
-/** Collected while a query runs; terminalPayload attaches it to the payload. */
+/** Collected while a query runs; terminalPayloadAt attaches it to the payload. */
 export interface PointInTimeNotes {
   method: Set<string>
   unverified: Set<string>
+  /**
+   * Set by a reader that answers in event time (an Internet Archive capture,
+   * a filed fact by its filing date) rather than by what the store held at T:
+   * the data's license is dated by when it was published here, not by T.
+   */
+  eventTime: boolean
 }
 
 export const pointInTimeNotes = (): PointInTimeNotes => ({
   method: new Set(),
   unverified: new Set(),
+  eventTime: false,
 })
 
 export function pointInTimeMeta(at: string, notes: PointInTimeNotes): PointInTimeMeta {

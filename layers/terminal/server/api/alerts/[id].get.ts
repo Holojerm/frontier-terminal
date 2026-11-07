@@ -25,12 +25,9 @@ export default defineEventHandler(async (event) => {
   const id = idSchema.safeParse(getRouterParam(event, 'id'))
   if (!id.success) throw createError({ statusCode: 404, message: 'No such alert' })
 
-  const data = await serveTerminal(
-    event,
-    'alert',
-    (ctx) => queryAlert(terminalDb, ctx, id.data),
-    id.data,
-  )
+  const data = await serveTerminal(event, 'alert', (ctx) => queryAlert(terminalDb, ctx, id.data), {
+    variant: id.data,
+  })
   if (data === null) throw createError({ statusCode: 404, message: 'No such alert' })
   return data
 })

@@ -7,7 +7,7 @@ import { contentHash } from '../server/pipeline/contracts'
 import type { SourceFetcher } from '../server/pipeline/fetch'
 import { runRefresh, type RawStore, type RefreshDeps } from '../server/pipeline/refresh'
 import { includeSources } from '../server/pipeline/sources'
-import { terminalStamp } from '../server/utils/terminal-cache'
+import { terminalStamps } from '../server/utils/terminal-cache'
 import {
   queryContext,
   queryDataFreshness,
@@ -394,7 +394,7 @@ const run = (ids: readonly string[], fetcher = fixtureFetcher()) =>
   runRefresh(deps(fetcher), 'survey', ids)
 
 const FIXED_NOW = () => new Date('2026-09-09T12:00:00Z')
-const ctx = async () => queryContext(sourcesYaml, await terminalStamp(db), FIXED_NOW)
+const ctx = async () => queryContext(sourcesYaml, (await terminalStamps(db)).poll, FIXED_NOW)
 
 const GROK = 'model:xai:grok-4.6:standard'
 const XAI_PRICE_LINE = '| grok-4.6 (< 200k prompt tokens) | 500k | $2.00 | $0.50 | $6.00 |'

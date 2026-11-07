@@ -5,16 +5,12 @@
 // points are the Internet Archive's copies of its board from before then.
 
 import { queryHiringHistory } from '../../utils/terminal-db'
-import { serveTerminalAsOf, terminalDb } from '../../utils/terminal-handler'
+import { serveTerminal, terminalDb } from '../../utils/terminal-handler'
 import { rateLimitTerminal } from '../../utils/api-access'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'hiring-history', limit: 60, windowSeconds: 60 })
-  return serveTerminalAsOf(
-    event,
-    'hiring-history',
-    (ctx) => queryHiringHistory(terminalDb, ctx),
-    '',
-    'hiring',
-  )
+  return serveTerminal(event, 'hiring-history', (ctx) => queryHiringHistory(terminalDb, ctx), {
+    asOf: 'hiring',
+  })
 })

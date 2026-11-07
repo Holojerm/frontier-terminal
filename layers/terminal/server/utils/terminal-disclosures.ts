@@ -31,7 +31,7 @@ import type {
 
 import * as tables from '#server/db/schema'
 import type { PipelineDb } from '../pipeline/store'
-import { readStamps, type QueryContext } from './terminal-db'
+import { sourceReads, type QueryContext } from './terminal-db'
 import { byString, parseJson, str, type Json } from './terminal-json'
 import { DISCLOSURE_SOURCES, PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
 
@@ -249,7 +249,7 @@ export async function queryDisclosures(
       })
       .from(tables.changes)
       .where(eq(tables.changes.entity_type, 'disclosure')),
-    readStamps(db),
+    sourceReads(db).then((r) => r.cited),
   ])
 
   const entries: EntryBase[] = []

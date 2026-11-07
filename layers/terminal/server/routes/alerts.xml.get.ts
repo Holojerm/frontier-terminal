@@ -33,7 +33,7 @@ export default defineEventHandler(async (event) => {
     event,
     'alerts',
     (ctx) => queryAlerts(terminalDb, ctx, FEED_ENTRIES, tier),
-    `${tier}:${FEED_ENTRIES}`,
+    { variant: `${tier}:${FEED_ENTRIES}` },
   )
 
   setResponseHeader(event, 'Content-Type', 'application/atom+xml; charset=utf-8')

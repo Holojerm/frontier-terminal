@@ -12,9 +12,8 @@
 // recomputed from D1 and the miss is logged. Takes the store explicitly so
 // layers/terminal/test/terminal-cache.test.ts drives it with a Map.
 
-import { max, sql } from 'drizzle-orm'
+import { sql } from 'drizzle-orm'
 
-import * as tables from '#server/db/schema'
 import type { PipelineDb } from '../pipeline/store'
 import { timed, type ServerTimings } from './server-timing'
 
@@ -41,14 +40,8 @@ export interface CacheStore {
  */
 export const TERMINAL_CACHE_TTL_SECONDS = 2400
 
-/** The newest poll tick, or null before the first one. Every payload's `as_of`. */
-export async function terminalStamp(db: PipelineDb): Promise<string | null> {
-  const [row] = await db.select({ at: max(tables.sourceRuns.started_at) }).from(tables.sourceRuns)
-  return row?.at ?? null
-}
-
 export interface TerminalStamps {
-  /** The newest poll tick (terminalStamp): the payloads' `as_of`. */
+  /** The newest poll tick (max source_runs.started_at), or null before the first one: every payload's `as_of`. */
   poll: string | null
   /** What the KV and HTML caches key on: the poll tick and every later writer. Null before anything was written. */
   key: string | null
@@ -56,14 +49,16 @@ export interface TerminalStamps {
 
 /**
  * The poll tick plus the newest write of each writer that changes a served
- * payload outside the poll: the judge (alerts, class-map decisions, claim and
- * track-record verdicts; its judge_runs row is written last), other alert
- * writers (the hiring rollup, exposure ingest), the thesis evaluation (it runs
- * after the survey's recipes, so it also moves past their writes), the GDELT
- * files and track-record searches, and the filed-fact reads. Keyed on the
- * poll alone, a judge run left every page on the payload from before it until
- * the next poll. One statement: each subquery is a max() on an indexed
- * column, except track_record_searches, a row per alert per source.
+ * payload outside the poll: the judge (its alerts, then its judge_runs row,
+ * then the class-map decisions and the claim and track-record verdicts, which
+ * land after that row and so are keyed on their own), other alert writers (the
+ * hiring rollup, exposure ingest), the thesis evaluation (it runs after the
+ * survey's recipes, so it also moves past their writes), the track-record
+ * searches and the candidates they and the GDELT backfill find, and the
+ * filed-fact reads. Keyed on the poll alone, a judge run left every page on
+ * the payload from before it until the next poll. One statement, each
+ * subquery a max() on an indexed column. A route's own variant only adds
+ * what this cannot see: its input, or a stamp from a table outside this list.
  */
 export async function terminalStamps(db: PipelineDb): Promise<TerminalStamps> {
   const [row] = await db.all<Record<string, string | null>>(
@@ -71,8 +66,11 @@ export async function terminalStamps(db: PipelineDb): Promise<TerminalStamps> {
       (select max(started_at) from source_runs) as poll,
       (select max(started_at) from judge_runs) as judge,
       (select max(created_at) from alerts) as alerts,
+      (select max(decided_at) from class_map_decisions) as classes,
       (select max(computed_at) from claim_readings) as readings,
-      (select max(recorded_at) from gdelt_files) as gkg,
+      (select max(judged_at) from claim_verdicts) as verdicts,
+      (select max(judged_at) from track_record_verdicts) as ratings,
+      (select max(found_at) from track_record_candidates) as candidates,
       (select max(searched_at) from track_record_searches) as searches,
       (select max(started_at) from filed_fact_reads) as filed`,
   )
@@ -82,7 +80,17 @@ export async function terminalStamps(db: PipelineDb): Promise<TerminalStamps> {
   return { poll, key: [poll ?? 'never-polled', ...writes.map((w) => w ?? '-')].join('+') }
 }
 
-const WRITERS = ['judge', 'alerts', 'readings', 'gkg', 'searches', 'filed'] as const
+const WRITERS = [
+  'judge',
+  'alerts',
+  'classes',
+  'readings',
+  'verdicts',
+  'ratings',
+  'candidates',
+  'searches',
+  'filed',
+] as const
 
 /**
  * The stamp read currently in flight, if any. Module scope, so it is per
@@ -91,10 +99,10 @@ const WRITERS = ['judge', 'alerts', 'readings', 'gkg', 'searches', 'filed'] as c
 let inFlightStamp: { promise: Promise<unknown>; startedAt: number } | null = null
 
 /**
- * `terminalStamp`, de-duplicated across concurrent callers.
+ * `terminalStamps`, de-duplicated across concurrent callers.
  *
  * Rendering the front page fans out to eight endpoints, and each one used to
- * ask D1 for `max(source_runs.started_at)` independently: eight identical
+ * ask D1 for the same stamps independently: eight identical
  * queries, eight round-trips, one answer. They all start within a few
  * milliseconds of each other, so sharing the first one's promise collapses them
  * into a single query without changing a single result.
@@ -108,7 +116,7 @@ let inFlightStamp: { promise: Promise<unknown>; startedAt: number } | null = nul
  * A rejection is shared too, so eight fan-out calls report one 503 rather than
  * eight — and because the slot is cleared on settle, the next request retries.
  *
- * `terminalStamp` itself stays an unmemoized read: callers that drive it across
+ * `terminalStamps` itself stays an unmemoized read: callers that drive it across
  * writes to the same database must see each new value.
  */
 export function sharedTerminalStamp<T>(

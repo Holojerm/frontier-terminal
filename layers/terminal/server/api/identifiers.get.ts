@@ -19,5 +19,7 @@ const Query = z.object({
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'identifiers', limit: 60, windowSeconds: 60 })
   const { entity } = await getValidatedQuery(event, Query.parse)
-  return serveTerminal(event, 'identifiers', async () => identifiersPayload(entity), entity ?? '')
+  return serveTerminal(event, 'identifiers', async () => identifiersPayload(entity), {
+    variant: entity ?? '',
+  })
 })

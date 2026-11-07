@@ -1162,7 +1162,6 @@ export interface GpuPricesData extends Stamp {
 export type TrackRecordState =
   | 'window-open'
   | 'not-searched'
-  | 'search-failed'
   | 'not-searchable'
   | 'no-feed'
   | 'none-found'
@@ -1185,7 +1184,7 @@ export interface TrackRecordHit {
 
 export interface TrackRecordSide {
   state: TrackRecordState
-  /** The reason for `search-failed` or `not-searchable`. */
+  /** The reason for `not-searchable` or `no-feed`. */
   detail: string | null
   hit: TrackRecordHit | null
   /** Hours from the saw-it time to the hit: positive when we saw it first. */

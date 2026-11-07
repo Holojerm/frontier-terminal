@@ -18,7 +18,7 @@ import {
   pollStampAt,
 } from '../server/utils/terminal-asof'
 import { isCacheableDocument } from '../server/utils/html-cache'
-import { terminalCacheKey, terminalStamp } from '../server/utils/terminal-cache'
+import { terminalCacheKey, terminalStamps } from '../server/utils/terminal-cache'
 import {
   queryAlerts,
   queryContext,
@@ -75,7 +75,7 @@ const poll = (overrides: Record<string, string> = {}) =>
 const between = () => new Date(tick + 500).toISOString()
 
 const live = async (clock: string): Promise<QueryContext> =>
-  queryContext(sourcesYaml, await terminalStamp(db), () => new Date(clock))
+  queryContext(sourcesYaml, (await terminalStamps(db)).poll, () => new Date(clock))
 const asOf = async (at: string, clock = at): Promise<QueryContext> =>
   queryContext(sourcesYaml, await pollStampAt(db, at), () => new Date(clock), at)
 
@@ -154,7 +154,9 @@ describe('which routes answer as_of', () => {
   it('lists every route that rebuilds its payload as of T, and no other', () => {
     const answering = Object.keys(ROUTES)
       .filter((path) =>
-        /serveTerminalAsOf|serveTerminalFiled|terminalPayloadAt|parseAsOfQuery/.test(ROUTES[path]!),
+        /asOf: '(snapshot|pricing|hiring|filed)'|terminalPayloadAt|parseAsOfQuery/.test(
+          ROUTES[path]!,
+        ),
       )
       .sort()
     expect(answering).toEqual([...AS_OF_ROUTES].sort())

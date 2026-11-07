@@ -3,12 +3,13 @@
 // (layers/terminal/server/utils/terminal-exposure.ts). `as_of` keeps the facts
 // filed before that day.
 
-import { filedFactsStamp, queryExposure } from '../utils/terminal-exposure'
-import { serveTerminalFiled, terminalDb } from '../utils/terminal-handler'
+import { queryExposure } from '../utils/terminal-exposure'
+import { serveTerminal, terminalDb } from '../utils/terminal-handler'
 import { rateLimitTerminal } from '../utils/api-access'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'exposure', limit: 60, windowSeconds: 60 })
-  const variant = await filedFactsStamp(terminalDb)
-  return serveTerminalFiled(event, 'exposure', (ctx) => queryExposure(terminalDb, ctx), variant)
+  return serveTerminal(event, 'exposure', (ctx) => queryExposure(terminalDb, ctx), {
+    asOf: 'filed',
+  })
 })

@@ -24,7 +24,7 @@ export function isTrackedForm(form: string): boolean {
   return TRACKED_FORMS.includes(rootForm(form))
 }
 
-/** The S-1 family and the 424B4 — the s1-floor rule (layers/terminal/server/pipeline/lanes.ts).
+/** The S-1 family and the 424B4 — the s1-floor rule (layers/terminal/server/pipeline/filing-floors.ts).
  * Deliberately NOT matched: DRS (confidential drafts are structurally
  * invisible until flipped public — non-goals), S-8, and every periodic form. */
 export function isS1FloorForm(form: string): boolean {

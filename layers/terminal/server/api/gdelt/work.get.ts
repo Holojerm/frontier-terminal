@@ -1,8 +1,8 @@
 // GET /api/gdelt/work — the next GDELT GKG files the press side has not read,
-// oldest first, and the alerts (with their search terms) whose windows overlap
-// them, for the Actions job (scripts/gdelt-search.ts) on the owner's Mac mini.
+// oldest first, and the vocabulary whose words decide which rows the job posts
+// back, for the Actions job (scripts/gdelt-search.ts) on the owner's Mac mini.
 // Also hands it the User-Agent, so the job keeps no copy of it. Bearer-gated:
-// it is the work queue for the one route that writes press candidates.
+// it is the work queue for the route that keeps the rows press is matched on.
 
 import { db } from '@nuxthub/db'
 

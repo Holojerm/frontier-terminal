@@ -26,7 +26,8 @@
 //     task_heartbeats table (task-heartbeat.ts), with the limit derived from
 //     its cron: one missed run plus half an interval, at least 30 minutes;
 //   - one per producer off the Worker, or per task whose heartbeat cannot say
-//     enough, with its evidence read from the rows that producer writes.
+//     enough, with its evidence read from the rows that producer writes;
+//   - the deploy of main (pipeline/deploy-watch.ts).
 //
 // layers/terminal/test/freshness.test.ts fails the build when a scheduled task
 // has no heartbeat and no check of its own, or a check's kind has no tier.
@@ -34,7 +35,6 @@
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
 import { logEvent } from '#server/utils/log'
-import { eq, min } from 'drizzle-orm'
 
 import type { LockStore } from '../pipeline/lock'
 import type { PipelineDb } from '../pipeline/store'
@@ -206,12 +206,18 @@ export function taskMaxAgeMs(expression: string): number {
   return interval + Math.max(30 * MINUTE_MS, interval / 2)
 }
 
-/** Monitoring started with the first heartbeat any task wrote. */
-async function monitoringStart(db: PipelineDb): Promise<string | null> {
-  const [since] = await db
-    .select({ at: min(tables.taskHeartbeats.first_seen_at) })
-    .from(tables.taskHeartbeats)
-  return since?.at ?? null
+type HeartbeatRow = typeof tables.taskHeartbeats.$inferSelect
+type HeartbeatReader = (db: PipelineDb) => Promise<HeartbeatRow[]>
+
+const readHeartbeats: HeartbeatReader = (db) => db.select().from(tables.taskHeartbeats)
+
+/**
+ * The task_heartbeats table (one row per task), read once however many task
+ * checks ask. Make one per tick: it never reads again.
+ */
+export function heartbeatLoader(): HeartbeatReader {
+  let rows: Promise<HeartbeatRow[]> | null = null
+  return (db) => (rows ??= readHeartbeats(db))
 }
 
 export const expectedMarkerKey = (task: string) => `freshness:expected:${task}`
@@ -233,23 +239,27 @@ async function firstExpected(marker: MarkerStore, task: string, now: Date): Prom
   return now.toISOString()
 }
 
-/** The check a scheduled task gets from its heartbeat. */
-export function taskHeartbeatCheck(task: string, expression: string): FreshnessCheck {
+/** The check a scheduled task gets from its heartbeat; freshnessChecks() shares one loader across them. */
+export function taskHeartbeatCheck(
+  task: string,
+  expression: string,
+  heartbeats: HeartbeatReader = readHeartbeats,
+): FreshnessCheck {
   return {
     key: `task:${task}`,
     label: `Scheduled task ${task} (${expression})`,
     kind: TASK_SILENT_KIND,
     maxAgeMs: taskMaxAgeMs(expression),
     async evidence(db, now, marker) {
-      const [row] = await db
-        .select()
-        .from(tables.taskHeartbeats)
-        .where(eq(tables.taskHeartbeats.task, task))
+      const rows = await heartbeats(db)
+      const row = rows.find((r) => r.task === task)
+      // Monitoring started with the first heartbeat any task wrote.
+      const monitoringStart = rows.map((r) => r.first_seen_at).sort()[0] ?? null
       const lastOk = row?.last_completed_at ?? null
       const failedSince =
         row?.last_failed_at && (!lastOk || row.last_failed_at > lastOk) ? row.last_failed_at : null
       return {
-        owedSince: row ? await monitoringStart(db) : await firstExpected(marker, task, now),
+        owedSince: row ? monitoringStart : await firstExpected(marker, task, now),
         lastOkAt: lastOk,
         note: !row
           ? 'it has never recorded a run'

@@ -14,7 +14,7 @@ import { LABS } from '../../shared/utils/terminal-lab-summary'
 import { ALERT_TIER_FILTERS, tierFilterOf } from '../../shared/utils/terminal-tiers'
 
 import { parseAlertCursor, queryAlerts } from '../utils/terminal-db'
-import { serveTerminalAsOf, terminalDb } from '../utils/terminal-handler'
+import { serveTerminal, terminalDb } from '../utils/terminal-handler'
 import { rateLimitTerminal } from '../utils/api-access'
 
 const querySchema = z.object({
@@ -44,11 +44,14 @@ export default defineEventHandler(async (event) => {
     topic ?? '',
     cursor ? `${cursor.created_at}~${cursor.id}` : '',
   ].join(':')
-  return serveTerminalAsOf(
+  return serveTerminal(
     event,
     'alerts',
     (ctx) => queryAlerts(terminalDb, ctx, limit, tier, filter),
-    // The unfiltered first page keeps the key it always had, so the cache entries other pages read stay warm.
-    lab || topic || cursor ? variant : `${tier}:${limit}`,
+    {
+      // The unfiltered first page keeps the key it always had, so the cache entries other pages read stay warm.
+      variant: lab || topic || cursor ? variant : `${tier}:${limit}`,
+      asOf: 'snapshot',
+    },
   )
 })

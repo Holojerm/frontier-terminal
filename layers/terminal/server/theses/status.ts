@@ -10,7 +10,12 @@
 // margin or half the drop. It warns before it breaks without needing a
 // threshold of its own.
 
-import type { ClaimDef, ClaimStatus, MeasuredRule } from '../../shared/utils/thesis-types'
+import type {
+  ClaimDef,
+  ClaimStatus,
+  MeasuredRule,
+  SignalSpec,
+} from '../../shared/utils/thesis-types'
 
 import { daysBefore } from '../utils/terminal-rankings'
 
@@ -255,18 +260,22 @@ function sustainedDrawdown(
   }
 }
 
-/** The claim's status from its readings, oldest-to-newest order not required. */
+/** A claim read from stored readings; a judged one is rated from verdicts (judged-status.ts). */
+export type MeasuredClaim = ClaimDef & { spec: Extract<SignalSpec, { kind: 'measured' }> }
+
+/** The claim's status from its readings, oldest first. */
 export function evaluateClaim(
-  claim: ClaimDef,
+  claim: MeasuredClaim,
   all: readonly StoredReading[],
   fmt: Formatter,
   comparatorName: string | null = null,
 ): ClaimEvaluation {
   const spec = claim.spec
-  if (spec.kind === 'judged') return unresolved('Judged signal: rated from M2 on.')
   const newest = all.reduce<StoredReading | null>((n, r) => (!n || r.date > n.date ? r : n), null)
   if (newest?.void_reason) return unresolved(newest.void_reason, newest.date)
-  const readings = all.filter((r) => !r.void_reason)
+  // Voids go before the restart: a void reading still records its lab set,
+  // and an older one with a set of its own would cut the series there.
+  const readings = sinceLabSetChange(all.filter((r) => !r.void_reason))
   switch (spec.rule.rule) {
     case 'sustained-floor':
       return sustainedFloor(spec.rule, readings, fmt, comparatorName)

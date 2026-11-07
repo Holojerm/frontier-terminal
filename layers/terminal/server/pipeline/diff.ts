@@ -21,6 +21,20 @@ function indexByKey(rows: readonly EntityRow[], side: 'before' | 'after'): Map<s
   return byKey
 }
 
+export interface Diff {
+  changes: ChangeRow[]
+  /**
+   * The after rows the store must write: every added or modified row, plus
+   * any whose content is unchanged but whose provider or source_url differs
+   * from the stored row. Neither is in the content hash, so no change is
+   * logged for those, yet the stored row would otherwise keep the old value
+   * forever: a revenue filer retagged to another lab in sources.yaml, or a
+   * source that moved URL with byte-identical content. The world did not
+   * change, our description of it did.
+   */
+  upserts: EntityRow[]
+}
+
 /**
  * `detected_at` is the fetch of the after snapshot, and `after_url` its URL
  * (the before row's URL when not given): together they name the snapshot a
@@ -31,7 +45,7 @@ export function diff(
   after: readonly EntityRow[],
   detected_at: string,
   after_url?: string,
-): ChangeRow[] {
+): Diff {
   const beforeByKey = indexByKey(before, 'before')
   const afterByKey = indexByKey(after, 'after')
 
@@ -43,10 +57,15 @@ export function diff(
   )
 
   const changes: ChangeRow[] = []
+  const upserts: EntityRow[] = []
   for (const key of keys) {
     const b = beforeByKey.get(key)
     const a = afterByKey.get(key)
-    if (b && a && b.content_hash === a.content_hash) continue // unchanged
+    if (b && a && b.content_hash === a.content_hash) {
+      if (b.provider !== a.provider || b.source_url !== a.source_url) upserts.push(a)
+      continue
+    }
+    if (a) upserts.push(a)
 
     const change_type = b && a ? 'modified' : a ? 'added' : 'removed'
     // Provenance: the after-side row where one exists (added/modified were
@@ -78,7 +97,7 @@ export function diff(
       }),
     )
   }
-  return changes
+  return { changes, upserts }
 }
 
 /** A change's id: the entity and its two content hashes, no source and no clock. */
@@ -107,27 +126,4 @@ export function repeatChangeId(change: ChangeRow): ChangeRow {
       detected_at: change.detected_at,
     }),
   }
-}
-
-/**
- * After rows whose content is unchanged but whose provider or source_url
- * differs from the stored row. Neither is in the content hash, so diff()
- * reports nothing and the stored row would keep the old value forever: a
- * revenue filer retagged to another lab in sources.yaml, or a source that
- * moved URL with byte-identical content. These are rewritten in place and
- * never logged — the world did not change, our description of it did.
- */
-export function inPlaceRewrites(
-  before: readonly EntityRow[],
-  after: readonly EntityRow[],
-): EntityRow[] {
-  const beforeByKey = indexByKey(before, 'before')
-  return [...indexByKey(after, 'after').values()].filter((a) => {
-    const b = beforeByKey.get(a.entity_key)
-    return (
-      b !== undefined &&
-      b.content_hash === a.content_hash &&
-      (b.provider !== a.provider || b.source_url !== a.source_url)
-    )
-  })
 }

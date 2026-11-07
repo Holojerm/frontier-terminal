@@ -2,9 +2,8 @@
 // rows always give the same query. `who` names the company and `what` the
 // event; `also` narrows a broad `what` (a department name needs a hiring
 // word beside it). A GDELT article needs a phrase of every group
-// (matchesArticle); gdeltQuery writes the same rule as GDELT's query syntax,
-// which is how the search row records it. A newsroom post is already the
-// lab's own, so it is matched on `what` alone.
+// (matchesArticle); termList writes that rule out for the search row. A
+// newsroom post is already the lab's own, so it is matched on `what` alone.
 //
 // Terms are deliberately broad. A candidate is not a match: the judge rates
 // each one as the same event or not, so a broad term costs a rating, while a
@@ -186,7 +185,7 @@ function termsOf(change: ChangeRow): SearchTerms | null {
   }
 }
 
-/** Most phrases one query may OR together; GDELT rejects very long queries. */
+/** Phrases kept per group: an alert citing many rows would otherwise match most of the press. */
 export const MAX_PHRASES = 4
 
 /**
@@ -204,17 +203,12 @@ export function alertTerms(changes: readonly ChangeRow[]): SearchTerms | null {
   }
 }
 
-const quote = (phrase: string) => (/\s|-/.test(phrase) ? `"${phrase}"` : phrase)
-const group = (phrases: readonly string[]) =>
-  phrases.length === 1 ? quote(phrases[0]!) : `(${phrases.map(quote).join(' OR ')})`
-
-/**
- * The GDELT DOC 2.0 query: `who` AND `what`, English sources only. GDELT
- * rejects parentheses around a single term, so a group of one is bare.
- */
-export function gdeltQuery(terms: SearchTerms): string {
-  const parts = [terms.who, terms.what, terms.also].filter((g) => g.length > 0).map(group)
-  return [...parts, 'sourcelang:english'].join(' ')
+/** The terms as the search row records them: every group, any phrase of each. */
+export function termList(terms: SearchTerms): string {
+  return [terms.who, terms.what, terms.also]
+    .filter((g) => g.length > 0)
+    .map((g) => g.join(' | '))
+    .join(' + ')
 }
 
 /** Lowercase words and dotted numbers, so "GPT‑6.1 Sol." and "gpt-6.1-sol" read alike. */
@@ -318,10 +312,13 @@ export function mentionVocabulary(modelSlugs: readonly string[]): string[] {
     if (first && first.length >= 3 && !/^\d/.test(first)) words.add(first)
   }
   const seen = new Set<string>()
-  return [...words].filter((w) => {
-    const k = normalizeText(w)
-    if (seen.has(k)) return false
-    seen.add(k)
-    return true
-  })
+  // Sorted, so a file's stored vocabulary is the same text whatever order the slugs came in.
+  return [...words]
+    .filter((w) => {
+      const k = normalizeText(w)
+      if (seen.has(k)) return false
+      seen.add(k)
+      return true
+    })
+    .sort()
 }

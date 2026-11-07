@@ -119,7 +119,7 @@ describe('prospectusFloorAlerts', () => {
       ...normalizeRevenues(revenue, 'snap', 'anthropic'),
       ...normalizeOfferings([offering], 'snap'),
     ]
-    return diff([], after, fetchedAt)
+    return diff([], after, fetchedAt).changes
   }
 
   async function storeS1() {

@@ -3,11 +3,9 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { contentHashOfText, type ProspectusOutput } from '../../server/pipeline/contracts'
+import type { ProspectusOutput } from '../../server/pipeline/contracts'
 import { diff } from '../../server/pipeline/diff'
-import { laneFor } from '../../server/pipeline/lanes'
 import {
-  normalizeDocuments,
   normalizeOfferings,
   normalizeProspectusDetails,
   normalizeRevenues,
@@ -21,9 +19,8 @@ import { PROSPECTUS_FIXTURE, parseProspectus } from '../../server/pipeline/parse
 import { docLines, docText, figure } from '../../server/pipeline/parsers/sec/prospectus-doc'
 import { riskFactorChanges } from '../../server/pipeline/parsers/sec/prospectus-risk-factors'
 import { prospectusFloorAlerts } from '../../server/pipeline/prospectus-floor'
-import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
 import { insertRows } from '../../server/pipeline/store'
-import { terminalStamp } from '../../server/utils/terminal-cache'
+import { terminalStamps } from '../../server/utils/terminal-cache'
 import { queryContext } from '../../server/utils/terminal-db'
 import { EXPORT_TABLES, collect, csvChunks } from '../../server/utils/terminal-export'
 import { queryProspectus } from '../../server/utils/terminal-prospectus'
@@ -320,15 +317,13 @@ describe('concentration, shares and risk factors', () => {
 
 // ── the lane, the alert, the query layer, the exports ──────────────────────
 
-const raw: RawStore = { put: async () => {} }
-let tick = Date.parse('2026-11-04T14:00:00Z')
-const now = () => new Date((tick += 1000))
+const tick = Date.parse('2026-11-04T14:00:00Z')
 
-async function store(out: ProspectusOutput, sourceId: string, details = true) {
+async function store(out: ProspectusOutput, sourceId: string) {
   const rows = [
     ...normalizeRevenues(out.revenue, 'snap', 'anthropic'),
     ...normalizeOfferings(out.offering ? [out.offering] : [], 'snap'),
-    ...(details ? normalizeProspectusDetails(out, 'snap') : []),
+    ...normalizeProspectusDetails(out, 'snap'),
   ]
   await insertRows(
     db,
@@ -350,91 +345,13 @@ beforeEach(async () => {
   }
 })
 
-describe('a document read before the lane read its details', () => {
-  it('is parsed again although its bytes are unchanged, adding only the new rows', async () => {
-    const id = PROSPECTUS_FIXTURE.sourceId
-    // As production holds it: the filing index that located the S-1/A, and the
-    // S-1/A's revenue and cover from an earlier parse of the same bytes.
-    const located = normalizeDocuments(
-      [
-        {
-          provider: 'anthropic',
-          cik: CIK,
-          entity_name: 'Anthropic, PBC',
-          accession_no: S1A.accession_no,
-          form: 'S-1/A',
-          filed: '2026-11-02',
-          document: 'anthropicpbc-sx1ax1.htm',
-          ...s1aProv,
-        },
-      ],
-      'snap',
-    )
-    await db.insert(schema.entities).values(
-      located.map((r) => ({
-        ...r,
-        source_id: `filing-index-${PROSPECTUS_FIXTURE.key}`,
-        first_seen_at: r.fetched_at,
-      })),
-    )
-    await store(s1a, id, false)
-    const content = contentHashOfText(s1aHtml)
-    await db.insert(schema.snapshots).values({
-      id: `${id}:2026-11-02T15:00:00.000Z`,
-      source_id: id,
-      content_hash: content,
-      raw_key: 'raw/old',
-      http_status: 200,
-      bytes: s1aHtml.length,
-      source_url: s1aProv.source_url,
-      fetched_at: '2026-11-02T15:00:00.000Z',
-    })
-    await db.insert(schema.sourceRuns).values({
-      id: 'run-old',
-      scope: 'survey',
-      source_id: id,
-      started_at: '2026-11-02T15:00:00.000Z',
-      status: 'ok',
-      detail: null,
-      snapshot_id: `${id}:2026-11-02T15:00:00.000Z`,
-      added: 7,
-      removed: 0,
-      modified: 0,
-      source_url: s1aProv.source_url,
-    })
-    expect(await laneFor(id)!.stale!(db, id)).toBe(true)
-
-    const report = await runRefresh(
-      {
-        db,
-        raw,
-        fetcher: async () => ({ ok: true, status: 200, text: s1aHtml, bytes: s1aHtml.length }),
-        sourcesYaml: fixtureText('sources.yaml'),
-        now,
-      },
-      'survey',
-      [id],
-    )
-    expect(report.sources[0]).toMatchObject({ status: 'ok', added: 13, modified: 0, alerts: 0 })
-    const changed = await db.select().from(schema.changes)
-    expect([...new Set(changed.map((c) => c.entity_type))].sort()).toEqual([
-      'commitment',
-      'concentration',
-      'risk_factors',
-      'shares',
-      'statement',
-    ])
-    expect(await laneFor(id)!.stale!(db, id)).toBe(false)
-  })
-})
-
 describe('the risk-factor alert', () => {
   const headingsOnly = (sections: ProspectusOutput['risk_factors']['sections']) => {
     const amended = { ...s1a, risk_factors: { ...s1a.risk_factors, sections } }
     const rows = normalizeProspectusDetails(amended, 'snap').filter(
       (r) => r.entity_type === 'risk_factors',
     )
-    return diff([], rows, '2026-11-04T14:00:00.000Z')
+    return diff([], rows, '2026-11-04T14:00:00.000Z').changes
   }
 
   it('fires when an amendment adds or removes a heading, and names it', async () => {
@@ -469,7 +386,7 @@ describe('the risk-factor alert', () => {
 
 describe('GET /api/prospectus and the exports', () => {
   const ctx = async () =>
-    queryContext(fixtureText('sources.yaml'), await terminalStamp(db), () => new Date(tick))
+    queryContext(fixtureText('sources.yaml'), (await terminalStamps(db)).poll, () => new Date(tick))
 
   it('shows each period once from the newest filing, the S-1’s halves beside the S-1/A’s nine months', async () => {
     await store(s1, REGISTRATION_FIXTURE.prospectusSourceId)

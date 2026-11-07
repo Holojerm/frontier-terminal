@@ -7,7 +7,7 @@
 
 import { and, desc, eq, lt, max } from 'drizzle-orm'
 
-import type { LabId } from '../../shared/utils/terminal-types'
+import type { HiringHistoryData, LabId } from '../../shared/utils/terminal-types'
 import type { SignalSpec } from '../../shared/utils/thesis-types'
 
 import * as tables from '#server/db/schema'
@@ -400,13 +400,20 @@ export function sumAcrossLabs(labs: readonly LabSeries[]): {
   })
 }
 
+/** The live hiring history: the run's shared read when there is one. */
+export function hiringHistoryFor(db: PipelineDb, deps: SignalDeps): Promise<HiringHistoryData> {
+  return (
+    deps.hiringHistory?.() ?? queryHiringHistory(db, queryContext(deps.sourcesYaml, null, deps.now))
+  )
+}
+
 /** Open roles in a department cluster, summed across every lab whose board has a public feed. */
 export async function clusterRolesAcrossLabs(
   db: PipelineDb,
   spec: Spec<'cluster-roles-across-labs'>,
   deps: SignalDeps,
 ): Promise<SignalReading[]> {
-  const history = await queryHiringHistory(db, queryContext(deps.sourcesYaml, null, deps.now))
+  const history = await hiringHistoryFor(db, deps)
   const no_feed: Partial<Record<LabId, string>> = {}
   const labs: LabSeries[] = []
   for (const p of history.providers) {

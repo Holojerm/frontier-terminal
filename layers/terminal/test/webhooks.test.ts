@@ -12,7 +12,7 @@ import { PAID_LICENSE } from '~~/shared/utils/license'
 import { JUDGED_HOLD_MS } from '../server/pipeline/social'
 import { expiryAfter } from '../server/utils/api-key-token'
 import {
-  WEBHOOK_BASELINE_MARKER,
+  WEBHOOK_ALERT_LOOKBACK_MS,
   drainWebhookDeliveries,
   enqueueWebhookDeliveries,
   type WebhookDrainOptions,
@@ -310,11 +310,6 @@ async function seedAlert(
   return id
 }
 
-/** The first run only records a baseline; tests start after it. */
-async function baseline(now = at(-30)) {
-  return enqueueWebhookDeliveries(db, now)
-}
-
 function recorder(status = 200) {
   const sent: WebhookRequest[] = []
   const send = async (request: WebhookRequest) => {
@@ -346,7 +341,6 @@ const deliveries = () => db.select().from(schema.webhookDeliveries)
 beforeEach(async () => {
   for (const table of [
     schema.webhookDeliveries,
-    schema.webhookAlertLog,
     schema.webhooks,
     schema.apiKeys,
     schema.alerts,
@@ -359,18 +353,19 @@ beforeEach(async () => {
 })
 
 describe('enqueue', () => {
-  it('records a baseline on its first run and queues nothing from before it', async () => {
+  it('sends a webhook nothing written before it was added, or before the lookback', async () => {
     await seedKey()
     await seedWebhook('whk_000000000a', 'info')
     await seedAlert('critical', { created_at: at(-120) })
-    const first = await baseline()
-    expect(first).toMatchObject({ baseline: true, queued: 0, seen: 1 })
-    const [marker] = await db
-      .select()
-      .from(schema.webhookAlertLog)
-      .where(eq(schema.webhookAlertLog.alert_id, WEBHOOK_BASELINE_MARKER))
-    expect(marker).toBeDefined()
-    expect(await enqueueWebhookDeliveries(db, T0)).toMatchObject({ baseline: false, queued: 0 })
+    expect(await enqueueWebhookDeliveries(db, T0)).toEqual({ queued: 0 })
+
+    await db.delete(schema.alerts)
+    await db.update(schema.webhooks).set({ created_at: at(-7 * 24 * 60).toISOString() })
+    const lookback = WEBHOOK_ALERT_LOOKBACK_MS / MIN
+    await seedAlert('critical', { created_at: at(-lookback - 1) })
+    const recent = await seedAlert('critical', { created_at: at(-lookback + 1) })
+    expect(await enqueueWebhookDeliveries(db, T0)).toEqual({ queued: 1 })
+    expect((await deliveries()).map((r) => r.alert_id)).toEqual([recent])
   })
 
   it('queues one delivery per webhook whose severity the alert reaches', async () => {
@@ -378,12 +373,11 @@ describe('enqueue', () => {
     await seedWebhook('whk_000000000a', 'info')
     await seedWebhook('whk_000000000b', 'notable')
     await seedWebhook('whk_000000000c', 'critical')
-    await baseline()
     const info = await seedAlert('info')
     const notable = await seedAlert('notable')
     const critical = await seedAlert('critical')
 
-    expect(await enqueueWebhookDeliveries(db, T0)).toMatchObject({ seen: 3, queued: 6 })
+    expect(await enqueueWebhookDeliveries(db, T0)).toEqual({ queued: 6 })
     const rows = await deliveries()
     const to = (alert: string) =>
       rows
@@ -399,14 +393,9 @@ describe('enqueue', () => {
   it('is idempotent on alert and webhook', async () => {
     await seedKey()
     await seedWebhook('whk_000000000a', 'info')
-    await baseline()
     const id = await seedAlert('critical')
     expect((await enqueueWebhookDeliveries(db, T0)).queued).toBe(1)
     expect((await enqueueWebhookDeliveries(db, at(5))).queued).toBe(0)
-
-    // Even with the log row gone, the unique (alert, webhook) index holds.
-    await db.delete(schema.webhookAlertLog).where(eq(schema.webhookAlertLog.alert_id, id))
-    expect((await enqueueWebhookDeliveries(db, at(10))).queued).toBe(0)
     await db
       .insert(schema.webhookDeliveries)
       .values({
@@ -421,9 +410,8 @@ describe('enqueue', () => {
     expect(await deliveries()).toHaveLength(1)
   })
 
-  it('sends a new webhook only alerts first seen after it was added', async () => {
+  it('sends a new webhook only alerts written after it was added', async () => {
     await seedKey()
-    await baseline()
     await seedAlert('critical')
     await enqueueWebhookDeliveries(db, T0)
     await seedWebhook('whk_000000000a', 'info', at(1))
@@ -436,7 +424,6 @@ describe('enqueue', () => {
   it('skips webhooks whose key is revoked or expired, and removed webhooks', async () => {
     await seedKey({ revoked: true, revoked_at: T0.toISOString() })
     await seedWebhook('whk_000000000a', 'info')
-    await baseline()
     await seedAlert('critical')
     expect((await enqueueWebhookDeliveries(db, T0)).queued).toBe(0)
 
@@ -453,7 +440,6 @@ describe('enqueue', () => {
   it('holds a judged alert for the social layer’s hour, from the same instant', async () => {
     await seedKey()
     await seedWebhook('whk_000000000a', 'info')
-    await baseline()
     await seedAlert('critical', { rule: 'agent-judge', created_at: at(-10) })
     await seedAlert('critical', { rule: 'rule-x', created_at: at(-10) })
     await enqueueWebhookDeliveries(db, T0)
@@ -466,7 +452,6 @@ describe('enqueue', () => {
   it('holds a judged alert from when it was written, not from its evidence’s fetch', async () => {
     await seedKey()
     await seedWebhook('whk_000000000a', 'info')
-    await baseline()
     await seedAlert('critical', { rule: 'agent-judge', created_at: at(-70), recorded_at: at(-2) })
     await enqueueWebhookDeliveries(db, T0)
     const [row] = await deliveries()
@@ -478,7 +463,6 @@ describe('drain', () => {
   async function oneQueued(severity = 'critical', rule = 'rule-x') {
     await seedKey()
     await seedWebhook('whk_000000000a', 'info')
-    await baseline()
     const id = await seedAlert(severity, { rule })
     await enqueueWebhookDeliveries(db, T0)
     return id
@@ -519,14 +503,16 @@ describe('drain', () => {
     expect((await drainAt(at(10), send)).delivered).toBe(0)
   })
 
-  it('waits until the public site has moved past the moment the alert was seen', async () => {
+  it('waits until the public site has moved past the moment the alert was written', async () => {
     await oneQueued()
+    const [row] = await deliveries()
+    expect(row!.seen_at).toBe(at(-5).toISOString())
     const { sent, send } = recorder()
     await drainAt(at(5), send, null)
-    await drainAt(at(5), send, T0.toISOString())
-    await drainAt(at(5), send, at(-1).toISOString())
+    await drainAt(at(5), send, at(-5).toISOString())
+    await drainAt(at(5), send, at(-6).toISOString())
     expect(sent).toHaveLength(0)
-    await drainAt(at(5), send, at(1).toISOString())
+    await drainAt(at(5), send, at(-4).toISOString())
     expect(sent).toHaveLength(1)
   })
 
