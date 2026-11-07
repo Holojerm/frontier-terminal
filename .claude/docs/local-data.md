@@ -31,6 +31,9 @@ second poll later records only what moved since.
 ## The browser suites use the fixtures
 
 `test/warmup/fill-store.ts` runs `dev:fixtures` before the axe and CSP suites, and the run
-fails if it can't. Before it did, the suites swept empty pages, and 126 `target-size`
+fails if it can't. The suites' server uses its own NuxtHub dir, `.data-browser` (wiped at the
+start of each run, `NUXT_HUB_DIR` in `playwright.config.ts`), so a local `test:a11y` never
+rewrites the dev DB you filled from a live poll with older fixture values. The sweep also
+fails on any duplicate `id`, which axe stopped flagging on its own. Before it did, the suites swept empty pages, and 126 `target-size`
 violations on source links went out to five public pages. Keep it in front of any suite
 that judges rendered UI.

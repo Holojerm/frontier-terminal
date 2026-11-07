@@ -2,6 +2,7 @@
 .nuxt
 .output
 .data
+.data-browser
 .env
 .env.*
 !.env.example

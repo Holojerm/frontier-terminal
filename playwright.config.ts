@@ -18,6 +18,8 @@
 // share the single `webServer` below, because booting one dev server twice is
 // the slowest thing in `bun run ci`.
 
+import { rmSync } from 'node:fs'
+
 import { defineConfig, devices } from '@playwright/test'
 
 import { playwrightPort } from './scripts/worktree-port'
@@ -33,6 +35,12 @@ const HOST = `http://localhost:${PORT}`
 // Playwright re-imports this config in every worker process, so print only from
 // the runner — otherwise the line repeats once per worker in the CI log.
 if (process.env.TEST_WORKER_INDEX === undefined) console.info(`browser suites → ${HOST}`)
+
+// The suites' own NuxtHub data dir: test/warmup/fill-store.ts fills it from
+// fixtures, which would rewrite a dev DB filled from a live poll. Wiped once per
+// run (by the runner, not each worker) so every run starts from the same store.
+const HUB_DIR = '.data-browser'
+if (process.env.TEST_WORKER_INDEX === undefined) rmSync(HUB_DIR, { recursive: true, force: true })
 
 export default defineConfig({
   testDir: './test',
@@ -98,6 +106,7 @@ export default defineConfig({
       NUXT_DEVTOOLS: 'false',
       NUXT_TYPECHECK: 'false',
       NUXT_PORT: String(PORT),
+      NUXT_HUB_DIR: HUB_DIR,
     },
   },
 })
