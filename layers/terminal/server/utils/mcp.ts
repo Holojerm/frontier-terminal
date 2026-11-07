@@ -338,7 +338,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
       description:
         'Alerts newest first, each citing the change rows it is a claim about (changes, resolved; missing_change_ids if any did not resolve). ' +
         'Severity reads as a tier: info is minor changes (what moved, low stakes — a role added, a title reworded); notable and critical are alerts ' +
-        '(a price move, a new SKU, a department-level hiring shift, a filing). tier selects alert, info, or all (default all); ticker is an old name for info. ' +
+        '(a price move, a new SKU, a department-level hiring shift, a filing). tier selects alert, critical (critical alerts only), info, or all (default all); ticker is an old name for info.' +
         'rule is s1-floor (deterministic: a registration statement appeared on EDGAR), periodic-floor (deterministic: a 10-Q/10-K on a ' +
         'whitelisted CIK), cik-resolved (deterministic: a pending lab’s own S-1 appeared and its CIK was read off it), model-floor (deterministic: a model slug no vendor catalog listed before), prospectus-floor (deterministic: what a lab’s new registration filing states — revenue and the price range on its cover), hiring-rollup (deterministic: one per lab per week, the board’s net change and the departments that moved most) or agent-judge (a model’s reading of change rows, labelled as such). total is the count on file for the chosen tier. ' +
         `With a severity filter, the newest ${ALERT_SEARCH_DEPTH} rows of the tier are searched and up to limit returned. ` +

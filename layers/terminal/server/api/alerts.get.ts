@@ -1,7 +1,7 @@
 // GET /api/alerts?tier=&limit= — newest first, each with its cited change
 // rows resolved. `tier` is the materiality split (layers/terminal/shared/utils/terminal-tiers.ts):
-// `alert` (notable, critical), `info` (minor changes; `ticker` is its old
-// name and still accepted), or `all`. Both are part of the cache key. `as_of` returns the alerts the store held at that instant
+// `alert` (notable, critical), `critical` alone, `info` (minor changes; `ticker`
+// is its old name and still accepted), or `all`. Both are part of the cache key. `as_of` returns the alerts the store held at that instant
 // (terminal-asof.ts › alertsKnownAt).
 
 import { z } from 'zod'

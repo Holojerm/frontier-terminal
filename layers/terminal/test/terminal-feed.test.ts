@@ -126,6 +126,32 @@ describe('buildAlertsAtom', () => {
     )
   })
 
+  it('narrowed to critical is its own feed: id, self link, title and subtitle', () => {
+    const xml = buildAlertsAtom({
+      ...SITE,
+      alerts: [alert()],
+      tier: 'critical',
+      fallbackUpdated: 'x',
+    })
+    assertBalanced(xml)
+    expect(feedPath('critical')).toBe('/alerts.xml?tier=critical')
+    expect(xml).toContain('<id>https://example.com/alerts.xml?tier=critical</id>')
+    expect(xml).toContain(
+      '<link rel="self" type="application/atom+xml" href="https://example.com/alerts.xml?tier=critical"/>',
+    )
+    expect(xml).toContain('<title>Frontier Terminal critical alerts</title>')
+    expect(xml).toContain('Critical alerts only')
+
+    const urn = buildAlertsAtom({
+      ...SITE,
+      appUrl: '',
+      alerts: [],
+      tier: 'critical',
+      fallbackUpdated: 'x',
+    })
+    expect(urn).toContain('<id>urn:frontier-terminal:alerts:critical</id>')
+  })
+
   it('with no alerts is still a valid feed, dated by the fallback', () => {
     const xml = buildAlertsAtom({
       ...SITE,

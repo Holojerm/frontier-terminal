@@ -839,6 +839,11 @@ describe('the ticker/alert split', () => {
     expect(alerts.rows.map((r) => r.severity)).toEqual(['critical', 'notable'])
     for (const r of alerts.rows) expect(r.changes).toHaveLength(1)
 
+    const critical = await queryAlerts(db, await ctx(), 50, 'critical')
+    expect(critical.tier).toBe('critical')
+    expect(critical.total).toBe(1)
+    expect(critical.rows.map((r) => r.severity)).toEqual(['critical'])
+
     const minor = await queryAlerts(db, await ctx(), 50, 'info')
     expect(minor.total).toBe(9)
     expect(minor.rows.every((r) => r.severity === 'info')).toBe(true)

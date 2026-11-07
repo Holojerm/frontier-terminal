@@ -3,8 +3,14 @@
 // critical) lead, the minor changes (info) follow as one line each. Each
 // headline is a permalink to the alert with its cited rows in full. The Atom
 // feed at /alerts.xml carries the alerts; ?include=info adds the minor changes.
+// ?tier=critical narrows the alert list (and its feed) to critical alerts, the
+// same spelling /api/alerts takes, so a filtered view is a link someone can send.
 
-import { INFO_FEED_QUERY, INFO_TIER_LABEL } from '../../../shared/utils/terminal-tiers'
+import {
+  CRITICAL_FEED_QUERY,
+  INFO_FEED_QUERY,
+  INFO_TIER_LABEL,
+} from '../../../shared/utils/terminal-tiers'
 import type { AlertsData, TrackRecordData } from '../../../shared/utils/terminal-types'
 
 definePageMeta({
@@ -17,9 +23,14 @@ definePageMeta({
   },
 })
 
+const route = useRoute()
+const criticalOnly = computed(() => route.query.tier === 'critical')
+
 const [{ data: alerts, error: alertsError }, { data: minor, error: minorError }, { data: record }] =
   await Promise.all([
-    useFetch<AlertsData>('/api/alerts', { query: { tier: 'alert' } }),
+    useFetch<AlertsData>('/api/alerts', {
+      query: computed(() => ({ tier: criticalOnly.value ? 'critical' : 'alert' })),
+    }),
     useFetch<AlertsData>('/api/alerts', { query: { tier: 'info' } }),
     useFetch<TrackRecordData>('/api/track-record'),
   ])
@@ -47,12 +58,26 @@ const PAGE = 25
 const shownCount = ref(PAGE)
 const shown = computed(() => alerts.value?.rows.slice(0, shownCount.value) ?? [])
 const remaining = computed(() => (alerts.value?.rows.length ?? 0) - shown.value.length)
+watch(criticalOnly, () => {
+  shownCount.value = PAGE
+})
+
+// Links rather than a toggle: each view has its own URL, and the tab and hash ride along.
+const filters = computed(() => [
+  { label: 'All alerts', active: !criticalOnly.value, tier: undefined },
+  { label: 'Critical only', active: criticalOnly.value, tier: 'critical' },
+])
+const filterTo = (tier: string | undefined) => ({
+  query: { ...route.query, tier },
+  hash: route.hash,
+})
 // The minor changes page the same way: a scroll box inside a scrolling page hid
 // its rows from find-in-page and made the page scroll twice.
 const minorCount = ref(PAGE)
 const minorShown = computed(() => minor.value?.rows.slice(0, minorCount.value) ?? [])
 const minorRemaining = computed(() => (minor.value?.rows.length ?? 0) - minorShown.value.length)
 const infoFeed = `/alerts.xml?${INFO_FEED_QUERY}`
+const criticalFeed = `/alerts.xml?${CRITICAL_FEED_QUERY}`
 </script>
 
 <template>
@@ -76,7 +101,14 @@ const infoFeed = `/alerts.xml?${INFO_FEED_QUERY}`
           class="font-mono text-primary underline underline-offset-2"
           >?{{ INFO_FEED_QUERY }}</NuxtLink
         >
-        adds the minor changes.
+        adds the minor changes;
+        <NuxtLink
+          :to="criticalFeed"
+          external
+          class="font-mono text-primary underline underline-offset-2"
+          >?{{ CRITICAL_FEED_QUERY }}</NuxtLink
+        >
+        keeps only critical alerts.
       </p>
     </template>
 
@@ -89,12 +121,35 @@ const infoFeed = `/alerts.xml?${INFO_FEED_QUERY}`
             id="alerts"
             class="2xl:col-span-2"
             title="Alerts"
-            note="Notable and critical, newest first."
+            :note="
+              criticalOnly
+                ? 'Critical only: the ones to look at today, newest first.'
+                : 'Notable and critical, newest first.'
+            "
             :flush="Boolean(alerts?.rows.length)"
           >
+            <template #meta>
+              <nav aria-label="Filter alerts by severity" class="flex gap-3">
+                <NuxtLink
+                  v-for="f in filters"
+                  :key="f.label"
+                  :to="filterTo(f.tier)"
+                  :aria-current="f.active ? 'page' : undefined"
+                  :class="f.active ? 'text-highlighted' : 'text-toned underline underline-offset-2'"
+                >
+                  {{ f.label }}
+                </NuxtLink>
+              </nav>
+            </template>
             <template v-if="alerts">
               <TerminalGap
-                v-if="alerts.rows.length === 0"
+                v-if="alerts.rows.length === 0 && criticalOnly"
+                title="No critical alerts."
+                reason="Critical is kept for what an analyst should look at today, like a registration filing or an API outage. An empty list here is normal."
+                :action="{ label: 'All alerts', to: '/alerts' }"
+              />
+              <TerminalGap
+                v-else-if="alerts.rows.length === 0"
                 title="No alerts yet."
                 reason="An alert needs a change big enough to matter. Right after our first check, an empty list is normal."
                 :action="{ label: 'Recent changes', to: '/#signal' }"
