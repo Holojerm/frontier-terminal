@@ -32,7 +32,7 @@ export const EDGAR_RELEASE_HOUR_ET = 6
 export const FRESHNESS_LANES = [
   {
     id: 'sec',
-    label: 'SEC filings and model catalogs',
+    label: 'SEC filings, model catalogs and price lists',
     scopes: ['edgar', 'survey'],
     stated_minutes: 30,
     grace_minutes: 15,

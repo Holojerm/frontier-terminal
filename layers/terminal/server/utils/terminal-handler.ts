@@ -36,7 +36,7 @@ import {
 } from './terminal-cache'
 import { queryContext, type QueryContext } from './terminal-db'
 
-/** Five minutes at the edge too — the same window as the KV entry. */
+/** A minute fresh at the edge, then up to four more served while revalidating. The KV entry is keyed by the data stamp, so it never outlives the data. */
 export const TERMINAL_CACHE_CONTROL = 'public, max-age=60, stale-while-revalidate=240'
 
 /**

@@ -64,7 +64,8 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   },
   poll_skipped: {
     severity: 'warning',
-    action: 'A six-hourly survey was skipped; pricing and hiring are six hours staler.',
+    action:
+      'A six-hourly survey was skipped; hiring and the other survey-only sources are six hours staler. Price lists and catalogs keep their 30- and 5-minute polls.',
   },
   launch_unalerted: { severity: 'warning' },
   class_basis_still_stale: { severity: 'warning' },
