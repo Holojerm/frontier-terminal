@@ -13,6 +13,7 @@ import {
   type StoredEntityRow,
   type TableName,
 } from './contracts'
+import { emitEvent } from '../utils/events'
 import { RATE_LIMITED_DETAIL } from './fetch'
 
 // The write chokepoint. Every pipeline row reaches D1 through insertRows(),
@@ -301,6 +302,8 @@ export async function applyDiff(db: PipelineDb, sourceId: string, writes: DiffWr
   ]
   if (statements.length === 0) return
   await db.batch(statements as unknown as [Statement, ...Statement[]])
+  // After the commit: the consumer reads the alerts from D1, not the message.
+  if (writes.alerts.length) await emitEvent('alerts.new')
 }
 
 /**
