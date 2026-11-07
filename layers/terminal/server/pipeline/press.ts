@@ -1,10 +1,8 @@
 // Press notes: when a registration filing parses (a prospectus-floor alert),
-// one note per reporter, composed here from the alert. Two paths deliver them
-// to the owner, never to a reporter: the EVENTS queue's alert fan-out
+// one note per reporter, composed here from the alert. They reach the owner,
+// never a reporter: the EVENTS queue's alert fan-out
 // (layers/terminal/server/utils/event-work.ts) mails a brief of mailto: links
-// within a minute or so, and the press-drafts routine
-// (.claude/routines/press-drafts.md) reads /api/press/pending and saves each
-// note as a Gmail draft. A person decides that a note goes out.
+// within a minute or so. A person decides that a note goes out.
 //
 // The press list is a Worker secret (NUXT_PRESS_LIST, JSON), not in the repo:
 // it is a list of people, and this repository is public.
@@ -22,9 +20,6 @@ import type { PipelineDb } from './store'
 export const PRESS_EPOCH = '2026-11-05T00:00:00.000Z'
 
 const LOOKBACK = 10
-
-/** KV key: every draft for this alert is saved in Gmail. */
-export const draftedKey = (id: string) => `press:drafted:${id}`
 
 const Contact = z.object({
   name: z.string().min(1),
@@ -112,13 +107,13 @@ export function pressBrief(
     '',
     alert.explanation,
     '',
-    `${notes.length} notes. The press-drafts routine puts them in Gmail as drafts within the hour; or open one here, read it, send it:`,
+    `${notes.length} notes. Open one, read it, send it:`,
     ...notes.map((n) => `- ${n.c.name}, ${n.c.outlet}${n.desk ? ' (tips desk)' : ''}: ${n.href}`),
   ].join('\n')
   const html = [
     `<p><strong><a href="${esc(permalink)}">${esc(alert.headline)}</a></strong></p>`,
     `<p>${esc(alert.explanation)}</p>`,
-    `<p>${notes.length} notes. The press-drafts routine puts them in Gmail as drafts within the hour; or open one here, read it, send it:</p>`,
+    `<p>${notes.length} notes. Open one, read it, send it:</p>`,
     '<ul>',
     ...notes.map(
       (n) =>

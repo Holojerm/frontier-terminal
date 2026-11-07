@@ -8,7 +8,6 @@
 //   judge         the judge routine (claude.ai), judge_runs — critical
 //   gdelt-search  the GDELT Actions job (.github/workflows/gdelt-search.yml),
 //                 gdelt_files
-//   press-drafts  the press-drafts routine (claude.ai), the KV drafted markers
 //   social-outbox the social outbox, social_posts — its sender is in the
 //                 vendored layer and records no heartbeat
 //   deploy        Workers Builds: main's head on GitHub against this build's
@@ -24,7 +23,6 @@ import * as tables from '#server/db/schema'
 
 import { deployDriftCheck } from '../pipeline/deploy-watch'
 import { judgeFreshnessCheck } from '../pipeline/judge/watchdog'
-import { parsePressList, pendingPressAlerts } from '../pipeline/press'
 import { GKG_READY_MS, stampIso } from '../pipeline/track-record/gkg'
 import { oldestUnread } from '../pipeline/track-record/search'
 import { heartbeatLoader, taskHeartbeatCheck, type FreshnessCheck } from './freshness'
@@ -54,36 +52,6 @@ export const gdeltFreshnessCheck: FreshnessCheck = {
       lastOkAt: ok?.at ?? null,
     }
   },
-}
-
-/** The press-drafts routine runs hourly (.claude/routines/press-drafts.md). */
-export const PRESS_DRAFTS_SILENCE_MS = 6 * HOUR_MS
-
-/**
- * `drafted` answers whether an alert's drafts were saved (the KV marker the
- * routine sets through POST /api/press/drafted); `pressList` is
- * NUXT_PRESS_LIST. With no press list nothing is owed: the pending route hands
- * out nothing then, so the routine has nothing to do.
- */
-export function pressDraftsFreshnessCheck(
-  drafted: (id: string) => Promise<boolean>,
-  pressList: unknown,
-): FreshnessCheck {
-  return {
-    key: 'press-drafts',
-    label: 'The press-drafts routine',
-    kind: 'press_drafts_silent',
-    maxAgeMs: PRESS_DRAFTS_SILENCE_MS,
-    path: '/api/press/pending',
-    async evidence(db) {
-      if (!parsePressList(pressList).length) return { owedSince: null }
-      const pending = await pendingPressAlerts(db, drafted)
-      const oldest = pending.map((a) => a.created_at).sort()[0] ?? null
-      // The routine leaves no row of its own, only the markers; an alert
-      // still pending past the limit is the evidence.
-      return { owedSince: oldest, lastOkAt: undefined }
-    },
-  }
 }
 
 /** A queued post due and still queued this long means nothing is draining the social outbox. */
@@ -135,8 +103,6 @@ export const TASK_CHECK_OVERRIDES: Record<
 export interface FreshnessDeps {
   /** runtimeConfig.scheduledTasks: cron expression → task names. */
   scheduledTasks: Record<string, string[]>
-  drafted: (id: string) => Promise<boolean>
-  pressList: unknown
   /** runtimeConfig.public.buildSha; empty for a local build. */
   buildSha: string
   /** Main's head on GitHub this tick, null when it could not be read. */
@@ -158,7 +124,6 @@ export function freshnessChecks(deps: FreshnessDeps): FreshnessCheck[] {
     judgeFreshnessCheck,
     gdeltFreshnessCheck,
     socialOutboxFreshnessCheck,
-    pressDraftsFreshnessCheck(deps.drafted, deps.pressList),
     deployDriftCheck(deps.buildSha, deps.mainHead),
   ]
 }

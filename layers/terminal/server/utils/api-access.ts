@@ -6,7 +6,7 @@
 // have yet, or a source the owner can't license (payloads are `rights: ours`
 // only, server/routes/export/payloads). Every public route that takes a key
 // calls rateLimitTerminal() first, in place of core's rateLimit(). The gated
-// routes (/api/fleet, /api/judge, /api/press, /api/ops, /api/gdelt) read their own bearer
+// routes (/api/fleet, /api/judge, /api/ops, /api/gdelt) read their own bearer
 // and never come through here, and neither do /mcp and /alerts.xml.
 
 import { db } from '@nuxthub/db'

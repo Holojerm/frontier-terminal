@@ -22,7 +22,6 @@ import rawManifest from '../../../fleet.json'
 import { fetchMainHead } from '#layers/terminal/server/pipeline/deploy-watch'
 import { checkLaunchCoverage } from '#layers/terminal/server/pipeline/launch-watch'
 import { unstorageLockStore } from '#layers/terminal/server/pipeline/lock'
-import { draftedKey } from '#layers/terminal/server/pipeline/press'
 import { checkFreshness } from '#layers/terminal/server/utils/freshness'
 import { freshnessChecks } from '#layers/terminal/server/utils/terminal-freshness'
 import { getOpsMailer } from '../../utils/ops-mail'
@@ -46,8 +45,8 @@ const task = defineTask({
     // The freshness checks spool their own events, so they run before the
     // mailer check: an unconfigured digest still records that a part went
     // quiet. One per scheduled task, plus the judge routine, the GDELT job, the
-    // press-drafts routine, and the deploy of main: this build's sha against
-    // main's head (layers/terminal/server/utils/terminal-freshness.ts).
+    // social outbox, and the deploy of main: this build's sha against main's
+    // head (layers/terminal/server/utils/terminal-freshness.ts).
     const config = useRuntimeConfig()
     const mainHead = manifest.links?.github ? await fetchMainHead(manifest.links.github) : null
     await checkFreshness(
@@ -55,8 +54,6 @@ const task = defineTask({
       unstorageLockStore(kv),
       freshnessChecks({
         scheduledTasks: config.scheduledTasks,
-        drafted: async (id) => Boolean(await kv.getItem(draftedKey(id))),
-        pressList: config.pressList,
         buildSha: config.public.buildSha,
         mainHead,
       }),
