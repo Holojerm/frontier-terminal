@@ -100,7 +100,6 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 ├── public/                 # Static assets — og.png, favicon.svg, apple-touch-icon.png
 ├── .github/                # Dependabot + browser-suites.yml (axe/CSP — the only CI
 │                           # not in Workers Builds; that image can't launch Chromium)
-│                           # + scheduled-ci.yml (the full gate against main, weekly)
 ├── emails/                 # Maizzle sources for the ops digest — compiled by bun run email:build
 ├── fleet.json              # How this app describes itself to the portfolio dashboard — see bun run fleet:check
 ├── drizzle.config.ts       # Drizzle Kit config
@@ -192,10 +191,12 @@ Each of these has a full contract in its own doc — this is the one-line versio
   is the depth axis of this project; never trade it for a feature.
 - **Errors** — `<UAlert>` on the client, `createError({ statusCode })` on the
   server, never a raw error message to a user. → [`patterns.md`](.claude/docs/patterns.md)
-- **Public API** — every `/api/*` route is public and read-only, with five bearer-gated
+- **Public API** — every `/api/*` route is public and read-only, with six bearer-gated
   exceptions: `/api/fleet` (portfolio dashboard), `/api/judge/*` (the judge routine, a
   writer — `layers/terminal/server/utils/judge-auth.ts`), `/api/ops/events` (the ops-triage
-  routine's read of the ops spool, `NUXT_OPS_TOKEN`), `/api/press/*` (the press-drafts
+  routine's read of the ops spool, `NUXT_OPS_TOKEN`), `POST /api/ops/issues` (the Workers
+  Issues automation, a writer; Cloudflare sends `NUXT_ISSUES_WEBHOOK_SECRET` in
+  `cf-webhook-auth`), `/api/press/*` (the press-drafts
   routine; it names reporters, `NUXT_PRESS_TOKEN`) and `/api/gdelt/*` (the GitHub Actions job
   that reads GDELT's 15-minute GKG files and posts the matching rows
   back, the other writer, `NUXT_GDELT_TOKEN`). No session; a route that takes input validates it

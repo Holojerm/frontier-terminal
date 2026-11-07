@@ -1,7 +1,7 @@
 # Post-deploy smoke test — after every push to main, wait for production to
 # serve that commit, then check it is healthy (scripts/smoke.ts).
 #
-# Workers Builds runs `bun run ci` and deploys, and it reports a build that
+# Workers Builds runs typecheck + build and deploys, and it reports a build that
 # fails. It does not report a deploy that succeeded but serves a broken app,
 # and nothing on GitHub turned red when #169's deploy was refused by Cloudflare
 # (error 10021) and production stayed on the previous commit. This job fails

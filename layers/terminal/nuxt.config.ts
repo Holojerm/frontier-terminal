@@ -15,6 +15,10 @@ export default defineNuxtConfig({
     // GitHub otherwise limits per shared Workers IP. Any token that can read
     // public repositories; a Worker secret: NUXT_GITHUB_TOKEN.
     githubToken: '',
+    // The secret Cloudflare sends in `cf-webhook-auth` on each Workers Issues
+    // automation call to POST /api/ops/issues. Unset = that route 404s. 32+
+    // characters; a Worker secret: NUXT_ISSUES_WEBHOOK_SECRET.
+    issuesWebhookSecret: '',
     // Which queue layers/terminal/server/plugins/events-queue.ts consumes. MUST
     // equal the `queue` in [[queues.consumers]] in wrangler.toml; a var, not a
     // constant, for the template's reason: a consumer that skips a batch acks it

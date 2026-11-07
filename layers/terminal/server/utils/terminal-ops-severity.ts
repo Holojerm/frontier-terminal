@@ -26,6 +26,15 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
     action:
       "No alerts are being published. Open the frontier-terminal-judge routine's latest session at claude.ai/code/routines; a 403 on /api/judge/pending means its environment's network allowlist lost the Worker host.",
   },
+  // Critical so it is mailed at once (ops-immediate.ts): Issues fires on a new
+  // kind of failure, rarely, and it is the only signal for a failure that
+  // spools nothing else, like a request that never returns.
+  workers_issue: {
+    severity: 'critical',
+    action:
+      'Workers Issues found a new or returning failure. Open the Issues tab for frontier-terminal in the Cloudflare dashboard for the stack and the failing requests.',
+  },
+  workers_issue_resolved: { severity: 'info' },
   all_sources_failed: {
     severity: 'critical',
     action:
