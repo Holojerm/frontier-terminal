@@ -276,7 +276,10 @@ async function seedWebhook(id: string, min_severity: string, created_at = at(-60
 }
 
 let alertN = 0
-async function seedAlert(severity: string, opts: { rule?: string; created_at?: Date } = {}) {
+async function seedAlert(
+  severity: string,
+  opts: { rule?: string; created_at?: Date; recorded_at?: Date } = {},
+) {
   const id = (++alertN).toString(16).padStart(64, '0')
   const created_at = (opts.created_at ?? at(-5)).toISOString()
   const changeId = `c${id.slice(1)}`
@@ -302,6 +305,7 @@ async function seedAlert(severity: string, opts: { rule?: string; created_at?: D
     created_at,
     source_url: 'https://openai.com/api/pricing',
     fetched_at: created_at,
+    recorded_at: opts.recorded_at?.toISOString() ?? created_at,
   })
   return id
 }
@@ -457,6 +461,16 @@ describe('enqueue', () => {
     const judged = rows.find((r) => r.not_before !== T0.toISOString())!
     expect(Date.parse(judged.not_before)).toBe(at(-10).getTime() + JUDGED_HOLD_MS)
     expect(rows.filter((r) => r.not_before === T0.toISOString())).toHaveLength(1)
+  })
+
+  it('holds a judged alert from when it was written, not from its evidence’s fetch', async () => {
+    await seedKey()
+    await seedWebhook('whk_000000000a', 'info')
+    await baseline()
+    await seedAlert('critical', { rule: 'agent-judge', created_at: at(-70), recorded_at: at(-2) })
+    await enqueueWebhookDeliveries(db, T0)
+    const [row] = await deliveries()
+    expect(Date.parse(row!.not_before)).toBe(at(-2).getTime() + JUDGED_HOLD_MS)
   })
 })
 

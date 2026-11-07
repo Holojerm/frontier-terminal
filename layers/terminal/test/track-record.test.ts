@@ -397,6 +397,7 @@ const alertRow = (id: number, c: ChangeRow, severity = 'notable') => ({
   created_at: c.fetched_at,
   source_url: c.source_url,
   fetched_at: c.fetched_at,
+  recorded_at: c.fetched_at,
 })
 
 const memoryRaw = () => {
@@ -590,6 +591,33 @@ describe('the search run', () => {
       status: 'ok',
       query: '"gpt 6.1" sourcelang:english',
       candidates: 0,
+    })
+  })
+
+  it('records where the press search began when the window’s first files were read before the alert existed', async () => {
+    await markRead('2026-10-07T00:00:00Z', '')
+    // Files up to 18:45 were read before the alert was written at 18:40 (and
+    // the 18:45 one within the job's batch lag after it): never matched to it.
+    await env.DB.prepare(
+      `UPDATE gdelt_files SET recorded_at = '2026-09-29T18:50:00.000Z' WHERE stamp < '20260929190000'`,
+    ).run()
+    await db
+      .update(schema.alerts)
+      .set({ recorded_at: '2026-09-29T18:40:00.000Z' })
+      .where(eq(schema.alerts.id, HASH(1)))
+    expect((await runTrackRecordSearch(db, { now: () => NOW })).gdelt).toBe(1)
+    const rows = await db.select().from(schema.trackRecordSearches)
+    const gdelt = rows.find((r) => r.source === 'gdelt' && r.alert_id === HASH(1))!
+    expect(gdelt.window_start).toBe('2026-09-29T19:00:00.000Z')
+    expect(rows.find((r) => r.source === 'newsroom')!.window_start).toBe('2026-09-22T17:01:00.000Z')
+
+    const data = await queryTrackRecord(
+      db,
+      queryContext(sourcesYaml, null, () => NOW),
+    )
+    expect(data.rows.find((r) => r.alert_id === HASH(1))!.press).toMatchObject({
+      state: 'none-found',
+      searched_from: '2026-09-29T19:00:00.000Z',
     })
   })
 
@@ -813,6 +841,15 @@ describe('the page payload', () => {
     expect(tally([sideOf(false, ok, two, lagged, SAW)])).toMatchObject({
       lagged: 1,
       median_lead_hours: -17,
+      searched_in_part: 0,
+    })
+    // A side searched only part way through its window is shown, never tallied.
+    const part = { ...sideOf(false, ok, two, lagged, SAW), searched_from: '2026-09-29T19:00:00Z' }
+    expect(tally([part])).toMatchObject({
+      matched: 0,
+      lagged: 0,
+      median_lead_hours: null,
+      searched_in_part: 1,
     })
   })
 

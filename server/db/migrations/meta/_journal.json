@@ -260,6 +260,13 @@
       "when": 1794070400748,
       "tag": "0036_removal_provenance",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "6",
+      "when": 1794074340203,
+      "tag": "0037_alerts_recorded_at",
+      "breakpoints": true
     }
   ]
 }

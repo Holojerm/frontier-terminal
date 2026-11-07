@@ -10,7 +10,8 @@
 //     the cron first saw the alert. Anything rendered under that stamp was
 //     rendered after the alert was stored, so it lists it.
 //   - A judged alert waits out the same one-hour hold as its social post
-//     (layers/terminal/server/pipeline/social.ts › JUDGED_HOLD_MS), from the same instant. Suppressing
+//     (layers/terminal/server/pipeline/social.ts › heldUntil), from the same instant: when
+//     the alert was written. Suppressing
 //     the post inside the hold suppresses the webhook too; so does deleting
 //     the alert row. Deterministic alerts don't wait.
 //
@@ -29,7 +30,7 @@ import {
   severityReaches,
   type WebhookChangeRow,
 } from '../../shared/utils/webhooks'
-import { JUDGED_HOLD_MS } from '../pipeline/social'
+import { heldUntil } from '../pipeline/social'
 import { D1_MAX_BOUND_PARAMS, type PipelineDb } from '../pipeline/store'
 import { keyRefusal } from './api-key-token'
 import { webhookUrlRefusal } from './webhook-url'
@@ -111,6 +112,7 @@ export async function enqueueWebhookDeliveries(
       severity: tables.alerts.severity,
       rule: tables.alerts.rule,
       created_at: tables.alerts.created_at,
+      recorded_at: tables.alerts.recorded_at,
     })
     .from(tables.alerts)
     .leftJoin(tables.webhookAlertLog, eq(tables.webhookAlertLog.alert_id, tables.alerts.id))
@@ -165,8 +167,7 @@ export async function enqueueWebhookDeliveries(
 
   const rows: (typeof tables.webhookDeliveries.$inferInsert)[] = []
   for (const alert of alerts) {
-    const hold = alert.rule === 'agent-judge' ? JUDGED_HOLD_MS : 0
-    const held = Date.parse(alert.created_at) + hold
+    const held = heldUntil(alert)
     const notBefore = new Date(Math.max(now.getTime(), Number.isNaN(held) ? 0 : held))
     for (const hook of hooks) {
       if (!severityReaches(alert.severity, hook.min_severity)) continue

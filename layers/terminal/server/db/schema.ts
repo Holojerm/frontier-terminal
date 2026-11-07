@@ -126,6 +126,12 @@ export const alerts = sqliteTable(
     rule: text('rule').notNull(),
     created_at: text('created_at').notNull(),
     ...provenance,
+    // When the row was written. created_at is the evidence's fetch time, which
+    // for a judged alert is up to an hour or more earlier; a hold measured
+    // from it was mostly spent before the alert existed. Stamped by the
+    // alerts_recorded_at trigger (migration), so no writer has to set it;
+    // rows from before the column read created_at.
+    recorded_at: text('recorded_at'),
   },
   (t) => [index('alerts_created_id_idx').on(t.created_at, t.id)],
 )

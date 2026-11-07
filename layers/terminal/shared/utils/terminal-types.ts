@@ -1181,6 +1181,12 @@ export interface TrackRecordSide {
   lead_hours: number | null
   candidates: number
   rated: number
+  /**
+   * Set when the search began after the window did: press before this time
+   * was read before the alert existed and never matched to it, so a lead
+   * here may be no lead at all. Such a side is left out of the tally.
+   */
+  searched_from: string | null
 }
 
 export interface TrackRecordRow {
@@ -1206,6 +1212,8 @@ export interface TrackRecordTally {
   tied: number
   median_lead_hours: number | null
   not_yet_rated: number
+  /** Matched sides left out of the counts above: searched only from part way through the window. */
+  searched_in_part: number
 }
 
 export interface TrackRecordData extends Stamp {

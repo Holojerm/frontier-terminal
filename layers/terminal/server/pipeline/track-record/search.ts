@@ -17,11 +17,19 @@
 // every file in the window has been read, the cron writes the side's search
 // row. Backfill is the same path: the queue starts at GKG_FROM.
 //
+// Each file is matched against the alerts that exist when it is read, so the
+// files from before an alert was written were never matched to it: the half
+// of its window before the terminal saw the change, which is where a press
+// lead would be, goes unsearched for any alert written after its files were
+// read. The search row records where the search actually began (its
+// window_start, pressSearchedFrom), and the page leaves a window searched
+// only in part out of the lead/lag tally rather than count it as a lead.
+//
 // GDELT's search API was used before (rows with a DOC API source_url). It
 // limits requests per IP and answered most queries with a 429 from every IP
 // we tried; the page ignores those rows' failures (terminal-track-record.ts).
 
-import { and, asc, count, eq, gte, inArray } from 'drizzle-orm'
+import { and, asc, count, eq, gte, inArray, lte, min, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { ChangeRow, contentHash } from '../contracts'
@@ -29,7 +37,7 @@ import type { RawStore } from '../refresh'
 import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '../store'
 import { NEWSROOM_OF } from '../../theses/recipes/newsrooms'
 import { PRESS_CANDIDATE_LIMIT, titleKey } from './gdelt'
-import { GKG_BASE, GKG_SLOT_MS, gkgSlots, gkgUrl, parseGkgRow, stampIso } from './gkg'
+import { GKG_BASE, GKG_SLOT_MS, gkgSlots, gkgStamp, gkgUrl, parseGkgRow, stampIso } from './gkg'
 import { alertTerms, gdeltQuery, matchesArticle, matchesWhat, type SearchTerms } from './terms'
 import { TRACK_RECORD_FROM, sawIt, searchState, trackWindow, type TrackWindow } from './window'
 
@@ -44,6 +52,8 @@ export const NEWSROOM_CANDIDATE_LIMIT = 10
 export interface AlertForSearch {
   id: string
   created_at: string
+  /** When the alert row was written; created_at for rows from before the column. */
+  recorded_at: string
   changes: ChangeRow[]
 }
 
@@ -53,6 +63,7 @@ export async function materialAlerts(db: PipelineDb): Promise<AlertForSearch[]> 
     .select({
       id: tables.alerts.id,
       created_at: tables.alerts.created_at,
+      recorded_at: tables.alerts.recorded_at,
       change_ids: tables.alerts.change_ids,
     })
     .from(tables.alerts)
@@ -72,6 +83,7 @@ export async function materialAlerts(db: PipelineDb): Promise<AlertForSearch[]> 
   return alerts.map((a) => ({
     id: a.id,
     created_at: a.created_at,
+    recorded_at: a.recorded_at ?? a.created_at,
     changes: (JSON.parse(a.change_ids) as string[])
       .map((id) => byId.get(id))
       .filter((c): c is ChangeRow => c !== undefined),
@@ -239,6 +251,45 @@ export function windowRead(
   return oldestUnread === null || Date.parse(stampIso(oldestUnread)) >= Date.parse(window.end)
 }
 
+/**
+ * A file read this soon after an alert was written may still have been
+ * matched without it: the job takes the alert list once per batch of
+ * GKG_FILES_PER_CALL files (about two minutes of reading), so a file only
+ * counts as searched for an alert when it was recorded this long after.
+ */
+export const GKG_WORK_LAG_MS = 15 * 60_000
+
+/**
+ * The quarter hour from which the press side was actually searched for an
+ * alert: the earliest file in its window recorded GKG_WORK_LAG_MS or more
+ * after the alert was written. window.end when none was, so a window searched
+ * not at all reads as empty rather than complete.
+ */
+export async function pressSearchedFrom(
+  db: PipelineDb,
+  written: string,
+  window: TrackWindow,
+): Promise<string> {
+  const after = new Date(Date.parse(written) + GKG_WORK_LAG_MS).toISOString()
+  const [row] = await db
+    .select({ stamp: min(tables.gdeltFiles.stamp) })
+    .from(tables.gdeltFiles)
+    .where(
+      and(
+        gte(tables.gdeltFiles.stamp, gkgStamp(Date.parse(window.start) - GKG_SLOT_MS + 1)),
+        lte(tables.gdeltFiles.stamp, gkgStamp(Date.parse(window.end))),
+        sql`julianday(${tables.gdeltFiles.recorded_at}) >= julianday(${after})`,
+      ),
+    )
+  const from = row?.stamp ? stampIso(row.stamp) : window.end
+  return Date.parse(from) < Date.parse(window.start) ? window.start : from
+}
+
+/** Whether a press search began later than its window: the part before it was never searched. */
+export function searchedInPart(search: { window_start: string }, window: TrackWindow): boolean {
+  return Date.parse(search.window_start) > Date.parse(window.start) + GKG_SLOT_MS
+}
+
 const baseOf = (p: AlertPlan, searched_at: string) => ({
   alert_id: p.alert.id,
   window_start: p.window.start,
@@ -347,9 +398,11 @@ export async function runTrackRecordSearch(
     }
 
     if (!p.gdeltDone && windowRead(p.window, lastDue, oldestUnread)) {
-      // The candidates were stored as each file was read; this row says the window is complete.
+      // The candidates were stored as each file was read; this row says the
+      // window is complete, from where its search began.
       await insertSearch(db, {
         ...base,
+        window_start: await pressSearchedFrom(db, p.alert.recorded_at, p.window),
         id: crypto.randomUUID(),
         source: 'gdelt',
         query: gdeltQuery(p.terms),
