@@ -52,7 +52,7 @@ import { archivesCik, parseFilingIndex, registrationTarget } from './parsers/sec
 import { resolveFilers, type PendingFilers } from './parsers/sec/pending-filers'
 import { SUBMISSIONS_SOURCES, parseEdgarSubmissions } from './parsers/sec/edgar-submissions'
 import { parseProspectus } from './parsers/sec/prospectus'
-import { freshRegistrationKey } from './prospectus-floor'
+import { freshFiling, freshRegistrationKey } from './prospectus-floor'
 import { revenueProviderFor, type RevenueFilers } from './parsers/sec/revenue-filers'
 import { parseXbrlSegment, segmentTarget } from './parsers/sec/xbrl-segment'
 import { isPeriodicForm, isS1FloorForm } from './parsers/sec/s1-floor'
@@ -128,8 +128,42 @@ export interface Lane {
    * more of one would never read the documents already on file.
    */
   stale?: (db: PipelineDb, sourceId: string) => Promise<boolean>
+  /**
+   * The sources.yaml-derived blocks parse() reads. They go into the context
+   * fingerprint (contextFingerprint), so an unchanged page is parsed again
+   * when one of them changes — a filer retagged, a CIK whitelisted.
+   */
+  reads?: readonly ContextBlock[]
   parse(text: string, ctx: ParseContext): ParseResult
   alerts?: (changes: readonly ChangeRow[]) => AlertRow[]
+}
+
+export type ContextBlock = 'whitelist' | 'revenueFilers' | 'pendingFilers' | 'resolvedProviders'
+
+/**
+ * Bump when a parser change makes the same bytes yield different rows. Every
+ * lane's next tick then parses its unchanged page again and rewrites the
+ * stored rows in place without logging a change: a parser learning to read a
+ * field is not the vendor changing it.
+ */
+export const PARSER_VERSION = 1
+
+/** Hashable form of a context block: stableStringify reads a Map or Set as
+ * `{}`, so those become their entries, sorted so insertion order is moot. */
+function canonical(block: ParseContext[ContextBlock]): unknown {
+  if (!(block instanceof Map) && !(block instanceof Set)) return block
+  const entries: unknown[] = block instanceof Map ? [...block.entries()] : [...block]
+  return entries.sort((a, b) => {
+    const [x, y] = [JSON.stringify(a), JSON.stringify(b)]
+    return x < y ? -1 : x > y ? 1 : 0
+  })
+}
+
+/** The parser version plus every config block the lane reads, hashed. */
+export function contextFingerprint(lane: Lane, ctx: Pick<ParseContext, ContextBlock>): string {
+  const blocks: Record<string, unknown> = {}
+  for (const name of lane.reads ?? []) blocks[name] = canonical(ctx[name])
+  return contentHash({ parser_version: PARSER_VERSION, ...blocks })
 }
 
 const set = (parse: Lane['parse']): Lane => ({ sides: [], removals: 'set', parse })
@@ -139,6 +173,7 @@ const set = (parse: Lane['parse']): Lane => ({ sides: [], removals: 'set', parse
 const FTS_LANE: Lane = {
   sides: [],
   removals: 'append-only',
+  reads: ['whitelist', 'pendingFilers', 'resolvedProviders'],
   parse: (text, { prov, snapshotId, whitelist, pendingFilers, resolvedProviders }) => {
     const { rows } = parseEdgarFts(text, whitelist, prov)
     const filers = resolveFilers(rows, pendingFilers, resolvedProviders)
@@ -166,6 +201,7 @@ function ftsLanes(): Record<string, Lane> {
 const SUBMISSIONS_LANE: Lane = {
   sides: [],
   removals: 'append-only',
+  reads: ['whitelist'],
   parse: (text, { prov, snapshotId, whitelist }) => {
     const { rows, skipped } = parseEdgarSubmissions(text, whitelist, prov)
     return {
@@ -189,6 +225,7 @@ function submissionsLanes(): Record<string, Lane> {
 const COMPANYFACTS_LANE: Lane = {
   sides: [],
   removals: 'append-only',
+  reads: ['whitelist', 'revenueFilers'],
   parse: (text, { prov, snapshotId, whitelist, revenueFilers }) => {
     const { rows, tags } = parseEdgarCompanyfacts(text, whitelist, prov)
     const cik = rows[0]?.cik
@@ -206,12 +243,23 @@ function companyfactsLanes(): Record<string, Lane> {
   return lanes
 }
 
+/** The filing date in a derived segment key, `<ticker>-<filed>-<accession>`. */
+const SEGMENT_FILED = /^[a-z0-9]+-(\d{4}-\d{2}-\d{2})-\d{10}-\d{2}-\d{6}$/
+
 // A derived segment instance: one 10-Q/10-K's revenue on the filer's tagged
 // segment member. A filing is never un-filed, and the prior-year comparative
 // a 10-K drops is still what the earlier filing reported: append-only.
+// Each filing is its own source, so its first parse is the only time its
+// facts are new: a fresh filing's are news, as a registration document's are,
+// and the back catalogue derived for a newly tagged filer is a baseline.
 const XBRL_SEGMENT_LANE: Lane = {
   sides: [],
   removals: 'append-only',
+  firstIsNews: (key, fetchedAt) => {
+    const filed = key?.match(SEGMENT_FILED)?.[1]
+    return filed !== undefined && freshFiling(filed, fetchedAt)
+  },
+  reads: ['whitelist', 'revenueFilers'],
   parse: (text, { prov, snapshotId, whitelist, revenueFilers, derivedKey }) => {
     const target = segmentTarget(derivedKey ?? '', revenueFilers, whitelist)
     const { rows, form, period_end } = parseXbrlSegment(text, target, prov)

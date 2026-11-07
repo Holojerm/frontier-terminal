@@ -16,8 +16,13 @@ import type { Storage } from 'unstorage'
 // KV is eventually consistent, so this is a best-effort mutex, not a
 // guarantee — two ticks starting within the same second could both see no
 // lock. What makes that tolerable is the store: change and alert ids are
-// deterministic, so the loser's writes collide on primary keys and surface
-// as 'failed' runs rather than as duplicate rows.
+// deterministic and inserted skip-existing (store.ts › applyDiff), so the
+// loser's change and alert writes are skipped rather than duplicated. Its
+// snapshot and run rows are its own (their ids carry the tick's clock).
+//
+// The value is the holder plus a token unique to this acquisition, and the
+// release deletes the key only while it still holds that token. Without it, a
+// tick that outran the TTL would delete the lock a later tick had since taken.
 
 export const POLL_LOCK_KEY = 'poll:lock'
 export const POLL_LOCK_TTL_SECONDS = 600
@@ -68,11 +73,22 @@ export async function withPollLock<T>(
     await sleep(retry.delayMs)
     current = await store.get(POLL_LOCK_KEY)
   }
-  if (current !== null) return { skipped: true, heldBy: current }
-  await store.put(POLL_LOCK_KEY, holder, POLL_LOCK_TTL_SECONDS)
+  if (current !== null) return { skipped: true, heldBy: holderOf(current) }
+  const value = `${holder}${TOKEN_SEPARATOR}${crypto.randomUUID()}`
+  await store.put(POLL_LOCK_KEY, value, POLL_LOCK_TTL_SECONDS)
   try {
     return { skipped: false, result: await fn() }
   } finally {
-    await store.delete(POLL_LOCK_KEY)
+    // KV has no compare-and-delete, so a holder could still slip in between
+    // this read and the delete; the window is one round trip, not the TTL.
+    if ((await store.get(POLL_LOCK_KEY)) === value) await store.delete(POLL_LOCK_KEY)
   }
+}
+
+const TOKEN_SEPARATOR = ' #'
+
+/** The holder named in a lock value, without the acquisition token. */
+function holderOf(value: string): string {
+  const at = value.lastIndexOf(TOKEN_SEPARATOR)
+  return at === -1 ? value : value.slice(0, at)
 }

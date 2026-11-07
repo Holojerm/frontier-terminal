@@ -13,6 +13,9 @@ import type { CikWhitelist } from './whitelist'
 // (an XBRL StatementBusinessSegmentsAxis member): the series is then that
 // segment's, read from each filing's own instance (parsers/sec/xbrl-segment.ts),
 // never the parent's consolidated top line.
+// `effective`, optional, is the UTC day the entry took effect. The poll reads
+// today's block; an as_of read before that day reads the lab as untagged,
+// which is what the block said then.
 
 export type FilerRelation = 'issuer' | 'parent'
 
@@ -21,6 +24,8 @@ export interface RevenueFiler {
   relation: FilerRelation
   /** The segment member the series is read on (goog:GoogleCloudMember); absent for a consolidated series. */
   segment?: string
+  /** YYYY-MM-DD the entry took effect; absent when it has held since the block began. */
+  effective?: string
 }
 
 /** Provider -> filer, or null where the block says the lab has no disclosure. */
@@ -39,7 +44,8 @@ const LAB_PROVIDERS: readonly Provider[] = [
 ]
 
 /** Narrow block reader: `  provider: null` or `  provider:` followed by
- * `    ticker:`, `    relation:` and an optional `    segment:` line. Any
+ * `    ticker:`, `    relation:` and optional `    segment:` and
+ * `    effective:` lines. Any
  * indented line that fits none of these throws — a drift here must not
  * silently untag a filer. */
 export function parseRevenueFilersBlock(yaml: string): Map<Provider, RevenueFiler | null> {
@@ -48,8 +54,13 @@ export function parseRevenueFilersBlock(yaml: string): Map<Provider, RevenueFile
   if (start === -1) throw new Error('sources.yaml has no revenue_filers block')
 
   const map = new Map<Provider, RevenueFiler | null>()
-  let current: { provider: Provider; ticker?: string; relation?: string; segment?: string } | null =
-    null
+  let current: {
+    provider: Provider
+    ticker?: string
+    relation?: string
+    segment?: string
+    effective?: string
+  } | null = null
   const flush = () => {
     if (!current) return
     if (current.ticker === undefined || current.relation === undefined) {
@@ -65,6 +76,7 @@ export function parseRevenueFilersBlock(yaml: string): Map<Provider, RevenueFile
       ticker: current.ticker,
       relation: current.relation,
       ...(current.segment !== undefined && { segment: current.segment }),
+      ...(current.effective !== undefined && { effective: current.effective }),
     })
     current = null
   }
@@ -94,8 +106,13 @@ export function parseRevenueFilersBlock(yaml: string): Map<Provider, RevenueFile
       current.segment = segment[1]!
       continue
     }
+    const effective = line.match(/^ {4}effective:\s*(\d{4}-\d{2}-\d{2})\s*(#.*)?$/)
+    if (effective && current) {
+      current.effective = effective[1]!
+      continue
+    }
     throw new Error(
-      `revenue_filers line ${i + 1} is not \`  provider: null\` or \`    ticker|relation|segment: value\`: ${JSON.stringify(line)}`,
+      `revenue_filers line ${i + 1} is not \`  provider: null\` or \`    ticker|relation|segment|effective: value\`: ${JSON.stringify(line)}`,
     )
   }
   flush()
@@ -116,4 +133,10 @@ export function revenueProviderFor(
     if (filer && whitelist.get(filer.ticker) === cik) return provider
   }
   return 'other'
+}
+
+/** The entry in force on `at`'s UTC day: one not yet effective reads as untagged (null). */
+export function filerAt(filer: RevenueFiler | null, at: string | null): RevenueFiler | null {
+  if (!filer || at === null || filer.effective === undefined) return filer
+  return at.slice(0, 10) < filer.effective ? null : filer
 }

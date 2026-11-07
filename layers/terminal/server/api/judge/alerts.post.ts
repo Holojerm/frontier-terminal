@@ -6,7 +6,8 @@
 // (layers/terminal/server/pipeline/judge/submit.ts). Any class_map re-mapping is checked
 // against the vendor page as R2 holds it (layers/terminal/server/pipeline/judge/class-map.ts).
 //
-// 422 when the whole body failed the schema gate — that run is recorded and
+// 422 when the whole body failed the schema gate or the cursor check
+// (layers/terminal/server/pipeline/judge/submit.ts › checkCursor) — that run is recorded and
 // nothing else is; the 200 carries counts, including grounding rejections,
 // because a partially accepted run is still a run.
 
@@ -44,7 +45,7 @@ export default defineEventHandler(async (event) => {
   if (report.gate_rejection) {
     throw createError({
       statusCode: 422,
-      message: 'Judge output rejected at the schema gate',
+      message: 'Judge output rejected whole (schema gate or cursor check)',
       data: report.gate_rejection,
     })
   }

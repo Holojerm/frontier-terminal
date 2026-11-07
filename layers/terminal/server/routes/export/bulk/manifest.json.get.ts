@@ -23,7 +23,7 @@ export default defineEventHandler(async (event) => {
     setResponseHeader(event, 'Retry-After', 3600)
     throw createError({
       statusCode: 503,
-      message: 'The bulk feed hasn’t been built yet. It’s rebuilt hourly at :41 UTC.',
+      message: 'The bulk feed hasn’t been built yet. It’s built once a UTC day.',
     })
   }
   const appUrl = useRuntimeConfig(event).public.appUrl.replace(/\/+$/, '')

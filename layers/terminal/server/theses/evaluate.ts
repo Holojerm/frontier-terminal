@@ -17,7 +17,14 @@ import { daysBefore } from '../utils/terminal-rankings'
 import { evaluateJudgedClaim, type StoredVerdict } from './judged-status'
 import { THESES } from './registry'
 import { presentation, readSignal, recomputable, type SignalDeps } from './signals'
-import { evaluateClaim, historyDays, type ClaimEvaluation, type StoredReading } from './status'
+import {
+  evaluateClaim,
+  historyDays,
+  sinceLabSetChange,
+  staleGuard,
+  type ClaimEvaluation,
+  type StoredReading,
+} from './status'
 
 const READING_COLUMNS = 8
 
@@ -50,19 +57,37 @@ export async function storedReadings(
       ),
     )
     .orderBy(tables.claimReadings.date)
-  return rows.map((r) => {
-    const detail = JSON.parse(r.detail) as { compare?: unknown; void_reason?: unknown }
+  const readings = rows.map((r) => {
+    const detail = JSON.parse(r.detail) as {
+      compare?: unknown
+      void_reason?: unknown
+      compare_unavailable?: unknown
+      lab_set?: unknown
+    }
     return {
       ...r,
       compare: typeof detail.compare === 'number' ? detail.compare : null,
       void_reason: typeof detail.void_reason === 'string' ? detail.void_reason : null,
+      compare_unavailable:
+        typeof detail.compare_unavailable === 'string' ? detail.compare_unavailable : null,
+      lab_set: Array.isArray(detail.lab_set) ? detail.lab_set.join(',') : null,
     }
   })
+  return readings
 }
 
-export function evaluationOf(claim: ClaimDef, readings: readonly StoredReading[]): ClaimEvaluation {
+export function evaluationOf(
+  claim: ClaimDef,
+  readings: readonly StoredReading[],
+  now: Date,
+): ClaimEvaluation {
   const { fmt, comparatorName } = presentation(claim)
-  return evaluateClaim(claim, readings, fmt, comparatorName)
+  return staleGuard(
+    claim,
+    readings,
+    evaluateClaim(claim, sinceLabSetChange(readings), fmt, comparatorName),
+    now.toISOString(),
+  )
 }
 
 /** Every verdict stored for a judged claim, newest first. */
@@ -86,7 +111,9 @@ export async function currentEvaluation(
   claim: ClaimDef,
   now: Date,
 ): Promise<ClaimEvaluation> {
-  if (claim.spec.kind === 'measured') return evaluationOf(claim, await storedReadings(db, claim))
+  if (claim.spec.kind === 'measured') {
+    return evaluationOf(claim, await storedReadings(db, claim), now)
+  }
   const [verdicts, through] = await Promise.all([storedVerdicts(db, claim), judgedThrough(db)])
   return evaluateJudgedClaim(claim, thesis.company, verdicts, through, now.toISOString())
 }

@@ -95,21 +95,38 @@ export function count(n: number): string {
   return n.toLocaleString('en-US')
 }
 
+const UNITS: readonly (readonly [number, string])[] = [
+  [1e12, 'T'],
+  [1e9, 'B'],
+  [1e6, 'M'],
+  [1e3, 'K'],
+]
+
+/**
+ * A non-negative magnitude as three significant figures and a unit, or null
+ * below a thousand. The digits are chosen after rounding, so 999.6M reads
+ * '1.00B' rather than '1000M', and 99.96M '100M' rather than '100.0M'.
+ */
+function compactMagnitude(abs: number): string | null {
+  for (let i = 0; i < UNITS.length; i++) {
+    const [value, unit] = UNITS[i]!
+    if (abs < value) continue
+    const x = abs / value
+    const digits = Math.round(x * 10) / 10 >= 100 ? 0 : Math.round(x * 100) / 100 >= 10 ? 1 : 2
+    const text = x.toFixed(digits)
+    if (Number(text) >= 1000 && i > 0) {
+      const [upValue, upUnit] = UNITS[i - 1]!
+      return `${(abs / upValue).toFixed(2)}${upUnit}`
+    }
+    return `${text}${unit}`
+  }
+  return abs >= 999.5 ? '1.00K' : null
+}
+
 /** '2.4T' / '910B' / '15.0M' — token counts at the scale a chart axis can carry. */
 export function compactTokens(n: number): string {
-  const units: [number, string][] = [
-    [1e12, 'T'],
-    [1e9, 'B'],
-    [1e6, 'M'],
-    [1e3, 'K'],
-  ]
-  for (const [value, unit] of units) {
-    if (Math.abs(n) >= value) {
-      const x = n / value
-      return `${x >= 100 ? Math.round(x) : x >= 10 ? x.toFixed(1) : x.toFixed(2)}${unit}`
-    }
-  }
-  return String(n)
+  const text = compactMagnitude(Math.abs(n))
+  return text === null ? String(n) : `${n < 0 ? '-' : ''}${text}`
 }
 
 /** '12.3%' from a 0..1 share; '—' for absent. */
@@ -128,19 +145,7 @@ export function ppLabel(pp: number): string {
 export function compactUsd(n: number): string {
   const sign = n < 0 ? '−' : ''
   const abs = Math.abs(n)
-  const units: [number, string][] = [
-    [1e12, 'T'],
-    [1e9, 'B'],
-    [1e6, 'M'],
-    [1e3, 'K'],
-  ]
-  for (const [value, unit] of units) {
-    if (abs >= value) {
-      const x = abs / value
-      return `${sign}$${x >= 100 ? Math.round(x) : x >= 10 ? x.toFixed(1) : x.toFixed(2)}${unit}`
-    }
-  }
-  return `${sign}$${abs.toFixed(0)}`
+  return `${sign}$${compactMagnitude(abs) ?? abs.toFixed(0)}`
 }
 
 /** '1 Apr → 30 Jun 2026' style period label from two ISO dates, with the span named. */

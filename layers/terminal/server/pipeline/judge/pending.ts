@@ -1,4 +1,4 @@
-import { and, desc, gt, isNotNull, max, notInArray } from 'drizzle-orm'
+import { and, gte, isNotNull, notInArray, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { ChangeRow } from '../contracts'
@@ -6,18 +6,20 @@ import type { PipelineDb } from '../store'
 
 // What GET /api/judge/pending hands the routine: change rows detected since
 // the last judged run, minus the ones that only say "the board re-stamped
-// its timestamps" and the tripwire hits on filers nobody here tracks, newest
+// its timestamps" and the tripwire hits on filers nobody here tracks, oldest
 // first and capped.
 //
 // Nothing is deleted by either filter. The rows stay in `changes`, in the
 // export and on every public endpoint; they just do not wake the judge.
 
 /**
- * Newest-first cap on what one judge run considers. Changes the model stays
- * SILENT about are never cited, so without a cursor every run would re-send
- * the whole history; with the cursor a cap still matters for the first run
- * over a backlog, where a bounded prompt beats an exhaustive one. The route
- * reports total_pending so a bite of the cap is never silent.
+ * Cap on what one judge run considers, taken oldest first. Changes the model
+ * stays SILENT about are never cited, so without a cursor every run would
+ * re-send the whole history; with the cursor a cap still matters for a run
+ * over a backlog, where a bounded prompt beats an exhaustive one. Oldest
+ * first because the cursor moves to the newest change offered: a newest-first
+ * cap moved it past everything the cap left out, which was then never judged.
+ * The route reports total_pending so a bite of the cap is never silent.
  */
 export const JUDGE_CHANGE_LIMIT = 200
 
@@ -129,11 +131,50 @@ function stableEquals(a: unknown, b: unknown): boolean {
 
 /** The newest judged_through across judge_runs, or null before the first run. */
 export async function judgedThrough(db: PipelineDb): Promise<string | null> {
+  // Ordered by instant, not by string: a cursor written without milliseconds
+  // ("…:00Z") sorts after a later one written with them ("…:00.500Z").
   const [row] = await db
-    .select({ at: max(tables.judgeRuns.judged_through) })
+    .select({ at: tables.judgeRuns.judged_through })
     .from(tables.judgeRuns)
     .where(isNotNull(tables.judgeRuns.judged_through))
+    .orderBy(sql`julianday(${tables.judgeRuns.judged_through}) desc`)
+    .limit(1)
   return row?.at ?? null
+}
+
+const DAY_MS = 86_400_000
+
+/**
+ * The WHERE fragment for "detected after the cursor", compared as instants.
+ * The string bound a day early keeps the detected_at index in play (it holds
+ * for any offset a timestamp may carry); julianday() is the exact test, since
+ * a string comparison misorders "…:00Z" against "…:00.500Z".
+ */
+export function detectedAfter(since: string | null) {
+  if (since === null) return undefined
+  const floor = new Date(Date.parse(since) - DAY_MS).toISOString().slice(0, 10)
+  return and(
+    gte(tables.changes.detected_at, floor),
+    sql`julianday(${tables.changes.detected_at}) > julianday(${since})`,
+  )
+}
+
+/**
+ * How many of `times` (detected_at instants, oldest first) one run is
+ * offered: up to `limit`, cut back to an instant boundary. The routine
+ * advances the cursor to the newest offered instant, so a cut inside one
+ * would strand that instant's other rows behind the cursor for good. One
+ * instant holding more than `limit` rows (a new source's first poll) is
+ * offered whole rather than not at all.
+ */
+export function offerCount(times: readonly number[], limit: number): number {
+  if (times.length <= limit) return times.length
+  let n = limit
+  while (n > 0 && times[n] === times[n - 1]) n--
+  if (n > 0) return n
+  n = limit
+  while (n < times.length && times[n] === times[n - 1]) n++
+  return n
 }
 
 export interface PendingChanges {
@@ -142,6 +183,8 @@ export interface PendingChanges {
   total_pending: number
   /** The cursor the selection started from; null on the first run. */
   since: string | null
+  /** The newest detected_at offered: the judged_through this run should send. Null when nothing is. */
+  through: string | null
 }
 
 export async function pendingChanges(
@@ -152,12 +195,22 @@ export async function pendingChanges(
   const rows = await db
     .select()
     .from(tables.changes)
-    .where(and(judgeEligible(), since ? gt(tables.changes.detected_at, since) : undefined))
-    .orderBy(desc(tables.changes.detected_at), desc(tables.changes.id))
-  const pending = rows.filter((row) => !isTimestampOnlyChange(row) && !isUntrackedFilingChange(row))
+    .where(and(judgeEligible(), detectedAfter(since)))
+  const pending = rows
+    .filter((row) => !isTimestampOnlyChange(row) && !isUntrackedFilingChange(row))
+    .map((row) => ({ row, at: Date.parse(row.detected_at) }))
+    .sort((a, b) => a.at - b.at || (a.row.id < b.row.id ? -1 : a.row.id > b.row.id ? 1 : 0))
+  const offered = pending.slice(
+    0,
+    offerCount(
+      pending.map((p) => p.at),
+      limit,
+    ),
+  )
   return {
-    changes: pending.slice(0, limit).map((row) => ChangeRow.parse(row)),
+    changes: offered.map((p) => ChangeRow.parse(p.row)),
     total_pending: pending.length,
     since,
+    through: offered.at(-1)?.row.detected_at ?? null,
   }
 }

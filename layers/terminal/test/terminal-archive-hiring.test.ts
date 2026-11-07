@@ -82,6 +82,8 @@ const asOf = async (at: string) =>
   queryContext(sourcesYaml, await pollStampAt(db, at), undefined, at)
 
 beforeEach(async () => {
+  // The tables are wiped below, so each test starts its clock again too.
+  tick = Date.parse('2026-09-07T10:00:00Z')
   for (const table of [
     schema.sourceRuns,
     schema.sourceStats,
@@ -154,6 +156,28 @@ describe('archived hiring history', () => {
       expect(method).toContain('mistral: Internet Archive copy of 2025-01-08T00:00:00.000Z')
     },
   )
+
+  it('answers a board read later than the others from its archived copy', POLLS, async () => {
+    const ids = ALL.map((s) => s.source_id)
+    await runRefresh(
+      { db, raw, fetcher, sourcesYaml, now },
+      'survey',
+      ids.filter((id) => id !== 'mistral-ashby'),
+    )
+    tick += 86_400_000
+    await runRefresh({ db, raw, fetcher, sourcesYaml, now }, 'survey', ['mistral-ashby'])
+
+    const c = await asOf('2026-09-07T12:00:00.000Z')
+    const hiring = await queryHiring(db, c)
+    const mistral = hiring.providers.find((p) => p.provider === 'mistral')!
+    expect(mistral).toMatchObject({ feed: 'ok', total: 7 })
+    expect(mistral.sources[0]!.source_id).toBe('wayback:mistral-lever-2023')
+    // The boards read by then are live.
+    expect(hiring.providers.find((p) => p.provider === 'xai')!.sources[0]!.source_id).toBe(
+      'xai-greenhouse',
+    )
+    expect([...c.notes.method].join(' ')).toContain('some boards were added later')
+  })
 
   it('refuses an instant before the earliest readable board', async () => {
     await expect(

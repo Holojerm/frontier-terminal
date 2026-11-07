@@ -16,8 +16,6 @@ import {
   compactUsd,
   count,
   money,
-  pctChange,
-  pctLabel,
   periodLabel,
   ppLabel,
   sharePct,
@@ -25,7 +23,7 @@ import {
 } from '../../shared/utils/terminal-format'
 import { summarizeLab, type LabInputs } from '../../shared/utils/terminal-lab-summary'
 import type { AlertSeverity } from '../../shared/utils/terminal-tiers'
-import { priceCitation } from './price-display'
+import { SAME_PRICE, moveText, priceCitation, priceMoves } from './price-display'
 import type {
   IncidentsData,
   LabId,
@@ -162,18 +160,8 @@ export function priceChangeLabel(delta: PriceDeltaView | null): string {
   const on = day(delta.detected_at)
   if (delta.change_type === 'added') return `Listed ${on}`
   if (delta.change_type === 'removed') return `Delisted ${on}`
-  const moves = (
-    [
-      ['In', delta.input_before, delta.input_after],
-      ['out', delta.output_before, delta.output_after],
-    ] as const
-  )
-    .filter(([, before, after]) => before !== after)
-    .map(([side, before, after]) => {
-      const pct = pctChange(before, after)
-      return `${side} ${money(before)} → ${money(after)}${pct === null ? '' : ` (${pctLabel(pct)})`}`
-    })
-  if (moves.length === 0) return `Edited ${on}, same price`
+  const moves = priceMoves(delta).map(moveText)
+  if (moves.length === 0) return `Edited ${on}, ${SAME_PRICE}`
   const text = moves.join(', ')
   return `${text.charAt(0).toUpperCase()}${text.slice(1)} on ${on}`
 }
@@ -301,12 +289,18 @@ export function buildTearSheet(lab: LabId, input: TearSheetInputs): TearSheet {
   const d = s.demand
   const rankings = input.rankings ?? null
   const window = rankings?.meta.coverage.window ?? null
+  const prior = rankings?.meta.coverage.prior_window ?? null
   const demand: SheetFigure =
     d && d.share !== null && rankings?.provenance
       ? {
           label: 'OpenRouter share of all tokens',
           value: sharePct(d.share),
-          delta: d.delta_pp === null ? null : `${ppLabel(d.delta_pp)} on 7 days before`,
+          // The prior window can be shorter than seven days while the feed is
+          // young, so the delta names the span it was taken against.
+          delta:
+            d.delta_pp === null || !prior
+              ? null
+              : `${ppLabel(d.delta_pp)} on ${prior.from} to ${prior.to}`,
           lines: [
             `Every provider’s tokens counted, ${window ? `${window.from} to ${window.to}` : 'last 7 days'}.`,
           ],
@@ -368,7 +362,12 @@ export function buildTearSheet(lab: LabId, input: TearSheetInputs): TearSheet {
           label: `Incidents, ${days} days`,
           value: String(i.last_window),
           delta: `${i.prior_window} in the ${days} days before`,
-          lines: [i.open.length ? `${i.open.length} open now.` : 'None open now.'],
+          lines: [
+            i.open.length ? `${i.open.length} open now.` : 'None open now.',
+            ...(i.window_to
+              ? [`Counted to ${shortStamp(i.window_to)}, our last read of the feed.`]
+              : []),
+          ],
           gap: null,
           ref: incidentSource ? cite(incidentSource, incidentSource.label) : null,
         }

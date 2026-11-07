@@ -42,18 +42,37 @@ export async function thesesStamp(db: PipelineDb): Promise<string> {
   return `${DEFINITIONS}|${readings?.at ?? 'none'}|${verdicts?.at ?? 'none'}`
 }
 
-/** A reading as the chart and table show it, noting a change of mapped flagship. */
+/** A reading as the chart and table show it, noting a change of mapped flagship or of the labs counted. */
 function seriesPoint(r: { date: string; value: number; detail: string }): ReadingPoint {
-  const changed = (JSON.parse(r.detail) as { flagship_changed?: Record<string, unknown> | null })
-    .flagship_changed
-  if (!changed) return { date: r.date, value: r.value }
-  const labs = Object.entries(changed)
-    .map(([lab, c]) => {
-      const { from, to } = c as { from: string; to: string }
-      return `${companyName(lab)} ${from} → ${to}`
-    })
-    .join('; ')
-  return { date: r.date, value: r.value, note: `Flagship changed: ${labs}` }
+  const detail = JSON.parse(r.detail) as {
+    flagship_changed?: Record<string, unknown> | null
+    lab_set_changed?: { added: string[]; removed: string[] } | null
+  }
+  const notes: string[] = []
+  const changed = detail.flagship_changed
+  if (changed) {
+    const labs = Object.entries(changed)
+      .map(([lab, c]) => {
+        const { from, to } = c as { from: string; to: string }
+        return `${companyName(lab)} ${from} → ${to}`
+      })
+      .join('; ')
+    notes.push(`Flagship changed: ${labs}`)
+  }
+  const set = detail.lab_set_changed
+  if (set) notes.push(labSetNote(set))
+  return notes.length
+    ? { date: r.date, value: r.value, note: notes.join('. ') }
+    : { date: r.date, value: r.value }
+}
+
+/** 'Labs counted changed: Mistral joined; xAI left' */
+function labSetNote(set: { added: string[]; removed: string[] }): string {
+  const parts = [
+    ...(set.added.length ? [`${set.added.map(companyName).join(', ')} joined`] : []),
+    ...(set.removed.length ? [`${set.removed.map(companyName).join(', ')} left`] : []),
+  ]
+  return `Labs counted changed: ${parts.join('; ')}`
 }
 
 export async function queryTheses(db: PipelineDb, ctx: QueryContext): Promise<ThesesData> {

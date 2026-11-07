@@ -119,12 +119,17 @@ useSeo({
         <dd class="text-default">
           We check EDGAR every 30 minutes. That covers the full-text search for new S-1s, the
           filings of each company we track, and XBRL (the SEC’s tagged financial data) for each
-          company that reports revenue. Filings are where minutes matter.
+          company whose total revenue we show. Filings are where minutes matter. Segment revenue
+          (Google Cloud, inside Alphabet) is read from each 10-Q and 10-K every 6 hours.
         </dd>
-        <dt class="text-muted">Pricing and hiring</dt>
+        <dt class="text-muted">Prices and models</dt>
         <dd class="text-default">
-          We also check every source, EDGAR included, every 6 hours. That way a stuck feed still
-          gets picked up.
+          We read the labs’ model catalogs every 5 minutes and their price lists every 30 minutes.
+        </dd>
+        <dt class="text-muted">Everything else</dt>
+        <dd class="text-default">
+          We check every other source, hiring included, every 6 hours. EDGAR and the price lists get
+          that check too, so a stuck feed still gets picked up.
         </dd>
         <dt class="text-muted">Pages</dt>
         <dd class="text-default">

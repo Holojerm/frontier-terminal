@@ -4,12 +4,14 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import { ChangeRow, contentHash } from '../../server/pipeline/contracts'
+import { changeId, repeatChangeId } from '../../server/pipeline/diff'
 import {
   D1_MAX_BOUND_PARAMS,
   StoreValidationError,
   applyDiff,
   chunk,
   insertRows,
+  repeatedChangeIds,
   rowsPerStatement,
 } from '../../server/pipeline/store'
 
@@ -226,5 +228,69 @@ describe('source_stats', () => {
       insertRows(db, 'snapshots', [snapshot('2026-09-07T10:00:00.000Z')]),
     ).rejects.toThrow()
     expect((await stats())!.snapshot_count).toBe(1)
+  })
+})
+
+describe('repeatedChangeIds', () => {
+  const KEY = 'model:xai:grok-4.6:standard'
+  const [h15, h10] = [contentHash({ p: 15 }), contentHash({ p: 10 })]
+  const transition = (
+    before_hash: string,
+    after_hash: string,
+    detected_at: string,
+    source_url = PROV.source_url,
+  ) =>
+    ChangeRow.parse({
+      id: changeId(KEY, before_hash, after_hash),
+      entity_key: KEY,
+      entity_type: 'model',
+      provider: 'xai',
+      change_type: 'modified',
+      before_hash,
+      after_hash,
+      before_json: '{}',
+      after_json: '{}',
+      detected_at,
+      source_url,
+      fetched_at: detected_at,
+    })
+
+  it('re-keys a transition the entity made before and has since left', async () => {
+    const down = transition(h15, h10, '2026-09-07T10:00:00.000Z')
+    const up = transition(h10, h15, '2026-09-07T16:00:00.000Z')
+    await insertRows(db, 'changes', [down, up])
+
+    const again = transition(h15, h10, '2026-09-07T22:00:00.000Z')
+    expect(again.id).toBe(down.id)
+    expect(await repeatedChangeIds(db, [again])).toEqual(new Set([down.id]))
+    const rekeyed = repeatChangeId(again)
+    expect(rekeyed.id).not.toBe(down.id)
+    await applyDiff(db, 'xai-models-md', {
+      added: [],
+      modified: [],
+      removed: [],
+      changes: [rekeyed],
+      alerts: [],
+    })
+    expect(await db.select().from(schema.changes)).toHaveLength(3)
+
+    // An overlapping tick re-diffing the same two snapshots: the newest
+    // change is that same transition, so it is one row, not two.
+    const overlap = transition(h15, h10, '2026-09-07T22:00:01.000Z')
+    expect(await repeatedChangeIds(db, [overlap])).toEqual(new Set())
+  })
+
+  it('keeps one row when another source logged the same transition first', async () => {
+    const fts = transition(h15, h10, '2026-09-07T10:00:00.000Z', 'https://efts.sec.gov/x')
+    await insertRows(db, 'changes', [
+      fts,
+      transition(h10, h15, '2026-09-07T16:00:00.000Z', 'https://efts.sec.gov/x'),
+    ])
+    const subs = transition(h15, h10, '2026-09-07T22:00:00.000Z')
+    expect(await repeatedChangeIds(db, [subs])).toEqual(new Set())
+  })
+
+  it('a first sighting is not a repeat', async () => {
+    expect(await repeatedChangeIds(db, [transition(h15, h10, PROV.fetched_at)])).toEqual(new Set())
   })
 })

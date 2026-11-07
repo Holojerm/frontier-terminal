@@ -168,7 +168,8 @@ export const ANTHROPIC_THESIS: ThesisDef = {
       id: 'anthropic-revenue-growth',
       n: 9,
       text: 'Revenue at least doubles year over year',
-      signal_label: 'Revenue Anthropic reports to the SEC, against the same period a year earlier',
+      signal_label:
+        'Quarterly revenue Anthropic reports to the SEC (as filed, or derived from year-to-date figures), against the same quarter a year earlier',
       kill_condition: 'Growth below 100% in 2 straight reported periods',
       spec: {
         kind: 'measured',

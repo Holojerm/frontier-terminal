@@ -364,7 +364,7 @@ describe('the license window', () => {
     expect(rowLicense('2026-01-01', '2026-11-04T00:00:00Z', '2026-08-06').id).toBe('CC-BY-NC-4.0')
   })
 
-  it('puts the split beside every API payload, and labels an old as_of CC BY-NC', () => {
+  it('puts the split beside every API payload, and labels an old as_of as rowLicense would', () => {
     const now = new Date('2026-11-04T12:00:00Z')
     expect(withLicense({ as_of: 'x' }, now)).toMatchObject({
       as_of: 'x',
@@ -376,8 +376,18 @@ describe('the license window', () => {
     })
     expect(withLicense(null, now)).toBeNull()
     expect(withLicense([1], now)).toEqual([1])
-    expect(asOfLicense('2026-08-05T23:59:59.000Z', now)).toBe('CC-BY-NC-4.0')
+    // Before the split, an old instant stays CC BY: it was published under it.
+    expect(asOfLicense('2026-08-05T23:59:59.000Z', now)).toBe('CC-BY-4.0')
     expect(asOfLicense('2026-08-06T00:00:00.000Z', now)).toBe('CC-BY-4.0')
+    // Once the window has moved past the split, an instant after it is CC BY-NC.
+    const later = new Date('2027-03-01T12:00:00Z')
+    expect(asOfLicense('2026-11-03T23:59:59.000Z', later)).toBe('CC-BY-4.0')
+    expect(asOfLicense('2026-11-04T00:00:00.000Z', later)).toBe('CC-BY-NC-4.0')
+    expect(asOfLicense('2026-12-01T00:00:00.000Z', later)).toBe('CC-BY-4.0')
+    // An event-time answer about 2025 was published here on the split day.
+    expect(asOfLicense('2025-03-01T00:00:00.000Z', now, undefined, '2026-11-04')).toBe(
+      'CC-BY-NC-4.0',
+    )
   })
 
   it('cuts a time-indexed table in SQL, on its own date column', async () => {

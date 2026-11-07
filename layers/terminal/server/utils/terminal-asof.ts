@@ -386,6 +386,7 @@ export const AS_OF_ROUTES = [
   '/api/hiring',
   '/api/hiring/history',
   '/api/revenue',
+  '/api/exposure',
   '/api/track-record',
 ] as const
 
