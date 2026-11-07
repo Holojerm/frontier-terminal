@@ -23,10 +23,7 @@ export default defineEventHandler(async (event) => {
   }
   // The rollup, deploy reads and filing records land between polls, so they key the cache too.
   const variant = await reliabilityStamp(terminalDb)
-  return serveTerminal(
-    event,
-    'reliability',
-    (ctx) => queryReliability(terminalDb, ctx, opts),
+  return serveTerminal(event, 'reliability', (ctx) => queryReliability(terminalDb, ctx, opts), {
     variant,
-  )
+  })
 })

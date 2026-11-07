@@ -8,16 +8,16 @@
 // newest window, and its older readings are the ones earlier runs wrote.
 
 import { companyName, type CompanyId } from '../../shared/utils/companies'
-import type { LabId } from '../../shared/utils/terminal-types'
+import type { HiringHistoryData, LabId } from '../../shared/utils/terminal-types'
 import type { ClaimDef, SignalSpec, ValueFormat } from '../../shared/utils/thesis-types'
 
 import type { PipelineDb } from '../pipeline/store'
-import { queryContext, queryHiringHistory } from '../utils/terminal-db'
 import { rankingObservations, type RankingObservation } from '../utils/terminal-rankings'
 import { splitPermaslug, catalogRows, summarizeSpend } from '../utils/terminal-spend'
 import { PROVIDER_ORDER } from '../utils/terminal-sources'
 import {
   clusterRolesAcrossLabs,
+  hiringHistoryFor,
   flagshipBlendedPrice,
   flagshipPriceToGpu,
   labsCombinedShare,
@@ -37,6 +37,8 @@ export interface SignalReading {
 export interface SignalDeps {
   sourcesYaml: string
   now: () => Date
+  /** One run's live hiring history, read once for every claim that needs it (evaluateTheses sets it). */
+  hiringHistory?: () => Promise<HiringHistoryData>
 }
 
 type Measured = Extract<SignalSpec, { kind: 'measured' }>
@@ -137,7 +139,7 @@ async function openRolesIn(
   departments: readonly string[],
   deps: SignalDeps,
 ): Promise<SignalReading[]> {
-  const history = await queryHiringHistory(db, queryContext(deps.sourcesYaml, null, deps.now))
+  const history = await hiringHistoryFor(db, deps)
   const board = history.providers.find((p) => p.provider === company)
   const source = board?.sources[0]
   if (!board || board.feed === 'no_public_feed' || !source) return []

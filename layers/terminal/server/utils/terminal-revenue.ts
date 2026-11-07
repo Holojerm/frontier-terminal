@@ -25,7 +25,7 @@ import * as tables from '#server/db/schema'
 import { REVENUE_TAGS } from '../pipeline/parsers/sec/edgar-companyfacts'
 import { filerAt } from '../pipeline/parsers/sec/revenue-filers'
 import type { PipelineDb } from '../pipeline/store'
-import { readStamps, rewound, type QueryContext } from './terminal-db'
+import { sourceReads, rewound, type QueryContext } from './terminal-db'
 import { byString, num, parseJson, str } from './terminal-json'
 import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
 
@@ -211,7 +211,7 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
           .from(tables.entities)
           .where(eq(tables.entities.entity_type, 'filer')),
     // Cited as the last read of each source, not a newer fetch that failed to parse.
-    readStamps(db, at),
+    sourceReads(db, at).then((r) => r.cited),
   ])
   const resolved = new Map<string, ResolvedFilerView>()
   for (const row of filerRows) {

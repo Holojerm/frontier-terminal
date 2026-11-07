@@ -17,7 +17,7 @@ import {
 import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
 import { sourceIdsForScope } from '../../server/pipeline/scopes'
 import { includeSources } from '../../server/pipeline/sources'
-import { terminalStamp } from '../../server/utils/terminal-cache'
+import { terminalStamps } from '../../server/utils/terminal-cache'
 import { queryContext } from '../../server/utils/terminal-db'
 import { queryRevenue, segmentLabel } from '../../server/utils/terminal-revenue'
 import { labelOf } from '../../server/utils/terminal-sources'
@@ -245,7 +245,7 @@ describe('Google Cloud segment end to end', () => {
     expect(facts.every((e) => e.provider === 'google' && e.entity_type === 'revenue')).toBe(true)
     expect(facts[0]!.entity_key).toMatch(/:goog:GoogleCloudMember$/)
 
-    const ctx = queryContext(sourcesYaml, await terminalStamp(db), () => new Date(tick))
+    const ctx = queryContext(sourcesYaml, (await terminalStamps(db)).poll, () => new Date(tick))
     const google = (await queryRevenue(db, ctx)).providers.find((p) => p.provider === 'google')!
     expect(google.disclosure).toBe('parent')
     expect(google.filer).toMatchObject({

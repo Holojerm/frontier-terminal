@@ -145,7 +145,7 @@ describe('normalize-diff lane', () => {
     expect(keys).toContain('model:xai:grok-4.6')
     expect(keys).toContain('model:xai:grok-4.6:long_context')
 
-    expect(diff(entities, entities, DETECTED_AT)).toEqual([])
+    expect(diff(entities, entities, DETECTED_AT)).toEqual({ changes: [], upserts: [] })
   })
 
   test('normalize refuses the same entity_key with different content (a tier-disambiguation bug), collapses identical repeats', () => {
@@ -163,7 +163,7 @@ describe('normalize-diff lane', () => {
     expect(before).toHaveLength(41)
     expect(after).toHaveLength(41)
 
-    const changes = diff(before, after, DETECTED_AT)
+    const changes = diff(before, after, DETECTED_AT).changes
     expect(changes.map((c) => [c.entity_key, c.change_type])).toEqual([
       [`job:xai:${REMOVED_ID}`, 'removed'],
       [`job:xai:${ADDED_ID}`, 'added'],
@@ -177,7 +177,7 @@ describe('normalize-diff lane', () => {
     // A removal is cited to the after snapshot: the poll that found it gone.
     expect(removed.source_url).toBe('https://boards-api.greenhouse.io/v1/boards/xai/jobs')
     expect(removed.fetched_at).toBe(DETECTED_AT)
-    const moved = diff(before, after, DETECTED_AT, 'https://job-boards.example/xai').find(
+    const moved = diff(before, after, DETECTED_AT, 'https://job-boards.example/xai').changes.find(
       (c) => c.change_type === 'removed',
     )!
     expect(moved.source_url).toBe('https://job-boards.example/xai')
@@ -194,7 +194,9 @@ describe('normalize-diff lane', () => {
 
   test('modified rows carry both content hashes and both payloads (before_json/after_json)', () => {
     const { before, after } = buildBeforeAfter()
-    const modified = diff(before, after, DETECTED_AT).find((c) => c.change_type === 'modified')!
+    const modified = diff(before, after, DETECTED_AT).changes.find(
+      (c) => c.change_type === 'modified',
+    )!
 
     expect(modified.entity_key).toBe(`job:xai:${MODIFIED_ID}`)
     expect(modified.before_hash).toMatch(/^[0-9a-f]{64}$/)
@@ -226,7 +228,7 @@ describe('normalize-diff lane', () => {
         reversed ? [...before].reverse() : before,
         reversed ? [...after].reverse() : after,
         DETECTED_AT,
-      )
+      ).changes
     }
     const run1 = run(false)
     const run2 = run(true) // input order must not matter

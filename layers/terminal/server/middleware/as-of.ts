@@ -1,6 +1,6 @@
 // `as_of` is answered by the API routes that rebuild their payload
-// (terminal-handler.ts › serveTerminalAsOf), refused by the ones that do not
-// (serveTerminal), and answered or refused per table by /export. Everything
+// (terminal-handler.ts › serveTerminal with an `asOf` mode), refused by the
+// ones that do not (refuseAsOf), and answered or refused per table by /export. Everything
 // else — pages, the Atom feed, llms.txt, /mcp, the ops endpoints — renders the
 // present, so a URL naming another instant is refused here rather than
 // answered with today's data. A page with a query string is never stored in

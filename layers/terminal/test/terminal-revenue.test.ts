@@ -13,7 +13,7 @@ import { parseCikWhitelistBlock } from '../server/pipeline/parsers/sec/whitelist
 import type { SourceFetcher } from '../server/pipeline/fetch'
 import { runRefresh, type RawStore } from '../server/pipeline/refresh'
 import { includeSources } from '../server/pipeline/sources'
-import { terminalStamp } from '../server/utils/terminal-cache'
+import { terminalStamps } from '../server/utils/terminal-cache'
 import { queryContext } from '../server/utils/terminal-db'
 import {
   filingIndexUrl,
@@ -216,7 +216,7 @@ describe('queryRevenue against a seeded store', () => {
   it('two labs say no disclosure; xAI carries SpaceX’s consolidated series as the parent’s', async () => {
     const ctx = queryContext(
       sourcesYaml,
-      await terminalStamp(db),
+      (await terminalStamps(db)).poll,
       () => new Date('2026-09-07T12:00:00Z'),
     )
     const revenue = await queryRevenue(db, ctx)

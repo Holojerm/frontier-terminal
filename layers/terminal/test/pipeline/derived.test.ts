@@ -24,7 +24,7 @@ import {
 import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
 import { CAREERS_SOURCES, sourceIdsForScope } from '../../server/pipeline/scopes'
 import { includeSources } from '../../server/pipeline/sources'
-import { terminalStamp } from '../../server/utils/terminal-cache'
+import { terminalStamps } from '../../server/utils/terminal-cache'
 import { queryContext, queryCoverage, queryPrices } from '../../server/utils/terminal-db'
 import { queryRevenue } from '../../server/utils/terminal-revenue'
 import { labelOf } from '../../server/utils/terminal-sources'
@@ -349,7 +349,7 @@ const ftsWithAnthropicS1 = () => {
 }
 
 const ctx = async () =>
-  queryContext(sourcesYaml, await terminalStamp(db), () => new Date('2026-09-22T12:00:00Z'))
+  queryContext(sourcesYaml, (await terminalStamps(db)).poll, () => new Date('2026-09-22T12:00:00Z'))
 
 beforeEach(async () => {
   for (const table of [

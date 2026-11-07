@@ -59,7 +59,7 @@ const priceChanges = diff(
   normalizePrices(priceRows, 'xai-models-md:before'),
   normalizePrices(priceAfter, 'xai-models-md:after'),
   DETECTED_AT,
-)
+).changes
 
 const ADDED_JOB_ID = '5090171007'
 const REMOVED_JOB_ID = '4741579007'
@@ -77,7 +77,7 @@ const jobChanges = diff(
     'xai-greenhouse:after',
   ),
   DETECTED_AT,
-)
+).changes
 
 const changes: ChangeRow[] = [...priceChanges, ...jobChanges]
 

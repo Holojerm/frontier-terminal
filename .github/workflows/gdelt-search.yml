@@ -1,10 +1,10 @@
 # The GDELT side of the track record (scripts/gdelt-search.ts), hourly.
 #
 # Each run asks the site for the GDELT GKG files it has not read (one per
-# quarter hour, ~2.5 MB zipped), reads them oldest first, matches each row
-# against the alerts whose windows cover it, and posts the matches back. It
-# runs here and not on the Worker's cron because a file is ~8 MB unzipped and
-# a tick reads several; the Worker matches every posted row again. A file
+# quarter hour, ~2.5 MB zipped), reads them oldest first, and posts back the
+# rows naming a tracked lab, filer or model family, which the Worker keeps and
+# matches each alert against once its window closes. It runs here and not on
+# the Worker's cron because a file is ~8 MB unzipped and a tick reads several. A file
 # GDELT has not published ends the run quietly; a red run means our own
 # /api/gdelt/* routes failed. A backlog (the queue starts at 2026-09-01)
 # drains at up to 40 minutes a run.

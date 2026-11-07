@@ -238,7 +238,7 @@ export interface WebhookDrainOptions {
   signingKey: string
   origin: string
   schemaVersion: string
-  /** The live poll stamp (terminal-cache.ts › terminalStamp); null sends nothing. */
+  /** The live poll stamp (terminal-cache.ts › terminalStamps); null sends nothing. */
   stamp: string | null
   send: WebhookSender
   now?: Date

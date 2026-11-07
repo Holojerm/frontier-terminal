@@ -9,7 +9,6 @@ import {
   cachedTerminal,
   sharedTerminalStamp,
   terminalCacheKey,
-  terminalStamp,
   terminalStamps,
   type CacheStore,
 } from '../server/utils/terminal-cache'
@@ -36,30 +35,6 @@ function mapStore() {
 beforeEach(async () => {
   await db.delete(schema.sourceRuns)
   await db.delete(schema.sourceStats)
-})
-
-describe('terminalStamp', () => {
-  it('is null before any poll and the newest started_at after', async () => {
-    expect(await terminalStamp(db)).toBeNull()
-    const run = (at: string) => ({
-      id: `survey:x:${at}`,
-      scope: 'survey',
-      source_id: 'xai-models-md',
-      started_at: at,
-      status: 'ok',
-      detail: null,
-      snapshot_id: null,
-      added: 0,
-      removed: 0,
-      modified: 0,
-      source_url: 'https://docs.x.ai/developers/models.md',
-    })
-    await insertRows(db, 'source_runs', [
-      run('2026-09-07T10:00:00.000Z'),
-      run('2026-09-07T16:00:00.000Z'),
-    ])
-    expect(await terminalStamp(db)).toBe('2026-09-07T16:00:00.000Z')
-  })
 })
 
 describe('terminalStamps', () => {
@@ -99,8 +74,94 @@ describe('terminalStamps', () => {
     expect(judged.poll).toBe(polled.poll)
     expect(judged.key).not.toBe(polled.key)
     expect(judged.key).toContain('2026-09-07T10:20:00.000Z')
-    expect(await terminalStamp(db)).toBe(polled.poll)
+
+    // The judge writes class-map decisions and claim and track-record verdicts
+    // after its judge_runs row (pipeline/judge/submit.ts), and the GDELT
+    // backfill adds candidates with no search row: each must move the key on its own.
+    const prov = { source_url: 'https://example.com/', fetched_at: '2026-09-07T10:00:00.000Z' }
+    await db.insert(schema.classMapDecisions).values({
+      id: 'cm-1',
+      provider: 'openai',
+      class: 'flagship',
+      model_slug: 'gpt-x',
+      basis: 'b',
+      basis_source_id: 'openai-pricing',
+      decided_at: '2026-09-07T10:20:30.000Z',
+      decided_by: 'judge',
+      ...prov,
+    })
+    const mapped = await terminalStamps(db)
+    expect(mapped.key).not.toBe(judged.key)
+    await db.insert(schema.claimVerdicts).values({
+      id: 'v-1',
+      thesis_id: 't',
+      claim_id: 'c',
+      subject: 's',
+      change_id: 'ch',
+      provider: 'openai',
+      verdict: 'supports',
+      rationale: 'r',
+      facts: '[]',
+      detected_at: '2026-09-07T10:00:00.000Z',
+      judged_at: '2026-09-07T10:21:00.000Z',
+      ...prov,
+    })
+    const claimed = await terminalStamps(db)
+    expect(claimed.key).not.toBe(mapped.key)
+    await db.insert(schema.trackRecordVerdicts).values({
+      id: 'tv-1',
+      candidate_id: 'cand-1',
+      alert_id: 'a',
+      same_event: true,
+      rationale: 'r',
+      judged_at: '2026-09-07T10:22:00.000Z',
+      ...prov,
+    })
+    const rated = await terminalStamps(db)
+    expect(rated.key).not.toBe(claimed.key)
+    await db.insert(schema.trackRecordCandidates).values({
+      id: 'cand-1',
+      alert_id: 'a',
+      kind: 'press',
+      title: 't',
+      snippet: null,
+      outlet: 'o',
+      url: 'https://example.com/a',
+      published_at: '2026-09-07T10:00:00.000Z',
+      search_id: 'gkg:backfill:x',
+      found_at: '2026-09-07T10:23:00.000Z',
+      ...prov,
+    })
+    const found = await terminalStamps(db)
+    expect(found.key).not.toBe(rated.key)
+    expect(found.poll).toBe(polled.poll)
     await db.delete(schema.judgeRuns)
+    await db.delete(schema.classMapDecisions)
+    await db.delete(schema.claimVerdicts)
+    await db.delete(schema.trackRecordVerdicts)
+    await db.delete(schema.trackRecordCandidates)
+  })
+
+  it('is null before any poll and the newest started_at after', async () => {
+    expect((await terminalStamps(db)).poll).toBeNull()
+    const run = (at: string) => ({
+      id: `survey:x:${at}`,
+      scope: 'survey',
+      source_id: 'xai-models-md',
+      started_at: at,
+      status: 'ok',
+      detail: null,
+      snapshot_id: null,
+      added: 0,
+      removed: 0,
+      modified: 0,
+      source_url: 'https://docs.x.ai/developers/models.md',
+    })
+    await insertRows(db, 'source_runs', [
+      run('2026-09-07T10:00:00.000Z'),
+      run('2026-09-07T16:00:00.000Z'),
+    ])
+    expect((await terminalStamps(db)).poll).toBe('2026-09-07T16:00:00.000Z')
   })
 })
 
@@ -234,6 +295,8 @@ describe('sharedTerminalStamp', () => {
         source_url: 'https://openai.com/api/pricing/',
       },
     ])
-    expect(await sharedTerminalStamp(() => terminalStamp(db))).toBe('2026-09-22T10:00:00.000Z')
+    expect((await sharedTerminalStamp(() => terminalStamps(db))).poll).toBe(
+      '2026-09-22T10:00:00.000Z',
+    )
   })
 })

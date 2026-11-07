@@ -23,7 +23,7 @@ import * as tables from '#server/db/schema'
 import { judgeFreshnessCheck } from '../pipeline/judge/watchdog'
 import { parsePressList, pendingPressAlerts } from '../pipeline/press'
 import { GKG_READY_MS, stampIso } from '../pipeline/track-record/gkg'
-import { unreadStamps } from '../pipeline/track-record/search'
+import { oldestUnread } from '../pipeline/track-record/search'
 import { taskHeartbeatCheck, type FreshnessCheck } from './freshness'
 
 const HOUR_MS = 60 * 60 * 1000
@@ -42,8 +42,7 @@ export const gdeltFreshnessCheck: FreshnessCheck = {
   path: '/api/gdelt/work',
   async evidence(db, now) {
     // The oldest unread file has been owed since it was due.
-    const read = await db.select({ stamp: tables.gdeltFiles.stamp }).from(tables.gdeltFiles)
-    const [oldest] = unreadStamps(now, new Set(read.map((r) => r.stamp)))
+    const oldest = await oldestUnread(db, now)
     const [ok] = await db.select({ at: max(tables.gdeltFiles.recorded_at) }).from(tables.gdeltFiles)
     return {
       owedSince: oldest

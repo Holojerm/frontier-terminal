@@ -4,10 +4,10 @@
 // our first snapshot, from the Internet Archive backfill (terminal-archive.ts).
 
 import { queryPrices } from '../utils/terminal-db'
-import { serveTerminalAsOf, terminalDb } from '../utils/terminal-handler'
+import { serveTerminal, terminalDb } from '../utils/terminal-handler'
 import { rateLimitTerminal } from '../utils/api-access'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'prices', limit: 60, windowSeconds: 60 })
-  return serveTerminalAsOf(event, 'prices', (ctx) => queryPrices(terminalDb, ctx), '', true)
+  return serveTerminal(event, 'prices', (ctx) => queryPrices(terminalDb, ctx), { asOf: 'pricing' })
 })

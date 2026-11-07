@@ -9,5 +9,5 @@ import { rateLimitTerminal } from '../utils/api-access'
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'coverage', limit: 60, windowSeconds: 60 })
   const variant = await recipeRunsStamp(terminalDb)
-  return serveTerminal(event, 'coverage', (ctx) => queryCoverage(terminalDb, ctx), variant)
+  return serveTerminal(event, 'coverage', (ctx) => queryCoverage(terminalDb, ctx), { variant })
 })

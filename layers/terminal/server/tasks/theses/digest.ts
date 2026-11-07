@@ -13,7 +13,7 @@ import * as tables from '#server/db/schema'
 import { DIGEST_DAYS, buildThesisDigest } from '../../theses/digest'
 import { recordOpsEvent } from '#server/utils/ops'
 import { getOpsMailer } from '#server/utils/ops-mail'
-import { terminalStamp } from '../../utils/terminal-cache'
+import { terminalStamps } from '../../utils/terminal-cache'
 import { queryContext } from '../../utils/terminal-db'
 import { queryTheses } from '../../utils/terminal-theses'
 import { withHeartbeat } from '../../utils/task-heartbeat'
@@ -39,7 +39,7 @@ const task = defineTask({
     const [data, changes, failedRuns] = await Promise.all([
       queryTheses(
         db,
-        queryContext(sourcesYaml, await terminalStamp(db), () => now),
+        queryContext(sourcesYaml, (await terminalStamps(db)).poll, () => now),
       ),
       db
         .select()

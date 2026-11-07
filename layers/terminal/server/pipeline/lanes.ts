@@ -63,7 +63,6 @@ import { parseMistralStatus } from './parsers/status/mistral-status'
 import { parseOpenaiStatus } from './parsers/status/openai-status'
 import { parseXaiStatus } from './parsers/status/xai-status'
 import { recommendationRows } from './recommendations'
-import { currentEntities, type PipelineDb } from './store'
 import type { ClassEntry } from '../utils/terminal-classes'
 import type { CikWhitelist } from './parsers/sec/whitelist'
 
@@ -122,13 +121,6 @@ export interface Lane {
    */
   firstIsNews?: (derivedKey: string | null, fetchedAt: string) => boolean
   /**
-   * True when a source whose bytes are unchanged must be parsed again: its
-   * stored rows predate something the lane now reads from the same bytes. A
-   * filed document never changes, so without this a lane that learns to read
-   * more of one would never read the documents already on file.
-   */
-  stale?: (db: PipelineDb, sourceId: string) => Promise<boolean>
-  /**
    * The sources.yaml-derived blocks parse() reads. They go into the context
    * fingerprint (contextFingerprint), so an unchanged page is parsed again
    * when one of them changes — a filer retagged, a CIK whitelisted.
@@ -159,11 +151,15 @@ function canonical(block: ParseContext[ContextBlock]): unknown {
   })
 }
 
-/** The parser version plus every config block the lane reads, hashed. */
-export function contextFingerprint(lane: Lane, ctx: Pick<ParseContext, ContextBlock>): string {
+/** The parser version, every config block the lane reads, and the URL its rows cite, hashed. */
+export function contextFingerprint(
+  lane: Lane,
+  ctx: Pick<ParseContext, ContextBlock>,
+  sourceUrl: string,
+): string {
   const blocks: Record<string, unknown> = {}
   for (const name of lane.reads ?? []) blocks[name] = canonical(ctx[name])
-  return contentHash({ parser_version: PARSER_VERSION, ...blocks })
+  return contentHash({ parser_version: PARSER_VERSION, source_url: sourceUrl, ...blocks })
 }
 
 const set = (parse: Lane['parse']): Lane => ({ sides: [], removals: 'set', parse })
@@ -327,17 +323,11 @@ const FILING_INDEX_LANE: Lane = {
 // operations prints, the cover terms, and the rest of what the document says
 // (parsers/sec/prospectus.ts). A filing never changes once accepted, and an
 // amendment is its own source, so the lane is append-only like the other
-// revenue lanes. A document parsed before the lane read risk factors is
-// parsed again once: the new rows arrive as additions, and the revenue and
-// cover rows diff to nothing.
+// revenue lanes.
 const PROSPECTUS_REVENUE_LANE: Lane = {
   sides: [],
   removals: 'append-only',
   firstIsNews: freshRegistrationKey,
-  stale: async (db, sourceId) => {
-    const rows = await currentEntities(db, sourceId)
-    return rows.length > 0 && !rows.some((r) => r.entity_type === 'risk_factors')
-  },
   parse: (text, { prov, snapshotId, derivedKey }) => {
     const target = registrationTarget(derivedKey ?? '')
     const out = parseProspectus(text, target, archivesCik(prov.source_url), prov)

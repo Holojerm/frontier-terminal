@@ -21,7 +21,6 @@ const now = useNow()
 const STATE_TEXT: Record<Exclude<TrackRecordState, 'matched'>, string> = {
   'window-open': 'Window still open',
   'not-searched': 'Not searched yet',
-  'search-failed': 'Search failed',
   'not-searchable': 'Not searched',
   'no-feed': 'No feed',
   'none-found': 'None found',

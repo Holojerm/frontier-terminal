@@ -354,7 +354,7 @@ describe('status lane', () => {
       'snap:b',
     )
 
-    const changes = diff(before, after, DETECTED_AT)
+    const changes = diff(before, after, DETECTED_AT).changes
     expect(changes).toHaveLength(1)
     expect(changes[0]).toMatchObject({
       entity_key: 'incident:openai:01M20PYYYGRT9303VHAPA7YNT2',

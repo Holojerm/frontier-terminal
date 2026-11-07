@@ -9,5 +9,5 @@ import { rateLimitTerminal } from '../utils/api-access'
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'adoption', limit: 60, windowSeconds: 60 })
   const variant = await recipeRunsStamp(terminalDb, VIEW_RECIPES.adoption)
-  return serveTerminal(event, 'adoption', () => queryAdoption(terminalDb), variant)
+  return serveTerminal(event, 'adoption', () => queryAdoption(terminalDb), { variant })
 })

@@ -105,6 +105,7 @@ beforeEach(async () => {
     schema.entities,
     schema.snapshots,
     schema.opsEvents,
+    schema.classMapDecisions,
   ]) {
     await db.delete(table)
   }
@@ -281,6 +282,32 @@ describe('tripwire', () => {
     ])
     expect((await runs()).length).toBe(before.runs)
     expect((await db.select().from(schema.snapshots)).length).toBe(before.snapshots)
+  })
+
+  it('checks the class map in effect, so a cell the judge re-mapped does not trip every tick', async () => {
+    await db.insert(schema.classMapDecisions).values({
+      id: 'xai:flagship:test',
+      provider: 'xai',
+      class: 'flagship',
+      model_slug: 'grok-4.8',
+      basis: 'use Grok 4.8. It is the most capable model',
+      basis_source_id: 'xai-models-md',
+      decided_at: '2026-09-22T11:00:00.000Z',
+      decided_by: 'judge',
+      source_url: idToUrl.get('xai-models-md')!,
+      fetched_at: '2026-09-22T11:00:00.000Z',
+    })
+    await poll(TRIPWIRE_BASE, fetcher(), '2026-09-22T12:00:00Z')
+
+    const outcome = await runTripwire({
+      db,
+      raw,
+      fetcher: fetcher(),
+      sourcesYaml,
+      lock: memoryKv(),
+      now: clockAt('2026-09-22T12:05:00Z'),
+    })
+    expect(outcome).toEqual({ status: 'quiet', checked: TRIPWIRE_BASE })
   })
 
   it('reads a side page that fails as no change, not as a trip', async () => {

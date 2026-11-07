@@ -29,12 +29,14 @@ import type {
 import * as tables from '#server/db/schema'
 import { providerOfOpenRouterId } from '../pipeline/parsers/openrouter'
 import type { PipelineDb } from '../pipeline/store'
-import { readStamps, type QueryContext } from './terminal-db'
+import { sourceReads, type QueryContext } from './terminal-db'
 import { byString, num, parseJson, str } from './terminal-json'
 import {
   SHARE_WINDOW_DAYS,
-  queryRankings,
   rankingObservations,
+  rankingsAsOf,
+  rankingsMeta,
+  summarizeRankings,
   type RankingObservation,
 } from './terminal-rankings'
 import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
@@ -262,20 +264,21 @@ export async function catalogRows(db: PipelineDb): Promise<SkuPrice[]> {
 }
 
 export async function querySpend(db: PipelineDb, ctx: QueryContext): Promise<SpendData> {
-  const [rows, catalog, rankings, stamps] = await Promise.all([
+  const [rows, catalog, reads, openRouterAsOf] = await Promise.all([
     rankingObservations(db),
     catalogRows(db),
-    queryRankings(db, ctx),
-    readStamps(db),
+    sourceReads(db),
+    rankingsAsOf(db),
   ])
   const summary = summarizeSpend(rows, catalog)
+  const rankings = rankingsMeta(ctx, rows, reads, openRouterAsOf, summarizeRankings(rows).coverage)
 
   const priceSourceIds = ctx.registry.sources
     .filter((s) => s.axis === 'pricing-catalog')
     .map((s) => s.source_id)
   const price_sources: SourceRef[] = priceSourceIds
     .map((id) => {
-      const stamp = stamps.get(id)
+      const stamp = reads.cited.get(id)
       return stamp ? { source_id: id, label: labelOf(id).label, ...stamp } : null
     })
     .filter((s): s is SourceRef => s !== null)

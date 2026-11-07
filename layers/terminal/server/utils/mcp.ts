@@ -74,13 +74,14 @@ import { queryDisclosures } from './terminal-disclosures'
 import { gpuRunsStamp, queryGpuPrices } from './terminal-gpu'
 import { SHARE_WINDOW_DAYS, queryRankings } from './terminal-rankings'
 import { queryProspectus } from './terminal-prospectus'
-import { filedFactsStamp, queryExposure } from './terminal-exposure'
+import { queryExposure } from './terminal-exposure'
 import { identifiersPayload } from './terminal-identifiers'
 import { queryRevenue } from './terminal-revenue'
 import { PROVIDER_ORDER } from './terminal-sources'
 import { querySpend } from './terminal-spend'
-import { queryTrackRecord, trackRecordStamp } from './terminal-track-record'
+import { queryTrackRecord } from './terminal-track-record'
 import { queryReliability, reliabilityStamp } from './terminal-reliability'
+import type { RebuiltAsOf } from './terminal-handler'
 import { repoSlug, workflowRunsUrl } from '../pipeline/reliability/deploys'
 import { DETECTION_RULES, RELIABILITY_DAYS } from '../../shared/utils/terminal-reliability'
 import manifest from '~~/fleet.json'
@@ -97,16 +98,15 @@ export interface McpDeps {
   serve<T>(name: string, query: (ctx: QueryContext) => Promise<T>, variant?: string): Promise<T>
   /**
    * `serve` as of the instant `at`, for a tool given `as_of`: the route passes
-   * terminalPayloadAt(), which refuses an instant before the first snapshot
-   * with a 400 and adds point_in_time to the payload.
+   * terminalPayloadAt(), which refuses an instant `asOf` cannot answer with a
+   * 400 and adds point_in_time to the payload.
    */
   serveAt<T extends object | null>(
     name: string,
     at: string,
     query: (ctx: QueryContext) => Promise<T>,
     variant?: string,
-    /** `filed`: read by filing date, so an instant before the first snapshot is answered. */
-    opts?: { filed?: boolean; archived?: boolean | 'hiring' },
+    asOf?: RebuiltAsOf,
   ): Promise<AsOfPayload<T>>
   /** The site's llms.txt body — the same bytes GET /llms.txt serves. */
   llmsTxt: string
@@ -235,11 +235,11 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
     as_of: string | undefined,
     query: (ctx: QueryContext) => Promise<T>,
     variant?: string,
-    opts?: { filed?: boolean; archived?: boolean | 'hiring' },
+    asOf: RebuiltAsOf = 'snapshot',
   ) => {
     if (as_of === undefined) return deps.serve(name, query, variant)
     const at = parseAsOfQuery({ as_of }).as_of!
-    return deps.serveAt(name, at, query, variant, opts)
+    return deps.serveAt(name, at, query, variant, asOf)
   }
 
   server.registerTool(
@@ -280,9 +280,13 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
     },
     ({ provider, as_of }) =>
       asOfErrors(async () => {
-        const prices = await read('prices', as_of, (ctx) => queryPrices(deps.db, ctx), '', {
-          archived: true,
-        })
+        const prices = await read(
+          'prices',
+          as_of,
+          (ctx) => queryPrices(deps.db, ctx),
+          '',
+          'pricing',
+        )
         if (!provider) return json(prices)
         const rows = prices.rows.filter((r) => r.provider === provider)
         const priced = (r: (typeof rows)[number]) =>
@@ -323,9 +327,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
     },
     ({ provider, as_of }) =>
       asOfErrors(async () => {
-        const hiring = await read('hiring', as_of, (ctx) => queryHiring(deps.db, ctx), '', {
-          archived: 'hiring',
-        })
+        const hiring = await read('hiring', as_of, (ctx) => queryHiring(deps.db, ctx), '', 'hiring')
         if (!provider) return json(hiring)
         return json({
           ...hiring,
@@ -415,7 +417,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
           as_of,
           (ctx) => queryPriceHistory(deps.db, ctx, key),
           key,
-          { archived: true },
+          'pricing',
         )
         if (history === null) {
           return failure(
@@ -456,7 +458,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
           as_of,
           (ctx) => queryHiringHistory(deps.db, ctx),
           '',
-          { archived: 'hiring' },
+          'hiring',
         )
         // An archived copy's departments would put a few hundred kB in a tool
         // result; the totals and clusters stay, the rest is one request away.
@@ -625,13 +627,12 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
     },
     ({ group, ticker, as_of }) =>
       asOfErrors(async () => {
-        const variant = await filedFactsStamp(deps.db)
         const exposure = await read(
           'exposure',
           as_of,
           (ctx) => queryExposure(deps.db, ctx),
-          variant,
-          { filed: true },
+          '',
+          'filed',
         )
         return json({
           ...exposure,
@@ -655,7 +656,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         '(the first post on the lab’s own newsroom feed; Anthropic and xAI publish none). A side has a time only when its state is matched: ' +
         'the judge rated that candidate the same event and every earlier candidate not. lead_hours is that time minus saw_at, ' +
         'positive when the terminal saw it first. Other states say why there is no time: window-open (searched once 7 days have passed), ' +
-        'not-searched, search-failed, not-searchable, no-feed, none-found, not-yet-rated (never a guessed lead), no-match. ' +
+        'not-searched, not-searchable, no-feed, none-found, not-yet-rated (never a guessed lead), no-match. ' +
         'press.published_at is the quarter hour GDELT’s crawler read the article, not when the outlet published it, and GDELT misses outlets. ' +
         'A lead is not a trading signal. press and newsroom tally led, lagged, tied and the median lead over matched rows. ' +
         'A press side with searched_from set was searched only from that time: earlier press was read before the alert existed and never matched to it, ' +
@@ -666,14 +667,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
     },
     ({ as_of }) =>
       asOfErrors(async () =>
-        json(
-          await read(
-            'track-record',
-            as_of,
-            (ctx) => queryTrackRecord(deps.db, ctx),
-            await trackRecordStamp(deps.db),
-          ),
-        ),
+        json(await read('track-record', as_of, (ctx) => queryTrackRecord(deps.db, ctx))),
       ),
   )
 

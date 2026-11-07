@@ -3,13 +3,9 @@
 // the stored readings by the same pure rules the evaluator uses, so the page
 // and the status-change log cannot disagree; status_since comes from the log.
 
-import { max } from 'drizzle-orm'
-
 import { COMPANIES, companyName } from '../../shared/utils/companies'
 import type { ClaimView, ReadingPoint, ThesesData } from '../../shared/utils/thesis-types'
 
-import * as tables from '#server/db/schema'
-import { contentHash } from '../pipeline/contracts'
 import type { PipelineDb } from '../pipeline/store'
 import {
   currentEvaluation,
@@ -25,22 +21,6 @@ import type { QueryContext } from './terminal-db'
 export const THESES_CAVEAT =
   'This is a research journal. It isn’t investment advice. Each status is computed from our stored data against kill conditions written before the data arrived. ' +
   'OpenRouter is one aggregator’s traffic, so treat it as a rough read on demand. A judged claim stays unresolved until the judge rates it.'
-
-/** The thesis definitions themselves: a deploy that adds a thesis, moves a
- * threshold or commits a confirmation must not be served a payload cached
- * before it. */
-const DEFINITIONS = contentHash(THESES).slice(0, 12)
-
-/** Newest reading and verdict writes plus the definitions — the cache key's
- * variant, because readings and verdicts land after the poll tick that
- * stamps the cache, and definitions change on deploy. */
-export async function thesesStamp(db: PipelineDb): Promise<string> {
-  const [[readings], [verdicts]] = await Promise.all([
-    db.select({ at: max(tables.claimReadings.computed_at) }).from(tables.claimReadings),
-    db.select({ at: max(tables.claimVerdicts.judged_at) }).from(tables.claimVerdicts),
-  ])
-  return `${DEFINITIONS}|${readings?.at ?? 'none'}|${verdicts?.at ?? 'none'}`
-}
 
 /** A reading as the chart and table show it, noting a change of mapped flagship or of the labs counted. */
 function seriesPoint(r: { date: string; value: number; detail: string }): ReadingPoint {
