@@ -49,7 +49,7 @@ export async function terminalStamp(db: PipelineDb): Promise<string | null> {
  * The stamp read currently in flight, if any. Module scope, so it is per
  * isolate rather than per request — which is the point.
  */
-let inFlightStamp: Promise<string | null> | null = null
+let inFlightStamp: { promise: Promise<string | null>; startedAt: number } | null = null
 
 /**
  * `terminalStamp`, de-duplicated across concurrent callers.
@@ -72,13 +72,53 @@ let inFlightStamp: Promise<string | null> | null = null
  * `terminalStamp` itself stays an unmemoized read: callers that drive it across
  * writes to the same database must see each new value.
  */
-export function sharedTerminalStamp(read: () => Promise<string | null>): Promise<string | null> {
-  if (inFlightStamp) return inFlightStamp
+export function sharedTerminalStamp(
+  read: () => Promise<string | null>,
+  waitMs = STAMP_SHARE_WAIT_MS,
+  now: () => number = Date.now,
+): Promise<string | null> {
+  const slot = inFlightStamp
+  if (slot && now() - slot.startedAt < waitMs) {
+    return joinOrReadOwn(slot.promise, read, waitMs - (now() - slot.startedAt))
+  }
   const tracked = read().finally(() => {
-    if (inFlightStamp === tracked) inFlightStamp = null
+    if (inFlightStamp?.promise === tracked) inFlightStamp = null
   })
-  inFlightStamp = tracked
+  inFlightStamp = { promise: tracked, startedAt: now() }
   return tracked
+}
+
+/**
+ * How long a caller waits on another caller's stamp read before issuing its own.
+ *
+ * The slot is per isolate, so concurrent *requests* share it, not just one
+ * render's fan-out. Workers ties a D1 read to the request that started it: if
+ * that request is cancelled (a reader closes the tab) the read never settles,
+ * and a promise from an ended request context is dropped rather than resolved
+ * in another (the handle_cross_request_promise_resolution flag). Before this
+ * bound, every later page request in the isolate joined that dead promise and
+ * hung with no bytes sent; frontierterm.com did exactly that on 2026-11-07.
+ * A healthy stamp read takes 10–90ms, so a second's wait costs nothing on the
+ * normal path, and an abandoned slot is replaced after it.
+ */
+export const STAMP_SHARE_WAIT_MS = 1000
+
+/** The shared read if it lands within `budgetMs`, else this caller's own read. The timer lives in the caller's context, so it always fires. */
+async function joinOrReadOwn(
+  shared: Promise<string | null>,
+  read: () => Promise<string | null>,
+  budgetMs: number,
+): Promise<string | null> {
+  let timer: ReturnType<typeof setTimeout> | undefined
+  const late = new Promise<'late'>((resolve) => {
+    timer = setTimeout(() => resolve('late'), Math.max(0, budgetMs))
+  })
+  try {
+    const first = await Promise.race([shared, late])
+    return first === 'late' ? await read() : first
+  } finally {
+    clearTimeout(timer)
+  }
 }
 
 export function terminalCacheKey(name: string, stamp: string | null): string {

@@ -8,6 +8,7 @@ import { db } from '@nuxthub/db'
 import { kv } from '@nuxthub/kv'
 
 import { LAB_PAGES } from '../../../shared/utils/terminal-lab-summary'
+import { POLL_LOCK_KEY } from '../../pipeline/lock'
 import { thesisPages } from '../../../shared/utils/thesis-format'
 import { THESES } from '../../theses/registry'
 import { warmCaches, warmPaths } from '../../utils/cache-warm'
@@ -37,6 +38,9 @@ const task = defineTask({
         store: kv,
         build: config.public.buildSha || 'dev',
         stamp: () => terminalStamp(db),
+        // A poll's own warm runs after it releases the lock. If KV still shows
+        // the lock then, the next five-minute tick warms instead.
+        pollRunning: async () => (await kv.getItem(POLL_LOCK_KEY)) !== null,
         render: async (path) => {
           // The same context shape the Worker's fetch handler hands Nitro, so
           // bindings and waitUntil (the deferred KV writes) reach the render

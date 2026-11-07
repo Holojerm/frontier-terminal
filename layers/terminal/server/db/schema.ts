@@ -237,7 +237,11 @@ export const claimReadings = sqliteTable(
     computed_at: text('computed_at').notNull(),
     ...provenance,
   },
-  (t) => [primaryKey({ columns: [t.claim_id, t.date] })],
+  (t) => [
+    primaryKey({ columns: [t.claim_id, t.date] }),
+    // thesesStamp() reads max(computed_at) on every /api/theses request.
+    index('claim_readings_computed_idx').on(t.computed_at),
+  ],
 )
 
 // Claim status changes — append-only, one row each time a claim's computed
@@ -280,7 +284,10 @@ export const claimVerdicts = sqliteTable(
     judged_at: text('judged_at').notNull(),
     ...provenance,
   },
-  (t) => [index('claim_verdicts_claim_idx').on(t.claim_id, t.detected_at)],
+  (t) => [
+    index('claim_verdicts_claim_idx').on(t.claim_id, t.detected_at),
+    index('claim_verdicts_judged_idx').on(t.judged_at),
+  ],
 )
 
 // Recipe observations — what a thesis recipe (layers/terminal/server/theses/recipes/) read
@@ -378,7 +385,11 @@ export const filedFactReads = sqliteTable(
     started_at: text('started_at').notNull(),
     source_url: text('source_url').notNull(),
   },
-  (t) => [index('filed_fact_reads_doc_idx').on(t.ticker, t.kind, t.started_at)],
+  (t) => [
+    index('filed_fact_reads_doc_idx').on(t.ticker, t.kind, t.started_at),
+    // filedFactsStamp() reads max(started_at) across every ticker; the doc index can't serve it.
+    index('filed_fact_reads_started_idx').on(t.started_at),
+  ],
 )
 
 // ─────────────────────────────────────────────
@@ -415,16 +426,20 @@ export const trackRecordSearches = sqliteTable(
 // its quarter hour, how it ended, and where the rows that matched an alert
 // are kept. A file is read once; its matches are press candidates whose
 // search_id is `gkg:<stamp>`. missing: GDELT never published that quarter hour.
-export const gdeltFiles = sqliteTable('gdelt_files', {
-  stamp: text('stamp').primaryKey(),
-  url: text('url').notNull(),
-  status: text('status').notNull(), // ok | missing
-  rows: integer('rows').notNull(),
-  matched: integer('matched').notNull(),
-  raw_key: text('raw_key'),
-  fetched_at: text('fetched_at').notNull(),
-  recorded_at: text('recorded_at').notNull(),
-})
+export const gdeltFiles = sqliteTable(
+  'gdelt_files',
+  {
+    stamp: text('stamp').primaryKey(),
+    url: text('url').notNull(),
+    status: text('status').notNull(), // ok | missing
+    rows: integer('rows').notNull(),
+    matched: integer('matched').notNull(),
+    raw_key: text('raw_key'),
+    fetched_at: text('fetched_at').notNull(),
+    recorded_at: text('recorded_at').notNull(),
+  },
+  (t) => [index('gdelt_files_recorded_idx').on(t.recorded_at)],
+)
 
 // One row per (alert, kind, url): an article or newsroom post inside the
 // alert's window that matched its search terms. A candidate is not a match;
@@ -713,7 +728,10 @@ export const filingDetections = sqliteTable(
     fetched_at: text('fetched_at'),
     recorded_at: text('recorded_at').notNull(),
   },
-  (t) => [index('filing_detections_alerted_idx').on(t.alerted_at)],
+  (t) => [
+    index('filing_detections_alerted_idx').on(t.alerted_at),
+    index('filing_detections_recorded_idx').on(t.recorded_at),
+  ],
 )
 
 // How far the rollup above has rolled: one row, name 'source_runs'.
@@ -744,7 +762,11 @@ export const deployChecks = sqliteTable(
     source_url: text('source_url').notNull(),
     fetched_at: text('fetched_at').notNull(),
   },
-  (t) => [index('deploy_checks_created_idx').on(t.created_at)],
+  (t) => [
+    index('deploy_checks_created_idx').on(t.created_at),
+    // reliabilityStamp() reads max(fetched_at) on every /api/reliability request.
+    index('deploy_checks_fetched_idx').on(t.fetched_at),
+  ],
 )
 
 // One row per (capture, count): what an archived job board listed. Each

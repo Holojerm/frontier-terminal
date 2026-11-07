@@ -246,6 +246,13 @@
       "when": 1794027775917,
       "tag": "0034_gdelt_files",
       "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "6",
+      "when": 1794068625920,
+      "tag": "0035_stamp_indexes",
+      "breakpoints": true
     }
   ]
 }

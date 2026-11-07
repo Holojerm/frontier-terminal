@@ -3,7 +3,14 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { warmCaches, warmMarkerKey, warmPaths, type WarmDeps } from '../server/utils/cache-warm'
+import {
+  WARM_LEASE_TTL_SECONDS,
+  warmCaches,
+  warmLeaseKey,
+  warmMarkerKey,
+  warmPaths,
+  type WarmDeps,
+} from '../server/utils/cache-warm'
 import type { CacheStore } from '../server/utils/terminal-cache'
 
 function deps(overrides: Partial<WarmDeps> = {}) {
@@ -76,6 +83,45 @@ describe('warmCaches', () => {
       failed: expect.arrayContaining(['/prices', '/hiring']),
     })
     expect(map.has(warmMarkerKey('abc', 's1'))).toBe(false)
+  })
+})
+
+describe('warmCaches backs off', () => {
+  it('renders nothing while a poll holds the lock, and warms once it is free', async () => {
+    let polling = true
+    const { d, rendered } = deps({ pollRunning: async () => polling })
+    expect(await warmCaches(d, ['/'])).toEqual({
+      status: 'skipped',
+      reason: 'poll-running',
+      stamp: 's1',
+    })
+    expect(rendered).toEqual([])
+
+    polling = false
+    expect((await warmCaches(d, ['/'])).status).toBe('warmed')
+  })
+
+  it('leaves a (build, stamp) to whichever isolate claimed it first', async () => {
+    const { d, map, rendered } = deps()
+    map.set(warmLeaseKey('abc', 's1'), true)
+    expect(await warmCaches(d, ['/'])).toEqual({ status: 'skipped', reason: 'leased', stamp: 's1' })
+    expect(rendered).toEqual([])
+  })
+
+  it('claims the stamp before rendering, with a TTL that lapses before the next tick', async () => {
+    const ttls = new Map<string, number | undefined>()
+    const { d } = deps()
+    const store: CacheStore = {
+      get: d.store.get,
+      set: async (key, value, opts) => {
+        ttls.set(key, opts?.ttl)
+        return d.store.set(key, value, opts)
+      },
+    }
+    await warmCaches({ ...d, store }, ['/'])
+    expect(ttls.get(warmLeaseKey('abc', 's1'))).toBe(WARM_LEASE_TTL_SECONDS)
+    expect(WARM_LEASE_TTL_SECONDS).toBeGreaterThanOrEqual(60)
+    expect(WARM_LEASE_TTL_SECONDS).toBeLessThan(300)
   })
 })
 
