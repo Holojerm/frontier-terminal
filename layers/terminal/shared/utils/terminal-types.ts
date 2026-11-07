@@ -286,7 +286,7 @@ export interface CoverageData extends Stamp {
   track_record: TrackRecordSource[]
   totals: TableCounts
   exports: ExportTableInfo[]
-  /** Newest fetch across every source. */
+  /** Newest fetch across every source, failed reads included. */
   latest_fetched_at: string | null
   /** Oldest fetch on record: where every table's history starts. */
   first_fetched_at: string | null
@@ -330,6 +330,7 @@ export interface OverviewData extends Stamp {
   info: AlertView[]
   info_count: number
   totals: TableCounts
+  /** Newest read across every source: a fetch whose page was parsed into the store. */
   latest_fetched_at: string | null
 }
 
