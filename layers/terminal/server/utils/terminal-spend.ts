@@ -195,6 +195,7 @@ export function summarizeSpend(
     share_low: totalLow > 0 ? s.low / totalLow : null,
     share_high: totalHigh > 0 ? s.high / totalHigh : null,
     token_share: labTokens > 0 ? s.tokens / labTokens : null,
+    priced_token_share: totalPriced > 0 ? s.pricedTokens / totalPriced : null,
     models: s.models,
   }))
 

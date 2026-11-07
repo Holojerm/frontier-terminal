@@ -42,6 +42,16 @@ describe('measured values', () => {
     ])
     expect(detailRows(undefined)).toEqual([])
   })
+
+  it('says when the comparator could not be compared, rather than dropping it', () => {
+    const why = 'OpenAI had no priced tokens in the window, so it could not be compared.'
+    const rows = detailRows({
+      ratios: { anthropic: 1.87 },
+      compare: null,
+      compare_unavailable: why,
+    })
+    expect(rows).toContainEqual({ label: 'Not compared', value: why })
+  })
 })
 
 describe('judged facts', () => {

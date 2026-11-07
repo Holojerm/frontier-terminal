@@ -46,7 +46,13 @@ const round = (n: number, places = 4) => Math.round(n * 10 ** places) / 10 ** pl
 const newestProv = (rows: readonly RankingObservation[]) =>
   rows.reduce((a, b) => (b.fetched_at > a.fetched_at ? b : a))
 
-/** Spend share ÷ token share per lab, newest 7-day window, today's list prices. */
+/**
+ * Spend share ÷ token share per lab, newest 7-day window, today's list
+ * prices. Both shares are over priced tokens: the spend share's denominator
+ * is the priced labs' dollars, so dividing by a share of every lab's tokens
+ * (unpriced labs included) understated each lab's token share and inflated
+ * every ratio.
+ */
 async function spendPremium(
   db: PipelineDb,
   company: LabId,
@@ -57,11 +63,18 @@ async function spendPremium(
   if (!summary.window) return []
   const ratios: Partial<Record<LabId, number>> = {}
   for (const p of summary.providers) {
-    if (p.share_low === null || p.share_high === null || !p.token_share) continue
-    ratios[p.provider] = round((p.share_low + p.share_high) / 2 / p.token_share)
+    if (p.share_low === null || p.share_high === null || !p.priced_token_share) continue
+    ratios[p.provider] = round((p.share_low + p.share_high) / 2 / p.priced_token_share)
   }
   const value = ratios[company]
   if (value === undefined) return []
+  // A comparator with nothing priced has no ratio. Say so on the reading
+  // rather than letting the floor check run as if there were no comparator.
+  const compare = comparator ? (ratios[comparator] ?? null) : null
+  const compare_unavailable =
+    comparator && compare === null
+      ? `${companyName(comparator)} had no priced tokens in the window, so it could not be compared.`
+      : null
   const { from, to } = summary.window
   const prov = newestProv(rows.filter((r) => r.date >= from && r.date <= to))
   const own = summary.providers.find((p) => p.provider === company)!
@@ -75,8 +88,10 @@ async function spendPremium(
         spend_share_low: own.share_low,
         spend_share_high: own.share_high,
         token_share: own.token_share,
+        priced_token_share: own.priced_token_share,
         coverage: own.coverage,
-        compare: comparator ? (ratios[comparator] ?? null) : null,
+        compare,
+        compare_unavailable,
       },
       source_url: prov.source_url,
       fetched_at: prov.fetched_at,

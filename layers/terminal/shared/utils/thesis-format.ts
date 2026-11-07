@@ -154,6 +154,9 @@ export function detailRows(detail: unknown): DetailRow[] {
     })
     if (parts.length) rows.push({ label: 'By lab', value: parts.join(' · ') })
   }
+  if (typeof d.compare_unavailable === 'string') {
+    rows.push({ label: 'Not compared', value: d.compare_unavailable })
+  }
   const names = (record: unknown) => Object.keys(asRecord(record) ?? {}).map(companyName)
   const noFeed = names(d.no_feed)
   if (noFeed.length) rows.push({ label: 'No public feed', value: noFeed.join(', ') })

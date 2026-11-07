@@ -168,6 +168,10 @@ describe('summarizeSpend', () => {
     expect(by.xai).toMatchObject({ tokens: 1 * M, priced_tokens: 0, coverage: 0 })
     // Token share is among the four labs' tokens (66M), dollars among priced ones.
     expect(by.openai!.token_share).toBeCloseTo(30 / 66)
+    // The like-for-like token share is among priced tokens (30M), as the dollars are.
+    expect(by.anthropic!.priced_token_share).toBeCloseTo(10 / 30)
+    expect(by.google!.priced_token_share).toBeCloseTo(20 / 30)
+    expect(by.openai!.priced_token_share).toBe(0)
 
     expect(s.excluded).toEqual([
       {
@@ -198,6 +202,7 @@ describe('summarizeSpend', () => {
     expect(s.window).toBeNull()
     expect(s.totals.spend_high).toBe(0)
     expect(s.providers.every((p) => p.share_low === null && p.coverage === null)).toBe(true)
+    expect(s.providers.every((p) => p.priced_token_share === null)).toBe(true)
     expect(s.excluded).toEqual([])
   })
 })
