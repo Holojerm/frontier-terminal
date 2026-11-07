@@ -1,7 +1,7 @@
 # Voice
 
-How the site's words should sound. It's modeled on Jeremy's own writing (the Substack, hand
-edits to take-home prose, and ~600 chat messages) and on what Jeremy cuts from AI drafts.
+How the site's words should sound. It's modeled on Jeremy's own writing and on what Jeremy cuts
+from AI drafts.
 
 Read this before writing or changing anything a visitor reads.
 

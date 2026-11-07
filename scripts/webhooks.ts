@@ -14,7 +14,7 @@
 // add and test need NUXT_WEBHOOK_SIGNING_KEY, the same value the Worker has:
 // each webhook's secret is derived from it (webhook-sign.ts). Locally bun
 // reads it from .env. For production, pass it from 1Password:
-//   NUXT_WEBHOOK_SIGNING_KEY="$(op read 'op://Private/Frontier Terminal webhook signing key/password')" \
+//   NUXT_WEBHOOK_SIGNING_KEY="$(op read 'op://…')" \
 //     bun run webhooks:add -- … --remote
 //
 // The secret is printed once, on stdout. Everything else goes to stderr.

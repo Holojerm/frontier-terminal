@@ -14,7 +14,7 @@
 //
 // Minting a token needs a token that may manage tokens, which the `cf` login
 // is not. Pass one in BULK_GRANT_API_TOKEN for this command only, e.g.
-//   BULK_GRANT_API_TOKEN="$(op read 'op://Private/Frontier Terminal bulk grants/credential')" bun run bulk:grant -- …
+//   BULK_GRANT_API_TOKEN="$(op read 'op://…')" bun run bulk:grant -- …
 // It goes to the `cf` child process and nowhere else: not to wrangler (which
 // would try it against D1), not to a log. The account id comes from
 // CLOUDFLARE_ACCOUNT_ID or, failing that, the `cf` login's only account.
