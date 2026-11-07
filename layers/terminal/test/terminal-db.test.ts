@@ -23,6 +23,7 @@ import {
   queryIncidents,
   queryOverview,
   queryPrices,
+  sourceStamps,
 } from '../server/utils/terminal-db'
 import { fieldDiff, fieldTable } from '../server/utils/terminal-json'
 import { fixtureText, manifest } from './pipeline/fixtures'
@@ -569,6 +570,20 @@ describe('after a baseline poll of every source', () => {
     const alerts = await queryAlerts(db, await ctx(), 50)
     expect(alerts.rows).toEqual([])
     expect(alerts.total).toBe(0)
+  })
+
+  it('matrix: an unchanged repoll moves the basis check to that poll', async () => {
+    const before = (await queryPrices(db, await ctx())).matrix.cells.find(
+      (c) => c.provider === 'xai' && c.class === 'flagship',
+    )!
+    await run(['xai-models-md'])
+    const after = (await queryPrices(db, await ctx())).matrix.cells.find(
+      (c) => c.provider === 'xai' && c.class === 'flagship',
+    )!
+    const newest = (await sourceStamps(db)).get('xai-models-md')!.newest.fetched_at
+    expect(after.basis_current).toBe(true)
+    expect(after.basis_checked_at! > before.basis_checked_at!).toBe(true)
+    expect(after.basis_checked_at).toBe(newest)
   })
 
   it('matrix: a vendor rewriting its recommendation puts the cell under review, price intact', async () => {

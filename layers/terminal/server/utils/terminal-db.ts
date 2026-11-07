@@ -1036,7 +1036,7 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
   return {
     ...stampOf(ctx),
     rows,
-    matrix: buildMatrix(rows, basisChecks(checks), classMap),
+    matrix: buildMatrix(rows, basisChecks(checks, stamps), classMap),
     counts: {
       total: rows.length,
       priced: rows.filter((r) => !r.removed && pricedRow(r)).length,
@@ -1117,9 +1117,15 @@ export interface BasisCheck {
   fetched_at: string
 }
 
-/** Stored 'recommendation' entities as checks, keyed by provider:class. */
+/**
+ * Stored 'recommendation' entities as checks, keyed by provider:class. An
+ * entity's fetched_at only moves when its verdict changes, but every good
+ * poll writes a snapshot and re-reads the page, so with `stamps` the check is
+ * dated to the source's newest snapshot.
+ */
 export function basisChecks(
   entities: readonly (typeof tables.entities.$inferSelect)[],
+  stamps: ReadonlyMap<string, SourceStamp> = new Map(),
 ): Map<string, BasisCheck> {
   const out = new Map<string, BasisCheck>()
   for (const e of entities) {
@@ -1129,12 +1135,13 @@ export function basisChecks(
     const klass = str(payload.class)
     const model_slug = str(payload.model_slug)
     if (!provider || !klass || !model_slug || typeof payload.present !== 'boolean') continue
+    const polled = stamps.get(e.source_id)?.newest.fetched_at
     out.set(`${provider}:${klass}`, {
       provider,
       class: klass,
       model_slug,
       present: payload.present,
-      fetched_at: e.fetched_at,
+      fetched_at: polled && polled > e.fetched_at ? polled : e.fetched_at,
     })
   }
   return out
