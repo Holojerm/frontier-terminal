@@ -650,7 +650,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'the judge rated that candidate the same event and every earlier candidate not. lead_hours is that time minus saw_at, ' +
         'positive when the terminal saw it first. Other states say why there is no time: window-open (searched once 7 days have passed), ' +
         'not-searched, search-failed, not-searchable, no-feed, none-found, not-yet-rated (never a guessed lead), no-match. ' +
-        'press.published_at is when GDELT’s crawler first saw the article, not when the outlet published it, and GDELT misses outlets. ' +
+        'press.published_at is the quarter hour GDELT’s crawler read the article, not when the outlet published it, and GDELT misses outlets. ' +
         'A lead is not a trading signal. press and newsroom tally led, lagged, tied and the median lead over matched rows. ' +
         PROVENANCE,
       inputSchema: z.object({ as_of: AsOfSchema }),

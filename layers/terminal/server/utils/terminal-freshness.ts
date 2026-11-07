@@ -7,7 +7,7 @@
 //
 //   judge         the judge routine (claude.ai), judge_runs — critical
 //   gdelt-search  the GDELT Actions job (.github/workflows/gdelt-search.yml),
-//                 track_record_searches
+//                 gdelt_files
 //   press-drafts  the press-drafts routine (claude.ai), the KV drafted markers
 //
 // A new producer gets a check here and its kind a tier in
@@ -20,33 +20,35 @@ import * as tables from '#server/db/schema'
 
 import { judgeFreshnessCheck } from '../pipeline/judge/watchdog'
 import { parsePressList, pendingPressAlerts } from '../pipeline/press'
-import { dueGdeltSearches } from '../pipeline/track-record/search'
+import { GKG_READY_MS, stampIso } from '../pipeline/track-record/gkg'
+import { unreadStamps } from '../pipeline/track-record/search'
 import { taskHeartbeatCheck, type FreshnessCheck } from './freshness'
 
 const HOUR_MS = 60 * 60 * 1000
 
-/** The GDELT job runs hourly and stops at GDELT's first 429, so a few empty hours are normal. */
+/**
+ * The GDELT job runs hourly and GitHub's scheduler skips some hours (on
+ * 2026-11-06 it fired 2 of 12), so a few empty hours are normal.
+ */
 export const GDELT_SILENCE_MS = 6 * HOUR_MS
 
 export const gdeltFreshnessCheck: FreshnessCheck = {
   key: 'gdelt-search',
-  label: 'The GDELT search job (GitHub Actions › GDELT search)',
+  label: 'The GDELT file job (GitHub Actions › GDELT search)',
   kind: 'gdelt_search_silent',
   maxAgeMs: GDELT_SILENCE_MS,
-  path: '/api/gdelt/pending',
+  path: '/api/gdelt/work',
   async evidence(db, now) {
-    // The oldest due search has been owed since its window closed.
-    const [due] = await dueGdeltSearches(db, now, 1)
-    const [ok] = await db
-      .select({ at: max(tables.trackRecordSearches.searched_at) })
-      .from(tables.trackRecordSearches)
-      .where(
-        and(
-          eq(tables.trackRecordSearches.source, 'gdelt'),
-          eq(tables.trackRecordSearches.status, 'ok'),
-        ),
-      )
-    return { owedSince: due?.window_end ?? null, lastOkAt: ok?.at ?? null }
+    // The oldest unread file has been owed since it was due.
+    const read = await db.select({ stamp: tables.gdeltFiles.stamp }).from(tables.gdeltFiles)
+    const [oldest] = unreadStamps(now, new Set(read.map((r) => r.stamp)))
+    const [ok] = await db.select({ at: max(tables.gdeltFiles.recorded_at) }).from(tables.gdeltFiles)
+    return {
+      owedSince: oldest
+        ? new Date(Date.parse(stampIso(oldest)) + GKG_READY_MS).toISOString()
+        : null,
+      lastOkAt: ok?.at ?? null,
+    }
   },
 }
 

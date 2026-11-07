@@ -1,65 +1,42 @@
-// Find candidates for each material alert once its window has closed: the
-// GDELT articles and the lab's own newsroom posts within WINDOW_DAYS either
-// side of when the terminal saw the change, matched on terms built from the
-// cited change rows (terms.ts). Candidates only: the judge decides which are
-// the same event (review.ts).
+// Find candidates for each material alert: the GDELT articles and the lab's
+// own newsroom posts within WINDOW_DAYS either side of when the terminal saw
+// the change, matched on terms built from the cited change rows (terms.ts).
+// Candidates only: the judge decides which are the same event (review.ts).
 //
 // The two sides run in different places. The newsroom side reads posts the
-// poll already stored, so the */5 cron does it here (runTrackRecordSearch).
-// The GDELT side does not run on Cloudflare at all: Workers share egress IPs,
-// GDELT limits per IP, and from those IPs 85% of our queries drew a 429 for
-// other tenants' traffic. A GitHub Actions job (scripts/gdelt-search.ts) asks
-// /api/gdelt/pending for the due searches (dueGdeltSearches), queries GDELT
-// itself at GDELT's own pace, and posts each answer to /api/gdelt/result
-// (recordGdeltResult), which stores the bytes and the candidates exactly as
-// the Worker's own fetch did. An alert is searched once its window has
-// closed, so both sides of it are in; until then the page says the window is
-// open.
+// poll already stored, so the */5 cron does it here (runTrackRecordSearch),
+// once an alert's window has closed.
+//
+// The press side reads GDELT's 15-minute GKG files (gkg.ts), each once, in
+// order, off the Worker: an Actions job (scripts/gdelt-search.ts) asks /api/gdelt/work for the next unread files and
+// the alerts whose windows cover them (gkgWork), reads each file, and posts
+// the rows that match an alert's terms to /api/gdelt/file (recordGkgFile).
+// The Worker parses and matches every posted row again with this same code
+// before keeping it, so the job can neither pick the matches nor fill an
+// alert it was not handed. Candidates collect while a window is open; once
+// every file in the window has been read, the cron writes the side's search
+// row. Backfill is the same path: the queue starts at GKG_FROM.
+//
+// GDELT's search API was used before (rows with a DOC API source_url). It
+// limits requests per IP and answered most queries with a 429 from every IP
+// we tried; the page ignores those rows' failures (terminal-track-record.ts).
 
-import { and, asc, desc, gte, inArray } from 'drizzle-orm'
+import { and, asc, count, eq, gte, inArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import { recordOpsEvent } from '#server/utils/ops'
-import { ChangeRow, contentHash, contentHashOfText } from '../contracts'
-import { RATE_LIMITED_DETAIL } from '../fetch'
+import { ChangeRow, contentHash } from '../contracts'
 import type { RawStore } from '../refresh'
 import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '../store'
 import { NEWSROOM_OF } from '../../theses/recipes/newsrooms'
-import { GDELT_HORIZON_DAYS, gdeltUrl, parseGdeltArticles, type PressArticle } from './gdelt'
-import { alertTerms, gdeltQuery, matchesWhat, type SearchTerms } from './terms'
+import { PRESS_CANDIDATE_LIMIT, titleKey } from './gdelt'
+import { GKG_BASE, GKG_SLOT_MS, gkgSlots, gkgUrl, parseGkgRow, stampIso } from './gkg'
+import { alertTerms, gdeltQuery, matchesArticle, matchesWhat, type SearchTerms } from './terms'
 import { TRACK_RECORD_FROM, sawIt, searchState, trackWindow, type TrackWindow } from './window'
 
 export const MATERIAL_SEVERITIES = ['notable', 'critical'] as const
 
-/** GDELT searches handed out per /api/gdelt/pending call. */
-export const GDELT_PENDING_LIMIT = 10
-
-/**
- * Failed GDELT searches after which an alert stops being retried. A busy
- * GDELT is not one (transientSearch): a 429 or a timeout says GDELT had no
- * time for us, not that the query is bad, and counting those abandoned the
- * oldest alert after three busy ticks (24 of 105 alerts on 2026-11-05 for
- * 429s; one more on 2026-11-06 for timeouts).
- */
-export const MAX_FAILED_SEARCHES = 3
-
-/** The detail of a search GDELT did not answer in time. */
-export const TIMEOUT_DETAIL = 'timeout'
-
-/**
- * A failed search that says GDELT was busy, not that the query failed: a 429,
- * or no answer in time. Retried, never counted toward giving up, never mailed.
- * `TimeoutError` matches the rows the Worker's own fetcher wrote before the
- * search moved to GitHub Actions ("fetch threw: TimeoutError: ...").
- */
-export function transientSearch(s: { status: string; detail: string | null }): boolean {
-  if (s.status !== 'failed' || !s.detail) return false
-  return (
-    s.detail.startsWith(RATE_LIMITED_DETAIL) ||
-    s.detail.startsWith(TIMEOUT_DETAIL) ||
-    s.detail.includes('TimeoutError')
-  )
-}
+/** GKG files handed out per /api/gdelt/work call: about two minutes of the job's reading. */
+export const GKG_FILES_PER_CALL = 24
 
 /** Newsroom posts kept per alert, earliest first. */
 export const NEWSROOM_CANDIDATE_LIMIT = 10
@@ -173,10 +150,8 @@ async function searchesOf(db: PipelineDb) {
       alert_id: tables.trackRecordSearches.alert_id,
       source: tables.trackRecordSearches.source,
       status: tables.trackRecordSearches.status,
-      detail: tables.trackRecordSearches.detail,
     })
     .from(tables.trackRecordSearches)
-    .orderBy(desc(tables.trackRecordSearches.searched_at))
 }
 
 export interface SearchDeps {
@@ -186,7 +161,9 @@ export interface SearchDeps {
 export interface SearchRunReport {
   /** Newsroom searches written this run. */
   newsroom: number
-  /** Searches recorded as skipped: no terms, or a window past GDELT's horizon. */
+  /** GDELT searches written this run: alerts whose window's files have all been read. */
+  gdelt: number
+  /** Searches recorded as skipped: no search terms. */
   skipped: number
   candidates: number
 }
@@ -209,42 +186,57 @@ interface SearchRow {
 interface AlertPlan {
   alert: AlertForSearch
   window: TrackWindow
-  state: 'due' | 'beyond-horizon'
   terms: SearchTerms | null
   gdeltDone: boolean
   newsroomDone: boolean
-  /** MAX_FAILED_SEARCHES real failures: GDELT is not asked again. */
-  gdeltGivenUp: boolean
 }
 
-/** Every material alert whose window has closed, oldest first, with what is left to do. */
-async function closedAlerts(db: PipelineDb, now: Date): Promise<AlertPlan[]> {
+/** Every material alert with a saw-it time, oldest first, with its window and what is done. */
+async function alertPlans(db: PipelineDb): Promise<AlertPlan[]> {
   const [alerts, searches] = await Promise.all([materialAlerts(db), searchesOf(db)])
   const done = new Set<string>()
-  const failures = new Map<string, number>()
   for (const s of searches) {
-    const key = `${s.alert_id}:${s.source}`
-    if (s.status === 'ok' || s.status === 'skipped') done.add(key)
-    else if (!transientSearch(s)) failures.set(key, (failures.get(key) ?? 0) + 1)
+    if (s.status === 'ok' || s.status === 'skipped') done.add(`${s.alert_id}:${s.source}`)
   }
   const plans: AlertPlan[] = []
   for (const alert of alerts) {
     const saw = sawIt(alert.changes)
     if (!saw) continue
-    const window = trackWindow(saw.at)
-    const state = searchState(window, now)
-    if (state === 'open') continue
     plans.push({
       alert,
-      window,
-      state,
+      window: trackWindow(saw.at),
       terms: alertTerms(alert.changes),
       gdeltDone: done.has(`${alert.id}:gdelt`),
       newsroomDone: done.has(`${alert.id}:newsroom`),
-      gdeltGivenUp: (failures.get(`${alert.id}:gdelt`) ?? 0) >= MAX_FAILED_SEARCHES,
     })
   }
   return plans
+}
+
+/** Every GKG file already read, ok or missing. */
+async function readStamps(db: PipelineDb): Promise<Set<string>> {
+  const rows = await db.select({ stamp: tables.gdeltFiles.stamp }).from(tables.gdeltFiles)
+  return new Set(rows.map((r) => r.stamp))
+}
+
+/** The quarter hours whose file is due and not read yet, oldest first. */
+export function unreadStamps(now: Date, read: ReadonlySet<string>): string[] {
+  return gkgSlots(now).filter((s) => !read.has(s))
+}
+
+/**
+ * Whether every GKG file a window needs has been read: the quarter hour its
+ * end falls in is due, and nothing before its end is unread. A file is due
+ * GKG_READY_MS after its quarter hour, so a window that closed a moment ago
+ * waits for its last files.
+ */
+export function windowRead(
+  window: TrackWindow,
+  lastDue: string | null,
+  oldestUnread: string | null,
+): boolean {
+  if (!lastDue || Date.parse(stampIso(lastDue)) + GKG_SLOT_MS < Date.parse(window.end)) return false
+  return oldestUnread === null || Date.parse(stampIso(oldestUnread)) >= Date.parse(window.end)
 }
 
 const baseOf = (p: AlertPlan, searched_at: string) => ({
@@ -254,18 +246,47 @@ const baseOf = (p: AlertPlan, searched_at: string) => ({
   searched_at,
 })
 
+async function pressCounts(db: PipelineDb, alertIds: readonly string[]) {
+  const out = new Map<string, number>()
+  for (const group of chunk([...alertIds], D1_MAX_BOUND_PARAMS - 5)) {
+    const rows = await db
+      .select({ alert_id: tables.trackRecordCandidates.alert_id, n: count() })
+      .from(tables.trackRecordCandidates)
+      .where(
+        and(
+          eq(tables.trackRecordCandidates.kind, 'press'),
+          inArray(tables.trackRecordCandidates.alert_id, group),
+        ),
+      )
+      .groupBy(tables.trackRecordCandidates.alert_id)
+    for (const r of rows) out.set(r.alert_id, r.n)
+  }
+  return out
+}
+
 /**
- * The cron's half: the newsroom side of every closed alert, and the GDELT
- * side's skips (no search terms, or a window past GDELT's horizon). Never
- * fetches anything; the GDELT queries are the Actions job's.
+ * The cron's half, for every alert whose window has closed: the newsroom
+ * side, the GDELT side's search row once every file in the window has been
+ * read, and a skip for an alert with no search terms. Never fetches anything.
  */
 export async function runTrackRecordSearch(
   db: PipelineDb,
   deps: SearchDeps,
 ): Promise<SearchRunReport> {
-  const report: SearchRunReport = { newsroom: 0, skipped: 0, candidates: 0 }
-  for (const p of await closedAlerts(db, deps.now())) {
-    if (p.gdeltDone && p.newsroomDone) continue
+  const report: SearchRunReport = { newsroom: 0, gdelt: 0, skipped: 0, candidates: 0 }
+  const now = deps.now()
+  const closed = (await alertPlans(db)).filter(
+    (p) => searchState(p.window, now) !== 'open' && !(p.gdeltDone && p.newsroomDone),
+  )
+  if (closed.length === 0) return report
+  const lastDue = gkgSlots(now).at(-1) ?? null
+  const oldestUnread = unreadStamps(now, await readStamps(db))[0] ?? null
+  const counts = await pressCounts(
+    db,
+    closed.map((p) => p.alert.id),
+  )
+
+  for (const p of closed) {
     const searched_at = deps.now().toISOString()
     const base = baseOf(p, searched_at)
 
@@ -282,7 +303,7 @@ export async function runTrackRecordSearch(
           detail: 'no search terms for the cited change types',
           candidates: 0,
           raw_key: null,
-          source_url: source === 'gdelt' ? gdeltUrl('', p.window.start, p.window.end) : '',
+          source_url: source === 'gdelt' ? GKG_BASE : '',
         })
         report.skipped++
       }
@@ -325,160 +346,192 @@ export async function runTrackRecordSearch(
       report.candidates += posts.length
     }
 
-    if (!p.gdeltDone && !p.gdeltGivenUp && p.state === 'beyond-horizon') {
-      const query = gdeltQuery(p.terms)
+    if (!p.gdeltDone && windowRead(p.window, lastDue, oldestUnread)) {
+      // The candidates were stored as each file was read; this row says the window is complete.
       await insertSearch(db, {
         ...base,
         id: crypto.randomUUID(),
         source: 'gdelt',
-        query,
-        status: 'skipped',
-        detail: `the window starts more than ${GDELT_HORIZON_DAYS} days ago, past what GDELT's DOC API searches`,
-        candidates: 0,
+        query: gdeltQuery(p.terms),
+        status: 'ok',
+        detail: null,
+        candidates: counts.get(p.alert.id) ?? 0,
         raw_key: null,
-        source_url: gdeltUrl(query, p.window.start, p.window.end),
+        source_url: GKG_BASE,
       })
-      report.skipped++
+      report.gdelt++
     }
   }
   return report
 }
 
-export interface DueGdeltSearch {
+export interface GkgAlert {
   alert_id: string
-  query: string
-  /** The exact URL to fetch; /api/gdelt/result refuses an answer for any other. */
-  url: string
   window_start: string
   window_end: string
+  terms: SearchTerms
 }
 
-/** The GDELT searches due now, oldest alert first: what the Actions job asks GDELT. */
-export async function dueGdeltSearches(
-  db: PipelineDb,
-  now: Date,
-  limit: number = GDELT_PENDING_LIMIT,
-): Promise<DueGdeltSearch[]> {
-  const due: DueGdeltSearch[] = []
-  for (const p of await closedAlerts(db, now)) {
-    if (due.length >= limit) break
-    if (p.state !== 'due' || !p.terms || p.gdeltDone || p.gdeltGivenUp) continue
-    const query = gdeltQuery(p.terms)
-    due.push({
+/** Material alerts with search terms whose window overlaps [from, to], oldest first. */
+async function alertsOverlapping(db: PipelineDb, from: string, to: string): Promise<GkgAlert[]> {
+  const out: GkgAlert[] = []
+  for (const p of await alertPlans(db)) {
+    if (!p.terms || p.window.end < from || p.window.start > to) continue
+    out.push({
       alert_id: p.alert.id,
-      query,
-      url: gdeltUrl(query, p.window.start, p.window.end),
       window_start: p.window.start,
       window_end: p.window.end,
+      terms: p.terms,
     })
   }
-  return due
+  return out
 }
 
-/** What the Actions job saw when it fetched a due search's URL. */
-export type GdeltAnswer =
-  | { kind: 'http'; status: number; text: string }
-  | { kind: 'timeout' }
-  | { kind: 'error'; message: string }
+export interface GkgWork {
+  files: { stamp: string; url: string }[]
+  /** The alerts whose windows overlap these files; each row is matched against the ones covering its quarter hour. */
+  alerts: GkgAlert[]
+}
 
-export interface GdeltResultInput {
-  alert_id: string
-  url: string
+/** The next unread GKG files, oldest first, and the alerts to match them against. */
+export async function gkgWork(
+  db: PipelineDb,
+  now: Date,
+  limit: number = GKG_FILES_PER_CALL,
+): Promise<GkgWork> {
+  const stamps = unreadStamps(now, await readStamps(db)).slice(0, limit)
+  if (stamps.length === 0) return { files: [], alerts: [] }
+  const alerts = await alertsOverlapping(db, stampIso(stamps[0]!), stampIso(stamps.at(-1)!))
+  return { files: stamps.map((stamp) => ({ stamp, url: gkgUrl(stamp) })), alerts }
+}
+
+export interface GkgFileInput {
+  stamp: string
+  /** When the job downloaded the file. */
   fetched_at: string
-  answer: GdeltAnswer
+  /** missing: GDELT answered 404, it never published that quarter hour. */
+  status: 'ok' | 'missing'
+  /** Rows the file held. */
+  rows: number
+  /** Each row the job matched to an alert, exactly as the file has it. */
+  matches: { alert_id: string; row: string }[]
 }
 
-export type GdeltResultOutcome =
-  | { recorded: true; status: 'ok' | 'failed'; transient: boolean; candidates: number }
-  | { recorded: false; reason: 'not-due' | 'url-mismatch' }
+export type GkgFileOutcome =
+  | { recorded: true; candidates: number; duplicates: number; rejected: number }
+  | { recorded: false; reason: 'not-due' }
 
 /**
- * Store one GDELT answer the Actions job fetched: the search row, the raw
- * bytes in R2, and the articles as press candidates — the same rows the
- * Worker's own fetch wrote. Only for a search that is due, at the URL
- * dueGdeltSearches handed out, so the job can neither pick the query nor
- * fill a side that is done.
+ * Store one GKG file the job read: the file's row, its matched rows in R2, and
+ * those rows as press candidates. Only for a file that is due and not read
+ * yet. A posted match is kept only when the Worker parses the row, finds it in
+ * this file's quarter hour, inside the alert's window, and matching the
+ * alert's terms itself; anything else is counted as rejected. Per alert, a
+ * headline already held and anything past PRESS_CANDIDATE_LIMIT are dropped
+ * as duplicates, so the earliest reports are the ones kept.
  */
-export async function recordGdeltResult(
+export async function recordGkgFile(
   db: PipelineDb,
   raw: RawStore,
-  input: GdeltResultInput,
+  input: GkgFileInput,
   now: Date,
-): Promise<GdeltResultOutcome> {
-  const due = (await dueGdeltSearches(db, now, Number.POSITIVE_INFINITY)).find(
-    (d) => d.alert_id === input.alert_id,
+): Promise<GkgFileOutcome> {
+  if (!gkgSlots(now).includes(input.stamp)) return { recorded: false, reason: 'not-due' }
+  const [already] = await db
+    .select({ stamp: tables.gdeltFiles.stamp })
+    .from(tables.gdeltFiles)
+    .where(eq(tables.gdeltFiles.stamp, input.stamp))
+  if (already) return { recorded: false, reason: 'not-due' }
+
+  const seen_at = stampIso(input.stamp)
+  const url = gkgUrl(input.stamp)
+  const alerts = new Map(
+    (await alertsOverlapping(db, seen_at, seen_at)).map((a) => [a.alert_id, a] as const),
   )
-  if (!due) return { recorded: false, reason: 'not-due' }
-  if (due.url !== input.url) return { recorded: false, reason: 'url-mismatch' }
 
-  const { answer, fetched_at } = input
-  let articles: PressArticle[] | null = null
-  let detail: string | null = null
-  let raw_key: string | null = null
-  if (answer.kind === 'timeout') {
-    detail = `${TIMEOUT_DETAIL}: GDELT did not answer in time`
-  } else if (answer.kind === 'error') {
-    detail = `fetch threw: ${answer.message}`
-  } else if (answer.status === 429) {
-    detail = RATE_LIMITED_DETAIL
-  } else if (answer.status < 200 || answer.status >= 300) {
-    detail = `HTTP ${answer.status}`
-  } else {
-    try {
-      articles = parseGdeltArticles(answer.text)
-      raw_key = `track-record/gdelt/${contentHashOfText(answer.text)}.json`
-      await raw.put(raw_key, answer.text, 'application/json')
-    } catch (error) {
-      articles = null
-      detail = `parse: ${String(error)}`
-    }
+  const held = new Map<string, { ids: Set<string>; titles: Set<string> }>()
+  const existing = alerts.size
+    ? await db
+        .select({
+          id: tables.trackRecordCandidates.id,
+          alert_id: tables.trackRecordCandidates.alert_id,
+          title: tables.trackRecordCandidates.title,
+        })
+        .from(tables.trackRecordCandidates)
+        .where(
+          and(
+            eq(tables.trackRecordCandidates.kind, 'press'),
+            inArray(tables.trackRecordCandidates.alert_id, [...alerts.keys()]),
+          ),
+        )
+    : []
+  const heldOf = (alert_id: string) => {
+    let h = held.get(alert_id)
+    if (!h) held.set(alert_id, (h = { ids: new Set(), titles: new Set() }))
+    return h
+  }
+  for (const c of existing) {
+    const h = heldOf(c.alert_id)
+    h.ids.add(c.id)
+    h.titles.add(titleKey(c.title))
   }
 
-  const search_id = crypto.randomUUID()
-  const status = articles ? 'ok' : 'failed'
-  const row: SearchRow = {
-    id: search_id,
-    alert_id: due.alert_id,
-    source: 'gdelt',
-    query: due.query,
-    window_start: due.window_start,
-    window_end: due.window_end,
-    status,
-    detail: detail?.slice(0, 500) ?? null,
-    candidates: articles?.length ?? 0,
-    searched_at: fetched_at,
-    raw_key,
-    source_url: due.url,
-  }
-  await insertSearch(db, row)
-  const transient = transientSearch(row)
-  if (!articles) {
-    if (!transient) {
-      await recordOpsEvent(db, {
-        kind: 'track_record_search_failed',
-        detail: `GDELT search for alert ${due.alert_id}: ${detail}`,
-      })
+  const rows: CandidateRow[] = []
+  const lines: string[] = []
+  let rejected = 0
+  let duplicates = 0
+  for (const match of input.status === 'ok' ? input.matches : []) {
+    const alert = alerts.get(match.alert_id)
+    const article = parseGkgRow(match.row)
+    if (
+      !alert ||
+      !article ||
+      article.seen_at !== seen_at ||
+      !matchesArticle(article, alert.terms)
+    ) {
+      rejected++
+      continue
     }
-    return { recorded: true, status: 'failed', transient, candidates: 0 }
-  }
-  await insertCandidates(
-    db,
-    articles.map((a) => ({
-      id: candidateId(due.alert_id, 'press', a.url),
-      alert_id: due.alert_id,
+    const h = heldOf(alert.alert_id)
+    const id = candidateId(alert.alert_id, 'press', article.url)
+    const key = titleKey(article.title)
+    if (h.ids.has(id) || h.titles.has(key) || h.ids.size >= PRESS_CANDIDATE_LIMIT) {
+      duplicates++
+      continue
+    }
+    h.ids.add(id)
+    h.titles.add(key)
+    if (!lines.includes(match.row)) lines.push(match.row)
+    rows.push({
+      id,
+      alert_id: alert.alert_id,
       kind: 'press',
-      title: a.title,
+      title: article.title,
       snippet: null,
-      outlet: a.outlet,
-      url: a.url,
-      published_at: a.seen_at,
-      search_id,
-      found_at: fetched_at,
-      source_url: due.url,
-      fetched_at,
-    })),
-  )
-  return { recorded: true, status: 'ok', transient: false, candidates: articles.length }
+      outlet: article.outlet,
+      url: article.url,
+      published_at: article.seen_at,
+      search_id: `gkg:${input.stamp}`,
+      found_at: now.toISOString(),
+      source_url: url,
+      fetched_at: input.fetched_at,
+    })
+  }
+
+  const raw_key = lines.length ? `track-record/gkg/${input.stamp}.tsv` : null
+  if (raw_key) await raw.put(raw_key, `${lines.join('\n')}\n`, 'text/tab-separated-values')
+  await insertCandidates(db, rows)
+  await db.insert(tables.gdeltFiles).values({
+    stamp: input.stamp,
+    url,
+    status: input.status,
+    rows: input.status === 'ok' ? input.rows : 0,
+    matched: rows.length,
+    raw_key,
+    fetched_at: input.fetched_at,
+    recorded_at: now.toISOString(),
+  })
+  return { recorded: true, candidates: rows.length, duplicates, rejected }
 }
 
 const NEWSROOM_URLS: Readonly<Record<string, string>> = Object.fromEntries(

@@ -24,7 +24,7 @@ import type { AlertSeverity } from '../../shared/utils/terminal-tiers'
 import * as tables from '#server/db/schema'
 import { ChangeRow } from '../pipeline/contracts'
 import { candidateTitle } from '../pipeline/track-record/gdelt'
-import { MATERIAL_SEVERITIES, transientSearch } from '../pipeline/track-record/search'
+import { MATERIAL_SEVERITIES } from '../pipeline/track-record/search'
 import {
   TRACK_RECORD_FROM,
   WINDOW_DAYS,
@@ -81,11 +81,8 @@ export function sideOf(
   if (!ok) {
     const skipped = searches.find((s) => s.status === 'skipped')
     if (skipped) return side(noFeedState, { detail: skipped.detail })
-    const failed = searches.find((s) => s.status === 'failed' && !transientSearch(s))
+    const failed = searches.find((s) => s.status === 'failed')
     if (failed) return side('search-failed', { detail: failed.detail })
-    if (searches.some(transientSearch)) {
-      return side('not-searched', { detail: 'GDELT was busy on the last try; it is retried.' })
-    }
     return side('not-searched')
   }
   if (candidates.length === 0) return side('none-found')
@@ -218,7 +215,15 @@ export async function queryTrackRecord(
       saw_source_url: saw.source_url,
       window_from: window.start,
       window_to: window.end,
-      press: sideOf(open, own('gdelt'), kind('press'), verdictOf, saw.at),
+      // A failure from GDELT's search API (before the GKG files) says nothing now: every
+      // window's files are read, so until they are, the side is not searched yet.
+      press: sideOf(
+        open,
+        own('gdelt').filter((s) => s.status !== 'failed'),
+        kind('press'),
+        verdictOf,
+        saw.at,
+      ),
       newsroom: sideOf(open, own('newsroom'), kind('newsroom'), verdictOf, saw.at, 'no-feed'),
     })
   }

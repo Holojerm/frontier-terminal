@@ -2,7 +2,6 @@
 // Pure functions of the cited change rows and the clock.
 
 import type { ChangeRow } from '../contracts'
-import { GDELT_HORIZON_DAYS } from './gdelt'
 
 /** The first alert day the track record covers. */
 export const TRACK_RECORD_FROM = '2026-09-08'
@@ -54,13 +53,9 @@ export function trackWindow(saw: string, days: number = WINDOW_DAYS): TrackWindo
   }
 }
 
-/** Searched once the window has closed, and only while GDELT still covers its start. */
-export function searchState(window: TrackWindow, now: Date): 'open' | 'due' | 'beyond-horizon' {
-  if (now.getTime() < Date.parse(window.end)) return 'open'
-  if (now.getTime() - Date.parse(window.start) > GDELT_HORIZON_DAYS * DAY_MS) {
-    return 'beyond-horizon'
-  }
-  return 'due'
+/** A side's search row is written once the window has closed. */
+export function searchState(window: TrackWindow, now: Date): 'open' | 'due' {
+  return now.getTime() < Date.parse(window.end) ? 'open' : 'due'
 }
 
 /** Hours from the saw-it time to `at`: positive when the terminal saw it first. */

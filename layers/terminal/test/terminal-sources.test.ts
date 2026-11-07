@@ -164,9 +164,9 @@ describe('readSourceRegistry', () => {
       'newsroom-mistral': 'ours',
     })
     expect(registry.track_record).toEqual([
-      expect.objectContaining({ id: 'gdelt-doc', rights: 'upstream', verdict: 'include' }),
+      expect.objectContaining({ id: 'gdelt-gkg', rights: 'upstream', verdict: 'include' }),
     ])
-    expect(registry.track_record[0]!.terms).toContain('one every 5 seconds')
+    expect(registry.track_record[0]!.terms).toContain('unrestricted use for')
     expect(() =>
       readSourceRegistry(yaml.replace('    rights: ours\n', '    rights: ours-ish\n')),
     ).toThrow(/unknown rights ours-ish/)

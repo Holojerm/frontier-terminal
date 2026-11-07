@@ -1,47 +1,62 @@
 // The GDELT side of the track record — `bun run gdelt:search`, run hourly by
-// .github/workflows/gdelt-search.yml.
+// .github/workflows/gdelt-search.yml (the owner's Mac mini, or a hosted runner while it is down).
 //
-// GDELT limits its DOC API per IP ("one every 5 seconds"), and Cloudflare
-// Workers share egress IPs with every other tenant, so from the Worker 85% of
-// our queries drew a 429 for traffic that was not ours. This job runs the
-// queries from a GitHub runner instead, one at a time at GDELT's pace:
+// Reads GDELT's 15-minute GKG files (layers/terminal/server/pipeline/track-record/gkg.ts),
+// each once, oldest first:
 //
-//   1. GET  /api/gdelt/pending  the due searches, plus the pace, timeout and
-//                               User-Agent to use (the Worker owns those)
-//   2. fetch each search's URL from GDELT, spaced, one attempt
-//   3. POST /api/gdelt/result   what GDELT answered, bytes and all; the
-//                               Worker stores it as its own fetch did
+//   1. GET  /api/gdelt/work  the next unread files, the alerts whose windows
+//                            overlap them with their search terms, and the
+//                            User-Agent to use (the Worker owns all three)
+//   2. fetch each file, unzip it, and match every row against the alerts
+//      whose window covers its quarter hour, with the Worker's own matcher
+//   3. POST /api/gdelt/file  the file's row count and its matched rows,
+//                            verbatim; the Worker matches them again
 //
-// A 429, a timeout or a network error ends the run: GDELT is busy, and the
-// next run retries. Those are recorded but never counted toward giving an
-// alert up (layers/terminal/server/pipeline/track-record/search.ts). The job
-// exits non-zero only when our own routes fail, so a red run means this
-// site is broken, not GDELT.
+// and repeats until nothing is unread or --minutes have passed, so a backlog
+// (the first run starts at GKG_FROM, 2026-09-01) drains over a few runs. The
+// files are static, with no per-IP limit, so no pacing is needed beyond
+// reading one at a time. A 404 means GDELT never published that quarter hour
+// and is recorded as missing; any other failure to fetch ends the run quietly
+// and the next run retries. The job exits non-zero only when our own routes
+// fail, so a red run means this site is broken, not GDELT.
 //
 //   GDELT_TOKEN=… bun run gdelt:search                    # against production
+//   GDELT_TOKEN=… bun run gdelt:search -- --minutes 5     # a shorter run
 //   GDELT_TOKEN=… bun run gdelt:search -- --url <origin>  # against another deploy
 //
-// Bun built-ins only, so the workflow needs no `bun install`.
+// No `bun install`: Bun built-ins and the layer's own dependency-free modules.
 
 import { readFileSync } from 'node:fs'
 import { join, resolve } from 'node:path'
 import { parseArgs } from 'node:util'
 
+import {
+  parseGkgRow,
+  stampIso,
+  unzipOne,
+} from '../layers/terminal/server/pipeline/track-record/gkg'
+import {
+  matchesArticle,
+  type SearchTerms,
+} from '../layers/terminal/server/pipeline/track-record/terms'
+
 const ROOT = resolve(import.meta.dir, '..')
 
-interface Pending {
-  spacing_ms: number
-  timeout_ms: number
+/** Per file download. A file is ~2.5 MB; this is generous for a slow link. */
+const FETCH_TIMEOUT_MS = 120_000
+
+interface Work {
   user_agent: string
-  searches: { alert_id: string; query: string; url: string }[]
+  files: { stamp: string; url: string }[]
+  alerts: { alert_id: string; window_start: string; window_end: string; terms: SearchTerms }[]
 }
 
-type Answer =
-  | { kind: 'http'; status: number; text: string }
-  | { kind: 'timeout' }
-  | { kind: 'error'; message: string }
-
-const { values } = parseArgs({ args: Bun.argv.slice(2), options: { url: { type: 'string' } } })
+const { values } = parseArgs({
+  args: Bun.argv.slice(2),
+  options: { url: { type: 'string' }, minutes: { type: 'string' } },
+})
+const budgetMs = Number(values.minutes ?? 40) * 60_000
+const started = Date.now()
 
 const annotate = (level: 'notice' | 'warning' | 'error', message: string) =>
   console.error(process.env.GITHUB_ACTIONS ? `::${level}::${message}` : `${level}: ${message}`)
@@ -59,7 +74,7 @@ const token = process.env.GDELT_TOKEN?.trim()
 if (!token) {
   annotate(
     'warning',
-    'GDELT_TOKEN is not set; no GDELT search ran (see .github/workflows/gdelt-search.yml)',
+    'GDELT_TOKEN is not set; no GDELT file was read (see .github/workflows/gdelt-search.yml)',
   )
   process.exit(0)
 }
@@ -70,52 +85,84 @@ async function ours(path: string, init: RequestInit = {}): Promise<unknown> {
   const response = await fetch(`${origin}${path}`, {
     ...init,
     headers: { ...auth, ...init.headers },
-    signal: AbortSignal.timeout(60_000),
+    signal: AbortSignal.timeout(120_000),
   })
   const text = await response.text()
   if (!response.ok) throw new Error(`${path}: HTTP ${response.status} ${text.slice(0, 300)}`)
   return JSON.parse(text)
 }
 
-async function askGdelt(url: string, pending: Pending): Promise<Answer> {
+type Fetched = { kind: 'ok'; text: string } | { kind: 'missing' } | { kind: 'failed'; why: string }
+
+async function fetchFile(url: string, userAgent: string): Promise<Fetched> {
   try {
     const response = await fetch(url, {
-      headers: { 'User-Agent': pending.user_agent, Accept: 'application/json' },
-      signal: AbortSignal.timeout(pending.timeout_ms),
+      headers: { 'User-Agent': userAgent },
+      signal: AbortSignal.timeout(FETCH_TIMEOUT_MS),
     })
-    return { kind: 'http', status: response.status, text: await response.text() }
+    if (response.status === 404) return { kind: 'missing' }
+    if (!response.ok) return { kind: 'failed', why: `HTTP ${response.status}` }
+    const zip = new Uint8Array(await response.arrayBuffer())
+    return { kind: 'ok', text: new TextDecoder().decode(await unzipOne(zip)) }
   } catch (error) {
-    if (error instanceof Error && error.name === 'TimeoutError') return { kind: 'timeout' }
-    return { kind: 'error', message: String(error).slice(0, 500) }
+    return { kind: 'failed', why: String(error).slice(0, 300) }
   }
 }
 
-const pending = (await ours('/api/gdelt/pending')) as Pending
-console.info(`${pending.searches.length} GDELT search(es) due`)
+function matchesOf(text: string, stamp: string, alerts: Work['alerts']) {
+  const seen = stampIso(stamp)
+  const covering = alerts.filter((a) => a.window_start <= seen && seen <= a.window_end)
+  const lines = text.split('\n').filter((l) => l.trim())
+  const matches: { alert_id: string; row: string }[] = []
+  if (covering.length) {
+    for (const row of lines) {
+      const article = parseGkgRow(row)
+      if (!article) continue
+      for (const a of covering) {
+        if (matchesArticle(article, a.terms)) matches.push({ alert_id: a.alert_id, row })
+      }
+    }
+  }
+  return { rows: lines.length, matches }
+}
 
-let searched = 0
-for (const [i, search] of pending.searches.entries()) {
-  if (i > 0) await Bun.sleep(pending.spacing_ms)
-  const answer = await askGdelt(search.url, pending)
-  const outcome = (await ours('/api/gdelt/result', {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      alert_id: search.alert_id,
-      url: search.url,
-      fetched_at: new Date().toISOString(),
-      answer,
-    }),
-  })) as { status: 'ok' | 'failed'; transient: boolean; candidates: number }
-  searched++
-  const label = answer.kind === 'http' ? `HTTP ${answer.status}` : answer.kind
-  console.info(
-    `${search.alert_id.slice(0, 12)} ${label}: ${outcome.status}` +
-      (outcome.status === 'ok' ? `, ${outcome.candidates} article(s)` : ''),
-  )
-  if (outcome.transient) {
-    annotate('notice', `GDELT is busy (${label}); the rest wait for the next run`)
-    break
+let read = 0
+let matched = 0
+let missing = 0
+let stop: string | null = null
+while (!stop && Date.now() - started < budgetMs) {
+  const work = (await ours('/api/gdelt/work')) as Work
+  if (work.files.length === 0) break
+  for (const file of work.files) {
+    if (Date.now() - started >= budgetMs) break
+    const fetched = await fetchFile(file.url, work.user_agent)
+    if (fetched.kind === 'failed') {
+      stop = `${file.stamp}: ${fetched.why}`
+      break
+    }
+    const { rows, matches } =
+      fetched.kind === 'ok'
+        ? matchesOf(fetched.text, file.stamp, work.alerts)
+        : { rows: 0, matches: [] }
+    const outcome = (await ours('/api/gdelt/file', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        stamp: file.stamp,
+        fetched_at: new Date().toISOString(),
+        status: fetched.kind,
+        rows,
+        matches,
+      }),
+    })) as { candidates: number; duplicates: number; rejected: number }
+    read++
+    if (fetched.kind === 'missing') missing++
+    matched += outcome.candidates
+    if (outcome.rejected) {
+      annotate('warning', `${file.stamp}: the site rejected ${outcome.rejected} posted match(es)`)
+    }
+    if (outcome.candidates) console.info(`${file.stamp}: ${outcome.candidates} candidate(s)`)
   }
 }
-console.info(`searched ${searched} of ${pending.searches.length}`)
+if (stop) annotate('notice', `GDELT file not read (${stop}); the next run retries from there`)
+console.info(`read ${read} GKG file(s), ${missing} missing, ${matched} new candidate(s)`)

@@ -183,10 +183,11 @@ const columns: TableColumn[] = [
           does. Until every earlier candidate is rated, the row says “Not yet rated”.
         </p>
         <p>
-          The press time is when GDELT first saw the article, not when the outlet published it.
-          GDELT doesn’t read every outlet, and paywalled wires and newsletters are thin in it. It
-          searches only the last three months, and it gives us headlines but no article text, so
-          each match is judged on its headline. We never fetch the articles.
+          The press time is the quarter hour GDELT read the article, not when the outlet published
+          it. GDELT doesn’t read every outlet, and paywalled wires and newsletters are thin in it.
+          It gives us headlines but no article text, so an article counts only when the event is in
+          its headline or web address, and each match is judged on its headline. We never fetch the
+          articles.
         </p>
         <p>
           A report from more than {{ record.window_days }} days before we saw it isn’t searched, so

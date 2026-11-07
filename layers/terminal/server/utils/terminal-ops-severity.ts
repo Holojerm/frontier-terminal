@@ -44,7 +44,7 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   gdelt_search_silent: {
     severity: 'warning',
     action:
-      "No GDELT search has succeeded while searches are due. Open GitHub › Actions › GDELT search: if its runs stopped, start one with 'Run workflow'; if they run, read the log for 429s or a 4xx from /api/gdelt/*.",
+      "No GDELT file has been read while files are due. Open GitHub › Actions › GDELT search: if its runs stopped, start one with 'Run workflow'; if they run, read the log for a failed file fetch or a 4xx from /api/gdelt/*.",
   },
   press_drafts_silent: {
     severity: 'warning',
