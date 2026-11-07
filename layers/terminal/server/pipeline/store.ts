@@ -419,6 +419,26 @@ export async function lastRunStatus(db: PipelineDb, sourceId: string): Promise<s
   return row?.status ?? null
 }
 
+/** This source's most recent run, with the content hash of the snapshot it
+ * read (null when it fetched nothing), or null before its first run. */
+export async function lastRunWithHash(
+  db: PipelineDb,
+  sourceId: string,
+): Promise<{ status: string; detail: string | null; content_hash: string | null } | null> {
+  const [row] = await db
+    .select({
+      status: tables.sourceRuns.status,
+      detail: tables.sourceRuns.detail,
+      content_hash: tables.snapshots.content_hash,
+    })
+    .from(tables.sourceRuns)
+    .leftJoin(tables.snapshots, eq(tables.snapshots.id, tables.sourceRuns.snapshot_id))
+    .where(eq(tables.sourceRuns.source_id, sourceId))
+    .orderBy(desc(tables.sourceRuns.started_at))
+    .limit(1)
+  return row ?? null
+}
+
 /** The newest `limit` runs for a source, newest first. */
 export async function recentRuns(
   db: PipelineDb,

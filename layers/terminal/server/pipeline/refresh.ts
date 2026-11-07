@@ -45,6 +45,7 @@ import {
   lastSkippedRunAt,
   latestGoodSnapshot,
   latestRateLimitedRuns,
+  lastRunWithHash,
   recentRuns,
   repeatedChangeIds,
   unstoredAlerts,
@@ -269,6 +270,8 @@ export const MASS_REMOVAL_SHARE = 0.5
 /** Below this many current entities the share is noise: a two-model catalog
  * that drops one is half its set and is an ordinary removal. */
 export const MASS_REMOVAL_MIN_SET = 20
+/** How a refused mass removal's run detail starts, so the next run can find it. */
+export const MASS_REMOVAL_DETAIL = 'parse would remove'
 
 type ContextBlocks = Pick<ParseContext, ContextBlock>
 
@@ -375,6 +378,7 @@ async function parseAndStore(
       basisJson,
     )
   }
+  let massRemoval: string | null = null
   if (lane.removals === 'set' && before.length > 0) {
     // An empty page that parsed cleanly is far more often an outage that
     // returned 200 than a board that really closed every role. An
@@ -390,11 +394,22 @@ async function parseAndStore(
       before.length >= MASS_REMOVAL_MIN_SET &&
       removed.length > before.length * MASS_REMOVAL_SHARE
     ) {
-      return quiet(
-        'failed',
-        `parse would remove ${removed.length} of ${before.length} current entities; refusing to record a mass removal`,
-        body.snapshot_id,
-      )
+      // A half-rendered page rarely comes back byte-identical; a board that
+      // really shrank does. So the same page refused on the run before this
+      // one is taken as the board's new size, and a layoff costs one tick.
+      const last = await lastRunWithHash(deps.db, source.source_id)
+      const confirmed =
+        last?.status === 'failed' &&
+        last.detail?.startsWith(MASS_REMOVAL_DETAIL) === true &&
+        last.content_hash === body.content_hash
+      if (!confirmed) {
+        return quiet(
+          'failed',
+          `${MASS_REMOVAL_DETAIL} ${removed.length} of ${before.length} current entities; refusing to record a mass removal until the next fetch shows the same page`,
+          body.snapshot_id,
+        )
+      }
+      massRemoval = `removal of ${removed.length} of ${before.length} accepted: the same page was refused on the run before`
     }
   }
 
@@ -446,7 +461,7 @@ async function parseAndStore(
       : null
   return {
     status: 'ok',
-    detail: [unlogged, note].filter(Boolean).join('; ') || null,
+    detail: [massRemoval, unlogged, note].filter(Boolean).join('; ') || null,
     snapshot_id: body.snapshot_id,
     added: reread ? 0 : added.length,
     removed: reread ? 0 : removed.length,

@@ -778,37 +778,55 @@ describe('repeats, retries and re-reads', () => {
     expect(await rows.changes()).toHaveLength(0)
   })
 
-  it('refuses a parse that would remove most of a large set, and lets a smaller cut through', async () => {
-    await run('survey', ['anthropic-greenhouse'])
-    const board = JSON.parse(fixtureText('fixtures/hiring/anthropic-greenhouse.json')) as {
-      jobs: unknown[]
-    }
-    const keep = (n: number) => JSON.stringify({ ...board, jobs: board.jobs.slice(0, n) })
-    expect(board.jobs).toHaveLength(59)
+  describe('a mass removal on a large set', () => {
+    const ID = 'anthropic-greenhouse'
+    const board = () =>
+      JSON.parse(fixtureText('fixtures/hiring/anthropic-greenhouse.json')) as { jobs: unknown[] }
+    const keep = (n: number) => JSON.stringify({ ...board(), jobs: board().jobs.slice(0, n) })
+    const tick = async (n: number) =>
+      (await run('survey', [ID], fixtureFetcher({ [ID]: keep(n) }))).sources.find(
+        (s) => s.source_id === ID,
+      )!
+    const stored = async () => (await rows.entities()).filter((e) => e.source_id === ID)
+    const failedMail = async () => (await rows.ops()).filter((o) => o.kind === 'source_failed')
 
-    const gutted = await run(
-      'survey',
-      ['anthropic-greenhouse'],
-      fixtureFetcher({ 'anthropic-greenhouse': keep(29) }),
-    )
-    const refused = gutted.sources.find((s) => s.source_id === 'anthropic-greenhouse')!
-    expect(refused.status).toBe('failed')
-    expect(refused.detail).toBe(
-      'parse would remove 30 of 59 current entities; refusing to record a mass removal',
-    )
-    expect(
-      (await rows.entities()).filter((e) => e.source_id === 'anthropic-greenhouse'),
-    ).toHaveLength(59)
-    expect(await rows.changes()).toHaveLength(0)
+    it('is refused once, and accepted when the next fetch is the same page', async () => {
+      await run('survey', [ID])
+      expect(board().jobs).toHaveLength(59)
 
-    const trimmed = await run(
-      'survey',
-      ['anthropic-greenhouse'],
-      fixtureFetcher({ 'anthropic-greenhouse': keep(30) }),
-    )
-    expect(trimmed.sources.find((s) => s.source_id === 'anthropic-greenhouse')).toMatchObject({
-      status: 'ok',
-      removed: 29,
+      const refused = await tick(29)
+      expect(refused).toMatchObject({
+        status: 'failed',
+        detail:
+          'parse would remove 30 of 59 current entities; refusing to record a mass removal until the next fetch shows the same page',
+      })
+      expect(await stored()).toHaveLength(59)
+      expect(await rows.changes()).toHaveLength(0)
+      // Mailed like any failed run: a source_failed ops event for the digest.
+      expect(await failedMail()).toHaveLength(1)
+      expect((await failedMail())[0]!.detail).toContain(`${ID}: parse would remove 30 of 59`)
+
+      const accepted = await tick(29)
+      expect(accepted).toMatchObject({ status: 'ok', removed: 30 })
+      expect(accepted.detail).toBe(
+        'removal of 30 of 59 accepted: the same page was refused on the run before',
+      )
+      expect(await stored()).toHaveLength(29)
+      expect((await rows.changes()).filter((c) => c.change_type === 'removed')).toHaveLength(30)
+      expect(await failedMail()).toHaveLength(1)
+    })
+
+    it('stays refused while each fetch is a different page; a smaller cut goes through', async () => {
+      await run('survey', [ID])
+      expect((await tick(29)).status).toBe('failed')
+      expect(await tick(28)).toMatchObject({
+        status: 'failed',
+        detail: expect.stringContaining('parse would remove 31 of 59'),
+      })
+      expect(await stored()).toHaveLength(59)
+      expect(await rows.changes()).toHaveLength(0)
+
+      expect(await tick(30)).toMatchObject({ status: 'ok', removed: 29, detail: null })
     })
   })
 })
