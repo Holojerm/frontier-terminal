@@ -188,6 +188,15 @@ function computeRows(d: Record<string, unknown>): DetailRow[] {
     return `${companyName(lab)} ${String(r?.from)} → ${String(r?.to)}`
   })
   if (changed.length) rows.push({ label: 'Flagship changed', value: changed.join(' · ') })
+  const set = asRecord(d.lab_set_changed)
+  if (set) {
+    const labs = (v: unknown) => (Array.isArray(v) ? v.map(String).map(companyName) : [])
+    const parts = [
+      ...(labs(set.added).length ? [`${labs(set.added).join(', ')} joined`] : []),
+      ...(labs(set.removed).length ? [`${labs(set.removed).join(', ')} left`] : []),
+    ]
+    if (parts.length) rows.push({ label: 'Labs counted changed', value: parts.join('; ') })
+  }
 
   const gpuLine = (gpu: unknown, m: unknown, providers: unknown) => {
     const value = num(m)

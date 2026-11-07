@@ -21,6 +21,7 @@ import type { SourceFetcher } from '../server/pipeline/fetch'
 import {
   blendedPrice,
   gpuMedian,
+  labSetChange,
   median,
   sumAcrossLabs,
   type GpuObservation,
@@ -62,6 +63,25 @@ const counted = (id: string, gpu: string) =>
   extract(recipe(id))
     .filter((o) => o.payload.gpu === gpu && o.payload.counted)
     .map((o) => o.value)
+
+describe('labSetChange', () => {
+  const price = { model_slug: 'm', input_per_mtok: 1, output_per_mtok: 1, blended: 1 }
+  const state = (labs: string[]) => ({
+    flagships: Object.fromEntries(
+      labs.map((l) => [l, { ...price, basis_current: true, source_url: 'u', fetched_at: 't' }]),
+    ),
+  })
+  it('flags a lab joining or leaving the median, which no price move explains', () => {
+    expect(labSetChange({ openai: {}, xai: {} }, state(['openai', 'mistral']))).toEqual({
+      added: ['mistral'],
+      removed: ['xai'],
+    })
+  })
+  it('is null for the same set, and for a first reading', () => {
+    expect(labSetChange({ openai: {}, xai: {} }, state(['xai', 'openai']))).toBeNull()
+    expect(labSetChange(null, state(['openai']))).toBeNull()
+  })
+})
 
 describe('GPU price recipes', () => {
   // From 2026-11-03 Crusoe prints today's price beside a scheduled one
@@ -460,6 +480,8 @@ describe('the Compute thesis on a seeded store', () => {
     expect(detail.flagships.openai).toMatchObject({ model_slug: 'gpt-6-astra', blended: 11.25 })
     expect(detail.flagships.meta.source_url).toBe('https://meta-pricing-md.test')
     expect(detail.flagship_changed).toBeNull()
+    expect(detail.lab_set).toEqual(Object.keys(detail.flagships).sort())
+    expect(detail.lab_set_changed).toBeNull()
   })
 
   it('claim 3: the tracked labs’ combined share of every token, rebuilt from the rankings', async () => {
