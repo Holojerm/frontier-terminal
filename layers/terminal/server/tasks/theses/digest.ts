@@ -1,8 +1,7 @@
 // Cron task: the weekly thesis digest, Monday 13:00 UTC (layers/terminal/server/theses/digest.ts).
-// Mailed through the same send_email binding as the ops digest; with no
-// binding configured it logs and returns, like ops:alert. A send that fails
-// throws, and withHeartbeat spools it as task_failed, so the next ops digest
-// says the weekly one did not go out.
+// Mailed through the OWNER_EMAIL send_email binding; with no binding configured
+// it logs and returns. A send that fails throws, and withHeartbeat spools it as
+// task_failed, which the fleet dashboard reports.
 
 import { db } from '@nuxthub/db'
 import { and, eq, gte } from 'drizzle-orm'
@@ -11,7 +10,7 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 
 import * as tables from '#server/db/schema'
 import { DIGEST_DAYS, buildThesisDigest } from '../../theses/digest'
-import { getOpsMailer } from '#server/utils/ops-mail'
+import { getOwnerMailer } from '../../utils/owner-mail'
 import { terminalStamps } from '../../utils/terminal-cache'
 import { queryContext } from '../../utils/terminal-db'
 import { queryTheses } from '../../utils/terminal-theses'
@@ -28,7 +27,7 @@ const task = defineTask({
   },
   async run({ context }) {
     const env = (context as CloudflareTaskContext | undefined)?.cloudflare?.env
-    const mailer = getOpsMailer(env)
+    const mailer = getOwnerMailer(env)
     if (!mailer) {
       console.warn(JSON.stringify({ kind: 'thesis_digest_unconfigured' }))
       return { result: { skipped: 'unconfigured' } }
@@ -57,7 +56,7 @@ const task = defineTask({
     ])
     const { appName, appUrl } = useRuntimeConfig().public
     const digest = buildThesisDigest({ data, changes, failedRuns, now, appName, appUrl })
-    await mailer({ ...digest, ids: [] })
+    await mailer(digest)
     return { result: { sent: true, subject: digest.subject } }
   },
 })

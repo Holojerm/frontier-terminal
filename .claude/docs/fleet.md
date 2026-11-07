@@ -1,7 +1,7 @@
 # Fleet contract — status, manifest, ops alerts
 
 **Load this when:** you are touching `fleet.json`, `/api/status`, `/api/fleet`, the
-`ops_events` spool or its digest cron, or wiring this app into the portfolio dashboard.
+`ops_events` spool or its fleet alerts, or wiring this app into the portfolio dashboard.
 
 This app can be watched by one portfolio dashboard (`fleet`, itself a template fork).
 Three pieces:
@@ -28,19 +28,14 @@ Three pieces:
   and land in `extra`.
 - **Ops alerting.** Anything worth waking the owner up for calls
   `recordOpsEvent(db, { kind, detail, path })` — the error plugin already does
-  for every 5xx — and `server/tasks/ops/alert.ts` drains the spool every five
-  minutes via the `[[send_email]] ALERT_EMAIL` binding. Each row waits for its
-  tier's hold (`OPS_HOLD_MS` in `server/utils/ops.ts`): critical goes on the next
-  drain, so within five minutes; warning waits 25 minutes, so a burst becomes one
-  mail; info waits a day. Once any row is due, one digest carries everything
-  waiting. Workers Issues
+  for every 5xx. The app sends no mail: `GET /api/fleet` reports the last 24 h
+  of the spool as `ops.kinds` (per kind: severity, count, newest detail) and the
+  fleet dashboard is the only alert sender. Workers Issues
   (`[observability.issues]` in wrangler.toml) covers failures that spool nothing,
   such as a request that never returns.
-  Unconfigured = one `ops_alert_unconfigured` log line per tick and nothing
-  sent, but the retention sweep (`pruneOpsEvents()`) still runs. Rows are marked notified only after the send resolves, so a mail
-  hiccup retries instead of losing the alert. Every 30 minutes `ops:watch`
-  (`layers/terminal/server/tasks/ops/watch.ts`) runs
-  the watchdogs that spool their own events, mostly the **freshness checks**
+  `layers/terminal/server/tasks/ops/watch.ts` (`ops:watch`, every 30 minutes) runs the
+  watchdogs that spool their own events, then prunes the spool (`pruneOpsEvents()`; this app
+  has no purge task). Mostly they are the **freshness checks**
   (`layers/terminal/server/utils/freshness.ts`), one rule for
   every part that can go quiet: a check is stale when work has been owed for longer than its limit
   and nothing succeeded within it, and it spools its kind once every six hours while that lasts.
@@ -59,13 +54,10 @@ Three pieces:
 - **Severity.** Every kind has a tier from core's registry, `server/utils/ops-severity.ts`:
   `critical` (the product stopped working), `warning` (a part is degraded; also the default for a
   kind nobody registered), or `info` (the system handled it). Core escalates `server_error` to
-  critical at `SERVER_ERROR_CRITICAL_COUNT` unmailed rows; this app's kinds (`judge_silent` and
+  critical at `SERVER_ERROR_CRITICAL_COUNT` in 24 h; this app's kinds (`judge_silent` and
   `all_sources_failed` are the critical ones) are in `layers/terminal/server/utils/terminal-ops-severity.ts`,
-  registered by `layers/terminal/server/plugins/ops-severity.ts`. The digest leads with the most
-  severe kind, the subject starts `[Critical]`, `[Warning]` or `[Info]` so a mail filter on
-  `subject:"[Critical]"` can mark those important, and critical kinds carry a "What to do" line.
-  The tier also sets the hold above. Add a new kind to the table when you add its `recordOpsEvent`
-  call.
+  registered by `layers/terminal/server/plugins/ops-severity.ts`. Critical kinds carry a "What to do" line, and `/api/fleet` hands the severity to
+  the dashboard, which decides what reaches the inbox. Add a new kind to the table when you add its `recordOpsEvent` call.
 
 ## Social posting (layers/social)
 
@@ -87,7 +79,7 @@ an hour spools `social_outbox_stalled`.
 - **Suppress a judged alert** inside its one-hour hold:
   `UPDATE social_posts SET status = 'suppressed' WHERE kind = 'alert' AND ref = '<alert id>'`.
 - **`unknown` rows** (network error or 5xx mid-send) are never retried and land in
-  the ops digest as `social_unknown`. Check Buffer; set `sent` or `queued` by hand.
+  the fleet board as `social_unknown`. Check Buffer; set `sent` or `queued` by hand.
 - `fleet.json` lists the key, the X channel and the switch, so the dashboard
   flags any of them going missing. A Bluesky channel joins that list when one is set.
 

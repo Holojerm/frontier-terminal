@@ -117,7 +117,7 @@ the gotcha below would surface as a cron event failing with nobody watching.
 
 Anything a sweep filters on needs an **index**. A `LIMIT` bounds rows *deleted*, not rows
 *examined* — so an unindexed predicate full-scans the table on every tick and gets slower
-as the table grows. `ops_events.notified_at` has one for exactly this reason.
+as the table grows. `ops_events` is pruned by `created_at`, which every read of it filters on, for exactly this reason.
 
 ## The dev server caches its DB connection — external writes need a restart
 

@@ -156,16 +156,14 @@ enabled = true
 # Worker on schedule and runs nothing, with no error and no log line.
 # `bun run crons:check` (part of `bun run ci`) fails the build on a mismatch.
 #
-#   "*/30 * * * *"  ops:watch  — the freshness and launch-coverage watchdogs
+#   "*/30 * * * *"  ops:watch  — freshness + launch-coverage checks, then prunes ops_events
 #                   poll:edgar — the two SEC feeds (layers/terminal/server/pipeline/scopes.ts)
 #   "0 */6 * * *"   poll:survey — every include source: pricing, hiring, EDGAR,
 #                   status pages, OpenRouter rankings — except the careers lane
 #   "17 */6 * * *"  poll:careers — the ~20 MB Google careers feed, alone, so its
 #                   memory never shares the survey's invocation
 #                   (CAREERS_SOURCES in layers/terminal/server/pipeline/scopes.ts)
-#   "*/5 * * * *"   ops:alert  — drains the ops_events spool into a digest email once a
-#                   row has waited out its tier's hold (critical: the next tick)
-#                   poll:tripwire — parses the four model catalogs and polls
+#   "*/5 * * * *"   poll:tripwire — parses the four model catalogs and polls
 #                   them off-cycle only when they differ from the store
 #                   cache:warm — re-renders the public pages after a deploy or poll
 #                   moves the payload cache key
@@ -227,8 +225,10 @@ max_batch_size = 10
 # dead-letter queue: a message is only its type, so a dropped one loses nothing.
 max_retries = 5
 
-# ─── Ops alert email ─────────────────────────────────────────────────────────
-# Outbound mail for the ops digest (server/tasks/ops/alert.ts). Pinned to a
+# ─── Owner email ─────────────────────────────────────────────────────────────
+# Outbound mail for the weekly thesis digest and the press brief
+# (layers/terminal/server/utils/owner-mail.ts). Alerts are not sent from here:
+# the fleet dashboard is the only alert sender. Pinned to a
 # single destination on purpose: an unrestricted send binding is a spam cannon
 # if the Worker is ever compromised, and this one only ever needs to reach one
 # inbox. Sends to a verified destination address are free and count against no
@@ -239,16 +239,16 @@ max_retries = 5
 # inbox used to be written here twice, which is a harvestable address in a
 # repository anyone can clone; `alerts@frontierterm.com` forwards to it through
 # an Email Routing rule instead, so the private address lives in the Cloudflare
-# account and nowhere in git. Changing who reads the digest is now a routing
+# account and nowhere in git. Changing who reads the mail is now a routing
 # rule, not a commit.
 #
 # Both halves are configured under Email → Email Routing on frontierterm.com:
 # the rule that forwards alerts@ to a personal inbox, and alerts@ itself as a
 # VERIFIED destination address — which is what lets the binding be pinned to
 # it. A fork replaces both with its own, or drops this block entirely and gets
-# no digest.
+# no owner mail.
 [[send_email]]
-name = "ALERT_EMAIL"
+name = "OWNER_EMAIL"
 destination_address = "alerts@frontierterm.com"
 
 [vars]
@@ -256,14 +256,14 @@ NUXT_PUBLIC_APP_NAME = "Frontier Terminal"
 # Canonical public origin, no trailing slash. sitemap.xml, robots.txt and og:
 # tags build absolute links from this.
 NUXT_PUBLIC_APP_URL = "https://frontierterm.com"
-# Ops digest routing — pairs with the [[send_email]] block above. `to` must be
+# Owner mail routing — pairs with the [[send_email]] block above. `to` must be
 # the same verified destination address the binding is pinned to; `from` must
 # be on a zone in this account with Email Routing enabled. Both are on
 # frontierterm.com now, so the app sends and receives its own mail on its own
 # domain rather than borrowing another zone's. Not secrets, and no longer
 # anyone's personal address either — see the block above.
-NUXT_ALERT_EMAIL_TO = "alerts@frontierterm.com"
-NUXT_ALERT_EMAIL_FROM = "frontier-terminal@frontierterm.com"
+NUXT_OWNER_EMAIL_TO = "alerts@frontierterm.com"
+NUXT_OWNER_EMAIL_FROM = "frontier-terminal@frontierterm.com"
 # Which queue the EVENTS consumer owns. MUST equal `queue` in [[queues.consumers]]
 # above (layers/terminal/nuxt.config.ts says why it is a var).
 NUXT_EVENTS_QUEUE_NAME = "frontier-terminal-events"
