@@ -1,5 +1,7 @@
-// The webhook outbox: the `webhooks:deliver` cron enqueues one delivery per
-// (alert, webhook) and sends what is due.
+// The webhook outbox: one delivery per (alert, webhook), queued and sent by
+// the EVENTS queue's fan-out and drain messages (layers/terminal/server/utils/event-work.ts),
+// with the hourly events:sweep as backstop. "The cron" below is whichever of
+// those ran.
 //
 // Two promises shape it:
 //   - A licensee never gets an alert before the public site shows it. A

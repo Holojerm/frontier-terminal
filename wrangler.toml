@@ -11,9 +11,10 @@
 name = "frontier-terminal"
 compatibility_date = "2025-09-01"
 # `queue_consumer_wait_for_wait_until` pins today's default so a future
-# `compatibility_date` bump cannot flip it. Nothing here consumes a queue today;
-# the flag is inert and harmless, and keeping it means a queue added later
-# inherits the safe behaviour without anyone having to remember why.
+# `compatibility_date` bump cannot flip it. The EVENTS consumer
+# (layers/terminal/server/plugins/events-queue.ts) acks inside the waitUntil
+# Nitro's queue() hands it; without this flag a batch would be acked before a
+# single handler ran. Do not remove it.
 compatibility_flags = ["nodejs_compat", "queue_consumer_wait_for_wait_until"]
 
 # Custom domain. `custom_domain = true` makes wrangler create the DNS records
@@ -164,22 +165,20 @@ enabled = true
 #                   (CAREERS_SOURCES in layers/terminal/server/pipeline/scopes.ts)
 #   "*/5 * * * *"   poll:tripwire — parses the four model catalogs and polls
 #                   them off-cycle only when they differ from the store
-#                   social:alerts, social:post — queue critical alerts and send
-#                   due posts through Buffer (layers/social)
 #                   cache:warm — re-renders the public pages after a deploy or poll
 #                   moves the payload cache key
 #                   track-record:search — the newsroom side of the track record for
 #                   alerts whose window closed, and the GDELT side's search row once its
 #                   files are read (layers/terminal/server/pipeline/track-record/); the files
 #                   are read on GitHub Actions (.github/workflows/gdelt-search.yml)
-#                   webhooks:deliver — queues new alerts for licensee webhooks and
-#                   sends the due ones (layers/terminal/server/utils/webhook-outbox.ts)
 #   "0 13 * * 1"    theses:digest — the weekly thesis digest email (layers/terminal/server/theses/digest.ts)
 #                   social:digest — queues the weekly what-moved thread
 #                   alerts:hiring-rollup — one hiring alert per lab for the week
 #                   just ended (layers/terminal/server/pipeline/hiring-rollup.ts)
 #   "0 4 * * *"     seo:indexnow — submits changed sitemap URLs to IndexNow (server/utils/indexnow.ts)
-#   "41 * * * *"    bulk:build — the bulk feed's gzipped CSVs and Parquet files in R2, built once a
+#   "41 * * * *"    events:sweep — the EVENTS queue's backstop: the social and webhook
+#                   outboxes and the press briefs (see [[queues]] below)
+#                   bulk:build —the bulk feed's gzipped CSVs and Parquet files in R2, built once a
 #                   UTC day and resumed hourly (layers/terminal/server/utils/terminal-bulk.ts)
 #
 # Cron triggers run on UTC, and changes take up to 15 minutes to propagate.
@@ -193,6 +192,40 @@ crons = [
   "41 * * * *",
   "0 4 * * *",
 ]
+
+# ─── EVENTS queue ────────────────────────────────────────────────────────────
+# Alert delivery is driven by messages, not a timer
+# (layers/terminal/server/utils/events.ts): writing an alert emits `alerts.new`,
+# the consumer offers it to the social and webhook outboxes and the press
+# briefs, then schedules each outbox's drain at its earliest due row. The
+# queue carries triggers only; the outbox tables stay the record, so a lost
+# message waits for the hourly events:sweep, never for nothing.
+#
+# YOU MUST CREATE IT FIRST: `wrangler deploy` fails on a queue that does not
+# exist (the dead-letter queue is created for you):
+#
+#     bunx wrangler queues create frontier-terminal-events
+#
+# One producer and one consumer naming the same queue is the Worker sending to
+# itself, which is supported and the right shape: the consumer needs the same
+# bindings and secrets the app already has.
+[[queues.producers]]
+binding = "EVENTS"
+queue = "frontier-terminal-events"
+
+[[queues.consumers]]
+queue = "frontier-terminal-events"
+# A second, not the 30s default: an alert's fan-out should not wait to fill a
+# batch. Handlers run once per type per batch, so batching saves little.
+max_batch_timeout = 1
+max_batch_size = 10
+# A handler that throws retries its messages a minute later
+# (event-consumer.ts). Five tries span several minutes of D1 or Buffer
+# trouble; past that the hourly sweep does the same work anyway.
+max_retries = 5
+# Messages carry no payload beyond their type, so this holds nothing
+# sensitive; read it with `wrangler queues consumer` if it fills.
+dead_letter_queue = "frontier-terminal-events-dlq"
 
 # ─── Ops alert email ─────────────────────────────────────────────────────────
 # Outbound mail for the ops digest (server/tasks/ops/alert.ts). Pinned to a
@@ -231,6 +264,9 @@ NUXT_PUBLIC_APP_URL = "https://frontierterm.com"
 # anyone's personal address either — see the block above.
 NUXT_ALERT_EMAIL_TO = "alerts@frontierterm.com"
 NUXT_ALERT_EMAIL_FROM = "frontier-terminal@frontierterm.com"
+# Which queue the EVENTS consumer owns. MUST equal `queue` in [[queues.consumers]]
+# above (layers/terminal/nuxt.config.ts says why it is a var).
+NUXT_EVENTS_QUEUE_NAME = "frontier-terminal-events"
 # IndexNow ownership key. Not a secret: /indexnow-key.txt serves it.
 NUXT_INDEXNOW_KEY = "fe2738e740b8c6b06a20d76ab1877559"
 
@@ -240,7 +276,7 @@ NUXT_INDEXNOW_KEY = "fe2738e740b8c6b06a20d76ab1877559"
 #                                32+ chars (`openssl rand -base64 32`). Unset = the
 #                                route 404s and the app is simply not on the dashboard.
 #   NUXT_FLEET_TOKEN_PREVIOUS    only during a rotation — server/utils/fleet-auth.ts.
-#   NUXT_PRESS_LIST              JSON press list for press:briefs (layers/terminal/server/pipeline/press.ts).
+#   NUXT_PRESS_LIST              JSON press list for the press briefs (layers/terminal/server/pipeline/press.ts).
 #                                Names people, so never in git. Unset = no briefs.
 #   NUXT_PRESS_TOKEN             bearer the press-drafts routine presents to /api/press/*.
 #                                32+ chars. Unset = those routes 404.
