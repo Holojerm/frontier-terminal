@@ -17,7 +17,7 @@ import { parsePressList } from '../pipeline/press'
 import { SCHEMA_VERSION } from './data-schema'
 import type { EventDeps } from './event-work'
 import type { CacheStore } from './terminal-cache'
-import { terminalStamp } from './terminal-cache'
+import { terminalStamps } from './terminal-cache'
 import { fetchWebhookSender, signingKeyRefusal } from './webhook-sign'
 
 export const kvStore: CacheStore = {
@@ -46,7 +46,7 @@ export function eventDeps(env: Record<string, unknown> | undefined): EventDeps {
           signingKey,
           origin,
           schemaVersion: SCHEMA_VERSION,
-          stamp: () => terminalStamp(db),
+          stamp: async () => (await terminalStamps(db)).poll,
           send: fetchWebhookSender(),
         },
     press: contacts.length && mailer ? { contacts, mailer, origin, briefed: kvStore } : null,

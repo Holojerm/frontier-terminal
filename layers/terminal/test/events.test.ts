@@ -32,7 +32,6 @@ import {
   type EventMessage,
 } from '../server/utils/events'
 import type { CacheStore } from '../server/utils/terminal-cache'
-import { enqueueWebhookDeliveries } from '../server/utils/webhook-outbox'
 import { signingKeyId, type WebhookRequest } from '../server/utils/webhook-sign'
 
 const db = drizzle(env.DB, { schema })
@@ -154,8 +153,6 @@ async function seedWebhook() {
     status: 'active',
     created_at: at(-3600).toISOString(),
   })
-  // The outbox's first run only records a baseline.
-  await enqueueWebhookDeliveries(db, at(-600))
 }
 
 const socialDeps = (publisher: SocialPublisher) => ({
@@ -176,7 +173,6 @@ beforeEach(async () => {
   setEventSender(null)
   for (const table of [
     schema.webhookDeliveries,
-    schema.webhookAlertLog,
     schema.webhooks,
     schema.apiKeys,
     schema.alerts,

@@ -185,18 +185,18 @@ const securityHeaders = {
 //                catches any message that was lost.
 //              — bulk:build, and reliability:record, which rolls up source runs
 //                and records filing detections for /data#reliability
-//                (layers/terminal/server/pipeline/reliability/). Its deploy smoke
-//                results are reliability:deploys on the */5 tick, which reads
-//                GitHub at most hourly.
+//                (layers/terminal/server/pipeline/reliability/), and
+//                reliability:deploys, which reads its deploy smoke results
+//                from GitHub.
 //   0 4 * * *  — seo:indexnow submits the sitemap URLs changed since its last
 //                accepted run to IndexNow (server/utils/indexnow.ts).
 const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:alert', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
   '17 */6 * * *': ['poll:careers'],
-  '*/5 * * * *': ['poll:tripwire', 'cache:warm', 'track-record:search', 'reliability:deploys'],
+  '*/5 * * * *': ['poll:tripwire', 'cache:warm', 'track-record:search'],
   '0 13 * * 1': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
-  '41 * * * *': ['events:sweep', 'bulk:build', 'reliability:record'],
+  '41 * * * *': ['events:sweep', 'bulk:build', 'reliability:record', 'reliability:deploys'],
   '0 4 * * *': ['seo:indexnow'],
 }
 

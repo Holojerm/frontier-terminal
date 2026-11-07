@@ -38,6 +38,7 @@
     "design:check": "bun run scripts/check-design-tokens.ts",
     "brand:generate": "bun run scripts/generate-brand-assets.ts",
     "brand:check": "bun run scripts/check-brand.ts",
+    "schema:lock": "bun run scripts/schema-lock.ts",
     "email:build": "bun run scripts/email-build.ts",
     "email:check": "bun run scripts/email-check.ts",
     "email:dev": "bun run scripts/email-dev.ts",

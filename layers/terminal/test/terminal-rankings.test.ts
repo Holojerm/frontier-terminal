@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import * as schema from '~~/server/db/schema'
 import { OPENROUTER_KEY_UNSET, type SourceFetcher } from '../server/pipeline/fetch'
 import { runRefresh, type RawStore, type RefreshDeps } from '../server/pipeline/refresh'
-import { terminalStamp } from '../server/utils/terminal-cache'
+import { terminalStamps } from '../server/utils/terminal-cache'
 import { queryContext, queryCoverage } from '../server/utils/terminal-db'
 import { EXPORT_TABLES } from '../server/utils/terminal-export'
 import {
@@ -183,7 +183,7 @@ let tick = Date.parse('2026-09-07T10:00:00Z')
 const now = () => new Date((tick += 1000))
 const deps = (fetcher: SourceFetcher): RefreshDeps => ({ db, raw, fetcher, sourcesYaml, now })
 const FIXED_NOW = () => new Date('2026-09-07T12:00:00Z')
-const ctx = async () => queryContext(sourcesYaml, await terminalStamp(db), FIXED_NOW)
+const ctx = async () => queryContext(sourcesYaml, (await terminalStamps(db)).poll, FIXED_NOW)
 
 const fixtureFetcher: SourceFetcher = async () => {
   const text = fixtureText('fixtures/rankings/openrouter-rankings-daily.json')

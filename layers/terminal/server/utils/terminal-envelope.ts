@@ -1,9 +1,9 @@
-// What every terminal API response carries around its payload, beyond the
-// license split (shared/utils/license.ts › withLicense): the schema version,
-// and for a licensee's key the license that key holds on older data. Pure, so
+// What every terminal payload carries around its data: the license split
+// (shared/utils/license.ts › withLicense), the schema version, and for a
+// licensee's key the license that key holds on older data. Pure, so
 // layers/terminal/test/api-keys.test.ts drives it without Nitro.
 
-import { HISTORY_LICENSE, PAID_LICENSE, licenseSplit } from '#shared/utils/license'
+import { HISTORY_LICENSE, PAID_LICENSE, licenseSplit, withLicense } from '#shared/utils/license'
 
 import { SCHEMA_VERSION } from './data-schema'
 
@@ -16,6 +16,14 @@ export function withSchemaVersion<T>(payload: T): T {
   if (payload === null || typeof payload !== 'object' || Array.isArray(payload)) return payload
   return { schema_version: SCHEMA_VERSION, ...payload }
 }
+
+/**
+ * What every door hands out — the JSON routes and the MCP tools alike
+ * (terminal-handler.ts › terminalPayload, terminalPayloadAt): the license split
+ * and the schema version, added after the cache. The license window moves
+ * daily and a cached payload must not carry yesterday's.
+ */
+export const served = <T>(payload: T): T => withSchemaVersion(withLicense(payload))
 
 // How an Internet Archive row shows in a payload: a history point's basis, or
 // an as_of catalog row's source_id (terminal-history.ts › archiveSourceId).

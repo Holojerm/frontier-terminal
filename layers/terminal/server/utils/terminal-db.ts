@@ -205,6 +205,12 @@ export async function rewound(
 const atOf = (ctx: QueryContext): (QueryContext & { at: string }) | null =>
   ctx.at === null ? null : (ctx as QueryContext & { at: string })
 
+/** An answer read from the Internet Archive: its method, and that it is event time (PointInTimeNotes). */
+function noteArchived(ctx: QueryContext, method: string): void {
+  ctx.notes.method.add(method)
+  ctx.notes.eventTime = true
+}
+
 /** The audit's reason for a sources.yaml cut, or null when the id is not registered. */
 const cutReason = (ctx: QueryContext, cutId: string): string | null =>
   ctx.registry.cuts.find((c) => c.id === cutId)?.reason ?? null
@@ -236,79 +242,97 @@ export interface SourceStamp {
   snapshot_count: number | null
 }
 
-/**
- * Newest snapshot per source, with how many that source has. Read through
- * source_stats: one index seek per source instead of a scan of every
- * snapshot. CROSS JOIN, here and in the two queries like it below, is
- * SQLite's way of fixing the loop order — given a plain join, the planner
- * walks the big table and probes source_stats, which reads every row again.
- */
-export async function sourceStamps(
-  db: PipelineDb,
-  at: string | null = null,
-): Promise<Map<string, SourceStamp>> {
-  // As of T, the newest snapshot at or before it: one index seek per source
-  // on (source_id, fetched_at), as the subquery is correlated to the outer row.
-  const newestAt = at
-    ? sql`(select s.fetched_at from snapshots s where s.source_id = ${tables.sourceStats.source_id} and s.fetched_at <= ${at} order by s.fetched_at desc limit 1)`
-    : tables.sourceStats.last_fetched_at
-  const rows = await db
-    .select({
-      source_id: tables.snapshots.source_id,
-      source_url: tables.snapshots.source_url,
-      fetched_at: tables.snapshots.fetched_at,
-      http_status: tables.snapshots.http_status,
-      bytes: tables.snapshots.bytes,
-      n: tables.sourceStats.snapshot_count,
-    })
-    .from(tables.sourceStats)
-    .crossJoin(tables.snapshots)
-    .where(
-      and(
-        eq(tables.snapshots.source_id, tables.sourceStats.source_id),
-        eq(tables.snapshots.fetched_at, newestAt),
-      ),
-    )
-    .orderBy(asc(tables.snapshots.source_id), desc(tables.snapshots.id))
-
-  const out = new Map<string, SourceStamp>()
-  for (const row of rows) {
-    if (out.has(row.source_id)) continue // two fetches in the same instant: first wins
-    out.set(row.source_id, {
-      source_id: row.source_id,
-      newest: {
-        source_url: row.source_url,
-        fetched_at: row.fetched_at,
-        http_status: row.http_status,
-        bytes: row.bytes,
-      },
-      snapshot_count: at ? null : row.n,
-    })
-  }
-  return out
+/** Every per-source stamp a payload cites, from one statement (sourceReads). */
+export interface SourceReads {
+  /** Newest snapshot per source, with how many that source has. The coverage panel reports these: fetches. */
+  stamps: Map<string, SourceStamp>
+  /**
+   * The newest poll per source whose page was read into the store, as that
+   * snapshot's fetched_at. A snapshot alone is not enough: a run can store the
+   * bytes and then fail (a parser error, a refused mass removal), and the rows
+   * are still the older page's.
+   */
+  reads: Map<string, string>
+  /** Each source as a "data as of" citation: its newest read, or for a source never read, its newest snapshot. */
+  cited: Map<string, Prov>
+  /** Newest run per source — how the last poll of it ended. Empty as of an instant: source_stats only holds the current one. */
+  runs: Map<string, SourceRunStamp>
 }
 
 /**
- * The newest poll per source whose page was read into the store, as that
- * snapshot's fetched_at. A snapshot alone is not enough: a run can store the
- * bytes and then fail (a parser error, a refused mass removal), and the rows
- * are still the older page's. One index seek per source on
- * (source_id, started_at), walking back past failed runs.
+ * The newest snapshot, newest successful read and newest run of every source,
+ * as of `at` or now, in one round trip. Driven from source_stats, one row per
+ * source, so each correlated subquery is an index seek on
+ * (source_id, fetched_at) or (source_id, started_at) rather than a scan of
+ * tables that grow by a row per source per tick. Two rows in the same instant:
+ * the larger id wins.
  */
-export async function lastReads(
-  db: PipelineDb,
-  at: string | null = null,
-): Promise<Map<string, string>> {
-  // Raw SQL: drizzle renders an outer column unqualified inside a sql``
-  // subquery of a single-table select, which SQLite finds ambiguous.
-  const readAt = sql<
-    string | null
-  >`(select s.fetched_at from source_runs r join snapshots s on s.id = r.snapshot_id where r.source_id = st.source_id and r.status in ('ok', 'unchanged', 'baseline')${at ? sql` and s.fetched_at <= ${at}` : sql``} order by r.started_at desc limit 1)`
-  const rows = await db.all<{ source_id: string; read_at: string | null }>(
-    sql`select st.source_id as source_id, ${readAt} as read_at from source_stats st`,
-  )
-  const out = new Map<string, string>()
-  for (const row of rows) if (row.read_at) out.set(row.source_id, row.read_at)
+export async function sourceReads(db: PipelineDb, at: string | null = null): Promise<SourceReads> {
+  const newestSnapshot = at
+    ? sql`(select s1.id from snapshots s1 where s1.source_id = st.source_id and s1.fetched_at <= ${at} order by s1.fetched_at desc, s1.id desc limit 1)`
+    : sql`(select s1.id from snapshots s1 where s1.source_id = st.source_id and s1.fetched_at = st.last_fetched_at order by s1.id desc limit 1)`
+  const newestRun = at
+    ? sql`null`
+    : sql`(select r1.id from source_runs r1 where r1.source_id = st.source_id and r1.started_at = st.last_run_at order by r1.id desc limit 1)`
+  const rows = await db.all<{
+    source_id: string
+    n: number
+    source_url: string | null
+    fetched_at: string | null
+    http_status: number | null
+    bytes: number | null
+    read_at: string | null
+    run_started_at: string | null
+    run_status: string | null
+    run_detail: string | null
+    run_scope: string | null
+    run_source_url: string | null
+  }>(sql`select st.source_id as source_id, st.snapshot_count as n,
+      s.source_url as source_url, s.fetched_at as fetched_at, s.http_status as http_status, s.bytes as bytes,
+      (select s2.fetched_at from source_runs r2 join snapshots s2 on s2.id = r2.snapshot_id
+        where r2.source_id = st.source_id and r2.status in ('ok', 'unchanged', 'baseline')${at ? sql` and s2.fetched_at <= ${at}` : sql``}
+        order by r2.started_at desc limit 1) as read_at,
+      r.started_at as run_started_at, r.status as run_status, r.detail as run_detail,
+      r.scope as run_scope, r.source_url as run_source_url
+    from source_stats st
+    left join snapshots s on s.id = ${newestSnapshot}
+    left join source_runs r on r.id = ${newestRun}
+    order by st.source_id`)
+
+  const out: SourceReads = {
+    stamps: new Map(),
+    reads: new Map(),
+    cited: new Map(),
+    runs: new Map(),
+  }
+  for (const row of rows) {
+    if (row.read_at) out.reads.set(row.source_id, row.read_at)
+    if (row.fetched_at !== null && row.source_url !== null) {
+      out.stamps.set(row.source_id, {
+        source_id: row.source_id,
+        newest: {
+          source_url: row.source_url,
+          fetched_at: row.fetched_at,
+          http_status: row.http_status,
+          bytes: row.bytes,
+        },
+        snapshot_count: at ? null : row.n,
+      })
+      out.cited.set(row.source_id, {
+        source_url: row.source_url,
+        fetched_at: row.read_at ?? row.fetched_at,
+      })
+    }
+    if (row.run_started_at !== null) {
+      out.runs.set(row.source_id, {
+        started_at: row.run_started_at,
+        status: row.run_status as SourceRunStamp['status'],
+        detail: row.run_detail,
+        scope: row.run_scope!,
+        source_url: row.run_source_url!,
+      })
+    }
+  }
   return out
 }
 
@@ -326,36 +350,6 @@ export function confirmedAt(
   if (laneFor(source_id)?.removals !== 'set') return null
   const read = reads.get(source_id)
   return read && Date.parse(read) > Date.parse(fetched_at) ? read : null
-}
-
-/**
- * Each source as a "data as of" citation: the newest snapshot a run read into
- * the store, or, for a source never read, its newest snapshot as before. The
- * newest snapshot alone can be a fetch whose parse failed, and the rows on
- * the page are still the older read's. The coverage panel keeps sourceStamps:
- * it reports fetches, not what the data is as of.
- */
-export function citedReads(
-  stamps: ReadonlyMap<string, SourceStamp>,
-  reads: ReadonlyMap<string, string>,
-): Map<string, Prov> {
-  const out = new Map<string, Prov>()
-  for (const [id, stamp] of stamps) {
-    out.set(id, {
-      source_url: stamp.newest.source_url,
-      fetched_at: reads.get(id) ?? stamp.newest.fetched_at,
-    })
-  }
-  return out
-}
-
-/** sourceStamps and lastReads at `at`, as citedReads. */
-export async function readStamps(
-  db: PipelineDb,
-  at: string | null = null,
-): Promise<Map<string, Prov>> {
-  const [stamps, reads] = await Promise.all([sourceStamps(db, at), lastReads(db, at)])
-  return citedReads(stamps, reads)
 }
 
 /** First snapshot per source — when watching it began. */
@@ -376,41 +370,6 @@ async function firstSnapshotPerSource(
         eq(tables.snapshots.fetched_at, tables.sourceStats.first_fetched_at),
       ),
     )
-}
-
-/** Newest run per source — how the last poll of it ended. */
-export async function lastRuns(db: PipelineDb): Promise<Map<string, SourceRunStamp>> {
-  const rows = await db
-    .select({
-      source_id: tables.sourceRuns.source_id,
-      started_at: tables.sourceRuns.started_at,
-      status: tables.sourceRuns.status,
-      detail: tables.sourceRuns.detail,
-      scope: tables.sourceRuns.scope,
-      source_url: tables.sourceRuns.source_url,
-    })
-    .from(tables.sourceStats)
-    .crossJoin(tables.sourceRuns)
-    .where(
-      and(
-        eq(tables.sourceRuns.source_id, tables.sourceStats.source_id),
-        eq(tables.sourceRuns.started_at, tables.sourceStats.last_run_at),
-      ),
-    )
-    .orderBy(asc(tables.sourceRuns.source_id), desc(tables.sourceRuns.id))
-
-  const out = new Map<string, SourceRunStamp>()
-  for (const row of rows) {
-    if (out.has(row.source_id)) continue
-    out.set(row.source_id, {
-      started_at: row.started_at,
-      status: row.status as SourceRunStamp['status'],
-      detail: row.detail,
-      scope: row.scope,
-      source_url: row.source_url,
-    })
-  }
-  return out
 }
 
 export async function tableCounts(db: PipelineDb): Promise<TableCounts> {
@@ -883,7 +842,7 @@ export async function queryOverview(db: PipelineDb, ctx: QueryContext): Promise<
     queryAlerts(db, ctx, OVERVIEW_ALERTS, 'alert'),
     queryAlerts(db, ctx, OVERVIEW_INFO, 'info'),
     tableCounts(db),
-    lastReads(db),
+    sourceReads(db).then((r) => r.reads),
   ])
   // "Last checked" is the newest read, not the newest snapshot: a fetch that
   // stored bytes and then failed to parse checked nothing.
@@ -1013,14 +972,13 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
   if (pit && (await beforeLiveFloor(db, pit.at))) return archivedPrices(db, pit)
   const models = pit ? rewound(db, pit, 'model') : null
   if (pit) ctx.notes.method.add(PRICES_METHOD)
-  const [entities, history, stamps, reads, firsts, checks, classMap, reach, early] =
+  const [entities, history, { stamps, reads }, firsts, checks, classMap, reach, early] =
     await Promise.all([
       models
         ? models.then((m) => m.rows)
         : db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'model')),
       models ? models.then((m) => m.changes) : modelChanges(db),
-      sourceStamps(db, ctx.at),
-      lastReads(db, ctx.at),
+      sourceReads(db, ctx.at),
       firstSnapshotByUrl(db),
       pit
         ? rewound(db, pit, 'recommendation').then((r) => r.rows)
@@ -1184,7 +1142,7 @@ async function archivedBeforeOwnFloor(
   if (labs.length === 0) return null
   const catalog = await archivedCatalogAt(db, ctx.at, labs)
   if (catalog.rows.length === 0) return null
-  ctx.notes.method.add(ARCHIVED_LABS_AS_OF_METHOD)
+  noteArchived(ctx, ARCHIVED_LABS_AS_OF_METHOD)
   for (const c of catalog.captures) {
     ctx.notes.method.add(
       `${c.provider}: Internet Archive capture of ${c.captured_at} (${c.source_url}).`,
@@ -1207,7 +1165,7 @@ async function archivedPrices(
     archivedCatalogAt(db, ctx.at),
     queryPriceReach(db, ctx.registry),
   ])
-  ctx.notes.method.add(ARCHIVED_AS_OF_METHOD)
+  noteArchived(ctx, ARCHIVED_AS_OF_METHOD)
   for (const c of catalog.captures) {
     ctx.notes.method.add(
       `${c.provider}: Internet Archive capture of ${c.captured_at} (${c.source_url}).`,
@@ -1257,7 +1215,7 @@ export interface BasisCheck {
 /**
  * Stored 'recommendation' entities as checks, keyed by provider:class. An
  * entity's fetched_at only moves when its verdict changes, but every read of
- * the page re-checks it, so with `reads` (lastReads) the check is dated to
+ * the page re-checks it, so with `reads` (sourceReads) the check is dated to
  * the source's newest read.
  */
 export function basisChecks(
@@ -1386,10 +1344,9 @@ async function hiringAggregatesAt(
     { provider: string; department: string | null; n: number }[],
     { provider: string; company: string | null }[],
     { provider: string; source_id: string; source_url: string; fetched_at: string | null }[],
-    Map<string, SourceStamp>,
   ]
 > {
-  const [jobs, stamps] = await Promise.all([rewound(db, ctx, 'job'), sourceStamps(db, ctx.at)])
+  const jobs = await rewound(db, ctx, 'job')
   const departments = new Map<string, { provider: string; department: string | null; n: number }>()
   const companies = new Map<string, { provider: string; company: string | null }>()
   const sources = new Map<
@@ -1410,7 +1367,7 @@ async function hiringAggregatesAt(
     if (!s) sources.set(k, { provider, source_id, source_url, fetched_at })
     else if (s.fetched_at === null || fetched_at > s.fetched_at) s.fetched_at = fetched_at
   }
-  return [[...departments.values()], [...companies.values()], [...sources.values()], stamps]
+  return [[...departments.values()], [...companies.values()], [...sources.values()]]
 }
 
 export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<HiringData> {
@@ -1420,8 +1377,8 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
 
   const pit = atOf(ctx)
   if (pit && (await beforeLiveFloor(db, pit.at))) return archivedHiring(db, pit)
-  const reading = lastReads(db, ctx.at)
-  const [departments, companies, sources, stamps] = pit
+  const reading = sourceReads(db, ctx.at)
+  const [departments, companies, sources] = pit
     ? await hiringAggregatesAt(db, pit)
     : await Promise.all([
         db
@@ -1444,11 +1401,9 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
           .from(tables.entities)
           .where(isJob)
           .groupBy(tables.entities.provider, tables.entities.source_id, tables.entities.source_url),
-        sourceStamps(db),
       ])
 
-  const reads = await reading
-  const cited = citedReads(stamps, reads)
+  const { reads, cited } = await reading
   const xaiCaveat = ctx.registry.sources.find((s) => s.source_id === 'xai-greenhouse')?.caveat
 
   const providers: HiringProviderView[] = []
@@ -1520,7 +1475,7 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
     const points = early.length ? await archivedHiringPoints(db, ctx.clusters, pit.at) : null
     for (const lab of early) {
       if (!points?.get(lab)?.length) continue
-      ctx.notes.method.add(ARCHIVED_LAB_BOARDS_AS_OF_METHOD)
+      noteArchived(ctx, ARCHIVED_LAB_BOARDS_AS_OF_METHOD)
       const i = providers.findIndex((p) => p.provider === lab)
       providers[i] = archivedHiringView(pit, lab, points)
     }
@@ -1540,7 +1495,7 @@ async function archivedHiring(
   ctx: QueryContext & { at: string },
 ): Promise<HiringData> {
   const points = await archivedHiringPoints(db, ctx.clusters, ctx.at)
-  ctx.notes.method.add(ARCHIVED_HIRING_AS_OF_METHOD)
+  noteArchived(ctx, ARCHIVED_HIRING_AS_OF_METHOD)
   const providers = PROVIDER_ORDER.map((provider) => archivedHiringView(ctx, provider, points))
   return { ...stampOf(ctx), providers }
 }
@@ -1651,7 +1606,7 @@ const newestFirst = (a: IncidentView, b: IncidentView) =>
 export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise<IncidentsData> {
   const [entities, stamps] = await Promise.all([
     db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'incident')),
-    readStamps(db),
+    sourceReads(db).then((r) => r.cited),
   ])
 
   const anchors = Object.values(INCIDENT_SOURCES)
@@ -1768,7 +1723,7 @@ export async function queryPriceHistory(
   const archived = archivedPriceHistory(archivedRows)
   if (entities.length === 0 && changes.length === 0 && archived.length === 0) return null
   if (ctx.at !== null && archived.length > 0 && (liveFrom === null || ctx.at < liveFrom)) {
-    ctx.notes.method.add(ARCHIVED_AS_OF_METHOD)
+    noteArchived(ctx, ARCHIVED_AS_OF_METHOD)
   }
 
   const points = [
@@ -1962,7 +1917,7 @@ export async function queryHiringHistory(
       .from(tables.sourceRuns)
       .where(eq(tables.sourceRuns.status, 'baseline'))
       .groupBy(tables.sourceRuns.source_id),
-    readStamps(db, ctx.at),
+    sourceReads(db, ctx.at).then((r) => r.cited),
     archivedHiringPoints(db, ctx.clusters, ctx.at),
     queryHiringReach(db, ctx.registry),
   ])
@@ -2169,9 +2124,8 @@ async function recipeCoverage(db: PipelineDb, ctx: QueryContext): Promise<Recipe
 }
 
 export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<CoverageData> {
-  const [stamps, runs, counts, totals, [first]] = await Promise.all([
-    sourceStamps(db),
-    lastRuns(db),
+  const [{ stamps, runs }, counts, totals, [first]] = await Promise.all([
+    sourceReads(db),
     db
       .select({ source_id: tables.entities.source_id, n: count() })
       .from(tables.entities)

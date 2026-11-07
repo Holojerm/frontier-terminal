@@ -7,12 +7,13 @@
 // ahead. Changing what a column holds without renaming it is a minor version
 // with a note. A release that changes no column is a patch.
 //
-// SCHEMA_BASELINE is every table's columns at 1.0.0, and each later release
-// lists what it added and removed. layers/terminal/test/terminal-dictionary.test.ts
-// replays the releases over the baseline and fails when the result isn't what
-// /export serves today, or when a release's version bump is smaller than its
-// changes need. So a column can't move without a release here, and a release
-// can't be filed under the wrong kind of bump.
+// schema.lock.json holds the columns /export served at the last release.
+// layers/terminal/test/terminal-dictionary.test.ts fails when the exported
+// columns or SCHEMA_VERSION no longer match it, and `bun run schema:lock`
+// (scripts/schema-lock.ts) rewrites it only when the newest release here
+// says exactly what changed since (lockRefusal). So a column can't move
+// without a release, and the test also fails a release filed under too small
+// a bump.
 
 import type { SchemaChangelogEntry } from '../../shared/utils/terminal-types'
 
@@ -29,411 +30,11 @@ export interface SchemaRelease {
   /** UTC day the release reached /export. */
   date: string
   summary: string
-  /** Per table, what changed. A new table lists all its columns as added. */
+  /**
+   * Per table, what changed. A new table needs only its entry (a note); its
+   * columns are read off the export. A dropped table lists them as removed.
+   */
   tables?: Readonly<Record<string, TableChange>>
-}
-
-/** Every exported table's default columns at 1.0.0, in export order. */
-export const SCHEMA_BASELINE: Readonly<Record<string, readonly string[]>> = {
-  snapshots: [
-    'id',
-    'source_id',
-    'content_hash',
-    'raw_key',
-    'http_status',
-    'bytes',
-    'source_url',
-    'fetched_at',
-  ],
-  prices_latest: [
-    'entity_key',
-    'source_id',
-    'provider',
-    'model_slug',
-    'tier',
-    'context_window',
-    'input_per_mtok',
-    'cached_input_per_mtok',
-    'output_per_mtok',
-    'currency',
-    'effective_from',
-    'effective_until',
-    'notes',
-    'content_hash',
-    'snapshot_id',
-    'first_seen_at',
-    'source_url',
-    'fetched_at',
-  ],
-  jobs_open: [
-    'entity_key',
-    'source_id',
-    'provider',
-    'job_id',
-    'title',
-    'department',
-    'team',
-    'location',
-    'employment_type',
-    'published_at',
-    'updated_at',
-    'company_name',
-    'content_hash',
-    'snapshot_id',
-    'first_seen_at',
-    'source_url',
-    'fetched_at',
-  ],
-  incidents: [
-    'entity_key',
-    'source_id',
-    'provider',
-    'incident_id',
-    'title',
-    'impact',
-    'status',
-    'started_at',
-    'resolved_at',
-    'components',
-    'incident_url',
-    'content_hash',
-    'snapshot_id',
-    'first_seen_at',
-    'source_url',
-    'fetched_at',
-  ],
-  disclosures: [
-    'entity_key',
-    'source_id',
-    'provider',
-    'kind',
-    'entry_id',
-    'title',
-    'summary',
-    'model',
-    'observed_during',
-    'listed_on',
-    'entry_url',
-    'content_hash',
-    'snapshot_id',
-    'first_seen_at',
-    'source_url',
-    'fetched_at',
-  ],
-  disclosure_timelines: [
-    'entity_key',
-    'source_id',
-    'provider',
-    'entry_id',
-    'title',
-    'lines',
-    'discovered_on',
-    'disclosed_on',
-    'content_hash',
-    'snapshot_id',
-    'first_seen_at',
-    'source_url',
-    'fetched_at',
-  ],
-  filers: [
-    'entity_key',
-    'source_id',
-    'provider',
-    'cik',
-    'name',
-    'resolved_form',
-    'resolved_accession',
-    'resolved_file_date',
-    'content_hash',
-    'snapshot_id',
-    'first_seen_at',
-    'source_url',
-    'fetched_at',
-  ],
-  revenue_facts: [
-    'entity_key',
-    'source_id',
-    'provider',
-    'cik',
-    'entity_name',
-    'taxonomy',
-    'tag',
-    'unit',
-    'start',
-    'end',
-    'val',
-    'accession_no',
-    'fy',
-    'fp',
-    'form',
-    'filed',
-    'frame',
-    'whitelist_cik',
-    'content_hash',
-    'snapshot_id',
-    'first_seen_at',
-    'source_url',
-    'fetched_at',
-  ],
-  prospectus_statements: [
-    'entity_key',
-    'source_id',
-    'provider',
-    'part',
-    'cik',
-    'entity_name',
-    'accession_no',
-    'form',
-    'filed',
-    'start',
-    'end',
-    'unaudited',
-    'units',
-    'line_key',
-    'label',
-    'val',
-    'unit',
-    'first_seen_at',
-    'source_url',
-    'fetched_at',
-  ],
-  prospectus_commitments: [
-    'entity_key',
-    'source_id',
-    'provider',
-    'part',
-    'cik',
-    'entity_name',
-    'accession_no',
-    'form',
-    'filed',
-    'schedule',
-    'as_of',
-    'audited',
-    'approximate',
-    'line',
-    'bucket',
-    'val',
-    'statement',
-    'first_seen_at',
-    'source_url',
-    'fetched_at',
-  ],
-  prospectus_concentration: [
-    'entity_key',
-    'source_id',
-    'provider',
-    'part',
-    'cik',
-    'entity_name',
-    'accession_no',
-    'form',
-    'filed',
-    'basis',
-    'customer',
-    'start',
-    'end',
-    'unaudited',
-    'pct',
-    'first_seen_at',
-    'source_url',
-    'fetched_at',
-  ],
-  prospectus_shares: [
-    'entity_key',
-    'source_id',
-    'provider',
-    'part',
-    'cik',
-    'entity_name',
-    'accession_no',
-    'form',
-    'filed',
-    'measure',
-    'as_of',
-    'label',
-    'shares',
-    'with_option',
-    'first_seen_at',
-    'source_url',
-    'fetched_at',
-  ],
-  prospectus_risk_factors: [
-    'entity_key',
-    'source_id',
-    'provider',
-    'part',
-    'cik',
-    'entity_name',
-    'accession_no',
-    'form',
-    'filed',
-    'section',
-    'heading',
-    'change',
-    'previous',
-    'first_seen_at',
-    'source_url',
-    'fetched_at',
-  ],
-  changes: [
-    'id',
-    'entity_key',
-    'entity_type',
-    'provider',
-    'change_type',
-    'before_hash',
-    'after_hash',
-    'before_json',
-    'after_json',
-    'detected_at',
-    'source_url',
-    'fetched_at',
-  ],
-  alerts: [
-    'id',
-    'severity',
-    'headline',
-    'explanation',
-    'change_ids',
-    'rule',
-    'created_at',
-    'source_url',
-    'fetched_at',
-  ],
-  claim_readings: [
-    'thesis_id',
-    'claim_id',
-    'date',
-    'value',
-    'detail',
-    'computed_at',
-    'source_url',
-    'fetched_at',
-  ],
-  claim_verdicts: [
-    'id',
-    'thesis_id',
-    'claim_id',
-    'subject',
-    'change_id',
-    'provider',
-    'verdict',
-    'rationale',
-    'facts',
-    'detected_at',
-    'judged_at',
-    'source_url',
-    'fetched_at',
-  ],
-  track_record_candidates: [
-    'id',
-    'alert_id',
-    'kind',
-    'title',
-    'snippet',
-    'outlet',
-    'url',
-    'published_at',
-    'search_id',
-    'found_at',
-    'source_url',
-    'fetched_at',
-  ],
-  track_record_verdicts: [
-    'id',
-    'candidate_id',
-    'alert_id',
-    'same_event',
-    'rationale',
-    'judged_at',
-    'source_url',
-    'fetched_at',
-  ],
-  recipe_observations: [
-    'id',
-    'recipe_id',
-    'company',
-    'key',
-    'date',
-    'value',
-    'payload',
-    'raw_key',
-    'first_seen_at',
-    'source_url',
-    'fetched_at',
-  ],
-  filed_facts: [
-    'id',
-    'ticker',
-    'cik',
-    'concept',
-    'dims',
-    'start',
-    'end',
-    'value',
-    'unit',
-    'form',
-    'filed',
-    'accession_no',
-    'basis',
-    'raw_key',
-    'first_seen_at',
-    'source_url',
-    'fetched_at',
-  ],
-  exposure_quarters: [
-    'series_id',
-    'ticker',
-    'filer',
-    'group',
-    'label',
-    'concept',
-    'dims',
-    'kind',
-    'unit',
-    'start',
-    'end',
-    'value',
-    'derived',
-    'less_start',
-    'less_end',
-    'less_value',
-    'less_accession_no',
-    'accession_no',
-    'form',
-    'filed',
-    'filing_url',
-    'source_url',
-    'fetched_at',
-  ],
-  source_runs: [
-    'id',
-    'scope',
-    'source_id',
-    'started_at',
-    'status',
-    'detail',
-    'snapshot_id',
-    'added',
-    'removed',
-    'modified',
-    'source_url',
-  ],
-  entity_securities: [
-    'entity',
-    'entity_name',
-    'entity_kind',
-    'relationship',
-    'issuer',
-    'cik',
-    'symbol',
-    'exchange',
-    'listing_status',
-    'note',
-    'source_url',
-    'checked_on',
-  ],
 }
 
 export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
@@ -629,36 +230,74 @@ export function bumpCovers(made: Bump, needed: Bump): boolean {
   return RANK[made] >= RANK[needed]
 }
 
+/** schema.lock.json: every exported table's columns, in export order, at `schema_version`. */
+export interface SchemaLock {
+  schema_version: string
+  tables: Readonly<Record<string, readonly string[]>>
+}
+
+const sameSet = (a: readonly string[], b: readonly string[]) =>
+  a.length === b.length && a.every((x) => b.includes(x))
+
 /**
- * Every table's columns after `releases`, from the baseline. An added column
- * goes before source_url when the table has one (provenance stays last), else
- * at the end. A table whose columns are all removed is dropped.
+ * Why `columns` can't be locked over `lock`, or null when they can: unchanged
+ * under the same version, or changed by exactly what the newest release, the
+ * one right after the lock, says. A table whose columns only moved still
+ * needs an entry (a note), since a CSV reader may go by position.
  */
-export function replaySchema(
+export function lockRefusal(
+  lock: SchemaLock,
+  columns: Readonly<Record<string, readonly string[]>>,
   releases: readonly SchemaRelease[] = SCHEMA_RELEASES,
-): Record<string, string[]> {
-  const out: Record<string, string[]> = Object.fromEntries(
-    Object.entries(SCHEMA_BASELINE).map(([name, columns]) => [name, [...columns]]),
+): string | null {
+  const newest = releases.at(-1)!
+  const names = [...new Set([...Object.keys(lock.tables), ...Object.keys(columns)])]
+  const changed = names.filter(
+    (name) => JSON.stringify(lock.tables[name]) !== JSON.stringify(columns[name]),
   )
-  for (const release of releases.slice(1)) {
-    for (const [name, change] of Object.entries(release.tables ?? {})) {
-      // A new table lists its columns in export order, provenance included.
-      const fresh = !(name in out)
-      let columns = out[name] ?? []
-      for (const [from, to] of Object.entries(change.renamed ?? {})) {
-        columns = columns.map((c) => (c === from ? to : c))
+  if (newest.version === lock.schema_version) {
+    if (!changed.length) return null
+    return `${changed.join(', ')} changed since ${lock.schema_version}. Add a release to SCHEMA_RELEASES in layers/terminal/server/utils/data-schema.ts (adding is minor, removing or renaming is major) and an entry to CHANGELOG-data.md`
+  }
+  if (releases.at(-2)?.version !== lock.schema_version) {
+    return `schema.lock.json is at ${lock.schema_version}, but the release before ${newest.version} is ${releases.at(-2)?.version}. Lock each release as it is added`
+  }
+  const problems: string[] = []
+  for (const name of names) {
+    const before = lock.tables[name] ?? []
+    const after = columns[name] ?? []
+    const change = newest.tables?.[name]
+    if (!changed.includes(name)) {
+      if (change?.added?.length || change?.removed?.length || change?.renamed) {
+        problems.push(`${name} lists column changes, but its columns didn't change`)
       }
-      columns = columns.filter((c) => !change.removed?.includes(c))
-      for (const added of change.added ?? []) {
-        const at = fresh ? -1 : columns.indexOf('source_url')
-        if (at === -1) columns.push(added)
-        else columns.splice(at, 0, added)
-      }
-      if (columns.length) out[name] = columns
-      else delete out[name]
+      continue
+    }
+    if (!change) {
+      problems.push(`${name} changed, and ${newest.version} has no entry for it`)
+      continue
+    }
+    const renamed = Object.entries(change.renamed ?? {})
+    const added = [...(change.added ?? []), ...renamed.map(([, to]) => to)]
+    const removed = [...(change.removed ?? []), ...renamed.map(([from]) => from)]
+    // A new table's columns are the export's; a list, if given, must agree.
+    const wantAdded = after.filter((c) => !before.includes(c))
+    const wantRemoved = before.filter((c) => !after.includes(c))
+    const fresh = !(name in lock.tables)
+    if (!(fresh && !change.added && !renamed.length) && !sameSet(added, wantAdded)) {
+      problems.push(
+        `${name} added ${JSON.stringify(wantAdded)}, the release says ${JSON.stringify(added)}`,
+      )
+    }
+    if (!sameSet(removed, wantRemoved)) {
+      problems.push(
+        `${name} removed ${JSON.stringify(wantRemoved)}, the release says ${JSON.stringify(removed)}`,
+      )
     }
   }
-  return out
+  return problems.length
+    ? `${newest.version} doesn't match the exported columns: ${problems.join('; ')}`
+    : null
 }
 
 /** The changelog as the dictionary serves it: newest first. */

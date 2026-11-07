@@ -2,63 +2,52 @@
 // own newsroom posts within WINDOW_DAYS either side of when the terminal saw
 // the change, matched on terms built from the cited change rows (terms.ts).
 // Candidates only: the judge decides which are the same event (review.ts).
+// Both sides are matched once, by the */5 cron (runTrackRecordSearch), when
+// an alert's window has closed.
 //
-// The two sides run in different places. The newsroom side reads posts the
-// poll already stored, so the */5 cron does it here (runTrackRecordSearch),
-// once an alert's window has closed.
+// The newsroom side reads posts the poll already stored.
 //
 // The press side reads GDELT's 15-minute GKG files (gkg.ts), each once, in
-// order, off the Worker: an Actions job (scripts/gdelt-search.ts) asks /api/gdelt/work for the next unread files and
-// the alerts whose windows cover them (gkgWork), reads each file, and posts
-// the rows that match an alert's terms to /api/gdelt/file (recordGkgFile).
-// The Worker parses and matches every posted row again with this same code
-// before keeping it, so the job can neither pick the matches nor fill an
-// alert it was not handed. Candidates collect while a window is open; once
-// every file in the window has been read, the cron writes the side's search
-// row. Backfill is the same path: the queue starts at GKG_FROM.
-//
-// Each file is matched against the alerts that exist when it is read, so the
-// files from before an alert was written were never matched to it: the half
-// of its window before the terminal saw the change, which is where a press
-// lead would be. The job also posts every row naming a tracked lab, filer or
-// model family, kept MENTION_RETAIN_DAYS (mentions.ts), and each alert is
-// matched once against those (backfill) when the job starts matching it going
-// forward. The search row records where the search actually began (its
-// window_start, pressSearchedFrom): the window's start when every file in it
-// was kept and the alert's terms are inside the vocabulary, otherwise where
-// the forward match began; the page leaves a window searched only in part out
-// of the lead/lag tally rather than count it as a lead.
+// order, off the Worker: an Actions job (scripts/gdelt-search.ts) asks
+// /api/gdelt/work for the next unread files and the vocabulary (gkgWork),
+// reads each file, and posts its row count and the rows carrying a
+// vocabulary word to /api/gdelt/file (recordGkgFile), which keeps them
+// (mentions.ts). Once every file through an alert's window has been read,
+// the cron matches the alert against the rows kept for its window, earliest
+// first, and writes the side's search row. Its window_start says where the
+// search actually began (mentions.ts › pressSearchedFrom), and the page
+// leaves a window searched only in part out of the lead/lag tally.
 //
 // GDELT's search API was used before (rows with a DOC API source_url). It
 // limits requests per IP and answered most queries with a 429 from every IP
-// we tried; the page ignores those rows' failures (terminal-track-record.ts).
+// we tried.
 
-import { and, asc, count, eq, gte, inArray, lte, min, sql } from 'drizzle-orm'
+import { and, asc, count, eq, gte, inArray, max } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { ChangeRow, contentHash } from '../contracts'
-import type { RawStore } from '../refresh'
 import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '../store'
 import { NEWSROOM_OF } from '../../theses/recipes/newsrooms'
-import { PRESS_CANDIDATE_LIMIT, titleKey } from './gdelt'
-import { GKG_BASE, GKG_SLOT_MS, gkgSlots, gkgStamp, gkgUrl, parseGkgRow, stampIso } from './gkg'
+import {
+  GKG_BASE,
+  GKG_FROM,
+  GKG_READY_MS,
+  GKG_SLOT_MS,
+  gkgSlots,
+  gkgStamp,
+  gkgUrl,
+  stampIso,
+} from './gkg'
 import {
   acceptedMentions,
-  backfilledFrom,
-  mentionsBetween,
+  mentionsIn,
+  pressSearchedFrom,
   pruneMentions,
   retentionVocabulary,
   storeMentions,
   type GkgMention,
 } from './mentions'
-import {
-  alertTerms,
-  gdeltQuery,
-  matchesArticle,
-  matchesWhat,
-  termsInVocabulary,
-  type SearchTerms,
-} from './terms'
+import { alertTerms, matchesArticle, matchesWhat, termList, type SearchTerms } from './terms'
 import { TRACK_RECORD_FROM, sawIt, searchState, trackWindow, type TrackWindow } from './window'
 
 export const MATERIAL_SEVERITIES = ['notable', 'critical'] as const
@@ -69,11 +58,19 @@ export const GKG_FILES_PER_CALL = 24
 /** Newsroom posts kept per alert, earliest first. */
 export const NEWSROOM_CANDIDATE_LIMIT = 10
 
+/** Articles kept per alert: the earliest ones, since the first report is the one that counts. */
+export const PRESS_CANDIDATE_LIMIT = 20
+
+/** One key per headline: a wire story syndicated to fifty sites is one report, first seen at its earliest copy. */
+export const titleKey = (title: string) =>
+  title
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
+
 export interface AlertForSearch {
   id: string
   created_at: string
-  /** When the alert row was written; created_at for rows from before the column. */
-  recorded_at: string
   changes: ChangeRow[]
 }
 
@@ -83,7 +80,6 @@ export async function materialAlerts(db: PipelineDb): Promise<AlertForSearch[]> 
     .select({
       id: tables.alerts.id,
       created_at: tables.alerts.created_at,
-      recorded_at: tables.alerts.recorded_at,
       change_ids: tables.alerts.change_ids,
     })
     .from(tables.alerts)
@@ -103,7 +99,6 @@ export async function materialAlerts(db: PipelineDb): Promise<AlertForSearch[]> 
   return alerts.map((a) => ({
     id: a.id,
     created_at: a.created_at,
-    recorded_at: a.recorded_at ?? a.created_at,
     changes: (JSON.parse(a.change_ids) as string[])
       .map((id) => byId.get(id))
       .filter((c): c is ChangeRow => c !== undefined),
@@ -207,7 +202,7 @@ interface SearchRow {
   query: string
   window_start: string
   window_end: string
-  status: 'ok' | 'failed' | 'skipped'
+  status: 'ok' | 'skipped'
   detail: string | null
   candidates: number
   searched_at: string
@@ -245,77 +240,34 @@ async function alertPlans(db: PipelineDb): Promise<AlertPlan[]> {
   return plans
 }
 
-/** Every GKG file already read, ok or missing. */
-async function readStamps(db: PipelineDb): Promise<Set<string>> {
-  const rows = await db.select({ stamp: tables.gdeltFiles.stamp }).from(tables.gdeltFiles)
-  return new Set(rows.map((r) => r.stamp))
+/** The last GKG file read, ok or missing; files are read as a contiguous run from GKG_FROM. */
+async function lastReadStamp(db: PipelineDb): Promise<string | null> {
+  const [row] = await db.select({ stamp: max(tables.gdeltFiles.stamp) }).from(tables.gdeltFiles)
+  return row?.stamp ?? null
 }
+
+/** The quarter hour after `last`, or GKG_FROM's when nothing has been read. */
+const nextAfter = (last: string | null) =>
+  last ? gkgStamp(Date.parse(stampIso(last)) + GKG_SLOT_MS) : gkgStamp(Date.parse(GKG_FROM))
 
 /** The quarter hours whose file is due and not read yet, oldest first. */
-export function unreadStamps(now: Date, read: ReadonlySet<string>): string[] {
-  return gkgSlots(now).filter((s) => !read.has(s))
+export function unreadStamps(now: Date, last: string | null): string[] {
+  return gkgSlots(now, stampIso(nextAfter(last)))
+}
+
+/** The oldest file that is due and not read yet, or null when the job is caught up. */
+export async function oldestUnread(db: PipelineDb, now: Date): Promise<string | null> {
+  const next = nextAfter(await lastReadStamp(db))
+  return Date.parse(stampIso(next)) + GKG_READY_MS <= now.getTime() ? next : null
 }
 
 /**
- * Whether every GKG file a window needs has been read: the quarter hour its
- * end falls in is due, and nothing before its end is unread. A file is due
- * GKG_READY_MS after its quarter hour, so a window that closed a moment ago
- * waits for its last files.
+ * Whether every GKG file a window needs has been read: the one whose quarter
+ * hour holds the window's end, and so (the run being contiguous) every one
+ * before it.
  */
-export function windowRead(
-  window: TrackWindow,
-  lastDue: string | null,
-  oldestUnread: string | null,
-): boolean {
-  if (!lastDue || Date.parse(stampIso(lastDue)) + GKG_SLOT_MS < Date.parse(window.end)) return false
-  return oldestUnread === null || Date.parse(stampIso(oldestUnread)) >= Date.parse(window.end)
-}
-
-/**
- * A file read this soon after an alert was written may still have been
- * matched without it: the job takes the alert list once per batch of
- * GKG_FILES_PER_CALL files (about two minutes of reading), so a file only
- * counts as searched for an alert when it was recorded this long after.
- */
-export const GKG_WORK_LAG_MS = 15 * 60_000
-
-/**
- * The quarter hour from which the press side was actually searched for an
- * alert: the earliest file in its window recorded GKG_WORK_LAG_MS or more
- * after the alert was written. window.end when none was, so a window searched
- * not at all reads as empty rather than complete.
- */
-export async function pressSearchedFrom(
-  db: PipelineDb,
-  alert: { id: string; recorded_at: string },
-  window: TrackWindow,
-): Promise<string> {
-  const forward = await forwardSearchedFrom(db, alert.recorded_at, window)
-  // A backfill reaches through a file read after the alert was matched going
-  // forward, so the two ranges meet and the search began at the earlier one.
-  const back = await backfilledFrom(db, alert.id, window)
-  return back !== null && Date.parse(back) < Date.parse(forward) ? back : forward
-}
-
-/** The earliest file matched going forward: recorded GKG_WORK_LAG_MS or more after the alert. */
-async function forwardSearchedFrom(
-  db: PipelineDb,
-  written: string,
-  window: TrackWindow,
-): Promise<string> {
-  const after = new Date(Date.parse(written) + GKG_WORK_LAG_MS).toISOString()
-  const [row] = await db
-    .select({ stamp: min(tables.gdeltFiles.stamp) })
-    .from(tables.gdeltFiles)
-    .where(
-      and(
-        gte(tables.gdeltFiles.stamp, gkgStamp(Date.parse(window.start) - GKG_SLOT_MS + 1)),
-        lte(tables.gdeltFiles.stamp, gkgStamp(Date.parse(window.end))),
-        sql`julianday(${tables.gdeltFiles.recorded_at}) >= julianday(${after})`,
-      ),
-    )
-  const from = row?.stamp ? stampIso(row.stamp) : window.end
-  return Date.parse(from) < Date.parse(window.start) ? window.start : from
+export function windowRead(window: TrackWindow, lastRead: string | null): boolean {
+  return lastRead !== null && Date.parse(stampIso(lastRead)) + GKG_SLOT_MS > Date.parse(window.end)
 }
 
 /** Whether a press search began later than its window: the part before it was never searched. */
@@ -350,8 +302,8 @@ async function pressCounts(db: PipelineDb, alertIds: readonly string[]) {
 
 /**
  * The cron's half, for every alert whose window has closed: the newsroom
- * side, the GDELT side's search row once every file in the window has been
- * read, and a skip for an alert with no search terms. Never fetches anything.
+ * side, the GDELT side once every file in the window has been read, and a
+ * skip for an alert with no search terms. Never fetches anything.
  */
 export async function runTrackRecordSearch(
   db: PipelineDb,
@@ -363,8 +315,7 @@ export async function runTrackRecordSearch(
     (p) => searchState(p.window, now) !== 'open' && !(p.gdeltDone && p.newsroomDone),
   )
   if (closed.length === 0) return report
-  const lastDue = gkgSlots(now).at(-1) ?? null
-  const oldestUnread = unreadStamps(now, await readStamps(db))[0] ?? null
+  const lastRead = await lastReadStamp(db)
   const counts = await pressCounts(
     db,
     closed.map((p) => p.alert.id),
@@ -430,73 +381,100 @@ export async function runTrackRecordSearch(
       report.candidates += posts.length
     }
 
-    if (!p.gdeltDone && windowRead(p.window, lastDue, oldestUnread)) {
-      // The candidates were stored as each file was read; this row says the
-      // window is complete, from where its search began.
+    if (!p.gdeltDone && windowRead(p.window, lastRead)) {
+      const rows = await pressCandidates(db, p.alert.id, p.terms, p.window, searched_at)
+      // Candidates before the search row: a run that dies between the two
+      // matches again next tick, and the candidate ids make that a no-op.
+      await insertCandidates(db, rows)
       await insertSearch(db, {
         ...base,
-        window_start: await pressSearchedFrom(db, p.alert, p.window),
+        window_start: await pressSearchedFrom(db, p.terms, p.window, now),
         id: crypto.randomUUID(),
         source: 'gdelt',
-        query: gdeltQuery(p.terms),
+        query: termList(p.terms),
         status: 'ok',
         detail: null,
-        candidates: counts.get(p.alert.id) ?? 0,
+        candidates: (counts.get(p.alert.id) ?? 0) + rows.length,
         raw_key: null,
         source_url: GKG_BASE,
       })
       report.gdelt++
+      report.candidates += rows.length
     }
   }
   return report
 }
 
-export interface GkgAlert {
-  alert_id: string
-  window_start: string
-  window_end: string
-  terms: SearchTerms
-  /** When the alert row was written: it is backfilled once the job is matching it. */
-  recorded_at: string
-}
-
-/** Material alerts with search terms whose window overlaps [from, to], oldest first. */
-async function alertsOverlapping(db: PipelineDb, from: string, to: string): Promise<GkgAlert[]> {
-  const out: GkgAlert[] = []
-  for (const p of await alertPlans(db)) {
-    if (!p.terms || p.window.end < from || p.window.start > to) continue
+/**
+ * The kept GKG rows in an alert's window that match its terms, earliest
+ * first, one per headline, up to PRESS_CANDIDATE_LIMIT. Press candidates the
+ * alert already holds count toward both: alerts whose windows were open when
+ * the job still matched each file as it read it have some.
+ */
+async function pressCandidates(
+  db: PipelineDb,
+  alertId: string,
+  terms: SearchTerms,
+  window: TrackWindow,
+  found_at: string,
+): Promise<CandidateRow[]> {
+  const held = await db
+    .select({ id: tables.trackRecordCandidates.id, title: tables.trackRecordCandidates.title })
+    .from(tables.trackRecordCandidates)
+    .where(
+      and(
+        eq(tables.trackRecordCandidates.alert_id, alertId),
+        eq(tables.trackRecordCandidates.kind, 'press'),
+      ),
+    )
+  const ids = new Set(held.map((c) => c.id))
+  const titles = new Set(held.map((c) => titleKey(c.title)))
+  const out: CandidateRow[] = []
+  if (ids.size >= PRESS_CANDIDATE_LIMIT) return out
+  for await (const m of mentionsIn(db, window)) {
+    if (!matchesArticle(m, terms)) continue
+    const id = candidateId(alertId, 'press', m.url)
+    const key = titleKey(m.title)
+    if (ids.has(id) || titles.has(key)) continue
+    ids.add(id)
+    titles.add(key)
     out.push({
-      alert_id: p.alert.id,
-      window_start: p.window.start,
-      window_end: p.window.end,
-      terms: p.terms,
-      recorded_at: p.alert.recorded_at,
+      id,
+      alert_id: alertId,
+      kind: 'press',
+      title: m.title,
+      snippet: null,
+      outlet: m.outlet,
+      url: m.url,
+      published_at: m.seen_at,
+      search_id: `gkg:${m.stamp}`,
+      found_at,
+      source_url: gkgUrl(m.stamp),
+      fetched_at: m.fetched_at,
     })
+    if (ids.size >= PRESS_CANDIDATE_LIMIT) break
   }
   return out
 }
 
 export interface GkgWork {
   files: { stamp: string; url: string }[]
-  /** The alerts whose windows overlap these files; each row is matched against the ones covering its quarter hour. */
-  alerts: GkgAlert[]
   /** The words a row must carry to be posted as a mention (mentions.ts). */
   vocabulary: string[]
 }
 
-/** The next unread GKG files, oldest first, and the alerts to match them against. */
+/** The next unread GKG files, oldest first, and the vocabulary to keep their rows by. */
 export async function gkgWork(
   db: PipelineDb,
   now: Date,
   limit: number = GKG_FILES_PER_CALL,
 ): Promise<GkgWork> {
-  const stamps = unreadStamps(now, await readStamps(db)).slice(0, limit)
-  if (stamps.length === 0) return { files: [], alerts: [], vocabulary: [] }
-  const [alerts, vocabulary] = await Promise.all([
-    alertsOverlapping(db, stampIso(stamps[0]!), stampIso(stamps.at(-1)!)),
-    retentionVocabulary(db),
-  ])
-  return { files: stamps.map((stamp) => ({ stamp, url: gkgUrl(stamp) })), alerts, vocabulary }
+  const stamps = unreadStamps(now, await lastReadStamp(db)).slice(0, limit)
+  if (stamps.length === 0) return { files: [], vocabulary: [] }
+  return {
+    files: stamps.map((stamp) => ({ stamp, url: gkgUrl(stamp) })),
+    vocabulary: await retentionVocabulary(db),
+  }
 }
 
 export interface GkgFileInput {
@@ -507,213 +485,49 @@ export interface GkgFileInput {
   status: 'ok' | 'missing'
   /** Rows the file held. */
   rows: number
-  /** Each row the job matched to an alert, exactly as the file has it. */
-  matches: { alert_id: string; row: string }[]
-  /** Every row carrying a vocabulary word, compacted; absent from a job that predates them. */
-  mentions?: GkgMention[]
+  /** Every row carrying a vocabulary word, compacted. */
+  mentions: GkgMention[]
 }
 
 export type GkgFileOutcome =
-  | { recorded: true; candidates: number; duplicates: number; rejected: number }
-  | { recorded: false; reason: 'not-due' }
+  | { recorded: true; mentions: number; rejected: number }
+  | { recorded: false; reason: 'not-next' }
 
 /**
- * Store one GKG file the job read: the file's row, its matched rows in R2, and
- * those rows as press candidates. Only for a file that is due and not read
- * yet. A posted match is kept only when the Worker parses the row, finds it in
- * this file's quarter hour, inside the alert's window, and matching the
- * alert's terms itself; anything else is counted as rejected. Per alert, a
- * headline already held and anything past PRESS_CANDIDATE_LIMIT are dropped
- * as duplicates, so the earliest reports are the ones kept.
+ * Store one GKG file the job read: its row, and the rows it carried that name
+ * a vocabulary word (mentions.ts), with the vocabulary they were kept by.
+ * Only for the next file in the run, once it is due, so the files read are a
+ * contiguous run from GKG_FROM and the last one read says what has been. The
+ * vocabulary is the Worker's own as the file is recorded: a posted row is
+ * kept with the names in it, and a row with none is counted as rejected.
  */
 export async function recordGkgFile(
   db: PipelineDb,
-  raw: RawStore,
   input: GkgFileInput,
   now: Date,
 ): Promise<GkgFileOutcome> {
-  if (!gkgSlots(now).includes(input.stamp)) return { recorded: false, reason: 'not-due' }
-  const [already] = await db
-    .select({ stamp: tables.gdeltFiles.stamp })
-    .from(tables.gdeltFiles)
-    .where(eq(tables.gdeltFiles.stamp, input.stamp))
-  if (already) return { recorded: false, reason: 'not-due' }
+  const next = nextAfter(await lastReadStamp(db))
+  const due = Date.parse(stampIso(next)) + GKG_READY_MS <= now.getTime()
+  if (input.stamp !== next || !due) return { recorded: false, reason: 'not-next' }
 
-  const seen_at = stampIso(input.stamp)
-  const url = gkgUrl(input.stamp)
-  const alerts = new Map(
-    (await alertsOverlapping(db, seen_at, seen_at)).map((a) => [a.alert_id, a] as const),
-  )
-
-  const held = new Map<string, { ids: Set<string>; titles: Set<string> }>()
-  const existing = alerts.size
-    ? await db
-        .select({
-          id: tables.trackRecordCandidates.id,
-          alert_id: tables.trackRecordCandidates.alert_id,
-          title: tables.trackRecordCandidates.title,
-        })
-        .from(tables.trackRecordCandidates)
-        .where(
-          and(
-            eq(tables.trackRecordCandidates.kind, 'press'),
-            inArray(tables.trackRecordCandidates.alert_id, [...alerts.keys()]),
-          ),
-        )
-    : []
-  const heldOf = (alert_id: string) => {
-    let h = held.get(alert_id)
-    if (!h) held.set(alert_id, (h = { ids: new Set(), titles: new Set() }))
-    return h
-  }
-  for (const c of existing) {
-    const h = heldOf(c.alert_id)
-    h.ids.add(c.id)
-    h.titles.add(titleKey(c.title))
-  }
-
-  const rows: CandidateRow[] = []
-  const lines: string[] = []
-  let rejected = 0
-  let duplicates = 0
-  const keep = (row: CandidateRow, title: string): boolean => {
-    const h = heldOf(row.alert_id)
-    const key = titleKey(title)
-    if (h.ids.has(row.id) || h.titles.has(key) || h.ids.size >= PRESS_CANDIDATE_LIMIT) {
-      duplicates++
-      return false
-    }
-    h.ids.add(row.id)
-    h.titles.add(key)
-    rows.push(row)
-    return true
-  }
-
-  // Kept mentions, then the backfill, before this file's own matches: the
-  // backfilled rows are earlier, and the earliest reports are the ones kept.
-  const kept =
-    input.status === 'ok' && input.mentions
-      ? acceptedMentions(input.mentions, await retentionVocabulary(db))
-      : null
-  if (kept) {
-    await storeMentions(db, input.stamp, input.fetched_at, kept)
-    await pruneMentions(db, input.stamp)
-    await backfill(db, now, input.stamp, [...alerts.values()], keep)
-  }
-
-  for (const match of input.status === 'ok' ? input.matches : []) {
-    const alert = alerts.get(match.alert_id)
-    const article = parseGkgRow(match.row)
-    if (
-      !alert ||
-      !article ||
-      article.seen_at !== seen_at ||
-      !matchesArticle(article, alert.terms)
-    ) {
-      rejected++
-      continue
-    }
-    const added = keep(
-      {
-        id: candidateId(alert.alert_id, 'press', article.url),
-        alert_id: alert.alert_id,
-        kind: 'press',
-        title: article.title,
-        snippet: null,
-        outlet: article.outlet,
-        url: article.url,
-        published_at: article.seen_at,
-        search_id: `gkg:${input.stamp}`,
-        found_at: now.toISOString(),
-        source_url: url,
-        fetched_at: input.fetched_at,
-      },
-      article.title,
-    )
-    if (added && !lines.includes(match.row)) lines.push(match.row)
-  }
-
-  const raw_key = lines.length ? `track-record/gkg/${input.stamp}.tsv` : null
-  if (raw_key) await raw.put(raw_key, `${lines.join('\n')}\n`, 'text/tab-separated-values')
-  await insertCandidates(db, rows)
+  const ok = input.status === 'ok'
+  const vocabulary = ok ? await retentionVocabulary(db) : null
+  const kept = vocabulary ? acceptedMentions(input.mentions, vocabulary) : []
+  await storeMentions(db, input.stamp, input.fetched_at, kept)
+  await pruneMentions(db, now)
   await db.insert(tables.gdeltFiles).values({
     stamp: input.stamp,
-    url,
+    url: gkgUrl(input.stamp),
     status: input.status,
-    rows: input.status === 'ok' ? input.rows : 0,
-    matched: rows.length,
-    raw_key,
+    rows: ok ? input.rows : 0,
+    matched: 0,
+    raw_key: null,
     fetched_at: input.fetched_at,
     recorded_at: now.toISOString(),
-    // A missing file holds nothing to keep; it is no gap in what was kept.
-    mentions: kept ? kept.length : input.mentions && input.status === 'missing' ? 0 : null,
+    mentions: kept.length,
+    vocabulary: vocabulary ? JSON.stringify(vocabulary) : null,
   })
-  return { recorded: true, candidates: rows.length, duplicates, rejected }
-}
-
-/**
- * Match each alert, once, against the kept mentions from its window's start
- * through this file, when it is old enough (GKG_WORK_LAG_MS) that the job's
- * work lists carry it, so every later file is matched going forward and the
- * two ranges meet. Records whether its terms are inside the vocabulary: if
- * not, the kept rows may not hold every match, and its search still counts
- * only from where the forward match began.
- */
-async function backfill(
-  db: PipelineDb,
-  now: Date,
-  stamp: string,
-  alerts: readonly GkgAlert[],
-  keep: (row: CandidateRow, title: string) => boolean,
-): Promise<void> {
-  const ready = alerts.filter((a) => Date.parse(a.recorded_at) + GKG_WORK_LAG_MS <= now.getTime())
-  if (ready.length === 0) return
-  const done = new Set(
-    (
-      await db
-        .select({ alert_id: tables.gkgBackfills.alert_id })
-        .from(tables.gkgBackfills)
-        .where(
-          inArray(
-            tables.gkgBackfills.alert_id,
-            ready.map((a) => a.alert_id),
-          ),
-        )
-    ).map((r) => r.alert_id),
-  )
-  const vocabulary = await retentionVocabulary(db)
-  for (const alert of ready) {
-    if (done.has(alert.alert_id)) continue
-    let candidates = 0
-    for (const m of await mentionsBetween(db, alert.window_start, stamp)) {
-      if (m.seen_at > alert.window_end || !matchesArticle(m, alert.terms)) continue
-      const added = keep(
-        {
-          id: candidateId(alert.alert_id, 'press', m.url),
-          alert_id: alert.alert_id,
-          kind: 'press',
-          title: m.title,
-          snippet: null,
-          outlet: m.outlet,
-          url: m.url,
-          published_at: m.seen_at,
-          search_id: `gkg:backfill:${m.stamp}`,
-          found_at: now.toISOString(),
-          source_url: gkgUrl(m.stamp),
-          fetched_at: m.fetched_at,
-        },
-        m.title,
-      )
-      if (added) candidates++
-    }
-    await db.insert(tables.gkgBackfills).values({
-      alert_id: alert.alert_id,
-      through_stamp: stamp,
-      covered: termsInVocabulary(alert.terms, vocabulary) ? 1 : 0,
-      candidates,
-      recorded_at: now.toISOString(),
-    })
-  }
+  return { recorded: true, mentions: kept.length, rejected: input.mentions.length - kept.length }
 }
 
 const NEWSROOM_URLS: Readonly<Record<string, string>> = Object.fromEntries(

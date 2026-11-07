@@ -1,4 +1,4 @@
-import { and, desc, eq, gte, inArray, like, sql } from 'drizzle-orm'
+import { and, desc, eq, getTableColumns, gte, inArray, like, sql } from 'drizzle-orm'
 import type { drizzle } from 'drizzle-orm/d1'
 import type { BatchItem } from 'drizzle-orm/batch'
 import type { SQLiteColumn } from 'drizzle-orm/sqlite-core'
@@ -128,9 +128,12 @@ function insertStatements<T extends TableName>(
 
 const stats = tables.sourceStats
 
+/** The value an upsert's conflicting row brought, for its DO UPDATE clause. */
+const excluded = (column: SQLiteColumn) => sql`excluded.${sql.identifier(column.name)}`
+
 /** The stored stamp or the incoming one, whichever `fn` picks; NULL never wins. */
 const keep = (fn: 'min' | 'max', column: SQLiteColumn) => {
-  const incoming = sql`excluded.${sql.identifier(column.name)}`
+  const incoming = excluded(column)
   return sql`${sql.raw(fn)}(coalesce(${column}, ${incoming}), ${incoming})`
 }
 
@@ -199,34 +202,37 @@ export async function currentEntities(db: PipelineDb, sourceId: string): Promise
   return rows.map(({ source_id: _source, first_seen_at: _first, ...row }) => EntityRow.parse(row))
 }
 
-/** Rewrite the content of entities whose hash changed. first_seen_at is left
- * alone: it belongs to the row's first appearance, not its latest edit. */
-function updateEntityStatements(
-  db: PipelineDb,
-  sourceId: string,
-  rows: readonly EntityRow[],
-): Statement[] {
-  return rows
-    .map((row) => EntityRow.parse(row))
-    .map((row) =>
-      db
-        .update(tables.entities)
-        .set({
-          entity_type: row.entity_type,
-          provider: row.provider,
-          content_hash: row.content_hash,
-          payload: row.payload,
-          snapshot_id: row.snapshot_id,
-          source_url: row.source_url,
-          fetched_at: row.fetched_at,
-        })
-        .where(
-          and(
-            eq(tables.entities.source_id, sourceId),
-            eq(tables.entities.entity_key, row.entity_key),
-          ),
-        ),
-    )
+// Everything an entity write may change. first_seen_at is left out: it
+// belongs to the row's first appearance, not its latest edit.
+const {
+  source_id: _sourceId,
+  entity_key: _entityKey,
+  first_seen_at: _firstSeen,
+  ...entityContent
+} = getTableColumns(tables.entities)
+const ENTITY_UPSERT_SET = Object.fromEntries(
+  Object.entries(entityContent).map(([name, column]) => [name, excluded(column)]),
+)
+
+/**
+ * Write entities whatever the source already holds: insert a new key, rewrite
+ * an existing one. One path for added, modified and in-place rows alike, and
+ * idempotent, so a write that a killed tick left half-done is finished by the
+ * next one rather than colliding with its own rows.
+ */
+function upsertEntityStatements(db: PipelineDb, rows: readonly unknown[]): Statement[] {
+  const validated = validateRows('entities', rows)
+  if (validated.length === 0) return []
+  const target = tables.entities
+  return chunk(validated, rowsPerStatement(Object.keys(validated[0]!).length)).map((group) =>
+    db
+      .insert(target)
+      .values(group)
+      .onConflictDoUpdate({
+        target: [target.source_id, target.entity_key],
+        set: ENTITY_UPSERT_SET,
+      }),
+  )
 }
 
 /** Drop entities a set-typed source no longer lists. */
@@ -271,24 +277,29 @@ export async function unstoredAlerts<T extends { id: string }>(
 }
 
 export interface DiffWrites {
-  added: readonly StoredEntityRow[]
-  modified: readonly EntityRow[]
+  /** The fetch's snapshot row, written first so no entity cites a snapshot that is not stored. */
+  snapshot?: unknown
+  upserts: readonly StoredEntityRow[]
   removed: readonly string[]
   changes: readonly ChangeRow[]
   alerts: readonly unknown[]
 }
 
 /**
- * One tick's diff, applied as a single db.batch() — which D1 runs as one
- * transaction. The entity set and the change log must move together: entities
- * written without their change rows make the next tick diff to nothing, so the
- * change (and any alert on it) is lost for good. All or nothing means a failed
- * write is retried whole by the next tick.
+ * One parse's writes. With change rows they go as a single db.batch(), which
+ * D1 runs as one transaction: the entity set and the change log must move
+ * together, since entities written without their change rows make the next
+ * tick diff to nothing and the change (and any alert on it) is lost for good.
+ * All or nothing means a failed write is retried whole by the next tick.
+ *
+ * Without change rows (a baseline, a quiet re-read) nothing can be lost that
+ * way, so a large set is chunked rather than sent as one oversized batch; the
+ * upserts make a retry finish whatever a killed write left.
  */
 export async function applyDiff(db: PipelineDb, sourceId: string, writes: DiffWrites) {
   const statements = [
-    ...insertStatements(db, 'entities', writes.added),
-    ...updateEntityStatements(db, sourceId, writes.modified),
+    ...insertStatements(db, 'snapshots', writes.snapshot ? [writes.snapshot] : []),
+    ...upsertEntityStatements(db, writes.upserts),
     ...deleteEntityStatements(db, sourceId, writes.removed),
     // A change id is a hash of (entity, before, after) with no source in it, so
     // two sources that see the same filing produce the same id. The row is
@@ -301,26 +312,24 @@ export async function applyDiff(db: PipelineDb, sourceId: string, writes: DiffWr
     ...insertStatements(db, 'alerts', writes.alerts, { skipExisting: true }),
   ]
   if (statements.length === 0) return
+  if (writes.changes.length === 0 && writes.alerts.length === 0) {
+    await runStatements(db, statements)
+    return
+  }
   await db.batch(statements as unknown as [Statement, ...Statement[]])
   // After the commit: the consumer reads the alerts from D1, not the message.
   if (writes.alerts.length) await emitEvent('alerts.new')
 }
 
-export type BaselineWrites = Pick<DiffWrites, 'added' | 'modified' | 'removed'>
-
 /**
- * A first parse's entity set, with no change rows. Written against whatever
- * the source already has rather than as plain INSERTs: a baseline whose
- * entity writes landed but whose run row did not is "first" again next tick,
- * and a plain INSERT would then collide on (source_id, entity_key) every
- * tick forever. Chunked like insertRows, so a large baseline is not one
- * oversized batch; a retry finishes whatever a killed one left.
+ * A source's run row, plus its fetch's snapshot when no earlier write carried
+ * it (store.ts › applyDiff), in one batch: the snapshot never lands without
+ * the run that read it, nor the run without its snapshot.
  */
-export async function writeBaseline(db: PipelineDb, sourceId: string, writes: BaselineWrites) {
+export async function recordRun(db: PipelineDb, run: unknown, snapshot: unknown) {
   await runStatements(db, [
-    ...insertStatements(db, 'entities', writes.added, { skipExisting: true }),
-    ...updateEntityStatements(db, sourceId, writes.modified),
-    ...deleteEntityStatements(db, sourceId, writes.removed),
+    ...insertStatements(db, 'snapshots', snapshot ? [snapshot] : []),
+    ...insertStatements(db, 'source_runs', [run]),
   ])
 }
 
@@ -492,9 +501,11 @@ export interface GoodSnapshot {
   raw_key: string
   /** The URL that snapshot was fetched from: a source can move (sources.yaml). */
   source_url: string
-  /** What else that run's parse read (refresh.ts › ParseBasis), or null. */
+  /** What that run's parse read and read it with (refresh.ts › ParseBasis), or null. */
   parse_basis: string | null
 }
+
+const GOOD_STATUSES: SourceRunRow['status'][] = ['ok', 'unchanged', 'baseline']
 
 /** Which of these sources have parsed at least once ('ok', 'unchanged' or 'baseline'). */
 export async function sourcesWithGoodRun(
@@ -502,43 +513,49 @@ export async function sourcesWithGoodRun(
   sourceIds: readonly string[],
 ): Promise<Set<string>> {
   if (sourceIds.length === 0) return new Set()
-  const good: SourceRunRow['status'][] = ['ok', 'unchanged', 'baseline']
   const rows = await db
     .selectDistinct({ source_id: tables.sourceRuns.source_id })
     .from(tables.sourceRuns)
     .where(
       and(
         inArray(tables.sourceRuns.source_id, [...sourceIds]),
-        inArray(tables.sourceRuns.status, good),
+        inArray(tables.sourceRuns.status, GOOD_STATUSES),
       ),
     )
   return new Set(rows.map((r) => r.source_id))
 }
 
 /**
- * The snapshot behind a source's newest non-failed run. Read through
- * source_runs rather than snapshots directly because the run row is written
- * last: a tick that stored a snapshot and then died before its entity writes
- * has no run row, so the next tick sees a different "latest" hash and parses
- * again instead of skipping a half-applied payload as 'unchanged'.
+ * The snapshot behind each source's newest non-failed run, by source id, in
+ * one query for the tick. Read through source_runs rather than snapshots
+ * directly because the run row is written last: a tick that stored a
+ * snapshot and then died before its run row has no run row, so the next tick
+ * sees a different "latest" hash and parses again instead of skipping a
+ * half-applied payload as 'unchanged'.
+ *
+ * The ids go in as one JSON parameter, so the list is not bound by D1's
+ * parameter cap, and each source costs one index probe for its newest good
+ * run rather than a read of its whole run history.
  */
-export async function latestGoodSnapshot(
+export async function latestGoodSnapshots(
   db: PipelineDb,
-  sourceId: string,
-): Promise<GoodSnapshot | null> {
-  const good: SourceRunRow['status'][] = ['ok', 'unchanged', 'baseline']
-  const [row] = await db
-    .select({
-      id: tables.snapshots.id,
-      content_hash: tables.snapshots.content_hash,
-      raw_key: tables.snapshots.raw_key,
-      source_url: tables.snapshots.source_url,
-      parse_basis: tables.sourceRuns.parse_basis,
-    })
-    .from(tables.sourceRuns)
-    .innerJoin(tables.snapshots, eq(tables.snapshots.id, tables.sourceRuns.snapshot_id))
-    .where(and(eq(tables.sourceRuns.source_id, sourceId), inArray(tables.sourceRuns.status, good)))
-    .orderBy(desc(tables.sourceRuns.started_at))
-    .limit(1)
-  return row ?? null
+  sourceIds: readonly string[],
+): Promise<Map<string, GoodSnapshot>> {
+  if (sourceIds.length === 0) return new Map()
+  const statuses = sql.join(
+    GOOD_STATUSES.map((s) => sql`${s}`),
+    sql`, `,
+  )
+  const rows = await db.all<GoodSnapshot & { source_id: string }>(sql`
+    SELECT ids.value AS source_id, s.id, s.content_hash, s.raw_key, s.source_url, r.parse_basis
+    FROM json_each(${JSON.stringify(sourceIds)}) AS ids
+    JOIN source_runs AS r ON r.id = (
+      SELECT id FROM source_runs
+      WHERE source_id = ids.value AND status IN (${statuses})
+      ORDER BY started_at DESC
+      LIMIT 1
+    )
+    JOIN snapshots AS s ON s.id = r.snapshot_id
+  `)
+  return new Map(rows.map(({ source_id, ...snapshot }) => [source_id, snapshot]))
 }

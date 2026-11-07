@@ -16,7 +16,7 @@ import {
 import { submitJudgeRun } from '../../server/pipeline/judge/submit'
 import { recommendationRows } from '../../server/pipeline/recommendations'
 import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
-import { terminalStamp } from '../../server/utils/terminal-cache'
+import { terminalStamps } from '../../server/utils/terminal-cache'
 import { CLASS_MAP_SOURCES, MODEL_CLASS_MAP } from '../../server/utils/terminal-classes'
 import { queryContext, queryPrices } from '../../server/utils/terminal-db'
 import { fixtureText } from './fixtures'
@@ -262,7 +262,7 @@ describe('a judge re-mapping', () => {
     expect(flagship?.model_slug).toBe('claude-opus-6')
     expect((await classMapReview(db, readRaw, NOW)).cells).toEqual([])
 
-    const ctx = queryContext(sourcesYaml, await terminalStamp(db), () => NOW)
+    const ctx = queryContext(sourcesYaml, (await terminalStamps(db)).poll, () => NOW)
     const { matrix } = await queryPrices(db, ctx)
     const cell = matrix.cells.find((c) => c.provider === 'anthropic' && c.class === 'flagship')
     expect(cell?.row?.model_slug).toBe('claude-opus-6')

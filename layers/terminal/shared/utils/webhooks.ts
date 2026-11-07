@@ -45,21 +45,12 @@ export const WEBHOOK_MAX_CHANGES = 100
 
 export type WebhookEvent = 'alert.created' | 'test'
 
-/** A cited change, with the columns of the `changes` export table. */
-export interface WebhookChangeRow {
-  id: string
-  entity_key: string
-  entity_type: string
-  provider: string
-  change_type: string
-  before_hash: string | null
-  after_hash: string | null
-  before_json: string | null
-  after_json: string | null
-  detected_at: string
-  source_url: string
-  fetched_at: string
-}
+/**
+ * A cited change: a row with the columns of the `changes` export table, in
+ * its order (EXPORT_TABLES.changes on the server, which the outbox projects
+ * through).
+ */
+export type WebhookChangeRow = Readonly<Record<string, unknown>> & { source_url: string }
 
 export interface WebhookAlertRow {
   id: string

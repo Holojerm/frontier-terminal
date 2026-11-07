@@ -1,4 +1,5 @@
 import { env } from 'cloudflare:test'
+import { sql } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
@@ -11,6 +12,7 @@ import {
   applyDiff,
   chunk,
   insertRows,
+  latestGoodSnapshots,
   repeatedChangeIds,
   rowsPerStatement,
 } from '../../server/pipeline/store'
@@ -112,8 +114,7 @@ describe('applyDiff', () => {
     ...PROV,
   })
   const writes = (n: number) => ({
-    added: [entity(n)],
-    modified: [],
+    upserts: [entity(n)],
     removed: [],
     changes: [change(n)],
     alerts: [],
@@ -128,13 +129,67 @@ describe('applyDiff', () => {
   // The 2026-09-22 google-pricing-html failure: entities landed, the changes
   // INSERT did not, and the next tick diffed the re-added model to nothing.
   it('leaves the entity set and change log untouched when a later insert fails', async () => {
-    // Enough entities to span several INSERT statements; the last one is
-    // already stored, so the final statement fails after the first succeeded.
-    const many = Array.from({ length: 40 }, (_, i) => entity(100 + i))
-    await insertRows(db, 'entities', [many.at(-1)!])
-    await expect(applyDiff(db, 'xai-greenhouse', { ...writes(2), added: many })).rejects.toThrow()
-    expect(await db.select().from(schema.entities)).toHaveLength(1)
+    // Enough entities to span several statements, then a change INSERT that
+    // fails after them all, as the changes table did that day.
+    await db.run(
+      sql.raw(`CREATE TRIGGER fail_change BEFORE INSERT ON changes
+        BEGIN SELECT RAISE(ABORT, 'change insert failed'); END`),
+    )
+    try {
+      const many = Array.from({ length: 40 }, (_, i) => entity(100 + i))
+      await expect(
+        applyDiff(db, 'xai-greenhouse', { ...writes(2), upserts: many }),
+      ).rejects.toThrow()
+    } finally {
+      await db.run(sql.raw('DROP TRIGGER fail_change'))
+    }
+    expect(await db.select().from(schema.entities)).toHaveLength(0)
     expect(await db.select().from(schema.changes)).toHaveLength(0)
+  })
+
+  it('upserts each row from its own values, across statements, and never moves first_seen_at', async () => {
+    const first = Array.from({ length: 25 }, (_, i) => entity(200 + i))
+    await applyDiff(db, 'xai-greenhouse', { upserts: first, removed: [], changes: [], alerts: [] })
+    const LATER = '2026-09-08T10:00:00.000Z'
+    const rewritten = first.map((e, i) => ({
+      ...e,
+      provider: 'other' as const,
+      content_hash: contentHash({ n: i, v: 2 }),
+      payload: JSON.stringify({ n: i, v: 2 }),
+      snapshot_id: 'snap-2',
+      source_url: 'https://job-boards.example/xai',
+      fetched_at: LATER,
+      first_seen_at: LATER,
+    }))
+    const fresh = { ...entity(300), fetched_at: LATER, first_seen_at: LATER }
+    await applyDiff(db, 'xai-greenhouse', {
+      upserts: [...rewritten, fresh],
+      removed: [],
+      changes: [],
+      alerts: [],
+    })
+
+    const stored = new Map((await db.select().from(schema.entities)).map((r) => [r.entity_key, r]))
+    expect(stored.size).toBe(26)
+    for (const row of rewritten) {
+      expect(stored.get(row.entity_key)).toEqual({ ...row, first_seen_at: PROV.fetched_at })
+    }
+    expect(stored.get(fresh.entity_key)).toEqual(fresh)
+  })
+
+  it('writes the snapshot with the entities that cite it', async () => {
+    const snapshot = {
+      id: 'snap-1',
+      source_id: 'xai-greenhouse',
+      content_hash: contentHash({ snap: 1 }),
+      raw_key: 'raw/xai-greenhouse/snap-1.json',
+      http_status: 200,
+      bytes: 10,
+      ...PROV,
+    }
+    await applyDiff(db, 'xai-greenhouse', { ...writes(5), snapshot })
+    expect((await db.select().from(schema.snapshots)).map((s) => s.id)).toEqual(['snap-1'])
+    expect(await db.select().from(schema.entities)).toHaveLength(1)
   })
 
   // edgar-fts and edgar-fts-openai both returned one filing; the second
@@ -231,6 +286,58 @@ describe('source_stats', () => {
   })
 })
 
+describe('latestGoodSnapshots', () => {
+  beforeEach(async () => {
+    await db.delete(schema.sourceRuns)
+  })
+
+  it("reads each source's newest good run's snapshot, for more ids than one statement may bind", async () => {
+    const at = (h: number) => `2026-09-07T${String(h).padStart(2, '0')}:00:00.000Z`
+    const snap = (id: string, h: number) => ({
+      id: `${id}:${at(h)}`,
+      source_id: id,
+      content_hash: contentHash({ id, h }),
+      raw_key: `raw/${id}/${h}.json`,
+      http_status: 200,
+      bytes: 10,
+      source_url: PROV.source_url,
+      fetched_at: at(h),
+    })
+    const run = (id: string, h: number, status: string, parse_basis: string | null = null) => ({
+      id: `survey:${id}:${at(h)}`,
+      scope: 'survey',
+      source_id: id,
+      started_at: at(h),
+      status,
+      detail: null,
+      snapshot_id: `${id}:${at(h)}`,
+      added: 0,
+      removed: 0,
+      modified: 0,
+      source_url: PROV.source_url,
+      parse_basis,
+    })
+    await insertRows(db, 'snapshots', [snap('a', 10), snap('a', 11), snap('a', 12), snap('b', 10)])
+    await insertRows(db, 'source_runs', [
+      run('a', 10, 'ok'),
+      run('a', 11, 'unchanged', '{"input":"i","context":"c"}'),
+      run('a', 12, 'failed'),
+      run('b', 10, 'failed'),
+    ])
+
+    const ids = ['a', 'b', ...Array.from({ length: 150 }, (_, n) => `none-${n}`)]
+    const got = await latestGoodSnapshots(db, ids)
+    expect([...got.keys()]).toEqual(['a'])
+    expect(got.get('a')).toEqual({
+      id: `a:${at(11)}`,
+      content_hash: contentHash({ id: 'a', h: 11 }),
+      raw_key: 'raw/a/11.json',
+      source_url: PROV.source_url,
+      parse_basis: '{"input":"i","context":"c"}',
+    })
+  })
+})
+
 describe('repeatedChangeIds', () => {
   const KEY = 'model:xai:grok-4.6:standard'
   const [h15, h10] = [contentHash({ p: 15 }), contentHash({ p: 10 })]
@@ -266,8 +373,7 @@ describe('repeatedChangeIds', () => {
     const rekeyed = repeatChangeId(again)
     expect(rekeyed.id).not.toBe(down.id)
     await applyDiff(db, 'xai-models-md', {
-      added: [],
-      modified: [],
+      upserts: [],
       removed: [],
       changes: [rekeyed],
       alerts: [],

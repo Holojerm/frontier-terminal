@@ -8,7 +8,7 @@
 // that says when each row was written (searched_at, found_at, judged_at), and
 // the alerts are the ones the store held then (terminal-asof.ts).
 
-import { and, asc, gte, inArray, lte, max } from 'drizzle-orm'
+import { and, asc, gte, inArray, lte } from 'drizzle-orm'
 
 import type {
   ProviderId,
@@ -23,7 +23,6 @@ import type { AlertSeverity } from '../../shared/utils/terminal-tiers'
 
 import * as tables from '#server/db/schema'
 import { ChangeRow } from '../pipeline/contracts'
-import { candidateTitle } from '../pipeline/track-record/gdelt'
 import { MATERIAL_SEVERITIES, searchedInPart } from '../pipeline/track-record/search'
 import {
   TRACK_RECORD_FROM,
@@ -41,15 +40,6 @@ import type { QueryContext } from './terminal-db'
 type Candidate = typeof tables.trackRecordCandidates.$inferSelect
 type Verdict = typeof tables.trackRecordVerdicts.$inferSelect
 type Search = typeof tables.trackRecordSearches.$inferSelect
-
-/** A cache variant: the newest search or verdict, which the poll stamp does not see. */
-export async function trackRecordStamp(db: PipelineDb): Promise<string> {
-  const [[s], [v]] = await Promise.all([
-    db.select({ at: max(tables.trackRecordSearches.searched_at) }).from(tables.trackRecordSearches),
-    db.select({ at: max(tables.trackRecordVerdicts.judged_at) }).from(tables.trackRecordVerdicts),
-  ])
-  return `${s?.at ?? 'none'}|${v?.at ?? 'none'}`
-}
 
 /**
  * One side's state from its searches, candidates and verdicts. Candidates are
@@ -82,8 +72,6 @@ export function sideOf(
   if (!ok) {
     const skipped = searches.find((s) => s.status === 'skipped')
     if (skipped) return side(noFeedState, { detail: skipped.detail })
-    const failed = searches.find((s) => s.status === 'failed')
-    if (failed) return side('search-failed', { detail: failed.detail })
     return side('not-searched')
   }
   if (candidates.length === 0) return side('none-found')
@@ -95,7 +83,7 @@ export function sideOf(
     if (!v) return side('not-yet-rated')
     if (!v.same_event) continue
     const hit: TrackRecordHit = {
-      title: candidateTitle(c),
+      title: c.title,
       outlet: c.outlet,
       url: c.url,
       published_at: c.published_at,
@@ -125,7 +113,7 @@ export function tally(rows: readonly TrackRecordSide[]): TrackRecordTally {
   }
 }
 
-/** The press side, marked when its search began after its window did (search.ts › pressSearchedFrom). */
+/** The press side, marked when its search began after its window did (mentions.ts › pressSearchedFrom). */
 function pressSide(
   side: TrackRecordSide,
   ok: Pick<Search, 'window_start'> | undefined,
@@ -231,16 +219,8 @@ export async function queryTrackRecord(
       saw_source_url: saw.source_url,
       window_from: window.start,
       window_to: window.end,
-      // A failure from GDELT's search API (before the GKG files) says nothing now: every
-      // window's files are read, so until they are, the side is not searched yet.
       press: pressSide(
-        sideOf(
-          open,
-          own('gdelt').filter((s) => s.status !== 'failed'),
-          kind('press'),
-          verdictOf,
-          saw.at,
-        ),
+        sideOf(open, own('gdelt'), kind('press'), verdictOf, saw.at),
         own('gdelt').find((s) => s.status === 'ok'),
         window,
       ),

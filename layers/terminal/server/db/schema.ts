@@ -138,7 +138,11 @@ export const alerts = sqliteTable(
     // rows from before the column read created_at.
     recorded_at: text('recorded_at'),
   },
-  (t) => [index('alerts_created_id_idx').on(t.created_at, t.id)],
+  (t) => [
+    index('alerts_created_id_idx').on(t.created_at, t.id),
+    // The webhook outbox offers alerts by when they were written.
+    index('alerts_recorded_idx').on(t.recorded_at),
+  ],
 )
 
 // Source runs — one row per (tick, source): what each poll attempted and how
@@ -160,11 +164,11 @@ export const sourceRuns = sqliteTable(
     removed: integer('removed').notNull(),
     modified: integer('modified').notNull(),
     source_url: text('source_url').notNull(),
-    // What else the parse read besides this source's own bytes: the side
-    // snapshots it joined against and a fingerprint of the parser and config
-    // it ran with (JSON, layers/terminal/server/pipeline/refresh.ts › ParseBasis). The next
-    // tick may skip an unchanged page only when these match too. NULL for a
-    // failed run, a source with no lane, and every run before the column.
+    // Two hashes (JSON, layers/terminal/server/pipeline/refresh.ts › ParseBasis): what the
+    // parse read (the page, its side snapshots, the class-map cells citing
+    // it) and what it read them with (parser version, config, URL). The next
+    // tick skips the parse only when both match. NULL for a failed run, a
+    // source with no lane, and every run before the column.
     parse_basis: text('parse_basis'),
   },
   (t) => [
@@ -234,7 +238,11 @@ export const classMapDecisions = sqliteTable(
     decided_by: text('decided_by').notNull(), // 'judge' today; anything else that decides says who
     ...provenance,
   },
-  (t) => [index('class_map_decisions_cell_idx').on(t.provider, t.class, t.decided_at)],
+  (t) => [
+    index('class_map_decisions_cell_idx').on(t.provider, t.class, t.decided_at),
+    // terminalStamps() reads max(decided_at) on every cached request; the cell index can't serve it.
+    index('class_map_decisions_decided_idx').on(t.decided_at),
+  ],
 )
 
 // Claim readings — one row per (claim, data date): the measured value a
@@ -256,7 +264,7 @@ export const claimReadings = sqliteTable(
   },
   (t) => [
     primaryKey({ columns: [t.claim_id, t.date] }),
-    // thesesStamp() reads max(computed_at) on every /api/theses request.
+    // terminalStamps() reads max(computed_at) on every cached request.
     index('claim_readings_computed_idx').on(t.computed_at),
   ],
 )
@@ -409,7 +417,7 @@ export const filedFactReads = sqliteTable(
   },
   (t) => [
     index('filed_fact_reads_doc_idx').on(t.ticker, t.kind, t.started_at),
-    // filedFactsStamp() reads max(started_at) across every ticker; the doc index can't serve it.
+    // terminalStamps() reads max(started_at) across every ticker; the doc index can't serve it.
     index('filed_fact_reads_started_idx').on(t.started_at),
   ],
 )
@@ -422,9 +430,10 @@ export const filedFactReads = sqliteTable(
 // append-only, so the track-record tab and its exports answer as_of by the
 // column that says when each row was written.
 
-// One row per search for an alert's candidates: a GDELT query, or a read of
-// the stored newsroom posts. A failed GDELT search is kept (the page says so)
-// and retried; an ok one is never repeated.
+// One row per search for an alert's candidates: a match against the kept GKG
+// rows, or a read of the stored newsroom posts. Written once per side, when
+// the window has closed. Rows with status 'failed' came from GDELT's search
+// API before the GKG files (scripts/track-record-cleanup.ts deletes them).
 export const trackRecordSearches = sqliteTable(
   'track_record_searches',
   {
@@ -434,7 +443,7 @@ export const trackRecordSearches = sqliteTable(
     query: text('query').notNull(),
     window_start: text('window_start').notNull(),
     window_end: text('window_end').notNull(),
-    status: text('status').notNull(), // ok | failed | skipped
+    status: text('status').notNull(), // ok | skipped
     detail: text('detail'),
     candidates: integer('candidates').notNull(),
     searched_at: text('searched_at').notNull(),
@@ -448,10 +457,10 @@ export const trackRecordSearches = sqliteTable(
   ],
 )
 
-// One row per GDELT GKG file the press side has read (pipeline/track-record/gkg.ts):
-// its quarter hour, how it ended, and where the rows that matched an alert
-// are kept. A file is read once; its matches are press candidates whose
-// search_id is `gkg:<stamp>`. missing: GDELT never published that quarter hour.
+// One row per GDELT GKG file the press side has read (pipeline/track-record/gkg.ts),
+// a contiguous run from GKG_FROM: a file is recorded only when it is the next
+// one. missing: GDELT never published that quarter hour. matched and raw_key
+// are from when the job matched rows as it read them; they are 0 and null since.
 export const gdeltFiles = sqliteTable(
   'gdelt_files',
   {
@@ -463,17 +472,19 @@ export const gdeltFiles = sqliteTable(
     raw_key: text('raw_key'),
     fetched_at: text('fetched_at').notNull(),
     recorded_at: text('recorded_at').notNull(),
-    // Rows kept in gkg_mentions from this file; null when it was read before
-    // mentions were kept, which leaves it unsearchable for later alerts.
+    // Rows kept in gkg_mentions from this file, and the vocabulary (JSON
+    // array) they were kept by; both null for a file read before rows were
+    // kept, which leaves it unsearchable for every alert.
     mentions: integer('mentions'),
+    vocabulary: text('vocabulary'),
   },
   (t) => [index('gdelt_files_recorded_idx').on(t.recorded_at)],
 )
 
 // The GKG rows that name a tracked lab, filer or model family, kept
-// MENTION_RETAIN_DAYS so an alert written after its files were read can still
-// be matched against the press from before it (track-record/mentions.ts).
-// Compact: names holds only the vocabulary terms the row carried.
+// MENTION_RETAIN_DAYS for matching each alert once its window closes
+// (track-record/mentions.ts). Compact: names holds only the vocabulary terms
+// the row carried.
 export const gkgMentions = sqliteTable(
   'gkg_mentions',
   {
@@ -488,19 +499,6 @@ export const gkgMentions = sqliteTable(
   },
   (t) => [index('gkg_mentions_seen_idx').on(t.seen_at)],
 )
-
-// One row per alert matched backward against gkg_mentions, once: through the
-// file being recorded when it ran. covered = 0 when the alert's terms fall
-// outside the vocabulary the mentions were kept by, so the rows could not hold
-// every match and the window still counts as searched only from where the
-// forward match began.
-export const gkgBackfills = sqliteTable('gkg_backfills', {
-  alert_id: text('alert_id').primaryKey(),
-  through_stamp: text('through_stamp').notNull(),
-  covered: integer('covered').notNull(),
-  candidates: integer('candidates').notNull(),
-  recorded_at: text('recorded_at').notNull(),
-})
 
 // One row per (alert, kind, url): an article or newsroom post inside the
 // alert's window that matched its search terms. A candidate is not a match;
@@ -611,20 +609,6 @@ export const webhooks = sqliteTable(
   (t) => [index('webhooks_api_key_idx').on(t.api_key_id)],
 )
 
-// The first time the webhook cron saw each alert. An alert's created_at is
-// its evidence time, not when it was stored (a judged alert is dated by the
-// changes it cites), so this is the only record of when an alert appeared:
-// a webhook gets alerts first seen after it was added, and a delivery waits
-// until the public site has rotated past seen_at.
-export const webhookAlertLog = sqliteTable(
-  'webhook_alert_log',
-  {
-    alert_id: text('alert_id').primaryKey(),
-    seen_at: text('seen_at').notNull(),
-  },
-  (t) => [index('webhook_alert_log_seen_idx').on(t.seen_at)],
-)
-
 // The webhook outbox: one row per (alert, webhook), unique, so enqueueing is
 // idempotent. id is the X-Frontier-Delivery header, the same on every retry.
 export const webhookDeliveries = sqliteTable(
@@ -635,8 +619,10 @@ export const webhookDeliveries = sqliteTable(
     alert_id: text('alert_id').notNull(),
     // queued | delivered | failed | expired | cancelled | suppressed
     status: text('status').notNull().default('queued'),
+    // When the alert was written (alerts.recorded_at): not sent until the
+    // public site's stamp is past it.
     seen_at: text('seen_at').notNull(),
-    // Not sent before this: seen_at, or a judged alert's hold.
+    // Not sent before this: when it was queued, or a judged alert's hold.
     not_before: text('not_before').notNull(),
     next_attempt_at: text('next_attempt_at').notNull(),
     attempts: integer('attempts').notNull().default(0),

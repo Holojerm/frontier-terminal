@@ -12,7 +12,6 @@ import oracle from '~~/fixtures/recipes/gpu-oracle.json?raw'
 import together from '~~/fixtures/recipes/gpu-together.html?raw'
 import verda from '~~/fixtures/recipes/gpu-verda.html?raw'
 import crwv from '~~/fixtures/recipes/sec-companyfacts-crwv.json?raw'
-import type { ClaimDef } from '../shared/utils/thesis-types'
 
 import * as schema from '~~/server/db/schema'
 import { insertRows } from '../server/pipeline/store'
@@ -32,7 +31,7 @@ import type { Recipe } from '../server/theses/recipes/contract'
 import { gpuOf, gpuPriceObservation } from '../server/theses/recipes/gpu-prices'
 import { GPU_RECIPES, RECIPES } from '../server/theses/recipes/registry'
 import { runRecipes } from '../server/theses/recipes/run'
-import { evaluateClaim, type StoredReading } from '../server/theses/status'
+import { evaluateClaim, type MeasuredClaim, type StoredReading } from '../server/theses/status'
 import { queryContext, queryCoverage } from '../server/utils/terminal-db'
 import { queryGpuPrices } from '../server/utils/terminal-gpu'
 import { daysBefore } from '../server/utils/terminal-rankings'
@@ -233,7 +232,7 @@ describe('compute arithmetic', () => {
 })
 
 describe('sustained drawdown', () => {
-  const claim: ClaimDef = {
+  const claim: MeasuredClaim = {
     ...COMPUTE_THESIS.claims[1]!,
     spec: {
       kind: 'measured',
@@ -294,6 +293,16 @@ describe('sustained drawdown', () => {
     })
     const voidBefore = base.map((r, i) => (i === 20 ? { ...r, value: 1, void_reason: 'x' } : r))
     expect(evaluateClaim(claim, voidBefore, fmt).status).toBe('holding')
+  })
+
+  it('drops void readings before restarting at a lab-set change', () => {
+    // A void reading 30 days back carries the lab set it could not use. Read
+    // as a change, it would cut the series to 30 days, short of the 49 needed.
+    const series60 = series(60, () => 10).map((r) => ({ ...r, lab_set: 'anthropic,openai' }))
+    const readings = series60.map((r, i) =>
+      i === 30 ? { ...r, lab_set: 'anthropic', void_reason: '1 of 2' } : r,
+    )
+    expect(evaluateClaim(claim, readings, fmt).status).toBe('holding')
   })
 })
 

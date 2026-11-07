@@ -39,16 +39,19 @@ Three pieces:
   Unconfigured = one `ops_alert_unconfigured` log line per tick and nothing
   sent, but the retention sweep (`pruneOpsEvents()`) still runs. Rows are marked notified only after the send resolves, so a mail
   hiccup retries instead of losing the alert. Before draining, the same tick runs
-  the watchdogs that spool their own events. One is `deploy_drift`: production's
-  `build.sha` is behind main's head on GitHub for a full tick, meaning a merge never deployed. The
-  rest are the **freshness checks** (`layers/terminal/server/utils/freshness.ts`), one rule for
+  the watchdogs that spool their own events, mostly the **freshness checks**
+  (`layers/terminal/server/utils/freshness.ts`), one rule for
   every part that can go quiet: a check is stale when work has been owed for longer than its limit
   and nothing succeeded within it, and it spools its kind once every six hours while that lasts.
   There is one check per scheduled task, read from the `task_heartbeats` row `withHeartbeat()`
-  writes (`task_silent`), plus one per producer off the Worker
+  writes (`task_silent`; a run that throws also spools `task_failed` at once), plus one per
+  producer off the Worker
   (`layers/terminal/server/utils/terminal-freshness.ts`): the judge routine (`judge_silent`, owed
   changes three hours old and no judge run in that time), the GDELT Actions job
-  (`gdelt_search_silent`) and the press-drafts routine (`press_drafts_silent`).
+  (`gdelt_search_silent`) and the press-drafts routine (`press_drafts_silent`). The deploy is one
+  too (`deploy_drift`): production's `build.sha` behind main's head on GitHub for a full tick
+  means a merge never deployed. A failed post-deploy smoke run spools `deploy_smoke_failed` when
+  `reliability:deploys` reads it, since GitHub mails that failure to whoever triggered the run.
   `layers/terminal/test/freshness.test.ts` fails the build on a scheduled task with no check and
   on a check kind with no tier. Always `await` the record call:
   a 5xx is exactly the path that ends the request before a floated promise runs.
@@ -112,10 +115,10 @@ bun run webhooks:remove -- --id whk_0a1b2c3d4e [--remote]
   `webhooks.drain` message for the first due row, and each drain reschedules
   itself while deliveries are owed, which is how backoff retries run. The
   hourly `events:sweep` covers a lost message. Unset key = the outbox is skipped
-  before touching D1. The first run records every recent alert as seen and
-  sends nothing.
+  before touching D1. A webhook gets the alerts written after it was added,
+  within the last two days.
 - **Timing:** a delivery waits until the poll stamp is past the moment the
-  cron first saw the alert, so the public pages already list it. A judged
+  alert was written, so the public pages already list it. A judged
   alert also waits out the social hold, from the same instant. Suppressing its
   social post (above) suppresses the webhook too, and so does deleting the alert.
 - **Failures:** retried with backoff for 24 hours. Then the webhook is marked
@@ -128,15 +131,17 @@ bun run webhooks:remove -- --id whk_0a1b2c3d4e [--remote]
 
 `bulk:build` (hourly at :41, `layers/terminal/server/utils/terminal-bulk.ts`) writes
 each table's `recent` and `full` cuts as a gzipped CSV and a gzip Parquet file
-(`terminal-parquet.ts`) to `BLOB`, from one pass over the table. The `full`
-files and a manifest are also copied to `frontier-terminal-bulk-licensed`
-(binding `BULK_LICENSED`), which holds nothing else. That bucket is what a
-licensee's S3 credentials open, read-only, so they can never reach the raw
-payloads in `BLOB`. Without the binding the build runs and makes no copies; once
-it appears, the next run rebuilds the `full` cuts to fill the bucket.
+(`terminal-parquet.ts`), from one pass over the table. The `recent` files go to
+`BLOB`; the `full` files and a manifest go to `frontier-terminal-bulk-licensed`
+(binding `BULK_LICENSED`), which holds nothing else, and `/export/bulk/full/*`
+is served from there. A table not cut by age is one file pair in that bucket,
+named by both its index entries. That bucket is what a licensee's S3
+credentials open, read-only, so they can never reach the raw payloads in
+`BLOB`. Without the binding (local dev) the build keeps everything in `BLOB`;
+once it appears, the next run rebuilds every table to fill the bucket.
 
 How a run spends its time: up to `BUILD_BUDGET_MS` (8 minutes of the cron's
-15) starting cuts, smallest first, reading D1 `BULK_PAGE_SIZE` rows at a time,
+15) starting cuts, smallest first, reading D1 `EXPORT_PAGE_SIZE` rows at a time,
 and saving the index (`BULK_INDEX_PATH` in R2) after each cut. It also stops at `D1_READ_BUDGET`
 planned queries, under D1's per-invocation query limit (a full rebuild needed
 ~370 on 2026-11-05). A cut that failed today is tried

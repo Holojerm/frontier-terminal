@@ -17,7 +17,6 @@ import * as tables from '#server/db/schema'
 import { ChangeRow, contentHash } from '../contracts'
 import { corpusOf, groundingFailure } from '../judge/grounding'
 import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '../store'
-import { candidateTitle } from './gdelt'
 
 /** Candidates offered per alert and kind per run. */
 export const REVIEW_PER_SIDE = 5
@@ -151,7 +150,7 @@ export async function trackRecordReview(
         candidate_id: c.id,
         kind: c.kind as 'press' | 'newsroom',
         outlet: c.outlet,
-        title: candidateTitle(c),
+        title: c.title,
         snippet: c.snippet,
         published_at: c.published_at,
       })),
@@ -182,7 +181,7 @@ export function reviewCorpus(
   changes: readonly ChangeRow[],
 ): string {
   return [
-    candidateTitle(candidate),
+    candidate.title,
     candidate.snippet ?? '',
     candidate.outlet,
     candidate.published_at,

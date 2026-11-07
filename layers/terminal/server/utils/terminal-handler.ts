@@ -1,6 +1,12 @@
 // What every terminal API route does around its query: read the poll tick,
 // build the query context, and serve the payload through the KV cache. The
-// five routes under server/api/ are one line each because of this.
+// routes under server/api/ are a line or two each because of this.
+//
+// Freshness differs by door, on purpose: a JSON response may trail the newest
+// stamp by up to five minutes at the edge (fresh for one, then served stale
+// while revalidating: TERMINAL_CACHE_CONTROL), while the HTML cache
+// (plugins/html-cache.ts) is keyed on the stamp and never serves a page
+// rendered from an older one.
 //
 // `db` and `kv` are imported explicitly, not auto-imported — the auto-import
 // typechecks everywhere and is not injected everywhere at runtime
@@ -12,7 +18,7 @@ import type { H3Event } from 'h3'
 
 import sourcesYaml from 'raw:~~/sources.yaml'
 
-import { LICENSE_SPLIT_EFFECTIVE, asOfLicense, withLicense } from '#shared/utils/license'
+import { LICENSE_SPLIT_EFFECTIVE, asOfLicense } from '#shared/utils/license'
 
 import {
   AS_OF_PARAM,
@@ -23,17 +29,12 @@ import {
   pointInTimeMeta,
   pollStampAt,
   type AsOfPayload,
+  type PointInTimeMeta,
 } from './terminal-asof'
 import { cacheControlFor, resolvedApiKey } from './api-access'
-import {
-  ARCHIVED_AS_OF_METHOD,
-  ARCHIVED_HIRING_AS_OF_METHOD,
-  ARCHIVED_LABS_AS_OF_METHOD,
-  ARCHIVED_LAB_BOARDS_AS_OF_METHOD,
-  assertArchiveKnowable,
-} from './terminal-archive'
+import { assertArchiveKnowable } from './terminal-archive'
 import { serverTimingHeader, timed, type ServerTiming } from './server-timing'
-import { paidLicensed, withSchemaVersion } from './terminal-envelope'
+import { paidLicensed, served } from './terminal-envelope'
 import {
   cachedTerminal,
   sharedTerminalStamp,
@@ -43,8 +44,19 @@ import {
 } from './terminal-cache'
 import { queryContext, type QueryContext } from './terminal-db'
 
-/** A minute fresh at the edge, then up to four more served while revalidating. The KV entry is keyed by the data stamp, so it never outlives the data. */
+/** A minute fresh at the edge, then up to four more served stale while revalidating. The KV entry is keyed by the data stamp, so it never outlives the data. */
 export const TERMINAL_CACHE_CONTROL = 'public, max-age=60, stale-while-revalidate=240'
+
+/**
+ * How a route answers `as_of`. 'none' refuses it (refuseAsOf); the others
+ * rebuild the payload at the instant and differ only in which instants they
+ * refuse: 'snapshot' one before the store's first snapshot, 'pricing' and
+ * 'hiring' one before that axis's Internet Archive backfill
+ * (terminal-archive.ts), and 'filed' none, since filed facts are read by
+ * filing date.
+ */
+export type AsOfMode = 'none' | 'snapshot' | 'pricing' | 'hiring' | 'filed'
+export type RebuiltAsOf = Exclude<AsOfMode, 'none'>
 
 /**
  * The payload for `name` in the current tick, computed with `query` on a
@@ -67,9 +79,7 @@ export async function terminalPayload<T>(
 ): Promise<T> {
   const stamp = await timed(options.timings, 'stamp', liveStamp)
   const context = queryContext(sourcesYaml, stamp.poll)
-  // The license is added after the cache: its window moves daily, and a
-  // cached payload must not carry yesterday's.
-  return withLicense(
+  return served(
     await cachedTerminal(kv, cacheName(name, variant), stamp.key, () => query(context), options),
   )
 }
@@ -86,20 +96,13 @@ export async function terminalPayloadAt<T extends object | null>(
   at: string,
   query: (context: QueryContext) => Promise<T>,
   variant = '',
-  /**
-   * `filed`: the query reads filed facts by their filing date (event time), so
-   * an instant before our first snapshot is still answerable and is not refused.
-   */
-  options: CacheOptions & { filed?: boolean; archived?: boolean | 'hiring' } = {},
+  asOf: RebuiltAsOf = 'snapshot',
+  options: CacheOptions = {},
 ): Promise<AsOfPayload<T>> {
   const stamp = await timed(options.timings, 'stamp', liveStamp)
   try {
-    // `archived`: a price route (true) or a hiring route ('hiring'), which
-    // answers an instant before our first snapshot from the Internet Archive
-    // backfill (terminal-archive.ts).
-    if (options.archived) {
-      await assertArchiveKnowable(db, at, options.archived === 'hiring' ? 'hiring' : 'pricing')
-    } else if (!options.filed) await assertKnowable(db, at)
+    if (asOf === 'snapshot') await assertKnowable(db, at)
+    else if (asOf !== 'filed') await assertArchiveKnowable(db, at, asOf)
   } catch (error) {
     if (error instanceof PointInTimeError) {
       throw createError({ statusCode: 400, message: error.message })
@@ -107,34 +110,32 @@ export async function terminalPayloadAt<T extends object | null>(
     throw error
   }
   const context = queryContext(sourcesYaml, await pollStampAt(db, at), undefined, at)
-  return cachedTerminal(
+  // eventTime rides beside the payload: on a hit the query does not run, so
+  // ctx.notes is empty and the entry has to remember it.
+  type Entry = { data: T & { point_in_time: PointInTimeMeta }; eventTime: boolean } | null
+  const entry = await cachedTerminal<Entry>(
     kv,
     cacheName(name, `${variant}|${AS_OF_PARAM}=${at}`),
     stamp.key,
     async () => {
       const data = await query(context)
       // null is "not known at T" (an unknown SKU), which the route turns into its 404.
-      return (
-        data === null ? null : { ...data, point_in_time: pointInTimeMeta(at, context.notes) }
-      ) as AsOfPayload<T>
+      if (data === null) return null
+      const point_in_time = pointInTimeMeta(at, context.notes)
+      return { data: { ...data, point_in_time }, eventTime: context.notes.eventTime }
     },
     options,
-  ).then((payload) =>
-    payload === null
-      ? payload
-      : withLicense({
-          ...payload,
-          point_in_time: {
-            ...payload.point_in_time,
-            license: asOfLicense(
-              at,
-              undefined,
-              undefined,
-              eventTime(options.filed, payload.point_in_time.method) ? EVENT_TIME_PUBLISHED : at,
-            ),
-          },
-        }),
   )
+  if (entry === null) return null as AsOfPayload<T>
+  const { data, eventTime } = entry
+  const published = eventTime ? EVENT_TIME_PUBLISHED : at
+  return served({
+    ...data,
+    point_in_time: {
+      ...data.point_in_time,
+      license: asOfLicense(at, undefined, undefined, published),
+    },
+  }) as AsOfPayload<T>
 }
 
 /**
@@ -143,19 +144,6 @@ export async function terminalPayloadAt<T extends object | null>(
  * earlier than that, however old the instant it describes.
  */
 const EVENT_TIME_PUBLISHED = LICENSE_SPLIT_EFFECTIVE
-
-/** Whether the answer reads event time: filed facts, or an Internet Archive capture. */
-function eventTime(filed: boolean | undefined, method: readonly string[]): boolean {
-  return (
-    filed === true ||
-    [
-      ARCHIVED_AS_OF_METHOD,
-      ARCHIVED_HIRING_AS_OF_METHOD,
-      ARCHIVED_LABS_AS_OF_METHOD,
-      ARCHIVED_LAB_BOARDS_AS_OF_METHOD,
-    ].some((m) => method.includes(m))
-  )
-}
 
 async function liveStamp(): Promise<TerminalStamps> {
   try {
@@ -166,7 +154,8 @@ async function liveStamp(): Promise<TerminalStamps> {
 }
 
 // The build is part of the key: a deploy that changes what a query returns
-// must not be served the previous build's payload until the next poll.
+// (its code, a thesis definition) must not be served the previous build's
+// payload until the next poll.
 function cacheName(name: string, variant: string): string {
   const build = useRuntimeConfig().public.buildSha || 'dev'
   return `${name}@${build}${variant ? `:${variant}` : ''}`
@@ -200,86 +189,54 @@ export function refuseAsOf(event: H3Event, name: string): void {
   })
 }
 
+interface ServeOptions {
+  /** Anything besides the stamps that changes the payload: the route's input. */
+  variant?: string
+  asOf?: AsOfMode
+}
+
 /**
- * `terminalPayload`, plus the edge Cache-Control every JSON route sends. A
- * route served through here does not answer `as_of`, so a request carrying
- * one is refused rather than handed today's payload.
+ * `terminalPayload`, plus the edge Cache-Control every JSON route sends. With
+ * `asOf` other than 'none' a request carrying `as_of` is rebuilt at that
+ * instant (terminalPayloadAt); without, it is refused rather than handed
+ * today's payload.
  */
-export async function serveTerminal<T>(
+export function serveTerminal<T>(
   event: H3Event,
   name: string,
   query: (context: QueryContext) => Promise<T>,
-  variant = '',
-): Promise<T> {
-  refuseAsOf(event, name)
-  setResponseHeader(event, 'Cache-Control', cacheControlFor(event, TERMINAL_CACHE_CONTROL))
-  const options = requestCacheOptions(event)
-  const payload = await terminalPayload(name, query, variant, options)
-  setResponseHeader(event, 'Server-Timing', serverTimingHeader(options.timings))
-  return envelopeFor(event, payload)
-}
-
-/**
- * `serveTerminal` for a route whose query honours ctx.at: live without `as_of`,
- * rebuilt with it. `archived`: the query answers an instant before the first
- * snapshot from the archived price history, so only one before that is refused.
- */
-export async function serveTerminalAsOf<T extends object | null>(
+  options?: ServeOptions & { asOf?: 'none' },
+): Promise<T>
+export function serveTerminal<T extends object | null>(
   event: H3Event,
   name: string,
   query: (context: QueryContext) => Promise<T>,
-  variant = '',
-  archived: boolean | 'hiring' = false,
-): Promise<T | AsOfPayload<T>> {
-  const { as_of } = await getValidatedQuery(event, parseAsOfQuery)
-  setResponseHeader(event, 'Cache-Control', cacheControlFor(event, TERMINAL_CACHE_CONTROL))
-  const options = requestCacheOptions(event)
-  const payload =
-    as_of === undefined
-      ? await terminalPayload(name, query, variant, options)
-      : await terminalPayloadAt(name, as_of, query, variant, { ...options, archived })
-  setResponseHeader(event, 'Server-Timing', serverTimingHeader(options.timings))
-  return envelopeFor(event, payload)
-}
-
-/** Timed, and with the KV write after the response: what a request-bound read gets. */
-function requestCacheOptions(event: H3Event): CacheOptions & { timings: ServerTiming[] } {
-  return { timings: [], defer: (promise) => event.waitUntil(promise) }
-}
-
-/**
- * `serveTerminalAsOf` for a route that reads filed facts by filing date
- * (terminal-exposure.ts): `as_of` may name any instant, before the store's
- * first snapshot included.
- */
-export async function serveTerminalFiled<T extends object | null>(
+  options: ServeOptions & { asOf: RebuiltAsOf },
+): Promise<T | AsOfPayload<T>>
+export async function serveTerminal(
   event: H3Event,
   name: string,
-  query: (context: QueryContext) => Promise<T>,
-  variant = '',
-): Promise<T | AsOfPayload<T>> {
-  const { as_of } = await getValidatedQuery(event, parseAsOfQuery)
+  query: (context: QueryContext) => Promise<object | null>,
+  { variant = '', asOf = 'none' }: ServeOptions = {},
+): Promise<unknown> {
+  let at: string | undefined
+  if (asOf === 'none') refuseAsOf(event, name)
+  else at = (await getValidatedQuery(event, parseAsOfQuery)).as_of
   setResponseHeader(event, 'Cache-Control', cacheControlFor(event, TERMINAL_CACHE_CONTROL))
-  const options = requestCacheOptions(event)
-  const payload =
-    as_of === undefined
-      ? await terminalPayload(name, query, variant, options)
-      : await terminalPayloadAt(name, as_of, query, variant, { ...options, filed: true })
-  setResponseHeader(event, 'Server-Timing', serverTimingHeader(options.timings))
-  return envelopeFor(event, payload)
-}
-
-/**
- * What a route returns: the payload with its schema version, and for a
- * licensee's key the license that key holds on older data (PAID_LICENSE) in
- * place of CC BY-NC. Nothing else in the payload changes with a key.
- */
-export function envelopeFor<T>(event: H3Event, payload: T): T {
-  const versioned = withSchemaVersion(payload)
-  if (!resolvedApiKey(event) || versioned === null || typeof versioned !== 'object') {
-    return versioned
+  const options: CacheOptions & { timings: ServerTiming[] } = {
+    timings: [],
+    // The KV write on a miss runs after the response is sent.
+    defer: (promise) => event.waitUntil(promise),
   }
-  return paidLicensed(versioned)
+  const payload =
+    at === undefined || asOf === 'none'
+      ? await terminalPayload(name, query, variant, options)
+      : await terminalPayloadAt(name, at, query, variant, asOf, options)
+  setResponseHeader(event, 'Server-Timing', serverTimingHeader(options.timings))
+  // A licensee's key carries the paid license on older data in place of CC
+  // BY-NC (PAID_LICENSE). Nothing else in the payload changes with a key.
+  if (!resolvedApiKey(event) || payload === null || typeof payload !== 'object') return payload
+  return paidLicensed(payload)
 }
 
 /** The Drizzle client, for routes that stream rather than cache. */

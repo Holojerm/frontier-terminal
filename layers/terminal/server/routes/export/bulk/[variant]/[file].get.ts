@@ -1,8 +1,9 @@
 // GET /export/bulk/<recent|full>/<table>.<csv.gz|parquet> — one bulk-feed
 // file, as the manifest lists it (/export/bulk/manifest.json). `recent` is
 // open to anyone; `full` needs a licensee's key, in either format. Served from
-// R2 with no D1 read. The file's SHA-256 is its ETag, so a client that has it
-// gets a 304.
+// R2 with no D1 read: the blob store, or LICENSED_BUCKET for the files that
+// live there (BulkFile.stored). The file's SHA-256 is its ETag, so a client
+// that has it gets a 304.
 
 import { blob } from '@nuxthub/blob'
 
@@ -12,7 +13,7 @@ import {
   BULK_CONTENT_TYPES,
   byteRange,
   bulkFileOf,
-  bulkPath,
+  licensedStoreOf,
   notModified,
   readBulkIndex,
 } from '../../../../utils/terminal-bulk'
@@ -73,7 +74,9 @@ export default defineEventHandler(async (event) => {
     })
   }
 
-  const body = await blob.get(bulkPath(file.variant, file.table, file.format))
+  const env = (event.context as { cloudflare?: { env?: unknown } }).cloudflare?.env
+  const store = file.stored.in === 'licensed' ? licensedStoreOf(env) : blob
+  const body = await store?.get(file.stored.key)
   if (!body) throw createError({ statusCode: 404, message: 'No bulk file at that path' })
   // A Parquet reader over HTTP (DuckDB, pyarrow) fetches the footer first, by range.
   const ifRange = getRequestHeader(event, 'if-range')

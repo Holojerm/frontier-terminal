@@ -9,5 +9,5 @@ import { rateLimitTerminal } from '../utils/api-access'
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'pay', limit: 60, windowSeconds: 60 })
   const variant = await recipeRunsStamp(terminalDb, VIEW_RECIPES.pay)
-  return serveTerminal(event, 'pay', () => queryPay(terminalDb), variant)
+  return serveTerminal(event, 'pay', () => queryPay(terminalDb), { variant })
 })

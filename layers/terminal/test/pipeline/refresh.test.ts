@@ -767,6 +767,11 @@ describe('repeats, retries and re-reads', () => {
     const oldUrl = 'https://status.example.com/incidents.json'
     await db.update(schema.snapshots).set({ source_url: oldUrl })
     await db.update(schema.entities).set({ source_url: oldUrl })
+    // The URL is part of the parse's context, so the run read it under another one.
+    const [first] = await db.select().from(schema.sourceRuns)
+    await db
+      .update(schema.sourceRuns)
+      .set({ parse_basis: JSON.stringify({ ...JSON.parse(first!.parse_basis!), context: oldUrl }) })
 
     const report = await run('survey', ['anthropic-status'])
     expect(report.sources[0]).toMatchObject({ status: 'ok', added: 0, modified: 0, removed: 0 })

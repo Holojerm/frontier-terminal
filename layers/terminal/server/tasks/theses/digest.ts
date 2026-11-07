@@ -1,8 +1,8 @@
 // Cron task: the weekly thesis digest, Monday 13:00 UTC (layers/terminal/server/theses/digest.ts).
 // Mailed through the same send_email binding as the ops digest; with no
 // binding configured it logs and returns, like ops:alert. A send that fails
-// is spooled as an ops event, so the next ops digest says the weekly one
-// did not go out.
+// throws, and withHeartbeat spools it as task_failed, so the next ops digest
+// says the weekly one did not go out.
 
 import { db } from '@nuxthub/db'
 import { and, eq, gte } from 'drizzle-orm'
@@ -11,9 +11,8 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 
 import * as tables from '#server/db/schema'
 import { DIGEST_DAYS, buildThesisDigest } from '../../theses/digest'
-import { recordOpsEvent } from '#server/utils/ops'
 import { getOpsMailer } from '#server/utils/ops-mail'
-import { terminalStamp } from '../../utils/terminal-cache'
+import { terminalStamps } from '../../utils/terminal-cache'
 import { queryContext } from '../../utils/terminal-db'
 import { queryTheses } from '../../utils/terminal-theses'
 import { withHeartbeat } from '../../utils/task-heartbeat'
@@ -39,7 +38,7 @@ const task = defineTask({
     const [data, changes, failedRuns] = await Promise.all([
       queryTheses(
         db,
-        queryContext(sourcesYaml, await terminalStamp(db), () => now),
+        queryContext(sourcesYaml, (await terminalStamps(db)).poll, () => now),
       ),
       db
         .select()
@@ -58,12 +57,7 @@ const task = defineTask({
     ])
     const { appName, appUrl } = useRuntimeConfig().public
     const digest = buildThesisDigest({ data, changes, failedRuns, now, appName, appUrl })
-    try {
-      await mailer({ ...digest, ids: [] })
-    } catch (error) {
-      await recordOpsEvent(db, { kind: 'thesis_digest_failed', detail: String(error) })
-      return { result: { sent: false } }
-    }
+    await mailer({ ...digest, ids: [] })
     return { result: { sent: true, subject: digest.subject } }
   },
 })

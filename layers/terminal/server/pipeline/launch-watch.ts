@@ -1,4 +1,4 @@
-import { and, eq, gte } from 'drizzle-orm'
+import { eq } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
@@ -11,33 +11,23 @@ import type { PipelineDb } from './store'
 //
 // On the Opus 5.5 launch the rows were in the store from 18:01, and at 22:51
 // the site still showed no alert for it and Opus 5 as Anthropic's flagship,
-// marked "under review". Refresh does spool one ops event when a cell loses
-// its sentence, but one line in one digest is easy to miss, and nothing at
-// all noticed the missing alert. This module checks both every half hour and
-// keeps saying so until they are fixed:
+// marked "under review". The missing alert is model-floor.ts's to prevent: it
+// writes in the same transaction as the change rows. The stale cell is this
+// module's. Refresh spools one class_basis_stale the moment a cell loses its
+// sentence, but one line in one digest is easy to miss, so every half hour
+// this reports a matrix cell whose vendor sentence has been gone for more
+// than an hour (the judge, hourly at :17, has had its run and not re-mapped
+// it) as class_basis_still_stale, again every six hours until it is fixed.
+// Both stay: this one waits out the judge's run before asking the owner, so
+// it never fires at the flip and cannot stand in for refresh's event there.
 //
-//   stale cell   a matrix cell whose vendor sentence has been gone for more
-//                than an hour: the flagship on the page is not the one the
-//                vendor now recommends, and the judge (hourly, at :17) has
-//                not re-mapped it. Re-announced every six hours.
-//   unalerted    a model slug new to the store in the last week that no
-//                alert cites two hours after it landed. model-floor.ts should
-//                make this impossible, so this is the check on that rule.
-//                Announced once per slug.
-//
-// The markers live in KV beside the poll lock. /api/fleet reports the same
-// two lists as counts, so the dashboard shows a launch gap before the digest
-// is read.
+// The markers live in KV beside the poll lock. /api/fleet reports the count,
+// so the dashboard shows a stale cell before the digest is read.
 
 const HOUR_MS = 60 * 60 * 1000
-const DAY_MS = 24 * HOUR_MS
 
-export const STALE_CELL_AFTER_MS = HOUR_MS
-export const STALE_CELL_RENOTIFY_SECONDS = (6 * HOUR_MS) / 1000
-/** The judge runs hourly at :17, so two hours covers one full run after the rows landed. */
-export const UNALERTED_AFTER_MS = 2 * HOUR_MS
-export const LAUNCH_WINDOW_MS = 7 * DAY_MS
-export const UNALERTED_MARKER_TTL_SECONDS = LAUNCH_WINDOW_MS / 1000
+const STALE_CELL_AFTER_MS = HOUR_MS
+const STALE_CELL_RENOTIFY_SECONDS = (6 * HOUR_MS) / 1000
 
 export interface StaleCell {
   provider: string
@@ -47,15 +37,8 @@ export interface StaleCell {
   since: string
 }
 
-export interface UnalertedModel {
-  provider: string
-  model_slug: string
-  first_seen_at: string
-}
-
 export interface LaunchCoverage {
   stale_cells: StaleCell[]
-  unalerted: UnalertedModel[]
 }
 
 async function staleCells(db: PipelineDb, now: Date): Promise<StaleCell[]> {
@@ -81,91 +64,14 @@ async function staleCells(db: PipelineDb, now: Date): Promise<StaleCell[]> {
   return out
 }
 
-const slugOf = (json: string | null): string | null => {
-  if (!json) return null
-  const slug = (JSON.parse(json) as { model_slug?: unknown }).model_slug
-  return typeof slug === 'string' ? slug : null
-}
-
-async function unalertedModels(db: PipelineDb, now: Date): Promise<UnalertedModel[]> {
-  const windowStart = new Date(now.getTime() - LAUNCH_WINDOW_MS).toISOString()
-  const settled = now.getTime() - UNALERTED_AFTER_MS
-
-  // First sighting per slug across every catalog. A slug one catalog has
-  // listed for months is not new because a second one started listing it.
-  const models = await db
-    .select({
-      provider: tables.entities.provider,
-      payload: tables.entities.payload,
-      first_seen_at: tables.entities.first_seen_at,
-    })
-    .from(tables.entities)
-    .where(eq(tables.entities.entity_type, 'model'))
-  const firstSeen = new Map<string, UnalertedModel>()
-  for (const row of models) {
-    const slug = slugOf(row.payload)
-    if (!slug) continue
-    const key = `${row.provider}:${slug}`
-    const seen = firstSeen.get(key)
-    if (!seen || row.first_seen_at < seen.first_seen_at) {
-      firstSeen.set(key, {
-        provider: row.provider,
-        model_slug: slug,
-        first_seen_at: row.first_seen_at,
-      })
-    }
-  }
-  const candidates = [...firstSeen.entries()].filter(
-    ([, m]) => m.first_seen_at >= windowStart && Date.parse(m.first_seen_at) <= settled,
-  )
-  if (candidates.length === 0) return []
-
-  // A slug is covered when any alert cites any 'added' change on it.
-  const added = await db
-    .select({
-      id: tables.changes.id,
-      provider: tables.changes.provider,
-      after_json: tables.changes.after_json,
-    })
-    .from(tables.changes)
-    .where(
-      and(
-        eq(tables.changes.entity_type, 'model'),
-        eq(tables.changes.change_type, 'added'),
-        gte(tables.changes.detected_at, windowStart),
-      ),
-    )
-  const alerts = await db
-    .select({ change_ids: tables.alerts.change_ids })
-    .from(tables.alerts)
-    .where(gte(tables.alerts.created_at, windowStart))
-  const cited = new Set(alerts.flatMap((a) => JSON.parse(a.change_ids) as string[]))
-  const covered = new Set<string>()
-  const hasChange = new Set<string>()
-  for (const change of added) {
-    const key = `${change.provider}:${slugOf(change.after_json)}`
-    hasChange.add(key)
-    if (cited.has(change.id)) covered.add(key)
-  }
-  // A slug with no 'added' change arrived in a baseline: the source was new,
-  // not the model, and there is nothing to alert about.
-  return candidates
-    .filter(([key]) => hasChange.has(key) && !covered.has(key))
-    .map(([, m]) => m)
-    .sort((a, b) => a.first_seen_at.localeCompare(b.first_seen_at))
-}
-
 export async function launchCoverage(
   db: PipelineDb,
   now: Date = new Date(),
 ): Promise<LaunchCoverage> {
-  return { stale_cells: await staleCells(db, now), unalerted: await unalertedModels(db, now) }
+  return { stale_cells: await staleCells(db, now) }
 }
 
-export const staleMarkerKey = (c: StaleCell) =>
-  `launch:stale:${c.provider}:${c.class}:${c.model_slug}`
-export const unalertedMarkerKey = (m: UnalertedModel) =>
-  `launch:unalerted:${m.provider}:${m.model_slug}`
+const staleMarkerKey = (c: StaleCell) => `launch:stale:${c.provider}:${c.class}:${c.model_slug}`
 
 /** One ops:alert tick: spool an event for each gap not reported recently. */
 export async function checkLaunchCoverage(
@@ -185,17 +91,6 @@ export async function checkLaunchCoverage(
         'vendor page; if it has not, re-transcribe it in layers/terminal/server/utils/terminal-classes.ts.',
     })
     await marker.put(key, now.toISOString(), STALE_CELL_RENOTIFY_SECONDS)
-  }
-  for (const model of coverage.unalerted) {
-    const key = unalertedMarkerKey(model)
-    if ((await marker.get(key)) !== null) continue
-    await recordOpsEvent(db, {
-      kind: 'launch_unalerted',
-      detail:
-        `${model.provider} ${model.model_slug} first listed ${model.first_seen_at} ` +
-        'and no alert cites it — check the model-floor rule and the judge.',
-    })
-    await marker.put(key, now.toISOString(), UNALERTED_MARKER_TTL_SECONDS)
   }
   return coverage
 }

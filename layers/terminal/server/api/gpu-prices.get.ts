@@ -9,5 +9,5 @@ import { rateLimitTerminal } from '../utils/api-access'
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'gpu-prices', limit: 60, windowSeconds: 60 })
   const variant = await gpuRunsStamp(terminalDb)
-  return serveTerminal(event, 'gpu-prices', (ctx) => queryGpuPrices(terminalDb, ctx), variant)
+  return serveTerminal(event, 'gpu-prices', (ctx) => queryGpuPrices(terminalDb, ctx), { variant })
 })

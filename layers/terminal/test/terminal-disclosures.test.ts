@@ -8,7 +8,7 @@ import { deriveSources } from '../server/pipeline/derived'
 import type { SourceFetcher } from '../server/pipeline/fetch'
 import { pendingChanges } from '../server/pipeline/judge/pending'
 import { runRefresh, type RawStore } from '../server/pipeline/refresh'
-import { terminalStamp } from '../server/utils/terminal-cache'
+import { terminalStamps } from '../server/utils/terminal-cache'
 import { queryContext } from '../server/utils/terminal-db'
 import {
   daysBetween,
@@ -54,7 +54,7 @@ function fetcher(overrides: Record<string, string> = {}): SourceFetcher {
 }
 
 const ctx = async () =>
-  queryContext(sourcesYaml, await terminalStamp(db), () => new Date('2026-10-03T00:00:00Z'))
+  queryContext(sourcesYaml, (await terminalStamps(db)).poll, () => new Date('2026-10-03T00:00:00Z'))
 
 const reportPageIds = async () =>
   (await deriveSources(db, sourcesYaml))
