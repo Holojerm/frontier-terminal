@@ -1,14 +1,13 @@
 // The webhook outbox: one delivery per (alert, webhook), queued and sent by
 // the EVENTS queue's fan-out and drain messages (layers/terminal/server/utils/event-work.ts),
-// with the hourly events:sweep as backstop. "The cron" below is whichever of
-// those ran.
+// with the hourly events:sweep as backstop. "A run" below is any of those.
 //
 // Two promises shape it:
 //   - A licensee never gets an alert before the public site shows it. A
 //     delivery waits until the poll stamp, which keys every cached page and
 //     payload (terminal-cache.ts, html-cache.ts), is later than the moment
-//     the cron first saw the alert. Anything rendered under that stamp was
-//     rendered after the alert was stored, so it lists it.
+//     the alert was written (alerts.recorded_at). Anything rendered under that
+//     stamp was rendered after the alert was stored, so it lists it.
 //   - A judged alert waits out the same one-hour hold as its social post
 //     (layers/terminal/server/pipeline/social.ts › heldUntil), from the same instant: when
 //     the alert was written. Suppressing
@@ -20,19 +19,20 @@
 // receiver dedupes on it. Takes the Drizzle client explicitly so
 // layers/terminal/test/webhooks.test.ts drives it against workerd's D1.
 
-import { and, asc, eq, inArray, isNull, lt, lte, ne, sql } from 'drizzle-orm'
+import { and, asc, eq, inArray, lt, lte, ne, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
 
 import {
   buildWebhookPayload,
-  severityReaches,
+  WEBHOOK_SEVERITIES,
   type WebhookChangeRow,
 } from '../../shared/utils/webhooks'
-import { heldUntil } from '../pipeline/social'
+import { JUDGED_HOLD_MS } from '../pipeline/social'
 import { D1_MAX_BOUND_PARAMS, type PipelineDb } from '../pipeline/store'
 import { keyRefusal } from './api-key-token'
+import { EXPORT_TABLES } from './terminal-export'
 import { webhookUrlRefusal } from './webhook-url'
 import {
   deriveWebhookSecret,
@@ -46,34 +46,23 @@ import {
 const DAY_MS = 86_400_000
 
 /**
- * Alerts dated further back than this are not offered. A judged or rolled-up
- * alert is dated by its evidence, which can be days before it is stored; two
- * weeks covers the weekly hiring rollup with room to spare.
+ * Alerts written further back than this are not offered. Every alert write
+ * emits a fan-out and the hourly sweep backs it up, so this only bites after
+ * an outage longer than the lookback.
  */
-export const WEBHOOK_ALERT_LOOKBACK_MS = 14 * DAY_MS
+export const WEBHOOK_ALERT_LOOKBACK_MS = 2 * DAY_MS
 
-/** Deliveries one tick sends, CONCURRENCY at a time. */
+/** Deliveries one drain sends, CONCURRENCY at a time. */
 export const WEBHOOK_DELIVERY_LIMIT = 20
 const CONCURRENCY = 5
 
 /** A claimed send is retried after this if its invocation dies mid-request. */
 const CLAIM_LEASE_MS = 15 * 60_000
 
-/** Finished deliveries and log rows are kept this long. */
+/** Finished deliveries are kept this long, well past the lookback, so none is offered twice. */
 const RETENTION_MS = 30 * DAY_MS
 
-/**
- * Written on the first run, so "the log is empty" means "never ran" rather
- * than "no alerts lately". That first run records every recent alert as seen
- * and queues nothing: a webhook added before the cron ever ran must not be
- * sent two weeks of history.
- */
-export const WEBHOOK_BASELINE_MARKER = '__baseline__'
-
 const LIVE_WEBHOOK_STATUSES = ['active', 'failing']
-
-/** Rows per multi-row insert, under D1's bound-parameter ceiling. */
-const rowsPerInsert = (columns: number) => Math.floor(D1_MAX_BOUND_PARAMS / columns)
 
 function chunks<T>(items: readonly T[], size: number): T[][] {
   const out: T[][] = []
@@ -82,15 +71,28 @@ function chunks<T>(items: readonly T[], size: number): T[][] {
 }
 
 export interface WebhookEnqueueResult {
-  seen: number
   queued: number
-  baseline: boolean
 }
 
+const iso = (julianDay: ReturnType<typeof sql>) => sql`strftime('%Y-%m-%dT%H:%M:%fZ', ${julianDay})`
+
+/** A severity's rank in WEBHOOK_SEVERITIES, NULL for one it doesn't list (severityReaches). */
+const severityRank = (column: unknown) =>
+  sql`CASE ${column} ${sql.join(
+    WEBHOOK_SEVERITIES.map((s, i) => sql`WHEN ${s} THEN ${i}`),
+    sql` `,
+  )} END`
+
+/** A v4 UUID, as crypto.randomUUID() writes it: the X-Frontier-Delivery id shape. */
+const uuid = sql`lower(hex(randomblob(4)) || '-' || hex(randomblob(2)) || '-4' ||
+  substr(hex(randomblob(2)), 2) || '-' || substr('89ab', 1 + abs(random()) % 4, 1) ||
+  substr(hex(randomblob(2)), 2) || '-' || hex(randomblob(6)))`
+
 /**
- * Record alerts the cron hasn't seen and queue a delivery for every live
- * webhook whose severity they reach. Idempotent: an alert is seen once, and
- * (alert, webhook) is unique in the outbox.
+ * Queue a delivery for every alert written since a live webhook was added,
+ * to each webhook whose severity it reaches, in one statement. Idempotent on
+ * the unique (alert, webhook) index. A delivery is not due before the run
+ * that queued it, nor before a judged alert's hold ends (heldUntil, in SQL).
  */
 export async function enqueueWebhookDeliveries(
   db: PipelineDb,
@@ -98,101 +100,35 @@ export async function enqueueWebhookDeliveries(
 ): Promise<WebhookEnqueueResult> {
   const nowIso = now.toISOString()
   const since = new Date(now.getTime() - WEBHOOK_ALERT_LOOKBACK_MS).toISOString()
-
-  const [marker] = await db
-    .select({ id: tables.webhookAlertLog.alert_id })
-    .from(tables.webhookAlertLog)
-    .where(eq(tables.webhookAlertLog.alert_id, WEBHOOK_BASELINE_MARKER))
-    .limit(1)
-  const baseline = !marker
-
-  const unseen = await db
-    .select({
-      id: tables.alerts.id,
-      severity: tables.alerts.severity,
-      rule: tables.alerts.rule,
-      created_at: tables.alerts.created_at,
-      recorded_at: tables.alerts.recorded_at,
-    })
-    .from(tables.alerts)
-    .leftJoin(tables.webhookAlertLog, eq(tables.webhookAlertLog.alert_id, tables.alerts.id))
-    .where(
-      and(
-        isNull(tables.webhookAlertLog.alert_id),
-        sql`datetime(${tables.alerts.created_at}) >= datetime(${since})`,
-      ),
-    )
-    .orderBy(asc(tables.alerts.created_at))
-    .limit(500)
-
-  // Only the rows this call inserted go on: an overlapping tick that logged
-  // an alert first owns its deliveries.
-  const fresh = new Set<string>()
-  const logRows = [
-    ...(baseline ? [{ alert_id: WEBHOOK_BASELINE_MARKER, seen_at: nowIso }] : []),
-    ...unseen.map((a) => ({ alert_id: a.id, seen_at: nowIso })),
-  ]
-  for (const batch of chunks(logRows, rowsPerInsert(2))) {
-    const inserted = await db
-      .insert(tables.webhookAlertLog)
-      .values(batch)
-      .onConflictDoNothing()
-      .returning({ id: tables.webhookAlertLog.alert_id })
-    for (const row of inserted) fresh.add(row.id)
-  }
+  const a = tables.alerts
+  const h = tables.webhooks
+  const k = tables.apiKeys
+  const notBefore = iso(
+    sql`max(julianday(${nowIso}), CASE WHEN ${a.rule} = 'agent-judge'
+      THEN max(julianday(${a.created_at}), julianday(${a.recorded_at})) + ${JUDGED_HOLD_MS / DAY_MS}
+      ELSE julianday(${a.created_at}) END)`,
+  )
+  const inserted = await db.all<{ id: string }>(sql`
+    INSERT INTO ${tables.webhookDeliveries}
+      (id, webhook_id, alert_id, status, seen_at, not_before, next_attempt_at)
+    SELECT 'whd_' || ${uuid}, webhook_id, alert_id, 'queued', seen_at, not_before, not_before
+    FROM (
+      SELECT ${h.id} AS webhook_id, ${a.id} AS alert_id, ${a.recorded_at} AS seen_at,
+        ${notBefore} AS not_before
+      FROM ${a}
+      JOIN ${h} ON ${a.recorded_at} >= ${h.created_at}
+      JOIN ${k} ON ${k.id} = ${h.api_key_id}
+      WHERE ${a.recorded_at} >= ${since}
+        AND ${inArray(h.status, LIVE_WEBHOOK_STATUSES)}
+        AND ${h.created_at} <= ${nowIso}
+        AND ${k.revoked} = 0
+        AND julianday(${k.expires_at}) > julianday(${nowIso})
+        AND ${severityRank(a.severity)} >= ${severityRank(h.min_severity)}
+    ) WHERE true
+    ON CONFLICT (alert_id, webhook_id) DO NOTHING
+    RETURNING id`)
   await prune(db, now)
-  if (baseline) return { seen: unseen.length, queued: 0, baseline: true }
-
-  const alerts = unseen.filter((a) => fresh.has(a.id))
-  if (!alerts.length) return { seen: 0, queued: 0, baseline: false }
-
-  const hooks = (
-    await db
-      .select({
-        id: tables.webhooks.id,
-        min_severity: tables.webhooks.min_severity,
-        created_at: tables.webhooks.created_at,
-        revoked: tables.apiKeys.revoked,
-        expires_at: tables.apiKeys.expires_at,
-      })
-      .from(tables.webhooks)
-      .innerJoin(tables.apiKeys, eq(tables.apiKeys.id, tables.webhooks.api_key_id))
-      .where(
-        and(
-          inArray(tables.webhooks.status, LIVE_WEBHOOK_STATUSES),
-          lte(tables.webhooks.created_at, nowIso),
-        ),
-      )
-  ).filter((h) => keyRefusal(h, now) === null)
-
-  const rows: (typeof tables.webhookDeliveries.$inferInsert)[] = []
-  for (const alert of alerts) {
-    const held = heldUntil(alert)
-    const notBefore = new Date(Math.max(now.getTime(), Number.isNaN(held) ? 0 : held))
-    for (const hook of hooks) {
-      if (!severityReaches(alert.severity, hook.min_severity)) continue
-      rows.push({
-        id: `whd_${crypto.randomUUID()}`,
-        webhook_id: hook.id,
-        alert_id: alert.id,
-        status: 'queued',
-        seen_at: nowIso,
-        not_before: notBefore.toISOString(),
-        next_attempt_at: notBefore.toISOString(),
-      })
-    }
-  }
-
-  let queued = 0
-  for (const batch of chunks(rows, rowsPerInsert(7))) {
-    const inserted = await db
-      .insert(tables.webhookDeliveries)
-      .values(batch)
-      .onConflictDoNothing()
-      .returning({ id: tables.webhookDeliveries.id })
-    queued += inserted.length
-  }
-  return { seen: alerts.length, queued, baseline: false }
+  return { queued: inserted.length }
 }
 
 async function prune(db: PipelineDb, now: Date): Promise<void> {
@@ -203,16 +139,6 @@ async function prune(db: PipelineDb, now: Date): Promise<void> {
       and(
         ne(tables.webhookDeliveries.status, 'queued'),
         lt(tables.webhookDeliveries.next_attempt_at, cutoff),
-      ),
-    )
-  // Safe: an alert logged 30 days ago is dated at least that far back, so the
-  // two-week lookback never offers it again.
-  await db
-    .delete(tables.webhookAlertLog)
-    .where(
-      and(
-        lt(tables.webhookAlertLog.seen_at, cutoff),
-        ne(tables.webhookAlertLog.alert_id, WEBHOOK_BASELINE_MARKER),
       ),
     )
 }
@@ -390,10 +316,18 @@ async function citedChanges(
 ): Promise<Map<string, WebhookChangeRow>> {
   const ids = new Set<string>()
   for (const alert of alerts) for (const id of changeIdsOf(alert.change_ids)) ids.add(id)
+  // A cited change carries the columns of the changes export, in its order.
+  const { columns } = EXPORT_TABLES.changes!
   const out = new Map<string, WebhookChangeRow>()
   for (const batch of chunks([...ids], D1_MAX_BOUND_PARAMS - 1)) {
     const rows = await db.select().from(tables.changes).where(inArray(tables.changes.id, batch))
-    for (const row of rows) out.set(row.id, row)
+    for (const row of rows) {
+      const record: Record<string, unknown> = row
+      out.set(row.id, {
+        ...Object.fromEntries(columns.map((c) => [c, record[c] ?? null])),
+        source_url: row.source_url,
+      })
+    }
   }
   return out
 }

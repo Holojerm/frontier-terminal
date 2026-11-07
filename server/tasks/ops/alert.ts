@@ -19,7 +19,7 @@ import { kv } from '@nuxthub/kv'
 import { FleetManifestSchema } from '#shared/utils/fleet-manifest'
 
 import rawManifest from '../../../fleet.json'
-import { checkDeployDrift, fetchMainHead } from '#layers/terminal/server/pipeline/deploy-watch'
+import { fetchMainHead } from '#layers/terminal/server/pipeline/deploy-watch'
 import { checkLaunchCoverage } from '#layers/terminal/server/pipeline/launch-watch'
 import { unstorageLockStore } from '#layers/terminal/server/pipeline/lock'
 import { draftedKey } from '#layers/terminal/server/pipeline/press'
@@ -45,9 +45,11 @@ const task = defineTask({
   async run({ context }) {
     // The freshness checks spool their own events, so they run before the
     // mailer check: an unconfigured digest still records that a part went
-    // quiet. One per scheduled task, plus the judge routine, the GDELT job and
-    // the press-drafts routine (layers/terminal/server/utils/terminal-freshness.ts).
+    // quiet. One per scheduled task, plus the judge routine, the GDELT job, the
+    // press-drafts routine, and the deploy of main: this build's sha against
+    // main's head (layers/terminal/server/utils/terminal-freshness.ts).
     const config = useRuntimeConfig()
+    const mainHead = manifest.links?.github ? await fetchMainHead(manifest.links.github) : null
     await checkFreshness(
       db,
       unstorageLockStore(kv),
@@ -55,18 +57,16 @@ const task = defineTask({
         scheduledTasks: config.scheduledTasks,
         drafted: async (id) => Boolean(await kv.getItem(draftedKey(id))),
         pressList: config.pressList,
+        buildSha: config.public.buildSha,
+        mainHead,
       }),
     )
     // Same reason: a launch the site has stored but does not show is recorded
     // whether or not the digest can be mailed.
     const launch = await checkLaunchCoverage(db, unstorageLockStore(kv))
-    if (launch.stale_cells.length || launch.unalerted.length) {
+    if (launch.stale_cells.length) {
       logEvent('warn', 'launch_gap', { ...launch })
     }
-    // And a merge whose deploy never landed: this build's sha against main's head.
-    const head = manifest.links?.github ? await fetchMainHead(manifest.links.github) : null
-    const drift = await checkDeployDrift(db, unstorageLockStore(kv), config.public.buildSha, head)
-    if (drift.verdict === 'drift') logEvent('warn', 'deploy_drift', { ...drift })
 
     const env = (context as CloudflareTaskContext | undefined)?.cloudflare?.env
     const mailer = getOpsMailer(env)

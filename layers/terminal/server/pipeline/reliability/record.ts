@@ -1,7 +1,6 @@
 // The reliability:record cron: the rollup and the filing detections behind
-// /data#reliability. The deploy smoke results are read by their own
-// five-minute task (reliability:deploys, deploys.ts), since GitHub refuses
-// most unauthenticated reads from Workers and an hourly try rarely lands. Each
+// /data#reliability. The deploy smoke results are read by their own task
+// (reliability:deploys, deploys.ts), which parks on GitHub's rate limit. Each
 // part runs on its own, and a failure is reported in the result, never thrown.
 
 import { recordDetections, type DetectionReport, type RawReader } from './acceptance'

@@ -53,6 +53,7 @@ a configuration gap: journal it and do not retry.
 
 3. **Deploy check.** If `build.sha` is not `origin/main`'s head, and the head commit is more
    than 45 minutes old (`git log -1 --format=%cI origin/main`), a merge never deployed.
+   The Worker spools the same finding as `deploy_drift`; act on it here, not again in step 4.
    - If `migrations.pending` is non-empty, do not retrigger. A deploy ahead of its migrations
      is an outage. Escalate it as `sev:critical`.
    - If you are at tier 2 and `$DEPLOY_HOOK_URL` is set, `curl -sS -f -X POST "$DEPLOY_HOOK_URL"`

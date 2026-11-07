@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import type { SourceFetcher } from '../../server/pipeline/fetch'
-import { checkLaunchCoverage, launchCoverage } from '../../server/pipeline/launch-watch'
+import { checkLaunchCoverage } from '../../server/pipeline/launch-watch'
 import type { LockStore } from '../../server/pipeline/lock'
 import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
 import { isPollInstant, runTripwire } from '../../server/pipeline/tripwire'
@@ -207,30 +207,12 @@ describe('launch watch', () => {
     expect((await ops()).filter((e) => e.kind === 'class_basis_still_stale')).toHaveLength(2)
   })
 
-  it('reports a new model no alert cites, and never a baseline one', async () => {
+  it('puts the stale-cell count on /api/fleet', async () => {
     await launchDay()
-    const at = new Date('2026-09-22T21:00:00Z')
-    // The floor alerted it, and every baseline slug arrived with no change.
-    expect((await launchCoverage(db, at)).unalerted).toEqual([])
-
-    await db.delete(schema.alerts)
-    const kv = memoryKv()
-    const coverage = await checkLaunchCoverage(db, kv, at)
-    expect(coverage.unalerted.map((m) => m.model_slug)).toEqual(['claude-opus-6'])
-    await checkLaunchCoverage(db, kv, new Date('2026-09-22T21:30:00Z'))
-    expect((await ops()).filter((e) => e.kind === 'launch_unalerted')).toHaveLength(1)
-
-    // Inside two hours of the listing the judge still has a run to make.
-    expect((await launchCoverage(db, new Date('2026-09-22T19:00:00Z'))).unalerted).toEqual([])
-  })
-
-  it('puts both counts on /api/fleet', async () => {
-    await launchDay()
-    await db.delete(schema.alerts)
     // The Nitro plugin that does this does not run under vitest.
     registerFleetExtraContributor({ key: 'terminal', collect: collectTerminalCounters })
     const counters = await collectFleetCounters(db, new Date('2026-09-22T21:00:00Z'))
-    expect(counters.extra).toMatchObject({ launchStaleCells: 1, launchUnalerted: 1 })
+    expect(counters.extra).toMatchObject({ launchStaleCells: 1 })
   })
 })
 

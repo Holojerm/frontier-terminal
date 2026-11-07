@@ -1,7 +1,7 @@
 // `const SCHEDULED_TASKS = { … }` out of nuxt.config.ts as data, for the
-// post-deploy smoke test (scripts/smoke.ts), which compares it with the cron
-// map production's /api/status reports. crons:check reads the same literal its
-// own way; both fail closed on anything but an object of string arrays.
+// freshness coverage test (layers/terminal/test/freshness.test.ts). crons:check
+// reads the same literal its own way; both fail closed on anything but an
+// object of string arrays.
 
 import { sliceBalanced } from './brace-match'
 

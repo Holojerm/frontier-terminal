@@ -1,6 +1,7 @@
-// Both /export routes are this one handler: table lookup, format, the 404,
-// rate limiting, `as_of`, the license window, and the stream. See
-// parseExportPath for why the route files themselves decide nothing.
+// The /export/<table>.<format> route and its sample/ twin are this one
+// handler: table lookup, format, the 404, rate limiting, `as_of`, the license
+// window, and the stream. See parseExportPath for why the route files
+// themselves decide nothing.
 
 import type { H3Event } from 'h3'
 import sourcesYaml from 'raw:~~/sources.yaml'
@@ -44,7 +45,7 @@ export const AS_OF_EXPORTS = Object.values(EXPORT_TABLES)
 export async function serveExport(event: H3Event, options: { sample?: boolean } = {}) {
   const parsed = parseExportPath(event.path)
 
-  // /export/dictionary.<format> lands on these catch-alls too (see
+  // /export/dictionary.<format> lands on the same route (see
   // parseExportPath). It reads no database, so it skips the export budget,
   // which /data's server render would otherwise spend on every view.
   if (parsed?.name === DICTIONARY_NAME && !options.sample) {

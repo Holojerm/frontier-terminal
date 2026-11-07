@@ -7,7 +7,7 @@
 //
 // The licensed bucket arrives on the env Nitro hands a scheduled task
 // (server/utils/ops-mail.ts says why that beats `cloudflare:workers`). Without
-// the binding the build still runs and simply makes no S3 copies.
+// the binding the build still runs and keeps the `full` files in the blob store.
 
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'

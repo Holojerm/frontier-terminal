@@ -22,9 +22,9 @@ import { presentation, readSignal, recomputable, type SignalDeps } from './signa
 import {
   evaluateClaim,
   historyDays,
-  sinceLabSetChange,
   staleGuard,
   type ClaimEvaluation,
+  type MeasuredClaim,
   type StoredReading,
 } from './status'
 
@@ -79,7 +79,7 @@ export async function storedReadings(
 }
 
 export function evaluationOf(
-  claim: ClaimDef,
+  claim: MeasuredClaim,
   readings: readonly StoredReading[],
   now: Date,
 ): ClaimEvaluation {
@@ -87,7 +87,7 @@ export function evaluationOf(
   return staleGuard(
     claim,
     readings,
-    evaluateClaim(claim, sinceLabSetChange(readings), fmt, comparatorName),
+    evaluateClaim(claim, readings, fmt, comparatorName),
     now.toISOString(),
   )
 }
@@ -113,8 +113,9 @@ export async function currentEvaluation(
   claim: ClaimDef,
   now: Date,
 ): Promise<ClaimEvaluation> {
-  if (claim.spec.kind === 'measured') {
-    return evaluationOf(claim, await storedReadings(db, claim), now)
+  const { spec } = claim
+  if (spec.kind === 'measured') {
+    return evaluationOf({ ...claim, spec }, await storedReadings(db, claim), now)
   }
   const [verdicts, through] = await Promise.all([storedVerdicts(db, claim), judgedThrough(db)])
   return evaluateJudgedClaim(claim, thesis.company, verdicts, through, now.toISOString())

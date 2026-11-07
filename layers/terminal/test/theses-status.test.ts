@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { ClaimDef, MeasuredRule } from '../shared/utils/thesis-types'
+import type { MeasuredRule } from '../shared/utils/thesis-types'
 
 import { ANTHROPIC_THESIS } from '../server/theses/anthropic'
 import {
@@ -10,6 +10,7 @@ import {
   sinceLabSetChange,
   staleGuard,
   weeklyCheckpoints,
+  type MeasuredClaim,
   type StoredReading,
 } from '../server/theses/status'
 import { daysBefore } from '../server/utils/terminal-rankings'
@@ -19,7 +20,7 @@ import { daysBefore } from '../server/utils/terminal-rankings'
 
 const fmt = (v: number) => v.toFixed(2)
 
-const claim = (rule: MeasuredRule): ClaimDef => ({
+const claim = (rule: MeasuredRule): MeasuredClaim => ({
   id: 'c',
   n: 1,
   text: 'claim',
@@ -214,12 +215,6 @@ describe('stale readings', () => {
 })
 
 describe('the Anthropic thesis', () => {
-  it('leaves judged claims unresolved until the judge rates them', () => {
-    const judged = ANTHROPIC_THESIS.claims.filter((c) => c.spec.kind === 'judged')
-    expect(judged.map((c) => c.n)).toEqual([3, 5])
-    for (const c of judged) expect(evaluateClaim(c, [], fmt).status).toBe('unresolved')
-  })
-
   it('keeps claim ids unique — readings and status changes are keyed by them', () => {
     const ids = ANTHROPIC_THESIS.claims.map((c) => c.id)
     expect(new Set(ids).size).toBe(ids.length)

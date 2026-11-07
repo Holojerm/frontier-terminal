@@ -11,6 +11,8 @@
 //   press-drafts  the press-drafts routine (claude.ai), the KV drafted markers
 //   social-outbox the social outbox, social_posts — its sender is in the
 //                 vendored layer and records no heartbeat
+//   deploy        Workers Builds: main's head on GitHub against this build's
+//                 sha (pipeline/deploy-watch.ts)
 //
 // A new producer gets a check here and its kind a tier in
 // terminal-ops-severity.ts; freshness.test.ts fails the build on a kind with
@@ -20,11 +22,12 @@ import { and, asc, desc, eq, lte, max } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 
+import { deployDriftCheck } from '../pipeline/deploy-watch'
 import { judgeFreshnessCheck } from '../pipeline/judge/watchdog'
 import { parsePressList, pendingPressAlerts } from '../pipeline/press'
 import { GKG_READY_MS, stampIso } from '../pipeline/track-record/gkg'
 import { oldestUnread } from '../pipeline/track-record/search'
-import { taskHeartbeatCheck, type FreshnessCheck } from './freshness'
+import { heartbeatLoader, taskHeartbeatCheck, type FreshnessCheck } from './freshness'
 
 const HOUR_MS = 60 * 60 * 1000
 
@@ -134,15 +137,20 @@ export interface FreshnessDeps {
   scheduledTasks: Record<string, string[]>
   drafted: (id: string) => Promise<boolean>
   pressList: unknown
+  /** runtimeConfig.public.buildSha; empty for a local build. */
+  buildSha: string
+  /** Main's head on GitHub this tick, null when it could not be read. */
+  mainHead: string | null
 }
 
 /** Every check this app runs, tasks first. */
 export function freshnessChecks(deps: FreshnessDeps): FreshnessCheck[] {
+  const heartbeats = heartbeatLoader()
   const tasks = Object.entries(deps.scheduledTasks).flatMap(([expression, names]) =>
     names.map((name) =>
       TASK_CHECK_OVERRIDES[name]
         ? TASK_CHECK_OVERRIDES[name].check(expression)
-        : taskHeartbeatCheck(name, expression),
+        : taskHeartbeatCheck(name, expression, heartbeats),
     ),
   )
   return [
@@ -151,5 +159,6 @@ export function freshnessChecks(deps: FreshnessDeps): FreshnessCheck[] {
     gdeltFreshnessCheck,
     socialOutboxFreshnessCheck,
     pressDraftsFreshnessCheck(deps.drafted, deps.pressList),
+    deployDriftCheck(deps.buildSha, deps.mainHead),
   ]
 }

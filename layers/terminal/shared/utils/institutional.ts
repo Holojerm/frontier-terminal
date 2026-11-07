@@ -25,7 +25,7 @@ export const KEY_HEADER_EXAMPLE = 'Authorization: Bearer ftk_…'
 
 /**
  * The R2 bucket licensees read the full-history bulk files from over S3
- * (layers/terminal/server/utils/terminal-bulk.ts copies them there). Its
+ * (layers/terminal/server/utils/terminal-bulk.ts writes them there). Its
  * wrangler.toml binding is BULK_LICENSED.
  */
 export const LICENSED_BUCKET = 'frontier-terminal-bulk-licensed'

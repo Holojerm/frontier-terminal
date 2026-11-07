@@ -1,8 +1,7 @@
+import { cikResolvedAlerts, periodicFloorAlerts, s1FloorAlerts } from './filing-floors'
 import {
-  AlertRow,
-  FilerRow,
-  FilingRow,
   contentHash,
+  type AlertRow,
   type ChangeRow,
   type EntityRow,
   type Provenance,
@@ -55,7 +54,6 @@ import { parseProspectus } from './parsers/sec/prospectus'
 import { freshFiling, freshRegistrationKey } from './prospectus-floor'
 import { revenueProviderFor, type RevenueFilers } from './parsers/sec/revenue-filers'
 import { parseXbrlSegment, segmentTarget } from './parsers/sec/xbrl-segment'
-import { isPeriodicForm, isS1FloorForm } from './parsers/sec/s1-floor'
 import { parseAnthropicStatus } from './parsers/status/anthropic-status'
 import { DEEPSEEK_ATOM, parseDeepseekStatus } from './parsers/status/deepseek-status'
 import { parseGoogleCloudStatus } from './parsers/status/google-cloud-status'
@@ -578,135 +576,4 @@ export const LANES: Readonly<Record<string, Lane>> = {
 /** The `as_of` a rankings lane wrote into its run detail, if the detail carries one. */
 export function asOfFromDetail(detail: string | null): string | null {
   return detail?.match(/as_of (\S+)/)?.[1] ?? null
-}
-
-/** EDGAR full-text search suffixes each display name with "(CIK 0002130357)"; the submissions feed does not. */
-const filerName = (name: string) => name.replace(/\s*\(CIK \d+\)\s*$/, '')
-
-/**
- * The one deterministic significance rule (boundary table, judge row): a
- * NEW S-1/424B4 filing on a whitelisted CIK always alerts, no model in the
- * loop. Only 'added' changes qualify — a baseline records no changes, so the
- * historical S-1s in a filer's recent window never fire on first sight.
- *
- * Grounding: every value in the headline and explanation is read back out of
- * the change row's after_json, re-validated as a FilingRow.
- */
-export function s1FloorAlerts(changes: readonly ChangeRow[]): AlertRow[] {
-  const alerts: AlertRow[] = []
-  for (const change of changes) {
-    if (change.change_type !== 'added' || change.entity_type !== 'filing' || !change.after_json) {
-      continue
-    }
-    const filing = FilingRow.parse({
-      ...(JSON.parse(change.after_json) as Record<string, unknown>),
-      source_url: change.source_url,
-      fetched_at: change.fetched_at,
-    })
-    if (filing.whitelist_cik === null || !isS1FloorForm(filing.form)) continue
-
-    const names = filing.display_names.map(filerName)
-    const filer = names[0] ?? `CIK ${filing.whitelist_cik}`
-    alerts.push(
-      AlertRow.parse({
-        // One alert per filing: the FTS tripwire and the filer's submissions
-        // feed both list it, and whichever parses second finds this id stored.
-        id: contentHash({ rule: 's1-floor', accession_no: filing.accession_no }),
-        severity: 'critical',
-        headline: `${filing.form} filed by ${filer} (${filing.file_date})`,
-        explanation:
-          `Accession ${filing.accession_no}: form ${filing.form} filed ${filing.file_date} by ` +
-          `whitelisted CIK ${filing.whitelist_cik} (${names.join(', ')}). ` +
-          'An S-1/424B4 on a whitelisted filer always alerts — the s1-floor rule, no model in the loop. ' +
-          'What the filing says follows in a prospectus-floor alert once its document is parsed.',
-        change_ids: JSON.stringify([change.id]),
-        rule: 's1-floor',
-        created_at: change.detected_at,
-        source_url: change.source_url,
-        fetched_at: change.fetched_at,
-      }),
-    )
-  }
-  return alerts
-}
-
-/**
- * The second deterministic rule: a NEW 10-Q/10-K on a whitelisted CIK
- * always alerts, `notable` rather than `critical` — a periodic report is
- * scheduled news, an S-1 is not. Same grounding as s1FloorAlerts: every
- * value is read back out of the change row's after_json. An 8-K is tracked
- * but left to the judge (parsers/sec/forms.ts).
- */
-export function periodicFloorAlerts(changes: readonly ChangeRow[]): AlertRow[] {
-  const alerts: AlertRow[] = []
-  for (const change of changes) {
-    if (change.change_type !== 'added' || change.entity_type !== 'filing' || !change.after_json) {
-      continue
-    }
-    const filing = FilingRow.parse({
-      ...(JSON.parse(change.after_json) as Record<string, unknown>),
-      source_url: change.source_url,
-      fetched_at: change.fetched_at,
-    })
-    if (filing.whitelist_cik === null || !isPeriodicForm(filing.form)) continue
-
-    const filer = filing.display_names[0] ?? `CIK ${filing.whitelist_cik}`
-    alerts.push(
-      AlertRow.parse({
-        id: contentHash({ rule: 'periodic-floor', change_id: change.id }),
-        severity: 'notable',
-        headline: `${filing.form} filed by ${filer} (${filing.file_date})`,
-        explanation:
-          `Accession ${filing.accession_no}: form ${filing.form} filed ${filing.file_date} by ` +
-          `whitelisted CIK ${filing.whitelist_cik} (${filing.display_names.join(', ')}). ` +
-          'A 10-Q, 10-K or 20-F on a whitelisted filer always alerts — the periodic-floor rule, no model in the loop. ' +
-          'Where the filer is a tagged revenue filer, its XBRL revenue facts refresh on the /revenue panel at the next company-facts poll.',
-        change_ids: JSON.stringify([change.id]),
-        rule: 'periodic-floor',
-        created_at: change.detected_at,
-        source_url: change.source_url,
-        fetched_at: change.fetched_at,
-      }),
-    )
-  }
-  return alerts
-}
-
-/**
- * The third deterministic rule: a lab's CIK resolved from its own S-1 hit
- * (a NEW `filer` row) always alerts, `critical` — this is the public-flip
- * moment the whole SEC axis waits for. Every value is read back out of the
- * change row's after_json, re-validated as a FilerRow.
- */
-export function cikResolvedAlerts(changes: readonly ChangeRow[]): AlertRow[] {
-  const alerts: AlertRow[] = []
-  for (const change of changes) {
-    if (change.change_type !== 'added' || change.entity_type !== 'filer' || !change.after_json) {
-      continue
-    }
-    const filer = FilerRow.parse({
-      ...(JSON.parse(change.after_json) as Record<string, unknown>),
-      source_url: change.source_url,
-      fetched_at: change.fetched_at,
-    })
-    alerts.push(
-      AlertRow.parse({
-        id: contentHash({ rule: 'cik-resolved', change_id: change.id }),
-        severity: 'critical',
-        headline: `${filer.name} filed ${filer.resolved_form} (${filer.resolved_file_date}) — CIK ${filer.cik} resolved for ${filer.provider}`,
-        explanation:
-          `Accession ${filer.resolved_accession}: form ${filer.resolved_form} filed ${filer.resolved_file_date} by ` +
-          `${filer.name} (CIK ${filer.cik}), whose name matches the ${filer.provider} pattern in sources.yaml pending_filers. ` +
-          'A registration filing by a pending lab always alerts — the cik-resolved rule, no model in the loop. ' +
-          'From the next poll the CIK is whitelisted and the filer’s submissions and XBRL company-facts feeds are derived and polled; ' +
-          'its reported revenue lands on /revenue as an issuer filing.',
-        change_ids: JSON.stringify([change.id]),
-        rule: 'cik-resolved',
-        created_at: change.detected_at,
-        source_url: change.source_url,
-        fetched_at: change.fetched_at,
-      }),
-    )
-  }
-  return alerts
 }

@@ -1,6 +1,4 @@
-import { recordOpsEvent } from '#server/utils/ops'
-import type { OpsDb } from '#server/utils/ops'
-import type { LockStore } from './lock'
+import type { FreshnessCheck } from '../utils/freshness'
 
 // Deploy drift: is production running the commit main points at?
 //
@@ -11,11 +9,12 @@ import type { LockStore } from './lock'
 // So every digest tick asks GitHub for main's head and compares it with the
 // sha this build was cut from (runtimeConfig.public.buildSha).
 //
-// A normal deploy takes ten to fifteen minutes, so one disagreeing tick is a
-// deploy in flight. The first tick that sees a given head undeployed records
-// when it did; the tick DRIFT_AFTER_MS later spools the event. The marker is
-// keyed by the head, so a new merge restarts the clock, and the event repeats
-// every DRIFT_RENOTIFY_MS until production catches up.
+// It is a freshness check (utils/freshness.ts): an undeployed head is owed
+// work from the first tick that saw it, recorded in KV per head so a new merge
+// restarts the clock. A normal deploy takes ten to fifteen minutes, so the
+// limit sits just under the 30-minute tick: one disagreeing tick is a deploy
+// in flight, the next one spools. The check is keyed by the head too, so the
+// six-hour repeat never silences a different merge that also failed to land.
 //
 // The head comes from git's smart-HTTP ref advertisement, not the REST API:
 // that is unauthenticated, and the REST API's 60-requests-per-hour limit is
@@ -24,26 +23,9 @@ import type { LockStore } from './lock'
 const MINUTE_MS = 60 * 1000
 /** Under the 30-minute tick, so cron jitter cannot push the alert a tick later. */
 export const DRIFT_AFTER_MS = 25 * MINUTE_MS
-export const DRIFT_RENOTIFY_MS = 6 * 60 * MINUTE_MS
-export const DRIFT_MARKER_TTL_SECONDS = (7 * 24 * 60 * MINUTE_MS) / 1000
-export const DRIFT_OPS_PATH = '/api/status'
+const FIRST_SEEN_TTL_SECONDS = 7 * 24 * 60 * 60
 
-export const driftMarkerKey = (head: string) => `deploy:drift:${head}`
-
-interface DriftMarker {
-  firstSeen: string
-  notifiedAt?: string
-}
-
-export type DeployDriftVerdict =
-  /** Production runs main's head. */
-  | { verdict: 'in-sync'; head: string }
-  /** The build carries no sha (local or tarball build) or main's head could not be read. */
-  | { verdict: 'unknown'; reason: string }
-  /** Main is ahead, but for less than DRIFT_AFTER_MS, or it was reported recently. */
-  | { verdict: 'pending' | 'already-notified'; head: string; deployed: string; firstSeen: string }
-  /** Main has been ahead for DRIFT_AFTER_MS; the ops event was recorded this tick. */
-  | { verdict: 'drift'; head: string; deployed: string; firstSeen: string }
+export const driftFirstSeenKey = (head: string) => `deploy:first-seen:${head}`
 
 /** The sha `refs/heads/<branch>` points at, from a git upload-pack ref advertisement. */
 export function parseRefAdvertisement(body: string, branch = 'main'): string | null {
@@ -75,44 +57,29 @@ export async function fetchMainHead(
   }
 }
 
-export async function checkDeployDrift(
-  db: OpsDb,
-  marker: LockStore,
-  deployed: string,
-  head: string | null,
-  now: Date = new Date(),
-): Promise<DeployDriftVerdict> {
-  if (!deployed) return { verdict: 'unknown', reason: 'build carries no sha' }
-  if (!head) return { verdict: 'unknown', reason: 'main head unreadable' }
-  if (head === deployed) return { verdict: 'in-sync', head }
-
-  const key = driftMarkerKey(head)
-  const stored = await marker.get(key)
-  const state: DriftMarker = stored
-    ? (JSON.parse(stored) as DriftMarker)
-    : { firstSeen: now.toISOString() }
-  const facts = { head, deployed, firstSeen: state.firstSeen }
-
-  const save = () => marker.put(key, JSON.stringify(state), DRIFT_MARKER_TTL_SECONDS)
-  if (!stored) {
-    await save()
-    return { verdict: 'pending', ...facts }
-  }
-  if (now.getTime() - Date.parse(state.firstSeen) < DRIFT_AFTER_MS)
-    return { verdict: 'pending', ...facts }
-  if (state.notifiedAt && now.getTime() - Date.parse(state.notifiedAt) < DRIFT_RENOTIFY_MS) {
-    return { verdict: 'already-notified', ...facts }
-  }
-
-  await recordOpsEvent(db, {
+/** `deployed` is this build's sha, empty for a local build; `head` is null when GitHub was unreadable. */
+export function deployDriftCheck(deployed: string, head: string | null): FreshnessCheck {
+  return {
+    key: head ? `deploy:${head}` : 'deploy',
+    label: 'The deploy of main',
     kind: 'deploy_drift',
-    detail:
-      `production runs ${deployed.slice(0, 7)} but main has been at ${head.slice(0, 7)} since at least ` +
-      `${state.firstSeen}. The Workers Build for it failed or never ran; retry it with ` +
-      '`cf builds create` on the main trigger and the full sha (.claude/docs/gotchas.md › Workers Builds).',
-    path: DRIFT_OPS_PATH,
-  })
-  state.notifiedAt = now.toISOString()
-  await save()
-  return { verdict: 'drift', ...facts }
+    maxAgeMs: DRIFT_AFTER_MS,
+    path: '/api/status',
+    async evidence(_db, now, marker) {
+      if (!deployed || !head || head === deployed) return { owedSince: null }
+      const key = driftFirstSeenKey(head)
+      let firstSeen = await marker.get(key)
+      if (!firstSeen) {
+        firstSeen = now.toISOString()
+        await marker.put(key, firstSeen, FIRST_SEEN_TTL_SECONDS)
+      }
+      return {
+        owedSince: firstSeen,
+        note:
+          `production runs ${deployed.slice(0, 7)}, main is at ${head.slice(0, 7)}. The Workers Build ` +
+          'failed or never ran; retry it with `cf builds create` on the main trigger and the full sha ' +
+          '(.claude/docs/gotchas.md › Workers Builds)',
+      }
+    },
+  }
 }

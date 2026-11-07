@@ -138,7 +138,11 @@ export const alerts = sqliteTable(
     // rows from before the column read created_at.
     recorded_at: text('recorded_at'),
   },
-  (t) => [index('alerts_created_id_idx').on(t.created_at, t.id)],
+  (t) => [
+    index('alerts_created_id_idx').on(t.created_at, t.id),
+    // The webhook outbox offers alerts by when they were written.
+    index('alerts_recorded_idx').on(t.recorded_at),
+  ],
 )
 
 // Source runs — one row per (tick, source): what each poll attempted and how
@@ -605,20 +609,6 @@ export const webhooks = sqliteTable(
   (t) => [index('webhooks_api_key_idx').on(t.api_key_id)],
 )
 
-// The first time the webhook cron saw each alert. An alert's created_at is
-// its evidence time, not when it was stored (a judged alert is dated by the
-// changes it cites), so this is the only record of when an alert appeared:
-// a webhook gets alerts first seen after it was added, and a delivery waits
-// until the public site has rotated past seen_at.
-export const webhookAlertLog = sqliteTable(
-  'webhook_alert_log',
-  {
-    alert_id: text('alert_id').primaryKey(),
-    seen_at: text('seen_at').notNull(),
-  },
-  (t) => [index('webhook_alert_log_seen_idx').on(t.seen_at)],
-)
-
 // The webhook outbox: one row per (alert, webhook), unique, so enqueueing is
 // idempotent. id is the X-Frontier-Delivery header, the same on every retry.
 export const webhookDeliveries = sqliteTable(
@@ -629,8 +619,10 @@ export const webhookDeliveries = sqliteTable(
     alert_id: text('alert_id').notNull(),
     // queued | delivered | failed | expired | cancelled | suppressed
     status: text('status').notNull().default('queued'),
+    // When the alert was written (alerts.recorded_at): not sent until the
+    // public site's stamp is past it.
     seen_at: text('seen_at').notNull(),
-    // Not sent before this: seen_at, or a judged alert's hold.
+    // Not sent before this: when it was queued, or a judged alert's hold.
     not_before: text('not_before').notNull(),
     next_attempt_at: text('next_attempt_at').notNull(),
     attempts: integer('attempts').notNull().default(0),

@@ -6,12 +6,10 @@ import * as schema from '~~/server/db/schema'
 import { buildLlmsTxt } from '~~/server/utils/seo'
 import { llmsTxtInput } from '../server/utils/crawler-pages'
 import {
-  COLUMN_DOCS,
   DATA_TYPES,
   DICTIONARY_CSV_COLUMNS,
   DICTIONARY_NAME,
   TABLE_META,
-  asOfColumns,
   dataDictionary,
   dictionaryCsv,
 } from '../server/utils/terminal-dictionary'
@@ -19,46 +17,38 @@ import {
   BREAKING_NOTICE_DAYS,
   SCHEMA_RELEASES,
   SCHEMA_VERSION,
+  type SchemaRelease,
   bumpCovers,
   bumpNeeded,
   bumpOf,
-  replaySchema,
+  lockRefusal,
+  type SchemaLock,
 } from '../server/utils/data-schema'
 import { ENTITY_SECURITIES } from '../server/utils/terminal-entities'
 import changelogMd from '~~/CHANGELOG-data.md?raw'
+import schemaLock from '~~/schema.lock.json'
 import { fixtureText } from './pipeline/fixtures'
 import {
   EXPORT_HISTORY,
   EXPORT_TABLES,
   LICENSE_COLUMN,
+  asOfColumns,
   csvLine,
   licenseWindow,
 } from '../server/utils/terminal-export'
 
-// The dictionary cannot drift from the exports: every exported column has an
-// entry, no entry names a column the export lost, and the as_of columns are
-// the ones a point-in-time request really returns.
+// The dictionary cannot drift from the exports: each column is declared with
+// its entry (terminal-export.ts), and the as_of columns are the ones a
+// point-in-time request really returns.
 
 const db = drizzle(env.DB, { schema })
 const T = '2026-10-01T00:00:00.000Z'
 const sourcesYaml = fixtureText('sources.yaml')
 
 describe('the data dictionary', () => {
-  it('documents every exported table, and only those', () => {
-    expect(Object.keys(COLUMN_DOCS).sort()).toEqual(Object.keys(EXPORT_TABLES).sort())
+  it('takes no export table’s name', () => {
     // /export/dictionary.<format> is served ahead of the table lookup.
     expect(Object.keys(EXPORT_TABLES)).not.toContain(DICTIONARY_NAME)
-  })
-
-  it('documents every exported column, and names none the export no longer has', () => {
-    for (const table of Object.values(EXPORT_TABLES)) {
-      expect(new Set(table.columns).size, `${table.name} names a column twice`).toBe(
-        table.columns.length,
-      )
-      expect(Object.keys(COLUMN_DOCS[table.name]!.columns).sort(), table.name).toEqual(
-        asOfColumns(table).sort(),
-      )
-    }
   })
 
   it('lists, per table, the columns ?as_of= really serves, or the refusal', async () => {
@@ -77,8 +67,6 @@ describe('the data dictionary', () => {
       const table = EXPORT_TABLES[t.name]!
       expect(t.as_of.mode, t.name).toBe(table.pointInTime)
       expect(t.as_of.note.length, t.name).toBeGreaterThan(20)
-      // A written cut rule only where the table is cut; the others say it from the export.
-      expect(COLUMN_DOCS[t.name]!.asOf !== undefined, t.name).toBe(table.pointInTime === 'cut')
       if (t.as_of.mode === 'refused') expect(t.as_of.note).toContain(table.asOfRefusal!.slice(1))
       const asOfOnly = t.columns.filter((c) => c.as_of_only).map((c) => c.name)
       expect(asOfOnly, t.name).toEqual(t.as_of.mode === 'rebuilt' ? ['as_of_verified'] : [])
@@ -256,21 +244,51 @@ describe('the data dictionary', () => {
   })
 })
 
-// The schema version can't drift either. Replaying every release over the
-// 1.0.0 baseline has to give the columns /export serves today, so a column
-// added, dropped, or renamed without a release in data-schema.ts fails here.
+// The schema version can't drift either. schema.lock.json is the columns at
+// the last release, and `bun run schema:lock` rewrites it only when a new
+// release says exactly what changed (lockRefusal), so a column added,
+// dropped, or renamed without a release fails here.
 describe('the schema version', () => {
-  it('matches the exported columns, release by release', () => {
-    const replayed = replaySchema()
+  it('matches the exported columns, as locked at this version', () => {
     const exported = Object.fromEntries(
       Object.values(EXPORT_TABLES).map((t) => [t.name, [...t.columns]]),
     )
-    for (const name of new Set([...Object.keys(replayed), ...Object.keys(exported)])) {
-      expect(
-        replayed[name],
-        `${name}'s columns changed. Add a release to SCHEMA_RELEASES in layers/terminal/server/utils/data-schema.ts (adding is minor, removing or renaming is major) and an entry to CHANGELOG-data.md`,
-      ).toEqual(exported[name])
-    }
+    const remedy =
+      'Add a release to SCHEMA_RELEASES in layers/terminal/server/utils/data-schema.ts (adding is minor, removing or renaming is major) and an entry to CHANGELOG-data.md, then run bun run schema:lock'
+    expect(schemaLock.schema_version, remedy).toBe(SCHEMA_VERSION)
+    expect(exported, remedy).toEqual(schemaLock.tables)
+  })
+
+  it('locks a change only when the newest release says exactly what moved', () => {
+    const lock: SchemaLock = { schema_version: '1.0.0', tables: { t: ['id', 'source_url'] } }
+    const release = (version: string, tables?: SchemaRelease['tables']) => [
+      { version: '1.0.0', date: '', summary: '' },
+      { version, date: '', summary: '', tables },
+    ]
+    const added = { t: ['id', 'x', 'source_url'] }
+    // Same columns, same version: nothing to lock. A move with no release is refused.
+    expect(lockRefusal(lock, lock.tables, release('1.0.0').slice(0, 1))).toBeNull()
+    expect(lockRefusal(lock, added, release('1.0.0').slice(0, 1))).toMatch(/t changed/)
+    expect(lockRefusal(lock, added, release('1.1.0', { t: { added: ['x'] } }))).toBeNull()
+    expect(lockRefusal(lock, added, release('1.1.0', { t: { added: ['y'] } }))).toMatch(
+      /t added \["x"\]/,
+    )
+    expect(lockRefusal(lock, added, release('1.1.0'))).toMatch(/no entry for it/)
+    // A new table names itself; its columns are the export's.
+    const fresh = { ...lock.tables, u: ['a', 'source_url'] }
+    expect(lockRefusal(lock, fresh, release('1.1.0', { u: { note: 'New.' } }))).toBeNull()
+    // A rename is a removal and an addition.
+    const renamed = { t: ['key', 'source_url'] }
+    expect(
+      lockRefusal(lock, renamed, release('2.0.0', { t: { renamed: { id: 'key' } } })),
+    ).toBeNull()
+    // A release two past the lock skipped one.
+    expect(
+      lockRefusal(lock, added, [
+        ...release('1.1.0'),
+        { version: '1.2.0', date: '', summary: '', tables: { t: { added: ['x'] } } },
+      ]),
+    ).toMatch(/Lock each release/)
   })
 
   it('bumps each release by at least what its changes need', () => {

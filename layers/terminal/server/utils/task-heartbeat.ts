@@ -8,8 +8,10 @@
 //
 // withHeartbeat() runs the task unchanged and, when it ends, upserts one row:
 // last_completed_at when run() resolved, last_failed_at and last_error when it
-// threw (the error is rethrown, so Nitro logs it as before). The write never
-// fails the task: a D1 hiccup here costs one heartbeat, not the task's result.
+// threw. A throw also spools one TASK_FAILED_KIND ops event and an error log
+// line, then the run resolves with no result, so no task needs a whole-run
+// try/catch of its own. Neither write fails the task: a D1 hiccup here costs
+// one heartbeat, not the task's result.
 //
 // The freshness checks read these rows (freshness.ts). Coverage is enforced by
 // layers/terminal/test/freshness.test.ts: a scheduled task whose file does not
@@ -21,7 +23,11 @@ import type { Task, TaskEvent, TaskResult } from 'nitropack/types'
 
 import * as tables from '#server/db/schema'
 import { logEvent } from '#server/utils/log'
+import { recordOpsEvent } from '#server/utils/ops'
 import type { PipelineDb } from '../pipeline/store'
+
+/** Spooled once per run that throws; the detail names the task. */
+export const TASK_FAILED_KIND = 'task_failed'
 
 export interface HeartbeatOutcome {
   task: string
@@ -71,22 +77,29 @@ export function withHeartbeat<R = unknown>(
     async run(event: TaskEvent): Promise<{ result?: R }> {
       const started_at = now().toISOString()
       let error: string | null = null
+      let result: TaskResult<R> = {}
       try {
-        return await (run.call(def, event) as Promise<TaskResult<R>>)
+        result = await (run.call(def, event) as Promise<TaskResult<R>>)
       } catch (err) {
         error = String(err)
-        throw err
-      } finally {
-        const outcome = { task: name, started_at, finished_at: now().toISOString(), error }
-        try {
-          await recordHeartbeat(target(), outcome)
-        } catch (writeError) {
-          logEvent('error', 'task_heartbeat_write_failed', {
-            task: name,
-            error: String(writeError),
-          })
-        }
+        // Logged, not rethrown: Nitro runs a cron's tasks under one Promise.all
+        // inside waitUntil, so a rejection settles the invocation and can cut
+        // off the sibling tasks still running.
+        logEvent('error', TASK_FAILED_KIND, { task: name, error })
       }
+      const outcome = { task: name, started_at, finished_at: now().toISOString(), error }
+      try {
+        if (error !== null) {
+          await recordOpsEvent(target(), { kind: TASK_FAILED_KIND, detail: `${name}: ${error}` })
+        }
+        await recordHeartbeat(target(), outcome)
+      } catch (writeError) {
+        logEvent('error', 'task_heartbeat_write_failed', {
+          task: name,
+          error: String(writeError),
+        })
+      }
+      return result
     },
   }
 }

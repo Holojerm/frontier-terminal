@@ -65,7 +65,7 @@ export const entityTypeEnum = z.enum([
 ])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])
-// The deterministic rules (layers/terminal/server/pipeline/lanes.ts, model-floor.ts, prospectus-floor.ts,
+// The deterministic rules (layers/terminal/server/pipeline/filing-floors.ts, model-floor.ts, prospectus-floor.ts,
 // hiring-rollup.ts) and the judge lane.
 export const alertRuleEnum = z.enum([
   'agent-judge',

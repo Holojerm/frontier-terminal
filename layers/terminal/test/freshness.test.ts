@@ -6,6 +6,12 @@ import layersLock from '~~/layers.lock.json'
 import nuxtConfigSource from '~~/nuxt.config.ts?raw'
 import * as schema from '~~/server/db/schema'
 import { readScheduledTasks } from '~~/scripts/lib/scheduled-tasks'
+import {
+  deployDriftCheck,
+  driftFirstSeenKey,
+  fetchMainHead,
+  parseRefAdvertisement,
+} from '../server/pipeline/deploy-watch'
 import type { LockStore } from '../server/pipeline/lock'
 import {
   FRESHNESS_CHECK_FAILED_KIND,
@@ -26,12 +32,12 @@ import {
   socialOutboxFreshnessCheck,
 } from '../server/utils/terminal-freshness'
 import { TERMINAL_OPS_SEVERITY } from '../server/utils/terminal-ops-severity'
-import { recordHeartbeat, withHeartbeat } from '../server/utils/task-heartbeat'
+import { TASK_FAILED_KIND, recordHeartbeat, withHeartbeat } from '../server/utils/task-heartbeat'
 
 // The freshness checks (server/utils/freshness.ts): the coverage gate that
 // keeps every scheduled task and every producer off the Worker under one rule,
-// then the rule itself, the heartbeat behind the task checks, and each
-// producer's evidence against a real D1.
+// then the rule itself, the heartbeat behind the task checks, each producer's
+// evidence against a real D1, and the deploy of main.
 
 const db = drizzle(env.DB, { schema })
 const SCHEDULED = readScheduledTasks(nuxtConfigSource)
@@ -59,7 +65,13 @@ function memoryMarker(): LockStore & { values: Map<string, string> } {
   }
 }
 
-const deps = { scheduledTasks: SCHEDULED, drafted: async () => false, pressList: '' }
+const deps = {
+  scheduledTasks: SCHEDULED,
+  drafted: async () => false,
+  pressList: '',
+  buildSha: '',
+  mainHead: null,
+}
 
 describe('coverage: every part of the pipeline has a freshness check', () => {
   const tasks = Object.entries(SCHEDULED).flatMap(([cron, names]) => names.map((n) => [n, cron]))
@@ -110,14 +122,15 @@ describe('coverage: every part of the pipeline has a freshness check', () => {
     expect(new Set(keys).size).toBe(keys.length)
     for (const [name] of tasks) expect(keys).toContain(`task:${name}`)
     expect(keys).toEqual(
-      expect.arrayContaining(['judge', 'gdelt-search', 'press-drafts', 'social-outbox']),
+      expect.arrayContaining(['judge', 'gdelt-search', 'press-drafts', 'social-outbox', 'deploy']),
     )
   })
 
-  it('gives every check’s kind, and the failure kind, a tier', () => {
+  it('gives every check’s kind, and the failure kinds, a tier', () => {
     const kinds = new Set([
       ...freshnessChecks(deps).map((c) => c.kind),
       FRESHNESS_CHECK_FAILED_KIND,
+      TASK_FAILED_KIND,
     ])
     for (const kind of kinds) expect(TERMINAL_OPS_SEVERITY[kind], kind).toBeDefined()
     expect(TERMINAL_OPS_SEVERITY.judge_silent!.severity).toBe('critical')
@@ -213,7 +226,7 @@ describe('task heartbeats', () => {
 
   const clock = (iso: string) => () => new Date(iso)
 
-  it('records a completed run, and a throw without hiding it', async () => {
+  it('records a completed run, and a throw as a failure, spooling it once', async () => {
     const ok = withHeartbeat(
       { meta: { name: 'demo:ok' }, run: async () => ({ result: 1 }) },
       () => db,
@@ -231,9 +244,8 @@ describe('task heartbeats', () => {
       () => db,
       clock('2026-11-06T10:05:00.000Z'),
     )
-    await expect(boom.run({ name: 'demo:boom', payload: {}, context: {} })).rejects.toThrow(
-      'CPU limit',
-    )
+    // Resolves: a rejection would settle the cron invocation under its siblings.
+    expect(await boom.run({ name: 'demo:boom', payload: {}, context: {} })).toEqual({})
 
     const rows = await db.select().from(schema.taskHeartbeats)
     expect(rows.find((r) => r.task === 'demo:ok')).toMatchObject({
@@ -244,6 +256,51 @@ describe('task heartbeats', () => {
       last_completed_at: null,
       last_failed_at: '2026-11-06T10:05:00.000Z',
       last_error: 'Error: CPU limit',
+    })
+    const events = await db.select().from(schema.opsEvents)
+    expect(events).toHaveLength(1)
+    expect(events[0]).toMatchObject({
+      kind: TASK_FAILED_KIND,
+      detail: 'demo:boom: Error: CPU limit',
+    })
+  })
+
+  it('lets the other tasks in one cron invocation finish when the first throws', async () => {
+    // How Nitro runs a cron's tasks: Promise.all over them, inside one waitUntil.
+    let release = () => {}
+    const slow = new Promise<void>((resolve) => (release = resolve))
+    const tasks = [
+      withHeartbeat(
+        {
+          meta: { name: 'demo:first' },
+          run: async () => {
+            throw new Error('D1 down')
+          },
+        },
+        () => db,
+        clock('2026-11-06T10:00:00.000Z'),
+      ),
+      withHeartbeat(
+        {
+          meta: { name: 'demo:second' },
+          run: async () => {
+            await slow
+            return { result: 'done' }
+          },
+        },
+        () => db,
+        clock('2026-11-06T10:00:30.000Z'),
+      ),
+    ]
+    const invocation = Promise.all(
+      tasks.map((t) => t.run({ name: t.meta!.name!, payload: {}, context: {} })),
+    )
+    release()
+    expect(await invocation).toEqual([{}, { result: 'done' }])
+    const rows = await db.select().from(schema.taskHeartbeats)
+    expect(rows.find((r) => r.task === 'demo:first')).toMatchObject({ last_completed_at: null })
+    expect(rows.find((r) => r.task === 'demo:second')).toMatchObject({
+      last_completed_at: '2026-11-06T10:00:30.000Z',
     })
   })
 
@@ -436,5 +493,99 @@ describe('the producers off the Worker', () => {
       notBefore: new Date('2026-11-06T10:00:00Z'),
     })
     expect(await run()).toEqual({ 'social-outbox': 'stale' })
+  })
+})
+
+describe('the deploy of main', () => {
+  // The 2026-11-03 incident: #117 merged at 16:43, its build timed out before
+  // starting, and production stayed on c2aa4d1 until a manual retry at 23:42.
+  const DEPLOYED = 'c2aa4d101fdc3e2e5375a3eb33e8ec5b1c656a32'
+  const HEAD = '188fab3f94a7ad466729a472c8d1359a30f98b96'
+  const at = (hhmm: string) => new Date(`2026-11-03T${hhmm}:00Z`)
+  const driftEvents = async () =>
+    (await db.select().from(schema.opsEvents)).filter((r) => r.kind === 'deploy_drift')
+
+  // Shape of GitHub's real answer, trimmed: pkt-line lengths, HEAD with its
+  // capability list after a NUL, then one line per ref.
+  const ADVERTISEMENT =
+    '001e# service=git-upload-pack\n0000' +
+    `0159${HEAD} HEAD\0multi_ack thin-pack symref=HEAD:refs/heads/main agent=git/github\n` +
+    `003f${'a'.repeat(40)} refs/heads/feat/other\n` +
+    `003d${HEAD} refs/heads/main\n0000`
+
+  beforeEach(async () => {
+    await db.delete(schema.opsEvents)
+  })
+
+  it('reads refs/heads/main from the ref advertisement, and nothing from anything else', () => {
+    expect(parseRefAdvertisement(ADVERTISEMENT)).toBe(HEAD)
+    expect(parseRefAdvertisement(ADVERTISEMENT, 'feat/other')).toBe('a'.repeat(40))
+    expect(parseRefAdvertisement(ADVERTISEMENT, 'nope')).toBeNull()
+    expect(parseRefAdvertisement('<html>rate limited</html>')).toBeNull()
+  })
+
+  it('asks the smart-HTTP endpoint, and is null on a non-2xx or a network error', async () => {
+    let url = ''
+    const head = await fetchMainHead('https://github.com/o/r/', async (input) => {
+      url = String(input)
+      return new Response(ADVERTISEMENT)
+    })
+    expect(url).toBe('https://github.com/o/r.git/info/refs?service=git-upload-pack')
+    expect(head).toBe(HEAD)
+    expect(
+      await fetchMainHead('https://github.com/o/r', async () => new Response('', { status: 503 })),
+    ).toBeNull()
+    expect(
+      await fetchMainHead('https://github.com/o/r', async () => {
+        throw new Error('offline')
+      }),
+    ).toBeNull()
+  })
+
+  it('owes nothing when production runs main, or when either sha is unknown', async () => {
+    const marker = memoryMarker()
+    for (const check of [
+      deployDriftCheck(HEAD, HEAD),
+      deployDriftCheck('', HEAD),
+      deployDriftCheck(DEPLOYED, null),
+    ]) {
+      expect(await checkFreshness(db, marker, [check], at('23:00'))).toEqual({
+        [check.key]: 'not-owed',
+      })
+    }
+    expect(marker.values.size).toBe(0)
+    expect(await driftEvents()).toHaveLength(0)
+  })
+
+  it('treats one disagreeing tick as a deploy in flight, then spools on the next', async () => {
+    const marker = memoryMarker()
+    const check = deployDriftCheck(DEPLOYED, HEAD)
+    const key = `deploy:${HEAD}`
+    expect(await checkFreshness(db, marker, [check], at('17:00'))).toEqual({ [key]: 'not-owed' })
+    expect(marker.values.get(driftFirstSeenKey(HEAD))).toBe(at('17:00').toISOString())
+    expect(await checkFreshness(db, marker, [check], at('17:30'))).toEqual({ [key]: 'stale' })
+    expect(await checkFreshness(db, marker, [check], at('18:00'))).toEqual({
+      [key]: 'already-notified',
+    })
+
+    const events = await driftEvents()
+    expect(events).toHaveLength(1)
+    expect(events[0]!.detail).toContain('production runs c2aa4d1, main is at 188fab3')
+    expect(events[0]!.path).toBe('/api/status')
+
+    // The repeat marker expires after FRESHNESS_REPEAT_MS; the drift is spooled again.
+    marker.values.delete(freshnessMarkerKey(key))
+    expect(await checkFreshness(db, marker, [check], at('23:30'))).toEqual({ [key]: 'stale' })
+    expect(await driftEvents()).toHaveLength(2)
+  })
+
+  it('restarts the clock when main moves to a new head', async () => {
+    const marker = memoryMarker()
+    await checkFreshness(db, marker, [deployDriftCheck(DEPLOYED, HEAD)], at('17:00'))
+    const next = 'b'.repeat(40)
+    expect(
+      await checkFreshness(db, marker, [deployDriftCheck(DEPLOYED, next)], at('17:30')),
+    ).toEqual({ [`deploy:${next}`]: 'not-owed' })
+    expect(await driftEvents()).toHaveLength(0)
   })
 })

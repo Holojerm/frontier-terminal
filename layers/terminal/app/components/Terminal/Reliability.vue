@@ -401,7 +401,7 @@ const code = 'font-mono text-highlighted'
         <TerminalGap
           v-if="data.deploys.fetched_at === null"
           title="Not read from GitHub yet"
-          reason="GitHub limits reads without a token by IP address, and Cloudflare’s servers share theirs with other sites, so GitHub can refuse our read for a while. When it does, we wait for its limit to reset (up to an hour) and try again. After any other failure we try again in 15 minutes. The results are public on GitHub Actions meanwhile."
+          reason="GitHub limits reads without a token by IP address, and Cloudflare’s servers share theirs with other sites, so GitHub can refuse our read for a while. When it does, we wait for its limit to reset (up to an hour) and try again. After any other failure we try again the next hour. The results are public on GitHub Actions meanwhile."
         />
         <TerminalGap
           v-else-if="data.deploys.rows.length === 0"

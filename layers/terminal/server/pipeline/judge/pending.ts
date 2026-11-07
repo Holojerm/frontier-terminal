@@ -101,7 +101,7 @@ export function isTimestampOnlyChange(change: {
  * already whitelisted or resolved, so those rows always carry one. A lab's
  * OWN first S-1 arrives before it is whitelisted and so is filtered here —
  * and is exactly what the deterministic cik-resolved rule fires on
- * (layers/terminal/server/pipeline/lanes.ts), at `critical`, with no model in the loop. From
+ * (layers/terminal/server/pipeline/filing-floors.ts), at `critical`, with no model in the loop. From
  * the next poll the lab is whitelisted and its filings reach the judge.
  */
 export function isUntrackedFilingChange(change: {

@@ -53,6 +53,12 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
     action:
       'A scheduled task has not completed a run in its window. Look for it in the Worker logs (Logs link below); a cron string out of step with wrangler.toml shows up in `bun run crons:check`.',
   },
+  // Spooled by withHeartbeat (task-heartbeat.ts) for any scheduled task that throws.
+  task_failed: {
+    severity: 'warning',
+    action:
+      'A scheduled task threw; the detail names it and the error. If it keeps throwing it goes silent too, and task_silent follows.',
+  },
   gdelt_search_silent: {
     severity: 'warning',
     action:
@@ -74,12 +80,18 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
     action:
       'A merge to main has not deployed. Check the latest Workers Builds run for a failed migrate or deploy step.',
   },
+  // reliability:deploys reads the smoke runs anyway; GitHub mails a failure to
+  // whoever triggered the run, which under the merge queue is a bot.
+  deploy_smoke_failed: {
+    severity: 'warning',
+    action:
+      'Production failed its post-deploy smoke test. Open the run linked in the detail for the failing check.',
+  },
   poll_skipped: {
     severity: 'warning',
     action:
       'A six-hourly survey was skipped; hiring and the other survey-only sources are six hours staler. Price lists and catalogs keep their 30- and 5-minute polls.',
   },
-  launch_unalerted: { severity: 'warning' },
   class_basis_still_stale: { severity: 'warning' },
   source_failed: { severity: 'warning' },
   source_absent: { severity: 'warning' },
@@ -88,11 +100,8 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   recipe_failed: { severity: 'warning' },
   recipes_run_failed: { severity: 'warning' },
   theses_evaluate_failed: { severity: 'warning' },
-  thesis_digest_failed: { severity: 'warning' },
   bulk_build_failed: { severity: 'warning' },
   reliability_record_failed: { severity: 'warning' },
-  hiring_rollup_failed: { severity: 'warning' },
-  track_record_search_failed: { severity: 'warning' },
   press_brief_failed: { severity: 'warning' },
   webhook_failing: { severity: 'warning' },
   social_failed: { severity: 'warning' },
