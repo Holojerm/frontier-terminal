@@ -1,4 +1,4 @@
-// This app's freshness checks (the rule is in freshness.ts). ops:alert builds
+// This app's freshness checks (the rule is in freshness.ts). ops:watch builds
 // them with freshnessChecks() each tick and runs them with checkFreshness().
 //
 // Every scheduled task gets its heartbeat check, unless TASK_CHECK_OVERRIDES

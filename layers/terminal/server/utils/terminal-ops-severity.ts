@@ -9,8 +9,12 @@
 //   escalates server_error itself, at SERVER_ERROR_CRITICAL_COUNT). The
 //   digest subject leads with [Critical]; filter on it to make the phone buzz.
 // - warning — one part is degraded or stale. Worth a look today.
-// - info — the system handled it, or it is a setup state already known. These
-//   wait up to a day (OPS_INFO_HOLD_MS) unless something louder goes out first.
+// - info — the system handled it, or it is a setup state already known.
+//
+// Each tier waits for company before it is mailed (OPS_HOLD_MS in
+// server/utils/ops.ts): critical goes on the next five-minute drain, warning
+// after 25 minutes, info after a day, and a quieter row rides along with the
+// first louder digest.
 //
 // A kind missing from the table is a warning: a new failure path should be
 // seen before anyone decides it can be quiet. Add a kind here when you add its
@@ -26,7 +30,7 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
     action:
       "No alerts are being published. Open the frontier-terminal-judge routine's latest session at claude.ai/code/routines; a 403 on /api/judge/pending means its environment's network allowlist lost the Worker host.",
   },
-  // Critical so it is mailed at once (ops-immediate.ts): Issues fires on a new
+  // Critical so it goes on the next drain, not after a hold: Issues fires on a new
   // kind of failure, rarely, and it is the only signal for a failure that
   // spools nothing else, like a request that never returns.
   workers_issue: {
