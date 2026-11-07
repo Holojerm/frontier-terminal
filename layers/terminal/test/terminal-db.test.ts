@@ -489,6 +489,27 @@ describe('after a baseline poll of every source', () => {
     expect(xai!.sources[0]!.source_url).toBe(urlOf('xai-greenhouse'))
   })
 
+  it('hiring and overview: cite the last read of a board, not its last changed role', async () => {
+    const xaiSource = async () =>
+      (await queryHiring(db, await ctx())).providers.find((p) => p.provider === 'xai')!.sources[0]!
+    const baseline = await xaiSource()
+
+    await run(['xai-greenhouse'])
+    const newest = (await sourceStamps(db)).get('xai-greenhouse')!.newest.fetched_at
+    expect(Date.parse(newest)).toBeGreaterThan(Date.parse(baseline.fetched_at))
+    expect((await xaiSource()).fetched_at).toBe(newest)
+    expect((await queryOverview(db, await ctx())).latest_fetched_at).toBe(newest)
+
+    // An empty board is refused as a mass removal: stored, not read.
+    await run(['xai-greenhouse'], fixtureFetcher({ 'xai-greenhouse': '{"jobs":[]}' }))
+    const refused = (await sourceStamps(db)).get('xai-greenhouse')!.newest.fetched_at
+    expect(refused).not.toBe(newest)
+    expect((await xaiSource()).fetched_at).toBe(newest)
+    // The departments side page was read in the same tick, so "last checked"
+    // may move to it, but never to the refused board.
+    expect((await queryOverview(db, await ctx())).latest_fetched_at).not.toBe(refused)
+  })
+
   it('coverage: every source has a snapshot, a run, and the audit caveat', async () => {
     const coverage = await queryCoverage(db, await ctx())
     expect(coverage.sources).toHaveLength(45)

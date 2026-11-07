@@ -826,18 +826,16 @@ export const OVERVIEW_ALERTS = 10
 export const OVERVIEW_INFO = 8
 
 export async function queryOverview(db: PipelineDb, ctx: QueryContext): Promise<OverviewData> {
-  const [movement, alerts, info, totals, stamps] = await Promise.all([
+  const [movement, alerts, info, totals, reads] = await Promise.all([
     queryMovement(db),
     queryAlerts(db, ctx, OVERVIEW_ALERTS, 'alert'),
     queryAlerts(db, ctx, OVERVIEW_INFO, 'info'),
     tableCounts(db),
-    sourceStamps(db),
+    lastReads(db),
   ])
-  const latest =
-    [...stamps.values()]
-      .map((s) => s.newest.fetched_at)
-      .sort(byString)
-      .at(-1) ?? null
+  // "Last checked" is the newest read, not the newest snapshot: a fetch that
+  // stored bytes and then failed to parse checked nothing.
+  const latest = [...reads.values()].sort(byString).at(-1) ?? null
   return {
     ...stampOf(ctx),
     movement,
@@ -1316,6 +1314,7 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
 
   const pit = atOf(ctx)
   if (pit && (await beforeLiveFloor(db, pit.at))) return archivedHiring(db, pit)
+  const reading = lastReads(db, ctx.at)
   const [departments, companies, sources, stamps] = pit
     ? await hiringAggregatesAt(db, pit)
     : await Promise.all([
@@ -1342,6 +1341,7 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
         sourceStamps(db),
       ])
 
+  const reads = await reading
   const xaiCaveat = ctx.registry.sources.find((s) => s.source_id === 'xai-greenhouse')?.caveat
 
   const providers: HiringProviderView[] = []
@@ -1371,13 +1371,16 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
       .sort((a, b) => b.count - a.count || byString(a.department, b.department))
     const total = depts.reduce((acc, d) => acc + d.count, 0)
 
+    // The counts are the whole board as of its last read, so they cite that
+    // read. The newest job row's fetched_at only says when a role last
+    // changed, which on a quiet board is days before the read that counted it.
     const rowSources: HiringSource[] = sources
       .filter((s) => s.provider === provider && s.fetched_at)
       .map((s) => ({
         source_id: s.source_id,
         label: labelOf(s.source_id).label,
         source_url: s.source_url,
-        fetched_at: s.fetched_at!,
+        fetched_at: confirmedAt(reads, s.source_id, s.fetched_at!) ?? s.fetched_at!,
       }))
     // No rows yet: cite the feed snapshots, if any were captured.
     const feedSources: HiringSource[] = backing.source_ids
