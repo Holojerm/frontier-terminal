@@ -1,1 +1,0 @@
-CREATE INDEX `track_record_searches_searched_idx` ON `track_record_searches` (`searched_at`);

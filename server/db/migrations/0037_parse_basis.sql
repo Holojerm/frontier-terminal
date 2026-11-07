@@ -1,1 +1,0 @@
-ALTER TABLE `source_runs` ADD `parse_basis` text;

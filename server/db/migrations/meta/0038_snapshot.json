@@ -1,8 +1,8 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "66f3b52c-b70a-49ec-a1d7-5e8f55488e32",
-  "prevId": "06b7c4a7-3cf1-4b49-9106-eb516a802008",
+  "id": "92a1d825-663c-40f4-8eef-60f9d0bd8bc3",
+  "prevId": "8139541e-2a2e-4674-9627-91a36d0e5469",
   "tables": {
     "alerts": {
       "name": "alerts",
@@ -1234,6 +1234,13 @@
             "entity_key"
           ],
           "isUnique": false
+        },
+        "entities_type_idx": {
+          "name": "entities_type_idx",
+          "columns": [
+            "entity_type"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {},
@@ -2018,6 +2025,14 @@
             "recipe_id",
             "key",
             "date"
+          ],
+          "isUnique": false
+        },
+        "recipe_observations_fetched_idx": {
+          "name": "recipe_observations_fetched_idx",
+          "columns": [
+            "recipe_id",
+            "fetched_at"
           ],
           "isUnique": false
         }
@@ -2879,6 +2894,13 @@
           "columns": [
             "alert_id",
             "source",
+            "searched_at"
+          ],
+          "isUnique": false
+        },
+        "track_record_searches_searched_idx": {
+          "name": "track_record_searches_searched_idx",
+          "columns": [
             "searched_at"
           ],
           "isUnique": false

@@ -1,3 +1,4 @@
+ALTER TABLE `source_runs` ADD `parse_basis` text;--> statement-breakpoint
 ALTER TABLE `alerts` ADD `recorded_at` text;--> statement-breakpoint
 -- Rows written before the column: their write time is unknown, and created_at
 -- is the closest the store holds.
@@ -26,3 +27,5 @@ WHEN NEW.`recorded_at` IS NULL
 BEGIN
   UPDATE `alerts` SET `recorded_at` = strftime('%Y-%m-%dT%H:%M:%fZ', 'now') WHERE `id` = NEW.`id`;
 END;
+--> statement-breakpoint
+CREATE INDEX `track_record_searches_searched_idx` ON `track_record_searches` (`searched_at`);

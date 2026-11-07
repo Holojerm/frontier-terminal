@@ -86,6 +86,9 @@ export const entities = sqliteTable(
   (t) => [
     primaryKey({ columns: [t.source_id, t.entity_key] }),
     index('entities_entity_key_idx').on(t.entity_key),
+    // Most panel queries filter on entity_type; without this each one scanned
+    // every entity (~8.4k rows, ~10k runs a day in production).
+    index('entities_type_idx').on(t.entity_type),
   ],
 )
 
@@ -326,7 +329,12 @@ export const recipeObservations = sqliteTable(
     first_seen_at: text('first_seen_at').notNull(),
     ...provenance,
   },
-  (t) => [index('recipe_observations_recipe_idx').on(t.recipe_id, t.key, t.date)],
+  (t) => [
+    index('recipe_observations_recipe_idx').on(t.recipe_id, t.key, t.date),
+    // recipeCoverage() finds each recipe's newest fetch. Without this it read
+    // about 5.9M rows a run, 63% of all D1 reads on 2026-11-07.
+    index('recipe_observations_fetched_idx').on(t.recipe_id, t.fetched_at),
+  ],
 )
 
 // Recipe runs — one row per (survey tick, recipe): what was fetched and how
