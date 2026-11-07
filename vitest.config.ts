@@ -8,10 +8,27 @@
 //
 // Docs: https://developers.cloudflare.com/workers/testing/vitest-integration/
 
+import { readFileSync, readdirSync } from 'node:fs'
 import { fileURLToPath } from 'node:url'
 
 import { cloudflareTest, readD1Migrations } from '@cloudflare/vitest-pool-workers'
 import { defineConfig } from 'vitest/config'
+
+// Every committed fixture (plus sources.yaml) keyed by repo-relative path, handed to
+// the tests as a binding. Importing them with `?raw` made each test file transform and
+// evaluate ~10 MB of strings in workerd (about 2 s per file, ~100 s across the suite).
+function readFixtures(): Record<string, string> {
+  const out: Record<string, string> = { 'sources.yaml': readFileSync('sources.yaml', 'utf8') }
+  const walk = (dir: string) => {
+    for (const e of readdirSync(dir, { withFileTypes: true })) {
+      const path = `${dir}/${e.name}`
+      if (e.isDirectory()) walk(path)
+      else if (e.name !== 'README.md') out[path] = readFileSync(path, 'utf8')
+    }
+  }
+  walk('fixtures')
+  return out
+}
 
 const migrationsPath = fileURLToPath(new URL('./server/db/migrations', import.meta.url))
 
@@ -23,7 +40,10 @@ export default defineConfig({
         // The real migrations, handed to test/setup.ts (which applies them to
         // each test file's isolated D1) — so tests exercise the real tables
         // rather than a hand-written copy that drifts.
-        bindings: { TEST_MIGRATIONS: await readD1Migrations(migrationsPath) },
+        bindings: {
+          TEST_MIGRATIONS: await readD1Migrations(migrationsPath),
+          FIXTURES: readFixtures(),
+        },
       },
     })),
   ],
