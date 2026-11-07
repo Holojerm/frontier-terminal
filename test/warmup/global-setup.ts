@@ -24,8 +24,34 @@
 import { chromium } from '@playwright/test'
 import type { FullConfig } from '@playwright/test'
 
-/** The app shell plus the heaviest page (the catalog table). */
-const WARM_PATHS = ['/', '/prices']
+/**
+ * One path per page file the suites visit. Vite compiles each page's own
+ * components on its first request, so warming only the shell left the lab,
+ * tear-sheet, compare and thesis pages cold; on the two-core ubuntu-latest
+ * runner their first visit ran past 30s, and which of them failed changed
+ * from run to run with the parallel race. A page file added to the suites
+ * belongs here too.
+ */
+const WARM_PATHS = [
+  '/',
+  '/prices',
+  '/labs/openai',
+  '/labs/openai/tear-sheet',
+  '/compare/openai-vs-anthropic',
+  '/theses',
+  '/theses/anthropic',
+  '/alerts',
+  '/hiring',
+  '/revenue',
+  '/exposure',
+  '/incidents',
+  '/releases',
+  '/rankings',
+  '/compute',
+  '/disclosures',
+  '/data',
+  '/about',
+]
 
 export default async function globalSetup(config: FullConfig): Promise<void> {
   const baseURL = config.projects[0]?.use?.baseURL
@@ -34,12 +60,19 @@ export default async function globalSetup(config: FullConfig): Promise<void> {
   const browser = await chromium.launch()
   try {
     const page = await browser.newPage({ baseURL })
+    const started = Date.now()
     for (const path of WARM_PATHS) {
       // Failures are not fatal here. This is a performance measure, not a
       // check: if the server is genuinely broken, the suites themselves should
       // be the ones to say so, with a route name and a proper diff.
-      await page.goto(path, { timeout: 240_000, waitUntil: 'networkidle' }).catch(() => {})
+      // The first path pays for the shared graph; the rest only for their own
+      // components, so a shorter cap keeps a hung page from eating the job's 20 minutes.
+      const timeout = path === WARM_PATHS[0] ? 240_000 : 60_000
+      await page.goto(path, { timeout, waitUntil: 'networkidle' }).catch(() => {})
     }
+    console.info(
+      `warmed ${WARM_PATHS.length} pages in ${Math.round((Date.now() - started) / 1000)}s`,
+    )
   } finally {
     await browser.close()
   }

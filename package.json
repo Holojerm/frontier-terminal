@@ -11,6 +11,8 @@
     "build": "nuxt build",
     "dev": "bun run scripts/dev.ts",
     "dev:app": "nuxt dev",
+    "dev:seed": "bun run scripts/dev-seed.ts",
+    "dev:poll": "bun run scripts/dev-poll.ts",
     "generate": "nuxt generate",
     "preview": "nuxt preview",
     "postinstall": "nuxt prepare",
@@ -100,5 +102,8 @@
     "bun": ">=1.4",
     "node": ">=22.13.0"
   },
-  "packageManager": "bun@1.4.0"
+  "packageManager": "bun@1.4.0",
+  "patchedDependencies": {
+    "@nuxthub/core@0.10.8": "patches/@nuxthub%2Fcore@0.10.8.patch"
+  }
 }

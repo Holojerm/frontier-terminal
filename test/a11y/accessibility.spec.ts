@@ -141,6 +141,18 @@ for (const route of ROUTES) {
       const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
 
       expect(format(violations)).toEqual([])
+
+      // axe 4.7+ only flags a duplicate id when ARIA references it, so this
+      // checks them all: a panel's id is its #hash link and its heading's
+      // aria-labelledby target, and both tabs of a TerminalTabs page stay in the
+      // DOM. /alerts shipped two id="alerts" sections that way.
+      const duplicates = await page.evaluate(() => {
+        const seen = new Map<string, number>()
+        for (const el of document.querySelectorAll('[id]'))
+          seen.set(el.id, (seen.get(el.id) ?? 0) + 1)
+        return [...seen].filter(([, n]) => n > 1).map(([id, n]) => `${id} ×${n}`)
+      })
+      expect(duplicates, `${route} has duplicate ids`).toEqual([])
     })
   }
 }

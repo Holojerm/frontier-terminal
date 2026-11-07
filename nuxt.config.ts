@@ -306,6 +306,10 @@ export default defineNuxtConfig({
 
   // NuxtHub — Cloudflare D1, KV, R2, and Blob bindings
   hub: {
+    // Local dev's data dir. The browser suites point it at .data-browser
+    // (playwright.config.ts) so filling their store from fixtures never
+    // rewrites the dev DB you filled from a live poll.
+    dir: process.env.NUXT_HUB_DIR || '.data',
     db: 'sqlite', // D1 SQLite via Drizzle (auto-imports `db` and `schema` in server routes)
     kv: true, // KV store
     blob: true, // R2 — raw fetched payloads, so every derived datum has its source bytes

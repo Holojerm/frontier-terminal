@@ -18,6 +18,8 @@
 // share the single `webServer` below, because booting one dev server twice is
 // the slowest thing in `bun run ci`.
 
+import { rmSync } from 'node:fs'
+
 import { defineConfig, devices } from '@playwright/test'
 
 import { playwrightPort } from './scripts/worktree-port'
@@ -34,6 +36,12 @@ const HOST = `http://localhost:${PORT}`
 // the runner — otherwise the line repeats once per worker in the CI log.
 if (process.env.TEST_WORKER_INDEX === undefined) console.info(`browser suites → ${HOST}`)
 
+// The suites' own NuxtHub data dir: test/warmup/fill-store.ts fills it from
+// fixtures, which would rewrite a dev DB filled from a live poll. Wiped once per
+// run (by the runner, not each worker) so every run starts from the same store.
+const HUB_DIR = '.data-browser'
+if (process.env.TEST_WORKER_INDEX === undefined) rmSync(HUB_DIR, { recursive: true, force: true })
+
 export default defineConfig({
   testDir: './test',
   testMatch: '**/*.spec.ts',
@@ -46,11 +54,17 @@ export default defineConfig({
   // every one of eighteen tests, and blunts the one signal this timeout exists
   // to give. `globalSetup` absorbs the cold build once instead.
   fullyParallel: true,
+  // One worker on CI. The ubuntu-latest runner this repo gets has 5 GB, and
+  // once the store holds fixture rows (test/warmup/fill-store.ts) two workers
+  // rendering /prices at once (two Chromium tabs, ~1.4 MB of HTML each, plus
+  // the dev server's ~1.8 GB) reached 4.9 GB and the kernel killed the server
+  // mid-run. Measured in CI with free/ps sampling on 2026-11-07.
+  workers: process.env.CI ? 1 : undefined,
   // Runs after `webServer` (Playwright starts that as a plugin, and plugin
   // setup precedes globalSetup), so the server is reachable by then. Warms the
   // client bundle with a real page (test/warmup/) so the first test does not
   // pay for the cold Vite build.
-  globalSetup: ['./test/warmup/global-setup.ts'],
+  globalSetup: ['./test/warmup/fill-store.ts', './test/warmup/global-setup.ts'],
   forbidOnly: !!process.env.CI,
   reporter: process.env.CI ? [['list'], ['html', { open: 'never' }]] : 'list',
 
@@ -98,6 +112,7 @@ export default defineConfig({
       NUXT_DEVTOOLS: 'false',
       NUXT_TYPECHECK: 'false',
       NUXT_PORT: String(PORT),
+      NUXT_HUB_DIR: HUB_DIR,
     },
   },
 })

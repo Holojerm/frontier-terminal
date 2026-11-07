@@ -59,6 +59,7 @@
       "app/types/auth.d.ts",
       "app/utils/",
       "nuxt.config.ts",
+      "playwright.config.ts",
       "scripts/check-design-tokens.ts",
       "scripts/check-mirrors.ts",
       "scripts/check-seo.ts",
@@ -130,7 +131,9 @@
       "shared/utils/onboarding.ts",
       "shared/utils/referral-code.ts",
       "shared/utils/schema.ts",
-      "shared/utils/site.ts"
+      "shared/utils/site.ts",
+      "test/a11y/accessibility.spec.ts",
+      "test/warmup/global-setup.ts"
     ]
   },
   "features": {
