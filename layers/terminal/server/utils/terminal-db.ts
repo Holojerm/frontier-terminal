@@ -1124,7 +1124,12 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
   }
 
   // The matrix maps live rows only, so it is built before archived rows join.
-  const matrix = buildMatrix(rows, basisChecks(checks, reads), classMap)
+  const matrix = buildMatrix(
+    rows,
+    basisChecks(checks, reads),
+    classMap,
+    ctx.at ?? ctx.now().toISOString(),
+  )
   if (early) rows.push(...early.filter((r) => !byKey.has(r.entity_key)))
 
   // Priced first, then catalog-only, then delisted; provider order inside each.
@@ -1279,6 +1284,18 @@ export function basisChecks(
 }
 
 /**
+ * A scheduled price ("$Y starting Jan 1, 2027") is stored as its own row with
+ * the same slug and a standard tier; only its key carries the start date
+ * (normalize.ts › priceTier). Until that date it is not what the model costs,
+ * the same rule spend's matchSku applies by preferring a current row.
+ */
+function scheduledAfter(row: PriceRowView, at: string | null): boolean {
+  if (at === null || row.effective_from === null) return false
+  const from = Date.parse(row.effective_from)
+  return Number.isFinite(from) && from > Date.parse(at)
+}
+
+/**
  * Joins the editorial class map (terminal-classes.ts) to real stored rows.
  * Nothing is computed about a model here: the map says which slug answers
  * which question, the store says what that slug costs, and anything the two
@@ -1290,10 +1307,12 @@ export function buildMatrix(
   rows: readonly PriceRowView[],
   checks: ReadonlyMap<string, BasisCheck> = new Map(),
   classMap: readonly ClassEntry[] = MODEL_CLASS_MAP,
+  /** The instant the matrix prices: a scheduled price that starts after it is not yet the price. */
+  at: string | null = null,
 ): PriceMatrix {
   const bySlug = new Map<string, PriceRowView[]>()
   for (const row of rows) {
-    if (row.removed || !isStandardTier(row.tier)) continue
+    if (row.removed || !isStandardTier(row.tier) || scheduledAfter(row, at)) continue
     const key = `${row.provider}:${row.model_slug}`
     bySlug.set(key, [...(bySlug.get(key) ?? []), row])
   }

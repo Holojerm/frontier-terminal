@@ -13,9 +13,11 @@ import { insertRows } from '../server/pipeline/store'
 import { terminalStamp } from '../server/utils/terminal-cache'
 import { MODEL_CLASS_MAP, NO_ROW_GAP } from '../server/utils/terminal-classes'
 import { ENTITY_AXIS } from '../shared/utils/terminal-labs'
+import type { PriceRowView } from '../shared/utils/terminal-types'
 import {
   AXIS_OF,
   alertPermalinks,
+  buildMatrix,
   parseAlertCursor,
   queryAlert,
   queryAlerts,
@@ -851,6 +853,50 @@ describe('the stated window holds when changes span several axes', () => {
       if (axis === 'demand') expect(AXIS_OF[type]).toBeUndefined()
       else expect(AXIS_OF[type], type).toBeDefined()
     }
+  })
+})
+
+describe('the matrix prices what a model costs at the query instant', () => {
+  it('passes over a scheduled price until its start date', () => {
+    const entry = MODEL_CLASS_MAP.find((e) => e.class === 'flagship')!
+    const row = (over: Partial<PriceRowView>): PriceRowView => ({
+      entity_key: `model:${entry.provider}:${entry.model_slug}:standard`,
+      source_id: 'pricing',
+      provider: entry.provider,
+      model_slug: entry.model_slug,
+      tier: 'standard',
+      context_window: null,
+      context_window_source: null,
+      input_per_mtok: 2,
+      cached_input_per_mtok: null,
+      output_per_mtok: 10,
+      effective_from: null,
+      effective_until: null,
+      notes: null,
+      removed: false,
+      delta: null,
+      also_listed_by: [],
+      revisions: 1,
+      spark: null,
+      source_url: 'https://example.com/pricing',
+      fetched_at: '2026-11-01T00:00:00.000Z',
+      checked_at: null,
+      ...over,
+    })
+    // Richer and newer, so preferRow alone would pick it.
+    const scheduled = row({
+      entity_key: `model:${entry.provider}:${entry.model_slug}:standard@2027-01-01`,
+      input_per_mtok: 1,
+      cached_input_per_mtok: 0.1,
+      effective_from: '2027-01-01',
+      fetched_at: '2026-11-05T00:00:00.000Z',
+    })
+    const cellAt = (at: string | null) =>
+      buildMatrix([row({}), scheduled], new Map(), MODEL_CLASS_MAP, at).cells.find(
+        (c) => c.provider === entry.provider && c.class === 'flagship',
+      )!
+    expect(cellAt('2026-11-07T00:00:00.000Z').row!.input_per_mtok).toBe(2)
+    expect(cellAt('2027-01-02T00:00:00.000Z').row!.input_per_mtok).toBe(1)
   })
 })
 
