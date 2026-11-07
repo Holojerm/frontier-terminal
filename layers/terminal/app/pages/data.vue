@@ -12,7 +12,7 @@ import {
 } from '#shared/utils/license'
 import { mailto } from '../../shared/utils/contact'
 import { count } from '../../shared/utils/terminal-format'
-import { INFO_FEED_QUERY } from '../../shared/utils/terminal-tiers'
+import { CRITICAL_FEED_QUERY, INFO_FEED_QUERY } from '../../shared/utils/terminal-tiers'
 import type {
   CoverageData,
   DataDictionary,
@@ -501,7 +501,14 @@ const EXPORT_COLUMNS: TableColumn[] = [
             class="font-mono text-primary underline underline-offset-2"
             >?{{ INFO_FEED_QUERY }}</NuxtLink
           >
-          for the minor changes.
+          for the minor changes, or
+          <NuxtLink
+            :to="`/alerts.xml?${CRITICAL_FEED_QUERY}`"
+            external
+            class="font-mono text-primary underline underline-offset-2"
+            >?{{ CRITICAL_FEED_QUERY }}</NuxtLink
+          >
+          for critical alerts only.
         </p>
       </TerminalPanel>
     </div>

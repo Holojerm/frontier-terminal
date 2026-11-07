@@ -7,7 +7,7 @@
 
 import { COMPARE_PAIRS, comparePath, pairTitle } from '../../../../shared/utils/terminal-compare'
 import { isLab, summarizeLab, tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
-import { alertLabs, LAB_SITE } from '../../../../shared/utils/terminal-labs'
+import { LAB_SITE } from '../../../../shared/utils/terminal-labs'
 import { absoluteStamp, count } from '../../../../shared/utils/terminal-format'
 import { labLede } from '../../../../shared/utils/terminal-ledes'
 import type { TableColumn } from '../../../types/terminal-ui'
@@ -138,16 +138,11 @@ const [prices, revenue, rankings, spend, hiring, incidents, releases, alerts] = 
       rows: d.rows.filter((r) => r.provider === lab),
     }),
   }),
-  // The big one: /api/alerts at tier=all&limit=200 is ~600KB. `alertLabs` is
-  // the same predicate summarizeLab applies below; the page renders the newest
-  // ALERTS_SHOWN of the lab's rows, and `total` becomes the lab's count.
+  // Narrowed to the lab on the server (the same any-cited-row predicate as
+  // alertLabs), so `total` is the lab's whole history, not its share of the newest 200.
   useFetch<AlertsData>('/api/alerts', {
     key: `lab-alerts:${lab}`,
-    query: { tier: 'all', limit: 200 },
-    transform: (d: AlertsData): AlertsData => {
-      const rows = d.rows.filter((a) => alertLabs(a).includes(lab))
-      return { ...d, rows: rows.slice(0, ALERTS_SHOWN), total: rows.length }
-    },
+    query: { tier: 'all', limit: ALERTS_SHOWN, lab },
   }),
 ])
 
@@ -331,7 +326,7 @@ const tabs = computed(() => [
             :note="`Alerts and minor changes whose cited rows name ${display}, newest first.`"
             :more="
               alertCount > labAlerts.length
-                ? { label: `All ${alertCount} on the alerts page`, to: '/alerts' }
+                ? { label: `All ${alertCount} on the alerts page`, to: `/alerts?lab=${lab}` }
                 : undefined
             "
             :flush="labAlerts.length > 0"
