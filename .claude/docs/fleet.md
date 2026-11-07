@@ -74,8 +74,8 @@ anything a lost message left (`layers/terminal/server/utils/events.ts`). The
 layer's own `social:post` task is not scheduled. A due post still queued after
 an hour spools `social_outbox_stalled`.
 
-- **Secrets:** `NUXT_SOCIAL_BUFFER_API_KEY` (1Password "Buffer API — Frontier
-  Terminal"), `NUXT_SOCIAL_CHANNEL_X`, `NUXT_SOCIAL_CHANNEL_BLUESKY`. With no key <!-- refs-check-ignore: runtimeConfig.social.channelBluesky in layers/social -->
+- **Secrets:** `NUXT_SOCIAL_BUFFER_API_KEY` (kept in 1Password),
+  `NUXT_SOCIAL_CHANNEL_X`, `NUXT_SOCIAL_CHANNEL_BLUESKY`. With no key <!-- refs-check-ignore: runtimeConfig.social.channelBluesky in layers/social -->
   every task returns before touching D1.
 - **Kill switch:** `NUXT_SOCIAL_ENABLED=1` sends. Unset is a dry run — due rows
   become `dry-run`, so switching on never flushes a backlog. Delete the secret to
@@ -99,11 +99,11 @@ bun run webhooks:test -- --id whk_0a1b2c3d4e [--remote]
 bun run webhooks:remove -- --id whk_0a1b2c3d4e [--remote]
 ```
 
-- **Secret:** `NUXT_WEBHOOK_SIGNING_KEY` (32+ characters, 1Password "Frontier
-  Terminal webhook signing key"). Each webhook's signing secret is
+- **Secret:** `NUXT_WEBHOOK_SIGNING_KEY` (32+ characters, kept in 1Password).
+  Each webhook's signing secret is
   HMAC-derived from it and the webhook id, so D1 stores no secret, only a
   SHA-256 fingerprint. `add` and `test` need the same value as the Worker:
-  `NUXT_WEBHOOK_SIGNING_KEY="$(op read 'op://Private/Frontier Terminal webhook signing key/password')" bun run webhooks:add -- … --remote`.
+  `NUXT_WEBHOOK_SIGNING_KEY="$(op read 'op://…')" bun run webhooks:add -- … --remote`.
   Rotating it breaks every webhook: each one goes `failing` with an ops event,
   and has to be removed and re-added with a new secret for the client.
 - **Trigger:** the EVENTS queue (`layers/terminal/server/utils/events.ts`).
@@ -151,14 +151,13 @@ One-time setup (owner):
    access, no custom domain).
 2. An account-owned API token that can mint tokens: dashboard › Manage Account ›
    Account API Tokens › Create Custom Token, permission **Account › Account API
-   Tokens › Edit**, no other. Save it in 1Password as "Frontier Terminal bulk
-   grants" (field `credential`). The `cf` login can't do this: its OAuth scopes
+   Tokens › Edit**, no other. Save it in 1Password. The `cf` login can't do this: its OAuth scopes
    don't include token management.
 
 Grants:
 
 ```bash
-export BULK_GRANT_API_TOKEN="$(op read 'op://Private/Frontier Terminal bulk grants/credential')"
+export BULK_GRANT_API_TOKEN="$(op read 'op://…')"
 bun run bulk:grant -- --key key_0a1b2c3d4e --remote            # prints S3 credentials once
 bun run bulk:grants -- --remote                                # list
 bun run bulk:grant -- --key key_0a1b2c3d4e --revoke --remote   # or --grant grant_…

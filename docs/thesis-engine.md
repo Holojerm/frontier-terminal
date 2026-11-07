@@ -1,6 +1,6 @@
 # Thesis engine — plan
 
-Written 2026-10-08. Working copy for discussion: [claude.ai doc](https://claude.ai/code/artifact/4699c725-6ac5-43e4-bbb6-c76c0f0f4d8a); this file is the record.
+Written 2026-10-08. This file is the record.
 
 ## Summary
 
