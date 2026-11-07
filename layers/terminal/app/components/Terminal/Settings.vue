@@ -53,10 +53,25 @@ const zones = computed<Option<string>[]>(() => {
   ]
 })
 
-const field =
-  <K extends keyof ReaderPrefs>(key: K) =>
-  (value: ReaderPrefs[K]) =>
-    set({ [key]: value } as Partial<ReaderPrefs>)
+// One writable computed per setting, so every control is a plain v-model.
+// An inline `@update:model-value="f(key)"` would only call f, never the
+// setter it returns, and the control would silently do nothing.
+type Scalar = Exclude<keyof ReaderPrefs, 'watchlist'>
+const bind = <K extends Scalar>(key: K) =>
+  computed<ReaderPrefs[K]>({
+    get: () => prefs.value[key],
+    set: (value) => set({ [key]: value }),
+  })
+const zone = bind('zone')
+const clock = bind('clock')
+const dates = bind('dates')
+const relative = bind('relative')
+const numbers = bind('numbers')
+const density = bind('density')
+const mode = computed({
+  get: () => colorMode.preference,
+  set: (value: string) => (colorMode.preference = value),
+})
 
 const sample = computed(() =>
   stamps.absolute(new Date(stamps.now.value ?? Date.now()).toISOString()),
@@ -90,49 +105,30 @@ function resetAll() {
       >
         <div class="space-y-4">
           <UFormField label="Color mode">
-            <USelect
-              :model-value="colorMode.preference"
-              :items="COLOR"
-              class="w-full"
-              @update:model-value="(v) => (colorMode.preference = String(v))"
-            />
+            <USelect v-model="mode" :items="COLOR" class="w-full" />
           </UFormField>
 
           <fieldset class="space-y-3">
             <legend class="mb-2 text-xs text-toned">Times</legend>
             <UFormField label="Time zone">
               <USelectMenu
-                :model-value="prefs.zone"
+                v-model="zone"
+                aria-label="Time zone"
                 :items="zones"
                 value-key="value"
                 virtualize
                 class="w-full"
-                @update:model-value="field('zone')"
               />
             </UFormField>
             <div class="grid grid-cols-2 gap-3">
               <UFormField label="Clock">
-                <USelect
-                  :model-value="prefs.clock"
-                  :items="CLOCK"
-                  class="w-full"
-                  @update:model-value="field('clock')"
-                />
+                <USelect v-model="clock" :items="CLOCK" class="w-full" />
               </UFormField>
               <UFormField label="Dates">
-                <USelect
-                  :model-value="prefs.dates"
-                  :items="DATES"
-                  class="w-full"
-                  @update:model-value="field('dates')"
-                />
+                <USelect v-model="dates" :items="DATES" class="w-full" />
               </UFormField>
             </div>
-            <USwitch
-              :model-value="prefs.relative"
-              label="Show recent times as ages (3h ago)"
-              @update:model-value="field('relative')"
-            />
+            <USwitch v-model="relative" label="Show recent times as ages (3h ago)" />
             <p class="text-xs text-muted">
               Now reads as <span class="font-mono text-default">{{ sample }}</span
               >. Hover over a time for the exact UTC value we stored.
@@ -143,20 +139,10 @@ function resetAll() {
             <legend class="mb-2 text-xs text-toned">Tables and figures</legend>
             <div class="grid grid-cols-2 gap-3">
               <UFormField label="Dollar figures">
-                <USelect
-                  :model-value="prefs.numbers"
-                  :items="NUMBERS"
-                  class="w-full"
-                  @update:model-value="field('numbers')"
-                />
+                <USelect v-model="numbers" :items="NUMBERS" class="w-full" />
               </UFormField>
               <UFormField label="Row spacing">
-                <USelect
-                  :model-value="prefs.density"
-                  :items="DENSITY"
-                  class="w-full"
-                  @update:model-value="field('density')"
-                />
+                <USelect v-model="density" :items="DENSITY" class="w-full" />
               </UFormField>
             </div>
             <p class="text-xs text-muted">
