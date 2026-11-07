@@ -29,6 +29,7 @@ import {
 } from '../../shared/utils/terminal-tiers'
 import type {
   AlertDetailData,
+  ArchivedHiringPoint,
   AlertView,
   AlertsData,
   LabId,
@@ -98,6 +99,8 @@ import {
 import {
   ARCHIVED_AS_OF_METHOD,
   ARCHIVED_HIRING_AS_OF_METHOD,
+  ARCHIVED_LABS_AS_OF_METHOD,
+  ARCHIVED_LAB_BOARDS_AS_OF_METHOD,
   HIRING_ARCHIVE_METHOD,
   archivedHiringPoints,
   queryHiringReach,
@@ -105,6 +108,8 @@ import {
   archivedPriceKeys,
   archivedRowsForKey,
   beforeLiveFloor,
+  labLiveFloors,
+  labsBeforeFloor,
   queryPriceReach,
 } from './terminal-archive'
 import {
@@ -1008,20 +1013,25 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
   if (pit && (await beforeLiveFloor(db, pit.at))) return archivedPrices(db, pit)
   const models = pit ? rewound(db, pit, 'model') : null
   if (pit) ctx.notes.method.add(PRICES_METHOD)
-  const [entities, history, stamps, reads, firsts, checks, classMap, reach] = await Promise.all([
-    models
-      ? models.then((m) => m.rows)
-      : db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'model')),
-    models ? models.then((m) => m.changes) : modelChanges(db),
-    sourceStamps(db, ctx.at),
-    lastReads(db, ctx.at),
-    firstSnapshotByUrl(db),
-    pit
-      ? rewound(db, pit, 'recommendation').then((r) => r.rows)
-      : db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'recommendation')),
-    effectiveClassMap(db, ctx.at),
-    queryPriceReach(db, ctx.registry),
-  ])
+  const [entities, history, stamps, reads, firsts, checks, classMap, reach, early] =
+    await Promise.all([
+      models
+        ? models.then((m) => m.rows)
+        : db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'model')),
+      models ? models.then((m) => m.changes) : modelChanges(db),
+      sourceStamps(db, ctx.at),
+      lastReads(db, ctx.at),
+      firstSnapshotByUrl(db),
+      pit
+        ? rewound(db, pit, 'recommendation').then((r) => r.rows)
+        : db
+            .select()
+            .from(tables.entities)
+            .where(eq(tables.entities.entity_type, 'recommendation')),
+      effectiveClassMap(db, ctx.at),
+      queryPriceReach(db, ctx.registry),
+      pit ? archivedBeforeOwnFloor(db, pit) : null,
+    ])
   const changes = newestPerSource(history)
   const entitiesByKey = groupByKey(entities)
   const historyByKey = groupByKey(history)
@@ -1113,6 +1123,10 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
     rows.push(row)
   }
 
+  // The matrix maps live rows only, so it is built before archived rows join.
+  const matrix = buildMatrix(rows, basisChecks(checks, reads), classMap)
+  if (early) rows.push(...early.filter((r) => !byKey.has(r.entity_key)))
+
   // Priced first, then catalog-only, then delisted; provider order inside each.
   rows.sort((a, b) => {
     const bucket = (r: PriceRowView) => (r.removed ? 2 : pricedRow(r) ? 0 : 1)
@@ -1130,7 +1144,7 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
   return {
     ...stampOf(ctx),
     rows,
-    matrix: buildMatrix(rows, basisChecks(checks, reads), classMap),
+    matrix,
     counts: {
       total: rows.length,
       priced: rows.filter((r) => !r.removed && pricedRow(r)).length,
@@ -1148,6 +1162,30 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
         }
       : null,
   }
+}
+
+/**
+ * As of T after the first fetch, the labs whose own pricing pages were not
+ * fetched yet: their rows from the newest readable archive capture by T, so
+ * a lab added later is answered from the archive up to its own first fetch
+ * rather than missing. Null when every lab's live record had begun.
+ */
+async function archivedBeforeOwnFloor(
+  db: PipelineDb,
+  ctx: QueryContext & { at: string },
+): Promise<PriceRowView[] | null> {
+  const floors = await labLiveFloors(db, ctx.registry, 'pricing')
+  const labs = labsBeforeFloor(floors, ctx.at, 'pricing')
+  if (labs.length === 0) return null
+  const catalog = await archivedCatalogAt(db, ctx.at, labs)
+  if (catalog.rows.length === 0) return null
+  ctx.notes.method.add(ARCHIVED_LABS_AS_OF_METHOD)
+  for (const c of catalog.captures) {
+    ctx.notes.method.add(
+      `${c.provider}: Internet Archive capture of ${c.captured_at} (${c.source_url}).`,
+    )
+  }
+  return catalog.rows
 }
 
 /**
@@ -1456,6 +1494,19 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
     })
   }
 
+  // As of T, a lab whose board we had not read yet is answered from its
+  // newest archived copy by T rather than as an empty board.
+  if (pit) {
+    const early = labsBeforeFloor(await labLiveFloors(db, ctx.registry, 'hiring'), pit.at, 'hiring')
+    const points = early.length ? await archivedHiringPoints(db, ctx.clusters, pit.at) : null
+    for (const lab of early) {
+      if (!points?.get(lab)?.length) continue
+      ctx.notes.method.add(ARCHIVED_LAB_BOARDS_AS_OF_METHOD)
+      const i = providers.findIndex((p) => p.provider === lab)
+      providers[i] = archivedHiringView(pit, lab, points)
+    }
+  }
+
   return { ...stampOf(ctx), providers }
 }
 
@@ -1471,43 +1522,50 @@ async function archivedHiring(
 ): Promise<HiringData> {
   const points = await archivedHiringPoints(db, ctx.clusters, ctx.at)
   ctx.notes.method.add(ARCHIVED_HIRING_AS_OF_METHOD)
-  const providers: HiringProviderView[] = PROVIDER_ORDER.map((provider) => {
-    const backing = HIRING_SOURCES[provider]
-    const newest = points.get(provider)?.at(-1)
-    if (newest) {
-      ctx.notes.method.add(
-        `${provider}: Internet Archive copy of ${newest.at} (${newest.source_url}).`,
-      )
-    }
-    return {
-      provider,
-      display: PROVIDER_DISPLAY[provider],
-      feed: 'cut_id' in backing ? 'no_public_feed' : newest ? 'ok' : 'no_rows',
-      reason:
-        'cut_id' in backing
-          ? (cutReason(ctx, backing.cut_id) ??
-            `No public hiring feed exists for ${PROVIDER_DISPLAY[provider]}.`)
-          : null,
-      total: newest?.total ?? 0,
-      departments: (newest?.departments ?? []).map((d) => ({
-        department: d.department,
-        count: d.open_roles,
-      })),
-      caveat: null,
-      company_names: [],
-      sources: newest
-        ? [
-            {
-              source_id: newest.source_id,
-              label: 'Internet Archive copy of the job board',
-              source_url: newest.source_url,
-              fetched_at: newest.fetched_at,
-            },
-          ]
-        : [],
-    }
-  })
+  const providers = PROVIDER_ORDER.map((provider) => archivedHiringView(ctx, provider, points))
   return { ...stampOf(ctx), providers }
+}
+
+/** One lab's board as of ctx.at from its newest readable archived copy, noted on point_in_time. */
+function archivedHiringView(
+  ctx: QueryContext & { at: string },
+  provider: LabId,
+  points: ReadonlyMap<string, ArchivedHiringPoint[]>,
+): HiringProviderView {
+  const backing = HIRING_SOURCES[provider]
+  const newest = points.get(provider)?.at(-1)
+  if (newest) {
+    ctx.notes.method.add(
+      `${provider}: Internet Archive copy of ${newest.at} (${newest.source_url}).`,
+    )
+  }
+  return {
+    provider,
+    display: PROVIDER_DISPLAY[provider],
+    feed: 'cut_id' in backing ? 'no_public_feed' : newest ? 'ok' : 'no_rows',
+    reason:
+      'cut_id' in backing
+        ? (cutReason(ctx, backing.cut_id) ??
+          `No public hiring feed exists for ${PROVIDER_DISPLAY[provider]}.`)
+        : null,
+    total: newest?.total ?? 0,
+    departments: (newest?.departments ?? []).map((d) => ({
+      department: d.department,
+      count: d.open_roles,
+    })),
+    caveat: null,
+    company_names: [],
+    sources: newest
+      ? [
+          {
+            source_id: newest.source_id,
+            label: 'Internet Archive copy of the job board',
+            source_url: newest.source_url,
+            fetched_at: newest.fetched_at,
+          },
+        ]
+      : [],
+  }
 }
 
 // ---- incidents (capacity strain) -------------------------------------------
@@ -1678,9 +1736,12 @@ export async function queryPriceHistory(
           .where(and(eq(tables.changes.entity_type, 'model'), eq(tables.changes.entity_key, key))),
     firstSnapshotByUrl(db),
   ])
-  // Archived points stop where live observation starts: a capture the
-  // Archive took after our first fetch adds nothing we did not see ourselves.
-  const liveFrom = [...firsts.values()].sort()[0] ?? null
+  // Archived points stop where live observation of this SKU's lab starts: a
+  // capture the Archive took after our first fetch of the lab's pricing pages
+  // adds nothing we did not see ourselves. Per lab, not the store's first
+  // fetch, or a lab added later loses its archive up to its own first fetch.
+  const lab = key.split(':')[1] as LabId
+  const liveFrom = (await labLiveFloors(db, ctx.registry, 'pricing')).get(lab) ?? null
   const cut = ctx.at !== null && (liveFrom === null || ctx.at < liveFrom) ? ctx.at : liveFrom
   const archivedRows = (await archivedRowsForKey(db, key, cut)).filter(
     (r) => liveFrom === null || r.captured_at < liveFrom,

@@ -28,6 +28,8 @@ import { cacheControlFor, resolvedApiKey } from './api-access'
 import {
   ARCHIVED_AS_OF_METHOD,
   ARCHIVED_HIRING_AS_OF_METHOD,
+  ARCHIVED_LABS_AS_OF_METHOD,
+  ARCHIVED_LAB_BOARDS_AS_OF_METHOD,
   assertArchiveKnowable,
 } from './terminal-archive'
 import { serverTimingHeader, timed, type ServerTiming } from './server-timing'
@@ -146,8 +148,12 @@ const EVENT_TIME_PUBLISHED = LICENSE_SPLIT_EFFECTIVE
 function eventTime(filed: boolean | undefined, method: readonly string[]): boolean {
   return (
     filed === true ||
-    method.includes(ARCHIVED_AS_OF_METHOD) ||
-    method.includes(ARCHIVED_HIRING_AS_OF_METHOD)
+    [
+      ARCHIVED_AS_OF_METHOD,
+      ARCHIVED_HIRING_AS_OF_METHOD,
+      ARCHIVED_LABS_AS_OF_METHOD,
+      ARCHIVED_LAB_BOARDS_AS_OF_METHOD,
+    ].some((m) => method.includes(m))
   )
 }
 
