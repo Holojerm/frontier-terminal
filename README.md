@@ -21,7 +21,7 @@ bun run ci         # the merge gate: format (writes), lint, every gate, typechec
 bun run ci:fast    # while iterating: cheap gates + typecheck + tests touched since origin/main
 ```
 
-Workers Builds runs `bun run ci` on every push. The browser suites (axe over every public route
+Workers Builds runs `bun run ci` on every pull-request branch (production builds run typecheck + build only). The browser suites (axe over every public route
 in both color modes, and the Content-Security-Policy spec) run in GitHub Actions instead
 (`.github/workflows/browser-suites.yml`), because the Workers Builds image can't launch Chromium.
 
