@@ -9,6 +9,8 @@
 //   gdelt-search  the GDELT Actions job (.github/workflows/gdelt-search.yml),
 //                 gdelt_files
 //   press-drafts  the press-drafts routine (claude.ai), the KV drafted markers
+//   social-outbox the social outbox, social_posts — its sender is in the
+//                 vendored layer and records no heartbeat
 //
 // A new producer gets a check here and its kind a tier in
 // terminal-ops-severity.ts; freshness.test.ts fails the build on a kind with
@@ -82,49 +84,51 @@ export function pressDraftsFreshnessCheck(
   }
 }
 
-/** A queued post that is due and still queued this long means social:post is not sending. */
+/** A queued post due and still queued this long means nothing is draining the social outbox. */
 export const SOCIAL_POST_SILENCE_MS = HOUR_MS
 
 /**
+ * The social outbox is drained by EVENTS queue messages and the hourly
+ * events:sweep (layers/terminal/server/utils/events.ts), and its sender lives in
+ * the vendored social layer, which records no heartbeat. Its own rows are the
+ * evidence: a due post still queued past the limit is the stall, whichever
+ * path should have sent it.
+ */
+export const socialOutboxFreshnessCheck: FreshnessCheck = {
+  key: 'social-outbox',
+  label: 'The social outbox (EVENTS social.drain and events:sweep)',
+  kind: 'social_outbox_stalled',
+  maxAgeMs: SOCIAL_POST_SILENCE_MS,
+  async evidence(db, now) {
+    const [oldest] = await db
+      .select({ due: tables.socialPosts.notBefore })
+      .from(tables.socialPosts)
+      .where(and(eq(tables.socialPosts.status, 'queued'), lte(tables.socialPosts.notBefore, now)))
+      .orderBy(asc(tables.socialPosts.notBefore))
+      .limit(1)
+    const [sent] = await db
+      .select({ at: tables.socialPosts.sentAt })
+      .from(tables.socialPosts)
+      .where(eq(tables.socialPosts.status, 'sent'))
+      .orderBy(desc(tables.socialPosts.sentAt))
+      .limit(1)
+    return {
+      owedSince: oldest ? oldest.due.toISOString() : null,
+      lastOkAt: sent?.at ? sent.at.toISOString() : null,
+      note: oldest ? 'a due post is still queued' : null,
+    }
+  },
+}
+
+/**
  * Scheduled tasks whose freshness is checked from their own rows instead of
- * a heartbeat, each with the reason.
+ * a heartbeat, each with the reason. Empty since social:post left the
+ * schedule; kept so a task that cannot carry withHeartbeat() has a place.
  */
 export const TASK_CHECK_OVERRIDES: Record<
   string,
   { reason: string; check: (expression: string) => FreshnessCheck }
-> = {
-  'social:post': {
-    reason:
-      'The task is in the vendored social layer, whose files layers:check pins to the lock, so it cannot carry withHeartbeat(). Its own queue is better evidence anyway: a due post still queued is the stall.',
-    check: (expression) => ({
-      key: 'task:social:post',
-      label: `Scheduled task social:post (${expression})`,
-      kind: 'task_silent',
-      maxAgeMs: SOCIAL_POST_SILENCE_MS,
-      async evidence(db, now) {
-        const [oldest] = await db
-          .select({ due: tables.socialPosts.notBefore })
-          .from(tables.socialPosts)
-          .where(
-            and(eq(tables.socialPosts.status, 'queued'), lte(tables.socialPosts.notBefore, now)),
-          )
-          .orderBy(asc(tables.socialPosts.notBefore))
-          .limit(1)
-        const [sent] = await db
-          .select({ at: tables.socialPosts.sentAt })
-          .from(tables.socialPosts)
-          .where(eq(tables.socialPosts.status, 'sent'))
-          .orderBy(desc(tables.socialPosts.sentAt))
-          .limit(1)
-        return {
-          owedSince: oldest ? oldest.due.toISOString() : null,
-          lastOkAt: sent?.at ? sent.at.toISOString() : null,
-          note: oldest ? 'a due post is still queued' : null,
-        }
-      },
-    }),
-  },
-}
+> = {}
 
 export interface FreshnessDeps {
   /** runtimeConfig.scheduledTasks: cron expression → task names. */
@@ -146,6 +150,7 @@ export function freshnessChecks(deps: FreshnessDeps): FreshnessCheck[] {
     ...tasks,
     judgeFreshnessCheck,
     gdeltFreshnessCheck,
+    socialOutboxFreshnessCheck,
     pressDraftsFreshnessCheck(deps.drafted, deps.pressList),
   ]
 }

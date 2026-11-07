@@ -1,7 +1,8 @@
 // Press notes: when a registration filing parses (a prospectus-floor alert),
 // one note per reporter, composed here from the alert. Two paths deliver them
-// to the owner, never to a reporter: the press:briefs task mails a brief of
-// mailto: links within minutes, and the press-drafts routine
+// to the owner, never to a reporter: the EVENTS queue's alert fan-out
+// (layers/terminal/server/utils/event-work.ts) mails a brief of mailto: links
+// within a minute or so, and the press-drafts routine
 // (.claude/routines/press-drafts.md) reads /api/press/pending and saves each
 // note as a Gmail draft. A person decides that a note goes out.
 //
