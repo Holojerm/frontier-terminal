@@ -9,6 +9,7 @@ import { runRefresh, type RawStore } from '../server/pipeline/refresh'
 import { includeSources } from '../server/pipeline/sources'
 import { insertRows } from '../server/pipeline/store'
 import {
+  AS_OF_ROUTES,
   AsOfInstant,
   PointInTimeError,
   assertKnowable,
@@ -129,6 +130,38 @@ describe('as_of', () => {
       /before the first snapshot \(2026-09-07T10:00:\d\d/,
     )
     await expect(assertKnowable(db, between())).resolves.toBeUndefined()
+  })
+})
+
+// Every API route as source text, keyed by its URL path ('/api/prices/<key>').
+const ROUTES = Object.fromEntries(
+  Object.entries(
+    import.meta.glob('/layers/terminal/server/api/**/*.get.ts', {
+      query: '?raw',
+      import: 'default',
+      eager: true,
+    }) as Record<string, string>,
+  ).map(([file, source]) => [
+    file
+      .replace(/^.*\/server/, '')
+      .replace(/\.get\.ts$/, '')
+      .replace(/\[(\w+)\]/g, '<$1>'),
+    source,
+  ]),
+)
+
+describe('which routes answer as_of', () => {
+  it('lists every route that rebuilds its payload as of T, and no other', () => {
+    const answering = Object.keys(ROUTES)
+      .filter((path) =>
+        /serveTerminalAsOf|serveTerminalFiled|terminalPayloadAt|parseAsOfQuery/.test(ROUTES[path]!),
+      )
+      .sort()
+    expect(answering).toEqual([...AS_OF_ROUTES].sort())
+  })
+
+  it('refuses as_of on the page payload rather than serving today’s page under it', () => {
+    expect(ROUTES['/api/page-data']).toMatch(/refuseAsOf\(event, 'page-data'\)/)
   })
 })
 

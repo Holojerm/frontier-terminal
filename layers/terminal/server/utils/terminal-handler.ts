@@ -183,6 +183,8 @@ const AS_OF_REFUSALS: Readonly<Record<string, string>> = {
     'an alert is never rewritten, so its row is the same at every moment after it was raised. Use /api/alerts?as_of= to see which alerts existed then.',
   identifiers:
     'it’s a registry kept in code, and each identifier is dated by its own fetched_at instead.',
+  'page-data':
+    'it returns the live page’s own hydration payload. Ask the API route the page reads from with as_of instead.',
 }
 
 /** A 400 for a route that does not rebuild its payload as of T. Never ignore it. */

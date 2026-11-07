@@ -17,6 +17,7 @@ import { z } from 'zod'
 
 import { CACHE_STATUS, isCacheableDocument } from '../utils/html-cache'
 import { rateLimitTerminal } from '../utils/api-access'
+import { refuseAsOf } from '../utils/terminal-handler'
 
 const PAYLOAD_RE = /<script[^>]*\bid="__NUXT_DATA__"[^>]*>([\s\S]*?)<\/script>/
 
@@ -30,6 +31,9 @@ const querySchema = z.object({
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'page-data', limit: 60, windowSeconds: 60 })
+  // The schema strips unknown keys, so an as_of would be dropped and today's
+  // page served under it.
+  refuseAsOf(event, 'page-data')
   const { path } = await getValidatedQuery(event, querySchema.parse)
   if (!isCacheableDocument({ method: 'GET', path })) {
     throw createError({ statusCode: 400, statusMessage: 'Not a public page' })
