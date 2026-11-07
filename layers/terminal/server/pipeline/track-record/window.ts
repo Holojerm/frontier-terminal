@@ -19,9 +19,10 @@ export interface SawIt {
 
 /**
  * When a row's change was first in hand. An added or modified row carries
- * the fetch that observed it. A removal carries the last fetch that still
- * listed the entity (diff.ts keeps the before side's provenance), which can
- * be weeks old, so a removal counts from the run that noticed it was gone.
+ * the fetch that observed it. A removal counts from the run that noticed it
+ * was gone: removals diffed before migration 0036 were stamped with the
+ * removed row's first sighting, weeks earlier, and that migration rewrote
+ * them, so reading detected_at keeps saw-it times stable either way.
  */
 export function seenAt(change: Pick<ChangeRow, 'change_type' | 'fetched_at' | 'detected_at'>) {
   return new Date(change.change_type === 'removed' ? change.detected_at : change.fetched_at)
