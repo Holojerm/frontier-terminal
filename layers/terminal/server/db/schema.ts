@@ -466,8 +466,14 @@ export const gdeltFiles = sqliteTable(
     // Rows kept in gkg_mentions from this file; null when it was read before
     // mentions were kept, which leaves it unsearchable for later alerts.
     mentions: integer('mentions'),
+    // When the file was read for reported figures (pipeline/reported/). Null for a
+    // file read before that side existed, until the job reads it again for them.
+    figures_at: text('figures_at'),
   },
-  (t) => [index('gdelt_files_recorded_idx').on(t.recorded_at)],
+  (t) => [
+    index('gdelt_files_recorded_idx').on(t.recorded_at),
+    index('gdelt_files_figures_idx').on(t.figures_at, t.stamp),
+  ],
 )
 
 // The GKG rows that name a tracked lab, filer or model family, kept
@@ -542,6 +548,70 @@ export const trackRecordVerdicts = sqliteTable(
   (t) => [
     index('track_record_verdicts_alert_idx').on(t.alert_id),
     index('track_record_verdicts_judged_idx').on(t.judged_at, t.id),
+  ],
+)
+
+// ─────────────────────────────────────────────
+// Reported figures: lab revenue, valuations and funding rounds as press
+// headlines state them (pipeline/reported/). Append-only, like the track record.
+
+// One row per GDELT article whose headline names a private lab, an amount and
+// a financial word. Syndicated copies share a title_key; the judge reads each
+// headline once, whatever the number of outlets that carried it.
+export const reportedArticles = sqliteTable(
+  'reported_articles',
+  {
+    id: text('id').primaryKey(),
+    title_key: text('title_key').notNull(),
+    title: text('title').notNull(),
+    outlet: text('outlet').notNull(),
+    url: text('url').notNull(),
+    published_at: text('published_at').notNull(),
+    found_at: text('found_at').notNull(),
+    raw_key: text('raw_key'),
+    ...provenance,
+  },
+  (t) => [
+    index('reported_articles_key_idx').on(t.title_key, t.published_at),
+    index('reported_articles_found_idx').on(t.found_at, t.id),
+  ],
+)
+
+// One row per headline the judge read: how many figures it found (0 when the
+// headline states none we track).
+export const reportedReviews = sqliteTable(
+  'reported_reviews',
+  {
+    id: text('id').primaryKey(),
+    title_key: text('title_key').notNull(),
+    figures: integer('figures').notNull(),
+    judged_at: text('judged_at').notNull(),
+  },
+  (t) => [index('reported_reviews_judged_idx').on(t.judged_at, t.id)],
+)
+
+// One row per figure a headline states, as the judge labeled it and the
+// Worker checked it: the amount and the lab are in the headline.
+export const reportedFigures = sqliteTable(
+  'reported_figures',
+  {
+    id: text('id').primaryKey(),
+    title_key: text('title_key').notNull(),
+    article_id: text('article_id').notNull(),
+    lab: text('lab').notNull(),
+    metric: text('metric').notNull(), // revenue_run_rate | revenue | valuation | funding
+    basis: text('basis').notNull(), // reported | sought | projected
+    currency: text('currency').notNull(), // USD | EUR
+    amount: real('amount').notNull(),
+    amount_text: text('amount_text').notNull(),
+    period: text('period'),
+    published_at: text('published_at').notNull(),
+    judged_at: text('judged_at').notNull(),
+    ...provenance,
+  },
+  (t) => [
+    index('reported_figures_lab_idx').on(t.lab, t.metric, t.published_at),
+    index('reported_figures_judged_idx').on(t.judged_at, t.id),
   ],
 )
 

@@ -1,8 +1,9 @@
 // POST /api/gdelt/file — one GDELT GKG file the Actions job read, for a file
 // /api/gdelt/work handed out: how many rows it held, the rows that matched
-// an alert, verbatim, and the rows that carry a vocabulary word, compacted.
-// The Worker parses and matches each matched row again before it keeps it,
-// and keeps a mention only when every name it claims is in the vocabulary
+// an alert, verbatim, the rows that carry a vocabulary word, compacted, and
+// the rows whose headline is a lab figure, verbatim. The Worker parses and
+// matches each matched and figure row again before it keeps it, and keeps a
+// mention only when every name it claims is in the vocabulary
 // (recordGkgFile). 409 for a file that is not due or already read.
 
 import { blob } from '@nuxthub/blob'
@@ -11,6 +12,7 @@ import { z } from 'zod'
 
 import { blobRawStore } from '../../pipeline/poll'
 import { MAX_MENTIONS_PER_FILE } from '../../pipeline/track-record/mentions'
+import { MAX_FIGURES_PER_FILE } from '../../pipeline/reported/store'
 import { recordGkgFile } from '../../pipeline/track-record/search'
 import { requireGdeltToken } from '../../utils/gdelt-auth'
 
@@ -48,6 +50,8 @@ const Body = z.object({
     )
     .max(MAX_MENTIONS_PER_FILE)
     .optional(),
+  // Absent from a job checked out before reported figures existed.
+  figures: z.array(z.string().max(200_000)).max(MAX_FIGURES_PER_FILE).default([]),
 })
 
 export default defineEventHandler(async (event) => {

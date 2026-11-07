@@ -511,7 +511,14 @@ describe('the search run', () => {
     const raw = memoryRaw()
     const { outcome, report } = await searchAll(raw)
     // Of the four rows, only cnet's headline carries "gpt 6.1".
-    expect(outcome).toEqual({ recorded: true, candidates: 1, duplicates: 0, rejected: 3 })
+    expect(outcome).toEqual({
+      recorded: true,
+      candidates: 1,
+      duplicates: 0,
+      rejected: 3,
+      figures: 0,
+      figures_rejected: 0,
+    })
     expect(raw.put).toEqual([`track-record/gkg/${FIXTURE_STAMP}.tsv`])
     expect(report).toMatchObject({ newsroom: 1, gdelt: 1 })
 

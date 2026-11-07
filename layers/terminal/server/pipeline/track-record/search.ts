@@ -40,6 +40,7 @@ import { ChangeRow, contentHash } from '../contracts'
 import type { RawStore } from '../refresh'
 import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '../store'
 import { NEWSROOM_OF } from '../../theses/recipes/newsrooms'
+import { storeFigureRows } from '../reported/store'
 import { PRESS_CANDIDATE_LIMIT, titleKey } from './gdelt'
 import { GKG_BASE, GKG_SLOT_MS, gkgSlots, gkgStamp, gkgUrl, parseGkgRow, stampIso } from './gkg'
 import {
@@ -511,10 +512,20 @@ export interface GkgFileInput {
   matches: { alert_id: string; row: string }[]
   /** Every row carrying a vocabulary word, compacted; absent from a job that predates them. */
   mentions?: GkgMention[]
+  /** Each row whose headline is a lab figure (../reported/figures.ts), exactly as the file has it. */
+  figures?: string[]
 }
 
 export type GkgFileOutcome =
-  | { recorded: true; candidates: number; duplicates: number; rejected: number }
+  | {
+      recorded: true
+      candidates: number
+      duplicates: number
+      rejected: number
+      /** Figure headlines kept, and figure rows refused (../reported/store.ts). */
+      figures: number
+      figures_rejected: number
+    }
   | { recorded: false; reason: 'not-due' }
 
 /**
@@ -647,8 +658,26 @@ export async function recordGkgFile(
     recorded_at: now.toISOString(),
     // A missing file holds nothing to keep; it is no gap in what was kept.
     mentions: kept ? kept.length : input.mentions && input.status === 'missing' ? 0 : null,
+    figures_at: now.toISOString(),
   })
-  return { recorded: true, candidates: rows.length, duplicates, rejected }
+  const figures = await storeFigureRows(
+    db,
+    raw,
+    {
+      stamp: input.stamp,
+      fetched_at: input.fetched_at,
+      rows: input.status === 'ok' ? (input.figures ?? []) : [],
+    },
+    now,
+  )
+  return {
+    recorded: true,
+    candidates: rows.length,
+    duplicates,
+    rejected,
+    figures: figures.articles,
+    figures_rejected: figures.rejected,
+  }
 }
 
 /**

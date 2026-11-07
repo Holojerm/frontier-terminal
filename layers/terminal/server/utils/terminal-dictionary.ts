@@ -864,6 +864,96 @@ export const COLUMN_DOCS: Readonly<Record<string, TableDoc>> = {
     },
   },
 
+  reported_articles: {
+    asOf: 'Rows with found_at at or before as_of.',
+    columns: {
+      id: { type: 'text', key: true, meaning: 'SHA-256 (hex) of url: one row per article.' },
+      title_key: {
+        type: 'text',
+        meaning:
+          'The headline lowercased with punctuation removed. Copies of one headline on many sites share it, and the judge reads it once.',
+      },
+      title: { type: 'text', meaning: 'The headline as GDELT gives it.' },
+      outlet: { type: 'text', meaning: 'The site’s domain, as GDELT names it.' },
+      url: { type: 'text', meaning: 'The article itself.' },
+      published_at: {
+        type: 'timestamp',
+        meaning:
+          'The quarter hour GDELT’s crawler read the article (not when the outlet published it), UTC.',
+      },
+      found_at: {
+        type: 'timestamp',
+        meaning: 'When we stored the article, in UTC.',
+      },
+      raw_key: {
+        type: 'text',
+        meaning: 'Where we keep the GDELT row the article came from, whole.',
+      },
+      source_url: {
+        type: 'text',
+        provenance: true,
+        meaning: 'The GDELT file the article was read from.',
+      },
+      fetched_at: {
+        type: 'timestamp',
+        provenance: true,
+        meaning: 'When that file was fetched, in UTC.',
+      },
+    },
+  },
+
+  reported_figures: {
+    asOf: 'Rows with judged_at at or before as_of.',
+    columns: {
+      id: {
+        type: 'text',
+        key: true,
+        meaning:
+          'SHA-256 (hex) of title_key, lab, metric, basis and amount_text: one row per figure per headline.',
+      },
+      title_key: { type: 'text', meaning: 'The reported_articles.title_key of the headline.' },
+      article_id: {
+        type: 'text',
+        meaning: 'The reported_articles.id of the earliest copy when the judge read it.',
+      },
+      lab: { type: 'text', meaning: 'The lab the figure is about, as its provider id.' },
+      metric: {
+        type: 'text',
+        meaning:
+          'revenue_run_rate (annualized or recurring), revenue (for a stated period), valuation, funding (one round) or funding_total (raised to date).',
+      },
+      basis: {
+        type: 'text',
+        meaning:
+          'reported (given as fact), sought (in talks or planned) or projected (a forecast or target).',
+      },
+      currency: { type: 'text', meaning: 'USD or EUR, as the headline writes it.' },
+      amount: { type: 'number', meaning: 'The amount in units of currency.' },
+      amount_text: { type: 'text', meaning: 'The amount as the headline writes it.' },
+      period: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'The period the headline names: a year, a quarter (2026-Q3) or a month. Null when it names none.',
+      },
+      published_at: {
+        type: 'timestamp',
+        meaning: 'When GDELT read the earliest copy of the headline, UTC.',
+      },
+      judged_at: { type: 'timestamp', meaning: 'When the judge run that labeled it ran, in UTC.' },
+      source_url: {
+        type: 'text',
+        provenance: true,
+        meaning: 'The earliest copy of the headline (the article read).',
+      },
+      fetched_at: {
+        type: 'timestamp',
+        provenance: true,
+        meaning: 'When the GDELT file holding that copy was fetched, in UTC.',
+      },
+    },
+  },
+
   recipe_observations: {
     columns: {
       id: {
@@ -1690,6 +1780,24 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     knowledge: 'judged_at',
     start: 'From the first rated candidate.',
     joins: [],
+    feeds: ['track_record'],
+  },
+  reported_articles: {
+    grain: 'One row per article URL.',
+    cadence: 'Hourly, as each GDELT file is read.',
+    event: 'published_at',
+    knowledge: 'found_at',
+    start: 'From GDELT’s files of 2026-09-01, read again for figures from 2026-11-07.',
+    joins: [],
+    feeds: ['track_record'],
+  },
+  reported_figures: {
+    grain: 'One row per figure a headline states.',
+    cadence: 'When the judge runs.',
+    event: 'published_at',
+    knowledge: 'judged_at',
+    start: 'From the first headline the judge read.',
+    joins: [{ column: 'lab', to: ID }],
     feeds: ['track_record'],
   },
   recipe_observations: {

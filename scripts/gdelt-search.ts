@@ -10,12 +10,17 @@
 //   2. fetch each file, unzip it, and match every row against the alerts
 //      whose window covers its quarter hour, with the Worker's own matcher
 //   3. POST /api/gdelt/file  the file's row count, its matched rows verbatim
-//                            (the Worker matches them again), and every row
+//                            (the Worker matches them again), every row
 //                            carrying a word of the Worker's vocabulary,
-//                            compacted, kept for alerts written later
+//                            compacted, kept for alerts written later, and
+//                            its figure headlines (reported/figures.ts),
+//                            verbatim
 //
 // and repeats until nothing is unread or --minutes have passed, so a backlog
-// (the first run starts at GKG_FROM, 2026-09-01) drains over a few runs. The
+// (the first run starts at GKG_FROM, 2026-09-01) drains over a few runs. Once
+// nothing is unread, the run reads files from before reported figures existed
+// again (`figure_files`), posting only their figure headlines to
+// /api/gdelt/figures. The
 // files are static, with no per-IP limit, so no pacing is needed beyond
 // reading one at a time. A 404 means GDELT never published that quarter hour
 // and is recorded as missing; any other failure to fetch ends the run quietly
@@ -42,6 +47,7 @@ import {
   vocabularyHits,
   type SearchTerms,
 } from '../layers/terminal/server/pipeline/track-record/terms'
+import { figureHeadline } from '../layers/terminal/server/pipeline/reported/figures'
 
 const ROOT = resolve(import.meta.dir, '..')
 
@@ -54,6 +60,8 @@ interface Work {
   alerts: { alert_id: string; window_start: string; window_end: string; terms: SearchTerms }[]
   /** Rows carrying one of these are posted as mentions, kept for alerts written later. */
   vocabulary?: string[]
+  /** Files read before reported figures existed; absent from a Worker deployed before them. */
+  figure_files?: { stamp: string; url: string }[]
 }
 
 interface Mention {
@@ -129,9 +137,11 @@ function matchesOf(text: string, stamp: string, work: Work) {
   const lines = text.split('\n').filter((l) => l.trim())
   const matches: { alert_id: string; row: string }[] = []
   const mentions: Mention[] = []
+  const figures: string[] = []
   for (const row of lines) {
     const article = parseGkgRow(row)
     if (!article) continue
+    if (figureHeadline(article.title)) figures.push(row)
     for (const a of covering) {
       if (matchesArticle(article, a.terms)) matches.push({ alert_id: a.alert_id, row })
     }
@@ -141,16 +151,48 @@ function matchesOf(text: string, stamp: string, work: Work) {
       mentions.push({ record_id, outlet, url, title, names })
     }
   }
-  return { rows: lines.length, matches, mentions }
+  return { rows: lines.length, matches, mentions, figures }
+}
+
+/** Read one file from before reported figures existed again, for its figure headlines. */
+async function backfillFigures(file: { stamp: string; url: string }, work: Work) {
+  const fetched = await fetchFile(file.url, work.user_agent)
+  if (fetched.kind === 'failed') return `${file.stamp}: ${fetched.why}`
+  const { figures } =
+    fetched.kind === 'ok'
+      ? matchesOf(fetched.text, file.stamp, { ...work, alerts: [], vocabulary: [] })
+      : { figures: [] }
+  const outcome = (await ours('/api/gdelt/figures', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ stamp: file.stamp, fetched_at: new Date().toISOString(), figures }),
+  })) as { articles: number; rejected: number }
+  backfilled++
+  figureHeadlines += outcome.articles
+  if (outcome.rejected) {
+    annotate('warning', `${file.stamp}: the site rejected ${outcome.rejected} figure row(s)`)
+  }
+  return null
 }
 
 let read = 0
 let matched = 0
 let missing = 0
+let backfilled = 0
+let figureHeadlines = 0
 let stop: string | null = null
 while (!stop && Date.now() - started < budgetMs) {
   const work = (await ours('/api/gdelt/work')) as Work
-  if (work.files.length === 0) break
+  if (work.files.length === 0) {
+    const backlog = work.figure_files ?? []
+    if (backlog.length === 0) break
+    for (const file of backlog) {
+      if (Date.now() - started >= budgetMs) break
+      stop = await backfillFigures(file, work)
+      if (stop) break
+    }
+    continue
+  }
   for (const file of work.files) {
     if (Date.now() - started >= budgetMs) break
     const fetched = await fetchFile(file.url, work.user_agent)
@@ -158,10 +200,10 @@ while (!stop && Date.now() - started < budgetMs) {
       stop = `${file.stamp}: ${fetched.why}`
       break
     }
-    const { rows, matches, mentions } =
+    const { rows, matches, mentions, figures } =
       fetched.kind === 'ok'
         ? matchesOf(fetched.text, file.stamp, work)
-        : { rows: 0, matches: [], mentions: [] }
+        : { rows: 0, matches: [], mentions: [], figures: [] }
     const outcome = (await ours('/api/gdelt/file', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
@@ -174,11 +216,13 @@ while (!stop && Date.now() - started < budgetMs) {
         // Only when the Worker handed out a vocabulary: an older Worker has
         // nothing to keep them by.
         ...(work.vocabulary ? { mentions } : {}),
+        figures,
       }),
-    })) as { candidates: number; duplicates: number; rejected: number }
+    })) as { candidates: number; duplicates: number; rejected: number; figures?: number }
     read++
     if (fetched.kind === 'missing') missing++
     matched += outcome.candidates
+    figureHeadlines += outcome.figures ?? 0
     if (outcome.rejected) {
       annotate('warning', `${file.stamp}: the site rejected ${outcome.rejected} posted match(es)`)
     }
@@ -186,4 +230,7 @@ while (!stop && Date.now() - started < budgetMs) {
   }
 }
 if (stop) annotate('notice', `GDELT file not read (${stop}); the next run retries from there`)
-console.info(`read ${read} GKG file(s), ${missing} missing, ${matched} new candidate(s)`)
+console.info(
+  `read ${read} GKG file(s), ${missing} missing, ${matched} new candidate(s); ` +
+    `${backfilled} file(s) re-read for figures, ${figureHeadlines} figure headline(s)`,
+)

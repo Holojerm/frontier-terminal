@@ -2141,7 +2141,11 @@ track_record_sources:
       it is down); of each row that
       matches a material alert, its record id, URL, title, outlet domain,
       quarter hour and the names GDELT found, with the row itself kept
-      whole in R2. Read 2026-11-07.
+      whole in R2. From 2026-11-07 also each row whose headline names a
+      private lab, an amount of money and a financial word (reported
+      figures), with its URL, title, outlet domain and quarter hour, and the
+      row whole in R2; files read before then are read again for these.
+      Read 2026-11-07.
     rights: upstream
     caveats: >-
       The time is the quarter hour GDELT's crawler read the article, not
