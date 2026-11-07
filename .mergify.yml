@@ -1,21 +1,31 @@
-# Merge queue. Sessions queue a PR with a `@mergifyio queue` comment instead of
-# `gh pr merge --auto`. Mergify tests up to three queued PRs at once, each on a draft
-# PR holding main plus every PR ahead of it, then squash-merges the originals in order.
+# Merge queue. Queue a PR by commenting "@mergifyio queue"; never arm GitHub auto-merge,
+# because a merge outside the queue invalidates every speculative check in it.
 #
-# The ruleset keeps "require branches to be up to date" on: Mergify is an exempt bypass
-# actor, so it skips that rule (its tested state is newer than any PR branch), while a
-# merge by anything else still has to be up to date. Mergify reads the ruleset's
-# required checks and applies them to the draft PRs.
+# Mergify batches up to three queued PRs into one draft PR (waiting up to 30 seconds to
+# fill a batch) and tests up to three batches at once, each on top of main plus every
+# batch ahead of it, then squash-merges the originals in order. One CI run covers a
+# whole batch; a failed batch is split to find the culprit. It reads the
+# ruleset's required checks and applies them to both the PR and the drafts, so this
+# file names no checks and is identical in every repo. The PR's own checks must pass
+# before it enters the queue, so a PR broken on its own never invalidates the drafts
+# behind it.
+#
+# The ruleset keeps "require branches to be up to date" on, with Mergify as an exempt
+# bypass actor: Mergify skips that rule, every other merge still has to be up to date.
 merge_queue:
   max_parallel_checks: 3
 
 queue_rules:
   - name: default
     merge_method: squash
-    # The PR's own CI must pass before it enters the queue, so a PR that is broken on
-    # its own never invalidates the speculative drafts queued behind it.
+    batch_size: 3
     queue_conditions:
       - base = main
       - -draft
-      - 'check-success = Workers Builds: frontier-terminal'
-      - 'check-success = browser-suites'
+    # Two-step CI: the browser workflows skip their Playwright steps on a PR and run
+    # them on the queue's drafts. Merge conditions that differ from the queue
+    # conditions are what tell Mergify this queue is two-step, which turns off
+    # "direct merge": otherwise a lone, up-to-date PR would merge on its own CI alone,
+    # without the browser suites ever running. The ruleset's checks still apply on top.
+    merge_conditions:
+      - base = main
