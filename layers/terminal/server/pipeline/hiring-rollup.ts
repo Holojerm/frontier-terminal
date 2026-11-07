@@ -2,6 +2,7 @@ import { and, asc, eq, gte, inArray, lt } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { labName } from '../../shared/utils/terminal-labs'
+import { emitEvent } from '../utils/events'
 import type { DepartmentCluster } from '../utils/terminal-clusters'
 import { AlertRow, ChangeRow, contentHash } from './contracts'
 import { boardMoves, describeReason, signed, type BoardMove } from './hiring-floor'
@@ -140,6 +141,7 @@ export async function writeHiringRollups(
 ): Promise<{ week: string; inserted: number; notable: number }> {
   const alerts = await unstoredAlerts(db, await hiringRollupAlerts(db, clusters, now))
   const inserted = await insertRows(db, 'alerts', alerts)
+  if (inserted) await emitEvent('alerts.new')
   return {
     week: lastCompleteWeek(now).start.slice(0, 10),
     inserted,

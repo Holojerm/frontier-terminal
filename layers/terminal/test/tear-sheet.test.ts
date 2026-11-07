@@ -9,6 +9,7 @@ import {
   shortUrl,
   SHEET_ALERTS,
 } from '../app/utils/tear-sheet'
+import { priceCitation } from '../app/utils/price-display'
 import { PROVIDER_ORDER } from '../server/utils/terminal-sources'
 import type { ExposureData } from '../shared/utils/terminal-exposure'
 import { LABS, TEAR_SHEET_PAGES } from '../shared/utils/terminal-lab-summary'
@@ -128,6 +129,7 @@ const row = (over: Partial<PriceRowView>): PriceRowView => ({
   spark: null,
   source_url: 'https://platform.claude.com/docs/en/about-claude/pricing.md',
   fetched_at: AT,
+  checked_at: null,
   ...over,
 })
 
@@ -347,6 +349,15 @@ describe('buildTearSheet', () => {
       ['Economy', '', '', 'Not mapped'],
     ])
     expect(sheet.prices[2]!.gap!.reason).toBe('The page names no economy model.')
+  })
+
+  it('cites a price to its newest read, not to when it last changed', () => {
+    const read = '2026-11-07T12:00:00.000Z'
+    expect(priceCitation(row({ checked_at: read }))).toEqual({
+      source_url: 'https://platform.claude.com/docs/en/about-claude/pricing.md',
+      fetched_at: read,
+    })
+    expect(priceCitation(row({})).fetched_at).toBe(AT)
   })
 
   it('numbers each source once, in the order the sheet cites it', () => {

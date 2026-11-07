@@ -3,7 +3,7 @@
 // front page's flagship grid so one cell never explains itself two ways.
 
 import { absoluteStamp, pctChange, pctLabel } from '../../shared/utils/terminal-format'
-import type { MatrixCell } from '../../shared/utils/terminal-types'
+import type { MatrixCell, PriceRowView, Prov } from '../../shared/utils/terminal-types'
 
 /** The vendor sentence behind a cell, and the last poll's word on whether it is still there. */
 export function basisText(c: MatrixCell, label: string): string {
@@ -13,6 +13,15 @@ export function basisText(c: MatrixCell, label: string): string {
     return `${mapped} Still on the page at our last check, ${absoluteStamp(c.basis_checked_at)}.`
   }
   return mapped
+}
+
+/**
+ * A price row as one citation: its newest read that still showed it. That
+ * read's snapshot carries the same price, and the row's own fetched_at only
+ * says when the price last changed.
+ */
+export function priceCitation(row: PriceRowView): Prov {
+  return { source_url: row.source_url, fetched_at: row.checked_at ?? row.fetched_at }
 }
 
 /** Percent move on the input price since the previous revision, when there is one. */

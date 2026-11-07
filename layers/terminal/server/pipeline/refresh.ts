@@ -297,7 +297,7 @@ async function parseAndStore(
     )
   }
 
-  const all = diff(before, parsed.entities, fetched_at)
+  const all = diff(before, parsed.entities, fetched_at, source.url)
   const kept = lane.removals === 'set' ? all : all.filter((c) => c.change_type !== 'removed')
   const afterByKey = new Map(parsed.entities.map((e) => [e.entity_key, e]))
   const added = kept.filter((c) => c.change_type === 'added')
