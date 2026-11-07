@@ -77,7 +77,7 @@ const skuText = (m: SpendModel) =>
       </p>
 
       <TerminalTable
-        caption="Each lab’s implied spend through OpenRouter as a range and as a share of the tracked labs’ total, with its token share and how much of it we could price"
+        caption="Each lab’s implied spend through OpenRouter as a range and as a share of the priced labs’ total, with its share of every tracked lab’s tokens and how much of it we could price"
         :columns="columns"
         :rows="spend.providers"
         :row-key="(p) => p.provider"
@@ -103,6 +103,12 @@ const skuText = (m: SpendModel) =>
         </template>
         <template #cell-coverage="{ row: p }">{{ sharePct(p.coverage) }}</template>
       </TerminalTable>
+
+      <!-- The two shares have different universes; say which, or a reader divides one by the other. -->
+      <p class="text-xs text-muted">
+        Spend share is of the implied dollars of the labs we could price. Token share is of every
+        tracked lab’s tokens, priced or not.
+      </p>
 
       <p
         v-if="spend.excluded.length"

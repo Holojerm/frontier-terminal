@@ -23,14 +23,19 @@ import type {
 
 import * as tables from '#server/db/schema'
 import { REVENUE_TAGS } from '../pipeline/parsers/sec/edgar-companyfacts'
+import { filerAt } from '../pipeline/parsers/sec/revenue-filers'
 import type { PipelineDb } from '../pipeline/store'
-import { rewound, sourceStamps, type QueryContext } from './terminal-db'
+import { readStamps, rewound, type QueryContext } from './terminal-db'
 import { byString, num, parseJson, str } from './terminal-json'
 import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
 
 export const REVENUE_RULE =
   'Audited SEC disclosures only, from EDGAR’s XBRL data (the SEC’s tagged financial data). Consolidated figures come from company facts, and segment figures from the filing’s own XBRL. If a lab’s S-1 has no tagged financials, we read its printed statement of operations until its first tagged 10-Q. Interim periods from it are unaudited and marked. Each value links to the filing that reported it. ' +
   'With no audited disclosure on file, nothing is shown. Press-reported run-rates are excluded.'
+
+/** How an as_of read uses sources.yaml: the filer tags as dated there, the CIK whitelist as today's. */
+export const REVENUE_CONFIG_METHOD =
+  'Which filer and segment a lab’s revenue is read from comes from sources.yaml revenue_filers as it stood at as_of: an entry dated after it reads as no disclosure. The CIK whitelist is today’s; a ticker’s CIK doesn’t change.'
 
 const DAY_MS = 86_400_000
 
@@ -185,6 +190,7 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
   // store held them, the newest snapshot per source at or before T. A new
   // read added here must be rewound too, or a historical payload mixes in today.
   const at = ctx.at
+  if (at !== null) ctx.notes.method.add(REVENUE_CONFIG_METHOD)
   const [rows, filerRows, stamps] = await Promise.all([
     at !== null
       ? rewound(db, { ...ctx, at }, 'revenue').then((r) => r.rows)
@@ -204,7 +210,8 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
           .select({ provider: tables.entities.provider, payload: tables.entities.payload })
           .from(tables.entities)
           .where(eq(tables.entities.entity_type, 'filer')),
-    sourceStamps(db, at),
+    // Cited as the last read of each source, not a newer fetch that failed to parse.
+    readStamps(db, at),
   ])
   const resolved = new Map<string, ResolvedFilerView>()
   for (const row of filerRows) {
@@ -217,7 +224,8 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
     const display = PROVIDER_DISPLAY[provider]
     // The audited file first; a filer the poll resolved from the lab's own
     // S-1 fills a null entry as an issuer, keyed by provider (no ticker yet).
-    const tagged = ctx.revenueFilers.get(provider) ?? null
+    // As of T, an entry that took effect after T was not the tag then.
+    const tagged = filerAt(ctx.revenueFilers.get(provider) ?? null, at)
     const auto = tagged ? null : (resolved.get(provider) ?? null)
     const filer = tagged ?? (auto ? { ticker: null, relation: 'issuer' as const } : null)
     if (!filer) {
@@ -271,14 +279,7 @@ export async function queryRevenue(db: PipelineDb, ctx: QueryContext): Promise<R
       .filter((id): id is string => id !== null)
       .map((id) => {
         const stamp = stamps.get(id)
-        return stamp
-          ? {
-              source_id: id,
-              label: labelOf(id).label,
-              source_url: stamp.newest.source_url,
-              fetched_at: stamp.newest.fetched_at,
-            }
-          : null
+        return stamp ? { source_id: id, label: labelOf(id).label, ...stamp } : null
       })
       .filter((s): s is SourceRef => s !== null)
 

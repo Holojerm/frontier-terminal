@@ -1,7 +1,9 @@
-// A five-minute KV cache for the terminal payloads, keyed by the poll tick.
+// A KV cache for the terminal payloads, keyed by the poll tick. The TTL is
+// garbage collection only (TERMINAL_CACHE_TTL_SECONDS); freshness comes from the key.
 //
-// The key carries the newest source_runs.started_at, so a poll invalidates
-// every cached payload by construction: the next request computes against
+// The key carries the newest source_runs.started_at and the newest write of
+// every writer outside the poll (terminalStamps), so a poll or a judge run
+// invalidates every cached payload by construction: the next request computes against
 // the new stamp and the old entries expire on their own. Nothing has to be
 // evicted, and a reader can never be served a payload from before the tick
 // the page says it reflects.
@@ -10,7 +12,7 @@
 // recomputed from D1 and the miss is logged. Takes the store explicitly so
 // layers/terminal/test/terminal-cache.test.ts drives it with a Map.
 
-import { max } from 'drizzle-orm'
+import { max, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import type { PipelineDb } from '../pipeline/store'
@@ -39,17 +41,54 @@ export interface CacheStore {
  */
 export const TERMINAL_CACHE_TTL_SECONDS = 2400
 
-/** The newest poll tick, or null before the first one. The cache key and every payload's `as_of`. */
+/** The newest poll tick, or null before the first one. Every payload's `as_of`. */
 export async function terminalStamp(db: PipelineDb): Promise<string | null> {
   const [row] = await db.select({ at: max(tables.sourceRuns.started_at) }).from(tables.sourceRuns)
   return row?.at ?? null
 }
 
+export interface TerminalStamps {
+  /** The newest poll tick (terminalStamp): the payloads' `as_of`. */
+  poll: string | null
+  /** What the KV and HTML caches key on: the poll tick and every later writer. Null before anything was written. */
+  key: string | null
+}
+
+/**
+ * The poll tick plus the newest write of each writer that changes a served
+ * payload outside the poll: the judge (alerts, class-map decisions, claim and
+ * track-record verdicts; its judge_runs row is written last), other alert
+ * writers (the hiring rollup, exposure ingest), the thesis evaluation (it runs
+ * after the survey's recipes, so it also moves past their writes), the GDELT
+ * files and track-record searches, and the filed-fact reads. Keyed on the
+ * poll alone, a judge run left every page on the payload from before it until
+ * the next poll. One statement: each subquery is a max() on an indexed
+ * column, except track_record_searches, a row per alert per source.
+ */
+export async function terminalStamps(db: PipelineDb): Promise<TerminalStamps> {
+  const [row] = await db.all<Record<string, string | null>>(
+    sql`select
+      (select max(started_at) from source_runs) as poll,
+      (select max(started_at) from judge_runs) as judge,
+      (select max(created_at) from alerts) as alerts,
+      (select max(computed_at) from claim_readings) as readings,
+      (select max(recorded_at) from gdelt_files) as gkg,
+      (select max(searched_at) from track_record_searches) as searches,
+      (select max(started_at) from filed_fact_reads) as filed`,
+  )
+  const poll = row?.poll ?? null
+  const writes = WRITERS.map((w) => row?.[w] ?? null)
+  if (poll === null && writes.every((w) => w === null)) return { poll, key: null }
+  return { poll, key: [poll ?? 'never-polled', ...writes.map((w) => w ?? '-')].join('+') }
+}
+
+const WRITERS = ['judge', 'alerts', 'readings', 'gkg', 'searches', 'filed'] as const
+
 /**
  * The stamp read currently in flight, if any. Module scope, so it is per
  * isolate rather than per request — which is the point.
  */
-let inFlightStamp: { promise: Promise<string | null>; startedAt: number } | null = null
+let inFlightStamp: { promise: Promise<unknown>; startedAt: number } | null = null
 
 /**
  * `terminalStamp`, de-duplicated across concurrent callers.
@@ -72,14 +111,15 @@ let inFlightStamp: { promise: Promise<string | null>; startedAt: number } | null
  * `terminalStamp` itself stays an unmemoized read: callers that drive it across
  * writes to the same database must see each new value.
  */
-export function sharedTerminalStamp(
-  read: () => Promise<string | null>,
+export function sharedTerminalStamp<T>(
+  read: () => Promise<T>,
   waitMs = STAMP_SHARE_WAIT_MS,
   now: () => number = Date.now,
-): Promise<string | null> {
+): Promise<T> {
   const slot = inFlightStamp
   if (slot && now() - slot.startedAt < waitMs) {
-    return joinOrReadOwn(slot.promise, read, waitMs - (now() - slot.startedAt))
+    // Every production caller reads terminalStamps, so a joined slot is a T.
+    return joinOrReadOwn(slot.promise as Promise<T>, read, waitMs - (now() - slot.startedAt))
   }
   const tracked = read().finally(() => {
     if (inFlightStamp?.promise === tracked) inFlightStamp = null
@@ -104,18 +144,21 @@ export function sharedTerminalStamp(
 export const STAMP_SHARE_WAIT_MS = 1000
 
 /** The shared read if it lands within `budgetMs`, else this caller's own read. The timer lives in the caller's context, so it always fires. */
-async function joinOrReadOwn(
-  shared: Promise<string | null>,
-  read: () => Promise<string | null>,
+async function joinOrReadOwn<T>(
+  shared: Promise<T>,
+  read: () => Promise<T>,
   budgetMs: number,
-): Promise<string | null> {
+): Promise<T> {
   let timer: ReturnType<typeof setTimeout> | undefined
-  const late = new Promise<'late'>((resolve) => {
-    timer = setTimeout(() => resolve('late'), Math.max(0, budgetMs))
+  const late = new Promise<{ late: true }>((resolve) => {
+    timer = setTimeout(() => resolve({ late: true }), Math.max(0, budgetMs))
   })
   try {
-    const first = await Promise.race([shared, late])
-    return first === 'late' ? await read() : first
+    const first = await Promise.race([
+      shared.then((value) => ({ late: false as const, value })),
+      late,
+    ])
+    return first.late ? await read() : first.value
   } finally {
     clearTimeout(timer)
   }
@@ -154,7 +197,7 @@ type Read<T> = { found: true; value: T } | { found: false }
 
 /**
  * Serve `name` for the tick `stamp` from the store, computing and storing it
- * on a miss. `compute` runs at most once per (name, stamp) per five minutes
+ * on a miss. `compute` runs at most once per (name, stamp) per TTL
  * under normal conditions; under a failing store it runs every time, which
  * is slower and still correct. A slow read is hedged (KV_HEDGE_MS).
  */

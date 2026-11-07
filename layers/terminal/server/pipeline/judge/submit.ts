@@ -2,7 +2,7 @@ import { inArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
-import { ChangeRow } from '../contracts'
+import { ChangeRow, contentHash } from '../contracts'
 import { D1_MAX_BOUND_PARAMS, chunk, insertRows, type PipelineDb } from '../store'
 import { applyClaimVerdicts, type VerdictReport } from '../../theses/verdicts'
 import { applyTrackRecordVerdicts, type TrackRecordVerdictReport } from '../track-record/review'
@@ -11,11 +11,13 @@ import { parseDepartmentClusters, type DepartmentCluster } from '../../utils/ter
 import { clampHiringAlerts, type FloorClamp } from '../hiring-floor'
 import { applyClassMappings, type RawReader } from './class-map'
 import { emitEvent } from '../../utils/events'
-import { buildAlertRows, gateJudgeSubmission } from './contract'
-import { groundAlerts } from './grounding'
+import { buildAlertRows, gateJudgeSubmission, type JudgeSubmission } from './contract'
+import { groundAlerts, type AlertGroundingRejection } from './grounding'
+import { judgedThrough, pendingChanges } from './pending'
 
 // POST /api/judge/alerts, minus the request: raw body -> schema gate ->
-// grounding against the cited change rows as D1 holds them -> the hiring
+// cursor check -> the offered window -> grounding against the cited change
+// rows as D1 holds them -> the hiring
 // materiality floor (layers/terminal/server/pipeline/hiring-floor.ts) -> stamping ->
 // the one write chokepoint -> a judge_runs row. Every model-output
 // rejection is a return value and an ops event, never an exception; only
@@ -35,7 +37,7 @@ export interface JudgeRunReport {
   rejections: { reason: string; detail: string; headline: string }[]
   /** Hiring alerts sent as notable/critical and stored as info: below the materiality floor. */
   clamped: FloorClamp[]
-  /** Whole-body rejection at the schema gate — nothing reached grounding. */
+  /** Whole-body rejection at the schema gate or the cursor check — nothing reached grounding. */
   gate_rejection: { reason: string; detail: string } | null
   /** Re-mappings of matrix cells under review (layers/terminal/server/pipeline/judge/class-map.ts). */
   class_map: {
@@ -68,6 +70,110 @@ async function existingAlertIds(db: PipelineDb, ids: readonly string[]): Promise
   }
   return existing
 }
+
+/**
+ * The cursor this run may store, or why `judged_through` is not one. The
+ * routine sends the newest detected_at it was handed; anything else either
+ * strands changes behind the cursor (too far ahead) or re-offers judged ones
+ * (behind). It must not go back, must not pass the newest change GET
+ * /api/judge/pending offers from the current cursor, and must be the newest
+ * detected_at among the changes the run says it saw. A run that saw none (a
+ * review-only run) holds the cursor where it is, and before the first cursor
+ * stores none. Compared as instants: "…:00Z" and "…:00.000Z" are one cursor.
+ */
+export async function checkCursor(
+  db: PipelineDb,
+  body: Pick<JudgeSubmission, 'judged_through' | 'change_ids_seen'>,
+): Promise<{ ok: true; through: string | null } | { ok: false; detail: string }> {
+  const prev = await judgedThrough(db)
+  const at = Date.parse(body.judged_through)
+  const through = new Date(at).toISOString()
+  if (prev !== null && at < Date.parse(prev)) {
+    return {
+      ok: false,
+      detail: `judged_through ${body.judged_through} is behind the cursor ${prev}`,
+    }
+  }
+  const seen = await loadChanges(db, body.change_ids_seen)
+  if (seen.length === 0) {
+    if (prev === null) return { ok: true, through: null }
+    return at === Date.parse(prev)
+      ? { ok: true, through }
+      : {
+          ok: false,
+          detail: `no change was seen, so judged_through must stay at the cursor ${prev}`,
+        }
+  }
+  const end = (await pendingChanges(db)).through ?? prev
+  if (end === null || at > Date.parse(end)) {
+    return {
+      ok: false,
+      detail: `judged_through ${body.judged_through} is past the newest change offered (${end ?? 'none'})`,
+    }
+  }
+  const newestSeen = Math.max(...seen.map((c) => Date.parse(c.detected_at)))
+  if (at !== newestSeen) {
+    return {
+      ok: false,
+      detail: `judged_through ${body.judged_through} is not the newest detected_at among the changes seen (${new Date(newestSeen).toISOString()})`,
+    }
+  }
+  return { ok: true, through }
+}
+
+/**
+ * Alerts that cite a change outside the window this run was offered: detected
+ * after the previous cursor and no later than judged_through. Without this a
+ * run could cite any change ever stored, judged already or never offered. An
+ * alert already stored is a repeat of a run that landed, and passes on to the
+ * dedupe below rather than reading as a rejection.
+ */
+function outsideWindow(
+  alerts: JudgeSubmission['alerts'],
+  cited: readonly ChangeRow[],
+  prev: string | null,
+  through: string | null,
+  stored: ReadonlySet<string>,
+): { inside: JudgeSubmission['alerts']; rejected: AlertGroundingRejection[] } {
+  const from = prev === null ? -Infinity : Date.parse(prev)
+  // No cursor and none set: nothing was offered.
+  const to = through === null ? -Infinity : Date.parse(through)
+  const offered = new Set(
+    cited
+      .filter((c) => {
+        const at = Date.parse(c.detected_at)
+        return at > from && at <= to
+      })
+      .map((c) => c.id),
+  )
+  const known = new Set(cited.map((c) => c.id))
+  const inside: JudgeSubmission['alerts'] = []
+  const rejected: AlertGroundingRejection[] = []
+  for (const alert of alerts) {
+    const outside = alert.change_ids.filter((id) => !offered.has(id))
+    if (outside.length === 0 || stored.has(stampedId(alert))) {
+      inside.push(alert)
+      continue
+    }
+    // An id not stored at all is grounding's unknown-change-id; this is only
+    // for real changes the run was not handed.
+    const unoffered = outside.filter((id) => known.has(id))
+    if (unoffered.length === 0) {
+      inside.push(alert)
+      continue
+    }
+    rejected.push({
+      alert,
+      reason: 'unoffered-change-id',
+      detail: `change_id(s) outside this run's window (${prev ?? 'start'}, ${through}]: ${unoffered.join(', ')}`,
+    })
+  }
+  return { inside, rejected }
+}
+
+/** The id buildAlertRows will stamp — the dedupe key. */
+const stampedId = (alert: { change_ids: readonly string[]; headline: string }) =>
+  contentHash({ change_ids: [...new Set(alert.change_ids)].sort(), headline: alert.headline })
 
 /** No stored pages: every class-map proposal is rejected for want of one. */
 const NO_PAGES: RawReader = async () => null
@@ -122,13 +228,50 @@ export async function submitJudgeRun(
   }
 
   const body = gate.value
+  const prev = await judgedThrough(db)
+  const cursor = await checkCursor(db, body)
+  if (!cursor.ok) {
+    const badCursor = cursor.detail
+    await db.insert(tables.judgeRuns).values({
+      id: crypto.randomUUID(),
+      started_at,
+      judged_through: null,
+      changes_seen: body.change_ids_seen.length,
+      accepted: 0,
+      rejected: 0,
+      rejection_reason: `cursor: ${badCursor}`.slice(0, 500),
+      source,
+    })
+    await recordOpsEvent(db, {
+      kind: 'judge_rejected',
+      detail: `body rejected at the cursor check (${badCursor})`,
+      path: JUDGE_OPS_PATH,
+    })
+    return {
+      changes_seen: 0,
+      accepted: 0,
+      inserted: 0,
+      rejected: 0,
+      rejections: [],
+      clamped: [],
+      gate_rejection: { reason: 'cursor', detail: badCursor },
+      class_map: { accepted: 0, rejected: [] },
+      claims: { accepted: 0, inserted: 0, rejected: [] },
+      track_record: { accepted: 0, inserted: 0, rejected: [] },
+    }
+  }
+
   // Grounding reads the change rows from D1, not from the body: the routine
   // never gets to say what a change contained.
   const cited = await loadChanges(
     db,
     body.alerts.flatMap((alert) => alert.change_ids),
   )
-  const { accepted, rejected } = groundAlerts(body.alerts, cited)
+  const stored = await existingAlertIds(db, body.alerts.map(stampedId))
+  const windowed = outsideWindow(body.alerts, cited, prev, cursor.through ?? prev, stored)
+  const grounded = groundAlerts(windowed.inside, cited)
+  const accepted = grounded.accepted
+  const rejected = [...windowed.rejected, ...grounded.rejected]
   const rejections = rejected.map((r) => ({
     reason: r.reason,
     detail: r.detail,
@@ -155,7 +298,8 @@ export async function submitJudgeRun(
   await db.insert(tables.judgeRuns).values({
     id: crypto.randomUUID(),
     started_at,
-    judged_through: body.judged_through,
+    // Stored as toISOString so every cursor reads the same way.
+    judged_through: cursor.through,
     changes_seen: body.change_ids_seen.length,
     accepted: accepted.length,
     rejected: rejected.length,

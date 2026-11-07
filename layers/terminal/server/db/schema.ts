@@ -94,7 +94,9 @@ export const entities = sqliteTable(
 
 // Changes — append-only. id is contentHash(entity_key + before/after hashes)
 // as layers/terminal/server/pipeline/diff.ts computes it, so the same two snapshots always
-// yield the same ids and an overlapping tick cannot log a change twice.
+// yield the same ids and an overlapping tick cannot log a change twice. An
+// entity that makes the same transition again later (a role reposted and
+// closed again) gets an id that also hashes detected_at — diff.ts › repeatChangeId.
 export const changes = sqliteTable(
   'changes',
   {
@@ -129,6 +131,12 @@ export const alerts = sqliteTable(
     rule: text('rule').notNull(),
     created_at: text('created_at').notNull(),
     ...provenance,
+    // When the row was written. created_at is the evidence's fetch time, which
+    // for a judged alert is up to an hour or more earlier; a hold measured
+    // from it was mostly spent before the alert existed. Stamped by the
+    // alerts_recorded_at trigger (migration), so no writer has to set it;
+    // rows from before the column read created_at.
+    recorded_at: text('recorded_at'),
   },
   (t) => [index('alerts_created_id_idx').on(t.created_at, t.id)],
 )
@@ -152,6 +160,12 @@ export const sourceRuns = sqliteTable(
     removed: integer('removed').notNull(),
     modified: integer('modified').notNull(),
     source_url: text('source_url').notNull(),
+    // What else the parse read besides this source's own bytes: the side
+    // snapshots it joined against and a fingerprint of the parser and config
+    // it ran with (JSON, layers/terminal/server/pipeline/refresh.ts › ParseBasis). The next
+    // tick may skip an unchanged page only when these match too. NULL for a
+    // failed run, a source with no lane, and every run before the column.
+    parse_basis: text('parse_basis'),
   },
   (t) => [
     index('source_runs_source_started_idx').on(t.source_id, t.started_at),
@@ -427,7 +441,11 @@ export const trackRecordSearches = sqliteTable(
     raw_key: text('raw_key'),
     source_url: text('source_url').notNull(),
   },
-  (t) => [index('track_record_searches_alert_idx').on(t.alert_id, t.source, t.searched_at)],
+  (t) => [
+    index('track_record_searches_alert_idx').on(t.alert_id, t.source, t.searched_at),
+    // terminalStamps reads max(searched_at) on every cached request.
+    index('track_record_searches_searched_idx').on(t.searched_at),
+  ],
 )
 
 // One row per GDELT GKG file the press side has read (pipeline/track-record/gkg.ts):
@@ -445,9 +463,44 @@ export const gdeltFiles = sqliteTable(
     raw_key: text('raw_key'),
     fetched_at: text('fetched_at').notNull(),
     recorded_at: text('recorded_at').notNull(),
+    // Rows kept in gkg_mentions from this file; null when it was read before
+    // mentions were kept, which leaves it unsearchable for later alerts.
+    mentions: integer('mentions'),
   },
   (t) => [index('gdelt_files_recorded_idx').on(t.recorded_at)],
 )
+
+// The GKG rows that name a tracked lab, filer or model family, kept
+// MENTION_RETAIN_DAYS so an alert written after its files were read can still
+// be matched against the press from before it (track-record/mentions.ts).
+// Compact: names holds only the vocabulary terms the row carried.
+export const gkgMentions = sqliteTable(
+  'gkg_mentions',
+  {
+    record_id: text('record_id').primaryKey(),
+    stamp: text('stamp').notNull(),
+    seen_at: text('seen_at').notNull(),
+    outlet: text('outlet').notNull(),
+    url: text('url').notNull(),
+    title: text('title').notNull(),
+    names: text('names').notNull(), // JSON array
+    fetched_at: text('fetched_at').notNull(),
+  },
+  (t) => [index('gkg_mentions_seen_idx').on(t.seen_at)],
+)
+
+// One row per alert matched backward against gkg_mentions, once: through the
+// file being recorded when it ran. covered = 0 when the alert's terms fall
+// outside the vocabulary the mentions were kept by, so the rows could not hold
+// every match and the window still counts as searched only from where the
+// forward match began.
+export const gkgBackfills = sqliteTable('gkg_backfills', {
+  alert_id: text('alert_id').primaryKey(),
+  through_stamp: text('through_stamp').notNull(),
+  covered: integer('covered').notNull(),
+  candidates: integer('candidates').notNull(),
+  recorded_at: text('recorded_at').notNull(),
+})
 
 // One row per (alert, kind, url): an article or newsroom post inside the
 // alert's window that matched its search terms. A candidate is not a match;

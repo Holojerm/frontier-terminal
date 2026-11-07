@@ -663,7 +663,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   revenue_facts: entityView(
     'revenue_facts',
-    'One row per XBRL revenue fact from EDGAR company facts, with the filer, tag, period, value in USD, and the filing that reported it. Rows are never edited. A restatement is a new row under its own accession.',
+    'One row per XBRL revenue fact, with the filer, tag, period, value in USD, and the filing that reported it. Facts come from EDGAR company facts, a filing’s segment XBRL (Google Cloud), and a prospectus’s XBRL. Rows are never edited. A restatement is a new row under its own accession.',
     'revenue',
     REVENUE_FIELDS,
   ),

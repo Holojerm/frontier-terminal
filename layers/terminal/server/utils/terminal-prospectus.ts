@@ -36,7 +36,7 @@ import {
 import { riskFactorChanges } from '../pipeline/parsers/sec/prospectus-risk-factors'
 import { OPTIONAL_LINES } from '../pipeline/parsers/sec/prospectus-statement'
 import type { PipelineDb } from '../pipeline/store'
-import { sourceStamps, type QueryContext } from './terminal-db'
+import { readStamps, type QueryContext } from './terminal-db'
 import { byString } from './terminal-json'
 import { filingIndexUrl, prospectusSourcePrefix } from './terminal-revenue'
 import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
@@ -230,7 +230,7 @@ export async function queryProspectus(db: PipelineDb, ctx: QueryContext): Promis
       })
       .from(tables.entities)
       .where(inArray(tables.entities.entity_type, [...DETAIL_TYPES])),
-    sourceStamps(db),
+    readStamps(db),
   ])
 
   const issuers: ProspectusIssuerView[] = []
@@ -275,8 +275,7 @@ export async function queryProspectus(db: PipelineDb, ctx: QueryContext): Promis
       .map((id) => ({
         source_id: id,
         label: labelOf(id).label,
-        source_url: stamps.get(id)!.newest.source_url,
-        fetched_at: stamps.get(id)!.newest.fetched_at,
+        ...stamps.get(id)!,
       }))
 
     issuers.push({

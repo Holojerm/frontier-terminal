@@ -18,16 +18,15 @@ const props = defineProps<{ incidents: Omit<IncidentsData, 'incidents'> }>()
 const now = useNow()
 const DAY_MS = 86_400_000
 
-/** Start of the prior window: two window lengths back from the anchor. */
-const priorFrom = computed(() =>
+/** Start of a lab's prior window: two window lengths back from its own anchor. */
+const priorFrom = (p: IncidentProviderView) =>
   new Date(
-    Date.parse(props.incidents.window_to) - 2 * props.incidents.window_days * DAY_MS,
-  ).toISOString(),
-)
+    Date.parse(p.window_to ?? props.incidents.window_to) - 2 * props.incidents.window_days * DAY_MS,
+  ).toISOString()
 
 /** True when the held history starts after the prior window opens. */
 const priorPartial = (p: IncidentProviderView) =>
-  p.coverage_from !== null && p.coverage_from > priorFrom.value
+  p.coverage_from !== null && p.coverage_from > priorFrom(p)
 
 const columns = computed<TableColumn[]>(() => [
   { key: 'display', label: 'Lab', class: 'whitespace-nowrap' },
@@ -49,6 +48,13 @@ const columns = computed<TableColumn[]>(() => [
   >
     <template #cell-last="{ row: p }">
       <span class="text-highlighted">{{ p.last_window }}</span>
+      <!-- Each lab counts back from its own feed's last read; one that lags
+           the freshest says so rather than reading as a quiet stretch. -->
+      <TerminalCaveatMark
+        v-if="p.window_to && p.window_to !== incidents.window_to"
+        :name="`Why ${p.display}’s window ends earlier`"
+        :text="`Counted to ${absoluteStamp(p.window_to, now)}, the last time we read ${p.display}’s status feed.`"
+      />
     </template>
     <template #cell-prior="{ row: p }">
       {{ p.prior_window }}

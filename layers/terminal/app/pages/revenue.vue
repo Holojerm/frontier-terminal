@@ -97,9 +97,9 @@ useSeo({
         <div class="max-w-2xl space-y-3 text-sm text-default">
           <p>
             We check EDGAR every 30 minutes. That covers the full-text search for new S-1s, the
-            filings of each company we track (S-1, 424B4, 10-Q, 10-K, and 8-K), and the XBRL data of
-            each company that reports revenue. A new S-1, 424B4, 10-Q, or 10-K from a company we
-            track always raises an alert.
+            filings of each company we track (S-1, 424B4, 10-Q, 10-K, 20-F, and 8-K), and the XBRL
+            company facts of each company whose total revenue we show. A new S-1, 424B4, 10-Q, 10-K,
+            or 20-F from a company we track always raises an alert.
           </p>
           <p>
             When a lab files for itself, nobody has to do anything. Two full-text searches look for

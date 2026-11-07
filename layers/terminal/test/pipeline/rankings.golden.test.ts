@@ -331,7 +331,7 @@ describe('with the key', () => {
     expect(await db.select().from(schema.changes)).toHaveLength(1)
 
     const pending = await pendingChanges(db)
-    expect(pending).toEqual({ changes: [], total_pending: 0, since: null })
+    expect(pending).toEqual({ changes: [], total_pending: 0, since: null, through: null })
 
     const movement = await queryMovement(db)
     expect(movement.total_changes).toBe(0)

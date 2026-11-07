@@ -186,7 +186,7 @@ const LICENSE =
 const PROVENANCE =
   'Every row carries source_url (the exact page it was read from) and fetched_at (UTC), the fetch that produced its current values; ' +
   'it only moves when they change. A current price row also carries checked_at, the newest read of that page that still showed it, or null. ' +
-  'as_of is the poll tick the payload reflects; computed_at is when it was built (it may then be served from a five-minute cache). ' +
+  'as_of is the newest poll the payload reflects. computed_at is when it was built: a payload is reused until new data arrives, so it can be older than your request. ' +
   LICENSE
 
 const INSTRUCTIONS =
@@ -508,8 +508,8 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         '(last_window) against the same span before (prior_window), what is open now, and coverage_from — where held history ' +
         'begins; a Statuspage feed is a rolling window, so prior_window is partial until the pipeline has polled through it. ' +
         `incidents lists every one started inside ${INCIDENT_HISTORY_DAYS} days, newest first, with impact in the vendor’s own ` +
-        'vocabulary (never mapped across vendors; null for Anthropic and DeepSeek, whose feeds publish none) and a link. Windows anchor on window_to, the newest status fetch, not the ' +
-        'clock. Not an SLA and not comparable across vendors: OpenAI’s feed mixes ChatGPT with API incidents and has no component ' +
+        'vocabulary (never mapped across vendors; null for Anthropic and DeepSeek, whose feeds publish none) and a link. Each lab’s window anchors on its own window_to, the last successful read of its status feed, not the ' +
+        'clock, so a feed that stopped answering shows an earlier window_to rather than a quiet stretch. Not an SLA and not comparable across vendors: OpenAI’s feed mixes ChatGPT with API incidents and has no component ' +
         'field; xAI’s RSS history covers Cursor’s products alongside Grok and the API (read components). DeepSeek’s titles are Chinese with the English in parentheses. Meta, ' +
         'Alibaba and Moonshot AI have NO incident history we can read and are reported as no_public_feed with the reason, never as zero incidents. Optional provider filter narrows providers and incidents. ' +
         PROVENANCE,
@@ -658,6 +658,8 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'not-searched, search-failed, not-searchable, no-feed, none-found, not-yet-rated (never a guessed lead), no-match. ' +
         'press.published_at is the quarter hour GDELT’s crawler read the article, not when the outlet published it, and GDELT misses outlets. ' +
         'A lead is not a trading signal. press and newsroom tally led, lagged, tied and the median lead over matched rows. ' +
+        'A press side with searched_from set was searched only from that time: earlier press was read before the alert existed and never matched to it, ' +
+        'so its lead may not be one, and the tally leaves it out (searched_in_part counts them). ' +
         PROVENANCE,
       inputSchema: z.object({ as_of: AsOfSchema }),
       annotations: READ_ONLY,
@@ -710,7 +712,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'matched a priced SKU (coverage), and implied spend as a RANGE — spend_low is every token at the input list price, spend_high ' +
         'every token at the output price (the rankings carry no prompt/completion split, so a point estimate would be invented). ' +
         'share_low/share_high are each lab’s slice of the tracked labs’ implied dollars at each bound; token_share is the same window’s ' +
-        'slice of the tracked labs’ tokens (NOT of all OpenRouter tokens, which get_rankings reports), so tokens and dollars can be read side by side. models[] shows the join per model, with reason (free, unlisted, ' +
+        'slice of the tracked labs’ tokens (NOT of all OpenRouter tokens, which get_rankings reports); priced_token_share is the lab’s slice of the priced tokens only, the same universe as the dollar shares, so compare dollars with priced_token_share. models[] shows the join per model, with reason (free, unlisted, ' +
         'unpriced) for every model excluded from dollars. This is one aggregator’s channel at list price, not revenue and not market ' +
         'share; cite it as implied OpenRouter-channel spend and reproduce the CC BY 4.0 citation in rankings.meta.citation. ' +
         PROVENANCE,
@@ -778,7 +780,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
       description:
         `For due diligence on the feed, computed from stored records. sources: each registered source (derived per-model and per-filing sources folded by template, members > 0) with runs and good runs over the last ${RELIABILITY_DAYS.short} (short) and ${RELIABILITY_DAYS.long} (long) UTC days, ` +
         'where good is ok, unchanged, baseline or absent (an answered check) and skipped runs are not counted; longest_gap is the longest wait between good runs (to null while still open); stated_minutes is how often we say we check it. Worst first. ' +
-        'freshness: per lane (sec: SEC feeds and model catalogs, stated every 30 minutes; all: every source, stated every 6 hours), the periods our data was past its stated age, from the poll ticks in which most sources answered. ' +
+        'freshness: per lane (sec: SEC feeds, model catalogs and price lists, stated every 30 minutes; all: every source, stated every 6 hours), the periods our data was past its stated age, from the poll ticks in which most sources answered. ' +
         `detection: each filing a no-model rule alerted on (${DETECTION_RULES.join(', ')}), its first alert time against EDGAR's acceptance time (accepted_at, read from the stored submissions JSON or filing index; null when no stored payload listed it), ` +
         'and released_at, when EDGAR made it public (6:00 a.m. Eastern on the filing date for a filing accepted after 5:30 p.m. Eastern). Median and worst minutes for both. ' +
         'deploys: each run of the post-deploy smoke test on main from GitHub Actions (conclusion success, failure, or cancelled when a newer push superseded it), with build_sha the commit now deployed. ' +

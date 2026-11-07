@@ -9,6 +9,7 @@ import { runRefresh, type RawStore } from '../server/pipeline/refresh'
 import { includeSources } from '../server/pipeline/sources'
 import { insertRows } from '../server/pipeline/store'
 import {
+  AS_OF_ROUTES,
   AsOfInstant,
   PointInTimeError,
   assertKnowable,
@@ -41,7 +42,12 @@ import { fixtureText, manifest } from './pipeline/fixtures'
 const POLLS = { timeout: 60_000 }
 
 const db = drizzle(env.DB, { schema })
-const sourcesYaml = fixtureText('sources.yaml')
+// This store runs in September 2026, before some revenue_filers entries took
+// effect. The round-trip tests below compare a live read then with an as_of
+// read now, so they read the block as if every entry had always held; the
+// effective dates have their own test.
+const datedYaml = fixtureText('sources.yaml')
+const sourcesYaml = datedYaml.replace(/^ {4}effective: .*\n/gm, '')
 const ALL = includeSources(sourcesYaml, manifest.fixtures)
 const ALL_IDS = ALL.map((s) => s.source_id)
 
@@ -127,6 +133,38 @@ describe('as_of', () => {
   })
 })
 
+// Every API route as source text, keyed by its URL path ('/api/prices/<key>').
+const ROUTES = Object.fromEntries(
+  Object.entries(
+    import.meta.glob('/layers/terminal/server/api/**/*.get.ts', {
+      query: '?raw',
+      import: 'default',
+      eager: true,
+    }) as Record<string, string>,
+  ).map(([file, source]) => [
+    file
+      .replace(/^.*\/server/, '')
+      .replace(/\.get\.ts$/, '')
+      .replace(/\[(\w+)\]/g, '<$1>'),
+    source,
+  ]),
+)
+
+describe('which routes answer as_of', () => {
+  it('lists every route that rebuilds its payload as of T, and no other', () => {
+    const answering = Object.keys(ROUTES)
+      .filter((path) =>
+        /serveTerminalAsOf|serveTerminalFiled|terminalPayloadAt|parseAsOfQuery/.test(ROUTES[path]!),
+      )
+      .sort()
+    expect(answering).toEqual([...AS_OF_ROUTES].sort())
+  })
+
+  it('refuses as_of on the page payload rather than serving today’s page under it', () => {
+    expect(ROUTES['/api/page-data']).toMatch(/refuseAsOf\(event, 'page-data'\)/)
+  })
+})
+
 describe('caches', () => {
   it('never let a historical answer and the live one share an entry', () => {
     // A page with any query string is neither served from nor stored in the HTML cache.
@@ -169,6 +207,19 @@ describe('a store that has moved on answers as it did then', () => {
     // Every row was rebuilt from a log that agrees with itself.
     expect([...c.notes.unverified]).toEqual([])
     expect([...c.notes.method].join(' ')).toContain('change log')
+  })
+
+  it('revenue as of T reads revenue_filers as dated, not today’s tags', POLLS, async () => {
+    await poll()
+    const t1 = between()
+    const dated = queryContext(datedYaml, await pollStampAt(db, t1), () => new Date(t1), t1)
+    const revenue = await queryRevenue(db, dated)
+    // Google's segment tag took effect on 2026-11-01: in September it was untagged.
+    expect(revenue.providers.find((p) => p.provider === 'google')).toMatchObject({
+      disclosure: 'none',
+      filer: null,
+    })
+    expect([...dated.notes.method].join(' ')).toContain('revenue_filers as it stood at as_of')
   })
 
   it('a SKU first listed after T is not there at T', POLLS, async () => {

@@ -64,11 +64,7 @@ export function diff(
         // Deterministic id: pure function of the entity and the two
         // content hashes, so two runs over the same snapshots produce
         // byte-identical ids.
-        id: contentHash({
-          entity_key: key,
-          before_hash: b?.content_hash ?? null,
-          after_hash: a?.content_hash ?? null,
-        }),
+        id: changeId(key, b?.content_hash ?? null, a?.content_hash ?? null),
         entity_key: key,
         entity_type: evidence.entity_type,
         provider: evidence.provider,
@@ -83,4 +79,55 @@ export function diff(
     )
   }
   return changes
+}
+
+/** A change's id: the entity and its two content hashes, no source and no clock. */
+export function changeId(
+  entity_key: string,
+  before_hash: string | null,
+  after_hash: string | null,
+): string {
+  return contentHash({ entity_key, before_hash, after_hash })
+}
+
+/**
+ * The id for a transition the entity has made before and since moved on from
+ * (a role closed, reposted, closed again; a price 15 → 10 → 15 → 10). changeId
+ * alone would name the earlier row, which the store skips as already logged,
+ * so the repeat would vanish. detected_at tells the two apart and is still an
+ * input, so the id stays reproducible from the stored rows.
+ */
+export function repeatChangeId(change: ChangeRow): ChangeRow {
+  return {
+    ...change,
+    id: contentHash({
+      entity_key: change.entity_key,
+      before_hash: change.before_hash,
+      after_hash: change.after_hash,
+      detected_at: change.detected_at,
+    }),
+  }
+}
+
+/**
+ * After rows whose content is unchanged but whose provider or source_url
+ * differs from the stored row. Neither is in the content hash, so diff()
+ * reports nothing and the stored row would keep the old value forever: a
+ * revenue filer retagged to another lab in sources.yaml, or a source that
+ * moved URL with byte-identical content. These are rewritten in place and
+ * never logged — the world did not change, our description of it did.
+ */
+export function inPlaceRewrites(
+  before: readonly EntityRow[],
+  after: readonly EntityRow[],
+): EntityRow[] {
+  const beforeByKey = indexByKey(before, 'before')
+  return [...indexByKey(after, 'after').values()].filter((a) => {
+    const b = beforeByKey.get(a.entity_key)
+    return (
+      b !== undefined &&
+      b.content_hash === a.content_hash &&
+      (b.provider !== a.provider || b.source_url !== a.source_url)
+    )
+  })
 }

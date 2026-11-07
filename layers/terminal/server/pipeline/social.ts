@@ -34,6 +34,24 @@ export const SOCIAL_EPOCH = '2026-11-02T00:00:00.000Z'
 /** How long a judged critical waits before it can be sent. */
 export const JUDGED_HOLD_MS = 60 * 60_000
 
+/**
+ * When a judged alert's hold ends: an hour after the alert was written, not
+ * after created_at. created_at is the cited evidence's fetch time, which the
+ * hourly judge reads up to an hour or more later, so a hold counted from it
+ * was mostly spent before anyone could see the alert to suppress it. A row
+ * without a write time (before the column) holds from created_at.
+ */
+export function heldUntil(alert: {
+  rule: string
+  created_at: string
+  recorded_at: string | null
+}): number {
+  const created = Date.parse(alert.created_at)
+  if (alert.rule !== 'agent-judge') return created
+  const recorded = alert.recorded_at === null ? NaN : Date.parse(alert.recorded_at)
+  return Math.max(created, Number.isNaN(recorded) ? created : recorded) + JUDGED_HOLD_MS
+}
+
 /** Newest critical alerts re-offered each tick; enqueueing is idempotent. */
 const ALERT_LOOKBACK = 20
 
@@ -66,6 +84,7 @@ export async function enqueueCriticalAlerts(
       headline: tables.alerts.headline,
       rule: tables.alerts.rule,
       created_at: tables.alerts.created_at,
+      recorded_at: tables.alerts.recorded_at,
     })
     .from(tables.alerts)
     .where(
@@ -79,11 +98,10 @@ export async function enqueueCriticalAlerts(
 
   let queued = 0
   for (const alert of rows) {
-    const hold = alert.rule === 'agent-judge' ? JUDGED_HOLD_MS : 0
     queued += await enqueueSocialPost(db, channels, {
       kind: 'alert',
       ref: alert.id,
-      notBefore: new Date(Date.parse(alert.created_at) + hold),
+      notBefore: new Date(heldUntil(alert)),
       compose: (service) => ({
         posts: withLink(service, alert.headline, alertUrl(origin, alert.id)),
       }),

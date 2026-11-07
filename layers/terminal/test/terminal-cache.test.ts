@@ -10,6 +10,7 @@ import {
   sharedTerminalStamp,
   terminalCacheKey,
   terminalStamp,
+  terminalStamps,
   type CacheStore,
 } from '../server/utils/terminal-cache'
 
@@ -58,6 +59,48 @@ describe('terminalStamp', () => {
       run('2026-09-07T16:00:00.000Z'),
     ])
     expect(await terminalStamp(db)).toBe('2026-09-07T16:00:00.000Z')
+  })
+})
+
+describe('terminalStamps', () => {
+  it('moves the cache key on a judge run, and keeps as_of on the poll', async () => {
+    await db.delete(schema.judgeRuns)
+    expect(await terminalStamps(db)).toEqual({ poll: null, key: null })
+    await insertRows(db, 'source_runs', [
+      {
+        id: 'survey:x:1',
+        scope: 'survey',
+        source_id: 'xai-models-md',
+        started_at: '2026-09-07T10:00:00.000Z',
+        status: 'ok',
+        detail: null,
+        snapshot_id: null,
+        added: 0,
+        removed: 0,
+        modified: 0,
+        source_url: 'https://docs.x.ai/developers/models.md',
+      },
+    ])
+    const polled = await terminalStamps(db)
+    expect(polled.poll).toBe('2026-09-07T10:00:00.000Z')
+    expect(polled.key).toMatch(/^2026-09-07T10:00:00\.000Z\+/)
+
+    await db.insert(schema.judgeRuns).values({
+      id: 'judge-1',
+      started_at: '2026-09-07T10:20:00.000Z',
+      judged_through: '2026-09-07T10:00:00.000Z',
+      changes_seen: 1,
+      accepted: 1,
+      rejected: 0,
+      rejection_reason: null,
+      source: 'routine',
+    })
+    const judged = await terminalStamps(db)
+    expect(judged.poll).toBe(polled.poll)
+    expect(judged.key).not.toBe(polled.key)
+    expect(judged.key).toContain('2026-09-07T10:20:00.000Z')
+    expect(await terminalStamp(db)).toBe(polled.poll)
+    await db.delete(schema.judgeRuns)
   })
 })
 

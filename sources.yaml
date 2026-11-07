@@ -1143,20 +1143,25 @@ cik_whitelist:
 # `segment`, an XBRL StatementBusinessSegmentsAxis member: the series is then
 # that one segment's, read off each 10-Q/10-K's own instance (the
 # xbrl-segment template below), never the consolidated top line — so no
-# companyfacts source is registered for it.
+# companyfacts source is registered for it. `effective` is the UTC day an
+# entry took effect (its merge); an as_of read before it treats the lab as
+# untagged, as the block did then. Set it on every entry that changes.
 revenue_filers:
   openai: null
   anthropic: null
   # Alphabet reports no Gemini line. Google Cloud is the segment Gemini API
   # and Vertex AI revenue lands in, beside Workspace and GCP — the nearest
-  # audited figure, labelled as the segment's, never as Gemini's.
+  # audited figure, labelled as the segment's, never as Gemini's. Was null
+  # (no disclosure) before 2026-11-01.
   google:
     ticker: GOOGL
     relation: parent
     segment: goog:GoogleCloudMember
+    effective: 2026-11-01
   xai:
     ticker: SPCX
     relation: parent
+    effective: 2026-09-21
   meta: null # Meta Platforms (META) is public but segments Family of Apps and Reality Labs, never its model API
   mistral: null # private; no EDGAR filer (2026-11-01: "Mistral AI" appears only in CoreWeave's S-1/A as a customer)
   deepseek: null # private; no EDGAR filer (2026-11-04: "DeepSeek" appears only in 7 other companies' S-1-family filings)

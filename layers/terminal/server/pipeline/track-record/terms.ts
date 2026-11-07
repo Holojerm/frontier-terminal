@@ -260,10 +260,68 @@ export function matchesArticle(
   article: { title: string; url: string; names: readonly string[] },
   terms: SearchTerms,
 ): boolean {
-  const slug = pathWords(article.url).replace(/\b(\d+) (\d{1,2})\b/g, '$1.$2')
-  const about = normalizeText(`${article.title} ${slug}`)
+  const about = aboutText(article)
   if (!carries(about, terms.what)) return false
   if (terms.also.length && !carries(about, terms.also)) return false
   if (!terms.who.length) return true
   return carries(normalizeText(`${about} ${article.names.join(' ; ')}`), terms.who)
+}
+
+/** An article's headline and URL words, normalized: where its event has to be named. */
+function aboutText(article: { title: string; url: string }): string {
+  const slug = pathWords(article.url).replace(/\b(\d+) (\d{1,2})\b/g, '$1.$2')
+  return normalizeText(`${article.title} ${slug}`)
+}
+
+/**
+ * The vocabulary terms an article carries anywhere matchesArticle looks: its
+ * headline, its URL or GDELT's names list. A row carrying none cannot match an
+ * alert whose terms are inside the vocabulary (termsInVocabulary), so only
+ * rows with a hit are kept for matching later; the hits stand in for the
+ * names list, which is most of a row's size.
+ */
+export function vocabularyHits(
+  article: { title: string; url: string; names: readonly string[] },
+  vocabulary: readonly string[],
+): string[] {
+  const text = normalizeText(`${aboutText(article)} ${article.names.join(' ; ')}`)
+  return vocabulary.filter((term) => {
+    const needle = normalizeText(term)
+    return needle.trim().length > 0 && text.includes(needle)
+  })
+}
+
+/**
+ * Whether every article an alert's terms can match carries a vocabulary
+ * term, so the kept rows hold all of its matches: each `who` phrase (or, for
+ * an alert with none, each `what` phrase) has to contain one.
+ */
+export function termsInVocabulary(terms: SearchTerms, vocabulary: readonly string[]): boolean {
+  const required = terms.who.length ? terms.who : terms.what
+  return (
+    required.length > 0 && required.every((phrase) => carries(normalizeText(phrase), vocabulary))
+  )
+}
+
+/**
+ * The words that decide which GKG rows are kept: every lab and filer name the
+ * terms use, and the first word of each model family (gpt, claude, gemini),
+ * so a launch headline that never names its lab is still kept. A first word
+ * under three letters (o3) is too common a token to keep rows by.
+ */
+export function mentionVocabulary(modelSlugs: readonly string[]): string[] {
+  const words = new Set<string>()
+  for (const names of Object.values(LAB_NAMES)) for (const n of names) words.add(n)
+  for (const n of Object.values(FILER_NAMES)) words.add(n)
+  for (const slug of modelSlugs) {
+    const first = modelFamily(slug)?.split(' ')[0]
+    if (first && first.length >= 3 && !/^\d/.test(first)) words.add(first)
+  }
+  const seen = new Set<string>()
+  return [...words].filter((w) => {
+    const k = normalizeText(w)
+    if (seen.has(k)) return false
+    seen.add(k)
+    return true
+  })
 }

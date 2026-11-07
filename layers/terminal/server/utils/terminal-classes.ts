@@ -310,11 +310,15 @@ export const PRICE_GAPS: Readonly<Partial<Record<LabId, string>>> = {
   moonshot:
     'Moonshot’s pricing page (platform.kimi.ai/docs/pricing/chat) draws its price tables in the browser: the page as served, in Markdown and in HTML, holds an empty table. We read no price for any Kimi model rather than run the page’s scripts or read an aggregator’s.',
   openai:
-    'OpenAI’s catalog page (developers.openai.com/api/docs/models.md) prints no prices. We read prices from a separate page, pricing.md (added 2026-09-22). No price here means we haven’t read that page yet. We don’t fill in a price from any other source.',
+    'OpenAI’s catalog page (developers.openai.com/api/docs/models.md) prints no prices. We read prices from a separate page, pricing.md (added 2026-09-22). No price here means pricing.md didn’t list this model at our last check. We don’t fill in a price from any other source.',
 }
 
-/** The generic reason when a mapped SKU has simply not been stored yet. */
-export const NO_ROW_GAP = 'Nothing stored for this SKU yet. We haven’t checked its source.'
+/**
+ * The generic reason a mapped cell has no price: the SKU's row is gone (the
+ * vendor delisted it), was never stored, or carries no price.
+ */
+export const NO_ROW_GAP =
+  'No current price for this SKU. The vendor’s page didn’t list one at our last check.'
 
 /**
  * Shown on a cell whose vendor sentence was not found on the page at the

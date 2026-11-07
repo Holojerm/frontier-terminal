@@ -202,6 +202,8 @@ export const SourceRunRow = z.strictObject({
   removed: z.int().nonnegative(),
   modified: z.int().nonnegative(),
   source_url: provenanceFields.source_url,
+  // JSON: what the parse read besides the source's own bytes (refresh.ts).
+  parse_basis: jsonText.nullable().default(null),
 })
 export type SourceRunRow = z.infer<typeof SourceRunRow>
 

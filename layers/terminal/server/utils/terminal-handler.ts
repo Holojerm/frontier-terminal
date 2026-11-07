@@ -12,7 +12,7 @@ import type { H3Event } from 'h3'
 
 import sourcesYaml from 'raw:~~/sources.yaml'
 
-import { asOfLicense, withLicense } from '#shared/utils/license'
+import { LICENSE_SPLIT_EFFECTIVE, asOfLicense, withLicense } from '#shared/utils/license'
 
 import {
   AS_OF_PARAM,
@@ -25,18 +25,25 @@ import {
   type AsOfPayload,
 } from './terminal-asof'
 import { cacheControlFor, resolvedApiKey } from './api-access'
-import { assertArchiveKnowable } from './terminal-archive'
+import {
+  ARCHIVED_AS_OF_METHOD,
+  ARCHIVED_HIRING_AS_OF_METHOD,
+  ARCHIVED_LABS_AS_OF_METHOD,
+  ARCHIVED_LAB_BOARDS_AS_OF_METHOD,
+  assertArchiveKnowable,
+} from './terminal-archive'
 import { serverTimingHeader, timed, type ServerTiming } from './server-timing'
 import { paidLicensed, withSchemaVersion } from './terminal-envelope'
 import {
   cachedTerminal,
   sharedTerminalStamp,
-  terminalStamp,
+  terminalStamps,
   type CacheOptions,
+  type TerminalStamps,
 } from './terminal-cache'
 import { queryContext, type QueryContext } from './terminal-db'
 
-/** Five minutes at the edge too — the same window as the KV entry. */
+/** A minute fresh at the edge, then up to four more served while revalidating. The KV entry is keyed by the data stamp, so it never outlives the data. */
 export const TERMINAL_CACHE_CONTROL = 'public, max-age=60, stale-while-revalidate=240'
 
 /**
@@ -59,11 +66,11 @@ export async function terminalPayload<T>(
   options: CacheOptions = {},
 ): Promise<T> {
   const stamp = await timed(options.timings, 'stamp', liveStamp)
-  const context = queryContext(sourcesYaml, stamp)
+  const context = queryContext(sourcesYaml, stamp.poll)
   // The license is added after the cache: its window moves daily, and a
   // cached payload must not carry yesterday's.
   return withLicense(
-    await cachedTerminal(kv, cacheName(name, variant), stamp, () => query(context), options),
+    await cachedTerminal(kv, cacheName(name, variant), stamp.key, () => query(context), options),
   )
 }
 
@@ -103,7 +110,7 @@ export async function terminalPayloadAt<T extends object | null>(
   return cachedTerminal(
     kv,
     cacheName(name, `${variant}|${AS_OF_PARAM}=${at}`),
-    stamp,
+    stamp.key,
     async () => {
       const data = await query(context)
       // null is "not known at T" (an unknown SKU), which the route turns into its 404.
@@ -117,14 +124,42 @@ export async function terminalPayloadAt<T extends object | null>(
       ? payload
       : withLicense({
           ...payload,
-          point_in_time: { ...payload.point_in_time, license: asOfLicense(at) },
+          point_in_time: {
+            ...payload.point_in_time,
+            license: asOfLicense(
+              at,
+              undefined,
+              undefined,
+              eventTime(options.filed, payload.point_in_time.method) ? EVENT_TIME_PUBLISHED : at,
+            ),
+          },
         }),
   )
 }
 
-async function liveStamp(): Promise<string | null> {
+/**
+ * The archive backfill and the filed facts both landed on the split day
+ * (2026-11-04), so data an event-time answer reads was published here no
+ * earlier than that, however old the instant it describes.
+ */
+const EVENT_TIME_PUBLISHED = LICENSE_SPLIT_EFFECTIVE
+
+/** Whether the answer reads event time: filed facts, or an Internet Archive capture. */
+function eventTime(filed: boolean | undefined, method: readonly string[]): boolean {
+  return (
+    filed === true ||
+    [
+      ARCHIVED_AS_OF_METHOD,
+      ARCHIVED_HIRING_AS_OF_METHOD,
+      ARCHIVED_LABS_AS_OF_METHOD,
+      ARCHIVED_LAB_BOARDS_AS_OF_METHOD,
+    ].some((m) => method.includes(m))
+  )
+}
+
+async function liveStamp(): Promise<TerminalStamps> {
   try {
-    return await sharedTerminalStamp(() => terminalStamp(db))
+    return await sharedTerminalStamp(() => terminalStamps(db))
   } catch (error) {
     throw createError({ statusCode: 503, message: 'Database unavailable', cause: error })
   }
@@ -148,6 +183,8 @@ const AS_OF_REFUSALS: Readonly<Record<string, string>> = {
     'an alert is never rewritten, so its row is the same at every moment after it was raised. Use /api/alerts?as_of= to see which alerts existed then.',
   identifiers:
     'it’s a registry kept in code, and each identifier is dated by its own fetched_at instead.',
+  'page-data':
+    'it returns the live page’s own hydration payload. Ask the API route the page reads from with as_of instead.',
 }
 
 /** A 400 for a route that does not rebuild its payload as of T. Never ignore it. */

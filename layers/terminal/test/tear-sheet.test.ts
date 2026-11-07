@@ -9,7 +9,7 @@ import {
   shortUrl,
   SHEET_ALERTS,
 } from '../app/utils/tear-sheet'
-import { priceCitation } from '../app/utils/price-display'
+import { cellDelta, priceCitation } from '../app/utils/price-display'
 import { PROVIDER_ORDER } from '../server/utils/terminal-sources'
 import type { ExposureData } from '../shared/utils/terminal-exposure'
 import { LABS, TEAR_SHEET_PAGES } from '../shared/utils/terminal-lab-summary'
@@ -32,6 +32,8 @@ const delta = (d: Partial<PriceDeltaView>): PriceDeltaView => ({
   input_after: null,
   output_before: null,
   output_after: null,
+  cached_before: null,
+  cached_after: null,
   source_url: 'https://example.com/pricing',
   fetched_at: AT,
   ...d,
@@ -90,6 +92,39 @@ describe('priceChangeLabel', () => {
         delta({ input_before: 2, input_after: 2, output_before: 10, output_after: 10 }),
       ),
     ).toBe('Edited 2026-10-07, same price')
+  })
+  it('names a cached-input move rather than calling the price unchanged', () => {
+    expect(priceChangeLabel(delta({ cached_before: 0.5, cached_after: 0.25 }))).toBe(
+      'Cached $0.50 → $0.25 (−50%) on 2026-10-07',
+    )
+  })
+})
+
+describe('cellDelta', () => {
+  const moved = (d: Partial<PriceDeltaView>) =>
+    cellDelta(cell({ priced: true, row: row({ delta: delta(d) }) }))
+  it('reads the field that moved, never a held input as 0%', () => {
+    expect(moved({ input_before: 2, input_after: 2, output_before: 10, output_after: 8 })).toBe(
+      '−20% out',
+    )
+    expect(moved({ input_before: 3, input_after: 2, output_before: 15, output_after: 10 })).toBe(
+      '−33.3% in',
+    )
+    expect(moved({ input_before: 1, input_after: 1, cached_before: 0.1, cached_after: 0.2 })).toBe(
+      '+100% cached',
+    )
+  })
+  it('says the price held when no price field moved', () => {
+    expect(moved({ input_before: 2, input_after: 2, output_before: 10, output_after: 10 })).toBe(
+      'same price',
+    )
+  })
+  it('prints both sides when there is no base for a percent', () => {
+    expect(moved({ output_before: null, output_after: 8 })).toBe('out — → $8.00')
+  })
+  it('says nothing for a listing or a row with no change', () => {
+    expect(moved({ change_type: 'added' })).toBeNull()
+    expect(cellDelta(cell({ row: row({}) }))).toBeNull()
   })
 })
 
@@ -231,7 +266,8 @@ const rankings = {
       first_date: '2026-10-21',
       last_date: '2026-11-03',
       window: { from: '2026-10-28', to: '2026-11-03' },
-      prior_window: null,
+      // A young feed: three days before the window, not seven.
+      prior_window: { from: '2026-10-25', to: '2026-10-27' },
     },
   },
   shares: [
@@ -385,7 +421,7 @@ describe('buildTearSheet', () => {
   it('labels the demand share’s denominator and carries the upstream citation', () => {
     expect(sheet.demand.label).toBe('OpenRouter share of all tokens')
     expect(sheet.demand.value).toBe('6.2%')
-    expect(sheet.demand.delta).toBe('−1.4 pp on 7 days before')
+    expect(sheet.demand.delta).toBe('−1.4 pp on 2026-10-25 to 2026-10-27')
     expect(sheet.citations).toEqual([rankings.meta.citation])
   })
 

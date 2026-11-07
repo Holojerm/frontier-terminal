@@ -28,7 +28,7 @@ import { asOfFromDetail } from '../pipeline/lanes'
 import { manifestFixtures } from '../pipeline/parsers/fixture-provenance'
 import { providerOfOpenRouterId } from '../pipeline/parsers/openrouter'
 import type { PipelineDb } from '../pipeline/store'
-import { lastRuns, sourceStamps, type QueryContext } from './terminal-db'
+import { lastReads, lastRuns, sourceStamps, type QueryContext } from './terminal-db'
 import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
 
 export const RANKINGS_SOURCE_ID = 'openrouter-rankings-daily'
@@ -245,9 +245,10 @@ async function newestAsOf(db: PipelineDb): Promise<string | null> {
 }
 
 export async function queryRankings(db: PipelineDb, ctx: QueryContext): Promise<RankingsData> {
-  const [rows, stamps, runs, as_of] = await Promise.all([
+  const [rows, stamps, reads, runs, as_of] = await Promise.all([
     rankingObservations(db),
     sourceStamps(db),
+    lastReads(db),
     lastRuns(db),
     newestAsOf(db),
   ])
@@ -280,8 +281,12 @@ export async function queryRankings(db: PipelineDb, ctx: QueryContext): Promise<
       last_run,
       newest_snapshot: stamp?.newest ?? null,
     },
+    // The shares are as of the last read; newest_snapshot above reports the fetch.
     provenance: stamp
-      ? { source_url: stamp.newest.source_url, fetched_at: stamp.newest.fetched_at }
+      ? {
+          source_url: stamp.newest.source_url,
+          fetched_at: reads.get(RANKINGS_SOURCE_ID) ?? stamp.newest.fetched_at,
+        }
       : null,
     meta: { as_of, citation, coverage: summary.coverage },
     shares: summary.shares,
