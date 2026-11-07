@@ -11,6 +11,10 @@
 // and the exact stamp in the link's tooltip and in a screen-reader-only
 // <time>. The panel's footer still prints every source with its age, so a
 // row trades a repeated "2h ago" for a row that is one line tall.
+//
+// Each link is `leading-6`: at text-xs its line box was 16px, under the 24px
+// target floor (DESIGN.md › Target size), and these sit stacked in table cells
+// and footers where axe found 120+ of them once the pages had real rows.
 
 import { exactStamp, hostOf, relativeStamp } from '../../../shared/utils/terminal-format'
 
@@ -51,7 +55,7 @@ const exact = computed(() => exactStamp(props.fetchedAt))
       target="_blank"
       rel="noopener noreferrer"
       :title="`${label ? `${label}\n` : ''}${sourceUrl}\nfetched ${exact} (${age})`"
-      class="max-w-40 truncate underline underline-offset-2 hover:text-default"
+      class="inline-block max-w-40 truncate leading-6 underline underline-offset-2 hover:text-default"
       >{{ hostOf(sourceUrl) }}</a
     >
     <time :datetime="fetchedAt" class="sr-only">fetched {{ age }}</time>
@@ -67,7 +71,7 @@ const exact = computed(() => exactStamp(props.fetchedAt))
       target="_blank"
       rel="noopener noreferrer"
       :title="sourceUrl"
-      class="underline underline-offset-2 hover:text-default"
+      class="inline-block leading-6 underline underline-offset-2 hover:text-default"
       >{{ text }}</a
     >
     <time :datetime="fetchedAt" :title="`fetched ${exact}`">{{ age }}</time>
