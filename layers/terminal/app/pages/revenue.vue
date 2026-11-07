@@ -15,7 +15,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Revenue',
     summary:
-      'Disclosed revenue per frontier lab from SEC XBRL filings. Where a public parent files, we show its consolidated figure or the one segment it reports. Where none does, we say “no audited disclosure”. For a lab that files its own S-1, we show the full statement of operations, commitments, customer concentration, share counts, and risk-factor changes. Press reports of revenue, valuations and funding sit in their own section, never mixed with filed figures.',
+      'Disclosed revenue per frontier lab from SEC XBRL filings. Where a public parent files, we show its consolidated figure or the one segment it reports. Where none does, we say “no audited disclosure”. For a lab that files its own S-1, we show the full statement of operations, commitments, customer concentration, share counts, and risk-factor changes. Press reports of revenue, valuations and funding sit in their own tab, never mixed with filed figures.',
   },
 })
 
@@ -29,6 +29,15 @@ const [
   useFetch<ParentsData>('/api/parents'),
   useFetch<ProspectusData>('/api/prospectus'),
   useFetch<ReportedData>('/api/reported'),
+])
+
+// Three sources, one tab each: what was filed, what a parent discloses, and
+// what the press reports. The press tab is apart so its unaudited figures
+// never sit beside a filed one.
+const tabs = computed(() => [
+  { value: 'filed', label: 'Filed' },
+  ...(parents.value?.parents.length ? [{ value: 'parents', label: 'Parents' }] : []),
+  { value: 'press', label: 'Press', badge: reported.value?.series.length || undefined },
 ])
 
 const site = useSiteContext()
@@ -55,89 +64,96 @@ useSeo({
 <template>
   <TerminalPage
     title="Revenue"
-    lede="Revenue from XBRL (the SEC’s tagged financial data) on EDGAR, with each value linked to its filing. What the press reports sits in its own section below."
+    lede="Revenue from XBRL (the SEC’s tagged financial data) on EDGAR, with each value linked to its filing. What the press reports has a tab of its own."
     :as-of="revenue?.as_of"
     :error="Boolean(error)"
     error-title="Revenue didn’t load"
     error-body="Try reloading in a minute."
   >
-    <template v-if="revenue">
-      <TerminalPanel
-        id="disclosed"
-        title="Disclosed revenue, per lab"
-        note="Each period once, from the newest filing. Restated values are marked as superseded."
-      >
-        <TerminalRevenuePanel :revenue="revenue" />
-      </TerminalPanel>
+    <TerminalTabs v-if="revenue" :tabs="tabs">
+      <template #filed>
+        <TerminalPanel
+          id="disclosed"
+          title="Disclosed revenue, per lab"
+          note="Each period once, from the newest filing. Restated values are marked as superseded."
+        >
+          <TerminalRevenuePanel :revenue="revenue" />
+        </TerminalPanel>
 
-      <TerminalProspectusPanel
-        v-for="issuer in prospectus?.issuers ?? []"
-        :key="issuer.provider"
-        :issuer="issuer"
-      />
-      <UAlert
-        v-if="prospectusError"
-        color="warning"
-        variant="subtle"
-        icon="i-lucide-triangle-alert"
-        title="Registration-statement detail could not be read"
-        description="The prospectus endpoint failed to respond. Revenue above is unaffected."
-      />
-
-      <TerminalPanel
-        v-if="parents?.parents.length"
-        id="parents"
-        title="What the parents disclose"
-        note="Every fact Microsoft and Amazon tag with OpenAI or Anthropic in their newest 10-Q or 10-K. These are the parent’s own figures, never the lab’s revenue or valuation."
-        :more="{ label: 'Every quarter, and hyperscaler capex', to: '/exposure' }"
-      >
-        <TerminalParentFacts :parents="parents" />
-      </TerminalPanel>
-
-      <TerminalPanel
-        id="reported"
-        title="Reported in the press"
-        note="Revenue, valuations and funding as news headlines state them. Unaudited, and never mixed with the filed figures above."
-      >
-        <TerminalReportedPanel v-if="reported" :reported="reported" />
+        <TerminalProspectusPanel
+          v-for="issuer in prospectus?.issuers ?? []"
+          :key="issuer.provider"
+          :issuer="issuer"
+        />
         <UAlert
-          v-else-if="reportedError"
+          v-if="prospectusError"
           color="warning"
           variant="subtle"
           icon="i-lucide-triangle-alert"
-          title="Press figures didn’t load"
-          description="Try reloading in a minute. The filed revenue above is unaffected."
+          title="Registration-statement detail could not be read"
+          description="The prospectus endpoint failed to respond. Revenue above is unaffected."
         />
-      </TerminalPanel>
 
-      <TerminalPanel
-        id="how"
-        title="How a lab gets a number here"
-        note="What happens the day a lab files for itself."
-      >
-        <div class="max-w-2xl space-y-3 text-sm text-default">
-          <p>
-            We check EDGAR every 30 minutes. That covers the full-text search for new S-1s, the
-            filings of each company we track (S-1, 424B4, 10-Q, 10-K, 20-F, and 8-K), and the XBRL
-            company facts of each company whose total revenue we show. A new S-1, 424B4, 10-Q, 10-K,
-            or 20-F from a company we track always raises an alert.
-          </p>
-          <p>
-            When a lab files for itself, nobody has to do anything. Two full-text searches look for
-            S-1s that mention Anthropic or OpenAI. When one comes from a company whose name matches
-            the lab, we read its CIK (the SEC’s company ID) from the filing and raise a critical
-            alert. From the next check on, we track that company’s filings and XBRL data. Its
-            revenue then shows up above as an <em>issuer</em> filing, linked to the filing that
-            identified it. A public parent that consolidates a lab is marked <em>parent</em>
-            instead, and its numbers are labeled as the parent’s everywhere they appear.
-          </p>
-          <p>
-            Some parents report the lab’s business inside one segment (Google inside Alphabet’s
-            Google Cloud). There the numbers are that segment’s, read from the XBRL in each 10-Q and
-            10-K on our 6-hour check, and labeled as the segment instead of the lab.
-          </p>
-        </div>
-      </TerminalPanel>
-    </template>
+        <TerminalPanel
+          id="how"
+          title="How a lab gets a number here"
+          note="What happens the day a lab files for itself."
+        >
+          <div class="max-w-2xl space-y-3 text-sm text-default">
+            <p>
+              We check EDGAR every 30 minutes. That covers the full-text search for new S-1s, the
+              filings of each company we track (S-1, 424B4, 10-Q, 10-K, 20-F, and 8-K), and the XBRL
+              company facts of each company whose total revenue we show. A new S-1, 424B4, 10-Q,
+              10-K, or 20-F from a company we track always raises an alert.
+            </p>
+            <p>
+              When a lab files for itself, nobody has to do anything. Two full-text searches look
+              for S-1s that mention Anthropic or OpenAI. When one comes from a company whose name
+              matches the lab, we read its CIK (the SEC’s company ID) from the filing and raise a
+              critical alert. From the next check on, we track that company’s filings and XBRL data.
+              Its revenue then shows up above as an <em>issuer</em> filing, linked to the filing
+              that identified it. A public parent that consolidates a lab is marked
+              <em>parent</em> instead, and its numbers are labeled as the parent’s everywhere they
+              appear.
+            </p>
+            <p>
+              Some parents report the lab’s business inside one segment (Google inside Alphabet’s
+              Google Cloud). There the numbers are that segment’s, read from the XBRL in each 10-Q
+              and 10-K on our 6-hour check, and labeled as the segment instead of the lab.
+            </p>
+          </div>
+        </TerminalPanel>
+      </template>
+
+      <template #parents>
+        <TerminalPanel
+          v-if="parents?.parents.length"
+          id="parents"
+          title="What the parents disclose"
+          note="Every fact Microsoft and Amazon tag with OpenAI or Anthropic in their newest 10-Q or 10-K. These are the parent’s own figures, never the lab’s revenue or valuation."
+          :more="{ label: 'Every quarter, and hyperscaler capex', to: '/exposure' }"
+        >
+          <TerminalParentFacts :parents="parents" />
+        </TerminalPanel>
+      </template>
+
+      <template #press>
+        <TerminalPanel
+          id="reported"
+          title="Reported in the press"
+          note="Revenue, valuations and funding as news headlines state them. Unaudited, and never mixed with the filed figures."
+        >
+          <TerminalReportedPanel v-if="reported" :reported="reported" />
+          <UAlert
+            v-else-if="reportedError"
+            color="warning"
+            variant="subtle"
+            icon="i-lucide-triangle-alert"
+            title="Press figures didn’t load"
+            description="Try reloading in a minute. The filed revenue is unaffected."
+          />
+        </TerminalPanel>
+      </template>
+    </TerminalTabs>
   </TerminalPage>
 </template>
