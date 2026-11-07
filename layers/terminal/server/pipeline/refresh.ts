@@ -50,6 +50,7 @@ import {
   recentRuns,
   recordRun,
   repeatedChangeIds,
+  sourcesWithGoodRun,
   unstoredAlerts,
   type GoodSnapshot,
   type PipelineDb,
@@ -655,10 +656,16 @@ export async function runRefresh(
         })
       }
     } else if (outcome.status === 'absent') {
-      // On the transition only. A SKU that has never had a model page has
-      // nothing to report; a page that was there last tick and is gone now is
-      // the event, and for this product it is the interesting kind.
-      if ((await lastRunStatus(deps.db, source.source_id)) !== 'absent') {
+      // On the transition only, and only for a page that once parsed. A SKU
+      // that has never had a model page has nothing to report (the coverage
+      // panel shows it); a page that was there and is gone now is the event,
+      // and for this product it is the interesting kind. A first run has no
+      // previous status, so "not absent last time" alone mailed every new SKU.
+      const wasAbsent = (await lastRunStatus(deps.db, source.source_id)) === 'absent'
+      const everParsed = (await sourcesWithGoodRun(deps.db, [source.source_id])).has(
+        source.source_id,
+      )
+      if (!wasAbsent && everParsed) {
         await recordOpsEvent(deps.db, {
           kind: 'source_absent',
           detail: `${source.source_id}: ${detail ?? 'no document at this url'}`,
