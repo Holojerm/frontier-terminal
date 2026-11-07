@@ -289,12 +289,18 @@ export function buildTearSheet(lab: LabId, input: TearSheetInputs): TearSheet {
   const d = s.demand
   const rankings = input.rankings ?? null
   const window = rankings?.meta.coverage.window ?? null
+  const prior = rankings?.meta.coverage.prior_window ?? null
   const demand: SheetFigure =
     d && d.share !== null && rankings?.provenance
       ? {
           label: 'OpenRouter share of all tokens',
           value: sharePct(d.share),
-          delta: d.delta_pp === null ? null : `${ppLabel(d.delta_pp)} on 7 days before`,
+          // The prior window can be shorter than seven days while the feed is
+          // young, so the delta names the span it was taken against.
+          delta:
+            d.delta_pp === null || !prior
+              ? null
+              : `${ppLabel(d.delta_pp)} on ${prior.from} to ${prior.to}`,
           lines: [
             `Every provider’s tokens counted, ${window ? `${window.from} to ${window.to}` : 'last 7 days'}.`,
           ],

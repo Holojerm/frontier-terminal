@@ -266,7 +266,8 @@ const rankings = {
       first_date: '2026-10-21',
       last_date: '2026-11-03',
       window: { from: '2026-10-28', to: '2026-11-03' },
-      prior_window: null,
+      // A young feed: three days before the window, not seven.
+      prior_window: { from: '2026-10-25', to: '2026-10-27' },
     },
   },
   shares: [
@@ -420,7 +421,7 @@ describe('buildTearSheet', () => {
   it('labels the demand share’s denominator and carries the upstream citation', () => {
     expect(sheet.demand.label).toBe('OpenRouter share of all tokens')
     expect(sheet.demand.value).toBe('6.2%')
-    expect(sheet.demand.delta).toBe('−1.4 pp on 7 days before')
+    expect(sheet.demand.delta).toBe('−1.4 pp on 2026-10-25 to 2026-10-27')
     expect(sheet.citations).toEqual([rankings.meta.citation])
   })
 
