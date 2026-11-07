@@ -60,6 +60,7 @@ import { parseGoogleCloudStatus } from './parsers/status/google-cloud-status'
 import { parseMistralStatus } from './parsers/status/mistral-status'
 import { parseOpenaiStatus } from './parsers/status/openai-status'
 import { parseXaiStatus } from './parsers/status/xai-status'
+import { asOfFromDetail } from './as-of'
 import { recommendationRows } from './recommendations'
 import type { ClassEntry } from '../utils/terminal-classes'
 import type { CikWhitelist } from './parsers/sec/whitelist'
@@ -573,7 +574,4 @@ export const LANES: Readonly<Record<string, Lane>> = {
   },
 }
 
-/** The `as_of` a rankings lane wrote into its run detail, if the detail carries one. */
-export function asOfFromDetail(detail: string | null): string | null {
-  return detail?.match(/as_of (\S+)/)?.[1] ?? null
-}
+export { asOfFromDetail }
