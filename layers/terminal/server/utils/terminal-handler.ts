@@ -12,7 +12,7 @@ import type { H3Event } from 'h3'
 
 import sourcesYaml from 'raw:~~/sources.yaml'
 
-import { asOfLicense, withLicense } from '#shared/utils/license'
+import { LICENSE_SPLIT_EFFECTIVE, asOfLicense, withLicense } from '#shared/utils/license'
 
 import {
   AS_OF_PARAM,
@@ -25,7 +25,11 @@ import {
   type AsOfPayload,
 } from './terminal-asof'
 import { cacheControlFor, resolvedApiKey } from './api-access'
-import { assertArchiveKnowable } from './terminal-archive'
+import {
+  ARCHIVED_AS_OF_METHOD,
+  ARCHIVED_HIRING_AS_OF_METHOD,
+  assertArchiveKnowable,
+} from './terminal-archive'
 import { serverTimingHeader, timed, type ServerTiming } from './server-timing'
 import { paidLicensed, withSchemaVersion } from './terminal-envelope'
 import {
@@ -118,8 +122,32 @@ export async function terminalPayloadAt<T extends object | null>(
       ? payload
       : withLicense({
           ...payload,
-          point_in_time: { ...payload.point_in_time, license: asOfLicense(at) },
+          point_in_time: {
+            ...payload.point_in_time,
+            license: asOfLicense(
+              at,
+              undefined,
+              undefined,
+              eventTime(options.filed, payload.point_in_time.method) ? EVENT_TIME_PUBLISHED : at,
+            ),
+          },
         }),
+  )
+}
+
+/**
+ * The archive backfill and the filed facts both landed on the split day
+ * (2026-11-04), so data an event-time answer reads was published here no
+ * earlier than that, however old the instant it describes.
+ */
+const EVENT_TIME_PUBLISHED = LICENSE_SPLIT_EFFECTIVE
+
+/** Whether the answer reads event time: filed facts, or an Internet Archive capture. */
+function eventTime(filed: boolean | undefined, method: readonly string[]): boolean {
+  return (
+    filed === true ||
+    method.includes(ARCHIVED_AS_OF_METHOD) ||
+    method.includes(ARCHIVED_HIRING_AS_OF_METHOD)
   )
 }
 
