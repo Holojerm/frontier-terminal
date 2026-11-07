@@ -1,4 +1,5 @@
-// A five-minute KV cache for the terminal payloads, keyed by the poll tick.
+// A KV cache for the terminal payloads, keyed by the poll tick. The TTL is
+// garbage collection only (TERMINAL_CACHE_TTL_SECONDS); freshness comes from the key.
 //
 // The key carries the newest source_runs.started_at, so a poll invalidates
 // every cached payload by construction: the next request computes against
@@ -154,7 +155,7 @@ type Read<T> = { found: true; value: T } | { found: false }
 
 /**
  * Serve `name` for the tick `stamp` from the store, computing and storing it
- * on a miss. `compute` runs at most once per (name, stamp) per five minutes
+ * on a miss. `compute` runs at most once per (name, stamp) per TTL
  * under normal conditions; under a failing store it runs every time, which
  * is slower and still correct. A slow read is hedged (KV_HEDGE_MS).
  */

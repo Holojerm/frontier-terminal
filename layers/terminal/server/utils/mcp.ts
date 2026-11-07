@@ -186,7 +186,7 @@ const LICENSE =
 const PROVENANCE =
   'Every row carries source_url (the exact page it was read from) and fetched_at (UTC), the fetch that produced its current values; ' +
   'it only moves when they change. A current price row also carries checked_at, the newest read of that page that still showed it, or null. ' +
-  'as_of is the poll tick the payload reflects; computed_at is when it was built (it may then be served from a five-minute cache). ' +
+  'as_of is the newest poll the payload reflects. computed_at is when it was built: a payload is reused until new data arrives, so it can be older than your request. ' +
   LICENSE
 
 const INSTRUCTIONS =
