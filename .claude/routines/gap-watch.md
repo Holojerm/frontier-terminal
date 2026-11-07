@@ -2,7 +2,7 @@
 schedule: "41 13 * * 1"
 model: claude-sonnet-5
 connectors: [github]
-enabled: false
+enabled: true
 ---
 
 # gap-watch — has the reason behind a stated gap stopped being true?
