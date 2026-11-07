@@ -28,7 +28,6 @@ import {
   TASK_CHECK_OVERRIDES,
   freshnessChecks,
   gdeltFreshnessCheck,
-  pressDraftsFreshnessCheck,
   socialOutboxFreshnessCheck,
 } from '../server/utils/terminal-freshness'
 import { TERMINAL_OPS_SEVERITY } from '../server/utils/terminal-ops-severity'
@@ -67,8 +66,6 @@ function memoryMarker(): LockStore & { values: Map<string, string> } {
 
 const deps = {
   scheduledTasks: SCHEDULED,
-  drafted: async () => false,
-  pressList: '',
   buildSha: '',
   mainHead: null,
 }
@@ -122,7 +119,7 @@ describe('coverage: every part of the pipeline has a freshness check', () => {
     expect(new Set(keys).size).toBe(keys.length)
     for (const [name] of tasks) expect(keys).toContain(`task:${name}`)
     expect(keys).toEqual(
-      expect.arrayContaining(['judge', 'gdelt-search', 'press-drafts', 'social-outbox', 'deploy']),
+      expect.arrayContaining(['judge', 'gdelt-search', 'social-outbox', 'deploy']),
     )
   })
 
@@ -415,7 +412,6 @@ describe('task heartbeats', () => {
 
 describe('the producers off the Worker', () => {
   const NOW = new Date('2026-11-06T12:00:00Z')
-  const HASH = (n: number) => n.toString(16).padStart(64, '0')
 
   beforeEach(async () => {
     await db.delete(schema.opsEvents)
@@ -451,35 +447,6 @@ describe('the producers off the Worker', () => {
     expect(await checkFreshness(db, memoryMarker(), [gdeltFreshnessCheck], early)).toEqual({
       'gdelt-search': 'not-owed',
     })
-  })
-
-  it('flags a press note that has waited six hours, and only with a press list', async () => {
-    await db.insert(schema.alerts).values({
-      id: HASH(5),
-      severity: 'critical',
-      headline: 'A filing crosses the prospectus floor',
-      explanation: 'S-1.',
-      change_ids: '[]',
-      rule: 'prospectus-floor',
-      created_at: '2026-11-06T04:00:00.000Z',
-      source_url: 'https://www.sec.gov/',
-      fetched_at: '2026-11-06T04:00:00.000Z',
-    })
-    const list = JSON.stringify([
-      { name: 'A Reporter', outlet: 'Wire', email: 'a@example.com', priority: 1 },
-    ])
-    const run = (drafted: boolean, pressList: string) =>
-      checkFreshness(
-        db,
-        memoryMarker(),
-        [pressDraftsFreshnessCheck(async () => drafted, pressList)],
-        NOW,
-      )
-    expect(await run(false, '')).toEqual({ 'press-drafts': 'not-owed' })
-    expect(await run(true, list)).toEqual({ 'press-drafts': 'not-owed' })
-    expect(await run(false, list)).toEqual({ 'press-drafts': 'stale' })
-    const [event] = await db.select().from(schema.opsEvents)
-    expect(event!.detail).toContain('nothing records a success')
   })
 
   it('checks the social outbox by its rows: a due post still queued after an hour', async () => {

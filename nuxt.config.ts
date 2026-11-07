@@ -160,8 +160,8 @@ const securityHeaders = {
 // map, so the dashboard compares the schedule Nitro will honour against the
 // triggers Cloudflare says it registered.
 //
-//   */30       — ops digest, server/tasks/ops/alert.ts. Silence is the healthy
-//                state: an empty spool costs one indexed SELECT per tick.
+//   */30       — ops:watch, layers/terminal/server/tasks/ops/watch.ts: the freshness
+//                and launch-coverage watchdogs, which spool ops events of their own.
 //              — EDGAR tick, layers/terminal/server/tasks/poll/edgar.ts: the SEC feeds and the
 //                model catalogs, the two axes where latency is worth polling for.
 //   0 */6      — full survey, layers/terminal/server/tasks/poll/survey.ts: every include
@@ -169,7 +169,10 @@ const securityHeaders = {
 //   17 */6     — careers lane, layers/terminal/server/tasks/poll/careers.ts: the ~20 MB
 //                Google careers feed in an invocation of its own, so its memory
 //                never shares the survey's 128 MB.
-//   */5        — launch tripwire, layers/terminal/server/tasks/poll/tripwire.ts: parses the
+//   */5        — ops digest, server/tasks/ops/alert.ts: mails what has waited out its
+//                tier's hold (OPS_HOLD_MS), so a critical event within five minutes.
+//                Silence is the healthy state: an empty spool costs one indexed SELECT.
+//              — launch tripwire, layers/terminal/server/tasks/poll/tripwire.ts: parses the
 //                model catalogs, polls them only when they differ from the
 //                store, and yields on the half-hour ticks above.
 //              — cache:warm re-renders the public pages once per (build, poll
@@ -191,10 +194,10 @@ const securityHeaders = {
 //   0 4 * * *  — seo:indexnow submits the sitemap URLs changed since its last
 //                accepted run to IndexNow (server/utils/indexnow.ts).
 const SCHEDULED_TASKS: Record<string, string[]> = {
-  '*/30 * * * *': ['ops:alert', 'poll:edgar'],
+  '*/30 * * * *': ['ops:watch', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
   '17 */6 * * *': ['poll:careers'],
-  '*/5 * * * *': ['poll:tripwire', 'cache:warm', 'track-record:search'],
+  '*/5 * * * *': ['ops:alert', 'poll:tripwire', 'cache:warm', 'track-record:search'],
   '0 13 * * 1': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
   '41 * * * *': ['events:sweep', 'bulk:build', 'reliability:record', 'reliability:deploys'],
   '0 4 * * *': ['seo:indexnow'],
@@ -490,9 +493,6 @@ export default defineNuxtConfig({
     // { name, outlet, email?, tips_email?, priority }. A Worker secret because it
     // names people and this repo is public. `wrangler secret put NUXT_PRESS_LIST`.
     pressList: '',
-    // Bearer the press-drafts routine presents to /api/press/* (its own, not the
-    // judge's). Unset = those routes 404. `wrangler secret put NUXT_PRESS_TOKEN`; 32+ chars.
-    pressToken: '',
     // SEC fair-access policy requires a contact email in the User-Agent of
     // every request to sec.gov hosts. Empty = the EDGAR sources are skipped
     // with a 'failed' run, never fetched anonymously (layers/terminal/server/pipeline/fetch.ts).

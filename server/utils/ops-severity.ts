@@ -9,8 +9,11 @@
 // - warning — one part is degraded. Worth a look today. Also the tier of every
 //   kind nobody registered: a new failure path is seen before anyone decides
 //   it can be quiet.
-// - info — the system handled it, or it is a known setup state. These wait up
-//   to a day (OPS_INFO_HOLD_MS) unless something louder goes out first.
+// - info — the system handled it, or it is a known setup state.
+//
+// The tier also sets how long a row waits before it is mailed (OPS_HOLD_MS in
+// server/utils/ops.ts): critical on the next drain, warning after 25 minutes,
+// info after a day, quieter rows riding along with the first louder digest.
 //
 // Core knows one kind, `server_error`, and escalates it on a burst. A feature
 // layer or a fork registers its own kinds from a Nitro plugin, next to the
@@ -20,7 +23,11 @@
 
 import type { OpsClassifier, OpsKindPolicy } from './ops-digest'
 
-/** A burst of 5xxs inside one 30-minute digest means the app is broken, not one route. */
+/**
+ * This many unmailed 5xxs at one drain means the app is broken, not one route:
+ * the kind turns critical and is mailed on that drain instead of waiting out
+ * a warning's hold.
+ */
 export const SERVER_ERROR_CRITICAL_COUNT = 10
 
 const SERVER_ERROR_BURST: OpsKindPolicy = {

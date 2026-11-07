@@ -1,30 +1,28 @@
-// Cron task: drain the ops spool and email a digest.
+// Cron task: drain the ops spool and email a digest, every five minutes.
 //
 // Scheduled from nuxt.config.ts (SCHEDULED_TASKS → nitro.scheduledTasks) and
 // matched by the [triggers] crons entry in wrangler.toml — both must agree, or
 // Cloudflare delivers a cron Nitro has no task for, or Nitro waits for a cron
 // that never arrives. `bun run crons:check` fails the build on either.
 //
+// Every five minutes so a critical event waits at most one tick; the per-tier
+// holds in drainOpsEvents (OPS_HOLD_MS) keep warnings and info from mailing
+// that often. The watchdogs that spool events of their own run half-hourly in
+// layers/terminal/server/tasks/ops/watch.ts.
+//
 // Silence is the healthy state: with nothing spooled this is one indexed
 // SELECT, one DELETE, and a return. That is what makes a tight schedule cheap.
 //
 // Imports are explicit for the reason server/tasks/purge-expired-tokens.ts
 // spells out: a task is an untested bundling surface that runs unattended, and
-// an auto-import that resolves to `undefined` here would fail every half hour
-// with nobody watching.
+// an auto-import that resolves to `undefined` here would fail every tick with
+// nobody watching.
 
 import { db } from '@nuxthub/db'
-import { kv } from '@nuxthub/kv'
 
 import { FleetManifestSchema } from '#shared/utils/fleet-manifest'
 
 import rawManifest from '../../../fleet.json'
-import { fetchMainHead } from '#layers/terminal/server/pipeline/deploy-watch'
-import { checkLaunchCoverage } from '#layers/terminal/server/pipeline/launch-watch'
-import { unstorageLockStore } from '#layers/terminal/server/pipeline/lock'
-import { draftedKey } from '#layers/terminal/server/pipeline/press'
-import { checkFreshness } from '#layers/terminal/server/utils/freshness'
-import { freshnessChecks } from '#layers/terminal/server/utils/terminal-freshness'
 import { getOpsMailer } from '../../utils/ops-mail'
 import { drainOpsEvents, pruneOpsEvents } from '../../utils/ops'
 import { classifyOps } from '../../utils/ops-severity'
@@ -43,31 +41,6 @@ const task = defineTask({
     description: 'Email a digest of spooled ops events, then prune old ones',
   },
   async run({ context }) {
-    // The freshness checks spool their own events, so they run before the
-    // mailer check: an unconfigured digest still records that a part went
-    // quiet. One per scheduled task, plus the judge routine, the GDELT job, the
-    // press-drafts routine, and the deploy of main: this build's sha against
-    // main's head (layers/terminal/server/utils/terminal-freshness.ts).
-    const config = useRuntimeConfig()
-    const mainHead = manifest.links?.github ? await fetchMainHead(manifest.links.github) : null
-    await checkFreshness(
-      db,
-      unstorageLockStore(kv),
-      freshnessChecks({
-        scheduledTasks: config.scheduledTasks,
-        drafted: async (id) => Boolean(await kv.getItem(draftedKey(id))),
-        pressList: config.pressList,
-        buildSha: config.public.buildSha,
-        mainHead,
-      }),
-    )
-    // Same reason: a launch the site has stored but does not show is recorded
-    // whether or not the digest can be mailed.
-    const launch = await checkLaunchCoverage(db, unstorageLockStore(kv))
-    if (launch.stale_cells.length) {
-      logEvent('warn', 'launch_gap', { ...launch })
-    }
-
     const env = (context as CloudflareTaskContext | undefined)?.cloudflare?.env
     const mailer = getOpsMailer(env)
     if (!mailer) {
@@ -77,13 +50,14 @@ const task = defineTask({
       return { result: { skipped: 'unconfigured', pruned } }
     }
 
-    const { appName, appUrl } = config.public
+    const { appName, appUrl } = useRuntimeConfig().public
     const outcome = await drainOpsEvents(db, mailer, {
       appName,
       appUrl: appUrl || undefined,
       workerName: manifest.workers[0],
       // Tiers registered by layers and the app from their Nitro plugins
-      // (server/utils/ops-severity.ts). Ranks the digest, tags its subject.
+      // (server/utils/ops-severity.ts). Ranks the digest, tags its subject,
+      // and sets how long each tier waits.
       classify: classifyOps,
     })
     // Quiet ticks stay quiet — only say something when something happened.
