@@ -21,7 +21,7 @@
 // against the workerd D1.
 
 import { and, count, eq, inArray, max, min, sql } from 'drizzle-orm'
-import { laneFor } from '../pipeline/lanes'
+import { isSetLane } from '../pipeline/lane-removals'
 import type {
   CoverageData,
   RecipeCoverage,
@@ -270,7 +270,7 @@ export function confirmedAt(
   source_id: string,
   fetched_at: string,
 ): string | null {
-  if (laneFor(source_id)?.removals !== 'set') return null
+  if (!isSetLane(source_id)) return null
   const read = reads.get(source_id)
   return read && Date.parse(read) > Date.parse(fetched_at) ? read : null
 }

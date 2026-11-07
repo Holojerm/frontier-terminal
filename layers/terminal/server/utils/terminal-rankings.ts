@@ -24,7 +24,7 @@ import type {
 } from '../../shared/utils/terminal-types'
 
 import * as tables from '#server/db/schema'
-import { asOfFromDetail } from '../pipeline/lanes'
+import { asOfFromDetail } from '../pipeline/as-of'
 import { manifestFixtures } from '../pipeline/parsers/fixture-provenance'
 import { providerOfOpenRouterId } from '../pipeline/parsers/openrouter'
 import type { PipelineDb } from '../pipeline/store'
