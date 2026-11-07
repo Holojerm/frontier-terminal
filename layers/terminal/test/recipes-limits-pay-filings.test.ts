@@ -74,7 +74,9 @@ describe('investee facts in a parent filing', () => {
     expect(newestInstanceUrl(feed, 789019)).toBe(
       'https://www.sec.gov/Archives/edgar/data/789019/000119312526323660/msft-20260630_htm.xml',
     )
-    expect(INVESTEE_RECIPES.map((r) => r.url({ now: new Date(), newest: null }))).toEqual([
+    expect(
+      INVESTEE_RECIPES.map((r) => r.url({ now: new Date('2026-11-07T00:00:00Z'), newest: null })),
+    ).toEqual([
       'https://data.sec.gov/submissions/CIK0000789019.json',
       'https://data.sec.gov/submissions/CIK0001018724.json',
     ])
