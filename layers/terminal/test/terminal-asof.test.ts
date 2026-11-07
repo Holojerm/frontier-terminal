@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:test'
 import { drizzle } from 'drizzle-orm/d1'
-import { beforeEach, describe, expect, it } from 'vitest'
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import type { SourceFetcher } from '../server/pipeline/fetch'
@@ -109,6 +109,10 @@ beforeEach(async () => {
   }
 })
 
+afterEach(() => {
+  vi.useRealTimers()
+})
+
 describe('as_of', () => {
   it('takes a zoned ISO timestamp, in UTC milliseconds, and nothing vaguer', () => {
     expect(AsOfInstant.parse('2026-09-07T12:00:00+02:00')).toBe('2026-09-07T10:00:00.000Z')
@@ -116,7 +120,9 @@ describe('as_of', () => {
     expect(AsOfInstant.safeParse('2026-09-07').success).toBe(false)
     expect(AsOfInstant.safeParse('2026-09-07T10:00:00').success).toBe(false)
     expect(AsOfInstant.safeParse('yesterday').success).toBe(false)
-    const future = AsOfInstant.safeParse(new Date(Date.now() + 3_600_000).toISOString())
+    // The clock is pinned, so "an hour ahead" cannot straddle a tick.
+    vi.useFakeTimers({ now: new Date('2026-11-07T12:00:00.000Z'), toFake: ['Date'] })
+    const future = AsOfInstant.safeParse('2026-11-07T13:00:00.000Z')
     expect(future.success).toBe(false)
     expect(future.error?.issues[0]?.message).toBe('as_of is in the future')
   })
