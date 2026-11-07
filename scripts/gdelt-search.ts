@@ -12,7 +12,11 @@
 //                            to what the matcher reads
 //
 // and repeats until nothing is unread or --minutes have passed, so a backlog
-// (the first run starts at GKG_FROM, 2026-09-01) drains over a few runs. The
+// (the first run starts at GKG_FROM, 2026-09-01) drains over a few runs. Once
+// nothing is unread, the run reads files from before reported figures existed
+// again (`figure_files`), posting only their figure headlines to
+// /api/gdelt/figures. A new file needs no such pass: the Worker finds its
+// figure headlines among the rows it keeps. The
 // files are static, with no per-IP limit, so no pacing is needed beyond
 // reading one at a time. A 404 means GDELT never published that quarter hour
 // and is recorded as missing; any other failure to fetch ends the run quietly
@@ -35,6 +39,7 @@ import { parseArgs } from 'node:util'
 
 import { parseGkgRow, unzipOne } from '../layers/terminal/server/pipeline/track-record/gkg'
 import { vocabularyHits } from '../layers/terminal/server/pipeline/track-record/terms'
+import { figureHeadline } from '../layers/terminal/server/pipeline/reported/figures'
 
 const ROOT = resolve(import.meta.dir, '..')
 
@@ -46,6 +51,8 @@ interface Work {
   files: { stamp: string; url: string }[]
   /** Rows carrying one of these are posted as mentions. */
   vocabulary: string[]
+  /** Files read before reported figures existed; absent from a Worker deployed before them. */
+  figure_files?: { stamp: string; url: string }[]
 }
 
 interface Mention {
@@ -129,13 +136,57 @@ function mentionsOf(text: string, vocabulary: readonly string[]) {
   return { rows: lines.length, mentions }
 }
 
+/** A file's figure headlines, compacted like a mention. */
+function figuresOf(text: string) {
+  const figures: Omit<Mention, 'names'>[] = []
+  for (const row of text.split('\n')) {
+    const article = parseGkgRow(row)
+    if (!article || !figureHeadline(article.title)) continue
+    const { record_id, outlet, url, title } = article
+    figures.push({ record_id, outlet, url, title })
+  }
+  return figures
+}
+
+/** Read one file from before reported figures existed again, for its figure headlines. */
+async function backfillFigures(file: { stamp: string; url: string }, userAgent: string) {
+  const fetched = await fetchFile(file.url, userAgent)
+  if (fetched.kind === 'failed') return `${file.stamp}: ${fetched.why}`
+  const outcome = (await ours('/api/gdelt/figures', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({
+      stamp: file.stamp,
+      fetched_at: new Date().toISOString(),
+      figures: fetched.kind === 'ok' ? figuresOf(fetched.text) : [],
+    }),
+  })) as { articles: number; rejected: number }
+  backfilled++
+  figures += outcome.articles
+  if (outcome.rejected) {
+    annotate('warning', `${file.stamp}: the site rejected ${outcome.rejected} figure row(s)`)
+  }
+  return null
+}
+
 let read = 0
 let kept = 0
 let missing = 0
+let backfilled = 0
+let figures = 0
 let stop: string | null = null
 while (!stop && Date.now() - started < budgetMs) {
   const work = (await ours('/api/gdelt/work')) as Work
-  if (work.files.length === 0) break
+  if (work.files.length === 0) {
+    const backlog = work.figure_files ?? []
+    if (backlog.length === 0) break
+    for (const file of backlog) {
+      if (Date.now() - started >= budgetMs) break
+      stop = await backfillFigures(file, work.user_agent)
+      if (stop) break
+    }
+    continue
+  }
   for (const file of work.files) {
     if (Date.now() - started >= budgetMs) break
     const fetched = await fetchFile(file.url, work.user_agent)
@@ -155,14 +206,18 @@ while (!stop && Date.now() - started < budgetMs) {
         rows,
         mentions,
       }),
-    })) as { mentions: number; rejected: number }
+    })) as { mentions: number; rejected: number; figures?: number }
     read++
     if (fetched.kind === 'missing') missing++
     kept += outcome.mentions
+    figures += outcome.figures ?? 0
     if (outcome.rejected) {
       annotate('warning', `${file.stamp}: the site rejected ${outcome.rejected} posted row(s)`)
     }
   }
 }
 if (stop) annotate('notice', `GDELT file not read (${stop}); the next run retries from there`)
-console.info(`read ${read} GKG file(s), ${missing} missing, ${kept} row(s) kept`)
+console.info(
+  `read ${read} GKG file(s), ${missing} missing, ${kept} row(s) kept; ` +
+    `${backfilled} file(s) re-read for figures, ${figures} figure headline(s)`,
+)
