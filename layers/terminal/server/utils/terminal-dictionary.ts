@@ -83,6 +83,8 @@ const AS_OF_CUT: Readonly<Record<string, string>> = {
     'Verdicts with detected_at and judged_at both at or before as_of: a verdict is held back until it was judged.',
   track_record_candidates: 'Rows with found_at at or before as_of.',
   track_record_verdicts: 'Rows with judged_at at or before as_of.',
+  reported_articles: 'Rows with found_at at or before as_of.',
+  reported_figures: 'Rows with judged_at at or before as_of.',
   filed_facts:
     'Rows whose filing date is before the UTC day of as_of. A fact counts from the day after its filing, whenever we read it, so this table answers as_of back to 2019.',
   exposure_quarters:
@@ -285,6 +287,24 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     knowledge: 'judged_at',
     start: 'From the first rated candidate.',
     joins: [],
+    feeds: ['track_record'],
+  },
+  reported_articles: {
+    grain: 'One row per article URL.',
+    cadence: 'Hourly, as each GDELT file is read.',
+    event: 'published_at',
+    knowledge: 'found_at',
+    start: 'From GDELT’s files of 2026-09-01, read again for figures from 2026-11-07.',
+    joins: [],
+    feeds: ['track_record'],
+  },
+  reported_figures: {
+    grain: 'One row per figure a headline states.',
+    cadence: 'When the judge runs.',
+    event: 'published_at',
+    knowledge: 'judged_at',
+    start: 'From the first headline the judge read.',
+    joins: [{ column: 'lab', to: ID }],
     feeds: ['track_record'],
   },
   recipe_observations: {
