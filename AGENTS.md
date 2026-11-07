@@ -240,8 +240,7 @@ bun format:check      # Check formatting without writing
 bun run design:check  # Fail on UI code that bypasses the DESIGN.md token layer
 bun run brand:generate # Rebuild favicon.svg, apple-touch-icon.png and og.png from the brand mark
 bun run brand:check   # Fail when those generated files no longer match the mark
-bun run email:build   # Compile emails/templates/ → server/emails/generated.ts (commit the result)
-bun run email:check   # Fail when the committed module no longer matches the templates
+bun run email:build   # Compile emails/templates/ → server/emails/generated.ts (gitignored; postinstall and ci run it)
 bun run email:dev     # Maizzle dev server with sample data (email:preview writes the files out)
 bun run mirror:check  # Fail when a comment or doc names a file, symbol, or variable that no longer exists
 bun run seo:check     # Fail on pages that bypass useSeo() or aren't declared public/noindex
@@ -259,7 +258,7 @@ bun run db:migrate:remote # Apply migrations to production D1 (Workers Builds ru
 bun db:studio         # Open Drizzle Studio (visual DB browser)
 bun run keys:issue -- --client "<name>" --tier research|systematic --months 12 [--remote]
                       # Licensee API key: prints the key once, stores its SHA-256 (keys:list, keys:revoke)
-bun run ci            # Every gate, concurrently (scripts/ci.ts): format (writes), lint, design/brand/email/mirror/seo/fleet/crons
+bun run ci            # Every gate, concurrently (scripts/ci.ts): format (writes; checks in CI), email:build, lint, design/brand/mirror/seo/fleet/crons/migrations:check
                       # gates, typecheck, test, build — Workers Builds runs this. NO browser suites: that image cannot
                       # launch Chromium (see Gotchas). CI_SERIAL=1 runs the gates one at a time.
 bun run ci:fast       # While iterating: format (writes), cheap gates + typecheck + tests touched since origin/main, no build
@@ -273,8 +272,8 @@ bun run deploy        # Manual deploy to Cloudflare via wrangler (normally unnec
 starting: iterate with `bun run ci:fast`, run `bun run ci` once before pushing, and again after any
 change you think is trivial. It runs every gate even after one fails and prints only the failures.
 If it fails, fix the failure; do not work around it. Both modes run the formatter in write mode,
-so formatting never fails a local run; commit what it rewrote. GitHub Actions still runs
-`format:check`. Edits made through Claude Code are formatted by a PostToolUse hook
+so formatting never fails a local run; commit what it rewrote. In CI (`CI` set) it runs
+`format:check` instead, so an unformatted commit fails the Workers Builds check. Edits made through Claude Code are formatted by a PostToolUse hook
 (`scripts/format-edited.ts`).
 
 ---

@@ -140,376 +140,403 @@ const EXPORT_COLUMNS: TableColumn[] = [
   { key: 'columns', label: 'Columns', class: 'font-mono text-xs text-muted' },
   { key: 'download', label: 'Download' },
 ]
+
+// Three questions: how to take the data, where it comes from and how well we
+// read it, and what a reader may do with it. Downloads come first because the
+// coverage table runs to every source and used to push them out of view.
+const tabs = [
+  { value: 'downloads', label: 'Downloads' },
+  { value: 'sources', label: 'Sources' },
+  { value: 'licensing', label: 'Licensing' },
+]
 </script>
 
 <template>
   <TerminalPage
     title="Data"
-    lede="Every source we read, and every table we hold as a CSV or JSON download. Each row has its source URL and the time we fetched it."
+    lede="Every table we hold as a CSV or JSON download, and every source we read. Each row has its source URL and the time we fetched it."
     :as-of="coverage?.as_of"
     :error="Boolean(error)"
     error-title="Row counts didn’t load"
     error-body="The downloads below still work. Only the row counts are missing."
   >
-    <TerminalPanel
-      id="coverage"
-      title="Coverage"
-      note="Each source with its newest snapshot, last check, snapshot count, rows, the audit’s caveat, and the terms and robots.txt we read it under."
-      flush
-    >
-      <TerminalCoveragePanel v-if="coverage" :coverage="coverage" />
-      <template #foot>
-        Each label links to the URL we fetched. Hover over an age for the full UTC timestamp.
-      </template>
-    </TerminalPanel>
-
-    <TerminalPanel
-      id="tables"
-      title="Tables"
-      :note="`Tables that grow over time download the last ${LICENSE_WINDOW_DAYS} days. Full history has every row, each with its license. Every row has its source URL and fetch time.`"
-      flush
-    >
-      <!-- Everything below the coverage table hydrates when scrolled into view.
-           The server HTML is already complete; hydrating the download buttons
-           and the dictionary at load only lengthened the first long task. -->
-      <LazyTerminalTable
-        hydrate-on-visible
-        caption="Exportable tables with row counts and download links"
-        :columns="EXPORT_COLUMNS"
-        :rows="coverage?.exports ?? []"
-        :row-key="(t: ExportTableInfo) => t.name"
-        align="top"
-      >
-        <template #cell-name="{ row: t }">
-          <span class="font-mono text-highlighted">{{ t.name }}</span>
-          <span class="block max-w-md text-xs text-muted">{{ t.description }}</span>
-        </template>
-        <template #cell-rows="{ row: t }">{{ count(t.rows) }}</template>
-        <template #cell-columns="{ row: t }">{{ t.columns.join(', ') }}</template>
-        <template #cell-download="{ row: t }">
-          <span class="flex flex-wrap gap-2">
-            <UButton
-              :to="`/export/${t.name}.csv`"
-              external
-              size="sm"
-              variant="outline"
-              color="neutral"
-              icon="i-lucide-download"
-              label="CSV"
-            />
-            <UButton
-              :to="`/export/${t.name}.json`"
-              external
-              size="sm"
-              variant="outline"
-              color="neutral"
-              icon="i-lucide-braces"
-              label="JSON"
-            />
-            <UButton
-              v-if="t.history === 'windowed'"
-              :to="`/export/${t.name}.csv?${HISTORY_PARAM}=full`"
-              external
-              size="sm"
-              variant="link"
-              color="neutral"
-              :aria-label="`Full history of ${t.name}, CSV, licensed ${HISTORY_LICENSE.short}`"
-              label="Full history"
-            />
-            <UButton
-              :to="`/export/sample/${t.name}.csv`"
-              external
-              size="sm"
-              variant="link"
-              color="neutral"
-              :aria-label="`Sample of ${t.name}, CSV`"
-              label="Sample"
-            />
-            <UButton
-              :to="`#dictionary-${t.name}`"
-              size="sm"
-              variant="link"
-              color="neutral"
-              :aria-label="`Column dictionary for ${t.name}`"
-              label="Columns"
-              @click="openTables = [...new Set([...openTables, t.name])]"
-            />
-          </span>
-        </template>
-      </LazyTerminalTable>
-      <template v-if="coverage" #foot>
-        Data as of the last check<template v-if="coverage.as_of"
-          >, <time :datetime="coverage.as_of">{{ coverage.as_of }}</time></template
-        ><span v-else> (none has run yet)</span>. Exports are live. The counts above are from that
-        check, and count every row, not just the last {{ LICENSE_WINDOW_DAYS }} days. Each sample is
-        the first 50 rows of the default download in export order (oldest first when the table is
-        ordered by time), at <span class="font-mono">/export/sample/&lt;table&gt;.csv</span> or
-        <span class="font-mono">.json</span>. <span class="font-mono">entity_identifiers</span> has
-        each company’s CIK, LEI, ticker, and FIGI, and
-        <span class="font-mono">entity_securities</span> maps each lab to the securities that carry
-        it. We no longer export <span class="font-mono">rankings_daily</span>. OpenRouter licenses
-        its rankings CC BY 4.0 but says they aren’t to be re-served as a competing free API. So the
-        per-lab shares stay on
-        <NuxtLink to="/rankings" class="text-primary underline underline-offset-2"
-          >/rankings</NuxtLink
+    <TerminalTabs :tabs="tabs">
+      <template #downloads>
+        <TerminalPanel
+          id="tables"
+          title="Tables"
+          :note="`Tables that grow over time download the last ${LICENSE_WINDOW_DAYS} days. Full history has every row, each with its license. Every row has its source URL and fetch time.`"
+          flush
         >
-        and the raw rows stay with OpenRouter.
-      </template>
-    </TerminalPanel>
-
-    <TerminalPanel
-      id="security-master"
-      title="Joining to your security master"
-      note="One identifier table, and a join column on every table that names a company."
-    >
-      <div class="flex max-w-3xl flex-col gap-3 text-sm text-default">
-        <p v-if="dictionary">{{ dictionary.joining }}</p>
-        <p>
-          Download
-          <NuxtLink
-            to="/export/entity_identifiers.csv"
-            external
-            class="font-mono break-words text-primary underline underline-offset-2"
-            >/export/entity_identifiers.csv</NuxtLink
+          <!-- Everything below the coverage table hydrates when scrolled into view.
+               The server HTML is already complete; hydrating the download buttons
+               and the dictionary at load only lengthened the first long task. -->
+          <LazyTerminalTable
+            hydrate-on-visible
+            caption="Exportable tables with row counts and download links"
+            :columns="EXPORT_COLUMNS"
+            :rows="coverage?.exports ?? []"
+            :row-key="(t: ExportTableInfo) => t.name"
+            align="top"
           >
-          and
-          <NuxtLink
-            to="/export/entity_securities.csv"
-            external
-            class="font-mono break-words text-primary underline underline-offset-2"
-            >/export/entity_securities.csv</NuxtLink
-          >, or read both at
-          <NuxtLink
-            to="/api/identifiers"
-            external
-            class="font-mono text-primary underline underline-offset-2"
-            >/api/identifiers</NuxtLink
-          >. Each table’s Join on line in the dictionary below names its columns.
-        </p>
-      </div>
-    </TerminalPanel>
+            <template #cell-name="{ row: t }">
+              <span class="font-mono text-highlighted">{{ t.name }}</span>
+              <span class="block max-w-md text-xs text-muted">{{ t.description }}</span>
+            </template>
+            <template #cell-rows="{ row: t }">{{ count(t.rows) }}</template>
+            <template #cell-columns="{ row: t }">{{ t.columns.join(', ') }}</template>
+            <template #cell-download="{ row: t }">
+              <span class="flex flex-wrap gap-2">
+                <UButton
+                  :to="`/export/${t.name}.csv`"
+                  external
+                  size="sm"
+                  variant="outline"
+                  color="neutral"
+                  icon="i-lucide-download"
+                  label="CSV"
+                />
+                <UButton
+                  :to="`/export/${t.name}.json`"
+                  external
+                  size="sm"
+                  variant="outline"
+                  color="neutral"
+                  icon="i-lucide-braces"
+                  label="JSON"
+                />
+                <UButton
+                  v-if="t.history === 'windowed'"
+                  :to="`/export/${t.name}.csv?${HISTORY_PARAM}=full`"
+                  external
+                  size="sm"
+                  variant="link"
+                  color="neutral"
+                  :aria-label="`Full history of ${t.name}, CSV, licensed ${HISTORY_LICENSE.short}`"
+                  label="Full history"
+                />
+                <UButton
+                  :to="`/export/sample/${t.name}.csv`"
+                  external
+                  size="sm"
+                  variant="link"
+                  color="neutral"
+                  :aria-label="`Sample of ${t.name}, CSV`"
+                  label="Sample"
+                />
+                <UButton
+                  :to="`#dictionary-${t.name}`"
+                  size="sm"
+                  variant="link"
+                  color="neutral"
+                  :aria-label="`Column dictionary for ${t.name}`"
+                  label="Columns"
+                  @click="openTables = [...new Set([...openTables, t.name])]"
+                />
+              </span>
+            </template>
+          </LazyTerminalTable>
+          <template v-if="coverage" #foot>
+            Data as of the last check<template v-if="coverage.as_of"
+              >, <time :datetime="coverage.as_of">{{ coverage.as_of }}</time></template
+            ><span v-else> (none has run yet)</span>. Exports are live. The counts above are from
+            that check, and count every row, not just the last {{ LICENSE_WINDOW_DAYS }} days. Each
+            sample is the first 50 rows of the default download in export order (oldest first when
+            the table is ordered by time), at
+            <span class="font-mono">/export/sample/&lt;table&gt;.csv</span> or
+            <span class="font-mono">.json</span>.
+            <span class="font-mono">entity_identifiers</span> has each company’s CIK, LEI, ticker,
+            and FIGI, and <span class="font-mono">entity_securities</span> maps each lab to the
+            securities that carry it. We no longer export
+            <span class="font-mono">rankings_daily</span>. OpenRouter licenses its rankings CC BY
+            4.0 but says they aren’t to be re-served as a competing free API. So the per-lab shares
+            stay on
+            <NuxtLink to="/rankings" class="text-primary underline underline-offset-2"
+              >/rankings</NuxtLink
+            >
+            and the raw rows stay with OpenRouter.
+          </template>
+        </TerminalPanel>
 
-    <TerminalPanel
-      id="dictionary"
-      title="Data dictionary"
-      note="Each table’s grain, update cadence, time columns, history, join columns, and commercial use. Every exported column’s type, unit, whether it can be null, whether it is a key, and what it holds."
-    >
-      <LazyTerminalDictionary
-        v-if="dictionary"
-        v-model:open="openTables"
-        hydrate-on-visible
-        :dictionary="dictionary"
-      />
-      <TerminalGap
-        v-else
-        title="Dictionary unavailable"
-        reason="We couldn’t read the column dictionary. The downloads above still work."
-      />
-      <template #foot>
-        Machine-readable at
-        <NuxtLink
-          to="/export/dictionary.json"
-          external
-          class="font-mono text-primary underline underline-offset-2"
-          >/export/dictionary.json</NuxtLink
+        <TerminalPanel
+          id="security-master"
+          title="Joining to your security master"
+          note="One identifier table, and a join column on every table that names a company."
         >
-        and
-        <NuxtLink
-          to="/export/dictionary.csv"
-          external
-          class="font-mono text-primary underline underline-offset-2"
-          >/export/dictionary.csv</NuxtLink
-        >, one row per table and column.
+          <div class="flex max-w-3xl flex-col gap-3 text-sm text-default">
+            <p v-if="dictionary">{{ dictionary.joining }}</p>
+            <p>
+              Download
+              <NuxtLink
+                to="/export/entity_identifiers.csv"
+                external
+                class="font-mono break-words text-primary underline underline-offset-2"
+                >/export/entity_identifiers.csv</NuxtLink
+              >
+              and
+              <NuxtLink
+                to="/export/entity_securities.csv"
+                external
+                class="font-mono break-words text-primary underline underline-offset-2"
+                >/export/entity_securities.csv</NuxtLink
+              >, or read both at
+              <NuxtLink
+                to="/api/identifiers"
+                external
+                class="font-mono text-primary underline underline-offset-2"
+                >/api/identifiers</NuxtLink
+              >. Each table’s Join on line in the dictionary below names its columns.
+            </p>
+          </div>
+        </TerminalPanel>
+
+        <TerminalPanel
+          id="dictionary"
+          title="Data dictionary"
+          note="Each table’s grain, update cadence, time columns, history, join columns, and commercial use. Every exported column’s type, unit, whether it can be null, whether it is a key, and what it holds."
+        >
+          <LazyTerminalDictionary
+            v-if="dictionary"
+            v-model:open="openTables"
+            hydrate-on-visible
+            :dictionary="dictionary"
+          />
+          <TerminalGap
+            v-else
+            title="Dictionary unavailable"
+            reason="We couldn’t read the column dictionary. The downloads above still work."
+          />
+          <template #foot>
+            Machine-readable at
+            <NuxtLink
+              to="/export/dictionary.json"
+              external
+              class="font-mono text-primary underline underline-offset-2"
+              >/export/dictionary.json</NuxtLink
+            >
+            and
+            <NuxtLink
+              to="/export/dictionary.csv"
+              external
+              class="font-mono text-primary underline underline-offset-2"
+              >/export/dictionary.csv</NuxtLink
+            >, one row per table and column.
+          </template>
+        </TerminalPanel>
+
+        <TerminalPanel
+          id="spreadsheets"
+          title="Use in a spreadsheet"
+          note="Every CSV link above works as a live source. The examples use the latest prices."
+        >
+          <div class="flex max-w-3xl flex-col gap-3 text-sm text-default">
+            <p>
+              <strong class="text-highlighted">Google Sheets.</strong> Paste this into a cell.
+              Sheets refreshes it about once an hour.
+            </p>
+            <pre
+              class="overflow-x-auto rounded-md border border-default bg-muted p-3 font-mono text-xs text-default"
+            ><code>=IMPORTDATA("{{ site.appUrl }}/export/prices_latest.csv")</code></pre>
+            <p>
+              <strong class="text-highlighted">Excel.</strong> Go to Data, then From Web, and paste
+              the CSV link. Excel loads it through Power Query. Refresh it from Data, then Refresh
+              All, or set a refresh interval under Query Properties.
+            </p>
+            <pre
+              class="overflow-x-auto rounded-md border border-default bg-muted p-3 font-mono text-xs text-default"
+            ><code>{{ site.appUrl }}/export/prices_latest.csv</code></pre>
+            <p class="text-muted">
+              Swap in any table name from the list above. Tables that grow over time give the last
+              {{ LICENSE_WINDOW_DAYS }} days. Add <span class="font-mono">?history=full</span> for
+              every row, under the full-history license.
+            </p>
+          </div>
+        </TerminalPanel>
+
+        <TerminalPanel
+          id="point-in-time"
+          title="Point in time"
+          note="What we knew at a given moment, for a backtest."
+        >
+          <div class="flex max-w-3xl flex-col gap-3 text-sm text-default">
+            <p>
+              Add <code class="font-mono text-highlighted">?as_of=</code> with an ISO-8601 timestamp
+              and a timezone, such as
+              <NuxtLink
+                to="/api/prices?as_of=2026-10-01T00:00:00Z"
+                external
+                class="font-mono text-primary underline underline-offset-2"
+                >/api/prices?as_of=2026-10-01T00:00:00Z</NuxtLink
+              >. You get what we held at that moment. A row counts from when we fetched it. A judged
+              alert counts from when the model could have written it, not from the event it
+              describes.
+            </p>
+            <ul class="flex list-disc flex-col gap-1 pl-5">
+              <li>
+                <span class="font-mono">/api/alerts</span>,
+                <span class="font-mono">/api/prices</span>,
+                <span class="font-mono">/api/prices/&lt;key&gt;</span>,
+                <span class="font-mono">/api/hiring</span>,
+                <span class="font-mono">/api/hiring/history</span> and
+                <span class="font-mono">/api/revenue</span> rebuild their response and add a
+                <span class="font-mono">point_in_time</span> field. It says how the answer was
+                rebuilt and lists any keys the change log can’t confirm.
+              </li>
+              <li>
+                Every table above except
+                <template v-for="(name, i) in refusesAsOf" :key="name"
+                  ><span class="font-mono">{{ name }}</span
+                  >{{ i < refusesAsOf.length - 1 ? ', ' : '' }}</template
+                >. Tables that only grow are cut at that moment. Tables of current rows are rebuilt
+                from the change log and gain an
+                <span class="font-mono">as_of_verified</span> column. The data dictionary gives each
+                table’s rule, or why it answers 400.
+              </li>
+              <li>
+                Before our first fetch, <span class="font-mono">/api/prices</span> and
+                <span class="font-mono">/api/prices/&lt;key&gt;</span> answer from the Internet
+                Archive’s copies instead, and <span class="font-mono">point_in_time</span> names the
+                copy each lab’s prices came from. That’s when the Archive saw the page, not when we
+                knew it. Every other route refuses a date that early.
+              </li>
+              <li>
+                The MCP tools for those routes take an
+                <span class="font-mono">as_of</span> argument.
+              </li>
+            </ul>
+            <p class="text-muted">
+              Any other route returns a 400 instead of today’s data under an earlier date.
+            </p>
+          </div>
+        </TerminalPanel>
+
+        <TerminalPanel id="feed" title="Feed">
+          <p class="text-sm text-default">
+            Alerts as an Atom feed at
+            <NuxtLink to="/alerts.xml" external class="text-primary underline underline-offset-2">
+              /alerts.xml</NuxtLink
+            >. Add
+            <NuxtLink
+              :to="`/alerts.xml?${INFO_FEED_QUERY}`"
+              external
+              class="font-mono text-primary underline underline-offset-2"
+              >?{{ INFO_FEED_QUERY }}</NuxtLink
+            >
+            for the minor changes, or
+            <NuxtLink
+              :to="`/alerts.xml?${CRITICAL_FEED_QUERY}`"
+              external
+              class="font-mono text-primary underline underline-offset-2"
+              >?{{ CRITICAL_FEED_QUERY }}</NuxtLink
+            >
+            for critical alerts only.
+          </p>
+        </TerminalPanel>
       </template>
-    </TerminalPanel>
 
-    <TerminalPanel
-      id="spreadsheets"
-      title="Use in a spreadsheet"
-      note="Every CSV link above works as a live source. The examples use the latest prices."
-    >
-      <div class="flex max-w-3xl flex-col gap-3 text-sm text-default">
-        <p>
-          <strong class="text-highlighted">Google Sheets.</strong> Paste this into a cell. Sheets
-          refreshes it about once an hour.
-        </p>
-        <pre
-          class="overflow-x-auto rounded-md border border-default bg-muted p-3 font-mono text-xs text-default"
-        ><code>=IMPORTDATA("{{ site.appUrl }}/export/prices_latest.csv")</code></pre>
-        <p>
-          <strong class="text-highlighted">Excel.</strong> Go to Data, then From Web, and paste the
-          CSV link. Excel loads it through Power Query. Refresh it from Data, then Refresh All, or
-          set a refresh interval under Query Properties.
-        </p>
-        <pre
-          class="overflow-x-auto rounded-md border border-default bg-muted p-3 font-mono text-xs text-default"
-        ><code>{{ site.appUrl }}/export/prices_latest.csv</code></pre>
-        <p class="text-muted">
-          Swap in any table name from the list above. Tables that grow over time give the last
-          {{ LICENSE_WINDOW_DAYS }} days. Add <span class="font-mono">?history=full</span> for every
-          row, under the full-history license.
-        </p>
-      </div>
-    </TerminalPanel>
+      <template #sources>
+        <TerminalPanel
+          id="coverage"
+          title="Coverage"
+          note="Each source with its newest snapshot, last check, snapshot count, rows, the audit’s caveat, and the terms and robots.txt we read it under."
+          flush
+        >
+          <TerminalCoveragePanel v-if="coverage" :coverage="coverage" />
+          <template #foot>
+            Each label links to the URL we fetched. Hover over an age for the full UTC timestamp.
+          </template>
+        </TerminalPanel>
 
-    <TerminalPanel
-      v-if="prices?.reach?.length"
-      id="price-history"
-      title="How far price history goes back"
-      note="Before we started checking, we read the Internet Archive’s copies of each lab’s own pricing page."
-      flush
-    >
-      <!-- Not lazy: its scroll box gets a keyboard tab stop only once mounted,
-           and with no links in its rows nothing else makes it reachable. -->
-      <TerminalArchiveReach :reach="prices.reach" />
-      <template #foot>
-        Rows from an archived copy are marked on each SKU’s page, in
-        <span class="font-mono">/api/prices/&lt;key&gt;</span>, and in the
-        <span class="font-mono">archived_prices</span> table above. Their source link is the copy.
-        We skip a copy we can’t read with confidence. Archived rows are older than the license
-        window, so they’re {{ HISTORY_LICENSE.short }}.
+        <TerminalPanel
+          v-if="prices?.reach?.length"
+          id="price-history"
+          title="How far price history goes back"
+          note="Before we started checking, we read the Internet Archive’s copies of each lab’s own pricing page."
+          flush
+        >
+          <!-- Not lazy: its scroll box gets a keyboard tab stop only once mounted,
+               and with no links in its rows nothing else makes it reachable. -->
+          <TerminalArchiveReach :reach="prices.reach" />
+          <template #foot>
+            Rows from an archived copy are marked on each SKU’s page, in
+            <span class="font-mono">/api/prices/&lt;key&gt;</span>, and in the
+            <span class="font-mono">archived_prices</span> table under
+            <NuxtLink to="#tables" class="text-primary underline underline-offset-2"
+              >Downloads</NuxtLink
+            >. Their source link is the copy. We skip a copy we can’t read with confidence. Archived
+            rows are older than the license window, so they’re {{ HISTORY_LICENSE.short }}.
+          </template>
+        </TerminalPanel>
+
+        <TerminalPanel
+          v-if="hiring?.reach?.length"
+          id="hiring-history"
+          title="How far hiring history goes back"
+          note="Before we started reading the boards, we read the Internet Archive’s copies of each lab’s own job board."
+          flush
+        >
+          <!-- Not lazy, like the price-reach table above. -->
+          <TerminalArchiveReach
+            :reach="hiring.reach"
+            caption="How far back each lab’s hiring history reaches"
+          />
+          <template #foot>
+            Open roles per copy, on the whole board and per department, are in the
+            <span class="font-mono">archived_hiring</span> table under
+            <NuxtLink to="#tables" class="text-primary underline underline-offset-2"
+              >Downloads</NuxtLink
+            >
+            and in
+            <span class="font-mono">/api/hiring/history</span> (each lab’s
+            <span class="font-mono">archived</span> points). Their source link is the copy. We skip
+            a copy we can’t read with confidence. Archived rows are {{ HISTORY_LICENSE.short }}.
+          </template>
+        </TerminalPanel>
+
+        <!-- Fetches its own payload (/api/reliability). -->
+        <LazyTerminalReliability hydrate-on-visible />
       </template>
-    </TerminalPanel>
 
-    <TerminalPanel
-      v-if="hiring?.reach?.length"
-      id="hiring-history"
-      title="How far hiring history goes back"
-      note="Before we started reading the boards, we read the Internet Archive’s copies of each lab’s own job board."
-      flush
-    >
-      <!-- Not lazy, like the price-reach table above. -->
-      <TerminalArchiveReach
-        :reach="hiring.reach"
-        caption="How far back each lab’s hiring history reaches"
-      />
-      <template #foot>
-        Open roles per copy, on the whole board and per department, are in the
-        <span class="font-mono">archived_hiring</span> table above and in
-        <span class="font-mono">/api/hiring/history</span> (each lab’s
-        <span class="font-mono">archived</span> points). Their source link is the copy. We skip a
-        copy we can’t read with confidence. Archived rows are {{ HISTORY_LICENSE.short }}.
-      </template>
-    </TerminalPanel>
+      <template #licensing>
+        <TerminalPanel id="license" title="Terms">
+          <p class="max-w-2xl text-sm text-default">
+            The last {{ LICENSE_WINDOW_DAYS }} days are {{ DATA_LICENSE.short }}. Older rows are
+            {{ HISTORY_LICENSE.short }}, except what we published before
+            {{ LICENSE_SPLIT_EFFECTIVE }}, which stays {{ DATA_LICENSE.short }}. A full-history
+            download labels each row in a <span class="font-mono">license</span> column. The
+            underlying facts belong to their publishers.
+            <NuxtLink to="/license" class="text-primary underline underline-offset-2"
+              >Full terms and the attribution line</NuxtLink
+            >.
+          </p>
+        </TerminalPanel>
 
-    <TerminalPanel
-      id="point-in-time"
-      title="Point in time"
-      note="What we knew at a given moment, for a backtest."
-    >
-      <div class="flex max-w-3xl flex-col gap-3 text-sm text-default">
-        <p>
-          Add <code class="font-mono text-highlighted">?as_of=</code> with an ISO-8601 timestamp and
-          a timezone, such as
-          <NuxtLink
-            to="/api/prices?as_of=2026-10-01T00:00:00Z"
-            external
-            class="font-mono text-primary underline underline-offset-2"
-            >/api/prices?as_of=2026-10-01T00:00:00Z</NuxtLink
-          >. You get what we held at that moment. A row counts from when we fetched it. A judged
-          alert counts from when the model could have written it, not from the event it describes.
-        </p>
-        <ul class="flex list-disc flex-col gap-1 pl-5">
-          <li>
-            <span class="font-mono">/api/alerts</span>, <span class="font-mono">/api/prices</span>,
-            <span class="font-mono">/api/prices/&lt;key&gt;</span>,
-            <span class="font-mono">/api/hiring</span>,
-            <span class="font-mono">/api/hiring/history</span> and
-            <span class="font-mono">/api/revenue</span> rebuild their response and add a
-            <span class="font-mono">point_in_time</span> field. It says how the answer was rebuilt
-            and lists any keys the change log can’t confirm.
-          </li>
-          <li>
-            Every table above except
-            <template v-for="(name, i) in refusesAsOf" :key="name"
-              ><span class="font-mono">{{ name }}</span
-              >{{ i < refusesAsOf.length - 1 ? ', ' : '' }}</template
-            >. Tables that only grow are cut at that moment. Tables of current rows are rebuilt from
-            the change log and gain an <span class="font-mono">as_of_verified</span> column. The
-            data dictionary gives each table’s rule, or why it answers 400.
-          </li>
-          <li>
-            Before our first fetch, <span class="font-mono">/api/prices</span> and
-            <span class="font-mono">/api/prices/&lt;key&gt;</span> answer from the Internet
-            Archive’s copies instead, and <span class="font-mono">point_in_time</span> names the
-            copy each lab’s prices came from. That’s when the Archive saw the page, not when we knew
-            it. Every other route refuses a date that early.
-          </li>
-          <li>
-            The MCP tools for those routes take an <span class="font-mono">as_of</span> argument.
-          </li>
-        </ul>
-        <p class="text-muted">
-          Any other route returns a 400 instead of today’s data under an earlier date.
-        </p>
-      </div>
-    </TerminalPanel>
+        <TerminalPanel id="commercial" title="Commercial use">
+          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <p class="max-w-2xl text-sm text-default">
+              Using the full history in a product, a fund process, or anything else commercial? That
+              needs a paid license. So do signed terms, a feed you can depend on, and coverage we
+              don’t have yet.
+              <NuxtLink to="/contact" class="text-primary underline underline-offset-2"
+                >Write to us</NuxtLink
+              >. Upstream CC BY data keeps its own terms, and some sources aren’t in any paid offer.
+            </p>
+            <UButton
+              :to="mailto('Data licensing')"
+              external
+              icon="i-lucide-mail"
+              label="Email us"
+              class="self-start sm:self-auto"
+            />
+          </div>
+        </TerminalPanel>
 
-    <TerminalPanel id="commercial" title="Commercial use">
-      <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-        <p class="max-w-2xl text-sm text-default">
-          Using the full history in a product, a fund process, or anything else commercial? That
-          needs a paid license. So do signed terms, a feed you can depend on, and coverage we don’t
-          have yet.
-          <NuxtLink to="/contact" class="text-primary underline underline-offset-2"
-            >Write to us</NuxtLink
-          >. Upstream CC BY data keeps its own terms, and some sources aren’t in any paid offer.
-        </p>
-        <UButton
-          :to="mailto('Data licensing')"
-          external
-          icon="i-lucide-mail"
-          label="Email us"
-          class="self-start sm:self-auto"
+        <!-- Not lazy, like the price-reach table: its rate-limit table has no links. -->
+        <TerminalInstitutions
+          :schema-version="dictionary?.schema_version"
+          :changelog="dictionary?.changelog ?? []"
         />
-      </div>
-    </TerminalPanel>
-
-    <!-- Not lazy, like the price-reach table: its rate-limit table has no links. -->
-    <TerminalInstitutions
-      :schema-version="dictionary?.schema_version"
-      :changelog="dictionary?.changelog ?? []"
-    />
-
-    <!-- Fetches its own payload (/api/reliability). -->
-    <LazyTerminalReliability hydrate-on-visible />
-
-    <div class="grid gap-6 lg:grid-cols-2">
-      <TerminalPanel id="license" title="Terms">
-        <p class="max-w-2xl text-sm text-default">
-          The last {{ LICENSE_WINDOW_DAYS }} days are {{ DATA_LICENSE.short }}. Older rows are
-          {{ HISTORY_LICENSE.short }}, except what we published before
-          {{ LICENSE_SPLIT_EFFECTIVE }}, which stays {{ DATA_LICENSE.short }}. A full-history
-          download labels each row in a <span class="font-mono">license</span> column. The
-          underlying facts belong to their publishers.
-          <NuxtLink to="/license" class="text-primary underline underline-offset-2"
-            >Full terms and the attribution line</NuxtLink
-          >.
-        </p>
-      </TerminalPanel>
-
-      <TerminalPanel id="feed" title="Feed">
-        <p class="text-sm text-default">
-          Alerts as an Atom feed at
-          <NuxtLink to="/alerts.xml" external class="text-primary underline underline-offset-2">
-            /alerts.xml</NuxtLink
-          >. Add
-          <NuxtLink
-            :to="`/alerts.xml?${INFO_FEED_QUERY}`"
-            external
-            class="font-mono text-primary underline underline-offset-2"
-            >?{{ INFO_FEED_QUERY }}</NuxtLink
-          >
-          for the minor changes, or
-          <NuxtLink
-            :to="`/alerts.xml?${CRITICAL_FEED_QUERY}`"
-            external
-            class="font-mono text-primary underline underline-offset-2"
-            >?{{ CRITICAL_FEED_QUERY }}</NuxtLink
-          >
-          for critical alerts only.
-        </p>
-      </TerminalPanel>
-    </div>
+      </template>
+    </TerminalTabs>
   </TerminalPage>
 </template>

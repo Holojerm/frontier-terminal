@@ -6,6 +6,8 @@
 import { env } from 'cloudflare:test'
 import { afterEach, describe, expect, it } from 'vitest'
 
+import WRANGLER_TOML from '../../../wrangler.toml?raw'
+
 import {
   chooseBackendAmong,
   clearNativeLimitersForTest,
@@ -24,22 +26,23 @@ import {
 
 const fake = (): NativeRateLimiter => ({ limit: async () => ({ success: true }) })
 
-// Whether the binding lets one call past `limit` through. Its windows are
-// aligned to the wall clock, and under CI load 1,200 calls can straddle a
-// boundary, which resets the count and lets the extra call through (this
-// failed main's Workers Build after #171). A run that crosses one is repeated.
-async function allowsOneMore(limiter: NativeRateLimiter, limit: number): Promise<boolean> {
-  const window = () => Math.floor(Date.now() / 60_000)
-  for (let attempt = 1; ; attempt++) {
-    const started = window()
-    // Unique per run: the binding's counters outlive an individual `it`.
-    const key = `drift-check:${crypto.randomUUID()}`
-    for (let i = 0; i < limit; i++) {
-      expect((await limiter.limit({ key })).success, `request ${i + 1} was refused`).toBe(true)
+// Reads every [[ratelimits]] block out of wrangler.toml. miniflare builds the bindings from this
+// same file, so the text is the deployed number. Exhausting the binding instead was both slow
+// (1,200 sequential calls blew the 5 s test timeout on a Workers Build) and wall-clock
+// dependent: its windows align to the clock, so a run that straddled a boundary let the extra
+// call through.
+function declaredLimits(): Map<string, { limit: number; period: number }> {
+  const declared = new Map<string, { limit: number; period: number }>()
+  for (const [, body] of WRANGLER_TOML.matchAll(/^\[\[ratelimits\]\]\n((?:(?!\[).*\n?)*)/gm)) {
+    const name = /^name\s*=\s*"([^"]+)"/m.exec(body!)?.[1]
+    if (name) {
+      declared.set(name, {
+        limit: Number(/limit\s*=\s*(\d+)/.exec(body!)?.[1]),
+        period: Number(/period\s*=\s*(\d+)/.exec(body!)?.[1]),
+      })
     }
-    const allowed = (await limiter.limit({ key })).success
-    if (window() === started || attempt === 3) return allowed
   }
+  return declared
 }
 
 afterEach(() => clearNativeLimitersForTest())
@@ -71,15 +74,15 @@ describe('READ_PATH_LIMITER', () => {
     })
   })
 
-  it('matches the [[ratelimits]] block in wrangler.toml', async () => {
-    const limiter = (env as unknown as Record<string, NativeRateLimiter | undefined>)[
+  it('matches the [[ratelimits]] block in wrangler.toml', () => {
+    const binding = (env as unknown as Record<string, NativeRateLimiter | undefined>)[
       READ_PATH_LIMITER.binding
     ]
-    expect(limiter, `no [[ratelimits]] block named ${READ_PATH_LIMITER.binding}`).toBeDefined()
-    expect(
-      await allowsOneMore(limiter!, READ_PATH_LIMITER.limit),
-      `request ${READ_PATH_LIMITER.limit + 1} was allowed — wrangler.toml permits more than the spec`,
-    ).toBe(false)
+    expect(binding, `no [[ratelimits]] block named ${READ_PATH_LIMITER.binding}`).toBeDefined()
+    expect(declaredLimits().get(READ_PATH_LIMITER.binding)).toEqual({
+      limit: READ_PATH_LIMITER.limit,
+      period: READ_PATH_LIMITER.windowSeconds,
+    })
   })
 })
 
@@ -106,16 +109,17 @@ describe('KEYED_READ_LIMITERS', () => {
     })
   })
 
-  it('matches the [[ratelimits]] blocks in wrangler.toml', async () => {
+  it('matches the [[ratelimits]] blocks in wrangler.toml', () => {
+    const declared = declaredLimits()
     for (const spec of Object.values(KEYED_READ_LIMITERS)) {
-      const limiter = (env as unknown as Record<string, NativeRateLimiter | undefined>)[
+      const binding = (env as unknown as Record<string, NativeRateLimiter | undefined>)[
         spec.binding
       ]
-      expect(limiter, `no [[ratelimits]] block named ${spec.binding}`).toBeDefined()
-      expect(
-        await allowsOneMore(limiter!, spec.limit),
-        `request ${spec.limit + 1} was allowed on ${spec.binding}`,
-      ).toBe(false)
+      expect(binding, `no [[ratelimits]] block named ${spec.binding}`).toBeDefined()
+      expect(declared.get(spec.binding), `wrangler.toml disagrees on ${spec.binding}`).toEqual({
+        limit: spec.limit,
+        period: spec.windowSeconds,
+      })
     }
   })
 })
