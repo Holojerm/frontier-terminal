@@ -3,6 +3,7 @@
 // reports each new or returning issue. Each becomes an ops event, so it lands
 // in the same digest email as every other alert, and at once, because
 // `workers_issue` is critical (layers/terminal/server/utils/ops-immediate.ts).
+// Test pings and low-risk bot scans get quieter kinds (workers-issues.ts).
 //
 // Cloudflare authenticates the call by sending the destination's secret in
 // `cf-webhook-auth`. Same verdicts as the other bearer routes: 404 when the
@@ -15,6 +16,8 @@ import { z } from 'zod'
 
 import { verifyFleetToken } from '#server/utils/fleet-auth'
 import { recordOpsEvent } from '#server/utils/ops'
+
+import { workersIssueKind } from '../../utils/workers-issues'
 
 const Payload = z
   .object({
@@ -36,9 +39,8 @@ export default defineEventHandler(async (event) => {
   if (verdict === 'unauthorized') throw createError({ statusCode: 401 })
 
   const body = await readValidatedBody(event, Payload.parse)
-  const resolved = body.alert_event === 'ALERT_STATE_EVENT_END'
   await recordOpsEvent(db, {
-    kind: resolved ? 'workers_issue_resolved' : 'workers_issue',
+    kind: workersIssueKind(body),
     detail: (body.text || body.name || 'Workers Issues reported an issue').slice(0, 500),
   })
   return { ok: true }

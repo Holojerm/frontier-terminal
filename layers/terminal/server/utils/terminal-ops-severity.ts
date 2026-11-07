@@ -35,6 +35,9 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
       'Workers Issues found a new or returning failure. Open the Issues tab for frontier-terminal in the Cloudflare dashboard for the stack and the failing requests.',
   },
   workers_issue_resolved: { severity: 'info' },
+  // Not failures; see workers-issues.ts.
+  workers_issue_scan: { severity: 'info' },
+  workers_issue_test: { severity: 'info' },
   all_sources_failed: {
     severity: 'critical',
     action:
