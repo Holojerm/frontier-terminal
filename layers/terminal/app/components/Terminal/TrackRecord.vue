@@ -37,10 +37,17 @@ const sameHour = (t: TrackRecordTally) =>
 const medianText = (t: TrackRecordTally) =>
   t.median_lead_hours === null ? '' : ` The median lead is ${leadLabel(t.median_lead_hours)}.`
 
+/** Matched alerts whose press before the alert was never searched: shown, not counted. */
+const partText = (t: TrackRecordTally) =>
+  t.searched_in_part
+    ? ` ${alerts(t.searched_in_part)} with a match ${t.searched_in_part === 1 ? 'is' : 'are'} left out: we read the press from before ${t.searched_in_part === 1 ? 'it' : 'them'} before the alert existed, so an earlier report could be missing.`
+    : ''
+
 const pressSummary = (t: TrackRecordTally) =>
-  t.matched === 0
+  (t.matched === 0
     ? 'No alert has a rated press report yet.'
-    : `Of ${alerts(t.matched)} with a rated press report, we saw ${t.led} first and the press saw ${t.lagged} first.${sameHour(t)}${medianText(t)}`
+    : `Of ${alerts(t.matched)} with a rated press report, we saw ${t.led} first and the press saw ${t.lagged} first.${sameHour(t)}${medianText(t)}`) +
+  partText(t)
 
 const newsroomSummary = (t: TrackRecordTally) =>
   t.matched === 0

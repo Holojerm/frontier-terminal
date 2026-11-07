@@ -72,7 +72,34 @@ export interface ClaimReview {
   candidates: { change_id: string; provider: string; facts: Record<string, unknown> }[]
 }
 
-/** The CLAIM REVIEW block: judged claims with candidates only. */
+/** Of `subjects`, the ones `claimId` already holds a verdict on. */
+async function ratedSubjects(
+  db: PipelineDb,
+  claimId: string,
+  subjects: readonly string[],
+): Promise<Set<string>> {
+  const rated = new Set<string>()
+  for (const group of chunk([...new Set(subjects)], D1_MAX_BOUND_PARAMS - 1)) {
+    const rows = await db
+      .select({ subject: tables.claimVerdicts.subject })
+      .from(tables.claimVerdicts)
+      .where(
+        and(
+          eq(tables.claimVerdicts.claim_id, claimId),
+          inArray(tables.claimVerdicts.subject, group),
+        ),
+      )
+    for (const row of rows) rated.add(row.subject)
+  }
+  return rated
+}
+
+/**
+ * The CLAIM REVIEW block: judged claims with candidates only. A subject the
+ * claim has rated is not offered again: a verdict is stored once per
+ * (claim, subject), so asking twice — a second source printing the same cut
+ * an hour later — only spends the judge's time.
+ */
 export async function claimReview(
   db: PipelineDb,
   changes: readonly ChangeRow[],
@@ -83,10 +110,18 @@ export async function claimReview(
   for (const thesis of theses) {
     for (const claim of thesis.claims) {
       if (claim.spec.kind !== 'judged') continue
-      const candidates =
+      const offered =
         claim.spec.review === 'recipe-items'
           ? recipeCandidates(thesis, claim, await unratedItems(db, claim))
           : claimCandidates(thesis, claim, changes, flagships)
+      const rated = offered.length
+        ? await ratedSubjects(
+            db,
+            claim.id,
+            offered.map((c) => c.subject),
+          )
+        : new Set<string>()
+      const candidates = offered.filter((c) => !rated.has(c.subject))
       if (candidates.length === 0) continue
       out.push({
         claim_id: claim.id,

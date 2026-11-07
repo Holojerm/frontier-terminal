@@ -128,6 +128,7 @@ async function seedAlert(severity: string, opts: { rule?: string; created_at?: D
     created_at,
     source_url: 'https://openai.com/api/pricing',
     fetched_at: created_at,
+    recorded_at: created_at,
   })
   return id
 }

@@ -23,7 +23,7 @@ export interface CandidateItem {
 export interface Candidate {
   thesis_id: string
   claim_id: string
-  /** What a verdict is about: the change for a price cut, the incident or disclosure entity_key, the observation for a recipe item. */
+  /** What a verdict is about: the cut (cutSubject) for a price cut, the incident or disclosure entity_key, the observation for a recipe item. */
   subject: string
   item: CandidateItem
   provider: CompanyId
@@ -76,6 +76,18 @@ function priceCut(change: ChangeRow, flagships: FlagshipMap): Record<string, unk
   }
 }
 
+/**
+ * One price cut, however many sources print it. A model's price row lives in
+ * several sources (a pricing page, a models list), each diffing to its own
+ * change row with its own id, so keying on the change rated one cut two or
+ * three times and counted each. The model's key, the price it was cut to and
+ * the UTC day it was seen name the event instead.
+ */
+export function cutSubject(change: ChangeRow, facts: Record<string, unknown>): string {
+  const day = new Date(change.detected_at).toISOString().slice(0, 10)
+  return `${change.entity_key}@${String(facts.input_after)}/${String(facts.output_after)}@${day}`
+}
+
 type IncidentRule = Extract<JudgedSpec, { review: 'incidents-and-disclosures' }>['rule']
 
 function incidentOrDisclosure(
@@ -121,7 +133,7 @@ export function claimCandidates(
   const spec = claim.spec
   if (spec.kind !== 'judged' || spec.review === 'recipe-items') return []
   const covered = new Set<string>([thesis.company, ...thesis.comparison_set])
-  const out: Candidate[] = []
+  const out = new Map<string, Candidate>()
   for (const change of changes) {
     if (!covered.has(change.provider) || change.detected_at < spec.judged_from) continue
     const facts =
@@ -129,16 +141,20 @@ export function claimCandidates(
         ? priceCut(change, flagships)
         : incidentOrDisclosure(change, spec.rule)
     if (!facts) continue
-    out.push({
+    const subject =
+      spec.review === 'flagship-price-cuts' ? cutSubject(change, facts) : change.entity_key
+    // One question per event, on its newest row (changes arrive oldest
+    // first): an incident's latest row carries its fullest duration.
+    out.set(subject, {
       thesis_id: thesis.id,
       claim_id: claim.id,
-      subject: spec.review === 'flagship-price-cuts' ? change.id : change.entity_key,
+      subject,
       item: changeItem(change),
       provider: change.provider as CompanyId,
       facts,
     })
   }
-  return out
+  return [...out.values()]
 }
 
 /** A recipe-items claim's candidates: every observation of its recipe on or after judged_from. */

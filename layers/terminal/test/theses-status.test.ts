@@ -3,7 +3,14 @@ import { describe, expect, it } from 'vitest'
 import type { ClaimDef, MeasuredRule } from '../shared/utils/thesis-types'
 
 import { ANTHROPIC_THESIS } from '../server/theses/anthropic'
-import { evaluateClaim, weeklyCheckpoints, type StoredReading } from '../server/theses/status'
+import {
+  evaluateClaim,
+  MAX_READING_AGE_DAYS,
+  maxReadingAgeDays,
+  staleGuard,
+  weeklyCheckpoints,
+  type StoredReading,
+} from '../server/theses/status'
 import { daysBefore } from '../server/utils/terminal-rankings'
 
 // The kill-condition rules on typed readings: weekly checkpoints, the half-way
@@ -121,6 +128,73 @@ describe('drawdown from high', () => {
   it('forgets a high older than the window', () => {
     const readings = [...daily('2026-06-01', [500]), ...daily('2026-10-08', Array(60).fill(100))]
     expect(evaluateClaim(claim(rule), readings, fmt).status).toBe('holding')
+  })
+})
+
+describe('below floor periods', () => {
+  const rule = { rule: 'below-floor-periods', floor: 0.25, periods: 2 } as const
+  const q = (date: string, value: number): StoredReading => ({ date, value, compare: null })
+
+  it('breaks on two straight quarters below the floor', () => {
+    const e = evaluateClaim(
+      claim(rule),
+      [q('2026-03-31', 0.4), q('2026-06-30', 0.2), q('2026-09-30', 0.1)],
+      fmt,
+    )
+    expect(e.status).toBe('broken')
+    expect(e.reason).toContain('below for 2 of 2 straight periods')
+  })
+
+  it('does not join two below-floor quarters across a quarter never read', () => {
+    // Q2 is missing: Q1 and Q3 are not "2 straight quarters".
+    const e = evaluateClaim(
+      claim(rule),
+      [q('2025-12-31', 0.4), q('2026-03-31', 0.2), q('2026-09-30', 0.1)],
+      fmt,
+    )
+    expect(e.status).toBe('weakening')
+    expect(e.reason).toContain('below for 1 of 2 straight periods')
+  })
+
+  it('reads months by their own cadence', () => {
+    const three = { rule: 'below-floor-periods', floor: 1, periods: 3 } as const
+    const m = (date: string) => q(date, 0.9)
+    const straight = [m('2026-06-01'), m('2026-07-01'), m('2026-08-01'), m('2026-09-01')]
+    expect(evaluateClaim(claim(three), straight, fmt).status).toBe('broken')
+    const gap = [m('2026-05-01'), m('2026-06-01'), m('2026-08-01'), m('2026-09-01')]
+    expect(evaluateClaim(claim(three), gap, fmt).status).toBe('weakening')
+  })
+})
+
+describe('stale readings', () => {
+  const rule = { rule: 'sustained-floor', floor: 1.3, comparator: null, weeks: 4 } as const
+  const readings = weekly('2026-10-08', [1.2, 1.2, 1.2, 1.2])
+  const broken = evaluateClaim(claim(rule), readings, fmt)
+
+  it('keeps the status while the newest reading is fresh', () => {
+    expect(broken.status).toBe('broken')
+    expect(staleGuard(claim(rule), readings, broken, '2026-10-15T12:00:00Z')).toBe(broken)
+  })
+
+  it('reads unresolved, naming the reading’s age, once a daily signal stops reading', () => {
+    const stale = staleGuard(claim(rule), readings, broken, '2026-10-20T00:00:00Z')
+    expect(stale).toEqual({
+      status: 'unresolved',
+      reason:
+        'Stale: the newest reading is from 2026-10-08, 12 days ago, and this signal reads at least every 7 days. It read broken then.',
+      reading_date: '2026-10-08',
+    })
+  })
+
+  it('allows each signal its own cadence', () => {
+    const ramp = ANTHROPIC_THESIS.claims.find((c) => c.id === 'anthropic-enterprise-lead')!
+    const revenue = ANTHROPIC_THESIS.claims.find((c) => c.id === 'anthropic-revenue-growth')!
+    expect(maxReadingAgeDays(ramp)).toBe(MAX_READING_AGE_DAYS.monthly)
+    expect(maxReadingAgeDays(revenue)).toBe(MAX_READING_AGE_DAYS.quarterly)
+    expect(maxReadingAgeDays(claim(rule))).toBe(MAX_READING_AGE_DAYS.daily)
+    expect(
+      maxReadingAgeDays(ANTHROPIC_THESIS.claims.find((c) => c.spec.kind === 'judged')!),
+    ).toBeNull()
   })
 })
 

@@ -62,6 +62,9 @@ const reason = computed(() => {
         absoluteStamp(side.hit.published_at, now)
       }}</time>
     </span>
+    <span v-if="side.searched_from" class="block text-xs text-dimmed"
+      >Searched only from {{ absoluteStamp(side.searched_from, now) }}, so not in the tally.</span
+    >
   </template>
   <template v-else-if="reason">
     <span class="text-xs text-muted">{{ reason.text }}</span>

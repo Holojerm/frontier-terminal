@@ -658,6 +658,8 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'not-searched, search-failed, not-searchable, no-feed, none-found, not-yet-rated (never a guessed lead), no-match. ' +
         'press.published_at is the quarter hour GDELT’s crawler read the article, not when the outlet published it, and GDELT misses outlets. ' +
         'A lead is not a trading signal. press and newsroom tally led, lagged, tied and the median lead over matched rows. ' +
+        'A press side with searched_from set was searched only from that time: earlier press was read before the alert existed and never matched to it, ' +
+        'so its lead may not be one, and the tally leaves it out (searched_in_part counts them). ' +
         PROVENANCE,
       inputSchema: z.object({ as_of: AsOfSchema }),
       annotations: READ_ONLY,

@@ -43,7 +43,10 @@ configuration gap rather than retrying.
      "$JUDGE_BASE_URL/api/judge/pending" -o pending.json
    ```
 
-   The response is `{ changes, total_pending, since, limit, hiring, class_map_review, claim_review, track_record_review, prompt }`.
+   The response is `{ changes, total_pending, since, through, limit, hiring, class_map_review, claim_review, track_record_review, prompt }`.
+   `changes` are the oldest pending first, at most about `limit` of them; when `total_pending` is
+   larger, the rest wait for the next run, which starts where this one stops. `through` is the
+   largest `detected_at` among `changes` (null when there are none).
    `hiring` is `{ floor, boards }`: per lab with job changes pending, its board and department
    sizes and, under `material`, the moves that clear the hiring materiality floor. `boards` is
    `[]` when no job change is pending (and `hiring` is absent on a Worker deployed before it).
@@ -97,10 +100,17 @@ configuration gap rather than retrying.
 5. Send the verdicts back. Build the body from your JSON output (`alerts`, plus `class_map`,
    `claims` and `track_record` when you printed them) plus two fields the Worker uses for its cursor:
 
-   - `judged_through` — the largest `detected_at` among the `changes` you received. With no
-     changes (a review-only run), send the `since` value from the pending response. If that is
-     also null, skip the POST and journal it: there is no cursor to hold.
+   - `judged_through` — the `through` value from the pending response, copied exactly: the
+     largest `detected_at` among the `changes` you received. With no changes (a review-only
+     run), send the `since` value instead; if that is also null, send any timestamp (the
+     Worker stores no cursor then) or skip the POST when there is nothing to review.
    - `change_ids_seen` — the `id` of every change you received (`[]` on a review-only run).
+
+   The Worker checks the cursor before anything else: it must not be behind the last one, must
+   not pass the newest change it offered, must equal the newest `detected_at` among
+   `change_ids_seen`, and on a review-only run must stay at `since`. A cursor that fails is a
+   422 with reason `cursor`; nothing in the body is kept. An alert citing a change outside the
+   ones you were handed is rejected as `unoffered-change-id`.
 
    ```bash
    curl -sS -H "Authorization: Bearer $JUDGE_TOKEN" -H "Content-Type: application/json" \
@@ -114,8 +124,9 @@ configuration gap rather than retrying.
    `rejected`, `rejections`, `clamped` (hiring alerts you sent as notable/critical that were
    stored as `info`, each with the floor detail), and `class_map` (`accepted`, plus the
    `rejected` entries with their reasons).
-   A 422 means the whole body failed the schema gate; the response says why. Do not retry a
-   422 — the Worker has already recorded the run — journal the reason instead.
+   A 422 means the whole body failed the schema gate or the cursor check; the response says
+   why. Do not retry a 422 — the Worker has already recorded the run — journal the reason
+   instead.
 
 6. Journal the counts from the response (`accepted`/`inserted`/`rejected`, `clamped` with
    each entry's `from` and `detail`, `class_map`

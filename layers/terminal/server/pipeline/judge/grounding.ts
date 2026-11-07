@@ -11,7 +11,9 @@ import type { JudgeAlert } from './contract'
 //      rows' before_json/after_json/entity_key ("$" and thousands-commas
 //      stripped, numeric value compared — "$7.50" grounds 7.5; a derived
 //      figure like "-33%" does not), or is the dotted version a cited slug
-//      spells with a dash ("Opus 5.5" grounds against claude-opus-5-5),
+//      spells with a dash ("Opus 5.5" grounds against claude-opus-5-5); a
+//      time of day grounds only as a time of day (splitClocks), so the 33 in
+//      a fetch stamp's "09:33:47" never grounds "cuts 33%",
 //   3. every slug-like token carrying a digit ("grok-4.6", "gemini-2.5-pro",
 //      "s-1") and every "double-quoted span" (how the prompt tells the model
 //      to cite job titles) appears verbatim, case-insensitively, in them —
@@ -25,7 +27,11 @@ import type { JudgeAlert } from './contract'
 // measured (3/3 runs, 2026-08-25). A tripwire that fires on ordinary prose
 // is not a tripwire.
 
-export type AlertGroundingReason = 'unknown-change-id' | 'ungrounded-number' | 'ungrounded-term'
+export type AlertGroundingReason =
+  | 'unknown-change-id'
+  | 'unoffered-change-id'
+  | 'ungrounded-number'
+  | 'ungrounded-term'
 
 export interface AlertGroundingRejection {
   alert: JudgeAlert
@@ -44,6 +50,39 @@ export function numericTokens(text: string): Set<string> {
   const tokens = new Set<string>()
   for (const m of normalized.matchAll(/\d+(?:\.\d+)?/g)) tokens.add(String(Number(m[0])))
   return tokens
+}
+
+const TIMESTAMP =
+  /(\d{4}-\d{2}-\d{2})[T ](\d{1,2}:\d{2}(?::\d{2})?)(?:\.\d+)?(?:Z|[+-]\d{2}:?\d{2})?/g
+const CLOCK = /(?<![\d:.])(\d{1,2}:\d{2}(?::\d{2})?)(?![\d:])/g
+
+/** "9:33" and "09:33" are one time of day; seconds kept when given. */
+const clockKey = (clock: string) => clock.replace(/^(\d):/, '0$1:')
+
+/**
+ * Times of day in `text`, and `text` without them. Every record carries ISO
+ * fetch stamps, so their digits would otherwise ground almost any number
+ * under 60. A timestamp's date stays in the text, where its parts still
+ * ground a printed date; its clock grounds only a clock in the alert.
+ */
+export function splitClocks(text: string): { rest: string; clocks: Set<string> } {
+  const clocks = new Set<string>()
+  const keep = (clock: string) => {
+    const key = clockKey(clock)
+    clocks.add(key)
+    // "09:33:47" also grounds the "09:33" an alert would print.
+    if (key.length > 5) clocks.add(key.slice(0, 5))
+  }
+  const rest = text
+    .replace(TIMESTAMP, (_, date: string, clock: string) => {
+      keep(clock)
+      return date
+    })
+    .replace(CLOCK, (_, clock: string) => {
+      keep(clock)
+      return ' '
+    })
+  return { rest, clocks }
 }
 
 /** Identifier words joined by "-", "." or "/" that carry a digit, lowercased. */
@@ -109,8 +148,13 @@ export function groundingFailure(
   corpus: string,
 ): { reason: 'ungrounded-number' | 'ungrounded-term'; detail: string } | null {
   const corpusLower = corpus.toLowerCase()
-  const corpusNumbers = new Set([...numericTokens(corpus), ...slugVersions(corpus)])
-  const badNumbers = [...numericTokens(text)].filter((n) => !corpusNumbers.has(n))
+  const source = splitClocks(corpus)
+  const printed = splitClocks(text)
+  const corpusNumbers = new Set([...numericTokens(source.rest), ...slugVersions(corpus)])
+  const badNumbers = [
+    ...[...numericTokens(printed.rest)].filter((n) => !corpusNumbers.has(n)),
+    ...[...printed.clocks].filter((c) => !source.clocks.has(c)),
+  ]
   if (badNumbers.length > 0) {
     return {
       reason: 'ungrounded-number',
