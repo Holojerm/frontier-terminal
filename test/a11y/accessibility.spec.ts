@@ -12,7 +12,7 @@
 
 import AxeBuilder from '@axe-core/playwright'
 import type { Result } from 'axe-core'
-import { expect, test } from '@playwright/test'
+import { expect, type Page, test } from '@playwright/test'
 
 import { TEAR_SHEET_PAGES } from '../../layers/terminal/shared/utils/terminal-lab-summary'
 
@@ -120,64 +120,88 @@ function format(violations: Result[]): string[] {
   )
 }
 
-for (const route of ROUTES) {
-  for (const mode of COLOR_MODES) {
-    test(`${route} passes axe in ${mode} mode`, async ({ page }) => {
-      // NuxtUI's color mode defaults to `system`, so emulating the media query
-      // is enough — no cookie or class juggling.
-      await page.emulateMedia({ colorScheme: mode })
-      const response = await page.goto(route)
-
-      // The 404 page is accessible. That is not what this suite is for, and a
-      // route that quietly stopped existing — a renamed post, a moved page —
-      // would otherwise be scanned green forever while nobody could reach it.
-      expect(response?.status(), `${route} did not return 200`).toBe(200)
-
-      // Contrast is measured against rendered pixels, so the webfonts have to
-      // have landed before axe runs or it can sample a fallback face.
-      await page.waitForLoadState('networkidle')
-      await page.evaluate(() => document.fonts.ready)
-
-      const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
-
-      expect(format(violations)).toEqual([])
-
-      // axe 4.7+ only flags a duplicate id when ARIA references it, so this
-      // checks them all: a panel's id is its #hash link and its heading's
-      // aria-labelledby target, and both tabs of a TerminalTabs page stay in the
-      // DOM. /alerts shipped two id="alerts" sections that way.
-      const duplicates = await page.evaluate(() => {
-        const seen = new Map<string, number>()
-        for (const el of document.querySelectorAll('[id]'))
-          seen.set(el.id, (seen.get(el.id) ?? 0) + 1)
-        return [...seen].filter(([, n]) => n > 1).map(([id, n]) => `${id} ×${n}`)
-      })
-      expect(duplicates, `${route} has duplicate ids`).toEqual([])
-    })
-  }
+/** A color-mode switch or a resize can start CSS transitions, and axe reads
+ *  computed colors: mid-transition it would measure a blend of the two themes.
+ *  Only transitions are awaited — an infinite animation (a pulse, a spinner)
+ *  never finishes and is not what changed. */
+async function settle(page: Page) {
+  await page.evaluate(async () => {
+    await new Promise((resolve) => requestAnimationFrame(() => requestAnimationFrame(resolve)))
+    await Promise.all(
+      document
+        .getAnimations()
+        .filter((a) => a instanceof CSSTransition)
+        .map((a) => a.finished.catch(() => {})),
+    )
+  })
 }
 
-// DESIGN.md › Viewport and touch: a page never scrolls sideways. Wide tables
-// scroll in their own box, so the page itself must be exactly the viewport's
-// width. The usual way this breaks is invisible: an absolutely positioned
-// sr-only element inside a table's scroll box, with no positioned ancestor
-// inside the box, escapes the box's clipping and stretches the page.
-test.describe('phone width', () => {
-  test.use({ viewport: { width: 375, height: 812 } })
-  for (const route of ROUTES) {
-    test(`${route} does not scroll sideways at 375px`, async ({ page }) => {
-      await page.goto(route)
-      await page.waitForLoadState('networkidle')
+// One page load per route covers both color modes and phone width. A fresh
+// load per check was 3 loads per route, each in a new context with a cold
+// cache, and those loads were most of the suite's runtime. Soft assertions keep
+// every check reporting: a light-mode failure does not hide a dark-mode one.
+for (const route of ROUTES) {
+  test(`${route} passes axe in light and dark mode and fits a phone`, async ({ page }) => {
+    // Three checks in one test; /prices alone spends ~10 s per axe pass.
+    test.setTimeout(60_000)
+
+    await page.emulateMedia({ colorScheme: COLOR_MODES[0] })
+    const response = await page.goto(route)
+
+    // The 404 page is accessible. That is not what this suite is for, and a
+    // route that quietly stopped existing — a renamed post, a moved page —
+    // would otherwise be scanned green forever while nobody could reach it.
+    expect(response?.status(), `${route} did not return 200`).toBe(200)
+
+    // Contrast is measured against rendered pixels, so the webfonts have to
+    // have landed before axe runs or it can sample a fallback face.
+    await page.waitForLoadState('networkidle')
+    await page.evaluate(() => document.fonts.ready)
+
+    for (const mode of COLOR_MODES) {
+      await test.step(`axe in ${mode} mode`, async () => {
+        // colorMode.preference is `system`, so @nuxtjs/color-mode follows the
+        // emulated media query live and toggles the `dark` class on <html>.
+        await page.emulateMedia({ colorScheme: mode })
+        if (mode === 'dark') await expect(page.locator('html')).toHaveClass(/\bdark\b/)
+        else await expect(page.locator('html')).not.toHaveClass(/\bdark\b/)
+        await settle(page)
+
+        const { violations } = await new AxeBuilder({ page }).withTags(WCAG_TAGS).analyze()
+        expect.soft(format(violations), `${route} in ${mode} mode`).toEqual([])
+      })
+    }
+
+    // axe 4.7+ only flags a duplicate id when ARIA references it, so this
+    // checks them all: a panel's id is its #hash link and its heading's
+    // aria-labelledby target, and both tabs of a TerminalTabs page stay in the
+    // DOM. /alerts shipped two id="alerts" sections that way.
+    const duplicates = await page.evaluate(() => {
+      const seen = new Map<string, number>()
+      for (const el of document.querySelectorAll('[id]'))
+        seen.set(el.id, (seen.get(el.id) ?? 0) + 1)
+      return [...seen].filter(([, n]) => n > 1).map(([id, n]) => `${id} ×${n}`)
+    })
+    expect.soft(duplicates, `${route} has duplicate ids`).toEqual([])
+
+    // DESIGN.md › Viewport and touch: a page never scrolls sideways. Wide tables
+    // scroll in their own box, so the page itself must be exactly the viewport's
+    // width. The usual way this breaks is invisible: an absolutely positioned
+    // sr-only element inside a table's scroll box, with no positioned ancestor
+    // inside the box, escapes the box's clipping and stretches the page.
+    await test.step('fits 375px without scrolling sideways', async () => {
+      await page.setViewportSize({ width: 375, height: 812 })
+      await settle(page)
       const { scrollWidth, clientWidth } = await page.evaluate(() => ({
         scrollWidth: document.documentElement.scrollWidth,
         clientWidth: document.documentElement.clientWidth,
       }))
-      expect(scrollWidth, `${route} is ${scrollWidth}px wide on a ${clientWidth}px screen`).toBe(
-        clientWidth,
-      )
+      expect
+        .soft(scrollWidth, `${route} is ${scrollWidth}px wide on a ${clientWidth}px screen`)
+        .toBe(clientWidth)
     })
-  }
-})
+  })
+}
 
 // The keyboard path can only be checked in a real browser — `:focus` needs a
 // focused document, which jsdom and a background tab both lack. These two are
