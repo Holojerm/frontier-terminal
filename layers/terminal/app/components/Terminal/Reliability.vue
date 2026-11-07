@@ -5,7 +5,7 @@
 // test, and the corrections log. Every figure comes from /api/reliability,
 // which computes it from stored records (terminal-reliability.ts).
 
-import { absoluteStamp, count } from '../../../shared/utils/terminal-format'
+import { count } from '../../../shared/utils/terminal-format'
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import {
   durationLabel,
@@ -20,9 +20,9 @@ import type { Fact, TableColumn } from '../../types/terminal-ui'
 
 import manifest from '~~/fleet.json'
 
-const now = useNow()
+const stamps = useStamps()
 const { data, error } = await useFetch<ReliabilityData>('/api/reliability')
-const at = (iso: string) => absoluteStamp(iso, now.value)
+const at = (iso: string) => stamps.absolute(iso)
 const repo = manifest.links.github
 
 const pct = (t: RunTally | null) =>

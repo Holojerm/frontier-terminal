@@ -4,7 +4,6 @@
 // first sight of a page, not a lab's announcement, so its rows are
 // excluded and the count of them is stated.
 
-import { absoluteStamp } from '../../shared/utils/terminal-format'
 import type { ReleasesData } from '../../shared/utils/terminal-types'
 
 definePageMeta({
@@ -26,7 +25,7 @@ useSeo({
   dateModified: releases.value?.as_of,
 })
 
-const now = useNow()
+const stamps = useStamps()
 </script>
 
 <template>
@@ -44,7 +43,7 @@ const now = useNow()
         title="No new SKUs since tracking began."
         :reason="
           releases.log_from
-            ? `We’ve tracked these pages since ${absoluteStamp(releases.log_from, now)}. Our first check recorded what was already listed, and nothing new has appeared since.`
+            ? `We’ve tracked these pages since ${stamps.absolute(releases.log_from)}. Our first check recorded what was already listed, and nothing new has appeared since.`
             : 'We haven’t checked any pricing page yet. The first check records what’s already listed. Later checks record new listings.'
         "
         :action="{ label: 'See the full catalog', to: '/prices' }"
@@ -53,7 +52,7 @@ const now = useNow()
         v-else
         id="listings"
         title="Listings"
-        :note="`${releases.rows.length} listing${releases.rows.length === 1 ? '' : 's'}${releases.log_from ? ` since ${absoluteStamp(releases.log_from, now)}` : ''}, newest first.`"
+        :note="`${releases.rows.length} listing${releases.rows.length === 1 ? '' : 's'}${releases.log_from ? ` since ${stamps.absolute(releases.log_from)}` : ''}, newest first.`"
         flush
       >
         <TerminalReleaseList :rows="releases.rows" flow />

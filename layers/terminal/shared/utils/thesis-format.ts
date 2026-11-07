@@ -267,7 +267,10 @@ const sentence = (key: string) => {
 }
 
 /** What the Worker computed about an event, in the words a reader expects. */
-export function factRows(facts: Record<string, unknown>): DetailRow[] {
+export function factRows(
+  facts: Record<string, unknown>,
+  at: (iso: string) => string = absoluteStamp,
+): DetailRow[] {
   const rows = new Map<string, DetailRow>()
   const set = (key: string, label: string, value: string) => rows.set(key, { label, value })
 
@@ -283,7 +286,7 @@ export function factRows(facts: Record<string, unknown>): DetailRow[] {
         break
       case 'started_at':
       case 'resolved_at':
-        if (typeof raw === 'string') set(key, FACT_LABELS[key]!, absoluteStamp(raw))
+        if (typeof raw === 'string') set(key, FACT_LABELS[key]!, at(raw))
         break
       case 'input_before':
       case 'input_after':

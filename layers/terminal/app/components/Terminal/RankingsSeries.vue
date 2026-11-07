@@ -10,6 +10,8 @@ import { compactTokens } from '../../../shared/utils/terminal-format'
 import type { ProviderId, RankingDay } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
+const figures = useFigures()
+
 const props = defineProps<{ series: RankingDay[] }>()
 
 const STACK: { id: ProviderId; label: string; cls: string; opacity: number; swatch: string }[] = [
@@ -127,7 +129,7 @@ const xLabels = computed(() =>
 )
 
 const describe = (day: RankingDay) =>
-  `${day.date}: ${STACK.map((s) => `${s.label} ${compactTokens(day.tokens[s.id])}`).join(', ')}. Total ${compactTokens(day.total)}`
+  `${day.date}: ${STACK.map((s) => `${s.label} ${figures.tokens(day.tokens[s.id])}`).join(', ')}. Total ${figures.tokens(day.total)}`
 
 const uid = useId()
 
@@ -205,9 +207,9 @@ const tableColumns: TableColumn[] = [
         nested
       >
         <template v-for="s in STACK" :key="s.id" #[`cell-${s.id}`]="{ row: d }">
-          {{ compactTokens(d.tokens[s.id]) }}
+          {{ figures.tokens(d.tokens[s.id]) }}
         </template>
-        <template #cell-total="{ row: d }">{{ compactTokens(d.total) }}</template>
+        <template #cell-total="{ row: d }">{{ figures.tokens(d.total) }}</template>
       </TerminalTable>
     </TerminalExpand>
   </div>

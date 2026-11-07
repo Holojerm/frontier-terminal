@@ -5,7 +5,7 @@
 // source's first snapshot — as a step chart and as the point-by-point table
 // with the fetch each point was read from.
 
-import { absoluteStamp, money } from '../../../shared/utils/terminal-format'
+import { money } from '../../../shared/utils/terminal-format'
 import { labName } from '../../../shared/utils/terminal-labs'
 import { skuLede } from '../../../shared/utils/terminal-ledes'
 import type { PriceHistoryData, PricePoint } from '../../../shared/utils/terminal-types'
@@ -124,8 +124,8 @@ const chart = computed(() => {
 
 const archivedCount = computed(() => points.value.filter((p) => p.basis === 'archived').length)
 
-const now = useNow()
-const xLabel = (x: string) => absoluteStamp(x, now.value)
+const stamps = useStamps()
+const xLabel = (x: string) => stamps.absolute(x)
 
 /** 'input 2 → 2.5' for a revised point; the non-price fields otherwise. */
 const diffText = (p: PricePoint) =>
@@ -209,7 +209,7 @@ const POINT_COLUMNS: TableColumn[] = [
           align="top"
         >
           <template #cell-at="{ row: p }">
-            <time :datetime="p.at" :title="p.at">{{ absoluteStamp(p.at, now) }}</time>
+            <time :datetime="p.at" :title="p.at">{{ stamps.absolute(p.at) }}</time>
           </template>
           <template #cell-kind="{ row: p }">
             <UBadge

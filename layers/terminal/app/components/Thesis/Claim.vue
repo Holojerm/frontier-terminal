@@ -2,8 +2,9 @@
 // One claim of a thesis: its number and text, where it stands and since when,
 // the reason the status rule gave, the kill condition, and the evidence.
 
-import { absoluteStamp } from '../../../shared/utils/terminal-format'
 import type { ClaimView } from '../../../shared/utils/thesis-types'
+
+const stamps = useStamps()
 
 defineProps<{ claim: ClaimView }>()
 </script>
@@ -19,7 +20,7 @@ defineProps<{ claim: ClaimView }>()
       <ThesisStatusBadge :status="claim.status" />
       <span v-if="claim.status_since">
         since
-        <time :datetime="claim.status_since">{{ absoluteStamp(claim.status_since) }}</time>
+        <time :datetime="claim.status_since">{{ stamps.absolute(claim.status_since) }}</time>
       </span>
     </template>
 

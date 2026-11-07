@@ -4,9 +4,10 @@
 // computed by the Worker, and the record it was computed from is linked.
 
 import { companyName } from '../../../shared/utils/companies'
-import { absoluteStamp } from '../../../shared/utils/terminal-format'
 import { factRows } from '../../../shared/utils/thesis-format'
 import type { ClaimView, VerdictView } from '../../../shared/utils/thesis-types'
+
+const stamps = useStamps()
 
 defineProps<{ claim: ClaimView }>()
 
@@ -69,10 +70,10 @@ function ruling(v: VerdictView) {
         <p class="text-sm text-default">{{ v.rationale }}</p>
 
         <TerminalFacts
-          v-if="factRows(v.facts).length"
+          v-if="factRows(v.facts, stamps.absolute).length"
           layout="list"
           :items="
-            factRows(v.facts).map((row) => ({
+            factRows(v.facts, stamps.absolute).map((row) => ({
               key: row.label,
               label: row.label,
               value: row.value,
@@ -83,8 +84,8 @@ function ruling(v: VerdictView) {
 
         <template #foot>
           <span>
-            Detected <time :datetime="v.detected_at">{{ absoluteStamp(v.detected_at) }}</time
-            >, rated <time :datetime="v.judged_at">{{ absoluteStamp(v.judged_at) }}</time>
+            Detected <time :datetime="v.detected_at">{{ stamps.absolute(v.detected_at) }}</time
+            >, rated <time :datetime="v.judged_at">{{ stamps.absolute(v.judged_at) }}</time>
           </span>
         </template>
       </TerminalCard>

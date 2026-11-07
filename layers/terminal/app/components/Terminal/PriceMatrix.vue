@@ -9,6 +9,8 @@ import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type { LabId, MatrixCell, PriceMatrix } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
+const watchlist = useWatchlist()
+
 const props = defineProps<{
   matrix: PriceMatrix
   /** Which rows to draw; every provider by default. A lab page draws its own alone. */
@@ -16,19 +18,23 @@ const props = defineProps<{
 }>()
 
 const rows = computed(() =>
-  (props.providers
-    ? props.matrix.providers.filter((p) => props.providers!.includes(p))
-    : props.matrix.providers
-  ).map((p) => ({
-    provider: p,
-    display: LAB_DISPLAY[p] ?? p,
-    cells: Object.fromEntries(
-      props.matrix.classes.map((k) => [
-        k.id,
-        props.matrix.cells.find((c) => c.provider === p && c.class === k.id),
-      ]),
-    ) as Record<string, MatrixCell | undefined>,
-  })),
+  watchlist
+    .first(
+      props.providers
+        ? props.matrix.providers.filter((p) => props.providers!.includes(p))
+        : props.matrix.providers,
+      (p) => p,
+    )
+    .map((p) => ({
+      provider: p,
+      display: LAB_DISPLAY[p] ?? p,
+      cells: Object.fromEntries(
+        props.matrix.classes.map((k) => [
+          k.id,
+          props.matrix.cells.find((c) => c.provider === p && c.class === k.id),
+        ]),
+      ) as Record<string, MatrixCell | undefined>,
+    })),
 )
 
 const columns = computed<TableColumn[]>(() => [

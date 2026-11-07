@@ -16,12 +16,7 @@
 // target floor (DESIGN.md › Target size), and these sit stacked in table cells
 // and footers where axe found 120+ of them once the pages had real rows.
 
-import {
-  absoluteStamp,
-  exactStamp,
-  hostOf,
-  relativeStamp,
-} from '../../../shared/utils/terminal-format'
+import { exactStamp, hostOf } from '../../../shared/utils/terminal-format'
 
 const props = withDefaults(
   defineProps<{
@@ -48,15 +43,13 @@ const props = withDefaults(
 const inTable = inject(IN_TERMINAL_TABLE, false)
 const oneLine = computed(() => props.compact ?? inTable)
 
-const now = useNow()
+const stamps = useStamps()
 const text = computed(() => props.label ?? hostOf(props.sourceUrl))
-const age = computed(() => relativeStamp(props.fetchedAt, now.value))
+const age = computed(() => stamps.relative(props.fetchedAt))
 const exact = computed(() => exactStamp(props.fetchedAt))
-const since = computed(() => `unchanged since ${absoluteStamp(props.fetchedAt, now.value)}`)
+const since = computed(() => `unchanged since ${stamps.absolute(props.fetchedAt)}`)
 const reading = computed(() =>
-  props.checkedAt
-    ? `checked ${relativeStamp(props.checkedAt, now.value)} · ${since.value}`
-    : age.value,
+  props.checkedAt ? `checked ${stamps.relative(props.checkedAt)} · ${since.value}` : age.value,
 )
 const exactReading = computed(() =>
   props.checkedAt

@@ -9,6 +9,8 @@ import { count, signed } from '../../../shared/utils/terminal-format'
 import { dayLabel } from '../../../shared/utils/thesis-format'
 import type { ClusterSeries, HiringHistoryData } from '../../../shared/utils/terminal-types'
 
+const watchlist = useWatchlist()
+
 const props = defineProps<{
   history: HiringHistoryData
   /** The cluster id to show; the first registered one by default. */
@@ -44,8 +46,9 @@ const chart = computed(() => {
 
 // A lab with no public board gets one line under the cards, not a card of its
 // own: an empty tile the size of a full one reads as a missing reading.
-const fed = computed(() => props.history.providers.filter((p) => !feedGap('hiring', p)))
-const unfed = computed(() => props.history.providers.filter((p) => feedGap('hiring', p)))
+const providers = computed(() => watchlist.first(props.history.providers, (p) => p.provider))
+const fed = computed(() => providers.value.filter((p) => !feedGap('hiring', p)))
+const unfed = computed(() => providers.value.filter((p) => feedGap('hiring', p)))
 
 const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
   const total = p.total.at(-1) ?? 0

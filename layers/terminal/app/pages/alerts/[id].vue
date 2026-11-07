@@ -4,9 +4,10 @@
 // its provenance. The Atom feed and every list link here.
 
 import { DESCRIPTION_MAX } from '#shared/utils/seo-bounds'
-import { absoluteStamp } from '../../../shared/utils/terminal-format'
 import { alertTier } from '../../../shared/utils/terminal-tiers'
 import type { AlertDetailData } from '../../../shared/utils/terminal-types'
+
+const stamps = useStamps()
 
 // Inert for a dynamic route: the collecting hook skips paths with a
 // parameter, and server/routes/sitemap.xml.get.ts enumerates the permalinks
@@ -101,7 +102,7 @@ useSeo({
         <TerminalCaveatMark :label="tier" :text="TIER_TEXT[tier]" />
         <TerminalCaveatMark :label="alert.rule" :text="RULE_TEXT[alert.rule]" />
         <time :datetime="alert.created_at" :title="alert.created_at" class="text-muted">
-          {{ absoluteStamp(alert.created_at) }}
+          {{ stamps.absolute(alert.created_at) }}
         </time>
       </div>
       <p class="max-w-3xl text-default">{{ alert.explanation }}</p>

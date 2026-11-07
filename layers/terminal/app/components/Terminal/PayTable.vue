@@ -4,10 +4,14 @@
 // behind each. The change is against the cell's previous reading, the only
 // comparison the caveat allows.
 
-import { compactUsd, count, pctChange, pctLabel } from '../../../shared/utils/terminal-format'
+import { count, pctChange, pctLabel } from '../../../shared/utils/terminal-format'
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type { PayData } from '../../../shared/utils/recipe-views'
 import type { TableColumn } from '../../types/terminal-ui'
+
+const watchlist = useWatchlist()
+
+const figures = useFigures()
 
 const props = defineProps<{ pay: PayData; labs?: string[] }>()
 
@@ -20,7 +24,10 @@ const columns: TableColumn[] = [
 ]
 
 const boards = computed(() =>
-  props.pay.boards.filter((b) => !props.labs || props.labs.includes(b.lab)),
+  watchlist.first(
+    props.pay.boards.filter((b) => !props.labs || props.labs.includes(b.lab)),
+    (b) => b.lab,
+  ),
 )
 const rows = computed(() =>
   boards.value.flatMap((b) =>
@@ -29,8 +36,8 @@ const rows = computed(() =>
       return {
         id: `${b.lab}|${c.key}`,
         cell: `${LAB_DISPLAY[b.lab]} · ${c.label}`,
-        median: compactUsd(c.median),
-        range: `${compactUsd(c.p25)}–${compactUsd(c.p75)}`,
+        median: figures.usd(c.median),
+        range: `${figures.usd(c.p25)}–${figures.usd(c.p75)}`,
         n: `${count(c.n)}${c.key === 'all' ? ` of ${count(b.roles_on_board)}` : ''}`,
         change: ch === null ? `first read ${b.date}` : `${pctLabel(ch)} since ${c.previous!.date}`,
         departments: c.departments,

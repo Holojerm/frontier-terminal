@@ -77,12 +77,15 @@ const gapKeys = computed(
 // Source cells inside a table render on one line (ProvenanceTag reads this).
 provide(IN_TERMINAL_TABLE, true)
 
+// The reader's compact density halves the row padding. It is a `data-density`
+// on <html>, set before first paint (plugins/reader-prefs.ts), so the class
+// list is the same on the server and the client.
 const pad = computed(() =>
   props.nested
-    ? 'px-2 py-1 first:pl-0 last:pr-0'
+    ? 'px-2 py-1 in-data-[density=compact]:py-0.5 first:pl-0 last:pr-0'
     : props.edge === false
-      ? 'px-3 py-2 first:pl-0 last:pr-0'
-      : 'px-3 py-2',
+      ? 'px-3 py-2 in-data-[density=compact]:py-1 first:pl-0 last:pr-0'
+      : 'px-3 py-2 in-data-[density=compact]:py-1',
 )
 
 // Measured on the client: SSR renders the box without a tab stop, and a

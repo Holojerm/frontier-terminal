@@ -11,6 +11,8 @@ import { labName } from '../../../shared/utils/terminal-labs'
 import type { PriceRowView, PricesData } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
+const watchlist = useWatchlist()
+
 const props = defineProps<{
   prices: PricesData
   /** Initial provider filter, e.g. from `/prices?provider=xai`. */
@@ -26,10 +28,12 @@ const provider = ref(props.provider ?? 'all')
 
 const providers = computed(() => [
   { label: 'All labs', value: 'all' },
-  ...[...new Set(props.prices.rows.map((r) => r.provider))].map((p) => ({
-    label: labName(p),
-    value: p,
-  })),
+  ...watchlist
+    .first([...new Set(props.prices.rows.map((r) => r.provider))], (p) => p)
+    .map((p) => ({
+      label: labName(p),
+      value: p,
+    })),
 ])
 
 const rows = computed(() =>

@@ -3,9 +3,11 @@
 // and tier, a column per metric the page prints. "None" is the page's own
 // word for no limit on that metric, kept rather than shown as a zero.
 
-import { compactTokens, count } from '../../../shared/utils/terminal-format'
+import { count } from '../../../shared/utils/terminal-format'
 import type { LimitsData } from '../../../shared/utils/recipe-views'
 import type { TableColumn } from '../../types/terminal-ui'
+
+const figures = useFigures()
 
 const props = defineProps<{ pages: LimitsData['pages']; caveat: string }>()
 
@@ -17,7 +19,7 @@ const columnsOf = (p: LimitsData['pages'][number]): TableColumn[] => [
 ]
 
 const fmt = (v: number | null | undefined) =>
-  v === undefined ? '' : v === null ? 'None' : v >= 1e6 ? compactTokens(v) : count(v)
+  v === undefined ? '' : v === null ? 'None' : v >= 1e6 ? figures.tokens(v) : count(v)
 
 const rowsOf = (p: LimitsData['pages'][number]) =>
   p.rows.map((r) => ({

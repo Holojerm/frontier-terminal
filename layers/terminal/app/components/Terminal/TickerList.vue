@@ -4,13 +4,12 @@
 // and the explanation and cited rows live there. Provenance still travels on
 // every line, because a minor-change line is a datum too.
 
-import { relativeStamp } from '../../../shared/utils/terminal-format'
 import { alertPath } from '../../../shared/utils/terminal-tiers'
 import type { AlertView } from '../../../shared/utils/terminal-types'
 
 defineProps<{ alerts: AlertView[] }>()
 
-const now = useNow()
+const stamps = useStamps()
 </script>
 
 <template>
@@ -26,7 +25,7 @@ const now = useNow()
         :title="alert.created_at"
         class="w-20 shrink-0 font-mono text-xs text-muted"
       >
-        {{ relativeStamp(alert.created_at, now) }}
+        {{ stamps.relative(alert.created_at) }}
       </time>
       <NuxtLink
         :to="alertPath(alert.id)"

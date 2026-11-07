@@ -5,7 +5,6 @@
 // the judge rated a candidate the same event, so an unrated alert says so
 // instead of guessing.
 
-import { absoluteStamp } from '../../../shared/utils/terminal-format'
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import { alertPath } from '../../../shared/utils/terminal-tiers'
 import type {
@@ -17,7 +16,7 @@ import type { TableColumn } from '../../types/terminal-ui'
 
 defineProps<{ record: TrackRecordData }>()
 
-const now = useNow()
+const stamps = useStamps()
 
 /** '+3.2 h' when we saw it first, '−5 h' when the press did. */
 const leadLabel = (h: number) =>
@@ -122,7 +121,7 @@ const columns: TableColumn[] = [
             class="underline underline-offset-2 hover:text-primary"
           >
             <time :datetime="row.saw_at" :title="row.saw_at">{{
-              absoluteStamp(row.saw_at, now)
+              stamps.absolute(row.saw_at)
             }}</time>
           </a>
         </template>
@@ -204,9 +203,9 @@ const columns: TableColumn[] = [
           noon UTC, so read those times as dates.
         </p>
         <p>
-          All times are UTC. Leads are rounded to a tenth of an hour. A lead isn’t a trading signal,
-          and this isn’t investment advice. It says when a public page changed against when someone
-          wrote about it.
+          Times are in {{ stamps.zone.value }}. Leads are rounded to a tenth of an hour. A lead
+          isn’t a trading signal, and this isn’t investment advice. It says when a public page
+          changed against when someone wrote about it.
         </p>
         <p class="text-muted">
           Press data from the GDELT Project (gdeltproject.org). Every candidate and rating is in the

@@ -6,9 +6,11 @@
 // a longer period the filer tags without a quarter (Amazon's nine-month
 // marks) is in the table, labelled with its length.
 
-import { compactUsd, count } from '../../../shared/utils/terminal-format'
+import { count } from '../../../shared/utils/terminal-format'
 import type { ExposurePoint, ExposureSeries } from '../../../shared/utils/terminal-exposure'
 import type { CaveatRef, Citation, TableColumn } from '../../types/terminal-ui'
+
+const figures = useFigures()
 
 const props = defineProps<{ id: string; title: string; series: ExposureSeries[] }>()
 
@@ -16,7 +18,7 @@ const unit = computed(() => props.series[0]?.unit ?? 'USD')
 
 const fmt = (v: number) =>
   unit.value === 'USD'
-    ? compactUsd(v)
+    ? figures.usd(v)
     : unit.value === 'pure'
       ? `${Math.round(v * 1000) / 10}%`
       : `${count(v)}${unit.value === 'shares' ? ' shares' : ''}`

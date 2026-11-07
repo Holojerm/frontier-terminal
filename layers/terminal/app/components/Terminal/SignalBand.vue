@@ -4,7 +4,6 @@
 // change counts by axis, then an explicit quiet state — a terminal that
 // cannot say "nothing moved" is a terminal you have to re-read every morning.
 
-import { relativeStamp } from '../../../shared/utils/terminal-format'
 import { alertPath, INFO_TIER_LABEL } from '../../../shared/utils/terminal-tiers'
 import type { OverviewData } from '../../../shared/utils/terminal-types'
 
@@ -13,7 +12,7 @@ const props = defineProps<{ overview: OverviewData }>()
 /** Rows on the band; the rest are one link away. */
 const SHOWN = 5
 
-const now = useNow()
+const stamps = useStamps()
 const movement = computed(() => props.overview.movement)
 const shown = computed(() => props.overview.alerts.slice(0, SHOWN))
 const newestInfo = computed(() => props.overview.info[0] ?? null)
@@ -65,7 +64,7 @@ const quietReason = computed(() => {
         <span v-if="overview.latest_fetched_at">
           last checked
           <time :datetime="overview.latest_fetched_at" :title="overview.latest_fetched_at">
-            {{ relativeStamp(overview.latest_fetched_at, now) }}
+            {{ stamps.relative(overview.latest_fetched_at) }}
           </time>
         </span>
         <NuxtLink to="/data#coverage" class="underline underline-offset-2 hover:text-default">
@@ -88,7 +87,7 @@ const quietReason = computed(() => {
         </NuxtLink>
         <span class="min-w-0 truncate">
           <time :datetime="newestInfo.created_at" class="font-mono text-xs">
-            {{ relativeStamp(newestInfo.created_at, now) }}
+            {{ stamps.relative(newestInfo.created_at) }}
           </time>
           <NuxtLink
             :to="alertPath(newestInfo.id)"
@@ -111,7 +110,7 @@ const quietReason = computed(() => {
               :datetime="movement.latest_detected_at"
               :title="`window ${movement.window_from} → ${movement.latest_detected_at}`"
             >
-              {{ relativeStamp(movement.latest_detected_at, now) }}
+              {{ stamps.relative(movement.latest_detected_at) }}
             </time>
           </span>
         </span>

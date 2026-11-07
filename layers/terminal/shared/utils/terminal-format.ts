@@ -6,6 +6,13 @@
 // the reader's. Components pass `now = null` on the server and set it after
 // mount (layers/terminal/app/composables/useNow.ts), so first paint is the absolute form and
 // a hydration mismatch on a provenance stamp cannot happen.
+//
+// The reader's zone is the same story. Page HTML is cached and shared, so the
+// server always reads in UTC_STYLE, and the reader's StampStyle
+// (layers/terminal/app/composables/useReaderPrefs.ts) applies after hydration.
+// Only a reading with a time of day moves with the zone. A date printed alone
+// (a filing period, a UTC-day chart bucket, a first-seen day) is a UTC date
+// and prints as stored, so a day never shifts under a reader near midnight.
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -15,15 +22,105 @@ const DAY = 24 * HOUR
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
+/** How an instant reads: which zone, which clock, which date form, and whether ages are relative. */
+export interface StampStyle {
+  /** An IANA zone. 'UTC' keeps the 'Z' suffix the site has always printed. */
+  zone: string
+  hour12: boolean
+  /** '2026-08-25' instead of 'Aug 25'. */
+  iso: boolean
+  /** '3h ago' inside a day; off, every stamp is absolute. */
+  relative: boolean
+}
+
+/** The server's reading, and every reader's until their settings load. */
+export const UTC_STYLE: StampStyle = { zone: 'UTC', hour12: false, iso: false, relative: true }
+
+interface Wall {
+  year: number
+  month: number
+  day: number
+  hour: number
+  minute: number
+  /** 'EDT', 'GMT+1'; null for UTC, which prints as 'Z'. */
+  zone: string | null
+}
+
+// Intl formatters are costly to build and a page formats hundreds of stamps.
+const formatters = new Map<string, Intl.DateTimeFormat>()
+
+function wallClock(d: Date, zone: string): Wall {
+  if (zone === 'UTC') {
+    return {
+      year: d.getUTCFullYear(),
+      month: d.getUTCMonth(),
+      day: d.getUTCDate(),
+      hour: d.getUTCHours(),
+      minute: d.getUTCMinutes(),
+      zone: null,
+    }
+  }
+  let f = formatters.get(zone)
+  if (!f) {
+    f = new Intl.DateTimeFormat('en-US', {
+      timeZone: zone,
+      year: 'numeric',
+      month: 'numeric',
+      day: 'numeric',
+      hour: 'numeric',
+      minute: 'numeric',
+      hourCycle: 'h23',
+      timeZoneName: 'short',
+    })
+    formatters.set(zone, f)
+  }
+  const parts: Partial<Record<Intl.DateTimeFormatPartTypes, string>> = {}
+  for (const p of f.formatToParts(d)) parts[p.type] = p.value
+  return {
+    year: Number(parts.year),
+    month: Number(parts.month) - 1,
+    day: Number(parts.day),
+    hour: Number(parts.hour) % 24,
+    minute: Number(parts.minute),
+    zone: parts.timeZoneName ?? zone,
+  }
+}
+
+/** True when the zone is one this runtime can read in. */
+export function isTimeZone(zone: string): boolean {
+  try {
+    new Intl.DateTimeFormat('en-US', { timeZone: zone })
+    return true
+  } catch {
+    return false
+  }
+}
+
+function dateOf(w: Wall, nowYear: number, style: StampStyle): string {
+  if (style.iso) return `${w.year}-${pad(w.month + 1)}-${pad(w.day)}`
+  const year = w.year === nowYear ? '' : ` ${w.year}`
+  return `${MONTHS[w.month]} ${w.day}${year}`
+}
+
+function timeOf(w: Wall, style: StampStyle): string {
+  const clock = style.hour12
+    ? `${w.hour % 12 || 12}:${pad(w.minute)} ${w.hour < 12 ? 'AM' : 'PM'}`
+    : `${pad(w.hour)}:${pad(w.minute)}`
+  if (w.zone !== null) return `${clock} ${w.zone}`
+  return style.hour12 ? `${clock} UTC` : `${clock}Z`
+}
+
 /** 'Aug 25 23:08Z' — same-year absolute; adds the year when it differs. */
-export function absoluteStamp(iso: string, now: number | null = null): string {
+export function absoluteStamp(
+  iso: string,
+  now: number | null = null,
+  style: StampStyle = UTC_STYLE,
+): string {
   const d = new Date(iso)
   if (Number.isNaN(d.getTime())) return iso
-  const day = `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}`
-  const time = `${pad(d.getUTCHours())}:${pad(d.getUTCMinutes())}Z`
-  const nowYear = now === null ? d.getUTCFullYear() : new Date(now).getUTCFullYear()
-  const year = d.getUTCFullYear() === nowYear ? '' : ` ${d.getUTCFullYear()}`
-  return `${day}${year} ${time}`
+  const w = wallClock(d, style.zone)
+  const nowYear = now === null ? w.year : wallClock(new Date(now), style.zone).year
+  return `${dateOf(w, nowYear, style)} ${timeOf(w, style)}`
 }
 
 /**
@@ -31,15 +128,24 @@ export function absoluteStamp(iso: string, now: number | null = null): string {
  * `now === null` (server render, or an unparseable value) always yields the
  * absolute form; a stamp ahead of the clock is never guessed at either.
  */
-export function relativeStamp(iso: string, now: number | null): string {
+export function relativeStamp(
+  iso: string,
+  now: number | null,
+  style: StampStyle = UTC_STYLE,
+): string {
   const t = new Date(iso).getTime()
-  if (now === null || Number.isNaN(t)) return absoluteStamp(iso, now)
+  if (now === null || Number.isNaN(t) || !style.relative) return absoluteStamp(iso, now, style)
   const delta = now - t
-  if (delta < 0) return absoluteStamp(iso, now)
+  if (delta < 0) return absoluteStamp(iso, now, style)
   if (delta < MINUTE) return 'just now'
   if (delta < HOUR) return `${Math.floor(delta / MINUTE)}m ago`
   if (delta < DAY) return `${Math.floor(delta / HOUR)}h ago`
-  return absoluteStamp(iso, now)
+  return absoluteStamp(iso, now, style)
+}
+
+/** 'UTC', or the zone as a reader names it: 'America/New York'. */
+export function zoneName(style: StampStyle): string {
+  return style.zone === 'UTC' ? 'UTC' : style.zone.replaceAll('_', ' ')
 }
 
 /** Tooltip text: the exact stored value, never abbreviated. */
