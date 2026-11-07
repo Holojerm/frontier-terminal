@@ -60,8 +60,13 @@ Three pieces:
 ## Social posting (layers/social)
 
 Critical alerts and a Monday what-moved thread post to the app's X and Bluesky
-accounts through Buffer. `social:alerts` and `social:digest` queue rows
-(`layers/terminal/server/pipeline/social.ts`); `social:post` sends them.
+accounts through Buffer. A new critical alert is queued as a row by the
+EVENTS queue's `alerts.new` fan-out, and `social:digest` queues the weekly
+thread (`layers/terminal/server/pipeline/social.ts`); a delayed `social.drain`
+message sends each row when it is due, and the hourly `events:sweep` catches
+anything a lost message left (`layers/terminal/server/utils/events.ts`). The
+layer's own `social:post` task is not scheduled. A due post still queued after
+an hour spools `social_outbox_stalled`.
 
 - **Secrets:** `NUXT_SOCIAL_BUFFER_API_KEY` (1Password "Buffer API — Frontier
   Terminal"), `NUXT_SOCIAL_CHANNEL_X`, `NUXT_SOCIAL_CHANNEL_BLUESKY`. With no key <!-- refs-check-ignore: runtimeConfig.social.channelBluesky in layers/social -->
@@ -95,9 +100,14 @@ bun run webhooks:remove -- --id whk_0a1b2c3d4e [--remote]
   `NUXT_WEBHOOK_SIGNING_KEY="$(op read 'op://Private/Frontier Terminal webhook signing key/password')" bun run webhooks:add -- … --remote`.
   Rotating it breaks every webhook: each one goes `failing` with an ops event,
   and has to be removed and re-added with a new secret for the client.
-- **Cron:** `webhooks:deliver` on the */5 tick (`layers/terminal/server/utils/webhook-outbox.ts`).
-  Unset key = it returns before touching D1. The first run records every
-  recent alert as seen and sends nothing.
+- **Trigger:** the EVENTS queue (`layers/terminal/server/utils/events.ts`).
+  Writing an alert emits `alerts.new`; its fan-out queues the deliveries
+  (`layers/terminal/server/utils/webhook-outbox.ts`) and schedules a
+  `webhooks.drain` message for the first due row, and each drain reschedules
+  itself while deliveries are owed, which is how backoff retries run. The
+  hourly `events:sweep` covers a lost message. Unset key = the outbox is skipped
+  before touching D1. The first run records every recent alert as seen and
+  sends nothing.
 - **Timing:** a delivery waits until the poll stamp is past the moment the
   cron first saw the alert, so the public pages already list it. A judged
   alert also waits out the social hold, from the same instant. Suppressing its

@@ -10,6 +10,7 @@ import { evaluateTheses } from '../../theses/evaluate'
 import { parseDepartmentClusters, type DepartmentCluster } from '../../utils/terminal-clusters'
 import { clampHiringAlerts, type FloorClamp } from '../hiring-floor'
 import { applyClassMappings, type RawReader } from './class-map'
+import { emitEvent } from '../../utils/events'
 import { buildAlertRows, gateJudgeSubmission } from './contract'
 import { groundAlerts } from './grounding'
 
@@ -149,6 +150,7 @@ export async function submitJudgeRun(
   )
   const fresh = rows.filter((row) => !existing.has(row.id))
   const inserted = await insertRows(db, 'alerts', fresh)
+  if (inserted) await emitEvent('alerts.new')
 
   await db.insert(tables.judgeRuns).values({
     id: crypto.randomUUID(),

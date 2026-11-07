@@ -51,6 +51,11 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
     action:
       "A press note has waited past its window. Open the press-drafts routine's latest session at claude.ai/code/routines.",
   },
+  social_outbox_stalled: {
+    severity: 'warning',
+    action:
+      'A due social post has stayed queued for an hour. Look for events_queue_failed or events_emit_failed in the Worker logs; the hourly events:sweep should have sent it, so check that task too.',
+  },
   freshness_check_failed: { severity: 'warning' },
   deploy_drift: {
     severity: 'warning',

@@ -172,19 +172,18 @@ const securityHeaders = {
 //   */5        — launch tripwire, layers/terminal/server/tasks/poll/tripwire.ts: parses the
 //                model catalogs, polls them only when they differ from the
 //                store, and yields on the half-hour ticks above.
-//              — social: social:alerts queues critical alerts
-//                (layers/terminal/server/pipeline/social.ts), social:post sends
-//                what is due (layers/social). Both no-op without a Buffer key.
-//              — press:briefs mails the owner click-to-send notes for each new
-//                registration filing (layers/terminal/server/pipeline/press.ts);
-//                no-op without NUXT_PRESS_LIST.
 //              — cache:warm re-renders the public pages once per (build, poll
 //                stamp) so readers hit warm KV payloads
 //                (layers/terminal/server/utils/cache-warm.ts).
 //   0 13 * * 1 — weekly thesis digest email, and social:digest queues the
 //                weekly what-moved thread. alerts:hiring-rollup writes one
 //                hiring alert per lab for the week that just ended.
-//   41 * * * * — bulk:build, and reliability:record, which rolls up source runs
+//   41 * * * * — events:sweep, the backstop for the EVENTS queue
+//                (layers/terminal/server/utils/events.ts): the social and webhook
+//                outboxes and the press briefs are driven by queue messages
+//                emitted when alerts are written, not by a timer, and this
+//                catches any message that was lost.
+//              — bulk:build, and reliability:record, which rolls up source runs
 //                and records filing detections for /data#reliability
 //                (layers/terminal/server/pipeline/reliability/). Its deploy smoke
 //                results are reliability:deploys on the */5 tick, which reads
@@ -195,18 +194,9 @@ const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:alert', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
   '17 */6 * * *': ['poll:careers'],
-  '*/5 * * * *': [
-    'poll:tripwire',
-    'social:alerts',
-    'social:post',
-    'press:briefs',
-    'cache:warm',
-    'track-record:search',
-    'webhooks:deliver',
-    'reliability:deploys',
-  ],
+  '*/5 * * * *': ['poll:tripwire', 'cache:warm', 'track-record:search', 'reliability:deploys'],
   '0 13 * * 1': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
-  '41 * * * *': ['bulk:build', 'reliability:record'],
+  '41 * * * *': ['events:sweep', 'bulk:build', 'reliability:record'],
   '0 4 * * *': ['seo:indexnow'],
 }
 

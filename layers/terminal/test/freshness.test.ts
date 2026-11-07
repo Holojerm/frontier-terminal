@@ -2,6 +2,7 @@ import { env } from 'cloudflare:test'
 import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
+import layersLock from '~~/layers.lock.json'
 import nuxtConfigSource from '~~/nuxt.config.ts?raw'
 import * as schema from '~~/server/db/schema'
 import { readScheduledTasks } from '~~/scripts/lib/scheduled-tasks'
@@ -21,6 +22,7 @@ import {
   freshnessChecks,
   gdeltFreshnessCheck,
   pressDraftsFreshnessCheck,
+  socialOutboxFreshnessCheck,
 } from '../server/utils/terminal-freshness'
 import { TERMINAL_OPS_SEVERITY } from '../server/utils/terminal-ops-severity'
 import { recordHeartbeat, withHeartbeat } from '../server/utils/task-heartbeat'
@@ -82,9 +84,15 @@ describe('coverage: every part of the pipeline has a freshness check', () => {
   })
 
   it('wraps every task file, scheduled or not, so a task added later is covered from its first run', () => {
+    // A vendored layer's files are pinned by layers:check and cannot be edited
+    // to add the wrapper. Its unscheduled tasks never run here (social:post:
+    // the EVENTS queue drains the social outbox), and a scheduled one still
+    // needs an override, which the test above enforces.
+    const vendored = Object.keys(layersLock.layers).map((name) => `/layers/${name}/`)
     for (const [path, source] of Object.entries(TASK_SOURCES)) {
       const name = /\bname:\s*'([^']+)'/.exec(source)?.[1]
       if (name && TASK_CHECK_OVERRIDES[name]) continue
+      if (vendored.some((prefix) => path.startsWith(prefix))) continue
       expect(source, path).toMatch(/^export default withHeartbeat\(task\)$/m)
     }
   })
@@ -100,7 +108,9 @@ describe('coverage: every part of the pipeline has a freshness check', () => {
     const keys = checks.map((c) => c.key)
     expect(new Set(keys).size).toBe(keys.length)
     for (const [name] of tasks) expect(keys).toContain(`task:${name}`)
-    expect(keys).toEqual(expect.arrayContaining(['judge', 'gdelt-search', 'press-drafts']))
+    expect(keys).toEqual(
+      expect.arrayContaining(['judge', 'gdelt-search', 'press-drafts', 'social-outbox']),
+    )
   })
 
   it('gives every check’s kind, and the failure kind, a tier', () => {
@@ -386,10 +396,9 @@ describe('the producers off the Worker', () => {
     expect(event!.detail).toContain('nothing records a success')
   })
 
-  it('checks social:post by its queue: a due post still queued after an hour', async () => {
-    const socialPost = TASK_CHECK_OVERRIDES['social:post']!.check('*/5 * * * *')
-    const run = () => checkFreshness(db, memoryMarker(), [socialPost], NOW)
-    expect(await run()).toEqual({ 'task:social:post': 'not-owed' })
+  it('checks the social outbox by its rows: a due post still queued after an hour', async () => {
+    const run = () => checkFreshness(db, memoryMarker(), [socialOutboxFreshnessCheck], NOW)
+    expect(await run()).toEqual({ 'social-outbox': 'not-owed' })
     await db.insert(schema.socialPosts).values({
       service: 'x',
       kind: 'alert',
@@ -397,6 +406,6 @@ describe('the producers off the Worker', () => {
       body: 'hello',
       notBefore: new Date('2026-11-06T10:00:00Z'),
     })
-    expect(await run()).toEqual({ 'task:social:post': 'stale' })
+    expect(await run()).toEqual({ 'social-outbox': 'stale' })
   })
 })
