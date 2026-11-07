@@ -11,6 +11,7 @@ import {
   isTimestampOnlyChange,
   isUntrackedFilingChange,
   JUDGE_CHANGE_LIMIT,
+  offerCount,
   pendingChanges,
 } from '../../server/pipeline/judge/pending'
 import { submitJudgeRun } from '../../server/pipeline/judge/submit'
@@ -346,7 +347,7 @@ describe('pendingChanges', () => {
     expect(pending.changes.map((c) => c.detected_at)).toEqual(['2026-08-26T00:00:00Z'])
   })
 
-  it('caps newest-first and reports the true total', async () => {
+  it('caps oldest-first and reports the true total, so the cursor walks the backlog in order', async () => {
     const rows = Array.from({ length: 12 }, (_, i) =>
       change(i, `2026-08-${String(10 + i).padStart(2, '0')}T00:00:00Z`),
     )
@@ -354,16 +355,62 @@ describe('pendingChanges', () => {
     const pending = await pendingChanges(db, 5)
     expect(pending.total_pending).toBe(12)
     expect(pending.changes.map((c) => c.detected_at)).toEqual(
-      rows
-        .slice(7)
-        .map((r) => r.detected_at)
-        .reverse(),
+      rows.slice(0, 5).map((r) => r.detected_at),
     )
+    expect(pending.through).toBe(rows[4]!.detected_at)
     expect(JUDGE_CHANGE_LIMIT).toBe(200)
+
+    // Judging that bite moves the cursor to its newest row; the next bite
+    // starts right after it, so no backlog row is ever skipped.
+    const report = await submitJudgeRun(
+      db,
+      JSON.stringify({
+        alerts: [],
+        judged_through: pending.through,
+        change_ids_seen: pending.changes.map((c) => c.id),
+      }),
+    )
+    expect(report.gate_rejection).toBeNull()
+    const next = await pendingChanges(db, 5)
+    expect(next.changes.map((c) => c.detected_at)).toEqual(
+      rows.slice(5, 10).map((r) => r.detected_at),
+    )
+    expect(next.total_pending).toBe(7)
+  })
+
+  it('never cuts the cap inside one instant, and offers an instant bigger than the cap whole', async () => {
+    expect(offerCount([1, 2, 3, 3, 3, 4], 4)).toBe(2)
+    expect(offerCount([1, 2, 3, 4], 4)).toBe(4)
+    expect(offerCount([1, 2, 3, 4, 5], 4)).toBe(4)
+    expect(offerCount([7, 7, 7, 7, 7, 8], 3)).toBe(5)
+  })
+
+  it('reads the cursor as an instant: a row a half second past a cursor without milliseconds is pending', async () => {
+    await insertRows(db, 'changes', [
+      change(0, '2026-08-25T00:00:00.000Z'),
+      change(1, '2026-08-25T00:00:00.500Z'),
+    ])
+    await db.insert(schema.judgeRuns).values({
+      id: 'run-1',
+      started_at: '2026-08-25T01:00:00Z',
+      judged_through: '2026-08-25T00:00:00Z',
+      changes_seen: 1,
+      accepted: 0,
+      rejected: 0,
+      rejection_reason: null,
+      source: 'routine',
+    })
+    const pending = await pendingChanges(db)
+    expect(pending.changes.map((c) => c.detected_at)).toEqual(['2026-08-25T00:00:00.500Z'])
   })
 
   it('is empty on an empty table', async () => {
-    expect(await pendingChanges(db)).toEqual({ changes: [], total_pending: 0, since: null })
+    expect(await pendingChanges(db)).toEqual({
+      changes: [],
+      total_pending: 0,
+      since: null,
+      through: null,
+    })
   })
 })
 
@@ -385,8 +432,9 @@ describe('submitJudgeRun', () => {
 
     const stored = await db.select().from(schema.alerts).orderBy(schema.alerts.severity)
     expect(stored).toHaveLength(2)
-    for (const row of stored) {
+    for (const { recorded_at, ...row } of stored) {
       expect(AlertRow.safeParse(row).success).toBe(true)
+      expect(recorded_at).not.toBeNull() // stamped by the store on write
       expect(row.rule).toBe('agent-judge') // stamped by code, never model-supplied
     }
 
@@ -412,7 +460,7 @@ describe('submitJudgeRun', () => {
     expect(runs).toHaveLength(1)
     expect(runs[0]).toMatchObject({
       started_at: '2026-08-25T13:00:00.000Z',
-      judged_through: DETECTED_AT,
+      judged_through: new Date(DETECTED_AT).toISOString(),
       changes_seen: 3,
       accepted: 2,
       rejected: 0,
@@ -450,7 +498,11 @@ describe('submitJudgeRun', () => {
     expect(await db.select().from(schema.alerts)).toHaveLength(0)
 
     const [run] = await db.select().from(schema.judgeRuns)
-    expect(run).toMatchObject({ accepted: 0, rejected: 1, judged_through: DETECTED_AT })
+    expect(run).toMatchObject({
+      accepted: 0,
+      rejected: 1,
+      judged_through: new Date(DETECTED_AT).toISOString(),
+    })
     expect(run!.rejection_reason).toContain('ungrounded-number')
 
     const events = await db.select().from(schema.opsEvents)
@@ -520,6 +572,85 @@ describe('submitJudgeRun', () => {
     const extra = await submitJudgeRun(db, body(live).replace(/^\{/, '{"rule":"s1-floor",'))
     expect(extra.gate_rejection?.detail).toContain('Unrecognized key')
     expect(await db.select().from(schema.judgeRuns)).toHaveLength(3)
+  })
+})
+
+describe('the cursor and the offered window', () => {
+  const OFFERED = change(1, '2026-08-26T00:00:00.000Z')
+  const LATER = change(2, '2026-08-27T00:00:00.000Z')
+  const JUDGED = change(0, '2026-08-24T00:00:00.000Z')
+
+  beforeEach(async () => {
+    await insertRows(db, 'changes', [JUDGED, OFFERED, LATER])
+    await db.insert(schema.judgeRuns).values({
+      id: 'run-0',
+      started_at: '2026-08-25T00:00:00Z',
+      judged_through: '2026-08-25T00:00:00Z',
+      changes_seen: 1,
+      accepted: 0,
+      rejected: 0,
+      rejection_reason: null,
+      source: 'routine',
+    })
+  })
+
+  const submit = (judged_through: string, seen: ChangeRow[], alerts: unknown[] = []) =>
+    submitJudgeRun(
+      db,
+      JSON.stringify({ alerts, judged_through, change_ids_seen: seen.map((c) => c.id) }),
+    )
+
+  it('refuses a cursor behind the last one, past the newest offered, or not the newest seen', async () => {
+    const behind = await submit('2026-08-24T00:00:00Z', [OFFERED])
+    expect(behind.gate_rejection).toMatchObject({ reason: 'cursor' })
+    expect(behind.gate_rejection!.detail).toContain('behind')
+
+    const ahead = await submitJudgeRun(
+      db,
+      JSON.stringify({
+        alerts: [],
+        judged_through: '2026-08-28T00:00:00Z',
+        change_ids_seen: [OFFERED.id, LATER.id],
+      }),
+    )
+    expect(ahead.gate_rejection!.detail).toContain('past the newest change offered')
+
+    const mismatch = await submit(LATER.detected_at, [OFFERED])
+    expect(mismatch.gate_rejection!.detail).toContain('not the newest detected_at')
+
+    const moved = await submit(OFFERED.detected_at, [])
+    expect(moved.gate_rejection!.detail).toContain('must stay at the cursor')
+
+    // Nothing moved, every rejection is on record, and both rows are still owed.
+    const runs = await db.select().from(schema.judgeRuns)
+    expect(runs.filter((r) => r.rejection_reason?.startsWith('cursor: '))).toHaveLength(4)
+    expect((await pendingChanges(db)).total_pending).toBe(2)
+  })
+
+  it('takes the same instant spelled with or without milliseconds, and a review-only run that holds', async () => {
+    expect((await submit('2026-08-25T00:00:00.000Z', [])).gate_rejection).toBeNull()
+    expect((await submit('2026-08-27T00:00:00Z', [OFFERED, LATER])).gate_rejection).toBeNull()
+  })
+
+  it('rejects an alert citing a change outside the offered window, and keeps one inside it', async () => {
+    const alert = (c: ChangeRow) => ({
+      severity: 'info',
+      headline: 'grok-4.6 listed',
+      explanation: 'grok-4.6 appears.',
+      change_ids: [c.id],
+    })
+    // LATER was stored but not judged through: the run saw only OFFERED.
+    const report = await submit(
+      OFFERED.detected_at,
+      [OFFERED],
+      [alert(OFFERED), alert(JUDGED), alert(LATER)],
+    )
+    expect(report).toMatchObject({ accepted: 1, inserted: 1, rejected: 2 })
+    expect(report.rejections.map((r) => r.reason)).toEqual([
+      'unoffered-change-id',
+      'unoffered-change-id',
+    ])
+    expect(report.rejections[0]!.detail).toContain(JUDGED.id)
   })
 })
 
@@ -622,6 +753,18 @@ describe('groundingFailure: versions a slug spells with a dash', () => {
     )
   })
 
+  it('a time of day in a fetch stamp grounds no other number', () => {
+    const corpus = '{"title":"Sales roles","detected":"2026-10-14T09:33:47Z"}'
+    expect(groundingFailure('cuts Sales by 33%', corpus)).toMatchObject({
+      reason: 'ungrounded-number',
+    })
+    expect(groundingFailure('cuts Sales by 47 roles', corpus)?.reason).toBe('ungrounded-number')
+    // The stamp still grounds itself: its date, and its time printed as a time.
+    expect(groundingFailure('Sales roles moved on 2026-10-14 at 09:33 UTC', corpus)).toBeNull()
+    expect(groundingFailure('Sales roles moved at 9:33', corpus)).toBeNull()
+    expect(groundingFailure('Sales roles moved at 09:34', corpus)?.reason).toBe('ungrounded-number')
+  })
+
   it('a dashed date is not a version', () => {
     const dated = '{"entity_key":"filing:anthropic:x","filed":"2026-10-09"}'
     expect(groundingFailure('Filed in 2026.1', dated)?.reason).toBe('ungrounded-number')
@@ -679,7 +822,7 @@ describe('the judge freshness check', () => {
       now: new Date('2026-08-27T08:00:00Z'),
     })
     expect(await checkJudgeSilence(db, memoryMarker(), NOW)).toBe('stale')
-    const [event] = await db.select().from(schema.opsEvents)
+    const event = (await db.select().from(schema.opsEvents)).find((e) => e.kind === 'judge_silent')
     expect(event!.detail).toContain('for 4h (since 2026-08-27T08:00:00')
   })
 

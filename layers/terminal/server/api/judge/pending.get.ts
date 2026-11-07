@@ -4,7 +4,8 @@
 //
 // The prompt travels in the response so the routine judges with the prompt
 // this deploy shipped, whatever commit its own checkout happens to be on —
-// one prompt, versioned here. Empty `changes` with no cell in
+// one prompt, versioned here. `changes` are the oldest pending first, and
+// `through` is the cursor POST /api/judge/alerts accepts for them. Empty `changes` with no cell in
 // `class_map_review` is the common case and the routine's signal to stop.
 // `class_map_review` lists the price-matrix cells whose vendor sentence left
 // the page, with that page's text to re-map them from
@@ -39,13 +40,17 @@ export default defineEventHandler(async (event) => {
   setResponseHeader(event, 'Cache-Control', 'no-store')
   await requireJudgeToken(event)
 
-  const [{ changes, total_pending, since }, class_map_review, flagships, track_record_review] =
-    await Promise.all([
-      pendingChanges(db, JUDGE_CHANGE_LIMIT),
-      classMapReview(db, blobRawReader(blob)),
-      flagshipMap(db),
-      trackRecordReview(db),
-    ])
+  const [
+    { changes, total_pending, since, through },
+    class_map_review,
+    flagships,
+    track_record_review,
+  ] = await Promise.all([
+    pendingChanges(db, JUDGE_CHANGE_LIMIT),
+    classMapReview(db, blobRawReader(blob)),
+    flagshipMap(db),
+    trackRecordReview(db),
+  ])
   const [claim_review, hiring] = await Promise.all([
     claimReview(db, changes, flagships),
     hiringBoards(db, changes, parseDepartmentClusters(sourcesYaml)),
@@ -55,6 +60,8 @@ export default defineEventHandler(async (event) => {
     changes,
     total_pending,
     since,
+    // The judged_through to send back: the newest detected_at among `changes`.
+    through,
     limit: JUDGE_CHANGE_LIMIT,
     hiring,
     class_map_review,
