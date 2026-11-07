@@ -11,7 +11,7 @@ import { and, desc, eq, sql } from 'drizzle-orm'
 import { z } from 'zod'
 
 import * as tables from '#server/db/schema'
-import type { OpsDigest } from '#server/utils/ops'
+import type { OwnerMessage } from '../utils/owner-mail'
 import { absoluteUrl } from '#shared/utils/site'
 import { PROSPECTUS_FLOOR_RULE } from './prospectus-floor'
 import type { PipelineDb } from './store'
@@ -97,7 +97,7 @@ export function pressBrief(
   alert: PressAlert,
   contacts: readonly PressContact[],
   origin: string,
-): OpsDigest {
+): OwnerMessage {
   const notes = contacts.map((c) => ({ c, ...pressNote(alert, c, origin) }))
   const permalink = absoluteUrl(origin, `/alerts/${alert.id}`)
   const subject = `Press brief ready: ${alert.headline}`

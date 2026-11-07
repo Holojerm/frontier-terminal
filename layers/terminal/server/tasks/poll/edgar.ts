@@ -3,7 +3,7 @@
 //
 // Scheduled from nuxt.config.ts (SCHEDULED_TASKS) and matched by the
 // [triggers] crons entry in wrangler.toml; `bun run crons:check` fails the
-// build when the two disagree. Imports are explicit, as in ops/alert.ts: a
+// build when the two disagree. Imports are explicit, as in ops/watch.ts: a
 // task is an untested bundling surface that runs unattended.
 //
 // sources.yaml arrives as text through Nitro's `raw:` import — there is no

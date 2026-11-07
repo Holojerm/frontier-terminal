@@ -10,7 +10,6 @@ import { kv } from '@nuxthub/kv'
 
 import { createBufferPublisher } from '#layers/social/server/utils/buffer'
 import { readSocialConfig } from '#layers/social/server/utils/social'
-import { getOpsMailer } from '#server/utils/ops-mail'
 import { recordOpsEvent } from '#server/utils/ops'
 
 import { parsePressList } from '../pipeline/press'
@@ -18,6 +17,7 @@ import { SCHEMA_VERSION } from './data-schema'
 import type { EventDeps } from './event-work'
 import type { CacheStore } from './terminal-cache'
 import { terminalStamps } from './terminal-cache'
+import { getOwnerMailer } from './owner-mail'
 import { fetchWebhookSender, signingKeyRefusal } from './webhook-sign'
 
 export const kvStore: CacheStore = {
@@ -31,7 +31,7 @@ export function eventDeps(env: Record<string, unknown> | undefined): EventDeps {
   const social = readSocialConfig(runtime.social)
   const signingKey = runtime.webhookSigningKey
   const contacts = parsePressList(runtime.pressList)
-  const mailer = getOpsMailer(env)
+  const mailer = getOwnerMailer(env)
 
   return {
     db,

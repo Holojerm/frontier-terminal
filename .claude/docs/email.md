@@ -1,8 +1,8 @@
 # Email
 
-How an email is written (Maizzle templates, compiled at build time, filled in with Mustache). This app sends two emails, both to its owner through the `send_email` binding (`server/utils/ops-mail.ts`): the ops alert digest (`server/utils/ops-digest.ts`) and the weekly thesis digest (`layers/terminal/server/theses/digest.ts`). The pipeline is the template's, trimmed to those two.
+How an email is written (Maizzle templates, compiled at build time, filled in with Mustache). This app sends one email template, the weekly thesis digest (`layers/terminal/server/theses/digest.ts`), plus the plain press brief, both to its owner through the `OWNER_EMAIL` `send_email` binding (`layers/terminal/server/utils/owner-mail.ts`). It sends no alerts: the fleet dashboard is the only alert sender. The pipeline is the template's, trimmed to the thesis digest.
 
-> **Load this when:** touching `emails/`, `server/utils/ops-digest.ts`, or adding a second outbound email.
+> **Load this when:** touching `emails/`, `layers/terminal/server/theses/digest.ts`, or adding a second outbound email.
 > Canonical index: [AGENTS.md](../../AGENTS.md).
 
 ---
@@ -19,9 +19,8 @@ At send time `renderEmail(name, data)` in
 
 ```
 emails/
-  templates/ops-digest.vue  the HTML — content only
-  templates/ops-digest.txt  the plain-text alternative, same tags
-  templates/thesis-digest.* the weekly thesis digest, same pair
+  templates/thesis-digest.vue  the weekly thesis digest HTML — content only
+  templates/thesis-digest.txt  the plain-text alternative, same tags
   components/Email*.vue     the chrome: EmailLayout, EmailParagraph, EmailButton
   samples.ts                sample data per template — previews and tests
   theme.generated.css       GENERATED from DESIGN.md — see Branding
@@ -40,7 +39,7 @@ server/emails/generated.ts  GENERATED at install — never commit it
 4. `bun run email:build`, then `bun run email:dev` and look at it.
 5. A function that returns `{ subject, html, text }` by calling `renderEmail('<name>', data)`
    (`server/utils/render-email.ts`) — the subject, and turning a `Date` or an enum into the
-   strings the template reads, stay in TypeScript (see `server/utils/ops-digest.ts`). Add its
+   strings the template reads, stay in TypeScript (see `layers/terminal/server/theses/digest.ts`). Add its
    action URL to `ACTION_URL` in `test/emails.test.ts`, plus a test for anything specific to it.
    That file already proves a template renders, leaves no `{{` behind, escapes hostile data,
    and that the text carries the action URL.
@@ -70,7 +69,7 @@ only the HTML needs — a tone flag, a link target — is declared in the `.txt`
 - **Sections** are `{{#list}}…{{/list}}` (loop, or "if truthy") and `{{^x}}…{{/x}}` ("if not").
   A value is truthy when it is non-empty and not `0`/`null`/`false`. A color that depends on
   runtime data cannot be inlined at build time, so the template carries one copy per choice —
-  see the tone bar in `emails/templates/ops-digest.vue`.
+  see the tone bar in `emails/templates/thesis-digest.vue`.
 - **Don't hand-format `emails/**/*.vue`** — it is excluded from `oxfmt`, which splits
   `</Raw>` across lines and breaks Maizzle's extraction.
 
@@ -101,11 +100,6 @@ fine. Colors come from the theme (`text-ink`, `bg-accent`, `border-rule`); never
   from `emails/samples.ts`, live-reloading as you edit.
 - `bun run email:preview [dir]` — writes every email as the Worker would send it (compiled
   module + Mustache, HTML and text) to `dir` (default `.email-preview/`).
-
-### Ops digest
-
-`server/utils/ops-digest.ts` renders `emails/templates/ops-digest.*` and imports nothing from
-the transactional stack except `render-email.ts` — a deployment with no transactional email keeps their alerts, so keep it that way.
 
 ### Bun workspaces
 
