@@ -17,18 +17,15 @@ import type { PriceRowView } from '../shared/utils/terminal-types'
 import {
   AXIS_OF,
   alertPermalinks,
-  buildMatrix,
   parseAlertCursor,
   queryAlert,
   queryAlerts,
-  queryContext,
-  queryCoverage,
-  queryHiring,
-  queryIncidents,
   queryOverview,
-  queryPrices,
-  sourceReads,
-} from '../server/utils/terminal-db'
+} from '../server/utils/terminal-alerts'
+import { buildMatrix, queryPrices } from '../server/utils/terminal-prices'
+import { queryContext, queryCoverage, sourceReads } from '../server/utils/terminal-db'
+import { queryHiring } from '../server/utils/terminal-hiring'
+import { queryIncidents } from '../server/utils/terminal-incidents'
 import { fieldDiff, fieldTable } from '../server/utils/terminal-json'
 import { fixtureText, manifest } from './pipeline/fixtures'
 

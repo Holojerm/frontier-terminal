@@ -30,12 +30,12 @@ import schemaLock from '~~/schema.lock.json'
 import { fixtureText } from './pipeline/fixtures'
 import {
   EXPORT_HISTORY,
-  EXPORT_TABLES,
   LICENSE_COLUMN,
-  asOfColumns,
-  csvLine,
   licenseWindow,
-} from '../server/utils/terminal-export'
+} from '../server/utils/terminal-export-history'
+import { EXPORT_TABLES } from '../server/utils/terminal-export'
+import { asOfColumns } from '../server/utils/terminal-export-views'
+import { csvLine } from '../server/utils/terminal-export-format'
 
 // The dictionary cannot drift from the exports: each column is declared with
 // its entry (terminal-export.ts), and the as_of columns are the ones a

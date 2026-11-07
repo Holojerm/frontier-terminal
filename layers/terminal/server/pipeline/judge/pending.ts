@@ -48,7 +48,7 @@ export const TIMESTAMP_FIELDS: Readonly<Record<string, readonly string[]>> = {
  * (UTC day, model) observation each, ~50 new rows a day by construction — not
  * events; offering them would wake the judge every morning to read a table.
  * Demand-share movement is read off /api/rankings instead. The same set is
- * excluded from the signal band's counts (layers/terminal/server/utils/terminal-db.ts).
+ * excluded from the signal band's counts (layers/terminal/server/utils/terminal-alerts.ts).
  */
 // 'filed_fact' changes exist only as the citation of a rule-based alert that
 // is already written (layers/terminal/server/exposure/alerts.ts).

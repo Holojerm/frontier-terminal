@@ -8,16 +8,15 @@ import type { SourceFetcher } from '../server/pipeline/fetch'
 import { runRefresh, type RawStore, type RefreshDeps } from '../server/pipeline/refresh'
 import { includeSources } from '../server/pipeline/sources'
 import { terminalStamps } from '../server/utils/terminal-cache'
+import { queryContext, queryDataFreshness } from '../server/utils/terminal-db'
+import { queryHiringHistory } from '../server/utils/terminal-hiring'
 import {
-  queryContext,
-  queryDataFreshness,
-  queryHiringHistory,
   queryPriceHistory,
   queryPriceKeys,
   queryPrices,
   sitemapPriceKeys,
   queryReleases,
-} from '../server/utils/terminal-db'
+} from '../server/utils/terminal-prices'
 import {
   baselineInstants,
   compareWindow,

@@ -12,7 +12,9 @@ import {
   s3SecretOf,
   staleGrants,
 } from '../server/utils/bulk-grant'
-import { EXPORT_TABLES, licensedColumns, type ExportTable } from '../server/utils/terminal-export'
+import { EXPORT_TABLES } from '../server/utils/terminal-export'
+import { licensedColumns } from '../server/utils/terminal-export-history'
+import { type ExportTable } from '../server/utils/terminal-export-views'
 import {
   PARQUET_CODEC,
   parquetBuilder,

@@ -30,13 +30,12 @@ import { ALERTS_METHOD } from './terminal-asof'
 import {
   AS_OF_VERIFIED,
   AS_OF_VERIFIED_DOC,
-  EXPORT_TABLES,
-  LICENSE_COLUMN,
   asOfColumns,
-  csvLine,
-  historyRule,
   type ExportTable,
-} from './terminal-export'
+} from './terminal-export-views'
+import { EXPORT_TABLES } from './terminal-export'
+import { LICENSE_COLUMN, historyRule } from './terminal-export-history'
+import { csvLine } from './terminal-export-format'
 import { JOINING_NOTE } from './terminal-identifiers'
 import {
   readArchiveSources,

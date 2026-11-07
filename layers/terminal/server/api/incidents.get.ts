@@ -2,7 +2,7 @@
 // newest 30 days against the 30 before, what is open now, and every
 // incident in the last 90 days, each with provenance. xAI is a stated cut.
 
-import { queryIncidents } from '../utils/terminal-db'
+import { queryIncidents } from '../utils/terminal-incidents'
 import { serveTerminal, terminalDb } from '../utils/terminal-handler'
 import { rateLimitTerminal } from '../utils/api-access'
 
