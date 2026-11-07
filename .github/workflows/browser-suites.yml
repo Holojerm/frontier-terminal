@@ -53,13 +53,26 @@ permissions:
   contents: read
 
 jobs:
+  # Trusted runs (pushes to main, PRs from branches in this repo) go to the
+  # owner's Mac mini: a single-use runner in a throwaway VM with no LAN access.
+  # Fork PRs stay on GitHub-hosted runners. This expression is not the security
+  # boundary — a fork can edit it — the "approve all external contributors"
+  # setting is; this keeps honest fork PRs off the mini without an approval.
+  # While the mini is down, trusted runs fall back to ubuntu-latest too
+  # (pick-runner.yml).
+  route:
+    uses: ./.github/workflows/pick-runner.yml
+    with:
+      label: mini
+      trusted: ${{ !(github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository) }}
+
   browser-suites:
-    # Trusted runs (pushes to main, PRs from branches in this repo) go to the
-    # owner's Mac mini: a single-use runner in a throwaway VM with no LAN access.
-    # Fork PRs stay on GitHub-hosted runners. This expression is not the security
-    # boundary — a fork can edit it — the "approve all external contributors"
-    # setting is; this keeps honest fork PRs off the mini without an approval.
-    runs-on: ${{ (github.event_name == 'pull_request' && github.event.pull_request.head.repo.full_name != github.repository) && 'ubuntu-latest' || fromJSON('["self-hosted","linux","ARM64","mini"]') }}
+    needs: route
+    # `browser-suites` is a required check, and a job skipped because its
+    # `needs` failed reports as passing. So it runs even if routing failed,
+    # on ubuntu-latest.
+    if: ${{ !cancelled() }}
+    runs-on: ${{ fromJSON(needs.route.outputs.runner || '"ubuntu-latest"') }}
     timeout-minutes: 20
 
     steps:
