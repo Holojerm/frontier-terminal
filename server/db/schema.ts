@@ -50,7 +50,8 @@ export const instanceSecrets = sqliteTable('instance_secrets', {
 // a row here; the fleet dashboard reads it through GET /api/fleet (`ops.kinds`)
 // and does the mailing. This exists because Workers Logs cannot be alerted on:
 // the only component that knows a request blew up is the Worker itself, at the
-// moment it happens. Pruned after OPS_EVENT_RETENTION_DAYS by server/tasks/ops/watch.ts.
+// moment it happens. Pruned after OPS_EVENT_RETENTION_DAYS by ops:watch
+// (layers/terminal/server/tasks/ops/watch.ts).
 export const opsEvents = sqliteTable('ops_events', {
   id: text('id')
     .primaryKey()

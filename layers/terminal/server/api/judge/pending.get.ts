@@ -20,6 +20,10 @@
 // newsroom posts found around it that still need a same-event rating
 // (layers/terminal/server/pipeline/track-record/review.ts); like
 // `claim_review`, it can be non-empty when `changes` is empty.
+// `figure_review` lists press headlines that state a lab's revenue,
+// valuation or funding and are not yet read
+// (layers/terminal/server/pipeline/reported/review.ts); it too can be
+// non-empty when `changes` is empty.
 
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
@@ -30,6 +34,7 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 import { hiringBoards } from '../../pipeline/hiring-floor'
 import { blobRawReader, classMapReview } from '../../pipeline/judge/class-map'
 import { JUDGE_CHANGE_LIMIT, pendingChanges } from '../../pipeline/judge/pending'
+import { figureReview } from '../../pipeline/reported/review'
 import { trackRecordReview } from '../../pipeline/track-record/review'
 import { claimReview, flagshipMap } from '../../theses/verdicts'
 import { requireJudgeToken } from '../../utils/judge-auth'
@@ -45,11 +50,13 @@ export default defineEventHandler(async (event) => {
     class_map_review,
     flagships,
     track_record_review,
+    figure_review,
   ] = await Promise.all([
     pendingChanges(db, JUDGE_CHANGE_LIMIT),
     classMapReview(db, blobRawReader(blob)),
     flagshipMap(db),
     trackRecordReview(db),
+    figureReview(db),
   ])
   const [claim_review, hiring] = await Promise.all([
     claimReview(db, changes, flagships),
@@ -67,6 +74,7 @@ export default defineEventHandler(async (event) => {
     class_map_review,
     claim_review,
     track_record_review,
+    figure_review,
     prompt: judgePrompt,
   }
 })

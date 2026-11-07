@@ -17,7 +17,7 @@
 // a judge with no changes to read, or a GDELT job with no due searches, is
 // quiet because it should be. A stale check spools one ops event of its kind,
 // then a KV marker holds the repeat to once every FRESHNESS_REPEAT_MS while
-// it lasts. ops:watch runs every check each tick.
+// it lasts. ops:watch runs every check each half hour.
 //
 // Two sources of checks, both built by freshnessChecks() in
 // terminal-freshness.ts:

@@ -5,7 +5,7 @@
 // that broke is picked up within the hour. An unconfigured outbox is skipped
 // before touching D1.
 //
-// Imports are explicit for the reason server/tasks/ops/watch.ts spells out.
+// Imports are explicit for the reason layers/terminal/server/tasks/ops/watch.ts spells out.
 
 import { logEvent } from '#server/utils/log'
 

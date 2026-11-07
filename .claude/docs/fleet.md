@@ -33,9 +33,10 @@ Three pieces:
   fleet dashboard is the only alert sender. Workers Issues
   (`[observability.issues]` in wrangler.toml) covers failures that spool nothing,
   such as a request that never returns.
-  `server/tasks/ops/watch.ts` (`ops:watch`, every 30 minutes) runs the watchdogs
-  that spool their own events, mostly the **freshness checks**
-(`layers/terminal/server/utils/freshness.ts`), one rule for
+  `layers/terminal/server/tasks/ops/watch.ts` (`ops:watch`, every 30 minutes) runs the
+  watchdogs that spool their own events, then prunes the spool (`pruneOpsEvents()`; this app
+  has no purge task). Mostly they are the **freshness checks**
+  (`layers/terminal/server/utils/freshness.ts`), one rule for
   every part that can go quiet: a check is stale when work has been owed for longer than its limit
   and nothing succeeded within it, and it spools its kind once every six hours while that lasts.
   There is one check per scheduled task, read from the `task_heartbeats` row `withHeartbeat()`
@@ -43,7 +44,7 @@ Three pieces:
   producer off the Worker
   (`layers/terminal/server/utils/terminal-freshness.ts`): the judge routine (`judge_silent`, owed
   changes three hours old and no judge run in that time), the GDELT Actions job
-  (`gdelt_search_silent`) and the press-drafts routine (`press_drafts_silent`). The deploy is one
+  (`gdelt_search_silent`) and the social outbox (`social_outbox_stalled`). The deploy is one
   too (`deploy_drift`): production's `build.sha` behind main's head on GitHub for a full tick
   means a merge never deployed. A failed post-deploy smoke run spools `deploy_smoke_failed` when
   `reliability:deploys` reads it, since GitHub mails that failure to whoever triggered the run.

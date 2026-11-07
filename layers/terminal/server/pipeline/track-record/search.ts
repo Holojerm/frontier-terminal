@@ -28,6 +28,7 @@ import * as tables from '#server/db/schema'
 import { ChangeRow, contentHash } from '../contracts'
 import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '../store'
 import { NEWSROOM_OF } from '../../theses/recipes/newsrooms'
+import { storeFigureRows } from '../reported/store'
 import {
   GKG_BASE,
   GKG_FROM,
@@ -490,7 +491,13 @@ export interface GkgFileInput {
 }
 
 export type GkgFileOutcome =
-  | { recorded: true; mentions: number; rejected: number }
+  | {
+      recorded: true
+      mentions: number
+      rejected: number
+      /** Kept rows whose headline is a lab figure (../reported/store.ts). */
+      figures: number
+    }
   | { recorded: false; reason: 'not-next' }
 
 /**
@@ -526,8 +533,20 @@ export async function recordGkgFile(
     recorded_at: now.toISOString(),
     mentions: kept.length,
     vocabulary: vocabulary ? JSON.stringify(vocabulary) : null,
+    figures_at: now.toISOString(),
   })
-  return { recorded: true, mentions: kept.length, rejected: input.mentions.length - kept.length }
+  // A figure headline names a lab, so it is always among the kept rows.
+  const figures = await storeFigureRows(
+    db,
+    { stamp: input.stamp, fetched_at: input.fetched_at, rows: kept },
+    now,
+  )
+  return {
+    recorded: true,
+    mentions: kept.length,
+    rejected: input.mentions.length - kept.length,
+    figures: figures.articles,
+  }
 }
 
 const NEWSROOM_URLS: Readonly<Record<string, string>> = Object.fromEntries(
