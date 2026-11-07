@@ -16,7 +16,12 @@
 // target floor (DESIGN.md › Target size), and these sit stacked in table cells
 // and footers where axe found 120+ of them once the pages had real rows.
 
-import { exactStamp, hostOf, relativeStamp } from '../../../shared/utils/terminal-format'
+import {
+  absoluteStamp,
+  exactStamp,
+  hostOf,
+  relativeStamp,
+} from '../../../shared/utils/terminal-format'
 
 const props = withDefaults(
   defineProps<{
@@ -28,10 +33,16 @@ const props = withDefaults(
     stamp?: boolean
     /** One line, age in the tooltip. Defaults to on inside a TerminalTable. */
     compact?: boolean
+    /**
+     * A later read of the source that still showed this datum. fetchedAt only
+     * moves when the datum changes, so without this an unchanged price
+     * re-read ten minutes ago would read as days old.
+     */
+    checkedAt?: string | null
   }>(),
   // An explicit undefined default stops Vue casting an absent boolean to
   // false, so "not set" can fall through to the table context.
-  { label: undefined, compact: undefined },
+  { label: undefined, compact: undefined, checkedAt: null },
 )
 
 const inTable = inject(IN_TERMINAL_TABLE, false)
@@ -41,6 +52,18 @@ const now = useNow()
 const text = computed(() => props.label ?? hostOf(props.sourceUrl))
 const age = computed(() => relativeStamp(props.fetchedAt, now.value))
 const exact = computed(() => exactStamp(props.fetchedAt))
+const since = computed(() => `unchanged since ${absoluteStamp(props.fetchedAt, now.value)}`)
+const reading = computed(() =>
+  props.checkedAt
+    ? `checked ${relativeStamp(props.checkedAt, now.value)} · ${since.value}`
+    : age.value,
+)
+const exactReading = computed(() =>
+  props.checkedAt
+    ? `checked ${exactStamp(props.checkedAt)}\nunchanged since ${exact.value}`
+    : `fetched ${exact.value}`,
+)
+const datetime = computed(() => props.checkedAt ?? props.fetchedAt)
 </script>
 
 <template>
@@ -54,11 +77,11 @@ const exact = computed(() => exactStamp(props.fetchedAt))
       :href="sourceUrl"
       target="_blank"
       rel="noopener noreferrer"
-      :title="`${label ? `${label}\n` : ''}${sourceUrl}\nfetched ${exact} (${age})`"
+      :title="`${label ? `${label}\n` : ''}${sourceUrl}\n${exactReading}`"
       class="inline-block max-w-40 truncate leading-6 underline underline-offset-2 hover:text-default"
       >{{ hostOf(sourceUrl) }}</a
     >
-    <time :datetime="fetchedAt" class="sr-only">fetched {{ age }}</time>
+    <time :datetime="datetime" class="sr-only">{{ checkedAt ? reading : `fetched ${age}` }}</time>
   </span>
   <span
     v-else
@@ -74,6 +97,6 @@ const exact = computed(() => exactStamp(props.fetchedAt))
       class="inline-block leading-6 underline underline-offset-2 hover:text-default"
       >{{ text }}</a
     >
-    <time :datetime="fetchedAt" :title="`fetched ${exact}`">{{ age }}</time>
+    <time :datetime="datetime" :title="exactReading">{{ reading }}</time>
   </span>
 </template>

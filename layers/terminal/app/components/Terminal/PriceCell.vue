@@ -47,6 +47,11 @@ const delta = computed(() => cellDelta(props.cell))
       :reason="cell.gap ?? undefined"
       :name="`Why ${lab} has no ${label} price`"
     />
-    <TerminalProvenanceTag v-if="row" :source-url="row.source_url" :fetched-at="row.fetched_at" />
+    <TerminalProvenanceTag
+      v-if="row"
+      :source-url="row.source_url"
+      :fetched-at="row.fetched_at"
+      :checked-at="row.checked_at"
+    />
   </div>
 </template>
