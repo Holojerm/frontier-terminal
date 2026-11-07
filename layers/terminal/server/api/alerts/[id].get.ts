@@ -6,7 +6,7 @@
 import { z } from 'zod'
 
 import { PERMALINK_LIMIT } from '../../utils/rate-limits'
-import { queryAlert } from '../../utils/terminal-db'
+import { queryAlert } from '../../utils/terminal-alerts'
 import { serveTerminal, terminalDb } from '../../utils/terminal-handler'
 import { rateLimitTerminal } from '../../utils/api-access'
 

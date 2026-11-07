@@ -3,7 +3,7 @@
 // the job set rebuilt at that instant; before our first read of the boards,
 // each lab's newest Internet Archive copy by then (terminal-archive.ts).
 
-import { queryHiring } from '../utils/terminal-db'
+import { queryHiring } from '../utils/terminal-hiring'
 import { serveTerminal, terminalDb } from '../utils/terminal-handler'
 import { rateLimitTerminal } from '../utils/api-access'
 

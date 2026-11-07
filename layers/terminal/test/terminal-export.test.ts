@@ -7,29 +7,28 @@ import { asOfLicense, licenseWindowStart, rowLicense, withLicense } from '~~/sha
 import { PointInTimeError } from '../server/utils/terminal-asof'
 import { contentHash, contentHashOfText } from '../server/pipeline/contracts'
 import { insertRows } from '../server/pipeline/store'
+import { EXPORT_PAGE_SIZE, exportFilter } from '../server/utils/terminal-export-views'
+import { EXPORT_TABLES, exportTable, WITHDRAWN_EXPORTS } from '../server/utils/terminal-export'
 import {
-  EXPORT_PAGE_SIZE,
-  EXPORT_TABLES,
   collect,
   csvCell,
   csvChunks,
   csvLine,
   defuseFormula,
-  exportFilter,
-  exportTable,
-  historyRule,
   jsonChunks,
   jsonEnvelopeChunks,
+  parseExportPath,
+  streamOf,
+} from '../server/utils/terminal-export-format'
+import {
+  historyRule,
   licenseHeaders,
   licenseWindow,
-  parseExportPath,
   parseExportQuery,
   windowOf,
   sampleOf,
   SAMPLE_ROWS,
-  streamOf,
-  WITHDRAWN_EXPORTS,
-} from '../server/utils/terminal-export'
+} from '../server/utils/terminal-export-history'
 
 // Bulk exports against a real D1: every table has provenance columns, the
 // CSV is RFC 4180, the JSON parses back to the same rows, and a table larger

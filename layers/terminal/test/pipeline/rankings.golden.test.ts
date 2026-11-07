@@ -22,7 +22,7 @@ import {
   type RefreshDeps,
 } from '../../server/pipeline/refresh'
 import { includeSources } from '../../server/pipeline/sources'
-import { queryMovement } from '../../server/utils/terminal-db'
+import { queryMovement } from '../../server/utils/terminal-alerts'
 import { fixtureText, manifest, provenanceOf } from './fixtures'
 
 // The demand-share source end to end: the parser against the first keyed

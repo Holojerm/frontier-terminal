@@ -18,7 +18,8 @@ import { recommendationRows } from '../../server/pipeline/recommendations'
 import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
 import { terminalStamps } from '../../server/utils/terminal-cache'
 import { CLASS_MAP_SOURCES, MODEL_CLASS_MAP } from '../../server/utils/terminal-classes'
-import { queryContext, queryPrices } from '../../server/utils/terminal-db'
+import { queryContext } from '../../server/utils/terminal-db'
+import { queryPrices } from '../../server/utils/terminal-prices'
 import { fixtureText } from './fixtures'
 
 // The judge re-mapping a price-matrix cell. Pure halves first, then the whole

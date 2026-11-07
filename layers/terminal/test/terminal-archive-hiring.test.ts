@@ -16,8 +16,10 @@ import {
   queryHiringReach,
   queryPriceReach,
 } from '../server/utils/terminal-archive'
-import { queryContext, queryHiring, queryHiringHistory } from '../server/utils/terminal-db'
-import { exportTable, licenseWindow } from '../server/utils/terminal-export'
+import { queryContext } from '../server/utils/terminal-db'
+import { queryHiring, queryHiringHistory } from '../server/utils/terminal-hiring'
+import { exportTable } from '../server/utils/terminal-export'
+import { licenseWindow } from '../server/utils/terminal-export-history'
 import { fixtureText, manifest } from './pipeline/fixtures'
 
 // The archived hiring history on the read side: archived points before the

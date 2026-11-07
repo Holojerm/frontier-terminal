@@ -4,7 +4,7 @@
 // there, rebuilt from the set and log as they stood. Each lab's `archived`
 // points are the Internet Archive's copies of its board from before then.
 
-import { queryHiringHistory } from '../../utils/terminal-db'
+import { queryHiringHistory } from '../../utils/terminal-hiring'
 import { serveTerminal, terminalDb } from '../../utils/terminal-handler'
 import { rateLimitTerminal } from '../../utils/api-access'
 
