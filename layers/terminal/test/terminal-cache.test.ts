@@ -154,6 +154,27 @@ describe('sharedTerminalStamp', () => {
     expect(await sharedTerminalStamp(async () => 't3')).toBe('t3')
   })
 
+  it('does not hang on a read that never settles: waiters time out and read for themselves', async () => {
+    // A read owned by a cancelled request never settles in Workers. A caller
+    // that joined it must still get a stamp, and the dead slot must not trap
+    // the callers that come after it.
+    let clock = 0
+    const now = () => clock
+    const never = () => new Promise<string | null>(() => {})
+    void sharedTerminalStamp(never, 20, now)
+
+    expect(await sharedTerminalStamp(async () => 'own', 20, now)).toBe('own')
+
+    clock = 50
+    let reads = 0
+    const fresh = async () => {
+      reads += 1
+      return 'fresh'
+    }
+    expect(await sharedTerminalStamp(fresh, 20, now)).toBe('fresh')
+    expect(reads).toBe(1)
+  })
+
   it('reads the real stamp through the same path terminalPayload uses', async () => {
     await insertRows(db, 'source_runs', [
       {

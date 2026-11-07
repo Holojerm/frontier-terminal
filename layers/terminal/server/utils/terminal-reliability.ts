@@ -400,7 +400,12 @@ async function deploys(
       .where(gte(d.created_at, longFromIso))
       .orderBy(desc(d.created_at))
       .limit(DEPLOYS_SHOWN),
-    db.select({ first: min(d.created_at), fetched: max(d.fetched_at) }).from(d),
+    // Two selects, not one: SQLite answers a lone min() or max() from an index
+    // in one step, but scans the table when both share a select.
+    Promise.all([
+      db.select({ first: min(d.created_at) }).from(d),
+      db.select({ fetched: max(d.fetched_at) }).from(d),
+    ]).then(([[a], [b]]) => [{ first: a?.first ?? null, fetched: b?.fetched ?? null }]),
   ])
   const checks: DeployCheck[] = rows
   const tally = { success: 0, failure: 0, cancelled: 0, other: 0, running: 0 }

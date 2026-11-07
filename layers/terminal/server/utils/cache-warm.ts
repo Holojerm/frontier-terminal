@@ -28,16 +28,40 @@ export function warmMarkerKey(build: string, stamp: string | null): string {
   return `cache-warm:${build}:${stamp ?? 'never-polled'}`
 }
 
+/**
+ * Claims a (build, stamp) warm across isolates. Each cron expression is its own
+ * scheduled event, so at 12:00 the five-minute tick's cache:warm, and the warm
+ * each poll asks for when it finishes, can land in different isolates, where
+ * runTask's de-duplication cannot see each other. Without the claim they all
+ * rendered every page at once, on top of the survey's writes, and D1 refused
+ * reads for "too many resources consumed within a 10 second window"
+ * (2026-11-07). Not released on finish: the marker answers success, and after
+ * a failure the claim lapses before the next five-minute tick retries. KV's
+ * floor is 60s.
+ */
+export const WARM_LEASE_TTL_SECONDS = 120
+
+export function warmLeaseKey(build: string, stamp: string | null): string {
+  return `cache-warm-lease:${build}:${stamp ?? 'never-polled'}`
+}
+
 export interface WarmDeps {
   store: CacheStore
   build: string
   stamp: () => Promise<string | null>
   /** Renders one path in-process and resolves to its HTTP status. */
   render: (path: string) => Promise<number>
+  /**
+   * True while a poll holds the poll lock. Every row it writes moves the stamp,
+   * so a warm started mid-poll renders every page for a stamp that is gone by
+   * the time it finishes. The poll asks for its own warm once the lock is free.
+   */
+  pollRunning?: () => Promise<boolean>
 }
 
 export type WarmResult =
   | { status: 'already-warm'; stamp: string | null }
+  | { status: 'skipped'; reason: 'poll-running' | 'leased'; stamp: string | null }
   | { status: 'warmed'; stamp: string | null; pages: number; failed: string[] }
 
 /** Passes per run when polls keep moving the stamp; the next tick picks up the rest. */
@@ -56,7 +80,7 @@ export const WARM_MAX_PASSES = 3
 export async function warmCaches(deps: WarmDeps, paths: readonly string[]): Promise<WarmResult> {
   let result = await warmOnce(deps, paths)
   for (let pass = 1; pass < WARM_MAX_PASSES; pass++) {
-    if ((await deps.stamp()) === result.stamp) break
+    if (result.status !== 'warmed' || (await deps.stamp()) === result.stamp) break
     result = await warmOnce(deps, paths)
   }
   return result
@@ -66,6 +90,10 @@ async function warmOnce(deps: WarmDeps, paths: readonly string[]): Promise<WarmR
   const stamp = await deps.stamp()
   const marker = warmMarkerKey(deps.build, stamp)
   if (await deps.store.get(marker)) return { status: 'already-warm', stamp }
+  if (await deps.pollRunning?.()) return { status: 'skipped', reason: 'poll-running', stamp }
+  const lease = warmLeaseKey(deps.build, stamp)
+  if (await deps.store.get(lease)) return { status: 'skipped', reason: 'leased', stamp }
+  await deps.store.set(lease, true, { ttl: WARM_LEASE_TTL_SECONDS })
 
   const failed: string[] = []
   const queue = [...paths]
