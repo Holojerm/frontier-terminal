@@ -719,7 +719,7 @@ describe('repeats, retries and re-reads', () => {
       new Set((await rows.entities()).filter((e) => e.source_id === ID).map((e) => e.provider))
     expect(await providers()).toEqual(new Set(['xai']))
 
-    const tag = '  xai:\n    ticker: SPCX\n    relation: parent\n'
+    const tag = '  xai:\n    ticker: SPCX\n    relation: parent\n    effective: 2026-09-21\n'
     expect(sourcesYaml).toContain(tag)
     const untagged = sourcesYaml.replace(tag, '  xai: null\n')
     const retag = (yaml: string) =>
