@@ -23,21 +23,15 @@
 # about: a broken CSP fails silently, in exactly the way that gate exists to
 # catch. If you ever delete this workflow, you are deleting the CSP gate.
 #
-# Everything else still runs in Workers Builds via `bun run ci` — lint, the
-# design/brand/mirror/seo gates, typecheck, the unit tests and the build. Those
-# are the gates that block a deploy; these two block a merge.
+# Everything else runs in Workers Builds on non-production branches via `bun run ci` —
+# lint, the design/brand/mirror/seo gates, typecheck, the unit tests and the build.
+# That is the other PR check; production builds run typecheck + build only.
 
 name: Browser suites
 
-# `push` is limited to main rather than '**' because a pull-request branch
-# already gets a `pull_request` run. Matching on both fired this workflow twice
-# for every push to an open PR, under two different concurrency groups
-# (refs/heads/… and refs/pull/N/merge), so neither cancelled the other — two
-# full browser suites per push, and the stale one ran to completion.
+# Pull requests only: branches must be up to date before merging, so a run on
+# main after the merge would repeat the check that just passed.
 on:
-  push:
-    branches:
-      - main
   pull_request:
 
 # A second push to the same branch makes the first run irrelevant.
@@ -53,7 +47,7 @@ permissions:
   contents: read
 
 jobs:
-  # Trusted runs (pushes to main, PRs from branches in this repo) go to the
+  # Trusted runs (PRs from branches in this repo) go to the
   # owner's Mac mini: a single-use runner in a throwaway VM with no LAN access.
   # Fork PRs stay on GitHub-hosted runners. This expression is not the security
   # boundary — a fork can edit it — the "approve all external contributors"
