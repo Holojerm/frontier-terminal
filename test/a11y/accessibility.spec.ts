@@ -52,6 +52,8 @@ const ROUTES = [
   '/rankings',
   '/compute',
   '/alerts',
+  // Filtered: the selects show a value and the "Clear filters" link and filtered gap render.
+  '/alerts?lab=anthropic&topic=pricing&tier=critical',
   '/alerts?tab=track-record',
   '/theses',
   '/theses/anthropic',

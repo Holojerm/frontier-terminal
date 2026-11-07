@@ -15,7 +15,9 @@
 // server/utils/fleet-status.ts uses) so layers/terminal/test/terminal-db.test.ts drives them
 // against the workerd D1.
 
-import { and, asc, count, desc, eq, inArray, max, min, ne, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, gt, inArray, lt, max, min, ne, or, sql } from 'drizzle-orm'
+
+import { entityTypesOf, type AlertAxis } from '../../shared/utils/terminal-labs'
 
 import { count as countLabel, money } from '../../shared/utils/terminal-format'
 import {
@@ -663,26 +665,82 @@ async function resolveAlerts<C extends ChangeView>(
 const tierWhere = (tier: AlertTierFilter) =>
   tier === 'all' ? undefined : inArray(tables.alerts.severity, severitiesOf(tier))
 
+export interface AlertFilter {
+  /** Alerts citing at least one row from this lab. */
+  lab?: ProviderId
+  /** Alerts citing at least one row on this axis. */
+  topic?: AlertAxis
+  /** A `next_cursor` from the previous page: only alerts older than it. */
+  cursor?: AlertCursor
+}
+
+/** Where a page ended, in the list's own order: created_at descending, then id ascending. */
+export interface AlertCursor {
+  created_at: string
+  id: string
+}
+
+// `~` appears in neither an ISO timestamp nor a content-hash id, so it splits a cursor unambiguously.
+export const formatAlertCursor = (c: AlertCursor): string => `${c.created_at}~${c.id}`
+
+export function parseAlertCursor(text: string): AlertCursor | null {
+  const [created_at, id, extra] = text.split('~')
+  return created_at && id && extra === undefined ? { created_at, id } : null
+}
+
+/**
+ * Lab and topic are not columns on an alert: they are read off the rows it
+ * cites (terminal-labs.ts), so the filter does the same in SQL, over the
+ * change_ids JSON array. "Any cited row matches", like alertLabs: an alert
+ * citing two labs is found under both.
+ */
+function citesWhere(filter: AlertFilter) {
+  if (!filter.lab && !filter.topic) return undefined
+  const conds = [sql`c.id = j.value`]
+  if (filter.lab) conds.push(sql`c.provider = ${filter.lab}`)
+  if (filter.topic) {
+    const types = entityTypesOf(filter.topic)
+    conds.push(
+      sql`c.entity_type in (${sql.join(
+        types.map((t) => sql`${t}`),
+        sql`, `,
+      )})`,
+    )
+  }
+  return sql`exists (select 1 from json_each(${tables.alerts.change_ids}) j join ${tables.changes} c on ${sql.join(conds, sql` and `)})`
+}
+
+const olderThan = (c: AlertCursor) =>
+  or(
+    lt(tables.alerts.created_at, c.created_at),
+    and(eq(tables.alerts.created_at, c.created_at), gt(tables.alerts.id, c.id)),
+  )
+
 export async function queryAlerts(
   db: PipelineDb,
   ctx: QueryContext,
   limit: number,
   tier: AlertTierFilter = 'all',
+  filter: AlertFilter = {},
 ): Promise<AlertsData> {
-  let where = tierWhere(tier)
+  let where = and(tierWhere(tier), citesWhere(filter))
   if (ctx.at !== null) {
     where = and(where, alertsKnownAt(ctx.at, await judgeCutoffAt(db, ctx.at)))
     ctx.notes.method.add(ALERTS_METHOD)
   }
-  const rows = await db
+  // One extra row says whether an older page exists without a second query.
+  const fetched = await db
     .select()
     .from(tables.alerts)
-    .where(where)
+    .where(filter.cursor ? and(where, olderThan(filter.cursor)) : where)
     .orderBy(desc(tables.alerts.created_at), asc(tables.alerts.id))
-    .limit(limit)
+    .limit(limit + 1)
+  const rows = fetched.slice(0, limit)
+  const last = rows.at(-1)
+  const next_cursor = fetched.length > limit && last ? formatAlertCursor(last) : null
   const [totalRow] = await db.select({ total: count() }).from(tables.alerts).where(where)
   const views = await resolveAlerts(db, rows, toChangeView)
-  return { ...stampOf(ctx), tier, rows: views, total: totalRow?.total ?? 0 }
+  return { ...stampOf(ctx), tier, rows: views, total: totalRow?.total ?? 0, next_cursor }
 }
 
 /** One alert by id, its cited rows in full; null when no such alert. */

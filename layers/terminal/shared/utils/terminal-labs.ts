@@ -86,6 +86,13 @@ const AXIS_OF: Record<ChangeView['entity_type'], AlertAxis> = {
   ranking: 'demand',
 }
 
+export const ALERT_AXES = Object.keys(AXIS_DISPLAY) as [AlertAxis, ...AlertAxis[]]
+
+/** The change entity types that sit on `axis`: what a topic filter matches cited rows against. */
+export function entityTypesOf(axis: AlertAxis): ChangeView['entity_type'][] {
+  return (Object.keys(AXIS_OF) as ChangeView['entity_type'][]).filter((t) => AXIS_OF[t] === axis)
+}
+
 /** Distinct labs across the cited rows, in first-cited order. */
 export function alertLabs(alert: Pick<AlertView, 'changes'>): ProviderId[] {
   return [...new Set(alert.changes.map((c) => c.provider))]

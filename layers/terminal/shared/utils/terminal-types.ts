@@ -1073,7 +1073,10 @@ export interface AlertsData extends Stamp {
   /** Which tier(s) `rows` and `total` cover. */
   tier: AlertTierFilter
   rows: AlertView[]
+  /** Every alert matching the tier and filters, not just this page. */
   total: number
+  /** Pass as `cursor` for the next, older page; null when this page reaches the oldest match. */
+  next_cursor: string | null
 }
 
 /** A cited change on its permalink: every scalar field, before and after. */
