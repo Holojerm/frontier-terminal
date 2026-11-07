@@ -156,14 +156,16 @@ enabled = true
 # Worker on schedule and runs nothing, with no error and no log line.
 # `bun run crons:check` (part of `bun run ci`) fails the build on a mismatch.
 #
-#   "*/30 * * * *"  ops:alert  — drains the ops_events spool into a digest email
+#   "*/30 * * * *"  ops:watch  — the freshness and launch-coverage watchdogs
 #                   poll:edgar — the two SEC feeds (layers/terminal/server/pipeline/scopes.ts)
 #   "0 */6 * * *"   poll:survey — every include source: pricing, hiring, EDGAR,
 #                   status pages, OpenRouter rankings — except the careers lane
 #   "17 */6 * * *"  poll:careers — the ~20 MB Google careers feed, alone, so its
 #                   memory never shares the survey's invocation
 #                   (CAREERS_SOURCES in layers/terminal/server/pipeline/scopes.ts)
-#   "*/5 * * * *"   poll:tripwire — parses the four model catalogs and polls
+#   "*/5 * * * *"   ops:alert  — drains the ops_events spool into a digest email once a
+#                   row has waited out its tier's hold (critical: the next tick)
+#                   poll:tripwire — parses the four model catalogs and polls
 #                   them off-cycle only when they differ from the store
 #                   cache:warm — re-renders the public pages after a deploy or poll
 #                   moves the payload cache key
@@ -276,8 +278,6 @@ NUXT_INDEXNOW_KEY = "fe2738e740b8c6b06a20d76ab1877559"
 #   NUXT_FLEET_TOKEN_PREVIOUS    only during a rotation — server/utils/fleet-auth.ts.
 #   NUXT_PRESS_LIST              JSON press list for the press briefs (layers/terminal/server/pipeline/press.ts).
 #                                Names people, so never in git. Unset = no briefs.
-#   NUXT_PRESS_TOKEN             bearer the press-drafts routine presents to /api/press/*.
-#                                32+ chars. Unset = those routes 404.
 #   NUXT_GDELT_TOKEN             bearer the GitHub Actions GDELT job presents to /api/gdelt/*
 #                                (scripts/gdelt-search.ts); the same value is the repo secret
 #                                GDELT_TOKEN. 32+ chars. Unset = those routes 404, no GDELT file is read.
