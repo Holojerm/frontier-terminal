@@ -175,9 +175,9 @@ function statsStatements(db: PipelineDb, table: TableName, rows: readonly unknow
 
 /**
  * Validate, then insert. Returns the number of rows written. Plain INSERT on
- * purpose — a primary-key collision (two ticks writing the same change id)
- * fails loudly and becomes a 'failed' source run, which is the honest record
- * of a lock race; the KV mutex in lock.ts is what prevents it.
+ * purpose — a primary-key collision fails loudly and becomes a 'failed'
+ * source run. Change and alert rows, whose ids two ticks or two sources can
+ * share, go through applyDiff instead, which skips an id already stored.
  */
 export async function insertRows<T extends TableName>(
   db: PipelineDb,
@@ -306,6 +306,84 @@ export async function applyDiff(db: PipelineDb, sourceId: string, writes: DiffWr
   if (writes.alerts.length) await emitEvent('alerts.new')
 }
 
+export type BaselineWrites = Pick<DiffWrites, 'added' | 'modified' | 'removed'>
+
+/**
+ * A first parse's entity set, with no change rows. Written against whatever
+ * the source already has rather than as plain INSERTs: a baseline whose
+ * entity writes landed but whose run row did not is "first" again next tick,
+ * and a plain INSERT would then collide on (source_id, entity_key) every
+ * tick forever. Chunked like insertRows, so a large baseline is not one
+ * oversized batch; a retry finishes whatever a killed one left.
+ */
+export async function writeBaseline(db: PipelineDb, sourceId: string, writes: BaselineWrites) {
+  await runStatements(db, [
+    ...insertStatements(db, 'entities', writes.added, { skipExisting: true }),
+    ...updateEntityStatements(db, sourceId, writes.modified),
+    ...deleteEntityStatements(db, sourceId, writes.removed),
+  ])
+}
+
+/**
+ * The ids among `changes` that name a transition already logged from the
+ * same source_url which the entity has since moved on from — a repeat, to be
+ * re-keyed with diff.ts › repeatChangeId so the store does not skip it.
+ *
+ * A stored id from another source_url is two sources seeing one event (an
+ * FTS hit and the filer's own feed): that stays one row. A stored id whose
+ * entity's newest change from this source_url is the same transition is an
+ * overlapping tick re-diffing the same snapshots: that stays one row too.
+ */
+export async function repeatedChangeIds(
+  db: PipelineDb,
+  changes: readonly ChangeRow[],
+): Promise<Set<string>> {
+  const stored = new Map<string, string>()
+  for (const ids of chunk(
+    changes.map((c) => c.id),
+    D1_MAX_BOUND_PARAMS,
+  )) {
+    const rows = await db
+      .select({ id: tables.changes.id, source_url: tables.changes.source_url })
+      .from(tables.changes)
+      .where(inArray(tables.changes.id, ids))
+    for (const r of rows) stored.set(r.id, r.source_url)
+  }
+  const collided = changes.filter((c) => stored.get(c.id) === c.source_url)
+  if (collided.length === 0) return new Set()
+
+  // Collisions are rare (one entity flapping), so reading their whole
+  // history is cheap.
+  type Transition = { before_hash: string | null; after_hash: string | null; detected_at: string }
+  const newest = new Map<string, Transition>()
+  const slot = (key: string, url: string) => `${key}\n${url}`
+  for (const keys of chunk([...new Set(collided.map((c) => c.entity_key))], D1_MAX_BOUND_PARAMS)) {
+    const rows = await db
+      .select({
+        entity_key: tables.changes.entity_key,
+        source_url: tables.changes.source_url,
+        before_hash: tables.changes.before_hash,
+        after_hash: tables.changes.after_hash,
+        detected_at: tables.changes.detected_at,
+      })
+      .from(tables.changes)
+      .where(inArray(tables.changes.entity_key, keys))
+    for (const r of rows) {
+      const at = slot(r.entity_key, r.source_url)
+      const seen = newest.get(at)
+      if (!seen || r.detected_at > seen.detected_at) newest.set(at, r)
+    }
+  }
+  return new Set(
+    collided
+      .filter((c) => {
+        const n = newest.get(slot(c.entity_key, c.source_url))
+        return n !== undefined && (n.before_hash !== c.before_hash || n.after_hash !== c.after_hash)
+      })
+      .map((c) => c.id),
+  )
+}
+
 /**
  * When this source was last recorded 'skipped', or null. The refresh uses it
  * to say "not configured" in the ops digest once a day rather than once a
@@ -394,6 +472,8 @@ export interface GoodSnapshot {
   raw_key: string
   /** The URL that snapshot was fetched from: a source can move (sources.yaml). */
   source_url: string
+  /** What else that run's parse read (refresh.ts › ParseBasis), or null. */
+  parse_basis: string | null
 }
 
 /** Which of these sources have parsed at least once ('ok', 'unchanged' or 'baseline'). */
@@ -433,6 +513,7 @@ export async function latestGoodSnapshot(
       content_hash: tables.snapshots.content_hash,
       raw_key: tables.snapshots.raw_key,
       source_url: tables.snapshots.source_url,
+      parse_basis: tables.sourceRuns.parse_basis,
     })
     .from(tables.sourceRuns)
     .innerJoin(tables.snapshots, eq(tables.snapshots.id, tables.sourceRuns.snapshot_id))

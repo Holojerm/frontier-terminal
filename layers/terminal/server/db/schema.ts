@@ -91,7 +91,9 @@ export const entities = sqliteTable(
 
 // Changes — append-only. id is contentHash(entity_key + before/after hashes)
 // as layers/terminal/server/pipeline/diff.ts computes it, so the same two snapshots always
-// yield the same ids and an overlapping tick cannot log a change twice.
+// yield the same ids and an overlapping tick cannot log a change twice. An
+// entity that makes the same transition again later (a role reposted and
+// closed again) gets an id that also hashes detected_at — diff.ts › repeatChangeId.
 export const changes = sqliteTable(
   'changes',
   {
@@ -149,6 +151,12 @@ export const sourceRuns = sqliteTable(
     removed: integer('removed').notNull(),
     modified: integer('modified').notNull(),
     source_url: text('source_url').notNull(),
+    // What else the parse read besides this source's own bytes: the side
+    // snapshots it joined against and a fingerprint of the parser and config
+    // it ran with (JSON, layers/terminal/server/pipeline/refresh.ts › ParseBasis). The next
+    // tick may skip an unchanged page only when these match too. NULL for a
+    // failed run, a source with no lane, and every run before the column.
+    parse_basis: text('parse_basis'),
   },
   (t) => [
     index('source_runs_source_started_idx').on(t.source_id, t.started_at),

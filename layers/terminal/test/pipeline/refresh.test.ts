@@ -621,6 +621,198 @@ describe('second run', () => {
   })
 })
 
+describe('repeats, retries and re-reads', () => {
+  it('logs every move of an entity that returns to a state it left, not only the first', async () => {
+    const PRICE = 'model:xai:grok-4.6:standard'
+    const JOB = `job:xai:${REMOVED_JOB}`
+    await run('survey', ['xai-models-md', 'xai-greenhouse'])
+    const [repriced, closed] = [xaiPricesRepriced(), xaiJobsWithout(REMOVED_JOB)]
+    const board = fixtureText('fixtures/hiring/xai-greenhouse.json')
+    const prices = fixtureText('fixtures/pricing/xai-models.md')
+    // 2.00 → 2.50 → 2.00 → 2.50; open → closed → reposted → closed.
+    for (const [md, jobs] of [
+      [repriced, closed],
+      [prices, board],
+      [repriced, closed],
+    ]) {
+      await run(
+        'survey',
+        ['xai-models-md', 'xai-greenhouse'],
+        fixtureFetcher({ 'xai-models-md': md!, 'xai-greenhouse': jobs! }),
+      )
+    }
+    const changes = await rows.changes()
+    const of = (key: string) =>
+      changes
+        .filter((c) => c.entity_key === key)
+        .sort((a, b) => (a.detected_at < b.detected_at ? -1 : 1))
+    expect(of(PRICE).map((c) => c.change_type)).toEqual(['modified', 'modified', 'modified'])
+    expect(of(JOB).map((c) => c.change_type)).toEqual(['removed', 'added', 'removed'])
+    const [first, , repeat] = of(PRICE)
+    expect(repeat!.before_hash).toBe(first!.before_hash)
+    expect(repeat!.after_hash).toBe(first!.after_hash)
+    expect(repeat!.id).not.toBe(first!.id)
+  })
+
+  it('re-parses a board whose /departments changed on a tick the board itself failed', async () => {
+    await run('survey', ['xai-greenhouse'])
+    const renamed = fixtureText('fixtures/hiring/xai-greenhouse-departments.json').replace(
+      '"name": "Human Data"',
+      '"name": "Human Data Ops"',
+    )
+    // The rename lands while the board is down: the side's run records it.
+    const down = await run(
+      'survey',
+      ['xai-greenhouse'],
+      fixtureFetcher({
+        'xai-greenhouse-departments': renamed,
+        'xai-greenhouse': { ok: false, status: 503, detail: 'HTTP 503' },
+      }),
+    )
+    expect(down.sources.find((s) => s.source_id === 'xai-greenhouse')!.status).toBe('failed')
+
+    // Both are byte-identical to their own last good runs now, but the board
+    // has never been joined against the renamed departments.
+    const back = await run(
+      'survey',
+      ['xai-greenhouse'],
+      fixtureFetcher({ 'xai-greenhouse-departments': renamed }),
+    )
+    const byId = Object.fromEntries(back.sources.map((s) => [s.source_id, s]))
+    expect(byId['xai-greenhouse-departments']!.status).toBe('unchanged')
+    expect(byId['xai-greenhouse']).toMatchObject({ status: 'ok', modified: 3 })
+
+    const again = await run(
+      'survey',
+      ['xai-greenhouse'],
+      fixtureFetcher({ 'xai-greenhouse-departments': renamed }),
+    )
+    expect(again.sources.find((s) => s.source_id === 'xai-greenhouse')!.status).toBe('unchanged')
+  })
+
+  it('a baseline that died before its run row is retried, not wedged on its own rows', async () => {
+    await run('survey', ['xai-greenhouse'])
+    const stored = (await rows.entities()).filter((e) => e.source_id === 'xai-greenhouse')
+    expect(stored).toHaveLength(42)
+    // The entity writes landed; the run row that marks them good did not.
+    await db.delete(schema.sourceRuns)
+
+    const retry = await run(
+      'survey',
+      ['xai-greenhouse'],
+      fixtureFetcher({ 'xai-greenhouse': xaiJobsWithout(REMOVED_JOB) }),
+    )
+    expect(retry.sources.find((s) => s.source_id === 'xai-greenhouse')).toMatchObject({
+      status: 'baseline',
+      detail: '41 entities',
+    })
+    const after = (await rows.entities()).filter((e) => e.source_id === 'xai-greenhouse')
+    expect(after).toHaveLength(41)
+    expect(after.find((e) => e.entity_key === `job:xai:${REMOVED_JOB}`)).toBeUndefined()
+    expect(await rows.changes()).toHaveLength(0)
+  })
+
+  it('a retagged revenue filer rewrites its stored rows in place, without a change or an alert', async () => {
+    const ID = 'edgar-companyfacts-spcx'
+    await run('edgar', [ID])
+    const providers = async () =>
+      new Set((await rows.entities()).filter((e) => e.source_id === ID).map((e) => e.provider))
+    expect(await providers()).toEqual(new Set(['xai']))
+
+    const tag = '  xai:\n    ticker: SPCX\n    relation: parent\n'
+    expect(sourcesYaml).toContain(tag)
+    const untagged = sourcesYaml.replace(tag, '  xai: null\n')
+    const retag = (yaml: string) =>
+      runRefresh({ ...deps(fixtureFetcher()), sourcesYaml: yaml }, 'edgar', [ID])
+
+    // Same bytes, new sources.yaml: parsed again, rewritten, not logged.
+    const report = await retag(untagged)
+    expect(report.sources[0]).toMatchObject({ status: 'ok', added: 0, modified: 0, removed: 0 })
+    expect(report.sources[0]!.detail).toContain(
+      'parser or sources.yaml changed: 4 rows re-read in place, not logged as changes',
+    )
+    expect(await providers()).toEqual(new Set(['other']))
+    expect(await rows.changes()).toHaveLength(0)
+    expect(await rows.alerts()).toHaveLength(0)
+
+    expect((await retag(untagged)).sources[0]!.status).toBe('unchanged')
+    // Tagged back while the bytes also change: the restated value logs, the
+    // provider flip on the other rows does not.
+    const doc = JSON.parse(fixtureText('fixtures/sec/edgar-companyfacts-spcx.json')) as {
+      facts: { 'us-gaap': Record<string, { units: { USD: { val: number }[] } }> }
+    }
+    doc.facts['us-gaap']['RevenueFromContractWithCustomerExcludingAssessedTax']!.units.USD[3]!.val =
+      7_815_000_000
+    const restated = await runRefresh(
+      { ...deps(fixtureFetcher({ [ID]: JSON.stringify(doc) })), sourcesYaml },
+      'edgar',
+      [ID],
+    )
+    expect(restated.sources[0]).toMatchObject({ status: 'ok', modified: 1 })
+    expect(await providers()).toEqual(new Set(['xai']))
+    expect((await rows.changes()).map((c) => c.change_type)).toEqual(['modified'])
+  })
+
+  it('a run from before parse bases were recorded is re-read once, quietly', async () => {
+    await run('survey', ['xai-models-md'])
+    await db.update(schema.sourceRuns).set({ parse_basis: null })
+    const reread = await run('survey', ['xai-models-md'])
+    expect(reread.sources[0]).toMatchObject({ status: 'ok', detail: null, modified: 0 })
+    expect(await rows.changes()).toHaveLength(0)
+    expect((await run('survey', ['xai-models-md'])).sources[0]!.status).toBe('unchanged')
+  })
+
+  it('a source that moved URL with byte-identical content still moves every row to the new URL', async () => {
+    await run('survey', ['anthropic-status'])
+    const oldUrl = 'https://status.example.com/incidents.json'
+    await db.update(schema.snapshots).set({ source_url: oldUrl })
+    await db.update(schema.entities).set({ source_url: oldUrl })
+
+    const report = await run('survey', ['anthropic-status'])
+    expect(report.sources[0]).toMatchObject({ status: 'ok', added: 0, modified: 0, removed: 0 })
+    expect(report.sources[0]!.detail).toBe(
+      `moved from ${oldUrl}: 25 rows re-read in place, not logged as changes`,
+    )
+    const urls = new Set((await rows.entities()).map((e) => e.source_url))
+    expect(urls).toEqual(new Set([urlOf('anthropic-status')]))
+    expect(await rows.changes()).toHaveLength(0)
+  })
+
+  it('refuses a parse that would remove most of a large set, and lets a smaller cut through', async () => {
+    await run('survey', ['anthropic-greenhouse'])
+    const board = JSON.parse(fixtureText('fixtures/hiring/anthropic-greenhouse.json')) as {
+      jobs: unknown[]
+    }
+    const keep = (n: number) => JSON.stringify({ ...board, jobs: board.jobs.slice(0, n) })
+    expect(board.jobs).toHaveLength(59)
+
+    const gutted = await run(
+      'survey',
+      ['anthropic-greenhouse'],
+      fixtureFetcher({ 'anthropic-greenhouse': keep(29) }),
+    )
+    const refused = gutted.sources.find((s) => s.source_id === 'anthropic-greenhouse')!
+    expect(refused.status).toBe('failed')
+    expect(refused.detail).toBe(
+      'parse would remove 30 of 59 current entities; refusing to record a mass removal',
+    )
+    expect(
+      (await rows.entities()).filter((e) => e.source_id === 'anthropic-greenhouse'),
+    ).toHaveLength(59)
+    expect(await rows.changes()).toHaveLength(0)
+
+    const trimmed = await run(
+      'survey',
+      ['anthropic-greenhouse'],
+      fixtureFetcher({ 'anthropic-greenhouse': keep(30) }),
+    )
+    expect(trimmed.sources.find((s) => s.source_id === 'anthropic-greenhouse')).toMatchObject({
+      status: 'ok',
+      removed: 29,
+    })
+  })
+})
+
 describe('s1-floor', () => {
   it('a new S-1 on a whitelisted CIK alerts; historical ones in the baseline and non-whitelist hits do not', async () => {
     await run('edgar', ['edgar-fts', 'edgar-submissions-spcx'])

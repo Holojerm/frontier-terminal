@@ -12,11 +12,17 @@ import {
   type SourceRunRow,
   type StoredEntityRow,
 } from './contracts'
-import { diff } from './diff'
+import { diff, inPlaceRewrites, repeatChangeId } from './diff'
 import { modelFloorAlerts } from './model-floor'
 import { prospectusFloorAlerts } from './prospectus-floor'
 import type { SourceFetcher } from './fetch'
-import { derivedKeyOf, laneFor } from './lanes'
+import {
+  contextFingerprint,
+  derivedKeyOf,
+  laneFor,
+  type ContextBlock,
+  type ParseContext,
+} from './lanes'
 import {
   cooldownEndsAt,
   RATE_LIMIT_MAX_COOLDOWN_MS,
@@ -26,9 +32,9 @@ import {
 } from './rate-limit'
 import { deriveSources, resolvedFilers } from './derived'
 import { manifestFixtures } from './parsers/fixture-provenance'
-import { parsePendingFilersBlock, type PendingFilers } from './parsers/sec/pending-filers'
-import { parseRevenueFilersBlock, type RevenueFilers } from './parsers/sec/revenue-filers'
-import { parseCikWhitelistBlock, type CikWhitelist } from './parsers/sec/whitelist'
+import { parsePendingFilersBlock } from './parsers/sec/pending-filers'
+import { parseRevenueFilersBlock } from './parsers/sec/revenue-filers'
+import { parseCikWhitelistBlock } from './parsers/sec/whitelist'
 import { JoinRaceError } from './parsers/hiring/common'
 import { includeSources, type FetchSource } from './sources'
 import {
@@ -40,7 +46,9 @@ import {
   latestGoodSnapshot,
   latestRateLimitedRuns,
   recentRuns,
+  repeatedChangeIds,
   unstoredAlerts,
+  writeBaseline,
   type PipelineDb,
 } from './store'
 import { redactPayload } from './redact'
@@ -135,6 +143,9 @@ interface Fetched {
     first: boolean
     /** The URL the last good run read, when the source has since moved to another. */
     movedFrom: string | null
+    content_hash: string
+    /** The last good run's parse_basis: what else that parse read. */
+    basis: string | null
   } | null
   failure: string | null
   /** True when the fetcher refused for want of a credential (nothing attempted). */
@@ -198,6 +209,8 @@ async function fetchAndSnapshot(deps: RefreshDeps, source: FetchSource, now: () 
       unchanged,
       first: latest === null,
       movedFrom: latest !== null && latest.source_url !== source.url ? latest.source_url : null,
+      content_hash,
+      basis: latest?.parse_basis ?? null,
     },
     failure: null,
     skipped: false,
@@ -207,19 +220,63 @@ async function fetchAndSnapshot(deps: RefreshDeps, source: FetchSource, now: () 
   } satisfies Fetched
 }
 
-type Outcome = Omit<SourceReport, 'source_id'>
+/** A run's outcome, plus the parse basis its run row records. */
+type Outcome = Omit<SourceReport, 'source_id'> & { basis?: string | null }
 
-const quiet = (status: Outcome['status'], detail: string | null, snapshot_id: string | null) =>
-  ({ status, detail, snapshot_id, added: 0, removed: 0, modified: 0, alerts: 0 }) satisfies Outcome
+const quiet = (
+  status: Outcome['status'],
+  detail: string | null,
+  snapshot_id: string | null,
+  basis: string | null = null,
+) =>
+  ({
+    status,
+    detail,
+    snapshot_id,
+    added: 0,
+    removed: 0,
+    modified: 0,
+    alerts: 0,
+    basis,
+  }) satisfies Outcome
+
+/**
+ * What a parse read besides the source's own bytes, stored on its run row:
+ * the content hash of each side it joined against, and the lane's context
+ * fingerprint (lanes.ts › contextFingerprint).
+ */
+interface ParseBasis {
+  sides: Record<string, string>
+  context: string
+}
+
+function readBasis(json: string | null): ParseBasis | null {
+  if (json === null) return null
+  const basis = JSON.parse(json) as Partial<ParseBasis>
+  return basis.sides && typeof basis.context === 'string'
+    ? { sides: basis.sides, context: basis.context }
+    : null
+}
+
+/**
+ * A 'set' lane refuses a parse that would remove more than this share of its
+ * current entities. A board that loses half its roles between two polls six
+ * hours apart is far more often a page that half-rendered, a filter that
+ * changed, or a parser that lost a section than a lab that halved its hiring;
+ * the zero-row guard alone let a page that kept one row through.
+ */
+export const MASS_REMOVAL_SHARE = 0.5
+/** Below this many current entities the share is noise: a two-model catalog
+ * that drops one is half its set and is an ordinary removal. */
+export const MASS_REMOVAL_MIN_SET = 20
+
+type ContextBlocks = Pick<ParseContext, ContextBlock>
 
 async function parseAndStore(
   deps: RefreshDeps,
   fetched: Fetched,
   byId: ReadonlyMap<string, Fetched>,
-  whitelist: CikWhitelist,
-  revenueFilers: RevenueFilers,
-  pendingFilers: PendingFilers,
-  resolvedProviders: ReadonlySet<Provider>,
+  blocks: ContextBlocks,
   classMap: readonly ClassEntry[],
 ): Promise<Outcome> {
   const { source, fetched_at, body } = fetched
@@ -242,25 +299,41 @@ async function parseAndStore(
       return quiet('failed', `side source ${sideId} unavailable this tick`, body.snapshot_id)
     }
   }
+  const sides = Object.fromEntries(lane.sides.map((id) => [id, byId.get(id)!.body!.content_hash]))
+  const basis: ParseBasis = { sides, context: contextFingerprint(lane, blocks) }
+  const prior = readBasis(body.basis)
   // A department renamed with no job touched still changes the joined rows.
-  const sideChanged = lane.sides.some((id) => !byId.get(id)!.body!.unchanged)
-  if (
+  // Compared with the side bytes this source's last good parse joined
+  // against, not with the side's own last run: a side that changed on a tick
+  // this source failed to parse is still unread here. A run from before
+  // bases were recorded falls back to the side's own run.
+  const sideChanged = prior
+    ? lane.sides.some((id) => prior.sides[id] !== sides[id])
+    : lane.sides.some((id) => !byId.get(id)!.body!.unchanged)
+  // The same inputs as the stored rows were read from, but for the context:
+  // a moved URL is new input even with identical bytes, since every row's
+  // source_url must follow it.
+  const sameInputs =
     body.unchanged &&
     !sideChanged &&
+    !body.movedFrom &&
     !(await classMapMoved(deps.db, source.source_id, classMap)) &&
     !(await lane.stale?.(deps.db, source.source_id))
-  ) {
-    return quiet('unchanged', null, body.snapshot_id)
+  const basisJson = JSON.stringify(basis)
+  if (sameInputs && prior?.context === basis.context) {
+    return quiet('unchanged', null, body.snapshot_id, basisJson)
   }
+  // Only the parser or the sources.yaml blocks it reads changed (or the run
+  // predates the fingerprint). Whatever the parse now says differently, the
+  // page did not say it differently: rows are rewritten in place and nothing
+  // is logged, as for a moved URL below.
+  const reread = sameInputs
 
   const parsed = lane.parse(body.text, {
     prov: { source_url: source.url, fetched_at },
     snapshotId: body.snapshot_id,
     side: (id) => byId.get(id)!.body!.text,
-    whitelist,
-    revenueFilers,
-    pendingFilers,
-    resolvedProviders,
+    ...blocks,
     derivedKey: derivedKeyOf(source.source_id),
     classMap,
   })
@@ -273,43 +346,74 @@ async function parseAndStore(
   })
 
   const before = await currentEntities(deps.db, source.source_id)
-  if (body.first && !lane.firstIsNews?.(derivedKeyOf(source.source_id), fetched_at)) {
-    // First observation: record what is there, not a wall of "added" events
-    // for things that happened before we were watching — a status feed's
-    // whole backlog, a filer's recent window. Decided by "no earlier good
-    // run", not by an empty current set: a filtered feed can legitimately
-    // baseline at zero rows, and its first real row must then be 'added'.
-    await insertRows(deps.db, 'entities', parsed.entities.map(toStored))
-    return quiet(
-      'baseline',
-      [`${parsed.entities.length} entities`, note].filter(Boolean).join('; '),
-      body.snapshot_id,
-    )
-  }
-  if (parsed.entities.length === 0 && before.length > 0 && lane.removals === 'set') {
-    // An empty page that parsed cleanly is far more often an outage that
-    // returned 200 than a board that really closed every role. An
-    // append-only feed is different: an empty window removes nothing.
-    return quiet(
-      'failed',
-      `parser returned zero rows against ${before.length} current entities; refusing to record a mass removal`,
-      body.snapshot_id,
-    )
-  }
-
   const all = diff(before, parsed.entities, fetched_at, source.url)
   const kept = lane.removals === 'set' ? all : all.filter((c) => c.change_type !== 'removed')
   const afterByKey = new Map(parsed.entities.map((e) => [e.entity_key, e]))
   const added = kept.filter((c) => c.change_type === 'added')
   const modified = kept.filter((c) => c.change_type === 'modified')
   const removed = kept.filter((c) => c.change_type === 'removed')
+  const rewrites = inPlaceRewrites(before, parsed.entities)
+  const entityWrites = {
+    added: added.map((c) => toStored(afterByKey.get(c.entity_key)!)),
+    modified: [...modified.map((c) => afterByKey.get(c.entity_key)!), ...rewrites],
+    removed: removed.map((c) => c.entity_key),
+  }
+
+  if (body.first && !lane.firstIsNews?.(derivedKeyOf(source.source_id), fetched_at)) {
+    // First observation: record what is there, not a wall of "added" events
+    // for things that happened before we were watching — a status feed's
+    // whole backlog, a filer's recent window. Decided by "no earlier good
+    // run", not by an empty current set: a filtered feed can legitimately
+    // baseline at zero rows, and its first real row must then be 'added'.
+    // The current set is usually empty here, and is not only when an
+    // earlier baseline wrote its rows and died before its run row.
+    await writeBaseline(deps.db, source.source_id, entityWrites)
+    return quiet(
+      'baseline',
+      [`${parsed.entities.length} entities`, note].filter(Boolean).join('; '),
+      body.snapshot_id,
+      basisJson,
+    )
+  }
+  if (lane.removals === 'set' && before.length > 0) {
+    // An empty page that parsed cleanly is far more often an outage that
+    // returned 200 than a board that really closed every role. An
+    // append-only feed is different: an empty window removes nothing.
+    if (parsed.entities.length === 0) {
+      return quiet(
+        'failed',
+        `parser returned zero rows against ${before.length} current entities; refusing to record a mass removal`,
+        body.snapshot_id,
+      )
+    }
+    if (
+      before.length >= MASS_REMOVAL_MIN_SET &&
+      removed.length > before.length * MASS_REMOVAL_SHARE
+    ) {
+      return quiet(
+        'failed',
+        `parse would remove ${removed.length} of ${before.length} current entities; refusing to record a mass removal`,
+        body.snapshot_id,
+      )
+    }
+  }
+
   // A source that moved to a new URL reads the same entities from another
   // document, and what differs is the representation, not the world:
   // anthropic-status leaving the Statuspage JSON API (robots.txt disallows
   // /api/) for its Atom feed loses impact and components on every incident
   // still in the window. Those rows are rewritten in place without a change
-  // row, as a baseline would; an added or removed key still logs.
-  const changes = body.movedFrom ? kept.filter((c) => c.change_type !== 'modified') : kept
+  // row, as a baseline would; an added or removed key still logs. A re-read
+  // of the same bytes logs nothing at all: no key can be new to the page.
+  const logged = reread
+    ? []
+    : body.movedFrom
+      ? kept.filter((c) => c.change_type !== 'modified')
+      : kept
+  // A transition this entity made before and has since left is a new event,
+  // and needs an id of its own (diff.ts › repeatChangeId).
+  const repeats = await repeatedChangeIds(deps.db, logged)
+  const changes = logged.map((c) => (repeats.has(c.id) ? repeatChangeId(c) : c))
 
   // Alerts are computed before anything is written, so the whole diff lands
   // in one transaction — see applyDiff.
@@ -318,13 +422,7 @@ async function parseAndStore(
     ...(await modelFloorAlerts(deps.db, source.source_id, changes)),
     ...(await prospectusFloorAlerts(deps.db, changes)),
   ])
-  await applyDiff(deps.db, source.source_id, {
-    added: added.map((c) => toStored(afterByKey.get(c.entity_key)!)),
-    modified: modified.map((c) => afterByKey.get(c.entity_key)!),
-    removed: removed.map((c) => c.entity_key),
-    changes,
-    alerts,
-  })
+  await applyDiff(deps.db, source.source_id, { ...entityWrites, changes, alerts })
   // A vendor rewrote a sentence the class map rests on: the owner has a
   // transcription to redo. Once per flip — an unchanged verdict diffs to
   // nothing, so a stale cell does not re-spool every tick.
@@ -336,17 +434,25 @@ async function parseAndStore(
     })
   }
 
-  const moved = body.movedFrom
-    ? `moved from ${body.movedFrom}: ${modified.length} ${modified.length === 1 ? 'row' : 'rows'} re-read in place, not logged as changes`
-    : null
+  const rows = (n: number) => `${n} ${n === 1 ? 'row' : 'rows'}`
+  const rewritten = modified.length + rewrites.length
+  const reshaped = rewritten + added.length + removed.length
+  const unlogged = reread
+    ? reshaped
+      ? `parser or sources.yaml changed: ${rows(reshaped)} re-read in place, not logged as changes`
+      : null
+    : body.movedFrom
+      ? `moved from ${body.movedFrom}: ${rows(rewritten)} re-read in place, not logged as changes`
+      : null
   return {
     status: 'ok',
-    detail: [moved, note].filter(Boolean).join('; ') || null,
+    detail: [unlogged, note].filter(Boolean).join('; ') || null,
     snapshot_id: body.snapshot_id,
-    added: added.length,
-    removed: removed.length,
-    modified: body.movedFrom ? 0 : modified.length,
+    added: reread ? 0 : added.length,
+    removed: reread ? 0 : removed.length,
+    modified: reread || body.movedFrom ? 0 : modified.length,
     alerts: alerts.length,
+    basis: basisJson,
   }
 }
 
@@ -509,10 +615,7 @@ export async function runRefresh(
         deps,
         fetched,
         byId,
-        whitelist,
-        revenueFilers,
-        pendingFilers,
-        resolvedProviders,
+        { whitelist, revenueFilers, pendingFilers, resolvedProviders },
         classMap,
       )
     } catch (err) {
@@ -583,9 +686,11 @@ export async function runRefresh(
         removed: outcome.removed,
         modified: outcome.modified,
         source_url: source.url,
+        parse_basis: outcome.basis ?? null,
       },
     ])
-    reports.push({ source_id: source.source_id, ...outcome, detail })
+    const { basis: _basis, ...reported } = outcome
+    reports.push({ source_id: source.source_id, ...reported, detail })
   }
 
   const failed = reports.filter((r) => r.status === 'failed').length

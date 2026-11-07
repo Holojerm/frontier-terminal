@@ -103,6 +103,16 @@ describe('parseXbrlSegment', () => {
     expect(periodBefore('2026-09-30')).toBe('2026-06-30') // strictly before
   })
 
+  it('treats a fresh filing’s first parse as news and an old one’s as a baseline', () => {
+    const lane = laneFor(SEGMENT_FIXTURE.sourceId)!
+    const key = derivedKeyOf(SEGMENT_FIXTURE.sourceId)
+    expect(key).toBe('googl-2026-10-29-0001652044-26-000084')
+    expect(lane.firstIsNews?.(key, '2026-11-01T22:00:00Z')).toBe(true)
+    // The back catalogue derived when a filer is first tagged.
+    expect(lane.firstIsNews?.(key, '2026-12-01T00:00:00Z')).toBe(false)
+    expect(lane.firstIsNews?.(null, '2026-11-01T22:00:00Z')).toBe(false)
+  })
+
   it('labels the member and the derived source', () => {
     expect(segmentLabel(CLOUD)).toBe('Google Cloud')
     expect(laneFor(SEGMENT_FIXTURE.sourceId)).toBeDefined()
@@ -217,7 +227,12 @@ describe('Google Cloud segment end to end', () => {
     const report = await runRefresh({ db, raw, fetcher, sourcesYaml, now }, 'survey', [
       SEGMENT_FIXTURE.sourceId,
     ])
-    expect(report.sources[0]).toMatchObject({ status: 'baseline' })
+    // Filed 2026-10-29, read 2026-11-01: a new quarter, so its facts are news.
+    expect(report.sources[0]).toMatchObject({ status: 'ok', added: 4 })
+    const logged = await db.select().from(schema.changes)
+    expect(logged.map((c) => [c.change_type, c.entity_type, c.provider])).toEqual(
+      Array(4).fill(['added', 'revenue', 'google']),
+    )
     const facts = (await db.select().from(schema.entities)).filter(
       (e) => e.source_id === SEGMENT_FIXTURE.sourceId,
     )
