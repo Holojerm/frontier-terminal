@@ -343,6 +343,8 @@ export interface PriceDeltaView extends Prov {
   input_after: number | null
   output_before: number | null
   output_after: number | null
+  cached_before: number | null
+  cached_after: number | null
 }
 
 export interface PriceRowView extends Prov {

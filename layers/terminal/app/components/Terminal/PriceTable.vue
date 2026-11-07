@@ -5,7 +5,8 @@
 // link to its own page, and its provenance. Batch, long-context and promo
 // rows sit here, not in the matrix.
 
-import { money, pctChange, pctLabel } from '../../../shared/utils/terminal-format'
+import { money } from '../../../shared/utils/terminal-format'
+import { SAME_PRICE, moveText, priceMoves } from '../../utils/price-display'
 import { labName } from '../../../shared/utils/terminal-labs'
 import type { PriceRowView, PricesData } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
@@ -60,14 +61,8 @@ function deltaText(row: PriceRowView): string | null {
   if (!d) return null
   if (d.change_type === 'added') return 'new'
   if (d.change_type === 'removed') return 'delisted'
-  const input = pctChange(d.input_before, d.input_after)
-  if (input !== null)
-    return `in ${money(d.input_before)} → ${money(d.input_after)} (${pctLabel(input)})`
-  const output = pctChange(d.output_before, d.output_after)
-  if (output !== null) {
-    return `out ${money(d.output_before)} → ${money(d.output_after)} (${pctLabel(output)})`
-  }
-  return 'modified (non-price field)'
+  const [move] = priceMoves(d)
+  return move ? moveText(move) : SAME_PRICE
 }
 </script>
 

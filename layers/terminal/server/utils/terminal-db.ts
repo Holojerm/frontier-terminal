@@ -946,6 +946,8 @@ function toDelta(change: typeof tables.changes.$inferSelect): PriceDeltaView {
     input_after: after ? num(after.input_per_mtok) : null,
     output_before: before ? num(before.output_per_mtok) : null,
     output_after: after ? num(after.output_per_mtok) : null,
+    cached_before: before ? num(before.cached_input_per_mtok) : null,
+    cached_after: after ? num(after.cached_input_per_mtok) : null,
     source_url: change.source_url,
     fetched_at: change.fetched_at,
   }

@@ -16,8 +16,6 @@ import {
   compactUsd,
   count,
   money,
-  pctChange,
-  pctLabel,
   periodLabel,
   ppLabel,
   sharePct,
@@ -25,7 +23,7 @@ import {
 } from '../../shared/utils/terminal-format'
 import { summarizeLab, type LabInputs } from '../../shared/utils/terminal-lab-summary'
 import type { AlertSeverity } from '../../shared/utils/terminal-tiers'
-import { priceCitation } from './price-display'
+import { SAME_PRICE, moveText, priceCitation, priceMoves } from './price-display'
 import type {
   IncidentsData,
   LabId,
@@ -162,18 +160,8 @@ export function priceChangeLabel(delta: PriceDeltaView | null): string {
   const on = day(delta.detected_at)
   if (delta.change_type === 'added') return `Listed ${on}`
   if (delta.change_type === 'removed') return `Delisted ${on}`
-  const moves = (
-    [
-      ['In', delta.input_before, delta.input_after],
-      ['out', delta.output_before, delta.output_after],
-    ] as const
-  )
-    .filter(([, before, after]) => before !== after)
-    .map(([side, before, after]) => {
-      const pct = pctChange(before, after)
-      return `${side} ${money(before)} → ${money(after)}${pct === null ? '' : ` (${pctLabel(pct)})`}`
-    })
-  if (moves.length === 0) return `Edited ${on}, same price`
+  const moves = priceMoves(delta).map(moveText)
+  if (moves.length === 0) return `Edited ${on}, ${SAME_PRICE}`
   const text = moves.join(', ')
   return `${text.charAt(0).toUpperCase()}${text.slice(1)} on ${on}`
 }
