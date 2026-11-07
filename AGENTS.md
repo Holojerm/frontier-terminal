@@ -100,7 +100,6 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 ├── public/                 # Static assets — og.png, favicon.svg, apple-touch-icon.png
 ├── .github/                # Dependabot + browser-suites.yml (axe/CSP — the only CI
 │                           # not in Workers Builds; that image can't launch Chromium)
-│                           # + scheduled-ci.yml (the full gate against main, weekly)
 ├── emails/                 # Maizzle sources for the ops digest — compiled by bun run email:build
 ├── fleet.json              # How this app describes itself to the portfolio dashboard — see bun run fleet:check
 ├── drizzle.config.ts       # Drizzle Kit config

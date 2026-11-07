@@ -1,0 +1,21 @@
+# Merge queue. Sessions queue a PR with a `@mergifyio queue` comment instead of
+# `gh pr merge --auto`. Mergify tests up to three queued PRs at once, each on a draft
+# PR holding main plus every PR ahead of it, then squash-merges the originals in order.
+#
+# The ruleset keeps "require branches to be up to date" on: Mergify is an exempt bypass
+# actor, so it skips that rule (its tested state is newer than any PR branch), while a
+# merge by anything else still has to be up to date. Mergify reads the ruleset's
+# required checks and applies them to the draft PRs.
+merge_queue:
+  max_parallel_checks: 3
+
+queue_rules:
+  - name: default
+    merge_method: squash
+    # The PR's own CI must pass before it enters the queue, so a PR that is broken on
+    # its own never invalidates the speculative drafts queued behind it.
+    queue_conditions:
+      - base = main
+      - -draft
+      - 'check-success = Workers Builds: frontier-terminal'
+      - 'check-success = browser-suites'
