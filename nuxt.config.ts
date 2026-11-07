@@ -160,8 +160,8 @@ const securityHeaders = {
 // map, so the dashboard compares the schedule Nitro will honour against the
 // triggers Cloudflare says it registered.
 //
-//   */30       — ops digest, server/tasks/ops/alert.ts. Silence is the healthy
-//                state: an empty spool costs one indexed SELECT per tick.
+//   */30       — ops watch, server/tasks/ops/watch.ts: the freshness and launch-coverage
+//                checks (they spool ops events) and the 7-day prune of the spool.
 //              — EDGAR tick, layers/terminal/server/tasks/poll/edgar.ts: the SEC feeds and the
 //                model catalogs, the two axes where latency is worth polling for.
 //   0 */6      — full survey, layers/terminal/server/tasks/poll/survey.ts: every include
@@ -191,7 +191,7 @@ const securityHeaders = {
 //   0 4 * * *  — seo:indexnow submits the sitemap URLs changed since its last
 //                accepted run to IndexNow (server/utils/indexnow.ts).
 const SCHEDULED_TASKS: Record<string, string[]> = {
-  '*/30 * * * *': ['ops:alert', 'poll:edgar'],
+  '*/30 * * * *': ['ops:watch', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
   '17 */6 * * *': ['poll:careers'],
   '*/5 * * * *': ['poll:tripwire', 'cache:warm', 'track-record:search'],
@@ -477,15 +477,6 @@ export default defineNuxtConfig({
     // IndexNow key, public by design (/indexnow-key.txt serves it). Set in
     // wrangler.toml [vars] as NUXT_INDEXNOW_KEY. See server/utils/indexnow.ts.
     indexnowKey: '',
-    // Ops alerting — where the cron digest goes (server/tasks/ops/alert.ts).
-    // `from` must be on a domain in the Cloudflare account with Email Routing
-    // enabled; `to` must be a verified destination address. That combination
-    // is free and needs no sending-domain onboarding. Both empty = the cron
-    // logs `ops_alert_unconfigured` and sends nothing. Set in wrangler.toml
-    // [vars] as NUXT_ALERT_EMAIL_TO / NUXT_ALERT_EMAIL_FROM — neither is a
-    // secret, and the [[send_email]] binding pins the destination anyway.
-    alertEmailTo: '',
-    alertEmailFrom: '',
     // The press list (layers/terminal/server/pipeline/press.ts): JSON array of
     // { name, outlet, email?, tips_email?, priority }. A Worker secret because it
     // names people and this repo is public. `wrangler secret put NUXT_PRESS_LIST`.

@@ -22,7 +22,7 @@
 // `_hub_migrations` instead, and both work — which is exactly why this reads
 // whichever one exists rather than assuming.
 
-import { and, count, gt, isNull, sql } from 'drizzle-orm'
+import { and, count, desc, eq, gt, max, sql } from 'drizzle-orm'
 import type { drizzle } from 'drizzle-orm/d1'
 
 import { FleetManifestSchema } from '#shared/utils/fleet-manifest'
@@ -31,6 +31,7 @@ import rawManifest from '../../fleet.json'
 import pkg from '../../package.json'
 import journal from '../db/migrations/meta/_journal.json'
 import * as tables from '../db/schema'
+import { classifyOps, type OpsSeverity } from './ops-severity'
 import { getFleetExtraContributors } from './extensions'
 
 /** The Drizzle client, passed in explicitly. */
@@ -102,8 +103,8 @@ function tagOf(name: string): string {
 // ── Counters for /api/fleet ─────────────────────────────────────────────────
 //
 // Everything a portfolio dashboard wants to put on a card, in one query-light
-// call. Counts only — no rows, no ids — so the payload is safe to store for
-// months in someone else's database. The product adds its own (snapshots taken,
+// call. Counts, plus one summary line per ops kind — no ids, no stack traces —
+// so the payload is safe to store for months in someone else's database. The product adds its own (snapshots taken,
 // sources fetched, …) by registering a contributor in server/utils/extensions.ts
 // rather than editing this function or inventing a second endpoint, so one
 // token and one route cover the fleet:
@@ -111,22 +112,75 @@ function tagOf(name: string): string {
 
 const DAY_MS = 24 * 60 * 60 * 1000
 
+/** Most kinds one response carries; a runaway kind namespace must not bloat it. */
+export const FLEET_OPS_KIND_LIMIT = 50
+
+export interface FleetOpsKind {
+  kind: string
+  severity: OpsSeverity
+  /** Rows of this kind created in the last 24 h. */
+  count: number
+  /** ISO timestamp of the newest row of this kind. */
+  lastAt: string
+  /** That row's `detail`, already truncated to 500 characters at write time. */
+  lastDetail: string | null
+  lastPath: string | null
+}
+
 export interface FleetCounters {
-  opsEvents: { pending: number; last24h: number }
+  ops: { kinds: FleetOpsKind[] }
   extra: Record<string, number>
+}
+
+const SEVERITY_RANK: Record<OpsSeverity, number> = { critical: 0, warning: 1, info: 2 }
+
+/**
+ * The ops spool since `since`, one entry per kind: a GROUP BY for the counts,
+ * then one lookup per kind for its newest row (at most FLEET_OPS_KIND_LIMIT).
+ */
+async function collectOpsKinds(db: FleetDb, since: Date): Promise<{ kinds: FleetOpsKind[] }> {
+  const grouped = await db
+    .select({
+      kind: tables.opsEvents.kind,
+      total: count(),
+      lastAt: max(tables.opsEvents.createdAt),
+    })
+    .from(tables.opsEvents)
+    .where(gt(tables.opsEvents.createdAt, since))
+    .groupBy(tables.opsEvents.kind)
+
+  const ranked = grouped
+    .map((g) => ({ ...g, severity: classifyOps(g.kind, g.total).severity }))
+    .sort((a, b) => SEVERITY_RANK[a.severity] - SEVERITY_RANK[b.severity] || b.total - a.total)
+    .slice(0, FLEET_OPS_KIND_LIMIT)
+
+  const kinds = await Promise.all(
+    ranked.map(async (g): Promise<FleetOpsKind> => {
+      const [latest] = await db
+        .select({
+          createdAt: tables.opsEvents.createdAt,
+          detail: tables.opsEvents.detail,
+          path: tables.opsEvents.path,
+        })
+        .from(tables.opsEvents)
+        .where(and(eq(tables.opsEvents.kind, g.kind), gt(tables.opsEvents.createdAt, since)))
+        .orderBy(desc(tables.opsEvents.createdAt))
+        .limit(1)
+      return {
+        kind: g.kind,
+        severity: g.severity,
+        count: g.total,
+        lastAt: (latest?.createdAt ?? g.lastAt ?? since).toISOString(),
+        lastDetail: latest?.detail ?? null,
+        lastPath: latest?.path ?? null,
+      }
+    }),
+  )
+  return { kinds }
 }
 
 export async function collectFleetCounters(db: FleetDb, now = new Date()): Promise<FleetCounters> {
   const dayAgo = new Date(now.getTime() - DAY_MS)
-
-  const [pendingOps] = await db
-    .select({ total: count() })
-    .from(tables.opsEvents)
-    .where(isNull(tables.opsEvents.notifiedAt))
-  const [recentOps] = await db
-    .select({ total: count() })
-    .from(tables.opsEvents)
-    .where(and(gt(tables.opsEvents.createdAt, dayAgo)))
 
   const extra: Record<string, number> = {}
   const extras = getFleetExtraContributors()
@@ -134,7 +188,7 @@ export async function collectFleetCounters(db: FleetDb, now = new Date()): Promi
   for (const values of extraValues) Object.assign(extra, values)
 
   return {
-    opsEvents: { pending: pendingOps?.total ?? 0, last24h: recentOps?.total ?? 0 },
+    ops: await collectOpsKinds(db, dayAgo),
     extra,
   }
 }

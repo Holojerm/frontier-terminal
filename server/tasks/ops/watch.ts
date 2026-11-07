@@ -1,15 +1,15 @@
-// Cron task: drain the ops spool and email a digest.
+// Cron task: run the freshness and launch-coverage checks, which spool their
+// findings into ops_events, then prune the spool. This app sends no mail: the
+// fleet dashboard reads the spool through GET /api/fleet (`ops.kinds`) and is
+// the only alert sender.
 //
 // Scheduled from nuxt.config.ts (SCHEDULED_TASKS → nitro.scheduledTasks) and
 // matched by the [triggers] crons entry in wrangler.toml — both must agree, or
 // Cloudflare delivers a cron Nitro has no task for, or Nitro waits for a cron
 // that never arrives. `bun run crons:check` fails the build on either.
 //
-// Silence is the healthy state: with nothing spooled this is one indexed
-// SELECT, one DELETE, and a return. That is what makes a tight schedule cheap.
-//
 // Imports are explicit for the reason server/tasks/purge-expired-tokens.ts
-// spells out: a task is an untested bundling surface that runs unattended, and
+// spelled out: a task is an untested bundling surface that runs unattended, and
 // an auto-import that resolves to `undefined` here would fail every half hour
 // with nobody watching.
 
@@ -25,27 +25,20 @@ import { unstorageLockStore } from '#layers/terminal/server/pipeline/lock'
 import { draftedKey } from '#layers/terminal/server/pipeline/press'
 import { checkFreshness } from '#layers/terminal/server/utils/freshness'
 import { freshnessChecks } from '#layers/terminal/server/utils/terminal-freshness'
-import { getOpsMailer } from '../../utils/ops-mail'
-import { drainOpsEvents, pruneOpsEvents } from '../../utils/ops'
-import { classifyOps } from '../../utils/ops-severity'
+import { pruneOpsEvents } from '../../utils/ops'
 import { logEvent } from '../../utils/log'
 import { withHeartbeat } from '#layers/terminal/server/utils/task-heartbeat'
-
-interface CloudflareTaskContext {
-  cloudflare?: { env?: Record<string, unknown> }
-}
 
 const manifest = FleetManifestSchema.parse(rawManifest)
 
 const task = defineTask({
   meta: {
-    name: 'ops:alert',
-    description: 'Email a digest of spooled ops events, then prune old ones',
+    name: 'ops:watch',
+    description:
+      'Run the freshness and launch-coverage checks (they spool ops events), then prune the spool',
   },
-  async run({ context }) {
-    // The freshness checks spool their own events, so they run before the
-    // mailer check: an unconfigured digest still records that a part went
-    // quiet. One per scheduled task, plus the judge routine, the GDELT job, the
+  async run() {
+    // One check per scheduled task, plus the judge routine, the GDELT job, the
     // press-drafts routine, and the deploy of main: this build's sha against
     // main's head (layers/terminal/server/utils/terminal-freshness.ts).
     const config = useRuntimeConfig()
@@ -61,36 +54,14 @@ const task = defineTask({
         mainHead,
       }),
     )
-    // Same reason: a launch the site has stored but does not show is recorded
-    // whether or not the digest can be mailed.
+    // A launch the site has stored but does not show is recorded as an ops event.
     const launch = await checkLaunchCoverage(db, unstorageLockStore(kv))
     if (launch.stale_cells.length) {
       logEvent('warn', 'launch_gap', { ...launch })
     }
 
-    const env = (context as CloudflareTaskContext | undefined)?.cloudflare?.env
-    const mailer = getOpsMailer(env)
-    if (!mailer) {
-      // Nothing can be sent, but the spool must not grow without bound.
-      const pruned = await pruneOpsEvents(db)
-      logEvent('warn', 'ops_alert_unconfigured', { pruned })
-      return { result: { skipped: 'unconfigured', pruned } }
-    }
-
-    const { appName, appUrl } = config.public
-    const outcome = await drainOpsEvents(db, mailer, {
-      appName,
-      appUrl: appUrl || undefined,
-      workerName: manifest.workers[0],
-      // Tiers registered by layers and the app from their Nitro plugins
-      // (server/utils/ops-severity.ts). Ranks the digest, tags its subject.
-      classify: classifyOps,
-    })
-    // Quiet ticks stay quiet — only say something when something happened.
-    if (outcome.sent || outcome.error) {
-      logEvent('warn', 'ops_alert_run', { ...outcome })
-    }
-    return { result: outcome }
+    const pruned = await pruneOpsEvents(db)
+    return { result: { pruned } }
   },
 })
 

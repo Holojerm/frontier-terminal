@@ -25,10 +25,10 @@ Read the row that matches what you are about to touch. Do not load them all.
 | [`.claude/docs/patterns.md`](.claude/docs/patterns.md) | Worked examples: components, API routes, Drizzle queries, error handling | Writing a new component, route, or query — especially your first change here |
 | [`.claude/docs/seo.md`](.claude/docs/seo.md) | `useSeo()`, `publicPage` meta, structured data, the crawler files | Adding or editing a page |
 | [`.claude/docs/brand.md`](.claude/docs/brand.md) | How every icon is generated from one `Logo.vue` | Redesigning the mark or fixing `brand:check` |
-| [`.claude/docs/email.md`](.claude/docs/email.md) | The Maizzle/Mustache pipeline behind the ops alert digest | Touching `emails/`, `ops-digest.ts`, or adding an email |
+| [`.claude/docs/email.md`](.claude/docs/email.md) | The Maizzle/Mustache pipeline behind the weekly thesis digest | Touching `emails/`, the thesis digest, or adding an email |
 | [`.claude/docs/agent-setup.md`](.claude/docs/agent-setup.md) | MCP servers, skills, slash commands, cloud routines | Configuring tooling |
 | [`docs/template-divergence.md`](docs/template-divergence.md) | Why each template-owned file differs from `nuxt-cf-template`, or is absent | Syncing the template, or touching a file listed in `fleet.json` › `template.customized` |
-| [`.claude/docs/fleet.md`](.claude/docs/fleet.md) | `fleet.json`, `/api/status`, `/api/fleet`, the `ops_events` spool and its digest cron | Touching the manifest, the status/fleet endpoints, or ops alerting |
+| [`.claude/docs/fleet.md`](.claude/docs/fleet.md) | `fleet.json`, `/api/status`, `/api/fleet`, the `ops_events` spool and its fleet alerts | Touching the manifest, the status/fleet endpoints, or ops alerting |
 | [`DESIGN.md`](DESIGN.md) | The visual design system — source of truth | Writing any UI |
 
 **Three gotchas are load-bearing enough to state here**, because each one fails with
@@ -84,7 +84,7 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 │   ├── plugins/            # Nitro plugins (error logging)
 │   ├── routes/             # robots, sitemap, llms.txt, manifest (route table); the layer holds
 │   │                       # alerts.xml, export/, mcp.ts
-│   ├── tasks/              # ops:alert; cron wiring in nuxt.config + wrangler.toml (the poll and
+│   ├── tasks/              # ops:watch; cron wiring in nuxt.config + wrangler.toml (the poll and
 │   │                       # theses tasks are in the layer)
 │   └── utils/              # Core server utilities (ops, fleet, rate limit, SEO, mail)
 ├── shared/                 # Auto-imported in BOTH app/ and server/ (Nuxt 4 `shared/`)
@@ -211,7 +211,7 @@ Each of these has a full contract in its own doc — this is the one-line versio
   heavy components, raw payloads to R2 via `blob`. → [`patterns.md`](.claude/docs/patterns.md)
 - **Fleet contract** — `fleet.json` describes this app, `GET /api/status` reports build,
   migrations and crons, `GET /api/fleet` reports counters behind a token, and every 5xx
-  spools an `ops_events` row that a cron emails as a digest.
+  spools an `ops_events` row that the fleet dashboard reads (`ops.kinds`) and mails.
   → [`fleet.md`](.claude/docs/fleet.md)
 
 ---

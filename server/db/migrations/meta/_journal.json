@@ -288,6 +288,13 @@
       "when": 1794079808484,
       "tag": "0040_subtract",
       "breakpoints": true
+    },
+    {
+      "idx": 41,
+      "version": "6",
+      "when": 1794081944604,
+      "tag": "0041_tan_goblin_queen",
+      "breakpoints": true
     }
   ]
 }

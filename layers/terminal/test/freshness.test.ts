@@ -334,7 +334,7 @@ describe('task heartbeats', () => {
 
   it('gives a task a deploy just added its full window before calling it silent', async () => {
     await recordHeartbeat(db, {
-      task: 'ops:alert',
+      task: 'ops:watch',
       started_at: '2026-11-06T10:00:00.000Z',
       finished_at: '2026-11-06T10:00:00.000Z',
       error: null,
@@ -366,7 +366,7 @@ describe('task heartbeats', () => {
 
     // Another task's first heartbeat starts monitoring; bulk:build never runs.
     await recordHeartbeat(db, {
-      task: 'ops:alert',
+      task: 'ops:watch',
       started_at: '2026-11-06T10:00:00.000Z',
       finished_at: '2026-11-06T10:00:00.000Z',
       error: null,

@@ -10,13 +10,13 @@
 //   digest subject leads with [Critical]; filter on it to make the phone buzz.
 // - warning — one part is degraded or stale. Worth a look today.
 // - info — the system handled it, or it is a setup state already known. These
-//   wait up to a day (OPS_INFO_HOLD_MS) unless something louder goes out first.
+//   show on the board only; fleet never mails them.
 //
 // A kind missing from the table is a warning: a new failure path should be
 // seen before anyone decides it can be quiet. Add a kind here when you add its
 // recordOpsEvent call.
 
-import type { OpsKindPolicy } from '#server/utils/ops-digest'
+import type { OpsKindPolicy } from '#server/utils/ops-severity'
 import { registerOpsSeverity } from '#server/utils/ops-severity'
 
 export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
@@ -26,7 +26,7 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
     action:
       "No alerts are being published. Open the frontier-terminal-judge routine's latest session at claude.ai/code/routines; a 403 on /api/judge/pending means its environment's network allowlist lost the Worker host.",
   },
-  // Critical so it is mailed at once (ops-immediate.ts): Issues fires on a new
+  // Critical so fleet mails it within minutes: Issues fires on a new
   // kind of failure, rarely, and it is the only signal for a failure that
   // spools nothing else, like a request that never returns.
   workers_issue: {

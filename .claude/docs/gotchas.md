@@ -94,7 +94,7 @@ keep it there; the gate can read an inline literal too, but one map is harder to
 A task that is wired correctly can still stop: the cron stops firing, the run is killed at
 the CPU limit, or it throws every tick. Every task file therefore ends in
 `export default withHeartbeat(task)` (`layers/terminal/server/utils/task-heartbeat.ts`),
-which records each run in `task_heartbeats`, and the freshness checks in `ops:alert`
+which records each run in `task_heartbeats`, and the freshness checks in `ops:watch`
 spool `task_silent` when a task has not completed in one missed run plus half an interval
 (`layers/terminal/server/utils/freshness.ts`). `layers/terminal/test/freshness.test.ts`
 fails the build on a task file without it. A task that cannot carry the wrapper (one in a
@@ -117,7 +117,7 @@ the gotcha below would surface as a cron event failing with nobody watching.
 
 Anything a sweep filters on needs an **index**. A `LIMIT` bounds rows *deleted*, not rows
 *examined* — so an unindexed predicate full-scans the table on every tick and gets slower
-as the table grows. `ops_events.notified_at` has one for exactly this reason.
+as the table grows. `ops_events` is pruned by `created_at`, which every read of it filters on, for exactly this reason.
 
 ## The dev server caches its DB connection — external writes need a restart
 
