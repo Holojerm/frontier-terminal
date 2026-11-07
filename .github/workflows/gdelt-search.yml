@@ -11,8 +11,7 @@
 # NUXT_GDELT_TOKEN. Without it the run passes with a warning and searches
 # nothing.
 #
-# Cost: one small runner for under a minute an hour. The repo is public, so
-# Actions minutes are free.
+# Cost: under a minute an hour on the Mac mini's light runner slot.
 
 name: GDELT search
 
@@ -34,7 +33,9 @@ jobs:
   search:
     # Forks have no production to search for.
     if: github.repository == 'Holojerm/frontier-terminal'
-    runs-on: ubuntu-latest
+    # The owner's Mac mini, light slot: a home IP that is ours alone. GitHub's
+    # hosted runners share egress IPs the same way Workers do.
+    runs-on: [self-hosted, linux, ARM64, mini-light]
     timeout-minutes: 15
 
     steps:
