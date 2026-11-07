@@ -260,6 +260,13 @@
       "when": 1794070400748,
       "tag": "0036_removal_provenance",
       "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "6",
+      "when": 1794072574816,
+      "tag": "0037_recipe_entity_indexes",
+      "breakpoints": true
     }
   ]
 }
