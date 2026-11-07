@@ -282,7 +282,7 @@ export interface CoverageData extends Stamp {
   cuts: CutSource[]
   /** The thesis recipes, which store outside the lab tables. */
   recipes: RecipeCoverage[]
-  /** Sources the track record queries per alert (GDELT), with their audit entry. */
+  /** Sources the track record matches per alert (GDELT), with their audit entry. */
   track_record: TrackRecordSource[]
   totals: TableCounts
   exports: ExportTableInfo[]
@@ -1153,11 +1153,11 @@ export interface TrackRecordHit {
   title: string
   outlet: string
   url: string
-  /** When GDELT first saw the article, or the post's own publication time. */
+  /** The quarter hour GDELT read the article, or the post's own publication time. */
   published_at: string
   /** The judge's same-event rationale. */
   rationale: string
-  /** The GDELT query or newsroom feed the candidate came from, and when it was read. */
+  /** The GDELT file (a search-API query before 2026-11-07) or newsroom feed it came from, and when that was read. */
   source_url: string
   fetched_at: string
 }

@@ -239,6 +239,13 @@
       "when": 1793981377745,
       "tag": "0033_task_heartbeats",
       "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "6",
+      "when": 1794027775917,
+      "tag": "0034_gdelt_files",
+      "breakpoints": true
     }
   ]
 }

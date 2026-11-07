@@ -1,17 +1,20 @@
 # The GDELT side of the track record (scripts/gdelt-search.ts), hourly.
 #
-# It runs here and not on the Worker's cron because GDELT limits its DOC API
-# per IP, and Cloudflare Workers share egress IPs with every other tenant:
-# from there 85% of our queries drew a 429 for traffic that was not ours.
-# Each run asks the site for the due searches, queries GDELT one at a time at
-# GDELT's pace (one every 6 s), and posts each answer back. A busy GDELT ends
-# the run quietly; a red run means our own /api/gdelt/* routes failed.
+# Each run asks the site for the GDELT GKG files it has not read (one per
+# quarter hour, ~2.5 MB zipped), reads them oldest first, matches each row
+# against the alerts whose windows cover it, and posts the matches back. It
+# runs here and not on the Worker's cron because a file is ~8 MB unzipped and
+# a tick reads several; the Worker matches every posted row again. A file
+# GDELT has not published ends the run quietly; a red run means our own
+# /api/gdelt/* routes failed. A backlog (the queue starts at 2026-09-01)
+# drains at up to 40 minutes a run.
 #
 # Needs the repository secret GDELT_TOKEN, the same value as the Worker's
-# NUXT_GDELT_TOKEN. Without it the run passes with a warning and searches
+# NUXT_GDELT_TOKEN. Without it the run passes with a warning and reads
 # nothing.
 #
-# Cost: under a minute an hour on the Mac mini's light runner slot.
+# Cost: about a minute an hour once caught up (four files, ~10 MB of
+# downloads). The repo is public, so hosted minutes are free too.
 
 name: GDELT search
 
@@ -30,13 +33,22 @@ permissions:
   contents: read
 
 jobs:
-  search:
+  # The owner's Mac mini, light slot, or ubuntu-latest while the mini is down
+  # (pick-runner.yml). The GKG files are static, with no per-IP limit, so a
+  # shared GitHub IP reads them as well as the mini does.
+  route:
     # Forks have no production to search for.
     if: github.repository == 'Holojerm/frontier-terminal'
-    # The owner's Mac mini, light slot: a home IP that is ours alone. GitHub's
-    # hosted runners share egress IPs the same way Workers do.
-    runs-on: [self-hosted, linux, ARM64, mini-light]
-    timeout-minutes: 15
+    uses: ./.github/workflows/pick-runner.yml
+    with:
+      label: mini-light
+
+  search:
+    needs: route
+    if: ${{ !cancelled() && github.repository == 'Holojerm/frontier-terminal' }}
+    runs-on: ${{ fromJSON(needs.route.outputs.runner || '"ubuntu-latest"') }}
+    # The script stops itself at 40 minutes; this is the backstop.
+    timeout-minutes: 50
 
     steps:
       # Pinned to commits for the reason browser-suites.yml gives.
@@ -46,8 +58,8 @@ jobs:
         with:
           bun-version: 1.4.0
 
-      # No `bun install`: the script uses bun built-ins only.
-      - name: Run the due GDELT searches
+      # No `bun install`: the script uses bun built-ins and dependency-free layer modules.
+      - name: Read the unread GDELT files
         run: bun run scripts/gdelt-search.ts
         env:
           GDELT_TOKEN: ${{ secrets.GDELT_TOKEN }}

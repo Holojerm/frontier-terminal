@@ -1,9 +1,10 @@
 // Search terms for an alert, built only from its cited change rows: the same
 // rows always give the same query. `who` names the company and `what` the
 // event; `also` narrows a broad `what` (a department name needs a hiring
-// word beside it). GDELT gets every group as one boolean query, any phrase
-// of each group required. A newsroom post is already the lab's own, so it is
-// matched on `what` alone.
+// word beside it). A GDELT article needs a phrase of every group
+// (matchesArticle); gdeltQuery writes the same rule as GDELT's query syntax,
+// which is how the search row records it. A newsroom post is already the
+// lab's own, so it is matched on `what` alone.
 //
 // Terms are deliberately broad. A candidate is not a match: the judge rates
 // each one as the same event or not, so a broad term costs a rating, while a
@@ -226,11 +227,43 @@ export function normalizeText(text: string): string {
     .trim()} `
 }
 
-/** A newsroom post matches when its title or summary carries any `what` phrase as whole words. */
-export function matchesWhat(text: string, terms: SearchTerms): boolean {
-  const haystack = normalizeText(text)
-  return terms.what.some((phrase) => {
+const carries = (haystack: string, phrases: readonly string[]) =>
+  phrases.some((phrase) => {
     const needle = normalizeText(phrase)
     return needle.trim().length > 0 && haystack.includes(needle)
   })
+
+/** A newsroom post matches when its title or summary carries any `what` phrase as whole words. */
+export function matchesWhat(text: string, terms: SearchTerms): boolean {
+  return carries(normalizeText(text), terms.what)
+}
+
+/** The words of a URL's path: /2026/09/29/openai-devday-gpt-6-1/ -> "2026 09 29 openai devday gpt 6 1". */
+function pathWords(url: string): string {
+  try {
+    return decodeURIComponent(new URL(url).pathname).replace(/[-_/]+/g, ' ')
+  } catch {
+    return ''
+  }
+}
+
+/**
+ * A GDELT article matches when its headline or URL carries a `what` phrase
+ * and an `also` phrase (when the terms have any), and the company in `who` is
+ * named in the headline, the URL or anywhere in the article (GDELT's names
+ * list). The event has to be in the headline or URL, where it says what the
+ * article is about; the company can be named anywhere. "6.1" in a headline
+ * and "6-1" in a slug read alike, since dashes in a slug become spaces and a
+ * version's dot is kept between digits.
+ */
+export function matchesArticle(
+  article: { title: string; url: string; names: readonly string[] },
+  terms: SearchTerms,
+): boolean {
+  const slug = pathWords(article.url).replace(/\b(\d+) (\d{1,2})\b/g, '$1.$2')
+  const about = normalizeText(`${article.title} ${slug}`)
+  if (!carries(about, terms.what)) return false
+  if (terms.also.length && !carries(about, terms.also)) return false
+  if (!terms.who.length) return true
+  return carries(normalizeText(`${about} ${article.names.join(' ; ')}`), terms.who)
 }

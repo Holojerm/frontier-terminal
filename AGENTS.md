@@ -196,8 +196,8 @@ Each of these has a full contract in its own doc — this is the one-line versio
   writer — `layers/terminal/server/utils/judge-auth.ts`), `/api/ops/events` (the ops-triage
   routine's read of the ops spool, `NUXT_OPS_TOKEN`), `/api/press/*` (the press-drafts
   routine; it names reporters, `NUXT_PRESS_TOKEN`) and `/api/gdelt/*` (the GitHub Actions job
-  that runs GDELT queries off Cloudflare's shared IPs and posts the answers back, the other
-  writer, `NUXT_GDELT_TOKEN`). No session; a route that takes input validates it
+  that reads GDELT's 15-minute GKG files and posts the matching rows
+  back, the other writer, `NUXT_GDELT_TOKEN`). No session; a route that takes input validates it
   with Zod and calls `rateLimit()` (`rateLimitTerminal()` on the public product routes).
   Licensees may send an owner-issued API key (`Authorization: Bearer ftk_…`, `bun run keys:issue`):
   it only raises the rate limit, lists the full-history bulk files, labels older rows with the paid

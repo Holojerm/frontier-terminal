@@ -411,6 +411,21 @@ export const trackRecordSearches = sqliteTable(
   (t) => [index('track_record_searches_alert_idx').on(t.alert_id, t.source, t.searched_at)],
 )
 
+// One row per GDELT GKG file the press side has read (pipeline/track-record/gkg.ts):
+// its quarter hour, how it ended, and where the rows that matched an alert
+// are kept. A file is read once; its matches are press candidates whose
+// search_id is `gkg:<stamp>`. missing: GDELT never published that quarter hour.
+export const gdeltFiles = sqliteTable('gdelt_files', {
+  stamp: text('stamp').primaryKey(),
+  url: text('url').notNull(),
+  status: text('status').notNull(), // ok | missing
+  rows: integer('rows').notNull(),
+  matched: integer('matched').notNull(),
+  raw_key: text('raw_key'),
+  fetched_at: text('fetched_at').notNull(),
+  recorded_at: text('recorded_at').notNull(),
+})
+
 // One row per (alert, kind, url): an article or newsroom post inside the
 // alert's window that matched its search terms. A candidate is not a match;
 // a match is a same-event verdict below.

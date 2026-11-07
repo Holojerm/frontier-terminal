@@ -6,7 +6,6 @@ import nuxtConfigSource from '~~/nuxt.config.ts?raw'
 import * as schema from '~~/server/db/schema'
 import { readScheduledTasks } from '~~/scripts/lib/scheduled-tasks'
 import type { LockStore } from '../server/pipeline/lock'
-import { insertRows } from '../server/pipeline/store'
 import {
   FRESHNESS_CHECK_FAILED_KIND,
   checkFreshness,
@@ -330,60 +329,30 @@ describe('the producers off the Worker', () => {
     await db.delete(schema.socialPosts)
   })
 
-  async function seedMaterialAlert(fetchedAt: string) {
-    const c = {
-      id: HASH(101),
-      entity_key: 'model:openai:gpt-6.1-sol:standard',
-      entity_type: 'model',
-      provider: 'openai',
-      change_type: 'added',
-      before_hash: null,
-      after_hash: HASH(2),
-      before_json: null,
-      after_json: JSON.stringify({ model_slug: 'gpt-6.1-sol' }),
-      detected_at: fetchedAt,
-      source_url: 'https://developers.openai.com/api/docs/models.md',
-      fetched_at: fetchedAt,
-    }
-    await insertRows(db, 'changes', [c as never])
-    await db.insert(schema.alerts).values({
-      id: HASH(1),
-      severity: 'notable',
-      headline: 'OpenAI lists a new model, gpt-6.1-sol',
-      explanation: 'A new SKU.',
-      change_ids: JSON.stringify([c.id]),
-      rule: 'model-floor',
-      created_at: fetchedAt,
-      source_url: c.source_url,
-      fetched_at: fetchedAt,
-    })
-  }
-
-  it('flags the GDELT job when a search has been due for six hours with no success', async () => {
-    // Saw it 2026-10-20: the window closed on the 27th, well inside GDELT's horizon.
-    await seedMaterialAlert('2026-10-20T12:00:00.000Z')
+  it('flags the GDELT job when files have been owed for six hours and none was read', async () => {
+    await db.delete(schema.gdeltFiles)
     const run = () => checkFreshness(db, memoryMarker(), [gdeltFreshnessCheck], NOW)
+    // Nothing read: the queue has been owed since 2026-09-01.
     expect(await run()).toEqual({ 'gdelt-search': 'stale' })
 
-    await db.insert(schema.trackRecordSearches).values({
-      id: 'other',
-      alert_id: HASH(9),
-      source: 'gdelt',
-      query: 'q',
-      window_start: '2026-10-13T12:00:00.000Z',
-      window_end: '2026-10-27T12:00:00.000Z',
+    // A backlog still owed, but the job read a file two hours ago: it is working through it.
+    await db.insert(schema.gdeltFiles).values({
+      stamp: '20260901000000',
+      url: 'http://data.gdeltproject.org/gdeltv2/20260901000000.gkg.csv.zip',
       status: 'ok',
-      detail: null,
-      candidates: 3,
-      searched_at: '2026-11-06T10:00:00.000Z',
+      rows: 1200,
+      matched: 0,
       raw_key: null,
-      source_url: 'https://api.gdeltproject.org/api/v2/doc/doc?query=q',
+      fetched_at: '2026-11-06T10:00:00.000Z',
+      recorded_at: '2026-11-06T10:00:00.000Z',
     })
     expect(await run()).toEqual({ 'gdelt-search': 'fresh' })
   })
 
-  it('says nothing for GDELT when no search is due', async () => {
-    expect(await checkFreshness(db, memoryMarker(), [gdeltFreshnessCheck], NOW)).toEqual({
+  it('says nothing for GDELT before any file is due', async () => {
+    await db.delete(schema.gdeltFiles)
+    const early = new Date('2026-09-01T00:20:00Z')
+    expect(await checkFreshness(db, memoryMarker(), [gdeltFreshnessCheck], early)).toEqual({
       'gdelt-search': 'not-owed',
     })
   })

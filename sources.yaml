@@ -2113,12 +2113,16 @@ recipe_sources:
       Recent posts are stamped close to 12:00 UTC, so read a Mistral post's
       time as a date. Posts from 2026-08-01 on are kept.
 
-# Sources the track record reads that are not recipes: queried per alert,
-# not polled. Same fields as recipe_sources. /contact groups them by rights.
+# Sources the track record reads that are not recipes: read off the Worker
+# and matched per alert. Same fields as recipe_sources. /contact groups them
+# by rights.
 track_record_sources:
-  gdelt-doc:
-    url: https://api.gdeltproject.org/api/v2/doc/doc
-    format: JSON, GDELT DOC 2.0 API in artlist mode, up to 75 articles per query
+  gdelt-gkg:
+    url: http://data.gdeltproject.org/gdeltv2/{stamp}.gkg.csv.zip
+    format: >-
+      Zipped TSV, GDELT 2.0 Global Knowledge Graph (GKG 2.1), one file per
+      quarter hour, ~2.5 MB zipped and ~8 MB unzipped, ~1,200 English news
+      articles each (~110,000 a day, sampled 2026-11-06)
     verdict: include
     terms: >-
       GDELT's terms (gdeltproject.org/about.html): "all datasets released by
@@ -2126,19 +2130,24 @@ track_record_sources:
       any academic, commercial, or governmental use of any kind without
       fee", and any redistribution "must include a citation to the GDELT
       Project and a link to this website (https://www.gdeltproject.org/)".
-      api.gdeltproject.org has no robots.txt (404). The API asks for "one
-      every 5 seconds". Taken: each article's URL, title, outlet domain,
-      language and the time GDELT first saw it, one query per material
-      alert, from a GitHub Actions runner (not Cloudflare's shared IPs), one
-      query every 6 seconds at most, at most 10 an hour. Read 2026-11-04.
+      data.gdeltproject.org serves static files and states no rate limit.
+      Taken: every file from 2026-09-01 on, each read once, hourly, from
+      a GitHub Actions job (the owner's Mac mini, or a hosted runner while
+      it is down); of each row that
+      matches a material alert, its record id, URL, title, outlet domain,
+      quarter hour and the names GDELT found, with the row itself kept
+      whole in R2. Read 2026-11-07.
     rights: upstream
     caveats: >-
-      The time is when GDELT's crawler first saw the article, not when the
-      outlet published it, and GDELT doesn't crawl every outlet (paywalled
-      wires and newsletters are thin). The DOC API searches only the last
-      three months. It returns no article text, and we never fetch the
-      article, so a match is rated on its headline alone. Headlines belong
-      to their outlets.
+      The time is the quarter hour GDELT's crawler read the article, not
+      when the outlet published it. GDELT doesn't crawl every outlet: a day
+      sampled on 2026-11-06 had CNBC, The Verge and TechCrunch at a handful
+      of articles each, and no Bloomberg, Reuters, WSJ or FT. A match needs
+      the event in the headline or URL; the article text is not in the file
+      and we never fetch the article, so the judge rates the headline alone.
+      Headlines belong to their outlets. Press rows found before 2026-11-07
+      came from GDELT's DOC 2.0 search API over the same crawl; it limits
+      requests per IP and answered most of our queries with a 429.
 
 # Archives read once, by hand, to backfill history from before the live
 # pipeline watched a page (scripts/wayback-backfill.ts; never on a cron).

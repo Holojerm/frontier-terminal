@@ -786,13 +786,13 @@ export const COLUMN_DOCS: Readonly<Record<string, TableDoc>> = {
       title: {
         type: 'text',
         meaning:
-          'The headline as GDELT or the feed gives it. GDELT spaces out punctuation (“GPT - 6 . 1”), and we keep that as read.',
+          'The headline as GDELT or the feed gives it. Press rows found through GDELT’s search API before 2026-11-07 keep its spaced punctuation (“GPT - 6 . 1”) as read.',
       },
       snippet: {
         type: 'text',
         nullable: true,
         meaning:
-          'The first 400 characters of a newsroom post’s description. Null for press, since GDELT returns no article text.',
+          'The first 400 characters of a newsroom post’s description. Null for press, since GDELT gives no article text.',
       },
       outlet: {
         type: 'text',
@@ -802,23 +802,27 @@ export const COLUMN_DOCS: Readonly<Record<string, TableDoc>> = {
       published_at: {
         type: 'timestamp',
         meaning:
-          'For press, when GDELT’s crawler first saw the article (not when the outlet published it). For a newsroom post, its own publication time. UTC.',
+          'For press, the quarter hour GDELT’s crawler read the article (not when the outlet published it). For a newsroom post, its own publication time. UTC.',
       },
       search_id: {
         type: 'text',
         meaning:
-          'The search that found it. Searches aren’t exported. The page shows each one’s outcome.',
+          'The search that found it, or gkg:<quarter hour> for a press row read from that GDELT file. Searches aren’t exported. The page shows each one’s outcome.',
       },
-      found_at: { type: 'timestamp', meaning: 'When the search that found it ran, in UTC.' },
+      found_at: {
+        type: 'timestamp',
+        meaning: 'When the search or file that found it was recorded, in UTC.',
+      },
       source_url: {
         type: 'text',
         provenance: true,
-        meaning: 'The GDELT query URL, or the newsroom feed the post was read from.',
+        meaning:
+          'The GDELT file the article was read from (a search-API query URL before 2026-11-07), or the newsroom feed the post was read from.',
       },
       fetched_at: {
         type: 'timestamp',
         provenance: true,
-        meaning: 'When that query or feed was fetched, in UTC.',
+        meaning: 'When that file, query or feed was fetched, in UTC.',
       },
     },
   },

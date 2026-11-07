@@ -1,8 +1,9 @@
 import { env } from 'cloudflare:test'
+import { eq } from 'drizzle-orm'
 import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import gdeltFixture from '~~/fixtures/track-record/gdelt-gpt-6.1-sol.json?raw'
+import gkgFixture from '~~/fixtures/track-record/gkg-20260929183000.gkg.csv?raw'
 import deepmindFeed from '~~/fixtures/recipes/newsroom-google-deepmind.xml?raw'
 import metaFeed from '~~/fixtures/recipes/newsroom-meta.xml?raw'
 import mistralFeed from '~~/fixtures/recipes/newsroom-mistral.xml?raw'
@@ -13,14 +14,19 @@ import { groundingFailure } from '../server/pipeline/judge/grounding'
 import { submitJudgeRun } from '../server/pipeline/judge/submit'
 import { insertRows } from '../server/pipeline/store'
 import {
-  GDELT_MAX_RECORDS,
   PRESS_CANDIDATE_LIMIT,
   candidateTitle,
-  gdeltStamp,
-  gdeltUrl,
-  parseGdeltArticles,
   untokenizeTitle,
 } from '../server/pipeline/track-record/gdelt'
+import {
+  GKG_FROM,
+  gkgSlots,
+  gkgStamp,
+  gkgUrl,
+  parseGkgRow,
+  stampIso,
+  unzipOne,
+} from '../server/pipeline/track-record/gkg'
 import {
   applyTrackRecordVerdicts,
   pendingCandidates,
@@ -28,19 +34,17 @@ import {
   trackRecordReview,
 } from '../server/pipeline/track-record/review'
 import {
-  GDELT_PENDING_LIMIT,
-  MAX_FAILED_SEARCHES,
   candidateId,
-  dueGdeltSearches,
-  recordGdeltResult,
+  gkgWork,
+  recordGkgFile,
   runTrackRecordSearch,
-  transientSearch,
-  type GdeltAnswer,
+  windowRead,
 } from '../server/pipeline/track-record/search'
 import {
   alertTerms,
   filerName,
   gdeltQuery,
+  matchesArticle,
   matchesWhat,
   modelFamily,
 } from '../server/pipeline/track-record/terms'
@@ -57,10 +61,10 @@ import { queryTrackRecord, sideOf, tally } from '../server/utils/terminal-track-
 import { fixtureText } from './pipeline/fixtures'
 
 // The track record: deterministic search terms from the cited change rows,
-// the window around the saw-it time, the GDELT and newsroom readers, the
-// search run against a real D1 with a canned fetcher, and the gate on the
-// judge's same-event ratings. No network and no model: GDELT's answer is a
-// committed fixture, and the ratings are written here.
+// the window around the saw-it time, the GDELT GKG and newsroom readers, the
+// search run against a real D1, and the gate on the judge's same-event
+// ratings. No network and no model: the GKG rows are a committed fixture (real
+// rows from 2026-09-29), and the ratings are written here.
 
 const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
@@ -194,12 +198,13 @@ describe('the window', () => {
     expect(sawIt([])).toBeNull()
   })
 
-  it('spans 7 days either side, opens for search once it closes, and stops at GDELT’s horizon', () => {
+  it('spans 7 days either side, and closes for search at its end', () => {
     const w = trackWindow('2026-10-01T12:00:00.000Z')
     expect(w).toEqual({ start: '2026-09-24T12:00:00.000Z', end: '2026-10-08T12:00:00.000Z' })
     expect(searchState(w, new Date('2026-10-08T11:59:00Z'))).toBe('open')
     expect(searchState(w, new Date('2026-10-08T12:00:00Z'))).toBe('due')
-    expect(searchState(w, new Date('2026-12-24T00:00:00Z'))).toBe('beyond-horizon')
+    // GKG files go back years: an old window is searched like a new one.
+    expect(searchState(w, new Date('2027-06-01T00:00:00Z'))).toBe('due')
   })
 
   it('signs a lead positive when we saw it first, and takes a median', () => {
@@ -211,42 +216,101 @@ describe('the window', () => {
   })
 })
 
-describe('GDELT', () => {
-  it('asks for the window in GDELT’s UTC format, earliest first', () => {
-    expect(gdeltStamp('2026-10-01T12:30:05.123Z')).toBe('20261001123005')
-    const url = new URL(
-      gdeltUrl('"gpt 6.1" sourcelang:english', '2026-09-22T17:01:00Z', '2026-10-06T17:01:00Z'),
+const FIXTURE_STAMP = '20260929183000'
+const fixtureRows = gkgFixture.split('\n').filter((l) => l.trim())
+const cnetRow = fixtureRows.find((r) => r.includes('cnet.com/'))!
+
+/** A one-entry zip of `text`, built the way GDELT's are: deflated, sizes in the central directory. */
+async function zipOf(name: string, text: string): Promise<Uint8Array> {
+  const body = new TextEncoder().encode(text)
+  const stream = new Blob([body]).stream().pipeThrough(new CompressionStream('deflate-raw'))
+  const data = new Uint8Array(await new Response(stream).arrayBuffer())
+  const file = new TextEncoder().encode(name)
+  const local = new DataView(new ArrayBuffer(30))
+  local.setUint32(0, 0x04034b50, true)
+  local.setUint16(6, 0x0008, true) // sizes follow in a data descriptor, so the local header has none
+  local.setUint16(8, 8, true)
+  local.setUint16(26, file.length, true)
+  const central = new DataView(new ArrayBuffer(46))
+  central.setUint32(0, 0x02014b50, true)
+  central.setUint16(10, 8, true)
+  central.setUint32(20, data.length, true)
+  central.setUint32(24, body.length, true)
+  central.setUint16(28, file.length, true)
+  central.setUint32(42, 0, true)
+  const centralAt = 30 + file.length + data.length
+  const eocd = new DataView(new ArrayBuffer(22))
+  eocd.setUint32(0, 0x06054b50, true)
+  eocd.setUint16(8, 1, true)
+  eocd.setUint16(10, 1, true)
+  eocd.setUint32(12, 46 + file.length, true)
+  eocd.setUint32(16, centralAt, true)
+  const parts = [new Uint8Array(local.buffer), file, data, new Uint8Array(central.buffer), file]
+  const out = new Uint8Array(centralAt + 46 + file.length + 22)
+  let at = 0
+  for (const p of [...parts, new Uint8Array(eocd.buffer)]) {
+    out.set(p, at)
+    at += p.length
+  }
+  return out
+}
+
+describe('GDELT GKG files', () => {
+  it('names a quarter hour the way GDELT does, and lists the due ones from GKG_FROM', () => {
+    expect(gkgStamp(Date.parse('2026-09-29T18:30:00Z'))).toBe(FIXTURE_STAMP)
+    expect(stampIso(FIXTURE_STAMP)).toBe('2026-09-29T18:30:00.000Z')
+    expect(gkgUrl(FIXTURE_STAMP)).toBe(
+      'http://data.gdeltproject.org/gdeltv2/20260929183000.gkg.csv.zip',
     )
-    expect(url.origin + url.pathname).toBe('https://api.gdeltproject.org/api/v2/doc/doc')
-    expect(Object.fromEntries(url.searchParams)).toEqual({
-      query: '"gpt 6.1" sourcelang:english',
-      mode: 'artlist',
-      format: 'json',
-      sort: 'dateasc',
-      maxrecords: String(GDELT_MAX_RECORDS),
-      startdatetime: '20260922170100',
-      enddatetime: '20261006170100',
+    // GDELT publishes ~15 minutes behind; a file is asked for 30 minutes after its quarter hour.
+    expect(gkgSlots(new Date('2026-09-01T00:44:00Z'))).toEqual(['20260901000000'])
+    expect(gkgSlots(new Date('2026-09-01T00:45:00Z'))).toEqual(['20260901000000', '20260901001500'])
+    expect(gkgSlots(new Date(GKG_FROM))).toEqual([])
+  })
+
+  it('reads a row’s quarter hour, outlet, URL, headline and names', () => {
+    expect(fixtureRows).toHaveLength(4)
+    expect(parseGkgRow(cnetRow)).toEqual({
+      record_id: '20260929183000-364',
+      seen_at: '2026-09-29T18:30:00.000Z',
+      outlet: 'cnet.com',
+      url: 'https://www.cnet.com/tech/services-and-software/everything-announced-at-openai-devday-subscription-changes-new-models-and-dots/',
+      title: 'OpenAI DevDay: You Can Now Use GPT-6.1 Sol and Dots, Plus Big Subscription Changes',
+      names: expect.arrayContaining(['Ziff Davis']),
     })
+    for (const row of fixtureRows) expect(parseGkgRow(row)?.title).toBeTruthy()
+    expect(parseGkgRow('not\ta\trow')).toBeNull()
   })
 
-  it('reads articles earliest first, one per headline, with GDELT’s seen time', () => {
-    const articles = parseGdeltArticles(gdeltFixture)
-    expect(articles.length).toBeGreaterThan(0)
-    expect(articles.length).toBeLessThanOrEqual(PRESS_CANDIDATE_LIMIT)
-    expect(articles[0]).toMatchObject({ outlet: 'cnet.com', seen_at: '2026-09-29T18:30:00.000Z' })
-    const titles = articles.map((a) => a.title.toLowerCase())
-    expect(new Set(titles).size).toBe(titles.length)
-    const times = articles.map((a) => a.seen_at)
-    expect([...times].sort()).toEqual(times)
+  it('unzips a file whose local header defers its sizes', async () => {
+    const zip = await zipOf(`${FIXTURE_STAMP}.gkg.csv`, gkgFixture)
+    expect(new TextDecoder().decode(await unzipOne(zip))).toBe(gkgFixture)
+    await expect(unzipOne(new Uint8Array(64))).rejects.toThrow('not a zip')
   })
 
-  it('stores a title with GDELT’s tokenizing spaces closed', () => {
-    expect(parseGdeltArticles(gdeltFixture)[0]!.title).toBe(
-      'OpenAI DevDay: You Can Now Use GPT - 6.1 Sol and Dots, Plus Big Subscription Changes',
-    )
+  it('matches the event in the headline or URL, and the company anywhere in the article', () => {
+    const terms = { who: [], what: ['gpt 6.1'], also: [] }
+    expect(matchesArticle(parseGkgRow(cnetRow)!, terms)).toBe(true)
+    // The 9to5mac row names GPT-6.1 only in its text, not its headline or URL.
+    const elsewhere = fixtureRows.find((r) => r.includes('9to5mac.com/'))!
+    expect(matchesArticle(parseGkgRow(elsewhere)!, terms)).toBe(false)
+    // A slug's "gpt-6-1" reads as "gpt 6.1"; "gpt-6-15" does not.
+    const slug = (path: string, title = 'A headline') => ({
+      title,
+      url: `https://example.com/${path}`,
+      names: [],
+    })
+    expect(matchesArticle(slug('2026/09/29/openai-scraps-gpt-6-1-astra/'), terms)).toBe(true)
+    expect(matchesArticle(slug('gpt-6-15-ships'), terms)).toBe(false)
+    const filing = { who: ['Microsoft'], what: ['earnings'], also: [] }
+    expect(matchesArticle(slug('q3-earnings-beat'), filing)).toBe(false)
+    expect(matchesArticle({ ...slug('q3-earnings-beat'), names: ['Microsoft'] }, filing)).toBe(true)
+    const hiring = { who: ['OpenAI'], what: ['research'], also: ['hiring'] }
+    expect(matchesArticle(slug('openai-research-hiring-spree'), hiring)).toBe(true)
+    expect(matchesArticle(slug('openai-research-paper'), hiring)).toBe(false)
   })
 
-  // Titles as production D1 held them on 2026-11-05.
+  // Titles as production D1 held them on 2026-11-05, from GDELT's search API.
   it.each([
     [
       'Grok 4 . 7 arrives for coding and knowledge work at Grok 4 . 6 prices · Digg',
@@ -280,13 +344,6 @@ describe('GDELT', () => {
   ])('untokenizes %j', (raw, clean) => {
     expect(untokenizeTitle(raw)).toBe(clean)
     expect(untokenizeTitle(clean)).toBe(clean)
-  })
-
-  it('reads an empty result as none, and refuses a plain-text answer', () => {
-    expect(parseGdeltArticles('{}')).toEqual([])
-    expect(() => parseGdeltArticles('Please limit requests to one every 5 seconds')).toThrow(
-      'not JSON',
-    )
   })
 })
 
@@ -349,6 +406,7 @@ const memoryRaw = () => {
 
 async function seed() {
   await db.delete(schema.opsEvents)
+  await db.delete(schema.gdeltFiles)
   await db.delete(schema.trackRecordVerdicts)
   await db.delete(schema.trackRecordCandidates)
   await db.delete(schema.trackRecordSearches)
@@ -379,138 +437,169 @@ async function seed() {
   })
 }
 
-const OK: GdeltAnswer = { kind: 'http', status: 200, text: gdeltFixture }
+/**
+ * Marks every quarter hour from GKG_FROM up to `until` as read, but `except`,
+ * the way a caught-up job leaves gdelt_files. Generated in SQL: a window needs
+ * thousands of rows.
+ */
+async function markRead(until: string, except: string = FIXTURE_STAMP) {
+  await env.DB.prepare(
+    `WITH RECURSIVE t(s) AS (
+       SELECT unixepoch(?1) UNION ALL SELECT s + 900 FROM t WHERE s + 900 < unixepoch(?2)
+     )
+     INSERT OR IGNORE INTO gdelt_files
+       SELECT strftime('%Y%m%d%H%M%S', s, 'unixepoch'), 'u', 'ok', 0, 0, NULL, ?3, ?3 FROM t
+       WHERE strftime('%Y%m%d%H%M%S', s, 'unixepoch') != ?4`,
+  )
+    .bind(GKG_FROM, until, NOW.toISOString(), except)
+    .run()
+}
 
-/** One hourly Actions run: the cron's half, then each due GDELT search answered with `answer`. */
-async function searchAll(answer: GdeltAnswer = OK, raw = memoryRaw()) {
-  await runTrackRecordSearch(db, { now: () => NOW })
-  const due = await dueGdeltSearches(db, NOW)
-  const outcomes: Awaited<ReturnType<typeof recordGdeltResult>>[] = []
-  for (const d of due) {
-    const outcome = await recordGdeltResult(
-      db,
-      raw.store,
-      { alert_id: d.alert_id, url: d.url, fetched_at: NOW.toISOString(), answer },
-      NOW,
-    )
-    outcomes.push(outcome)
-    if (outcome.recorded && outcome.transient) break
-  }
-  return { due, outcomes }
+/** What the job posts for the fixture file: every row, offered for `alertId`, matching or not. */
+const fixtureFile = (alertId: string = HASH(1)) => ({
+  stamp: FIXTURE_STAMP,
+  fetched_at: NOW.toISOString(),
+  status: 'ok' as const,
+  rows: fixtureRows.length,
+  matches: fixtureRows.map((row) => ({ alert_id: alertId, row })),
+})
+
+/** A caught-up job, then the cron: every file in alert 1's window read, the fixture's matches stored. */
+async function searchAll(raw = memoryRaw()) {
+  await markRead('2026-10-07T00:00:00Z')
+  const outcome = await recordGkgFile(db, raw.store, fixtureFile(), NOW)
+  const report = await runTrackRecordSearch(db, { now: () => NOW })
+  return { outcome, report }
 }
 
 describe('the search run', () => {
   beforeEach(seed)
 
-  it('hands out each material alert once its window has closed, and only those', async () => {
+  it('keeps a posted row only when the Worker matches it to the alert itself', async () => {
     const raw = memoryRaw()
-    const { due, outcomes } = await searchAll(OK, raw)
-    // The info alert is not material; the 2026-11-01 alert's window is still open.
-    expect(due).toHaveLength(1)
-    expect(due[0]!.alert_id).toBe(HASH(1))
-    expect(new URL(due[0]!.url).searchParams.get('query')).toBe('"gpt 6.1" sourcelang:english')
-    expect(outcomes[0]).toMatchObject({ recorded: true, status: 'ok', transient: false })
-    expect(raw.put).toHaveLength(1)
+    const { outcome, report } = await searchAll(raw)
+    // Of the four rows, only cnet's headline carries "gpt 6.1".
+    expect(outcome).toEqual({ recorded: true, candidates: 1, duplicates: 0, rejected: 3 })
+    expect(raw.put).toEqual([`track-record/gkg/${FIXTURE_STAMP}.tsv`])
+    expect(report).toMatchObject({ newsroom: 1, gdelt: 1 })
 
     const candidates = await db.select().from(schema.trackRecordCandidates)
     expect(candidates.every((c) => c.alert_id === HASH(1))).toBe(true)
-    const newsroom = candidates.filter((c) => c.kind === 'newsroom')
-    expect(newsroom).toHaveLength(1)
-    expect(newsroom[0]).toMatchObject({
-      outlet: 'openai.com',
-      published_at: '2026-09-29T17:00:00.000Z',
-    })
     const press = candidates.filter((c) => c.kind === 'press')
-    expect(press.length).toBeGreaterThan(0)
-    expect(
-      press.every((c) => c.source_url === due[0]!.url && c.fetched_at === NOW.toISOString()),
-    ).toBe(true)
+    expect(press).toEqual([
+      expect.objectContaining({
+        outlet: 'cnet.com',
+        published_at: '2026-09-29T18:30:00.000Z',
+        search_id: `gkg:${FIXTURE_STAMP}`,
+        source_url: gkgUrl(FIXTURE_STAMP),
+        fetched_at: NOW.toISOString(),
+      }),
+    ])
+    expect(candidates.filter((c) => c.kind === 'newsroom')).toEqual([
+      expect.objectContaining({ outlet: 'openai.com', published_at: '2026-09-29T17:00:00.000Z' }),
+    ])
+    const [file] = await db
+      .select()
+      .from(schema.gdeltFiles)
+      .where(eq(schema.gdeltFiles.stamp, FIXTURE_STAMP))
+    expect(file).toMatchObject({ status: 'ok', rows: 4, matched: 1 })
 
     // A second run has nothing left to do.
-    expect(await dueGdeltSearches(db, NOW)).toHaveLength(0)
     expect(await runTrackRecordSearch(db, { now: () => NOW })).toMatchObject({
       newsroom: 0,
+      gdelt: 0,
       skipped: 0,
     })
   })
 
-  it('the cron fetches nothing: it writes the newsroom side and leaves GDELT due', async () => {
-    const report = await runTrackRecordSearch(db, { now: () => NOW })
-    expect(report).toMatchObject({ newsroom: 1, candidates: 1 })
-    const searches = await db.select().from(schema.trackRecordSearches)
-    expect(searches.map((s) => s.source)).toEqual(['newsroom'])
-    expect(await dueGdeltSearches(db, NOW)).toHaveLength(1)
+  it('reads a file once, and only once it is due', async () => {
+    const post = (stamp: string) =>
+      recordGkgFile(db, memoryRaw().store, { ...fixtureFile(), stamp }, NOW)
+    expect(await post(FIXTURE_STAMP)).toMatchObject({ recorded: true })
+    expect(await post(FIXTURE_STAMP)).toEqual({ recorded: false, reason: 'not-due' })
+    // Not yet published, and not a quarter hour.
+    expect(await post('20261104120000')).toEqual({ recorded: false, reason: 'not-due' })
+    expect(await post('20260929183100')).toEqual({ recorded: false, reason: 'not-due' })
   })
 
-  it('caps what one run hands out', async () => {
-    expect(GDELT_PENDING_LIMIT).toBeGreaterThan(0)
-    expect(await dueGdeltSearches(db, NOW, 0)).toHaveLength(0)
-  })
-
-  it('refuses an answer for a search that is not due, or at another URL', async () => {
-    const [due] = await dueGdeltSearches(db, NOW)
-    const post = (alert_id: string, url: string) =>
-      recordGdeltResult(
-        db,
-        memoryRaw().store,
-        { alert_id, url, fetched_at: NOW.toISOString(), answer: OK },
-        NOW,
-      )
-    // The window of alert 2 is still open; alert 3 is not material.
-    expect(await post(HASH(2), due!.url)).toEqual({ recorded: false, reason: 'not-due' })
-    expect(await post(HASH(3), due!.url)).toEqual({ recorded: false, reason: 'not-due' })
-    const other = due!.url.replace('gpt+6.1', 'something+else')
-    expect(await post(HASH(1), other)).toEqual({ recorded: false, reason: 'url-mismatch' })
-    expect(await db.select().from(schema.trackRecordSearches)).toHaveLength(0)
-
-    expect(await post(HASH(1), due!.url)).toMatchObject({ recorded: true, status: 'ok' })
-    expect(await post(HASH(1), due!.url)).toEqual({ recorded: false, reason: 'not-due' })
-  })
-
-  it('records a 429 or a timeout as busy: not mailed, retried on the next run', async () => {
-    for (const busy of [
-      { kind: 'http', status: 429, text: 'slow down' },
-      { kind: 'timeout' },
-    ] as GdeltAnswer[]) {
+  it('refuses matches for an alert whose window does not cover the file', async () => {
+    // Alert 2's window opens on 2026-10-25; alert 3 is not material.
+    for (const id of [HASH(2), HASH(3)]) {
       await seed()
-      const { outcomes } = await searchAll(busy)
-      expect(outcomes[0]).toMatchObject({ recorded: true, status: 'failed', transient: true })
-      expect(await db.select().from(schema.opsEvents)).toHaveLength(0)
-      expect(await dueGdeltSearches(db, NOW)).toHaveLength(1)
+      expect(await recordGkgFile(db, memoryRaw().store, fixtureFile(id), NOW)).toMatchObject({
+        candidates: 0,
+        rejected: 4,
+      })
     }
+    expect(await db.select().from(schema.trackRecordCandidates)).toHaveLength(0)
   })
 
-  it('never gives an alert up over 429s or timeouts, only over real failures', async () => {
-    for (let i = 0; i < MAX_FAILED_SEARCHES + 2; i++) {
-      await searchAll({ kind: 'http', status: 429, text: '' })
-      await searchAll({ kind: 'timeout' })
+  it('keeps one candidate per headline, and records a quarter hour GDELT never published', async () => {
+    const twice = {
+      ...fixtureFile(),
+      matches: [cnetRow, cnetRow].map((row) => ({ alert_id: HASH(1), row })),
     }
-    expect(await dueGdeltSearches(db, NOW)).toHaveLength(1)
-
-    await seed()
-    for (let i = 0; i < MAX_FAILED_SEARCHES; i++) {
-      await searchAll({ kind: 'http', status: 500, text: 'oops' })
-    }
-    expect(await dueGdeltSearches(db, NOW)).toHaveLength(0)
-    const events = await db.select().from(schema.opsEvents)
-    expect(events).toHaveLength(MAX_FAILED_SEARCHES)
-    expect(events[0]!.kind).toBe('track_record_search_failed')
+    expect(await recordGkgFile(db, memoryRaw().store, twice, NOW)).toMatchObject({
+      candidates: 1,
+      duplicates: 1,
+    })
+    const missing = { ...fixtureFile(), stamp: '20260929184500', status: 'missing' as const }
+    expect(await recordGkgFile(db, memoryRaw().store, missing, NOW)).toMatchObject({
+      recorded: true,
+      candidates: 0,
+    })
+    const [file] = await db
+      .select()
+      .from(schema.gdeltFiles)
+      .where(eq(schema.gdeltFiles.stamp, '20260929184500'))
+    expect(file).toMatchObject({ status: 'missing', rows: 0, raw_key: null })
   })
 
-  it('reads the timeouts the Worker’s own fetcher wrote as busy too', () => {
-    const failed = (detail: string) => ({ status: 'failed', detail })
-    expect(
-      transientSearch(
-        failed(
-          'fetch threw: TimeoutError: The operation was aborted due to timeout after 1 attempts',
-        ),
-      ),
-    ).toBe(true)
-    expect(transientSearch(failed('HTTP 429 (Retry-After 60s)'))).toBe(true)
-    expect(transientSearch(failed('timeout: GDELT did not answer in time'))).toBe(true)
-    expect(transientSearch(failed('HTTP 500'))).toBe(false)
-    expect(transientSearch(failed('parse: SyntaxError'))).toBe(false)
-    expect(transientSearch({ status: 'ok', detail: null })).toBe(false)
+  it('hands out the oldest unread files, with the alerts whose windows overlap them', async () => {
+    const first = await gkgWork(db, NOW, 2)
+    expect(first.files.map((f) => f.stamp)).toEqual(['20260901000000', '20260901001500'])
+    // No material alert's window reaches back to 2026-09-01.
+    expect(first.alerts).toEqual([])
+
+    await markRead('2026-09-29T00:00:00Z')
+    const later = await gkgWork(db, NOW, 1)
+    expect(later.files[0]!.stamp).toBe('20260929000000')
+    expect(later.alerts).toEqual([
+      expect.objectContaining({
+        alert_id: HASH(1),
+        terms: { who: [], what: ['gpt 6.1'], also: [] },
+      }),
+    ])
+  })
+
+  it('writes the GDELT side only once every file in the window is read', async () => {
+    expect(await runTrackRecordSearch(db, { now: () => NOW })).toMatchObject({
+      newsroom: 1,
+      gdelt: 0,
+    })
+    // Everything read up to a day before the window ends: still not complete.
+    await markRead('2026-10-05T17:01:00Z', '')
+    expect((await runTrackRecordSearch(db, { now: () => NOW })).gdelt).toBe(0)
+    await markRead('2026-10-07T00:00:00Z', '')
+    expect((await runTrackRecordSearch(db, { now: () => NOW })).gdelt).toBe(1)
+    const [row] = await db
+      .select()
+      .from(schema.trackRecordSearches)
+      .where(eq(schema.trackRecordSearches.source, 'gdelt'))
+    expect(row).toMatchObject({
+      status: 'ok',
+      query: '"gpt 6.1" sourcelang:english',
+      candidates: 0,
+    })
+  })
+
+  it('waits for the last files of a window that has only just closed', () => {
+    const window = { start: '2026-09-22T17:01:00.000Z', end: '2026-10-06T17:01:00.000Z' }
+    // The file for 17:00 holds the window's last minute; it is due at 17:30.
+    expect(windowRead(window, '20261006164500', null)).toBe(false)
+    expect(windowRead(window, '20261006170000', null)).toBe(true)
+    expect(windowRead(window, '20261006170000', '20261006170000')).toBe(false)
+    expect(windowRead(window, '20261007000000', '20261006171500')).toBe(true)
   })
 })
 
@@ -626,6 +715,26 @@ describe('the page payload', () => {
 
   const ctx = (at: string | null = null) => queryContext(sourcesYaml, null, () => NOW, at)
 
+  it('reads a press side with only search-API failures as not searched yet', async () => {
+    await seed()
+    await db.insert(schema.trackRecordSearches).values({
+      id: 'busy',
+      alert_id: HASH(1),
+      source: 'gdelt',
+      query: '"gpt 6.1" sourcelang:english',
+      window_start: '2026-09-22T17:01:00.000Z',
+      window_end: '2026-10-06T17:01:00.000Z',
+      status: 'failed',
+      detail: 'HTTP 429',
+      candidates: 0,
+      searched_at: '2026-11-04T00:00:00.000Z',
+      raw_key: null,
+      source_url: 'https://api.gdeltproject.org/api/v2/doc/doc?query=x',
+    })
+    const data = await queryTrackRecord(db, ctx())
+    expect(data.rows.find((r) => r.alert_id === HASH(1))!.press.state).toBe('not-searched')
+  })
+
   it('says "not yet rated" until the earliest candidates are rated, never a guessed lead', async () => {
     const data = await queryTrackRecord(db, ctx())
     expect(data.rows.map((r) => r.alert_id)).toEqual([HASH(2), HASH(1)])
@@ -689,14 +798,6 @@ describe('the page payload', () => {
       state: 'search-failed',
       detail: 'HTTP 500',
     })
-    const busy = { status: 'failed', detail: 'HTTP 429' }
-    expect(sideOf(false, [busy, busy], [], none, SAW)).toMatchObject({
-      state: 'not-searched',
-      detail: expect.stringContaining('retried'),
-    })
-    expect(
-      sideOf(false, [busy, { status: 'failed', detail: 'HTTP 500' }], [], none, SAW).state,
-    ).toBe('search-failed')
     expect(
       sideOf(false, [{ status: 'skipped', detail: 'no feed' }], [], none, SAW, 'no-feed').state,
     ).toBe('no-feed')

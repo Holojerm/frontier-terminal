@@ -148,8 +148,9 @@ head_sampling_rate = 1
 #                   cache:warm — re-renders the public pages after a deploy or poll
 #                   moves the payload cache key
 #                   track-record:search — the newsroom side of the track record for
-#                   alerts whose window closed (layers/terminal/server/pipeline/track-record/);
-#                   the GDELT side runs on GitHub Actions (.github/workflows/gdelt-search.yml)
+#                   alerts whose window closed, and the GDELT side's search row once its
+#                   files are read (layers/terminal/server/pipeline/track-record/); the files
+#                   are read on GitHub Actions (.github/workflows/gdelt-search.yml)
 #                   webhooks:deliver — queues new alerts for licensee webhooks and
 #                   sends the due ones (layers/terminal/server/utils/webhook-outbox.ts)
 #   "0 13 * * 1"    theses:digest — the weekly thesis digest email (layers/terminal/server/theses/digest.ts)
@@ -224,7 +225,7 @@ NUXT_INDEXNOW_KEY = "fe2738e740b8c6b06a20d76ab1877559"
 #                                32+ chars. Unset = those routes 404.
 #   NUXT_GDELT_TOKEN             bearer the GitHub Actions GDELT job presents to /api/gdelt/*
 #                                (scripts/gdelt-search.ts); the same value is the repo secret
-#                                GDELT_TOKEN. 32+ chars. Unset = those routes 404, no GDELT search.
+#                                GDELT_TOKEN. 32+ chars. Unset = those routes 404, no GDELT file is read.
 #   NUXT_SEC_CONTACT_EMAIL       contact address sec.gov's fair-access policy requires in
 #                                the User-Agent (layers/terminal/server/pipeline/fetch.ts). Unset = the
 #                                EDGAR sources are skipped as 'failed', never fetched
