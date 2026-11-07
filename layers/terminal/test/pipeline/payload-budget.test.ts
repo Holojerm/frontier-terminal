@@ -9,7 +9,7 @@ import { CAREERS_SOURCES, sourceIdsForScope } from '../../server/pipeline/scopes
 import { includeSources, type FetchSource } from '../../server/pipeline/sources'
 import { TRIPWIRE_REFRESH } from '../../server/pipeline/tripwire'
 import { RECIPES } from '../../server/theses/recipes/registry'
-import { EXPORT_PAGE_SIZE } from '../../server/utils/terminal-export'
+import { EXPORT_PAGE_SIZE } from '../../server/utils/terminal-export-views'
 import { PARQUET_ROW_GROUP_BYTES } from '../../server/utils/terminal-parquet'
 
 // The payload-size gate. Every cron invocation is one Worker isolate with

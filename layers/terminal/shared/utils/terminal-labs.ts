@@ -66,7 +66,7 @@ export const AXIS_PATH: Record<AlertAxis, string> = {
   demand: '/rankings',
 }
 
-/** The axis each change entity type sits on. The signal band (terminal-db.ts › AXIS_OF) buckets by it too. */
+/** The axis each change entity type sits on. The signal band (terminal-alerts.ts › AXIS_OF) buckets by it too. */
 export const ENTITY_AXIS: Record<ChangeView['entity_type'], AlertAxis> = {
   job: 'hiring',
   model: 'pricing',

@@ -29,7 +29,8 @@ import {
   type BulkManifest,
   type BulkStore,
 } from '../server/utils/terminal-bulk'
-import { EXPORT_PAGE_SIZE, EXPORT_TABLES, type ExportTable } from '../server/utils/terminal-export'
+import { EXPORT_PAGE_SIZE, type ExportTable } from '../server/utils/terminal-export-views'
+import { EXPORT_TABLES } from '../server/utils/terminal-export'
 
 // The bulk feed against a real D1: files land in the store, gzipped CSV and
 // Parquet, with a SHA-256 that matches their bytes, the recent file is the

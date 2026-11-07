@@ -47,18 +47,10 @@ import {
 import { LICENSED_BUCKET } from '../../shared/utils/institutional'
 import type { PipelineDb } from '../pipeline/store'
 import { SCHEMA_VERSION, tableChangedAfter } from './data-schema'
-import {
-  ARCHIVED_EXPORTS,
-  EXPORT_PAGE_SIZE,
-  EXPORT_TABLES,
-  LICENSE_COLUMN,
-  csvLine,
-  exportPages,
-  historyRule,
-  inWindow,
-  licenseWindow,
-  type ExportTable,
-} from './terminal-export'
+import { ARCHIVED_EXPORTS, EXPORT_TABLES } from './terminal-export'
+import { EXPORT_PAGE_SIZE, type ExportTable } from './terminal-export-views'
+import { LICENSE_COLUMN, historyRule, inWindow, licenseWindow } from './terminal-export-history'
+import { csvLine, exportPages } from './terminal-export-format'
 import { parquetBuilder } from './terminal-parquet'
 
 export const BULK_VARIANTS = ['recent', 'full'] as const

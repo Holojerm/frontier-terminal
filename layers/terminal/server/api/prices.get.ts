@@ -3,7 +3,7 @@
 // `as_of` rebuilds the catalog from the change log as it stood then; before
 // our first snapshot, from the Internet Archive backfill (terminal-archive.ts).
 
-import { queryPrices } from '../utils/terminal-db'
+import { queryPrices } from '../utils/terminal-prices'
 import { serveTerminal, terminalDb } from '../utils/terminal-handler'
 import { rateLimitTerminal } from '../utils/api-access'
 

@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
-import { basisChecks } from '../utils/terminal-db'
+import { basisChecks } from '../utils/terminal-prices'
 import { effectiveClassMap } from './class-map'
 import type { LockStore } from './lock'
 import type { PipelineDb } from './store'

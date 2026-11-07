@@ -11,7 +11,8 @@ import { alertPath } from '../../shared/utils/terminal-tiers'
 
 import type { PublicPageSource } from '#server/utils/public-pages'
 
-import { alertPermalinks, queryPriceKeys, sitemapPriceKeys } from './terminal-db'
+import { alertPermalinks } from './terminal-alerts'
+import { queryPriceKeys, sitemapPriceKeys } from './terminal-prices'
 import { terminalPayload } from './terminal-handler'
 import { queryRevenue } from './terminal-revenue'
 

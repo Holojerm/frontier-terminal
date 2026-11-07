@@ -12,13 +12,10 @@ import { includeSources } from '../server/pipeline/sources'
 import { PointInTimeError, pollStampAt } from '../server/utils/terminal-asof'
 import { terminalStamps } from '../server/utils/terminal-cache'
 import { assertArchiveKnowable, queryPriceReach } from '../server/utils/terminal-archive'
-import {
-  queryContext,
-  queryPriceHistory,
-  queryPriceKeys,
-  queryPrices,
-} from '../server/utils/terminal-db'
-import { exportTable, licenseWindow } from '../server/utils/terminal-export'
+import { queryContext } from '../server/utils/terminal-db'
+import { queryPriceHistory, queryPriceKeys, queryPrices } from '../server/utils/terminal-prices'
+import { exportTable } from '../server/utils/terminal-export'
+import { licenseWindow } from '../server/utils/terminal-export-history'
 import { PROVIDER_ORDER } from '../server/utils/terminal-sources'
 import { fixtureText, manifest } from './pipeline/fixtures'
 

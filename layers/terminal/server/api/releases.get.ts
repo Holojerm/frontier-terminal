@@ -1,7 +1,7 @@
 // GET /api/releases — every SKU first listed after its source's baseline,
 // newest first, with the price printed beside it when it was first seen.
 
-import { queryReleases } from '../utils/terminal-db'
+import { queryReleases } from '../utils/terminal-prices'
 import { serveTerminal, terminalDb } from '../utils/terminal-handler'
 import { rateLimitTerminal } from '../utils/api-access'
 

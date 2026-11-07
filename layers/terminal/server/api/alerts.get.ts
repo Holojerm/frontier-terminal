@@ -13,7 +13,7 @@ import { ALERT_AXES } from '../../shared/utils/terminal-labs'
 import { LABS } from '../../shared/utils/terminal-lab-summary'
 import { ALERT_TIER_FILTERS, tierFilterOf } from '../../shared/utils/terminal-tiers'
 
-import { parseAlertCursor, queryAlerts } from '../utils/terminal-db'
+import { parseAlertCursor, queryAlerts } from '../utils/terminal-alerts'
 import { serveTerminal, terminalDb } from '../utils/terminal-handler'
 import { rateLimitTerminal } from '../utils/api-access'
 

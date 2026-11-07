@@ -11,24 +11,22 @@ import { cacheControlFor, rateLimitTerminal } from './api-access'
 import { SCHEMA_VERSION, SCHEMA_VERSION_HEADER } from './data-schema'
 import { PointInTimeError, assertKnowable } from './terminal-asof'
 import { DICTIONARY_NAME, dataDictionary, dictionaryCsv } from './terminal-dictionary'
+import { ARCHIVED_EXPORTS, EXPORT_TABLES, exportTable, WITHDRAWN_EXPORTS } from './terminal-export'
 import {
-  ARCHIVED_EXPORTS,
-  EXPORT_TABLES,
   LICENSE_COLUMN,
-  csvChunks,
-  exportFilter,
-  exportTable,
-  jsonChunks,
-  jsonEnvelopeChunks,
   licenseHeaders,
   licenseWindow,
-  parseExportPath,
   parseExportQuery,
   sampleOf,
+} from './terminal-export-history'
+import {
+  csvChunks,
+  jsonChunks,
+  jsonEnvelopeChunks,
+  parseExportPath,
   streamOf,
-  WITHDRAWN_EXPORTS,
-  type ExportTable,
-} from './terminal-export'
+} from './terminal-export-format'
+import { exportFilter, type ExportTable } from './terminal-export-views'
 import { terminalDb } from './terminal-handler'
 
 const CONTENT_TYPES = {

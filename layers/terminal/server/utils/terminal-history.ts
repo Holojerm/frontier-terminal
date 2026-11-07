@@ -1,6 +1,6 @@
 // Three derived views of the history the store already holds, as pure
 // functions over rows: a SKU's price series, open roles per day, and the
-// model-release timeline. terminal-db.ts fetches the rows; nothing here
+// model-release timeline. terminal-prices.ts and terminal-hiring.ts fetch the rows; nothing here
 // touches D1, so layers/terminal/test/terminal-history.test.ts drives every rule with a
 // handful of fixture rows.
 //

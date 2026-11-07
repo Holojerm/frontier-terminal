@@ -2,7 +2,7 @@
 // their cited change rows, and the store's totals. Cached in KV for the
 // current poll tick (layers/terminal/server/utils/terminal-handler.ts).
 
-import { queryOverview } from '../utils/terminal-db'
+import { queryOverview } from '../utils/terminal-alerts'
 import { serveTerminal, terminalDb } from '../utils/terminal-handler'
 import { rateLimitTerminal } from '../utils/api-access'
 

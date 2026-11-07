@@ -25,7 +25,7 @@ import {
   type SocialService,
 } from '#layers/social/server/utils/social-text'
 import { absoluteUrl } from '#shared/utils/site'
-import { AXIS_OF } from '../utils/terminal-db'
+import { AXIS_OF } from '../utils/terminal-alerts'
 import type { PipelineDb } from './store'
 
 /** Alerts before posting went live are history, not news. */
