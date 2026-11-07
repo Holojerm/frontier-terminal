@@ -335,8 +335,11 @@ describe('second run', () => {
     const removed = changes.find((c) => c.change_type === 'removed')!
     expect(removed.before_hash).toBe(beforeJob.content_hash)
     expect(removed.after_json).toBeNull()
-    // A removed row's evidence is its last observation.
-    expect(removed.fetched_at).toBe(beforeJob.fetched_at)
+    // A removal is cited to the poll that found it gone, not the removed
+    // row's first sighting.
+    expect(removed.fetched_at).not.toBe(beforeJob.fetched_at)
+    expect(removed.fetched_at).toBe(removed.detected_at)
+    expect(removed.source_url).toBe(beforeJob.source_url)
 
     const modified = changes.find((c) => c.change_type === 'modified')!
     expect(modified.before_hash).toBe(beforePrice.content_hash)
