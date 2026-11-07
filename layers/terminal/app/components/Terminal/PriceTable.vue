@@ -119,7 +119,7 @@ function deltaText(row: PriceRowView): string | null {
         <span
           ><NuxtLink
             :to="`/prices/${r.entity_key}`"
-            class="font-mono underline underline-offset-2"
+            class="py-1 font-mono underline underline-offset-2"
             :class="r.removed ? 'text-muted line-through' : 'text-highlighted'"
             >{{ r.model_slug }}</NuxtLink
           ><TerminalCaveatMark
@@ -157,7 +157,7 @@ function deltaText(row: PriceRowView): string | null {
         <NuxtLink
           v-if="r.spark"
           :to="`/prices/${r.entity_key}`"
-          class="inline-flex items-center gap-2 text-xs text-muted"
+          class="inline-flex min-h-6 items-center gap-2 text-xs text-muted"
           :title="`${r.revisions} observations of ${r.spark.field.replace(/_per_mtok$/, '')} price. Open the SKU page`"
         >
           <TerminalSparkline :values="r.spark.values" />
