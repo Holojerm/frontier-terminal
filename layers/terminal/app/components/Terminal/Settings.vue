@@ -56,18 +56,32 @@ const zones = computed<Option<string>[]>(() => {
 // One writable computed per setting, so every control is a plain v-model.
 // An inline `@update:model-value="f(key)"` would only call f, never the
 // setter it returns, and the control would silently do nothing.
-type Scalar = Exclude<keyof ReaderPrefs, 'watchlist'>
-const bind = <K extends Scalar>(key: K) =>
-  computed<ReaderPrefs[K]>({
-    get: () => prefs.value[key],
-    set: (value) => set({ [key]: value }),
-  })
-const zone = bind('zone')
-const clock = bind('clock')
-const dates = bind('dates')
-const relative = bind('relative')
-const numbers = bind('numbers')
-const density = bind('density')
+// Spelled out per field: a generic `bind(key)` over the readonly `prefs`
+// failed `computed`'s overloads in Workers Builds' typecheck.
+const zone = computed({
+  get: () => prefs.value.zone,
+  set: (v: ReaderPrefs['zone']) => set({ zone: v }),
+})
+const clock = computed({
+  get: () => prefs.value.clock,
+  set: (v: ReaderPrefs['clock']) => set({ clock: v }),
+})
+const dates = computed({
+  get: () => prefs.value.dates,
+  set: (v: ReaderPrefs['dates']) => set({ dates: v }),
+})
+const relative = computed({
+  get: () => prefs.value.relative,
+  set: (v: boolean) => set({ relative: v }),
+})
+const numbers = computed({
+  get: () => prefs.value.numbers,
+  set: (v: ReaderPrefs['numbers']) => set({ numbers: v }),
+})
+const density = computed({
+  get: () => prefs.value.density,
+  set: (v: ReaderPrefs['density']) => set({ density: v }),
+})
 const mode = computed({
   get: () => colorMode.preference,
   set: (value: string) => (colorMode.preference = value),
