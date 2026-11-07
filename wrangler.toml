@@ -140,6 +140,15 @@ head_sampling_rate = 1
 enabled = true
 head_sampling_rate = 1
 
+# Workers Issues: groups uncaught exceptions, failed invocations, 5xx responses
+# and console.error lines into issues, and an automation pushes each new or
+# recurring one to email or an agent. It covers what the ops spool cannot: a
+# request that never returns, which records no 5xx and so no ops event (the
+# 2026-11-07 hangs). Must stay in this file: a deploy without it turns Issues
+# off. Needs wrangler 4.134+.
+[observability.issues]
+enabled = true
+
 # ─── Scheduled tasks ─────────────────────────────────────────────────────────
 # Every expression here must appear VERBATIM as a key in SCHEDULED_TASKS in
 # nuxt.config.ts. That map is what turns a trigger into a task, and the join

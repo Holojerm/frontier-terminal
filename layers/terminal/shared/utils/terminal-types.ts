@@ -400,7 +400,7 @@ export interface MatrixCell {
    * check was introduced, or the cell is unmapped.
    */
   basis_current: boolean | null
-  /** fetched_at of the poll that produced `basis_current`. */
+  /** fetched_at of the newest poll of `basis_source_id` that confirmed `basis_current`. */
   basis_checked_at: string | null
   /** Set when basis_current is false: what the reader should make of the cell. */
   basis_note: string | null
