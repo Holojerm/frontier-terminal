@@ -36,10 +36,13 @@ import { PointInTimeError, firstSnapshotAt } from './terminal-asof'
 import { inCluster, type DepartmentCluster } from './terminal-clusters'
 import { archiveSourceId, type ArchivedPrice } from './terminal-history'
 import { byString, num, parseJson, str } from './terminal-json'
-import { HIRING_SOURCES, type SourceRegistry } from './terminal-sources'
+import { HIRING_SOURCES, PROVIDER_ORDER, type SourceRegistry } from './terminal-sources'
 
 export const ARCHIVE_SOURCE_NOTE =
   'Read from the Internet Archive’s capture of the lab’s own pricing page, before this site watched it.'
+
+export const ARCHIVED_LABS_AS_OF_METHOD =
+  'Each lab’s live record starts at our first fetch of its own pricing pages, and some labs were added later than others. A lab we hadn’t fetched by as_of is answered from the Internet Archive: the price list on the newest capture of its pricing page at or before as_of that we could read. That is event time (when the Archive saw the page), not knowledge time: we read these captures back long after. Its rows’ source_url is the capture, fetched_at when we read it. The like-for-like matrix is built from live rows only.'
 
 export const ARCHIVED_AS_OF_METHOD =
   'as_of is before this site’s first fetch, so this answer is rebuilt from the Internet Archive: per lab, the price list on the newest capture of its pricing page at or before as_of that we could read. That is event time (when the Archive saw the page), not knowledge time: we read these captures back long after, so this store did not hold them at as_of. Each row’s source_url is the capture, fetched_at when we read it. Labs with no readable capture by as_of have no rows. The like-for-like matrix is not rebuilt from the archive.'
@@ -68,10 +71,64 @@ export async function archivedRowsForKey(
     .orderBy(asc(tables.archivedPrices.captured_at))
 }
 
-/** Whether `at` is before the live floor, so a price read as of it must come from the archive. */
+/** Whether `at` is before every lab's live floor, so the whole answer comes from the archive. */
 export async function beforeLiveFloor(db: PipelineDb, at: string): Promise<boolean> {
   const first = await firstSnapshotAt(db)
   return first === null || at < first
+}
+
+/**
+ * Where each lab's live record begins: the first fetch of its own pricing
+ * pages ('pricing'), or of its primary job board ('hiring'). Labs joined at
+ * different times (DeepSeek and Alibaba on 2026-11-04), so one floor for all
+ * of them dropped a later lab between the archive's end and its own first
+ * fetch. A lab never fetched has no entry; a lab with no board is left out of
+ * 'hiring' entirely (labsBeforeFloor never names it).
+ */
+export async function labLiveFloors(
+  db: PipelineDb,
+  registry: SourceRegistry,
+  axis: ArchiveAxis,
+): Promise<Map<LabId, string>> {
+  const live = await db
+    .select({
+      source_id: tables.sourceStats.source_id,
+      first: tables.sourceStats.first_fetched_at,
+    })
+    .from(tables.sourceStats)
+  const firstOf = new Map(live.flatMap((l) => (l.first ? [[l.source_id, l.first] as const] : [])))
+  const out = new Map<LabId, string>()
+  for (const lab of PROVIDER_ORDER) {
+    const first = floorSources(registry, axis, lab)
+      .map((id) => firstOf.get(id))
+      .filter((at): at is string => at !== undefined)
+      .sort()[0]
+    if (first) out.set(lab, first)
+  }
+  return out
+}
+
+function floorSources(registry: SourceRegistry, axis: ArchiveAxis, lab: LabId): string[] {
+  if (axis === 'hiring') {
+    const backing = HIRING_SOURCES[lab]
+    return 'source_ids' in backing ? [backing.source_ids[0]!] : []
+  }
+  return registry.sources
+    .filter((s) => s.axis === 'pricing-catalog' && s.provider === lab)
+    .map((s) => s.source_id)
+}
+
+/** The labs whose live record had not begun at `at`, whose answer comes from the archive. */
+export function labsBeforeFloor(
+  floors: ReadonlyMap<LabId, string>,
+  at: string,
+  axis: ArchiveAxis,
+): LabId[] {
+  return PROVIDER_ORDER.filter((lab) => {
+    if (axis === 'hiring' && !('source_ids' in HIRING_SOURCES[lab])) return false
+    const floor = floors.get(lab)
+    return floor === undefined || at < floor
+  })
 }
 
 const parsedOn = (axis: ArchiveAxis) =>
@@ -126,7 +183,12 @@ export interface ArchivedCatalog {
  * capture sits before a gap is still answered from it, and the payload's
  * point_in_time names that capture so the reader sees how old it is.
  */
-export async function archivedCatalogAt(db: PipelineDb, at: string): Promise<ArchivedCatalog> {
+export async function archivedCatalogAt(
+  db: PipelineDb,
+  at: string,
+  /** Only these labs; every lab when absent. */
+  labs?: readonly string[],
+): Promise<ArchivedCatalog> {
   const newest = await db
     .select({
       provider: tables.archiveCaptures.provider,
@@ -137,7 +199,7 @@ export async function archivedCatalogAt(db: PipelineDb, at: string): Promise<Arc
     .groupBy(tables.archiveCaptures.provider)
   const captures: ArchivedCatalog['captures'] = []
   for (const n of newest) {
-    if (!n.captured_at) continue
+    if (!n.captured_at || (labs && !labs.includes(n.provider))) continue
     const [c] = await db
       .select({
         id: tables.archiveCaptures.id,
@@ -226,7 +288,8 @@ export async function archivedPriceKeys(
   return rows.flatMap((r) => (r.at ? [{ entity_key: r.entity_key, at: r.at }] : []))
 }
 
-const LABS: readonly LabId[] = ['openai', 'anthropic', 'google', 'xai', 'meta', 'mistral']
+/** The labs with an archived job-board history to reach back through (hiring-eras.ts). */
+const HIRING_LABS: readonly LabId[] = ['openai', 'anthropic', 'google', 'xai', 'meta', 'mistral']
 
 /**
  * How far each lab's price history reaches: the archived span and how many
@@ -262,7 +325,7 @@ export async function queryPriceReach(
       .map((s) => [s.source_id, s.provider]),
   )
   const covered = new Set(ARCHIVE_ERAS.map((e) => e.provider as string))
-  return LABS.map((provider) => {
+  return PROVIDER_ORDER.map((provider) => {
     const parsed = archived.find((a) => a.provider === provider && a.status === 'parsed')
     const skipped = archived.find((a) => a.provider === provider && a.status === 'skipped')
     const liveFirst = live
@@ -292,6 +355,9 @@ export async function queryPriceReach(
 
 export const HIRING_ARCHIVE_METHOD =
   'Points before our first read of a board come from the Internet Archive’s copies of the lab’s own job board (source_id wayback:<era>). Each is the board as the Archive saw it at `at`. That is event time, not knowledge time: we read the copies back long after, at fetched_at, so this store did not hold them at `at`. We read one copy a week. A copy that lists every role gives departments. One that pages its list gives only the board’s own total. A copy we couldn’t read is skipped with its reason (archive_captures). Department labels are the board’s own at the time, filed under today’s department where the board’s own id ties the two. Archived points never reach alerts, theses or the judge.'
+
+export const ARCHIVED_LAB_BOARDS_AS_OF_METHOD =
+  'Each lab’s live hiring record starts at our first read of its own job board, and some boards were added later than others. A lab whose board we hadn’t read by as_of is answered from the Internet Archive: the open roles on the newest copy of its job board at or before as_of that we could read. That is event time (when the Archive saw the board), not knowledge time: we read these copies back long after. Its source_url is the copy, fetched_at when we read it.'
 
 export const ARCHIVED_HIRING_AS_OF_METHOD =
   'as_of is before this site first read the boards, so this answer is rebuilt from the Internet Archive: per lab, the open roles on the newest copy of its job board at or before as_of that we could read. That is event time (when the Archive saw the board), not knowledge time: we read these copies back long after, so this store did not hold them at as_of. Each lab’s source_url is the copy, fetched_at when we read it. A copy that pages its list gives the board’s total with no departments. A lab with no readable copy by as_of has no rows.'
@@ -432,7 +498,7 @@ export async function queryHiringReach(
   ])
   const known = new Set(registry.sources.map((s) => s.source_id))
   const covered = new Set(HIRING_ARCHIVE_ERAS.map((e) => e.provider as string))
-  return LABS.map((provider) => {
+  return HIRING_LABS.map((provider) => {
     const backing = HIRING_SOURCES[provider]
     const primary = 'source_ids' in backing ? backing.source_ids[0]! : null
     const liveFirst =

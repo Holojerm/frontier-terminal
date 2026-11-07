@@ -12,8 +12,12 @@ import { AlertRow, contentHash } from '../server/pipeline/contracts'
 import { insertRows } from '../server/pipeline/store'
 import { terminalStamp } from '../server/utils/terminal-cache'
 import { MODEL_CLASS_MAP, NO_ROW_GAP } from '../server/utils/terminal-classes'
+import { ENTITY_AXIS } from '../shared/utils/terminal-labs'
+import type { PriceRowView } from '../shared/utils/terminal-types'
 import {
+  AXIS_OF,
   alertPermalinks,
+  buildMatrix,
   parseAlertCursor,
   queryAlert,
   queryAlerts,
@@ -591,6 +595,26 @@ describe('after a baseline poll of every source', () => {
     expect(byProvider.xai!.caveat).toContain('Cursor')
   })
 
+  it('incidents: each lab counts back from its own feed’s last read, never a failed fetch', async () => {
+    const baseline = await queryIncidents(db, await ctx())
+    const xaiRead = baseline.providers.find((p) => p.provider === 'xai')!.window_to!
+    await run(['openai-status'])
+    await run(['xai-status'], fixtureFetcher({ 'xai-status': 'not a feed' }))
+    const failed = (await sourceStamps(db)).get('xai-status')!.newest.fetched_at
+    expect(Date.parse(failed)).toBeGreaterThan(Date.parse(xaiRead))
+
+    const incidents = await queryIncidents(db, await ctx())
+    const byProvider = Object.fromEntries(incidents.providers.map((p) => [p.provider, p]))
+    const openaiRead = (await sourceStamps(db)).get('openai-status')!.newest.fetched_at
+    // The freshest read anchors the list; the failed fetch anchors nothing.
+    expect(incidents.window_to).toBe(openaiRead)
+    expect(byProvider.openai!.window_to).toBe(openaiRead)
+    expect(byProvider.xai!.window_to).toBe(xaiRead)
+    expect(byProvider.xai!.sources[0]!.fetched_at).toBe(xaiRead)
+    expect(Date.parse(byProvider.anthropic!.window_to!)).toBeLessThan(Date.parse(openaiRead))
+    expect(byProvider.meta!.window_to).toBeNull()
+  })
+
   it('alerts: none after a baseline', async () => {
     const alerts = await queryAlerts(db, await ctx(), 50)
     expect(alerts.rows).toEqual([])
@@ -786,7 +810,7 @@ describe('after a second poll that moves prices, closes a role, and files an S-1
 describe('the stated window holds when changes span several axes', () => {
   it('anchors to the newest detection, never to the reader’s clock', async () => {
     const src = urlOf('xai-models-md')
-    const change = (id: string, type: 'model' | 'job', at: string) => ({
+    const change = (id: string, type: 'model' | 'job' | 'offering' | 'statement', at: string) => ({
       id: contentHashOfText(id),
       entity_key: `${type}:xai:${id}`,
       entity_type: type,
@@ -805,6 +829,10 @@ describe('the stated window holds when changes span several axes', () => {
       change('b', 'job', '2026-08-26T16:24:42Z'), // newest — anchors the window
       change('c', 'job', '2026-08-26T10:18:56Z'),
       change('d', 'model', '2026-08-25T16:00:00Z'), // 24h24m before — outside
+      // Prospectus rows sit on the SEC bucket; the band once counted them in
+      // the total and on no axis.
+      change('e', 'offering', '2026-08-26T09:00:00Z'),
+      change('f', 'statement', '2026-08-26T09:30:00Z'),
     ])
     const { movement } = await queryOverview(db, await ctx())
     expect(movement.latest_detected_at).toBe('2026-08-26T16:24:42Z')
@@ -812,12 +840,63 @@ describe('the stated window holds when changes span several axes', () => {
     expect(movement.recent).toEqual({
       pricing: 1,
       hiring: 2,
-      sec: 0,
+      sec: 2,
       incidents: 0,
       disclosures: 0,
-      total: 3,
+      total: 5,
     })
-    expect(movement.total_changes).toBe(4)
+    expect(movement.total_changes).toBe(6)
+  })
+
+  it('buckets every entity type that has an axis, so the total is the sum of the axes', () => {
+    for (const [type, axis] of Object.entries(ENTITY_AXIS)) {
+      if (axis === 'demand') expect(AXIS_OF[type]).toBeUndefined()
+      else expect(AXIS_OF[type], type).toBeDefined()
+    }
+  })
+})
+
+describe('the matrix prices what a model costs at the query instant', () => {
+  it('passes over a scheduled price until its start date', () => {
+    const entry = MODEL_CLASS_MAP.find((e) => e.class === 'flagship')!
+    const row = (over: Partial<PriceRowView>): PriceRowView => ({
+      entity_key: `model:${entry.provider}:${entry.model_slug}:standard`,
+      source_id: 'pricing',
+      provider: entry.provider,
+      model_slug: entry.model_slug,
+      tier: 'standard',
+      context_window: null,
+      context_window_source: null,
+      input_per_mtok: 2,
+      cached_input_per_mtok: null,
+      output_per_mtok: 10,
+      effective_from: null,
+      effective_until: null,
+      notes: null,
+      removed: false,
+      delta: null,
+      also_listed_by: [],
+      revisions: 1,
+      spark: null,
+      source_url: 'https://example.com/pricing',
+      fetched_at: '2026-11-01T00:00:00.000Z',
+      checked_at: null,
+      ...over,
+    })
+    // Richer and newer, so preferRow alone would pick it.
+    const scheduled = row({
+      entity_key: `model:${entry.provider}:${entry.model_slug}:standard@2027-01-01`,
+      input_per_mtok: 1,
+      cached_input_per_mtok: 0.1,
+      effective_from: '2027-01-01',
+      fetched_at: '2026-11-05T00:00:00.000Z',
+    })
+    const cellAt = (at: string | null) =>
+      buildMatrix([row({}), scheduled], new Map(), MODEL_CLASS_MAP, at).cells.find(
+        (c) => c.provider === entry.provider && c.class === 'flagship',
+      )!
+    expect(cellAt('2026-11-07T00:00:00.000Z').row!.input_per_mtok).toBe(2)
+    expect(cellAt('2027-01-02T00:00:00.000Z').row!.input_per_mtok).toBe(1)
   })
 })
 

@@ -12,7 +12,7 @@ import { POLL_LOCK_KEY } from '../../pipeline/lock'
 import { thesisPages } from '../../../shared/utils/thesis-format'
 import { THESES } from '../../theses/registry'
 import { warmCaches, warmPaths } from '../../utils/cache-warm'
-import { terminalStamp } from '../../utils/terminal-cache'
+import { terminalStamps } from '../../utils/terminal-cache'
 import { withHeartbeat } from '../../utils/task-heartbeat'
 
 interface CloudflareTaskContext {
@@ -37,7 +37,8 @@ const task = defineTask({
       {
         store: kv,
         build: config.public.buildSha || 'dev',
-        stamp: () => terminalStamp(db),
+        // The key stamp the pages are cached under, so a judge run is warmed too.
+        stamp: async () => (await terminalStamps(db)).key,
         // A poll's own warm runs after it releases the lock. If KV still shows
         // the lock then, the next five-minute tick warms instead.
         pollRunning: async () => (await kv.getItem(POLL_LOCK_KEY)) !== null,

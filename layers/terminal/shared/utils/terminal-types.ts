@@ -343,6 +343,8 @@ export interface PriceDeltaView extends Prov {
   input_after: number | null
   output_before: number | null
   output_after: number | null
+  cached_before: number | null
+  cached_after: number | null
 }
 
 export interface PriceRowView extends Prov {
@@ -566,7 +568,13 @@ export interface IncidentProviderView {
   reason: string | null
   /** The audit's caveat for the feed (e.g. Google's product filter), in its own words. */
   caveat: string | null
-  /** Incidents started inside the newest window_days. */
+  /**
+   * Where this lab's windows count back from: its feed's last successful read
+   * (its newest snapshot if never read, the payload's window_to with neither).
+   * Null for an audited cut.
+   */
+  window_to: string | null
+  /** Incidents started inside the window_days to window_to. */
   last_window: number
   /** Incidents started in the window_days before that. */
   prior_window: number
@@ -578,7 +586,7 @@ export interface IncidentProviderView {
 }
 
 export interface IncidentsData extends Stamp {
-  /** The windows count back from here: the newest status-feed fetch, or computed_at before any. */
+  /** The freshest lab's window_to, or computed_at before any read: where the incident list counts back from. Each lab's counts use its own. */
   window_to: string
   window_days: number
   history_days: number
@@ -842,9 +850,12 @@ export interface SpendProviderView {
   /** This lab's spend_low over the tracked labs' spend_low, 0..1; null when nothing is priced. */
   share_low: number | null
   share_high: number | null
-  /** This lab's tokens over the tracked labs' tokens in the same window, for the decomposition:
-   * tokens vs. dollars. Not the rankings' share, which is of all OpenRouter tokens. */
+  /** This lab's tokens over the tracked labs' tokens in the same window, priced or not. Not
+   * the rankings' share, which is of all OpenRouter tokens. */
   token_share: number | null
+  /** This lab's priced tokens over the tracked labs' priced tokens: the like-for-like
+   * denominator for share_low/high, which only count priced tokens. Null when nothing is priced. */
+  priced_token_share: number | null
   models: SpendModel[]
 }
 

@@ -17,7 +17,7 @@
 
 import { and, asc, count, desc, eq, gt, inArray, lt, max, min, ne, or, sql } from 'drizzle-orm'
 
-import { entityTypesOf, type AlertAxis } from '../../shared/utils/terminal-labs'
+import { ENTITY_AXIS, entityTypesOf, type AlertAxis } from '../../shared/utils/terminal-labs'
 import { laneFor } from '../pipeline/lanes'
 
 import { count as countLabel, money } from '../../shared/utils/terminal-format'
@@ -29,6 +29,7 @@ import {
 } from '../../shared/utils/terminal-tiers'
 import type {
   AlertDetailData,
+  ArchivedHiringPoint,
   AlertView,
   AlertsData,
   LabId,
@@ -53,6 +54,7 @@ import type {
   PriceMatrix,
   PriceRowView,
   PricesData,
+  Prov,
   ProviderId,
   ReleasesData,
   SnapshotStamp,
@@ -97,6 +99,8 @@ import {
 import {
   ARCHIVED_AS_OF_METHOD,
   ARCHIVED_HIRING_AS_OF_METHOD,
+  ARCHIVED_LABS_AS_OF_METHOD,
+  ARCHIVED_LAB_BOARDS_AS_OF_METHOD,
   HIRING_ARCHIVE_METHOD,
   archivedHiringPoints,
   queryHiringReach,
@@ -104,6 +108,8 @@ import {
   archivedPriceKeys,
   archivedRowsForKey,
   beforeLiveFloor,
+  labLiveFloors,
+  labsBeforeFloor,
   queryPriceReach,
 } from './terminal-archive'
 import {
@@ -322,6 +328,36 @@ export function confirmedAt(
   return read && Date.parse(read) > Date.parse(fetched_at) ? read : null
 }
 
+/**
+ * Each source as a "data as of" citation: the newest snapshot a run read into
+ * the store, or, for a source never read, its newest snapshot as before. The
+ * newest snapshot alone can be a fetch whose parse failed, and the rows on
+ * the page are still the older read's. The coverage panel keeps sourceStamps:
+ * it reports fetches, not what the data is as of.
+ */
+export function citedReads(
+  stamps: ReadonlyMap<string, SourceStamp>,
+  reads: ReadonlyMap<string, string>,
+): Map<string, Prov> {
+  const out = new Map<string, Prov>()
+  for (const [id, stamp] of stamps) {
+    out.set(id, {
+      source_url: stamp.newest.source_url,
+      fetched_at: reads.get(id) ?? stamp.newest.fetched_at,
+    })
+  }
+  return out
+}
+
+/** sourceStamps and lastReads at `at`, as citedReads. */
+export async function readStamps(
+  db: PipelineDb,
+  at: string | null = null,
+): Promise<Map<string, Prov>> {
+  const [stamps, reads] = await Promise.all([sourceStamps(db, at), lastReads(db, at)])
+  return citedReads(stamps, reads)
+}
+
 /** First snapshot per source — when watching it began. */
 async function firstSnapshotPerSource(
   db: PipelineDb,
@@ -404,18 +440,32 @@ export async function tableCounts(db: PipelineDb): Promise<TableCounts> {
 
 export const MOVEMENT_WINDOW_HOURS = 24
 
-export const AXIS_OF: Readonly<Record<string, keyof Omit<MovementSummary['recent'], 'total'>>> = {
-  model: 'pricing',
-  recommendation: 'pricing',
-  job: 'hiring',
-  filing: 'sec',
+type BandAxis = keyof Omit<MovementSummary['recent'], 'total'>
+
+// The band has no revenue bucket: revenue is read off the filings the SEC
+// bucket counts. Rankings are not events (isEvent below).
+const BAND_OF: Readonly<Record<AlertAxis, BandAxis | null>> = {
+  pricing: 'pricing',
+  hiring: 'hiring',
+  sec: 'sec',
   revenue: 'sec',
-  filer: 'sec',
-  document: 'sec',
-  incident: 'incidents',
-  disclosure: 'disclosures',
-  disclosure_timeline: 'disclosures',
+  incidents: 'incidents',
+  disclosures: 'disclosures',
+  demand: null,
 }
+
+/**
+ * The band bucket of each change entity type, derived from the shared axis
+ * map so a new entity type is counted on an axis the moment it has one. A
+ * hand-kept copy here missed six SEC types, and the band's total counted
+ * changes no axis showed.
+ */
+export const AXIS_OF: Readonly<Record<string, BandAxis>> = Object.fromEntries(
+  Object.entries(ENTITY_AXIS).flatMap(([type, axis]) => {
+    const band = BAND_OF[axis]
+    return band ? [[type, band]] : []
+  }),
+)
 
 // Ranking rows are a daily time series, not events (~50 new rows a day by
 // construction), so they are out of "what moved" entirely — the window's
@@ -454,9 +504,11 @@ export async function queryMovement(db: PipelineDb): Promise<MovementSummary> {
         and(isEvent(), sql`datetime(${tables.changes.detected_at}) >= datetime(${windowFrom})`),
       )
       .groupBy(tables.changes.entity_type)
+    // The total is the sum of the axes the band prints, never more.
     for (const row of inWindow) {
       const axis = AXIS_OF[row.entity_type]
-      if (axis) recent[axis] += row.n
+      if (!axis) continue
+      recent[axis] += row.n
       recent.total += row.n
     }
   }
@@ -946,6 +998,8 @@ function toDelta(change: typeof tables.changes.$inferSelect): PriceDeltaView {
     input_after: after ? num(after.input_per_mtok) : null,
     output_before: before ? num(before.output_per_mtok) : null,
     output_after: after ? num(after.output_per_mtok) : null,
+    cached_before: before ? num(before.cached_input_per_mtok) : null,
+    cached_after: after ? num(after.cached_input_per_mtok) : null,
     source_url: change.source_url,
     fetched_at: change.fetched_at,
   }
@@ -959,20 +1013,25 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
   if (pit && (await beforeLiveFloor(db, pit.at))) return archivedPrices(db, pit)
   const models = pit ? rewound(db, pit, 'model') : null
   if (pit) ctx.notes.method.add(PRICES_METHOD)
-  const [entities, history, stamps, reads, firsts, checks, classMap, reach] = await Promise.all([
-    models
-      ? models.then((m) => m.rows)
-      : db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'model')),
-    models ? models.then((m) => m.changes) : modelChanges(db),
-    sourceStamps(db, ctx.at),
-    lastReads(db, ctx.at),
-    firstSnapshotByUrl(db),
-    pit
-      ? rewound(db, pit, 'recommendation').then((r) => r.rows)
-      : db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'recommendation')),
-    effectiveClassMap(db, ctx.at),
-    queryPriceReach(db, ctx.registry),
-  ])
+  const [entities, history, stamps, reads, firsts, checks, classMap, reach, early] =
+    await Promise.all([
+      models
+        ? models.then((m) => m.rows)
+        : db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'model')),
+      models ? models.then((m) => m.changes) : modelChanges(db),
+      sourceStamps(db, ctx.at),
+      lastReads(db, ctx.at),
+      firstSnapshotByUrl(db),
+      pit
+        ? rewound(db, pit, 'recommendation').then((r) => r.rows)
+        : db
+            .select()
+            .from(tables.entities)
+            .where(eq(tables.entities.entity_type, 'recommendation')),
+      effectiveClassMap(db, ctx.at),
+      queryPriceReach(db, ctx.registry),
+      pit ? archivedBeforeOwnFloor(db, pit) : null,
+    ])
   const changes = newestPerSource(history)
   const entitiesByKey = groupByKey(entities)
   const historyByKey = groupByKey(history)
@@ -1064,6 +1123,15 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
     rows.push(row)
   }
 
+  // The matrix maps live rows only, so it is built before archived rows join.
+  const matrix = buildMatrix(
+    rows,
+    basisChecks(checks, reads),
+    classMap,
+    ctx.at ?? ctx.now().toISOString(),
+  )
+  if (early) rows.push(...early.filter((r) => !byKey.has(r.entity_key)))
+
   // Priced first, then catalog-only, then delisted; provider order inside each.
   rows.sort((a, b) => {
     const bucket = (r: PriceRowView) => (r.removed ? 2 : pricedRow(r) ? 0 : 1)
@@ -1081,7 +1149,7 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
   return {
     ...stampOf(ctx),
     rows,
-    matrix: buildMatrix(rows, basisChecks(checks, reads), classMap),
+    matrix,
     counts: {
       total: rows.length,
       priced: rows.filter((r) => !r.removed && pricedRow(r)).length,
@@ -1099,6 +1167,30 @@ export async function queryPrices(db: PipelineDb, ctx: QueryContext): Promise<Pr
         }
       : null,
   }
+}
+
+/**
+ * As of T after the first fetch, the labs whose own pricing pages were not
+ * fetched yet: their rows from the newest readable archive capture by T, so
+ * a lab added later is answered from the archive up to its own first fetch
+ * rather than missing. Null when every lab's live record had begun.
+ */
+async function archivedBeforeOwnFloor(
+  db: PipelineDb,
+  ctx: QueryContext & { at: string },
+): Promise<PriceRowView[] | null> {
+  const floors = await labLiveFloors(db, ctx.registry, 'pricing')
+  const labs = labsBeforeFloor(floors, ctx.at, 'pricing')
+  if (labs.length === 0) return null
+  const catalog = await archivedCatalogAt(db, ctx.at, labs)
+  if (catalog.rows.length === 0) return null
+  ctx.notes.method.add(ARCHIVED_LABS_AS_OF_METHOD)
+  for (const c of catalog.captures) {
+    ctx.notes.method.add(
+      `${c.provider}: Internet Archive capture of ${c.captured_at} (${c.source_url}).`,
+    )
+  }
+  return catalog.rows
 }
 
 /**
@@ -1192,6 +1284,18 @@ export function basisChecks(
 }
 
 /**
+ * A scheduled price ("$Y starting Jan 1, 2027") is stored as its own row with
+ * the same slug and a standard tier; only its key carries the start date
+ * (normalize.ts › priceTier). Until that date it is not what the model costs,
+ * the same rule spend's matchSku applies by preferring a current row.
+ */
+function scheduledAfter(row: PriceRowView, at: string | null): boolean {
+  if (at === null || row.effective_from === null) return false
+  const from = Date.parse(row.effective_from)
+  return Number.isFinite(from) && from > Date.parse(at)
+}
+
+/**
  * Joins the editorial class map (terminal-classes.ts) to real stored rows.
  * Nothing is computed about a model here: the map says which slug answers
  * which question, the store says what that slug costs, and anything the two
@@ -1203,10 +1307,12 @@ export function buildMatrix(
   rows: readonly PriceRowView[],
   checks: ReadonlyMap<string, BasisCheck> = new Map(),
   classMap: readonly ClassEntry[] = MODEL_CLASS_MAP,
+  /** The instant the matrix prices: a scheduled price that starts after it is not yet the price. */
+  at: string | null = null,
 ): PriceMatrix {
   const bySlug = new Map<string, PriceRowView[]>()
   for (const row of rows) {
-    if (row.removed || !isStandardTier(row.tier)) continue
+    if (row.removed || !isStandardTier(row.tier) || scheduledAfter(row, at)) continue
     const key = `${row.provider}:${row.model_slug}`
     bySlug.set(key, [...(bySlug.get(key) ?? []), row])
   }
@@ -1342,6 +1448,7 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
       ])
 
   const reads = await reading
+  const cited = citedReads(stamps, reads)
   const xaiCaveat = ctx.registry.sources.find((s) => s.source_id === 'xai-greenhouse')?.caveat
 
   const providers: HiringProviderView[] = []
@@ -1382,18 +1489,11 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
         source_url: s.source_url,
         fetched_at: confirmedAt(reads, s.source_id, s.fetched_at!) ?? s.fetched_at!,
       }))
-    // No rows yet: cite the feed snapshots, if any were captured.
+    // No rows yet: cite the feed's last read, or its newest snapshot if never read.
     const feedSources: HiringSource[] = backing.source_ids
       .map((id) => {
-        const stamp = stamps.get(id)
-        return stamp
-          ? {
-              source_id: id,
-              label: labelOf(id).label,
-              source_url: stamp.newest.source_url,
-              fetched_at: stamp.newest.fetched_at,
-            }
-          : null
+        const stamp = cited.get(id)
+        return stamp ? { source_id: id, label: labelOf(id).label, ...stamp } : null
       })
       .filter((s): s is HiringSource => s !== null)
 
@@ -1413,6 +1513,19 @@ export async function queryHiring(db: PipelineDb, ctx: QueryContext): Promise<Hi
     })
   }
 
+  // As of T, a lab whose board we had not read yet is answered from its
+  // newest archived copy by T rather than as an empty board.
+  if (pit) {
+    const early = labsBeforeFloor(await labLiveFloors(db, ctx.registry, 'hiring'), pit.at, 'hiring')
+    const points = early.length ? await archivedHiringPoints(db, ctx.clusters, pit.at) : null
+    for (const lab of early) {
+      if (!points?.get(lab)?.length) continue
+      ctx.notes.method.add(ARCHIVED_LAB_BOARDS_AS_OF_METHOD)
+      const i = providers.findIndex((p) => p.provider === lab)
+      providers[i] = archivedHiringView(pit, lab, points)
+    }
+  }
+
   return { ...stampOf(ctx), providers }
 }
 
@@ -1428,43 +1541,50 @@ async function archivedHiring(
 ): Promise<HiringData> {
   const points = await archivedHiringPoints(db, ctx.clusters, ctx.at)
   ctx.notes.method.add(ARCHIVED_HIRING_AS_OF_METHOD)
-  const providers: HiringProviderView[] = PROVIDER_ORDER.map((provider) => {
-    const backing = HIRING_SOURCES[provider]
-    const newest = points.get(provider)?.at(-1)
-    if (newest) {
-      ctx.notes.method.add(
-        `${provider}: Internet Archive copy of ${newest.at} (${newest.source_url}).`,
-      )
-    }
-    return {
-      provider,
-      display: PROVIDER_DISPLAY[provider],
-      feed: 'cut_id' in backing ? 'no_public_feed' : newest ? 'ok' : 'no_rows',
-      reason:
-        'cut_id' in backing
-          ? (cutReason(ctx, backing.cut_id) ??
-            `No public hiring feed exists for ${PROVIDER_DISPLAY[provider]}.`)
-          : null,
-      total: newest?.total ?? 0,
-      departments: (newest?.departments ?? []).map((d) => ({
-        department: d.department,
-        count: d.open_roles,
-      })),
-      caveat: null,
-      company_names: [],
-      sources: newest
-        ? [
-            {
-              source_id: newest.source_id,
-              label: 'Internet Archive copy of the job board',
-              source_url: newest.source_url,
-              fetched_at: newest.fetched_at,
-            },
-          ]
-        : [],
-    }
-  })
+  const providers = PROVIDER_ORDER.map((provider) => archivedHiringView(ctx, provider, points))
   return { ...stampOf(ctx), providers }
+}
+
+/** One lab's board as of ctx.at from its newest readable archived copy, noted on point_in_time. */
+function archivedHiringView(
+  ctx: QueryContext & { at: string },
+  provider: LabId,
+  points: ReadonlyMap<string, ArchivedHiringPoint[]>,
+): HiringProviderView {
+  const backing = HIRING_SOURCES[provider]
+  const newest = points.get(provider)?.at(-1)
+  if (newest) {
+    ctx.notes.method.add(
+      `${provider}: Internet Archive copy of ${newest.at} (${newest.source_url}).`,
+    )
+  }
+  return {
+    provider,
+    display: PROVIDER_DISPLAY[provider],
+    feed: 'cut_id' in backing ? 'no_public_feed' : newest ? 'ok' : 'no_rows',
+    reason:
+      'cut_id' in backing
+        ? (cutReason(ctx, backing.cut_id) ??
+          `No public hiring feed exists for ${PROVIDER_DISPLAY[provider]}.`)
+        : null,
+    total: newest?.total ?? 0,
+    departments: (newest?.departments ?? []).map((d) => ({
+      department: d.department,
+      count: d.open_roles,
+    })),
+    caveat: null,
+    company_names: [],
+    sources: newest
+      ? [
+          {
+            source_id: newest.source_id,
+            label: 'Internet Archive copy of the job board',
+            source_url: newest.source_url,
+            fetched_at: newest.fetched_at,
+          },
+        ]
+      : [],
+  }
 }
 
 // ---- incidents (capacity strain) -------------------------------------------
@@ -1519,31 +1639,28 @@ const newestFirst = (a: IncidentView, b: IncidentView) =>
 
 /**
  * Incident counts are windows over `started_at` as the vendor posted it,
- * anchored to the newest status-feed fetch rather than the reader's clock —
- * the same reason the signal band anchors to the newest detection. The
- * anchor ships in the payload so the claim is checkable, and each provider
- * reports where its held history begins: a Statuspage feed is a rolling
- * window, so the prior-30-day count is partial until the pipeline has
- * polled through it, and the UI says so rather than printing a low number.
+ * anchored to each lab's own feed — its last successful read — rather than
+ * the reader's clock, the same reason the signal band anchors to the newest
+ * detection. One anchor for every lab let a feed that stopped reading count
+ * a window it never saw as quiet. Each provider ships its anchor
+ * (window_to) so the claim is checkable, and reports where its held history
+ * begins: a Statuspage feed is a rolling window, so the prior-30-day count
+ * is partial until the pipeline has polled through it, and the UI says so
+ * rather than printing a low number.
  */
 export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise<IncidentsData> {
   const [entities, stamps] = await Promise.all([
     db.select().from(tables.entities).where(eq(tables.entities.entity_type, 'incident')),
-    sourceStamps(db),
+    readStamps(db),
   ])
 
-  const feedStamps = Object.values(INCIDENT_SOURCES)
-    .flatMap((b) => ('source_id' in b ? [stamps.get(b.source_id)] : []))
-    .filter((s): s is SourceStamp => s !== undefined)
-  const windowTo =
-    feedStamps
-      .map((s) => s.newest.fetched_at)
-      .sort(byString)
-      .at(-1) ?? ctx.now().toISOString()
-  const toMs = Date.parse(windowTo)
-  const lastFrom = toMs - INCIDENT_WINDOW_DAYS * DAY_MS
-  const priorFrom = toMs - 2 * INCIDENT_WINDOW_DAYS * DAY_MS
-  const historyFrom = toMs - INCIDENT_HISTORY_DAYS * DAY_MS
+  const anchors = Object.values(INCIDENT_SOURCES)
+    .flatMap((b) => ('source_id' in b ? [stamps.get(b.source_id)?.fetched_at] : []))
+    .filter((at): at is string => at !== undefined)
+    .sort(byString)
+  // The list and a feed with no read yet count back from the freshest anchor.
+  const windowTo = anchors.at(-1) ?? ctx.now().toISOString()
+  const historyFrom = Date.parse(windowTo) - INCIDENT_HISTORY_DAYS * DAY_MS
 
   const all: IncidentView[] = []
   for (const e of entities) {
@@ -1566,6 +1683,7 @@ export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise
           cutReason(ctx, backing.cut_id) ??
           `No public status feed is reachable for ${PROVIDER_DISPLAY[provider]}.`,
         caveat: null,
+        window_to: null,
         last_window: 0,
         prior_window: 0,
         open: [],
@@ -1578,15 +1696,12 @@ export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise
     const rows = all.filter((i) => i.provider === provider)
     const startedMs = (i: IncidentView) => Date.parse(i.started_at)
     const stamp = stamps.get(sourceId)
+    const ownTo = stamp?.fetched_at ?? windowTo
+    const toMs = Date.parse(ownTo)
+    const lastFrom = toMs - INCIDENT_WINDOW_DAYS * DAY_MS
+    const priorFrom = toMs - 2 * INCIDENT_WINDOW_DAYS * DAY_MS
     const sources: SourceRef[] = stamp
-      ? [
-          {
-            source_id: sourceId,
-            label: labelOf(sourceId).label,
-            source_url: stamp.newest.source_url,
-            fetched_at: stamp.newest.fetched_at,
-          },
-        ]
+      ? [{ source_id: sourceId, label: labelOf(sourceId).label, ...stamp }]
       : []
     providers.push({
       provider,
@@ -1594,6 +1709,7 @@ export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise
       feed: rows.length > 0 ? 'ok' : 'no_rows',
       reason: null,
       caveat: ctx.registry.sources.find((s) => s.source_id === sourceId)?.caveat ?? null,
+      window_to: ownTo,
       last_window: rows.filter((i) => startedMs(i) > lastFrom && startedMs(i) <= toMs).length,
       prior_window: rows.filter((i) => startedMs(i) > priorFrom && startedMs(i) <= lastFrom).length,
       open: rows.filter((i) => i.resolved_at === null),
@@ -1639,9 +1755,12 @@ export async function queryPriceHistory(
           .where(and(eq(tables.changes.entity_type, 'model'), eq(tables.changes.entity_key, key))),
     firstSnapshotByUrl(db),
   ])
-  // Archived points stop where live observation starts: a capture the
-  // Archive took after our first fetch adds nothing we did not see ourselves.
-  const liveFrom = [...firsts.values()].sort()[0] ?? null
+  // Archived points stop where live observation of this SKU's lab starts: a
+  // capture the Archive took after our first fetch of the lab's pricing pages
+  // adds nothing we did not see ourselves. Per lab, not the store's first
+  // fetch, or a lab added later loses its archive up to its own first fetch.
+  const lab = key.split(':')[1] as LabId
+  const liveFrom = (await labLiveFloors(db, ctx.registry, 'pricing')).get(lab) ?? null
   const cut = ctx.at !== null && (liveFrom === null || ctx.at < liveFrom) ? ctx.at : liveFrom
   const archivedRows = (await archivedRowsForKey(db, key, cut)).filter(
     (r) => liveFrom === null || r.captured_at < liveFrom,
@@ -1843,7 +1962,7 @@ export async function queryHiringHistory(
       .from(tables.sourceRuns)
       .where(eq(tables.sourceRuns.status, 'baseline'))
       .groupBy(tables.sourceRuns.source_id),
-    sourceStamps(db, ctx.at),
+    readStamps(db, ctx.at),
     archivedHiringPoints(db, ctx.clusters, ctx.at),
     queryHiringReach(db, ctx.registry),
   ])
@@ -1909,17 +2028,11 @@ export async function queryHiringHistory(
     const own = from ? grid.filter((g) => g.date >= dayOf(from)) : []
     const { total, departments } = departmentSeries(byInstant, own, provider)
     const dates = own.map((g) => g.date)
+    // The series runs to the boards' last read, so that read is what it cites.
     const sources: HiringSource[] = backing.source_ids
       .map((id) => {
         const stamp = stamps.get(id)
-        return stamp
-          ? {
-              source_id: id,
-              label: labelOf(id).label,
-              source_url: stamp.newest.source_url,
-              fetched_at: stamp.newest.fetched_at,
-            }
-          : null
+        return stamp ? { source_id: id, label: labelOf(id).label, ...stamp } : null
       })
       .filter((s): s is HiringSource => s !== null)
     const open = total.at(-1) ?? 0

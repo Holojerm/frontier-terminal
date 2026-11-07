@@ -111,36 +111,67 @@ async function flagshipState(
   }
 }
 
-/** Labs whose mapped flagship differs from the claim's previous reading — a step to explain, not a revision. */
-async function flagshipChanges(
+type PreviousFlagships = Record<string, { model_slug?: string }> | null
+
+/** The flagships behind the claim's previous reading, or null when there is none. */
+async function previousFlagships(
   db: PipelineDb,
   claimId: string,
-  state: FlagshipState,
-): Promise<Partial<Record<LabId, { from: string; to: string }>> | null> {
+  date: string,
+): Promise<PreviousFlagships> {
   const [prev] = await db
     .select({ detail: tables.claimReadings.detail })
     .from(tables.claimReadings)
-    .where(
-      and(eq(tables.claimReadings.claim_id, claimId), lt(tables.claimReadings.date, state.date)),
-    )
+    .where(and(eq(tables.claimReadings.claim_id, claimId), lt(tables.claimReadings.date, date)))
     .orderBy(desc(tables.claimReadings.date))
     .limit(1)
   if (!prev) return null
-  const before = (
-    JSON.parse(prev.detail) as { flagships?: Record<string, { model_slug?: string }> }
-  ).flagships
+  return (JSON.parse(prev.detail) as { flagships?: PreviousFlagships }).flagships ?? {}
+}
+
+/** Labs whose mapped flagship differs from the claim's previous reading — a step to explain, not a revision. */
+function flagshipChanges(
+  before: PreviousFlagships,
+  state: FlagshipState,
+): Partial<Record<LabId, { from: string; to: string }>> | null {
+  if (!before) return null
   const out: Partial<Record<LabId, { from: string; to: string }>> = {}
   for (const [lab, now] of Object.entries(state.flagships) as [LabId, FlagshipPrice][]) {
-    const was = before?.[lab]?.model_slug
+    const was = before[lab]?.model_slug
     if (was && was !== now.model_slug) out[lab] = { from: was, to: now.model_slug }
   }
   return Object.keys(out).length ? out : null
 }
 
-const flagshipDetail = (s: FlagshipState) => ({
-  flagships: s.flagships,
-  no_flagship: s.excluded,
-})
+/**
+ * Labs that joined or left the median since the previous reading. The median
+ * has no quorum, so a lab dropping out (its flagship unpriced for a day)
+ * steps it with no price having moved: like a flagship change, a step to
+ * explain, not a market move.
+ */
+export function labSetChange(
+  before: PreviousFlagships,
+  state: Pick<FlagshipState, 'flagships'>,
+): { added: LabId[]; removed: LabId[] } | null {
+  if (!before) return null
+  const was = new Set(Object.keys(before))
+  const now = new Set(Object.keys(state.flagships))
+  const added = [...now].filter((l) => !was.has(l)).sort() as LabId[]
+  const removed = [...was].filter((l) => !now.has(l)).sort() as LabId[]
+  return added.length || removed.length ? { added, removed } : null
+}
+
+/** What a flagship reading records beside its value: the labs in it, and what moved under it. */
+async function flagshipDetail(db: PipelineDb, claimId: string, s: FlagshipState) {
+  const before = await previousFlagships(db, claimId, s.date)
+  return {
+    flagships: s.flagships,
+    no_flagship: s.excluded,
+    lab_set: Object.keys(s.flagships).sort(),
+    flagship_changed: flagshipChanges(before, s),
+    lab_set_changed: labSetChange(before, s),
+  }
+}
 
 /** Median flagship blended price across the labs with a mapped, priced flagship. */
 export async function flagshipBlendedPrice(
@@ -151,12 +182,11 @@ export async function flagshipBlendedPrice(
 ): Promise<SignalReading[]> {
   const state = await flagshipState(db, spec, deps)
   if (state.median === null) return []
-  const flagship_changed = await flagshipChanges(db, claimId, state)
   return [
     {
       date: state.date,
       value: state.median,
-      detail: { ...flagshipDetail(state), flagship_changed, compare: null },
+      detail: { ...(await flagshipDetail(db, claimId, state)), compare: null },
       ...pick(newest(Object.values(state.flagships))),
     },
   ]
@@ -280,8 +310,7 @@ export async function flagshipPriceToGpu(
       value: ratio(main.median)!,
       detail: {
         flagship_median: flag.median,
-        ...flagshipDetail(flag),
-        flagship_changed: await flagshipChanges(db, claimId, flag),
+        ...(await flagshipDetail(db, claimId, flag)),
         gpu: spec.gpu,
         gpu_median: main.median,
         gpu_providers: main.providers,

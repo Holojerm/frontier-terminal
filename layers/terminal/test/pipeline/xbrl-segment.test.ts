@@ -126,7 +126,12 @@ describe('parseXbrlSegment', () => {
 
 describe('revenue_filers segment', () => {
   it('tags Google as Alphabet’s Google Cloud segment', () => {
-    expect(filers.get('google')).toEqual({ ticker: 'GOOGL', relation: 'parent', segment: CLOUD })
+    expect(filers.get('google')).toEqual({
+      ticker: 'GOOGL',
+      relation: 'parent',
+      segment: CLOUD,
+      effective: '2026-11-01',
+    })
   })
 
   it('reads a segment only off a parent', () => {

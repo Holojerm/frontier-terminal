@@ -31,7 +31,7 @@ import type {
 
 import * as tables from '#server/db/schema'
 import type { PipelineDb } from '../pipeline/store'
-import { sourceStamps, type QueryContext } from './terminal-db'
+import { readStamps, type QueryContext } from './terminal-db'
 import { byString, parseJson, str, type Json } from './terminal-json'
 import { DISCLOSURE_SOURCES, PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
 
@@ -249,7 +249,7 @@ export async function queryDisclosures(
       })
       .from(tables.changes)
       .where(eq(tables.changes.entity_type, 'disclosure')),
-    sourceStamps(db),
+    readStamps(db),
   ])
 
   const entries: EntryBase[] = []
@@ -278,14 +278,7 @@ export async function queryDisclosures(
     reasonOf: (id) => ctx.registry.cuts.find((c) => c.id === id)?.reason ?? null,
     sourceRef: (id) => {
       const stamp = stamps.get(id)
-      return stamp
-        ? {
-            source_id: id,
-            label: labelOf(id).label,
-            source_url: stamp.newest.source_url,
-            fetched_at: stamp.newest.fetched_at,
-          }
-        : null
+      return stamp ? { source_id: id, label: labelOf(id).label, ...stamp } : null
     },
   })
 

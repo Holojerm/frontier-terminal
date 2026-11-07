@@ -27,29 +27,42 @@ const S1 = [
 ]
 
 describe('revenueGrowth', () => {
-  it('compares each period with the same-length period a year earlier', () => {
+  it('compares quarters only, deriving each from year-to-date figures', () => {
     const readings = revenueGrowth(S1)
-    expect(readings.map((r) => [r.date, r.value])).toEqual([
-      ['2024-12-31', 8.4146],
-      ['2025-12-31', 10.8782],
-      ['2026-06-30', 13.0034],
-      ['2026-09-30', 12.0617],
-    ])
-    expect(readings.at(-1)!.detail).toMatchObject({
+    const counted = readings.filter((r) => !r.detail.void_reason)
+    // Q3 2026 (nine months less the half) against Q3 2025, derived the same way.
+    expect(counted.map((r) => [r.date, r.value])).toEqual([['2026-09-30', 11.2692]])
+    expect(counted[0]!.detail).toMatchObject({
+      start: '2026-07-01',
+      value: 16_956e6,
+      derived: true,
+      base_start: '2025-07-01',
       base_date: '2025-09-30',
-      base_value: 2_545e6,
+      base_value: 1_382e6,
+      base_derived: true,
       unaudited: true,
     })
   })
 
-  it('reads the longest span when a filing reports two to one date', () => {
+  it('keeps a year, a half or nine months on record but out of the count', () => {
+    const voided = revenueGrowth(S1).filter((r) => r.detail.void_reason)
+    // FY 2025's Q4 is derivable, but FY 2024 has no nine months to take one from.
+    expect(voided.map((r) => [r.date, r.value])).toEqual([
+      ['2024-12-31', 8.4146],
+      ['2025-12-31', 10.8782],
+      ['2026-06-30', 13.0034],
+    ])
+    expect(voided[2]!.detail.void_reason).toContain('181-day period to 2026-06-30')
+  })
+
+  it('reads a quarter as filed before deriving one', () => {
     const quarter = [
       ...S1,
-      period('2026-07-01', '2026-09-30', 91, 16_956e6),
-      period('2025-07-01', '2025-09-30', 91, 1_382e6),
+      period('2026-07-01', '2026-09-30', 91, 17_000e6),
+      period('2025-07-01', '2025-09-30', 91, 1_400e6),
     ]
     const sep = revenueGrowth(quarter).find((r) => r.date === '2026-09-30')!
-    expect(sep.detail.start).toBe('2026-01-01')
+    expect(sep.detail).toMatchObject({ start: '2026-07-01', value: 17_000e6, derived: false })
   })
 
   it('never pairs periods of different lengths', () => {
