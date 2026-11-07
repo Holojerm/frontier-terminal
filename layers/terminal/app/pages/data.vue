@@ -240,11 +240,10 @@ const EXPORT_COLUMNS: TableColumn[] = [
       <template v-if="coverage" #foot>
         Data as of the last check<template v-if="coverage.as_of"
           >, <time :datetime="coverage.as_of">{{ coverage.as_of }}</time></template
-        ><span v-else> (none has run yet)</span>. Exports are live. The counts above can be up to
-        five minutes old, and count every row, not just the last {{ LICENSE_WINDOW_DAYS }} days.
-        Each sample is the first 50 rows of the default download in export order (oldest first when
-        the table is ordered by time), at
-        <span class="font-mono">/export/sample/&lt;table&gt;.csv</span> or
+        ><span v-else> (none has run yet)</span>. Exports are live. The counts above are from that
+        check, and count every row, not just the last {{ LICENSE_WINDOW_DAYS }} days. Each sample is
+        the first 50 rows of the default download in export order (oldest first when the table is
+        ordered by time), at <span class="font-mono">/export/sample/&lt;table&gt;.csv</span> or
         <span class="font-mono">.json</span>. <span class="font-mono">entity_identifiers</span> has
         each company’s CIK, LEI, ticker, and FIGI, and
         <span class="font-mono">entity_securities</span> maps each lab to the securities that carry

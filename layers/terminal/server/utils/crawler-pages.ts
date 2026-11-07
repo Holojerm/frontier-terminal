@@ -102,6 +102,10 @@ const refusingAsOf = Object.values(EXPORT_TABLES)
 
 const EXAMPLE_AS_OF = '2026-10-01T00:00:00Z'
 
+/** /api/exposure dates a fact by its filing, not our fetch, so llms.txt names it apart. */
+const FILED_AS_OF_ROUTE = '/api/exposure'
+const FETCHED_AS_OF_ROUTES = AS_OF_ROUTES.filter((r: string) => r !== FILED_AS_OF_ROUTE)
+
 /** `?as_of=` on the routes and exports that answer it (terminal-asof.ts). */
 const POINT_IN_TIME: LlmsTxtSection = {
   heading: 'Point in time',
@@ -109,7 +113,7 @@ const POINT_IN_TIME: LlmsTxtSection = {
     {
       path: `/api/prices?as_of=${EXAMPLE_AS_OF}`,
       title: 'API as_of',
-      description: `Add \`?as_of=<ISO-8601 timestamp with zone>\` to ${AS_OF_ROUTES.join(', ')} to see what we knew at that moment. That’s when we fetched the data, not when the event happened. A row counts from its fetch, and a judge alert from a judge run that could have written it. The response’s as_of becomes our last check before that moment, and point_in_time says how the answer was rebuilt and which keys the change log can’t confirm (unverified). Every other route answers 400 instead of ignoring it.`,
+      description: `Add \`?as_of=<ISO-8601 timestamp with zone>\` to ${FETCHED_AS_OF_ROUTES.join(', ')} to see what we knew at that moment. That’s when we fetched the data, not when the event happened. A row counts from its fetch, and a judge alert from a judge run that could have written it. The response’s as_of becomes our last check before that moment, and point_in_time says how the answer was rebuilt and which keys the change log can’t confirm (unverified). ${FILED_AS_OF_ROUTE} takes as_of too, and keeps the facts filed before that UTC day, back to 2020. Every other route answers 400 instead of ignoring it.`,
     },
     {
       path: `/export/changes.csv?as_of=${EXAMPLE_AS_OF}`,

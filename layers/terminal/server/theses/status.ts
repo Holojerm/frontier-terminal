@@ -4,9 +4,11 @@
 //
 // Every rule reads weekly checkpoints rather than every daily reading: a
 // kill condition says "for 4 straight weeks", and seven overlapping trailing
-// windows a week are one observation, not seven. "Weakening" is half way to
-// the kill condition (half the run, half the margin, half the drop), so it
-// warns before it breaks without needing a threshold of its own.
+// windows a week are one observation, not seven. "Weakening" is the first
+// step toward the kill condition: a run rule (N straight weeks or periods)
+// weakens at the first breached checkpoint, a margin or drop rule at half the
+// margin or half the drop. It warns before it breaks without needing a
+// threshold of its own.
 
 import type { ClaimDef, ClaimStatus, MeasuredRule } from '../../shared/utils/thesis-types'
 
