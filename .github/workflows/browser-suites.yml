@@ -112,9 +112,7 @@ jobs:
       - run: bun run playwright:install
 
       - name: Run axe and CSP suites
-        run: |
-          (while sleep 3; do echo "MEM $(free -m | awk 'NR==2{print $3"/"$2}') TOP $(ps -eo rss=,comm= --sort=-rss | head -5 | awk '{printf "%s:%dMB ", $2, $1/1024}')"; done) &
-          bun run test:a11y
+        run: bun run test:a11y
 
       - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
         if: ${{ !cancelled() }}
