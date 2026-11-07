@@ -41,7 +41,12 @@ import { fixtureText, manifest } from './pipeline/fixtures'
 const POLLS = { timeout: 60_000 }
 
 const db = drizzle(env.DB, { schema })
-const sourcesYaml = fixtureText('sources.yaml')
+// This store runs in September 2026, before some revenue_filers entries took
+// effect. The round-trip tests below compare a live read then with an as_of
+// read now, so they read the block as if every entry had always held; the
+// effective dates have their own test.
+const datedYaml = fixtureText('sources.yaml')
+const sourcesYaml = datedYaml.replace(/^ {4}effective: .*\n/gm, '')
 const ALL = includeSources(sourcesYaml, manifest.fixtures)
 const ALL_IDS = ALL.map((s) => s.source_id)
 
@@ -169,6 +174,19 @@ describe('a store that has moved on answers as it did then', () => {
     // Every row was rebuilt from a log that agrees with itself.
     expect([...c.notes.unverified]).toEqual([])
     expect([...c.notes.method].join(' ')).toContain('change log')
+  })
+
+  it('revenue as of T reads revenue_filers as dated, not today’s tags', POLLS, async () => {
+    await poll()
+    const t1 = between()
+    const dated = queryContext(datedYaml, await pollStampAt(db, t1), () => new Date(t1), t1)
+    const revenue = await queryRevenue(db, dated)
+    // Google's segment tag took effect on 2026-11-01: in September it was untagged.
+    expect(revenue.providers.find((p) => p.provider === 'google')).toMatchObject({
+      disclosure: 'none',
+      filer: null,
+    })
+    expect([...dated.notes.method].join(' ')).toContain('revenue_filers as it stood at as_of')
   })
 
   it('a SKU first listed after T is not there at T', POLLS, async () => {

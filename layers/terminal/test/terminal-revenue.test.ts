@@ -5,6 +5,7 @@ import { beforeAll, describe, expect, it } from 'vitest'
 import * as schema from '~~/server/db/schema'
 import { parseEdgarCompanyfacts } from '../server/pipeline/parsers/sec/edgar-companyfacts'
 import {
+  filerAt,
   parseRevenueFilersBlock,
   revenueProviderFor,
 } from '../server/pipeline/parsers/sec/revenue-filers'
@@ -37,8 +38,16 @@ describe('revenue_filers', () => {
     expect([...filers.entries()]).toEqual([
       ['openai', null],
       ['anthropic', null],
-      ['google', { ticker: 'GOOGL', relation: 'parent', segment: 'goog:GoogleCloudMember' }],
-      ['xai', { ticker: 'SPCX', relation: 'parent' }],
+      [
+        'google',
+        {
+          ticker: 'GOOGL',
+          relation: 'parent',
+          segment: 'goog:GoogleCloudMember',
+          effective: '2026-11-01',
+        },
+      ],
+      ['xai', { ticker: 'SPCX', relation: 'parent', effective: '2026-09-21' }],
       ['meta', null],
       ['mistral', null],
       ['deepseek', null],
@@ -48,6 +57,19 @@ describe('revenue_filers', () => {
     expect(revenueProviderFor(SPCX_CIK, filers, whitelist)).toBe('xai')
     expect(revenueProviderFor('0001652044', filers, whitelist)).toBe('google')
     expect(revenueProviderFor('0000789019', filers, whitelist)).toBe('other') // MSFT: whitelisted, not a filer
+  })
+
+  it('reads an entry as untagged before the day it took effect', () => {
+    const google = filers.get('google')!
+    expect(filerAt(google, '2026-10-31T23:59:59.000Z')).toBeNull()
+    expect(filerAt(google, '2026-11-01T00:00:00.000Z')).toBe(google)
+    expect(filerAt(google, null)).toBe(google)
+    expect(filerAt(null, '2026-12-01T00:00:00.000Z')).toBeNull()
+    expect(() =>
+      parseRevenueFilersBlock(
+        'revenue_filers:\n  xai:\n    ticker: SPCX\n    relation: parent\n    effective: soon\n',
+      ),
+    ).toThrow('ticker|relation|segment|effective')
   })
 
   it('refuses a drifted block instead of silently untagging a filer', () => {
