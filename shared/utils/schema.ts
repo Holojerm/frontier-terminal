@@ -51,6 +51,25 @@ export function dataCatalogId(site: SiteContext): string {
   return `${absoluteUrl(site.appUrl, '/data')}${SCHEMA_IDS.dataCatalog}`
 }
 
+function dataCatalogName(site: SiteContext): string {
+  return `${site.appName} data`
+}
+
+/**
+ * The catalog as a Dataset names it: `@id` plus `name` and `url` inline. The
+ * full node is only on /data, and Google does not resolve a bare `@id` across
+ * pages — Search Console flags "Either name or url should be specified (in
+ * includedInDataCatalog)" on every other page that carries a Dataset.
+ */
+function dataCatalogRef(site: SiteContext): JsonLdNode {
+  return {
+    '@type': 'DataCatalog',
+    '@id': dataCatalogId(site),
+    name: dataCatalogName(site),
+    url: absoluteUrl(site.appUrl, '/data'),
+  }
+}
+
 /** The publisher. The site is its own publisher — there is no separate legal entity to name. */
 function organizationSameAs(site: SiteContext): { sameAs?: string[] } {
   const links = [site.repoUrl, ...(site.sameAs ?? [])].filter(Boolean)
@@ -179,7 +198,7 @@ export function dataCatalogSchema(
     '@type': 'DataCatalog',
     '@id': dataCatalogId(site),
     url: absoluteUrl(site.appUrl, '/data'),
-    name: `${site.appName} data`,
+    name: dataCatalogName(site),
     description: catalog.description,
     license: DATA_LICENSE.url,
     // The age split: /license says which rows are CC BY-NC (shared/utils/license.ts).
@@ -262,7 +281,7 @@ export function datasetSchema(site: SiteContext, dataset: DatasetInput): JsonLdN
     // off the node and does not always resolve a bare reference.
     creator: publisherRef(site),
     publisher: publisherRef(site),
-    includedInDataCatalog: { '@id': dataCatalogId(site) },
+    includedInDataCatalog: dataCatalogRef(site),
     inLanguage: 'en',
     // The repo holds the code and the audit behind every row.
     ...(site.repoUrl ? { sameAs: site.repoUrl } : {}),
