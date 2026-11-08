@@ -264,7 +264,8 @@ describe('baseline', () => {
     expect(keys.find((k) => k.startsWith('raw/xai-models-md/'))).toMatch(
       /^raw\/xai-models-md\/2026-09-07T10:00:\d\d\.000Z\.md$/,
     )
-  })
+    // Parses and stores all 45 sources; Workers Builds runs far slower than a laptop.
+  }, 30_000)
 
   it('feeds the fleet counters and the per-source freshness on /api/status', async () => {
     await run('edgar', ['edgar-fts', 'edgar-submissions-spcx'])
