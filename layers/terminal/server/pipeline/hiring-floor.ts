@@ -14,6 +14,9 @@ import type { PipelineDb } from './store'
 // The judge applies the same rubric (judge-explain.prompt.md), but the
 // Worker enforces it: a judged hiring alert below the floor is clamped to
 // `info` at submit (judge/submit.ts), whatever severity the routine sent.
+// A net cut stays critical only if it empties a department. Critical is the
+// tier social.ts posts, and a batch of removals with no additions says
+// nothing about how much of the department is left.
 // The weekly roll-up (hiring-rollup.ts) uses it to pick its severity.
 //
 // Thresholds, set against the judged history to 2026-11-04 (32 alert-tier
@@ -304,14 +307,20 @@ export const isHiringOnly = (cited: readonly ChangeRow[]): boolean =>
 export interface FloorClamp {
   headline: string
   from: 'notable' | 'critical'
+  to: 'info' | 'notable'
   detail: string
 }
 
+/** Every provider cited lost roles on net, and no department reached zero. */
+const isCutWithoutClosure = (moves: readonly BoardMove[]): boolean =>
+  moves.every((m) => m.net < 0) && !moves.some((m) => m.material.some((r) => r.kind === 'closed'))
+
 /**
  * Clamp every alert-tier, hiring-only alert whose cited changes are below
- * the floor to `info`. Only ever lowers a severity, so it cannot add an alert
- * or a critical (the tier social.ts posts). An alert is above the floor when
- * any provider it cites clears it.
+ * the floor to `info`, and every critical net cut that empties no department
+ * to `notable`. Only ever lowers a severity, so it cannot add an alert or a
+ * critical (the tier social.ts posts). An alert is above the floor when any
+ * provider it cites clears it.
  */
 export async function clampHiringAlerts<
   A extends { severity: 'info' | 'notable' | 'critical'; headline: string; change_ids: string[] },
@@ -331,16 +340,27 @@ export async function clampHiringAlerts<
       continue
     }
     const moves = await boardMoves(db, cited, clusters)
-    if (moves.some((m) => m.material.length > 0)) {
-      out.push(alert)
-      continue
-    }
     const summary = moves.length
       ? moves.map((m) => `${m.provider} net ${signed(m.net)} on a board of ${m.before}`).join('; ')
       : 'no role added or removed'
+    if (moves.some((m) => m.material.length > 0)) {
+      if (alert.severity === 'critical' && isCutWithoutClosure(moves)) {
+        clamped.push({
+          headline: alert.headline,
+          from: 'critical',
+          to: 'notable',
+          detail: `a cut that empties no department (${summary})`,
+        })
+        out.push({ ...alert, severity: 'notable' })
+      } else {
+        out.push(alert)
+      }
+      continue
+    }
     clamped.push({
       headline: alert.headline,
       from: alert.severity,
+      to: 'info',
       detail: `below the hiring materiality floor (${summary})`,
     })
     out.push({ ...alert, severity: 'info' })

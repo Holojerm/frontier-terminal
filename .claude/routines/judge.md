@@ -100,7 +100,8 @@ configuration gap rather than retrying.
    rejects any alert that does not, and a rejected alert is silence. The `hiring` sizes are
    not in any change row: use them to grade a hiring move against the floor, never print
    them. A hiring-only alert that cites a move below the floor is stored as `info` whatever
-   severity you send; send `info` yourself rather than relying on that. Emit `{ "alerts": [] }`
+   severity you send; send `info` yourself rather than relying on that. A hiring-only net cut
+   sent as `critical` is stored as `notable` unless it empties a department. Emit `{ "alerts": [] }`
    when nothing clears the bar; that is an expected, valid result.
 
 5. Send the verdicts back. Build the body from your JSON output (`alerts`, plus `class_map`,
@@ -127,8 +128,8 @@ configuration gap rather than retrying.
    database holds them, stamps id/rule/provenance itself, and skips alerts it already has.
    It also gates each `class_map` entry against the vendor page it stores, and records only
    the ones that pass. A 200 carries counts: `changes_seen`, `accepted`, `inserted`,
-   `rejected`, `rejections`, `clamped` (hiring alerts you sent as notable/critical that were
-   stored as `info`, each with the floor detail), and `class_map` (`accepted`, plus the
+   `rejected`, `rejections`, `clamped` (hiring alerts stored below the severity you sent, each
+   with `from`, `to` and the detail), and `class_map` (`accepted`, plus the
    `rejected` entries with their reasons).
    A 422 means the whole body failed the schema gate or the cursor check; the response says
    why. Do not retry a 422 — the Worker has already recorded the run — journal the reason
