@@ -769,6 +769,20 @@ describe('groundingFailure: versions a slug spells with a dash', () => {
     const dated = '{"entity_key":"filing:anthropic:x","filed":"2026-10-09"}'
     expect(groundingFailure('Filed in 2026.1', dated)?.reason).toBe('ungrounded-number')
   })
+
+  // The prompt tells the judge to name terms apart for this reason (issue #300).
+  it('a slash-joined pair fails where the same terms named apart pass', () => {
+    const corpus = 'The 8-K and the 10-Q. gemini-4-argon, then gemini-3.8-flash.'
+    expect(groundingFailure('Cites the 8-K/10-Q', corpus)).toMatchObject({
+      reason: 'ungrounded-term',
+      detail: expect.stringContaining('k/10-q'),
+    })
+    expect(groundingFailure('Cites the 8-K and the 10-Q', corpus)).toBeNull()
+    expect(groundingFailure('Both gemini-4-argon/gemini-3.8-flash', corpus)?.reason).toBe(
+      'ungrounded-term',
+    )
+    expect(groundingFailure('Both gemini-4-argon and gemini-3.8-flash', corpus)).toBeNull()
+  })
 })
 
 describe('the judge freshness check', () => {
