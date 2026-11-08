@@ -298,11 +298,13 @@ describe('the submit gate', () => {
       {
         headline: 'Anthropic adds Sales roles',
         from: 'critical',
+        to: 'info',
         detail: 'below the hiring materiality floor (anthropic net +2 on a board of 560)',
       },
       {
         headline: 'Anthropic Sales hiring',
         from: 'notable',
+        to: 'info',
         detail: 'below the hiring materiality floor (anthropic net +2 on a board of 560)',
       },
     ])
@@ -317,14 +319,54 @@ describe('the submit gate', () => {
 
     const report = await submit(
       [
-        alert('critical', 'xAI pulls Human Data postings', cut),
+        alert('notable', 'xAI pulls Human Data postings', cut),
         alert('info', 'xAI Human Data roles close', cut),
       ],
       cut,
     )
     expect(report.clamped).toEqual([])
     const stored = await db.select().from(schema.alerts)
-    expect(stored.map((a) => a.severity).sort()).toEqual(['critical', 'info'])
+    expect(stored.map((a) => a.severity).sort()).toEqual(['info', 'notable'])
+  })
+
+  it('lowers a critical cut to notable while the department still has open roles', async () => {
+    await seedBoard('xai', { 'Human Data': 2, Other: 280 })
+    const cut = many(12, () => job('xai', 'removed', 'Human Data', T))
+    await storeJobs(cut)
+
+    const report = await submit([alert('critical', 'xAI pulls Human Data postings', cut)], cut)
+    expect(report.clamped).toEqual([
+      {
+        headline: 'xAI pulls Human Data postings',
+        from: 'critical',
+        to: 'notable',
+        detail: 'a cut that empties no department (xai net −12 on a board of 294)',
+      },
+    ])
+    const [stored] = await db.select().from(schema.alerts)
+    expect(stored?.severity).toBe('notable')
+  })
+
+  it('keeps a critical cut that empties a department', async () => {
+    await seedBoard('xai', { Other: 280 })
+    const cut = many(12, () => job('xai', 'removed', 'Human Data', T))
+    await storeJobs(cut)
+
+    const report = await submit([alert('critical', 'xAI closes Human Data', cut)], cut)
+    expect(report.clamped).toEqual([])
+    const [stored] = await db.select().from(schema.alerts)
+    expect(stored?.severity).toBe('critical')
+  })
+
+  it('keeps a critical hiring surge, which is not a cut', async () => {
+    await seedBoard('anthropic', { Finance: 30, Other: 600 })
+    const surge = many(10, () => job('anthropic', 'added', 'Finance', T))
+    await storeJobs(surge)
+
+    const report = await submit([alert('critical', 'Anthropic staffs up Finance', surge)], surge)
+    expect(report.clamped).toEqual([])
+    const [stored] = await db.select().from(schema.alerts)
+    expect(stored?.severity).toBe('critical')
   })
 
   it('leaves a cross-axis alert and an alert citing only relabels to their own rules', async () => {

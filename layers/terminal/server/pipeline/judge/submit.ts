@@ -36,7 +36,7 @@ export interface JudgeRunReport {
   /** Grounded-out alerts: real model output that cited something it couldn't. */
   rejected: number
   rejections: { reason: string; detail: string; headline: string }[]
-  /** Hiring alerts sent as notable/critical and stored as info: below the materiality floor. */
+  /** Hiring alerts stored below the severity sent: under the floor, or a cut emptying no department. */
   clamped: FloorClamp[]
   /** Whole-body rejection at the schema gate or the cursor check — nothing reached grounding. */
   gate_rejection: { reason: string; detail: string } | null
@@ -284,7 +284,8 @@ export async function submitJudgeRun(
   }))
 
   // The floor runs after grounding and only lowers severity: whatever the
-  // routine sent, a hiring move below it is stored as a ticker line.
+  // routine sent, a hiring move below it is stored as a ticker line, and a
+  // critical net cut that empties no department is stored as notable.
   const clusters =
     opts.clusters ?? (opts.sourcesYaml ? parseDepartmentClusters(opts.sourcesYaml) : [])
   const floored = await clampHiringAlerts(db, accepted, cited, clusters)
