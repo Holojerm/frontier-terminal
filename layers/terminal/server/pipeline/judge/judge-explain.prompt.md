@@ -349,7 +349,10 @@ what you remember about the news.
 The `rationale` is grounded like an explanation: every number and every
 model or quoted title in it must appear in the candidate's title or
 snippet, or in the alert and its change records. A rationale that fails
-the check drops that rating, and the candidate stays unrated.
+the check drops that rating, and the candidate stays unrated. So say why
+in words. Leave dates out: the check reads "2026-10-18/19" as the numbers
+18 and 19. Never join two terms with a slash ("8-K/10-Q",
+"gemini-4-argon/gemini-3.8-flash"); name each one on its own.
 
 ## Reading reported figures (`figures`)
 
@@ -385,8 +388,9 @@ headline states none of the five, send `"figures": []`.
 
 `amount` is copied from that headline's `amounts[].text` exactly ("$30bn",
 never "$30 billion"). `lab` must be one of its `labs`. Give `period` only
-when the title names it ("2028", "2026-Q3"); otherwise null. A reading
-that breaks any of these is dropped whole, and the headline is offered
+when the title names it with its year ("2028", "2026-Q3"); otherwise
+null. A month with no year ("September") is null: never supply the year
+yourself. A reading that breaks any of these is dropped whole, and the headline is offered
 again. Read the headline only, never what you remember about the lab.
 
 Print the JSON object now.
