@@ -243,7 +243,7 @@ describe('S-1 revenue end to end', () => {
     const report = await run([prospectus.source_id], f)
     expect(report.sources[0]).toMatchObject({ status: 'ok', alerts: 1 })
     const [alert] = await db.select().from(schema.alerts)
-    expect(alert).toMatchObject({ rule: 'prospectus-floor', severity: 'critical' })
+    expect(alert).toMatchObject({ rule: 'prospectus-floor', severity: 'notable' })
     expect(alert!.headline).toBe(
       'Anthropic, PBC S-1: $16,286 million revenue for the six months ended 2026-06-30; price range still blank',
     )

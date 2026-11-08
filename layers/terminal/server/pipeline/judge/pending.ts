@@ -1,4 +1,4 @@
-import { and, gte, isNotNull, notInArray, sql } from 'drizzle-orm'
+import { and, count, eq, gte, isNotNull, notInArray, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { ChangeRow } from '../contracts'
@@ -127,6 +127,39 @@ function stableEquals(a: unknown, b: unknown): boolean {
   return ak.every((k) =>
     stableEquals((a as Record<string, unknown>)[k], (b as Record<string, unknown>)[k]),
   )
+}
+
+/** The window of the capacity-strain rule's "three or more incidents". */
+export const INCIDENT_WINDOW_HOURS = 24
+
+/**
+ * The `incidents` block of GET /api/judge/pending: added incidents per provider
+ * over a fixed window, so the rule does not depend on how the polls happened
+ * to fall into judge batches. Empty when no incident is pending.
+ */
+export async function incidentCounts(
+  db: PipelineDb,
+  pending: readonly ChangeRow[],
+  now = new Date(),
+) {
+  const window_hours = INCIDENT_WINDOW_HOURS
+  if (!pending.some((c) => c.entity_type === 'incident' && c.change_type === 'added')) {
+    return { window_hours, providers: [] }
+  }
+  const since = new Date(now.getTime() - window_hours * 3_600_000).toISOString()
+  const providers = await db
+    .select({ provider: tables.changes.provider, added: count() })
+    .from(tables.changes)
+    .where(
+      and(
+        eq(tables.changes.entity_type, 'incident'),
+        eq(tables.changes.change_type, 'added'),
+        gte(tables.changes.detected_at, since),
+      ),
+    )
+    .groupBy(tables.changes.provider)
+    .orderBy(tables.changes.provider)
+  return { window_hours, providers }
 }
 
 /** The newest judged_through across judge_runs, or null before the first run. */

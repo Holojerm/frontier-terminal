@@ -33,7 +33,7 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { hiringBoards } from '../../pipeline/hiring-floor'
 import { blobRawReader, classMapReview } from '../../pipeline/judge/class-map'
-import { JUDGE_CHANGE_LIMIT, pendingChanges } from '../../pipeline/judge/pending'
+import { JUDGE_CHANGE_LIMIT, incidentCounts, pendingChanges } from '../../pipeline/judge/pending'
 import { figureReview } from '../../pipeline/reported/review'
 import { trackRecordReview } from '../../pipeline/track-record/review'
 import { claimReview, flagshipMap } from '../../theses/verdicts'
@@ -58,9 +58,10 @@ export default defineEventHandler(async (event) => {
     trackRecordReview(db),
     figureReview(db),
   ])
-  const [claim_review, hiring] = await Promise.all([
+  const [claim_review, hiring, incidents] = await Promise.all([
     claimReview(db, changes, flagships),
     hiringBoards(db, changes, parseDepartmentClusters(sourcesYaml)),
+    incidentCounts(db, changes),
   ])
   return {
     schema: 1,
@@ -71,6 +72,7 @@ export default defineEventHandler(async (event) => {
     through,
     limit: JUDGE_CHANGE_LIMIT,
     hiring,
+    incidents,
     class_map_review,
     claim_review,
     track_record_review,

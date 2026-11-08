@@ -6,7 +6,7 @@ import {
   type Provenance,
 } from '../../contracts'
 import { fixtureProvenance } from '../fixture-provenance'
-import { isTrackedForm } from './forms'
+import { eightKItems, isTrackedForm, rootForm } from './forms'
 import { parseCikWhitelistBlock, whitelistCikFor, type CikWhitelist } from './whitelist'
 
 // edgar-submissions-<ticker> — data.sec.gov/submissions/CIK{n}.json for one
@@ -27,9 +27,15 @@ interface SubmissionsDoc {
       accessionNumber: string[]
       form: string[]
       filingDate: string[]
+      items?: string[]
     }
   }
 }
+
+/** Only 8-Ks filed from this date carry `items`. The field is part of a row's
+ * content hash, so setting it on stored filings would diff them all as
+ * `modified` and hand the judge every 8-K in each filer's window again. */
+export const EIGHT_K_ITEMS_FROM = '2026-11-09'
 
 export interface SubmissionsParse {
   rows: FilingRow[]
@@ -64,6 +70,10 @@ export function parseEdgarSubmissions(
     }
     if (seen.has(accession)) continue
     seen.add(accession)
+    const items =
+      rootForm(form) === '8-K' && fileDate >= EIGHT_K_ITEMS_FROM
+        ? eightKItems(recent.items?.[i] ?? '')
+        : []
     rows.push({
       accession_no: accession,
       form,
@@ -71,6 +81,7 @@ export function parseEdgarSubmissions(
       ciks: [cik],
       display_names: [doc.name],
       whitelist_cik: whitelistCik,
+      ...(items.length ? { items } : {}),
       ...prov,
     })
   }
