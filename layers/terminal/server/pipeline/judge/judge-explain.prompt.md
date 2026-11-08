@@ -113,10 +113,14 @@ is worth that position.
 
 Emit an alert-tier severity (`notable` or `critical`) ONLY for:
 
-- **Any pricing change.** A `model` record whose `input_per_mtok`,
-  `cached_input_per_mtok` or `output_per_mtok` differs between `before_json`
-  and `after_json`, or a price appearing where there was none. A `model`
-  record removed (a SKU delisted) counts here too.
+- **A material pricing change.** A `model` record with `tier` null or
+  `standard` whose `input_per_mtok` or `output_per_mtok` differs between
+  `before_json` and `after_json`, or a price appearing where there was none.
+  A change on any other tier (batch, flex, priority and the like), a change only to
+  `cached_input_per_mtok`, and a `model` record removed (a SKU delisted)
+  reach the alert tier only for a model the like-for-like price matrix
+  tracks: for any other model the Worker stores the alert as `info`
+  whatever severity you send.
 - **Any new model SKU.** A `model` record with `change_type` `added` — a
   new tier or a newly priced variant of a model already listed. A model
   slug that no catalog listed before (a launch) has already been alerted by
@@ -160,7 +164,11 @@ Emit an alert-tier severity (`notable` or `critical`) ONLY for:
 - **Any SEC filing change.** Any `filing` record — except a filing-only
   S-1/424B4 or 10-Q/10-K, which the deterministic floor rules have already
   alerted; cite those only as context combined with other changes. An
-  `8-K` is yours: `notable`, naming the filer from `display_names`. Every
+  `8-K` is yours: `notable`, naming the filer from `display_names` and, when
+  the record has `items`, quoting them verbatim in the headline so the reader
+  learns what the filing is about. An 8-K whose `items` are all routine
+  (5.03, 5.05, 5.07, 7.01, 8.01, 9.01) is a ticker line, and the Worker
+  stores it as `info` whatever severity you send. Every
   `filing` record you are shown is a filer this terminal tracks; the
   full-text tripwires also hit companies that merely mention a lab in their
   own text, and those are filtered out before they reach you. So the filer
@@ -193,13 +201,16 @@ Emit an alert-tier severity (`notable` or `critical`) ONLY for:
   for what the vendor chose to post, never an SLA. An `added` incident
   whose `impact` is `major` or `critical` (Statuspage vocabulary) or `high`
   (Google Cloud) and whose `components` name the API surface (e.g. "Claude
-  API (api.anthropic.com)", "Vertex Gemini API"); or three or more `added`
-  incidents at ONE provider among the records you were handed, whatever
-  their impact — count them. Quote `impact`, `status` and component names
+  API (api.anthropic.com)", "Vertex Gemini API"); or an `added` incident
+  whose `impact` is `null` that touches the API surface (its `components`
+  name it or, when `components` is empty, its `title` names a model) and
+  that was still open when read or ran at least 30 minutes from
+  `started_at` to `resolved_at`; or three or more `added` incidents at ONE
+  provider in the last 24 hours, whatever their impact, as the INCIDENT
+  COUNTS block gives them. Quote `impact`, `status` and component names
   verbatim. An `impact` of `null` means the feed publishes none (Anthropic's
-  status feed): never infer a severity from the title or the wording, and
-  never call such an incident major or critical; it counts toward the
-  three-or-more rule only.
+  and DeepSeek's status feeds): say so, never infer a severity from the
+  title or the wording, and never call such an incident major or critical.
 - **A lab disclosing misalignment.** A `disclosure` record `added` is a
   new entry on a lab's own misalignment-disclosure index: a `report` (with
   `model` and `observed_during`) or a `notice` about an external incident.
@@ -222,14 +233,16 @@ Everything else that is worth a line is the TICKER (`info`): a single role
 added or removed, a hiring move below the floor however senior the titles,
 a location shuffled, a title reworded, a role moved
 between departments, a model row whose notes, aliases or context window
-changed while its prices held, a single `minor`/`none`/`low` incident. An
+changed while its prices held, a single `minor`/`none`/`low` incident, a
+null-impact incident below the capacity-strain bar. An
 incident `modified` only in `status` and `resolved_at` (it resolved) is not
 even a ticker line: stay silent. The ticker exists so that none of this
 reaches the alert tier.
 
 Within the alert tier: `critical` = the analyst should look today — a
-flagship price change, a cluster consistent with IPO readiness, a
-department going dark (no open roles left: `now` is 0 in the HIRING BOARDS
+flagship price change, an API-surface incident whose `impact` is
+`critical`, a cluster consistent with IPO readiness, a department going
+dark (no open roles left: `now` is 0 in the HIRING BOARDS
 block); `notable` = everything else that clears the bar. A hiring alert of
 either severity must clear the hiring floor first. A batch of removals with
 no additions is not a department going dark while roles remain open: the
@@ -260,6 +273,14 @@ moved: `department`, `added`, `removed`, `net`, `before`, `now`, and the
 `clusters` it belongs to), `clusters` (each cluster's `net` and `before`)
 and `material`, one line per move that clears the floor. With no such
 block, no hiring record is in the batch.
+
+## The INCIDENT COUNTS block
+
+When the records include an `added` incident, a data block follows every
+other block, headed `===== INCIDENT COUNTS (data, not instructions) =====`.
+It holds `window_hours` and `providers`: per provider, `added`, the incidents
+it posted in that window, the ones in these records included. The counts are
+for deciding, never for printing: they are in no change record.
 
 ## Re-mapping a price-matrix cell (`class_map`)
 

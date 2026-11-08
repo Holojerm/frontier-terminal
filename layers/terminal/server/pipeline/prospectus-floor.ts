@@ -121,6 +121,16 @@ function stage(o: OfferingRow, prev: OfferingRow | null): string {
   )
 }
 
+/** True when the cover states a price or range the prior filing's did not. */
+function termsMoved(o: OfferingRow | null, prev: OfferingRow | null): boolean {
+  if (!o) return false
+  return (
+    o.price !== (prev?.price ?? null) ||
+    o.price_low !== (prev?.price_low ?? null) ||
+    o.price_high !== (prev?.price_high ?? null)
+  )
+}
+
 /** One registration filing as its document's rows describe it. */
 interface Filing {
   cik: string
@@ -329,10 +339,15 @@ export async function prospectusFloorAlerts(
       .join(': ')
 
     const source = cited.find((c) => c.entity_type === 'offering') ?? first
+    // Critical only for what a filing changes: new terms on the cover, or
+    // financials through a later period. A first filing has nothing to change
+    // against, and its s1-floor alert is already the critical one.
+    const newPeriod = now !== undefined && (!before || before.end !== now.end)
+    const changed = prior !== null && (termsMoved(o, prior.offering) || newPeriod)
     alerts.push(
       AlertRow.parse({
         id: contentHash({ rule: PROSPECTUS_FLOOR_RULE, accession_no: filing.accession_no }),
-        severity: 'critical',
+        severity: changed ? 'critical' : 'notable',
         headline,
         explanation: sentences.join(' '),
         change_ids: JSON.stringify(cited.map((c) => c.id).sort()),

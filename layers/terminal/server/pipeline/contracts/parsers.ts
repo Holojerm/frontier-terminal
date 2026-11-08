@@ -89,6 +89,9 @@ export const FilingRow = z.strictObject({
   // Set only when a CIK matches the sources.yaml whitelist; open FTS hits
   // are audit-confirmed noisy and never alert on their own.
   whitelist_cik: z.string().nullable(),
+  // An 8-K's items as "2.02 Results of Operations…"; absent on other forms and
+  // on 8-Ks before EIGHT_K_ITEMS_FROM (parsers/sec/edgar-submissions.ts).
+  items: z.array(z.string().min(1)).optional(),
   ...provenanceFields,
 })
 export type FilingRow = z.infer<typeof FilingRow>

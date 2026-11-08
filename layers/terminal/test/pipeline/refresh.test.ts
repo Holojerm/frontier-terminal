@@ -866,7 +866,7 @@ describe('s1-floor', () => {
     )!
     expect(alert).toMatchObject({
       rule: 's1-floor',
-      severity: 'critical',
+      severity: 'notable',
       change_ids: JSON.stringify([change.id]),
       created_at: change.detected_at,
       source_url: urlOf('edgar-fts'),

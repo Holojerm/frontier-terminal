@@ -763,7 +763,7 @@ describe('after a second poll that moves prices, closes a role, and files an S-1
     const alerts = await queryAlerts(db, await ctx(), 50)
     expect(alerts.total).toBe(1)
     const [alert] = alerts.rows
-    expect(alert).toMatchObject({ rule: 's1-floor', severity: 'critical' })
+    expect(alert).toMatchObject({ rule: 's1-floor', severity: 'notable' })
     expect(alert!.headline).toContain('S-1/A')
     expect(alert!.change_ids).toHaveLength(1)
     expect(alert!.missing_change_ids).toEqual([])
@@ -786,7 +786,7 @@ describe('after a second poll that moves prices, closes a role, and files an S-1
     const { rows } = await queryAlerts(db, await ctx(), 1)
     const detail = await queryAlert(db, await ctx(), rows[0]!.id)
     expect(detail).not.toBeNull()
-    expect(detail!.alert).toMatchObject({ id: rows[0]!.id, rule: 's1-floor', severity: 'critical' })
+    expect(detail!.alert).toMatchObject({ id: rows[0]!.id, rule: 's1-floor', severity: 'notable' })
     const [change] = detail!.alert.changes
     expect(change!.id).toBe(rows[0]!.change_ids[0])
     // An added row: every field is ∅ → value, and the diff stays empty.

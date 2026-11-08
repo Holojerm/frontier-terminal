@@ -157,6 +157,40 @@ describe('prospectusFloorAlerts', () => {
     expect(JSON.parse(alert!.change_ids)).toEqual(changes.map((c) => c.id).sort())
   })
 
+  it('is notable when an amendment changes neither the terms nor the period', async () => {
+    await storeS1()
+    const at = '2026-11-02T15:00:00.000Z'
+    const p = { source_url: prov.source_url.replace('sx1', 'sx1ax1'), fetched_at: at }
+    const same = {
+      ...p,
+      accession_no: S1A.accession_no,
+      form: 'S-1/A',
+      filed: '2026-11-02',
+    }
+    const after = [
+      ...normalizeRevenues(
+        s1Revenue.map((r) => ({ ...r, ...same })),
+        'snap',
+        'anthropic',
+      ),
+      ...normalizeOfferings([{ ...s1Offering, ...same, amendment_no: 1 }], 'snap'),
+    ]
+    const [alert] = await prospectusFloorAlerts(db, diff([], after, at).changes)
+    expect(alert!.severity).toBe('notable')
+  })
+
+  it('is notable for a first filing, whose s1-floor alert is the critical one', async () => {
+    const after = [
+      ...normalizeRevenues(s1Revenue, 'snap', 'anthropic'),
+      ...normalizeOfferings([s1Offering], 'snap'),
+    ]
+    const [alert] = await prospectusFloorAlerts(
+      db,
+      diff([], after, '2026-10-26T15:00:00.000Z').changes,
+    )
+    expect(alert!.severity).toBe('notable')
+  })
+
   it('stays silent for a filing older than two weeks: a back catalogue is not news', async () => {
     expect(await prospectusFloorAlerts(db, amended('2026-12-01T00:00:00.000Z'))).toEqual([])
   })
