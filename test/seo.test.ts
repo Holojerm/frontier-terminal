@@ -225,7 +225,14 @@ describe('datasetSchema / dataCatalogSchema', () => {
 
   it('files every dataset in the one catalog and under the stated license', () => {
     const node = datasetSchema(SITE, TABLE)
-    expect(node?.includedInDataCatalog).toEqual({ '@id': 'https://example.com/data#data-catalog' })
+    // Named inline, not just by @id: Google does not resolve the reference
+    // from pages that do not carry the catalog node itself.
+    expect(node?.includedInDataCatalog).toEqual({
+      '@type': 'DataCatalog',
+      '@id': 'https://example.com/data#data-catalog',
+      name: `${SITE.appName} data`,
+      url: 'https://example.com/data',
+    })
     expect(node?.license).toBe(DATA_LICENSE.url)
     expect(node?.usageInfo).toBe('https://example.com/license')
     expect(node?.isAccessibleForFree).toBe(true)
