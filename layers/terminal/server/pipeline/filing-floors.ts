@@ -21,7 +21,7 @@ interface FloorSpec<R> {
   entityType: EntityRow['entity_type']
   contract: { parse(value: unknown): R }
   applies: (row: R) => boolean
-  severity: AlertRow['severity']
+  severity: AlertRow['severity'] | ((row: R) => AlertRow['severity'])
   /** Hashed with the rule into the alert id. Byte-for-byte stable: a change
    * here re-alerts every stored filing on the next poll. */
   idKey: (row: R, change: ChangeRow) => Record<string, string>
@@ -49,7 +49,7 @@ function floor<R>(spec: FloorSpec<R>) {
       alerts.push(
         AlertRow.parse({
           id: contentHash({ rule: spec.rule, ...spec.idKey(row, change) }),
-          severity: spec.severity,
+          severity: typeof spec.severity === 'function' ? spec.severity(row) : spec.severity,
           headline: spec.headline(row),
           explanation: spec.explanation(row),
           change_ids: JSON.stringify([change.id]),
@@ -67,13 +67,16 @@ function floor<R>(spec: FloorSpec<R>) {
 /** EDGAR full-text search suffixes each display name with "(CIK 0002130357)"; the submissions feed does not. */
 const filerName = (name: string) => name.replace(/\s*\(CIK \d+\)\s*$/, '')
 
-/** A NEW S-1/424B4 filing on a whitelisted CIK, `critical`. */
+/** A NEW S-1/424B4 filing on a whitelisted CIK. The original S-1 is `critical`.
+ * An amendment or final prospectus is `notable`: this alert can only say the
+ * filing exists, and the prospectus-floor alert that follows decides whether
+ * what it says is critical, so one filing never pages twice. */
 export const s1FloorAlerts = floor<FilingRow>({
   rule: 's1-floor',
   entityType: 'filing',
   contract: FilingRow,
   applies: (f) => f.whitelist_cik !== null && isS1FloorForm(f.form),
-  severity: 'critical',
+  severity: (f) => (f.form === 'S-1' ? 'critical' : 'notable'),
   // One alert per filing: the FTS tripwire and the filer's submissions feed
   // both list it, and whichever parses second finds this id stored.
   idKey: (f) => ({ accession_no: f.accession_no }),
@@ -105,14 +108,15 @@ export const periodicFloorAlerts = floor<FilingRow>({
     'Where the filer is a tagged revenue filer, its XBRL revenue facts refresh on the /revenue panel at the next company-facts poll.',
 })
 
-/** A lab's CIK resolved from its own S-1 hit (a NEW `filer` row), `critical`:
- * the public-flip moment the whole SEC axis waits for. */
+/** A lab's CIK resolved from its own S-1 hit (a NEW `filer` row), `info`: the
+ * store learning an identifier. The s1-floor alert for the same filing follows
+ * on the next tick, once the CIK is whitelisted, and is the one that pages. */
 export const cikResolvedAlerts = floor<FilerRow>({
   rule: 'cik-resolved',
   entityType: 'filer',
   contract: FilerRow,
   applies: () => true,
-  severity: 'critical',
+  severity: 'info',
   idKey: (_f, change) => ({ change_id: change.id }),
   headline: (f) =>
     `${f.name} filed ${f.resolved_form} (${f.resolved_file_date}) — CIK ${f.cik} resolved for ${f.provider}`,

@@ -9,7 +9,9 @@ import { applyFigureReadings, type FigureReport } from '../reported/review'
 import { applyTrackRecordVerdicts, type TrackRecordVerdictReport } from '../track-record/review'
 import { evaluateTheses } from '../../theses/evaluate'
 import { parseDepartmentClusters, type DepartmentCluster } from '../../utils/terminal-clusters'
+import { effectiveClassMap } from '../class-map'
 import { clampHiringAlerts, type FloorClamp } from '../hiring-floor'
+import { clampRoutineAlerts } from './severity-gates'
 import { applyClassMappings, type RawReader } from './class-map'
 import { emitEvent } from '../../utils/events'
 import { buildAlertRows, gateJudgeSubmission, type JudgeSubmission } from './contract'
@@ -289,8 +291,14 @@ export async function submitJudgeRun(
   const clusters =
     opts.clusters ?? (opts.sourcesYaml ? parseDepartmentClusters(opts.sourcesYaml) : [])
   const floored = await clampHiringAlerts(db, accepted, cited, clusters)
+  const matrix = await effectiveClassMap(db)
+  const gated = clampRoutineAlerts(
+    floored.alerts,
+    cited,
+    new Set(matrix.map((e) => `${e.provider}:${e.model_slug}`)),
+  )
 
-  const rows = buildAlertRows(floored.alerts, cited)
+  const rows = buildAlertRows(gated.alerts, cited)
   // Dedupe on the stamped id: the same headline over the same change ids is
   // the same alert, and a routine that judged twice is not an error.
   const existing = await existingAlertIds(
@@ -382,7 +390,7 @@ export async function submitJudgeRun(
     inserted,
     rejected: rejected.length,
     rejections,
-    clamped: floored.clamped,
+    clamped: [...floored.clamped, ...gated.clamped],
     gate_rejection: null,
     class_map: {
       accepted: classMap.accepted,

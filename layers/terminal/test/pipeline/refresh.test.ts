@@ -264,7 +264,8 @@ describe('baseline', () => {
     expect(keys.find((k) => k.startsWith('raw/xai-models-md/'))).toMatch(
       /^raw\/xai-models-md\/2026-09-07T10:00:\d\d\.000Z\.md$/,
     )
-  })
+    // Parses and stores all 45 sources; Workers Builds runs far slower than a laptop.
+  }, 30_000)
 
   it('feeds the fleet counters and the per-source freshness on /api/status', async () => {
     await run('edgar', ['edgar-fts', 'edgar-submissions-spcx'])
@@ -866,7 +867,7 @@ describe('s1-floor', () => {
     )!
     expect(alert).toMatchObject({
       rule: 's1-floor',
-      severity: 'critical',
+      severity: 'notable',
       change_ids: JSON.stringify([change.id]),
       created_at: change.detected_at,
       source_url: urlOf('edgar-fts'),

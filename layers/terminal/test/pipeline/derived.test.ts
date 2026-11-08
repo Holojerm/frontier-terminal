@@ -368,7 +368,7 @@ beforeEach(async () => {
 })
 
 describe('CIK resolution end to end', () => {
-  it('an S-1 by a pending lab resolves its CIK, alerts critical, and derives its feeds for the next tick', async () => {
+  it('an S-1 by a pending lab resolves its CIK, records it, and derives its feeds for the next tick', async () => {
     // Baseline: the committed FTS fixtures resolve nobody.
     const ids = sourceIdsForScope('edgar', ALL)
     expect(ids).toContain('edgar-fts-openai')
@@ -388,7 +388,7 @@ describe('CIK resolution end to end', () => {
       { provider: 'anthropic', cik: ANTHROPIC_CIK, name: 'Anthropic, PBC' },
     ])
     const [alert] = await db.select().from(schema.alerts)
-    expect(alert).toMatchObject({ rule: 'cik-resolved', severity: 'critical' })
+    expect(alert).toMatchObject({ rule: 'cik-resolved', severity: 'info' })
     expect(alert!.headline).toBe(
       `Anthropic, PBC filed S-1 (2026-10-01) — CIK ${ANTHROPIC_CIK} resolved for anthropic`,
     )

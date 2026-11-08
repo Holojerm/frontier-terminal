@@ -92,6 +92,14 @@ describe('filing floors', () => {
     `)
   })
 
+  it('pages on the original S-1 only', () => {
+    const severityOf = (form: string, n: number) =>
+      s1FloorAlerts([added('filing', filing(`acc-${n}`, form, '0001181412'), n)])[0]!.severity
+    expect(severityOf('S-1', 10)).toBe('critical')
+    expect(severityOf('S-1/A', 11)).toBe('notable')
+    expect(severityOf('424B4', 12)).toBe('notable')
+  })
+
   it('keep their severity, headline and explanation', () => {
     const all = [
       ...s1FloorAlerts(changes),
@@ -107,7 +115,7 @@ describe('filing floors', () => {
           "fetched_at": "2026-09-01T12:00:00.000Z",
           "headline": "S-1/A filed by SPACE EXPLORATION TECHNOLOGIES CORP  (SPCX) (2026-09-01)",
           "rule": "s1-floor",
-          "severity": "critical",
+          "severity": "notable",
           "source_url": "https://efts.sec.gov/LATEST/search-index?q=%22S-1%22&forms=S-1",
         },
         {
@@ -127,7 +135,7 @@ describe('filing floors', () => {
           "fetched_at": "2026-09-01T12:00:00.000Z",
           "headline": "SPACE EXPLORATION TECHNOLOGIES CORP filed S-1 (2026-09-01) — CIK 0001181412 resolved for xai",
           "rule": "cik-resolved",
-          "severity": "critical",
+          "severity": "info",
           "source_url": "https://efts.sec.gov/LATEST/search-index?q=%22S-1%22&forms=S-1",
         },
       ]

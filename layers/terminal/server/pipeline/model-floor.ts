@@ -1,4 +1,4 @@
-import { and, eq, inArray } from 'drizzle-orm'
+import { and, eq, inArray, lt, sql } from 'drizzle-orm'
 
 import { LAB_DISPLAY } from '../../shared/utils/terminal-labs'
 
@@ -21,9 +21,15 @@ import type { PipelineDb } from './store'
 // slug two catalogs add in the same tick alerts once: the first to parse
 // writes the alert, and the second finds the first's rows already stored. The id hashes
 // (provider, slug) alone, so a slug that is delisted and relisted never
-// alerts twice either.
+// alerts twice either. A delisted slug also leaves the catalog rows, so the
+// change log is read too: without it a model listed before this rule existed
+// would be announced as new when it came back.
 
 export const MODEL_FLOOR_RULE = 'model-floor' as const
+
+/** A slug as vendors write them. Anything else is a parser reading a table
+ * cell as a name; the judge still sees the row, but no launch is announced. */
+const WELL_FORMED_SLUG = /^[a-z0-9][a-z0-9._-]*$/i
 
 interface SlugChanges {
   provider: keyof typeof LAB_DISPLAY
@@ -92,6 +98,29 @@ async function knownSlugs(
   return known
 }
 
+/** `provider:slug` for every model the change log added before `before`. */
+async function everAdded(
+  db: PipelineDb,
+  providers: readonly string[],
+  before: string,
+): Promise<Set<string>> {
+  const rows = await db
+    .selectDistinct({
+      provider: tables.changes.provider,
+      slug: sql<string | null>`json_extract(${tables.changes.after_json}, '$.model_slug')`,
+    })
+    .from(tables.changes)
+    .where(
+      and(
+        eq(tables.changes.entity_type, 'model'),
+        eq(tables.changes.change_type, 'added'),
+        inArray(tables.changes.provider, [...providers]),
+        lt(tables.changes.detected_at, before),
+      ),
+    )
+  return new Set(rows.flatMap((r) => (r.slug ? [`${r.provider}:${r.slug}`] : [])))
+}
+
 const usd = (n: number) => `$${n.toFixed(2)}`
 
 /** "$5.00 in / $25.00 out per MTok" off the untiered row, when it carries both prices. */
@@ -130,13 +159,21 @@ export async function modelFloorAlerts(
 ): Promise<AlertRow[]> {
   const groups = addedModels(changes)
   if (groups.length === 0) return []
-  const known = await knownSlugs(
-    db,
-    sourceId,
-    [...new Set(groups.map((g) => g.provider))],
-    new Set(groups.flatMap((g) => g.changes.map((c) => c.entity_key))),
-  )
-  const fresh = groups.filter((g) => !known.has(`${g.provider}:${g.slug}`)).map(modelFloorAlert)
+  const providers = [...new Set(groups.map((g) => g.provider))]
+  const tick = groups.flatMap((g) => g.changes.map((c) => c.detected_at)).sort()[0]!
+  const [known, history] = await Promise.all([
+    knownSlugs(
+      db,
+      sourceId,
+      providers,
+      new Set(groups.flatMap((g) => g.changes.map((c) => c.entity_key))),
+    ),
+    everAdded(db, providers, tick),
+  ])
+  const fresh = groups
+    .filter((g) => WELL_FORMED_SLUG.test(g.slug))
+    .filter((g) => !known.has(`${g.provider}:${g.slug}`) && !history.has(`${g.provider}:${g.slug}`))
+    .map(modelFloorAlert)
   if (fresh.length === 0) return []
   const stored = await db
     .select({ id: tables.alerts.id })

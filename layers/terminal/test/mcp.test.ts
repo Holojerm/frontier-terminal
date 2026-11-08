@@ -34,7 +34,7 @@ const ftsWithNewS1 = () => {
   const hit = {
     _source: {
       adsh: '0001628280-26-099999',
-      form: 'S-1/A',
+      form: 'S-1',
       file_date: '2026-09-01',
       ciks: [SPCX_CIK],
       display_names: ['SPACE EXPLORATION TECHNOLOGIES CORP  (SPCX)  (CIK 0001181412)'],
@@ -131,7 +131,7 @@ beforeAll(async () => {
   const run = (ids: readonly string[], fetcher: SourceFetcher) =>
     runRefresh({ db, raw, fetcher, sourcesYaml, now }, 'survey', ids)
   await run(ALL_IDS, fixtureFetcher())
-  // A new S-1/A on EDGAR trips the deterministic floor rule: one alert.
+  // A new S-1 on EDGAR trips the deterministic floor rule: one alert.
   await run(['edgar-fts'], fixtureFetcher({ 'edgar-fts': ftsWithNewS1() }))
 })
 
