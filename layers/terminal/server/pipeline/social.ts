@@ -11,7 +11,7 @@
 // On X the link goes in a self-reply, never the lead post: X ranks posts
 // carrying an external link lower. Bluesky does not, so it keeps one post.
 
-import { and, count, desc, eq, ne, sql } from 'drizzle-orm'
+import { and, count, desc, eq, gte, ne, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import {
@@ -57,6 +57,9 @@ const ALERT_LOOKBACK = 20
 
 /** Critical alerts named in the weekly thread, newest first. */
 const DIGEST_ALERTS = 3
+
+/** A weekly thread is skipped when another went out within this many days. */
+const DIGEST_MIN_GAP_DAYS = 6
 
 const DAY_MS = 86_400_000
 
@@ -210,6 +213,16 @@ export async function enqueueWeeklyDigest(
   origin: string,
   now = new Date(),
 ): Promise<number> {
+  // The ref is a date, so it only stops a repeat on the same day. A cron that
+  // moves to another weekday would otherwise post two threads a day apart.
+  const cutoff = new Date(now.getTime() - DIGEST_MIN_GAP_DAYS * DAY_MS).toISOString().slice(0, 10)
+  const [recent] = await db
+    .select({ ref: tables.socialPosts.ref })
+    .from(tables.socialPosts)
+    .where(and(eq(tables.socialPosts.kind, 'digest'), gte(tables.socialPosts.ref, cutoff)))
+    .limit(1)
+  if (recent) return 0
+
   const digest = await readWeeklyDigest(db, now)
   const bodies = new Map<SocialService, SocialBody | null>()
   for (const service of SOCIAL_SERVICES) {

@@ -192,6 +192,19 @@ describe('weekly digest', () => {
     ])
   })
 
+  it('skips a thread within six days of the last one, then posts again', async () => {
+    const at = (day: string) => new Date(`${day}T13:00:00.000Z`)
+    await db
+      .insert(schema.changes)
+      .values([
+        change('c1', 'model', '2026-11-08T00:00:00.000Z'),
+        change('c2', 'model', '2026-11-15T00:00:00.000Z'),
+      ])
+    expect(await enqueueWeeklyDigest(db, CHANNELS, ORIGIN, at('2026-11-08'))).toBe(1)
+    expect(await enqueueWeeklyDigest(db, CHANNELS, ORIGIN, at('2026-11-09'))).toBe(0)
+    expect(await enqueueWeeklyDigest(db, CHANNELS, ORIGIN, at('2026-11-16'))).toBe(1)
+  })
+
   it('posts nothing for an empty week', async () => {
     expect(await enqueueWeeklyDigest(db, CHANNELS, ORIGIN, NOW)).toBe(0)
     expect(
