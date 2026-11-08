@@ -154,7 +154,7 @@ Emit an alert-tier severity (`notable` or `critical`) ONLY for:
   one cluster per provider: a net move of at least 3 roles and at least 5%
   of the cluster clears the floor — added reads as capacity buildout,
   removed as a buildout pulled back or completed. `notable`, `critical`
-  when the removals empty a location. Quote the `department` values and
+  only when the removals empty a department. Quote the `department` values and
   `location` values verbatim; the count is yours to state only as records
   cited.
 - **Any SEC filing change.** Any `filing` record — except a filing-only
@@ -229,8 +229,12 @@ reaches the alert tier.
 
 Within the alert tier: `critical` = the analyst should look today — a
 flagship price change, a cluster consistent with IPO readiness, a
-department going dark; `notable` = everything else that clears the bar. A
-hiring alert of either severity must clear the hiring floor first.
+department going dark (no open roles left: `now` is 0 in the HIRING BOARDS
+block); `notable` = everything else that clears the bar. A hiring alert of
+either severity must clear the hiring floor first. A batch of removals with
+no additions is not a department going dark while roles remain open: the
+Worker stores a hiring-only net cut as `notable` unless it empties a
+department, whatever severity you send.
 
 A weekly hiring roll-up per lab is written by a deterministic rule from
 the change log, so never summarise a lab's week of hiring yourself.
