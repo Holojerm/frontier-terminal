@@ -30,10 +30,11 @@ import { heartbeatLoader, taskHeartbeatCheck, type FreshnessCheck } from './fres
 const HOUR_MS = 60 * 60 * 1000
 
 /**
- * The GDELT job runs hourly and GitHub's scheduler skips some hours (on
- * 2026-11-06 it fired 2 of 12), so a few empty hours are normal.
+ * The GDELT job runs hourly and GitHub's scheduler skips some hours: on
+ * 2026-11-06 it fired 2 of 12, and healthy runs sat up to 7h37m apart that
+ * week, so the limit has to clear that spread (issue #301).
  */
-export const GDELT_SILENCE_MS = 6 * HOUR_MS
+export const GDELT_SILENCE_MS = 9 * HOUR_MS
 
 export const gdeltFreshnessCheck: FreshnessCheck = {
   key: 'gdelt-search',

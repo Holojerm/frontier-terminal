@@ -422,7 +422,7 @@ describe('the producers off the Worker', () => {
     await db.delete(schema.socialPosts)
   })
 
-  it('flags the GDELT job when files have been owed for six hours and none was read', async () => {
+  it('flags the GDELT job when files have been owed for nine hours and none was read', async () => {
     await db.delete(schema.gdeltFiles)
     const run = () => checkFreshness(db, memoryMarker(), [gdeltFreshnessCheck], NOW)
     // Nothing read: the queue has been owed since 2026-09-01.
@@ -440,6 +440,13 @@ describe('the producers off the Worker', () => {
       recorded_at: '2026-11-06T10:00:00.000Z',
     })
     expect(await run()).toEqual({ 'gdelt-search': 'fresh' })
+
+    // GitHub's scheduler leaves gaps of nearly eight hours between healthy runs.
+    await db.update(schema.gdeltFiles).set({ recorded_at: '2026-11-06T04:00:00.000Z' })
+    expect(await run()).toEqual({ 'gdelt-search': 'fresh' })
+
+    await db.update(schema.gdeltFiles).set({ recorded_at: '2026-11-06T02:00:00.000Z' })
+    expect(await run()).toEqual({ 'gdelt-search': 'stale' })
   })
 
   it('says nothing for GDELT before any file is due', async () => {
