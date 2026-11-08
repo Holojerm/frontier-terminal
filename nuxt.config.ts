@@ -175,7 +175,7 @@ const securityHeaders = {
 //              — cache:warm re-renders the public pages once per (build, poll
 //                stamp) so readers hit warm KV payloads
 //                (layers/terminal/server/utils/cache-warm.ts).
-//   0 13 * * 1 — weekly thesis digest email, and social:digest queues the
+//   0 13 * * MON — weekly thesis digest email, and social:digest queues the
 //                weekly what-moved thread. alerts:hiring-rollup writes one
 //                hiring alert per lab for the week that just ended.
 //   41 * * * * — events:sweep, the backstop for the EVENTS queue
@@ -195,7 +195,7 @@ const SCHEDULED_TASKS: Record<string, string[]> = {
   '0 */6 * * *': ['poll:survey'],
   '17 */6 * * *': ['poll:careers'],
   '*/5 * * * *': ['poll:tripwire', 'cache:warm', 'track-record:search'],
-  '0 13 * * 1': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
+  '0 13 * * MON': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
   '41 * * * *': ['events:sweep', 'bulk:build', 'reliability:record', 'reliability:deploys'],
   '0 4 * * *': ['seo:indexnow'],
 }

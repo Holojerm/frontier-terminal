@@ -185,6 +185,9 @@ export function cronIntervalMs(expression: string): number {
   ]
   const fixed = (f: string) => /^\d+$/.test(f)
   const every = (f: string) => /^\*\/(\d+)$/.exec(f)?.[1]
+  // Names only: Cloudflare numbers weekdays from 1 = Sunday, so a numeric day
+  // reads as one day and fires on another. Refusing it here fails the build.
+  const weekday = (f: string) => /^(sun|mon|tue|wed|thu|fri|sat)$/i.test(f)
   if (dayOfMonth !== '*' || month !== '*') {
     throw new Error(`cron "${expression}": day-of-month and month must be *`)
   }
@@ -195,7 +198,7 @@ export function cronIntervalMs(expression: string): number {
     if (hour === '*' && dayOfWeek === '*') return HOUR_MS
     if (hourStep && dayOfWeek === '*') return Number(hourStep) * HOUR_MS
     if (fixed(hour) && dayOfWeek === '*') return 24 * HOUR_MS
-    if (fixed(hour) && fixed(dayOfWeek)) return 7 * 24 * HOUR_MS
+    if (fixed(hour) && weekday(dayOfWeek)) return 7 * 24 * HOUR_MS
   }
   throw new Error(`cron "${expression}" is not a shape cronIntervalMs reads`)
 }
