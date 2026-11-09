@@ -60,7 +60,10 @@ const [
   incidents,
   disclosures,
 ] = await Promise.all([
-  useFetch<OverviewData>('/api/overview'),
+  // The band and readout read a handful of alerts; see overviewStrip.
+  useFetch<OverviewData>('/api/overview', {
+    transform: (d: OverviewData): OverviewData => overviewStrip(d, LABS),
+  }),
   useFetch<PricesData>('/api/prices', { pick: ['as_of', 'computed_at', 'matrix', 'counts'] }),
   useFetch<RevenueData>('/api/revenue'),
   // The compact demand and spend panels read shares and totals only: the

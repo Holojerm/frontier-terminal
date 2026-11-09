@@ -3,6 +3,7 @@
 // into the claim-by-claim page. Nothing here knows which companies exist;
 // the list is whatever /api/theses returns.
 
+import { thesisCardView, type ThesisCardView } from '../../../shared/utils/thesis-format'
 import type { ThesesData } from '../../../shared/utils/thesis-types'
 
 definePageMeta({
@@ -15,7 +16,14 @@ definePageMeta({
   },
 })
 
-const { data: theses, error } = await useFetch<ThesesData>('/api/theses')
+// Cards need each claim's status only; transform runs before the payload is serialised.
+const { data: theses, error } = await useFetch('/api/theses', {
+  key: 'theses-cards',
+  transform: (d: ThesesData): Omit<ThesesData, 'theses'> & { theses: ThesisCardView[] } => ({
+    ...d,
+    theses: d.theses.map(thesisCardView),
+  }),
+})
 
 useSeo({
   title: 'Theses',

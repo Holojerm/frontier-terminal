@@ -2,10 +2,9 @@
 // One thesis on the index: who it is about, where it stands claim by claim,
 // and the way in.
 
-import { statusCounts, thesisPath } from '../../../shared/utils/thesis-format'
-import type { ThesisView } from '../../../shared/utils/thesis-types'
+import { statusCounts, thesisPath, type ThesisCardView } from '../../../shared/utils/thesis-format'
 
-const props = defineProps<{ thesis: ThesisView }>()
+const props = defineProps<{ thesis: ThesisCardView }>()
 
 const counts = computed(() => statusCounts(props.thesis.claims))
 </script>

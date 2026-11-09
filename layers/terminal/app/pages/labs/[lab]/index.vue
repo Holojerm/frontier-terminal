@@ -143,6 +143,8 @@ const [prices, revenue, rankings, spend, hiring, incidents, releases, alerts] = 
   useFetch<AlertsData>('/api/alerts', {
     key: `lab-alerts:${lab}`,
     query: { tier: 'all', limit: ALERTS_SHOWN, lab },
+    // The table prints lab, topic, headline and one figure; see slimAlert.
+    transform: (d: AlertsData): AlertsData => ({ ...d, rows: d.rows.map(slimAlert) }),
   }),
 ])
 

@@ -2,10 +2,10 @@
 // The facts that frame a thesis, shared by its index card and its page.
 
 import { POSITION_LABEL } from '../../../shared/utils/thesis-format'
-import type { ThesisView } from '../../../shared/utils/thesis-types'
+import type { ThesisCardView } from '../../../shared/utils/thesis-format'
 import type { Fact } from '../../types/terminal-ui'
 
-const props = defineProps<{ thesis: ThesisView }>()
+const props = defineProps<{ thesis: Omit<ThesisCardView, 'claims'> }>()
 
 const items = computed<Fact[]>(() => [
   {
