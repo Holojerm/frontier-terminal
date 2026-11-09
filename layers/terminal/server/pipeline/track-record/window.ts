@@ -1,8 +1,6 @@
 // When the terminal saw an alert's change, and the window searched around it.
 // Pure functions of the cited change rows and the clock.
 
-import type { ChangeRow } from '../contracts'
-
 /** The first alert day the track record covers. */
 export const TRACK_RECORD_FROM = '2026-09-08'
 
@@ -24,13 +22,21 @@ export interface SawIt {
  * removed row's first sighting, weeks earlier, and that migration rewrote
  * them, so reading detected_at keeps saw-it times stable either way.
  */
-export function seenAt(change: Pick<ChangeRow, 'change_type' | 'fetched_at' | 'detected_at'>) {
+export function seenAt(change: Pick<SawItChange, 'change_type' | 'fetched_at' | 'detected_at'>) {
   return new Date(change.change_type === 'removed' ? change.detected_at : change.fetched_at)
 }
 
 /** When the terminal saw it: the earliest cited change row by seenAt. Ties keep the smallest id. */
-export function sawIt(changes: readonly ChangeRow[]): SawIt | null {
-  let first: ChangeRow | null = null
+export interface SawItChange {
+  id: string
+  change_type: string
+  fetched_at: string
+  detected_at: string
+  source_url: string
+}
+
+export function sawIt<C extends SawItChange>(changes: readonly C[]): SawIt | null {
+  let first: C | null = null
   for (const c of changes) {
     const t = seenAt(c).getTime()
     const f = first ? seenAt(first).getTime() : Infinity
