@@ -1,4 +1,4 @@
-# The GDELT side of the track record (scripts/gdelt-search.ts), hourly.
+# The GDELT side of the track record (scripts/gdelt-search.ts), twice an hour.
 #
 # Each run asks the site for the GDELT GKG files it has not read (one per
 # quarter hour, ~2.5 MB zipped), reads them oldest first, and posts back the
@@ -13,15 +13,20 @@
 # NUXT_GDELT_TOKEN. Without it the run passes with a warning and reads
 # nothing.
 #
-# Cost: about a minute an hour once caught up (four files, ~10 MB of
+# Cost: about a minute a run once caught up (two files, ~5 MB of
 # downloads). The repo is public, so hosted minutes are free too.
 
 name: GDELT search
 
 on:
   schedule:
-    # Minute 23: off the top of the hour, when GitHub's scheduler is busiest.
-    - cron: '23 * * * *'
+    # Minutes 23 and 53: off the top of the hour, when GitHub's scheduler is
+    # busiest. Twice an hour because the scheduler drops triggers: hourly, it
+    # fired 2 of 12 on 2026-11-06 and none from 08:03Z to 18:52Z on 2026-11-09
+    # (issues #301, #323). A run is about a minute once caught up, and a
+    # backlog run stops at 40 minutes, so the next trigger at most waits in
+    # the concurrency queue below and none is cancelled.
+    - cron: '23,53 * * * *'
   workflow_dispatch:
 
 # One run at a time: two would double our rate at GDELT.

@@ -272,7 +272,7 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
   track_record_candidates: {
     grain: 'One row per article or newsroom post found for an alert.',
     cadence:
-      'Press articles from GDELT’s files, read hourly while an alert’s window is open. Newsroom posts within 5 minutes of the window closing.',
+      'Press articles from GDELT’s files, read twice an hour while an alert’s window is open. Newsroom posts within 5 minutes of the window closing.',
     event: 'published_at',
     knowledge: 'found_at',
     start: 'From the first notable or critical alert.',

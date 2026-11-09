@@ -1,4 +1,4 @@
-// The GDELT side of the track record — `bun run gdelt:search`, run hourly by
+// The GDELT side of the track record — `bun run gdelt:search`, run twice an hour by
 // .github/workflows/gdelt-search.yml (the owner's Mac mini, or a hosted runner while it is down).
 //
 // Reads GDELT's 15-minute GKG files (layers/terminal/server/pipeline/track-record/gkg.ts),
