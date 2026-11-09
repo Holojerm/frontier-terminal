@@ -17,10 +17,11 @@ import { emitEvent } from '../../utils/events'
 import { buildAlertRows, gateJudgeSubmission, type JudgeSubmission } from './contract'
 import { groundAlerts, type AlertGroundingRejection } from './grounding'
 import { judgedThrough, pendingChanges } from './pending'
+import { rejectFalseDelistings, stillListedRemovals } from './still-listed'
 
 // POST /api/judge/alerts, minus the request: raw body -> schema gate ->
 // cursor check -> the offered window -> grounding against the cited change
-// rows as D1 holds them -> the hiring
+// rows as D1 holds them -> no still-listed model called delisted -> the hiring
 // materiality floor (layers/terminal/server/pipeline/hiring-floor.ts) -> stamping ->
 // the one write chokepoint -> a judge_runs row. Every model-output
 // rejection is a return value and an ops event, never an exception; only
@@ -277,8 +278,12 @@ export async function submitJudgeRun(
   const stored = await existingAlertIds(db, body.alerts.map(stampedId))
   const windowed = outsideWindow(body.alerts, cited, prev, cursor.through ?? prev, stored)
   const grounded = groundAlerts(windowed.inside, cited)
-  const accepted = grounded.accepted
-  const rejected = [...windowed.rejected, ...grounded.rejected]
+  // Read at submit time: a page that drops the model between the pending
+  // read and now makes the removal a real delisting.
+  const stillListed = await stillListedRemovals(db, cited)
+  const listed = rejectFalseDelistings(grounded.accepted, cited, stillListed)
+  const accepted = listed.accepted
+  const rejected = [...windowed.rejected, ...grounded.rejected, ...listed.rejected]
   const rejections = rejected.map((r) => ({
     reason: r.reason,
     detail: r.detail,
@@ -296,6 +301,7 @@ export async function submitJudgeRun(
     floored.alerts,
     cited,
     new Set(matrix.map((e) => `${e.provider}:${e.model_slug}`)),
+    new Set(stillListed.map((r) => r.change_id)),
   )
 
   const rows = buildAlertRows(gated.alerts, cited)
