@@ -17,6 +17,12 @@ export const RATE_LIMIT_COOLDOWN_MS = 60 * 60 * 1000
 export const RATE_LIMIT_MAX_COOLDOWN_MS = 6 * 60 * 60 * 1000
 export const RATE_LIMIT_ALERT_AFTER_MS = 6 * 60 * 60 * 1000
 export const RATE_LIMIT_REALERT_MS = 24 * 60 * 60 * 1000
+/**
+ * Recipes run once per survey tick (every 6 hours), so the sources' six hours
+ * would be a streak of two runs, one more 429 than a limiter's bad half day.
+ * Three consecutive ticks is the same "not transient" bar.
+ */
+export const RECIPE_RATE_LIMIT_ALERT_AFTER_MS = 12 * 60 * 60 * 1000
 
 /** A run as stored in source_runs; newest first wherever a list is taken. */
 export interface RunSummary {
@@ -47,14 +53,16 @@ function streakOf(history: readonly RunSummary[]): RunSummary[] {
  * attempt that carries the streak past 6 hours, and on the first attempt of
  * each further day it lasts; never for a transient 429.
  */
-export function rateLimitAlertDue(history: readonly RunSummary[], nowMs: number): boolean {
+export function rateLimitAlertDue(
+  history: readonly RunSummary[],
+  nowMs: number,
+  alertAfterMs: number = RATE_LIMIT_ALERT_AFTER_MS,
+): boolean {
   const streak = streakOf(history)
   if (streak.length === 0) return false
   const since = Date.parse(streak.at(-1)!.started_at)
   const tier = (at: number) =>
-    at - since < RATE_LIMIT_ALERT_AFTER_MS
-      ? -1
-      : Math.floor((at - since - RATE_LIMIT_ALERT_AFTER_MS) / RATE_LIMIT_REALERT_MS)
+    at - since < alertAfterMs ? -1 : Math.floor((at - since - alertAfterMs) / RATE_LIMIT_REALERT_MS)
   return tier(nowMs) > tier(Date.parse(streak[0]!.started_at))
 }
 
