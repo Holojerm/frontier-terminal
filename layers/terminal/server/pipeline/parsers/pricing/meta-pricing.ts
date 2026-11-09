@@ -19,16 +19,33 @@ import { tableAfterHeading, usdAmount } from './md-table'
 //
 // Only the token-priced lines are parsed: a "### " section under
 // "## Model pricing" whose table header is the Standard/Contributor $/MTok
-// pair. Muse Image, Muse Voice Transcribe and SAM print per-image, per-hour
+// pair. The columns are found by name: on 2026-11-09 Meta swapped them to
+// Contributor-then-Standard with every price unchanged. Muse Image, Muse Voice Transcribe and SAM print per-image, per-hour
 // and per-frame tables with a different header and are skipped by that test.
 
 const PRICING_HEADING = '## Model pricing'
-const TOKEN_HEADER = ['Usage', 'Standard mode (per 1M tokens)', 'Contributor mode (per 1M tokens)']
+const USAGE_HEADER = 'Usage'
+const MODE_HEADER: Record<Mode, string> = {
+  Standard: 'Standard mode (per 1M tokens)',
+  Contributor: 'Contributor mode (per 1M tokens)',
+}
 // "Model: `muse-wonder-1.0`." | "Models: `a`, `b` in Standard mode; `c` in Contributor mode."
 const MODELS_SENTENCE = /^Models?: (.+?\.)(?:\s|$)/
 const NOT_AVAILABLE = 'Not available'
 
 type Mode = 'Standard' | 'Contributor'
+
+/**
+ * Each mode's column in a token table, or null when the header is not the
+ * Usage + Standard/Contributor $/MTok trio (in either column order).
+ */
+function modeColumns(header: string[]): Record<Mode, number> | null {
+  if (header.length !== 3 || header[0] !== USAGE_HEADER) return null
+  const standard = header.indexOf(MODE_HEADER.Standard)
+  const contributor = header.indexOf(MODE_HEADER.Contributor)
+  if (standard === -1 || contributor === -1) return null
+  return { Standard: standard, Contributor: contributor }
+}
 
 /** The `### ` headings directly under `## Model pricing`, in page order. */
 function lineHeadings(text: string): string[] {
@@ -80,9 +97,10 @@ export function parseMetaPricingMd(
     } catch {
       continue // a prose-only section ("### Token pricing notes")
     }
-    const header = table[0]?.join('|') ?? ''
-    if (header !== TOKEN_HEADER.join('|')) {
+    const columns = modeColumns(table[0] ?? [])
+    if (!columns) {
       // A reshaped token table must fail loudly, not drop the line's prices.
+      const header = table[0]?.join('|') ?? ''
       if (header.includes('per 1M tokens'))
         throw new Error(`${heading}: unrecognized header ${header}`)
       continue
@@ -98,7 +116,7 @@ export function parseMetaPricingMd(
     const output = usage('Output')
 
     for (const [mode, ids] of idsByMode(text, heading)) {
-      const col = mode === 'Standard' ? 1 : 2
+      const col = columns[mode]
       if (input[col] === NOT_AVAILABLE) {
         throw new Error(
           `${heading}: ${ids.join(', ')} named in ${mode} mode, priced "Not available"`,
