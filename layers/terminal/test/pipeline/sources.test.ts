@@ -11,7 +11,7 @@ import { fixtureText, manifest } from './fixtures'
 const sourcesYaml = fixtureText('sources.yaml')
 
 describe('includeSources', () => {
-  test('yields the 45 include-verdict sources in sources.yaml order, keyed by manifest source_id', () => {
+  test('yields the 46 include-verdict sources in sources.yaml order, keyed by manifest source_id', () => {
     const sources = includeSources(sourcesYaml, manifest.fixtures)
     expect(sources.map((s) => s.source_id)).toEqual([
       'openai-models-md',
@@ -24,6 +24,7 @@ describe('includeSources', () => {
       'meta-models-md',
       'meta-muse-wonder-md',
       'meta-muse-spark-md',
+      'meta-muse-ember-md',
       'meta-pricing-md',
       'mistral-models-md',
       'mistral-pricing-md',

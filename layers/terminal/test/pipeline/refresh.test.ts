@@ -155,7 +155,7 @@ describe('scopes', () => {
     )
     expect(sourceIdsForScope('careers', ALL)).toEqual(['google-careers'])
     expect(sourceIdsForScope('edgar', ALL)).not.toContain('google-careers')
-    expect(ALL_IDS).toHaveLength(45)
+    expect(ALL_IDS).toHaveLength(46)
     // The status feeds ride the six-hourly survey only, never the EDGAR tick.
     expect(sourceIdsForScope('edgar', ALL)).not.toContain('openai-status')
   })
@@ -165,7 +165,7 @@ describe('baseline', () => {
   it('stores entities for every parser source, zero changes, one snapshot and one raw object each', async () => {
     const report = await run('survey', ALL_IDS)
 
-    expect(report.sources).toHaveLength(45)
+    expect(report.sources).toHaveLength(46)
     expect(report.failed).toBe(0)
     const byId = Object.fromEntries(report.sources.map((s) => [s.source_id, s]))
     // Sides and the cross-check are fetched and snapshotted but yield no entities.
@@ -184,8 +184,8 @@ describe('baseline', () => {
 
     expect(await rows.changes()).toHaveLength(0)
     expect(await rows.alerts()).toHaveLength(0)
-    expect(await rows.snapshots()).toHaveLength(45)
-    expect(await rows.runs()).toHaveLength(45)
+    expect(await rows.snapshots()).toHaveLength(46)
+    expect(await rows.runs()).toHaveLength(46)
     expect(await rows.ops()).toHaveLength(0)
 
     const entities = await rows.entities()
@@ -199,8 +199,8 @@ describe('baseline', () => {
     expect(perSource.get('xai-models-md')).toBe(17)
     // No prices: only the flagship and economy class-map checks.
     expect(perSource.get('google-models-md')).toBe(2)
-    // 6 catalog rows + the flagship and economy class-map checks.
-    expect(perSource.get('meta-models-md')).toBe(8)
+    // 7 catalog rows (Muse Ember added 2026-11-09) + the flagship and economy class-map checks.
+    expect(perSource.get('meta-models-md')).toBe(9)
     // 6 priced ids: Muse Wonder, three Muse Spark versions, two Contributor ids.
     expect(perSource.get('meta-pricing-md')).toBe(6)
     // 16 current first-party models with an API name; third-party and no-API rows skipped.
@@ -257,14 +257,14 @@ describe('baseline', () => {
     ])
 
     const keys = await rawKeys()
-    expect(keys).toHaveLength(45)
+    expect(keys).toHaveLength(46)
     expect(keys).toContain(
       (await rows.snapshots()).find((s) => s.source_id === 'xai-models-md')!.raw_key,
     )
     expect(keys.find((k) => k.startsWith('raw/xai-models-md/'))).toMatch(
       /^raw\/xai-models-md\/2026-09-07T10:00:\d\d\.000Z\.md$/,
     )
-    // Parses and stores all 45 sources; Workers Builds runs far slower than a laptop.
+    // Parses and stores all 46 sources; Workers Builds runs far slower than a laptop.
   }, 30_000)
 
   it('feeds the fleet counters and the per-source freshness on /api/status', async () => {

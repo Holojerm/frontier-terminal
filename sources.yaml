@@ -209,13 +209,15 @@ sources:
       descriptions and context windows but no prices; they come from
       meta-pricing-md. Live-fetched 2026-10-12. llama.developer.meta.com
       301-redirects to dev.meta.ai; the source is registered at the final
-      URL. Only the two token-priced text lines (Muse Wonder, Muse Spark) are
-      parsed. Muse Image, Muse Voice Transcribe and SAM are billed per image,
+      URL. Only the token-priced text lines (Muse Wonder, Muse Spark, and
+      since 2026-11-09 Muse Ember) are parsed. Muse Image, Muse Voice Transcribe and SAM are billed per image,
       per hour or per frame, and Muse Glimmer and Muse Spark Open are
       open-weight with no API at all. Since 2026-11-06 this page prints each
       line's ids and context window but no availability table: those moved
-      to each line's own page (meta-muse-wonder-md, meta-muse-spark-md),
-      which the parser joins. A text line with a context window and no
+      to each line's own page (meta-muse-wonder-md, meta-muse-spark-md,
+      meta-muse-ember-md), which the parser joins. A text line is a Model ID
+      table whose Output is "Text"; Muse Ember's prints no Context window
+      column, so its window is read from its own page. A text line with no
       registered page fails the parse rather than being guessed at.
 
   meta-muse-wonder-md:
@@ -251,6 +253,23 @@ sources:
     caveats: >-
       The only page that lists the -contributor ids; meta-models-md names
       the Standard-mode ids alone.
+
+  meta-muse-ember-md:
+    axis: pricing-catalog
+    provider: meta
+    url: https://dev.meta.ai/docs/muse-ember.md
+    format: Markdown, an "## At a glance" table and an "## Availability" table
+    diff_mechanism: body hash (ETag, Last-Modified)
+    verdict: include (join table for meta-models-md)
+    terms: >-
+      Same terms and robots.txt as meta-models-md. Taken: the Availability
+      table (id, Standard mode on pay-as-you-go) and the At a glance context
+      window, whenever meta-models-md is read. Read 2026-11-09.
+    rights: not-cleared
+    fixture: fixtures/pricing/meta-muse-ember.md
+    caveats: >-
+      Added 2026-11-09 with Muse Ember. models.md prints this line's ids with
+      no Context window column; the window comes from this page.
 
   meta-pricing-md:
     axis: pricing-catalog
