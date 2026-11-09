@@ -1,0 +1,3 @@
+-- destructive-ok: removes only repeat ratings of one (alert, candidate) pair (#316), keeping the earliest; no deployed code reads a second one.
+DELETE FROM `track_record_verdicts` WHERE EXISTS (SELECT 1 FROM `track_record_verdicts` AS `earlier` WHERE `earlier`.`alert_id` = `track_record_verdicts`.`alert_id` AND `earlier`.`candidate_id` = `track_record_verdicts`.`candidate_id` AND (`earlier`.`judged_at` < `track_record_verdicts`.`judged_at` OR (`earlier`.`judged_at` = `track_record_verdicts`.`judged_at` AND `earlier`.`id` < `track_record_verdicts`.`id`)));--> statement-breakpoint
+CREATE UNIQUE INDEX `track_record_verdicts_pair_uq` ON `track_record_verdicts` (`alert_id`,`candidate_id`);
