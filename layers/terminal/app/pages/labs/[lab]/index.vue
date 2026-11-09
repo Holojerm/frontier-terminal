@@ -210,6 +210,7 @@ const figures = computed(() =>
 )
 
 useSeo({
+  image: ogCardPath(route.path),
   // The words an analyst types ("Anthropic API pricing", "xAI revenue"), not
   // the bare lab name, which matches every page on the web about the lab.
   title: `${display}: API pricing, revenue, hiring, outages`,

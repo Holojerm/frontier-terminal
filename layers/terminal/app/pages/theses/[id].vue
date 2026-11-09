@@ -34,6 +34,7 @@ if (data.value && !thesis.value) {
 const name = thesis.value?.title ?? 'Thesis'
 
 useSeo({
+  image: ogCardPath(`/theses/${id}`),
   title: `${name} thesis`,
   description: `The ${name} thesis checked claim by claim: each status against its kill condition, with the readings or verdicts and sources behind it.`,
   dateModified: data.value?.as_of,
