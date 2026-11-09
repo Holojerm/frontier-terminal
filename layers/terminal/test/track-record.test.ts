@@ -760,6 +760,43 @@ describe('the same-event gate', () => {
     expect(again.inserted).toBe(0)
   })
 
+  it('stops offering a rated pair, and a second rating of it writes nothing (#316)', async () => {
+    const offered = (await trackRecordReview(db))[0]!.candidates
+    const verdicts = offered.map((c) => ({
+      candidate_id: c.candidate_id,
+      same_event: false,
+      rationale: 'A roundup of the week.',
+    }))
+    const first = await applyTrackRecordVerdicts(db, verdicts, NOW)
+    expect(first.inserted).toBe(offered.length)
+    const after = await trackRecordReview(db)
+    expect(after.flatMap((r) => r.candidates.map((c) => c.candidate_id))).toEqual([])
+    const again = await applyTrackRecordVerdicts(db, verdicts, new Date('2026-11-04T13:00:00Z'))
+    expect(again.inserted).toBe(0)
+    const rows = await db.select().from(schema.trackRecordVerdicts)
+    expect(rows).toHaveLength(offered.length)
+  })
+
+  it('refuses a second row for a pair even under a different id', async () => {
+    const [c] = (await trackRecordReview(db))[0]!.candidates
+    const row = {
+      candidate_id: c!.candidate_id,
+      alert_id: HASH(1),
+      same_event: false,
+      rationale: 'x',
+      judged_at: NOW.toISOString(),
+      source_url: 'https://example.com/',
+      fetched_at: NOW.toISOString(),
+    }
+    await db.insert(schema.trackRecordVerdicts).values({ ...row, id: HASH(900) })
+    const dup = await db
+      .insert(schema.trackRecordVerdicts)
+      .values({ ...row, id: HASH(901) })
+      .onConflictDoNothing()
+      .returning()
+    expect(dup).toEqual([])
+  })
+
   it('takes ratings through the judge’s POST body, and refuses a key the contract lacks', async () => {
     const [press] = (await trackRecordReview(db))[0]!.candidates
     const body = (track_record: unknown) =>
@@ -789,6 +826,32 @@ describe('the same-event gate', () => {
       { now: NOW },
     )
     expect(smuggled.gate_rejection).not.toBeNull()
+  })
+})
+
+describe('migration 0044', () => {
+  it('keeps the earliest of each duplicated pair and nothing else', async () => {
+    const sql = (await import('~~/server/db/migrations/0044_verdict_pair_unique.sql?raw')).default
+    const dedupe = sql
+      .split('--> statement-breakpoint')[0]!
+      .replace(/`track_record_verdicts`/g, '`verdicts_scratch`')
+    await env.DB.exec(
+      'CREATE TABLE verdicts_scratch (id text PRIMARY KEY, candidate_id text, alert_id text, judged_at text)',
+    )
+    const ins = env.DB.prepare('INSERT INTO verdicts_scratch VALUES (?, ?, ?, ?)')
+    await env.DB.batch([
+      ins.bind('b', 'c1', 'a1', '2026-11-09T02:00:00Z'),
+      ins.bind('a', 'c1', 'a1', '2026-11-09T01:00:00Z'),
+      ins.bind('c', 'c1', 'a1', '2026-11-09T03:00:00Z'),
+      ins.bind('d', 'c2', 'a1', '2026-11-09T03:00:00Z'),
+      ins.bind('e', 'c2', 'a1', '2026-11-09T03:00:00Z'),
+    ])
+    await env.DB.exec(dedupe.replace(/^--.*\n/, '').replace(/\n/g, ' '))
+    const left = await env.DB.prepare('SELECT id FROM verdicts_scratch ORDER BY id').all<{
+      id: string
+    }>()
+    expect(left.results.map((r) => r.id)).toEqual(['a', 'd'])
+    await env.DB.exec('DROP TABLE verdicts_scratch')
   })
 })
 

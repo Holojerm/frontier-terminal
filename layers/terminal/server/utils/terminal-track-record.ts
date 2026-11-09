@@ -22,7 +22,6 @@ import type {
 import type { AlertSeverity } from '../../shared/utils/terminal-tiers'
 
 import * as tables from '#server/db/schema'
-import { ChangeRow } from '../pipeline/contracts'
 import { MATERIAL_SEVERITIES, searchedInPart } from '../pipeline/track-record/search'
 import {
   TRACK_RECORD_FROM,
@@ -155,8 +154,20 @@ export async function queryTrackRecord(
   const changeIds = alerts.flatMap((a) => JSON.parse(a.change_ids) as string[])
 
   const [changes, searches, candidates, verdicts] = await Promise.all([
+    // Never before_json / after_json: a snapshot-sized row there makes D1 fail the whole
+    // read with SQLITE_TOOBIG, and nothing below reads them (#182).
     inChunks(changeIds, (g) =>
-      db.select().from(tables.changes).where(inArray(tables.changes.id, g)),
+      db
+        .select({
+          id: tables.changes.id,
+          provider: tables.changes.provider,
+          change_type: tables.changes.change_type,
+          detected_at: tables.changes.detected_at,
+          source_url: tables.changes.source_url,
+          fetched_at: tables.changes.fetched_at,
+        })
+        .from(tables.changes)
+        .where(inArray(tables.changes.id, g)),
     ),
     inChunks(alertIds, (g) =>
       db
@@ -192,14 +203,14 @@ export async function queryTrackRecord(
         ),
     ),
   ])
-  const changeById = new Map(changes.map((c) => [c.id, ChangeRow.parse(c)]))
+  const changeById = new Map(changes.map((c) => [c.id, c]))
   const verdictOf = new Map(verdicts.map((v) => [v.candidate_id, v]))
 
   const rows: TrackRecordRow[] = []
   for (const alert of alerts) {
     const cited = (JSON.parse(alert.change_ids) as string[])
       .map((id) => changeById.get(id))
-      .filter((c): c is ChangeRow => c !== undefined)
+      .filter((c): c is NonNullable<typeof c> => c !== undefined)
     const saw = sawIt(cited)
     if (!saw) continue
     const window = trackWindow(saw.at)
