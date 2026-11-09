@@ -538,6 +538,9 @@ export default defineNuxtConfig({
       // The app's canonical public origin, no trailing slash. Absolute links in
       // sitemap.xml, robots.txt, and og: tags are built from this.
       appUrl: 'http://localhost:3000',
+      // PostHog project token, set by NUXT_PUBLIC_POSTHOG_KEY in wrangler.toml.
+      // Public by design; empty means no analytics load.
+      posthogKey: '',
       // Set false to make robots.txt disallow everything, every page render
       // `noindex`, and sitemap.xml/llms.txt go empty — for any deploy that
       // must not compete with production in the index.

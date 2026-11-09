@@ -139,7 +139,7 @@
   "features": {
     "auth": false,
     "billing": false,
-    "posthog": null,
+    "posthog": { "projectId": 721429 },
     "opsEvents": true
   },
   "secrets": [

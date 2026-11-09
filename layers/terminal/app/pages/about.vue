@@ -178,6 +178,16 @@ useSeo({
       </ul>
     </TerminalPanel>
 
+    <TerminalPanel id="analytics" title="Analytics">
+      <p class="max-w-2xl text-sm text-default">
+        We use PostHog to see which pages people read. It records page views, clicks, and errors
+        under a random ID kept in a cookie and your browser’s storage. PostHog also uses your IP
+        address to estimate your location. We don’t record your screen, and you never give us a name
+        or email to attach to that ID. Cloudflare Web Analytics also counts page loads, without a
+        cookie.
+      </p>
+    </TerminalPanel>
+
     <TerminalPanel id="disclaimer" title="Not investment advice">
       <p class="max-w-2xl text-sm text-default">
         This isn’t investment advice. We report what public sources say and when they said it.
