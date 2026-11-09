@@ -14,6 +14,7 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 import { rateLimit } from '#server/utils/rate-limit'
 
 import { requireApiKeyTier } from '../../../utils/api-access'
+import { headResponse } from '../../../utils/head-response'
 import { PAYLOAD_LIMIT } from '../../../utils/rate-limits'
 import { terminalDb } from '../../../utils/terminal-handler'
 import {
@@ -69,5 +70,6 @@ export default defineEventHandler(async (event) => {
     'Content-Type': body.type || 'application/octet-stream',
     'Content-Disposition': `attachment; filename="${snapshot.raw_key.split('/').pop()}"`,
   })
+  if (event.method === 'HEAD') return headResponse(event, body.size)
   return sendStream(event, body.stream())
 })

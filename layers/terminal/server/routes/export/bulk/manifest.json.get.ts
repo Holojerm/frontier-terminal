@@ -14,6 +14,7 @@ import { sha256Hex } from '#server/utils/hash'
 
 import { cacheControlFor, rateLimitTerminal } from '../../../utils/api-access'
 import { SCHEMA_VERSION, SCHEMA_VERSION_HEADER } from '../../../utils/data-schema'
+import { headResponse } from '../../../utils/head-response'
 import { bulkManifest, notModified, readBulkIndex } from '../../../utils/terminal-bulk'
 
 export default defineEventHandler(async (event) => {
@@ -50,6 +51,10 @@ export default defineEventHandler(async (event) => {
   ) {
     setResponseStatus(event, 304)
     return null
+  }
+  if (event.method === 'HEAD') {
+    setResponseHeader(event, 'Content-Type', 'application/json')
+    return headResponse(event)
   }
   return manifest
 })
