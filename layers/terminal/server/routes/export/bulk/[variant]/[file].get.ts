@@ -9,6 +9,7 @@ import { blob } from '@nuxthub/blob'
 
 import { cacheControlFor, rateLimitTerminal } from '../../../../utils/api-access'
 import { SCHEMA_VERSION_HEADER } from '../../../../utils/data-schema'
+import { headResponse } from '../../../../utils/head-response'
 import {
   BULK_CONTENT_TYPES,
   byteRange,
@@ -63,16 +64,7 @@ export default defineEventHandler(async (event) => {
     'Content-Disposition': `attachment; filename="${file.table}.${file.variant}.${file.format}"`,
   })
   // [file].head.ts: a Parquet reader asks for the size before it reads anything.
-  if (event.method === 'HEAD') {
-    // A null body would be a 204, which drops Content-Length.
-    return new Response(null, {
-      status: 200,
-      headers: { ...getResponseHeaders(event), 'Content-Length': String(file.bytes) } as Record<
-        string,
-        string
-      >,
-    })
-  }
+  if (event.method === 'HEAD') return headResponse(event, file.bytes)
 
   const env = (event.context as { cloudflare?: { env?: unknown } }).cloudflare?.env
   const store = file.stored.in === 'licensed' ? licensedStoreOf(env) : blob
