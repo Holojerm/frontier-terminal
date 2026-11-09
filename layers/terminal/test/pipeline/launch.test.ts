@@ -260,6 +260,7 @@ describe('tripwire', () => {
       ...TRIPWIRE_BASE.slice(0, META),
       'meta-muse-wonder-md',
       'meta-muse-spark-md',
+      'meta-muse-ember-md',
       ...TRIPWIRE_BASE.slice(META),
     ])
     expect((await runs()).length).toBe(before.runs)
@@ -347,6 +348,7 @@ describe('tripwire', () => {
         ...TRIPWIRE_BASE,
         'meta-muse-wonder-md',
         'meta-muse-spark-md',
+        'meta-muse-ember-md',
         'anthropic-pricing-md',
         'openai-pricing-md',
         'meta-pricing-md',
