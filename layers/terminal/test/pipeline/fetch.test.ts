@@ -137,6 +137,18 @@ describe('createFetcher', () => {
     expect(sleeps).toEqual([2000])
   })
 
+  it('treats "Retry-After: 0" as no wait beyond the fixed backoff', async () => {
+    sleeps.length = 0
+    const { fetch, calls } = scripted([
+      new Response('', { status: 429, headers: { 'Retry-After': '0' } }),
+      new Response('', { status: 429, headers: { 'Retry-After': '0' } }),
+      new Response('ok'),
+    ])
+    expect(await createFetcher({ ...APP, fetch, sleep })(XAI)).toMatchObject({ ok: true })
+    expect(calls).toHaveLength(3)
+    expect(sleeps).toEqual([500, 2000])
+  })
+
   it('reads Retry-After as seconds or as an HTTP date, and nothing else', () => {
     expect(parseRetryAfter('120')).toBe(120_000)
     expect(

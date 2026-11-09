@@ -217,7 +217,7 @@ describe('runRecipes', () => {
   })
 
   // npm's downloads API sheds load for a tick now and then (2026-10-09, -11).
-  it("alerts on a 429 only once the streak outlasts the sources' six hours", async () => {
+  it('alerts on a 429 only once the streak has run three survey ticks', async () => {
     const limited: SourceFetcher = async () => ({
       ok: false,
       status: 429,
@@ -233,6 +233,10 @@ describe('runRecipes', () => {
     await runRecipes(db, { raw, fetcher: limited, now: at(0) }, [recipe])
     expect(await failedAlerts()).toBe(0)
     await runRecipes(db, { raw, fetcher: limited, now: at(6) }, [recipe])
+    expect(await failedAlerts()).toBe(0)
+    await runRecipes(db, { raw, fetcher: limited, now: at(12) }, [recipe])
+    expect(await failedAlerts()).toBe(1)
+    await runRecipes(db, { raw, fetcher: limited, now: at(18) }, [recipe])
     expect(await failedAlerts()).toBe(1)
   })
 

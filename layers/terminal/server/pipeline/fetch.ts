@@ -266,8 +266,10 @@ export function createFetcher(options: FetcherOptions): SourceFetcher {
             ...(retryAfterMs === null ? {} : { retryAfterMs }),
           }
           if (retryAfterMs === null || retryAfterMs > RATE_LIMIT_MAX_INLINE_WAIT_MS) return last
-          // Short enough to honour here; it replaces the loop's own backoff.
-          await sleep(retryAfterMs)
+          // Short enough to honour here; it replaces the loop's own backoff,
+          // but never undercuts it: npm answers "Retry-After: 0" and then
+          // 429s again, so a zero wait is three requests in one instant.
+          await sleep(Math.max(retryAfterMs, FETCH_BACKOFF_MS[attempt - 1] ?? 0))
           waited = true
           continue
         }
