@@ -1,6 +1,6 @@
 # Muse Spark
 
-Muse Spark is Meta's model for agentic and coding work at scale, such as multi-step tool loops, software engineering assistants, sub-agent tasks, and long-context reasoning. It's the lower-cost option for high-volume, latency-sensitive work, and on Model API it also offers a discounted Contributor mode.
+Muse Spark is Meta's model for agentic and coding work at scale, such as multi-step tool loops, software engineering assistants, and long-context reasoning. It costs less than Muse Wonder, and on Model API it also offers a discounted Contributor mode.
 
 ## At a glance
 
@@ -11,18 +11,18 @@ Muse Spark is Meta's model for agentic and coding work at scale, such as multi-s
 | **Input**                                                                                      | Text, image, video, audio, and PDF                                                                                                                                                          |
 | **Output**                                                                                     | Text                                                                                                                                                                                        |
 | **Context window**                                                                             | 1,048,576 tokens                                                                                                                                                                            |
-| **[Reasoning effort](https://dev.meta.ai/docs/reasoning)**                                     | `"minimal"` to `"max"` on `muse-spark-1.3`; see [Versions](https://dev.meta.ai/docs/muse-spark#versions)                                                                                    |
+| **[Reasoning effort](https://dev.meta.ai/docs/reasoning)**                                     | `"minimal"` to `"max"` on `muse-spark-1.3`; see [Versions](https://dev.meta.ai/docs/muse-spark#versions). The default is `"high"`                                                           |
 | **Endpoints**                                                                                  | [Responses](https://dev.meta.ai/docs/protocols/responses), [Chat Completions](https://dev.meta.ai/docs/protocols/chat-completions), [Messages](https://dev.meta.ai/docs/protocols/messages) |
 | **Pricing**                                                                                    | Pay-as-you-go; see [Muse Spark pricing](https://dev.meta.ai/docs/pricing-rate-limits#muse-spark-pricing)                                                                                    |
 | **Rate limits**                                                                                | See [rate limits](https://dev.meta.ai/docs/pricing-rate-limits#rate-limits)                                                                                                                 |
 
 ## Build with Muse Spark
 
-Use Muse Spark for high-volume, latency-sensitive, or cost-sensitive work:
+Use Muse Spark for agentic and coding work that needs strong reasoning at a lower cost than Muse Wonder:
 
-- **Sub-agent tasks**: run the many short, focused tasks that a main agent hands out.
-- **Tight tool loops**: drive multi-step tool calls where latency per turn adds up.
-- **Classification**: process large volumes of requests at a lower cost per token.
+- **Agent main loops**: run the main loop of an agent or assistant, and hand high-volume subtasks to [Muse Ember](https://dev.meta.ai/docs/muse-ember).
+- **Multi-step tool loops**: plan and drive tool calls across many turns.
+- **Knowledge-heavy questions**: answer questions that depend on broad knowledge, without a retrieval step.
 - **Coding assistants**: connect the [coding agent](https://dev.meta.ai/docs/coding-agents) you already use, or run [Muse Code](https://dev.meta.ai/docs/muse-code).
 
 Muse Spark also handles [image understanding](https://dev.meta.ai/docs/media-understanding#images), [video](https://dev.meta.ai/docs/media-understanding#video) and [audio](https://dev.meta.ai/docs/media-understanding#audio) understanding, [tool calling](https://dev.meta.ai/docs/tool-calling), [structured output](https://dev.meta.ai/docs/structured-output), and [search grounding](https://dev.meta.ai/docs/search-grounding). For complex, long-running tasks where capability matters more than cost, see [Choose a model](https://dev.meta.ai/docs/choose-a-model).
@@ -63,4 +63,4 @@ In [Standard mode](https://dev.meta.ai/docs/pricing-rate-limits#standard-mode), 
 
 - Weighing Muse Spark against Muse Wonder? [Choose a model](https://dev.meta.ai/docs/choose-a-model) compares them workload by workload.
 - Get schema-guaranteed JSON for your classification pipeline with [structured output](https://dev.meta.ai/docs/structured-output).
-- Run Muse Spark as the sub-agent model under a Muse Wonder main loop with an [agent framework](https://dev.meta.ai/docs/agent-frameworks).
+- Pair Muse Spark with Muse Wonder and Muse Ember in one agent with an [agent framework](https://dev.meta.ai/docs/agent-frameworks).

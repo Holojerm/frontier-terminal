@@ -36,6 +36,7 @@ export const SOURCE_LABELS: Readonly<Record<string, SourceLabel>> = {
   'meta-models-md': { label: 'Meta models.md', role: 'primary' },
   'meta-muse-wonder-md': { label: 'Meta Muse Wonder.md (availability)', role: 'join' },
   'meta-muse-spark-md': { label: 'Meta Muse Spark.md (availability)', role: 'join' },
+  'meta-muse-ember-md': { label: 'Meta Muse Ember.md (availability)', role: 'join' },
   'meta-pricing-md': { label: 'Meta pricing and rate limits.md', role: 'primary' },
   'mistral-models-md': { label: 'Mistral models.md', role: 'primary' },
   'mistral-pricing-md': { label: 'Mistral API pricing.md', role: 'primary' },
