@@ -30,9 +30,11 @@ import { heartbeatLoader, taskHeartbeatCheck, type FreshnessCheck } from './fres
 const HOUR_MS = 60 * 60 * 1000
 
 /**
- * The GDELT job runs hourly and GitHub's scheduler skips some hours: on
- * 2026-11-06 it fired 2 of 12, and healthy runs sat up to 7h37m apart that
- * week, so the limit has to clear that spread (issue #301).
+ * The GDELT job is scheduled twice an hour and GitHub's scheduler skips
+ * triggers: hourly, it fired 2 of 12 on 2026-11-06, healthy runs sat up to
+ * 7h37m apart that week (issue #301), and 10h49m apart on 2026-11-09
+ * (issue #323), which is why it now has two triggers an hour. The limit
+ * stays wide enough to clear the spread that remains.
  */
 export const GDELT_SILENCE_MS = 9 * HOUR_MS
 
