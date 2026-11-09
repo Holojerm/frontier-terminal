@@ -134,7 +134,14 @@ const value = (row: T, key: string) => {
     :role="scrolls ? 'region' : undefined"
     :aria-label="scrolls ? caption : undefined"
   >
-    <table class="w-full" :class="nested ? 'text-xs' : 'text-sm'">
+    <!-- Inline links get a 24px-plus tap area from padding (the -mx-1 cancels the
+           side padding's layout), which an inline box spends outside the line, so
+           rows keep their density. Flex links carry
+           their own min-h-6. -->
+    <table
+      class="w-full [&_:is(td,th)_a:not(.min-h-6)]:-mx-1 [&_:is(td,th)_a:not(.min-h-6)]:px-1 [&_:is(td,th)_a:not(.min-h-6)]:py-1.5"
+      :class="nested ? 'text-xs' : 'text-sm'"
+    >
       <caption class="sr-only">
         {{
           caption

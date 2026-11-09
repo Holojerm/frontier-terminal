@@ -50,7 +50,7 @@ defineProps<{
       <NuxtLink
         v-if="more"
         :to="more.to"
-        class="inline-flex items-center gap-1 text-sm text-primary underline underline-offset-2"
+        class="inline-flex min-h-6 items-center gap-1 text-sm text-primary underline underline-offset-2"
       >
         {{ more.label }}
         <UIcon name="i-lucide-arrow-right" class="size-3.5" aria-hidden="true" />

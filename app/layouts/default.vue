@@ -249,7 +249,7 @@ watch(
           class="flex flex-col gap-4 py-6 text-sm text-muted sm:flex-row sm:items-center sm:justify-between"
         >
           <p>© {{ year }} {{ appName }} · Not investment advice.</p>
-          <ul class="flex flex-wrap gap-4">
+          <ul class="flex flex-wrap gap-x-4 [&_a]:inline-block [&_a]:py-1">
             <li v-for="link in REFERENCE" :key="link.to">
               <NuxtLink :to="link.to">{{ link.label }}</NuxtLink>
             </li>

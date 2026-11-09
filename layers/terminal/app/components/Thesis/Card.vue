@@ -14,7 +14,7 @@ const counts = computed(() => statusCounts(props.thesis.claims))
     <template #title>
       <NuxtLink
         :to="thesisPath(thesis.id)"
-        class="text-base hover:underline hover:underline-offset-2"
+        class="py-1.5 text-base hover:underline hover:underline-offset-2"
         >{{ thesis.title }}</NuxtLink
       >
       <span v-if="thesis.ticker" class="ml-2 font-mono text-muted">{{ thesis.ticker }}</span>

@@ -192,7 +192,7 @@ const skuText = (m: SpendModel) =>
         href="https://openrouter.ai/rankings"
         target="_blank"
         rel="noopener noreferrer"
-        class="underline underline-offset-2 hover:text-default"
+        class="leading-6 underline underline-offset-2 hover:text-default"
         :title="spend.rankings.meta.citation"
         >CC BY 4.0</a
       >

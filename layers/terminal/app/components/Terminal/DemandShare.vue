@@ -93,7 +93,7 @@ const widest = computed(() => Math.max(...props.rankings.shares.map((s) => s.sha
         :href="rankings.source.url"
         target="_blank"
         rel="noopener noreferrer"
-        class="underline underline-offset-2 hover:text-default"
+        class="leading-6 underline underline-offset-2 hover:text-default"
         >{{ rankings.source.url }}</a
       >
       <span v-if="rankings.meta.as_of">
@@ -107,7 +107,7 @@ const widest = computed(() => Math.max(...props.rankings.shares.map((s) => s.sha
         href="https://openrouter.ai/rankings"
         target="_blank"
         rel="noopener noreferrer"
-        class="underline underline-offset-2 hover:text-default"
+        class="leading-6 underline underline-offset-2 hover:text-default"
         :title="rankings.meta.citation"
         >CC BY 4.0</a
       >
@@ -120,7 +120,7 @@ const widest = computed(() => Math.max(...props.rankings.shares.map((s) => s.sha
           :href="ref.url"
           target="_blank"
           rel="noopener noreferrer"
-          class="underline underline-offset-2 hover:text-default"
+          class="py-1.5 underline underline-offset-2 hover:text-default"
           >{{ ref.label }}</a
         ><template v-if="i < EXTERNAL.length - 1">, </template>
       </template>
