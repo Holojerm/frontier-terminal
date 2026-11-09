@@ -9,3 +9,12 @@ export const BRAND_MANIFEST_COLORS = {
   themeColor: '#09090b',
   backgroundColor: '#09090b',
 } as const
+
+// The `og-*` roles, for scripts/og-images.ts: it draws a card per page at
+// build time, where there is no browser to resolve a token.
+export const BRAND_OG_COLORS = {
+  mark: '#978aff',
+  ground: '#09090b',
+  ink: '#fafafa',
+  muted: '#9f9fa9',
+} as const

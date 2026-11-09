@@ -101,6 +101,7 @@ const [prices, revenue, rankings, hiring, incidents, alerts] = await Promise.all
 ])
 
 useSeo({
+  image: ogCardPath(comparePath(pair)),
   title: `${title}: API pricing, revenue, hiring`,
   description: `${title}: flagship API price, SEC revenue, OpenRouter demand share, open roles, and status-page incidents, each sourced.`,
   breadcrumb: [{ name: title, path: comparePath(pair) }],
