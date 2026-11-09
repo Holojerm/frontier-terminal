@@ -140,6 +140,17 @@ was a `rate_limit_unavailable` line in the logs — the feature was simply off.
 Import it explicitly (`import { kv } from '@nuxthub/kv'`) in server utils. More generally: when a
 NuxtHub auto-import is load-bearing, check the running logs, not just the type checker.
 
+## A `fatal` 404 pages the owner unless `server/error.ts` is in the chain
+
+Nitro's default error handler `console.error`s every error marked `fatal`, 404s included, and
+Nuxt's handler calls it without `silent`. Workers Issues files each of those lines as an issue
+and the fleet dashboard mails it as Critical, so a crawler asking for `/alerts/<stale id>` sent
+"[Critical] Workers issue … No such alert". `server/error.ts` un-flags `fatal` on anything
+below 500, and the `nitro:config` hook in `nuxt.config.ts` puts it ahead of Nuxt's handler.
+Don't move it to `nitro.errorHandler`: setting that key stops Nuxt registering its own handler,
+and the error pages go with it. To check it after an upgrade, serve a build
+(`npx wrangler --cwd .output dev`), request a missing slug, and look for `[request error] [fatal]`.
+
 ## Custom `definePageMeta` keys need two opt-ins, and fail silently without them
 
 `sitemap.xml` and `llms.txt` are built from `definePageMeta({ publicPage: … })`, collected by

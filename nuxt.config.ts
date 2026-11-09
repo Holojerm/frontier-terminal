@@ -399,6 +399,17 @@ export default defineNuxtConfig({
     // /design-system is the dev-only style guide (app/pages/design-system.vue)
     // used to verify DESIGN.md changes actually landed. Strip it from the
     // production route table so it never ships to users.
+    // Put server/error.ts at the head of Nitro's error-handler chain, ahead of
+    // Nuxt's (it un-flags `fatal` on 4xx so a missing slug is not logged as a
+    // Workers issue). In a hook rather than `nitro.errorHandler`: setting that
+    // key makes Nuxt skip registering its own handler, and the error pages
+    // with it. By this hook Nuxt has already added its handler, so ours is
+    // prepended to it.
+    'nitro:config'(nitroConfig) {
+      const existing = nitroConfig.errorHandler ? [nitroConfig.errorHandler].flat() : []
+      nitroConfig.errorHandler = [`${useNuxt().options.serverDir}/error`, ...existing]
+    },
+
     'pages:extend'(pages) {
       if (process.env.NODE_ENV !== 'production') return
       const index = pages.findIndex((page) => page.path === '/design-system')
