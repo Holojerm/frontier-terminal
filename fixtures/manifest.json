@@ -121,11 +121,11 @@
       "path": "fixtures/pricing/meta-pricing.md",
       "source_id": "meta-pricing-md",
       "source_url": "https://dev.meta.ai/docs/pricing-rate-limits.md",
-      "fetched_at": "2026-11-09T12:39:22Z",
+      "fetched_at": "2026-11-09T18:38:46Z",
       "http_status": 200,
-      "raw_bytes": 11243,
+      "raw_bytes": 12671,
       "trim": "none — committed whole",
-      "note": "Registered 2026-10-12; re-captured 2026-11-09 after the page swapped its column order to Contributor then Standard (prices unchanged). One $/MTok table per model line (Muse Wonder, Muse Spark) with Standard and Contributor mode columns; image, audio and segmentation tables are not $/MTok and are not parsed. ETag present."
+      "note": "Registered 2026-10-12; re-captured 2026-11-09 12:39Z after the page swapped its column order to Contributor then Standard (prices unchanged), and again 18:38Z after Meta added Muse Ember (`muse-ember-1.0`, Standard mode only), priced by request size in Up to 200K / Over 200K input tokens columns (Last-Modified 2026-11-09T18:37:14Z). One $/MTok table per model line (Muse Wonder, Muse Spark) with Standard and Contributor mode columns; image, audio and segmentation tables are not $/MTok and are not parsed. ETag present."
     },
     {
       "path": "fixtures/pricing/mistral-models.md",

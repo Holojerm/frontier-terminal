@@ -342,15 +342,34 @@ describe('vendor-md + sec lane', () => {
     const out = parseMetaPricingMd(fixtureText('fixtures/pricing/meta-pricing.md'))
     expect(VendorMdPricingOutput.safeParse(out).success).toBe(true)
     const by = Object.fromEntries(out.rows.map((r) => [r.model_slug, r]))
-    expect(Object.keys(by)).toEqual([
-      'muse-spark-1.1',
-      'muse-spark-1.2',
-      'muse-spark-1.2-contributor',
-      'muse-spark-1.3',
-      'muse-spark-1.3-contributor',
-      'muse-wonder-1.0',
+    expect(out.rows.map((r) => modelKey(r.provider, r.model_slug, r.tier))).toEqual([
+      modelKey('meta', 'muse-ember-1.0', null),
+      modelKey('meta', 'muse-ember-1.0', 'long_context'),
+      modelKey('meta', 'muse-spark-1.1', null),
+      modelKey('meta', 'muse-spark-1.2', null),
+      modelKey('meta', 'muse-spark-1.2-contributor', null),
+      modelKey('meta', 'muse-spark-1.3', null),
+      modelKey('meta', 'muse-spark-1.3-contributor', null),
+      modelKey('meta', 'muse-wonder-1.0', null),
     ])
-    expect(out.rows.every((r) => r.provider === 'meta' && r.tier === null)).toBe(true)
+    expect(out.rows.every((r) => r.provider === 'meta')).toBe(true)
+    expect(out.rows.filter((r) => r.tier !== null).map((r) => r.model_slug)).toEqual([
+      'muse-ember-1.0',
+    ])
+    // "| Cached input | $0.004 | $0.012 |", "| Input | $0.10 | $0.30 |", "| Output | $0.50 | $1.50 |"
+    const ember = out.rows.filter((r) => r.model_slug === 'muse-ember-1.0')
+    expect(ember.find((r) => r.tier === null)).toMatchObject({
+      input_per_mtok: 0.1,
+      cached_input_per_mtok: 0.004,
+      output_per_mtok: 0.5,
+      notes: 'Standard mode; up to 200K input tokens',
+    })
+    expect(ember.find((r) => r.tier === 'long_context')).toMatchObject({
+      input_per_mtok: 0.3,
+      cached_input_per_mtok: 0.012,
+      output_per_mtok: 1.5,
+      notes: 'Standard mode; long context: over 200K input tokens, billed on the whole request',
+    })
     expect(by['muse-wonder-1.0']).toMatchObject({
       input_per_mtok: 4,
       cached_input_per_mtok: 0.2,
@@ -388,6 +407,41 @@ describe('vendor-md + sec lane', () => {
     const text = fixtureText('fixtures/pricing/meta-pricing.md').replace(
       '| Usage        | Contributor mode (per 1M tokens) | Standard mode (per 1M tokens) |\n|',
       '| Usage        | Contributor mode (per 1M tokens) | Price (per 1M tokens) |\n|',
+    )
+    expect(() => parseMetaPricingMd(text)).toThrow('unrecognized header')
+  })
+
+  test('meta: a line priced by request size reads its up-to/over columns by name, in either order', () => {
+    const current = fixtureText('fixtures/pricing/meta-pricing.md')
+    const lines = current.split('\n')
+    const ember = lines.indexOf('### Muse Ember')
+    expect(ember).toBeGreaterThan(-1)
+    const swapped = lines
+      .map((line, i) => {
+        const cells = line.split('|')
+        // Only Muse Ember's table: the first five-cell rows after its heading.
+        if (i < ember || i > ember + 12 || cells.length !== 5) return line
+        return [cells[0], cells[1], cells[3], cells[2], cells[4]].join('|')
+      })
+      .join('\n')
+    expect(swapped).toContain(
+      '| Over 200K input tokens (per 1M tokens) | Up to 200K input tokens (per 1M tokens) |',
+    )
+    expect(parseMetaPricingMd(swapped)).toEqual(parseMetaPricingMd(current))
+  })
+
+  test('meta: a size-priced line naming a Contributor id fails, since the table has no Contributor column', () => {
+    const text = fixtureText('fixtures/pricing/meta-pricing.md').replace(
+      'Model: `muse-ember-1.0`, in Standard mode only.',
+      'Models: `muse-ember-1.0` in Standard mode; `muse-ember-1.0-contributor` in Contributor mode.',
+    )
+    expect(() => parseMetaPricingMd(text)).toThrow('no column for')
+  })
+
+  test('meta: up-to and over columns with different thresholds are not a size-priced table', () => {
+    const text = fixtureText('fixtures/pricing/meta-pricing.md').replace(
+      'Over 200K input tokens (per 1M tokens)',
+      'Over 128K input tokens (per 1M tokens)',
     )
     expect(() => parseMetaPricingMd(text)).toThrow('unrecognized header')
   })
@@ -445,10 +499,14 @@ describe('vendor-md + sec lane', () => {
     expect(out.rows.find((r) => r.model_slug === 'muse-spark-1.3-contributor')!.notes).toBe(
       'Muse Spark 1.3 Contributor; Model API: Contributor mode',
     )
-    // The catalog and the price list key the same ids, so the two pages join on modelKey.
+    // The catalog and the price list key the same ids, so the two pages join on
+    // modelKey. Muse Ember (priced since 2026-11-09) is the exception until its
+    // own page is registered as a catalog join source.
     const priced = parseMetaPricingMd(fixtureText('fixtures/pricing/meta-pricing.md')).rows
     expect(out.rows.map((r) => modelKey(r.provider, r.model_slug, r.tier))).toEqual(
-      priced.map((r) => modelKey(r.provider, r.model_slug, r.tier)),
+      priced
+        .filter((r) => r.model_slug !== 'muse-ember-1.0')
+        .map((r) => modelKey(r.provider, r.model_slug, r.tier)),
     )
   })
 
