@@ -10,6 +10,7 @@ import * as tables from '#server/db/schema'
 import type { ExtensionDb } from '#server/utils/extensions'
 
 import { launchCoverage } from '../pipeline/launch-watch'
+import { countConfirmed } from './subscribers'
 
 export async function collectTerminalCounters(
   db: ExtensionDb,
@@ -53,5 +54,6 @@ export async function collectTerminalCounters(
     lastFailureMs: await lastTick('', true),
     lastTripwireRunMs: await lastTick('tripwire', false),
     launchStaleCells: coverage.stale_cells.length,
+    subscribersConfirmed: await countConfirmed(db),
   }
 }

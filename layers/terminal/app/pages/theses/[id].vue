@@ -76,6 +76,7 @@ useSeo({
       >
         Read the journal page on GitHub
       </UButton>
+      <TerminalSubscribeForm />
     </template>
 
     <template v-if="thesis && data">

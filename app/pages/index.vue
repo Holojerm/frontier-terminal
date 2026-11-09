@@ -281,5 +281,6 @@ const openIncidents = computed(() =>
         />
       </TerminalPanel>
     </div>
+    <TerminalSubscribeForm />
   </TerminalPage>
 </template>

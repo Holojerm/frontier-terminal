@@ -43,6 +43,10 @@ useSeo({
     error-title="Theses didn’t load"
     error-body="We won’t show an old status in its place. Try reloading in a minute."
   >
+    <template #header>
+      <TerminalSubscribeForm />
+    </template>
+
     <template v-if="theses">
       <TerminalGap
         v-if="theses.theses.length === 0"

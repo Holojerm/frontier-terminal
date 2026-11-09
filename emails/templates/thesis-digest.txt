@@ -29,4 +29,14 @@ No claim changed status and nothing was rated this week.
 {{/theses}}
 Theses: {{thesesUrl}}
 Generated {{generated}}
+{{#owner}}
+{{/owner}}
+{{^owner}}
+{{#unsubscribeUrl}}
+You get this every Monday because you subscribed. Unsubscribe: {{unsubscribeUrl}}
+{{/unsubscribeUrl}}
+{{^unsubscribeUrl}}
+This is a sample of the weekly digest.
+{{/unsubscribeUrl}}
+{{/owner}}
 {{appUrl}}

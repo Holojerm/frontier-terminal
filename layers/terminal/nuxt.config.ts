@@ -12,6 +12,15 @@ export default defineNuxtConfig({
     // skipped. NUXT_OWNER_EMAIL_TO / NUXT_OWNER_EMAIL_FROM in [vars]; not secrets.
     ownerEmailTo: '',
     ownerEmailFrom: '',
+    // Public digest subscriptions (layers/terminal/server/utils/subscribe-config.ts).
+    // Both set = the subscribe form renders, /api/subscribe/* answers and the
+    // weekly digest fans out to confirmed subscribers through Resend. Either
+    // empty = the whole feature is off: no form, those routes 404, no fan-out.
+    // The key is a Worker secret (`op read "op://…" | bunx wrangler secret put
+    // NUXT_RESEND_API_KEY`); the from address is a var, on a domain verified in
+    // Resend. NUXT_RESEND_API_KEY / NUXT_SUBSCRIBE_EMAIL_FROM.
+    resendApiKey: '',
+    subscribeEmailFrom: '',
     // Derives every alert webhook's signing secret (layers/terminal/server/utils/webhook-sign.ts).
     // Unset = the webhook outbox does nothing. 32+ characters; rotating it
     // invalidates every webhook secret. A Worker secret:

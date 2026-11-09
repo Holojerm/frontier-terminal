@@ -64,8 +64,9 @@
       </tr>
     </table>
     <template #footnote>
-      Sent every Monday by the theses:digest cron. Confirm or reject a material event by adding it
-      to the claim's confirmations in layers/terminal/server/theses/. Generated <Raw>{{generated}}</Raw>.
+      <Raw>{{#owner}}</Raw>Sent every Monday by the theses:digest cron. Confirm or reject a material event by adding it
+      to the claim's confirmations in layers/terminal/server/theses/. Generated <Raw>{{generated}}</Raw>.<Raw>{{/owner}}</Raw>
+      <Raw>{{^owner}}</Raw>Generated <Raw>{{generated}}</Raw>. <Raw>{{#unsubscribeUrl}}</Raw>You get this every Monday because you subscribed. <a href="{{unsubscribeUrl}}" class="text-copy">Unsubscribe</a>.<Raw>{{/unsubscribeUrl}}</Raw><Raw>{{^unsubscribeUrl}}</Raw>This is a sample of the weekly digest.<Raw>{{/unsubscribeUrl}}</Raw><Raw>{{/owner}}</Raw>
     </template>
   </EmailLayout>
 </template>

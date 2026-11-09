@@ -8,8 +8,10 @@ the page we read it from and shows when we read it. Not investment advice.
 
 Built on [nuxt-cf-template](https://github.com/Holojerm/nuxt-cf-template): Nuxt 4 and NuxtUI v4
 on Cloudflare Workers, with D1 (SQLite via Drizzle), KV, and R2. There are no accounts, sign-in,
-or payments. We removed the template's auth, billing, email, blog, uploads, feedback, admin, and
-analytics code. What's left is the app shell, the SEO layer, the CI gates, and the ops/fleet
+or payments. The one thing it stores about a person is the email address of someone who
+subscribes to the weekly thesis digest (double opt-in, sent through Resend, off until a key is
+set). We removed the template's auth, billing, blog, uploads, feedback, admin, and analytics
+code. What's left is the app shell, the SEO layer, the CI gates, and the ops/fleet
 contract.
 
 ## Run it

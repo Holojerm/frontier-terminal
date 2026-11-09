@@ -116,6 +116,10 @@ export default defineConfig({
       NUXT_TYPECHECK: 'false',
       NUXT_PORT: String(PORT),
       NUXT_HUB_DIR: HUB_DIR,
+      // Not real values: they only switch the subscribe form on so axe and the
+      // CSP suite see it. Nothing in these suites submits it.
+      NUXT_RESEND_API_KEY: 'browser-suite-not-a-key',
+      NUXT_SUBSCRIBE_EMAIL_FROM: 'digest@example.test',
     },
   },
 })

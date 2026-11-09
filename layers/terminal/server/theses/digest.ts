@@ -99,6 +99,13 @@ export interface DigestInput {
   now: Date
   appName: string
   appUrl: string
+  /**
+   * `owner` (the default) is the inbox copy with the confirmations queue and the
+   * API link. `public` is the subscriber and sample copy: no queue, a link to
+   * the theses page, and `unsubscribeUrl` in the footnote when there is one.
+   */
+  audience?: 'owner' | 'public'
+  unsubscribeUrl?: string
 }
 
 export function buildThesisDigest(input: DigestInput): RenderedEmail & { subject: string } {
@@ -152,7 +159,7 @@ export function buildThesisDigest(input: DigestInput): RenderedEmail & { subject
     })
     failed += gaps.length
     rated += verdicts.length
-    const awaiting = thesis.claims.flatMap((claim) =>
+    const awaiting = (input.audience === 'public' ? [] : thesis.claims).flatMap((claim) =>
       claim.verdicts
         .filter(
           (v) =>
@@ -176,6 +183,7 @@ export function buildThesisDigest(input: DigestInput): RenderedEmail & { subject
     }
   })
 
+  const owner = input.audience !== 'public'
   const head = theses.map((t) => `${t.name.split(' ')[0]}: ${t.counts}`).join('; ')
   const tail = moved > 0 ? ` · ${moved} claim${moved === 1 ? '' : 's'} moved` : ''
   const summary = `${head}${tail}`
@@ -184,7 +192,9 @@ export function buildThesisDigest(input: DigestInput): RenderedEmail & { subject
     appUrl: input.appUrl,
     summary,
     generated: formatDigestTime(input.now),
-    thesesUrl: `${input.appUrl}/api/theses`,
+    thesesUrl: `${input.appUrl}${owner ? '/api/theses' : '/theses'}`,
+    owner,
+    unsubscribeUrl: input.unsubscribeUrl ?? '',
     quiet: moved === 0 && rated === 0 && failed === 0,
     theses,
   })
