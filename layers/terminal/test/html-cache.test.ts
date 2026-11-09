@@ -73,6 +73,8 @@ describe('isCacheableDocument', () => {
     expect(isCacheableDocument({ method: 'GET', path: '/api/prices' })).toBe(false)
     expect(isCacheableDocument({ method: 'GET', path: '/_nuxt/entry.js' })).toBe(false)
     expect(isCacheableDocument({ method: 'GET', path: '/design-system' })).toBe(false)
+    expect(isCacheableDocument({ method: 'GET', path: '/subscribe/confirm' })).toBe(false)
+    expect(isCacheableDocument({ method: 'GET', path: '/subscribe/unsubscribe?u=x' })).toBe(false)
   })
 })
 

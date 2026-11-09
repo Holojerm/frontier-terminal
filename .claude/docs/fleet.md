@@ -25,7 +25,7 @@ Three pieces:
   contributor from a Nitro plugin with `registerFleetExtraContributor({ key, collect })`
   (`server/utils/extensions.ts`, a trimmed copy of the template's registry). The pipeline's
   numbers are registered that way by `layers/terminal/server/plugins/fleet-counters.ts`
-  and land in `extra`.
+  and land in `extra` (including `subscribersConfirmed`, the confirmed digest subscribers).
 - **Ops alerting.** Anything worth waking the owner up for calls
   `recordOpsEvent(db, { kind, detail, path })` — the error plugin already does
   for every 5xx. The app sends no mail: `GET /api/fleet` reports the last 24 h

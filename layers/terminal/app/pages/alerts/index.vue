@@ -203,6 +203,7 @@ const criticalFeed = `/alerts.xml?${CRITICAL_FEED_QUERY}`
         >
         keeps only critical alerts.
       </p>
+      <TerminalSubscribeForm />
     </template>
 
     <TerminalTabs :tabs="tabs">

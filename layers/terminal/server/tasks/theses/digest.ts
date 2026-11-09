@@ -1,19 +1,20 @@
 // Cron task: the weekly thesis digest, Monday 13:00 UTC (layers/terminal/server/theses/digest.ts).
-// Mailed through the OWNER_EMAIL send_email binding; with no binding configured
-// it logs and returns. A send that fails throws, and withHeartbeat spools it as
-// task_failed, which the fleet dashboard reports.
+// The owner's copy goes through the OWNER_EMAIL send_email binding; with no
+// binding configured it is skipped. Confirmed subscribers get the public copy
+// through Resend, and only when NUXT_RESEND_API_KEY and the from address are set.
+// A send that fails throws, and withHeartbeat spools it as task_failed, which
+// the fleet dashboard reports.
 
 import { db } from '@nuxthub/db'
-import { and, eq, gte } from 'drizzle-orm'
 
-import sourcesYaml from 'raw:~~/sources.yaml'
+import { getIdentitySalt } from '#server/utils/identity'
 
-import * as tables from '#server/db/schema'
-import { DIGEST_DAYS, buildThesisDigest } from '../../theses/digest'
+import { buildThesisDigest } from '../../theses/digest'
+import { loadDigestInput } from '../../utils/digest-input'
 import { getOwnerMailer } from '../../utils/owner-mail'
-import { terminalStamps } from '../../utils/terminal-cache'
-import { queryContext } from '../../utils/terminal-db'
-import { queryTheses } from '../../utils/terminal-theses'
+import { subscribeConfig } from '../../utils/subscribe-config'
+import { sendSubscriberDigest } from '../../utils/subscriber-mail'
+import { purgeStalePending } from '../../utils/subscribers'
 import { withHeartbeat } from '../../utils/task-heartbeat'
 
 interface CloudflareTaskContext {
@@ -28,36 +29,38 @@ const task = defineTask({
   async run({ context }) {
     const env = (context as CloudflareTaskContext | undefined)?.cloudflare?.env
     const mailer = getOwnerMailer(env)
-    if (!mailer) {
+    const config = useRuntimeConfig()
+    const subscribe = subscribeConfig(config as Parameters<typeof subscribeConfig>[0])
+    if (!mailer && !subscribe) {
       console.warn(JSON.stringify({ kind: 'thesis_digest_unconfigured' }))
       return { result: { skipped: 'unconfigured' } }
     }
-    const now = new Date()
-    const since = new Date(now.getTime() - DIGEST_DAYS * 86_400_000).toISOString()
-    const [data, changes, failedRuns] = await Promise.all([
-      queryTheses(
-        db,
-        queryContext(sourcesYaml, (await terminalStamps(db)).poll, () => now),
-      ),
-      db
-        .select()
-        .from(tables.claimStatusChanges)
-        .where(gte(tables.claimStatusChanges.changed_at, since)),
-      db
-        .select({
-          recipe_id: tables.recipeRuns.recipe_id,
-          started_at: tables.recipeRuns.started_at,
-          detail: tables.recipeRuns.detail,
-        })
-        .from(tables.recipeRuns)
-        .where(
-          and(eq(tables.recipeRuns.status, 'failed'), gte(tables.recipeRuns.started_at, since)),
-        ),
-    ])
-    const { appName, appUrl } = useRuntimeConfig().public
-    const digest = buildThesisDigest({ data, changes, failedRuns, now, appName, appUrl })
-    await mailer(digest)
-    return { result: { sent: true, subject: digest.subject } }
+    const input = await loadDigestInput(new Date())
+    const { appName, appUrl } = config.public
+    const result: Record<string, unknown> = {}
+
+    if (mailer) {
+      const digest = buildThesisDigest({ ...input, appName, appUrl })
+      await mailer(digest)
+      result.sent = true
+      result.subject = digest.subject
+    }
+
+    if (subscribe) {
+      const purged = await purgeStalePending(db, input.now)
+      const fan = await sendSubscriberDigest(db, subscribe, await getIdentitySalt(db), {
+        ...input,
+        appName,
+        appUrl: subscribe.appUrl,
+      })
+      result.subscribers = { ...fan, purged }
+      if (fan.failedBatches > 0) {
+        throw new Error(
+          `subscriber digest: ${fan.failedBatches} batch(es) failed, ${fan.sent}/${fan.recipients} sent`,
+        )
+      }
+    }
+    return { result }
   },
 })
 

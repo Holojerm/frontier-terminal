@@ -31,6 +31,7 @@ describe('collectTerminalCounters', () => {
       lastFailureMs: 0,
       lastTripwireRunMs: 0,
       launchStaleCells: 0,
+      subscribersConfirmed: 0,
     })
   })
 

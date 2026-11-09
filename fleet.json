@@ -2,7 +2,7 @@
   "schema": 1,
   "slug": "frontier-terminal",
   "name": "Frontier Terminal",
-  "stage": "unreleased",
+  "stage": "live",
   "urls": {
     "prod": "https://frontierterm.com"
   },
@@ -153,7 +153,8 @@
     "NUXT_SOCIAL_ENABLED",
     "NUXT_PRESS_LIST",
     "NUXT_GDELT_TOKEN",
-    "NUXT_WEBHOOK_SIGNING_KEY"
+    "NUXT_WEBHOOK_SIGNING_KEY",
+    "NUXT_RESEND_API_KEY"
   ],
   "links": {
     "github": "https://github.com/Holojerm/frontier-terminal"

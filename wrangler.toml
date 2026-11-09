@@ -266,6 +266,9 @@ NUXT_PUBLIC_APP_URL = "https://frontierterm.com"
 # anyone's personal address either — see the block above.
 NUXT_OWNER_EMAIL_TO = "alerts@frontierterm.com"
 NUXT_OWNER_EMAIL_FROM = "frontier-terminal@frontierterm.com"
+# Public digest subscriptions: the from address on a domain verified in Resend.
+# Inert until the NUXT_RESEND_API_KEY secret below is also set.
+NUXT_SUBSCRIBE_EMAIL_FROM = "digest@frontierterm.com"
 # Which queue the EVENTS consumer owns. MUST equal `queue` in [[queues.consumers]]
 # above (layers/terminal/nuxt.config.ts says why it is a var).
 NUXT_EVENTS_QUEUE_NAME = "frontier-terminal-events"
@@ -294,3 +297,8 @@ NUXT_INDEXNOW_KEY = "fe2738e740b8c6b06a20d76ab1877559"
 #                                rankings behind the demand-share panel
 #                                (layers/terminal/server/pipeline/fetch.ts). Unset = that source is
 #                                recorded 'skipped' each tick, never fetched anonymously.
+#   NUXT_RESEND_API_KEY          Resend API key for public digest subscriptions
+#                                (layers/terminal/server/utils/resend.ts). Needs the
+#                                domain of NUXT_SUBSCRIBE_EMAIL_FROM verified in Resend.
+#                                Unset = no subscribe form, /api/subscribe/* and /digest 404,
+#                                no digest fan-out; the owner digest is unaffected.
