@@ -9,7 +9,11 @@ import { and, desc, eq, lt, max, sql } from 'drizzle-orm'
 import * as tables from '#server/db/schema'
 import { contentHash, contentHashOfText } from '../../pipeline/contracts'
 import type { SourceFetcher } from '../../pipeline/fetch'
-import { isRateLimitRun, rateLimitAlertDue } from '../../pipeline/rate-limit'
+import {
+  isRateLimitRun,
+  rateLimitAlertDue,
+  RECIPE_RATE_LIMIT_ALERT_AFTER_MS,
+} from '../../pipeline/rate-limit'
 import type { RawStore } from '../../pipeline/refresh'
 import { chunk, D1_MAX_BOUND_PARAMS, type PipelineDb } from '../../pipeline/store'
 import { recordOpsEvent } from '#server/utils/ops'
@@ -163,8 +167,9 @@ async function runOne(
   return { recipe_id: recipe.id, status: 'ok', detail: null, observations: rows.length, url, hash }
 }
 
-// A 429 follows the sources' policy (pipeline/rate-limit.ts): npm's API
-// sheds load for a tick now and then, and a lone 429 is not worth a page.
+// A 429 follows the sources' policy (pipeline/rate-limit.ts), with the streak
+// measured in survey ticks: npm's API sheds load for a tick or two now and
+// then, and a short run of 429s is not worth a page.
 async function failureAlertDue(
   db: PipelineDb,
   recipeId: string,
@@ -187,7 +192,7 @@ async function failureAlertDue(
     )
     .orderBy(desc(tables.recipeRuns.started_at))
     .limit(50)
-  return rateLimitAlertDue(history, startedAt.getTime())
+  return rateLimitAlertDue(history, startedAt.getTime(), RECIPE_RATE_LIMIT_ALERT_AFTER_MS)
 }
 
 export async function runRecipes(
