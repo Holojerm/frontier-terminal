@@ -47,6 +47,17 @@ export default defineAppConfig({
       },
     },
 
+    // DESIGN.md › Typography › Scale: nothing sets below text-xs. NuxtUI's
+    // `sm` and `xs` badges set 10px and 8px.
+    badge: {
+      variants: {
+        size: {
+          xs: { base: 'text-xs' },
+          sm: { base: 'text-xs' },
+        },
+      },
+    },
+
     // DESIGN.md › Component behavior › Long-form content.
     //
     // NuxtUI registers its Prose* components as soon as @nuxt/content is

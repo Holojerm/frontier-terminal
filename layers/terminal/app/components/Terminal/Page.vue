@@ -83,7 +83,7 @@ withDefaults(
       Data from the last {{ LICENSE_WINDOW_DAYS }} days is {{ DATA_LICENSE.short }}. Older data is
       {{ HISTORY_LICENSE.short }}, except what we published before {{ LICENSE_SPLIT_EFFECTIVE }},
       which stays {{ DATA_LICENSE.short }}.
-      <NuxtLink to="/license" class="text-primary underline underline-offset-2"
+      <NuxtLink to="/license" class="py-1.5 text-primary underline underline-offset-2"
         >How you can reuse it</NuxtLink
       >.
     </p>

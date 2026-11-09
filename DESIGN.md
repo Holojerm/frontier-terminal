@@ -275,6 +275,10 @@ wider per character: an `h1` of "Frontier Terminal" at 3rem mono overruns a phon
 says anything. Body copy stays at `text-base` with a 1.65 line height — looser than Tailwind's
 default, because the prose pages are for reading. Never set arbitrary sizes (`text-[13px]`).
 
+`text-xs` is also the floor: no text sets smaller, on a phone or anywhere. NuxtUI's `sm` and `xs`
+badges and SVG chart labels were the places that did (10px and 8px), so `app.config.ts` sets both
+badge sizes to `text-xs` and charts draw their labels at 12.
+
 ### Roles
 
 A size names a role, and each role has one size. The primitives apply these; a page never
@@ -516,6 +520,11 @@ nav items, footer rows, buttons — don't need it.
   Every icon-only control gets `min-touch`; `design:check` enforces that one, because an
   icon-only button is the case that ends up smallest and is hardest to spot by eye.
   Anything pinned to a viewport edge or acting as a primary mobile action gets it too.
+
+  Links inside a table clear the 24px floor with vertical padding, not bigger type: `TerminalTable`
+  gives every inline `td`/`th` link `py-1.5`, and an inline box spends that padding outside the
+  line, so rows keep their density. A link that is a flex item or `inline-flex` carries
+  `min-h-6` itself.
 - **Motion:** `prefers-reduced-motion` is honored globally in `main.css` (see Motion) — no
   component should re-implement it.
 

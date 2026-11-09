@@ -67,7 +67,10 @@ const quietReason = computed(() => {
             {{ stamps.relative(overview.latest_fetched_at) }}
           </time>
         </span>
-        <NuxtLink to="/data#coverage" class="underline underline-offset-2 hover:text-default">
+        <NuxtLink
+          to="/data#coverage"
+          class="-my-1.5 py-1.5 underline underline-offset-2 hover:text-default"
+        >
           {{ movement.sources_total }} sources
         </NuxtLink>
       </span>
