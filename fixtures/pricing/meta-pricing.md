@@ -1,6 +1,6 @@
 # Pricing and rate limits
 
-Use our models with pay-as-you-go billing on Meta Model API and in [Muse Code](https://dev.meta.ai/docs/muse-code), or in Muse Code with a monthly [subscription](https://dev.meta.ai/docs/muse-code/subscriptions). This page covers pay-as-you-go: Model API bills text models per token, image generation per image, Muse Voice Transcribe by the hour of audio processed, and Segment Anything Model (SAM) per image or video frame segmented, with no minimums or upfront commitment.
+Use our models with pay-as-you-go billing on Meta Model API and in [Muse Code](https://dev.meta.ai/docs/muse-code), or in Muse Code with a monthly [subscription](https://dev.meta.ai/docs/muse-code/subscriptions). This page covers pay-as-you-go: Model API bills the reasoning models (Muse Wonder and Muse Spark) per token, image generation per image, Muse Voice Transcribe by the hour of audio processed, and Segment Anything Model (SAM) per image or video frame segmented, with no minimums or upfront commitment.
 
 ## Pricing modes
 
@@ -24,21 +24,21 @@ In [Muse Code](https://dev.meta.ai/docs/muse-code), subscriptions default to Con
 
 Model: `muse-wonder-1.0`.
 
-| Usage        | Standard mode (per 1M tokens) | Contributor mode (per 1M tokens) |
-| :----------- | :---------------------------- | :------------------------------- |
-| Cached input | $0.20                         | Not available                    |
-| Input        | $4.00                         | Not available                    |
-| Output       | $20.00                        | Not available                    |
+| Usage        | Contributor mode (per 1M tokens) | Standard mode (per 1M tokens) |
+| :----------- | :------------------------------- | :---------------------------- |
+| Cached input | Not available                    | $0.20                         |
+| Input        | Not available                    | $4.00                         |
+| Output       | Not available                    | $20.00                        |
 
 ### Muse Spark
 
 Models: `muse-spark-1.3`, `muse-spark-1.2`, and `muse-spark-1.1` in Standard mode; `muse-spark-1.3-contributor` and `muse-spark-1.2-contributor` in Contributor mode. Muse Spark 1.1 is Standard mode only.
 
-| Usage        | Standard mode (per 1M tokens) | Contributor mode (per 1M tokens) |
-| :----------- | :---------------------------- | :------------------------------- |
-| Cached input | $0.15                         | $0.002                           |
-| Input        | $1.25                         | $0.10                            |
-| Output       | $4.25                         | $0.20                            |
+| Usage        | Contributor mode (per 1M tokens) | Standard mode (per 1M tokens) |
+| :----------- | :------------------------------- | :---------------------------- |
+| Cached input | $0.002                           | $0.15                         |
+| Input        | $0.10                            | $1.25                         |
+| Output       | $0.20                            | $4.25                         |
 
 ### Token pricing notes
 
@@ -46,7 +46,7 @@ These apply to the token-priced models above, Muse Wonder and Muse Spark.
 
 - **Cached input costs less**: When part of your prompt matches a [cached prefix](https://dev.meta.ai/docs/prompt-caching), you pay the cached-input rate for those tokens. Check `cached_tokens` in the response to see how many were served from cache.
 - **No long-context premium**: you pay the same rate whether your context window is mostly empty or almost full.
-- **Web search grounding**: **$2.50 per 1,000 search queries**, in addition to the request's token cost. This applies to the [`web_search` tool](https://dev.meta.ai/docs/search-grounding) on text models such as [Muse Wonder](https://dev.meta.ai/docs/models#muse-wonder) and [Muse Spark](https://dev.meta.ai/docs/models#muse-spark).
+- **Web search grounding**: **$2.50 per 1,000 search queries**, in addition to the request's token cost. This applies to the [`web_search` tool](https://dev.meta.ai/docs/search-grounding) on the reasoning models, [Muse Wonder](https://dev.meta.ai/docs/models#muse-wonder) and [Muse Spark](https://dev.meta.ai/docs/models#muse-spark).
 
 > **NOTE: Muse Image search is included**
 >
@@ -72,7 +72,7 @@ Streaming and non-streaming transcription are priced the same. Zero data retenti
 
 ### Segment Anything Model 3.1
 
-[SAM 3.1](https://dev.meta.ai/docs/models#sam-3) segmentation is billed per image and per video frame, not per token. The same prices apply to streaming and non-streaming requests.
+[SAM 3.1](https://dev.meta.ai/docs/models#sam-3) segmentation is billed per image and per video frame, not per token. The same prices apply to streaming and non-streaming requests. Each video request is billed for at least 50 frames, so a clip or tracking range shorter than 50 frames is billed as 50. The response's `usage.video_frames_processed` reports the frames billed for that request.
 
 | Usage              | Price                  |
 | :----------------- | :--------------------- |
@@ -93,13 +93,13 @@ Rate limits apply **per team, not per API key**: requests, tokens, and streams f
 | `muse-spark-1.1`             | 3,000                     | 4,000,000               |                                                 |
 | `sam-3.1`                    | 3,000                     | None                    |                                                 |
 | `muse-image-1.0`             | 150                       | None                    |                                                 |
-| `muse-voice-transcribe-1.0`  | None                      | None                    | 128 concurrent streams; 16,000 streams per hour |
+| `muse-voice-transcribe-1.0`  | None                      | None                    | 256 concurrent streams; 16,000 streams per hour |
 
 [SAM 3.1](https://dev.meta.ai/docs/models#sam-3) is [billed per image or frame](https://dev.meta.ai/docs/pricing-rate-limits#sam-pricing) and [Muse Image](https://dev.meta.ai/docs/models#muse-image) is [priced per image](https://dev.meta.ai/docs/pricing-rate-limits#image-generation), so neither has a TPM limit.
 
 [Muse Voice Transcribe](https://dev.meta.ai/docs/speech-to-text) is [billed by audio processed](https://dev.meta.ai/docs/pricing-rate-limits#muse-voice-transcribe-pricing), so it's limited by streams rather than requests or tokens. **Concurrent streams** caps how many transcription sessions you hold open at once; **streams per hour** caps how many you start. Realtime and file transcription share the same budget.
 
-Token usage counts only **your** input and output tokens. Meta injects a small amount of steering context into every prompt (a system prompt and related scaffolding); those injected tokens are not billed and are excluded from the token counts reported in your `usage` and by the [token-counting endpoints](https://dev.meta.ai/docs/token-counting#injected-tokens).
+Token usage counts only **your** input and output tokens. Meta injects a small amount of steering context into every prompt (a system prompt and related scaffolding); those injected tokens are not billed and are excluded from the token counts reported in your `usage` and by the [token-counting endpoints](https://dev.meta.ai/docs/prompt-caching#injected-tokens).
 
 ### Background responses
 
@@ -111,7 +111,7 @@ When you exceed a limit, the API rejects the request. Requests succeed again onc
 
 ### Retry on 429 responses
 
-**Retry strategy:** Use exponential backoff with jitter. Start with a short delay such as 500 ms, double it after each consecutive rate-limit response, and add random jitter to avoid thundering-herd effects across concurrent clients. If the response includes a `Retry-After` header, wait at least that long.
+**Retry strategy:** Use exponential backoff with jitter. Start with a short delay such as 500 ms, double it after each consecutive rate-limit response, and add random jitter so concurrent clients don't all retry at the same moment. If the response includes a `Retry-After` header, wait at least that long.
 
 ### Read rate-limit headers
 
@@ -132,5 +132,5 @@ A realtime stream rejected for exceeding a stream limit closes with `1013`. A re
 
 ## See also
 
-- [Models](https://dev.meta.ai/docs/models): every model line, its versions, and where each one is available
+- [Models](https://dev.meta.ai/docs/models): every model line, with links to each model's versions and availability
 - [Subscriptions](https://dev.meta.ai/docs/muse-code/subscriptions): Muse Code plans, an alternative to pay-as-you-go

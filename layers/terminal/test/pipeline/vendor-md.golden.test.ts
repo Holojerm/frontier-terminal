@@ -386,10 +386,28 @@ describe('vendor-md + sec lane', () => {
 
   test('meta: a reshaped token table fails loudly rather than dropping the line', () => {
     const text = fixtureText('fixtures/pricing/meta-pricing.md').replace(
-      '| Usage        | Standard mode (per 1M tokens) | Contributor mode (per 1M tokens) |\n|',
-      '| Usage        | Price (per 1M tokens) | Contributor mode (per 1M tokens) |\n|',
+      '| Usage        | Contributor mode (per 1M tokens) | Standard mode (per 1M tokens) |\n|',
+      '| Usage        | Contributor mode (per 1M tokens) | Price (per 1M tokens) |\n|',
     )
     expect(() => parseMetaPricingMd(text)).toThrow('unrecognized header')
+  })
+
+  test('meta: the mode columns are read by name, so either column order gives the same rows', () => {
+    // Before 2026-11-09 the page printed Standard first; the capture prints Contributor first.
+    const current = fixtureText('fixtures/pricing/meta-pricing.md')
+    const swapped = current
+      .split('\n')
+      .map((line) => {
+        const cells = line.split('|')
+        if (cells.length !== 5 || !/^\s*(Usage|:-+|Cached input|Input|Output)\s*$/.test(cells[1]!))
+          return line
+        return [cells[0], cells[1], cells[3], cells[2], cells[4]].join('|')
+      })
+      .join('\n')
+    expect(swapped).toContain(
+      '| Standard mode (per 1M tokens) | Contributor mode (per 1M tokens) |',
+    )
+    expect(parseMetaPricingMd(swapped)).toEqual(parseMetaPricingMd(current))
   })
 
   const metaSide = (id: string) =>
