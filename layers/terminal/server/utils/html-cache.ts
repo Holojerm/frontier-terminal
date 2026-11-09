@@ -32,6 +32,18 @@
 export const HTML_CACHE_TTL_SECONDS = 2400
 
 /**
+ * What a reader's browser may do with a cached document: reuse it for a minute,
+ * the same window the JSON routes allow (TERMINAL_CACHE_CONTROL in
+ * terminal-handler.ts), so the two doors never disagree by more than that.
+ * Safe with the CSP because the policy is one static string per route
+ * (routeRules in nuxt.config.ts), with no per-response nonce to go stale. No
+ * `s-maxage`: Cloudflare does not edge-cache HTML on its own, and the stamp-keyed
+ * entry above is the shared cache. Set only on a 200 document the cache stores
+ * or serves, never on an error page.
+ */
+export const HTML_CLIENT_CACHE_CONTROL = 'public, max-age=60'
+
+/**
  * Where the original response headers ride while the entry is in the cache.
  *
  * The stored copy needs its own `Cache-Control` for the Cache API to keep it,

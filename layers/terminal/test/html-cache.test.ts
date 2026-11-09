@@ -13,6 +13,7 @@ import {
   htmlCacheKey,
   isCacheableDocument,
   isStorableResponse,
+  HTML_CLIENT_CACHE_CONTROL,
 } from '../server/utils/html-cache'
 
 describe('htmlCacheKey', () => {
@@ -132,5 +133,11 @@ describe('the storage contract', () => {
     // `public, max-age=...` on a document is precisely the browser-side
     // staleness this cache exists to avoid.
     expect(HEADER_SIDECAR).toMatch(/^x-/)
+  })
+
+  it('lets a browser reuse a document for one minute, never longer than the poll', () => {
+    const maxAge = Number(/max-age=(\d+)/.exec(HTML_CLIENT_CACHE_CONTROL)![1])
+    expect(maxAge).toBeLessThanOrEqual(60)
+    expect(HTML_CLIENT_CACHE_CONTROL).toMatch(/^public/)
   })
 })
