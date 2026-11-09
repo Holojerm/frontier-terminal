@@ -7,6 +7,10 @@ import { isRoutine8K, rootForm } from '../parsers/sec/forms'
 // rules, but only these bind. Each only lowers a severity, and only when every
 // change an alert cites is one the rule covers: a price cut cited beside a
 // launch is carried by the launch.
+//
+// A model removal that another page of the lab still lists
+// (still-listed.ts) is a page dropping a row, not a delisting: an alert that
+// cites only such removals is a ticker line, whatever model it names.
 
 interface PriceFields {
   provider?: string
@@ -50,6 +54,8 @@ export function clampRoutineAlerts<
   alerts: readonly A[],
   supplied: readonly ChangeRow[],
   tracked: ReadonlySet<string>,
+  /** Ids of model removals another page of the lab still lists. */
+  stillListed: ReadonlySet<string> = new Set(),
 ): { alerts: A[]; clamped: FloorClamp[] } {
   const byId = new Map(supplied.map((c) => [c.id, c]))
   const out: A[] = []
@@ -61,9 +67,11 @@ export function clampRoutineAlerts<
         ? null
         : cited.every(routine8K)
           ? 'an 8-K with routine items only'
-          : cited.every((c) => minorPriceChange(c, tracked))
-            ? 'a minor price change on a model the matrix does not track'
-            : null
+          : cited.every((c) => stillListed.has(c.id))
+            ? 'a model dropped from one page that another page of the lab still lists'
+            : cited.every((c) => minorPriceChange(c, tracked))
+              ? 'a minor price change on a model the matrix does not track'
+              : null
     if (alert.severity === 'info' || detail === null) {
       out.push(alert)
       continue

@@ -32,6 +32,8 @@ export type AlertGroundingReason =
   | 'unoffered-change-id'
   | 'ungrounded-number'
   | 'ungrounded-term'
+  // A still-listed model called delisted (still-listed.ts); runs after grounding.
+  | 'still-listed'
 
 export interface AlertGroundingRejection {
   alert: JudgeAlert
