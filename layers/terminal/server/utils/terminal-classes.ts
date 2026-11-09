@@ -149,7 +149,10 @@ export const MODEL_CLASS_MAP: ClassEntry[] = [
   // same page says "is recommended for new work." Economy sentence
   // re-transcribed 2026-11-06, when Meta moved its "Choose Muse Wonder or
   // Muse Spark" section (and with it "high-volume, latency-sensitive, or
-  // cost-sensitive work") off models.md to its own page.
+  // cost-sensitive work") off models.md to its own page. Economy re-mapped
+  // 2026-11-09, when Meta added Muse Ember, "built for high-volume, repeated
+  // work", and dropped "sub-agent tasks" from the Muse Spark sentence.
+  // Muse Ember has one version, muse-ember-1.0.
   {
     provider: 'meta',
     class: 'flagship',
@@ -161,9 +164,9 @@ export const MODEL_CLASS_MAP: ClassEntry[] = [
   {
     provider: 'meta',
     class: 'economy',
-    model_slug: 'muse-spark-1.3',
+    model_slug: 'muse-ember-1.0',
     basis:
-      "Muse Spark is Meta's model for agentic and coding work at scale, such as multi-step tool loops, software engineering assistants, sub-agent tasks, and long-context reasoning.",
+      'Muse Ember is the efficient execution model in the Muse family, built for high-volume, repeated work: sub-agent tasks, tool calls, routing, and processing large collections of images, files, and records.',
     basis_source_id: 'meta-models-md',
   },
   // Transcribed 2026-11-01, when Google's models page first served markdown;
@@ -244,7 +247,7 @@ export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string 
     provider: 'meta',
     class: 'balanced',
     reason:
-      'Meta’s models page lists two API text lines, Muse Wonder for capability and Muse Spark for cost-sensitive volume, and names no middle tier.',
+      'Meta’s models page lists three API text lines, Muse Wonder for capability, Muse Spark for agentic and coding work at scale, and Muse Ember for high-volume, repeated work. None is described as an intelligence-for-cost tradeoff.',
   },
   // Checked 2026-11-01 and again 2026-11-04 (pages unchanged) across
   // models.md, the model selection guide and each model's own page. Mistral

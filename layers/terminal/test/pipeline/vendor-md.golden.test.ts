@@ -469,6 +469,7 @@ describe('vendor-md + sec lane', () => {
       {
         'meta-muse-wonder-md': 'fixtures/pricing/meta-muse-wonder.md',
         'meta-muse-spark-md': 'fixtures/pricing/meta-muse-spark.md',
+        'meta-muse-ember-md': 'fixtures/pricing/meta-muse-ember.md',
       }[id]!,
     )
 
@@ -478,6 +479,7 @@ describe('vendor-md + sec lane', () => {
     // Muse Wonder Full (Muse Code only), the per-image/per-hour lines and the
     // open-weight lines are not API text SKUs.
     expect(out.rows.map((r) => r.model_slug)).toEqual([
+      'muse-ember-1.0',
       'muse-spark-1.1',
       'muse-spark-1.2',
       'muse-spark-1.2-contributor',
@@ -499,14 +501,26 @@ describe('vendor-md + sec lane', () => {
     expect(out.rows.find((r) => r.model_slug === 'muse-spark-1.3-contributor')!.notes).toBe(
       'Muse Spark 1.3 Contributor; Model API: Contributor mode',
     )
+    // Muse Ember's models.md table prints no Context window; its page's At a glance does.
+    expect(out.rows.find((r) => r.model_slug === 'muse-ember-1.0')!.notes).toBe(
+      'Muse Ember; Model API: Standard mode',
+    )
     // The catalog and the price list key the same ids, so the two pages join on
-    // modelKey. Muse Ember (priced since 2026-11-09) is the exception until its
-    // own page is registered as a catalog join source.
+    // modelKey. The price list's one extra key is Muse Ember's long_context row,
+    // a tier of the same id.
     const priced = parseMetaPricingMd(fixtureText('fixtures/pricing/meta-pricing.md')).rows
     expect(out.rows.map((r) => modelKey(r.provider, r.model_slug, r.tier))).toEqual(
-      priced
-        .filter((r) => r.model_slug !== 'muse-ember-1.0')
-        .map((r) => modelKey(r.provider, r.model_slug, r.tier)),
+      priced.filter((r) => r.tier === null).map((r) => modelKey(r.provider, r.model_slug, r.tier)),
+    )
+  })
+
+  test('meta: a text line printing no Context window column still fails without a registered page', () => {
+    const models = fixtureText('fixtures/pricing/meta-models.md').replace(
+      '## Muse Image',
+      '## Muse Nova\n\n| Model ID | Input | Output |\n| :--- | :--- | :--- |\n| `muse-nova-1.0` | Text | Text |\n\n## Muse Image',
+    )
+    expect(() => parseMetaModelsMd(models, metaSide)).toThrow(
+      'Muse Nova: a text line with no page in META_LINE_PAGES',
     )
   })
 
