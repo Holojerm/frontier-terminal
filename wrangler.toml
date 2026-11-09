@@ -258,6 +258,9 @@ NUXT_PUBLIC_APP_NAME = "Frontier Terminal"
 # Canonical public origin, no trailing slash. sitemap.xml, robots.txt and og:
 # tags build absolute links from this.
 NUXT_PUBLIC_APP_URL = "https://frontierterm.com"
+# PostHog project token. Public by design: it ships in the client bundle and
+# authorizes nothing but ingestion. Empty turns analytics off.
+NUXT_PUBLIC_POSTHOG_KEY = "phc_qUu9EPBa2azwU4RnoXdbAj5SNe3APq9r3Bfs55tgUEXd"
 # Owner mail routing — pairs with the [[send_email]] block above. `to` must be
 # the same verified destination address the binding is pinned to; `from` must
 # be on a zone in this account with Email Routing enabled. Both are on

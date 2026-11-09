@@ -75,12 +75,9 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 ## Removed: analytics and attribution
 
 - `app/plugins/attribution.client.ts` — signup attribution capture; no signups
-- `app/plugins/posthog.client.ts` — PostHog client; fleet.json features.posthog is null
-- `server/routes/ingest/` — PostHog reverse proxy; fleet.json features.posthog is null
-- `server/utils/posthog.ts` — PostHog server client; fleet.json features.posthog is null
-- `server/utils/ingest-headers.ts` — header allowlist for the PostHog relay; fleet.json features.posthog is null
-- `server/utils/ingest-relay.ts` — the PostHog relay's forwarding and optional rate limit; fleet.json features.posthog is null
-- `app/composables/useFlag.ts` — PostHog feature flags; fleet.json features.posthog is null
+- `server/utils/posthog.ts` — PostHog server client; every event this app records comes from the browser
+- `server/utils/ingest-relay.ts` — the PostHog relay's optional rate limit; the project token is public, so a limit on the relay would not stop anyone posting to PostHog directly
+- `app/composables/useFlag.ts` — PostHog feature flags; this app has none
 - `app/composables/useFragmentParams.ts` — reads credentials from the URL fragment of sign-in and unsubscribe links; no accounts (fleet.json features.auth is false)
 - `shared/utils/attribution.ts` — signup attribution shapes; no signups
 - `server/utils/fleet-funnel.ts` — signup-to-paid funnel counters for /api/fleet; no signups or payments
@@ -110,6 +107,9 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 - `playwright.config.ts` — the suites' server runs on `.data-browser` (`NUXT_HUB_DIR`, wiped per run) and `test/warmup/fill-store.ts` fills it from fixtures before the warmup (upstream candidate: the separate data dir and a fork-supplied fill step)
 - `test/a11y/accessibility.spec.ts` — the product's route list, and a duplicate-id assertion after axe, which only flags ids that ARIA references (upstream candidate: the assertion)
 - `test/warmup/global-setup.ts` — warms one path per page file the suites visit, not just the shell; a cold page compile ran past 30s on the two-core runner (upstream candidate: the per-page rule)
+- `app/plugins/posthog.client.ts` — imports the SDK after hydration instead of in the entry chunk (upstream candidate); no session replay, heatmaps or web vitals, which /about says; no identify, since there are no accounts; reports Vue errors through the `vue:error` hook rather than replacing Nuxt's `config.errorHandler` (upstream candidate); no credential scrubbing, since no URL here carries one
+- `server/routes/ingest/` — no rate limit (see `server/utils/ingest-relay.ts` above); always forwards the visitor's address for GeoIP
+- `server/utils/ingest-headers.ts` — comments only: this app has no session cookie and no `ingest-relay.ts`
 - `app/composables/useSeo.ts` — adds dateModified and about inputs and a repoUrl in the site context in place of supportEmail and legalEntity (upstream candidate: dateModified/about)
 - `scripts/check-design-tokens.ts` — the app's own palette ramp in the allowed-color list is `iris`, not `clay`
 - `scripts/check-mirrors.ts` — reference pass only; the template's mirror pass compares server/utils/users.ts with mcp/src/server.ts, neither of which exists here (upstream candidate: skip a mirror whose files are absent)
