@@ -11,7 +11,7 @@
 import { companyName } from './companies'
 import { absoluteStamp, count, money } from './terminal-format'
 import type { PublicPage } from '#shared/utils/site'
-import type { ClaimStatus, ThesisDef, ValueFormat } from './thesis-types'
+import type { ClaimStatus, ThesisDef, ThesisView, ValueFormat } from './thesis-types'
 
 export const thesisPath = (id: string) => `/theses/${id}`
 
@@ -346,3 +346,29 @@ export const thesisPages = (
     title: `${t.title ?? companyName(t.company)} thesis`,
     summary: `The ${t.title ?? companyName(t.company)} thesis: each claim, its kill condition, its current status, and the readings and verdicts behind it.`,
   }))
+
+// ---- the index card -----------------------------------------------------------
+
+/**
+ * What /theses draws per thesis: the card never reads a claim's text, readings or
+ * verdicts, which were 110 kB of that page's hydration payload. They are on the
+ * thesis page, one click away.
+ */
+export type ThesisCardView = Pick<
+  ThesisView,
+  'id' | 'title' | 'ticker' | 'statement' | 'stance' | 'position' | 'opened' | 'horizon'
+> & { claims: { status: ClaimStatus }[] }
+
+export function thesisCardView(t: ThesisView): ThesisCardView {
+  return {
+    id: t.id,
+    title: t.title,
+    ticker: t.ticker,
+    statement: t.statement,
+    stance: t.stance,
+    position: t.position,
+    opened: t.opened,
+    horizon: t.horizon,
+    claims: t.claims.map((c) => ({ status: c.status })),
+  }
+}

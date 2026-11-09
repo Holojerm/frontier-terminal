@@ -28,6 +28,7 @@ import {
   CACHE_STATUS,
   HEADER_SIDECAR,
   HTML_CACHE_TTL_SECONDS,
+  HTML_CLIENT_CACHE_CONTROL,
   headerValue,
   htmlCacheKey,
   isCacheableDocument,
@@ -109,6 +110,7 @@ export default defineNitroPlugin((nitro) => {
         headers: {
           ...((sidecar ? JSON.parse(sidecar) : {}) as Record<string, string>),
           [CACHE_STATUS]: 'hit',
+          'cache-control': HTML_CLIENT_CACHE_CONTROL,
         },
       }
     } catch (error) {
@@ -132,6 +134,8 @@ export default defineNitroPlugin((nitro) => {
     // After `headers` is captured for the sidecar: a stored timing would be
     // replayed on every later hit as if it described that request.
     withServerTiming(response, ctx.event)
+    // Not in the sidecar above: the stored copy has its own storage policy.
+    response.headers = { ...response.headers, 'cache-control': HTML_CLIENT_CACHE_CONTROL }
 
     const stored = new Response(response.body as string, {
       headers: {
