@@ -58,7 +58,7 @@ const columns: TableColumn[] = [
       <!-- Two stacked links, so each is at least 24px tall (WCAG 2.5.8). -->
       <NuxtLink
         :to="labPath(row.lab)"
-        class="inline-flex min-h-6 items-center whitespace-nowrap font-medium hover:underline hover:underline-offset-2"
+        class="inline-flex min-h-6 min-w-6 items-center whitespace-nowrap font-medium hover:underline hover:underline-offset-2"
       >
         {{ row.display }}
       </NuxtLink>

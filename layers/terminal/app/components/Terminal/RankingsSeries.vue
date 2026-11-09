@@ -72,7 +72,7 @@ const STACK: { id: ProviderId; label: string; cls: string; opacity: number; swat
 // Drawn at the box's own width (useChartWidth), so the bars fill the panel.
 const W = useChartWidth('box', 720)
 const H = 240
-const PAD = { top: 8, right: 8, bottom: 24, left: 44 }
+const PAD = { top: 8, right: 8, bottom: 24, left: 50 }
 const plotW = computed(() => W.value - PAD.left - PAD.right)
 const plotH = H - PAD.top - PAD.bottom
 const GAP = 2
@@ -172,8 +172,8 @@ const tableColumns: TableColumn[] = [
           :y2="y(t)"
         />
       </g>
-      <g class="fill-current text-muted" font-size="10" text-anchor="end">
-        <text v-for="t in ticks" :key="t" :x="PAD.left - 6" :y="y(t) + 3">
+      <g class="fill-current text-muted" font-size="12" text-anchor="end">
+        <text v-for="t in ticks" :key="t" :x="PAD.left - 6" :y="y(t) + 4">
           {{ compactTokens(t) }}
         </text>
       </g>
@@ -193,7 +193,7 @@ const tableColumns: TableColumn[] = [
         />
       </g>
 
-      <g class="fill-current text-muted" font-size="10" text-anchor="middle">
+      <g class="fill-current text-muted" font-size="12" text-anchor="middle">
         <text v-for="l in xLabels" :key="l.i" :x="l.x" :y="H - 8">{{ l.text }}</text>
       </g>
     </svg>

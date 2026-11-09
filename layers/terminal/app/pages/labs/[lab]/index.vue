@@ -360,7 +360,7 @@ const tabs = computed(() => [
             <li v-for="pair in pairs" :key="comparePath(pair)">
               <NuxtLink
                 :to="comparePath(pair)"
-                class="text-default underline underline-offset-2 hover:text-highlighted"
+                class="py-1.5 text-default underline underline-offset-2 hover:text-highlighted"
                 >{{ pairTitle(pair) }}</NuxtLink
               >
             </li>

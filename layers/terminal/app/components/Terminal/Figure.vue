@@ -24,7 +24,7 @@ defineProps<{
         <NuxtLink
           v-if="to"
           :to="to"
-          class="font-mono text-lg text-highlighted sm:text-xl hover:underline hover:underline-offset-2"
+          class="min-w-6 font-mono text-lg text-highlighted sm:text-xl hover:underline hover:underline-offset-2"
         >
           {{ value }}
         </NuxtLink>

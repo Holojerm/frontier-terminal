@@ -30,13 +30,13 @@ const props = withDefaults(
 )
 
 // The drawing width is the box's own width in CSS pixels, measured on mount,
-// so the chart fills its panel and its 10-unit labels stay 10px at any
+// so the chart fills its panel and its 12-unit labels stay 12px at any
 // width. A fixed viewBox scaled with the box instead: capped, it left half a
 // wide panel empty; uncapped, it set the labels at twice the body size.
 const W = useChartWidth('box')
 const H = 220
 // Room on the right for direct end labels when there is more than one series.
-const PAD = computed(() => ({ l: 52, r: props.series.length > 1 ? 84 : 20, t: 12, b: 28 }))
+const PAD = computed(() => ({ l: 56, r: props.series.length > 1 ? 84 : 20, t: 12, b: 28 }))
 
 // Series slot → ink. Fixed by position so a filtered series never repaints
 // the survivors.
@@ -139,15 +139,15 @@ const lastPoint = (s: Series) => {
 // Direct end labels ride the lines when they fit and do not collide; otherwise
 // the legend and the readout carry identity (dataviz: never nudge labels
 // apart, never clip them). A single line needs none: the title names it.
-// 10px labels run about 6 units a character; 8 more is the gap to the line.
-const LABEL_CHAR = 6
+// 12px labels run about 7 units a character; 8 more is the gap to the line.
+const LABEL_CHAR = 7
 const endLabels = computed(() => {
   if (props.series.length < 2) return []
   if (props.series.some((s) => s.label.length * LABEL_CHAR + 8 > PAD.value.r)) return []
   const ends = props.series.map((s) => ({ label: s.label, at: lastPoint(s) }))
   const ys = ends.map((e) => e.at?.y ?? null).filter((y): y is number => y !== null)
   for (let a = 0; a < ys.length; a++) {
-    for (let b = a + 1; b < ys.length; b++) if (Math.abs(ys[a]! - ys[b]!) < 14) return []
+    for (let b = a + 1; b < ys.length; b++) if (Math.abs(ys[a]! - ys[b]!) < 16) return []
   }
   return ends
 })
@@ -227,8 +227,8 @@ const readout = computed(() => {
             :y2="yAt(t)"
           />
         </g>
-        <g class="fill-(--ui-text-muted) font-mono tabular-nums" font-size="10">
-          <text v-for="t in yTicks" :key="t" :x="PAD.l - 6" :y="yAt(t) + 3" text-anchor="end">
+        <g class="fill-(--ui-text-muted) font-mono tabular-nums" font-size="12">
+          <text v-for="t in yTicks" :key="t" :x="PAD.l - 6" :y="yAt(t) + 4" text-anchor="end">
             {{ format(t) }}
           </text>
           <text v-for="t in xTicks" :key="t.i" :x="t.x" :y="H - 8" text-anchor="middle">
@@ -290,12 +290,12 @@ const readout = computed(() => {
           </template>
         </g>
 
-        <g class="fill-(--ui-text-toned)" font-size="10">
+        <g class="fill-(--ui-text-toned)" font-size="12">
           <text
             v-for="e in endLabels"
             :key="e.label"
             :x="(e.at?.x ?? 0) + 8"
-            :y="(e.at?.y ?? 0) + 3"
+            :y="(e.at?.y ?? 0) + 4"
           >
             {{ e.label }}
           </text>
