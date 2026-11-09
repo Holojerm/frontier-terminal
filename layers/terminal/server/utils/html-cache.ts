@@ -92,6 +92,9 @@ export function isCacheableDocument(req: { method: string; path: string }): bool
   if (req.path.startsWith('/api/')) return false
   if (req.path.startsWith('/_')) return false
   if (req.path === '/design-system') return false
+  // Confirm and unsubscribe links carry a token in the query (already excluded
+  // above); the pages themselves are never stored either.
+  if (req.path.startsWith('/subscribe/')) return false
   return true
 }
 

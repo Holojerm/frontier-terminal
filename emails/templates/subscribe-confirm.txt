@@ -1,0 +1,7 @@
+Someone asked for the {{appName}} weekly thesis digest to be sent to this address. If that was you, confirm here. It's one email each Monday.
+
+Confirm subscription: {{confirmUrl}}
+
+If you didn't ask for this, ignore this email. We won't write again, and the link stops working in a week.
+
+{{appUrl}}

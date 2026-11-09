@@ -128,6 +128,55 @@ describe('buildThesisDigest', () => {
     expect(d.html).toContain('Awaiting your confirmation')
   })
 
+  it('leaves the owner’s confirmation queue out of the public copy and links the theses page', () => {
+    const safety = view('anthropic-safety-asset', {
+      verdicts: [
+        {
+          subject: 'incident:anthropic:abc',
+          change_id: 'c1',
+          provider: 'anthropic',
+          verdict: 'material',
+          rationale: 'Hit the API for 3.5 hours.',
+          facts: { title: 'Elevated errors on Claude API', impact: null, hours: 3.5 },
+          detected_at: '2026-10-10T06:00:00Z',
+          judged_at: '2026-10-10T07:00:00Z',
+          confirmation: null,
+          source_url: 'https://status.claude.com/history.atom',
+          fetched_at: '2026-10-10T06:00:00Z',
+        },
+      ],
+    })
+    const input = {
+      data: data([safety]),
+      changes: [],
+      failedRuns: [],
+      now: NOW,
+      appName: 'Frontier Terminal',
+      appUrl: 'https://frontierterm.com',
+      audience: 'public' as const,
+    }
+    const sub = buildThesisDigest({
+      ...input,
+      unsubscribeUrl: 'https://frontierterm.com/subscribe/unsubscribe?u=x',
+    })
+    expect(sub.text).not.toContain('Awaiting')
+    expect(sub.html).not.toContain('Awaiting your confirmation')
+    expect(sub.text).toContain('Theses: https://frontierterm.com/theses')
+    expect(sub.text).toContain('Unsubscribe: https://frontierterm.com/subscribe/unsubscribe?u=x')
+    expect(sub.html).toContain('href="https://frontierterm.com/subscribe/unsubscribe?u=x"')
+    expect(sub.html).not.toContain('theses:digest cron')
+    // The sample page has no recipient, so no unsubscribe link.
+    const sample = buildThesisDigest(input)
+    expect(sample.text).toContain('sample of the weekly digest')
+    expect(sample.text).not.toContain('Unsubscribe:')
+    // The owner copy is unchanged: queue, API link, cron footnote.
+    const owner = build([safety])
+    expect(owner.text).toContain('! Awaiting confirmation, claim 5')
+    expect(owner.text).toContain('Theses: https://frontierterm.com/api/theses')
+    expect(owner.html).toContain('theses:digest cron')
+    expect(owner.text).not.toContain('Unsubscribe')
+  })
+
   it('orders claims weakest first, a moved claim ahead of its peers', () => {
     const d = build(
       [

@@ -14,7 +14,7 @@ definePageMeta({
     priority: '0.5',
     title: 'About',
     summary:
-      'What Frontier Terminal tracks, who runs it, the provenance rule every number follows, per-source caveats, data latency, the corrections log, the data license, and where the code lives.',
+      'What Frontier Terminal tracks, who runs it, the provenance rule every number follows, per-source caveats, data latency, the corrections log, the data license, privacy, and where the code lives.',
   },
 })
 
@@ -100,6 +100,30 @@ useSeo({
           vendor prices, so we only use it as a cross-check. Its usage rankings are one aggregator’s
           traffic, so we don’t treat them as market share. Timestamps under a day old show as
           relative times. The full timestamp is in the hover text and the page markup.
+        </p>
+      </div>
+    </TerminalPanel>
+
+    <TerminalPanel id="privacy" title="Privacy">
+      <div class="max-w-2xl space-y-3 text-default">
+        <p>
+          There are no accounts, no ads and no cookies of ours. Cloudflare serves the site. It keeps
+          standard request logs and counts visits without cookies.
+        </p>
+        <p>
+          If you subscribe to the weekly digest, we store your email address, when you signed up,
+          and the page you signed up from. We use them to send the digest and for nothing else. We
+          don’t sell or share them. Resend, our mail provider, sends the emails and sees the address
+          and the message. An address that never confirms is deleted after 30 days.
+        </p>
+        <p>
+          The unsubscribe link in every digest stops the mail. We keep the address, marked as
+          unsubscribed, so it isn’t added again by mistake. To have it deleted, write to
+          <a
+            href="mailto:contact@frontierterm.com"
+            class="text-primary underline underline-offset-2"
+            >contact@frontierterm.com</a
+          >.
         </p>
       </div>
     </TerminalPanel>

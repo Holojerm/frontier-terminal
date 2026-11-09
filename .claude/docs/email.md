@@ -1,6 +1,6 @@
 # Email
 
-How an email is written (Maizzle templates, compiled at build time, filled in with Mustache). This app sends one email template, the weekly thesis digest (`layers/terminal/server/theses/digest.ts`), plus the plain press brief, both to its owner through the `OWNER_EMAIL` `send_email` binding (`layers/terminal/server/utils/owner-mail.ts`). It sends no alerts: the fleet dashboard is the only alert sender. The pipeline is the template's, trimmed to the thesis digest.
+How an email is written (Maizzle templates, compiled at build time, filled in with Mustache). This app sends two email templates: the weekly thesis digest (`layers/terminal/server/theses/digest.ts`) and the subscription confirmation. The owner's digest and the plain press brief go through the `OWNER_EMAIL` `send_email` binding (`layers/terminal/server/utils/owner-mail.ts`). Subscribers' mail goes through Resend (see Subscribers below). It sends no alerts: the fleet dashboard is the only alert sender. The pipeline is the template's, trimmed to the thesis digest.
 
 > **Load this when:** touching `emails/`, `layers/terminal/server/theses/digest.ts`, or adding a second outbound email.
 > Canonical index: [AGENTS.md](../../AGENTS.md).
@@ -107,3 +107,29 @@ A root with `workspaces` makes bun install packages in an isolated layout, and `
 then cannot resolve Maizzle's own `@maizzle/tailwindcss` from `emails/`. This repo has no
 workspaces; if one is added, add `@maizzle/tailwindcss` as a direct devDependency of the root.
 
+---
+
+## Subscribers
+
+Public digest subscriptions, off until `NUXT_RESEND_API_KEY` (secret) and
+`NUXT_SUBSCRIBE_EMAIL_FROM` (var, an address on a domain verified in Resend) are both set.
+Unset, there is no form, `/api/subscribe/*` and `/digest` answer 404, and the Monday task skips
+the fan-out. The owner's digest never depends on it.
+
+- **Table.** `subscribers` (`layers/terminal/server/db/schema.ts`): pending, confirmed or
+  unsubscribed. The confirm token is stored hashed; the unsubscribe token is an HMAC of the row
+  id under the instance salt, so it is not stored and never expires. Pending rows that never
+  confirm are deleted after 30 days by the digest task. Unsubscribed rows stay, marked.
+- **Flow.** `POST /api/subscribe` (honeypot, 5 per 10 min per IP, 300 per hour overall, the
+  same answer for any address) mails `/subscribe/confirm?t=…`, a page that POSTs the token on
+  load, so a link scanner that only fetches pages confirms nobody. Each digest carries
+  `/subscribe/unsubscribe?u=…` in the body and `List-Unsubscribe` plus
+  `List-Unsubscribe-Post` headers pointing at `POST /api/subscribe/unsubscribe?u=…`. No route
+  changes state on GET, and none uses DELETE.
+- **Digest copy.** `buildThesisDigest({ audience: 'public' })` drops the owner's confirmation
+  queue and cron footnote. The subscriber copy is rendered once with a placeholder for the
+  unsubscribe link, then filled per recipient. `/digest` renders the same copy with no link.
+- **Fan-out.** `sendSubscriberDigest` (`layers/terminal/server/utils/subscriber-mail.ts`): up to 2,500
+  recipients a run, 50 per Resend batch call. A row is marked (`last_digest_at`) only after its
+  batch is accepted and is skipped for 6 days, so re-running `theses:digest` mails only the ones
+  that missed. A failed batch throws, which spools `task_failed` for the fleet dashboard.

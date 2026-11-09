@@ -17,6 +17,8 @@ export const SAMPLES: Record<string, EmailSample> = {
     generated: 'Oct 12, 13:00 UTC',
     thesesUrl: `${brand.appUrl}/api/theses`,
     quiet: false,
+    owner: false,
+    unsubscribeUrl: `${brand.appUrl}/subscribe/unsubscribe?u=sample`,
     theses: [
       {
         name: 'Anthropic (bullish)',
@@ -67,5 +69,9 @@ export const SAMPLES: Record<string, EmailSample> = {
         awaiting: [],
       },
     ],
+  },
+  'subscribe-confirm': {
+    ...brand,
+    confirmUrl: `${brand.appUrl}/subscribe/confirm?t=sample`,
   },
 }
