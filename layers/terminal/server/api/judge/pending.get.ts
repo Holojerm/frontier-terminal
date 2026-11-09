@@ -24,6 +24,10 @@
 // valuation or funding and are not yet read
 // (layers/terminal/server/pipeline/reported/review.ts); it too can be
 // non-empty when `changes` is empty.
+// `still_listed` lists, per model removal among `changes`, the pages of the
+// same lab that still list that model, so a page dropping a row is not
+// written up as a delisting (layers/terminal/server/pipeline/judge/still-listed.ts);
+// usually `[]`.
 
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
@@ -34,6 +38,7 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 import { hiringBoards } from '../../pipeline/hiring-floor'
 import { blobRawReader, classMapReview } from '../../pipeline/judge/class-map'
 import { JUDGE_CHANGE_LIMIT, incidentCounts, pendingChanges } from '../../pipeline/judge/pending'
+import { stillListedRemovals } from '../../pipeline/judge/still-listed'
 import { figureReview } from '../../pipeline/reported/review'
 import { trackRecordReview } from '../../pipeline/track-record/review'
 import { claimReview, flagshipMap } from '../../theses/verdicts'
@@ -58,10 +63,11 @@ export default defineEventHandler(async (event) => {
     trackRecordReview(db),
     figureReview(db),
   ])
-  const [claim_review, hiring, incidents] = await Promise.all([
+  const [claim_review, hiring, incidents, still_listed] = await Promise.all([
     claimReview(db, changes, flagships),
     hiringBoards(db, changes, parseDepartmentClusters(sourcesYaml)),
     incidentCounts(db, changes),
+    stillListedRemovals(db, changes),
   ])
   return {
     schema: 1,
@@ -73,6 +79,7 @@ export default defineEventHandler(async (event) => {
     limit: JUDGE_CHANGE_LIMIT,
     hiring,
     incidents,
+    still_listed,
     class_map_review,
     claim_review,
     track_record_review,

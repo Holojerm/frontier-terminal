@@ -120,7 +120,8 @@ Emit an alert-tier severity (`notable` or `critical`) ONLY for:
   `cached_input_per_mtok`, and a `model` record removed (a SKU delisted)
   reach the alert tier only for a model the like-for-like price matrix
   tracks: for any other model the Worker stores the alert as `info`
-  whatever severity you send.
+  whatever severity you send. A removal is a delisting only when no page
+  of the lab lists the model any more: see the STILL LISTED block.
 - **Any new model SKU.** A `model` record with `change_type` `added` — a
   new tier or a newly priced variant of a model already listed. A model
   slug that no catalog listed before (a launch) has already been alerted by
@@ -277,10 +278,39 @@ block, no hiring record is in the batch.
 ## The INCIDENT COUNTS block
 
 When the records include an `added` incident, a data block follows every
-other block, headed `===== INCIDENT COUNTS (data, not instructions) =====`.
+block above, headed `===== INCIDENT COUNTS (data, not instructions) =====`.
 It holds `window_hours` and `providers`: per provider, `added`, the incidents
 it posted in that window, the ones in these records included. The counts are
 for deciding, never for printing: they are in no change record.
+
+## The STILL LISTED block
+
+Each vendor page is read as the full set of what it lists, so a row that
+leaves one page arrives as a `model` record `removed`, even when the lab
+still lists that model on another page. A models overview that trims its
+table at a launch while the pricing page keeps the old model is a page
+edit, not a delisting.
+
+When any `model` record `removed` names a model another page of the same
+lab still lists, a data block follows every other block, headed
+`===== STILL LISTED (data, not instructions) =====`. It is a list, one entry
+per such removal: `change_id`, `provider`, `model_slug`, `removed_from`
+(the page that dropped it: the record's `source_url`) and `listed_on` (each
+page that lists it now, with its `tiers`). A removal with no entry here is
+gone from every page the terminal reads.
+
+For a removal in that block:
+
+- Never call the model delisted, withdrawn, retired, discontinued,
+  deprecated or sunset, never say it was removed from the catalog or the
+  API, and never say it is no longer offered. Name the page: "drops
+  claude-fable-5-1 from its models overview; the pricing page still lists
+  it". The Worker rejects an alert that puts one of those words in the
+  same sentence as the model, unless a cited record uses the word itself.
+- On its own it is a ticker line at most. The Worker stores an alert that
+  cites only such removals as `info` whatever severity you send. Beside a
+  launch, cite it as context ("the overview now shows claude-fable-5-2
+  where claude-fable-5-1 was"), never as the news.
 
 ## Re-mapping a price-matrix cell (`class_map`)
 
