@@ -545,6 +545,8 @@ export const trackRecordVerdicts = sqliteTable(
   },
   (t) => [
     index('track_record_verdicts_alert_idx').on(t.alert_id),
+    // One rating per (alert, candidate): the write is do-nothing on this (#316).
+    uniqueIndex('track_record_verdicts_pair_uq').on(t.alert_id, t.candidate_id),
     index('track_record_verdicts_judged_idx').on(t.judged_at, t.id),
   ],
 )

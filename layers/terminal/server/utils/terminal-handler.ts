@@ -32,6 +32,7 @@ import {
   type PointInTimeMeta,
 } from './terminal-asof'
 import { cacheControlFor, resolvedApiKey } from './api-access'
+import { withDatabaseFault } from './d1-fault'
 import { assertArchiveKnowable } from './terminal-archive'
 import { serverTimingHeader, timed, type ServerTiming } from './server-timing'
 import { paidLicensed, served } from './terminal-envelope'
@@ -80,7 +81,13 @@ export async function terminalPayload<T>(
   const stamp = await timed(options.timings, 'stamp', liveStamp)
   const context = queryContext(sourcesYaml, stamp.poll)
   return served(
-    await cachedTerminal(kv, cacheName(name, variant), stamp.key, () => query(context), options),
+    await cachedTerminal(
+      kv,
+      cacheName(name, variant),
+      stamp.key,
+      () => withDatabaseFault(query)(context),
+      options,
+    ),
   )
 }
 
@@ -118,7 +125,7 @@ export async function terminalPayloadAt<T extends object | null>(
     cacheName(name, `${variant}|${AS_OF_PARAM}=${at}`),
     stamp.key,
     async () => {
-      const data = await query(context)
+      const data = await withDatabaseFault(query)(context)
       // null is "not known at T" (an unknown SKU), which the route turns into its 404.
       if (data === null) return null
       const point_in_time = pointInTimeMeta(at, context.notes)

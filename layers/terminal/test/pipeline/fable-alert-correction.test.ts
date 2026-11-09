@@ -4,13 +4,13 @@ import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import migration from '~~/server/db/migrations/0044_correct_fable_alert.sql?raw'
+import migration from '~~/server/db/migrations/0045_correct_fable_alert.sql?raw'
 import { AlertRow, ChangeRow } from '../../server/pipeline/contracts'
 import { corpusOf, groundingFailure } from '../../server/pipeline/judge/grounding'
 import { falseDelisting } from '../../server/pipeline/judge/still-listed'
 import { insertRows } from '../../server/pipeline/store'
 
-// Migration 0044 rewrites the 2026-11-09 judge alert that called
+// Migration 0045 rewrites the 2026-11-09 judge alert that called
 // claude-fable-5-1 delisted. The records below are the six change rows it
 // cites, copied from production's /export/changes.json, so the corrected text
 // is held to the same two gates a new alert meets: grounding and still-listed.
@@ -151,7 +151,7 @@ beforeEach(async () => {
   await db.delete(schema.alerts)
 })
 
-describe('migration 0044: the claude-fable-5-1 alert', () => {
+describe('migration 0045: the claude-fable-5-1 alert', () => {
   it('rewrites the alert in place, keeping its id, citations, severity and provenance', async () => {
     await insertRows(db, 'alerts', [ORIGINAL])
     await runMigration()
