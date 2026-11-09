@@ -96,3 +96,21 @@ The `useSeo()` one-call-per-page contract, how `publicPage` meta feeds both `sit
   Terminal"; these links are what tell an engine which entity is ours.
 - **Search Console / Bing Webmaster verification** is a one-time, owner-login step: the
   template's `.claude/docs/seo.md` › "Search console verification" has the DNS runbook.
+
+## Share cards (og:image)
+
+Every public page gets its own 1200x630 card, drawn at **build time** by `scripts/og-images.ts` into
+`public/og/` (gitignored) with `satori` and `@resvg/resvg-js`, and served as a static asset, so the
+Worker bundle does not grow. `bun run build` runs it before `nuxt build` and `--check` after.
+
+- **Static pages** declaring a literal `publicPage` are carded from its `title` and `summary`, and
+  `useSeo()` links `/og/<route>.png` on its own. The home page keeps the site card, `public/og.png`.
+- **Dynamic routes** are listed in `layers/terminal/og-cards.ts` (labs, tear sheets, compare pairs,
+  theses, from the same lists `crawlerPages()` reads) and each page passes
+  `image: ogCardPath(...)` to `useSeo()`. A new dynamic page registers its cards in the same change, or its
+  preview is a broken link. Alert, SKU and filing pages keep the site card.
+- **Titles only, no live numbers.** A card is drawn once per build; a price on it would be stale by
+  the next poll.
+- Colors are the `og-*` roles resolved by `bun run brand:generate`; fonts are `@fontsource` packages
+  (Inter and JetBrains Mono), so the build needs no network. `public/og/` is absent under `bun dev`;
+  run `bun run og:build` to see the cards locally.

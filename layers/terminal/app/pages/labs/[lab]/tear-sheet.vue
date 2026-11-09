@@ -135,6 +135,7 @@ const display = sheet.value.display
 const asOf = computed(() => prices.data.value?.as_of ?? alerts.data.value?.as_of ?? null)
 
 useSeo({
+  image: ogCardPath(route.path),
   title: `${display} tear sheet: prices, revenue, hiring, incidents`,
   description: `${display} on one printable page: API prices, SEC revenue, OpenRouter share, open roles, incidents and recent alerts, each with its source.`,
   about: labOrganizationSchema({ name: display, url: LAB_SITE[lab] }),
