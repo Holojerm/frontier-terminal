@@ -10,6 +10,7 @@ import { HISTORY_LICENSE, PAID_LICENSE, licenseSplit } from '#shared/utils/licen
 import { cacheControlFor, rateLimitTerminal } from './api-access'
 import { SCHEMA_VERSION, SCHEMA_VERSION_HEADER } from './data-schema'
 import { PointInTimeError, assertKnowable } from './terminal-asof'
+import { headResponse } from './head-response'
 import { DICTIONARY_NAME, dataDictionary, dictionaryCsv } from './terminal-dictionary'
 import { ARCHIVED_EXPORTS, EXPORT_TABLES, exportTable, WITHDRAWN_EXPORTS } from './terminal-export'
 import {
@@ -47,13 +48,15 @@ export async function serveExport(event: H3Event, options: { sample?: boolean } 
   // parseExportPath). It reads no database, so it skips the export budget,
   // which /data's server render would otherwise spend on every view.
   if (parsed?.name === DICTIONARY_NAME && !options.sample) {
-    const dictionary = dataDictionary(sourcesYaml)
     setResponseHeader(event, 'Cache-Control', 'public, max-age=300')
     setResponseHeader(event, SCHEMA_VERSION_HEADER, SCHEMA_VERSION)
-    if (parsed.format === 'json') return dictionary
-    setResponseHeader(event, 'Content-Type', 'text/csv; charset=utf-8')
-    setResponseHeader(event, 'Content-Disposition', 'attachment; filename="dictionary.csv"')
-    return dictionaryCsv(dictionary)
+    setResponseHeader(event, 'Content-Type', CONTENT_TYPES[parsed.format])
+    if (parsed.format === 'csv') {
+      setResponseHeader(event, 'Content-Disposition', 'attachment; filename="dictionary.csv"')
+    }
+    if (event.method === 'HEAD') return headResponse(event)
+    const dictionary = dataDictionary(sourcesYaml)
+    return parsed.format === 'json' ? dictionary : dictionaryCsv(dictionary)
   }
 
   // Exports walk whole tables; 30/min matches the native limiter's budget. A
@@ -118,6 +121,7 @@ export async function serveExport(event: H3Event, options: { sample?: boolean } 
   // A JSON export is a bare array unless it carries its license, so the
   // schema version travels as a header on every one.
   setResponseHeader(event, SCHEMA_VERSION_HEADER, SCHEMA_VERSION)
+  if (event.method === 'HEAD') return headResponse(event)
 
   const chunks =
     parsed.format === 'csv'
