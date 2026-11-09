@@ -1,6 +1,6 @@
 # Pricing and rate limits
 
-Use our models with pay-as-you-go billing on Meta Model API and in [Muse Code](https://dev.meta.ai/docs/muse-code), or in Muse Code with a monthly [subscription](https://dev.meta.ai/docs/muse-code/subscriptions). This page covers pay-as-you-go: Model API bills the reasoning models (Muse Wonder and Muse Spark) per token, image generation per image, Muse Voice Transcribe by the hour of audio processed, and Segment Anything Model (SAM) per image or video frame segmented, with no minimums or upfront commitment.
+Use our models with pay-as-you-go billing on Meta Model API and in [Muse Code](https://dev.meta.ai/docs/muse-code), or in Muse Code with a monthly [subscription](https://dev.meta.ai/docs/muse-code/subscriptions). This page covers pay-as-you-go: Model API bills the reasoning models (Muse Wonder, Muse Spark, and Muse Ember) per token, image generation per image, Muse Voice Transcribe by the hour of audio processed, and Segment Anything Model (SAM) per image or video frame segmented, with no minimums or upfront commitment.
 
 ## Pricing modes
 
@@ -14,7 +14,7 @@ In Standard mode, you pay standard prices and your content is not used to train 
 
 On Model API, Contributor mode runs the same models at heavily discounted token prices, in exchange for permission to use your content to train future Meta models. It lowers the barrier to entry for prototyping, testing integrations, and scaling experiments where it's acceptable for Meta to use your content to train future Meta models.
 
-On Model API, use Contributor mode with Muse Spark 1.3 or 1.2 by calling its Contributor-mode variant: `muse-spark-1.3-contributor` or `muse-spark-1.2-contributor`. Contributor mode isn't available for Muse Wonder on Model API.
+On Model API, use Contributor mode with Muse Spark 1.3 or 1.2 by calling its Contributor-mode variant: `muse-spark-1.3-contributor` or `muse-spark-1.2-contributor`. Contributor mode isn't available for Muse Wonder or Muse Ember on Model API.
 
 In [Muse Code](https://dev.meta.ai/docs/muse-code), subscriptions default to Contributor mode, and you can turn it on or off in settings; see [Contributor mode in Muse Code](https://dev.meta.ai/docs/muse-code/subscriptions#contributor-mode).
 
@@ -40,13 +40,25 @@ Models: `muse-spark-1.3`, `muse-spark-1.2`, and `muse-spark-1.1` in Standard mod
 | Input        | $0.10                            | $1.25                         |
 | Output       | $0.20                            | $4.25                         |
 
+### Muse Ember
+
+Model: `muse-ember-1.0`, in Standard mode only.
+
+Muse Ember has two price tiers, and the input tokens in your API request set the tier, cached tokens included. When a request continues a stored conversation with `previous_response_id`, its input includes that conversation. A request with up to 200K input tokens is billed at the rates in the first column. A request with more is billed at the long-context rates in full, not only for the tokens past 200K. Your invoice and usage dashboard list the two tiers separately.
+
+| Usage        | Up to 200K input tokens (per 1M tokens) | Over 200K input tokens (per 1M tokens) |
+| :----------- | :-------------------------------------- | :------------------------------------- |
+| Cached input | $0.004                                  | $0.012                                 |
+| Input        | $0.10                                   | $0.30                                  |
+| Output       | $0.50                                   | $1.50                                  |
+
 ### Token pricing notes
 
-These apply to the token-priced models above, Muse Wonder and Muse Spark.
+These apply to the reasoning models above.
 
 - **Cached input costs less**: When part of your prompt matches a [cached prefix](https://dev.meta.ai/docs/prompt-caching), you pay the cached-input rate for those tokens. Check `cached_tokens` in the response to see how many were served from cache.
-- **No long-context premium**: you pay the same rate whether your context window is mostly empty or almost full.
-- **Web search grounding**: **$2.50 per 1,000 search queries**, in addition to the request's token cost. This applies to the [`web_search` tool](https://dev.meta.ai/docs/search-grounding) on the reasoning models, [Muse Wonder](https://dev.meta.ai/docs/models#muse-wonder) and [Muse Spark](https://dev.meta.ai/docs/models#muse-spark).
+- **No long-context premium on Muse Wonder and Muse Spark**: you pay the same rate whether your context window is mostly empty or almost full. Muse Ember bills requests with more than 200K input tokens at higher rates; see [Muse Ember pricing](https://dev.meta.ai/docs/pricing-rate-limits#muse-ember-pricing).
+- **Web search grounding**: **$2.50 per 1,000 search queries**, in addition to the request's token cost. This applies to the [`web_search` tool](https://dev.meta.ai/docs/search-grounding) on the reasoning models, [Muse Wonder](https://dev.meta.ai/docs/models#muse-wonder), [Muse Spark](https://dev.meta.ai/docs/models#muse-spark), and [Muse Ember](https://dev.meta.ai/docs/models#muse-ember).
 
 > **NOTE: Muse Image search is included**
 >
@@ -91,6 +103,7 @@ Rate limits apply **per team, not per API key**: requests, tokens, and streams f
 | `muse-spark-1.3-contributor` | 150                       | 3,000,000               |                                                 |
 | `muse-spark-1.2-contributor` | 150                       | 3,000,000               |                                                 |
 | `muse-spark-1.1`             | 3,000                     | 4,000,000               |                                                 |
+| `muse-ember-1.0`             | 3,000                     | 4,000,000               |                                                 |
 | `sam-3.1`                    | 3,000                     | None                    |                                                 |
 | `muse-image-1.0`             | 150                       | None                    |                                                 |
 | `muse-voice-transcribe-1.0`  | None                      | None                    | 256 concurrent streams; 16,000 streams per hour |

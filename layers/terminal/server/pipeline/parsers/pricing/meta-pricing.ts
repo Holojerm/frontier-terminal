@@ -22,6 +22,12 @@ import { tableAfterHeading, usdAmount } from './md-table'
 // pair. The columns are found by name: on 2026-11-09 Meta swapped them to
 // Contributor-then-Standard with every price unchanged. Muse Image, Muse Voice Transcribe and SAM print per-image, per-hour
 // and per-frame tables with a different header and are skipped by that test.
+//
+// Muse Ember (added 2026-11-09) is Standard mode only and prices by request
+// size instead: "Up to 200K input tokens" / "Over 200K input tokens" columns,
+// the larger rate billed on the whole request. The first column is the id's
+// row (tier null); the second is its own `long_context` row, the tier name
+// openai-pricing-md and anthropic-pricing-md give a long-context price.
 
 const PRICING_HEADING = '## Model pricing'
 const USAGE_HEADER = 'Usage'
@@ -35,16 +41,48 @@ const NOT_AVAILABLE = 'Not available'
 
 type Mode = 'Standard' | 'Contributor'
 
+/** One price column of a token table: the mode it serves and the row it fills. */
+type Column = { at: number; mode: Mode; tier: string | null; note: string }
+
+const CONTRIBUTOR_NOTE =
+  'Contributor mode: Meta may use the content sent and returned to train future Meta models'
+// "Up to 200K input tokens (per 1M tokens)" | "Over 200K input tokens (per 1M tokens)"
+const BAND_HEADER = /^(Up to|Over) (\S+) input tokens \(per 1M tokens\)$/
+
 /**
- * Each mode's column in a token table, or null when the header is not the
- * Usage + Standard/Contributor $/MTok trio (in either column order).
+ * The price columns of a token table, or null when the header is neither the
+ * Usage + Standard/Contributor $/MTok trio (in either column order) nor the
+ * Usage + up-to/over input-size trio (in either column order).
  */
-function modeColumns(header: string[]): Record<Mode, number> | null {
+function priceColumns(header: string[]): Column[] | null {
   if (header.length !== 3 || header[0] !== USAGE_HEADER) return null
   const standard = header.indexOf(MODE_HEADER.Standard)
   const contributor = header.indexOf(MODE_HEADER.Contributor)
-  if (standard === -1 || contributor === -1) return null
-  return { Standard: standard, Contributor: contributor }
+  if (standard !== -1 && contributor !== -1) {
+    return [
+      { at: standard, mode: 'Standard', tier: null, note: 'Standard mode' },
+      { at: contributor, mode: 'Contributor', tier: null, note: CONTRIBUTOR_NOTE },
+    ]
+  }
+  const bands = header.slice(1).map((h) => h.match(BAND_HEADER))
+  const upTo = bands.findIndex((m) => m?.[1] === 'Up to')
+  const over = bands.findIndex((m) => m?.[1] === 'Over')
+  if (upTo === -1 || over === -1 || bands[upTo]![2] !== bands[over]![2]) return null
+  const threshold = bands[upTo]![2]!
+  return [
+    {
+      at: upTo + 1,
+      mode: 'Standard',
+      tier: null,
+      note: `Standard mode; up to ${threshold} input tokens`,
+    },
+    {
+      at: over + 1,
+      mode: 'Standard',
+      tier: 'long_context',
+      note: `Standard mode; long context: over ${threshold} input tokens, billed on the whole request`,
+    },
+  ]
 }
 
 /** The `### ` headings directly under `## Model pricing`, in page order. */
@@ -97,7 +135,7 @@ export function parseMetaPricingMd(
     } catch {
       continue // a prose-only section ("### Token pricing notes")
     }
-    const columns = modeColumns(table[0] ?? [])
+    const columns = priceColumns(table[0] ?? [])
     if (!columns) {
       // A reshaped token table must fail loudly, not drop the line's prices.
       const header = table[0]?.join('|') ?? ''
@@ -116,30 +154,35 @@ export function parseMetaPricingMd(
     const output = usage('Output')
 
     for (const [mode, ids] of idsByMode(text, heading)) {
-      const col = columns[mode]
-      if (input[col] === NOT_AVAILABLE) {
+      const served = columns.filter((c) => c.mode === mode)
+      if (served.length === 0) {
         throw new Error(
-          `${heading}: ${ids.join(', ')} named in ${mode} mode, priced "Not available"`,
+          `${heading}: ${ids.join(', ')} named in ${mode} mode, a mode the table has no column for`,
         )
       }
-      for (const slug of ids) {
-        rows.push({
-          provider: 'meta',
-          model_slug: slug,
-          tier: null,
-          context_window: null, // not printed here (catalog: meta-models-md)
-          input_per_mtok: usdAmount(input[col]!),
-          cached_input_per_mtok: usdAmount(cached[col]!),
-          output_per_mtok: usdAmount(output[col]!),
-          currency: 'USD',
-          effective_from: null,
-          effective_until: null,
-          notes:
-            mode === 'Contributor'
-              ? 'Contributor mode: Meta may use the content sent and returned to train future Meta models'
-              : 'Standard mode',
-          ...prov,
-        })
+      for (const column of served) {
+        const col = column.at
+        if (input[col] === NOT_AVAILABLE) {
+          throw new Error(
+            `${heading}: ${ids.join(', ')} named in ${mode} mode, priced "Not available"`,
+          )
+        }
+        for (const slug of ids) {
+          rows.push({
+            provider: 'meta',
+            model_slug: slug,
+            tier: column.tier,
+            context_window: null, // not printed here (catalog: meta-models-md)
+            input_per_mtok: usdAmount(input[col]!),
+            cached_input_per_mtok: usdAmount(cached[col]!),
+            output_per_mtok: usdAmount(output[col]!),
+            currency: 'USD',
+            effective_from: null,
+            effective_until: null,
+            notes: column.note,
+            ...prov,
+          })
+        }
       }
     }
   }
