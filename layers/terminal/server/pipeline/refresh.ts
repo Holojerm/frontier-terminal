@@ -371,7 +371,9 @@ async function parseAndStore(
     })
   }
   // An incomplete read is never 'unchanged': the next tick reads the page again.
-  const readBasis = problems.length ? JSON.stringify({ ...basis, context: INCOMPLETE }) : basisJson
+  const readBasis = problems.length
+    ? JSON.stringify({ ...basis, context: INCOMPLETE, problems })
+    : basisJson
 
   const toStored = (row: EntityRow): StoredEntityRow => ({
     ...row,

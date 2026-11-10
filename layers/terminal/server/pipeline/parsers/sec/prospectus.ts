@@ -40,7 +40,7 @@ export const PROSPECTUS_FIXTURE = {
 const COVER_NAME = /SECURITIES ACT OF 1933 (.{2,120}?) \(Exact name of registrant/i
 
 /** The registrant as the facing page names it, for when the statement cannot be read. */
-function coverName(html: string): string | null {
+export function coverName(html: string): string | null {
   return cellText(html.slice(0, 200_000)).match(COVER_NAME)?.[1]?.trim() || null
 }
 
