@@ -291,6 +291,9 @@ export const MASS_REMOVAL_DETAIL = 'parse would remove'
 
 type ContextBlocks = Pick<ParseContext, ContextBlock>
 
+/** The stored context of a read that left parts unread (ParseResult.problems). */
+const INCOMPLETE = 'incomplete'
+
 async function parseAndStore(
   deps: RefreshDeps,
   fetched: Fetched,
@@ -344,8 +347,10 @@ async function parseAndStore(
   }
   // Only the parser, the sources.yaml blocks it reads or the URL changed.
   // Whatever the parse now says differently, the page did not say it
-  // differently: rows are rewritten in place and nothing is logged.
-  const reread = sameInput
+  // differently: rows are rewritten in place and nothing is logged. Not after
+  // an incomplete read: what the page said all along, read for the first
+  // time, is still news (a filing's revenue once its parser is fixed).
+  const reread = sameInput && stored?.context !== INCOMPLETE
   const movedFrom = prior && prior.source_url !== source.url ? prior.source_url : null
 
   const parsed = lane.parse(body.text, {
@@ -357,6 +362,16 @@ async function parseAndStore(
     classMap,
   })
   const note = parsed.note ?? null
+  const problems = parsed.problems ?? []
+  for (const problem of problems) {
+    await recordOpsEvent(deps.db, {
+      kind: 'source_part_failed',
+      detail: `${source.source_id}: ${problem}`,
+      path: source.url,
+    })
+  }
+  // An incomplete read is never 'unchanged': the next tick reads the page again.
+  const readBasis = problems.length ? JSON.stringify({ ...basis, context: INCOMPLETE }) : basisJson
 
   const toStored = (row: EntityRow): StoredEntityRow => ({
     ...row,
@@ -394,7 +409,7 @@ async function parseAndStore(
       'baseline',
       [`${parsed.entities.length} entities`, note].filter(Boolean).join('; '),
       snapshot.id,
-      basisJson,
+      readBasis,
     )
   }
   let massRemoval: string | null = null
@@ -481,7 +496,7 @@ async function parseAndStore(
     removed: reread ? 0 : removed.length,
     modified: reread || movedFrom ? 0 : modified.length,
     alerts: alerts.length,
-    basis: basisJson,
+    basis: readBasis,
   }
 }
 

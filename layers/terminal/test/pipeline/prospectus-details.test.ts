@@ -45,6 +45,14 @@ const s1aProv = provenanceOf(PROSPECTUS_FIXTURE.sourceId)
 const s1 = parseProspectus(s1Html, S1, CIK, s1Prov)
 const s1a = parseProspectus(s1aHtml, S1A, CIK, s1aProv)
 
+/** A part's parser refusing: that part is named in `failed`, the rest still read. */
+function refuses(html: string, part: ProspectusOutput['failed'][number]['part'], error: string) {
+  const out = parseProspectus(html, S1A, CIK, s1aProv)
+  expect(out.failed).toContainEqual({ part, error: expect.stringContaining(error) })
+  expect(out.offering ?? out.revenue[0]).toBeTruthy()
+  return out
+}
+
 const lineOf = (out: ProspectusOutput, end: string, key: string) =>
   out.statements
     .find((s) => s.end === end && s.start.startsWith(end.slice(0, 4)))!
@@ -135,15 +143,15 @@ describe('the statement of operations, every line', () => {
 
   it('refuses a statement that does not foot, or lacks a line it must print', () => {
     const slid = s1aHtml.replace('>18,808<', '>19,808<')
-    expect(() => parseProspectus(slid, S1A, CIK, s1aProv)).toThrow(
-      '"Total operating expenses" does not foot',
-    )
+    refuses(slid, 'statements', '"Total operating expenses" does not foot')
     const unbalanced = s1aHtml.replace('>(1,260)<', '>(1,270)<')
-    expect(() => parseProspectus(unbalanced, S1A, CIK, s1aProv)).toThrow(
+    refuses(
+      unbalanced,
+      'statements',
       'operating line does not equal revenue less operating expenses',
     )
     const renamed = s1aHtml.replaceAll('>Net loss<', '>Net result<')
-    expect(() => parseProspectus(renamed, S1A, CIK, s1aProv)).toThrow('lacks net_income')
+    refuses(renamed, 'statements', 'lacks net_income')
     expect(() => figure('12.3.4', 'cell')).toThrow('cell is not a figure')
     expect(figure('$ (1.42)', 'cell')).toBe(-1.42)
     expect(figure('—', 'cell')).toBeNull()
@@ -200,12 +208,12 @@ describe('commitments', () => {
 
   it('refuses a table whose rows do not add up or a filled table with no date', () => {
     const off = s1aHtml.replace('>313,819<', '>303,819<')
-    expect(() => parseProspectus(off, S1A, CIK, s1aProv)).toThrow('do not foot')
+    refuses(off, 'commitments', 'do not foot')
     const undated = s1aHtml.replace(
       /(contractual obligations as of <\/font><font[^>]*>)September&#160;30, 2026/,
       '$1',
     )
-    expect(() => parseProspectus(undated, S1A, CIK, s1aProv)).toThrow('figures but no as-of date')
+    refuses(undated, 'commitments', 'figures but no as-of date')
   })
 })
 
@@ -239,7 +247,7 @@ describe('concentration, shares and risk factors', () => {
       ],
     })
     const bad = s1aHtml.replace('>43%<', '>43 pct<')
-    expect(() => parseProspectus(bad, S1A, CIK, s1aProv)).toThrow('is not a percentage')
+    refuses(bad, 'concentration', 'is not a percentage')
   })
 
   it('records the share counts the S-1/A leaves blank as null, and the ones it prints', () => {

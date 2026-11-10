@@ -77,6 +77,7 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   },
   class_basis_still_stale: { severity: 'warning' },
   source_failed: { severity: 'warning' },
+  source_part_failed: { severity: 'warning' },
   source_absent: { severity: 'warning' },
   filed_facts_failed: { severity: 'warning' },
   filed_facts_run_failed: { severity: 'warning' },

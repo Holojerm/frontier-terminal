@@ -349,14 +349,28 @@ export const RiskFactorsRow = z.strictObject({
 export type RiskFactorsRow = z.infer<typeof RiskFactorsRow>
 
 // Everything the prospectus lane reads from one registration document.
+export const PROSPECTUS_PARTS = [
+  'revenue',
+  'offering',
+  'statements',
+  'commitments',
+  'concentration',
+  'shares',
+  'risk_factors',
+] as const
+export const ProspectusPart = z.enum(PROSPECTUS_PARTS)
+export type ProspectusPart = z.infer<typeof ProspectusPart>
+
 export const ProspectusOutput = z.strictObject({
   revenue: z.array(RevenueRow),
   offering: OfferingRow.nullable(),
-  statements: z.array(StatementRow).min(1),
+  statements: z.array(StatementRow),
   commitments: z.array(CommitmentRow),
   concentration: z.array(ConcentrationRow),
   shares: SharesRow.nullable(),
-  risk_factors: RiskFactorsRow,
+  risk_factors: RiskFactorsRow.nullable(),
+  /** The parts whose parser threw, and why; each is empty or null above. */
+  failed: z.array(z.strictObject({ part: ProspectusPart, error: z.string().min(1) })),
 })
 export type ProspectusOutput = z.infer<typeof ProspectusOutput>
 
