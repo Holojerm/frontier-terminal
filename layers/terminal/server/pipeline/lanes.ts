@@ -99,6 +99,11 @@ export interface ParseResult {
   entities: EntityRow[]
   /** Anything the parser saw and deliberately did not turn into rows. */
   note?: string
+  /**
+   * Parts of the page the parser could not read, while the rest stored. Each
+   * is spooled, and the page is read again next tick (refresh.ts › INCOMPLETE).
+   */
+  problems?: string[]
 }
 
 export interface Lane {
@@ -330,7 +335,8 @@ const PROSPECTUS_REVENUE_LANE: Lane = {
   parse: (text, { prov, snapshotId, derivedKey }) => {
     const target = registrationTarget(derivedKey ?? '')
     const out = parseProspectus(text, target, archivesCik(prov.source_url), prov)
-    const headings = out.risk_factors.sections.reduce((n, s) => n + s.headings.length, 0)
+    const headings = out.risk_factors?.sections.reduce((n, s) => n + s.headings.length, 0) ?? 0
+    const failed = new Set(out.failed.map((f) => f.part))
     return {
       entities: [
         ...normalizeRevenues(out.revenue, snapshotId, target.provider),
@@ -338,10 +344,13 @@ const PROSPECTUS_REVENUE_LANE: Lane = {
         ...normalizeProspectusDetails(out, snapshotId),
       ],
       note:
-        `${out.revenue.length} periods, row "${out.revenue[0]!.tag}"` +
-        (out.offering ? '' : '; cover states no price range or price') +
-        `; ${out.statements[0]!.lines.length} statement lines, ${out.commitments.length} commitment schedules, ` +
-        `${out.concentration.length} concentration tables, ${headings} risk-factor headings`,
+        `${out.revenue.length} periods` +
+        (out.revenue[0] ? `, row "${out.revenue[0].tag}"` : '') +
+        (out.offering || failed.has('offering') ? '' : '; cover states no price range or price') +
+        `; ${out.statements[0]?.lines.length ?? 0} statement lines, ${out.commitments.length} commitment schedules, ` +
+        `${out.concentration.length} concentration tables, ${headings} risk-factor headings` +
+        (failed.size ? `; not read: ${[...failed].join(', ')}` : ''),
+      problems: out.failed.map((f) => `${f.part}: ${f.error}`),
     }
   },
 }
