@@ -1354,6 +1354,16 @@
       "note": "Exhibit 8.1 to Alibaba’s 20-F for fiscal 2026: its subsidiaries, Alibaba Cloud Computing Ltd. among them."
     },
     {
+      "path": "fixtures/sec/prospectus-anthropic-s-1-a-2-offering.html",
+      "source_id": "prospectus-revenue-anthropic-s-1-a-2026-11-10-0001628280-26-072484",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/anthropicpbc-sx1ax2.htm",
+      "fetched_at": "2026-11-10T12:55:11Z",
+      "http_status": 200,
+      "raw_bytes": 14798488,
+      "trim": "one excerpt, bytes unchanged: from the block holding the “The Offering” title (byte 671,754) to the close of the line after its pre-offering basis sentence, 154,751 bytes, cut at element boundaries. parseProspectusShares returned output identical to its run on the untrimmed document.",
+      "note": "Anthropic, PBC's Amendment No. 2 to Form S-1, the first with share counts and a price range ($70.00–$78.00). The summary table breaks across a page, and a concurrent private placement of Class N common stock rewords every outstanding-after row and the basis sentence (“outstanding after this offering and the concurrent private placement is based on …”). 801,351,354 Class A shares offered by Anthropic, 23,648,646 by selling stockholders; 13,086,672,593 shares of all classes outstanding after, on 6,626,640,437 Class A and 5,307,329,452 Class N outstanding as of 2026-09-30."
+    },
+    {
       "path": "fixtures/identifiers/anthropic-s-1-a-note-purchase.htm",
       "source_id": "identifiers-anthropic-s-1-a-npa",
       "source_url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/anthropicpbc-sx1ax1.htm",

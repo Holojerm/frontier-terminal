@@ -165,10 +165,13 @@ const securityHeaders = {
 //              — EDGAR tick, layers/terminal/server/tasks/poll/edgar.ts: the SEC feeds and the
 //                model catalogs, the two axes where latency is worth polling for.
 //   0 */6      — full survey, layers/terminal/server/tasks/poll/survey.ts: every include
-//                source but the careers lane's. Scope policy: layers/terminal/server/pipeline/scopes.ts.
+//                source but the careers and filings lanes'. Scope policy:
+//                layers/terminal/server/pipeline/scopes.ts.
 //   17 */6     — careers lane, layers/terminal/server/tasks/poll/careers.ts: the ~20 MB
 //                Google careers feed in an invocation of its own, so its memory
 //                never shares the survey's 128 MB.
+//   47 */6     — filings lane, layers/terminal/server/tasks/poll/filings.ts: the S-1
+//                indexes and ~14 MB prospectuses, for the same reason.
 //   */5        — launch tripwire, layers/terminal/server/tasks/poll/tripwire.ts: parses the
 //                model catalogs, polls them only when they differ from the
 //                store, and yields on the half-hour ticks above.
@@ -194,6 +197,7 @@ const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:watch', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
   '17 */6 * * *': ['poll:careers'],
+  '47 */6 * * *': ['poll:filings'],
   '*/5 * * * *': ['poll:tripwire', 'cache:warm', 'track-record:search'],
   '0 13 * * MON': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
   '41 * * * *': ['events:sweep', 'bulk:build', 'reliability:record', 'reliability:deploys'],

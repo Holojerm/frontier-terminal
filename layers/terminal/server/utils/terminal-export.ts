@@ -1438,7 +1438,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
       scope: {
         type: 'text',
         meaning:
-          'Which poll ran it: edgar, survey, careers (the large careers feeds, on a six-hourly tick of their own), or tripwire (an off-cycle poll of the model catalogs).',
+          'Which poll ran it: edgar, survey, careers (the large careers feeds, on a six-hourly tick of their own), filings (the registration filings, likewise), or tripwire (an off-cycle poll of the model catalogs).',
       },
       source_id: SOURCE_NAME,
       started_at: {

@@ -50,7 +50,7 @@ const task = defineTask({
     const raw = blobRawStore(blob)
     const lock = unstorageLockStore(kv)
     const polls = []
-    for (const scope of ['survey', 'careers'] as const) {
+    for (const scope of ['survey', 'careers', 'filings'] as const) {
       polls.push(await runPoll(scope, { db, raw, lock, fetcher, sourcesYaml }))
     }
     const recipes = await runRecipes(db, { raw, fetcher, now: () => new Date() })

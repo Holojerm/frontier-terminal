@@ -18,6 +18,7 @@ import {
 import { PROSPECTUS_FIXTURE, parseProspectus } from '../../server/pipeline/parsers/sec/prospectus'
 import { docLines, docText, figure } from '../../server/pipeline/parsers/sec/prospectus-doc'
 import { riskFactorChanges } from '../../server/pipeline/parsers/sec/prospectus-risk-factors'
+import { parseProspectusShares } from '../../server/pipeline/parsers/sec/prospectus-shares'
 import { prospectusFloorAlerts } from '../../server/pipeline/prospectus-floor'
 import { insertRows } from '../../server/pipeline/store'
 import { terminalStamps } from '../../server/utils/terminal-cache'
@@ -270,6 +271,53 @@ describe('concentration, shares and risk factors', () => {
       '$112,500,000 shares$2',
     )
     expect(parseProspectus(filled, S1A, CIK, s1aProv).shares!.lines[0]!.shares).toBe(12_500_000)
+  })
+
+  it('reads Amendment No. 2’s counts across its page break and the private-placement wording', () => {
+    const key = 'anthropic-s-1-a-2026-11-10-0001628280-26-072484'
+    const html = fixtureText('fixtures/sec/prospectus-anthropic-s-1-a-2-offering.html')
+    const prov = provenanceOf(`prospectus-revenue-${key}`)
+    const target = registrationTarget(key)
+    const shares = parseProspectusShares(
+      html,
+      docText(docLines(html)),
+      target,
+      CIK,
+      'Anthropic, PBC',
+      prov,
+    )!
+    const after = 'to be outstanding after this offering and the concurrent private placement'
+    expect(shares.lines.map((l) => [l.label, l.shares, l.with_option])).toEqual([
+      ['Class A common stock offered by us', 801_351_354, null],
+      ['Class A common stock offered by the selling stockholders', 23_648_646, null],
+      [
+        'Underwriters’ option to purchase additional shares of Class A common stock from us',
+        123_750_000,
+        null,
+      ],
+      [`Class A common stock ${after}`, 7_427_991_791, 7_551_741_791],
+      [`Class N common stock ${after}`, 5_658_680_800, null],
+      [`Class T common stock ${after}`, 1, null],
+      [`Class E common stock ${after}`, 0, null],
+      [`Class F common stock ${after}`, 1, null],
+      [
+        `Class A, Class N, Class T, Class E, and Class F common stock ${after}`,
+        13_086_672_593,
+        13_210_422_593,
+      ],
+    ])
+    expect(shares.before_as_of).toBe('2026-09-30')
+    expect(shares.before).toEqual([
+      { label: 'Class A common stock', shares: 6_626_640_437 },
+      { label: 'Class N common stock', shares: 5_307_329_452 },
+      { label: 'Class T common stock', shares: 1 },
+      { label: 'Class F common stock', shares: 1 },
+    ])
+    expect(shares).toMatchObject({
+      accession_no: target.accession_no,
+      filed: '2026-11-10',
+      ...prov,
+    })
   })
 
   it('reads every risk-factor heading under its subsection', () => {
