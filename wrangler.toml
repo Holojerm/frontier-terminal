@@ -272,6 +272,9 @@ NUXT_OWNER_EMAIL_FROM = "frontier-terminal@frontierterm.com"
 # Public digest subscriptions: the from address on a domain verified in Resend.
 # Inert until the NUXT_RESEND_API_KEY secret below is also set.
 NUXT_SUBSCRIBE_EMAIL_FROM = "digest@frontierterm.com"
+# Press notes go straight to reporters from this address once NUXT_RESEND_API_KEY
+# is set; replies go to NUXT_OWNER_EMAIL_TO (layers/terminal/server/pipeline/press.ts).
+NUXT_PRESS_EMAIL_FROM = "press@frontierterm.com"
 # Which queue the EVENTS consumer owns. MUST equal `queue` in [[queues.consumers]]
 # above (layers/terminal/nuxt.config.ts says why it is a var).
 NUXT_EVENTS_QUEUE_NAME = "frontier-terminal-events"
@@ -284,8 +287,8 @@ NUXT_INDEXNOW_KEY = "fe2738e740b8c6b06a20d76ab1877559"
 #                                32+ chars (`openssl rand -base64 32`). Unset = the
 #                                route 404s and the app is simply not on the dashboard.
 #   NUXT_FLEET_TOKEN_PREVIOUS    only during a rotation — server/utils/fleet-auth.ts.
-#   NUXT_PRESS_LIST              JSON press list for the press briefs (layers/terminal/server/pipeline/press.ts).
-#                                Names people, so never in git. Unset = no briefs.
+#   NUXT_PRESS_LIST              JSON press list for the press notes (layers/terminal/server/pipeline/press.ts).
+#                                Names people, so never in git. Unset = no notes.
 #   NUXT_GDELT_TOKEN             bearer the GitHub Actions GDELT job presents to /api/gdelt/*
 #                                (scripts/gdelt-search.ts); the same value is the repo secret
 #                                GDELT_TOKEN. 32+ chars. Unset = those routes 404, no GDELT file is read.

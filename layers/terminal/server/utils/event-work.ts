@@ -14,7 +14,16 @@ import type { OwnerMailer } from './owner-mail'
 import { drainSocialPosts, type SocialConfig } from '#layers/social/server/utils/social'
 import type { SocialPublisher } from '#layers/social/server/utils/buffer'
 
-import { pendingPressAlerts, pressBrief, type PressContact } from '../pipeline/press'
+import {
+  pendingPressAlerts,
+  pressBrief,
+  pressMessage,
+  pressReceipt,
+  type PressAlert,
+  type PressContact,
+  type PressOutcome,
+} from '../pipeline/press'
+import type { MailMessage } from './resend'
 import { enqueueCriticalAlerts } from '../pipeline/social'
 import type { PipelineDb } from '../pipeline/store'
 import { delaySecondsUntil, scheduleDrain } from './events'
@@ -59,8 +68,12 @@ export interface PressDeps {
   contacts: readonly PressContact[]
   mailer: OwnerMailer
   origin: string
-  /** The `press:briefed:<id>` markers: an alert is briefed once. */
+  /** The `press:briefed:<id>` and `press:sent:<id>:<to>` markers: each goes out once. */
   briefed: CacheStore
+  /** Sends a note to a reporter (Resend); null mails the owner a mailto brief instead. */
+  send: ((message: MailMessage) => Promise<void>) | null
+  /** Where a reporter's reply goes: the owner's inbox. */
+  replyTo: string
 }
 
 export interface EventDeps {
@@ -77,6 +90,7 @@ export interface EventDeps {
 }
 
 export const briefedKey = (id: string) => `press:briefed:${id}`
+export const noteSentKey = (id: string, to: string) => `press:sent:${id}:${to.toLowerCase()}`
 
 /** Oldest queued post, or null when the social outbox is empty. */
 export async function nextSocialDue(db: PipelineDb): Promise<Date | null> {
@@ -147,7 +161,45 @@ export async function fanOutAlerts(deps: EventDeps): Promise<FanOutResult> {
   return result
 }
 
-/** Mail the owner one brief per new registration-filing alert. Returns how many went out. */
+/**
+ * Each reporter's note, once: a reporter already marked sent for this alert
+ * counts as sent and is not mailed again, so a retry (the receipt failed, or
+ * nothing went out) never mails anyone twice.
+ */
+async function sendPressNotes(
+  deps: EventDeps,
+  press: PressDeps,
+  send: (message: MailMessage) => Promise<void>,
+  alert: PressAlert,
+): Promise<PressOutcome[]> {
+  const outcomes: PressOutcome[] = []
+  for (const contact of press.contacts) {
+    const message = pressMessage(alert, contact, press.origin, press.replyTo)
+    const key = noteSentKey(alert.id, message.to)
+    if (await press.briefed.get(key)) {
+      outcomes.push({ contact, to: message.to, error: null })
+      continue
+    }
+    try {
+      await send(message)
+      await press.briefed.set(key, deps.now().toISOString())
+      outcomes.push({ contact, to: message.to, error: null })
+    } catch (error) {
+      outcomes.push({
+        contact,
+        to: message.to,
+        error: error instanceof Error ? error.message : String(error),
+      })
+    }
+  }
+  return outcomes
+}
+
+/**
+ * Per new registration-filing alert: send every reporter their note and mail
+ * the owner a receipt, or without a sender, mail the owner the mailto brief.
+ * Returns how many alerts were handled.
+ */
 async function sendPressBriefs(deps: EventDeps, press: PressDeps): Promise<number> {
   const pending = await pendingPressAlerts(deps.db, async (id) =>
     Boolean(await press.briefed.get(briefedKey(id))),
@@ -155,7 +207,19 @@ async function sendPressBriefs(deps: EventDeps, press: PressDeps): Promise<numbe
   let sent = 0
   for (const alert of pending) {
     try {
-      await press.mailer(pressBrief(alert, press.contacts, press.origin))
+      if (press.send) {
+        const outcomes = await sendPressNotes(deps, press, press.send, alert)
+        // Nothing went out (a bad key, an outage): leave the alert pending so the next fan-out retries.
+        if (outcomes.every((o) => o.error)) {
+          throw new Error(`no press note went out: ${outcomes[0]?.error ?? 'no contacts'}`)
+        }
+        for (const o of outcomes.filter((o) => o.error)) {
+          await deps.record('press_note_failed', `${alert.id}: ${o.contact.outlet}: ${o.error}`)
+        }
+        await press.mailer(pressReceipt(alert, outcomes, press.origin))
+      } else {
+        await press.mailer(pressBrief(alert, press.contacts, press.origin))
+      }
       await press.briefed.set(briefedKey(alert.id), deps.now().toISOString())
       sent++
     } catch (error) {

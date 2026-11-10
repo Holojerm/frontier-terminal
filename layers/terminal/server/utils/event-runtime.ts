@@ -15,9 +15,12 @@ import { recordOpsEvent } from '#server/utils/ops'
 import { parsePressList } from '../pipeline/press'
 import { SCHEMA_VERSION } from './data-schema'
 import type { EventDeps } from './event-work'
+import type { MailMessage } from './resend'
 import type { CacheStore } from './terminal-cache'
 import { terminalStamps } from './terminal-cache'
 import { getOwnerMailer } from './owner-mail'
+import { sendMail } from './resend'
+import { subscribeConfig } from './subscribe-config'
 import { fetchWebhookSender, signingKeyRefusal } from './webhook-sign'
 
 export const kvStore: CacheStore = {
@@ -49,7 +52,27 @@ export function eventDeps(env: Record<string, unknown> | undefined): EventDeps {
           stamp: async () => (await terminalStamps(db)).poll,
           send: fetchWebhookSender(),
         },
-    press: contacts.length && mailer ? { contacts, mailer, origin, briefed: kvStore } : null,
+    press:
+      contacts.length && mailer
+        ? {
+            contacts,
+            mailer,
+            origin,
+            briefed: kvStore,
+            send: pressSender(runtime),
+            replyTo: runtime.ownerEmailTo,
+          }
+        : null,
     record: (kind, detail) => recordOpsEvent(db, { kind, detail }),
   }
+}
+
+/** Resend, sending from the press address; null until both are configured. */
+function pressSender(runtime: ReturnType<typeof useRuntimeConfig>) {
+  const resend = subscribeConfig({
+    resendApiKey: runtime.resendApiKey,
+    subscribeEmailFrom: runtime.pressEmailFrom,
+    public: runtime.public,
+  })
+  return resend ? (message: MailMessage) => sendMail(resend, [message]) : null
 }
