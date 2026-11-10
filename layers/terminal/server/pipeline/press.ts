@@ -1,8 +1,9 @@
 // Press notes: when a registration filing parses (a prospectus-floor alert),
-// one note per reporter, composed here from the alert. They reach the owner,
-// never a reporter: the EVENTS queue's alert fan-out
-// (layers/terminal/server/utils/event-work.ts) mails a brief of mailto: links
-// within a minute or so. A person decides that a note goes out.
+// one note per reporter, composed here from the alert. The EVENTS queue's
+// alert fan-out (layers/terminal/server/utils/event-work.ts) sends each note
+// to its reporter through Resend within a minute or so, then mails the owner
+// a receipt of who got it. Without Resend configured it mails the owner a
+// brief of mailto: links instead, and a person sends them.
 //
 // The press list is a Worker secret (NUXT_PRESS_LIST, JSON), not in the repo:
 // it is a list of people, and this repository is public.
@@ -12,6 +13,7 @@ import { z } from 'zod'
 
 import * as tables from '#server/db/schema'
 import type { OwnerMessage } from '../utils/owner-mail'
+import type { MailMessage } from '../utils/resend'
 import { absoluteUrl } from '#shared/utils/site'
 import { PROSPECTUS_FLOOR_RULE } from './prospectus-floor'
 import type { PipelineDb } from './store'
@@ -72,6 +74,8 @@ export function pressDraft(alert: PressAlert, contact: PressContact, origin: str
     '',
     'Jeremy Ettlinger',
     'Frontier Terminal · frontierterm.com',
+    '',
+    'If you would rather not get these, reply and I will take you off the list.',
   ].join('\n')
   return {
     name: contact.name,
@@ -91,6 +95,73 @@ export function pressNote(alert: PressAlert, contact: PressContact, origin: stri
 
 const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
+
+/** The sender's name on a note: the person who signs it. */
+export const PRESS_FROM_NAME = 'Jeremy Ettlinger'
+
+/** One reporter's note as mail, sent as written in pressDraft. */
+export function pressMessage(
+  alert: PressAlert,
+  contact: PressContact,
+  origin: string,
+  replyTo: string,
+): MailMessage {
+  const d = pressDraft(alert, contact, origin)
+  const link = (line: string) =>
+    esc(line).replace(/https:\/\/\S+/g, (url) => `<a href="${url}">${url}</a>`)
+  const html = d.body
+    .split('\n\n')
+    .map((para) => `<p>${para.split('\n').map(link).join('<br>')}</p>`)
+    .join('\n')
+  return {
+    to: d.to,
+    subject: d.subject,
+    text: d.body,
+    html,
+    fromName: PRESS_FROM_NAME,
+    replyTo,
+  }
+}
+
+export interface PressOutcome {
+  contact: PressContact
+  to: string
+  /** The provider's refusal, or null when the note went out. */
+  error: string | null
+}
+
+/** The owner's receipt: which reporters got the note, and which failed. */
+export function pressReceipt(
+  alert: PressAlert,
+  outcomes: readonly PressOutcome[],
+  origin: string,
+): OwnerMessage {
+  const permalink = absoluteUrl(origin, `/alerts/${alert.id}`)
+  const sent = outcomes.filter((o) => !o.error)
+  const failed = outcomes.filter((o) => o.error)
+  const line = (o: PressOutcome) =>
+    `${o.contact.name}, ${o.contact.outlet} <${o.to}>${o.error ? `: ${o.error}` : ''}`
+  const subject = `Press notes sent (${sent.length}/${outcomes.length}): ${alert.headline}`
+  const text = [
+    alert.headline,
+    permalink,
+    '',
+    `Sent to ${sent.length}:`,
+    ...sent.map((o) => `- ${line(o)}`),
+    ...(failed.length
+      ? ['', `Failed for ${failed.length}:`, ...failed.map((o) => `- ${line(o)}`)]
+      : []),
+  ].join('\n')
+  const list = (items: readonly PressOutcome[]) =>
+    ['<ul>', ...items.map((o) => `<li>${esc(line(o))}</li>`), '</ul>'].join('\n')
+  const html = [
+    `<p><strong><a href="${esc(permalink)}">${esc(alert.headline)}</a></strong></p>`,
+    `<p>Sent to ${sent.length}:</p>`,
+    list(sent),
+    ...(failed.length ? [`<p>Failed for ${failed.length}:</p>`, list(failed)] : []),
+  ].join('\n')
+  return { subject, html, text, ids: [alert.id] }
+}
 
 /** The owner's mail: the alert, then one click-to-draft link per contact. */
 export function pressBrief(

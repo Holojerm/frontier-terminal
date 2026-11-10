@@ -21,6 +21,7 @@ import {
   runWebhookDrain,
   sweepEvents,
   type EventDeps,
+  type PressDeps,
 } from '../server/utils/event-work'
 import {
   MAX_DELAY_SECONDS,
@@ -31,6 +32,7 @@ import {
   setEventSender,
   type EventMessage,
 } from '../server/utils/events'
+import type { MailMessage } from '../server/utils/resend'
 import type { CacheStore } from '../server/utils/terminal-cache'
 import { signingKeyId, type WebhookRequest } from '../server/utils/webhook-sign'
 
@@ -255,21 +257,93 @@ describe('fanOutAlerts', () => {
     expect(sent).toEqual([{ type: 'webhooks.drain', delaySeconds: FANOUT_SETTLE_SECONDS }])
   })
 
-  it('mails one press brief per filing alert, once', async () => {
+  const REPORTERS = [
+    { name: 'A Reporter', outlet: 'Wire', email: 'a@example.org', priority: 1 },
+    { name: 'Tips', outlet: 'Paper', tips_email: 'tips@example.org', priority: 2 },
+  ]
+  const pressDeps = (send: PressDeps['send'], mails: string[] = []): PressDeps => ({
+    contacts: REPORTERS,
+    mailer: async (m) => void mails.push(m.subject),
+    origin: ORIGIN,
+    briefed: mapStore(),
+    send,
+    replyTo: 'owner@example.org',
+  })
+
+  it('without a sender, mails the owner one mailto brief per filing alert, once', async () => {
     queueFake()
     await seedAlert('critical', { rule: 'prospectus-floor' })
     const mails: string[] = []
-    const d = deps({
-      press: {
-        contacts: [{ name: 'A Reporter', outlet: 'Wire', email: 'a@example.org', priority: 1 }],
-        mailer: async (digest) => void mails.push(digest.subject),
-        origin: ORIGIN,
-        briefed: mapStore(),
-      },
-    })
+    const d = deps({ press: pressDeps(null, mails) })
     expect((await fanOutAlerts(d)).press).toBe(1)
     expect((await fanOutAlerts(d)).press).toBe(0)
     expect(mails).toHaveLength(1)
+    expect(mails[0]).toMatch(/^Press brief ready:/)
+  })
+
+  it('sends each reporter their note, once, and mails the owner a receipt', async () => {
+    queueFake()
+    await seedAlert('critical', { rule: 'prospectus-floor' })
+    const notes: MailMessage[] = []
+    const mails: string[] = []
+    const d = deps({ press: pressDeps(async (m) => void notes.push(m), mails) })
+    expect((await fanOutAlerts(d)).press).toBe(1)
+    expect((await fanOutAlerts(d)).press).toBe(0)
+    expect(notes.map((n) => [n.to, n.fromName, n.replyTo])).toEqual([
+      ['a@example.org', 'Jeremy Ettlinger', 'owner@example.org'],
+      ['tips@example.org', 'Jeremy Ettlinger', 'owner@example.org'],
+    ])
+    expect(notes[0]!.text).toMatch(/^Hi A,/)
+    expect(notes[0]!.html).toContain(`<a href="${ORIGIN}/revenue">`)
+    expect(mails).toEqual([expect.stringMatching(/^Press notes sent \(2\/2\):/)])
+  })
+
+  it('names a reporter it could not reach in the receipt and the spool, and moves on', async () => {
+    queueFake()
+    await seedAlert('critical', { rule: 'prospectus-floor' })
+    const notes: string[] = []
+    const mails: string[] = []
+    const events: string[] = []
+    const d = deps({
+      press: pressDeps(async (m) => {
+        if (m.to.startsWith('tips')) throw new Error('resend 422')
+        notes.push(m.to)
+      }, mails),
+    })
+    d.record = async (kind, detail) => void events.push(`${kind}: ${detail}`)
+    expect((await fanOutAlerts(d)).press).toBe(1)
+    expect((await fanOutAlerts(d)).press).toBe(0)
+    expect(notes).toEqual(['a@example.org'])
+    expect(mails).toEqual([expect.stringMatching(/^Press notes sent \(1\/2\):/)])
+    expect(events).toEqual([expect.stringMatching(/^press_note_failed: .*Paper: resend 422$/)])
+  })
+
+  it('never mails a reporter twice when the receipt fails and the alert is retried', async () => {
+    queueFake()
+    await seedAlert('critical', { rule: 'prospectus-floor' })
+    const notes: string[] = []
+    let receipts = 0
+    const d = deps({ press: pressDeps(async (m) => void notes.push(m.to)) })
+    d.press!.mailer = async () => {
+      if (receipts++ === 0) throw new Error('binding down')
+    }
+    expect((await fanOutAlerts(d)).press).toBe(0)
+    expect((await fanOutAlerts(d)).press).toBe(1)
+    expect(notes).toEqual(['a@example.org', 'tips@example.org'])
+  })
+
+  it('leaves the alert pending when no note went out, and spools why', async () => {
+    queueFake()
+    await seedAlert('critical', { rule: 'prospectus-floor' })
+    const events: string[] = []
+    const d = deps({
+      press: pressDeps(async () => {
+        throw new Error('resend 401')
+      }),
+    })
+    d.record = async (kind, detail) => void events.push(`${kind}: ${detail}`)
+    expect((await fanOutAlerts(d)).press).toBe(0)
+    expect(events).toEqual([expect.stringContaining('no press note went out: resend 401')])
   })
 })
 

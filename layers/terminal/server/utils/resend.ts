@@ -10,6 +10,10 @@ export interface MailMessage {
   html: string
   text: string
   headers?: Record<string, string>
+  /** Display name for the from address; the app's name when unset. */
+  fromName?: string
+  /** Where a reply goes; contact@ on the app's domain when unset. */
+  replyTo?: string
 }
 
 /** The most messages one /emails/batch call takes is 100; D1 binds cap us lower elsewhere. */
@@ -19,9 +23,9 @@ type Fetcher = (url: string, init: RequestInit) => Promise<Response>
 
 function payload(cfg: SubscribeConfig, m: MailMessage) {
   return {
-    from: `${cfg.appName} <${cfg.from}>`,
+    from: `${m.fromName ?? cfg.appName} <${cfg.from}>`,
     to: [m.to],
-    reply_to: `contact@${new URL(cfg.appUrl).hostname}`,
+    reply_to: m.replyTo ?? `contact@${new URL(cfg.appUrl).hostname}`,
     subject: m.subject,
     html: m.html,
     text: m.text,

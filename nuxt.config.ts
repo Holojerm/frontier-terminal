@@ -496,6 +496,10 @@ export default defineNuxtConfig({
     // { name, outlet, email?, tips_email?, priority }. A Worker secret because it
     // names people and this repo is public. `wrangler secret put NUXT_PRESS_LIST`.
     pressList: '',
+    // The from address on press notes, on a domain verified in Resend. With
+    // NUXT_RESEND_API_KEY set, notes go straight to reporters; without, the
+    // owner gets a brief of mailto: links (layers/terminal/server/pipeline/press.ts).
+    pressEmailFrom: '',
     // SEC fair-access policy requires a contact email in the User-Agent of
     // every request to sec.gov hosts. Empty = the EDGAR sources are skipped
     // with a 'failed' run, never fetched anonymously (layers/terminal/server/pipeline/fetch.ts).
