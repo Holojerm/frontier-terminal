@@ -5,7 +5,11 @@ import sourcesYaml from '~~/sources.yaml?raw'
 
 import { parseDerivedSourcesBlock } from '../../server/pipeline/derived'
 import { MAX_BODY_BYTES } from '../../server/pipeline/fetch'
-import { CAREERS_SOURCES, sourceIdsForScope } from '../../server/pipeline/scopes'
+import {
+  CAREERS_SOURCES,
+  isRegistrationSource,
+  sourceIdsForScope,
+} from '../../server/pipeline/scopes'
 import { includeSources, type FetchSource } from '../../server/pipeline/sources'
 import { TRIPWIRE_REFRESH } from '../../server/pipeline/tripwire'
 import { RECIPES } from '../../server/theses/recipes/registry'
@@ -52,7 +56,7 @@ const LANE_BUDGET = 112 * MiB
 /**
  * Derived sources are named by the store, not by a file, so a lane's real
  * count comes from production: every instance per family in /api/status ›
- * sources on 2026-11-04, statics in the same family included. Each one beyond
+ * sources on 2026-11-04 (registration filings on 2026-11-10), statics in the same family included. Each one beyond
  * the committed fixtures is sized like its family's largest fixture. Raise a
  * count when a family grows by a large instance (a new prospectus is ~14 MB).
  */
@@ -60,8 +64,8 @@ const DERIVED_INSTANCES: Readonly<Record<string, number>> = {
   'edgar-submissions': 8,
   'edgar-companyfacts': 2,
   'xbrl-segment': 4,
-  'filing-index': 2,
-  'prospectus-revenue': 2,
+  'filing-index': 3,
+  'prospectus-revenue': 3,
   'openai-model-md': 36,
   'google-model-md': 29,
   'openai-misalignment-report': 20,
@@ -194,9 +198,10 @@ const derivedFixtures: FetchSource[] = manifestJson.fixtures
 const known = [...statics, ...derivedFixtures]
 
 /** Production's instances beyond the committed ones, as placeholder ids the sizer prices by family. */
-function productionExtras(): string[] {
+function productionExtras(lane: 'survey' | 'filings'): string[] {
   const out: string[] = []
   for (const family of families) {
+    if (isRegistrationSource(`${family}-`) !== (lane === 'filings')) continue
     const have = known.filter((s) => familyOf(s.source_id) === family).length
     for (let n = have; n < (DERIVED_INSTANCES[family] ?? 0); n++) {
       out.push(`${family}-production-${n + 1}`)
@@ -231,11 +236,16 @@ const productionLanes: readonly Lane[] = [
     where: `${SCOPES} + theses/recipes/registry.ts, 0 */6`,
     ids: [
       ...sourceIdsForScope('survey', known),
-      ...productionExtras(),
+      ...productionExtras('survey'),
       ...RECIPES.map((r) => r.id),
     ],
   },
   { name: 'careers', where: `${SCOPES}, 17 */6`, ids: sourceIdsForScope('careers', known) },
+  {
+    name: 'filings',
+    where: `${SCOPES}, 47 */6`,
+    ids: [...sourceIdsForScope('filings', known), ...productionExtras('filings')],
+  },
   {
     name: 'tripwire',
     where: 'layers/terminal/server/pipeline/tripwire.ts, */5',
@@ -273,7 +283,16 @@ describe('payload budget', () => {
     expect(
       found.some((v) => v.startsWith('google-careers is') && v.includes('SOURCE_BUDGET')),
     ).toBe(true)
-    expect(found.some((v) => v.startsWith('The survey lane'))).toBe(true)
+  })
+
+  // The configuration Anthropic's Amendment No. 2 (2026-11-10) would have made:
+  // a third ~14 MB prospectus inside the survey.
+  test('catches the registration filings back in the survey', () => {
+    const filings = productionLanes.find((l) => l.name === 'filings')!
+    const merged = productionLanes
+      .filter((l) => l !== filings)
+      .map((l) => (l.name === 'survey' ? { ...l, ids: [...l.ids, ...filings.ids] } : l))
+    expect(budgetViolations(merged, sizeOf).some((v) => v.startsWith('The survey lane'))).toBe(true)
   })
 
   test('a source with no recorded size and no sibling fails with the fix', () => {

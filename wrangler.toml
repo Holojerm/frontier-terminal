@@ -160,10 +160,12 @@ enabled = true
 #   "*/30 * * * *"  ops:watch  — freshness + launch-coverage checks, then prunes ops_events
 #                   poll:edgar — the two SEC feeds (layers/terminal/server/pipeline/scopes.ts)
 #   "0 */6 * * *"   poll:survey — every include source: pricing, hiring, EDGAR,
-#                   status pages, OpenRouter rankings — except the careers lane
+#                   status pages, OpenRouter rankings — except the careers and filings lanes
 #   "17 */6 * * *"  poll:careers — the ~20 MB Google careers feed, alone, so its
 #                   memory never shares the survey's invocation
 #                   (CAREERS_SOURCES in layers/terminal/server/pipeline/scopes.ts)
+#   "47 */6 * * *"  poll:filings — the S-1 indexes and ~14 MB prospectuses, for the
+#                   same reason (REGISTRATION_PREFIXES in the same file)
 #   "*/5 * * * *"   poll:tripwire — parses the four model catalogs and polls
 #                   them off-cycle only when they differ from the store
 #                   cache:warm — re-renders the public pages after a deploy or poll
@@ -189,6 +191,7 @@ crons = [
   "*/30 * * * *",
   "0 */6 * * *",
   "17 */6 * * *",
+  "47 */6 * * *",
   "*/5 * * * *",
   "0 13 * * MON",
   "41 * * * *",

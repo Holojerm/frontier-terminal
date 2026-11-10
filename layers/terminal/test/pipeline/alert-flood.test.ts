@@ -90,7 +90,8 @@ const poll = (scope: PollScope, at: string, fetcher: SourceFetcher) => {
 
 /** The scopes the crons run, in one tick's order. `at` is not a survey instant for edgar. */
 async function tick(at: string, fetcher: SourceFetcher) {
-  for (const scope of ['survey', 'careers', 'edgar'] as const) await poll(scope, at, fetcher)
+  for (const scope of ['survey', 'careers', 'filings', 'edgar'] as const)
+    await poll(scope, at, fetcher)
 }
 
 const counts = async () => ({

@@ -154,6 +154,18 @@ describe('scopes', () => {
       ALL_IDS.filter((id) => id !== 'google-careers'),
     )
     expect(sourceIdsForScope('careers', ALL)).toEqual(['google-careers'])
+    // Each prospectus is ~14 MB: the registration filings run on the filings tick, never the survey.
+    const filings = ['filing-index-', 'prospectus-revenue-'].map((p) => ({
+      source_id: `${p}anthropic-s-1-a-2026-11-10-0001628280-26-072484`,
+      url: 'https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/',
+      ext: 'html',
+    }))
+    expect(sourceIdsForScope('filings', [...ALL, ...filings])).toEqual(
+      filings.map((s) => s.source_id),
+    )
+    expect(sourceIdsForScope('survey', [...ALL, ...filings])).toEqual(
+      ALL_IDS.filter((id) => id !== 'google-careers'),
+    )
     expect(sourceIdsForScope('edgar', ALL)).not.toContain('google-careers')
     expect(ALL_IDS).toHaveLength(46)
     // The status feeds ride the six-hourly survey only, never the EDGAR tick.
