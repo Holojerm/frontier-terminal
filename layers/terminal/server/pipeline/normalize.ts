@@ -266,7 +266,9 @@ export function normalizeProspectusDetails(
           ),
         ]
       : []),
-    toEntity(riskFactorsKey(rf.accession_no), 'risk_factors', rf.provider, snapshotId, rf),
+    ...(rf
+      ? [toEntity(riskFactorsKey(rf.accession_no), 'risk_factors', rf.provider, snapshotId, rf)]
+      : []),
   ])
 }
 

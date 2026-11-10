@@ -139,8 +139,9 @@ const run = (ids: readonly string[], fetcher: SourceFetcher) =>
   runRefresh({ db, raw, fetcher, sourcesYaml, now }, 'survey', ids)
 
 /** Anthropic's S-1 as the full-text search and its own submissions feed list it. */
-function fetcher(): SourceFetcher {
+function fetcher(prospectus = prospectusHtml): SourceFetcher {
   const byUrl = new Map(manifest.fixtures.map((f) => [f.source_url, fixtureText(f.path)]))
+  byUrl.set(prospectusProv.source_url, prospectus)
   const fts = JSON.parse(fixtureText('fixtures/sec/edgar-fts.json')) as {
     hits: { hits: unknown[] }
   }
@@ -270,5 +271,37 @@ describe('S-1 revenue end to end', () => {
     expect(anthropic.sources[0]!.source_id).toBe(REGISTRATION_FIXTURE.prospectusSourceId)
     expect(anthropic.filer!.caveat).toContain('tags no financial XBRL')
     expect(revenue.rule).toContain('printed statement of operations')
+  })
+
+  it('stores the parts that read and alerts on them when one part does not, then reads it again', async () => {
+    // The 2026-11-10 failure: a share-count sentence reworded past the parser.
+    const reworded = prospectusHtml.replace(
+      'outstanding after this offering is based on',
+      'outstanding after this offering will be based on',
+    )
+    expect(reworded).not.toBe(prospectusHtml)
+    const f = fetcher(reworded)
+    await run(['edgar-fts'], f)
+    await run(['edgar-submissions-anthropic'], f)
+    await run([REGISTRATION_FIXTURE.indexSourceId], f)
+
+    const first = await run([REGISTRATION_FIXTURE.prospectusSourceId], f)
+    expect(first.sources[0]).toMatchObject({ status: 'ok', alerts: 1 })
+    expect(first.sources[0]!.detail).toContain('not read: shares')
+    const [alert] = await db.select().from(schema.alerts)
+    expect(alert!.headline).toContain('$16,286 million revenue for the six months ended 2026-06-30')
+    const entities = await db.select().from(schema.entities)
+    expect(entities.some((e) => e.entity_type === 'revenue')).toBe(true)
+    expect(entities.some((e) => e.entity_type === 'shares')).toBe(false)
+    const spooled = async () =>
+      (await db.select().from(schema.opsEvents)).filter((e) => e.kind === 'source_part_failed')
+    expect((await spooled()).map((e) => e.detail)).toEqual([
+      `${REGISTRATION_FIXTURE.prospectusSourceId}: shares: "The Offering" states no pre-offering basis`,
+    ])
+
+    // Same bytes next tick: an incomplete read is read again, never 'unchanged'.
+    const second = await run([REGISTRATION_FIXTURE.prospectusSourceId], f)
+    expect(second.sources[0]).toMatchObject({ status: 'ok', alerts: 0 })
+    expect(await spooled()).toHaveLength(2)
   })
 })
