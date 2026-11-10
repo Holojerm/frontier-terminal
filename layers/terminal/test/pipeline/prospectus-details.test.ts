@@ -397,6 +397,7 @@ beforeEach(async () => {
     schema.changes,
     schema.entities,
     schema.snapshots,
+    schema.filingReadings,
   ]) {
     await db.delete(table)
   }
@@ -433,6 +434,34 @@ describe('the risk-factor alert', () => {
       'added “Our dual listing may depress the price of our Class A common stock.”; removed “',
     )
     expect(alert!.explanation).toMatch(/; reworded \d+\.$/)
+  })
+
+  it('stays notable when the judge already announced the filing from what the parser missed', async () => {
+    await store(s1, REGISTRATION_FIXTURE.prospectusSourceId)
+    const added = diff(
+      [],
+      [
+        ...normalizeRevenues(s1a.revenue, 'snap', 'anthropic'),
+        ...normalizeOfferings(s1a.offering ? [s1a.offering] : [], 'snap'),
+      ],
+      '2026-11-04T14:00:00.000Z',
+    ).changes
+    const [before] = await prospectusFloorAlerts(db, added)
+    expect(before!.severity).toBe('critical')
+    await db.insert(schema.filingReadings).values({
+      id: 'r',
+      source_id: PROSPECTUS_FIXTURE.sourceId,
+      accession_no: S1A.accession_no,
+      part: 'revenue',
+      quote: 'q',
+      values: '{}',
+      alert_id: 'a',
+      source_url: s1aProv.source_url,
+      fetched_at: s1aProv.fetched_at,
+      read_at: s1aProv.fetched_at,
+    })
+    const [after] = await prospectusFloorAlerts(db, added)
+    expect(after!.severity).toBe('notable')
   })
 
   it('stays silent when the headings were only reworded', async () => {

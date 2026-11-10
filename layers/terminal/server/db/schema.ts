@@ -578,6 +578,27 @@ export const reportedArticles = sqliteTable(
   ],
 )
 
+// One row per part of a registration filing the parser could not read and
+// the judge did, from a sentence the Worker found verbatim in the stored
+// document (layers/terminal/server/pipeline/judge/filing-review.ts). `values`
+// is what the Worker re-read from that sentence, not what the model said.
+export const filingReadings = sqliteTable(
+  'filing_readings',
+  {
+    id: text('id').primaryKey(),
+    source_id: text('source_id').notNull(),
+    accession_no: text('accession_no').notNull(),
+    part: text('part').notNull(), // revenue | offering
+    quote: text('quote').notNull(),
+    values: text('values').notNull(), // JSON
+    alert_id: text('alert_id'),
+    source_url: text('source_url').notNull(),
+    fetched_at: text('fetched_at').notNull(),
+    read_at: text('read_at').notNull(),
+  },
+  (t) => [index('filing_readings_accession_idx').on(t.accession_no)],
+)
+
 // One row per headline the judge read: how many figures it found (0 when the
 // headline states none we track).
 export const reportedReviews = sqliteTable(

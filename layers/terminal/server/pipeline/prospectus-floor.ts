@@ -1,4 +1,4 @@
-import { like } from 'drizzle-orm'
+import { eq, like } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import {
@@ -258,6 +258,15 @@ export function riskSentence(
   return `Against the ${priorLabel}, its ${count} risk-factor headings ${parts.join('; ')}.`
 }
 
+async function judgeRead(db: PipelineDb, accessionNo: string): Promise<boolean> {
+  const [row] = await db
+    .select({ id: tables.filingReadings.id })
+    .from(tables.filingReadings)
+    .where(eq(tables.filingReadings.accession_no, accessionNo))
+    .limit(1)
+  return Boolean(row)
+}
+
 const headingCount = (r: RiskFactorsRow) => r.sections.reduce((n, s) => n + s.headings.length, 0)
 
 export async function prospectusFloorAlerts(
@@ -344,10 +353,13 @@ export async function prospectusFloorAlerts(
     // against, and its s1-floor alert is already the critical one.
     const newPeriod = now !== undefined && (!before || before.end !== now.end)
     const changed = prior !== null && (termsMoved(o, prior.offering) || newPeriod)
+    // The judge already announced this filing from what the parser could not
+    // read (judge/filing-review.ts): this one is the record, not news again.
+    const announced = await judgeRead(db, filing.accession_no)
     alerts.push(
       AlertRow.parse({
         id: contentHash({ rule: PROSPECTUS_FLOOR_RULE, accession_no: filing.accession_no }),
-        severity: changed ? 'critical' : 'notable',
+        severity: changed && !announced ? 'critical' : 'notable',
         headline,
         explanation: sentences.join(' '),
         change_ids: JSON.stringify(cited.map((c) => c.id).sort()),
