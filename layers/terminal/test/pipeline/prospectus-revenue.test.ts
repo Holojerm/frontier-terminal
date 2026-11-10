@@ -18,6 +18,8 @@ import {
   registrationTarget,
 } from '../../server/pipeline/parsers/sec/filing-index'
 import { parseProspectusRevenue } from '../../server/pipeline/parsers/sec/prospectus-revenue'
+import { filingReview } from '../../server/pipeline/judge/filing-review'
+import { submitJudgeRun } from '../../server/pipeline/judge/submit'
 import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
 import { includeSources } from '../../server/pipeline/sources'
 import { terminalStamps } from '../../server/utils/terminal-cache'
@@ -191,6 +193,8 @@ beforeEach(async () => {
     schema.entities,
     schema.snapshots,
     schema.opsEvents,
+    schema.filingReadings,
+    schema.judgeRuns,
   ]) {
     await db.delete(table)
   }
@@ -303,5 +307,90 @@ describe('S-1 revenue end to end', () => {
     const second = await run([REGISTRATION_FIXTURE.prospectusSourceId], f)
     expect(second.sources[0]).toMatchObject({ status: 'ok', alerts: 0 })
     expect(await spooled()).toHaveLength(2)
+  })
+
+  it('has the judge read revenue the parser could not, from a sentence the Worker finds in the filing', async () => {
+    const SENTENCE =
+      'Our revenue was $16.3 billion for the six months ended June 30, 2026, compared to $1.2 billion for the six months ended June 30, 2025.'
+    // The statement is retitled past the parser, and the filing says its revenue in prose.
+    const broken =
+      prospectusHtml.replace(
+        />(\s*)Consolidated Statements of Operations(\s*)</g,
+        '>$1Statements of Results$2<',
+      ) + `<div style="line-height:12pt"><font style="font-size:10pt">${SENTENCE}</font></div>`
+    expect(broken).toContain(SENTENCE)
+    const f = fetcher(broken)
+    await run(['edgar-fts'], f)
+    await run(['edgar-submissions-anthropic'], f)
+    await run([REGISTRATION_FIXTURE.indexSourceId], f)
+    const read = await run([REGISTRATION_FIXTURE.prospectusSourceId], f)
+    expect(read.sources[0]!.detail).toContain('not read: statements, revenue')
+
+    const readRaw = async (key: string) => (await env.BLOB.get(key))?.text() ?? null
+    const NOW = new Date('2026-11-02T12:00:00Z')
+    const [review, ...none] = await filingReview(db, readRaw, NOW)
+    expect(none).toEqual([])
+    expect(review).toMatchObject({
+      source_id: REGISTRATION_FIXTURE.prospectusSourceId,
+      accession_no: ACCESSION,
+      parts: [{ part: 'revenue' }],
+    })
+    expect(review!.excerpts.join(' ')).toContain(SENTENCE)
+
+    const submit = (filings: unknown[]) =>
+      submitJudgeRun(
+        db,
+        JSON.stringify({
+          alerts: [],
+          filings,
+          judged_through: '2026-11-02T04:00:00.000Z',
+          change_ids_seen: [],
+        }),
+        { readRaw, now: NOW },
+      )
+    const reading = {
+      source_id: REGISTRATION_FIXTURE.prospectusSourceId,
+      part: 'revenue',
+      quote: SENTENCE,
+      amount: '$16.3 billion',
+      months: 6,
+      period_end: '2026-06-30',
+    }
+    // Invented words, an earlier period, or the other period's amount are dropped.
+    const bad = await submit([
+      {
+        ...reading,
+        quote: 'Our revenue was $99.0 billion for the six months ended June 30, 2026.',
+        amount: '$99.0 billion',
+      },
+    ])
+    expect(bad.filings).toMatchObject({
+      accepted: 0,
+      rejected: [{ reason: 'quote-not-in-document' }],
+    })
+    const stale = await submit([{ ...reading, amount: '$1.2 billion', period_end: '2025-06-30' }])
+    expect(stale.filings.rejected).toMatchObject([{ reason: 'not-the-latest-period' }])
+    const swapped = await submit([{ ...reading, amount: '$1.2 billion' }])
+    expect(swapped.filings.rejected).toMatchObject([{ reason: 'amount-not-for-period' }])
+
+    const ok = await submit([reading])
+    expect(ok.filings).toEqual({ accepted: 1, alerts: 1, rejected: [] })
+    const alerts = await db.select().from(schema.alerts)
+    const judged = alerts.find((a) => a.explanation.includes('the judge read'))!
+    expect(judged).toMatchObject({ rule: 'prospectus-floor', severity: 'notable' })
+    expect(judged.headline).toBe(
+      'Anthropic, PBC S-1: $16,300 million revenue for the six months ended 2026-06-30',
+    )
+    expect(judged.explanation).toContain(`“${SENTENCE}”`)
+    const [stored] = await db.select().from(schema.filingReadings)
+    expect(JSON.parse(stored!.values)).toEqual({
+      val: 16_300_000_000,
+      months: 6,
+      end: '2026-06-30',
+      amount: '$16.3 billion',
+    })
+    // Read once: the filing is no longer offered, and a second reading is not offered either.
+    expect(await filingReview(db, readRaw, NOW)).toEqual([])
+    expect((await submit([reading])).filings.rejected).toMatchObject([{ reason: 'not-offered' }])
   })
 })

@@ -24,6 +24,10 @@
 // valuation or funding and are not yet read
 // (layers/terminal/server/pipeline/reported/review.ts); it too can be
 // non-empty when `changes` is empty.
+// `filing_review` lists fresh registration filings whose revenue or cover
+// terms the parser could not read, with the document text to read them from
+// (layers/terminal/server/pipeline/judge/filing-review.ts); usually `[]`, and
+// it too can be non-empty when `changes` is empty.
 // `still_listed` lists, per model removal among `changes`, the pages of the
 // same lab that still list that model, so a page dropping a row is not
 // written up as a delisting (layers/terminal/server/pipeline/judge/still-listed.ts);
@@ -37,6 +41,7 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { hiringBoards } from '../../pipeline/hiring-floor'
 import { blobRawReader, classMapReview } from '../../pipeline/judge/class-map'
+import { filingReview } from '../../pipeline/judge/filing-review'
 import { JUDGE_CHANGE_LIMIT, incidentCounts, pendingChanges } from '../../pipeline/judge/pending'
 import { stillListedRemovals } from '../../pipeline/judge/still-listed'
 import { figureReview } from '../../pipeline/reported/review'
@@ -56,12 +61,14 @@ export default defineEventHandler(async (event) => {
     flagships,
     track_record_review,
     figure_review,
+    filing_review,
   ] = await Promise.all([
     pendingChanges(db, JUDGE_CHANGE_LIMIT),
     classMapReview(db, blobRawReader(blob)),
     flagshipMap(db),
     trackRecordReview(db),
     figureReview(db),
+    filingReview(db, blobRawReader(blob)),
   ])
   const [claim_review, hiring, incidents, still_listed] = await Promise.all([
     claimReview(db, changes, flagships),
@@ -84,6 +91,7 @@ export default defineEventHandler(async (event) => {
     claim_review,
     track_record_review,
     figure_review,
+    filing_review,
     prompt: judgePrompt,
   }
 })

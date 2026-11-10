@@ -6,6 +6,7 @@ import { ChangeRow, contentHash } from '../contracts'
 import { D1_MAX_BOUND_PARAMS, chunk, insertRows, type PipelineDb } from '../store'
 import { applyClaimVerdicts, type VerdictReport } from '../../theses/verdicts'
 import { applyFigureReadings, type FigureReport } from '../reported/review'
+import { applyFilingReadings, type FilingReport } from './filing-review'
 import { applyTrackRecordVerdicts, type TrackRecordVerdictReport } from '../track-record/review'
 import { evaluateTheses } from '../../theses/evaluate'
 import { parseDepartmentClusters, type DepartmentCluster } from '../../utils/terminal-clusters'
@@ -54,6 +55,8 @@ export interface JudgeRunReport {
   track_record: TrackRecordVerdictReport
   /** Labeled figures in press headlines (layers/terminal/server/pipeline/reported/review.ts). */
   figures: FigureReport
+  /** Registration-filing parts the parser could not read (judge/filing-review.ts). */
+  filings: FilingReport
 }
 
 async function loadChanges(db: PipelineDb, ids: readonly string[]): Promise<ChangeRow[]> {
@@ -231,6 +234,7 @@ export async function submitJudgeRun(
       claims: { accepted: 0, inserted: 0, rejected: [] },
       track_record: { accepted: 0, inserted: 0, rejected: [] },
       figures: { accepted: 0, inserted: 0, rejected: [] },
+      filings: { accepted: 0, alerts: 0, rejected: [] },
     }
   }
 
@@ -266,6 +270,7 @@ export async function submitJudgeRun(
       claims: { accepted: 0, inserted: 0, rejected: [] },
       track_record: { accepted: 0, inserted: 0, rejected: [] },
       figures: { accepted: 0, inserted: 0, rejected: [] },
+      filings: { accepted: 0, alerts: 0, rejected: [] },
     }
   }
 
@@ -381,6 +386,15 @@ export async function submitJudgeRun(
       path: JUDGE_OPS_PATH,
     })
   }
+  const filings = await applyFilingReadings(db, opts.readRaw ?? NO_PAGES, body.filings, now)
+  if (filings.rejected.length > 0) {
+    const [first] = filings.rejected
+    await recordOpsEvent(db, {
+      kind: 'judge_rejected',
+      detail: `${filings.rejected.length} filing reading(s) rejected; first: ${first!.reason} — ${first!.detail} (${first!.source_id})`,
+      path: JUDGE_OPS_PATH,
+    })
+  }
   if (opts.sourcesYaml) {
     await evaluateTheses(db, { sourcesYaml: opts.sourcesYaml, now: () => now }, undefined, {
       judgedOnly: true,
@@ -391,6 +405,7 @@ export async function submitJudgeRun(
     claims,
     track_record,
     figures,
+    filings,
     changes_seen: body.change_ids_seen.length,
     accepted: accepted.length,
     inserted,
