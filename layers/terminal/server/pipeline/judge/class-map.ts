@@ -9,7 +9,8 @@ import { recordOpsEvent } from '#server/utils/ops'
 import { CLASS_MAP_SOURCES, type ClassEntry } from '../../utils/terminal-classes'
 import { effectiveClassMap } from '../class-map'
 import type { SourceRunRow } from '../contracts'
-import { basisOnPage, flattenMdLinks } from '../recommendations'
+import { basisOnPage, flattenMdLinks, foldQuotes } from '../recommendations'
+import { cardDescriptions, type CardDescriptions } from './page-cards'
 import type { PipelineDb } from '../store'
 
 // The judge's second job: re-mapping a like-for-like matrix cell whose vendor
@@ -267,6 +268,7 @@ export async function applyClassMappings(
   const review = await cellsUnderReview(db, classMap, now)
   const pages = new Map<string, SourcePage | null>()
   const models = new Map<string, Map<string, Set<string>>>()
+  const cards = new Map<string, CardDescriptions>()
   const rejected: ClassMapRejection[] = []
   const decided = new Set<string>()
   let accepted = 0
@@ -306,9 +308,15 @@ export async function applyClassMappings(
       reject('unknown-model', `${mapping.model_slug} is not a ${who} model in the store`)
       continue
     }
+    if (!cards.has(expected)) cards.set(expected, cardDescriptions(expected, page.text))
+    const basis = foldQuotes(mapping.basis.trim())
+    const onCard = [...(cards.get(expected)!.get(mapping.model_slug) ?? [])].some(
+      (d) => foldQuotes(d) === basis,
+    )
     if (
       modelNamedBy(mapping.basis, listed.keys()) !== mapping.model_slug &&
-      !descriptions.has(mapping.basis.trim())
+      !descriptions.has(mapping.basis.trim()) &&
+      !onCard
     ) {
       reject(
         'basis-does-not-name-model',

@@ -13,6 +13,7 @@ import {
   REVIEW_WINDOW_MS,
   type RawReader,
 } from '../../server/pipeline/judge/class-map'
+import { cardDescriptions } from '../../server/pipeline/judge/page-cards'
 import { submitJudgeRun } from '../../server/pipeline/judge/submit'
 import { recommendationRows } from '../../server/pipeline/recommendations'
 import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
@@ -351,5 +352,121 @@ describe('a judge re-mapping', () => {
     const report = await submitJudgeRun(db, JSON.stringify(body), { now: NOW, readRaw })
     expect(report.gate_rejection).toBeNull()
     expect(report.class_map).toEqual({ accepted: 0, rejected: [] })
+  })
+})
+
+describe('the cards on a page that does not name its models', () => {
+  const GOOGLE = fixtureText('fixtures/pricing/google-models.md')
+  const ALIBABA = fixtureText('fixtures/pricing/alibaba-models.html')
+
+  it('reads each card’s description under the model the card itself names', () => {
+    const google = cardDescriptions('google-models-md', GOOGLE)
+    // A block card, named by its Model code line.
+    expect([...google.get('gemini-4-argon')!]).toEqual([
+      'Our flagship reasoning model with a shared 1M context window and long decodes up to 1M tokens.',
+    ])
+    // A self-closing card, named by its href.
+    expect(google.get('gemini-3.5-flash-lite')).toContain(
+      'Our fastest, most cost-effective 3.5 model for high-throughput execution.',
+    )
+    const alibaba = cardDescriptions('alibaba-models-html', ALIBABA)
+    expect(alibaba.get('qwen3.8-max')).toContain('Complex reasoning and coding')
+    expect(cardDescriptions('anthropic-models-md', FIXTURE).size).toBe(0)
+  })
+
+  it('holds every seed sentence for those pages under the seed’s own model', () => {
+    const pages: Record<string, string> = {
+      'google-models-md': GOOGLE,
+      'alibaba-models-html': ALIBABA,
+    }
+    const seeded = MODEL_CLASS_MAP.filter((e) => e.basis_source_id in pages)
+    expect(seeded.length).toBeGreaterThan(0)
+    for (const entry of seeded) {
+      const cards = cardDescriptions(entry.basis_source_id, pages[entry.basis_source_id]!)
+      expect(cards.get(entry.model_slug), `${entry.provider}:${entry.class}`).toContain(entry.basis)
+    }
+  })
+})
+
+describe('a judge re-mapping onto a Google card (issue #360)', () => {
+  const GOOGLE = fixtureText('fixtures/pricing/google-models.md')
+  const ARGON_OLD =
+    'Our flagship reasoning model with a shared 1M context window and long decodes up to 1M tokens.'
+  const ARGON_NEW = 'A faster, lower-cost alternative to Gemini 4 Carbon for everyday reasoning.'
+  const CARBON =
+    'Our strongest reasoning model, built for complex software engineering, multimodal knowledge work, scientific reasoning, and cybersecurity defense.'
+  const CARBON_CARD = `  {% card description="${CARBON}" title="Gemini 4 Carbon" variant="model-card" %}
+  {% section class="model-specs" %}
+  *   *Model code* **gemini-4-carbon**
+  *   *Context* **1M tokens**
+
+  {% /section %}
+
+  {% /card %}
+
+`
+  // The 2026-11-10 rewrite as the judge reported it: a Carbon card ahead of
+  // Argon's, and Argon re-described as the cheaper option.
+  const REWRITTEN = GOOGLE.replace(ARGON_OLD, ARGON_NEW).replace(
+    '{% card-grid columns="2" %}\n',
+    `{% card-grid columns="2" %}\n${CARBON_CARD}`,
+  )
+
+  function pollGoogle(text: string) {
+    const fetcher: SourceFetcher = async () => ({ ok: true, status: 200, text, bytes: text.length })
+    return runRefresh({ db, raw, fetcher, sourcesYaml, now: clock }, 'survey', ['google-models-md'])
+  }
+
+  /** Catalog rows as the pricing page leaves them: tier notes, no description. */
+  async function listGoogleModels(slugs: string[]) {
+    for (const slug of slugs) {
+      await db.insert(schema.entities).values({
+        source_id: 'google-pricing-html',
+        entity_key: `model:google:${slug}`,
+        entity_type: 'model',
+        provider: 'google',
+        content_hash: slug,
+        payload: JSON.stringify({ model_slug: slug, notes: 'Standard tier' }),
+        snapshot_id: 'pricing',
+        first_seen_at: NOW.toISOString(),
+        source_url: 'https://aistudio.google.com/docs/pricing.md',
+        fetched_at: NOW.toISOString(),
+      })
+    }
+  }
+
+  const google = (over: Record<string, unknown> = {}) =>
+    proposal({
+      provider: 'google',
+      model_slug: 'gemini-4-carbon',
+      basis: CARBON,
+      basis_source_id: 'google-models-md',
+      ...over,
+    })
+
+  beforeEach(async () => {
+    expect(REWRITTEN).toContain(CARBON_CARD)
+    await listGoogleModels(['gemini-4-argon', 'gemini-4-carbon'])
+    await pollGoogle(GOOGLE)
+    await pollGoogle(REWRITTEN)
+  })
+
+  it('accepts the description on the proposed model’s own card', async () => {
+    const cells = (await classMapReview(db, readRaw, NOW)).cells.map(
+      (c) => `${c.provider}:${c.class}`,
+    )
+    expect(cells).toEqual(['google:flagship'])
+
+    const report = await submit([google()])
+    expect(report.class_map).toEqual({ accepted: 1, rejected: [] })
+    const map = await effectiveClassMap(db)
+    const flagship = map.find((e) => e.provider === 'google' && e.class === 'flagship')
+    expect(flagship).toMatchObject({ model_slug: 'gemini-4-carbon', basis: CARBON })
+  })
+
+  it('rejects one model’s card sentence proposed for another', async () => {
+    const report = await submit([google({ model_slug: 'gemini-4-argon' })])
+    expect(report.class_map.rejected.map((r) => r.reason)).toEqual(['basis-does-not-name-model'])
+    expect(await db.select().from(schema.classMapDecisions)).toEqual([])
   })
 })
