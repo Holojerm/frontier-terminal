@@ -357,7 +357,9 @@ Propose it only if you find one:
   The Worker checks it as a substring of the page and rejects anything else.
 - `model_slug` is the model the sentence names, written exactly as the
   catalog's `model` records print it. The sentence must name that model,
-  or be that model's own catalog description.
+  or be that model's own catalog description, or be the description on
+  that model's own card on the page (Google's and Alibaba's model cards,
+  where the card's model code or link says which model it is).
 - `basis_source_id` is the page's `source_id`.
 
 If the page has no such sentence for a class, propose nothing for that
