@@ -1,6 +1,6 @@
 # Email
 
-How an email is written (Maizzle templates, compiled at build time, filled in with Mustache). This app sends two email templates: the weekly thesis digest (`layers/terminal/server/theses/digest.ts`) and the subscription confirmation. The owner's digest and the plain press brief go through the `OWNER_EMAIL` `send_email` binding (`layers/terminal/server/utils/owner-mail.ts`). Subscribers' mail goes through Resend (see Subscribers below). It sends no alerts: the fleet dashboard is the only alert sender. The pipeline is the template's, trimmed to the thesis digest.
+How an email is written (Maizzle templates, compiled at build time, filled in with Mustache). This app sends two email templates: the weekly thesis digest (`layers/terminal/server/theses/digest.ts`) and the subscription confirmation. The owner's digest and the press receipt (or, without Resend, the mailto press brief) go through the `OWNER_EMAIL` `send_email` binding (`layers/terminal/server/utils/owner-mail.ts`). Subscribers' mail and the press notes to reporters go through Resend (see Subscribers below; press notes send from `NUXT_PRESS_EMAIL_FROM`). It sends no alerts: the fleet dashboard is the only alert sender. The pipeline is the template's, trimmed to the thesis digest.
 
 > **Load this when:** touching `emails/`, `layers/terminal/server/theses/digest.ts`, or adding a second outbound email.
 > Canonical index: [AGENTS.md](../../AGENTS.md).
