@@ -73,14 +73,14 @@ an hour spools `social_outbox_stalled`.
 - **Secrets:** `NUXT_SOCIAL_BUFFER_API_KEY` (kept in 1Password),
   `NUXT_SOCIAL_CHANNEL_X`, `NUXT_SOCIAL_CHANNEL_BLUESKY`. With no key <!-- refs-check-ignore: runtimeConfig.social.channelBluesky in layers/social -->
   every task returns before touching D1.
-- **Kill switch:** `NUXT_SOCIAL_ENABLED=1` sends. Unset is a dry run — due rows
-  become `dry-run`, so switching on never flushes a backlog. Delete the secret to
-  stop posting at the next tick.
+- **Stopping it:** a key and a channel send. Delete `NUXT_SOCIAL_BUFFER_API_KEY` to
+  stop posting at the next tick. Rows from before 2026-11-10 marked `dry-run` were
+  never sent and never will be.
 - **Suppress a judged alert** inside its one-hour hold:
   `UPDATE social_posts SET status = 'suppressed' WHERE kind = 'alert' AND ref = '<alert id>'`.
 - **`unknown` rows** (network error or 5xx mid-send) are never retried and land in
   the fleet board as `social_unknown`. Check Buffer; set `sent` or `queued` by hand.
-- `fleet.json` lists the key, the X channel and the switch, so the dashboard
+- `fleet.json` lists the key and the X channel, so the dashboard
   flags any of them going missing. A Bluesky channel joins that list when one is set.
 
 ## Alert webhooks (licensees)

@@ -3,9 +3,9 @@
   "repo": "Holojerm/nuxt-cf-template",
   "layers": {
     "social": {
-      "ref": "3cd00ee",
-      "sha": "3cd00eef1bc29b834f3481fef3dbbcdc81ed331d",
-      "hash": "0a88f1fba956bf2e57f5f7ea6d18fb1e08a41b9feb27cfc6d1c0892ea4760cdb"
+      "ref": "4613310",
+      "sha": "46133105f6b2c447fbf9b5f3aa7f78fafad5dfe3",
+      "hash": "693dd3c0701bddc80050792e8b64db785d2b312148af245117f5b6357def6123"
     }
   }
 }
