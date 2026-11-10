@@ -1,7 +1,7 @@
 // `bun run dev:poll` — fill the local store by running the poll tasks on the
 // dev server you already have up (`bun dev` or `bun dev:app`).
 //
-//   bun run dev:poll              live: poll:survey and poll:careers, the same
+//   bun run dev:poll              live: poll:survey, poll:careers and poll:filings, the
 //                                 fetches a production tick makes (~30s)
 //   bun run dev:poll --fixtures   offline: dev:fixtures, the same pipeline over
 //                                 the committed fixtures/ (deterministic)
@@ -55,7 +55,9 @@ if (!origin) {
   process.exit(1)
 }
 
-const tasks = flag('--fixtures') ? ['dev:fixtures'] : ['poll:survey', 'poll:careers']
+const tasks = flag('--fixtures')
+  ? ['dev:fixtures']
+  : ['poll:survey', 'poll:careers', 'poll:filings']
 
 interface SourceLine {
   source_id: string

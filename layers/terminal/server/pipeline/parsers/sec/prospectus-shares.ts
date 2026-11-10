@@ -1,12 +1,18 @@
 import { SharesRow, type Provenance } from '../../contracts'
 import type { RegistrationTarget } from './filing-index'
+import { cellText } from './filing-index'
 import { DATE_PATTERN, docText, findAll, isoDate, tableAfter, type DocText } from './prospectus-doc'
 
 // Share counts from the prospectus summary's "The Offering" table — shares
 // offered by the company and by selling stockholders, the underwriters'
 // option, and each class outstanding after the offering — and the sentence
 // under it that states the pre-offering basis ("is based on N shares of our
-// Class A common stock, … outstanding as of September 30, 2026").
+// Class A common stock, … outstanding as of September 30, 2026"). Once a
+// concurrent private placement is announced, the rows and that sentence say
+// "after this offering and the concurrent private placement".
+//
+// A summary that runs past a page ends its table there; the rest of it is a
+// second table after the page number and "Table of Contents".
 //
 // A preliminary prospectus prints the frame with the counts blank ("shares",
 // "shares (or shares if the underwriters exercise …)") until the price range
@@ -14,6 +20,7 @@ import { DATE_PATTERN, docText, findAll, isoDate, tableAfter, type DocText } fro
 // of those shapes throws, and so does a summary with no outstanding-after row.
 
 const TABLE_GAP = 3000
+const PAGE_BREAK = /^(?:\d{1,3} )?Table of Contents$/
 const SHARE_ROW = /\bcommon stock\b|\bshares\b/i
 const COUNT = String.raw`(\d[\d,]*|one|no)`
 const VALUE = new RegExp(
@@ -21,7 +28,7 @@ const VALUE = new RegExp(
   'i',
 )
 const BASIS = new RegExp(
-  String.raw`outstanding after this offering is based on (.+?) outstanding as of (${DATE_PATTERN})`,
+  String.raw`outstanding after this offering(?: and the concurrent private placement)? is based on (.+?) outstanding as of (${DATE_PATTERN})`,
   'g',
 )
 
@@ -46,9 +53,17 @@ export function parseProspectusShares(
   if (title === -1) return null
   const table = tableAfter(html, doc.lines[title]!.end, TABLE_GAP)
   if (!table) throw new Error('"The Offering" is not followed by a table')
+  const rows = [...table.rows]
+  let end = table.end
+  for (;;) {
+    const more = tableAfter(html, end, TABLE_GAP)
+    if (!more || !PAGE_BREAK.test(cellText(html.slice(end, more.start)))) break
+    rows.push(...more.rows)
+    end = more.end
+  }
 
   const lines: SharesRow['lines'] = []
-  for (const row of table.rows) {
+  for (const row of rows) {
     if (row.length !== 2 || !SHARE_ROW.test(row[0]!)) continue
     const m = row[1]!.match(VALUE)
     if (!m) {
@@ -67,10 +82,10 @@ export function parseProspectusShares(
   // The basis sentence follows the table: "…based on [N] shares of our Class A
   // common stock, [N] shares of our Class N common stock, one share of our
   // Class T common stock, … outstanding as of <date>".
-  const next = doc.lines.findIndex((l) => l.at >= table.end)
+  const next = doc.lines.findIndex((l) => l.at >= end)
   const basis = findAll(docText(next === -1 ? [] : doc.lines.slice(next, next + 60)), BASIS)[0]
   if (!basis) throw new Error('"The Offering" states no pre-offering basis')
-  const before = basis.match[1]!.split(/,\s*(?:and\s+)?|\s+and\s+/)
+  const before = basis.match[1]!.split(/,\s+(?:and\s+)?|\s+and\s+/)
     .filter(Boolean)
     .map((part) => {
       const m = part.match(new RegExp(String.raw`^(?:${COUNT} )?shares? of our (.+? stock)$`, 'i'))

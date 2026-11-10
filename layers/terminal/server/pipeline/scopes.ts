@@ -11,11 +11,14 @@ import type { FetchSource } from './sources'
 //                          (LAUNCH_SOURCES): the two axes where latency is
 //                          worth polling for. The scope keeps its stored name
 //                          'edgar' (pollScopeEnum, source_runs, /api/status).
-//   survey  0 */6 * * *    every include source but the careers lane's. It
-//                          re-checks EDGAR on purpose: an unchanged re-fetch
-//                          diffs to zero, and the overlap means a stalled
-//                          edgar tick goes covered, not blind.
+//   survey  0 */6 * * *    every include source but the careers and filings
+//                          lanes'. It re-checks EDGAR on purpose: an unchanged
+//                          re-fetch diffs to zero, and the overlap means a
+//                          stalled edgar tick goes covered, not blind.
 //   careers 17 */6 * * *   CAREERS_SOURCES, alone in their own invocation.
+//   filings 47 */6 * * *   the registration filings (REGISTRATION_PREFIXES):
+//                          three ~14 MB prospectuses by 2026-11-10, which put
+//                          the survey over its budget.
 //
 // A Worker invocation has 128 MB, and a payload is held as bytes, as a string,
 // and again while it is hashed and archived. The 2026-11-04 18:00 survey was
@@ -74,8 +77,8 @@ export const CAREERS_SOURCES: readonly string[] = ['google-careers']
 
 // A fresh registration filing's index and document ride the edgar tick until
 // each has parsed once, so what an S-1 amendment says reaches an alert within
-// an hour of the filing rather than at the next six-hourly survey. After that
-// only the survey re-checks them: a filed document never changes, and a
+// an hour of the filing rather than at the next six-hourly tick. After that
+// only the filings lane re-checks them: a filed document never changes, and a
 // prospectus runs to 14 MB.
 export const REGISTRATION_PREFIXES = ['filing-index-', 'prospectus-revenue-']
 
@@ -106,7 +109,10 @@ export function sourceIdsForScope(
     }
     return [...CAREERS_SOURCES]
   }
-  if (scope === 'survey') return ids.filter((id) => !CAREERS_SOURCES.includes(id))
+  if (scope === 'filings') return ids.filter(isRegistrationSource)
+  if (scope === 'survey') {
+    return ids.filter((id) => !CAREERS_SOURCES.includes(id) && !isRegistrationSource(id))
+  }
   const missing = [...EDGAR_SOURCES, ...LAUNCH_SOURCES].filter((id) => !ids.includes(id))
   if (missing.length) {
     throw new Error(`edgar scope names sources not in sources.yaml: ${missing.join(', ')}`)
@@ -121,7 +127,7 @@ export function sourceIdsForScope(
 /**
  * How often we say a source is checked, in minutes (/about#latency): the
  * edgar tick's feeds and catalogs every 30, everything else on the six-hourly
- * survey or careers lane. A fresh registration filing rides the edgar tick
+ * survey, careers or filings lane. A fresh registration filing rides the edgar tick
  * only until it parses, so it counts as six-hourly.
  */
 export function statedIntervalMinutes(sourceId: string): number {
