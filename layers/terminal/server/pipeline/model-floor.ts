@@ -38,7 +38,8 @@ interface SlugChanges {
   rows: PriceRow[]
 }
 
-function addedModels(changes: readonly ChangeRow[]): SlugChanges[] {
+/** The added model rows of one tick, grouped by provider and slug. */
+export function addedModels(changes: readonly ChangeRow[]): SlugChanges[] {
   const bySlug = new Map<string, SlugChanges>()
   for (const change of changes) {
     if (change.change_type !== 'added' || change.entity_type !== 'model' || !change.after_json) {
@@ -123,18 +124,39 @@ async function everAdded(
 
 const usd = (n: number) => `$${n.toFixed(2)}`
 
-/** "$5.00 in / $25.00 out per MTok" off the untiered row, when it carries both prices. */
-function priceClause(rows: readonly PriceRow[]): string | null {
-  const base = rows.find((r) => r.tier === null) ?? rows[0]
-  if (!base || base.input_per_mtok === null || base.output_per_mtok === null) return null
-  return `${usd(base.input_per_mtok)} in / ${usd(base.output_per_mtok)} out per MTok`
+// The headline's price is the list price: the standard tier, as the price
+// matrix reads it (terminal-prices.ts › isStandardTier, scheduledAfter). Until
+// 2026-11-11 this took the untiered row or else the first row parsed, and
+// Google's parser names its list tier 'standard', so five Google launches were
+// announced at their batch price (gemini-4-carbon at $1.00 / $5.00 against a
+// $2.00 / $10.00 list price). Migration 0050 corrects those five.
+const isStandard = (r: PriceRow) => r.tier === null || r.tier === 'standard'
+const startsAfter = (r: PriceRow, at: string) =>
+  r.effective_from !== null && Date.parse(r.effective_from) > Date.parse(at)
+const bothPrices = (r: PriceRow) => r.input_per_mtok !== null && r.output_per_mtok !== null
+const priceOf = (r: PriceRow) =>
+  `${usd(r.input_per_mtok!)} in / ${usd(r.output_per_mtok!)} out per MTok`
+
+/** "$5.00 in / $25.00 out per MTok": the standard-tier price in effect at `at`, or none. */
+function priceClause(rows: readonly PriceRow[], at: string): string | null {
+  const base = rows.find((r) => isStandard(r) && !startsAfter(r, at) && bothPrices(r))
+  return base ? priceOf(base) : null
+}
+
+/** "Its standard price moves to … on 2026-12-01." for each scheduled standard price. */
+function scheduledClause(rows: readonly PriceRow[], at: string): string {
+  return rows
+    .filter((r) => isStandard(r) && startsAfter(r, at) && bothPrices(r))
+    .sort((a, b) => a.effective_from!.localeCompare(b.effective_from!))
+    .map((r) => `Its standard price moves to ${priceOf(r)} on ${r.effective_from}. `)
+    .join('')
 }
 
 export function modelFloorAlert(group: SlugChanges): AlertRow {
   const first = group.changes[0]!
   const lab = LAB_DISPLAY[group.provider]
-  const price = priceClause(group.rows)
-  const tiers = group.rows.map((r) => r.tier ?? 'standard')
+  const price = priceClause(group.rows, first.detected_at)
+  const tiers = [...new Set(group.rows.map((r) => r.tier ?? 'standard'))]
   return AlertRow.parse({
     id: contentHash({ rule: MODEL_FLOOR_RULE, provider: group.provider, slug: group.slug }),
     severity: 'notable',
@@ -142,6 +164,7 @@ export function modelFloorAlert(group: SlugChanges): AlertRow {
     explanation:
       `${group.slug} appears for the first time in ${lab}'s catalog (${first.source_url}), ` +
       `listed as ${tiers.join(', ')}. ` +
+      scheduledClause(group.rows, first.detected_at) +
       'A model no catalog has listed before always alerts — the model-floor rule, no model in the loop.',
     change_ids: JSON.stringify(group.changes.map((c) => c.id)),
     rule: MODEL_FLOOR_RULE,
