@@ -51,7 +51,7 @@ scope: fleet                   # optional: one all-repos routine runs this for e
 ```
 
 `scope: fleet` is for routines that are identical in every repo and light enough to run for all
-of them in one session (`pr-shepherd.md`). The owner registers one `all-repos-<name>` routine that sources every
+of them in one session (`dependency-merge.md`, `pr-shepherd.md`). The owner registers one `all-repos-<name>` routine that sources every
 repo and follows each repo's own grants and journal; `/routines sync` skips the definition so
 forks don't grow a duplicate per repo.
 
