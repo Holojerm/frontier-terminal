@@ -6,7 +6,10 @@ import {
   VendorMdPricingOutput,
   modelKey,
 } from '../../server/pipeline/contracts'
-import { parseAnthropicModelsOverviewMd } from '../../server/pipeline/parsers/pricing/anthropic-models-overview'
+import {
+  FROM_NOTE,
+  parseAnthropicModelsOverviewMd,
+} from '../../server/pipeline/parsers/pricing/anthropic-models-overview'
 import { parseAnthropicPricingMd } from '../../server/pipeline/parsers/pricing/anthropic-pricing'
 import { parseMetaModelsMd } from '../../server/pipeline/parsers/pricing/meta-models'
 import { parseMetaPricingMd } from '../../server/pipeline/parsers/pricing/meta-pricing'
@@ -26,6 +29,7 @@ import {
 import { fixtureText, provenanceOf } from './fixtures'
 import catalog1008 from '~/fixtures/pricing/anthropic-models-overview.2026-10-08.md?raw'
 import pricing1008 from '~/fixtures/pricing/anthropic-pricing.2026-10-08.md?raw'
+import catalog1111 from '~/fixtures/pricing/anthropic-models-overview.2026-11-11.md?raw'
 
 // Vendor .md pricing/catalog + EDGAR golden tests. Fixtures:
 // fixtures/pricing/*.md, fixtures/sec/* (provenance in fixtures/manifest.json).
@@ -294,6 +298,38 @@ describe('vendor-md + sec lane', () => {
         )
       }
     })
+  })
+
+  // Live capture of 2026-11-11T18:39:30Z: the page renamed "## Compare models"
+  // to "## Latest models" (every poll from 17:31Z failed "heading not found").
+  // The table under it keeps the rows the parser reads.
+  test('anthropic: the catalog table under its 2026-11-11 heading "## Latest models"', () => {
+    expect(catalog1111).not.toContain('## Compare models')
+    const prov = {
+      source_url: 'https://platform.claude.com/docs/en/models/overview.md',
+      fetched_at: '2026-11-11T18:39:30Z',
+    }
+    const catalog = parseAnthropicModelsOverviewMd(catalog1111, prov)
+    expect(VendorMdPricingOutput.safeParse(catalog).success).toBe(true)
+    expect(catalog.rows.map((r) => r.model_slug)).toEqual([
+      'claude-fable-5-2',
+      'claude-haiku-5-5',
+      'claude-opus-5-5',
+      'claude-sonnet-5-5',
+    ])
+    const cat = (slug: string) => catalog.rows.find((r) => r.model_slug === slug)!
+    expect(cat('claude-fable-5-2')).toMatchObject({
+      input_per_mtok: 8,
+      output_per_mtok: 40,
+      context_window: '1M tokens',
+      notes: 'For demanding reasoning and long-horizon agentic work',
+    })
+    expect(cat('claude-opus-5-5')).toMatchObject({ input_per_mtok: 4, output_per_mtok: 20 })
+    expect(cat('claude-haiku-5-5').notes).toContain(FROM_NOTE)
+    // A page with neither heading still fails loudly.
+    expect(() =>
+      parseAnthropicModelsOverviewMd(catalog1111.replace('## Latest models', '## Models'), prov),
+    ).toThrow('heading not found')
   })
 
   test("xai: long-context dual rows map to tier 'standard' / 'long_context' under the same model_slug", () => {

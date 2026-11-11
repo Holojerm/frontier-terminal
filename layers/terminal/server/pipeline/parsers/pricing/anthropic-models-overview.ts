@@ -8,7 +8,8 @@ import { fixtureProvenance } from '../fixture-provenance'
 import { tableAfterHeading } from './md-table'
 
 // anthropic-models-md — https://platform.claude.com/docs/en/models/overview.md
-// Catalog parser: the "Compare models" table is transposed (features as
+// Catalog parser: the "Latest models" table (headed "Compare models" until
+// 2026-11-11) is transposed (features as
 // rows, one column per current model). It contributes the fields the
 // pricing page does not print — context window, description — plus the
 // vendor's own API ids. model_slug is taken from the printed "Claude API
@@ -53,7 +54,12 @@ export function parseAnthropicModelsOverviewMd(
   text: string,
   prov: Provenance = fixtureProvenance('anthropic-models-md'),
 ) {
-  const table = tableAfterHeading(text, '## Compare models')
+  // The page renamed "## Compare models" to "## Latest models" on 2026-11-11;
+  // older captures (the 2026-10-08 pair) still carry the old heading.
+  const heading = text.split('\n').some((l) => l.trim() === '## Latest models')
+    ? '## Latest models'
+    : '## Compare models'
+  const table = tableAfterHeading(text, heading)
   const header = table[0]
   if (!header || header.length < 2) throw new Error('compare-models table has no model columns')
 
