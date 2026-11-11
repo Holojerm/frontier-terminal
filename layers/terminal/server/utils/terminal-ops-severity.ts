@@ -58,6 +58,13 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
       'A due social post has stayed queued for an hour. Look for events_queue_failed or events_emit_failed in the Worker logs; the hourly events:sweep should have sent it, so check that task too.',
   },
   freshness_check_failed: { severity: 'warning' },
+  // judge/price-review.ts: a published price now rests on the judge's reading
+  // of a page, not on a parser.
+  price_read_by_judge: {
+    severity: 'warning',
+    action:
+      'The price list named in the detail has a failing parser, and the judge read these prices from the page instead. Check them against the page; the quotes are in price_readings. The parser fix (ops-triage opens it for source_failed) re-reads the page and corrects any that are wrong.',
+  },
   deploy_drift: {
     severity: 'warning',
     action:

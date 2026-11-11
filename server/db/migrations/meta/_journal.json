@@ -337,6 +337,13 @@
       "when": 1794323232323,
       "tag": "0047_filing_readings",
       "breakpoints": true
+    },
+    {
+      "idx": 48,
+      "version": "6",
+      "when": 1794364413514,
+      "tag": "0048_price_readings",
+      "breakpoints": true
     }
   ]
 }
