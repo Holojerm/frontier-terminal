@@ -599,6 +599,27 @@ export const filingReadings = sqliteTable(
   (t) => [index('filing_readings_accession_idx').on(t.accession_no)],
 )
 
+// One row per page of a price list the judge read while its parser was
+// failing (layers/terminal/server/pipeline/judge/price-review.ts). `readings`
+// holds, for each SKU whose price changed, the run of the page it was read
+// from; the row also marks the page as read, so it is offered once.
+export const priceReadings = sqliteTable(
+  'price_readings',
+  {
+    id: text('id').primaryKey(),
+    source_id: text('source_id').notNull(),
+    snapshot_id: text('snapshot_id').notNull(),
+    content_hash: text('content_hash').notNull(),
+    confirmed: integer('confirmed').notNull(),
+    changed: integer('changed').notNull(),
+    readings: text('readings').notNull(), // JSON
+    source_url: text('source_url').notNull(),
+    fetched_at: text('fetched_at').notNull(),
+    read_at: text('read_at').notNull(),
+  },
+  (t) => [index('price_readings_source_idx').on(t.source_id, t.read_at)],
+)
+
 // One row per headline the judge read: how many figures it found (0 when the
 // headline states none we track).
 export const reportedReviews = sqliteTable(
