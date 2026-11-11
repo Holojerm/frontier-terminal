@@ -88,7 +88,10 @@ export const CLASS_MAP_SOURCES: Readonly<Partial<Record<LabId, string>>> = {
 // that still falls short on it, so Opus is the flagship cell and Fable 5.1
 // is in the full catalog. Anthropic re-transcribed 2026-10-12: the 5.5
 // generation replaced Opus 5, Sonnet 5 and Haiku 4.5 in the comparison
-// table, and Haiku's old "fastest model" description is gone. When a check
+// table, and Haiku's old "fastest model" description is gone. Again on
+// 2026-11-11: Fable 5.2 took Fable 5.1's place as the escalation, the
+// start-here sentence kept its words and gained a curly apostrophe, and
+// Sonnet's and Haiku's descriptions were unchanged. When a check
 // flips `basis_current` off, re-transcribe here and refresh the fixture.
 export const MODEL_CLASS_MAP: ClassEntry[] = [
   {
@@ -117,7 +120,7 @@ export const MODEL_CLASS_MAP: ClassEntry[] = [
     provider: 'anthropic',
     class: 'flagship',
     model_slug: 'claude-opus-5-5',
-    basis: "If you're unsure which model to use, start with Claude Opus 5.5 for most workloads.",
+    basis: 'If you’re unsure which model to use, start with Claude Opus 5.5 for most workloads.',
     basis_source_id: 'anthropic-models-md',
   },
   {
