@@ -22,6 +22,8 @@ Delete a line to take the grant back.
 | ops-triage | 2 | 2026-11-03 |
 | dependency-merge | 2 | 2026-11-03 |
 | pr-shepherd | 2 | 2026-11-11 |
+| bug-fix | 2 | 2026-11-11 |
+| template-sync | 2 | 2026-11-11 |
 
 ## Mechanical fixes
 
