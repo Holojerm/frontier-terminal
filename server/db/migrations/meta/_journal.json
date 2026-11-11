@@ -344,6 +344,13 @@
       "when": 1794364413514,
       "tag": "0048_price_readings",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "6",
+      "when": 1794365357709,
+      "tag": "0049_correct_google_flagship",
+      "breakpoints": true
     }
   ]
 }
