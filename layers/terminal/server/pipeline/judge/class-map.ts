@@ -9,8 +9,8 @@ import { recordOpsEvent } from '#server/utils/ops'
 import { CLASS_MAP_SOURCES, type ClassEntry } from '../../utils/terminal-classes'
 import { effectiveClassMap } from '../class-map'
 import type { SourceRunRow } from '../contracts'
-import { basisOnPage, flattenMdLinks, foldQuotes } from '../recommendations'
-import { cardDescriptions, type CardDescriptions } from './page-cards'
+import { basisOnPage, flattenMdLinks } from '../recommendations'
+import { cardDescriptions, cardOwners, type CardDescriptions } from './page-cards'
 import type { PipelineDb } from '../store'
 
 // The judge's second job: re-mapping a like-for-like matrix cell whose vendor
@@ -32,8 +32,14 @@ import type { PipelineDb } from '../store'
 //   5. the sentence names that model and no other listed one (its slug, case
 //      and punctuation folded: "Claude Opus 5.5" names claude-opus-5-5, never
 //      claude-opus-5 — modelNamedBy) or IS that model's catalog description
-//      (Anthropic's compare table describes, it does not name);
-//   6. it differs from the mapping in effect.
+//      (Anthropic's compare table describes, it does not name) or the
+//      description on that model's own card on the page (Google's and
+//      Alibaba's cards, page-cards.ts: their stored rows carry pricing notes,
+//      not descriptions);
+//   6. the sentence is not ANOTHER model's card description. A card is about
+//      its own model, whatever it mentions: Argon's card compares Argon to
+//      Carbon, which the naming rule in 5 reads as naming Carbon (cardOwners);
+//   7. it differs from the mapping in effect.
 // The written row's provenance is the snapshot the sentence was found in.
 
 /** How long after its sentence disappears a cell is offered for re-mapping. */
@@ -218,6 +224,7 @@ export type ClassMapRejectionReason =
   | 'basis-not-on-page'
   | 'unknown-model'
   | 'basis-does-not-name-model'
+  | 'basis-is-another-models-card'
   | 'unchanged'
 
 export interface ClassMapRejection {
@@ -309,10 +316,15 @@ export async function applyClassMappings(
       continue
     }
     if (!cards.has(expected)) cards.set(expected, cardDescriptions(expected, page.text))
-    const basis = foldQuotes(mapping.basis.trim())
-    const onCard = [...(cards.get(expected)!.get(mapping.model_slug) ?? [])].some(
-      (d) => foldQuotes(d) === basis,
-    )
+    const owners = cardOwners(cards.get(expected)!, mapping.basis)
+    const onCard = owners.includes(mapping.model_slug)
+    if (owners.length > 0 && !onCard) {
+      reject(
+        'basis-is-another-models-card',
+        `the sentence is the description on ${owners.join(', ')}'s card, not ${mapping.model_slug}'s`,
+      )
+      continue
+    }
     if (
       modelNamedBy(mapping.basis, listed.keys()) !== mapping.model_slug &&
       !descriptions.has(mapping.basis.trim()) &&

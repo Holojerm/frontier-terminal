@@ -369,7 +369,11 @@ Propose it only if you find one:
   catalog's `model` records print it. The sentence must name that model,
   or be that model's own catalog description, or be the description on
   that model's own card on the page (Google's and Alibaba's model cards,
-  where the card's model code or link says which model it is).
+  where the card's model code or link says which model it is). A
+  sentence on one model's card is about that model, even when it
+  mentions another: "compared to Gemini 4 Carbon" on Argon's card is
+  not a basis for Carbon, and the Worker rejects it for any model but
+  the card's own.
 - `basis_source_id` is the page's `source_id`.
 
 If the page has no such sentence for a class, propose nothing for that
