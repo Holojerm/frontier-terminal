@@ -351,6 +351,20 @@
       "when": 1794365357709,
       "tag": "0049_correct_google_flagship",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "6",
+      "when": 1794368401299,
+      "tag": "0050_correct_google_launch_prices",
+      "breakpoints": true
+    },
+    {
+      "idx": 51,
+      "version": "6",
+      "when": 1794368890761,
+      "tag": "0051_remove_haiku_prompt_length_alerts",
+      "breakpoints": true
     }
   ]
 }
