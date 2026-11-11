@@ -57,7 +57,10 @@ configuration gap rather than retrying.
    changelog entry, say) are offered until they are rated.
    `track_record_review` lists, per material alert, press articles and newsroom posts found
    near it that still need a same-event rating; it is usually `[]`, and it too can hold
-   candidates when `changes` is empty.
+   candidates when `changes` is empty. An alert arrives five candidates per kind per run,
+   earliest first, so the same alert comes back on later runs with different `candidate_id`s
+   until every candidate is rated (up to 20 press articles, so four runs) or one is rated the
+   same event. That is not a repeat: a repeat is the same `candidate_id` offered twice.
    `figure_review` lists press headlines that may state a lab's revenue, valuation or funding
    and still need a reading; like the two above, it can hold entries when `changes` is empty.
    `filing_review` lists fresh registration filings whose revenue or cover terms the parser
