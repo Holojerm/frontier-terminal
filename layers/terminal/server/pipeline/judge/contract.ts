@@ -7,6 +7,7 @@ import { JudgeFigureReading } from '../reported/review'
 import { JudgeTrackRecordVerdict } from '../track-record/review'
 import { JudgeClassMapping } from './class-map'
 import { JudgeFilingReading } from './filing-review'
+import { JudgePriceReading } from './price-review'
 
 // The judge lane's contract. The Worker owns the data and every gate; the routine only reasons. What
 // the routine may send back is derived entirely from the AlertRow contract:
@@ -36,6 +37,8 @@ export const JudgeOutput = z.strictObject({
   figures: JudgeFigureReading.array().max(100).default([]),
   /** Parts of a registration filing the parser could not read, one per FILING REVIEW part. */
   filings: JudgeFilingReading.array().max(20).default([]),
+  /** Prices read from a price list whose parser is failing, one per SKU in a PRICE REVIEW block. */
+  prices: JudgePriceReading.array().max(400).default([]),
 })
 export type JudgeOutput = z.infer<typeof JudgeOutput>
 

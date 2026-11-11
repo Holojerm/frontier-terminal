@@ -28,6 +28,9 @@
 // terms the parser could not read, with the document text to read them from
 // (layers/terminal/server/pipeline/judge/filing-review.ts); usually `[]`, and
 // it too can be non-empty when `changes` is empty.
+// `price_review` lists the price lists whose parser is failing, each with its
+// page and the SKUs to read from it (layers/terminal/server/pipeline/judge/price-review.ts);
+// usually `[]`, and it too can be non-empty when `changes` is empty.
 // `still_listed` lists, per model removal among `changes`, the pages of the
 // same lab that still list that model, so a page dropping a row is not
 // written up as a delisting (layers/terminal/server/pipeline/judge/still-listed.ts);
@@ -42,6 +45,7 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 import { hiringBoards } from '../../pipeline/hiring-floor'
 import { blobRawReader, classMapReview } from '../../pipeline/judge/class-map'
 import { filingReview } from '../../pipeline/judge/filing-review'
+import { priceReview } from '../../pipeline/judge/price-review'
 import { JUDGE_CHANGE_LIMIT, incidentCounts, pendingChanges } from '../../pipeline/judge/pending'
 import { stillListedRemovals } from '../../pipeline/judge/still-listed'
 import { figureReview } from '../../pipeline/reported/review'
@@ -62,6 +66,7 @@ export default defineEventHandler(async (event) => {
     track_record_review,
     figure_review,
     filing_review,
+    price_review,
   ] = await Promise.all([
     pendingChanges(db, JUDGE_CHANGE_LIMIT),
     classMapReview(db, blobRawReader(blob)),
@@ -69,6 +74,7 @@ export default defineEventHandler(async (event) => {
     trackRecordReview(db),
     figureReview(db),
     filingReview(db, blobRawReader(blob)),
+    priceReview(db, blobRawReader(blob)),
   ])
   const [claim_review, hiring, incidents, still_listed] = await Promise.all([
     claimReview(db, changes, flagships),
@@ -92,6 +98,7 @@ export default defineEventHandler(async (event) => {
     track_record_review,
     figure_review,
     filing_review,
+    price_review,
     prompt: judgePrompt,
   }
 })
