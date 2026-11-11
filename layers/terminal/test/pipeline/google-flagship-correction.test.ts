@@ -3,13 +3,13 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import migration from '~~/server/db/migrations/0048_correct_google_flagship.sql?raw'
+import migration from '~~/server/db/migrations/0049_correct_google_flagship.sql?raw'
 import { effectiveClassMap } from '../../server/pipeline/class-map'
 import { cardDescriptions, cardOwners } from '../../server/pipeline/judge/page-cards'
 import { basisOnPage, flattenMdLinks } from '../../server/pipeline/recommendations'
 import { fixtureText } from './fixtures'
 
-// Migration 0048 re-bases the google:flagship decision the judge wrote on
+// Migration 0049 re-bases the google:flagship decision the judge wrote on
 // 2026-11-10, which quoted Argon's card for Carbon. The page it now rests on is
 // committed whole as fixtures/pricing/google-models.2026-11-11.md (fetched
 // 2026-11-11T02:25:02Z from aistudio.google.com/docs/models.md), beside the
@@ -52,7 +52,7 @@ beforeEach(async () => {
   await db.delete(schema.classMapDecisions)
 })
 
-describe('migration 0048: the google:flagship decision', () => {
+describe('migration 0049: the google:flagship decision', () => {
   it('quotes sentences from the captured page, each on the card the migration says', () => {
     expect(migration).toContain(CARBON_CARD)
     expect(migration).toContain(ARGON_CARD)

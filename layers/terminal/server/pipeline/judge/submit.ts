@@ -7,6 +7,7 @@ import { D1_MAX_BOUND_PARAMS, chunk, insertRows, type PipelineDb } from '../stor
 import { applyClaimVerdicts, type VerdictReport } from '../../theses/verdicts'
 import { applyFigureReadings, type FigureReport } from '../reported/review'
 import { applyFilingReadings, type FilingReport } from './filing-review'
+import { applyPriceReadings, type PriceReport } from './price-review'
 import { applyTrackRecordVerdicts, type TrackRecordVerdictReport } from '../track-record/review'
 import { evaluateTheses } from '../../theses/evaluate'
 import { parseDepartmentClusters, type DepartmentCluster } from '../../utils/terminal-clusters'
@@ -57,6 +58,8 @@ export interface JudgeRunReport {
   figures: FigureReport
   /** Registration-filing parts the parser could not read (judge/filing-review.ts). */
   filings: FilingReport
+  /** Prices read from a price list whose parser is failing (judge/price-review.ts). */
+  prices: PriceReport
 }
 
 async function loadChanges(db: PipelineDb, ids: readonly string[]): Promise<ChangeRow[]> {
@@ -235,6 +238,7 @@ export async function submitJudgeRun(
       track_record: { accepted: 0, inserted: 0, rejected: [] },
       figures: { accepted: 0, inserted: 0, rejected: [] },
       filings: { accepted: 0, alerts: 0, rejected: [] },
+      prices: { accepted: 0, changed: 0, rejected: [] },
     }
   }
 
@@ -271,6 +275,7 @@ export async function submitJudgeRun(
       track_record: { accepted: 0, inserted: 0, rejected: [] },
       figures: { accepted: 0, inserted: 0, rejected: [] },
       filings: { accepted: 0, alerts: 0, rejected: [] },
+      prices: { accepted: 0, changed: 0, rejected: [] },
     }
   }
 
@@ -395,6 +400,15 @@ export async function submitJudgeRun(
       path: JUDGE_OPS_PATH,
     })
   }
+  const prices = await applyPriceReadings(db, opts.readRaw ?? NO_PAGES, body.prices, now)
+  if (prices.rejected.length > 0) {
+    const [first] = prices.rejected
+    await recordOpsEvent(db, {
+      kind: 'judge_rejected',
+      detail: `${prices.rejected.length} price reading(s) rejected; first: ${first!.reason} — ${first!.detail} (${first!.source_id})`,
+      path: JUDGE_OPS_PATH,
+    })
+  }
   if (opts.sourcesYaml) {
     await evaluateTheses(db, { sourcesYaml: opts.sourcesYaml, now: () => now }, undefined, {
       judgedOnly: true,
@@ -406,6 +420,7 @@ export async function submitJudgeRun(
     track_record,
     figures,
     filings,
+    prices,
     changes_seen: body.change_ids_seen.length,
     accepted: accepted.length,
     inserted,
