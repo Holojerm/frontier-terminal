@@ -43,8 +43,14 @@ schedule: "0 14 * * *"        # 5-field cron, UTC (minimum interval: 1 hour)
 model: claude-sonnet-5
 connectors: [github]           # claude.ai connectors this routine needs
 enabled: false                 # keep false; enable explicitly after sync
+scope: fleet                   # optional: one all-repos routine runs this for every fork
 ---
 ```
+
+`scope: fleet` is for routines that are identical in every repo and light enough to run for all
+of them in one session. The owner registers one `all-repos-<name>` routine that sources every
+repo and follows each repo's own grants and journal; `/routines sync` skips the definition so
+forks don't grow a duplicate per repo.
 
 …followed by a `## Purpose` and `## Instructions` section. Then `/routines sync`. Every routine
 must follow the operating rules in `_shared.md` (the pointer prompt enforces reading it first).
