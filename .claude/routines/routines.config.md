@@ -10,6 +10,7 @@ configured" and skip the dependent work (journaling the gap).
 | Owner name | Jeremy Ettlinger |
 | GitHub repo | Holojerm/frontier-terminal |
 | Analytics sources | Cloudflare Workers analytics for the production Worker |
+| Issue triage scope | `routine-filed` (only issues a routine opened, `issue-triage.md` step 3) |
 
 ## Autonomy grants
 
@@ -20,6 +21,7 @@ Delete a line to take the grant back.
 | --- | --- | --- |
 | ops-triage | 2 | 2026-11-03 |
 | dependency-merge | 2 | 2026-11-03 |
+| pr-shepherd | 2 | 2026-11-11 |
 
 ## Mechanical fixes
 
@@ -28,7 +30,7 @@ fixes). The paths are globs, and the fix may touch nothing else.
 
 | Routine | Failure class (ops `kind` + cause) | Paths the fix may touch | Done-bar beyond `_shared.md` |
 | --- | --- | --- | --- |
-| ops-triage | `source_failed` / `recipe_failed` repeating across polls because the vendor moved or reshaped the page (a redirect or 404 to a new URL, a renamed header, a new table or markup format). #117 is the worked example. | `layers/terminal/server/pipeline/parsers/**`, `layers/terminal/server/theses/recipes/**`, `fixtures/**`, `sources.yaml` (only the failing source's URL and notes), `docs/source-audit.md`, `layers/terminal/test/**` | Re-capture the fixture from a live fetch and record the fetch time in `fixtures/manifest.json`. The parser's output on the new fixture must keep the old fixture's entity keys, and any value that changed must be quoted from the new page in the PR body. Class-map sentences are the next row's job. |
+| ops-triage | `source_failed` / `recipe_failed` repeating across polls because the vendor moved or reshaped the page (a redirect or 404 to a new URL, a renamed header, a new table or markup format). #117 is the worked example. | `layers/terminal/server/pipeline/parsers/**`, `layers/terminal/server/theses/recipes/**`, `fixtures/**`, `sources.yaml` (only the failing source's URL and notes), `docs/source-audit.md`, `layers/terminal/test/**` | Re-capture the fixture from a live fetch and record the fetch time in `fixtures/manifest.json`. The parser's output on the new fixture must keep every entity key the new page still prints. A key the page added or dropped (a launch, a delisting) and any value that changed must each be quoted from the new page in the PR body. Re-capture every fixture the change breaks, including the paired source a cross-source test reads (`anthropic-pricing-md` beside `anthropic-models-md`). When the re-captured page breaks a class-map quote test, apply the next row in the same PR. |
 | ops-triage | `class_basis_stale` / `class_basis_still_stale` (and the `judge_rejected` events that come with them): a price-matrix cell whose vendor sentence left the page, and the judge could not re-map it | `layers/terminal/server/utils/terminal-classes.ts` (only the stale cell's `MODEL_CLASS_MAP` entry), `fixtures/pricing/**`, `fixtures/manifest.json`, `layers/terminal/test/**` | Re-fetch the page `CLASS_MAP_SOURCES` names, and re-capture its fixture with the fetch time in `fixtures/manifest.json`. The new basis must be a sentence copied character for character from that fixture. It must name the model or be its catalog description, which is the check the judge failed. It must answer that class's `question` in `MODEL_CLASSES`: for the flagship, the vendor's start-here model. Check live `GET /api/prices` first, because a `class_map_decisions` row overrides the seed. If the vendor's own words fit no model, record it as a `CLASS_GAPS` entry instead, with the reason, and never paraphrase a sentence to make it fit. Update the golden counts, and rebase the launch tests that replay a hypothetical next model on the fixture. |
 
 ## Product context
