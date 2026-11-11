@@ -392,7 +392,9 @@ describe('a judge re-mapping onto a Google card (issue #360)', () => {
   const GOOGLE = fixtureText('fixtures/pricing/google-models.md')
   const ARGON_OLD =
     'Our flagship reasoning model with a shared 1M context window and long decodes up to 1M tokens.'
-  const ARGON_NEW = 'A faster, lower-cost alternative to Gemini 4 Carbon for everyday reasoning.'
+  // Argon's card as served on 2026-11-11: it names Carbon, to compare itself.
+  const ARGON_NEW =
+    'Our efficient Gemini 4 frontier reasoning model, delivering faster responses and lower token spend per turn compared to Gemini 4 Carbon across complex coding, agentic, math, and science tasks.'
   const CARBON =
     'Our strongest reasoning model, built for complex software engineering, multimodal knowledge work, scientific reasoning, and cybersecurity defense.'
   const CARBON_CARD = `  {% card description="${CARBON}" title="Gemini 4 Carbon" variant="model-card" %}
@@ -466,7 +468,21 @@ describe('a judge re-mapping onto a Google card (issue #360)', () => {
 
   it('rejects one model’s card sentence proposed for another', async () => {
     const report = await submit([google({ model_slug: 'gemini-4-argon' })])
-    expect(report.class_map.rejected.map((r) => r.reason)).toEqual(['basis-does-not-name-model'])
+    expect(report.class_map.rejected.map((r) => r.reason)).toEqual(['basis-is-another-models-card'])
+    expect(await db.select().from(schema.classMapDecisions)).toEqual([])
+  })
+
+  it('rejects a card that mentions the model only to compare itself to it', async () => {
+    // 2026-11-10: this sentence names Gemini 4 Carbon and no other model, so
+    // the naming rule passed it, and the matrix showed Carbon as Google's
+    // flagship on the strength of Argon's description.
+    const report = await submit([google({ basis: ARGON_NEW })])
+    expect(report.class_map.rejected).toEqual([
+      expect.objectContaining({
+        reason: 'basis-is-another-models-card',
+        detail: "the sentence is the description on gemini-4-argon's card, not gemini-4-carbon's",
+      }),
+    ])
     expect(await db.select().from(schema.classMapDecisions)).toEqual([])
   })
 })

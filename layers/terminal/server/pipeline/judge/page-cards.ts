@@ -1,3 +1,5 @@
+import { foldQuotes } from '../recommendations'
+
 // The descriptions a class-map page prints on each model's own card, for the
 // providers whose stored model rows do not carry them. Anthropic's, OpenAI's,
 // xAI's and Moonshot's models pages are parsed into catalog rows whose notes
@@ -13,6 +15,12 @@
 // Alibaba's by its `/detail/<slug>` link. A card that names no model adds
 // nothing. The text is returned as printed, so the gate's comparison stays the
 // same verbatim rule basisOnPage applies.
+//
+// The same map works the other way: a card's description is about that card's
+// model, whatever else it mentions. Argon's card compares itself to Carbon
+// ("…lower token spend per turn compared to Gemini 4 Carbon…"), which the
+// naming rule read as naming Carbon, and on 2026-11-10 the gate accepted it as
+// the basis for Carbon's flagship cell (cardOwners, issue #360 follow-up).
 
 /** slug -> the descriptions printed on that model's cards. */
 export type CardDescriptions = Map<string, Set<string>>
@@ -89,4 +97,12 @@ const READERS: Readonly<Record<string, CardReader>> = {
 /** The card descriptions on a class-map page; empty for a source with no reader. */
 export function cardDescriptions(sourceId: string, text: string): CardDescriptions {
   return READERS[sourceId]?.(text) ?? new Map()
+}
+
+/** The models whose own card prints this sentence, quote typography aside. */
+export function cardOwners(cards: CardDescriptions, basis: string): string[] {
+  const wanted = foldQuotes(basis.trim())
+  return [...cards]
+    .filter(([, descriptions]) => [...descriptions].some((d) => foldQuotes(d) === wanted))
+    .map(([slug]) => slug)
 }
