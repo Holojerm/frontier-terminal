@@ -36,9 +36,9 @@ const PAGE_URL = 'https://platform.claude.com/docs/en/models/overview.md'
 // The committed page is the Opus 5.5 generation; the launch rewritten onto it
 // is a hypothetical Opus 6.
 const OLD_FLAGSHIP =
-  "If you're unsure which model to use, start with Claude Opus 5.5 for most workloads."
+  'If you’re unsure which model to use, start with Claude Opus 5.5 for most workloads.'
 const NEW_FLAGSHIP =
-  "If you're unsure which model to use, start with Claude Opus 6 for most workloads."
+  'If you’re unsure which model to use, start with Claude Opus 6 for most workloads.'
 const OLD_BALANCED = 'The best combination of speed and intelligence'
 const NEW_BALANCED = 'Our best balance of speed and intelligence'
 
@@ -148,11 +148,12 @@ describe('quote typography', () => {
   const flagship = (page: string) =>
     recommendationRows('anthropic-models-md', page, prov).find((r) => r.class === 'flagship')
 
-  it('a curly apostrophe on the page keeps the recommendation present (issue #83)', () => {
-    const curled = FIXTURE.replace("If you're unsure", 'If you’re unsure')
-    expect(curled).not.toBe(FIXTURE)
+  // The page printed a straight apostrophe until 2026-11-11 and a curly one since.
+  it('either apostrophe on the page keeps the recommendation present (issue #83)', () => {
+    const straight = FIXTURE.replace('If you’re unsure', "If you're unsure")
+    expect(straight).not.toBe(FIXTURE)
     expect(flagship(FIXTURE)?.present).toBe(true)
-    expect(flagship(curled)?.present).toBe(true)
+    expect(flagship(straight)?.present).toBe(true)
   })
 
   it('a reworded recommendation still reads as gone', () => {
