@@ -29,7 +29,6 @@ import {
 import { fixtureText, provenanceOf } from './fixtures'
 import catalog1008 from '~/fixtures/pricing/anthropic-models-overview.2026-10-08.md?raw'
 import pricing1008 from '~/fixtures/pricing/anthropic-pricing.2026-10-08.md?raw'
-import catalog1111 from '~/fixtures/pricing/anthropic-models-overview.2026-11-11.md?raw'
 
 // Vendor .md pricing/catalog + EDGAR golden tests. Fixtures:
 // fixtures/pricing/*.md, fixtures/sec/* (provenance in fixtures/manifest.json).
@@ -138,11 +137,11 @@ describe('vendor-md + sec lane', () => {
     const priced = parseAnthropicPricingMd(fixtureText('fixtures/pricing/anthropic-pricing.md'))
     expect(VendorMdPricingOutput.safeParse(priced).success).toBe(true)
 
-    // 20 models in "Model pricing" (tier null) + the same 20 in "Batch
+    // 21 models in "Model pricing" (tier null) + the same 21 in "Batch
     // processing" (tier "batch"), and Haiku 5.5's long-prompt band in each.
-    expect(priced.rows.length).toBe(42)
-    expect(priced.rows.filter((r) => r.tier === null).length).toBe(20)
-    expect(priced.rows.filter((r) => r.tier === 'batch').length).toBe(20)
+    expect(priced.rows.length).toBe(44)
+    expect(priced.rows.filter((r) => r.tier === null).length).toBe(21)
+    expect(priced.rows.filter((r) => r.tier === 'batch').length).toBe(21)
     expect(priced.rows.filter((r) => r.tier === 'long_context').length).toBe(1)
     expect(priced.rows.filter((r) => r.tier === 'batch_long_context').length).toBe(1)
 
@@ -154,11 +153,18 @@ describe('vendor-md + sec lane', () => {
     expect(base('claude-opus-4-5').output_per_mtok).toBe(25)
     expect(base('claude-sonnet-5').input_per_mtok).toBe(2)
     expect(base('claude-sonnet-5').output_per_mtok).toBe(10)
-    expect(base('claude-haiku-3-5').input_per_mtok).toBe(0.8)
-    expect(base('claude-haiku-3-5').cached_input_per_mtok).toBe(0.08)
-    expect(base('claude-haiku-3-5').output_per_mtok).toBe(4)
+    expect(base('claude-opus-4-1').input_per_mtok).toBe(15)
+    expect(base('claude-opus-4-1').cached_input_per_mtok).toBe(1.5)
+    expect(base('claude-opus-4-1').output_per_mtok).toBe(75)
+    expect(base('claude-fable-5-2').input_per_mtok).toBe(8)
+    expect(base('claude-fable-5-2').cached_input_per_mtok).toBe(0.2)
+    expect(base('claude-fable-5-2').output_per_mtok).toBe(40)
+    // The page dropped Claude Haiku 3.5 between 2026-10-12 and 2026-11-11.
+    expect(priced.rows.some((r) => r.model_slug === 'claude-haiku-3-5')).toBe(false)
     // Printed caveat travels with the row; cache-write prices ride verbatim.
-    expect(base('claude-haiku-3-5').notes).toContain('retired, except on Google Cloud')
+    expect(base('claude-opus-4-1').notes).toContain(
+      'retired, except on Claude Models on Google Cloud (Google managed) and Bedrock',
+    )
     expect(base('claude-fable-5').notes).toBe(
       '5m cache writes $12.50 / MTok; 1h cache writes $20 / MTok',
     )
@@ -178,21 +184,33 @@ describe('vendor-md + sec lane', () => {
     // Catalog fields from the models overview (own parser, source id
     // anthropic-models-md): context windows + the vendor's printed API alias
     // as slug, so both sources join on modelKey.
-    const catalog = parseAnthropicModelsOverviewMd(
-      fixtureText('fixtures/pricing/anthropic-models-overview.md'),
-    )
+    // The table sits under "## Latest models" since 2026-11-11 ("## Compare
+    // models" before, as in the 2026-10-08 captures below).
+    const overview = fixtureText('fixtures/pricing/anthropic-models-overview.md')
+    expect(overview).not.toContain('## Compare models')
+    const catalog = parseAnthropicModelsOverviewMd(overview)
     expect(VendorMdPricingOutput.safeParse(catalog).success).toBe(true)
+    // A page with neither heading fails loudly.
+    expect(() =>
+      parseAnthropicModelsOverviewMd(overview.replace('## Latest models', '## Models')),
+    ).toThrow('heading not found')
     expect(catalog.rows.map((r) => r.model_slug)).toEqual([
-      'claude-fable-5-1',
+      'claude-fable-5-2',
       'claude-haiku-5-5',
       'claude-opus-5-5',
       'claude-sonnet-5-5',
     ])
     const cat = (slug: string) => catalog.rows.find((r) => r.model_slug === slug)!
-    expect(cat('claude-fable-5-1').context_window).toBe('1M tokens')
+    expect(cat('claude-fable-5-2')).toMatchObject({
+      input_per_mtok: 8,
+      output_per_mtok: 40,
+      context_window: '1M tokens',
+      notes: 'For demanding reasoning and long-horizon agentic work',
+    })
+    expect(cat('claude-haiku-5-5').notes).toContain(FROM_NOTE)
     expect(cat('claude-opus-5-5').input_per_mtok).toBe(4)
     expect(cat('claude-opus-5-5').output_per_mtok).toBe(20)
-    expect(cat('claude-fable-5-1').source_url).toBe(
+    expect(cat('claude-fable-5-2').source_url).toBe(
       'https://platform.claude.com/docs/en/models/overview.md',
     )
 
@@ -298,38 +316,6 @@ describe('vendor-md + sec lane', () => {
         )
       }
     })
-  })
-
-  // Live capture of 2026-11-11T18:39:30Z: the page renamed "## Compare models"
-  // to "## Latest models" (every poll from 17:31Z failed "heading not found").
-  // The table under it keeps the rows the parser reads.
-  test('anthropic: the catalog table under its 2026-11-11 heading "## Latest models"', () => {
-    expect(catalog1111).not.toContain('## Compare models')
-    const prov = {
-      source_url: 'https://platform.claude.com/docs/en/models/overview.md',
-      fetched_at: '2026-11-11T18:39:30Z',
-    }
-    const catalog = parseAnthropicModelsOverviewMd(catalog1111, prov)
-    expect(VendorMdPricingOutput.safeParse(catalog).success).toBe(true)
-    expect(catalog.rows.map((r) => r.model_slug)).toEqual([
-      'claude-fable-5-2',
-      'claude-haiku-5-5',
-      'claude-opus-5-5',
-      'claude-sonnet-5-5',
-    ])
-    const cat = (slug: string) => catalog.rows.find((r) => r.model_slug === slug)!
-    expect(cat('claude-fable-5-2')).toMatchObject({
-      input_per_mtok: 8,
-      output_per_mtok: 40,
-      context_window: '1M tokens',
-      notes: 'For demanding reasoning and long-horizon agentic work',
-    })
-    expect(cat('claude-opus-5-5')).toMatchObject({ input_per_mtok: 4, output_per_mtok: 20 })
-    expect(cat('claude-haiku-5-5').notes).toContain(FROM_NOTE)
-    // A page with neither heading still fails loudly.
-    expect(() =>
-      parseAnthropicModelsOverviewMd(catalog1111.replace('## Latest models', '## Models'), prov),
-    ).toThrow('heading not found')
   })
 
   test("xai: long-context dual rows map to tier 'standard' / 'long_context' under the same model_slug", () => {
