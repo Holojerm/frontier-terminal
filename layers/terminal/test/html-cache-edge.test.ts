@@ -1,6 +1,6 @@
 // The Cache API half of the HTML cache, against the real thing.
 //
-// These run in workerd (vitest-pool-workers), because `caches.default` is a
+// These run in workerd (@cloudflare/vitest-plugin), because `caches.default` is a
 // Workers API and simply does not exist under Node — which is also why
 // `nuxt dev` can never exercise this code: the plugin feature-detects, finds no
 // cache, and no-ops. Everything here is therefore untestable in the dev server

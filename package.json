@@ -83,7 +83,7 @@
   },
   "devDependencies": {
     "@axe-core/playwright": "^4.13.0",
-    "@cloudflare/vitest-pool-workers": "^0.22.0",
+    "@cloudflare/vitest-plugin": "^1.8.0",
     "@cloudflare/workers-types": "^5.20260821.1",
     "@fontsource/inter": "^5.3.0",
     "@fontsource/jetbrains-mono": "^5.3.0",
@@ -103,7 +103,7 @@
     "portless": "^0.15.5",
     "satori": "^0.63.2",
     "typescript": "^6.0.3",
-    "vitest": "^4.1.11",
+    "vitest": "^5.1.0",
     "vue-tsc": "^3.3.11",
     "wrangler": "^4.152.0"
   },
