@@ -206,7 +206,7 @@ describe('baseline', () => {
     expect(perSource.get('xai-greenhouse')).toBe(42)
     expect(perSource.get('anthropic-greenhouse')).toBe(59)
     expect(perSource.get('openai-ashby')).toBe(65)
-    expect(perSource.get('anthropic-pricing-md')).toBe(42)
+    expect(perSource.get('anthropic-pricing-md')).toBe(44)
     // 16 price rows (8 models × 2 tiers) + the flagship class-map check.
     expect(perSource.get('xai-models-md')).toBe(17)
     // No prices: only the flagship and economy class-map checks.
