@@ -344,16 +344,53 @@ export function licenseHeaders(window: LicenseWindow): Record<string, string> {
   }
 }
 
-/** Rows in a sample file: the first rows of the table in export order, oldest first where the key is a time. */
+/** Rows in a sample file. */
 export const SAMPLE_ROWS = 50
 
-/** The same table cut to its first SAMPLE_ROWS rows, for /export/sample/<table>.<format>. */
-export function sampleOf(table: ExportTable): ExportTable {
+// A table that grows over time is sampled from its newest rows: its first rows
+// are the day the pipeline started, which shows a reader none of what it has
+// logged since. Each span is tried in turn until one holds a full sample, so
+// a busy log reads a few days and a quiet one a few months.
+const SAMPLE_SPANS_DAYS = [3, 30, LICENSE_WINDOW_DAYS]
+const SAMPLE_PAGE = 500
+
+async function newestRows(
+  db: Parameters<ExportTable['page']>[0],
+  table: ExportTable,
+  where: Parameters<ExportTable['page']>[3],
+): Promise<Row[]> {
+  let tail: Row[] = []
+  let cursor: Row | null = null
+  for (;;) {
+    const rows = await table.page(db, cursor, SAMPLE_PAGE, where)
+    tail = [...tail, ...rows].slice(-SAMPLE_ROWS)
+    if (rows.length < SAMPLE_PAGE) return tail
+    cursor = rows.at(-1)!
+  }
+}
+
+/**
+ * The same table cut to SAMPLE_ROWS rows, for /export/sample/<table>.<format>:
+ * the newest rows of a table windowed on a date column, in export order, and
+ * the first rows of any other table. A windowed table with too few recent rows
+ * (or read as of a past date) falls back to its first rows.
+ */
+export function sampleOf(table: ExportTable, now: Date = new Date()): ExportTable {
+  const rule = EXPORT_HISTORY[table.name]
+  const column = rule?.kind === 'windowed' ? rule.column : undefined
   return {
     ...table,
     filters: undefined,
     async page(db, after, _limit, where) {
-      return after === null ? table.page(db, null, SAMPLE_ROWS, where) : []
+      if (after !== null) return []
+      if (column) {
+        for (const days of SAMPLE_SPANS_DAYS) {
+          const from = new Date(now.getTime() - days * 86_400_000).toISOString()
+          const rows = await newestRows(db, table, and(where, gte(column, from)))
+          if (rows.length === SAMPLE_ROWS) return rows
+        }
+      }
+      return table.page(db, null, SAMPLE_ROWS, where)
     },
     async count(db) {
       return Math.min(SAMPLE_ROWS, await table.count(db))

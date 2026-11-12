@@ -241,8 +241,8 @@ const tabs = [
               >, <time :datetime="coverage.as_of">{{ coverage.as_of }}</time></template
             ><span v-else> (none has run yet)</span>. Exports are live. The counts above are from
             that check, and count every row, not just the last {{ LICENSE_WINDOW_DAYS }} days. Each
-            sample is the first 50 rows of the default download in export order (oldest first when
-            the table is ordered by time), at
+            sample is 50 rows of the default download: the newest rows of a table that grows over
+            time, and the first rows of the rest, at
             <span class="font-mono">/export/sample/&lt;table&gt;.csv</span> or
             <span class="font-mono">.json</span>.
             <span class="font-mono">entity_identifiers</span> has each company’s CIK, LEI, ticker,
