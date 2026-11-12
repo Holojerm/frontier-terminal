@@ -604,3 +604,22 @@ Totals on the local run (one copy per week of each era): 416 copies read (3,460 
 The live series starts 2026-08-10 because the rankings endpoint defaults to the trailing 30 days. OpenRouter's own documentation (openrouter.ai/docs/cookbook/administration/data-api, read 2026-11-05) says `rankings-daily` begins on 2025-01-01, takes `start_date` and `end_date` up to 366 days apart, and is CC BY 4.0, the license the live source already carries. So OpenRouter itself holds the history from 2025-01-01, as the same dataset, and that is the honest backfill: two keyed requests, rows into the live rankings table with their own provenance (`rights: upstream`, not archived). It isn't in this change. It needs `NUXT_OPENROUTER_API_KEY`, which this audit doesn't use, and it writes the live table rather than an archive one, so it gets its own change. Ranking rows never reach the judge (`JUDGE_EXCLUDED_ENTITY_TYPES`).
 
 The Internet Archive holds 392 days of openrouter.ai/rankings copies from 2023-11-25, 44 of them before 2025. Each copy's page data carries that day's top models per variant and a weekly chart. We don't read them: the page says its tokens were "normalized using the GPT-4 tokenizer" while the dataset counts each provider's own tokens, so the two are different units. The CC BY 4.0 grant also covers only what the Data API publishes, not the page. Before 2025-01-01 the rankings history stays a stated gap.
+
+## Addendum, 2026-11-11: a fourth rights verdict, `restricted`
+
+Until today a source whose publisher's site terms restrict automated reading was `not-cleared` and out of any paid offer. That put the OpenAI and Anthropic price pages, the headline series, outside anything a licensee could use commercially, while the free site published the same rows under CC BY 4.0.
+
+**The verdict.** `restricted` is for a source that meets all of these:
+
+- the publisher states the facts about itself (a price, a model id, a rate limit, an incident time);
+- the page is public and needs no login;
+- its robots.txt allows the path, or the host has none;
+- its site terms restrict automated reading, or no terms for the host were found.
+
+A paid license can cover our compilation of those rows (the timestamped rows, the change log, the numbers we derive), with the terms reading shown per source on /data and /contact. The saved pages are the publisher's and are never served (`payloadRefusal`).
+
+**Moved from `not-cleared` (25 entries).** `openai-models-md`, `openai-pricing-md`, `openai-status`, `anthropic-models-md`, `anthropic-pricing-md`, `anthropic-status`, `xai-models-md`, `xai-status`, `meta-models-md`, the three `meta-muse-*` pages, `meta-pricing-md`, `deepseek-pricing-md`, `deepseek-status`, `deepseek-status-atom`, `alibaba-pricing-html`, `alibaba-models-html`, `moonshot-models-md`, and the six `limits-*` recipes. The three OpenAI entries now quote the Terms of Use recorded under `newsroom-openai` instead of saying the terms were unread.
+
+**Still `not-cleared` (14 entries), and why.** `openrouter-models` (a third party's copy of vendor prices, under terms that bar scraping); `ramp-ai-index` (someone else's dataset, no stated license); `openai-misalignment-reports`, `newsroom-openai`, `newsroom-meta` and `cloudflare-changelog-ai` (a publisher's own words, not facts); `mistral-status` and `gpu-oracle` (robots.txt answers 403, so the third condition can't be checked); the three `github-prs-*` recipes (GitHub's terms condition research use on open access); `wayback-pricing` and `wayback-hiring` (the Internet Archive grants research use only); `lab-legal-pages`.
+
+**What this is not.** No publisher has given permission and none has objected. No lawyer has reviewed the position. It rests on the pages being public facts read by an identified client at a low rate, which is how most vendors of web-collected data describe theirs. A cease-and-desist from a publisher would move its sources back to `not-cleared`.

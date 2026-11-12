@@ -7,8 +7,9 @@
 //
 // What a paid licence can cover is not ours to decide for every row: an
 // upstream CC BY dataset keeps its attribution condition whatever we sign,
-// and a source with no licence or a scraping bar cannot be sold at all. The
-// three lists below are read from each source's `rights:` in sources.yaml
+// a publisher whose site terms restrict automated reading gets that said
+// beside its name, and a source with no licence cannot be sold at all. The
+// four lists below are read from each source's `rights:` in sources.yaml
 // (via /api/coverage), so the offer cannot drift from the audit.
 
 import {
@@ -45,7 +46,12 @@ interface Named {
 
 /** Registered sources and audited recipes by what a licence can cover; derived feeds follow their parent. */
 const groups = computed(() => {
-  const out: Record<SourceRights, Named[]> = { ours: [], upstream: [], 'not-cleared': [] }
+  const out: Record<SourceRights, Named[]> = {
+    ours: [],
+    restricted: [],
+    upstream: [],
+    'not-cleared': [],
+  }
   for (const s of coverage.value?.sources ?? []) {
     if (s.derived_from || !s.rights) continue
     out[s.rights].push({ key: s.source_id, name: s.label })
@@ -66,6 +72,11 @@ const GROUPS: { rights: SourceRights; title: string; body: string }[] = [
     body: 'Facts each publisher states about itself (prices, open roles, incidents, filings), read under terms and a robots.txt that allow it. The compilation is ours. That means the timestamped rows, the change log, the alerts, and every number we derive. The facts still belong to their publishers.',
   },
   {
+    rights: 'restricted',
+    title: 'Licensable, with a restriction we disclose',
+    body: 'Facts a publisher states about itself (prices, models, rate limits, incidents) on a public page that needs no login and that its robots.txt doesn’t close. The publisher’s site terms restrict automated reading, or we couldn’t find them. We license our compilation of these rows and name the restriction for each source on /data, so your compliance team can decide. We don’t pass on the saved pages. No publisher has given us permission, none has objected, and no lawyer has reviewed this position.',
+  },
+  {
     rights: 'upstream',
     title: 'Passed on under upstream terms',
     body: 'Someone else’s dataset under its own license. We pass it on with the attribution that license requires, and we can’t sign that condition away. Per-lab shares we compute from it still count as derived from CC BY data.',
@@ -73,7 +84,7 @@ const GROUPS: { rights: SourceRights; title: string; body: string }[] = [
   {
     rights: 'not-cleared',
     title: 'Not in any paid offer',
-    body: 'Sources with no stated license (the Ramp AI Index), terms we couldn’t read, or terms or a robots.txt that restrict automated reading. These stay on the free site and out of anything we sell.',
+    body: 'Someone else’s dataset with no stated license (the Ramp AI Index), a publisher’s own words rather than facts (newsroom posts, misalignment reports), a robots.txt we couldn’t read, terms that condition reuse, and the Internet Archive’s copies. These stay on the free site and out of anything we sell.',
   },
 ]
 </script>
@@ -90,8 +101,9 @@ const GROUPS: { rights: SourceRights; title: string; body: string }[] = [
           Every page stays free to read. Data from the last {{ LICENSE_WINDOW_DAYS }} days is
           {{ DATA_LICENSE.short }}, free for any use. Older data is {{ HISTORY_LICENSE.short }}, so
           commercial use of the full history needs a paid license. Anything we published before
-          {{ LICENSE_SPLIT_EFFECTIVE }} stays {{ DATA_LICENSE.short }}. A paid license covers only
-          what’s ours to license (see below). Tell us what you need. Here’s what we can offer.
+          {{ LICENSE_SPLIT_EFFECTIVE }} stays {{ DATA_LICENSE.short }}. A paid license covers what’s
+          ours to license, and says where a publisher’s terms restrict it (see below). Tell us what
+          you need. Here’s what we can offer.
         </p>
         <ul class="list-disc space-y-2 pl-5">
           <li>

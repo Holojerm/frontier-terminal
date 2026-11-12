@@ -41,10 +41,14 @@ export type SourceRole = 'primary' | 'join' | 'cross-check' | 'sec' | 'status'
  * the publisher states about itself, read under terms and a robots.txt that
  * allow it, so the compilation is ours to license. `upstream`: someone else's
  * dataset under its own licence (CC BY and the like), which travels with it.
- * `not-cleared`: no stated licence, unread terms, or a robots/terms
- * restriction, so it stays on the free site and out of any paid offer.
+ * `restricted`: facts the publisher states about itself on a public page its
+ * robots.txt doesn't close, where its site terms restrict automated reading
+ * or weren't found. A licence can cover our compilation of the rows with that
+ * disclosed, never the saved pages. `not-cleared`: no stated licence, a
+ * publisher's own words, an unreadable robots.txt, or terms that condition
+ * reuse, so it stays on the free site and out of any paid offer.
  */
-export const SOURCE_RIGHTS = ['ours', 'upstream', 'not-cleared'] as const
+export const SOURCE_RIGHTS = ['ours', 'restricted', 'upstream', 'not-cleared'] as const
 export type SourceRights = (typeof SOURCE_RIGHTS)[number]
 export type RunStatus = 'ok' | 'unchanged' | 'failed' | 'baseline' | 'skipped' | 'absent'
 
@@ -182,9 +186,11 @@ export interface DictionaryTable {
   joins: DictionaryJoin[]
   /** Whether a licensee can use the rows commercially, from each feeding source's sources.yaml rights. */
   licensing: {
-    commercial: 'yes' | 'upstream' | 'no' | 'mixed'
+    commercial: 'yes' | 'restricted' | 'upstream' | 'no' | 'mixed'
     note: string
     ours: string[]
+    /** Sources whose site terms restrict automated reading: licensable as our compilation, disclosed. */
+    restricted: string[]
     upstream: { id: string; license: string | null }[]
     not_cleared: string[]
   }

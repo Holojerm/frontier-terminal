@@ -8,10 +8,17 @@
 # licence could cover: `ours` (facts the publisher states about itself, read
 # under terms and a robots.txt that allow it; the compilation is ours),
 # `upstream` (someone else's dataset, under its own licence, which travels
-# with it), or `not-cleared` (no stated licence, unread terms, or a robots or
-# terms restriction: free site only, never in a paid offer). /api/coverage
-# and /contact read both. A source is `ours` only when both its terms and its
-# robots.txt were read and neither restricts what is taken.
+# with it), `restricted` (facts the publisher states about itself on a public
+# page its robots.txt doesn't close, where its site terms restrict automated
+# reading or weren't found: a paid licence can cover our compilation of the
+# rows with that reading disclosed, never the saved pages), or `not-cleared`
+# (someone else's dataset with no stated licence, a publisher's own words
+# rather than facts, a robots.txt that couldn't be read, or terms that
+# condition reuse: free site only, never in a paid offer). /api/coverage and
+# /contact read both. A source is `ours` only when both its terms and its
+# robots.txt were read and neither restricts what is taken. `restricted` was
+# added on 2026-11-11 (docs/source-audit.md); no publisher has given
+# permission or objected, and no counsel has reviewed it.
 
 sources:
   openai-models-md:
@@ -22,12 +29,16 @@ sources:
     diff_mechanism: body hash (ETag on pricing page)
     verdict: include
     terms: >-
-      OpenAI's terms of use (openai.com/policies) answer 403 to a headless
-      client, so they were not read. developers.openai.com/robots.txt allows
-      everything. Taken: model ids and catalog fields, every 5 minutes (the
-      launch tripwire). Not cleared for a paid offer until the terms are read.
-      Read 2026-11-04.
-    rights: not-cleared
+      OpenAI's Terms of Use (effective 2026-01-01, quoted under
+      newsroom-openai; openai.com/policies answers 403 to a headless client)
+      cover "associated software applications and websites" and bar users who
+      "Automatically or programmatically extract data or Output".
+      developers.openai.com/robots.txt allows everything. Taken: model ids and
+      catalog fields, every 5 minutes (the launch tripwire). Restricted: a
+      paid license can cover our compilation of these rows with this terms
+      reading disclosed, never the saved pages. Verdict set 2026-11-11. Read
+      2026-11-04.
+    rights: restricted
     fixture: fixtures/pricing/openai-models.md
     caveats: >-
       Catalog only — the page prints no prices; they come from
@@ -43,12 +54,16 @@ sources:
     diff_mechanism: body hash (ETag present)
     verdict: include
     terms: >-
-      OpenAI's terms of use (openai.com/policies) answer 403 to a headless
-      client, so they were not read. developers.openai.com/robots.txt allows
-      everything. Taken: $/MTok prices per model, tier and context band, every
-      30 minutes. Not cleared for a paid offer until the terms are read. Read
+      OpenAI's Terms of Use (effective 2026-01-01, quoted under
+      newsroom-openai; openai.com/policies answers 403 to a headless client)
+      cover "associated software applications and websites" and bar users who
+      "Automatically or programmatically extract data or Output".
+      developers.openai.com/robots.txt allows everything. Taken: $/MTok prices
+      per model, tier and context band, every 30 minutes. Restricted: a paid
+      license can cover our compilation of these rows with this terms reading
+      disclosed, never the saved pages. Verdict set 2026-11-11. Read
       2026-11-04.
-    rights: not-cleared
+    rights: restricted
     fixture: fixtures/pricing/openai-pricing.md
     caveats: >-
       Did not exist at the 2026-08-25 audit; live-checked 2026-09-22 as
@@ -77,9 +92,11 @@ sources:
       our Services", and define the Services to include "associated apps,
       software, and websites"; the Commercial Terms carry no such clause.
       platform.claude.com/robots.txt disallows only /api/. Taken: model ids,
-      context windows and cutoffs, every 5 minutes. Not in a paid offer while
-      the Consumer Terms' scraping bar may reach the docs. Read 2026-11-04.
-    rights: not-cleared
+      context windows and cutoffs, every 5 minutes. Restricted: a paid license
+      can cover our compilation of these rows with this terms reading
+      disclosed, never the saved pages. Verdict set 2026-11-11. Read
+      2026-11-04.
+    rights: restricted
     fixture: fixtures/pricing/anthropic-models-overview.md
     caveats: Catalog fields (context window, cutoff); pair with anthropic-pricing-md for prices.
 
@@ -96,9 +113,11 @@ sources:
       our Services", and define the Services to include "associated apps,
       software, and websites"; the Commercial Terms carry no such clause.
       platform.claude.com/robots.txt disallows only /api/. Taken: $/MTok
-      prices per model and tier, every 30 minutes. Not in a paid offer while
-      the Consumer Terms' scraping bar may reach the docs. Read 2026-11-04.
-    rights: not-cleared
+      prices per model and tier, every 30 minutes. Restricted: a paid license
+      can cover our compilation of these rows with this terms reading
+      disclosed, never the saved pages. Verdict set 2026-11-11. Read
+      2026-11-04.
+    rights: restricted
     fixture: fixtures/pricing/anthropic-pricing.md
     caveats: >-
       Audit recorded this page as semantic HTML; scaffold-time fetch
@@ -122,10 +141,12 @@ sources:
       xAI's Acceptable Use Policy bars "Accessing the Services through
       unauthorized automated or non-human means" (read in a browser; x.ai
       answers 403 headless). docs.x.ai/robots.txt allows everything and
-      signals ai-input=yes, which is read as authorizing the free site.
-      Taken: model ids, prices and context windows, every 5 minutes. Not in
-      a paid offer while the AUP bar stands. Read 2026-11-04.
-    rights: not-cleared
+      signals ai-input=yes, which is read as authorizing the free site. Taken:
+      model ids, prices and context windows, every 5 minutes. Restricted: a
+      paid license can cover our compilation of these rows with this terms
+      reading disclosed, never the saved pages. Verdict set 2026-11-11. Read
+      2026-11-04.
+    rights: restricted
     fixture: fixtures/pricing/xai-models.md
     caveats: >-
       Long-context dual pricing: models listed with two rows (< 200k / >=
@@ -200,9 +221,10 @@ sources:
       No website terms found for dev.meta.ai (meta.com/legal/terms and
       dev.meta.ai/legal/terms answer 404); the Meta Model API terms govern API
       calls, not reading the docs. robots.txt allows /docs/. Taken: model ids
-      and context windows, every 5 minutes. Not cleared for a paid offer until
-      the terms are read. Read 2026-11-04.
-    rights: not-cleared
+      and context windows, every 5 minutes. Restricted: a paid license can
+      cover our compilation of these rows with this terms reading disclosed,
+      never the saved pages. Verdict set 2026-11-11. Read 2026-11-04.
+    rights: restricted
     fixture: fixtures/pricing/meta-models.md
     caveats: >-
       Catalog only, like openai-models-md: the page prints model ids,
@@ -231,7 +253,7 @@ sources:
       Same terms and robots.txt as meta-models-md. Taken: the Availability
       table (variant, id, whether pay-as-you-go serves it) and the preview
       note, whenever meta-models-md is read. Read 2026-11-06.
-    rights: not-cleared
+    rights: restricted
     fixture: fixtures/pricing/meta-muse-wonder.md
     caveats: >-
       Muse Wonder Full is listed with no id and "Not available" on Model
@@ -248,7 +270,7 @@ sources:
       Same terms and robots.txt as meta-models-md. Taken: the Availability
       table (version, id, Standard or Contributor mode on pay-as-you-go),
       whenever meta-models-md is read. Read 2026-11-06.
-    rights: not-cleared
+    rights: restricted
     fixture: fixtures/pricing/meta-muse-spark.md
     caveats: >-
       The only page that lists the -contributor ids; meta-models-md names
@@ -265,7 +287,7 @@ sources:
       Same terms and robots.txt as meta-models-md. Taken: the Availability
       table (id, Standard mode on pay-as-you-go) and the At a glance context
       window, whenever meta-models-md is read. Read 2026-11-09.
-    rights: not-cleared
+    rights: restricted
     fixture: fixtures/pricing/meta-muse-ember.md
     caveats: >-
       Added 2026-11-09 with Muse Ember. models.md prints this line's ids with
@@ -282,9 +304,10 @@ sources:
       No website terms found for dev.meta.ai (meta.com/legal/terms and
       dev.meta.ai/legal/terms answer 404); the Meta Model API terms govern API
       calls, not reading the docs. robots.txt allows /docs/. Taken: $/MTok
-      prices per model line, every 30 minutes. Not cleared for a paid offer
-      until the terms are read. Read 2026-11-04.
-    rights: not-cleared
+      prices per model line, every 30 minutes. Restricted: a paid license can
+      cover our compilation of these rows with this terms reading disclosed,
+      never the saved pages. Verdict set 2026-11-11. Read 2026-11-04.
+    rights: restricted
     fixture: fixtures/pricing/meta-pricing.md
     caveats: >-
       One table per model line, priced per line, not per version: every
@@ -360,13 +383,14 @@ sources:
     verdict: include
     terms: >-
       DeepSeek's Terms of Use (cdn.deepseek.com/policies/en-US, last updated
-      2026-03-27) cover its "websites" and bar "capturing, copying any
-      content of the Services, including but not limited to using any robots,
-      spiders, or other automatic setups". api-docs.deepseek.com/robots.txt
-      allows everything. Taken: model ids, versions, context and $/MTok
-      prices, every 5 minutes (the launch tripwire). Kept on the free site
-      only, as Anthropic's docs are; not in a paid offer. Read 2026-11-04.
-    rights: not-cleared
+      2026-03-27) cover its "websites" and bar "capturing, copying any content
+      of the Services, including but not limited to using any robots, spiders,
+      or other automatic setups". api-docs.deepseek.com/robots.txt allows
+      everything. Taken: model ids, versions, context and $/MTok prices, every
+      5 minutes (the launch tripwire). Restricted: a paid license can cover
+      our compilation of these rows with this terms reading disclosed, never
+      the saved pages. Verdict set 2026-11-11. Read 2026-11-04.
+    rights: restricted
     fixture: fixtures/pricing/deepseek-pricing.md
     caveats: >-
       Live-fetched 2026-11-04: catalog and prices on one page, in USD (the
@@ -396,10 +420,11 @@ sources:
       devices or manual processes) without written permission from Alibaba
       Cloud is prohibited". www.alibabacloud.com/robots.txt allows /help/.
       Taken: $/MTok list prices for the Qwen-Max, Qwen-Plus and Qwen-Flash
-      lines, every 30 minutes, not on the five-minute tripwire. Kept on the
-      free site only, as Anthropic's docs are; not in a paid offer. Read
+      lines, every 30 minutes, not on the five-minute tripwire. Restricted: a
+      paid license can cover our compilation of these rows with this terms
+      reading disclosed, never the saved pages. Verdict set 2026-11-11. Read
       2026-11-04.
-    rights: not-cleared
+    rights: restricted
     fixture: fixtures/pricing/alibaba-pricing.html
     caveats: >-
       Live-fetched 2026-11-04 from the international site, priced in USD;
@@ -428,8 +453,10 @@ sources:
     terms: >-
       Same terms and robots.txt as alibaba-pricing-html. Taken: whether the
       three sentences the class map quotes are still on the page, every 5
-      minutes (the launch tripwire). Not in a paid offer. Read 2026-11-04.
-    rights: not-cleared
+      minutes (the launch tripwire). Restricted: a paid license can cover our
+      compilation of these rows with this terms reading disclosed, never the
+      saved pages. Verdict set 2026-11-11. Read 2026-11-04.
+    rights: restricted
     fixture: fixtures/pricing/alibaba-models.html
     caveats: >-
       Read only for the vendor sentences the class map quotes: the
@@ -448,14 +475,15 @@ sources:
     verdict: include (catalog only)
     terms: >-
       Moonshot AI's Terms of Service for the Kimi Open Platform
-      (platform.kimi.ai/docs/agreement/modeluse.md, last updated
-      2026-07-30) define the Services to include "documentation, and
-      websites" and bar users from "Use any method to extract data from the
-      Services other than as permitted through the APIs". robots.txt
-      allows /docs. Taken: model ids and descriptions, every 5 minutes (the
-      launch tripwire). Kept on the free site only, as Anthropic's docs
-      are; not in a paid offer. Read 2026-11-04.
-    rights: not-cleared
+      (platform.kimi.ai/docs/agreement/modeluse.md, last updated 2026-07-30)
+      define the Services to include "documentation, and websites" and bar
+      users from "Use any method to extract data from the Services other than
+      as permitted through the APIs". robots.txt allows /docs. Taken: model
+      ids and descriptions, every 5 minutes (the launch tripwire). Restricted:
+      a paid license can cover our compilation of these rows with this terms
+      reading disclosed, never the saved pages. Verdict set 2026-11-11. Read
+      2026-11-04.
+    rights: restricted
     fixture: fixtures/pricing/moonshot-models.md
     caveats: >-
       Live-fetched 2026-11-04. platform.moonshot.ai redirects to
@@ -903,12 +931,16 @@ sources:
     diff_mechanism: incident ids; status/resolved_at per incident
     verdict: include
     terms: >-
-      OpenAI's terms of use (openai.com/policies) answer 403 to a headless
-      client, so they were not read. status.openai.com has no robots.txt
-      (404). Taken: incident id, title, impact, status, start and resolution,
-      every 6 hours. Not cleared for a paid offer until the terms are read.
-      Read 2026-11-04.
-    rights: not-cleared
+      OpenAI's Terms of Use (effective 2026-01-01, quoted under
+      newsroom-openai; openai.com/policies answers 403 to a headless client)
+      cover "associated software applications and websites" and bar users who
+      "Automatically or programmatically extract data or Output".
+      status.openai.com has no robots.txt (404). Taken: incident id, title,
+      impact, status, start and resolution, every 6 hours. Restricted: a paid
+      license can cover our compilation of these rows with this terms reading
+      disclosed, never the saved pages. Verdict set 2026-11-11. Read
+      2026-11-04.
+    rights: restricted
     fixture: fixtures/status/openai-status.json
     caveats: >-
       Capacity-strain proxy, not an SLA: a status page records what the
@@ -933,8 +965,10 @@ sources:
       source moved here from the JSON API on 2026-11-04. Anthropic's Consumer
       Terms bar scraping its Services (see anthropic-models-md). Taken:
       incident id, title, status, start and resolution (no impact is
-      published), every 6 hours. Not in a paid offer. Read 2026-11-04.
-    rights: not-cleared
+      published), every 6 hours. Restricted: a paid license can cover our
+      compilation of these rows with this terms reading disclosed, never the
+      saved pages. Verdict set 2026-11-11. Read 2026-11-04.
+    rights: restricted
     fixture: fixtures/status/anthropic-status.xml
     caveats: >-
       Read from the Atom feed since 2026-11-04 because status.claude.com's
@@ -1018,13 +1052,14 @@ sources:
     diff_mechanism: incident ids; status/resolved_at per incident
     verdict: include
     terms: >-
-      DeepSeek's Terms of Use bar robots and spiders that capture the
-      content of its websites (see deepseek-pricing-md).
-      status.deepseek.com has no robots.txt (the path answers the status
-      app's own page). Taken: incident id, title, status, components,
-      start and end, every 6 hours. Kept on the free site only; not in a
-      paid offer. Read 2026-11-04.
-    rights: not-cleared
+      DeepSeek's Terms of Use bar robots and spiders that capture the content
+      of its websites (see deepseek-pricing-md). status.deepseek.com has no
+      robots.txt (the path answers the status app's own page). Taken: incident
+      id, title, status, components, start and end, every 6 hours. Restricted:
+      a paid license can cover our compilation of these rows with this terms
+      reading disclosed, never the saved pages. Verdict set 2026-11-11. Read
+      2026-11-04.
+    rights: restricted
     fixture: fixtures/status/deepseek-status.xml
     caveats: >-
       Live-fetched 2026-11-04: 28 incidents, 2026-08-04 to 2026-11-03, all
@@ -1046,7 +1081,7 @@ sources:
     terms: >-
       Same terms and robots.txt as deepseek-status. Taken: each incident's
       newest update time, every 6 hours. Read 2026-11-04.
-    rights: not-cleared
+    rights: restricted
     fixture: fixtures/status/deepseek-status-atom.xml
     caveats: >-
       The same incidents as the RSS feed, with no start time. Each entry's
@@ -1066,12 +1101,13 @@ sources:
     terms: >-
       xAI's Acceptable Use Policy bars "Accessing the Services through
       unauthorized automated or non-human means" (read in a browser; x.ai
-      answers 403 headless). robots.txt allows the feed and disallows
-      /api/. Taken: incident guid, title, severity, components, start and
-      end, every 6 hours. A published feed robots.txt allows is read as
-      authorized for the free site; not in a paid offer while the AUP bar
-      stands. Read 2026-11-04.
-    rights: not-cleared
+      answers 403 headless). robots.txt allows the feed and disallows /api/.
+      Taken: incident guid, title, severity, components, start and end, every
+      6 hours. A published feed robots.txt allows is read as authorized for
+      the free site. Restricted: a paid license can cover our compilation of
+      these rows with this terms reading disclosed, never the saved pages.
+      Verdict set 2026-11-11. Read 2026-11-04.
+    rights: restricted
     fixture: fixtures/status/xai-status.xml
     caveats: >-
       The page is "SpaceXAI System Status" and covers every SpaceXSI
@@ -1100,11 +1136,14 @@ sources:
     diff_mechanism: report slug / notice id; title, summary, model and context per entry
     verdict: include
     terms: >-
-      OpenAI's terms of use (openai.com/policies) answer 403 to a headless
-      client, so they were not read. alignment.openai.com has no robots.txt
-      (404). Taken: each entry's title, one-sentence summary, model and
-      context verbatim, every 6 hours. Short quotations of OpenAI's own words,
-      with the link. Not cleared for a paid offer until the terms are read.
+      OpenAI's Terms of Use (effective 2026-01-01, quoted under
+      newsroom-openai; openai.com/policies answers 403 to a headless client)
+      cover "associated software applications and websites" and bar users who
+      "Automatically or programmatically extract data or Output".
+      alignment.openai.com has no robots.txt (404). Taken: each entry's title,
+      one-sentence summary, model and context verbatim, every 6 hours. Short
+      quotations of OpenAI's own words, with the link. Not in a paid offer:
+      the entries are OpenAI's own words, not facts about a price or a role.
       Read 2026-11-04.
     rights: not-cleared
     fixture: fixtures/disclosures/openai-misalignment-reports.html
@@ -1951,7 +1990,7 @@ recipe_sources:
     terms: >-
       Same host as the lab's catalog and pricing docs
       (developers.openai.com); robots.txt allows the path. Read 2026-11-04.
-    rights: not-cleared
+    rights: restricted
     caveats: >-
       Keyed on tier name: OpenAI cut five numbered tiers to Build, Launch
       and Grow on 2026-10-06, a relabel more than a capacity change. The
@@ -1966,7 +2005,7 @@ recipe_sources:
     terms: >-
       Same host as the lab's catalog and pricing docs
       (developers.openai.com); robots.txt allows the path. Read 2026-11-04.
-    rights: not-cleared
+    rights: restricted
     caveats: >-
       Keyed on tier name: OpenAI cut five numbered tiers to Build, Launch
       and Grow on 2026-10-06, a relabel more than a capacity change. The
@@ -1981,7 +2020,7 @@ recipe_sources:
     terms: >-
       Same host as the lab's catalog and pricing docs
       (developers.openai.com); robots.txt allows the path. Read 2026-11-04.
-    rights: not-cleared
+    rights: restricted
     caveats: >-
       Keyed on tier name: OpenAI cut five numbered tiers to Build, Launch
       and Grow on 2026-10-06, a relabel more than a capacity change. The
@@ -1996,7 +2035,7 @@ recipe_sources:
     terms: >-
       Same host as the lab's catalog and pricing docs (platform.claude.com);
       robots.txt allows the path. Read 2026-11-04.
-    rights: not-cleared
+    rights: restricted
     caveats: >-
       The page says limits are "designed to prevent API abuse"; new
       organizations may start in an unpublished evaluation tier. Release
@@ -2010,7 +2049,7 @@ recipe_sources:
     terms: >-
       Same host as the lab's catalog and pricing docs (docs.x.ai);
       robots.txt allows the path. Read 2026-11-04.
-    rights: not-cleared
+    rights: restricted
     caveats: >-
       The page says limits scale exponentially with tier: a designed curve,
       so a change is more likely pricing than strain. No validators and no
@@ -2024,7 +2063,7 @@ recipe_sources:
     terms: >-
       Same host as the lab's catalog and pricing docs (dev.meta.ai);
       robots.txt allows the path. Read 2026-11-04.
-    rights: not-cleared
+    rights: restricted
     caveats: >-
       The same page as meta-pricing-md. Limits apply per team, not per key.
       "Other limits" (streams for transcription) is kept as text. Each

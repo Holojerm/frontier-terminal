@@ -29,6 +29,7 @@ const HISTORY_LABEL = { windowed: 'last 90 days', whole: 'whole table' } as cons
 
 const COMMERCIAL_LABEL = {
   yes: 'yes',
+  restricted: 'yes, terms restriction disclosed',
   upstream: 'upstream terms',
   no: 'no',
   mixed: 'by source',

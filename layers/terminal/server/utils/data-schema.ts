@@ -181,6 +181,12 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       reported_figures: { note: 'New table.' },
     },
   },
+  {
+    version: '1.7.0',
+    date: '2026-11-11',
+    summary:
+      'A fourth rights value, restricted: facts a publisher states about itself on a public page, where its site terms restrict automated reading or we couldn’t find them. A paid license can cover our compilation of those rows with the restriction disclosed, never the saved pages. 25 sources moved to it from not-cleared, among them the OpenAI, Anthropic, xAI, Meta, DeepSeek, Alibaba and Moonshot docs. rights in /api/coverage can now be restricted, and each table’s licensing in /export/dictionary.json gains a restricted list and can answer commercial: restricted. No table columns changed.',
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version
