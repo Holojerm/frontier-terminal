@@ -61,6 +61,8 @@ const recipeColumns: TableColumn[] = [
 // the same three facts for a lab source and a recipe.
 const RIGHTS_NOTE: Record<SourceRights, string> = {
   ours: 'Licensable on our terms.',
+  restricted:
+    'Licensable as our compilation, with this terms reading disclosed. Saved pages aren’t served.',
   upstream: 'Stays under its upstream license.',
   'not-cleared': 'Free site only. Not in any paid offer.',
 }

@@ -24,6 +24,18 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.7.0 (2026-11-11)
+
+A fourth `rights` value, `restricted`: facts a publisher states about itself
+on a public page its robots.txt doesn't close, where its site terms restrict
+automated reading or we couldn't find them. A paid license can cover our
+compilation of those rows with the restriction disclosed, never the saved
+pages. 25 sources moved to it from `not-cleared`, among them the OpenAI,
+Anthropic, xAI, Meta, DeepSeek, Alibaba and Moonshot docs. `rights` in
+`/api/coverage` can now be `restricted`, and each table's `licensing` in
+`/export/dictionary.json` gains a `restricted` list and can answer
+`commercial: restricted`. No table columns changed.
+
 ## 1.6.0 (2026-11-07)
 
 Press reports of the private labs’ revenue, valuations and funding, in two new

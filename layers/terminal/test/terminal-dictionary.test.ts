@@ -191,9 +191,18 @@ describe('the data dictionary', () => {
     // Every recipe lands in exactly one group.
     const recipes = table('recipe_observations').licensing
     const recipeSources = dictionary.sources.filter((s) => s.group === 'recipes')
-    expect(recipes.ours.length + recipes.upstream.length + recipes.not_cleared.length).toBe(
-      recipeSources.length,
-    )
+    expect(
+      recipes.ours.length +
+        recipes.restricted.length +
+        recipes.upstream.length +
+        recipes.not_cleared.length,
+    ).toBe(recipeSources.length)
+    // Lab price pages whose terms restrict reading are licensable as our compilation, and say so.
+    const prices = table('prices_latest').licensing
+    expect(prices.commercial).toBe('mixed')
+    expect(prices.restricted).toContain('openai-pricing-md')
+    expect(prices.not_cleared).toEqual(['openrouter-models'])
+    expect(prices.note).toContain('terms restriction we disclose')
     for (const t of dictionary.tables) {
       expect(t.licensing.note, t.name).toMatch(/^\S.{8,}\.$/s)
     }
@@ -201,6 +210,7 @@ describe('the data dictionary', () => {
       expect(s.commercial, s.id).toMatch(/^\S.{8,}[.)]$/s)
       if (s.rights === 'not-cleared') expect(s.commercial, s.id).toMatch(/^No\./)
       if (s.rights === 'ours') expect(s.commercial, s.id).toMatch(/^Yes\./)
+      if (s.rights === 'restricted') expect(s.commercial, s.id).toMatch(/^Yes, with a restriction/)
     }
     expect(dictionary.sources.find((s) => s.id === 'gleif-lei')!.commercial).toContain('CC0 1.0')
   })

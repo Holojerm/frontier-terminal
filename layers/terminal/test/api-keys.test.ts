@@ -255,6 +255,10 @@ describe('what a key changes', () => {
     const notCleared = registry.sources.find((s) => s.rights === 'not-cleared')!
     expect(payloadRefusal(sourceRights(registry, ours.source_id))).toBeNull()
     expect(payloadRefusal(sourceRights(registry, notCleared.source_id))).toMatch(/isn’t cleared/)
+    const restricted = registry.sources.find((s) => s.rights === 'restricted')!
+    expect(payloadRefusal(sourceRights(registry, restricted.source_id))).toMatch(
+      /not the saved pages/,
+    )
     expect(payloadRefusal('upstream')).toMatch(/own license/)
     expect(payloadRefusal(sourceRights(registry, 'no-such-source'))).toMatch(/no rights/)
     // A derived source takes its parent's rights.

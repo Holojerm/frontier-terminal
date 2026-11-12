@@ -147,6 +147,17 @@ describe('readSourceRegistry', () => {
     expect(byId['openrouter-rankings-daily']!.terms).toContain('competing free API')
     const recipeRights = Object.fromEntries(registry.recipes.map((r) => [r.recipe_id, r.rights]))
     expect(recipeRights['ramp-ai-index']).toBe('not-cleared')
+    // A publisher's own facts under terms that restrict reading: licensable, disclosed.
+    expect(byId['openai-pricing-md']!.rights).toBe('restricted')
+    expect(byId['anthropic-pricing-md']!.rights).toBe('restricted')
+    expect(recipeRights['limits-anthropic']).toBe('restricted')
+    // Another party's copy, a publisher's own words, an unreadable robots.txt: still not cleared.
+    expect(byId['openrouter-models']!.rights).toBe('not-cleared')
+    expect(byId['openai-misalignment-reports']!.rights).toBe('not-cleared')
+    expect(byId['mistral-status']!.rights).toBe('not-cleared')
+    for (const s of registry.sources) {
+      if (s.rights === 'restricted') expect(s.terms, s.yaml_id).toMatch(/Restricted:|Same terms/)
+    }
     // The Cloudflare thesis's recipes, which predate the block.
     expect(recipeRights).toMatchObject({
       'sec-revenue-net': 'ours',
