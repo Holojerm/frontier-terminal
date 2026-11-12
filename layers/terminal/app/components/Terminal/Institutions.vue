@@ -200,8 +200,8 @@ const block =
           byte for byte, for any snapshot in
           <NuxtLink to="/export/snapshots.csv" external :class="`${link} font-mono`"
             >/export/snapshots</NuxtLink
-          >. Only for sources that are ours to license. A source we haven’t cleared, or someone
-          else’s dataset, gets a 403.
+          >. Only for sources that are ours to license. A source whose terms restrict automated
+          reading, one we haven’t cleared, or someone else’s dataset gets a 403.
         </p>
       </section>
 
@@ -212,8 +212,10 @@ const block =
         <p>
           The {{ PAID_LICENSE.short }} covers our compilation and the numbers we derive, over the
           full history, for commercial use under your signed terms. The facts still belong to their
-          publishers. Upstream {{ DATA_LICENSE.short }} data keeps its own attribution condition,
-          and sources we haven’t cleared aren’t in it.
+          publishers. Where a publisher’s site terms restrict automated reading, the license covers
+          our compilation of those rows and names the restriction. Upstream
+          {{ DATA_LICENSE.short }} data keeps its own attribution condition, and sources we haven’t
+          cleared aren’t in it.
           <NuxtLink to="/contact#rights" :class="link">See which sources are in each group</NuxtLink
           >.
         </p>

@@ -3,9 +3,11 @@
 //
 // Only for sources whose sources.yaml `rights` is `ours`: facts a publisher
 // states about itself, read under terms and a robots.txt that allow it. A
-// `not-cleared` source stays on the free site and out of anything sold, and an
-// `upstream` dataset travels under its own license, not ours, so neither's
-// bytes are served here whatever the key. A derived source (a model page, an
+// `restricted` source's rows can be licensed as our compilation, but the page
+// is the publisher's and its terms restrict reading it, so we don't hand the
+// bytes on. A `not-cleared` source stays out of anything sold, and an
+// `upstream` dataset travels under its own license, not ours. None of the
+// three is served here whatever the key. A derived source (a model page, an
 // EDGAR filing index) takes the rights of the source it was derived from.
 
 import { eq } from 'drizzle-orm'
@@ -37,6 +39,9 @@ export function payloadRefusal(rights: SourceRights | null): string | null {
   if (rights === 'ours') return null
   if (rights === 'upstream') {
     return 'This source is someone else’s dataset under its own license, so we don’t serve its saved pages. Its license and URL are in the coverage table on /data.'
+  }
+  if (rights === 'restricted') {
+    return 'This publisher’s terms restrict automated reading of its pages. A license covers our compilation of the rows, not the saved pages, so they stay off the licensed feed.'
   }
   if (rights === 'not-cleared') {
     return 'This source isn’t cleared for any paid offer (no stated license, unread terms, or a robots or terms restriction), so its saved pages stay off the licensed feed.'

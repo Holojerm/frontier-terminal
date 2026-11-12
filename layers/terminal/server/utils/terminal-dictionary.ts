@@ -417,6 +417,7 @@ const OURS_TERMS = `A paid license covers the full history. The last ${LICENSE_W
 
 const RIGHTS_ANSWER: Readonly<Record<SourceRights, string>> = {
   ours: `Yes. ${OURS_TERMS}`,
+  restricted: `Yes, with a restriction we disclose. The publisher’s site terms restrict automated reading, or we couldn’t find them. A paid license covers our compilation of these rows, not the saved pages. ${OURS_TERMS}`,
   upstream: 'Under its own license, which we pass on.',
   'not-cleared': 'No. It stays on the free site and isn’t in any paid offer.',
 }
@@ -490,47 +491,52 @@ function tableLicensing(meta: TableMeta, sources: readonly Rated[]): DictionaryT
       commercial: 'yes',
       note: `Yes. These are records of our own checks. ${OURS_TERMS}`,
       ours: [],
+      restricted: [],
       upstream: [],
       not_cleared: [],
     }
   }
   const from = fed(meta, sources)
   const ours = from.filter((s) => s.rights === 'ours').map((s) => s.id)
+  const restricted = from.filter((s) => s.rights === 'restricted').map((s) => s.id)
   const upstream = from
     .filter((s) => s.rights === 'upstream')
     .map((s) => ({ id: s.id, license: s.license }))
   const notCleared = from
-    .filter((s) => s.rights !== 'ours' && s.rights !== 'upstream')
+    .filter((s) => s.rights === 'not-cleared' || s.rights === null)
     .map((s) => s.id)
-  const kinds = [ours.length > 0, upstream.length > 0, notCleared.length > 0].filter(Boolean).length
+  const lists = { ours, restricted, upstream, not_cleared: notCleared }
+  const kinds = [ours, restricted, upstream, notCleared].filter((l) => l.length > 0).length
   const licenses = [
     ...new Set(upstream.flatMap((u) => (u.license ? [licenseName(u.license)] : []))),
   ]
   const upstreamTerms = licenses.length ? ` (${licenses.join('; ')})` : ''
   if (kinds === 1 && ours.length) {
-    return { commercial: 'yes', note: RIGHTS_ANSWER.ours, ours, upstream, not_cleared: notCleared }
+    return { commercial: 'yes', note: RIGHTS_ANSWER.ours, ...lists }
+  }
+  if (kinds === 1 && restricted.length) {
+    return { commercial: 'restricted', note: RIGHTS_ANSWER.restricted, ...lists }
   }
   if (kinds === 1 && notCleared.length) {
-    return {
-      commercial: 'no',
-      note: RIGHTS_ANSWER['not-cleared'],
-      ours,
-      upstream,
-      not_cleared: notCleared,
-    }
+    return { commercial: 'no', note: RIGHTS_ANSWER['not-cleared'], ...lists }
   }
   if (kinds === 1) {
     return {
       commercial: 'upstream',
       note: `Under each source’s own license${upstreamTerms}.`,
-      ours,
-      upstream,
-      not_cleared: notCleared,
+      ...lists,
     }
   }
   const one = (n: number, singular: string, many: string) => `${n} ${n === 1 ? singular : many}`
   const parts = [
     ours.length ? one(ours.length, 'is ours to license', 'are ours to license') : null,
+    restricted.length
+      ? one(
+          restricted.length,
+          'is licensable with a terms restriction we disclose',
+          'are licensable with a terms restriction we disclose',
+        )
+      : null,
     upstream.length
       ? `${one(upstream.length, 'passes', 'pass')} on under upstream terms${upstreamTerms}`
       : null,
@@ -542,14 +548,14 @@ function tableLicensing(meta: TableMeta, sources: readonly Rated[]): DictionaryT
     commercial: 'mixed',
     note: [
       `It depends on the source. Of the sources it reads, ${series(parts)}.`,
-      'A paid license covers only what comes from sources that are ours.',
+      restricted.length
+        ? 'A paid license covers what comes from sources that are ours, and our compilation of the restricted ones.'
+        : 'A paid license covers only what comes from sources that are ours.',
       meta.licenseNote,
     ]
       .filter(Boolean)
       .join(' '),
-    ours,
-    upstream,
-    not_cleared: notCleared,
+    ...lists,
   }
 }
 
