@@ -40,7 +40,7 @@ export const AS_OF_EXPORTS = Object.values(EXPORT_TABLES)
   .filter((t) => t.asOfRefusal === null)
   .map((t) => t.name)
 
-/** `sample`: the first SAMPLE_ROWS rows only, for /export/sample/<table>.<format>. */
+/** `sample`: SAMPLE_ROWS rows only (sampleOf), for /export/sample/<table>.<format>. */
 export async function serveExport(event: H3Event, options: { sample?: boolean } = {}) {
   const parsed = parseExportPath(event.path)
 
@@ -99,7 +99,7 @@ export async function serveExport(event: H3Event, options: { sample?: boolean } 
   const window = await badRequestOn(async () =>
     licenseWindow(full.name, rebuilt, { as_of, history }, undefined, older),
   )
-  // A sample is the first rows of what the same URL without /sample serves.
+  // A sample is cut from what the same URL without /sample serves.
   const table = options.sample ? sampleOf(window.table) : window.table
 
   setResponseHeader(event, 'Content-Type', CONTENT_TYPES[parsed.format])
