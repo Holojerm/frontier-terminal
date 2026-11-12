@@ -303,6 +303,41 @@ describe('samples', () => {
     expect(await prices.count(db)).toBe(SAMPLE_ROWS)
     expect(prices.filters).toBeUndefined()
   })
+
+  it('cut a table that grows over time to its newest rows', async () => {
+    const change = (id: string, detected_at: string) => ({
+      id,
+      entity_key: `model:x:${id}`,
+      entity_type: 'model',
+      provider: 'openai',
+      change_type: 'added',
+      before_hash: null,
+      after_hash: contentHash({}),
+      before_json: null,
+      after_json: '{}',
+      detected_at,
+      ...PROV,
+    })
+    await insertRows(db, 'changes', [
+      change('s-old', '2026-08-25T00:00:00.000Z'),
+      ...Array.from({ length: SAMPLE_ROWS + 5 }, (_, i) =>
+        change(`s-new-${String(i).padStart(2, '0')}`, '2026-09-30T12:00:00.000Z'),
+      ),
+    ])
+    const read = async (now: string) =>
+      JSON.parse(
+        await collect(jsonChunks(db, sampleOf(exportTable('changes')!, new Date(now)))),
+      ) as { id: string; detected_at: string }[]
+
+    const recent = await read('2026-10-01T00:00:00.000Z')
+    expect(recent).toHaveLength(SAMPLE_ROWS)
+    expect(new Set(recent.map((r) => r.detected_at))).toEqual(new Set(['2026-09-30T12:00:00.000Z']))
+
+    // Nothing inside any span: the first rows, as before.
+    const stale = await read('2027-06-01T00:00:00.000Z')
+    expect(stale).toHaveLength(SAMPLE_ROWS)
+    expect(stale[0]!.id).toBe('s-old')
+  })
 })
 
 describe('entity_securities', () => {
