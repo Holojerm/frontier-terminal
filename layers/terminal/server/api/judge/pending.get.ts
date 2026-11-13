@@ -8,7 +8,8 @@
 // `through` is the cursor POST /api/judge/alerts accepts for them. Empty `changes` with no cell in
 // `class_map_review` is the common case and the routine's signal to stop.
 // `class_map_review` lists the price-matrix cells whose vendor sentence left
-// the page, with that page's text to re-map them from
+// the page, and the empty cells of a lab that just launched a model, with
+// that page's text to map them from
 // (layers/terminal/server/pipeline/judge/class-map.ts). `claim_review` lists, per judged
 // thesis claim, the pending changes it offers for a verdict
 // (layers/terminal/server/theses/verdicts.ts): events among `changes`, and recipe items

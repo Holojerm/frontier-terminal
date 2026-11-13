@@ -1,4 +1,4 @@
-import { and, desc, eq, inArray } from 'drizzle-orm'
+import { and, desc, eq, gte, inArray } from 'drizzle-orm'
 import { z } from 'zod'
 
 import type { LabId, ModelClassId } from '../../../shared/utils/terminal-types'
@@ -6,9 +6,15 @@ import type { LabId, ModelClassId } from '../../../shared/utils/terminal-types'
 import * as tables from '#server/db/schema'
 import { catalogDescription } from '../parsers/pricing/anthropic-models-overview'
 import { recordOpsEvent } from '#server/utils/ops'
-import { CLASS_MAP_SOURCES, type ClassEntry } from '../../utils/terminal-classes'
+import {
+  CLASS_GAPS,
+  CLASS_MAP_SOURCES,
+  MODEL_CLASSES,
+  type ClassEntry,
+} from '../../utils/terminal-classes'
 import { effectiveClassMap } from '../class-map'
 import type { SourceRunRow } from '../contracts'
+import { MODEL_FLOOR_RULE } from '../model-floor'
 import { basisOnPage, flattenMdLinks } from '../recommendations'
 import { cardDescriptions, cardOwners, type CardDescriptions } from './page-cards'
 import type { PipelineDb } from '../store'
@@ -20,11 +26,21 @@ import type { PipelineDb } from '../store'
 // the explain rule: the model proposes, deterministic checks decide, and a
 // rejection is silence plus an ops event, never a repair.
 //
+// A cell is under review in one of two ways. Its drift check
+// (recommendations.ts) found the current sentence gone within
+// REVIEW_WINDOW_MS. Or it is a gap (no mapping, CLASS_GAPS says why) and the
+// provider launched a model within REVIEW_WINDOW_MS: a launch is when a vendor
+// writes the sentence a gap lacked. Gemini 4 Hydrogen was listed on
+// 2026-11-12 with a card that answers Google's balanced column, and nothing
+// offered that cell to anyone, because only a mapped cell has a sentence to
+// lose. A gap re-opened by a launch may be filled only with a launched model:
+// the older models were weighed when the gap was written.
+//
 // A proposal is accepted only if ALL of these hold:
-//   1. the cell is under review: its drift check (recommendations.ts) found
-//      the current sentence gone within REVIEW_WINDOW_MS. A cell whose
-//      sentence is still on the page is never re-mapped, whatever the model
-//      thinks of a newer model — "start here" is the vendor's call;
+//   1. the cell is under review, as above. A cell whose sentence is still on
+//      the page is never re-mapped, whatever the model thinks of a newer
+//      model — "start here" is the vendor's call. A gap re-opened by a launch
+//      takes only a model the launch listed;
 //   2. basis_source_id is that provider's class-map page (CLASS_MAP_SOURCES);
 //   3. the basis sentence is on that page verbatim — the newest good stored
 //      snapshot, links flattened — the same substring rule as the drift check;
@@ -118,16 +134,68 @@ export async function latestPage(
   }
 }
 
-export interface ReviewCell {
-  provider: LabId
-  class: ModelClassId
-  /** The mapping in effect, whose sentence the last poll did not find. */
-  current: Pick<ClassEntry, 'model_slug' | 'basis' | 'basis_source_id'>
-  /** When the drift check first reported the sentence gone. */
-  stale_since: string
+export type ReviewCell =
+  | {
+      provider: LabId
+      class: ModelClassId
+      reason: 'basis-gone'
+      /** The mapping in effect, whose sentence the last poll did not find. */
+      current: Pick<ClassEntry, 'model_slug' | 'basis' | 'basis_source_id'>
+      /** When the drift check first reported the sentence gone. */
+      since: string
+    }
+  | {
+      provider: LabId
+      class: ModelClassId
+      reason: 'launch-into-gap'
+      current: null
+      /** Why the cell had no mapping (CLASS_GAPS), as the matrix shows it. */
+      gap: string | null
+      /** The models the provider launched in the window, the only ones the cell may take. */
+      launched: string[]
+      /** When the first of them was listed. */
+      since: string
+    }
+
+/** `provider -> slug -> first listed`, for every model-floor launch since `cutoff`. */
+async function launchesSince(
+  db: PipelineDb,
+  cutoff: string,
+): Promise<Map<string, Map<string, string>>> {
+  const alerts = await db
+    .select({ change_ids: tables.alerts.change_ids, created_at: tables.alerts.created_at })
+    .from(tables.alerts)
+    .where(and(eq(tables.alerts.rule, MODEL_FLOOR_RULE), gte(tables.alerts.created_at, cutoff)))
+  const listedAt = new Map<string, string>()
+  for (const alert of alerts) {
+    const ids = JSON.parse(alert.change_ids) as unknown
+    if (Array.isArray(ids) && typeof ids[0] === 'string') listedAt.set(ids[0], alert.created_at)
+  }
+  const out = new Map<string, Map<string, string>>()
+  if (listedAt.size === 0) return out
+  const changes = await db
+    .select({
+      id: tables.changes.id,
+      provider: tables.changes.provider,
+      after_json: tables.changes.after_json,
+    })
+    .from(tables.changes)
+    .where(inArray(tables.changes.id, [...listedAt.keys()]))
+  for (const change of changes) {
+    const slug = (JSON.parse(change.after_json ?? '{}') as { model_slug?: unknown }).model_slug
+    if (typeof slug !== 'string') continue
+    const slugs = out.get(change.provider) ?? new Map<string, string>()
+    slugs.set(slug, listedAt.get(change.id)!)
+    out.set(change.provider, slugs)
+  }
+  return out
 }
 
-/** Cells whose sentence left the page within the window, for the mapping in effect. */
+/**
+ * Cells offered for a new mapping: those whose sentence left the page within
+ * the window, for the mapping in effect, and the gaps of a provider that
+ * launched a model within it.
+ */
 export async function cellsUnderReview(
   db: PipelineDb,
   classMap: readonly ClassEntry[],
@@ -139,6 +207,24 @@ export async function cellsUnderReview(
     .where(eq(tables.entities.entity_type, 'recommendation'))
   const cutoff = now.getTime() - REVIEW_WINDOW_MS
   const out: ReviewCell[] = []
+  for (const [provider, slugs] of await launchesSince(db, new Date(cutoff).toISOString())) {
+    // A provider with no class-map page has nowhere a sentence could come from.
+    if (!CLASS_MAP_SOURCES[provider as LabId]) continue
+    const since = [...slugs.values()].sort()[0]!
+    for (const klass of MODEL_CLASSES) {
+      if (classMap.some((e) => e.provider === provider && e.class === klass.id)) continue
+      const gap = CLASS_GAPS.find((g) => g.provider === provider && g.class === klass.id)
+      out.push({
+        provider: provider as LabId,
+        class: klass.id,
+        reason: 'launch-into-gap',
+        current: null,
+        gap: gap?.reason ?? null,
+        launched: [...slugs.keys()].sort(),
+        since,
+      })
+    }
+  }
   for (const check of checks) {
     const payload = JSON.parse(check.payload) as Record<string, unknown>
     if (payload.present !== false) continue
@@ -149,12 +235,13 @@ export async function cellsUnderReview(
     out.push({
       provider: entry.provider,
       class: entry.class,
+      reason: 'basis-gone',
       current: {
         model_slug: entry.model_slug,
         basis: entry.basis,
         basis_source_id: entry.basis_source_id,
       },
-      stale_since: check.fetched_at,
+      since: check.fetched_at,
     })
   }
   return out.sort((a, b) => `${a.provider}:${a.class}`.localeCompare(`${b.provider}:${b.class}`))
@@ -219,6 +306,7 @@ export function modelNamedBy(basis: string, slugs: Iterable<string>): string | n
 
 export type ClassMapRejectionReason =
   | 'not-under-review'
+  | 'not-a-launched-model'
   | 'wrong-source'
   | 'no-page'
   | 'basis-not-on-page'
@@ -285,8 +373,16 @@ export async function applyClassMappings(
     const reject = (reason: ClassMapRejectionReason, detail: string) =>
       rejected.push({ mapping, reason, detail })
 
-    if (decided.has(cell) || !review.some((r) => `${r.provider}:${r.class}` === cell)) {
+    const under = review.find((r) => `${r.provider}:${r.class}` === cell)
+    if (decided.has(cell) || !under) {
       reject('not-under-review', `${cell} is not awaiting a new mapping`)
+      continue
+    }
+    if (under.reason === 'launch-into-gap' && !under.launched.includes(mapping.model_slug)) {
+      reject(
+        'not-a-launched-model',
+        `${cell} was re-opened by the launch of ${under.launched.join(', ')}, not ${mapping.model_slug}`,
+      )
       continue
     }
     const expected = CLASS_MAP_SOURCES[mapping.provider]

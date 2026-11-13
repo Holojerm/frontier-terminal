@@ -18,10 +18,11 @@ import { submitJudgeRun } from '../../server/pipeline/judge/submit'
 import { recommendationRows } from '../../server/pipeline/recommendations'
 import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
 import { terminalStamps } from '../../server/utils/terminal-cache'
-import { CLASS_MAP_SOURCES, MODEL_CLASS_MAP } from '../../server/utils/terminal-classes'
+import { MODEL_FLOOR_RULE } from '../../server/pipeline/model-floor'
+import { CLASS_GAPS, CLASS_MAP_SOURCES, MODEL_CLASS_MAP } from '../../server/utils/terminal-classes'
 import { queryContext } from '../../server/utils/terminal-db'
 import { queryPrices } from '../../server/utils/terminal-prices'
-import { fixtureText } from './fixtures'
+import { fixtureText, manifest } from './fixtures'
 
 // The judge re-mapping a price-matrix cell. Pure halves first, then the whole
 // path against the workerd D1 and R2: a real poll of the committed Anthropic
@@ -101,6 +102,10 @@ function submit(class_map: unknown[], pages: RawReader = readRaw) {
   }
   return submitJudgeRun(db, JSON.stringify(body), { now: NOW, readRaw: pages })
 }
+
+/** The decisions the judge wrote, leaving out any a test seeded as the map's history. */
+const judged = () =>
+  db.select().from(schema.classMapDecisions).where(eq(schema.classMapDecisions.decided_by, 'judge'))
 
 async function opsKinds(): Promise<string[]> {
   const rows = await db.select().from(schema.opsEvents)
@@ -215,7 +220,7 @@ describe('the review the judge is handed', () => {
     await poll(FIXTURE)
     await poll(LAUNCHED)
     const review = await classMapReview(db, readRaw, NOW)
-    const cells = review.cells.map((c) => `${c.provider}:${c.class}:${c.current.model_slug}`)
+    const cells = review.cells.map((c) => `${c.provider}:${c.class}:${c.current?.model_slug}`)
     expect(cells).toEqual([
       'anthropic:balanced:claude-sonnet-5-5',
       'anthropic:flagship:claude-opus-5-5',
@@ -364,8 +369,11 @@ describe('the cards on a page that does not name its models', () => {
     const google = cardDescriptions('google-models-md', GOOGLE)
     // A block card, named by its Model code line.
     expect([...google.get('gemini-4-argon')!]).toEqual([
-      'Our flagship reasoning model with a shared 1M context window and long decodes up to 1M tokens.',
+      'Our efficient Gemini 4 frontier reasoning model, delivering faster responses and lower token spend per turn compared to Gemini 4 Carbon across complex coding, agentic, math, and science tasks.',
     ])
+    expect(google.get('gemini-4-hydrogen')).toContain(
+      'Brings cutting-edge intelligence to everyone, with speed and efficiency for everyday coding and agentic workflows, featuring a shared 1M context window and long decodes up to 1M tokens.',
+    )
     // A self-closing card, named by its href.
     expect(google.get('gemini-3.5-flash-lite')).toContain(
       'Our fastest, most cost-effective 3.5 model for high-throughput execution.',
@@ -390,7 +398,9 @@ describe('the cards on a page that does not name its models', () => {
 })
 
 describe('a judge re-mapping onto a Google card (issue #360)', () => {
-  const GOOGLE = fixtureText('fixtures/pricing/google-models.md')
+  // Replayed on the page as it was before the rewrite, with the map as it was:
+  // Argon the flagship. The seed has moved on to Carbon since.
+  const GOOGLE = fixtureText('fixtures/pricing/google-models.2026-11-03.md')
   const ARGON_OLD =
     'Our flagship reasoning model with a shared 1M context window and long decodes up to 1M tokens.'
   // Argon's card as served on 2026-11-11: it names Carbon, to compare itself.
@@ -449,6 +459,18 @@ describe('a judge re-mapping onto a Google card (issue #360)', () => {
 
   beforeEach(async () => {
     expect(REWRITTEN).toContain(CARBON_CARD)
+    await db.insert(schema.classMapDecisions).values({
+      id: 'argon-as-it-was',
+      provider: 'google',
+      class: 'flagship',
+      model_slug: 'gemini-4-argon',
+      basis: ARGON_OLD,
+      basis_source_id: 'google-models-md',
+      decided_at: '2026-09-22T03:00:00.000Z',
+      decided_by: 'owner',
+      source_url: 'https://aistudio.google.com/docs/models.md',
+      fetched_at: '2026-09-22T03:00:00.000Z',
+    })
     await listGoogleModels(['gemini-4-argon', 'gemini-4-carbon'])
     await pollGoogle(GOOGLE)
     await pollGoogle(REWRITTEN)
@@ -458,7 +480,8 @@ describe('a judge re-mapping onto a Google card (issue #360)', () => {
     const cells = (await classMapReview(db, readRaw, NOW)).cells.map(
       (c) => `${c.provider}:${c.class}`,
     )
-    expect(cells).toEqual(['google:flagship'])
+    // Balanced too: the seed quotes Hydrogen's card, which no page this old has.
+    expect(cells).toEqual(['google:balanced', 'google:flagship'])
 
     const report = await submit([google()])
     expect(report.class_map).toEqual({ accepted: 1, rejected: [] })
@@ -470,7 +493,7 @@ describe('a judge re-mapping onto a Google card (issue #360)', () => {
   it('rejects one model’s card sentence proposed for another', async () => {
     const report = await submit([google({ model_slug: 'gemini-4-argon' })])
     expect(report.class_map.rejected.map((r) => r.reason)).toEqual(['basis-is-another-models-card'])
-    expect(await db.select().from(schema.classMapDecisions)).toEqual([])
+    expect(await judged()).toEqual([])
   })
 
   it('rejects a card that mentions the model only to compare itself to it', async () => {
@@ -483,6 +506,151 @@ describe('a judge re-mapping onto a Google card (issue #360)', () => {
         reason: 'basis-is-another-models-card',
         detail: "the sentence is the description on gemini-4-argon's card, not gemini-4-carbon's",
       }),
+    ])
+    expect(await judged()).toEqual([])
+  })
+})
+
+describe('a launch re-opens its lab’s empty cells (Gemini 4 Hydrogen, 2026-11-12)', () => {
+  // Google listed Hydrogen with a card that answers its balanced column, and
+  // nothing offered that cell to anyone: only a mapped cell has a sentence to
+  // lose. Replayed as a hypothetical Meta launch, since Meta's balanced column
+  // is still a stated gap.
+  const META = fixtureText('fixtures/pricing/meta-models.md')
+  const BLOOM = "Muse Bloom is Meta's best balance of intelligence and cost for everyday work."
+  const ANCHOR = "Pick one by what you're building"
+  const LAUNCHED_META = META.replace(ANCHOR, `${BLOOM} ${ANCHOR}`)
+  const LISTED_AT = '2026-09-22T04:30:00.000Z'
+  const META_GAP = CLASS_GAPS.find((g) => g.provider === 'meta' && g.class === 'balanced')!
+
+  /** The models page as given; its per-line side pages from their committed fixtures. */
+  function pollMeta(text: string) {
+    const fetcher: SourceFetcher = async (source) => {
+      const side = manifest.fixtures.find((f) => f.source_url === source.url)
+      const body = source.source_id === 'meta-models-md' || !side ? text : fixtureText(side.path)
+      return { ok: true, status: 200, text: body, bytes: body.length }
+    }
+    return runRefresh({ db, raw, fetcher, sourcesYaml, now: clock }, 'survey', ['meta-models-md'])
+  }
+
+  /** What the model-floor rule leaves for a launch: the added row, its change, its alert. */
+  async function launch(provider: string, slug: string, at = LISTED_AT) {
+    const url = 'https://example.com/catalog'
+    await db.insert(schema.entities).values({
+      source_id: `${provider}-catalog`,
+      entity_key: `model:${provider}:${slug}`,
+      entity_type: 'model',
+      provider,
+      content_hash: slug,
+      payload: JSON.stringify({ model_slug: slug, notes: 'Standard tier' }),
+      snapshot_id: 'catalog',
+      first_seen_at: at,
+      source_url: url,
+      fetched_at: at,
+    })
+    const changeId = `added-${provider}-${slug}`
+    await db.insert(schema.changes).values({
+      id: changeId,
+      entity_key: `model:${provider}:${slug}`,
+      entity_type: 'model',
+      provider,
+      change_type: 'added',
+      after_json: JSON.stringify({ provider, model_slug: slug }),
+      detected_at: at,
+      source_url: url,
+      fetched_at: at,
+    })
+    await db.insert(schema.alerts).values({
+      id: `floor-${provider}-${slug}`,
+      severity: 'notable',
+      headline: `lists a new model, ${slug}`,
+      explanation: 'x',
+      change_ids: JSON.stringify([changeId]),
+      rule: MODEL_FLOOR_RULE,
+      created_at: at,
+      source_url: url,
+      fetched_at: at,
+    })
+  }
+
+  const bloom = (over: Record<string, unknown> = {}) =>
+    proposal({
+      provider: 'meta',
+      class: 'balanced',
+      model_slug: 'muse-bloom',
+      basis: BLOOM,
+      basis_source_id: 'meta-models-md',
+      ...over,
+    })
+
+  beforeEach(async () => {
+    expect(LAUNCHED_META).toContain(BLOOM)
+    await pollMeta(META)
+    await pollMeta(LAUNCHED_META)
+  })
+
+  it('offers the launching lab’s empty cells, with the launched slugs, and nothing else', async () => {
+    await launch('meta', 'muse-bloom')
+    // Anthropic has no empty cell; DeepSeek has no class-map page to quote.
+    await launch('anthropic', 'claude-opus-6')
+    await launch('deepseek', 'deepseek-v5')
+    const review = await classMapReview(db, readRaw, NOW)
+    expect(review.cells).toEqual([
+      {
+        provider: 'meta',
+        class: 'balanced',
+        reason: 'launch-into-gap',
+        current: null,
+        gap: META_GAP.reason,
+        launched: ['muse-bloom'],
+        since: LISTED_AT,
+      },
+    ])
+    expect(review.pages.map((p) => p.source_id)).toEqual(['meta-models-md'])
+    expect(review.pages[0]!.text).toContain(BLOOM)
+  })
+
+  it('offers nothing without a launch, or once the window has passed', async () => {
+    expect((await classMapReview(db, readRaw, NOW)).cells).toEqual([])
+    await launch('meta', 'muse-bloom')
+    const later = new Date(Date.parse(LISTED_AT) + REVIEW_WINDOW_MS + 60 * 60 * 1000)
+    expect((await classMapReview(db, readRaw, later)).cells).toEqual([])
+  })
+
+  it('fills the gap with the launched model’s own sentence, and the cell leaves review', async () => {
+    await launch('meta', 'muse-bloom')
+    const report = await submit([bloom()])
+    expect(report.class_map).toEqual({ accepted: 1, rejected: [] })
+
+    const map = await effectiveClassMap(db)
+    const balanced = map.find((e) => e.provider === 'meta' && e.class === 'balanced')
+    expect(balanced).toMatchObject({ model_slug: 'muse-bloom', basis: BLOOM })
+    expect((await classMapReview(db, readRaw, NOW)).cells).toEqual([])
+    const [changed] = await db
+      .select()
+      .from(schema.opsEvents)
+      .where(eq(schema.opsEvents.kind, 'class_map_changed'))
+    expect(changed!.detail).toContain('meta:balanced: (gap) -> muse-bloom')
+
+    // The next poll's drift check holds the filled cell to its sentence.
+    const prov = { source_url: 'https://dev.meta.ai/docs/models.md', fetched_at: NOW.toISOString() }
+    const check = recommendationRows('meta-models-md', LAUNCHED_META, prov, map).find(
+      (r) => r.class === 'balanced',
+    )
+    expect(check).toMatchObject({ model_slug: 'muse-bloom', present: true })
+  })
+
+  it('takes no model the launch did not list, and no sentence the page does not print', async () => {
+    await launch('meta', 'muse-bloom')
+    const SPARK =
+      "Muse Spark is Meta's model for agentic and coding work at scale, such as multi-step tool loops, software engineering assistants, and long-context reasoning."
+    const report = await submit([
+      bloom({ model_slug: 'muse-spark-1.3', basis: SPARK }),
+      bloom({ basis: 'Muse Bloom balances intelligence and cost.' }),
+    ])
+    expect(report.class_map.rejected.map((r) => r.reason)).toEqual([
+      'not-a-launched-model',
+      'basis-not-on-page',
     ])
     expect(await db.select().from(schema.classMapDecisions)).toEqual([])
   })

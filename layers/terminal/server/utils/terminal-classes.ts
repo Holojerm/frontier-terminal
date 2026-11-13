@@ -22,8 +22,10 @@
 //     (layers/terminal/server/pipeline/judge/class-map.ts). This file is the seed; the
 //     newest decision per cell overrides it (layers/terminal/server/pipeline/class-map.ts);
 //   - a provider that publishes no such recommendation gets a stated gap,
-//     never a guess (xAI names one model and stops; Google names no
-//     intelligence-for-cost model on a current generation).
+//     never a guess (xAI names one model and stops; Meta names no
+//     intelligence-for-cost model). A launch re-opens that provider's gaps
+//     to the judge for the review window, for the launched models only
+//     (layers/terminal/server/pipeline/judge/class-map.ts).
 //
 // Prices are never in this file. They come from the store, with the row's
 // own provenance, and the class map only says which row to put where.
@@ -172,16 +174,29 @@ export const MODEL_CLASS_MAP: ClassEntry[] = [
       'Muse Ember is the efficient execution model in the Muse family, built for high-volume, repeated work: sub-agent tasks, tool calls, routing, and processing large collections of images, files, and records.',
     basis_source_id: 'meta-models-md',
   },
-  // Transcribed 2026-11-01, when Google's models page first served markdown;
-  // the flagship sentence re-transcribed 2026-11-03, when the page moved to
-  // AI Studio and its card read "shared" where it had read "unified".
-  // Each sentence is the description on that model's own card.
+  // Transcribed 2026-11-01, when Google's models page first served markdown,
+  // and re-transcribed 2026-11-13 from the page as rewritten for the Gemini 4
+  // Hydrogen launch. Each sentence is the description on that model's own card.
+  // The flagship is Carbon, as migration 0049 already set it in production:
+  // Argon's card stopped calling it "Our flagship" on 2026-11-10. The balanced
+  // cell, a gap until now, is Hydrogen's card: "intelligence … with speed and
+  // efficiency" is the intelligence-for-cost answer, and the same page tells
+  // new projects to use "Gemini 4 Hydrogen or 3.5 Flash-Lite" and calls 3.8
+  // Flash "Our previous-generation Flash model".
   {
     provider: 'google',
     class: 'flagship',
-    model_slug: 'gemini-4-argon',
+    model_slug: 'gemini-4-carbon',
     basis:
-      'Our flagship reasoning model with a shared 1M context window and long decodes up to 1M tokens.',
+      'Our strongest reasoning model, built for complex software engineering, multimodal knowledge work, scientific reasoning, and cybersecurity defense.',
+    basis_source_id: 'google-models-md',
+  },
+  {
+    provider: 'google',
+    class: 'balanced',
+    model_slug: 'gemini-4-hydrogen',
+    basis:
+      'Brings cutting-edge intelligence to everyone, with speed and efficiency for everyday coding and agentic workflows, featuring a shared 1M context window and long decodes up to 1M tokens.',
     basis_source_id: 'google-models-md',
   },
   {
@@ -239,12 +254,6 @@ export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string 
     class: 'economy',
     reason:
       'xAI prices grok-4.3, the grok-4.20 models, and grok-build-0.1 below Grok 4.7 (full catalog). No xAI page says which one to use for cost-sensitive work.',
-  },
-  {
-    provider: 'google',
-    class: 'balanced',
-    reason:
-      'Google’s models page names no single intelligence-for-cost model. “Our best price-performance model” describes Gemini 2.5 Flash, an older generation the page steers new projects away from. “Frontier-class performance rivaling larger models at a fraction of the cost” is printed word for word on two cards, Gemini 3.1 Flash-Lite and Gemini 3 Flash (Preview). Every Gemini SKU is in the full catalog.',
   },
   {
     provider: 'meta',

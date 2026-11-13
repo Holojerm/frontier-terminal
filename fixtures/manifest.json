@@ -71,11 +71,11 @@
       "path": "fixtures/pricing/google-models.md",
       "source_id": "google-models-md",
       "source_url": "https://aistudio.google.com/docs/models.md",
-      "fetched_at": "2026-11-03T16:24:35Z",
+      "fetched_at": "2026-11-13T00:28:13Z",
       "http_status": 200,
-      "raw_bytes": 22093,
+      "raw_bytes": 24274,
       "trim": "none — committed whole",
-      "note": "Not in the audit: the models page as Markdoc at AI Studio's .md suffix. Replaces the 2026-11-01 capture of ai.google.dev/gemini-api/docs/models.md.txt, which 301s to aistudio.google.com/docs/models.md.txt and 404s from 2026-11-03. The source of Google's class-map sentences, each a card's description attribute; no prices are parsed from it."
+      "note": "Not in the audit: the models page as Markdoc at AI Studio's .md suffix. Replaces the 2026-11-01 capture of ai.google.dev/gemini-api/docs/models.md.txt, which 301s to aistudio.google.com/docs/models.md.txt and 404s from 2026-11-03. The source of Google's class-map sentences, each a card's description attribute; no prices are parsed from it. Re-captured 2026-11-13 after the Gemini 4 Hydrogen launch (the Carbon, Argon and Hydrogen cards the seed now quotes); the 2026-11-03 capture is kept beside it as google-models.2026-11-03.md, outside this manifest, for the tests that replay Google's 2026-11-10 rewrite onto it."
     },
     {
       "path": "fixtures/pricing/google-model-gemini-4-argon.md",
