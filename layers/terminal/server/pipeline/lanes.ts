@@ -383,6 +383,11 @@ export function derivedKeyOf(sourceId: string): string | null {
 // mapped cell, beside the page's price rows (recommendations.ts).
 const checked = (sourceId: string, text: string, { prov, snapshotId, classMap }: ParseContext) =>
   normalizeRecommendations(recommendationRows(sourceId, text, prov, classMap), snapshotId)
+// A class-map page with no lane of its own, read as a side: its check row is
+// stored with the lane that joins it, under that lane's fetch provenance, as
+// every stored row is. The cell names the side page as its basis (basis_source_id).
+const checkedSide = (sourceId: string, ctx: ParseContext) =>
+  checked(sourceId, ctx.side(sourceId), ctx)
 
 export const LANES: Readonly<Record<string, Lane>> = {
   'openai-models-md': set((text, ctx) => ({
@@ -410,6 +415,7 @@ export const LANES: Readonly<Record<string, Lane>> = {
     ],
   })),
   // The availability tables are on each text line's own page (meta-models.ts).
+  // Muse Spark's page also carries the balanced cell's sentence.
   'meta-models-md': {
     sides: Object.values(META_LINE_PAGES),
     removals: 'set',
@@ -417,6 +423,7 @@ export const LANES: Readonly<Record<string, Lane>> = {
       entities: [
         ...normalizePrices(parseMetaModelsMd(text, ctx.side, ctx.prov).rows, ctx.snapshotId),
         ...checked('meta-models-md', text, ctx),
+        ...checkedSide('meta-muse-spark-md', ctx),
       ],
     }),
   },

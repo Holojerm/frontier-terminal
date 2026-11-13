@@ -43,8 +43,8 @@ on the shared one.
 
    - every entry under `cut:` in `sources.yaml` (id, verdict, reason);
    - every entry of `CLASS_GAPS` in `layers/terminal/server/utils/terminal-classes.ts` (provider, class,
-     reason), and the page that provider's class map rests on (`CLASS_MAP_SOURCES` in the
-     same file, resolved to a URL through `sources.yaml`; a provider with no entry there has
+     reason), and the pages that provider's class map rests on (`CLASS_MAP_SOURCES` in the
+     same file, resolved to URLs through `sources.yaml`; a provider with no entry there has
      no page yet, so search its own docs for one).
 
 3. **Cuts.** For each cut, re-run the checks its reason names: fetch every URL it cites and
@@ -74,7 +74,7 @@ on the shared one.
    in the journal whether `alignment.openai.com/rss.xml` has started listing OpenAI's
    misalignment reports (it did not at the 2026-09-27 audit).
 
-4. **Matrix gaps.** For each `CLASS_GAPS` cell, fetch the provider's class-map page and look
+4. **Matrix gaps.** For each `CLASS_GAPS` cell, fetch the provider's class-map pages and look
    for a sentence in the vendor's own words that answers that column's question (the
    `question` of the class in `MODEL_CLASSES`: the start-here model for hard work, the stated
    intelligence-for-cost tradeoff, the model for cost-sensitive, high-volume work) about a

@@ -262,10 +262,12 @@ interface ParseBasis {
  * The judge re-maps a cell after the vendor edits the page, so the page is
  * usually unchanged by the next tick; without these in the input the check
  * would keep testing the old sentence until the vendor edits the page again.
+ * A cell resting on one of the lane's sides is checked here too (lanes.ts ›
+ * checkedSide).
  */
-function citedCells(classMap: readonly ClassEntry[], sourceId: string) {
+function citedCells(classMap: readonly ClassEntry[], sourceIds: readonly string[]) {
   return classMap
-    .filter((e) => e.basis_source_id === sourceId)
+    .filter((e) => sourceIds.includes(e.basis_source_id))
     .map((e) => ({
       provider: e.provider,
       class: e.class,
@@ -332,7 +334,7 @@ async function parseAndStore(
     input: contentHash({
       page: snapshot.content_hash,
       sides,
-      cells: citedCells(classMap, source.source_id),
+      cells: citedCells(classMap, [source.source_id, ...lane.sides]),
     }),
     context: contextFingerprint(lane, blocks, source.url),
   }

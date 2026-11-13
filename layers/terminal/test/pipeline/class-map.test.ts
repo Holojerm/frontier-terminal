@@ -202,9 +202,9 @@ describe('overlayClassMap', () => {
     expect(economy?.model_slug).toBe('grok-4.3')
   })
 
-  it('every provider the seed maps has its class-map page, and the seed cites only those', () => {
+  it('every provider the seed maps has its class-map pages, and the seed cites only those', () => {
     for (const entry of MODEL_CLASS_MAP) {
-      expect(CLASS_MAP_SOURCES[entry.provider]).toBe(entry.basis_source_id)
+      expect(CLASS_MAP_SOURCES[entry.provider]).toContain(entry.basis_source_id)
     }
   })
 })
@@ -514,23 +514,24 @@ describe('a judge re-mapping onto a Google card (issue #360)', () => {
 describe('a launch re-opens its lab’s empty cells (Gemini 4 Hydrogen, 2026-11-12)', () => {
   // Google listed Hydrogen with a card that answers its balanced column, and
   // nothing offered that cell to anyone: only a mapped cell has a sentence to
-  // lose. Replayed as a hypothetical Meta launch, since Meta's balanced column
-  // is still a stated gap.
-  const META = fixtureText('fixtures/pricing/meta-models.md')
-  const BLOOM = "Muse Bloom is Meta's best balance of intelligence and cost for everyday work."
-  const ANCHOR = "Pick one by what you're building"
-  const LAUNCHED_META = META.replace(ANCHOR, `${BLOOM} ${ANCHOR}`)
+  // lose. Replayed as a hypothetical xAI launch, since xAI's balanced and
+  // economy columns are still stated gaps.
+  const XAI = fixtureText('fixtures/pricing/xai-models.md')
+  const MINI = 'Grok 5 Mini is our best balance of intelligence and cost for everyday work.'
+  const ANCHOR = 'Your choice depends on your use case.'
+  const LAUNCHED_XAI = XAI.replace(ANCHOR, `${MINI} ${ANCHOR}`)
   const LISTED_AT = '2026-09-22T04:30:00.000Z'
-  const META_GAP = CLASS_GAPS.find((g) => g.provider === 'meta' && g.class === 'balanced')!
+  const gapReason = (k: string) =>
+    CLASS_GAPS.find((g) => g.provider === 'xai' && g.class === k)!.reason
 
-  /** The models page as given; its per-line side pages from their committed fixtures. */
-  function pollMeta(text: string) {
-    const fetcher: SourceFetcher = async (source) => {
-      const side = manifest.fixtures.find((f) => f.source_url === source.url)
-      const body = source.source_id === 'meta-models-md' || !side ? text : fixtureText(side.path)
-      return { ok: true, status: 200, text: body, bytes: body.length }
-    }
-    return runRefresh({ db, raw, fetcher, sourcesYaml, now: clock }, 'survey', ['meta-models-md'])
+  function pollXai(text: string) {
+    const fetcher: SourceFetcher = async () => ({
+      ok: true,
+      status: 200,
+      text,
+      bytes: text.length,
+    })
+    return runRefresh({ db, raw, fetcher, sourcesYaml, now: clock }, 'survey', ['xai-models-md'])
   }
 
   /** What the model-floor rule leaves for a launch: the added row, its change, its alert. */
@@ -573,85 +574,164 @@ describe('a launch re-opens its lab’s empty cells (Gemini 4 Hydrogen, 2026-11-
     })
   }
 
-  const bloom = (over: Record<string, unknown> = {}) =>
+  const mini = (over: Record<string, unknown> = {}) =>
     proposal({
-      provider: 'meta',
+      provider: 'xai',
       class: 'balanced',
-      model_slug: 'muse-bloom',
-      basis: BLOOM,
-      basis_source_id: 'meta-models-md',
+      model_slug: 'grok-5-mini',
+      basis: MINI,
+      basis_source_id: 'xai-models-md',
       ...over,
     })
 
   beforeEach(async () => {
-    expect(LAUNCHED_META).toContain(BLOOM)
-    await pollMeta(META)
-    await pollMeta(LAUNCHED_META)
+    expect(LAUNCHED_XAI).toContain(MINI)
+    await pollXai(XAI)
+    await pollXai(LAUNCHED_XAI)
   })
 
   it('offers the launching lab’s empty cells, with the launched slugs, and nothing else', async () => {
-    await launch('meta', 'muse-bloom')
+    await launch('xai', 'grok-5-mini')
     // Anthropic has no empty cell; DeepSeek has no class-map page to quote.
     await launch('anthropic', 'claude-opus-6')
     await launch('deepseek', 'deepseek-v5')
     const review = await classMapReview(db, readRaw, NOW)
-    expect(review.cells).toEqual([
-      {
-        provider: 'meta',
-        class: 'balanced',
+    expect(review.cells).toEqual(
+      (['balanced', 'economy'] as const).map((k) => ({
+        provider: 'xai',
+        class: k,
         reason: 'launch-into-gap',
         current: null,
-        gap: META_GAP.reason,
-        launched: ['muse-bloom'],
+        gap: gapReason(k),
+        launched: ['grok-5-mini'],
         since: LISTED_AT,
-      },
-    ])
-    expect(review.pages.map((p) => p.source_id)).toEqual(['meta-models-md'])
-    expect(review.pages[0]!.text).toContain(BLOOM)
+      })),
+    )
+    expect(review.pages.map((p) => p.source_id)).toEqual(['xai-models-md'])
+    expect(review.pages[0]!.text).toContain(MINI)
   })
 
   it('offers nothing without a launch, or once the window has passed', async () => {
     expect((await classMapReview(db, readRaw, NOW)).cells).toEqual([])
-    await launch('meta', 'muse-bloom')
+    await launch('xai', 'grok-5-mini')
     const later = new Date(Date.parse(LISTED_AT) + REVIEW_WINDOW_MS + 60 * 60 * 1000)
     expect((await classMapReview(db, readRaw, later)).cells).toEqual([])
   })
 
   it('fills the gap with the launched model’s own sentence, and the cell leaves review', async () => {
-    await launch('meta', 'muse-bloom')
-    const report = await submit([bloom()])
+    await launch('xai', 'grok-5-mini')
+    const report = await submit([mini()])
     expect(report.class_map).toEqual({ accepted: 1, rejected: [] })
 
     const map = await effectiveClassMap(db)
-    const balanced = map.find((e) => e.provider === 'meta' && e.class === 'balanced')
-    expect(balanced).toMatchObject({ model_slug: 'muse-bloom', basis: BLOOM })
-    expect((await classMapReview(db, readRaw, NOW)).cells).toEqual([])
+    const balanced = map.find((e) => e.provider === 'xai' && e.class === 'balanced')
+    expect(balanced).toMatchObject({ model_slug: 'grok-5-mini', basis: MINI })
+    // The economy gap is still open to the launched model; the filled cell is not.
+    const left = (await classMapReview(db, readRaw, NOW)).cells.map((c) => c.class)
+    expect(left).toEqual(['economy'])
     const [changed] = await db
       .select()
       .from(schema.opsEvents)
       .where(eq(schema.opsEvents.kind, 'class_map_changed'))
-    expect(changed!.detail).toContain('meta:balanced: (gap) -> muse-bloom')
+    expect(changed!.detail).toContain('xai:balanced: (gap) -> grok-5-mini')
 
     // The next poll's drift check holds the filled cell to its sentence.
-    const prov = { source_url: 'https://dev.meta.ai/docs/models.md', fetched_at: NOW.toISOString() }
-    const check = recommendationRows('meta-models-md', LAUNCHED_META, prov, map).find(
+    const prov = {
+      source_url: 'https://docs.x.ai/developers/models.md',
+      fetched_at: NOW.toISOString(),
+    }
+    const check = recommendationRows('xai-models-md', LAUNCHED_XAI, prov, map).find(
       (r) => r.class === 'balanced',
     )
-    expect(check).toMatchObject({ model_slug: 'muse-bloom', present: true })
+    expect(check).toMatchObject({ model_slug: 'grok-5-mini', present: true })
   })
 
   it('takes no model the launch did not list, and no sentence the page does not print', async () => {
-    await launch('meta', 'muse-bloom')
-    const SPARK =
-      "Muse Spark is Meta's model for agentic and coding work at scale, such as multi-step tool loops, software engineering assistants, and long-context reasoning."
+    await launch('xai', 'grok-5-mini')
+    const GROK_47 = 'For everything else, including code, use Grok 4.7.'
     const report = await submit([
-      bloom({ model_slug: 'muse-spark-1.3', basis: SPARK }),
-      bloom({ basis: 'Muse Bloom balances intelligence and cost.' }),
+      mini({ model_slug: 'grok-4.7', basis: GROK_47 }),
+      mini({ basis: 'Grok 5 Mini balances intelligence and cost.' }),
     ])
     expect(report.class_map.rejected.map((r) => r.reason)).toEqual([
       'not-a-launched-model',
       'basis-not-on-page',
     ])
     expect(await db.select().from(schema.classMapDecisions)).toEqual([])
+  })
+})
+
+describe('a cell resting on a join page (Meta balanced, 2026-11-13)', () => {
+  // Meta's balanced sentence is on Muse Spark's own page, which has no lane:
+  // the models page's lane reads it as a side and checks the sentence there.
+  const META = fixtureText('fixtures/pricing/meta-models.md')
+  const SPARK_PAGE = fixtureText('fixtures/pricing/meta-muse-spark.md')
+  const SPARK_URL = 'https://dev.meta.ai/docs/muse-spark.md'
+  const SEED = MODEL_CLASS_MAP.find((e) => e.provider === 'meta' && e.class === 'balanced')!
+  const REWRITTEN =
+    'Use Muse Spark 1.3 for agentic and coding work that needs strong reasoning for less than Muse Wonder costs'
+
+  /** The models page and its line pages from their fixtures, Muse Spark's as given. */
+  function pollMeta(spark: string) {
+    const fetcher: SourceFetcher = async (source) => {
+      const fixture = manifest.fixtures.find((f) => f.source_url === source.url)
+      const body = source.url === SPARK_URL ? spark : fixtureText(fixture!.path)
+      return { ok: true, status: 200, text: body, bytes: body.length }
+    }
+    return runRefresh({ db, raw, fetcher, sourcesYaml, now: clock }, 'survey', ['meta-models-md'])
+  }
+
+  const check = async () => {
+    const rows = await db
+      .select()
+      .from(schema.entities)
+      .where(eq(schema.entities.entity_type, 'recommendation'))
+    return rows.find((r) => JSON.parse(r.payload).class === 'balanced' && r.provider === 'meta')
+  }
+
+  it('is checked on the side page, and stored with the lane that read it', async () => {
+    expect(SEED).toMatchObject({
+      model_slug: 'muse-spark-1.3',
+      basis_source_id: 'meta-muse-spark-md',
+    })
+    await pollMeta(SPARK_PAGE)
+    const row = (await check())!
+    expect(JSON.parse(row.payload)).toMatchObject({ model_slug: 'muse-spark-1.3', present: true })
+    expect(row.source_id).toBe('meta-models-md')
+    expect(row.source_url).toBe('https://dev.meta.ai/docs/models.md')
+    // The page it rests on is the cell's basis, which the matrix shows.
+    const ctx = queryContext(sourcesYaml, (await terminalStamps(db)).poll, () => NOW)
+    const { matrix } = await queryPrices(db, ctx)
+    const cell = matrix.cells.find((c) => c.provider === 'meta' && c.class === 'balanced')
+    expect(cell).toMatchObject({ basis_source_id: 'meta-muse-spark-md', basis_current: true })
+  })
+
+  it('goes under review when the side page drops it, and the judge may re-map it from that page', async () => {
+    await pollMeta(SPARK_PAGE)
+    const edited = SPARK_PAGE.replace(SEED.basis, REWRITTEN)
+    expect(edited).not.toBe(SPARK_PAGE)
+    await pollMeta(edited)
+    expect(JSON.parse((await check())!.payload).present).toBe(false)
+
+    const review = await classMapReview(db, readRaw, NOW)
+    expect(review.cells).toEqual([
+      expect.objectContaining({ provider: 'meta', class: 'balanced', reason: 'basis-gone' }),
+    ])
+    expect(review.pages.map((p) => p.source_id)).toEqual(['meta-models-md', 'meta-muse-spark-md'])
+
+    const remap = {
+      provider: 'meta',
+      class: 'balanced',
+      model_slug: 'muse-spark-1.3',
+      basis: REWRITTEN,
+    }
+    const report = await submit([
+      { ...remap, basis_source_id: 'meta-pricing-md' },
+      { ...remap, basis_source_id: 'meta-muse-spark-md' },
+    ])
+    expect(report.class_map.accepted).toBe(1)
+    expect(report.class_map.rejected.map((r) => r.reason)).toEqual(['wrong-source'])
+    const [decision] = await judged()
+    expect(decision).toMatchObject({ basis_source_id: 'meta-muse-spark-md', source_url: SPARK_URL })
   })
 })

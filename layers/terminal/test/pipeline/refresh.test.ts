@@ -211,8 +211,9 @@ describe('baseline', () => {
     expect(perSource.get('xai-models-md')).toBe(17)
     // No prices: only the flagship, balanced and economy class-map checks.
     expect(perSource.get('google-models-md')).toBe(3)
-    // 7 catalog rows (Muse Ember added 2026-11-09) + the flagship and economy class-map checks.
-    expect(perSource.get('meta-models-md')).toBe(9)
+    // 7 catalog rows (Muse Ember added 2026-11-09) + the flagship and economy class-map
+    // checks + the balanced check, read off Muse Spark's page (2026-11-13).
+    expect(perSource.get('meta-models-md')).toBe(10)
     // 6 priced ids: Muse Wonder, three Muse Spark versions, two Contributor ids.
     expect(perSource.get('meta-pricing-md')).toBe(6)
     // 16 current first-party models with an API name; third-party and no-API rows skipped.
