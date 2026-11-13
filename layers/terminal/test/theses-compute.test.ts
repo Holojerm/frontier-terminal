@@ -339,7 +339,7 @@ const entity = (
 const FLAGSHIPS = [
   ['openai', 'openai-pricing-md', 'gpt-6-astra', 5, 30],
   ['anthropic', 'anthropic-pricing-md', 'claude-opus-5-5', 5, 25],
-  ['google', 'google-pricing-html', 'gemini-4-argon', 2, 12],
+  ['google', 'google-pricing-html', 'gemini-4-carbon', 2, 12],
   ['xai', 'xai-models-md', 'grok-4.7', 3, 15],
   ['meta', 'meta-pricing-md', 'muse-wonder-1.0', 1.25, 4.25],
 ] as const
@@ -348,7 +348,7 @@ const FLAGSHIPS = [
 const DAILY_TOKENS = {
   'openai/gpt-6-astra': 250,
   'anthropic/claude-opus-5-5': 150,
-  'google/gemini-4-argon': 120,
+  'google/gemini-4-carbon': 120,
   'x-ai/grok-4.7': 50,
   'meta/muse-wonder-1.0': 20,
   'mistralai/mistral-large-4': 10,

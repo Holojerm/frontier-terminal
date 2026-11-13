@@ -51,7 +51,10 @@ configuration gap rather than retrying.
    sizes and, under `material`, the moves that clear the hiring materiality floor. `boards` is
    `[]` when no job change is pending (and `hiring` is absent on a Worker deployed before it).
    `class_map_review` is `{ cells, pages }`: price-matrix cells whose vendor sentence left the
-   page, and the page text to re-map them from. It is usually `{ "cells": [], "pages": [] }`.
+   page (`reason: "basis-gone"`), the empty cells of a lab that launched a model in the last
+   48 hours (`reason: "launch-into-gap"`, with the `launched` slugs), and the page text to
+   map them from. It is usually `{ "cells": [], "pages": [] }`. An empty cell offered after a
+   launch and left empty is the common outcome, not a failure.
    `claim_review` lists, per judged thesis claim, the pending changes it wants a verdict on;
    it is usually `[]`. It can hold candidates when `changes` is empty: recipe items (a
    changelog entry, say) are offered until they are rated.

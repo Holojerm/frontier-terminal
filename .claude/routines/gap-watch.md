@@ -13,7 +13,9 @@ The terminal states its gaps instead of guessing: every source the audit cut is 
 `cut:` in `sources.yaml` with the reason it was cut, and every matrix cell with no mapping
 is listed in `CLASS_GAPS` in `layers/terminal/server/utils/terminal-classes.ts` with the reason no vendor
 sentence answers it. The pipeline re-checks only what is mapped (a mapped cell's sentence is
-re-read on every poll); nothing re-reads a gap. Each reason is a dated fact about a vendor page
+re-read on every poll). The one exception is a launch: for 48 hours after a lab lists a new
+model, the judge is offered that lab's empty cells for the launched models only. Nothing
+else re-reads a gap. Each reason is a dated fact about a vendor page
 ("answers 404", "names no middle tier"), and those facts expire: Google's flagship cell sat
 empty for weeks after Google's models page started serving markdown with a "flagship"
 sentence on it. Once a week, re-check the premise of every gap and tell the owner when one has

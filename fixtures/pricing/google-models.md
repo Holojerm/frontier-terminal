@@ -8,7 +8,23 @@
 ## Gemini 4  {% id="gemini-4" %}
 
 {% card-grid columns="2" %}
-  {% card description="Our flagship reasoning model with a shared 1M context window and long decodes up to 1M tokens." title="Gemini 4 Argon" variant="model-card" %}
+  {% card description="Our strongest reasoning model, built for complex software engineering, multimodal knowledge work, scientific reasoning, and cybersecurity defense." title="Gemini 4 Carbon" variant="model-card" %}
+  {% section class="model-specs" %}
+  *   *Model code* **gemini-4-carbon**
+  *   *Context* **1M tokens**
+  *   *Max output* **65K / 1M tokens**
+  *   *Modalities* **Text, Image, Audio, Video, PDF**
+
+  {% /section %}
+
+  {% section class="card-actions" %}
+  {% button href="https://aistudio.google.com/prompts/new_chat?model=gemini-4-carbon" variant="primary" %}Try in AI Studio{% /button %} {% button href="/docs/models/gemini-4-carbon" icon="arrow_forward" tooltip="View models" variant="icon-primary" /%}
+
+  {% /section %}
+
+  {% /card %}
+
+  {% card description="Our efficient Gemini 4 frontier reasoning model, delivering faster responses and lower token spend per turn compared to Gemini 4 Carbon across complex coding, agentic, math, and science tasks." title="Gemini 4 Argon" variant="model-card" %}
   {% section class="model-specs" %}
   *   *Model code* **gemini-4-argon**
   *   *Context* **1M tokens**
@@ -24,6 +40,22 @@
 
   {% /card %}
 
+  {% card description="Brings cutting-edge intelligence to everyone, with speed and efficiency for everyday coding and agentic workflows, featuring a shared 1M context window and long decodes up to 1M tokens." title="Gemini 4 Hydrogen" variant="model-card" %}
+  {% section class="model-specs" %}
+  *   *Model code* **gemini-4-hydrogen**
+  *   *Context* **1M tokens**
+  *   *Max output* **65K / 1M tokens**
+  *   *Modalities* **Text, Image, Audio, Video, PDF**
+
+  {% /section %}
+
+  {% section class="card-actions" %}
+  {% button href="https://aistudio.google.com/prompts/new_chat?model=gemini-4-hydrogen" variant="primary" %}Try in AI Studio{% /button %} {% button href="/docs/models/gemini-4-hydrogen" icon="arrow_forward" tooltip="View models" variant="icon-primary" /%}
+
+  {% /section %}
+
+  {% /card %}
+
 {% /card-grid %}
 
 ## All Gemini 4 models  {% id="all-gemini-4-models" %}
@@ -34,14 +66,24 @@
 
   ---
 
+  * [Gemini 4 Carbon](/docs/models/gemini-4-carbon)
+  * `gemini-4-carbon`
+
+  ---
+
   * [Gemini 4 Argon](/docs/models/gemini-4-argon)
   * `gemini-4-argon`
+
+  ---
+
+  * [Gemini 4 Hydrogen](/docs/models/gemini-4-hydrogen)
+  * `gemini-4-hydrogen`
 {% /table %}
 
 ## Gemini 3  {% id="gemini-3" %}
 
 {% card-grid %}
-  {% card badge="New" description="Our most intelligent Flash model, engineered for long-horizon software engineering, autonomous agents, and complex enterprise workflows." href="/docs/models/gemini-3.8-flash" icon="spark" title="Gemini 3.8 Flash" variant="model" /%}
+  {% card badge="Stable" description="Our previous-generation Flash model for software engineering, autonomous agents, and complex enterprise workflows." href="/docs/models/gemini-3.8-flash" icon="spark" title="Gemini 3.8 Flash" variant="model" /%}
 
   {% card badge="New" description="Default Live API model for most low-latency voice agent experiences without reasoning delays." href="/docs/models/gemini-3.8-live" icon="settings_voice" title="Gemini 3.8 Live" variant="model" /%}
 
@@ -67,7 +109,7 @@
 
   {% card badge="Stable" description="Low-latency speech-to-text model with utterance-based language detection, speaker diarization, and word timestamps." href="/docs/models/gemini-3.5-transcribe" icon="speech_to_text" title="Gemini 3.5 Transcribe" variant="model" /%}
 
-  {% card badge="Stable" description="Fast video generation, editing, keyframe interpolation, and extension with native audio." href="/docs/models/gemini-omni-flash" icon="movie_filter" title="Gemini Omni Flash" variant="model" /%}
+  {% card badge="New" description="Generate and edit up to 15 seconds of video with native audio, keyframe interpolation, video extension, and character consistency." href="/docs/models/gemini-omni-flash" icon="movie_filter" title="Gemini Omni Flash" variant="model" /%}
 
   {% card badge="Preview" description="Frontier-class performance rivaling larger models at a fraction of the cost." href="/docs/models/gemini-3-flash-preview" icon="spark" title="Gemini 3 Flash" variant="model" /%}
 
@@ -154,7 +196,8 @@
   ---
 
   * [Gemini Omni Flash](/docs/models/gemini-omni-flash)
-  * `gemini-omni-1.1-flash`
+  * `gemini-omni-1.2-flash`   
+    `gemini-omni-1.1-flash`
 
   ---
 
@@ -236,8 +279,8 @@
   To ensure reliable performance for everyone, we are limiting access to the 2.5
   models to users who have actively used them in the past. `gemini-2.5-flash-lite`
   is not deprecated and will continue to be served until further notice through
-  the API. For any new projects, use our latest models: 3.5 Flash-Lite or 3.8
-  Flash. This helps us maintain sufficient capacity for both ongoing legacy
+  the API. For any new projects, use our latest models: Gemini 4 Hydrogen or 3.5
+  Flash-Lite. This helps us maintain sufficient capacity for both ongoing legacy
   workflows and new applications.
 
 {% /callout %}
@@ -403,9 +446,10 @@ already be listed in other sections*
   ---
 
   * [Gemini Omni Flash](/docs/models/gemini-omni-flash)
-  * Fast video generation, editing, keyframe interpolation, and extension with
-    native audio.
-  * `gemini-omni-1.1-flash`
+  * Fast video generation and editing up to 15 seconds with native audio,
+    keyframe interpolation, and video extension.
+  * `gemini-omni-1.2-flash`   
+    `gemini-omni-1.1-flash`
 
   ---
 
@@ -494,6 +538,13 @@ already be listed in other sections*
   * Model
   * Description
   * Endpoint
+
+  ---
+
+  * [Gemini Decision 1](/docs/models/gemini-decision-1)
+  * Fast, calibrated multimodal yes/no, choice, and score decisions with zero
+    output tokens using the [Decisions API](/docs/decisions-api).
+  * `gemini-decision-1`
 
   ---
 
