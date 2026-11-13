@@ -441,9 +441,15 @@ describe('after a baseline poll of every source', () => {
     expect(meta.basis_source_id).toBe('meta-models-md')
     expect(meta.basis_current).toBe(true)
     expect(cell('meta', 'economy').row!.model_slug).toBe('muse-ember-1.0')
-    expect(cell('meta', 'balanced').gap).toContain(
-      'None is described as an intelligence-for-cost tradeoff',
-    )
+    // Meta's balanced sentence is on Muse Spark's own page, a join page of the catalog.
+    expect(cell('meta', 'balanced')).toMatchObject({
+      basis_source_id: 'meta-muse-spark-md',
+      basis_current: true,
+      priced: true,
+      gap: null,
+    })
+    expect(cell('meta', 'balanced').row!.model_slug).toBe('muse-spark-1.3')
+    expect(cell('meta', 'balanced').row!.source_url).toBe(urlOf('meta-pricing-md'))
 
     // Mistral prints no tier sentence: every cell is a stated gap, never a guess.
     for (const k of ['flagship', 'balanced', 'economy']) {

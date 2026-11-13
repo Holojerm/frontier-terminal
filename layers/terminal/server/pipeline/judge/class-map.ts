@@ -41,7 +41,8 @@ import type { PipelineDb } from '../store'
 //      the page is never re-mapped, whatever the model thinks of a newer
 //      model — "start here" is the vendor's call. A gap re-opened by a launch
 //      takes only a model the launch listed;
-//   2. basis_source_id is that provider's class-map page (CLASS_MAP_SOURCES);
+//   2. basis_source_id is one of that provider's class-map pages
+//      (CLASS_MAP_SOURCES);
 //   3. the basis sentence is on that page verbatim — the newest good stored
 //      snapshot, links flattened — the same substring rule as the drift check;
 //   4. model_slug is a model this store currently lists for the provider;
@@ -209,7 +210,7 @@ export async function cellsUnderReview(
   const out: ReviewCell[] = []
   for (const [provider, slugs] of await launchesSince(db, new Date(cutoff).toISOString())) {
     // A provider with no class-map page has nowhere a sentence could come from.
-    if (!CLASS_MAP_SOURCES[provider as LabId]) continue
+    if (!CLASS_MAP_SOURCES[provider as LabId]?.length) continue
     const since = [...slugs.values()].sort()[0]!
     for (const klass of MODEL_CLASSES) {
       if (classMap.some((e) => e.provider === provider && e.class === klass.id)) continue
@@ -249,7 +250,7 @@ export async function cellsUnderReview(
 
 export interface ClassMapReview {
   cells: ReviewCell[]
-  /** The page each cell rests on, once per source. */
+  /** The pages each cell's provider may cite, once per source. */
   pages: SourcePage[]
 }
 
@@ -261,8 +262,7 @@ export async function classMapReview(
 ): Promise<ClassMapReview> {
   const cells = await cellsUnderReview(db, await effectiveClassMap(db), now)
   const pages: SourcePage[] = []
-  for (const sourceId of new Set(cells.map((c) => CLASS_MAP_SOURCES[c.provider]))) {
-    if (!sourceId) continue
+  for (const sourceId of new Set(cells.flatMap((c) => CLASS_MAP_SOURCES[c.provider] ?? []))) {
     const page = await latestPage(db, readRaw, sourceId)
     if (page) pages.push({ ...page, text: page.text.slice(0, MAX_PAGE_CHARS) })
   }
@@ -385,12 +385,13 @@ export async function applyClassMappings(
       )
       continue
     }
-    const expected = CLASS_MAP_SOURCES[mapping.provider]
-    if (!expected || mapping.basis_source_id !== expected) {
-      const page = expected ?? 'no page'
-      reject('wrong-source', `${cell} rests on ${page}, not ${mapping.basis_source_id}`)
+    const allowed = CLASS_MAP_SOURCES[mapping.provider] ?? []
+    if (!allowed.includes(mapping.basis_source_id)) {
+      const pagesFor = allowed.length ? allowed.join(' or ') : 'no page'
+      reject('wrong-source', `${cell} rests on ${pagesFor}, not ${mapping.basis_source_id}`)
       continue
     }
+    const expected = mapping.basis_source_id
     if (!pages.has(expected)) pages.set(expected, await latestPage(db, readRaw, expected))
     const page = pages.get(expected)!
     if (!page) {

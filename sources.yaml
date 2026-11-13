@@ -265,16 +265,20 @@ sources:
     url: https://dev.meta.ai/docs/muse-spark.md
     format: Markdown, one "## Availability" table
     diff_mechanism: body hash (ETag, Last-Modified)
-    verdict: include (join table for meta-models-md)
+    verdict: include (join table for meta-models-md; class-map page for Meta's balanced cell)
     terms: >-
       Same terms and robots.txt as meta-models-md. Taken: the Availability
       table (version, id, Standard or Contributor mode on pay-as-you-go),
-      whenever meta-models-md is read. Read 2026-11-06.
+      and the one sentence Meta's balanced cell quotes, whenever
+      meta-models-md is read. Read 2026-11-06.
     rights: restricted
     fixture: fixtures/pricing/meta-muse-spark.md
     caveats: >-
       The only page that lists the -contributor ids; meta-models-md names
-      the Standard-mode ids alone.
+      the Standard-mode ids alone. Since 2026-11-13 it is also a class-map
+      page (terminal-classes.ts CLASS_MAP_SOURCES): the meta-models-md lane
+      drift-checks the balanced sentence on it, and stores the check row
+      under meta-models-md with that page's fetch provenance.
 
   meta-muse-ember-md:
     axis: pricing-catalog
