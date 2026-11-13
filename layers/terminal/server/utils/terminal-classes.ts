@@ -22,8 +22,8 @@
 //     (layers/terminal/server/pipeline/judge/class-map.ts). This file is the seed; the
 //     newest decision per cell overrides it (layers/terminal/server/pipeline/class-map.ts);
 //   - a provider that publishes no such recommendation gets a stated gap,
-//     never a guess (xAI names one model and stops; Meta names no
-//     intelligence-for-cost model). A launch re-opens that provider's gaps
+//     never a guess (xAI names one model and stops; DeepSeek's one catalog
+//     page is a price list). A launch re-opens that provider's gaps
 //     to the judge for the review window, for the launched models only
 //     (layers/terminal/server/pipeline/judge/class-map.ts).
 //
@@ -68,17 +68,20 @@ export interface ClassEntry {
 }
 
 /**
- * The page each provider's class map may rest on — the sources the seed
+ * The pages each provider's class map may rest on — the sources the seed
  * below was transcribed from, and the only ones a judge decision may cite.
+ * Each is drift-checked on every poll that reads it: a page with a parse lane
+ * by that lane, a join page by the lane that joins it (Meta's Muse Spark page
+ * is read with its models page, lanes.ts).
  */
-export const CLASS_MAP_SOURCES: Readonly<Partial<Record<LabId, string>>> = {
-  openai: 'openai-models-md',
-  anthropic: 'anthropic-models-md',
-  xai: 'xai-models-md',
-  meta: 'meta-models-md',
-  google: 'google-models-md',
-  alibaba: 'alibaba-models-html',
-  moonshot: 'moonshot-models-md',
+export const CLASS_MAP_SOURCES: Readonly<Partial<Record<LabId, readonly string[]>>> = {
+  openai: ['openai-models-md'],
+  anthropic: ['anthropic-models-md'],
+  xai: ['xai-models-md'],
+  meta: ['meta-models-md', 'meta-muse-spark-md'],
+  google: ['google-models-md'],
+  alibaba: ['alibaba-models-html'],
+  moonshot: ['moonshot-models-md'],
 }
 
 // Verbatim transcriptions from the fixtures fetched 2026-09-22 (the previous
@@ -158,6 +161,13 @@ export const MODEL_CLASS_MAP: ClassEntry[] = [
   // 2026-11-09, when Meta added Muse Ember, "built for high-volume, repeated
   // work", and dropped "sub-agent tasks" from the Muse Spark sentence.
   // Muse Ember has one version, muse-ember-1.0.
+  //
+  // Balanced mapped 2026-11-13, a gap until then. models.md gives Muse Spark
+  // no cost reason, but Muse Spark's own page says when to use it: "strong
+  // reasoning at a lower cost than Muse Wonder", the intelligence-for-cost
+  // answer. That sentence was already in the 2026-11-09 fixture; the gap had
+  // been judged on models.md alone. Meta's choose-a-model page says the same
+  // ("Use it when" under Muse Spark), but it is not a registered source.
   {
     provider: 'meta',
     class: 'flagship',
@@ -165,6 +175,14 @@ export const MODEL_CLASS_MAP: ClassEntry[] = [
     basis:
       "Muse Wonder is Meta's most capable model, built for complex software engineering and long-horizon agentic work.",
     basis_source_id: 'meta-models-md',
+  },
+  {
+    provider: 'meta',
+    class: 'balanced',
+    model_slug: 'muse-spark-1.3',
+    basis:
+      'Use Muse Spark for agentic and coding work that needs strong reasoning at a lower cost than Muse Wonder',
+    basis_source_id: 'meta-muse-spark-md',
   },
   {
     provider: 'meta',
@@ -254,12 +272,6 @@ export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string 
     class: 'economy',
     reason:
       'xAI prices grok-4.3, the grok-4.20 models, and grok-build-0.1 below Grok 4.7 (full catalog). No xAI page says which one to use for cost-sensitive work.',
-  },
-  {
-    provider: 'meta',
-    class: 'balanced',
-    reason:
-      'Meta’s models page lists three API text lines, Muse Wonder for capability, Muse Spark for agentic and coding work at scale, and Muse Ember for high-volume, repeated work. None is described as an intelligence-for-cost tradeoff.',
   },
   // Checked 2026-11-01 and again 2026-11-04 (pages unchanged) across
   // models.md, the model selection guide and each model's own page. Mistral
