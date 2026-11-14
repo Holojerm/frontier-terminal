@@ -4,7 +4,8 @@ Repo-shipped definitions for the cloud agents ("routines") that run on a schedul
 repo. Fork-owned: `judge.md`, which reads the Worker's unjudged change rows and sends back
 significance alerts through a gated API, and `gap-watch.md`, which re-checks weekly whether the
 reason behind each stated gap (a cut source, an unmapped matrix cell) is still true and files an
-issue when one is not. `ops-triage.md`, `issue-triage.md`, `bug-fix.md`, `dependency-merge.md`,
+issue when one is not, then scouts for up to three public datasets the terminal does not yet
+read. `ops-triage.md`, `issue-triage.md`, `bug-fix.md`, `dependency-merge.md`,
 `pr-shepherd.md` and `template-sync.md` come from the template. `pr-shepherd` is `scope: fleet`: one
 `all-repos-pr-shepherd` routine retries a check that failed on infrastructure, requeues a PR that fell
 out of the merge queue, and escalates the rest. `issue-triage` checks the issues other routines escalate
