@@ -11,7 +11,10 @@ import { parseAnthropicGreenhouse } from '../../server/pipeline/parsers/hiring/a
 import { parseGoogleCareers } from '../../server/pipeline/parsers/hiring/google-careers'
 import { parseMistralAshby } from '../../server/pipeline/parsers/hiring/mistral-ashby'
 import { JoinRaceError, MAX_UNJOINED_JOBS } from '../../server/pipeline/parsers/hiring/common'
-import { parseOpenaiAshby } from '../../server/pipeline/parsers/hiring/openai-ashby'
+import {
+  MAX_UNTITLED_JOBS,
+  parseOpenaiAshby,
+} from '../../server/pipeline/parsers/hiring/openai-ashby'
 import { parseXaiGreenhouse } from '../../server/pipeline/parsers/hiring/xai-greenhouse'
 import { fixtureText } from './fixtures'
 
@@ -57,6 +60,53 @@ describe('hiring lane', () => {
 
     // Rows sorted by job_id — stable output order for the determinism gate.
     expect(out.rows[0]?.job_id).toBe('00207abc-49b7-465c-a219-f7c1140f8047')
+  })
+
+  // #411: the live board served a posting whose title failed the row contract
+  // (`rows.79.title: Invalid input`), and the whole OpenAI board failed that poll.
+  const ashbyWith = (edit: (jobs: Array<Record<string, unknown>>) => void) => {
+    const payload = JSON.parse(ashbyText) as { jobs: Array<Record<string, unknown>> }
+    edit(payload.jobs)
+    return JSON.stringify(payload)
+  }
+
+  test('ashby: a listed posting with an empty, blank or null title is skipped, not fatal', () => {
+    const text = ashbyWith((jobs) => {
+      jobs[0]!.title = ''
+      jobs[1]!.title = '   '
+      jobs[2]!.title = null
+    })
+    const skipped = (JSON.parse(text) as { jobs: Array<{ id: string }> }).jobs
+      .slice(0, 3)
+      .map((j) => j.id)
+    const out = parseOpenaiAshby(text)
+    expect(AshbyJobsOutput.safeParse(out).success).toBe(true)
+    expect(out.rows).toHaveLength(65 - 3)
+    for (const id of skipped) expect(out.rows.some((r) => r.job_id === id)).toBe(false)
+  })
+
+  test('ashby: more untitled postings than a handful is payload drift, and still throws', () => {
+    const text = ashbyWith((jobs) => {
+      for (const job of jobs.slice(0, MAX_UNTITLED_JOBS + 1)) job.title = ''
+    })
+    expect(() => parseOpenaiAshby(text)).toThrow(
+      `${MAX_UNTITLED_JOBS + 1} listed job(s) have no title`,
+    )
+  })
+
+  test('ashby: a board whose every posting is untitled throws rather than empty itself', () => {
+    expect(() => parseOpenaiAshby('{"jobs":[{"id":"abc","title":""}]}')).toThrow(
+      '1 listed job(s) have no title',
+    )
+  })
+
+  test('ashby: an unlisted posting is not an open role, whatever its title', () => {
+    const text = ashbyWith((jobs) => {
+      jobs[0]!.isListed = false
+      jobs[0]!.title = ''
+      jobs[1]!.isListed = false
+    })
+    expect(parseOpenaiAshby(text).rows).toHaveLength(65 - 2)
   })
 
   test('ashby mistral: the mistral.ai board in the same shape — 19 rows across all 10 departments', () => {
