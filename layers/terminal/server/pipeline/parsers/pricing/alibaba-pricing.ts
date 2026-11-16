@@ -28,8 +28,12 @@ import { fixtureProvenance } from '../fixture-provenance'
 // table prices non-thinking and thinking output apart, the non-thinking price
 // is the output price and the thinking one is kept in notes. A "List price $X
 // (Limited-time N% off)" cell stores the list price X and notes the promotion:
-// the page states no end date, so no effective_until is set. The page's
-// cache and batch discounts are percentages on other pages and are not read.
+// the page states no end date, so no effective_until is set. Most cache and
+// batch discounts are percentages on other pages and are not read. The
+// exception is a model whose tab prints its own cache price table under a
+// "<slug> — Cache price (per million tokens)" caption (qwen4-max, added
+// 2026-11-16, issue #405): its cache read is the cached-input price and its
+// 5m and 1h cache writes go in notes, as Anthropic's are.
 
 const SECTION = 'Text generation - Qwen'
 const LINES = ['Qwen-Max', 'Qwen-Plus', 'Qwen-Flash'] as const
@@ -179,6 +183,46 @@ function tableRows(table: string, line: string, prov: Provenance): PriceRow[] {
   return rows
 }
 
+interface CachePrice {
+  slug: string
+  write5m: number
+  write1h: number
+  read: number
+}
+
+const CACHE_LABELS = ['Cache write (5m)', 'Cache write (1h)', 'Explicit/implicit cache read']
+const CACHE_CAPTION = /^([a-z0-9][a-z0-9.-]*) — Cache price \(per million tokens\)$/
+
+/**
+ * A model's cache price table, or null for any other table. `before` is the
+ * HTML between the previous table and this one, whose last paragraph is the
+ * caption naming the model ("qwen4-max — Cache price (per million tokens)").
+ * A table with these headers but no such caption, or not exactly one row of
+ * three plain USD prices, fails the parse: a cache price that cannot be tied
+ * to one model is not stored under a guessed one.
+ */
+function cacheTable(table: string, before: string, line: string): CachePrice | null {
+  const head = grid(table.match(/<thead[^>]*>([\s\S]*?)<\/thead>/)?.[1] ?? '')
+  if (columnLabels(head).join('\u0000') !== CACHE_LABELS.join('\u0000')) return null
+  const captions = [...before.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)]
+  const slug = textOf(captions.at(-1)?.[1] ?? '').match(CACHE_CAPTION)?.[1]
+  if (!slug) throw new Error(`alibaba-pricing: ${line}: a cache price table names no model`)
+  const body = grid(table.match(/<tbody[^>]*>([\s\S]*?)<\/tbody>/)?.[1] ?? '')
+  if (body.length !== 1 || body[0]!.length !== 3) {
+    throw new Error(`alibaba-pricing: ${line}: ${slug}'s cache price table is not one row of three`)
+  }
+  const [write5m, write1h, read] = body[0]!.map((c) => {
+    const p = price(c.text)
+    if (p.usd === null || p.promo !== null) {
+      throw new Error(
+        `alibaba-pricing: ${line}: ${slug} cache cell does not print a USD price: ${c.text}`,
+      )
+    }
+    return p.usd
+  })
+  return { slug, write5m: write5m!, write1h: write1h!, read: read! }
+}
+
 // prov defaults to the fixture manifest's record (single-arg behavior is
 // byte-identical for the determinism gate); the refresh orchestrator passes
 // the live fetch's provenance instead.
@@ -190,10 +234,38 @@ export function parseAlibabaPricingHtml(
   const rows: PriceRow[] = []
   for (const line of LINES) {
     const tab = section(section(qwen, 3, line), 4, REGION)
-    const tables = [...tab.matchAll(/<table[\s\S]*?<\/table>/g)].map((m) => m[0])
+    const tables = [...tab.matchAll(/<table[\s\S]*?<\/table>/g)]
     if (tables.length === 0) throw new Error(`alibaba-pricing: ${line}: no ${REGION} table`)
-    const found = tables.flatMap((t) => tableRows(t, line, prov))
+    const found: PriceRow[] = []
+    const caches: CachePrice[] = []
+    tables.forEach((m, i) => {
+      const before = tab.slice(
+        i === 0 ? 0 : tables[i - 1]!.index + tables[i - 1]![0].length,
+        m.index,
+      )
+      const cache = cacheTable(m[0], before, line)
+      if (cache) caches.push(cache)
+      else found.push(...tableRows(m[0], line, prov))
+    })
     if (found.length === 0) throw new Error(`alibaba-pricing: ${line}: no ${SCOPE} row`)
+    for (const cache of caches) {
+      const priced = found.filter((r) => r.model_slug === cache.slug)
+      if (priced.length === 0) {
+        throw new Error(
+          `alibaba-pricing: ${line}: a cache price for ${cache.slug}, which has no ${SCOPE} row`,
+        )
+      }
+      for (const r of priced) {
+        if (r.cached_input_per_mtok !== null)
+          throw new Error(`alibaba-pricing: ${line}: ${cache.slug} has two cache prices`)
+        r.cached_input_per_mtok = cache.read
+        r.notes = [
+          r.notes,
+          `5m cache writes $${cache.write5m}`,
+          `1h cache writes $${cache.write1h}`,
+        ].join('; ')
+      }
+    }
     rows.push(...found)
   }
 

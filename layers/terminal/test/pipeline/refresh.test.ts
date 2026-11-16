@@ -223,8 +223,9 @@ describe('baseline', () => {
     expect(perSource.get('mistral-ashby')).toBe(19)
     // Two models at peak and off-peak; the page prints no tier sentence.
     expect(perSource.get('deepseek-pricing-md')).toBe(4)
-    // Qwen-Max, -Plus and -Flash in the Singapore tab, one row per request band.
-    expect(perSource.get('alibaba-pricing-html')).toBe(48)
+    // Qwen-Max, -Plus and -Flash in the Singapore tab, one row per request band
+    // (qwen4-max's cache price table adds a price to a row, not a row).
+    expect(perSource.get('alibaba-pricing-html')).toBe(49)
     // No prices: the three class-map checks.
     expect(perSource.get('alibaba-models-html')).toBe(3)
     // 3 unpriced catalog rows + the flagship class-map check.

@@ -1,5 +1,6 @@
 import { MODEL_CLASS_MAP, type ClassEntry } from '../utils/terminal-classes'
 import { RecommendationRow, type Provenance } from './contracts'
+import { cardDescriptions, cardOwners, foldQuotes } from './judge/page-cards'
 
 // The drift check on the like-for-like matrix. The class map is editorial and
 // hand-transcribed; the golden test proves each sentence was on the vendor
@@ -17,18 +18,22 @@ import { RecommendationRow, type Provenance } from './contracts'
 // is quote typography: Anthropic's page swapped "you're" for "you’re" on
 // 2026-10-27 and the flagship cell read as re-pointed (issue #83). A curly
 // apostrophe is a rendering choice, not a changed recommendation.
+//
+// On a page of model cards (Google's, Alibaba's: page-cards.ts) the sentence
+// can stay while its card changes hands. Alibaba moved "Complex reasoning and
+// coding" from qwen3.8-max's card to the new qwen4-max's on 2026-11-16 (issue
+// #405); the substring was still there, so the flagship cell read as current
+// and was never offered to the judge. A sentence that is now only other
+// models' card description is not present for the model it was mapped to.
 
 /** `[text](url)` → `text`; nothing else is touched. */
 export function flattenMdLinks(md: string): string {
   return md.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1')
 }
 
-/** Typographic single and double quotes → their ASCII forms. */
-export function foldQuotes(text: string): string {
-  return text
-    .replace(/[\u2018\u2019\u201A\u201B\u2032]/g, "'")
-    .replace(/[\u201C\u201D\u201E\u201F\u2033]/g, '"')
-}
+// foldQuotes lives with the card readers, which this module calls; defining it
+// here would make the two modules import each other.
+export { foldQuotes }
 
 /** Whether the basis sentence is on a link-flattened page, quote typography aside. */
 export function basisOnPage(flatPage: string, basis: string): boolean {
@@ -46,14 +51,17 @@ export function recommendationRows(
   const entries = classMap.filter((e) => e.basis_source_id === sourceId)
   if (entries.length === 0) return []
   const flat = foldQuotes(flattenMdLinks(text))
-  return entries.map((e) =>
-    RecommendationRow.parse({
+  const cards = cardDescriptions(sourceId, text)
+  return entries.map((e) => {
+    const owners = cardOwners(cards, e.basis)
+    const ownCard = owners.length === 0 || owners.includes(e.model_slug)
+    return RecommendationRow.parse({
       provider: e.provider,
       class: e.class,
       model_slug: e.model_slug,
       basis: e.basis,
-      present: flat.includes(foldQuotes(e.basis)),
+      present: flat.includes(foldQuotes(e.basis)) && ownCard,
       ...prov,
-    }),
-  )
+    })
+  })
 }

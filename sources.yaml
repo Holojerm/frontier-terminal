@@ -445,7 +445,10 @@ sources:
       apart, the non-thinking price is the output price and the other is
       in notes. "List price $X (Limited-time 20% off)" stores X and notes
       the promotion, which states no end date. The page prints no context
-      window.
+      window. A model with its own cache price table under its line's tab
+      (qwen4-max, from 2026-11-16) stores the cache read as its cached-input
+      price and the 5m and 1h cache writes in notes; a cache table that
+      names no priced model fails the parse. Re-captured 2026-11-16.
 
   alibaba-models-html:
     axis: pricing-catalog
@@ -464,8 +467,8 @@ sources:
     fixture: fixtures/pricing/alibaba-models.html
     caveats: >-
       Read only for the vendor sentences the class map quotes: the
-      "Recommended models" card for each of qwen3.8-max ("Complex reasoning
-      and coding"), qwen3.7-plus ("Balanced performance, speed, and cost")
+      "Recommended models" card for each of qwen4-max ("Complex reasoning
+      and coding", qwen3.8-max's card until 2026-11-16), qwen3.7-plus ("Balanced performance, speed, and cost")
       and qwen3.8-flash ("Fast and cost-effective"). The same page
       recommends third-party models (DeepSeek, GLM, Kimi, MiniMax), which
       are not Alibaba SKUs. Prices come from alibaba-pricing-html.
