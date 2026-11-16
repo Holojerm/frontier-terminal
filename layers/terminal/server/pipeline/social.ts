@@ -1,17 +1,19 @@
 // What Frontier Terminal says in public, and when. The social layer
 // (layers/social) owns sending; this file only decides what to enqueue.
 //
-// Two things post, both composed from stored rows only — no model writes the
+// Three things post, all composed from stored rows only — no model writes the
 // text, so a post can say nothing the alert page doesn't:
 //   - every critical alert: its headline and its permalink, which carries
 //     the source URL and fetch time. A judged alert waits an hour first, so
 //     a bad call can be suppressed before it is public.
+//   - a launch of a model the vendor recommends (enqueueLaunchAlerts): the
+//     model-floor alert, the same headline-and-permalink shape.
 //   - a weekly thread: what moved, by axis, and the week's critical alerts.
 //
 // On X the link goes in a self-reply, never the lead post: X ranks posts
 // carrying an external link lower. Bluesky does not, so it keeps one post.
 
-import { and, count, desc, eq, gte, ne, sql } from 'drizzle-orm'
+import { and, count, desc, eq, gte, inArray, ne, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import {
@@ -26,6 +28,8 @@ import {
 } from '#layers/social/server/utils/social-text'
 import { absoluteUrl } from '#shared/utils/site'
 import { AXIS_OF } from '../utils/terminal-alerts'
+import { effectiveClassMap } from './class-map'
+import { MODEL_FLOOR_RULE } from './model-floor'
 import type { PipelineDb } from './store'
 
 /** Alerts before posting went live are history, not news. */
@@ -73,6 +77,80 @@ export function withLink(service: SocialService, text: string, url: string): str
   return LINK_IN_REPLY[service]
     ? [fitSocialText(service, text), `Source and details: ${url}`]
     : [fitSocialText(service, text, url)]
+}
+
+/** How long after it was written a launch can still be queued: news on the day, not a week on. */
+export const LAUNCH_POST_WINDOW_MS = 48 * 60 * 60_000
+
+/**
+ * Queue each recent launch of a model its vendor recommends: a model-floor
+ * alert (always notable, never critical) whose slug fills a like-for-like
+ * cell in the class map in effect. Most new slugs are image, speech and
+ * embedding SKUs, and none of them were ever posted; but the new flagship of a
+ * tracked lab is the news this account exists for, and qwen4-max (2026-11-16)
+ * went unposted like every launch before it. A launch the class map takes up
+ * later (the seed, or the judge within its own 48-hour review) is posted then,
+ * if still inside the window. Returns how many rows were new.
+ */
+export async function enqueueLaunchAlerts(
+  db: PipelineDb,
+  channels: SocialChannels,
+  origin: string,
+  now: Date,
+): Promise<number> {
+  const since = new Date(now.getTime() - LAUNCH_POST_WINDOW_MS).toISOString()
+  const rows = await db
+    .select({
+      id: tables.alerts.id,
+      headline: tables.alerts.headline,
+      change_ids: tables.alerts.change_ids,
+      created_at: tables.alerts.created_at,
+    })
+    .from(tables.alerts)
+    .where(
+      and(
+        eq(tables.alerts.rule, MODEL_FLOOR_RULE),
+        sql`datetime(${tables.alerts.created_at}) >= datetime(${since})`,
+        sql`datetime(${tables.alerts.created_at}) >= datetime(${SOCIAL_EPOCH})`,
+      ),
+    )
+    .orderBy(desc(tables.alerts.created_at))
+  if (rows.length === 0) return 0
+
+  const mapped = new Set((await effectiveClassMap(db)).map((e) => `${e.provider}:${e.model_slug}`))
+  const launched = await launchedModels(
+    db,
+    rows.flatMap((r) => JSON.parse(r.change_ids) as string[]),
+  )
+  let queued = 0
+  for (const alert of rows) {
+    const keys = (JSON.parse(alert.change_ids) as string[]).map((id) => launched.get(id))
+    if (!keys.some((k) => k !== undefined && mapped.has(k))) continue
+    queued += await enqueueSocialPost(db, channels, {
+      kind: 'alert',
+      ref: alert.id,
+      compose: (service) => ({
+        posts: withLink(service, alert.headline, alertUrl(origin, alert.id)),
+      }),
+    })
+  }
+  return queued
+}
+
+/** change id → "provider:slug" of the model row each added change wrote. */
+async function launchedModels(db: PipelineDb, ids: string[]): Promise<Map<string, string>> {
+  if (ids.length === 0) return new Map()
+  const changes = await db
+    .select({ id: tables.changes.id, entity_key: tables.changes.entity_key })
+    .from(tables.changes)
+    .where(inArray(tables.changes.id, ids))
+  const out = new Map<string, string>()
+  for (const c of changes) {
+    // entity_key is "model:<provider>:<slug>[:<tier>]" (contracts/keys.ts).
+    const [type, provider, slug] = c.entity_key.split(':')
+    if (type === 'model' && provider && slug) out.set(c.id, `${provider}:${slug}`)
+  }
+  return out
 }
 
 /** Queue every recent critical alert. Returns how many rows were new. */

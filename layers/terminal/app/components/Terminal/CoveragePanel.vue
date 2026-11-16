@@ -5,11 +5,13 @@
 // trusted, not every visit — which is why it sits last.
 
 import { companyName } from '../../../shared/utils/companies'
+import { absoluteStamp } from '../../../shared/utils/terminal-format'
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type {
   CoverageData,
   RecipeCoverage,
   SourceCoverage,
+  SourceHealth,
   SourceRights,
 } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
@@ -28,6 +30,14 @@ const STATUS = {
   // page the absence IS the fact worth showing a reader.
   absent: { color: 'neutral', icon: 'i-lucide-file-question', label: 'no page' },
 } as const
+
+// A source can pass its last check and still be unreliable, or fail it for
+// hours on end. The badge above says how one check ended; this line says
+// whether the rows behind it are current (server/utils/source-health.ts).
+const healthNote = (h: SourceHealth) =>
+  h.kind === 'failing'
+    ? `Every check has failed since ${absoluteStamp(h.since)}. The rows shown are from the last check that worked.`
+    : `${h.failures} checks failed in the last ${h.window_days} days.`
 
 const PROVIDER: Record<string, string> = { ...LAB_DISPLAY, all: 'market-wide', other: 'other' }
 
@@ -119,6 +129,14 @@ const auditNote = (r: SourceCoverage | RecipeCoverage) =>
             :name="`Detail of the last ${s.label} check`"
             :text="s.last_run.detail"
           />
+          <span v-if="s.health" class="mt-1 block">
+            <UBadge color="warning" icon="i-lucide-triangle-alert" variant="subtle" size="sm">
+              degraded
+            </UBadge>
+            <span class="mt-1 block max-w-48 text-xs whitespace-normal text-muted">
+              {{ healthNote(s.health) }}
+            </span>
+          </span>
         </template>
         <span v-else class="text-xs text-muted">no run</span>
       </template>
