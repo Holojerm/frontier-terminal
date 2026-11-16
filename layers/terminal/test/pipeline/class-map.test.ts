@@ -13,7 +13,7 @@ import {
   REVIEW_WINDOW_MS,
   type RawReader,
 } from '../../server/pipeline/judge/class-map'
-import { cardDescriptions } from '../../server/pipeline/judge/page-cards'
+import { cardDescriptions, cardOwners } from '../../server/pipeline/judge/page-cards'
 import { submitJudgeRun } from '../../server/pipeline/judge/submit'
 import { recommendationRows } from '../../server/pipeline/recommendations'
 import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
@@ -379,7 +379,11 @@ describe('the cards on a page that does not name its models', () => {
       'Our fastest, most cost-effective 3.5 model for high-throughput execution.',
     )
     const alibaba = cardDescriptions('alibaba-models-html', ALIBABA)
-    expect(alibaba.get('qwen3.8-max')).toContain('Complex reasoning and coding')
+    // qwen4-max's card links to its doc page, whose last segment is the card's title.
+    expect(alibaba.get('qwen4-max')).toContain('Complex reasoning and coding')
+    expect(alibaba.get('qwen3.7-plus')).toContain('Balanced performance, speed, and cost')
+    // Only qwen4-max's card prints it; until 2026-11-16 it was qwen3.8-max's.
+    expect(cardOwners(alibaba, 'Complex reasoning and coding')).toEqual(['qwen4-max'])
     expect(cardDescriptions('anthropic-models-md', FIXTURE).size).toBe(0)
   })
 
@@ -394,6 +398,36 @@ describe('the cards on a page that does not name its models', () => {
       const cards = cardDescriptions(entry.basis_source_id, pages[entry.basis_source_id]!)
       expect(cards.get(entry.model_slug), `${entry.provider}:${entry.class}`).toContain(entry.basis)
     }
+  })
+
+  it('a doc link names a card only when it is the card’s own title', () => {
+    const card = (href: string, title: string) =>
+      `<a class="adoc-help-center-card" href="${href}" data-layout="default"><div class="adoc-help-center-card-content"><strong class="not-prose adoc-help-center-card-title">${title}</strong><div class="prose adoc-help-center-card-body"><p>Some sentence</p></div></div></a>`
+    const read = (html: string) => [...cardDescriptions('alibaba-models-html', html).keys()]
+    expect(read(card('/help/en/model-studio/qwen4-max', 'qwen4-max'))).toEqual(['qwen4-max'])
+    expect(read(card('/help/en/model-studio/context-cache', 'qwen4-max'))).toEqual([])
+    expect(read(card('/help/en/model-studio/text-generation', 'Text generation'))).toEqual([])
+  })
+
+  // Alibaba moved "Complex reasoning and coding" from qwen3.8-max's card to
+  // the new qwen4-max's on 2026-11-16. The sentence never left the page, so a
+  // substring check called the old mapping current (issue #405).
+  it('a sentence that moved to another model’s card is gone for the model it was mapped to', () => {
+    const prov = {
+      source_url: 'https://www.alibabacloud.com/help/en/model-studio/models',
+      fetched_at: NOW.toISOString(),
+    }
+    const seed = MODEL_CLASS_MAP.filter((e) => e.provider === 'alibaba')
+    const was = seed.map((e) => (e.class === 'flagship' ? { ...e, model_slug: 'qwen3.8-max' } : e))
+    const present = (map: typeof seed) =>
+      Object.fromEntries(
+        recommendationRows('alibaba-models-html', ALIBABA, prov, map).map((r) => [
+          r.class,
+          r.present,
+        ]),
+      )
+    expect(present(was)).toEqual({ flagship: false, balanced: true, economy: true })
+    expect(present(seed)).toEqual({ flagship: true, balanced: true, economy: true })
   })
 })
 

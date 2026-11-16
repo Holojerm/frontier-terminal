@@ -465,9 +465,10 @@ describe('after a baseline poll of every source', () => {
     const qwen = cell('alibaba', 'flagship')
     expect(qwen).toMatchObject({ priced: true, basis_source_id: 'alibaba-models-html' })
     expect(qwen.row).toMatchObject({
-      model_slug: 'qwen3.8-max',
-      input_per_mtok: 2,
-      output_per_mtok: 6,
+      model_slug: 'qwen4-max',
+      input_per_mtok: 1.5,
+      cached_input_per_mtok: 0.075,
+      output_per_mtok: 4.5,
     })
     expect(qwen.row!.source_url).toBe(urlOf('alibaba-pricing-html'))
     expect(cell('alibaba', 'balanced').row!.model_slug).toBe('qwen3.7-plus')

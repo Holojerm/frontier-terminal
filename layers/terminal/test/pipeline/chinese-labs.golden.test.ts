@@ -103,6 +103,32 @@ describe('alibaba-pricing-html', () => {
     }
   })
 
+  // Added to the Qwen-Max Singapore tab 2026-11-16, after the price table:
+  // "qwen4-max — Cache price (per million tokens)" over $1.875 | $3 | $0.075.
+  // Read as a price table, it failed every poll on its missing "Model ID" (issue #405).
+  test('a model’s own cache price table is its cached-input price, cache writes in notes', () => {
+    expect(by['qwen4-max:']).toMatchObject({
+      input_per_mtok: 1.5,
+      cached_input_per_mtok: 0.075,
+      output_per_mtok: 4.5,
+    })
+    expect(by['qwen4-max:']!.notes).toContain('5m cache writes $1.875; 1h cache writes $3')
+    const cached = out.rows.filter((r) => r.cached_input_per_mtok !== null)
+    expect(cached.map((r) => r.model_slug)).toEqual(['qwen4-max'])
+  })
+
+  test('a cache price table that names no model, or no priced one, fails the parse', () => {
+    const page = fixtureText('fixtures/pricing/alibaba-pricing.html')
+    const caption = '<p><strong>qwen4-max — Cache price (per million tokens)</strong></p>'
+    expect(page).toContain(caption)
+    expect(() => parseAlibabaPricingHtml(page.replace(caption, ''))).toThrow(
+      'a cache price table names no model',
+    )
+    expect(() =>
+      parseAlibabaPricingHtml(page.replace(caption, caption.replace('qwen4-max', 'qwen9-max'))),
+    ).toThrow('a cache price for qwen9-max, which has no International row')
+  })
+
   test('a price in a shape the parser does not know fails the parse', () => {
     const text = fixtureText('fixtures/pricing/alibaba-pricing.html').replace(
       '<p>$0.15</p>',
