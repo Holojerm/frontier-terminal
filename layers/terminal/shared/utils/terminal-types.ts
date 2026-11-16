@@ -80,6 +80,15 @@ export interface SourceRunStamp {
   source_url: string
 }
 
+/**
+ * A degraded source (server/utils/source-health.ts): its checks have failed
+ * for six hours straight, or it passes now but failed three or more checks
+ * in the last week. Null for a healthy source.
+ */
+export type SourceHealth =
+  | { kind: 'failing'; since: string }
+  | { kind: 'intermittent'; failures: number; window_days: number }
+
 /** One registered source, whether or not it has ever been fetched. */
 export interface SourceCoverage {
   source_id: string
@@ -108,6 +117,7 @@ export interface SourceCoverage {
   newest_snapshot: SnapshotStamp | null
   snapshot_count: number
   last_run: SourceRunStamp | null
+  health: SourceHealth | null
   /** Rows in the current entity set that came from this source. */
   entity_count: number
   /** Set for a source the store derived for itself (sources.yaml derived_sources): the template id. */

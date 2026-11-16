@@ -24,7 +24,7 @@ import {
   type PressOutcome,
 } from '../pipeline/press'
 import type { MailMessage } from './resend'
-import { enqueueCriticalAlerts } from '../pipeline/social'
+import { enqueueCriticalAlerts, enqueueLaunchAlerts } from '../pipeline/social'
 import type { PipelineDb } from '../pipeline/store'
 import { delaySecondsUntil, scheduleDrain } from './events'
 import type { CacheStore } from './terminal-cache'
@@ -134,11 +134,10 @@ export async function fanOutAlerts(deps: EventDeps): Promise<FanOutResult> {
   const result: FanOutResult = { social: null, webhooks: null, press: null }
 
   if (deps.social) {
-    result.social = await enqueueCriticalAlerts(
-      deps.db,
-      deps.social.config.channels,
-      deps.social.origin,
-    )
+    const { channels } = deps.social.config
+    result.social =
+      (await enqueueCriticalAlerts(deps.db, channels, deps.social.origin)) +
+      (await enqueueLaunchAlerts(deps.db, channels, deps.social.origin, now))
     await scheduleNext(
       deps,
       'social.drain',

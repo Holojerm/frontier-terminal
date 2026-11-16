@@ -1,7 +1,8 @@
 // What Frontier Terminal queues for its social accounts, against a real D1.
 // Sending is the social layer's (layers/social/test); this pins down what is
-// offered: critical alerts only, from go-live on, judged ones held, and a
-// weekly thread built from counts and headlines alone.
+// offered: critical alerts from go-live on, judged ones held; launches of a
+// model the class map names, while they are news; and a weekly thread built
+// from counts and headlines alone.
 
 import { env } from 'cloudflare:test'
 import { drizzle } from 'drizzle-orm/d1'
@@ -12,9 +13,11 @@ import { socialLength } from '#layers/social/server/utils/social-text'
 import {
   composeWeeklyDigest,
   enqueueCriticalAlerts,
+  enqueueLaunchAlerts,
   enqueueWeeklyDigest,
   heldUntil,
   JUDGED_HOLD_MS,
+  LAUNCH_POST_WINDOW_MS,
   SOCIAL_EPOCH,
 } from '../server/pipeline/social'
 
@@ -160,6 +163,56 @@ describe('enqueueCriticalAlerts', () => {
   it('treats the epoch as inclusive', async () => {
     await db.insert(schema.alerts).values(alert('edge', 'critical', 's1-floor', SOCIAL_EPOCH))
     expect(await enqueueCriticalAlerts(db, CHANNELS, ORIGIN)).toBe(1)
+  })
+})
+
+describe('enqueueLaunchAlerts', () => {
+  // qwen4-max is the seed's Alibaba flagship (terminal-classes.ts); an image
+  // SKU fills no cell.
+  const AT = new Date('2026-11-16T14:00:00.000Z')
+  const launch = (id: string, entity_key: string, created_at: string) => ({
+    change: { ...change(`ch-${id}`, 'model', created_at), entity_key },
+    alert: {
+      ...alert(id, 'notable', 'model-floor', created_at),
+      change_ids: JSON.stringify([`ch-${id}`]),
+    },
+  })
+  const seed = async (...launches: ReturnType<typeof launch>[]) => {
+    await db.insert(schema.changes).values(launches.map((l) => l.change))
+    await db.insert(schema.alerts).values(launches.map((l) => l.alert))
+  }
+
+  it('queues a launch of a model the class map names, once, with no hold', async () => {
+    await seed(
+      launch('qwen', 'model:alibaba:qwen4-max', '2026-11-16T13:50:23.745Z'),
+      launch('image', 'model:openai:gpt-image-2.6-flare', '2026-11-16T13:00:00.000Z'),
+    )
+    expect(await enqueueLaunchAlerts(db, CHANNELS, ORIGIN, AT)).toBe(1)
+    expect(await enqueueLaunchAlerts(db, CHANNELS, ORIGIN, AT)).toBe(0)
+    const rows = await db.select().from(schema.socialPosts)
+    expect(rows.map((r) => [r.kind, r.ref])).toEqual([['alert', 'qwen']])
+    expect(rows[0]!.notBefore.getTime()).toBeLessThanOrEqual(Date.now())
+    expect(JSON.parse(rows[0]!.body).posts).toEqual([
+      'Headline qwen',
+      `Source and details: ${ORIGIN}/alerts/qwen`,
+    ])
+  })
+
+  it('reads a tiered row as its model', async () => {
+    await seed(launch('t', 'model:alibaba:qwen4-max:input_256k_1m', '2026-11-16T13:50:00.000Z'))
+    expect(await enqueueLaunchAlerts(db, CHANNELS, ORIGIN, AT)).toBe(1)
+  })
+
+  it('leaves a launch that is no longer news', async () => {
+    const stale = new Date(AT.getTime() - LAUNCH_POST_WINDOW_MS - 1000).toISOString()
+    await seed(launch('old', 'model:alibaba:qwen4-max', stale))
+    expect(await enqueueLaunchAlerts(db, CHANNELS, ORIGIN, AT)).toBe(0)
+  })
+
+  it('leaves a notable alert of any other rule', async () => {
+    const l = launch('judged', 'model:alibaba:qwen4-max', '2026-11-16T13:50:00.000Z')
+    await seed({ ...l, alert: { ...l.alert, rule: 'agent-judge' } })
+    expect(await enqueueLaunchAlerts(db, CHANNELS, ORIGIN, AT)).toBe(0)
   })
 })
 
