@@ -61,9 +61,11 @@ Three pieces:
 
 ## Social posting (layers/social)
 
-Critical alerts and a Monday what-moved thread post to the app's X and Bluesky
-accounts through Buffer. A new critical alert is queued as a row by the
-EVENTS queue's `alerts.new` fan-out, and `social:digest` queues the weekly
+Critical alerts, launches of a model the class map names (a model-floor alert
+for a slug in a flagship, balanced or economy cell, within 48 hours), and a
+Monday what-moved thread post to the app's X and Bluesky accounts through
+Buffer. A new critical alert or launch is queued as a row by the EVENTS queue's
+`alerts.new` fan-out, and `social:digest` queues the weekly
 thread (`layers/terminal/server/pipeline/social.ts`); a delayed `social.drain`
 message sends each row when it is due, and the hourly `events:sweep` catches
 anything a lost message left (`layers/terminal/server/utils/events.ts`). The

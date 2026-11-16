@@ -45,6 +45,7 @@ import type { DataFreshness } from '#server/utils/seo'
 import { parseDepartmentClusters, type DepartmentCluster } from './terminal-clusters'
 import { EXPORT_TABLES } from './terminal-export'
 import { historyRule } from './terminal-export-history'
+import { sourceFailures, sourceHealth } from './source-health'
 import {
   ENTITY_METHOD,
   pointInTimeNotes,
@@ -479,6 +480,7 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
       newest_snapshot: stamp?.newest ?? null,
       snapshot_count: stamp?.snapshot_count ?? 0,
       last_run: runs.get(source.source_id) ?? null,
+      health: null,
       entity_count: entityCount.get(source.source_id) ?? 0,
       derived_from: null,
     }
@@ -528,9 +530,31 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
       newest_snapshot: stamp?.newest ?? null,
       snapshot_count: stamp?.snapshot_count ?? 0,
       last_run: runs.get(source_id) ?? null,
+      health: null,
       entity_count: entityCount.get(source_id) ?? 0,
       derived_from: template,
     })
+  }
+
+  // Degraded sources, judged as of the newest check of any source so the
+  // verdict is the same however long the response sits in cache.
+  const asOf = [...runs.values()].reduce<string | null>(
+    (newest, r) => (newest === null || r.started_at > newest ? r.started_at : newest),
+    null,
+  )
+  if (asOf) {
+    const failingNow = sources
+      .filter((s) => s.last_run?.status === 'failed')
+      .map((s) => s.source_id)
+    const { failures, since } = await sourceFailures(db, failingNow, asOf)
+    for (const s of sources) {
+      s.health = sourceHealth(
+        s.last_run,
+        failures.get(s.source_id) ?? 0,
+        since.get(s.source_id) ?? null,
+        asOf,
+      )
+    }
   }
 
   const exports = await Promise.all(
