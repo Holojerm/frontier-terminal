@@ -1,5 +1,3 @@
-import { foldQuotes } from '../recommendations'
-
 // The descriptions a class-map page prints on each model's own card, for the
 // providers whose stored model rows do not carry them. Anthropic's, OpenAI's,
 // xAI's and Moonshot's models pages are parsed into catalog rows whose notes
@@ -12,7 +10,8 @@ import { foldQuotes } from '../recommendations'
 //
 // A description belongs to a card only when the card itself says which model
 // it is: Google's by its `*Model code*` line or its `/docs/models/<slug>` link,
-// Alibaba's by its `/detail/<slug>` link. A card that names no model adds
+// Alibaba's by its `/detail/<slug>` link or a doc link matching its title. A
+// card that names no model adds
 // nothing. The text is returned as printed, so the gate's comparison stays the
 // same verbatim rule basisOnPage applies.
 //
@@ -21,6 +20,15 @@ import { foldQuotes } from '../recommendations'
 // ("…lower token spend per turn compared to Gemini 4 Carbon…"), which the
 // naming rule read as naming Carbon, and on 2026-11-10 the gate accepted it as
 // the basis for Carbon's flagship cell (cardOwners, issue #360 follow-up).
+// The drift check (recommendations.ts) reads it the same way: a sentence that
+// moved to another model's card has left the mapped model's (issue #405).
+
+/** Typographic single and double quotes → their ASCII forms. */
+export function foldQuotes(text: string): string {
+  return text
+    .replace(/[\u2018\u2019\u201A\u201B\u2032]/g, "'")
+    .replace(/[\u201C\u201D\u201E\u201F\u2033]/g, '"')
+}
 
 /** slug -> the descriptions printed on that model's cards. */
 export type CardDescriptions = Map<string, Set<string>>
@@ -75,14 +83,21 @@ const googleCards: CardReader = (text) => {
 
 /**
  * Alibaba's model list: an `<a class="adoc-help-center-card">` per model,
- * linking to its `/detail/<slug>` page, with the description as the body's
- * one paragraph.
+ * linking to its console `/detail/<slug>` page, with the description as the
+ * body's one paragraph. A newer card (qwen4-max, 2026-11-16) links to its
+ * doc page, `/help/en/model-studio/<slug>`, instead; that link names the
+ * model only when its last segment is the card's own title, since the same
+ * path holds docs that are not models.
  */
 const alibabaCards: CardReader = (html) => {
   const out: CardDescriptions = new Map()
   const card = /<a\s[^>]*class="adoc-help-center-card"[^>]*>([\s\S]*?)<\/a>/g
   for (const match of html.matchAll(card)) {
-    const slug = match[0].match(/href="[^"]*\/detail\/([^"/?#]+)"/)?.[1]
+    const title = match[1]!.match(/adoc-help-center-card-title"[^>]*>([^<]*)<\/strong>/)?.[1]
+    const doc = match[0].match(/href="\/help\/en\/model-studio\/([^"/?#]+)"/)?.[1]
+    const slug =
+      match[0].match(/href="[^"]*\/detail\/([^"/?#]+)"/)?.[1] ??
+      (doc && doc === title?.trim() ? doc : undefined)
     const body = match[1]!.match(/adoc-help-center-card-body"[^>]*>\s*<p>([^<]*)<\/p>/)?.[1]
     if (slug && body) add(out, slug, body)
   }

@@ -228,10 +228,12 @@ export const MODEL_CLASS_MAP: ClassEntry[] = [
   // whose text-generation row names three Qwen models, each with the use it is
   // recommended for. The flagship cell reads "complex reasoning and coding" as
   // the page's answer for hard work, as OpenAI's flagship sentence does.
+  // Re-transcribed 2026-11-16: the same sentence now sits on qwen4-max's card,
+  // where it had been qwen3.8-max's.
   {
     provider: 'alibaba',
     class: 'flagship',
-    model_slug: 'qwen3.8-max',
+    model_slug: 'qwen4-max',
     basis: 'Complex reasoning and coding',
     basis_source_id: 'alibaba-models-html',
   },
