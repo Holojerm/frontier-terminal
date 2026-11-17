@@ -325,6 +325,8 @@ export interface LlmsTxtInput {
   repoUrl?: string
   /** After the data tables, before Agents — see server/utils/public-pages.ts. */
   sections?: LlmsTxtSection[]
+  /** The MCP worker's origin (NUXT_PUBLIC_MCP_URL). Empty or absent = not mentioned. */
+  mcpUrl?: string
 }
 
 /**
@@ -373,6 +375,19 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
       sections.push(`- [${link.title}](${absoluteUrl(appUrl, link.path)}): ${link.description}`)
     }
     sections.push('')
+  }
+
+  // The one line here that is an instruction rather than a description: a model
+  // reading this file is exactly the reader that can use an MCP endpoint.
+  const mcpUrl = normalizeOrigin(input.mcpUrl)
+  if (mcpUrl) {
+    sections.push(
+      '## MCP server',
+      '',
+      `- Endpoint (Streamable HTTP, OAuth sign-in): ${mcpUrl}/mcp`,
+      `- Server Card: ${mcpUrl}/mcp/server-card`,
+      '',
+    )
   }
 
   sections.push(

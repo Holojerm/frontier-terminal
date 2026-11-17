@@ -36,6 +36,7 @@ export default defineEventHandler((event) => {
       appDescription: config.public.appDescription,
       publicPages: config.publicPages,
     }),
+    mcpUrl: config.public.mcpUrl,
     complete: true,
   })
 

@@ -515,6 +515,16 @@ describe('buildLlmsTxt', () => {
     expect(buildLlmsTxt({ ...INPUT, pages: [] })).not.toContain('## Pages')
   })
 
+  it('names the MCP endpoint and its Server Card only when one is configured', () => {
+    expect(buildLlmsTxt(INPUT)).not.toContain('## MCP server')
+    const body = buildLlmsTxt({ ...INPUT, mcpUrl: 'https://mcp.example.com/' })
+    expect(body).toContain(
+      '- Endpoint (Streamable HTTP, OAuth sign-in): https://mcp.example.com/mcp',
+    )
+    expect(body).toContain('- Server Card: https://mcp.example.com/mcp/server-card')
+    expect(body.indexOf('## MCP server')).toBeLessThan(body.indexOf('## About'))
+  })
+
   it('names the bulk tables so a model can fetch numbers instead of rendering prose', () => {
     const text = buildLlmsTxt({
       ...INPUT,
