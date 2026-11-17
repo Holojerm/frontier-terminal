@@ -8,8 +8,8 @@
 export const CONTACT_EMAIL = 'contact@frontierterm.com'
 
 /**
- * A mailto link with the subject filled in, so a buyer's message is sortable
- * from a correction or a press request before anyone opens it.
+ * A mailto link with the subject filled in, so a correction is sortable from
+ * a press request before anyone opens it.
  */
 export function mailto(subject: string): string {
   return `mailto:${CONTACT_EMAIL}?subject=${encodeURIComponent(subject)}`

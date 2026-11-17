@@ -239,15 +239,6 @@ useSeo({
           >
         </li>
         <li>
-          <NuxtLink to="/contact" class="text-primary underline underline-offset-2"
-            >Commercial licensing</NuxtLink
-          >
-          <span class="text-muted">
-            for commercial use of the full history, your own terms, a dependable feed, or new
-            coverage.</span
-          >
-        </li>
-        <li>
           <NuxtLink to="/alerts.xml" external class="text-primary underline underline-offset-2">
             Atom feed
           </NuxtLink>

@@ -68,8 +68,7 @@ https://frontierterm.com/export/changes.csv?history=full
 ```
 
 The data license depends on age. Our compilation and the numbers we derive from the last 90 days
-are CC BY 4.0. Older ones are CC BY-NC 4.0, so commercial use of the full history needs a paid
-license (see `/contact`). Anything we published before 2026-11-04 stays CC BY 4.0. A full-history
+are CC BY 4.0. Older ones are CC BY-NC 4.0, free for non-commercial use. Anything we published before 2026-11-04 stays CC BY 4.0. A full-history
 download labels each row in a `license` column. Upstream data keeps its own license, and the
 underlying facts belong to their publishers. The code is MIT. Details are on `/license`.
 

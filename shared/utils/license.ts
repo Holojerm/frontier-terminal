@@ -51,13 +51,15 @@ export const HISTORY_LICENSE: LicenseRef = {
 /**
  * What a licensee's API key labels the history with, in place of
  * HISTORY_LICENSE: the same rows, with commercial use permitted under the
- * licensee's signed terms. Sold by email, never self-serve (/data#institutions).
+ * licensee's signed terms. Not offered while commercial licensing is paused:
+ * no page, llms.txt line or API message advertises it. Keys issued before the
+ * pause keep this label until they expire.
  */
 export const PAID_LICENSE: LicenseRef = {
   id: 'LicenseRef-FrontierTerminal-Commercial',
   name: 'Frontier Terminal commercial data license',
   short: 'Frontier Terminal commercial license',
-  url: '/data#institutions',
+  url: '/license',
 }
 
 /** The code that produces it. */
@@ -114,8 +116,7 @@ export interface LicenseSplit {
 export const LICENSE_SPLIT_NOTE =
   `Our compilation and derived numbers dated on or after recent.from are ${DATA_LICENSE.short}. ` +
   `Older ones are ${HISTORY_LICENSE.short}, except what we first published before ${LICENSE_SPLIT_EFFECTIVE}, which stays ${DATA_LICENSE.short}. ` +
-  'Upstream data keeps its own license, and the facts belong to their publishers. ' +
-  'Commercial use of the full history needs a paid license (/contact).'
+  'Upstream data keeps its own license, and the facts belong to their publishers.'
 
 /** The note a licensee's key gets: its own license on the history, in place of CC BY-NC. */
 export const PAID_LICENSE_SPLIT_NOTE =

@@ -121,6 +121,12 @@ The Dune model: public data and theses free; paid platform. Candidates are priva
 
 Why: revenue can come from the history and from terms, without closing anything. The recent window stays open for any use, and the full history stays open for non-commercial use. The platform ideas above still stand.
 
+**2026-11-17: commercial licensing is paused.** The site sells nothing while the pause lasts.
+
+- No page, `/llms.txt` line, or API message offers a paid license, an API key, the licensed S3 bucket, or webhooks. `/contact` is for corrections and press.
+- The license split above stays. The last 90 days are CC BY 4.0, and the full history is CC BY-NC 4.0, for non-commercial use only.
+- The key code stays in place, unadvertised. A key issued before the pause works until it expires, and none is issued during it.
+
 ## Risks
 
 | Risk | Mitigation |

@@ -198,7 +198,8 @@ Each of these has a full contract in its own doc — this is the one-line versio
   that reads GDELT's 15-minute GKG files and posts back the rows naming a tracked lab, filer
   or model family, the other writer, `NUXT_GDELT_TOKEN`). No session; a route that takes input validates it
   with Zod and calls `rateLimit()` (`rateLimitTerminal()` on the public product routes).
-  Licensees may send an owner-issued API key (`Authorization: Bearer ftk_…`, `bun run keys:issue`):
+  Licensees may send an owner-issued API key (`Authorization: Bearer ftk_…`, `bun run keys:issue`;
+  commercial licensing is paused, so no page, llms.txt line or API message advertises keys):
   it only raises the rate limit, lists the full-history bulk files, labels older rows with the paid
   license, and opens `/export/payloads/*` (systematic, `rights: ours` sources). It never changes the
   data, and a bad key is a 401, never anonymous. → `layers/terminal/server/utils/api-access.ts`

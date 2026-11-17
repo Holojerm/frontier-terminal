@@ -10,7 +10,6 @@ import {
   LICENSE_SPLIT_EFFECTIVE,
   LICENSE_WINDOW_DAYS,
 } from '#shared/utils/license'
-import { mailto } from '../../shared/utils/contact'
 import { count } from '../../shared/utils/terminal-format'
 import { CRITICAL_FEED_QUERY, INFO_FEED_QUERY } from '../../shared/utils/terminal-tiers'
 import type {
@@ -511,28 +510,8 @@ const tabs = [
           </p>
         </TerminalPanel>
 
-        <TerminalPanel id="commercial" title="Commercial use">
-          <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-            <p class="max-w-2xl text-sm text-default">
-              Using the full history in a product, a fund process, or anything else commercial? That
-              needs a paid license. So do signed terms, a feed you can depend on, and coverage we
-              don’t have yet.
-              <NuxtLink to="/contact" class="text-primary underline underline-offset-2"
-                >Write to us</NuxtLink
-              >. Upstream CC BY data keeps its own terms, and some sources aren’t in any paid offer.
-            </p>
-            <UButton
-              :to="mailto('Data licensing')"
-              external
-              icon="i-lucide-mail"
-              label="Email us"
-              class="self-start sm:self-auto"
-            />
-          </div>
-        </TerminalPanel>
-
-        <!-- Not lazy, like the price-reach table: its rate-limit table has no links. -->
-        <TerminalInstitutions
+        <!-- Not lazy, like the price-reach table. -->
+        <TerminalBulkFeed
           :schema-version="dictionary?.schema_version"
           :changelog="dictionary?.changelog ?? []"
         />

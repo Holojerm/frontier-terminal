@@ -167,7 +167,7 @@ async function asOfErrors(run: () => Promise<CallToolResult>): Promise<CallToolR
 
 const LICENSE =
   `license names the data license, split by age: our compilation and derived numbers from the last ${LICENSE_WINDOW_DAYS} days are ${DATA_LICENSE.short}, ` +
-  `older ones ${HISTORY_LICENSE.short} (no commercial use without a paid license), except what we published before ${LICENSE_SPLIT_EFFECTIVE}, which stays ${DATA_LICENSE.short}. ` +
+  `older ones ${HISTORY_LICENSE.short} (non-commercial use only), except what we published before ${LICENSE_SPLIT_EFFECTIVE}, which stays ${DATA_LICENSE.short}. ` +
   `A result with as_of older than ${LICENSE_WINDOW_DAYS} days is labeled ${HISTORY_LICENSE.id} in point_in_time.license. Upstream data keeps its own license.`
 
 const PROVENANCE =

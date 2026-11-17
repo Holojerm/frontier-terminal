@@ -398,7 +398,7 @@ export function buildLlmsTxt(input: LlmsTxtInput): string {
     '## License',
     '',
     `- Our data (the tables, the change log, the alerts, the exports, and the numbers we derive) is licensed by age. The last ${LICENSE_WINDOW_DAYS} days are ${DATA_LICENSE.short} (${DATA_LICENSE.url}). You may quote, republish, or use them commercially, with attribution.`,
-    `- Data older than ${LICENSE_WINDOW_DAYS} days (the full history) is ${HISTORY_LICENSE.short} (${HISTORY_LICENSE.url}). Commercial use of it needs a paid license (${appUrl}/contact).`,
+    `- Data older than ${LICENSE_WINDOW_DAYS} days (the full history) is ${HISTORY_LICENSE.short} (${HISTORY_LICENSE.url}). You may use it for non-commercial purposes, with attribution.`,
     `- Data we published before ${LICENSE_SPLIT_EFFECTIVE} stays ${DATA_LICENSE.short} at any age. Pages show the full history and are free to read. Every API response and MCP tool result has a \`license\` field naming the split.`,
     `- Attribution: ${attributionLine(input.appName, appUrl)}`,
     `- Attribution for the full history: ${attributionLine(input.appName, appUrl, HISTORY_LICENSE)}`,
