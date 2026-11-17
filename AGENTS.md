@@ -49,7 +49,7 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 | Styling      | **Tailwind CSS v4**        | Utility-first, via NuxtUI                                        |
 | Backend      | **Cloudflare Workers**     | Via NuxtHub + Nitro                                              |
 | Database     | **Cloudflare D1** (SQLite) | Via Drizzle ORM — `db` + `schema` auto-imported by NuxtHub       |
-| KV Store     | **Cloudflare KV**          | Cache and rate-limit counters                                    |
+| KV Store     | **Cloudflare KV**          | Cache                                    |
 | Object Store | **Cloudflare R2**          | Raw fetched payloads, so every derived number has its source bytes |
 | Deployment   | **Wrangler**               | `bun deploy` → `wrangler deploy`                                 |
 | CI/CD        | **Workers Builds**         | Cloudflare-native CI: `bun run ci` + deploy on push (see README) |

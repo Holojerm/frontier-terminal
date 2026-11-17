@@ -1,10 +1,10 @@
 // Cron task: run the watchdogs that spool their own ops events, then prune the
-// spool, every 30 minutes. This app sends no ops mail: the fleet dashboard reads
+// spool and the finished rate-limit windows, every 30 minutes. This app sends no ops mail: the fleet dashboard reads
 // the spool through GET /api/fleet (`ops.kinds`) and is the only alert sender.
 //
 // Each watchdog reads D1 and KV, and the deploy check calls GitHub, which is not
-// worth doing more often. The prune lives here because this app has no purge
-// task; without it the spool would grow without bound.
+// worth doing more often. The prunes live here because this app has no purge
+// task; without them the spool and the rate_limits table would grow without bound.
 //
 // Imports are explicit: a task is an untested bundling surface that runs
 // unattended, and an auto-import that resolves to `undefined` here would fail
@@ -16,6 +16,7 @@ import { kv } from '@nuxthub/kv'
 import { FleetManifestSchema } from '#shared/utils/fleet-manifest'
 import { logEvent } from '#server/utils/log'
 import { pruneOpsEvents } from '#server/utils/ops'
+import { pruneRateLimits } from '#server/utils/rate-limit'
 
 import rawManifest from '../../../../../fleet.json'
 import { fetchMainHead } from '../../pipeline/deploy-watch'
@@ -53,7 +54,10 @@ const task = defineTask({
       logEvent('warn', 'launch_gap', { ...launch })
     }
     const pruned = await pruneOpsEvents(db)
-    return { result: { freshness, stale_cells: launch.stale_cells.length, pruned } }
+    const rateLimitsPruned = await pruneRateLimits(db)
+    return {
+      result: { freshness, stale_cells: launch.stale_cells.length, pruned, rateLimitsPruned },
+    }
   },
 })
 
