@@ -245,6 +245,8 @@ bun run seo:check     # Fail on pages that bypass useSeo() or aren't declared pu
 bun run fleet:check   # Fail when fleet.json stops matching wrangler.toml (names, binding ids, crons)
 bun run crons:check   # Fail when [triggers] crons and nitro.scheduledTasks disagree, or a task has no file
 bun run methods:check # Fail when a GET/HEAD/DELETE route reads a request body (a Workers handler never receives one)
+bun run mcp:check     # The template's gate for a separate MCP worker in mcp/. Inert here: there is no mcp/
+                      # directory (our MCP endpoint is the app's own /mcp route), so it passes with nothing to check
 bun run test:a11y     # Playwright/Chromium browser suites: axe over every public route
                       # (light + dark) AND the Content-Security-Policy spec (test/csp/)
 bun run perf          # Page-load harness: throttled cold-cache runs per route, medians, Server-Timing
@@ -256,7 +258,7 @@ bun run db:migrate:remote # Apply migrations to production D1 (Workers Builds ru
 bun db:studio         # Open Drizzle Studio (visual DB browser)
 bun run keys:issue -- --client "<name>" --tier research|systematic --months 12 [--remote]
                       # Licensee API key: prints the key once, stores its SHA-256 (keys:list, keys:revoke)
-bun run ci            # Every gate, concurrently (scripts/ci.ts): format (writes; checks in CI), email:build, lint, design/brand/mirror/seo/fleet/crons/migrations:check
+bun run ci            # Every gate, concurrently (scripts/ci.ts): format (writes; checks in CI), email:build, lint, design/brand/mirror/seo/fleet/crons/mcp/migrations:check
                       # gates, typecheck, test, build — Workers Builds runs this. NO browser suites: that image cannot
                       # launch Chromium (see Gotchas). CI_SERIAL=1 runs the gates one at a time.
 bun run ci:fast       # While iterating: format (writes), cheap gates + typecheck + tests touched since origin/main, no build

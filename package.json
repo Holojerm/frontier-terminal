@@ -64,6 +64,7 @@
     "ci:browser": "bun run playwright:install && bun run test:a11y",
     "ci": "bun run scripts/ci.ts",
     "ci:fast": "bun run scripts/ci.ts --fast",
+    "mcp:check": "bun run scripts/check-mcp.ts",
     "migrations:check": "bun run scripts/check-migrations.ts",
     "deploy:smoke": "bun run scripts/deploy-smoke.ts",
     "deploy": "nuxt build && wrangler --cwd .output deploy",

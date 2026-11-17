@@ -546,6 +546,13 @@ export default defineNuxtConfig({
       // The app's canonical public origin, no trailing slash. Absolute links in
       // sitemap.xml, robots.txt, and og: tags are built from this.
       appUrl: 'http://localhost:3000',
+      // The origin of a separate MCP worker (the template's mcp/ directory),
+      // which this app does not have: its MCP endpoint is the app's own /mcp
+      // route (layers/terminal/server/routes/mcp.ts), and llms.txt already names
+      // it. Leave this empty. Set, it would add a second "MCP server" section to
+      // llms.txt and make /.well-known/ai-catalog.json point at a Server Card
+      // that nothing here serves.
+      mcpUrl: '',
       // Set false to make robots.txt disallow everything, every page render
       // `noindex`, and sitemap.xml/llms.txt go empty — for any deploy that
       // must not compete with production in the index.
