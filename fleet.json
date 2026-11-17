@@ -37,7 +37,7 @@
   "deploy": "workers-builds",
   "template": {
     "repo": "Holojerm/nuxt-cf-template",
-    "syncedSha": "cb1c4f1c818598469c2a3112053917ecfd8ebc02",
+    "syncedSha": "26c47b9355f0d83cd883821b8ec9426d776a559f",
     "customized": [
       "app/components/Auth/",
       "app/components/Onboarding/",
