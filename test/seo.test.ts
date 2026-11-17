@@ -523,6 +523,10 @@ describe('buildLlmsTxt', () => {
     )
     expect(body).toContain('- Server Card: https://mcp.example.com/mcp/server-card')
     expect(body.indexOf('## MCP server')).toBeLessThan(body.indexOf('## About'))
+    // The endpoint is what people paste, so it is what they type here too.
+    const fromEndpoint = buildLlmsTxt({ ...INPUT, mcpUrl: 'https://mcp.example.com/mcp' })
+    expect(fromEndpoint).toContain('): https://mcp.example.com/mcp\n')
+    expect(fromEndpoint).not.toContain('/mcp/mcp')
   })
 
   it('names the bulk tables so a model can fetch numbers instead of rendering prose', () => {
