@@ -122,7 +122,8 @@ a vendored copy has been edited. `--remote` also re-downloads each commit and co
 hash is the template's.
 
 - **Updating**: `bun run layers:pull --all` re-pulls every locked layer at its recorded ref
-  (`main` unless you passed `--ref`). The PR diff is exactly what the template changed.
+  (`main` unless you passed `--ref`). `--sha <commit>` takes one exact commit without changing
+  which ref the layer follows. The PR diff is exactly what the template changed.
 - **Customizing**: app files shadow a layer's components, pages and API routes. `server/utils`
   cannot be shadowed (the layer's export wins), so change server behaviour through an
   extension point or upstream in the template.
