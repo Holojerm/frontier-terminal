@@ -67,14 +67,14 @@ const recipeColumns: TableColumn[] = [
   { key: 'caveat', label: 'Caveat and terms' },
 ]
 
-// The caveat, then the terms reading and what a paid licence could cover —
-// the same three facts for a lab source and a recipe.
+// The caveat, then the terms reading and what our licence covers — the same
+// three facts for a lab source and a recipe.
 const RIGHTS_NOTE: Record<SourceRights, string> = {
-  ours: 'Licensable on our terms.',
+  ours: 'Covered by our license.',
   restricted:
-    'Licensable as our compilation, with this terms reading disclosed. Saved pages aren’t served.',
+    'Our license covers our compilation, with this terms reading disclosed. Saved pages aren’t served.',
   upstream: 'Stays under its upstream license.',
-  'not-cleared': 'Free site only. Not in any paid offer.',
+  'not-cleared': 'Free to read here. Our license doesn’t cover it.',
 }
 const auditNote = (r: SourceCoverage | RecipeCoverage) =>
   [r.caveat, r.terms && `Terms: ${r.terms}`, r.rights && RIGHTS_NOTE[r.rights]]

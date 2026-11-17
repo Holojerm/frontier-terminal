@@ -194,9 +194,9 @@ const filerLine = computed(() =>
           <p>
             Those downloads give you the last 90 days of periods. Add
             <code>?history=full</code> for the series back to 2020. That history is CC BY-NC 4.0 for
-            data we publish from 2026-11-04 on, so commercial use needs a
-            <NuxtLink to="/license" class="text-primary underline">paid license</NuxtLink>. This
-            page shows all of it, free to read.
+            data we publish from 2026-11-04 on, so it’s for
+            <NuxtLink to="/license" class="text-primary underline">non-commercial use</NuxtLink>.
+            This page shows all of it, free to read.
           </p>
         </div>
       </TerminalPanel>

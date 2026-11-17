@@ -25,7 +25,7 @@ definePageMeta({
     priority: '0.4',
     title: 'License',
     summary:
-      'Our data from the last 90 days is CC BY 4.0. Older data is CC BY-NC 4.0, so commercial use of the full history needs a paid license. Anything published before 2026-11-04 stays CC BY 4.0. The code is MIT, and the underlying facts belong to their publishers.',
+      'Our data from the last 90 days is CC BY 4.0. Older data is CC BY-NC 4.0, free for non-commercial use. Anything published before 2026-11-04 stays CC BY 4.0. The code is MIT, and the underlying facts belong to their publishers.',
   },
 })
 
@@ -43,7 +43,7 @@ const licensed = computed(() => (coverage.value?.sources ?? []).filter((s) => s.
 useSeo({
   title: 'License',
   description:
-    'Data from the last 90 days is CC BY 4.0. The full history is CC BY-NC 4.0, so commercial use needs a paid license. The code is MIT. Attribution lines to copy.',
+    'Data from the last 90 days is CC BY 4.0. The full history is CC BY-NC 4.0, free for non-commercial use. The code is MIT. Attribution lines to copy.',
   dateModified: coverage.value?.as_of,
 })
 </script>
@@ -80,8 +80,8 @@ useSeo({
               rel="noopener noreferrer license"
               class="text-primary underline underline-offset-2"
               >{{ HISTORY_LICENSE.name }}</a
-            >. It’s free for non-commercial use, with attribution. Commercial use needs a paid
-            license.
+            >. It’s free for non-commercial use, with attribution. We don’t offer a commercial
+            license for it.
           </li>
         </ul>
         <p>
@@ -99,13 +99,6 @@ useSeo({
         <p class="text-sm text-muted">For the full history:</p>
         <p class="rounded border border-default p-3 font-mono text-sm text-highlighted">
           {{ historyAttribution }}
-        </p>
-        <p class="text-sm text-default">
-          Want the full history in a product or a fund process, or terms your compliance team has
-          signed?
-          <NuxtLink to="/contact" class="text-primary underline underline-offset-2"
-            >License it commercially</NuxtLink
-          >.
         </p>
       </div>
     </TerminalPanel>
@@ -159,11 +152,11 @@ useSeo({
         </p>
         <p>
           Data we pass on from someone else’s dataset keeps that dataset’s license at every age.
-          That covers OpenRouter, Epoch AI, PyPI, npm, and GDELT. The
-          <NuxtLink to="/contact#rights" class="text-primary underline underline-offset-2"
-            >full list</NuxtLink
+          That covers OpenRouter, Epoch AI, PyPI, npm, and GDELT. Each source’s terms are in the
+          <NuxtLink to="/data#coverage" class="text-primary underline underline-offset-2"
+            >coverage table</NuxtLink
           >
-          is on the contact page.
+          on /data.
         </p>
         <p>
           Every row shows its source URL and when we fetched it, so the terms for any number come

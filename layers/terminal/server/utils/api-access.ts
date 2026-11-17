@@ -132,7 +132,7 @@ export async function requireApiKeyTier(event: H3Event, tier: ApiKeyTier): Promi
     setResponseHeader(event, 'WWW-Authenticate', 'Bearer')
     throw createError({
       statusCode: 401,
-      message: `This endpoint needs a ${tier} API key. See /data#institutions.`,
+      message: `This endpoint needs a ${tier} API key.`,
     })
   }
   if (key.tier !== tier) {

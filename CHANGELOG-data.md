@@ -12,8 +12,7 @@ the `X-Schema-Version` header on a CSV or a JSON array. The same history is on
 - Adding a table or a column is a minor version (1.0.0 to 1.1.0). Code that
   reads columns by name keeps working.
 - Removing or renaming a table or a column is a major version (1.x to 2.0.0).
-  Licensees get 90 days' notice by email before it ships, and the release is
-  listed here first.
+  It's listed here 90 days before it ships.
 - Changing what a column holds without renaming it is a minor version, with a
   note saying what changed.
 - A release that changes no column (a fix to how a value is read) is a patch.
@@ -28,7 +27,7 @@ exactly which columns changed.
 
 A fourth `rights` value, `restricted`: facts a publisher states about itself
 on a public page its robots.txt doesn't close, where its site terms restrict
-automated reading or we couldn't find them. A paid license can cover our
+automated reading or we couldn't find them. Our license covers our
 compilation of those rows with the restriction disclosed, never the saved
 pages. 25 sources moved to it from `not-cleared`, among them the OpenAI,
 Anthropic, xAI, Meta, DeepSeek, Alibaba and Moonshot docs. `rights` in
@@ -88,7 +87,7 @@ Identifiers for joining our tables to a security master:
   `get_identifiers` tool.
 - The data dictionary now gives each table its grain, update cadence, event
   and knowledge time columns, where its history starts, the identifier
-  columns to join on, and whether a licensee can use it commercially.
+  columns to join on, and whether it can be used commercially.
 
 ## 1.3.0 (2026-11-05)
 
@@ -130,7 +129,7 @@ from the Internet Archive's copies of each lab's own pricing page:
 
 ## 1.1.0 (2026-11-04)
 
-New: alert webhooks for licensees. We POST each new alert at or above the
+New: alert webhooks. We POST each new alert at or above the
 severity you chose to an https URL you give us. The body is versioned like the
 exports, and its `schema_version` field is this one.
 

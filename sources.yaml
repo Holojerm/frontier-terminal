@@ -4,18 +4,18 @@
 # (fetch timestamps, trim notes): fixtures/manifest.json.
 #
 # Every include source and recipe carries `terms` (the publisher's terms and
-# robots.txt as read, what is taken, how often) and `rights`, what a paid
-# licence could cover: `ours` (facts the publisher states about itself, read
+# robots.txt as read, what is taken, how often) and `rights`, what our
+# licence covers: `ours` (facts the publisher states about itself, read
 # under terms and a robots.txt that allow it; the compilation is ours),
 # `upstream` (someone else's dataset, under its own licence, which travels
 # with it), `restricted` (facts the publisher states about itself on a public
 # page its robots.txt doesn't close, where its site terms restrict automated
-# reading or weren't found: a paid licence can cover our compilation of the
+# reading or weren't found: our licence covers our compilation of the
 # rows with that reading disclosed, never the saved pages), or `not-cleared`
 # (someone else's dataset with no stated licence, a publisher's own words
 # rather than facts, a robots.txt that couldn't be read, or terms that
-# condition reuse: free site only, never in a paid offer). /api/coverage and
-# /contact read both. A source is `ours` only when both its terms and its
+# condition reuse: free site only, never under our licence). /api/coverage
+# reads both. A source is `ours` only when both its terms and its
 # robots.txt were read and neither restricts what is taken. `restricted` was
 # added on 2026-11-11 (docs/source-audit.md); no publisher has given
 # permission or objected, and no counsel has reviewed it.
@@ -34,8 +34,8 @@ sources:
       cover "associated software applications and websites" and bar users who
       "Automatically or programmatically extract data or Output".
       developers.openai.com/robots.txt allows everything. Taken: model ids and
-      catalog fields, every 5 minutes (the launch tripwire). Restricted: a
-      paid license can cover our compilation of these rows with this terms
+      catalog fields, every 5 minutes (the launch tripwire). Restricted: our
+      license covers our compilation of these rows with this terms
       reading disclosed, never the saved pages. Verdict set 2026-11-11. Read
       2026-11-04.
     rights: restricted
@@ -59,8 +59,8 @@ sources:
       cover "associated software applications and websites" and bar users who
       "Automatically or programmatically extract data or Output".
       developers.openai.com/robots.txt allows everything. Taken: $/MTok prices
-      per model, tier and context band, every 30 minutes. Restricted: a paid
-      license can cover our compilation of these rows with this terms reading
+      per model, tier and context band, every 30 minutes. Restricted: our license
+      covers our compilation of these rows with this terms reading
       disclosed, never the saved pages. Verdict set 2026-11-11. Read
       2026-11-04.
     rights: restricted
@@ -92,8 +92,8 @@ sources:
       our Services", and define the Services to include "associated apps,
       software, and websites"; the Commercial Terms carry no such clause.
       platform.claude.com/robots.txt disallows only /api/. Taken: model ids,
-      context windows and cutoffs, every 5 minutes. Restricted: a paid license
-      can cover our compilation of these rows with this terms reading
+      context windows and cutoffs, every 5 minutes. Restricted: our license
+      covers our compilation of these rows with this terms reading
       disclosed, never the saved pages. Verdict set 2026-11-11. Read
       2026-11-04.
     rights: restricted
@@ -113,8 +113,8 @@ sources:
       our Services", and define the Services to include "associated apps,
       software, and websites"; the Commercial Terms carry no such clause.
       platform.claude.com/robots.txt disallows only /api/. Taken: $/MTok
-      prices per model and tier, every 30 minutes. Restricted: a paid license
-      can cover our compilation of these rows with this terms reading
+      prices per model and tier, every 30 minutes. Restricted: our license
+      covers our compilation of these rows with this terms reading
       disclosed, never the saved pages. Verdict set 2026-11-11. Read
       2026-11-04.
     rights: restricted
@@ -142,8 +142,8 @@ sources:
       unauthorized automated or non-human means" (read in a browser; x.ai
       answers 403 headless). docs.x.ai/robots.txt allows everything and
       signals ai-input=yes, which is read as authorizing the free site. Taken:
-      model ids, prices and context windows, every 5 minutes. Restricted: a
-      paid license can cover our compilation of these rows with this terms
+      model ids, prices and context windows, every 5 minutes. Restricted: our
+      license covers our compilation of these rows with this terms
       reading disclosed, never the saved pages. Verdict set 2026-11-11. Read
       2026-11-04.
     rights: restricted
@@ -221,8 +221,8 @@ sources:
       No website terms found for dev.meta.ai (meta.com/legal/terms and
       dev.meta.ai/legal/terms answer 404); the Meta Model API terms govern API
       calls, not reading the docs. robots.txt allows /docs/. Taken: model ids
-      and context windows, every 5 minutes. Restricted: a paid license can
-      cover our compilation of these rows with this terms reading disclosed,
+      and context windows, every 5 minutes. Restricted: our license
+      covers our compilation of these rows with this terms reading disclosed,
       never the saved pages. Verdict set 2026-11-11. Read 2026-11-04.
     rights: restricted
     fixture: fixtures/pricing/meta-models.md
@@ -308,8 +308,8 @@ sources:
       No website terms found for dev.meta.ai (meta.com/legal/terms and
       dev.meta.ai/legal/terms answer 404); the Meta Model API terms govern API
       calls, not reading the docs. robots.txt allows /docs/. Taken: $/MTok
-      prices per model line, every 30 minutes. Restricted: a paid license can
-      cover our compilation of these rows with this terms reading disclosed,
+      prices per model line, every 30 minutes. Restricted: our license
+      covers our compilation of these rows with this terms reading disclosed,
       never the saved pages. Verdict set 2026-11-11. Read 2026-11-04.
     rights: restricted
     fixture: fixtures/pricing/meta-pricing.md
@@ -391,7 +391,7 @@ sources:
       of the Services, including but not limited to using any robots, spiders,
       or other automatic setups". api-docs.deepseek.com/robots.txt allows
       everything. Taken: model ids, versions, context and $/MTok prices, every
-      5 minutes (the launch tripwire). Restricted: a paid license can cover
+      5 minutes (the launch tripwire). Restricted: our license covers
       our compilation of these rows with this terms reading disclosed, never
       the saved pages. Verdict set 2026-11-11. Read 2026-11-04.
     rights: restricted
@@ -424,8 +424,8 @@ sources:
       devices or manual processes) without written permission from Alibaba
       Cloud is prohibited". www.alibabacloud.com/robots.txt allows /help/.
       Taken: $/MTok list prices for the Qwen-Max, Qwen-Plus and Qwen-Flash
-      lines, every 30 minutes, not on the five-minute tripwire. Restricted: a
-      paid license can cover our compilation of these rows with this terms
+      lines, every 30 minutes, not on the five-minute tripwire. Restricted: our
+      license covers our compilation of these rows with this terms
       reading disclosed, never the saved pages. Verdict set 2026-11-11. Read
       2026-11-04.
     rights: restricted
@@ -460,7 +460,7 @@ sources:
     terms: >-
       Same terms and robots.txt as alibaba-pricing-html. Taken: whether the
       three sentences the class map quotes are still on the page, every 5
-      minutes (the launch tripwire). Restricted: a paid license can cover our
+      minutes (the launch tripwire). Restricted: our license covers our
       compilation of these rows with this terms reading disclosed, never the
       saved pages. Verdict set 2026-11-11. Read 2026-11-04.
     rights: restricted
@@ -487,7 +487,7 @@ sources:
       users from "Use any method to extract data from the Services other than
       as permitted through the APIs". robots.txt allows /docs. Taken: model
       ids and descriptions, every 5 minutes (the launch tripwire). Restricted:
-      a paid license can cover our compilation of these rows with this terms
+      our license covers our compilation of these rows with this terms
       reading disclosed, never the saved pages. Verdict set 2026-11-11. Read
       2026-11-04.
     rights: restricted
@@ -514,8 +514,8 @@ sources:
       processes … to scrape or copy any information on the Site or the
       Services"; the CC BY 4.0 grant covers the Data API datasets only, not
       this endpoint. robots.txt allows /. Taken: per-model list prices, every
-      6 hours, as a cross-check that is never a source of record. Not in a
-      paid offer. Read 2026-11-04.
+      6 hours, as a cross-check that is never a source of record. Not covered by
+      our license. Read 2026-11-04.
     rights: not-cleared
     fixture: fixtures/pricing/openrouter-models.json
     caveats: >-
@@ -943,8 +943,8 @@ sources:
       cover "associated software applications and websites" and bar users who
       "Automatically or programmatically extract data or Output".
       status.openai.com has no robots.txt (404). Taken: incident id, title,
-      impact, status, start and resolution, every 6 hours. Restricted: a paid
-      license can cover our compilation of these rows with this terms reading
+      impact, status, start and resolution, every 6 hours. Restricted: our license
+      covers our compilation of these rows with this terms reading
       disclosed, never the saved pages. Verdict set 2026-11-11. Read
       2026-11-04.
     rights: restricted
@@ -972,7 +972,7 @@ sources:
       source moved here from the JSON API on 2026-11-04. Anthropic's Consumer
       Terms bar scraping its Services (see anthropic-models-md). Taken:
       incident id, title, status, start and resolution (no impact is
-      published), every 6 hours. Restricted: a paid license can cover our
+      published), every 6 hours. Restricted: our license covers our
       compilation of these rows with this terms reading disclosed, never the
       saved pages. Verdict set 2026-11-11. Read 2026-11-04.
     rights: restricted
@@ -1038,7 +1038,7 @@ sources:
       Mistral's terms say nothing about automated access;
       status.mistral.ai/robots.txt answers a Cloudflare challenge (403), so
       there is no file to read. Taken: incident id, title, impact, status,
-      start and resolution, every 6 hours. Not cleared for a paid offer until
+      start and resolution, every 6 hours. Not covered by our license until
       robots.txt can be read. Read 2026-11-04.
     rights: not-cleared
     fixture: fixtures/status/mistral-status.json
@@ -1063,7 +1063,7 @@ sources:
       of its websites (see deepseek-pricing-md). status.deepseek.com has no
       robots.txt (the path answers the status app's own page). Taken: incident
       id, title, status, components, start and end, every 6 hours. Restricted:
-      a paid license can cover our compilation of these rows with this terms
+      our license covers our compilation of these rows with this terms
       reading disclosed, never the saved pages. Verdict set 2026-11-11. Read
       2026-11-04.
     rights: restricted
@@ -1111,7 +1111,7 @@ sources:
       answers 403 headless). robots.txt allows the feed and disallows /api/.
       Taken: incident guid, title, severity, components, start and end, every
       6 hours. A published feed robots.txt allows is read as authorized for
-      the free site. Restricted: a paid license can cover our compilation of
+      the free site. Restricted: our license covers our compilation of
       these rows with this terms reading disclosed, never the saved pages.
       Verdict set 2026-11-11. Read 2026-11-04.
     rights: restricted
@@ -1149,7 +1149,7 @@ sources:
       "Automatically or programmatically extract data or Output".
       alignment.openai.com has no robots.txt (404). Taken: each entry's title,
       one-sentence summary, model and context verbatim, every 6 hours. Short
-      quotations of OpenAI's own words, with the link. Not in a paid offer:
+      quotations of OpenAI's own words, with the link. Not covered by our license:
       the entries are OpenAI's own words, not facts about a price or a role.
       Read 2026-11-04.
     rights: not-cleared
@@ -2121,7 +2121,7 @@ recipe_sources:
       programmatically extract data or Output". openai.com/robots.txt
       disallows only /microsoft-for-startups/. Taken: title, link,
       publication time and the first 400 characters of each post's
-      description, every 6 hours. Not in a paid offer while the terms bar
+      description, every 6 hours. Not covered by our license while the terms bar
       automated extraction. Read 2026-11-04.
     rights: not-cleared
     caveats: >-
@@ -2159,7 +2159,7 @@ recipe_sources:
       automated means is prohibited unless you have express written
       permission". about.fb.com/robots.txt allows /feed/. Taken: title,
       link, publication time and the first 400 characters of each post's
-      description, every 6 hours. Not cleared for a paid offer until the
+      description, every 6 hours. Not covered by our license until the
       terms are read. Read 2026-11-04.
     rights: not-cleared
     caveats: >-
@@ -2261,8 +2261,8 @@ archive_sources:
       challenge page, a script shell, or a page in a shape no era parser
       reads are skipped with the reason (archive_captures), never guessed.
       Archived rows carry basis archived, the capture URL as source_url, and
-      CC BY-NC 4.0 even under a licensee's key: the Archive's terms are for
-      scholarship and research, so they stay off anything sold.
+      CC BY-NC 4.0, since the Archive's terms are for scholarship and
+      research.
   wayback-hiring:
     url: https://web.archive.org/cdx/search/cdx
     format: CDX JSON (one row per capture), then each capture's raw bytes via https://web.archive.org/web/<timestamp>id_/<url>

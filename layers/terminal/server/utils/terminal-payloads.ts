@@ -41,10 +41,10 @@ export function payloadRefusal(rights: SourceRights | null): string | null {
     return 'This source is someone else’s dataset under its own license, so we don’t serve its saved pages. Its license and URL are in the coverage table on /data.'
   }
   if (rights === 'restricted') {
-    return 'This publisher’s terms restrict automated reading of its pages. A license covers our compilation of the rows, not the saved pages, so they stay off the licensed feed.'
+    return 'This publisher’s terms restrict automated reading of its pages. Our license covers our compilation of the rows, not the saved pages, so we don’t serve them.'
   }
   if (rights === 'not-cleared') {
-    return 'This source isn’t cleared for any paid offer (no stated license, unread terms, or a robots or terms restriction), so its saved pages stay off the licensed feed.'
+    return 'Our license doesn’t cover this source (no stated license, unread terms, or a robots or terms restriction), so we don’t serve its saved pages.'
   }
   return 'sources.yaml states no rights for this source, so its saved pages aren’t served.'
 }

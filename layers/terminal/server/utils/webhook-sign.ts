@@ -116,7 +116,7 @@ export async function signedWebhookRequest(
     body,
     headers: {
       'Content-Type': 'application/json',
-      'User-Agent': 'FrontierTerminal-Webhooks/1 (+https://frontierterm.com/data#webhooks)',
+      'User-Agent': 'FrontierTerminal-Webhooks/1 (+https://frontierterm.com)',
       [WEBHOOK_HEADERS.signature]: await signWebhookBody(secret, body),
       [WEBHOOK_HEADERS.delivery]: payload.delivery_id,
       [WEBHOOK_HEADERS.timestamp]: String(Math.floor(Date.parse(payload.sent_at) / 1000)),
