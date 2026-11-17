@@ -1,7 +1,7 @@
 // The terminal's second native rate-limit budget. Core's registry decides which
 // binding serves a call site from the numbers alone, so these tests pin the
 // three facts that fail silently otherwise: the registered spec matches the
-// deployed binding, reads go native, and the permalink budget stays on KV.
+// deployed binding, reads go native, and the permalink budget gets no first check.
 
 import { env } from 'cloudflare:test'
 import { afterEach, describe, expect, it } from 'vitest'
@@ -9,9 +9,9 @@ import { afterEach, describe, expect, it } from 'vitest'
 import WRANGLER_TOML from '../../../wrangler.toml?raw'
 
 import {
-  chooseBackendAmong,
   clearNativeLimitersForTest,
   getNativeLimiters,
+  nativeFor,
   NATIVE_LIMITER,
   registerNativeLimiter,
   type NativeRateLimiter,
@@ -55,23 +55,14 @@ describe('READ_PATH_LIMITER', () => {
     const writer = fake()
     const reader = fake()
     const natives = { [NATIVE_LIMITER.binding]: writer, [READ_PATH_LIMITER.binding]: reader }
-    expect(chooseBackendAmong(natives, { limit: 60, windowSeconds: 60 })).toEqual({
-      backend: 'native',
-      native: reader,
-    })
-    expect(chooseBackendAmong(natives, { limit: 30, windowSeconds: 60 })).toEqual({
-      backend: 'native',
-      native: writer,
-    })
+    expect(nativeFor(natives, { limit: 60, windowSeconds: 60 })).toBe(reader)
+    expect(nativeFor(natives, { limit: 30, windowSeconds: 60 })).toBe(writer)
   })
 
-  it('leaves the permalink budget on KV, whatever is registered', () => {
+  it('gives the permalink budget no native first check, whatever is registered', () => {
     registerNativeLimiter(READ_PATH_LIMITER)
     const natives = { [READ_PATH_LIMITER.binding]: fake(), [NATIVE_LIMITER.binding]: fake() }
-    expect(chooseBackendAmong(natives, { limit: PERMALINK_LIMIT, windowSeconds: 60 })).toEqual({
-      backend: 'kv',
-      reason: 'limit-mismatch',
-    })
+    expect(nativeFor(natives, { limit: PERMALINK_LIMIT, windowSeconds: 60 })).toBeUndefined()
   })
 
   it('matches the [[ratelimits]] block in wrangler.toml', () => {
@@ -92,21 +83,16 @@ describe('KEYED_READ_LIMITERS', () => {
     for (const spec of Object.values(KEYED_READ_LIMITERS)) registerNativeLimiter(spec)
     const natives = Object.fromEntries(getNativeLimiters().map((s) => [s.binding, fake()]))
     for (const spec of Object.values(KEYED_READ_LIMITERS)) {
-      expect(chooseBackendAmong(natives, spec)).toEqual({
-        backend: 'native',
-        native: natives[spec.binding],
-      })
+      expect(nativeFor(natives, spec)).toBe(natives[spec.binding])
     }
     // A key's export budget is the read path's pair, and its payload budget
     // the research tier's, so both run native.
-    expect(chooseBackendAmong(natives, { limit: KEYED_EXPORT_LIMIT, windowSeconds: 60 })).toEqual({
-      backend: 'native',
-      native: natives[READ_PATH_LIMITER.binding],
-    })
-    expect(chooseBackendAmong(natives, { limit: PAYLOAD_LIMIT, windowSeconds: 60 })).toEqual({
-      backend: 'native',
-      native: natives[KEYED_READ_LIMITERS.research.binding],
-    })
+    expect(nativeFor(natives, { limit: KEYED_EXPORT_LIMIT, windowSeconds: 60 })).toBe(
+      natives[READ_PATH_LIMITER.binding],
+    )
+    expect(nativeFor(natives, { limit: PAYLOAD_LIMIT, windowSeconds: 60 })).toBe(
+      natives[KEYED_READ_LIMITERS.research.binding],
+    )
   })
 
   it('matches the [[ratelimits]] blocks in wrangler.toml', () => {

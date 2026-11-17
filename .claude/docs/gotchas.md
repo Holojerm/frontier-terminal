@@ -129,15 +129,15 @@ server (or touch `nuxt.config.ts`) and it appears immediately.
 
 So: write before starting the dev server, or restart after writing. Don't go debugging the query.
 
-## NuxtHub's `kv` auto-import doesn't reach every file at runtime
+## NuxtHub's auto-imports don't reach every file at runtime
 
-`kv` (the unstorage handle for the KV binding) is declared in `.nuxt/types/nitro-imports.d.ts`, so
-it **typechecks** anywhere in `server/`. It is not always **injected** at runtime: in
-`server/utils/rate-limit.ts` it resolved to `ReferenceError: kv is not defined` while the build,
-typecheck, and lint were all green. Because the rate limiter fails open by design, the only symptom
-was a `rate_limit_unavailable` line in the logs — the feature was simply off.
+`kv` and `db` are declared in `.nuxt/types/nitro-imports.d.ts`, so they **typecheck** anywhere in
+`server/`. They are not always **injected** at runtime: in `server/utils/rate-limit.ts` the
+auto-imported handle once resolved to a `ReferenceError` while the build, typecheck, and lint were
+all green. Because the rate limiter fails open by design, the only symptom was a
+`rate_limit_unavailable` line in the logs — the feature was simply off.
 
-Import it explicitly (`import { kv } from '@nuxthub/kv'`) in server utils. More generally: when a
+Import them explicitly (`import { db } from '@nuxthub/db'`, `import { kv } from '@nuxthub/kv'`) in server utils. More generally: when a
 NuxtHub auto-import is load-bearing, check the running logs, not just the type checker.
 
 ## A `fatal` 404 pages the owner unless `server/error.ts` is in the chain

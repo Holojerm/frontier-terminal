@@ -1,4 +1,4 @@
-import { integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
 // ─────────────────────────────────────────────
 // Database Schema (Drizzle ORM + Cloudflare D1)
@@ -74,3 +74,17 @@ export type NewOpsEvent = typeof opsEvents.$inferInsert
 // The terminal layer owns the pipeline and thesis tables.
 export * from '../../layers/terminal/server/db/schema'
 export * from '../../layers/social/server/db/schema'
+
+// Rate-limit counters: one row per caller, endpoint and window, moved by one
+// atomic statement (server/utils/rate-limit.ts). `bucket` is a hash, so no
+// address or mailbox is kept. A row outlives its window only until the daily
+// purge.
+export const rateLimits = sqliteTable(
+  'rate_limits',
+  {
+    bucket: text('bucket').primaryKey(),
+    count: integer('count').notNull(),
+    expiresAt: integer('expires_at', { mode: 'timestamp' }).notNull(),
+  },
+  (table) => [index('rate_limits_expires_idx').on(table.expiresAt)],
+)

@@ -84,25 +84,34 @@ const keyedLimit = (tier: ApiKeyTier, budget: Budget): number => REQUEST_BUDGETS
  * Core's rateLimit(), keyed: anonymous callers spend `opts` per IP exactly as
  * before, and a key spends its tier's budget per key. `budget` says which of
  * the tier's budgets a route draws on.
+ *
+ * The `read` budget is the public, read-only, high-volume path, so it passes
+ * `exact: false`: where its numbers match a native limiter (READ_PATH_LIMITER,
+ * KEYED_READ_LIMITERS) that limiter decides alone and no D1 write is made per
+ * read. The `export` budget walks whole tables and stays exact.
  */
 export async function rateLimitTerminal(
   event: H3Event,
   opts: { name: string; limit: number; windowSeconds: number; budget?: Budget },
 ): Promise<ApiKey | null> {
   const key = await requestApiKey(event)
+  const budget = opts.budget ?? 'read'
+  const exact = budget !== 'read'
   if (!key) {
     await rateLimit(event, {
       name: opts.name,
       limit: opts.limit,
       windowSeconds: opts.windowSeconds,
+      exact,
     })
     return null
   }
   await rateLimit(event, {
     name: opts.name,
-    limit: keyedLimit(key.tier, opts.budget ?? 'read'),
+    limit: keyedLimit(key.tier, budget),
     windowSeconds: 60,
     identifier: `key:${key.id}`,
+    exact,
   })
   return key
 }
