@@ -17,7 +17,7 @@ An empty local DB is normal on a fresh checkout, and it hides bugs. Filling it i
 
 ## NuxtHub applies dev migrations in directory order — patched to sort
 
-NuxtHub (0.10.8 through 0.10.12, the latest checked) lists `.data/db/migrations/` with no sort, and on APFS directory order is not name order. A fresh `.data/db/sqlite.db` on a Mac therefore ran `0018` then `0009`, which failed (`no such table: entitlements`) before `0000` ever ran, and every data route returned 503 "Database unavailable". `patches/@nuxthub%2Fcore@0.10.8.patch` adds the `.sort()`. When upgrading NuxtHub, `bun install` fails on the stale patch: re-cut it with `bun patch @nuxthub/core` unless upstream sorts by then. A DB already broken this way is easiest rebuilt: move `.data/db/sqlite.db` aside and start `bun dev`.
+NuxtHub (0.10.8 through 0.10.12, the latest checked) lists `.data/db/migrations/` with no sort, and on APFS directory order is not name order. A fresh `.data/db/sqlite.db` on a Mac therefore ran `0018` then `0009`, which failed (`no such table: entitlements`) before `0000` ever ran, and every data route returned 503 "Database unavailable". `patches/@nuxthub%2Fcore@0.10.8.patch` (bun's `patchedDependencies`, the template's patch byte for byte) sorts the filtered list by name, the order drizzle-kit numbers them. Production is unaffected: `wrangler d1 migrations apply` sorts its own list. When upgrading NuxtHub, `bun install` fails on the stale patch: re-cut it with `bun patch @nuxthub/core` unless upstream sorts by then. A DB already broken this way is easiest rebuilt: move `.data/db/sqlite.db` aside and start `bun dev`.
 
 ## Production D1 is migrated only by `deploy:ci`
 
