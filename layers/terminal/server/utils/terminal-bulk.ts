@@ -604,7 +604,7 @@ export function bulkManifest(index: BulkIndex, variant: BulkVariant, appUrl: str
             recent: DATA_LICENSE.id,
             older: null,
             terms: '/license',
-            note: `The trailing window of each table that grows (from), and every row of the rest, all CC BY 4.0. Full history needs an API key, or /export/<table>.csv?history=full under ${HISTORY_LICENSE.short}.`,
+            note: `The trailing window of each table that grows (from), and every row of the rest, all CC BY 4.0. For the full history, /export/<table>.csv?history=full serves every row under ${HISTORY_LICENSE.short}.`,
           },
     s3:
       variant === 'full'
@@ -613,7 +613,7 @@ export function bulkManifest(index: BulkIndex, variant: BulkVariant, appUrl: str
             prefix: 'full/',
             manifest: LICENSED_MANIFEST_KEY,
             credentials:
-              'Read-only S3 credentials for this bucket are issued per licensee by email, with the endpoint (/data#institutions).',
+              'Read-only S3 credentials for this bucket are issued per licensee by email, with the endpoint.',
           }
         : null,
     tables: csvs.map((f) => {

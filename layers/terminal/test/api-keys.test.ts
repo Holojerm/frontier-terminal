@@ -254,7 +254,9 @@ describe('what a key changes', () => {
     const ours = registry.sources.find((s) => s.rights === 'ours')!
     const notCleared = registry.sources.find((s) => s.rights === 'not-cleared')!
     expect(payloadRefusal(sourceRights(registry, ours.source_id))).toBeNull()
-    expect(payloadRefusal(sourceRights(registry, notCleared.source_id))).toMatch(/isn’t cleared/)
+    expect(payloadRefusal(sourceRights(registry, notCleared.source_id))).toMatch(
+      /doesn’t cover this source/,
+    )
     const restricted = registry.sources.find((s) => s.rights === 'restricted')!
     expect(payloadRefusal(sourceRights(registry, restricted.source_id))).toMatch(
       /not the saved pages/,

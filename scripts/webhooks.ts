@@ -141,7 +141,7 @@ async function add(flags: Map<string, string | true>, remote: boolean) {
   console.log(secret)
   console.error(
     '\nThis is the only time the signing secret is shown. Deliver it the way you deliver keys (a 1Password share link).\n' +
-      'The client checks X-Frontier-Signature against it (/data#webhooks).\n' +
+      'The client checks X-Frontier-Signature against it.\n' +
       `Send a test delivery with: bun run webhooks:test -- --id ${id}${remoteFlag(remote)}`,
   )
 }

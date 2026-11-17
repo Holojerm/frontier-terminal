@@ -413,13 +413,13 @@ export const TIME_NOTE =
 
 // ---- commercial use, from sources.yaml rights -----------------------------------
 
-const OURS_TERMS = `A paid license covers the full history. The last ${LICENSE_WINDOW_DAYS} days are ${DATA_LICENSE.short} for anyone.`
+const OURS_TERMS = `The last ${LICENSE_WINDOW_DAYS} days are ${DATA_LICENSE.short} for anyone. Older rows are ${HISTORY_LICENSE.short}, for non-commercial use only.`
 
 const RIGHTS_ANSWER: Readonly<Record<SourceRights, string>> = {
   ours: `Yes. ${OURS_TERMS}`,
-  restricted: `Yes, with a restriction we disclose. The publisher’s site terms restrict automated reading, or we couldn’t find them. A paid license covers our compilation of these rows, not the saved pages. ${OURS_TERMS}`,
+  restricted: `Yes, with a restriction we disclose. The publisher’s site terms restrict automated reading, or we couldn’t find them. Our license covers our compilation of these rows, not the saved pages. ${OURS_TERMS}`,
   upstream: 'Under its own license, which we pass on.',
-  'not-cleared': 'No. It stays on the free site and isn’t in any paid offer.',
+  'not-cleared': 'No. It stays on the free site, and our license doesn’t cover it.',
 }
 
 interface Rated {
@@ -541,7 +541,7 @@ function tableLicensing(meta: TableMeta, sources: readonly Rated[]): DictionaryT
       ? `${one(upstream.length, 'passes', 'pass')} on under upstream terms${upstreamTerms}`
       : null,
     notCleared.length
-      ? one(notCleared.length, 'isn’t in any paid offer', 'aren’t in any paid offer')
+      ? one(notCleared.length, 'isn’t covered by our license', 'aren’t covered by our license')
       : null,
   ].filter((p): p is string => p !== null)
   return {
@@ -549,8 +549,8 @@ function tableLicensing(meta: TableMeta, sources: readonly Rated[]): DictionaryT
     note: [
       `It depends on the source. Of the sources it reads, ${series(parts)}.`,
       restricted.length
-        ? 'A paid license covers what comes from sources that are ours, and our compilation of the restricted ones.'
-        : 'A paid license covers only what comes from sources that are ours.',
+        ? 'Our license covers what comes from sources that are ours, and our compilation of the restricted ones.'
+        : 'Our license covers only what comes from sources that are ours.',
       meta.licenseNote,
     ]
       .filter(Boolean)

@@ -1,25 +1,11 @@
 <script setup lang="ts">
-// How to reach the people behind the terminal — above all, how to pay for the
-// data. The public site stays free to read, the last 90 days stay CC BY, and
-// the full history is CC BY-NC (shared/utils/license.ts); this page is where
-// someone who needs commercial use of that history, or more, finds out what
-// can be bought and who to ask.
-//
-// What a paid licence can cover is not ours to decide for every row: an
-// upstream CC BY dataset keeps its attribution condition whatever we sign,
-// a publisher whose site terms restrict automated reading gets that said
-// beside its name, and a source with no licence cannot be sold at all. The
-// four lists below are read from each source's `rights:` in sources.yaml
-// (via /api/coverage), so the offer cannot drift from the audit.
+// How to reach the people behind the terminal: corrections first, then
+// everything else. Nothing here is for sale. The data is free to read, the
+// last 90 days are CC BY, and the full history is CC BY-NC
+// (shared/utils/license.ts). Commercial licensing is paused, so this page
+// offers none.
 
-import {
-  DATA_LICENSE,
-  HISTORY_LICENSE,
-  LICENSE_SPLIT_EFFECTIVE,
-  LICENSE_WINDOW_DAYS,
-} from '#shared/utils/license'
 import { CONTACT_EMAIL, mailto } from '../../shared/utils/contact'
-import type { CoverageData, SourceRights } from '../../shared/utils/terminal-types'
 
 definePageMeta({
   publicPage: {
@@ -27,141 +13,49 @@ definePageMeta({
     priority: '0.5',
     title: 'Contact',
     summary:
-      'Commercial data licensing: commercial use of the full history (CC BY-NC 4.0 on the free site), signed terms for our compilation and the numbers we derive, a dependable feed, the source pages, and custom coverage. Upstream CC BY data keeps its own terms. Corrections and press too. Write to contact@frontierterm.com.',
+      'How to send a correction, a press question, or anything else. Write to contact@frontierterm.com.',
   },
 })
-
-const { data: coverage, error } = await useFetch<CoverageData>('/api/coverage')
 
 useSeo({
   title: 'Contact',
   description:
-    'License the full history for commercial use, with signed terms, a dependable feed, or custom coverage. Corrections and press go to the same address.',
+    'Send a correction with the page and the row’s source URL. Press and anything else go to the same address.',
 })
-
-interface Named {
-  key: string
-  name: string
-}
-
-/** Registered sources and audited recipes by what a licence can cover; derived feeds follow their parent. */
-const groups = computed(() => {
-  const out: Record<SourceRights, Named[]> = {
-    ours: [],
-    restricted: [],
-    upstream: [],
-    'not-cleared': [],
-  }
-  for (const s of coverage.value?.sources ?? []) {
-    if (s.derived_from || !s.rights) continue
-    out[s.rights].push({ key: s.source_id, name: s.label })
-  }
-  for (const r of coverage.value?.recipes ?? []) {
-    if (r.rights) out[r.rights].push({ key: r.recipe_id, name: r.recipe_id })
-  }
-  for (const t of coverage.value?.track_record ?? []) {
-    if (t.rights) out[t.rights].push({ key: t.id, name: t.id })
-  }
-  return out
-})
-
-const GROUPS: { rights: SourceRights; title: string; body: string }[] = [
-  {
-    rights: 'ours',
-    title: 'Ours to license',
-    body: 'Facts each publisher states about itself (prices, open roles, incidents, filings), read under terms and a robots.txt that allow it. The compilation is ours. That means the timestamped rows, the change log, the alerts, and every number we derive. The facts still belong to their publishers.',
-  },
-  {
-    rights: 'restricted',
-    title: 'Licensable, with a restriction we disclose',
-    body: 'Facts a publisher states about itself (prices, models, rate limits, incidents) on a public page that needs no login and that its robots.txt doesn’t close. The publisher’s site terms restrict automated reading, or we couldn’t find them. We license our compilation of these rows and name the restriction for each source on /data, so your compliance team can decide. We don’t pass on the saved pages. No publisher has given us permission, none has objected, and no lawyer has reviewed this position.',
-  },
-  {
-    rights: 'upstream',
-    title: 'Passed on under upstream terms',
-    body: 'Someone else’s dataset under its own license. We pass it on with the attribution that license requires, and we can’t sign that condition away. Per-lab shares we compute from it still count as derived from CC BY data.',
-  },
-  {
-    rights: 'not-cleared',
-    title: 'Not in any paid offer',
-    body: 'Someone else’s dataset with no stated license (the Ramp AI Index), a publisher’s own words rather than facts (newsroom posts, misalignment reports), a robots.txt we couldn’t read, terms that condition reuse, and the Internet Archive’s copies. These stay on the free site and out of anything we sell.',
-  },
-]
 </script>
 
 <template>
   <TerminalPage
     title="Contact"
-    lede="Building a product, a fund process, or a report on this data? Write to us."
+    lede="Found a wrong number, or have a question? Write to us."
     narrow
   >
-    <TerminalPanel id="commercial" title="Paying for the data">
+    <TerminalPanel id="corrections" title="Corrections">
       <div class="max-w-2xl space-y-4 text-default">
         <p>
-          Every page stays free to read. Data from the last {{ LICENSE_WINDOW_DAYS }} days is
-          {{ DATA_LICENSE.short }}, free for any use. Older data is {{ HISTORY_LICENSE.short }}, so
-          commercial use of the full history needs a paid license. Anything we published before
-          {{ LICENSE_SPLIT_EFFECTIVE }} stays {{ DATA_LICENSE.short }}. A paid license covers what’s
-          ours to license, and says where a publisher’s terms restrict it (see below). Tell us what
-          you need. Here’s what we can offer.
+          If a number looks wrong, send a correction with the page and, if you have it, the row’s
+          source URL. Every row shows the URL we read it from.
         </p>
-        <ul class="list-disc space-y-2 pl-5">
-          <li>
-            Commercial use of the full history: our compilation and the numbers we derive, older
-            than {{ LICENSE_WINDOW_DAYS }} days.
-          </li>
-          <li>
-            A signed license on attribution terms that suit your compliance team. Upstream CC BY
-            data keeps its own attribution condition.
-          </li>
-          <li>
-            A feed on a committed schedule, instead of a public endpoint with a rate limit per IP
-            address.
-          </li>
-          <li>
-            The full change log and the saved copy of each page behind every number, for the sources
-            we can license.
-          </li>
-          <li>Another lab, source, or kind of data we don’t cover yet.</li>
-        </ul>
         <UButton
-          :to="mailto('Data licensing')"
+          :to="mailto('Correction')"
           external
           size="lg"
           icon="i-lucide-mail"
           :label="`Email ${CONTACT_EMAIL}`"
         />
-        <p class="text-sm text-muted">
-          It helps to say who you are, what you would use it for, which labs or tables matter, and
-          how fresh the numbers need to be.
-        </p>
       </div>
     </TerminalPanel>
 
-    <TerminalPanel
-      id="rights"
-      title="What a license can cover"
-      note="Grouped by the terms and robots.txt we read each source under. The coverage table on /data has the details."
-    >
-      <UAlert
-        v-if="error"
-        color="warning"
-        variant="subtle"
-        title="The source list could not be read"
-        description="Each source’s terms are also in the coverage table on /data and in sources.yaml."
-      />
-      <div v-else class="space-y-4 text-sm">
-        <section v-for="g in GROUPS" :key="g.rights" class="space-y-1">
-          <h3 class="text-highlighted">{{ g.title }}</h3>
-          <p class="max-w-2xl text-muted">{{ g.body }}</p>
-          <p v-if="groups[g.rights].length" class="max-w-2xl text-default">
-            <template v-for="(s, i) in groups[g.rights]" :key="s.key"
-              ><span class="sm:whitespace-nowrap">{{ s.name }}</span
-              ><template v-if="i < groups[g.rights].length - 1">; </template></template
-            >.
-          </p>
-        </section>
-        <p class="text-xs text-muted">
+    <TerminalPanel id="other" title="Everything else">
+      <div class="max-w-2xl space-y-3 text-default">
+        <p>
+          Press and anything else go to
+          <a :href="mailto('Hello')" class="text-primary underline underline-offset-2">{{
+            CONTACT_EMAIL
+          }}</a
+          >.
+        </p>
+        <p class="text-muted">
           <NuxtLink to="/data#coverage" class="text-primary underline underline-offset-2"
             >Each source’s terms</NuxtLink
           >
@@ -169,26 +63,6 @@ const GROUPS: { rights: SourceRights; title: string; body: string }[] = [
           <NuxtLink to="/license" class="text-primary underline underline-offset-2"
             >License and attribution</NuxtLink
           >
-        </p>
-      </div>
-    </TerminalPanel>
-
-    <TerminalPanel id="other" title="Everything else">
-      <div class="max-w-2xl space-y-3 text-sm text-default">
-        <p>
-          If a number looks wrong,
-          <a :href="mailto('Correction')" class="text-primary underline underline-offset-2"
-            >send a correction</a
-          >
-          with the page and, if you have it, the row’s source URL. Every row shows the URL we read
-          it from.
-        </p>
-        <p>
-          Press and anything else go to
-          <a :href="mailto('Hello')" class="text-primary underline underline-offset-2">{{
-            CONTACT_EMAIL
-          }}</a
-          >.
         </p>
       </div>
     </TerminalPanel>

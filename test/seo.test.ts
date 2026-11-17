@@ -556,7 +556,8 @@ describe('buildLlmsTxt', () => {
     expect(text).toContain(HISTORY_LICENSE.url)
     expect(text).toContain('Licensed under CC BY-NC 4.0.')
     expect(text).toContain('before 2026-11-04 stays CC BY 4.0')
-    expect(text).toContain('https://example.com/contact')
+    // Commercial licensing is paused: nothing offers a paid license.
+    expect(text).not.toMatch(/paid license/i)
     expect(text).toContain('https://github.com/Holojerm/frontier-terminal')
     expect(text).toContain('https://example.com/license')
   })

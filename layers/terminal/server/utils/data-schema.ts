@@ -2,7 +2,7 @@
 // and every /api envelope carry as `schema_version`, and what /data and
 // CHANGELOG-data.md list as the schema changelog.
 //
-// The promise to licensees: adding a table or a column is a minor version.
+// The promise to data users: adding a table or a column is a minor version.
 // Removing or renaming one is a major version, announced BREAKING_NOTICE_DAYS
 // ahead. Changing what a column holds without renaming it is a minor version
 // with a note. A release that changes no column is a patch.
@@ -48,7 +48,7 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
     version: '1.1.0',
     date: '2026-11-04',
     summary:
-      'New: alert webhooks for licensees. Each POST carries schema_version, the alert with the columns of the alerts table plus permalink, source_urls and its cited rows of the changes table, and the license for your key. No table columns changed.',
+      'New: alert webhooks. Each POST carries schema_version, the alert with the columns of the alerts table plus permalink, source_urls and its cited rows of the changes table, and its license. No table columns changed.',
   },
   {
     version: '1.2.0',
@@ -94,7 +94,7 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
     version: '1.3.0',
     date: '2026-11-05',
     summary:
-      'New: every bulk file also as Parquet (zstd), the same rows and columns typed by the data dictionary, listed under parquet in each manifest entry. Licensees can also read the full-history files over S3 with read-only credentials. No table columns changed.',
+      'New: every bulk file also as Parquet (zstd), the same rows and columns typed by the data dictionary, listed under parquet in each manifest entry. No table columns changed.',
   },
   {
     version: '1.4.0',
@@ -185,13 +185,13 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
     version: '1.7.0',
     date: '2026-11-11',
     summary:
-      'A fourth rights value, restricted: facts a publisher states about itself on a public page, where its site terms restrict automated reading or we couldn’t find them. A paid license can cover our compilation of those rows with the restriction disclosed, never the saved pages. 25 sources moved to it from not-cleared, among them the OpenAI, Anthropic, xAI, Meta, DeepSeek, Alibaba and Moonshot docs. rights in /api/coverage can now be restricted, and each table’s licensing in /export/dictionary.json gains a restricted list and can answer commercial: restricted. No table columns changed.',
+      'A fourth rights value, restricted: facts a publisher states about itself on a public page, where its site terms restrict automated reading or we couldn’t find them. Our license covers our compilation of those rows with the restriction disclosed, never the saved pages. 25 sources moved to it from not-cleared, among them the OpenAI, Anthropic, xAI, Meta, DeepSeek, Alibaba and Moonshot docs. rights in /api/coverage can now be restricted, and each table’s licensing in /export/dictionary.json gains a restricted list and can answer commercial: restricted. No table columns changed.',
   },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version
 
-/** Days of notice a licensee gets before a major release removes or renames a column. */
+/** Days of notice before a major release removes or renames a column. */
 export const BREAKING_NOTICE_DAYS = 90
 
 /** The response header a CSV or a JSON array export carries its version in. */

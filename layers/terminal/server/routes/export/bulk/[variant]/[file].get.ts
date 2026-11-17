@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
     throw createError({
       statusCode: 401,
       message:
-        'The full-history bulk files need an API key (see /data#institutions). Without one, /export/<table>.csv?history=full serves every row under CC BY-NC 4.0.',
+        'The full-history bulk files aren’t public. /export/<table>.csv?history=full serves every row under CC BY-NC 4.0.',
     })
   }
 
