@@ -747,11 +747,11 @@
       "path": "fixtures/pricing/alibaba-pricing.html",
       "source_id": "alibaba-pricing-html",
       "source_url": "https://www.alibabacloud.com/help/en/model-studio/model-pricing",
-      "fetched_at": "2026-11-16T13:22:58Z",
+      "fetched_at": "2026-11-18T13:50:00Z",
       "http_status": 200,
-      "raw_bytes": 515462,
+      "raw_bytes": 532184,
       "trim": "none — committed whole",
-      "note": "Registered 2026-11-04 with Alibaba as a tracked lab. International site, USD. One <h3> per model line, one <h4> tab per region; the Singapore tab's International rows of Qwen-Max, Qwen-Plus and Qwen-Flash are parsed. Re-captured 2026-11-16 (issue #405): qwen4-max added, with its own cache price table under the Qwen-Max tab. No ETag or Last-Modified; a per-request trace id changes the bytes on every fetch."
+      "note": "Registered 2026-11-04 with Alibaba as a tracked lab. International site, USD. One <h3> per model line, one <h4> tab per region; the Singapore tab's International rows of Qwen-Max, Qwen-Plus and Qwen-Flash are parsed. Re-captured 2026-11-16 (issue #405): qwen4-max added, with its own cache price table under the Qwen-Max tab. Re-captured 2026-11-18 (issue #427): Alibaba republished it as a new machine translation (relabelled headings and columns; the Qwen Flash Singapore table has no <thead> and a Pattern column that only some rows fill). No ETag or Last-Modified; a per-request trace id changes the bytes on every fetch."
     },
     {
       "path": "fixtures/pricing/alibaba-models.html",

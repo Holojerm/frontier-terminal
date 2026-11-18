@@ -22,18 +22,34 @@ import { fixtureProvenance } from '../fixture-provenance'
 //     international list price. Beijing, Hong Kong, Frankfurt, Virginia and
 //     Tokyo print other prices for the same ids and are not read.
 //
+// Alibaba republishes this page as a fresh machine translation now and then
+// ("Text generation - Qwen" became "Text Generation - Qwen", "Input price"
+// became "Input unit price"; issue #427), so headings and column labels are
+// matched on their words, not their punctuation or casing. A heading or label
+// that matches nothing, or more than one thing, still fails the parse.
+//
+// A table's header is its <thead> or, as in the Qwen Flash Singapore table,
+// its first <tbody> row. That table also has a "Pattern" column that only some
+// rows fill: the others print their band where the header puts Pattern, so a
+// positional read would store the band's neighbour as the input price. A row
+// is read under the header only when its own cells fit it (an id in the model
+// cell, a band in the band cell). A row that instead fits the header without
+// Pattern, cell for cell, is read that way. Any other International row fails
+// the parse: a price is never stored from a guess, and this is a 'set' lane,
+// where a row left out would be recorded as the model being delisted.
+//
 // A model is tiered by input tokens per request ("0<Token≤256K",
 // "256K<Token≤1M"). The first band is the standard row; each later band is
 // its own tier (`input_256k_1m`), as OpenAI's long-context rows are. Where a
 // table prices non-thinking and thinking output apart, the non-thinking price
-// is the output price and the thinking one is kept in notes. A "List price $X
-// (Limited-time N% off)" cell stores the list price X and notes the promotion:
-// the page states no end date, so no effective_until is set. Most cache and
-// batch discounts are percentages on other pages and are not read. The
-// exception is a model whose tab prints its own cache price table under a
-// "<slug> — Cache price (per million tokens)" caption (qwen4-max, added
-// 2026-11-16, issue #405): its cache read is the cached-input price and its
-// 5m and 1h cache writes go in notes, as Anthropic's are.
+// is the output price and the thinking one is kept in notes. An "Original$X
+// (N% off for a limited time)" cell stores the original price X and notes the
+// promotion: the page states no end date, so no effective_until is set. Most
+// cache and batch discounts are percentages on other pages and are not read.
+// The exception is a model whose tab prints its own cache price table under a
+// "<slug> — Cache unit prices (per million tokens)" caption (qwen4-max, added
+// 2026-11-16, issue #405): its cache hit is the cached-input price and its 5m
+// and 1h cache creations go in notes, as Anthropic's are.
 
 const SECTION = 'Text generation - Qwen'
 const LINES = ['Qwen-Max', 'Qwen-Plus', 'Qwen-Flash'] as const
@@ -42,11 +58,21 @@ const SCOPE = 'International'
 
 const SLUG = /^[a-z0-9][a-z0-9.-]*$/
 const BAND = /^(\d+[KM]?)<Token≤(\d+[KM])$/
-const PRICE = /^(?:List price )?\$(\d+(?:\.\d+)?)(?: \((Limited-time \d+% off)\))?$/
+const NO_TIERS = /^no tiered pricing$/i
+const PRICE = /^(?:(?:list price|original)\s*)?\$(\d+(?:\.\d+)?)(?:\s*\((.+?)\)?)?$/i
+const QUOTA = /^\d+ million tokens$/i
 
 export interface Cell {
   html: string
   text: string
+}
+
+/** Lowercase words only: "Qwen-Max", "Qwen Max" and "qwen  max" are one heading. */
+function words(text: string): string {
+  return text
+    .toLowerCase()
+    .replace(/[^a-z0-9]+/g, ' ')
+    .trim()
 }
 
 /** Every heading of one level with its text and where it starts. */
@@ -55,11 +81,14 @@ function headings(html: string, level: number): { text: string; at: number }[] {
   return [...html.matchAll(re)].map((m) => ({ text: textOf(m[1]!), at: m.index }))
 }
 
-/** The HTML from the heading with this text to the next heading of the same level. */
+/** The HTML from the one heading with these words to the next heading of the same level. */
 function section(html: string, level: number, text: string): string {
   const all = headings(html, level)
-  const i = all.findIndex((h) => h.text === text)
-  if (i === -1) throw new Error(`alibaba-pricing: no <h${level}> "${text}"`)
+  const hits = all.flatMap((h, i) => (words(h.text) === words(text) ? [i] : []))
+  if (hits.length !== 1) {
+    throw new Error(`alibaba-pricing: ${hits.length} <h${level}> headings read "${text}"`)
+  }
+  const i = hits[0]!
   return html.slice(all[i]!.at, all[i + 1]?.at ?? html.length)
 }
 
@@ -98,70 +127,147 @@ export function columnLabels(head: Cell[][]): string[] {
   })
 }
 
-function column(labels: string[], prefix: string): number {
-  const hits = labels.flatMap((l, i) => (l.startsWith(prefix) ? [i] : []))
-  if (hits.length !== 1) throw new Error(`alibaba-pricing: expected one "${prefix}" column`)
+/** The header and body rows of a table: its <thead>, or else its first row. */
+function split(table: string): { head: Cell[][]; body: Cell[][] } {
+  const thead = table.match(/<thead[^>]*>([\s\S]*?)<\/thead>/)?.[1]
+  const tbody = table.match(/<tbody[^>]*>([\s\S]*?)<\/tbody>/)?.[1] ?? ''
+  if (thead !== undefined) return { head: grid(thead), body: grid(tbody) }
+  const [first, ...rest] = grid(tbody)
+  return { head: first ? [first] : [], body: rest }
+}
+
+function column(labels: string[], name: string, test: (w: string) => boolean): number {
+  const hits = labels.flatMap((l, i) => (test(words(l)) ? [i] : []))
+  if (hits.length !== 1) throw new Error(`alibaba-pricing: expected one ${name} column`)
   return hits[0]!
 }
 
-/** "$2" | "List price $0.4 (Limited-time 20% off)" -> the printed list price; "" -> null. */
+/** "$2" | "Original$0.4 (20% off for a limited time)" -> the printed price; "" -> null. */
 function price(text: string): { usd: number | null; promo: string | null } {
   if (text === '') return { usd: null, promo: null }
   const m = text.match(PRICE)
   if (!m) throw new Error(`alibaba-pricing: cell does not print a USD price: ${text}`)
-  return { usd: Number(m[1]), promo: m[2] ?? null }
+  return { usd: Number(m[1]), promo: m[2]?.trim() ?? null }
 }
 
 /** null for the first band (or an untiered model); otherwise `input_<from>_<to>`. */
 export function bandTier(text: string): string | null {
-  if (text === 'No tiered pricing') return null
+  if (NO_TIERS.test(text)) return null
   const m = text.match(BAND)
   if (!m) throw new Error(`alibaba-pricing: unrecognized input band: ${text}`)
   return m[1] === '0' ? null : `input_${m[1]!.toLowerCase()}_${m[2]!.toLowerCase()}`
 }
 
+const isBand = (text: string) => BAND.test(text) || NO_TIERS.test(text)
+
+function slugOf(modelHtml: string): string {
+  return textOf(modelHtml.match(/<p[^>]*>([\s\S]*?)<\/p>/)?.[1] ?? '')
+}
+
+interface Columns {
+  model: number
+  scope: number
+  pattern: number | null
+  band: number
+  input: number
+  output: number
+  thinking: number | null
+}
+
+/** The columns with one removed and every later one a place nearer: the layout of a row that omits that cell. */
+function without(col: Columns, gone: number): Columns {
+  const at = (i: number) => (i > gone ? i - 1 : i)
+  return {
+    model: at(col.model),
+    scope: at(col.scope),
+    pattern: null,
+    band: at(col.band),
+    input: at(col.input),
+    output: at(col.output),
+    thinking: col.thinking === null ? null : at(col.thinking),
+  }
+}
+
+/**
+ * The columns this row's cells are read under, or null when none is provable.
+ * The header's own win when the row's model cell holds an id and its band cell
+ * a band (and its Pattern cell is not also a band, which would be a second
+ * reading). Otherwise, for a table with a Pattern column, the header without
+ * it wins when the row fits that the same way and every cell past its last
+ * price is empty or the free-quota phrase.
+ */
+function columnsFor(cells: Cell[], col: Columns): Columns | null {
+  const fits = (c: Columns) =>
+    SLUG.test(slugOf(cells[c.model]?.html ?? '')) && isBand(cells[c.band]?.text ?? '')
+  if (fits(col)) return col.pattern !== null && isBand(cells[col.pattern]?.text ?? '') ? null : col
+  if (col.pattern === null || col.thinking !== null) return null
+  const short = without(col, col.pattern)
+  if (!fits(short)) return null
+  const last = Math.max(short.model, short.scope, short.band, short.input, short.output)
+  return cells.slice(last + 1).every((c) => c.text === '' || QUOTA.test(c.text)) ? short : null
+}
+
 function tableRows(table: string, line: string, prov: Provenance): PriceRow[] {
-  const head = grid(table.match(/<thead[^>]*>([\s\S]*?)<\/thead>/)?.[1] ?? '')
-  const body = grid(table.match(/<tbody[^>]*>([\s\S]*?)<\/tbody>/)?.[1] ?? '')
+  const { head, body } = split(table)
   if (head.length === 0 || body.length === 0)
     throw new Error(`alibaba-pricing: ${line}: empty table`)
   const labels = columnLabels(head)
-  const col = {
-    model: column(labels, 'Model ID'),
-    scope: column(labels, 'Deployment scope'),
-    band: column(labels, 'Input tokens per request'),
-    input: column(labels, 'Input price (per 1 million tokens)'),
-  }
-  const outputs = labels.flatMap((l, i) =>
-    l.startsWith('Output price (per 1 million tokens)') ? [i] : [],
-  )
+  const outputs = labels.flatMap((l, i) => (/^output (unit )?price\b/.test(words(l)) ? [i] : []))
   if (outputs.length === 0 || outputs.length > 2) {
     throw new Error(`alibaba-pricing: ${line}: ${outputs.length} output price columns`)
   }
   const output =
-    outputs.length === 1 ? outputs[0]! : outputs.find((i) => labels[i]!.includes('Non-Thinking'))
+    outputs.length === 1
+      ? outputs[0]!
+      : outputs.find((i) => words(labels[i]!).includes('non thinking'))
   const thinking = outputs.length === 2 ? outputs.find((i) => i !== output) : undefined
   if (output === undefined || (outputs.length === 2 && thinking === undefined)) {
     throw new Error(`alibaba-pricing: ${line}: cannot tell the non-thinking output column`)
   }
+  const patterns = labels.flatMap((l, i) => (words(l) === 'pattern' ? [i] : []))
+  const header: Columns = {
+    model: column(labels, 'Model ID', (w) => w.startsWith('model id')),
+    scope: column(labels, 'deployment scope', (w) => w.includes('deployment scope')),
+    pattern: patterns.length === 1 ? patterns[0]! : null,
+    band: column(
+      labels,
+      'input token range',
+      (w) => w.startsWith('input token') && w.includes('per request'),
+    ),
+    input: column(labels, 'input price', (w) => /^input (unit )?price\b/.test(w)),
+    output,
+    thinking: thinking ?? null,
+  }
 
   const rows: PriceRow[] = []
   for (const cells of body) {
-    if (cells[col.scope]?.text !== SCOPE) continue
-    const modelHtml = cells[col.model]?.html ?? ''
-    const slug = textOf(modelHtml.match(/<p[^>]*>([\s\S]*?)<\/p>/)?.[1] ?? '')
-    if (!SLUG.test(slug))
-      throw new Error(`alibaba-pricing: ${line}: unrecognized model id: ${slug}`)
+    const col = columnsFor(cells, header)
+    if (col === null) {
+      // Without a layout the scope column is unknown too, so any cell naming
+      // the scope makes the row one this parser owes a price for.
+      if (!cells.some((c) => words(c.text) === words(SCOPE))) continue
+      const printed = cells.map((c) => c.text).join(' | ')
+      throw new Error(
+        `alibaba-pricing: ${line}: a row's cells fit no column layout: ${printed.slice(0, 160)}`,
+      )
+    }
+    if (words(cells[col.scope]?.text ?? '') !== words(SCOPE)) continue
+    const slug = slugOf(cells[col.model]!.html)
     const annotation = cells[col.model]!.text.slice(slug.length).trim()
-    const band = cells[col.band]?.text ?? ''
+    const band = cells[col.band]!.text
     const input = price(cells[col.input]?.text ?? '')
-    const out = price(cells[output]?.text ?? '')
-    const think = thinking === undefined ? null : price(cells[thinking]?.text ?? '')
-    const promo = input.promo ?? out.promo
+    const out = price(cells[col.output]?.text ?? '')
+    const think = col.thinking === null ? null : price(cells[col.thinking]?.text ?? '')
+    // Notes keep their old wording so a re-translation does not rewrite every stored note.
+    const alias = annotation.match(
+      /(?:currently|current capabilities are) equivalent to (\S+)/i,
+    )?.[1]
+    const off = (input.promo ?? out.promo)?.match(/(\d+)% off/)?.[1]
+    const promo = off ? `Limited-time ${off}% off` : null
     const notes = [
       `${line}, ${REGION} (${SCOPE})`,
       `input tokens per request ${band}`,
-      annotation.match(/Currently equivalent to \S+/)?.[0] ?? null,
+      alias ? `Currently equivalent to ${alias}` : null,
       think && think.usd !== null ? `thinking-mode output $${think.usd}` : null,
       promo ? `list price shown; ${promo} at the read` : null,
     ].filter((n): n is string => n !== null)
@@ -190,24 +296,30 @@ interface CachePrice {
   read: number
 }
 
-const CACHE_LABELS = ['Cache write (5m)', 'Cache write (1h)', 'Explicit/implicit cache read']
-const CACHE_CAPTION = /^([a-z0-9][a-z0-9.-]*) — Cache price \(per million tokens\)$/
+const CACHE_LABELS = [
+  (w: string) => /^cache (write|creation) 5m$/.test(w),
+  (w: string) => /^cache (write|creation) 1h$/.test(w),
+  (w: string) => /^(explicit implicit )?cache (read|hit)$/.test(w),
+]
+const CACHE_CAPTION =
+  /^([a-z0-9][a-z0-9.-]*) [—–-] cache (?:unit )?prices? \(per million tokens\)$/i
 
 /**
  * A model's cache price table, or null for any other table. `before` is the
  * HTML between the previous table and this one, whose last paragraph is the
- * caption naming the model ("qwen4-max — Cache price (per million tokens)").
+ * caption naming the model ("qwen4-max — Cache unit prices (per million tokens)").
  * A table with these headers but no such caption, or not exactly one row of
  * three plain USD prices, fails the parse: a cache price that cannot be tied
  * to one model is not stored under a guessed one.
  */
 function cacheTable(table: string, before: string, line: string): CachePrice | null {
-  const head = grid(table.match(/<thead[^>]*>([\s\S]*?)<\/thead>/)?.[1] ?? '')
-  if (columnLabels(head).join('\u0000') !== CACHE_LABELS.join('\u0000')) return null
+  const { head, body } = split(table)
+  const labels = head.length ? columnLabels(head) : []
+  if (labels.length !== CACHE_LABELS.length) return null
+  if (!CACHE_LABELS.every((test, i) => test(words(labels[i]!)))) return null
   const captions = [...before.matchAll(/<p[^>]*>([\s\S]*?)<\/p>/g)]
   const slug = textOf(captions.at(-1)?.[1] ?? '').match(CACHE_CAPTION)?.[1]
   if (!slug) throw new Error(`alibaba-pricing: ${line}: a cache price table names no model`)
-  const body = grid(table.match(/<tbody[^>]*>([\s\S]*?)<\/tbody>/)?.[1] ?? '')
   if (body.length !== 1 || body[0]!.length !== 3) {
     throw new Error(`alibaba-pricing: ${line}: ${slug}'s cache price table is not one row of three`)
   }
