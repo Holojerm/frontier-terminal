@@ -70,3 +70,27 @@ export function usdAmount(cell: string): number {
   if (!m) throw new Error(`cell does not print a USD amount: ${cell}`)
   return Number(m[1])
 }
+
+const MONTHS: Record<string, string> = {
+  January: '01',
+  February: '02',
+  March: '03',
+  April: '04',
+  May: '05',
+  June: '06',
+  July: '07',
+  August: '08',
+  September: '09',
+  October: '10',
+  November: '11',
+  December: '12',
+}
+
+/** "December 31, 2026" -> "2026-12-31"; null for anything else. */
+export function isoDate(printed: string): string | null {
+  const m = printed.match(/^([A-Z][a-z]+) (\d{1,2}), (\d{4})$/)
+  if (!m) return null
+  const month = MONTHS[m[1]!]
+  if (!month) return null
+  return `${m[3]}-${month}-${m[2]!.padStart(2, '0')}`
+}

@@ -42,24 +42,55 @@ describe('vendor-md + sec lane', () => {
   test('openai: pricing.md yields one row per model, service tier and context band, promo bounds kept as notes', () => {
     const out = parseOpenAiPricingMd(fixtureText('fixtures/pricing/openai-pricing.md'))
     expect(VendorMdPricingOutput.safeParse(out).success).toBe(true)
-    expect(out.rows).toHaveLength(163)
+    expect(out.rows).toHaveLength(160)
     expect(out.rows.every((r) => r.provider === 'openai' && r.context_window === null)).toBe(true)
     const tiers = new Map<string | null, number>()
     for (const r of out.rows) tiers.set(r.tier, (tiers.get(r.tier) ?? 0) + 1)
     expect([...tiers.entries()].sort()).toEqual([
-      [null, 37],
-      ['batch', 36],
-      ['batch_long_context', 11],
-      ['fast', 23],
-      ['fast_long_context', 8],
-      ['flex', 21],
+      [null, 29],
+      ['batch', 29],
+      ['batch_long_context', 13],
+      ['fast', 22],
+      ['fast_long_context', 10],
+      ['flex', 20],
       ['flex_long_context', 11],
-      ['long_context', 12],
-      ['ultrafast', 2],
-      ['ultrafast_long_context', 2],
+      ['long_context', 14],
+      ['ultrafast', 6],
+      ['ultrafast_long_context', 6],
     ])
     const row = (slug: string, tier: string | null) =>
-      out.rows.find((r) => r.model_slug === slug && r.tier === tier)!
+      out.rows.find((r) => r.model_slug === slug && r.tier === tier && !r.effective_from)!
+    // "| gpt-6.2-astra | $8.00 | $40.00 | $0.40 | $10.00 | $20.00 | $16.00 | $60.00 | ..."
+    expect(row('gpt-6.2-astra', null)).toMatchObject({
+      input_per_mtok: 8,
+      cached_input_per_mtok: 0.4,
+      output_per_mtok: 40,
+      effective_from: null,
+      effective_until: null,
+    })
+    // "Ultrafast costs 3 times the Standard rate through February 28, 2027, and 6 times
+    // the Standard rate starting March 1, 2027": the promotion ends where the list starts.
+    expect(row('gpt-6.2-astra', 'ultrafast')).toMatchObject({
+      input_per_mtok: 24,
+      output_per_mtok: 120,
+      effective_from: null,
+      effective_until: '2027-03-01',
+    })
+    const listed = out.rows.filter((r) => r.effective_from !== null)
+    expect(listed.map((r) => [r.model_slug, r.tier])).toEqual([
+      ['gpt-6.2-astra', 'ultrafast'],
+      ['gpt-6.2-astra', 'ultrafast_long_context'],
+      ['gpt-6.2-sol', 'ultrafast'],
+      ['gpt-6.2-sol', 'ultrafast_long_context'],
+    ])
+    expect(listed[0]).toMatchObject({
+      input_per_mtok: 48,
+      output_per_mtok: 240,
+      effective_from: '2027-03-01',
+      effective_until: null,
+    })
+    // An unscheduled Ultrafast row carries no window.
+    expect(row('gpt-6-astra', 'ultrafast').effective_until).toBeNull()
     // "| gpt-5.6-sol | $4.00 | $20.00 | $0.40 | $5.00 | $10.00 | $8.00 | $30.00 | $0.80 | ..."
     expect(row('gpt-5.6-sol', null)).toMatchObject({
       input_per_mtok: 4,
@@ -102,6 +133,14 @@ describe('vendor-md + sec lane', () => {
     expect(out.rows.some((r) => r.model_slug === 'gpt-5.6-cyber')).toBe(false)
     for (const r of out.rows)
       expect(r.source_url).toBe('https://developers.openai.com/api/docs/pricing.md')
+  })
+
+  test('openai: an Ultrafast schedule it cannot date fails the parse', () => {
+    const page = fixtureText('fixtures/pricing/openai-pricing.md')
+    const undated = page.replace(/starting March 1, 2027/, 'starting soon')
+    expect(() => parseOpenAiPricingMd(undated)).toThrow(/expected one start date/)
+    const halved = page.replace('### Ultrafast list pricing data', '### Ultrafast pricing notes')
+    expect(() => parseOpenAiPricingMd(halved)).toThrow(/must appear together/)
   })
 
   test('openai: parses fixtures/pricing/openai-models.md into PriceRow[] with model slugs as stable keys', () => {

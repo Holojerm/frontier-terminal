@@ -497,7 +497,8 @@ describe('OpenAI model pages end to end', () => {
     const slugs = await openAiPricedSlugs(db)
     expect(slugs).toContain('gpt-5.6-sol')
     expect(slugs).toContain('gpt-4o-mini')
-    expect(slugs).toHaveLength(37)
+    expect(slugs).toContain('gpt-6.2-astra')
+    expect(slugs).toHaveLength(29)
     const derived = await deriveSources(db, sourcesYaml)
     expect(derived.map((d) => d.source_id)).toEqual(
       slugs.map((s) => derivedSourceId('openai-model-md', s)),

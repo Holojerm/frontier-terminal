@@ -6,7 +6,7 @@ import {
   type Provenance,
 } from '../../contracts'
 import { fixtureProvenance } from '../fixture-provenance'
-import { tablesUnderHeading, usdAmount } from './md-table'
+import { isoDate, tablesUnderHeading, usdAmount } from './md-table'
 
 // openai-pricing-md — https://developers.openai.com/api/docs/pricing.md
 // The markdown twin of the platform pricing page, which did not exist at
@@ -28,14 +28,64 @@ import { tablesUnderHeading, usdAmount } from './md-table'
 // a reorder is harmless; an added or dropped column still throws. The
 // "Grouped Pricing Table" sections (cyber, audio, image, realtime, tools)
 // are not the token price list and are deliberately not parsed.
+//
+// A launch can price Ultrafast on a schedule (GPT-6.2 Astra and Sol,
+// 2026-11-17): a "promotion" table in force now and a "list" table from a
+// date the page prints only in prose ("… through February 28, 2027, and 6
+// times the Standard rate starting March 1, 2027"). The promotion rows end
+// on that date and the list rows start on it, the shape google-pricing gives
+// a promo cell, so the list rows key as `ultrafast@<date>` (normalize.ts ›
+// priceTier). The two tables come and go together, and never without the
+// date: a schedule we cannot date fails the source rather than storing a
+// future price as today's.
 
-const TABLES: readonly { heading: string; tier: string | null; long: string }[] = [
+type Window = 'promotion' | 'list'
+
+const TABLES: readonly {
+  heading: string
+  tier: string | null
+  long: string
+  window?: Window
+}[] = [
   { heading: '### Standard pricing data', tier: null, long: 'long_context' },
-  { heading: '#### Batch', tier: 'batch', long: 'batch_long_context' },
-  { heading: '#### Flex', tier: 'flex', long: 'flex_long_context' },
+  { heading: '### Batch pricing data', tier: 'batch', long: 'batch_long_context' },
+  { heading: '### Flex pricing data', tier: 'flex', long: 'flex_long_context' },
   { heading: '### Fast pricing data', tier: 'fast', long: 'fast_long_context' },
   { heading: '### Ultrafast pricing data', tier: 'ultrafast', long: 'ultrafast_long_context' },
+  {
+    heading: '### Ultrafast promotion pricing data',
+    tier: 'ultrafast',
+    long: 'ultrafast_long_context',
+    window: 'promotion',
+  },
+  {
+    heading: '### Ultrafast list pricing data',
+    tier: 'ultrafast',
+    long: 'ultrafast_long_context',
+    window: 'list',
+  },
 ]
+
+// "…, and 6 times the Standard rate starting March 1, 2027 (Pacific time)."
+const LIST_STARTS = /\bUltrafast costs [^\n]*?\bstarting ([A-Z][a-z]+ \d{1,2}, \d{4})/g
+
+const hasHeading = (text: string, heading: string) =>
+  text.split('\n').some((l) => l.trim() === heading)
+
+/** The date the Ultrafast list price starts, or null when the page schedules none. */
+function listStarts(text: string): string | null {
+  const promotion = hasHeading(text, '### Ultrafast promotion pricing data')
+  const list = hasHeading(text, '### Ultrafast list pricing data')
+  if (promotion !== list) {
+    throw new Error('Ultrafast promotion and list tables must appear together')
+  }
+  if (!promotion) return null
+  const dates = new Set([...text.matchAll(LIST_STARTS)].map((m) => isoDate(m[1]!)))
+  if (dates.size !== 1 || dates.has(null)) {
+    throw new Error(`Ultrafast list pricing: expected one start date, found ${dates.size}`)
+  }
+  return [...dates][0]!
+}
 
 const CURRENT = [
   'Model',
@@ -71,7 +121,13 @@ export function parseOpenAiPricingMd(
   prov: Provenance = fixtureProvenance('openai-pricing-md'),
 ) {
   const rows: PriceRow[] = []
-  for (const { heading, tier, long } of TABLES) {
+  const changeDate = listStarts(text)
+  for (const { heading, tier, long, window } of TABLES) {
+    if (window && changeDate === null) continue
+    const dated = {
+      effective_from: window === 'list' ? changeDate : null,
+      effective_until: window === 'promotion' ? changeDate : null,
+    }
     const [current, legacy, ...rest] = tablesUnderHeading(text, heading)
     if (rest.length > 0)
       throw new Error(`${heading}: ${2 + rest.length} tables, expected at most 2`)
@@ -97,8 +153,7 @@ export function parseOpenAiPricingMd(
           cached_input_per_mtok: null,
           output_per_mtok: null,
           currency: 'USD',
-          effective_from: null,
-          effective_until: null,
+          ...dated,
           notes: m ? m[2]! : null,
           ...prov,
         })
