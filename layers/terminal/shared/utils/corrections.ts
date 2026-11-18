@@ -15,6 +15,12 @@ const PR = 'https://github.com/Holojerm/frontier-terminal/pull/'
 
 export const CORRECTIONS: readonly Correction[] = [
   {
+    on: '2026-11-18',
+    area: 'Alerts',
+    what: 'An alert on 2026-11-18 said Google’s docs no longer positioned gemini-4-hydrogen as its balanced-class pick. Google had only shortened the sentence we quote. Gemini 4 Hydrogen stayed the balanced model throughout. The alert now says so and is filed as info.',
+    fix: `${PR}435`,
+  },
+  {
     on: '2026-11-04',
     area: 'Demand share',
     what: 'Two different token shares were printed without their denominators: the readout’s share of all OpenRouter tokens and the spend table’s share of the tracked labs’ tokens, side by side on /rankings.',
