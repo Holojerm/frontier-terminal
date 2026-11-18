@@ -159,8 +159,8 @@ const tagLine = computed(() =>
         </template>
       </TerminalTable>
       <p class="text-xs text-muted">
-        Read from <code>{{ tagLine }}</code
-        >. A derived quarter is the filing’s year-to-date figure less the one a quarter shorter.
+        Read from <code>{{ tagLine }}</code>. A derived quarter is the filing’s year-to-date figure
+        less the one a quarter shorter.
       </p>
       <div v-if="superseded.length" class="space-y-1 text-xs text-muted">
         <p>Restated by a later filing:</p>

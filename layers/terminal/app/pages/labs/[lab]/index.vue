@@ -489,8 +489,8 @@ const tabs = computed(() => [
             <TerminalHiringSummary v-if="hiringOf" :history="hiringOf" />
             <p v-if="archivedHiring" class="px-3 py-2 text-xs text-muted">
               Before we read the board: {{ count(archivedHiring.copies) }} Internet Archive copies
-              from <span class="font-mono">{{ archivedHiring.from }}</span
-              >, when it listed {{ count(archivedHiring.first) }} open roles.
+              from <span class="font-mono">{{ archivedHiring.from }}</span>, when it listed
+              {{ count(archivedHiring.first) }} open roles.
               <NuxtLink
                 :to="`/hiring#archived-${lab}`"
                 class="text-default underline underline-offset-2 hover:text-highlighted"

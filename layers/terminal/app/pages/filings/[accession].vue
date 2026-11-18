@@ -244,9 +244,7 @@ const rowKey = (r: FilingPeriod) => r.entity_key
             class="text-default underline underline-offset-2 hover:text-highlighted"
             >{{ o.title }}</NuxtLink
           >
-          <span class="text-muted">
-            · filed <time :datetime="o.filed">{{ o.filed }}</time></span
-          >
+          <span class="text-muted"> · filed <time :datetime="o.filed">{{ o.filed }}</time></span>
         </li>
       </ul>
     </TerminalPanel>
