@@ -72,41 +72,41 @@
   },
   "dependencies": {
     "@modelcontextprotocol/server": "2.0.0",
-    "@nuxt/ui": "^4.10.0",
-    "drizzle-orm": "^0.45.2",
+    "@nuxt/ui": "^4.12.2",
+    "drizzle-orm": "^0.45.4",
     "hyparquet-writer": "0.17.0",
     "mustache": "^4.2.0",
-    "nuxt": "^4.5.2",
-    "tailwindcss": "^4.3.3",
-    "vue": "^3.5.41",
-    "vue-router": "^5.2.0",
-    "zod": "^4.4.3"
+    "nuxt": "^4.6.4",
+    "tailwindcss": "^4.3.5",
+    "vue": "^3.5.45",
+    "vue-router": "^5.5.1",
+    "zod": "^4.6.7"
   },
   "devDependencies": {
-    "@axe-core/playwright": "^4.13.0",
-    "@cloudflare/vitest-plugin": "^1.8.0",
-    "@cloudflare/workers-types": "^5.20260821.1",
+    "@axe-core/playwright": "^4.14.0",
+    "@cloudflare/vitest-plugin": "^1.8.4",
+    "@cloudflare/workers-types": "^5.20261118.1",
     "@fontsource/inter": "^5.3.0",
     "@fontsource/jetbrains-mono": "^5.3.0",
-    "@iconify-json/lucide": "^1.2.124",
-    "@libsql/client": "^0.17.4",
-    "@maizzle/framework": "^6.1.7",
-    "@nuxthub/core": "^0.10.8",
-    "@playwright/test": "^1.62.1",
+    "@iconify-json/lucide": "^1.2.156",
+    "@libsql/client": "^0.18.0",
+    "@maizzle/framework": "^6.4.0",
+    "@nuxthub/core": "^0.10.12",
+    "@playwright/test": "^1.65.1",
     "@resvg/resvg-js": "^2.6.2",
     "@types/mustache": "^4.2.6",
-    "axe-core": "^4.13.0",
-    "drizzle-kit": "^0.31.10",
+    "axe-core": "^4.14.1",
+    "drizzle-kit": "^0.31.11",
     "hyparquet": "1.31.5",
     "nuxt-mcp": "^0.2.6",
-    "oxfmt": "^0.64.0",
-    "oxlint": "^1.79.0",
-    "portless": "^0.15.5",
+    "oxfmt": "^0.79.0",
+    "oxlint": "^1.94.0",
+    "portless": "^0.18.0",
     "satori": "^0.63.2",
     "typescript": "^6.0.3",
     "vitest": "^5.1.0",
-    "vue-tsc": "^3.3.11",
-    "wrangler": "^4.152.0"
+    "vue-tsc": "^3.3.14",
+    "wrangler": "^4.164.0"
   },
   "engines": {
     "bun": ">=1.4",
@@ -114,6 +114,6 @@
   },
   "packageManager": "bun@1.4.0",
   "patchedDependencies": {
-    "@nuxthub/core@0.10.8": "patches/@nuxthub%2Fcore@0.10.8.patch"
+    "@nuxthub/core@0.10.12": "patches/@nuxthub%2Fcore@0.10.12.patch"
   }
 }

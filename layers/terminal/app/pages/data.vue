@@ -228,7 +228,7 @@ const tabs = [
                   size="sm"
                   variant="link"
                   color="neutral"
-                  :aria-label="`Column dictionary for ${t.name}`"
+                  :aria-label="`Columns of ${t.name}`"
                   label="Columns"
                   @click="openTables = [...new Set([...openTables, t.name])]"
                 />

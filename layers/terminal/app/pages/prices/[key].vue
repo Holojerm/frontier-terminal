@@ -152,9 +152,7 @@ const POINT_COLUMNS: TableColumn[] = [
     error-title="Price history didn’t load"
     error-body="We won’t show an old number in its place. Try reloading in a minute."
   >
-    <template #title
-      ><span class="font-mono">{{ name }}</span></template
-    >
+    <template #title><span class="font-mono">{{ name }}</span></template>
     <template v-if="history" #lede>
       <span v-if="summary" class="mb-1 block text-default">{{ summary }}</span>
       {{ labName(history.provider) }} ·

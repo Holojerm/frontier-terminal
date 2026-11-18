@@ -17,7 +17,7 @@ An empty local DB is normal on a fresh checkout, and it hides bugs. Filling it i
 
 ## NuxtHub applies dev migrations in directory order — patched to sort
 
-NuxtHub (0.10.8 through 0.10.12, the latest checked) lists `.data/db/migrations/` with no sort, and on APFS directory order is not name order. A fresh `.data/db/sqlite.db` on a Mac therefore ran `0018` then `0009`, which failed (`no such table: entitlements`) before `0000` ever ran, and every data route returned 503 "Database unavailable". `patches/@nuxthub%2Fcore@0.10.8.patch` (bun's `patchedDependencies`, the template's patch byte for byte) sorts the filtered list by name, the order drizzle-kit numbers them. Production is unaffected: `wrangler d1 migrations apply` sorts its own list. When upgrading NuxtHub, `bun install` fails on the stale patch: re-cut it with `bun patch @nuxthub/core` unless upstream sorts by then. A DB already broken this way is easiest rebuilt: move `.data/db/sqlite.db` aside and start `bun dev`.
+NuxtHub (0.10.8 through 0.10.12, the latest checked) lists `.data/db/migrations/` with no sort, and on APFS directory order is not name order. A fresh `.data/db/sqlite.db` on a Mac therefore ran `0018` then `0009`, which failed (`no such table: entitlements`) before `0000` ever ran, and every data route returned 503 "Database unavailable". `patches/@nuxthub%2Fcore@0.10.12.patch` (bun's `patchedDependencies`) sorts the filtered list by name, the order drizzle-kit numbers them. Production is unaffected: `wrangler d1 migrations apply` sorts its own list. When upgrading NuxtHub, `bun install` does **not** fail on the stale patch: it prints one `no longer applies` warning and drops the entry from `bun.lock`, so the bug comes back with CI green. Re-cut it with `bun patch @nuxthub/core` (unless upstream sorts by then) and check `bun.lock` still has a `patchedDependencies` entry. A DB already broken this way is easiest rebuilt: move `.data/db/sqlite.db` aside and start `bun dev`.
 
 ## Production D1 is migrated only by `deploy:ci`
 
@@ -128,6 +128,24 @@ API still reports the old state, with the row plainly visible in the file. Resta
 server (or touch `nuxt.config.ts`) and it appears immediately.
 
 So: write before starting the dev server, or restart after writing. Don't go debugging the query.
+
+## With no `node` on the PATH, `nuxt dev` silently runs under Bun — and SSR breaks
+
+The `nuxt` bin's shebang asks for Node. On a machine that has only Bun, `bun run dev:app` and
+the Playwright suites' web server run `nuxt dev` **on Bun itself**, with no warning. CI never
+does: the browser-suites workflow runs `actions/setup-node` from `.node-version`.
+
+Under Bun, every page that renders a component importing `zod` (the subscribe form, through
+`layers/terminal/shared/utils/subscribe.ts`) returns 500:
+`undefined is not an object (evaluating '__vite_ssr_import_N__.z.object')`. Vite externalizes
+`zod`; Bun answers `true` to `'__esModule' in ns` for zod's ESM namespace, so vite-node swaps
+the module for its default export, the `z` namespace, which lacks `z` itself. The error text is
+JavaScriptCore's, not V8's: that is the tell that Node is not what is running.
+
+The fix is the environment, not the app: install the Node that `.node-version` names
+(`mise use -g node@24`). `which node` should print a path before you trust a local browser run.
+`vite.ssr.noExternal: ['zod']` makes the pages render under Bun, but it is a workaround for an
+environment CI does not have — do not commit it.
 
 ## NuxtHub's auto-imports don't reach every file at runtime
 

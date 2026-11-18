@@ -143,9 +143,7 @@ const value = (row: T, key: string) => {
       :class="nested ? 'text-xs' : 'text-sm'"
     >
       <caption class="sr-only">
-        {{
-          caption
-        }}
+        {{ caption }}
       </caption>
       <!-- The rule under the header is a shadow, not a border: a collapsed
            border stays behind when the header sticks. -->
