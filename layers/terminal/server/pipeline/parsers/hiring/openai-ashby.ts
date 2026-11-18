@@ -7,12 +7,26 @@ import { compareByJobId } from './common'
 
 interface AshbyJob {
   id: string
-  title: string
+  title: string | null
   department: string | null
   team: string | null
   location: string | null
   employmentType: string | null
   publishedAt: string | null
+  isListed?: boolean
+}
+
+// A posting the board hides (isListed: false) is not an open role on the
+// public board, the same rule wayback-boards.ts applies to archived boards.
+// A listed posting with no title cannot be stored (titles are never
+// invented), so it is skipped: one half-filled posting must not stall the
+// whole board (#411). More than a handful means the payload itself moved
+// (a renamed field), as does a board whose every posting is untitled, and a
+// silent mass "removal" would be worse than a failed poll, so those throw.
+export const MAX_UNTITLED_JOBS = 3
+
+function hasTitle(job: AshbyJob): job is AshbyJob & { title: string } {
+  return typeof job.title === 'string' && job.title.trim() !== ''
 }
 
 // prov defaults to the fixture manifest's record (single-arg behavior is
@@ -23,7 +37,21 @@ export function parseOpenaiAshby(
   prov: Provenance = fixtureProvenance('openai-ashby'),
 ) {
   const payload = JSON.parse(fixtureText) as { jobs: AshbyJob[] }
-  const rows = payload.jobs
+  const listed = payload.jobs.filter((job) => job.isListed !== false)
+  const untitled = listed.filter((job) => !hasTitle(job)).map((job) => job.id)
+  if (
+    untitled.length > MAX_UNTITLED_JOBS ||
+    (untitled.length > 0 && untitled.length === listed.length)
+  ) {
+    throw new Error(`ashby: ${untitled.length} listed job(s) have no title: ${untitled.join(', ')}`)
+  }
+  if (untitled.length > 0) {
+    console.warn(
+      `ashby: skipped ${untitled.length} listed job(s) with no title: ${untitled.join(', ')}`,
+    )
+  }
+  const rows = listed
+    .filter(hasTitle)
     .map((job) => ({
       provider: 'openai' as const,
       job_id: job.id,
