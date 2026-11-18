@@ -157,6 +157,8 @@ interface Fetched {
   absent: boolean
   /** True when the server answered 429: backed off, alerted only if it persists (rate-limit.ts). */
   rateLimited: boolean
+  /** True when the server answered 403: alerted only if the next tick is refused too. */
+  refused: boolean
   /** True when the source is inside the cooldown a 429 started: not fetched, not recorded. */
   cooling: boolean
 }
@@ -180,6 +182,7 @@ async function fetchAndSnapshot(
       // audit recorded that it resolved — so that one stays a failure.
       absent: outcome.status === 404 && derivedKeyOf(source.source_id) !== null,
       rateLimited: outcome.status === 429,
+      refused: outcome.status === 403,
       cooling: false,
     } satisfies Fetched
   }
@@ -219,6 +222,7 @@ async function fetchAndSnapshot(
     skipped: false,
     absent: false,
     rateLimited: false,
+    refused: false,
     cooling: false,
   } satisfies Fetched
 }
@@ -592,6 +596,7 @@ export async function runRefresh(
           skipped: false,
           absent: false,
           rateLimited: false,
+          refused: false,
           cooling: true,
         }
       }
@@ -605,6 +610,7 @@ export async function runRefresh(
         skipped: false,
         absent: false,
         rateLimited: false,
+        refused: false,
         cooling: false,
       }
     }
@@ -633,9 +639,11 @@ export async function runRefresh(
     const fetched = await fetchHeld(source)
     if (fetched.cooling) continue
     let outcome: Outcome
-    // A failure the next tick clears was a blip. Only one class is known to
-    // self-resolve — the Greenhouse snapshot race — and it says so by type.
-    let transient = false
+    // A failure the next tick clears was a blip. Two classes are known to
+    // self-resolve: the Greenhouse snapshot race, which says so by type, and a
+    // 403 from a vendor edge that turns away the odd request (OpenAI's docs
+    // host refused four polls in a day while every other one succeeded).
+    let transient = fetched.refused
     try {
       outcome = await parseAndStore(
         deps,
@@ -645,7 +653,7 @@ export async function runRefresh(
         classMap,
       )
     } catch (err) {
-      transient = err instanceof JoinRaceError
+      transient ||= err instanceof JoinRaceError
       outcome = quiet('failed', describeError(err), fetched.body?.snapshot.id ?? null)
     }
     const detail = outcome.detail?.slice(0, DETAIL_MAX) ?? null
