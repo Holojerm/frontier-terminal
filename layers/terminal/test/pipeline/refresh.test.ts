@@ -1084,6 +1084,24 @@ describe('failures', () => {
     expect(await mails()).toHaveLength(1)
   })
 
+  it('a lone 403 is a failed run without an ops event; a second in a row raises one', async () => {
+    const ID = 'openai-models-md'
+    const refused = fixtureFetcher({ [ID]: { ok: false, status: 403, detail: 'HTTP 403' } })
+    const mails = async () => (await rows.ops()).filter((o) => o.kind === 'source_failed')
+
+    const first = await run('survey', [ID], refused)
+    expect(first.sources[0]).toMatchObject({ status: 'failed', detail: 'HTTP 403' })
+    expect(await mails()).toHaveLength(0)
+
+    // The next poll succeeds, so the one after it is a lone 403 again.
+    await run('survey', [ID], fixtureFetcher({}))
+    await run('survey', [ID], refused)
+    expect(await mails()).toHaveLength(0)
+
+    await run('survey', [ID], refused)
+    expect((await mails()).map((o) => o.detail)).toEqual([`${ID}: HTTP 403`])
+  })
+
   it('an index that is empty from the start is quiet, not a mass-removal failure', async () => {
     const ID = 'openai-misalignment-reports'
     const empty = fixtureText('fixtures/disclosures/openai-misalignment-reports.html').replace(
