@@ -1157,11 +1157,11 @@ describe('failures', () => {
     const report = await run(
       'survey',
       ['openai-ashby'],
-      fixtureFetcher({ 'openai-ashby': '{"jobs":[{"id":"abc","title":""}]}' }),
+      fixtureFetcher({ 'openai-ashby': '{"jobs":[{"id":"","title":"Engineer"}]}' }),
     )
     const ashby = report.sources[0]!
     expect(ashby.status).toBe('failed')
-    expect(ashby.detail).toContain('rows.0.title')
+    expect(ashby.detail).toContain('rows.0.job_id')
     expect(ashby.snapshot_id).not.toBeNull()
     expect(await rows.snapshots()).toHaveLength(1)
     expect(await rows.entities()).toHaveLength(0)
