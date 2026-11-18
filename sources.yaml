@@ -77,7 +77,11 @@ sources:
       or per-image tables are not $/MTok token pricing and are not parsed.
       Promotional windows are prose on this page ("promotional pricing is
       available at least through …") with no hard end date, so no
-      effective_until is set — the price shown is the price printed.
+      effective_until is set — the price shown is the price printed. The
+      one dated schedule is Ultrafast's promotion and list tables
+      (2026-11-17, GPT-6.2): the promotion rows end and the list rows
+      start on the date the page's prose prints, and a schedule without
+      that date fails the source.
 
   anthropic-models-md:
     axis: pricing-catalog

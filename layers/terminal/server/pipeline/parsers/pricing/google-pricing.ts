@@ -1,6 +1,7 @@
 import type { z } from 'zod'
 import { GooglePricingOutput as ContractGooglePricingOutput, registerParser } from '../../contracts'
 import { fixtureProvenance } from '../fixture-provenance'
+import { isoDate } from './md-table'
 
 // google-pricing — https://aistudio.google.com/docs/pricing.md
 //
@@ -114,21 +115,6 @@ const ENTITIES: Record<string, string> = {
   '&quot;': '"',
 }
 
-const MONTHS: Record<string, string> = {
-  January: '01',
-  February: '02',
-  March: '03',
-  April: '04',
-  May: '05',
-  June: '06',
-  July: '07',
-  August: '08',
-  September: '09',
-  October: '10',
-  November: '11',
-  December: '12',
-}
-
 function text(fragment: string): string {
   return fragment
     .replace(FOOTNOTE, '')
@@ -192,15 +178,6 @@ function mdRowCells(chunk: string): string[][] {
   }
   flush()
   return cells
-}
-
-/** "December 31, 2026" -> "2026-12-31"; null for anything else. */
-function isoDate(printed: string): string | null {
-  const m = printed.match(/^([A-Z][a-z]+) (\d{1,2}), (\d{4})$/)
-  if (!m) return null
-  const month = MONTHS[m[1]!]
-  if (!month) return null
-  return `${m[3]}-${month}-${m[2]!.padStart(2, '0')}`
 }
 
 const LEADING_AMOUNT = /^\$(\d[\d,]*(?:\.\d+)?)(.*)$/

@@ -14,11 +14,11 @@
       "path": "fixtures/pricing/openai-pricing.md",
       "source_id": "openai-pricing-md",
       "source_url": "https://developers.openai.com/api/docs/pricing.md",
-      "fetched_at": "2026-11-01T20:57:21Z",
+      "fetched_at": "2026-11-18T00:13:59Z",
       "http_status": 200,
-      "raw_bytes": 23508,
+      "raw_bytes": 24045,
       "trim": "none — committed whole",
-      "note": "Not in the audit: the docs origin began serving pricing as markdown after 2026-08-25. Recaptured 2026-11-01 (Last-Modified 2026-11-01T04:06:53Z) after the 2026-10-23 redesign: columns reordered with 30m/12h cache-write pairs, Flex moved under '### Batch pricing data' as '#### Flex', an Ultrafast tier added, and legacy models split into a second Input | Output | Cached input table per tier. The grouped tables below them (cyber, audio, image, realtime, tools) are not parsed."
+      "note": "Not in the audit: the docs origin began serving pricing as markdown after 2026-08-25. Recaptured 2026-11-18 (Last-Modified 2026-11-17T22:25:33Z) after the GPT-6.2 launch reshaped it: Batch and Flex became their own '### Batch pricing data' / '### Flex pricing data' sections, Ultrafast gained a promotion table and a list table for GPT-6.2 Astra and Sol (the list price starts on a date printed only in prose), ten legacy models were delisted (o1, o1-pro, o3-mini, o4-mini, gpt-4.1-nano, gpt-4o-2024-05-13, gpt-4-turbo-2024-04-09, gpt-4-0613, gpt-3.5-turbo, gpt-3.5-turbo-0125), and the cyber tables moved into a Grouped Pricing Table. The grouped tables (cyber, audio, image, realtime, tools) are not parsed."
     },
     {
       "path": "fixtures/pricing/openai-model-gpt-5.6-sol.md",
