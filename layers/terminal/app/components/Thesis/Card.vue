@@ -39,7 +39,7 @@ const counts = computed(() => statusCounts(props.thesis.claims))
       variant="outline"
       size="sm"
       trailing-icon="i-lucide-arrow-right"
-      :aria-label="`Read the ${thesis.title} thesis`"
+      :aria-label="`Read the thesis: ${thesis.title}`"
     >
       Read the thesis
     </UButton>

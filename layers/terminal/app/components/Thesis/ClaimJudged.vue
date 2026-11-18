@@ -84,8 +84,8 @@ function ruling(v: VerdictView) {
 
         <template #foot>
           <span>
-            Detected <time :datetime="v.detected_at">{{ stamps.absolute(v.detected_at) }}</time
-            >, rated <time :datetime="v.judged_at">{{ stamps.absolute(v.judged_at) }}</time>
+            Detected <time :datetime="v.detected_at">{{ stamps.absolute(v.detected_at) }}</time>,
+            rated <time :datetime="v.judged_at">{{ stamps.absolute(v.judged_at) }}</time>
           </span>
         </template>
       </TerminalCard>

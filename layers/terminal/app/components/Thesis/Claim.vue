@@ -12,9 +12,7 @@ defineProps<{ claim: ClaimView }>()
 <template>
   <TerminalCard :id="`claim-${claim.n}`" :level="2">
     <template #title>
-      <span class="text-base"
-        ><span class="text-muted">{{ claim.n }}.</span> {{ claim.text }}</span
-      >
+      <span class="text-base"><span class="text-muted">{{ claim.n }}.</span> {{ claim.text }}</span>
     </template>
     <template #meta>
       <ThesisStatusBadge :status="claim.status" />

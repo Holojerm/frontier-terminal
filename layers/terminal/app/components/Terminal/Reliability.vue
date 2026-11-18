@@ -258,14 +258,12 @@ const code = 'font-mono text-highlighted'
             <template v-if="lane.checks === 0"> No checks counted yet.</template>
             <template v-else-if="lane.periods.length === 0">
               Never late in {{ count(lane.checks) }} checks since
-              <time :datetime="lane.from!">{{ at(lane.from!) }}</time
-              >.
+              <time :datetime="lane.from!">{{ at(lane.from!) }}</time>.
             </template>
             <template v-else>
               Late {{ lane.periods.length }} {{ lane.periods.length === 1 ? 'time' : 'times' }} for
               {{ durationLabel(lane.stale_minutes) }} in all, over {{ count(lane.checks) }} checks
-              since <time :datetime="lane.from!">{{ at(lane.from!) }}</time
-              >.
+              since <time :datetime="lane.from!">{{ at(lane.from!) }}</time>.
             </template>
           </p>
           <TerminalExpand
@@ -313,10 +311,10 @@ const code = 'font-mono text-highlighted'
           <p>
             {{ data.detection.rows.length }}
             {{ data.detection.rows.length === 1 ? 'filing' : 'filings' }} since
-            <time :datetime="data.detection.from!">{{ at(data.detection.from!) }}</time
-            >. From release, the median is {{ latency(data.detection.release.median_minutes) }} and
-            the slowest {{ latency(data.detection.release.worst_minutes) }}. From acceptance, the
-            median is {{ latency(data.detection.acceptance.median_minutes) }} and the slowest
+            <time :datetime="data.detection.from!">{{ at(data.detection.from!) }}</time>. From
+            release, the median is {{ latency(data.detection.release.median_minutes) }} and the
+            slowest {{ latency(data.detection.release.worst_minutes) }}. From acceptance, the median
+            is {{ latency(data.detection.acceptance.median_minutes) }} and the slowest
             {{ latency(data.detection.acceptance.worst_minutes) }}.
             <template v-if="data.detection.missing">
               {{ data.detection.missing }} {{ data.detection.missing === 1 ? 'has' : 'have' }} no
@@ -412,8 +410,8 @@ const code = 'font-mono text-highlighted'
             {{ data.deploys.tally.success }} passed, {{ data.deploys.tally.failure }} failed, and
             {{ data.deploys.tally.cancelled }} superseded<template v-if="data.deploys.tally.running"
               >, with {{ data.deploys.tally.running }} running</template
-            >, since <time :datetime="data.deploys.from!">{{ at(data.deploys.from!) }}</time
-            >, when the smoke test started.
+            >, since <time :datetime="data.deploys.from!">{{ at(data.deploys.from!) }}</time>, when
+            the smoke test started.
             <template v-if="data.deploys.build_sha">
               This page is served by
               <a
@@ -480,8 +478,8 @@ const code = 'font-mono text-highlighted'
     </div>
     <template v-if="data" #foot>
       Computed from stored records at
-      <time :datetime="data.computed_at">{{ at(data.computed_at) }}</time
-      >. The same figures, with every timestamp and source URL, are at
+      <time :datetime="data.computed_at">{{ at(data.computed_at) }}</time>. The same figures, with
+      every timestamp and source URL, are at
       <NuxtLink to="/api/reliability" external :class="`${link} font-mono`"
         >/api/reliability</NuxtLink
       >

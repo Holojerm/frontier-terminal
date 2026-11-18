@@ -185,9 +185,7 @@ useSeo({
     >
       <ul class="max-w-2xl space-y-3 text-sm">
         <li v-for="c in CORRECTIONS" :key="c.on + c.area">
-          <p class="text-muted">
-            <span class="font-mono">{{ c.on }}</span> · {{ c.area }}
-          </p>
+          <p class="text-muted"><span class="font-mono">{{ c.on }}</span> · {{ c.area }}</p>
           <p class="text-default">
             {{ c.what }}
             <a

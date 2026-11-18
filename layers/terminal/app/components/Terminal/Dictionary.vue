@@ -151,9 +151,8 @@ watch(() => route.hash, followHash)
                 <dd class="text-default">{{ t.cadence }}</dd>
                 <dt class="text-xs text-muted">Time</dt>
                 <dd class="text-default">
-                  Event time <span class="font-mono">{{ t.time.event ?? 'none' }}</span
-                  >, knowledge time <span class="font-mono">{{ t.time.knowledge }}</span
-                  >.
+                  Event time <span class="font-mono">{{ t.time.event ?? 'none' }}</span>, knowledge
+                  time <span class="font-mono">{{ t.time.knowledge }}</span>.
                 </dd>
                 <dt class="text-xs text-muted">as_of</dt>
                 <dd class="text-default">{{ t.as_of.note }}</dd>

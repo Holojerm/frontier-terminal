@@ -58,8 +58,7 @@ const from = (r: ArchiveReach) => r.archived_from ?? r.live_from
     <template #cell-gaps="{ row: r }">
       <ul v-if="r.gaps.length" class="space-y-1">
         <li v-for="g in r.gaps" :key="g.from">
-          <span class="font-mono">{{ g.from }} – {{ g.until }}</span
-          >: {{ g.reason }}
+          <span class="font-mono">{{ g.from }} – {{ g.until }}</span>: {{ g.reason }}
         </li>
       </ul>
       <span v-else>—</span>

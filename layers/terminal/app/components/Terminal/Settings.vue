@@ -144,8 +144,8 @@ function resetAll() {
             </div>
             <USwitch v-model="relative" label="Show recent times as ages (3h ago)" />
             <p class="text-xs text-muted">
-              Now reads as <span class="font-mono text-default">{{ sample }}</span
-              >. Hover over a time for the exact UTC value we stored.
+              Now reads as <span class="font-mono text-default">{{ sample }}</span>. Hover over a
+              time for the exact UTC value we stored.
             </p>
           </fieldset>
 

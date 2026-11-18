@@ -59,9 +59,7 @@ const COLUMNS: TableColumn[] = [
 
     <template #foot>
       <span class="font-mono break-all">{{ change.entity_key }}</span>
-      <span>
-        detected <time :datetime="change.detected_at">{{ change.detected_at }}</time>
-      </span>
+      <span> detected <time :datetime="change.detected_at">{{ change.detected_at }}</time> </span>
     </template>
   </TerminalCard>
 </template>
