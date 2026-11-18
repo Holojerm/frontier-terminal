@@ -104,7 +104,7 @@ describe('alibaba-pricing-html', () => {
   })
 
   // Added to the Qwen-Max Singapore tab 2026-11-16, after the price table:
-  // "qwen4-max — Cache price (per million tokens)" over $1.875 | $3 | $0.075.
+  // "qwen4-max — Cache unit prices (per million tokens)" over $1.875 | $3 | $0.075.
   // Read as a price table, it failed every poll on its missing "Model ID" (issue #405).
   test('a model’s own cache price table is its cached-input price, cache writes in notes', () => {
     expect(by['qwen4-max:']).toMatchObject({
@@ -119,7 +119,7 @@ describe('alibaba-pricing-html', () => {
 
   test('a cache price table that names no model, or no priced one, fails the parse', () => {
     const page = fixtureText('fixtures/pricing/alibaba-pricing.html')
-    const caption = '<p><strong>qwen4-max — Cache price (per million tokens)</strong></p>'
+    const caption = '<p><strong>qwen4-max — Cache unit prices (per million tokens)</strong></p>'
     expect(page).toContain(caption)
     expect(() => parseAlibabaPricingHtml(page.replace(caption, ''))).toThrow(
       'a cache price table names no model',
@@ -127,6 +127,48 @@ describe('alibaba-pricing-html', () => {
     expect(() =>
       parseAlibabaPricingHtml(page.replace(caption, caption.replace('qwen4-max', 'qwen9-max'))),
     ).toThrow('a cache price for qwen9-max, which has no International row')
+  })
+
+  // Issue #427: the Qwen Flash Singapore table has a Pattern column that only
+  // qwen3.8-flash and qwen3.7-flash fill; the other rows print their band in its
+  // place, so reading them by the header stores the band as a price.
+  test('a row that omits the Pattern cell is read without it, not by position', () => {
+    const read = parseAlibabaPricingHtml(fixtureText('fixtures/pricing/alibaba-pricing.html'))
+    const flash = Object.fromEntries(
+      read.rows.map((r) => [
+        `${r.model_slug}:${r.tier ?? ''}`,
+        [r.input_per_mtok, r.output_per_mtok],
+      ]),
+    )
+    expect(flash['qwen3.6-flash:']).toEqual([0.25, 1.5])
+    expect(flash['qwen3.6-flash:input_256k_1m']).toEqual([1, 4])
+    expect(flash['qwen3.5-flash:']).toEqual([0.1, 0.4])
+    expect(flash['qwen-flash:']).toEqual([0.05, 0.4])
+    expect(flash['qwen-flash:input_256k_1m']).toEqual([0.25, 2])
+    expect(flash['qwen3.8-flash:']).toEqual([0.15, 0.47])
+  })
+
+  // Not skipped: this is a 'set' lane, so a row left out would read as a delisting.
+  test('a short row whose cells fit no layout fails the parse, never stored from a guess', () => {
+    const page = fixtureText('fixtures/pricing/alibaba-pricing.html')
+    const at = page.indexOf('<p>qwen3.5-flash</p>')
+    const band = '<p>0&lt;Token≤1M</p>'
+    expect(page.indexOf(band, at)).toBeGreaterThan(at)
+    // The band becomes a bare price: no cell then says which column it is in.
+    const broken = page.slice(0, at) + page.slice(at).replace(band, '<p>$0.1</p>')
+    expect(() => parseAlibabaPricingHtml(broken)).toThrow(
+      /Qwen-Flash: a row's cells fit no column layout: qwen3\.5-flash/,
+    )
+  })
+
+  test('a re-translated heading still matches; an unrelated one never does', () => {
+    const page = fixtureText('fixtures/pricing/alibaba-pricing.html')
+    const heading = 'Text Generation - Qwen <span'
+    expect(page).toContain(heading)
+    const renamed = page.replace(heading, 'text  generation – QWEN <span')
+    expect(parseAlibabaPricingHtml(renamed).rows).toHaveLength(49)
+    const other = page.replace(heading, 'Text Generation - Qwen Plus <span')
+    expect(() => parseAlibabaPricingHtml(other)).toThrow('0 <h2> headings')
   })
 
   test('a price in a shape the parser does not know fails the parse', () => {
