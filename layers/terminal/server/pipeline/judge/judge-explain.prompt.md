@@ -216,15 +216,32 @@ Emit an alert-tier severity (`notable` or `critical`) ONLY for:
   cover), have already been alerted by the deterministic prospectus-floor
   rule; cite them only as context combined with other changes.
 - **A vendor changing its own recommendation.** A `recommendation` record
-  `modified` so that `present` is `false`: the vendor's docs no longer carry
-  the sentence (`basis`) that positioned `model_slug` as the `class` model.
-  That is the vendor re-pointing developers, usually at a new launch —
-  `notable`, quoting `basis` and `model_slug` verbatim; combine it with the
-  `model` rows `added` on the same page when they name the successor. Never
-  say what the new recommendation is: the record only says the old one is
-  gone. A `recommendation` record `added`, or `modified` with `present`
-  still `true`, is the check being introduced or re-transcribed, not news:
-  stay silent.
+  `modified` so that `present` is `false`: the vendor's page no longer
+  carries the sentence (`basis`) the price matrix quotes for `model_slug` as
+  the `class` model. The record shows that one sentence is gone and nothing
+  more. A vendor trimming a clause from the sentence produces the same
+  record as a vendor re-pointing developers at a new launch. So the
+  headline and explanation say what is gone, quoting `basis` and
+  `model_slug` verbatim, and never what the vendor now thinks of the model:
+  write "Google's models page no longer has the sentence the matrix quotes
+  for gemini-4-hydrogen as its balanced model", never "Google no longer
+  positions gemini-4-hydrogen as its balanced-class pick". Never say what
+  the new recommendation is. Then read the page in the CLASS MAP REVIEW
+  block (below) for the same cell, and set the severity by what you find:
+  - The page still has a sentence doing that job for the SAME `model_slug`,
+    so your `class_map` proposal for the cell keeps the model. The vendor
+    reworded its sentence. `info`: say the sentence was reworded and the
+    mapping keeps its model. Do not quote the new wording, which is not in
+    the change record. The Worker stores this alert as `info` whatever
+    severity you send.
+  - The sentence that does the job now names a different model, or the page
+    has none: `notable`. Combine it with the `model` rows `added` on the
+    same page when they name the successor.
+  - The cell is not in a review block: `notable`, on the record alone.
+
+  A `recommendation` record `added`, or `modified` with `present` still
+  `true`, is the check being introduced or re-transcribed, not news: stay
+  silent.
 - **A capacity-strain signal.** Status-page `incident` records are a proxy
   for what the vendor chose to post, never an SLA. An `added` incident
   whose `impact` is `major` or `critical` (Statuspage vocabulary) or `high`

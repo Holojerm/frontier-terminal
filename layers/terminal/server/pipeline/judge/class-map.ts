@@ -324,7 +324,16 @@ export interface ClassMapRejection {
 export interface ClassMapResult {
   accepted: number
   rejected: ClassMapRejection[]
+  /**
+   * Accepted decisions that kept their cell's model, as `provider:class:model_slug`
+   * (requotedKey): the vendor reworded the sentence and recommends what it did.
+   */
+  requoted: string[]
 }
+
+/** How ClassMapResult.requoted names a cell and the model it kept. */
+export const requotedKey = (cell: { provider: string; class: string; model_slug: string }) =>
+  `${cell.provider}:${cell.class}:${cell.model_slug}`
 
 export const CLASS_MAP_OPS_PATH = '/api/judge/alerts'
 
@@ -357,7 +366,7 @@ export async function applyClassMappings(
   proposals: readonly JudgeClassMapping[],
   now: Date = new Date(),
 ): Promise<ClassMapResult> {
-  if (proposals.length === 0) return { accepted: 0, rejected: [] }
+  if (proposals.length === 0) return { accepted: 0, rejected: [], requoted: [] }
 
   const classMap = await effectiveClassMap(db)
   const review = await cellsUnderReview(db, classMap, now)
@@ -366,6 +375,7 @@ export async function applyClassMappings(
   const cards = new Map<string, CardDescriptions>()
   const rejected: ClassMapRejection[] = []
   const decided = new Set<string>()
+  const requoted: string[] = []
   let accepted = 0
 
   for (const mapping of proposals) {
@@ -459,6 +469,7 @@ export async function applyClassMappings(
       path: CLASS_MAP_OPS_PATH,
     })
     decided.add(cell)
+    if (current?.model_slug === mapping.model_slug) requoted.push(requotedKey(mapping))
     accepted++
   }
 
@@ -470,5 +481,5 @@ export async function applyClassMappings(
       path: CLASS_MAP_OPS_PATH,
     })
   }
-  return { accepted, rejected }
+  return { accepted, rejected, requoted }
 }

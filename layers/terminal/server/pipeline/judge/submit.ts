@@ -24,7 +24,8 @@ import { rejectFalseDelistings, stillListedRemovals } from './still-listed'
 // POST /api/judge/alerts, minus the request: raw body -> schema gate ->
 // cursor check -> the offered window -> grounding against the cited change
 // rows as D1 holds them -> no still-listed model called delisted -> the hiring
-// materiality floor (layers/terminal/server/pipeline/hiring-floor.ts) -> stamping ->
+// materiality floor (layers/terminal/server/pipeline/hiring-floor.ts) -> the
+// class-map re-mappings -> the severity gates (severity-gates.ts) -> stamping ->
 // the one write chokepoint -> a judge_runs row. Every model-output
 // rejection is a return value and an ops event, never an exception; only
 // D1 itself can throw here.
@@ -306,12 +307,24 @@ export async function submitJudgeRun(
   const clusters =
     opts.clusters ?? (opts.sourcesYaml ? parseDepartmentClusters(opts.sourcesYaml) : [])
   const floored = await clampHiringAlerts(db, accepted, cited, clusters)
+  // The matrix as it stood before this run's re-mappings: a model the run
+  // maps away from was still tracked when its changes were detected.
   const matrix = await effectiveClassMap(db)
+  // Re-mappings are gated against the stored page, never against the body.
+  // Applied before the alerts are stored, so an alert on a sentence the run
+  // only re-quoted is stored as the rewording it is.
+  const classMap = await applyClassMappings(
+    db,
+    opts.readRaw ?? NO_PAGES,
+    body.class_map,
+    opts.now ?? new Date(),
+  )
   const gated = clampRoutineAlerts(
     floored.alerts,
     cited,
     new Set(matrix.map((e) => `${e.provider}:${e.model_slug}`)),
     new Set(stillListed.map((r) => r.change_id)),
+    new Set(classMap.requoted),
   )
 
   const rows = buildAlertRows(gated.alerts, cited)
@@ -351,14 +364,6 @@ export async function submitJudgeRun(
       path: JUDGE_OPS_PATH,
     })
   }
-
-  // Re-mappings are gated against the stored page, never against the body.
-  const classMap = await applyClassMappings(
-    db,
-    opts.readRaw ?? NO_PAGES,
-    body.class_map,
-    opts.now ?? new Date(),
-  )
 
   // Verdicts land after the cursor row, so a judged claim's status reads
   // this run as coverage; the status log is updated here rather than

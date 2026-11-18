@@ -4,6 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import { ChangeRow, contentHash } from '../../server/pipeline/contracts'
+import { requotedKey } from '../../server/pipeline/judge/class-map'
 import { incidentCounts } from '../../server/pipeline/judge/pending'
 import { clampRoutineAlerts } from '../../server/pipeline/judge/severity-gates'
 import { submitJudgeRun } from '../../server/pipeline/judge/submit'
@@ -156,6 +157,61 @@ describe('pricing materiality', () => {
     const minor = change('model', 'removed', was, null)
     const launch = change('model', 'added', null, price('gpt-new', null, 1, 2))
     expect(gate(minor, launch)).toBe('notable')
+  })
+})
+
+describe('a class-map sentence gone from the page', () => {
+  const sentence = (model_slug: string, present: boolean) => ({
+    provider: 'google',
+    class: 'balanced',
+    model_slug,
+    basis: 'A sentence the vendor has since reworded.',
+    present,
+  })
+  const gone = (model_slug = 'gemini-4-hydrogen') =>
+    change(
+      'recommendation',
+      'modified',
+      sentence(model_slug, true),
+      sentence(model_slug, false),
+      AT,
+      'google',
+    )
+  const requoted = new Set([
+    requotedKey({ provider: 'google', class: 'balanced', model_slug: 'gemini-4-hydrogen' }),
+  ])
+  const severity = (cited: ChangeRow[], cells: ReadonlySet<string> = requoted) =>
+    clampRoutineAlerts([alertOn(...cited)], cited, TRACKED, new Set(), cells).alerts[0]!.severity
+
+  it('is a ticker line when the run re-quoted the cell for the same model', () => {
+    const cited = [gone()]
+    const { alerts, clamped } = clampRoutineAlerts(
+      [alertOn(...cited)],
+      cited,
+      TRACKED,
+      new Set(),
+      requoted,
+    )
+    expect(alerts[0]!.severity).toBe('info')
+    expect(clamped).toEqual([
+      {
+        headline: 'A headline',
+        from: 'notable',
+        to: 'info',
+        detail: 'a class-map sentence the vendor reworded, re-quoted for the same model',
+      },
+    ])
+  })
+
+  it('stays an alert when the cell was not re-quoted, or took another model', () => {
+    expect(severity([gone()], new Set())).toBe('notable')
+    // The run re-mapped the cell to a different model: requoted holds no key for the old one.
+    expect(severity([gone('gemini-3.8-flash')])).toBe('notable')
+  })
+
+  it('stays an alert beside a change the rule does not cover', () => {
+    const launch = change('model', 'added', null, price('gemini-new', null, 1, 2), AT, 'google')
+    expect(severity([gone(), launch])).toBe('notable')
   })
 })
 
