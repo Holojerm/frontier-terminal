@@ -1,6 +1,7 @@
 import type { ChangeRow } from '../contracts'
 import type { FloorClamp } from '../hiring-floor'
 import { isRoutine8K, rootForm } from '../parsers/sec/forms'
+import { requotedKey } from './class-map'
 
 // Worker-side severity rules for the judge's filing and pricing alerts, the
 // counterpart of the hiring floor (hiring-floor.ts). The prompt states the same
@@ -11,6 +12,13 @@ import { isRoutine8K, rootForm } from '../parsers/sec/forms'
 // A model removal that another page of the lab still lists
 // (still-listed.ts) is a page dropping a row, not a delisting: an alert that
 // cites only such removals is a ticker line, whatever model it names.
+//
+// A class-map sentence gone from the page says one sentence is gone. When the
+// same run re-quotes the cell for the model it already held (class-map.ts ›
+// ClassMapResult.requoted), the vendor reworded the sentence and recommends
+// what it did: Google cut "featuring a shared 1M context window…" from
+// Hydrogen's card on 2026-11-18, and the alert read "no longer position
+// gemini-4-hydrogen as its balanced-class pick".
 
 interface PriceFields {
   provider?: string
@@ -47,6 +55,15 @@ function minorPriceChange(change: ChangeRow, tracked: ReadonlySet<string>): bool
   )
 }
 
+/** A class-map sentence that left the page, on a cell this run re-quoted for the same model. */
+function rewording(change: ChangeRow, requoted: ReadonlySet<string>): boolean {
+  if (change.entity_type !== 'recommendation') return false
+  const row = parsed<{ provider: string; class: string; model_slug: string; present?: boolean }>(
+    change.after_json,
+  )
+  return row?.present === false && requoted.has(requotedKey(row))
+}
+
 /** Lower every alert-tier alert the rules above cover to `info`. */
 export function clampRoutineAlerts<
   A extends { severity: 'info' | 'notable' | 'critical'; headline: string; change_ids: string[] },
@@ -56,6 +73,8 @@ export function clampRoutineAlerts<
   tracked: ReadonlySet<string>,
   /** Ids of model removals another page of the lab still lists. */
   stillListed: ReadonlySet<string> = new Set(),
+  /** Cells this run re-quoted for the model they held (requotedKey). */
+  requoted: ReadonlySet<string> = new Set(),
 ): { alerts: A[]; clamped: FloorClamp[] } {
   const byId = new Map(supplied.map((c) => [c.id, c]))
   const out: A[] = []
@@ -71,7 +90,9 @@ export function clampRoutineAlerts<
             ? 'a model dropped from one page that another page of the lab still lists'
             : cited.every((c) => minorPriceChange(c, tracked))
               ? 'a minor price change on a model the matrix does not track'
-              : null
+              : cited.every((c) => rewording(c, requoted))
+                ? 'a class-map sentence the vendor reworded, re-quoted for the same model'
+                : null
     if (alert.severity === 'info' || detail === null) {
       out.push(alert)
       continue

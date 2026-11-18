@@ -285,6 +285,93 @@ describe('a judge re-mapping', () => {
     expect(check).toMatchObject({ model_slug: 'claude-opus-6', present: true })
   })
 
+  it('stores the alert on a sentence it re-quotes for the same model as a ticker line', async () => {
+    // The launch rewrote two sentences. The flagship one now names Opus 6, a
+    // re-pointing. The balanced one is still Sonnet 5.5's, in new words.
+    const gone = await db
+      .select()
+      .from(schema.changes)
+      .where(eq(schema.changes.entity_type, 'recommendation'))
+    const lost = (klass: string) =>
+      gone.find((c) => c.entity_key.endsWith(`:${klass}`) && c.change_type === 'modified')!
+    const alert = (klass: string, slug: string) => ({
+      severity: 'notable',
+      headline: `Anthropic’s models page no longer has the sentence quoted for ${slug}`,
+      explanation: `The sentence the matrix quotes for ${slug} is gone from the page.`,
+      change_ids: [lost(klass).id],
+    })
+    const balanced = alert('balanced', 'claude-sonnet-5-5')
+    const flagship = alert('flagship', 'claude-opus-5-5')
+    const report = await submitJudgeRun(
+      db,
+      JSON.stringify({
+        alerts: [balanced, flagship],
+        class_map: [
+          proposal(),
+          proposal({ class: 'balanced', model_slug: 'claude-sonnet-5-5', basis: NEW_BALANCED }),
+        ],
+        judged_through: lost('balanced').detected_at,
+        change_ids_seen: [lost('balanced').id, lost('flagship').id],
+      }),
+      { now: NOW, readRaw, clusters: [] },
+    )
+    expect(report.gate_rejection).toBeNull()
+    expect(report.rejections).toEqual([])
+    expect(report.class_map).toEqual({ accepted: 2, rejected: [] })
+    expect(report.clamped).toEqual([
+      {
+        headline: balanced.headline,
+        from: 'notable',
+        to: 'info',
+        detail: 'a class-map sentence the vendor reworded, re-quoted for the same model',
+      },
+    ])
+    const stored = await db.select().from(schema.alerts)
+    const severityOf = (headline: string) => stored.find((a) => a.headline === headline)?.severity
+    expect(severityOf(balanced.headline)).toBe('info')
+    expect(severityOf(flagship.headline)).toBe('notable')
+  })
+
+  it('leaves that alert as sent when the re-quote is rejected', async () => {
+    const [lost] = await db
+      .select()
+      .from(schema.changes)
+      .where(eq(schema.changes.entity_key, 'recommendation:anthropic:balanced'))
+    const report = await submitJudgeRun(
+      db,
+      JSON.stringify({
+        alerts: [
+          {
+            severity: 'notable',
+            headline:
+              'Anthropic’s models page no longer has the sentence quoted for claude-sonnet-5-5',
+            explanation:
+              'The sentence the matrix quotes for claude-sonnet-5-5 is gone from the page.',
+            change_ids: [lost!.id],
+          },
+        ],
+        class_map: [
+          proposal({
+            class: 'balanced',
+            model_slug: 'claude-sonnet-5-5',
+            basis: 'A sentence the page does not print',
+          }),
+        ],
+        judged_through: lost!.detected_at,
+        change_ids_seen: [lost!.id],
+      }),
+      { now: NOW, readRaw, clusters: [] },
+    )
+    expect(report.class_map.rejected.map((r) => r.reason)).toEqual(['basis-not-on-page'])
+    expect(report.clamped).toEqual([])
+    // The poll's own launch alert for claude-opus-6 is stored beside it.
+    const judgeAlerts = await db
+      .select()
+      .from(schema.alerts)
+      .where(eq(schema.alerts.rule, 'agent-judge'))
+    expect(judgeAlerts.map((a) => a.severity)).toEqual(['notable'])
+  })
+
   it('accepts a model’s own description when its row also carries a "From" price note', async () => {
     // 2026-10-09: Haiku 5.5 replaced Haiku 4.5 with a "From" price, the parser
     // appended a note to the row's description, and every re-mapping onto the
