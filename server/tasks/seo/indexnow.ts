@@ -19,7 +19,14 @@ import {
 import { logEvent } from '../../utils/log'
 import { withHeartbeat } from '#layers/terminal/server/utils/task-heartbeat'
 
-const task = defineTask({
+// Spelled out because TypeScript infers the result type from the first `return`
+// alone, and this task has three shapes.
+type IndexNowRunResult =
+  | { skipped: NonNullable<ReturnType<typeof indexNowSkipReason>> }
+  | { submitted: number; statuses: number[] }
+  | { error: string }
+
+const task = defineTask<IndexNowRunResult>({
   meta: {
     name: 'seo:indexnow',
     description: 'Submit sitemap URLs changed since the last run to IndexNow (Bing, Yandex, …)',

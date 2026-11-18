@@ -10,4 +10,5 @@ export default defineEventHandler((event) => {
     path: url.pathname + url.search,
   })
   if (target) return sendRedirect(event, target, 301)
+  return undefined
 })

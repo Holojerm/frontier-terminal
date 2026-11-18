@@ -12,7 +12,9 @@ import { kvStore } from '../../utils/event-runtime'
 import { scheduleDrain } from '../../utils/events'
 import { withHeartbeat } from '../../utils/task-heartbeat'
 
-const task = defineTask({
+// The result type is spelled out because TypeScript infers it from the first
+// `return` alone, and this task has two shapes.
+const task = defineTask<{ skipped: 'unconfigured' } | { queued: number }>({
   meta: {
     name: 'social:digest',
     description: 'Queue the weekly what-moved thread for the social accounts',

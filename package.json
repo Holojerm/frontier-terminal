@@ -55,6 +55,7 @@
     "gdelt:search": "bun run scripts/gdelt-search.ts",
     "layers:pull": "bun run scripts/layers-pull.ts",
     "layers:check": "bun run scripts/check-layers.ts",
+    "patches:check": "bun run scripts/check-patches.ts",
     "typecheck": "nuxt typecheck",
     "test": "vitest run",
     "test:watch": "vitest",
