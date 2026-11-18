@@ -21,8 +21,8 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 import type { FetchOutcome, SourceFetcher } from '../../pipeline/fetch'
 import { unstorageLockStore } from '../../pipeline/lock'
 import { manifestFixtures } from '../../pipeline/parsers/fixture-provenance'
-import { blobRawStore, runPoll } from '../../pipeline/poll'
-import { evaluateTheses } from '../../theses/evaluate'
+import { blobRawStore, runPoll, type PollOutcome } from '../../pipeline/poll'
+import { evaluateTheses, type ClaimRun } from '../../theses/evaluate'
 import { runRecipes } from '../../theses/recipes/run'
 import { withHeartbeat } from '../../utils/task-heartbeat'
 
@@ -39,7 +39,9 @@ async function fixtureFetcher(): Promise<SourceFetcher> {
   }
 }
 
-const task = defineTask({
+// The result type is spelled out because TypeScript infers it from the first
+// `return` alone, and this task has two shapes.
+const task = defineTask<string | { polls: PollOutcome[]; recipes: number; theses: ClaimRun[] }>({
   meta: {
     name: 'dev:fixtures',
     description: 'Dev only: run the poll, recipes and theses over the committed fixtures',

@@ -17,7 +17,7 @@ An empty local DB is normal on a fresh checkout, and it hides bugs. Filling it i
 
 ## NuxtHub applies dev migrations in directory order — patched to sort
 
-NuxtHub (0.10.8 through 0.10.12, the latest checked) lists `.data/db/migrations/` with no sort, and on APFS directory order is not name order. A fresh `.data/db/sqlite.db` on a Mac therefore ran `0018` then `0009`, which failed (`no such table: entitlements`) before `0000` ever ran, and every data route returned 503 "Database unavailable". `patches/@nuxthub%2Fcore@0.10.12.patch` (bun's `patchedDependencies`) sorts the filtered list by name, the order drizzle-kit numbers them. Production is unaffected: `wrangler d1 migrations apply` sorts its own list. When upgrading NuxtHub, `bun install` does **not** fail on the stale patch: it prints one `no longer applies` warning and drops the entry from `bun.lock`, so the bug comes back with CI green. Re-cut it with `bun patch @nuxthub/core` (unless upstream sorts by then) and check `bun.lock` still has a `patchedDependencies` entry. A DB already broken this way is easiest rebuilt: move `.data/db/sqlite.db` aside and start `bun dev`.
+NuxtHub (0.10.8 through 0.10.12, the latest checked) lists `.data/db/migrations/` with no sort, and on APFS directory order is not name order. A fresh `.data/db/sqlite.db` on a Mac therefore ran `0018` then `0009`, which failed (`no such table: entitlements`) before `0000` ever ran, and every data route returned 503 "Database unavailable". `patches/@nuxthub%2Fcore@0.10.12.patch` (bun's `patchedDependencies`) sorts the filtered list by name, the order drizzle-kit numbers them. Production is unaffected: `wrangler d1 migrations apply` sorts its own list. When upgrading NuxtHub, `bun install` does **not** fail on the stale patch: it prints one `no longer applies` warning and drops the entry from `bun.lock`, so the bug comes back with CI green. `bun run patches:check` (part of `bun run ci`) now catches this: it fails when a `patchedDependencies` key names a version that isn't the one installed. Re-cut it with `bun patch @nuxthub/core` (unless upstream sorts by then) and check `bun.lock` still has a `patchedDependencies` entry. A DB already broken this way is easiest rebuilt: move `.data/db/sqlite.db` aside and start `bun dev`.
 
 ## Production D1 is migrated only by `deploy:ci`
 
@@ -188,6 +188,27 @@ produces an **empty sitemap** rather than an error:
 Also: values must be JSON-serializable *literals*. An interpolated string or a referenced
 constant fails `isSerializable` and is dropped, silently, the same way.
 
+## `nuxt typecheck` checks `server/` only when the root tsconfig is solution-style
+
+Nuxt 4 generates four projects (`.nuxt/tsconfig.app.json`, `.server.json`, `.shared.json`,
+`.node.json`). `nuxt typecheck`, and the checker inside `nuxt dev` and `nuxt build`, run
+`vue-tsc -b` over all four only when the root `tsconfig.json` has `references`, `"files": []`
+and no `include`. Until 2026-11 it was `"extends": "./.nuxt/tsconfig.json"`, the legacy config
+that excludes `server/**`, so nothing under `server/` or `layers/*/server/` was ever
+typechecked and the gate stayed green. Fixing it surfaced six real errors here: three
+`defineTask` calls with more than one result shape needing an explicit result type
+(`layers/social/server/tasks/social/post.ts`, `layers/terminal/server/tasks/social/digest.ts`,
+`layers/terminal/server/tasks/dev/fixtures.ts`, `server/tasks/seo/indexnow.ts`), one function
+with a parameter type narrower than what it called (`layers/terminal/server/pipeline/rate-limit.ts`
+› `isRateLimitRun`, now `Pick<RunSummary, 'status' | 'detail'>`), and one handler missing a
+`noImplicitReturns` return (`server/middleware/canonical-host.ts`).
+
+- Keep the root `tsconfig.json` as it is. Compiler options go in `nuxt.config.ts` ›
+  `typescript.tsConfig`; set in the root file they reach no project.
+- A removed auto-import is now `TS2304` in the gate, even where a test replaces the name with
+  `vi.stubGlobal`. It does not cover the case above (a name that typechecks but is not
+  injected), and nothing typechecks `test/` or `scripts/`.
+
 ## NuxtUI v4 needs an explicit CSS entry
 
 `app/assets/css/main.css` must contain `@import "tailwindcss"; @import "@nuxt/ui";` and be listed under `css:` in `nuxt.config.ts`. Without this, NuxtUI's generated theme (`.nuxt/ui.css`) doesn't get bundled — pages render in browser default fonts/colors with no Tailwind utilities working. Already wired up in this template; don't remove either piece.
@@ -207,7 +228,7 @@ How each gate stays scoped — **match this when you add a gate**:
 | `design:check` / `seo:check` / `brand:check` | Walk `ROOT/app`, `ROOT/app/pages`, and fixed root-relative asset paths |
 | `globals:check` | Walks `ROOT/server` and `ROOT/layers/*/server` |
 | `test` | `vitest.config.ts` › `include` is `test/**` + `server/**`, relative to the checkout |
-| `typecheck` | Nuxt's generated `.nuxt/tsconfig.*` use scoped includes (`../app/**/*`, `../server/**/*`), not a root glob |
+| `typecheck` | The root `tsconfig.json` has no files of its own, and Nuxt's generated `.nuxt/tsconfig.*` use scoped includes (`../app/**/*`, `../server/**/*`), not a root glob |
 | `test:a11y` | Per-checkout port — see below |
 | `build` | Nuxt only reads `app/`, `server/`, `shared/` |
 

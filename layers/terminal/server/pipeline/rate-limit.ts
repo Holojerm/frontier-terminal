@@ -31,7 +31,7 @@ export interface RunSummary {
   started_at: string
 }
 
-export const isRateLimitRun = (run: RunSummary): boolean =>
+export const isRateLimitRun = (run: Pick<RunSummary, 'status' | 'detail'>): boolean =>
   run.status === 'failed' && (run.detail?.startsWith(RATE_LIMITED_DETAIL) ?? false)
 
 /** When a source that last answered 429 may be fetched again, or null if it is not cooling. */
