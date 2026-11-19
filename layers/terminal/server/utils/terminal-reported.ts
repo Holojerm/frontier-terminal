@@ -102,9 +102,15 @@ const METRIC_ORDER: Readonly<Record<ReportedMetric, number>> = {
   funding_total: 4,
 }
 
-export async function queryReported(db: PipelineDb, ctx: QueryContext): Promise<ReportedData> {
-  const at = ctx.at
-  const [figures, articles, [read], [waiting]] = await Promise.all([
+/** A headline as the payload lists it, plus when we stored its earliest copy. */
+export type StoredHeadline = ReportedHeadline & { found_at: string }
+
+/** Every figure the judge kept, at its headline's earliest copy, newest first, and the headline keys read. */
+export async function storedHeadlines(
+  db: PipelineDb,
+  at: string | null,
+): Promise<{ headlines: StoredHeadline[]; keys: string[] }> {
+  const [figures, articles] = await Promise.all([
     db
       .select()
       .from(tables.reportedFigures)
@@ -113,18 +119,6 @@ export async function queryReported(db: PipelineDb, ctx: QueryContext): Promise<
       .select()
       .from(tables.reportedArticles)
       .where(at ? lte(tables.reportedArticles.found_at, at) : undefined),
-    db
-      .select({ n: count() })
-      .from(tables.gdeltFiles)
-      .where(
-        at
-          ? and(isNotNull(tables.gdeltFiles.figures_at), lte(tables.gdeltFiles.figures_at, at))
-          : isNotNull(tables.gdeltFiles.figures_at),
-      ),
-    db
-      .select({ n: count() })
-      .from(tables.gdeltFiles)
-      .where(and(eq(tables.gdeltFiles.status, 'ok'), isNull(tables.gdeltFiles.figures_at))),
   ])
 
   const copies = new Map<string, Set<string>>()
@@ -133,23 +127,7 @@ export async function queryReported(db: PipelineDb, ctx: QueryContext): Promise<
   }
   const earliest = new Map(earliestPerHeadline(articles).map((a) => [a.title_key, a]))
 
-  const reviewed = new Set<string>()
-  for (const group of chunk([...earliest.keys()], D1_MAX_BOUND_PARAMS - 1)) {
-    const rows = await db
-      .select({ title_key: tables.reportedReviews.title_key })
-      .from(tables.reportedReviews)
-      .where(
-        at
-          ? and(
-              inArray(tables.reportedReviews.title_key, group),
-              lte(tables.reportedReviews.judged_at, at),
-            )
-          : inArray(tables.reportedReviews.title_key, group),
-      )
-    for (const r of rows) reviewed.add(r.title_key)
-  }
-
-  const headlines: ReportedHeadline[] = []
+  const headlines: StoredHeadline[] = []
   for (const f of figures) {
     const article = earliest.get(f.title_key)
     if (!article) continue
@@ -168,9 +146,47 @@ export async function queryReported(db: PipelineDb, ctx: QueryContext): Promise<
       outlets: copies.get(f.title_key)?.size ?? 1,
       source_url: article.url,
       fetched_at: article.fetched_at,
+      found_at: article.found_at,
     })
   }
   headlines.sort((a, b) => b.published_at.localeCompare(a.published_at))
+  return { headlines, keys: [...earliest.keys()] }
+}
+
+export async function queryReported(db: PipelineDb, ctx: QueryContext): Promise<ReportedData> {
+  const at = ctx.at
+  const [stored, [read], [waiting]] = await Promise.all([
+    storedHeadlines(db, at),
+    db
+      .select({ n: count() })
+      .from(tables.gdeltFiles)
+      .where(
+        at
+          ? and(isNotNull(tables.gdeltFiles.figures_at), lte(tables.gdeltFiles.figures_at, at))
+          : isNotNull(tables.gdeltFiles.figures_at),
+      ),
+    db
+      .select({ n: count() })
+      .from(tables.gdeltFiles)
+      .where(and(eq(tables.gdeltFiles.status, 'ok'), isNull(tables.gdeltFiles.figures_at))),
+  ])
+  const headlines = stored.headlines.map(({ found_at: _found, ...h }): ReportedHeadline => h)
+
+  const reviewed = new Set<string>()
+  for (const group of chunk(stored.keys, D1_MAX_BOUND_PARAMS - 1)) {
+    const rows = await db
+      .select({ title_key: tables.reportedReviews.title_key })
+      .from(tables.reportedReviews)
+      .where(
+        at
+          ? and(
+              inArray(tables.reportedReviews.title_key, group),
+              lte(tables.reportedReviews.judged_at, at),
+            )
+          : inArray(tables.reportedReviews.title_key, group),
+      )
+    for (const r of rows) reviewed.add(r.title_key)
+  }
 
   return {
     series: seriesOf(headlines),
@@ -180,7 +196,7 @@ export async function queryReported(db: PipelineDb, ctx: QueryContext): Promise<
       files_read: read?.n ?? 0,
       // A point-in-time payload can't rewind a file that was waiting then; it reports today's.
       files_waiting: waiting?.n ?? 0,
-      unread: [...earliest.keys()].filter((k) => !reviewed.has(k)).length,
+      unread: stored.keys.filter((k) => !reviewed.has(k)).length,
     },
     as_of: ctx.as_of,
     computed_at: ctx.now().toISOString(),

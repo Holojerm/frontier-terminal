@@ -209,6 +209,7 @@ export const PAGE_ENTITY_TYPES: Record<string, readonly string[]> = {
     'risk_factors',
   ],
   '/disclosures': ['disclosure'],
+  '/ground-truth': ['revenue'],
 }
 
 /** Pages that summarise every axis, so change whenever anything does. */

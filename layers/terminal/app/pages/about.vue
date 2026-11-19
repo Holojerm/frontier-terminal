@@ -170,6 +170,14 @@ useSeo({
           times each notable or critical alert against the first press report and the lab’s own
           post. It shows the alerts where the press was first too.
         </dd>
+        <dt class="text-muted">Against filings</dt>
+        <dd class="text-default">
+          <NuxtLink to="/ground-truth" class="text-primary underline underline-offset-2"
+            >Ground truth</NuxtLink
+          >
+          checks each press report of a lab’s revenue against the filing that printed the figure
+          later. It shows the error and how many days early the report was.
+        </dd>
         <dt class="text-muted">Confidential filings</dt>
         <dd class="text-default">
           A confidential draft registration doesn’t appear on EDGAR until the company makes it

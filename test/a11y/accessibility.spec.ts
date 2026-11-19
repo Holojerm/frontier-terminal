@@ -47,6 +47,7 @@ const ROUTES = [
   '/prices',
   '/revenue',
   '/exposure',
+  '/ground-truth',
   '/hiring',
   '/releases',
   '/rankings',

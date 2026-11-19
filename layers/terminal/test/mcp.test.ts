@@ -177,6 +177,7 @@ describe('tools/list', () => {
       'get_disclosures',
       'get_exposure',
       'get_gpu_prices',
+      'get_ground_truth',
       'get_hiring',
       'get_hiring_history',
       'get_identifiers',

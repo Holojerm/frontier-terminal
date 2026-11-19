@@ -83,6 +83,7 @@ const LAB_LINKS: NavLink[] = LABS.map((lab) => ({ label: LAB_DISPLAY[lab], to: l
 const REFERENCE: NavLink[] = [
   { label: 'About', to: '/about' },
   { label: 'Data', to: '/data' },
+  { label: 'Ground truth', to: '/ground-truth' },
   { label: 'License', to: '/license' },
   { label: 'Contact', to: '/contact' },
   { label: 'Privacy', to: '/about#privacy' },
