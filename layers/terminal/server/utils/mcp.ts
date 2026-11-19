@@ -67,6 +67,8 @@ import { queryRevenue } from './terminal-revenue'
 import { PROVIDER_ORDER } from './terminal-sources'
 import { querySpend } from './terminal-spend'
 import { queryTrackRecord } from './terminal-track-record'
+import { queryGroundTruth } from './terminal-ground-truth'
+import { reportedStamp } from './terminal-reported'
 import { queryReliability, reliabilityStamp } from './terminal-reliability'
 import type { RebuiltAsOf } from './terminal-handler'
 import { repoSlug, workflowRunsUrl } from '../pipeline/reliability/deploys'
@@ -655,6 +657,38 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
     ({ as_of }) =>
       asOfErrors(async () =>
         json(await read('track-record', as_of, (ctx) => queryTrackRecord(deps.db, ctx))),
+      ),
+  )
+
+  server.registerTool(
+    'get_ground_truth',
+    {
+      title: 'Ground truth: press revenue reports against the filing that came later',
+      description:
+        'For a lab that files for itself (Anthropic so far): each press headline that stated its revenue before a filing printed that figure, ' +
+        'grouped under the filed figure. resolutions[] has the filed value, the first filing that printed it (first_filed, form, filing_url), ' +
+        'the reports scored against it earliest first, the median report, error_pct ((reported − filed) / filed), and lead_days from the earliest report to the filing day. ' +
+        'A report is scored only against a figure not yet filed when it was published. matched_by says how the period was chosen: stated (the headline names the year or quarter) ' +
+        'or nearest (the closest not-yet-filed figure within tolerance_pct, since most headlines name no year). ' +
+        'A filed figure with derived_from is one filed period minus another with the same start (a quarter no filing prints). ' +
+        'States: matched, missed (a named period more than tolerance_pct off), restated (published on or after the filing day, not scored), open (nothing filed to check it against). ' +
+        'held_before_filing is false for a headline we read back from GDELT’s archive after the filing: the press had it first and our store did not. ' +
+        'waiting[] lists reported figures no filing can score: a lab that hasn’t filed (no-filing), or run-rates, valuations and funding (not-in-filings). ' +
+        'alerts has the totals of get_track_record. Headlines come from GDELT, which misses Bloomberg, Reuters, the WSJ and the FT. Not investment advice. ' +
+        PROVENANCE,
+      inputSchema: z.object({ as_of: AsOfSchema }),
+      annotations: READ_ONLY,
+    },
+    ({ as_of }) =>
+      asOfErrors(async () =>
+        json(
+          await read(
+            'ground-truth',
+            as_of,
+            (ctx) => queryGroundTruth(deps.db, ctx),
+            await reportedStamp(deps.db),
+          ),
+        ),
       ),
   )
 

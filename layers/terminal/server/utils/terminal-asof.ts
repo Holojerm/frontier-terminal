@@ -396,6 +396,7 @@ export const AS_OF_ROUTES = [
   '/api/exposure',
   '/api/reported',
   '/api/track-record',
+  '/api/ground-truth',
 ] as const
 
 export function asOfRefusal(what: string, reason: string, also: string): string {

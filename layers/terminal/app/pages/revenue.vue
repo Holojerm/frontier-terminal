@@ -131,6 +131,7 @@ useSeo({
           id="reported"
           title="Reported in the press"
           note="Revenue, valuations and funding as news headlines state them. Unaudited, and never mixed with the filed figures."
+          :more="{ label: 'How these reports compare with filings', to: '/ground-truth' }"
         >
           <TerminalReportedPanel v-if="reported" :reported="reported" />
           <UAlert
