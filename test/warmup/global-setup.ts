@@ -44,6 +44,7 @@ const WARM_PATHS = [
   '/hiring',
   '/revenue',
   '/exposure',
+  '/ground-truth',
   '/incidents',
   '/releases',
   '/rankings',

@@ -82,7 +82,11 @@ const columns: TableColumn[] = [
 
 <template>
   <div class="space-y-6">
-    <TerminalPanel id="summary" title="Summary">
+    <TerminalPanel
+      id="summary"
+      title="Summary"
+      :more="{ label: 'Press reports against filings', to: '/ground-truth' }"
+    >
       <div class="max-w-2xl space-y-2 text-sm text-default">
         <p>{{ pressSummary(record.press) }}</p>
         <p>{{ newsroomSummary(record.newsroom) }}</p>
