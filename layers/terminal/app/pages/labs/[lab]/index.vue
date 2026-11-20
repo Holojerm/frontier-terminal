@@ -258,6 +258,18 @@ const fmt = useFigures()
 const figures = computed(() =>
   readoutCells(summary.value, rankings.data.value?.provenance, fmt.usd),
 )
+// The readout as two groups. Power has no axis of its own, so it joins here
+// and nowhere else: under economics, where the site nav files Compute.
+const readoutGroups = computed(() =>
+  READOUT_GROUPS.map((g) => ({
+    id: g.id,
+    label: g.label,
+    cells: [
+      ...g.axes.map((axis) => figures.value[axis]),
+      ...(g.id === 'economics' ? [powerCell(lab, display, power.data.value)] : []),
+    ],
+  })),
+)
 
 useSeo({
   image: ogCardPath(route.path),
@@ -381,21 +393,36 @@ const tabs = computed(() => [
           {{ comparedIn.length === 1 ? 'thesis' : 'theses' }}.
         </template>
       </p>
-      <dl
-        class="grid grid-cols-2 gap-x-6 gap-y-4 rounded border border-default p-3 sm:grid-cols-3 lg:grid-cols-5"
-      >
-        <TerminalFigure
-          v-for="axis in READOUT_AXES"
-          :key="axis"
-          :label="figures[axis].label"
-          :value="figures[axis].value"
-          :delta="figures[axis].delta"
-          :sub="figures[axis].sub"
-          :to="figures[axis].to"
-          :source="figures[axis].source"
-          :gap="figures[axis].gap"
-        />
-      </dl>
+      <!-- Four economics figures beside two operations figures, in six equal
+           columns. Only from 2xl: at xl a column is too narrow for a price
+           pair on one line, so the groups stack. -->
+      <div class="grid gap-3 2xl:grid-cols-3">
+        <section
+          v-for="g in readoutGroups"
+          :key="g.id"
+          :aria-labelledby="`readout-${g.id}`"
+          class="min-w-0 space-y-3 rounded border border-default p-3"
+          :class="g.cells.length > 2 ? '2xl:col-span-2' : undefined"
+        >
+          <h2 :id="`readout-${g.id}`" class="text-sm text-highlighted">{{ g.label }}</h2>
+          <dl
+            class="grid grid-cols-2 gap-x-6 gap-y-4"
+            :class="g.cells.length > 2 ? 'lg:grid-cols-4' : undefined"
+          >
+            <TerminalFigure
+              v-for="c in g.cells"
+              :key="c.label"
+              :label="c.label"
+              :value="c.value"
+              :delta="c.delta"
+              :sub="c.sub"
+              :to="c.to"
+              :source="c.source"
+              :gap="c.gap"
+            />
+          </dl>
+        </section>
+      </div>
     </template>
 
     <TerminalTabs :tabs="tabs">
@@ -516,6 +543,16 @@ const tabs = computed(() => [
             :title="`No listed company is tied to ${display} by name yet.`"
             :action="{ label: 'See the graph', to: '/dependencies' }"
           />
+
+          <TerminalPanel
+            v-if="power.data.value?.labs.length"
+            id="power"
+            title="Data-center power"
+            note="Epoch AI’s estimate of the sites that name this lab as a user."
+            :more="{ label: 'Every lab, and every site', to: '/compute' }"
+          >
+            <TerminalDataCenterPower :data="power.data.value" />
+          </TerminalPanel>
         </div>
       </template>
 
@@ -602,16 +639,6 @@ const tabs = computed(() => [
             :more="{ label: 'Hiring', to: '/hiring#pay' }"
           >
             <TerminalPayTable :pay="pay.data.value" />
-          </TerminalPanel>
-
-          <TerminalPanel
-            v-if="power.data.value?.labs.length"
-            id="power"
-            title="Data-center power"
-            note="Epoch AI’s estimate of the sites that name this lab as a user."
-            :more="{ label: 'Every lab, and every site', to: '/compute' }"
-          >
-            <TerminalDataCenterPower :data="power.data.value" />
           </TerminalPanel>
         </div>
       </template>
