@@ -89,8 +89,8 @@ const CORPUS_EXTRA = [
   'package.json',
   'content.config.ts',
   // Root config files are source too, and docs legitimately name what they
-  // set. `NUXT_PORT` is only ever written in playwright.config.ts, so without
-  // these a true statement about the browser suites read as a dead variable.
+  // set. The browser suites' env is only ever written in playwright.config.ts,
+  // so without these a true statement about the suites read as a dead variable.
   'playwright.config.ts',
   'vitest.config.ts',
   'drizzle.config.ts',
