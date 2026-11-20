@@ -13,25 +13,41 @@ export const OVERVIEW_BAND_ROWS = 5
 // The explanation, the cited ids and each row's text are on the permalink; no row on
 // the page prints them. What it reads off `changes` is lab, axis and the one figure
 // that moved (alertLabs, alertAxis, alertDelta in terminal-labs.ts).
-export function slimAlert(a: AlertView): AlertView {
-  return {
+//
+// What is left of a change is the same for most of the rows an alert cites (a
+// hiring batch is 150 "anthropic job added"), so equal ones are one object: the
+// payload serialiser writes a shared object once and points at it. With the
+// fields above, it took /alerts' payload from 550 kB to 150 kB.
+export function slimAlerts(alerts: AlertView[]): AlertView[] {
+  const seen = new Map<string, ChangeView>()
+  const slim = (c: ChangeView): ChangeView => {
+    const diff = c.diff.filter((d) => d.field === 'input_per_mtok' || d.field === 'output_per_mtok')
+    const key = JSON.stringify([c.entity_type, c.provider, c.change_type, diff])
+    let kept = seen.get(key)
+    if (!kept) {
+      kept = {
+        id: '',
+        entity_key: '',
+        entity_type: c.entity_type,
+        provider: c.provider,
+        change_type: c.change_type,
+        detected_at: '',
+        source_url: '',
+        fetched_at: '',
+        summary: '',
+        diff,
+      }
+      seen.set(key, kept)
+    }
+    return kept
+  }
+  return alerts.map((a) => ({
     ...a,
     explanation: '',
     change_ids: [],
     missing_change_ids: [],
-    changes: a.changes.map((c): ChangeView => ({
-      id: '',
-      entity_key: '',
-      entity_type: c.entity_type,
-      provider: c.provider,
-      change_type: c.change_type,
-      detected_at: '',
-      source_url: '',
-      fetched_at: '',
-      summary: '',
-      diff: c.diff.filter((d) => d.field === 'input_per_mtok' || d.field === 'output_per_mtok'),
-    })),
-  }
+    changes: a.changes.map(slim),
+  }))
 }
 
 export function overviewStrip(data: OverviewData, labs: readonly string[]): OverviewData {
@@ -47,7 +63,7 @@ export function overviewStrip(data: OverviewData, labs: readonly string[]): Over
   }
   return {
     ...data,
-    alerts: data.alerts.filter((a) => keep.has(a.id)).map(slimAlert),
-    info: data.info.filter((a) => keep.has(a.id)).map(slimAlert),
+    alerts: slimAlerts(data.alerts.filter((a) => keep.has(a.id))),
+    info: slimAlerts(data.info.filter((a) => keep.has(a.id))),
   }
 }

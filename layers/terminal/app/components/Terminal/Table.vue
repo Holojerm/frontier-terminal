@@ -77,16 +77,20 @@ const gapKeys = computed(
 // Source cells inside a table render on one line (ProvenanceTag reads this).
 provide(IN_TERMINAL_TABLE, true)
 
+// Cell padding is set once on the <table> for every cell, not on each cell:
+// repeated per cell it was about a quarter of /prices' markup. The selectors
+// reach only this table's own rows (`>*>tr>*`), never a table nested in a cell.
 // The reader's compact density halves the row padding. It is a `data-density`
 // on <html>, set before first paint (plugins/reader-prefs.ts), so the class
 // list is the same on the server and the client.
-const pad = computed(() =>
+const pad = computed(() => [
   props.nested
-    ? 'px-2 py-1 in-data-[density=compact]:py-0.5 first:pl-0 last:pr-0'
-    : props.edge === false
-      ? 'px-3 py-2 in-data-[density=compact]:py-1 first:pl-0 last:pr-0'
-      : 'px-3 py-2 in-data-[density=compact]:py-1',
-)
+    ? '[&>*>tr>*]:px-2 [&>*>tr>*]:py-1 in-data-[density=compact]:[&>*>tr>*]:py-0.5'
+    : '[&>*>tr>*]:px-3 [&>*>tr>*]:py-2 in-data-[density=compact]:[&>*>tr>*]:py-1',
+  props.nested || props.edge === false
+    ? '[&>*>tr>:first-child]:pl-0 [&>*>tr>:last-child]:pr-0'
+    : undefined,
+])
 
 // Measured on the client: SSR renders the box without a tab stop, and a
 // table that fits never gets one.
@@ -110,7 +114,6 @@ onBeforeUnmount(() => observer?.disconnect())
 const isHeader = (c: TableColumn) => c.key === (props.rowHeader ?? props.columns[0]?.key)
 
 const cellClass = (c: TableColumn) => [
-  pad.value,
   // A row header takes the highlight unless `rowClass` colors the whole row.
   isHeader(c)
     ? ['text-left font-normal', props.rowClass ? undefined : 'text-highlighted']
@@ -118,6 +121,27 @@ const cellClass = (c: TableColumn) => [
   c.numeric ? 'whitespace-nowrap text-right font-mono' : undefined,
   c.class,
 ]
+
+type Cell = { key: string; gap: boolean; span?: number; header: boolean }
+
+/**
+ * The cells a row renders: one per column, except that a gap row folds its
+ * gap columns into one spanning cell. A flat list so the row renders with
+ * one v-for, not a fragment (two comment nodes) around every cell.
+ */
+const cellsOf = (row: T): Cell[] => {
+  const gapped = props.gap?.(row) ?? false
+  const cells: Cell[] = []
+  for (const c of props.columns) {
+    if (gapped && c.key === gapKeys.value[0])
+      cells.push({ key: c.key, gap: true, span: gapKeys.value.length, header: false })
+    else if (!(gapped && gapKeys.value.includes(c.key)))
+      cells.push({ key: c.key, gap: false, header: isHeader(c) })
+  }
+  return cells
+}
+
+const classes = computed(() => new Map(props.columns.map((c) => [c.key, cellClass(c)])))
 
 const value = (row: T, key: string) => {
   const v = (row as Record<string, unknown>)[key]
@@ -140,7 +164,7 @@ const value = (row: T, key: string) => {
            their own min-h-6. -->
     <table
       class="w-full [&_:is(td,th)_a:not(.min-h-6)]:-mx-1 [&_:is(td,th)_a:not(.min-h-6)]:px-1 [&_:is(td,th)_a:not(.min-h-6)]:py-1.5"
-      :class="nested ? 'text-xs' : 'text-sm'"
+      :class="[nested ? 'text-xs' : 'text-sm', pad]"
     >
       <caption class="sr-only">
         {{ caption }}
@@ -157,7 +181,7 @@ const value = (row: T, key: string) => {
             :key="c.key"
             scope="col"
             class="whitespace-nowrap text-xs font-medium text-muted"
-            :class="[pad, c.numeric ? 'text-right' : undefined]"
+            :class="c.numeric ? 'text-right' : undefined"
           >
             {{ c.label }}
             <span v-if="c.hint" class="block max-w-48 whitespace-normal font-normal">{{
@@ -166,32 +190,30 @@ const value = (row: T, key: string) => {
           </th>
         </tr>
       </thead>
-      <tbody>
+      <!-- Row rules and alignment, like the padding, are set once here. -->
+      <tbody
+        class="*:border-b *:border-default *:last:border-0"
+        :class="align === 'top' ? '*:align-top' : '*:align-baseline'"
+      >
         <tr
           v-for="(row, index) in rows"
           :id="rowId?.(row)"
           :key="rowKey(row)"
-          class="border-b border-default last:border-0"
-          :class="[align === 'top' ? 'align-top' : 'align-baseline', rowClass?.(row)]"
+          :class="rowClass?.(row)"
         >
-          <template v-for="c in columns" :key="c.key">
-            <td
-              v-if="gap?.(row) && c.key === gapKeys[0]"
-              :colspan="gapKeys.length"
-              class="text-xs text-muted"
-              :class="pad"
-            >
-              <slot name="gap" :row="row" />
-            </td>
-            <component
-              :is="isHeader(c) ? 'th' : 'td'"
-              v-else-if="!(gap?.(row) && gapKeys.includes(c.key))"
-              :scope="isHeader(c) ? 'row' : undefined"
-              :class="cellClass(c)"
-            >
-              <slot :name="`cell-${c.key}`" :row="row" :index="index">{{ value(row, c.key) }}</slot>
-            </component>
-          </template>
+          <component
+            :is="cell.header ? 'th' : 'td'"
+            v-for="cell in cellsOf(row)"
+            :key="cell.key"
+            :colspan="cell.span"
+            :scope="cell.header ? 'row' : undefined"
+            :class="cell.gap ? 'text-xs text-muted' : classes.get(cell.key)"
+          >
+            <slot v-if="cell.gap" name="gap" :row="row" />
+            <slot v-else :name="`cell-${cell.key}`" :row="row" :index="index">{{
+              value(row, cell.key)
+            }}</slot>
+          </component>
         </tr>
       </tbody>
     </table>
