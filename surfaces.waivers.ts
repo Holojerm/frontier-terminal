@@ -24,7 +24,6 @@ export const SURFACE_WAIVERS = {
   labPage: {
     '/api/exposure':
       'not yet: the hyperscaler lines naming the lab are on the tear sheet and /exposure only',
-    '/api/theses': 'not yet: the lab’s thesis is on the tear sheet and /theses only',
   },
 
   tearSheet: {
