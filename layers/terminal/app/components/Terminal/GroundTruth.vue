@@ -160,6 +160,8 @@ const newsroomText = (t: TrackRecordTally) =>
 
 const scored = computed(() => props.truth.resolutions.flatMap((r) => r.reports))
 
+// Why a figure isn't scored, said once over the rows it covers (TerminalTable
+// `group`), not down a column: most rows share one reason.
 const reasonText = (w: GroundTruthWaiting) =>
   w.reason === 'no-filing'
     ? `${LAB_DISPLAY[w.lab]} hasn’t filed its own revenue with the SEC.`
@@ -203,7 +205,6 @@ const waitingColumns: TableColumn[] = [
   { key: 'reports', label: 'Reports', numeric: true },
   { key: 'latest', label: 'Latest report', numeric: true },
   { key: 'when', label: 'Reported', class: 'whitespace-nowrap' },
-  { key: 'why', label: 'Why it isn’t scored' },
 ]
 
 const resolutionKey = (r: GroundTruthResolution) => `${r.lab}|${r.filed.start}|${r.filed.end}`
@@ -405,10 +406,11 @@ const waitingKey = (w: GroundTruthWaiting) => `${w.lab}|${w.metric}|${w.currency
     >
       <TerminalTable
         v-if="truth.waiting.length"
-        caption="Reported figures with no filed figure to score them against, and why"
+        caption="Reported figures with no filed figure to score them against, grouped by why"
         :columns="waitingColumns"
         :rows="truth.waiting"
         :row-key="waitingKey"
+        :group="reasonText"
         align="top"
         nested
       >
@@ -429,7 +431,6 @@ const waitingKey = (w: GroundTruthWaiting) => `${w.lab}|${w.metric}|${w.currency
           </a>
           <span class="block text-xs text-muted">{{ row.latest.outlet }}</span>
         </template>
-        <template #cell-why="{ row }">{{ reasonText(row) }}</template>
       </TerminalTable>
       <p v-else class="text-sm text-default">No reported figure is waiting.</p>
     </TerminalPanel>

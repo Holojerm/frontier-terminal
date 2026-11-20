@@ -33,6 +33,13 @@ export interface TableColumn {
   /** A second header line: what the column answers. */
   hint?: string
   class?: string
+  /**
+   * In a `stack` table below `sm`, where each cell is a label/value line:
+   * `inline` drops the label and runs the value on one shared line with the
+   * row's other inline cells (a time, a lab, a topic); `hide` drops a
+   * secondary column on a phone.
+   */
+  stack?: 'inline' | 'hide'
 }
 
 export interface Fact {

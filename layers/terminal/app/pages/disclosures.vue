@@ -84,7 +84,7 @@ const TIMELINE_GAP: Record<Exclude<DisclosureView['timeline_status'], 'ok'>, str
         note="Median days from the discovery date a report prints to the date it was published."
         flush
       >
-        <TerminalDisclosureTable :disclosures="disclosures" collapse-gaps />
+        <TerminalDisclosureTable :disclosures="disclosures" />
       </TerminalPanel>
 
       <TerminalGap

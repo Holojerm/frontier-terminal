@@ -379,13 +379,25 @@ screen the way a terminal function key does. The data below it is the content.
   nothing to show keeps its label and its source cells and states the gap in one cell spanning
   the rest. `UTable` cannot express either — every cell is a `td` and a `colspan` does not
   remove its neighbors — so every table is `TerminalTable`.
+- **Repeated gaps:** labs that state the same gap share one line after the rows with figures
+  (`TerminalTable` `foldGaps`): the gap, then the labs, each with its own reason behind an info
+  control. A column that would repeat one reason down most rows is a group line over those
+  rows instead (`group`).
+- **Phones:** a table that would scroll sideways below `sm` stacks instead (`TerminalTable`
+  `stack`): each row is a short block, the row header first, then one label/value line per
+  cell. Columns marked `stack: 'inline'` (a time, a lab, a topic) share one unlabelled line, and
+  `stack: 'hide'` drops a secondary column. A table left to scroll sideways fades at the edge it
+  clips, so the reader can see there is more.
 - **Scroll:** a page never scrolls a box inside a scroll for its main reading. The page's
   primary table — the release list, the incident log, the price catalog, the alerts — runs as
   long as its rows (`TerminalTable` `flow`), with its header sticky under the site header.
+  So does a table whose rows are all the reading, like the like-for-like price matrix: a cap
+  that hides four of nine labs is a clipped reading, not a scroll box.
   A secondary table in a multi-panel layout scrolls in its own box, capped at 70% of the
   small viewport height (`70svh`, never `dvh`: a dvh cap resizes as the mobile URL bar shows
   and hides, and the page jumps mid-scroll), header sticky to the box. A box that scrolls is a named, focusable region
-  so a keyboard can scroll it.
+  so a keyboard can scroll it. Its clipped edges fade (a mask, dropped while the box has
+  focus so the focus ring shows).
 - **Source cells:** a citation in a table cell is one line: the host as a link, the age and
   exact fetch stamp in its tooltip and a screen-reader `<time>`. The panel footer prints every
   source with its visible age, so provenance stays within reach while a row stays one line.
@@ -426,7 +438,7 @@ feed with nothing to show live once in `layers/terminal/app/utils/feed-gap.ts`.
 |---|---|---|
 | `TerminalPage` | The page header (optional back link, `h1`, lede, as-of stamp, a header slot) and the one error alert | Per-page headers in three sizes; thirteen copies of the error `UAlert` |
 | `TerminalPanel` | The shell every reading sits in: 1px border, a `bg-muted` header strip with the `h2` title, a one-line note and a `#meta` slot, the body, and a footer for sources and the "more" link | Bare `section`s, the one `bg-elevated` band, fourteen hand-written "more" links |
-| `TerminalTable` | Semantic table: caption, row header, numeric alignment, a spanning gap cell, its own scroll box with a sticky header | Eighteen hand-rolled tables with drifting padding and header tokens |
+| `TerminalTable` | Semantic table: caption, row header, numeric alignment, a spanning gap cell, folded gap lines and group lines, a stacked phone form, its own scroll box with a sticky header and edge fades | Eighteen hand-rolled tables with drifting padding and header tokens |
 | `TerminalCard` | One lab, one filing, one claim — a bordered tile inside a panel, with a title row and a sources footer | Seven per-lab `article`s |
 | `TerminalGap` | A stated absence: inline (in a table cell, reason behind an info control) or block (dashed box, title, reason, one action) | `EmptyState` and six re-codings of the feed states |
 | `TerminalSources` | The provenance footer: one `TerminalProvenanceTag` per source, caveat controls, license | Three layouts of the same footer |

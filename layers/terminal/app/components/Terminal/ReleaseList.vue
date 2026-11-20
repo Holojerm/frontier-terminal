@@ -15,11 +15,17 @@ defineProps<{
   flow?: boolean
 }>()
 
+// On a phone a row stacks: the model, then its day, launch price and source.
 const columns: TableColumn[] = [
-  { key: 'seen', label: 'First seen', class: 'whitespace-nowrap font-mono text-xs text-muted' },
+  {
+    key: 'seen',
+    label: 'First seen',
+    class: 'whitespace-nowrap font-mono text-xs text-muted',
+    stack: 'inline',
+  },
   { key: 'model', label: 'Model' },
-  { key: 'price', label: '$/Mtok at launch', numeric: true },
-  { key: 'source', label: 'Source' },
+  { key: 'price', label: '$/Mtok at launch', numeric: true, stack: 'inline' },
+  { key: 'source', label: 'Source', stack: 'inline' },
 ]
 
 const priced = (r: ReleaseView) => r.input_per_mtok !== null || r.output_per_mtok !== null
@@ -33,6 +39,7 @@ const priced = (r: ReleaseView) => r.input_per_mtok !== null || r.output_per_mto
     :row-key="(r) => r.change_id"
     row-header="model"
     :flow="flow"
+    stack
   >
     <template #cell-seen="{ row: r }">
       <time :datetime="r.first_seen_at" :title="r.first_seen_at">{{

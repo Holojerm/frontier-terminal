@@ -2,6 +2,7 @@
 // Disclosed revenue as one row per lab: the newest reported period, its
 // value, the filing it came from. The front page's reading; every period,
 // restatements and the parent/issuer distinction in full are on /revenue.
+// Labs with the same gap share one line after the figures.
 
 import { count, periodLabel } from '../../../shared/utils/terminal-format'
 import type { RevenueData, RevenueProviderView } from '../../../shared/utils/terminal-types'
@@ -27,6 +28,14 @@ const gapText = (p: RevenueProviderView) =>
     : p.filer?.relation === 'issuer'
       ? 'S-1 filed. No revenue read yet'
       : 'Filer known. No XBRL revenue read yet'
+
+/** The same gap said of several labs at once, on a folded line. */
+const foldedText = (p: RevenueProviderView) =>
+  p.disclosure === 'none'
+    ? 'No SEC filing reports their revenue'
+    : p.filer?.relation === 'issuer'
+      ? 'S-1 filed, no revenue read yet'
+      : 'Filer known, no XBRL revenue read yet'
 </script>
 
 <template>
@@ -36,6 +45,8 @@ const gapText = (p: RevenueProviderView) =>
     :rows="watchlist.first(revenue.providers, (p) => p.provider)"
     :row-key="(p) => p.provider"
     :gap="(p) => !p.periods[0]"
+    :fold-gaps="gapText"
+    stack
   >
     <template #cell-display="{ row: p }">
       {{ p.display }}
@@ -49,7 +60,7 @@ const gapText = (p: RevenueProviderView) =>
     <template #cell-period="{ row: p }">
       <time :datetime="p.periods[0]!.start">{{ p.periods[0]!.start }}</time> →
       <time :datetime="p.periods[0]!.end">{{ p.periods[0]!.end }}</time>
-      <span class="text-muted"> · {{ periodLabel(p.periods[0]!.days) }}</span>
+      <span class="block text-muted">{{ periodLabel(p.periods[0]!.days) }}</span>
     </template>
     <template #cell-value="{ row: p }">
       <span class="text-highlighted" :title="`USD ${count(p.periods[0]!.val)}`">
@@ -70,8 +81,8 @@ const gapText = (p: RevenueProviderView) =>
     <template #cell-source="{ row: p }">
       <TerminalSources :sources="p.sources.slice(0, 1)" />
     </template>
-    <template #gap="{ row: p }">
-      <TerminalGap inline :title="gapText(p)" />
+    <template #gap="{ row: p, rows }">
+      <TerminalGap inline :title="rows ? foldedText(p) : gapText(p)" />
     </template>
   </TerminalTable>
 </template>

@@ -1,24 +1,21 @@
 <script setup lang="ts">
 // Misalignment disclosure as one row per lab: reports and notices on the
 // lab's own index, and the median days from discovery to publication. A lab
-// with no index is a row that says so and gives the audit's reason: the
-// count measures disclosure, so a blank here is the finding, not a zero.
+// with no index says so and gives the audit's reason: the count measures
+// disclosure, so a blank here is the finding, not a zero.
 //
-// `collapseGaps` states those labs on one line under the table instead, each
-// name with its reason behind an info control: where most labs publish no
-// index, five gap rows were taller than the one row of figures.
+// Labs with the same gap share one line after the figures, each name with
+// its own reason behind an info control (TerminalTable `foldGaps`): where most
+// labs publish no index, eight gap rows were taller than the one row of figures.
 
 import type { DisclosuresData } from '../../../shared/utils/terminal-types'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { GapRef, TableColumn } from '../../types/terminal-ui'
 
 const watchlist = useWatchlist()
 
 // Omit the entry list: this table renders the per-lab counts only, and a
 // page can drop the array before it is serialised into the hydration payload.
-const props = defineProps<{
-  disclosures: Omit<DisclosuresData, 'entries'>
-  collapseGaps?: boolean
-}>()
+const props = defineProps<{ disclosures: Omit<DisclosuresData, 'entries'> }>()
 
 const days = (n: number) => (Number.isInteger(n) ? `${n}d` : `${n.toFixed(1)}d`)
 
@@ -30,74 +27,50 @@ const columns: TableColumn[] = [
   { key: 'source', label: 'Source', keep: true },
 ]
 
-const providers = computed(() => watchlist.first(props.disclosures.providers, (p) => p.provider))
-const rows = computed(() =>
-  props.collapseGaps ? providers.value.filter((p) => p.feed === 'ok') : providers.value,
-)
+type Provider = DisclosuresData['providers'][number]
 
-/** Gap labs grouped by what is missing, for the collapsed line. */
-const gapGroups = computed(() => {
-  if (!props.collapseGaps) return []
-  const groups = new Map<string, { display: string; reason?: string; name?: string }[]>()
-  for (const p of providers.value) {
-    const gap = feedGap('disclosures', p)
-    if (!gap) continue
-    const list = groups.get(gap.title) ?? []
-    list.push({ display: p.display, reason: gap.reason, name: gap.name })
-    groups.set(gap.title, list)
-  }
-  return [...groups].map(([title, labs]) => ({ title, labs }))
-})
+const rows = computed(() => watchlist.first(props.disclosures.providers, (p) => p.provider))
+const gapOf = (p: Provider): GapRef => feedGap('disclosures', p) ?? { title: '' }
 </script>
 
 <template>
-  <div>
-    <TerminalTable
-      v-if="rows.length"
-      caption="Misalignment disclosures per lab: reports and notices on the lab’s own index, and median days from discovery to publication"
-      :columns="columns"
-      :rows="rows"
-      :row-key="(p) => p.provider"
-      :gap="(p) => p.feed !== 'ok'"
-    >
-      <template #cell-reports="{ row: p }">
-        <span class="text-highlighted">{{ p.reports }}</span>
+  <TerminalTable
+    caption="Misalignment disclosures per lab: reports and notices on the lab’s own index, and median days from discovery to publication"
+    :columns="columns"
+    :rows="rows"
+    :row-key="(p) => p.provider"
+    :gap="(p) => p.feed !== 'ok'"
+    :fold-gaps="(p) => gapOf(p).title"
+    stack
+  >
+    <template #cell-reports="{ row: p }">
+      <span class="text-highlighted">{{ p.reports }}</span>
+    </template>
+    <template #cell-median="{ row: p }">
+      <template v-if="p.median_days_to_disclosure !== null">
+        {{ days(p.median_days_to_disclosure) }}
+        <span class="text-xs text-muted">over {{ p.timed_reports }}</span>
       </template>
-      <template #cell-median="{ row: p }">
-        <template v-if="p.median_days_to_disclosure !== null">
-          {{ days(p.median_days_to_disclosure) }}
-          <span class="text-xs text-muted">over {{ p.timed_reports }}</span>
-        </template>
-        <span v-else class="text-muted">—</span>
-      </template>
-      <template #cell-source="{ row: p }">
-        <TerminalSources
-          :sources="p.sources.slice(0, 1)"
-          :caveats="
-            p.caveat ? [{ name: `Caveat for ${p.display} disclosures`, text: p.caveat }] : []
-          "
-        />
-      </template>
-      <template #gap="{ row: p }">
-        <TerminalGap inline v-bind="feedGap('disclosures', p)!" />
-      </template>
-    </TerminalTable>
-    <p
-      v-for="g in gapGroups"
-      :key="g.title"
-      class="border-t border-default px-3 py-2 text-xs text-muted first:border-t-0"
-    >
-      {{ g.title }}:
-      <template v-for="(l, i) in g.labs" :key="l.display">
-        <span class="whitespace-nowrap text-default"
-          >{{ l.display
-          }}<TerminalCaveatMark
-            v-if="l.reason"
-            :name="l.name ?? `Why: ${l.display}`"
-            :text="l.reason"
-            class="ml-1 align-middle" /></span
-        >{{ i < g.labs.length - 1 ? ', ' : '' }}
-      </template>
-    </p>
-  </div>
+      <span v-else class="text-muted">—</span>
+    </template>
+    <template #cell-source="{ row: p }">
+      <TerminalSources
+        :sources="p.sources.slice(0, 1)"
+        :caveats="p.caveat ? [{ name: `Caveat for ${p.display} disclosures`, text: p.caveat }] : []"
+      />
+    </template>
+    <template #gap="{ row: p, rows: folded }">
+      <TerminalGap v-if="folded" inline :title="gapOf(p).title" />
+      <TerminalGap v-else inline v-bind="gapOf(p)" />
+    </template>
+    <template #fold-name="{ row: p }">
+      {{ p.display
+      }}<TerminalCaveatMark
+        v-if="gapOf(p).reason"
+        :name="gapOf(p).name ?? `Why: ${p.display}`"
+        :text="gapOf(p).reason!"
+        class="-mr-1.5 align-middle"
+      />
+    </template>
+  </TerminalTable>
 </template>

@@ -11,7 +11,7 @@ import type {
   HiringHistoryData,
   HiringHistoryProvider,
 } from '../../../shared/utils/terminal-types'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { GapRef, TableColumn } from '../../types/terminal-ui'
 
 const watchlist = useWatchlist()
 
@@ -51,6 +51,11 @@ const columns = computed<TableColumn[]>(() => [
 ])
 
 const hasRows = (p: HiringHistoryProvider) => p.feed === 'ok' && p.total.length > 0
+
+// Boards with the same gap share one line after the figures, each lab's own
+// reason beside its name.
+const gapOf = (p: HiringHistoryProvider): GapRef =>
+  feedGap('hiring', p) ?? { title: 'No parsed roles yet' }
 </script>
 
 <template>
@@ -60,6 +65,8 @@ const hasRows = (p: HiringHistoryProvider) => p.feed === 'ok' && p.total.length 
     :rows="watchlist.first(history.providers, (p) => p.provider)"
     :row-key="(p) => p.provider"
     :gap="(p) => !hasRows(p)"
+    :fold-gaps="(p) => gapOf(p).title"
+    stack
   >
     <template #cell-display="{ row: p }">
       <NuxtLink :to="`/hiring#${p.provider}`" class="hover:underline hover:underline-offset-2">
@@ -89,8 +96,18 @@ const hasRows = (p: HiringHistoryProvider) => p.feed === 'ok' && p.total.length 
     <template #cell-source="{ row: p }">
       <TerminalSources :sources="p.sources.slice(0, 1)" />
     </template>
-    <template #gap="{ row: p }">
-      <TerminalGap inline v-bind="feedGap('hiring', p) ?? { title: 'No parsed roles yet' }" />
+    <template #gap="{ row: p, rows }">
+      <TerminalGap v-if="rows" inline :title="gapOf(p).title" />
+      <TerminalGap v-else inline v-bind="gapOf(p)" />
+    </template>
+    <template #fold-name="{ row: p }">
+      {{ p.display
+      }}<TerminalCaveatMark
+        v-if="gapOf(p).reason"
+        :name="gapOf(p).name ?? `Why: ${p.display}`"
+        :text="gapOf(p).reason!"
+        class="-mr-1.5 align-middle"
+      />
     </template>
   </TerminalTable>
 </template>
