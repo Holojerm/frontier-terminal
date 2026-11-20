@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { queryDependencies } from '../utils/terminal-dependencies'
 import { buildSuppliers, SUPPLIERS_VERSION } from '../utils/terminal-suppliers'
 import { queryListed } from '../utils/terminal-listed'
-import { VIEW_RECIPES } from '../utils/terminal-recipe-views'
+import { queryParents, VIEW_RECIPES } from '../utils/terminal-recipe-views'
 import { recipeRunsStamp } from '../utils/terminal-db'
 import { queryExposure } from '../utils/terminal-exposure'
 import { identifiersPayload } from '../utils/terminal-identifiers'
@@ -86,6 +86,30 @@ export function registerExposureTools({ server, deps, read }: McpKit): void {
       const ids = new Set([node, ...edges.flatMap((e) => [e.from, e.to])])
       return json({ ...data, edges, nodes: data.nodes.filter((n) => ids.has(n.id)) })
     },
+  )
+
+  server.registerTool(
+    'get_parents',
+    {
+      title: 'What Microsoft and Amazon file about OpenAI and Anthropic',
+      description:
+        'Every XBRL fact Microsoft tags on OpenAI and Amazon tags on Anthropic in its newest 10-Q or 10-K, with the filing’s own comparatives. ' +
+        'parents is one per lab: parent, member (the XBRL member the facts are tagged with), period (the newest period end in the filing) and facts, newest first, each with label, ' +
+        'date (the period end or the instant), span (3 months, 9 months, instant), value and unit (usd, pure for a ratio, shares, or text with the words in text). ' +
+        'These are the parent’s figures and none of them is the lab’s. Microsoft accounts for OpenAI at hypothetical liquidation value and books dilution gains in the same line, ' +
+        'so dividing by the stake doesn’t give OpenAI’s result. Amazon’s marks follow observable prices, and 12% is a cap rather than a stake, so none of this is Anthropic’s valuation. ' +
+        'get_exposure carries the OpenAI and Anthropic lines as series over time. Not investment advice. ' +
+        PROVENANCE,
+      annotations: READ_ONLY,
+    },
+    async () =>
+      json(
+        await deps.serve(
+          'parents',
+          () => queryParents(deps.db),
+          await recipeRunsStamp(deps.db, VIEW_RECIPES.parents),
+        ),
+      ),
   )
 
   server.registerTool(
