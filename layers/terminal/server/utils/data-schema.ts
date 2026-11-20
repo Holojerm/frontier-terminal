@@ -196,6 +196,12 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       reported_figures: { added: ['counterparty'] },
     },
   },
+  {
+    version: '1.8.1',
+    date: '2026-11-20',
+    summary:
+      'A fix to how the latency probes in /api/probes are read. ttft_ms is the time to the first text of the answer, and tokens_per_second counts answer tokens only. Until now a lab that streams its reasoning (xAI) was timed to its first reasoning text and its reasoning tokens were counted in throughput, so its readings before 2026-11-20 are not comparable with later ones. No columns changed.',
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

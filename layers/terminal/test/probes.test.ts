@@ -119,7 +119,7 @@ describe('the stream reader', () => {
     expect(state.output_tokens).toBe(5)
   })
 
-  it('counts streamed reasoning as tokens arriving, and an encrypted blob as nothing', () => {
+  it('times the first answer text, whether the reasoning before it was streamed or hidden', () => {
     const hidden = read([
       [200, chunk({ reasoning_details: [{ type: 'reasoning.encrypted', data: 'AAAA' }] })],
       [900, chunk({ content: 'one' })],
@@ -129,8 +129,11 @@ describe('the stream reader', () => {
       [200, chunk({ reasoning_details: [{ type: 'reasoning.text', text: 'Counting.' }] })],
       [900, chunk({ content: 'one' })],
     ])
-    expect(shown).toMatchObject({ first_token_at: 200, reasoning_streamed: true })
-    expect(read([[150, chunk({ reasoning: 'Counting.' })]]).first_token_at).toBe(150)
+    expect(shown).toMatchObject({ first_token_at: 900, token_chunks: 1, reasoning_streamed: true })
+    expect(read([[150, chunk({ reasoning: 'Counting.' })]])).toMatchObject({
+      first_token_at: null,
+      reasoning_streamed: true,
+    })
   })
 
   it('keeps a mid-stream error with the provider’s own code', () => {
@@ -180,6 +183,38 @@ describe('measure', () => {
     expect(measure(read(reads), 0, 1461).tokens_per_second).toBe(99)
   })
 
+  // The shape of xAI's reply on 2026-11-20: reasoning text for seven seconds,
+  // then the answer, and a usage that bills the reasoning beyond the cap.
+  const REASONED: Read[] = [
+    [3006, chunk({ reasoning: 'The user wants' })],
+    [6000, chunk({ reasoning: ' a count to three hundred.' })],
+    [10239, chunk({ content: 'one,' })],
+    [10600, chunk({ content: ' two,' })],
+    [11239, chunk({ content: ' three' })],
+    [11300, usageChunk(834, 674)],
+  ]
+
+  it('times a reply with streamed reasoning from its answer, on answer tokens alone', () => {
+    // 160 answer tokens, 159 after the first, over 1.000 s.
+    expect(measure(read(REASONED), 0, 11354)).toMatchObject({
+      ttft_ms: 10239,
+      output_tokens: 834,
+      reasoning_tokens: 674,
+      tokens_per_second: 159,
+    })
+  })
+
+  it('gives no throughput when streamed reasoning cannot be told from the answer', () => {
+    const unstated = [
+      ...REASONED.slice(0, 5),
+      [11300, usageChunk(834).replace('"reasoning_tokens":0', '"reasoning_tokens":null')] as Read,
+    ]
+    expect(measure(read(unstated), 0, 11354)).toMatchObject({
+      ttft_ms: 10239,
+      tokens_per_second: null,
+    })
+  })
+
   it('gives no throughput for a reply that arrived in one piece', () => {
     const state = read([
       [800, chunk({ content: 'one, two, three' })],
@@ -193,6 +228,23 @@ describe('measure', () => {
     expect(measure(read(shifted), 5000, 6461)).toMatchObject({ ttft_ms: 450, total_ms: 1461 })
   })
 })
+
+// The shape of Meta's reply on 2026-11-20 at a cap of 160: one encrypted
+// reasoning blob, no answer text, finish_reason length.
+const ALL_REASONING: Read[] = [
+  [1649, ': OPENROUTER PROCESSING\n\n'],
+  [
+    3264,
+    chunk({
+      content: '',
+      role: 'assistant',
+      reasoning: null,
+      reasoning_details: [{ type: 'reasoning.encrypted', data: 'Q-PaDgHx' }],
+    }),
+  ],
+  [3284, usageChunk(160, 158)],
+  [3287, 'data: [DONE]\n\n'],
+]
 
 describe('classify', () => {
   const state = read(GOOD)
@@ -227,6 +279,7 @@ describe('classify', () => {
       'router',
     ],
     ['a 200 that ends with no usage', end({ state: read(GOOD.slice(0, 6)) }), 'setup'],
+    ['a 200 whose cap went to hidden reasoning', end({ state: read(ALL_REASONING) }), 'setup'],
     [
       'a 429 mid-stream',
       end({ state: { ...state, error: { code: 429, message: 'slow down', provider_code: null } } }),
@@ -249,6 +302,12 @@ describe('classify', () => {
       '429 (provider overloaded_error): said',
     )
     expect(classify(end({})).detail).toBeNull()
+    expect(classify(end({ state: read(ALL_REASONING) })).detail).toBe(
+      'no answer text: the output cap went to reasoning (158 of 160 tokens)',
+    )
+    expect(classify(end({ state: read(GOOD.slice(0, 6)) })).detail).toBe(
+      'unreadable reply: the stream ended with no tokens or no usage',
+    )
   })
 })
 
@@ -716,13 +775,24 @@ describe('the probe targets', () => {
       const body = probeRequestBody(target)
       expect(body.provider).toEqual({ only: [target.provider], allow_fallbacks: false })
       expect(body.stream).toBe(true)
-      expect(body.max_tokens).toBe(PROBE_MAX_TOKENS)
+      expect(body.max_tokens).toBe(PROBE_MAX_TOKENS + (target.reasoning_allowance ?? 0))
     }
   })
 
-  it('stay inside the owner’s budget of $15 a month at list prices', () => {
+  it('leave room for an answer where the endpoint counts reasoning against the cap', () => {
+    const body = (lab: string) => probeRequestBody(PROBE_TARGETS.find((t) => t.lab === lab)!)
+    expect(body('meta').max_tokens).toBe(480)
+    expect(body('openai').max_tokens).toBe(160)
+    // Mistral's endpoint refuses `none` (400, 2026-11-20), whatever OpenRouter lists.
+    expect(body('mistral').reasoning).toEqual({ effort: 'low' })
+  })
+
+  it('stay inside $25 a month at list prices, counting what xAI bills outside the cap', () => {
     const ceiling = monthlyCostCeiling()
-    expect(ceiling).toBeGreaterThan(10)
-    expect(ceiling).toBeLessThan(15)
+    expect(ceiling).toBeGreaterThan(20)
+    expect(ceiling).toBeLessThan(25)
+    const only = (lab: string) => monthlyCostCeiling(PROBE_TARGETS.filter((t) => t.lab === lab))
+    // 40 + 1,260 prompt tokens at $2 and 160 + 700 output tokens at $6, 732 times.
+    expect(only('xai')).toBeCloseTo(5.68, 2)
   })
 })

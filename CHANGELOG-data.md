@@ -23,6 +23,16 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.8.1 (2026-11-20)
+
+A fix to how the latency probes in `/api/probes` are read. No columns changed.
+
+- `ttft_ms` is the time to the first text of the answer, and
+  `tokens_per_second` counts answer tokens only. Until now a lab that streams
+  its reasoning (xAI) was timed to its first reasoning text, and its reasoning
+  tokens were counted in throughput. Its readings before 2026-11-20 are not
+  comparable with later ones.
+
 ## 1.8.0 (2026-11-19)
 
 Press reports of deal sizes. `reported_figures.metric` gains `commitment`,
