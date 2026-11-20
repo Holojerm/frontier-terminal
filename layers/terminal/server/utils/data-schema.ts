@@ -216,6 +216,18 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       power_site_ties: { note: 'New table.' },
     },
   },
+  {
+    version: '1.10.0',
+    date: '2026-11-20',
+    summary:
+      'supplier_passages is read from the suppliers’ own filings as they are filed. Its first rows were read by hand; the filings lane now reads each company’s new 10-Q, 10-K, 8-K, 20-F and 6-K, a model picks out the passages, and a row is kept only where its quote and every figure are in the filing verbatim. basis says which, a row a later filing of the same form drops gets ended_at and ended_by, and fetched_at now moves when a newer filing repeats the quote.',
+    tables: {
+      supplier_passages: {
+        added: ['basis', 'accession_no', 'first_seen_at', 'ended_at', 'ended_by'],
+        note: 'source_url, filed, period and source_title move to the newer filing when it repeats the quote word for word.',
+      },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

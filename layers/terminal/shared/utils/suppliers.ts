@@ -1,8 +1,8 @@
 // The chip, hardware and compute-rental companies whose own filings tie them
 // to a lab or a cloud (GET /api/suppliers, the /dependencies page, the
-// get_suppliers MCP tool). Every row is read by hand from one SEC document
-// (layers/terminal/server/curated/suppliers.json) and is kept only while
-// `bun run suppliers:verify` still finds its quote in that document.
+// get_suppliers MCP tool). Every row is one passage of one SEC document, read
+// by hand (layers/terminal/server/curated/suppliers.json) or by the judge from
+// a filing the filings lane stored (layers/terminal/server/suppliers/).
 
 import { z } from 'zod'
 
@@ -104,14 +104,20 @@ const curatedRow = z.object({
    * ("the Parent"), the term and the passage that defines it.
    */
   alias: z.object({ term: z.string().min(1), quote: z.string().min(20).max(400) }).nullable(),
-  /** When suppliers:verify last fetched the document and found the quote. */
+  /** When the document was last fetched and the quote found in it. */
   fetched_at: z.iso.datetime(),
 })
 
+/** The rows read by hand, which seed the stored table (layers/terminal/server/suppliers/ingest.ts). */
 export const curatedSuppliers = z.object({ rows: z.array(curatedRow) })
 
 export type CuratedSuppliers = z.infer<typeof curatedSuppliers>
-export type SupplierRow = z.infer<typeof curatedRow>
+export type CuratedSupplierRow = z.infer<typeof curatedRow>
+
+/** hand: read by a person. judge: read by the judge from a stored filing and checked word for word. */
+export type SupplierBasis = 'hand' | 'judge'
+
+export type SupplierRow = CuratedSupplierRow & { basis: SupplierBasis }
 export type SupplierFigure = z.infer<typeof figure>
 
 /** A share a filing puts on one customer, with who it is where the filing says. */

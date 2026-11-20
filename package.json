@@ -54,7 +54,6 @@
     "power:verify": "bun run scripts/power-sites-verify.ts",
     "probe:install": "bun run scripts/probe-install.ts",
     "gdelt:search": "bun run scripts/gdelt-search.ts",
-    "suppliers:verify": "bun run scripts/suppliers-verify.ts",
     "layers:pull": "bun run scripts/layers-pull.ts",
     "layers:check": "bun run scripts/check-layers.ts",
     "patches:check": "bun run scripts/check-patches.ts",

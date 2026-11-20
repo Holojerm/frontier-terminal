@@ -4,9 +4,14 @@
 // Its own invocation because its own memory: each S-1 and amendment runs to
 // ~14 MB, and with a third one in it the survey would carry ~124 MiB of the
 // 128 MB that killed it on 2026-11-04 (payload-budget.test.ts).
+//
+// After the poll, the suppliers reader fetches the suppliers' new 10-Qs,
+// 10-Ks, 8-Ks, 20-Fs and 6-Ks (layers/terminal/server/suppliers/ingest.ts),
+// one document at a time, for the same reason.
 
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
+import { recordOpsEvent } from '#server/utils/ops'
 import { kv } from '@nuxthub/kv'
 
 import sourcesYaml from 'raw:~~/sources.yaml'
@@ -15,6 +20,7 @@ import { createFetcher } from '../../pipeline/fetch'
 import { unstorageLockStore } from '../../pipeline/lock'
 import { blobRawStore, runPoll } from '../../pipeline/poll'
 import { paceSec } from '../../pipeline/sec-pace'
+import { runSupplierReads } from '../../suppliers/ingest'
 import { warmAfterPoll } from '../../utils/cache-warm-task'
 import { withHeartbeat } from '../../utils/task-heartbeat'
 
@@ -25,20 +31,28 @@ const task = defineTask({
   },
   async run({ context }) {
     const config = useRuntimeConfig()
+    const fetcher = paceSec(
+      createFetcher({
+        secContactEmail: config.secContactEmail,
+        appUrl: config.public.appUrl,
+      }),
+    )
+    const raw = blobRawStore(blob)
     const result = await runPoll('filings', {
       db,
-      raw: blobRawStore(blob),
+      raw,
       lock: unstorageLockStore(kv),
-      fetcher: paceSec(
-        createFetcher({
-          secContactEmail: config.secContactEmail,
-          appUrl: config.public.appUrl,
-        }),
-      ),
+      fetcher,
       sourcesYaml,
     })
+    const suppliers = await runSupplierReads(db, { raw, fetcher, now: new Date() }).catch(
+      async (error: unknown) => {
+        await recordOpsEvent(db, { kind: 'supplier_read_failed', detail: String(error) })
+        return null
+      },
+    )
     await warmAfterPoll(context)
-    return { result }
+    return { result, suppliers }
   },
 })
 

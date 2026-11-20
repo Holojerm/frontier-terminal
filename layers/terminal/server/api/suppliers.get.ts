@@ -2,15 +2,17 @@
 // own SEC filings tie them to a lab or a cloud: one row per filed passage,
 // with its figures, the quote it rests on, the document and when the quote
 // was last found there (layers/terminal/server/utils/terminal-suppliers.ts).
-// The table is read by hand and ships with the build. No `as_of`.
+// The table is stored in D1 and grows as the suppliers' new filings are read
+// (layers/terminal/server/suppliers/). No `as_of`.
 
 import { rateLimitTerminal } from '../utils/api-access'
-import { serveTerminal } from '../utils/terminal-handler'
-import { buildSuppliers, SUPPLIERS_VERSION } from '../utils/terminal-suppliers'
+import { suppliersStamp } from '../suppliers/store'
+import { serveTerminal, terminalDb } from '../utils/terminal-handler'
+import { querySuppliers } from '../utils/terminal-suppliers'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'suppliers', limit: 60, windowSeconds: 60 })
-  return serveTerminal(event, 'suppliers', async () => buildSuppliers(), {
-    variant: SUPPLIERS_VERSION,
+  return serveTerminal(event, 'suppliers', () => querySuppliers(terminalDb), {
+    variant: await suppliersStamp(terminalDb),
   })
 })

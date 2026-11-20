@@ -1,6 +1,6 @@
-// Whether a quoted passage is still on the page it was read from. Used by
-// the verify scripts for the hand-read tables (scripts/suppliers-verify.ts,
-// scripts/power-sites-verify.ts).
+// Whether a quoted passage is on the page it was read from: the suppliers
+// reader's check of a stored filing (layers/terminal/server/suppliers/) and
+// scripts/power-sites-verify.ts.
 
 const ENTITIES: Record<string, string> = {
   amp: '&',

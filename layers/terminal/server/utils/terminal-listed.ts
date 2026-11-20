@@ -17,7 +17,7 @@ import type { PipelineDb } from '../pipeline/store'
 import type { QueryContext } from './terminal-db'
 import { queryDependencies } from './terminal-dependencies'
 import { queryPowerSites } from './terminal-recipe-views'
-import { buildSuppliers } from './terminal-suppliers'
+import { querySuppliers } from './terminal-suppliers'
 
 export const LISTED_RULE =
   'One row per listed company that the graph, the suppliers table or the power table names. Each tie is what a filing or a cited page says, and the three tables measure different things, so the rows aren’t ranked. A row says a source names the company. It isn’t a view on the stock. Not investment advice.'
@@ -111,11 +111,15 @@ export function buildListed(
 }
 
 export async function queryListed(db: PipelineDb, ctx: QueryContext): Promise<ListedData> {
-  const [graph, power] = await Promise.all([queryDependencies(db, ctx), queryPowerSites(db)])
+  const [graph, power, suppliers] = await Promise.all([
+    queryDependencies(db, ctx),
+    queryPowerSites(db),
+    querySuppliers(db),
+  ])
   return {
     as_of: ctx.as_of,
     computed_at: ctx.now().toISOString(),
     rule: LISTED_RULE,
-    ...buildListed(graph, buildSuppliers(), power),
+    ...buildListed(graph, suppliers, power),
   }
 }

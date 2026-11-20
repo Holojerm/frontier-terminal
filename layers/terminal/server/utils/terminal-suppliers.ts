@@ -1,27 +1,22 @@
 // The suppliers table: the chip, hardware and compute-rental companies whose
-// own SEC filings tie them to a lab or a cloud. The rows are read by hand
-// (../curated/suppliers.json) and re-checked against their documents by
-// `bun run suppliers:verify`. Nothing here is estimated or joined to another
-// source: a company's row says what its filing says, in the filing's words.
+// own SEC filings tie them to a lab or a cloud. The rows start from the
+// hand-read file (../curated/suppliers.json) and grow as the filings lane
+// reads each company's new documents and the judge reads them
+// (../suppliers/). Nothing here is estimated or joined to another source: a
+// company's row says what its filing says, in the filing's words.
 
 import {
-  curatedSuppliers,
-  type CuratedSuppliers,
   type SupplierCompany,
   type SupplierGap,
   type SupplierRow,
   type SupplierShare,
   type SuppliersData,
 } from '../../shared/utils/suppliers'
-import curated from '../curated/suppliers.json'
+import type { PipelineDb } from '../pipeline/store'
+import { currentPassages, rowOf } from '../suppliers/store'
 
 export const SUPPLIERS_RULE =
-  'Each row is one passage from the company’s own SEC filing, read by hand and quoted. A share is the filing’s own figure for one customer in the period it names, and companies’ fiscal years differ. Where a filing gives a customer’s share and no name, the row keeps the filing’s label and names no one. Not investment advice.'
-
-const TABLE = curatedSuppliers.parse(curated)
-
-/** The cache key half that moves when the table does. */
-export const SUPPLIERS_VERSION = `${TABLE.rows.length}:${TABLE.rows.reduce((m, r) => (r.fetched_at > m ? r.fetched_at : m), '')}`
+  'Each row is one passage from the company’s own SEC filing, quoted. The first rows were read by hand; each new 10-Q, 10-K, 8-K, 20-F or 6-K is read by a model and kept only where the quote and every figure in it are in the filing word for word. A passage a later filing of the same form no longer has is dropped. A share is the filing’s own figure for one customer in the period it names, and companies’ fiscal years differ. Where a filing gives a customer’s share and no name, the row keeps the filing’s label and names no one. Not investment advice.'
 
 /**
  * The share a row puts on its customer: the first figure, which is the
@@ -55,7 +50,7 @@ const newest = (a: SupplierShare | null, b: SupplierShare | null) => {
   return b.pct > a.pct ? b : a
 }
 
-export function buildSuppliers(table: CuratedSuppliers = TABLE): SuppliersData {
+export function buildSuppliers(table: { rows: readonly SupplierRow[] }): SuppliersData {
   const companies = new Map<string, SupplierCompany>()
   for (const row of table.rows) {
     const c = companies.get(row.ticker) ?? {
@@ -116,13 +111,19 @@ export function buildSuppliers(table: CuratedSuppliers = TABLE): SuppliersData {
       id: 'not-on-graph',
       title: 'These companies aren’t circles on the graph',
       reason:
-        'The graph draws figures a filer tags in its XBRL on a named counterparty. These rows are sentences read by hand, with shares and dollars that measure different things, so they are listed here with their quotes.',
+        'The graph draws figures a filer tags in its XBRL on a named counterparty. These rows are quoted sentences, with shares and dollars that measure different things, so they are listed here with their quotes.',
     },
     {
       id: 'unfiled-deals',
       title: 'Announced deals with no filed passage aren’t listed',
       reason:
         'A row needs a passage in the company’s own SEC document. A deal known only from a press report or a lab’s blog post isn’t here.',
+    },
+    {
+      id: 'exhibits-unread',
+      title: 'An exhibit to an 8-K or 6-K isn’t read',
+      reason:
+        'The reader reads the main document of each new filing. A tie stated only in an attached press release or interim statements reaches the table when it is read by hand.',
     },
     {
       id: 'non-sec-suppliers',
@@ -142,4 +143,9 @@ export function buildSuppliers(table: CuratedSuppliers = TABLE): SuppliersData {
     rows,
     gaps,
   }
+}
+
+/** The rows no later filing has dropped, as a reader sees them. */
+export async function querySuppliers(db: PipelineDb): Promise<SuppliersData> {
+  return buildSuppliers({ rows: (await currentPassages(db)).map(rowOf) })
 }
