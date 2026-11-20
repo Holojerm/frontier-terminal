@@ -23,6 +23,21 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.10.0 (2026-11-20)
+
+`supplier_passages` is read from the suppliers' own filings as they are
+filed. Its first rows were read by hand. The filings lane now reads each
+company's new 10-Q, 10-K, 8-K, 20-F and 6-K, a model picks out the
+passages, and a row is kept only where its quote and every figure in it are
+in the filing verbatim.
+
+- New columns: `basis` (`hand` or `judge`), `accession_no`, `first_seen_at`,
+  and `ended_at` and `ended_by`, set when the company's next filing of the
+  same form no longer has the quote. An ended row stays in the table.
+- Changed: when a newer filing of the same form repeats a quote word for
+  word, the row's `source_url`, `filed`, `period`, `source_title` and
+  `fetched_at` move to that filing. The `id` stays the same.
+
 ## 1.9.0 (2026-11-20)
 
 Six new tables.

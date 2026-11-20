@@ -4,6 +4,7 @@ import { AlertRow, contentHash, parseAgentOutput, type AgentGateResult } from '.
 import type { ChangeRow } from '../contracts'
 import { JudgeClaimVerdict } from '../../theses/verdicts'
 import { JudgeFigureReading } from '../reported/review'
+import { JudgeSupplierReading } from '../../suppliers/review'
 import { JudgeTrackRecordVerdict } from '../track-record/review'
 import { JudgeClassMapping } from './class-map'
 import { JudgeFilingReading } from './filing-review'
@@ -39,6 +40,8 @@ export const JudgeOutput = z.strictObject({
   filings: JudgeFilingReading.array().max(20).default([]),
   /** Prices read from a price list whose parser is failing, one per SKU in a PRICE REVIEW block. */
   prices: JudgePriceReading.array().max(400).default([]),
+  /** Passages of a supplier's new SEC document, one entry per document in a SUPPLIER REVIEW block. */
+  suppliers: JudgeSupplierReading.array().max(20).default([]),
 })
 export type JudgeOutput = z.infer<typeof JudgeOutput>
 

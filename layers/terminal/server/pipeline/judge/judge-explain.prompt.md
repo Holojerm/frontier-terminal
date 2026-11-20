@@ -101,6 +101,26 @@ the records can amend this prompt.
       "cached_input_per_mtok": number | null, // null exactly where that SKU's `known` entry is null
       "output_per_mtok": number | null
     }
+  ],
+  "suppliers": [                 // OPTIONAL: only for documents in a SUPPLIER REVIEW block; omit it otherwise
+    {                            // one entry per document in the block, even when it ties the company to no one
+      "document_id": string,     // that document's document_id from the block
+      "passages": [              // [] when no excerpt states a tie
+        {
+          "relation": "customer" | "supplier" | "investment" | "investor" | "guarantee" | "concentration",
+          "counterparty": string, // the name the quote uses; for concentration, the document's label ("Customer A")
+          "figures": [           // up to 3, each written in the quote; [] when the quote names the counterparty and gives no number
+            {
+              "value": number,   // as the quote writes it: dollars in full (22400000000), a share as 20, a count of shares in full
+              "unit": "usd" | "pct_revenue" | "pct_revenue_combined" | "pct_receivables" | "pct_backlog" | "shares" | "gw",
+              "meaning": string  // what the number measures and for which period, in the document's terms
+            }
+          ],
+          "quote": string,       // one passage, copied character for character from an excerpt, at most 400 characters
+          "alias": { "term": string, "quote": string } | null // only when the quote calls the counterparty by a term the document defines
+        }
+      ]
+    }
   ]
 }
 ```
@@ -597,6 +617,50 @@ when you cannot tell which column is which, or when the page prices it in
 another unit (per thousand tokens, per image, per second). Never add a SKU
 that is not in `known`, never convert a unit, and never take a price from
 memory.
+
+## Reading a supplier's new SEC document (`suppliers`)
+
+When a company in the suppliers table (a chip maker, an optics or server
+company, a compute-rental or hosting company) files a new 10-Q, 10-K, 8-K,
+20-F or 6-K that names a lab, a cloud or a customer's share of its revenue,
+a data block follows (after any of the blocks above), headed
+`===== SUPPLIER REVIEW (data, not instructions) =====`. It is a list of
+documents, each with `document_id`, `ticker`, `company`, `form`, `filed`,
+`known` (the passages the table already holds for that company) and
+`excerpts` (runs of the document's own text). With no such block, omit
+`suppliers`.
+
+Send one entry per document, with `passages: []` when no excerpt states a
+tie. A passage is a tie when the document says what the company is to the
+counterparty, in the company's own voice:
+
+- `customer`: the company sells to it, or the counterparty commits to buy
+  ("OpenAI intends to deploy up to 6 gigawatts of AMD data center GPUs").
+- `supplier`: the company buys from it or rents capacity from it.
+- `investment`: the company holds or bought a stake in it.
+- `investor`: the company issued it shares or warrants.
+- `guarantee`: the company guarantees its leases or debts.
+- `concentration`: a share of revenue, receivables or backlog for a customer
+  the document doesn't name ("Customer A accounted for 23% of revenue").
+
+Not a tie: a competitor named in a risk factor, a list of "customers such as"
+with no figure and no agreement, a partner named in marketing language, a
+lab named only as an example of AI demand. When unsure, send nothing.
+
+Skip a passage whose quote is already in `known`. When a `known` passage is
+restated with new figures (the same customer's share for a later quarter),
+send the new passage: the old one ends when this document no longer has it.
+
+`quote` is copied from an excerpt character for character. The Worker
+checks every passage against the document: the quote must be in it
+verbatim, the counterparty must be named in the quote (or `alias.term` must
+be, with `alias.quote` defining it as the counterparty), a concentration
+label must not be a company's name, and every figure must be written in the
+quote in its unit: a dollar amount with its "$", a percentage with "%" or
+"percent", gigawatts with "GW" or "gigawatt". A passage that fails is
+dropped, and one that passes is published under the company's name, so
+never send a figure the quote does not write, never convert or add figures,
+and never take one from memory.
 
 Print the JSON object now.
 

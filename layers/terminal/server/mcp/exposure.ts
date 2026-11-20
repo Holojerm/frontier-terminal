@@ -2,7 +2,8 @@
 
 import { z } from 'zod'
 import { queryDependencies } from '../utils/terminal-dependencies'
-import { buildSuppliers, SUPPLIERS_VERSION } from '../utils/terminal-suppliers'
+import { suppliersStamp } from '../suppliers/store'
+import { querySuppliers } from '../utils/terminal-suppliers'
 import { queryListed } from '../utils/terminal-listed'
 import { queryParents, VIEW_RECIPES } from '../utils/terminal-recipe-views'
 import { recipeRunsStamp } from '../utils/terminal-db'
@@ -122,10 +123,10 @@ export function registerExposureTools({ server, deps, read }: McpKit): void {
         'rows is one filed passage each: ticker, company, layer, relation (customer: the counterparty buys from the company; supplier: the company buys from it; ' +
         'investment: the company invests in it; investor: it holds a stake or warrant in the company; guarantee: the company guarantees its obligations; concentration: a customer the filing gives a share for and does not name), ' +
         'counterparty (the name, or for concentration the filing’s own label such as Customer A), counterparty_ticker, counterparty_lab, figures (value, unit, meaning; ' +
-        'units usd, pct_revenue, pct_receivables, pct_backlog, shares, gw), form, filed, period, source_url, quote and fetched_at (when the quote was last found in the document). ' +
+        'units usd, pct_revenue, pct_receivables, pct_backlog, shares, gw), form, filed, period, source_url, quote, fetched_at (when the quote was last found in the document) and basis (hand: read by a person; judge: read by a model from the filing and checked word for word). ' +
         'companies is one row per ticker: the counterparties its filings name, the tracked labs among them, top_named_share and top_unnamed_share (the largest share of its revenue ' +
         'a filing puts on one customer, named or not). A concentration row is tied to no lab or cloud: never infer who the customer is. Shares are for each company’s own fiscal period, ' +
-        'and figures measure different things, so do not sum them. The table is read by hand and is not a complete list of suppliers; gaps says what is left out. ' +
+        'and figures measure different things, so do not sum them. Each company’s new filings are read as they are filed, and a passage its next filing of the same form drops is removed. It is not a complete list of suppliers; gaps says what is left out. ' +
         'Not investment advice. Optional ticker keeps one company; optional counterparty keeps rows naming a lab id or a counterparty ticker. ' +
         PROVENANCE,
       inputSchema: z.object({
@@ -145,7 +146,11 @@ export function registerExposureTools({ server, deps, read }: McpKit): void {
       annotations: READ_ONLY,
     },
     async ({ ticker, counterparty }) => {
-      const data = await deps.serve('suppliers', async () => buildSuppliers(), SUPPLIERS_VERSION)
+      const data = await deps.serve(
+        'suppliers',
+        () => querySuppliers(deps.db),
+        await suppliersStamp(deps.db),
+      )
       if (!ticker && !counterparty) return json(data)
       const rows = data.rows.filter(
         (r) =>
@@ -179,11 +184,14 @@ export function registerExposureTools({ server, deps, read }: McpKit): void {
       annotations: READ_ONLY,
     },
     async ({ lab }) => {
-      const power = await recipeRunsStamp(deps.db, VIEW_RECIPES.powerSites)
+      const [power, suppliers] = await Promise.all([
+        recipeRunsStamp(deps.db, VIEW_RECIPES.powerSites),
+        suppliersStamp(deps.db),
+      ])
       const data = await deps.serve(
         'listed',
         (ctx) => queryListed(deps.db, ctx),
-        `${SUPPLIERS_VERSION}:${power}`,
+        `${suppliers}:${power}`,
       )
       if (!lab) return json(data)
       const id = lab.toLowerCase()

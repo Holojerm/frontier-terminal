@@ -68,7 +68,8 @@ export const SURFACE_WAIVERS = {
     '/api/reliability': 'internal: the feed’s own track record; failures spool ops events',
     '/api/reported': 'not yet: press headlines are judged for the track record, not alerted',
     '/api/spend': 'derived: joins OpenRouter share (demand) to list prices (pricing), both axes',
-    '/api/suppliers': 'not yet: a hand-read table that ships with the build',
+    '/api/suppliers':
+      'not yet: a judge-read passage raises no alert (docs/alerts-expansion.md › 6)',
     '/api/theses': 'not yet: thesis status changes go to the weekly digest, not the alert feed',
     '/api/track-record': 'internal: grades the alerts; it cannot raise one',
     '/api/utilization': 'not yet: recipe observations raise no alert',
@@ -97,6 +98,8 @@ export const SURFACE_WAIVERS = {
     source_run_days: 'derived: a daily rollup of source_runs, which is exported',
     source_stats: 'derived: per-source counts of snapshots and source_runs, both exported',
     subscribers: 'internal: email addresses',
+    supplier_documents:
+      'internal: the suppliers reader’s fetch log; each supplier_passages row names its document',
     task_heartbeats: 'internal: cron task liveness',
     track_record_searches: 'internal: the search log behind track_record_candidates',
     webhook_deliveries: 'internal: the webhook outbox',
