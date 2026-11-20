@@ -46,7 +46,6 @@ const link = (
   source_title: 'A page',
   publisher: 'Example',
   published: null,
-  primary: true,
   quote: 'Indiana Michigan Power will serve the New Carlisle campus.',
   fetched_at: '2026-11-19T00:00:00.000Z',
   ...over,
@@ -100,7 +99,7 @@ describe('power sites', () => {
     expect(d.source?.source_url).toBe('https://epoch.ai/data/data_centers/data_centers.csv')
   })
 
-  it('counts a site once per listed company, in full', async () => {
+  it('lists a site once per listed company', async () => {
     const { tickers, sites } = await queryPowerSites(db, TABLE)
     const aep = tickers.find((t) => t.ticker === 'AEP')!
     const prometheus = sites.find((s) => s.name === 'Meta Prometheus')!
@@ -108,9 +107,10 @@ describe('power sites', () => {
     expect(aep.sites).toEqual(['Anthropic-Amazon New Carlisle', 'Meta Prometheus'])
     expect(aep.roles).toEqual(['utility', 'generation'])
     expect(aep.labs.sort()).toEqual(['anthropic', 'meta'])
-    expect(aep.mw_now).toBe(1037 + prometheus.mw_now)
-    expect(tickers.find((t) => t.ticker === 'WMB')!.mw_now).toBe(prometheus.mw_now)
-    expect(tickers.map((t) => t.ticker).sort()).toEqual(['AEP', 'WMB'])
+    expect(prometheus.links).toHaveLength(3)
+    expect(tickers.find((t) => t.ticker === 'WMB')!.sites).toEqual(['Meta Prometheus'])
+    // Most sites first.
+    expect(tickers.map((t) => t.ticker)).toEqual(['AEP', 'WMB'])
   })
 
   it('lists the lab sites we have read nothing for', async () => {

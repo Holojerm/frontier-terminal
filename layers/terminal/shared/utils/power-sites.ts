@@ -2,8 +2,9 @@
 // listed companies that puts beside each site (GET /api/power-sites, the
 // /compute page). The sites, their power and their users are Epoch's. The
 // companies are ours, read by hand from one public page each
-// (layers/terminal/server/curated/power-sites.json), and a link is kept only
-// while `bun run power:verify` still finds its quote on that page.
+// (layers/terminal/server/curated/power-sites.json): a filing, a regulator's
+// page or the company's own, never press coverage. A link is kept only while
+// `bun run power:verify` still finds its quote on that page.
 
 import { z } from 'zod'
 
@@ -38,8 +39,6 @@ const curatedLink = z.object({
   source_title: z.string().min(1),
   publisher: z.string().min(1),
   published: z.iso.date().nullable(),
-  /** False for press coverage. True for a filing, a regulator or the company's own page. */
-  primary: z.boolean(),
   /** The passage the link rests on, byte-identical to the page. */
   quote: z.string().min(20).max(400),
   /** When power:verify last fetched the page and found the quote. */
@@ -91,13 +90,12 @@ export interface PowerTicker {
   /** The listed company: the parent where the link names a subsidiary. */
   company: string
   roles: PowerRole[]
-  /** The sites it is tied to, largest first. */
+  /**
+   * The sites it is tied to, largest first. No megawatts here: a site's power
+   * summed per company reads as what the company supplies, which no page says.
+   */
   sites: string[]
   labs: LabId[]
-  /** Epoch's power for those sites, each counted once and in full. */
-  mw_now: number
-  /** The same sites at Epoch's furthest estimate (power now where Epoch projects nothing). */
-  mw_planned: number
 }
 
 export interface PowerSitesData {

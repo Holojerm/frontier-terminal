@@ -2,7 +2,8 @@
 // Who supplies power to the sites Epoch AI credits to a lab. Two tables: the
 // listed companies with the sites behind each, then every company we read,
 // one row per page so each row keeps its own source and quote. A site's power
-// is Epoch's and counts in full on every row that names the site.
+// is Epoch's and sits on the site's rows only: summed per company it would
+// read as what the company supplies, which no page says.
 
 import { count } from '../../../shared/utils/terminal-format'
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
@@ -20,9 +21,8 @@ const tickerColumns: TableColumn[] = [
   { key: 'company', label: 'Company' },
   { key: 'roles', label: 'Role' },
   { key: 'labs', label: 'Labs' },
-  { key: 'sites', label: 'Sites' },
-  { key: 'now', label: 'Site power now', numeric: true },
-  { key: 'planned', label: 'Planned', numeric: true },
+  { key: 'n', label: 'Sites', numeric: true },
+  { key: 'sites', label: 'Where' },
 ]
 const tickers = computed(() =>
   props.data.tickers.map((t) => ({
@@ -30,9 +30,8 @@ const tickers = computed(() =>
     company: t.company,
     roles: t.roles.map((r) => POWER_ROLE_LABEL[r]).join(', '),
     labs: labs(t.labs),
+    n: count(t.sites.length),
     sites: t.sites.join(', '),
-    now: mw(t.mw_now),
-    planned: mw(t.mw_planned),
   })),
 )
 
@@ -78,7 +77,7 @@ const links = computed(() =>
         role: POWER_ROLE_LABEL[l.role],
         company: l.parent ? `${l.company} (${l.parent})` : l.company,
         ticker: l.ticker,
-        note: [l.unlisted, l.primary ? null : 'press report'].filter(Boolean).join(', '),
+        note: l.unlisted ?? '',
         stated: l.mw === null ? '' : mw(l.mw),
         stated_meaning: l.mw_meaning,
         quote: l.quote,

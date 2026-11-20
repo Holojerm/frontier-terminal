@@ -477,7 +477,7 @@ export async function queryDataCenters(db: PipelineDb): Promise<DataCentersData>
 // ── Who powers the lab sites (Epoch AI's sites, our hand-read companies) ────
 
 export const POWER_SITES_CAVEAT =
-  'The sites, their power and their users are Epoch AI’s estimates (CC BY 4.0). The companies are ours, each read by hand from the one page cited beside it. A site’s power counts in full for every company tied to it. It is the size of the site, never the power that company sells, and the companies don’t add up.'
+  'The sites, their power and their users are Epoch AI’s estimates (CC BY 4.0). The companies are ours. Each is read by hand from the page cited beside it, which is a filing, a regulator’s page or the company’s own. We matched each company to its listed parent and ticker ourselves. A row ties a company to a site. It doesn’t say how much of the site’s power that company supplies.'
 
 /** The labs Epoch names as users at #confident or #likely. */
 function attributedLabs(users: string): LabId[] {
@@ -546,16 +546,12 @@ export async function queryPowerSites(
         roles: [],
         sites: [],
         labs: [],
-        mw_now: 0,
-        mw_planned: 0,
       }
       if (!t.roles.includes(l.role)) t.roles.push(l.role)
       if (!seen.has(l.ticker)) {
         seen.add(l.ticker)
         t.sites.push(s.name)
         t.labs = [...new Set([...t.labs, ...s.labs])]
-        t.mw_now += s.mw_now
-        t.mw_planned += s.mw_planned ?? s.mw_now
       }
       tickers.set(l.ticker, t)
     }
@@ -567,7 +563,7 @@ export async function queryPowerSites(
     snapshot: snapshot || null,
     sites,
     tickers: [...tickers.values()].sort(
-      (a, b) => b.mw_planned - a.mw_planned || a.ticker.localeCompare(b.ticker),
+      (a, b) => b.sites.length - a.sites.length || a.ticker.localeCompare(b.ticker),
     ),
     uncovered: uncovered.sort((a, b) => b.mw_now - a.mw_now),
     source: newest ? cite(EPOCH_DATA_CENTERS.id, 'Epoch AI, AI data centers', newest) : null,

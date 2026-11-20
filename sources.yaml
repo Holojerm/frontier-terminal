@@ -2592,6 +2592,186 @@ filed_fact_sources:
       Oracle's numbers. Its fiscal year ends May 31. Capex is Capital
       expenditures (PaymentsToAcquirePropertyPlantAndEquipment). Oracle tags
       only its total remaining performance obligations, not a cloud figure.
+# The pages behind /api/power-sites and the "Who powers the lab sites" panel on
+# /compute (layers/terminal/server/curated/power-sites.json). Unlike every
+# section above, nothing here is polled: each row is one sentence a person
+# read on the page, shown as the row's basis the way the class map shows a
+# vendor's sentence, and `bun run power:verify` re-reads the page on demand.
+# Only a filing, a regulator's page or the company's own page is cited, never
+# press coverage. `rights` follows the header's rule. Terms and robots.txt
+# were read on 2026-11-20 (docs/source-audit.md). /api/coverage doesn't read
+# this section yet.
+power_site_sources:
+  power-sec-filings:
+    publisher: SEC EDGAR filings (TeraWulf, Cipher Digital, WEC Energy Group, DTE Energy, SB Energy, Blue Owl Real Estate Net Lease Trust)
+    url: https://www.sec.gov/Archives/edgar/data/
+    format: HTML, one sentence per row, read by hand
+    verdict: include
+    terms: >-
+      SEC fair-access policy, as recorded under sec-msft-openai.
+      www.sec.gov/robots.txt allows /Archives/edgar/data (read 2026-11-19).
+      Taken: 18 sentences from eight filings, each the filer's statement about
+      its own site, lease or customer. Read 2026-11-20.
+    rights: ours
+  power-aep:
+    publisher: American Electric Power
+    url: https://www.aep.com/news/releases/read/9883
+    format: HTML, one sentence per row, read by hand
+    verdict: include
+    terms: >-
+      www.aep.com has no robots.txt (404). Its Legal Notice (aep.com/terms,
+      undated) has no clause on automated reading and says: "If attribution to
+      AEP is included, limited quotations from the content are hereby
+      permitted." It also says: "You may not copy or display for
+      redistribution to third parties for commercial purposes any portion of
+      the content without the prior written permission of AEP." Taken: one
+      attributed sentence. Read 2026-11-20.
+    rights: ours
+  power-lancium:
+    publisher: Lancium
+    url: https://lancium.com/locations/
+    format: HTML, one sentence per row, read by hand
+    verdict: include
+    terms: >-
+      robots.txt disallows only /wp-admin/. The Terms of Service (last updated
+      April 18, 2022) cover purchased services and say nothing on automated
+      reading or on quoting the site. Taken: one sentence. Read 2026-11-20.
+    rights: ours
+  power-bloom-energy:
+    publisher: Bloom Energy
+    url: https://www.bloomenergy.com/blog/communities-are-right-to-ask-about-the-water-use-of-ai-infrastructure/
+    format: HTML, one sentence per row, read by hand
+    verdict: include
+    terms: >-
+      robots.txt allows the path and sets a crawl delay of 10 seconds. The
+      terms at bloomenergy.com/legal (undated) state ownership and no
+      restriction: "The compilation of all content on this site is the
+      exclusive property of Bloom Energy and protected by U.S. and
+      international copyright laws." Taken: one sentence. Read 2026-11-20.
+    rights: ours
+  power-ge-vernova:
+    publisher: GE Vernova
+    url: https://www.gevernova.com/news/articles/going-big-support-data-center-growth-rising-renewables-crusoe-ordering-flexible-gas
+    format: HTML, one sentence per row, read by hand
+    verdict: include
+    terms: >-
+      robots.txt allows /news/. The terms (last updated July 16, 2024) have no
+      clause on automated reading. They allow copying for personal and
+      non-commercial use and go on: "Any other use of content on the site,
+      including but not limited to the modification, distribution,
+      transmission, performance, broadcast, publication" "or use of the site
+      for purposes competitive to GE Vernova, is expressly prohibited." Taken:
+      one sentence. Read 2026-11-20.
+    rights: restricted
+  power-crusoe:
+    publisher: Crusoe
+    url: https://crusoe.ai/blog/an-inside-look-at-the-abilene-ai-data-center/
+    format: HTML, one sentence per row, read by hand
+    verdict: include
+    terms: >-
+      robots.txt allows everything. The Website Terms of Use (effective August
+      12th 2024) have no clause on automated reading and say: "You may not
+      copy, reproduce, publish, transmit, distribute, perform, display, post,
+      modify, create derivative works from, sell, license or otherwise exploit
+      the Websites or any of the Content without our prior written
+      permission." Taken: two sentences from two pages, the second at
+      crusoe.ai/newsroom. Both addresses now redirect under
+      crusoe.ai/resources. Read 2026-11-20.
+    rights: restricted
+  power-vantage:
+    publisher: Vantage Data Centers
+    url: https://vantage-dc.com/news/openai-oracle-and-vantage-data-centers-announce-stargate-data-center-site-in-wisconsin/
+    format: HTML, one sentence per row, read by hand
+    verdict: include
+    terms: >-
+      robots.txt allows the path. The terms (last reviewed April 24, 2020)
+      have no clause on automated reading and say: "You may not modify the
+      materials at this Website in any way or reproduce or publicly display,
+      perform, distribute or otherwise use the materials for any purpose
+      without the prior consent of Vantage." Taken: two sentences from one
+      release. Read 2026-11-20.
+    rights: restricted
+  power-atc:
+    publisher: American Transmission Company
+    url: https://www.atcllc.com/project/ozaukee-county-distribution-interconnection
+    format: HTML, one sentence per row, read by hand
+    verdict: include
+    terms: >-
+      robots.txt has no rules. We found no terms of use on the site. Taken:
+      one sentence. Read 2026-11-20.
+    rights: restricted
+  power-microsoft-blog:
+    publisher: Microsoft
+    url: https://blogs.microsoft.com/on-the-issues/2025/09/18/made-in-wisconsin-the-worlds-most-powerful-ai-datacenter/
+    format: HTML, one sentence per row, read by hand
+    verdict: include
+    terms: >-
+      robots.txt allows the path. The footer's terms link opens the Microsoft
+      Services Agreement (effective September 30, 2026), which says: "vi.
+      Don’t circumvent any restrictions on access to, usage, or availability
+      of the Services (e.g., attempting to “jailbreak” an AI system or
+      impermissible scraping)." The Microsoft Terms of Use (last updated
+      February 7, 2022) say: "You may not modify, copy, distribute, transmit,
+      display, perform, reproduce, publish, license, create derivative works
+      from, transfer, or sell any information, software, products or services
+      obtained from the Services." Taken: one sentence. Read 2026-11-20.
+    rights: restricted
+  power-aps:
+    publisher: Arizona Public Service
+    url: https://www.aps.com/runway
+    format: HTML, one sentence per row, read by hand
+    verdict: include
+    terms: >-
+      robots.txt allows the path. The Terms of Use (revision August 13, 2019)
+      bar automated systems only for unauthorized access, and say: "Other than
+      as stated in this Agreement, you may not copy, modify, frame, mirror, or
+      distribute the Content in any form (including by email or by
+      incorporating it in another site) without written permission from APS."
+      Taken: one sentence. Read 2026-11-20.
+    rights: restricted
+  power-core-scientific:
+    publisher: Core Scientific
+    url: https://investors.corescientific.com/news-events/press-releases/
+    format: HTML, one sentence per row, read by hand
+    verdict: include
+    terms: >-
+      robots.txt disallows only /form-submit. The investor site links no terms
+      of its own. The Terms of Use at corescientific.com (undated) cover every
+      Core Scientific site and say: "Except as expressly authorized by Core
+      Scientific or the Third Party Provider, none of the Material may be
+      copied, reproduced, distributed, republished, downloaded, displayed,
+      posted or transmitted in any form or by any means" Taken: two sentences
+      from two press releases. Read 2026-11-20.
+    rights: restricted
+  power-ohio-siting-board:
+    publisher: Ohio Power Siting Board
+    url: https://content.govdelivery.com/accounts/OHPUC/bulletins/3f348f9
+    format: HTML, one sentence per row, read by hand
+    verdict: include
+    terms: >-
+      A state agency's bulletin on Granicus's mailing host, which has no
+      robots.txt (404). We found no terms for the host, and the bulletin's one
+      policy link answers 404. Taken: one sentence. Read 2026-11-20.
+    rights: restricted
+  power-williams:
+    publisher: Williams
+    url: https://www.williams.com/expansion-project/socrates-power-solution-facilities/
+    format: HTML, one sentence per row, read by hand
+    verdict: include
+    terms: >-
+      robots.txt disallows nothing. We found no terms of use on the site.
+      Taken: one sentence. Read 2026-11-20.
+    rights: restricted
+  power-louisiana-economic-development:
+    publisher: Louisiana Economic Development
+    url: https://www.opportunitylouisiana.gov/news/entergy-louisiana-to-power-metas-data-center-in-richland-parish
+    format: HTML, one sentence per row, read by hand
+    verdict: include
+    terms: >-
+      A state agency's release quoting Entergy Louisiana. robots.txt allows
+      everything. The site has a privacy notice and no terms of use. Taken:
+      one sentence. Read 2026-11-20.
+    rights: restricted
 department_clusters:
   physical-infrastructure:
     label: Physical infrastructure
@@ -2976,3 +3156,20 @@ cut:
       a price. RunPod's terms bar automated access (gpu-runpod above).
       lambda.ai now redirects to lambda.com, whose terms we haven't read, so
       nothing is fetched from it for this. Checked 2026-11-19.
+  power-site-press:
+    verdict: cut (not shown)
+    reason: >-
+      Press reports name a utility or a supplier for more sites, among them
+      both Colossus sites in Memphis and Microsoft's Fairwater site near
+      Atlanta. We show a company only from a filing, a regulator's page or the
+      company's own page, so those sites are listed as not read yet.
+  power-site-unread:
+    verdict: cut (not shown until we can re-read them)
+    reason: >-
+      Some primary pages name a company and we can't check the quote again.
+      Memphis Light, Gas and Water, Mississippi's environment department and
+      Indiana's utility commission publish PDFs, which our check can't search.
+      oracle.com and michigan.gov answered 403 to an identified client. QTS's
+      terms bar using its site with any AI tool without consent, and Entergy's
+      bar automatic reading and links to any page but its homepage. Read
+      2026-11-20.

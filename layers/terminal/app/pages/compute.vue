@@ -1,10 +1,11 @@
 <script setup lang="ts">
 // The compute axis: what renting a GPU costs, how full the capacity looks
-// from outside, and how much data-center power is coming online and for
-// whom. All read the thesis recipes (GPU price pages, SEC filings, MLPerf
-// results and Epoch AI's datasets), every figure with its source and fetch
-// time. No tabs; the site list is the page's long table and runs with the
-// page rather than in a box.
+// from outside, how much data-center power is coming online and for whom,
+// and who supplies it. All read the thesis recipes (GPU price pages, SEC
+// filings, MLPerf results and Epoch AI's datasets) except the suppliers,
+// which are read by hand (layers/terminal/shared/utils/power-sites.ts). Every
+// figure has its source and fetch time. No tabs; the site list is the page's
+// long table and runs with the page rather than in a box.
 
 import { count } from '../../shared/utils/terminal-format'
 import type { PowerSitesData } from '../../shared/utils/power-sites'
@@ -18,7 +19,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Compute',
     summary:
-      'On-demand H100 and B200 rental list prices from nine first-party provider pages with the median across them, spot prices against on-demand per provider, Alphabet’s stated token volume as a bounded share of Google’s estimated fleet, CoreWeave’s revenue per megawatt of active power, and Epoch AI’s estimate of data-center power per frontier lab and per site.',
+      'On-demand H100 and B200 rental list prices from nine first-party provider pages with the median across them, spot prices against on-demand per provider, Alphabet’s stated token volume as a bounded share of Google’s estimated fleet, CoreWeave’s revenue per megawatt of active power, Epoch AI’s estimate of data-center power per frontier lab and per site, and the utilities, generators and equipment makers tied to each lab’s sites, each with its source page.',
   },
 })
 
