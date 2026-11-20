@@ -258,7 +258,10 @@ const readout = computed(() => {
           </text>
         </g>
 
-        <!-- The rule: dashed, named in words above it, so it never reads by color alone. -->
+        <!-- The rule: dashed, named in words, so it never reads by color alone.
+             The name sits below the line (a claim that holds runs above it)
+             and wears a halo of the surface, so a series crossing it can't
+             strike it through. -->
         <g v-if="rule" class="stroke-(--ui-error) fill-(--ui-error)">
           <line
             :x1="PAD.l"
@@ -268,7 +271,15 @@ const readout = computed(() => {
             stroke-width="1.5"
             stroke-dasharray="6 4"
           />
-          <text :x="PAD.l + 4" :y="yAt(rule.value) - 5" font-size="12" stroke="none">
+          <text
+            :x="PAD.l + 4"
+            :y="yAt(rule.value) + 16 > H - PAD.b ? yAt(rule.value) - 6 : yAt(rule.value) + 16"
+            font-size="12"
+            class="stroke-(--ui-bg)"
+            stroke-width="4"
+            stroke-linejoin="round"
+            paint-order="stroke"
+          >
             {{ rule.label }}
           </text>
         </g>

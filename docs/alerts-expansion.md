@@ -3,8 +3,12 @@
 A plan, approved by the owner on 2026-11-20. It covers six candidates from the surfaces plan
 (workstream 4) and ends with a recommended order. Figures were read from production on
 2026-11-20. Built so far: the `exposure` axis and the `filed_fact` track-record terms
-(step 1 of the order), and the GPU median rule (`gpu-median-floor`) on a new `compute` axis
-(step 5, the median half: single-provider moves still wait for the judge block).
+(step 1 of the order), and the hyperscaler filed facts about a lab (step 2, candidate 1).
+The lab commitment and claim series alert, `critical` on a series' first point or a 25% move
+in a commitment or stake. A point for a period an earlier filing already reported, or a
+balance that didn't move, writes nothing. Step 5's median half is built too, as the GPU
+median rule (`gpu-median-floor`) on a new `compute` axis. Single-provider moves still wait
+for the judge block.
 
 ## How alerts work today
 
