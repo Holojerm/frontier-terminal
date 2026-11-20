@@ -57,6 +57,11 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
     action:
       'A due social post has stayed queued for an hour. Look for events_queue_failed or events_emit_failed in the Worker logs; the hourly events:sweep should have sent it, so check that task too.',
   },
+  listing_status_stale: {
+    severity: 'warning',
+    action:
+      'A filer listed as "registered" has filed its final prospectus (424B4), so the site still says its shares are not trading. Check the listing, then update its rows in layers/terminal/server/utils/terminal-identifiers.ts and terminal-entities.ts (listing_status, exchange, note).',
+  },
   freshness_check_failed: { severity: 'warning' },
   // tasks/probes/latency.ts: a latency probe was refused for a reason of ours.
   probe_setup_failed: {

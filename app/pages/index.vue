@@ -174,6 +174,10 @@ const readout = computed(() => ({
 
 const recent = computed(() => releases.data.value?.rows ?? [])
 
+// A panel whose request failed says so. Left empty, or filled with its
+// no-rows line, it would state something about the data we did not read.
+const NOT_LOADED = 'Didn’t load.'
+
 const openIncidents = computed(() =>
   (incidents.data.value?.providers ?? []).reduce((n, p) => n + p.open.length, 0),
 )
@@ -230,7 +234,8 @@ const openIncidents = computed(() =>
         :flush="recent.length > 0"
       >
         <TerminalReleaseList v-if="recent.length" :rows="recent" />
-        <TerminalGap v-else title="No new SKU since tracking began." />
+        <TerminalGap v-else-if="releases.data.value" title="No new SKU since tracking began." />
+        <TerminalGap v-else :title="NOT_LOADED" />
       </TerminalPanel>
     </div>
 
@@ -252,6 +257,7 @@ const openIncidents = computed(() =>
         flush
       >
         <TerminalPriceMatrix v-if="prices.data.value" :matrix="prices.data.value.matrix" />
+        <TerminalGap v-else :title="NOT_LOADED" />
       </TerminalPanel>
 
       <TerminalPanel
@@ -263,6 +269,7 @@ const openIncidents = computed(() =>
         flush
       >
         <TerminalRevenueTable v-if="revenue.data.value" :revenue="revenue.data.value" />
+        <TerminalGap v-else :title="NOT_LOADED" />
       </TerminalPanel>
 
       <div class="grid gap-6 lg:grid-cols-2">
@@ -274,6 +281,7 @@ const openIncidents = computed(() =>
           :more="{ label: '30-day series and top models', to: '/rankings' }"
         >
           <TerminalDemandShare v-if="rankings.data.value" :rankings="rankings.data.value" compact />
+          <TerminalGap v-else :title="NOT_LOADED" />
         </TerminalPanel>
         <TerminalPanel
           id="spend"
@@ -283,6 +291,7 @@ const openIncidents = computed(() =>
           :more="{ label: 'Per-model join', to: '/rankings#spend' }"
         >
           <TerminalSpendShare v-if="spend.data.value" :spend="spend.data.value" compact />
+          <TerminalGap v-else :title="NOT_LOADED" />
         </TerminalPanel>
       </div>
     </TerminalGroup>
@@ -304,6 +313,7 @@ const openIncidents = computed(() =>
           v-if="hiringHistory.data.value"
           :history="hiringHistory.data.value"
         />
+        <TerminalGap v-else :title="NOT_LOADED" />
       </TerminalPanel>
 
       <!-- The strain table carries the open incident and its source; the
@@ -330,6 +340,7 @@ const openIncidents = computed(() =>
           flush
         >
           <TerminalStrainTable v-if="incidents.data.value" :incidents="incidents.data.value" />
+          <TerminalGap v-else :title="NOT_LOADED" />
         </TerminalPanel>
         <TerminalPanel
           id="disclosures"
@@ -344,6 +355,7 @@ const openIncidents = computed(() =>
             v-if="disclosures.data.value"
             :disclosures="disclosures.data.value"
           />
+          <TerminalGap v-else :title="NOT_LOADED" />
         </TerminalPanel>
       </div>
     </TerminalGroup>

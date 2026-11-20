@@ -440,7 +440,8 @@ const tabs = computed(() => [
             :flush="labAlerts.length > 0"
           >
             <TerminalSignalTable v-if="labAlerts.length" :alerts="labAlerts" flow scoped />
-            <TerminalGap v-else title="No alert cites this lab yet." />
+            <TerminalGap v-else-if="alerts.data.value" title="No alert cites this lab yet." />
+            <TerminalGap v-else title="Didn’t load." />
           </TerminalPanel>
 
           <TerminalPanel
@@ -460,7 +461,8 @@ const tabs = computed(() => [
                 </TerminalExpand>
               </div>
             </template>
-            <TerminalGap v-else title="No new SKU since tracking began." />
+            <TerminalGap v-else-if="releases.data.value" title="No new SKU since tracking began." />
+            <TerminalGap v-else title="Didn’t load." />
           </TerminalPanel>
         </div>
 

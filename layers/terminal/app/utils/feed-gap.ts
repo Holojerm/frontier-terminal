@@ -24,6 +24,13 @@ const WHAT: Record<FeedAxis, string> = {
   disclosures: 'disclosure index',
 }
 
+/**
+ * What a citation, a readout cell and a feed row say when their source has
+ * failed every check for hours (Prov.failing_since). `at` is the formatted
+ * time the failures began.
+ */
+export const failingSince = (at: string) => `checks failing since ${at}`
+
 interface FeedRow {
   feed: 'ok' | 'no_public_feed' | 'no_rows'
   display: string
