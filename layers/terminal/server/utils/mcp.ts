@@ -60,6 +60,7 @@ import { queryPriceHistory, queryPrices, queryReleases } from './terminal-prices
 import { queryDependencies } from './terminal-dependencies'
 import { queryDisclosures } from './terminal-disclosures'
 import { gpuRunsStamp, queryGpuPrices } from './terminal-gpu'
+import { probesStamp, queryProbes } from './terminal-probes'
 import { SHARE_WINDOW_DAYS, queryRankings } from './terminal-rankings'
 import { queryProspectus } from './terminal-prospectus'
 import { queryExposure } from './terminal-exposure'
@@ -853,6 +854,34 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
           await reliabilityStamp(deps.db),
         ),
       )
+    },
+  )
+
+  server.registerTool(
+    'get_probes',
+    {
+      title: 'Latency probes: measured strain per lab',
+      description:
+        'Our own measurement, not a vendor’s page. Once an hour we send each lab’s flagship model one fixed streaming request (probe.prompt, capped at probe.max_tokens) ' +
+        'through OpenRouter, pinned to the lab’s own endpoint with no fallback, and time the reply. labs has one entry per tracked lab. status probed carries latest (the newest probe: outcome, http_status, ' +
+        'ttft_ms, total_ms, output_tokens, tokens_per_second, ran_from as cloudflare:<colo>), window (the trailing window_days of complete days) and days (one reading per UTC day, newest first, history_days back). ' +
+        'A day gives probes, ok, rate_limited, failed, strained_share ((rate_limited + failed) ÷ probes), peak_tps and offpeak_tps (median tokens per second in the lab’s fixed UTC peak and off-peak hours, named in hours; ' +
+        'null under three good probes) and peak_to_offpeak (under 1 means slower in working hours). complete is false for the current UTC day. Probes refused because of our key, credit or the router are left out of probes. ' +
+        'status not_probed is a lab with no first-party endpoint to probe, with the reason in gap, never a zero. status waiting is a target with no probe stored yet. since is the first day probed: history starts there and cannot be backfilled. ' +
+        'This is a strain reading, not utilization, and it is unproven as a predictor. Hourly sampling misses short rate-limit bursts. Compare a lab with its own history, not across labs: five of the models cannot turn reasoning off, ' +
+        'so their first token waits on it. Read method and caveat before quoting a number. Optional provider filter narrows labs. No as_of: read the day you want from days. ' +
+        PROVENANCE,
+      inputSchema: z.object({ provider: ProviderSchema.optional() }),
+      annotations: READ_ONLY,
+    },
+    async ({ provider }) => {
+      const probes = await deps.serve(
+        'probes',
+        (ctx) => queryProbes(deps.db, ctx),
+        await probesStamp(deps.db),
+      )
+      if (!provider) return json(probes)
+      return json({ ...probes, labs: probes.labs.filter((l) => l.lab === provider) })
     },
   )
 

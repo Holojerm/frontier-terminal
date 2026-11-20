@@ -191,6 +191,9 @@ const securityHeaders = {
 //                (layers/terminal/server/pipeline/reliability/), and
 //                reliability:deploys, which reads its deploy smoke results
 //                from GitHub.
+//   7 * * * *  — probes:latency, layers/terminal/server/tasks/probes/latency.ts: one
+//                timed streaming request per lab, alone in its invocation so no
+//                other task's requests queue in front of a probe.
 //   0 4 * * *  — seo:indexnow submits the sitemap URLs changed since its last
 //                accepted run to IndexNow (server/utils/indexnow.ts).
 const SCHEDULED_TASKS: Record<string, string[]> = {
@@ -201,6 +204,7 @@ const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/5 * * * *': ['poll:tripwire', 'cache:warm', 'track-record:search'],
   '0 13 * * MON': ['theses:digest', 'social:digest', 'alerts:hiring-rollup'],
   '41 * * * *': ['events:sweep', 'bulk:build', 'reliability:record', 'reliability:deploys'],
+  '7 * * * *': ['probes:latency'],
   '0 4 * * *': ['seo:indexnow'],
 }
 
@@ -530,7 +534,9 @@ export default defineNuxtConfig({
     // OpenRouter API key for the usage-rankings dataset (the demand-share axis,
     // layers/terminal/server/pipeline/fetch.ts). Sent as a bearer to openrouter.ai/api/v1/datasets/*
     // only. Empty = that source is recorded 'skipped' every tick and the panel
-    // says "not configured"; nothing is fetched anonymously. A Worker secret:
+    // says "not configured"; nothing is fetched anonymously. The hourly latency
+    // probes (layers/terminal/server/pipeline/probes/) spend this key's credit on
+    // openrouter.ai/api/v1/chat/completions; empty = no probe runs. A Worker secret:
     // `op read "op://…" | bunx wrangler secret put NUXT_OPENROUTER_API_KEY`.
     openrouterApiKey: '',
     // Bearer for GitHub's search API, which the coding-agent PR recipes read
