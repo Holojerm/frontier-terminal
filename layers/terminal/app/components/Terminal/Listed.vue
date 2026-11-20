@@ -3,7 +3,8 @@
 // suppliers table and the power table name, one row each. A row says what
 // each table ties the company to and links to the table that has the figures.
 // With `lab` (a lab page) the payload is the companies tied to that lab
-// (/api/listed?lab=), and the counts are of that set.
+// (/api/listed?lab=), and the counts are of that set. With two labs (a compare
+// page) it is the companies tied to both.
 
 import {
   listedEvidence,
@@ -15,7 +16,7 @@ import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type { LabId } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
-const props = defineProps<{ data: ListedData; lab?: LabId }>()
+const props = defineProps<{ data: ListedData; lab?: LabId | readonly [LabId, LabId] }>()
 
 const columns: TableColumn[] = [
   { key: 'ticker', label: 'Ticker' },
@@ -37,7 +38,12 @@ const rows = computed(() =>
 
 const note = computed(() => {
   const n = props.data.counts
-  const tied = props.lab ? ` tied to ${LAB_DISPLAY[props.lab]}` : ''
+  const lab = props.lab
+  const tied = !lab
+    ? ''
+    : typeof lab === 'string'
+      ? ` tied to ${LAB_DISPLAY[lab]}`
+      : ` tied to both ${LAB_DISPLAY[lab[0]]} and ${LAB_DISPLAY[lab[1]]}`
   return `${n.companies} listed ${n.companies === 1 ? 'company' : 'companies'}${tied}: ${n.graph} on the graph, ${n.suppliers} in the suppliers table and ${n.power} in the power table on the Compute page. Not investment advice.`
 })
 </script>
