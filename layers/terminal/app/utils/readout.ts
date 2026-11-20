@@ -157,7 +157,7 @@ export const READOUT_GROUPS = [
 ] as const satisfies readonly { id: string; label: string; axes: readonly ReadoutAxis[] }[]
 
 /**
- * Data-center power as a readout cell, for the lab page's operations group.
+ * Data-center power as a readout cell, for the lab page's economics group.
  * Not an axis: the front page's strip has no column for it.
  */
 export function powerCell(
