@@ -51,6 +51,7 @@
     "globals:check": "bun run scripts/check-global-scope.ts",
     "smoke": "bun run scripts/smoke.ts",
     "probe": "bun run scripts/probe.ts",
+    "power:verify": "bun run scripts/power-sites-verify.ts",
     "probe:install": "bun run scripts/probe-install.ts",
     "gdelt:search": "bun run scripts/gdelt-search.ts",
     "layers:pull": "bun run scripts/layers-pull.ts",

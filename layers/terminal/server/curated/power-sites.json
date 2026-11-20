@@ -1,0 +1,562 @@
+{
+  "sites": [
+    {
+      "site": "Anthropic-Amazon New Carlisle",
+      "grid": null,
+      "links": [
+        {
+          "role": "utility",
+          "company": "Indiana Michigan Power",
+          "parent": "American Electric Power",
+          "ticker": "AEP",
+          "unlisted": null,
+          "mw": null,
+          "mw_meaning": null,
+          "source_url": "https://www.aep.com/news/releases/read/9883",
+          "source_title": "I&M and Stakeholders File Large Load Settlement to Advance Grid Reliability and Support Economic Growth",
+          "publisher": "American Electric Power",
+          "published": "2024-11-22",
+          "quote": "Indiana Michigan Power (I&M), an American Electric Power (Nasdaq: AEP) company, has filed a joint settlement with the Indiana Office of Utility Consumer Counselor (OUCC), Amazon Web Services (AWS)",
+          "fetched_at": "2026-11-20T01:14:07.932Z"
+        }
+      ]
+    },
+    {
+      "site": "Anthropic Lake Mariner",
+      "grid": {
+        "name": "NYISO",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/1083301/000162828026071671/wulf-20260930.htm",
+        "quote": "The Lake Mariner Data Campus sources power from the NYISO Zone A grid, which is characterized by low-cost, low-carbon energy.",
+        "fetched_at": "2026-11-20T01:14:09.888Z"
+      },
+      "links": [
+        {
+          "role": "host",
+          "company": "TeraWulf",
+          "parent": null,
+          "ticker": "WULF",
+          "unlisted": null,
+          "mw": 500,
+          "mw_meaning": "Campus capacity expected to be energized by early 2027",
+          "source_url": "https://www.sec.gov/Archives/edgar/data/1083301/000162828026071671/wulf-20260930.htm",
+          "source_title": "TeraWulf Inc. Form 10-Q for the quarter ended September 30, 2026",
+          "publisher": "TeraWulf Inc. (SEC filing)",
+          "published": "2026-11-06",
+          "quote": "with approximately 500 MW of aggregate gross capacity expected to be energized by early 2027, and planned expansion to approximately 750 MW, supported by an approved NYISO System Impact Study",
+          "fetched_at": "2026-11-20T01:14:09.888Z"
+        },
+        {
+          "role": "host",
+          "company": "TeraWulf",
+          "parent": null,
+          "ticker": "WULF",
+          "unlisted": null,
+          "mw": 378,
+          "mw_meaning": "Critical IT load leased to Fluidstack",
+          "source_url": "https://www.sec.gov/Archives/edgar/data/1083301/000108330126000031/wulf-20251231.htm",
+          "source_title": "TeraWulf Inc. Form 10-K for the fiscal year ended December 31, 2025",
+          "publisher": "TeraWulf Inc. (SEC filing)",
+          "published": "2026-02-27",
+          "quote": "Under the Akela Fluidstack Leases, we will provide 378 MW of critical IT load at the Lake Mariner Data Campus.",
+          "fetched_at": "2026-11-20T01:14:09.994Z"
+        },
+        {
+          "role": "utility",
+          "company": "New York Power Authority",
+          "parent": null,
+          "ticker": null,
+          "unlisted": "state power authority",
+          "mw": 90,
+          "mw_meaning": "Power allocated under a 2022 agreement",
+          "source_url": "https://www.sec.gov/Archives/edgar/data/1083301/000162828026071671/wulf-20260930.htm",
+          "source_title": "TeraWulf Inc. Form 10-Q for the quarter ended September 30, 2026",
+          "publisher": "TeraWulf Inc. (SEC filing)",
+          "published": "2026-11-06",
+          "quote": "Of the campus’s total power needs, 90 MW is allocated under an agreement with the New York Power Authority (“NYPA”) executed in February 2022",
+          "fetched_at": "2026-11-20T01:14:09.888Z"
+        }
+      ]
+    },
+    {
+      "site": "Anthropic Barber Lake",
+      "grid": {
+        "name": "ERCOT",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/1819989/000181998926000009/cifr-20251231.htm",
+        "quote": "Cipher Barber Lake has received approvals for 300 MW of interconnection without any restrictions on the load profile and has entered into agreements necessary to participate in the Electric Reliability Council of Texas",
+        "fetched_at": "2026-11-20T01:14:10.166Z"
+      },
+      "links": [
+        {
+          "role": "host",
+          "company": "Cipher Digital",
+          "parent": null,
+          "ticker": "CIFR",
+          "unlisted": null,
+          "mw": 300,
+          "mw_meaning": "Site capacity, all of it for Fluidstack",
+          "source_url": "https://www.sec.gov/Archives/edgar/data/1819989/000181998926000009/cifr-20251231.htm",
+          "source_title": "Cipher Digital Inc. Form 10-K for the fiscal year ended December 31, 2025",
+          "publisher": "Cipher Digital Inc. (SEC filing)",
+          "published": "2026-02-24",
+          "quote": "Cipher Barber Lake has received approvals for 300 MW of interconnection without any restrictions on the load profile and has entered into agreements necessary to participate in the Electric Reliability Council of Texas",
+          "fetched_at": "2026-11-20T01:14:10.166Z"
+        },
+        {
+          "role": "host",
+          "company": "Cipher Digital",
+          "parent": null,
+          "ticker": "CIFR",
+          "unlisted": null,
+          "mw": 300,
+          "mw_meaning": "Site capacity, all of it for Fluidstack",
+          "source_url": "https://www.sec.gov/Archives/edgar/data/1819989/000181998926000009/cifr-20251231.htm",
+          "source_title": "Cipher Digital Inc. Form 10-K for the fiscal year ended December 31, 2025",
+          "publisher": "Cipher Digital Inc. (SEC filing)",
+          "published": "2026-02-24",
+          "quote": "244 MW of gross capacity will be allocated to Fluidstack in Barber Lake Phase I, and the remaining 56 MW will be allocated to Fluidstack in Barber Lake Phase II.",
+          "fetched_at": "2026-11-20T01:14:10.166Z"
+        },
+        {
+          "role": "host",
+          "company": "Cipher Digital",
+          "parent": null,
+          "ticker": "CIFR",
+          "unlisted": null,
+          "mw": 300,
+          "mw_meaning": "Site capacity, all of it for Fluidstack",
+          "source_url": "https://www.sec.gov/Archives/edgar/data/1819989/000181998926000050/cifr-20260930.htm",
+          "source_title": "Cipher Digital Inc. Form 10-Q for the quarter ended September 30, 2026",
+          "publisher": "Cipher Digital Inc. (SEC filing)",
+          "published": "2026-11-02",
+          "quote": "with the 300 MW Barber Lake Facility for Fluidstack USA II Inc. (“Fluidstack”), expecting phased commencement in the fourth quarter of 2026",
+          "fetched_at": "2026-11-20T01:14:10.303Z"
+        }
+      ]
+    },
+    {
+      "site": "OpenAI Stargate Abilene",
+      "grid": null,
+      "links": [
+        {
+          "role": "equipment",
+          "company": "GE Vernova",
+          "parent": null,
+          "ticker": "GEV",
+          "unlisted": null,
+          "mw": null,
+          "mw_meaning": null,
+          "source_url": "https://www.gevernova.com/news/articles/going-big-support-data-center-growth-rising-renewables-crusoe-ordering-flexible-gas",
+          "source_title": "Going Big: To Support Data Center Growth and Rising Renewables, Crusoe Is Ordering Flexible Gas Turbines",
+          "publisher": "GE Vernova",
+          "published": "2025-07-24",
+          "quote": "has been sourcing high-efficiency natural gas turbines from GE Vernova to provide this stability. Last December, the company ordered 10 LM2500XPRESS aeroderivative gas turbines to be installed at the data center it’s building outside of Abilene.",
+          "fetched_at": "2026-11-20T01:14:11.753Z"
+        },
+        {
+          "role": "generation",
+          "company": "Crusoe",
+          "parent": null,
+          "ticker": null,
+          "unlisted": "private",
+          "mw": null,
+          "mw_meaning": null,
+          "source_url": "https://crusoe.ai/blog/an-inside-look-at-the-abilene-ai-data-center/",
+          "source_title": "An inside look at the Abilene AI data center",
+          "publisher": "Crusoe",
+          "published": "2025-08-05",
+          "quote": "To ensure uninterrupted reliability and support grid stability for this critical AI infrastructure, we've strategically installed advanced natural gas turbines from GE Vernova.",
+          "fetched_at": "2026-11-20T01:14:12.073Z"
+        },
+        {
+          "role": "generation",
+          "company": "Abilene DC 1 (Crusoe and Blue Owl joint venture)",
+          "parent": null,
+          "ticker": null,
+          "unlisted": "private",
+          "mw": null,
+          "mw_meaning": null,
+          "source_url": "https://www.sec.gov/Archives/edgar/data/1944366/000194436626000020/exhibit993-2025abelinedc1l.htm",
+          "source_title": "Abilene DC 1, LLC financial statements (Exhibit 99.3 to Blue Owl Real Estate Net Lease Trust Form 10-K)",
+          "publisher": "SEC EDGAR / Blue Owl Real Estate Net Lease Trust",
+          "published": "2026-03-13",
+          "quote": "The Company was formed for the purpose of owning, developing, leasing, and operating a data center campus located in Abilene, Texas (the “Investment”), which is comprised of two buildings each containing four data halls, and a power station.",
+          "fetched_at": "2026-11-20T01:14:12.597Z"
+        },
+        {
+          "role": "host",
+          "company": "Lancium",
+          "parent": null,
+          "ticker": null,
+          "unlisted": "private",
+          "mw": 1200,
+          "mw_meaning": "Grid interconnection for the campus",
+          "source_url": "https://lancium.com/locations/",
+          "source_title": "Lancium Gigawatt AI Data Center Campuses",
+          "publisher": "Lancium",
+          "published": null,
+          "quote": "Our Abilene campus features a 1.2GW interconnect, which has been fully approved by ERCOT and undergone a rigorous, formal review process in collaboration with transmission service providers.",
+          "fetched_at": "2026-11-20T01:14:12.697Z"
+        },
+        {
+          "role": "host",
+          "company": "Lancium",
+          "parent": null,
+          "ticker": null,
+          "unlisted": "private",
+          "mw": 1200,
+          "mw_meaning": "Grid interconnection for the campus",
+          "source_url": "https://www.crusoe.ai/newsroom/crusoe-expands-ai-data-center-campus-in-abilene-to-1-2-gigawatts",
+          "source_title": "Crusoe Expands AI Data Center Campus in Abilene to 1.2 Gigawatts",
+          "publisher": "Crusoe",
+          "published": "2025-03-18",
+          "quote": "In addition to the 1.2 GW grid interconnection, Lancium’s power plan for the site includes large-scale behind-the-meter battery storage and solar resources",
+          "fetched_at": "2026-11-20T01:14:12.856Z"
+        },
+        {
+          "role": "host",
+          "company": "Lancium",
+          "parent": null,
+          "ticker": null,
+          "unlisted": "private",
+          "mw": null,
+          "mw_meaning": null,
+          "source_url": "https://www.sec.gov/Archives/edgar/data/1944366/000194436626000020/exhibit993-2025abelinedc1l.htm",
+          "source_title": "Abilene DC 1, LLC financial statements (Exhibit 99.3 to Blue Owl Real Estate Net Lease Trust Form 10-K)",
+          "publisher": "SEC EDGAR / Blue Owl Real Estate Net Lease Trust",
+          "published": "2026-03-13",
+          "quote": "While the Investment is leased to a tenant, the tenant will be responsible for making monthly payments for power directly to Lancium.",
+          "fetched_at": "2026-11-20T01:14:12.597Z"
+        }
+      ]
+    },
+    {
+      "site": "OpenAI Stargate Milam",
+      "grid": {
+        "name": "ERCOT",
+        "source_url": "https://www.sec.gov/Archives/edgar/data/2133037/000162828026075026/sbenergy-sx1a3.htm",
+        "quote": "Milam County, TX (ERCOT)",
+        "fetched_at": "2026-11-20T01:14:13.201Z"
+      },
+      "links": [
+        {
+          "role": "host",
+          "company": "SB Energy",
+          "parent": "SoftBank Group",
+          "ticker": null,
+          "unlisted": "has filed to list",
+          "mw": null,
+          "mw_meaning": null,
+          "source_url": "https://www.sec.gov/Archives/edgar/data/2133037/000162828026075026/sbenergy-sx1a3.htm",
+          "source_title": "SB Energy, Inc. Form S-1/A (Amendment No. 3), filed 2026-11-19",
+          "publisher": "SEC EDGAR / SB Energy, Inc.",
+          "published": "2026-11-19",
+          "quote": "On January 9, 2026, Milam County DC, LLC, one of our subsidiaries, as landlord, and Orion DC I, LLC, an affiliate of OpenAI, as tenant, entered into two separate triple-net data center lease agreements for data center buildings to be constructed in Milam County, Texas.",
+          "fetched_at": "2026-11-20T01:14:13.201Z"
+        },
+        {
+          "role": "host",
+          "company": "SB Energy",
+          "parent": "SoftBank Group",
+          "ticker": null,
+          "unlisted": "has filed to list",
+          "mw": 753,
+          "mw_meaning": "Critical IT capacity under the two leases",
+          "source_url": "https://www.sec.gov/Archives/edgar/data/2133037/000162828026075026/sbenergy-sx1a3.htm",
+          "source_title": "SB Energy, Inc. Form S-1/A (Amendment No. 3), filed 2026-11-19",
+          "publisher": "SEC EDGAR / SB Energy, Inc.",
+          "published": "2026-11-19",
+          "quote": "The Milam County leases cover approximately 753 MW of critical IT capacity across two buildings and have 15-year initial terms.",
+          "fetched_at": "2026-11-20T01:14:13.201Z"
+        },
+        {
+          "role": "generation",
+          "company": "SB Energy",
+          "parent": "SoftBank Group",
+          "ticker": null,
+          "unlisted": "has filed to list",
+          "mw": 1300,
+          "mw_meaning": "Generation SB Energy has developed in the county",
+          "source_url": "https://www.sec.gov/Archives/edgar/data/2133037/000162828026075026/sbenergy-sx1a3.htm",
+          "source_title": "SB Energy, Inc. Form S-1/A (Amendment No. 3), filed 2026-11-19",
+          "publisher": "SEC EDGAR / SB Energy, Inc.",
+          "published": "2026-11-19",
+          "quote": "As of the date of this prospectus, we had developed more than 1.3 GW of incremental power generation capacity in Milam County, and these co-located power assets are expected to serve a substantial portion of the data center campus’s total electricity needs.",
+          "fetched_at": "2026-11-20T01:14:13.201Z"
+        },
+        {
+          "role": "generation",
+          "company": "SB Energy",
+          "parent": "SoftBank Group",
+          "ticker": null,
+          "unlisted": "has filed to list",
+          "mw": null,
+          "mw_meaning": null,
+          "source_url": "https://www.sec.gov/Archives/edgar/data/2133037/000162828026075026/sbenergy-sx1a3.htm",
+          "source_title": "SB Energy, Inc. Form S-1/A (Amendment No. 3), filed 2026-11-19",
+          "publisher": "SEC EDGAR / SB Energy, Inc.",
+          "published": "2026-11-19",
+          "quote": "For Milam County, high-voltage interconnection is being delivered in phases: Phase 1-A (200 MW from Orion 1 via 34.5kV, targeted August 2026), Phase 1-B (230 MW from Orion 2 via 345kV, targeted December 2026), Phase 1-C (230 MW from Orion 3 via 345kV, targeted February 2027)",
+          "fetched_at": "2026-11-20T01:14:13.201Z"
+        }
+      ]
+    },
+    {
+      "site": "OpenAI Stargate Michigan",
+      "grid": null,
+      "links": [
+        {
+          "role": "utility",
+          "company": "DTE Electric",
+          "parent": "DTE Energy",
+          "ticker": "DTE",
+          "unlisted": null,
+          "mw": 1400,
+          "mw_meaning": "Load under DTE’s data-center contracts",
+          "source_url": "https://www.sec.gov/Archives/edgar/data/936340/000093634026000051/exhibit991-123125.htm",
+          "source_title": "DTE Energy 2025 results press release (Exhibit 99.1 to Form 8-K)",
+          "publisher": "SEC EDGAR / DTE Energy",
+          "published": "2026-02-17",
+          "quote": "DTE negotiated its first hyperscale data center contracts to provide 1.4 gigawatts of load to power Oracle’s new data center in Saline Township, MI",
+          "fetched_at": "2026-11-20T01:14:14.074Z"
+        }
+      ]
+    },
+    {
+      "site": "OpenAI Stargate New Mexico",
+      "grid": null,
+      "links": [
+        {
+          "role": "equipment",
+          "company": "Bloom Energy",
+          "parent": null,
+          "ticker": "BE",
+          "unlisted": null,
+          "mw": 2450,
+          "mw_meaning": "Fuel cell capacity, up to",
+          "source_url": "https://www.bloomenergy.com/blog/communities-are-right-to-ask-about-the-water-use-of-ai-infrastructure/",
+          "source_title": "Communities Are Right to Ask About the Water Use of AI Infrastructure",
+          "publisher": "Bloom Energy",
+          "published": "2026-08-03",
+          "quote": "Project Jupiter in New Mexico, part of Bloom’s expanded partnership with Oracle, will be powered by up to 2.45 GW of Bloom fuel cell capacity.",
+          "fetched_at": "2026-11-20T01:14:14.321Z"
+        }
+      ]
+    },
+    {
+      "site": "OpenAI Stargate Wisconsin",
+      "grid": null,
+      "links": [
+        {
+          "role": "utility",
+          "company": "We Energies",
+          "parent": "WEC Energy Group",
+          "ticker": "WEC",
+          "unlisted": null,
+          "mw": null,
+          "mw_meaning": null,
+          "source_url": "https://vantage-dc.com/news/openai-oracle-and-vantage-data-centers-announce-stargate-data-center-site-in-wisconsin/",
+          "source_title": "OpenAI, Oracle and Vantage Data Centers Announce Stargate Data Center Site in Wisconsin",
+          "publisher": "Vantage Data Centers",
+          "published": "2025-10-22",
+          "quote": "Vantage is underwriting 100% of the power infrastructure investment with a dedicated electricity rate from WEC Energy Group utility We Energies.",
+          "fetched_at": "2026-11-20T01:14:14.853Z"
+        },
+        {
+          "role": "utility",
+          "company": "We Energies",
+          "parent": "WEC Energy Group",
+          "ticker": "WEC",
+          "unlisted": null,
+          "mw": 1300,
+          "mw_meaning": "Demand WEC forecasts the campus adds through 2031",
+          "source_url": "https://www.sec.gov/Archives/edgar/data/783325/000078332526000107/wec-20260930.htm",
+          "source_title": "WEC Energy Group Form 10-Q for the quarter ended September 30, 2026",
+          "publisher": "SEC EDGAR / WEC Energy Group",
+          "published": "2026-10-30",
+          "quote": "Additionally, Vantage Data Centers is developing a large data center campus in Port Washington that is forecasted to add 1.3 GWs of demand through 2031.",
+          "fetched_at": "2026-11-20T01:14:14.961Z"
+        },
+        {
+          "role": "utility",
+          "company": "We Energies",
+          "parent": "WEC Energy Group",
+          "ticker": "WEC",
+          "unlisted": null,
+          "mw": null,
+          "mw_meaning": null,
+          "source_url": "https://www.atcllc.com/project/ozaukee-county-distribution-interconnection",
+          "source_title": "Ozaukee County Distribution Interconnection – ATC",
+          "publisher": "American Transmission Co.",
+          "published": null,
+          "quote": "The project is needed to reliably serve a load interconnection request by We Energies for a new large load addition in the Port Washington area and maintain the safe and reliable operation of ATC’s system.",
+          "fetched_at": "2026-11-20T01:14:15.237Z"
+        },
+        {
+          "role": "utility",
+          "company": "American Transmission Company",
+          "parent": "WEC Energy Group",
+          "ticker": "WEC",
+          "unlisted": null,
+          "mw": null,
+          "mw_meaning": null,
+          "source_url": "https://www.sec.gov/Archives/edgar/data/783325/000078332526000107/wec-20260930.htm",
+          "source_title": "WEC Energy Group Form 10-Q for the quarter ended September 30, 2026",
+          "publisher": "SEC EDGAR / WEC Energy Group",
+          "published": "2026-10-30",
+          "quote": "In September 2025, ATC filed an application for a CPCN with the PSCW to construct the Ozaukee County Distribution Interconnection Project. This proposed project is an important part of our plan to serve the data center under construction in Port Washington, Wisconsin",
+          "fetched_at": "2026-11-20T01:14:14.961Z"
+        },
+        {
+          "role": "generation",
+          "company": "WEC Energy Group",
+          "parent": null,
+          "ticker": "WEC",
+          "unlisted": null,
+          "mw": null,
+          "mw_meaning": null,
+          "source_url": "https://vantage-dc.com/news/openai-oracle-and-vantage-data-centers-announce-stargate-data-center-site-in-wisconsin/",
+          "source_title": "OpenAI, Oracle and Vantage Data Centers Announce Stargate Data Center Site in Wisconsin",
+          "publisher": "Vantage Data Centers",
+          "published": "2025-10-22",
+          "quote": "said Scott Lauber, president and CEO, WEC Energy Group. “Together with Vantage, we are adding nearly two gigawatts of new energy to the grid, 30% of which will be dedicated to the homes, farms and other businesses we serve today.",
+          "fetched_at": "2026-11-20T01:14:14.853Z"
+        }
+      ]
+    },
+    {
+      "site": "Microsoft Fairwater Wisconsin",
+      "grid": null,
+      "links": [
+        {
+          "role": "utility",
+          "company": "We Energies",
+          "parent": "WEC Energy Group",
+          "ticker": "WEC",
+          "unlisted": null,
+          "mw": null,
+          "mw_meaning": null,
+          "source_url": "https://blogs.microsoft.com/on-the-issues/2025/09/18/made-in-wisconsin-the-worlds-most-powerful-ai-datacenter/",
+          "source_title": "Made in Wisconsin: The world’s most powerful AI datacenter",
+          "publisher": "Microsoft (Microsoft On the Issues blog)",
+          "published": "2025-09-18",
+          "quote": "And our partnership with WE Energies ensures we will continually explore and add energy transmission, generation, and usage — under transparent tariffs that support grid reliability.",
+          "fetched_at": "2026-11-20T01:14:16.191Z"
+        }
+      ]
+    },
+    {
+      "site": "Microsoft Goodyear",
+      "grid": null,
+      "links": [
+        {
+          "role": "utility",
+          "company": "Arizona Public Service",
+          "parent": "Pinnacle West Capital",
+          "ticker": "PNW",
+          "unlisted": null,
+          "mw": null,
+          "mw_meaning": null,
+          "source_url": "https://www.aps.com/runway",
+          "source_title": "Runway 230kV",
+          "publisher": "Arizona Public Service",
+          "published": null,
+          "quote": "In Jan. 2022, we announced the need for a new double circuit 230kV power line to serve the Microsoft data center. The new 230kV line would connect the APS Runway Substation,",
+          "fetched_at": "2026-11-20T01:14:16.594Z"
+        }
+      ]
+    },
+    {
+      "site": "CoreWeave Denton TX",
+      "grid": null,
+      "links": [
+        {
+          "role": "host",
+          "company": "Core Scientific",
+          "parent": null,
+          "ticker": "CORZ",
+          "unlisted": null,
+          "mw": 260,
+          "mw_meaning": "Critical IT load CoreWeave has contracted",
+          "source_url": "https://investors.corescientific.com/news-events/press-releases/detail/110/core-scientific-and-coreweave-announce-1-2-billion-expansion-at-denton-tx-site",
+          "source_title": "Core Scientific and CoreWeave Announce $1.2 Billion Expansion at Denton, TX Site",
+          "publisher": "Core Scientific (investor relations)",
+          "published": "2025-02-26",
+          "quote": "The 70 MW of additional contracted power at the Denton site increases the full critical IT load to approximately 260 MW. The agreement increases CoreWeave’s total contracted HPC infrastructure with Core Scientific to approximately 590 MW across six sites.",
+          "fetched_at": "2026-11-20T01:14:17.453Z"
+        },
+        {
+          "role": "host",
+          "company": "Core Scientific",
+          "parent": null,
+          "ticker": "CORZ",
+          "unlisted": null,
+          "mw": 394,
+          "mw_meaning": "Power Core Scientific can draw under its city agreements",
+          "source_url": "https://investors.corescientific.com/news-events/press-releases/detail/100/core-scientific-announces-approval-of-lease-amendments-with-the-city-of-denton-to-enable-high-performance-computing-expansion",
+          "source_title": "Core Scientific Announces Approval of Lease Amendments with the City of Denton to Enable High-Performance Computing Expansion",
+          "publisher": "Core Scientific (investor relations)",
+          "published": "2024-11-20",
+          "quote": "Under the original agreement, Core Scientific leased approximately 31 acres of city-owned land and had access to 297 megawatts (MW) of power. The Denton City Council's approval increases the leased land to approximately 78 acres and the Company's access to power to 394 MW.",
+          "fetched_at": "2026-11-20T01:14:17.609Z"
+        }
+      ]
+    },
+    {
+      "site": "Meta Prometheus",
+      "grid": null,
+      "links": [
+        {
+          "role": "generation",
+          "company": "Will-Power OH",
+          "parent": "Williams",
+          "ticker": "WMB",
+          "unlisted": null,
+          "mw": 200,
+          "mw_meaning": "Capacity of one Socrates plant",
+          "source_url": "https://content.govdelivery.com/accounts/OHPUC/bulletins/3f348f9",
+          "source_title": "OPSB authorizes construction of Licking County power plant",
+          "publisher": "Ohio Power Siting Board (Public Utilities Commission of Ohio bulletin)",
+          "published": "2025-09-18",
+          "quote": "Will-Power OH, LLC will construct and operate the power plant on 20 acres within the New Albany International Business Park, and Sidecat, an affiliate of Meta Platforms, Inc., will consume the power.",
+          "fetched_at": "2026-11-20T01:14:17.668Z"
+        },
+        {
+          "role": "generation",
+          "company": "Will-Power OH",
+          "parent": "Williams",
+          "ticker": "WMB",
+          "unlisted": null,
+          "mw": 400,
+          "mw_meaning": "Capacity of the two Socrates plants together",
+          "source_url": "https://www.williams.com/expansion-project/socrates-power-solution-facilities/",
+          "source_title": "Socrates Power Solution Facilities",
+          "publisher": "Williams",
+          "published": null,
+          "quote": "Will-Power’s proposed Socrates North and South projects are advanced power generation facilities in New Albany, Ohio, spanning approximately 20 acres each. The project involves two separate power generation sites, with a combined generating capacity of 400 megawatts",
+          "fetched_at": "2026-11-20T01:14:17.874Z"
+        }
+      ]
+    },
+    {
+      "site": "Meta Hyperion",
+      "grid": null,
+      "links": [
+        {
+          "role": "utility",
+          "company": "Entergy Louisiana",
+          "parent": "Entergy",
+          "ticker": "ETR",
+          "unlisted": null,
+          "mw": null,
+          "mw_meaning": null,
+          "source_url": "https://www.opportunitylouisiana.gov/news/entergy-louisiana-to-power-metas-data-center-in-richland-parish",
+          "source_title": "Entergy Louisiana to Power Meta’s Data Center in Richland Parish",
+          "publisher": "Louisiana Economic Development",
+          "published": "2024-12-05",
+          "quote": "Entergy Louisiana is pleased to announce plans to invest in modern, efficient generation facilities and robust transmission infrastructure to support the region and Meta’s data center representing a $10 billion in investment in Richland Parish.",
+          "fetched_at": "2026-11-20T01:14:18.510Z"
+        }
+      ]
+    }
+  ]
+}

@@ -289,6 +289,8 @@ describe('queryRankings', () => {
       'vercel-ai-gateway',
       'inferencex',
       'gpu-stock-status',
+      'power-site-press',
+      'power-site-unread',
     ])
     expect(coverage.cuts.find((c) => c.id === 'artificial-analysis')!.reason).toContain(
       '"Internal use only; no redistribution."',
