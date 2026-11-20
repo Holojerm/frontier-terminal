@@ -37,12 +37,21 @@ useSeo({
     <TerminalPanel id="what" title="What this is">
       <div class="max-w-2xl space-y-3 text-default">
         <p>
-          A free, public, read-only terminal for equity analysts who cover AI infrastructure through
-          the frontier-lab IPO wave. We track nine frontier model providers (OpenAI, Anthropic,
-          Google, xAI, Meta, Mistral, DeepSeek, Alibaba’s Qwen, and Moonshot AI’s Kimi). For each
-          one we follow API prices, hiring (including the roles that build data centers and power),
-          OpenRouter demand share and the spend share it implies at list price, status-page
-          incidents, misalignment disclosures, SEC filings, and disclosed revenue.
+          A free, public, read-only terminal of fundamentals on the frontier AI labs, for analysts
+          who cover AI infrastructure through the frontier-lab IPO wave. We track nine labs (OpenAI,
+          Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Alibaba’s Qwen, and Moonshot AI’s Kimi).
+        </p>
+        <p>
+          For each lab we follow API prices, hiring (including the roles that build data centers and
+          power), SEC filings and disclosed revenue, OpenRouter demand share and the spend share it
+          implies at list price, status-page incidents and response times, and misalignment
+          disclosures.
+        </p>
+        <p>
+          Around the labs we follow the public companies tied to them. That covers hyperscaler capex
+          and backlog, who sells to and funds whom, chip and power suppliers, and GPU rental prices.
+          Ground truth scores press reports of lab revenue and deals against the filings that came
+          later.
         </p>
         <p>
           Most of these labs are still private. Until one files to go public, hiring, prices, and
@@ -54,6 +63,11 @@ useSeo({
           We check every source on a schedule, keep a copy of each page we read, and record what
           changed since the last check. Pages show what each source says now and what has changed.
           An alert only ever describes those recorded changes.
+        </p>
+        <p>
+          Theses sit on top of the data. Each one is a short argument about a company, with the
+          claims it rests on and the numbers that would break them. They’re Jeremy’s, and each shows
+          his position.
         </p>
       </div>
     </TerminalPanel>

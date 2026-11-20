@@ -11,7 +11,7 @@ Frontier Terminal is the engine, and its first thesis is Anthropic, read off the
 ## Decisions
 
 - **Frontier Terminal is the engine.** Anthropic is the first thesis; new theses join the same app, not a new one.
-- **The thesis layer is core.** Datasets exist to test claims, not as a product on their own.
+- **The thesis layer is core.** Datasets exist to test claims, not as a product on their own. *Reversed 2026-11-19: the terminal's data is the product and theses sit on top (see [Revisions](#revisions)).*
 - **Signals can be measured or judged.** A number from a recipe, or an LLM verdict on grounded change rows, as Frontier Terminal's judge already does.
 - **No public-company line.** Private companies count; the frontier labs are already among the largest. One size floor applies to all.
 - **The size floor is a $10B valuation:** market cap for a public company, the last priced round for a private one. It applies to the thesis's company, not its comparison set.
@@ -126,6 +126,12 @@ Why: revenue can come from the history and from terms, without closing anything.
 - No page, `/llms.txt` line, or API message offers a paid license, an API key, the licensed S3 bucket, or webhooks. `/contact` is for corrections and press.
 - The license split above stays. The last 90 days are CC BY 4.0, and the full history is CC BY-NC 4.0, for non-commercial use only.
 - The key code stays in place, unadvertised. A key issued before the pause works until it expires, and none is issued during it.
+
+**2026-11-19: the terminal is the product, and theses are a layer on top.** Frontier Terminal is a terminal of fundamentals on the frontier AI labs and the public companies tied to them. Theses are the retail-facing angle, built on that data.
+
+- New datasets earn their place as fundamentals on a lab or a company around it. They don't need a claim to test.
+- Theses keep the rules above: kill conditions written first, a position disclosure, and a digest that leads with what counts against them.
+- The README, `AGENTS.md`, the About page, `/llms.txt` and the MCP server's instructions describe the terminal first and theses second.
 
 ## Risks
 
