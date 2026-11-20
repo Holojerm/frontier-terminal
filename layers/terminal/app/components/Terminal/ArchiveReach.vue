@@ -11,9 +11,15 @@ import type { TableColumn } from '../../types/terminal-ui'
 
 const watchlist = useWatchlist()
 
-withDefaults(defineProps<{ reach: ArchiveReach[]; caption?: string }>(), {
-  caption: 'How far back each lab’s price history reaches',
-})
+withDefaults(
+  defineProps<{
+    reach: ArchiveReach[]
+    caption?: string
+    /** Runs with the page: nine labs and their gap lists outgrow a 70svh box. */
+    flow?: boolean
+  }>(),
+  { caption: 'How far back each lab’s price history reaches' },
+)
 
 const COLUMNS: TableColumn[] = [
   { key: 'provider', label: 'Lab' },
@@ -34,6 +40,8 @@ const from = (r: ArchiveReach) => r.archived_from ?? r.live_from
     :rows="watchlist.first(reach, (r) => r.provider)"
     :row-key="(r) => r.provider"
     align="top"
+    :flow="flow"
+    stack
   >
     <template #cell-provider="{ row: r }">{{ labName(r.provider) }}</template>
     <template #cell-from="{ row: r }">

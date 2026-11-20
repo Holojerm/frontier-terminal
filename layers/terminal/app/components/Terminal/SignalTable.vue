@@ -24,6 +24,8 @@ const props = defineProps<{
   alerts: AlertView[]
   /** The page's primary table: it runs with the page instead of its own scroll box. */
   flow?: boolean
+  /** The page is one lab's, so a Lab column would repeat its name on every row. */
+  scoped?: boolean
 }>()
 
 const stamps = useStamps()
@@ -42,19 +44,31 @@ const rows = computed(() =>
 )
 
 // The headline is the row header: it names the row, and a screen reader
-// moving down the table hears what moved rather than a timestamp.
-const columns: TableColumn[] = [
-  { key: 'when', label: 'When', class: 'whitespace-nowrap font-mono text-xs text-muted' },
-  { key: 'labs', label: 'Lab', class: 'whitespace-nowrap' },
-  { key: 'axis', label: 'Topic', class: 'whitespace-nowrap text-muted' },
+// moving down the table hears what moved rather than a timestamp. On a phone
+// the row stacks: the headline, then when, lab, topic and figure on one line.
+const columns = computed<TableColumn[]>(() => [
+  {
+    key: 'when',
+    label: 'When',
+    class: 'whitespace-nowrap font-mono text-xs text-muted',
+    stack: 'inline',
+  },
+  ...(props.scoped
+    ? []
+    : [{ key: 'labs', label: 'Lab', class: 'whitespace-nowrap', stack: 'inline' } as const]),
+  { key: 'axis', label: 'Topic', class: 'whitespace-nowrap text-muted', stack: 'inline' },
   { key: 'headline', label: 'What moved', class: 'min-w-64' },
-  { key: 'delta', label: 'Δ', numeric: true, class: 'text-xs' },
-]
+  { key: 'delta', label: 'Δ', numeric: true, class: 'text-xs', stack: 'inline' },
+])
 </script>
 
 <template>
   <TerminalTable
-    caption="Alerts, newest first, with the time, lab, topic, headline, and the figure that moved"
+    :caption="
+      scoped
+        ? 'Alerts, newest first, with the time, topic, headline, and the figure that moved'
+        : 'Alerts, newest first, with the time, lab, topic, headline, and the figure that moved'
+    "
     :columns="columns"
     :rows="rows"
     :row-key="(r) => r.alert.id"
@@ -62,6 +76,7 @@ const columns: TableColumn[] = [
     row-header="headline"
     align="top"
     :flow="flow"
+    stack
   >
     <template #cell-headline="{ row }">
       <UIcon
