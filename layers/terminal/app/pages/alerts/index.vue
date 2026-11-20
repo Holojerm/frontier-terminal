@@ -91,10 +91,15 @@ const minorQuery = computed(() => ({
   limit: PAGE,
 }))
 
+// The rows print when, lab, topic, headline and one figure; the explanation and
+// the cited changes are on each permalink, so slimAlerts keeps only what the
+// rows read. A hiring alert cites 150 changes; in full they were most of the page.
+const slim = (d: AlertsData): AlertsData => ({ ...d, rows: slimAlerts(d.rows) })
+
 const [{ data: alerts, error: alertsError }, { data: minor, error: minorError }, { data: record }] =
   await Promise.all([
-    useFetch<AlertsData>('/api/alerts', { query: alertQuery }),
-    useFetch<AlertsData>('/api/alerts', { query: minorQuery }),
+    useFetch<AlertsData>('/api/alerts', { query: alertQuery, transform: slim }),
+    useFetch<AlertsData>('/api/alerts', { query: minorQuery, transform: slim }),
     useFetch<TrackRecordData>('/api/track-record'),
   ])
 

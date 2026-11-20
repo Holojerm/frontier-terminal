@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { overviewStrip } from '../app/utils/overview-strip'
+import { overviewStrip, slimAlerts } from '../app/utils/overview-strip'
+import { alertDelta } from '../shared/utils/terminal-labs'
 
 const alert = (id: string, at: string, provider: string) =>
   ({
@@ -36,5 +37,28 @@ describe('overviewStrip', () => {
     expect(out.alert_count).toBe(7)
     expect(out.alerts[0]!.explanation).toBe('')
     expect(out.alerts[0]!.changes[0]).toMatchObject({ provider: 'openai', summary: '', diff: [] })
+  })
+})
+
+describe('slimAlerts', () => {
+  it('shares one object between equal slimmed changes, and keeps what alertDelta counts', () => {
+    const job = (id: string, change_type: string) => ({
+      id,
+      provider: 'anthropic',
+      entity_type: 'job',
+      change_type,
+      summary: `role ${id}`,
+      diff: [],
+    })
+    const [a] = slimAlerts([
+      {
+        id: 'a',
+        explanation: 'long text',
+        changes: [job('1', 'added'), job('2', 'added'), job('3', 'removed')],
+      } as never,
+    ])
+    expect(a!.changes[0]).toBe(a!.changes[1])
+    expect(a!.changes[2]).not.toBe(a!.changes[0])
+    expect(alertDelta(a!)).toBe('+2 −1 roles')
   })
 })
