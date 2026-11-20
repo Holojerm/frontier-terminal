@@ -31,13 +31,17 @@ export interface StreamError {
 }
 
 export interface StreamState {
-  /** clock() at the first chunk carrying answer or reasoning text. */
+  /**
+   * clock() at the first chunk carrying answer text. Reasoning text is not
+   * the answer: one lab streams it and the rest hide it, so timing it would
+   * put that lab's first token seconds ahead of an answer it had not begun.
+   */
   first_token_at: number | null
-  /** clock() at the last such chunk. */
+  /** clock() at the last chunk carrying answer text. */
   last_token_at: number | null
-  /** Chunks that carried text. */
+  /** Chunks that carried answer text. */
   token_chunks: number
-  /** True when any reasoning text was streamed, so reasoning tokens arrived inside the timed span. */
+  /** True when any reasoning text was streamed. */
   reasoning_streamed: boolean
   output_tokens: number | null
   reasoning_tokens: number | null
@@ -73,7 +77,7 @@ export function parseStreamError(value: unknown): StreamError | null {
   }
 }
 
-/** True when a delta carries text a reader would see arrive: answer or reasoning, not an encrypted blob. */
+/** What text a delta carries: the answer, readable reasoning, or neither (an encrypted blob is neither). */
 function deltaText(delta: Record<string, unknown>): { answer: boolean; reasoning: boolean } {
   const details = Array.isArray(delta.reasoning_details) ? delta.reasoning_details : []
   const reasoning =
@@ -129,7 +133,7 @@ export function createStreamReader() {
       if (delta) {
         const seen = deltaText(delta)
         if (seen.reasoning) state.reasoning_streamed = true
-        if (seen.answer || seen.reasoning) {
+        if (seen.answer) {
           state.first_token_at ??= at
           state.last_token_at = at
           state.token_chunks += 1
@@ -174,10 +178,11 @@ export interface ProbeMeasurement {
   output_tokens: number | null
   reasoning_tokens: number | null
   /**
-   * Tokens that arrived after the first one, per second of the span between
-   * the first and last token. Reasoning tokens count only when the reasoning
-   * was streamed; hidden reasoning happened before the first token. Null when
-   * the stream came in too few pieces or too short a span to divide.
+   * Answer tokens that arrived after the first one, per second of the span
+   * between the first and last answer token. Reasoning tokens are left out,
+   * streamed or hidden: they came before the answer. Null when the answer
+   * came in too few pieces or too short a span to divide, or when reasoning
+   * was streamed and the usage does not say how many tokens it was.
    */
   tokens_per_second: number | null
 }
@@ -190,11 +195,11 @@ export function measure(state: StreamState, startedAt: number, endedAt: number):
     state.first_token_at !== null &&
     state.last_token_at !== null
   ) {
-    const hidden = state.reasoning_streamed ? 0 : (state.reasoning_tokens ?? 0)
-    const streamed = state.output_tokens - hidden
+    const separable = state.reasoning_tokens !== null || !state.reasoning_streamed
+    const answer = state.output_tokens - (state.reasoning_tokens ?? 0)
     const span = state.last_token_at - state.first_token_at
-    if (streamed > 1 && span >= MIN_GENERATION_MS && state.token_chunks >= 3) {
-      tps = Math.round(((streamed - 1) / (span / 1000)) * 100) / 100
+    if (separable && answer > 1 && span >= MIN_GENERATION_MS && state.token_chunks >= 3) {
+      tps = Math.round(((answer - 1) / (span / 1000)) * 100) / 100
     }
   }
   return {
@@ -223,7 +228,7 @@ export interface ProbeEnd {
  * provider's (provider_code is kept where the body gives one). So is a
  * 502/503, or a 5xx naming the provider's code. Another 4xx is about our key,
  * credit, model id or request (`setup`), and so is a 200 whose stream we
- * could not read. A 500 with no provider code, or a
+ * could not read or whose output cap went to reasoning before any answer. A 500 with no provider code, or a
  * connection that never reached OpenRouter, is OpenRouter's (`router`).
  */
 export function classify(end: ProbeEnd): { outcome: ProbeOutcome; detail: string | null } {
@@ -245,7 +250,14 @@ export function classify(end: ProbeEnd): { outcome: ProbeOutcome; detail: string
   }
   if (end.thrown) return { outcome: 'failed', detail: `stream broke: ${end.thrown}`.slice(0, 300) }
   if (!end.state.output_tokens || end.state.first_token_at === null) {
-    // A clean 200 we could not read is our reader or the router, never evidence about the lab.
+    // A clean 200 with no answer to time is our reader, our output cap or the router, never evidence about the lab.
+    const { output_tokens, reasoning_tokens, reasoning_streamed } = end.state
+    if (output_tokens && (reasoning_tokens || reasoning_streamed)) {
+      return {
+        outcome: 'setup',
+        detail: `no answer text: the output cap went to reasoning (${reasoning_tokens ?? 'an unstated share'} of ${output_tokens} tokens)`,
+      }
+    }
     return {
       outcome: 'setup',
       detail: 'unreadable reply: the stream ended with no tokens or no usage',
