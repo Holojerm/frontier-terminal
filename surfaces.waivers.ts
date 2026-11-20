@@ -24,16 +24,20 @@ export const SURFACE_WAIVERS = {
   labPage: {
     '/api/exposure':
       'not yet: the hyperscaler lines naming the lab are on the tear sheet and /exposure only',
-    '/api/theses': 'not yet: the lab’s thesis is on the tear sheet and /theses only',
   },
 
   tearSheet: {
     '/api/adoption': 'not yet: adoption panels are on the lab page and /rankings only',
     '/api/datacenters': 'not yet: data-center power is on the lab page, /hiring and /compute only',
+    '/api/disclosures': 'not yet: the disclosure summary is on the lab page and /disclosures only',
+    '/api/ground-truth': 'not yet: press against filings is on the lab page and /ground-truth only',
     '/api/limits': 'not yet: rate limits are on the lab page and /incidents only',
+    '/api/listed':
+      'not yet: listed companies tied to the lab are on the lab page and /dependencies only',
     '/api/parents':
       'not yet: on the lab page only; the sheet reads /api/exposure for the same filers',
     '/api/pay': 'not yet: posted pay is on the lab page and /hiring only',
+    '/api/probes': 'not yet: measured strain is on the lab page and /incidents only',
     '/api/releases': 'not yet: new SKUs are on the lab page and /releases only',
     '/api/spend': 'not yet: implied spend share is on the lab page and /rankings only',
   },
