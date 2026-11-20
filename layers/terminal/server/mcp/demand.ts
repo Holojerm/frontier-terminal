@@ -54,7 +54,8 @@ export function registerDemandTools({ server, deps }: McpKit): void {
         'Crusoe, Together AI, DigitalOcean, Verda, Azure, Oracle), normalized to usd_per_gpu_hour: an instance price divided by its GPUs, ' +
         'with gpus_per_instance, instance_usd_per_hour, region and config kept as printed. medians counts each provider once, at the ' +
         'median of its own counted rows; PCIe and NVL cards have counted=false. failed names providers whose page failed today; they are ' +
-        'left out, never carried forward. These are list prices, not transaction prices (see caveat). The Compute thesis divides the ' +
+        'left out, never carried forward. history gives, per GPU, the median and the spot price as a share of on-demand (low and high bounds) ' +
+        'on each date a provider’s page changed, ending on today’s read; its method says how to read it. These are list prices, not transaction prices (see caveat). The Compute thesis divides the ' +
         'flagship token price by the H100 median. ' +
         PROVENANCE,
       annotations: READ_ONLY,
