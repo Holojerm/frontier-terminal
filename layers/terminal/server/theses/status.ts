@@ -59,6 +59,12 @@ export interface ClaimEvaluation {
   status: ClaimStatus
   reason: string
   reading_date: string | null
+  /**
+   * The value the newest reading would have to cross to count against the
+   * claim, where the rule has one level: a floor, a ceiling, or a drop from
+   * a high (today's high, so it moves). The chart draws it.
+   */
+  kill_line?: number
 }
 
 /** A checkpoint may sit up to this many days before its target date: the
@@ -113,12 +119,16 @@ function sustainedFloor(
   // Without the comparator only the floor was tested; the reason says so
   // rather than reading as if both tests passed.
   const note = now.compare_unavailable ? ` ${now.compare_unavailable}` : ''
-  if (run === 0) return { status: 'holding', reason: `${vs}.${note}`, reading_date: now.date }
+  const kill_line = rule.floor
+  if (run === 0) {
+    return { status: 'holding', reason: `${vs}.${note}`, reading_date: now.date, kill_line }
+  }
   const status: ClaimStatus = run >= rule.weeks ? 'broken' : 'weakening'
   return {
     status,
     reason: `${vs}: below at ${run} of ${rule.weeks} straight weekly checkpoints.${note}`,
     reading_date: now.date,
+    kill_line,
   }
 }
 
@@ -143,6 +153,7 @@ function belowTrailingAverage(
     status,
     reason: `${fmt(now.value)} against a trailing average of ${fmt(avg)} (kill below ${fmt(avg - margin)}); ${history}.`,
     reading_date: now.date,
+    kill_line: avg - margin,
   }
 }
 
@@ -169,6 +180,7 @@ function drawdownFromHigh(
     status,
     reason: `${fmt(now.value)}, ${pct}% below the high of ${fmt(high.value)} on ${high.date} (kill at ${fmt(high.value * (1 - rule.drop))}); ${history}.`,
     reading_date: now.date,
+    kill_line: high.value * (1 - rule.drop),
   }
 }
 
@@ -213,11 +225,13 @@ function belowFloorPeriods(
     run++
   }
   const vs = `${fmt(now.value)} for the period ending ${now.date}, against a floor of ${fmt(rule.floor)}`
-  if (run === 0) return { status: 'holding', reason: `${vs}.`, reading_date: now.date }
+  const kill_line = rule.floor
+  if (run === 0) return { status: 'holding', reason: `${vs}.`, reading_date: now.date, kill_line }
   return {
     status: run >= rule.periods ? 'broken' : 'weakening',
     reason: `${vs}: below for ${run} of ${rule.periods} straight periods.`,
     reading_date: now.date,
+    kill_line,
   }
 }
 
@@ -257,6 +271,7 @@ function sustainedDrawdown(
     status,
     reason: `${where}: at or past the kill line at ${run} of ${rule.weeks} straight weekly checkpoints; ${history}.`,
     reading_date: now.date,
+    kill_line: high.value * (1 - rule.drop),
   }
 }
 
@@ -273,6 +288,7 @@ function countCeiling(
     status,
     reason: `${fmt(now.value)}, against a kill line of ${fmt(rule.kill)}.`,
     reading_date: now.date,
+    kill_line: rule.kill,
   }
 }
 

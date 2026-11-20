@@ -41,7 +41,9 @@ const days = computed(
 )
 
 const columns = computed<TableColumn[]>(() => [
-  { key: 'display', label: 'Lab', class: 'whitespace-nowrap' },
+  // No nowrap: Google's "blended board" mark rode on its name's line and set
+  // the column at 158px, which pushed Source past the home page's half-width panel.
+  { key: 'display', label: 'Lab' },
   { key: 'open', label: 'Open roles', numeric: true },
   { key: 'delta', label: `Δ ${days.value}d`, numeric: true },
   { key: 'cluster', label: clusterLabel.value, numeric: true },

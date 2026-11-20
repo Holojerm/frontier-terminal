@@ -57,7 +57,9 @@ const columns = computed<TableColumn[]>(() => [
     ? []
     : [{ key: 'labs', label: 'Lab', class: 'whitespace-nowrap', stack: 'inline' } as const]),
   { key: 'axis', label: 'Topic', class: 'whitespace-nowrap text-muted', stack: 'inline' },
-  { key: 'headline', label: 'What moved', class: 'min-w-64' },
+  // min-w-48, not 64: in the home page's half-width panel at 1440 a wider
+  // floor pushed the Δ column 8px past the box.
+  { key: 'headline', label: 'What moved', class: 'min-w-48' },
   { key: 'delta', label: 'Δ', numeric: true, class: 'text-xs', stack: 'inline' },
 ])
 </script>

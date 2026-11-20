@@ -91,6 +91,7 @@ const skuText = (m: SpendModel) =>
         :rows="watchlist.first(spend.providers, (p) => p.provider)"
         :row-key="(p) => p.provider"
         :edge="false"
+        stack
       >
         <template #cell-display="{ row: p }">
           <span class="text-default">{{ p.display }}</span>
@@ -151,6 +152,7 @@ const skuText = (m: SpendModel) =>
               :rows="p.models"
               :row-key="(m) => m.model_permaslug"
               nested
+              stack
             >
               <template #cell-tokens="{ row: m }">{{ figures.tokens(m.tokens) }}</template>
               <template #cell-sku="{ row: m }">

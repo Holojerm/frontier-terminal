@@ -32,6 +32,10 @@ const title = computed(() =>
       }}</span>
       <span v-if="cell.delta" class="ml-1 text-xs text-muted">{{ cell.delta }}</span>
     </NuxtLink>
-    <span v-if="cell.sub" class="block font-sans text-xs text-muted">{{ cell.sub }}</span>
+    <!-- The figure stays on one line; its sub-line wraps, or a long period
+         note ("nine months to … · Google Cloud") widens a stacked phone row. -->
+    <span v-if="cell.sub" class="block whitespace-normal font-sans text-xs text-muted">{{
+      cell.sub
+    }}</span>
   </span>
 </template>

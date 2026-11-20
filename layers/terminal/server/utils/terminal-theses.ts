@@ -88,6 +88,7 @@ export async function queryTheses(db: PipelineDb, ctx: QueryContext): Promise<Th
         status: evaluation.status,
         status_since: change?.status === evaluation.status ? change.changed_at : null,
         reason: evaluation.reason,
+        kill_line: evaluation.kill_line ?? null,
         latest: newest
           ? {
               date: newest.date,

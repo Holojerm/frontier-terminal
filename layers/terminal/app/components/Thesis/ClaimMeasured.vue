@@ -32,6 +32,12 @@ const chart = computed(() => ({
     },
   ],
 }))
+// The level the claim dies at, drawn on its chart: without it the line has no meaning.
+const killRule = computed(() =>
+  typeof props.claim.kill_line === 'number'
+    ? { value: props.claim.kill_line, label: `Kill line ${format(props.claim.kill_line)}` }
+    : undefined,
+)
 const newestFirst = computed(() => [...series.value].reverse())
 const hasNotes = computed(() => series.value.some((p) => p.note))
 const columns = computed(() => [
@@ -83,7 +89,8 @@ const columns = computed(() => [
           :format="format"
           :tick-format="tick"
           :x-label="dayLabel"
-          :title="`${claim.signal_label}, ${series.length} readings from ${stamps.day(chart.x[0]!)} to ${stamps.day(chart.x.at(-1)!)}`"
+          :rule="killRule"
+          :title="`${claim.signal_label}, ${series.length} readings from ${stamps.day(chart.x[0]!)} to ${stamps.day(chart.x.at(-1)!)}${killRule ? `, against a kill line of ${format(killRule.value)}` : ''}`"
         />
         <p v-else class="text-sm text-muted">One reading so far. A trend needs at least two.</p>
 

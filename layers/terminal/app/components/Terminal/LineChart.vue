@@ -27,6 +27,10 @@ const props = withDefaults(
     xLabel: (x: string) => string
     /** Accessible name — what is plotted, in one sentence. */
     title: string
+    /** A dashed level across the plot, labelled: a claim's kill line. */
+    rule?: { value: number; label: string }
+    /** A top for the y-axis shared across a grid of charts, so their heights compare. */
+    yMax?: number
   }>(),
   { step: false },
 )
@@ -37,8 +41,17 @@ const props = withDefaults(
 // wide panel empty; uncapped, it set the labels at twice the body size.
 const W = useChartWidth('box')
 const H = 220
-// Room on the right for direct end labels when there is more than one series.
-const PAD = computed(() => ({ l: 56, r: props.series.length > 1 ? 84 : 20, t: 12, b: 28 }))
+// 12px labels run about 7 units a character; 8 more is the gap to the line.
+const LABEL_CHAR = 7
+const END_ROOM = 84
+// Room on the right for direct end labels, only when they will be drawn: kept
+// for labels too long to fit, it left two-series charts 64px narrower than the card.
+const endFits = computed(
+  () =>
+    props.series.length > 1 &&
+    props.series.every((s) => s.label.length * LABEL_CHAR + 8 <= END_ROOM),
+)
+const PAD = computed(() => ({ l: 56, r: endFits.value ? END_ROOM : 20, t: 12, b: 28 }))
 
 // Series slot → ink. Fixed by position so a filtered series never repaints
 // the survivors.
@@ -46,15 +59,17 @@ const INK = ['text-primary', 'text-highlighted', 'text-muted'] as const
 
 const times = computed(() => props.x.map((v) => Date.parse(v)))
 
+// The rule counts toward the range: a kill line off the top of the plot is
+// the one line a reader most needs to see.
 const yMax = computed(() => {
-  let max = 0
+  let max = Math.max(0, props.yMax ?? 0, props.rule?.value ?? 0)
   for (const s of props.series) for (const v of s.values) if (v !== null && v > max) max = v
   return niceCeil(max)
 })
 
 // Zero unless a value is negative (a loss), so the axis still starts at zero.
 const yMin = computed(() => {
-  let min = 0
+  let min = Math.min(0, props.rule?.value ?? 0)
   for (const s of props.series) for (const v of s.values) if (v !== null && v < min) min = v
   return min < 0 ? -niceCeil(-min) : 0
 })
@@ -99,7 +114,15 @@ const xTicks = computed(() => {
     for (let i = 1; i < n; i++) if (Math.abs(t[i]! - target) < Math.abs(t[best]! - target)) best = i
     idx.add(best)
   }
-  return [...idx].map((i) => ({ i, x: xAt(i), label: props.xLabel(props.x[i]!) }))
+  // A centred label at either end ran past the box ("Sep '2"): those anchor
+  // to their own edge instead.
+  return [...idx].map((i) => {
+    const x = xAt(i)
+    const label = props.xLabel(props.x[i]!)
+    const half = (label.length * LABEL_CHAR) / 2
+    const anchor = x + half > W.value ? 'end' : x - half < 0 ? 'start' : 'middle'
+    return { i, x, label, anchor }
+  })
 })
 
 /** SVG path per series; a null breaks the line rather than bridging it. */
@@ -141,11 +164,8 @@ const lastPoint = (s: Series) => {
 // Direct end labels ride the lines when they fit and do not collide; otherwise
 // the legend and the readout carry identity (dataviz: never nudge labels
 // apart, never clip them). A single line needs none: the title names it.
-// 12px labels run about 7 units a character; 8 more is the gap to the line.
-const LABEL_CHAR = 7
 const endLabels = computed(() => {
-  if (props.series.length < 2) return []
-  if (props.series.some((s) => s.label.length * LABEL_CHAR + 8 > PAD.value.r)) return []
+  if (!endFits.value) return []
   const ends = props.series.map((s) => ({ label: s.label, at: lastPoint(s) }))
   const ys = ends.map((e) => e.at?.y ?? null).filter((y): y is number => y !== null)
   for (let a = 0; a < ys.length; a++) {
@@ -233,8 +253,23 @@ const readout = computed(() => {
           <text v-for="t in yTicks" :key="t" :x="PAD.l - 6" :y="yAt(t) + 4" text-anchor="end">
             {{ (tickFormat ?? format)(t) }}
           </text>
-          <text v-for="t in xTicks" :key="t.i" :x="t.x" :y="H - 8" text-anchor="middle">
+          <text v-for="t in xTicks" :key="t.i" :x="t.x" :y="H - 8" :text-anchor="t.anchor">
             {{ t.label }}
+          </text>
+        </g>
+
+        <!-- The rule: dashed, named in words above it, so it never reads by color alone. -->
+        <g v-if="rule" class="stroke-(--ui-error) fill-(--ui-error)">
+          <line
+            :x1="PAD.l"
+            :x2="W - PAD.r"
+            :y1="yAt(rule.value)"
+            :y2="yAt(rule.value)"
+            stroke-width="1.5"
+            stroke-dasharray="6 4"
+          />
+          <text :x="PAD.l + 4" :y="yAt(rule.value) - 5" font-size="12" stroke="none">
+            {{ rule.label }}
           </text>
         </g>
 
