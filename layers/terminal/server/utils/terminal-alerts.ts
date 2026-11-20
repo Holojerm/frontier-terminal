@@ -35,8 +35,8 @@ export const MOVEMENT_WINDOW_HOURS = 24
 
 type BandAxis = keyof Omit<MovementSummary['recent'], 'total'>
 
-// The band has no revenue bucket: revenue is read off the filings the SEC
-// bucket counts. Rankings are not events (isEvent below).
+// The band has no revenue or exposure bucket: both are read off the filings
+// the SEC bucket counts. Rankings are not events (isEvent below).
 const BAND_OF: Readonly<Record<AlertAxis, BandAxis | null>> = {
   pricing: 'pricing',
   hiring: 'hiring',
@@ -45,6 +45,7 @@ const BAND_OF: Readonly<Record<AlertAxis, BandAxis | null>> = {
   incidents: 'incidents',
   disclosures: 'disclosures',
   demand: null,
+  exposure: 'sec',
 }
 
 /**
