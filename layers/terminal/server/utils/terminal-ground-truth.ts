@@ -370,12 +370,18 @@ export function tallyOf(
   }
 }
 
+/**
+ * With `lab`, every list and tally is that lab's alone, filtered before the
+ * lists are cut to their limits. Guidance (hyperscaler capex) and the alert
+ * totals stay site-wide, since neither is about one lab.
+ */
 export async function queryGroundTruth(
   db: PipelineDb,
   ctx: QueryContext,
+  lab?: LabId,
 ): Promise<GroundTruthData> {
   if (ctx.at) ctx.notes.method.add(EXPOSURE_METHOD)
-  const [revenue, stored, record, facts, prospectus, owed] = await Promise.all([
+  const [revenue, all, record, facts, prospectus, owed] = await Promise.all([
     queryRevenue(db, ctx),
     storedHeadlines(db, ctx.at),
     queryTrackRecord(db, ctx),
@@ -387,6 +393,13 @@ export async function queryGroundTruth(
       .from(tables.reportedReviews)
       .where(isNull(tables.reportedReviews.deals_at)),
   ])
+  const stored = lab
+    ? {
+        ...all,
+        headlines: all.headlines.filter((h) => h.lab === lab),
+        deals: all.deals.filter((d) => d.lab === lab),
+      }
+    : all
   const guidance = await queryGuidance(db, ctx.at, facts, TOLERANCE_PCT)
 
   const aggregates: FiledAggregate[] = prospectus.issuers.flatMap((issuer) =>
@@ -407,7 +420,9 @@ export async function queryGroundTruth(
   const labeled = stored.deals.map((d) => d.judged_at).sort()
 
   // Only a lab that files for itself: a parent's consolidated revenue isn't the lab's.
-  const issuers = revenue.providers.filter((p) => p.disclosure === 'issuer')
+  const issuers = revenue.providers.filter(
+    (p) => p.disclosure === 'issuer' && (!lab || p.provider === lab),
+  )
   const filers = new Set(issuers.map((p) => p.provider))
 
   const resolutions: GroundTruthResolution[] = []
@@ -438,7 +453,10 @@ export async function queryGroundTruth(
       reports: deals.slice(0, DEAL_LIMIT),
       tally: dealTally(deals),
       measures: dealMeasures(),
-      unread: owed.filter((r) => DEAL_WORDS.test(stored.titles.get(r.title_key) ?? '')).length,
+      // A headline waiting for its deal reading has no lab yet, so one lab's view counts none.
+      unread: lab
+        ? 0
+        : owed.filter((r) => DEAL_WORDS.test(stored.titles.get(r.title_key) ?? '')).length,
       first_labeled_at: labeled[0] ?? null,
     },
     guidance,

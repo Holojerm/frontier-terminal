@@ -1,5 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
+import { listedForLab } from '../server/utils/terminal-lab-cuts'
 import { buildListed } from '../server/utils/terminal-listed'
 import { buildSuppliers } from '../server/utils/terminal-suppliers'
 import { listedEvidence, listedGroup, listedTieText } from '../shared/utils/listed'
@@ -167,6 +168,35 @@ describe('buildListed', () => {
       { text: '2 sites', to: '/compute#suppliers' },
     ])
     expect(company('UTIL')).toMatchObject({ labs: [], site_labs: ['openai'] })
+  })
+})
+
+describe('listedForLab', () => {
+  const data = { as_of: null, computed_at: '2026-11-19T00:00:00.000Z', rule: '', ...listed }
+
+  it('keeps the companies tied to the lab, by filing or by site, and counts that set', () => {
+    const cut = listedForLab(data, 'anthropic')
+    const kept = cut.companies.map((c) => c.ticker)
+    for (const c of listed.companies) {
+      const tied =
+        c.lab === 'anthropic' || c.labs.includes('anthropic') || c.site_labs.includes('anthropic')
+      expect(kept.includes(c.ticker)).toBe(tied)
+    }
+    expect(cut.counts.companies).toBe(kept.length)
+    expect(cut.counts.lab_tied).toBe(kept.length)
+    expect(cut.counts.graph + cut.counts.suppliers + cut.counts.power).toBeGreaterThanOrEqual(
+      kept.length,
+    )
+  })
+
+  it('keeps none for a lab no source names', () => {
+    expect(listedForLab(data, 'moonshot').counts).toEqual({
+      companies: 0,
+      graph: 0,
+      suppliers: 0,
+      power: 0,
+      lab_tied: 0,
+    })
   })
 })
 
