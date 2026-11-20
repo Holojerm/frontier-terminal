@@ -252,6 +252,7 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
             v-if="hiring.reach.length"
             :reach="hiring.reach"
             caption="How far back each lab’s hiring history reaches"
+            flow
           />
           <template #foot>
             Each copy is the board as the Archive saw it on that day. We read the copies back in

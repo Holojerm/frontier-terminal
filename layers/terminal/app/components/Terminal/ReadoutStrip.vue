@@ -3,6 +3,8 @@
 // delta and nothing else. This is what an investor glances at and leaves
 // with. Every figure links to the lab page section that carries its full
 // provenance (layers/terminal/app/utils/readout.ts derives the cells for both).
+// On a phone each lab stacks as a short block, one axis per line, rather than
+// a 1,300px row in a 356px box.
 
 import { clipHeadline } from '../../../shared/utils/terminal-labs'
 import {
@@ -53,6 +55,7 @@ const columns: TableColumn[] = [
     :columns="columns"
     :rows="rows"
     :row-key="(r) => r.lab"
+    stack
   >
     <template #cell-lab="{ row }">
       <!-- Two stacked links, so each is at least 24px tall (WCAG 2.5.8). -->

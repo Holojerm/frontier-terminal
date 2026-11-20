@@ -73,6 +73,9 @@ const lab = labParam
 const ALERTS_SHOWN = 10
 const CATALOG_ROWS = 15
 const INCIDENTS_SHOWN = 10
+// Releases beside the alerts show as many rows, so neither panel leaves a
+// block of empty space under the other; the rest open in place.
+const RELEASES_SHOWN = ALERTS_SHOWN
 type LabPrices = PricesData & { lab_skus: number }
 type LabIncidents = IncidentsData & { incident_count: number }
 
@@ -314,6 +317,7 @@ const incidentsOf = computed(() =>
 const labSkus = computed(() => prices.data.value?.lab_skus ?? 0)
 const topModels = computed(() => rankings.data.value?.top_models ?? [])
 const labReleases = computed(() => releases.data.value?.rows ?? [])
+const earlierReleases = computed(() => labReleases.value.length - RELEASES_SHOWN)
 const labIncidents = computed(() => incidents.data.value?.incident_count ?? 0)
 const pairs = COMPARE_PAIRS.filter((pair) => pair.includes(lab))
 
@@ -408,7 +412,7 @@ const tabs = computed(() => [
             "
             :flush="labAlerts.length > 0"
           >
-            <TerminalSignalTable v-if="labAlerts.length" :alerts="labAlerts" />
+            <TerminalSignalTable v-if="labAlerts.length" :alerts="labAlerts" flow scoped />
             <TerminalGap v-else title="No alert cites this lab yet." />
           </TerminalPanel>
 
@@ -418,7 +422,17 @@ const tabs = computed(() => [
             note="SKUs first listed on a tracked page, with the launch price."
             :flush="labReleases.length > 0"
           >
-            <TerminalReleaseList v-if="labReleases.length" :rows="labReleases" />
+            <template v-if="labReleases.length">
+              <TerminalReleaseList :rows="labReleases.slice(0, RELEASES_SHOWN)" flow />
+              <div v-if="earlierReleases > 0" class="border-t border-default px-3">
+                <TerminalExpand
+                  :show="`Show ${earlierReleases} earlier release${earlierReleases === 1 ? '' : 's'}`"
+                  hide="Hide the earlier releases"
+                >
+                  <TerminalReleaseList :rows="labReleases.slice(RELEASES_SHOWN)" flow />
+                </TerminalExpand>
+              </div>
+            </template>
             <TerminalGap v-else title="No new SKU since tracking began." />
           </TerminalPanel>
         </div>
@@ -690,7 +704,7 @@ const tabs = computed(() => [
           :more="{ label: 'Every report, in the lab’s words', to: '/disclosures' }"
           flush
         >
-          <TerminalDisclosureTable :disclosures="disclosures.data.value" collapse-gaps />
+          <TerminalDisclosureTable :disclosures="disclosures.data.value" />
         </TerminalPanel>
 
         <TerminalPanel
