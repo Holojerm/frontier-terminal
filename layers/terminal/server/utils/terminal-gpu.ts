@@ -5,15 +5,16 @@
 import { desc, inArray } from 'drizzle-orm'
 
 import { companyName } from '../../shared/utils/companies'
-import type { GpuPricesData } from '../../shared/utils/terminal-types'
+import type { GpuHistoryView, GpuPricesData } from '../../shared/utils/terminal-types'
 
 import * as tables from '#server/db/schema'
 import type { PipelineDb } from '../pipeline/store'
-import { gpuMedian, gpuState } from '../theses/compute-signals'
+import { gpuMedian, gpuState, type GpuObservation } from '../theses/compute-signals'
 import { GPU_MODELS, gpuPricePayload } from '../theses/recipes/gpu-prices'
 import { GPU_RECIPES } from '../theses/recipes/registry'
 import { recipeRunsStamp, type QueryContext } from './terminal-db'
 import { byString } from './terminal-json'
+import { SPOT_QUORUM, spotRead } from './terminal-utilization'
 
 export const GPU_PRICES_METHOD =
   'On-demand list prices from first-party price pages and documented price APIs, in USD per GPU-hour (an instance price divided by its GPUs). ' +
@@ -24,11 +25,90 @@ export const GPU_PRICES_CAVEAT =
   'These are list prices. Reserved terms, spot markets, and negotiated contracts are lower. When we audited these sources, a marketplace such as Vast.ai listed H100 SXM offers at about half the first-party median. ' +
   'If a provider’s page failed today, we name it and leave it out. We don’t carry an old price forward.'
 
+export const GPU_HISTORY_METHOD =
+  'One point for each day a provider’s page changed, then today’s read. A page that didn’t change keeps its last price. ' +
+  'The median counts the providers priced that day, so it can move when we add a provider or a page fails, with no price changing. ' +
+  'The spot share is a spot price divided by the on-demand price for the same instance on the same page. ' +
+  `We show each provider’s share on its own until ${SPOT_QUORUM} providers print a spot price for the same GPU. ` +
+  'Where a page prints two spot prices, the chart follows the lower one and the table has both.'
+
 export const gpuRunsStamp = (db: PipelineDb) =>
   recipeRunsStamp(
     db,
     GPU_RECIPES.map((r) => r.id),
   )
+
+/** One stored price row, with the recipe that stored it and the day it was read. */
+export type StoredGpuRead = GpuObservation & { recipe_id: string; date: string }
+
+/**
+ * Pure: the medians and spot shares on each day a provider's page changed.
+ * A recipe stores its whole page under the day it read a change, so the
+ * prices on a day are each recipe's newest stored date on or before it.
+ *
+ * `newest` is today's read as the snapshot panels count it (a provider whose
+ * run failed today is left out), and it is the last point, so the end of each
+ * line is the number the panel beside it prints.
+ */
+export function gpuHistory(
+  stored: readonly StoredGpuRead[],
+  newest: { date: string; observations: readonly GpuObservation[] } | null,
+): GpuHistoryView {
+  const byRecipe = new Map<string, Map<string, StoredGpuRead[]>>()
+  for (const r of stored) {
+    const dates = byRecipe.get(r.recipe_id) ?? new Map<string, StoredGpuRead[]>()
+    const rows = dates.get(r.date) ?? []
+    rows.push(r)
+    dates.set(r.date, rows)
+    byRecipe.set(r.recipe_id, dates)
+  }
+  const reads: { date: string; observations: readonly GpuObservation[] }[] = [
+    ...new Set(stored.map((r) => r.date)),
+  ]
+    .filter((date) => !newest || date < newest.date)
+    .sort(byString)
+    .map((date) => ({
+      date,
+      observations: [...byRecipe.values()].flatMap((dates) => {
+        const at = [...dates.keys()]
+          .filter((d) => d <= date)
+          .sort(byString)
+          .at(-1)
+        return at ? dates.get(at)! : []
+      }),
+    }))
+  if (newest) reads.push(newest)
+
+  const spots = reads.map((r) => spotRead(r.observations))
+  return {
+    dates: reads.map((r) => r.date),
+    gpus: GPU_MODELS.map((gpu) => {
+      const medians = reads.map((r) => gpuMedian(gpu, r.observations))
+      const names = new Map<string, string>()
+      for (const s of spots) {
+        for (const p of s.providers) if (p.gpu === gpu) names.set(p.provider, p.provider_name)
+      }
+      return {
+        gpu,
+        median: medians.map((m) => m.median),
+        providers: medians.map((m) => Object.keys(m.providers).length),
+        spot_combined: spots.map((s) => s.combined.find((c) => c.gpu === gpu)?.ratio ?? null),
+        spot: [...names]
+          .sort(([a], [b]) => byString(a, b))
+          .map(([provider, provider_name]) => ({
+            provider,
+            provider_name,
+            share: spots.map(
+              (s) =>
+                s.providers.find((p) => p.provider === provider && p.gpu === gpu)?.ratio ?? null,
+            ),
+          })),
+      }
+    }),
+    spot_providers_needed: SPOT_QUORUM,
+    method: GPU_HISTORY_METHOD,
+  }
+}
 
 export async function queryGpuPrices(db: PipelineDb, ctx: QueryContext): Promise<GpuPricesData> {
   const state = await gpuState(db)
@@ -42,10 +122,29 @@ export async function queryGpuPrices(db: PipelineDb, ctx: QueryContext): Promise
   const newest = new Map<string, string>()
   for (const r of rows) if (!newest.has(r.recipe_id)) newest.set(r.recipe_id, r.date)
   const failed = new Set(Object.keys(state.failed))
-  const prices = rows
-    .filter((r) => r.date === newest.get(r.recipe_id) && r.value !== null)
-    .map((r) => {
-      const p = gpuPricePayload.parse(JSON.parse(r.payload))
+  const parsed = rows
+    .filter((r) => r.value !== null)
+    .map((r) => ({ r, p: gpuPricePayload.parse(JSON.parse(r.payload)) }))
+  const history = gpuHistory(
+    parsed.map(({ r, p }) => ({
+      recipe_id: r.recipe_id,
+      date: r.date,
+      provider: p.provider,
+      gpu: p.gpu,
+      counted: p.counted,
+      value: r.value!,
+      spot_low: p.spot_low_usd_per_gpu_hour,
+      spot_high: p.spot_high_usd_per_gpu_hour,
+      source_url: r.source_url,
+      fetched_at: r.fetched_at,
+    })),
+    state.observations.length
+      ? { date: ctx.now().toISOString().slice(0, 10), observations: state.observations }
+      : null,
+  )
+  const prices = parsed
+    .filter(({ r }) => r.date === newest.get(r.recipe_id))
+    .map(({ r, p }) => {
       return {
         provider: p.provider,
         provider_name: companyName(p.provider),
@@ -86,6 +185,7 @@ export async function queryGpuPrices(db: PipelineDb, ctx: QueryContext): Promise
         })),
       }
     }),
+    history,
     prices,
     failed: Object.entries(state.failed).map(([provider, detail]) => ({
       provider,

@@ -31,8 +31,35 @@ export interface GpuMedianView {
   })[]
 }
 
+/** A spot price ÷ the on-demand price for the same instance, 0 to 1, at the two ends a page prints. */
+export interface SpotShare {
+  low: number
+  high: number
+}
+
+/** The medians and spot shares as they stood on each day a provider's page changed. */
+export interface GpuHistoryView {
+  /** YYYY-MM-DD, ascending: each day a page changed, then the day of the newest read. */
+  dates: string[]
+  gpus: {
+    gpu: 'H100' | 'B200'
+    /** Per date, the median across providers in USD per GPU-hour; null with none priced. */
+    median: (number | null)[]
+    /** Per date, the providers the median counts. A change here moves it with no price moving. */
+    providers: number[]
+    /** Per date, the median share across providers; null below `spot_providers_needed`. */
+    spot_combined: (SpotShare | null)[]
+    /** Each provider that has printed a spot price for this GPU; null on a date it printed none. */
+    spot: { provider: string; provider_name: string; share: (SpotShare | null)[] }[]
+  }[]
+  /** How many providers must print a spot price for one GPU before a combined share is shown. */
+  spot_providers_needed: number
+  method: string
+}
+
 export interface GpuPricesData extends Stamp {
   medians: GpuMedianView[]
+  history: GpuHistoryView
   prices: GpuPriceView[]
   /** Providers whose newest run failed: none of their prices count today. */
   failed: { provider: string; provider_name: string; detail: string }[]
