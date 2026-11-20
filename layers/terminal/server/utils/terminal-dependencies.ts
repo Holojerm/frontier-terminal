@@ -134,19 +134,18 @@ const list = (names: string[]) =>
     ? names.join(' and ')
     : `${names.slice(0, -1).join(', ')}, and ${names[names.length - 1]}`
 
-/** The graph of two payloads. Pure: the same inputs give the same graph. */
-export function buildDependencies(
-  exposure: ExposureData,
-  prospectus: ProspectusData,
-): Pick<DependenciesData, 'nodes' | 'edges' | 'gaps' | 'unplaced'> {
-  const tickers = FILER_ORDER.filter((t) => exposure.filers.some((f) => f.ticker === t))
-  const byId = new Map(exposure.series.map((s) => [s.id, s]))
-
-  // Lines: one per (filer, counterparty, kind), holding every placed figure.
+/**
+ * The graph's lines, from the exposure series alone: one per (filer,
+ * counterparty, kind), holding every placed figure. The dependency_edges
+ * export is these, one row per figure.
+ */
+export function dependencyEdges(
+  series: readonly ExposureSeries[],
+): Pick<DependenciesData, 'edges' | 'unplaced'> {
   type Line = DependencyEdge & { ranks: Map<DependencyFigure, number> }
   const lines = new Map<string, Line>()
   const unplaced: DependenciesData['unplaced'] = []
-  for (const s of exposure.series) {
+  for (const s of series) {
     const other = counterpartyOf(s)
     if (!other) continue
     const place = PLACEMENT[s.concept]
@@ -187,6 +186,17 @@ export function buildDependencies(
       order(a.reporter) - order(b.reporter) ||
       (a.kind === b.kind ? a.id.localeCompare(b.id) : a.kind === 'buys' ? -1 : 1),
   )
+  return { edges, unplaced }
+}
+
+/** The graph of two payloads. Pure: the same inputs give the same graph. */
+export function buildDependencies(
+  exposure: ExposureData,
+  prospectus: ProspectusData,
+): Pick<DependenciesData, 'nodes' | 'edges' | 'gaps' | 'unplaced'> {
+  const tickers = FILER_ORDER.filter((t) => exposure.filers.some((f) => f.ticker === t))
+  const byId = new Map(exposure.series.map((s) => [s.id, s]))
+  const { edges, unplaced } = dependencyEdges(exposure.series)
 
   // Nodes: every filer, then each counterparty a line names.
   const obligations = (lab: string): DependencyFigure | null => {
