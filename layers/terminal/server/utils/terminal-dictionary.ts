@@ -41,6 +41,7 @@ import {
   readArchiveSources,
   readFiledFactSources,
   readIdentifierSources,
+  readPowerSiteSources,
   readSourceRegistry,
 } from './terminal-sources'
 
@@ -84,10 +85,15 @@ const AS_OF_CUT: Readonly<Record<string, string>> = {
   track_record_verdicts: 'Rows with judged_at at or before as_of.',
   reported_articles: 'Rows with found_at at or before as_of.',
   reported_figures: 'Rows with judged_at at or before as_of.',
+  latency_probes: 'Rows with started_at at or before as_of.',
   filed_facts:
     'Rows whose filing date is before the UTC day of as_of. A fact counts from the day after its filing, whenever we read it, so this table answers as_of back to 2019.',
+  filed_guidance:
+    'Rows whose release was filed before the UTC day of as_of. A release counts from the day after its filing, whenever we read it, so this table answers as_of back to 2024.',
   exposure_quarters:
     'Built from the filed_facts rows filed before the UTC day of as_of, so it answers back to 2019.',
+  dependency_edges:
+    'Built from the filed_facts rows filed before the UTC day of as_of: the graph as the filings stood then.',
   archived_prices:
     'Rows with captured_at at or before as_of: when the Internet Archive saw the page, not when we read the copy (fetched_at, always later). So a backtest gets the page as it stood then, which this site did not hold at the time.',
   archived_hiring:
@@ -110,6 +116,7 @@ type Feed =
   | 'archive'
   | 'filed_facts'
   | 'identifiers'
+  | 'power_sites'
   | { axes: readonly SourceAxis[] }
   /** Named sources, by id. */
   | { ids: readonly string[] }
@@ -207,6 +214,24 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     start: 'Every report the index links to.',
     joins: [byProvider],
     feeds: [{ axes: ['disclosures'] }],
+  },
+  latency_probes: {
+    grain: 'One row per probe: one streaming request to one lab’s flagship model.',
+    cadence: 'Hourly, one probe per lab.',
+    event: 'started_at',
+    knowledge: 'fetched_at',
+    start: 'From our first probe of each lab, in November 2026.',
+    joins: [{ column: 'lab', to: ID }],
+    feeds: ['own'],
+  },
+  probe_days: {
+    grain: 'One row per lab and UTC day.',
+    cadence: 'Rolled again from latency_probes after every hourly run, for the days it touched.',
+    event: 'day',
+    knowledge: 'fetched_at',
+    start: 'From our first probe of each lab, in November 2026.',
+    joins: [{ column: 'lab', to: ID }],
+    feeds: ['own'],
   },
   filers: {
     grain: 'One row per lab whose CIK we found in its own registration filing.',
@@ -326,6 +351,15 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     joins: [byTicker, byCik],
     feeds: ['filed_facts'],
   },
+  filed_guidance: {
+    grain: 'One row per earnings release and fiscal year it gives a capex figure or range for.',
+    cadence: 'Every 30 minutes with the filed-facts read, up to four releases a run.',
+    event: 'filed',
+    knowledge: 'filed',
+    start: 'Each earnings release filed from 2024-01-01.',
+    joins: [byTicker, byCik],
+    feeds: ['filed_facts'],
+  },
   exposure_quarters: {
     grain: 'One row per series and period.',
     cadence: 'Rebuilt from filed_facts on each request.',
@@ -333,6 +367,15 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     knowledge: 'filed',
     start: 'From 2020.',
     joins: [byTicker],
+    feeds: ['filed_facts'],
+  },
+  dependency_edges: {
+    grain: 'One row per figure on a line of the dependency graph.',
+    cadence: 'Rebuilt from filed_facts on each request.',
+    event: 'end',
+    knowledge: 'filed',
+    start: 'The newest filed figure of each series only. Earlier periods are in exposure_quarters.',
+    joins: [{ column: 'reporter', to: 'entity_identifiers.ticker' }],
     feeds: ['filed_facts'],
   },
   archived_prices: {
@@ -406,6 +449,30 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     licenseNote:
       'CIK, ticker, and exchange come from SEC, lei from GLEIF, and figi and mic from OpenFIGI. legal_name and country come from GLEIF too, except on a row with no LEI, where they come from the company’s own terms page.',
   },
+  supplier_passages: {
+    grain: 'One row per passage in a company’s own SEC document that ties it to a lab or a cloud.',
+    cadence:
+      'By hand. suppliers:verify re-reads each document on demand, restamps fetched_at, and fails when a quote is gone.',
+    event: 'filed',
+    knowledge: 'fetched_at',
+    start: 'The current table only.',
+    joins: [
+      { column: 'counterparty_lab', to: ID },
+      { column: 'ticker', to: 'your security master' },
+    ],
+    feeds: [{ ids: ['edgar-submissions'] }],
+  },
+  power_site_ties: {
+    grain:
+      'One row per company a page ties to a lab’s data-center site, and one per site whose grid a page names.',
+    cadence:
+      'By hand. power:verify re-reads each page on demand, restamps fetched_at, and fails when a quote is gone.',
+    event: 'published',
+    knowledge: 'fetched_at',
+    start: 'The current table only.',
+    joins: [{ column: 'ticker', to: 'your security master' }],
+    feeds: ['power_sites'],
+  },
 }
 
 export const TIME_NOTE =
@@ -459,6 +526,7 @@ function ratedSources(sourcesYaml: string): Rated[] {
       ...flat('identifiers')(s),
       license: s.license,
     })),
+    ...readPowerSiteSources(sourcesYaml).map(flat('power_sites')),
   ]
 }
 

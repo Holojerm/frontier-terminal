@@ -202,6 +202,20 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
     summary:
       'A fix to how the latency probes in /api/probes are read. ttft_ms is the time to the first text of the answer, and tokens_per_second counts answer tokens only. Until now a lab that streams its reasoning (xAI) was timed to its first reasoning text and its reasoning tokens were counted in throughput, so its readings before 2026-11-20 are not comparable with later ones. No columns changed.',
   },
+  {
+    version: '1.9.0',
+    date: '2026-11-20',
+    summary:
+      'Six new tables. latency_probes has every hourly probe we send each lab, and probe_days the daily strain reading /api/probes serves. filed_guidance has the capex guidance in each hyperscaler earnings release, with the release’s sentence. dependency_edges has the lines of the dependency graph, one row per filed figure. supplier_passages and power_site_ties are the hand-read tables behind /api/suppliers and /api/power-sites, each row with its quote. The dictionary’s sources gain the power_site_sources pages, grouped as power_sites.',
+    tables: {
+      latency_probes: { note: 'New table.' },
+      probe_days: { note: 'New table.' },
+      filed_guidance: { note: 'New table.' },
+      dependency_edges: { note: 'New table.' },
+      supplier_passages: { note: 'New table.' },
+      power_site_ties: { note: 'New table.' },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version
