@@ -1,5 +1,6 @@
-// One lab on one printed page: the lab page's readout, the hyperscaler lines
-// that name the lab, the newest alerts and the thesis, each figure numbered
+// One lab on one printed page: the lab page's readout, press reports against
+// the filings, the hyperscaler lines and listed companies that name the lab,
+// the newest alerts and the thesis, each figure numbered
 // against a source list at the foot. Built from the same payloads the lab
 // page reads, through summarizeLab, so the sheet and the lab page cannot
 // disagree about a number.
@@ -24,10 +25,15 @@ import {
   signed,
   type StampStyle,
 } from '../../shared/utils/terminal-format'
+import { listedGroup, listedTieText, type ListedData } from '../../shared/utils/listed'
 import { summarizeLab, type LabInputs } from '../../shared/utils/terminal-lab-summary'
 import type { AlertSeverity } from '../../shared/utils/terminal-tiers'
 import { SAME_PRICE, moveText, priceCitation, priceMoves } from './price-display'
 import type {
+  GroundTruthData,
+  GroundTruthDealTally,
+  GroundTruthResolution,
+  GroundTruthTally,
   IncidentsData,
   LabId,
   ModelClassId,
@@ -87,6 +93,27 @@ export interface SheetFigure {
   ref: number | null
 }
 
+export interface SheetListed {
+  ticker: string
+  company: string
+  /** What the company is: a cloud, a chip maker, a utility. */
+  group: string
+  /** What each table that names it says ties it to a lab. */
+  ties: string
+}
+
+/** One filed revenue figure and the press reports scored against it. */
+export interface SheetTruthLine {
+  key: string
+  period: string
+  filed: string
+  reports: number
+  median: string
+  /** The median report against the filed figure, its sign always visible. */
+  error: string
+  ref: number
+}
+
 export interface SheetAlert {
   id: string
   date: string
@@ -103,6 +130,10 @@ export interface TearSheet {
   tierNote: string | null
   revenue: { scope: string | null; lines: SheetLine[]; gap: SheetGap | null }
   exposure: { lines: SheetLine[]; gaps: SheetGap[]; filers: number }
+  /** Press reports against the filings: the tallies as sentences, then one line per filed figure. */
+  truth: { summary: string[]; lines: SheetTruthLine[]; gap: SheetGap | null }
+  /** The ties are the site's own reading of filings and cited pages, so one ref points at that table. */
+  listed: { rows: SheetListed[]; ref: number | null; gap: SheetGap | null }
   demand: SheetFigure
   hiring: SheetFigure
   incidents: SheetFigure
@@ -126,6 +157,35 @@ export interface TearSheetInputs extends LabInputs {
   incidents?: Pick<IncidentsData, 'providers' | 'window_days'> | null
   exposure?: Pick<ExposureData, 'series' | 'gaps' | 'filers'> | null
   theses?: Pick<ThesesData, 'theses'> | null
+  /** /api/ground-truth?lab=, slimmed by truthInput. */
+  truth?: SheetTruthInput | null
+  /** /api/listed?lab=. */
+  listed?: Pick<ListedData, 'companies' | 'computed_at'> | null
+  /** The site's origin, so a citation of one of its own tables prints in full. */
+  siteUrl?: string
+}
+
+/** What the sheet reads from /api/ground-truth?lab=: the tallies, and each filed figure with its report count. */
+export interface SheetTruthInput {
+  tolerance_pct: number
+  tally: GroundTruthTally
+  deals: GroundTruthDealTally
+  /** Reports of a figure no filing we read can score yet. */
+  waiting: number
+  resolutions: (Omit<GroundTruthResolution, 'reports'> & { reports: number })[]
+}
+
+/** The useFetch transform: the newest SHEET_PERIODS filed figures, with counts in place of the report lists. */
+export function truthInput(d: GroundTruthData): SheetTruthInput {
+  return {
+    tolerance_pct: d.tolerance_pct,
+    tally: d.tally,
+    deals: d.deals.tally,
+    waiting: d.waiting.reduce((n, w) => n + w.reports, 0),
+    resolutions: d.resolutions
+      .slice(0, SHEET_PERIODS)
+      .map((r) => ({ ...r, reports: r.reports.length })),
+  }
 }
 
 /**
@@ -192,6 +252,48 @@ function revenueScopeLine(view: RevenueProviderView | null): string | null {
   return f.segment_label
     ? `${f.segment_label} segment, as ${parent}${ticker} reports it. It’s the parent’s figure.`
     : `All of ${parent}${ticker}, the parent. It’s the parent’s figure.`
+}
+
+const plural = (n: number, one: string, many = `${one}s`) => `${count(n)} ${n === 1 ? one : many}`
+
+/** '+0.9%' above the filed figure, '−0.9%' below. */
+const signedPct = (n: number) =>
+  `${n > 0 ? '+' : n < 0 ? '−' : '±'}${Math.abs(n).toLocaleString('en-US', { minimumFractionDigits: 1, maximumFractionDigits: 1 })}%`
+
+/** Two decimals in billions, so $17.00B filed beside $16.85B reported shows the gap. */
+const preciseUsd = (n: number) => (Math.abs(n) >= 1e9 ? `$${(n / 1e9).toFixed(2)}B` : compactUsd(n))
+
+/** The tallies as sentences a printed page can carry. */
+function truthSummary(t: SheetTruthInput, display: string): string[] {
+  const r = t.tally
+  const lines =
+    r.reports > 0 && r.median_abs_error_pct !== null
+      ? [
+          `${plural(r.reports, 'press report')} stated ${display}’s revenue before a filing printed it, across ${plural(r.periods, 'filed figure')}.`,
+          `The median report was ${r.median_abs_error_pct.toLocaleString('en-US', { maximumFractionDigits: 1 })}% off${
+            r.median_lead_days === null
+              ? '.'
+              : `, and the first report came a median ${plural(r.median_lead_days, 'day')} before the filing.`
+          }`,
+        ]
+      : ['No filing has printed a revenue figure the press reported first.']
+  if (r.missed) {
+    lines.push(
+      `${plural(r.missed, 'report')} named a period and missed by more than ${t.tolerance_pct}%.`,
+    )
+  }
+  const d = t.deals
+  if (d.reports) {
+    lines.push(
+      `${plural(d.reports, 'report')} stated a deal’s size. ${count(d.scored)} could be checked against a later filing, and ${count(d.scored - d.missed)} came within ${t.tolerance_pct}%.`,
+    )
+  }
+  if (t.waiting) {
+    lines.push(
+      `${plural(t.waiting, 'more report')} state a figure no filing we read can score yet.`,
+    )
+  }
+  return lines
 }
 
 /** Every figure on the sheet, with its footnote numbers resolved against one source list. */
@@ -292,6 +394,54 @@ export function buildTearSheet(
   const exposureGaps: SheetGap[] = (exposure?.gaps ?? [])
     .filter((g) => g.group === lab)
     .map((g) => ({ title: g.title, reason: g.reason }))
+
+  const ti = input.truth ?? null
+  const truthLines: SheetTruthLine[] = (ti?.resolutions ?? []).map((r) => ({
+    key: `${r.filed.start}:${r.filed.end}`,
+    period: r.filed.label,
+    filed: preciseUsd(r.filed.val),
+    reports: r.reports,
+    median: preciseUsd(r.median),
+    error: signedPct(r.error_pct),
+    ref: cite(r.filed, `${r.filed.form} filed ${r.filed.first_filed}`),
+  }))
+  const stored = ti ? ti.tally.reports + ti.tally.open + ti.deals.reports + ti.waiting : 0
+  const truth = {
+    summary: ti && stored ? truthSummary(ti, s.display) : [],
+    lines: truthLines,
+    gap: stored
+      ? null
+      : {
+          title: 'No press report stored',
+          reason: `We haven’t stored a press report that states ${s.display}’s revenue or a deal’s size.`,
+        },
+  }
+
+  const companies = input.listed?.companies ?? []
+  const listed = {
+    rows: companies.map((c) => ({
+      ticker: c.ticker,
+      company: c.company,
+      group: listedGroup(c),
+      ties: c.ties.map((t) => listedTieText(t, c)).join(' '),
+    })),
+    ref:
+      companies.length && input.listed
+        ? cite(
+            {
+              source_url: `${input.siteUrl ?? ''}/dependencies#listed`,
+              fetched_at: input.listed.computed_at,
+            },
+            'Listed companies table, which links each filing and page',
+          )
+        : null,
+    gap: companies.length
+      ? null
+      : {
+          title: 'None tied by name',
+          reason: `No filing or cited page we read ties a listed company to ${s.display}.`,
+        },
+  }
 
   const citations: string[] = []
   const d = s.demand
@@ -421,6 +571,8 @@ export function buildTearSheet(
     tierNote: matrix?.tier_note ?? null,
     revenue: { scope: revenueScopeLine(rv), lines: revenueLines, gap: revenueGap },
     exposure: { lines: exposureLines, gaps: exposureGaps, filers: exposure?.filers.length ?? 0 },
+    truth,
+    listed,
     demand,
     hiring,
     incidents,
