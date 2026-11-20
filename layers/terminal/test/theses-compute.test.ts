@@ -537,6 +537,12 @@ describe('the Compute thesis on a seeded store', () => {
     expect(h100.median).toBe(4.5)
     expect(h100.providers).toHaveLength(9)
     expect(data.medians.find((m) => m.gpu === 'B200')!.median).toBe(8.55)
+    // The series ends on today's read, at the number the medians print.
+    expect(data.history.dates.at(-1)).toBe(NOW.toISOString().slice(0, 10))
+    expect(data.history.gpus.map((g) => [g.gpu, g.median.at(-1), g.providers.at(-1)])).toEqual([
+      ['H100', 4.5, 9],
+      ['B200', 8.55, data.medians.find((m) => m.gpu === 'B200')!.providers.length],
+    ])
     expect(data.failed).toEqual([])
     expect(data.prices.every((p) => p.source_url.startsWith('https://') && p.fetched_at)).toBe(true)
     expect(data.prices.find((p) => p.provider === 'microsoft')!.provider_name).toBe(
