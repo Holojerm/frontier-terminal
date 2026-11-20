@@ -11,11 +11,16 @@ import { LAB_SITE } from '../../../../shared/utils/terminal-labs'
 import { count } from '../../../../shared/utils/terminal-format'
 import { labLede } from '../../../../shared/utils/terminal-ledes'
 import type { TableColumn } from '../../../types/terminal-ui'
+import type { ListedData } from '../../../../shared/utils/listed'
+import type { ThesesData, ThesisView } from '../../../../shared/utils/thesis-types'
 import type {
   AlertsData,
+  DisclosuresData,
+  GroundTruthData,
   HiringHistoryData,
   IncidentsData,
   PricesData,
+  ProbesData,
   RankingsData,
   ReleasesData,
   RevenueData,
@@ -39,7 +44,7 @@ definePageMeta({
     priority: '0.9',
     title: 'Lab',
     summary:
-      'One frontier lab across everything we track, including flagship API price, disclosed revenue, OpenRouter demand and implied spend share, open roles, the infrastructure buildout, status-page incidents, and the alerts that cite it.',
+      'One frontier lab across everything we track, including flagship API price, disclosed revenue and press reports scored against it, the listed companies tied to it, OpenRouter demand and implied spend share, open roles, the infrastructure buildout, status-page incidents and latency, misalignment disclosures, and the alerts that cite it.',
   },
 })
 
@@ -186,6 +191,48 @@ const [adoption, limits, pay, parents, power] = await Promise.all([
     }),
   }),
 ])
+// The fundamentals around the lab: press against filings, the listed companies
+// tied to it, measured latency, its disclosures, and the theses that read it.
+// Each route narrows to the lab on the server (`?lab=`).
+type ThesisLink = Pick<ThesisView, 'id' | 'title' | 'stance' | 'position'> & {
+  role: 'subject' | 'compared'
+}
+const [truth, listed, probes, disclosures, theses] = await Promise.all([
+  useFetch<GroundTruthData>('/api/ground-truth', { key: `lab-truth:${lab}`, query: { lab } }),
+  useFetch<ListedData>('/api/listed', { key: `lab-listed:${lab}`, query: { lab } }),
+  useFetch<ProbesData>('/api/probes', { key: `lab-probes:${lab}`, query: { lab } }),
+  useFetch('/api/disclosures', {
+    key: `lab-disclosures:${lab}`,
+    query: { lab },
+    // The summary row only; the entries are on /disclosures.
+    transform: ({
+      entries: _entries,
+      ...rest
+    }: DisclosuresData): Omit<DisclosuresData, 'entries'> => rest,
+  }),
+  useFetch('/api/theses', {
+    key: `lab-theses:${lab}`,
+    // A thesis about this lab, or one that reads it as a comparison or as one of a group.
+    transform: (d: ThesesData): ThesisLink[] =>
+      d.theses
+        .filter(
+          (t) =>
+            t.company === lab || t.comparison_set.includes(lab) || t.company === 'frontier-labs',
+        )
+        .map((t) => ({
+          id: t.id,
+          title: t.title,
+          stance: t.stance,
+          position: t.position,
+          role: t.company === lab ? 'subject' : 'compared',
+        })),
+  }),
+])
+const listedCount = computed(() => listed.data.value?.counts.companies ?? 0)
+const thesisLinks = computed(() => theses.data.value ?? [])
+const ownTheses = computed(() => thesisLinks.value.filter((t) => t.role === 'subject'))
+const comparedIn = computed(() => thesisLinks.value.filter((t) => t.role === 'compared'))
+
 const rampHasLab = computed(
   () => adoption.data.value?.ramp?.series.some((s) => s.lab === lab) ?? false,
 )
@@ -214,7 +261,7 @@ useSeo({
   // The words an analyst types ("Anthropic API pricing", "xAI revenue"), not
   // the bare lab name, which matches every page on the web about the lab.
   title: `${display}: API pricing, revenue, hiring, outages`,
-  description: `${display} at a glance: API price, SEC revenue, OpenRouter demand share, open roles, status-page incidents, and every alert that cites it.`,
+  description: `${display} at a glance: API price, SEC revenue against the press, listed companies tied to it, demand, hiring, incidents, and alerts.`,
   about: labOrganizationSchema({ name: display, url: LAB_SITE[lab] }),
   breadcrumb: [{ name: display, path: `/labs/${lab}` }],
   dateModified: alerts.data.value?.as_of,
@@ -281,13 +328,14 @@ const incidentColumns: TableColumn[] = [
   { key: 'source', label: 'Read from' },
 ]
 
-// Fifteen panels answer six separate questions, so each question is a tab.
+// The panels answer seven separate questions, so each question is a tab.
 // Every tab renders on the server; the panel ids are unchanged, so an old
 // anchor (`#revenue`, `#limits`) opens the tab that holds it.
 const tabs = computed(() => [
   { value: 'overview', label: 'Overview', badge: alertCount.value || undefined },
   { value: 'prices', label: 'Prices', badge: labSkus.value || undefined },
   { value: 'revenue', label: 'Revenue' },
+  { value: 'companies', label: 'Companies', badge: listedCount.value || undefined },
   { value: 'demand', label: 'Demand' },
   { value: 'hiring', label: 'Hiring' },
   { value: 'operations', label: 'Operations', badge: labIncidents.value || undefined },
@@ -306,6 +354,29 @@ const tabs = computed(() => [
       >
         Tear sheet
       </UButton>
+      <p v-if="thesisLinks.length" class="text-sm text-muted">
+        <template v-for="t in ownTheses" :key="t.id">
+          Thesis:
+          <NuxtLink
+            :to="`/theses/${t.id}`"
+            class="text-default underline underline-offset-2 hover:text-highlighted"
+            >{{ t.title }}</NuxtLink
+          >
+          ({{ t.stance }}, {{ t.position === 'none' ? 'no position' : t.position }}).
+        </template>
+        <template v-if="comparedIn.length">
+          Compared in the
+          <template v-for="(t, i) in comparedIn" :key="t.id"
+            ><template v-if="i > 0">{{ i === comparedIn.length - 1 ? ' and ' : ', ' }}</template
+            ><NuxtLink
+              :to="`/theses/${t.id}`"
+              class="text-default underline underline-offset-2 hover:text-highlighted"
+              >{{ t.title }}</NuxtLink
+            ></template
+          >
+          {{ comparedIn.length === 1 ? 'thesis' : 'theses' }}.
+        </template>
+      </p>
       <dl
         class="grid grid-cols-2 gap-x-6 gap-y-4 rounded border border-default p-3 sm:grid-cols-3 lg:grid-cols-5"
       >
@@ -399,10 +470,7 @@ const tabs = computed(() => [
       </template>
 
       <template #revenue>
-        <div
-          class="grid gap-6"
-          :class="parents.data.value?.parents.length ? '2xl:grid-cols-2' : undefined"
-        >
+        <div class="grid gap-6">
           <TerminalPanel
             id="revenue"
             title="Disclosed revenue"
@@ -412,6 +480,12 @@ const tabs = computed(() => [
             <TerminalRevenuePanel v-if="revenueOf" :revenue="revenueOf" />
           </TerminalPanel>
 
+          <TerminalGroundTruth v-if="truth.data.value" :truth="truth.data.value" :lab="lab" />
+        </div>
+      </template>
+
+      <template #companies>
+        <div class="grid gap-6">
           <TerminalPanel
             v-if="parents.data.value?.parents.length"
             id="parents"
@@ -421,6 +495,13 @@ const tabs = computed(() => [
           >
             <TerminalParentFacts :parents="parents.data.value" />
           </TerminalPanel>
+
+          <TerminalListed v-if="listedCount" :data="listed.data.value!" :lab="lab" />
+          <TerminalGap
+            v-else
+            :title="`No listed company is tied to ${display} by name yet.`"
+            :action="{ label: 'See the graph', to: '/dependencies' }"
+          />
         </div>
       </template>
 
@@ -539,6 +620,17 @@ const tabs = computed(() => [
           </TerminalPanel>
 
           <TerminalPanel
+            v-if="probes.data.value?.labs.length"
+            id="probes"
+            title="Measured strain"
+            :note="`One timed request an hour to ${display}’s flagship model. Working hours against night, over the last ${probes.data.value.window_days} complete days.`"
+            :more="{ label: 'Every lab, and how we probe', to: '/incidents#probes' }"
+            flush
+          >
+            <TerminalProbeStrain :probes="probes.data.value" />
+          </TerminalPanel>
+
+          <TerminalPanel
             v-if="recentIncidents.length"
             id="recent-incidents"
             title="Recent incidents"
@@ -589,6 +681,17 @@ const tabs = computed(() => [
             </TerminalTable>
           </TerminalPanel>
         </div>
+
+        <TerminalPanel
+          v-if="disclosures.data.value?.providers.length"
+          id="disclosures"
+          title="Misalignment disclosures"
+          note="Reports and notices on the lab’s own disclosure index, and the median days from discovery to publication."
+          :more="{ label: 'Every report, in the lab’s words', to: '/disclosures' }"
+          flush
+        >
+          <TerminalDisclosureTable :disclosures="disclosures.data.value" collapse-gaps />
+        </TerminalPanel>
 
         <TerminalPanel
           v-if="limits.data.value?.pages.length"
