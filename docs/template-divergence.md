@@ -97,6 +97,7 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 
 ## Removed: other template pieces
 
+- `test/warmup/global-setup.ts` — warmed `nuxt dev`'s first-visit compile; the suites here run against a build, which has none
 - `server/api/mcp/` — mints OAuth connect codes for a signed-in user to the template MCP worker; this app has no mcp/ worker (the terminal layer serves /mcp itself, with no auth)
 - `scripts/x-post.ts` — posts to X directly with OAuth 1.0a credentials; this app posts through layers/social (Buffer)
 - `scripts/lib/oauth1.ts` — OAuth 1.0a signing for x-post.ts
@@ -106,10 +107,9 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 
 ## Customized: kept on purpose
 
-- `nuxt.config.ts` — module list, runtimeConfig, security headers, cron map and the product routeRules are this app's; `hub.dir` reads `NUXT_HUB_DIR` so the browser suites get their own data dir (upstream candidate); a `nitro:config` hook puts `server/error.ts` ahead of Nuxt's error handler so a fatal 4xx is not logged as a Workers issue (upstream candidate: any template app throwing `fatal: true` 404s has the same noise)
-- `playwright.config.ts` — the suites' server runs on `.data-browser` (`NUXT_HUB_DIR`, wiped per run) and `test/warmup/fill-store.ts` fills it from fixtures before the warmup (upstream candidate: the separate data dir and a fork-supplied fill step)
+- `nuxt.config.ts` — module list, runtimeConfig, security headers, cron map and the product routeRules are this app's; `typescript.typeCheck` is dev-only, since every build follows `bun run typecheck` and the build's own vue-tsc pass was 6s of 10s (upstream candidate); `nitro.minify` is off for the browser suites' build (`BROWSER_SUITE_BUILD`); a `nitro:config` hook puts `server/error.ts` ahead of Nuxt's error handler so a fatal 4xx is not logged as a Workers issue (upstream candidate: any template app throwing `fatal: true` 404s has the same noise)
+- `playwright.config.ts` — the suites run against the production build under `wrangler dev` (`test/server/start.ts`), on a `.data-browser` store filled from fixtures, with no warm-up pass, and record traces on the CI retry only; the dev server was SIGKILLed on the 5 GB merge-queue VM (upstream candidate: the built server)
 - `test/a11y/accessibility.spec.ts` — the product's route list, and a duplicate-id assertion after axe, which only flags ids that ARIA references (upstream candidate: the assertion)
-- `test/warmup/global-setup.ts` — warms one path per page file the suites visit, not just the shell; a cold page compile ran past 30s on the two-core runner (upstream candidate: the per-page rule)
 - `app/composables/useSeo.ts` — adds dateModified and about inputs and a repoUrl in the site context in place of supportEmail and legalEntity (upstream candidate: dateModified/about)
 - `scripts/check-design-tokens.ts` — the app's own palette ramp in the allowed-color list is `iris`, not `clay`
 - `scripts/check-mirrors.ts` — reference pass only; the template's mirror pass compares server/utils/users.ts with mcp/src/server.ts, neither of which exists here (upstream candidate: skip a mirror whose files are absent)

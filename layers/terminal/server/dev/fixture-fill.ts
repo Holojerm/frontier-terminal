@@ -1,8 +1,9 @@
 // Fill a store from the committed fixtures, offline: the polls a cron runs,
 // then the filed-facts reader, the recipes and the theses, each answered from
 // fixtures/ by URL. dev:fixtures (tasks/dev/fixtures.ts) calls it with the
-// dev bindings; fixture-fill.test.ts calls it against the test database, so a
-// page that would sweep empty in the browser suites fails a unit test first.
+// dev bindings, test/server/fill.ts with the browser suites' local D1 and R2,
+// and fixture-fill.test.ts against the test database, so a page that would
+// sweep empty in the browser suites fails a unit test first.
 
 import { runFiledFacts, type FiledFactsReport } from '../exposure/ingest'
 import type { FetchOutcome, SourceFetcher } from '../pipeline/fetch'

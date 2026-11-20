@@ -237,7 +237,7 @@ Three rules follow, and each one exists because something broke it:
 1. **A gate takes its scan root from the checkout** — not a walk upward, not a bare `**/*` glob.
 2. **A gate that binds a port derives it** via `scripts/worktree-port.ts`. Never hardcode one.
 3. **A gate never writes to a tracked file.** `nuxt-mcp` rewrites `.mcp.json` with the live dev
-   server URL on every boot, and `test:a11y` boots one — so a green run used to end with a dirty
+   server URL on every boot, and `test:a11y` used to boot one — so a green run ended with a dirty
    tree, and `git add -A` would commit a throwaway port. Two guards now: the rewrite is disabled
    whenever `NUXT_DEVTOOLS=false` (`nuxt.config.ts` › `modules`), which is exactly the automated
    case, and `.mcp.json` is untracked entirely (`.mcp.json.example` is the shared copy), so the
@@ -339,7 +339,7 @@ What was observed, on every branch, since the moment the repo was connected:
 
 ```
 error while loading shared libraries: libatk-1.0.so.0: cannot open shared object file
-  at globalSetup (test/warmup/global-setup.ts:36:34)
+  at globalSetup (the warm-up script the suites had then)
 ```
 
 The build image ships no Chromium system libraries. The documented fix is
@@ -365,37 +365,46 @@ deletes the CSP gate, and nothing will tell you.
 The other half of the original note still stands: because the *build command* lives in the
 Cloudflare dashboard rather than the repo, a fork cannot fix this by editing `ci` alone —
 which is why the fix is a workflow file, something a fork inherits automatically.
-- **The suite starts its own dev server** (`playwright.config.ts` → `webServer`) with
-  `reuseExistingServer: false`. That is deliberate: it only produces valid results against a
-  server started with `NUXT_DEVTOOLS=false`, and reusing a dev server you already had running
-  reports the devtools panel's own markup as your app's violations. So a stale process on the
-  suite's port makes the run fail to boot rather than silently lie — kill it, don't flip
-  `reuseExistingServer`.
+- **The suites run against the production build, not `nuxt dev`.** `playwright.config.ts` →
+  `webServer` runs `test/server/start.ts`: `nuxt build`, the migrations into a fresh
+  `.data-browser`, the fixture fill (`test/server/fill.ts`), then `wrangler dev` on `.output`.
+  The dev server didn't fit: the merge-queue VM (3 CPUs, 5 GB) SIGKILLed it at `/prices` in
+  three queue runs in a row on 2026-11-20. Measured that day on the Mac mini, one worker as on
+  CI:
+
+  | | dev server | built Worker |
+  | --- | --- | --- |
+  | peak while testing (server + Chromium + runner) | 5.6 GB (2.7 + 1.8 + 1.4) | 4.1–4.4 GB (1.8 + 1.6 + 1.2) |
+  | peak before the first test | 2.6 GB (boot and warm-up) | 3.2 GB (`nuxt build`, alone) |
+  | `bun run test:a11y` wall time | 136s | 114s |
+
+  Nothing compiles on a first visit, so there is no warm-up pass, and the CSP suite reads the
+  headers that ship. `/prices` is the slowest test either way (~8s, most of it axe on 1.7 MB
+  of HTML).
+- **That build skips the server minify.** `BROWSER_SUITE_BUILD=1` sets `nitro.minify: false`
+  (`nuxt.config.ts`). The worker preset minifies with terser, in-process: 4.8 GB peak with it,
+  3.2 GB without, and the markup and headers the suites check don't change. V8 caps its heap at
+  about a quarter of RAM, ~1.25 GB on the VM, and the build needs ~1.5 GB, so `start.ts` runs it
+  with `--max-old-space-size=2048`. If the VM ever kills the build, look there first.
+- **`reuseExistingServer: false` is deliberate.** A server already on the suite's port wasn't
+  started from this build and this store. A stale one makes the run fail to boot rather than
+  report on something else: kill it, don't flip the flag.
 - **The port is derived from the checkout path**, not fixed (`scripts/worktree-port.ts`,
   range 3100–3899). Every worktree gets its own, so parallel agents don't collide and a
   `bun run dev:app` on 3000 doesn't either. It's deterministic, so the same checkout always
   gets the same port and you can open it by hand mid-run — `bun run test:a11y` prints it.
   Set `A11Y_PORT` to pin a value. Any future suite that binds a port must use this helper.
-- **The `webServer.timeout` is sized for a cold cache, not your machine.** A cold `nuxt dev`
-  builds the whole app before it listens; anything that invalidates the Nuxt build cache
-  (editing `nuxt.config.ts`, a merge that touches it) puts you back on that path. Observed:
-  a 120s budget timed out on the first run after such a merge, and the very next warm boot
-  took 2s. CI is *always* cold, so the budget is 300s and the server runs with
-  `NUXT_TYPECHECK=false` to keep vue-tsc off the critical path — `bun run ci` has already
-  typechecked by then.
-- **Listening is not warm.** Vite compiles each page's own components on that page's first
-  browser request, so `test/warmup/global-setup.ts` visits one path per page file before the
-  tests race. Warming only the shell passed on the Mac mini and timed out a different lab or
-  compare page every run on the two-core `ubuntu-latest` fallback. A new page file in the
-  suites goes in its `WARM_PATHS`.
-- **The store is filled from fixtures first** (`test/warmup/fill-store.ts`, see
-  [`local-data.md`](local-data.md)). Without rows the sweep only judges empty states.
-- **The `ubuntu-latest` runner has 5 GB, not 16.** With real rows, two workers rendering
-  `/prices` at once took it to 4.9 GB and the kernel SIGKILLed the dev server; every later
-  test then failed in ~100ms with a refused connection. CI runs one worker
-  (`playwright.config.ts`). If that line appears again, sample `free -m` and `ps` in the
-  workflow step before guessing: locally on a Mac the same run peaks near 5 GB total and
-  never trips.
+- **The fill runs beside the Worker, not in it.** `/_nitro/tasks` exists only under `nuxt dev`,
+  so `fill.ts` runs `fillFromFixtures` in Bun through wrangler's `getPlatformProxy`, on the D1
+  and R2 files `wrangler dev` then serves. `--persist-to` adds a `v3/` that `getPlatformProxy`
+  doesn't, which is why the fill opens `<store>/v3`. It needs
+  `--tsconfig-override=.nuxt/tsconfig.server.json` for the layer's `#server` imports. Without
+  rows the sweep only judges empty states ([`local-data.md`](local-data.md)).
+- **One worker on CI.** Two workers OOM'd the dev server on 2026-11-07. The build leaves room
+  for two, but one fits the job and the axe pass on `/prices` is the peak. If a SIGKILL line
+  appears again, sample `free -m` and `ps` in the workflow step before guessing.
+- **Traces are recorded on the CI retry only** (`trace: 'on-first-retry'`). Locally, rerun a
+  failure with `--trace on`.
 
 ## Don't add `nuxt-mcp-toolkit` config under `mcp:` in `nuxt.config.ts`
 

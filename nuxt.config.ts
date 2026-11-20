@@ -34,11 +34,10 @@ const CF_WEB_ANALYTICS = {
 // `nuxt dev` sets NODE_ENV=development, `nuxt build` sets production.
 //
 // The dev delta is exactly one source — `frame-src 'self'`, for the Nuxt
-// DevTools panel — and keeping it that small is deliberate. The tempting shape
-// is "strict in production, off in dev", but test/csp/ runs against
-// `bun run dev:app`: every source dev adds is a source the browser suite stops
-// checking. One extra entry means the suite still exercises essentially the
-// policy that ships.
+// DevTools panel — and keeping it that small is deliberate. test/csp/ runs
+// against the production build, so it checks the policy that ships; a dev
+// server that refuses what production refuses shows the same violation the
+// moment a change causes it, not at the merge queue.
 //
 // Everything else Vite dev was assumed to need turned out to be unnecessary —
 // see connect-src.
@@ -237,12 +236,13 @@ export default defineNuxtConfig({
     '@nuxthub/core',
     // nuxt-mcp rewrites `.mcp.json` — a *tracked* file — with the live dev
     // server URL every time a dev server boots. Helpful when you started that
-    // server yourself; destructive in automation, because `bun run test:a11y`
-    // boots one too. An agent or CI run would finish with a dirty tree, and a
+    // server yourself; destructive in automation, where an agent boots one to
+    // check a page. The run would finish with a dirty tree, and a
     // `git add -A` would sweep a throwaway port into the commit, clobbering the
     // `my-app.localhost` URL that `bun run rename` is responsible for.
     //
-    // Gated on the same signal the a11y suite already sets. Options go in the
+    // Gated on NUXT_DEVTOOLS=false, the switch for a dev server started by
+    // automation (see `devtools` below). Options go in the
     // array form because nuxt-mcp registers `configKey: 'mcp'` without
     // augmenting `@nuxt/schema`, so a top-level `mcp:` key would not typecheck.
     ['nuxt-mcp', { updateConfig: process.env.NUXT_DEVTOOLS === 'false' ? false : 'auto' }],
@@ -304,10 +304,6 @@ export default defineNuxtConfig({
 
   // NuxtHub — Cloudflare D1, KV, R2, and Blob bindings
   hub: {
-    // Local dev's data dir. The browser suites point it at .data-browser
-    // (playwright.config.ts) so filling their store from fixtures never
-    // rewrites the dev DB you filled from a live poll.
-    dir: process.env.NUXT_HUB_DIR || '.data',
     db: 'sqlite', // D1 SQLite via Drizzle (auto-imports `db` and `schema` in server routes)
     kv: true, // KV store
     blob: true, // R2 — raw fetched payloads, so every derived datum has its source bytes
@@ -345,17 +341,17 @@ export default defineNuxtConfig({
 
   // TypeScript — follow Vite/Nuxt recommended defaults.
   //
-  // typeCheck runs vue-tsc in-process on `nuxt dev`. The a11y suite's dev server
-  // sets NUXT_TYPECHECK=false to skip it: `bun run ci` has already run
-  // `bun run typecheck` by that point, so doing it again just puts vue-tsc in
-  // competition with the cold Vite build for the same CI runner.
+  // typeCheck runs vue-tsc in-process on `nuxt dev`, and only there. Under
+  // `nuxt build` it was a second vue-tsc pass, 6s of a 10s build (2026-11-20), in
+  // a build that always follows `bun run typecheck`: the gates in `bun run ci`,
+  // and Workers Builds' production command. NUXT_TYPECHECK=false skips it in dev.
   //
   // tsConfig.compilerOptions reach all four generated projects (app, server,
   // shared, node). The root tsconfig.json only references them, so an option
   // set there applies to nothing.
   typescript: {
     strict: true,
-    typeCheck: process.env.NUXT_TYPECHECK !== 'false',
+    typeCheck: isDev && process.env.NUXT_TYPECHECK !== 'false',
     tsConfig: {
       compilerOptions: {
         noUnusedLocals: true,
@@ -402,9 +398,9 @@ export default defineNuxtConfig({
     fallbackToApi: false,
   },
 
-  // DevTools. Disabled when NUXT_DEVTOOLS=false, which the a11y suite sets:
-  // the devtools panel injects its own markup into every page, and axe would
-  // scan it and report violations that aren't in this app's code.
+  // DevTools. Disabled when NUXT_DEVTOOLS=false: the devtools panel injects its
+  // own markup into every page, so axe run against a dev server would report
+  // violations that aren't in this app's code.
   devtools: { enabled: process.env.NUXT_DEVTOOLS !== 'false' },
 
   experimental: {
@@ -605,6 +601,12 @@ export default defineNuxtConfig({
   // Nitro — Cloudflare Workers preset for production build
   nitro: {
     preset: 'cloudflare_module',
+    // The worker preset minifies the server bundle with terser, in-process: about
+    // 1.4 GB of the build's 4.8 GB peak and half its CPU (2026-11-20). The browser
+    // suites build on a 5 GB VM (test/server/start.ts), and minifying the server
+    // changes none of the markup or headers they check, so their build skips it.
+    // Deploys keep the preset's default.
+    minify: process.env.BROWSER_SUITE_BUILD === '1' ? false : undefined,
     experimental: {
       // Turns on Nitro's task layer: server/tasks/ is scanned, `defineTask` is
       // auto-imported, and `import.meta._tasks` becomes true — which is the
@@ -622,10 +624,11 @@ export default defineNuxtConfig({
     // croner clock. That is not a harmless extra: the tripwire and EDGAR ticks
     // fetch the live vendor pages into the local database, so a dev server
     // that happens to be up across a :00/:05/:30 mark grows /prices from an
-    // empty state to ~300 rows mid-run. The browser suites run against
+    // empty state to ~300 rows mid-run. The browser suites then ran against
     // `dev:app`, and axe on that populated table blew the 30s test budget
     // (Browser suites red on main, 2026-10-05) — a result that depended on the
-    // wall clock and the vendors' networks. Tasks stay runnable on demand
+    // wall clock and the vendors' networks. They run on the build under
+    // `wrangler dev` now, which never fires a cron. Tasks stay runnable on demand
     // through the dev task endpoint (/_nitro/tasks/<name>).
     scheduledTasks: isDev ? {} : SCHEDULED_TASKS,
   },
