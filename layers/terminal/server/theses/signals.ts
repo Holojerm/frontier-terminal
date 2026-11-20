@@ -15,6 +15,7 @@ import type { PipelineDb } from '../pipeline/store'
 import { rankingObservations, type RankingObservation } from '../utils/terminal-rankings'
 import { splitPermaslug, catalogRows, summarizeSpend } from '../utils/terminal-spend'
 import { PROVIDER_ORDER } from '../utils/terminal-sources'
+import { capexGuidanceShortfalls, gpuSpotToOnDemand, probePeakToOffpeak } from './capacity-signals'
 import {
   clusterRolesAcrossLabs,
   hiringHistoryFor,
@@ -199,15 +200,24 @@ export async function readSignal(
       return labsCombinedShare(db, historyDays)
     case 'cluster-roles-across-labs':
       return clusterRolesAcrossLabs(db, spec, deps)
+    case 'gpu-spot-to-on-demand':
+      return gpuSpotToOnDemand(db, spec, deps)
+    case 'capex-guidance-shortfalls':
+      return capexGuidanceShortfalls(db, spec, deps)
+    case 'probe-peak-to-offpeak':
+      return probePeakToOffpeak(db, spec, deps, historyDays)
   }
 }
 
-/** Signals that join today's state (list prices, the class map) cannot be
- * recomputed for a past day: only their newest reading is written. */
+/** Signals that join today's state (list prices, the class map, the GPU
+ * pages as last fetched, guidance as it stands) cannot be recomputed for a
+ * past day: only their newest reading is written. */
 export const recomputable = (spec: Measured) =>
   spec.signal !== 'openrouter-spend-premium' &&
   spec.signal !== 'flagship-blended-price' &&
-  spec.signal !== 'flagship-price-to-gpu'
+  spec.signal !== 'flagship-price-to-gpu' &&
+  spec.signal !== 'gpu-spot-to-on-demand' &&
+  spec.signal !== 'capex-guidance-shortfalls'
 
 const BY_FORMAT: Record<ValueFormat, Formatter> = {
   ratio: (v) => `${v.toFixed(2)}×`,
@@ -224,6 +234,8 @@ const formatOf = (spec: Measured): Formatter => {
     case 'open-roles-in-departments':
     case 'cluster-roles-across-labs':
       return (v) => `${Math.round(v)} open roles`
+    case 'capex-guidance-shortfalls':
+      return (v) => `${Math.round(v)} ${Math.round(v) === 1 ? 'filer' : 'filers'}`
     default:
       return BY_FORMAT[valueFormatOfSpec(spec)]
   }
@@ -232,13 +244,16 @@ const formatOf = (spec: Measured): Formatter => {
 function valueFormatOfSpec(spec: Measured): ValueFormat {
   switch (spec.signal) {
     case 'openrouter-spend-premium':
+    case 'probe-peak-to-offpeak':
       return 'ratio'
+    case 'gpu-spot-to-on-demand':
     case 'openrouter-lab-token-share':
     case 'openrouter-labs-combined-share':
     case 'sec-revenue-yoy-growth':
       return 'percent'
     case 'open-roles-in-departments':
     case 'cluster-roles-across-labs':
+    case 'capex-guidance-shortfalls':
       return 'count'
     case 'flagship-blended-price':
       return 'usd_per_mtok'

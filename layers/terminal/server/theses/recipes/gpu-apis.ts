@@ -119,6 +119,8 @@ export const GPU_AZURE = gpuRecipe({
   ext: 'json',
   description: 'Azure H100 VM pay-as-you-go prices per region (Azure Retail Prices API)',
   rows: azureRows,
+  // 2: the spot price beside each row, read from 2026-11-20.
+  revision: 2,
 })
 
 export const GPU_ORACLE = gpuRecipe({

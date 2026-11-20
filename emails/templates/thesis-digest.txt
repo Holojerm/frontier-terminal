@@ -14,6 +14,9 @@ No claim changed status and nothing was rated this week.
 {{#week}}
    Week: {{week}}
 {{/week}}
+{{#early}}
+   Press, unconfirmed: {{early}}
+{{/early}}
 {{/claims}}
 {{#verdicts}}
   • {{#against}}Against · {{/against}}Claim {{n}} · {{provider}} · {{verdict}} · {{event}}
