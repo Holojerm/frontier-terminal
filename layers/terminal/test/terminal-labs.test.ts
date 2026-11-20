@@ -24,6 +24,10 @@ describe('alertLabs / alertAxis', () => {
     expect(alertAxis(alert)).toBe('hiring')
   })
 
+  it('puts a filed hyperscaler fact on the exposure axis', () => {
+    expect(alertAxis({ changes: [change({ entity_type: 'filed_fact' })] })).toBe('exposure')
+  })
+
   it('is null when the rows resolve to nothing or disagree', () => {
     expect(alertAxis({ changes: [] })).toBeNull()
     expect(

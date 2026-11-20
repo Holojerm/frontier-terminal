@@ -44,6 +44,7 @@ export type AlertAxis =
   | 'incidents'
   | 'disclosures'
   | 'demand'
+  | 'exposure'
 
 export const AXIS_DISPLAY: Record<AlertAxis, string> = {
   pricing: 'Prices',
@@ -53,6 +54,7 @@ export const AXIS_DISPLAY: Record<AlertAxis, string> = {
   incidents: 'Incidents',
   disclosures: 'Disclosures',
   demand: 'Demand',
+  exposure: 'Exposure',
 }
 
 /** Where each axis reads in full. */
@@ -64,6 +66,7 @@ export const AXIS_PATH: Record<AlertAxis, string> = {
   incidents: '/incidents',
   disclosures: '/disclosures',
   demand: '/rankings',
+  exposure: '/exposure',
 }
 
 /** The axis each change entity type sits on. The signal band (terminal-alerts.ts › AXIS_OF) buckets by it too. */
@@ -85,6 +88,7 @@ export const ENTITY_AXIS: Record<ChangeView['entity_type'], AlertAxis> = {
   disclosure: 'disclosures',
   disclosure_timeline: 'disclosures',
   ranking: 'demand',
+  filed_fact: 'exposure',
 }
 
 export const ALERT_AXES = Object.keys(AXIS_DISPLAY) as [AlertAxis, ...AlertAxis[]]

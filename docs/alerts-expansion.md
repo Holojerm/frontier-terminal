@@ -1,8 +1,9 @@
 # Alerts for the new datasets
 
-A plan for the owner to decide on. Nothing here is built. It covers six candidates from the
-surfaces plan (workstream 4) and ends with a recommended order. Figures were read from
-production on 2026-11-20.
+A plan, approved by the owner on 2026-11-20. It covers six candidates from the surfaces plan
+(workstream 4) and ends with a recommended order. Figures were read from production on
+2026-11-20. Built so far: the `exposure` axis and the `filed_fact` track-record terms
+(step 1 of the order).
 
 ## How alerts work today
 

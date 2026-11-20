@@ -164,6 +164,28 @@ describe('search terms', () => {
     expect(alertTerms([quarterly])!.what).toContain('earnings')
   })
 
+  it('searches a filed fact by its filer, and names the lab when the line is about one', () => {
+    const capex = change({
+      entity_type: 'filed_fact',
+      provider: 'other',
+      entity_key: 'filed_fact:msft-capex:2026-09-30',
+      after: { series_id: 'msft-capex', filer: 'Microsoft', form: '10-Q' },
+    })
+    expect(alertTerms([capex])).toEqual({
+      who: ['Microsoft'],
+      what: ['earnings', 'quarterly results', '10-Q'],
+      also: [],
+    })
+    const stake = change({
+      entity_type: 'filed_fact',
+      provider: 'openai',
+      entity_key: 'filed_fact:msft-openai:2026-09-30',
+      after: { series_id: 'msft-openai', filer: 'Microsoft', form: '10-Q' },
+    })
+    expect(alertTerms([stake])!.also).toEqual(['OpenAI', 'ChatGPT'])
+    expect(alertTerms([change({ entity_type: 'filed_fact', after: {} })])).toBeNull()
+  })
+
   it('keeps rows by lab, filer and model-family words, and knows which alerts that covers', () => {
     const vocabulary = mentionVocabulary(['gpt-6.1-sol', 'claude-opus-5-5', 'o3-pro'])
     // "claude" folds into the lab name "Claude"; "gpt" is new.
