@@ -3,7 +3,7 @@ import { describe, expect, it } from 'vitest'
 import { listedForLab } from '../server/utils/terminal-lab-cuts'
 import { buildListed } from '../server/utils/terminal-listed'
 import { buildSuppliers } from '../server/utils/terminal-suppliers'
-import { listedEvidence, listedGroup, listedTieText } from '../shared/utils/listed'
+import { listedBoth, listedEvidence, listedGroup, listedTieText } from '../shared/utils/listed'
 import type { PowerTicker } from '../shared/utils/power-sites'
 import type { CuratedSuppliers, SupplierRow } from '../shared/utils/suppliers'
 import type {
@@ -197,6 +197,15 @@ describe('listedForLab', () => {
       power: 0,
       lab_tied: 0,
     })
+  })
+
+  it('keeps the companies tied to both labs of a pair', () => {
+    const both = listedBoth(listedForLab(data, 'openai'), listedForLab(data, 'anthropic'))
+    const tickers = (lab: 'openai' | 'anthropic') =>
+      new Set(listedForLab(data, lab).companies.map((c) => c.ticker))
+    const [o, an] = [tickers('openai'), tickers('anthropic')]
+    expect(both.companies.map((c) => c.ticker)).toEqual([...o].filter((t) => an.has(t)))
+    expect(both.counts.companies).toBe(both.companies.length)
   })
 })
 

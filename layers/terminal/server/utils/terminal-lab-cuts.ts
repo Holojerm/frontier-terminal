@@ -5,7 +5,7 @@
 // truth filters inside its query instead (queryGroundTruth's `lab`).
 
 import { z } from 'zod'
-import type { ListedCompany, ListedData } from '../../shared/utils/listed'
+import { listedSubset, type ListedCompany, type ListedData } from '../../shared/utils/listed'
 import { LABS } from '../../shared/utils/terminal-lab-summary'
 import type { DisclosuresData, LabId, ProbesData } from '../../shared/utils/terminal-types'
 
@@ -27,19 +27,8 @@ export function disclosuresForLab(data: DisclosuresData, lab: LabId): Disclosure
 export const listedTiedTo = (c: ListedCompany, lab: LabId): boolean =>
   c.lab === lab || c.labs.includes(lab) || c.site_labs.includes(lab)
 
-export function listedForLab(data: ListedData, lab: LabId): ListedData {
-  const companies = data.companies.filter((c) => listedTiedTo(c, lab))
-  const from = (source: ListedCompany['ties'][number]['source']) =>
-    companies.filter((c) => c.ties.some((t) => t.source === source)).length
-  return {
-    ...data,
-    companies,
-    counts: {
-      companies: companies.length,
-      graph: from('graph'),
-      suppliers: from('suppliers'),
-      power: from('power'),
-      lab_tied: companies.length,
-    },
-  }
-}
+export const listedForLab = (data: ListedData, lab: LabId): ListedData =>
+  listedSubset(
+    data,
+    data.companies.filter((c) => listedTiedTo(c, lab)),
+  )
