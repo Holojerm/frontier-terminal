@@ -63,8 +63,12 @@ describe('shortUrl', () => {
 
 describe('shortStamp', () => {
   it('prints the UTC minute with the year, never a relative age', () => {
-    expect(shortStamp(AT)).toBe('2026-11-04 18:00Z')
-    expect(shortStamp('2026-01-02T03:04:05+02:00')).toBe('2026-01-02 01:04Z')
+    expect(shortStamp(AT)).toBe('Nov 4 2026 18:00Z')
+    expect(shortStamp('2026-01-02T03:04:05+02:00')).toBe('Jan 2 2026 01:04Z')
+  })
+  it('reads in the reader’s date form, zone and clock like every other page', () => {
+    const style = { zone: 'America/New_York', hour12: true, iso: true, relative: true }
+    expect(shortStamp(AT, style)).toBe('2026-11-04 1:00 PM EST')
   })
   it('passes an unparseable stamp through', () => {
     expect(shortStamp('soon')).toBe('soon')

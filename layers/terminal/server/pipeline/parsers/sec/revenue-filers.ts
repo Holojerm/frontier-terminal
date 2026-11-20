@@ -135,6 +135,25 @@ export function revenueProviderFor(
   return 'other'
 }
 
+/**
+ * The lab a filing belongs to: the one whose own filer (relation `issuer`)
+ * carries this CIK, 'other' otherwise. A parent's filing (SpaceX for xAI,
+ * Alphabet for Google) stays 'other': it is the parent's, and a 10-Q about
+ * rockets is not a lab's filing. A lab resolved from its S-1 joins as an issuer
+ * (refresh.ts), so its 424B4 reads as the lab's.
+ */
+export function issuerProviderFor(
+  cik: string | null,
+  filers: RevenueFilers,
+  whitelist: CikWhitelist,
+): Provider {
+  if (cik === null) return 'other'
+  for (const [provider, filer] of filers) {
+    if (filer?.relation === 'issuer' && whitelist.get(filer.ticker) === cik) return provider
+  }
+  return 'other'
+}
+
 /** The entry in force on `at`'s UTC day: one not yet effective reads as untagged (null). */
 export function filerAt(filer: RevenueFiler | null, at: string | null): RevenueFiler | null {
   if (!filer || at === null || filer.effective === undefined) return filer

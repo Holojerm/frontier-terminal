@@ -254,6 +254,193 @@ export function compactUsd(n: number): string {
   return `${sign}$${compactMagnitude(abs) ?? abs.toFixed(0)}`
 }
 
+// ── figures ──────────────────────────────────────────────────────────────────
+
+/** A negative figure's sign: U+2212, the minus every delta on the site uses. */
+const MINUS = '−'
+
+/**
+ * '1,260' / '−1,260' / '4.25': a grouped figure whose minus is U+2212, never
+ * the hyphen toLocaleString prints. `digits` fixes the decimals. A value that
+ * rounds to zero prints unsigned, because '−0' reads as a loss.
+ */
+export function grouped(n: number, digits = 0): string {
+  const text = Math.abs(n).toLocaleString('en-US', {
+    minimumFractionDigits: digits,
+    maximumFractionDigits: digits,
+  })
+  return n < 0 && Number(text.replaceAll(',', '')) !== 0 ? `${MINUS}${text}` : text
+}
+
+/**
+ * '$6.16': a rental price per GPU-hour at a fixed two decimals, so a column
+ * of them lines up. Providers print two to four; `exactUsd` is the value as
+ * printed, for the tooltip beside it. '—' for absent.
+ */
+export function gpuHour(v: number | null): string {
+  if (v === null) return '—'
+  return `${v < 0 ? MINUS : ''}$${Math.abs(v).toFixed(2)}`
+}
+
+/** '$6.155': the value as the vendor printed it, unrounded. Tooltip text. */
+export function exactUsd(v: number): string {
+  return `${v < 0 ? MINUS : ''}$${Math.abs(v)}`
+}
+
+/** '1.24M' / '30.0K' / '640': a count at a scale a cell can carry. Under a thousand it prints whole. */
+export function compactCount(n: number): string {
+  const body = compactMagnitude(Math.abs(n)) ?? count(Math.round(Math.abs(n)))
+  return n < 0 && body !== '0' ? `${MINUS}${body}` : body
+}
+
+// ── dates ────────────────────────────────────────────────────────────────────
+
+/**
+ * 'Aug 25' / '2026-08-25': a date printed alone (YYYY-MM-DD, a UTC day) in the
+ * reader's date form. The zone never moves it. The year shows when it isn't
+ * the current one, as in `absoluteStamp`.
+ */
+export function dayStamp(
+  date: string,
+  now: number | null = null,
+  style: StampStyle = UTC_STYLE,
+): string {
+  const d = new Date(/^\d{4}-\d\d-\d\d$/.test(date) ? `${date}T00:00:00Z` : date)
+  if (Number.isNaN(d.getTime())) return date
+  const w = wallClock(d, 'UTC')
+  return dateOf(w, now === null ? w.year : new Date(now).getUTCFullYear(), style)
+}
+
+/**
+ * 'Nov 4 2026 18:00Z' / '2026-11-04 18:00Z': an instant that always names its
+ * year, for a page that is printed and read later. Otherwise the reader's
+ * zone, clock and date form, like every other stamp.
+ */
+export function datedStamp(iso: string, style: StampStyle = UTC_STYLE): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  const w = wallClock(d, style.zone)
+  return `${dateOf(w, Number.NaN, style)} ${timeOf(w, style)}`
+}
+
+/** An ISO 8601 instant inside running text: '2026-09-09T12:00:03.352Z'. */
+const INSTANT = /\d{4}-\d\d-\d\dT\d\d:\d\d(?::\d\d(?:\.\d+)?)?(?:Z|[+-]\d\d:\d\d)/g
+
+export type TextPart = { text: string } | { iso: string }
+
+/**
+ * A source's own sentence split around the instants in it, so a page can
+ * print each as a stamp and keep the rest byte-identical (a license
+ * citation). Joined back, the parts are the input.
+ */
+export function splitInstants(text: string): TextPart[] {
+  const parts: TextPart[] = []
+  let at = 0
+  for (const m of text.matchAll(INSTANT)) {
+    if (m.index > at) parts.push({ text: text.slice(at, m.index) })
+    parts.push({ iso: m[0] })
+    at = m.index + m[0].length
+  }
+  if (at < text.length) parts.push({ text: text.slice(at) })
+  return parts
+}
+
+// ── labels ───────────────────────────────────────────────────────────────────
+
+const ENUM = /^[A-Z][A-Z0-9]*(?:_[A-Z0-9]+)+$/
+
+/**
+ * 'Software engineering' from Google's 'SOFTWARE_ENGINEERING'. A board label
+ * spelled as an enum reads as a sentence-case phrase. A label a person typed
+ * ('Go To Market', 'AI Research') prints as the board wrote it. A
+ * comma-separated list is read item by item. Stored values never change.
+ */
+export function boardLabel(label: string): string {
+  return label
+    .split(', ')
+    .map((part) => {
+      if (!ENUM.test(part)) return part
+      const words = part.toLowerCase().replaceAll('_', ' ')
+      return words.charAt(0).toUpperCase() + words.slice(1)
+    })
+    .join(', ')
+}
+
+/** Tier words that take two tokens of the vendor's key, and how each reads. */
+const TIER_PHRASES: readonly (readonly [RegExp, (m: RegExpMatchArray) => string])[] = [
+  [/^long_context(?:_|$)/, () => 'long context'],
+  [/^off_peak(?:_|$)/, () => 'off-peak'],
+  // A prompt-length band: 'input_256k_1m'.
+  [
+    /^input_(\d+[km])_(\d+[km])(?:_|$)/,
+    (m) => `input ${m[1]!.toUpperCase()}–${m[2]!.toUpperCase()}`,
+  ],
+]
+
+/**
+ * 'Batch, long context' from the key 'batch_long_context'; 'Input 256K–1M'
+ * from 'input_256k_1m'. Only how the key reads: the stored tier is unchanged.
+ */
+export function tierLabel(tier: string): string {
+  const words: string[] = []
+  let rest = tier
+  while (rest) {
+    const phrase = TIER_PHRASES.find(([re]) => re.test(rest))
+    if (phrase) {
+      const m = rest.match(phrase[0])!
+      words.push(phrase[1](m))
+      rest = rest.slice(m[0].length)
+      continue
+    }
+    const i = rest.indexOf('_')
+    words.push(i < 0 ? rest : rest.slice(0, i))
+    rest = i < 0 ? '' : rest.slice(i + 1)
+  }
+  const text = words.filter(Boolean).join(', ')
+  return text.charAt(0).toUpperCase() + text.slice(1)
+}
+
+/** How legal suffixes read once a conformed name is out of capitals. */
+const SUFFIX: Readonly<Record<string, string>> = {
+  CORP: 'Corp',
+  INC: 'Inc',
+  CO: 'Co',
+  LTD: 'Ltd',
+  PLC: 'plc',
+  LLC: 'LLC',
+  LP: 'LP',
+  PBC: 'PBC',
+  AG: 'AG',
+  SE: 'SE',
+}
+
+/** Words EDGAR spells in capitals that the company does too. */
+const ACRONYMS = new Set(['NVIDIA', 'ASML', 'TSMC', 'AMD', 'IBM', 'ARM', 'AI', 'USA', 'US'])
+
+/**
+ * 'NVIDIA Corp' from EDGAR's conformed 'NVIDIA CORP'; 'Amazon Com Inc' from
+ * 'AMAZON COM INC'. EDGAR stores names in capitals and a reader expects the
+ * company's case. A name with any lower-case letter is already the filer's
+ * own and prints as is.
+ */
+export function edgarName(name: string): string {
+  if (/[a-z]/.test(name)) return name
+  return name.replace(/[A-Z][A-Z0-9']*/g, (w) => {
+    if (SUFFIX[w]) return SUFFIX[w]
+    if (ACRONYMS.has(w) || w.length <= 2 || /\d/.test(w)) return w
+    return w.charAt(0) + w.slice(1).toLowerCase()
+  })
+}
+
+/** A run of capitals ending in a legal suffix: an EDGAR conformed name inside a sentence. */
+const CONFORMED =
+  /\b[A-Z][A-Z0-9&'.-]*(?:,? [A-Z0-9&'.-]+)*,? (?:CORP|INC|CO|LTD|PLC|LLC|LP|PBC)\b\.?/g
+
+/** A sentence with each EDGAR conformed name in it read as `edgarName` does. */
+export function readableEdgarNames(text: string): string {
+  return text.replace(CONFORMED, edgarName)
+}
+
 /** '1 Apr → 30 Jun 2026' style period label from two ISO dates, with the span named. */
 export function periodLabel(days: number): string {
   if (days >= 350) return 'year'

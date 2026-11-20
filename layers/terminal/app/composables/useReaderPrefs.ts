@@ -20,6 +20,8 @@ import {
   compactTokens,
   compactUsd,
   count,
+  datedStamp,
+  dayStamp,
   isTimeZone,
   relativeStamp,
   type StampStyle,
@@ -122,6 +124,10 @@ export function useStamps() {
     style,
     absolute: (iso: string) => absoluteStamp(iso, now.value, style.value),
     relative: (iso: string) => relativeStamp(iso, now.value, style.value),
+    /** A UTC date printed alone (YYYY-MM-DD): the reader's date form, never shifted by zone. */
+    day: (date: string) => dayStamp(date, now.value, style.value),
+    /** An instant that always names its year, for a page read on paper. */
+    dated: (iso: string) => datedStamp(iso, style.value),
     zone: computed(() => zoneName(style.value)),
   }
 }

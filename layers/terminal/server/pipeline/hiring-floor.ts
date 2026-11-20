@@ -1,6 +1,7 @@
 import { and, eq, gt, inArray, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
+import { boardLabel } from '../../shared/utils/terminal-format'
 import { inCluster, type DepartmentCluster } from '../utils/terminal-clusters'
 import { NO_DEPARTMENT, openRolesAt, type OpenRole } from '../utils/terminal-history'
 import type { ChangeRow } from './contracts'
@@ -80,17 +81,17 @@ export interface BoardMove {
 /** A count with its sign, minus as U+2212 the way the terminal prints it. */
 export const signed = (n: number) => (n > 0 ? `+${n}` : n < 0 ? `−${-n}` : '0')
 
-/** One line per reason, for the run report and the roll-up's explanation. */
+/** One line per reason, for the run report and the roll-up's explanation. Departments read as boardLabel prints them. */
 export function describeReason(r: MaterialReason): string {
   switch (r.kind) {
     case 'board':
       return `net ${signed(r.net)} on a board of ${r.before}`
     case 'department':
-      return `${r.department} ${signed(r.net)} of ${r.before}`
+      return `${boardLabel(r.department)} ${signed(r.net)} of ${r.before}`
     case 'opened':
-      return `${r.department} opened with ${r.now}`
+      return `${boardLabel(r.department)} opened with ${r.now}`
     case 'closed':
-      return `${r.department} closed (${r.before} to 0)`
+      return `${boardLabel(r.department)} closed (${r.before} to 0)`
     case 'cluster':
       return `${r.cluster} ${signed(r.net)} of ${r.before}`
   }

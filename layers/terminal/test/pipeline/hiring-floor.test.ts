@@ -4,7 +4,12 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import { ChangeRow, contentHash } from '../../server/pipeline/contracts'
-import { boardMoves, hiringBoards, scoreBoard } from '../../server/pipeline/hiring-floor'
+import {
+  boardMoves,
+  describeReason,
+  hiringBoards,
+  scoreBoard,
+} from '../../server/pipeline/hiring-floor'
 import {
   HIRING_ROLLUP_RULE,
   hiringRollupAlerts,
@@ -475,5 +480,19 @@ describe('the weekly roll-up', () => {
     await seedBoard('xai', { Model: 10 })
     await storeJobs([job('xai', 'modified', 'Model', '2026-11-04T00:00:00.000Z', 'Research')])
     expect(await hiringRollupAlerts(db, clusters, NOW)).toEqual([])
+  })
+})
+
+describe('describeReason', () => {
+  it('names a department the way the hiring page prints it, not as Google’s enum', () => {
+    expect(
+      describeReason({ kind: 'department', department: 'PROGRAM_MANAGEMENT', net: -6, before: 25 }),
+    ).toBe('Program management −6 of 25')
+    expect(describeReason({ kind: 'opened', department: 'SOFTWARE_ENGINEERING', now: 4 })).toBe(
+      'Software engineering opened with 4',
+    )
+    expect(
+      describeReason({ kind: 'department', department: 'Applied AI', net: 3, before: 70 }),
+    ).toBe('Applied AI +3 of 70')
   })
 })

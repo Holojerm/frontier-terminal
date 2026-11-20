@@ -99,8 +99,8 @@ export function normalizePrice(row: PriceRow, snapshotId: string): EntityRow {
 
 // FilingRow carries no provider field: EDGAR filers (SPCX, MSFT, ...) are
 // whitelisted public companies, not the private big-4 labs, so the default
-// is "other". Callers override only when a filing is genuinely a lab's own
-// (the S-1 public-flip moment).
+// is "other". The SEC lanes override it only when a filing is a lab's own
+// (the S-1 public-flip moment): revenue-filers.ts › issuerProviderFor.
 export function normalizeFiling(
   row: FilingRow,
   snapshotId: string,
@@ -299,12 +299,14 @@ export function normalizeRevenues(
   return collapse(rows.map((row) => normalizeRevenue(row, snapshotId, provider)))
 }
 
+/** `provider` is one lab for every row, or the lab of each row (lanes.ts reads it off the filer's CIK). */
 export function normalizeFilings(
   rows: readonly FilingRow[],
   snapshotId: string,
-  provider: Provider = 'other',
+  provider: Provider | ((row: FilingRow) => Provider) = 'other',
 ): EntityRow[] {
-  return collapse(rows.map((row) => normalizeFiling(row, snapshotId, provider)))
+  const of = typeof provider === 'function' ? provider : () => provider
+  return collapse(rows.map((row) => normalizeFiling(row, snapshotId, of(row))))
 }
 
 export function normalizeIncidents(rows: readonly IncidentRow[], snapshotId: string): EntityRow[] {

@@ -2,14 +2,22 @@
 // A measured claim: the newest reading with its provenance, the series behind
 // it, and the same numbers as a table (the chart never gates a value).
 
-import { dayLabel, detailRows, formatValue, valueKind } from '../../../shared/utils/thesis-format'
+import {
+  dayLabel,
+  detailRows,
+  formatTick,
+  formatValue,
+  valueKind,
+} from '../../../shared/utils/thesis-format'
 import type { ClaimView } from '../../../shared/utils/thesis-types'
 
 const props = defineProps<{ claim: ClaimView }>()
+const stamps = useStamps()
 
 const latest = computed(() => props.claim.latest)
 const kind = computed(() => valueKind(latest.value?.detail, props.claim.format))
 const format = (v: number) => formatValue(kind.value, v)
+const tick = (v: number) => formatTick(kind.value, v)
 const context = computed(() => detailRows(latest.value?.detail))
 
 const series = computed(() => props.claim.series)
@@ -49,7 +57,7 @@ const columns = computed(() => [
           <TerminalFigure
             label="Latest reading"
             :value="format(latest.value)"
-            :sub="`for ${latest.date}`"
+            :sub="`for ${stamps.day(latest.date)}`"
             :source="latest"
           />
         </dl>
@@ -73,8 +81,9 @@ const columns = computed(() => [
           :x="chart.x"
           :series="chart.series"
           :format="format"
+          :tick-format="tick"
           :x-label="dayLabel"
-          :title="`${claim.signal_label}, ${series.length} readings from ${chart.x[0]} to ${chart.x.at(-1)}`"
+          :title="`${claim.signal_label}, ${series.length} readings from ${stamps.day(chart.x[0]!)} to ${stamps.day(chart.x.at(-1)!)}`"
         />
         <p v-else class="text-sm text-muted">One reading so far. A trend needs at least two.</p>
 
@@ -87,7 +96,7 @@ const columns = computed(() => [
             nested
           >
             <template #cell-date="{ row: p }">
-              <time :datetime="p.date" :title="dayLabel(p.date)">{{ p.date }}</time>
+              <time :datetime="p.date" :title="p.date">{{ stamps.day(p.date) }}</time>
             </template>
             <template #cell-value="{ row: p }">{{ format(p.value) }}</template>
             <template #cell-note="{ row: p }">{{ p.note ?? '' }}</template>
