@@ -133,5 +133,58 @@ export const COMPUTE_THESIS: ThesisDef = {
         rule: { rule: 'sustained-drawdown', drop: 0.2, days: 180, weeks: 4 },
       },
     },
+    // Claims 7 to 9 were added 2026-11-20, each before it had a reading that
+    // counts: see the journal's Revisions and Limits.
+    {
+      id: 'compute-gpu-spot-tight',
+      n: 7,
+      text: 'Rented GPU capacity stays tight',
+      signal_label:
+        'Median H100 spot price as a share of the on-demand price, across the providers whose page prints both',
+      kill_condition:
+        'The median spot price stays below 60% of the on-demand price for 4 straight weekly readings',
+      spec: {
+        kind: 'measured',
+        signal: 'gpu-spot-to-on-demand',
+        gpu: 'H100',
+        // The quorum /compute holds its combined spot figure to. Written out,
+        // not imported: changing it here is a thesis revision.
+        min_providers: 4,
+        rule: { rule: 'sustained-floor', floor: 0.6, comparator: null, weeks: 4 },
+      },
+    },
+    {
+      id: 'compute-capex-guidance',
+      n: 8,
+      text: 'The buildout stays funded',
+      signal_label:
+        'Filers, of Amazon, Meta, Alphabet, Microsoft and Oracle, that cut the capex guidance in their earnings release or filed capex under it',
+      kill_condition:
+        'Two filers each cut the midpoint of their capex guidance for a fiscal year by 10% or more, or file capex 15% or more under what they guided',
+      spec: {
+        kind: 'measured',
+        signal: 'capex-guidance-shortfalls',
+        cut: 0.1,
+        under: 0.15,
+        rule: { rule: 'count-ceiling', kill: 2 },
+      },
+    },
+    {
+      id: 'compute-peak-throughput',
+      n: 9,
+      text: 'The labs serve peak hours without slowing',
+      signal_label:
+        'Peak-hours throughput over off-peak throughput at the median probed lab, trailing 7 days of hourly probes (one account, one router)',
+      kill_condition:
+        'Peak-hours throughput at the median lab stays below 70% of off-peak for 4 straight weekly readings',
+      spec: {
+        kind: 'measured',
+        signal: 'probe-peak-to-offpeak',
+        days: 7,
+        min_days: 3,
+        min_labs: 4,
+        rule: { rule: 'sustained-floor', floor: 0.7, comparator: null, weeks: 4 },
+      },
+    },
   ],
 }

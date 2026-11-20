@@ -260,6 +260,22 @@ function sustainedDrawdown(
   }
 }
 
+function countCeiling(
+  rule: Extract<MeasuredRule, { rule: 'count-ceiling' }>,
+  readings: readonly StoredReading[],
+  fmt: Formatter,
+): ClaimEvaluation {
+  const now = readings.reduce<StoredReading | null>((n, r) => (!n || r.date > n.date ? r : n), null)
+  if (!now) return unresolved('No reading yet.')
+  const status: ClaimStatus =
+    now.value >= rule.kill ? 'broken' : now.value > 0 ? 'weakening' : 'holding'
+  return {
+    status,
+    reason: `${fmt(now.value)}, against a kill line of ${fmt(rule.kill)}.`,
+    reading_date: now.date,
+  }
+}
+
 /** A claim read from stored readings; a judged one is rated from verdicts (judged-status.ts). */
 export type MeasuredClaim = ClaimDef & { spec: Extract<SignalSpec, { kind: 'measured' }> }
 
@@ -287,6 +303,8 @@ export function evaluateClaim(
       return belowFloorPeriods(spec.rule, readings, fmt)
     case 'sustained-drawdown':
       return sustainedDrawdown(spec.rule, readings, fmt)
+    case 'count-ceiling':
+      return countCeiling(spec.rule, readings, fmt)
   }
 }
 
@@ -366,6 +384,8 @@ export function historyDays(claim: ClaimDef): number {
         ? 92 * r.periods
         : r.rule === 'sustained-drawdown'
           ? r.days + 7 * r.weeks
-          : 7 * r.weeks
+          : r.rule === 'count-ceiling'
+            ? 0
+            : 7 * r.weeks
   return days + 7 + CHECKPOINT_SLACK_DAYS
 }

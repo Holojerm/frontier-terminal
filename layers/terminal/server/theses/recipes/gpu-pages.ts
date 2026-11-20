@@ -260,6 +260,8 @@ export const GPU_COREWEAVE = gpuRecipe({
   ext: 'html',
   description: 'CoreWeave on-demand instance prices, divided by GPUs per instance',
   rows: coreweaveRows,
+  // 2: the spot price beside each row, read from 2026-11-20.
+  revision: 2,
 })
 
 export const GPU_NEBIUS = gpuRecipe({

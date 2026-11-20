@@ -258,6 +258,22 @@ describe('runRecipes', () => {
     expect(await run()).toBe('ok')
   })
 
+  it('reads unchanged bytes again when the recipe’s revision is raised', async () => {
+    const body = { values: { '2026-06-30': 1 } }
+    const steady: SourceFetcher = async () => json(body)
+    const recipe: Recipe = {
+      ...REVENUE,
+      id: 'test-revised',
+      extract: (text) => quarters((JSON.parse(text) as typeof body).values),
+    }
+    const run = async (r: Recipe) =>
+      (await runRecipes(db, { raw, fetcher: steady, now: () => NOW }, [r]))[0]!.status
+    expect(await run(recipe)).toBe('ok')
+    expect(await run(recipe)).toBe('unchanged')
+    expect(await run({ ...recipe, revision: 2 })).toBe('ok')
+    expect(await run({ ...recipe, revision: 2 })).toBe('unchanged')
+  })
+
   it('follows the first body to the document it names, and stores that URL', async () => {
     const seen: string[] = []
     const follower: SourceFetcher = async (source) => {

@@ -1,7 +1,8 @@
 <!-- Data: summary, generated, thesesUrl, quiet, theses[]. Each thesis carries a name,
      its statement, and claims[]; each claim exactly one of bad/warn/good/idle (its
      status as a tone), n, text, status, reason, and optional moved (the status it
-     left this week) and week (its reading a week ago and now). Each thesis also
+     left this week), week (its reading a week ago and now) and early (what the
+     press says about a period not yet filed, which sets no status). Each thesis also
      carries verdicts[] (rated this week, those counting against the thesis first,
      each with an optional against), gaps[] (recipes behind a claim that failed this
      week) and awaiting[] (material, unconfirmed). Claims arrive weakest first.
@@ -32,6 +33,9 @@
           <Raw>{{#week}}</Raw>
           <div class="pt-1 font-mono text-xs text-muted">Week: <Raw>{{week}}</Raw></div>
           <Raw>{{/week}}</Raw>
+          <Raw>{{#early}}</Raw>
+          <div class="pt-1 text-xs leading-normal text-muted [word-break:break-word]">Press, unconfirmed: <Raw>{{early}}</Raw></div>
+          <Raw>{{/early}}</Raw>
         </td>
       </tr>
     </table>

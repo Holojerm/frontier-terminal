@@ -9,9 +9,15 @@
 // and the Compute thesis's flagship prices and GPU medians.
 
 import { companyName } from './companies'
-import { absoluteStamp, count, money } from './terminal-format'
+import { absoluteStamp, compactUsd, count, money } from './terminal-format'
 import type { PublicPage } from '#shared/utils/site'
-import type { ClaimStatus, ThesisDef, ThesisView, ValueFormat } from './thesis-types'
+import type {
+  ClaimStatus,
+  PressEarlyRead,
+  ThesisDef,
+  ThesisView,
+  ValueFormat,
+} from './thesis-types'
 
 export const thesisPath = (id: string) => `/theses/${id}`
 
@@ -160,8 +166,119 @@ export function detailRows(detail: unknown): DetailRow[] {
   const names = (record: unknown) => Object.keys(asRecord(record) ?? {}).map(companyName)
   const noFeed = names(d.no_feed)
   if (noFeed.length) rows.push({ label: 'No public feed', value: noFeed.join(', ') })
-  rows.push(...computeRows(d))
+  rows.push(...capacityRows(d), ...computeRows(d))
   return rows
+}
+
+const wholePct = (share: number) => `${Math.round(share * 100)}%`
+
+/** The Compute thesis's capacity readings: spot prices, capex guidance, and the probes behind a ratio. */
+function capacityRows(d: Record<string, unknown>): DetailRow[] {
+  const rows: DetailRow[] = []
+  const spot = Object.entries(asRecord(d.spot_providers) ?? {}).flatMap(([id, p]) => {
+    const r = asRecord(p)
+    const ratio = num(r?.ratio)
+    const low = num(r?.spot_low)
+    const high = num(r?.spot_high)
+    const onDemand = num(r?.on_demand)
+    if (ratio === null || low === null || high === null || onDemand === null) return []
+    const price = low === high ? perGpuHour(low) : `$${low.toFixed(2)} to ${perGpuHour(high)}`
+    return [`${companyName(id)} ${wholePct(ratio)} (${price} against ${perGpuHour(onDemand)})`]
+  })
+  if (spot.length) rows.push({ label: 'Spot against on-demand', value: spot.join(' · ') })
+
+  const range = (low: number, high: number) =>
+    low === high ? compactUsd(low) : `${compactUsd(low)} to ${compactUsd(high)}`
+  for (const f of Object.values(asRecord(d.guidance_filers) ?? {})) {
+    const r = asRecord(f)
+    if (!r || typeof r.filer !== 'string') continue
+    const parts: string[] = []
+    const guided = asRecord(r.guided)
+    const low = num(guided?.low)
+    const high = num(guided?.high)
+    if (guided && low !== null && high !== null) {
+      const cut = num(guided.cut)
+      const peak = num(guided.peak_midpoint)
+      const change =
+        cut === null || peak === null
+          ? 'the first figure for the year'
+          : cut > 0
+            ? `midpoint ${wholePct(cut)} below its high of ${compactUsd(peak)}`
+            : 'not cut'
+      parts.push(`${String(guided.fiscal_year)} guidance ${range(low, high)}, ${change}`)
+    }
+    const landed = asRecord(r.landed)
+    const guidedLow = num(landed?.low)
+    const guidedHigh = num(landed?.high)
+    const actual = num(landed?.actual)
+    if (landed && guidedLow !== null && guidedHigh !== null && actual !== null) {
+      const under = num(landed.under)
+      const gap = under ? `, ${wholePct(under)} under the low end` : ''
+      parts.push(
+        `${String(landed.fiscal_year)} filed ${compactUsd(actual)} against ${range(guidedLow, guidedHigh)} guided${gap}`,
+      )
+    }
+    if (parts.length) rows.push({ label: r.filer, value: parts.join('. ') })
+  }
+  const noFigure = Object.values(asRecord(d.no_figure) ?? {}).flatMap((f) => {
+    const filer = asRecord(f)?.filer
+    return typeof filer === 'string' ? [filer] : []
+  })
+  if (noFigure.length) rows.push({ label: 'No figure to read', value: noFigure.join(', ') })
+
+  const leftOut = Object.keys(asRecord(d.left_out) ?? {}).map(companyName)
+  if (leftOut.length) rows.push({ label: 'Left out', value: leftOut.join(', ') })
+  const strained = num(d.strained_share)
+  if (strained !== null) {
+    rows.push({
+      label: 'Rate limited or failed',
+      value: `${formatValue('share', strained)} of probes, context only`,
+    })
+  }
+  return rows
+}
+
+// ---- the press early read ---------------------------------------------------------
+
+/** The early read as sentences: the page and the digest say the same thing. */
+export function earlyReadLines(read: PressEarlyRead): {
+  periods: string[]
+  unplaced: string | null
+  record: string
+} {
+  const reports = (n: number) => `${count(n)} press ${n === 1 ? 'report' : 'reports'}`
+  const periods = read.periods.map((p) => {
+    const spread = p.low === p.high ? '' : `, from ${compactUsd(p.low)} to ${compactUsd(p.high)}`
+    const figure = `${p.label}: ${compactUsd(p.median)} at the median of ${reports(p.reports)}${spread}.`
+    if (!p.base || p.implied_growth === null) {
+      return `${figure} The same period a year earlier isn’t filed, so there is no growth to read.`
+    }
+    const growth =
+      p.implied_growth >= 0
+        ? `growth of ${wholePct(p.implied_growth)}`
+        : `a fall of ${wholePct(-p.implied_growth)}`
+    return `${figure} Against the ${compactUsd(p.base.value)} filed for ${p.base.label}, that is ${growth}.`
+  })
+  const one = read.unplaced === 1
+  const r = read.record
+  return {
+    periods,
+    unplaced:
+      read.unplaced > 0
+        ? `${reports(read.unplaced)} ${one ? 'matches' : 'match'} no filed figure and ${one ? 'names' : 'name'} no period, so we can’t tie ${one ? 'it' : 'them'} to one.`
+        : null,
+    record:
+      r.reports > 0 && r.median_abs_error_pct !== null && r.median_lead_days !== null
+        ? `Filings have settled ${reports(r.reports)} so far. They were a median ${r.median_abs_error_pct.toFixed(1)}% off and ran a median ${count(Math.round(r.median_lead_days))} days before the filing.`
+        : 'No press report has been settled by a filing yet, so there is no past error to show.',
+  }
+}
+
+/** One line for the digest. */
+export function earlyReadSummary(read: PressEarlyRead): string {
+  const lines = earlyReadLines(read)
+  const first = lines.periods[0] ?? 'No press report names a period that isn’t filed yet.'
+  return `${first} ${lines.record}`
 }
 
 const perGpuHour = (v: number) => `$${v.toFixed(2)}/GPU-h`
