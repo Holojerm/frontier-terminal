@@ -5,7 +5,8 @@ import { buildListed } from '../server/utils/terminal-listed'
 import { buildSuppliers } from '../server/utils/terminal-suppliers'
 import { listedBoth, listedEvidence, listedGroup, listedTieText } from '../shared/utils/listed'
 import type { PowerTicker } from '../shared/utils/power-sites'
-import type { CuratedSuppliers, SupplierRow } from '../shared/utils/suppliers'
+import curated from '../server/curated/suppliers.json'
+import { curatedSuppliers, type SupplierRow } from '../shared/utils/suppliers'
 import type {
   DependencyEdge,
   DependencyFigure,
@@ -67,9 +68,10 @@ const row = (over: Partial<SupplierRow>): SupplierRow => ({
   quote: 'We executed a lease with Anthropic for critical IT capacity.',
   alias: null,
   fetched_at: '2026-11-19T12:00:00.000Z',
+  basis: 'hand',
   ...over,
 })
-const TABLE: CuratedSuppliers = {
+const TABLE: { rows: SupplierRow[] } = {
   rows: [
     row({}),
     row({ relation: 'investor', counterparty: 'Google', counterparty_lab: 'google' }),
@@ -210,7 +212,9 @@ describe('listedForLab', () => {
 })
 
 describe('the hand-read suppliers file', () => {
-  const suppliers = buildSuppliers()
+  const suppliers = buildSuppliers({
+    rows: curatedSuppliers.parse(curated).rows.map((r) => ({ ...r, basis: 'hand' as const })),
+  })
   const real = buildListed(GRAPH, suppliers, { tickers: [] })
 
   it('lists every supplier once, with all of its passages', () => {

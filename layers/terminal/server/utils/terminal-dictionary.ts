@@ -452,10 +452,10 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
   supplier_passages: {
     grain: 'One row per passage in a company’s own SEC document that ties it to a lab or a cloud.',
     cadence:
-      'By hand. suppliers:verify re-reads each document on demand, restamps fetched_at, and fails when a quote is gone.',
+      'Six-hourly. The filings lane reads each company’s new filings and the judge reads the passages from them; a row ends when the next filing of its form drops the quote.',
     event: 'filed',
     knowledge: 'fetched_at',
-    start: 'The current table only.',
+    start: 'The hand read of 2026-11-19 and 2026-11-20, then every filing since.',
     joins: [
       { column: 'counterparty_lab', to: ID },
       { column: 'ticker', to: 'your security master' },

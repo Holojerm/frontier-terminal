@@ -2592,6 +2592,15 @@ filed_fact_sources:
       Oracle's numbers. Its fiscal year ends May 31. Capex is Capital
       expenditures (PaymentsToAcquirePropertyPlantAndEquipment). Oracle tags
       only its total remaining performance obligations, not a cloud figure.
+# The suppliers table (/api/suppliers) is not listed source by source: its
+# filers are the companies in layers/terminal/server/suppliers/filers.ts, read
+# from www.sec.gov under the fair-access terms recorded under sec-msft-openai.
+# The filings lane reads each one's submissions feed (data.sec.gov) and the
+# primary document of each new 10-Q, 10-K, 8-K, 20-F or 6-K, at most six
+# documents a run; the judge reads the passages and the Worker checks each
+# quote against the stored document (layers/terminal/server/suppliers/).
+# rights: ours, as for every SEC filing here.
+#
 # The pages behind /api/power-sites and the "Who powers the lab sites" panel on
 # /compute (layers/terminal/server/curated/power-sites.json). Unlike every
 # section above, nothing here is polled: each row is one sentence a person

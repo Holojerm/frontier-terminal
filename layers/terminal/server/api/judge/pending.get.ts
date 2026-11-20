@@ -36,6 +36,10 @@
 // same lab that still list that model, so a page dropping a row is not
 // written up as a delisting (layers/terminal/server/pipeline/judge/still-listed.ts);
 // usually `[]`.
+// `supplier_review` lists the suppliers' new SEC documents that name a lab, a
+// cloud or a customer share, each with excerpts and the rows already held for
+// that company (layers/terminal/server/suppliers/review.ts); it too can be
+// non-empty when `changes` is empty.
 
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
@@ -50,6 +54,7 @@ import { priceReview } from '../../pipeline/judge/price-review'
 import { JUDGE_CHANGE_LIMIT, incidentCounts, pendingChanges } from '../../pipeline/judge/pending'
 import { stillListedRemovals } from '../../pipeline/judge/still-listed'
 import { figureReview } from '../../pipeline/reported/review'
+import { supplierReview } from '../../suppliers/review'
 import { trackRecordReview } from '../../pipeline/track-record/review'
 import { claimReview, flagshipMap } from '../../theses/verdicts'
 import { requireJudgeToken } from '../../utils/judge-auth'
@@ -68,6 +73,7 @@ export default defineEventHandler(async (event) => {
     figure_review,
     filing_review,
     price_review,
+    supplier_review,
   ] = await Promise.all([
     pendingChanges(db, JUDGE_CHANGE_LIMIT),
     classMapReview(db, blobRawReader(blob)),
@@ -76,6 +82,7 @@ export default defineEventHandler(async (event) => {
     figureReview(db),
     filingReview(db, blobRawReader(blob)),
     priceReview(db, blobRawReader(blob)),
+    supplierReview(db, blobRawReader(blob)),
   ])
   const [claim_review, hiring, incidents, still_listed] = await Promise.all([
     claimReview(db, changes, flagships),
@@ -100,6 +107,7 @@ export default defineEventHandler(async (event) => {
     figure_review,
     filing_review,
     price_review,
+    supplier_review,
     prompt: judgePrompt,
   }
 })

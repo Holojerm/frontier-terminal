@@ -94,6 +94,9 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   source_absent: { severity: 'warning' },
   filed_facts_failed: { severity: 'warning' },
   filed_facts_run_failed: { severity: 'warning' },
+  // The suppliers reader (layers/terminal/server/suppliers/ingest.ts): a feed
+  // it could not parse, a 429, or the run itself throwing.
+  supplier_read_failed: { severity: 'warning' },
   // A stored capex-guidance sentence is not in its stored release, or no
   // longer reads as its figure: the parser and the store disagree.
   guidance_unverified: { severity: 'warning' },

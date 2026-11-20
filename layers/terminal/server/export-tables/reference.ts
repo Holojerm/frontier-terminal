@@ -7,7 +7,6 @@ import curatedPower from '../curated/power-sites.json'
 import { contentHash } from '../pipeline/contracts/keys'
 import { ENTITY_SECURITIES, ENTITY_SECURITY_COLUMNS } from '../utils/terminal-entities'
 import { ENTITY_IDENTIFIERS, ENTITY_IDENTIFIER_COLUMNS } from '../utils/terminal-identifiers'
-import { buildSuppliers } from '../utils/terminal-suppliers'
 import * as tables from '#server/db/schema'
 import {
   CIK,
@@ -17,56 +16,23 @@ import {
   byColumn,
   loggedTotal,
   type ExportTable,
+  type Row,
 } from '../utils/terminal-export-views'
 
-const SUPPLIER_PASSAGE_COLUMNS = [
-  'id',
-  'ticker',
-  'company_name',
-  'layer',
-  'relation',
-  'counterparty',
-  'counterparty_ticker',
-  'counterparty_lab',
-  'figures',
-  'form',
-  'filed',
-  'period',
-  'source_title',
-  'quote',
-  'alias_term',
-  'alias_quote',
-  'source_url',
-  'fetched_at',
-] as const
-
-/** Every passage, in the order /api/suppliers lists them. */
-const SUPPLIER_PASSAGES = buildSuppliers().rows.map((r) => ({
-  id: contentHash({
-    ticker: r.ticker,
-    relation: r.relation,
-    counterparty: r.counterparty,
-    source_url: r.source_url,
-    quote: r.quote,
-  }),
-  ticker: r.ticker,
-  company_name: r.company,
-  layer: r.layer,
-  relation: r.relation,
-  counterparty: r.counterparty,
-  counterparty_ticker: r.counterparty_ticker,
-  counterparty_lab: r.counterparty_lab,
-  figures: r.figures,
-  form: r.form,
-  filed: r.filed,
-  period: r.period,
-  source_title: r.source_title,
-  quote: r.quote,
-  alias_term: r.alias?.term ?? null,
-  alias_quote: r.alias?.quote ?? null,
-  source_url: r.source_url,
-  fetched_at: r.fetched_at,
-}))
+/** A plainTable whose JSON-text columns are served parsed, as the in-code table served them. */
+function parsedJson(table: ExportTable, columns: readonly string[]): ExportTable {
+  const parse = (row: Row): Row => {
+    const out = { ...row }
+    for (const c of columns) if (typeof out[c] === 'string') out[c] = JSON.parse(out[c] as string)
+    return out
+  }
+  return {
+    ...table,
+    async page(db, after, limit, where) {
+      return (await table.page(db, after, limit, where)).map(parse)
+    },
+  }
+}
 
 const POWER_SITE_TIE_COLUMNS = [
   'id',
@@ -396,85 +362,116 @@ export const REFERENCE_TABLES = {
     ENTITY_IDENTIFIERS,
     'it’s a registry kept in code, and each identifier is dated by its own fetched_at.',
   ),
-  supplier_passages: staticTable(
-    'supplier_passages',
-    'The chip, hardware, and compute-rental companies whose own SEC documents tie them to a lab or a cloud: one row per passage, read by hand and quoted, with the figures it states. A share is the filing’s own figure for one customer in the period it names, and fiscal years differ. Where a filing gives a customer’s share and no name, the row keeps the filing’s label (“Customer A”) and names no one. A row is kept only while suppliers:verify still finds its quote in the document.',
-    SUPPLIER_PASSAGE_COLUMNS,
-    {
-      id: {
-        type: 'text',
-        key: true,
-        meaning: 'SHA-256 (hex) of ticker, relation, counterparty, source_url, and quote.',
+  supplier_passages: parsedJson(
+    plainTable(
+      'supplier_passages',
+      'The chip, hardware, and compute-rental companies whose own SEC documents tie them to a lab or a cloud: one row per passage, quoted, with the figures it states. The first rows were read by hand; each company’s new filings are read by a model and kept only where the quote and every figure are in the filing word for word (basis). A share is the filing’s own figure for one customer in the period it names, and fiscal years differ. Where a filing gives a customer’s share and no name, the row keeps the filing’s label (“Customer A”) and names no one. A row ends when the company’s next filing of the same form no longer has its quote, and stays in the table with ended_at set.',
+      tables.supplierPassages,
+      {
+        id: {
+          type: 'text',
+          key: true,
+          meaning:
+            'SHA-256 (hex) of ticker, relation, counterparty, source_url, and quote, as first read. A row later restamped to a newer filing keeps its id.',
+        },
+        ticker: { type: 'text', meaning: 'The company’s ticker, as it trades.' },
+        company_name: { type: 'text', meaning: 'The company’s name.' },
+        layer: {
+          type: 'text',
+          meaning:
+            'Where the company sits: chips, memory, foundry, networking, optics, servers, cooling (power and cooling), neocloud (compute rental), or hosting (data-center hosting).',
+        },
+        relation: {
+          type: 'text',
+          meaning:
+            'What the passage says the company is to the counterparty: customer (sells to it), supplier (buys from it), investment (invests in it), investor (issued it shares or warrants), guarantee (guarantees leases for it), or concentration (a customer given a share and no name).',
+        },
+        counterparty: {
+          type: 'text',
+          meaning:
+            'The name the document uses. For concentration, the document’s own label, such as Customer A.',
+        },
+        counterparty_ticker: {
+          type: 'text',
+          nullable: true,
+          meaning: 'The counterparty’s ticker. Null for a private lab and for concentration.',
+        },
+        counterparty_lab: {
+          type: 'text',
+          nullable: true,
+          meaning:
+            'The tracked lab the counterparty is or owns, as the rest of the site names it. Null for a cloud or an unnamed customer.',
+        },
+        figures: {
+          type: 'json',
+          meaning:
+            'Each figure the passage states, up to three, as {value, unit, meaning}. unit is usd, pct_revenue, pct_revenue_combined (several customers together), pct_receivables, pct_backlog, shares, or gw. Empty where the passage names the counterparty and gives no number.',
+        },
+        form: {
+          type: 'text',
+          meaning: 'The document type: 10-K, 10-Q, 8-K, EX-99.1, EX-99.2, 20-F, or 6-K.',
+        },
+        filed: { type: 'date', meaning: 'The document’s filing date.' },
+        period: {
+          type: 'text',
+          nullable: true,
+          meaning: 'The period the document covers, in its words. Null where it names none.',
+        },
+        source_title: { type: 'text', meaning: 'The document, in a few words.' },
+        quote: { type: 'text', meaning: 'The passage the row rests on, as the document has it.' },
+        alias_term: {
+          type: 'text',
+          nullable: true,
+          meaning:
+            'Where the passage calls the counterparty by a term the document defines (“the Parent”), the term. Null otherwise.',
+        },
+        alias_quote: {
+          type: 'text',
+          nullable: true,
+          meaning: 'The passage that defines alias_term. Null with no alias.',
+        },
+        basis: {
+          type: 'text',
+          meaning:
+            'hand (read by a person) or judge (read by a model from the stored filing, and checked by the Worker: the quote and every figure are in the filing verbatim).',
+        },
+        accession_no: {
+          type: 'text',
+          nullable: true,
+          meaning: 'The EDGAR accession number of the document at source_url.',
+        },
+        first_seen_at: {
+          type: 'timestamp',
+          meaning:
+            'When the row entered the table, in UTC: the hand read’s check, or the judge’s reading.',
+        },
+        ended_at: {
+          type: 'timestamp',
+          nullable: true,
+          meaning:
+            'When the company’s next filing of the same form was read and no longer had the quote, in UTC. Null while the passage stands.',
+        },
+        ended_by: {
+          type: 'text',
+          nullable: true,
+          meaning: 'The accession number of that filing. Null while the passage stands.',
+        },
+        source_url: {
+          type: 'text',
+          provenance: true,
+          meaning: 'The SEC document on EDGAR the passage is in.',
+        },
+        fetched_at: {
+          type: 'timestamp',
+          provenance: true,
+          meaning:
+            'When the document at source_url was last fetched and the quote found in it, in UTC.',
+        },
       },
-      ticker: { type: 'text', meaning: 'The company’s ticker, as it trades.' },
-      company_name: { type: 'text', meaning: 'The company’s name.' },
-      layer: {
-        type: 'text',
-        meaning:
-          'Where the company sits: chips, memory, foundry, networking, optics, servers, cooling (power and cooling), neocloud (compute rental), or hosting (data-center hosting).',
-      },
-      relation: {
-        type: 'text',
-        meaning:
-          'What the passage says the company is to the counterparty: customer (sells to it), supplier (buys from it), investment (invests in it), investor (issued it shares or warrants), guarantee (guarantees leases for it), or concentration (a customer given a share and no name).',
-      },
-      counterparty: {
-        type: 'text',
-        meaning:
-          'The name the document uses. For concentration, the document’s own label, such as Customer A.',
-      },
-      counterparty_ticker: {
-        type: 'text',
-        nullable: true,
-        meaning: 'The counterparty’s ticker. Null for a private lab and for concentration.',
-      },
-      counterparty_lab: {
-        type: 'text',
-        nullable: true,
-        meaning:
-          'The tracked lab the counterparty is or owns, as the rest of the site names it. Null for a cloud or an unnamed customer.',
-      },
-      figures: {
-        type: 'json',
-        meaning:
-          'Each figure the passage states, up to three, as {value, unit, meaning}. unit is usd, pct_revenue, pct_revenue_combined (several customers together), pct_receivables, pct_backlog, shares, or gw. Empty where the passage names the counterparty and gives no number.',
-      },
-      form: {
-        type: 'text',
-        meaning: 'The document type: 10-K, 10-Q, 8-K, EX-99.1, EX-99.2, 20-F, or 6-K.',
-      },
-      filed: { type: 'date', meaning: 'The document’s filing date.' },
-      period: {
-        type: 'text',
-        nullable: true,
-        meaning: 'The period the document covers, in its words. Null where it names none.',
-      },
-      source_title: { type: 'text', meaning: 'The document, in a few words.' },
-      quote: { type: 'text', meaning: 'The passage the row rests on, as the document has it.' },
-      alias_term: {
-        type: 'text',
-        nullable: true,
-        meaning:
-          'Where the passage calls the counterparty by a term the document defines (“the Parent”), the term. Null otherwise.',
-      },
-      alias_quote: {
-        type: 'text',
-        nullable: true,
-        meaning: 'The passage that defines alias_term. Null with no alias.',
-      },
-      source_url: {
-        type: 'text',
-        provenance: true,
-        meaning: 'The SEC document on EDGAR the passage is in.',
-      },
-      fetched_at: {
-        type: 'timestamp',
-        provenance: true,
-        meaning: 'When suppliers:verify last fetched the document and found the quote, in UTC.',
-      },
-    },
-    SUPPLIER_PASSAGES,
-    HAND_READ('suppliers:verify'),
+      [tables.supplierPassages.id],
+      'rows are restamped to newer filings and ended in place, so the table’s past isn’t kept.',
+    ),
+    ['figures'],
   ),
   power_site_ties: staticTable(
     'power_site_ties',

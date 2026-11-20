@@ -18,7 +18,7 @@ import {
   curatedPowerSites,
   type CuratedPowerSites,
 } from '../layers/terminal/shared/utils/power-sites'
-import { comparable, pageText } from './lib/quote-match'
+import { comparable, pageText } from '../layers/terminal/server/utils/quote-match'
 
 export const CURATED_PATH = join(
   import.meta.dirname,

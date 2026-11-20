@@ -1,14 +1,9 @@
 import { describe, expect, it } from 'vitest'
 
-import { comparable, pageText } from '~~/scripts/lib/quote-match'
+import { comparable, pageText } from '../server/utils/quote-match'
 import curated from '../server/curated/suppliers.json'
 import { buildSuppliers } from '../server/utils/terminal-suppliers'
-import {
-  curatedSuppliers,
-  supplierFigureText,
-  type CuratedSuppliers,
-  type SupplierRow,
-} from '../shared/utils/suppliers'
+import { curatedSuppliers, supplierFigureText, type SupplierRow } from '../shared/utils/suppliers'
 
 // The suppliers view over a small table of our own, so the grouping is tested
 // apart from whatever the hand-read file holds, then the file's own rules.
@@ -30,10 +25,11 @@ const row = (over: Partial<SupplierRow>): SupplierRow => ({
   quote: 'Microsoft and Meta Platforms represented 20% and 15% of our revenue.',
   alias: null,
   fetched_at: '2026-11-19T12:00:00.000Z',
+  basis: 'hand',
   ...over,
 })
 
-const TABLE: CuratedSuppliers = {
+const TABLE: { rows: SupplierRow[] } = {
   rows: [
     row({}),
     row({
