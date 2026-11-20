@@ -12,7 +12,13 @@ import {
   instanceDocuments,
 } from '../server/exposure/facts'
 import { filerFacts, runFiledFacts } from '../server/exposure/ingest'
-import { buildSeries, quarterly, type StoredFact } from '../server/exposure/series'
+import {
+  buildSeries,
+  earlierPoints,
+  isAlerting,
+  quarterly,
+  type StoredFact,
+} from '../server/exposure/series'
 import type { FetchOutcome, FetchSource } from '../server/pipeline/fetch'
 import { queryContext } from '../server/utils/terminal-db'
 import { EXPORT_TABLES } from '../server/utils/terminal-export'
@@ -30,6 +36,9 @@ const db = drizzle(env.DB, { schema })
 const MSFT = '0000789019'
 const AMZN = '0001018724'
 const MSFT_Q = '0001193125-26-436133'
+const NONOP = 'us-gaap:NonoperatingIncomeExpense'
+const MARKS =
+  'us-gaap:EquitySecuritiesWithoutReadilyDeterminableFairValueUpwardPriceAdjustmentAnnualAmount'
 const AMZN_Q = '0001018724-26-000040'
 const OPENAI = 'msft:OpenAIGlobalLlcMember'
 const ANTHROPIC = 'amzn:AnthropicMember'
@@ -208,8 +217,8 @@ describe('quarterly', () => {
 })
 
 describe('headlineFor', () => {
-  const s = (group: ExposureSeries['group'], filer: string, id = 'x') =>
-    ({ id, group, filer }) as ExposureSeries
+  const s = (group: ExposureSeries['group'], filer: string, id = 'x', concept = '', unit = 'USD') =>
+    ({ id, group, filer, concept, unit, label: 'Some line' }) as ExposureSeries
   const p = (value: number, end = '2026-09-30', months: number | null = 3) =>
     ({ value, end, months }) as ExposurePoint
 
@@ -227,15 +236,81 @@ describe('headlineFor', () => {
     expect(
       headlineFor(s('rpo', 'Alphabet', 'googl-rpo-cloud'), p(560.8e9, '2026-09-30', null), null),
     ).toBe('Alphabet’s Google Cloud backlog reaches $561B at 2026-09-30')
-    expect(headlineFor(s('openai', 'Microsoft'), p(-4.1e9), null)).toBe(
+    expect(headlineFor(s('openai', 'Microsoft', 'x', NONOP), p(-4.1e9), null)).toBe(
       'Microsoft books a $4.10B loss on OpenAI in the quarter to 2026-09-30',
     )
-    expect(headlineFor(s('anthropic', 'Amazon'), p(55.6e9), null)).toBe(
+    expect(headlineFor(s('anthropic', 'Amazon', 'x', MARKS), p(55.6e9), null)).toBe(
       'Amazon marks its Anthropic stake up by $55.6B in the quarter to 2026-09-30',
     )
-    expect(headlineFor(s('anthropic', 'Amazon'), p(62.8e9, '2026-09-30', 9), null)).toBe(
-      'Amazon marks its Anthropic stake up by $62.8B in the nine months to 2026-09-30',
+    expect(
+      headlineFor(s('anthropic', 'Amazon', 'x', MARKS), p(62.8e9, '2026-09-30', 9), null),
+    ).toBe('Amazon marks its Anthropic stake up by $62.8B in the nine months to 2026-09-30')
+  })
+
+  it('has a line for each lab commitment and claim', () => {
+    const msft = (concept: string, unit = 'USD') => s('openai', 'Microsoft', 'x', concept, unit)
+    const amzn = (concept: string) => s('anthropic', 'Amazon', 'x', concept)
+    const at = (v: number, end = '2026-09-30') => p(v, end, null)
+    expect(
+      headlineFor(msft('msft:EquityMethodInvestmentsTotalFundingCommitments'), at(13e9), null),
+    ).toBe('Microsoft’s funding commitment to OpenAI reaches $13.0B at 2026-09-30')
+    expect(
+      headlineFor(msft('msft:EquityMethodInvestmentsFunded'), at(12e9), at(11e9, '2026-06-30')),
+    ).toBe('Microsoft’s funding paid in to OpenAI reaches $12.0B at 2026-09-30, up from $11.0B')
+    expect(
+      headlineFor(msft('us-gaap:AccountsReceivableNet'), at(7.2e9), at(6e9, '2026-06-30')),
+    ).toBe('Microsoft’s receivables from OpenAI reach $7.20B at 2026-09-30, up from $6.00B')
+    expect(
+      headlineFor(
+        msft('us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax'),
+        p(10e9),
+        null,
+      ),
+    ).toBe('Microsoft’s revenue from OpenAI hits $10.0B in the quarter to 2026-09-30')
+    const stake = msft('us-gaap:EquityMethodInvestmentOwnershipPercentage', 'pure')
+    expect(headlineFor(stake, at(0.24), null)).toBe(
+      'Microsoft reports a 24% stake in OpenAI at 2026-09-30',
     )
+    expect(headlineFor(stake, at(0.18), at(0.24, '2026-06-30'))).toBe(
+      'Microsoft’s stake in OpenAI falls to 18% at 2026-09-30, from 24%',
+    )
+    expect(
+      headlineFor(
+        amzn('us-gaap:LineOfCreditFacilityMaximumBorrowingCapacity'),
+        at(20e9, '2026-06-30'),
+        null,
+      ),
+    ).toBe('Amazon’s financing line to Anthropic reaches $20.0B at 2026-06-30')
+    expect(
+      headlineFor(
+        amzn('us-gaap:LineOfCreditFacilityCurrentBorrowingCapacity'),
+        at(10e9),
+        at(15e9, '2026-06-30'),
+      ),
+    ).toBe('Amazon’s financing available to Anthropic falls to $10.0B at 2026-09-30, from $15.0B')
+    const added = amzn('amzn:RevenueRemainingPerformanceObligationAmountPeriodIncreaseDecrease')
+    expect(headlineFor(added, p(100e9, '2026-06-30'), null)).toBe(
+      'Amazon adds $100B from Anthropic to its backlog in the quarter to 2026-06-30',
+    )
+    expect(headlineFor(added, p(-5e9), null)).toBe(
+      'Amazon’s backlog from Anthropic falls by $5.00B in the quarter to 2026-09-30',
+    )
+  })
+
+  it('says a lab backlog falls to a figure, never that it was cut', () => {
+    const openai = headlineFor(
+      s('rpo', 'Amazon', 'amzn-rpo-openai'),
+      p(30e9, '2026-09-30', null),
+      p(38e9, '2026-03-31', null),
+    )
+    expect(openai).toBe('Amazon’s backlog from OpenAI falls to $30.0B at 2026-09-30, from $38.0B')
+    const crux = headlineFor(
+      s('rpo', 'Alphabet', 'googl-rpo-investee'),
+      p(16.8e9, '2026-09-30', null),
+      null,
+    )
+    expect(crux).toBe('Alphabet’s backlog from Crux AI reaches $16.8B at 2026-09-30')
+    for (const h of [openai, crux]) expect(h).not.toMatch(/cut|cancel/i)
   })
 })
 
@@ -428,16 +503,188 @@ describe('filedFactAlert', () => {
       }),
     ]).find((x) => x.id === 'googl-capex')!
     const now = new Date('2026-11-04T12:00:00Z')
-    expect(filedFactAlert(s, { now, firstReadAt: '2026-11-04T00:00:00.000Z', cik: '1' })).toBeNull()
+    const earlier = () => []
+    expect(
+      filedFactAlert(s, { now, firstReadAt: '2026-11-04T00:00:00.000Z', cik: '1', earlier }),
+    ).toBeNull()
     expect(
       filedFactAlert(s, {
         now: new Date('2027-01-01T00:00:00Z'),
         firstReadAt: '2026-01-01T00:00:00.000Z',
         cik: '1',
+        earlier,
       }),
     ).toBeNull()
     expect(
-      filedFactAlert(s, { now, firstReadAt: '2026-01-01T00:00:00.000Z', cik: '1' }),
+      filedFactAlert(s, { now, firstReadAt: '2026-01-01T00:00:00.000Z', cik: '1', earlier }),
     ).not.toBeNull()
+  })
+
+  // Two filings of one series: the older one before the baseline read, the
+  // newer one fresh. `alertOn` runs the rule on the newest point.
+  const now = new Date('2026-11-04T12:00:00Z')
+  const ctx = (facts: StoredFact[]) => ({
+    now,
+    firstReadAt: '2026-08-01T00:00:00.000Z',
+    cik: '1',
+    earlier: earlierPoints(facts),
+  })
+  const alertOn = (facts: StoredFact[], id: string) => {
+    const series = buildSeries(facts).find((x) => x.id === id)
+    expect(series).toBeDefined()
+    return filedFactAlert(series!, ctx(facts))
+  }
+  const older = { filed: '2026-07-30', accession_no: 'q2', fetched_at: '2026-07-31T00:00:00.000Z' }
+  const newer = { filed: '2026-10-30', accession_no: 'q3', fetched_at: '2026-10-31T00:00:00.000Z' }
+  const msftLab = (concept: string, value: number, end: string, f: typeof older, unit = 'USD') =>
+    fact({
+      ticker: 'MSFT',
+      concept,
+      dims: `srt:ScheduleOfEquityMethodInvestmentEquityMethodInvesteeNameAxis=${OPENAI}`,
+      end,
+      value,
+      unit,
+      ...f,
+    })
+  const COMMIT = 'msft:EquityMethodInvestmentsTotalFundingCommitments'
+  const COMMIT_ID = 'msft-openai-equity-method-investments-total-funding-commitments'
+
+  it('alerts on every lab commitment and claim series the filings carry, and not on shares held', () => {
+    const facts = [
+      ...extractInstanceFacts(
+        fixtureText('fixtures/filed-facts/msft-20260930.xml'),
+        { cik: MSFT, form: '10-Q', filed: '2026-10-30', accession_no: MSFT_Q },
+        [OPENAI],
+      ).map((f) => ({ ...f, ticker: 'MSFT', source_url: 'x', fetched_at: 'y' })),
+      ...extractInstanceFacts(
+        fixtureText('fixtures/filed-facts/amzn-20260930.xml'),
+        { cik: AMZN, form: '10-Q', filed: '2026-10-30', accession_no: AMZN_Q },
+        [ANTHROPIC],
+      ).map((f) => ({ ...f, ticker: 'AMZN', source_url: 'x', fetched_at: 'y' })),
+      ...extractInstanceFacts(
+        fixtureText('fixtures/filed-facts/goog-20260930.xml'),
+        { cik: '0001652044', form: '10-Q', filed: '2026-10-30', accession_no: 'g' },
+        [],
+      ).map((f) => ({ ...f, ticker: 'GOOGL', source_url: 'x', fetched_at: 'y' })),
+    ]
+    const series = buildSeries(facts)
+    const alerting = series.filter(isAlerting).map((x) => x.label)
+    for (const label of [
+      'Total funding commitment',
+      'Funding paid in',
+      'Receivables from OpenAI',
+      'Revenue from OpenAI',
+      'Ownership stake',
+      'Financing Amazon makes available to Anthropic, maximum',
+      'Financing available to Anthropic now',
+      'Commitment Anthropic added to Amazon’s backlog',
+      'Backlog from OpenAI',
+      'Backlog from Crux AI',
+    ]) {
+      expect(alerting).toContain(label)
+    }
+    expect(alerting).not.toContain('Anthropic shares held')
+  })
+
+  it('is notable on a new point, critical on a series’ first', () => {
+    const one = [msftLab(COMMIT, 13e9, '2026-09-30', newer)]
+    expect(alertOn(one, COMMIT_ID)!.alert).toMatchObject({
+      severity: 'critical',
+      headline: 'Microsoft’s funding commitment to OpenAI reaches $13.0B at 2026-09-30',
+    })
+    expect(alertOn(one, COMMIT_ID)!.alert.explanation).toContain(
+      'It’s the first time Microsoft’s filings report this line.',
+    )
+    // A filing that brings a line with its comparative is still the line's first.
+    const withComparative = [
+      msftLab(COMMIT, 13e9, '2026-09-30', newer),
+      msftLab(COMMIT, 11e9, '2026-06-30', newer),
+    ]
+    expect(alertOn(withComparative, COMMIT_ID)!.alert.severity).toBe('critical')
+    const two = [
+      msftLab(COMMIT, 12e9, '2026-06-30', older),
+      msftLab(COMMIT, 13e9, '2026-09-30', newer),
+    ]
+    expect(alertOn(two, COMMIT_ID)!.alert).toMatchObject({
+      severity: 'notable',
+      headline:
+        'Microsoft’s funding commitment to OpenAI reaches $13.0B at 2026-09-30, up from $12.0B',
+    })
+  })
+
+  it('is critical when a commitment or stake moves 25% or more, and not for other series', () => {
+    const commit = (from: number, to: number) =>
+      alertOn(
+        [msftLab(COMMIT, from, '2026-06-30', older), msftLab(COMMIT, to, '2026-09-30', newer)],
+        COMMIT_ID,
+      )!.alert
+    expect(commit(10e9, 12.5e9)).toMatchObject({ severity: 'critical' })
+    expect(commit(10e9, 12.5e9).explanation).toContain('That’s a 25% move from the point before.')
+    expect(commit(10e9, 7.5e9).severity).toBe('critical')
+    expect(commit(10e9, 12.4e9).severity).toBe('notable')
+
+    const STAKE = 'us-gaap:EquityMethodInvestmentOwnershipPercentage'
+    const stake = alertOn(
+      [
+        msftLab(STAKE, 0.24, '2026-06-30', older, 'pure'),
+        msftLab(STAKE, 0.32, '2026-09-30', newer, 'pure'),
+      ],
+      'msft-openai-equity-method-investment-ownership-percentage',
+    )!.alert
+    expect(stake).toMatchObject({
+      severity: 'critical',
+      headline: 'Microsoft’s stake in OpenAI rises to 32% at 2026-09-30, from 24%',
+    })
+    expect(stake.explanation).toContain('ownership stake of 32%')
+
+    // Receivables are a claim, not a commitment: a 50% move stays notable.
+    const AR = 'us-gaap:AccountsReceivableNet'
+    expect(
+      alertOn(
+        [msftLab(AR, 4e9, '2026-06-30', older), msftLab(AR, 6e9, '2026-09-30', newer)],
+        'msft-openai-accounts-receivable-net',
+      )!.alert.severity,
+    ).toBe('notable')
+
+    // A lab backlog is a commitment. A fall of 25% or more is critical, and reads as a fall.
+    const openai = (value: number, end: string, f: typeof older) =>
+      fact({
+        ticker: 'AMZN',
+        concept: 'us-gaap:RevenueRemainingPerformanceObligation',
+        dims: 'srt:MajorCustomersAxis=amzn:OpenAIGroupPBCMember',
+        end,
+        value,
+        ...f,
+      })
+    expect(
+      alertOn(
+        [openai(38e9, '2026-06-30', older), openai(28e9, '2026-09-30', newer)],
+        'amzn-rpo-openai',
+      )!.alert,
+    ).toMatchObject({
+      severity: 'critical',
+      headline: 'Amazon’s backlog from OpenAI falls to $28.0B at 2026-09-30, from $38.0B',
+    })
+  })
+
+  it('skips a period an earlier filing reported, and a balance that didn’t move', () => {
+    // The newer 10-Q repeats June's balance (a restated value) and adds no later one.
+    const restated = [
+      msftLab(COMMIT, 13e9, '2026-06-30', older),
+      msftLab(COMMIT, 14e9, '2026-06-30', newer),
+    ]
+    const series = buildSeries(restated).find((x) => x.id === COMMIT_ID)!
+    expect(series.points.at(-1)).toMatchObject({ value: 14e9, accession_no: 'q3' })
+    expect(alertOn(restated, COMMIT_ID)).toBeNull()
+    const repeated = [
+      msftLab(COMMIT, 13e9, '2026-06-30', older),
+      msftLab(COMMIT, 13e9, '2026-06-30', newer),
+    ]
+    expect(alertOn(repeated, COMMIT_ID)).toBeNull()
+    const flat = [
+      msftLab(COMMIT, 13e9, '2026-06-30', older),
+      msftLab(COMMIT, 13e9, '2026-09-30', newer),
+    ]
+    expect(alertOn(flat, COMMIT_ID)).toBeNull()
   })
 })

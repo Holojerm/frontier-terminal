@@ -29,7 +29,7 @@ export const RULE_TEXT: Record<AlertView['rule'], string> = {
   'hiring-rollup':
     'Set by a fixed rule. One hiring summary per lab per week. It’s notable only when the week’s moves pass our hiring threshold.',
   'filed-fact-floor':
-    'Set by a fixed rule. A new 10-Q/10-K that moves a hyperscaler’s capex, backlog or stake in a lab is an alert, with the filed figure and the one before it.',
+    'Set by a fixed rule. A new 10-Q/10-K that moves a hyperscaler’s capex or backlog, or a figure it files about a lab (a stake, a funding commitment, revenue), is an alert, with the filed figure and the one before it. It’s critical the first time a filer reports the line, or when a commitment or stake moves 25% or more.',
   'agent-judge': 'Judged by a model. It can cite only fields from the changes it links to.',
 }
 
