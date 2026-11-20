@@ -2976,7 +2976,14 @@ cut:
     reason: >-
       cloud.google.com/compute/gpus-pricing redirects to a client-rendered
       page with no prices in its HTML, and the Cloud Billing Catalog API
-      needs an API key. Checked 2026-11-02.
+      needs an API key. Checked 2026-11-02. A recheck on 2026-11-20 found
+      cloud.google.com/products/compute/pricing/accelerator-optimized
+      server-rendered, with an on-demand and a current spot price for the
+      8-GPU H100 machines in one table. robots.txt has no rule on the path,
+      and Google's Terms of Service bar automated access only "in violation
+      of the machine-readable instructions on our web pages". No recipe
+      reads it yet. A tenth provider would move the H100 median, so the
+      owner decides.
   gpu-vultr:
     verdict: cut (GPU prices not stored)
     reason: >-
@@ -3140,6 +3147,18 @@ cut:
       Azure Resource Graph. Both need a signed-in account, and we haven't
       read what either account agreement says about republishing. Read
       2026-11-19.
+  gpu-aws-spot:
+    verdict: cut (spot prices not stored)
+    reason: >-
+      AWS publishes no current spot price outside an account. The file
+      behind its spot pricing page (spot-price.s3.amazonaws.com/spot.js) was
+      last modified on 13 May 2024. The file behind its Spot Instance
+      Advisor gives a saving over on-demand as a whole percent and an
+      interruption band, last modified on 20 March 2026. Both are
+      undocumented backends for a page, and we don't use those as sources.
+      The AWS Site Terms (last updated June 2, 2025) exclude "any use of
+      data mining, robots, or similar data gathering and extraction tools".
+      Checked 2026-11-20.
   vercel-ai-gateway:
     verdict: cut (shares not stored)
     reason: >-

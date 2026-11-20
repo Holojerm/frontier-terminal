@@ -116,6 +116,7 @@ describe('readSourceRegistry', () => {
       'ornn-compute-index',
       'aws-capacity-blocks',
       'gpu-spot-history',
+      'gpu-aws-spot',
       'vercel-ai-gateway',
       'inferencex',
       'gpu-stock-status',
