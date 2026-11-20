@@ -12,7 +12,11 @@ import { createTerminalMcpHandler, type McpDeps } from '../server/utils/mcp'
 import { assertKnowable, pointInTimeMeta, pollStampAt } from '../server/utils/terminal-asof'
 import { SCHEMA_VERSION } from '../server/utils/data-schema'
 import { terminalStamps } from '../server/utils/terminal-cache'
-import { queryContext } from '../server/utils/terminal-db'
+import { queryContext, recipeRunsStamp } from '../server/utils/terminal-db'
+import { VIEW_RECIPES } from '../server/utils/terminal-recipe-views'
+import { reportedStamp } from '../server/utils/terminal-reported'
+import { UTILIZATION_RECIPES } from '../server/utils/terminal-utilization'
+import { THESES } from '../server/theses/registry'
 import { served } from '../server/utils/terminal-envelope'
 import { fixtureText, manifest } from './pipeline/fixtures'
 
@@ -172,9 +176,11 @@ describe('tools/list', () => {
     const tools = result!.tools as { name: string; description: string; annotations: unknown }[]
     expect(tools.map((t) => t.name).sort()).toEqual([
       'describe',
+      'get_adoption',
       'get_alert',
       'get_alerts',
       'get_coverage',
+      'get_datacenters',
       'get_dependencies',
       'get_disclosures',
       'get_exposure',
@@ -186,18 +192,25 @@ describe('tools/list', () => {
       'get_incidents',
       'get_listed_companies',
       'get_overview',
+      'get_parents',
+      'get_pay',
+      'get_power_sites',
       'get_price_history',
       'get_prices',
       'get_probes',
       'get_prospectus',
       'get_rankings',
+      'get_rate_limits',
       'get_releases',
       'get_reliability',
+      'get_reported',
       'get_revenue',
       'get_spend',
       'get_status',
       'get_suppliers',
+      'get_theses',
       'get_track_record',
+      'get_utilization',
     ])
     for (const t of tools) {
       expect(t.annotations).toMatchObject({ readOnlyHint: true })
@@ -221,6 +234,34 @@ describe('tools/list', () => {
       'RECONSTRUCTED',
     )
     expect(tools.find((t) => t.name === 'get_releases')!.description).toContain('EXCLUDED')
+    // Every data tool ends with the provenance rule (describe and get_status serve no rows).
+    for (const t of tools.filter((x) => !['describe', 'get_status'].includes(x.name))) {
+      expect(t.description, t.name).toContain('source_url')
+    }
+    expect(tools.find((t) => t.name === 'get_datacenters')!.description).toContain('never sum')
+    expect(tools.find((t) => t.name === 'get_reported')!.description).toContain('get_revenue')
+  })
+
+  it('names every data tool in the server instructions', async () => {
+    const { result } = await call('initialize', {
+      protocolVersion: '2025-06-18',
+      capabilities: {},
+      clientInfo: { name: 'test', version: '0' },
+    })
+    const instructions = result!.instructions as string
+    for (const name of [
+      'get_theses',
+      'get_utilization',
+      'get_datacenters',
+      'get_power_sites',
+      'get_reported',
+      'get_adoption',
+      'get_rate_limits',
+      'get_pay',
+      'get_parents',
+    ]) {
+      expect(instructions, name).toContain(name)
+    }
   })
 
   it('serves llms.txt as a resource and as the describe tool', async () => {
@@ -604,5 +645,83 @@ describe('tools/call', () => {
     expect(status.migrations.pending).toEqual([])
     expect(status.crons).toEqual(deps.status.scheduledTasks)
     expect(Object.keys(status.sources)).toContain('edgar-fts')
+  })
+
+  it('get_theses: every thesis with its claims and statuses, narrowed by thesis id', async () => {
+    const all = (await tool('get_theses')).structuredContent as {
+      theses: { id: string; claims: { status: string; kill_condition: string }[] }[]
+      caveat: string
+    }
+    expect(all.theses.map((t) => t.id)).toEqual(THESES.map((t) => t.id))
+    for (const claim of all.theses.flatMap((t) => t.claims)) {
+      expect(['holding', 'weakening', 'broken', 'unresolved']).toContain(claim.status)
+      expect(claim.kill_condition.length).toBeGreaterThan(10)
+    }
+    expect(all.caveat).toContain('investment advice')
+    const one = (await tool('get_theses', { thesis: 'compute' })).structuredContent as {
+      theses: { id: string }[]
+    }
+    expect(one.theses.map((t) => t.id)).toEqual(['compute'])
+    const { error, result } = await call('tools/call', {
+      name: 'get_theses',
+      arguments: { thesis: 'nope' },
+    })
+    expect(error !== undefined || (result as unknown as ToolResult).isError === true).toBe(true)
+  })
+
+  it('get_rate_limits and get_power_sites: caveats travel with the payload, and a lab filter narrows', async () => {
+    const limits = (await tool('get_rate_limits', { provider: 'openai' })).structuredContent as {
+      pages: { lab: string }[]
+      caveat: string
+    }
+    expect(limits.pages.every((p) => p.lab === 'openai')).toBe(true)
+    expect(limits.caveat).toContain('Google and Mistral publish no per-model limits')
+    const power = (await tool('get_power_sites', { provider: 'anthropic' })).structuredContent as {
+      sites: { labs: string[] }[]
+      tickers: { labs: string[] }[]
+      caveat: string
+    }
+    expect(power.sites.every((s) => s.labs.includes('anthropic'))).toBe(true)
+    expect(power.tickers.every((t) => t.labs.includes('anthropic'))).toBe(true)
+    expect(power.caveat).toContain('Epoch AI')
+  })
+
+  it('reads each tool through its JSON route’s KV entry: the same name and variant', async () => {
+    const seen = new Map<string, string>()
+    const recording = createTerminalMcpHandler({
+      ...deps,
+      serve: async (name, query, variant) => {
+        seen.set(name, variant ?? '')
+        return deps.serve(name, query, variant)
+      },
+    })
+    const views = {
+      utilization: recipeRunsStamp(db, UTILIZATION_RECIPES),
+      datacenters: recipeRunsStamp(db, VIEW_RECIPES.datacenters),
+      'power-sites': recipeRunsStamp(db, VIEW_RECIPES.powerSites),
+      adoption: recipeRunsStamp(db, VIEW_RECIPES.adoption),
+      limits: recipeRunsStamp(db, VIEW_RECIPES.limits),
+      pay: recipeRunsStamp(db, VIEW_RECIPES.pay),
+      parents: recipeRunsStamp(db, VIEW_RECIPES.parents),
+      reported: reportedStamp(db),
+      theses: Promise.resolve(''),
+    }
+    const tools = {
+      utilization: 'get_utilization',
+      datacenters: 'get_datacenters',
+      'power-sites': 'get_power_sites',
+      adoption: 'get_adoption',
+      limits: 'get_rate_limits',
+      pay: 'get_pay',
+      parents: 'get_parents',
+      reported: 'get_reported',
+      theses: 'get_theses',
+    }
+    for (const [route, name] of Object.entries(tools)) {
+      const response = await recording(rpc('tools/call', { name, arguments: {} }))
+      const body = (await response.json()) as RpcResponse
+      expect((body.result as unknown as ToolResult).isError, name).toBeUndefined()
+      expect(seen.get(route), name).toBe(await views[route as keyof typeof views])
+    }
   })
 })
