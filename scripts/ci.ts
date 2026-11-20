@@ -44,6 +44,7 @@ const cheap = [
   'mcp:check',
   'layers:check',
   'patches:check',
+  'surfaces:check',
 ].map((s) => run(s))
 
 const background = fast ? run('test', '--changed', 'origin/main', '--passWithNoTests') : run('test')
