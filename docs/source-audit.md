@@ -683,3 +683,48 @@ Checked for the guidance check on `/ground-truth`: does a filer's earnings relea
 **Terms.** EDGAR's are the SEC's: fair-access rate and a declared contact. A release is the filer's own text, not a government work. We keep the guided figure, the year, and the one sentence that states it, with a link to the exhibit. The saved release is stored under `guidance/` and is in no export.
 
 **Verdict.** Include, for Meta, Alphabet and Oracle. Amazon's figures are shown with the reason they aren't scored.
+
+## Addendum, 2026-11-20: who powers the lab sites
+
+Checked to see which public companies the labs' sites point to. Epoch AI's site list (already read, CC BY 4.0) says who uses each data center and has an energy-company column that is blank for most sites. This pass fills it for the sites Epoch credits to a lab at #confident or #likely, by hand: one sentence per company, from one page, kept in `layers/terminal/server/curated/power-sites.json`. Nothing here is polled. `bun run power:verify` fetches each cited page and checks the sentence is still on it.
+
+**The rule.** A row needs a filing, a regulator's page or the company's own page that ties the company to the site or to the site's customer. Press coverage doesn't count. Research on 2026-11-19 found 80 candidate rows on 19 sites. 31 rows on 13 sites are kept, each found again on its page by a scripted fetch on 2026-11-20 (01:14Z).
+
+| Publisher | Rows | robots.txt | Terms (read 2026-11-20) | Rights |
+|---|---|---|---|---|
+| SEC EDGAR: filings by TeraWulf, Cipher Digital, WEC Energy Group, DTE Energy, SB Energy and Blue Owl Real Estate Net Lease Trust | 15, and the grid operator for 3 sites | Allows `/Archives/edgar/data` (read 2026-11-19) | SEC fair access | `ours` |
+| American Electric Power, `aep.com` | 1 | None (404) | Legal Notice, undated: "If attribution to AEP is included, limited quotations from the content are hereby permitted." | `ours` |
+| Lancium, `lancium.com` | 1 | Allows the path | Terms of Service (April 18, 2022) cover purchased services only | `ours` |
+| Bloom Energy, `bloomenergy.com` | 1 | Allows the path, crawl delay 10 seconds | States ownership, no restriction | `ours` |
+| GE Vernova, `gevernova.com` | 1 | Allows `/news/` | July 16, 2024. Nothing on automated reading. Any use beyond personal copying "is expressly prohibited" | `restricted` |
+| Crusoe, `crusoe.ai` | 2 | Allows everything | August 12th 2024. Nothing on automated reading. No copying or publishing "without our prior written permission" | `restricted` |
+| Vantage Data Centers, `vantage-dc.com` | 2 | Allows the path | April 24, 2020. No use of the materials "for any purpose without the prior consent of Vantage" | `restricted` |
+| American Transmission Company, `atcllc.com` | 1 | No rules | None found | `restricted` |
+| Microsoft, `blogs.microsoft.com` | 1 | Allows the path | Services Agreement (September 30, 2026) bars "impermissible scraping" | `restricted` |
+| Arizona Public Service, `aps.com` | 1 | Allows the path | August 13, 2019. No copying "by incorporating it in another site" without written permission | `restricted` |
+| Core Scientific, `investors.corescientific.com` | 2 | Allows the path | The parent site's terms bar copying or republishing any material | `restricted` |
+| Ohio Power Siting Board, on `content.govdelivery.com` | 1 | None (404) | None found for the host | `restricted` |
+| Williams, `williams.com` | 1 | Disallows nothing | None found | `restricted` |
+| Louisiana Economic Development, `opportunitylouisiana.gov` | 1 | Allows everything | Privacy notice only | `restricted` |
+
+The exact sentences from each set of terms are in `sources.yaml` under `power_site_sources`.
+
+**Left out, and why.**
+
+- **Press coverage.** Six researched sites end with no row and show as not read yet. Press is the only source we found for Microsoft's Fairwater site near Atlanta and OpenAI's Shackelford and Lordstown sites. Both Colossus sites in Memphis have press and PDFs, and the QTS site xAI uses in Atlanta is under the terms below.
+- **PDFs.** Memphis Light, Gas and Water's xAI updates, Mississippi's order on the Southaven turbines and the Indiana commission's order on Indiana Michigan Power's contract with Amazon (2,250 MW) are primary. The check can't search a PDF, so a row from one couldn't be kept honest.
+- **Hosts that refuse an identified client.** `oracle.com` and `michigan.gov` answered 403. That drops Oracle's pages on Abilene and Project Jupiter and the Michigan commission's release on DTE's contracts (1,383 MW). DTE's own filing (1.4 gigawatts) and Bloom's own page are kept.
+- **Terms that name this use.** QTS's terms say: "You may not use this Site or any QTS Service (as defined below) in connection with the training, development, or operation of any machine learning or artificial intelligence model or tool unless we provide express prior written consent." Entergy's bar anyone who "uses any robot, spider, scraper or other automatic or manual means to access the Sites" and any direct link to a page other than its homepage. Both rows are dropped. Meta's Hyperion site keeps Entergy Louisiana through the state's own release.
+- **One contractor's page.** Mortenson says it built interconnection work "for AEP" at Abilene. That is the contractor's account of its own job, so American Electric Power isn't listed for that site.
+- **Solaris Energy Infrastructure.** Its filings name MZX Tech as the lessee of its Stateline generation and never name xAI or the site. The page tying MZX to Colossus 2 is press, so the row is out.
+
+**Limits.**
+
+- **Tickers and parents are ours.** Each row's company is matched to its listed parent by us (Indiana Michigan Power to AEP, We Energies to WEC). The cited page states the match for AEP, and for the companies whose own filing is the source. The rest weren't checked against SEC's ticker file in this pass.
+- **A row doesn't size anything.** It ties a company to a site. Megawatts appear only where the page states them, with what they measure, and no figure is summed per company.
+- **The table goes stale by hand.** Nothing reruns the check on a schedule, and it isn't part of `bun run ci` because it reads the network.
+- **No bytes are saved.** The cited pages aren't stored in R2, which every polled source's are.
+
+Interpretation, marked as such: the `restricted` rows rest on the same position as the 2026-11-11 addendum. A public page, a fact the publisher states about itself, and one attributed sentence shown as its basis. Six of those publishers' terms bar copying or publishing site content in general. None has given permission and none has objected, and no lawyer has reviewed it.
+
+**Verdict: include the fourteen publishers under `power_site_sources`. Cut press reports (`power-site-press`) and the pages we can't re-read or whose terms name this use (`power-site-unread`).** The owner asked for the primary-source cut to ship on 2026-11-19.

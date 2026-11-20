@@ -119,6 +119,8 @@ describe('readSourceRegistry', () => {
       'vercel-ai-gateway',
       'inferencex',
       'gpu-stock-status',
+      'power-site-press',
+      'power-site-unread',
     ])
   })
 
