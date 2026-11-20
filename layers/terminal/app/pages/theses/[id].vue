@@ -77,7 +77,7 @@ useSeo({
       >
         Read the journal page on GitHub
       </UButton>
-      <TerminalSubscribeForm />
+      <TerminalSubscribeLink />
     </template>
 
     <template v-if="thesis && data">
@@ -85,6 +85,7 @@ useSeo({
         <ThesisClaim v-for="claim in thesis.claims" :key="claim.id" :claim="claim" />
       </section>
 
+      <TerminalSubscribeForm />
       <ThesisFooter :caveat="data.caveat" />
     </template>
   </TerminalPage>

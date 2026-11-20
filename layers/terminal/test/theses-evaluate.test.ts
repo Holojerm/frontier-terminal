@@ -225,5 +225,8 @@ describe('evaluateTheses', () => {
     expect(premium.status_since).toBe(NOW.toISOString())
     expect(premium.latest?.date).toBe(NEWEST)
     expect(premium.reason).toMatch(/against a floor of 1\.30× and OpenAI's/)
+    // The level its chart draws; an unresolved claim has none to draw.
+    expect(premium.kill_line).toBe(1.3)
+    expect(thesis.claims[2]!.kill_line).toBeNull()
   })
 })

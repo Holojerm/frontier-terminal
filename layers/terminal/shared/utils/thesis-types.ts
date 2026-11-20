@@ -356,6 +356,12 @@ export interface ClaimView {
   /** When the claim entered its current status; null before the first evaluation. */
   status_since: string | null
   reason: string
+  /**
+   * Measured claims: the level the newest reading would cross to count
+   * against the claim (a floor, a ceiling, or a drop from today's high);
+   * null for a judged claim, or before the rule has enough history.
+   */
+  kill_line?: number | null
   /** The newest reading, with the detail the signal recorded beside it. */
   latest: (ReadingPoint & { detail: unknown; source_url: string; fetched_at: string }) | null
   /** Oldest first, newest last — up to the history the rule reads. */

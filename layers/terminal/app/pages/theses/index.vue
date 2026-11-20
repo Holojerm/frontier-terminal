@@ -44,7 +44,7 @@ useSeo({
     error-body="We won’t show an old status in its place. Try reloading in a minute."
   >
     <template #header>
-      <TerminalSubscribeForm />
+      <TerminalSubscribeLink />
     </template>
 
     <template v-if="theses">
@@ -57,6 +57,7 @@ useSeo({
         <ThesisCard v-for="thesis in theses.theses" :key="thesis.id" :thesis="thesis" />
       </div>
 
+      <TerminalSubscribeForm />
       <ThesisFooter :caveat="theses.caveat" />
     </template>
   </TerminalPage>

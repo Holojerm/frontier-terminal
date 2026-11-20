@@ -46,6 +46,7 @@ const columns = computed<TableColumn[]>(() => [
     :rows="watchlist.first(incidents.providers, (p) => p.provider)"
     :row-key="(p) => p.provider"
     :gap="(p) => p.feed !== 'ok'"
+    stack
   >
     <template #cell-last="{ row: p }">
       <span class="text-highlighted">{{ p.last_window }}</span>

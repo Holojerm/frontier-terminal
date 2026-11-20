@@ -141,6 +141,11 @@ describe('drawdown from high', () => {
     expect(at(75)).toBe('broken')
   })
 
+  it('reports its kill line as the high less the drop, for the chart', () => {
+    const e = evaluateClaim(claim(rule), daily('2026-10-08', [...Array(40).fill(100), 90]), fmt)
+    expect(e.kill_line).toBe(75)
+  })
+
   it('forgets a high older than the window', () => {
     const readings = [...daily('2026-06-01', [500]), ...daily('2026-10-08', Array(60).fill(100))]
     expect(evaluateClaim(claim(rule), readings, fmt).status).toBe('holding')

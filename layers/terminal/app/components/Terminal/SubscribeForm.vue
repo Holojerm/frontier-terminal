@@ -38,8 +38,9 @@ async function submit() {
 <template>
   <section
     v-if="enabled"
+    id="digest"
     aria-labelledby="subscribe-heading"
-    class="max-w-3xl space-y-2 rounded border border-default px-3 py-3 print:hidden"
+    class="max-w-3xl scroll-mt-24 space-y-2 rounded border border-default px-3 py-3 print:hidden"
   >
     <h2 id="subscribe-heading" class="text-sm text-highlighted">Get the weekly thesis digest</h2>
     <p class="text-xs text-muted">

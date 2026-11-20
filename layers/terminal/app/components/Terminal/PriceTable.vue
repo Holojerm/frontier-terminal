@@ -52,9 +52,9 @@ const rows = computed(() =>
 const hidden = computed(() => props.prices.rows.length - rows.value.length)
 
 const COLUMNS: TableColumn[] = [
-  { key: 'provider', label: 'Lab', class: 'whitespace-nowrap text-muted' },
+  { key: 'provider', label: 'Lab', class: 'whitespace-nowrap text-muted', stack: 'inline' },
   { key: 'model_slug', label: 'Model' },
-  { key: 'tier', label: 'Tier', class: 'text-muted' },
+  { key: 'tier', label: 'Tier', class: 'text-muted', stack: 'inline' },
   { key: 'context_window', label: 'Context', class: 'text-muted' },
   { key: 'input_per_mtok', label: 'In $/Mtok', numeric: true },
   { key: 'cached_input_per_mtok', label: 'Cached in', numeric: true, class: 'text-muted' },
@@ -132,6 +132,7 @@ function deltaText(row: PriceRowView): string | null {
       :edge="false"
       align="top"
       :flow="flow"
+      stack
     >
       <template #cell-provider="{ row: r }">{{ labName(r.provider) }}</template>
       <template #cell-tier="{ row: r }">
