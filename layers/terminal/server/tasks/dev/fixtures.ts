@@ -4,10 +4,8 @@
 // answers each source from fixtures/ by URL, so every page renders
 // real-shaped rows offline and the same way every time.
 //
-// Two callers: `bun run dev:poll --fixtures` on a running dev server, and the
-// browser suites' global setup, which runs it before the axe sweep so the
-// sweep reads tables and footers rather than empty states. (An empty store hid
-// 126 target-size failures there.)
+// Called by `bun run dev:poll --fixtures` on a running dev server. The browser
+// suites run the same fill against the built Worker's store (test/server/fill.ts).
 //
 // Never scheduled, and a no-op outside `nuxt dev`: /_nitro/tasks is only served
 // in dev, and the body reads fixtures/ from the working directory, which a
