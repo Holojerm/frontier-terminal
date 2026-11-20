@@ -24,7 +24,17 @@ import type { LabId } from '../../shared/utils/terminal-types'
 import * as tables from '#server/db/schema'
 import type { PipelineDb } from '../pipeline/store'
 import { PROVIDER_ORDER } from './terminal-sources'
-import { EPOCH_DATA_CENTERS } from '../theses/recipes/epoch-data-centers'
+import type {
+  CuratedPowerSites,
+  PowerSite,
+  PowerSitesData,
+  PowerTicker,
+} from '../../shared/utils/power-sites'
+import curated from '../curated/power-sites.json'
+import {
+  EPOCH_DATA_CENTERS,
+  EPOCH_DATA_CENTER_TIMELINES,
+} from '../theses/recipes/epoch-data-centers'
 import { GITHUB_AGENT_RECIPES } from '../theses/recipes/github-agent-prs'
 import { INVESTEE_RECIPES } from '../theses/recipes/investee-facts'
 import { NPM_LAB_RECIPES } from '../theses/recipes/npm-downloads'
@@ -464,6 +474,107 @@ export async function queryDataCenters(db: PipelineDb): Promise<DataCentersData>
   }
 }
 
+// ── Who powers the lab sites (Epoch AI's sites, our hand-read companies) ────
+
+export const POWER_SITES_CAVEAT =
+  'The sites, their power and their users are Epoch AI’s estimates (CC BY 4.0). The companies are ours, each read by hand from the one page cited beside it. A site’s power counts in full for every company tied to it. It is the size of the site, never the power that company sells, and the companies don’t add up.'
+
+/** The labs Epoch names as users at #confident or #likely. */
+function attributedLabs(users: string): LabId[] {
+  const labs = users
+    .split(',')
+    .filter((u) => ATTRIBUTED.test(u))
+    .map((u) => LAB_OF_NAME[u.replace(/#\w+/g, '').trim().toLowerCase().replace(/\s+/g, '-')])
+  return [...new Set(labs.filter((l): l is LabId => Boolean(l)))]
+}
+
+export async function queryPowerSites(
+  db: PipelineDb,
+  table: CuratedPowerSites = curated as CuratedPowerSites,
+): Promise<PowerSitesData> {
+  const read = new Map(table.sites.map((s) => [s.site, s]))
+  const rows = (await rowsOf(db, [EPOCH_DATA_CENTERS.id, EPOCH_DATA_CENTER_TIMELINES.id])).filter(
+    (r) => r.value !== null,
+  )
+  const current = rows.filter((r) => r.recipe_id === EPOCH_DATA_CENTERS.id)
+  const snapshot = current.reduce((m, r) => (r.date > m ? r.date : m), '')
+  // Epoch's furthest dated estimate per site. One dated after the snapshot is a projection.
+  const furthest = new Map<string, Row>()
+  for (const r of rows) {
+    if (r.recipe_id !== EPOCH_DATA_CENTER_TIMELINES.id) continue
+    const f = furthest.get(r.key)
+    if (!f || r.date > f.date) furthest.set(r.key, r)
+  }
+
+  const sites: PowerSite[] = []
+  const uncovered: PowerSitesData['uncovered'] = []
+  for (const r of current.filter((c) => c.date === snapshot)) {
+    const p = payloadOf(r) as { owner?: string; users?: string; country?: string }
+    const labs = attributedLabs(p.users ?? '')
+    if (labs.length === 0) continue
+    const mine = read.get(r.key)
+    if (!mine || mine.links.length === 0) {
+      uncovered.push({ name: r.key, labs, mw_now: r.value! })
+      continue
+    }
+    const plan = furthest.get(r.key)
+    const projected = plan && plan.date > snapshot ? plan : null
+    sites.push({
+      name: r.key,
+      labs,
+      owner: p.owner ?? '',
+      users: p.users ?? '',
+      country: p.country ?? '',
+      mw_now: r.value!,
+      mw_planned: projected?.value ?? null,
+      planned_date: projected?.date ?? null,
+      grid: mine.grid,
+      links: mine.links,
+    })
+  }
+  sites.sort((a, b) => b.mw_now - a.mw_now || (b.mw_planned ?? 0) - (a.mw_planned ?? 0))
+
+  const tickers = new Map<string, PowerTicker>()
+  for (const s of sites) {
+    // A site counts once per ticker, however many of its links name the company.
+    const seen = new Set<string>()
+    for (const l of s.links) {
+      if (!l.ticker) continue
+      const t = tickers.get(l.ticker) ?? {
+        ticker: l.ticker,
+        company: l.parent ?? l.company,
+        roles: [],
+        sites: [],
+        labs: [],
+        mw_now: 0,
+        mw_planned: 0,
+      }
+      if (!t.roles.includes(l.role)) t.roles.push(l.role)
+      if (!seen.has(l.ticker)) {
+        seen.add(l.ticker)
+        t.sites.push(s.name)
+        t.labs = [...new Set([...t.labs, ...s.labs])]
+        t.mw_now += s.mw_now
+        t.mw_planned += s.mw_planned ?? s.mw_now
+      }
+      tickers.set(l.ticker, t)
+    }
+  }
+
+  const newest = newestRow(current)
+  return {
+    as_of: asOf(rows),
+    snapshot: snapshot || null,
+    sites,
+    tickers: [...tickers.values()].sort(
+      (a, b) => b.mw_planned - a.mw_planned || a.ticker.localeCompare(b.ticker),
+    ),
+    uncovered: uncovered.sort((a, b) => b.mw_now - a.mw_now),
+    source: newest ? cite(EPOCH_DATA_CENTERS.id, 'Epoch AI, AI data centers', newest) : null,
+    caveat: POWER_SITES_CAVEAT,
+  }
+}
+
 /** Every recipe the views read, for the cache key. */
 export const VIEW_RECIPES = {
   adoption: [RAMP_AI_INDEX, ...NPM_LAB_RECIPES, ...PYPI_LAB_RECIPES, ...GITHUB_AGENT_RECIPES].map(
@@ -473,4 +584,5 @@ export const VIEW_RECIPES = {
   pay: PAY_RECIPES.map((r) => r.id),
   parents: INVESTEE_RECIPES.map((r) => r.id),
   datacenters: [EPOCH_DATA_CENTERS.id],
+  powerSites: [EPOCH_DATA_CENTERS.id, EPOCH_DATA_CENTER_TIMELINES.id],
 } as const

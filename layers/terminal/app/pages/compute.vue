@@ -7,6 +7,7 @@
 // page rather than in a box.
 
 import { count } from '../../shared/utils/terminal-format'
+import type { PowerSitesData } from '../../shared/utils/power-sites'
 import type { DataCentersData, UtilizationData } from '../../shared/utils/recipe-views'
 import type { GpuPricesData } from '../../shared/utils/terminal-types'
 import type { TableColumn } from '../types/terminal-ui'
@@ -21,11 +22,13 @@ definePageMeta({
   },
 })
 
-const [{ data: gpu, error }, { data: power }, { data: utilization }] = await Promise.all([
-  useFetch<GpuPricesData>('/api/gpu-prices'),
-  useFetch<DataCentersData>('/api/datacenters'),
-  useFetch<UtilizationData>('/api/utilization'),
-])
+const [{ data: gpu, error }, { data: power }, { data: utilization }, { data: suppliers }] =
+  await Promise.all([
+    useFetch<GpuPricesData>('/api/gpu-prices'),
+    useFetch<DataCentersData>('/api/datacenters'),
+    useFetch<UtilizationData>('/api/utilization'),
+    useFetch<PowerSitesData>('/api/power-sites'),
+  ])
 
 useSeo({
   title: 'GPU rental prices, utilization bounds, and AI data-center power',
@@ -105,6 +108,15 @@ const sites = computed(() =>
         note="Epoch AI’s estimate, credited to each lab Epoch names as a user at #confident or #likely."
       >
         <TerminalDataCenterPower :data="power" />
+      </TerminalPanel>
+
+      <TerminalPanel
+        v-if="suppliers?.sites.length"
+        id="suppliers"
+        title="Who powers the lab sites"
+        note="The utility, generator, equipment maker or site host we read for each site Epoch credits to a lab, with the page it comes from. Planned is Epoch’s furthest estimate."
+      >
+        <TerminalPowerSites :data="suppliers" />
       </TerminalPanel>
 
       <TerminalPanel
