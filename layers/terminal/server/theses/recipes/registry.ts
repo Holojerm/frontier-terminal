@@ -3,6 +3,8 @@
 
 import { CLOUDFLARE_CHANGELOG } from './cloudflare-changelog'
 import type { Recipe } from './contract'
+import { EARNINGS_RELEASE_RECIPES } from './earnings-releases'
+import { EPOCH_CHIP_TYPES, EPOCH_CHIP_USERS } from './epoch-chip-users'
 import { EPOCH_DATA_CENTERS, EPOCH_DATA_CENTER_TIMELINES } from './epoch-data-centers'
 import { GITHUB_AGENT_RECIPES } from './github-agent-prs'
 import { GPU_AZURE, GPU_ORACLE } from './gpu-apis'
@@ -17,6 +19,7 @@ import {
 } from './gpu-pages'
 import { GREENHOUSE_CLOUDFLARE } from './greenhouse-departments'
 import { INVESTEE_RECIPES } from './investee-facts'
+import { MLPERF_INFERENCE } from './mlperf-inference'
 import { NEWSROOM_RECIPES } from './newsrooms'
 import { NPM_LAB_RECIPES, NPM_WRANGLER } from './npm-downloads'
 import { PAY_RECIPES } from './pay-bands'
@@ -65,4 +68,10 @@ export const RECIPES: readonly Recipe[] = [
   ...PAY_RECIPES,
   // The labs' newsroom feeds the track record reads, audited 2026-11-04.
   ...NEWSROOM_RECIPES,
+  // What the utilization read divides: stated token volume, benchmark
+  // throughput, estimated compute and CoreWeave's active power, audited 2026-11-19.
+  ...EARNINGS_RELEASE_RECIPES,
+  MLPERF_INFERENCE,
+  EPOCH_CHIP_USERS,
+  EPOCH_CHIP_TYPES,
 ]

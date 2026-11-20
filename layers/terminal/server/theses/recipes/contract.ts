@@ -44,7 +44,9 @@ export interface Recipe {
    * For a source found through another: `url` is fetched first and this
    * names the document to read from its body (an EDGAR submissions feed →
    * the newest filing). Everything else (hash, raw bytes, extract, the
-   * stored source URL) is about the followed document.
+   * stored source URL) is about the followed document. `newest` is the
+   * newest stored date, as `url` gets it, for a source that reads one
+   * document per run and moves on from the last one stored.
    */
-  follow?(body: string): string
+  follow?(body: string, ctx: { newest: string | null }): string
 }

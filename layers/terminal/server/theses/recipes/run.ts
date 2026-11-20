@@ -58,11 +58,12 @@ async function runOne(
   recipe: Recipe,
   deps: { raw: RawStore; fetcher: SourceFetcher; now: Date },
 ): Promise<RecipeRunResult & { url: string; hash: string | null }> {
-  let url = recipe.url({ now: deps.now, newest: await newestDate(db, recipe.id) })
+  const newest = await newestDate(db, recipe.id)
+  let url = recipe.url({ now: deps.now, newest })
   let fetched = await deps.fetcher({ source_id: recipe.id, url, ext: recipe.ext })
   if (fetched.ok && recipe.follow) {
     try {
-      url = recipe.follow(fetched.text)
+      url = recipe.follow(fetched.text, { newest })
     } catch (error) {
       return {
         recipe_id: recipe.id,

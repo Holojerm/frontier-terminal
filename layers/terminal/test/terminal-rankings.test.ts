@@ -283,6 +283,12 @@ describe('queryRankings', () => {
       'alphabet-anthropic-stake',
       'anthropic-newsroom',
       'xai-newsroom',
+      'ornn-compute-index',
+      'aws-capacity-blocks',
+      'gpu-spot-history',
+      'vercel-ai-gateway',
+      'inferencex',
+      'gpu-stock-status',
     ])
     expect(coverage.cuts.find((c) => c.id === 'artificial-analysis')!.reason).toContain(
       '"Internal use only; no redistribution."',

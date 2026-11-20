@@ -55,7 +55,7 @@ export function lambdaRows(body: string): GpuRow[] {
   })
 }
 
-/** CoreWeave: one list item per instance, priced per instance-hour with its GPU count. */
+/** CoreWeave: one list item per instance, priced per instance-hour with its GPU count, and its spot price beside it. */
 export function coreweaveRows(body: string): GpuRow[] {
   const html = contentOf(body)
   const items = html.split(/<div role="listitem" class="table-row-v2 /).slice(1)
@@ -70,6 +70,8 @@ export function coreweaveRows(body: string): GpuRow[] {
     const gpus = Number(item.match(/table-meta-value">\s*(\d+)\s*<\/div>\s*<div>GPU Count/)?.[1])
     if (price === null) continue
     if (!gpus) throw new Error(`${label}: no GPU count`)
+    // "N/A" where CoreWeave sells no spot capacity for the instance.
+    const spot = dollars(item.match(/Spot Price:\s*<span class="item-value">([^<]*)</)?.[1] ?? '')
     rows.push({
       ...g,
       label,
@@ -78,6 +80,7 @@ export function coreweaveRows(body: string): GpuRow[] {
       instance_usd_per_hour: price,
       region: null,
       config: null,
+      spot_usd_per_gpu_hour: spot === null ? null : spot / gpus,
     })
   }
   return need(rows.length ? rows : null, 'CoreWeave GPU instance list')

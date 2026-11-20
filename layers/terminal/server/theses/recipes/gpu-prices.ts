@@ -40,6 +40,14 @@ export const gpuPricePayload = z.object({
   region: z.string().nullable(),
   /** Anything else that tells two rows of one provider apart (a SKU, a tab). */
   config: z.string().nullable(),
+  /**
+   * The spot (interruptible) price the same page prints for this row, USD per
+   * GPU-hour: the lowest and highest when the page prints it more than once.
+   * Null where the page prints none, and on rows stored before 2026-11-20.
+   * Never part of `value` or the medians, which are on-demand only.
+   */
+  spot_low_usd_per_gpu_hour: z.number().positive().nullable().default(null),
+  spot_high_usd_per_gpu_hour: z.number().positive().nullable().default(null),
 })
 export type GpuPricePayload = z.infer<typeof gpuPricePayload>
 
@@ -60,7 +68,11 @@ export interface GpuRow {
   instance_usd_per_hour: number | null
   region: string | null
   config: string | null
+  /** The row's spot price per GPU-hour, where the page prints one. */
+  spot_usd_per_gpu_hour?: number | null
 }
+
+const round4 = (n: number) => Math.round(n * 10_000) / 10_000
 
 const slug = (s: string) =>
   s
@@ -71,14 +83,16 @@ const slug = (s: string) =>
 /**
  * Rows to observations, validated against the contract. Identical rows (a
  * page that renders one table twice) collapse; two rows that share a key but
- * disagree on price fail the run rather than store either.
+ * disagree on price fail the run rather than store either. Spot prices move
+ * between two renders of one page, so copies of a row keep the lowest and the
+ * highest spot price printed.
  */
 export function gpuObservations(
   provider: CompanyId,
   rows: readonly GpuRow[],
   date: string,
 ): Observation[] {
-  const byKey = new Map<string, Observation>()
+  const byKey = new Map<string, z.infer<typeof gpuPriceObservation>>()
   for (const r of rows) {
     const key = [r.gpu, r.form_factor, r.label, r.gpus_per_instance, r.region, r.config]
       .filter((p) => p !== null)
@@ -87,7 +101,7 @@ export function gpuObservations(
     const obs = gpuPriceObservation.parse({
       key,
       date,
-      value: Math.round(r.usd_per_gpu_hour * 10_000) / 10_000,
+      value: round4(r.usd_per_gpu_hour),
       payload: {
         provider,
         gpu: r.gpu,
@@ -98,11 +112,23 @@ export function gpuObservations(
         instance_usd_per_hour: r.instance_usd_per_hour,
         region: r.region,
         config: r.config,
+        spot_low_usd_per_gpu_hour: null,
+        spot_high_usd_per_gpu_hour: null,
       },
     })
     const held = byKey.get(key)
     if (held && held.value !== obs.value) {
       throw new Error(`${key} is priced twice: ${held.value} and ${obs.value}`)
+    }
+    const spots = [
+      held?.payload.spot_low_usd_per_gpu_hour,
+      held?.payload.spot_high_usd_per_gpu_hour,
+      r.spot_usd_per_gpu_hour == null ? null : round4(r.spot_usd_per_gpu_hour),
+    ].filter((n): n is number => typeof n === 'number')
+    if (spots.some((n) => !(n > 0))) throw new Error(`${key}: spot price is not positive`)
+    if (spots.length) {
+      obs.payload.spot_low_usd_per_gpu_hour = Math.min(...spots)
+      obs.payload.spot_high_usd_per_gpu_hour = Math.max(...spots)
     }
     byKey.set(key, obs)
   }
