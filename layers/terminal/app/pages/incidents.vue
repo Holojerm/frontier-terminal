@@ -1,10 +1,11 @@
 <script setup lang="ts">
 // Every status-page incident in the last 90 days, newest first, each linked
 // to the vendor's own incident page and stamped with the fetch it was read
-// from, under the per-lab summary the overview leads with.
+// from, under the per-lab summary the overview leads with and our own hourly
+// latency probes: what each vendor posted beside what we measured.
 
 import { labName } from '../../shared/utils/terminal-labs'
-import type { IncidentView, IncidentsData } from '../../shared/utils/terminal-types'
+import type { IncidentView, IncidentsData, ProbesData } from '../../shared/utils/terminal-types'
 import type { LimitsData } from '../../shared/utils/recipe-views'
 import type { TableColumn } from '../types/terminal-ui'
 
@@ -14,13 +15,14 @@ definePageMeta({
     priority: '0.8',
     title: 'Incidents',
     summary:
-      'Status-page incidents posted by OpenAI, Anthropic, and Google (Gemini / Vertex AI only) over the last 90 days. Each shows impact, status, components, start, and resolution, linked to the vendor’s incident page.',
+      'Status-page incidents posted by OpenAI, Anthropic, and Google (Gemini / Vertex AI only) over the last 90 days. Each shows impact, status, components, start, and resolution, linked to the vendor’s incident page. The page also shows our own hourly latency probes of each lab’s flagship model.',
   },
 })
 
-const [{ data: incidents, error }, { data: limits }] = await Promise.all([
+const [{ data: incidents, error }, { data: limits }, { data: probes }] = await Promise.all([
   useFetch<IncidentsData>('/api/incidents'),
   useFetch<LimitsData>('/api/limits'),
+  useFetch<ProbesData>('/api/probes'),
 ])
 
 const site = useSiteContext()
@@ -100,6 +102,34 @@ const columns: TableColumn[] = [
           <TerminalLimitsSummary :limits="limits" />
         </TerminalPanel>
       </div>
+
+      <TerminalPanel
+        v-if="probes"
+        id="probes"
+        title="Measured strain"
+        :note="`One timed request an hour to each lab’s flagship model. Working hours against night, over the last ${probes.window_days} complete days.`"
+        flush
+      >
+        <TerminalProbeStrain :probes="probes" />
+        <template #foot>
+          <p>
+            We measure this ourselves<template v-if="probes.since">
+              and have since
+              <time :datetime="probes.since">{{ probes.since }}</time></template
+            >. It’s a reading of strain from one hourly sample. It isn’t utilization, and we haven’t
+            shown that it predicts anything. Every day’s reading is at
+            <NuxtLink to="/api/probes" external class="font-mono underline underline-offset-2"
+              >/api/probes</NuxtLink
+            >.
+          </p>
+          <TerminalSources
+            :caveats="[
+              { text: probes.method, label: 'method' },
+              { text: probes.caveat, label: 'limits of this reading' },
+            ]"
+          />
+        </template>
+      </TerminalPanel>
 
       <TerminalGap
         v-if="incidents.incidents.length === 0"
