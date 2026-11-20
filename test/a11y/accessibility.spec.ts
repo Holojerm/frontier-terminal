@@ -52,6 +52,7 @@ const ROUTES = [
   '/releases',
   '/rankings',
   '/compute',
+  '/dependencies',
   '/alerts',
   // Filtered: the selects show a value and the "Clear filters" link and filtered gap render.
   '/alerts?lab=anthropic&topic=pricing&tier=critical',

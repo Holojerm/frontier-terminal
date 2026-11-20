@@ -57,6 +57,7 @@ import { INCIDENT_HISTORY_DAYS, INCIDENT_WINDOW_DAYS, queryIncidents } from './t
 import { MOVEMENT_WINDOW_HOURS, queryAlert, queryAlerts, queryOverview } from './terminal-alerts'
 import { queryCoverage, recipeRunsStamp, type QueryContext } from './terminal-db'
 import { queryPriceHistory, queryPrices, queryReleases } from './terminal-prices'
+import { queryDependencies } from './terminal-dependencies'
 import { queryDisclosures } from './terminal-disclosures'
 import { gpuRunsStamp, queryGpuPrices } from './terminal-gpu'
 import { SHARE_WINDOW_DAYS, queryRankings } from './terminal-rankings'
@@ -633,6 +634,41 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
           ),
         })
       }),
+  )
+
+  server.registerTool(
+    'get_dependencies',
+    {
+      title: 'Dependency graph: who buys from and funds whom (filed)',
+      description:
+        'The labs and the public companies around them as a graph, from SEC filings only. nodes are companies: the five filers whose XBRL we read (Microsoft, Amazon, Alphabet, Meta, Oracle), ' +
+        'each lab a filing names, and any other named counterparty (kind venture). A node carries two sizes from its own filing, each null where none is filed: contracts (a filer’s remaining ' +
+        'performance obligations, which customers owe it; a lab’s aggregate contractual obligations from its prospectus, which it owes suppliers) and capex (the newest quarter). ' +
+        'edges are directed. kind buys runs from the customer to the supplier (backlog, revenue, receivables the filer tags on the customer); kind funds runs from the investor to the lab ' +
+        '(funding commitments, credit lines, stakes, marks). reporter is the node whose filing states every figure on the edge, so a figure is the filer’s number, never the lab’s. ' +
+        'facts lists every figure with its label, value, unit, period, form, filing date and filing_url; weight is the first dollar figure, which the page uses for line width. ' +
+        'Edges carry different kinds of figure (a backlog balance, an amount added in one quarter, a funding commitment), so do not sum weights. gaps lists what no filing gives: a lab with ' +
+        'no filing of its own, obligations with no named supplier, filers and labs with no edge, and suppliers we don’t read (chips, power). unplaced lists figures tagged on a lab that are ' +
+        'not on an edge. No press-reported deal is included. No as_of: use get_exposure for point-in-time series. Optional node filter keeps the edges touching one node id. ' +
+        PROVENANCE,
+      inputSchema: z.object({
+        node: z
+          .string()
+          .max(40)
+          .optional()
+          .describe(
+            'A node id: a lab id (openai, anthropic) or a ticker (MSFT, AMZN, GOOGL, META, ORCL).',
+          ),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ node }) => {
+      const data = await deps.serve('dependencies', (ctx) => queryDependencies(deps.db, ctx))
+      if (!node) return json(data)
+      const edges = data.edges.filter((e) => e.from === node || e.to === node)
+      const ids = new Set([node, ...edges.flatMap((e) => [e.from, e.to])])
+      return json({ ...data, edges, nodes: data.nodes.filter((n) => ids.has(n.id)) })
+    },
   )
 
   server.registerTool(
