@@ -1510,6 +1510,10 @@ recipe_sources:
       Priced per 8-GPU instance ("On-Demand Price: $49.24 / Hour") and
       divided by the printed GPU count. The page renders its GPU list twice;
       identical rows collapse, and two rows that disagree fail the run.
+      From 2026-11-20 the spot price printed beside it ("Spot Price: $19.71
+      / Hour") is kept on the same row and never enters the median. The two
+      renders print different spot prices ($19.51 and $19.71 at the audit),
+      so the row keeps the lowest and the highest.
   gpu-nebius:
     company: nebius
     url: https://nebius.com/prices
@@ -1591,8 +1595,11 @@ recipe_sources:
       prices.azure.com has no robots.txt (404).
     rights: ours
     caveats: >-
-      Linux pay-as-you-go only: Windows, Spot and Low Priority meters are
-      skipped. The ND H100 v5 family is the 8-GPU SXM board; its price is
+      Linux pay-as-you-go only: Windows and Low Priority meters are skipped.
+      From 2026-11-20 each size's Spot meter is kept beside the pay-as-you-go
+      row for its region and never enters the median. The 8-GPU H100 sizes'
+      Spot price was 18.48% of pay-as-you-go in every region at the audit,
+      and the meters carry month-start effective dates. The ND H100 v5 family is the 8-GPU SXM board; its price is
       divided by 8. The NC H100 v5 families are H100 NVL cards, kept and not
       counted. GPUs per VM come from Azure's VM size pages
       (AZURE_GPUS_PER_VM), not the API; an unknown size fails the run. Azure
@@ -2186,6 +2193,117 @@ recipe_sources:
     caveats: >-
       Recent posts are stamped close to 12:00 UTC, so read a Mistral post's
       time as a date. Posts from 2026-08-01 on are kept.
+  sec-googl-api-tokens:
+    company: google
+    url: https://efts.sec.gov/LATEST/search-index?q=%22tokens%20per%20minute%22&ciks=0001652044&forms=8-K
+    format: JSON, EDGAR full-text search, then the earnings release it names (HTML, the EX-99.1 of an Item 2.02 8-K)
+    verdict: include
+    terms: >-
+      SEC fair-access policy: a User-Agent naming a contact, under 10
+      requests a second (layers/terminal/server/pipeline/fetch.ts).
+      www.sec.gov/robots.txt allows /Archives/edgar/data;
+      efts.sec.gov/robots.txt answers 403. Taken: one figure and the
+      sentence that states it, from one release per run, every 6 hours. Read
+      2026-11-19.
+    rights: ours
+    caveats: >-
+      Alphabet states the figure in its release's prose and tags it nowhere.
+      The wording changes each quarter: "now process 7 billion tokens per
+      minute" (Q3 2025), "over 10 billion" (Q4 2025), "more than 16 billion"
+      (Q1 2026), "22 billion API tokens per minute" (Q2 2026), "nearly 32
+      billion" (Q3 2026). The qualifier and the sentence are stored with the
+      number. It counts tokens through Google's first-party model APIs, input
+      and output together, and nothing served inside Google's own products. A
+      quarter whose release drops the phrase adds no row, and the series ends
+      at the last quarter that printed it. A run reads one release, oldest
+      first, so the history fills over the first few runs. An 8-K that is not
+      an Item 2.02 earnings release is not read (one from 2026-06-04 uses the
+      phrase).
+  sec-crwv-active-power:
+    company: coreweave
+    url: https://efts.sec.gov/LATEST/search-index?q=%22active%20power%22&ciks=0001769628&forms=8-K
+    format: JSON, EDGAR full-text search, then the earnings release it names (HTML, the EX-99.1 of an Item 2.02 8-K)
+    verdict: include
+    terms: >-
+      SEC fair-access policy: a User-Agent naming a contact, under 10
+      requests a second (layers/terminal/server/pipeline/fetch.ts).
+      www.sec.gov/robots.txt allows /Archives/edgar/data;
+      efts.sec.gov/robots.txt answers 403. Taken: one figure and the
+      sentence that states it, from one release per run, every 6 hours. Read
+      2026-11-19.
+    rights: ours
+    caveats: >-
+      CoreWeave states active power in a sentence and rounds it: "approximately
+      420 MW" (Q1 2025), "approximately 470 MW", "approximately 590 MW", "more
+      than 850 MW", "Surpassed 1 GW", "to reach 1.5 GW", "to reach over 1.7
+      GW" (Q3 2026). The total is the figure after "to reach" or "bringing
+      the total to", else the one in front of "of active power". Guidance
+      sentences (a year-end target, "more than 8 GW by 2030") are skipped. The
+      10-Q tags only undelivered power at leased sites, so the release is the
+      one place the total is stated. A sentence the reader cannot place fails
+      the run.
+  mlperf-inference-datacenter:
+    company: frontier-labs
+    url: https://raw.githubusercontent.com/mlcommons/inference_results_v6.0/main/summary_results.json
+    format: JSON, one object per submitted result (520 at the audit)
+    verdict: include
+    terms: >-
+      The results repository is under the Apache License 2.0
+      (mlcommons/inference_results_v6.0, LICENSE.md). The MLPerf Results
+      Messaging Guidelines (mlcommons/policies) apply to every use: "Any use
+      of or reference to an MLPerf benchmark result must also include the
+      following in a footnote", and "Secondary and derived metrics must not
+      be presented as official or verified MLPerf metrics. You must follow
+      the rules above for citing an unverified score." raw.githubusercontent.com
+      has no robots.txt (404). Taken: closed-division, available, Server
+      results in tokens per second, every 6 hours. Read 2026-11-19.
+    rights: upstream
+    license: Apache License 2.0 (github.com/mlcommons/inference_results_v6.0, read 2026-11-19)
+    caveats: >-
+      Tokens per second per accelerator is our division of a system's result
+      by its accelerator count. MLCommons has not verified that figure, and
+      every page that shows it carries "Result not verified by MLCommons
+      Association." with the result IDs. The benchmarks run open-weight
+      models on submitters' hardware (NVIDIA, AMD, Intel). No closed lab's
+      model and no TPU is measured. Per H100-equivalent, results span 49
+      tokens a second (Llama 3.1 405B) to 7,326 (Llama 3.1 8B), which is why
+      anything built on them is a range. The round is in the URL, so a new
+      round is a new URL changed by hand.
+  epoch-chip-users:
+    company: frontier-labs
+    url: https://epoch.ai/data/ai_chip_users_intermediates_by_lab.csv
+    format: CSV, one row per developer, year and model step (74 at the audit)
+    verdict: include
+    terms: >-
+      "Epoch AI’s data is free to use, distribute, and reproduce provided
+      the source and authors are credited under the Creative Commons
+      Attribution license" (CC BY 4.0, epoch.ai/data/ai-chip-users).
+      robots.txt allows /data/. Read 2026-11-19.
+    rights: upstream
+    caveats: >-
+      Year-end estimates only; the newest is the end of 2025. Each value is
+      the median of Epoch's Monte Carlo model with its 5th and 95th
+      percentiles. Epoch: "Many of our developer estimates are substantially
+      uncertain, especially for Meta Superintelligence Labs and Google
+      DeepMind." Google's "Operational fleet" row is every Google-owned chip
+      Epoch counts as running, for training, research, Cloud customers and
+      its own products together.
+  epoch-chip-types:
+    company: frontier-labs
+    url: https://epoch.ai/data/ai_chip_sales_chip_types.csv
+    format: CSV, one row per AI chip type (33 at the audit), RFC 4180 with multi-line note fields
+    verdict: include
+    terms: >-
+      "Epoch AI’s data is free to use, distribute, and reproduce provided
+      the source and authors are credited under the Creative Commons
+      Attribution license" (CC BY 4.0, epoch.ai/data/ai-chip-sales).
+      robots.txt allows /data/. Read 2026-11-20.
+    rights: upstream
+    caveats: >-
+      Epoch's rating of each chip in H100-equivalents, from its 8-bit
+      performance (16-bit where a chip has no 8-bit mode). It rates B200 and
+      B300 alike at 2.53. A benchmark result on a chip Epoch does not rate is
+      left out and counted.
 
 # Sources the track record reads that are not recipes: read off the Worker
 # and matched per alert. Same fields as recipe_sources. /contact groups them
@@ -2693,6 +2811,10 @@ cut:
       The audit compared Vast.ai's median H100 SXM offer with our median once
       (docs/source-audit.md), and we store nothing from either. We never take
       index values from licensed vendors (Bloomberg, LSEG, and the like).
+      Vast.ai's terms (read 2026-11-19) also bar using its data "to
+      construct, publish, or maintain any index, benchmark,
+      pricing-comparison service, market-data product, or similar product or
+      service".
   vscode-marketplace:
     verdict: cut (install counts not stored)
     reason: >-
@@ -2787,3 +2909,63 @@ cut:
       Services through unauthorized automated or non-human means", so we
       don't read the HTML page instead. The track record shows no newsroom
       time for xAI. Checked 2026-11-04.
+  ornn-compute-index:
+    verdict: cut (link only, nothing stored)
+    reason: >-
+      Ornn publishes a daily GPU rental price from executed trades
+      (data.ornn.com), with the latest value and three months of history
+      open without a key. Its Terms of Use (dated May 29, 2026, read
+      2026-11-19) bar anyone to "create, calculate, validate, benchmark,
+      publish, distribute, or make available any index, benchmark, reference
+      rate, price assessment, valuation, dataset, derived data product,
+      database, analytics product, model, report, or other derivative work
+      using Company Data without the Company's prior express written
+      consent". We haven't asked for consent. Ornn sells market data and may
+      compete with this site, and we don't want to depend on it (owner's
+      decision, 2026-11-20).
+  aws-capacity-blocks:
+    verdict: cut (reservation prices not stored)
+    reason: >-
+      aws.amazon.com/ec2/capacityblocks/pricing prints a price table and says
+      "Reservation prices are updated regularly based on trends in supply and
+      demand for EC2 Capacity Blocks." robots.txt allows the page. The AWS
+      Site Terms (last updated June 4, 2025, read 2026-11-19) exclude "any
+      derivative use of the AWS Site or its contents" and "any use of data
+      mining, robots, or similar data gathering and extraction tools". It is
+      one price for every region, changed a few times a year, so we left it
+      out (owner's decision, 2026-11-20).
+  gpu-spot-history:
+    verdict: cut (needs an account we don't have)
+    reason: >-
+      AWS and Azure both keep spot price history, and Azure keeps eviction
+      rates. AWS: "You can view the Spot price history for the last 90 days",
+      through its console, CLI or API. Azure: "Get pricing history in the
+      last 90 days and eviction rates for the last 28 trailing days" through
+      Azure Resource Graph. Both need a signed-in account, and we haven't
+      read what either account agreement says about republishing. Read
+      2026-11-19.
+  vercel-ai-gateway:
+    verdict: cut (shares not stored)
+    reason: >-
+      Vercel publishes its AI Gateway leaderboard data under CC BY 4.0
+      (vercel.com/docs/ai-gateway/leaderboards, read 2026-11-19). The data
+      "shows each model, lab, app, or provider's percentage share or rank,
+      never absolute volumes", so it can't say how many tokens were served.
+      The export endpoint is /api/ai/leaderboard-export, and vercel.com's
+      robots.txt has "Disallow: /api/".
+  inferencex:
+    verdict: cut (benchmark results not stored)
+    reason: >-
+      SemiAnalysis's InferenceX publishes tokens per second per GPU. The
+      benchmark code is Apache 2.0, but its results are served from
+      inferencex.semianalysis.com/api, and the site's robots.txt has
+      "Disallow: /api/". The site has no terms page (/terms answers 404) and
+      states no license for the results. Read 2026-11-19. MLPerf covers the
+      same question under a stated license.
+  gpu-stock-status:
+    verdict: cut (availability not stored)
+    reason: >-
+      Which GPUs a provider has in stock would say more about tightness than
+      a price. RunPod's terms bar automated access (gpu-runpod above).
+      lambda.ai now redirects to lambda.com, whose terms we haven't read, so
+      nothing is fetched from it for this. Checked 2026-11-19.

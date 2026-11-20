@@ -1,6 +1,7 @@
 // GPU rental prices from documented, unauthenticated price APIs: Microsoft's
 // Azure Retail Prices API and Oracle's Cloud Price List API. Both are list
-// prices for on-demand (pay-as-you-go) use.
+// prices for on-demand (pay-as-you-go) use. Azure's answer also carries each
+// size's Spot meter per region, kept beside the pay-as-you-go row it belongs to.
 
 import { gpuOf, gpuRecipe, type GpuRow } from './gpu-prices'
 
@@ -32,10 +33,26 @@ export function azureRows(body: string): GpuRow[] {
   const doc = JSON.parse(body) as { Items?: AzureItem[]; NextPageLink?: string | null }
   if (!Array.isArray(doc.Items)) throw new Error('not an Azure retail prices page')
   if (doc.NextPageLink) throw new Error('Azure answered with more than one page')
+  const linux = doc.Items.filter(
+    (i) =>
+      i.type === 'Consumption' &&
+      i.currencyCode === 'USD' &&
+      !/Windows|\bWin\b/.test(i.productName),
+  )
+  // One Spot meter per size and region; two that disagree fail the run.
+  const spot = new Map<string, number>()
+  for (const item of linux) {
+    if (!/\bSpot\b/.test(item.skuName)) continue
+    const at = `${item.armSkuName}|${item.armRegionName}`
+    const held = spot.get(at)
+    if (held !== undefined && held !== item.retailPrice) {
+      throw new Error(`${at} has two Spot prices: ${held} and ${item.retailPrice}`)
+    }
+    spot.set(at, item.retailPrice)
+  }
   const rows: GpuRow[] = []
-  for (const item of doc.Items) {
-    if (item.type !== 'Consumption' || item.currencyCode !== 'USD') continue
-    if (/Windows|\bWin\b/.test(item.productName) || /Spot|Low Priority/.test(item.skuName)) continue
+  for (const item of linux) {
+    if (/Spot|Low Priority/.test(item.skuName)) continue
     if (item.unitOfMeasure !== '1 Hour')
       throw new Error(`${item.armSkuName}: ${item.unitOfMeasure}`)
     const size = item.armSkuName.match(/^Standard_([A-Z]+\d+)/)?.[1]
@@ -44,6 +61,7 @@ export function azureRows(body: string): GpuRow[] {
     const g = gpuOf(item.armSkuName.replaceAll('_', ' '))
     if (!g) continue
     const nd = item.armSkuName.startsWith('Standard_ND')
+    const spotPrice = spot.get(`${item.armSkuName}|${item.armRegionName}`)
     rows.push({
       gpu: g.gpu,
       form_factor: nd ? 'SXM' : 'NVL',
@@ -53,6 +71,7 @@ export function azureRows(body: string): GpuRow[] {
       instance_usd_per_hour: item.retailPrice,
       region: item.armRegionName,
       config: item.skuName,
+      spot_usd_per_gpu_hour: spotPrice === undefined ? null : spotPrice / gpus,
     })
   }
   return rows

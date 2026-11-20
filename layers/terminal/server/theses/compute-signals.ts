@@ -203,6 +203,9 @@ export interface GpuObservation extends Prov {
   gpu: GpuModel
   counted: boolean
   value: number
+  /** The row's spot price range per GPU-hour, where its page prints one (terminal-utilization.ts). */
+  spot_low?: number | null
+  spot_high?: number | null
 }
 
 export interface GpuProviderPrice extends Prov {
@@ -284,6 +287,8 @@ export async function gpuState(db: PipelineDb): Promise<GpuState> {
         gpu: payload.gpu,
         counted: payload.counted,
         value: r.value,
+        spot_low: payload.spot_low_usd_per_gpu_hour,
+        spot_high: payload.spot_high_usd_per_gpu_hour,
         source_url: r.source_url,
         fetched_at: r.fetched_at,
       })
