@@ -55,6 +55,11 @@ const GROUPS: NavGroup[] = [
         to: '/exposure',
         description: 'Hyperscaler capex, backlog and lab stakes.',
       },
+      {
+        label: 'Dependencies',
+        to: '/dependencies',
+        description: 'Who buys from and funds whom, as a graph.',
+      },
       { label: 'Demand', to: '/rankings', description: 'OpenRouter, Ramp, downloads, agents.' },
       { label: 'Compute', to: '/compute', description: 'GPU rental prices and data-center power.' },
     ],

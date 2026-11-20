@@ -49,6 +49,7 @@ const WARM_PATHS = [
   '/releases',
   '/rankings',
   '/compute',
+  '/dependencies',
   '/disclosures',
   '/data',
   '/about',

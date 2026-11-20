@@ -174,6 +174,7 @@ describe('tools/list', () => {
       'get_alert',
       'get_alerts',
       'get_coverage',
+      'get_dependencies',
       'get_disclosures',
       'get_exposure',
       'get_gpu_prices',
