@@ -1,6 +1,7 @@
 <script setup lang="ts">
 // One lab on one printed page (US Letter or A4): the lab page's readout plus
-// the hyperscaler lines that name the lab, the newest alerts and the thesis,
+// press reports against filings, the hyperscaler lines and listed companies
+// that name the lab, the newest alerts and the thesis,
 // with every figure footnoted to a source list at the foot. The payloads are
 // the ones the lab page reads, each narrowed to this lab on the server before
 // it reaches the hydration payload; layers/terminal/app/utils/tear-sheet.ts
@@ -20,8 +21,10 @@ import { LAB_SITE } from '../../../../shared/utils/terminal-labs'
 import { isLab, labPath, tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
 import { alertPath } from '../../../../shared/utils/terminal-tiers'
 import type { ExposureData } from '../../../../shared/utils/terminal-exposure'
+import type { ListedData } from '../../../../shared/utils/listed'
 import type {
   AlertsData,
+  GroundTruthData,
   HiringHistoryData,
   IncidentsData,
   PricesData,
@@ -38,7 +41,7 @@ definePageMeta({
     priority: '0.6',
     title: 'Lab tear sheet',
     summary:
-      'One frontier lab on one printable page, with API prices and the last change, disclosed revenue, hyperscaler filings that name it, OpenRouter demand share, open roles, incidents, the newest alerts, and every source with its fetch time.',
+      'One frontier lab on one printable page, with API prices and the last change, disclosed revenue and press reports scored against it, hyperscaler filings and listed companies that name it, OpenRouter demand share, open roles, incidents, the newest alerts, and every source with its fetch time.',
   },
 })
 
@@ -51,68 +54,81 @@ const lab = labParam
 
 // Explicit per-lab keys for the reason the lab page gives: an automatic key
 // follows the call site, so every lab's sheet would share one entry.
-const [prices, revenue, rankings, hiring, incidents, alerts, exposure, theses] = await Promise.all([
-  useFetch<PricesData>('/api/prices', {
-    key: `sheet-prices:${lab}`,
-    transform: (d: PricesData): PricesData => ({
-      ...d,
-      rows: [],
-      matrix: { ...d.matrix, cells: d.matrix.cells.filter((c) => c.provider === lab) },
+const [prices, revenue, rankings, hiring, incidents, alerts, exposure, theses, truth, listed] =
+  await Promise.all([
+    useFetch<PricesData>('/api/prices', {
+      key: `sheet-prices:${lab}`,
+      transform: (d: PricesData): PricesData => ({
+        ...d,
+        rows: [],
+        matrix: { ...d.matrix, cells: d.matrix.cells.filter((c) => c.provider === lab) },
+      }),
     }),
-  }),
-  useFetch<RevenueData>('/api/revenue', {
-    key: `sheet-revenue:${lab}`,
-    transform: (d: RevenueData): RevenueData => ({
-      ...d,
-      providers: d.providers.filter((p) => p.provider === lab),
+    useFetch<RevenueData>('/api/revenue', {
+      key: `sheet-revenue:${lab}`,
+      transform: (d: RevenueData): RevenueData => ({
+        ...d,
+        providers: d.providers.filter((p) => p.provider === lab),
+      }),
     }),
-  }),
-  useFetch<RankingsData>('/api/rankings', {
-    key: `sheet-rankings:${lab}`,
-    transform: (d: RankingsData): RankingsData => ({
-      ...d,
-      shares: d.shares.filter((s) => s.provider === lab),
-      top_models: [],
-      series: [],
+    useFetch<RankingsData>('/api/rankings', {
+      key: `sheet-rankings:${lab}`,
+      transform: (d: RankingsData): RankingsData => ({
+        ...d,
+        shares: d.shares.filter((s) => s.provider === lab),
+        top_models: [],
+        series: [],
+      }),
     }),
-  }),
-  useFetch<HiringHistoryData>('/api/hiring/history', {
-    key: `sheet-hiring:${lab}`,
-    transform: (d: HiringHistoryData): HiringHistoryData => ({
-      ...withoutArchive(d),
-      providers: withoutArchive(d).providers.filter((p) => p.provider === lab),
+    useFetch<HiringHistoryData>('/api/hiring/history', {
+      key: `sheet-hiring:${lab}`,
+      transform: (d: HiringHistoryData): HiringHistoryData => ({
+        ...withoutArchive(d),
+        providers: withoutArchive(d).providers.filter((p) => p.provider === lab),
+      }),
     }),
-  }),
-  useFetch<IncidentsData>('/api/incidents', {
-    key: `sheet-incidents:${lab}`,
-    transform: (d: IncidentsData): IncidentsData => ({
-      ...d,
-      providers: d.providers.filter((p) => p.provider === lab),
-      incidents: [],
+    useFetch<IncidentsData>('/api/incidents', {
+      key: `sheet-incidents:${lab}`,
+      transform: (d: IncidentsData): IncidentsData => ({
+        ...d,
+        providers: d.providers.filter((p) => p.provider === lab),
+        incidents: [],
+      }),
     }),
-  }),
-  // The alert tier only (notable and critical), so a week of minor hiring
-  // changes can't push the newest alerts out of the window.
-  useFetch<AlertsData>('/api/alerts', {
-    key: `sheet-alerts:${lab}`,
-    query: { tier: 'alert', limit: SHEET_ALERTS, lab },
-  }),
-  useFetch<ExposureData>('/api/exposure', {
-    key: `sheet-exposure:${lab}`,
-    transform: (d: ExposureData): ExposureData => ({
-      ...d,
-      series: d.series.filter((s) => s.group === lab),
-      gaps: d.gaps.filter((g) => g.group === lab),
+    // The alert tier only (notable and critical), so a week of minor hiring
+    // changes can't push the newest alerts out of the window.
+    useFetch<AlertsData>('/api/alerts', {
+      key: `sheet-alerts:${lab}`,
+      query: { tier: 'alert', limit: SHEET_ALERTS, lab },
     }),
-  }),
-  useFetch<ThesesData>('/api/theses', {
-    key: `sheet-theses:${lab}`,
-    transform: (d: ThesesData): ThesesData => ({
-      ...d,
-      theses: d.theses.filter((t) => t.company === lab),
+    useFetch<ExposureData>('/api/exposure', {
+      key: `sheet-exposure:${lab}`,
+      transform: (d: ExposureData): ExposureData => ({
+        ...d,
+        series: d.series.filter((s) => s.group === lab),
+        gaps: d.gaps.filter((g) => g.group === lab),
+      }),
     }),
-  }),
-])
+    useFetch<ThesesData>('/api/theses', {
+      key: `sheet-theses:${lab}`,
+      transform: (d: ThesesData): ThesesData => ({
+        ...d,
+        theses: d.theses.filter((t) => t.company === lab),
+      }),
+    }),
+    // These two take `?lab=`, so the server narrows them.
+    useFetch('/api/ground-truth', {
+      key: `sheet-truth:${lab}`,
+      query: { lab },
+      transform: (d: GroundTruthData) => truthInput(d),
+    }),
+    useFetch<ListedData>('/api/listed', { key: `sheet-listed:${lab}`, query: { lab } }),
+  ])
+
+const config = useRuntimeConfig()
+const appUrl = config.public.appUrl.replace(/\/+$/, '')
+const attribution = attributionLine(config.public.appName, appUrl)
+const absolute = (path: string) => `${appUrl}${path}`
 
 const stamps = useStamps()
 const sheet = computed(() =>
@@ -127,6 +143,9 @@ const sheet = computed(() =>
       alerts: alerts.data.value?.rows ?? [],
       exposure: exposure.data.value,
       theses: theses.data.value,
+      truth: truth.data.value,
+      listed: listed.data.value,
+      siteUrl: appUrl,
     },
     stamps.style.value,
   ),
@@ -137,7 +156,7 @@ const asOf = computed(() => prices.data.value?.as_of ?? alerts.data.value?.as_of
 useSeo({
   image: ogCardPath(route.path),
   title: `${display} tear sheet: prices, revenue, hiring, incidents`,
-  description: `${display} on one printable page: API prices, SEC revenue, OpenRouter share, open roles, incidents and recent alerts, each with its source.`,
+  description: `${display} on one printable page: API prices, SEC revenue against the press, listed companies, demand, hiring, incidents and alerts, each sourced.`,
   about: labOrganizationSchema({ name: display, url: LAB_SITE[lab] }),
   breadcrumb: [
     { name: display, path: labPath(lab) },
@@ -147,15 +166,10 @@ useSeo({
 })
 
 const failed = computed(() =>
-  [prices, revenue, rankings, hiring, incidents, alerts, exposure, theses].some(
+  [prices, revenue, rankings, hiring, incidents, alerts, exposure, theses, truth, listed].some(
     (r) => r.error.value !== null && r.error.value !== undefined,
   ),
 )
-
-const config = useRuntimeConfig()
-const appUrl = config.public.appUrl.replace(/\/+$/, '')
-const attribution = attributionLine(config.public.appName, appUrl)
-const absolute = (path: string) => `${appUrl}${path}`
 
 const printSheet = () => window.print()
 
@@ -307,6 +321,35 @@ const PRINT_INK = [
         </TearSheetSection>
 
         <TearSheetSection
+          id="truth"
+          title="Press against filings"
+          :note="sheet.truth.lines.length ? 'Each filed figure, and the reports before it' : null"
+          class="sm:col-span-2 print:col-span-2"
+        >
+          <p v-if="sheet.truth.gap">
+            <TearSheetGap :title="sheet.truth.gap.title" :reason="sheet.truth.gap.reason" />
+          </p>
+          <p v-else class="text-xs text-muted">{{ sheet.truth.summary.join(' ') }}</p>
+          <TerminalTable
+            v-if="sheet.truth.lines.length"
+            :caption="`${display} revenue as filed, against the press reports published before the filing`"
+            :columns="[
+              { key: 'period', label: 'Period' },
+              { key: 'filed', label: 'Filed', numeric: true, class: 'font-mono' },
+              { key: 'reports', label: 'Reports', numeric: true, class: 'font-mono' },
+              { key: 'median', label: 'Median report', numeric: true, class: 'font-mono' },
+              { key: 'error', label: 'Off by', numeric: true, class: 'font-mono' },
+            ]"
+            :rows="sheet.truth.lines"
+            :row-key="(r) => r.key"
+            nested
+            flow
+          >
+            <template #cell-filed="{ row }">{{ row.filed }}<TearSheetRef :n="row.ref" /></template>
+          </TerminalTable>
+        </TearSheetSection>
+
+        <TearSheetSection
           id="exposure"
           title="Hyperscaler filings"
           note="Each line is the filer’s own number"
@@ -336,6 +379,42 @@ const PRINT_INK = [
           >
             None of the {{ sheet.exposure.filers || 'hyperscaler' }} filers we read tags a line on
             {{ display }}.
+          </p>
+        </TearSheetSection>
+
+        <TearSheetSection
+          id="listed"
+          title="Listed companies"
+          :note="
+            sheet.listed.rows.length
+              ? 'What a filing or a cited page says ties each one to the lab'
+              : null
+          "
+          class="sm:col-span-2 print:col-span-2"
+        >
+          <template v-if="sheet.listed.rows.length">
+            <TerminalTable
+              :caption="`Listed companies a filing or a cited page ties to ${display}`"
+              :columns="[
+                { key: 'ticker', label: 'Ticker', class: 'font-mono' },
+                { key: 'company', label: 'Company' },
+                { key: 'group', label: 'What it is' },
+                { key: 'ties', label: 'What ties it to a lab' },
+              ]"
+              :rows="sheet.listed.rows"
+              :row-key="(r) => r.ticker"
+              align="top"
+              nested
+              flow
+            />
+            <p class="text-xs text-muted">
+              The figures and quotes behind each tie are on the Dependencies page<TearSheetRef
+                :n="sheet.listed.ref"
+              />. Not investment advice.
+            </p>
+          </template>
+          <p v-else-if="sheet.listed.gap">
+            <TearSheetGap :title="sheet.listed.gap.title" :reason="sheet.listed.gap.reason" />
           </p>
         </TearSheetSection>
 
