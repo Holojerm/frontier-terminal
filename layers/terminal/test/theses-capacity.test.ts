@@ -103,15 +103,29 @@ describe('claim 7: spot against on-demand', () => {
     expect(providers('B200')).toEqual(['coreweave'])
   })
 
-  it('breaks after 4 straight weekly readings under 60% of on-demand, and holds at 60%', () => {
-    expect(evaluate('compute-gpu-spot-tight', weekly([0.7, 0.6, 0.62, 0.6]))).toMatchObject({
-      status: 'holding',
-      reason: '60.0% against a floor of 60.0%.',
+  it('breaks once the share sits 30% below its 90-day high for 4 straight weekly readings', () => {
+    // 18 weekly readings: the 111 days the rule needs, and a high of 40%.
+    const after = (tail: number[]) =>
+      evaluate('compute-gpu-spot-tight', weekly([...Array<number>(14).fill(0.4), ...tail]))
+    expect(after([0.4, 0.4, 0.4, 0.38]).status).toBe('holding')
+    expect(after([0.4, 0.4, 0.4, 0.27]).status).toBe('weakening')
+    expect(after([0.27, 0.26, 0.27, 0.27])).toMatchObject({
+      status: 'broken',
+      reason:
+        '27.0%, 32% below the high of 40.0% on 2026-11-30 (kill at 28.0%): at or past the kill line at 4 of 4 straight weekly checkpoints; 111 of 111 days of history.',
     })
-    expect(evaluate('compute-gpu-spot-tight', weekly([0.7, 0.7, 0.55, 0.5])).status).toBe(
-      'weakening',
+  })
+
+  it('has no fixed line: a low share that never fell is holding', () => {
+    expect(evaluate('compute-gpu-spot-tight', weekly(Array<number>(18).fill(0.18))).status).toBe(
+      'holding',
     )
-    expect(evaluate('compute-gpu-spot-tight', weekly([0.59, 0.5, 0.55, 0.5])).status).toBe('broken')
+  })
+
+  it('is unresolved until it has 111 days of counted readings', () => {
+    const short = evaluate('compute-gpu-spot-tight', weekly([0.4, 0.4, 0.3, 0.2]))
+    expect(short.status).toBe('unresolved')
+    expect(short.reason).toContain('21 of 111 days of history, needs 111.')
   })
 
   it('is unresolved while fewer than four providers print a spot price', () => {

@@ -141,8 +141,7 @@ export const COMPUTE_THESIS: ThesisDef = {
       text: 'Rented GPU capacity stays tight',
       signal_label:
         'Median H100 spot price as a share of the on-demand price, across the providers whose page prints both',
-      kill_condition:
-        'The median spot price stays below 60% of the on-demand price for 4 straight weekly readings',
+      kill_condition: 'It stays 30% or more below its 90-day high for 4 straight weekly readings',
       spec: {
         kind: 'measured',
         signal: 'gpu-spot-to-on-demand',
@@ -150,7 +149,9 @@ export const COMPUTE_THESIS: ThesisDef = {
         // The quorum /compute holds its combined spot figure to. Written out,
         // not imported: changing it here is a thesis revision.
         min_providers: 4,
-        rule: { rule: 'sustained-floor', floor: 0.6, comparator: null, weeks: 4 },
+        // A fall, not a level: spot capacity sells far under on-demand as a
+        // matter of course, so no fixed share says capacity went slack.
+        rule: { rule: 'sustained-drawdown', drop: 0.3, days: 90, weeks: 4 },
       },
     },
     {
