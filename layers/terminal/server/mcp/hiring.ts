@@ -1,7 +1,9 @@
-// Open roles now and over time.
+// Open roles now and over time, and the pay the boards post.
 
 import { z } from 'zod'
+import { recipeRunsStamp } from '../utils/terminal-db'
 import { HIRING_WINDOW_DAYS, queryHiring, queryHiringHistory } from '../utils/terminal-hiring'
+import { queryPay, VIEW_RECIPES } from '../utils/terminal-recipe-views'
 import {
   ProviderSchema,
   json,
@@ -87,5 +89,30 @@ export function registerHiringTools({ server, deps, read }: McpKit): void {
           providers: slim.providers.filter((p) => p.provider === provider),
         })
       }),
+  )
+
+  server.registerTool(
+    'get_pay',
+    {
+      title: 'Posted pay on the labs’ job boards',
+      description:
+        'The US annual salary bands OpenAI and Anthropic post on their job boards, reduced to each band’s midpoint. boards is one per lab, at its newest reading (date), with roles_on_board ' +
+        'and cells, one per role family: median, p25 and p75 of the band midpoints in USD a year, n (the roles counted), departments (the board’s departments we mapped to the family by hand) ' +
+        'and previous (the median at the reading before, when there is one). Bands are posted ranges, not offers, and leave out equity, the larger part of pay at these labs. ' +
+        'Sales is left out, since Anthropic posts on-target earnings and OpenAI base pay. Compare a cell with itself over time, not one lab with another. xAI and Mistral post no usable pay. ' +
+        'Optional provider keeps one lab’s board. ' +
+        PROVENANCE,
+      inputSchema: z.object({ provider: ProviderSchema.optional() }),
+      annotations: READ_ONLY,
+    },
+    async ({ provider }) => {
+      const data = await deps.serve(
+        'pay',
+        () => queryPay(deps.db),
+        await recipeRunsStamp(deps.db, VIEW_RECIPES.pay),
+      )
+      if (!provider) return json(data)
+      return json({ ...data, boards: data.boards.filter((b) => b.lab === provider) })
+    },
   )
 }
