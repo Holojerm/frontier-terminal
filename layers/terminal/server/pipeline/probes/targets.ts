@@ -21,8 +21,8 @@ export const PROBE_PROMPT =
  * The answer every probe asks for. Most endpoints count reasoning tokens
  * against the cap, so a target whose reasoning would use it up carries a
  * `reasoning_allowance` on top, and xAI bills its reasoning outside the cap
- * altogether (`billed_outside_cap`). With both, eight labs hourly come to
- * about $28 a month at 2026-11-19 list prices; the test in
+ * altogether (`billed_outside_cap`). With both, seven labs hourly come to
+ * about $23 a month at 2026-11-19 list prices; the test in
  * layers/terminal/test/probes.test.ts holds the arithmetic.
  */
 export const PROBE_MAX_TOKENS = 160
@@ -153,21 +153,6 @@ export const PROBE_TARGETS: readonly ProbeTarget[] = [
     list_price: { input: 4, output: 20 },
   },
   {
-    lab: 'mistral',
-    model: 'mistralai/mistral-large-4-0',
-    // Mistral has two standard endpoints there (mistral/zdr, mistral/eu); one is named so the series never mixes them.
-    provider: 'mistral/zdr',
-    // OpenRouter lists `none` for this model. Mistral's endpoint refused it on 2026-11-20
-    // (400, "supported values: high, low, medium"), so the lowest it takes is `low`.
-    effort: 'low',
-    // 2026-11-20: at a cap of 480 the reply was 479 reasoning tokens and no answer, in 3.4 seconds.
-    // The owner chose room for about 3,000 over dropping the lab (about $4 a month more).
-    reasoning_allowance: 3000,
-    note: 'Mistral’s docs name no flagship. We probe Large 4, its top-priced general text model.',
-    market: 'europe',
-    list_price: { input: 0.7, output: 2.1 },
-  },
-  {
     lab: 'alibaba',
     model: 'qwen/qwen4-max',
     provider: 'alibaba',
@@ -201,6 +186,14 @@ export const PROBE_GAPS: readonly ProbeGap[] = [
     model: 'deepseek/deepseek-v4-pro',
     reason:
       'OpenRouter serves DeepSeek V4 Pro only through other companies’ hardware, not DeepSeek’s own endpoint. A probe there would measure the host, so we take no reading.',
+  },
+  {
+    lab: 'mistral',
+    model: 'mistralai/mistral-large-4-0',
+    // Dropped 2026-11-20 (owner's decision, #486): at effort `low` on mistral/zdr the reply was
+    // cap − 1 reasoning tokens at a cap of 480 and again at 3,160, so more room never bought an answer.
+    reason:
+      'Mistral’s own endpoint spends the whole output cap on reasoning, even at its lowest reasoning setting and a cap of 3,160 tokens, so a probe never gets an answer to time. We take no reading.',
   },
 ]
 
