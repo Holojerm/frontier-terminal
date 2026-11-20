@@ -194,6 +194,8 @@ export function gpuRecipe(opts: {
   description: string
   rows: (body: string) => GpuRow[]
   revision?: number
+  /** For a page whose bytes differ on every fetch: a change is judged on the rows read. */
+  byRows?: boolean
 }): Recipe {
   return {
     id: opts.id,
@@ -203,5 +205,6 @@ export function gpuRecipe(opts: {
     url: () => opts.url,
     ext: opts.ext,
     extract: (body, ctx) => gpuObservations(opts.company, opts.rows(body), ctx.date),
+    ...(opts.byRows ? { fingerprint: (body: string) => JSON.stringify(opts.rows(body)) } : {}),
   }
 }

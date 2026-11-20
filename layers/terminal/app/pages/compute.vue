@@ -19,7 +19,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Compute',
     summary:
-      'On-demand H100 and B200 rental list prices from nine first-party provider pages with the median across them, spot prices against on-demand per provider, both charted on each day a provider’s page changed, Alphabet’s stated token volume as a bounded share of Google’s estimated fleet, CoreWeave’s revenue per megawatt of active power, Epoch AI’s estimate of data-center power per frontier lab and per site, and the utilities, generators and equipment makers tied to each lab’s sites, each with its source page.',
+      'On-demand H100 and B200 rental list prices from ten first-party provider pages with the median across them, spot prices against on-demand per provider, both charted on each day a provider’s page changed, Alphabet’s stated token volume as a bounded share of Google’s estimated fleet, CoreWeave’s revenue per megawatt of active power, Epoch AI’s estimate of data-center power per frontier lab and per site, and the utilities, generators and equipment makers tied to each lab’s sites, each with its source page.',
   },
 })
 

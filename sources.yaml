@@ -1621,6 +1621,32 @@ recipe_sources:
       "GPU Per Hour" are read; the NVIDIA AI Enterprise licence is software
       and is skipped, and "H100T" is not a part Oracle documents, so it is
       not read as an H100.
+  gpu-google-cloud:
+    company: google
+    url: https://cloud.google.com/products/compute/pricing/accelerator-optimized
+    format: SSR HTML, one table of GPU machine types for the region the page renders, USD per machine-hour
+    verdict: include
+    terms: >-
+      cloud.google.com/robots.txt has no rule on /products/. The page links
+      Google's Terms of Service (effective July 30, 2026), which bar "using
+      automated means to access content from any of our services in
+      violation of the machine-readable instructions on our web pages (for
+      example, robots.txt files that disallow crawling, training, or other
+      activities)".
+    rights: ours
+    caveats: >-
+      Added 2026-11-20 as the tenth H100 provider (owner's decision), so the
+      H100 median steps up on its first read with no price changing, and
+      /compute notes the day. One region: the page renders Iowa
+      (us-central1), and the region is read from the list under the table.
+      Priced per 8-GPU machine ("$88.490000119 / 1 hour") and divided by the
+      printed GPU count. The "Current Spot pricing (USD)" column is kept on
+      the same row and never enters the median. Google says spot prices "can
+      change up to once every day". A machine with no on-demand price is
+      skipped, which leaves out the B200 machine (a4-highgpu-8g, "N/A"). The
+      page's bytes differ on every fetch, so a change is judged on the rows
+      read. The cut of 2026-11-02 followed cloud.google.com/compute/gpus-pricing,
+      which still redirects to a page with no prices.
   sec-revenue-crwv:
     company: coreweave
     url: https://data.sec.gov/api/xbrl/companyfacts/CIK0001769628.json
@@ -2980,19 +3006,6 @@ cut:
       credentials. The 58 KB JSON behind the on-demand pricing page
       (b0.p.awsstatic.com) is an undocumented backend for that page, and we
       don't use those as sources. Checked 2026-11-02.
-  gpu-google-cloud:
-    verdict: cut (GPU prices not stored)
-    reason: >-
-      cloud.google.com/compute/gpus-pricing redirects to a client-rendered
-      page with no prices in its HTML, and the Cloud Billing Catalog API
-      needs an API key. Checked 2026-11-02. A recheck on 2026-11-20 found
-      cloud.google.com/products/compute/pricing/accelerator-optimized
-      server-rendered, with an on-demand and a current spot price for the
-      8-GPU H100 machines in one table. robots.txt has no rule on the path,
-      and Google's Terms of Service bar automated access only "in violation
-      of the machine-readable instructions on our web pages". No recipe
-      reads it yet. A tenth provider would move the H100 median, so the
-      owner decides.
   gpu-vultr:
     verdict: cut (GPU prices not stored)
     reason: >-

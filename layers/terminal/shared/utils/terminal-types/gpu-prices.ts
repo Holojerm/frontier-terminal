@@ -47,6 +47,8 @@ export interface GpuHistoryView {
     median: (number | null)[]
     /** Per date, the providers the median counts. A change here moves it with no price moving. */
     providers: number[]
+    /** Each date the set of providers counted changed from the date before, by display name. */
+    provider_changes: { date: string; joined: string[]; left: string[] }[]
     /** Per date, the median share across providers; null below `spot_providers_needed`. */
     spot_combined: (SpotShare | null)[]
     /** Each provider that has printed a spot price for this GPU; null on a date it printed none. */

@@ -8,7 +8,7 @@
 // `by_key` and `by_lab` breakdowns, a year-earlier base, a trailing window,
 // and the Compute thesis's flagship prices and GPU medians.
 
-import { companyName } from './companies'
+import { companyName, gpuProviderName } from './companies'
 import { absoluteStamp, compactUsd, count, money } from './terminal-format'
 import type { PublicPage } from '#shared/utils/site'
 import type {
@@ -194,7 +194,7 @@ function capacityRows(d: Record<string, unknown>): DetailRow[] {
     const onDemand = num(r?.on_demand)
     if (ratio === null || low === null || high === null || onDemand === null) return []
     const price = low === high ? perGpuHour(low) : `$${low.toFixed(2)} to ${perGpuHour(high)}`
-    return [`${companyName(id)} ${wholePct(ratio)} (${price} against ${perGpuHour(onDemand)})`]
+    return [`${gpuProviderName(id)} ${wholePct(ratio)} (${price} against ${perGpuHour(onDemand)})`]
   })
   if (spot.length) rows.push({ label: 'Spot against on-demand', value: spot.join(' · ') })
 
@@ -316,15 +316,18 @@ function computeRows(d: Record<string, unknown>): DetailRow[] {
     return `${companyName(lab)} ${String(r?.from)} → ${String(r?.to)}`
   })
   if (changed.length) rows.push({ label: 'Flagship changed', value: changed.join(' · ') })
-  const set = asRecord(d.lab_set_changed)
-  if (set) {
-    const labs = (v: unknown) => (Array.isArray(v) ? v.map(String).map(companyName) : [])
+  // A lab or a GPU provider joining or leaving a median steps it with no price moving.
+  const setRow = (label: string, change: unknown, name = companyName) => {
+    const set = asRecord(change)
+    if (!set) return
+    const names = (v: unknown) => (Array.isArray(v) ? v.map(String).map(name) : [])
     const parts = [
-      ...(labs(set.added).length ? [`${labs(set.added).join(', ')} joined`] : []),
-      ...(labs(set.removed).length ? [`${labs(set.removed).join(', ')} left`] : []),
+      ...(names(set.added).length ? [`${names(set.added).join(', ')} joined`] : []),
+      ...(names(set.removed).length ? [`${names(set.removed).join(', ')} left`] : []),
     ]
-    if (parts.length) rows.push({ label: 'Labs counted changed', value: parts.join('; ') })
+    if (parts.length) rows.push({ label, value: parts.join('; ') })
   }
+  setRow('Labs counted changed', d.lab_set_changed)
 
   const gpuLine = (gpu: unknown, m: unknown, providers: unknown) => {
     const value = num(m)
@@ -332,7 +335,7 @@ function computeRows(d: Record<string, unknown>): DetailRow[] {
     if (typeof gpu !== 'string' || value === null) return null
     const each = Object.entries(by).flatMap(([id, p]) => {
       const v = num(asRecord(p)?.value)
-      return v === null ? [] : [`${companyName(id)} ${perGpuHour(v)}`]
+      return v === null ? [] : [`${gpuProviderName(id)} ${perGpuHour(v)}`]
     })
     return {
       median: `${perGpuHour(value)} across ${Object.keys(by).length} providers`,
@@ -344,7 +347,8 @@ function computeRows(d: Record<string, unknown>): DetailRow[] {
     rows.push({ label: `${String(d.gpu)} median`, value: main.median })
     if (main.each) rows.push({ label: `${String(d.gpu)} by provider`, value: main.each })
   }
-  const failed = Object.keys(asRecord(d.gpu_failed) ?? {}).map(companyName)
+  setRow('GPU providers counted changed', d.gpu_set_changed, gpuProviderName)
+  const failed = Object.keys(asRecord(d.gpu_failed) ?? {}).map(gpuProviderName)
   if (failed.length) rows.push({ label: 'No price today', value: failed.join(', ') })
   const context = asRecord(d.context)
   const ctx = context && gpuLine(context.gpu, context.gpu_median, context.providers)
