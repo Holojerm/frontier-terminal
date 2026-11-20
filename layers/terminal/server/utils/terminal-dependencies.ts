@@ -298,7 +298,7 @@ export function buildDependencies(
     id: 'suppliers-in-table',
     title: 'Chip and compute suppliers are in the table, with no circle',
     reason:
-      'The graph draws what these companies tag in their XBRL and what a lab’s prospectus states. A chip maker’s tie to a lab is a sentence in its filing, read by hand, so it is a row in the suppliers table with its quote. The companies that power each lab’s sites are on the Compute page.',
+      'The graph draws what these companies tag in their XBRL and what a lab’s prospectus states. A chip maker’s tie to a lab is a sentence in its filing, read by hand, so it is a row in the suppliers table with its quote. The companies that power each lab’s sites are on the Compute page. The listed-companies table has every ticker from all three.',
   })
 
   return { nodes, edges, gaps, unplaced }
