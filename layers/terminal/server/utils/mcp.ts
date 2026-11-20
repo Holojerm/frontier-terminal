@@ -62,6 +62,7 @@ import { queryDisclosures } from './terminal-disclosures'
 import { gpuRunsStamp, queryGpuPrices } from './terminal-gpu'
 import { probesStamp, queryProbes } from './terminal-probes'
 import { SHARE_WINDOW_DAYS, queryRankings } from './terminal-rankings'
+import { buildSuppliers, SUPPLIERS_VERSION } from './terminal-suppliers'
 import { queryProspectus } from './terminal-prospectus'
 import { queryExposure } from './terminal-exposure'
 import { identifiersPayload } from './terminal-identifiers'
@@ -669,6 +670,53 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
       const edges = data.edges.filter((e) => e.from === node || e.to === node)
       const ids = new Set([node, ...edges.flatMap((e) => [e.from, e.to])])
       return json({ ...data, edges, nodes: data.nodes.filter((n) => ids.has(n.id)) })
+    },
+  )
+
+  server.registerTool(
+    'get_suppliers',
+    {
+      title:
+        'Suppliers: chip, hardware and compute-rental companies tied to a lab or cloud (filed)',
+      description:
+        'The listed chip, foundry, networking, optics, server, compute-rental and data-center hosting companies whose own SEC filings tie them to a lab or a cloud. ' +
+        'rows is one filed passage each: ticker, company, layer, relation (customer: the counterparty buys from the company; supplier: the company buys from it; ' +
+        'investment: the company invests in it; investor: it holds a stake or warrant in the company; guarantee: the company guarantees its obligations; concentration: a customer the filing gives a share for and does not name), ' +
+        'counterparty (the name, or for concentration the filing’s own label such as Customer A), counterparty_ticker, counterparty_lab, figures (value, unit, meaning; ' +
+        'units usd, pct_revenue, pct_receivables, pct_backlog, shares, gw), form, filed, period, source_url, quote and fetched_at (when the quote was last found in the document). ' +
+        'companies is one row per ticker: the counterparties its filings name, the tracked labs among them, top_named_share and top_unnamed_share (the largest share of its revenue ' +
+        'a filing puts on one customer, named or not). A concentration row is tied to no lab or cloud: never infer who the customer is. Shares are for each company’s own fiscal period, ' +
+        'and figures measure different things, so do not sum them. The table is read by hand and is not a complete list of suppliers; gaps says what is left out. ' +
+        'Not investment advice. Optional ticker keeps one company; optional counterparty keeps rows naming a lab id or a counterparty ticker. ' +
+        PROVENANCE,
+      inputSchema: z.object({
+        ticker: z
+          .string()
+          .max(8)
+          .optional()
+          .describe('A supplier ticker, such as NVDA, AMD, ANET or CRWV.'),
+        counterparty: z
+          .string()
+          .max(40)
+          .optional()
+          .describe(
+            'A lab id (openai, anthropic, xai) or a counterparty ticker (MSFT, META, NVDA).',
+          ),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ ticker, counterparty }) => {
+      const data = await deps.serve('suppliers', async () => buildSuppliers(), SUPPLIERS_VERSION)
+      if (!ticker && !counterparty) return json(data)
+      const rows = data.rows.filter(
+        (r) =>
+          (!ticker || r.ticker === ticker.toUpperCase()) &&
+          (!counterparty ||
+            r.counterparty_lab === counterparty.toLowerCase() ||
+            r.counterparty_ticker === counterparty.toUpperCase()),
+      )
+      const kept = new Set(rows.map((r) => r.ticker))
+      return json({ ...data, rows, companies: data.companies.filter((c) => kept.has(c.ticker)) })
     },
   )
 
