@@ -295,10 +295,10 @@ export function buildDependencies(
     })
   }
   gaps.push({
-    id: 'suppliers-not-read',
-    title: 'Chip, server, and power suppliers aren’t drawn',
+    id: 'suppliers-in-table',
+    title: 'Chip and compute suppliers are in the table, with no circle',
     reason:
-      'We read the XBRL of these companies and the prospectus of a lab that files. We don’t read a chip maker’s or a utility’s filings yet, so the graph stops at the cloud.',
+      'The graph draws what these companies tag in their XBRL and what a lab’s prospectus states. A chip maker’s tie to a lab is a sentence in its filing, read by hand, so it is a row in the suppliers table with its quote. Utilities and other power suppliers aren’t read here.',
   })
 
   return { nodes, edges, gaps, unplaced }
