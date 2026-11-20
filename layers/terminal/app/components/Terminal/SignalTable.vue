@@ -4,7 +4,9 @@
 // explanation, the rule that fired it, the cited rows, the source — is on
 // the permalink, one click from the headline. Lab and axis are read off the
 // cited rows (layers/terminal/shared/utils/terminal-labs.ts), so a row that cites nothing
-// says so with a dash rather than a guess.
+// says so with a dash rather than a guess. "When" is one form down the
+// column: the absolute stamp. A relative age that turned absolute past a day
+// made the column switch forms partway down.
 
 import {
   AXIS_DISPLAY,
@@ -78,7 +80,7 @@ const columns: TableColumn[] = [
     </template>
     <template #cell-when="{ row }">
       <time :datetime="row.alert.created_at" :title="row.alert.created_at">
-        {{ stamps.relative(row.alert.created_at) }}
+        {{ stamps.absolute(row.alert.created_at) }}
       </time>
     </template>
     <template #cell-delta="{ row }">{{ row.delta ?? '' }}</template>

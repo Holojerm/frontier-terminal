@@ -34,6 +34,28 @@ describe('alertLabs / alertAxis', () => {
       alertAxis({ changes: [change({ entity_type: 'job' }), change({ entity_type: 'model' })] }),
     ).toBeNull()
   })
+
+  it('reads a prospectus alert (revenue lines beside its offering and risk factors) as revenue', () => {
+    // The 2026-11-19 424B4 prospectus-floor alert: one offering row, five revenue
+    // rows, one risk-factors row. Two SEC axes, one filing: its Topic was "—".
+    const alert = {
+      changes: [
+        change({ entity_type: 'offering', provider: 'anthropic' }),
+        ...Array.from({ length: 5 }, () =>
+          change({ entity_type: 'revenue', provider: 'anthropic' }),
+        ),
+        change({ entity_type: 'risk_factors', provider: 'anthropic' }),
+      ],
+    }
+    expect(alertAxis(alert)).toBe('revenue')
+    expect(alertAxis({ changes: [change({ entity_type: 'offering' })] })).toBe('sec')
+    // Revenue beside an axis that isn't the filing's still disagrees.
+    expect(
+      alertAxis({
+        changes: [change({ entity_type: 'revenue' }), change({ entity_type: 'job' })],
+      }),
+    ).toBeNull()
+  })
 })
 
 describe('alertDelta', () => {

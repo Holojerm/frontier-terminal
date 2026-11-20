@@ -3,6 +3,7 @@
 // panel and the filing page share. Every figure is the filing's own, with the
 // filing it came from and the URL and fetch time of the document it was read off.
 
+import { grouped } from './terminal-format'
 import type { LabId, Prov, SourceRef } from './terminal-types'
 
 /** The filing a figure was printed in, and the document it was read from. */
@@ -130,21 +131,14 @@ export interface ProspectusData {
 /** '33,242' / '−1,260' — a dollar figure in millions as a statement prints it, sign visible. */
 export function millions(n: number): string {
   const m = Math.round(n / 1e5) / 10
-  const text = Math.abs(m).toLocaleString('en-US', {
-    minimumFractionDigits: Number.isInteger(m) ? 0 : 1,
-    maximumFractionDigits: 1,
-  })
-  return n < 0 ? `−${text}` : text
+  return grouped(m, Number.isInteger(m) ? 0 : 1)
 }
 
 /** A statement value in its own unit: $ millions, thousands of shares, or $ per share. */
 export function statementValue(val: number | null, unit: StatementUnit): string {
   if (val === null) return '—'
-  if (unit === 'USD/share') return `${val < 0 ? '−' : ''}${Math.abs(val).toFixed(2)}`
-  if (unit === 'shares') {
-    const k = Math.round(val / 1e3).toLocaleString('en-US')
-    return val < 0 ? `−${k}` : k
-  }
+  if (unit === 'USD/share') return grouped(val, 2)
+  if (unit === 'shares') return grouped(Math.round(val / 1e3))
   return millions(val)
 }
 

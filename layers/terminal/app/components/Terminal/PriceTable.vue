@@ -4,14 +4,20 @@
 // the change log), a sparkline once it has been observed more than once, a
 // link to its own page, and its provenance. Batch, long-context and promo
 // rows sit here, not in the matrix.
+//
+// A column whose every filtered row would print a dash (no change on record,
+// no second observation, no dated window) is left out for that filter
+// instead of running a column of dashes. A context window read from another
+// page on the row's own host links that page by name, so the host prints once.
 
-import { money } from '../../../shared/utils/terminal-format'
+import { hostOf, money, tierLabel } from '../../../shared/utils/terminal-format'
 import { SAME_PRICE, moveText, priceMoves } from '../../utils/price-display'
 import { labName } from '../../../shared/utils/terminal-labs'
 import type { PriceRowView, PricesData } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
 const watchlist = useWatchlist()
+const stamps = useStamps()
 
 const props = defineProps<{
   prices: PricesData
@@ -45,7 +51,7 @@ const rows = computed(() =>
 )
 const hidden = computed(() => props.prices.rows.length - rows.value.length)
 
-const columns: TableColumn[] = [
+const COLUMNS: TableColumn[] = [
   { key: 'provider', label: 'Lab', class: 'whitespace-nowrap text-muted' },
   { key: 'model_slug', label: 'Model' },
   { key: 'tier', label: 'Tier', class: 'text-muted' },
@@ -58,6 +64,22 @@ const columns: TableColumn[] = [
   { key: 'window', label: 'Window', class: 'whitespace-nowrap text-xs text-muted' },
   { key: 'source', label: 'Source' },
 ]
+
+/** Columns that only ever read off something a row may lack, and what each needs. */
+const SPARSE: Record<string, (r: PriceRowView) => boolean> = {
+  delta: (r) => r.delta !== null,
+  history: (r) => r.spark !== null,
+  window: (r) => Boolean(r.effective_from || r.effective_until),
+}
+
+const columns = computed(() =>
+  COLUMNS.filter((c) => !SPARSE[c.key] || rows.value.some(SPARSE[c.key]!)),
+)
+
+/** True when the window's own page sits on the row's host: the second tag would repeat it. */
+const sameHost = (r: PriceRowView) =>
+  r.context_window_source !== null &&
+  hostOf(r.context_window_source.source_url) === hostOf(r.source_url)
 
 /** One phrase describing the newest change on the row, or null when there is none. */
 function deltaText(row: PriceRowView): string | null {
@@ -112,6 +134,9 @@ function deltaText(row: PriceRowView): string | null {
       :flow="flow"
     >
       <template #cell-provider="{ row: r }">{{ labName(r.provider) }}</template>
+      <template #cell-tier="{ row: r }">
+        <span v-if="r.tier" :title="r.tier">{{ tierLabel(r.tier) }}</span>
+      </template>
       <template #cell-model_slug="{ row: r }">
         <!-- No whitespace between the slug and its mark: the mark stays on the
              slug's last line, and a long slug still breaks at its hyphens. -->
@@ -138,7 +163,8 @@ function deltaText(row: PriceRowView): string | null {
             :source-url="r.context_window_source.source_url"
             :fetched-at="r.context_window_source.fetched_at"
             :checked-at="r.context_window_source.checked_at"
-            label="window source"
+            :compact="sameHost(r) ? false : undefined"
+            label="model page"
           />
         </span>
       </template>
@@ -167,7 +193,8 @@ function deltaText(row: PriceRowView): string | null {
       </template>
       <template #cell-window="{ row: r }">
         <template v-if="r.effective_from || r.effective_until">
-          {{ r.effective_from ?? '…' }} → {{ r.effective_until ?? '…' }}
+          {{ r.effective_from ? stamps.day(r.effective_from) : '…' }} →
+          {{ r.effective_until ? stamps.day(r.effective_until) : '…' }}
         </template>
         <template v-else>—</template>
       </template>

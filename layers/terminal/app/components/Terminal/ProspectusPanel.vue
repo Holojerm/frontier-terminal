@@ -6,6 +6,7 @@
 // print and a count the filing leaves blank are stated as gaps, never filled.
 
 import { periodName } from '../../../shared/utils/terminal-filings'
+import { grouped } from '../../../shared/utils/terminal-format'
 import {
   billions,
   millions,
@@ -141,7 +142,7 @@ const shareFacts = computed<Fact[]>(() => {
       .map((l, i) => ({
         key: `after-${i}`,
         label: l.label,
-        value: `${l.shares!.toLocaleString('en-US')}${l.with_option === null ? '' : ` (${l.with_option.toLocaleString('en-US')} with the option)`}`,
+        value: `${grouped(l.shares!)}${l.with_option === null ? '' : ` (${grouped(l.with_option)} with the option)`}`,
         mono: true,
       })),
     ...s.before
@@ -149,7 +150,7 @@ const shareFacts = computed<Fact[]>(() => {
       .map((l, i) => ({
         key: `before-${i}`,
         label: `${l.label} outstanding as of ${s.before_as_of}`,
-        value: l.shares!.toLocaleString('en-US'),
+        value: grouped(l.shares!),
         mono: true,
       })),
   ]

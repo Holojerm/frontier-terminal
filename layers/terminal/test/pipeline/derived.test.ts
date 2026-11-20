@@ -431,6 +431,16 @@ describe('CIK resolution end to end', () => {
       (e) => e.source_id === 'edgar-submissions-anthropic',
     )
     expect(filings.every((e) => JSON.parse(e.payload).whitelist_cik === ANTHROPIC_CIK)).toBe(true)
+    // A resolved lab's own filings are the lab's. Every filing was 'other'
+    // before, so /alerts put Anthropic's 424B4 under Lab "Other".
+    expect(filings.length).toBeGreaterThan(0)
+    expect(filings.every((e) => e.provider === 'anthropic')).toBe(true)
+    // A parent's filings stay the parent's: SpaceX's own feed is not xAI's.
+    const spcx = (await db.select().from(schema.entities)).filter(
+      (e) => e.source_id === 'edgar-submissions-spcx',
+    )
+    expect(spcx.length).toBeGreaterThan(0)
+    expect(spcx.every((e) => e.provider === 'other')).toBe(true)
 
     // The FTS feed seen again with the S-1 (the tick in between re-read the
     // committed fixture): the lab is already resolved so the resolver leaves
@@ -451,6 +461,7 @@ describe('CIK resolution end to end', () => {
     )!
     expect(JSON.parse(flipped.before_json!).whitelist_cik).toBeNull()
     expect(JSON.parse(flipped.after_json!).whitelist_cik).toBe(ANTHROPIC_CIK)
+    expect(flipped.provider).toBe('anthropic')
     expect(await db.select().from(schema.alerts)).toHaveLength(1)
     expect(await resolvedFilers(db)).toHaveLength(1)
 

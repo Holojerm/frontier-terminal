@@ -4,6 +4,7 @@
 // its provenance. The Atom feed and every list link here.
 
 import { DESCRIPTION_MAX } from '#shared/utils/seo-bounds'
+import { readableEdgarNames } from '../../../shared/utils/terminal-format'
 import { alertTier } from '../../../shared/utils/terminal-tiers'
 import type { AlertDetailData } from '../../../shared/utils/terminal-types'
 
@@ -48,6 +49,10 @@ if (!data.value) {
 }
 
 const alert = data.value.alert
+// EDGAR's capitals ("NVIDIA CORP") read in the company's case. Only the
+// display: the stored headline and the API keep the text as written.
+const headline = readableEdgarNames(alert.headline)
+const explanation = readableEdgarNames(alert.explanation)
 const tier = alertTier(alert.severity)
 
 /** The explanation is the description; cut at a word if it runs past what a result shows. */
@@ -65,12 +70,12 @@ function snippet(text: string): string {
 const citation = [alert.source_url, ...alert.changes.map((change) => change.source_url)]
 
 useSeo({
-  title: alert.headline,
-  description: snippet(alert.explanation),
+  title: headline,
+  description: snippet(explanation),
   ogType: 'article',
   breadcrumb: [
     { name: 'Alerts', path: '/alerts' },
-    { name: alert.headline, path: `/alerts/${alert.id}` },
+    { name: headline, path: `/alerts/${alert.id}` },
   ],
   // An alerts row is append-only, so its creation time is exact and is also
   // the last time anything about it was true.
@@ -78,8 +83,8 @@ useSeo({
   schema: [
     articleSchema(useSiteContext(), {
       url: usePageUrl(),
-      headline: alert.headline,
-      description: snippet(alert.explanation),
+      headline,
+      description: snippet(explanation),
       datePublished: alert.created_at,
       citation,
     }),
@@ -88,7 +93,7 @@ useSeo({
 </script>
 
 <template>
-  <TerminalPage :back="{ label: 'All alerts', to: '/alerts' }" :title="alert.headline">
+  <TerminalPage :back="{ label: 'All alerts', to: '/alerts' }" :title="headline">
     <template #header>
       <div class="flex flex-wrap items-center gap-2 text-xs">
         <UBadge
@@ -105,7 +110,7 @@ useSeo({
           {{ stamps.absolute(alert.created_at) }}
         </time>
       </div>
-      <p class="max-w-3xl text-default">{{ alert.explanation }}</p>
+      <p class="max-w-3xl text-default">{{ explanation }}</p>
       <TerminalSources :sources="[alert]">
         <span class="font-mono break-all">{{ alert.id }}</span>
       </TerminalSources>

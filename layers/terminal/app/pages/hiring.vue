@@ -6,7 +6,7 @@
 // by-lab table the overview leads with.
 
 import { HISTORY_LICENSE } from '#shared/utils/license'
-import { count, signed } from '../../shared/utils/terminal-format'
+import { boardLabel, count, signed } from '../../shared/utils/terminal-format'
 import { dayLabel } from '../../shared/utils/thesis-format'
 import type {
   ArchivedHiringPoint,
@@ -123,7 +123,12 @@ const tabs = computed(() => [
 
 const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
   { key: 'department', label: 'Department', class: 'max-w-48 truncate text-default' },
-  { key: 'then', label: p.compare?.at ?? 'Then', numeric: true, class: 'text-muted' },
+  {
+    key: 'then',
+    label: p.compare?.at ? stamps.day(p.compare.at) : 'Then',
+    numeric: true,
+    class: 'text-muted',
+  },
   { key: 'now', label: 'Now', numeric: true },
   { key: 'delta', label: 'Δ', numeric: true, class: 'text-highlighted' },
 ]
@@ -330,7 +335,7 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
                   nested
                 >
                   <template #cell-department="{ row: d }">
-                    <span :title="d.department">{{ d.department }}</span>
+                    <span :title="d.department">{{ boardLabel(d.department) }}</span>
                   </template>
                 </TerminalTable>
                 <p
