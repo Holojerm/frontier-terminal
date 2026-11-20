@@ -526,6 +526,39 @@ export function plainTable(
   }
 }
 
+/**
+ * `table` with some columns served under other names, where a store column's
+ * name would mislead in an export: latency_probes.provider is an OpenRouter
+ * endpoint slug, not the lab id every other provider column holds. Pages are
+ * read with the store's names, so a keyset resumes as before.
+ */
+export function renamedColumns(
+  table: ExportTable,
+  names: Readonly<Record<string, string>>,
+): ExportTable {
+  const back = Object.fromEntries(Object.entries(names).map(([from, to]) => [to, from]))
+  const out = (c: string) => names[c] ?? c
+  const columns = table.columns.map(out)
+  const docs = Object.fromEntries(Object.entries(table.docs).map(([c, doc]) => [out(c), doc]))
+  const rename = (row: Row): Row =>
+    Object.fromEntries(Object.entries(row).map(([c, v]) => [out(c), v]))
+  const restore = (row: Row): Row =>
+    Object.fromEntries(Object.entries(row).map(([c, v]) => [back[c] ?? c, v]))
+  const wrap = (inner: ExportTable): ExportTable => ({
+    ...inner,
+    columns,
+    docs,
+    async page(db, after, limit, where) {
+      const rows = await inner.page(db, after === null ? null : restore(after), limit, where)
+      return rows.map(rename)
+    },
+    async at(db, at) {
+      return wrap(await inner.at(db, at))
+    },
+  })
+  return wrap(table)
+}
+
 /** A table that lives in code, not D1: a few hand-checked rows, each with its own source. */
 export function staticTable<C extends string>(
   name: string,

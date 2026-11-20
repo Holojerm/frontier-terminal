@@ -23,6 +23,28 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.9.0 (2026-11-20)
+
+Six new tables.
+
+- `latency_probes`: every hourly probe we send each lab's flagship model
+  through OpenRouter, with its outcome and the timings we measured. Our own
+  measurements, so the whole table is ours to license.
+- `probe_days`: the daily strain reading `/api/probes` serves, per lab and UTC
+  day, rolled from `latency_probes`.
+- `filed_guidance`: the capex guidance in each earnings release Microsoft,
+  Alphabet, Amazon, Meta and Oracle furnish, one row per fiscal year, with the
+  release's own sentence.
+- `dependency_edges`: the lines of the graph on `/dependencies`, one row per
+  filed figure a company's XBRL puts on a named counterparty.
+- `supplier_passages`: the passages behind `/api/suppliers`, each with its
+  quote and the SEC document it's in.
+- `power_site_ties`: the companies and grids behind `/api/power-sites`, each
+  with its quote and the page it's on.
+
+The dictionary's `sources` gain the `power_site_sources` pages, in a new
+`power_sites` group.
+
 ## 1.8.1 (2026-11-20)
 
 A fix to how the latency probes in `/api/probes` are read. No columns changed.

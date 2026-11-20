@@ -163,7 +163,14 @@ export interface DictionaryJoin {
 export interface SourceLicensing {
   id: string
   /** The sources.yaml block it's in. */
-  group: 'sources' | 'recipes' | 'track_record' | 'archive' | 'filed_facts' | 'identifiers'
+  group:
+    | 'sources'
+    | 'recipes'
+    | 'track_record'
+    | 'archive'
+    | 'filed_facts'
+    | 'identifiers'
+    | 'power_sites'
   rights: SourceRights | null
   /** The licence the source states, verbatim, or null. */
   license: string | null

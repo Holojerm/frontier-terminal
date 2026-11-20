@@ -87,6 +87,13 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
     'disclosed_on, else discovered_on, else first_seen_at',
     'first_seen_at',
   ),
+  latency_probes: windowed(
+    ['started_at'],
+    'started_at, when we sent the probe',
+    'fetched_at',
+    tables.latencyProbes.started_at,
+  ),
+  probe_days: windowed(['day'], 'day, the UTC day', 'fetched_at', tables.probeDays.day),
   filers: whole('it’s a lookup of one CIK per lab.'),
   revenue_facts: windowed(['end'], 'end, the period end', 'first_seen_at'),
   prospectus_statements: windowed(['filed'], 'filed, the filing date', 'first_seen_at'),
@@ -167,7 +174,17 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
     tables.recipeObservations.date,
   ),
   filed_facts: windowed(['end'], 'end, the period end', 'first_seen_at', tables.filedFacts.end),
+  filed_guidance: windowed(
+    ['filed'],
+    'filed, the release’s filing date',
+    'first_seen_at',
+    tables.filedGuidance.filed,
+  ),
   exposure_quarters: windowed(['end'], 'end, the period end', 'fetched_at'),
+  dependency_edges: whole(
+    'it holds the graph as filed now: the newest figure of each series on a line.',
+    'fetched_at',
+  ),
   source_runs: windowed(
     ['started_at'],
     'started_at, when the check ran',
@@ -176,6 +193,8 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
   ),
   entity_securities: whole('it’s a hand-checked lookup of labs to securities.', null),
   entity_identifiers: whole('it’s a lookup of one row per company.', null),
+  supplier_passages: whole('it’s a table of passages read by hand and kept in code.', null),
+  power_site_ties: whole('it’s a table of passages read by hand and kept in code.', null),
 }
 
 /** The license window's rule for a registered table. */
