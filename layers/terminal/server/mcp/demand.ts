@@ -1,6 +1,8 @@
-// Demand: OpenRouter share, implied spend, and GPU rental prices.
+// Demand: OpenRouter share, implied spend, GPU rental prices, and adoption.
 
+import { recipeRunsStamp } from '../utils/terminal-db'
 import { gpuRunsStamp, queryGpuPrices } from '../utils/terminal-gpu'
+import { queryAdoption, VIEW_RECIPES } from '../utils/terminal-recipe-views'
 import { SHARE_WINDOW_DAYS, queryRankings } from '../utils/terminal-rankings'
 import { querySpend } from '../utils/terminal-spend'
 import { json, READ_ONLY, PROVENANCE, type McpKit } from './kit'
@@ -63,6 +65,30 @@ export function registerDemandTools({ server, deps }: McpKit): void {
           'gpu-prices',
           (ctx) => queryGpuPrices(deps.db, ctx),
           await gpuRunsStamp(deps.db),
+        ),
+      ),
+  )
+
+  server.registerTool(
+    'get_adoption',
+    {
+      title: 'Adoption: businesses paying, package downloads, coding-agent pull requests',
+      description:
+        'Three reads on adoption outside the labs’ own numbers. ramp: the Ramp AI Index, the share of US businesses on Ramp that paid the vendor anything in the month by card or bill pay, ' +
+        'per month (months, ascending) for overall and each vendor Ramp reports (lab ties it to a tracked lab). It measures adoption, not spend, covers Ramp’s customers only, and Ramp restates past months, ' +
+        'so this is the newest release (release_seen, data_version). Google and Meta aren’t in Ramp’s vendor series. downloads: each lab’s SDK and coding-agent packages on npm and PyPI, ' +
+        'last_28d against prior_28d through a date. Every download counts, CI and bots included, so read the trend, never the level, and never as users. ' +
+        'agent_prs: per coding agent, daily counts of public GitHub pull requests that carry its trace (the query says which). Each agent leaves a different trace, so the counts are not shares of one market. ' +
+        'caveats has the full caveat for each. Not investment advice. ' +
+        PROVENANCE,
+      annotations: READ_ONLY,
+    },
+    async () =>
+      json(
+        await deps.serve(
+          'adoption',
+          () => queryAdoption(deps.db),
+          await recipeRunsStamp(deps.db, VIEW_RECIPES.adoption),
         ),
       ),
   )

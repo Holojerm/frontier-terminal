@@ -4,7 +4,7 @@ import { z } from 'zod'
 import { queryProspectus } from '../utils/terminal-prospectus'
 import { queryRevenue } from '../utils/terminal-revenue'
 import { queryGroundTruth } from '../utils/terminal-ground-truth'
-import { reportedStamp } from '../utils/terminal-reported'
+import { queryReported, reportedStamp } from '../utils/terminal-reported'
 import {
   ProviderSchema,
   json,
@@ -68,6 +68,41 @@ export function registerFilingTools({ server, deps, read }: McpKit): void {
       if (!provider) return json(data)
       return json({ ...data, issuers: data.issuers.filter((i) => i.provider === provider) })
     },
+  )
+
+  server.registerTool(
+    'get_reported',
+    {
+      title: 'Press-reported revenue, valuations and funding (unaudited)',
+      description:
+        'What press headlines say about each private lab’s revenue, revenue run-rate, valuation and funding: never a filing, and never mixed with get_revenue. ' +
+        'Headlines come from GDELT’s files. Our judge model labels each figure a headline states, and a label is kept only when its amount and lab are in the headline as written. ' +
+        'recent is every figure, newest first: lab, metric (revenue_run_rate, annualized or recurring; revenue, for a stated period; valuation; funding, one round; funding_total, raised to date), ' +
+        'basis (reported, given as fact; sought, in talks or planned; projected, a forecast or target), ' +
+        'currency, amount with amount_text as the headline writes it, period when the headline names one (else the figure is as of the report), title, outlet, url (the earliest copy), published_at ' +
+        '(when GDELT first read it, not when the outlet published) and outlets (how many ran the same headline). series is per lab, metric and currency, basis reported only: latest, and per quarter ' +
+        'of reporting the median, low, high and number of distinct headlines. coverage says where the read starts, how many GDELT files are read and waiting, and how many headlines the judge hasn’t read. ' +
+        'A headline is one outlet’s claim, often citing unnamed sources; GDELT misses Bloomberg, Reuters, the WSJ and the FT. get_ground_truth scores these figures against the filings that came later. ' +
+        'Not investment advice. Optional provider keeps one lab. ' +
+        PROVENANCE,
+      inputSchema: z.object({ provider: ProviderSchema.optional(), as_of: AsOfSchema }),
+      annotations: READ_ONLY,
+    },
+    ({ provider, as_of }) =>
+      asOfErrors(async () => {
+        const data = await read(
+          'reported',
+          as_of,
+          (ctx) => queryReported(deps.db, ctx),
+          await reportedStamp(deps.db),
+        )
+        if (!provider) return json(data)
+        return json({
+          ...data,
+          series: data.series.filter((s) => s.lab === provider),
+          recent: data.recent.filter((r) => r.lab === provider),
+        })
+      }),
   )
 
   server.registerTool(

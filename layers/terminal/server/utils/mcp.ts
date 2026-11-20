@@ -12,7 +12,7 @@
 // leak.
 //
 // Stateless and JSON on both protocol eras. Each request gets a fresh
-// McpServer — some thirty registrations, cheap — so a Worker isolate holds no
+// McpServer — some forty registrations, cheap — so a Worker isolate holds no
 // session, and a client that reconnects to a different isolate notices
 // nothing. Legacy (2025-era) clients, which is every shipping client today,
 // are served through a per-request WebStandardStreamableHTTPServerTransport
@@ -51,6 +51,8 @@ import { registerDemandTools } from '../mcp/demand'
 import { registerFilingTools } from '../mcp/filings'
 import { registerExposureTools } from '../mcp/exposure'
 import { registerFeedTools } from '../mcp/feed'
+import { registerComputeTools } from '../mcp/compute'
+import { registerThesisTools } from '../mcp/theses'
 import { READ_ONLY, PROVENANCE, makeRead } from '../mcp/kit'
 
 /** What the server needs from its host — the route supplies the real thing, the test a fixture. */
@@ -87,10 +89,13 @@ export const MCP_SERVER_NAME = 'frontier-terminal'
 const INSTRUCTIONS =
   `${MCP_SERVER_NAME}: a free, public, read-only terminal of fundamentals on the frontier AI labs ` +
   '(OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Alibaba (Qwen), Moonshot AI (Kimi)) and the public companies around them. ' +
-  'Per lab: API price lists, hiring boards (with the physical-infrastructure buildout cluster), SEC filings and disclosed revenue, ' +
-  'status-page incidents and latency probes, misalignment disclosures, and OpenRouter demand share with its implied spend share. ' +
-  'Around the labs: hyperscaler exposure, who sells to and funds whom, suppliers, listed companies, GPU rental prices, ' +
-  'and press reports scored against later filings (get_ground_truth). Theses (on the site) are arguments built on this data. ' +
+  'Per lab: API price lists, hiring boards (with the physical-infrastructure buildout cluster) and posted pay (get_pay), SEC filings and disclosed revenue, ' +
+  'status-page incidents, latency probes and published rate limits (get_rate_limits), misalignment disclosures, OpenRouter demand share with its implied spend share, ' +
+  'and adoption outside the labs’ own numbers (get_adoption). ' +
+  'Around the labs: hyperscaler exposure, what Microsoft and Amazon file about OpenAI and Anthropic (get_parents), who sells to and funds whom, suppliers, listed companies, ' +
+  'compute (GPU rental prices, utilization readings in get_utilization, Epoch AI’s data-center power in get_datacenters, who powers each lab site in get_power_sites), ' +
+  'press-reported revenue, valuations and funding (get_reported), and those reports scored against later filings (get_ground_truth). ' +
+  'Theses (get_theses) are arguments built on this data, each claim checked against a kill condition. ' +
   'Not investment advice. Start with `describe` (the site map) or `get_overview` (what moved). ' +
   PROVENANCE
 
@@ -135,6 +140,8 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
   registerDemandTools(kit)
   registerFilingTools(kit)
   registerExposureTools(kit)
+  registerComputeTools(kit)
+  registerThesisTools(kit)
   registerFeedTools(kit)
 
   return server

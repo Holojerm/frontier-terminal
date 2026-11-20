@@ -1,6 +1,8 @@
-// Capacity strain and safety: incidents, latency probes, misalignment disclosures.
+// Capacity strain and safety: incidents, latency probes, published rate limits, misalignment disclosures.
 
 import { z } from 'zod'
+import { recipeRunsStamp } from '../utils/terminal-db'
+import { queryLimits, VIEW_RECIPES } from '../utils/terminal-recipe-views'
 import {
   INCIDENT_HISTORY_DAYS,
   INCIDENT_WINDOW_DAYS,
@@ -66,6 +68,31 @@ export function registerOperationsTools({ server, deps }: McpKit): void {
       )
       if (!provider) return json(probes)
       return json({ ...probes, labs: probes.labs.filter((l) => l.lab === provider) })
+    },
+  )
+
+  server.registerTool(
+    'get_rate_limits',
+    {
+      title: 'Published API rate limits',
+      description:
+        'The API rate limits OpenAI, Anthropic, xAI and Meta publish in their docs. pages is one per lab’s limits page: covers says what it covers, metrics names the columns ' +
+        '(requests or tokens per minute, per day, …), and rows is one per model and tier with values per metric (null is none published) and text where the page gives a limit in words ' +
+        '(“256 concurrent streams”). snapshot is the newest reading and previous the one before it once a change has been seen; changed counts the limits that differ between them. ' +
+        'A new reading is stored only when a limit changes. Limits reflect tier design and abuse control as much as capacity, and they change in announced steps, so a raised limit is not a measure of spare capacity. ' +
+        'Google and Mistral publish no per-model limits. Optional provider keeps one lab’s page. ' +
+        PROVENANCE,
+      inputSchema: z.object({ provider: ProviderSchema.optional() }),
+      annotations: READ_ONLY,
+    },
+    async ({ provider }) => {
+      const data = await deps.serve(
+        'limits',
+        () => queryLimits(deps.db),
+        await recipeRunsStamp(deps.db, VIEW_RECIPES.limits),
+      )
+      if (!provider) return json(data)
+      return json({ ...data, pages: data.pages.filter((p) => p.lab === provider) })
     },
   )
 
