@@ -5,7 +5,7 @@
 // summed listed under the number — the sum is checkable, never a black box.
 // The line chart (full page) draws the cluster per day across the boards.
 
-import { count, signed } from '../../../shared/utils/terminal-format'
+import { boardLabel, count, signed } from '../../../shared/utils/terminal-format'
 import { dayLabel } from '../../../shared/utils/thesis-format'
 import type { ClusterSeries, HiringHistoryData } from '../../../shared/utils/terminal-types'
 
@@ -120,7 +120,7 @@ const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
             nested
           >
             <template #cell-department="{ row: d }">
-              <span :title="d.department">{{ d.department }}</span>
+              <span :title="d.department">{{ boardLabel(d.department) }}</span>
             </template>
           </TerminalTable>
         </template>

@@ -17,6 +17,7 @@ import {
   LICENSE_WINDOW_DAYS,
   attributionLine,
 } from '#shared/utils/license'
+import { readableEdgarNames } from '../../../../shared/utils/terminal-format'
 import { LAB_SITE } from '../../../../shared/utils/terminal-labs'
 import { isLab, labPath, tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
 import { alertPath } from '../../../../shared/utils/terminal-tiers'
@@ -196,17 +197,13 @@ const PRINT_INK = [
 
 <template>
   <div :class="PRINT_INK" class="print:bg-default print:text-default">
-    <TerminalPage narrow :error="failed" class="print:max-w-none">
+    <TerminalPage narrow :error="failed" :as-of="asOf ?? undefined" class="print:max-w-none">
       <template #title>{{ display }} tear sheet</template>
       <template #header>
         <div class="flex flex-wrap items-center justify-between gap-x-6 gap-y-2">
           <p class="text-xs text-muted">
-            As of
-            <time v-if="asOf" :datetime="asOf" class="font-mono">{{
-              shortStamp(asOf, stamps.style.value)
-            }}</time>
-            <span v-else>no check yet</span>
-            · $ per million tokens · times {{ stamps.zone.value }} ·
+            <template v-if="!asOf">No check yet · </template>$ per million tokens · times
+            {{ stamps.zone.value }} ·
             <span class="font-mono">{{ shortUrl(absolute(tearSheetPath(lab))) }}</span>
           </p>
           <div class="flex flex-wrap items-center gap-2 print:hidden">
@@ -442,7 +439,7 @@ const PRINT_INK = [
               <NuxtLink
                 :to="alertPath(row.id)"
                 class="text-highlighted underline underline-offset-2"
-                >{{ row.headline }}</NuxtLink
+                >{{ readableEdgarNames(row.headline) }}</NuxtLink
               ><TearSheetRef :n="row.ref" /><span class="hidden text-muted print:inline">{{
                 ` ${shortUrl(appUrl)}${alertPath(row.id).slice(0, 16)}…`
               }}</span>
@@ -468,8 +465,8 @@ const PRINT_INK = [
               >{{ shortUrl(s.url, 44) }}</a
             >
             ·
-            <time :datetime="s.fetched_at" class="font-mono">{{
-              shortStamp(s.fetched_at, stamps.style.value)
+            <time :datetime="s.fetched_at" :title="s.fetched_at" class="font-mono">{{
+              stamps.dated(s.fetched_at)
             }}</time>
           </li>
         </ol>

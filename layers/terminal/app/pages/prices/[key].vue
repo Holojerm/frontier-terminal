@@ -5,7 +5,7 @@
 // source's first snapshot — as a step chart and as the point-by-point table
 // with the fetch each point was read from.
 
-import { money } from '../../../shared/utils/terminal-format'
+import { money, tierLabel } from '../../../shared/utils/terminal-format'
 import { labName } from '../../../shared/utils/terminal-labs'
 import { skuLede } from '../../../shared/utils/terminal-ledes'
 import type { PriceHistoryData, PricePoint } from '../../../shared/utils/terminal-types'
@@ -45,7 +45,7 @@ if (upstream === 429) {
 const name = computed(() => {
   const h = history.value
   if (!h) return key
-  return `${h.model_slug}${h.tier ? ` (${h.tier})` : ''}`
+  return `${h.model_slug}${h.tier ? ` (${tierLabel(h.tier)})` : ''}`
 })
 
 // A price series with a source URL on every point is a Dataset, not a page

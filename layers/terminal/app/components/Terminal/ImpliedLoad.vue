@@ -5,7 +5,12 @@
 // a pair of bounds per model, with the sentence the volume came from and the
 // footnote MLCommons requires beside a figure it has not verified.
 
-import { compactTokens, count } from '../../../shared/utils/terminal-format'
+import {
+  compactCount,
+  compactTokens,
+  count,
+  splitInstants,
+} from '../../../shared/utils/terminal-format'
 import type { Bounds, UtilizationData } from '../../../shared/utils/recipe-views'
 import type { TableColumn } from '../../types/terminal-ui'
 
@@ -17,8 +22,11 @@ const props = defineProps<{
 }>()
 
 const pct = (n: number) => (n >= 10 ? `${count(Math.round(n * 100))}%` : `${(n * 100).toFixed(1)}%`)
-const h100e = (n: number) =>
-  n >= 1e6 ? `${(n / 1e6).toFixed(2)}M` : `${count(Math.round(n / 1e3))}K`
+const h100e = compactCount
+const stamps = useStamps()
+// OpenRouter's citation is its license's own wording: only the instant in it
+// is read as a stamp, the rest prints as given.
+const citation = computed(() => (props.shape?.citation ? splitInstants(props.shape.citation) : []))
 const speed = (n: number) => count(Math.round(n))
 const range = (b: Bounds, f: (n: number) => string) =>
   f(b.low) === f(b.high) ? f(b.low) : `${f(b.low)}–${f(b.high)}`
@@ -138,7 +146,14 @@ const fleet = computed(() => props.implied.fleet)
     >
       <span>CC BY 4.0, Epoch AI</span>
     </TerminalSources>
-    <p v-if="shape?.citation" class="text-xs text-toned">{{ shape.citation }}</p>
+    <p v-if="citation.length" class="text-xs text-toned">
+      <template v-for="(part, i) in citation" :key="i"
+        ><time v-if="'iso' in part" :datetime="part.iso" :title="part.iso">{{
+          stamps.absolute(part.iso)
+        }}</time
+        ><template v-else>{{ part.text }}</template></template
+      >
+    </p>
     <p class="text-xs text-toned">{{ implied.benchmark.footnote }}</p>
   </div>
 </template>
