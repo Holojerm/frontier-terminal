@@ -89,7 +89,8 @@ async function runOne(
   const fetched_at = deps.now.toISOString()
   let hash: string
   try {
-    hash = contentHashOfText(recipe.fingerprint?.(fetched.text) ?? fetched.text)
+    const judged = recipe.fingerprint?.(fetched.text) ?? fetched.text
+    hash = contentHashOfText(recipe.revision ? `${judged}\nrevision:${recipe.revision}` : judged)
   } catch (error) {
     return {
       recipe_id: recipe.id,

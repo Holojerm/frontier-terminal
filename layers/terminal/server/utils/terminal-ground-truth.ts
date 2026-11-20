@@ -29,6 +29,8 @@ import type {
   RevenuePeriod,
 } from '../../shared/utils/terminal-types'
 
+import type { PressEarlyPeriod, PressEarlyRead } from '../../shared/utils/thesis-types'
+
 import { isNull } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
@@ -370,6 +372,91 @@ export function tallyOf(
   }
 }
 
+const usdRevenue = (lab: LabId) => (h: StoredHeadline) =>
+  h.lab === lab && h.metric === 'revenue' && h.basis === 'reported' && h.currency === 'USD'
+
+/**
+ * What the press says about periods a lab has not filed: its revenue reports
+ * that name a period no filing prints, grouped by that period, and how its
+ * earlier reports did once a filing settled them. A report counts only when
+ * the period it names was over when it ran; one that names no period can't be
+ * tied to an unfiled one and is counted apart. `headlines` are the lab's
+ * reported USD revenue figures; `rows` every filed row, superseded included.
+ */
+export function pressEarlyRead(
+  lab: LabId,
+  headlines: readonly StoredHeadline[],
+  rows: readonly RevenuePeriod[],
+): PressEarlyRead {
+  const figures = filedFigures(rows)
+  const scored = headlines.map((h) => scoreReport(h, figures))
+  const groups = new Map<string, StoredHeadline[]>()
+  let unplaced = 0
+  headlines.forEach((h, i) => {
+    if (scored[i]!.report.state !== 'open') return
+    const span = h.period ? statedSpan(h.period) : null
+    if (!span) {
+      unplaced++
+      return
+    }
+    if (span.end >= dayOf(h.published_at)) return
+    groups.set(h.period!, [...(groups.get(h.period!) ?? []), h])
+  })
+  const periods = [...groups].map(([period, group]): PressEarlyPeriod => {
+    const span = statedSpan(period)!
+    const amounts = group.map((h) => h.amount)
+    const median = middle(amounts)
+    const yearEarlier = statedSpan(`${Number(period.slice(0, 4)) - 1}${period.slice(4)}`)!
+    const base = figures.find((f) => spanKey(f) === spanKey(yearEarlier))
+    const latest = group.reduce((a, b) => (b.published_at > a.published_at ? b : a))
+    return {
+      label: spanLabel(span.start, span.end),
+      ...span,
+      reports: group.length,
+      median,
+      low: Math.min(...amounts),
+      high: Math.max(...amounts),
+      implied_growth: base && base.val > 0 ? median / base.val - 1 : null,
+      base: base ? { label: base.label, value: base.val, filing_url: base.filing_url } : null,
+      latest: {
+        title: latest.title,
+        outlet: latest.outlet,
+        url: latest.url,
+        published_at: latest.published_at,
+        source_url: latest.source_url,
+        fetched_at: latest.fetched_at,
+      },
+    }
+  })
+  periods.sort((a, b) => b.end.localeCompare(a.end) || a.start.localeCompare(b.start))
+  const tally = tallyOf(resolutionsOf(lab, scored), 0, 0)
+  return {
+    periods,
+    unplaced,
+    record: {
+      periods: tally.periods,
+      reports: tally.reports,
+      median_abs_error_pct: tally.median_abs_error_pct,
+      median_lead_days: tally.median_lead_days,
+    },
+  }
+}
+
+/** The early read for one lab; null unless the lab files its own revenue. */
+export async function queryPressEarlyRead(
+  db: PipelineDb,
+  ctx: QueryContext,
+  lab: LabId,
+): Promise<PressEarlyRead | null> {
+  const [revenue, stored] = await Promise.all([queryRevenue(db, ctx), storedHeadlines(db, ctx.at)])
+  const issuer = revenue.providers.find((p) => p.provider === lab && p.disclosure === 'issuer')
+  if (!issuer) return null
+  return pressEarlyRead(lab, stored.headlines.filter(usdRevenue(lab)), [
+    ...issuer.periods,
+    ...issuer.superseded,
+  ])
+}
+
 export async function queryGroundTruth(
   db: PipelineDb,
   ctx: QueryContext,
@@ -416,13 +503,7 @@ export async function queryGroundTruth(
   for (const issuer of issuers) {
     const figures = filedFigures([...issuer.periods, ...issuer.superseded])
     const scored = stored.headlines
-      .filter(
-        (h) =>
-          h.lab === issuer.provider &&
-          h.metric === 'revenue' &&
-          h.basis === 'reported' &&
-          h.currency === 'USD',
-      )
+      .filter(usdRevenue(issuer.provider))
       .map((h) => scoreReport(h, figures))
     resolutions.push(...resolutionsOf(issuer.provider, scored))
     open.push(...scored.filter((s) => s.report.state === 'open').map((s) => s.report))

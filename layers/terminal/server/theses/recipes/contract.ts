@@ -41,6 +41,13 @@ export interface Recipe {
    */
   fingerprint?(body: string): string
   /**
+   * Raise it when `extract` starts reading something new from the same
+   * bytes. A run skips a body whose hash matches the last one stored, so
+   * without this a new field would wait for the source to change before it
+   * was first read. The revision is part of that hash.
+   */
+  revision?: number
+  /**
    * For a source found through another: `url` is fetched first and this
    * names the document to read from its body (an EDGAR submissions feed →
    * the newest filing). Everything else (hash, raw bytes, extract, the
