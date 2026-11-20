@@ -3,7 +3,7 @@
 // the stored readings by the same pure rules the evaluator uses, so the page
 // and the status-change log cannot disagree; status_since comes from the log.
 
-import { COMPANIES, companyName } from '../../shared/utils/companies'
+import { COMPANIES, companyName, gpuProviderName } from '../../shared/utils/companies'
 import type { LabId } from '../../shared/utils/terminal-types'
 import type { ClaimView, ReadingPoint, ThesesData } from '../../shared/utils/thesis-types'
 
@@ -29,6 +29,7 @@ function seriesPoint(r: { date: string; value: number; detail: string }): Readin
   const detail = JSON.parse(r.detail) as {
     flagship_changed?: Record<string, unknown> | null
     lab_set_changed?: { added: string[]; removed: string[] } | null
+    gpu_set_changed?: { added: string[]; removed: string[] } | null
   }
   const notes: string[] = []
   const changed = detail.flagship_changed
@@ -42,19 +43,26 @@ function seriesPoint(r: { date: string; value: number; detail: string }): Readin
     notes.push(`Flagship changed: ${labs}`)
   }
   const set = detail.lab_set_changed
-  if (set) notes.push(labSetNote(set))
+  if (set) notes.push(setNote('Labs counted changed', set))
+  if (detail.gpu_set_changed) {
+    notes.push(setNote('GPU providers counted changed', detail.gpu_set_changed, gpuProviderName))
+  }
   return notes.length
     ? { date: r.date, value: r.value, note: notes.join('. ') }
     : { date: r.date, value: r.value }
 }
 
 /** 'Labs counted changed: Mistral joined; xAI left' */
-function labSetNote(set: { added: string[]; removed: string[] }): string {
+function setNote(
+  what: string,
+  set: { added: string[]; removed: string[] },
+  name = companyName,
+): string {
   const parts = [
-    ...(set.added.length ? [`${set.added.map(companyName).join(', ')} joined`] : []),
-    ...(set.removed.length ? [`${set.removed.map(companyName).join(', ')} left`] : []),
+    ...(set.added.length ? [`${set.added.map(name).join(', ')} joined`] : []),
+    ...(set.removed.length ? [`${set.removed.map(name).join(', ')} left`] : []),
   ]
-  return `Labs counted changed: ${parts.join('; ')}`
+  return `${what}: ${parts.join('; ')}`
 }
 
 export async function queryTheses(db: PipelineDb, ctx: QueryContext): Promise<ThesesData> {

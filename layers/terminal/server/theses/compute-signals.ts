@@ -115,20 +115,19 @@ async function flagshipState(
 
 type PreviousFlagships = Record<string, { model_slug?: string }> | null
 
-/** The flagships behind the claim's previous reading, or null when there is none. */
-async function previousFlagships(
+/** What the claim's previous reading recorded beside its value, or null when there is none. */
+async function previousDetail(
   db: PipelineDb,
   claimId: string,
   date: string,
-): Promise<PreviousFlagships> {
+): Promise<Record<string, unknown> | null> {
   const [prev] = await db
     .select({ detail: tables.claimReadings.detail })
     .from(tables.claimReadings)
     .where(and(eq(tables.claimReadings.claim_id, claimId), lt(tables.claimReadings.date, date)))
     .orderBy(desc(tables.claimReadings.date))
     .limit(1)
-  if (!prev) return null
-  return (JSON.parse(prev.detail) as { flagships?: PreviousFlagships }).flagships ?? {}
+  return prev ? (JSON.parse(prev.detail) as Record<string, unknown>) : null
 }
 
 /** Labs whose mapped flagship differs from the claim's previous reading — a step to explain, not a revision. */
@@ -163,9 +162,27 @@ export function labSetChange(
   return added.length || removed.length ? { added, removed } : null
 }
 
+/**
+ * GPU providers that joined or left the median since the previous reading.
+ * Like a lab joining: a step in the ratio to explain, not a price move. Null
+ * for a first reading, and after a reading that recorded no providers.
+ */
+export function gpuSetChange(
+  before: Record<string, unknown> | null,
+  providers: Readonly<Record<string, unknown>>,
+): { added: string[]; removed: string[] } | null {
+  const held = before?.gpu_providers
+  if (!held || typeof held !== 'object') return null
+  const was = Object.keys(held)
+  const now = Object.keys(providers)
+  const added = now.filter((p) => !was.includes(p)).sort()
+  const removed = was.filter((p) => !now.includes(p)).sort()
+  return added.length || removed.length ? { added, removed } : null
+}
+
 /** What a flagship reading records beside its value: the labs in it, and what moved under it. */
-async function flagshipDetail(db: PipelineDb, claimId: string, s: FlagshipState) {
-  const before = await previousFlagships(db, claimId, s.date)
+function flagshipDetail(detail: Record<string, unknown> | null, s: FlagshipState) {
+  const before = detail ? ((detail.flagships as PreviousFlagships) ?? {}) : null
   return {
     flagships: s.flagships,
     no_flagship: s.excluded,
@@ -188,7 +205,10 @@ export async function flagshipBlendedPrice(
     {
       date: state.date,
       value: state.median,
-      detail: { ...(await flagshipDetail(db, claimId, state)), compare: null },
+      detail: {
+        ...flagshipDetail(await previousDetail(db, claimId, state.date), state),
+        compare: null,
+      },
       ...pick(newest(Object.values(state.flagships))),
     },
   ]
@@ -326,6 +346,7 @@ export async function flagshipPriceToGpu(
   const context = gpuMedian(spec.context_gpu, gpus.observations)
   if (flag.median === null || main.median === null) return []
   const have = Object.keys(main.providers).length
+  const before = await previousDetail(db, claimId, flag.date)
   const ratio = (m: number | null) => (m === null ? null : round(flag.median! / m))
   const inputs = [...Object.values(flag.flagships), ...Object.values(main.providers)]
   return [
@@ -334,10 +355,11 @@ export async function flagshipPriceToGpu(
       value: ratio(main.median)!,
       detail: {
         flagship_median: flag.median,
-        ...(await flagshipDetail(db, claimId, flag)),
+        ...flagshipDetail(before, flag),
         gpu: spec.gpu,
         gpu_median: main.median,
         gpu_providers: main.providers,
+        gpu_set_changed: gpuSetChange(before, main.providers),
         gpu_failed: gpus.failed,
         context: {
           gpu: spec.context_gpu,

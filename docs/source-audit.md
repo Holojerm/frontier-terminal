@@ -754,3 +754,26 @@ Checked because two providers print an H100 spot price we read, and the Compute 
 Interpretation, marked as such: Google's page meets the tests the nine included providers met. It is first-party, server-rendered, open under robots.txt, and under the same Google terms as the Google sources already rated `ours`. Whether to read it is a product decision, since it changes a headline number.
 
 **Verdict: cut `gpu-aws-spot`. `gpu-google-cloud` stays cut with a new reason: the page passes, and no recipe reads it until the owner decides.**
+
+**Built the same day.** The owner chose to count Google Cloud in both the spot read and the H100 median, with a note on the day it joins. `gpu-google-cloud` is now an include under `recipe_sources`. A second fetch at 23:15Z with the pipeline's User-Agent answered 200 (5,846,865 bytes), and its trimmed body is the fixture. The page's bytes differ on every fetch, so the recipe judges a change on the rows it reads. On the prices of 2026-11-20 the H100 median moves from $4.74 to about $5.12 on Google's first read. `/compute`, `/api/gpu-prices` and the Compute thesis's reading each name the day a provider joins or leaves the median (`docs/theses/compute.md` › Revisions).
+
+## Addendum, 2026-11-20: a fourth spot provider
+
+Checked because Google Cloud makes three H100 spot providers and the combined figure needs four. A first pass over about 30 providers, fetched 2026-11-20 23:14Z to 23:26Z with a generic client. Nothing is stored and nothing is decided. Only the Nebius and Verda rows were fetched twice and read by hand. The rest are one fetch each, and most of their terms weren't read.
+
+| Candidate | Source | Result | Terms | Verdict |
+|---|---|---|---|---|
+| Nebius spot prices | `api.nebius.cloud/billing/v1alpha1/spot-price`, documented at `docs.nebius.com/signup-billing/spot-prices` | 200, 3,530 bytes, JSON, 13 items. "Preemptible NVIDIA® H100 NVLink" in eu-north1 at 1 USD per "GPU hour", effective 2026-11-20T17:31:00Z. Items in the same answer took effect between 17:31Z and 22:26Z that day. No on-demand price in the answer | Docs: "Spot prices of preemptible GPU platforms and their history are public." and "The request doesn’t require authentication." The host has no robots.txt (404) | **Passes, with a method change.** The spot price and the on-demand price ($4.50 on `nebius.com/prices`, already read as `gpu-nebius`) are two documents, and the share is defined on one page |
+| Verda spot column | `verda.com/pricing`, already read as `gpu-verda` | 200, 492,005 bytes. A spot price beside each instance: 1x H100 SXM5 $5.508 and $2.754, 1x B200 SXM6 $9.747 and $4.874 | Read 2026-11-02 | **Passes, and says little.** Spot is half of on-demand on every H100 and B200 row, so the share would be a flat 50% |
+| Hyperstack | `hyperstack.cloud/gpu-pricing` | One fetch. H100 SXM $3.20 and B200 $6.00 on demand. Spot only for an H100 PCIe at $2.00, and its spot page says "Spot VM pricing offers fixed percentage discounts over on-demand pricing." | Terms not read by hand | **Not a spot source**: a fixed discount, on a card the median doesn't count. An on-demand candidate |
+| Crusoe, DigitalOcean, Oracle | Pages and API already read | Crusoe's page has dropped its spot column. DigitalOcean prints spot for B300 and AMD cards only. Oracle's price list has no preemptible part, and its docs say "Preemptible capacity costs 50% less than on-demand capacity in all regions." | — | **No H100 or B200 spot price** |
+| OVHcloud, Civo, Massed Compute, Denvr | Their pricing pages | One fetch each. H100 on demand at $2.99, $2.99, $3.14 and $3.00. No spot price | Terms not read | **On-demand candidates only** |
+| Lightning AI, SF Compute | Their sites | Lightning resells other clouds. SF Compute runs an order book with resale | — | **Not first-party** |
+
+**Findings.**
+
+- **Nebius is the only new price that moves.** Its docs publish the API for anyone, and the prices in one answer changed hours apart. On 2026-11-20 its H100 spot price was 22% of its on-demand price.
+- **Reading it changes the method.** `/compute` says the share is a spot price over the on-demand price "for the same instance on the same page". Nebius would be one provider read from two of its own documents, with a spot price for one region against a list price that names none.
+- **A fourth provider turns the combined figure on.** With CoreWeave, Azure, Google Cloud and one more, `/compute` prints a median share and claim 7 of the Compute thesis starts to count. Azure hasn't moved and Verda's wouldn't, so which provider is fourth decides how much of that median is a market.
+
+**Verdict: none yet.** Whether to read Nebius's API across two documents, and whether a fixed discount counts as a spot price, are the owner's calls.

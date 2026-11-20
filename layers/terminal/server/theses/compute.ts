@@ -34,6 +34,8 @@ export const COMPUTE_THESIS: ThesisDef = {
     'verda',
     'microsoft',
     'oracle',
+    // For Google Cloud's GPU prices; the lab is also part of the subject.
+    'google',
   ],
   horizon: '2027-12-31',
   position: 'none',

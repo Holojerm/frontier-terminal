@@ -12,6 +12,7 @@ import {
   GPU_COREWEAVE,
   GPU_CRUSOE,
   GPU_DIGITALOCEAN,
+  GPU_GOOGLE_CLOUD,
   GPU_LAMBDA,
   GPU_NEBIUS,
   GPU_TOGETHER,
@@ -44,6 +45,7 @@ export const GPU_RECIPES: readonly Recipe[] = [
   GPU_VERDA,
   GPU_AZURE,
   GPU_ORACLE,
+  GPU_GOOGLE_CLOUD,
 ]
 
 export const RECIPES: readonly Recipe[] = [

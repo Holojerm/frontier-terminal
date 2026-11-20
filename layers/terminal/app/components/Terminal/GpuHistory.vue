@@ -18,6 +18,13 @@ const wholePct = (n: number) => `${Math.round(n * 100)}%`
 const range = (s: SpotShare) =>
   pct(s.low) === pct(s.high) ? pct(s.low) : `${pct(s.low)}–${pct(s.high)}`
 
+/** 'Google Cloud joined', 'Verda left': the providers behind the median changed that day. */
+const setNote = (c: { joined: string[]; left: string[] }) =>
+  [
+    ...(c.joined.length ? [`${c.joined.join(', ')} joined`] : []),
+    ...(c.left.length ? [`${c.left.join(', ')} left`] : []),
+  ].join(', ')
+
 /** A line needs two points; one read is a number in the table, not a chart. */
 const drawable = (values: (number | null)[]) => values.filter((v) => v !== null).length > 1
 
@@ -42,6 +49,7 @@ const charts = computed(() =>
         }))
     return {
       gpu: g.gpu,
+      notes: g.provider_changes.map((c) => `${dayLabel(c.date)}: ${setNote(c)}`),
       price: [{ id: 'median', label: 'Median', values: g.median }],
       spot: spot.filter((s) => drawable(s.values)),
       spotRead: g.spot.length > 0,
@@ -66,12 +74,15 @@ const rows = computed(() =>
         const singles = g.spot
           .filter((p) => p.share[i])
           .map((p) => `${p.provider_name} ${range(p.share[i]!)}`)
+        const change = g.provider_changes.find((c) => c.date === date)
         return {
           key: `${date}:${g.gpu}`,
           date,
           gpu: g.gpu,
           median: gpuHour(g.median[i] ?? null),
-          providers: g.providers[i] ?? 0,
+          providers: change
+            ? `${g.providers[i] ?? 0} (${setNote(change)})`
+            : `${g.providers[i] ?? 0}`,
           spot: combined
             ? `${range(combined)} across ${singles.length} providers`
             : singles.join(', ') || 'none printed',
@@ -102,6 +113,10 @@ const rows = computed(() =>
             step
             :title="`Median on-demand ${c.gpu} list price per GPU-hour across providers, ${dayLabel(first)} to ${dayLabel(last)}`"
           />
+          <p v-if="c.notes.length" class="text-xs text-muted">
+            Providers counted changed, which moves the median with no price moving.
+            {{ c.notes.join('. ') }}.
+          </p>
         </div>
         <div class="space-y-1">
           <h4 class="text-xs text-muted">Spot price as % of on-demand</h4>
