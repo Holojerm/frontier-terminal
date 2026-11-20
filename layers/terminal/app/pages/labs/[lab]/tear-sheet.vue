@@ -152,6 +152,15 @@ const sheet = computed(() =>
   ),
 )
 const display = sheet.value.display
+const figureBlocks = computed(() => [
+  { id: 'demand', title: 'Demand', wide: false, figures: [sheet.value.demand] },
+  {
+    id: 'operations',
+    title: 'Operations',
+    wide: true,
+    figures: [sheet.value.hiring, sheet.value.incidents],
+  },
+])
 const asOf = computed(() => prices.data.value?.as_of ?? alerts.data.value?.as_of ?? null)
 
 useSeo({
@@ -294,10 +303,22 @@ const PRINT_INK = [
           </p>
         </TearSheetSection>
 
-        <TearSheetSection id="operations" title="Demand, hiring, incidents">
-          <dl class="space-y-2">
+        <!-- Demand sits beside revenue with the economics. Hiring and incidents
+             are how the lab runs, so they get a section of their own. -->
+        <TearSheetSection
+          v-for="block in figureBlocks"
+          :id="block.id"
+          :key="block.id"
+          :title="block.title"
+          :class="block.wide ? 'sm:col-span-2 print:col-span-2' : undefined"
+        >
+          <dl
+            :class="
+              block.wide ? 'grid gap-x-6 gap-y-2 sm:grid-cols-2 print:grid-cols-2' : 'space-y-2'
+            "
+          >
             <div
-              v-for="f in [sheet.demand, sheet.hiring, sheet.incidents]"
+              v-for="f in block.figures"
               :key="f.label"
               class="flex flex-wrap items-baseline justify-between gap-x-3"
             >

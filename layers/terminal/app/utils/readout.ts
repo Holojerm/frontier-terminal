@@ -13,7 +13,8 @@ import {
   signed,
 } from '../../shared/utils/terminal-format'
 import { labPath, type LabSummary } from '../../shared/utils/terminal-lab-summary'
-import type { Prov, RevenueProviderView } from '../../shared/utils/terminal-types'
+import type { DataCentersData } from '../../shared/utils/recipe-views'
+import type { LabId, Prov, RevenueProviderView } from '../../shared/utils/terminal-types'
 import type { GapRef } from '../types/terminal-ui'
 
 import { feedGap } from './feed-gap'
@@ -144,4 +145,64 @@ export function readoutCells(
         })
 
   return { prices, revenue, demand, hiring, incidents }
+}
+
+/**
+ * The lab page's readout in two halves: what the lab charges and earns, then
+ * how it staffs and runs. Every axis sits in one group.
+ */
+export const READOUT_GROUPS = [
+  { id: 'economics', label: 'Economics', axes: ['prices', 'revenue', 'demand'] },
+  { id: 'operations', label: 'Operations', axes: ['hiring', 'incidents'] },
+] as const satisfies readonly { id: string; label: string; axes: readonly ReadoutAxis[] }[]
+
+/**
+ * Data-center power as a readout cell, for the lab page's economics group.
+ * Not an axis: the front page's strip has no column for it.
+ */
+export function powerCell(
+  lab: LabId,
+  display: string,
+  data: Pick<DataCentersData, 'labs' | 'speculative_only' | 'source'> | null | undefined,
+): ReadoutCell {
+  const cell = (c: Partial<ReadoutCell>): ReadoutCell => ({
+    label: 'Data-center power',
+    value: null,
+    delta: null,
+    sub: null,
+    to: `${labPath(lab)}#power`,
+    source: null,
+    gap: null,
+    ...c,
+  })
+  if (!data) return cell({ gap: { title: 'No power data yet' } })
+  const row = data.labs.find((l) => l.lab === lab)
+  if (!row) {
+    return cell({
+      gap: data.speculative_only.includes(lab)
+        ? {
+            title: 'No site counted',
+            reason: 'Epoch names this lab as a user only at #speculative, which we don’t count.',
+          }
+        : {
+            title: 'No site named',
+            reason: `Epoch AI’s data names no data center with ${display} as a user.`,
+            name: `Why ${display} has no power figure`,
+          },
+    })
+  }
+  if (row.mw === 0) {
+    return cell({
+      gap: {
+        title: 'No power yet',
+        reason: `Epoch puts current power at 0 MW for ${display}’s ${row.sites === 1 ? 'site' : 'sites'}. Its data counts power already online, so a site still being built reads as zero.`,
+        name: `Why ${display} has no power figure`,
+      },
+    })
+  }
+  return cell({
+    value: `${count(Math.round(row.mw))} MW`,
+    sub: `${count(row.sites)} ${row.sites === 1 ? 'site' : 'sites'} · Epoch AI estimate`,
+    source: data.source,
+  })
 }
