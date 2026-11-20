@@ -180,6 +180,16 @@ function termsOf(change: ChangeRow): SearchTerms | null {
       if (who.length) return { who, what, also: [] }
       return lab.length ? { who: lab.slice(0, 1), what, also: [] } : null
     }
+    case 'filed_fact': {
+      // A hyperscaler's own figure, read from its 10-Q/10-K: earnings news.
+      // A line about a lab (Microsoft's gain on OpenAI) also needs the lab
+      // named, or every earnings story about the filer would be a candidate.
+      const filer = str(p.filer)
+      const form = str(p.form)
+      if (!filer || !form) return null
+      const aboutLab = change.provider === 'openai' || change.provider === 'anthropic'
+      return { who: [filer], what: formTerms(form), also: aboutLab ? lab : [] }
+    }
     default:
       return null
   }

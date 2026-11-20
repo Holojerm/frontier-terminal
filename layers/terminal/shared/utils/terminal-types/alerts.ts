@@ -28,6 +28,7 @@ export interface ChangeView extends Prov {
     | 'concentration'
     | 'shares'
     | 'risk_factors'
+    | 'filed_fact'
   provider: ProviderId
   change_type: 'added' | 'removed' | 'modified'
   detected_at: string
@@ -50,6 +51,7 @@ export interface AlertView extends Prov {
     | 'model-floor'
     | 'prospectus-floor'
     | 'hiring-rollup'
+    | 'filed-fact-floor'
   created_at: string
   change_ids: string[]
   /** The cited rows, resolved; ids that resolve to nothing are listed in `missing`. */
