@@ -4,11 +4,15 @@
 // disclosed, who is winning demand and where the implied dollars go, who is
 // hiring, and how strained the APIs are. Each panel is the same component
 // its axis page leads with, so the overview is the axis pages' summaries and
-// nothing else. Nine cached endpoints, fetched in parallel on the server.
+// nothing else. Fourteen cached endpoints, fetched in parallel on the server.
 
+import type { ListedData } from '#layers/terminal/shared/utils/listed'
+import type { UtilizationData } from '#layers/terminal/shared/utils/recipe-views'
 import { LABS } from '#layers/terminal/shared/utils/terminal-lab-summary'
 import type {
   DisclosuresData,
+  GpuPricesData,
+  GroundTruthData,
   HiringHistoryData,
   IncidentsData,
   OverviewData,
@@ -18,6 +22,7 @@ import type {
   RevenueData,
   SpendData,
 } from '#layers/terminal/shared/utils/terminal-types'
+import type { ThesesData } from '#layers/terminal/shared/utils/thesis-types'
 
 definePageMeta({
   publicPage: {
@@ -25,7 +30,7 @@ definePageMeta({
     priority: '1.0',
     title: 'Overview',
     summary:
-      'What changed at the frontier AI labs, with judged alerts, change counts, flagship API prices, disclosed revenue, demand and implied spend share, open roles, the infrastructure buildout, status-page incidents, and misalignment disclosures.',
+      'What changed at the frontier AI labs, with judged alerts, flagship API prices, disclosed revenue and press reports scored against it, listed companies tied to the labs, GPU rental prices and utilization, the newest thesis status, demand and implied spend share, open roles, status-page incidents, and misalignment disclosures.',
   },
 })
 
@@ -41,6 +46,21 @@ const config = useRuntimeConfig()
 // One source for the site's one-sentence claim — also used by /llms.txt and
 // the schema.org description, so all three agree.
 const description = config.public.appDescription
+
+// The fundamentals row reads one figure from each of these, so each transform
+// keeps that figure and its citation and drops the rest of the payload. Started
+// before the other nine are awaited, so all fourteen run at once.
+const fundamentalsFetch = Promise.all([
+  useFetch('/api/ground-truth', {
+    transform: (d: GroundTruthData) => truthFigure(d),
+  }),
+  useFetch('/api/listed', { transform: (d: ListedData) => listedFigure(d) }),
+  useFetch('/api/gpu-prices', { transform: (d: GpuPricesData) => gpuFigure(d) }),
+  useFetch('/api/utilization', {
+    transform: (d: UtilizationData) => utilizationFigure(d),
+  }),
+  useFetch('/api/theses', { transform: (d: ThesesData) => thesisFigure(d) }),
+])
 
 // `pick`/`transform` run on the server, before Nuxt serialises the result into
 // the hydration payload — so what is dropped here is not fetched-then-ignored,
@@ -108,6 +128,11 @@ const [
   }),
 ])
 
+const fundamentals = await fundamentalsFetch
+const fundamentalFigures = computed(() =>
+  fundamentals.flatMap((r) => (r.data.value ? [r.data.value] : [])),
+)
+
 useSeo({
   // 'exact' because the brand should lead on the landing page — everywhere else
   // useSeo appends `· AppName` for you.
@@ -128,6 +153,7 @@ const failed = computed(() =>
     hiringHistory,
     incidents,
     disclosures,
+    ...fundamentals,
   ].some((r) => r.error.value !== null && r.error.value !== undefined),
 )
 
@@ -165,6 +191,26 @@ const openIncidents = computed(() =>
       flush
     >
       <TerminalReadoutStrip :labs="LABS" :data="readout" />
+    </TerminalPanel>
+
+    <TerminalPanel
+      v-if="fundamentalFigures.length"
+      id="fundamentals"
+      title="Around the labs"
+      note="Press reports against filings, the listed companies tied to the labs, compute, and the theses. Each figure links to the page with every source."
+    >
+      <dl class="grid grid-cols-2 gap-x-6 gap-y-4 sm:grid-cols-3 lg:grid-cols-5">
+        <TerminalFigure
+          v-for="f in fundamentalFigures"
+          :key="f.label"
+          :label="f.label"
+          :value="f.value"
+          :sub="f.sub"
+          :to="f.to"
+          :source="f.source"
+          :gap="f.gap"
+        />
+      </dl>
     </TerminalPanel>
 
     <div class="grid gap-6 lg:grid-cols-2">
