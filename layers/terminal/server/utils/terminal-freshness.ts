@@ -10,6 +10,7 @@
 //                 gdelt_files
 //   social-outbox the social outbox, social_posts — its sender is in the
 //                 vendored layer and records no heartbeat
+//   listing-status the hand-checked "registered" rows, against a stored 424B4
 //   deploy        Workers Builds: main's head on GitHub against this build's
 //                 sha (pipeline/deploy-watch.ts)
 //
@@ -17,7 +18,7 @@
 // terminal-ops-severity.ts; freshness.test.ts fails the build on a kind with
 // no tier and on a scheduled task with no heartbeat and no override.
 
-import { and, asc, desc, eq, lte, max } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, lte, max, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 
@@ -26,6 +27,7 @@ import { judgeFreshnessCheck } from '../pipeline/judge/watchdog'
 import { GKG_READY_MS, stampIso } from '../pipeline/track-record/gkg'
 import { oldestUnread } from '../pipeline/track-record/search'
 import { heartbeatLoader, taskHeartbeatCheck, type FreshnessCheck } from './freshness'
+import { ENTITY_IDENTIFIERS } from './terminal-identifiers'
 
 const HOUR_MS = 60 * 60 * 1000
 
@@ -93,6 +95,52 @@ export const socialOutboxFreshnessCheck: FreshnessCheck = {
   },
 }
 
+/** How long a final prospectus may sit beside a row that still says "registered". */
+export const LISTING_REVIEW_MS = HOUR_MS
+
+/**
+ * ENTITY_IDENTIFIERS and ENTITY_SECURITIES are checked by hand, and
+ * "registered" (an S-1 on file, shares not yet trading) stops being true the
+ * day the offering prices. The filings lane stores the 424B4 that says so and
+ * alerts on it, while the two hand-kept rows would go on saying "not yet
+ * trading". That filing is the work owed: it stays owed until the rows are
+ * re-checked and no longer say "registered".
+ */
+export const listingStatusCheck: FreshnessCheck = {
+  key: 'listing-status',
+  label: 'A registered filer’s listing status (terminal-identifiers.ts, terminal-entities.ts)',
+  kind: 'listing_status_stale',
+  maxAgeMs: LISTING_REVIEW_MS,
+  path: '/api/identifiers',
+  async evidence(db) {
+    const registered = ENTITY_IDENTIFIERS.filter((e) => e.listing_status === 'registered')
+    if (registered.length === 0) return { owedSince: null }
+    const fileDate = sql<string | null>`json_extract(${tables.entities.payload}, '$.file_date')`
+    const [priced] = await db
+      .select({ source_id: tables.entities.source_id, fileDate })
+      .from(tables.entities)
+      .where(
+        and(
+          inArray(
+            tables.entities.source_id,
+            registered.map((e) => `edgar-submissions-${e.entity_id}`),
+          ),
+          eq(tables.entities.entity_type, 'filing'),
+          eq(sql`json_extract(${tables.entities.payload}, '$.form')`, '424B4'),
+        ),
+      )
+      .orderBy(asc(fileDate))
+      .limit(1)
+    if (!priced?.fileDate || !/^\d{4}-\d{2}-\d{2}$/.test(priced.fileDate)) {
+      return { owedSince: null }
+    }
+    return {
+      owedSince: `${priced.fileDate}T00:00:00.000Z`,
+      note: `${priced.source_id.replace('edgar-submissions-', '')} filed a 424B4 on ${priced.fileDate} and is still listed as registered`,
+    }
+  },
+}
+
 /**
  * Scheduled tasks whose freshness is checked from their own rows instead of
  * a heartbeat, each with the reason. Empty since social:post left the
@@ -127,6 +175,7 @@ export function freshnessChecks(deps: FreshnessDeps): FreshnessCheck[] {
     judgeFreshnessCheck,
     gdeltFreshnessCheck,
     socialOutboxFreshnessCheck,
+    listingStatusCheck,
     deployDriftCheck(deps.buildSha, deps.mainHead),
   ]
 }

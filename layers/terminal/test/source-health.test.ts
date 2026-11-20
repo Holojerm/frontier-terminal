@@ -8,7 +8,13 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { FAILING_AFTER_MS, sourceFailures, sourceHealth } from '../server/utils/source-health'
+import {
+  FAILING_AFTER_MS,
+  failingSources,
+  markFailing,
+  sourceFailures,
+  sourceHealth,
+} from '../server/utils/source-health'
 
 const db = drizzle(env.DB, { schema })
 
@@ -105,5 +111,62 @@ describe('sourceFailures', () => {
     ])
     const { since } = await sourceFailures(db, ['new-source'], AS_OF)
     expect(since.get('new-source')).toBe('2026-11-16T01:00:00.000Z')
+  })
+})
+
+describe('failing sources on every payload', () => {
+  beforeEach(async () => {
+    await db.delete(schema.sourceStats)
+  })
+
+  const stat = (source_id: string, last_run_at: string) =>
+    db.insert(schema.sourceStats).values({ source_id, run_count: 1, last_run_at })
+
+  it('names a source whose newest check ends six hours of failures, and no other', async () => {
+    await insertRuns([
+      run('mistral-status', '2026-11-16T00:00:39.000Z', 'unchanged'),
+      run('mistral-status', '2026-11-16T06:00:36.982Z', 'failed'),
+      run('mistral-status', '2026-11-16T12:00:40.000Z', 'failed'),
+      // Failed once, an hour ago: a blip.
+      run('openai-status', '2026-11-16T13:30:00.000Z', 'failed'),
+      // Failed for a day, then recovered.
+      run('xai-status', '2026-11-15T00:00:00.000Z', 'failed'),
+      run('xai-status', '2026-11-16T12:00:00.000Z', 'ok'),
+    ])
+    await stat('mistral-status', '2026-11-16T12:00:40.000Z')
+    await stat('openai-status', '2026-11-16T13:30:00.000Z')
+    await stat('xai-status', '2026-11-16T12:00:00.000Z')
+
+    expect(await failingSources(db, AS_OF)).toEqual({
+      'mistral-status': '2026-11-16T06:00:36.982Z',
+    })
+    expect(await failingSources(db, null)).toEqual({})
+  })
+
+  it('stamps failing_since on the citations of a failing source, wherever they sit', () => {
+    const cite = (source_id: string) => ({
+      source_id,
+      label: source_id,
+      source_url: 'https://example.com',
+      fetched_at: '2026-11-16T00:00:39.000Z',
+    })
+    const payload = {
+      as_of: AS_OF,
+      providers: [
+        { provider: 'mistral', open: [{ id: 'i1' }], sources: [cite('mistral-status')] },
+        { provider: 'openai', open: [], sources: [cite('openai-status')] },
+      ],
+      // Names a source without citing a read of it: left alone.
+      coverage: [{ source_id: 'mistral-status', label: 'Mistral status' }],
+    }
+    const failing = { 'mistral-status': '2026-11-16T06:00:36.982Z' }
+    const marked = markFailing(structuredClone(payload), failing)
+    expect(marked.providers[0]!.sources[0]).toEqual({
+      ...cite('mistral-status'),
+      failing_since: '2026-11-16T06:00:36.982Z',
+    })
+    expect(marked.providers[1]).toEqual(payload.providers[1])
+    expect(marked.coverage).toEqual(payload.coverage)
+    expect(markFailing(payload, {})).toBe(payload)
   })
 })

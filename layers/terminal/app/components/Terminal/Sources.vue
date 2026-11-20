@@ -27,6 +27,7 @@ const inTable = inject(IN_TERMINAL_TABLE, false)
       :label="s.label"
       :source-url="s.source_url"
       :fetched-at="s.fetched_at"
+      :failing-since="s.failing_since"
     />
     <TerminalCaveatMark
       v-for="c in caveats"

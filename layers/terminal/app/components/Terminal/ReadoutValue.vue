@@ -16,6 +16,13 @@ const title = computed(() =>
     ? `${hostOf(props.cell.source.source_url)} · fetched ${stamps.absolute(props.cell.source.fetched_at)}`
     : undefined,
 )
+// A feed we can no longer read keeps its last figure, so the cell says so
+// (TerminalProvenanceTag uses the same words beside a full citation).
+const failing = computed(() =>
+  props.cell.source?.failing_since
+    ? failingSince(stamps.absolute(props.cell.source.failing_since))
+    : null,
+)
 </script>
 
 <template>
@@ -36,6 +43,9 @@ const title = computed(() =>
          note ("nine months to … · Google Cloud") widens a stacked phone row. -->
     <span v-if="cell.sub" class="block whitespace-normal font-sans text-xs text-muted">{{
       cell.sub
+    }}</span>
+    <span v-if="failing" class="block whitespace-normal font-sans text-xs text-warning">{{
+      failing
     }}</span>
   </span>
 </template>

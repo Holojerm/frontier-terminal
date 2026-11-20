@@ -91,6 +91,11 @@ const columns = computed<TableColumn[]>(() => [
         </span>
       </span>
       <span v-else class="text-muted">none</span>
+      <!-- The source column scrolls out of view on a narrow table, and a feed
+           we cannot read would otherwise show "none" as if checked. -->
+      <span v-if="p.sources[0]?.failing_since" class="block whitespace-nowrap text-warning">{{
+        failingSince(stamps.absolute(p.sources[0].failing_since))
+      }}</span>
     </template>
     <template #cell-source="{ row: p }">
       <TerminalSources

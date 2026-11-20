@@ -402,6 +402,10 @@ screen the way a terminal function key does. The data below it is the content.
 - **Source cells:** a citation in a table cell is one line: the host as a link, the age and
   exact fetch stamp in its tooltip and a screen-reader `<time>`. The panel footer prints every
   source with its visible age, so provenance stays within reach while a row stays one line.
+- **Failing sources:** the page's as-of stamp is the newest check of any source. A source
+  whose checks have all failed for six hours keeps its last datum, so its citation says
+  "checks failing since" with the time, in `text-warning` (a warning icon in a table cell). A
+  readout cell or feed row built on that source repeats the line under its figure.
 - **Tabs:** a page whose panels answer several separate questions (one lab across every axis;
   hiring's openings, buildout, departments and pay) splits them into `TerminalTabs`. The open
   tab is in `?tab=`, every tab renders on the server and stays in the document, and an

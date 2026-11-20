@@ -34,10 +34,17 @@ const props = withDefaults(
      * re-read ten minutes ago would read as days old.
      */
     checkedAt?: string | null
+    /**
+     * When this source's checks began failing, on a source that has failed
+     * every check for hours (Prov.failing_since). The page's "as of" is the
+     * newest check of any source, so without this the last datum read from a
+     * dead source looks as current as the rest.
+     */
+    failingSince?: string | null
   }>(),
   // An explicit undefined default stops Vue casting an absent boolean to
   // false, so "not set" can fall through to the table context.
-  { label: undefined, compact: undefined, checkedAt: null },
+  { label: undefined, compact: undefined, checkedAt: null, failingSince: null },
 )
 
 const inTable = inject(IN_TERMINAL_TABLE, false)
@@ -57,6 +64,14 @@ const exactReading = computed(() =>
     : `fetched ${exact.value}`,
 )
 const datetime = computed(() => props.checkedAt ?? props.fetchedAt)
+const failing = computed(() =>
+  props.failingSince ? failingSince(stamps.absolute(props.failingSince)) : null,
+)
+const failingNote = computed(() =>
+  props.failingSince
+    ? `Every check has failed since ${exactStamp(props.failingSince)}. This is from the last check that worked.`
+    : null,
+)
 </script>
 
 <template>
@@ -70,11 +85,18 @@ const datetime = computed(() => props.checkedAt ?? props.fetchedAt)
       :href="sourceUrl"
       target="_blank"
       rel="noopener noreferrer"
-      :title="`${label ? `${label}\n` : ''}${sourceUrl}\n${exactReading}`"
+      :title="`${label ? `${label}\n` : ''}${sourceUrl}\n${exactReading}${failingNote ? `\n${failingNote}` : ''}`"
       class="inline-block max-w-40 truncate leading-6 underline underline-offset-2 hover:text-default"
       >{{ hostOf(sourceUrl) }}</a
     >
+    <UIcon
+      v-if="failing"
+      name="i-lucide-triangle-alert"
+      class="ml-1 size-3 shrink-0 self-center text-warning"
+      aria-hidden="true"
+    />
     <time :datetime="datetime" class="sr-only">{{ checkedAt ? reading : `fetched ${age}` }}</time>
+    <span v-if="failing" class="sr-only">{{ failing }}</span>
   </span>
   <span
     v-else
@@ -91,5 +113,6 @@ const datetime = computed(() => props.checkedAt ?? props.fetchedAt)
       >{{ text }}</a
     >
     <time :datetime="datetime" :title="exactReading">{{ reading }}</time>
+    <span v-if="failing" class="text-warning" :title="failingNote ?? undefined">{{ failing }}</span>
   </span>
 </template>

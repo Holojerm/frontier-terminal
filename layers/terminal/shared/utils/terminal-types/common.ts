@@ -2,6 +2,13 @@ export interface Prov {
   source_url: string
   /** ISO 8601 with timezone, exactly as stored. */
   fetched_at: string
+  /**
+   * On a citation that names its source (source_id): set when every check of
+   * that source has failed for six hours or more, to when the failures began.
+   * The datum beside it is the last one we read. Absent on a healthy source
+   * and on a payload read with as_of.
+   */
+  failing_since?: string
 }
 
 export type ProviderId =
