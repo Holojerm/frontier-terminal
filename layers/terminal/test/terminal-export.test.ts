@@ -114,6 +114,8 @@ describe('the table registry', () => {
       'incidents',
       'disclosures',
       'disclosure_timelines',
+      'latency_probes',
+      'probe_days',
       'filers',
       'revenue_facts',
       'prospectus_statements',
@@ -134,10 +136,14 @@ describe('the table registry', () => {
       'reported_figures',
       'recipe_observations',
       'filed_facts',
+      'filed_guidance',
       'exposure_quarters',
+      'dependency_edges',
       'source_runs',
       'entity_securities',
       'entity_identifiers',
+      'supplier_passages',
+      'power_site_ties',
     ])
     expect(exportTable('entities')).toBeNull()
     expect(exportTable('rankings_daily')).toBeNull()
@@ -349,6 +355,155 @@ describe('entity_securities', () => {
       expect(Object.keys(row)).toEqual(table.columns)
       expect(row.source_url).toMatch(/^https:\/\//)
     }
+  })
+})
+
+describe('the hand-read tables', () => {
+  it('serve every passage from code, each with its quote, source, and a unique id', async () => {
+    for (const name of ['supplier_passages', 'power_site_ties']) {
+      const table = exportTable(name)!
+      const rows = JSON.parse(await collect(jsonChunks(db, table))) as Record<string, unknown>[]
+      expect(rows.length, name).toBeGreaterThan(10)
+      expect(rows.length, name).toBe(await table.count(db))
+      expect(new Set(rows.map((r) => r.id)).size, name).toBe(rows.length)
+      for (const row of rows) {
+        expect(Object.keys(row), name).toEqual(table.columns)
+        expect(row.source_url, name).toMatch(/^https:\/\//)
+        expect(String(row.quote).length, name).toBeGreaterThan(9)
+      }
+    }
+  })
+
+  it('keeps each supplier figure nested, and each site’s grid as a row of its own', async () => {
+    const suppliers = JSON.parse(
+      await collect(jsonChunks(db, exportTable('supplier_passages')!)),
+    ) as { figures: unknown[] }[]
+    expect(suppliers.some((r) => r.figures.length > 0)).toBe(true)
+    const ties = JSON.parse(await collect(jsonChunks(db, exportTable('power_site_ties')!))) as {
+      role: string
+      ticker: string | null
+    }[]
+    expect(ties.filter((r) => r.role === 'grid').every((r) => r.ticker === null)).toBe(true)
+    expect(ties.some((r) => r.role === 'grid')).toBe(true)
+  })
+})
+
+describe('latency_probes', () => {
+  const probe = (lab: string, started_at: string) => ({
+    id: `probe-${lab}-${started_at}`,
+    lab,
+    model: `${lab}/flagship`,
+    route: 'openrouter',
+    provider: lab === 'google' ? 'google-ai-studio' : lab,
+    served_by: null,
+    started_at,
+    outcome: 'ok',
+    http_status: 200,
+    detail: null,
+    provider_code: null,
+    ttft_ms: 400,
+    total_ms: 2_000,
+    output_tokens: 120,
+    reasoning_tokens: null,
+    tokens_per_second: 75,
+    finish_reason: 'stop',
+    cost_usd: 0.001,
+    generation_id: 'gen-1',
+    ran_from: 'cloudflare:EWR',
+    raw_key: null,
+    source_url: 'https://openrouter.ai/api/v1/chat/completions',
+    fetched_at: started_at,
+  })
+
+  it('serves the endpoint slug as pinned_provider, not as a lab id, and resumes a page', async () => {
+    await db
+      .insert(schema.latencyProbes)
+      .values([
+        probe('google', '2026-09-10T01:00:00.000Z'),
+        probe('openai', '2026-09-11T01:00:00.000Z'),
+      ])
+    const table = exportTable('latency_probes')!
+    expect(table.columns).toContain('pinned_provider')
+    expect(table.columns).not.toContain('provider')
+    expect(table.columns).not.toContain('generation_id')
+    const first = await table.page(db, null, 1)
+    expect(first[0]).toMatchObject({ lab: 'google', pinned_provider: 'google-ai-studio' })
+    const next = await table.page(db, first[0]!, 1)
+    expect(next[0]).toMatchObject({ lab: 'openai', pinned_provider: 'openai' })
+    const at = await table.at(db, '2026-09-10T12:00:00.000Z')
+    expect((await at.page(db, null, 10)).map((r) => r.lab)).toEqual(['google'])
+  })
+})
+
+describe('dependency_edges and filed_guidance', () => {
+  const MSFT = '0000789019'
+  const OPENAI = 'us-gaap:InvestmentIssuerNameAxis=msft:OpenAIGlobalLlcMember'
+  const filedFact = (concept: string, value: number, filed: string) => ({
+    id: contentHash({ concept, filed }),
+    ticker: 'MSFT',
+    cik: MSFT,
+    concept,
+    dims: OPENAI,
+    start: null,
+    end: '2026-09-30',
+    value,
+    unit: 'USD',
+    form: '10-Q',
+    filed,
+    accession_no: `${MSFT}-26-${filed.slice(5, 7)}`,
+    basis: 'instance',
+    raw_key: 'filed-facts/msft/x.xml',
+    first_seen_at: '2026-11-19T18:00:00.000Z',
+    source_url: 'https://www.sec.gov/Archives/edgar/data/789019/x.xml',
+    fetched_at: '2026-11-19T18:00:00.000Z',
+  })
+
+  it('serves one row per figure on a line, the weight marked, cut at as_of by filing date', async () => {
+    await db
+      .insert(schema.filedFacts)
+      .values([
+        filedFact('msft:EquityMethodInvestmentsTotalFundingCommitments', 13e9, '2026-10-29'),
+        filedFact('msft:EquityMethodInvestmentsFunded', 12e9, '2026-10-29'),
+      ])
+    const table = exportTable('dependency_edges')!
+    const rows = await table.page(db, null, 100)
+    const funds = rows.filter((r) => r.edge_id === 'MSFT>openai:funds')
+    expect(funds.map((r) => [r.short, r.weight])).toEqual([
+      ['committed', true],
+      ['paid in', false],
+    ])
+    expect(funds[0]).toMatchObject({ from_node: 'MSFT', to_node: 'openai', reporter: 'MSFT' })
+    expect(await table.page(db, funds[0]!, 100)).toEqual(rows.slice(rows.indexOf(funds[0]!) + 1))
+    const before = await table.at(db, '2026-10-29T12:00:00.000Z')
+    expect((await before.page(db, null, 100)).some((r) => r.edge_id === 'MSFT>openai:funds')).toBe(
+      false,
+    )
+  })
+
+  it('serves guidance with its sentence, cut at as_of by filing date', async () => {
+    await db.insert(schema.filedGuidance).values({
+      id: 'g1',
+      ticker: 'MSFT',
+      cik: MSFT,
+      accession_no: '0000950170-26-000001',
+      filed: '2026-10-29',
+      fiscal_year: 2027,
+      low: 120e9,
+      high: 120e9,
+      sentence: 'We expect capital expenditures of about $120 billion in fiscal year 2027.',
+      raw_key: 'guidance/msft/0000950170-26-000001.htm',
+      first_seen_at: '2026-10-29T21:00:00.000Z',
+      source_url: 'https://www.sec.gov/Archives/edgar/data/789019/ex99-1.htm',
+      fetched_at: '2026-10-29T21:00:00.000Z',
+    })
+    const table = exportTable('filed_guidance')!
+    expect(await table.page(db, null, 10)).toEqual([
+      expect.objectContaining({ ticker: 'MSFT', fiscal_year: 2027, low: 120e9 }),
+    ])
+    expect(await (await table.at(db, '2026-10-29T23:00:00.000Z')).page(db, null, 10)).toEqual([])
+    expect(await (await table.at(db, '2026-10-30T00:00:00.000Z')).page(db, null, 10)).toHaveLength(
+      1,
+    )
   })
 })
 
