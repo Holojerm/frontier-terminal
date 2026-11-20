@@ -1,68 +1,117 @@
-# New Feature Scaffold
+# New dataset
 
-Scaffold a complete full-stack feature: component + API routes + optional schema changes.
+Add a dataset to the terminal end to end: source, parser, table, route, pages, MCP tool, export
+and alerts. This is a read-only pipeline product. Rows come from a scheduled fetch of a public
+source, never from a request, and every row carries its `source_url` and `fetched_at`.
 
 ## Usage
-`/new-feature [FeatureName]`
+`/new-feature [dataset]`
 
-Example: `/new-feature Workout`
+Example: `/new-feature gpu-spot-prices`
 
-## Instructions
+## Before writing code
 
-Given a feature name, scaffold the full stack for that feature. Ask clarifying questions first if needed:
+Settle these first, and ask if the answer isn't clear:
 
-1. **What data does this feature manage?** (to know what schema columns/tables are needed)
-2. **What operations does it need?** (list, create, update, delete — determines which API routes)
-3. **Where does the data come from?** (a source URL and fetch timestamp must ride on every row)
+1. **The source.** The URL, what we take from it, how often, its terms and `robots.txt`, and
+   what our license covers (`rights`: `ours`, `upstream`, `restricted` or `not-cleared`). A
+   source we can't fetch again isn't stored.
+2. **Per lab or not.** Does each row belong to one lab? Then it reaches the lab page and tear
+   sheet, and the route takes `?lab=`.
+3. **Headline or not.** Would a visitor to the home page miss it? Then it also gets a figure on
+   `app/pages/index.vue`.
+4. **Does a change matter?** Decide whether a move in this data should raise an alert, and how
+   it would be judged (a deterministic rule or the judge routine). See
+   `layers/terminal/shared/utils/terminal-tiers.ts`.
 
-Then execute in this order:
+Product code goes in `layers/terminal/`, mirroring the app's folders. Read
+[`.claude/docs/patterns.md`](../docs/patterns.md) for the route, query and component shapes,
+and [`.claude/docs/voice.md`](../docs/voice.md) before any copy.
 
-### 1. Schema (if new table or columns needed)
+## Steps
 
-Update `server/db/schema.ts` to add the new table or columns. Follow the existing patterns:
-- UUID primary keys: `.$defaultFn(() => crypto.randomUUID())`
-- Spread the shared `timestamps` helper for `created_at` / `updated_at` — don't redeclare them
-- Foreign keys as `<table_singular>_id` with `.references(() => parent.id)`. Omit the FK
-  deliberately if the row must survive a missing parent, and comment why
-- Add an `index()` for any column pair you filter or sort on
-- Export the inferred types: `export type [Name] = typeof [table].$inferSelect`
+### 1. Source
 
-After updating schema, remind the user to run `/db-migrate` to generate and apply the migration.
+Add the source to `sources.yaml` with its `axis`, `provider`, `url`, `diff_mechanism`,
+`verdict`, `terms` and `rights`. A thesis recipe (`layers/terminal/server/theses/recipes/`,
+stored in `recipe_observations`) goes under `recipe_sources:` instead, and the other blocks
+(`filed_fact_sources:`, `identifier_sources:` and so on) take their own kinds. Note the audit
+in `docs/source-audit.md`.
 
-### 2. API Routes
+### 2. Parser and fixture
 
-Create the needed routes in `server/api/[feature]/`:
-- `index.get.ts` — list all
-- `[id].get.ts` — get single by id
+Write the parser under `layers/terminal/server/pipeline/parsers/<axis>/`, pure from bytes to
+rows. Capture the real response into `fixtures/` and record its fetch time in
+`fixtures/manifest.json`, so the parser is tested offline against the bytes the source sent.
+Register it in `layers/terminal/server/pipeline/parsers.manifest.ts`. A parser that fails
+throws and the run is recorded as failed. It never writes a partial or guessed row.
 
-Read-only. This site has no accounts and takes no writes from a request: anything that
-creates or updates rows is a scheduled task under `server/tasks/`, not an endpoint. Follow
-all conventions from `/scaffold-api` — every route rate-limits itself and validates its
-query with Zod. Put anything with real branching in `server/utils/[feature].ts` as a
-function taking `db` first, so it can be tested in workerd.
+### 3. Table and migration
 
-### 3. Component
+Most datasets are entity rows (`entities`, diffed into `changes`), and need no table of their
+own. A new table goes in its domain's file under `layers/terminal/server/db/tables/` with the provenance columns
+(`source_url`, `fetched_at`) and an index on whatever a read filters or sorts on. Then run
+`/db-migrate`. Migrations are expand-only, and production applies them only through
+`bun run deploy:ci` (`.claude/docs/gotchas.md`).
 
-Create `app/components/[Feature]/[Feature]List.vue` — the primary list/display component.
-Every rendered number shows, or links to, its source URL and fetch timestamp.
+### 4. Query and route
 
-Follow all conventions from `/scaffold-component`.
+Put the query in `layers/terminal/server/utils/terminal-<dataset>.ts` as a function taking the
+db first, so it's tested in workerd. Add `layers/terminal/server/api/<dataset>.get.ts`:
+`rateLimitTerminal()`, a Zod query schema, and `serveTerminal(event, '<dataset>', …)` so it is
+cached for the poll tick under one cache name. The MCP tool reuses that name. A per-lab
+route takes `?lab=` and cuts the payload on the server.
 
-### 4. Page (if needed)
+### 5. Pages
 
-If the feature warrants its own page, create `app/pages/[feature]/index.vue` that:
-- Declares `definePageMeta({ publicPage: … })` and calls `useSeo()` once
-- Fetches data with `const { data, status } = await useFetch('/api/[feature]')`
-- Renders the List component
+- The axis page that reads it in full, with `definePageMeta({ publicPage })` and one
+  `useSeo()` call (`.claude/docs/seo.md`).
+- Per lab: the lab page (`labs/[lab]/index.vue`) and the tear sheet
+  (`labs/[lab]/tear-sheet.vue` and `layers/terminal/app/utils/tear-sheet.ts`), each fetching
+  with `query: { lab }`.
+- Headline: one figure on `app/pages/index.vue`, linking to the axis page.
 
-### Summary
+Every number shows or links to its source URL and fetch time.
 
-After scaffolding, output a checklist of what was created and what manual steps remain:
-- [ ] Run `/db-migrate` if schema was changed — and remember production D1 needs
-      `bun run db:migrate:remote` explicitly; deploying does not apply migrations
-- [ ] Customize Zod schemas in API routes
-- [ ] Confirm every new route calls `rateLimit()`
-- [ ] Add any missing props/emits to components
-- [ ] Wire up page navigation in the layout if needed
-- [ ] If the page is public, add `definePageMeta({ publicPage: … })` and call `useSeo()` once —
-      `bun run seo:check` fails the build otherwise
+### 6. MCP tool
+
+Register a tool in its domain's file under `layers/terminal/server/mcp/` that calls
+`deps.serve('<dataset>', …)` with the route's cache name. Give it literal `title`,
+`description` and `annotations: READ_ONLY`. Update the `tools/list` test in
+`layers/terminal/test/mcp.test.ts` and `INSTRUCTIONS` in `layers/terminal/server/utils/mcp.ts`.
+
+### 7. Export
+
+Add the table to its domain's record under `layers/terminal/server/export-tables/` with a
+builder from `layers/terminal/server/utils/terminal-export-views.ts` (`plainTable`,
+`entityView`, `staticTable` for a hand-read table that ships with the build). Each column
+needs a dictionary entry. Classify it in `EXPORT_HISTORY`, add a release in
+`layers/terminal/server/utils/data-schema.ts`, and run `bun run schema:lock`.
+
+### 8. Alerts
+
+Either the dataset sits on an alert axis (`AXIS_DISPLAY`, `AXIS_PATH` and `ENTITY_AXIS` in
+`layers/terminal/shared/utils/terminal-labs.ts`) with a rule or judge step that raises it, or
+it gets an `alerts` waiver saying why not.
+
+### 9. The surfaces gate
+
+```bash
+bun run surfaces:check --matrix
+```
+
+Every `✗` in your dataset's row is either fixed or waived in `surfaces.waivers.ts` with a
+one-line reason (`.claude/docs/surfaces.md`). Then `bun run ci:fast` while iterating, and
+`bun run ci` once before pushing.
+
+## Checklist to print at the end
+
+- [ ] `sources.yaml` entry with `terms` and `rights`
+- [ ] Parser with a captured fixture and its fetch time
+- [ ] Table and migration, or entity rows
+- [ ] Query function, route with Zod, `rateLimitTerminal()` and `serveTerminal()`
+- [ ] Axis page, plus lab page and tear sheet if per lab, plus home figure if headline
+- [ ] MCP tool on the same cache name, `tools/list` test and `INSTRUCTIONS` updated
+- [ ] Export table, dictionary, `EXPORT_HISTORY`, `schema:lock`
+- [ ] Alert axis, or an `alerts` waiver
+- [ ] `bun run surfaces:check` passes with no new `not yet:` waiver you could have closed
