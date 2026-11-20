@@ -1,7 +1,9 @@
 // The latency probes' fixed workload: one model per lab, one prompt, one
 // output cap, once an hour (tasks/probes/latency.ts). Everything a probe
-// sends is in this file, so a change to any of it is a visible series break:
-// each row stores the model and route it used.
+// sends is in this file but the model, which for a lab's flagship cell is
+// chosen on every run (probes/resolve.ts), so the probes follow a new
+// flagship without an edit here. A change to any of it is a visible series
+// break: each row stores the model and route it used.
 //
 // Route: OpenRouter, pinned to the lab's own endpoint with fallbacks off
 // (owner's decision, 2026-11-19). One key the Worker already has, at the cost
@@ -22,8 +24,8 @@ export const PROBE_PROMPT =
  * against the cap, so a target whose reasoning would use it up carries a
  * `reasoning_allowance` on top, and xAI bills its reasoning outside the cap
  * altogether (`billed_outside_cap`). With both, seven labs hourly come to
- * about $23 a month at 2026-11-19 list prices; the test in
- * layers/terminal/test/probes.test.ts holds the arithmetic.
+ * about $23 a month at 2026-11-20 list prices, under PROBE_MONTHLY_BUDGET_USD;
+ * the test in layers/terminal/test/probes.test.ts holds the arithmetic.
  */
 export const PROBE_MAX_TOKENS = 160
 
@@ -64,10 +66,8 @@ export const PROBE_WINDOWS: Record<ProbeMarket, ProbeWindow> = {
   },
 }
 
-export interface ProbeTarget {
+interface ProbeTargetBase {
   lab: LabId
-  /** OpenRouter's model id. */
-  model: string
   /**
    * OpenRouter's provider slug for the lab's own endpoint: the only one the
    * request may use. A bare slug never matches a priority or flex tier, so
@@ -91,85 +91,83 @@ export interface ProbeTarget {
    * bills beyond ours, as seen in its usage. For the budget only.
    */
   billed_outside_cap?: { output: number; prompt: number }
-  /**
-   * Null when the model is the flagship cell of the price matrix
-   * (utils/terminal-classes.ts). Otherwise why this model: the lab's docs name
-   * no flagship and the owner picked it (2026-11-19).
-   */
-  note: string | null
   market: ProbeMarket
-  /** USD per million tokens on OpenRouter when the target was set: the budget test's input, never shown. */
-  list_price: { input: number; output: number }
 }
 
-export const PROBE_TARGETS: readonly ProbeTarget[] = [
-  {
-    lab: 'openai',
-    model: 'openai/gpt-6.2-astra',
-    provider: 'openai',
-    effort: 'low',
-    note: null,
-    market: 'americas',
-    list_price: { input: 8, output: 40 },
-  },
-  {
-    lab: 'anthropic',
-    model: 'anthropic/claude-opus-5.5',
-    provider: 'anthropic',
-    effort: 'low',
-    note: null,
-    market: 'americas',
-    list_price: { input: 4, output: 20 },
-  },
-  {
-    lab: 'google',
-    model: 'google/gemini-4-carbon',
-    provider: 'google-ai-studio',
-    effort: 'low',
-    note: null,
-    market: 'americas',
-    list_price: { input: 2, output: 10 },
-  },
+/** USD per million tokens on OpenRouter: the budget's input, never shown. */
+export interface ProbePrice {
+  input: number
+  output: number
+}
+
+/**
+ * The flagship cell of the price matrix (utils/terminal-classes.ts). The
+ * model is chosen on every run, from the class map in effect and the newest
+ * OpenRouter catalog we stored, and so is its price (probes/resolve.ts).
+ */
+export interface DerivedProbeTarget extends ProbeTargetBase {
+  note: null
+}
+
+/** A lab whose docs name no flagship: the owner picked the model, and it stays pinned. */
+export interface PinnedProbeTarget extends ProbeTargetBase {
+  /** OpenRouter's model id. */
+  model: string
+  /** Why this model. */
+  note: string
+  /** USD per million tokens on OpenRouter when the target was set. */
+  list_price: ProbePrice
+}
+
+export type ProbeTargetSpec = DerivedProbeTarget | PinnedProbeTarget
+
+/** One run's target, with its model and price settled (probes/resolve.ts). */
+export interface ProbeTarget extends ProbeTargetBase {
+  /** OpenRouter's model id. */
+  model: string
+  note: string | null
+  list_price: ProbePrice
+  /**
+   * How a derived target's model was chosen, kept with each probe's trace in
+   * R2; null for a pinned one.
+   */
+  chosen_from: {
+    /** The class map's flagship slug: a family, not always the exact id. */
+    family: string
+    catalog_source_url: string
+    catalog_fetched_at: string
+  } | null
+}
+
+/**
+ * Each probed lab's workload. Every target today is a flagship cell, so its
+ * model is derived; a pinned target (note set, model and list_price given)
+ * is for a lab whose docs name no flagship.
+ */
+export const PROBE_TARGETS: readonly ProbeTargetSpec[] = [
+  { lab: 'openai', provider: 'openai', effort: 'low', note: null, market: 'americas' },
+  { lab: 'anthropic', provider: 'anthropic', effort: 'low', note: null, market: 'americas' },
+  { lab: 'google', provider: 'google-ai-studio', effort: 'low', note: null, market: 'americas' },
   {
     lab: 'xai',
-    model: 'x-ai/grok-4.7',
     provider: 'xai',
     effort: 'low',
     // 2026-11-20: usage showed 674 reasoning tokens beside the 160 capped answer tokens, and a 1,261-token prompt.
     billed_outside_cap: { output: 700, prompt: 1260 },
     note: null,
     market: 'americas',
-    list_price: { input: 2, output: 6 },
   },
   {
     lab: 'meta',
-    model: 'meta/muse-wonder',
     provider: 'meta',
     effort: 'minimal',
     // 2026-11-20: at a cap of 160 the reply was 158 hidden reasoning tokens and no answer.
     reasoning_allowance: 320,
     note: null,
     market: 'americas',
-    list_price: { input: 4, output: 20 },
   },
-  {
-    lab: 'alibaba',
-    model: 'qwen/qwen4-max',
-    provider: 'alibaba',
-    effort: 'none',
-    note: null,
-    market: 'china',
-    list_price: { input: 1.425, output: 4.275 },
-  },
-  {
-    lab: 'moonshot',
-    model: 'moonshotai/kimi-k3.1-pro',
-    provider: 'moonshotai',
-    effort: 'none',
-    note: null,
-    market: 'china',
-    list_price: { input: 0.253, output: 10 },
-  },
+  { lab: 'alibaba', provider: 'alibaba', effort: 'none', note: null, market: 'china' },
+  { lab: 'moonshot', provider: 'moonshotai', effort: 'none', note: null, market: 'china' },
 ]
 
 export interface ProbeGap {
@@ -215,10 +213,22 @@ const HOURS_PER_MONTH = 24 * 30.5
 const PROMPT_TOKENS = 40
 
 /**
+ * What a month of hourly probes may cost at list prices. A run probes a
+ * derived target only while the month, at that run's catalog prices, stays
+ * under it (probes/resolve.ts); the rest are skipped and spooled.
+ */
+export const PROBE_MONTHLY_BUDGET_USD = 24
+
+/**
  * What a month of hourly probes costs at list prices when every probe spends
  * its whole cap, plus what an endpoint bills outside it.
  */
-export function monthlyCostCeiling(targets: readonly ProbeTarget[] = PROBE_TARGETS): number {
+export function monthlyCostCeiling(
+  targets: readonly Pick<
+    ProbeTarget,
+    'list_price' | 'reasoning_allowance' | 'billed_outside_cap'
+  >[],
+): number {
   return targets.reduce((sum, t) => {
     const prompt = PROMPT_TOKENS + (t.billed_outside_cap?.prompt ?? 0)
     const output =

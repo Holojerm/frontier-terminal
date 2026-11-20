@@ -12,6 +12,15 @@ import {
   strainedShare,
   type ProbePoint,
 } from '../server/pipeline/probes/daily'
+import { parseOpenRouter } from '../server/pipeline/parsers/openrouter'
+import {
+  PROBE_MODEL_UNRESOLVED_KIND,
+  PROBE_OVER_BUDGET_KIND,
+  matchFlagship,
+  resolveProbeTargets,
+  slugTokens,
+  type ProbeCatalog,
+} from '../server/pipeline/probes/resolve'
 import { probeOrigin, probeRawKey, runProbes } from '../server/pipeline/probes/run'
 import {
   classify,
@@ -26,11 +35,15 @@ import {
   PROBE_ENDPOINT,
   PROBE_GAPS,
   PROBE_MAX_TOKENS,
+  PROBE_MONTHLY_BUDGET_USD,
   PROBE_TARGETS,
   PROBE_WINDOWS,
   monthlyCostCeiling,
   probeRequestBody,
+  type PinnedProbeTarget,
+  type ProbeTarget,
 } from '../server/pipeline/probes/targets'
+import { MODEL_CLASS_MAP } from '../server/utils/terminal-classes'
 import { queryContext } from '../server/utils/terminal-db'
 import { probesStamp, queryProbes } from '../server/utils/terminal-probes'
 import { PROVIDER_ORDER } from '../server/utils/terminal-sources'
@@ -39,9 +52,31 @@ import { fixtureText } from './pipeline/fixtures'
 const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 
+// OpenRouter's /api/v1/models as served 2026-11-20T22:14Z, trimmed to the
+// tracked labs' prefixes and to the fields the parser reads plus name and
+// created. Not in fixtures/manifest.json: openrouter-models' registered
+// fixture is the 2026-08-25 capture the price tests are pinned to.
+const CATALOG_PATH = 'fixtures/pricing/openrouter-models.2026-11-20.json'
+const CATALOG_FETCHED_AT = '2026-11-20T22:14:00.000Z'
+const CATALOG_TEXT = fixtureText(CATALOG_PATH)
+const CATALOG: ProbeCatalog = {
+  rows: parseOpenRouter(CATALOG_TEXT, {
+    source_url: 'https://openrouter.ai/api/v1/models',
+    fetched_at: CATALOG_FETCHED_AT,
+  }).rows,
+  source_url: 'https://openrouter.ai/api/v1/models',
+  fetched_at: CATALOG_FETCHED_AT,
+}
+const RESOLVED = resolveProbeTargets(PROBE_TARGETS, MODEL_CLASS_MAP, CATALOG)
+const RESOLVED_TARGETS: readonly ProbeTarget[] = RESOLVED.targets
+
 beforeEach(async () => {
   await db.delete(schema.latencyProbes)
   await db.delete(schema.probeDays)
+  await db.delete(schema.opsEvents)
+  await db.delete(schema.classMapDecisions)
+  await db.delete(schema.sourceRuns)
+  await db.delete(schema.snapshots)
 })
 
 // ---- the stream, as OpenRouter documents it ---------------------------------
@@ -339,7 +374,7 @@ function streamResponse(reads: readonly Read[], clock: ReturnType<typeof fakeClo
   )
 }
 
-const TARGET = PROBE_TARGETS[0]!
+const TARGET = RESOLVED_TARGETS[0]!
 const NOW = new Date('2026-11-20T15:07:00.000Z')
 
 describe('runProbe', () => {
@@ -527,6 +562,36 @@ function fakeRaw() {
   }
 }
 
+/** A stored openrouter-models snapshot and its good run, as a poll leaves them; returns the R2 reader. */
+async function seedCatalog(text: string = CATALOG_TEXT) {
+  const raw_key = 'raw/openrouter-models/catalog.json'
+  await db.insert(schema.snapshots).values({
+    id: 'snap-or',
+    source_id: 'openrouter-models',
+    content_hash: 'h',
+    raw_key,
+    http_status: 200,
+    bytes: text.length,
+    source_url: CATALOG.source_url,
+    fetched_at: CATALOG_FETCHED_AT,
+  })
+  await db.insert(schema.sourceRuns).values({
+    id: 'run-or',
+    scope: 'six-hourly',
+    source_id: 'openrouter-models',
+    started_at: CATALOG_FETCHED_AT,
+    status: 'ok',
+    snapshot_id: 'snap-or',
+    added: 0,
+    removed: 0,
+    modified: 0,
+    source_url: CATALOG.source_url,
+  })
+  return async (key: string) => (key === raw_key ? text : null)
+}
+
+const noRaw = async () => null
+
 describe('runProbes', () => {
   it('probes nothing and stores nothing without a key', async () => {
     const raw = fakeRaw()
@@ -538,9 +603,16 @@ describe('runProbes', () => {
       now: () => NOW,
       apiKey: ' ',
       raw: raw.store,
+      readRaw: noRaw,
       ranFrom: 'local',
     })
-    expect(report).toEqual({ skipped: OPENROUTER_KEY_UNSET, probes: [], days_rolled: 0 })
+    expect(report).toEqual({
+      skipped: OPENROUTER_KEY_UNSET,
+      probes: [],
+      unprobed: [],
+      days_rolled: 0,
+    })
+    expect(await db.select().from(schema.opsEvents)).toEqual([])
     expect(await db.select().from(schema.latencyProbes)).toEqual([])
     expect(raw.puts.size).toBe(0)
   })
@@ -577,9 +649,11 @@ describe('runProbes', () => {
       now: () => NOW,
       apiKey: 'or-test',
       raw: raw.store,
+      readRaw: await seedCatalog(),
       ranFrom: 'cloudflare:EWR',
     })
     expect(widest).toBe(1)
+    expect(report.unprobed).toEqual([])
     expect(report.probes.map((p) => [p.lab, p.outcome])).toEqual(
       PROBE_TARGETS.map((t) => [
         t.lab,
@@ -608,6 +682,11 @@ describe('runProbes', () => {
     })
     const stored = JSON.parse(raw.puts.get(openai.raw_key!)!)
     expect(stored.request.provider).toEqual({ only: ['openai'], allow_fallbacks: false })
+    expect(stored.chosen_from).toEqual({
+      family: 'gpt-6-astra',
+      catalog_source_url: 'https://openrouter.ai/api/v1/models',
+      catalog_fetched_at: CATALOG_FETCHED_AT,
+    })
     expect(stored.reads).toHaveLength(GOOD.length)
     expect([...raw.puts.values()].join('')).not.toContain('or-test')
 
@@ -630,11 +709,99 @@ describe('runProbes', () => {
           throw new Error('R2 is down')
         },
       },
+      readRaw: noRaw,
       ranFrom: 'local',
       targets: [TARGET],
     })
     const [row] = await db.select().from(schema.latencyProbes)
     expect(row).toMatchObject({ outcome: 'ok', raw_key: null })
+  })
+
+  it('probes the class map’s flagship as re-mapped by a decision, and stores the new model', async () => {
+    // The judge re-maps OpenAI's flagship to a family the catalog serves under one id.
+    await db.insert(schema.classMapDecisions).values({
+      id: 'd1',
+      provider: 'openai',
+      class: 'flagship',
+      model_slug: 'gpt-6.2-sol',
+      basis: 'a sentence',
+      basis_source_id: 'openai-models-md',
+      decided_at: '2026-11-20T12:00:00.000Z',
+      decided_by: 'judge',
+      source_url: 'https://developers.openai.com/api/docs/models.md',
+      fetched_at: '2026-11-20T12:00:00.000Z',
+    })
+    const clock = fakeClock()
+    const report = await runProbes(db, {
+      fetch: async () => streamResponse(GOOD, clock),
+      clock: clock.clock,
+      now: () => NOW,
+      apiKey: 'or-test',
+      raw: fakeRaw().store,
+      readRaw: await seedCatalog(),
+      ranFrom: 'local',
+    })
+    expect(report.probes.find((p) => p.lab === 'openai')!.model).toBe('openai/gpt-6.2-sol')
+    const rows = await db.select().from(schema.latencyProbes)
+    expect(rows.find((r) => r.lab === 'openai')!.model).toBe('openai/gpt-6.2-sol')
+  })
+
+  it('probes no lab whose flagship the catalog does not list, and spools which and why', async () => {
+    await db.insert(schema.classMapDecisions).values({
+      id: 'd2',
+      provider: 'anthropic',
+      class: 'flagship',
+      model_slug: 'claude-opus-6',
+      basis: 'a sentence',
+      basis_source_id: 'anthropic-models-md',
+      decided_at: '2026-11-20T12:00:00.000Z',
+      decided_by: 'judge',
+      source_url: 'https://platform.claude.com/docs/en/about-claude/models/overview.md',
+      fetched_at: '2026-11-20T12:00:00.000Z',
+    })
+    const clock = fakeClock()
+    const models: string[] = []
+    const report = await runProbes(db, {
+      fetch: async (_url, init) => {
+        models.push(JSON.parse(init.body as string).model)
+        return streamResponse(GOOD, clock)
+      },
+      clock: clock.clock,
+      now: () => NOW,
+      apiKey: 'or-test',
+      raw: fakeRaw().store,
+      readRaw: await seedCatalog(),
+      ranFrom: 'local',
+    })
+    // Never the old id, and nothing else in the family.
+    expect(models.filter((m) => m.startsWith('anthropic/'))).toEqual([])
+    expect(models).toHaveLength(PROBE_TARGETS.length - 1)
+    expect(report.unprobed.map((u) => [u.lab, u.kind])).toEqual([
+      ['anthropic', PROBE_MODEL_UNRESOLVED_KIND],
+    ])
+    const events = await db.select().from(schema.opsEvents)
+    expect(events).toHaveLength(1)
+    expect(events[0]).toMatchObject({ kind: PROBE_MODEL_UNRESOLVED_KIND })
+    expect(events[0]!.detail).toContain('anthropic')
+    expect(events[0]!.detail).toContain('claude-opus-6')
+  })
+
+  it('probes no flagship target when no catalog is stored, and spools each lab', async () => {
+    const report = await runProbes(db, {
+      fetch: async () => {
+        throw new Error('must not be called')
+      },
+      clock: () => 0,
+      now: () => NOW,
+      apiKey: 'or-test',
+      raw: fakeRaw().store,
+      readRaw: noRaw,
+      ranFrom: 'local',
+    })
+    expect(report.probes).toEqual([])
+    const events = await db.select().from(schema.opsEvents)
+    expect(events.map((e) => e.kind)).toEqual(PROBE_TARGETS.map(() => PROBE_MODEL_UNRESOLVED_KIND))
+    expect(events[0]!.detail).toContain('no readable OpenRouter catalog')
   })
 })
 
@@ -772,7 +939,7 @@ describe('the probe targets', () => {
   })
 
   it('pin each request to one provider with fallbacks off', () => {
-    for (const target of PROBE_TARGETS) {
+    for (const target of RESOLVED_TARGETS) {
       const body = probeRequestBody(target)
       expect(body.provider).toEqual({ only: [target.provider], allow_fallbacks: false })
       expect(body.stream).toBe(true)
@@ -781,17 +948,203 @@ describe('the probe targets', () => {
   })
 
   it('leave room for an answer where the endpoint counts reasoning against the cap', () => {
-    const body = (lab: string) => probeRequestBody(PROBE_TARGETS.find((t) => t.lab === lab)!)
+    const body = (lab: string) => probeRequestBody(RESOLVED_TARGETS.find((t) => t.lab === lab)!)
     expect(body('meta').max_tokens).toBe(480)
     expect(body('openai').max_tokens).toBe(160)
   })
 
-  it('stay inside $24 a month at list prices, counting what xAI bills outside the cap', () => {
-    const ceiling = monthlyCostCeiling()
+  it('stay inside the monthly budget at the 2026-11-20 catalog prices, counting what xAI bills outside the cap', () => {
+    expect(PROBE_MONTHLY_BUDGET_USD).toBe(24)
+    expect(RESOLVED.skipped).toEqual([])
+    expect(RESOLVED_TARGETS).toHaveLength(PROBE_TARGETS.length)
+    const ceiling = monthlyCostCeiling(RESOLVED_TARGETS)
     expect(ceiling).toBeGreaterThan(20)
-    expect(ceiling).toBeLessThan(24)
-    const only = (lab: string) => monthlyCostCeiling(PROBE_TARGETS.filter((t) => t.lab === lab))
+    expect(ceiling).toBeLessThan(PROBE_MONTHLY_BUDGET_USD)
+    const only = (lab: string) => monthlyCostCeiling(RESOLVED_TARGETS.filter((t) => t.lab === lab))
     // 40 + 1,260 prompt tokens at $2 and 160 + 700 output tokens at $6, 732 times.
     expect(only('xai')).toBeCloseTo(5.68, 2)
+  })
+})
+
+// ---- choosing the model ------------------------------------------------------
+
+/** A catalog row with prices in USD per million tokens. */
+const row = (id: string, input: number | null = 1, output: number | null = 5) => ({
+  ...CATALOG.rows[0]!,
+  or_model_id: id,
+  provider: CATALOG.rows.find((r) => r.or_model_id.startsWith(`${id.split('/')[0]}/`))!.provider,
+  prompt_per_tok: input === null ? null : input / 1e6,
+  completion_per_tok: output === null ? null : output / 1e6,
+})
+const withRows = (...rows: ReturnType<typeof row>[]): ProbeCatalog => ({
+  ...CATALOG,
+  rows: [...CATALOG.rows, ...rows],
+})
+const flagshipOf = (lab: string) =>
+  MODEL_CLASS_MAP.find((e) => e.provider === lab && e.class === 'flagship')!.model_slug
+const match = (lab: string, family: string, catalog: ProbeCatalog = CATALOG) =>
+  matchFlagship(lab, family, catalog.rows)?.or_model_id ?? null
+
+describe('the flagship match', () => {
+  it('reads a slug as words and version numbers', () => {
+    expect(slugTokens('gpt-6.2-astra')).toEqual([
+      { word: 'gpt' },
+      { version: [6, 2] },
+      { word: 'astra' },
+    ])
+    expect(slugTokens('claude-opus-5-5')).toEqual([
+      { word: 'claude' },
+      { word: 'opus' },
+      { version: [5, 5] },
+    ])
+    expect(slugTokens('qwen4-max')).toEqual([{ word: 'qwen' }, { version: [4] }, { word: 'max' }])
+  })
+
+  it('picks each probed lab’s flagship from the 2026-11-20 catalog', () => {
+    expect(RESOLVED_TARGETS.map((t) => [t.lab, t.model])).toEqual([
+      ['openai', 'openai/gpt-6.2-astra'],
+      ['anthropic', 'anthropic/claude-opus-5.5'],
+      ['google', 'google/gemini-4-carbon'],
+      ['xai', 'x-ai/grok-4.7'],
+      ['meta', 'meta/muse-wonder'],
+      ['alibaba', 'qwen/qwen4-max'],
+      ['moonshot', 'moonshotai/kimi-k3.1-pro'],
+    ])
+  })
+
+  it('reads the price from the catalog row, per million tokens', () => {
+    const price = (lab: string) => RESOLVED_TARGETS.find((t) => t.lab === lab)!.list_price
+    expect(price('openai')).toEqual({ input: 8, output: 40 })
+    expect(price('alibaba')).toEqual({ input: 1.425, output: 4.275 })
+    // Moonshot's output price on OpenRouter was $10 when the target was pinned.
+    expect(price('moonshot')).toEqual({ input: 0.253, output: 8.8 })
+  })
+
+  it('takes the newest point release of a family, over the family’s own first id', () => {
+    // The catalog lists both openai/gpt-6-astra and openai/gpt-6.2-astra.
+    expect(CATALOG.rows.some((r) => r.or_model_id === 'openai/gpt-6-astra')).toBe(true)
+    expect(match('openai', 'gpt-6-astra')).toBe('openai/gpt-6.2-astra')
+    expect(match('openai', 'gpt-6-astra', withRows(row('openai/gpt-6.3-astra')))).toBe(
+      'openai/gpt-6.3-astra',
+    )
+    // Numbers, not strings: 6.10 is newer than 6.9.
+    expect(
+      match(
+        'openai',
+        'gpt-6-astra',
+        withRows(row('openai/gpt-6.9-astra'), row('openai/gpt-6.10-astra')),
+      ),
+    ).toBe('openai/gpt-6.10-astra')
+  })
+
+  it('never takes another word, another family, a variant endpoint or another lab’s id', () => {
+    const catalog = withRows(
+      row('openai/gpt-7-astra'),
+      row('openai/gpt-6.4-astra-pro'),
+      row('openai/gpt-6.4-astra:free'),
+      row('meta-llama/gpt-6.4-astra'),
+    )
+    expect(match('openai', 'gpt-6-astra', catalog)).toBe('openai/gpt-6.2-astra')
+    // claude-opus-5 and claude-opus-5-fast are listed; neither is Opus 5.5.
+    expect(match('anthropic', 'claude-opus-5-5')).toBe('anthropic/claude-opus-5.5')
+    expect(match('anthropic', 'claude-opus-5-5', withRows(row('anthropic/claude-opus-5.6')))).toBe(
+      'anthropic/claude-opus-5.5',
+    )
+    expect(match('xai', 'grok-4.7')).toBe('x-ai/grok-4.7')
+  })
+
+  it('takes an unversioned id for a first release only, when no id in the family carries a version', () => {
+    expect(flagshipOf('meta')).toBe('muse-wonder-1.0')
+    expect(match('meta', 'muse-wonder-1.0')).toBe('meta/muse-wonder')
+    expect(match('meta', 'muse-wonder-1.0', withRows(row('meta/muse-wonder-1.0')))).toBe(
+      'meta/muse-wonder-1.0',
+    )
+    // Another word is still another model.
+    expect(match('meta', 'muse-spark-1.3')).toBe('meta/muse-spark-1.3')
+    // A later release is not the unversioned id, which may be the first one.
+    expect(match('meta', 'muse-wonder-1.1')).toBeNull()
+    expect(match('meta', 'muse-wonder-2')).toBeNull()
+  })
+
+  it('matches nothing when the catalog does not list the family', () => {
+    expect(match('openai', 'gpt-9-astra')).toBeNull()
+    // The catalog lists mistralai/mistral-large, an unversioned name: not Large 5.
+    expect(CATALOG.rows.some((r) => r.or_model_id === 'mistralai/mistral-large')).toBe(true)
+    expect(match('mistral', 'mistral-large-5')).toBeNull()
+  })
+})
+
+describe('resolveProbeTargets', () => {
+  const remap = (lab: string, model_slug: string) =>
+    MODEL_CLASS_MAP.map((e) =>
+      e.provider === lab && e.class === 'flagship' ? { ...e, model_slug } : e,
+    )
+
+  it('skips a lab whose flagship has no catalog row, never falling back to an earlier id', () => {
+    const { targets, skipped } = resolveProbeTargets(
+      PROBE_TARGETS,
+      remap('openai', 'gpt-9-astra'),
+      CATALOG,
+    )
+    expect(targets.map((t) => t.lab)).not.toContain('openai')
+    expect(targets).toHaveLength(PROBE_TARGETS.length - 1)
+    expect(skipped).toEqual([
+      {
+        lab: 'openai',
+        kind: PROBE_MODEL_UNRESOLVED_KIND,
+        detail: expect.stringContaining('flagship gpt-9-astra'),
+      },
+    ])
+  })
+
+  it('skips a match with no fixed price', () => {
+    const catalog: ProbeCatalog = {
+      ...CATALOG,
+      rows: CATALOG.rows.map((r) =>
+        r.or_model_id === 'x-ai/grok-4.7' ? { ...r, completion_per_tok: null } : r,
+      ),
+    }
+    const { targets, skipped } = resolveProbeTargets(PROBE_TARGETS, MODEL_CLASS_MAP, catalog)
+    expect(targets.map((t) => t.lab)).not.toContain('xai')
+    expect(skipped).toMatchObject([{ lab: 'xai', kind: PROBE_MODEL_UNRESOLVED_KIND }])
+    expect(skipped[0]!.detail).toContain('no fixed price')
+  })
+
+  it('skips a flagship whose price would take the month over budget, and keeps the rest', () => {
+    // A new Opus point release at ten times the price.
+    const catalog = withRows(row('anthropic/claude-opus-5.5.1', 40, 200))
+    const { targets, skipped } = resolveProbeTargets(
+      PROBE_TARGETS,
+      remap('anthropic', 'claude-opus-5-5'),
+      catalog,
+    )
+    expect(targets.map((t) => t.lab)).toEqual(
+      PROBE_TARGETS.map((t) => t.lab).filter((lab) => lab !== 'anthropic'),
+    )
+    expect(skipped).toEqual([
+      {
+        lab: 'anthropic',
+        kind: PROBE_OVER_BUDGET_KIND,
+        detail: expect.stringMatching(
+          /claude-opus-5\.5\.1 at \$40 in \/ \$200 out .* over the \$24\.00 budget/,
+        ),
+      },
+    ])
+    expect(monthlyCostCeiling(targets)).toBeLessThanOrEqual(PROBE_MONTHLY_BUDGET_USD)
+  })
+
+  it('probes a pinned target as written, whatever the catalog says', () => {
+    const pinned: PinnedProbeTarget = {
+      lab: 'deepseek',
+      model: 'deepseek/deepseek-v4-pro',
+      provider: 'deepseek',
+      effort: 'none',
+      note: 'The owner picked it.',
+      market: 'china',
+      list_price: { input: 1, output: 2 },
+    }
+    const { targets, skipped } = resolveProbeTargets([pinned], MODEL_CLASS_MAP, null)
+    expect(skipped).toEqual([])
+    expect(targets).toEqual([{ ...pinned, chosen_from: null }])
   })
 })

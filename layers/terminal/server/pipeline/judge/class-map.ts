@@ -112,6 +112,16 @@ export async function latestPage(
   readRaw: RawReader,
   sourceId: string,
 ): Promise<SourcePage | null> {
+  const page = await latestSnapshot(db, readRaw, sourceId)
+  return page && { ...page, text: flattenMdLinks(page.text) }
+}
+
+/** The newest good snapshot of a source, its stored bytes as they are (a JSON body stays JSON). */
+export async function latestSnapshot(
+  db: PipelineDb,
+  readRaw: RawReader,
+  sourceId: string,
+): Promise<SourcePage | null> {
   const good: SourceRunRow['status'][] = ['ok', 'unchanged', 'baseline']
   const [row] = await db
     .select({
@@ -131,7 +141,7 @@ export async function latestPage(
     source_id: sourceId,
     source_url: row.source_url,
     fetched_at: row.fetched_at,
-    text: flattenMdLinks(text),
+    text,
   }
 }
 

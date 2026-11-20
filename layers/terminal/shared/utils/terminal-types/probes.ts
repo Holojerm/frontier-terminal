@@ -59,7 +59,11 @@ export interface ProbeLabView {
   display: string
   /** probed: readings below. waiting: a target with no probe stored yet. not_probed: no first-party endpoint to probe (see gap). */
   status: 'probed' | 'waiting' | 'not_probed'
-  /** The model id as the router names it. */
+  /**
+   * The model id as the router names it, from the newest probe. A flagship
+   * target is re-chosen on every run, so this moves when the lab's flagship
+   * does. Before its first probe, the class map's flagship slug.
+   */
   model: string
   /** Why this model, where the lab’s docs name no flagship; null when it is the price matrix’s flagship. */
   model_note: string | null
