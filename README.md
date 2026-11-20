@@ -79,11 +79,9 @@ are CC BY 4.0. Older ones are CC BY-NC 4.0, free for non-commercial use. Anythin
 download labels each row in a `license` column. Upstream data keeps its own license, and the
 underlying facts belong to their publishers. The code is MIT. Details are on `/license`.
 
-The tables are `snapshots`, `prices_latest`, `jobs_open`, `incidents`, `revenue_facts`,
-`changes`, `alerts`, `claim_readings`, `claim_verdicts`, `recipe_observations`, and `source_runs`
-(every row carries `source_url` and `fetched_at`), plus `entity_securities`, which maps each lab
-and tracked filer to its issuer, CIK, and symbol. The `/data` page lists them with their columns
-and current row counts. `/export/sample/<table>.csv` is the first 50 rows of any of them.
+The `/data` page lists every table with its columns and current row counts. Every row carries
+`source_url` and `fetched_at`. `entity_securities` maps each lab and tracked filer to its issuer,
+CIK, and symbol. `/export/sample/<table>.csv` is the first 50 rows of any of them.
 OpenRouter's per-model rankings are shown as per-lab shares but aren't offered as a download (see
 `docs/source-audit.md`). Alerts are also an Atom feed at `/alerts.xml`.
 
@@ -113,12 +111,12 @@ For any other client that takes a JSON server definition:
 }
 ```
 
-Tools: `describe` (the site map), `get_overview`, `get_prices`, `get_price_history`, `get_revenue`,
-`get_hiring`, `get_hiring_history`, `get_releases`, `get_incidents`, `get_rankings`, `get_spend`,
-`get_alerts`, `get_alert`, `get_coverage`, `get_status`. Every result is the matching `/api/*`
+Start with `describe` (the site map) or `get_overview` (what moved). A client lists the rest when
+it connects: there is a tool for each dataset on the site. Every result is the matching `/api/*`
 response, provenance included, served through the same cache and the same per-IP rate limit (60
 requests a minute). The server is stateless. Each call is one POST with a JSON reply, so there's
-no session to keep. Tools and their descriptions live in `layers/terminal/server/utils/mcp.ts`.
+no session to keep. Tools and their descriptions live in `layers/terminal/server/utils/mcp.ts` and
+`layers/terminal/server/mcp/`.
 
 ## For agents
 

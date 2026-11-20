@@ -5,6 +5,12 @@
 
 import manifest from '~~/fleet.json'
 
+import {
+  DATA_LICENSE,
+  HISTORY_LICENSE,
+  LICENSE_SPLIT_EFFECTIVE,
+  LICENSE_WINDOW_DAYS,
+} from '#shared/utils/license'
 import { CORRECTIONS } from '../../shared/utils/corrections'
 import type { CoverageData } from '../../shared/utils/terminal-types'
 
@@ -40,8 +46,8 @@ useSeo({
       <div class="max-w-2xl space-y-3 text-default">
         <p>
           A free, public, read-only terminal of fundamentals on the frontier AI labs, for analysts
-          who cover AI infrastructure through the frontier-lab IPO wave. We track nine labs (OpenAI,
-          Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Alibaba’s Qwen, and Moonshot AI’s Kimi).
+          who cover AI infrastructure. We track OpenAI, Anthropic, Google, xAI, Meta, Mistral,
+          DeepSeek, Alibaba’s Qwen, and Moonshot AI’s Kimi.
         </p>
         <p>
           For each lab we follow API prices, hiring (including the roles that build data centers and
@@ -256,8 +262,9 @@ useSeo({
             >License</NuxtLink
           >
           <span class="text-muted">
-            for our data. The last 90 days are CC BY 4.0. Older data is CC BY-NC 4.0, except what we
-            published before 2026-11-04.</span
+            for our data. The last {{ LICENSE_WINDOW_DAYS }} days are {{ DATA_LICENSE.short }}.
+            Older data is {{ HISTORY_LICENSE.short }}, except what we published before
+            {{ LICENSE_SPLIT_EFFECTIVE }}.</span
           >
         </li>
         <li>
@@ -287,9 +294,9 @@ useSeo({
           class="overflow-x-auto rounded-md border border-default bg-muted p-3 font-mono text-xs text-default"
         ><code>claude mcp add --transport http frontier-terminal {{ mcpUrl }}</code></pre>
         <p class="text-muted">
-          Tools: describe, get_overview, get_prices, get_price_history, get_hiring,
-          get_hiring_history, get_releases, get_incidents, get_rankings, get_alerts, get_alert,
-          get_coverage, get_status. Start with <span class="font-mono">describe</span>.
+          Start with <span class="font-mono">describe</span> (the site map) or
+          <span class="font-mono">get_overview</span> (what moved). Your client lists the rest when
+          it connects.
         </p>
       </div>
     </TerminalPanel>
