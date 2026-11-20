@@ -8,13 +8,16 @@ import {
   shortStamp,
   shortUrl,
   SHEET_ALERTS,
+  truthInput,
 } from '../app/utils/tear-sheet'
+import type { ListedData } from '../shared/utils/listed'
 import { cellDelta, priceCitation } from '../app/utils/price-display'
 import { PROVIDER_ORDER } from '../server/utils/terminal-sources'
 import type { ExposureData } from '../shared/utils/terminal-exposure'
 import { LABS, TEAR_SHEET_PAGES } from '../shared/utils/terminal-lab-summary'
 import type {
   AlertView,
+  GroundTruthData,
   MatrixCell,
   PriceDeltaView,
   PriceRowView,
@@ -455,6 +458,95 @@ describe('buildTearSheet', () => {
     expect(empty.prices).toEqual([])
     expect(empty.sources).toEqual([])
     expect(empty.demand.gap?.title).toBe('No rankings data yet')
+    expect(empty.truth.gap?.title).toBe('No press report stored')
+    expect(empty.listed.gap?.title).toBe('None tied by name')
+  })
+})
+
+describe('tear sheet fundamentals', () => {
+  const filing =
+    'https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/anthropicpbc-sx1ax1.htm'
+  const truth = {
+    tolerance_pct: 5,
+    tally: {
+      periods: 1,
+      reports: 30,
+      missed: 0,
+      median_abs_error_pct: 0.92,
+      median_lead_days: 19,
+      held: 0,
+      restated: 4,
+      open: 1,
+    },
+    deals: { tally: { reports: 34, scored: 5, missed: 5 } },
+    waiting: [{ reports: 6 }, { reports: 2 }],
+    resolutions: [
+      {
+        lab: 'anthropic',
+        filed: {
+          source_url: filing,
+          fetched_at: AT,
+          start: '2026-07-01',
+          end: '2026-09-30',
+          label: 'Q3 2026',
+          val: 5_400_000_000,
+          form: 'S-1/A',
+          first_filed: '2026-11-02',
+        },
+        reports: Array.from({ length: 30 }, () => ({})),
+        median: 5_450_000_000,
+        error_pct: 0.92,
+      },
+    ],
+  } as unknown as GroundTruthData
+  const listed = {
+    computed_at: AT,
+    companies: [
+      {
+        ticker: 'AMZN',
+        company: 'Amazon',
+        lab: null,
+        labs: ['anthropic'],
+        site_labs: [],
+        ties: [{ source: 'graph', sells_to: [], funds: ['Anthropic'], figures: 3 }],
+      },
+    ],
+  } as unknown as ListedData
+  const sheet = buildTearSheet('anthropic', {
+    truth: truthInput(truth),
+    listed,
+    siteUrl: 'https://frontierterm.com',
+  })
+
+  it('scores the press against each filed figure, cited to the filing', () => {
+    expect(sheet.truth.lines).toEqual([
+      {
+        key: '2026-07-01:2026-09-30',
+        period: 'Q3 2026',
+        filed: '$5.40B',
+        reports: 30,
+        median: '$5.45B',
+        error: '+0.9%',
+        ref: 1,
+      },
+    ])
+    expect(sheet.sources[0]).toMatchObject({ url: filing, label: 'S-1/A filed 2026-11-02' })
+    expect(sheet.truth.summary).toEqual([
+      '30 press reports stated Anthropic’s revenue before a filing printed it, across 1 filed figure.',
+      'The median report was 0.9% off, and the first report came a median 19 days before the filing.',
+      '34 reports stated a deal’s size. 5 could be checked against a later filing, and 0 came within 5%.',
+      '8 more reports state a figure no filing we read can score yet.',
+    ])
+  })
+
+  it('lists the companies tied to the lab, cited once to the listed table', () => {
+    expect(sheet.listed.rows).toEqual([
+      { ticker: 'AMZN', company: 'Amazon', group: 'Cloud and funder', ties: 'Funds Anthropic.' },
+    ])
+    expect(sheet.sources[sheet.listed.ref! - 1]).toMatchObject({
+      url: 'https://frontierterm.com/dependencies#listed',
+      fetched_at: AT,
+    })
   })
 })
 
