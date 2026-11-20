@@ -460,6 +460,30 @@ describe('the payload', () => {
     expect(data.alerts).toMatchObject({ rated: 0, press: { matched: 0 } })
   })
 
+  it('scores one lab alone when given a lab, tallies included', async () => {
+    const openai = headline(
+      '2026-11-11T13:30:00.000Z',
+      10e9,
+      'OpenAI revenue rises to $10 billion',
+      { lab: 'openai' },
+    )
+    await seed([FY25, Q3_FT, Q3_POST, H1, H1_PRIOR, AFTER_S1, openai])
+
+    const anthropic = await queryGroundTruth(db, ctx(), 'anthropic')
+    expect(anthropic.resolutions.map((r) => r.lab)).toEqual(['anthropic', 'anthropic', 'anthropic'])
+    expect(anthropic.tally).toMatchObject({ periods: 3, reports: 4, restated: 1, open: 1 })
+    expect(anthropic.waiting).toEqual([])
+
+    const other = await queryGroundTruth(db, ctx(), 'openai')
+    expect(other.resolutions).toEqual([])
+    expect(other.open).toEqual([])
+    expect(other.tally).toMatchObject({ periods: 0, reports: 0, restated: 0, open: 0 })
+    expect(other.waiting).toEqual([
+      expect.objectContaining({ lab: 'openai', metric: 'revenue', reason: 'no-filing' }),
+    ])
+    expect(other.deals.unread).toBe(0)
+  })
+
   it('is empty, not an error, before anything is stored', async () => {
     const data = await queryGroundTruth(db, ctx())
     expect(data).toMatchObject({
