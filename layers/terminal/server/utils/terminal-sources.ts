@@ -357,6 +357,18 @@ export function readIdentifierSources(sourcesYaml: string): IdentifierSourceEntr
   }))
 }
 
+/** sources.yaml `power_site_sources`: the pages the power-site ties are read from, under what terms. */
+export function readPowerSiteSources(sourcesYaml: string): ArchiveSourceEntry[] {
+  return readBlock(sourcesYaml.split('\n'), 'power_site_sources').map((block) => ({
+    id: block.id,
+    url: block.fields.url ?? null,
+    verdict: block.fields.verdict ?? '',
+    terms: block.fields.terms ?? null,
+    rights: rightsOf(block.id, block.fields.rights),
+    caveat: block.fields.caveats ?? null,
+  }))
+}
+
 /** Every include source and every deliberate cut, as sources.yaml states them. */
 export function readSourceRegistry(sourcesYaml: string): SourceRegistry {
   const lines = sourcesYaml.split('\n')
