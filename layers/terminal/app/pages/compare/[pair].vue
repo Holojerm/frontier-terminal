@@ -8,14 +8,19 @@
 import { alertLabs, LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import { comparePath, pairTitle, parsePair } from '../../../shared/utils/terminal-compare'
 import { labPath } from '../../../shared/utils/terminal-lab-summary'
+import { listedBoth, type ListedData } from '../../../shared/utils/listed'
 import type {
   AlertsData,
+  GroundTruthData,
   HiringHistoryData,
   IncidentsData,
+  LabId,
   PricesData,
+  ProbesData,
   RankingsData,
   RevenueData,
 } from '../../../shared/utils/terminal-types'
+import type { TableColumn } from '../../types/terminal-ui'
 
 // Inert for a dynamic route: sitemap.xml and llms.txt append the compare
 // pages from layers/terminal/shared/utils/terminal-compare.ts. Declared anyway — the seo
@@ -26,7 +31,7 @@ definePageMeta({
     priority: '0.7',
     title: 'Compare',
     summary:
-      'Two frontier labs side by side: flagship API price, disclosed SEC revenue, OpenRouter demand share, open roles and the infrastructure buildout, and status-page incidents.',
+      'Two frontier labs side by side: flagship API price, disclosed SEC revenue and press reports scored against it, the listed companies tied to both, OpenRouter demand share, open roles and the infrastructure buildout, status-page incidents, and measured latency.',
   },
 })
 
@@ -43,6 +48,38 @@ const [a, b] = pair
 const inPair = (provider: string) => (pair as readonly string[]).includes(provider)
 const title = pairTitle(pair)
 const key = `${a}-${b}`
+
+/** What the press-against-filings table reads: the tally, and the newest filing it scored against. */
+const truthRow = (lab: LabId) => (d: GroundTruthData) => ({
+  lab,
+  tally: d.tally,
+  filed: d.resolutions[0]?.filed ?? null,
+})
+
+// The fundamentals routes take `?lab=`, so each lab is its own small read.
+// Probes are one row per lab, so the pair is kept in a transform. Started
+// before the axis reads below are awaited, so all eleven run at once.
+const fundamentalsFetch = Promise.all([
+  useFetch('/api/ground-truth', {
+    key: `compare-truth:${a}`,
+    query: { lab: a },
+    transform: truthRow(a),
+  }),
+  useFetch('/api/ground-truth', {
+    key: `compare-truth:${b}`,
+    query: { lab: b },
+    transform: truthRow(b),
+  }),
+  useFetch<ListedData>('/api/listed', { key: `compare-listed:${a}`, query: { lab: a } }),
+  useFetch<ListedData>('/api/listed', { key: `compare-listed:${b}`, query: { lab: b } }),
+  useFetch<ProbesData>('/api/probes', {
+    key: `compare-probes:${key}`,
+    transform: (d: ProbesData): ProbesData => ({
+      ...d,
+      labs: d.labs.filter((l) => inPair(l.lab)),
+    }),
+  }),
+])
 
 // Narrowed in `transform`, on the server, so the other labs' rows never reach
 // the hydration payload; the shapes are unchanged. The explicit per-pair key
@@ -99,30 +136,71 @@ const [prices, revenue, rankings, hiring, incidents, alerts] = await Promise.all
     }),
   }),
 ])
+const [truthA, truthB, listedA, listedB, probes] = await fundamentalsFetch
 
 useSeo({
   image: ogCardPath(comparePath(pair)),
   title: `${title}: API pricing, revenue, hiring`,
-  description: `${title}: flagship API price, SEC revenue, OpenRouter demand share, open roles, and status-page incidents, each sourced.`,
+  description: `${title}: API price, SEC revenue against the press, listed companies tied to both, demand, hiring, incidents and latency, each sourced.`,
   breadcrumb: [{ name: title, path: comparePath(pair) }],
   dateModified: alerts.data.value?.as_of,
 })
 
 const failed = computed(() =>
-  [prices, revenue, rankings, hiring, incidents, alerts].some(
-    (r) => r.error.value !== null && r.error.value !== undefined,
-  ),
+  [
+    prices,
+    revenue,
+    rankings,
+    hiring,
+    incidents,
+    alerts,
+    truthA,
+    truthB,
+    listedA,
+    listedB,
+    probes,
+  ].some((r) => r.error.value !== null && r.error.value !== undefined),
 )
+
+const both = computed(() =>
+  listedA.data.value && listedB.data.value
+    ? listedBoth(listedA.data.value, listedB.data.value)
+    : null,
+)
+
+const pct = (n: number) => `${n.toLocaleString('en-US', { maximumFractionDigits: 1 })}%`
+const truthRows = computed(() =>
+  [truthA.data.value, truthB.data.value]
+    .filter((t) => t !== undefined && t !== null)
+    .map((t) => ({
+      lab: t.lab,
+      display: LAB_DISPLAY[t.lab],
+      scored: t.tally.reports,
+      periods: t.tally.periods,
+      error: t.tally.median_abs_error_pct === null ? '' : pct(t.tally.median_abs_error_pct),
+      lead: t.tally.median_lead_days === null ? '' : `${t.tally.median_lead_days}`,
+      filed: t.filed,
+    })),
+)
+const truthColumns: TableColumn[] = [
+  { key: 'display', label: 'Lab' },
+  { key: 'scored', label: 'Reports scored', numeric: true },
+  { key: 'periods', label: 'Filed figures', numeric: true },
+  { key: 'error', label: 'Median report off by', numeric: true },
+  { key: 'lead', label: 'First report before filing', hint: 'median days', numeric: true },
+  { key: 'source', label: 'Newest filing', keep: true },
+]
 
 // The lab page's tabs, in its order, so the two read the same way. The
 // readout above them stays visible on every tab.
-const tabs = [
+const tabs = computed(() => [
   { value: 'prices', label: 'Prices' },
   { value: 'revenue', label: 'Revenue' },
+  { value: 'companies', label: 'Companies', badge: both.value?.counts.companies || undefined },
   { value: 'demand', label: 'Demand' },
   { value: 'hiring', label: 'Hiring' },
   { value: 'operations', label: 'Operations' },
-]
+])
 
 const readout = computed(() => ({
   prices: prices.data.value,
@@ -176,6 +254,47 @@ const readout = computed(() => ({
         >
           <TerminalRevenuePanel v-if="revenue.data.value" :revenue="revenue.data.value" />
         </TerminalPanel>
+
+        <TerminalPanel
+          id="truth"
+          title="Press against filings"
+          note="Press reports of each lab’s revenue published before a filing printed the figure, scored against it."
+          :more="{ label: 'Every report and filing', to: '/ground-truth' }"
+          flush
+        >
+          <TerminalTable
+            caption="Press reports of each lab’s revenue against the filed figure"
+            :columns="truthColumns"
+            :rows="truthRows"
+            :row-key="(r) => r.lab"
+            :gap="(r) => r.scored === 0"
+          >
+            <template #cell-source="{ row }">
+              <TerminalProvenanceTag
+                v-if="row.filed"
+                :label="row.filed.form"
+                :source-url="row.filed.source_url"
+                :fetched-at="row.filed.fetched_at"
+              />
+            </template>
+            <template #gap>
+              <TerminalGap
+                inline
+                title="No report scored yet"
+                reason="No filing has printed a revenue figure the press reported first."
+              />
+            </template>
+          </TerminalTable>
+        </TerminalPanel>
+      </template>
+
+      <template #companies>
+        <TerminalListed v-if="both?.counts.companies" :data="both" :lab="pair" />
+        <TerminalGap
+          v-else
+          :title="`No listed company is tied to both ${LAB_DISPLAY[a]} and ${LAB_DISPLAY[b]} by name yet.`"
+          :action="{ label: 'See the graph', to: '/dependencies' }"
+        />
       </template>
 
       <template #demand>
@@ -222,6 +341,17 @@ const readout = computed(() => ({
           flush
         >
           <TerminalStrainTable v-if="incidents.data.value" :incidents="incidents.data.value" />
+        </TerminalPanel>
+
+        <TerminalPanel
+          v-if="probes.data.value?.labs.length"
+          id="probes"
+          title="Measured strain"
+          :note="`One timed request an hour to each lab’s flagship model. Working hours against night, over the last ${probes.data.value.window_days} complete days.`"
+          :more="{ label: 'Every lab, and how we probe', to: '/incidents#probes' }"
+          flush
+        >
+          <TerminalProbeStrain :probes="probes.data.value" />
         </TerminalPanel>
       </template>
     </TerminalTabs>
