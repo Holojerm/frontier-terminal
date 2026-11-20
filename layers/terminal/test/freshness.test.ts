@@ -28,6 +28,7 @@ import {
   TASK_CHECK_OVERRIDES,
   freshnessChecks,
   gdeltFreshnessCheck,
+  listingStatusCheck,
   socialOutboxFreshnessCheck,
 } from '../server/utils/terminal-freshness'
 import { TERMINAL_OPS_SEVERITY } from '../server/utils/terminal-ops-severity'
@@ -119,7 +120,13 @@ describe('coverage: every part of the pipeline has a freshness check', () => {
     expect(new Set(keys).size).toBe(keys.length)
     for (const [name] of tasks) expect(keys).toContain(`task:${name}`)
     expect(keys).toEqual(
-      expect.arrayContaining(['judge', 'gdelt-search', 'social-outbox', 'deploy']),
+      expect.arrayContaining([
+        'judge',
+        'gdelt-search',
+        'social-outbox',
+        'listing-status',
+        'deploy',
+      ]),
     )
   })
 
@@ -468,6 +475,40 @@ describe('the producers off the Worker', () => {
       notBefore: new Date('2026-11-06T10:00:00Z'),
     })
     expect(await run()).toEqual({ 'social-outbox': 'stale' })
+  })
+})
+
+describe('hand-checked listing status', () => {
+  const NOW = new Date('2026-12-02T12:00:00Z')
+
+  const filing = (form: string, file_date: string, accession_no: string) => ({
+    source_id: 'edgar-submissions-anthropic',
+    entity_key: `filing:${accession_no}`,
+    entity_type: 'filing',
+    provider: 'anthropic',
+    content_hash: accession_no,
+    payload: JSON.stringify({ form, file_date, accession_no }),
+    snapshot_id: 's1',
+    first_seen_at: `${file_date}T12:00:00.000Z`,
+    source_url: 'https://data.sec.gov/submissions/CIK0002130357.json',
+    fetched_at: `${file_date}T12:00:00.000Z`,
+  })
+
+  beforeEach(async () => {
+    await db.delete(schema.opsEvents)
+    await db.delete(schema.entities)
+  })
+
+  it('owes a review once a filer still listed as registered files its 424B4', async () => {
+    const run = () => checkFreshness(db, memoryMarker(), [listingStatusCheck], NOW)
+    await db.insert(schema.entities).values(filing('S-1/A', '2026-11-10', '0001628280-26-070001'))
+    expect(await run()).toEqual({ 'listing-status': 'not-owed' })
+
+    await db.insert(schema.entities).values(filing('424B4', '2026-12-01', '0001628280-26-080001'))
+    expect(await run()).toEqual({ 'listing-status': 'stale' })
+    const [event] = await db.select().from(schema.opsEvents)
+    expect(event).toMatchObject({ kind: 'listing_status_stale' })
+    expect(event!.detail).toContain('anthropic filed a 424B4 on 2026-12-01')
   })
 })
 

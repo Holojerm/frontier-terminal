@@ -327,7 +327,7 @@ export const CLASS_GAPS: { provider: LabId; class: ModelClassId; reason: string 
     provider: 'moonshot',
     class: 'economy',
     reason:
-      'No Moonshot page names a model for cost-sensitive work. The K2 models that cost less are closed to new users and retire by the end of December 2026.',
+      'No Moonshot page names a model for cost-sensitive work. The K2 models that cost less are closed to new users.',
   },
 ]
 

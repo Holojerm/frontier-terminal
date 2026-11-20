@@ -33,6 +33,7 @@ import {
 } from './terminal-asof'
 import { cacheControlFor, resolvedApiKey } from './api-access'
 import { withDatabaseFault } from './d1-fault'
+import { failingSources, markFailing } from './source-health'
 import { assertArchiveKnowable } from './terminal-archive'
 import { serverTimingHeader, timed, type ServerTiming } from './server-timing'
 import { paidLicensed, served } from './terminal-envelope'
@@ -85,9 +86,16 @@ export async function terminalPayload<T>(
       kv,
       cacheName(name, variant),
       stamp.key,
-      () => withDatabaseFault(query)(context),
+      withDatabaseFault(async () => markFailing(await query(context), await failingNow(stamp))),
       options,
     ),
+  )
+}
+
+/** The failing sources for this tick, read once and shared by every payload computed in it. */
+function failingNow(stamp: TerminalStamps): Promise<Record<string, string>> {
+  return cachedTerminal(kv, cacheName('failing-sources', ''), stamp.key, () =>
+    failingSources(db, stamp.poll),
   )
 }
 

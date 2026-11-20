@@ -11,7 +11,12 @@ defineProps<{
   sub?: string | null
   /** The fuller reading this figure summarizes. */
   to?: string
-  source?: { source_url: string; fetched_at: string; label?: string } | null
+  source?: {
+    source_url: string
+    fetched_at: string
+    label?: string
+    failing_since?: string
+  } | null
   gap?: { title: string; reason?: string } | null
 }>()
 </script>
@@ -38,6 +43,7 @@ defineProps<{
         :label="source.label"
         :source-url="source.source_url"
         :fetched-at="source.fetched_at"
+        :failing-since="source.failing_since"
       />
     </dd>
   </div>
