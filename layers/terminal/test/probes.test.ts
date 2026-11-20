@@ -705,8 +705,9 @@ describe('queryProbes', () => {
       model: 'deepseek/deepseek-v4-pro',
     })
     expect(data.labs.find((l) => l.lab === 'mistral')).toMatchObject({
-      status: 'waiting',
-      model_note: expect.stringContaining('name no flagship'),
+      status: 'not_probed',
+      model: 'mistralai/mistral-large-4-0',
+      gap: expect.stringContaining('whole output cap on reasoning'),
     })
     expect(await probesStamp(db)).toBe('none')
   })
@@ -782,21 +783,15 @@ describe('the probe targets', () => {
   it('leave room for an answer where the endpoint counts reasoning against the cap', () => {
     const body = (lab: string) => probeRequestBody(PROBE_TARGETS.find((t) => t.lab === lab)!)
     expect(body('meta').max_tokens).toBe(480)
-    // At 480, Mistral's whole reply was reasoning (2026-11-20).
-    expect(body('mistral').max_tokens).toBe(3160)
     expect(body('openai').max_tokens).toBe(160)
-    // Mistral's endpoint refuses `none` (400, 2026-11-20), whatever OpenRouter lists.
-    expect(body('mistral').reasoning).toEqual({ effort: 'low' })
   })
 
-  it('stay inside $29 a month at list prices, counting what xAI bills outside the cap', () => {
+  it('stay inside $24 a month at list prices, counting what xAI bills outside the cap', () => {
     const ceiling = monthlyCostCeiling()
     expect(ceiling).toBeGreaterThan(20)
-    expect(ceiling).toBeLessThan(29)
+    expect(ceiling).toBeLessThan(24)
     const only = (lab: string) => monthlyCostCeiling(PROBE_TARGETS.filter((t) => t.lab === lab))
     // 40 + 1,260 prompt tokens at $2 and 160 + 700 output tokens at $6, 732 times.
     expect(only('xai')).toBeCloseTo(5.68, 2)
-    // 40 prompt tokens at $0.70 and 160 + 3,000 output tokens at $2.10, 732 times.
-    expect(only('mistral')).toBeCloseTo(4.88, 2)
   })
 })
