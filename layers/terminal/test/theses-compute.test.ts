@@ -458,6 +458,11 @@ describe('the Compute thesis on a seeded store', () => {
       'compute-physical-buildout': 'unresolved',
       'compute-rented-demand': 'holding',
       'compute-datacenter-power': 'unresolved',
+      // Two pages print an H100 spot price, of the four the reading needs.
+      'compute-gpu-spot-tight': 'unresolved',
+      // No release and no probe is seeded here.
+      'compute-capex-guidance': 'unresolved',
+      'compute-peak-throughput': 'unresolved',
     })
   })
 

@@ -4,6 +4,7 @@
 // and the status-change log cannot disagree; status_since comes from the log.
 
 import { COMPANIES, companyName } from '../../shared/utils/companies'
+import type { LabId } from '../../shared/utils/terminal-types'
 import type { ClaimView, ReadingPoint, ThesesData } from '../../shared/utils/thesis-types'
 
 import type { PipelineDb } from '../pipeline/store'
@@ -17,6 +18,7 @@ import { confirmationOf } from '../theses/judged-status'
 import { THESES } from '../theses/registry'
 import { valueFormatOf } from '../theses/signals'
 import type { QueryContext } from './terminal-db'
+import { queryPressEarlyRead } from './terminal-ground-truth'
 
 export const THESES_CAVEAT =
   'This is a research journal. It isn’t investment advice. Each status is computed from our stored data against kill conditions written before the data arrived. ' +
@@ -69,6 +71,12 @@ export async function queryTheses(db: PipelineDb, ctx: QueryContext): Promise<Th
       ])
       const spec = claim.spec
       const newest = readings.at(-1)
+      // A claim on filed revenue shows what the press says about the periods
+      // not filed yet. It rides beside the claim and feeds nothing above.
+      const early =
+        spec.kind === 'measured' && spec.signal === 'sec-revenue-yoy-growth'
+          ? await queryPressEarlyRead(db, ctx, def.company as LabId)
+          : null
       views.push({
         id: claim.id,
         n: claim.n,
@@ -104,6 +112,7 @@ export async function queryTheses(db: PipelineDb, ctx: QueryContext): Promise<Th
           source_url: v.source_url,
           fetched_at: v.fetched_at,
         })),
+        ...(early ? { early_read: early } : {}),
       })
     }
     theses.push({

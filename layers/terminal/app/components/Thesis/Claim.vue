@@ -34,5 +34,7 @@ defineProps<{ claim: ClaimView }>()
 
     <ThesisClaimMeasured v-if="claim.signal_kind === 'measured'" :claim="claim" />
     <ThesisClaimJudged v-else :claim="claim" />
+
+    <ThesisEarlyRead v-if="claim.early_read" :read="claim.early_read" />
   </TerminalCard>
 </template>

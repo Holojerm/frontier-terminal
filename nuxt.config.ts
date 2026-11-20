@@ -561,7 +561,7 @@ export default defineNuxtConfig({
       // description — so an answer engine reads the same claim everywhere
       // rather than three paraphrases it has to reconcile.
       appDescription:
-        'API prices, hiring, SEC filings, revenue, incidents, and demand share for the frontier AI labs. Every number links to its source and shows when we read it.',
+        'Fundamentals on the frontier AI labs and the public companies around them, from API prices and hiring to filings, revenue, demand, and compute. Every number links to its source and shows when we read it.',
       // The app's canonical public origin, no trailing slash. Absolute links in
       // sitemap.xml, robots.txt, and og: tags are built from this.
       appUrl: 'http://localhost:3000',

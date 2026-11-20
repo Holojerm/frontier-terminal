@@ -177,6 +177,23 @@ describe('buildThesisDigest', () => {
     expect(owner.text).not.toContain('Unsubscribe')
   })
 
+  it('prints the press early read under a claim that has one, and says it is unconfirmed', () => {
+    const early_read = {
+      periods: [],
+      unplaced: 0,
+      record: { periods: 3, reports: 35, median_abs_error_pct: 0.92, median_lead_days: 19 },
+    }
+    const digest = build([
+      view('anthropic-revenue-growth', { early_read }),
+      view('anthropic-spend-premium', {}),
+    ])
+    expect(digest.text).toContain(
+      'Press, unconfirmed: No press report names a period that isn’t filed yet. Filings have settled 35 press reports so far. They were a median 0.9% off and ran a median 19 days before the filing.',
+    )
+    expect(digest.text.match(/Press, unconfirmed/g)).toHaveLength(1)
+    expect(digest.html).toContain('Press, unconfirmed:')
+  })
+
   it('orders claims weakest first, a moved claim ahead of its peers', () => {
     const d = build(
       [

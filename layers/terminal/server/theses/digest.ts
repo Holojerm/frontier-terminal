@@ -8,6 +8,7 @@
 // signal that something broke.
 
 import { companyName } from '../../shared/utils/companies'
+import { earlyReadSummary } from '../../shared/utils/thesis-format'
 import type {
   ClaimDef,
   ClaimStatus,
@@ -129,6 +130,7 @@ export function buildThesisDigest(input: DigestInput): RenderedEmail & { subject
         moved: movedFrom,
         reason: claim.reason,
         week: weekLine(claim),
+        early: claim.early_read ? earlyReadSummary(claim.early_read) : null,
       }
     })
     claims.sort((a, b) => RANK[a.status] - RANK[b.status] || +!a.moved - +!b.moved || a.n - b.n)
