@@ -5,7 +5,7 @@
 // /hiring. A board with no public feed is a row that says so; the xAI entity
 // blend ships as a visible mark on its row, as the source audit requires.
 
-import { count, signed } from '../../../shared/utils/terminal-format'
+import { boardLabel, count, signed } from '../../../shared/utils/terminal-format'
 import type {
   ClusterSeries,
   HiringHistoryData,
@@ -81,7 +81,7 @@ const hasRows = (p: HiringHistoryProvider) => p.feed === 'ok' && p.total.length 
     </template>
     <template #cell-mover="{ row: p }">
       <template v-if="topMover(p)">
-        {{ topMover(p)!.department }}
+        <span :title="topMover(p)!.department">{{ boardLabel(topMover(p)!.department) }}</span>
         <span class="ml-1 font-mono text-muted">{{ signed(topMover(p)!.d) }}</span>
       </template>
       <span v-else class="text-muted">none</span>

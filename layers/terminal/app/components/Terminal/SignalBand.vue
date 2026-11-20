@@ -4,6 +4,7 @@
 // change counts by axis, then an explicit quiet state — a terminal that
 // cannot say "nothing moved" is a terminal you have to re-read every morning.
 
+import { readableEdgarNames } from '../../../shared/utils/terminal-format'
 import { alertPath, INFO_TIER_LABEL } from '../../../shared/utils/terminal-tiers'
 import type { OverviewData } from '../../../shared/utils/terminal-types'
 
@@ -97,7 +98,7 @@ const quietReason = computed(() => {
             :title="newestInfo.headline"
             class="ml-2 hover:text-default"
           >
-            {{ newestInfo.headline }}
+            {{ readableEdgarNames(newestInfo.headline) }}
           </NuxtLink>
         </span>
       </p>

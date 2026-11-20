@@ -3,8 +3,9 @@
 // it can be taken back, as a share of its own on-demand price. Providers
 // are shown singly; a combined figure appears only once enough of them
 // print a spot price for the same GPU (the payload decides, not the page).
+// Prices read at two decimals; the exact printed value is the tooltip.
 
-import { money } from '../../../shared/utils/terminal-format'
+import { exactUsd, gpuHour } from '../../../shared/utils/terminal-format'
 import type { Bounds, UtilizationData } from '../../../shared/utils/recipe-views'
 import type { TableColumn } from '../../types/terminal-ui'
 
@@ -28,8 +29,10 @@ const rows = computed(() =>
   props.spot.providers.map((p) => ({
     ...p,
     key: `${p.provider}:${p.gpu}`,
-    on_demand: money(p.on_demand),
-    spot_price: range(p.spot, money),
+    on_demand: gpuHour(p.on_demand),
+    on_demand_exact: exactUsd(p.on_demand),
+    spot_price: range(p.spot, gpuHour),
+    spot_exact: range(p.spot, exactUsd),
     share: range(p.ratio, pct),
   })),
 )
@@ -54,6 +57,12 @@ const combined = computed(() => props.spot.combined.filter((c) => c.providers > 
       >
         <template #cell-share="{ row: r }">
           <span class="font-mono text-highlighted">{{ r.share }}</span>
+        </template>
+        <template #cell-spot_price="{ row: r }">
+          <span :title="r.spot_exact">{{ r.spot_price }}</span>
+        </template>
+        <template #cell-on_demand="{ row: r }">
+          <span :title="r.on_demand_exact">{{ r.on_demand }}</span>
         </template>
         <template #cell-source="{ row: r }">
           <TerminalProvenanceTag :source-url="r.source_url" :fetched-at="r.fetched_at" />

@@ -57,6 +57,19 @@ function incidentFromPayload(
   }
 }
 
+/**
+ * SpaceXAI's status page carries Cursor's "Third-party Model Providers"
+ * component, which posts other labs' outages as seen through Cursor ("Degraded
+ * Gemini 4 Carbon", "Elevated errors for Claude Sonnet 5.5"). Those are not
+ * xAI's capacity: an incident filed only under that component counts for no
+ * lab. One that also names an xAI component still counts.
+ */
+const THIRD_PARTY_COMPONENT = /^third-party model/i
+
+export function isThirdPartyOnly(components: readonly string[]): boolean {
+  return components.length > 0 && components.every((c) => THIRD_PARTY_COMPONENT.test(c))
+}
+
 /** Newest started_at first; id breaks ties so the order is total. */
 const newestFirst = (a: IncidentView, b: IncidentView) =>
   a.started_at === b.started_at
@@ -94,7 +107,7 @@ export async function queryIncidents(db: PipelineDb, ctx: QueryContext): Promise
   for (const e of entities) {
     const payload = parseJson(e.payload)
     const view = payload && incidentFromPayload(e, payload)
-    if (view) all.push(view)
+    if (view && !isThirdPartyOnly(view.components)) all.push(view)
   }
   all.sort(newestFirst)
 

@@ -15,8 +15,8 @@ import type {
 } from '../../shared/utils/terminal-exposure'
 import {
   UTC_STYLE,
-  absoluteStamp,
   compactUsd,
+  datedStamp,
   count,
   money,
   periodLabel,
@@ -209,11 +209,11 @@ export function shortUrl(url: string, max = 56): string {
 }
 
 /**
- * '2026-11-04 18:00Z': a fetch time a printed page can carry without a year
- * being dropped. Always the ISO date, in the reader's zone and clock.
+ * 'Nov 4 2026 18:00Z': a fetch time a printed page can carry without its year
+ * being dropped. The reader's zone, clock and date form, as every page reads.
  */
 export function shortStamp(iso: string, style: StampStyle = UTC_STYLE): string {
-  return absoluteStamp(iso, null, { ...style, iso: true })
+  return datedStamp(iso, style)
 }
 
 const day = (iso: string) => iso.slice(0, 10)

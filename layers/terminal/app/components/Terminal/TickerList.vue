@@ -4,6 +4,7 @@
 // and the explanation and cited rows live there. Provenance still travels on
 // every line, because a minor-change line is a datum too.
 
+import { readableEdgarNames } from '../../../shared/utils/terminal-format'
 import { alertPath } from '../../../shared/utils/terminal-tiers'
 import type { AlertView } from '../../../shared/utils/terminal-types'
 
@@ -31,7 +32,7 @@ const stamps = useStamps()
         :to="alertPath(alert.id)"
         class="min-w-0 flex-1 text-default underline underline-offset-2 decoration-1 hover:text-highlighted"
       >
-        {{ alert.headline }}
+        {{ readableEdgarNames(alert.headline) }}
       </NuxtLink>
       <TerminalProvenanceTag
         :source-url="alert.source_url"

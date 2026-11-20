@@ -18,7 +18,9 @@ defineProps<{ claim: ClaimView }>()
       <ThesisStatusBadge :status="claim.status" />
       <span v-if="claim.status_since">
         since
-        <time :datetime="claim.status_since">{{ stamps.absolute(claim.status_since) }}</time>
+        <time :datetime="claim.status_since" :title="claim.status_since">{{
+          stamps.absolute(claim.status_since)
+        }}</time>
       </span>
     </template>
 
