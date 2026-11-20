@@ -1,10 +1,17 @@
 # Frontier Terminal
 
-A free, public, read-only investor terminal for the frontier AI labs (OpenAI, Anthropic, Google,
-xAI, Meta, Mistral, DeepSeek, Alibaba's Qwen, and Moonshot AI's Kimi). It tracks API price lists, hiring (including data center and
-infrastructure roles), SEC filings, disclosed revenue, status-page incidents, misalignment
-disclosures, and OpenRouter demand share with the spend share it implies. Every number links to
-the page we read it from and shows when we read it. Not investment advice.
+A free, public, read-only terminal of fundamentals on the frontier AI labs (OpenAI, Anthropic,
+Google, xAI, Meta, Mistral, DeepSeek, Alibaba's Qwen, and Moonshot AI's Kimi).
+
+For each lab it tracks API price lists, hiring (including data center and infrastructure roles),
+SEC filings and disclosed revenue, OpenRouter demand share with the spend share it implies,
+status-page incidents and latency probes, and misalignment disclosures. Around the labs it tracks
+the public companies tied to them: hyperscaler capex and backlog, the dependency graph of who
+sells to and funds whom, chip and power suppliers, and GPU rental prices. Ground truth scores
+press reports of lab revenue and deals against the filings that came later. Theses sit on top of
+the data, as short arguments with the numbers that would break them.
+
+Every number links to the page we read it from and shows when we read it. Not investment advice.
 
 Built on [nuxt-cf-template](https://github.com/Holojerm/nuxt-cf-template): Nuxt 4 and NuxtUI v4
 on Cloudflare Workers, with D1 (SQLite via Drizzle), KV, and R2. There are no accounts, sign-in,
@@ -32,7 +39,7 @@ in both color modes, and the Content-Security-Policy spec) run in GitHub Actions
 | Path | What |
 | --- | --- |
 | `layers/terminal/` | Everything the product is, as one fork-owned Nuxt layer (`app/`, `server/`, `shared/`, `test/`, and its tables in `server/db/schema.ts`). The app's own `app/`, `server/` and `shared/` hold the template's code and the few files the layer does not own. |
-| `layers/terminal/app/pages/` | The terminal pages: `prices/` (catalog and per-SKU history), `hiring.vue`, `revenue.vue`, `releases.vue`, `incidents.vue`, `rankings.vue`, `alerts/` (feed and permalinks), `data.vue` (bulk downloads), `about.vue`. The overview, `app/pages/index.vue`, stays in the app. Every page calls `useSeo()` once and declares `publicPage`. |
+| `layers/terminal/app/pages/` | The terminal pages. Per lab: `prices/` (catalog and per-SKU history), `hiring.vue`, `revenue.vue`, `releases.vue`, `incidents.vue`, `disclosures.vue`, `rankings.vue`, `labs/` (one page and tear sheet per lab), `compare/`. Around the labs: `exposure.vue`, `dependencies.vue`, `compute.vue`, `ground-truth.vue`, `filings/`. Then `alerts/` (feed and permalinks), `theses/`, `data.vue` (bulk downloads), `about.vue`. The overview, `app/pages/index.vue`, stays in the app. Every page calls `useSeo()` once and declares `publicPage`. |
 | `sources.yaml` | The source registry. One entry per candidate source with its axis, its diff mechanism, and an include or exclude verdict. Transcribed from `docs/source-audit.md`, never re-derived. |
 | `layers/terminal/server/pipeline/` | Fetch → normalize → diff → store. `parsers/` is one parser per source, `contracts/` the zod row shapes the DB mirrors, `judge/` the one writer that promotes changes to alerts and re-maps price-matrix cells whose vendor sentence changed, `scopes.ts` which sources a given run covers. |
 | `layers/terminal/server/api/` | The read-only JSON API: `overview`, `prices` (+ `prices/[key]`), `hiring` (+ `hiring/history`), `revenue`, `releases`, `incidents`, `rankings`, `spend`, `alerts` (+ `alerts/[id]`), `coverage`, `theses`. Plus `health`, `status`, and `fleet` (the ops contract), and `judge/`, bearer-gated, the only route that writes. |
@@ -42,7 +49,7 @@ in both color modes, and the Content-Security-Policy spec) run in GitHub Actions
 | `fixtures/` | A captured copy of every source, with fetch timestamps and trim notes in `fixtures/manifest.json`, so the parsers are tested against the real bytes without the network. |
 | `scripts/check-*.ts` | The gates in `bun run ci`: design tokens, brand assets, references, SEO, fleet manifest, cron parity. |
 | `layers/terminal/server/theses/` | The thesis layer: each thesis's claims and kill conditions (`anthropic.ts`), the recipes that read non-lab companies' public sources (`recipes/`), the measured signals that read the store, the judged claims' candidates and verdict gate, the pure status rules, the evaluator the survey cron runs after each run, and the weekly digest (`theses:digest`, Mondays 13:00 UTC). |
-| `docs/` | `source-audit.md` lists every candidate source, fetched and judged, with the reason for each exclusion. `thesis-engine.md` is the plan to grow the terminal into a thesis engine, with the lab thesis as the first one. |
+| `docs/` | `source-audit.md` lists every candidate source, fetched and judged, with the reason for each exclusion. `thesis-engine.md` is the plan for the thesis layer, the arguments that sit on top of the terminal's data. |
 
 ## Deploy
 

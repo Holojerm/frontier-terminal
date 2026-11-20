@@ -85,9 +85,12 @@ export interface McpDeps {
 export const MCP_SERVER_NAME = 'frontier-terminal'
 
 const INSTRUCTIONS =
-  `${MCP_SERVER_NAME}: a free, public, read-only investor terminal tracking the frontier AI labs ` +
-  '(OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Alibaba (Qwen), Moonshot AI (Kimi)) on seven axes — API price lists, hiring boards (with the physical-infrastructure buildout cluster), ' +
-  'SEC filings and disclosed revenue, status-page incidents, misalignment disclosures, and OpenRouter demand share with its implied spend share. ' +
+  `${MCP_SERVER_NAME}: a free, public, read-only terminal of fundamentals on the frontier AI labs ` +
+  '(OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Alibaba (Qwen), Moonshot AI (Kimi)) and the public companies around them. ' +
+  'Per lab: API price lists, hiring boards (with the physical-infrastructure buildout cluster), SEC filings and disclosed revenue, ' +
+  'status-page incidents and latency probes, misalignment disclosures, and OpenRouter demand share with its implied spend share. ' +
+  'Around the labs: hyperscaler exposure, who sells to and funds whom, suppliers, listed companies, GPU rental prices, ' +
+  'and press reports scored against later filings (get_ground_truth). Theses (on the site) are arguments built on this data. ' +
   'Not investment advice. Start with `describe` (the site map) or `get_overview` (what moved). ' +
   PROVENANCE
 

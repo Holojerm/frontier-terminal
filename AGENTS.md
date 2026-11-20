@@ -5,11 +5,14 @@ It is the **index**, deliberately kept small: it loads into every session, so
 anything that is not needed on every task lives in [`.claude/docs/`](.claude/docs/)
 and is read on demand.
 
-Frontier Terminal is a free, public, read-only data site: an investor terminal tracking
-the frontier AI labs (OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Alibaba (Qwen), Moonshot AI (Kimi)) on seven axes — API price lists,
-hiring, SEC filings, disclosed revenue, status-page incidents, misalignment disclosures,
-and OpenRouter demand share. No accounts, no sign-in, no payments. Every datum carries its source URL and
-fetch timestamp.
+Frontier Terminal is a free, public, read-only terminal of fundamentals on the frontier AI
+labs (OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Alibaba (Qwen), Moonshot AI (Kimi)).
+Per lab: API price lists, hiring, SEC filings and disclosed revenue, status-page incidents and
+latency probes, misalignment disclosures, and OpenRouter demand share. Around the labs: the
+public companies tied to them (exposure, dependencies, suppliers, listed companies), compute
+(GPU prices, data-center power), and ground truth (press reports scored against later filings).
+The terminal's data is the product. Theses are a layer on top, the retail-facing angle. No
+accounts, no sign-in, no payments. Every datum carries its source URL and fetch timestamp.
 
 ---
 
