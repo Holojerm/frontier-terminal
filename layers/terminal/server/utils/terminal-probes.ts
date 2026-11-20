@@ -34,13 +34,14 @@ export const PROBE_HISTORY_DAYS = 90
 
 export const PROBES_METHOD =
   'Once an hour we send each lab’s flagship model the same short request through OpenRouter, pinned to the lab’s own endpoint with no fallback, and time the streamed reply. ' +
-  'Time to first token runs from sending the request to the first streamed text. Tokens per second is the reply’s tokens over the time between its first and last token. ' +
+  'Time to first token runs from sending the request to the first text of the answer, so it includes any reasoning the model does first. Tokens per second is the answer’s tokens over the time between its first and last token, with reasoning tokens left out. ' +
+  'Every request caps the reply at the same length. Meta’s and Mistral’s carry a larger cap, because those endpoints count reasoning against it, so their answers can run longer. ' +
   'A day’s reading is the median of its working-hours probes against the median of its night probes, in fixed UTC hours per lab, and the share of probes that were rate limited, errored, or timed out. ' +
   'A window needs three good probes for a median. Probes that failed because of our key or the router aren’t counted.'
 
 export const PROBES_CAVEAT =
   'This is a reading of strain at one hourly sample, from one account, through one router. It isn’t utilization, and we haven’t shown that it predicts anything. ' +
-  'An hourly probe misses short bursts of rate limiting. Five of these models can’t turn reasoning off, so compare a lab with its own history and not with another lab. ' +
+  'An hourly probe misses short bursts of rate limiting. Six of these models reason before they answer, each for as long as it chooses, so compare a lab with its own history and not with another lab. ' +
   'Each probe leaves from whichever Cloudflare data center ran it, and the row says which.'
 
 const DAY_MS = 86_400_000

@@ -18,9 +18,12 @@ export const PROBE_PROMPT =
   'Count from one to three hundred in English words, separated by commas. Output only the words.'
 
 /**
- * Reasoning tokens count against this too, so it also caps what one probe
- * costs. 160 keeps eight labs hourly at about $14 a month on 2026-11-19 list
- * prices; the test in layers/terminal/test/probes.test.ts holds the arithmetic.
+ * The answer every probe asks for. Most endpoints count reasoning tokens
+ * against the cap, so a target whose reasoning would use it up carries a
+ * `reasoning_allowance` on top, and xAI bills its reasoning outside the cap
+ * altogether (`billed_outside_cap`). With both, eight labs hourly come to
+ * about $24 a month at 2026-11-19 list prices; the test in
+ * layers/terminal/test/probes.test.ts holds the arithmetic.
  */
 export const PROBE_MAX_TOKENS = 160
 
@@ -72,11 +75,22 @@ export interface ProbeTarget {
    */
   provider: string
   /**
-   * The lowest reasoning effort the model accepts (OpenRouter's model list,
-   * `reasoning.supported_efforts`, read 2026-11-19). Five of these models
-   * cannot turn reasoning off, so their first token waits on it.
+   * The lowest reasoning effort the endpoint accepts (OpenRouter's model list,
+   * `reasoning.supported_efforts`, read 2026-11-19, corrected by what the
+   * endpoint itself answered on 2026-11-20). Six of these models reason
+   * before they answer, so their first token waits on it.
    */
   effort: 'none' | 'minimal' | 'low'
+  /**
+   * Output tokens added to the cap for reasoning the endpoint counts against
+   * it, so the cap is not spent before the answer starts.
+   */
+  reasoning_allowance?: number
+  /**
+   * Output tokens the endpoint bills beyond the cap, and prompt tokens it
+   * bills beyond ours, as seen in its usage. For the budget only.
+   */
+  billed_outside_cap?: { output: number; prompt: number }
   /**
    * Null when the model is the flagship cell of the price matrix
    * (utils/terminal-classes.ts). Otherwise why this model: the lab's docs name
@@ -121,6 +135,8 @@ export const PROBE_TARGETS: readonly ProbeTarget[] = [
     model: 'x-ai/grok-4.7',
     provider: 'xai',
     effort: 'low',
+    // 2026-11-20: usage showed 674 reasoning tokens beside the 160 capped answer tokens, and a 1,261-token prompt.
+    billed_outside_cap: { output: 700, prompt: 1260 },
     note: null,
     market: 'americas',
     list_price: { input: 2, output: 6 },
@@ -130,6 +146,8 @@ export const PROBE_TARGETS: readonly ProbeTarget[] = [
     model: 'meta/muse-wonder',
     provider: 'meta',
     effort: 'minimal',
+    // 2026-11-20: at a cap of 160 the reply was 158 hidden reasoning tokens and no answer.
+    reasoning_allowance: 320,
     note: null,
     market: 'americas',
     list_price: { input: 4, output: 20 },
@@ -139,7 +157,10 @@ export const PROBE_TARGETS: readonly ProbeTarget[] = [
     model: 'mistralai/mistral-large-4-0',
     // Mistral has two standard endpoints there (mistral/zdr, mistral/eu); one is named so the series never mixes them.
     provider: 'mistral/zdr',
-    effort: 'none',
+    // OpenRouter lists `none` for this model. Mistral's endpoint refused it on 2026-11-20
+    // (400, "supported values: high, low, medium"), so the lowest it takes is `low`.
+    effort: 'low',
+    reasoning_allowance: 320,
     note: 'Mistral’s docs name no flagship. We probe Large 4, its top-priced general text model.',
     market: 'europe',
     list_price: { input: 0.7, output: 2.1 },
@@ -187,7 +208,7 @@ export function probeRequestBody(target: ProbeTarget) {
     model: target.model,
     messages: [{ role: 'user', content: PROBE_PROMPT }],
     stream: true,
-    max_tokens: PROBE_MAX_TOKENS,
+    max_tokens: PROBE_MAX_TOKENS + (target.reasoning_allowance ?? 0),
     reasoning: { effort: target.effort },
     provider: { only: [target.provider], allow_fallbacks: false },
   }
@@ -198,14 +219,18 @@ const HOURS_PER_MONTH = 24 * 30.5
 /** The prompt's size with chat framing, rounded up. */
 const PROMPT_TOKENS = 40
 
-/** What a month of hourly probes costs at list prices when every probe spends the whole cap. */
+/**
+ * What a month of hourly probes costs at list prices when every probe spends
+ * its whole cap, plus what an endpoint bills outside it.
+ */
 export function monthlyCostCeiling(targets: readonly ProbeTarget[] = PROBE_TARGETS): number {
-  return targets.reduce(
-    (sum, t) =>
+  return targets.reduce((sum, t) => {
+    const prompt = PROMPT_TOKENS + (t.billed_outside_cap?.prompt ?? 0)
+    const output =
+      PROBE_MAX_TOKENS + (t.reasoning_allowance ?? 0) + (t.billed_outside_cap?.output ?? 0)
+    return (
       sum +
-      (HOURS_PER_MONTH *
-        (PROMPT_TOKENS * t.list_price.input + PROBE_MAX_TOKENS * t.list_price.output)) /
-        1_000_000,
-    0,
-  )
+      (HOURS_PER_MONTH * (prompt * t.list_price.input + output * t.list_price.output)) / 1_000_000
+    )
+  }, 0)
 }
