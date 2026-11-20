@@ -264,6 +264,16 @@
       "note": "Join table for xai-greenhouse. Department names are the evidence for the SpaceXAI caveat: the set is xAI-shaped (Data Center 121, Human Data 36, Engineering 23, …) with no aerospace/launch function."
     },
     {
+      "path": "fixtures/sec/edgar-fts-anthropic-s-1.json",
+      "source_id": "edgar-fts-anthropic-s-1",
+      "source_url": "https://efts.sec.gov/LATEST/search-index?q=%22Anthropic%22&forms=S-1",
+      "fetched_at": "2026-11-20T01:43:28Z",
+      "http_status": 200,
+      "raw_bytes": 57417,
+      "trim": "hits.hits cut to 2 of the 100 returned (112 matched): the primary documents of Anthropic, PBC’s S-1 (2026-10-26) and Amendment No. 1 (2026-11-02). aggregations and the echoed query dropped; hits.total untouched.",
+      "note": "The edgar-fts query once the S-1 was public. The offline fill (layers/terminal/server/dev/fixture-fill.ts) answers edgar-fts from this capture so the lab resolves and its prospectus is derived; the parser tests keep the 2026-08-25 capture. Listed before the poll’s capture of the same URL, which a by-URL lookup must keep reading."
+    },
+    {
       "path": "fixtures/sec/edgar-fts.json",
       "source_id": "edgar-fts",
       "source_url": "https://efts.sec.gov/LATEST/search-index?q=%22Anthropic%22&forms=S-1",
@@ -293,6 +303,16 @@
       "trim": "none — committed whole"
     },
     {
+      "path": "fixtures/filed-facts/submissions-msft.json",
+      "source_id": "filed-facts-msft-submissions",
+      "source_url": "https://data.sec.gov/submissions/CIK0000789019.json",
+      "fetched_at": "2026-11-20T01:43:41Z",
+      "http_status": 200,
+      "raw_bytes": 186831,
+      "trim": "filings.recent parallel arrays cut to the rows named in the note (of 1,010); filings.files emptied; every header field untouched.",
+      "note": "Microsoft, for the filed-facts reader: the 10-Q filed 2026-10-28 (0001193125-26-436133), whose instance is msft-20260930.xml. Listed before the poll’s capture of the same URL, which a by-URL lookup must keep reading."
+    },
+    {
       "path": "fixtures/sec/edgar-submissions-msft.json",
       "source_id": "edgar-submissions-msft",
       "source_url": "https://data.sec.gov/submissions/CIK0000789019.json",
@@ -301,6 +321,16 @@
       "raw_bytes": 185250,
       "trim": "filings.recent parallel arrays cut to the newest 150 entries (of 1002); filings.files (the older-history index) emptied. Every field the parser reads is intact.",
       "note": "MICROSOFT CORP, whitelisted CIK. Fetched with the required UA header (contact email form). The newest 150 filings span 2025-12-12 to 2026-09-17 and hold 2 10-Q, 1 10-K and 6 8-K among 141 Form 4/144/3 rows the parser's form filter drops."
+    },
+    {
+      "path": "fixtures/filed-facts/submissions-amzn.json",
+      "source_id": "filed-facts-amzn-submissions",
+      "source_url": "https://data.sec.gov/submissions/CIK0001018724.json",
+      "fetched_at": "2026-11-20T01:43:43Z",
+      "http_status": 200,
+      "raw_bytes": 159784,
+      "trim": "filings.recent parallel arrays cut to the rows named in the note (of 1,000); filings.files emptied; every header field untouched.",
+      "note": "Amazon, for the filed-facts reader: the 10-Q filed 2026-10-30 (0001018724-26-000040), whose instance is amzn-20260930.xml, and the results 8-K of 2026-02-05 (0001018724-26-000002), whose release is fixtures/guidance/amzn-2026-02-05-ex99-1.htm. Listed before the poll’s capture of the same URL, which a by-URL lookup must keep reading."
     },
     {
       "path": "fixtures/sec/edgar-submissions-amzn.json",
@@ -323,6 +353,16 @@
       "note": "NVIDIA CORP, whitelisted CIK. Newest 150 filings span 2025-10-23 to 2026-09-21: 3 10-Q, 1 10-K, 13 8-K."
     },
     {
+      "path": "fixtures/filed-facts/submissions-googl.json",
+      "source_id": "filed-facts-googl-submissions",
+      "source_url": "https://data.sec.gov/submissions/CIK0001652044.json",
+      "fetched_at": "2026-11-20T01:43:42Z",
+      "http_status": 200,
+      "raw_bytes": 152403,
+      "trim": "filings.recent parallel arrays cut to the rows named in the note (of 1,001); filings.files emptied; every header field untouched.",
+      "note": "Alphabet, for the filed-facts reader: the 10-Q filed 2026-10-29 (0001652044-26-000084), whose instance is goog-20260930.xml, and the results 8-K of 2025-02-04 (0001652044-25-000010), whose release is fixtures/guidance/googl-2025-02-04-ex99-1.htm. Listed before the poll’s capture of the same URL, which a by-URL lookup must keep reading."
+    },
+    {
       "path": "fixtures/sec/edgar-submissions-googl.json",
       "source_id": "edgar-submissions-googl",
       "source_url": "https://data.sec.gov/submissions/CIK0001652044.json",
@@ -333,6 +373,16 @@
       "note": "Alphabet Inc., whitelisted CIK. Newest 150 filings span 2026-04-27 to 2026-09-16: 2 10-Q, 9 8-K, no 10-K inside the window (Alphabet's 10-K is a January/February filing)."
     },
     {
+      "path": "fixtures/filed-facts/submissions-meta.json",
+      "source_id": "filed-facts-meta-submissions",
+      "source_url": "https://data.sec.gov/submissions/CIK0001326801.json",
+      "fetched_at": "2026-11-20T01:43:45Z",
+      "http_status": 200,
+      "raw_bytes": 157592,
+      "trim": "filings.recent parallel arrays cut to the rows named in the note (of 1,003); filings.files emptied; every header field untouched.",
+      "note": "Meta, for the filed-facts reader: the results 8-K of 2025-01-29 (0001326801-25-000014), whose index page and release are under fixtures/guidance/. Listed before the poll’s capture of the same URL, which a by-URL lookup must keep reading."
+    },
+    {
       "path": "fixtures/sec/edgar-submissions-meta.json",
       "source_id": "edgar-submissions-meta",
       "source_url": "https://data.sec.gov/submissions/CIK0001326801.json",
@@ -341,6 +391,16 @@
       "raw_bytes": 157388,
       "trim": "filings.recent parallel arrays cut to the newest 150 entries (of 1000); filings.files emptied.",
       "note": "Meta Platforms, Inc., whitelisted CIK (resolved 2026-10-12 from SEC's company_tickers.json). Newest 150 filings span 2026-03-18 to 2026-10-07: 2 10-Q, 5 8-K, no 10-K inside the window."
+    },
+    {
+      "path": "fixtures/filed-facts/submissions-orcl.json",
+      "source_id": "filed-facts-orcl-submissions",
+      "source_url": "https://data.sec.gov/submissions/CIK0001341439.json",
+      "fetched_at": "2026-11-20T01:43:46Z",
+      "http_status": 200,
+      "raw_bytes": 158530,
+      "trim": "filings.recent parallel arrays cut to the rows named in the note (of 1,000); filings.files emptied; every header field untouched.",
+      "note": "Oracle, for the filed-facts reader: the results 8-K of 2026-03-10 (0001193125-26-100148), whose release is fixtures/guidance/orcl-2026-03-10-ex99-1.htm. Listed before the poll’s capture of the same URL, which a by-URL lookup must keep reading."
     },
     {
       "path": "fixtures/sec/edgar-submissions-orcl.json",
@@ -1114,6 +1174,16 @@
       "note": "SEC’s CIK, name, ticker and exchange file, fetched with the SEC User-Agent (FrontierTerminal contact@frontierterm.com). The CIK check for entity_identifiers. Anthropic, PBC is listed as ANT with a null exchange (not yet trading)."
     },
     {
+      "path": "fixtures/sec/edgar-submissions-anthropic.json",
+      "source_id": "edgar-submissions-anthropic",
+      "source_url": "https://data.sec.gov/submissions/CIK0002130357.json",
+      "fetched_at": "2026-11-20T01:43:29Z",
+      "http_status": 200,
+      "raw_bytes": 6291,
+      "trim": "filings.recent parallel arrays cut to the 8 rows filed through 2026-11-02 (of 32): the S-1/A, the S-1 and six draft registration rows. filings.files was already empty; every header field untouched.",
+      "note": "The derived submissions feed of a lab resolved from its S-1, as of Amendment No. 1: the two registration filings whose documents are committed. Later rows (two more amendments, the 424B4) are cut because no document is committed for them. Listed before the poll’s capture of the same URL, which a by-URL lookup must keep reading."
+    },
+    {
       "path": "fixtures/identifiers/sec-submissions-anthropic.json",
       "source_id": "identifiers-sec-submissions-anthropic",
       "source_url": "https://data.sec.gov/submissions/CIK0002130357.json",
@@ -1724,6 +1794,43 @@
       "http_status": 200,
       "raw_bytes": 3964639,
       "trim": "facts.us-gaap cut to the five concepts the reader takes, each unit's facts cut to period ends from 2024-01-01; values untouched."
+    },
+    {
+      "path": "fixtures/sec/filing-index-anthropic-s-1-a.html",
+      "source_id": "filing-index-anthropic-s-1-a-2026-11-02-0001628280-26-068676",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026068676/0001628280-26-068676-index.htm",
+      "fetched_at": "2026-11-20T01:43:40Z",
+      "http_status": 200,
+      "raw_bytes": 22825,
+      "trim": "none — committed whole",
+      "note": "The index page of Anthropic, PBC’s Amendment No. 1. Sequence 1 is anthropicpbc-sx1ax1.htm, Type S-1/A."
+    },
+    {
+      "path": "fixtures/guidance/googl-2025-02-04-index.html",
+      "source_id": "guidance-googl-2025-02-04-index",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204425000010/0001652044-25-000010-index.html",
+      "fetched_at": "2026-11-20T01:43:47Z",
+      "http_status": 200,
+      "raw_bytes": 10380,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/guidance/amzn-2026-02-05-index.html",
+      "source_id": "guidance-amzn-2026-02-05-index",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000002/0001018724-26-000002-index.html",
+      "fetched_at": "2026-11-20T01:43:48Z",
+      "http_status": 200,
+      "raw_bytes": 10615,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/guidance/orcl-2026-03-10-index.html",
+      "source_id": "guidance-orcl-2026-03-10-index",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1341439/000119312526100148/0001193125-26-100148-index.html",
+      "fetched_at": "2026-11-20T01:43:50Z",
+      "http_status": 200,
+      "raw_bytes": 9494,
+      "trim": "none — committed whole"
     }
   ]
 }
