@@ -397,16 +397,17 @@ export const filedFacts = sqliteTable(
   ],
 )
 
-// Filed-fact reads — one row per document fetch: a filer's company facts, or
-// one filing's instance. An instance read `ok` is never fetched again (a
-// filing never changes once accepted); company facts are re-read on a
-// schedule and skipped when their hash has not moved.
+// Filed-fact reads — one row per document fetch: a filer's company facts,
+// one filing's instance, or one earnings release (exposure/guidance.ts, where
+// `facts` counts the guidance rows it printed). An instance or release read
+// `ok` is never fetched again (a filing never changes once accepted); company
+// facts are re-read on a schedule and skipped when their hash has not moved.
 export const filedFactReads = sqliteTable(
   'filed_fact_reads',
   {
     id: text('id').primaryKey(),
     ticker: text('ticker').notNull(),
-    kind: text('kind').notNull(), // companyfacts | instance
+    kind: text('kind').notNull(), // companyfacts | instance | release
     accession_no: text('accession_no'), // null for company facts
     status: text('status').notNull(), // ok | unchanged | failed
     detail: text('detail'),
@@ -420,6 +421,29 @@ export const filedFactReads = sqliteTable(
     // terminalStamps() reads max(started_at) across every ticker; the doc index can't serve it.
     index('filed_fact_reads_started_idx').on(t.started_at),
   ],
+)
+
+// Capex guidance as a filer's earnings release prints it (the 8-K's exhibit
+// 99.1), one row per fiscal year a release gives a figure or range for
+// (layers/terminal/server/exposure/guidance.ts). `sentence` is the release's
+// own sentence. A release that prints none leaves only its filed_fact_reads row.
+export const filedGuidance = sqliteTable(
+  'filed_guidance',
+  {
+    id: text('id').primaryKey(),
+    ticker: text('ticker').notNull(),
+    cik: text('cik').notNull(),
+    accession_no: text('accession_no').notNull(),
+    filed: text('filed').notNull(),
+    fiscal_year: integer('fiscal_year').notNull(),
+    low: real('low').notNull(),
+    high: real('high').notNull(), // equal to low for a single figure
+    sentence: text('sentence').notNull(),
+    raw_key: text('raw_key').notNull(),
+    first_seen_at: text('first_seen_at').notNull(),
+    ...provenance,
+  },
+  (t) => [index('filed_guidance_filer_idx').on(t.ticker, t.fiscal_year, t.filed)],
 )
 
 // ─────────────────────────────────────────────
@@ -629,6 +653,9 @@ export const reportedReviews = sqliteTable(
     title_key: text('title_key').notNull(),
     figures: integer('figures').notNull(),
     judged_at: text('judged_at').notNull(),
+    // When the headline was read for deal sizes (review.ts). Null for one read
+    // before deals were labeled, until the judge reads it again for them.
+    deals_at: text('deals_at'),
   },
   (t) => [index('reported_reviews_judged_idx').on(t.judged_at, t.id)],
 )
@@ -642,8 +669,12 @@ export const reportedFigures = sqliteTable(
     title_key: text('title_key').notNull(),
     article_id: text('article_id').notNull(),
     lab: text('lab').notNull(),
-    metric: text('metric').notNull(), // revenue_run_rate | revenue | valuation | funding
+    // revenue_run_rate | revenue | valuation | funding | funding_total, or a
+    // deal: commitment | commitment_total | investment | financing
+    metric: text('metric').notNull(),
     basis: text('basis').notNull(), // reported | sought | projected
+    // The other company in a deal, as the headline names it. Null otherwise.
+    counterparty: text('counterparty'),
     currency: text('currency').notNull(), // USD | EUR
     amount: real('amount').notNull(),
     amount_text: text('amount_text').notNull(),

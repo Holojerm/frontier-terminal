@@ -659,3 +659,27 @@ Interpretation, marked as such: none of this measures utilization. The implied r
 **One change to the recipe contract.** `follow` now gets the newest stored date. The two earnings-release recipes read one release per run, oldest first, then the one after the newest stored quarter. That fills five quarters of Alphabet's figure and seven of CoreWeave's over the first runs.
 
 **Verdict: include `sec-googl-api-tokens`, `sec-crwv-active-power`, `mlperf-inference-datacenter`, `epoch-chip-users` and `epoch-chip-types`, and keep spot prices on `gpu-coreweave` and `gpu-azure`. Cut `ornn-compute-index`, `aws-capacity-blocks`, `gpu-spot-history`, `vercel-ai-gateway`, `inferencex` and `gpu-stock-status`.** The owner approved the plan on 2026-11-20.
+
+## Addendum, 2026-11-19: capex guidance in earnings releases
+
+Checked for the guidance check on `/ground-truth`: does a filer's earnings release print what it expects to spend on capex in a fiscal year? Fetched from `www.sec.gov` on 2026-11-19 with a declared User-Agent naming a contact: for each of the five `filed_fact_sources` filers, every 8-K with item 2.02 filed since 2024-01-01 in its submissions feed, the filing's index page (`{accession}-index.html`), and the document the index lists as `EX-99.1`. 57 releases in all.
+
+| Filer | Releases read | Print a capex figure for a year | What the release says |
+|---|---|---|---|
+| Meta | 10 | 10 | A range every quarter: "We anticipate our full year 2025 capital expenditures will be in the range of $60-65 billion." The figure includes principal payments on finance leases. |
+| Alphabet | 12 | 3 | A figure or range in a remark, some quarters only: $75 billion (2025-02-04), $91 billion to $93 billion (2025-10-29), $175 to $185 billion (2026-02-04). The other nine report capex and guide none. |
+| Amazon | 12 | 2 | "about $200 billion in capital expenditures across Amazon in 2026" (2026-02-05) and "2026 cash capital expenditures to be approximately $220 billion" (2026-10-29). |
+| Oracle | 11 | 1 | "For fiscal year 2026, we expect revenue of $67 billion and capital expenditures of $50 billion." (2026-03-10) |
+| Microsoft | 12 | 0 | No figure. Each release says forward-looking guidance is given on the earnings conference call. |
+
+**The rule.** A sentence is read when it names capital expenditures (or capex), says expect or anticipate, names a year, and states an amount in billions of dollars. The amount is the first one after those words, or the last one before them when none follows. Run over all 57 releases it returns the 16 figures above and nothing else (`layers/terminal/server/exposure/guidance.ts`). Twelve trimmed releases and one index page are fixtures under `fixtures/guidance/`.
+
+**What each figure is compared with.** The filer's own cash-flow line for the fiscal year, at the 10-K that first filed it. Meta's guided figure includes principal payments on finance leases, so its year is `PaymentsToAcquirePropertyPlantAndEquipment` plus `FinanceLeasePrincipalPayments`: $69,691M + $2,524M = $72,215M for 2025, which is the "$72.22 billion" its January 2026 release prints. On `/exposure` the two lines stay apart. Alphabet's and Oracle's figures are the purchases line alone ($91,447M for 2025, $55,663M for fiscal 2026).
+
+**Amazon, listed and not scored.** Amazon guides cash capital expenditures, which its releases define as purchases of property and equipment net of proceeds from sales and incentives. Its 10-K for 2025 gives $128.3 billion on that basis. Company facts carry the gross purchases line only (the proceeds line is a custom tag), so no filed figure we hold answers the guidance.
+
+**Microsoft, a gap.** Guidance given only on the call is out of scope. We don’t read call transcripts.
+
+**Terms.** EDGAR's are the SEC's: fair-access rate and a declared contact. A release is the filer's own text, not a government work. We keep the guided figure, the year, and the one sentence that states it, with a link to the exhibit. The saved release is stored under `guidance/` and is in no export.
+
+**Verdict.** Include, for Meta, Alphabet and Oracle. Amazon's figures are shown with the reason they aren't scored.

@@ -700,7 +700,7 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
   server.registerTool(
     'get_ground_truth',
     {
-      title: 'Ground truth: press revenue reports against the filing that came later',
+      title: 'Ground truth: press reports and capex guidance against the filing that came later',
       description:
         'For a lab that files for itself (Anthropic so far): each press headline that stated its revenue before a filing printed that figure, ' +
         'grouped under the filed figure. resolutions[] has the filed value, the first filing that printed it (first_filed, form, filing_url), ' +
@@ -711,6 +711,13 @@ export function createTerminalMcpServer(deps: McpDeps): McpServer {
         'States: matched, missed (a named period more than tolerance_pct off), restated (published on or after the filing day, not scored), open (nothing filed to check it against). ' +
         'held_before_filing is false for a headline we read back from GDELT’s archive after the filing: the press had it first and our store did not. ' +
         'waiting[] lists reported figures no filing can score: a lab that hasn’t filed (no-filing), or run-rates, valuations and funding (not-in-filings). ' +
+        'deals.reports[] checks press reports of a deal’s size (metric commitment, investment, financing or commitment_total, with the counterparty as the headline names it) ' +
+        'against the figure the other company filed. deals.measures[] lists each filed figure used and how: added (the amount added to a backlog in the quarter the report was published), ' +
+        'total (the first balance dated on or after the report), or null with why (a backlog balance isn’t a contract’s headline value). ' +
+        'A deal report is unsettled, with reason and why, when we read no filings from the counterparty (no-filer), its filings state no figure for it (not-filed), or they state a different measure (different-measure). Unsettled reports are never scored. ' +
+        'guidance.rows[] has each capex figure an earnings release (8-K exhibit 99.1) printed for a fiscal year: low and high in USD, the release’s sentence, and actual, the capex the 10-K later filed for that year with the filed lines it sums. ' +
+        'States: met (inside the range, or within tolerance_pct of a single figure), above, below, open (the year isn’t filed), unsettled (we don’t read the line the filer guides). error_pct is the distance outside the range. ' +
+        'guidance.filers[] says how many releases each filer has and how many print a figure: Meta, Alphabet and Oracle are scored, Amazon is listed and not scored, and Microsoft prints none (guidance given only on the call is not read). ' +
         'alerts has the totals of get_track_record. Headlines come from GDELT, which misses Bloomberg, Reuters, the WSJ and the FT. Not investment advice. ' +
         PROVENANCE,
       inputSchema: z.object({ as_of: AsOfSchema }),
