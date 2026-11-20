@@ -288,7 +288,8 @@ picks a heading size of its own.
 |---|---|---|---|
 | Page title (`h1`) | `text-2xl` | `text-highlighted` | `TerminalPage` |
 | Page lede | `text-sm` | `text-muted` | `TerminalPage` |
-| Panel title (`h2`) | `text-sm` | `text-highlighted` | `TerminalPanel` |
+| Group title (`h2`) | `text-sm` | `text-highlighted` | `TerminalGroup` |
+| Panel title (`h2`, `h3` in a group) | `text-sm` | `text-highlighted` | `TerminalPanel` |
 | Panel note | `text-xs` | `text-toned` | `TerminalPanel` |
 | Card title (`h3`) | `text-sm` | `text-highlighted` | `TerminalCard` |
 | Figure value | `text-lg` mono, `text-xl` from `sm` | `text-highlighted` | `TerminalFigure` |
@@ -438,7 +439,8 @@ feed with nothing to show live once in `layers/terminal/app/utils/feed-gap.ts`.
 |---|---|---|
 | `TerminalPage` | The page header (optional back link, `h1`, lede, as-of stamp, a header slot) and the one error alert | Per-page headers in three sizes; thirteen copies of the error `UAlert` |
 | `TerminalPanel` | The shell every reading sits in: 1px border, a `bg-muted` header strip with the `h2` title, a one-line note and a `#meta` slot, the body, and a footer for sources and the "more" link | Bare `section`s, the one `bg-elevated` band, fourteen hand-written "more" links |
-| `TerminalTable` | Semantic table: caption, row header, numeric alignment, a spanning gap cell, folded gap lines and group lines, a stacked phone form, its own scroll box with a sticky header and edge fades | Eighteen hand-rolled tables with drifting padding and header tokens |
+| `TerminalGroup` | A run of panels under one `h2`, a one-line note and a rule: the home page's Economics and Operations | Interleaved panels with no heading over them |
+| `TerminalTable` | Semantic table: caption, row header, numeric alignment, a spanning gap cell, folded gap lines and group lines, a band row of `colgroup` headings, a stacked phone form, its own scroll box with a sticky header and edge fades | Eighteen hand-rolled tables with drifting padding and header tokens |
 | `TerminalCard` | One lab, one filing, one claim — a bordered tile inside a panel, with a title row and a sources footer | Seven per-lab `article`s |
 | `TerminalGap` | A stated absence: inline (in a table cell, reason behind an info control) or block (dashed box, title, reason, one action) | `EmptyState` and six re-codings of the feed states |
 | `TerminalSources` | The provenance footer: one `TerminalProvenanceTag` per source, caveat controls, license | Three layouts of the same footer |

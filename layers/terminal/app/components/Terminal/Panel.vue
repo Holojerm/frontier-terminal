@@ -15,6 +15,8 @@ defineProps<{
   /** The one link onward to the fuller reading. */
   more?: { label: string; to: string }
   flush?: boolean
+  /** 3 for a panel under a `TerminalGroup`, whose title is the h2. */
+  level?: 2 | 3
 }>()
 </script>
 
@@ -28,7 +30,13 @@ defineProps<{
       class="flex flex-wrap items-baseline justify-between gap-x-4 gap-y-1 rounded-t border-b border-default bg-muted px-3 py-2"
     >
       <div class="min-w-0 space-y-1">
-        <h2 :id="`${id}-heading`" class="text-sm text-highlighted">{{ title }}</h2>
+        <component
+          :is="level === 3 ? 'h3' : 'h2'"
+          :id="`${id}-heading`"
+          class="text-sm text-highlighted"
+        >
+          {{ title }}
+        </component>
         <p v-if="note" class="text-xs text-toned">{{ note }}</p>
       </div>
       <div v-if="$slots.meta" class="text-xs text-toned">

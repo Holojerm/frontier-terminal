@@ -47,12 +47,16 @@ const columns: TableColumn[] = [
   })),
   { key: 'alert', label: 'Newest alert', class: 'min-w-48 text-xs' },
 ]
+
+// The same two groups the lab page's readout and the home page's panels use.
+const bands = READOUT_GROUPS.map((g) => ({ label: g.label, keys: g.axes }))
 </script>
 
 <template>
   <TerminalTable
     caption="Each lab’s flagship price, disclosed revenue, demand share, open roles, incidents, and newest alert"
     :columns="columns"
+    :bands="bands"
     :rows="rows"
     :row-key="(r) => r.lab"
     stack
