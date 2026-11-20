@@ -4,7 +4,7 @@ import { figurePeriod, layoutDependencies } from '../shared/utils/terminal-depen
 import type { ExposureData, ExposureTicker } from '../shared/utils/terminal-exposure'
 import type { ProspectusData } from '../shared/utils/terminal-prospectus'
 import { EXPOSURE_GAPS, FILER_NAMES, buildSeries, type StoredFact } from '../server/exposure/series'
-import { buildDependencies } from '../server/utils/terminal-dependencies'
+import { buildDependencies, dependencyEdges } from '../server/utils/terminal-dependencies'
 
 // The dependency graph on the figures the filings carried on 2026-11-19:
 // which line each tagged fact lands on and which way it points, what sizes a
@@ -219,6 +219,12 @@ describe('buildDependencies', () => {
       },
     ])
     expect(graph.edges.flatMap((e) => e.facts).some((f) => f.value === 5e9)).toBe(false)
+  })
+
+  it('draws the same lines from the series alone, for the dependency_edges export', () => {
+    const lines = dependencyEdges(buildSeries(FACTS))
+    expect(lines.edges).toEqual(graph.edges)
+    expect(lines.unplaced).toEqual(graph.unplaced)
   })
 
   it('sizes a filer by its backlog and capex and a lab by its own filed obligations', () => {
