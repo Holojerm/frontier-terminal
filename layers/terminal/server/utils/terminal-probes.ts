@@ -25,8 +25,10 @@ import {
   PROBE_ROUTE,
   PROBE_TARGETS,
   PROBE_WINDOWS,
+  type ProbeTargetSpec,
 } from '../pipeline/probes/targets'
 import type { PipelineDb } from '../pipeline/store'
+import { MODEL_CLASS_MAP } from './terminal-classes'
 import type { QueryContext } from './terminal-db'
 
 export const PROBE_WINDOW_DAYS = 7
@@ -34,6 +36,7 @@ export const PROBE_HISTORY_DAYS = 90
 
 export const PROBES_METHOD =
   'Once an hour we send each lab’s flagship model the same short request through OpenRouter, pinned to the lab’s own endpoint with no fallback, and time the streamed reply. ' +
+  'The flagship is the one in our price matrix. Before every run we look it up in our latest copy of OpenRouter’s model list and take its newest point release. When a lab ships one, the probes move to it, and each day’s reading names the model it was measured on. ' +
   'Time to first token runs from sending the request to the first text of the answer, so it includes any reasoning the model does first. Tokens per second is the answer’s tokens over the time between its first and last token, with reasoning tokens left out. ' +
   'Every request caps the reply at the same length. Meta’s and Mistral’s carry a larger cap, because those endpoints count reasoning against it, so their answers can run longer. ' +
   'A day’s reading is the median of its working-hours probes against the median of its night probes, in fixed UTC hours per lab, and the share of probes that were rate limited, errored, or timed out. ' +
@@ -98,6 +101,19 @@ export async function probesStamp(db: PipelineDb): Promise<string> {
   return row?.at ?? 'none'
 }
 
+/**
+ * The model named for a lab no probe has run for yet: a pinned target's id,
+ * or for a flagship target the class map's flagship slug, the family the
+ * first run picks an id from.
+ */
+function waitingModel(target: ProbeTargetSpec): string {
+  if (target.note !== null) return target.model
+  return (
+    MODEL_CLASS_MAP.find((e) => e.provider === target.lab && e.class === 'flagship')?.model_slug ??
+    target.lab
+  )
+}
+
 export async function queryProbes(db: PipelineDb, ctx: QueryContext): Promise<ProbesData> {
   const now = ctx.now()
   const today = dayOf(now)
@@ -150,7 +166,7 @@ export async function queryProbes(db: PipelineDb, ctx: QueryContext): Promise<Pr
           lab,
           display,
           status: last ? 'probed' : 'waiting',
-          model: last?.model ?? target.model,
+          model: last?.model ?? waitingModel(target),
           model_note: target.note,
           hours: PROBE_WINDOWS[target.market].label,
           gap: last ? null : 'No probe has run for this lab yet.',

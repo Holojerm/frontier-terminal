@@ -62,7 +62,18 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   probe_setup_failed: {
     severity: 'warning',
     action:
-      'OpenRouter refused a latency probe. The detail has its code: 402 means the account is out of credit, 401 or 403 the key, 404 that the model or its first-party endpoint is gone (update PROBE_TARGETS), 400 that the request needs changing, and “unreadable reply” that the stream reader (pipeline/probes/stream.ts) no longer matches what OpenRouter sends (the R2 trace under probes/ has the bytes). No reading is stored for those labs until it is fixed.',
+      'OpenRouter refused a latency probe. The detail has its code: 402 means the account is out of credit, 401 or 403 the key, 404 that the model or its first-party endpoint is gone (a flagship target picks its model from the next OpenRouter catalog; a pinned one needs PROBE_TARGETS updated), 400 that the request needs changing, and “unreadable reply” that the stream reader (pipeline/probes/stream.ts) no longer matches what OpenRouter sends (the R2 trace under probes/ has the bytes). No reading is stored for those labs until it is fixed.',
+  },
+  // pipeline/probes/resolve.ts: a flagship target's model is chosen on every run.
+  probe_model_unresolved: {
+    severity: 'warning',
+    action:
+      'A lab was not probed this run because no model in the stored OpenRouter catalog (openrouter-models) matches its flagship in the class map, or the match has no fixed price. The detail names the lab and the class-map slug. Check that openrouter-models is polling, and whether OpenRouter lists the flagship under another id; if the class map is stale, its drift check should already have flagged the cell.',
+  },
+  probe_over_budget: {
+    severity: 'warning',
+    action:
+      'A lab was not probed this run because its flagship’s OpenRouter list price would take the hourly probes over PROBE_MONTHLY_BUDGET_USD (pipeline/probes/targets.ts). The detail has the model, its price and the month it would cost. Raise the budget or trim the workload; until then that lab’s readings stop.',
   },
   // judge/price-review.ts: a published price now rests on the judge's reading
   // of a page, not on a parser.

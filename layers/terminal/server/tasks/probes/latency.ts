@@ -2,7 +2,8 @@
 // own so no other task's requests share its connections
 // (layers/terminal/server/pipeline/probes/run.ts). A probe that failed because
 // of our key, credit or request is spooled for the ops digest; a lab's own
-// failures are the data.
+// failures are the data. So is a lab skipped because its flagship's model
+// could not be settled or would break the budget (pipeline/probes/resolve.ts).
 //
 // To run one locally: put NUXT_OPENROUTER_API_KEY in .env, start the dev server,
 // and open /_nitro/tasks/probes:latency. It spends real credit (about two cents).
@@ -11,6 +12,7 @@ import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
 
 import { recordOpsEvent } from '#server/utils/ops'
+import { blobRawReader } from '../../pipeline/judge/class-map'
 import { blobRawStore } from '../../pipeline/poll'
 import { probeOrigin, runProbes } from '../../pipeline/probes/run'
 import { withHeartbeat } from '../../utils/task-heartbeat'
@@ -30,6 +32,7 @@ const task = defineTask({
       now: () => new Date(),
       apiKey: useRuntimeConfig().openrouterApiKey,
       raw: blobRawStore(blob),
+      readRaw: blobRawReader(blob),
       ranFrom: import.meta.dev ? 'local' : await probeOrigin((input, init) => fetch(input, init)),
     })
     const setup = report.probes.filter((p) => p.outcome === 'setup')

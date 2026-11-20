@@ -9,7 +9,7 @@ import * as tables from '#server/db/schema'
 import { medianOf } from '../../../shared/utils/terminal-reliability'
 import { chunk, rowsPerStatement, runStatements, type PipelineDb } from '../store'
 import { EXCLUDED_OUTCOMES, type ProbeOutcome } from './stream'
-import { PROBE_TARGETS, PROBE_WINDOWS, type ProbeTarget, type ProbeWindow } from './targets'
+import { PROBE_TARGETS, PROBE_WINDOWS, type ProbeTargetSpec, type ProbeWindow } from './targets'
 
 /** A window's median needs this many ok probes; under it the reading is null, never a guess from one or two. */
 export const MIN_WINDOW_SAMPLES = 3
@@ -110,7 +110,7 @@ export async function rollProbeDays(
   db: PipelineDb,
   days: readonly string[],
   now: Date,
-  targets: readonly ProbeTarget[] = PROBE_TARGETS,
+  targets: readonly Pick<ProbeTargetSpec, 'lab' | 'market'>[] = PROBE_TARGETS,
 ): Promise<number> {
   const p = tables.latencyProbes
   const d = tables.probeDays
