@@ -35,10 +35,18 @@ const appUrl = config.public.appUrl.replace(/\/+$/, '')
 const attribution = attributionLine(config.public.appName, appUrl)
 const historyAttribution = attributionLine(config.public.appName, appUrl, HISTORY_LICENSE)
 
-const { data: coverage } = await useFetch<CoverageData>('/api/coverage')
-
-/** Only the sources that state terms of their own — the rest would be a guess. */
-const licensed = computed(() => (coverage.value?.sources ?? []).filter((s) => s.license))
+// Only the sources that state terms of their own — the rest would be a guess —
+// and only the fields the table prints: the whole coverage report was 200KB of
+// payload.
+const { data: coverage } = await useFetch('/api/coverage', {
+  transform: (c: CoverageData) => ({
+    as_of: c.as_of,
+    licensed: c.sources
+      .filter((s) => s.license)
+      .map(({ source_id, label, url, license }) => ({ source_id, label, url, license })),
+  }),
+})
+const licensed = computed(() => coverage.value?.licensed ?? [])
 
 useSeo({
   title: 'License',

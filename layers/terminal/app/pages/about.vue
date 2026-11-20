@@ -22,7 +22,9 @@ const config = useRuntimeConfig()
 const repo = manifest.links.github
 const mcpUrl = `${config.public.appUrl.replace(/\/+$/, '')}/mcp`
 
-const { data: coverage } = await useFetch<CoverageData>('/api/coverage')
+// `pick`: the rest of the coverage report (every source with its caveat and
+// terms) was 200KB of payload this page never renders.
+const { data: coverage } = await useFetch<CoverageData>('/api/coverage', { pick: ['as_of'] })
 
 useSeo({
   title: 'About',

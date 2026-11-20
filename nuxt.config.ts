@@ -257,9 +257,9 @@ export default defineNuxtConfig({
   // render-blocking request, and as a <link> it starts alongside ~30 JS
   // modulepreloads that split the bandwidth: on a throttled phone it finished
   // ~1.7s after the HTML, and first paint waited for it (`bun run perf`,
-  // 2026-11-04). Inline, the page paints from the HTML alone. The cost is ~30KB
-  // compressed per document, which no other request was saving: every page
-  // load fetched the same file cold.
+  // 2026-11-04). Inline, the page paints from the HTML alone. The cost is ~21KB
+  // compressed per document (`ui` and `fonts` below keep it there), which no
+  // other request was saving: every page load fetched the same file cold.
   features: { inlineStyles: true },
 
   // Document-level defaults every page inherits.
@@ -328,6 +328,27 @@ export default defineNuxtConfig({
   ui: {
     // The design system is compiled from DESIGN.md into app/app.config.ts and
     // app/assets/css/main.css by /design-sync — nothing belongs here.
+    //
+    // Except this: Tailwind scans only the themes of the U-components the app
+    // uses. Without it every page inlined the classes of all 125 of them
+    // (calendars, editors, carousels): ~250KB of a 265KB stylesheet that rides in
+    // every document (features.inlineStyles below). A component reached only by
+    // a string name would lose its styles; there are none (`:is` here only
+    // picks between plain elements).
+    experimental: { componentDetection: true },
+  },
+
+  // The faces the pages set, and no others. Each face is an @font-face rule in
+  // the inlined stylesheet, and the defaults (both styles, all seven subsets)
+  // made 104 of them, 38KB of every document. Italic is synthesized for the
+  // two <em>s that use it; Greek stays for Δ. Cyrillic and Vietnamese text
+  // would fall back to the system face.
+  fonts: {
+    defaults: {
+      weights: [400, 500, 600, 700],
+      styles: ['normal'],
+      subsets: ['latin', 'latin-ext', 'greek'],
+    },
   },
 
   // DESIGN.md › Identity: this app is dark-first. `system` still wins whenever a
