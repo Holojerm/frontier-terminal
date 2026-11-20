@@ -207,10 +207,10 @@ why it has none.
 
 ### 6. A new supplier passage
 
-- **Change row.** None exists. The suppliers table is 110 passages read by hand into
-  `layers/terminal/server/curated/suppliers.json`, re-checked by `bun run suppliers:verify`. A
-  new passage arrives as a commit, so its "detection" is when someone read it, often weeks after
-  the filing was public. Two options:
+- **Change row.** None exists yet. Since 2026-11-20 the filings lane reads each supplier's new
+  filings and the judge reads the passages from them (`layers/terminal/server/suppliers/`),
+  checked against the stored document; the table started from 110 passages read by hand. What
+  is left is the alert. The two options as first written:
   - Alert on deploy, with a `supplier_passage` change row per new curated row, dated by its
     `filed` date and our `fetched_at`.
   - Watch the suppliers' own 10-Q, 10-K and 8-K filings and send each new one to the judge as a

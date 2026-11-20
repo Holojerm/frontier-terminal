@@ -6,20 +6,23 @@
 // parent, by filing, or by site), with counts for that set. No `as_of`: two of
 // the three have no point-in-time read.
 
+import { suppliersStamp } from '../suppliers/store'
 import { rateLimitTerminal } from '../utils/api-access'
 import { recipeRunsStamp } from '../utils/terminal-db'
 import { serveTerminal, terminalDb } from '../utils/terminal-handler'
 import { labQuerySchema, listedForLab } from '../utils/terminal-lab-cuts'
 import { queryListed } from '../utils/terminal-listed'
 import { VIEW_RECIPES } from '../utils/terminal-recipe-views'
-import { SUPPLIERS_VERSION } from '../utils/terminal-suppliers'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'listed', limit: 60, windowSeconds: 60 })
   const { lab } = await getValidatedQuery(event, labQuerySchema.parse)
-  const power = await recipeRunsStamp(terminalDb, VIEW_RECIPES.powerSites)
+  const [power, suppliers] = await Promise.all([
+    recipeRunsStamp(terminalDb, VIEW_RECIPES.powerSites),
+    suppliersStamp(terminalDb),
+  ])
   const data = await serveTerminal(event, 'listed', (ctx) => queryListed(terminalDb, ctx), {
-    variant: `${SUPPLIERS_VERSION}:${power}`,
+    variant: `${suppliers}:${power}`,
   })
   return lab ? listedForLab(data, lab) : data
 })
