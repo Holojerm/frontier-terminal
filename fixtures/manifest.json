@@ -1512,6 +1512,74 @@
       "raw_bytes": 405746,
       "trim": "the page reduced to its window.__remixContext script, and that to jobPosts (count, page, total, total_pages, and each role’s id and department), 405746 -> 4533 bytes; the era parser gives the same counts on the raw capture",
       "note": "Internet Archive capture of https://job-boards.greenhouse.io/deepmind taken 20250702184842 (era deepmind-job-boards-2025, layers/terminal/server/pipeline/archive/hiring-eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/recipes/sec-googl-api-tokens-search.json",
+      "source_id": "sec-googl-api-tokens-search",
+      "source_url": "https://efts.sec.gov/LATEST/search-index?q=%22tokens%20per%20minute%22&ciks=0001652044&forms=8-K",
+      "fetched_at": "2026-11-20T00:47:24Z",
+      "http_status": 200,
+      "raw_bytes": 4688,
+      "trim": "1 of 6 hits kept (the release committed as sec-googl-api-tokens.html); aggregations and the echoed query dropped",
+      "note": "The search the recipe follows to its release. Trimmed to one hit so the offline fill reads the committed release."
+    },
+    {
+      "path": "fixtures/recipes/sec-crwv-active-power-search.json",
+      "source_id": "sec-crwv-active-power-search",
+      "source_url": "https://efts.sec.gov/LATEST/search-index?q=%22active%20power%22&ciks=0001769628&forms=8-K",
+      "fetched_at": "2026-11-20T00:47:08Z",
+      "http_status": 200,
+      "raw_bytes": 6766,
+      "trim": "1 of 10 hits kept (the release committed as sec-crwv-active-power.html); aggregations and the echoed query dropped",
+      "note": "The search the recipe follows to its release. Trimmed to one hit so the offline fill reads the committed release."
+    },
+    {
+      "path": "fixtures/recipes/sec-googl-api-tokens.html",
+      "source_id": "sec-googl-api-tokens",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000080/googexhibit991q32026.htm",
+      "fetched_at": "2026-11-20T00:34:41Z",
+      "http_status": 200,
+      "raw_bytes": 370598,
+      "trim": "none — committed whole",
+      "note": "The release EDGAR full-text search names for Q3 2026 (accession 0001652044-26-000080, filed 2026-10-28)."
+    },
+    {
+      "path": "fixtures/recipes/sec-crwv-active-power.html",
+      "source_id": "sec-crwv-active-power",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1769628/000176962826000362/coreweave2q26earningspress.htm",
+      "fetched_at": "2026-11-20T00:47:07Z",
+      "http_status": 200,
+      "raw_bytes": 359364,
+      "trim": "none — committed whole",
+      "note": "The release for Q2 2026 (accession 0001769628-26-000362, filed 2026-08-11): the newest quarter the committed company-facts fixture (2026-11-02) has revenue for, so the offline fill can show the two together. All seven releases were fetched the same day and their active-power sentences are quoted in the test."
+    },
+    {
+      "path": "fixtures/recipes/mlperf-inference-datacenter.json",
+      "source_id": "mlperf-inference-datacenter",
+      "source_url": "https://raw.githubusercontent.com/mlcommons/inference_results_v6.0/main/summary_results.json",
+      "fetched_at": "2026-11-20T00:34:42Z",
+      "http_status": 200,
+      "raw_bytes": 784457,
+      "trim": "none — committed whole",
+      "note": "MLPerf Inference v6.0 summary, every suite and division (520 results); the recipe keeps 150."
+    },
+    {
+      "path": "fixtures/recipes/epoch-chip-users.csv",
+      "source_id": "epoch-chip-users",
+      "source_url": "https://epoch.ai/data/ai_chip_users_intermediates_by_lab.csv",
+      "fetched_at": "2026-11-20T00:34:42Z",
+      "http_status": 200,
+      "raw_bytes": 18814,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/recipes/epoch-chip-types.csv",
+      "source_id": "epoch-chip-types",
+      "source_url": "https://epoch.ai/data/ai_chip_sales_chip_types.csv",
+      "fetched_at": "2026-11-20T00:36:51Z",
+      "http_status": 200,
+      "raw_bytes": 7347,
+      "trim": "none — committed whole"
     }
   ]
 }

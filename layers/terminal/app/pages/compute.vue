@@ -1,12 +1,13 @@
 <script setup lang="ts">
-// The compute axis: what renting a GPU costs, and how much data-center power
-// is coming online and for whom. Both read the thesis recipes (GPU price
-// pages and Epoch AI's dataset), every figure with its source and fetch time.
-// Three panels, so no tabs; the site list is the page's long table and runs
-// with the page rather than in a box.
+// The compute axis: what renting a GPU costs, how full the capacity looks
+// from outside, and how much data-center power is coming online and for
+// whom. All read the thesis recipes (GPU price pages, SEC filings, MLPerf
+// results and Epoch AI's datasets), every figure with its source and fetch
+// time. No tabs; the site list is the page's long table and runs with the
+// page rather than in a box.
 
 import { count } from '../../shared/utils/terminal-format'
-import type { DataCentersData } from '../../shared/utils/recipe-views'
+import type { DataCentersData, UtilizationData } from '../../shared/utils/recipe-views'
 import type { GpuPricesData } from '../../shared/utils/terminal-types'
 import type { TableColumn } from '../types/terminal-ui'
 
@@ -16,19 +17,20 @@ definePageMeta({
     priority: '0.8',
     title: 'Compute',
     summary:
-      'On-demand H100 and B200 rental list prices from nine first-party provider pages with the median across them, and Epoch AI’s estimate of data-center power per frontier lab and per site.',
+      'On-demand H100 and B200 rental list prices from nine first-party provider pages with the median across them, spot prices against on-demand per provider, Alphabet’s stated token volume as a bounded share of Google’s estimated fleet, CoreWeave’s revenue per megawatt of active power, and Epoch AI’s estimate of data-center power per frontier lab and per site.',
   },
 })
 
-const [{ data: gpu, error }, { data: power }] = await Promise.all([
+const [{ data: gpu, error }, { data: power }, { data: utilization }] = await Promise.all([
   useFetch<GpuPricesData>('/api/gpu-prices'),
   useFetch<DataCentersData>('/api/datacenters'),
+  useFetch<UtilizationData>('/api/utilization'),
 ])
 
 useSeo({
-  title: 'GPU rental prices and AI data-center power',
+  title: 'GPU rental prices, utilization bounds, and AI data-center power',
   description:
-    'H100 and B200 rental prices from first-party provider pages, and Epoch AI’s estimate of data-center power per frontier lab and per site.',
+    'H100 and B200 rental prices and spot prices from provider pages, bounds on the load Google’s token volume implies, and data-center power per lab.',
   dateModified: gpu.value?.as_of,
 })
 
@@ -52,7 +54,7 @@ const sites = computed(() =>
 <template>
   <TerminalPage
     title="Compute"
-    lede="What a GPU-hour rents for, and how much data-center power each lab is bringing online."
+    lede="What a GPU-hour rents for, how full the capacity looks from public data, and how much data-center power each lab is bringing online."
     :as-of="gpu?.as_of"
     :error="Boolean(error)"
     error-title="GPU prices didn’t load"
@@ -67,6 +69,34 @@ const sites = computed(() =>
     >
       <TerminalGpuMedians :gpu="gpu" />
     </TerminalPanel>
+
+    <template v-if="utilization">
+      <TerminalPanel
+        id="spot"
+        title="Spot against on-demand"
+        note="The same instance at its spot price and its on-demand price, per provider. Spot moves toward on-demand when spare capacity runs short."
+      >
+        <TerminalSpotPrices :spot="utilization.spot" />
+      </TerminalPanel>
+
+      <TerminalPanel
+        v-if="utilization.implied"
+        id="implied-load"
+        title="Implied load on Google’s fleet"
+        note="Alphabet’s stated token volume at each benchmark model’s speed, as a share of Epoch AI’s estimate of Google’s fleet. A range per model, never one number."
+      >
+        <TerminalImpliedLoad :implied="utilization.implied" :shape="utilization.demand_shape" />
+      </TerminalPanel>
+
+      <TerminalPanel
+        v-if="utilization.coreweave"
+        id="revenue-per-mw"
+        title="CoreWeave revenue per megawatt"
+        note="Filed revenue against the active power CoreWeave states each quarter."
+      >
+        <TerminalRevenuePerMw :coreweave="utilization.coreweave" />
+      </TerminalPanel>
+    </template>
 
     <template v-if="power?.snapshot">
       <TerminalPanel

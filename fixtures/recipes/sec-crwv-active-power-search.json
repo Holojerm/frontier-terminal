@@ -1,0 +1,56 @@
+{
+  "hits": {
+    "total": {
+      "value": 10,
+      "relation": "eq"
+    },
+    "hits": [
+      {
+        "_index": "edgar_file",
+        "_id": "0001769628-26-000362:coreweave2q26earningspress.htm",
+        "_score": 4.785242,
+        "_source": {
+          "ciks": [
+            "0001769628"
+          ],
+          "period_ending": "2026-08-11",
+          "file_num": [
+            "001-42563"
+          ],
+          "display_names": [
+            "CoreWeave, Inc.  (CRWV)  (CIK 0001769628)"
+          ],
+          "xsl": null,
+          "sequence": "2",
+          "root_forms": [
+            "8-K"
+          ],
+          "file_date": "2026-08-11",
+          "biz_states": [
+            "NJ"
+          ],
+          "sics": [
+            "7372"
+          ],
+          "form": "8-K",
+          "adsh": "0001769628-26-000362",
+          "film_num": [
+            "261263280"
+          ],
+          "biz_locations": [
+            "Livingston, NJ"
+          ],
+          "file_type": "EX-99.1",
+          "file_description": "EX-99.1",
+          "inc_states": [
+            "DE"
+          ],
+          "items": [
+            "2.02",
+            "9.01"
+          ]
+        }
+      }
+    ]
+  }
+}

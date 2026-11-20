@@ -1,0 +1,57 @@
+{
+  "hits": {
+    "total": {
+      "value": 6,
+      "relation": "eq"
+    },
+    "hits": [
+      {
+        "_index": "edgar_file",
+        "_id": "0001652044-26-000080:googexhibit991q32026.htm",
+        "_score": 15.932264,
+        "_source": {
+          "ciks": [
+            "0001652044"
+          ],
+          "period_ending": "2026-10-28",
+          "file_num": [
+            "001-37580"
+          ],
+          "display_names": [
+            "Alphabet Inc.  (GOOG, GOOGL, GOOGM, GOOGN)  (CIK 0001652044)"
+          ],
+          "xsl": null,
+          "sequence": "2",
+          "root_forms": [
+            "8-K"
+          ],
+          "file_date": "2026-10-28",
+          "biz_states": [
+            "CA"
+          ],
+          "sics": [
+            "7370"
+          ],
+          "form": "8-K",
+          "adsh": "0001652044-26-000080",
+          "film_num": [
+            "261495664"
+          ],
+          "biz_locations": [
+            "Mountain View, CA"
+          ],
+          "file_type": "EX-99.1",
+          "ma_i_individual": null,
+          "file_description": "EX-99.1",
+          "inc_states": [
+            "DE"
+          ],
+          "items": [
+            "2.02",
+            "9.01"
+          ]
+        }
+      }
+    ]
+  }
+}
