@@ -45,14 +45,15 @@ import {
   scoreDeals,
   type FiledAggregate,
 } from './terminal-ground-truth-deals'
-import { queryGuidance } from './terminal-ground-truth-guidance'
+import { TOLERANCE_PCT, queryGuidance } from './terminal-ground-truth-guidance'
 import { queryProspectus } from './terminal-prospectus'
 import { middle, storedHeadlines, type StoredHeadline } from './terminal-reported'
 import { queryRevenue } from './terminal-revenue'
 import { queryTrackRecord } from './terminal-track-record'
 
-/** A report matches the nearest filed figure within this many percent. */
-export const TOLERANCE_PCT = 5
+// Defined beside the guidance score, so the guidance rule
+// (exposure/guidance-alerts.ts) reads it without loading this module.
+export { TOLERANCE_PCT }
 
 /** Open reports listed. */
 export const OPEN_LIMIT = 50

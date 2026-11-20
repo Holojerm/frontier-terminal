@@ -89,6 +89,8 @@ export const ENTITY_AXIS: Record<ChangeView['entity_type'], AlertAxis> = {
   disclosure_timeline: 'disclosures',
   ranking: 'demand',
   filed_fact: 'exposure',
+  guidance: 'exposure',
+  guidance_check: 'exposure',
 }
 
 export const ALERT_AXES = Object.keys(AXIS_DISPLAY) as [AlertAxis, ...AlertAxis[]]

@@ -3,7 +3,8 @@
 A plan, approved by the owner on 2026-11-20. It covers six candidates from the surfaces plan
 (workstream 4) and ends with a recommended order. Figures were read from production on
 2026-11-20. Built so far: the `exposure` axis and the `filed_fact` track-record terms
-(step 1 of the order).
+(step 1 of the order), and capex against guidance, the `guidance-floor` rule
+(`layers/terminal/server/exposure/guidance-alerts.ts`, step 3).
 
 ## How alerts work today
 
@@ -13,7 +14,8 @@ with the source URL and fetch time of the read that found it. Alerts come from t
 - **Rules.** Code in the Worker writes the alert with no model in the loop:
   `s1-floor`, `periodic-floor` and `cik-resolved` (`layers/terminal/server/pipeline/filing-floors.ts`),
   `model-floor`, `prospectus-floor`, `hiring-rollup` and `filed-fact-floor`
-  (`layers/terminal/server/exposure/alerts.ts`). A rule's headline and explanation are built
+  (`layers/terminal/server/exposure/alerts.ts`), and `guidance-floor`
+  (`layers/terminal/server/exposure/guidance-alerts.ts`). A rule's headline and explanation are built
   only from the row it cites.
 - **The judge.** The hourly routine reads `GET /api/judge/pending` (change rows since its last
   run) and sends back severity, headline and explanation. The Worker gates every field

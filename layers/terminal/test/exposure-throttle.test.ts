@@ -83,7 +83,8 @@ function world(msftRows: [string, string, string, string][]) {
     return docs[s.url] ?? missing
   }
   const raw = { put: async () => {} }
-  return { docs, fetched, fetcher, raw }
+  const readRaw = async () => null
+  return { docs, fetched, fetcher, raw, readRaw }
 }
 
 const MSFT_LATEST: [string, string, string, string] = [

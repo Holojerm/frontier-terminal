@@ -50,9 +50,15 @@ export const TIMESTAMP_FIELDS: Readonly<Record<string, readonly string[]>> = {
  * Demand-share movement is read off /api/rankings instead. The same set is
  * excluded from the signal band's counts (layers/terminal/server/utils/terminal-alerts.ts).
  */
-// 'filed_fact' changes exist only as the citation of a rule-based alert that
-// is already written (layers/terminal/server/exposure/alerts.ts).
-export const JUDGE_EXCLUDED_ENTITY_TYPES = ['ranking', 'filed_fact'] as const
+// 'filed_fact', 'guidance' and 'guidance_check' changes exist only as the
+// citation of a rule-based alert that is already written
+// (layers/terminal/server/exposure/alerts.ts, guidance-alerts.ts).
+export const JUDGE_EXCLUDED_ENTITY_TYPES = [
+  'ranking',
+  'filed_fact',
+  'guidance',
+  'guidance_check',
+] as const
 
 /** The WHERE fragment that keeps excluded entity types out of a changes query. */
 export const judgeEligible = () =>

@@ -304,8 +304,15 @@ function world() {
     fetched.push(s.url)
     return docs[s.url] ?? missing
   }
-  const raw = { put: async (key: string) => void stored.push(key) }
-  return { docs, fetched, stored, fetcher, raw }
+  const bodies = new Map<string, string>()
+  const raw = {
+    put: async (key: string, body: string) => {
+      stored.push(key)
+      bodies.set(key, body)
+    },
+  }
+  const readRaw = async (key: string) => bodies.get(key) ?? null
+  return { docs, fetched, stored, bodies, fetcher, raw, readRaw }
 }
 
 describe('runFiledFacts', () => {

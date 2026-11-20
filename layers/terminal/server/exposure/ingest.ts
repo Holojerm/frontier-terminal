@@ -16,7 +16,8 @@
 //
 // Facts are append-only (filed_facts). The raw bytes of every document that
 // produced facts go to R2 first, so each row's raw_key resolves. Then the
-// filed-fact rule (alerts.ts) runs over each filer that gained facts.
+// filed-fact rule (alerts.ts) runs over each filer that gained facts, and the
+// guidance rule (guidance-alerts.ts) over each that gained facts or guidance.
 //
 // Every request goes to SEC, under its fair-access limit (pipeline/sec-pace.ts).
 // When SEC answers 429 the run stops fetching: the rest of the run is deferred,
@@ -31,6 +32,7 @@ import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
 import { contentHash, contentHashOfText } from '../pipeline/contracts'
 import { RATE_LIMITED_DETAIL, type FetchOutcome, type SourceFetcher } from '../pipeline/fetch'
+import type { RawReader } from '../pipeline/judge/class-map'
 import { parseCikWhitelistBlock } from '../pipeline/parsers/sec/whitelist'
 import type { PollOutcome } from '../pipeline/poll'
 import { cooldownEndsAt, isRateLimitRun } from '../pipeline/rate-limit'
@@ -54,6 +56,7 @@ import {
   type GuidanceInput,
   type ReleaseDocument,
 } from './guidance'
+import { writeGuidanceAlerts } from './guidance-alerts'
 import { LAB_MEMBERS, SERIES_SINCE, buildSeries, isAlerting, type StoredFact } from './series'
 
 export const INSTANCES_PER_RUN = 24
@@ -67,6 +70,8 @@ const FACT_COLUMNS = 17
 
 export interface FiledFactsDeps {
   raw: RawStore
+  /** Reads back what `raw` stored: a guidance figure alerts only once its sentence is found in the stored release. */
+  readRaw: RawReader
   fetcher: SourceFetcher
   now: Date
   sourcesYaml: string
@@ -511,6 +516,36 @@ async function writeAlerts(db: PipelineDb, filer: Filer, now: Date): Promise<num
   return fresh.length
 }
 
+async function writeFilerGuidanceAlerts(
+  db: PipelineDb,
+  filer: Filer,
+  deps: FiledFactsDeps,
+): Promise<number> {
+  const first = async (kind?: string) => {
+    const [row] = await db
+      .select({ at: min(tables.filedFactReads.started_at) })
+      .from(tables.filedFactReads)
+      .where(
+        and(
+          eq(tables.filedFactReads.ticker, filer.ticker),
+          kind ? eq(tables.filedFactReads.kind, kind) : undefined,
+        ),
+      )
+    return row?.at ?? null
+  }
+  const [guidance, facts, firstReadAt, firstReleaseReadAt] = await Promise.all([
+    db.select().from(tables.filedGuidance).where(eq(tables.filedGuidance.ticker, filer.ticker)),
+    filerFacts(db, filer.ticker),
+    first(),
+    first('release'),
+  ])
+  return writeGuidanceAlerts(db, filer, guidance, facts, deps.readRaw, {
+    now: deps.now,
+    firstReadAt,
+    firstReleaseReadAt,
+  })
+}
+
 export async function runFiledFacts(
   db: PipelineDb,
   deps: FiledFactsDeps,
@@ -661,10 +696,13 @@ export async function runFiledFacts(
 
   let alerts = 0
   for (const filer of filers) {
+    const gained = (release: boolean) =>
+      reads.some(
+        (r) => r.ticker === filer.ticker && (r.kind === 'release') === release && r.facts > 0,
+      )
     // A release's rows are guidance, which no series reads.
-    if (reads.some((r) => r.ticker === filer.ticker && r.kind !== 'release' && r.facts > 0)) {
-      alerts += await writeAlerts(db, filer, deps.now)
-    }
+    if (gained(false)) alerts += await writeAlerts(db, filer, deps.now)
+    if (gained(false) || gained(true)) alerts += await writeFilerGuidanceAlerts(db, filer, deps)
   }
   return {
     reads: reads.map(({ ticker, kind, accession_no, status, facts }) => ({

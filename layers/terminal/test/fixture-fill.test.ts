@@ -56,6 +56,7 @@ beforeAll(async () => {
   report = await fillFromFixtures({
     db,
     raw,
+    readRaw: async (key) => (await env.BLOB.get(key))?.text() ?? null,
     lock: memoryLock(),
     sourcesYaml,
     read: fixtureText,
