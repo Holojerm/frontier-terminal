@@ -101,6 +101,8 @@ export const ENTITY_AXIS: Record<ChangeView['entity_type'], AlertAxis> = {
   disclosure_timeline: 'disclosures',
   ranking: 'demand',
   filed_fact: 'exposure',
+  guidance: 'exposure',
+  guidance_check: 'exposure',
   gpu_price: 'compute',
 }
 

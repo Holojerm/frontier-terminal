@@ -47,6 +47,7 @@ try {
         await env.BLOB.put(key, body, { httpMetadata: { contentType } })
       },
     },
+    readRaw: async (key) => (await env.BLOB.get(key))?.text() ?? null,
     lock,
     sourcesYaml: await readFile('sources.yaml', 'utf8'),
     read: (path) => readFile(path, 'utf8'),

@@ -6,9 +6,11 @@ A plan, approved by the owner on 2026-11-20. It covers six candidates from the s
 (step 1 of the order), and the hyperscaler filed facts about a lab (step 2, candidate 1).
 The lab commitment and claim series alert, `critical` on a series' first point or a 25% move
 in a commitment or stake. A point for a period an earlier filing already reported, or a
-balance that didn't move, writes nothing. Step 5's median half is built too, as the GPU
-median rule (`gpu-median-floor`) on a new `compute` axis. Single-provider moves still wait
-for the judge block.
+balance that didn't move, writes nothing. Capex against guidance
+(step 3, candidate 2) is the `guidance-floor` rule
+(`layers/terminal/server/exposure/guidance-alerts.ts`). Step 5's median half is built too, as
+the GPU median rule (`gpu-median-floor`) on a new `compute` axis. Single-provider moves still
+wait for the judge block.
 
 ## How alerts work today
 
@@ -18,7 +20,8 @@ with the source URL and fetch time of the read that found it. Alerts come from t
 - **Rules.** Code in the Worker writes the alert with no model in the loop:
   `s1-floor`, `periodic-floor` and `cik-resolved` (`layers/terminal/server/pipeline/filing-floors.ts`),
   `model-floor`, `prospectus-floor`, `hiring-rollup` and `filed-fact-floor`
-  (`layers/terminal/server/exposure/alerts.ts`). A rule's headline and explanation are built
+  (`layers/terminal/server/exposure/alerts.ts`), and `guidance-floor`
+  (`layers/terminal/server/exposure/guidance-alerts.ts`). A rule's headline and explanation are built
   only from the row it cites.
 - **The judge.** The hourly routine reads `GET /api/judge/pending` (change rows since its last
   run) and sends back severity, headline and explanation. The Worker gates every field

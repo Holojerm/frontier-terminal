@@ -45,6 +45,8 @@ const OUTAGE = ['outage', 'outages', 'elevated errors', 'disruption']
 const MISALIGNMENT = ['misalignment', 'misaligned']
 const HIRING = ['hiring', 'jobs', 'job cuts', 'layoffs', 'roles']
 const IPO = ['IPO', 'initial public offering', 'S-1', 'prospectus']
+const CAPEX = ['capex', 'capital expenditures']
+const GUIDANCE = ['guidance', 'outlook']
 
 /** What the press calls an SEC form's event. */
 export function formTerms(form: string): string[] {
@@ -189,6 +191,14 @@ function termsOf(change: ChangeRow): SearchTerms | null {
       if (!filer || !form) return null
       const aboutLab = change.provider === 'openai' || change.provider === 'anthropic'
       return { who: [filer], what: formTerms(form), also: aboutLab ? lab : [] }
+    }
+    case 'guidance':
+    case 'guidance_check': {
+      // A capex figure from an earnings release, or a filing checked against
+      // it: capex news about the filer, whichever word the story uses.
+      const filer = str(p.filer)
+      if (!filer) return null
+      return { who: [filer], what: CAPEX, also: GUIDANCE }
     }
     case 'gpu_price':
       // A rental median across GPU clouds. The GKG vocabulary keeps only rows

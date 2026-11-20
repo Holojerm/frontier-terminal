@@ -7,6 +7,7 @@
 
 import { runFiledFacts, type FiledFactsReport } from '../exposure/ingest'
 import type { FetchOutcome, SourceFetcher } from '../pipeline/fetch'
+import type { RawReader } from '../pipeline/judge/class-map'
 import type { LockRetry, LockStore } from '../pipeline/lock'
 import { manifestFixtures, type ManifestFixture } from '../pipeline/parsers/fixture-provenance'
 import { runPoll, type PollOutcome } from '../pipeline/poll'
@@ -67,6 +68,8 @@ const forRecipes: Choose = (candidates, source) =>
 export interface FixtureFillDeps {
   db: PipelineDb
   raw: RawStore
+  /** Reads back what `raw` stored (FiledFactsDeps.readRaw). */
+  readRaw: RawReader
   lock: LockStore
   sourcesYaml: string
   /** Text of a committed file by repo-relative path. */
@@ -104,6 +107,7 @@ export async function fillFromFixtures(deps: FixtureFillDeps): Promise<FixtureFi
   }
   const filed_facts = await runFiledFacts(db, {
     raw,
+    readRaw: deps.readRaw,
     fetcher: fixtureFetcher(deps.read, forFiledFacts),
     now: now(),
     sourcesYaml,

@@ -28,6 +28,11 @@ describe('alertLabs / alertAxis', () => {
     expect(alertAxis({ changes: [change({ entity_type: 'filed_fact' })] })).toBe('exposure')
   })
 
+  it('puts capex guidance and its checks on the exposure axis', () => {
+    expect(alertAxis({ changes: [change({ entity_type: 'guidance' })] })).toBe('exposure')
+    expect(alertAxis({ changes: [change({ entity_type: 'guidance_check' })] })).toBe('exposure')
+  })
+
   it('puts a GPU rental median on the compute axis, with its move as the figure', () => {
     const alert = {
       changes: [

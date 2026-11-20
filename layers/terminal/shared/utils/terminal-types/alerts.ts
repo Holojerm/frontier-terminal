@@ -29,6 +29,8 @@ export interface ChangeView extends Prov {
     | 'shares'
     | 'risk_factors'
     | 'filed_fact'
+    | 'guidance'
+    | 'guidance_check'
     | 'gpu_price'
   provider: ProviderId
   change_type: 'added' | 'removed' | 'modified'
@@ -53,6 +55,7 @@ export interface AlertView extends Prov {
     | 'prospectus-floor'
     | 'hiring-rollup'
     | 'filed-fact-floor'
+    | 'guidance-floor'
     | 'gpu-median-floor'
   created_at: string
   change_ids: string[]

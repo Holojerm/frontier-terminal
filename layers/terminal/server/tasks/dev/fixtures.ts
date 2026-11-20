@@ -18,6 +18,7 @@ import { kv } from '@nuxthub/kv'
 import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { fillFromFixtures, type FixtureFillReport } from '../../dev/fixture-fill'
+import { blobRawReader } from '../../pipeline/judge/class-map'
 import { unstorageLockStore } from '../../pipeline/lock'
 import { blobRawStore } from '../../pipeline/poll'
 import { withHeartbeat } from '../../utils/task-heartbeat'
@@ -34,6 +35,7 @@ const task = defineTask<string | FixtureFillReport>({
     const result = await fillFromFixtures({
       db,
       raw: blobRawStore(blob),
+      readRaw: blobRawReader(blob),
       lock: unstorageLockStore(kv),
       sourcesYaml,
       read: (path) => readFile(path, 'utf-8'),

@@ -20,6 +20,7 @@ import { recordOpsEvent } from '#server/utils/ops'
 import { filedFactsSkip, runFiledFacts } from '../../exposure/ingest'
 import { createFetcher } from '../../pipeline/fetch'
 import { unstorageLockStore } from '../../pipeline/lock'
+import { blobRawReader } from '../../pipeline/judge/class-map'
 import { blobRawStore, runPoll } from '../../pipeline/poll'
 import { paceSec } from '../../pipeline/sec-pace'
 import { warmAfterPoll } from '../../utils/cache-warm-task'
@@ -59,6 +60,7 @@ const task = defineTask({
       ? null
       : await runFiledFacts(db, {
           raw: blobRawStore(blob),
+          readRaw: blobRawReader(blob),
           fetcher,
           now: new Date(),
           sourcesYaml,
