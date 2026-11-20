@@ -23,6 +23,24 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.11.0 (2026-11-20)
+
+`power_site_ties` keeps up with new filings. Its first rows were read by
+hand. The filings lane now searches EDGAR each day for new 10-Qs, 10-Ks,
+8-Ks, 20-Fs, 6-Ks and S-1s (and their press-release exhibits) that name each
+of Epoch AI's lab sites, a model picks out the companies tied to the site's
+power, and a row is kept only where its quote, the company, the site and any
+megawatt figure are in the filing verbatim. Rows from a utility's,
+regulator's or company's own page stay read by hand and are re-read weekly.
+
+- New columns: `basis` (`hand` or `judge`), `accession_no`, `first_seen_at`,
+  and `ended_at` and `ended_by`, set when the filer's next filing of the same
+  periodic form no longer has the quote. An ended row stays in the table.
+- Changed: when a newer filing of the same form repeats a quote word for
+  word, the row's `source_url`, `published`, `source_title`, `publisher` and
+  `fetched_at` move to that filing. The `id` stays the same. A row from a
+  page off EDGAR has `fetched_at` moved by the weekly re-read.
+
 ## 1.10.0 (2026-11-20)
 
 `supplier_passages` is read from the suppliers' own filings as they are

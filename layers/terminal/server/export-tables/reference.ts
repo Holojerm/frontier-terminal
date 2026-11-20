@@ -1,10 +1,7 @@
-// The feed's own run log, and the registries kept in code: the entity registries and the
-// passages read by hand (suppliers, power-site ties). Part of EXPORT_TABLES
+// The feed's own run log, the registries kept in code (the entity registries), and the
+// passages read from filings and pages (suppliers, power-site ties). Part of EXPORT_TABLES
 // (utils/terminal-export.ts), which fixes the order.
 
-import { curatedPowerSites } from '../../shared/utils/power-sites'
-import curatedPower from '../curated/power-sites.json'
-import { contentHash } from '../pipeline/contracts/keys'
 import { ENTITY_SECURITIES, ENTITY_SECURITY_COLUMNS } from '../utils/terminal-entities'
 import { ENTITY_IDENTIFIERS, ENTITY_IDENTIFIER_COLUMNS } from '../utils/terminal-identifiers'
 import * as tables from '#server/db/schema'
@@ -33,74 +30,6 @@ function parsedJson(table: ExportTable, columns: readonly string[]): ExportTable
     },
   }
 }
-
-const POWER_SITE_TIE_COLUMNS = [
-  'id',
-  'site',
-  'role',
-  'company_name',
-  'parent',
-  'ticker',
-  'unlisted',
-  'mw',
-  'mw_meaning',
-  'source_title',
-  'publisher',
-  'published',
-  'quote',
-  'source_url',
-  'fetched_at',
-] as const
-
-/** Per site, the grid where a page names it, then each company in the order the file lists them. */
-const POWER_SITE_TIES = curatedPowerSites.parse(curatedPower).sites.flatMap((s) => {
-  const id = (role: string, company: string, source_url: string, quote: string) =>
-    contentHash({ site: s.site, role, company, source_url, quote })
-  const grid = s.grid
-    ? [
-        {
-          id: id('grid', s.grid.name, s.grid.source_url, s.grid.quote),
-          site: s.site,
-          role: 'grid',
-          company_name: s.grid.name,
-          parent: null,
-          ticker: null,
-          unlisted: null,
-          mw: null,
-          mw_meaning: null,
-          source_title: null,
-          publisher: null,
-          published: null,
-          quote: s.grid.quote,
-          source_url: s.grid.source_url,
-          fetched_at: s.grid.fetched_at,
-        },
-      ]
-    : []
-  return [
-    ...grid,
-    ...s.links.map((l) => ({
-      id: id(l.role, l.company, l.source_url, l.quote),
-      site: s.site,
-      role: l.role,
-      company_name: l.company,
-      parent: l.parent,
-      ticker: l.ticker,
-      unlisted: l.unlisted,
-      mw: l.mw,
-      mw_meaning: l.mw_meaning,
-      source_title: l.source_title,
-      publisher: l.publisher,
-      published: l.published,
-      quote: l.quote,
-      source_url: l.source_url,
-      fetched_at: l.fetched_at,
-    })),
-  ]
-})
-
-const HAND_READ = (check: string) =>
-  `it’s read by hand and kept in code, and each row is dated by when ${check} last found its quote (fetched_at).`
 
 export const REFERENCE_TABLES = {
   source_runs: plainTable(
@@ -473,15 +402,16 @@ export const REFERENCE_TABLES = {
     ),
     ['figures'],
   ),
-  power_site_ties: staticTable(
+  power_site_ties: plainTable(
     'power_site_ties',
-    'Who supplies power to the data-center sites Epoch AI ties to a lab: one row per company a public page ties to a site (the utility, a generator, an equipment maker, the site host), and one for the grid where a page names it. Each is read by hand from a filing, a regulator’s page, or the company’s own, never press coverage, and kept only while power:verify still finds its quote. The sites, their power, and their users are Epoch’s, in recipe_observations.',
-    POWER_SITE_TIE_COLUMNS,
+    'Who supplies power to the data-center sites Epoch AI ties to a lab: one row per company a public page ties to a site (the utility, a generator, an equipment maker, the site host), and one for the grid where a page names it. Each is read from a filing, a regulator’s page, or the company’s own, never press coverage. The first rows were read by hand. When a new SEC filing names a site, a model reads it, and a row is kept only where the quote, the company, the site and any megawatt figure are in the filing word for word (basis). A row from a filing ends when the filer’s next filing of the same periodic form no longer has its quote, and stays in the table with ended_at set. A row from any other page is re-read weekly. The sites, their power, and their users are Epoch’s, in recipe_observations.',
+    tables.powerSiteTies,
     {
       id: {
         type: 'text',
         key: true,
-        meaning: 'SHA-256 (hex) of site, role, company_name, source_url, and quote.',
+        meaning:
+          'SHA-256 (hex) of site, role, company_name, source_url, and quote, as first read. A row later restamped to a newer filing keeps its id.',
       },
       site: {
         type: 'text',
@@ -512,7 +442,7 @@ export const REFERENCE_TABLES = {
         type: 'text',
         nullable: true,
         meaning:
-          'Why there is no ticker: municipal, federal, or private. Null when there is one, and on a grid row.',
+          'Why there is no ticker: municipal, federal, private, or not matched to a listing (a company a model read that the table has not listed before and is not the filer). Null when there is one, and on a grid row.',
       },
       mw: {
         type: 'number',
@@ -539,11 +469,39 @@ export const REFERENCE_TABLES = {
       published: {
         type: 'date',
         nullable: true,
-        meaning: 'The day the page was published. Null where it gives none, and on a grid row.',
+        meaning:
+          'The day the page was published, or the filing date. Null where it gives none, and on a grid row.',
       },
       quote: {
         type: 'text',
-        meaning: 'The passage the row rests on, byte-identical to the page.',
+        meaning: 'The passage the row rests on, as the page has it.',
+      },
+      basis: {
+        type: 'text',
+        meaning:
+          'hand (read by a person) or judge (read by a model from a stored SEC filing that names the site, and checked by the Worker: the quote, the company, the site and any megawatt figure are in the filing verbatim).',
+      },
+      accession_no: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'The EDGAR accession number of the filing at source_url. Null for a page off EDGAR.',
+      },
+      first_seen_at: {
+        type: 'timestamp',
+        meaning:
+          'When the row entered the table, in UTC: the hand read’s check, or the judge’s reading.',
+      },
+      ended_at: {
+        type: 'timestamp',
+        nullable: true,
+        meaning:
+          'When the filer’s next filing of the same periodic form was read for the site and no longer had the quote, in UTC. Null while the row stands.',
+      },
+      ended_by: {
+        type: 'text',
+        nullable: true,
+        meaning: 'The accession number of that filing. Null while the row stands.',
       },
       source_url: {
         type: 'text',
@@ -553,10 +511,11 @@ export const REFERENCE_TABLES = {
       fetched_at: {
         type: 'timestamp',
         provenance: true,
-        meaning: 'When power:verify last fetched the page and found the quote, in UTC.',
+        meaning:
+          'When the page was last fetched and the quote found on it, in UTC. For a filing, when it or a later filing repeating the quote was read. For any other page, its weekly re-read.',
       },
     },
-    POWER_SITE_TIES,
-    HAND_READ('power:verify'),
+    [tables.powerSiteTies.id],
+    'rows are restamped to newer filings, re-dated by the weekly re-read and ended in place, so the table’s past isn’t kept.',
   ),
 } satisfies Record<string, ExportTable>

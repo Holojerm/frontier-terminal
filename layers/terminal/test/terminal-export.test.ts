@@ -7,6 +7,7 @@ import { asOfLicense, licenseWindowStart, rowLicense, withLicense } from '~~/sha
 import { PointInTimeError } from '../server/utils/terminal-asof'
 import { contentHash, contentHashOfText } from '../server/pipeline/contracts'
 import { insertRows } from '../server/pipeline/store'
+import { seedHandTies } from '../server/power/store'
 import { seedHandPassages } from '../server/suppliers/store'
 import { EXPORT_PAGE_SIZE, exportFilter } from '../server/utils/terminal-export-views'
 import { EXPORT_TABLES, exportTable, WITHDRAWN_EXPORTS } from '../server/utils/terminal-export'
@@ -360,7 +361,10 @@ describe('entity_securities', () => {
 })
 
 describe('the hand-read tables', () => {
-  beforeAll(() => seedHandPassages(db))
+  beforeAll(async () => {
+    await seedHandPassages(db)
+    await seedHandTies(db)
+  })
 
   it('serve every passage, each with its quote, source, and a unique id', async () => {
     for (const name of ['supplier_passages', 'power_site_ties']) {

@@ -228,6 +228,18 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       },
     },
   },
+  {
+    version: '1.11.0',
+    date: '2026-11-20',
+    summary:
+      'power_site_ties keeps up with new filings. Its first rows were read by hand. We now search EDGAR each day for new filings that name each of Epoch’s lab sites, a model picks out the companies tied to the site’s power, and a row is kept only where its quote, the company, the site and any megawatt figure are in the filing verbatim. basis says which. A row the filer’s next periodic filing drops gets ended_at and ended_by. fetched_at now moves when a newer filing repeats the quote or the weekly re-read finds it on its page.',
+    tables: {
+      power_site_ties: {
+        added: ['basis', 'accession_no', 'first_seen_at', 'ended_at', 'ended_by'],
+        note: 'source_url, published, source_title and publisher move to the newer filing when it repeats the quote word for word.',
+      },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

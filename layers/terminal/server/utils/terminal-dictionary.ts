@@ -466,10 +466,10 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     grain:
       'One row per company a page ties to a lab’s data-center site, and one per site whose grid a page names.',
     cadence:
-      'By hand. power:verify re-reads each page on demand, restamps fetched_at, and fails when a quote is gone.',
+      'Daily for SEC filings. We search EDGAR for new filings naming each site once a day, and a model reads the ties from them. A row ends when the filer’s next filing of its form drops the quote. Weekly for every other page. We re-read it, restamp fetched_at, and flag a quote that is gone.',
     event: 'published',
     knowledge: 'fetched_at',
-    start: 'The current table only.',
+    start: 'The hand read of 2026-11-19 and 2026-11-20, then every SEC filing naming a site since.',
     joins: [{ column: 'ticker', to: 'your security master' }],
     feeds: ['power_sites'],
   },

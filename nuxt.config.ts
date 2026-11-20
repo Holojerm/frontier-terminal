@@ -195,6 +195,9 @@ const securityHeaders = {
 //                other task's requests queue in front of a probe.
 //   0 4 * * *  — seo:indexnow submits the sitemap URLs changed since its last
 //                accepted run to IndexNow (server/utils/indexnow.ts).
+//   29 5 * * TUE — power:verify re-reads each utility, regulator and company page
+//                the power-sites table cites and spools an ops event for a quote
+//                that is gone (layers/terminal/server/power/verify.ts).
 const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:watch', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
@@ -205,6 +208,7 @@ const SCHEDULED_TASKS: Record<string, string[]> = {
   '41 * * * *': ['events:sweep', 'bulk:build', 'reliability:record', 'reliability:deploys'],
   '7 * * * *': ['probes:latency'],
   '0 4 * * *': ['seo:indexnow'],
+  '29 5 * * TUE': ['power:verify'],
 }
 
 /**

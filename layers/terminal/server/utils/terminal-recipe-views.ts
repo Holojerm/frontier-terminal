@@ -25,12 +25,19 @@ import * as tables from '#server/db/schema'
 import type { PipelineDb } from '../pipeline/store'
 import { PROVIDER_ORDER } from './terminal-sources'
 import type {
-  CuratedPowerSites,
+  PowerBasis,
+  PowerGrid,
+  PowerLink,
+  PowerRole,
   PowerSite,
+  PowerSiteGap,
   PowerSitesData,
   PowerTicker,
+  PowerUncovered,
 } from '../../shared/utils/power-sites'
-import curated from '../curated/power-sites.json'
+import { pendingDocuments as pendingPowerDocuments } from '../power/ingest'
+import { attributedLabs } from '../power/sites'
+import { currentTies, type StoredTie } from '../power/store'
 import {
   EPOCH_DATA_CENTERS,
   EPOCH_DATA_CENTER_TIMELINES,
@@ -474,51 +481,104 @@ export async function queryDataCenters(db: PipelineDb): Promise<DataCentersData>
   }
 }
 
-// ── Who powers the lab sites (Epoch AI's sites, our hand-read companies) ────
+// ── Who powers the lab sites (Epoch AI's sites, our companies from D1) ──────
 
 export const POWER_SITES_CAVEAT =
-  'The sites, their power and their users are Epoch AI’s estimates (CC BY 4.0). The companies are ours. Each is read by hand from the page cited beside it, which is a filing, a regulator’s page or the company’s own. We matched each company to its listed parent and ticker ourselves. A row ties a company to a site. It doesn’t say how much of the site’s power that company supplies.'
+  'The sites, their power and their users are Epoch AI’s estimates (CC BY 4.0). The companies are ours. Each is read from the page cited beside it, which is a filing, a regulator’s page or the company’s own. We read the first ones by hand. When a new SEC filing names a site, a model reads it, and we keep a row only where the quote, the company, the site and any megawatt figure are in the filing word for word. We matched each company to its listed parent and ticker ourselves. A row ties a company to a site. It doesn’t say how much of the site’s power that company supplies.'
 
-/** The labs Epoch names as users at #confident or #likely. */
-function attributedLabs(users: string): LabId[] {
-  const labs = users
-    .split(',')
-    .filter((u) => ATTRIBUTED.test(u))
-    .map((u) => LAB_OF_NAME[u.replace(/#\w+/g, '').trim().toLowerCase().replace(/\s+/g, '-')])
-  return [...new Set(labs.filter((l): l is LabId => Boolean(l)))]
+/** What the table never reads, whatever Epoch adds. */
+const POWER_STANDING_GAPS: PowerSiteGap[] = [
+  {
+    id: 'pages-off-edgar',
+    site: null,
+    title: 'New utility, regulator and company pages are read by hand',
+    reason:
+      'We search new SEC filings for each site every day. A utility’s release, a regulator’s order or a company’s own page we find and read by hand. We re-read each one we cite every week. If its quote is gone, we flag it, and the row keeps the date we last saw it.',
+  },
+  {
+    id: 'outside-sec',
+    site: null,
+    title: 'Sites whose power companies don’t file with the SEC wait for a hand read',
+    reason:
+      'A site in Europe, the Gulf or Asia is powered by companies that file nothing with the SEC. It waits until we read a regulator’s or a company’s page by hand.',
+  },
+]
+
+/** Epoch's rows to the companies stored for each site: the grid where one is named, then each link. */
+function storedSites(rows: StoredTie[]) {
+  const bySite = new Map<string, { grid: PowerGrid | null; links: PowerLink[] }>()
+  for (const r of rows) {
+    const e = bySite.get(r.site) ?? { grid: null, links: [] }
+    if (r.role === 'grid') {
+      e.grid ??= {
+        name: r.company_name,
+        source_url: r.source_url,
+        quote: r.quote,
+        fetched_at: r.fetched_at,
+      }
+    } else {
+      e.links.push({
+        role: r.role as PowerRole,
+        company: r.company_name,
+        parent: r.parent,
+        ticker: r.ticker,
+        unlisted: r.unlisted,
+        mw: r.mw,
+        mw_meaning: r.mw_meaning,
+        source_url: r.source_url,
+        source_title: r.source_title ?? '',
+        publisher: r.publisher ?? '',
+        published: r.published,
+        quote: r.quote,
+        fetched_at: r.fetched_at,
+        basis: r.basis as PowerBasis,
+      })
+    }
+    bySite.set(r.site, e)
+  }
+  return bySite
 }
 
-export async function queryPowerSites(
-  db: PipelineDb,
-  table: CuratedPowerSites = curated as CuratedPowerSites,
-): Promise<PowerSitesData> {
-  const read = new Map(table.sites.map((s) => [s.site, s]))
-  const rows = (await rowsOf(db, [EPOCH_DATA_CENTERS.id, EPOCH_DATA_CENTER_TIMELINES.id])).filter(
-    (r) => r.value !== null,
-  )
-  const current = rows.filter((r) => r.recipe_id === EPOCH_DATA_CENTERS.id)
+export async function queryPowerSites(db: PipelineDb): Promise<PowerSitesData> {
+  const [rows, ties, waiting] = await Promise.all([
+    rowsOf(db, [EPOCH_DATA_CENTERS.id, EPOCH_DATA_CENTER_TIMELINES.id]),
+    currentTies(db),
+    pendingPowerDocuments(db),
+  ])
+  const observed = rows.filter((r) => r.value !== null)
+  const read = storedSites(ties)
+  const pending = new Map<string, number>()
+  for (const d of waiting) pending.set(d.site, (pending.get(d.site) ?? 0) + 1)
+  const current = observed.filter((r) => r.recipe_id === EPOCH_DATA_CENTERS.id)
   const snapshot = current.reduce((m, r) => (r.date > m ? r.date : m), '')
   // Epoch's furthest dated estimate per site. One dated after the snapshot is a projection.
   const furthest = new Map<string, Row>()
-  for (const r of rows) {
+  for (const r of observed) {
     if (r.recipe_id !== EPOCH_DATA_CENTER_TIMELINES.id) continue
     const f = furthest.get(r.key)
     if (!f || r.date > f.date) furthest.set(r.key, r)
   }
 
   const sites: PowerSite[] = []
-  const uncovered: PowerSitesData['uncovered'] = []
+  const uncovered: PowerUncovered[] = []
   for (const r of current.filter((c) => c.date === snapshot)) {
     const p = payloadOf(r) as { owner?: string; users?: string; country?: string }
     const labs = attributedLabs(p.users ?? '')
     if (labs.length === 0) continue
-    const mine = read.get(r.key)
-    if (!mine || mine.links.length === 0) {
-      uncovered.push({ name: r.key, labs, mw_now: r.value! })
-      continue
-    }
     const plan = furthest.get(r.key)
     const projected = plan && plan.date > snapshot ? plan : null
+    const mine = read.get(r.key)
+    if (!mine || mine.links.length === 0) {
+      uncovered.push({
+        name: r.key,
+        labs,
+        mw_now: r.value!,
+        mw_planned: projected?.value ?? null,
+        planned_date: projected?.date ?? null,
+        pending: pending.get(r.key) ?? 0,
+      })
+      continue
+    }
     sites.push({
       name: r.key,
       labs,
@@ -533,6 +593,7 @@ export async function queryPowerSites(
     })
   }
   sites.sort((a, b) => b.mw_now - a.mw_now || (b.mw_planned ?? 0) - (a.mw_planned ?? 0))
+  uncovered.sort((a, b) => b.mw_now - a.mw_now || a.name.localeCompare(b.name))
 
   const tickers = new Map<string, PowerTicker>()
   for (const s of sites) {
@@ -559,15 +620,31 @@ export async function queryPowerSites(
 
   const newest = newestRow(current)
   return {
-    as_of: asOf(rows),
+    as_of: asOf(observed),
     snapshot: snapshot || null,
     sites,
     tickers: [...tickers.values()].sort(
       (a, b) => b.sites.length - a.sites.length || a.ticker.localeCompare(b.ticker),
     ),
-    uncovered: uncovered.sort((a, b) => b.mw_now - a.mw_now),
+    uncovered,
+    gaps: [...uncovered.map(uncoveredGap), ...POWER_STANDING_GAPS],
     source: newest ? cite(EPOCH_DATA_CENTERS.id, 'Epoch AI, AI data centers', newest) : null,
     caveat: POWER_SITES_CAVEAT,
+  }
+}
+
+/** One uncovered site's gap: what Epoch says of it, and what is waiting to be read. */
+function uncoveredGap(u: PowerUncovered): PowerSiteGap {
+  const mw = `${Math.round(u.mw_now).toLocaleString('en-US')} MW`
+  const waiting =
+    u.pending === 0
+      ? 'No filing, regulator’s page or company page we have read names its utility, generator or host yet.'
+      : `${u.pending} SEC ${u.pending === 1 ? 'filing names it and waits' : 'filings name it and wait'} to be read.`
+  return {
+    id: `site:${u.name}`,
+    site: u.name,
+    title: `${u.name}: no power company read yet`,
+    reason: `Epoch AI puts it at ${mw} now. ${waiting}`,
   }
 }
 

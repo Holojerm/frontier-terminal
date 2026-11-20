@@ -1,9 +1,10 @@
 <script setup lang="ts">
 // Who supplies power to the sites Epoch AI credits to a lab. Two tables: the
 // listed companies with the sites behind each, then every company we read,
-// one row per page so each row keeps its own source and quote. A site's power
-// is Epoch's and sits on the site's rows only: summed per company it would
-// read as what the company supplies, which no page says.
+// one row per page so each row keeps its own source and quote. A lab site we
+// have read no company for gets a row too, with the gap where the company
+// would be. A site's power is Epoch's and sits on the site's rows only: summed
+// per company it would read as what the company supplies, which no page says.
 
 import { count } from '../../../shared/utils/terminal-format'
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
@@ -45,15 +46,25 @@ const linkColumns: TableColumn[] = [
   { key: 'stated', label: 'Stated', numeric: true, hint: 'by the page' },
   { key: 'source', label: 'Source' },
 ]
-const links = computed(() =>
-  props.data.sites.flatMap((s) => {
-    const site = {
-      site: s.name,
-      labs: labs(s.labs),
-      now: mw(s.mw_now),
-      planned: s.mw_planned === null ? '—' : `${mw(s.mw_planned)} by ${s.planned_date}`,
-    }
-    return [
+const siteCells = (s: {
+  name: string
+  labs: readonly string[]
+  mw_now: number
+  mw_planned: number | null
+  planned_date: string | null
+}) => ({
+  site: s.name,
+  labs: labs(s.labs),
+  now: mw(s.mw_now),
+  planned: s.mw_planned === null ? '—' : `${mw(s.mw_planned)} by ${s.planned_date}`,
+})
+
+const gapOf = computed(() => new Map(props.data.gaps.map((g) => [g.site, g])))
+
+const links = computed(() => {
+  const read = props.data.sites.map((s) => {
+    const site = siteCells(s)
+    const rows = [
       ...(s.grid
         ? [
             {
@@ -66,8 +77,9 @@ const links = computed(() =>
               stated: '',
               stated_meaning: null as string | null,
               quote: s.grid.quote,
-              source_url: s.grid.source_url,
-              fetched_at: s.grid.fetched_at,
+              source_url: s.grid.source_url as string | null,
+              fetched_at: s.grid.fetched_at as string | null,
+              gap: null as { title: string; reason: string } | null,
             },
           ]
         : []),
@@ -81,14 +93,43 @@ const links = computed(() =>
         stated: l.mw === null ? '' : mw(l.mw),
         stated_meaning: l.mw_meaning,
         quote: l.quote,
-        source_url: l.source_url,
-        fetched_at: l.fetched_at,
+        source_url: l.source_url as string | null,
+        fetched_at: l.fetched_at as string | null,
+        gap: null as { title: string; reason: string } | null,
       })),
     ]
-  }),
-)
+    return { mw_now: s.mw_now, rows }
+  })
+  const unread = props.data.uncovered.map((u) => {
+    const gap = gapOf.value.get(u.name)
+    return {
+      mw_now: u.mw_now,
+      rows: [
+        {
+          ...siteCells(u),
+          key: `${u.name}|gap`,
+          role: '',
+          company: '',
+          ticker: null as string | null,
+          note: '',
+          stated: '',
+          stated_meaning: null as string | null,
+          quote: '',
+          source_url: null as string | null,
+          fetched_at: null as string | null,
+          gap: {
+            title: 'No power company read yet',
+            reason: gap?.reason ?? 'No page we have read names its utility, generator or host yet.',
+          },
+        },
+      ],
+    }
+  })
+  return [...read, ...unread].sort((a, b) => b.mw_now - a.mw_now).flatMap((s) => s.rows)
+})
 
-const uncovered = computed(() => props.data.uncovered.map((u) => u.name).join(', '))
+/** What the table never reads, beside the per-site gaps already on their rows. */
+const standing = computed(() => props.data.gaps.filter((g) => g.site === null))
 </script>
 
 <template>
@@ -109,27 +150,35 @@ const uncovered = computed(() => props.data.uncovered.map((u) => u.name).join(',
       nested
     >
       <template #cell-company="{ row }">
-        <p class="text-default">
-          {{ row.company }}
-          <span v-if="row.ticker" class="ml-1 font-mono text-highlighted">{{ row.ticker }}</span>
-          <span v-if="row.note" class="ml-1 text-muted">({{ row.note }})</span>
-        </p>
-        <p class="mt-1 text-muted">“{{ row.quote }}”</p>
+        <TerminalGap
+          v-if="row.gap"
+          inline
+          :title="row.gap.title"
+          :reason="row.gap.reason"
+          :name="`Why: no power company read for ${row.site}`"
+        />
+        <template v-else>
+          <p class="text-default">
+            {{ row.company }}
+            <span v-if="row.ticker" class="ml-1 font-mono text-highlighted">{{ row.ticker }}</span>
+            <span v-if="row.note" class="ml-1 text-muted">({{ row.note }})</span>
+          </p>
+          <p class="mt-1 text-muted">“{{ row.quote }}”</p>
+        </template>
       </template>
       <template #cell-stated="{ row }">
         <span :title="row.stated_meaning ?? undefined">{{ row.stated }}</span>
         <span v-if="row.stated_meaning" class="sr-only">{{ row.stated_meaning }}</span>
       </template>
       <template #cell-source="{ row }">
-        <TerminalProvenanceTag :source-url="row.source_url" :fetched-at="row.fetched_at" />
+        <TerminalProvenanceTag
+          v-if="row.source_url && row.fetched_at"
+          :source-url="row.source_url"
+          :fetched-at="row.fetched_at"
+        />
       </template>
     </TerminalTable>
-    <TerminalGap
-      v-if="data.uncovered.length"
-      inline
-      :title="`${count(data.uncovered.length)} more lab sites with no power company read yet`"
-      :reason="uncovered"
-    />
+    <TerminalGap v-for="g in standing" :key="g.id" inline :title="g.title" :reason="g.reason" />
     <TerminalSources
       :sources="data.source ? [data.source] : []"
       :caveats="[{ text: data.caveat, label: 'how to read this' }]"

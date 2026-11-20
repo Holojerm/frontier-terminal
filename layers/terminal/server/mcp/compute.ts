@@ -1,6 +1,7 @@
 // Compute around the labs: how full the data centers are, how much power each lab's sites draw, and who powers them.
 
 import { z } from 'zod'
+import { powerSitesStamp } from '../power/stamp'
 import { recipeRunsStamp } from '../utils/terminal-db'
 import { queryDataCenters, queryPowerSites, VIEW_RECIPES } from '../utils/terminal-recipe-views'
 import { queryUtilization, SPOT_QUORUM, UTILIZATION_RECIPES } from '../utils/terminal-utilization'
@@ -64,10 +65,10 @@ export function registerComputeTools({ server, deps }: McpKit): void {
         'The utilities, generators, equipment makers and site hosts tied to each data-center site Epoch AI credits to a lab. ' +
         'sites: Epoch’s name, the labs it names as users, owner and users verbatim, mw_now (Epoch’s estimate of power now) and mw_planned with planned_date (its furthest dated estimate, when later than the snapshot). ' +
         'grid is the grid operator where a page names it. links is one company each: role (utility, generation, equipment, host), company, parent (the listed parent of a subsidiary), ticker, ' +
-        'unlisted (why there is no ticker: municipal, federal, private), mw with mw_meaning (only a figure the page itself ties to this site), and quote, the sentence read by hand from source_url, ' +
-        'a filing, a regulator’s page or the company’s own, never press coverage. tickers rolls the links up per listed company with its roles, sites and labs, and carries no megawatts: ' +
+        'unlisted (why there is no ticker: municipal, federal, private, or not matched to a listing), mw with mw_meaning (only a figure the page itself ties to this site), quote, the sentence read from source_url, ' +
+        'a filing, a regulator’s page or the company’s own, never press coverage, and basis (hand: read by a person; judge: read by a model from a new SEC filing naming the site and checked word for word). tickers rolls the links up per listed company with its roles, sites and labs, and carries no megawatts: ' +
         'a link ties a company to a site and does not say how much of the site’s power it supplies, so never sum a site’s power per company. ' +
-        'uncovered lists lab sites with no power source read yet. The sites and their power are Epoch’s estimates (CC BY 4.0); the companies are ours. Not investment advice. ' +
+        'uncovered lists lab sites with no power source read yet, with pending (SEC filings naming it that wait to be read); gaps names each of them and what the table never reads. The sites and their power are Epoch’s estimates (CC BY 4.0); the companies are ours. Not investment advice. ' +
         'Optional provider keeps the sites, tickers and uncovered sites tied to one lab. ' +
         PROVENANCE,
       inputSchema: z.object({ provider: ProviderSchema.optional() }),
@@ -77,7 +78,7 @@ export function registerComputeTools({ server, deps }: McpKit): void {
       const data = await deps.serve(
         'power-sites',
         () => queryPowerSites(deps.db),
-        await recipeRunsStamp(deps.db, VIEW_RECIPES.powerSites),
+        await powerSitesStamp(deps.db),
       )
       if (!provider) return json(data)
       return json({
@@ -85,6 +86,11 @@ export function registerComputeTools({ server, deps }: McpKit): void {
         sites: data.sites.filter((s) => s.labs.includes(provider)),
         tickers: data.tickers.filter((t) => t.labs.includes(provider)),
         uncovered: data.uncovered.filter((u) => u.labs.includes(provider)),
+        gaps: data.gaps.filter(
+          (g) =>
+            g.site === null ||
+            data.uncovered.some((u) => u.name === g.site && u.labs.includes(provider)),
+        ),
       })
     },
   )

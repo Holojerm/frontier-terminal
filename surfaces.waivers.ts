@@ -60,7 +60,8 @@ export const SURFACE_WAIVERS = {
     '/api/page-data': 'internal: a page’s hydration payload, not a dataset',
     '/api/parents': 'not yet: recipe observations raise no alert',
     '/api/pay': 'not yet: recipe observations raise no alert',
-    '/api/power-sites': 'not yet: a hand-read table that ships with the build',
+    '/api/power-sites':
+      'not yet: a new tie raises no alert, like a new supplier passage (docs/alerts-expansion.md › 6)',
     '/api/probes': 'not yet: latency strain raises no alert',
     '/api/prospectus':
       'covered: prospectus rows are sec and revenue change rows (ENTITY_AXIS), read in full on /revenue',
@@ -98,6 +99,8 @@ export const SURFACE_WAIVERS = {
     source_run_days: 'derived: a daily rollup of source_runs, which is exported',
     source_stats: 'derived: per-source counts of snapshots and source_runs, both exported',
     subscribers: 'internal: email addresses',
+    power_site_documents:
+      'internal: the power-sites reader’s fetch log; each power_site_ties row names its filing',
     supplier_documents:
       'internal: the suppliers reader’s fetch log; each supplier_passages row names its document',
     task_heartbeats: 'internal: cron task liveness',

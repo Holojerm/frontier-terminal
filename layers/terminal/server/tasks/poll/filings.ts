@@ -7,7 +7,9 @@
 //
 // After the poll, the suppliers reader fetches the suppliers' new 10-Qs,
 // 10-Ks, 8-Ks, 20-Fs and 6-Ks (layers/terminal/server/suppliers/ingest.ts),
-// one document at a time, for the same reason.
+// one document at a time, for the same reason. Then the power-sites reader
+// searches EDGAR for new filings naming a quarter of Epoch's lab sites and
+// fetches the newest few (layers/terminal/server/power/ingest.ts).
 
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
@@ -20,6 +22,7 @@ import { createFetcher } from '../../pipeline/fetch'
 import { unstorageLockStore } from '../../pipeline/lock'
 import { blobRawStore, runPoll } from '../../pipeline/poll'
 import { paceSec } from '../../pipeline/sec-pace'
+import { KIND_READ_FAILED, runPowerSiteReads } from '../../power/ingest'
 import { runSupplierReads } from '../../suppliers/ingest'
 import { warmAfterPoll } from '../../utils/cache-warm-task'
 import { withHeartbeat } from '../../utils/task-heartbeat'
@@ -51,8 +54,14 @@ const task = defineTask({
         return null
       },
     )
+    const power = await runPowerSiteReads(db, { raw, fetcher, now: new Date() }).catch(
+      async (error: unknown) => {
+        await recordOpsEvent(db, { kind: KIND_READ_FAILED, detail: String(error) })
+        return null
+      },
+    )
     await warmAfterPoll(context)
-    return { result, suppliers }
+    return { result, suppliers, power }
   },
 })
 

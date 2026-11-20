@@ -183,6 +183,8 @@ enabled = true
 #                   outboxes and the press briefs (see [[queues]] below)
 #                   bulk:build —the bulk feed's gzipped CSVs and Parquet files in R2, built once a
 #                   UTC day and resumed hourly (layers/terminal/server/utils/terminal-bulk.ts)
+#   "29 5 * * TUE"  power:verify — re-reads each utility, regulator and company page the
+#                   power-sites table cites (layers/terminal/server/power/verify.ts)
 #   "7 * * * *"     probes:latency — one timed streaming request per lab's flagship model
 #                   (layers/terminal/server/pipeline/probes/), alone in its invocation
 #
@@ -199,6 +201,7 @@ crons = [
   "41 * * * *",
   "0 4 * * *",
   "7 * * * *",
+  "29 5 * * TUE",
 ]
 
 # ─── EVENTS queue ────────────────────────────────────────────────────────────
