@@ -57,7 +57,14 @@ import {
   type ReleaseDocument,
 } from './guidance'
 import { writeGuidanceAlerts } from './guidance-alerts'
-import { LAB_MEMBERS, SERIES_SINCE, buildSeries, isAlerting, type StoredFact } from './series'
+import {
+  LAB_MEMBERS,
+  SERIES_SINCE,
+  buildSeries,
+  earlierPoints,
+  isAlerting,
+  type StoredFact,
+} from './series'
 
 export const INSTANCES_PER_RUN = 24
 /** Two requests each: the filing's index page, then the release. */
@@ -490,9 +497,11 @@ async function writeAlerts(db: PipelineDb, filer: Filer, now: Date): Promise<num
     .from(tables.filedFactReads)
     .where(eq(tables.filedFactReads.ticker, filer.ticker))
   if (!first?.at) return 0
-  const out = buildSeries(await filerFacts(db, filer.ticker))
+  const facts = await filerFacts(db, filer.ticker)
+  const earlier = earlierPoints(facts)
+  const out = buildSeries(facts)
     .filter(isAlerting)
-    .map((s) => filedFactAlert(s, { now, firstReadAt: first.at!, cik: filer.cik }))
+    .map((s) => filedFactAlert(s, { now, firstReadAt: first.at!, cik: filer.cik, earlier }))
     .filter((a) => a !== null)
   if (out.length === 0) return 0
   const known = new Set(

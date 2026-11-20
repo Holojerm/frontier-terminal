@@ -69,11 +69,28 @@ export const LAB_MEMBERS: Readonly<
   'amzn:AnthropicMember': { ticker: 'AMZN', lab: 'anthropic' },
 }
 
-/** Lab-group series that raise an alert when a new filing moves them. */
-export const ALERTING_LAB_CONCEPTS = [
-  'us-gaap:NonoperatingIncomeExpense',
-  'us-gaap:EquitySecuritiesWithoutReadilyDeterminableFairValueUpwardPriceAdjustmentAnnualAmount',
-] as const
+/**
+ * What an alerting series is, for its tier. Every kind alerts `notable` on a
+ * new point and `critical` on a series' first. A commitment (a funding pledge,
+ * a financing line, a lab's backlog) or a stake also goes `critical` when it
+ * moves 25% or more against the point before.
+ */
+export type AlertKind = 'figure' | 'commitment' | 'stake'
+
+/** Lab-group series that raise an alert when a new filing moves them, by `<lab>|<concept>`. */
+export const ALERTING_LAB_CONCEPTS: Readonly<Record<string, AlertKind>> = {
+  'openai|us-gaap:NonoperatingIncomeExpense': 'figure',
+  'openai|us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax': 'figure',
+  'openai|us-gaap:AccountsReceivableNet': 'figure',
+  'openai|msft:EquityMethodInvestmentsTotalFundingCommitments': 'commitment',
+  'openai|msft:EquityMethodInvestmentsFunded': 'commitment',
+  'openai|us-gaap:EquityMethodInvestmentOwnershipPercentage': 'stake',
+  'anthropic|us-gaap:EquitySecuritiesWithoutReadilyDeterminableFairValueUpwardPriceAdjustmentAnnualAmount':
+    'figure',
+  'anthropic|amzn:RevenueRemainingPerformanceObligationAmountPeriodIncreaseDecrease': 'commitment',
+  'anthropic|us-gaap:LineOfCreditFacilityMaximumBorrowingCapacity': 'commitment',
+  'anthropic|us-gaap:LineOfCreditFacilityCurrentBorrowingCapacity': 'commitment',
+}
 
 interface SeriesDef {
   id: string
@@ -86,7 +103,7 @@ interface SeriesDef {
   dims: string | ((dims: string, end: string) => boolean)
   kind: 'flow' | 'balance'
   note?: string
-  alert?: boolean
+  alert?: AlertKind
 }
 
 const nextDay = (date: string) =>
@@ -115,7 +132,7 @@ export const SERIES_DEFS: readonly SeriesDef[] = [
     concept: PPE,
     dims: '',
     kind: 'flow',
-    alert: true,
+    alert: 'figure',
     note: 'Cash spent. Microsoft also signs finance leases for data centers, which aren’t in this line. We show them as a second line and don’t add the two.',
   },
   {
@@ -138,7 +155,7 @@ export const SERIES_DEFS: readonly SeriesDef[] = [
     concept: PPE,
     dims: '',
     kind: 'flow',
-    alert: true,
+    alert: 'figure',
   },
   {
     id: 'amzn-capex',
@@ -149,7 +166,7 @@ export const SERIES_DEFS: readonly SeriesDef[] = [
     concept: 'us-gaap:PaymentsToAcquireProductiveAssets',
     dims: '',
     kind: 'flow',
-    alert: true,
+    alert: 'figure',
     note: 'Gross of the proceeds and incentives Amazon reports on its own line. Assets under finance leases aren’t in it.',
   },
   {
@@ -161,7 +178,7 @@ export const SERIES_DEFS: readonly SeriesDef[] = [
     concept: PPE,
     dims: '',
     kind: 'flow',
-    alert: true,
+    alert: 'figure',
     note: 'Meta’s own capex figure adds its principal payments on finance leases, the second line here. We don’t add them.',
   },
   {
@@ -183,7 +200,7 @@ export const SERIES_DEFS: readonly SeriesDef[] = [
     concept: PPE,
     dims: '',
     kind: 'flow',
-    alert: true,
+    alert: 'figure',
     note: 'Oracle’s fiscal year ends May 31, so its quarters end in August, November, February, and May.',
   },
   {
@@ -195,7 +212,7 @@ export const SERIES_DEFS: readonly SeriesDef[] = [
     concept: RPO,
     dims: '',
     kind: 'balance',
-    alert: true,
+    alert: 'figure',
   },
   {
     id: 'msft-rpo-commercial',
@@ -206,7 +223,7 @@ export const SERIES_DEFS: readonly SeriesDef[] = [
     concept: RPO,
     dims: 'srt:MajorCustomersAxis=msft:CommercialCustomersMember',
     kind: 'balance',
-    alert: true,
+    alert: 'figure',
     note: 'Microsoft tags commercial backlog. It doesn’t tag a Microsoft Cloud figure.',
   },
   {
@@ -218,7 +235,7 @@ export const SERIES_DEFS: readonly SeriesDef[] = [
     concept: RPO,
     dims: '',
     kind: 'balance',
-    alert: true,
+    alert: 'figure',
     note: 'From the first quarter of 2026 Alphabet also counts contracts of a year or less, so later quarters aren’t comparable with earlier ones.',
   },
   {
@@ -230,7 +247,7 @@ export const SERIES_DEFS: readonly SeriesDef[] = [
     concept: RPO,
     dims: 'us-gaap:StatementBusinessSegmentsAxis=goog:GoogleCloudMember',
     kind: 'balance',
-    alert: true,
+    alert: 'figure',
     note: 'Alphabet started tagging the Google Cloud figure recently. Earlier quarters tag only the total.',
   },
   {
@@ -242,6 +259,7 @@ export const SERIES_DEFS: readonly SeriesDef[] = [
     concept: RPO,
     dims: 'us-gaap:RelatedPartyTransactionsByRelatedPartyAxis=us-gaap:EquityMethodInvesteeMember',
     kind: 'balance',
+    alert: 'commitment',
     note: 'Alphabet tags it as backlog from an equity-method investee. Its 10-Q text names the investee as Crux AI, a joint venture and related party.',
   },
   {
@@ -253,7 +271,7 @@ export const SERIES_DEFS: readonly SeriesDef[] = [
     concept: RPO,
     dims: amazonTotal,
     kind: 'balance',
-    alert: true,
+    alert: 'figure',
     note: 'Amazon’s total, which its 10-Q says is mainly AWS. It doesn’t tag an AWS-only figure.',
   },
   {
@@ -265,6 +283,7 @@ export const SERIES_DEFS: readonly SeriesDef[] = [
     concept: RPO,
     dims: (dims) => dims.split(';').includes('srt:MajorCustomersAxis=amzn:OpenAIGroupPBCMember'),
     kind: 'balance',
+    alert: 'commitment',
   },
   {
     id: 'orcl-rpo',
@@ -275,7 +294,7 @@ export const SERIES_DEFS: readonly SeriesDef[] = [
     concept: RPO,
     dims: '',
     kind: 'balance',
-    alert: true,
+    alert: 'figure',
     note: 'Oracle tags only its total backlog. It doesn’t tag a cloud figure.',
   },
 ]
@@ -552,12 +571,41 @@ export function buildSeries(facts: readonly StoredFact[]): ExposureSeries[] {
   return out
 }
 
+/** How a series alerts; null for one that doesn't. */
+export function alertKind(series: ExposureSeries): AlertKind | null {
+  if (series.group === 'openai' || series.group === 'anthropic') {
+    return ALERTING_LAB_CONCEPTS[`${series.group}|${series.concept}`] ?? null
+  }
+  return SERIES_DEFS.find((d) => d.id === series.id)?.alert ?? null
+}
+
 /** True for a series a new filing's point should raise an alert on. */
 export function isAlerting(series: ExposureSeries): boolean {
-  if (series.group === 'openai' || series.group === 'anthropic') {
-    return (ALERTING_LAB_CONCEPTS as readonly string[]).includes(series.concept)
+  return alertKind(series) !== null
+}
+
+/**
+ * Each series' points as they stood before the filing of its newest point:
+ * built without that filing and without anything filed after it. The rule
+ * reads it to tell a series' first point, and a re-reported or restated
+ * period, from a new one. Built once per filing.
+ */
+export function earlierPoints(
+  facts: readonly StoredFact[],
+): (series: ExposureSeries) => readonly ExposurePoint[] {
+  const built = new Map<string, ExposureSeries[]>()
+  return (series) => {
+    const p = series.points.at(-1)
+    if (!p) return []
+    let before = built.get(p.accession_no)
+    if (!before) {
+      before = buildSeries(
+        facts.filter((f) => f.accession_no !== p.accession_no && f.filed <= p.filed),
+      )
+      built.set(p.accession_no, before)
+    }
+    return before.find((s) => s.id === series.id)?.points ?? []
   }
-  return SERIES_DEFS.find((d) => d.id === series.id)?.alert === true
 }
 
 /** Figures an analyst would look for that these filings don't tag. Checked 2026-11-04. */
