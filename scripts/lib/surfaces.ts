@@ -8,7 +8,7 @@
 // route's `serveTerminal(event, '<name>'`, a page's read is a `useFetch('/api/…'`
 // (or `$fetch`) in its script or in a component it renders, an export is a
 // builder call in the export registry, and an alert axis is the AXIS_PATH page a
-// route sits under. The waiver file is the only hand-kept part, and it lists
+// route sits under (or an AXIS_ROUTES entry naming it). The waiver file is the only hand-kept part, and it lists
 // what is missing, with why.
 
 import { endOfString, findClosing, sliceBalanced } from './brace-match'
@@ -24,7 +24,7 @@ export const SURFACE_LABEL: Record<SurfaceKind, string> = {
   labPage: 'per-lab, but the lab page (labs/[lab]/index.vue) does not read it',
   tearSheet: 'per-lab, but the tear sheet (labs/[lab]/tear-sheet.vue) does not read it',
   mcp: 'no MCP tool serves its cache name',
-  alerts: 'no alert axis reads it (AXIS_PATH)',
+  alerts: 'no alert axis reads it (AXIS_PATH, AXIS_ROUTES)',
   export: 'no table in EXPORT_TABLES reads it',
 }
 
@@ -333,11 +333,31 @@ export function axisPaths(labsSource: string): Record<string, string> {
   return out
 }
 
-/** The axes whose page a route sits under: `/api/hiring/history` is under `/hiring`. */
-export function axesOfRoute(url: string, paths: Readonly<Record<string, string>>): string[] {
+/** AXIS_ROUTES in terminal-labs.ts: the routes an axis alerts on outside its page. */
+export function axisRoutes(labsSource: string): Record<string, string[]> {
+  const code = blankComments(labsSource)
+  const decl = /export\s+const\s+AXIS_ROUTES\b[^=]*=\s*\{/.exec(code)
+  if (!decl) return {}
+  const body = sliceBalanced(code, decl.index + decl[0].length - 1) ?? ''
+  const out: Record<string, string[]> = {}
+  for (const m of body.matchAll(/(\w+)\s*:\s*\[([^\]]*)\]/g)) {
+    out[m[1]!] = [...m[2]!.matchAll(/['"](\/api\/[^'"]*)['"]/g)].map((r) => r[1]!)
+  }
+  return out
+}
+
+/**
+ * The axes whose page a route sits under (`/api/hiring/history` is under
+ * `/hiring`), and those whose AXIS_ROUTES entry names it.
+ */
+export function axesOfRoute(
+  url: string,
+  paths: Readonly<Record<string, string>>,
+  routes: Readonly<Record<string, readonly string[]>> = {},
+): string[] {
   const page = url.replace(/^\/api/, '')
   return Object.entries(paths)
-    .filter(([, p]) => page === p || page.startsWith(`${p}/`))
+    .filter(([axis, p]) => page === p || page.startsWith(`${p}/`) || routes[axis]?.includes(url))
     .map(([axis]) => axis)
 }
 

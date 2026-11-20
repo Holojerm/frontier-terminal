@@ -33,6 +33,21 @@ describe('alertLabs / alertAxis', () => {
     expect(alertAxis({ changes: [change({ entity_type: 'guidance_check' })] })).toBe('exposure')
   })
 
+  it('puts a GPU rental median on the compute axis, with its move as the figure', () => {
+    const alert = {
+      changes: [
+        change({
+          entity_type: 'gpu_price',
+          provider: 'other',
+          change_type: 'modified',
+          diff: [{ field: 'median', before: '4.75', after: '4.275' }],
+        }),
+      ],
+    }
+    expect(alertAxis(alert)).toBe('compute')
+    expect(alertDelta(alert)).toBe('−10% median')
+  })
+
   it('is null when the rows resolve to nothing or disagree', () => {
     expect(alertAxis({ changes: [] })).toBeNull()
     expect(

@@ -7,6 +7,7 @@ import {
   apiFetchPaths,
   axesOfRoute,
   axisPaths,
+  axisRoutes,
   componentNameOf,
   componentRefs,
   exportBuilders,
@@ -205,6 +206,15 @@ describe('alert axes', () => {
     expect(axesOfRoute('/api/hiring/history', paths)).toEqual(['hiring'])
     expect(axesOfRoute('/api/revenue', paths)).toEqual(['sec', 'revenue'])
     expect(axesOfRoute('/api/pricesx', paths)).toEqual([])
+  })
+
+  it('puts a route on an axis whose AXIS_ROUTES entry names it', () => {
+    const source = `${labs}\n// compute: ['/api/not-this']\nexport const AXIS_ROUTES: Partial<Record<AlertAxis, readonly string[]>> = {\n  hiring: ['/api/gpu-prices', "/api/pay"],\n}`
+    const routes = axisRoutes(source)
+    expect(routes).toEqual({ hiring: ['/api/gpu-prices', '/api/pay'] })
+    expect(axesOfRoute('/api/gpu-prices', axisPaths(source), routes)).toEqual(['hiring'])
+    expect(axesOfRoute('/api/gpu-pricesx', axisPaths(source), routes)).toEqual([])
+    expect(axisRoutes(labs)).toEqual({})
   })
 })
 

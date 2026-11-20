@@ -21,6 +21,7 @@ import {
   SURFACE_LABEL,
   apiFetchPaths,
   axesOfRoute,
+  axisRoutes,
   axisPaths,
   componentNameOf,
   componentRefs,
@@ -109,6 +110,7 @@ const tearReads = readsOf.get(TEAR_SHEET) ?? new Set()
 // ── MCP and axes ─────────────────────────────────────────────────────────────
 const served = new Set(MCP_FILES.flatMap((f) => [...mcpServedNames(read(f))]))
 const axes = axisPaths(read(LABS_FILE))
+const extraRoutes = axisRoutes(read(LABS_FILE))
 
 const routeRows: RouteRow[] = routes
   .map(({ url, source }): RouteRow => {
@@ -123,7 +125,7 @@ const routeRows: RouteRow[] = routes
       labPage,
       tearSheet,
       mcp: cacheName !== null && served.has(cacheName),
-      axes: axesOfRoute(url, axes),
+      axes: axesOfRoute(url, axes, extraRoutes),
     }
   })
   .sort((a, b) => a.url.localeCompare(b.url))
