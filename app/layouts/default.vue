@@ -51,6 +51,11 @@ const GROUPS: NavGroup[] = [
         description: 'SEC filings, and what investors disclose.',
       },
       {
+        label: 'Ground truth',
+        to: '/ground-truth',
+        description: 'Press reports scored against later filings.',
+      },
+      {
         label: 'Exposure',
         to: '/exposure',
         description: 'Hyperscaler capex, backlog and lab stakes.',
@@ -88,7 +93,6 @@ const LAB_LINKS: NavLink[] = LABS.map((lab) => ({ label: LAB_DISPLAY[lab], to: l
 const REFERENCE: NavLink[] = [
   { label: 'About', to: '/about' },
   { label: 'Data', to: '/data' },
-  { label: 'Ground truth', to: '/ground-truth' },
   { label: 'License', to: '/license' },
   { label: 'Contact', to: '/contact' },
   { label: 'Privacy', to: '/about#privacy' },

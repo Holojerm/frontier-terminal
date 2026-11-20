@@ -5,11 +5,14 @@ It is the **index**, deliberately kept small: it loads into every session, so
 anything that is not needed on every task lives in [`.claude/docs/`](.claude/docs/)
 and is read on demand.
 
-Frontier Terminal is a free, public, read-only data site: an investor terminal tracking
-the frontier AI labs (OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Alibaba (Qwen), Moonshot AI (Kimi)) on seven axes — API price lists,
-hiring, SEC filings, disclosed revenue, status-page incidents, misalignment disclosures,
-and OpenRouter demand share. No accounts, no sign-in, no payments. Every datum carries its source URL and
-fetch timestamp.
+Frontier Terminal is a free, public, read-only terminal of fundamentals on the frontier AI
+labs (OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Alibaba (Qwen), Moonshot AI (Kimi)).
+Per lab: API price lists, hiring, SEC filings and disclosed revenue, status-page incidents and
+latency probes, misalignment disclosures, and OpenRouter demand share. Around the labs: the
+public companies tied to them (exposure, dependencies, suppliers, listed companies), compute
+(GPU prices, data-center power), and ground truth (press reports scored against later filings).
+The terminal's data is the product. Theses are a layer on top, the retail-facing angle. No
+accounts, no sign-in, no payments. Every datum carries its source URL and fetch timestamp.
 
 ---
 
@@ -29,6 +32,7 @@ Read the row that matches what you are about to touch. Do not load them all.
 | [`.claude/docs/agent-setup.md`](.claude/docs/agent-setup.md) | MCP servers, skills, slash commands, cloud routines | Configuring tooling |
 | [`docs/template-divergence.md`](docs/template-divergence.md) | Why each template-owned file differs from `nuxt-cf-template`, or is absent | Syncing the template, or touching a file listed in `fleet.json` › `template.customized` |
 | [`.claude/docs/fleet.md`](.claude/docs/fleet.md) | `fleet.json`, `/api/status`, `/api/fleet`, the `ops_events` spool and its fleet alerts | Touching the manifest, the status/fleet endpoints, or ops alerting |
+| [`.claude/docs/surfaces.md`](.claude/docs/surfaces.md) | Every place a dataset has to reach (pages, lab page, tear sheet, MCP, export, alerts), `bun run surfaces:check` and its waivers | Adding a dataset, route, table or page |
 | [`DESIGN.md`](DESIGN.md) | The visual design system — source of truth | Writing any UI |
 
 **Three gotchas are load-bearing enough to state here**, because each one fails with
@@ -246,6 +250,8 @@ bun run seo:check     # Fail on pages that bypass useSeo() or aren't declared pu
 bun run fleet:check   # Fail when fleet.json stops matching wrangler.toml (names, binding ids, crons)
 bun run crons:check   # Fail when [triggers] crons and nitro.scheduledTasks disagree, or a task has no file
 bun run methods:check # Fail when a GET/HEAD/DELETE route reads a request body (a Workers handler never receives one)
+bun run surfaces:check # Fail when a product route or table misses a surface (page, lab page, tear sheet, MCP tool,
+                      # export, alert axis) that surfaces.waivers.ts doesn't waive, or a waiver is stale. --matrix prints it
 bun run mcp:check     # The template's gate for a separate MCP worker in mcp/. Inert here: there is no mcp/
                       # directory (our MCP endpoint is the app's own /mcp route), so it passes with nothing to check
 bun run test:a11y     # Playwright/Chromium browser suites: axe over every public route
@@ -259,7 +265,7 @@ bun run db:migrate:remote # Apply migrations to production D1 (Workers Builds ru
 bun db:studio         # Open Drizzle Studio (visual DB browser)
 bun run keys:issue -- --client "<name>" --tier research|systematic --months 12 [--remote]
                       # Licensee API key: prints the key once, stores its SHA-256 (keys:list, keys:revoke)
-bun run ci            # Every gate, concurrently (scripts/ci.ts): format (writes; checks in CI), email:build, lint, design/brand/mirror/seo/fleet/crons/mcp/migrations:check
+bun run ci            # Every gate, concurrently (scripts/ci.ts): format (writes; checks in CI), email:build, lint, design/brand/mirror/seo/fleet/crons/mcp/migrations/surfaces:check
                       # gates, typecheck, test, build — Workers Builds runs this. NO browser suites: that image cannot
                       # launch Chromium (see Gotchas). CI_SERIAL=1 runs the gates one at a time.
 bun run ci:fast       # While iterating: format (writes), cheap gates + typecheck + tests touched since origin/main, no build
