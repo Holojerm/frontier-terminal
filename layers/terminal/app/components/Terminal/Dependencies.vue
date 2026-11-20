@@ -406,6 +406,8 @@ const sizeRows = computed(() =>
     </TerminalTable>
   </TerminalPanel>
 
+  <slot name="listed" />
+
   <slot name="suppliers" />
 
   <TerminalPanel

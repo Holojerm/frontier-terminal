@@ -184,6 +184,7 @@ describe('tools/list', () => {
       'get_hiring_history',
       'get_identifiers',
       'get_incidents',
+      'get_listed_companies',
       'get_overview',
       'get_price_history',
       'get_prices',
