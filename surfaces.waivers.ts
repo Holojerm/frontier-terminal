@@ -53,7 +53,7 @@ export const SURFACE_WAIVERS = {
       'derived: joins filed exposure facts and prospectus commitments (sec, through /api/prospectus)',
     '/api/gpu-prices': 'not yet: GPU rental prices raise no alert',
     '/api/ground-truth':
-      'derived: scores press reports against filings that alert on the revenue axis',
+      'derived: scores press reports against filings (revenue axis) and capex guidance against filed capex (exposure axis, guidance-floor)',
     '/api/identifiers': 'internal: reference data, read by hand',
     '/api/limits': 'not yet: recipe observations raise no alert',
     '/api/listed': 'derived: joins /api/dependencies, /api/suppliers and /api/power-sites',
