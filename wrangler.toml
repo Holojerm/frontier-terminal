@@ -183,6 +183,8 @@ enabled = true
 #                   outboxes and the press briefs (see [[queues]] below)
 #                   bulk:build —the bulk feed's gzipped CSVs and Parquet files in R2, built once a
 #                   UTC day and resumed hourly (layers/terminal/server/utils/terminal-bulk.ts)
+#   "7 * * * *"     probes:latency — one timed streaming request per lab's flagship model
+#                   (layers/terminal/server/pipeline/probes/), alone in its invocation
 #
 # Cron triggers run on UTC, and changes take up to 15 minutes to propagate.
 # Name weekdays: Cloudflare numbers them from 1 = Sunday, so "1" is not Monday.
@@ -196,6 +198,7 @@ crons = [
   "0 13 * * MON",
   "41 * * * *",
   "0 4 * * *",
+  "7 * * * *",
 ]
 
 # ─── EVENTS queue ────────────────────────────────────────────────────────────
@@ -303,6 +306,9 @@ NUXT_INDEXNOW_KEY = "fe2738e740b8c6b06a20d76ab1877559"
 #                                rankings behind the demand-share panel
 #                                (layers/terminal/server/pipeline/fetch.ts). Unset = that source is
 #                                recorded 'skipped' each tick, never fetched anonymously.
+#                                Also pays for the hourly latency probes
+#                                (layers/terminal/server/pipeline/probes/), which need credit on
+#                                the account; unset = no probe runs.
 #   NUXT_RESEND_API_KEY          Resend API key for public digest subscriptions
 #                                (layers/terminal/server/utils/resend.ts). Needs the
 #                                domain of NUXT_SUBSCRIBE_EMAIL_FROM verified in Resend.

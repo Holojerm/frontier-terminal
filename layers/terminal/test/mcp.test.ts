@@ -186,6 +186,7 @@ describe('tools/list', () => {
       'get_overview',
       'get_price_history',
       'get_prices',
+      'get_probes',
       'get_prospectus',
       'get_rankings',
       'get_releases',
