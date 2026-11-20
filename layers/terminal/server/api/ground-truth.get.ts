@@ -5,19 +5,23 @@
 // capex; and the alert track record's totals
 // (layers/terminal/server/utils/terminal-ground-truth.ts). `as_of` returns
 // what the store held then: the press tables are append-only and the filed
-// rows are rewound.
+// rows are rewound. `lab` scores that lab's reports alone, filtered before the
+// lists are cut, so it is its own cache entry.
 
 import { queryGroundTruth } from '../utils/terminal-ground-truth'
 import { reportedStamp } from '../utils/terminal-reported'
 import { serveTerminal, terminalDb } from '../utils/terminal-handler'
 import { rateLimitTerminal } from '../utils/api-access'
+import { labQuerySchema } from '../utils/terminal-lab-cuts'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'ground-truth', limit: 60, windowSeconds: 60 })
   // Articles and readings land between polls, so they key the cache too.
-  const variant = await reportedStamp(terminalDb)
-  return serveTerminal(event, 'ground-truth', (ctx) => queryGroundTruth(terminalDb, ctx), {
-    variant,
+  const { lab } = await getValidatedQuery(event, labQuerySchema.parse)
+  const stamp = await reportedStamp(terminalDb)
+  return serveTerminal(event, 'ground-truth', (ctx) => queryGroundTruth(terminalDb, ctx, lab), {
+    // The all-lab entry keeps the key it always had.
+    variant: lab ? `${stamp}:${lab}` : stamp,
     asOf: 'snapshot',
   })
 })

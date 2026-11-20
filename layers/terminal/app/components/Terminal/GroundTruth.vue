@@ -4,10 +4,14 @@
 // deal sizes and capex guidance against filings (each its own component), and
 // the alert track record's totals. A report read back from GDELT's archive
 // is counted as the press's, never as ours: `held` says which we had stored.
+// With `lab` (a lab page) the payload is that lab's alone (/api/ground-truth?lab=),
+// and the panels about every lab (capex guidance, alerts, the method) are left
+// to /ground-truth.
 
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type {
   GroundTruthData,
+  LabId,
   GroundTruthFiled,
   GroundTruthReport,
   GroundTruthResolution,
@@ -17,7 +21,7 @@ import type {
 } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
-const props = defineProps<{ truth: GroundTruthData }>()
+const props = defineProps<{ truth: GroundTruthData; lab?: LabId }>()
 
 const figures = useFigures()
 const stamps = useStamps()
@@ -209,17 +213,27 @@ const waitingKey = (w: GroundTruthWaiting) => `${w.lab}|${w.metric}|${w.currency
 
 <template>
   <div class="space-y-6">
-    <TerminalPanel id="summary" title="Summary">
+    <TerminalPanel
+      id="summary"
+      :title="lab ? 'Press against filings' : 'Summary'"
+      :note="
+        lab
+          ? `Press reports of ${LAB_DISPLAY[lab]}’s revenue and deals, scored against the filing that printed the figure later.`
+          : undefined
+      "
+      :more="lab ? { label: 'Every lab, and how we score it', to: '/ground-truth' } : undefined"
+    >
       <div class="max-w-2xl space-y-2 text-sm text-default">
         <p>{{ summary.join(' ') }}</p>
         <p v-if="heldText">{{ heldText }}</p>
         <p v-if="leftOut" class="text-muted">{{ leftOut }}</p>
         <p>{{ dealsText }}</p>
-        <p>{{ guidanceText }}</p>
+        <p v-if="!lab">{{ guidanceText }}</p>
       </div>
     </TerminalPanel>
 
     <TerminalPanel
+      v-if="!lab || truth.resolutions.length"
       id="filed"
       title="Press reports against filings"
       note="Revenue a headline stated before the lab’s own filing printed it. A positive error means the press was high."
@@ -383,6 +397,7 @@ const waitingKey = (w: GroundTruthWaiting) => `${w.lab}|${w.metric}|${w.currency
     </TerminalPanel>
 
     <TerminalPanel
+      v-if="!lab || truth.waiting.length"
       id="waiting"
       title="Waiting for a filing"
       note="Figures the press reports that no filing can check yet."
@@ -419,120 +434,131 @@ const waitingKey = (w: GroundTruthWaiting) => `${w.lab}|${w.metric}|${w.currency
       <p v-else class="text-sm text-default">No reported figure is waiting.</p>
     </TerminalPanel>
 
-    <TerminalGroundTruthDeals :deals="truth.deals" :tolerance-pct="truth.tolerance_pct" />
+    <TerminalGroundTruthDeals
+      v-if="!lab || truth.deals.reports.length"
+      :deals="truth.deals"
+      :tolerance-pct="truth.tolerance_pct"
+    />
 
-    <TerminalGroundTruthGuidance :guidance="truth.guidance" :tolerance-pct="truth.tolerance_pct" />
+    <template v-if="!lab">
+      <TerminalGroundTruthGuidance
+        :guidance="truth.guidance"
+        :tolerance-pct="truth.tolerance_pct"
+      />
 
-    <TerminalPanel
-      id="alerts"
-      title="Alerts against the press"
-      :note="`Notable and critical alerts since ${truth.alerts.from}. We compare when we saw the change with the first article about it.`"
-      :more="{ label: 'Every alert with its first report', to: '/alerts?tab=track-record' }"
-    >
-      <div class="max-w-2xl space-y-2 text-sm text-default">
-        <p>{{ pressText(truth.alerts.press) }}</p>
-        <p>{{ newsroomText(truth.alerts.newsroom) }}</p>
-        <p class="text-muted">
-          {{ plural(truth.alerts.rated, 'alert') }} in all.
-          <template v-if="truth.alerts.window_open">
-            {{ truth.alerts.window_open }}
-            {{ truth.alerts.window_open === 1 ? 'is' : 'are' }} less than
-            {{ truth.alerts.window_days }} days old and not searched yet.
-          </template>
-          A lead isn’t a trading signal.
-        </p>
-      </div>
-    </TerminalPanel>
+      <TerminalPanel
+        id="alerts"
+        title="Alerts against the press"
+        :note="`Notable and critical alerts since ${truth.alerts.from}. We compare when we saw the change with the first article about it.`"
+        :more="{ label: 'Every alert with its first report', to: '/alerts?tab=track-record' }"
+      >
+        <div class="max-w-2xl space-y-2 text-sm text-default">
+          <p>{{ pressText(truth.alerts.press) }}</p>
+          <p>{{ newsroomText(truth.alerts.newsroom) }}</p>
+          <p class="text-muted">
+            {{ plural(truth.alerts.rated, 'alert') }} in all.
+            <template v-if="truth.alerts.window_open">
+              {{ truth.alerts.window_open }}
+              {{ truth.alerts.window_open === 1 ? 'is' : 'are' }} less than
+              {{ truth.alerts.window_days }} days old and not searched yet.
+            </template>
+            A lead isn’t a trading signal.
+          </p>
+        </div>
+      </TerminalPanel>
 
-    <TerminalPanel id="method" title="How we score it">
-      <div class="max-w-2xl space-y-3 text-sm text-default">
-        <p>
-          We read news headlines from
-          <a
-            href="https://www.gdeltproject.org/"
-            target="_blank"
-            rel="noopener noreferrer"
-            class="text-primary underline underline-offset-2"
-            >GDELT</a
-          >
-          (a public index of news sites). When a headline states a lab’s revenue, a model labels the
-          amount. We keep it only when the amount and the lab’s name are in the headline as written.
-          We never fetch the article.
-        </p>
-        <p>
-          When the lab files with the SEC, we compare. A report counts only if GDELT read it before
-          the filing day. One from the filing day or later repeats the filing, so we leave it out.
-        </p>
-        <p>
-          Most headlines name no year. For those we take the nearest filed figure that wasn’t public
-          yet, for a period that had already ended, and count it when it’s within
-          {{ truth.tolerance_pct }}%. When a headline names the year or quarter, we use that period,
-          and a gap over {{ truth.tolerance_pct }}% is a miss.
-        </p>
-        <p>
-          Filings print year-to-date columns. A quarter is the nine-month figure minus the six-month
-          one, public from the later of the two filings. Interim figures in a registration statement
-          are unaudited.
-        </p>
-        <p>
-          GDELT’s time is the quarter hour it read the article. It doesn’t read Bloomberg, Reuters,
-          the Wall Street Journal or the Financial Times, so a figure they break shows up here when
-          another outlet repeats it. “Stored before” counts the reports our store held before the
-          filing day. The rest we read back from GDELT’s archive later.
-        </p>
-        <p>
-          Only a lab that files for itself is scored on revenue. A parent’s consolidated revenue
-          isn’t the lab’s.
-        </p>
-        <p>
-          Deal sizes go through the same steps. The model labels the amount as a contract, an
-          investment or a loan and names the other company. We keep the label only when the amount,
-          the lab and that company are in the headline as written. The filed side is the other
-          company’s own number, or the lab’s prospectus for its total commitments.
-        </p>
-        <p>
-          A filed figure often measures something else. Amazon files what Anthropic added to its
-          backlog in a quarter, and a contract’s stated value can be held to that. For OpenAI it
-          files the backlog left at each quarter end, which falls as Amazon delivers, so we score no
-          headline against it. The table under the reports lists every filed figure we use and how.
-          A report about a company whose filings we don’t read, or a figure no filing states, is
-          listed with the reason.
-        </p>
-        <p>
-          A report of an amount added is held to the quarter it was published in. One published
-          after a quarter ended and before its filing is held to that quarter only when it is within
-          {{ truth.tolerance_pct }}% of it. A report of a total is held to the first balance dated
-          on or after the report. Either is matched within {{ truth.tolerance_pct }}%. A report
-          within {{ truth.tolerance_pct }}% of a figure already filed repeats it and isn’t scored.
-          <template v-if="dealsSince">
-            We started labeling deal sizes on {{ dealsSince }}. Before then we kept a headline only
-            when it used a revenue, valuation or funding word, so older deal headlines are here only
-            if they used one.
-          </template>
-        </p>
-        <p>
-          For capex guidance we read the earnings release each filer attaches to its 8-K (exhibit
-          99.1), for releases filed since {{ truth.guidance.since }}. We take the sentence that
-          names capital expenditures, says expect or anticipate, names a year and states an amount
-          in billions of dollars. We compare it with the capex the annual report files for that
-          year. A range is met when the filed figure is inside it, and a single figure within
-          {{ truth.tolerance_pct }}%. Otherwise we show how far outside it came in.
-        </p>
-        <p>
-          Guidance given only on the earnings call isn’t here, because we don’t read call
-          transcripts. Each filer defines capex its own way, and the table under the guidance rows
-          says which filed lines we compare with. This isn’t investment advice.
-        </p>
-        <p class="text-muted">
-          Press data from the GDELT Project (gdeltproject.org). Every headline and filed figure is
-          in the
-          <NuxtLink to="/data" class="text-primary underline underline-offset-2"
-            >bulk exports</NuxtLink
-          >
-          as reported_articles, reported_figures, revenue_facts and filed_facts. This page’s rows,
-          the guidance figures included, are at /api/ground-truth, which also takes as_of.
-        </p>
-      </div>
-    </TerminalPanel>
+      <TerminalPanel id="method" title="How we score it">
+        <div class="max-w-2xl space-y-3 text-sm text-default">
+          <p>
+            We read news headlines from
+            <a
+              href="https://www.gdeltproject.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="text-primary underline underline-offset-2"
+              >GDELT</a
+            >
+            (a public index of news sites). When a headline states a lab’s revenue, a model labels
+            the amount. We keep it only when the amount and the lab’s name are in the headline as
+            written. We never fetch the article.
+          </p>
+          <p>
+            When the lab files with the SEC, we compare. A report counts only if GDELT read it
+            before the filing day. One from the filing day or later repeats the filing, so we leave
+            it out.
+          </p>
+          <p>
+            Most headlines name no year. For those we take the nearest filed figure that wasn’t
+            public yet, for a period that had already ended, and count it when it’s within
+            {{ truth.tolerance_pct }}%. When a headline names the year or quarter, we use that
+            period, and a gap over {{ truth.tolerance_pct }}% is a miss.
+          </p>
+          <p>
+            Filings print year-to-date columns. A quarter is the nine-month figure minus the
+            six-month one, public from the later of the two filings. Interim figures in a
+            registration statement are unaudited.
+          </p>
+          <p>
+            GDELT’s time is the quarter hour it read the article. It doesn’t read Bloomberg,
+            Reuters, the Wall Street Journal or the Financial Times, so a figure they break shows up
+            here when another outlet repeats it. “Stored before” counts the reports our store held
+            before the filing day. The rest we read back from GDELT’s archive later.
+          </p>
+          <p>
+            Only a lab that files for itself is scored on revenue. A parent’s consolidated revenue
+            isn’t the lab’s.
+          </p>
+          <p>
+            Deal sizes go through the same steps. The model labels the amount as a contract, an
+            investment or a loan and names the other company. We keep the label only when the
+            amount, the lab and that company are in the headline as written. The filed side is the
+            other company’s own number, or the lab’s prospectus for its total commitments.
+          </p>
+          <p>
+            A filed figure often measures something else. Amazon files what Anthropic added to its
+            backlog in a quarter, and a contract’s stated value can be held to that. For OpenAI it
+            files the backlog left at each quarter end, which falls as Amazon delivers, so we score
+            no headline against it. The table under the reports lists every filed figure we use and
+            how. A report about a company whose filings we don’t read, or a figure no filing states,
+            is listed with the reason.
+          </p>
+          <p>
+            A report of an amount added is held to the quarter it was published in. One published
+            after a quarter ended and before its filing is held to that quarter only when it is
+            within
+            {{ truth.tolerance_pct }}% of it. A report of a total is held to the first balance dated
+            on or after the report. Either is matched within {{ truth.tolerance_pct }}%. A report
+            within {{ truth.tolerance_pct }}% of a figure already filed repeats it and isn’t scored.
+            <template v-if="dealsSince">
+              We started labeling deal sizes on {{ dealsSince }}. Before then we kept a headline
+              only when it used a revenue, valuation or funding word, so older deal headlines are
+              here only if they used one.
+            </template>
+          </p>
+          <p>
+            For capex guidance we read the earnings release each filer attaches to its 8-K (exhibit
+            99.1), for releases filed since {{ truth.guidance.since }}. We take the sentence that
+            names capital expenditures, says expect or anticipate, names a year and states an amount
+            in billions of dollars. We compare it with the capex the annual report files for that
+            year. A range is met when the filed figure is inside it, and a single figure within
+            {{ truth.tolerance_pct }}%. Otherwise we show how far outside it came in.
+          </p>
+          <p>
+            Guidance given only on the earnings call isn’t here, because we don’t read call
+            transcripts. Each filer defines capex its own way, and the table under the guidance rows
+            says which filed lines we compare with. This isn’t investment advice.
+          </p>
+          <p class="text-muted">
+            Press data from the GDELT Project (gdeltproject.org). Every headline and filed figure is
+            in the
+            <NuxtLink to="/data" class="text-primary underline underline-offset-2"
+              >bulk exports</NuxtLink
+            >
+            as reported_articles, reported_figures, revenue_facts and filed_facts. This page’s rows,
+            the guidance figures included, are at /api/ground-truth, which also takes as_of.
+          </p>
+        </div>
+      </TerminalPanel>
+    </template>
   </div>
 </template>
