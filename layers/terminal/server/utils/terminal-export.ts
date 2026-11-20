@@ -32,6 +32,7 @@
 // drive them against the workerd D1 and read the bytes back.
 
 import { LIVE_TABLES } from '../export-tables/live'
+import { PROBE_TABLES } from '../export-tables/probes'
 import { FILING_TABLES } from '../export-tables/filings'
 import { HISTORY_TABLES } from '../export-tables/history'
 import { CLAIM_TABLES } from '../export-tables/theses'
@@ -52,6 +53,7 @@ export const WITHDRAWN_EXPORTS: Readonly<Record<string, string>> = {
 
 export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ...LIVE_TABLES,
+  ...PROBE_TABLES,
   ...FILING_TABLES,
   ...HISTORY_TABLES,
   ...CLAIM_TABLES,

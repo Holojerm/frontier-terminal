@@ -24,6 +24,7 @@ export const SURFACE_WAIVERS = {
   labPage: {
     '/api/exposure':
       'not yet: the hyperscaler lines naming the lab are on the tear sheet and /exposure only',
+    '/api/theses': 'not yet: the lab’s thesis is on the tear sheet and /theses only',
   },
 
   tearSheet: {
@@ -98,18 +99,15 @@ export const SURFACE_WAIVERS = {
     class_map_decisions: 'internal: the judge’s overrides of the price matrix class map',
     deploy_checks: 'internal: post-deploy smoke runs, summarized on /api/reliability',
     filed_fact_reads: 'internal: the fetch log behind filed_facts',
-    filed_guidance: 'not yet: capex guidance from earnings releases',
     filing_detections: 'internal: EDGAR-to-alert timing, summarized on /api/reliability',
     filing_readings:
       'internal: the judge’s re-reads of filing parts; what it reads lands in the entity store',
     gdelt_files: 'internal: the GKG read cursor',
     gkg_mentions: 'internal: third-party GDELT rows kept for matching, then dropped',
     judge_runs: 'internal: the judge routine’s cursor',
-    latency_probes: 'not yet: our own probes (rights: ours); export them or probe_days',
     poll_ticks: 'internal: poll tick log behind the freshness gaps',
     price_readings:
       'internal: the judge’s re-reads of failing price pages; the prices land in prices_latest',
-    probe_days: 'not yet: the daily strain rollup of latency_probes',
     recipe_runs: 'internal: the recipe fetch log; recipe_observations is exported',
     reported_reviews: 'internal: which headlines the judge has read',
     rollup_state: 'internal: how far the source_runs rollup has rolled',
