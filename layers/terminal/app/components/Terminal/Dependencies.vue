@@ -406,6 +406,8 @@ const sizeRows = computed(() =>
     </TerminalTable>
   </TerminalPanel>
 
+  <slot name="suppliers" />
+
   <TerminalPanel
     id="not-drawn"
     title="What isn’t drawn"
