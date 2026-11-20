@@ -39,17 +39,7 @@ export const SURFACE_WAIVERS = {
   },
 
   mcp: {
-    '/api/adoption': 'not yet: no tool for the adoption recipes',
-    '/api/datacenters': 'not yet: no tool for Epoch’s data-center power',
-    '/api/limits': 'not yet: no tool for published rate limits',
     '/api/page-data': 'internal: a page’s hydration payload for client navigation, not a dataset',
-    '/api/parents':
-      'not yet: no tool for the parents’ 10-Q/10-K tags (get_exposure covers the series)',
-    '/api/pay': 'not yet: no tool for posted pay bands',
-    '/api/power-sites': 'not yet: no tool for the power-site ties',
-    '/api/reported': 'not yet: no tool for press-reported figures',
-    '/api/theses': 'not yet: no tool for thesis statuses',
-    '/api/utilization': 'not yet: no tool for the utilization readings',
   },
 
   alerts: {
