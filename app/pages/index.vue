@@ -1,8 +1,10 @@
 <script setup lang="ts">
 // The terminal's front page. Reading order is priority order: every lab on
-// every axis, then what moved, then what things cost, then what has been
-// disclosed, who is winning demand and where the implied dollars go, who is
-// hiring, and how strained the APIs are. Each panel is the same component
+// every axis, the figures around the labs, and what moved; then the axes
+// under the site nav's two groups, Economics (what things cost, what has been
+// disclosed, who is winning demand and where the implied dollars go) and
+// Operations (who is hiring, how strained the APIs are, what the labs
+// disclose about their models). Each panel is the same component
 // its axis page leads with, so the overview is the axis pages' summaries and
 // nothing else. Fourteen cached endpoints, fetched in parallel on the server.
 
@@ -232,23 +234,29 @@ const openIncidents = computed(() =>
       </TerminalPanel>
     </div>
 
-    <TerminalPanel
-      id="pricing"
-      title="API prices"
-      note="$ per million tokens, like for like on each vendor’s own recommendation."
-      :more="
-        prices.data.value
-          ? { label: `All ${prices.data.value.counts.priced} priced SKUs`, to: '/prices' }
-          : undefined
-      "
-      flush
+    <TerminalGroup
+      id="economics"
+      title="Economics"
+      note="What the labs charge, what they have reported earning, and whose models the tokens go to."
     >
-      <TerminalPriceMatrix v-if="prices.data.value" :matrix="prices.data.value.matrix" />
-    </TerminalPanel>
+      <TerminalPanel
+        id="pricing"
+        :level="3"
+        title="API prices"
+        note="$ per million tokens, like for like on each vendor’s own recommendation."
+        :more="
+          prices.data.value
+            ? { label: `All ${prices.data.value.counts.priced} priced SKUs`, to: '/prices' }
+            : undefined
+        "
+        flush
+      >
+        <TerminalPriceMatrix v-if="prices.data.value" :matrix="prices.data.value.matrix" />
+      </TerminalPanel>
 
-    <div class="grid gap-6 lg:grid-cols-2">
       <TerminalPanel
         id="revenue"
+        :level="3"
         title="Disclosed revenue"
         note="What each lab, or its public parent, has reported to the SEC."
         :more="{ label: 'Every period, restatement, and filing', to: '/revenue' }"
@@ -256,8 +264,37 @@ const openIncidents = computed(() =>
       >
         <TerminalRevenueTable v-if="revenue.data.value" :revenue="revenue.data.value" />
       </TerminalPanel>
+
+      <div class="grid gap-6 lg:grid-cols-2">
+        <TerminalPanel
+          id="demand"
+          :level="3"
+          title="Demand share"
+          note="Share of OpenRouter tokens over the last 7 days. It’s one aggregator’s traffic, so treat it as a rough read on demand."
+          :more="{ label: '30-day series and top models', to: '/rankings' }"
+        >
+          <TerminalDemandShare v-if="rankings.data.value" :rankings="rankings.data.value" compact />
+        </TerminalPanel>
+        <TerminalPanel
+          id="spend"
+          :level="3"
+          title="Implied spend share"
+          note="The tracked labs’ tokens at list price, as a share of those labs’ total (not all OpenRouter traffic). It’s a range because some SKUs have no published price."
+          :more="{ label: 'Per-model join', to: '/rankings#spend' }"
+        >
+          <TerminalSpendShare v-if="spend.data.value" :spend="spend.data.value" compact />
+        </TerminalPanel>
+      </div>
+    </TerminalGroup>
+
+    <TerminalGroup
+      id="operations"
+      title="Operations"
+      note="Who the labs are hiring, how their APIs are holding up, and what they disclose about their own models."
+    >
       <TerminalPanel
         id="hiring"
+        :level="3"
         title="Hiring"
         note="Open roles per board, infrastructure roles, and the department that changed most."
         :more="{ label: 'Roles per day, buildout, department mix', to: '/hiring' }"
@@ -268,65 +305,49 @@ const openIncidents = computed(() =>
           :history="hiringHistory.data.value"
         />
       </TerminalPanel>
-    </div>
 
-    <div class="grid gap-6 lg:grid-cols-2">
-      <TerminalPanel
-        id="demand"
-        title="Demand share"
-        note="Share of OpenRouter tokens over the last 7 days. It’s one aggregator’s traffic, so treat it as a rough read on demand."
-        :more="{ label: '30-day series and top models', to: '/rankings' }"
-      >
-        <TerminalDemandShare v-if="rankings.data.value" :rankings="rankings.data.value" compact />
-      </TerminalPanel>
-      <TerminalPanel
-        id="spend"
-        title="Implied spend share"
-        note="The tracked labs’ tokens at list price, as a share of those labs’ total (not all OpenRouter traffic). It’s a range because some SKUs have no published price."
-        :more="{ label: 'Per-model join', to: '/rankings#spend' }"
-      >
-        <TerminalSpendShare v-if="spend.data.value" :spend="spend.data.value" compact />
-      </TerminalPanel>
-    </div>
+      <!-- The strain table carries the open incident and its source; the
+           disclosure counts are three short figures. Split 3:2, not 1:1. -->
+      <div class="grid gap-6 lg:grid-cols-5">
+        <TerminalPanel
+          id="strain"
+          :level="3"
+          class="lg:col-span-3"
+          title="Capacity strain"
+          :note="
+            incidents.data.value
+              ? `Status-page incidents in the last ${incidents.data.value.window_days} days, against the ${incidents.data.value.window_days} before. ${openIncidents} open now.`
+              : 'Status-page incidents in the last 30 days, against the 30 before.'
+          "
+          :more="
+            incidents.data.value
+              ? {
+                  label: `All ${incidents.data.value.incident_count} incidents in ${incidents.data.value.history_days} days`,
+                  to: '/incidents',
+                }
+              : undefined
+          "
+          flush
+        >
+          <TerminalStrainTable v-if="incidents.data.value" :incidents="incidents.data.value" />
+        </TerminalPanel>
+        <TerminalPanel
+          id="disclosures"
+          :level="3"
+          class="lg:col-span-2"
+          title="Disclosures"
+          note="Misalignment reports each lab publishes about its own models. A count shows what a lab chose to disclose, so it can’t tell you how often models misbehave."
+          :more="{ label: 'Every report and notice', to: '/disclosures' }"
+          flush
+        >
+          <TerminalDisclosureTable
+            v-if="disclosures.data.value"
+            :disclosures="disclosures.data.value"
+          />
+        </TerminalPanel>
+      </div>
+    </TerminalGroup>
 
-    <!-- The strain table carries the open incident and its source; the
-         disclosure counts are three short figures. Split 3:2, not 1:1. -->
-    <div class="grid gap-6 lg:grid-cols-5">
-      <TerminalPanel
-        id="strain"
-        class="lg:col-span-3"
-        title="Capacity strain"
-        :note="
-          incidents.data.value
-            ? `Status-page incidents in the last ${incidents.data.value.window_days} days, against the ${incidents.data.value.window_days} before. ${openIncidents} open now.`
-            : 'Status-page incidents in the last 30 days, against the 30 before.'
-        "
-        :more="
-          incidents.data.value
-            ? {
-                label: `All ${incidents.data.value.incident_count} incidents in ${incidents.data.value.history_days} days`,
-                to: '/incidents',
-              }
-            : undefined
-        "
-        flush
-      >
-        <TerminalStrainTable v-if="incidents.data.value" :incidents="incidents.data.value" />
-      </TerminalPanel>
-      <TerminalPanel
-        id="disclosures"
-        class="lg:col-span-2"
-        title="Disclosures"
-        note="Misalignment reports each lab publishes about its own models. A count shows what a lab chose to disclose, so it can’t tell you how often models misbehave."
-        :more="{ label: 'Every report and notice', to: '/disclosures' }"
-        flush
-      >
-        <TerminalDisclosureTable
-          v-if="disclosures.data.value"
-          :disclosures="disclosures.data.value"
-        />
-      </TerminalPanel>
-    </div>
     <TerminalSubscribeForm />
   </TerminalPage>
 </template>

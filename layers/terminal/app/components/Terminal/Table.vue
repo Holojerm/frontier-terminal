@@ -32,9 +32,10 @@
 // the same gap into one line naming them all, the way /revenue names its
 // unreported labs once. `group` splits the rows into bodies headed by one
 // spanning line, for a column that would otherwise repeat one reason down
-// every row.
+// every row. `bands` adds a header row above the column labels, each band a
+// `colgroup` heading over the columns it names.
 
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableBand, TableColumn } from '../../types/terminal-ui'
 
 const props = withDefaults(
   defineProps<{
@@ -78,6 +79,8 @@ const props = withDefaults(
      * share a value run together under it, in the order the value first appears.
      */
     group?: (row: T) => string
+    /** Headings over runs of adjacent columns, in a row above the column labels. */
+    bands?: readonly TableBand[]
   }>(),
   // Vue casts an absent boolean prop to false; `edge` reads absent as true.
   { edge: true },
@@ -122,6 +125,8 @@ const pad = computed(() => [
     : undefined,
   // A rule between row groups: each body's last row drops its own.
   '[&>tbody+tbody]:border-t [&>tbody+tbody]:border-default',
+  // The band row sits on the column labels: its rule is the gap between them.
+  props.bands?.length ? '[&>thead>tr:first-child>*]:pb-0' : undefined,
 ])
 
 // The phone form, set once on the <table> like the padding. Its selectors
@@ -273,6 +278,24 @@ const bodies = computed(() => {
   return [...byLabel].map(([label, rows]) => ({ key: label, label, rows }))
 })
 
+/**
+ * The band row: one cell per run of adjacent columns that share a band, and
+ * one empty cell per run outside any. Each run is also a `<colgroup>`, which
+ * is what a `scope="colgroup"` heading applies to.
+ */
+const bandCells = computed(() => {
+  if (!props.bands?.length) return []
+  const bandOf = new Map(props.bands.flatMap((b) => b.keys.map((k) => [k, b.label] as const)))
+  const cells: { key: string; label: string | undefined; span: number }[] = []
+  for (const c of props.columns) {
+    const label = bandOf.get(c.key)
+    const last = cells.at(-1)
+    if (last && last.label === label) last.span++
+    else cells.push({ key: c.key, label, span: 1 })
+  }
+  return cells
+})
+
 /** Where each row sits in `rows`, for the cell slots' `index`. */
 const indexOf = computed(() => new Map(props.rows.map((r, i) => [r, i])))
 </script>
@@ -303,12 +326,28 @@ const indexOf = computed(() => new Map(props.rows.map((r, i) => [r, i])))
       <caption class="sr-only">
         {{ caption }}
       </caption>
+      <colgroup v-for="b in bandCells" :key="b.key" :span="b.span" />
       <!-- The rule under the header is a shadow, not a border: a collapsed
            border stays behind when the header sticks. -->
       <thead
         class="z-10 bg-default shadow-[inset_0_-1px_0_var(--ui-border)]"
         :class="flow ? 'lg:sticky lg:top-(--header-offset)' : 'sticky top-0'"
       >
+        <!-- Each band's rule is drawn inside its cell's padding, so two
+             adjacent bands read as two rules, not one. -->
+        <tr v-if="bandCells.length">
+          <template v-for="b in bandCells" :key="b.key">
+            <th
+              v-if="b.label"
+              scope="colgroup"
+              :colspan="b.span"
+              class="text-left text-xs font-medium text-highlighted"
+            >
+              <span class="block border-b border-default pb-1">{{ b.label }}</span>
+            </th>
+            <td v-else :colspan="b.span" />
+          </template>
+        </tr>
         <tr class="text-left">
           <th
             v-for="c in columns"
