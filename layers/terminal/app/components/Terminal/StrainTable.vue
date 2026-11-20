@@ -69,18 +69,19 @@ const columns = computed<TableColumn[]>(() => [
       <span :class="p.open.length ? 'text-warning' : undefined">{{ p.open.length }}</span>
     </template>
     <template #cell-incident="{ row: p }">
-      <!-- One line: the title truncates (its full text is the tooltip) so an
-           open incident does not make its row three lines tall. -->
-      <span v-if="p.open[0]" class="flex max-w-64 min-w-0 items-baseline gap-1">
+      <!-- The title on its own line, then its impact and age. Sharing one
+           line, the nowrap age took most of the box and cut titles to six
+           characters. The title still truncates (full text in the tooltip). -->
+      <span v-if="p.open[0]" class="block max-w-72 min-w-0">
         <a
           :href="p.open[0].incident_url"
           target="_blank"
           rel="noopener noreferrer"
-          class="min-w-0 truncate text-default underline decoration-1 underline-offset-2 hover:text-highlighted"
+          class="block truncate text-default underline decoration-1 underline-offset-2 hover:text-highlighted"
           :title="p.open[0].title"
           >{{ p.open[0].title }}</a
         >
-        <span class="whitespace-nowrap text-muted">
+        <span class="block whitespace-nowrap text-muted">
           {{ p.open[0].impact ?? 'impact not published' }} · since
           <time :datetime="p.open[0].started_at" :title="p.open[0].started_at">{{
             stamps.relative(p.open[0].started_at)

@@ -404,10 +404,16 @@ screen the way a terminal function key does. The data below it is the content.
 - **Times:** a reading with a time of day goes through `useStamps()`, so it follows the
   reader's zone and clock and names the zone ('Aug 25 7:08 PM EDT', 'Aug 25 23:08Z' in UTC). The
   `<time>`'s `datetime` and tooltip keep the exact stored UTC value. A date printed alone (a
-  filing period, a UTC-day chart bucket) is a UTC date and never shifts. Starred labs reorder
+  filing period, a UTC-day chart bucket) is a UTC date and never shifts. It reads through
+  `useStamps().day`, in the reader's date form. A column keeps one form all the way down: a
+  "When" column is absolute, never relative for its first rows and absolute after. Starred labs reorder
   only lists in registry order, never a ranking, a timeline or a chart's stack.
 - **Deltas:** a sign the reader can see, never a color: `+12`, `−3` (U+2212), `±0`. Formatted
-  once, in `layers/terminal/shared/utils/terminal-format.ts`. A delta takes `text-muted` beside its figure;
+  once, in `layers/terminal/shared/utils/terminal-format.ts`. So is every other figure: a negative
+  is `grouped()` (never `toLocaleString`'s hyphen), a GPU-hour price is `gpuHour()` at two
+  decimals with `exactUsd()` in its tooltip, a count too big for a cell is `compactCount()`, and
+  a vendor's enum or key (`SOFTWARE_ENGINEERING`, `batch_long_context`, `NVIDIA CORP`) reads
+  through `boardLabel()`, `tierLabel()` or `edgarName()`. A delta takes `text-muted` beside its figure;
   green and red would read as good and bad, and a price rise is neither.
 
 ### Terminal primitives

@@ -4,7 +4,7 @@
 // cited rows, never off the prose. An alert whose rows did not resolve
 // reads as "—" on every column rather than as a guess.
 
-import { pctChange, pctLabel } from './terminal-format'
+import { pctChange, pctLabel, readableEdgarNames } from './terminal-format'
 import type { AlertView, ChangeView, ProviderId } from './terminal-types'
 
 export const LAB_DISPLAY: Record<ProviderId, string> = {
@@ -101,9 +101,16 @@ export function alertLabs(alert: Pick<AlertView, 'changes'>): ProviderId[] {
   return [...new Set(alert.changes.map((c) => c.provider))]
 }
 
-/** The axis the cited rows sit on; null when they resolve to nothing or disagree. */
+/**
+ * The axis the cited rows sit on; null when they resolve to nothing or disagree.
+ * One filing read whole cites rows on both SEC axes: a prospectus alert cites
+ * its revenue lines beside the offering and risk-factor rows of the same
+ * document. That is a revenue alert (its headline is the revenue figure), so
+ * `revenue` with only `sec` beside it reads as revenue, not as a disagreement.
+ */
 export function alertAxis(alert: Pick<AlertView, 'changes'>): AlertAxis | null {
   const axes = new Set(alert.changes.map((c) => ENTITY_AXIS[c.entity_type]))
+  if (axes.size === 2 && axes.has('revenue') && axes.has('sec')) return 'revenue'
   return axes.size === 1 ? [...axes][0]! : null
 }
 
@@ -155,8 +162,12 @@ export function alertDelta(alert: Pick<AlertView, 'changes'>): string | null {
   return null
 }
 
-/** A headline cut at a word so a table row stays one line; the full text is the link's title. */
-export function clipHeadline(text: string, max = 88): string {
+/**
+ * A headline cut at a word so a table row stays one line; the full text is the
+ * link's title. EDGAR's capitals ("NVIDIA CORP") read in the company's case.
+ */
+export function clipHeadline(raw: string, max = 88): string {
+  const text = readableEdgarNames(raw)
   if (text.length <= max) return text
   const cut = text.slice(0, max - 1)
   return `${cut.slice(0, Math.max(cut.lastIndexOf(' '), 40)).replace(/[,;:—-]$/, '')}…`

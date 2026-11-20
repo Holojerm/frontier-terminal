@@ -108,6 +108,17 @@ export function formatValue(kind: ValueKind, v: number): string {
   }
 }
 
+/**
+ * An axis tick for the same kind. Ticks are round numbers (1, 2, 2.5, 5 × a
+ * power of ten), so a ratio tick drops the reading's fixed decimals: '10×',
+ * '2.5×', never '10.00×'.
+ */
+export function formatTick(kind: ValueKind, v: number): string {
+  if (kind === 'ratio') return `${Number(v.toFixed(2))}×`
+  if (kind === 'gpu_hours_per_mtok') return `${Number(v.toFixed(2))} GPU-h/MTok`
+  return formatValue(kind, v)
+}
+
 export interface DetailRow {
   label: string
   value: string

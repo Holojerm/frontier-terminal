@@ -22,6 +22,8 @@ const props = withDefaults(
     /** Step-after: a value holds until the next observation (prices). */
     step?: boolean
     format: (v: number) => string
+    /** The y-axis tick text, when it should read shorter than a value (`format` otherwise). */
+    tickFormat?: (v: number) => string
     xLabel: (x: string) => string
     /** Accessible name — what is plotted, in one sentence. */
     title: string
@@ -229,7 +231,7 @@ const readout = computed(() => {
         </g>
         <g class="fill-(--ui-text-muted) font-mono tabular-nums" font-size="12">
           <text v-for="t in yTicks" :key="t" :x="PAD.l - 6" :y="yAt(t) + 4" text-anchor="end">
-            {{ format(t) }}
+            {{ (tickFormat ?? format)(t) }}
           </text>
           <text v-for="t in xTicks" :key="t.i" :x="t.x" :y="H - 8" text-anchor="middle">
             {{ t.label }}

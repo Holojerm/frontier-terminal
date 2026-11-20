@@ -4,6 +4,7 @@
 // and the fetch it was read from. The model links to the SKU's own page,
 // where later reprices live.
 
+import { tierLabel } from '../../../shared/utils/terminal-format'
 import { labName } from '../../../shared/utils/terminal-labs'
 import type { ReleaseView } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
@@ -64,7 +65,7 @@ const priced = (r: ReleaseView) => r.input_per_mtok !== null || r.output_per_mto
       >
         {{
           [
-            r.tier,
+            r.tier ? tierLabel(r.tier) : null,
             r.context_window,
             r.also_listed_by?.length ? `also on ${r.also_listed_by.join(', ')}` : null,
           ]

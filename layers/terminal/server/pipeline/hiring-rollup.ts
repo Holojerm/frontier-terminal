@@ -1,6 +1,7 @@
 import { and, asc, eq, gte, inArray, lt } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
+import { boardLabel } from '../../shared/utils/terminal-format'
 import { labName } from '../../shared/utils/terminal-labs'
 import { emitEvent } from '../utils/events'
 import type { DepartmentCluster } from '../utils/terminal-clusters'
@@ -56,7 +57,7 @@ export function composeRollup(
   const moved = move.departments.filter((d) => d.net !== 0)
   const top = moved
     .slice(0, HEADLINE_DEPARTMENTS)
-    .map((d) => `${d.department} ${signed(d.net)}`)
+    .map((d) => `${boardLabel(d.department)} ${signed(d.net)}`)
     .join(', ')
 
   const headline =
@@ -66,7 +67,7 @@ export function composeRollup(
 
   const departments = moved
     .slice(0, EXPLANATION_DEPARTMENTS)
-    .map((d) => `${d.department} ${signed(d.net)} (${d.before} to ${d.now})`)
+    .map((d) => `${boardLabel(d.department)} ${signed(d.net)} (${d.before} to ${d.now})`)
     .join('; ')
   const material = move.material.map(describeReason).join('; ')
   const explanation = [

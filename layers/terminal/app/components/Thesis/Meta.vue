@@ -1,11 +1,14 @@
 <script setup lang="ts">
 // The facts that frame a thesis, shared by its index card and its page.
+// "Opened" is a UTC date and reads in the same date form as the claim dates
+// below it (useStamps().day), never as the raw YYYY-MM-DD.
 
 import { POSITION_LABEL } from '../../../shared/utils/thesis-format'
 import type { ThesisCardView } from '../../../shared/utils/thesis-format'
 import type { Fact } from '../../types/terminal-ui'
 
 const props = defineProps<{ thesis: Omit<ThesisCardView, 'claims'> }>()
+const stamps = useStamps()
 
 const items = computed<Fact[]>(() => [
   {
@@ -32,7 +35,7 @@ const items = computed<Fact[]>(() => [
       </span>
     </template>
     <template #opened>
-      <time :datetime="thesis.opened">{{ thesis.opened }}</time>
+      <time :datetime="thesis.opened" :title="thesis.opened">{{ stamps.day(thesis.opened) }}</time>
     </template>
   </TerminalFacts>
 </template>

@@ -1,8 +1,10 @@
 <script setup lang="ts">
 // GPU rental list prices: per GPU the median across providers, then each
 // provider once at the median of its own counted rows, with its page.
+// Prices read at two decimals so the column lines up; the exact value a
+// provider printed ($6.155) is the tooltip.
 
-import { money } from '../../../shared/utils/terminal-format'
+import { exactUsd, gpuHour } from '../../../shared/utils/terminal-format'
 import type { GpuPricesData } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
@@ -22,17 +24,24 @@ const columns: TableColumn[] = [
       <TerminalCard v-for="m in gpu.medians" :id="`gpu-${m.gpu}`" :key="m.gpu" :title="m.gpu">
         <template #meta>
           <span v-if="m.median !== null">
-            median <span class="font-mono text-highlighted">{{ money(m.median) }}</span> across
+            median
+            <span class="font-mono text-highlighted" :title="exactUsd(m.median)">{{
+              gpuHour(m.median)
+            }}</span>
+            across
             {{ m.providers.length }} providers
           </span>
         </template>
         <TerminalTable
           :caption="`On-demand ${m.gpu} list price per GPU-hour, per provider`"
           :columns="columns"
-          :rows="m.providers.map((p) => ({ ...p, price: money(p.usd_per_gpu_hour) }))"
+          :rows="m.providers"
           :row-key="(p) => p.provider"
           nested
         >
+          <template #cell-price="{ row: p }">
+            <span :title="exactUsd(p.usd_per_gpu_hour)">{{ gpuHour(p.usd_per_gpu_hour) }}</span>
+          </template>
           <template #cell-source="{ row: p }">
             <TerminalProvenanceTag :source-url="p.source_url" :fetched-at="p.fetched_at" />
           </template>

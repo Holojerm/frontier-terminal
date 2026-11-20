@@ -4,6 +4,7 @@ import {
   type AlertRow,
   type ChangeRow,
   type EntityRow,
+  type FilingRow,
   type Provenance,
   type Provider,
 } from './contracts'
@@ -52,7 +53,11 @@ import { resolveFilers, type PendingFilers } from './parsers/sec/pending-filers'
 import { SUBMISSIONS_SOURCES, parseEdgarSubmissions } from './parsers/sec/edgar-submissions'
 import { parseProspectus } from './parsers/sec/prospectus'
 import { freshFiling, freshRegistrationKey } from './prospectus-floor'
-import { revenueProviderFor, type RevenueFilers } from './parsers/sec/revenue-filers'
+import {
+  issuerProviderFor,
+  revenueProviderFor,
+  type RevenueFilers,
+} from './parsers/sec/revenue-filers'
 import { parseXbrlSegment, segmentTarget } from './parsers/sec/xbrl-segment'
 import { parseAnthropicStatus } from './parsers/status/anthropic-status'
 import { DEEPSEEK_ATOM, parseDeepseekStatus } from './parsers/status/deepseek-status'
@@ -168,17 +173,33 @@ export function contextFingerprint(
 
 const set = (parse: Lane['parse']): Lane => ({ sides: [], removals: 'set', parse })
 
+/**
+ * Each filing's lab, read off its whitelisted CIK: a lab's own registration
+ * filings (Anthropic's S-1, its amendments and 424B4) are the lab's; a
+ * parent's or a supplier's stay 'other'. Before this every filing was 'other',
+ * so /alerts listed Anthropic's 424B4 under Lab "Other".
+ */
+const filingProvider =
+  (whitelist: CikWhitelist, revenueFilers: RevenueFilers) => (row: FilingRow) =>
+    issuerProviderFor(row.whitelist_cik, revenueFilers, whitelist)
+
 // The FTS tripwire lanes: filings, plus the labs those filings resolve
 // (parsers/sec/pending-filers.ts). Both floors and the cik-resolved alert run.
 const FTS_LANE: Lane = {
   sides: [],
   removals: 'append-only',
-  reads: ['whitelist', 'pendingFilers', 'resolvedProviders'],
-  parse: (text, { prov, snapshotId, whitelist, pendingFilers, resolvedProviders }) => {
+  reads: ['whitelist', 'pendingFilers', 'resolvedProviders', 'revenueFilers'],
+  parse: (
+    text,
+    { prov, snapshotId, whitelist, pendingFilers, resolvedProviders, revenueFilers },
+  ) => {
     const { rows } = parseEdgarFts(text, whitelist, prov)
     const filers = resolveFilers(rows, pendingFilers, resolvedProviders)
     return {
-      entities: [...normalizeFilings(rows, snapshotId), ...normalizeFilers(filers, snapshotId)],
+      entities: [
+        ...normalizeFilings(rows, snapshotId, filingProvider(whitelist, revenueFilers)),
+        ...normalizeFilers(filers, snapshotId),
+      ],
       note: filers.length
         ? `resolved ${filers.map((f) => `${f.provider} -> CIK ${f.cik}`).join(', ')}`
         : undefined,
@@ -201,11 +222,11 @@ function ftsLanes(): Record<string, Lane> {
 const SUBMISSIONS_LANE: Lane = {
   sides: [],
   removals: 'append-only',
-  reads: ['whitelist'],
-  parse: (text, { prov, snapshotId, whitelist }) => {
+  reads: ['whitelist', 'revenueFilers'],
+  parse: (text, { prov, snapshotId, whitelist, revenueFilers }) => {
     const { rows, skipped } = parseEdgarSubmissions(text, whitelist, prov)
     return {
-      entities: normalizeFilings(rows, snapshotId),
+      entities: normalizeFilings(rows, snapshotId, filingProvider(whitelist, revenueFilers)),
       note: skipped ? `${skipped} filings skipped: untracked form` : undefined,
     }
   },

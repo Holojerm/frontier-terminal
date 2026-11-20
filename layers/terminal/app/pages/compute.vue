@@ -38,6 +38,8 @@ useSeo({
   dateModified: gpu.value?.as_of,
 })
 
+const stamps = useStamps()
+
 const siteColumns: TableColumn[] = [
   { key: 'name', label: 'Site' },
   { key: 'power', label: 'Power', numeric: true },
@@ -123,7 +125,7 @@ const sites = computed(() =>
       <TerminalPanel
         id="sites"
         title="Every site"
-        :note="`${count(power.sites)} sites in Epoch’s data as of ${power.snapshot}, largest first. Owner and users are as Epoch writes them.`"
+        :note="`${count(power.sites)} sites in Epoch’s data as of ${stamps.day(power.snapshot)}, largest first. Owner and users are as Epoch writes them.`"
       >
         <TerminalTable
           caption="AI data centers tracked by Epoch AI, with estimated power and named users"

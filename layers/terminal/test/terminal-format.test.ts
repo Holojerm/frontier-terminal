@@ -3,18 +3,31 @@ import { describe, expect, it } from 'vitest'
 import {
   UTC_STYLE,
   absoluteStamp,
+  boardLabel,
+  compactCount,
   compactTokens,
   compactUsd,
   count,
+  datedStamp,
+  dayStamp,
+  edgarName,
   exactStamp,
+  exactUsd,
+  gpuHour,
+  grouped,
   hostOf,
   money,
+  readableEdgarNames,
+  splitInstants,
+  tierLabel,
   pctChange,
   pctLabel,
   relativeStamp,
   signed,
   zoneName,
 } from '../shared/utils/terminal-format'
+import { formatTick, formatValue } from '../shared/utils/thesis-format'
+import { millions, statementValue } from '../shared/utils/terminal-prospectus'
 import { DEFAULTS, labsFirst, parsePrefs } from '../shared/utils/reader-prefs'
 
 // How a stored value reads. The rule is relative inside a day, absolute
@@ -171,5 +184,140 @@ describe('signed', () => {
     expect(signed(-3)).toBe('−3')
     expect(signed(0)).toBe('±0')
     expect(signed(1234)).toBe('+1,234')
+  })
+})
+
+// The 2026-11-20 design review: figures that drifted between forms on one page.
+
+describe('GPU-hour prices', () => {
+  it('read at two decimals so a column lines up, with the printed value kept for the tooltip', () => {
+    // One column mixed $6.155, $14.3793 and $2.49.
+    expect(gpuHour(6.155)).toBe('$6.16')
+    expect(gpuHour(14.3793)).toBe('$14.38')
+    expect(gpuHour(2.49)).toBe('$2.49')
+    expect(gpuHour(3)).toBe('$3.00')
+    expect(gpuHour(null)).toBe('—')
+    expect(exactUsd(6.155)).toBe('$6.155')
+    expect(exactUsd(14.3793)).toBe('$14.3793')
+  })
+})
+
+describe('compactCount', () => {
+  it('scales a count to K or M instead of printing 0.03M or 0.00M', () => {
+    expect(compactCount(30_000)).toBe('30.0K')
+    expect(compactCount(1_240_000)).toBe('1.24M')
+    expect(compactCount(640)).toBe('640')
+    expect(compactCount(0)).toBe('0')
+    expect(compactCount(999_600)).toBe('1.00M')
+    expect(compactCount(-12_500)).toBe('−12.5K')
+  })
+})
+
+describe('grouped', () => {
+  it('prints a negative with U+2212, never the hyphen toLocaleString gives', () => {
+    expect(grouped(-1260)).toBe('−1,260')
+    expect(grouped(33_242)).toBe('33,242')
+    expect(grouped(-0.004, 2)).toBe('0.00')
+    expect(grouped(-4.25, 2)).toBe('−4.25')
+  })
+
+  it('reaches the prospectus statement in every unit', () => {
+    expect(statementValue(-1_260_000, 'shares')).toBe('−1,260')
+    expect(statementValue(-1_260_000_000, 'USD')).toBe('−1,260')
+    expect(statementValue(-0.42, 'USD/share')).toBe('−0.42')
+    expect(millions(-1_260_400_000)).toBe('−1,260.4')
+    expect(statementValue(null, 'USD')).toBe('—')
+    for (const v of [statementValue(-1_260_000, 'shares'), millions(-5e8)]) {
+      expect(v).not.toContain('-')
+    }
+  })
+})
+
+describe('thesis axis ticks', () => {
+  it('drop the reading’s fixed decimals on a round tick', () => {
+    expect(formatValue('ratio', 10)).toBe('10.00×')
+    expect(formatTick('ratio', 10)).toBe('10×')
+    expect(formatTick('ratio', 2.5)).toBe('2.5×')
+    expect(formatTick('ratio', 0.25)).toBe('0.25×')
+    expect(formatTick('share', 0.25)).toBe(formatValue('share', 0.25))
+  })
+})
+
+describe('dayStamp / datedStamp', () => {
+  it('reads a date printed alone in the reader’s date form, never moved by the zone', () => {
+    expect(dayStamp('2026-08-03', NOW)).toBe('Aug 3')
+    expect(dayStamp('2025-08-03', NOW)).toBe('Aug 3 2025')
+    const tokyo = { zone: 'Asia/Tokyo', hour12: false, iso: false, relative: true }
+    const nyIso = { zone: 'America/New_York', hour12: true, iso: true, relative: true }
+    expect(dayStamp('2026-08-03', NOW, tokyo)).toBe('Aug 3')
+    expect(dayStamp('2026-08-03', NOW, nyIso)).toBe('2026-08-03')
+    expect(dayStamp('soon', NOW)).toBe('soon')
+  })
+
+  it('always names the year on a printed stamp', () => {
+    expect(datedStamp('2026-08-25T23:08:00Z')).toBe('Aug 25 2026 23:08Z')
+    const nyIso = { zone: 'America/New_York', hour12: true, iso: true, relative: true }
+    expect(datedStamp('2026-11-20T15:30:00Z', nyIso)).toBe('2026-11-20 10:30 AM EST')
+  })
+})
+
+describe('splitInstants', () => {
+  it('lifts the instants out of a citation and keeps the rest byte-identical', () => {
+    const citation =
+      'Source: OpenRouter (openrouter.ai/rankings), as of 2026-09-09T12:00:03.352Z. Licensed under CC BY 4.0.'
+    const parts = splitInstants(citation)
+    expect(parts).toEqual([
+      { text: 'Source: OpenRouter (openrouter.ai/rankings), as of ' },
+      { iso: '2026-09-09T12:00:03.352Z' },
+      { text: '. Licensed under CC BY 4.0.' },
+    ])
+    expect(parts.map((p) => ('iso' in p ? p.iso : p.text)).join('')).toBe(citation)
+    expect(splitInstants('no stamp here')).toEqual([{ text: 'no stamp here' }])
+  })
+})
+
+describe('labels', () => {
+  it('reads a board’s enum department as a phrase and leaves typed labels alone', () => {
+    expect(boardLabel('SOFTWARE_ENGINEERING')).toBe('Software engineering')
+    expect(boardLabel('PROGRAM_MANAGEMENT, SOFTWARE_ENGINEERING')).toBe(
+      'Program management, Software engineering',
+    )
+    expect(boardLabel('Go To Market')).toBe('Go To Market')
+    expect(boardLabel('AI Research & Engineering')).toBe('AI Research & Engineering')
+    expect(boardLabel('IT')).toBe('IT')
+  })
+
+  it('reads a vendor’s tier key as words', () => {
+    expect(tierLabel('batch_long_context')).toBe('Batch, long context')
+    expect(tierLabel('long_context')).toBe('Long context')
+    expect(tierLabel('ultrafast_long_context')).toBe('Ultrafast, long context')
+    expect(tierLabel('off_peak')).toBe('Off-peak')
+    expect(tierLabel('input_256k_1m')).toBe('Input 256K–1M')
+    expect(tierLabel('input_32k_256k')).toBe('Input 32K–256K')
+    expect(tierLabel('batch')).toBe('Batch')
+  })
+
+  it('reads an EDGAR conformed name in the company’s case', () => {
+    expect(edgarName('NVIDIA CORP')).toBe('NVIDIA Corp')
+    expect(edgarName('MICROSOFT CORP')).toBe('Microsoft Corp')
+    expect(edgarName('AMAZON COM INC')).toBe('Amazon Com Inc')
+    expect(edgarName('SPACE EXPLORATION TECHNOLOGIES CORP')).toBe(
+      'Space Exploration Technologies Corp',
+    )
+    expect(edgarName('META PLATFORMS, INC.')).toBe('Meta Platforms, Inc.')
+    expect(edgarName('Anthropic, PBC')).toBe('Anthropic, PBC')
+  })
+
+  it('fixes the names inside a headline and nothing else', () => {
+    expect(readableEdgarNames('NVIDIA CORP files an 8-K with items "2.02 Results"')).toBe(
+      'NVIDIA Corp files an 8-K with items "2.02 Results"',
+    )
+    expect(readableEdgarNames('10-Q filed by MICROSOFT CORP (2026-10-28)')).toBe(
+      '10-Q filed by Microsoft Corp (2026-10-28)',
+    )
+    expect(readableEdgarNames('424B4 filed by Anthropic, PBC (2026-11-19)')).toBe(
+      '424B4 filed by Anthropic, PBC (2026-11-19)',
+    )
+    expect(readableEdgarNames('SEC EDGAR XBRL facts')).toBe('SEC EDGAR XBRL facts')
   })
 })
