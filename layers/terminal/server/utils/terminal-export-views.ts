@@ -2,7 +2,7 @@
 // (terminal-export.ts) is built from: column docs, the entity, parts and
 // exposure views, and static tables.
 
-import { and, asc, count, eq, lt, sql, type SQL } from 'drizzle-orm'
+import { and, asc, count, eq, lt, lte, sql, type SQL } from 'drizzle-orm'
 import type { SQLiteColumn, SQLiteTable } from 'drizzle-orm/sqlite-core'
 
 import * as tables from '#server/db/schema'
@@ -87,6 +87,16 @@ export function exportFilter(
 
 /** How an append-only table answers `as_of`: the rows written by `at`. */
 export type WrittenBy = (db: PipelineDb, at: string) => Promise<SQL | undefined>
+
+/** Rows whose own timestamp (the leading keyset column, so an index range) is at or before T. */
+export const byColumn =
+  (column: SQLiteColumn): WrittenBy =>
+  async (_db, at) =>
+    lte(column, at)
+
+// The two tables that gain a row per source per tick are counted from
+// source_stats; a count(*) over either reads every row ever written.
+export const loggedTotal = (column: SQLiteColumn) => sql<number>`coalesce(sum(${column}), 0)`
 
 /** A unique sort key: the columns a keyset page orders by and resumes after. */
 type Key = readonly [SQLiteColumn, ...SQLiteColumn[]]

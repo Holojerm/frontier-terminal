@@ -193,9 +193,11 @@ export function gpuRecipe(opts: {
   ext: 'html' | 'json'
   description: string
   rows: (body: string) => GpuRow[]
+  revision?: number
 }): Recipe {
   return {
     id: opts.id,
+    revision: opts.revision,
     company: opts.company,
     description: opts.description,
     url: () => opts.url,

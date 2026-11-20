@@ -38,6 +38,10 @@ export type MeasuredRule =
    * shorter, or the newest is past half the drop. Unresolved until every
    * one of those checkpoints has its full window of history behind it. */
   | { rule: 'sustained-drawdown'; drop: number; days: number; weeks: number }
+  /** For a reading that is a count of things gone wrong (filers that cut
+   * guidance): broken when the newest count is `kill` or more; weakening
+   * while it is above zero. Reads the newest reading only. */
+  | { rule: 'count-ceiling'; kill: number }
 
 /** How a reading's value prints. */
 export type ValueFormat =
@@ -100,6 +104,41 @@ export type SignalSpec =
       /** A sources.yaml department cluster's open roles, summed over every lab with a hiring feed. */
       signal: 'cluster-roles-across-labs'
       cluster: string
+      rule: MeasuredRule
+    }
+  /** The Compute thesis's capacity signals (layers/terminal/server/theses/capacity-signals.ts). */
+  | {
+      kind: 'measured'
+      /** The median, across providers that print both on one page, of `gpu`'s
+       * spot price over its on-demand price. A provider's spot price is the
+       * middle of the range its page prints. */
+      signal: 'gpu-spot-to-on-demand'
+      gpu: 'H100' | 'B200'
+      /** Fewer providers with a spot price than this and the reading cannot count. */
+      min_providers: number
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** How many of the filers whose earnings releases we read have cut the
+       * midpoint of their capex guidance for a fiscal year still running by
+       * `cut` or more, or filed capex `under` or more below the low end of
+       * what they guided for the year that last ended. */
+      signal: 'capex-guidance-shortfalls'
+      cut: number
+      under: number
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** The median, across probed labs, of peak-hours throughput over
+       * off-peak throughput: each lab's medians over the trailing `days`
+       * complete days of hourly probes. A lab needs `min_days` days with both
+       * medians to count, and the reading needs `min_labs` labs. */
+      signal: 'probe-peak-to-offpeak'
+      days: number
+      min_days: number
+      min_labs: number
       rule: MeasuredRule
     }
   | {
@@ -260,6 +299,50 @@ export interface ReadingPoint {
   note?: string
 }
 
+/** One period a company has not filed yet, as the press reports that name it give it. */
+export interface PressEarlyPeriod {
+  /** 'Q3 2026' */
+  label: string
+  start: string
+  end: string
+  reports: number
+  /** USD. */
+  median: number
+  low: number
+  high: number
+  /** The median against the same period a year earlier, where that one is filed. */
+  implied_growth: number | null
+  base: { label: string; value: number; filing_url: string } | null
+  /** The newest of the reports. */
+  latest: {
+    title: string
+    outlet: string
+    url: string
+    published_at: string
+    source_url: string
+    fetched_at: string
+  }
+}
+
+/**
+ * What the press says about revenue the company has not filed yet, shown
+ * beside a claim that reads filed revenue. Unconfirmed: it never enters a
+ * reading and never sets a status. Only a filing does.
+ */
+export interface PressEarlyRead {
+  /** Newest period first. Empty when no report names a period that isn't filed. */
+  periods: PressEarlyPeriod[]
+  /** Reports that match no filed figure and name no period, so they can't be tied to one. */
+  unplaced: number
+  /** How this company's press reports did against the filings that later settled them. */
+  record: {
+    periods: number
+    reports: number
+    median_abs_error_pct: number | null
+    median_lead_days: number | null
+  }
+}
+
 export interface ClaimView {
   id: string
   n: number
@@ -279,6 +362,8 @@ export interface ClaimView {
   series: ReadingPoint[]
   /** Judged claims: every verdict the rule reads, newest first. */
   verdicts: VerdictView[]
+  /** Claims on filed revenue only: the press's figures for periods not yet filed. */
+  early_read?: PressEarlyRead
 }
 
 export interface VerdictView {
