@@ -686,7 +686,7 @@ Checked for the guidance check on `/ground-truth`: does a filer's earnings relea
 
 ## Addendum, 2026-11-20: who powers the lab sites
 
-Checked to see which public companies the labs' sites point to. Epoch AI's site list (already read, CC BY 4.0) says who uses each data center and has an energy-company column that is blank for most sites. This pass fills it for the sites Epoch credits to a lab at #confident or #likely, by hand: one sentence per company, from one page, kept in `layers/terminal/server/curated/power-sites.json`. Nothing here is polled. `bun run power:verify` fetches each cited page and checks the sentence is still on it.
+Checked to see which public companies the labs' sites point to. Epoch AI's site list (already read, CC BY 4.0) says who uses each data center and has an energy-company column that is blank for most sites. This pass fills it for the sites Epoch credits to a lab at #confident or #likely, by hand: one sentence per company, from one page, kept in `layers/terminal/server/curated/power-sites.json`. Since 2026-11-20 those rows seed `power_site_ties` in D1: new SEC filings naming a site are found by EDGAR full-text search on the filings lane and read by the judge (`layers/terminal/server/power/`), and the weekly `power:verify` task re-reads each cited page off EDGAR and flags a sentence that is gone.
 
 **The rule.** A row needs a filing, a regulator's page or the company's own page that ties the company to the site or to the site's customer. Press coverage doesn't count. Research on 2026-11-19 found 80 candidate rows on 19 sites. 31 rows on 13 sites are kept, each found again on its page by a scripted fetch on 2026-11-20 (01:14Z).
 

@@ -1,10 +1,11 @@
 // Who supplies power to the data-center sites Epoch AI ties to a lab, and the
 // listed companies that puts beside each site (GET /api/power-sites, the
 // /compute page). The sites, their power and their users are Epoch's. The
-// companies are ours, read by hand from one public page each
-// (layers/terminal/server/curated/power-sites.json): a filing, a regulator's
-// page or the company's own, never press coverage. A link is kept only while
-// `bun run power:verify` still finds its quote on that page.
+// companies are ours, each read from one public page: a filing, a regulator's
+// page or the company's own, never press coverage. The first were read by hand
+// (layers/terminal/server/curated/power-sites.json); new SEC filings naming a
+// site are found and read as they are filed (layers/terminal/server/power/).
+// Every link is stored in D1 (power_site_ties) with its basis.
 
 import { z } from 'zod'
 
@@ -41,7 +42,7 @@ const curatedLink = z.object({
   published: z.iso.date().nullable(),
   /** The passage the link rests on, byte-identical to the page. */
   quote: z.string().min(20).max(400),
-  /** When power:verify last fetched the page and found the quote. */
+  /** When the page was last fetched and the quote found on it. */
   fetched_at: z.iso.datetime(),
 })
 
@@ -64,8 +65,13 @@ export const curatedPowerSites = z.object({
 })
 
 export type CuratedPowerSites = z.infer<typeof curatedPowerSites>
-export type PowerLink = z.infer<typeof curatedLink>
+export type CuratedPowerLink = z.infer<typeof curatedLink>
 export type PowerGrid = z.infer<typeof curatedGrid>
+
+/** hand: read by a person. judge: read by a model from a stored SEC filing, checked word for word by the Worker. */
+export type PowerBasis = 'hand' | 'judge'
+
+export type PowerLink = CuratedPowerLink & { basis: PowerBasis }
 
 export interface PowerSite {
   /** Epoch's name for the site. */
@@ -105,8 +111,29 @@ export interface PowerSitesData {
   /** Every lab site we have at least one sourced company for, largest first. */
   sites: PowerSite[]
   tickers: PowerTicker[]
-  /** Lab sites in Epoch's data we have read no power source for yet. */
-  uncovered: { name: string; labs: LabId[]; mw_now: number }[]
+  /** Lab sites in Epoch's data we have read no power source for yet, largest first. */
+  uncovered: PowerUncovered[]
+  /** What the table leaves out: each uncovered site by name, then what is never read. */
+  gaps: PowerSiteGap[]
   source: RecipeCitation | null
   caveat: string
+}
+
+export interface PowerUncovered {
+  name: string
+  labs: LabId[]
+  mw_now: number
+  mw_planned: number | null
+  planned_date: string | null
+  /** SEC documents naming the site that wait for the judge. */
+  pending: number
+}
+
+export interface PowerSiteGap {
+  /** `site:<Epoch's name>` for an uncovered site, else what is left out. */
+  id: string
+  /** Epoch's name for the site, on a site's gap. */
+  site: string | null
+  title: string
+  reason: string
 }

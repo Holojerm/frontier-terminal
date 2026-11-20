@@ -4,6 +4,7 @@ import { AlertRow, contentHash, parseAgentOutput, type AgentGateResult } from '.
 import type { ChangeRow } from '../contracts'
 import { JudgeClaimVerdict } from '../../theses/verdicts'
 import { JudgeFigureReading } from '../reported/review'
+import { JudgePowerSiteReading } from '../../power/review'
 import { JudgeSupplierReading } from '../../suppliers/review'
 import { JudgeTrackRecordVerdict } from '../track-record/review'
 import { JudgeClassMapping } from './class-map'
@@ -42,6 +43,8 @@ export const JudgeOutput = z.strictObject({
   prices: JudgePriceReading.array().max(400).default([]),
   /** Passages of a supplier's new SEC document, one entry per document in a SUPPLIER REVIEW block. */
   suppliers: JudgeSupplierReading.array().max(20).default([]),
+  /** Ties read from an SEC document naming a lab site, one entry per document in a POWER SITE REVIEW block. */
+  power_sites: JudgePowerSiteReading.array().max(20).default([]),
 })
 export type JudgeOutput = z.infer<typeof JudgeOutput>
 

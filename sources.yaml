@@ -2602,25 +2602,34 @@ filed_fact_sources:
 # rights: ours, as for every SEC filing here.
 #
 # The pages behind /api/power-sites and the "Who powers the lab sites" panel on
-# /compute (layers/terminal/server/curated/power-sites.json). Unlike every
-# section above, nothing here is polled: each row is one sentence a person
-# read on the page, shown as the row's basis the way the class map shows a
-# vendor's sentence, and `bun run power:verify` re-reads the page on demand.
+# /compute. The first rows were read by hand
+# (layers/terminal/server/curated/power-sites.json) and seed power_site_ties in
+# D1. From there, SEC filings are read as they are filed: the filings lane asks
+# EDGAR full-text search (efts.sec.gov, under the fair-access terms recorded
+# under sec-msft-openai) for new filings naming each of Epoch's lab sites, once
+# a site a day, fetches at most four documents a run, and the judge reads the
+# ties; the Worker checks each quote against the stored document
+# (layers/terminal/server/power/). A utility's, regulator's or company's own
+# page is still found and read by hand; power:verify re-reads each cited page
+# weekly and flags a quote that is gone. Each row is one sentence, shown as the
+# row's basis the way the class map shows a vendor's sentence.
 # Only a filing, a regulator's page or the company's own page is cited, never
 # press coverage. `rights` follows the header's rule. Terms and robots.txt
 # were read on 2026-11-20 (docs/source-audit.md). /api/coverage doesn't read
 # this section yet.
 power_site_sources:
   power-sec-filings:
-    publisher: SEC EDGAR filings (TeraWulf, Cipher Digital, WEC Energy Group, DTE Energy, SB Energy, Blue Owl Real Estate Net Lease Trust)
+    publisher: SEC EDGAR filings (TeraWulf, Cipher Digital, WEC Energy Group, DTE Energy, SB Energy, Blue Owl Real Estate Net Lease Trust, and any filer whose new filing names a lab site)
     url: https://www.sec.gov/Archives/edgar/data/
-    format: HTML, one sentence per row, read by hand
+    format: HTML, one sentence per row, read by hand and then by the judge from each new filing EDGAR full-text search finds
     verdict: include
     terms: >-
       SEC fair-access policy, as recorded under sec-msft-openai.
       www.sec.gov/robots.txt allows /Archives/edgar/data (read 2026-11-19).
       Taken: 18 sentences from eight filings, each the filer's statement about
-      its own site, lease or customer. Read 2026-11-20.
+      its own site, lease or customer. Read 2026-11-20. Since then, one
+      full-text search a site a day (efts.sec.gov) and at most four documents
+      a filings-lane run.
     rights: ours
   power-aep:
     publisher: American Electric Power
