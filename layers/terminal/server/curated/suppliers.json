@@ -1,0 +1,2883 @@
+{
+  "rows": [
+    {
+      "ticker": "AMD",
+      "company": "AMD",
+      "layer": "chips",
+      "relation": "customer",
+      "counterparty": "OpenAI",
+      "counterparty_ticker": null,
+      "counterparty_lab": "openai",
+      "figures": [
+        {
+          "value": 6,
+          "unit": "gw",
+          "meaning": "AMD data center GPUs OpenAI intends to deploy under October 2025 agreement"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-08-05",
+      "period": "quarter ended June 27, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000123/amd-20260627.htm",
+      "source_title": "AMD 10-Q, Q2 2026",
+      "quote": "In October 2025 and February 2026, we entered into multi-year agreements with OpenAI OpCo, LLC (OpenAI) and Meta Platforms, Inc. (Meta), respectively, under which each customer intends to deploy up to 6 gigawatts of AMD data center GPUs, with the first gigawatt of each deployment powered by our AMD Instinct MI450 series products.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:34.933Z"
+    },
+    {
+      "ticker": "AMD",
+      "company": "AMD",
+      "layer": "chips",
+      "relation": "customer",
+      "counterparty": "Meta",
+      "counterparty_ticker": "META",
+      "counterparty_lab": "meta",
+      "figures": [
+        {
+          "value": 6,
+          "unit": "gw",
+          "meaning": "AMD data center GPUs Meta intends to deploy under February 2026 agreement"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-08-05",
+      "period": "quarter ended June 27, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000123/amd-20260627.htm",
+      "source_title": "AMD 10-Q, Q2 2026",
+      "quote": "In October 2025 and February 2026, we entered into multi-year agreements with OpenAI OpCo, LLC (OpenAI) and Meta Platforms, Inc. (Meta), respectively, under which each customer intends to deploy up to 6 gigawatts of AMD data center GPUs, with the first gigawatt of each deployment powered by our AMD Instinct MI450 series products.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:34.933Z"
+    },
+    {
+      "ticker": "AMD",
+      "company": "AMD",
+      "layer": "chips",
+      "relation": "investor",
+      "counterparty": "OpenAI",
+      "counterparty_ticker": null,
+      "counterparty_lab": "openai",
+      "figures": [
+        {
+          "value": 160000000,
+          "unit": "shares",
+          "meaning": "AMD shares under the OpenAI warrant issued October 2025, vesting on purchases"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-08-05",
+      "period": "quarter ended June 27, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000123/amd-20260627.htm",
+      "source_title": "AMD 10-Q, Q2 2026",
+      "quote": "In October 2025 and February 2026, the Company issued warrants to OpenAI OpCo, LLC (OpenAI) and Meta Platforms, Inc. (Meta), each entitling the holder the right to purchase up to 160 million shares of the Company’s common stock at an exercise price of $0.01 per share",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:34.933Z"
+    },
+    {
+      "ticker": "AMD",
+      "company": "AMD",
+      "layer": "chips",
+      "relation": "investor",
+      "counterparty": "Meta",
+      "counterparty_ticker": "META",
+      "counterparty_lab": "meta",
+      "figures": [
+        {
+          "value": 160000000,
+          "unit": "shares",
+          "meaning": "AMD shares under the Meta warrant issued February 2026, vesting on purchases"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-08-05",
+      "period": "quarter ended June 27, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2488/000000248826000123/amd-20260627.htm",
+      "source_title": "AMD 10-Q, Q2 2026",
+      "quote": "In October 2025 and February 2026, the Company issued warrants to OpenAI OpCo, LLC (OpenAI) and Meta Platforms, Inc. (Meta), each entitling the holder the right to purchase up to 160 million shares of the Company’s common stock at an exercise price of $0.01 per share",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:34.933Z"
+    },
+    {
+      "ticker": "ARM",
+      "company": "Arm",
+      "layer": "chips",
+      "relation": "concentration",
+      "counterparty": "three customers",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 16,
+          "unit": "pct_revenue",
+          "meaning": "single largest customer, fiscal year ended March 31, 2026"
+        },
+        {
+          "value": 14,
+          "unit": "pct_revenue",
+          "meaning": "second largest customer, fiscal year ended March 31, 2026"
+        },
+        {
+          "value": 12,
+          "unit": "pct_revenue",
+          "meaning": "third largest customer, fiscal year ended March 31, 2026"
+        }
+      ],
+      "form": "20-F",
+      "filed": "2026-05-26",
+      "period": "fiscal year ended March 31, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1973239/000197323926000097/arm-20260331.htm",
+      "source_title": "Arm 20-F, fiscal 2026",
+      "quote": "For the fiscal year ended March 31, 2026, the Company had three customers that collectively represented 42% of total revenue, with the single largest customer accounting for 16% of total revenue, the second largest customer accounting for 14% of total revenue, and the third largest customer accounting for 12% of total revenue.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:35.370Z"
+    },
+    {
+      "ticker": "AVGO",
+      "company": "Broadcom",
+      "layer": "chips",
+      "relation": "customer",
+      "counterparty": "Anthropic",
+      "counterparty_ticker": null,
+      "counterparty_lab": "anthropic",
+      "figures": [
+        {
+          "value": 3.5,
+          "unit": "gw",
+          "meaning": "TPU-based compute Anthropic will access through Broadcom, beginning 2027"
+        }
+      ],
+      "form": "8-K",
+      "filed": "2026-04-06",
+      "period": null,
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1730168/000119312526144028/d87999d8k.htm",
+      "source_title": "Broadcom 8-K, Google and Anthropic agreements",
+      "quote": "Broadcom, Google and Anthropic PBC (“Anthropic”) have expanded their current strategic collaboration under which Anthropic, beginning in 2027, will access through Broadcom approximately 3.5 gigawatts as part of the multiple gigawatts of next generation TPU-based AI compute capacity committed by Anthropic.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:35.996Z"
+    },
+    {
+      "ticker": "AVGO",
+      "company": "Broadcom",
+      "layer": "chips",
+      "relation": "concentration",
+      "counterparty": "top five end customers",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 55,
+          "unit": "pct_revenue_combined",
+          "meaning": "top five end customers combined, quarter ended August 2, 2026"
+        },
+        {
+          "value": 50,
+          "unit": "pct_revenue_combined",
+          "meaning": "top five end customers combined, three quarters ended August 2, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-09-10",
+      "period": "quarter ended August 2, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1730168/000173016826000080/avgo-20260802.htm",
+      "source_title": "Broadcom 10-Q, Q3 fiscal 2026",
+      "quote": "We believe aggregate sales to our top five end customers, through all channels, accounted for approximately 55% and 50% of our net revenue for the fiscal quarter and three fiscal quarters ended August 2, 2026, respectively",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:36.356Z"
+    },
+    {
+      "ticker": "AVGO",
+      "company": "Broadcom",
+      "layer": "chips",
+      "relation": "concentration",
+      "counterparty": "our customer",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 35000000000,
+          "unit": "usd",
+          "meaning": "initial partner-funded tranche financing custom AI racks for one customer"
+        },
+        {
+          "value": 1,
+          "unit": "gw",
+          "meaning": "compute the tranche is to deploy, stated as more than"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-09-10",
+      "period": "quarter ended August 2, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1730168/000173016826000080/avgo-20260802.htm",
+      "source_title": "Broadcom 10-Q, Q3 fiscal 2026",
+      "quote": "In June 2026, we launched the AI XPV platform with an initial tranche of $35 billion led by a financial partner to facilitate the deployment of more than 1 gigawatt of compute infrastructure for our customer.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:36.356Z"
+    },
+    {
+      "ticker": "CBRS",
+      "company": "Cerebras",
+      "layer": "chips",
+      "relation": "customer",
+      "counterparty": "OpenAI",
+      "counterparty_ticker": null,
+      "counterparty_lab": "openai",
+      "figures": [
+        {
+          "value": 0.75,
+          "unit": "gw",
+          "meaning": "inference compute OpenAI is committed to purchase (750MW), December 2025 agreement"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-12",
+      "period": "quarter ended September 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2021728/000162828026073494/cbrs-20260930.htm",
+      "source_title": "Cerebras 10-Q, Q3 2026",
+      "quote": "In December 2025, the Company entered into a Master Relationship Agreement (the “MRA”) with OpenAI OpCo, LLC (“OpenAI”) to provide 750MW of AI inference compute capacity that OpenAI is contractually committed to purchase (the “Committed Capacity”) and related services over a multi-year term.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:36.809Z"
+    },
+    {
+      "ticker": "CBRS",
+      "company": "Cerebras",
+      "layer": "chips",
+      "relation": "investor",
+      "counterparty": "OpenAI",
+      "counterparty_ticker": null,
+      "counterparty_lab": "openai",
+      "figures": [
+        {
+          "value": 33445026,
+          "unit": "shares",
+          "meaning": "Cerebras Class N shares under the OpenAI warrant, vesting on milestones"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-12",
+      "period": "quarter ended September 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2021728/000162828026073494/cbrs-20260930.htm",
+      "source_title": "Cerebras 10-Q, Q3 2026",
+      "quote": "the Company issued to OpenAI a warrant to purchase an aggregate of up to 33,445,026 shares of the Company’s Class N common stock at an exercise price of $0.00001 per share (the “OpenAI Warrant”).",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:36.809Z"
+    },
+    {
+      "ticker": "CBRS",
+      "company": "Cerebras",
+      "layer": "chips",
+      "relation": "investor",
+      "counterparty": "Amazon",
+      "counterparty_ticker": "AMZN",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 2696678,
+          "unit": "shares",
+          "meaning": "Cerebras Class N shares under the AWS warrant issued June 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-12",
+      "period": "quarter ended September 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2021728/000162828026073494/cbrs-20260930.htm",
+      "source_title": "Cerebras 10-Q, Q3 2026",
+      "quote": "In June 2026, the Company issued to Amazon.com NV Investment Holdings LLC (the “AWS Warrantholder”) a warrant (the “AWS Warrant”) to acquire up to 2,696,678 shares of Class N common stock (the “AWS Warrant Shares”) at an exercise price of $100.00 per AWS Warrant Share.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:36.809Z"
+    },
+    {
+      "ticker": "CBRS",
+      "company": "Cerebras",
+      "layer": "chips",
+      "relation": "concentration",
+      "counterparty": "Customer A",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 38,
+          "unit": "pct_revenue",
+          "meaning": "Customer A, three months ended September 30, 2026"
+        },
+        {
+          "value": 45,
+          "unit": "pct_revenue",
+          "meaning": "Customer A, nine months ended September 30, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-12",
+      "period": "quarter ended September 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2021728/000162828026073494/cbrs-20260930.htm",
+      "source_title": "Cerebras 10-Q, Q3 2026",
+      "quote": "Three Months Ended September 30, Nine Months Ended September 30, 2026 2025 2026 2025 Customer A (1) 38% 70% 45% 56% Customer B 34% * 25% * Customer C (1) * 14% * 30%",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:36.809Z"
+    },
+    {
+      "ticker": "CBRS",
+      "company": "Cerebras",
+      "layer": "chips",
+      "relation": "concentration",
+      "counterparty": "Customer B",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 34,
+          "unit": "pct_revenue",
+          "meaning": "Customer B, three months ended September 30, 2026"
+        },
+        {
+          "value": 25,
+          "unit": "pct_revenue",
+          "meaning": "Customer B, nine months ended September 30, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-12",
+      "period": "quarter ended September 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2021728/000162828026073494/cbrs-20260930.htm",
+      "source_title": "Cerebras 10-Q, Q3 2026",
+      "quote": "Three Months Ended September 30, Nine Months Ended September 30, 2026 2025 2026 2025 Customer A (1) 38% 70% 45% 56% Customer B 34% * 25% * Customer C (1) * 14% * 30%",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:36.809Z"
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "layer": "chips",
+      "relation": "concentration",
+      "counterparty": "three largest customers",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 43,
+          "unit": "pct_revenue_combined",
+          "meaning": "three largest customers combined, fiscal 2025"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-01-23",
+      "period": "fiscal year ended December 27, 2025",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/50863/000005086326000011/intc-20251227.htm",
+      "source_title": "Intel 10-K, fiscal 2025",
+      "quote": "Collectively, our three largest customers accounted for 43% of our net revenue in 2025, 45% of our net revenue in 2024 and 40% of our net revenue in 2023.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:37.331Z"
+    },
+    {
+      "ticker": "MRVL",
+      "company": "Marvell",
+      "layer": "chips",
+      "relation": "investor",
+      "counterparty": "Amazon",
+      "counterparty_ticker": "AMZN",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 1045171,
+          "unit": "shares",
+          "meaning": "Marvell shares under the warrant issued to Amazon, December 2025"
+        }
+      ],
+      "form": "8-K",
+      "filed": "2025-12-02",
+      "period": null,
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1835632/000119312525305271/d81371d8k.htm",
+      "source_title": "Marvell 8-K, Amazon warrant with Celestial AI acquisition",
+      "quote": "the Company issued to Amazon a warrant (the “Warrant”) to acquire up to 1,045,171 shares (the “Warrant Shares”) of Company common stock (the “Common Stock”). The Warrant Shares vest based on Amazon’s purchases of photonic fabric products, indirectly or directly, through December 31, 2030.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:37.795Z"
+    },
+    {
+      "ticker": "MRVL",
+      "company": "Marvell",
+      "layer": "chips",
+      "relation": "investor",
+      "counterparty": "Google",
+      "counterparty_ticker": "GOOGL",
+      "counterparty_lab": "google",
+      "figures": [
+        {
+          "value": 58970907,
+          "unit": "shares",
+          "meaning": "Marvell shares under the warrant issued to Google, August 18, 2026"
+        }
+      ],
+      "form": "8-K",
+      "filed": "2026-08-19",
+      "period": null,
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1835632/000119312526356217/d412696d8k.htm",
+      "source_title": "Marvell 8-K, Google commercial agreement and warrant",
+      "quote": "on August 18, 2026, the Company issued to Google a warrant (the “Warrant”) to purchase up to an aggregate of 58,970,907 shares of common stock of the Company (the “Warrant Shares”) at an exercise price of $206.58 per share.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:38.200Z"
+    },
+    {
+      "ticker": "MRVL",
+      "company": "Marvell",
+      "layer": "chips",
+      "relation": "customer",
+      "counterparty": "Google",
+      "counterparty_ticker": "GOOGL",
+      "counterparty_lab": "google",
+      "figures": [
+        {
+          "value": 500000000,
+          "unit": "usd",
+          "meaning": "Google custom-product revenue that vests each of 240 warrant tranches"
+        }
+      ],
+      "form": "8-K",
+      "filed": "2026-08-19",
+      "period": null,
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1835632/000119312526356217/d412696d8k.htm",
+      "source_title": "Marvell 8-K, Google commercial agreement and warrant",
+      "quote": "The remaining Warrant Shares vest based on discretionary purchases from the Company’s third quarter of fiscal 2027 through the end of the Company’s fiscal year 2033 by or on behalf of Google and its affiliates in 240 equal tranches, with one tranche vesting for each $500 million in Custom Products revenue.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:38.200Z"
+    },
+    {
+      "ticker": "MRVL",
+      "company": "Marvell",
+      "layer": "chips",
+      "relation": "concentration",
+      "counterparty": "Customer A",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 16,
+          "unit": "pct_revenue",
+          "meaning": "direct Customer A, three months ended August 1, 2026"
+        },
+        {
+          "value": 16,
+          "unit": "pct_revenue",
+          "meaning": "direct Customer A, six months ended August 1, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-08-28",
+      "period": "quarter ended August 1, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1835632/000183563226000025/mrvl-20260801.htm",
+      "source_title": "Marvell 10-Q, Q2 fiscal 2027",
+      "quote": "Three Months Ended Six Months Ended August 1, 2026 August 2, 2025 August 1, 2026 August 2, 2025 Direct Customer: Customer A 16% 16% 16% 16% Distributor: Distributor A 44% 34% 45% 35%",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:38.549Z"
+    },
+    {
+      "ticker": "NVDA",
+      "company": "Nvidia",
+      "layer": "chips",
+      "relation": "investment",
+      "counterparty": "Anthropic",
+      "counterparty_ticker": null,
+      "counterparty_lab": "anthropic",
+      "figures": [
+        {
+          "value": 10000000000,
+          "unit": "usd",
+          "meaning": "maximum Nvidia agreed to invest in Anthropic, November 2025"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2025-11-19",
+      "period": "quarter ended October 26, 2025",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581025000230/nvda-20251026.htm",
+      "source_title": "Nvidia 10-Q, Q3 fiscal 2026",
+      "quote": "In November 2025, we entered into an agreement, subject to certain closing conditions, to invest up to $10 billion in Anthropic.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:39.200Z"
+    },
+    {
+      "ticker": "NVDA",
+      "company": "Nvidia",
+      "layer": "chips",
+      "relation": "guarantee",
+      "counterparty": "OpenAI",
+      "counterparty_ticker": null,
+      "counterparty_lab": "openai",
+      "figures": [
+        {
+          "value": 105000000000,
+          "unit": "usd",
+          "meaning": "cap on Nvidia lease guarantees for an OpenAI affiliate's data center campus"
+        },
+        {
+          "value": 4.25,
+          "unit": "gw",
+          "meaning": "IT load of the guaranteed leases at the PORTS campus, Ohio"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-08-26",
+      "period": "quarter ended July 26, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/nvda-20260726.htm",
+      "source_title": "Nvidia 10-Q, Q2 fiscal 2027",
+      "quote": "we entered into guarantees, capped at a total of $105 billion, to provide credit support on a land, power, and shell buildout with affiliates of SB Energy Corp. (SB Energy) on behalf of a customer, an affiliate of OpenAI Group PBC (OpenAI), related to leases for approximately 4.25 gigawatts of IT load",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:39.668Z"
+    },
+    {
+      "ticker": "NVDA",
+      "company": "Nvidia",
+      "layer": "chips",
+      "relation": "concentration",
+      "counterparty": "three direct customers",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 16,
+          "unit": "pct_revenue",
+          "meaning": "largest direct customer, first half of fiscal 2027"
+        },
+        {
+          "value": 15,
+          "unit": "pct_revenue",
+          "meaning": "second direct customer, first half of fiscal 2027"
+        },
+        {
+          "value": 13,
+          "unit": "pct_revenue",
+          "meaning": "third direct customer, first half of fiscal 2027"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-08-26",
+      "period": "six months ended July 26, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/nvda-20260726.htm",
+      "source_title": "Nvidia 10-Q, Q2 fiscal 2027",
+      "quote": "For the first half of fiscal year 2027, three direct customers represented 16%, 15%, and 13% of total revenue, all of which was primarily attributable to the Compute & Networking segment.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:39.668Z"
+    },
+    {
+      "ticker": "NVDA",
+      "company": "Nvidia",
+      "layer": "chips",
+      "relation": "concentration",
+      "counterparty": "one direct customer",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 16,
+          "unit": "pct_revenue",
+          "meaning": "only direct customer above 10%, second quarter of fiscal 2027"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-08-26",
+      "period": "quarter ended July 26, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1045810/000104581026000075/nvda-20260726.htm",
+      "source_title": "Nvidia 10-Q, Q2 fiscal 2027",
+      "quote": "For the second quarter of fiscal year 2027, one direct customer represented 16% of total revenue, which was primarily attributable to the Compute & Networking segment.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:39.668Z"
+    },
+    {
+      "ticker": "QCOM",
+      "company": "Qualcomm",
+      "layer": "chips",
+      "relation": "customer",
+      "counterparty": "Amazon",
+      "counterparty_ticker": "AMZN",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 60000000000,
+          "unit": "usd",
+          "meaning": "maximum Amazon payments for server chips that vest the warrant"
+        }
+      ],
+      "form": "8-K",
+      "filed": "2026-09-08",
+      "period": null,
+      "source_url": "https://www.sec.gov/Archives/edgar/data/804328/000110465926105718/tm2623289d1_8k.htm",
+      "source_title": "Qualcomm 8-K, warrant issued to Amazon",
+      "quote": "The Warrant Shares vest in tranches tied to the execution of certain commercial arrangements, the placement of binding purchase orders and actual purchases of QTI’s server chip products, technology, systems and manufacturing services by Amazon during the term of the Warrant, up to a maximum amount of $60 billion in payments",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:40.570Z"
+    },
+    {
+      "ticker": "QCOM",
+      "company": "Qualcomm",
+      "layer": "chips",
+      "relation": "investor",
+      "counterparty": "Amazon",
+      "counterparty_ticker": "AMZN",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 25000000,
+          "unit": "shares",
+          "meaning": "Qualcomm shares under the warrant issued to an Amazon affiliate, September 2026"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-11-04",
+      "period": "fiscal year ended September 27, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/804328/000080432826000128/qcom-20260927.htm",
+      "source_title": "Qualcomm 10-K, fiscal 2026",
+      "quote": "In September 2026, we issued a warrant to an affiliate of Amazon Data Services, Inc. to acquire up to an aggregate of 25 million shares (Warrant Shares) of our common stock at an exercise price of $161.26 per share.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:41.246Z"
+    },
+    {
+      "ticker": "QCOM",
+      "company": "Qualcomm",
+      "layer": "chips",
+      "relation": "concentration",
+      "counterparty": "Customer/licensee (x)",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 22,
+          "unit": "pct_revenue",
+          "meaning": "Customer/licensee (x), fiscal 2026"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-11-04",
+      "period": "fiscal year ended September 27, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/804328/000080432826000128/qcom-20260927.htm",
+      "source_title": "Qualcomm 10-K, fiscal 2026",
+      "quote": "Revenues from each customer/licensee that were 10% or greater of total revenues were as follows: 2026 2025 2024 Customer/licensee (x) 22% 21% 22% Customer/licensee (y) 20 20 19 Customer/licensee (z) * 13 12 * Less than 10%",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:41.246Z"
+    },
+    {
+      "ticker": "QCOM",
+      "company": "Qualcomm",
+      "layer": "chips",
+      "relation": "concentration",
+      "counterparty": "Customer/licensee (y)",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 20,
+          "unit": "pct_revenue",
+          "meaning": "Customer/licensee (y), fiscal 2026"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-11-04",
+      "period": "fiscal year ended September 27, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/804328/000080432826000128/qcom-20260927.htm",
+      "source_title": "Qualcomm 10-K, fiscal 2026",
+      "quote": "Revenues from each customer/licensee that were 10% or greater of total revenues were as follows: 2026 2025 2024 Customer/licensee (x) 22% 21% 22% Customer/licensee (y) 20 20 19 Customer/licensee (z) * 13 12 * Less than 10%",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:41.246Z"
+    },
+    {
+      "ticker": "TSM",
+      "company": "TSMC",
+      "layer": "foundry",
+      "relation": "investment",
+      "counterparty": "Anthropic",
+      "counterparty_ticker": null,
+      "counterparty_lab": "anthropic",
+      "figures": [
+        {
+          "value": 500000000,
+          "unit": "usd",
+          "meaning": "board-approved ceiling for buying Anthropic common shares at its IPO price"
+        }
+      ],
+      "form": "6-K",
+      "filed": "2026-11-10",
+      "period": null,
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617926000797/tsm-boardx202611xx.htm",
+      "source_title": "TSMC 6-K, board resolutions November 2026",
+      "quote": "Approved the investments in (1) Anthropic, PBC at its per share initial public offering price in an amount not to exceed US$500 million to acquire Anthropic’s common shares; and (2) OpenAI Group PBC in an amount not to exceed US$500 million to acquire OpenAI’s preferred stock.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:42.153Z"
+    },
+    {
+      "ticker": "TSM",
+      "company": "TSMC",
+      "layer": "foundry",
+      "relation": "investment",
+      "counterparty": "OpenAI",
+      "counterparty_ticker": null,
+      "counterparty_lab": "openai",
+      "figures": [
+        {
+          "value": 500000000,
+          "unit": "usd",
+          "meaning": "board-approved ceiling for buying OpenAI preferred stock"
+        }
+      ],
+      "form": "6-K",
+      "filed": "2026-11-10",
+      "period": null,
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1046179/000104617926000797/tsm-boardx202611xx.htm",
+      "source_title": "TSMC 6-K, board resolutions November 2026",
+      "quote": "Approved the investments in (1) Anthropic, PBC at its per share initial public offering price in an amount not to exceed US$500 million to acquire Anthropic’s common shares; and (2) OpenAI Group PBC in an amount not to exceed US$500 million to acquire OpenAI’s preferred stock.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:42.153Z"
+    },
+    {
+      "ticker": "TSM",
+      "company": "TSMC",
+      "layer": "foundry",
+      "relation": "concentration",
+      "counterparty": "Our largest customer",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 19,
+          "unit": "pct_revenue",
+          "meaning": "largest customer, 2025"
+        }
+      ],
+      "form": "20-F",
+      "filed": "2026-04-16",
+      "period": "fiscal year ended December 31, 2025",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1046179/000162828026025362/tsm-20251231.htm",
+      "source_title": "TSMC 20-F, fiscal 2025",
+      "quote": "Our largest customer in 2023, 2024 and 2025 accounted for 25%, 22% and 19% of our net revenue in the respective year.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:42.560Z"
+    },
+    {
+      "ticker": "TSM",
+      "company": "TSMC",
+      "layer": "foundry",
+      "relation": "concentration",
+      "counterparty": "Our second largest customer",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 17,
+          "unit": "pct_revenue",
+          "meaning": "second largest customer, 2025"
+        }
+      ],
+      "form": "20-F",
+      "filed": "2026-04-16",
+      "period": "fiscal year ended December 31, 2025",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1046179/000162828026025362/tsm-20251231.htm",
+      "source_title": "TSMC 20-F, fiscal 2025",
+      "quote": "Our second largest customer in 2023, 2024 and 2025 accounted for 11%, 12%, and 17% of our net revenue in the respective year.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:42.560Z"
+    },
+    {
+      "ticker": "TSM",
+      "company": "TSMC",
+      "layer": "foundry",
+      "relation": "concentration",
+      "counterparty": "ten largest customers",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 78,
+          "unit": "pct_revenue_combined",
+          "meaning": "ten largest customers combined, 2025"
+        }
+      ],
+      "form": "20-F",
+      "filed": "2026-04-16",
+      "period": "fiscal year ended December 31, 2025",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1046179/000162828026025362/tsm-20251231.htm",
+      "source_title": "TSMC 20-F, fiscal 2025",
+      "quote": "our ten largest customers in 2023, 2024 and 2025 accounted for approximately, 70%, 76% and 78% of our net revenue in the respective year.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:42.560Z"
+    },
+    {
+      "ticker": "ALAB",
+      "company": "Astera Labs",
+      "layer": "networking",
+      "relation": "investor",
+      "counterparty": "Amazon",
+      "counterparty_ticker": "AMZN",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 3262299,
+          "unit": "shares",
+          "meaning": "common shares under the warrant agreed February 5, 2026"
+        }
+      ],
+      "form": "8-K",
+      "filed": "2026-02-10",
+      "period": null,
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1736297/000110465926012606/tm265461d1_8k.htm",
+      "source_title": "Astera Labs 8-K, Amazon transaction and warrant agreement",
+      "quote": "the Company entered into a Warrant Agreement with Amazon.com NV Investment Holdings LLC (“Warrantholder”), to acquire up to an aggregate of 3,262,299 shares of common stock, par value $0.0001 per share (the “Common Stock”), of the Company (the “Warrant Shares”) at an exercise price of $142.82 per share (the “Warrant”).",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:43.241Z"
+    },
+    {
+      "ticker": "ALAB",
+      "company": "Astera Labs",
+      "layer": "networking",
+      "relation": "customer",
+      "counterparty": "Amazon",
+      "counterparty_ticker": "AMZN",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 6500000000,
+          "unit": "usd",
+          "meaning": "purchases by Amazon (the Parent) that vest the 2026 warrant in full"
+        }
+      ],
+      "form": "8-K",
+      "filed": "2026-02-10",
+      "period": null,
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1736297/000110465926012606/tm265461d1_8k.htm",
+      "source_title": "Astera Labs 8-K, Amazon transaction and warrant agreement",
+      "quote": "Warrant Shares vest upon the achievement of performance conditions, comprised of specified tranches of payments (as specified in the Warrant) by or on behalf of the Parent and its affiliates, for the purchase up to a total of $6.5 billion, of our smart fabric switch products, signal conditioning products and optical engine products.",
+      "alias": {
+        "term": "Parent",
+        "quote": "On February 5, 2026, Astera Labs, Inc. (the “Company”) and Amazon.com, Inc. (“Parent”) entered into a Transaction Agreement"
+      },
+      "fetched_at": "2026-11-20T02:08:43.241Z"
+    },
+    {
+      "ticker": "ALAB",
+      "company": "Astera Labs",
+      "layer": "networking",
+      "relation": "concentration",
+      "counterparty": "Customer A",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 53,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, quarter ended September 30, 2026"
+        },
+        {
+          "value": 40,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, nine months ended September 30, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-04",
+      "period": "quarter ended September 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1736297/000173629726000045/alab-20260930.htm",
+      "source_title": "Astera Labs 10-Q for the quarter ended September 30, 2026",
+      "quote": "Three Months Ended September 30, Nine Months Ended September 30, 2026 2025 2026 2025 Customer A 53% 23% 40% 21% Customer B 14% 24% 18% 14% Customer C 10% 10% 14% 15% Customer D * 27% 11% 25% Customer E * * * 10%",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:43.611Z"
+    },
+    {
+      "ticker": "ALAB",
+      "company": "Astera Labs",
+      "layer": "networking",
+      "relation": "concentration",
+      "counterparty": "Customer B",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 14,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, quarter ended September 30, 2026"
+        },
+        {
+          "value": 18,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, nine months ended September 30, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-04",
+      "period": "quarter ended September 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1736297/000173629726000045/alab-20260930.htm",
+      "source_title": "Astera Labs 10-Q for the quarter ended September 30, 2026",
+      "quote": "Three Months Ended September 30, Nine Months Ended September 30, 2026 2025 2026 2025 Customer A 53% 23% 40% 21% Customer B 14% 24% 18% 14% Customer C 10% 10% 14% 15% Customer D * 27% 11% 25% Customer E * * * 10%",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:43.611Z"
+    },
+    {
+      "ticker": "ALAB",
+      "company": "Astera Labs",
+      "layer": "networking",
+      "relation": "concentration",
+      "counterparty": "Customer C",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 10,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, quarter ended September 30, 2026"
+        },
+        {
+          "value": 14,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, nine months ended September 30, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-04",
+      "period": "quarter ended September 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1736297/000173629726000045/alab-20260930.htm",
+      "source_title": "Astera Labs 10-Q for the quarter ended September 30, 2026",
+      "quote": "Three Months Ended September 30, Nine Months Ended September 30, 2026 2025 2026 2025 Customer A 53% 23% 40% 21% Customer B 14% 24% 18% 14% Customer C 10% 10% 14% 15% Customer D * 27% 11% 25% Customer E * * * 10%",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:43.611Z"
+    },
+    {
+      "ticker": "ALAB",
+      "company": "Astera Labs",
+      "layer": "networking",
+      "relation": "concentration",
+      "counterparty": "Customer D",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 11,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, nine months ended September 30, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-04",
+      "period": "quarter ended September 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1736297/000173629726000045/alab-20260930.htm",
+      "source_title": "Astera Labs 10-Q for the quarter ended September 30, 2026",
+      "quote": "Three Months Ended September 30, Nine Months Ended September 30, 2026 2025 2026 2025 Customer A 53% 23% 40% 21% Customer B 14% 24% 18% 14% Customer C 10% 10% 14% 15% Customer D * 27% 11% 25% Customer E * * * 10%",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:43.611Z"
+    },
+    {
+      "ticker": "ANET",
+      "company": "Arista Networks",
+      "layer": "networking",
+      "relation": "concentration",
+      "counterparty": "one end customer",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 16,
+          "unit": "pct_revenue",
+          "meaning": "share of total revenue, fiscal 2025"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-02-17",
+      "period": "fiscal year ended December 31, 2025",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1596532/000159653226000013/anet-20251231.htm",
+      "source_title": "Arista Networks 10-K for fiscal 2025",
+      "quote": "Sales to one end customer represented 16%, 15% and 21% of our total revenue, and sales to the other end customer represented 26%, 20% and 18% of our total revenue for the years ended December 31, 2025, 2024 and 2023, respectively.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:44.032Z"
+    },
+    {
+      "ticker": "ANET",
+      "company": "Arista Networks",
+      "layer": "networking",
+      "relation": "concentration",
+      "counterparty": "the other end customer",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 26,
+          "unit": "pct_revenue",
+          "meaning": "share of total revenue, fiscal 2025"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-02-17",
+      "period": "fiscal year ended December 31, 2025",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1596532/000159653226000013/anet-20251231.htm",
+      "source_title": "Arista Networks 10-K for fiscal 2025",
+      "quote": "Sales to one end customer represented 16%, 15% and 21% of our total revenue, and sales to the other end customer represented 26%, 20% and 18% of our total revenue for the years ended December 31, 2025, 2024 and 2023, respectively.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:44.032Z"
+    },
+    {
+      "ticker": "CRDO",
+      "company": "Credo",
+      "layer": "networking",
+      "relation": "investor",
+      "counterparty": "Amazon",
+      "counterparty_ticker": "AMZN",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 4100000,
+          "unit": "shares",
+          "meaning": "ordinary shares under the warrant issued in fiscal 2022, all exercised"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-06-15",
+      "period": "fiscal year ended May 2, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1807794/000162828026043303/crdo-20260502.htm",
+      "source_title": "Credo 10-K for fiscal 2026",
+      "quote": "During fiscal year 2022, the Company issued a warrant to Amazon.com NV Investment Holdings LLC (Holder) to purchase an aggregate of up to 4.1 million of our ordinary shares at an exercise price of $10.74 per share (the Customer Warrant).",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:44.478Z"
+    },
+    {
+      "ticker": "CRDO",
+      "company": "Credo",
+      "layer": "networking",
+      "relation": "concentration",
+      "counterparty": "Customer A",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 43,
+          "unit": "pct_revenue",
+          "meaning": "share of total revenue, quarter ended August 1, 2026"
+        },
+        {
+          "value": 57,
+          "unit": "pct_receivables",
+          "meaning": "share of accounts receivable at August 1, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-09-02",
+      "period": "quarter ended August 1, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1807794/000162828026060111/crdo-20260801.htm",
+      "source_title": "Credo 10-Q for the quarter ended August 1, 2026",
+      "quote": "Accounts Receivable August 1, 2026 May 2, 2026 Customer A 57% 53% Customer B 28% 20% Customer C * 19% Three Months Ended Revenue August 1, 2026 August 2, 2025 Customer A 43% 50% Customer B 28% 35%",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:44.864Z"
+    },
+    {
+      "ticker": "CRDO",
+      "company": "Credo",
+      "layer": "networking",
+      "relation": "concentration",
+      "counterparty": "Customer B",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 28,
+          "unit": "pct_revenue",
+          "meaning": "share of total revenue, quarter ended August 1, 2026"
+        },
+        {
+          "value": 28,
+          "unit": "pct_receivables",
+          "meaning": "share of accounts receivable at August 1, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-09-02",
+      "period": "quarter ended August 1, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1807794/000162828026060111/crdo-20260801.htm",
+      "source_title": "Credo 10-Q for the quarter ended August 1, 2026",
+      "quote": "Accounts Receivable August 1, 2026 May 2, 2026 Customer A 57% 53% Customer B 28% 20% Customer C * 19% Three Months Ended Revenue August 1, 2026 August 2, 2025 Customer A 43% 50% Customer B 28% 35%",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:44.864Z"
+    },
+    {
+      "ticker": "CRDO",
+      "company": "Credo",
+      "layer": "networking",
+      "relation": "concentration",
+      "counterparty": "Customer C",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 28,
+          "unit": "pct_revenue",
+          "meaning": "end-customer share of revenue, quarter ended August 1, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-09-02",
+      "period": "quarter ended August 1, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1807794/000162828026060111/crdo-20260801.htm",
+      "source_title": "Credo 10-Q for the quarter ended August 1, 2026",
+      "quote": "Three Months Ended Revenue August 1, 2026 August 2, 2025 Customer C 28% 35% Customer D 33% 33% Customer E 13% 20% Customer F 10% *",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:44.864Z"
+    },
+    {
+      "ticker": "CRDO",
+      "company": "Credo",
+      "layer": "networking",
+      "relation": "concentration",
+      "counterparty": "Customer D",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 33,
+          "unit": "pct_revenue",
+          "meaning": "end-customer share of revenue, quarter ended August 1, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-09-02",
+      "period": "quarter ended August 1, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1807794/000162828026060111/crdo-20260801.htm",
+      "source_title": "Credo 10-Q for the quarter ended August 1, 2026",
+      "quote": "Three Months Ended Revenue August 1, 2026 August 2, 2025 Customer C 28% 35% Customer D 33% 33% Customer E 13% 20% Customer F 10% *",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:44.864Z"
+    },
+    {
+      "ticker": "CRDO",
+      "company": "Credo",
+      "layer": "networking",
+      "relation": "concentration",
+      "counterparty": "Customer E",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 13,
+          "unit": "pct_revenue",
+          "meaning": "end-customer share of revenue, quarter ended August 1, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-09-02",
+      "period": "quarter ended August 1, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1807794/000162828026060111/crdo-20260801.htm",
+      "source_title": "Credo 10-Q for the quarter ended August 1, 2026",
+      "quote": "Three Months Ended Revenue August 1, 2026 August 2, 2025 Customer C 28% 35% Customer D 33% 33% Customer E 13% 20% Customer F 10% *",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:44.864Z"
+    },
+    {
+      "ticker": "CRDO",
+      "company": "Credo",
+      "layer": "networking",
+      "relation": "concentration",
+      "counterparty": "Customer F",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 10,
+          "unit": "pct_revenue",
+          "meaning": "end-customer share of revenue, quarter ended August 1, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-09-02",
+      "period": "quarter ended August 1, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1807794/000162828026060111/crdo-20260801.htm",
+      "source_title": "Credo 10-Q for the quarter ended August 1, 2026",
+      "quote": "Three Months Ended Revenue August 1, 2026 August 2, 2025 Customer C 28% 35% Customer D 33% 33% Customer E 13% 20% Customer F 10% *",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:44.864Z"
+    },
+    {
+      "ticker": "AAOI",
+      "company": "Applied Optoelectronics",
+      "layer": "optics",
+      "relation": "customer",
+      "counterparty": "Microsoft",
+      "counterparty_ticker": "MSFT",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 28.8,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, 2025"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-02-26",
+      "period": "fiscal year ended December 31, 2025",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1158114/000143774926005875/aaoi20251231_10k.htm",
+      "source_title": "Applied Optoelectronics 10-K for fiscal 2025",
+      "quote": "In 2025, 2024 and 2023, Microsoft accounted for 28.8%, 43.7% and 46.6% of our revenue, respectively, and in 2024, Oracle accounted for 12.4% of our revenue.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:45.221Z"
+    },
+    {
+      "ticker": "AAOI",
+      "company": "Applied Optoelectronics",
+      "layer": "optics",
+      "relation": "customer",
+      "counterparty": "Microsoft",
+      "counterparty_ticker": "MSFT",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 13.9,
+          "unit": "pct_receivables",
+          "meaning": "share of total accounts receivable at December 31, 2025"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-02-26",
+      "period": "fiscal year ended December 31, 2025",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1158114/000143774926005875/aaoi20251231_10k.htm",
+      "source_title": "Applied Optoelectronics 10-K for fiscal 2025",
+      "quote": "As of December 31, 2025, Digicomm represented 71.6% of total accounts receivable and Microsoft represented 13.9% of total accounts receivable.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:45.221Z"
+    },
+    {
+      "ticker": "AAOI",
+      "company": "Applied Optoelectronics",
+      "layer": "optics",
+      "relation": "investor",
+      "counterparty": "Amazon",
+      "counterparty_ticker": "AMZN",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 7945399,
+          "unit": "shares",
+          "meaning": "common shares under the customer warrant issued March 13, 2025"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-05",
+      "period": "quarter ended September 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1158114/000143774926035282/aaoi20260930_10q.htm",
+      "source_title": "Applied Optoelectronics 10-Q for the quarter ended September 30, 2026",
+      "quote": "On March 13, 2025, the Company issued a warrant (the \"Customer Warrant\") to a wholly-owned subsidiary of Amazon.com, Inc. to purchase up to an aggregate of 7,945,399 shares of the Company's common stock (\"Warrant Shares\") at an exercise price of $23.6956 per share.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:45.631Z"
+    },
+    {
+      "ticker": "AAOI",
+      "company": "Applied Optoelectronics",
+      "layer": "optics",
+      "relation": "customer",
+      "counterparty": "Amazon",
+      "counterparty_ticker": "AMZN",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 4000000000,
+          "unit": "usd",
+          "meaning": "aggregate product purchases over 10 years that vest the warrant"
+        },
+        {
+          "value": 6621166,
+          "unit": "shares",
+          "meaning": "warrant shares that vest with those purchases"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-05",
+      "period": "quarter ended September 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1158114/000143774926035282/aaoi20260930_10q.htm",
+      "source_title": "Applied Optoelectronics 10-Q for the quarter ended September 30, 2026",
+      "quote": "The remaining 6,621,166 Warrant Shares may vest over the next 10 years, dependent on aggregate purchases by or on behalf of Amazon and its affiliates of $4 billion of the Company's products over this time period.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:45.631Z"
+    },
+    {
+      "ticker": "AAOI",
+      "company": "Applied Optoelectronics",
+      "layer": "optics",
+      "relation": "concentration",
+      "counterparty": "top three customers",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 41,
+          "unit": "pct_revenue",
+          "meaning": "largest customer share of revenue, quarter ended September 30, 2026"
+        },
+        {
+          "value": 28,
+          "unit": "pct_revenue",
+          "meaning": "second customer share of revenue, quarter ended September 30, 2026"
+        },
+        {
+          "value": 23,
+          "unit": "pct_revenue",
+          "meaning": "third customer share of revenue, quarter ended September 30, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-05",
+      "period": "quarter ended September 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1158114/000143774926035282/aaoi20260930_10q.htm",
+      "source_title": "Applied Optoelectronics 10-Q for the quarter ended September 30, 2026",
+      "quote": "For the three months ended September 30, 2026, our top three customers represented 41%, 28% and 23% of our revenue, respectively.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:45.631Z"
+    },
+    {
+      "ticker": "CIEN",
+      "company": "Ciena",
+      "layer": "optics",
+      "relation": "concentration",
+      "counterparty": "one cloud provider",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 851600000,
+          "unit": "usd",
+          "meaning": "sales to the cloud provider, fiscal 2025"
+        },
+        {
+          "value": 17.9,
+          "unit": "pct_revenue",
+          "meaning": "share of total revenue, fiscal 2025"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2025-12-12",
+      "period": "fiscal year ended November 1, 2025",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/936395/000162828025056698/cien-20251101.htm",
+      "source_title": "Ciena 10-K for fiscal 2025",
+      "quote": "Sales to one cloud provider were $851.6 million, or 17.9% of total revenue in fiscal 2025 and $532.3 million or 13.3% of total revenue in fiscal 2024.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:46.071Z"
+    },
+    {
+      "ticker": "CIEN",
+      "company": "Ciena",
+      "layer": "optics",
+      "relation": "concentration",
+      "counterparty": "Cloud provider A",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 476570000,
+          "unit": "usd",
+          "meaning": "revenue from this customer, quarter ended August 1, 2026"
+        },
+        {
+          "value": 1128775000,
+          "unit": "usd",
+          "meaning": "revenue from this customer, nine months ended August 1, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-09-03",
+      "period": "quarter ended August 1, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/936395/000162828026060361/cien-20260801.htm",
+      "source_title": "Ciena 10-Q for the quarter ended August 1, 2026",
+      "quote": "(in thousands): Quarter Ended Nine Months Ended August 1, August 2, August 1, August 2, 2026 2025 2026 2025 Cloud provider A $476,570 $217,954 $1,128,775 $538,195 Cloud provider B 219,644 n/a* 592,137 n/a*",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:46.475Z"
+    },
+    {
+      "ticker": "CIEN",
+      "company": "Ciena",
+      "layer": "optics",
+      "relation": "concentration",
+      "counterparty": "Cloud provider B",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 219644000,
+          "unit": "usd",
+          "meaning": "revenue from this customer, quarter ended August 1, 2026"
+        },
+        {
+          "value": 592137000,
+          "unit": "usd",
+          "meaning": "revenue from this customer, nine months ended August 1, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-09-03",
+      "period": "quarter ended August 1, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/936395/000162828026060361/cien-20260801.htm",
+      "source_title": "Ciena 10-Q for the quarter ended August 1, 2026",
+      "quote": "(in thousands): Quarter Ended Nine Months Ended August 1, August 2, August 1, August 2, 2026 2025 2026 2025 Cloud provider A $476,570 $217,954 $1,128,775 $538,195 Cloud provider B 219,644 n/a* 592,137 n/a*",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:46.475Z"
+    },
+    {
+      "ticker": "COHR",
+      "company": "Coherent",
+      "layer": "optics",
+      "relation": "investor",
+      "counterparty": "Nvidia",
+      "counterparty_ticker": "NVDA",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 7788161,
+          "unit": "shares",
+          "meaning": "common shares sold to Nvidia on March 2, 2026"
+        },
+        {
+          "value": 2000000000,
+          "unit": "usd",
+          "meaning": "aggregate gross proceeds of that private placement"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-04",
+      "period": "quarter ended September 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/820318/000082031826000023/iivi-20260930.htm",
+      "source_title": "Coherent 10-Q for the quarter ended September 30, 2026",
+      "quote": "On March 2, 2026, the Company entered into a Securities Purchase Agreement (the “Purchase Agreement”) with NVIDIA Corporation (“NVIDIA”), pursuant to which the Company issued and sold 7,788,161 shares of Common Stock at a price of $256.80 per share, for aggregate gross proceeds of $2 billion.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:46.898Z"
+    },
+    {
+      "ticker": "COHR",
+      "company": "Coherent",
+      "layer": "optics",
+      "relation": "concentration",
+      "counterparty": "One major customer",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 20,
+          "unit": "pct_revenue",
+          "meaning": "share of consolidated revenue, fiscal 2026"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-08-14",
+      "period": "fiscal year ended June 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/820318/000082031826000020/iivi-20260630.htm",
+      "source_title": "Coherent 10-K for fiscal 2026",
+      "quote": "One major customer accounted for 20%, 10%, and 10% of consolidated revenue during fiscal 2026, 2025 and 2024, respectively. A second major customer accounted for 12% of consolidated revenue during fiscal 2026.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:47.270Z"
+    },
+    {
+      "ticker": "COHR",
+      "company": "Coherent",
+      "layer": "optics",
+      "relation": "concentration",
+      "counterparty": "A second major customer",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 12,
+          "unit": "pct_revenue",
+          "meaning": "share of consolidated revenue, fiscal 2026"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-08-14",
+      "period": "fiscal year ended June 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/820318/000082031826000020/iivi-20260630.htm",
+      "source_title": "Coherent 10-K for fiscal 2026",
+      "quote": "One major customer accounted for 20%, 10%, and 10% of consolidated revenue during fiscal 2026, 2025 and 2024, respectively. A second major customer accounted for 12% of consolidated revenue during fiscal 2026.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:47.270Z"
+    },
+    {
+      "ticker": "FN",
+      "company": "Fabrinet",
+      "layer": "optics",
+      "relation": "customer",
+      "counterparty": "Nvidia",
+      "counterparty_ticker": "NVDA",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 16.3,
+          "unit": "pct_revenue",
+          "meaning": "share of revenues, fiscal year ended June 26, 2026"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-08-18",
+      "period": "fiscal year ended June 26, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1408710/000140871026000028/fn-20260626.htm",
+      "source_title": "Fabrinet 10-K for fiscal 2026",
+      "quote": "During fiscal year 2026, Cisco Systems, Inc., NVIDIA Corporation, Nokia Corporation and Amazon.com, Inc. contributed 19.9%, 16.3%, 10.7% and 10.5%, respectively, of our revenues.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:47.755Z"
+    },
+    {
+      "ticker": "FN",
+      "company": "Fabrinet",
+      "layer": "optics",
+      "relation": "customer",
+      "counterparty": "Amazon",
+      "counterparty_ticker": "AMZN",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 10.5,
+          "unit": "pct_revenue",
+          "meaning": "share of revenues, fiscal year ended June 26, 2026"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-08-18",
+      "period": "fiscal year ended June 26, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1408710/000140871026000028/fn-20260626.htm",
+      "source_title": "Fabrinet 10-K for fiscal 2026",
+      "quote": "During fiscal year 2026, Cisco Systems, Inc., NVIDIA Corporation, Nokia Corporation and Amazon.com, Inc. contributed 19.9%, 16.3%, 10.7% and 10.5%, respectively, of our revenues.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:47.755Z"
+    },
+    {
+      "ticker": "FN",
+      "company": "Fabrinet",
+      "layer": "optics",
+      "relation": "investor",
+      "counterparty": "Amazon",
+      "counterparty_ticker": "AMZN",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 381922,
+          "unit": "shares",
+          "meaning": "ordinary shares under the warrant issued March 12, 2025"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-03",
+      "period": "quarter ended September 25, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1408710/000140871026000041/fn-20260925.htm",
+      "source_title": "Fabrinet 10-Q for the quarter ended September 25, 2026",
+      "quote": "On March 12, 2025, the Company issued a warrant (the “Warrant”) to Amazon.com NV Investment Holdings LLC to acquire up to 381,922 ordinary shares (the “Warrant Shares”) of the Company at an exercise price of $208.48 per share.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:48.213Z"
+    },
+    {
+      "ticker": "FN",
+      "company": "Fabrinet",
+      "layer": "optics",
+      "relation": "concentration",
+      "counterparty": "three customers",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 46.7,
+          "unit": "pct_revenue_combined",
+          "meaning": "combined share of revenues, quarter ended September 25, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-03",
+      "period": "quarter ended September 25, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1408710/000140871026000041/fn-20260925.htm",
+      "source_title": "Fabrinet 10-Q for the quarter ended September 25, 2026",
+      "quote": "the Company had three customers for both periods, that each contributed 10% or more of the Company's revenues. Such customers together accounted for 46.7% and 51.5% of the Company revenues during the respective periods.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:48.213Z"
+    },
+    {
+      "ticker": "LITE",
+      "company": "Lumentum",
+      "layer": "optics",
+      "relation": "investor",
+      "counterparty": "Nvidia",
+      "counterparty_ticker": "NVDA",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 2900000,
+          "unit": "shares",
+          "meaning": "approximate Series A convertible preferred shares sold March 2, 2026"
+        },
+        {
+          "value": 2000000000,
+          "unit": "usd",
+          "meaning": "aggregate purchase price paid in cash"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-03",
+      "period": "quarter ended September 26, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1633978/000162828026069615/lite-20260926.htm",
+      "source_title": "Lumentum 10-Q for the quarter ended September 26, 2026",
+      "quote": "sale of approximately 2.9 million shares of our Series A Convertible Preferred Stock, par value $0.001 per share (the “Series A Preferred Stock”) to NVIDIA Corporation (“NVIDIA”), in a private placement pursuant to a Securities Purchase Agreement. The shares of Series A Preferred Stock were sold at a price of $695.31 per share for an aggregate purchase price of $2.0 billion in cash.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:48.738Z"
+    },
+    {
+      "ticker": "LITE",
+      "company": "Lumentum",
+      "layer": "optics",
+      "relation": "concentration",
+      "counterparty": "two end customers",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 37,
+          "unit": "pct_revenue",
+          "meaning": "largest end-customer share of net revenue, quarter ended September 26, 2026"
+        },
+        {
+          "value": 11,
+          "unit": "pct_revenue",
+          "meaning": "second end-customer share of net revenue, quarter ended September 26, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-03",
+      "period": "quarter ended September 26, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1633978/000162828026069615/lite-20260926.htm",
+      "source_title": "Lumentum 10-Q for the quarter ended September 26, 2026",
+      "quote": "During the three months ended September 26, 2026, two end customers individually accounted for 37% and 11% of our total net revenue, respectively.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:48.738Z"
+    },
+    {
+      "ticker": "CLS",
+      "company": "Celestica",
+      "layer": "servers",
+      "relation": "concentration",
+      "counterparty": "Three customers (all in our CCS segment)",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 35,
+          "unit": "pct_revenue",
+          "meaning": "largest customer share of total revenue, Q3 2026"
+        },
+        {
+          "value": 17,
+          "unit": "pct_revenue",
+          "meaning": "second-largest customer share of total revenue, Q3 2026"
+        },
+        {
+          "value": 14,
+          "unit": "pct_revenue",
+          "meaning": "third-largest customer share of total revenue, Q3 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-10-26",
+      "period": "quarter ended September 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1030894/000103089426000050/cls-20260930.htm",
+      "source_title": "Celestica 10-Q for the quarter ended September 30, 2026",
+      "quote": "Three customers (all in our CCS segment) individually represented 10% or more of total revenue in Q3 2026 (35%, 17% and 14%) and YTD 2026 (34%, 16% and 15%).",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:49.356Z"
+    },
+    {
+      "ticker": "DELL",
+      "company": "Dell",
+      "layer": "servers",
+      "relation": "concentration",
+      "counterparty": "One customer",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 12,
+          "unit": "pct_revenue",
+          "meaning": "share of consolidated net revenue, fiscal year ended January 30, 2026"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-03-16",
+      "period": "fiscal year ended January 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1571996/000157199626000008/dell-20260130.htm",
+      "source_title": "Dell Technologies 10-K for fiscal 2026",
+      "quote": "One customer accounted for 12% of the Company’s consolidated net revenue for the fiscal year ended January 30, 2026, with substantially all of such net revenue attributable to the sale of ISG offerings.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:49.799Z"
+    },
+    {
+      "ticker": "HPE",
+      "company": "Hewlett Packard Enterprise",
+      "layer": "servers",
+      "relation": "investor",
+      "counterparty": "Oracle",
+      "counterparty_ticker": "ORCL",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 4156466,
+          "unit": "shares",
+          "meaning": "common shares under the warrant issued July 2, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-09-03",
+      "period": "quarter ended July 31, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1645590/000164559026000080/hpe-20260731.htm",
+      "source_title": "Hewlett Packard Enterprise 10-Q for the quarter ended July 31, 2026",
+      "quote": "On July 2, 2026, we issued a warrant (the \"Warrant\") to Oracle Corp. (\"Holder\") to purchase up to an aggregate of 4,156,466 shares of our common stock at an exercise price of $0.01 per share.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:50.243Z"
+    },
+    {
+      "ticker": "SMCI",
+      "company": "Super Micro",
+      "layer": "servers",
+      "relation": "concentration",
+      "counterparty": "one customer",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 44,
+          "unit": "pct_revenue",
+          "meaning": "share of total net sales, quarter ended September 30, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-06",
+      "period": "quarter ended September 30, 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1375365/000137536526000027/smci-20260930.htm",
+      "source_title": "Super Micro Computer 10-Q for the quarter ended September 30, 2026",
+      "quote": "For the three months ended September 30, 2026, sales to one customer represented 44.0% of total net sales.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:50.746Z"
+    },
+    {
+      "ticker": "AKAM",
+      "company": "Akamai",
+      "layer": "neocloud",
+      "relation": "customer",
+      "counterparty": "Anthropic",
+      "counterparty_ticker": null,
+      "counterparty_lab": "anthropic",
+      "figures": [
+        {
+          "value": 11600000000,
+          "unit": "usd",
+          "meaning": "aggregate commitment over seven-year terms, September 2026 project plans"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-06",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1086222/000108622226000100/akam-20260930.htm",
+      "source_title": "Akamai 10-Q for the quarter ended September 30, 2026",
+      "quote": "In September 2026, we entered into two additional project plans under our existing master services agreement with Anthropic pursuant to which Anthropic has committed to pay us approximately $11.6 billion in the aggregate over the project plans' initial seven-year terms",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:51.138Z"
+    },
+    {
+      "ticker": "CRWV",
+      "company": "CoreWeave",
+      "layer": "neocloud",
+      "relation": "customer",
+      "counterparty": "Nvidia",
+      "counterparty_ticker": "NVDA",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 6300000000,
+          "unit": "usd",
+          "meaning": "initial value of September 2025 order form for residual unsold capacity"
+        }
+      ],
+      "form": "8-K",
+      "filed": "2025-09-15",
+      "period": null,
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1769628/000176962825000047/crwv-20250909.htm",
+      "source_title": "CoreWeave 8-K, order form with NVIDIA",
+      "quote": "NVIDIA Corporation (“NVIDIA”) entered into a new order form (the “Order Form”) under the existing Master Services Agreement (“MSA”) dated as of April 10, 2023, which has an initial value of $6.3 billion",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:51.606Z"
+    },
+    {
+      "ticker": "CRWV",
+      "company": "CoreWeave",
+      "layer": "neocloud",
+      "relation": "customer",
+      "counterparty": "Microsoft",
+      "counterparty_ticker": "MSFT",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 67,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue from top customer Microsoft, fiscal year 2025"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-03-02",
+      "period": "FY2025",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1769628/000176962826000104/crwv-20251231.htm",
+      "source_title": "CoreWeave 10-K for fiscal 2025",
+      "quote": "We recognized an aggregate of approximately 67% of our revenue from our top customer, Microsoft, for the year ended December 31, 2025.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:51.937Z"
+    },
+    {
+      "ticker": "CRWV",
+      "company": "CoreWeave",
+      "layer": "neocloud",
+      "relation": "customer",
+      "counterparty": "OpenAI",
+      "counterparty_ticker": null,
+      "counterparty_lab": "openai",
+      "figures": [
+        {
+          "value": 6500000000,
+          "unit": "usd",
+          "meaning": "September 2025 order form commitment, up to, through May 2031"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-12",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1769628/000176962826000465/crwv-20260930.htm",
+      "source_title": "CoreWeave 10-Q for the quarter ended September 30, 2026",
+      "quote": "in September 2025, we entered into an order form under this master services agreement pursuant to which OpenAI committed to pay us up to approximately $6.5 billion through May 31, 2031 and, as a result, we expect OpenAI to be a significant customer in future periods.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:52.370Z"
+    },
+    {
+      "ticker": "CRWV",
+      "company": "CoreWeave",
+      "layer": "neocloud",
+      "relation": "customer",
+      "counterparty": "Meta",
+      "counterparty_ticker": "META",
+      "counterparty_lab": "meta",
+      "figures": [
+        {
+          "value": 21000000000,
+          "unit": "usd",
+          "meaning": "March 2026 order form initial commitment, up to, through 2032"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-12",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1769628/000176962826000465/crwv-20260930.htm",
+      "source_title": "CoreWeave 10-Q for the quarter ended September 30, 2026",
+      "quote": "in March 2026, we entered into an order form under an existing master services agreement pursuant to which Meta Platforms, Inc. (\"Meta\") initially committed to pay us up to approximately $21.0 billion (inclusive of access to new computing capacity through December 20, 2032",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:52.370Z"
+    },
+    {
+      "ticker": "CRWV",
+      "company": "CoreWeave",
+      "layer": "neocloud",
+      "relation": "investor",
+      "counterparty": "Nvidia",
+      "counterparty_ticker": "NVDA",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 2000000000,
+          "unit": "usd",
+          "meaning": "gross proceeds of January 2026 private placement to NVIDIA"
+        },
+        {
+          "value": 23000000,
+          "unit": "shares",
+          "meaning": "approximate Class A shares sold to NVIDIA, January 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-12",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1769628/000176962826000465/crwv-20260930.htm",
+      "source_title": "CoreWeave 10-Q for the quarter ended September 30, 2026",
+      "quote": "In January 2026, we entered into a securities purchase agreement with NVIDIA Corporation for a private placement of approximately 23 million shares of our Class A common stock at a purchase price of $87.20 per share, for aggregate gross proceeds of $2.0 billion.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:52.370Z"
+    },
+    {
+      "ticker": "CRWV",
+      "company": "CoreWeave",
+      "layer": "neocloud",
+      "relation": "supplier",
+      "counterparty": "Nvidia",
+      "counterparty_ticker": "NVDA",
+      "counterparty_lab": null,
+      "figures": [],
+      "form": "10-Q",
+      "filed": "2026-11-12",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1769628/000176962826000465/crwv-20260930.htm",
+      "source_title": "CoreWeave 10-Q for the quarter ended September 30, 2026",
+      "quote": "as a result of our obligations in our current customer contracts, all of the GPUs used in our infrastructure today are NVIDIA GPUs and we have a limited number of suppliers for storage and memory components.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:52.370Z"
+    },
+    {
+      "ticker": "CRWV",
+      "company": "CoreWeave",
+      "layer": "neocloud",
+      "relation": "concentration",
+      "counterparty": "Customer A",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 24,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, three months ended September 30, 2026"
+        },
+        {
+          "value": 33,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, nine months ended September 30, 2026"
+        },
+        {
+          "value": 18,
+          "unit": "pct_receivables",
+          "meaning": "share of accounts receivable, net, at September 30, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-12",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1769628/000176962826000465/crwv-20260930.htm",
+      "source_title": "CoreWeave 10-Q for the quarter ended September 30, 2026",
+      "quote": "Customer A 24% 67% 33% 70% Customer B 30% * 26% * Customer C * * * * Customer D * * * * * Customer did not represent 10% or more of revenue. The customer references of A through D may represent different customers than those reported in a previous period. Customers A, B, C, and D accounted for 18%, 33%, 12%, and 14% of accounts receivable, net, respectively, as of September 30, 2026",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:52.370Z"
+    },
+    {
+      "ticker": "CRWV",
+      "company": "CoreWeave",
+      "layer": "neocloud",
+      "relation": "concentration",
+      "counterparty": "Customer B",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 30,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, three months ended September 30, 2026"
+        },
+        {
+          "value": 26,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, nine months ended September 30, 2026"
+        },
+        {
+          "value": 33,
+          "unit": "pct_receivables",
+          "meaning": "share of accounts receivable, net, at September 30, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-12",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1769628/000176962826000465/crwv-20260930.htm",
+      "source_title": "CoreWeave 10-Q for the quarter ended September 30, 2026",
+      "quote": "Customer A 24% 67% 33% 70% Customer B 30% * 26% * Customer C * * * * Customer D * * * * * Customer did not represent 10% or more of revenue. The customer references of A through D may represent different customers than those reported in a previous period. Customers A, B, C, and D accounted for 18%, 33%, 12%, and 14% of accounts receivable, net, respectively, as of September 30, 2026",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:52.370Z"
+    },
+    {
+      "ticker": "IREN",
+      "company": "IREN",
+      "layer": "neocloud",
+      "relation": "customer",
+      "counterparty": "Microsoft",
+      "counterparty_ticker": "MSFT",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 9700000000,
+          "unit": "usd",
+          "meaning": "total contract value of five-year agreement announced November 2025"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-08-27",
+      "period": "FY2026 (June)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1878848/000187884826000052/iren-20260630.htm",
+      "source_title": "IREN 10-K for fiscal year ended June 30, 2026",
+      "quote": "we announced a five-year agreement with Microsoft in November 2025, which includes GPU acquisitions and the development of the “Horizon 1,” “Horizon 2,” “Horizon 3” and “Horizon 4” data center facilities representing approximately $9.7 billion of total contract value.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:52.800Z"
+    },
+    {
+      "ticker": "IREN",
+      "company": "IREN",
+      "layer": "neocloud",
+      "relation": "customer",
+      "counterparty": "Nvidia",
+      "counterparty_ticker": "NVDA",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 3400000000,
+          "unit": "usd",
+          "meaning": "total contract value of five-year cloud contract, May 2026"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-08-27",
+      "period": "FY2026 (June)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1878848/000187884826000052/iren-20260630.htm",
+      "source_title": "IREN 10-K for fiscal year ended June 30, 2026",
+      "quote": "in May 2026 we entered into a five-year cloud services contract with NVIDIA to support its internal AI and research workloads representing approximately $3.4 billion of total contract value.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:52.800Z"
+    },
+    {
+      "ticker": "IREN",
+      "company": "IREN",
+      "layer": "neocloud",
+      "relation": "investor",
+      "counterparty": "Nvidia",
+      "counterparty_ticker": "NVDA",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 30000000,
+          "unit": "shares",
+          "meaning": "ordinary shares NVIDIA may acquire at $70.00, vesting on GPU supply"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-08-27",
+      "period": "FY2026 (June)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1878848/000187884826000052/iren-20260630.htm",
+      "source_title": "IREN 10-K for fiscal year ended June 30, 2026",
+      "quote": "In connection with its arrangements with NVIDIA Corporation (“NVIDIA”) for the supply of GPUs, on May 7, 2026 the Group granted NVIDIA rights to acquire up to 30,000,000 of the Company’s Ordinary shares at an exercise price of $70.00 per share (the “Investment Rights”).",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:52.800Z"
+    },
+    {
+      "ticker": "IREN",
+      "company": "IREN",
+      "layer": "neocloud",
+      "relation": "supplier",
+      "counterparty": "Dell",
+      "counterparty_ticker": "DELL",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 6700000000,
+          "unit": "usd",
+          "meaning": "aggregate purchase price of GPU purchase orders, September 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-05",
+      "period": "Q1 FY2027",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1878848/000187884826000066/iren-20260930.htm",
+      "source_title": "IREN 10-Q for the quarter ended September 30, 2026",
+      "quote": "Dell Marketing L.P. (“Dell USA”) entered into purchase documentation, including two purchase orders (the “Purchase Orders”) pursuant to which Dell USA will supply to the Purchasers GPUs and ancillary products and services for an aggregate purchase price of approximately $6.7 billion.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:53.323Z"
+    },
+    {
+      "ticker": "IREN",
+      "company": "IREN",
+      "layer": "neocloud",
+      "relation": "concentration",
+      "counterparty": "Customer A",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 28,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, three months ended September 30, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-05",
+      "period": "Q1 FY2027",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1878848/000187884826000066/iren-20260930.htm",
+      "source_title": "IREN 10-Q for the quarter ended September 30, 2026",
+      "quote": "Three Months Ended September 30, 2026 2025 Customer A 28% * Customer B 24% * Customer C 18% * * Customer did not represent 10% or more of revenue. Revenue from Customers A, B and C is reported within the AI Cloud segment.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:53.323Z"
+    },
+    {
+      "ticker": "IREN",
+      "company": "IREN",
+      "layer": "neocloud",
+      "relation": "concentration",
+      "counterparty": "Customer B",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 24,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, three months ended September 30, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-05",
+      "period": "Q1 FY2027",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1878848/000187884826000066/iren-20260930.htm",
+      "source_title": "IREN 10-Q for the quarter ended September 30, 2026",
+      "quote": "Three Months Ended September 30, 2026 2025 Customer A 28% * Customer B 24% * Customer C 18% * * Customer did not represent 10% or more of revenue. Revenue from Customers A, B and C is reported within the AI Cloud segment.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:53.323Z"
+    },
+    {
+      "ticker": "IREN",
+      "company": "IREN",
+      "layer": "neocloud",
+      "relation": "concentration",
+      "counterparty": "Customer C",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 18,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, three months ended September 30, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-05",
+      "period": "Q1 FY2027",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1878848/000187884826000066/iren-20260930.htm",
+      "source_title": "IREN 10-Q for the quarter ended September 30, 2026",
+      "quote": "Three Months Ended September 30, 2026 2025 Customer A 28% * Customer B 24% * Customer C 18% * * Customer did not represent 10% or more of revenue. Revenue from Customers A, B and C is reported within the AI Cloud segment.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:53.323Z"
+    },
+    {
+      "ticker": "NBIS",
+      "company": "Nebius",
+      "layer": "neocloud",
+      "relation": "customer",
+      "counterparty": "Microsoft",
+      "counterparty_ticker": "MSFT",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 17400000000,
+          "unit": "usd",
+          "meaning": "total contract value through 2031"
+        },
+        {
+          "value": 19400000000,
+          "unit": "usd",
+          "meaning": "total contract value if Microsoft takes additional capacity"
+        }
+      ],
+      "form": "6-K",
+      "filed": "2025-09-08",
+      "period": null,
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1513845/000110465925088312/tm2525580d1_6k.htm",
+      "source_title": "Nebius 6-K, commercial agreement with Microsoft",
+      "quote": "the total contract value is about $17.4 billion through 2031. Microsoft may also acquire additional services and/or capacity under the Agreement, which would increase the total contract value to about $19.4 billion.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:53.708Z"
+    },
+    {
+      "ticker": "NBIS",
+      "company": "Nebius",
+      "layer": "neocloud",
+      "relation": "customer",
+      "counterparty": "Meta",
+      "counterparty_ticker": "META",
+      "counterparty_lab": "meta",
+      "figures": [
+        {
+          "value": 27000000000,
+          "unit": "usd",
+          "meaning": "total contract value, up to, March 2026 agreement and initial orders"
+        }
+      ],
+      "form": "6-K",
+      "filed": "2026-03-16",
+      "period": null,
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1513845/000110465926027886/tm268879d1_6k.htm",
+      "source_title": "Nebius 6-K, commercial agreement with Meta",
+      "quote": "entered into an Infrastructure Service Agreement (the “Agreement”) with Meta Platforms, Inc. (“Meta”), pursuant to which the Company and Meta will enter into a series of orders, each for a duration of 5 years (each an “Order”). The Agreement and the initial Orders thereunder have a total contract value of up to approximately $27 billion.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:54.039Z"
+    },
+    {
+      "ticker": "NBIS",
+      "company": "Nebius",
+      "layer": "neocloud",
+      "relation": "investor",
+      "counterparty": "Nvidia",
+      "counterparty_ticker": "NVDA",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 2000000000,
+          "unit": "usd",
+          "meaning": "gross proceeds of pre-funded warrant sold to NVIDIA, March 2026"
+        },
+        {
+          "value": 21065936,
+          "unit": "shares",
+          "meaning": "Class A shares purchasable under NVIDIA pre-funded warrant"
+        }
+      ],
+      "form": "20-F",
+      "filed": "2026-04-30",
+      "period": "FY2025",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1513845/000110465926052948/nbis-20251231x20f.htm",
+      "source_title": "Nebius 20-F for fiscal 2025",
+      "quote": "we entered into a securities purchase agreement with NVIDIA Corporation (“NVIDIA”), pursuant to which we sold, in a private placement for aggregate gross proceeds of approximately $2 billion, a pre-funded Class A shares purchase warrant (the “Warrant”), exercisable to purchase an aggregate of 21,065,936 Class A shares",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:54.387Z"
+    },
+    {
+      "ticker": "NBIS",
+      "company": "Nebius",
+      "layer": "neocloud",
+      "relation": "supplier",
+      "counterparty": "Nvidia",
+      "counterparty_ticker": "NVDA",
+      "counterparty_lab": null,
+      "figures": [],
+      "form": "20-F",
+      "filed": "2026-04-30",
+      "period": "FY2025",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1513845/000110465926052948/nbis-20251231x20f.htm",
+      "source_title": "Nebius 20-F for fiscal 2025",
+      "quote": "We currently rely on Nvidia for the GPU chips we use and on a limited number of other suppliers for other key components in our infrastructure.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:54.387Z"
+    },
+    {
+      "ticker": "NBIS",
+      "company": "Nebius",
+      "layer": "neocloud",
+      "relation": "concentration",
+      "counterparty": "Customer C",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 15,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, three months ended September 30, 2026"
+        },
+        {
+          "value": 20,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, nine months ended September 30, 2026"
+        },
+        {
+          "value": 83,
+          "unit": "pct_receivables",
+          "meaning": "share of accounts receivable, net, at December 31, 2025"
+        }
+      ],
+      "form": "EX-99.2",
+      "filed": "2026-11-12",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1513845/000110465926126238/nbis-ex99d2.htm",
+      "source_title": "Nebius 6-K, Q3 2026 interim financial statements",
+      "quote": "Customer C * 15% * 20% Customer D * 22% * 21% Customer E * 33% * 21% * Customer did not represent 10% or more of revenue Customer C accounted for 83% of accounts receivable, net as of December 31, 2025. Customer D accounted for 75% and Customer E accounted for 10% of accounts receivable, net as of September 30, 2026.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:55.018Z"
+    },
+    {
+      "ticker": "NBIS",
+      "company": "Nebius",
+      "layer": "neocloud",
+      "relation": "concentration",
+      "counterparty": "Customer D",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 22,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, three months ended September 30, 2026"
+        },
+        {
+          "value": 21,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, nine months ended September 30, 2026"
+        },
+        {
+          "value": 75,
+          "unit": "pct_receivables",
+          "meaning": "share of accounts receivable, net, at September 30, 2026"
+        }
+      ],
+      "form": "EX-99.2",
+      "filed": "2026-11-12",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1513845/000110465926126238/nbis-ex99d2.htm",
+      "source_title": "Nebius 6-K, Q3 2026 interim financial statements",
+      "quote": "Customer C * 15% * 20% Customer D * 22% * 21% Customer E * 33% * 21% * Customer did not represent 10% or more of revenue Customer C accounted for 83% of accounts receivable, net as of December 31, 2025. Customer D accounted for 75% and Customer E accounted for 10% of accounts receivable, net as of September 30, 2026.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:55.018Z"
+    },
+    {
+      "ticker": "NBIS",
+      "company": "Nebius",
+      "layer": "neocloud",
+      "relation": "concentration",
+      "counterparty": "Customer E",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 33,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, three months ended September 30, 2026"
+        },
+        {
+          "value": 21,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, nine months ended September 30, 2026"
+        },
+        {
+          "value": 10,
+          "unit": "pct_receivables",
+          "meaning": "share of accounts receivable, net, at September 30, 2026"
+        }
+      ],
+      "form": "EX-99.2",
+      "filed": "2026-11-12",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1513845/000110465926126238/nbis-ex99d2.htm",
+      "source_title": "Nebius 6-K, Q3 2026 interim financial statements",
+      "quote": "Customer C * 15% * 20% Customer D * 22% * 21% Customer E * 33% * 21% * Customer did not represent 10% or more of revenue Customer C accounted for 83% of accounts receivable, net as of December 31, 2025. Customer D accounted for 75% and Customer E accounted for 10% of accounts receivable, net as of September 30, 2026.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:55.018Z"
+    },
+    {
+      "ticker": "APLD",
+      "company": "Applied Digital",
+      "layer": "hosting",
+      "relation": "customer",
+      "counterparty": "CoreWeave",
+      "counterparty_ticker": "CRWV",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 11000000000,
+          "unit": "usd",
+          "meaning": "total contracted revenue over 15-year base term, Polaris Forge 1"
+        },
+        {
+          "value": 0.4,
+          "unit": "gw",
+          "meaning": "contracted critical IT load leased to CoreWeave"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-07-29",
+      "period": "FY2026 (May)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1144879/000114487926000048/apld-20260531.htm",
+      "source_title": "Applied Digital 10-K for fiscal year ended May 31, 2026",
+      "quote": "CampusAnchor TenantContracted Critical IT LoadLease TermTotal Contracted Revenue (1)Expected Delivery (2)Polaris Forge 1CoreWeave400 MW15 years~$11.0B2H25–1H27",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:55.408Z"
+    },
+    {
+      "ticker": "APLD",
+      "company": "Applied Digital",
+      "layer": "hosting",
+      "relation": "concentration",
+      "counterparty": "Investment-grade hyperscaler",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 5000000000,
+          "unit": "usd",
+          "meaning": "total contracted revenue over 15-year base term, Polaris Forge 2"
+        },
+        {
+          "value": 0.2,
+          "unit": "gw",
+          "meaning": "contracted critical IT load, Polaris Forge 2"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-07-29",
+      "period": "FY2026 (May)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1144879/000114487926000048/apld-20260531.htm",
+      "source_title": "Applied Digital 10-K for fiscal year ended May 31, 2026",
+      "quote": "Polaris Forge 2Investment-grade hyperscaler200 MW15 years~$5.0B2H26–1H27Polaris Forge 3High investment-grade hyperscaler300 MW15 years~$7.5B2H27–2H28Delta Forge 1High investment-grade hyperscaler300 MW15 years~$7.5B1H27–1H28Delta Forge 2High investment-grade hyperscaler210 MW15 years~$5.2B1H28",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:55.408Z"
+    },
+    {
+      "ticker": "APLD",
+      "company": "Applied Digital",
+      "layer": "hosting",
+      "relation": "concentration",
+      "counterparty": "High investment-grade hyperscaler",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 7500000000,
+          "unit": "usd",
+          "meaning": "contracted revenue over base term, Polaris Forge 3 lease"
+        },
+        {
+          "value": 7500000000,
+          "unit": "usd",
+          "meaning": "contracted revenue over base term, Delta Forge 1 lease"
+        },
+        {
+          "value": 5200000000,
+          "unit": "usd",
+          "meaning": "contracted revenue over base term, Delta Forge 2 lease"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-07-29",
+      "period": "FY2026 (May)",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1144879/000114487926000048/apld-20260531.htm",
+      "source_title": "Applied Digital 10-K for fiscal year ended May 31, 2026",
+      "quote": "Polaris Forge 2Investment-grade hyperscaler200 MW15 years~$5.0B2H26–1H27Polaris Forge 3High investment-grade hyperscaler300 MW15 years~$7.5B2H27–2H28Delta Forge 1High investment-grade hyperscaler300 MW15 years~$7.5B1H27–1H28Delta Forge 2High investment-grade hyperscaler210 MW15 years~$5.2B1H28",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:55.408Z"
+    },
+    {
+      "ticker": "APLD",
+      "company": "Applied Digital",
+      "layer": "hosting",
+      "relation": "concentration",
+      "counterparty": "Customer A",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 56,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, three months ended August 31, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-10-07",
+      "period": "Q1 FY2027",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1144879/000114487926000059/apld-20260831.htm",
+      "source_title": "Applied Digital 10-Q for the quarter ended August 31, 2026",
+      "quote": "Three Months Ended August 31, 2026 August 31, 2025 Customer A 56% 32% Customer B 21% — % Customer C 11% 47% Customer D — % 21%",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:56.011Z"
+    },
+    {
+      "ticker": "APLD",
+      "company": "Applied Digital",
+      "layer": "hosting",
+      "relation": "concentration",
+      "counterparty": "Customer B",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 21,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, three months ended August 31, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-10-07",
+      "period": "Q1 FY2027",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1144879/000114487926000059/apld-20260831.htm",
+      "source_title": "Applied Digital 10-Q for the quarter ended August 31, 2026",
+      "quote": "Three Months Ended August 31, 2026 August 31, 2025 Customer A 56% 32% Customer B 21% — % Customer C 11% 47% Customer D — % 21%",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:56.011Z"
+    },
+    {
+      "ticker": "APLD",
+      "company": "Applied Digital",
+      "layer": "hosting",
+      "relation": "concentration",
+      "counterparty": "Customer C",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 11,
+          "unit": "pct_revenue",
+          "meaning": "share of revenue, three months ended August 31, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-10-07",
+      "period": "Q1 FY2027",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1144879/000114487926000059/apld-20260831.htm",
+      "source_title": "Applied Digital 10-Q for the quarter ended August 31, 2026",
+      "quote": "Three Months Ended August 31, 2026 August 31, 2025 Customer A 56% 32% Customer B 21% — % Customer C 11% 47% Customer D — % 21%",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:56.011Z"
+    },
+    {
+      "ticker": "CIFR",
+      "company": "Cipher Mining",
+      "layer": "hosting",
+      "relation": "customer",
+      "counterparty": "Amazon",
+      "counterparty_ticker": "AMZN",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 5500000000,
+          "unit": "usd",
+          "meaning": "approximate value of 15-year AWS lease announced November 2025"
+        }
+      ],
+      "form": "EX-99.1",
+      "filed": "2025-11-03",
+      "period": "Q3 2025",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1819989/000181998925000110/nov3_earningspressreleasex.htm",
+      "source_title": "Cipher Mining Q3 2025 business update release",
+      "quote": "Cipher today announced an approximately $5.5 billion, 15-year lease agreement with Amazon Web Services to provide turnkey space and power for AI workloads.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:56.384Z"
+    },
+    {
+      "ticker": "CIFR",
+      "company": "Cipher Mining",
+      "layer": "hosting",
+      "relation": "investor",
+      "counterparty": "Google",
+      "counterparty_ticker": "GOOGL",
+      "counterparty_lab": "google",
+      "figures": [
+        {
+          "value": 24178576,
+          "unit": "shares",
+          "meaning": "common shares under Google warrant at $0.01 exercise price"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-02",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1819989/000181998926000050/cifr-20260930.htm",
+      "source_title": "Cipher Digital 10-Q for the quarter ended September 30, 2026",
+      "quote": "the Company issued to Google a warrant to purchase 24,178,576 shares (the “Warrant Shares”) of the Company’s Common Stock for an exercise price of $0.01 per share of Common Stock (the “Google Warrants”)",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:56.733Z"
+    },
+    {
+      "ticker": "CIFR",
+      "company": "Cipher Mining",
+      "layer": "hosting",
+      "relation": "customer",
+      "counterparty": "Fluidstack",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 0.3,
+          "unit": "gw",
+          "meaning": "Barber Lake Facility capacity being built for Fluidstack"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-02",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1819989/000181998926000050/cifr-20260930.htm",
+      "source_title": "Cipher Digital 10-Q for the quarter ended September 30, 2026",
+      "quote": "with the 300 MW Barber Lake Facility for Fluidstack USA II Inc. (“Fluidstack”), expecting phased commencement in the fourth quarter of 2026",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:56.733Z"
+    },
+    {
+      "ticker": "CORZ",
+      "company": "Core Scientific",
+      "layer": "hosting",
+      "relation": "customer",
+      "counterparty": "CoreWeave",
+      "counterparty_ticker": "CRWV",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 84,
+          "unit": "pct_revenue",
+          "meaning": "share of total revenue, nine months ended September 30, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-05",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1839341/000183934126000030/core-20260930.htm",
+      "source_title": "Core Scientific 10-Q for the quarter ended September 30, 2026",
+      "quote": "For the nine months ended September 30, 2026, CoreWeave represented approximately 84% of our total revenue.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:57.166Z"
+    },
+    {
+      "ticker": "CORZ",
+      "company": "Core Scientific",
+      "layer": "hosting",
+      "relation": "customer",
+      "counterparty": "AMD",
+      "counterparty_ticker": "AMD",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 0.53,
+          "unit": "gw",
+          "meaning": "critical IT capacity leased to AMD and a neocloud, July 2026"
+        },
+        {
+          "value": 1.925,
+          "unit": "gw",
+          "meaning": "additional capacity AMD may reserve through December 2028"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-05",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1839341/000183934126000030/core-20260930.htm",
+      "source_title": "Core Scientific 10-Q for the quarter ended September 30, 2026",
+      "quote": "In July 2026, the Company entered into lease agreements with AMD and a Neocloud counterparty (collectively, the \"AMD Leases\") for an aggregate of approximately 530 MW of critical IT capacity across five of the Company's sites. AMD was provided with a reservation capacity right to lease from the Company at certain times and circumstances an additional 1,925 MW of critical IT capacity",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:57.166Z"
+    },
+    {
+      "ticker": "CORZ",
+      "company": "Core Scientific",
+      "layer": "hosting",
+      "relation": "investor",
+      "counterparty": "AMD",
+      "counterparty_ticker": "AMD",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 30000000,
+          "unit": "shares",
+          "meaning": "common shares under AMD warrant at $23.47, issued July 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-05",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1839341/000183934126000030/core-20260930.htm",
+      "source_title": "Core Scientific 10-Q for the quarter ended September 30, 2026",
+      "quote": "the Company issued AMD a warrant (the \"AMD Warrant\") to purchase up to 30 million shares of the Company's common stock at an exercise price of $23.47 per share",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:57.166Z"
+    },
+    {
+      "ticker": "GLXY",
+      "company": "Galaxy Digital",
+      "layer": "hosting",
+      "relation": "customer",
+      "counterparty": "CoreWeave",
+      "counterparty_ticker": "CRWV",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 79100000,
+          "unit": "usd",
+          "meaning": "data center lease revenue, three months ended September 30, 2026"
+        },
+        {
+          "value": 97900000,
+          "unit": "usd",
+          "meaning": "data center lease revenue, nine months ended September 30, 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-09",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1859392/000185939226000112/glxy-20260930.htm",
+      "source_title": "Galaxy Digital 10-Q for the quarter ended September 30, 2026",
+      "quote": "Data center lease revenue was $79.1 million and $97.9 million for the three and nine months ended September 30, 2026, attributable to the commencement of the CoreWeave Phase I lease agreement.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:57.606Z"
+    },
+    {
+      "ticker": "HUT",
+      "company": "Hut 8",
+      "layer": "hosting",
+      "relation": "customer",
+      "counterparty": "Fluidstack",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 7000000000,
+          "unit": "usd",
+          "meaning": "base-term value of 15-year River Bend lease"
+        },
+        {
+          "value": 0.245,
+          "unit": "gw",
+          "meaning": "IT capacity leased at River Bend"
+        }
+      ],
+      "form": "EX-99.1",
+      "filed": "2025-12-17",
+      "period": null,
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1964789/000110465925122052/hut-20251217xex99d1.htm",
+      "source_title": "Hut 8 release, River Bend lease",
+      "quote": "today announced that it has signed a 15-year, $7.0 billion lease (the “Agreement”) with Fluidstack for 245 megawatts (MW) of IT capacity at its River Bend data center campus in Louisiana",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:58.178Z"
+    },
+    {
+      "ticker": "HUT",
+      "company": "Hut 8",
+      "layer": "hosting",
+      "relation": "customer",
+      "counterparty": "Anthropic",
+      "counterparty_ticker": null,
+      "counterparty_lab": "anthropic",
+      "figures": [
+        {
+          "value": 1.05,
+          "unit": "gw",
+          "meaning": "additional optional capacity Hut 8 and Anthropic may jointly develop"
+        },
+        {
+          "value": 2.295,
+          "unit": "gw",
+          "meaning": "total AI data center capacity under the partnership, up to"
+        }
+      ],
+      "form": "10-K",
+      "filed": "2026-02-25",
+      "period": "FY2025",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1964789/000110465926019392/hut-20251231x10k.htm",
+      "source_title": "Hut 8 10-K for fiscal 2025",
+      "quote": "As part of the partnership, Hut 8 and Anthropic may jointly diligence and develop up to 1,050 MW of additional optional capacity across our broader pipeline for a total of up to 2,295 MW of AI data center infrastructure",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:58.521Z"
+    },
+    {
+      "ticker": "RIOT",
+      "company": "Riot Platforms",
+      "layer": "hosting",
+      "relation": "customer",
+      "counterparty": "AMD",
+      "counterparty_ticker": "AMD",
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 0.05,
+          "unit": "gw",
+          "meaning": "critical IT load leased to AMD at Rockdale"
+        },
+        {
+          "value": 0.2,
+          "unit": "gw",
+          "meaning": "total capacity AMD lease can expand to"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-04",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1167419/000110465926122417/riot-20260930x10q.htm",
+      "source_title": "Riot Platforms 10-Q for the quarter ended September 30, 2026",
+      "quote": "long-term data center lease agreements at the Rockdale Facility with Advanced Micro Devices, Inc. (“AMD”) for the deployment of 50 MW of critical IT load capacity (the “AMD Lease”), with the potential for additional expansion of up to a total of 200 MW of critical IT load capacity",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:59.334Z"
+    },
+    {
+      "ticker": "RIOT",
+      "company": "Riot Platforms",
+      "layer": "hosting",
+      "relation": "customer",
+      "counterparty": "Anthropic",
+      "counterparty_ticker": null,
+      "counterparty_lab": "anthropic",
+      "figures": [
+        {
+          "value": 0.91,
+          "unit": "gw",
+          "meaning": "critical IT load under Corsicana Lease announced November 2026"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-04",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1167419/000110465926122417/riot-20260930x10q.htm",
+      "source_title": "Riot Platforms 10-Q for the quarter ended September 30, 2026",
+      "quote": "In November 2026, we announced the execution of the Corsicana Lease to provide 910 MW of critical IT load capacity at the Corsicana Facility with the Frontier AI Lab.",
+      "alias": {
+        "term": "Frontier AI Lab",
+        "quote": "entered into a long-term powered land lease agreement (the “Corsicana Lease”) with Anthropic PBC (the “Frontier AI Lab”) to provide critical IT load capacity at the Company’s Corsicana Facility."
+      },
+      "fetched_at": "2026-11-20T02:08:59.334Z"
+    },
+    {
+      "ticker": "WULF",
+      "company": "TeraWulf",
+      "layer": "hosting",
+      "relation": "customer",
+      "counterparty": "Anthropic",
+      "counterparty_ticker": null,
+      "counterparty_lab": "anthropic",
+      "figures": [
+        {
+          "value": 19000000000,
+          "unit": "usd",
+          "meaning": "contracted revenue over initial 20-year lease term"
+        },
+        {
+          "value": 0.401,
+          "unit": "gw",
+          "meaning": "critical IT capacity leased to Anthropic"
+        }
+      ],
+      "form": "EX-99.1",
+      "filed": "2026-11-06",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1083301/000162828026071306/a_wulfearningsreleaseq32026.htm",
+      "source_title": "TeraWulf Q3 2026 earnings release",
+      "quote": "Executed a 20-year lease with Anthropic for approximately 401 MW of critical IT capacity, representing approximately $19 billion of contracted revenue over the initial term.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:08:59.940Z"
+    },
+    {
+      "ticker": "WULF",
+      "company": "TeraWulf",
+      "layer": "hosting",
+      "relation": "investor",
+      "counterparty": "Google",
+      "counterparty_ticker": "GOOGL",
+      "counterparty_lab": "google",
+      "figures": [
+        {
+          "value": 73580000,
+          "unit": "shares",
+          "meaning": "common shares under Google warrants at $0.01 exercise price"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-06",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1083301/000162828026071671/wulf-20260930.htm",
+      "source_title": "TeraWulf 10-Q for the quarter ended September 30, 2026",
+      "quote": "the Company issued to Google Warrants (the “Google Warrants”) to purchase a total of 73,580,000 shares of Common Stock for an exercise price of $0.01 per share of Common Stock.",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:09:00.362Z"
+    },
+    {
+      "ticker": "WULF",
+      "company": "TeraWulf",
+      "layer": "hosting",
+      "relation": "customer",
+      "counterparty": "Fluidstack",
+      "counterparty_ticker": null,
+      "counterparty_lab": null,
+      "figures": [
+        {
+          "value": 0.378,
+          "unit": "gw",
+          "meaning": "critical IT load under Akela Fluidstack leases, Lake Mariner"
+        }
+      ],
+      "form": "10-Q",
+      "filed": "2026-11-06",
+      "period": "Q3 2026",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1083301/000162828026071671/wulf-20260930.htm",
+      "source_title": "TeraWulf 10-Q for the quarter ended September 30, 2026",
+      "quote": "Akela entered into three data center lease agreements (the “Akela Fluidstack Leases”) with Fluidstack USA I Inc. (together with its affiliates, “Fluidstack”), a leading AI cloud platform. Under the Akela Fluidstack Leases, as amended, we agreed to provide 378 MW of critical IT load at the Lake Mariner Data Campus",
+      "alias": null,
+      "fetched_at": "2026-11-20T02:09:00.362Z"
+    }
+  ]
+}

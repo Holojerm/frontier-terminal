@@ -194,6 +194,7 @@ describe('tools/list', () => {
       'get_revenue',
       'get_spend',
       'get_status',
+      'get_suppliers',
       'get_track_record',
     ])
     for (const t of tools) {

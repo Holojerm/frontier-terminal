@@ -261,7 +261,7 @@ describe('buildDependencies', () => {
     expect(gap('labs-not-drawn')!.title).toBe(
       'xAI, Mistral, DeepSeek, Alibaba, and Moonshot AI aren’t drawn',
     )
-    expect(gap('suppliers-not-read')).toBeDefined()
+    expect(gap('suppliers-in-table')).toBeDefined()
   })
 
   it('gives a lab that hasn’t filed no size', () => {
