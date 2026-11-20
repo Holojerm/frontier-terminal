@@ -4,7 +4,7 @@
 
 import { desc, inArray } from 'drizzle-orm'
 
-import { companyName } from '../../shared/utils/companies'
+import { gpuProviderName } from '../../shared/utils/companies'
 import type { GpuHistoryView, GpuPricesData } from '../../shared/utils/terminal-types'
 
 import * as tables from '#server/db/schema'
@@ -27,7 +27,7 @@ export const GPU_PRICES_CAVEAT =
 
 export const GPU_HISTORY_METHOD =
   'One point for each day a provider’s page changed, then today’s read. A page that didn’t change keeps its last price. ' +
-  'The median counts the providers priced that day, so it can move when we add a provider or a page fails, with no price changing. ' +
+  'The median counts the providers priced that day, so it can move when we add a provider or a page fails, with no price changing. Each such day is noted under the chart. ' +
   'The spot share is a spot price divided by the on-demand price for the same instance on the same page. ' +
   `We show each provider’s share on its own until ${SPOT_QUORUM} providers print a spot price for the same GPU. ` +
   'Where a page prints two spot prices, the chart follows the lower one and the table has both.'
@@ -88,10 +88,18 @@ export function gpuHistory(
       for (const s of spots) {
         for (const p of s.providers) if (p.gpu === gpu) names.set(p.provider, p.provider_name)
       }
+      const counted = medians.map((m) => Object.keys(m.providers))
       return {
         gpu,
         median: medians.map((m) => m.median),
-        providers: medians.map((m) => Object.keys(m.providers).length),
+        providers: counted.map((ids) => ids.length),
+        provider_changes: counted.flatMap((ids, i) => {
+          if (i === 0) return []
+          const was = counted[i - 1]!
+          const joined = ids.filter((id) => !was.includes(id)).map(gpuProviderName)
+          const left = was.filter((id) => !ids.includes(id)).map(gpuProviderName)
+          return joined.length || left.length ? [{ date: reads[i]!.date, joined, left }] : []
+        }),
         spot_combined: spots.map((s) => s.combined.find((c) => c.gpu === gpu)?.ratio ?? null),
         spot: [...names]
           .sort(([a], [b]) => byString(a, b))
@@ -147,7 +155,7 @@ export async function queryGpuPrices(db: PipelineDb, ctx: QueryContext): Promise
     .map(({ r, p }) => {
       return {
         provider: p.provider,
-        provider_name: companyName(p.provider),
+        provider_name: gpuProviderName(p.provider),
         key: r.key,
         gpu: p.gpu,
         form_factor: p.form_factor,
@@ -177,7 +185,7 @@ export async function queryGpuPrices(db: PipelineDb, ctx: QueryContext): Promise
         median: m.median,
         providers: Object.entries(m.providers).map(([provider, v]) => ({
           provider,
-          provider_name: companyName(provider),
+          provider_name: gpuProviderName(provider),
           usd_per_gpu_hour: v.value,
           rows: v.rows,
           source_url: v.source_url,
@@ -189,7 +197,7 @@ export async function queryGpuPrices(db: PipelineDb, ctx: QueryContext): Promise
     prices,
     failed: Object.entries(state.failed).map(([provider, detail]) => ({
       provider,
-      provider_name: companyName(provider),
+      provider_name: gpuProviderName(provider),
       detail,
     })),
     method: GPU_PRICES_METHOD,

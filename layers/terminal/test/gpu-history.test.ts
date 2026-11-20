@@ -49,6 +49,25 @@ describe('gpuHistory', () => {
     expect(h100(h).providers).toEqual([1, 2])
   })
 
+  it('names each day a provider joined or left the median, and no other day', () => {
+    const stored = [
+      read('lambda', '2026-11-02', 4),
+      read('nebius', '2026-11-02', 6),
+      // Lambda's price moved on the 9th: a price move, not a change of set.
+      read('lambda', '2026-11-09', 5),
+      read('google', '2026-11-12', 11),
+    ]
+    // Nebius's page failed today, so the snapshot leaves it out.
+    const today = [read('lambda', '2026-11-20', 5), read('google', '2026-11-20', 11)]
+    const h = gpuHistory(stored, { date: '2026-11-20', observations: today })
+    expect(h100(h).median).toEqual([5, 5.5, 6, 8])
+    expect(h100(h).provider_changes).toEqual([
+      { date: '2026-11-12', joined: ['Google Cloud'], left: [] },
+      { date: '2026-11-20', joined: [], left: ['Nebius'] },
+    ])
+    expect(h.gpus.find((g) => g.gpu === 'B200')!.provider_changes).toEqual([])
+  })
+
   it('ends on today’s read as the panels count it', () => {
     const stored = [
       read('lambda', '2026-11-02', 4),

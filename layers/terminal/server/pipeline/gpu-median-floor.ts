@@ -18,7 +18,7 @@
 
 import { and, eq, gte } from 'drizzle-orm'
 
-import { companyName } from '../../shared/utils/companies'
+import { gpuProviderName } from '../../shared/utils/companies'
 import { money, pctLabel } from '../../shared/utils/terminal-format'
 
 import * as tables from '#server/db/schema'
@@ -177,9 +177,9 @@ export function gpuMedianAlert(
     .filter((p) => p.before !== p.after)
     .map(
       (p) =>
-        `${companyName(p.provider)} ${money(p.before)} to ${money(p.after)} (${pctLabel(((p.after - p.before) / p.before) * 100)})`,
+        `${gpuProviderName(p.provider)} ${money(p.before)} to ${money(p.after)} (${pctLabel(((p.after - p.before) / p.before) * 100)})`,
     )
-  const names = move.providers.map((p) => companyName(p.provider)).join(', ')
+  const names = move.providers.map((p) => gpuProviderName(p.provider)).join(', ')
   const configurations = move.providers.reduce((n, p) => n + p.configurations, 0)
   const explanation = [
     `The equal-weight median on-demand ${move.gpu} price was ${perHour(move.before)} on ${ctx.through} and ${perHour(move.after)} on ${day} (${pctLabel(move.pct)}).`,

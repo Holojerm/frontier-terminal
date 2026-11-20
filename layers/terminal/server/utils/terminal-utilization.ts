@@ -21,7 +21,7 @@
 
 import { inArray } from 'drizzle-orm'
 
-import { companyName } from '../../shared/utils/companies'
+import { gpuProviderName } from '../../shared/utils/companies'
 import type {
   Bounds,
   ImpliedModelRow,
@@ -105,7 +105,7 @@ export function spotRead(
       const newest = rows.reduce((a, b) => (b.fetched_at > a.fetched_at ? b : a))
       return {
         provider: newest.provider,
-        provider_name: companyName(newest.provider),
+        provider_name: gpuProviderName(newest.provider),
         gpu: newest.gpu,
         on_demand: median(rows.map((r) => r.value))!,
         spot: {

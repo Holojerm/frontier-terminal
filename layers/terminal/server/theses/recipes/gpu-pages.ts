@@ -244,6 +244,76 @@ export function verdaRows(body: string): GpuRow[] {
   })
 }
 
+/**
+ * Google Cloud: the accelerator-optimized machine table, priced per
+ * machine-hour for the region the page renders, with the current spot price
+ * in its own column. The region is the selected option in the list under the
+ * table. A machine with no on-demand price ("N/A") is skipped.
+ */
+export function googleCloudRows(body: string): GpuRow[] {
+  const html = contentOf(body)
+  const tables = [...html.matchAll(/<table\b[\s\S]*?<\/table>/gi)]
+  for (const [i, m] of tables.entries()) {
+    const [head = [], ...lines] = tablesOf(m[0])[0]!.rows
+    const col = {
+      machine: head.indexOf('Machine type'),
+      gpu: head.indexOf('GPU'),
+      parts: head.indexOf('Components'),
+      price: head.findIndex((c) => c.startsWith('Price (USD)')),
+      spot: head.indexOf('Current Spot pricing (USD)'),
+    }
+    if (col.machine === -1 || col.gpu === -1 || col.parts === -1 || col.price === -1) continue
+    const under = html.slice(m.index + m[0].length, tables[i + 1]?.index)
+    const regions = new Set(
+      [...under.matchAll(/aria-selected="true"[^>]*\bdata-value="([^"]*\([a-z0-9-]+\))"/g)].map(
+        (r) => cellText(r[1]!),
+      ),
+    )
+    if (regions.size !== 1) throw new Error(`${regions.size} selected regions under the GPU table`)
+    const [region] = regions
+    const hourly = (cell: string, what: string): number | null => {
+      const usd = dollars(cell)
+      if (usd !== null && !/\/\s*1 hour$/.test(cell)) throw new Error(`${what} is not hourly`)
+      return usd
+    }
+    return lines.flatMap((row) => {
+      const label = row[col.machine] ?? ''
+      const g = gpuOf(row[col.gpu] ?? '')
+      if (!g) return []
+      const price = hourly(row[col.price] ?? '', `${label} price`)
+      if (price === null) return []
+      const gpus = Number(row[col.parts]?.match(/\bGPUs?: (\d+)/)?.[1])
+      if (!gpus) throw new Error(`${label}: no GPU count`)
+      const spot = col.spot === -1 ? null : hourly(row[col.spot] ?? '', `${label} spot price`)
+      return [
+        {
+          ...g,
+          label,
+          usd_per_gpu_hour: price / gpus,
+          gpus_per_instance: gpus,
+          instance_usd_per_hour: price,
+          region: region!,
+          config: null,
+          spot_usd_per_gpu_hour: spot === null ? null : spot / gpus,
+        },
+      ]
+    })
+  }
+  throw new Error('missing the GPU machine table')
+}
+
+export const GPU_GOOGLE_CLOUD = gpuRecipe({
+  id: 'gpu-google-cloud',
+  // Google Cloud is Google LLC's business, so its prices sit under the lab's company id.
+  company: 'google',
+  url: 'https://cloud.google.com/products/compute/pricing/accelerator-optimized',
+  ext: 'html',
+  description:
+    'Google Cloud on-demand and spot prices for its H100 machines in one region, divided by GPUs per machine',
+  rows: googleCloudRows,
+  byRows: true,
+})
+
 export const GPU_LAMBDA = gpuRecipe({
   id: 'gpu-lambda',
   company: 'lambda',

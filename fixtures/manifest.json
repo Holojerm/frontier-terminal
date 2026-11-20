@@ -614,6 +614,15 @@
       "trim": "none — committed whole"
     },
     {
+      "path": "fixtures/recipes/gpu-google-cloud.html",
+      "source_id": "gpu-google-cloud",
+      "source_url": "https://cloud.google.com/products/compute/pricing/accelerator-optimized",
+      "fetched_at": "2026-11-20T23:15:38Z",
+      "http_status": 200,
+      "raw_bytes": 5846865,
+      "trim": "script, style, svg and noscript blocks removed, then cut where the second table starts; what is left is the GPU machine table and the region list under it, which is all the extractor reads"
+    },
+    {
       "path": "fixtures/recipes/sec-companyfacts-crwv.json",
       "source_id": "sec-revenue-crwv",
       "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001769628.json",

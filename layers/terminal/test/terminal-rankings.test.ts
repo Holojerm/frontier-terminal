@@ -265,7 +265,6 @@ describe('queryRankings', () => {
       'moonshot-disclosures',
       'gpu-runpod',
       'gpu-aws',
-      'gpu-google-cloud',
       'gpu-vultr',
       'gpu-jarvislabs',
       'gpu-scaleway',

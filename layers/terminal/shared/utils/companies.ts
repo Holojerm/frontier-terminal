@@ -43,3 +43,10 @@ export const isCompanyId = (id: string): id is CompanyId => Object.hasOwn(COMPAN
 
 /** Display name, falling back to the id for a provider this registry does not list. */
 export const companyName = (id: string): string => (isCompanyId(id) ? COMPANIES[id].name : id)
+
+/**
+ * A GPU rental provider's name. Google rents GPUs as Google Cloud, a business
+ * of the company the lab id already names, so a GPU price says which.
+ */
+export const gpuProviderName = (id: string): string =>
+  id === 'google' ? 'Google Cloud' : companyName(id)

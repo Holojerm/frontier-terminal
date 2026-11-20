@@ -6,6 +6,7 @@ import azure from '~~/fixtures/recipes/gpu-azure.json?raw'
 import coreweave from '~~/fixtures/recipes/gpu-coreweave.html?raw'
 import crusoe from '~~/fixtures/recipes/gpu-crusoe.html?raw'
 import digitalocean from '~~/fixtures/recipes/gpu-digitalocean.html?raw'
+import googleCloud from '~~/fixtures/recipes/gpu-google-cloud.html?raw'
 import lambda from '~~/fixtures/recipes/gpu-lambda.html?raw'
 import nebius from '~~/fixtures/recipes/gpu-nebius.html?raw'
 import oracle from '~~/fixtures/recipes/gpu-oracle.json?raw'
@@ -15,11 +16,12 @@ import crwv from '~~/fixtures/recipes/sec-companyfacts-crwv.json?raw'
 
 import * as schema from '~~/server/db/schema'
 import { insertRows } from '../server/pipeline/store'
-import { crusoeRows } from '../server/theses/recipes/gpu-pages'
+import { crusoeRows, googleCloudRows } from '../server/theses/recipes/gpu-pages'
 import type { SourceFetcher } from '../server/pipeline/fetch'
 import {
   blendedPrice,
   gpuMedian,
+  gpuSetChange,
   labSetChange,
   median,
   sumAcrossLabs,
@@ -53,6 +55,7 @@ const FIXTURES: Record<string, string> = {
   'gpu-verda': verda,
   'gpu-azure': azure,
   'gpu-oracle': oracle,
+  'gpu-google-cloud': googleCloud,
   'sec-revenue-crwv': crwv,
 }
 const DATE = '2026-11-02'
@@ -82,7 +85,75 @@ describe('labSetChange', () => {
   })
 })
 
+describe('gpuSetChange', () => {
+  const held = { gpu_providers: { lambda: {}, verda: {} } }
+  it('flags a provider joining or leaving the GPU median', () => {
+    expect(gpuSetChange(held, { lambda: {}, google: {} })).toEqual({
+      added: ['google'],
+      removed: ['verda'],
+    })
+  })
+  it('is null for the same set, a first reading, and a reading that held no providers', () => {
+    expect(gpuSetChange(held, { verda: {}, lambda: {} })).toBeNull()
+    expect(gpuSetChange(null, { lambda: {} })).toBeNull()
+    expect(gpuSetChange({}, { lambda: {} })).toBeNull()
+  })
+})
+
 describe('GPU price recipes', () => {
+  // Captured 2026-11-20: one table for Iowa, on-demand and spot per 8-GPU machine.
+  it('Google Cloud: divides each machine price by its GPUs and keeps the spot price beside it', () => {
+    expect(googleCloudRows(googleCloud)).toEqual([
+      {
+        gpu: 'H100',
+        form_factor: null,
+        label: 'a3-megagpu-8g',
+        usd_per_gpu_hour: 93.400712807 / 8,
+        gpus_per_instance: 8,
+        instance_usd_per_hour: 93.400712807,
+        region: 'Iowa (us-central1)',
+        config: null,
+        spot_usd_per_gpu_hour: 47.741932712 / 8,
+      },
+      {
+        gpu: 'H100',
+        form_factor: null,
+        label: 'a3-highgpu-8g',
+        usd_per_gpu_hour: 88.490000119 / 8,
+        gpus_per_instance: 8,
+        instance_usd_per_hour: 88.490000119,
+        region: 'Iowa (us-central1)',
+        config: null,
+        spot_usd_per_gpu_hour: 52.700460712 / 8,
+      },
+    ])
+    // The B200 machine prints "N/A" on demand, so its spot price has nothing to divide by.
+    expect(googleCloud).toContain('a4-highgpu-8g')
+    const mega = extract(recipe('gpu-google-cloud')).find(
+      (o) => o.payload.label === 'a3-megagpu-8g',
+    )
+    expect(mega!.payload).toMatchObject({
+      provider: 'google',
+      counted: true,
+      spot_low_usd_per_gpu_hour: 5.9677,
+      spot_high_usd_per_gpu_hour: 5.9677,
+    })
+  })
+
+  it('Google Cloud: fails on a monthly price or a missing region, and judges a change on its rows', () => {
+    expect(() =>
+      googleCloudRows(googleCloud.replace('$88.490000119 / 1 hour', '$64,597.70 / 1 month')),
+    ).toThrow('a3-highgpu-8g price is not hourly')
+    expect(() => googleCloudRows(googleCloud.replaceAll('aria-selected="true"', ''))).toThrow(
+      '0 selected regions',
+    )
+    const r = recipe('gpu-google-cloud')
+    expect(r.fingerprint!(googleCloud)).toBe(r.fingerprint!(`${googleCloud}<!-- nonce -->`))
+    expect(r.fingerprint!(googleCloud)).not.toBe(
+      r.fingerprint!(googleCloud.replace('$52.700460712', '$50.00')),
+    )
+  })
+
   // From 2026-11-03 Crusoe prints today's price beside a scheduled one
   // ("New on-demand starting Dec 1, 2026"); before, beside spot.
   it('Crusoe: reads the current on-demand column under either header, and no other', () => {
@@ -118,6 +189,8 @@ describe('GPU price recipes', () => {
     expect(counted('gpu-verda', 'B200')).toEqual([8.869])
     expect(counted('gpu-oracle', 'H100')).toEqual([10])
     expect(counted('gpu-oracle', 'B200')).toEqual([14])
+    expect(counted('gpu-google-cloud', 'H100').sort()).toEqual([11.0613, 11.6751])
+    expect(counted('gpu-google-cloud', 'B200')).toEqual([])
   })
 
   it('keeps instance prices beside the per-GPU price, and divides by the GPUs per instance', () => {
@@ -458,7 +531,7 @@ describe('the Compute thesis on a seeded store', () => {
       'compute-physical-buildout': 'unresolved',
       'compute-rented-demand': 'holding',
       'compute-datacenter-power': 'unresolved',
-      // Two pages print an H100 spot price, of the four the reading needs.
+      // Three pages print an H100 spot price, of the four the reading needs.
       'compute-gpu-spot-tight': 'unresolved',
       // No release and no probe is seeded here.
       'compute-capex-guidance': 'unresolved',
@@ -471,11 +544,14 @@ describe('the Compute thesis on a seeded store', () => {
     expect(all).toHaveLength(1)
     expect(newest.date).toBe(DATE)
     expect(detail.flagship_median).toBe(6)
-    expect(detail.gpu_median).toBe(4.5)
-    expect(newest.value).toBe(1.3333)
-    expect(Object.keys(detail.gpu_providers)).toHaveLength(9)
+    // Ten providers: the median sits between Nebius ($4.50) and Verda ($4.793).
+    expect(detail.gpu_median).toBe(4.6465)
+    expect(newest.value).toBe(1.2913)
+    expect(Object.keys(detail.gpu_providers)).toHaveLength(10)
     expect(detail.gpu_providers.lambda.value).toBe(4.14)
-    expect(detail.quorum).toEqual({ have: 9, need: 5 })
+    expect(detail.gpu_providers.google.value).toBe(11.3682)
+    expect(detail.gpu_set_changed).toBeNull()
+    expect(detail.quorum).toEqual({ have: 10, need: 5 })
     expect(detail.void_reason).toBeNull()
     expect(detail.context).toMatchObject({ gpu: 'B200', gpu_median: 8.55, ratio: 0.7018 })
     expect(Object.keys(detail.context.providers)).toHaveLength(6)
@@ -534,13 +610,13 @@ describe('the Compute thesis on a seeded store', () => {
       queryContext(sourcesYaml, null, () => NOW),
     )
     const h100 = data.medians.find((m) => m.gpu === 'H100')!
-    expect(h100.median).toBe(4.5)
-    expect(h100.providers).toHaveLength(9)
+    expect(h100.median).toBe(4.6465)
+    expect(h100.providers).toHaveLength(10)
     expect(data.medians.find((m) => m.gpu === 'B200')!.median).toBe(8.55)
     // The series ends on today's read, at the number the medians print.
     expect(data.history.dates.at(-1)).toBe(NOW.toISOString().slice(0, 10))
     expect(data.history.gpus.map((g) => [g.gpu, g.median.at(-1), g.providers.at(-1)])).toEqual([
-      ['H100', 4.5, 9],
+      ['H100', 4.6465, 10],
       ['B200', 8.55, data.medians.find((m) => m.gpu === 'B200')!.providers.length],
     ])
     expect(data.failed).toEqual([])
@@ -570,12 +646,17 @@ describe('the Compute thesis on a seeded store', () => {
   it('marks a reading void when fewer than 5 H100 providers had a price', async () => {
     const later = new Date('2026-11-03T12:00:00Z')
     const failing: SourceFetcher = async () => ({ ok: false, status: 500, detail: 'HTTP 500' })
-    await runRecipes(db, { raw, fetcher: failing, now: () => later }, GPU_RECIPES.slice(0, 5))
+    await runRecipes(db, { raw, fetcher: failing, now: () => later }, GPU_RECIPES.slice(0, 6))
     await evaluateTheses(db, { sourcesYaml, now: () => later }, [COMPUTE_THESIS])
     const { newest, detail } = await readingOf('compute-token-gpu-ratio')
     expect(newest.date).toBe('2026-11-03')
     expect(detail.quorum).toEqual({ have: 4, need: 5 })
-    expect(Object.keys(detail.gpu_failed)).toHaveLength(5)
+    expect(Object.keys(detail.gpu_failed)).toHaveLength(6)
+    // The providers that dropped out are named, so the step in the ratio is explained.
+    expect(detail.gpu_set_changed).toEqual({
+      added: [],
+      removed: Object.keys(detail.gpu_failed).sort(),
+    })
 
     const data = await queryTheses(
       db,
