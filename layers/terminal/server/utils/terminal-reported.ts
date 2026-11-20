@@ -11,6 +11,7 @@
 import { and, count, inArray, isNotNull, isNull, lte, max, eq } from 'drizzle-orm'
 
 import type {
+  DealMetric,
   LabId,
   ReportedBasis,
   ReportedData,
@@ -22,7 +23,7 @@ import type {
 
 import * as tables from '#server/db/schema'
 import { GKG_FROM } from '../pipeline/track-record/gkg'
-import { earliestPerHeadline } from '../pipeline/reported/review'
+import { earliestPerHeadline, isDealMetric } from '../pipeline/reported/review'
 import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '../pipeline/store'
 import type { QueryContext } from './terminal-db'
 
@@ -105,11 +106,28 @@ const METRIC_ORDER: Readonly<Record<ReportedMetric, number>> = {
 /** A headline as the payload lists it, plus when we stored its earliest copy. */
 export type StoredHeadline = ReportedHeadline & { found_at: string }
 
-/** Every figure the judge kept, at its headline's earliest copy, newest first, and the headline keys read. */
+/** A deal size one headline states: the same row, with the deal's metric and its other company. */
+export type StoredDeal = Omit<StoredHeadline, 'metric' | 'period'> & {
+  metric: DealMetric
+  counterparty: string | null
+  judged_at: string
+}
+
+/**
+ * Every figure the judge kept, at its headline's earliest copy, newest first,
+ * and the headline keys read. Deal sizes are kept apart in `deals`: they are
+ * not a lab's own revenue, valuation or funding.
+ */
 export async function storedHeadlines(
   db: PipelineDb,
   at: string | null,
-): Promise<{ headlines: StoredHeadline[]; keys: string[] }> {
+): Promise<{
+  headlines: StoredHeadline[]
+  deals: StoredDeal[]
+  keys: string[]
+  /** Each headline key's title, at its earliest copy. */
+  titles: Map<string, string>
+}> {
   const [figures, articles] = await Promise.all([
     db
       .select()
@@ -128,17 +146,16 @@ export async function storedHeadlines(
   const earliest = new Map(earliestPerHeadline(articles).map((a) => [a.title_key, a]))
 
   const headlines: StoredHeadline[] = []
+  const deals: StoredDeal[] = []
   for (const f of figures) {
     const article = earliest.get(f.title_key)
     if (!article) continue
-    headlines.push({
+    const row = {
       lab: f.lab as LabId,
-      metric: f.metric as ReportedMetric,
       basis: f.basis as ReportedBasis,
       currency: f.currency as 'USD' | 'EUR',
       amount: f.amount,
       amount_text: f.amount_text,
-      period: f.period,
       title: article.title,
       outlet: article.outlet,
       url: article.url,
@@ -147,10 +164,26 @@ export async function storedHeadlines(
       source_url: article.url,
       fetched_at: article.fetched_at,
       found_at: article.found_at,
-    })
+    }
+    if (isDealMetric(f.metric)) {
+      deals.push({
+        ...row,
+        metric: f.metric,
+        counterparty: f.counterparty,
+        judged_at: f.judged_at,
+      })
+    } else {
+      headlines.push({ ...row, metric: f.metric as ReportedMetric, period: f.period })
+    }
   }
   headlines.sort((a, b) => b.published_at.localeCompare(a.published_at))
-  return { headlines, keys: [...earliest.keys()] }
+  deals.sort((a, b) => b.published_at.localeCompare(a.published_at))
+  return {
+    headlines,
+    deals,
+    keys: [...earliest.keys()],
+    titles: new Map([...earliest].map(([key, a]) => [key, a.title])),
+  }
 }
 
 export async function queryReported(db: PipelineDb, ctx: QueryContext): Promise<ReportedData> {

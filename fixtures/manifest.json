@@ -1580,6 +1580,150 @@
       "http_status": 200,
       "raw_bytes": 7347,
       "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/guidance/meta-2024-10-30-ex99-1.htm",
+      "source_id": "guidance-meta-2024-10-30",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1326801/000132680124000077/meta-09302024xexhibit991.htm",
+      "fetched_at": "2026-11-20T00:48:58Z",
+      "http_status": 200,
+      "raw_bytes": 284755,
+      "trim": "the 5 innermost block elements (p, div, td, li) whose text names capital expenditures, capex or purchases of property and equipment, in document order; markup and text untouched"
+    },
+    {
+      "path": "fixtures/guidance/meta-2025-01-29-ex99-1.htm",
+      "source_id": "guidance-meta-2025-01-29",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1326801/000132680125000014/meta-12312024xexhibit991.htm",
+      "fetched_at": "2026-11-20T00:48:57Z",
+      "http_status": 200,
+      "raw_bytes": 300466,
+      "trim": "the 5 innermost block elements (p, div, td, li) whose text names capital expenditures, capex or purchases of property and equipment, in document order; markup and text untouched"
+    },
+    {
+      "path": "fixtures/guidance/meta-2025-10-29-ex99-1.htm",
+      "source_id": "guidance-meta-2025-10-29",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1326801/000162828025047114/meta-09302025xexhibit991.htm",
+      "fetched_at": "2026-11-20T00:44:28Z",
+      "http_status": 200,
+      "raw_bytes": 274796,
+      "trim": "the 7 innermost block elements (p, div, td, li) whose text names capital expenditures, capex or purchases of property and equipment, in document order; markup and text untouched"
+    },
+    {
+      "path": "fixtures/guidance/meta-2026-10-21-ex99-1.htm",
+      "source_id": "guidance-meta-2026-10-21",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1326801/000162828026066700/meta-09302026xexhibit991.htm",
+      "fetched_at": "2026-11-20T00:44:21Z",
+      "http_status": 200,
+      "raw_bytes": 287688,
+      "trim": "the 5 innermost block elements (p, div, td, li) whose text names capital expenditures, capex or purchases of property and equipment, in document order; markup and text untouched"
+    },
+    {
+      "path": "fixtures/guidance/googl-2025-02-04-ex99-1.htm",
+      "source_id": "guidance-googl-2025-02-04",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204425000010/googexhibit991q42024.htm",
+      "fetched_at": "2026-11-20T00:48:39Z",
+      "http_status": 200,
+      "raw_bytes": 405325,
+      "trim": "the 4 innermost block elements (p, div, td, li) whose text names capital expenditures, capex or purchases of property and equipment, in document order; markup and text untouched"
+    },
+    {
+      "path": "fixtures/guidance/googl-2025-10-29-ex99-1.htm",
+      "source_id": "guidance-googl-2025-10-29",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204425000087/googexhibit991q32025.htm",
+      "fetched_at": "2026-11-20T00:44:06Z",
+      "http_status": 200,
+      "raw_bytes": 367223,
+      "trim": "the 5 innermost block elements (p, div, td, li) whose text names capital expenditures, capex or purchases of property and equipment, in document order; markup and text untouched"
+    },
+    {
+      "path": "fixtures/guidance/googl-2026-02-04-ex99-1.htm",
+      "source_id": "guidance-googl-2026-02-04",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000012/googexhibit991q42025.htm",
+      "fetched_at": "2026-11-20T00:44:05Z",
+      "http_status": 200,
+      "raw_bytes": 414632,
+      "trim": "the 4 innermost block elements (p, div, td, li) whose text names capital expenditures, capex or purchases of property and equipment, in document order; markup and text untouched"
+    },
+    {
+      "path": "fixtures/guidance/googl-2026-07-22-ex99-1.htm",
+      "source_id": "guidance-googl-2026-07-22",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1652044/000165204426000066/googexhibit991q22026.htm",
+      "fetched_at": "2026-11-20T00:44:01Z",
+      "http_status": 200,
+      "raw_bytes": 371613,
+      "trim": "the 4 innermost block elements (p, div, td, li) whose text names capital expenditures, capex or purchases of property and equipment, in document order; markup and text untouched"
+    },
+    {
+      "path": "fixtures/guidance/amzn-2026-02-05-ex99-1.htm",
+      "source_id": "guidance-amzn-2026-02-05",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000002/amzn-20251231xex991.htm",
+      "fetched_at": "2026-11-20T00:44:15Z",
+      "http_status": 200,
+      "raw_bytes": 629437,
+      "trim": "the 5 innermost block elements (p, div, td, li) whose text names capital expenditures, capex or purchases of property and equipment, in document order; markup and text untouched"
+    },
+    {
+      "path": "fixtures/guidance/amzn-2026-10-29-ex99-1.htm",
+      "source_id": "guidance-amzn-2026-10-29",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000038/amzn-20260930xex991.htm",
+      "fetched_at": "2026-11-20T00:44:09Z",
+      "http_status": 200,
+      "raw_bytes": 673534,
+      "trim": "the 5 innermost block elements (p, div, td, li) whose text names capital expenditures, capex or purchases of property and equipment, in document order; markup and text untouched"
+    },
+    {
+      "path": "fixtures/guidance/orcl-2026-03-10-ex99-1.htm",
+      "source_id": "guidance-orcl-2026-03-10",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1341439/000119312526100148/orcl-ex99_1.htm",
+      "fetched_at": "2026-11-20T00:44:33Z",
+      "http_status": 200,
+      "raw_bytes": 1862524,
+      "trim": "the 4 innermost block elements (p, div, td, li) whose text names capital expenditures, capex or purchases of property and equipment, in document order; markup and text untouched"
+    },
+    {
+      "path": "fixtures/guidance/msft-2026-10-28-ex99-1.htm",
+      "source_id": "guidance-msft-2026-10-28",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/789019/000119312526436122/msft-ex99_1.htm",
+      "fetched_at": "2026-11-20T00:43:46Z",
+      "http_status": 200,
+      "raw_bytes": 597472,
+      "trim": "the 1 innermost block elements (p, div, td, li) whose text says guidance: the release names no capital expenditures; markup and text untouched"
+    },
+    {
+      "path": "fixtures/guidance/meta-2025-01-29-index.html",
+      "source_id": "guidance-meta-2025-01-29-index",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1326801/000132680125000014/0001326801-25-000014-index.html",
+      "fetched_at": "2026-11-20T00:48:56Z",
+      "http_status": 200,
+      "raw_bytes": 10296,
+      "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/filed-facts/companyfacts-meta.json",
+      "source_id": "filed-facts-meta",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001326801.json",
+      "fetched_at": "2026-11-20T00:50:33Z",
+      "http_status": 200,
+      "raw_bytes": 2810958,
+      "trim": "facts.us-gaap cut to the five concepts the reader takes, each unit's facts cut to period ends from 2024-01-01; values untouched."
+    },
+    {
+      "path": "fixtures/filed-facts/companyfacts-googl.json",
+      "source_id": "filed-facts-googl",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001652044.json",
+      "fetched_at": "2026-11-20T00:50:35Z",
+      "http_status": 200,
+      "raw_bytes": 3250837,
+      "trim": "facts.us-gaap cut to the five concepts the reader takes, each unit's facts cut to period ends from 2024-01-01; values untouched."
+    },
+    {
+      "path": "fixtures/filed-facts/companyfacts-orcl.json",
+      "source_id": "filed-facts-orcl",
+      "source_url": "https://data.sec.gov/api/xbrl/companyfacts/CIK0001341439.json",
+      "fetched_at": "2026-11-20T00:50:36Z",
+      "http_status": 200,
+      "raw_bytes": 3964639,
+      "trim": "facts.us-gaap cut to the five concepts the reader takes, each unit's facts cut to period ends from 2024-01-01; values untouched."
     }
   ]
 }

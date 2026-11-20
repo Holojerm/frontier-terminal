@@ -1,7 +1,8 @@
 <script setup lang="ts">
 // The ground-truth page's panels: press reports of a lab's revenue against the
 // figure its filing printed later, the reports nothing filed can score yet,
-// and the alert track record's totals. A report read back from GDELT's archive
+// deal sizes and capex guidance against filings (each its own component), and
+// the alert track record's totals. A report read back from GDELT's archive
 // is counted as the press's, never as ours: `held` says which we had stored.
 
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
@@ -94,6 +95,51 @@ const leftOut = computed(() => {
     .join(' ')
 })
 
+const dealsText = computed(() => {
+  const t = props.truth.deals.tally
+  if (t.reports === 0) return 'No press report of a deal’s size has been labeled yet.'
+  const parts = [`${plural(t.reports, 'press report')} stated the size of a deal as fact.`]
+  parts.push(
+    t.scored
+      ? `${t.scored} could be checked against a figure filed later, and ${t.scored - t.missed} ${t.scored - t.missed === 1 ? 'was' : 'were'} within ${props.truth.tolerance_pct}%.`
+      : 'None could be checked against a figure filed later.',
+  )
+  if (t.unsettled) {
+    parts.push(
+      `${t.unsettled} ${t.unsettled === 1 ? 'states' : 'state'} a figure no filing we read settles.`,
+    )
+  }
+  if (t.restated) {
+    parts.push(`${t.restated} ${t.restated === 1 ? 'repeats' : 'repeat'} a figure already filed.`)
+  }
+  if (t.open) parts.push(`${t.open} ${t.open === 1 ? 'waits' : 'wait'} for a filing.`)
+  return parts.join(' ')
+})
+
+const guidanceText = computed(() => {
+  const t = props.truth.guidance.tally
+  if (t.figures === 0) return 'No capex guidance from an earnings release is stored yet.'
+  const parts = [
+    `${plural(t.figures, 'capex figure')} from earnings releases, ${t.scored} for a year that has since been filed.`,
+  ]
+  if (t.scored) {
+    const outside = [
+      t.above ? `above it for ${t.above}` : '',
+      t.below ? `below it for ${t.below}` : '',
+    ].filter(Boolean)
+    parts.push(
+      `The filed capex met the guidance for ${t.met}${outside.length ? ` and came in ${outside.join(' and ')}` : ''}.`,
+    )
+  }
+  if (t.open) parts.push(`${t.open} ${t.open === 1 ? 'is' : 'are'} for a year not filed yet.`)
+  if (t.unsettled) {
+    parts.push(`${t.unsettled} ${t.unsettled === 1 ? 'isn’t' : 'aren’t'} scored.`)
+  }
+  return parts.join(' ')
+})
+
+const dealsSince = computed(() => props.truth.deals.first_labeled_at?.slice(0, 10) ?? null)
+
 const pressText = (t: TrackRecordTally) =>
   t.matched === 0
     ? 'No alert has a rated press report yet.'
@@ -168,6 +214,8 @@ const waitingKey = (w: GroundTruthWaiting) => `${w.lab}|${w.metric}|${w.currency
         <p>{{ summary.join(' ') }}</p>
         <p v-if="heldText">{{ heldText }}</p>
         <p v-if="leftOut" class="text-muted">{{ leftOut }}</p>
+        <p>{{ dealsText }}</p>
+        <p>{{ guidanceText }}</p>
       </div>
     </TerminalPanel>
 
@@ -371,6 +419,10 @@ const waitingKey = (w: GroundTruthWaiting) => `${w.lab}|${w.metric}|${w.currency
       <p v-else class="text-sm text-default">No reported figure is waiting.</p>
     </TerminalPanel>
 
+    <TerminalGroundTruthDeals :deals="truth.deals" :tolerance-pct="truth.tolerance_pct" />
+
+    <TerminalGroundTruthGuidance :guidance="truth.guidance" :tolerance-pct="truth.tolerance_pct" />
+
     <TerminalPanel
       id="alerts"
       title="Alerts against the press"
@@ -429,8 +481,47 @@ const waitingKey = (w: GroundTruthWaiting) => `${w.lab}|${w.metric}|${w.currency
           filing day. The rest we read back from GDELT’s archive later.
         </p>
         <p>
-          Only a lab that files for itself is scored. A parent’s consolidated revenue isn’t the
-          lab’s. This isn’t investment advice.
+          Only a lab that files for itself is scored on revenue. A parent’s consolidated revenue
+          isn’t the lab’s.
+        </p>
+        <p>
+          Deal sizes go through the same steps. The model labels the amount as a contract, an
+          investment or a loan and names the other company. We keep the label only when the amount,
+          the lab and that company are in the headline as written. The filed side is the other
+          company’s own number, or the lab’s prospectus for its total commitments.
+        </p>
+        <p>
+          A filed figure often measures something else. Amazon files what Anthropic added to its
+          backlog in a quarter, and a contract’s stated value can be held to that. For OpenAI it
+          files the backlog left at each quarter end, which falls as Amazon delivers, so we score no
+          headline against it. The table under the reports lists every filed figure we use and how.
+          A report about a company whose filings we don’t read, or a figure no filing states, is
+          listed with the reason.
+        </p>
+        <p>
+          A report of an amount added is held to the quarter it was published in. One published
+          after a quarter ended and before its filing is held to that quarter only when it is within
+          {{ truth.tolerance_pct }}% of it. A report of a total is held to the first balance dated
+          on or after the report. Either is matched within {{ truth.tolerance_pct }}%. A report
+          within {{ truth.tolerance_pct }}% of a figure already filed repeats it and isn’t scored.
+          <template v-if="dealsSince">
+            We started labeling deal sizes on {{ dealsSince }}. Before then we kept a headline only
+            when it used a revenue, valuation or funding word, so older deal headlines are here only
+            if they used one.
+          </template>
+        </p>
+        <p>
+          For capex guidance we read the earnings release each filer attaches to its 8-K (exhibit
+          99.1), for releases filed since {{ truth.guidance.since }}. We take the sentence that
+          names capital expenditures, says expect or anticipate, names a year and states an amount
+          in billions of dollars. We compare it with the capex the annual report files for that
+          year. A range is met when the filed figure is inside it, and a single figure within
+          {{ truth.tolerance_pct }}%. Otherwise we show how far outside it came in.
+        </p>
+        <p>
+          Guidance given only on the earnings call isn’t here, because we don’t read call
+          transcripts. Each filer defines capex its own way, and the table under the guidance rows
+          says which filed lines we compare with. This isn’t investment advice.
         </p>
         <p class="text-muted">
           Press data from the GDELT Project (gdeltproject.org). Every headline and filed figure is
@@ -438,8 +529,8 @@ const waitingKey = (w: GroundTruthWaiting) => `${w.lab}|${w.metric}|${w.currency
           <NuxtLink to="/data" class="text-primary underline underline-offset-2"
             >bulk exports</NuxtLink
           >
-          as reported_articles, reported_figures and revenue_facts. This page’s rows are at
-          /api/ground-truth, which also takes as_of.
+          as reported_articles, reported_figures, revenue_facts and filed_facts. This page’s rows,
+          the guidance figures included, are at /api/ground-truth, which also takes as_of.
         </p>
       </div>
     </TerminalPanel>

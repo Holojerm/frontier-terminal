@@ -2493,6 +2493,13 @@ identifier_sources:
 # its submissions feed. Checked every 30 minutes; company facts are fetched
 # every six hours, or every check while a filing from the last 14 days is
 # missing from them. Audited 2026-11-04 (docs/source-audit.md).
+#
+# Each filer's earnings releases since 2024 are read too, for the capex figure
+# a release prints for a fiscal year (/ground-truth): the 8-Ks with item 2.02
+# in the same submissions feed, each filing's index page, then its exhibit
+# 99.1, once, at most four releases a check. A release is the filer's own
+# text, furnished to the SEC. We keep the figure and the one sentence that
+# states it. Audited 2026-11-19 (docs/source-audit.md).
 filed_fact_sources:
   filed-facts-msft:
     ticker: MSFT

@@ -1159,14 +1159,14 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ),
   reported_figures: plainTable(
     'reported_figures',
-    'Each lab revenue, valuation or funding figure a headline in reported_articles states, as our judge model labeled it. A label is kept only when its amount and lab are in the headline as written. Unaudited press figures, never mixed with filed ones. Rows are never edited.',
+    'Each lab revenue, valuation, funding or deal figure a headline in reported_articles states, as our judge model labeled it. A label is kept only when its amount and lab, and a deal’s other company, are in the headline as written. Unaudited press figures, never mixed with filed ones. Rows are never edited.',
     tables.reportedFigures,
     {
       id: {
         type: 'text',
         key: true,
         meaning:
-          'SHA-256 (hex) of title_key, lab, metric, basis and amount_text: one row per figure per headline.',
+          'SHA-256 (hex) of title_key, lab, metric, basis and amount_text, and of counterparty when the row has one: one row per figure per headline.',
       },
       title_key: { type: 'text', meaning: 'The reported_articles.title_key of the headline.' },
       article_id: {
@@ -1177,12 +1177,18 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
       metric: {
         type: 'text',
         meaning:
-          'revenue_run_rate (annualized or recurring), revenue (for a stated period), valuation, funding (one round) or funding_total (raised to date).',
+          'revenue_run_rate (annualized or recurring), revenue (for a stated period), valuation, funding (one round) or funding_total (raised to date). Or the size of a deal: commitment (what the lab agreed to buy from one company), investment (what one company put into the lab), financing (what one company lends it) or commitment_total (everything the lab has agreed to buy).',
       },
       basis: {
         type: 'text',
         meaning:
           'reported (given as fact), sought (in talks or planned) or projected (a forecast or target).',
+      },
+      counterparty: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'The other company in a commitment, investment or financing, as the headline names it. Null for every other metric.',
       },
       currency: { type: 'text', meaning: 'USD or EUR, as the headline writes it.' },
       amount: { type: 'number', meaning: 'The amount in units of currency.' },

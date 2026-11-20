@@ -187,6 +187,15 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
     summary:
       'A fourth rights value, restricted: facts a publisher states about itself on a public page, where its site terms restrict automated reading or we couldn’t find them. Our license covers our compilation of those rows with the restriction disclosed, never the saved pages. 25 sources moved to it from not-cleared, among them the OpenAI, Anthropic, xAI, Meta, DeepSeek, Alibaba and Moonshot docs. rights in /api/coverage can now be restricted, and each table’s licensing in /export/dictionary.json gains a restricted list and can answer commercial: restricted. No table columns changed.',
   },
+  {
+    version: '1.8.0',
+    date: '2026-11-19',
+    summary:
+      'Press reports of deal sizes. reported_figures.metric gains commitment, investment, financing and commitment_total, for the size of a compute, investment or lending deal between a lab and another company, and a counterparty column names that company as the headline writes it. Rows with the five earlier metrics are unchanged and carry a null counterparty.',
+    tables: {
+      reported_figures: { added: ['counterparty'] },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version
