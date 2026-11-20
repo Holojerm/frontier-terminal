@@ -94,6 +94,9 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   source_absent: { severity: 'warning' },
   filed_facts_failed: { severity: 'warning' },
   filed_facts_run_failed: { severity: 'warning' },
+  // A stored capex-guidance sentence is not in its stored release, or no
+  // longer reads as its figure: the parser and the store disagree.
+  guidance_unverified: { severity: 'warning' },
   recipe_failed: { severity: 'warning' },
   recipes_run_failed: { severity: 'warning' },
   theses_evaluate_failed: { severity: 'warning' },

@@ -33,6 +33,9 @@ import { middle } from './terminal-reported'
 
 const PPE = 'us-gaap:PaymentsToAcquirePropertyPlantAndEquipment'
 
+/** A report matches the nearest filed figure within this many percent; a single guided figure is met within it too. */
+export const TOLERANCE_PCT = 5
+
 interface GuidanceMeasure {
   /** The filed lines the guided figure is the sum of. Null when we don't hold them all. */
   parts: { concept: string; label: string }[] | null
