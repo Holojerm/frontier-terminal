@@ -226,7 +226,7 @@ describe('classify', () => {
       end({ http_status: null, state: empty, thrown: 'TypeError: fetch failed' }),
       'router',
     ],
-    ['a 200 that ends with no usage', end({ state: read(GOOD.slice(0, 6)) }), 'failed'],
+    ['a 200 that ends with no usage', end({ state: read(GOOD.slice(0, 6)) }), 'setup'],
     [
       'a 429 mid-stream',
       end({ state: { ...state, error: { code: 429, message: 'slow down', provider_code: null } } }),

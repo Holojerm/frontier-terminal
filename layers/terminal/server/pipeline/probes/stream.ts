@@ -222,7 +222,8 @@ export interface ProbeEnd {
  * of its own on a paid model, so on a pinned route the limit is the
  * provider's (provider_code is kept where the body gives one). So is a
  * 502/503, or a 5xx naming the provider's code. Another 4xx is about our key,
- * credit, model id or request (`setup`). A 500 with no provider code, or a
+ * credit, model id or request (`setup`), and so is a 200 whose stream we
+ * could not read. A 500 with no provider code, or a
  * connection that never reached OpenRouter, is OpenRouter's (`router`).
  */
 export function classify(end: ProbeEnd): { outcome: ProbeOutcome; detail: string | null } {
@@ -244,7 +245,11 @@ export function classify(end: ProbeEnd): { outcome: ProbeOutcome; detail: string
   }
   if (end.thrown) return { outcome: 'failed', detail: `stream broke: ${end.thrown}`.slice(0, 300) }
   if (!end.state.output_tokens || end.state.first_token_at === null) {
-    return { outcome: 'failed', detail: 'the stream ended with no tokens or no usage' }
+    // A clean 200 we could not read is our reader or the router, never evidence about the lab.
+    return {
+      outcome: 'setup',
+      detail: 'unreadable reply: the stream ended with no tokens or no usage',
+    }
   }
   return { outcome: 'ok', detail: null }
 }

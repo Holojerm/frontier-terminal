@@ -62,7 +62,7 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   probe_setup_failed: {
     severity: 'warning',
     action:
-      'OpenRouter refused a latency probe. The detail has its code: 402 means the account is out of credit, 401 or 403 the key, 404 that the model or its first-party endpoint is gone (update PROBE_TARGETS), 400 that the request needs changing. No reading is stored for those labs until it is fixed.',
+      'OpenRouter refused a latency probe. The detail has its code: 402 means the account is out of credit, 401 or 403 the key, 404 that the model or its first-party endpoint is gone (update PROBE_TARGETS), 400 that the request needs changing, and “unreadable reply” that the stream reader (pipeline/probes/stream.ts) no longer matches what OpenRouter sends (the R2 trace under probes/ has the bytes). No reading is stored for those labs until it is fixed.',
   },
   // judge/price-review.ts: a published price now rests on the judge's reading
   // of a page, not on a parser.
