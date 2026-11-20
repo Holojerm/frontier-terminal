@@ -14,6 +14,7 @@ import { SCHEMA_VERSION } from '../server/utils/data-schema'
 import { terminalStamps } from '../server/utils/terminal-cache'
 import { queryContext, recipeRunsStamp } from '../server/utils/terminal-db'
 import { VIEW_RECIPES } from '../server/utils/terminal-recipe-views'
+import { powerSitesStamp } from '../server/power/stamp'
 import { reportedStamp } from '../server/utils/terminal-reported'
 import { UTILIZATION_RECIPES } from '../server/utils/terminal-utilization'
 import { THESES } from '../server/theses/registry'
@@ -698,7 +699,7 @@ describe('tools/call', () => {
     const views = {
       utilization: recipeRunsStamp(db, UTILIZATION_RECIPES),
       datacenters: recipeRunsStamp(db, VIEW_RECIPES.datacenters),
-      'power-sites': recipeRunsStamp(db, VIEW_RECIPES.powerSites),
+      'power-sites': powerSitesStamp(db),
       adoption: recipeRunsStamp(db, VIEW_RECIPES.adoption),
       limits: recipeRunsStamp(db, VIEW_RECIPES.limits),
       pay: recipeRunsStamp(db, VIEW_RECIPES.pay),

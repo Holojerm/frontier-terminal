@@ -1,6 +1,7 @@
 // Whether a quoted passage is on the page it was read from: the suppliers
-// reader's check of a stored filing (layers/terminal/server/suppliers/) and
-// scripts/power-sites-verify.ts.
+// reader's check of a stored filing (layers/terminal/server/suppliers/), the
+// power-sites reader's (layers/terminal/server/power/) and its weekly re-read
+// of the pages off EDGAR (power/verify.ts).
 
 const ENTITIES: Record<string, string> = {
   amp: '&',

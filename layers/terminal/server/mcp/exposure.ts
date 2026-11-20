@@ -2,6 +2,7 @@
 
 import { z } from 'zod'
 import { queryDependencies } from '../utils/terminal-dependencies'
+import { powerSitesStamp } from '../power/stamp'
 import { suppliersStamp } from '../suppliers/store'
 import { querySuppliers } from '../utils/terminal-suppliers'
 import { queryListed } from '../utils/terminal-listed'
@@ -185,7 +186,7 @@ export function registerExposureTools({ server, deps, read }: McpKit): void {
     },
     async ({ lab }) => {
       const [power, suppliers] = await Promise.all([
-        recipeRunsStamp(deps.db, VIEW_RECIPES.powerSites),
+        powerSitesStamp(deps.db),
         suppliersStamp(deps.db),
       ])
       const data = await deps.serve(

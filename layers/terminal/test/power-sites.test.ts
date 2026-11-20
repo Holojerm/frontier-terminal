@@ -1,24 +1,26 @@
 import { env } from 'cloudflare:test'
 import { drizzle } from 'drizzle-orm/d1'
-import { beforeAll, describe, expect, it } from 'vitest'
+import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import epochTimelines from '~~/fixtures/recipes/epoch-data-center-timelines.csv?raw'
 import epochSites from '~~/fixtures/recipes/epoch-data-centers.csv?raw'
 import * as schema from '~~/server/db/schema'
-import { comparable, pageText } from '~~/scripts/power-sites-verify'
 import curated from '../server/curated/power-sites.json'
 import type { SourceFetcher } from '../server/pipeline/fetch'
+import { handTies, insertTies } from '../server/power/store'
 import { parseCsv } from '../server/theses/recipes/csv'
 import {
   EPOCH_DATA_CENTERS,
   EPOCH_DATA_CENTER_TIMELINES,
 } from '../server/theses/recipes/epoch-data-centers'
 import { runRecipes } from '../server/theses/recipes/run'
+import { comparable, pageText } from '../server/utils/quote-match'
 import { queryPowerSites } from '../server/utils/terminal-recipe-views'
 import { curatedPowerSites, type CuratedPowerSites } from '../shared/utils/power-sites'
 
 // The power-sites view over Epoch's committed fixtures, with a small table of
-// our own so the join is tested apart from whatever the hand-read file holds.
+// our own stored in D1, so the join is tested apart from whatever the
+// hand-read file holds.
 
 const db = drizzle(env.DB, { schema })
 const NOW = new Date('2026-11-04T12:00:00Z')
@@ -82,9 +84,14 @@ beforeAll(async () => {
   ])
 })
 
+beforeEach(async () => {
+  await db.delete(schema.powerSiteTies)
+  await insertTies(db, handTies(TABLE))
+})
+
 describe('power sites', () => {
   it('joins our companies to Epoch’s lab sites, power now and at the furthest estimate', async () => {
-    const d = await queryPowerSites(db, TABLE)
+    const d = await queryPowerSites(db)
     expect(d.sites.map((s) => s.name)).toEqual([
       'Anthropic-Amazon New Carlisle',
       'Meta Prometheus',
@@ -100,7 +107,7 @@ describe('power sites', () => {
   })
 
   it('lists a site once per listed company', async () => {
-    const { tickers, sites } = await queryPowerSites(db, TABLE)
+    const { tickers, sites } = await queryPowerSites(db)
     const aep = tickers.find((t) => t.ticker === 'AEP')!
     const prometheus = sites.find((s) => s.name === 'Meta Prometheus')!
     expect(aep.company).toBe('American Electric Power')
@@ -114,7 +121,7 @@ describe('power sites', () => {
   })
 
   it('lists the lab sites we have read nothing for', async () => {
-    const { uncovered } = await queryPowerSites(db, TABLE)
+    const { uncovered } = await queryPowerSites(db)
     const names = uncovered.map((u) => u.name)
     expect(names).toContain('OpenAI Stargate Abilene')
     expect(names).not.toContain('Meta Prometheus')

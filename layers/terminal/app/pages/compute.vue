@@ -2,8 +2,8 @@
 // The compute axis: what renting a GPU costs, how full the capacity looks
 // from outside, how much data-center power is coming online and for whom,
 // and who supplies it. All read the thesis recipes (GPU price pages, SEC
-// filings, MLPerf results and Epoch AI's datasets) except the suppliers,
-// which are read by hand (layers/terminal/shared/utils/power-sites.ts). Every
+// filings, MLPerf results and Epoch AI's datasets) except the power suppliers,
+// which are read from filings and pages (layers/terminal/shared/utils/power-sites.ts). Every
 // figure has its source and fetch time. No tabs; the site list is the page's
 // long table and runs with the page rather than in a box.
 
@@ -138,7 +138,7 @@ const sites = computed(() =>
       </TerminalPanel>
 
       <TerminalPanel
-        v-if="suppliers?.sites.length"
+        v-if="suppliers?.sites.length || suppliers?.uncovered.length"
         id="suppliers"
         title="Who powers the lab sites"
         note="The utility, generator, equipment maker or site host we read for each site Epoch credits to a lab, with the page it comes from. Planned is Epoch’s furthest estimate."

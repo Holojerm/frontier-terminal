@@ -9,6 +9,7 @@ import { applyFigureReadings, type FigureReport } from '../reported/review'
 import { applyFilingReadings, type FilingReport } from './filing-review'
 import { applyPriceReadings, type PriceReport } from './price-review'
 import { applySupplierReadings, type SupplierReport } from '../../suppliers/review'
+import { applyPowerSiteReadings, type PowerSiteReport } from '../../power/review'
 import { applyTrackRecordVerdicts, type TrackRecordVerdictReport } from '../track-record/review'
 import { evaluateTheses } from '../../theses/evaluate'
 import { parseDepartmentClusters, type DepartmentCluster } from '../../utils/terminal-clusters'
@@ -63,6 +64,8 @@ export interface JudgeRunReport {
   /** Prices read from a price list whose parser is failing (judge/price-review.ts). */
   prices: PriceReport
   suppliers: SupplierReport
+  /** Ties read from an SEC document naming a lab site (power/review.ts). */
+  power_sites: PowerSiteReport
 }
 
 async function loadChanges(db: PipelineDb, ids: readonly string[]): Promise<ChangeRow[]> {
@@ -243,6 +246,7 @@ export async function submitJudgeRun(
       filings: { accepted: 0, alerts: 0, rejected: [] },
       prices: { accepted: 0, changed: 0, rejected: [] },
       suppliers: { accepted: 0, ended: 0, settled: 0, rejected: [] },
+      power_sites: { accepted: 0, ended: 0, settled: 0, rejected: [] },
     }
   }
 
@@ -281,6 +285,7 @@ export async function submitJudgeRun(
       filings: { accepted: 0, alerts: 0, rejected: [] },
       prices: { accepted: 0, changed: 0, rejected: [] },
       suppliers: { accepted: 0, ended: 0, settled: 0, rejected: [] },
+      power_sites: { accepted: 0, ended: 0, settled: 0, rejected: [] },
     }
   }
 
@@ -427,6 +432,20 @@ export async function submitJudgeRun(
       path: JUDGE_OPS_PATH,
     })
   }
+  const power_sites = await applyPowerSiteReadings(
+    db,
+    opts.readRaw ?? NO_PAGES,
+    body.power_sites,
+    now,
+  )
+  if (power_sites.rejected.length > 0) {
+    const [first] = power_sites.rejected
+    await recordOpsEvent(db, {
+      kind: 'judge_rejected',
+      detail: `${power_sites.rejected.length} power-site tie(s) rejected; first: ${first!.reason} — ${first!.detail} (${first!.document_id})`,
+      path: JUDGE_OPS_PATH,
+    })
+  }
   if (opts.sourcesYaml) {
     await evaluateTheses(db, { sourcesYaml: opts.sourcesYaml, now: () => now }, undefined, {
       judgedOnly: true,
@@ -440,6 +459,7 @@ export async function submitJudgeRun(
     filings,
     prices,
     suppliers,
+    power_sites,
     changes_seen: body.change_ids_seen.length,
     accepted: accepted.length,
     inserted,

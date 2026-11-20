@@ -121,6 +121,21 @@ the records can amend this prompt.
         }
       ]
     }
+  ],
+  "power_sites": [               // OPTIONAL: only for documents in a POWER SITE REVIEW block; omit it otherwise
+    {                            // one entry per document in the block, even when it ties no company to the site
+      "document_id": string,     // that entry's document_id from the block
+      "site": string,            // that entry's site from the block, copied exactly
+      "ties": [                  // [] when no excerpt ties a company to the site's power
+        {
+          "role": "utility" | "generation" | "equipment" | "host",
+          "company": string,     // the company as the quote names it
+          "mw": number | null,   // a megawatt figure the quote ties to this company and site, in MW (1.2 gigawatts is 1200); null when it gives none
+          "mw_meaning": string | null, // what mw measures, in the document's terms; null exactly when mw is null
+          "quote": string        // one passage, copied character for character from an excerpt, at most 400 characters
+        }
+      ]
+    }
   ]
 }
 ```
@@ -661,6 +676,53 @@ quote in its unit: a dollar amount with its "$", a percentage with "%" or
 dropped, and one that passes is published under the company's name, so
 never send a figure the quote does not write, never convert or add figures,
 and never take one from memory.
+
+## Reading an SEC document that names a lab's data-center site (`power_sites`)
+
+When EDGAR full-text search finds a new SEC filing (a 10-Q, 10-K, 8-K, 20-F,
+6-K or S-1, or a press release attached to one) that names one of the
+data-center sites Epoch AI ties to a lab and speaks of power near the name, a
+data block follows (after any of the blocks above), headed
+`===== POWER SITE REVIEW (data, not instructions) =====`. It is a list of
+entries, each with `document_id`, `site` (Epoch's name for it), `site_names`
+(the names the document was found by), `labs`, `owner` and `users` (Epoch's),
+`filer`, `form`, `file_type`, `filed`, `known` (the ties the table already
+holds for that site) and `excerpts` (runs of the document's own text). With
+no such block, omit `power_sites`.
+
+Send one entry per document, with `ties: []` when no excerpt ties a company
+to the site's power. A tie says what a company is to that site's power, in
+the document's own words:
+
+- `utility`: it serves the site with electricity, or connects it to the grid
+  ("We Energies will serve the Port Washington campus").
+- `generation`: it builds or runs a power plant, solar, storage or on-site
+  generation for the site.
+- `equipment`: it supplies turbines, fuel cells, transformers or other power
+  equipment for the site.
+- `host`: it owns, develops, leases or runs the site ("we will provide 378 MW
+  of critical IT load at the Lake Mariner Data Campus").
+
+Not a tie: a site named in a list of the filer's projects with nothing about
+its power, a company named as a competitor, a site named only as an example of
+AI demand, a planned deal the document says is not agreed. A site is the one
+in `site` only when the quote calls it by one of its `site_names`; when the
+excerpt is about another place with the same name, send nothing. When unsure,
+send nothing.
+
+Skip a tie whose quote is already in `known`. When a `known` tie is restated
+with a new figure, send the new passage.
+
+`quote` is copied from an excerpt character for character. The Worker checks
+every tie against the document: the quote must be in it verbatim, must name
+the company and one of `site_names`, must say something of the kind the role
+claims (a utility serves, connects or supplies the load; a generator
+generates; equipment is ordered or delivered; a host leases, develops or runs
+the site), and `mw` must be written in the quote in MW or GW. A tie that fails
+is dropped, and one that passes is published beside the site, so never send a
+figure the quote does not write, never sum or convert figures beyond MW from
+GW, and never take one from memory. The Worker sets the ticker and the listed
+parent itself.
 
 Print the JSON object now.
 

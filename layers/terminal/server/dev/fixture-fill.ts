@@ -1,5 +1,5 @@
 // Fill a store from the committed fixtures, offline: the polls a cron runs,
-// then the filed-facts reader, the suppliers table, the recipes and the theses, each answered from
+// then the filed-facts reader, the suppliers table, the recipes, the power table and the theses, each answered from
 // fixtures/ by URL. dev:fixtures (tasks/dev/fixtures.ts) calls it with the
 // dev bindings, test/server/fill.ts with the browser suites' local D1 and R2,
 // and fixture-fill.test.ts against the test database, so a page that would
@@ -14,6 +14,7 @@ import { runPoll, type PollOutcome } from '../pipeline/poll'
 import type { RawStore } from '../pipeline/refresh'
 import type { FetchSource } from '../pipeline/sources'
 import type { PipelineDb } from '../pipeline/store'
+import { runPowerSiteReads, type PowerReadReport } from '../power/ingest'
 import { runSupplierReads, type SupplierReadReport } from '../suppliers/ingest'
 import { evaluateTheses } from '../theses/evaluate'
 import { runRecipes } from '../theses/recipes/run'
@@ -86,6 +87,8 @@ export interface FixtureFillReport {
   /** The hand-read rows seeded; no supplier filing has a fixture, so none is read. */
   suppliers: SupplierReadReport
   recipes: number
+  /** The hand-read rows seeded; no site search has a fixture, so no filing is read. */
+  power: PowerReadReport
   theses: Awaited<ReturnType<typeof evaluateTheses>>
 }
 
@@ -125,6 +128,11 @@ export async function fillFromFixtures(deps: FixtureFillDeps): Promise<FixtureFi
     fetcher: fixtureFetcher(deps.read, forRecipes),
     now,
   })
+  const power = await runPowerSiteReads(db, {
+    raw,
+    fetcher: fixtureFetcher(deps.read, forPoll),
+    now: now(),
+  })
   const theses = await evaluateTheses(db, { sourcesYaml, now })
-  return { polls, filed_facts, suppliers, recipes: recipes.length, theses }
+  return { polls, filed_facts, suppliers, recipes: recipes.length, power, theses }
 }

@@ -108,6 +108,12 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   // The suppliers reader (layers/terminal/server/suppliers/ingest.ts): a feed
   // it could not parse, a 429, or the run itself throwing.
   supplier_read_failed: { severity: 'warning' },
+  // The power-sites reader (layers/terminal/server/power/ingest.ts): a search
+  // it could not run or parse, a 429, or the run itself throwing.
+  power_site_read_failed: { severity: 'warning' },
+  // The weekly re-check (layers/terminal/server/power/verify.ts): a hand-read
+  // quote is no longer on its utility, regulator or company page.
+  power_quote_gone: { severity: 'warning' },
   // A stored capex-guidance sentence is not in its stored release, or no
   // longer reads as its figure: the parser and the store disagree.
   guidance_unverified: { severity: 'warning' },
