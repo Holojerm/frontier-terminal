@@ -879,7 +879,9 @@ describe('the stated window holds when changes span several axes', () => {
 
   it('buckets every entity type that has an axis, so the total is the sum of the axes', () => {
     for (const [type, axis] of Object.entries(ENTITY_AXIS)) {
-      if (axis === 'demand') expect(AXIS_OF[type]).toBeUndefined()
+      // Rankings aren't events, and a GPU rental median is the market around
+      // the labs, not something a lab did (BAND_OF in terminal-alerts.ts).
+      if (axis === 'demand' || axis === 'compute') expect(AXIS_OF[type]).toBeUndefined()
       else expect(AXIS_OF[type], type).toBeDefined()
     }
   })

@@ -45,6 +45,7 @@ export type AlertAxis =
   | 'disclosures'
   | 'demand'
   | 'exposure'
+  | 'compute'
 
 export const AXIS_DISPLAY: Record<AlertAxis, string> = {
   pricing: 'Prices',
@@ -55,6 +56,7 @@ export const AXIS_DISPLAY: Record<AlertAxis, string> = {
   disclosures: 'Disclosures',
   demand: 'Demand',
   exposure: 'Exposure',
+  compute: 'Compute',
 }
 
 /** Where each axis reads in full. */
@@ -67,6 +69,16 @@ export const AXIS_PATH: Record<AlertAxis, string> = {
   disclosures: '/disclosures',
   demand: '/rankings',
   exposure: '/exposure',
+  compute: '/compute',
+}
+
+/**
+ * Routes an axis alerts on that sit outside its AXIS_PATH page. The GPU median
+ * rule reads the prices /api/gpu-prices serves, and they read in full on
+ * /compute. `bun run surfaces:check` reads this beside AXIS_PATH.
+ */
+export const AXIS_ROUTES: Partial<Record<AlertAxis, readonly string[]>> = {
+  compute: ['/api/gpu-prices'],
 }
 
 /** The axis each change entity type sits on. The signal band (terminal-alerts.ts › AXIS_OF) buckets by it too. */
@@ -89,6 +101,7 @@ export const ENTITY_AXIS: Record<ChangeView['entity_type'], AlertAxis> = {
   disclosure_timeline: 'disclosures',
   ranking: 'demand',
   filed_fact: 'exposure',
+  gpu_price: 'compute',
 }
 
 export const ALERT_AXES = Object.keys(AXIS_DISPLAY) as [AlertAxis, ...AlertAxis[]]
@@ -161,6 +174,12 @@ export function alertDelta(alert: Pick<AlertView, 'changes'>): string | null {
     if (added && !removed) return added === 1 ? 'new SKU' : `${added} new SKUs`
     if (removed && !added) return removed === 1 ? 'delisted' : `${removed} delisted`
     return null
+  }
+
+  if (axis === 'compute') {
+    const median = rows[0]!.diff.find((d) => d.field === 'median')
+    const pct = median ? pctChange(num(median.before), num(median.after)) : null
+    return pct === null ? null : `${pctLabel(pct)} median`
   }
 
   return null

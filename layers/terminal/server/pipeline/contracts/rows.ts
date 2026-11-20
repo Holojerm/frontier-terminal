@@ -62,11 +62,16 @@ export const entityTypeEnum = z.enum([
   // (layers/terminal/server/exposure/alerts.ts). Written only as the change an
   // alert cites; the facts themselves live in filed_facts, not entities.
   'filed_fact',
+  // 'gpu_price': the equal-weight H100 or B200 rental median on two reads
+  // seven days apart (layers/terminal/server/pipeline/gpu-median-floor.ts).
+  // Written only as the change its alert cites; the prices live in
+  // recipe_observations.
+  'gpu_price',
 ])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])
 // The deterministic rules (layers/terminal/server/pipeline/filing-floors.ts, model-floor.ts, prospectus-floor.ts,
-// hiring-rollup.ts) and the judge lane.
+// hiring-rollup.ts, gpu-median-floor.ts, layers/terminal/server/exposure/alerts.ts) and the judge lane.
 export const alertRuleEnum = z.enum([
   'agent-judge',
   's1-floor',
@@ -76,6 +81,7 @@ export const alertRuleEnum = z.enum([
   'prospectus-floor',
   'hiring-rollup',
   'filed-fact-floor',
+  'gpu-median-floor',
 ])
 // 'skipped': the source needs a credential the deploy does not have, so
 // nothing was attempted — distinct from 'failed' so a missing key is a

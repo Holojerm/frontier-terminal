@@ -27,7 +27,7 @@ export const HISTORY_TABLES = {
         type: 'text',
         key: true,
         meaning:
-          'SHA-256 (hex) of the entity key and the two content hashes, so the same change is never logged twice. A filed_fact change hashes its series, period, and accession instead.',
+          'SHA-256 (hex) of the entity key and the two content hashes, so the same change is never logged twice. A filed_fact change hashes its series, period, and accession instead, and a gpu_price change its GPU and UTC day.',
       },
       entity_key: {
         type: 'text',
@@ -36,7 +36,7 @@ export const HISTORY_TABLES = {
       entity_type: {
         type: 'text',
         meaning:
-          'The kind of row: model, job, incident, disclosure, disclosure_timeline, filer, revenue, filing, document, offering, statement, commitment, concentration, shares, risk_factors, recommendation, or filed_fact (a hyperscaler series point a new filing moved, cited by its alert). OpenRouter ranking rows are left out.',
+          'The kind of row: model, job, incident, disclosure, disclosure_timeline, filer, revenue, filing, document, offering, statement, commitment, concentration, shares, risk_factors, recommendation, filed_fact (a hyperscaler series point a new filing moved, cited by its alert), or gpu_price (the H100 or B200 rental median on two reads seven days apart, cited by its alert). OpenRouter ranking rows are left out.',
       },
       provider: PROVIDER,
       change_type: { type: 'text', meaning: 'added, removed, or modified.' },
@@ -285,7 +285,7 @@ export const HISTORY_TABLES = {
       rule: {
         type: 'text',
         meaning:
-          'What wrote it: agent-judge (the judge routine), or a deterministic rule: s1-floor, periodic-floor, cik-resolved, model-floor, prospectus-floor, hiring-rollup, filed-fact-floor.',
+          'What wrote it: agent-judge (the judge routine), or a deterministic rule: s1-floor, periodic-floor, cik-resolved, model-floor, prospectus-floor, hiring-rollup, filed-fact-floor, gpu-median-floor.',
       },
       created_at: {
         type: 'timestamp',
