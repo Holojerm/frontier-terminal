@@ -41,7 +41,9 @@ const REST_COLUMNS: TableColumn[] = [
   { key: 'company', label: 'Company', class: 'whitespace-nowrap' },
   { key: 'verdict', label: 'Verdict', class: 'whitespace-nowrap text-muted', stack: 'inline' },
   { key: 'detected', label: 'Detected', class: 'whitespace-nowrap text-muted', stack: 'inline' },
-  { key: 'rationale', label: 'Why' },
+  // Inline on a phone: the rationale is the row's body, and a "Why" label
+  // column left it a third of the width and 5,000px of page.
+  { key: 'rationale', label: 'Why', stack: 'inline' },
 ]
 </script>
 
