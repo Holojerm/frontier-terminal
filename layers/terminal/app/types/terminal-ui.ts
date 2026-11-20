@@ -42,6 +42,13 @@ export interface TableColumn {
   stack?: 'inline' | 'hide'
 }
 
+/** A label spanning a run of columns in a header row above the column labels. */
+export interface TableBand {
+  label: string
+  /** The column keys it spans, adjacent and in column order. */
+  keys: readonly string[]
+}
+
 export interface Fact {
   key: string
   label: string
