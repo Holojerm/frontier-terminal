@@ -12,7 +12,13 @@ import type { CaveatRef, Citation, TableColumn } from '../../types/terminal-ui'
 
 const figures = useFigures()
 
-const props = defineProps<{ id: string; title: string; series: ExposureSeries[] }>()
+const props = defineProps<{
+  id: string
+  title: string
+  series: ExposureSeries[]
+  /** The y-axis top shared by every card in a grid, so their heights compare. */
+  yMax?: number
+}>()
 
 const unit = computed(() => props.series[0]?.unit ?? 'USD')
 
@@ -126,6 +132,7 @@ const tagLine = computed(() =>
       :x="x"
       :series="chartSeries"
       :format="fmt"
+      :y-max="yMax"
       :x-label="monthLabel"
       :title="`${title}: ${chartSeries.map((s) => s.label).join(', ')}, ${series[0]?.kind === 'flow' ? 'per quarter' : 'at each period end'}, ${monthLabel(x[0]!)} to ${monthLabel(x.at(-1)!)}`"
     />

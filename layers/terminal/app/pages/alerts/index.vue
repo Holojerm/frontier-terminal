@@ -208,7 +208,7 @@ const criticalFeed = `/alerts.xml?${CRITICAL_FEED_QUERY}`
         >
         keeps only critical alerts.
       </p>
-      <TerminalSubscribeForm />
+      <TerminalSubscribeLink />
     </template>
 
     <TerminalTabs :tabs="tabs">
@@ -326,5 +326,7 @@ const criticalFeed = `/alerts.xml?${CRITICAL_FEED_QUERY}`
         />
       </template>
     </TerminalTabs>
+
+    <TerminalSubscribeForm />
   </TerminalPage>
 </template>

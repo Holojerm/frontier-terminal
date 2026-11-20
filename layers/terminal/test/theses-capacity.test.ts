@@ -254,6 +254,8 @@ describe('claim 8: capex guidance', () => {
       status: 'holding',
       reason: '0 filers, against a kill line of 2 filers.',
       reading_date: '2026-11-20',
+      // The level the chart draws as its dashed kill line.
+      kill_line: 2,
     })
     expect(at(1)).toMatchObject({
       status: 'weakening',

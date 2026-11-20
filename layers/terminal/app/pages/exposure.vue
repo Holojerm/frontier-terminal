@@ -59,6 +59,19 @@ function charts(group: ExposureGroup): { id: string; series: ExposureSeries[] }[
 const capex = computed(() => charts('capex'))
 const rpo = computed(() => charts('rpo'))
 
+// Capex cards share one y-axis top, so a $50B axis beside a $100B one doesn't
+// read as equal spend. Backlog keeps its own: Oracle's would flatten the rest.
+const capexMax = computed(() =>
+  Math.max(
+    0,
+    ...capex.value.flatMap((c) =>
+      c.series.flatMap((s) =>
+        s.points.filter((p) => p.months === null || p.months === 3).map((p) => p.value),
+      ),
+    ),
+  ),
+)
+
 const OPENAI_CHART = 'us-gaap:NonoperatingIncomeExpense'
 const openai = computed(() => (data.value?.series ?? []).filter((s) => s.group === 'openai'))
 const openaiChart = computed(() => openai.value.filter((s) => s.concept === OPENAI_CHART))
@@ -100,6 +113,7 @@ const filerLine = computed(() =>
             :key="c.id"
             :title="titleOf(c.series)"
             :series="c.series"
+            :y-max="capexMax"
           />
         </div>
       </TerminalPanel>
