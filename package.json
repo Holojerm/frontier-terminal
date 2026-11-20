@@ -69,6 +69,7 @@
     "ci:fast": "bun run scripts/ci.ts --fast",
     "mcp:check": "bun run scripts/check-mcp.ts",
     "migrations:check": "bun run scripts/check-migrations.ts",
+    "surfaces:check": "bun run scripts/check-surfaces.ts",
     "deploy:smoke": "bun run scripts/deploy-smoke.ts",
     "deploy": "nuxt build && wrangler --cwd .output deploy",
     "deploy:ci": "bun run db:migrate:remote && wrangler --cwd .output deploy && bun run deploy:smoke"
