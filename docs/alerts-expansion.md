@@ -8,7 +8,9 @@ The lab commitment and claim series alert, `critical` on a series' first point o
 in a commitment or stake. A point for a period an earlier filing already reported, or a
 balance that didn't move, writes nothing. Capex against guidance
 (step 3, candidate 2) is the `guidance-floor` rule
-(`layers/terminal/server/exposure/guidance-alerts.ts`).
+(`layers/terminal/server/exposure/guidance-alerts.ts`). Step 5's median half is built too, as
+the GPU median rule (`gpu-median-floor`) on a new `compute` axis. Single-provider moves still
+wait for the judge block.
 
 ## How alerts work today
 

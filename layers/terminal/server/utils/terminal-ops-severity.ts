@@ -99,6 +99,7 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   guidance_unverified: { severity: 'warning' },
   recipe_failed: { severity: 'warning' },
   recipes_run_failed: { severity: 'warning' },
+  gpu_median_alerts_failed: { severity: 'warning' },
   theses_evaluate_failed: { severity: 'warning' },
   bulk_build_failed: { severity: 'warning' },
   reliability_record_failed: { severity: 'warning' },

@@ -10,6 +10,7 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 import { createFetcher } from '../../pipeline/fetch'
 import { unstorageLockStore } from '../../pipeline/lock'
 import { blobRawStore, runPoll } from '../../pipeline/poll'
+import { writeGpuMedianAlerts } from '../../pipeline/gpu-median-floor'
 import { paceSec } from '../../pipeline/sec-pace'
 import { evaluateTheses } from '../../theses/evaluate'
 import { runRecipes } from '../../theses/recipes/run'
@@ -53,6 +54,13 @@ const task = defineTask({
       await recordOpsEvent(db, { kind: 'recipes_run_failed', detail: String(error) })
       return null
     })
+    // The GPU median rule reads the prices the recipes just stored.
+    const gpuMedians = recipes
+      ? await writeGpuMedianAlerts(db).catch(async (error: unknown) => {
+          await recordOpsEvent(db, { kind: 'gpu_median_alerts_failed', detail: String(error) })
+          return null
+        })
+      : null
     const theses = await evaluateTheses(db, { sourcesYaml, now: () => new Date() }).catch(
       async (error: unknown) => {
         await recordOpsEvent(db, { kind: 'theses_evaluate_failed', detail: String(error) })
@@ -60,7 +68,7 @@ const task = defineTask({
       },
     )
     await warmAfterPoll(context)
-    return { result, recipes, theses }
+    return { result, recipes, gpuMedians, theses }
   },
 })
 

@@ -31,6 +31,7 @@ export interface ChangeView extends Prov {
     | 'filed_fact'
     | 'guidance'
     | 'guidance_check'
+    | 'gpu_price'
   provider: ProviderId
   change_type: 'added' | 'removed' | 'modified'
   detected_at: string
@@ -55,6 +56,7 @@ export interface AlertView extends Prov {
     | 'hiring-rollup'
     | 'filed-fact-floor'
     | 'guidance-floor'
+    | 'gpu-median-floor'
   created_at: string
   change_ids: string[]
   /** The cited rows, resolved; ids that resolve to nothing are listed in `missing`. */

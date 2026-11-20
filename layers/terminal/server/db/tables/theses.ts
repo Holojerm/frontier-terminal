@@ -78,7 +78,8 @@ export const claimVerdicts = sqliteTable(
 // or payload, so fetched_at says when this value was last read, and raw_key
 // points at the stored bytes it was read from. Kept apart from `entities`:
 // these companies are not the terminal's labs, and none of the lab
-// panels, alert rules or the lab judge read this table.
+// panels or the lab judge read this table. One alert rule does: the GPU
+// median rule (layers/terminal/server/pipeline/gpu-median-floor.ts).
 export const recipeObservations = sqliteTable(
   'recipe_observations',
   {

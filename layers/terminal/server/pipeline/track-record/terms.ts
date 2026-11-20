@@ -200,6 +200,12 @@ function termsOf(change: ChangeRow): SearchTerms | null {
       if (!filer) return null
       return { who: [filer], what: CAPEX, also: GUIDANCE }
     }
+    case 'gpu_price':
+      // A rental median across GPU clouds. The GKG vocabulary keeps only rows
+      // naming a lab, filer or model family (mentions.ts), and Lambda, Crusoe
+      // and Nebius aren't in it, so a search would be none-found by
+      // construction. Not searched until the vocabulary names the providers.
+      return null
     default:
       return null
   }

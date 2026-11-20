@@ -36,7 +36,9 @@ export const MOVEMENT_WINDOW_HOURS = 24
 type BandAxis = keyof Omit<MovementSummary['recent'], 'total'>
 
 // The band has no revenue or exposure bucket: both are read off the filings
-// the SEC bucket counts. Rankings are not events (isEvent below).
+// the SEC bucket counts. Rankings are not events (isEvent below), and compute
+// has none: the band counts what the labs themselves did, and a GPU rental
+// median is the market around them.
 const BAND_OF: Readonly<Record<AlertAxis, BandAxis | null>> = {
   pricing: 'pricing',
   hiring: 'hiring',
@@ -46,6 +48,7 @@ const BAND_OF: Readonly<Record<AlertAxis, BandAxis | null>> = {
   disclosures: 'disclosures',
   demand: null,
   exposure: 'sec',
+  compute: null,
 }
 
 /**
@@ -266,6 +269,18 @@ function summarize(entityType: string, payload: Json | null): string {
       `${str(payload.start) ?? '?'} → ${str(payload.end) ?? '?'}`,
       val === null ? '?' : `USD ${countLabel(val)}`,
       str(payload.form),
+    ]
+      .filter((p): p is string => Boolean(p))
+      .join(' · ')
+  }
+  if (entityType === 'gpu_price') {
+    const median = num(payload.median)
+    const providers = str(payload.providers)?.split(', ').length ?? null
+    return [
+      `${str(payload.gpu) ?? '?'} rental median`,
+      median === null ? '?' : `${money(median)} per GPU-hour`,
+      providers === null ? null : `${providers} providers`,
+      str(payload.as_of),
     ]
       .filter((p): p is string => Boolean(p))
       .join(' · ')

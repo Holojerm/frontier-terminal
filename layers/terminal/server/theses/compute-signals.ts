@@ -5,7 +5,7 @@
 // history from stored rows, as the Anthropic thesis's do. The arithmetic is
 // pure and exported for layers/terminal/test/theses-compute.test.ts.
 
-import { and, desc, eq, lt, max } from 'drizzle-orm'
+import { and, desc, eq, lt, lte, max } from 'drizzle-orm'
 
 import type { HiringHistoryData, LabId } from '../../shared/utils/terminal-types'
 import type { SignalSpec } from '../../shared/utils/thesis-types'
@@ -200,6 +200,9 @@ const pick = (p: Prov): Prov => ({ source_url: p.source_url, fetched_at: p.fetch
 
 export interface GpuObservation extends Prov {
   provider: string
+  /** The recipe observation's key (one configuration and region) and date; gpuState sets both. */
+  key?: string
+  date?: string
   gpu: GpuModel
   counted: boolean
   value: number
@@ -249,26 +252,38 @@ export interface GpuState {
  * Today's prices: for each GPU recipe whose newest run succeeded (fetched, or
  * fetched and unchanged), the observations of its newest stored date. A key
  * the page stopped printing keeps an older date and drops out.
+ *
+ * With `through` (a YYYY-MM-DD date), the prices as they stood that day
+ * instead: each recipe's newest stored date on or before it. A changed page
+ * stores its whole set under the day it was read, so that date's rows are the
+ * page as it was. Runs are not consulted: what was stored is the read.
  */
-export async function gpuState(db: PipelineDb): Promise<GpuState> {
+export async function gpuState(db: PipelineDb, opts: { through?: string } = {}): Promise<GpuState> {
   const observations: GpuObservation[] = []
   const failed: Record<string, string> = {}
   for (const recipe of GPU_RECIPES) {
-    const [run] = await db
-      .select({ status: tables.recipeRuns.status, detail: tables.recipeRuns.detail })
-      .from(tables.recipeRuns)
-      .where(eq(tables.recipeRuns.recipe_id, recipe.id))
-      .orderBy(desc(tables.recipeRuns.started_at))
-      .limit(1)
-    if (!run) continue
-    if (run.status === 'failed') {
-      failed[recipe.company] = run.detail ?? 'failed'
-      continue
+    if (!opts.through) {
+      const [run] = await db
+        .select({ status: tables.recipeRuns.status, detail: tables.recipeRuns.detail })
+        .from(tables.recipeRuns)
+        .where(eq(tables.recipeRuns.recipe_id, recipe.id))
+        .orderBy(desc(tables.recipeRuns.started_at))
+        .limit(1)
+      if (!run) continue
+      if (run.status === 'failed') {
+        failed[recipe.company] = run.detail ?? 'failed'
+        continue
+      }
     }
     const [newestDate] = await db
       .select({ at: max(tables.recipeObservations.date) })
       .from(tables.recipeObservations)
-      .where(eq(tables.recipeObservations.recipe_id, recipe.id))
+      .where(
+        and(
+          eq(tables.recipeObservations.recipe_id, recipe.id),
+          opts.through ? lte(tables.recipeObservations.date, opts.through) : undefined,
+        ),
+      )
     if (!newestDate?.at) continue
     const rows = await db
       .select()
@@ -284,6 +299,8 @@ export async function gpuState(db: PipelineDb): Promise<GpuState> {
       if (r.value === null) continue
       observations.push({
         provider: payload.provider,
+        key: r.key,
+        date: r.date,
         gpu: payload.gpu,
         counted: payload.counted,
         value: r.value,

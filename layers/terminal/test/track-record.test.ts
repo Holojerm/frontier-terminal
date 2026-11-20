@@ -186,6 +186,16 @@ describe('search terms', () => {
     expect(alertTerms([change({ entity_type: 'filed_fact', after: {} })])).toBeNull()
   })
 
+  it('does not search a GPU rental median: the press vocabulary names none of the providers', () => {
+    const median = change({
+      entity_type: 'gpu_price',
+      provider: 'other',
+      entity_key: 'gpu_price:median:H100',
+      after: { gpu: 'H100', median: 4.5, providers: 'coreweave, lambda, nebius' },
+    })
+    expect(alertTerms([median])).toBeNull()
+  })
+
   it('keeps rows by lab, filer and model-family words, and knows which alerts that covers', () => {
     const vocabulary = mentionVocabulary(['gpt-6.1-sol', 'claude-opus-5-5', 'o3-pro'])
     // "claude" folds into the lab name "Claude"; "gpt" is new.
