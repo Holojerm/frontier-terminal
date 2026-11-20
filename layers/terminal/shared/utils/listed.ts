@@ -143,3 +143,29 @@ export function listedEvidence(tie: ListedTie): { text: string; to: string } {
   }
   return { text: count(tie.sites.length, 'site', 'sites'), to: '/compute#suppliers' }
 }
+
+/** Some of the rows, with the counts of that set. Every row in it is tied to a lab. */
+export function listedSubset(data: ListedData, companies: ListedCompany[]): ListedData {
+  const from = (source: ListedTie['source']) =>
+    companies.filter((c) => c.ties.some((t) => t.source === source)).length
+  return {
+    ...data,
+    companies,
+    counts: {
+      companies: companies.length,
+      graph: from('graph'),
+      suppliers: from('suppliers'),
+      power: from('power'),
+      lab_tied: companies.length,
+    },
+  }
+}
+
+/** The companies tied to both labs: rows of one lab's cut whose ticker is in the other's. */
+export function listedBoth(a: ListedData, b: ListedData): ListedData {
+  const tickers = new Set(b.companies.map((c) => c.ticker))
+  return listedSubset(
+    a,
+    a.companies.filter((c) => tickers.has(c.ticker)),
+  )
+}
