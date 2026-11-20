@@ -9,7 +9,10 @@
 //      not yet read, newest first, at most INSTANCES_PER_RUN a run across
 //      filers. The first runs back-fill the history; after that a run reads
 //      only what was just filed. An instance read once is never fetched
-//      again: a filing does not change after it is accepted.
+//      again: a filing does not change after it is accepted;
+//   4. each earnings release (an 8-K with item 2.02) since GUIDANCE_SINCE not
+//      yet read, for the capex guidance it prints (guidance.ts): the filing's
+//      index page, then its exhibit 99.1, at most RELEASES_PER_RUN a run.
 //
 // Facts are append-only (filed_facts). The raw bytes of every document that
 // produced facts go to R2 first, so each row's raw_key resolves. Then the
@@ -43,9 +46,19 @@ import {
   type FactInput,
   type InstanceDocument,
 } from './facts'
+import {
+  GUIDANCE_SINCE,
+  exhibitUrl,
+  extractGuidance,
+  releaseDocuments,
+  type GuidanceInput,
+  type ReleaseDocument,
+} from './guidance'
 import { LAB_MEMBERS, SERIES_SINCE, buildSeries, isAlerting, type StoredFact } from './series'
 
 export const INSTANCES_PER_RUN = 24
+/** Two requests each: the filing's index page, then the release. */
+export const RELEASES_PER_RUN = 4
 export const COMPANYFACTS_INTERVAL_MS = 6 * 60 * 60 * 1000
 /** A failed instance is retried after this long, not every run. */
 export const FAILED_RETRY_MS = 24 * 60 * 60 * 1000
@@ -97,7 +110,7 @@ type ReadKey = Pick<Read, 'ticker' | 'kind' | 'accession_no'>
 
 interface Read {
   ticker: string
-  kind: 'submissions' | 'companyfacts' | 'instance'
+  kind: 'submissions' | 'companyfacts' | 'instance' | 'release'
   accession_no: string | null
   status: 'ok' | 'unchanged' | 'failed'
   detail: string | null
@@ -295,12 +308,112 @@ async function readInstance(
   }
 }
 
+/** Store the guidance one release prints; returns how many rows were new. */
+async function storeGuidance(
+  db: PipelineDb,
+  filer: Filer,
+  doc: ReleaseDocument,
+  found: readonly GuidanceInput[],
+  prov: { raw_key: string; source_url: string; now: string },
+): Promise<number> {
+  let added = 0
+  for (const g of found) {
+    const written = await db
+      .insert(tables.filedGuidance)
+      .values({
+        id: contentHash({
+          ticker: filer.ticker,
+          accession_no: doc.accession_no,
+          fiscal_year: g.fiscal_year,
+        }),
+        ticker: filer.ticker,
+        cik: filer.cik,
+        accession_no: doc.accession_no,
+        filed: doc.filed,
+        ...g,
+        raw_key: prov.raw_key,
+        first_seen_at: prov.now,
+        source_url: prov.source_url,
+        fetched_at: prov.now,
+      })
+      .onConflictDoNothing()
+      .returning({ id: tables.filedGuidance.id })
+    added += written.length
+  }
+  return added
+}
+
+/** One earnings release: the filing's index page for its exhibit 99.1, then the exhibit. */
+async function readRelease(
+  db: PipelineDb,
+  filer: Filer,
+  doc: ReleaseDocument,
+  fetchSec: SecFetch,
+  deps: FiledFactsDeps,
+  now: string,
+): Promise<Read | null> {
+  const base = { ticker: filer.ticker, kind: 'release' as const, accession_no: doc.accession_no }
+  const failed = (detail: string, source_url: string): Read => ({
+    ...base,
+    status: 'failed',
+    detail,
+    content_hash: null,
+    facts: 0,
+    source_url,
+  })
+  const index = await fetchSec(
+    { source_id: `${filer.id}-${doc.accession_no}-index`, url: doc.index_url, ext: 'html' },
+    base,
+  )
+  if (!index) return null
+  if (!index.ok) return failed(index.detail, doc.index_url)
+  let url: string | null
+  try {
+    url = exhibitUrl(index.text, filer.cik, doc.accession_no)
+  } catch (error) {
+    return failed(`index: ${String(error)}`, doc.index_url)
+  }
+  if (!url) {
+    return {
+      ...base,
+      status: 'ok',
+      detail: 'no exhibit 99.1',
+      content_hash: null,
+      facts: 0,
+      source_url: doc.index_url,
+    }
+  }
+  const fetched = await fetchSec(
+    { source_id: `${filer.id}-${doc.accession_no}-release`, url, ext: 'html' },
+    base,
+  )
+  if (!fetched) return null
+  if (!fetched.ok) return failed(fetched.detail, url)
+  const found = extractGuidance(fetched.text)
+  const raw_key = `guidance/${filer.ticker.toLowerCase()}/${doc.accession_no}.htm`
+  if (found.length) await deps.raw.put(raw_key, fetched.text, 'text/html')
+  const added = await storeGuidance(db, filer, doc, found, { raw_key, source_url: url, now })
+  return {
+    ...base,
+    status: 'ok',
+    detail: null,
+    content_hash: contentHashOfText(fetched.text),
+    facts: added,
+    source_url: url,
+  }
+}
+
 /**
- * Accessions with an ok instance read, and those that failed within
+ * Accessions with an ok read of `kind`, and those that failed within
  * FAILED_RETRY_MS. A 429 is not the document failing: it waits out the
  * cooldown with the rest of the run instead.
  */
-async function instanceState(db: PipelineDb, ticker: string, now: Date) {
+async function documentState(
+  db: PipelineDb,
+  ticker: string,
+  kind: 'instance' | 'release',
+  now: Date,
+) {
   const rows = await db
     .select({
       accession_no: tables.filedFactReads.accession_no,
@@ -309,9 +422,7 @@ async function instanceState(db: PipelineDb, ticker: string, now: Date) {
       started_at: tables.filedFactReads.started_at,
     })
     .from(tables.filedFactReads)
-    .where(
-      and(eq(tables.filedFactReads.ticker, ticker), eq(tables.filedFactReads.kind, 'instance')),
-    )
+    .where(and(eq(tables.filedFactReads.ticker, ticker), eq(tables.filedFactReads.kind, kind)))
   const retryFrom = new Date(now.getTime() - FAILED_RETRY_MS).toISOString()
   const done = new Set<string>()
   const failedRecently = new Set<string>()
@@ -411,6 +522,7 @@ export async function runFiledFacts(
   const filers = readFiledFactSources(deps.sourcesYaml, parseCikWhitelistBlock(deps.sourcesYaml))
   const reads: Read[] = []
   const queue: { filer: Filer; docs: InstanceDocument[] }[] = []
+  const releases: { filer: Filer; docs: ReleaseDocument[] }[] = []
 
   // After the first 429 nothing else is fetched; each request the run would
   // still have made is counted instead.
@@ -443,6 +555,7 @@ export async function runFiledFacts(
     )
     // A deferred submissions feed (null) leaves no list to work from this run.
     let docs: InstanceDocument[] = []
+    let filed: ReleaseDocument[] = []
     if (sub && !sub.ok) {
       reads.push({
         ticker: filer.ticker,
@@ -457,6 +570,7 @@ export async function runFiledFacts(
     } else if (sub) {
       try {
         docs = instanceDocuments(sub.text, filer.cik, SERIES_SINCE)
+        filed = releaseDocuments(sub.text, filer.cik, GUIDANCE_SINCE)
       } catch (error) {
         reads.push({
           ticker: filer.ticker,
@@ -482,10 +596,17 @@ export async function runFiledFacts(
     }
 
     if (filer.instances && docs.length) {
-      const { done, failedRecently } = await instanceState(db, filer.ticker, deps.now)
+      const { done, failedRecently } = await documentState(db, filer.ticker, 'instance', deps.now)
       queue.push({
         filer,
         docs: docs.filter((d) => !done.has(d.accession_no) && !failedRecently.has(d.accession_no)),
+      })
+    }
+    if (filed.length) {
+      const { done, failedRecently } = await documentState(db, filer.ticker, 'release', deps.now)
+      releases.push({
+        filer,
+        docs: filed.filter((d) => !done.has(d.accession_no) && !failedRecently.has(d.accession_no)),
       })
     }
   }
@@ -498,6 +619,17 @@ export async function runFiledFacts(
       if (!doc || budget === 0) continue
       budget--
       const read = await readInstance(db, q.filer, doc, fetchSec, deps, now)
+      if (read) reads.push(read)
+    }
+  }
+
+  // After the instances, so a new 10-Q is never held up by a release back-fill.
+  for (let budget = RELEASES_PER_RUN; budget > 0 && releases.some((q) => q.docs.length);) {
+    for (const q of releases) {
+      const doc = q.docs.shift()
+      if (!doc || budget === 0) continue
+      budget--
+      const read = await readRelease(db, q.filer, doc, fetchSec, deps, now)
       if (read) reads.push(read)
     }
   }
@@ -529,7 +661,8 @@ export async function runFiledFacts(
 
   let alerts = 0
   for (const filer of filers) {
-    if (reads.some((r) => r.ticker === filer.ticker && r.facts > 0)) {
+    // A release's rows are guidance, which no series reads.
+    if (reads.some((r) => r.ticker === filer.ticker && r.kind !== 'release' && r.facts > 0)) {
       alerts += await writeAlerts(db, filer, deps.now)
     }
   }

@@ -1,7 +1,10 @@
 // The ground-truth payload (/ground-truth): each press report of a lab's
 // revenue against the figure the lab's own filing printed later, with the
-// error and how many days the report came before the filing. Beside it, the
-// alert track record's totals.
+// error and how many days the report came before the filing. Beside it, two
+// more checks against filings, each in its own file: press reports of a
+// deal's size (terminal-ground-truth-deals.ts) and the capex guidance an
+// earnings release prints (terminal-ground-truth-guidance.ts). Then the alert
+// track record's totals.
 //
 // A report is scored only against a figure that was not yet filed when it was
 // published. Most headlines name no year, so the period is the nearest
@@ -26,8 +29,22 @@ import type {
   RevenuePeriod,
 } from '../../shared/utils/terminal-types'
 
+import { isNull } from 'drizzle-orm'
+
+import * as tables from '#server/db/schema'
+import { DEAL_WORDS } from '../pipeline/reported/figures'
 import type { PipelineDb } from '../pipeline/store'
 import type { QueryContext } from './terminal-db'
+import { EXPOSURE_METHOD, filedFactsAt } from './terminal-exposure'
+import {
+  DEAL_LIMIT,
+  dealMeasures,
+  dealTally,
+  scoreDeals,
+  type FiledAggregate,
+} from './terminal-ground-truth-deals'
+import { queryGuidance } from './terminal-ground-truth-guidance'
+import { queryProspectus } from './terminal-prospectus'
 import { middle, storedHeadlines, type StoredHeadline } from './terminal-reported'
 import { queryRevenue } from './terminal-revenue'
 import { queryTrackRecord } from './terminal-track-record'
@@ -357,11 +374,37 @@ export async function queryGroundTruth(
   db: PipelineDb,
   ctx: QueryContext,
 ): Promise<GroundTruthData> {
-  const [revenue, stored, record] = await Promise.all([
+  if (ctx.at) ctx.notes.method.add(EXPOSURE_METHOD)
+  const [revenue, stored, record, facts, prospectus, owed] = await Promise.all([
     queryRevenue(db, ctx),
     storedHeadlines(db, ctx.at),
     queryTrackRecord(db, ctx),
+    filedFactsAt(db, ctx.at),
+    queryProspectus(db, ctx),
+    // A point-in-time payload can't rewind a second reading; it reports today's.
+    db
+      .select({ title_key: tables.reportedReviews.title_key })
+      .from(tables.reportedReviews)
+      .where(isNull(tables.reportedReviews.deals_at)),
   ])
+  const guidance = await queryGuidance(db, ctx.at, facts, TOLERANCE_PCT)
+
+  const aggregates: FiledAggregate[] = prospectus.issuers.flatMap((issuer) =>
+    issuer.commitments
+      .filter((c) => c.schedule === 'obligations_aggregate' && c.lines[0])
+      .map((c) => ({
+        lab: issuer.provider,
+        value: c.lines[0]!.total,
+        filed: c.filed,
+        form: c.form,
+        accession_no: c.accession_no,
+        filing_url: c.filing_url,
+        source_url: c.source_url,
+        fetched_at: c.fetched_at,
+      })),
+  )
+  const deals = scoreDeals(stored.deals, { facts, aggregates, tolerance_pct: TOLERANCE_PCT })
+  const labeled = stored.deals.map((d) => d.judged_at).sort()
 
   // Only a lab that files for itself: a parent's consolidated revenue isn't the lab's.
   const issuers = revenue.providers.filter((p) => p.disclosure === 'issuer')
@@ -391,6 +434,14 @@ export async function queryGroundTruth(
   const found = stored.headlines.map((h) => h.found_at).sort()
   return {
     tolerance_pct: TOLERANCE_PCT,
+    deals: {
+      reports: deals.slice(0, DEAL_LIMIT),
+      tally: dealTally(deals),
+      measures: dealMeasures(),
+      unread: owed.filter((r) => DEAL_WORDS.test(stored.titles.get(r.title_key) ?? '')).length,
+      first_labeled_at: labeled[0] ?? null,
+    },
+    guidance,
     resolutions,
     open: open.slice(0, OPEN_LIMIT),
     waiting: waitingOf(stored.headlines, filers),

@@ -1,9 +1,10 @@
-// Reported figures: lab revenue, valuations and funding rounds as the press
-// headlines them, read from the same GDELT GKG files as the track record
-// (../track-record/gkg.ts). A headline is kept when it names a private lab we
-// track, states an amount of money, and uses a financial word. The judge then
-// says which lab, metric and basis each amount is (review.ts), and the Worker
-// keeps a label only when its amount and lab are in the headline.
+// Reported figures: lab revenue, valuations, funding rounds and deal sizes as
+// the press headlines them, read from the same GDELT GKG files as the track
+// record (../track-record/gkg.ts). A headline is kept when it names a private
+// lab we track, states an amount of money, and uses a financial or a deal
+// word. The judge then says which lab, metric and basis each amount is
+// (review.ts), and the Worker keeps a label only when its amount, its lab and
+// any other company it names are in the headline.
 //
 // Dependency-free: scripts/gdelt-search.ts imports it without `bun install`,
 // and the Worker re-runs the same match on every posted row before keeping it.
@@ -90,15 +91,21 @@ export function amountsIn(title: string): Amount[] {
 const FIGURE_WORDS =
   /\b(revenues?|sales|run[- ]rate|annuali[sz]ed|ARR|valuations?|valued|valuing|worth|raises?|raised|raising|fundraise|fundraising|funding|financing|round|tender|share sale|secondary|investors?|investment|backs|backed|acquires|acquired|acquisition|bought|buys|forecasts?|projects|projected|projections?|expects|targets?|sees)\b/i
 
+// Words that make an amount a deal between a lab and another company: compute
+// and cloud contracts, a company's investment, a loan. Kept since deals were
+// labeled; a file read before then was matched on FIGURE_WORDS alone.
+export const DEAL_WORDS =
+  /\b(deals?|pacts?|contracts?|agreements?|partnerships?|commits?|committed|commitments?|compute|computing|cloud|capacity|chips?|gigawatts?|data[- ]cent(?:er|re)s?|leases?|loans?|lends?|lending|credit|financing|stakes?|invests?|invested|investing|backlog|obligations?)\b/i
+
 export interface FigureHeadline {
   labs: ReportedLab[]
   amounts: Amount[]
 }
 
-/** A headline worth a judge's reading, or null: a tracked lab, an amount of money, and a financial word. */
+/** A headline worth a judge's reading, or null: a tracked lab, an amount of money, and a financial or deal word. */
 export function figureHeadline(title: string): FigureHeadline | null {
   const labs = labsIn(title)
-  if (labs.length === 0 || !FIGURE_WORDS.test(title)) return null
+  if (labs.length === 0 || !(FIGURE_WORDS.test(title) || DEAL_WORDS.test(title))) return null
   const amounts = amountsIn(title)
   return amounts.length ? { labs, amounts } : null
 }

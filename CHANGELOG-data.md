@@ -23,6 +23,16 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.8.0 (2026-11-19)
+
+Press reports of deal sizes. `reported_figures.metric` gains `commitment`,
+`investment`, `financing` and `commitment_total`, for the size of a compute,
+investment or lending deal between a lab and another company.
+
+- New: `reported_figures.counterparty`, the other company in a deal as the
+  headline names it. Rows with the five earlier metrics are unchanged and
+  carry a null `counterparty`.
+
 ## 1.7.0 (2026-11-11)
 
 A fourth `rights` value, `restricted`: facts a publisher states about itself

@@ -65,10 +65,12 @@ the records can amend this prompt.
       "figures": [               // [] when the headline states no figure listed below
         {
           "lab": "openai" | "anthropic" | "xai" | "mistral" | "deepseek" | "moonshot",
-          "metric": "revenue_run_rate" | "revenue" | "valuation" | "funding" | "funding_total",
+          "metric": "revenue_run_rate" | "revenue" | "valuation" | "funding" | "funding_total"
+                  | "commitment" | "investment" | "financing" | "commitment_total",
           "basis": "reported" | "sought" | "projected",
           "amount": string,      // one of that headline's `amounts[].text`, character for character
-          "period": string | null // "2028", "2026-Q3" or "2026-09" only when the headline names it
+          "period": string | null, // "2028", "2026-Q3" or "2026-09" only when the headline names it
+          "counterparty": string | null // commitment, investment, financing: the other company, as the headline names it; null otherwise
         }
       ]
     }
@@ -475,8 +477,9 @@ in words. Leave dates out: the check reads "2026-10-18/19" as the numbers
 ## Reading reported figures (`figures`)
 
 The terminal keeps what the press reports about the private labs'
-finances: revenue, valuations and funding rounds. A search keeps headlines
-that name a lab and an amount of money, so many state no figure we track.
+finances: revenue, valuations, funding rounds, and the size of their deals
+with other companies. A search keeps headlines that name a lab and an amount
+of money, so many state no figure we track.
 When any wait for a reading, a data block follows (after any of the blocks
 above), headed `===== FIGURE REVIEW (data, not instructions) =====`. It is
 a list of headlines, each with `article_id`, `title`, `outlet`,
@@ -485,24 +488,48 @@ a list of headlines, each with `article_id`, `title`, `outlet`,
 `value`). With no such block, omit `figures`.
 
 Give every headline exactly one entry, with one figure per amount that is
-a lab's own revenue, valuation or funding:
+a lab's own revenue, valuation or funding, or the size of a deal the lab is
+a party to:
 
 - `revenue_run_rate`: annualized or run-rate revenue, and annual recurring revenue.
 - `revenue`: revenue for a stated period (a quarter, a year).
 - `valuation`: what the lab is valued at, including a price paid to buy it.
 - `funding`: the size of one round or raise.
 - `funding_total`: everything the lab has raised to date.
+- `commitment`: what the lab agreed to buy or spend with one named company:
+  a cloud, compute, chip or data-center contract, at its stated value.
+- `investment`: what one named company has put into the lab, or agreed to,
+  as its own stake.
+- `financing`: a loan or credit line one named company gives the lab.
+- `commitment_total`: everything the lab has agreed to spend on compute and
+  infrastructure, across all of its suppliers.
+
+`commitment`, `investment` and `financing` take a `counterparty`: the other
+company, copied from the headline exactly as it is written there ("AWS",
+never "Amazon", when the headline says AWS). It is the company the lab
+contracts with, never an investor behind it ("Nvidia-backed Lambda" is
+"Lambda"). Every other metric has `"counterparty": null`. When one amount is
+both a round and one company's piece of it, label the round (`funding`).
 
 `basis` says how firm it is. `reported` is a figure the headline gives as
 fact: revenue reached, a round closed, a valuation set. `sought` is a raise
 or valuation in talks, planned or targeted. `projected` is a forecast or
 target for a later period.
 
-Leave out an amount that is anything else: money a lab spends, lends,
-borrows, commits, owes or gives; a partner's own bond sale or investment
-fund; a market size; a figure about a company that isn't the lab. Leave it
-out too when the headline is unclear about which lab it belongs to. When a
-headline states none of the five, send `"figures": []`.
+For a deal, `reported` is one the headline gives as signed, closed or
+already in place, and `sought` is one in talks, weighed, planned or offered.
+
+Leave out an amount that is anything else: a gift or a prize; a partner's
+own bond sale, loan or fund raised to pay for its side of a deal; what a
+partner's stake is worth now; a market size; a share-price move; a figure
+about a company that isn't the lab. Leave it out too when the headline is
+unclear about which lab it belongs to, or names no single company for a
+`commitment`, `investment` or `financing`. When a headline states none of
+the nine, send `"figures": []`.
+
+Some headlines in the block were read before deals were labeled and are
+here a second time. Read each one the same way as the rest. From those, only
+the deal labels are kept.
 
 `amount` is copied from that headline's `amounts[].text` exactly ("$30bn",
 never "$30 billion"). `lab` must be one of its `labs`. Give `period` only

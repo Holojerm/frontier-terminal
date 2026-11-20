@@ -1,6 +1,8 @@
 // GET /api/ground-truth — each press report of a lab's revenue against the
 // figure the lab's own filing printed later, with the error and the days
-// between them, and the alert track record's totals
+// between them; press reports of a deal's size against what the other company
+// filed; capex guidance from earnings releases against the year's filed
+// capex; and the alert track record's totals
 // (layers/terminal/server/utils/terminal-ground-truth.ts). `as_of` returns
 // what the store held then: the press tables are append-only and the filed
 // rows are rewound.

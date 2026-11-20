@@ -15,7 +15,13 @@ import type { ExposureData, ExposureTicker } from '../../shared/utils/terminal-e
 
 import * as tables from '#server/db/schema'
 import { readState } from '../exposure/ingest'
-import { EXPOSURE_GAPS, FILER_NAMES, FISCAL_YEAR_END, buildSeries } from '../exposure/series'
+import {
+  EXPOSURE_GAPS,
+  FILER_NAMES,
+  FISCAL_YEAR_END,
+  buildSeries,
+  type StoredFact,
+} from '../exposure/series'
 import type { PipelineDb } from '../pipeline/store'
 import type { QueryContext } from './terminal-db'
 
@@ -28,33 +34,35 @@ export const EXPOSURE_RULE =
 /** UTC day of an instant: facts filed before it count at that instant. */
 export const filedBefore = (at: string) => at.slice(0, 10)
 
+/** Every stored fact filed before the UTC day of `at`, or all of them. */
+export function filedFactsAt(db: PipelineDb, at: string | null): Promise<StoredFact[]> {
+  return db
+    .select({
+      ticker: tables.filedFacts.ticker,
+      concept: tables.filedFacts.concept,
+      dims: tables.filedFacts.dims,
+      start: tables.filedFacts.start,
+      end: tables.filedFacts.end,
+      value: tables.filedFacts.value,
+      unit: tables.filedFacts.unit,
+      form: tables.filedFacts.form,
+      filed: tables.filedFacts.filed,
+      accession_no: tables.filedFacts.accession_no,
+      cik: tables.filedFacts.cik,
+      source_url: tables.filedFacts.source_url,
+      fetched_at: tables.filedFacts.fetched_at,
+    })
+    .from(tables.filedFacts)
+    .where(at ? lt(tables.filedFacts.filed, filedBefore(at)) : undefined)
+}
+
 export async function queryExposure(db: PipelineDb, ctx: QueryContext): Promise<ExposureData> {
   const at = ctx.at
   if (at) {
     ctx.notes.method.add(EXPOSURE_METHOD)
     ctx.notes.eventTime = true
   }
-  const [facts, state] = await Promise.all([
-    db
-      .select({
-        ticker: tables.filedFacts.ticker,
-        concept: tables.filedFacts.concept,
-        dims: tables.filedFacts.dims,
-        start: tables.filedFacts.start,
-        end: tables.filedFacts.end,
-        value: tables.filedFacts.value,
-        unit: tables.filedFacts.unit,
-        form: tables.filedFacts.form,
-        filed: tables.filedFacts.filed,
-        accession_no: tables.filedFacts.accession_no,
-        cik: tables.filedFacts.cik,
-        source_url: tables.filedFacts.source_url,
-        fetched_at: tables.filedFacts.fetched_at,
-      })
-      .from(tables.filedFacts)
-      .where(at ? lt(tables.filedFacts.filed, filedBefore(at)) : undefined),
-    readState(db, null),
-  ])
+  const [facts, state] = await Promise.all([filedFactsAt(db, at), readState(db, null)])
   return {
     as_of: ctx.as_of,
     computed_at: ctx.now().toISOString(),
