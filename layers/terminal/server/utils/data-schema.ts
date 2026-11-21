@@ -256,6 +256,12 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       archive_captures: { note: 'axis can now be gpu (rows in archived_gpu_prices).' },
     },
   },
+  {
+    version: '1.14.0',
+    date: '2026-11-21',
+    summary:
+      '/api/adoption gains weekly on each downloads and agent_prs entry: the total per ISO week (Monday to Sunday, UTC) over every stored day, oldest first, through the newest week whose Sunday is on record. days says how many of its days are stored, and partial is true when one is missing. An agent_prs week is also retrospective when any of its days was counted later, from the pull requests that still existed. get_adoption returns it too. No table columns changed.',
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

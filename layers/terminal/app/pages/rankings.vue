@@ -13,7 +13,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Demand',
     summary:
-      'Each frontier lab’s share of tokens routed through OpenRouter over the newest seven days, the implied spend share at list price, a 30-day series, weekly share over the whole history and the top models per lab; then the share of US businesses on Ramp paying each lab, SDK and coding-agent downloads on npm and PyPI, and coding-agent pull requests on GitHub. None of it is market share.',
+      'Each frontier lab’s share of tokens routed through OpenRouter over the newest seven days, the implied spend share at list price, a 30-day series, weekly share over the whole history and the top models per lab; then the share of US businesses on Ramp paying each lab, SDK and coding-agent downloads on npm and PyPI, and coding-agent pull requests on GitHub, each also by week over everything stored. None of it is market share.',
   },
 })
 
@@ -163,6 +163,38 @@ const tabs = computed(() => [
               </div>
             </TerminalPanel>
           </div>
+
+          <TerminalPanel
+            id="sdk-weekly"
+            title="SDK downloads by week"
+            note="Each SDK’s downloads per week over everything we have stored. Each chart has its own scale, so read each package’s trend on its own."
+            class="mt-6"
+          >
+            <TerminalDownloadsWeekly
+              :downloads="adoption.downloads"
+              kind="sdk"
+              :caveat="adoption.caveats.downloads"
+            />
+          </TerminalPanel>
+
+          <TerminalPanel
+            id="agents-weekly"
+            title="Coding agents by week"
+            note="Each coding agent’s npm downloads and public GitHub pull requests per week, back as far as we have them. Each chart has its own scale."
+            class="mt-6"
+          >
+            <div class="space-y-6">
+              <TerminalDownloadsWeekly
+                :downloads="adoption.downloads"
+                kind="agent"
+                :caveat="adoption.caveats.downloads"
+              />
+              <TerminalAgentPrsWeekly
+                :agents="adoption.agent_prs"
+                :caveat="adoption.caveats.agent_prs"
+              />
+            </div>
+          </TerminalPanel>
         </template>
       </template>
     </TerminalTabs>
