@@ -89,6 +89,7 @@ export const SURFACE_WAIVERS = {
     filing_detections: 'internal: EDGAR-to-alert timing, summarized on /api/reliability',
     filing_readings:
       'internal: the judge’s re-reads of filing parts; what it reads lands in the entity store',
+    gdelt_archive_files: 'internal: the read cursor for GKG files before GKG_FROM',
     gdelt_files: 'internal: the GKG read cursor',
     gkg_mentions: 'internal: third-party GDELT rows kept for matching, then dropped',
     judge_runs: 'internal: the judge routine’s cursor',

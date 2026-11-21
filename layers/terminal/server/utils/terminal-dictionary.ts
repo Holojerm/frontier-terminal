@@ -318,7 +318,8 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     cadence: 'Hourly, as each GDELT file is read.',
     event: 'published_at',
     knowledge: 'found_at',
-    start: 'From GDELT’s files of 2026-09-01, read again for figures from 2026-11-07.',
+    start:
+      'From GDELT’s files of 2026-09-01, read again for figures from 2026-11-07. Back to 2023-01-01 on the days whose hourly sample carried figure headlines, and the day either side, read from 2026-11-21 (found_at says when).',
     joins: [],
     feeds: ['track_record'],
   },

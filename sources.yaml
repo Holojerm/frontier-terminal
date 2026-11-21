@@ -2378,7 +2378,12 @@ track_record_sources:
       Of each kept row whose headline also names an amount of money and a
       financial word (reported figures), its record id, URL, title, outlet
       domain and quarter hour, kept for good; files read before 2026-11-07
-      are read again for these.
+      are read again for these. Before 2026-09-01, back to 2023-01-01, the
+      same figure fields alone, never a mention: the first file of every
+      hour, then every file of each day whose hourly files carried two
+      figure headlines or one stating revenue, and of the day either side
+      (layers/terminal/server/pipeline/reported/archive.ts, from
+      2026-11-21).
       Read 2026-11-07.
     rights: upstream
     caveats: >-
