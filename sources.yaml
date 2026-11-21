@@ -2357,8 +2357,10 @@ track_record_sources:
     url: http://data.gdeltproject.org/gdeltv2/{stamp}.gkg.csv.zip
     format: >-
       Zipped TSV, GDELT 2.0 Global Knowledge Graph (GKG 2.1), one file per
-      quarter hour, ~2.5 MB zipped and ~8 MB unzipped, ~1,200 English news
-      articles each (~110,000 a day, sampled 2026-11-06)
+      quarter hour, 1.8 to 9.5 MB zipped (about three times that
+      unzipped) and 1,300 to 2,300 English news articles each, by hour of
+      day; 490 MB a day on 2026-11-10, 720 MB on 2024-03-12 (sampled
+      2026-11-20)
     verdict: include
     terms: >-
       GDELT's terms (gdeltproject.org/about.html): "all datasets released by
