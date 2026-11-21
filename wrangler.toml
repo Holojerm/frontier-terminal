@@ -188,8 +188,8 @@ enabled = true
 #                   outboxes and the press briefs (see [[queues]] below)
 #                   bulk:build —the bulk feed's gzipped CSVs and Parquet files in R2, built once a
 #                   UTC day and resumed hourly (layers/terminal/server/utils/terminal-bulk.ts)
-#                   prints:read — the Taiwan monthly revenue feeds and TSMC's revenue 6-Ks
-#                   (layers/terminal/server/prints/ingest.ts)
+#                   prints:read — the Taiwan monthly revenue feeds, TSMC's revenue 6-Ks and
+#                   Korea Customs Service's export releases (layers/terminal/server/prints/ingest.ts)
 #   "29 5 * * TUE"  power:verify — re-reads each utility, regulator and company page the
 #                   power-sites table cites (layers/terminal/server/power/verify.ts)
 #   "7 * * * *"     probes:latency — one timed streaming request per lab's flagship model

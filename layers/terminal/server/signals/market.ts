@@ -57,6 +57,7 @@ export const MARKET_SYMBOLS = [
   'INTC',
   'MRVL',
   'NVDA',
+  'MU',
   'QCOM',
   'TSM',
   'ALAB',

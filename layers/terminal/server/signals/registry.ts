@@ -9,7 +9,7 @@
 // recipes and their derived series (theses/download-series.ts) and the probe
 // rollups (pipeline/probes/, probe_days).
 
-import { PRINT_ENTITIES } from '../../shared/utils/prints'
+import { PRINT_ENTITIES, type PrintSeries, type PrintWindow } from '../../shared/utils/prints'
 import type { LabId } from '../../shared/utils/terminal-types'
 import type {
   SignalEntityKind,
@@ -41,8 +41,8 @@ export type SignalSource =
   | { kind: 'grid_load'; ba: string; period: 'month' | 'week' }
   /** ERCOT's large-load figures (ercot_large_load_facts), each month as the first report that states it put it. */
   | { kind: 'ercot_large_loads'; metric: 'observed_peak_mw' | 'approved_to_energize_mw' }
-  /** A Taiwan company's monthly revenue (hardware_prints): the year-on-year change its first release stated. */
-  | { kind: 'prints'; series: 'tw_revenue'; entity: string }
+  /** A print series (hardware_prints) in one window: the year-on-year change its first release stated. */
+  | { kind: 'prints'; series: PrintSeries; entity: string; window?: PrintWindow }
 
 export interface SignalDef {
   /** Stable: results, exports and links key on it. Never reuse a retired id. */
@@ -311,6 +311,31 @@ const twRevenue = (entity: (typeof PRINT_ENTITIES)[number]): SignalDef => ({
     entity.id === 'tsmc' ? '2015-01-01' : entity.id === 'accton' ? '2023-07-01' : '2026-10-01',
 })
 
+/**
+ * Korea's chip exports in one window, as the year-on-year change the release
+ * states. Korea Customs Service posts the first 10 days on the 11th, the
+ * first 20 on the 21st and the confirmed month about the 15th of the next, so
+ * the 10- and 20-day counts lead the month. Each point is dated public on its
+ * release's embargo day, or the day KCS posted it; available_after_days is
+ * the fallback for neither. MU is the listed memory maker; Samsung and SK hynix
+ * aren't in MARKET_SYMBOLS.
+ */
+const krChips = (window: PrintWindow, label: string, lag: number): SignalDef => ({
+  id: window === 'month' ? 'kr-chip-exports' : `kr-chip-exports-${window}`,
+  label,
+  entity: { kind: 'supplier', id: 'kr-semiconductors' },
+  tickers: PRINT_ENTITIES.find((e) => e.id === 'kr-semiconductors')!.leads,
+  source: { kind: 'prints', series: 'kr_chip_exports', entity: 'kr-semiconductors', window },
+  transform: 'change',
+  frequency: 'monthly',
+  test: 'lead_lag',
+  aggregate: 'last',
+  available_after_days: lag,
+  // The 10- and 20-day releases state the chip figure from August 2021; the
+  // confirmed month has it from the board's oldest release, August 2016.
+  history_from: window === 'month' ? '2016-08-01' : '2021-08-01',
+})
+
 export const SIGNALS: readonly SignalDef[] = [
   npm('npm-anthropic-sdk', 'anthropic', '@anthropic-ai/sdk npm downloads'),
   npm('npm-claude-code', 'anthropic', 'Claude Code npm downloads'),
@@ -408,6 +433,9 @@ export const SIGNALS: readonly SignalDef[] = [
   ercot('observed_peak_mw', 'ERCOT large load observed, sum of monthly peaks'),
   ercot('approved_to_energize_mw', 'ERCOT large load approved to energize'),
   ...PRINT_ENTITIES.filter((e) => e.series === 'tw_revenue').map(twRevenue),
+  krChips('d10', 'Korea chip exports, first 10 days, year on year', 0),
+  krChips('d20', 'Korea chip exports, first 20 days, year on year', 0),
+  krChips('month', 'Korea chip exports, month, year on year', 20),
 ]
 
 /** Where a series is read from, in the names /data and the exports use. */
@@ -436,6 +464,6 @@ export function sourceLabel(source: SignalSource): string {
     case 'ercot_large_loads':
       return `ercot_large_load_facts: ${source.metric}, first stated`
     case 'prints':
-      return `hardware_prints: ${source.series} ${source.entity}, stated year-on-year change, first release`
+      return `hardware_prints: ${source.series} ${source.entity}${source.window && source.window !== 'month' ? ` ${source.window}` : ''}, stated year-on-year change, first release`
   }
 }

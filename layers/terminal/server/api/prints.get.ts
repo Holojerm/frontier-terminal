@@ -1,8 +1,9 @@
 // GET /api/prints — the hardware layer's monthly prints: Taiwan revenue for
-// TSMC, the server builders, Accton and Delta, each month as first printed and
-// as revised, with each company's sourced ties to the labs and chip makers it
-// builds for (layers/terminal/server/utils/terminal-prints.ts). Read hourly
-// by prints:read (layers/terminal/server/prints/).
+// TSMC, the server builders, Accton and Delta, and Korea's chip exports under
+// KOGL Type 1, each month as first printed and as revised, with each
+// company's sourced ties to the labs and chip makers it builds for
+// (layers/terminal/server/utils/terminal-prints.ts). Read hourly by
+// prints:read (layers/terminal/server/prints/).
 
 import { printsStamp } from '../prints/store'
 import { rateLimitTerminal } from '../utils/api-access'

@@ -2,7 +2,8 @@
 // The hardware layer's monthly prints (/api/prints): one row per company with
 // its newest month, the change on a year earlier as the release states it,
 // the last two years as a sparkline and when we first held the figure; then
-// the quoted ties naming who each company builds for or supplies.
+// Korea's chip exports, one row per window (the first 10 and 20 days, the
+// month); then the quoted ties naming who each company builds for or supplies.
 
 import type { PrintsData } from '../../../shared/utils/prints'
 import { grouped, signedPercent } from '../../../shared/utils/terminal-format'
@@ -40,6 +41,30 @@ const rows = computed(() =>
     }),
 )
 
+const krColumns: TableColumn[] = [
+  { key: 'window', label: 'Period' },
+  { key: 'month', label: 'Month' },
+  { key: 'exports', label: 'Exports', numeric: true, hint: 'US$ billion' },
+  { key: 'yoy', label: 'YoY', numeric: true },
+  { key: 'seen', label: 'Released' },
+]
+const WINDOW_LABEL = { d10: 'First 10 days', d20: 'First 20 days', month: 'Whole month' } as const
+const korea = computed(() => {
+  const points = props.data.series.find((s) => s.entity.series === 'kr_chip_exports')?.points ?? []
+  return (['d10', 'd20', 'month'] as const).map((w) => ({
+    key: w,
+    label: WINDOW_LABEL[w],
+    newest: points.find((p) => p.window === w) ?? null,
+  }))
+})
+const krSources = computed(() =>
+  korea.value.flatMap((r) =>
+    r.newest
+      ? [{ source_url: r.newest.source_url, fetched_at: r.newest.first_seen_at, label: r.label }]
+      : [],
+  ),
+)
+
 const tieColumns: TableColumn[] = [
   { key: 'company', label: 'Company' },
   { key: 'counterparty', label: 'Names' },
@@ -55,6 +80,7 @@ const ties = computed(() =>
 const sources = computed(() => {
   const seen = new Map<string, { source_url: string; fetched_at: string }>()
   for (const s of props.data.series) {
+    if (s.entity.series !== 'tw_revenue') continue
     for (const p of s.points.slice(0, 1))
       seen.set(p.source_url, { source_url: p.source_url, fetched_at: p.first_seen_at })
   }
@@ -100,6 +126,39 @@ const billions = (v: number) => grouped(v / 1e9, 1)
         <span class="text-sm text-muted">No month read yet.</span>
       </template>
     </TerminalTable>
+
+    <TerminalTable
+      caption="Korea’s semiconductor exports, newest release per period"
+      :columns="krColumns"
+      :rows="korea"
+      :row-key="(r) => r.key"
+      :gap="(r) => r.newest === null"
+      :gap-columns="['month', 'exports', 'yoy', 'seen']"
+      nested
+      stack
+    >
+      <template #cell-window="{ row: r }">
+        <span class="text-highlighted">{{ r.label }}</span>
+      </template>
+      <template #cell-month="{ row: r }">{{ r.newest?.period }}</template>
+      <template #cell-exports="{ row: r }">
+        <span v-if="r.newest">{{ billions(r.newest.value) }}</span>
+      </template>
+      <template #cell-yoy="{ row: r }">
+        {{ r.newest?.yoy_pct == null ? '—' : signedPercent(r.newest.yoy_pct) }}
+      </template>
+      <template #cell-seen="{ row: r }">
+        <span v-if="r.newest" class="text-xs text-muted">
+          {{ stamps.absolute(r.newest.published_at ?? r.newest.first_seen_at) }}
+        </span>
+      </template>
+      <template #gap>
+        <span class="text-sm text-muted">No release read yet.</span>
+      </template>
+    </TerminalTable>
+    <TerminalSources :sources="krSources">
+      <span>Korea Customs Service, under KOGL Type 1 (Korea Open Government License)</span>
+    </TerminalSources>
 
     <TerminalExpand
       v-if="ties.length"

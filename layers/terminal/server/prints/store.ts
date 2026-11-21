@@ -4,12 +4,12 @@
 // in release order (ingest.ts), so a chain's first vintage is the first
 // release that printed the month.
 
-import { and, desc, eq, inArray, sql } from 'drizzle-orm'
+import { and, desc, eq, inArray, notInArray, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import type { PipelineDb } from '../pipeline/store'
 import type { PrintObservation } from './parse'
-import type { PrintBasis } from '../../shared/utils/prints'
+import { PRINT_HELD_SOURCES, type PrintBasis } from '../../shared/utils/prints'
 
 export interface PrintWrite {
   source_id: string
@@ -92,7 +92,7 @@ export async function storeObservations(
   return { added: rows.length - revised, revised }
 }
 
-/** A change key for the route's cache: rows and the newest first sighting. */
+/** A change key for the route's cache: the rows a reader may see and the newest first sighting. */
 export async function printsStamp(db: PipelineDb): Promise<string> {
   const [row] = await db
     .select({
@@ -100,5 +100,6 @@ export async function printsStamp(db: PipelineDb): Promise<string> {
       last: sql<string | null>`max(${tables.hardwarePrints.first_seen_at})`,
     })
     .from(tables.hardwarePrints)
+    .where(notInArray(tables.hardwarePrints.source_id, [...PRINT_HELD_SOURCES]))
   return `${row?.n ?? 0}:${row?.last ?? ''}`
 }

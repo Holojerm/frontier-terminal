@@ -72,6 +72,22 @@ describe('periods', () => {
     expect(changes[0]!.available).toBe('2026-10-19')
     expect(changesOf(weeks, 'share', 'week', 0)[0]!.x).toBe(10)
   })
+
+  it('dates a change on the day its source says it was public, before the period ends', () => {
+    // Korea's first 10 days of November, released on the 11th; October's stated no time.
+    const months = resample(
+      [
+        { date: '2026-10-01', value: 170.9 },
+        { date: '2026-11-01', value: 331.2, available: '2026-11-11' },
+      ],
+      'month',
+      'last',
+    )
+    expect(changesOf(months, 'change', 'month', 0).map((c) => [c.period, c.available])).toEqual([
+      ['2026-10-01', '2026-10-31'],
+      ['2026-11-01', '2026-11-11'],
+    ])
+  })
 })
 
 describe('sessions and returns', () => {

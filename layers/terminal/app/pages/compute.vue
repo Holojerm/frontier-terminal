@@ -5,7 +5,8 @@
 // filings, MLPerf results and Epoch AI's datasets) except the power suppliers,
 // which are read from filings and pages (layers/terminal/shared/utils/power-sites.ts), and the
 // grid load where the sites are (EIA-930 and ERCOT, layers/terminal/shared/utils/grid-load.ts), and the
-// hardware prints, read hourly from the exchange and TSMC's 6-Ks (shared/utils/prints.ts). Every
+// hardware prints, read hourly from the exchange, TSMC's 6-Ks and Korea Customs Service's
+// releases (shared/utils/prints.ts). Every
 // figure has its source and fetch time. No tabs; the site list is the page's
 // long table and runs with the page rather than in a box.
 
@@ -162,7 +163,7 @@ const sites = computed(() =>
       v-if="prints"
       id="prints"
       title="Hardware prints"
-      note="Monthly revenue of the foundry, the server builders and their suppliers in Taiwan, as each was first printed."
+      note="Monthly revenue of the foundry, the server builders and their suppliers in Taiwan, and Korea’s chip exports, as each was first printed."
     >
       <TerminalHardwarePrints :data="prints" />
     </TerminalPanel>

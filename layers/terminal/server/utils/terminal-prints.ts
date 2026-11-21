@@ -2,12 +2,15 @@
 // newest figure with the first one we held where they differ, when it was
 // first seen and released, and the sourced ties of the company.
 
+import { notInArray } from 'drizzle-orm'
+
 import printTiesJson from '../curated/print-ties.json'
 
 import * as tables from '#server/db/schema'
 import {
   curatedPrintTies,
   PRINT_ENTITIES,
+  PRINT_HELD_SOURCES,
   type PrintGap,
   type PrintPoint,
   type PrintRow,
@@ -28,16 +31,16 @@ export const PRINT_GAPS: readonly PrintGap[] = [
       'Held for TSMC from its 6-Ks since 2015 and for Accton from its own page since July 2023. The exchange’s archive (MOPS) is closed to automated reading by its terms and robots.txt, so the other six start at our first read of the exchange feed.',
   },
   {
-    id: 'kr-chip-exports',
-    title: 'Korea chip exports',
+    id: 'kr-history',
+    title: 'Korea chip exports before October 2026',
     reason:
-      'Korea Customs Service’s 10-day, 20-day and monthly chip export figures are not read yet. Its releases since October 2026 are open under KOGL Type 1; earlier ones carry no licence mark. The memory makers they lead are tied below.',
+      'Korea Customs Service’s releases before October 2026 carry no open licence mark, and KCS asks to be consulted before an unmarked work is reused. We don’t show them.',
   },
 ]
 
 export const printTies: readonly PrintTie[] = curatedPrintTies.parse(printTiesJson).ties
 
-/** Every stored row, oldest sighting first. */
+/** Every stored row a reader may see, oldest sighting first. Rows of a held source never leave the harness. */
 export async function printRows(db: PipelineDb): Promise<PrintRow[]> {
   const t = tables.hardwarePrints
   const rows = await db
@@ -60,6 +63,7 @@ export async function printRows(db: PipelineDb): Promise<PrintRow[]> {
       fetched_at: t.fetched_at,
     })
     .from(t)
+    .where(notInArray(t.source_id, [...PRINT_HELD_SOURCES]))
     .orderBy(t.first_seen_at, t.vintage)
   return rows as PrintRow[]
 }
