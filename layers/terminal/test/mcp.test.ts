@@ -195,6 +195,7 @@ describe('tools/list', () => {
       'get_identifiers',
       'get_incidents',
       'get_listed_companies',
+      'get_listed_hiring',
       'get_overview',
       'get_parents',
       'get_pay',
@@ -269,6 +270,7 @@ describe('tools/list', () => {
       'get_adoption',
       'get_rate_limits',
       'get_pay',
+      'get_listed_hiring',
       'get_parents',
       'get_signals',
     ]) {

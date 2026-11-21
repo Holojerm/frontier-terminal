@@ -30,19 +30,19 @@ function tagPattern(tag: string): RegExp {
 }
 
 /** The text of the first <tag> in an element, XML entities decoded once; null when absent or empty. */
-function field(xml: string, tag: string): string | null {
+export function field(xml: string, tag: string): string | null {
   const m = tagPattern(tag).exec(xml)
   if (!m) return null
   const text = decodeEntities(m[1]!).trim()
   return text === '' ? null : text
 }
 
-function all(xml: string, tag: string): string[] {
+export function all(xml: string, tag: string): string[] {
   return Array.from(xml.matchAll(tagPattern(tag)), (m) => m[1]!)
 }
 
 /** "London, UK"; "Mountain View, CA, USA; New York, NY, USA" — the feed's own fields, in its order. */
-function locationOf(job: string): string | null {
+export function locationOf(job: string): string | null {
   const places = all(job, 'location')
     .map((loc) =>
       ['city', 'state', 'country']
