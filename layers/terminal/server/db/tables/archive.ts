@@ -42,30 +42,6 @@ export const archiveCaptures = sqliteTable(
   (t) => [index('archive_captures_provider_idx').on(t.provider, t.status, t.captured_at)],
 )
 
-// One row per (capture, SKU): what the archived page priced. payload is the
-// PriceRow minus its provenance, the shape entities.payload carries, so the
-// read side renders both with one function. Never a live row: basis is
-// always 'archived'.
-export const archivedPrices = sqliteTable(
-  'archived_prices',
-  {
-    id: text('id').primaryKey(),
-    capture_id: text('capture_id').notNull(),
-    entity_key: text('entity_key').notNull(),
-    provider: text('provider').notNull(),
-    content_hash: text('content_hash').notNull(),
-    payload: text('payload').notNull(),
-    captured_at: text('captured_at').notNull(),
-    original_url: text('original_url').notNull(),
-    basis: text('basis').notNull(), // 'archived'
-    ...provenance,
-  },
-  (t) => [
-    index('archived_prices_key_idx').on(t.entity_key, t.captured_at),
-    index('archived_prices_captured_id_idx').on(t.captured_at, t.id),
-  ],
-)
-
 // One row per (capture, count): what an archived job board listed. Each
 // parsed capture writes one `board` row (open roles on the whole board) and,
 // when the capture lists every role with its department, one `department`
@@ -160,35 +136,3 @@ export const archivedIncidents = sqliteTable(
 )
 
 export type ArchivedIncidentRow = typeof archivedIncidents.$inferSelect
-
-// One row per (capture, limit): what an archived copy of a lab's rate-limit
-// page printed, keyed as the live limits-* recipe keys its rows
-// (`<model>|<tier>|<metric>`, theses/recipes/rate-limits.ts), so one function
-// renders both. A usage-tier row's model names the column: spend cap, credit
-// purchase to reach tier, max credit purchase, wait to reach tier. value is
-// null where the copy printed no figure (N/A). Never a live row: basis is
-// always 'archived', and nothing here reaches recipe_observations, the
-// thesis or the judge.
-export const archivedRateLimits = sqliteTable(
-  'archived_rate_limits',
-  {
-    id: text('id').primaryKey(),
-    capture_id: text('capture_id').notNull(),
-    provider: text('provider').notNull(),
-    recipe_id: text('recipe_id').notNull(),
-    key: text('key').notNull(),
-    model: text('model').notNull(),
-    tier: text('tier').notNull(),
-    metric: text('metric').notNull(),
-    value: real('value'),
-    payload: text('payload').notNull(),
-    captured_at: text('captured_at').notNull(),
-    original_url: text('original_url').notNull(),
-    basis: text('basis').notNull(), // 'archived'
-    ...provenance,
-  },
-  (t) => [
-    index('archived_rate_limits_key_idx').on(t.recipe_id, t.key, t.captured_at),
-    index('archived_rate_limits_captured_id_idx').on(t.captured_at, t.id),
-  ],
-)

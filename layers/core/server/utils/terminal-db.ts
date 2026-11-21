@@ -604,3 +604,20 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
     first_fetched_at: first?.at ?? null,
   }
 }
+
+/** Ascending by time, then id, so output order never depends on input order. */
+export function byDetectedAt(
+  a: typeof tables.changes.$inferSelect,
+  b: typeof tables.changes.$inferSelect,
+): number {
+  return Date.parse(a.detected_at) - Date.parse(b.detected_at) || byString(a.id, b.id)
+}
+
+/** A change row carries no source_id; recover it from the audited URL. */
+export function sourceIdForUrl(url: string, ctx: QueryContext): string {
+  return (
+    manifestFixtures.find((f) => f.source_url === url)?.source_id ??
+    ctx.registry.sources.find((s) => s.url === url)?.source_id ??
+    '(unknown source)'
+  )
+}

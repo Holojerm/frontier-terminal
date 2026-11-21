@@ -490,9 +490,9 @@ export const RankingRow = z.strictObject({
 })
 export type RankingRow = z.infer<typeof RankingRow>
 
-// One mapped matrix cell (layers/terminal/server/utils/terminal-classes.ts) checked against
+// One mapped matrix cell (layers/pricing/server/utils/terminal-classes.ts) checked against
 // the live body of the page its sentence was transcribed from
-// (layers/terminal/server/pipeline/recommendations.ts). `present` is the whole verdict: the
+// (layers/pricing/server/pipeline/recommendations.ts). `present` is the whole verdict: the
 // sentence is either on the page, byte for byte after link-flattening, or it
 // is not — nothing is inferred about what replaced it.
 export const RecommendationRow = z.strictObject({

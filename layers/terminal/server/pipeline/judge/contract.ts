@@ -12,9 +12,9 @@ import { JudgeGuidanceReading } from '../../calls/review'
 import { JudgePowerSiteReading } from '#layers/compute/server/power/review'
 import { JudgeSupplierReading } from '../../suppliers/review'
 import { JudgeTrackRecordVerdict } from '../track-record/review'
-import { JudgeClassMapping } from './class-map'
+import { JudgeClassMapping } from '#layers/pricing/server/pipeline/judge/class-map'
 import { JudgeFilingReading } from './filing-review'
-import { JudgePriceReading } from './price-review'
+import { JudgePriceReading } from '#layers/pricing/server/pipeline/judge/price-review'
 
 // The judge lane's whole contract: the alert half (layers/core/server/pipeline/judge/alerts.ts)
 // plus each review a domain hands the routine. strictObject everywhere: an
@@ -23,7 +23,7 @@ import { JudgePriceReading } from './price-review'
 /**
  * What the model prints. `class_map` is optional so a run with no cell under
  * review prints exactly what it always did; the Worker gates each entry in
- * layers/terminal/server/pipeline/judge/class-map.ts.
+ * layers/pricing/server/pipeline/judge/class-map.ts.
  */
 export const JudgeOutput = z.strictObject({
   alerts: JudgeAlert.array(),

@@ -24,5 +24,26 @@ export const DOMAIN_LAYERS = {
       'server/pipeline/archive/gpu-eras.ts',
     ],
   },
-  terminal: { uses: ['core', 'compute'] },
+  pricing: {
+    uses: ['core'],
+    public: [
+      // Its queries (prices, the class map, the archived price lists and limits), which the
+      // lab page, the tear sheet, the probes, the launch watch, the theses and the signals read.
+      'server/utils/',
+      // The class map in effect, which the probes, the tripwire, the launch watch, the social
+      // posts, the theses and the judge runner read.
+      'server/pipeline/class-map.ts',
+      // The judge contracts the shell's judge runner calls until it reads a registry.
+      'server/pipeline/judge/class-map.ts',
+      'server/pipeline/judge/price-review.ts',
+      // The archive eras and price and limit events the shell's backfill rows and signals read.
+      'server/pipeline/archive/',
+      // The price normalizer the shell's archive rows reuse, and its parser manifest.
+      'server/pipeline/normalize.ts',
+      'server/pipeline/parsers.manifest.ts',
+      // The price formatting the lab readout and the tear sheet share.
+      'app/utils/price-display.ts',
+    ],
+  },
+  terminal: { uses: ['core', 'compute', 'pricing'] },
 } satisfies LayerTable

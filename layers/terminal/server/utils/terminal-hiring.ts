@@ -22,12 +22,14 @@ import {
   HIRING_ARCHIVE_METHOD,
   archivedHiringPoints,
   queryHiringReach,
+} from './terminal-archive'
+import {
+  beforeLiveFloor,
   labLiveFloors,
   labsBeforeFloor,
-} from './terminal-archive'
-import { beforeLiveFloor } from '#layers/core/server/utils/archive-floor'
+} from '#layers/core/server/utils/archive-floor'
+import { byDetectedAt } from '#layers/core/server/utils/terminal-db'
 import {
-  byDetectedAt,
   compareWindow,
   dailyInstants,
   dayOf,

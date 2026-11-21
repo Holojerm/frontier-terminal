@@ -10,7 +10,7 @@
 // `class_map_review` lists the price-matrix cells whose vendor sentence left
 // the page, and the empty cells of a lab that just launched a model, with
 // that page's text to map them from
-// (layers/terminal/server/pipeline/judge/class-map.ts). `claim_review` lists, per judged
+// (layers/pricing/server/pipeline/judge/class-map.ts). `claim_review` lists, per judged
 // thesis claim, the pending changes it offers for a verdict
 // (layers/terminal/server/theses/verdicts.ts): events among `changes`, and recipe items
 // (a changelog entry, say) not yet rated, so it can be non-empty when
@@ -30,7 +30,7 @@
 // (layers/terminal/server/pipeline/judge/filing-review.ts); usually `[]`, and
 // it too can be non-empty when `changes` is empty.
 // `price_review` lists the price lists whose parser is failing, each with its
-// page and the SKUs to read from it (layers/terminal/server/pipeline/judge/price-review.ts);
+// page and the SKUs to read from it (layers/pricing/server/pipeline/judge/price-review.ts);
 // usually `[]`, and it too can be non-empty when `changes` is empty.
 // `still_listed` lists, per model removal among `changes`, the pages of the
 // same lab that still list that model, so a page dropping a row is not
@@ -56,10 +56,10 @@ import judgePrompt from 'raw:../../pipeline/judge/judge-explain.prompt.md'
 import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { hiringBoards } from '../../pipeline/hiring-floor'
-import { classMapReview } from '../../pipeline/judge/class-map'
+import { classMapReview } from '#layers/pricing/server/pipeline/judge/class-map'
 import { blobRawReader } from '#layers/core/server/pipeline/raw'
 import { filingReview } from '../../pipeline/judge/filing-review'
-import { priceReview } from '../../pipeline/judge/price-review'
+import { priceReview } from '#layers/pricing/server/pipeline/judge/price-review'
 import {
   JUDGE_CHANGE_LIMIT,
   incidentCounts,

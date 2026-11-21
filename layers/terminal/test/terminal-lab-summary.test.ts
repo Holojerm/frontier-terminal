@@ -1,6 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
-import { LAB_PAGES, isLab, summarizeLab } from '../shared/utils/terminal-lab-summary'
+import { isLab } from '../../core/shared/utils/lab-names'
+import { LAB_PAGES, summarizeLab } from '../shared/utils/terminal-lab-summary'
 import type { HiringHistoryData } from '../shared/utils/terminal-types'
 
 const hiring: HiringHistoryData = {

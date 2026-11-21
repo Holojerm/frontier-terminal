@@ -2498,7 +2498,7 @@ track_record_sources:
 # Archives read once, by hand, to backfill history from before the live
 # pipeline watched a page (scripts/wayback-backfill.ts; never on a cron).
 # Same fields as recipe_sources. Eras, windows and gaps per lab:
-# layers/terminal/server/pipeline/archive/eras.ts. Audit: docs/source-audit.md
+# layers/pricing/server/pipeline/archive/eras.ts. Audit: docs/source-audit.md
 # › Internet Archive.
 archive_sources:
   wayback-pricing:
@@ -2637,7 +2637,7 @@ archive_sources:
       What we take is the usage-tier table and the per-model limits, keyed
       as the live recipe keys them, never the page text. Taken once per
       backfill run: one copy a week of each URL Anthropic's rate-limit page
-      had, 2024-03 to 2026-11-04 (layers/terminal/server/pipeline/archive/limits-eras.ts).
+      had, 2024-03 to 2026-11-04 (layers/pricing/server/pipeline/archive/limits-eras.ts).
       Read 2026-11-21.
     rights: not-cleared
     caveats: >-
@@ -2670,7 +2670,7 @@ archive_sources:
       authuser query strings). What we take is each note's date, its first
       words as a title, the model names it mentions and whether it talks
       about price, to date the launches and price changes the archived
-      price lists show (layers/terminal/server/pipeline/archive/price-events.ts).
+      price lists show (layers/pricing/server/pipeline/archive/price-events.ts).
       Read 2026-11-21.
     rights: not-cleared
     caveats: >-

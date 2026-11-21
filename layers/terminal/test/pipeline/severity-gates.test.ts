@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import { ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
-import { requotedKey } from '../../server/pipeline/judge/class-map'
+import { requotedKey } from '../../../pricing/server/pipeline/judge/class-map'
 import { incidentCounts } from '#layers/core/server/pipeline/judge/pending'
 import { clampRoutineAlerts } from '../../server/pipeline/judge/severity-gates'
 import { submitJudgeRun } from '../../server/pipeline/judge/submit'

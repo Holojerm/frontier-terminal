@@ -10,7 +10,7 @@
 // more" pages back through the whole history by cursor rather than slicing one
 // fixed fetch, so nothing older than the newest page is out of reach.
 
-import { LABS } from '../../../shared/utils/terminal-lab-summary'
+import { LABS } from '#layers/core/shared/utils/lab-names'
 import { ALERT_AXES, AXIS_DISPLAY } from '../../../shared/utils/terminal-labs'
 import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import {

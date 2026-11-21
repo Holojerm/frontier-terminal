@@ -2,7 +2,7 @@
 
 import { z } from 'zod'
 import { ALERT_AXES } from '../../shared/utils/terminal-labs'
-import { LABS } from '../../shared/utils/terminal-lab-summary'
+import { LABS } from '#layers/core/shared/utils/lab-names'
 import { ALERT_TIER_FILTERS } from '../../shared/utils/terminal-tiers'
 import {
   MOVEMENT_WINDOW_HOURS,

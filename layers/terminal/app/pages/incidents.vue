@@ -7,7 +7,7 @@
 
 import { labName } from '#layers/core/shared/utils/lab-names'
 import type { IncidentView, IncidentsData, ProbesData } from '../../shared/utils/terminal-types'
-import type { LimitsData } from '../../shared/utils/recipe-views'
+import type { LimitsData } from '#layers/pricing/shared/utils/limits'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 definePageMeta({

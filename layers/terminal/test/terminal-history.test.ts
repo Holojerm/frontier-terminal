@@ -15,16 +15,16 @@ import {
   queryDataFreshness,
 } from '#layers/core/server/utils/terminal-db'
 import { queryHiringHistory } from '../server/utils/terminal-hiring'
-import { queryPriceHistory, queryPrices, queryReleases } from '../server/utils/terminal-prices'
+import { queryReleases } from '../server/utils/terminal-releases'
+import { queryPriceHistory, queryPrices } from '../../pricing/server/utils/terminal-prices'
+import { priceHistory, sparkOf } from '../../pricing/server/utils/terminal-price-history'
 import {
   compareWindow,
   dailyInstants,
   departmentSeries,
   isBaseline,
   openRolesAt,
-  priceHistory,
   releaseEvents,
-  sparkOf,
 } from '../server/utils/terminal-history'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 

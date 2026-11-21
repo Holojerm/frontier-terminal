@@ -1,8 +1,6 @@
 import { ZodError } from 'zod'
 
 import { recordOpsEvent } from '#server/utils/ops'
-import type { ClassEntry } from '../utils/terminal-classes'
-import { effectiveClassMap } from './class-map'
 import {
   contentHash,
   contentHashOfText,
@@ -20,7 +18,13 @@ import { prospectusFloorAlerts } from './prospectus-floor'
 import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import type { RawStore } from '#layers/core/server/pipeline/raw'
 import { derivedKeyOf, laneFor } from '#server/registries/lanes'
-import { contextFingerprint, type ContextBlock, type ParseContext } from './lanes'
+import { TICK_INPUTS, type TickInputs } from '#server/registries/lane-context'
+import {
+  contextFingerprint,
+  type ContextBlock,
+  type ParseContext,
+  type TickInput,
+} from '#layers/core/server/pipeline/lanes'
 import {
   cooldownEndsAt,
   RATE_LIMIT_MAX_COOLDOWN_MS,
@@ -240,10 +244,11 @@ const quiet = (
 
 /**
  * Whether a parse may be skipped, stored on its run row as two hashes. `input`
- * is what the parse read: the page, each side it joined against, and the
- * class-map cells that cite the page (the drift check tests those sentences).
+ * is what the parse read: the page, each side it joined against, and the part
+ * of each tick input it reads (TickInput.cited: the class-map cells that cite
+ * the page, whose sentences the drift check tests).
  * `context` is what it read them with: the parser version, the sources.yaml
- * blocks the lane reads, and the URL every row cites (lanes.ts ›
+ * blocks the lane reads, and the URL every row cites (core's lanes.ts ›
  * contextFingerprint). A new input is news and is logged; a new context alone
  * is our reading changing, not the world, and is re-read quietly.
  */
@@ -252,24 +257,26 @@ interface ParseBasis {
   context: string
 }
 
-/**
- * The class-map cells checked against this source's page, in a stable order.
- * The judge re-maps a cell after the vendor edits the page, so the page is
- * usually unchanged by the next tick; without these in the input the check
- * would keep testing the old sentence until the vendor edits the page again.
- * A cell resting on one of the lane's sides is checked here too (lanes.ts ›
- * checkedSide).
- */
-function citedCells(classMap: readonly ClassEntry[], sourceIds: readonly string[]) {
-  return classMap
-    .filter((e) => sourceIds.includes(e.basis_source_id))
-    .map((e) => ({
-      provider: e.provider,
-      class: e.class,
-      model_slug: e.model_slug,
-      basis: e.basis,
-    }))
-    .sort((a, b) => (`${a.provider}:${a.class}` < `${b.provider}:${b.class}` ? -1 : 1))
+/** Every tick input, loaded once for the tick (server/registries/lane-context.ts). */
+async function loadTickInputs(db: PipelineDb): Promise<TickInputs> {
+  const entries = await Promise.all(
+    Object.entries(TICK_INPUTS).map(
+      async ([name, input]) => [name, await (input as TickInput<unknown>).load(db)] as const,
+    ),
+  )
+  return Object.fromEntries(entries) as TickInputs
+}
+
+/** The part of each tick input the parse of `sourceIds` reads, under its basis key. */
+function citedInputs(inputs: TickInputs, sourceIds: readonly string[]): Record<string, unknown> {
+  const cited: Record<string, unknown> = {}
+  for (const [name, input] of Object.entries(TICK_INPUTS) as [
+    keyof TickInputs,
+    TickInput<unknown>,
+  ][]) {
+    cited[input.basisKey] = input.cited(inputs[name], sourceIds)
+  }
+  return cited
 }
 
 /**
@@ -296,7 +303,7 @@ async function parseAndStore(
   fetched: Fetched,
   byId: ReadonlyMap<string, Fetched>,
   blocks: ContextBlocks,
-  classMap: readonly ClassEntry[],
+  inputs: TickInputs,
 ): Promise<Outcome> {
   const { source, fetched_at, body } = fetched
   if (!body) {
@@ -329,7 +336,7 @@ async function parseAndStore(
     input: contentHash({
       page: snapshot.content_hash,
       sides,
-      cells: citedCells(classMap, [source.source_id, ...lane.sides]),
+      ...citedInputs(inputs, [source.source_id, ...lane.sides]),
     }),
     context: contextFingerprint(lane, blocks, source.url),
   }
@@ -356,7 +363,7 @@ async function parseAndStore(
     side: (id) => byId.get(id)!.body!.text,
     ...blocks,
     derivedKey: derivedKeyOf(source.source_id),
-    classMap,
+    ...inputs,
   })
   const note = parsed.note ?? null
   const problems = parsed.problems ?? []
@@ -471,13 +478,12 @@ async function parseAndStore(
     ...(await prospectusFloorAlerts(deps.db, changes)),
   ])
   await store(changes, alerts)
-  // A vendor rewrote a sentence the class map rests on: the owner has a
-  // transcription to redo. Once per flip — an unchanged verdict diffs to
-  // nothing, so a stale cell does not re-spool every tick.
-  for (const change of recommendationsLost(modified)) {
+  // What the lane says the owner has to redo by hand (the class map's
+  // sentences: pricing's recommendations.ts › basisStaleEvents).
+  for (const event of lane.opsEvents?.(modified) ?? []) {
     await recordOpsEvent(deps.db, {
-      kind: 'class_basis_stale',
-      detail: `${source.source_id}: ${change}`,
+      kind: event.kind,
+      detail: `${source.source_id}: ${event.detail}`,
       path: source.url,
     })
   }
@@ -501,24 +507,6 @@ async function parseAndStore(
     alerts: alerts.length,
     basis: readBasis,
   }
-}
-
-/** One line per 'recommendation' change whose after-state lost the sentence. */
-function recommendationsLost(modified: readonly ChangeRow[]): string[] {
-  const lines: string[] = []
-  for (const change of modified) {
-    if (change.entity_type !== 'recommendation' || !change.after_json) continue
-    const after = JSON.parse(change.after_json) as {
-      class?: string
-      model_slug?: string
-      present?: boolean
-    }
-    if (after.present !== false) continue
-    lines.push(
-      `${change.provider} ${after.class} (${after.model_slug}) — vendor sentence no longer on the page`,
-    )
-  }
-  return lines
 }
 
 /**
@@ -554,9 +542,9 @@ export async function runRefresh(
     revenueFilers.set(filer.provider, { ticker: filer.provider.toUpperCase(), relation: 'issuer' })
   }
 
-  // The drift check runs against the map in effect — the seed plus any judge
-  // decision — so a re-mapped cell is checked for its new sentence.
-  const classMap = await effectiveClassMap(deps.db)
+  // What every parse this tick reads from a domain: the class map in effect,
+  // so a re-mapped cell is checked for its new sentence.
+  const inputs = await loadTickInputs(deps.db)
 
   const unknown = sourceIds.filter((id) => !all.some((s) => s.source_id === id))
   if (unknown.length) throw new Error(`not include sources: ${unknown.join(', ')}`)
@@ -645,7 +633,7 @@ export async function runRefresh(
         fetched,
         byId,
         { whitelist, revenueFilers, pendingFilers, resolvedProviders },
-        classMap,
+        inputs,
       )
     } catch (err) {
       transient ||= err instanceof JoinRaceError

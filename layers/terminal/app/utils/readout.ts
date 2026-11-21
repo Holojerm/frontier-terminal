@@ -18,7 +18,7 @@ import type { LabId, Prov, RevenueProviderView } from '../../shared/utils/termin
 import type { GapRef } from '#layers/core/app/types/terminal-ui'
 
 import { feedGap } from './feed-gap'
-import { priceCitation } from './price-display'
+import { priceCitation } from '#layers/pricing/app/utils/price-display'
 
 /** Whose revenue a figure is when it is not the lab's own: a parent's segment, or the whole parent. */
 export function revenueScope(view: RevenueProviderView | null): string {

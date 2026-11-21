@@ -13,14 +13,10 @@ import { EPOCH_DATA_CENTERS } from '#layers/compute/server/recipes/epoch-data-ce
 import { INVESTEE_RECIPES } from '../server/theses/recipes/investee-facts'
 import { PAY_RECIPES } from '../server/theses/recipes/pay-bands'
 import { RAMP_AI_INDEX } from '../server/theses/recipes/ramp-ai-index'
-import { RATE_LIMIT_RECIPES } from '../server/theses/recipes/rate-limits'
+import { RATE_LIMIT_RECIPES } from '../../pricing/server/recipes/rate-limits'
 import { runRecipes } from '../server/theses/recipes/run'
-import {
-  queryAdoption,
-  queryLimits,
-  queryParents,
-  queryPay,
-} from '../server/utils/terminal-recipe-views'
+import { queryLimits } from '../../pricing/server/utils/terminal-limits'
+import { queryAdoption, queryParents, queryPay } from '../server/utils/terminal-recipe-views'
 import { queryDataCenters } from '#layers/compute/server/utils/terminal-datacenters'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 

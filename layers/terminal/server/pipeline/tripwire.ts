@@ -1,8 +1,8 @@
 import { eq } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { ClassEntry } from '../utils/terminal-classes'
-import { effectiveClassMap } from './class-map'
+import type { ClassEntry } from '#layers/pricing/server/utils/terminal-classes'
+import { effectiveClassMap } from '#layers/pricing/server/pipeline/class-map'
 import { laneFor } from '#server/registries/lanes'
 import { withPollLock } from '#layers/core/server/pipeline/lock'
 import { manifestFixtures } from '#layers/core/server/pipeline/parsers/fixture-provenance'

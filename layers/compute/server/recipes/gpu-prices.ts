@@ -10,10 +10,10 @@
 
 import { z } from 'zod'
 
-import type { CompanyId } from '#layers/core/shared/utils/companies'
+import type { CompanyId } from '../../../core/shared/utils/companies'
 
-import { decodeEntities } from '#layers/core/server/pipeline/parsers/html-text'
-import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
+import { decodeEntities } from '../../../core/server/pipeline/parsers/html-text'
+import type { Observation, Recipe } from '../../../core/server/recipes/contract'
 
 export const GPU_MODELS = ['H100', 'B200'] as const
 export type GpuModel = (typeof GPU_MODELS)[number]

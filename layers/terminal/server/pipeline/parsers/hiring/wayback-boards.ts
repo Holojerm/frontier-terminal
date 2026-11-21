@@ -1,5 +1,5 @@
 import { NO_DEPARTMENT } from '../../../utils/terminal-history'
-import { decodeEntities, textOf } from '#layers/core/server/pipeline/parsers/html-text'
+import { decodeEntities, textOf } from '../../../../../core/server/pipeline/parsers/html-text'
 
 // The labs' job boards as the Internet Archive captured them
 // (archive/hiring-eras.ts names each era's URL and window). Each parser

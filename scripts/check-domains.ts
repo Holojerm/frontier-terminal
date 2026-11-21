@@ -11,12 +11,14 @@
 //     on that domain's public list;
 //   - a server/utils or shared/utils export name defined by two owners (the app
 //     or a layer): Nuxt keeps one and drops the other without an error;
+//   - a component a layer's .vue file names that is registered by a layer it
+//     does not use, or a component name two owners register (the later layer wins);
 //   - a fork-owned layer the table does not name, or a table entry with no layer.
 //
 // The app root may import any layer: it is the composition root (server/db/schema.ts,
 // server/registries/). Tests are exempt, as in layers:check. Vendored layers are
 // checked by layers:check, not here. Only .ts files under server/ and shared/ are
-// read for auto-imports; pages and components are not.
+// read for auto-imported names; .vue files are read for the components they name.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'
@@ -25,6 +27,8 @@ import ts from 'typescript'
 
 import { DOMAIN_LAYERS } from '../domains.config'
 import {
+  componentFindings,
+  componentName,
   declaredExports,
   duplicateNames,
   fileFindings,
@@ -67,12 +71,25 @@ for (const { name, files } of duplicateNames([...serverDefs, ...sharedDefs])) {
   problems.push(`${name} is auto-imported from more than one owner: ${files.join(', ')}`)
 }
 
+// ── Auto-registered components ───────────────────────────────────────────────
+const componentDefs: Definition[] = owners.flatMap((prefix) => {
+  const dir = join(ROOT, prefix, 'app/components')
+  return walk(dir, { extensions: ['.vue'], missingOk: true }).map((file) => ({
+    name: componentName(relative(dir, file)),
+    file: rel(file),
+  }))
+})
+for (const { name, files } of duplicateNames(componentDefs)) {
+  problems.push(`component ${name} is registered by more than one owner: ${files.join(', ')}`)
+}
+
 const mapOf = (defs: readonly Definition[]) => {
   const map = new Map<string, string>()
   for (const def of defs) if (!map.has(def.name)) map.set(def.name, def.file)
   return map
 }
 const sharedNames = mapOf(sharedDefs)
+const components = mapOf(componentDefs)
 const serverNames = mapOf([...serverDefs, ...sharedDefs])
 
 // ── Free identifiers ─────────────────────────────────────────────────────────
@@ -188,9 +205,10 @@ for (const layer of forkLayers) {
   ]
   for (const abs of rest) {
     scanned += 1
-    findings.push(
-      ...fileFindings(table, rel(abs), readFileSync(abs, 'utf8'), resolveTarget, [], new Map()),
-    )
+    const source = readFileSync(abs, 'utf8')
+    findings.push(...fileFindings(table, rel(abs), source, resolveTarget, [], new Map()))
+    if (abs.endsWith('.vue'))
+      findings.push(...componentFindings(table, rel(abs), source, components))
   }
 }
 

@@ -34,7 +34,7 @@ import {
 } from '#layers/core/shared/utils/terminal-format'
 import { formatTick, formatValue } from '../shared/utils/thesis-format'
 import { millions, statementValue } from '../shared/utils/terminal-prospectus'
-import { DEFAULTS, labsFirst, parsePrefs } from '../shared/utils/reader-prefs'
+import { DEFAULTS, labsFirst, parsePrefs } from '../../core/shared/utils/reader-prefs'
 
 // How a stored value reads. The rule is relative inside a day, absolute
 // beyond it, exact value always one hover away — and never a relative label
@@ -381,7 +381,7 @@ const NOT_FIGURES: Record<string, string> = {
 
 describe('app code formats figures through the shared module', () => {
   const sources = {
-    ...import.meta.glob<string>('../app/**/*.{vue,ts}', {
+    ...import.meta.glob<string>('../../*/app/**/*.{vue,ts}', {
       query: '?raw',
       import: 'default',
       eager: true,

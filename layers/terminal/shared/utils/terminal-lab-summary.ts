@@ -5,7 +5,7 @@
 // page header and the axis panels cannot disagree about a number.
 
 import { alertLabs } from './terminal-labs'
-import { LAB_DISPLAY } from '../../../core/shared/utils/lab-names'
+import { LAB_DISPLAY, LABS } from '../../../core/shared/utils/lab-names'
 import type {
   AlertView,
   LabId,
@@ -24,22 +24,6 @@ import type {
   SpendData,
   SpendProviderView,
 } from './terminal-types'
-
-export const LABS: readonly LabId[] = [
-  'openai',
-  'anthropic',
-  'google',
-  'xai',
-  'meta',
-  'mistral',
-  'deepseek',
-  'alibaba',
-  'moonshot',
-] as const
-
-export function isLab(s: string): s is LabId {
-  return (LABS as readonly string[]).includes(s)
-}
 
 export const labPath = (lab: LabId) => `/labs/${lab}`
 

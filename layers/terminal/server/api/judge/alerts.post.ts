@@ -4,7 +4,7 @@
 // survives it is grounded against the cited change rows as D1 holds them,
 // stamped, and written through the store's one chokepoint
 // (layers/terminal/server/pipeline/judge/submit.ts). Any class_map re-mapping is checked
-// against the vendor page as R2 holds it (layers/terminal/server/pipeline/judge/class-map.ts).
+// against the vendor page as R2 holds it (layers/pricing/server/pipeline/judge/class-map.ts).
 //
 // 422 when the whole body failed the schema gate or the cursor check
 // (layers/terminal/server/pipeline/judge/submit.ts › checkCursor) — that run is recorded and
