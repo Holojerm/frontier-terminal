@@ -73,16 +73,12 @@ const ROUTES = [
 ]
 
 // One template, N URLs — pages the sweep cannot enumerate ahead of a server:
-// the SKU pages and filing pages the sitemap reads from the store (server/
-// routes/sitemap.xml.get.ts). They are scanned through the static routes'
-// shared components; the patterns are what the coverage test recognises. The
-// compare pages are one template over thirty-six pairs; the three in ROUTES
-// stand for the rest.
-const DYNAMIC = [
-  /^\/prices\/model:/,
-  /^\/filings\/\d{10}-\d{2}-\d{6}$/,
-  /^\/compare\/[a-z]+-vs-[a-z]+$/,
-]
+// the filing pages the sitemap reads from the store (server/routes/
+// sitemap.xml.get.ts). They are scanned through the static routes' shared
+// components; the patterns are what the coverage test recognises. The compare
+// pages are one template over thirty-six pairs; the three in ROUTES stand for
+// the rest.
+const DYNAMIC = [/^\/filings\/\d{10}-\d{2}-\d{6}$/, /^\/compare\/[a-z]+-vs-[a-z]+$/]
 
 const COLOR_MODES = ['light', 'dark'] as const
 
