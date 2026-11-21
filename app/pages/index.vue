@@ -24,7 +24,7 @@ import type {
   RevenueData,
   SpendData,
 } from '#layers/terminal/shared/utils/terminal-types'
-import type { ThesesData } from '#layers/terminal/shared/utils/thesis-types'
+import type { ThesesData } from '#layers/theses/shared/utils/thesis-types'
 
 definePageMeta({
   publicPage: {

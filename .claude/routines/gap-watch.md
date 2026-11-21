@@ -117,7 +117,7 @@ on the shared one.
 
    Build the wanted list, in this order:
 
-   - every claim in `THESES` (`layers/terminal/server/theses/registry.ts`) whose `spec.kind`
+   - every claim in `THESES` (`layers/theses/server/theses/registry.ts`) whose `spec.kind`
      is `'judged'`: it rests on a rubric, and a measured series would test it harder;
    - every other claim, for a second, independent measure of the same thing;
    - each axis in `routines.config.md` › Product context on which a tracked lab has no

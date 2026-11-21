@@ -42,7 +42,7 @@ import {
   mlperfUrl,
   nextMlperfRound,
 } from '../server/recipes/mlperf-inference'
-import { runRecipes } from '#layers/terminal/server/theses/recipes/run'
+import { runRecipes } from '#layers/core/server/recipes/run'
 import { SEC_REVENUE_CRWV } from '#layers/companies/server/recipes/sec-revenue'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
 import {

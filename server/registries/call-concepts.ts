@@ -4,9 +4,9 @@
 // ask. Each entry names the filer's CIK.
 
 import type { ConceptNeeds } from '#layers/companies/server/calls/ingest'
-import { forwardConceptNeeds, forwardFiler } from '#layers/terminal/server/signals/forward-filers'
+import { forwardConceptNeeds, forwardFiler } from '#layers/signals/server/signals/forward-filers'
 
-/** The concepts forward calls settle against (layers/terminal/server/signals/forward-filers.ts). */
+/** The concepts forward calls settle against (layers/signals/server/signals/forward-filers.ts). */
 const forwardCallConcepts: ConceptNeeds = async (db, today) =>
   (await forwardConceptNeeds(db, today)).flatMap((w) => {
     const cik = forwardFiler(w.ticker)?.cik

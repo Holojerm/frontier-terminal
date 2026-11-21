@@ -162,7 +162,7 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   forward_calls_failed: {
     severity: 'warning',
     action:
-      'Recording or settling the forward calls threw (layers/terminal/server/signals/forward-rules.ts). The detail has the error. A prints call whose 14-day window passes before a fix is lost for that quarter; scores are written on the next good run.',
+      'Recording or settling the forward calls threw (layers/signals/server/signals/forward-rules.ts). The detail has the error. A prints call whose 14-day window passes before a fix is lost for that quarter; scores are written on the next good run.',
   },
   recipe_failed: { severity: 'warning' },
   recipes_run_failed: { severity: 'warning' },

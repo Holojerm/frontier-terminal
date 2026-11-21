@@ -128,7 +128,7 @@ need every domain's entries. Those lists are composition roots in `server/regist
 
 Core defines each entry's type. An event that crosses the direction is a Nitro hook instead: the
 judge calls `judge:applied` when a run's verdicts land, and the theses layer subscribes
-(`layers/terminal/server/plugins/theses-judged.ts`). `bun run domains:check` holds the direction.
+(`layers/theses/server/plugins/theses-judged.ts`). `bun run domains:check` holds the direction.
 
 ### Vendored layers
 

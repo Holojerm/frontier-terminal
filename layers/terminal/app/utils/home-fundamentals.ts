@@ -8,8 +8,8 @@ import type { Bounds, UtilizationData } from '#layers/compute/shared/utils/compu
 import { labName } from '#layers/core/shared/utils/lab-names'
 import { count, money, percent, dayLabel } from '#layers/core/shared/utils/terminal-format'
 import type { GpuPricesData, GroundTruthData, Prov } from '../../shared/utils/terminal-types'
-import { STATUS_META, thesisPath } from '../../shared/utils/thesis-format'
-import type { ThesesData } from '../../shared/utils/thesis-types'
+import { STATUS_META, thesisPath } from '../../../theses/shared/utils/thesis-format'
+import type { ThesesData } from '../../../theses/shared/utils/thesis-types'
 import type { GapRef } from '#layers/core/app/types/terminal-ui'
 
 export interface FundamentalFigure {

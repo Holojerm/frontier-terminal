@@ -20,8 +20,8 @@ import { registerOperationsTools } from '#layers/terminal/server/mcp/operations'
 import { registerReliabilityTools } from '#layers/reliability/server/mcp/reliability'
 import { registerPriceTools } from '#layers/pricing/server/mcp/prices'
 import { registerDisclosureTools, registerReleaseTools } from '#layers/models/server/mcp/models'
-import { registerSignalTools } from '#layers/terminal/server/mcp/signals'
-import { registerThesisTools } from '#layers/terminal/server/mcp/theses'
+import { registerSignalTools } from '#layers/signals/server/mcp/signals'
+import { registerThesisTools } from '#layers/theses/server/mcp/theses'
 import { registerUtilizationTools } from '#layers/terminal/server/mcp/utilization'
 
 export const MCP_TOOLS: readonly ((kit: McpKit) => void)[] = [

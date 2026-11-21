@@ -10,7 +10,7 @@ import {
 import type { ListedData } from '../shared/utils/listed'
 import type { UtilizationData } from '#layers/compute/shared/utils/compute-views'
 import type { GpuPricesData, GroundTruthData } from '../shared/utils/terminal-types'
-import type { ThesesData } from '../shared/utils/thesis-types'
+import type { ThesesData } from '../../theses/shared/utils/thesis-types'
 
 const AT = '2026-11-19T12:00:00.000Z'
 const src = (host: string, fetched_at = AT) => ({ source_url: `https://${host}/`, fetched_at })
