@@ -23,8 +23,8 @@ export const PROBE_PROMPT =
  * The answer every probe asks for. Most endpoints count reasoning tokens
  * against the cap, so a target whose reasoning would use it up carries a
  * `reasoning_allowance` on top, and xAI bills its reasoning outside the cap
- * altogether (`billed_outside_cap`). With both, seven labs hourly come to
- * about $23 a month at 2026-11-20 list prices, under PROBE_MONTHLY_BUDGET_USD;
+ * altogether (`billed_outside_cap`). With both, six labs hourly come to
+ * about $16 a month at 2026-11-20 list prices, under PROBE_MONTHLY_BUDGET_USD;
  * the test in layers/reliability/test/probes.test.ts holds the arithmetic.
  */
 export const PROBE_MAX_TOKENS = 160
@@ -157,15 +157,6 @@ export const PROBE_TARGETS: readonly ProbeTargetSpec[] = [
     note: null,
     market: 'americas',
   },
-  {
-    lab: 'meta',
-    provider: 'meta',
-    effort: 'minimal',
-    // 2026-11-20: at a cap of 160 the reply was 158 hidden reasoning tokens and no answer.
-    reasoning_allowance: 320,
-    note: null,
-    market: 'americas',
-  },
   { lab: 'alibaba', provider: 'alibaba', effort: 'none', note: null, market: 'china' },
   { lab: 'moonshot', provider: 'moonshotai', effort: 'none', note: null, market: 'china' },
 ]
@@ -184,6 +175,14 @@ export const PROBE_GAPS: readonly ProbeGap[] = [
     model: 'deepseek/deepseek-v4-pro',
     reason:
       'OpenRouter serves DeepSeek V4 Pro only through other companies’ hardware, not DeepSeek’s own endpoint. A probe there would measure the host, so we take no reading.',
+  },
+  {
+    lab: 'meta',
+    model: 'meta/muse-wonder',
+    // Dropped 2026-11-21 (owner's decision, #600): at effort `minimal` and a cap of 480, about one
+    // probe in six was 478 reasoning tokens and no answer. More room would take Meta past $10 a month.
+    reason:
+      'Meta’s own endpoint spends the output cap on reasoning often enough, even at its lowest reasoning setting, that about one probe in six gets no answer to time. We take no reading.',
   },
   {
     lab: 'mistral',
