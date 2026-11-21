@@ -19,13 +19,14 @@ import {
   parseSentences,
   refusalOf,
   speakerMapping,
-  SPEND_CAP_USD,
+  MONTHLY_SPEND_CAP_USD,
   transcriptRequest,
 } from '../server/calls/assemblyai'
 import { CALL_TICKERS, callCompany, curatedCalls } from '../server/calls/curated'
 import { earningsExhibits, earningsFilings } from '../server/calls/edgar'
 import { extractStatements, firstAmount, quoteOf, QUOTE_MAX_WORDS } from '../server/calls/extract'
 import {
+  assemblySpend,
   discoverExhibits,
   KIND_ASSEMBLYAI_CREDITS,
   readConcepts,
@@ -535,13 +536,36 @@ describe('the reader', () => {
     })
   })
 
+  it('counts only the current UTC month against the spend cap', async () => {
+    await db.insert(schema.callDocuments).values([
+      docRow({
+        ticker: 'AEP',
+        kind: 'audio',
+        status: 'read',
+        cost_usd: 9,
+        submitted_at: '2026-10-31T23:00:00Z',
+        url: 'https://example.com/october.mp3',
+      }),
+      docRow({
+        ticker: 'AEP',
+        kind: 'audio',
+        status: 'read',
+        cost_usd: 3,
+        submitted_at: '2026-11-02T10:00:00Z',
+        url: 'https://example.com/november.mp3',
+      }),
+    ])
+    expect(await assemblySpend(db, new Date('2026-11-21T09:00:00Z'))).toBe(3)
+    expect(await assemblySpend(db, new Date('2026-12-01T00:00:00Z'))).toBe(0)
+  })
+
   it('stops at the spend cap, and on exhausted credits, with an ops event each', async () => {
     await db.insert(schema.callDocuments).values([
       docRow({
         ticker: 'AEP',
         kind: 'audio',
         status: 'read',
-        cost_usd: SPEND_CAP_USD - 0.1,
+        cost_usd: MONTHLY_SPEND_CAP_USD - 0.1,
         url: 'https://example.com/old.mp3',
       }),
       docRow({
