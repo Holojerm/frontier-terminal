@@ -194,7 +194,11 @@ function flowOf(
   return ytd && ytdBefore ? combine(ytd.value - ytdBefore.value, [ytd, ytdBefore]) : null
 }
 
-function instantOf(facts: readonly ConceptFact[], concept: string, end: string): Filed | null {
+export function instantOf(
+  facts: readonly ConceptFact[],
+  concept: string,
+  end: string,
+): Filed | null {
   const f = firstFiled(
     facts.filter((x) => x.concept === concept && x.start === null && near(x.end, end)),
   )
@@ -225,7 +229,7 @@ export function revenueOf(
   return null
 }
 
-function flowSum(
+export function flowSum(
   facts: readonly ConceptFact[],
   concepts: readonly string[],
   fyEndMonth: number,
