@@ -3,7 +3,7 @@ import { provenance } from '../../../../core/server/db/tables/columns'
 
 // Job boards from before this site watched the labs, read from the Internet
 // Archive's captures of each lab's own board. Each row names its capture in
-// archive_captures (layers/terminal/server/db/tables/archive.ts), which logs
+// archive_captures (layers/core/server/db/tables/archive.ts), which logs
 // the captures of every archived axis.
 
 // One row per (capture, count): what an archived job board listed. Each

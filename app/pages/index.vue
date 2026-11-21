@@ -8,23 +8,16 @@
 // its axis page leads with, so the overview is the axis pages' summaries and
 // nothing else. Fourteen cached endpoints, fetched in parallel on the server.
 
-import type { ListedData } from '#layers/terminal/shared/utils/listed'
-import type { UtilizationData } from '#layers/compute/shared/utils/compute-views'
+import type { DisclosuresData } from '#layers/models/shared/utils/terminal-types/disclosures'
+import type { HiringHistoryData } from '#layers/talent/shared/utils/terminal-types/hiring'
+import type { IncidentsData } from '#layers/reliability/shared/utils/terminal-types/incidents'
 import { LABS } from '#layers/core/shared/utils/lab-names'
-import type {
-  DisclosuresData,
-  GpuPricesData,
-  GroundTruthData,
-  HiringHistoryData,
-  IncidentsData,
-  OverviewData,
-  PricesData,
-  RankingsData,
-  ReleasesData,
-  RevenueData,
-  SpendData,
-} from '#layers/terminal/shared/utils/terminal-types'
-import type { ThesesData } from '#layers/theses/shared/utils/thesis-types'
+import type { OverviewData } from '#layers/alerts/shared/utils/terminal-types/overview'
+import type { PricesData } from '#layers/pricing/shared/utils/terminal-types/prices'
+import type { RankingsData } from '#layers/adoption/shared/utils/terminal-types/rankings'
+import type { ReleasesData } from '#layers/models/shared/utils/terminal-types/releases'
+import type { RevenueData } from '#layers/companies/shared/utils/terminal-types/revenue'
+import type { SpendData } from '#layers/adoption/shared/utils/terminal-types/spend'
 
 definePageMeta({
   publicPage: {
@@ -53,15 +46,11 @@ const description = config.public.appDescription
 // keeps that figure and its citation and drops the rest of the payload. Started
 // before the other nine are awaited, so all fourteen run at once.
 const fundamentalsFetch = Promise.all([
-  useFetch('/api/ground-truth', {
-    transform: (d: GroundTruthData) => truthFigure(d),
-  }),
-  useFetch('/api/listed', { transform: (d: ListedData) => listedFigure(d) }),
-  useFetch('/api/gpu-prices', { transform: (d: GpuPricesData) => gpuFigure(d) }),
-  useFetch('/api/utilization', {
-    transform: (d: UtilizationData) => utilizationFigure(d),
-  }),
-  useFetch('/api/theses', { transform: (d: ThesesData) => thesisFigure(d) }),
+  useFetch('/api/ground-truth', { transform: truthFigure }),
+  useFetch('/api/listed', { transform: listedFigure }),
+  useFetch('/api/gpu-prices', { transform: gpuFigure }),
+  useFetch('/api/utilization', { transform: utilizationFigure }),
+  useFetch('/api/theses', { transform: thesisFigure }),
 ])
 
 // `pick`/`transform` run on the server, before Nuxt serialises the result into

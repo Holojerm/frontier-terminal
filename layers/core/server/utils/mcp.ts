@@ -1,5 +1,5 @@
 // The MCP server: the terminal's read-only query layer, exposed to an agent
-// over Streamable HTTP at /mcp (layers/terminal/server/routes/mcp.ts).
+// over Streamable HTTP at /mcp (layers/core/server/routes/mcp.ts).
 //
 // It lives inside the one Worker rather than beside it, and that is the
 // decision worth recording. A second Worker calling the public JSON API

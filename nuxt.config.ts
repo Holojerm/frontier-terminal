@@ -611,7 +611,7 @@ export default defineNuxtConfig({
       appUrl: 'http://localhost:3000',
       // The origin of a separate MCP worker (the template's mcp/ directory),
       // which this app does not have: its MCP endpoint is the app's own /mcp
-      // route (layers/terminal/server/routes/mcp.ts), and llms.txt already names
+      // route (layers/core/server/routes/mcp.ts), and llms.txt already names
       // it. Leave this empty. Set, it would add a second "MCP server" section to
       // llms.txt and make /.well-known/ai-catalog.json point at a Server Card
       // that nothing here serves.

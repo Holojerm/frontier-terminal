@@ -5,6 +5,7 @@ import { describe, expect, it } from 'vitest'
 
 import { DOMAIN_LAYERS } from '../domains.config'
 import {
+  appRootProblem,
   componentFindings,
   componentName,
   componentRefs,
@@ -12,10 +13,15 @@ import {
   duplicateNames,
   edgeProblem,
   fileFindings,
+  fileTargets,
   importSpecifiers,
+  rawFindings,
   reachable,
   specifierTarget,
   tableProblems,
+  templateNames,
+  unusedPublic,
+  unusedUses,
   type LayerTable,
 } from '../scripts/lib/domains'
 
@@ -83,6 +89,20 @@ describe('the domain table', () => {
     ]
     expect(DOMAIN_LAYERS.theses.uses).toEqual([...supporting, 'alerts'])
     expect(DOMAIN_LAYERS.signals.uses).toEqual(supporting)
+    // The shell reads every layer but signals, whose results reach pages only through its own.
+    expect(DOMAIN_LAYERS.terminal.uses).toEqual([
+      'core',
+      'companies',
+      'compute',
+      'pricing',
+      'talent',
+      'reliability',
+      'adoption',
+      'models',
+      'press',
+      'alerts',
+      'theses',
+    ])
   })
 })
 
@@ -264,5 +284,118 @@ describe('auto-registered components', () => {
         { name: 'TerminalTable', file: 'layers/terminal/app/components/Terminal/Table.vue' },
       ]),
     ).toHaveLength(1)
+  })
+})
+
+describe('the app root', () => {
+  it('reaches a layer above core only through its composition files or shared/', () => {
+    const page = 'app/pages/index.vue'
+    expect(appRootProblem(TABLE, page, 'layers/core/server/utils/a.ts')).toBeNull()
+    expect(appRootProblem(TABLE, page, 'layers/compute/shared/utils/gpu.ts')).toBeNull()
+    expect(appRootProblem(TABLE, page, 'layers/terminal/shared/utils/listed.ts')).toBeNull()
+    expect(
+      appRootProblem(
+        TABLE,
+        'server/routes/sitemap.xml.get.ts',
+        'layers/terminal/server/utils/crawler.ts',
+      ),
+    ).toMatch(/reaches terminal only through server\/registries/)
+    expect(
+      appRootProblem(
+        TABLE,
+        'server/registries/crawler-pages.ts',
+        'layers/terminal/server/utils/crawler.ts',
+      ),
+    ).toBeNull()
+    expect(
+      appRootProblem(TABLE, 'server/db/schema.ts', 'layers/compute/server/db/schema.ts'),
+    ).toBeNull()
+    expect(appRootProblem(TABLE, 'scripts/x.ts', 'layers/terminal/server/a.ts')).toBeNull()
+    expect(appRootProblem(TABLE, 'test/x.test.ts', 'layers/terminal/server/a.ts')).toBeNull()
+  })
+
+  it('judges an app-root file through fileFindings, auto-imports included', () => {
+    const findings = fileFindings(
+      TABLE,
+      'server/routes/llms.txt.get.ts',
+      "import { llmsTxtInput } from '#layers/terminal/server/utils/crawler-pages'\n",
+      (target) => `${target}.ts`,
+      [{ name: 'queryGpu', line: 3 }],
+      new Map([['queryGpu', 'layers/compute/server/utils/terminal-gpu.ts']]),
+      appRootProblem,
+    )
+    expect(findings.map((f) => f.line)).toEqual([1, 3])
+  })
+})
+
+describe('what a layer actually uses', () => {
+  const resolve = (target: string) => (target.endsWith('.ts') ? target : `${target}.ts`)
+
+  it('collects explicit and auto-imported targets', () => {
+    expect(
+      fileTargets(
+        'layers/theses/server/x.ts',
+        "import { a } from '#layers/compute/server/utils/terminal-gpu'\nimport { b } from 'zod'\n",
+        resolve,
+        [{ name: 'served' }, { name: 'local' }],
+        new Map([['served', 'layers/core/server/utils/terminal-envelope.ts']]),
+      ),
+    ).toEqual([
+      'layers/compute/server/utils/terminal-gpu.ts',
+      'layers/core/server/utils/terminal-envelope.ts',
+    ])
+  })
+
+  it('flags a uses entry nothing reaches', () => {
+    const used = new Map([
+      ['core', new Set<string>()],
+      ['compute', new Set(['core'])],
+      ['theses', new Set(['compute'])],
+      ['terminal', new Set(['theses'])],
+    ])
+    expect(unusedUses(TABLE, used)).toEqual([
+      'terminal lists core in its uses but never imports it',
+    ])
+  })
+
+  it('flags a public entry no other layer reads', () => {
+    expect(unusedPublic(TABLE, new Set(['layers/compute/server/utils/terminal-gpu.ts']))).toEqual(
+      [],
+    )
+    expect(unusedPublic(TABLE, new Set(['layers/compute/server/utils/other.ts']))).toEqual([
+      "compute's public list names server/utils/terminal-gpu.ts, which no other layer reads",
+    ])
+  })
+})
+
+describe('?raw imports', () => {
+  it('flags a raw import whose file is gone, and nothing else', () => {
+    // Built at run time, so the gate's own ?raw check does not read these lines as this file's imports.
+    const raw = '?' + 'raw'
+    const source = [
+      `import page from '../../app/pages/releases.vue${raw}'`,
+      "import yaml from 'raw:~~/sources.yaml'",
+      `import kept from './kept.ts${raw}'`,
+      `import pkg from 'some-package${raw}'`,
+    ].join('\n')
+    const present = new Set(['sources.yaml', 'layers/models/test/kept.ts'])
+    const findings = rawFindings('layers/models/test/copy.test.ts', source, (t) =>
+      present.has(t) ? t : null,
+    )
+    expect(findings).toEqual([
+      {
+        file: 'layers/models/test/copy.test.ts',
+        line: 1,
+        message: 'imports ../../app/pages/releases.vue?raw, which is not a file',
+      },
+    ])
+  })
+})
+
+describe('templateNames', () => {
+  it('reads the names a compiled template takes from its render context', () => {
+    const code =
+      'return _ctx.formatUsd(_ctx.row.price) + _ctx.count + _ctx.$route.path + _toDisplayString(x)'
+    expect(templateNames(code)).toEqual(['formatUsd', 'row', 'count', '$route'])
   })
 })

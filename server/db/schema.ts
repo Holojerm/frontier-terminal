@@ -74,7 +74,6 @@ export type NewOpsEvent = typeof opsEvents.$inferInsert
 // on its own; these lines are what make the typed `db` and drizzle-kit see them.
 // The core layer owns the store's tables, each domain layer its own.
 export * from '../../layers/core/server/db/schema'
-export * from '../../layers/terminal/server/db/schema'
 export * from '../../layers/compute/server/db/schema'
 export * from '../../layers/pricing/server/db/schema'
 export * from '../../layers/talent/server/db/schema'

@@ -4,7 +4,7 @@
 // Caveats are READ from sources.yaml, never retyped here. That file
 // transcribes docs/source-audit.md, and a caveat the UI paraphrased would be
 // a third copy that drifts from the other two. The only hand-kept part is
-// the label/role map below, and layers/terminal/test/terminal-sources.test.ts fails when
+// the label/role map below, and layers/core/test/terminal-sources.test.ts fails when
 // sources.yaml gains an include source this map has no entry for.
 //
 // Pure functions of the YAML text, so the same code runs in the Worker (with

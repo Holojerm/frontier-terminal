@@ -18,7 +18,10 @@ import {
 import { SCHEMA_VERSION } from '#layers/core/server/utils/data-schema'
 import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
 import { queryContext, recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
-import { VIEW_RECIPES } from '../server/utils/terminal-recipe-views'
+import { ADOPTION_RECIPE_IDS } from '#layers/adoption/server/utils/terminal-adoption'
+import { PARENT_RECIPE_IDS } from '#layers/companies/server/utils/terminal-parents'
+import { LIMIT_RECIPE_IDS } from '#layers/pricing/server/utils/terminal-limits'
+import { PAY_RECIPE_IDS } from '#layers/talent/server/utils/terminal-pay'
 import { DATACENTER_RECIPES } from '#layers/compute/server/utils/terminal-datacenters'
 import { powerSitesStamp } from '#layers/compute/server/power/stamp'
 import { reportedStamp } from '../../press/server/utils/terminal-reported'
@@ -719,10 +722,10 @@ describe('tools/call', () => {
       utilization: recipeRunsStamp(db, UTILIZATION_RECIPES),
       datacenters: recipeRunsStamp(db, DATACENTER_RECIPES.datacenters),
       'power-sites': powerSitesStamp(db),
-      adoption: recipeRunsStamp(db, VIEW_RECIPES.adoption),
-      limits: recipeRunsStamp(db, VIEW_RECIPES.limits),
-      pay: recipeRunsStamp(db, VIEW_RECIPES.pay),
-      parents: recipeRunsStamp(db, VIEW_RECIPES.parents),
+      adoption: recipeRunsStamp(db, ADOPTION_RECIPE_IDS),
+      limits: recipeRunsStamp(db, LIMIT_RECIPE_IDS),
+      pay: recipeRunsStamp(db, PAY_RECIPE_IDS),
+      parents: recipeRunsStamp(db, PARENT_RECIPE_IDS),
       reported: reportedStamp(db),
       theses: Promise.resolve(''),
     }

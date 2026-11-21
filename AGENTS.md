@@ -70,36 +70,32 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 
 ```
 /
-├── layers/core/            # Fork-owned layer every domain builds on: the ingest store and its contracts,
-│                           # the poll engine (refresh, poll, scope policy; each domain's lanes, scope
-│                           # entries and derived sources come in through server/registries/),
-│                           # query plumbing (terminal-db, -asof, -cache, -handler), the export and MCP
-│                           # frameworks, API keys, events producer, heartbeats, and the UI kit every
-│                           # page is built from (app/components/Terminal/, reader prefs). Names no domain.
-├── layers/compute/         # Domain layer: GPU prices, data centers, utilization reads, power sites and
-│                           # grid load, hardware prints, /compute and /power. Uses core only.
-├── layers/pricing/         # Domain layer: price-list parsers and lanes, the class map and its drift
-│                           # check, archived prices and rate limits, /api/limits, /prices. Uses core only.
-├── layers/talent/          # Domain layer: careers parsers and lanes, the hiring floor and roll-up,
-│                           # archived boards, posted pay, listed-company hiring, /api/hiring, /api/pay.
-│                           # Uses core only.
-├── layers/reliability/     # Domain layer: status parsers and lanes, incidents (live and archived), latency
-│                           # probes, the reliability record and deploy checks, /api/incidents, /api/probes,
-│                           # /api/reliability. Uses core, and pricing's class map for the probe targets.
-├── layers/adoption/        # Domain layer: OpenRouter rankings and implied spend, the Ramp, npm, PyPI and
-│                           # GitHub agent-PR recipes and the download series, /rankings, /api/rankings,
-│                           # /api/spend, /api/adoption. Uses core, and reliability's OpenRouter id map.
-├── layers/models/          # Domain layer: the release timeline, the launch tripwire, model-floor alerts
-│                           # and launch watch, misalignment-disclosure parsers and lanes, /releases,
-│                           # /disclosures and their APIs. Uses core, and pricing's class map.
-├── layers/alerts/          # Supporting layer: the alert feed and overview band (/alerts, /api/alerts*,
-│                           # /api/overview, alerts.xml, the alert axes), the events consumer and sweep,
-│                           # webhooks, social posts, and digest subscribers (/subscribe, /api/subscribe/*).
-│                           # Uses core, pricing and press.
-├── layers/terminal/        # Fork-owned layer: every domain not yet split out (parsers, lanes, theses,
-│                           # queries, pages, components, tables, tests). Same folder shapes as the app
-│                           # (app/, server/, shared/, test/); auto-registered, not in layers.lock.json.
-│                           # The app's template files reach them via `#layers/<name>/…`.
+├── layers/                 # The product: fork-owned Nuxt layers, each with app/, server/, shared/, test/;
+│                           # auto-registered, not in layers.lock.json (social is vendored). Direction:
+│                           # core ← domains ← alerts / theses / signals ← terminal (domains.config.ts).
+│   ├── core/               # What every domain builds on: the ingest store and its contracts, the poll
+│   │                       # engine, the archive capture log, query plumbing (terminal-db, -asof, -cache,
+│   │                       # -handler), the export and MCP frameworks with /export and /mcp, the judge
+│   │                       # runner, API keys, events producer, heartbeats, reader prefs, and the UI kit
+│   │                       # every page is built from (app/components/Terminal/). Names no domain.
+│   ├── pricing/            # Price lists, the class map, archived prices and rate limits, /prices.
+│   ├── talent/             # Careers boards, the hiring floor, archived boards, pay, listed-company hiring.
+│   ├── reliability/        # Status feeds, incidents, latency probes, the reliability record. Reads pricing.
+│   ├── adoption/           # OpenRouter rankings and spend, npm/PyPI/GitHub/Ramp, /rankings. Reads reliability.
+│   ├── models/             # Releases, the launch tripwire and watch, misalignment disclosures. Reads pricing.
+│   ├── companies/          # EDGAR and SEC filers, revenue, filed facts and guidance, calls, exposure,
+│   │                       # identifiers, parents, dependencies, suppliers, /filings, /exposure.
+│   ├── compute/            # GPU prices, data centers, power sites, grid load, prints, /compute, /power,
+│   │                       # /hardware. Reads companies.
+│   ├── press/              # GDELT, reported figures, the track record, ground truth, press notes. Reads companies.
+│   ├── alerts/             # The alert feed and overview band, alerts.xml, the events consumer, webhooks,
+│   │                       # social posts, digest subscribers. Reads pricing and press.
+│   ├── theses/             # Theses, claims and verdicts, the evaluator, the weekly digest.
+│   ├── signals/            # The signal registry, event-study harness, forward calls, market data.
+│   └── terminal/           # The shell: what reads several domains at once (the lab page, tear sheet,
+│                           # compare, /revenue, /dependencies, /hiring, /incidents, /data, the site
+│                           # pages, the listed and utilization views, the ticks that run several
+│                           # domains after one poll, the ops watch, the crawler page lists, OG cards).
 ├── domains.config.ts       # Which fork-owned layer may import which — see bun run domains:check
 ├── app/                    # Frontend (Vue/Nuxt pages, components, composables)
 │   ├── app.config.ts       # GENERATED from DESIGN.md — NuxtUI colors + component defaults
@@ -111,17 +107,18 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 │   ├── pages/              # File-based routing
 │   └── types/              # Frontend-only TypeScript types (seo.d.ts augments PageMeta)
 ├── server/                 # Backend (Nitro / Cloudflare Workers)
-│   ├── api/                # Template routes: status, fleet, health (the product's are in the layer)
+│   ├── api/                # Template routes: status, fleet, health (the product's are in the layers)
 │   ├── db/
 │   │   ├── schema.ts       # Composition root: ops tables + re-export of every layer's tables
 │   │   └── migrations/     # Generated by drizzle-kit (app-owned)
 │   ├── plugins/            # Nitro plugins (error logging)
 │   ├── registries/         # Composition roots for what lists every domain: lanes, scopes, MCP tools,
-│   │                       # export tables, recipes, query-context blocks. Core reads them via #server/registries
-│   ├── routes/             # robots, sitemap, llms.txt, manifest (route table); the layers hold
-│   │                       # alerts.xml, export/, mcp.ts
-│   ├── tasks/              # ops:watch; cron wiring in nuxt.config + wrangler.toml (the poll and
-│   │                       # theses tasks are in the layer)
+│   │                       # export tables, recipes, judge reviews, parsers, the dictionary and crawler
+│   │                       # pages. Core and the app's routes read them via #server/registries
+│   ├── routes/             # robots, sitemap, llms.txt, manifest (route table); core holds export/
+│   │                       # and mcp.ts, alerts the alerts.xml feed
+│   ├── tasks/              # seo:indexnow; cron wiring in nuxt.config + wrangler.toml (every other
+│   │                       # task is in its layer)
 │   └── utils/              # Core server utilities (ops, fleet, rate limit, SEO, mail)
 ├── shared/                 # Auto-imported in BOTH app/ and server/ (Nuxt 4 `shared/`)
 │   ├── types/              # Cross-cutting type augmentation (runtime config)
@@ -146,16 +143,19 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 └── AGENTS.md               # ← You are here
 ```
 
-**A domain layer** (`layers/compute/` is the first) owns its pages, components, API routes,
-queries, recipes, tables (`server/db/schema.ts`, re-exported from the app's), curated JSON, tasks,
-MCP tools, export tables and tests, and imports only `core`, plus another domain's public files where
-`domains.config.ts` allows it (reliability reads pricing's class map). It registers through the app: one line
-each in `server/registries/` and `server/db/schema.ts`, and a row in `domains.config.ts` whose
-`public` list names what the layers above it may import. Inside a layer, imports are relative; across
-layers they are `#layers/<name>/…`, except in `shared/` and schema files, which use relative paths
-because bun scripts and drizzle-kit load them outside Nuxt. What needs another domain stays in
-`terminal` until that domain has its layer (the utilization query, `/hardware`, the release
-timeline). A value every parse of a tick reads from a domain (the class map) is a tick input in
+**A domain layer** owns its pages, components, API routes, queries, recipes, tables
+(`server/db/schema.ts`, re-exported from the app's), curated JSON, tasks, MCP tools, export tables
+and tests, and imports only `core`, plus another domain's public files where `domains.config.ts`
+allows it (reliability reads pricing's class map). It registers through the app: one line each in
+`server/registries/` and `server/db/schema.ts`, and a row in `domains.config.ts` whose `uses` lists
+only layers it imports and whose `public` list names only files another layer reads
+(`bun run domains:check` fails on either kind of stale entry). Inside a layer, imports are relative;
+across layers they are `#layers/<name>/…`, except in `shared/` and schema files, which use relative
+paths because bun scripts and drizzle-kit load them outside Nuxt. Code that reads several domains
+goes in `terminal`, the shell; mechanism every domain shares goes in `core`, with the domain parts
+as registry entries. Core and the app root never import the shell: they reach it, like any layer
+above core, through `server/registries/` (the dictionary, the crawler pages, the judge's alert
+screen). A value every parse of a tick reads from a domain (the class map) is a tick input in
 `server/registries/lane-context.ts`, not a parameter of the refresh. Which sources ride which poll
 tick is a domain's `ScopeEntry` in `server/registries/scopes.ts`; the tick policy is core's.
 
@@ -200,8 +200,8 @@ Never hand-edit generated files in `public/`. Details and the redesign workflow:
 ### Component Usage
 
 - **Use NuxtUI components first.** Before building a custom component, check if `<UButton>`, `<UModal>`, `<UTable>`, etc. covers your need.
-- **Product code goes in a fork-owned layer** (`layers/core/` for what every domain shares, `layers/<domain>/` per
-  split domain, `layers/terminal/` for the rest), mirroring the app's folders; the app keeps template code and the registries.
+- **Product code goes in a fork-owned layer** (`layers/core/` for what every domain shares, `layers/<domain>/` for
+  one domain's, `layers/terminal/` for what reads several), mirroring the app's folders; the app keeps template code and the registries.
 - **Custom components go in `app/components/[Feature]/`** — never dump everything in `app/components/`.
 - **Component names are PascalCase** in templates and files: `PricingTable.vue`, `FilingList.vue`.
 
@@ -301,7 +301,8 @@ bun run methods:check # Fail when a GET/HEAD/DELETE route reads a request body (
 bun run surfaces:check # Fail when a product route or table misses a surface (page, lab page, tear sheet, MCP tool,
                       # export, alert axis) that surfaces.waivers.ts doesn't waive, or a waiver is stale. --matrix prints it
 bun run domains:check # Fail when a layer imports (or auto-imports) a layer domains.config.ts does not let it,
-                      # or two owners define one auto-imported util name
+                      # the app root reaches past core outside server/registries/, two owners define one
+                      # auto-imported name, a uses/public entry is unused, or a ?raw import has no file
 bun run mcp:check     # The template's gate for a separate MCP worker in mcp/. Inert here: there is no mcp/
                       # directory (our MCP endpoint is the app's own /mcp route), so it passes with nothing to check
 bun run test:a11y     # Playwright/Chromium browser suites: axe over every public route
@@ -343,7 +344,7 @@ When I ask you to build features in this project:
 2. **Use NuxtUI components** — don't build custom components for things NuxtUI already has.
 3. **Nuxt auto-imports** mean you never need to import Vue primitives or Nuxt composables.
 4. **`db` and `schema` are auto-imported** in server routes by `@nuxthub/core` — never instantiate Drizzle manually.
-5. **Server routes go in the owning layer's `server/api/`** (`layers/<domain>/`, else `layers/terminal/`), frontend pages in its `app/pages/` (product code lives in the layers; `server/api/` and `app/pages/` hold template files). A route a domain adds to a list of every domain (a lane, an MCP tool file, an export table file, a recipe) also gets its line in `server/registries/`.
+5. **Server routes go in the owning layer's `server/api/`** (`layers/<domain>/`, or `layers/terminal/` when it reads several domains), frontend pages in its `app/pages/` (product code lives in the layers; `server/api/` and `app/pages/` hold template files). A route a domain adds to a list of every domain (a lane, an MCP tool file, an export table file, a recipe) also gets its line in `server/registries/`.
 6. **Validate all inputs with Zod** — `getValidatedQuery` / `readValidatedBody` on the server.
 7. **Ask before adding new dependencies** — prefer solving problems with what's already installed.
 

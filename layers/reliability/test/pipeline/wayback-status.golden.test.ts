@@ -1,7 +1,7 @@
 import { describe, expect, test } from 'vitest'
 
 import { statusRows } from '../../server/pipeline/archive/rows'
-import { statusEraById } from '../../../reliability/server/pipeline/archive/status-eras'
+import { statusEraById } from '../../server/pipeline/archive/status-eras'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // Golden tests for the archived status feeds (archive/status-eras.ts): one
