@@ -118,7 +118,12 @@ export const recipeRuns = sqliteTable(
     observations: integer('observations').notNull(),
     source_url: text('source_url').notNull(),
   },
-  (t) => [index('recipe_runs_recipe_idx').on(t.recipe_id, t.started_at)],
+  (t) => [
+    index('recipe_runs_recipe_idx').on(t.recipe_id, t.started_at),
+    // The newest run of any recipe is the coverage route's cache variant, read
+    // on every request. Without this it scanned the table (4k rows, 700 a day).
+    index('recipe_runs_started_idx').on(t.started_at),
+  ],
 )
 
 export type ClaimReading = typeof claimReadings.$inferSelect

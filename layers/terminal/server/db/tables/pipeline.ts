@@ -1,5 +1,6 @@
+import { sql } from 'drizzle-orm'
 import { index, integer, primaryKey, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { provenance } from './columns'
+import { provenance, READ_RUN_STATUSES } from './columns'
 
 // Snapshots — one row per fetch, the provenance spine. The raw bytes live in
 // R2 under raw_key; an 'unchanged' fetch writes a row that points at the
@@ -57,6 +58,13 @@ export const entities = sqliteTable(
     // Most panel queries filter on entity_type; without this each one scanned
     // every entity (~8.4k rows, ~10k runs a day in production).
     index('entities_type_idx').on(t.entity_type),
+    // Ranking rows are read by the date inside their payload: the newest date,
+    // then a window back from it. On entity_type alone both read every ranking
+    // row ever stored (5.2k rows, 2.6k runs a day). The query has to spell the
+    // expression the same way, '$.date' as a literal. drizzle-kit writes this
+    // one wrong (it quotes the expression as column names), so its statement in
+    // the migration is corrected by hand.
+    index('entities_type_date_idx').on(t.entity_type, sql`json_extract(payload, '$.date')`),
   ],
 )
 
@@ -83,6 +91,9 @@ export const changes = sqliteTable(
   (t) => [
     index('changes_detected_id_idx').on(t.detected_at, t.id),
     index('changes_entity_key_idx').on(t.entity_key),
+    // Every panel reads one entity type's changes, some inside a date range.
+    // Without this each read scanned the whole log (21k rows, 1.6k runs a day).
+    index('changes_type_detected_idx').on(t.entity_type, t.detected_at),
   ],
 )
 
@@ -145,6 +156,17 @@ export const sourceRuns = sqliteTable(
     // Baseline runs are a handful among tens of thousands; this finds them
     // without scanning the rest.
     index('source_runs_status_source_idx').on(t.status, t.source_id, t.started_at),
+    // The newest run of a source that read its page. Walking
+    // source_runs_source_started_idx for it passes every failed and absent run
+    // on the way: a source that is absent on every poll, or has been failing
+    // for a week, cost its whole history on each call (10.6k rows a call,
+    // 6.9k calls a day). SQLite uses a partial index only when the query
+    // repeats its WHERE, so both sides spell it with READ_RUN_STATUSES, and
+    // the query names this index (INDEXED BY): with no statistics the planner
+    // takes source_runs_source_started_idx instead.
+    index('source_runs_read_idx')
+      .on(t.source_id, t.started_at, t.snapshot_id)
+      .where(sql`status in ${sql.raw(READ_RUN_STATUSES)}`),
   ],
 )
 
