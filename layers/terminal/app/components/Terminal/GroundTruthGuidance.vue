@@ -146,7 +146,7 @@ const stamps = useStamps()
       </TerminalTable>
 
       <p v-if="printed.length" class="max-w-2xl text-sm text-muted">
-        Guidance given only on the earnings call isn’t here.
+        Guidance given on the earnings call is in the next panel.
       </p>
     </div>
   </TerminalPanel>

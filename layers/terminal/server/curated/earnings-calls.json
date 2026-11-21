@@ -1,0 +1,1129 @@
+{
+  "_comment": "Hand-read 2026-11-21: what each listed company posts for its earnings calls (layers/terminal/server/calls/). EDGAR exhibits are found by the reader itself; this lists the transcripts, remarks and replay audio a company posts on its own hosts, and why a company has none. Re-read with the source-audit notes in docs/source-audit.md.",
+  "companies": [
+    {
+      "ticker": "MSFT",
+      "company": "Microsoft",
+      "cik": "0000789019",
+      "fy_end_month": 6,
+      "posts": "transcript",
+      "ir_url": "https://www.microsoft.com/en-us/investor",
+      "terms_url": "https://www.microsoft.com/en-us/legal/terms-of-use",
+      "gap": null
+    },
+    {
+      "ticker": "AMZN",
+      "company": "Amazon",
+      "cik": "0001018724",
+      "fy_end_month": 12,
+      "posts": "webcast",
+      "ir_url": "https://ir.aboutamazon.com/quarterly-results/default.aspx",
+      "terms_url": null,
+      "gap": "Amazon posts no transcript. Its call audio is an MP3 on its IR file host for about three months, so only calls still up were transcribed.",
+      "speakers": [
+        {
+          "name": "Andy Jassy",
+          "title": "President and CEO"
+        },
+        {
+          "name": "Brian Olsavsky",
+          "title": "SVP and CFO"
+        },
+        {
+          "name": "Dave Fildes",
+          "title": "Director, Investor Relations"
+        }
+      ],
+      "keyterms": [
+        "Amazon",
+        "AWS",
+        "Amazon Web Services",
+        "Andy Jassy",
+        "Brian Olsavsky",
+        "Dave Fildes",
+        "Trainium",
+        "Trainium2",
+        "Trainium3",
+        "Inferentia",
+        "Graviton",
+        "Bedrock",
+        "SageMaker",
+        "Amazon Q",
+        "Nova",
+        "Alexa",
+        "Alexa+",
+        "Project Kuiper",
+        "Kuiper",
+        "Prime Video",
+        "Zoox",
+        "Rainier",
+        "Project Rainier",
+        "Anthropic",
+        "operating income",
+        "free cash flow",
+        "capital expenditures",
+        "net sales",
+        "North America segment",
+        "International segment",
+        "backlog",
+        "gigawatts"
+      ],
+      "prompt": "Amazon.com quarterly earnings conference call. Investor relations opens, then CEO Andy Jassy and CFO Brian Olsavsky discuss results for AWS, the North America and International segments, advertising, capital expenditures and guidance, followed by analyst questions."
+    },
+    {
+      "ticker": "GOOGL",
+      "company": "Alphabet",
+      "cik": "0001652044",
+      "fy_end_month": 12,
+      "posts": "transcript",
+      "ir_url": "https://abc.xyz/investor/",
+      "terms_url": null,
+      "gap": null
+    },
+    {
+      "ticker": "META",
+      "company": "Meta",
+      "cik": "0001326801",
+      "fy_end_month": 12,
+      "posts": "transcript",
+      "ir_url": "https://investor.atmeta.com/financials/",
+      "terms_url": null,
+      "gap": null
+    },
+    {
+      "ticker": "ORCL",
+      "company": "Oracle",
+      "cik": "0001341439",
+      "fy_end_month": 5,
+      "posts": "webcast",
+      "ir_url": "https://investor.oracle.com/",
+      "terms_url": null,
+      "gap": "Oracle posts no transcript. Its webcast replay sits behind a registration page on q4 (events.q4inc.com), with no media file the company links, so we do not transcribe it. Its outlook is given only on the call."
+    },
+    {
+      "ticker": "AMD",
+      "company": "AMD",
+      "cik": "0000002488",
+      "fy_end_month": 12,
+      "posts": "transcript",
+      "ir_url": "https://ir.amd.com/financial-information/financial-results",
+      "terms_url": null,
+      "gap": null
+    },
+    {
+      "ticker": "ARM",
+      "company": "Arm",
+      "cik": "0001973239",
+      "fy_end_month": 3,
+      "posts": "transcript",
+      "ir_url": "https://investors.arm.com/financials/quarterly-annual-results",
+      "terms_url": null,
+      "gap": "Arm posts FactSet transcripts, but investors.arm.com refuses automated clients (HTTP 403), so we read only its 6-K exhibits."
+    },
+    {
+      "ticker": "AVGO",
+      "company": "Broadcom",
+      "cik": "0001730168",
+      "fy_end_month": 10,
+      "posts": "webcast",
+      "ir_url": "https://investors.broadcom.com/",
+      "terms_url": null,
+      "gap": "Broadcom posts no transcript, investors.broadcom.com refuses automated clients (HTTP 403), and its replay needs registration. Its release states the next quarter’s revenue outlook, which we read."
+    },
+    {
+      "ticker": "CBRS",
+      "company": "Cerebras",
+      "cik": "0002021728",
+      "fy_end_month": 12,
+      "posts": "webcast",
+      "ir_url": "https://investors.cerebras.ai/",
+      "terms_url": null,
+      "gap": "Cerebras posts no transcript we could find; its IR site refuses automated clients (HTTP 403)."
+    },
+    {
+      "ticker": "INTC",
+      "company": "Intel",
+      "cik": "0000050863",
+      "fy_end_month": 12,
+      "posts": "remarks",
+      "ir_url": "https://www.intc.com/news-events/ir-calendar",
+      "terms_url": null,
+      "gap": "Intel posts prepared remarks but no Q&A. Its webcast replay sits behind a registration page on notified (edge.media-server.com), with no media file the company links, so we do not transcribe it."
+    },
+    {
+      "ticker": "MRVL",
+      "company": "Marvell",
+      "cik": "0001835632",
+      "fy_end_month": 1,
+      "posts": "webcast",
+      "ir_url": "https://investor.marvell.com/news-events/ir-calendar",
+      "terms_url": null,
+      "gap": "Marvell posts no transcript. Its webcast replay sits behind a registration page on chorus call, with no media file the company links, so we do not transcribe it. Its release states the next quarter’s outlook."
+    },
+    {
+      "ticker": "NVDA",
+      "company": "Nvidia",
+      "cik": "0001045810",
+      "fy_end_month": 1,
+      "posts": "transcript",
+      "ir_url": "https://investor.nvidia.com/financial-info/quarterly-results/default.aspx",
+      "terms_url": null,
+      "gap": "The Q3 FY2027 transcript is a Bloomberg PDF whose body text our PDF reader cannot decode; the CFO commentary exhibit on EDGAR carries the outlook."
+    },
+    {
+      "ticker": "QCOM",
+      "company": "Qualcomm",
+      "cik": "0000804328",
+      "fy_end_month": 9,
+      "posts": "transcript",
+      "ir_url": "https://investor.qualcomm.com/financial-information/quarterly-results/default.aspx",
+      "terms_url": null,
+      "gap": null
+    },
+    {
+      "ticker": "TSM",
+      "company": "TSMC",
+      "cik": "0001046179",
+      "fy_end_month": 12,
+      "posts": "transcript",
+      "ir_url": "https://investor.tsmc.com/english/quarterly-results",
+      "terms_url": null,
+      "gap": "TSMC posts LSEG transcripts, but investor.tsmc.com answers automated clients with a bot challenge, so we read only its 6-Ks."
+    },
+    {
+      "ticker": "ALAB",
+      "company": "Astera Labs",
+      "cik": "0001736297",
+      "fy_end_month": 12,
+      "posts": "webcast",
+      "ir_url": "https://ir.asteralabs.com/",
+      "terms_url": null,
+      "gap": "Astera Labs posts no transcript; its IR site refuses automated clients (HTTP 403). Its release states the next quarter’s outlook."
+    },
+    {
+      "ticker": "ANET",
+      "company": "Arista Networks",
+      "cik": "0001596532",
+      "fy_end_month": 12,
+      "posts": "webcast",
+      "ir_url": "https://investors.arista.com/",
+      "terms_url": null,
+      "gap": "Arista posts no transcript. Its webcast replay sits behind a registration page on q4 (events.q4inc.com), with no media file the company links, so we do not transcribe it."
+    },
+    {
+      "ticker": "CRDO",
+      "company": "Credo",
+      "cik": "0001807794",
+      "fy_end_month": 4,
+      "posts": "webcast",
+      "ir_url": "https://investors.credosemi.com/",
+      "terms_url": null,
+      "gap": "Credo posts no transcript we could find. Its release states the next quarter’s outlook."
+    },
+    {
+      "ticker": "AAOI",
+      "company": "Applied Optoelectronics",
+      "cik": "0001158114",
+      "fy_end_month": 12,
+      "posts": "webcast",
+      "ir_url": "https://investors.ao-inc.com/quarterly-results",
+      "terms_url": null,
+      "gap": "Applied Optoelectronics posts no transcript. Its webcast replay sits behind a registration page on notified and q4, with no media file the company links, so we do not transcribe it. Its release states the next quarter’s outlook."
+    },
+    {
+      "ticker": "CIEN",
+      "company": "Ciena",
+      "cik": "0000936395",
+      "fy_end_month": 10,
+      "posts": "transcript",
+      "ir_url": "https://investor.ciena.com/",
+      "terms_url": null,
+      "gap": "Ciena posts S&P Global transcripts; only the fiscal Q3 2026 file could be found at a fixed address."
+    },
+    {
+      "ticker": "COHR",
+      "company": "Coherent",
+      "cik": "0000820318",
+      "fy_end_month": 6,
+      "posts": "webcast",
+      "ir_url": "https://ir.coherent.com/",
+      "terms_url": null,
+      "gap": "Coherent posts no transcript we could find; ir.coherent.com refuses automated clients (HTTP 403)."
+    },
+    {
+      "ticker": "FN",
+      "company": "Fabrinet",
+      "cik": "0001408710",
+      "fy_end_month": 6,
+      "posts": "webcast",
+      "ir_url": "https://investor.fabrinet.com/",
+      "terms_url": null,
+      "gap": "Fabrinet posts no transcript we could find; its IR site refuses automated clients (HTTP 403)."
+    },
+    {
+      "ticker": "LITE",
+      "company": "Lumentum",
+      "cik": "0001633978",
+      "fy_end_month": 6,
+      "posts": "webcast",
+      "ir_url": "https://investor.lumentum.com/",
+      "terms_url": null,
+      "gap": "Lumentum posts no transcript we could find. Its release states the next quarter’s outlook."
+    },
+    {
+      "ticker": "CLS",
+      "company": "Celestica",
+      "cik": "0001030894",
+      "fy_end_month": 12,
+      "posts": "webcast",
+      "ir_url": "https://corporate.celestica.com/",
+      "terms_url": null,
+      "gap": "Celestica posts no transcript; its IR site refuses automated clients (HTTP 403). It files 6-Ks as a foreign private issuer."
+    },
+    {
+      "ticker": "DELL",
+      "company": "Dell",
+      "cik": "0001571996",
+      "fy_end_month": 1,
+      "posts": "transcript",
+      "ir_url": "https://investors.delltechnologies.com/financial-information/financial-results",
+      "terms_url": null,
+      "gap": null
+    },
+    {
+      "ticker": "HPE",
+      "company": "Hewlett Packard Enterprise",
+      "cik": "0001645590",
+      "fy_end_month": 10,
+      "posts": "transcript",
+      "ir_url": "https://investors.hpe.com/financial/quarterly-results",
+      "terms_url": null,
+      "gap": null
+    },
+    {
+      "ticker": "SMCI",
+      "company": "Super Micro",
+      "cik": "0001375365",
+      "fy_end_month": 6,
+      "posts": "remarks",
+      "ir_url": "https://ir.supermicro.com/",
+      "terms_url": null,
+      "gap": "Super Micro posts prepared remarks, no Q&A, and only the fiscal Q1 2027 file could be found at a fixed address."
+    },
+    {
+      "ticker": "AKAM",
+      "company": "Akamai",
+      "cik": "0001086222",
+      "fy_end_month": 12,
+      "posts": "webcast",
+      "ir_url": "https://www.ir.akamai.com/",
+      "terms_url": null,
+      "gap": "Akamai posts no transcript; its IR site refuses automated clients (HTTP 403)."
+    },
+    {
+      "ticker": "CRWV",
+      "company": "CoreWeave",
+      "cik": "0001769628",
+      "fy_end_month": 12,
+      "posts": "transcript",
+      "ir_url": "https://investors.coreweave.com/events-and-presentations/default.aspx",
+      "terms_url": null,
+      "gap": null
+    },
+    {
+      "ticker": "IREN",
+      "company": "IREN",
+      "cik": "0001878848",
+      "fy_end_month": 6,
+      "posts": "webcast",
+      "ir_url": "https://iren.com/investors",
+      "terms_url": null,
+      "gap": "IREN filed one call transcript on EDGAR (May 2026). Its webcast replay sits behind a registration page on notified (edge.media-server.com), with no media file the company links, so we do not transcribe it."
+    },
+    {
+      "ticker": "NBIS",
+      "company": "Nebius",
+      "cik": "0001513845",
+      "fy_end_month": 12,
+      "posts": "remarks",
+      "ir_url": "https://nebius.com/investor-hub",
+      "terms_url": null,
+      "gap": "Nebius posts a shareholder letter (read from its 6-K) and streams the call on YouTube, which we do not download."
+    },
+    {
+      "ticker": "APLD",
+      "company": "Applied Digital",
+      "cik": "0001144879",
+      "fy_end_month": 5,
+      "posts": "webcast",
+      "ir_url": "https://ir.applieddigital.com/financial-information/financial-results",
+      "terms_url": null,
+      "gap": "Applied Digital posts no transcript. Its webcast replay sits behind a registration page on q4 (events.q4inc.com), with no media file the company links, so we do not transcribe it."
+    },
+    {
+      "ticker": "CIFR",
+      "company": "Cipher Digital",
+      "cik": "0001819989",
+      "fy_end_month": 12,
+      "posts": "webcast",
+      "ir_url": "https://investors.cipherdigital.com/",
+      "terms_url": null,
+      "gap": "Cipher posts no transcript; its IR site refuses automated clients (HTTP 403). Its business update deck is read from the 8-K."
+    },
+    {
+      "ticker": "CORZ",
+      "company": "Core Scientific",
+      "cik": "0001839341",
+      "fy_end_month": 12,
+      "posts": "remarks",
+      "ir_url": "https://investors.corescientific.com/financial-information/financial-results",
+      "terms_url": null,
+      "gap": "Core Scientific posts prepared remarks, no Q&A. Its webcast replay sits behind a registration page on chorus call, with no media file the company links, so we do not transcribe it."
+    },
+    {
+      "ticker": "GLXY",
+      "company": "Galaxy Digital",
+      "cik": "0001859392",
+      "fy_end_month": 12,
+      "posts": "webcast",
+      "ir_url": "https://investor.galaxy.com/",
+      "terms_url": null,
+      "gap": "Galaxy’s IR site refuses automated clients (HTTP 403); we found no transcript at a fixed address. It streams the call on YouTube, which we do not download."
+    },
+    {
+      "ticker": "HUT",
+      "company": "Hut 8",
+      "cik": "0001964789",
+      "fy_end_month": 12,
+      "posts": "transcript",
+      "ir_url": "https://www.hut8.com/investors/events-presentations/",
+      "terms_url": null,
+      "gap": "Hut 8’s Q3 2026 transcript was not posted yet on 2026-11-21."
+    },
+    {
+      "ticker": "RIOT",
+      "company": "Riot Platforms",
+      "cik": "0001167419",
+      "fy_end_month": 12,
+      "posts": "webcast",
+      "ir_url": "https://www.riotplatforms.com/investors/financial-results/",
+      "terms_url": null,
+      "gap": "Riot posts no transcript. Its webcast replay sits behind a registration page on notified (edge.media-server.com), with no media file the company links, so we do not transcribe it."
+    },
+    {
+      "ticker": "WULF",
+      "company": "TeraWulf",
+      "cik": "0001083301",
+      "fy_end_month": 12,
+      "posts": "webcast",
+      "ir_url": "https://investors.terawulf.com/financial-information/financial-results",
+      "terms_url": null,
+      "gap": "TeraWulf posts no transcript. Its webcast replay sits behind a registration page on viavid, with no media file the company links, so we do not transcribe it."
+    },
+    {
+      "ticker": "AEP",
+      "company": "American Electric Power",
+      "cik": "0000004904",
+      "fy_end_month": 12,
+      "posts": "webcast",
+      "ir_url": "https://www.aep.com/investors/events/",
+      "terms_url": null,
+      "gap": "AEP posts no transcript; it posts the call audio as an MP3, which we transcribe.",
+      "speakers": [
+        {
+          "name": "Bill Fehrman",
+          "title": "Chairman, President and CEO"
+        },
+        {
+          "name": "Trevor Mihalik",
+          "title": "EVP and CFO"
+        },
+        {
+          "name": "Andy Gurgol",
+          "title": "VP, Investor Relations"
+        }
+      ],
+      "keyterms": [
+        "American Electric Power",
+        "AEP",
+        "Bill Fehrman",
+        "Trevor Mihalik",
+        "Andy Gurgol",
+        "AEP Ohio",
+        "AEP Texas",
+        "Appalachian Power",
+        "Indiana Michigan Power",
+        "Public Service Company of Oklahoma",
+        "SWEPCO",
+        "Kentucky Power",
+        "AEP Transmission",
+        "PJM",
+        "ERCOT",
+        "SPP",
+        "load growth",
+        "gigawatts",
+        "data center",
+        "operating earnings",
+        "rate base",
+        "capital plan",
+        "FFO to debt",
+        "Bloom Energy",
+        "fuel cells",
+        "765 kV"
+      ],
+      "prompt": "American Electric Power quarterly earnings conference call. Investor relations opens, then CEO Bill Fehrman and CFO Trevor Mihalik discuss operating earnings, load growth from data centers, the capital plan and guidance, followed by analyst questions."
+    },
+    {
+      "ticker": "BE",
+      "company": "Bloom Energy",
+      "cik": "0001664703",
+      "fy_end_month": 12,
+      "posts": "webcast",
+      "ir_url": "https://investor.bloomenergy.com/",
+      "terms_url": null,
+      "gap": "Bloom posts no transcript we could find. Its release states its full-year outlook."
+    },
+    {
+      "ticker": "DTE",
+      "company": "DTE Energy",
+      "cik": "0000936340",
+      "fy_end_month": 12,
+      "posts": "transcript",
+      "ir_url": "https://ir.dteenergy.com/",
+      "terms_url": null,
+      "gap": "DTE posts FactSet transcripts; the Q3 2026 file was not at its usual address on 2026-11-21."
+    },
+    {
+      "ticker": "ETR",
+      "company": "Entergy",
+      "cik": "0000065984",
+      "fy_end_month": 12,
+      "posts": "webcast",
+      "ir_url": "https://investors.entergy.com/",
+      "terms_url": null,
+      "gap": "Entergy’s site terms bar automated reading, so we read only its EDGAR filings."
+    },
+    {
+      "ticker": "GEV",
+      "company": "GE Vernova",
+      "cik": "0001996810",
+      "fy_end_month": 12,
+      "posts": "transcript",
+      "ir_url": "https://www.gevernova.com/investors",
+      "terms_url": null,
+      "gap": null
+    },
+    {
+      "ticker": "PNW",
+      "company": "Pinnacle West Capital",
+      "cik": "0000764622",
+      "fy_end_month": 12,
+      "posts": "webcast",
+      "ir_url": "https://www.pinnaclewest.com/investors/",
+      "terms_url": null,
+      "gap": "Pinnacle West posts no transcript we could find."
+    },
+    {
+      "ticker": "WEC",
+      "company": "WEC Energy Group",
+      "cik": "0000783325",
+      "fy_end_month": 12,
+      "posts": "webcast",
+      "ir_url": "https://www.wecenergygroup.com/invest/",
+      "terms_url": null,
+      "gap": "WEC posts no transcript we could find; its site refuses automated clients (HTTP 403)."
+    },
+    {
+      "ticker": "WMB",
+      "company": "Williams",
+      "cik": "0000107263",
+      "fy_end_month": 12,
+      "posts": "transcript",
+      "ir_url": "https://investor.williams.com/",
+      "terms_url": null,
+      "gap": "Williams posts edited transcripts, but investor.williams.com refuses automated clients (HTTP 403), so we read only its 8-K exhibits."
+    }
+  ],
+  "documents": [
+    {
+      "ticker": "NVDA",
+      "call_date": "2025-11-19",
+      "kind": "transcript",
+      "url": "https://s201.q4cdn.com/141608511/files/doc_financials/2026/q3/NVDA-Q3-2026-Earnings-Call-19-November-2025-5_00-PM-ET.pdf",
+      "page_url": "https://investor.nvidia.com/financial-info/quarterly-results/default.aspx",
+      "produced_by": "FactSet"
+    },
+    {
+      "ticker": "NVDA",
+      "call_date": "2026-02-25",
+      "kind": "transcript",
+      "url": "https://s201.q4cdn.com/141608511/files/doc_financials/2026/q4/NVDA-Q4-2026-Earnings-Call-25-February-2026-5_00-PM-ET.pdf",
+      "page_url": "https://investor.nvidia.com/financial-info/quarterly-results/default.aspx",
+      "produced_by": "FactSet"
+    },
+    {
+      "ticker": "NVDA",
+      "call_date": "2026-05-20",
+      "kind": "transcript",
+      "url": "https://s201.q4cdn.com/141608511/files/doc_financials/2027/q1/NVDA-Q1-2027-Earnings-Call-20-May-2026-5_00-PM-ET.pdf",
+      "page_url": "https://investor.nvidia.com/financial-info/quarterly-results/default.aspx",
+      "produced_by": "FactSet"
+    },
+    {
+      "ticker": "NVDA",
+      "call_date": "2026-08-26",
+      "kind": "transcript",
+      "url": "https://s201.q4cdn.com/141608511/files/content_files/TRANSCRIPT_-NVIDIA-Corp-NVDA-US-Q2-2027-Earnings-Call-26-August-2026-5_00-PM-ET.pdf",
+      "page_url": "https://investor.nvidia.com/financial-info/quarterly-results/default.aspx",
+      "produced_by": "FactSet"
+    },
+    {
+      "ticker": "NVDA",
+      "call_date": "2026-11-17",
+      "kind": "transcript",
+      "url": "https://s201.q4cdn.com/141608511/files/content_files/NVDA-3Q27-Earnings-Transcript.pdf",
+      "page_url": "https://investor.nvidia.com/financial-info/quarterly-results/default.aspx",
+      "produced_by": "Bloomberg"
+    },
+    {
+      "ticker": "AMD",
+      "call_date": "2025-11-04",
+      "kind": "transcript",
+      "url": "https://d1io3yog0oux5.cloudfront.net/_5e4a6ee374b24afae0f5bbe07f5d210b/amd/db/841/9182/webcast_transcript/amd3q2025call.pdf",
+      "page_url": "https://ir.amd.com/financial-information/financial-results",
+      "produced_by": null
+    },
+    {
+      "ticker": "AMD",
+      "call_date": "2026-02-03",
+      "kind": "transcript",
+      "url": "https://d1io3yog0oux5.cloudfront.net/_5e4a6ee374b24afae0f5bbe07f5d210b/amd/db/841/9223/webcast_transcript/AMD+Fiscal+Fourth+Quarter+and+Full+Year+2025+Financial+Results.pdf",
+      "page_url": "https://ir.amd.com/financial-information/financial-results",
+      "produced_by": null
+    },
+    {
+      "ticker": "AMD",
+      "call_date": "2026-05-05",
+      "kind": "transcript",
+      "url": "https://d1io3yog0oux5.cloudfront.net/_5e4a6ee374b24afae0f5bbe07f5d210b/amd/db/841/9232/webcast_transcript/AMD_1Q_2026_Earnings.pdf",
+      "page_url": "https://ir.amd.com/financial-information/financial-results",
+      "produced_by": null
+    },
+    {
+      "ticker": "AMD",
+      "call_date": "2026-08-04",
+      "kind": "transcript",
+      "url": "https://d1io3yog0oux5.cloudfront.net/_5e4a6ee374b24afae0f5bbe07f5d210b/amd/db/841/9237/webcast_transcript/AMD2Q26EarningsCallTranscript.pdf",
+      "page_url": "https://ir.amd.com/financial-information/financial-results",
+      "produced_by": null
+    },
+    {
+      "ticker": "AMD",
+      "call_date": "2026-11-03",
+      "kind": "transcript",
+      "url": "https://d1io3yog0oux5.cloudfront.net/_5e4a6ee374b24afae0f5bbe07f5d210b/amd/db/841/9247/webcast_transcript/AMD_Q3_2026_Earnings_Call.pdf",
+      "page_url": "https://ir.amd.com/financial-information/financial-results",
+      "produced_by": null
+    },
+    {
+      "ticker": "META",
+      "call_date": "2025-10-29",
+      "kind": "transcript",
+      "url": "https://s21.q4cdn.com/399680738/files/doc_financials/2025/q3/META-Q3-2025-Earnings-Call-Transcript.pdf",
+      "page_url": "https://investor.atmeta.com/financials/",
+      "produced_by": null
+    },
+    {
+      "ticker": "META",
+      "call_date": "2026-01-28",
+      "kind": "transcript",
+      "url": "https://s21.q4cdn.com/399680738/files/doc_financials/2025/q4/META-Q4-2025-Earnings-Call-Transcript.pdf",
+      "page_url": "https://investor.atmeta.com/financials/",
+      "produced_by": null
+    },
+    {
+      "ticker": "META",
+      "call_date": "2026-04-29",
+      "kind": "transcript",
+      "url": "https://s21.q4cdn.com/399680738/files/doc_financials/2026/q1/META-Q1-2026-Earnings-Call-Transcript.pdf",
+      "page_url": "https://investor.atmeta.com/financials/",
+      "produced_by": null
+    },
+    {
+      "ticker": "META",
+      "call_date": "2026-07-29",
+      "kind": "transcript",
+      "url": "https://s21.q4cdn.com/399680738/files/doc_financials/2026/q2/META-Q2-2026-Earnings-Call-Transcript.pdf",
+      "page_url": "https://investor.atmeta.com/financials/",
+      "produced_by": null
+    },
+    {
+      "ticker": "META",
+      "call_date": "2026-10-21",
+      "kind": "transcript",
+      "url": "https://s21.q4cdn.com/399680738/files/content_files/META-Q3-2026-Earnings-Call-Transcript.pdf",
+      "page_url": "https://investor.atmeta.com/financials/",
+      "produced_by": null
+    },
+    {
+      "ticker": "QCOM",
+      "call_date": "2026-02-04",
+      "kind": "transcript",
+      "url": "https://s204.q4cdn.com/645488518/files/doc_events/2026/Feb/04/Q1FY26-Earnings-Call-Transcript_2-5-26_Final.pdf",
+      "page_url": "https://investor.qualcomm.com/financial-information/quarterly-results/default.aspx",
+      "produced_by": "LSEG"
+    },
+    {
+      "ticker": "QCOM",
+      "call_date": "2026-04-29",
+      "kind": "transcript",
+      "url": "https://s204.q4cdn.com/645488518/files/doc_financials/2026/q2/Q2FY26-Earnings-Call-Transcript_4-30-26_Final.pdf",
+      "page_url": "https://investor.qualcomm.com/news-events/investor-events/events/event-details/2026/Q2-FY26-Earnings-Conference-Call-2026-Tnakn5Ozme/default.aspx",
+      "produced_by": "LSEG"
+    },
+    {
+      "ticker": "QCOM",
+      "call_date": "2026-07-29",
+      "kind": "transcript",
+      "url": "https://s204.q4cdn.com/645488518/files/doc_financials/2026/q3/Q3FY26-Earnings-Call-Transcript_7-30-26_Final.pdf",
+      "page_url": "https://investor.qualcomm.com/news-events/investor-events/events/event-details/2026/Q3-FY26-Earnings-Conference-Call-2026-wxmcaE5Hyo/default.aspx",
+      "produced_by": "LSEG"
+    },
+    {
+      "ticker": "QCOM",
+      "call_date": "2026-11-04",
+      "kind": "transcript",
+      "url": "https://s204.q4cdn.com/645488518/files/content_files/Q4FY26-Earnings-Conference-Call_Transcript_11-5-26_Final.pdf",
+      "page_url": "https://investor.qualcomm.com/news-events/investor-events/events/event-details/2026/Q4-FY26-Earnings-Conference-Call-2026-zipgVlNz63/default.aspx",
+      "produced_by": "LSEG"
+    },
+    {
+      "ticker": "DELL",
+      "call_date": "2025-11-25",
+      "kind": "transcript",
+      "url": "https://investors.delltechnologies.com/_assets/_2d115b668eb9569931e94aa91d9c5fb3/delltechnologies/db/3595/34519/webcast_transcript/DELL_Q3FY26_Earnings_Transcript.pdf",
+      "page_url": "https://investors.delltechnologies.com/financial-information/financial-results",
+      "produced_by": null
+    },
+    {
+      "ticker": "DELL",
+      "call_date": "2026-02-26",
+      "kind": "transcript",
+      "url": "https://investors.delltechnologies.com/_assets/_2d115b668eb9569931e94aa91d9c5fb3/delltechnologies/db/3595/34520/webcast_transcript/DELL_Q4FY26_Earnings_Transcript.pdf",
+      "page_url": "https://investors.delltechnologies.com/financial-information/financial-results",
+      "produced_by": null
+    },
+    {
+      "ticker": "DELL",
+      "call_date": "2026-05-28",
+      "kind": "transcript",
+      "url": "https://investors.delltechnologies.com/_assets/_2d115b668eb9569931e94aa91d9c5fb3/delltechnologies/db/3595/34521/webcast_transcript/Q1_FY27_Transcript.pdf",
+      "page_url": "https://investors.delltechnologies.com/financial-information/financial-results",
+      "produced_by": null
+    },
+    {
+      "ticker": "DELL",
+      "call_date": "2026-09-01",
+      "kind": "transcript",
+      "url": "https://investors.delltechnologies.com/_assets/_2d115b668eb9569931e94aa91d9c5fb3/delltechnologies/db/3595/34748/webcast_transcript/Q2_FY27_Transcript.pdf",
+      "page_url": "https://investors.delltechnologies.com/financial-information/financial-results",
+      "produced_by": null
+    },
+    {
+      "ticker": "HPE",
+      "call_date": "2025-12-04",
+      "kind": "transcript",
+      "url": "https://investors.hpe.com/~/media/Files/H/HP-Enterprise-IR/documents/q4-2025/q4-earnings-transcript-final.pdf",
+      "page_url": "https://investors.hpe.com/financial/quarterly-results",
+      "produced_by": null
+    },
+    {
+      "ticker": "HPE",
+      "call_date": "2026-03-09",
+      "kind": "transcript",
+      "url": "https://investors.hpe.com/~/media/Files/H/HP-Enterprise-IR/documents/q1-2026/hpe-q1-26-earnings-transcript.pdf",
+      "page_url": "https://investors.hpe.com/financial/quarterly-results",
+      "produced_by": null
+    },
+    {
+      "ticker": "HPE",
+      "call_date": "2026-06-01",
+      "kind": "transcript",
+      "url": "https://investors.hpe.com/~/media/Files/H/HP-Enterprise-IR/documents/q2-2026/q2-2026-transcript.pdf",
+      "page_url": "https://investors.hpe.com/financial/quarterly-results",
+      "produced_by": null
+    },
+    {
+      "ticker": "HPE",
+      "call_date": "2026-09-02",
+      "kind": "transcript",
+      "url": "https://investors.hpe.com/~/media/Files/H/HP-Enterprise-IR/documents/q3-2026/q3-2026-transcript.pdf",
+      "page_url": "https://investors.hpe.com/financial/quarterly-results",
+      "produced_by": null
+    },
+    {
+      "ticker": "CRWV",
+      "call_date": "2026-02-26",
+      "kind": "transcript",
+      "url": "https://s205.q4cdn.com/133937190/files/doc_financials/2025/q4/CORRECTED-TRANSCRIPT-CoreWeave-Inc-CRWV-US-Q4-2025-Earnings-Call-26-February-2026-5-00-PM-ET.pdf",
+      "page_url": "https://investors.coreweave.com/events-and-presentations/default.aspx",
+      "produced_by": "FactSet"
+    },
+    {
+      "ticker": "CRWV",
+      "call_date": "2026-05-07",
+      "kind": "transcript",
+      "url": "https://s205.q4cdn.com/133937190/files/doc_financials/2026/q1/CoreWeave-Inc-CRWV-US-Q1-2026-Earnings-Call-7-May-2026-5_00-PM-ET.pdf",
+      "page_url": "https://investors.coreweave.com/events-and-presentations/default.aspx",
+      "produced_by": "FactSet"
+    },
+    {
+      "ticker": "CRWV",
+      "call_date": "2026-08-11",
+      "kind": "transcript",
+      "url": "https://s205.q4cdn.com/133937190/files/doc_financials/2026/q2/CRWV-US-CORRECTED-TRANSCRIPT-CoreWeave-Q2-2026-Earnings-Call-11August2026.pdf",
+      "page_url": "https://investors.coreweave.com/events-and-presentations/default.aspx",
+      "produced_by": "FactSet"
+    },
+    {
+      "ticker": "CRWV",
+      "call_date": "2026-11-10",
+      "kind": "transcript",
+      "url": "https://s205.q4cdn.com/133937190/files/content_files/CoreWeave-3Q26-Transcript-_1_.pdf",
+      "page_url": "https://investors.coreweave.com/events-and-presentations/default.aspx",
+      "produced_by": null
+    },
+    {
+      "ticker": "CIEN",
+      "call_date": "2026-09-03",
+      "kind": "transcript",
+      "url": "https://s25.q4cdn.com/550667411/files/doc_financials/2026/q3/Ciena-Fiscal-Q3-2026-Financial-Results-Call_Transcript.pdf",
+      "page_url": "https://investor.ciena.com/",
+      "produced_by": "S&P Global"
+    },
+    {
+      "ticker": "GOOGL",
+      "call_date": "2025-10-29",
+      "kind": "transcript",
+      "url": "https://s206.q4cdn.com/479360582/files/doc_events/2025/Oct/29/2025_Q3_Earnings_Transcript.pdf",
+      "page_url": "https://abc.xyz/investor/",
+      "produced_by": null
+    },
+    {
+      "ticker": "GOOGL",
+      "call_date": "2026-02-04",
+      "kind": "transcript",
+      "url": "https://s206.q4cdn.com/479360582/files/doc_events/2026/Feb/04/2025_Q4_Earnings_Transcript.pdf",
+      "page_url": "https://abc.xyz/investor/",
+      "produced_by": null
+    },
+    {
+      "ticker": "GOOGL",
+      "call_date": "2026-04-29",
+      "kind": "transcript",
+      "url": "https://s206.q4cdn.com/479360582/files/doc_events/2026/Apr/29/2026_Q1_Earnings_Transcript.pdf",
+      "page_url": "https://abc.xyz/investor/events/event-details/2026/2026-Q1-Earnings-Call-2026-nW8kCrBAKS/default.aspx",
+      "produced_by": null
+    },
+    {
+      "ticker": "GOOGL",
+      "call_date": "2026-07-22",
+      "kind": "transcript",
+      "url": "https://s206.q4cdn.com/479360582/files/doc_events/2026/Jul/22/2026_Q2_Earnings_Transcript.pdf",
+      "page_url": "https://abc.xyz/investor/events/event-details/2026/2026-Q2-Earnings-Call-2026-GgTAq7Is0z/default.aspx",
+      "produced_by": null
+    },
+    {
+      "ticker": "GOOGL",
+      "call_date": "2026-10-28",
+      "kind": "transcript",
+      "url": "https://s206.q4cdn.com/479360582/files/doc_events/2026/Oct/28/2026_Q3_Earnings_Transcript.pdf",
+      "page_url": "https://abc.xyz/investor/events/event-details/2026/2026-Q3-Earnings-Call-2026-Ujou16CTw9/default.aspx",
+      "produced_by": null
+    },
+    {
+      "ticker": "MSFT",
+      "call_date": "2025-10-29",
+      "kind": "transcript",
+      "url": "https://www.microsoft.com/en-us/investor/events/fy-2026/earnings-fy-2026-q1",
+      "page_url": "https://www.microsoft.com/en-us/investor/events/fy-2026/earnings-fy-2026-q1",
+      "produced_by": null
+    },
+    {
+      "ticker": "MSFT",
+      "call_date": "2026-01-28",
+      "kind": "transcript",
+      "url": "https://www.microsoft.com/en-us/investor/events/fy-2026/earnings-fy-2026-q2",
+      "page_url": "https://www.microsoft.com/en-us/investor/events/fy-2026/earnings-fy-2026-q2",
+      "produced_by": null
+    },
+    {
+      "ticker": "MSFT",
+      "call_date": "2026-04-29",
+      "kind": "transcript",
+      "url": "https://www.microsoft.com/en-us/investor/events/fy-2026/earnings-fy-2026-q3",
+      "page_url": "https://www.microsoft.com/en-us/investor/events/fy-2026/earnings-fy-2026-q3",
+      "produced_by": null
+    },
+    {
+      "ticker": "MSFT",
+      "call_date": "2026-07-29",
+      "kind": "transcript",
+      "url": "https://www.microsoft.com/en-us/investor/events/fy-2026/earnings-fy-2026-q4",
+      "page_url": "https://www.microsoft.com/en-us/investor/events/fy-2026/earnings-fy-2026-q4",
+      "produced_by": null
+    },
+    {
+      "ticker": "MSFT",
+      "call_date": "2026-10-28",
+      "kind": "transcript",
+      "url": "https://www.microsoft.com/en-us/investor/events/fy-2027/earnings-fy-2027-q1",
+      "page_url": "https://www.microsoft.com/en-us/investor/events/fy-2027/earnings-fy-2027-q1",
+      "produced_by": null
+    },
+    {
+      "ticker": "HUT",
+      "call_date": "2025-11-04",
+      "kind": "transcript",
+      "url": "https://cdn.sanity.io/files/2iccs2ie/production/4b7b59715b4f3e1c822605d441476f846364e877.pdf",
+      "page_url": "https://www.hut8.com/investors/events-presentations/",
+      "produced_by": null
+    },
+    {
+      "ticker": "HUT",
+      "call_date": "2026-02-25",
+      "kind": "transcript",
+      "url": "https://cdn.sanity.io/files/2iccs2ie/production/6c5d520fab973d5746b4d68d00e12f0b231ddcda.pdf",
+      "page_url": "https://www.hut8.com/investors/events-presentations/",
+      "produced_by": null
+    },
+    {
+      "ticker": "HUT",
+      "call_date": "2026-05-06",
+      "kind": "transcript",
+      "url": "https://cdn.sanity.io/files/2iccs2ie/production/c1bd952e1bd8efdf68079f3cbe33811227b3ac86.pdf",
+      "page_url": "https://www.hut8.com/investors/events-presentations/",
+      "produced_by": null
+    },
+    {
+      "ticker": "HUT",
+      "call_date": "2026-08-04",
+      "kind": "transcript",
+      "url": "https://cdn.sanity.io/files/2iccs2ie/production/c84441674c438d8725f18bc7d5f40dcfb68427ef.pdf",
+      "page_url": "https://www.hut8.com/investors/events-presentations/",
+      "produced_by": null
+    },
+    {
+      "ticker": "GEV",
+      "call_date": "2025-10-22",
+      "kind": "transcript",
+      "url": "https://www.gevernova.com/sites/default/files/gev_webcast_transcript_10222025.pdf",
+      "page_url": "https://www.gevernova.com/investors",
+      "produced_by": null
+    },
+    {
+      "ticker": "GEV",
+      "call_date": "2026-01-28",
+      "kind": "transcript",
+      "url": "https://www.gevernova.com/sites/default/files/gev_webcast_transcript_01282026.pdf",
+      "page_url": "https://www.gevernova.com/investors",
+      "produced_by": null
+    },
+    {
+      "ticker": "GEV",
+      "call_date": "2026-04-22",
+      "kind": "transcript",
+      "url": "https://www.gevernova.com/sites/default/files/gev_webcast_transcript_04222026.pdf",
+      "page_url": "https://www.gevernova.com/investors",
+      "produced_by": null
+    },
+    {
+      "ticker": "GEV",
+      "call_date": "2026-07-22",
+      "kind": "transcript",
+      "url": "https://www.gevernova.com/sites/default/files/gev_webcast_transcript_07222026.pdf",
+      "page_url": "https://www.gevernova.com/investors",
+      "produced_by": null
+    },
+    {
+      "ticker": "GEV",
+      "call_date": "2026-10-28",
+      "kind": "transcript",
+      "url": "https://www.gevernova.com/sites/default/files/gev_webcast_transcript_10282026.pdf",
+      "page_url": "https://www.gevernova.com/investors",
+      "produced_by": null
+    },
+    {
+      "ticker": "DTE",
+      "call_date": "2025-10-30",
+      "kind": "transcript",
+      "url": "https://s24.q4cdn.com/970999156/files/doc_financials/2025/q3/DTE-Q3-25-transcript.pdf",
+      "page_url": "https://ir.dteenergy.com/",
+      "produced_by": "FactSet"
+    },
+    {
+      "ticker": "DTE",
+      "call_date": "2026-02-17",
+      "kind": "transcript",
+      "url": "https://s24.q4cdn.com/970999156/files/doc_financials/2025/q4/DTE-Q4-25-transcript.pdf",
+      "page_url": "https://ir.dteenergy.com/",
+      "produced_by": "FactSet"
+    },
+    {
+      "ticker": "DTE",
+      "call_date": "2026-04-30",
+      "kind": "transcript",
+      "url": "https://s24.q4cdn.com/970999156/files/doc_financials/2026/q1/DTE-Q1-26-transcript.pdf",
+      "page_url": "https://ir.dteenergy.com/",
+      "produced_by": "FactSet"
+    },
+    {
+      "ticker": "DTE",
+      "call_date": "2026-07-28",
+      "kind": "transcript",
+      "url": "https://s24.q4cdn.com/970999156/files/doc_financials/2026/q2/DTE-Q2-26-transcript.pdf",
+      "page_url": "https://ir.dteenergy.com/",
+      "produced_by": "FactSet"
+    },
+    {
+      "ticker": "SMCI",
+      "call_date": "2026-11-03",
+      "kind": "remarks",
+      "url": "https://s204.q4cdn.com/707617056/files/content_files/FQ127-Prepared-Remarks.pdf",
+      "page_url": "https://ir.supermicro.com/",
+      "produced_by": null
+    },
+    {
+      "ticker": "INTC",
+      "call_date": "2025-10-23",
+      "kind": "remarks",
+      "url": "https://d1io3yog0oux5.cloudfront.net/_5bcd8acc7e1b5c73a62283d752dd0b96/intel/db/887/9148/prepared_remarks/3Q2025+Earnings+Call+Prepared+Remarks.pdf",
+      "page_url": "https://www.intc.com/news-events/ir-calendar/detail/20251023-q3-2025-intel-corporation-earnings-conference-call",
+      "produced_by": null
+    },
+    {
+      "ticker": "INTC",
+      "call_date": "2026-01-22",
+      "kind": "remarks",
+      "url": "https://d1io3yog0oux5.cloudfront.net/_5bcd8acc7e1b5c73a62283d752dd0b96/intel/db/887/9159/prepared_remarks/Intel-4Q2025-Earnings-Call+1+%281%29.pdf",
+      "page_url": "https://www.intc.com/news-events/ir-calendar/detail/20260122-q4-2025-intel-corporation-earnings-conference-call",
+      "produced_by": null
+    },
+    {
+      "ticker": "INTC",
+      "call_date": "2026-04-23",
+      "kind": "remarks",
+      "url": "https://d1io3yog0oux5.cloudfront.net/_5bcd8acc7e1b5c73a62283d752dd0b96/intel/db/887/9254/prepared_remarks/1Q2026-Earnings-Call.pdf",
+      "page_url": "https://www.intc.com/news-events/ir-calendar/detail/20260423-q1-2026-intel-corporation-earnings-conference-call",
+      "produced_by": null
+    },
+    {
+      "ticker": "INTC",
+      "call_date": "2026-07-23",
+      "kind": "remarks",
+      "url": "https://d1io3yog0oux5.cloudfront.net/_5bcd8acc7e1b5c73a62283d752dd0b96/intel/db/887/9266/prepared_remarks/Q2+2026+Prepared+Remarks.pdf",
+      "page_url": "https://www.intc.com/news-events/ir-calendar/detail/20260723-q2-2026-intel-corporation-earnings-conference-call",
+      "produced_by": null
+    },
+    {
+      "ticker": "INTC",
+      "call_date": "2026-10-29",
+      "kind": "remarks",
+      "url": "https://d1io3yog0oux5.cloudfront.net/_5bcd8acc7e1b5c73a62283d752dd0b96/intel/db/887/9273/prepared_remarks/Q3%2726_Prepared_Remarks.pdf",
+      "page_url": "https://www.intc.com/news-events/ir-calendar/detail/20261029-q3-2026-intel-corporation-earnings-conference-call",
+      "produced_by": null
+    },
+    {
+      "ticker": "CORZ",
+      "call_date": "2026-05-06",
+      "kind": "remarks",
+      "url": "https://d1io3yog0oux5.cloudfront.net/_f27ddb8d2fd521ca23ea3246d3d9b374/corescientific/db/1085/11268/prepared_remarks/1Q26+Prepared+Remarks.pdf",
+      "page_url": "https://investors.corescientific.com/financial-information/financial-results",
+      "produced_by": null
+    },
+    {
+      "ticker": "CORZ",
+      "call_date": "2026-07-28",
+      "kind": "remarks",
+      "url": "https://d1io3yog0oux5.cloudfront.net/_f27ddb8d2fd521ca23ea3246d3d9b374/corescientific/db/1085/11280/prepared_remarks/2Q26+Prepared+Remarks+Transcript+PDF.pdf",
+      "page_url": "https://investors.corescientific.com/financial-information/financial-results",
+      "produced_by": null
+    },
+    {
+      "ticker": "CORZ",
+      "call_date": "2026-11-05",
+      "kind": "remarks",
+      "url": "https://d1io3yog0oux5.cloudfront.net/_f27ddb8d2fd521ca23ea3246d3d9b374/corescientific/db/1085/11289/prepared_remarks/3Q26_Prepared_Remarks_Transcript_PDF.pdf",
+      "page_url": "https://investors.corescientific.com/financial-information/financial-results",
+      "produced_by": null
+    },
+    {
+      "ticker": "IREN",
+      "call_date": "2026-05-07",
+      "kind": "transcript",
+      "url": "https://www.sec.gov/Archives/edgar/data/1878848/000187884826000028/irentranscript.htm",
+      "page_url": "https://iren.com/investors",
+      "produced_by": "company"
+    },
+    {
+      "ticker": "AMZN",
+      "call_date": "2026-10-29",
+      "kind": "audio",
+      "url": "https://s2.q4cdn.com/299287126/files/doc_earnings/2026/q3/Q3-2026-Amazon-Earnings-Conference-Call.mp3",
+      "page_url": "https://ir.aboutamazon.com/events/event-details/2026/Q3-2026-Amazoncom-Inc-Earnings-Conference-Call/default.aspx",
+      "produced_by": null,
+      "job_id": "042832d4-e03a-40ca-af7e-20231166f304",
+      "submitted_at": "2026-11-21T07:56:44.758Z"
+    },
+    {
+      "ticker": "AEP",
+      "call_date": "2025-10-29",
+      "kind": "audio",
+      "url": "https://docs.aep.com/docs/newsroom/resources/earnings/2025-10/2025q3_conf_call.mp3",
+      "page_url": "https://www.aep.com/investors/events/",
+      "produced_by": null,
+      "job_id": "fcfb1e11-bd72-4622-b538-9ebbaa731206",
+      "submitted_at": "2026-11-21T07:56:45.224Z"
+    },
+    {
+      "ticker": "AEP",
+      "call_date": "2026-02-12",
+      "kind": "audio",
+      "url": "https://docs.aep.com/docs/newsroom/resources/earnings/2026-02/2025q4_conf_call.mp3",
+      "page_url": "https://www.aep.com/investors/events/",
+      "produced_by": null,
+      "job_id": "ea0f4412-13e6-4652-bafb-88b04f3f4d7e",
+      "submitted_at": "2026-11-21T07:56:45.461Z"
+    },
+    {
+      "ticker": "AEP",
+      "call_date": "2026-05-05",
+      "kind": "audio",
+      "url": "https://docs.aep.com/docs/newsroom/resources/earnings/2026-05/2026q1_conf_call.mp3",
+      "page_url": "https://www.aep.com/investors/events/",
+      "produced_by": null,
+      "job_id": "2c49e2b6-17b8-4571-9d56-eeab53905f1a",
+      "submitted_at": "2026-11-21T07:56:45.678Z"
+    },
+    {
+      "ticker": "AEP",
+      "call_date": "2026-07-30",
+      "kind": "audio",
+      "url": "https://docs.aep.com/docs/newsroom/resources/earnings/2026-07/2026q2_conf_call.mp3",
+      "page_url": "https://www.aep.com/investors/events/",
+      "produced_by": null,
+      "job_id": "75ca2e53-9a03-4dee-87ed-234f67928f18",
+      "submitted_at": "2026-11-21T07:56:45.921Z"
+    },
+    {
+      "ticker": "AEP",
+      "call_date": "2026-10-28",
+      "kind": "audio",
+      "url": "https://docs.aep.com/docs/newsroom/resources/earnings/2026-10/2026q3_conf_call.mp3",
+      "page_url": "https://www.aep.com/investors/events/",
+      "produced_by": null,
+      "job_id": "0d512ee1-17d3-4c20-8949-28706eb7f06b",
+      "submitted_at": "2026-11-21T07:56:46.148Z"
+    }
+  ]
+}

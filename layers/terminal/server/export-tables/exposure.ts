@@ -2,7 +2,7 @@
 // exposure series and dependency graph built on the facts. Part of EXPORT_TABLES
 // (utils/terminal-export.ts), which fixes the order.
 
-import { lt } from 'drizzle-orm'
+import { lt, lte } from 'drizzle-orm'
 import { buildSeries } from '../exposure/series'
 import { dependencyEdges } from '../utils/terminal-dependencies'
 import { filedBefore, filedFactsAt } from '../utils/terminal-exposure'
@@ -17,8 +17,6 @@ import {
   type ExportTable,
   type Row,
 } from '../utils/terminal-export-views'
-
-const FILER = { type: 'text', meaning: 'The filer: MSFT, GOOGL, AMZN, META, or ORCL.' } as const
 
 const DEPENDENCY_DOCS = {
   edge_id: {
@@ -226,7 +224,7 @@ export const EXPOSURE_TABLES = {
   ),
   filed_guidance: plainTable(
     'filed_guidance',
-    'The capex guidance in each earnings release Microsoft, Alphabet, Amazon, Meta, and Oracle furnish (exhibit 99.1 of an 8-K with item 2.02), one row per fiscal year a release gives a figure or range for, with the release’s own sentence. Guidance given only on the call isn’t here, since we don’t read transcripts. A release that prints none has no row. Rows are never edited.',
+    'Forward guidance as a company stated it. source release: the capex figure in each earnings release Microsoft, Alphabet, Amazon, Meta, and Oracle furnish (exhibit 99.1 of an 8-K with item 2.02), one row per fiscal year, with the release’s own sentence. The other sources are the earnings calls of the 45 listed companies: an 8-K or 6-K exhibit, a transcript or prepared remarks the company posts, or our transcript of the replay; one row per figure, with a quote of at most 25 words. guidance_resolutions holds how each was settled. Rows are never edited.',
     tables.filedGuidance,
     {
       id: {
@@ -234,10 +232,17 @@ export const EXPOSURE_TABLES = {
         key: true,
         meaning: 'SHA-256 (hex) of ticker, accession_no, and fiscal_year.',
       },
-      ticker: FILER,
+      ticker: { type: 'text', meaning: 'The company’s ticker.' },
       cik: CIK,
-      accession_no: { type: 'text', meaning: 'The 8-K’s EDGAR accession number.' },
-      filed: { type: 'date', meaning: 'The 8-K’s filing date, as EDGAR gives it.' },
+      accession_no: {
+        type: 'text',
+        meaning:
+          'The earnings 8-K’s or 6-K’s EDGAR accession number; empty for a call document no filing carries.',
+      },
+      filed: {
+        type: 'date',
+        meaning: 'The filing date, as EDGAR gives it, or the date of the call.',
+      },
       fiscal_year: {
         type: 'integer',
         meaning:
@@ -245,39 +250,201 @@ export const EXPOSURE_TABLES = {
       },
       low: {
         type: 'number',
-        unit: 'USD',
-        meaning: 'The low end of the range the sentence states, or its single figure.',
+        meaning: 'The low end of the range the sentence states, or its single figure, in unit.',
       },
       high: {
         type: 'number',
-        unit: 'USD',
-        meaning: 'The high end of the range. Equal to low for a single figure.',
+        meaning: 'The high end of the range, in unit. Equal to low for a single figure.',
       },
       sentence: {
         type: 'text',
         meaning:
-          'The release’s sentence the figure was read from, with entities decoded and whitespace collapsed.',
+          'The sentence the figure was read from: a release’s whole sentence, or at most 25 words of a call document’s, an ellipsis where it is cut.',
       },
       raw_key: {
         type: 'text',
         meaning: 'Key of the release in this site’s object store (R2).',
       },
-      first_seen_at: { type: 'timestamp', meaning: 'When we first read the release, in UTC.' },
+      first_seen_at: { type: 'timestamp', meaning: 'When we first read the document, in UTC.' },
+      source: {
+        type: 'text',
+        meaning:
+          'release (the hyperscaler capex reader), exhibit, transcript (the company’s own), remarks (its prepared remarks), or audio (our transcript of its replay, never published).',
+      },
+      metric: {
+        type: 'text',
+        meaning: 'capex, revenue, segment_revenue, ai_revenue, gross_margin, or backlog.',
+      },
+      segment: {
+        type: 'text',
+        nullable: true,
+        meaning: 'The business line a segment or AI figure is for, as the sentence names it.',
+      },
+      basis: {
+        type: 'text',
+        nullable: true,
+        meaning: 'gaap or non_gaap when the sentence says; null otherwise.',
+      },
+      unit: {
+        type: 'text',
+        meaning:
+          'USD; percent (a margin); growth_yoy or growth_qoq (revenue growth in percent, against a year or a quarter before).',
+      },
+      bound: {
+        type: 'text',
+        meaning: 'range, about (one figure), at_least, or at_most.',
+      },
+      fiscal_quarter: {
+        type: 'integer',
+        nullable: true,
+        meaning: 'The guided fiscal quarter, 1 to 4; null for a fiscal year.',
+      },
+      period_start: { type: 'date', nullable: true, meaning: 'First day of the guided period.' },
+      period_end: { type: 'date', nullable: true, meaning: 'Last day of the guided period.' },
+      speaker: {
+        type: 'text',
+        nullable: true,
+        meaning: 'Who said it, for a transcribed replay.',
+      },
+      at_ms: {
+        type: 'integer',
+        nullable: true,
+        meaning: 'Milliseconds into the replay where the sentence starts.',
+      },
+      page: { type: 'integer', nullable: true, meaning: 'The PDF page the sentence is on.' },
+      call_document_id: {
+        type: 'text',
+        nullable: true,
+        meaning: 'The call_documents row the figure was read from.',
+      },
+      page_url: {
+        type: 'text',
+        nullable: true,
+        meaning: 'The company’s own page for the call, or the filing’s EDGAR index.',
+      },
+      method: {
+        type: 'text',
+        meaning: 'parser (read by rule) or judge (read by the judge routine and checked).',
+      },
       source_url: {
         type: 'text',
         provenance: true,
-        meaning: 'The release (the exhibit itself) the sentence was read from.',
+        meaning:
+          'The document the sentence was read from: the exhibit, or the company’s own file or page.',
       },
       fetched_at: {
         type: 'timestamp',
         provenance: true,
-        meaning: 'When that read ran, in UTC. A release is never read again once read.',
+        meaning: 'When that read ran, in UTC. A document is never read again once read.',
       },
     },
     [tables.filedGuidance.filed, tables.filedGuidance.id],
     async (_db, at) => lt(tables.filedGuidance.filed, filedBefore(at)),
     undefined,
     { ticker: tables.filedGuidance.ticker },
+  ),
+  guidance_resolutions: plainTable(
+    'guidance_resolutions',
+    'How each call guidance row in filed_guidance was settled: the figure a later 10-Q or 10-K filed for the same measure and period, read from XBRL company concepts, and the error against the guided midpoint. One row per guidance row, written the first time we held the filed figure. A row with no resolution is open (the period isn’t filed yet) or not scored (a segment, an AI line or a non-GAAP margin).',
+    tables.guidanceResolutions,
+    {
+      id: { type: 'text', key: true, meaning: 'SHA-256 (hex) of guidance_id and accession_no.' },
+      guidance_id: { type: 'text', meaning: 'The filed_guidance row it settles.' },
+      ticker: { type: 'text', meaning: 'The company’s ticker.' },
+      metric: { type: 'text', meaning: 'As filed_guidance.metric.' },
+      actual: {
+        type: 'number',
+        meaning:
+          'The filed figure, in the guidance row’s unit: USD, or percent for a margin or a growth rate.',
+      },
+      guided_mid: { type: 'number', meaning: 'The midpoint of the guided low and high.' },
+      error_share: {
+        type: 'number',
+        meaning:
+          '(actual − guided_mid) / guided_mid for USD; (actual − guided_mid) / 100 for a percentage. Positive is a beat.',
+      },
+      state: {
+        type: 'text',
+        meaning:
+          'met (inside the range, or within 5% of one figure, half a point for a percentage), above, or below.',
+      },
+      concept: {
+        type: 'text',
+        meaning: 'The XBRL concept the filed figure is (the last part, for a sum or a ratio).',
+      },
+      form: { type: 'text', meaning: 'The filing’s form, 10-Q or 10-K.' },
+      filed: {
+        type: 'date',
+        meaning: 'The day the figure became public: the latest filing it needs.',
+      },
+      accession_no: { type: 'text', meaning: 'That filing’s EDGAR accession number.' },
+      first_seen_at: { type: 'timestamp', meaning: 'When we first held the filed figure, in UTC.' },
+      source_url: {
+        type: 'text',
+        provenance: true,
+        meaning: 'The EDGAR company-concept document the figure was read from.',
+      },
+      fetched_at: { type: 'timestamp', provenance: true, meaning: 'When that read ran, in UTC.' },
+    },
+    [tables.guidanceResolutions.first_seen_at, tables.guidanceResolutions.id],
+    async (_db, at) => lte(tables.guidanceResolutions.first_seen_at, at),
+    undefined,
+    { ticker: tables.guidanceResolutions.ticker },
+  ),
+  call_documents: plainTable(
+    'call_documents',
+    'Every document an earnings call of the 45 listed companies is read from: the EX-99 exhibits of its earnings 8-K or 6-K, the transcripts and prepared remarks the company posts, and the replays we send to AssemblyAI, with what each read found. The text and our transcripts are kept privately and never served; this lists where each came from and its state.',
+    tables.callDocuments,
+    {
+      id: { type: 'text', key: true, meaning: 'SHA-256 (hex) of the document URL.' },
+      ticker: { type: 'text', meaning: 'The company’s ticker.' },
+      call_date: { type: 'date', meaning: 'The call’s date, or its earnings filing’s.' },
+      period_label: { type: 'text', meaning: 'The quarter the call reported, e.g. Q3 FY2027.' },
+      fiscal_year: { type: 'integer', meaning: 'That quarter’s fiscal year.' },
+      fiscal_quarter: { type: 'integer', meaning: 'That quarter, 1 to 4.' },
+      kind: { type: 'text', meaning: 'exhibit, transcript, remarks, or audio.' },
+      url: { type: 'text', meaning: 'The document, or the replay’s audio file.' },
+      page_url: {
+        type: 'text',
+        nullable: true,
+        meaning: 'The company’s own page for the call, or the filing’s EDGAR index.',
+      },
+      produced_by: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'Who produced a transcript where it says (LSEG, FactSet, S&P Global, Bloomberg), the exhibit type, or AssemblyAI.',
+      },
+      accession_no: {
+        type: 'text',
+        nullable: true,
+        meaning: 'The earnings filing an exhibit is from.',
+      },
+      status: {
+        type: 'text',
+        meaning:
+          'pending, submitted (a replay with AssemblyAI), read, or failed (after three tries).',
+      },
+      detail: { type: 'text', nullable: true, meaning: 'Why a read failed, or found no text.' },
+      audio_seconds: {
+        type: 'number',
+        nullable: true,
+        meaning: 'A replay’s length as AssemblyAI billed it.',
+      },
+      statements: { type: 'integer', meaning: 'Guidance rows the read stored.' },
+      first_seen_at: { type: 'timestamp', meaning: 'When we first listed the document, in UTC.' },
+      read_at: { type: 'timestamp', nullable: true, meaning: 'When it was read, in UTC.' },
+      source_url: { type: 'text', provenance: true, meaning: 'The document’s URL.' },
+      fetched_at: {
+        type: 'timestamp',
+        provenance: true,
+        meaning: 'When it was last fetched, in UTC.',
+      },
+    },
+    [tables.callDocuments.first_seen_at, tables.callDocuments.id],
+    async (_db, at) => lte(tables.callDocuments.first_seen_at, at),
+    undefined,
+    { ticker: tables.callDocuments.ticker },
   ),
   exposure_quarters: exposureView(
     'exposure_quarters',

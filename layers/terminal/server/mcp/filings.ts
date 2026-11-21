@@ -5,6 +5,8 @@ import { queryProspectus } from '../utils/terminal-prospectus'
 import { queryRevenue } from '../utils/terminal-revenue'
 import { queryGroundTruth } from '../utils/terminal-ground-truth'
 import { queryReported, reportedStamp } from '../utils/terminal-reported'
+import { CALL_TICKERS } from '../calls/curated'
+import { callGuidanceStamp, queryCallGuidance } from '../utils/terminal-call-guidance'
 import {
   ProviderSchema,
   json,
@@ -16,6 +18,38 @@ import {
 } from './kit'
 
 export function registerFilingTools({ server, deps, read }: McpKit): void {
+  server.registerTool(
+    'get_call_guidance',
+    {
+      title: 'Earnings-call guidance, scored against later filings',
+      description:
+        'What management of the 45 listed companies around the labs guided on each earnings call (capex, revenue, a segment or AI line, gross margin, backlog), ' +
+        'read from the earnings 8-K/6-K exhibits, the transcript or prepared remarks the company posts, or our machine transcript of the replay (AssemblyAI; marked source audio). ' +
+        'Each statement has metric, period, low/high in unit (USD, percent, growth_yoy, growth_qoq), bound, a quote of at most 25 words, the speaker and the time into the replay where known, and its sources. ' +
+        'state is met, above or below once a later 10-Q or 10-K filed the same measure and period (actual, with the filing, and error_share: actual less the guided midpoint over the midpoint), ' +
+        'open until then, or unscored with the reason (a segment line, an AI figure, a non-GAAP margin, a foreign filer). companies lists what each company posts and why some calls can’t be read. ' +
+        'Without ticker it returns the newest 60 statements and every company’s coverage. Not investment advice. ' +
+        PROVENANCE,
+      inputSchema: z.object({
+        ticker: z.enum(CALL_TICKERS as [string, ...string[]]).optional(),
+        as_of: AsOfSchema,
+      }),
+      annotations: READ_ONLY,
+    },
+    ({ ticker, as_of }) =>
+      asOfErrors(async () =>
+        json(
+          await read(
+            'call-guidance',
+            as_of,
+            (ctx) => queryCallGuidance(deps.db, ctx, ticker ?? null),
+            `${await callGuidanceStamp(deps.db)}${ticker ? `:${ticker}` : ''}`,
+            'filed',
+          ),
+        ),
+      ),
+  )
+
   server.registerTool(
     'get_revenue',
     {

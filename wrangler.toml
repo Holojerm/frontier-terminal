@@ -198,6 +198,8 @@ enabled = true
 #                   plus the one-off hourly backfill (layers/terminal/server/signals/market.ts)
 #   "10 7 * * *"    signals:run — the signals harness over those closes
 #                   (layers/terminal/server/signals/run.ts)
+#   "23 * * * *"    calls:read — earnings-call exhibits, transcripts and AssemblyAI replays,
+#                   and the filed figures that score them (layers/terminal/server/calls/ingest.ts)
 #
 # Cron triggers run on UTC, and changes take up to 15 minutes to propagate.
 # Name weekdays: Cloudflare numbers them from 1 = Sunday, so "1" is not Monday.
@@ -216,6 +218,7 @@ crons = [
   "40 6 * * *",
   "10 7 * * *",
   "53 */6 * * *",
+  "23 * * * *",
 ]
 
 # ─── EVENTS queue ────────────────────────────────────────────────────────────

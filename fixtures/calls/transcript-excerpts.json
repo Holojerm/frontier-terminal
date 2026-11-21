@@ -1,0 +1,357 @@
+{
+ "_comment": "Short excerpts, as our reader cut them into sentences: each the guidance sentences of one call and the one before. Not whole transcripts: the companies post those, and we publish only quotes.",
+ "calls": [
+  {
+   "ticker": "META",
+   "call_date": "2026-10-21",
+   "fy_end_month": 12,
+   "source_url": "https://s21.q4cdn.com/399680738/files/content_files/META-Q3-2026-Earnings-Call-Transcript.pdf",
+   "sentences": [
+    {
+     "text": "Moving now to our financial outlook.",
+     "page": 8,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "We expect fourth quarter 2026 total revenue to be in the range of $73-76 billion.",
+     "page": 8,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "At a segment level, we now expect Reality Labs losses to decline compared to 2025 to a range of $18-19 billion .",
+     "page": 8,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "9 We anticipate 2026 capital expenditures, including principal payments on finance leases, to be in the range of $135-145 billion, narrowed from our prior outlook of $130-145 billion.",
+     "page": 9,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "QCOM",
+   "call_date": "2026-11-04",
+   "fy_end_month": 9,
+   "source_url": "https://s204.q4cdn.com/645488518/files/content_files/Q4FY26-Earnings-Conference-Call_Transcript_11-5-26_Final.pdf",
+   "sentences": [
+    {
+     "text": "First, non-handset revenues in QCT will grow by more than 60% year-over-year.",
+     "page": 3,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Second, our data center business begins its ramp with revenues expected to exceed $650 million in the December quarter.",
+     "page": 3,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "We announced strategic agreements with industry leaders, including Meta, Amazon, BMW, and Stellantis, with more to come, and our design win pipeline across the company grew 70% year-over-year.",
+     "page": 3,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "This is the backdrop that positions Qualcomm to deliver on our fiscal 2029 targets of $40 billion in non-handset revenues, with over $15 billion coming from Data Center.",
+     "page": 3,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "I will now provide our guidance for the first fiscal quarter.",
+     "page": 5,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "We are forecasting revenues of $10.4 billion to $11.2 billion and non-GAAP EPS of $2.15 to $2.35.",
+     "page": 5,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "In QTL, we estimate revenues of $1.3 billion to $1.5 billion and EBT margins of 72% to 76%, reflecting normal seasonal trends.",
+     "page": 5,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "In QCT, we expect revenues of $9 billion to $9.6 billion and EBT margins of 20% to 22%.",
+     "page": 5,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "NVDA",
+   "call_date": "2026-08-26",
+   "fy_end_month": 1,
+   "source_url": "https://s201.q4cdn.com/141608511/files/content_files/TRANSCRIPT_-NVIDIA-Corp-NVDA-US-Q2-2027-Earnings-Call-26-August-2026-5_00-PM-ET.pdf",
+   "sentences": [
+    {
+     "text": "Reinforcing that more compute drives more revenue as new GPU capacity comes online, our hyperscale customers delivered strong financial results in the quarter, with accelerating revenue growth and expanding margins.",
+     "page": 3,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "With cloud industry backlog now greater than $2 trillion, CapEx by the top-five hyperscalers is expected to reach nearly $800 billion in 2026 and $1.3 trillion in 2027.",
+     "page": 3,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Let me turn to the outlook for the third quarter.",
+     "page": 7,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Total revenue is expected to be $108 billion, plus or minus 2%.",
+     "page": 7,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "As a result, we are resetting expectations today.",
+     "page": 7,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "For Q3, we expect GAAP and non-GAAP gross margins to be 74%, plus or minus 50 basis points.",
+     "page": 7,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "DELL",
+   "call_date": "2026-09-01",
+   "fy_end_month": 1,
+   "source_url": "https://investors.delltechnologies.com/_assets/_2d115b668eb9569931e94aa91d9c5fb3/delltechnologies/db/3595/34748/webcast_transcript/Q2_FY27_Transcript.pdf",
+   "sentences": [
+    {
+     "text": "Our second half gross margin rate outlook has improved over the past 90 days, and we continue to drive significant operating leverage and scale.",
+     "page": 9,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "For Q3, we expect revenue to be $49 billion at the midpoint, up roughly 80% year on year.",
+     "page": 9,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Diluted non- GAAP earnings per share is expected to be $6.50, up over 150% at the midpoint.",
+     "page": 9,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "For the full year, we are raising our revenue guide by $25 billion to $192 billion at the midpoint, up roughly 70%, with diluted non- GAAP EPS of $25.50, up approximately 150%.",
+     "page": 9,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "We expect ISG to grow roughly 120%, driven by AI server revenue, up 3 x year over year to $74 billion.",
+     "page": 9,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "I guess maybe just to punch through some of the storage commentary.",
+     "page": 17,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "I mean, we're in the guide today, adding over $2.5 billion of storage revenue year on year to the P&L. That's tremendous margin opportunity, particularly as this Dell IP, and allows us to think about our margin rates from an enhancement perspective.",
+     "page": 17,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "SMCI",
+   "call_date": "2026-11-03",
+   "fy_end_month": 6,
+   "source_url": "https://s204.q4cdn.com/707617056/files/content_files/FQ127-Prepared-Remarks.pdf",
+   "sentences": [
+    {
+     "text": "New customer programs and strategic e cosystem partnerships are ramping strongly, but we want to remain prudent about some key component availability and volatile pricing.",
+     "page": 5,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Based on what we see today, we anticipate our Fiscal 2027 revenue target will be in the range of $72 billion to $82 billion.",
+     "page": 5,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Turning to guidance.",
+     "page": 10,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "For the second quarter of fiscal 2027, we expect net sales of $19.5 billion to $21.5 billion, and gross margin of 12.0% to 12.5%.",
+     "page": 10,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "That guidance assumes GAAP operating expenses of approximately $455 million, including approximately $102 million of stock-based compensation, which is excluded from non-GAAP.",
+     "page": 10,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "We expect other income and expense, including interest expense, to result in a net expense of approximately $58 million, GAAP and non-GAAP tax rates of approximately 21%, a GAAP diluted share count of approximately 753 million and a non-GAAP diluted count of approximately 769 million, preferred dividends of approximately $75 million, and capital expenditure of $70 million to $80 million.",
+     "page": 10,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "For the full fiscal year, we are raising our revenue outlook to $72 billion to $82 billion, from $65 billion to $72 billion.",
+     "page": 10,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "We expect full-year gross margin of 11.8% to 12.2%.",
+     "page": 10,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "CIEN",
+   "call_date": "2026-09-03",
+   "fy_end_month": 10,
+   "source_url": "https://s25.q4cdn.com/550667411/files/doc_financials/2026/q3/Ciena-Fiscal-Q3-2026-Financial-Results-Call_Transcript.pdf",
+   "sentences": [
+    {
+     "text": "Adjusted EPS reached $2.11, more than triplethe year ago figure and achieving a new record level for the company.Now let's move to guidance for the last quarter of the year.",
+     "page": 6,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "In Q4 '26, we expect to deliver revenue of$1.75 billion, plus or minus $50 million, raising the full year midpoint to $6.42 billion, up $120 millionfrom last quarter.",
+     "page": 6,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "With this revenue guide, we expect to increase our market share in the combined opticalsystems and plug market by about 4 points to approximately 30%.",
+     "page": 6,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "We expect adjusted gross margins of45%, plus or minus 50 basis points, bringing the year to a similar range, a raise of 50 basis points fromlast quarter.",
+     "page": 6,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Ourinvestments in capacity and supply allow us to accelerate absolute revenue growth from '25 to '26 and now into '27.",
+     "page": 7,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "At these levels, we expect to again increase our market share in optical systems and plugs in fiscal 2027.We expect gross margins to be at least between 45% and 46%.",
+     "page": 7,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "CRWV",
+   "call_date": "2026-11-10",
+   "fy_end_month": 12,
+   "source_url": "https://s205.q4cdn.com/133937190/files/content_files/CoreWeave-3Q26-Transcript-_1_.pdf",
+   "sentences": [
+    {
+     "text": "T urning to guidance.",
+     "page": 6,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "Our strong third quarter performance and continued execution give us confidence to raise our full-year 2026 revenue guidance to $13 billion to $13.3 billion and adjusted operating income guidance to $1.275 billion to $1.375 billion, which represents a 26% increase midpoint to midpoint.",
+     "page": 6,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "We continue to expect more than 1.85 gigawatts of active power at year-end.",
+     "page": 6,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "We expect CapEx of $37 billion to $39 billion, raising the low end of our prior range of $35 billion to $39 billion.",
+     "page": 6,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  },
+  {
+   "ticker": "MSFT",
+   "call_date": "2026-01-28",
+   "fy_end_month": 6,
+   "source_url": "https://www.microsoft.com/en-us/investor/events/fy-2026/earnings-fy-2026-q2",
+   "sentences": [
+    {
+     "text": "Now, moving to our Q3 outlook, which unless specifically noted otherwise, is on a US dollar basis.",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "We expect revenue of $80.65 to $81.75 billion or growth of 15% to %17 with continued strong growth across our commercial businesses, partially offset by our consumer businesses.",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "We expect COGS of $26.65 to $26.85 billion, or growth of 22% to 23%.",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "In our on-premises server business, we expect revenue to decline in the low-single digits as growth rates normalize following the launch of SQL Server 2025, though increased memory pricing could create additional volatility in transactional purchasing.",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    },
+    {
+     "text": "In More Personal Computing, we expect revenue to be $12.3 to $12.8 billion.",
+     "page": null,
+     "at_ms": null,
+     "speaker": null
+    }
+   ]
+  }
+ ]
+}

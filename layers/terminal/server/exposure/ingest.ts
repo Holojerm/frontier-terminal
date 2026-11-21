@@ -543,7 +543,15 @@ async function writeFilerGuidanceAlerts(
     return row?.at ?? null
   }
   const [guidance, facts, firstReadAt, firstReleaseReadAt] = await Promise.all([
-    db.select().from(tables.filedGuidance).where(eq(tables.filedGuidance.ticker, filer.ticker)),
+    db
+      .select()
+      .from(tables.filedGuidance)
+      .where(
+        and(
+          eq(tables.filedGuidance.ticker, filer.ticker),
+          eq(tables.filedGuidance.source, 'release'),
+        ),
+      ),
     filerFacts(db, filer.ticker),
     first(),
     first('release'),

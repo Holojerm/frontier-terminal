@@ -203,6 +203,9 @@ const securityHeaders = {
 //   53 */6     — power:grid-load streams EIA-930's six-month demand files and reads
 //                ERCOT's large-load reports (layers/terminal/server/power/grid-load.ts),
 //                alone in its invocation for the long downloads.
+//   23 * * * * — calls:read, the earnings-call reader: EDGAR exhibits, company
+//                transcripts and AssemblyAI replays, and the XBRL that scores them
+//                (layers/terminal/server/calls/ingest.ts).
 const SCHEDULED_TASKS: Record<string, string[]> = {
   '*/30 * * * *': ['ops:watch', 'poll:edgar'],
   '0 */6 * * *': ['poll:survey'],
@@ -223,6 +226,7 @@ const SCHEDULED_TASKS: Record<string, string[]> = {
   '40 6 * * *': ['signals:prices'],
   '10 7 * * *': ['signals:run'],
   '53 */6 * * *': ['power:grid-load'],
+  '23 * * * *': ['calls:read'],
 }
 
 /**
@@ -579,6 +583,12 @@ export default defineNuxtConfig({
     // files are read instead, as they are for 2018 and whenever the API fails. A Worker
     // secret: `op read "op://Agents/eia/credential" | bunx wrangler secret put NUXT_EIA_API_KEY`.
     eiaApiKey: '',
+    // AssemblyAI key for the earnings calls a company posts only as audio
+    // (layers/terminal/server/calls/assemblyai.ts), sent as the Authorization header to
+    // api.assemblyai.com only. Empty = replays are neither submitted nor collected; the
+    // text documents are still read. A Worker secret:
+    // `op read "op://Agents/assemblyai/credential" | bunx wrangler secret put NUXT_ASSEMBLYAI_API_KEY`.
+    assemblyaiApiKey: '',
     // Bearer for GitHub's search API, which the coding-agent PR recipes read
     // (layers/terminal/server/theses/recipes/github-agent-prs.ts). A fine-grained
     // token with no permissions is enough: public data only. Empty = those

@@ -1,0 +1,49 @@
+{
+ "id": "042832d4-e03a-40ca-af7e-20231166f304",
+ "status": "completed",
+ "audio_duration": 3168,
+ "speech_understanding": {
+  "request": {
+   "speaker_identification": {
+    "speaker_type": "name",
+    "speakers": [
+     {
+      "description": "President and CEO of Amazon",
+      "name": "Andy Jassy"
+     },
+     {
+      "description": "SVP and CFO of Amazon",
+      "name": "Brian Olsavsky"
+     },
+     {
+      "description": "Director, Investor Relations of Amazon",
+      "name": "Dave Fildes"
+     },
+     {
+      "description": "The conference call operator who introduces each question",
+      "name": "Operator"
+     },
+     {
+      "description": "A sell-side analyst asking a question; several different analysts speak",
+      "name": "Analyst"
+     }
+    ]
+   }
+  },
+  "response": {
+   "speaker_identification": {
+    "mapping": {
+     "G": "Analyst - 3 - 1",
+     "A": "Operator",
+     "B": "Dave Fildes",
+     "C": "Andy Jassy",
+     "D": "Brian Olsavsky",
+     "E": "Analyst - 1 - 1",
+     "F": "Analyst - 2 - 1"
+    },
+    "effort": "low",
+    "status": "success"
+   }
+  }
+ }
+}

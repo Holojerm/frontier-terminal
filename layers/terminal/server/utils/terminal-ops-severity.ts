@@ -136,6 +136,12 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   // The print reader (layers/terminal/server/prints/ingest.ts): a feed or 6-K
   // it could not fetch or parse, a 429, or a step throwing.
   print_read_failed: { severity: 'warning' },
+  // The call reader (layers/terminal/server/calls/ingest.ts): a document it
+  // could not fetch after three tries, an EDGAR read, or a step throwing.
+  call_read_failed: { severity: 'warning' },
+  // AssemblyAI refused for credits or billing, or the $40 spend cap was
+  // reached: replays stop being submitted until the owner acts.
+  assemblyai_credits: { severity: 'warning' },
   // The weekly re-check (layers/terminal/server/power/verify.ts): a hand-read
   // quote is no longer on its utility, regulator or company page.
   power_quote_gone: { severity: 'warning' },

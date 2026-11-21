@@ -23,6 +23,21 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.24.0 (2026-11-21)
+
+What management of the 45 listed companies around the labs guided on each
+earnings call, scored against what they filed later. `filed_guidance` gains
+the call rows: `source` is `exhibit` (an earnings 8-K or 6-K exhibit),
+`transcript` or `remarks` (posted by the company) or `audio` (our machine
+transcript of a replay the company posts as a file), with `metric`, `segment`,
+`basis`, `unit`, `bound`, `fiscal_quarter`, `period_start`, `period_end`,
+`speaker`, `at_ms`, `page`, `call_document_id`, `page_url` and `method`. The
+release capex rows read `source` `release` and are otherwise unchanged; `low`
+and `high` are now in `unit`. Two new tables: `guidance_resolutions`, the later
+10-Q or 10-K figure that settles a row, with `error_share` (actual less the
+guided midpoint, over the midpoint), and `call_documents`, every document read.
+`/api/call-guidance` and `get_call_guidance` serve them.
+
 ## 1.23.0 (2026-11-21)
 
 `hardware_prints` gains Korea's semiconductor exports from Korea Customs

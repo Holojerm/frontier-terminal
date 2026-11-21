@@ -143,6 +143,8 @@ describe('the table registry', () => {
       'download_series',
       'filed_facts',
       'filed_guidance',
+      'guidance_resolutions',
+      'call_documents',
       'exposure_quarters',
       'dependency_edges',
       'source_runs',
