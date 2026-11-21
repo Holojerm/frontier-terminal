@@ -9,9 +9,11 @@ import { GITHUB_TOKEN_UNSET, createFetcher, needsGithubToken } from '../server/p
 import { parseCsv } from '../server/theses/recipes/csv'
 import { extractSites, extractTimelines } from '../server/theses/recipes/epoch-data-centers'
 import {
+  BACKFILL_DAYS_PER_RUN,
   GITHUB_AGENT_RECIPES,
   extractSearchCount,
   githubPrRecipe,
+  walkBackDays,
 } from '../server/theses/recipes/github-agent-prs'
 import { NPM_LAB_RECIPES, extractDownloads } from '../server/theses/recipes/npm-downloads'
 import { PYPI_LAB_RECIPES, extractPypiDownloads } from '../server/theses/recipes/pypi-downloads'
@@ -55,7 +57,13 @@ describe('package downloads', () => {
 
 describe('GitHub agent pull requests', () => {
   it('counts the day before the run, and only a complete search', () => {
-    const recipe = githubPrRecipe('t', 'anthropic', 'Test', 'author:app/copilot-swe-agent')
+    const recipe = githubPrRecipe(
+      't',
+      'anthropic',
+      'Test',
+      'author:app/copilot-swe-agent',
+      '2025-05-19',
+    )
     expect(decodeURIComponent(recipe.url({ now: NOW, newest: null }))).toBe(
       'https://api.github.com/search/issues?q=is:pr author:app/copilot-swe-agent created:2026-11-03&per_page=1',
     )
@@ -65,6 +73,53 @@ describe('GitHub agent pull requests', () => {
     expect(() =>
       extractSearchCount('{"total_count":9,"incomplete_results":true}', 'Test', '2026-11-02'),
     ).toThrow(/incomplete/)
+  })
+
+  it('walks back from the oldest stored day, newest first, never before launch', () => {
+    expect(walkBackDays(null, '2026-10-01', 6)).toEqual([])
+    expect(walkBackDays('2026-11-03', '2026-10-01', 3)).toEqual([
+      '2026-11-02',
+      '2026-11-01',
+      '2026-10-31',
+    ])
+    // Across a month end, and stopping on the floor itself.
+    expect(walkBackDays('2026-03-02', '2026-02-27', 6)).toEqual([
+      '2026-03-01',
+      '2026-02-28',
+      '2026-02-27',
+    ])
+    expect(walkBackDays('2026-10-01', '2026-10-01', 6)).toEqual([])
+    expect(BACKFILL_DAYS_PER_RUN * 3 + 3).toBeLessThanOrEqual(21)
+  })
+
+  it('asks for each past day as the run the day after it would have', () => {
+    const recipe = githubPrRecipe('t', 'openai', 'Test', 'head:codex/', '2026-10-30')
+    const runs = recipe.backfill!({ oldest: '2026-11-02' })
+    expect(runs.map((r) => [decodeURIComponent(r.url), r.date])).toEqual([
+      [
+        'https://api.github.com/search/issues?q=is:pr head:codex/ created:2026-11-01&per_page=1',
+        '2026-11-02',
+      ],
+      [
+        'https://api.github.com/search/issues?q=is:pr head:codex/ created:2026-10-31&per_page=1',
+        '2026-11-01',
+      ],
+      [
+        'https://api.github.com/search/issues?q=is:pr head:codex/ created:2026-10-30&per_page=1',
+        '2026-10-31',
+      ],
+    ])
+    // The run date round-trips to the day its URL searched.
+    expect(recipe.extract(githubCount, { date: runs[0]!.date })[0]!.date).toBe('2026-11-01')
+  })
+
+  it('floors each agent at its public launch', () => {
+    const floor = (id: string, oldest: string) =>
+      GITHUB_AGENT_RECIPES.find((r) => r.id === id)!.backfill!({ oldest }).map((r) => r.date)
+    // The last run asked for is the day after launch, which counts launch day.
+    expect(floor('github-prs-claude-code', '2025-02-26')).toEqual(['2025-02-26', '2025-02-25'])
+    expect(floor('github-prs-codex', '2025-05-17')).toEqual(['2025-05-17'])
+    expect(floor('github-prs-jules', '2025-05-20')).toEqual([])
   })
 
   it('carries one recipe per lab agent, each searching what that agent leaves', () => {
