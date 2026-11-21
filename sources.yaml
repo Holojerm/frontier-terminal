@@ -554,8 +554,11 @@ sources:
       aggregator, not its revenue. Fetched without date parameters: the
       endpoint's default window is the trailing 30 completed UTC days, so
       every 6-hourly survey tick re-reads the same days and a late revision
-      lands as a modified row. Rate limits 30 req/min per key, 500/day per
-      account; this terminal uses four a day. Meta's share counts both of
+      lands as a modified row. Days from 2025-01-01 (the dataset's first)
+      to 2026-08-09 are read once with start_date and end_date
+      (scripts/rankings-backfill.ts), and each cites that windowed URL.
+      Rate limits 30 req/min per key, 500/day per account; this terminal
+      uses four a day. Meta's share counts both of
       its prefixes: its own API models (meta/*) and the open-weight Llama
       line (meta-llama/*), which third parties host and bill for, so it is
       demand for Meta's models, not traffic Meta serves. The same holds for
