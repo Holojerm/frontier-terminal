@@ -43,7 +43,7 @@ Three pieces:
   writes (`task_silent`; a run that throws also spools `task_failed` at once), plus one per
   producer off the Worker
   (`layers/terminal/server/utils/terminal-freshness.ts`): the judge routine (`judge_silent`, owed
-  changes three hours old and no judge run in that time), the GDELT Actions job
+  changes three hours old and no judge run in that time), the GDELT job on the mini
   (`gdelt_search_silent`) and the social outbox (`social_outbox_stalled`). The deploy is one
   too (`deploy_drift`): production's `build.sha` behind main's head on GitHub for a full tick
   means a merge never deployed. A failed post-deploy smoke run spools `deploy_smoke_failed` when

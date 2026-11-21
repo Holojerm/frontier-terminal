@@ -178,7 +178,7 @@ enabled = true
 #                   track-record:search — the newsroom side of the track record for
 #                   alerts whose window closed, and the GDELT side's search row once its
 #                   files are read (layers/terminal/server/pipeline/track-record/); the files
-#                   are read on GitHub Actions (.github/workflows/gdelt-search.yml)
+#                   are read on the owner's Mac mini (scripts/gdelt-search.ts)
 #   "0 13 * * MON"  theses:digest — the weekly thesis digest email (layers/terminal/server/theses/digest.ts)
 #                   social:digest — queues the weekly what-moved thread
 #                   alerts:hiring-rollup — one hiring alert per lab for the week
@@ -300,9 +300,9 @@ NUXT_INDEXNOW_KEY = "fe2738e740b8c6b06a20d76ab1877559"
 #   NUXT_FLEET_TOKEN_PREVIOUS    only during a rotation — server/utils/fleet-auth.ts.
 #   NUXT_PRESS_LIST              JSON press list for the press notes (layers/terminal/server/pipeline/press.ts).
 #                                Names people, so never in git. Unset = no notes.
-#   NUXT_GDELT_TOKEN             bearer the GitHub Actions GDELT job presents to /api/gdelt/*
+#   NUXT_GDELT_TOKEN             bearer the GDELT job presents to /api/gdelt/*
 #                                (scripts/gdelt-search.ts); the same value is the repo secret
-#                                GDELT_TOKEN. 32+ chars. Unset = those routes 404, no GDELT file is read.
+#                                GDELT_TOKEN and the mini's ~/agent-jobs/.gdelt-token. 32+ chars. Unset = those routes 404, no GDELT file is read.
 #   NUXT_SEC_CONTACT_EMAIL       contact address sec.gov's fair-access policy requires in
 #                                the User-Agent (layers/terminal/server/pipeline/fetch.ts). Unset = the
 #                                EDGAR sources are skipped as 'failed', never fetched

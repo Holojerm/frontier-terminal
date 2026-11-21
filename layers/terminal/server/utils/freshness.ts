@@ -3,7 +3,7 @@
 // The ops digest hears about failures because each pipeline records one
 // (source_failed, bulk_build_failed, …). It hears nothing when a part simply
 // stops: a cron that no longer fires, a run killed at the CPU limit, a job off
-// the Worker (the judge routine, the GDELT Actions job) that nobody starts. On
+// the Worker (the judge routine, the GDELT job) that nobody starts. On
 // 2026-11-06 the GDELT job's GitHub schedule never fired, and four hours
 // passed with no signal at all. These checks are that signal.
 //

@@ -50,7 +50,7 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   gdelt_search_silent: {
     severity: 'warning',
     action:
-      "No GDELT file has been read while files are due. Open GitHub › Actions › GDELT search: if its runs stopped, start one with 'Run workflow'; if they run, read the log for a failed file fetch or a 4xx from /api/gdelt/*.",
+      "No GDELT file has been read while files are due. On the Mac mini, read ~/agent-jobs/logs/gdelt-search.log for a failed file fetch or a 4xx from /api/gdelt/*, and check `launchctl print gui/$(id -u)/com.holojerm.job.gdelt-search`. If the mini is down, start GitHub › Actions › GDELT search with 'Run workflow'.",
   },
   social_outbox_stalled: {
     severity: 'warning',
