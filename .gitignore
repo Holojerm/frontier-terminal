@@ -67,5 +67,3 @@ server/emails/generated.ts
 # Vitest 5 report artifacts
 .vitest
 
-# Built by `bun run mcp:pack` and `bun run mcp:publish` — derived from mcp/listing.json.
-mcp/.publish/

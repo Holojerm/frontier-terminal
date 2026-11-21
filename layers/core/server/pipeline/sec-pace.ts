@@ -14,12 +14,12 @@
 /** 4 requests a second at most: under half of SEC's limit. */
 export const SEC_MIN_INTERVAL_MS = 250
 
-export interface PacedFetcher extends SourceFetcher {
+interface PacedFetcher extends SourceFetcher {
   /** The first 429 an SEC host answered through this fetcher, or null. */
   readonly secRateLimited: FetchOutcome | null
 }
 
-export interface PaceOptions {
+interface PaceOptions {
   intervalMs?: number
   sleep?: (ms: number) => Promise<void>
   now?: () => number

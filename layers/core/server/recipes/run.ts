@@ -26,7 +26,7 @@ import { RECIPES } from '#server/registries/recipes'
 
 const OBSERVATION_COLUMNS = 11
 
-export interface RecipeRunResult {
+interface RecipeRunResult {
   recipe_id: string
   /** skipped: the source needs a secret this deploy does not have; nothing was fetched. */
   status: 'ok' | 'unchanged' | 'failed' | 'skipped'

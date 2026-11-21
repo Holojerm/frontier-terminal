@@ -24,7 +24,7 @@ export interface Band {
 }
 
 /** Role families by each board's own department labels. */
-export const FAMILIES: Record<'openai' | 'anthropic', Record<string, readonly string[]>> = {
+const FAMILIES: Record<'openai' | 'anthropic', Record<string, readonly string[]>> = {
   openai: { research: ['Research'], swe: ['Applied AI'] },
   anthropic: {
     research: ['AI Research & Engineering'],
@@ -77,7 +77,7 @@ export function bandCells(
   })
 }
 
-export function openaiBands(body: string): { bands: Band[]; roles: number } {
+function openaiBands(body: string): { bands: Band[]; roles: number } {
   const doc = JSON.parse(body) as {
     jobs?: {
       title: string

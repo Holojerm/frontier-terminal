@@ -19,9 +19,9 @@ import { readPanel, type PricePanel } from './market'
 import { SIGNALS, type SignalDef } from './registry'
 import { createLoader } from './sources'
 
-export const BENCHMARK = 'SPY'
+const BENCHMARK = 'SPY'
 
-export const PERIOD_OF: Record<Exclude<SignalFrequency, 'event'>, Period> = {
+const PERIOD_OF: Record<Exclude<SignalFrequency, 'event'>, Period> = {
   daily: 'day',
   weekly: 'week',
   monthly: 'month',
@@ -34,14 +34,14 @@ export interface SeriesCoverage {
   error: string | null
 }
 
-export interface ScoredSeries {
+interface ScoredSeries {
   def: SignalDef
   coverage: SeriesCoverage
   cells: CellResult[]
 }
 
 /** Score one series. Pure given its loaded data and the panel. */
-export async function scoreSeries(
+async function scoreSeries(
   def: SignalDef,
   load: ReturnType<typeof createLoader>,
   panel: PricePanel,
@@ -89,7 +89,7 @@ export async function scoreSeries(
   }
 }
 
-export interface RunReport {
+interface RunReport {
   id: string
   series: number
   tests: number

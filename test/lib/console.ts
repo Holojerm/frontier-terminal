@@ -12,7 +12,7 @@
 
 import type { ConsoleMessage, Page } from '@playwright/test'
 
-export interface CspViolation {
+interface CspViolation {
   directive: string
   blockedURI: string
   sourceFile: string
@@ -27,7 +27,7 @@ declare global {
   }
 }
 
-export interface ConsoleRecorder {
+interface ConsoleRecorder {
   /** Every console message observed on this page since the recorder was installed. */
   messages: ConsoleMessage[]
   /** Every uncaught exception observed on this page since the recorder was installed. */

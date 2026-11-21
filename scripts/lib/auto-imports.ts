@@ -6,7 +6,7 @@ import { existsSync, readFileSync } from 'node:fs'
 import { dirname, join, resolve } from 'node:path'
 
 /** One auto-imported value, in unimport's `Import` shape. */
-export interface AutoImport {
+interface AutoImport {
   name: string
   as: string
   /** A package specifier, or an absolute path without extension. */

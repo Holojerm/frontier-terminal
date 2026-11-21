@@ -100,7 +100,7 @@ export function docText(lines: DocLine[]): DocText {
 }
 
 /** The index of the line holding character `index` of the joined text. */
-export function lineAt(doc: DocText, index: number): number {
+function lineAt(doc: DocText, index: number): number {
   let lo = 0
   let hi = doc.starts.length - 1
   while (lo < hi) {
@@ -145,7 +145,7 @@ export function tableAfter(
 }
 
 /** One cell of a table row with the grid column it starts at and how many it spans. */
-export interface GridCell {
+interface GridCell {
   text: string
   col: number
   span: number

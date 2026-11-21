@@ -11,10 +11,10 @@
 
 import type { GridDay } from './eia930'
 
-export const EIA_API_ORIGIN = 'https://api.eia.gov'
+const EIA_API_ORIGIN = 'https://api.eia.gov'
 export const EIA_API_FIRST_DAY = '2019-01-01'
 /** EIA's cap on rows per request. */
-export const EIA_API_PAGE = 5000
+const EIA_API_PAGE = 5000
 /** Days before the newest stored day re-read each run: EIA revises recent hours. */
 export const EIA_API_OVERLAP_DAYS = 42
 
@@ -74,7 +74,7 @@ export function hoursInLocalDay(date: string, iana: string): number {
   return Math.round((localMidnight(next, iana) - localMidnight(date, iana)) / 3_600_000)
 }
 
-export interface EiaPage {
+interface EiaPage {
   days: GridDay[]
   total: number
   rows: number

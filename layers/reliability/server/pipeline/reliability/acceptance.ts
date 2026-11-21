@@ -16,11 +16,11 @@ const HOUR_MS = 3_600_000
 const OVERLAP_MS = 30 * 24 * HOUR_MS
 
 /** How long a filing no stored payload lists is looked for again: the next poll derives its filer's feeds. */
-export const MISSING_RETRY_HOURS = 48
+const MISSING_RETRY_HOURS = 48
 /** Filings resolved per run; each costs at most one R2 read per filer. */
-export const MAX_RESOLVES_PER_RUN = 25
+const MAX_RESOLVES_PER_RUN = 25
 
-export interface CitedFiling {
+interface CitedFiling {
   accession_no: string
   cik: string
   form: string | null
@@ -55,7 +55,7 @@ export function citedFiling(change: {
   }
 }
 
-export interface Acceptance {
+interface Acceptance {
   accepted_at: string
   filing_date: string | null
   form: string | null

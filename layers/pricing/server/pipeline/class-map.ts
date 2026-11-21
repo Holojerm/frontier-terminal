@@ -71,7 +71,7 @@ export async function effectiveClassMap(
  * again. A cell resting on one of the lane's sides is checked here too
  * (lanes.ts › checkedSide).
  */
-export function citedCells(classMap: readonly ClassEntry[], sourceIds: readonly string[]) {
+function citedCells(classMap: readonly ClassEntry[], sourceIds: readonly string[]) {
   return classMap
     .filter((e) => sourceIds.includes(e.basis_source_id))
     .map((e) => ({

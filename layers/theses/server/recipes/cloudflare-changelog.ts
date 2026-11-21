@@ -5,7 +5,7 @@
 
 import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 
-export const AI_PRODUCTS = ['Workers AI', 'Agents'] as const
+const AI_PRODUCTS = ['Workers AI', 'Agents'] as const
 
 const ENTITIES: Record<string, string> = {
   amp: '&',

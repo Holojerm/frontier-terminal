@@ -29,7 +29,7 @@ export const JUDGE_CHANGE_LIMIT = 200
  * Ashby's `publishedAt` lands as `published_at`, and Greenhouse's
  * `first_published` / `updated_at` as `published_at` / `updated_at`.
  */
-export const JOB_TIMESTAMP_FIELDS = ['published_at', 'updated_at'] as const
+const JOB_TIMESTAMP_FIELDS = ['published_at', 'updated_at'] as const
 
 /**
  * Per entity type, the payload fields a source re-stamps without the entry
@@ -38,7 +38,7 @@ export const JOB_TIMESTAMP_FIELDS = ['published_at', 'updated_at'] as const
  * but a change there alone is not news. Model and filing rows carry no such
  * field.
  */
-export const TIMESTAMP_FIELDS: Readonly<Record<string, readonly string[]>> = {
+const TIMESTAMP_FIELDS: Readonly<Record<string, readonly string[]>> = {
   job: JOB_TIMESTAMP_FIELDS,
   disclosure: ['listed_on'],
 }
@@ -138,7 +138,7 @@ function stableEquals(a: unknown, b: unknown): boolean {
 }
 
 /** The window of the capacity-strain rule's "three or more incidents". */
-export const INCIDENT_WINDOW_HOURS = 24
+const INCIDENT_WINDOW_HOURS = 24
 
 /**
  * The `incidents` block of GET /api/judge/pending: added incidents per provider
@@ -218,7 +218,7 @@ export function offerCount(times: readonly number[], limit: number): number {
   return n
 }
 
-export interface PendingChanges {
+interface PendingChanges {
   changes: ChangeRow[]
   /** Pending after both filters, before the cap. */
   total_pending: number

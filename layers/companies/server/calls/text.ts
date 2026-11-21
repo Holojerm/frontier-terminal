@@ -18,7 +18,7 @@ export interface DocSentence {
 const WORD = /^[A-Za-z]+$/
 
 /** Above this share of one-letter tokens (other than "a" and "I"), a text is letter-spaced. */
-export const LETTER_SPACED = 0.08
+const LETTER_SPACED = 0.08
 
 // Glyph-by-glyph layouts (S&P's transcripts) come out "o f  o u r": one space
 // between letters, two between words. A run of four or more single
@@ -144,7 +144,7 @@ const u16 = (b: Uint8Array, at: number) => b[at]! | (b[at + 1]! << 8)
 const u32 = (b: Uint8Array, at: number) => (u16(b, at) | (u16(b, at + 2) << 16)) >>> 0
 
 /** One file of a zip archive, by name, inflated. Null when the archive has no such file. */
-export async function zipEntry(bytes: Uint8Array, name: string): Promise<Uint8Array | null> {
+async function zipEntry(bytes: Uint8Array, name: string): Promise<Uint8Array | null> {
   // The end-of-central-directory record is in the last 64 KiB.
   let eocd = -1
   for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65_557); i--) {

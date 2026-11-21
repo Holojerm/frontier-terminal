@@ -30,7 +30,7 @@ export function confirmationOf(spec: JudgedSpec, subject: string): Confirmation 
  * those rows are still stored, so the count is taken over events, never rows.
  * The deepest cut stands for its event.
  */
-export function cutEvents(verdicts: readonly StoredVerdict[]): StoredVerdict[] {
+function cutEvents(verdicts: readonly StoredVerdict[]): StoredVerdict[] {
   const byEvent = new Map<string, StoredVerdict>()
   for (const v of verdicts) {
     const day = new Date(v.detected_at).toISOString().slice(0, 10)

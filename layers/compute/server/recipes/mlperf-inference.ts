@@ -22,7 +22,7 @@
 
 import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 
-export interface MlperfRound {
+interface MlperfRound {
   round: string
   /** The day MLCommons announced the round's results. */
   published: string
@@ -38,8 +38,7 @@ export const MLPERF_ROUNDS: readonly MlperfRound[] = [
   { round: 'v6.0', published: '2026-04-01' },
 ]
 
-export const mlperfRepo = (round: string) =>
-  `https://github.com/mlcommons/inference_results_${round}`
+const mlperfRepo = (round: string) => `https://github.com/mlcommons/inference_results_${round}`
 export const mlperfUrl = (round: string) =>
   `https://raw.githubusercontent.com/mlcommons/inference_results_${round}/main/summary_results.json`
 

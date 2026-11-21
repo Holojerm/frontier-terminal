@@ -23,7 +23,7 @@ export interface ProbePoint {
   source_url: string
 }
 
-export interface DayReading {
+interface DayReading {
   model: string
   route: string
   probes: number

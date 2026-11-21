@@ -9,7 +9,7 @@ import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 // report-page template.
 
 /** Report slugs on the OpenAI misalignment index, sorted. Notices link off-site and are not derived. */
-export async function openAiMisalignmentReportSlugs(db: PipelineDb): Promise<string[]> {
+async function openAiMisalignmentReportSlugs(db: PipelineDb): Promise<string[]> {
   const kind = sql<string | null>`json_extract(${tables.entities.payload}, '$.kind')`
   const id = sql<string | null>`json_extract(${tables.entities.payload}, '$.entry_id')`
   const rows = await db

@@ -10,7 +10,7 @@ import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 export const NEWSROOM_FROM = '2026-08-01'
 
 /** Characters of a post's description kept for the judge to read. */
-export const NEWSROOM_SUMMARY_CHARS = 400
+const NEWSROOM_SUMMARY_CHARS = 400
 
 const NAMED: Record<string, string> = {
   amp: '&',
@@ -88,20 +88,20 @@ function newsroom(id: string, company: Recipe['company'], name: string, url: str
   }
 }
 
-export const NEWSROOM_OPENAI = newsroom(
+const NEWSROOM_OPENAI = newsroom(
   'newsroom-openai',
   'openai',
   'OpenAI',
   'https://openai.com/news/rss.xml',
 )
-export const NEWSROOM_GOOGLE_DEEPMIND = newsroom(
+const NEWSROOM_GOOGLE_DEEPMIND = newsroom(
   'newsroom-google-deepmind',
   'google',
   'Google DeepMind',
   'https://deepmind.google/blog/rss.xml',
 )
-export const NEWSROOM_META = newsroom('newsroom-meta', 'meta', 'Meta', 'https://about.fb.com/feed/')
-export const NEWSROOM_MISTRAL = newsroom(
+const NEWSROOM_META = newsroom('newsroom-meta', 'meta', 'Meta', 'https://about.fb.com/feed/')
+const NEWSROOM_MISTRAL = newsroom(
   'newsroom-mistral',
   'mistral',
   'Mistral',

@@ -162,7 +162,12 @@ describe('the transport', () => {
 describe('tools/list', () => {
   it('lists every tool, all read-only, each with documentation an analyst’s agent can act on', async () => {
     const { result } = await call('tools/list')
-    const tools = result!.tools as { name: string; description: string; annotations: unknown }[]
+    const tools = result!.tools as {
+      name: string
+      title: string
+      description: string
+      annotations: unknown
+    }[]
     expect(tools.map((t) => t.name).sort()).toEqual([
       'describe',
       'get_adoption',
@@ -208,6 +213,7 @@ describe('tools/list', () => {
     ])
     for (const t of tools) {
       expect(t.annotations).toMatchObject({ readOnlyHint: true })
+      expect(t.title, t.name).toMatch(/\S/)
       expect(t.description.length).toBeGreaterThan(80)
     }
     const hiring = tools.find((t) => t.name === 'get_hiring')!

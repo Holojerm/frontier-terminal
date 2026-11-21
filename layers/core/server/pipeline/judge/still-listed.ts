@@ -26,7 +26,7 @@ import type { JudgeAlert } from '#layers/core/server/pipeline/judge/alerts'
 // the same provider and model_slug on any page, any tier. A removal whose
 // model no page lists any more is a real delisting and passes untouched.
 
-export interface StillListedRemoval {
+interface StillListedRemoval {
   change_id: string
   provider: string
   model_slug: string

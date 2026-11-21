@@ -30,7 +30,7 @@ import * as tables from '#server/db/schema'
 // `net` counts `added` minus `removed`. A `modified` that moves a role between
 // departments is a relabel, not a hire or a closure, and never counts.
 
-export const HIRING_FLOOR = {
+const HIRING_FLOOR = {
   boardShare: 0.02,
   boardMin: 5,
   departmentShare: 0.2,
@@ -297,7 +297,7 @@ export async function hiringBoards(
  * beside a sales surge) is carried by its other rows and is left to the
  * judge.
  */
-export const isHiringOnly = (cited: readonly ChangeRow[]): boolean =>
+const isHiringOnly = (cited: readonly ChangeRow[]): boolean =>
   cited.length > 0 && cited.every((c) => c.entity_type === 'job')
 
 export interface FloorClamp {

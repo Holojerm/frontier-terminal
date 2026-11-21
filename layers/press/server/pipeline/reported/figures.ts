@@ -56,7 +56,7 @@ const FIGURE_WORDS =
 export const DEAL_WORDS =
   /\b(deals?|pacts?|contracts?|agreements?|partnerships?|commits?|committed|commitments?|compute|computing|cloud|capacity|chips?|gigawatts?|data[- ]cent(?:er|re)s?|leases?|loans?|lends?|lending|credit|financing|stakes?|invests?|invested|investing|backlog|obligations?)\b/i
 
-export interface FigureHeadline {
+interface FigureHeadline {
   labs: ReportedLab[]
   amounts: Amount[]
 }

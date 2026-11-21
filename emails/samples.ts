@@ -6,7 +6,7 @@
 // Plain data, no imports: it runs in Bun (the dev server) and in workerd (the
 // test suite), which share nothing else.
 
-export type EmailSample = Record<string, unknown>
+type EmailSample = Record<string, unknown>
 
 const brand = { appName: 'My App', appUrl: 'https://my-app.example' }
 

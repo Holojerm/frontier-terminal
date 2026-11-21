@@ -12,10 +12,10 @@
 // what is missing, with why.
 
 import { endOfString, findClosing, sliceBalanced } from './brace-match'
-import { blankComments } from './mcp-tools'
+import { blankComments } from './domains'
 
 /** Every place a dataset can reach, as the waiver file keys them. */
-export const SURFACE_KINDS = ['page', 'labPage', 'tearSheet', 'mcp', 'alerts', 'export'] as const
+const SURFACE_KINDS = ['page', 'labPage', 'tearSheet', 'mcp', 'alerts', 'export'] as const
 export type SurfaceKind = (typeof SURFACE_KINDS)[number]
 
 /** What each kind means, for the report. */
@@ -34,7 +34,7 @@ export type Waivers = Partial<Record<SurfaceKind, Readonly<Record<string, string
 // ── Routes ───────────────────────────────────────────────────────────────────
 
 /** Route folders that write or serve the subscribe flow: not datasets. */
-export const WRITER_DIRS = ['judge', 'gdelt', 'relay', 'subscribe'] as const
+const WRITER_DIRS = ['judge', 'gdelt', 'relay', 'subscribe'] as const
 
 /**
  * prices/[key].get.ts (relative to the layer's server/api/) gives
@@ -282,7 +282,7 @@ export function topLevelArgs(text: string): string[] {
   return args
 }
 
-export interface ExportEntry {
+interface ExportEntry {
   /** The export's own name, its first argument. */
   name: string
   builder: string
@@ -402,7 +402,7 @@ export function gapsOf(routes: readonly RouteRow[], tables: readonly TableRow[])
   return gaps
 }
 
-export interface WaiverProblem {
+interface WaiverProblem {
   kind: SurfaceKind | string
   subject: string
   detail: string

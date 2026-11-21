@@ -7,7 +7,7 @@
 import type { PrintWindow } from '../../shared/utils/prints'
 import type { PrintObservation } from './parse'
 
-export const KCS_HOST = 'https://www.customs.go.kr'
+const KCS_HOST = 'https://www.customs.go.kr'
 /** Rows per board page. The board answers 10 to 50; larger pages have timed out. */
 export const KCS_PAGE_SIZE = 20
 /** The board searched on titles containing "수출입 현황" (export and import status). */
@@ -22,7 +22,7 @@ export const kcsViewerUrl = (file_key: string): string =>
 export const kcsTextsUrl = (doc_id: string): string =>
   `${KCS_HOST}/streamdocs/v4/documents/${doc_id}/texts`
 
-export interface KcsListing {
+interface KcsListing {
   ntt_sn: string
   ntt_url: string
   title: string
@@ -97,7 +97,7 @@ export function kcsRelease(title: string, posted: string): KcsRelease | null {
   return { period: `${yearOf(m, month[1])}-${pad(m)}`, window: 'month' }
 }
 
-export interface KcsReleasePage {
+interface KcsReleasePage {
   /** The page states KOGL Type 1 ("출처표시": commercial use and changes allowed, with the source). */
   kogl_type1: boolean
   /** The attachments the document viewer opens, as KCS names them. */
@@ -218,7 +218,7 @@ function monthColumns(values: number[], yoy: number): { month: number; yearAgo: 
   return null
 }
 
-export type KcsReading =
+type KcsReading =
   | { kind: 'figures'; observations: PrintObservation[] }
   | { kind: 'none'; reason: string }
 

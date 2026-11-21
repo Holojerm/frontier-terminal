@@ -4,7 +4,7 @@ import { collapse, toEntity } from '../../../core/server/pipeline/normalize'
 // Normalize the status feeds: validated incident rows -> EntityRow (boundary
 // table, "normalize" = DETERMINISTIC).
 
-export function normalizeIncident(row: IncidentRow, snapshotId: string): EntityRow {
+function normalizeIncident(row: IncidentRow, snapshotId: string): EntityRow {
   return toEntity(
     incidentKey(row.provider, row.incident_id),
     'incident',

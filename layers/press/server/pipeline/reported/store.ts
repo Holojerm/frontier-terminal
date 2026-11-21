@@ -16,7 +16,7 @@ import { figureHeadline } from './figures'
 export const MAX_FIGURES_PER_FILE = 200
 
 /** Files handed out per backfill call: about two minutes of the job's reading. */
-export const FIGURE_FILES_PER_CALL = 24
+const FIGURE_FILES_PER_CALL = 24
 
 export const articleId = (url: string) => contentHash({ url })
 
@@ -98,7 +98,7 @@ export async function figureBackfill(
   return rows.map(({ stamp }) => ({ stamp, url: gkgUrl(stamp) }))
 }
 
-export type FigureFileOutcome =
+type FigureFileOutcome =
   | ({ recorded: true } & FigureRowsOutcome)
   | { recorded: false; reason: 'not-pending' }
 

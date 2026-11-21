@@ -8,7 +8,7 @@ import type { ScopeEntry } from '#layers/core/server/pipeline/scopes'
 // cross-check, never a source of record), so polling it faster would only
 // store bytes. The derived per-model OpenAI pages stay there too: they add
 // context windows to a SKU these pages already announced.
-export const LAUNCH_SOURCES: readonly string[] = [
+const LAUNCH_SOURCES: readonly string[] = [
   'openai-models-md',
   'openai-pricing-md',
   'anthropic-models-md',

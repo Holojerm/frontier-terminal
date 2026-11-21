@@ -240,7 +240,7 @@ function addedFilings(changes: readonly ChangeRow[]): { filing: Filing; changes:
 const quote = (h: string) => `“${h}”`
 
 /** One sentence on what the risk-factor headings did against the previous filing. */
-export function riskSentence(
+function riskSentence(
   changes: readonly RiskFactorChange[],
   count: number,
   priorLabel: string,

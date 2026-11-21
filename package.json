@@ -68,7 +68,6 @@
     "ci:browser": "bun run playwright:install && bun run test:a11y",
     "ci": "bun run scripts/ci.ts",
     "ci:fast": "bun run scripts/ci.ts --fast",
-    "mcp:check": "bun run scripts/check-mcp.ts",
     "migrations:check": "bun run scripts/check-migrations.ts",
     "surfaces:check": "bun run scripts/check-surfaces.ts",
     "domains:check": "bun run scripts/check-domains.ts",
@@ -79,6 +78,8 @@
   "dependencies": {
     "@modelcontextprotocol/server": "2.0.0",
     "@nuxt/ui": "^4.12.2",
+    "@vueuse/core": "14.4.0",
+    "@vueuse/nuxt": "14.4.0",
     "drizzle-orm": "^0.45.4",
     "hyparquet-writer": "0.17.0",
     "mustache": "^4.2.0",
