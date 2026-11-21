@@ -1,8 +1,9 @@
 // GET /api/gpu-prices and the get_gpu_prices MCP tool: today's on-demand GPU
 // rental prices from the GPU recipes, every row with its provider page and
-// fetch time, and the equal-weight medians the Compute thesis divides by.
+// fetch time, the equal-weight medians the Compute thesis divides by, and the
+// archived weekly series from before the recipes began (terminal-gpu-archive.ts).
 
-import { desc, inArray } from 'drizzle-orm'
+import { count, desc, eq, inArray, max } from 'drizzle-orm'
 
 import { gpuProviderName } from '../../shared/utils/companies'
 import type { GpuHistoryView, GpuPricesData } from '../../shared/utils/terminal-types'
@@ -13,6 +14,7 @@ import { gpuMedian, gpuState, type GpuObservation } from '../theses/compute-sign
 import { GPU_MODELS, gpuPricePayload } from '../theses/recipes/gpu-prices'
 import { GPU_RECIPES } from '../theses/recipes/registry'
 import { recipeRunsStamp, type QueryContext } from './terminal-db'
+import { queryGpuArchive } from './terminal-gpu-archive'
 import { byString } from './terminal-json'
 import { SPOT_QUORUM, spotRead } from './terminal-utilization'
 
@@ -32,11 +34,20 @@ export const GPU_HISTORY_METHOD =
   `We show each provider’s share on its own until ${SPOT_QUORUM} providers print a spot price for the same GPU. ` +
   'Where a page prints two spot prices, the chart follows the lower one and the table has both.'
 
-export const gpuRunsStamp = (db: PipelineDb) =>
-  recipeRunsStamp(
-    db,
-    GPU_RECIPES.map((r) => r.id),
-  )
+/** The cache variant: the newest GPU recipe run, and the newest archived copy a backfill wrote. */
+export async function gpuRunsStamp(db: PipelineDb): Promise<string> {
+  const [runs, [archived]] = await Promise.all([
+    recipeRunsStamp(
+      db,
+      GPU_RECIPES.map((r) => r.id),
+    ),
+    db
+      .select({ at: max(tables.archiveCaptures.fetched_at), n: count() })
+      .from(tables.archiveCaptures)
+      .where(eq(tables.archiveCaptures.axis, 'gpu')),
+  ])
+  return archived?.n ? `${runs}|archive:${archived.n}:${archived.at}` : runs
+}
 
 /** One stored price row, with the recipe that stored it and the day it was read. */
 export type StoredGpuRead = GpuObservation & { recipe_id: string; date: string }
@@ -119,7 +130,7 @@ export function gpuHistory(
 }
 
 export async function queryGpuPrices(db: PipelineDb, ctx: QueryContext): Promise<GpuPricesData> {
-  const state = await gpuState(db)
+  const [state, archived] = await Promise.all([gpuState(db), queryGpuArchive(db)])
   const ids = GPU_RECIPES.map((r) => r.id)
   const rows = await db
     .select()
@@ -194,6 +205,7 @@ export async function queryGpuPrices(db: PipelineDb, ctx: QueryContext): Promise
       }
     }),
     history,
+    archived,
     prices,
     failed: Object.entries(state.failed).map(([provider, detail]) => ({
       provider,

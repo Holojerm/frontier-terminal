@@ -221,6 +221,7 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       'changes',
       'archived_prices',
       'archived_hiring',
+      'archived_gpu_prices',
       'archive_captures',
       'alerts',
       'claim_readings',

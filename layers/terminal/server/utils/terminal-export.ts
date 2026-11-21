@@ -73,6 +73,7 @@ export const EXPORT_TABLE_NAMES = Object.keys(EXPORT_TABLES)
 export const ARCHIVED_EXPORTS: ReadonlySet<string> = new Set([
   'archived_prices',
   'archived_hiring',
+  'archived_gpu_prices',
   'archive_captures',
 ])
 

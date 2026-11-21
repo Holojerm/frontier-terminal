@@ -1850,6 +1850,136 @@
       "http_status": 200,
       "raw_bytes": 9494,
       "trim": "none — committed whole"
+    },
+    {
+      "path": "fixtures/recipes/wayback/lambda-gpu-cloud-2023-12.html",
+      "source_id": "wayback-lambda-gpu-cloud-2023-20231226173925",
+      "source_url": "https://web.archive.org/web/20231226173925id_/https://lambdalabs.com/service/gpu-cloud",
+      "fetched_at": "2026-11-21T00:18:54.797Z",
+      "http_status": 200,
+      "raw_bytes": 135536,
+      "trim": "head, scripts, styles, svg, noscript, iframes and comments removed, nav and footer removed, and layout-only attributes (style, srcset, Webflow ids, script-island props) dropped, 135536 -> 44906 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://lambdalabs.com/service/gpu-cloud taken 20231226173925 (era lambda-gpu-cloud-2023, layers/terminal/server/pipeline/archive/gpu-eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/recipes/wayback/lambda-gpu-cloud-2024-09.html",
+      "source_id": "wayback-lambda-gpu-cloud-2023-20240916060818",
+      "source_url": "https://web.archive.org/web/20240916060818id_/https://lambdalabs.com/service/gpu-cloud",
+      "fetched_at": "2026-11-21T00:19:15.207Z",
+      "http_status": 200,
+      "raw_bytes": 148620,
+      "trim": "head, scripts, styles, svg, noscript, iframes and comments removed, nav and footer removed, and layout-only attributes (style, srcset, Webflow ids, script-island props) dropped, 148620 -> 49541 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://lambdalabs.com/service/gpu-cloud taken 20240916060818 (era lambda-gpu-cloud-2023, layers/terminal/server/pipeline/archive/gpu-eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/recipes/wayback/lambda-ai-gpu-cloud-2025-05.html",
+      "source_id": "wayback-lambda-ai-gpu-cloud-2025-20250528111542",
+      "source_url": "https://web.archive.org/web/20250528111542id_/https://lambda.ai/service/gpu-cloud",
+      "fetched_at": "2026-11-21T00:29:36.004Z",
+      "http_status": 200,
+      "raw_bytes": 111460,
+      "trim": "head, scripts, styles, svg, noscript, iframes and comments removed, nav and footer removed, and layout-only attributes (style, srcset, Webflow ids, script-island props) dropped, 111460 -> 25048 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://lambda.ai/service/gpu-cloud taken 20250528111542 (era lambda-ai-gpu-cloud-2025, layers/terminal/server/pipeline/archive/gpu-eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/recipes/wayback/lambda-ai-pricing-2025-10.html",
+      "source_id": "wayback-lambda-ai-pricing-2025-20251011220942",
+      "source_url": "https://web.archive.org/web/20251011220942id_/https://lambda.ai/pricing",
+      "fetched_at": "2026-11-21T00:18:03.869Z",
+      "http_status": 200,
+      "raw_bytes": 153331,
+      "trim": "head, scripts, styles, svg, noscript, iframes and comments removed, nav and footer removed, and layout-only attributes (style, srcset, Webflow ids, script-island props) dropped, 153331 -> 50319 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://lambda.ai/pricing taken 20251011220942 (era lambda-ai-pricing-2025, layers/terminal/server/pipeline/archive/gpu-eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/recipes/wayback/coreweave-pricing-2025-09.html",
+      "source_id": "wayback-coreweave-pricing-2025-20250917194140",
+      "source_url": "https://web.archive.org/web/20250917194140id_/https://coreweave.com/pricing",
+      "fetched_at": "2026-11-21T00:20:09.573Z",
+      "http_status": 200,
+      "raw_bytes": 587438,
+      "trim": "head, scripts, styles, svg, noscript, iframes and comments removed, only the price lists with an instance price column kept, and in them only the H100 and B200 items, and layout-only attributes (style, srcset, Webflow ids, script-island props) dropped, 587438 -> 13751 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://coreweave.com/pricing taken 20250917194140 (era coreweave-pricing-2025, layers/terminal/server/pipeline/archive/gpu-eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/recipes/wayback/nebius-ai-prices-2024-08.html",
+      "source_id": "wayback-nebius-ai-prices-2023-20240805155823",
+      "source_url": "https://web.archive.org/web/20240805155823id_/https://nebius.ai/prices",
+      "fetched_at": "2026-11-21T00:21:45.145Z",
+      "http_status": 200,
+      "raw_bytes": 179236,
+      "trim": "head, scripts, styles, svg, noscript, iframes and comments removed, nav and footer removed, and layout-only attributes (style, srcset, Webflow ids, script-island props) dropped, 179236 -> 36017 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://nebius.ai/prices taken 20240805155823 (era nebius-ai-prices-2023, layers/terminal/server/pipeline/archive/gpu-eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/recipes/wayback/nebius-prices-2025-01.html",
+      "source_id": "wayback-nebius-prices-2024-20250115165501",
+      "source_url": "https://web.archive.org/web/20250115165501id_/https://nebius.com/prices",
+      "fetched_at": "2026-11-21T00:20:42.776Z",
+      "http_status": 200,
+      "raw_bytes": 163230,
+      "trim": "head, scripts, styles, svg, noscript, iframes and comments removed, nav and footer removed, and layout-only attributes (style, srcset, Webflow ids, script-island props) dropped, 163230 -> 37912 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://nebius.com/prices taken 20250115165501 (era nebius-prices-2024, layers/terminal/server/pipeline/archive/gpu-eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/recipes/wayback/nebius-prices-2025-03.html",
+      "source_id": "wayback-nebius-prices-2024-20250322001211",
+      "source_url": "https://web.archive.org/web/20250322001211id_/https://nebius.com/prices",
+      "fetched_at": "2026-11-21T00:20:47.417Z",
+      "http_status": 200,
+      "raw_bytes": 175986,
+      "trim": "head, scripts, styles, svg, noscript, iframes and comments removed, nav and footer removed, and layout-only attributes (style, srcset, Webflow ids, script-island props) dropped, 175986 -> 47120 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://nebius.com/prices taken 20250322001211 (era nebius-prices-2024, layers/terminal/server/pipeline/archive/gpu-eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/recipes/wayback/nebius-prices-2025-10.html",
+      "source_id": "wayback-nebius-prices-2025-20251020160326",
+      "source_url": "https://web.archive.org/web/20251020160326id_/https://nebius.com/prices",
+      "fetched_at": "2026-11-21T00:21:01.834Z",
+      "http_status": 200,
+      "raw_bytes": 221874,
+      "trim": "head, scripts, styles, svg, noscript, iframes and comments removed, nav and footer removed, and layout-only attributes (style, srcset, Webflow ids, script-island props) dropped, 221874 -> 46179 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://nebius.com/prices taken 20251020160326 (era nebius-prices-2025, layers/terminal/server/pipeline/archive/gpu-eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/recipes/wayback/crusoe-pricing-2025-09.html",
+      "source_id": "wayback-crusoe-pricing-2025-20250929194310",
+      "source_url": "https://web.archive.org/web/20250929194310id_/https://www.crusoe.ai/cloud/pricing",
+      "fetched_at": "2026-11-21T00:22:08.180Z",
+      "http_status": 200,
+      "raw_bytes": 161086,
+      "trim": "head, scripts, styles, svg, noscript, iframes and comments removed, nav and footer removed, and layout-only attributes (style, srcset, Webflow ids, script-island props) dropped, 161086 -> 33875 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://www.crusoe.ai/cloud/pricing taken 20250929194310 (era crusoe-pricing-2025, layers/terminal/server/pipeline/archive/gpu-eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/recipes/wayback/crusoe-pricing-2026-02.html",
+      "source_id": "wayback-crusoe-pricing-2025b-20260225204158",
+      "source_url": "https://web.archive.org/web/20260225204158id_/https://www.crusoe.ai/cloud/pricing",
+      "fetched_at": "2026-11-21T00:22:17.472Z",
+      "http_status": 200,
+      "raw_bytes": 187072,
+      "trim": "head, scripts, styles, svg, noscript, iframes and comments removed, nav and footer removed, and layout-only attributes (style, srcset, Webflow ids, script-island props) dropped, 187072 -> 30795 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://www.crusoe.ai/cloud/pricing taken 20260225204158 (era crusoe-pricing-2025b, layers/terminal/server/pipeline/archive/gpu-eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/recipes/wayback/datacrunch-products-2024-10.html",
+      "source_id": "wayback-datacrunch-products-2023-20241005191147",
+      "source_url": "https://web.archive.org/web/20241005191147id_/https://datacrunch.io/products",
+      "fetched_at": "2026-11-21T00:25:37.972Z",
+      "http_status": 200,
+      "raw_bytes": 503147,
+      "trim": "head, scripts, styles, svg, noscript, iframes and comments removed, nav and footer removed, and layout-only attributes (style, srcset, Webflow ids, script-island props) dropped, 503147 -> 60028 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://datacrunch.io/products taken 20241005191147 (era datacrunch-products-2023, layers/terminal/server/pipeline/archive/gpu-eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/recipes/wayback/together-gpu-clusters-2026-03.html",
+      "source_id": "wayback-together-gpu-clusters-2026-20260326031740",
+      "source_url": "https://web.archive.org/web/20260326031740id_/https://www.together.ai/gpu-clusters",
+      "fetched_at": "2026-11-21T00:30:27.052Z",
+      "http_status": 200,
+      "raw_bytes": 431769,
+      "trim": "head, scripts, styles, svg, noscript, iframes and comments removed, nav and footer removed, and layout-only attributes (style, srcset, Webflow ids, script-island props) dropped, 431769 -> 51217 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://www.together.ai/gpu-clusters taken 20260326031740 (era together-gpu-clusters-2026, layers/terminal/server/pipeline/archive/gpu-eras.ts). source_url is the capture; fetched_at is when we read it back."
     }
   ]
 }
