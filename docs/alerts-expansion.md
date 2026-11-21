@@ -32,14 +32,14 @@ with the source URL and fetch time of the read that found it. Alerts come from t
 Severity is `info`, `notable` or `critical`. `notable` and `critical` are the alert tier
 (`layers/core/shared/utils/terminal-tiers.ts`). The alert tier leads the home page and
 `/alerts`, goes in the Atom feed and reaches licensee webhooks by their `min_severity`.
-`critical` also posts to X and Bluesky (`layers/terminal/server/pipeline/social.ts`).
+`critical` also posts to X and Bluesky (`layers/alerts/server/pipeline/social.ts`).
 
 Of the 894 alerts on file (since 2026-08-25), the judge wrote 840, 125 of them in the alert
 tier. Rules wrote 54, and 53 of those are in the alert tier. So the judge decides most of
 what is minor, and rules carry most of what must never be missed.
 
 Each alert sits on one of seven axes (`AXIS_DISPLAY`), read from the entity type of the rows
-it cites (`ENTITY_AXIS` in `layers/terminal/shared/utils/terminal-labs.ts`).
+it cites (`ENTITY_AXIS` in `layers/alerts/shared/utils/terminal-labs.ts`).
 
 The track record (`/alerts`, Track record tab) takes every alert-tier alert since 2026-09-08.
 It searches GDELT's press files and the labs' newsrooms with terms built from the cited rows
@@ -55,7 +55,7 @@ October 10-Qs were read as its baseline. Three things are missing, and every can
 needs the same three:
 
 1. `filed_fact` isn't in `ChangeView`'s entity types
-   (`layers/terminal/shared/utils/terminal-types/alerts.ts`), so `ENTITY_AXIS` has no axis for
+   (`layers/alerts/shared/utils/terminal-types/alerts.ts`), so `ENTITY_AXIS` has no axis for
    it. Its alerts can't be found by `/alerts?topic=`, and `alertAxis()` returns nothing.
 2. `termsOf` has no `filed_fact` case, so these alerts are `not-searchable` in the track record.
 3. The surfaces gate (#469) waives `/api/exposure` as `covered:` until the axis exists.

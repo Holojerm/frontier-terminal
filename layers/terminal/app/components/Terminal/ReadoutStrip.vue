@@ -6,7 +6,7 @@
 // On a phone each lab stacks as a short block, one axis per line, rather than
 // a 1,300px row in a 356px box.
 
-import { clipHeadline } from '../../../shared/utils/terminal-labs'
+import { clipHeadline } from '../../../../alerts/shared/utils/terminal-labs'
 import { labPath } from '../../../../core/shared/utils/lab-names'
 import {
   summarizeLab,

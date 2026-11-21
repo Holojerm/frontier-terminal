@@ -1,4 +1,4 @@
-// One EVENTS batch, routed (the plugin, layers/terminal/server/plugins/events-queue.ts,
+// One EVENTS batch, routed (the plugin, layers/alerts/server/plugins/events-queue.ts,
 // filters by queue name first). Kept apart from the plugin so the routing is
 // testable without Nitro.
 //

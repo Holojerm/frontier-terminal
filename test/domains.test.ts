@@ -47,6 +47,7 @@ describe('the domain table', () => {
     expect(
       tableProblems(DOMAIN_LAYERS, [
         'adoption',
+        'alerts',
         'companies',
         'compute',
         'core',
@@ -67,6 +68,7 @@ describe('the domain table', () => {
     expect(DOMAIN_LAYERS.adoption.uses).toEqual(['core', 'reliability'])
     expect(DOMAIN_LAYERS.models.uses).toEqual(['core', 'pricing'])
     expect(DOMAIN_LAYERS.press.uses).toEqual(['core', 'companies'])
+    expect(DOMAIN_LAYERS.alerts.uses).toEqual(['core', 'pricing', 'press'])
   })
 })
 

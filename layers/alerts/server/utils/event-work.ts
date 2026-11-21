@@ -1,6 +1,6 @@
 // What each EVENTS message does (layers/core/server/utils/events.ts says
 // why the queue exists). Every dependency is passed in, so
-// layers/terminal/test/events.test.ts drives the whole thing against workerd's D1
+// layers/alerts/test/events.test.ts drives the whole thing against workerd's D1
 // with fakes for Buffer, the webhook sender, the mail binding and the queue.
 //
 // The outboxes are unchanged: these functions call the same idempotent

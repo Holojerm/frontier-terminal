@@ -313,7 +313,7 @@ export default defineNuxtConfig({
         { rel: 'icon', href: '/favicon.svg', type: 'image/svg+xml' },
         { rel: 'apple-touch-icon', href: '/apple-touch-icon.png' },
         { rel: 'manifest', href: '/manifest.webmanifest' },
-        // Feed autodiscovery. layers/terminal/server/routes/alerts.xml.get.ts has existed since
+        // Feed autodiscovery. layers/alerts/server/routes/alerts.xml.get.ts has existed since
         // the alerts axis shipped, but a feed reader finds a feed by reading
         // this tag off any page of the site — without it, /alerts.xml is a URL
         // you have to already know, which is the same as not publishing one.

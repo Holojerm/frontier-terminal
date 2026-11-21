@@ -62,7 +62,7 @@ const EXPORT_FILES = inLayers('server/export-tables').sort((a, b) =>
 )
 const SCHEMA_FILES = inLayers('server/db/tables')
 const VIEWS_FILE = join(CORE, 'server/utils/terminal-export-views.ts')
-const LABS_FILE = join(TERMINAL, 'shared/utils/terminal-labs.ts')
+const LABS_FILE = join(ROOT, 'layers/alerts/shared/utils/terminal-labs.ts')
 const LAB_PAGE = join(TERMINAL, 'app/pages/labs/[lab]/index.vue')
 const TEAR_SHEET = join(TERMINAL, 'app/pages/labs/[lab]/tear-sheet.vue')
 

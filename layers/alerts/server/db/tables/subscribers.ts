@@ -4,7 +4,7 @@ import { index, sqliteTable, text, uniqueIndex } from 'drizzle-orm/sqlite-core'
 // Digest subscribers
 // ─────────────────────────────────────────────
 // The only personal data this app stores: an email address someone typed into
-// the subscribe form (layers/terminal/server/utils/subscribers.ts). Double
+// the subscribe form (layers/alerts/server/utils/subscribers.ts). Double
 // opt-in: a row is `pending` until its confirmation link is followed. The
 // confirm token is stored as a SHA-256 hash, so a database read cannot confirm
 // anyone. The unsubscribe token is not stored at all: it is an HMAC of the row

@@ -12,7 +12,7 @@ name = "frontier-terminal"
 compatibility_date = "2025-09-01"
 # `queue_consumer_wait_for_wait_until` pins today's default so a future
 # `compatibility_date` bump cannot flip it. The EVENTS consumer
-# (layers/terminal/server/plugins/events-queue.ts) acks inside the waitUntil
+# (layers/alerts/server/plugins/events-queue.ts) acks inside the waitUntil
 # Nitro's queue() hands it; without this flag a batch would be acked before a
 # single handler ran. Do not remove it.
 compatibility_flags = ["nodejs_compat", "queue_consumer_wait_for_wait_until"]

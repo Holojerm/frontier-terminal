@@ -1,6 +1,6 @@
 // Press notes: when a registration filing parses (a prospectus-floor alert),
 // one note per reporter, composed here from the alert. The EVENTS queue's
-// alert fan-out (layers/terminal/server/utils/event-work.ts) sends each note
+// alert fan-out (layers/alerts/server/utils/event-work.ts) sends each note
 // to its reporter through Resend within a minute or so, then mails the owner
 // a receipt of who got it. Without Resend configured it mails the owner a
 // brief of mailto: links instead, and a person sends them.

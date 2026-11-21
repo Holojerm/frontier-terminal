@@ -4,7 +4,7 @@
 // payloads the axis pages render, so the strip on the front page, the lab
 // page header and the axis panels cannot disagree about a number.
 
-import { alertLabs } from './terminal-labs'
+import { alertLabs } from '../../../alerts/shared/utils/terminal-labs'
 import { LAB_DISPLAY, LABS, labPath } from '../../../core/shared/utils/lab-names'
 import type {
   AlertView,

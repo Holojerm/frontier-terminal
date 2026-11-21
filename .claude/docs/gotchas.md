@@ -156,7 +156,7 @@ the Playwright suites' web server run `nuxt dev` **on Bun itself**, with no warn
 does: the browser-suites workflow runs `actions/setup-node` from `.node-version`.
 
 Under Bun, every page that renders a component importing `zod` (the subscribe form, through
-`layers/terminal/shared/utils/subscribe.ts`) returns 500:
+`layers/alerts/shared/utils/subscribe.ts`) returns 500:
 `undefined is not an object (evaluating '__vite_ssr_import_N__.z.object')`. Vite externalizes
 `zod`; Bun answers `true` to `'__esModule' in ns` for zod's ESM namespace, so vite-node swaps
 the module for its default export, the `z` namespace, which lacks `z` itself. The error text is
@@ -217,7 +217,7 @@ and no `include`. Until 2026-11 it was `"extends": "./.nuxt/tsconfig.json"`, the
 that excludes `server/**`, so nothing under `server/` or `layers/*/server/` was ever
 typechecked and the gate stayed green. Fixing it surfaced six real errors here: three
 `defineTask` calls with more than one result shape needing an explicit result type
-(`layers/social/server/tasks/social/post.ts`, `layers/terminal/server/tasks/social/digest.ts`,
+(`layers/social/server/tasks/social/post.ts`, `layers/alerts/server/tasks/social/digest.ts`,
 `layers/terminal/server/tasks/dev/fixtures.ts`, `server/tasks/seo/indexnow.ts`), one function
 with a parameter type narrower than what it called (`layers/core/server/pipeline/rate-limit.ts`
 › `isRateLimitRun`, now `Pick<RunSummary, 'status' | 'detail'>`), and one handler missing a
