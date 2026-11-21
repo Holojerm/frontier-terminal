@@ -74,8 +74,8 @@ Live-fetched with `curl` and the pipeline's descriptive User-Agent at 03:20Z; ra
 
 | Axis | Provider | Source of record | Format | Diff mechanism | Verdict |
 |---|---|---|---|---|---|
-| Disclosures | OpenAI | `alignment.openai.com/misalignment-reports/` | SSR HTML (Vercel; ETag + Last-Modified) | report slug / notice id; title, summary, model, context | **Include** — 9 reports and 3 notices |
-| Disclosures | OpenAI | `alignment.openai.com/misalignment-reports/{slug}/` | SSR HTML, one page per report | discovery / disclosure dates per report | **Include as derived** — one page per listed report |
+| Disclosures | OpenAI | `openai.com/safety-alignment/misalignment-reports/` (was `alignment.openai.com/misalignment-reports/`, a 308 since 2026-11-20) | SSR HTML (Next.js on Cloudflare); every entry in the flight payload's `items` array | report slug / notice id; title, summary | **Include** — 26 reports and 3 notices (2026-11-21) |
+| Disclosures | OpenAI | `openai.com/safety-alignment/misalignment-reports/{slug}/` | SSR HTML, one page per report | model and context; discovery / disclosure dates per report | **Include as derived** — one page per listed report |
 | Disclosures | OpenAI | `alignment.openai.com/rss.xml` | RSS 2.0, 21 items | — | **Not used** — newest item 2026-07-21; lists none of the report pages |
 | Disclosures | OpenAI | `openai.com/index/model-misalignment-reporting-framework` | — | — | **Not used** — HTTP 403 to a headless client, like every openai.com marketing page |
 | Disclosures | Anthropic | `anthropic.com/news/investigating-incidents-cybersecurity-evals` | HTML article | — | **Cut** — one article (2026-07-30), not an index; `alignment.anthropic.com/rss.xml` is 404 |
@@ -87,6 +87,8 @@ Live-fetched with `curl` and the pipeline's descriptive User-Agent at 03:20Z; ra
 Time to disclosure, discovery date to publication, at this fetch: 5 days (DNS chatbot), 38, 69, 90 (printed disclosure date), 114 ×3, 121 and 153 days. Interpretation, marked as such: OpenAI's framework launched on 2026-09-16 with six reports discovered between April and August, so the long lags are a backlog published at launch; the lags of reports discovered after that date are the ones that test the framework. Press reports (Axios, Fortune, SiliconANGLE, 2026-09-16/17) describe a commitment to publish within six business days, or twelve with a minor investigation. That text is on the 403'd openai.com page, so the terminal shows the measured days and does not state the commitment as data.
 
 Most entries are not sandbox escapes. The page covers misalignment broadly; the escapes (a DNS lookup to an outside chatbot, uploads to file hosts, disposable email sign-ups and leaked API keys) are some of the reports. Incidents reported only by third parties or the press (Hugging Face's own write-up, the RubyGems report, statements at the UN) are not ingested, for the reason compute-deal extraction was cut: coverage from the press cannot be made honest. The other labs are re-checked by the `gap-watch` routine (`.claude/routines/gap-watch.md`), which files an issue rather than registering a source, because a new source needs this same audit.
+
+**Moved, 2026-11-20.** alignment.openai.com/misalignment-reports/ and every report page now answer 308 to the same paths under openai.com/safety-alignment/. openai.com's robots.txt allows them, and the poller's User-Agent gets 200 (no challenge). The index renders 20 entries behind "Load more"; all 29 (26 reports, 3 notices) are in the page's Next.js flight payload, which is what the parser reads. The index no longer prints the model or context; each report page still does, on the line above its dates, and the parser now reads them there. Report pages now print "First posted", which is read as the disclosure date.
 
 ## Addendum, 2026-10-12 — Meta
 

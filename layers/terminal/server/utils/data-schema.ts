@@ -262,6 +262,21 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
     summary:
       '/api/adoption gains weekly on each downloads and agent_prs entry: the total per ISO week (Monday to Sunday, UTC) over every stored day, oldest first, through the newest week whose Sunday is on record. days says how many of its days are stored, and partial is true when one is missing. An agent_prs week is also retrospective when any of its days was counted later, from the pull requests that still existed. get_adoption returns it too. No table columns changed.',
   },
+  {
+    version: '1.15.0',
+    date: '2026-11-21',
+    summary:
+      'OpenAI moved its misalignment reports to openai.com/safety-alignment/misalignment-reports/, and its index stopped printing each report’s model and the context it was observed in. Each report’s own page still prints both, so disclosure_timelines gains model and observed_during, read from that page. On disclosures, model and observed_during are null on OpenAI rows from now on, and entry_url points at the new address. A page’s “First posted” line is now read as its disclosure date.',
+    tables: {
+      disclosure_timelines: {
+        added: ['model', 'observed_during'],
+        note: 'disclosed_on is also read from a “First posted” line, which every report page but a few now prints. lines drops “Last updated” as it dropped “Report updated”.',
+      },
+      disclosures: {
+        note: 'model and observed_during are null on OpenAI rows from 2026-11-20 (disclosure_timelines has them); entry_url moved to openai.com/safety-alignment/.',
+      },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

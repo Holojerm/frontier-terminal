@@ -121,7 +121,9 @@ describe('derived_sources', () => {
       ['google-model-md', 'google-priced-model'],
       ['openai-misalignment-report', 'openai-misalignment-report'],
     ])
-    expect(templates[7]!.url).toBe('https://alignment.openai.com/misalignment-reports/{slug}/')
+    expect(templates[7]!.url).toBe(
+      'https://openai.com/safety-alignment/misalignment-reports/{slug}/',
+    )
     expect(templates[7]!.caveat).toContain('Discovery / Discovered / Discovery date')
     expect(templates[6]!.url).toBe('https://aistudio.google.com/docs/models/{slug}.md')
     expect(templates[6]!.caveat).toContain('reads as absent')
