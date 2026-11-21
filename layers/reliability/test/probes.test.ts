@@ -1180,9 +1180,9 @@ describe('the probe targets', () => {
   })
 
   it('leave room for an answer where the endpoint counts reasoning against the cap', () => {
-    const body = (lab: string) => probeRequestBody(RESOLVED_TARGETS.find((t) => t.lab === lab)!)
-    expect(body('meta').max_tokens).toBe(480)
-    expect(body('openai').max_tokens).toBe(160)
+    const openai = RESOLVED_TARGETS.find((t) => t.lab === 'openai')!
+    expect(probeRequestBody({ ...openai, reasoning_allowance: 320 }).max_tokens).toBe(480)
+    expect(probeRequestBody(openai).max_tokens).toBe(160)
   })
 
   it('stay inside the monthly budget at the 2026-11-20 catalog prices, counting what xAI bills outside the cap', () => {
@@ -1190,7 +1190,7 @@ describe('the probe targets', () => {
     expect(RESOLVED.skipped).toEqual([])
     expect(RESOLVED_TARGETS).toHaveLength(PROBE_TARGETS.length)
     const ceiling = monthlyCostCeiling(RESOLVED_TARGETS)
-    expect(ceiling).toBeGreaterThan(20)
+    expect(ceiling).toBeGreaterThan(15)
     expect(ceiling).toBeLessThan(PROBE_MONTHLY_BUDGET_USD)
     const only = (lab: string) => monthlyCostCeiling(RESOLVED_TARGETS.filter((t) => t.lab === lab))
     // 40 + 1,260 prompt tokens at $2 and 160 + 700 output tokens at $6, 732 times.
@@ -1238,7 +1238,6 @@ describe('the flagship match', () => {
       ['anthropic', 'anthropic/claude-opus-5.5'],
       ['google', 'google/gemini-4-carbon'],
       ['xai', 'x-ai/grok-4.7'],
-      ['meta', 'meta/muse-wonder'],
       ['alibaba', 'qwen/qwen4-max'],
       ['moonshot', 'moonshotai/kimi-k3.1-pro'],
     ])
