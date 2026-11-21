@@ -12,6 +12,7 @@
 import { PRINT_ENTITIES, type PrintSeries, type PrintWindow } from '../../shared/utils/prints'
 import { FOREIGN_FILERS } from '../calls/actuals'
 import { curatedCalls } from '../calls/curated'
+import { LISTED_BOARDS } from '../../shared/utils/listed-hiring'
 import type { LabId } from '../../shared/utils/terminal-types'
 import type {
   SignalEntityKind,
@@ -47,6 +48,8 @@ export type SignalSource =
   | { kind: 'prints'; series: PrintSeries; entity: string; window?: PrintWindow }
   /** Each filing that settles a company's call guidance (guidance_resolutions), signed: the error against the guided midpoint, positive for a beat. */
   | { kind: 'guidance_surprise'; ticker: string; metric?: 'capex' }
+  /** A listed company's job board (listed_hiring_reads): every open role, or its data-center roles. */
+  | { kind: 'listed_hiring'; board: string; metric: 'total' | 'datacenter' }
 
 export interface SignalDef {
   /** Stable: results, exports and links key on it. Never reuse a retired id. */
@@ -378,6 +381,50 @@ export const GUIDANCE_SIGNAL_COMPANIES: readonly [string, string][] = curatedCal
   .filter((c) => !FOREIGN_FILERS.has(c.ticker))
   .map((c) => [c.ticker, c.company])
 
+/**
+ * The stocks a host's data-center hiring should lead beyond its own: the GPU
+ * maker it buys from, and the tenants and lessees its filings name
+ * (suppliers.json). Hiring for a site comes before the megawatts, and the
+ * megawatts before the revenue.
+ */
+export const LISTED_HIRING_TICKERS: Readonly<Record<string, readonly string[]>> = {
+  CRWV: ['NVDA'],
+  NBIS: ['NVDA', 'MSFT'],
+  GLXY: ['CRWV'],
+  HUT: ['ANT'],
+  CIFR: ['AMZN', 'GOOGL'],
+  GOOGL: ['AVGO'],
+}
+
+/**
+ * A listed company's open roles, as each week's last read. History starts
+ * at our first read of the boards, so every series is thin for now.
+ */
+const listedHiring = (
+  board: string,
+  ticker: string,
+  company: string,
+  metric: 'total' | 'datacenter',
+): SignalDef => ({
+  id: `listed-hiring-${ticker.toLowerCase()}-${metric === 'total' ? 'open-roles' : 'datacenter-roles'}`,
+  label: metric === 'total' ? `Open roles, ${company}` : `Data-center roles, ${company}`,
+  entity: { kind: 'listed', id: ticker },
+  tickers: metric === 'total' ? [ticker] : [ticker, ...(LISTED_HIRING_TICKERS[ticker] ?? [])],
+  source: { kind: 'listed_hiring', board, metric },
+  transform: 'level',
+  frequency: 'weekly',
+  test: 'lead_lag',
+  aggregate: 'last',
+  available_after_days: 1,
+  history_from: '2026-11-21',
+})
+
+/** Every board's total, and a host's data-center roles: a chipmaker's "data center" roles sell to them. */
+const LISTED_HIRING_SIGNALS: readonly SignalDef[] = LISTED_BOARDS.flatMap((b) => [
+  ...(b.scope === 'all' ? [listedHiring(b.id, b.ticker, b.company, 'total')] : []),
+  ...(b.host ? [listedHiring(b.id, b.ticker, b.company, 'datacenter')] : []),
+])
+
 export const SIGNALS: readonly SignalDef[] = [
   npm('npm-anthropic-sdk', 'anthropic', '@anthropic-ai/sdk npm downloads'),
   npm('npm-claude-code', 'anthropic', 'Claude Code npm downloads'),
@@ -484,6 +531,7 @@ export const SIGNALS: readonly SignalDef[] = [
   capexSurprise('GOOGL', 'Alphabet'),
   capexSurprise('META', 'Meta'),
   capexSurprise('ORCL', 'Oracle'),
+  ...LISTED_HIRING_SIGNALS,
 ]
 
 /** Where a series is read from, in the names /data and the exports use. */
@@ -515,5 +563,7 @@ export function sourceLabel(source: SignalSource): string {
       return `hardware_prints: ${source.series} ${source.entity}${source.window && source.window !== 'month' ? ` ${source.window}` : ''}, stated year-on-year change, first release`
     case 'guidance_surprise':
       return `guidance_resolutions: ${source.ticker}${source.metric ? ` ${source.metric}` : ''}, error against the guided midpoint`
+    case 'listed_hiring':
+      return `listed_hiring_reads: ${source.board}, ${source.metric === 'total' ? 'open roles' : 'data-center roles'}`
   }
 }

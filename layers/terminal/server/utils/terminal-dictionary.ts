@@ -42,6 +42,7 @@ import {
   readFiledFactSources,
   readIdentifierSources,
   readGridLoadSources,
+  readListedHiringSources,
   readPowerSiteSources,
   readPrintSources,
   readCallSources,
@@ -92,6 +93,7 @@ const AS_OF_CUT: Readonly<Record<string, string>> = {
   ercot_large_load_facts: 'Rows with fetched_at at or before as_of: when we read the report.',
   hardware_prints:
     'Rows with first_seen_at at or before as_of: each month as we held it then. A backfilled row was read after its release, so for it published_at, where set, is the release time.',
+  listed_hiring_reads: 'Rows with read_at at or before as_of: when we read the board.',
   filed_facts:
     'Rows whose filing date is before the UTC day of as_of. A fact counts from the day after its filing, whenever we read it, so this table answers as_of back to 2019.',
   filed_guidance:
@@ -133,6 +135,7 @@ type Feed =
   | 'grid_load'
   | 'prints'
   | 'calls'
+  | 'listed_hiring'
   | { axes: readonly SourceAxis[] }
   /** Named sources, by id. */
   | { ids: readonly string[] }
@@ -597,6 +600,24 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
       },
     ],
   },
+  listed_jobs: {
+    grain: 'One row per role a listed company’s job board has listed, open or closed.',
+    cadence: 'Daily at 04:00 UTC, one request per board.',
+    event: 'published_at',
+    knowledge: 'first_seen_at',
+    start: 'Our first read of each board, 2026-11-21. Roles that closed before then are not here.',
+    joins: [],
+    feeds: ['listed_hiring'],
+  },
+  listed_hiring_reads: {
+    grain: 'One row per read of a listed company’s job board.',
+    cadence: 'Daily at 04:00 UTC.',
+    event: 'read_at',
+    knowledge: 'read_at',
+    start: 'Our first read of each board, 2026-11-21.',
+    joins: [],
+    feeds: ['listed_hiring'],
+  },
 }
 
 export const TIME_NOTE =
@@ -657,6 +678,9 @@ function ratedSources(sourcesYaml: string): Rated[] {
       license: s.license,
     })),
     ...readCallSources(sourcesYaml).map(flat('calls')),
+    ...readListedHiringSources(sourcesYaml)
+      .filter((s) => s.verdict.startsWith('include'))
+      .map(flat('listed_hiring')),
   ]
 }
 

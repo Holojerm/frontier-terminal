@@ -13,6 +13,7 @@ import type {
   HiringHistoryProvider,
 } from '../../shared/utils/terminal-types'
 import type { DataCentersData, PayData } from '../../shared/utils/recipe-views'
+import type { ListedHiringData } from '../../shared/utils/listed-hiring'
 import type { TableColumn } from '../types/terminal-ui'
 
 const watchlist = useWatchlist()
@@ -25,17 +26,19 @@ definePageMeta({
     priority: '0.8',
     title: 'Hiring',
     summary:
-      'Open roles per day at OpenAI, Anthropic, and xAI, rebuilt from each job board’s change log. Also infrastructure hiring per lab, the department mix now against 30 days ago, each board’s caveats, and open roles back to 2023 from the Internet Archive’s copies of each board.',
+      'Open roles per day at OpenAI, Anthropic, and xAI, rebuilt from each job board’s change log. Also infrastructure hiring per lab, data-center hiring at the listed neoclouds, miners and chipmakers, the department mix now against 30 days ago, each board’s caveats, and open roles back to 2023 from the Internet Archive’s copies of each board.',
   },
 })
 
-const [{ data: hiring, error }, { data: pay }, { data: power }] = await Promise.all([
-  // The archived copies' departments stay in the API and the export; this
-  // page draws only their totals and infrastructure counts.
-  useFetch<HiringHistoryData>('/api/hiring/history', { transform: slimArchive }),
-  useFetch<PayData>('/api/pay'),
-  useFetch<DataCentersData>('/api/datacenters'),
-])
+const [{ data: hiring, error }, { data: pay }, { data: power }, { data: listed }] =
+  await Promise.all([
+    // The archived copies' departments stay in the API and the export; this
+    // page draws only their totals and infrastructure counts.
+    useFetch<HiringHistoryData>('/api/hiring/history', { transform: slimArchive }),
+    useFetch<PayData>('/api/pay'),
+    useFetch<DataCentersData>('/api/datacenters'),
+    useFetch<ListedHiringData>('/api/hiring/listed'),
+  ])
 
 useSeo({
   title: 'AI lab hiring: open roles over time',
@@ -278,6 +281,15 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
           note="Data-center, facilities, energy, construction, compute, and hardware roles per lab per day."
         >
           <TerminalBuildoutPanel :history="hiring" />
+        </TerminalPanel>
+
+        <TerminalPanel
+          v-if="listed?.boards.length"
+          id="listed"
+          title="Listed companies"
+          note="Open roles at the neoclouds, miners and chipmakers around the labs, and Google’s data-center roles."
+        >
+          <TerminalListedHiring :data="listed" />
         </TerminalPanel>
 
         <TerminalPanel

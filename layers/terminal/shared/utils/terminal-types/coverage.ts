@@ -174,6 +174,7 @@ export interface SourceLicensing {
     | 'grid_load'
     | 'prints'
     | 'calls'
+    | 'listed_hiring'
   rights: SourceRights | null
   /** The licence the source states, verbatim, or null. */
   license: string | null

@@ -90,7 +90,7 @@ export const MCP_SERVER_NAME = 'frontier-terminal'
 const INSTRUCTIONS =
   `${MCP_SERVER_NAME}: a free, public, read-only terminal of fundamentals on the frontier AI labs ` +
   '(OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Alibaba (Qwen), Moonshot AI (Kimi)) and the public companies around them. ' +
-  'Per lab: API price lists, hiring boards (with the physical-infrastructure buildout cluster) and posted pay (get_pay), SEC filings and disclosed revenue, ' +
+  'Per lab: API price lists, hiring boards (with the physical-infrastructure buildout cluster) and posted pay (get_pay), the listed companies’ hiring with their data-center roles (get_listed_hiring), SEC filings and disclosed revenue, ' +
   'status-page incidents, latency probes and published rate limits (get_rate_limits), misalignment disclosures, OpenRouter demand share with its implied spend share, ' +
   'and adoption outside the labs’ own numbers (get_adoption). ' +
   'Around the labs: hyperscaler exposure, what Microsoft and Amazon file about OpenAI and Anthropic (get_parents), who sells to and funds whom, suppliers, listed companies, ' +
