@@ -2017,7 +2017,7 @@
       "fetched_at": "2026-11-21T02:29:15.464Z",
       "http_status": 200,
       "raw_bytes": 31076,
-      "note": "Internet Archive capture of https://status.openai.com/history.atom taken 20240503023126 (era openai-history-atom-2023, layers/terminal/server/pipeline/archive/status-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://status.openai.com/history.atom taken 20240503023126 (era openai-history-atom-2023, layers/reliability/server/pipeline/archive/status-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/status/wayback/openai-feed-2025-03.rss",
@@ -2026,7 +2026,7 @@
       "fetched_at": "2026-11-21T02:34:50.624Z",
       "http_status": 200,
       "raw_bytes": 74998,
-      "note": "Internet Archive capture of https://status.openai.com/feed.rss taken 20250301100550 (era openai-feed-rss-2025, layers/terminal/server/pipeline/archive/status-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://status.openai.com/feed.rss taken 20250301100550 (era openai-feed-rss-2025, layers/reliability/server/pipeline/archive/status-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/status/wayback/anthropic-history-2024-05.atom",
@@ -2035,7 +2035,7 @@
       "fetched_at": "2026-11-21T02:38:05.498Z",
       "http_status": 200,
       "raw_bytes": 24793,
-      "note": "Internet Archive capture of https://status.anthropic.com/history.atom taken 20240504224537 (era anthropic-history-atom-2023, layers/terminal/server/pipeline/archive/status-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://status.anthropic.com/history.atom taken 20240504224537 (era anthropic-history-atom-2023, layers/reliability/server/pipeline/archive/status-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/status/wayback/anthropic-claude-history-2026-04.atom",
@@ -2044,7 +2044,7 @@
       "fetched_at": "2026-11-21T02:41:58.469Z",
       "http_status": 200,
       "raw_bytes": 31867,
-      "note": "Internet Archive capture of https://status.claude.com/history.atom taken 20260401224100 (era anthropic-claude-history-atom-2025, layers/terminal/server/pipeline/archive/status-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://status.claude.com/history.atom taken 20260401224100 (era anthropic-claude-history-atom-2025, layers/reliability/server/pipeline/archive/status-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/status/wayback/deepseek-history-2025-04.atom",
@@ -2053,7 +2053,7 @@
       "fetched_at": "2026-11-21T02:47:16.048Z",
       "http_status": 200,
       "raw_bytes": 32468,
-      "note": "Internet Archive capture of https://status.deepseek.com/history.atom taken 20250425025406 (era deepseek-history-atom-2024, layers/terminal/server/pipeline/archive/status-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://status.deepseek.com/history.atom taken 20250425025406 (era deepseek-history-atom-2024, layers/reliability/server/pipeline/archive/status-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/status/wayback/google-cloud-incidents-2025-11.json",
@@ -2063,7 +2063,7 @@
       "http_status": 200,
       "raw_bytes": 344832,
       "trim": "only the Gemini and Vertex AI incidents and the copy's oldest incident (its reach) kept, each with only the fields the parser reads (updates dropped, most_recent_update reduced to its status), 344832 -> 8161 bytes; the era parser gives the same rows and covers_from on the raw capture",
-      "note": "Internet Archive capture of https://status.cloud.google.com/incidents.json taken 20251130051051 (era google-cloud-incidents-2023, layers/terminal/server/pipeline/archive/status-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://status.cloud.google.com/incidents.json taken 20251130051051 (era google-cloud-incidents-2023, layers/reliability/server/pipeline/archive/status-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/status/wayback/xai-feed-2025-05.xml",
@@ -2072,7 +2072,7 @@
       "fetched_at": "2026-11-21T02:49:47.477Z",
       "http_status": 200,
       "raw_bytes": 35695,
-      "note": "Internet Archive capture of https://status.x.ai/feed.xml taken 20250527165647 (era xai-feed-2025, layers/terminal/server/pipeline/archive/status-eras.ts). source_url is the capture; fetched_at is when we read it back."
+      "note": "Internet Archive capture of https://status.x.ai/feed.xml taken 20250527165647 (era xai-feed-2025, layers/reliability/server/pipeline/archive/status-eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
       "path": "fixtures/grid-load/eia930-balance-2026-jul-dec.csv",

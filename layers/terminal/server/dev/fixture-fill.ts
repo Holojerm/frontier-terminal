@@ -13,7 +13,7 @@ import {
   manifestFixtures,
   type ManifestFixture,
 } from '#layers/core/server/pipeline/parsers/fixture-provenance'
-import { runPoll, type PollOutcome } from '../pipeline/poll'
+import { runPoll, type PollOutcome } from '#layers/core/server/pipeline/poll'
 import type { FetchSource } from '#layers/core/server/pipeline/sources'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { runPowerSiteReads, type PowerReadReport } from '#layers/compute/server/power/ingest'

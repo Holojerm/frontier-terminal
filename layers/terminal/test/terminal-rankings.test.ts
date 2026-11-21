@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import { OPENROUTER_KEY_UNSET, type SourceFetcher } from '#layers/core/server/pipeline/fetch'
-import { runRefresh, type RefreshDeps } from '../server/pipeline/refresh'
+import { runRefresh, type RefreshDeps } from '../../core/server/pipeline/refresh'
 import type { RawStore } from '#layers/core/server/pipeline/raw'
 import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
 import { queryContext, queryCoverage } from '#layers/core/server/utils/terminal-db'

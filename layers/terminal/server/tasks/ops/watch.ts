@@ -19,7 +19,7 @@ import { pruneOpsEvents } from '#server/utils/ops'
 import { pruneRateLimits } from '#server/utils/rate-limit'
 
 import rawManifest from '../../../../../fleet.json'
-import { fetchMainHead } from '../../pipeline/deploy-watch'
+import { fetchMainHead } from '../../../../reliability/server/pipeline/deploy-watch'
 import { checkLaunchCoverage } from '../../pipeline/launch-watch'
 import { unstorageLockStore } from '#layers/core/server/pipeline/lock'
 import { checkFreshness } from '#layers/core/server/utils/freshness'

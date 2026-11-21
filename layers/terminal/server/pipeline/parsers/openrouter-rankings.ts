@@ -4,7 +4,7 @@ import {
   type Provenance,
 } from '../../../../core/server/pipeline/contracts'
 import { fixtureProvenance } from '../../../../core/server/pipeline/parsers/fixture-provenance'
-import { providerOfOpenRouterId } from './openrouter'
+import { providerOfOpenRouterId } from '../../../../reliability/server/pipeline/parsers/openrouter'
 
 // OpenRouter daily usage rankings — the demand-share axis. For labs that are
 // still private, one aggregator's token traffic is the best public proxy for

@@ -6,7 +6,7 @@ import { parseDeepseekPricingMd } from '../../../pricing/server/pipeline/parsers
 import { parseMoonshotModelsMd } from '../../../pricing/server/pipeline/parsers/pricing/moonshot-models'
 import { parseEdgarSubmissions } from '../../server/pipeline/parsers/sec/edgar-submissions'
 import { parseCikWhitelistBlock } from '../../server/pipeline/parsers/sec/whitelist'
-import { parseDeepseekStatus } from '../../server/pipeline/parsers/status/deepseek-status'
+import { parseDeepseekStatus } from '../../../reliability/server/pipeline/parsers/status/deepseek-status'
 import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // DeepSeek, Alibaba (Qwen) and Moonshot AI (Kimi), registered 2026-11-04

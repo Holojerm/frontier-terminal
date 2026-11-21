@@ -4,7 +4,6 @@ import {
   documentKey,
   filerKey,
   filingKey,
-  incidentKey,
   offeringKey,
   commitmentKey,
   concentrationKey,
@@ -19,7 +18,6 @@ import {
   type DisclosureTimelineRow,
   type FilerRow,
   type FilingRow,
-  type IncidentRow,
   type OfferingRow,
   type ProspectusOutput,
   type Provider,
@@ -48,16 +46,6 @@ export function normalizeFiling(
   provider: Provider = 'other',
 ): EntityRow {
   return toEntity(filingKey(row.accession_no), 'filing', provider, snapshotId, row)
-}
-
-export function normalizeIncident(row: IncidentRow, snapshotId: string): EntityRow {
-  return toEntity(
-    incidentKey(row.provider, row.incident_id),
-    'incident',
-    row.provider,
-    snapshotId,
-    row,
-  )
 }
 
 // A ranking row is one (UTC day, model) observation. Its provider is the
@@ -196,10 +184,6 @@ export function normalizeFilings(
 ): EntityRow[] {
   const of = typeof provider === 'function' ? provider : () => provider
   return collapse(rows.map((row) => normalizeFiling(row, snapshotId, of(row))))
-}
-
-export function normalizeIncidents(rows: readonly IncidentRow[], snapshotId: string): EntityRow[] {
-  return collapse(rows.map((row) => normalizeIncident(row, snapshotId)))
 }
 
 // A disclosure entry is keyed by its kind and the index's own id for it, so

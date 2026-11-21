@@ -316,7 +316,7 @@ export async function tableCounts(db: PipelineDb): Promise<TableCounts> {
  * The (source_url, fetched_at) pairs of every baseline fetch: the first
  * snapshot each source ever produced, plus any snapshot a source_runs row
  * marks 'baseline'. This Worker's baseline writes entities and no change
- * rows (layers/terminal/server/pipeline/refresh.ts), so the first form is what matters for
+ * rows (layers/core/server/pipeline/refresh.ts), so the first form is what matters for
  * the history imported at the 2026-09-08 cutover — that build logged its
  * first Google parse as an `added` row per SKU, and those are first
  * sightings of a watcher, not of a model.

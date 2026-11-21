@@ -1,19 +1,12 @@
-// One lab's slice of an all-lab payload, for the routes that take `?lab=`.
+// One lab's slice of an all-lab payload, for the routes that take `?lab=`
+// (layers/core/server/utils/lab-query.ts).
 // Each cut runs on the cached all-lab payload, so every lab page reads the one
 // KV entry the axis page fills. A payload that trims its lists before caching
 // can't be cut here, because the trim would hide the lab's older rows; ground
 // truth filters inside its query instead (queryGroundTruth's `lab`).
 
-import { z } from 'zod'
 import { listedSubset, type ListedCompany, type ListedData } from '../../shared/utils/listed'
-import { LABS } from '#layers/core/shared/utils/lab-names'
-import type { DisclosuresData, LabId, ProbesData } from '../../shared/utils/terminal-types'
-
-export const labQuerySchema = z.object({ lab: z.enum(LABS as [LabId, ...LabId[]]).optional() })
-
-export function probesForLab(data: ProbesData, lab: LabId): ProbesData {
-  return { ...data, labs: data.labs.filter((l) => l.lab === lab) }
-}
+import type { DisclosuresData, LabId } from '../../shared/utils/terminal-types'
 
 export function disclosuresForLab(data: DisclosuresData, lab: LabId): DisclosuresData {
   return {

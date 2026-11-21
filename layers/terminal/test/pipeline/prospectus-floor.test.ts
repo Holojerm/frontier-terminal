@@ -13,7 +13,7 @@ import {
 import { parseProspectusOffering } from '../../server/pipeline/parsers/sec/prospectus-offering'
 import { parseProspectusRevenue } from '../../server/pipeline/parsers/sec/prospectus-revenue'
 import { prospectusFloorAlerts, usd } from '../../server/pipeline/prospectus-floor'
-import { sourceIdsForScope } from '../../server/pipeline/scopes'
+import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
 import { includeSources } from '#layers/core/server/pipeline/sources'
 import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 

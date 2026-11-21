@@ -12,6 +12,7 @@ import { registerFeedTools } from '#layers/terminal/server/mcp/feed'
 import { registerFilingTools } from '#layers/terminal/server/mcp/filings'
 import { registerHiringTools } from '#layers/talent/server/mcp/hiring'
 import { registerOperationsTools } from '#layers/terminal/server/mcp/operations'
+import { registerReliabilityTools } from '#layers/reliability/server/mcp/reliability'
 import { registerPriceTools } from '#layers/pricing/server/mcp/prices'
 import { registerReleaseTools } from '#layers/terminal/server/mcp/releases'
 import { registerSignalTools } from '#layers/terminal/server/mcp/signals'
@@ -23,6 +24,7 @@ export const MCP_TOOLS: readonly ((kit: McpKit) => void)[] = [
   registerPriceTools,
   registerReleaseTools,
   registerHiringTools,
+  registerReliabilityTools,
   registerOperationsTools,
   registerDemandTools,
   registerFilingTools,

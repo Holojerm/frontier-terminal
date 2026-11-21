@@ -99,7 +99,7 @@ export const FETCH_TIMEOUT_MS = 30_000
 /**
  * Largest body the pipeline will hold. The biggest real source is Google's
  * careers feed at ~20 MB, which runs on a tick of its own for that reason
- * (CAREERS_SOURCES in scopes.ts); OpenAI's Ashby board is next at ~13.5 MB.
+ * (layers/talent/server/pipeline/scopes.ts › CAREERS_SOURCES); OpenAI's Ashby board is next at ~13.5 MB.
  * A Worker isolate has 128 MB and a body also becomes a JS string, so "no cap
  * at all" is one upstream accident away from an OOM the logs cannot explain.
  */

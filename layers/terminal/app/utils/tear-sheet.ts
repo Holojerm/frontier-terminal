@@ -52,7 +52,7 @@ import type {
 } from '../../shared/utils/terminal-types'
 import { statusCounts, STATUS_META, thesisPath } from '../../shared/utils/thesis-format'
 import type { ThesesData } from '../../shared/utils/thesis-types'
-import { feedGap } from './feed-gap'
+import { feedGap } from '#layers/core/app/utils/feed-gap'
 
 /** How many alerts the sheet lists: enough to show what moved, few enough to fit the page. */
 export const SHEET_ALERTS = 5

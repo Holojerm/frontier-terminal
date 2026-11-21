@@ -21,9 +21,10 @@ import {
   parsePendingFilersBlock,
   resolveFilers,
 } from '../../server/pipeline/parsers/sec/pending-filers'
-import { runRefresh } from '../../server/pipeline/refresh'
+import { runRefresh } from '../../../core/server/pipeline/refresh'
 import type { RawStore } from '#layers/core/server/pipeline/raw'
-import { CAREERS_SOURCES, sourceIdsForScope } from '../../server/pipeline/scopes'
+import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
+import { CAREERS_SOURCES } from '../../../talent/server/pipeline/scopes'
 import { includeSources } from '#layers/core/server/pipeline/sources'
 import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
 import { queryContext, queryCoverage } from '#layers/core/server/utils/terminal-db'

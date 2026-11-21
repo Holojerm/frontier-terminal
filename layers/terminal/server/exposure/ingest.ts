@@ -42,7 +42,7 @@ import {
 } from '#layers/core/server/pipeline/fetch'
 import type { RawReader, RawStore } from '#layers/core/server/pipeline/raw'
 import { parseCikWhitelistBlock } from '../pipeline/parsers/sec/whitelist'
-import type { PollOutcome } from '../pipeline/poll'
+import type { PollOutcome } from '#layers/core/server/pipeline/poll'
 import { cooldownEndsAt, isRateLimitRun } from '#layers/core/server/pipeline/rate-limit'
 import type { FetchSource } from '#layers/core/server/pipeline/sources'
 import {

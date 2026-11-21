@@ -20,7 +20,7 @@ import {
 import { parseProspectusRevenue } from '../../server/pipeline/parsers/sec/prospectus-revenue'
 import { filingReview } from '../../server/pipeline/judge/filing-review'
 import { submitJudgeRun } from '../../server/pipeline/judge/submit'
-import { runRefresh } from '../../server/pipeline/refresh'
+import { runRefresh } from '../../../core/server/pipeline/refresh'
 import type { RawStore } from '#layers/core/server/pipeline/raw'
 import { includeSources } from '#layers/core/server/pipeline/sources'
 import { terminalStamps } from '#layers/core/server/utils/terminal-cache'

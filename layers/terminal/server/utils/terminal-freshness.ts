@@ -22,7 +22,7 @@ import { and, asc, desc, eq, inArray, lte, max, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 
-import { deployDriftCheck } from '../pipeline/deploy-watch'
+import { deployDriftCheck } from '../../../reliability/server/pipeline/deploy-watch'
 import { judgeFreshnessCheck } from '../pipeline/judge/watchdog'
 import { GKG_READY_MS, stampIso } from '../pipeline/track-record/gkg'
 import { oldestUnread } from '../pipeline/track-record/search'
