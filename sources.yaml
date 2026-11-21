@@ -3092,6 +3092,86 @@ grid_load_sources:
       other than its own, and a later report can restate a month, so each
       report is a vintage. The queue's breakdown is a chart in the PDFs and
       isn't read.
+
+print_sources:
+  twse-monthly-revenue:
+    publisher: Taiwan Stock Exchange (TWSE OpenAPI, data.gov.tw dataset 18420)
+    url: https://openapi.twse.com.tw/v1/opendata/t187ap05_L
+    format: JSON, one row per listed company for the newest month, NT$ thousand
+    verdict: include
+    license: Open Government Data License, version 1.0 (https://data.gov.tw/license)
+    citation: >-
+      Taiwan Stock Exchange, 上市公司每月營業收入彙總表 (data.gov.tw 18420). The
+      Open Data is made available to the public under the Open Government
+      Data License, version 1.0: https://data.gov.tw/license
+    terms: >-
+      data.gov.tw lists dataset 18420 under OGDL v1 ("license":"1"), and the
+      OpenAPI's own description links its terms and data.gov.tw/license.
+      OGDL v1 §2.1 grants a "perpetual, worldwide, non-exclusive, irrevocable,
+      royalty-free copyright license to reproduce, distribute ... for any
+      purpose", §2.2 lets the user sublicense, §3.2 makes attribution the
+      condition ("void ab initio" without it), and §4.2 says "The License is
+      compatible with the Creative Commons Attribution License 4.0
+      International", so the CC BY 4.0 recent tier and a paid licence can
+      both carry it with the citation above. TWSE's terms of use
+      (twse.com.tw/en/terms/use.html) bar crawlers "unless by a means that
+      Taiwan Stock Exchange has agreed to" and reuse of anything not released
+      "via Government Open Data Platform"; this feed is that platform.
+      openapi.twse.com.tw/robots.txt is a 404. Taken: the tracked companies'
+      month, prior-month and year-ago revenue and stated YoY, hourly. Read
+      2026-11-21.
+    rights: upstream
+  tsmc-revenue-6k:
+    publisher: TSMC, Form 6-K monthly revenue reports on SEC EDGAR
+    url: https://www.sec.gov/cgi-bin/browse-edgar?action=getcompany&CIK=0001046179&type=6-K
+    format: HTML, one "TSMC <Month> <Year> Revenue Report" table per 6-K, NT$ million
+    verdict: include
+    terms: >-
+      SEC fair-access policy, as recorded under sec-msft-openai; requests
+      send the contact address via userAgentFor(). www.sec.gov/robots.txt
+      allows /Archives/edgar/data. Taken: the month, prior-month and year-ago
+      revenue, the stated YoY and EDGAR's acceptance time, from each 6-K
+      filed in the first twelve days of a month since 2015 (read once each,
+      oldest first, at most 20 a run). Read 2026-11-21.
+    rights: ours
+    caveats: >-
+      published_at is the 6-K's EDGAR acceptance time, hours after TSMC's
+      own release on the exchange the same day; it bounds the release from
+      above.
+  accton-monthly-revenue:
+    publisher: Accton Technology
+    url: https://www.accton.com/monthly-merge/
+    format: HTML table, one row per month from July 2023, NT$ thousand
+    verdict: include
+    terms: >-
+      robots.txt disallows only ?c= and ?channel= query paths. /terms/ is a
+      privacy policy; the footer reads "© Accton Technology Corporation. All
+      Rights Reserved." and we found no clause on automated reading or
+      reuse. Taken: each month's revenue, the same month a year earlier and
+      the stated YoY, the company's own figures, hourly; the page is stored
+      once per change. Read 2026-11-21.
+    rights: restricted
+  print-ties-filings:
+    publisher: SEC EDGAR filings (NVIDIA 10-K, AMD 10-K)
+    url: https://www.sec.gov/Archives/edgar/data/
+    format: HTML, one sentence per tie, read by hand
+    verdict: include
+    terms: >-
+      SEC fair-access policy, as recorded under sec-msft-openai. Taken: the
+      sentences naming TSMC, Hon Hai, Wistron, Samsung, SK hynix and Micron
+      as a foundry, contract manufacturer or memory supplier. Read
+      2026-11-21.
+    rights: ours
+  print-ties-statements:
+    publisher: Company newsrooms (NVIDIA, OpenAI, Samsung, Micron, Meta Engineering) and Wiwynn's annual report
+    url: https://nvidianews.nvidia.com/
+    format: HTML or PDF, one sentence per tie, read by hand
+    verdict: include
+    terms: >-
+      Each page was fetched once and the sentence found in it verbatim; the
+      pages' own terms were not read one by one. Taken: one attributed
+      sentence per tie, with its URL, never the page. Read 2026-11-21.
+    rights: restricted
 department_clusters:
   physical-infrastructure:
     label: Physical infrastructure
@@ -3499,3 +3579,51 @@ cut:
       terms bar using its site with any AI tool without consent, and Entergy's
       bar automatic reading and links to any page but its homepage. Read
       2026-11-20.
+  mops-monthly-revenue-history:
+    verdict: cut (history before our first read is not taken)
+    reason: >-
+      MOPS (mopsov.twse.com.tw) holds every listed company's monthly revenue
+      back to 2013 as HTML and CSV, but its robots.txt is "User-Agent: * /
+      Disallow: /" and TWSE's terms of use bar crawlers and redistribution
+      of anything not released through the open-data platform, which
+      publishes only the newest month. The new MOPS site's JSON endpoints are
+      undocumented. History for the six other Taiwan companies needs TWSE's
+      written consent (opendata@twse.com.tw), an owner step. Read 2026-11-21.
+  taiwan-ir-revenue-pages:
+    verdict: cut (Wiwynn, Delta, Quanta, Wistron, Gigabyte, Hon Hai)
+    reason: >-
+      Read 2026-11-21. Wiwynn's investor page has the table but its terms
+      (wiwynn.com/legal) forbid copying or republishing "without the prior
+      written permission of Wiwynn". Delta's page loads its figures client-side
+      from /api/, which robots.txt disallows, and its terms forbid
+      reproduction. Quanta answers every investor path with a bot challenge,
+      and Wistron and Gigabyte answer 403 to every path including
+      robots.txt. Hon Hai's monthly PDFs are allowed and stated without
+      terms; reading PDFs in the Worker is a separate step, not taken yet.
+  census-hs-847150:
+    verdict: cut (needs a key)
+    reason: >-
+      US Census international trade API imports under HS 8471.50 (servers),
+      public domain. Since 2026 every request without a key is redirected to
+      api.census.gov/data/missing_key.html. A free key is an owner step.
+      Read 2026-11-21.
+  kcs-chip-exports:
+    verdict: deferred (read in a follow-up; no figure stored yet)
+    reason: >-
+      Korea Customs Service posts the 1–10 and 1–20 day preliminary export
+      figures (the 11th and the 21st) and the final month (about the 15th)
+      on its press board (customs.go.kr bbsId=1362), each with an HWP, HWPX
+      or PDF whose text its own viewer (/streamdocs/v4/documents/<id>/texts)
+      returns as plain text; the 반도체 row gives the USD value and the YoY.
+      No key needed. robots.txt has no rule for every agent (it names only
+      Googlebot, Yeti, Daum and Bingbot). Releases since about October 2026
+      carry KOGL Type 1 ("출처표시": commercial use and changes allowed, with
+      the year, agency and URL), so they can go in the CC BY 4.0 tier and a
+      paid licence. Earlier releases carry no KOGL mark, and KCS's policy
+      (customs.go.kr cntntsId=2610) asks for consultation before using
+      unmarked works, so history before the mark is free-site only
+      (not-cleared) until KCS says otherwise. MOTIR's monthly release (the
+      1st) is the same: KOGL Type 1 only where marked, and no per-release
+      mark. data.go.kr's keyed APIs (15101609, 15100475: HS-code monthly
+      exports, "이용허락범위 제한 없음") need a service key, an owner step.
+      Read 2026-11-21.

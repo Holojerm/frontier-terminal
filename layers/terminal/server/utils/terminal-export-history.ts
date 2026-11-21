@@ -93,6 +93,12 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
     'fetched_at',
     tables.latencyProbes.started_at,
   ),
+  hardware_prints: windowed(
+    ['first_seen_at'],
+    'first_seen_at, when we first held the figure',
+    'first_seen_at',
+    tables.hardwarePrints.first_seen_at,
+  ),
   probe_days: windowed(['day'], 'day, the UTC day', 'fetched_at', tables.probeDays.day),
   filers: whole('it’s a lookup of one CIK per lab.'),
   revenue_facts: windowed(['end'], 'end, the period end', 'first_seen_at'),

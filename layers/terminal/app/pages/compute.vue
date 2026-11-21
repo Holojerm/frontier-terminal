@@ -4,13 +4,15 @@
 // and who supplies it. All read the thesis recipes (GPU price pages, SEC
 // filings, MLPerf results and Epoch AI's datasets) except the power suppliers,
 // which are read from filings and pages (layers/terminal/shared/utils/power-sites.ts), and the
-// grid load where the sites are (EIA-930 and ERCOT, layers/terminal/shared/utils/grid-load.ts). Every
+// grid load where the sites are (EIA-930 and ERCOT, layers/terminal/shared/utils/grid-load.ts), and the
+// hardware prints, read hourly from the exchange and TSMC's 6-Ks (shared/utils/prints.ts). Every
 // figure has its source and fetch time. No tabs; the site list is the page's
 // long table and runs with the page rather than in a box.
 
 import { count } from '../../shared/utils/terminal-format'
 import type { GridLoadData } from '../../shared/utils/grid-load'
 import type { PowerSitesData } from '../../shared/utils/power-sites'
+import type { PrintsData } from '../../shared/utils/prints'
 import type { DataCentersData, UtilizationData } from '../../shared/utils/recipe-views'
 import type { GpuPricesData } from '../../shared/utils/terminal-types'
 import type { TableColumn } from '../types/terminal-ui'
@@ -21,7 +23,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Compute',
     summary:
-      'On-demand H100 and B200 rental list prices from ten first-party provider pages with the median across them, spot prices against on-demand per provider, both charted on each day a provider’s page changed, the weekly median back to 2023 from the Internet Archive’s copies of those pages, Alphabet’s stated token volume as a bounded share of Google’s estimated fleet, MLPerf Inference tokens per second per accelerator in each round we hold, CoreWeave’s revenue per megawatt of active power, Epoch AI’s estimate of data-center power per frontier lab and per site, the utilities, generators and equipment makers tied to each lab’s sites, average demand on each grid that holds a lab site against a year before (EIA-930), and the large load ERCOT has approved to energize, each with its source page.',
+      'On-demand H100 and B200 rental list prices from ten first-party provider pages with the median across them, spot prices against on-demand per provider, both charted on each day a provider’s page changed, the weekly median back to 2023 from the Internet Archive’s copies of those pages, Alphabet’s stated token volume as a bounded share of Google’s estimated fleet, MLPerf Inference tokens per second per accelerator in each round we hold, CoreWeave’s revenue per megawatt of active power, Epoch AI’s estimate of data-center power per frontier lab and per site, the utilities, generators and equipment makers tied to each lab’s sites, average demand on each grid that holds a lab site against a year before (EIA-930), the large load ERCOT has approved to energize, and the monthly revenue of TSMC and the Taiwan server, networking and power makers as first printed, each with its source page.',
   },
 })
 
@@ -31,12 +33,14 @@ const [
   { data: utilization },
   { data: suppliers },
   { data: grid },
+  { data: prints },
 ] = await Promise.all([
   useFetch<GpuPricesData>('/api/gpu-prices'),
   useFetch<DataCentersData>('/api/datacenters'),
   useFetch<UtilizationData>('/api/utilization'),
   useFetch<PowerSitesData>('/api/power-sites'),
   useFetch<GridLoadData>('/api/grid-load'),
+  useFetch<PrintsData>('/api/prints'),
 ])
 
 useSeo({
@@ -153,6 +157,15 @@ const sites = computed(() =>
         <TerminalRevenuePerMw :coreweave="utilization.coreweave" />
       </TerminalPanel>
     </template>
+
+    <TerminalPanel
+      v-if="prints"
+      id="prints"
+      title="Hardware prints"
+      note="Monthly revenue of the foundry, the server builders and their suppliers in Taiwan, as each was first printed."
+    >
+      <TerminalHardwarePrints :data="prints" />
+    </TerminalPanel>
 
     <template v-if="power?.snapshot">
       <TerminalPanel
