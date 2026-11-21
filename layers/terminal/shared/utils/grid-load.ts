@@ -1,4 +1,4 @@
-// Grid load where the lab sites are (GET /api/grid-load, the /compute page):
+// Grid load where the lab sites are (GET /api/grid-load, the /power page):
 // EIA-930 demand per balancing authority holding a tracked site, as monthly
 // and weekly averages with their change on a year before, and ERCOT's own
 // count of the large loads it has let energize. A load reading, not a

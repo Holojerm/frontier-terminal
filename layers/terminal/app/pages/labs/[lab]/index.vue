@@ -189,7 +189,7 @@ const [adoption, limits, pay, parents, power] = await Promise.all([
     transform: (d: DataCentersData): DataCentersData => ({
       ...d,
       labs: d.labs.filter((l) => l.lab === lab),
-      // Every tracked site (~13 KB); only /compute's site table reads it.
+      // Every tracked site (~13 KB); only /power's site table reads it.
       site_list: [],
     }),
   }),
@@ -551,7 +551,7 @@ const tabs = computed(() => [
             id="power"
             title="Data-center power"
             note="Epoch AI’s estimate of the sites that name this lab as a user."
-            :more="{ label: 'Every lab, and every site', to: '/compute' }"
+            :more="{ label: 'Every lab, and every site', to: '/power' }"
           >
             <TerminalDataCenterPower :data="power.data.value" />
           </TerminalPanel>

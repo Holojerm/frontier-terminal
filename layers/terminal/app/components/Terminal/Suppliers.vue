@@ -3,11 +3,13 @@
 // compute-rental companies, and what their own SEC filings say ties them to a
 // lab or a cloud. Two tables. The first is one row per company. The second is
 // one row per filed passage, so every figure keeps its quote and document.
+// /hardware passes `layers` to list the chip and hardware makers only.
 
 import {
   SUPPLIER_LAYER_LABEL,
   SUPPLIER_RELATION_LABEL,
   supplierFigureText,
+  type SupplierLayer,
   type SupplierShare,
   type SuppliersData,
 } from '../../../shared/utils/suppliers'
@@ -15,9 +17,32 @@ import type { TableColumn } from '../../types/terminal-ui'
 
 const stamps = useStamps()
 
-const props = defineProps<{ data: SuppliersData }>()
+const props = withDefaults(
+  defineProps<{
+    data: SuppliersData
+    id?: string
+    title?: string
+    layers?: readonly SupplierLayer[]
+  }>(),
+  { id: 'suppliers', title: 'Chip and compute suppliers', layers: undefined },
+)
 
 const figures = useFigures()
+
+// The unnamed-customer count and the graph note describe the whole table, so a
+// filtered view drops them.
+const view = computed(() => {
+  const layers = props.layers
+  if (!layers) return props.data
+  const companies = props.data.companies.filter((c) => layers.includes(c.layer))
+  const tickers = new Set(companies.map((c) => c.ticker))
+  return {
+    ...props.data,
+    companies,
+    rows: props.data.rows.filter((r) => tickers.has(r.ticker)),
+    gaps: props.data.gaps.filter((g) => g.id !== 'unnamed-customers' && g.id !== 'not-on-graph'),
+  }
+})
 
 const share = (s: SupplierShare | null) => (s ? `${s.pct}%` : '')
 
@@ -35,7 +60,7 @@ const companyColumns: TableColumn[] = [
   },
 ]
 const companies = computed(() =>
-  props.data.companies.map((c) => ({
+  view.value.companies.map((c) => ({
     ticker: c.ticker,
     company: c.company,
     layer: SUPPLIER_LAYER_LABEL[c.layer],
@@ -55,7 +80,7 @@ const rowColumns: TableColumn[] = [
   { key: 'source', label: 'Source' },
 ]
 const rows = computed(() =>
-  props.data.rows.map((r, i) => ({
+  view.value.rows.map((r, i) => ({
     key: `${r.ticker}|${i}`,
     ticker: r.ticker,
     company: r.company,
@@ -78,8 +103,8 @@ const rows = computed(() =>
 
 <template>
   <TerminalPanel
-    id="suppliers"
-    title="Chip and compute suppliers"
+    :id="id"
+    :title="title"
     note="Listed companies whose own SEC filings tie them to a lab or a cloud. A share is the filing’s figure for one customer. Not investment advice."
   >
     <div class="space-y-4">
@@ -144,7 +169,7 @@ const rows = computed(() =>
         </template>
       </TerminalTable>
 
-      <TerminalGap v-for="g in data.gaps" :key="g.id" inline :title="g.title" :reason="g.reason" />
+      <TerminalGap v-for="g in view.gaps" :key="g.id" inline :title="g.title" :reason="g.reason" />
     </div>
   </TerminalPanel>
 </template>

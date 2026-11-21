@@ -1,22 +1,12 @@
 <script setup lang="ts">
-// The compute axis: what renting a GPU costs, how full the capacity looks
-// from outside, how much data-center power is coming online and for whom,
-// and who supplies it. All read the thesis recipes (GPU price pages, SEC
-// filings, MLPerf results and Epoch AI's datasets) except the power suppliers,
-// which are read from filings and pages (layers/terminal/shared/utils/power-sites.ts), and the
-// grid load where the sites are (EIA-930 and ERCOT, layers/terminal/shared/utils/grid-load.ts), and the
-// hardware prints, read hourly from the exchange, TSMC's 6-Ks and Korea Customs Service's
-// releases (shared/utils/prints.ts). Every
-// figure has its source and fetch time. No tabs; the site list is the page's
-// long table and runs with the page rather than in a box.
+// The compute layer: what renting a GPU costs and how full the capacity looks
+// from outside. All read the thesis recipes (GPU price pages, SEC filings,
+// MLPerf results and Epoch AI's datasets). Every figure has its source and
+// fetch time. The hardware prints and the power panels moved to /hardware and
+// /power; MOVED forwards their old anchors there.
 
-import { count } from '../../shared/utils/terminal-format'
-import type { GridLoadData } from '../../shared/utils/grid-load'
-import type { PowerSitesData } from '../../shared/utils/power-sites'
-import type { PrintsData } from '../../shared/utils/prints'
-import type { DataCentersData, UtilizationData } from '../../shared/utils/recipe-views'
+import type { UtilizationData } from '../../shared/utils/recipe-views'
 import type { GpuPricesData } from '../../shared/utils/terminal-types'
-import type { TableColumn } from '../types/terminal-ui'
 
 definePageMeta({
   publicPage: {
@@ -24,34 +14,36 @@ definePageMeta({
     priority: '0.8',
     title: 'Compute',
     summary:
-      'On-demand H100 and B200 rental list prices from ten first-party provider pages with the median across them, spot prices against on-demand per provider, both charted on each day a provider’s page changed, the weekly median back to 2023 from the Internet Archive’s copies of those pages, Alphabet’s stated token volume as a bounded share of Google’s estimated fleet, MLPerf Inference tokens per second per accelerator in each round we hold, CoreWeave’s revenue per megawatt of active power, Epoch AI’s estimate of data-center power per frontier lab and per site, the utilities, generators and equipment makers tied to each lab’s sites, average demand on each grid that holds a lab site against a year before (EIA-930), the large load ERCOT has approved to energize, and the monthly revenue of TSMC and the Taiwan server, networking and power makers as first printed, each with its source page.',
+      'On-demand H100 and B200 rental list prices from ten first-party provider pages with the median across them, spot prices against on-demand per provider, both charted on each day a provider’s page changed, the weekly median back to 2023 from the Internet Archive’s copies of those pages, Alphabet’s stated token volume as a bounded share of Google’s estimated fleet, MLPerf Inference tokens per second per accelerator in each round we hold, and CoreWeave’s revenue per megawatt of active power, each with its source page.',
   },
 })
 
-const [
-  { data: gpu, error },
-  { data: power },
-  { data: utilization },
-  { data: suppliers },
-  { data: grid },
-  { data: prints },
-] = await Promise.all([
+// A fragment never reaches the server, so the forward runs in the browser.
+const MOVED: Record<string, string> = {
+  prints: '/hardware',
+  power: '/power',
+  suppliers: '/power',
+  'grid-load': '/power',
+  'ercot-large-loads': '/power',
+  sites: '/power',
+}
+const route = useRoute()
+onMounted(() => {
+  const to = MOVED[route.hash.slice(1)]
+  if (to) navigateTo({ path: to, hash: route.hash }, { replace: true })
+})
+
+const [{ data: gpu, error }, { data: utilization }] = await Promise.all([
   useFetch<GpuPricesData>('/api/gpu-prices'),
-  useFetch<DataCentersData>('/api/datacenters'),
   useFetch<UtilizationData>('/api/utilization'),
-  useFetch<PowerSitesData>('/api/power-sites'),
-  useFetch<GridLoadData>('/api/grid-load'),
-  useFetch<PrintsData>('/api/prints'),
 ])
 
 useSeo({
-  title: 'GPU rental prices, utilization bounds, and AI data-center power',
+  title: 'GPU rental prices, spot share, and utilization bounds',
   description:
-    'H100 and B200 rental prices and spot prices from provider pages, bounds on the load Google’s token volume implies, and data-center power per lab.',
+    'H100 and B200 rental prices and spot prices from provider pages, bounds on the load Google’s token volume implies, MLPerf speeds and CoreWeave revenue per MW.',
   dateModified: gpu.value?.as_of,
 })
-
-const stamps = useStamps()
 
 // The pages behind the price series: each provider once, at its newest read.
 const gpuSources = computed(() => {
@@ -67,28 +59,12 @@ const gpuSources = computed(() => {
   }
   return [...pages.values()]
 })
-
-const siteColumns: TableColumn[] = [
-  { key: 'name', label: 'Site' },
-  { key: 'power', label: 'Power', numeric: true },
-  { key: 'h100', label: 'H100e', numeric: true },
-  { key: 'owner', label: 'Owner' },
-  { key: 'users', label: 'Users' },
-  { key: 'country', label: 'Country' },
-]
-const sites = computed(() =>
-  (power.value?.site_list ?? []).map((s) => ({
-    ...s,
-    power: `${count(Math.round(s.mw))} MW`,
-    h100: s.h100e === null ? '—' : count(Math.round(s.h100e)),
-  })),
-)
 </script>
 
 <template>
   <TerminalPage
     title="Compute"
-    lede="What a GPU-hour rents for, how full the capacity looks from public data, and how much data-center power each lab is bringing online."
+    lede="What a GPU-hour rents for, and how full the capacity looks from public data."
     :as-of="gpu?.as_of"
     :error="Boolean(error)"
     error-title="GPU prices didn’t load"
@@ -156,72 +132,6 @@ const sites = computed(() =>
         note="Filed revenue against the active power CoreWeave states each quarter."
       >
         <TerminalRevenuePerMw :coreweave="utilization.coreweave" />
-      </TerminalPanel>
-    </template>
-
-    <TerminalPanel
-      v-if="prints"
-      id="prints"
-      title="Hardware prints"
-      note="Monthly revenue of the foundry, the server builders and their suppliers in Taiwan, and Korea’s chip exports, as each was first printed."
-    >
-      <TerminalHardwarePrints :data="prints" />
-    </TerminalPanel>
-
-    <template v-if="power?.snapshot">
-      <TerminalPanel
-        id="power"
-        title="Data-center power per lab"
-        note="Epoch AI’s estimate, for sites where Epoch names the lab a confident or likely user."
-      >
-        <TerminalDataCenterPower :data="power" />
-      </TerminalPanel>
-
-      <TerminalPanel
-        v-if="suppliers?.sites.length || suppliers?.uncovered.length"
-        id="suppliers"
-        title="Who powers the lab sites"
-        note="The utility, generator, equipment maker or site host for each lab site. Planned is Epoch’s furthest estimate."
-      >
-        <TerminalPowerSites :data="suppliers" />
-      </TerminalPanel>
-
-      <TerminalPanel
-        v-if="grid?.areas.length"
-        id="grid-load"
-        title="Grid load where the lab sites are"
-        note="Average demand on each grid that holds a lab site, from EIA. Grid demand, not data-center use."
-      >
-        <TerminalGridLoad :data="grid" />
-      </TerminalPanel>
-
-      <TerminalPanel
-        v-if="grid?.ercot.months.length"
-        id="ercot-large-loads"
-        title="Large loads on ERCOT"
-        note="Large load ERCOT has approved to energize, and the sum of each one’s monthly peak, from ERCOT’s monthly reports."
-      >
-        <TerminalErcotLargeLoads :ercot="grid.ercot" :caveat="grid.caveat" />
-      </TerminalPanel>
-
-      <TerminalPanel
-        id="sites"
-        title="Every site"
-        :note="`${count(power.sites)} sites in Epoch’s data as of ${stamps.day(power.snapshot)}, largest first.`"
-      >
-        <TerminalTable
-          caption="AI data centers tracked by Epoch AI, with estimated power and named users"
-          :columns="siteColumns"
-          :rows="sites"
-          :row-key="(s) => s.name"
-          nested
-          flow
-        />
-        <template #foot>
-          <TerminalSources :sources="power.source ? [power.source] : []">
-            <span>CC BY 4.0, Epoch AI</span>
-          </TerminalSources>
-        </template>
       </TerminalPanel>
     </template>
   </TerminalPage>
