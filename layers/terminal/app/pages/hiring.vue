@@ -297,7 +297,7 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
           id="power"
           title="Data-center power"
           note="Epoch AI’s estimate of the power each lab’s data centers draw."
-          :more="{ label: 'Every site, and GPU rental prices', to: '/compute' }"
+          :more="{ label: 'Every site', to: '/power#sites' }"
         >
           <TerminalDataCenterPower :data="power" />
         </TerminalPanel>

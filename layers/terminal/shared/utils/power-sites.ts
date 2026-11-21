@@ -1,6 +1,6 @@
 // Who supplies power to the data-center sites Epoch AI ties to a lab, and the
 // listed companies that puts beside each site (GET /api/power-sites, the
-// /compute page). The sites, their power and their users are Epoch's. The
+// /power page). The sites, their power and their users are Epoch's. The
 // companies are ours, each read from one public page: a filing, a regulator's
 // page or the company's own, never press coverage. The first were read by hand
 // (layers/terminal/server/curated/power-sites.json); new SEC filings naming a

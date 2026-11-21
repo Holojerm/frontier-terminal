@@ -174,7 +174,7 @@ describe('buildListed', () => {
     expect(listedGroup(host)).toBe('Data-center hosting, Site host')
     expect(host.ties.map(listedEvidence)).toEqual([
       { text: '3 filed passages', to: '/dependencies#suppliers' },
-      { text: '2 sites', to: '/compute#suppliers' },
+      { text: '2 sites', to: '/power#suppliers' },
     ])
     expect(company('UTIL')).toMatchObject({ labs: [], site_labs: ['openai'] })
   })

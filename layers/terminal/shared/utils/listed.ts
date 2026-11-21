@@ -42,7 +42,7 @@ export interface ListedPowerTie {
   sites: string[]
 }
 
-/** A company whose monthly revenue or exports /compute#prints reads, with its quoted ties. */
+/** A company whose monthly revenue or exports /hardware#prints reads, with its quoted ties. */
 export interface ListedPrintTie {
   source: 'prints'
   layer: SupplierLayer
@@ -160,9 +160,9 @@ export function listedEvidence(tie: ListedTie): { text: string; to: string } {
     }
   }
   if (tie.source === 'prints') {
-    return { text: count(tie.quotes, 'quoted tie', 'quoted ties'), to: '/compute#prints' }
+    return { text: count(tie.quotes, 'quoted tie', 'quoted ties'), to: '/hardware#prints' }
   }
-  return { text: count(tie.sites.length, 'site', 'sites'), to: '/compute#suppliers' }
+  return { text: count(tie.sites.length, 'site', 'sites'), to: '/power#suppliers' }
 }
 
 /** Some of the rows, with the counts of that set. Every row in it is tied to a lab. */

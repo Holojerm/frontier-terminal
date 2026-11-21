@@ -33,8 +33,11 @@ export const RATE_PER_HOUR = {
 } as const
 export const USD_PER_HOUR = Object.values(RATE_PER_HOUR).reduce((a, b) => a + b, 0)
 
-/** The owner's cap on AssemblyAI spend, of the $50 free credit: $10 stays in reserve. */
-export const SPEND_CAP_USD = 40
+/**
+ * The owner's cap on AssemblyAI spend per UTC calendar month (2026-11-21, once
+ * billing was on). AssemblyAI has no hard limit of its own, only alerts.
+ */
+export const MONTHLY_SPEND_CAP_USD = 10
 
 /** Model families the labs ship, spelled as a speaker says them. */
 const MODEL_FAMILIES = [

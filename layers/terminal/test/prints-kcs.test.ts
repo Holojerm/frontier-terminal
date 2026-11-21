@@ -336,7 +336,7 @@ describe('the rights split', () => {
     const held = (r: { source_id: string }) => PRINT_HELD_SOURCES.includes(r.source_id)
     expect((await db.select().from(schema.hardwarePrints)).some(held)).toBe(true)
 
-    // /api/prints, the /compute panel and get_hardware_prints all read queryPrints.
+    // /api/prints, the /hardware panel and get_hardware_prints all read queryPrints.
     expect((await printRows(db)).some(held)).toBe(false)
     const data = await queryPrints(db, queryContext(fixtureText('sources.yaml'), null))
     const korea = data.series.find((s) => s.entity.id === 'kr-semiconductors')!
