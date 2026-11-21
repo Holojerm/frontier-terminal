@@ -6,8 +6,8 @@
 import type { OgCard } from '../../scripts/lib/og-source'
 import { COMPARE_PAGES } from './shared/utils/terminal-compare'
 import { LAB_PAGES, TEAR_SHEET_PAGES } from './shared/utils/terminal-lab-summary'
-import { thesisPages } from './shared/utils/thesis-format'
-import { THESES } from './server/theses/registry'
+import { thesisPages } from '../theses/shared/utils/thesis-format'
+import { THESES } from '../theses/server/theses/registry'
 
 export default function ogCards(): OgCard[] {
   return [

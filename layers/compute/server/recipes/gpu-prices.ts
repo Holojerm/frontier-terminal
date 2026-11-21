@@ -6,7 +6,7 @@
 //
 // Only first-party price pages and documented price APIs feed these recipes
 // (docs/source-audit.md › GPU rental prices). The Compute thesis reads them
-// through layers/terminal/server/theses/compute-signals.ts.
+// through layers/theses/server/theses/compute-signals.ts.
 
 import { z } from 'zod'
 

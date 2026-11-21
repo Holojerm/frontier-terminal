@@ -22,7 +22,7 @@ import {
   EPOCH_DATA_CENTERS,
   EPOCH_DATA_CENTER_TIMELINES,
 } from '../server/recipes/epoch-data-centers'
-import { runRecipes } from '#layers/terminal/server/theses/recipes/run'
+import { runRecipes } from '#layers/core/server/recipes/run'
 import { queryPowerSites } from '../server/utils/terminal-datacenters'
 
 // The power-sites reader end to end on a made-up filing: the hand-read rows

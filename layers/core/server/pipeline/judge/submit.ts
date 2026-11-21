@@ -30,7 +30,7 @@ export const JUDGE_OPS_PATH = '/api/judge/alerts'
 /**
  * What a run hands its `judge:applied` subscribers once every reading is
  * stored: the theses layer re-evaluates its judged claims on it
- * (layers/terminal/server/plugins/theses-judged.ts), so the judge never
+ * (layers/theses/server/plugins/theses-judged.ts), so the judge never
  * imports the code that reads its verdicts.
  */
 export interface JudgeAppliedContext {

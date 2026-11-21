@@ -1,7 +1,8 @@
 // The core layer: what every domain builds on. The ingest store and its
 // contracts, the query plumbing every JSON route and MCP tool serves through,
-// the export and MCP frameworks, API keys, the events queue's producer, task
-// heartbeats and ops severity. Fork-owned, not in layers.lock.json.
+// the export and MCP frameworks, the recipe runner and its tables, API keys, the
+// events queue's producer, task heartbeats and ops severity. Fork-owned, not in
+// layers.lock.json.
 //
 // It names no domain. A registry that lists every domain (lanes, MCP tools,
 // export tables, recipes) is assembled at the app root in server/registries/,

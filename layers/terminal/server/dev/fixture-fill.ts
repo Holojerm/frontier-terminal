@@ -22,8 +22,8 @@ import {
   runSupplierReads,
   type SupplierReadReport,
 } from '../../../companies/server/suppliers/ingest'
-import { evaluateTheses } from '../theses/evaluate'
-import { runRecipes } from '../theses/recipes/run'
+import { evaluateTheses } from '../../../theses/server/theses/evaluate'
+import { runRecipes } from '../../../core/server/recipes/run'
 
 /** A source with no committed fixture answers like a 404: the run records it as absent. */
 const NO_FIXTURE: FetchOutcome = { ok: false, status: 404, detail: 'no fixture for this URL' }

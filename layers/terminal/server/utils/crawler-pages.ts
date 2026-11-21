@@ -8,10 +8,10 @@
 import type { PublicPage } from '#shared/utils/site'
 import { COMPARE_PAGES } from '../../shared/utils/terminal-compare'
 import { LAB_PAGES, TEAR_SHEET_PAGES } from '../../shared/utils/terminal-lab-summary'
-import { thesisPages } from '../../shared/utils/thesis-format'
+import { thesisPages } from '../../../theses/shared/utils/thesis-format'
 
 import manifest from '~~/fleet.json'
-import { THESES } from '../theses/registry'
+import { THESES } from '../../../theses/server/theses/registry'
 import type { LlmsTxtInput, LlmsTxtSection } from '#server/utils/seo'
 import { BREAKING_NOTICE_DAYS, SCHEMA_VERSION } from '#layers/core/server/utils/data-schema'
 import { AS_OF_ROUTES } from '#layers/core/server/utils/terminal-asof'

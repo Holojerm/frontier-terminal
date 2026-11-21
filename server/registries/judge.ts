@@ -30,7 +30,7 @@ import {
 import { stillListedRemovals } from '#layers/terminal/server/pipeline/judge/still-listed'
 import { FIGURE_REVIEW } from '#layers/press/server/pipeline/reported/review'
 import { TRACK_RECORD_REVIEW } from '#layers/press/server/pipeline/track-record/review'
-import { CLAIM_REVIEW } from '#layers/terminal/server/theses/verdicts'
+import { CLAIM_REVIEW } from '#layers/theses/server/theses/verdicts'
 
 export const JUDGE_REVIEWS: readonly JudgeReview[] = [
   CLASS_MAP_REVIEW,

@@ -15,6 +15,4 @@
 // stored string is the datum a reader is shown, and converting it twice is a
 // chance to lose the offset.
 
-export * from './tables/theses'
 export * from './tables/archive'
-export * from './tables/signals'

@@ -1,0 +1,374 @@
+// The thesis layer's shapes: the definitions in layers/theses/server/theses/ and the
+// GET /api/theses payload built from them. Shared so a thesis page renders
+// the same types the server computes.
+
+import type { CompanyId } from '../../../core/shared/utils/companies'
+import type { LabId, Stamp } from '../../../core/shared/utils/terminal-types/common'
+import type { PressEarlyRead } from '../../../press/shared/utils/terminal-types/ground-truth'
+
+export type {
+  PressEarlyPeriod,
+  PressEarlyRead,
+} from '../../../press/shared/utils/terminal-types/ground-truth'
+
+export type ClaimStatus = 'holding' | 'weakening' | 'broken' | 'unresolved'
+
+/** A claim checked against a number the pipeline produces. Each rule is
+ * evaluated over weekly checkpoints: the newest reading, then the readings
+ * 7, 14, 21… days before it. */
+export type MeasuredRule =
+  /** Broken when the value sits below `floor` (or below the comparator's own
+   * value) at `weeks` consecutive checkpoints; weakening while that run is shorter. */
+  | { rule: 'sustained-floor'; floor: number; comparator: LabId | null; weeks: number }
+  /** Broken when the value sits more than `margin` below the mean of the
+   * previous `weeks` checkpoints; weakening past half the margin. With
+   * `relative`, `margin` is a fraction of that mean, so a share keeps the same
+   * bar when the set it is a share of grows. Unresolved with fewer than
+   * `min_weeks` checkpoints of history. */
+  | {
+      rule: 'below-trailing-average'
+      margin: number
+      relative?: boolean
+      weeks: number
+      min_weeks: number
+    }
+  /** Broken when the value has fallen `drop` or more from its high over the
+   * last `days`; weakening past half the drop. Unresolved with fewer than
+   * `min_days` of history. */
+  | { rule: 'drawdown-from-high'; drop: number; days: number; min_days: number }
+  /** For readings that are periods (quarters), not days: broken when the
+   * newest `periods` readings all sit below `floor`; weakening while fewer do. */
+  | { rule: 'below-floor-periods'; floor: number; periods: number }
+  /** Broken when each of the newest `weeks` checkpoints sits `drop` or more
+   * below the high of the `days` up to it; weakening while that run is
+   * shorter, or the newest is past half the drop. Unresolved until every
+   * one of those checkpoints has its full window of history behind it. */
+  | { rule: 'sustained-drawdown'; drop: number; days: number; weeks: number }
+  /** For a reading that is a count of things gone wrong (filers that cut
+   * guidance): broken when the newest count is `kill` or more; weakening
+   * while it is above zero. Reads the newest reading only. */
+  | { rule: 'count-ceiling'; kill: number }
+
+/** How a reading's value prints. */
+export type ValueFormat =
+  | 'ratio'
+  | 'percent'
+  | 'count'
+  | 'usd'
+  /** A token price, USD per million tokens. */
+  | 'usd_per_mtok'
+  /** A token price over a GPU rental price: GPU-hours one million tokens buy. */
+  | 'gpu_hours_per_mtok'
+  /** Electrical power, megawatts. */
+  | 'megawatts'
+
+export type SignalSpec =
+  | { kind: 'measured'; signal: 'openrouter-spend-premium'; rule: MeasuredRule }
+  | { kind: 'measured'; signal: 'openrouter-lab-token-share'; rule: MeasuredRule }
+  | {
+      kind: 'measured'
+      signal: 'open-roles-in-departments'
+      departments: readonly string[]
+      rule: MeasuredRule
+    }
+  /** The Compute thesis's signals (layers/theses/server/theses/compute-signals.ts). */
+  | {
+      kind: 'measured'
+      /** Median across labs of the mapped flagship's blended list price,
+       * (input × input_weight + output × output_weight) ÷ the weights' sum. */
+      signal: 'flagship-blended-price'
+      input_weight: number
+      output_weight: number
+      /** The labs counted; a tracked lab outside it is left out and named. Every lab when absent. */
+      labs?: readonly LabId[]
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** That median ÷ the median `gpu` on-demand price per GPU-hour across the
+       * GPU price recipes, each provider counted once; `context_gpu`'s ratio is
+       * recorded beside it and never read by the rule. */
+      signal: 'flagship-price-to-gpu'
+      input_weight: number
+      output_weight: number
+      gpu: 'H100' | 'B200'
+      context_gpu: 'H100' | 'B200'
+      /** As for flagship-blended-price: the labs whose flagships make the median. */
+      labs?: readonly LabId[]
+      /** Fewer included `gpu` providers than this and the reading cannot count. */
+      min_providers: number
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** The tracked labs' combined share of every OpenRouter token, trailing 7 days. */
+      signal: 'openrouter-labs-combined-share'
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** A sources.yaml department cluster's open roles, summed over every lab with a hiring feed. */
+      signal: 'cluster-roles-across-labs'
+      cluster: string
+      rule: MeasuredRule
+    }
+  /** The Compute thesis's capacity signals (layers/theses/server/theses/capacity-signals.ts). */
+  | {
+      kind: 'measured'
+      /** The median, across providers that print both on one page, of `gpu`'s
+       * spot price over its on-demand price. A provider's spot price is the
+       * middle of the range its page prints. */
+      signal: 'gpu-spot-to-on-demand'
+      gpu: 'H100' | 'B200'
+      /** Fewer providers with a spot price than this and the reading cannot count. */
+      min_providers: number
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** How many of the filers whose earnings releases we read have cut the
+       * midpoint of their capex guidance for a fiscal year still running by
+       * `cut` or more, or filed capex `under` or more below the low end of
+       * what they guided for the year that last ended. */
+      signal: 'capex-guidance-shortfalls'
+      cut: number
+      under: number
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** The median, across probed labs, of peak-hours throughput over
+       * off-peak throughput: each lab's medians over the trailing `days`
+       * complete days of hourly probes. A lab needs `min_days` days with both
+       * medians to count, and the reading needs `min_labs` labs. */
+      signal: 'probe-peak-to-offpeak'
+      days: number
+      min_days: number
+      min_labs: number
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** Revenue the lab itself reported to the SEC for each period, against the
+       * period of the same length a year earlier, as a growth rate
+       * (layers/theses/server/theses/sec-signals.ts). A parent's figure never counts. */
+      signal: 'sec-revenue-yoy-growth'
+      rule: MeasuredRule
+    }
+  /** Recipe signals (server/registries/recipes.ts): computed from recipe_observations. */
+  | {
+      kind: 'measured'
+      /** Each period's value against the same period a year earlier, as a growth rate. */
+      signal: 'recipe-yoy-growth'
+      recipe: string
+      key: string
+      /** Recipes whose same-period growth is shown beside it (the comparison set). */
+      compare_recipes: readonly string[]
+      format: ValueFormat
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** The sum of a daily series over the trailing `days`, per day. */
+      signal: 'recipe-trailing-sum'
+      recipe: string
+      key: string
+      days: number
+      format: ValueFormat
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** An npm package's downloads over the trailing `days`, divided by the
+       * non-AI control basket's index (layers/adoption/server/recipes/download-series.ts). */
+      signal: 'npm-normalized-trailing-sum'
+      recipe: string
+      days: number
+      format: ValueFormat
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** The sum of several keys' values on each date (e.g. departments). */
+      signal: 'recipe-sum-of-keys'
+      recipe: string
+      keys: readonly string[]
+      format: ValueFormat
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** One key's value over another's on each date both carry (Anthropic ÷ OpenAI). */
+      signal: 'recipe-key-ratio'
+      recipe: string
+      key: string
+      over_key: string
+      format: ValueFormat
+      rule: MeasuredRule
+    }
+  | {
+      kind: 'measured'
+      /** The sum of every key (but `@`-keyed releases) for a recipe that stores
+       * snapshots of a current state: each snapshot holds until the next, so
+       * the sum is carried forward day by day between them. */
+      signal: 'recipe-snapshot-total'
+      recipe: string
+      format: ValueFormat
+      rule: MeasuredRule
+    }
+  | JudgedSpec
+
+/** A judged event's verdict, by the review that offered it (recipe-items claims declare their own). */
+export const VERDICTS = {
+  'flagship-price-cuts': ['competitive', 'generational'],
+  'incidents-and-disclosures': ['material', 'not-material'],
+} as const
+
+/** The verdicts a judged claim accepts. */
+export const verdictsOf = (spec: JudgedSpec): readonly string[] =>
+  spec.review === 'recipe-items' ? spec.verdicts : VERDICTS[spec.review]
+
+/** Your ruling on a material verdict — committed to the thesis, never set by the judge. */
+export interface Confirmation {
+  /** The verdict's subject: the incident or disclosure entity_key. */
+  subject: string
+  decision: 'confirmed' | 'rejected'
+  on: string
+  note: string
+}
+
+/**
+ * A claim the judge rates. The Worker picks the candidate events and computes
+ * every number about them (a cut's size, an outage's hours); the judge only
+ * chooses a verdict per candidate and says why, grounded in the records.
+ */
+export type JudgedSpec = {
+  kind: 'judged'
+  rubric: string
+  /** Changes detected before this date were never offered for this claim. */
+  judged_from: string
+} & (
+  | {
+      review: 'flagship-price-cuts'
+      /** Broken when `count` rival cuts of `min_cut` or more are rated competitive
+       * within `days` and the company makes a competitive cut after one of them;
+       * weakening from the first such rival cut. */
+      rule: { rule: 'competitive-cuts'; min_cut: number; count: number; days: number }
+    }
+  | {
+      review: 'incidents-and-disclosures'
+      /** Candidates: incidents at one of `impacts` lasting `min_hours` or more, and
+       * every new disclosure. An incident whose feed publishes no impact (null) is
+       * taken on duration alone under 'duration-alone', and the rubric decides; under
+       * 'excluded' it is never a candidate. Broken by a material verdict on the
+       * company that is confirmed; weakening while one awaits confirmation. */
+      rule: {
+        rule: 'confirmed-material'
+        impacts: readonly string[]
+        min_hours: number
+        impact_unpublished: 'duration-alone' | 'excluded'
+      }
+      confirmations: readonly Confirmation[]
+    }
+  | {
+      /** Every observation of `recipe` is a candidate (a changelog entry, say), rated once. */
+      review: 'recipe-items'
+      recipe: string
+      verdicts: readonly string[]
+      /** Broken when no item was rated `verdict` in the last `days` (once that much has
+       * been rated); weakening when none was in the last half of them. */
+      rule: { rule: 'recent-verdict'; verdict: string; days: number }
+    }
+)
+
+export interface ClaimDef {
+  /** Stable across revisions: readings and status changes are keyed by it. */
+  id: string
+  n: number
+  text: string
+  /** How the signal is described on the thesis page. */
+  signal_label: string
+  kill_condition: string
+  spec: SignalSpec
+}
+
+export interface ThesisDef {
+  id: string
+  /** The page title, where the thesis is named for an idea rather than its company. */
+  title?: string
+  company: CompanyId
+  stance: 'bullish' | 'bearish'
+  statement: string
+  comparison_set: readonly CompanyId[]
+  horizon: string
+  position: 'long' | 'short' | 'none'
+  opened: string
+  /** The thesis's journal page in the repo. */
+  doc_path: string
+  claims: readonly ClaimDef[]
+}
+
+export interface ReadingPoint {
+  date: string
+  value: number
+  /** Why this reading reads differently from the one before (the mapped flagship changed). */
+  note?: string
+}
+
+export interface ClaimView {
+  id: string
+  n: number
+  text: string
+  signal_label: string
+  signal_kind: 'measured' | 'judged'
+  /** How a measured claim's values print; null for a judged claim. */
+  format: ValueFormat | null
+  kill_condition: string
+  status: ClaimStatus
+  /** When the claim entered its current status; null before the first evaluation. */
+  status_since: string | null
+  reason: string
+  /**
+   * Measured claims: the level the newest reading would cross to count
+   * against the claim (a floor, a ceiling, or a drop from today's high);
+   * null for a judged claim, or before the rule has enough history.
+   */
+  kill_line?: number | null
+  /** The newest reading, with the detail the signal recorded beside it. */
+  latest: (ReadingPoint & { detail: unknown; source_url: string; fetched_at: string }) | null
+  /** Oldest first, newest last — up to the history the rule reads. */
+  series: ReadingPoint[]
+  /** Judged claims: every verdict the rule reads, newest first. */
+  verdicts: VerdictView[]
+  /** Claims on filed revenue only: the press's figures for periods not yet filed. */
+  early_read?: PressEarlyRead
+}
+
+export interface VerdictView {
+  subject: string
+  change_id: string
+  provider: CompanyId
+  verdict: string
+  rationale: string
+  /** What the Worker computed about the event — the judge never supplies a number. */
+  facts: Record<string, unknown>
+  detected_at: string
+  judged_at: string
+  confirmation: Confirmation['decision'] | null
+  source_url: string
+  fetched_at: string
+}
+
+export interface ThesisView extends Omit<ThesisDef, 'claims' | 'title'> {
+  /** The thesis's title, or its company's name when it has none. */
+  title: string
+  company_name: string
+  ticker: string | null
+  comparison_names: string[]
+  claims: ClaimView[]
+}
+
+export interface ThesesData extends Stamp {
+  theses: ThesisView[]
+  caveat: string
+}

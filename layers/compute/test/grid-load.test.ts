@@ -29,9 +29,9 @@ import {
   EPOCH_DATA_CENTERS,
   EPOCH_DATA_CENTER_TIMELINES,
 } from '../server/recipes/epoch-data-centers'
-import { runRecipes } from '#layers/terminal/server/theses/recipes/run'
-import { SIGNALS } from '#layers/terminal/server/signals/registry'
-import { createLoader } from '#layers/terminal/server/signals/sources'
+import { runRecipes } from '#layers/core/server/recipes/run'
+import { SIGNALS } from '#layers/signals/server/signals/registry'
+import { createLoader } from '#layers/signals/server/signals/sources'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { GRID_AREAS, gridMonths, gridWeeks } from '../shared/utils/grid-load'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'

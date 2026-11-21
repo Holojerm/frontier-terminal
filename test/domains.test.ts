@@ -55,8 +55,10 @@ describe('the domain table', () => {
         'press',
         'pricing',
         'reliability',
+        'signals',
         'talent',
         'terminal',
+        'theses',
       ]),
     ).toEqual([])
     expect(DOMAIN_LAYERS.core.uses).toEqual([])
@@ -69,6 +71,18 @@ describe('the domain table', () => {
     expect(DOMAIN_LAYERS.models.uses).toEqual(['core', 'pricing'])
     expect(DOMAIN_LAYERS.press.uses).toEqual(['core', 'companies'])
     expect(DOMAIN_LAYERS.alerts.uses).toEqual(['core', 'pricing', 'press'])
+    const supporting = [
+      'core',
+      'companies',
+      'compute',
+      'pricing',
+      'talent',
+      'reliability',
+      'adoption',
+      'press',
+    ]
+    expect(DOMAIN_LAYERS.theses.uses).toEqual([...supporting, 'alerts'])
+    expect(DOMAIN_LAYERS.signals.uses).toEqual(supporting)
   })
 })
 

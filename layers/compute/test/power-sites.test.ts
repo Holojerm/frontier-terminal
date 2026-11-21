@@ -13,7 +13,7 @@ import {
   EPOCH_DATA_CENTERS,
   EPOCH_DATA_CENTER_TIMELINES,
 } from '../server/recipes/epoch-data-centers'
-import { runRecipes } from '#layers/terminal/server/theses/recipes/run'
+import { runRecipes } from '#layers/core/server/recipes/run'
 import { comparable, pageText } from '#layers/core/server/utils/quote-match'
 import { queryPowerSites } from '../server/utils/terminal-datacenters'
 import { curatedPowerSites, type CuratedPowerSites } from '../shared/utils/power-sites'

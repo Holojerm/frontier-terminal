@@ -214,7 +214,7 @@ CoreWeave is shown alone (`sec-revenue-crwv`).
 
 ## Addendum, 2026-11-04 — five candidate datasets beyond OpenRouter
 
-Live-fetched 04:00–04:50Z on 2026-11-04 (UTC) with the pipeline's descriptive User-Agent; every terms page was read the same morning. Checked because every demand signal the theses read is OpenRouter's, which sees developer traffic only (Anthropic claims 1–2 and Compute claim 3 say so). The includes were built the same day as thesis recipes (`layers/terminal/server/theses/recipes/`), each with its `sources.yaml` entry under `recipe_sources` and a fixture under `fixtures/recipes/`; the GitHub recipes record "not configured" until `NUXT_GITHUB_TOKEN` is set. The cuts are under `cut`.
+Live-fetched 04:00–04:50Z on 2026-11-04 (UTC) with the pipeline's descriptive User-Agent; every terms page was read the same morning. Checked because every demand signal the theses read is OpenRouter's, which sees developer traffic only (Anthropic claims 1–2 and Compute claim 3 say so). The includes were built the same day as thesis recipes (`server/registries/recipes.ts`), each with its `sources.yaml` entry under `recipe_sources` and a fixture under `fixtures/recipes/`; the GitHub recipes record "not configured" until `NUXT_GITHUB_TOKEN` is set. The cuts are under `cut`.
 
 | Candidate | Source | Result | Terms (read the same day) | Verdict |
 |---|---|---|---|---|
@@ -798,7 +798,7 @@ The three `github-prs-*` recipes counted only yesterday, so each series started 
 
 At 24 days a day, Claude Code's 20 months fill in under four weeks, Codex's and Jules's in about three.
 
-**Rules the runner keeps** (`layers/terminal/server/theses/recipes/run.ts`, the recipe contract's `backfill`):
+**Rules the runner keeps** (`layers/core/server/recipes/run.ts`, the recipe contract's `backfill`):
 
 - Every backfilled row carries `retrospective: true` in its payload, and the export carries the payload. Its `first_seen_at` and `fetched_at` are the day it was counted, so a point-in-time read never sees it earlier.
 - The walk runs only after the recipe's own run read its source, and it stops at the first failed day. The next tick asks for that day again, so the series has no hole.

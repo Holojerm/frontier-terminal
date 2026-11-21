@@ -11,8 +11,8 @@ import {
 } from '../server/listed-hiring/parsers'
 import { queryListedHiring } from '../server/listed-hiring/query'
 import { EMPTIED_BOARD_FLOOR, readListedBoard, runListedHiring } from '../server/listed-hiring/read'
-import { SIGNALS } from '../../terminal/server/signals/registry'
-import { createLoader } from '../../terminal/server/signals/sources'
+import { SIGNALS } from '../../signals/server/signals/registry'
+import { createLoader } from '../../signals/server/signals/sources'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { readListedHiringSources } from '#layers/core/server/utils/terminal-sources'
 import {
