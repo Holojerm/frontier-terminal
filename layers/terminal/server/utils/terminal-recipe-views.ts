@@ -84,7 +84,7 @@ export const RAMP_CAVEAT =
 export const DOWNLOADS_CAVEAT =
   'Every download counts, including CI and bots. Days when npm’s stats were down read as zero. Watch the trend instead of the level, and don’t read downloads as users.'
 export const AGENT_PRS_CAVEAT =
-  'Public repositories only, one trend per agent. Each agent leaves a different trace (a default-on PR footer users can turn off, a bot author, a branch name), so the counts can’t be read as shares of one market.'
+  'Public repositories only, one trend per agent. Each agent leaves a different trace (a default-on PR footer users can turn off, a bot author, a branch name), so the counts can’t be read as shares of one market. Days before we started counting were counted later, from the pull requests that still existed then. Those rows are marked retrospective.'
 
 const AGENT_PACKAGES = new Set(['@anthropic-ai/claude-code', '@openai/codex', '@google/gemini-cli'])
 
