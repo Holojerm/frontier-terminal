@@ -256,6 +256,21 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       archive_captures: { note: 'axis can now be gpu (rows in archived_gpu_prices).' },
     },
   },
+  {
+    version: '1.14.0',
+    date: '2026-11-21',
+    summary:
+      'OpenAI moved its misalignment reports to openai.com/safety-alignment/misalignment-reports/, and its index stopped printing each report’s model and the context it was observed in. Each report’s own page still prints both, so disclosure_timelines gains model and observed_during, read from that page. On disclosures, model and observed_during are null on OpenAI rows from now on, and entry_url points at the new address. A page’s “First posted” line is now read as its disclosure date.',
+    tables: {
+      disclosure_timelines: {
+        added: ['model', 'observed_during'],
+        note: 'disclosed_on is also read from a “First posted” line, which every report page but a few now prints. lines drops “Last updated” as it dropped “Report updated”.',
+      },
+      disclosures: {
+        note: 'model and observed_during are null on OpenAI rows from 2026-11-20 (disclosure_timelines has them); entry_url moved to openai.com/safety-alignment/.',
+      },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

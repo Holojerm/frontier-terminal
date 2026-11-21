@@ -418,8 +418,10 @@ const isoDate = z.string().regex(/^\d{4}-\d{2}-\d{2}$/)
 const entryId = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
 
 // One row per entry on a disclosure index. Everything a reader sees is the
-// page's own text, stored verbatim: the title, the one-sentence summary, the
-// model and the context it was observed in. `listed_on` is the date the index
+// page's own text, stored verbatim: the title, the one-sentence summary, and
+// the model and the context it was observed in where the index prints them
+// (OpenAI's stopped on 2026-11-20; its report pages carry them, on
+// DisclosureTimelineRow). `listed_on` is the date the index
 // prints beside the entry; it moves when a report is revised, so a change
 // there alone never wakes the judge (judge/pending.ts), but it is kept,
 // because the earliest one observed is the report's publication date.
@@ -438,16 +440,20 @@ export const DisclosureRow = z.strictObject({
 export type DisclosureRow = z.infer<typeof DisclosureRow>
 export const DisclosureIndexOutput = z.strictObject({ rows: z.array(DisclosureRow) })
 
-// The dates on one report's own page. `lines` is every "Label: value" line of
-// the page's metadata cell, verbatim and in page order, minus "Report
-// updated" (the index row carries that date). Two dates are read out of it,
-// and only when the value is exactly one date: the discovery date, under any
-// of the labels the vendor uses, and a printed disclosure date. The
-// occurrence line ("Sample", "Incident date", ...) is only ever verbatim.
+// One report's own page. `model` and `observed_during` are its scope line
+// ("Internal research model · RL training"), verbatim. `lines` is every
+// "Label: value" line of the page's metadata, verbatim and in page order,
+// minus "Last updated" / "Report updated" (the index row carries that date).
+// Two dates are read out of it, and only when the value is exactly one date:
+// the discovery date, under any of the labels the vendor uses, and a printed
+// disclosure date ("Disclosure date", "First posted"). The occurrence line
+// ("Sample", "Incident date", ...) is only ever verbatim.
 export const DisclosureTimelineRow = z.strictObject({
   provider: providerEnum,
   entry_id: entryId,
   title: z.string().min(1), // the page's own title; the read side joins on it
+  model: z.string().min(1).nullable(),
+  observed_during: z.string().min(1).nullable(),
   lines: z.array(z.strictObject({ label: z.string().min(1), value: z.string().min(1) })),
   discovered_on: isoDate.nullable(),
   disclosed_on: isoDate.nullable(),

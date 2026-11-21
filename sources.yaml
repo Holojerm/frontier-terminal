@@ -1145,31 +1145,34 @@ sources:
   openai-misalignment-reports:
     axis: disclosures
     provider: openai
-    url: https://alignment.openai.com/misalignment-reports/
-    format: SSR HTML — one <tbody class="report-entry"> per report, one per notice
-    diff_mechanism: report slug / notice id; title, summary, model and context per entry
+    url: https://openai.com/safety-alignment/misalignment-reports/
+    format: SSR HTML (Next.js) — every report and notice in the flight payload's "items" array
+    diff_mechanism: report slug / notice id; title and summary per entry
     verdict: include
     terms: >-
       OpenAI's Terms of Use (effective 2026-01-01, quoted under
       newsroom-openai; openai.com/policies answers 403 to a headless client)
       cover "associated software applications and websites" and bar users who
       "Automatically or programmatically extract data or Output".
-      alignment.openai.com has no robots.txt (404). Taken: each entry's title,
-      one-sentence summary, model and context verbatim, every 6 hours. Short
-      quotations of OpenAI's own words, with the link. Not covered by our license:
-      the entries are OpenAI's own words, not facts about a price or a role.
-      Read 2026-11-04.
+      openai.com/robots.txt allows every path but /microsoft-for-startups/
+      (read 2026-11-21). Taken: each entry's title and one-sentence summary
+      verbatim, every 6 hours. Short quotations of OpenAI's own words, with
+      the link. Not covered by our license: the entries are OpenAI's own
+      words, not facts about a price or a role. Read 2026-11-04; the page
+      moved from alignment.openai.com (now a 308) on 2026-11-20.
     rights: not-cleared
     fixture: fixtures/disclosures/openai-misalignment-reports.html
     caveats: >-
       A record of what OpenAI chose to disclose, not a count of what
       happened: a lab with a disclosure page will always show more entries
       than a lab without one, so the count is never a safety ranking.
-      Live-fetched 2026-10-08: 12 reports and 3 notices. Reports carry the
-      title, one-sentence observation, model and "observed during" context
-      verbatim; notices (Hugging Face, DSEwiki, RubyGems) carry a summary
-      and link to an update on openai.com, which answers 403 to a headless
-      client, so a notice's link is stored as printed and never followed.
+      Live-fetched 2026-11-21: 26 reports and 3 notices. Reports carry the
+      title and one-sentence observation verbatim; since 2026-11-20 the
+      model and "observed during" context are read off each report's own
+      page (openai-misalignment-report). Notices (Hugging Face, DSEwiki,
+      RubyGems) carry a summary and link to an update on openai.com; a
+      notice's id is its title as a slug, as the old index printed it, and
+      its link is stored as printed and never followed.
       Most reports are not sandbox escapes: the page covers misalignment
       broadly (deceptive compaction summaries, cross-sample messaging), and
       the escapes (DNS, file hosts, leaked keys) are some of the entries.
@@ -1349,16 +1352,19 @@ derived_sources:
       absent. A page can carry several model tables; the one read must name
       the slug it was derived for, or the source fails.
   openai-misalignment-report:
-    url: https://alignment.openai.com/misalignment-reports/{slug}/
+    url: https://openai.com/safety-alignment/misalignment-reports/{slug}/
     from: openai-misalignment-report
     caveats: >-
       One page per report listed on openai-misalignment-reports. The page's
-      metadata cell carries the dates the index omits, as "Label: value"
-      lines whose labels vary report to report: the discovery date
-      (Discovery / Discovered / Discovery date), the occurrence (Sample,
-      Samples, Incident date, Main incident, Main sample completed — kept
-      verbatim, sometimes two dates) and, on one report of nine, a printed
-      Disclosure date. Time to disclosure reads the discovery date against
+      metadata block opens with the model and the context it was observed
+      in ("Internal research model · RL training", verbatim), then
+      "Label: value" lines whose labels vary report to report: the
+      discovery date (Discovery / Discovered / Discovery date; "By Aug 13,
+      2026" is kept verbatim, not read as a date), the occurrence (Sample,
+      Incident date, Incident dates, Main incident date — kept verbatim,
+      sometimes two dates) and a printed disclosure date (First posted, or
+      Disclosure date on one report; absent on those that print only
+      Report updated). Time to disclosure reads the discovery date against
       the printed disclosure date where one exists, else against the
       earliest date the index has shown for the report.
 

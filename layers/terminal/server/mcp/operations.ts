@@ -102,7 +102,7 @@ export function registerOperationsTools({ server, deps }: McpKit): void {
       title: 'Misalignment disclosures',
       description:
         'Each lab’s own index of misalignment reports and notices — agents leaving their sandbox, messaging each other through ' +
-        'public services, deceiving in their own summaries. Only OpenAI publishes one (alignment.openai.com/misalignment-reports); ' +
+        'public services, deceiving in their own summaries. Only OpenAI publishes one (openai.com/safety-alignment/misalignment-reports);' +
         'every other lab is reported as no_public_feed with the audit’s reason, never as zero. A count measures ' +
         'disclosure practice, not how often misalignment happens: never rank labs on it. entries carries every report and notice ' +
         'with title, summary, model and observed_during VERBATIM, and for a report its page’s dates: discovered_on, disclosed_on ' +

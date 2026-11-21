@@ -23,6 +23,21 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.14.0 (2026-11-21)
+
+OpenAI moved its misalignment reports from alignment.openai.com to
+openai.com/safety-alignment/misalignment-reports/, and its index stopped
+printing each report's model and the context it was observed in. Each
+report's own page still prints both:
+
+- `disclosure_timelines` gains `model` and `observed_during`, verbatim from
+  the report page's first line ("Internal research model · RL training").
+- `disclosures.model` and `disclosures.observed_during` are null on OpenAI
+  rows from 2026-11-20, and `disclosures.entry_url` points at the new address.
+- `disclosure_timelines.disclosed_on` is also read from a "First posted"
+  line, which most report pages now print, and `lines` drops "Last updated"
+  as it drops "Report updated".
+
 ## 1.13.0 (2026-11-20)
 
 GPU rental price history from before our GPU price checks began (2026-11-01),

@@ -44,6 +44,8 @@ export interface TimelineObservation extends Prov {
   provider: string
   entry_id: string
   title: string
+  model: string | null
+  observed_during: string | null
   lines: { label: string; value: string }[]
   discovered_on: string | null
   disclosed_on: string | null
@@ -97,6 +99,8 @@ export function timelineFromPayload(
     provider: base.provider,
     entry_id,
     title,
+    model: str(p.model),
+    observed_during: str(p.observed_during),
     lines,
     discovered_on: date(p.discovered_on),
     disclosed_on: date(p.disclosed_on),
@@ -153,7 +157,14 @@ export function joinDisclosures(
       source_url: t.source_url,
       fetched_at: t.fetched_at,
     }
-    return { ...e, timeline_status: 'ok', timeline }
+    // OpenAI's index stopped printing the scope line on 2026-11-20; its page still does.
+    return {
+      ...e,
+      model: e.model ?? t.model,
+      observed_during: e.observed_during ?? t.observed_during,
+      timeline_status: 'ok',
+      timeline,
+    }
   })
   // Newest listed first; reports before notices on the same day; key breaks ties.
   return views.sort((a, b) =>
