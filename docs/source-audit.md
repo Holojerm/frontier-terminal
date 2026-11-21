@@ -779,3 +779,36 @@ Checked because Google Cloud makes three H100 spot providers and the combined fi
 - **A fourth provider turns the combined figure on.** With CoreWeave, Azure, Google Cloud and one more, `/compute` prints a median share and claim 7 of the Compute thesis starts to count. Azure hasn't moved and Verda's wouldn't, so which provider is fourth decides how much of that median is a market.
 
 **Verdict: none yet.** Whether to read Nebius's API across two documents, and whether a fixed discount counts as a spot price, are the owner's calls.
+
+## Addendum, 2026-11-20: GDELT GKG before 2026-09-01
+
+Checked because a buyer asked for press scored against filings, and Anthropic's S-1 (first filed 2026-10-26) prints revenue for 2023, 2024, 2025 and the first nine months of 2026, so press from well before `GKG_FROM` could be scored. GDELT publishes a GKG file for every quarter hour back to 2015, under the terms already read (`gdelt-gkg`). Measured 2026-11-20 between 23:15Z and 00:30Z with a generic client: HEAD requests, 21 files parsed with the pipeline's own `parseGkgRow` and `figureHeadline`, and a pilot read of six whole days. Production's counts come from its public export and its GitHub Actions logs. Nothing was stored.
+
+| Measure | Result |
+|---|---|
+| File size | HEAD on all 96 files of four days: 7.5 MB a file on average on 2024-03-12 (718 MB that day), 6.7 MB on 2025-03-12 (643 MB), 6.1 MB on 2025-09-17 (585 MB), 5.1 MB on 2026-11-10 (490 MB). A file runs 1.8 MB at 03:15Z to 9.5 MB at 17:00Z, and unzips to about three times that. None of the 384 was missing. The registry's "~2.5 MB" was wrong and is corrected |
+| Bytes | From 2025-01-01: 608 days, 58,368 files, about 360 GB. From 2024-01-01: 974 days, 93,504 files, about 610 GB |
+| Job throughput | The backlog runs of 2026-11-07 read 3,120 files in 40 minutes for mentions (78 a minute) and 3,975 in 36 minutes for figures alone (110 a minute), one file at a time, about 6.5 MB/s. The scheduler started about five such runs a day, so about 3.3 hours of reading a day |
+| Runtime at that rate | From 2025-01-01: 9 to 15 hours of reading, 3 to 5 days. From 2024-01-01: 14 to 26 hours, 5 to 8 days |
+| Runtime, four at once | The pilot fetched 576 files (3.23 GB) in 95 seconds from the Mac mini with four downloads at a time, 34 MB/s. At that rate 360 GB is about 3 hours |
+| Rows kept by the vocabulary filter | 56 a file on 2026-11-07 (98,639 over 1,773 files), 98 on 2026-11-20 (2,358 over 24). These are pruned after `MENTION_RETAIN_DAYS` (15), and no alert's window starts before 2026-09-01, so an old file's mentions would be deleted as they were written. They add nothing to D1 |
+| Figure rows | Production since 2026-09-01: 1,917 figure articles (975 headlines) over about 7,800 files, 0.25 a file and about 500 bytes each. Nine files sampled from 2024-03 to 2026-03 had none. The six pilot days, each a known Anthropic round or revenue report (2025-03-03/04, 05-30/31, 09-02/03), had 121 rows and 89 headlines, 0.21 a file |
+| D1 growth | Figure rows: a few thousand at most from 2025-01-01, under 5 MB. A `gdelt_files` row per file adds about 15 MB (2025) or 23 MB (2024). Either way under 30 MB |
+| Judge | Reads 60 figure headlines an hour, 1,440 a day, so a few thousand old headlines take a day or two. But `figureReview` offers the oldest first, so until they are read no new headline would be |
+| Sampled files instead of all | Simulated on production's headlines since 2026-09-01: reading every second quarter hour keeps 54% of figure headlines and 79% of distinct claims (lab, metric, amount); every fourth keeps 29% and 57%. Most headlines appear in only one or two files, so sampling loses them |
+
+**What the pilot found.** GDELT carried each event: the Series E at $61.5 billion (27 Anthropic headlines over two days), Reuters' "Anthropic hits $3 billion in annualized revenue" (4 headlines, 7 copies), and the Series F at $183 billion with its "$5B run-rate" (36). It also carried deals with other companies: OpenAI's Statsig purchase, Telegram's $300 million with xAI, SoftBank's Stargate loan.
+
+**What the ground truth would do with them.** Nothing bounds a report by date. `scoreReport` scores a USD `reported` revenue headline against any filed period that had ended when it ran and was first filed after it, and marks it `held_before_filing: false`, so the page counts it as the press's and not ours. Deal sizes are scored the same way against the counterparty's filings (Amazon, Alphabet, Microsoft and the rest, which the terminal holds from 2020). Two limits:
+
+- **Only period revenue is scored.** Every Anthropic revenue headline in the pilot was a run rate, which `revenue_run_rate` keeps and the page lists under "waiting", never scored against a filed period. Headlines that state a finished year's revenue were not seen in the pilot. How many exist is the open number.
+- **Valuations and rounds aren't filed.** They extend the "Reported in the press" series back, which has its own value, but nothing scores them.
+
+No live alert is touched: alerts start at `TRACK_RECORD_FROM` (2026-09-08), the matcher reads only mentions inside an alert's window, and mentions from an old file are pruned on write.
+
+**Verdict: not built.** The full read is 360 GB from 2025-01-01 and 610 GB from 2024-01-01, ten times what a backfill on the owner's home connection should take, for a scored yield the pilot can't yet put a number on. Two ways that fit:
+
+1. **Figures only, from 2025-01-01, on a hosted runner.** GitHub's runners carry the bytes for nothing on a public repository, so the 360 GB never touches the mini's line. Read four files at a time (about 3 hours of downloads, a few runs), post only figure headlines, keep no mentions, and record the old files apart from `gdelt_files`' contiguous run so `GKG_FROM`, `oldestUnread` and the coverage count stay as they are. Before it runs, `figureReview` must offer new headlines ahead of the backlog. 2024 can follow if 2025 yields scored reports.
+2. **One month first.** The same build pointed at one month of 2025 (about 2,900 files, 18 GB), to count how many headlines state a finished period's revenue, before committing to the rest.
+
+Also possible, not checked: GDELT's public BigQuery table (`gdelt-bq.gdeltv2.gkg_partitioned`) would return only the matching rows from one query, inside BigQuery's free monthly scan if the title column is small enough. It needs a Google Cloud account, and the scan size wasn't measured.

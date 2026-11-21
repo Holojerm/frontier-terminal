@@ -43,7 +43,7 @@ import { figureHeadline } from '../layers/terminal/server/pipeline/reported/figu
 
 const ROOT = resolve(import.meta.dir, '..')
 
-/** Per file download. A file is ~2.5 MB; this is generous for a slow link. */
+/** Per file download. A file is ~5 MB, up to ~10 MB; this is generous for a slow link. */
 const FETCH_TIMEOUT_MS = 120_000
 
 interface Work {
