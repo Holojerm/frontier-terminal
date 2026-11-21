@@ -2,8 +2,8 @@ import type { z } from 'zod'
 import {
   GooglePricingOutput as ContractGooglePricingOutput,
   registerParser,
-} from '#layers/core/server/pipeline/contracts'
-import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+} from '../../../../../core/server/pipeline/contracts'
+import { fixtureProvenance } from '../../../../../core/server/pipeline/parsers/fixture-provenance'
 import { isoDate } from './md-table'
 
 // google-pricing — https://aistudio.google.com/docs/pricing.md

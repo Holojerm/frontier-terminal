@@ -4,8 +4,8 @@ import {
   modelKey,
   type PriceRow,
   type Provenance,
-} from '#layers/core/server/pipeline/contracts'
-import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+} from '../../../../../core/server/pipeline/contracts'
+import { fixtureProvenance } from '../../../../../core/server/pipeline/parsers/fixture-provenance'
 import { tableAfterHeading, usdAmount } from './md-table'
 
 // xai-models-md — https://docs.x.ai/developers/models.md

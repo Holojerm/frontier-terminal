@@ -10,9 +10,9 @@
 // prices to the next URL. A gap between eras is a stretch where no capture
 // of any page carries a readable price list; GAPS says why.
 
-import type { PriceRow, Provenance } from '#layers/core/server/pipeline/contracts'
-import { VendorMdPricingOutput } from '#layers/core/server/pipeline/contracts'
-import { ARCHIVE_FROM } from '#layers/core/server/utils/archive-floor'
+import type { PriceRow, Provenance } from '../../../../core/server/pipeline/contracts'
+import { VendorMdPricingOutput } from '../../../../core/server/pipeline/contracts'
+import { ARCHIVE_FROM } from '../../../../core/server/utils/archive-floor'
 import { parseAnthropicPricingMd } from '../parsers/pricing/anthropic-pricing'
 import {
   parseAnthropicModelsOverviewHtml,

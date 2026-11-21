@@ -33,7 +33,7 @@ import {
   type RecommendationRow,
   type RegistrationDocumentRow,
   type RevenueRow,
-} from '#layers/core/server/pipeline/contracts'
+} from '../../../core/server/pipeline/contracts'
 
 // Normalize: validated parser-output rows -> EntityRow (boundary table,
 // "normalize" = DETERMINISTIC). Pure functions of their inputs: no clock,

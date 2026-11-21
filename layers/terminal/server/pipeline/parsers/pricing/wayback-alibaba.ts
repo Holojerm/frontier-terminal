@@ -2,8 +2,8 @@ import {
   VendorMdPricingOutput,
   type PriceRow,
   type Provenance,
-} from '#layers/core/server/pipeline/contracts'
-import { textOf } from '#layers/core/server/pipeline/parsers/html-text'
+} from '../../../../../core/server/pipeline/contracts'
+import { textOf } from '../../../../../core/server/pipeline/parsers/html-text'
 import { bandTier, columnLabels, grid, type Cell } from './alibaba-pricing'
 import { htmlText } from './html-table'
 

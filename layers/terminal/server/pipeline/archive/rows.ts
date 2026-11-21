@@ -6,16 +6,16 @@
 // in, rows out. scripts/wayback-backfill.ts does the fetching and the writing.
 
 import type * as tables from '#server/db/schema'
-import { contentHash, contentHashOfText } from '#layers/core/server/pipeline/contracts'
+import { contentHash, contentHashOfText } from '../../../../core/server/pipeline/contracts'
 import { normalizePrices } from '../normalize'
-import { gpuObservations } from '#layers/compute/server/recipes/gpu-prices'
+import { gpuObservations } from '../../../../compute/server/recipes/gpu-prices'
 import type { ArchiveEra } from './eras'
-import type { GpuEra } from '#layers/compute/server/pipeline/archive/gpu-eras'
+import type { GpuEra } from '../../../../compute/server/pipeline/archive/gpu-eras'
 import type { LimitsEra } from './limits-eras'
 import { liveDepartment, type HiringEra } from './hiring-eras'
 import type { StatusEra } from './status-eras'
 import { captureInstant, captureUrl, type CdxCapture } from './wayback'
-import type { ArchiveAxis } from '#layers/core/server/utils/archive-floor'
+import type { ArchiveAxis } from '../../../../core/server/utils/archive-floor'
 
 export type ArchiveCaptureRow = typeof tables.archiveCaptures.$inferInsert
 export type ArchivedPriceRow = typeof tables.archivedPrices.$inferInsert

@@ -3,7 +3,7 @@ import {
   modelKey,
   type PriceRow,
   type Provenance,
-} from '#layers/core/server/pipeline/contracts'
+} from '../../../../../core/server/pipeline/contracts'
 import { priceTier } from '../../normalize'
 import { htmlText, stripInvisible, usdPerMillion } from './html-table'
 import { parseGooglePricingPage } from './google-pricing'

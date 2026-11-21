@@ -20,7 +20,7 @@ import {
   xaiArchived,
   type ArchivedStatusParser,
 } from '../parsers/status/wayback-status'
-import { ARCHIVE_FROM } from '#layers/core/server/utils/archive-floor'
+import { ARCHIVE_FROM } from '../../../../core/server/utils/archive-floor'
 
 export type StatusArchiveProvider = Extract<
   LabId,

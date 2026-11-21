@@ -3,7 +3,7 @@ import {
   modelKey,
   type PriceRow,
   type Provenance,
-} from '#layers/core/server/pipeline/contracts'
+} from '../../../../../core/server/pipeline/contracts'
 import { htmlSections, type HtmlSection } from './html-table'
 
 // Mistral's own pricing pages as the Internet Archive captured them

@@ -18,8 +18,8 @@ import type {
 } from '../../shared/utils/terminal-types'
 
 import type * as tables from '#server/db/schema'
-import { byString, fieldDiff, num, parseJson, str } from '#layers/core/server/utils/terminal-json'
-import { archiveSourceId } from '#layers/core/server/utils/archive-floor'
+import { byString, fieldDiff, num, parseJson, str } from '../../../core/server/utils/terminal-json'
+import { archiveSourceId } from '../../../core/server/utils/archive-floor'
 
 type Change = typeof tables.changes.$inferSelect
 type Entity = typeof tables.entities.$inferSelect

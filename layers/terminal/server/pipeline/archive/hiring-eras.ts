@@ -23,7 +23,7 @@ import {
   parseLeverBoardHtml,
   type ArchivedBoardCount,
 } from '../parsers/hiring/wayback-boards'
-import { ARCHIVE_FROM } from '#layers/core/server/utils/archive-floor'
+import { ARCHIVE_FROM } from '../../../../core/server/utils/archive-floor'
 
 export type HiringArchiveProvider = 'openai' | 'anthropic' | 'google' | 'xai' | 'mistral'
 
