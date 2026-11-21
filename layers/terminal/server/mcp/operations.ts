@@ -1,11 +1,11 @@
-// Capacity strain and safety: published rate limits and misalignment disclosures. The incidents
-// and latency probes are the reliability layer's (layers/reliability/server/mcp/reliability.ts).
+// Capacity strain: published rate limits. The incidents and latency probes are the reliability
+// layer's (layers/reliability/server/mcp/reliability.ts), the misalignment disclosures the models
+// layer's (layers/models/server/mcp/models.ts).
 
 import { z } from 'zod'
 import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
 import { queryLimits } from '#layers/pricing/server/utils/terminal-limits'
 import { VIEW_RECIPES } from '../utils/terminal-recipe-views'
-import { queryDisclosures } from '../utils/terminal-disclosures'
 import {
   ProviderSchema,
   json,
@@ -38,34 +38,6 @@ export function registerOperationsTools({ server, deps }: McpKit): void {
       )
       if (!provider) return json(data)
       return json({ ...data, pages: data.pages.filter((p) => p.lab === provider) })
-    },
-  )
-
-  server.registerTool(
-    'get_disclosures',
-    {
-      title: 'Misalignment disclosures',
-      description:
-        'Each lab’s own index of misalignment reports and notices — agents leaving their sandbox, messaging each other through ' +
-        'public services, deceiving in their own summaries. Only OpenAI publishes one (openai.com/safety-alignment/misalignment-reports);' +
-        'every other lab is reported as no_public_feed with the audit’s reason, never as zero. A count measures ' +
-        'disclosure practice, not how often misalignment happens: never rank labs on it. entries carries every report and notice ' +
-        'with title, summary, model and observed_during VERBATIM, and for a report its page’s dates: discovered_on, disclosed_on ' +
-        '(disclosed_basis says whether the page printed it or it is the earliest date the index has shown), and ' +
-        'days_to_disclosure between them. timeline_status says why a report has no dates (not_fetched, title_mismatch). Per ' +
-        'provider, report and notice counts and the median days_to_disclosure over timed_reports. Optional provider filter. ' +
-        PROVENANCE,
-      inputSchema: z.object({ provider: ProviderSchema.optional() }),
-      annotations: READ_ONLY,
-    },
-    async ({ provider }) => {
-      const disclosures = await deps.serve('disclosures', (ctx) => queryDisclosures(deps.db, ctx))
-      if (!provider) return json(disclosures)
-      return json({
-        ...disclosures,
-        providers: disclosures.providers.filter((p) => p.provider === provider),
-        entries: disclosures.entries.filter((e) => e.provider === provider),
-      })
     },
   )
 }

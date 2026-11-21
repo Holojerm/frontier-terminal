@@ -6,7 +6,7 @@
 
 import { tierLabel } from '#layers/core/shared/utils/terminal-format'
 import { labName } from '#layers/core/shared/utils/lab-names'
-import type { ReleaseView } from '../../../shared/utils/terminal-types'
+import type { ReleaseView } from '../../../shared/utils/terminal-types/releases'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 defineProps<{

@@ -171,7 +171,7 @@ const securityHeaders = {
 //                never shares the survey's 128 MB.
 //   47 */6     — filings lane, layers/terminal/server/tasks/poll/filings.ts: the S-1
 //                indexes and ~14 MB prospectuses, for the same reason.
-//   */5        — launch tripwire, layers/terminal/server/tasks/poll/tripwire.ts: parses the
+//   */5        — launch tripwire, layers/models/server/tasks/poll/tripwire.ts: parses the
 //                model catalogs, polls them only when they differ from the
 //                store, and yields on the half-hour ticks above.
 //              — cache:warm re-renders the public pages once per (build, poll

@@ -76,7 +76,7 @@ export const entityTypeEnum = z.enum([
 ])
 export const changeTypeEnum = z.enum(['added', 'removed', 'modified'])
 export const severityEnum = z.enum(['info', 'notable', 'critical'])
-// The deterministic rules (layers/terminal/server/pipeline/filing-floors.ts, model-floor.ts, prospectus-floor.ts,
+// The deterministic rules (layers/terminal/server/pipeline/filing-floors.ts, prospectus-floor.ts, layers/models/server/pipeline/model-floor.ts,
 // hiring-rollup.ts, gpu-median-floor.ts; layers/terminal/server/exposure/alerts.ts, guidance-alerts.ts) and the judge lane.
 export const alertRuleEnum = z.enum([
   'agent-judge',
@@ -106,7 +106,7 @@ export const sourceRunStatusEnum = z.enum([
   'skipped',
   'absent',
 ])
-// 'tripwire': an off-cycle poll of the model catalogs (layers/terminal/server/pipeline/tripwire.ts).
+// 'tripwire': an off-cycle poll of the model catalogs (layers/models/server/pipeline/tripwire.ts).
 // 'careers': the sources too big to share the survey's invocation (layers/talent/server/pipeline/scopes.ts › CAREERS_SOURCES).
 // 'filings': the registration filings, ~14 MB a prospectus (layers/terminal/server/pipeline/scopes.ts › REGISTRATION_PREFIXES).
 export const pollScopeEnum = z.enum(['edgar', 'survey', 'tripwire', 'careers', 'filings'])

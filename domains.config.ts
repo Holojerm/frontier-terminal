@@ -93,5 +93,17 @@ export const DOMAIN_LAYERS = {
       'server/pipeline/parsers.manifest.ts',
     ],
   },
-  terminal: { uses: ['core', 'compute', 'pricing', 'talent', 'reliability', 'adoption'] },
+  models: {
+    uses: ['core', 'pricing'],
+    public: [
+      // The launch-coverage watch, which the shell's ops watch spools from and its fleet
+      // counters report.
+      'server/pipeline/launch-watch.ts',
+      // Its parser manifest, which the shell's manifest imports.
+      'server/pipeline/parsers.manifest.ts',
+    ],
+  },
+  terminal: {
+    uses: ['core', 'compute', 'pricing', 'talent', 'reliability', 'adoption', 'models'],
+  },
 } satisfies LayerTable
