@@ -94,9 +94,12 @@ const SCALE: Readonly<Record<string, number>> = {
   m: 1e6,
 }
 const NUM = String.raw`(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)`
+// Transcripts set ranges with a non-breaking hyphen (U+2011) as often as a plain one.
+const DASH = '[-‐‑‒–—−]'
+const RANGE_SEP = `(?:${DASH}|to|and)`
 const SCALE_WORD = String.raw`(trillion|billion|million|bn|mn|[bm])\b`
 const MONEY_RANGE = new RegExp(
-  String.raw`\$\s?${NUM}\s?(?:${SCALE_WORD})?\s?(?:-|–|—|to|and)\s?(?:US)?\$?\s?${NUM}\s?${SCALE_WORD}`,
+  String.raw`\$\s?${NUM}\s?(?:${SCALE_WORD})?\s?${RANGE_SEP}\s?(?:US)?\$?\s?${NUM}\s?${SCALE_WORD}`,
   'i',
 )
 const PLUS_MINUS = String.raw`(?:plus or\s+(?:m\s?inus|negative)|\+\s?\/\s?-|±)`
@@ -124,7 +127,7 @@ const MONEY_BAND_ABS = new RegExp(
 )
 const MONEY_ONE = new RegExp(String.raw`\$\s?${NUM}\s?${SCALE_WORD}`, 'i')
 const PCT = String.raw`${NUM}\s?(?:%|percent)`
-const PCT_RANGE = new RegExp(String.raw`${NUM}\s?(?:%|percent)?\s?(?:-|–|—|to|and)\s?${PCT}`, 'i')
+const PCT_RANGE = new RegExp(String.raw`${NUM}\s?(?:%|percent)?\s?${RANGE_SEP}\s?${PCT}`, 'i')
 const PCT_BAND = new RegExp(String.raw`${PCT},?\s*${PLUS_MINUS}\s*${NUM}\s?basis points`, 'i')
 // "GAAP and non-GAAP gross margins are expected to be 63.3 percent and 63.5
 // percent, respectively, plus or minus 50 basis points": two guides, not a range.
@@ -302,8 +305,9 @@ export function periodsIn(
     fiscalPeriod(fyEndMonth, year4(m[1]!), null),
   )
   if (fyEndMonth === 12) {
-    each(new RegExp(String.raw`${NOT_IN_DATE}\b(?:calendar\s+)?(20\d\d)\b(?![-–]\d)`, 'gi'), (m) =>
-      fiscalPeriod(fyEndMonth, Number(m[1]), null),
+    each(
+      new RegExp(String.raw`${NOT_IN_DATE}\b(?:calendar\s+)?(20\d\d)\b(?!${DASH}\d)`, 'gi'),
+      (m) => fiscalPeriod(fyEndMonth, Number(m[1]), null),
     )
   }
   each(/\b(?:full[- ]year|the (?:fiscal )?year|for the year|this year|annual)\b/gi, () =>
