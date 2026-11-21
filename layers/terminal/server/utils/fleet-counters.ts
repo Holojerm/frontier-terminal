@@ -3,23 +3,21 @@
 // layers/terminal/server/plugins/fleet-counters.ts, so core's fleet-status.ts
 // never imports the product's tables.
 
-import { and, count, eq, max, ne, sql } from 'drizzle-orm'
-import type { SQLiteTable } from 'drizzle-orm/sqlite-core'
+import { and, eq, max, ne, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import type { ExtensionDb } from '#server/utils/extensions'
 
 import { launchCoverage } from '../pipeline/launch-watch'
+import { countedTotals } from './row-counts'
 import { countConfirmed } from './subscribers'
 
 export async function collectTerminalCounters(
   db: ExtensionDb,
   now: Date,
 ): Promise<Record<string, number>> {
-  const total = async (table: SQLiteTable) => {
-    const [row] = await db.select({ total: count() }).from(table)
-    return row?.total ?? 0
-  }
+  // From row_counts: count(*) reads every row, and fleet asks every two minutes.
+  const totals = await countedTotals(db)
   // From source_stats: count(*) over snapshots reads every row ever taken.
   const snapshotTotal = async () => {
     const [row] = await db
@@ -46,9 +44,9 @@ export async function collectTerminalCounters(
 
   return {
     snapshots: await snapshotTotal(),
-    entities: await total(tables.entities),
-    changes: await total(tables.changes),
-    alerts: await total(tables.alerts),
+    entities: totals.entities,
+    changes: totals.changes,
+    alerts: totals.alerts,
     lastOkTickEdgarMs: await lastTick('edgar', false),
     lastOkTickSurveyMs: await lastTick('survey', false),
     lastFailureMs: await lastTick('', true),

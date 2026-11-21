@@ -1,7 +1,7 @@
 // The movement band, the alert feed and its permalinks, and the overview
 // that leads with both.
 
-import { and, asc, count, desc, eq, gt, gte, inArray, lt, max, ne, or, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, gt, gte, inArray, lt, ne, or, sql } from 'drizzle-orm'
 
 import { ENTITY_AXIS, entityTypesOf, type AlertAxis } from '../../shared/utils/terminal-labs'
 
@@ -28,6 +28,7 @@ import type { PipelineDb } from '../pipeline/store'
 import { ALERTS_METHOD, alertsKnownAt, judgeCutoffAt } from './terminal-asof'
 import { byString, fieldDiff, fieldTable, num, parseJson, str, type Json } from './terminal-json'
 import { sourceReads, stampOf, tableCounts, type QueryContext } from './terminal-db'
+import { countsByKey } from './row-counts'
 
 // ---- movement (the signal band) ---------------------------------------------
 
@@ -69,7 +70,8 @@ export const AXIS_OF: Readonly<Record<string, BandAxis>> = Object.fromEntries(
 // anchor included, or a ranking tick would pull the 24h window past a price
 // change detected the day before. Same exclusion as the judge's pending
 // query (layers/terminal/server/pipeline/judge/pending.ts › JUDGE_EXCLUDED_ENTITY_TYPES).
-const isEvent = () => ne(tables.changes.entity_type, 'ranking')
+const NOT_AN_EVENT = 'ranking'
+const isEvent = () => ne(tables.changes.entity_type, NOT_AN_EVENT)
 
 /**
  * Reported window: 24h back from the NEWEST detection, not from the reader's
@@ -80,12 +82,20 @@ const isEvent = () => ne(tables.changes.entity_type, 'ranking')
  * window the counts were never filtered on.
  */
 export async function queryMovement(db: PipelineDb): Promise<MovementSummary> {
-  const [bounds] = await db
-    .select({ latest: max(tables.changes.detected_at), n: count() })
-    .from(tables.changes)
-    .where(isEvent())
-  const totalChanges = bounds?.n ?? 0
-  const latest = bounds?.latest ?? null
+  // The count from row_counts and the newest detection as one index seek per
+  // entity type: max() and count(*) over the events read the whole log.
+  const [types, [newest]] = await Promise.all([
+    countsByKey(db, 'changes'),
+    db.all<{ latest: string | null }>(
+      sql`select max((select c.detected_at from changes c indexed by changes_type_detected_idx
+          where c.entity_type = rc.key order by c.detected_at desc limit 1)) as latest
+        from row_counts rc
+        where rc.table_name = 'changes' and rc.n > 0 and rc.key <> ${NOT_AN_EVENT}`,
+    ),
+  ])
+  let totalChanges = 0
+  for (const [type, n] of types) if (type !== NOT_AN_EVENT) totalChanges += n
+  const latest = newest?.latest ?? null
 
   const recent = { pricing: 0, hiring: 0, sec: 0, incidents: 0, disclosures: 0, total: 0 }
   let windowFrom: string | null = null
@@ -401,24 +411,19 @@ export function parseAlertCursor(text: string): AlertCursor | null {
 
 /**
  * Lab and topic are not columns on an alert: they are read off the rows it
- * cites (terminal-labs.ts), so the filter does the same in SQL, over the
- * change_ids JSON array. "Any cited row matches", like alertLabs: an alert
- * citing two labs is found under both.
+ * cites (terminal-labs.ts). alert_cites holds each alert's distinct
+ * (provider, entity_type) pairs, written by a trigger when the alert is, so
+ * the filter is a seek there instead of a walk through every alert's
+ * change_ids. "Any cited row matches", like alertLabs: an alert citing two
+ * labs is found under both, and lab with topic means one cited row has both.
  */
 function citesWhere(filter: AlertFilter) {
   if (!filter.lab && !filter.topic) return undefined
-  const conds = [sql`c.id = j.value`]
-  if (filter.lab) conds.push(sql`c.provider = ${filter.lab}`)
-  if (filter.topic) {
-    const types = entityTypesOf(filter.topic)
-    conds.push(
-      sql`c.entity_type in (${sql.join(
-        types.map((t) => sql`${t}`),
-        sql`, `,
-      )})`,
-    )
-  }
-  return sql`exists (select 1 from json_each(${tables.alerts.change_ids}) j join ${tables.changes} c on ${sql.join(conds, sql` and `)})`
+  const cites = tables.alertCites
+  const conds = []
+  if (filter.lab) conds.push(eq(cites.provider, filter.lab))
+  if (filter.topic) conds.push(inArray(cites.entity_type, [...entityTypesOf(filter.topic)]))
+  return sql`${tables.alerts.id} in (select ${cites.alert_id} from ${cites} where ${and(...conds)})`
 }
 
 const olderThan = (c: AlertCursor) =>
