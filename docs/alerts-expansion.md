@@ -30,7 +30,7 @@ with the source URL and fetch time of the read that found it. Alerts come from t
   rows.
 
 Severity is `info`, `notable` or `critical`. `notable` and `critical` are the alert tier
-(`layers/terminal/shared/utils/terminal-tiers.ts`). The alert tier leads the home page and
+(`layers/core/shared/utils/terminal-tiers.ts`). The alert tier leads the home page and
 `/alerts`, goes in the Atom feed and reaches licensee webhooks by their `min_severity`.
 `critical` also posts to X and Bluesky (`layers/terminal/server/pipeline/social.ts`).
 
@@ -43,7 +43,7 @@ it cites (`ENTITY_AXIS` in `layers/terminal/shared/utils/terminal-labs.ts`).
 
 The track record (`/alerts`, Track record tab) takes every alert-tier alert since 2026-09-08.
 It searches GDELT's press files and the labs' newsrooms with terms built from the cited rows
-(`layers/terminal/server/pipeline/track-record/terms.ts`). The judge rates each candidate as
+(`layers/press/server/pipeline/track-record/terms.ts`). The judge rates each candidate as
 the same event or not. Today: 29 press matches, 18 of them after our alert, median lead 0.5
 hours. An entity type with no case in `termsOf` is `not-searchable`.
 
@@ -132,7 +132,7 @@ why it has none.
 ### 3. A deal headline scored against a filing
 
 - **Change row.** The ground-truth page already scores press reports of deal sizes against the
-  other company's filing (`layers/terminal/server/utils/terminal-ground-truth-deals.ts`). Of 43
+  other company's filing (`layers/press/server/utils/terminal-ground-truth-deals.ts`). Of 43
   reports, 5 are scored and all 5 missed (median error 37%). 8 were restated, and 30 can't be
   scored yet (most name a counterparty whose filings we don't read). The alert would fire when a report moves from open to scored,
   and the change row is that transition: the report, the filed figure, the error and the days
@@ -172,7 +172,7 @@ why it has none.
   `critical`. A single provider's list-price change is `info`, and `notable` for the
   hyperscalers (Azure, Oracle) and CoreWeave, whose prices a reader would quote.
 - **Track record.** Weak. The GKG vocabulary keeps only rows naming a tracked lab, filer or
-  model family (`layers/terminal/server/pipeline/track-record/mentions.ts`). Lambda, Crusoe and
+  model family (`layers/press/server/pipeline/track-record/mentions.ts`). Lambda, Crusoe and
   Nebius aren't in it, so most of these would be `none-found` by construction. Mark them
   `not-searchable` until the vocabulary is extended, so they don't count as leads the press
   never had a chance to beat.

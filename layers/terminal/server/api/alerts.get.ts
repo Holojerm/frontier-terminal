@@ -1,6 +1,6 @@
 // GET /api/alerts?tier=&lab=&topic=&cursor=&limit= — newest first, each with
 // its cited change rows resolved. `tier` is the materiality split
-// (layers/terminal/shared/utils/terminal-tiers.ts): `alert` (notable, critical),
+// (layers/core/shared/utils/terminal-tiers.ts): `alert` (notable, critical),
 // `critical` or `notable` alone, `info` (minor changes; `ticker` is its old name
 // and still accepted), or `all`. `lab` and `topic` keep alerts citing a row from
 // that lab or on that axis. `cursor` is a page's `next_cursor`, for the older
@@ -11,7 +11,7 @@ import { z } from 'zod'
 
 import { ALERT_AXES } from '../../shared/utils/terminal-labs'
 import { LABS } from '#layers/core/shared/utils/lab-names'
-import { ALERT_TIER_FILTERS, tierFilterOf } from '../../shared/utils/terminal-tiers'
+import { ALERT_TIER_FILTERS, tierFilterOf } from '../../../core/shared/utils/terminal-tiers'
 
 import { parseAlertCursor, queryAlerts } from '../utils/terminal-alerts'
 import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'

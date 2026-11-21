@@ -177,7 +177,7 @@ enabled = true
 #                   moves the payload cache key
 #                   track-record:search — the newsroom side of the track record for
 #                   alerts whose window closed, and the GDELT side's search row once its
-#                   files are read (layers/terminal/server/pipeline/track-record/); the files
+#                   files are read (layers/press/server/pipeline/track-record/); the files
 #                   are read on the owner's Mac mini (scripts/gdelt-search.ts)
 #   "0 13 * * MON"  theses:digest — the weekly thesis digest email (layers/terminal/server/theses/digest.ts)
 #                   social:digest — queues the weekly what-moved thread
@@ -271,7 +271,7 @@ new_sqlite_classes = ["$DurableObject"]
 
 # ─── Owner email ─────────────────────────────────────────────────────────────
 # Outbound mail for the weekly thesis digest and the press brief
-# (layers/terminal/server/utils/owner-mail.ts). Alerts are not sent from here:
+# (layers/core/server/utils/owner-mail.ts). Alerts are not sent from here:
 # the fleet dashboard is the only alert sender. Pinned to a
 # single destination on purpose: an unrestricted send binding is a spam cannon
 # if the Worker is ever compromised, and this one only ever needs to reach one
@@ -312,7 +312,7 @@ NUXT_OWNER_EMAIL_FROM = "frontier-terminal@frontierterm.com"
 # Inert until the NUXT_RESEND_API_KEY secret below is also set.
 NUXT_SUBSCRIBE_EMAIL_FROM = "digest@frontierterm.com"
 # Press notes go straight to reporters from this address once NUXT_RESEND_API_KEY
-# is set; replies go to NUXT_OWNER_EMAIL_TO (layers/terminal/server/pipeline/press.ts).
+# is set; replies go to NUXT_OWNER_EMAIL_TO (layers/press/server/pipeline/press.ts).
 NUXT_PRESS_EMAIL_FROM = "press@frontierterm.com"
 # Which queue the EVENTS consumer owns. MUST equal `queue` in [[queues.consumers]]
 # above (layers/terminal/nuxt.config.ts says why it is a var).
@@ -326,7 +326,7 @@ NUXT_INDEXNOW_KEY = "fe2738e740b8c6b06a20d76ab1877559"
 #                                32+ chars (`openssl rand -base64 32`). Unset = the
 #                                route 404s and the app is simply not on the dashboard.
 #   NUXT_FLEET_TOKEN_PREVIOUS    only during a rotation — server/utils/fleet-auth.ts.
-#   NUXT_PRESS_LIST              JSON press list for the press notes (layers/terminal/server/pipeline/press.ts).
+#   NUXT_PRESS_LIST              JSON press list for the press notes (layers/press/server/pipeline/press.ts).
 #                                Names people, so never in git. Unset = no notes.
 #   NUXT_GDELT_TOKEN             bearer the mini's GDELT and relay jobs present to /api/gdelt/* and
 #                                /api/relay/* (scripts/gdelt-search.ts, relay-fetch.ts); the same value is the repo secret
@@ -346,7 +346,7 @@ NUXT_INDEXNOW_KEY = "fe2738e740b8c6b06a20d76ab1877559"
 #                                (layers/reliability/server/pipeline/probes/), which need credit on
 #                                the account; unset = no probe runs.
 #   NUXT_RESEND_API_KEY          Resend API key for public digest subscriptions
-#                                (layers/terminal/server/utils/resend.ts). Needs the
+#                                (layers/core/server/utils/resend.ts). Needs the
 #                                domain of NUXT_SUBSCRIBE_EMAIL_FROM verified in Resend.
 #                                Unset = no subscribe form, /api/subscribe/* and /digest 404,
 #                                no digest fan-out; the owner digest is unaffected.

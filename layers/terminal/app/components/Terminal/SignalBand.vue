@@ -5,7 +5,7 @@
 // cannot say "nothing moved" is a terminal you have to re-read every morning.
 
 import { readableEdgarNames } from '#layers/core/shared/utils/terminal-format'
-import { alertPath, INFO_TIER_LABEL } from '../../../shared/utils/terminal-tiers'
+import { alertPath, INFO_TIER_LABEL } from '../../../../core/shared/utils/terminal-tiers'
 import type { OverviewData } from '../../../shared/utils/terminal-types'
 
 const props = defineProps<{ overview: OverviewData }>()

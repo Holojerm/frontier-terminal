@@ -13,7 +13,7 @@ import {
   tearSheetPath,
   type LabInputs,
 } from '../../../shared/utils/terminal-lab-summary'
-import { alertPath } from '../../../shared/utils/terminal-tiers'
+import { alertPath } from '../../../../core/shared/utils/terminal-tiers'
 import type { LabId } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 

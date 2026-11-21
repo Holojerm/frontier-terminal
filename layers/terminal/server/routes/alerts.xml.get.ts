@@ -7,7 +7,7 @@
 
 import { z } from 'zod'
 
-import { tierFilterOf } from '../../shared/utils/terminal-tiers'
+import { tierFilterOf } from '../../../core/shared/utils/terminal-tiers'
 import { queryAlerts } from '../utils/terminal-alerts'
 import { buildAlertsAtom, type FeedTier } from '../utils/terminal-feed'
 import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'

@@ -1,6 +1,6 @@
 // What the filings say: call guidance, revenue and registration filings. The press
 // reports scored against them (get_reported, get_ground_truth), registered right after,
-// are the shell's (layers/terminal/server/mcp/press.ts).
+// are the press layer's (layers/press/server/mcp/press.ts).
 
 import { z } from 'zod'
 import { queryProspectus } from '../utils/terminal-prospectus'

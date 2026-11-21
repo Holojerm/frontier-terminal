@@ -22,7 +22,7 @@ import { LAB_SITE } from '#layers/core/shared/utils/lab-names'
 import { isLab } from '#layers/core/shared/utils/lab-names'
 import { labPath } from '../../../../../core/shared/utils/lab-names'
 import { tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
-import { alertPath } from '../../../../shared/utils/terminal-tiers'
+import { alertPath } from '../../../../../core/shared/utils/terminal-tiers'
 import type { ExposureData } from '../../../../../companies/shared/utils/terminal-exposure'
 import type { ListedData } from '../../../../shared/utils/listed'
 import type {

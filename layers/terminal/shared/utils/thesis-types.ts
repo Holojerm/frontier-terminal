@@ -4,6 +4,12 @@
 
 import type { CompanyId } from '../../../core/shared/utils/companies'
 import type { LabId, Stamp } from './terminal-types'
+import type { PressEarlyRead } from '../../../press/shared/utils/terminal-types/ground-truth'
+
+export type {
+  PressEarlyPeriod,
+  PressEarlyRead,
+} from '../../../press/shared/utils/terminal-types/ground-truth'
 
 export type ClaimStatus = 'holding' | 'weakening' | 'broken' | 'unresolved'
 
@@ -307,50 +313,6 @@ export interface ReadingPoint {
   value: number
   /** Why this reading reads differently from the one before (the mapped flagship changed). */
   note?: string
-}
-
-/** One period a company has not filed yet, as the press reports that name it give it. */
-export interface PressEarlyPeriod {
-  /** 'Q3 2026' */
-  label: string
-  start: string
-  end: string
-  reports: number
-  /** USD. */
-  median: number
-  low: number
-  high: number
-  /** The median against the same period a year earlier, where that one is filed. */
-  implied_growth: number | null
-  base: { label: string; value: number; filing_url: string } | null
-  /** The newest of the reports. */
-  latest: {
-    title: string
-    outlet: string
-    url: string
-    published_at: string
-    source_url: string
-    fetched_at: string
-  }
-}
-
-/**
- * What the press says about revenue the company has not filed yet, shown
- * beside a claim that reads filed revenue. Unconfirmed: it never enters a
- * reading and never sets a status. Only a filing does.
- */
-export interface PressEarlyRead {
-  /** Newest period first. Empty when no report names a period that isn't filed. */
-  periods: PressEarlyPeriod[]
-  /** Reports that match no filed figure and name no period, so they can't be tied to one. */
-  unplaced: number
-  /** How this company's press reports did against the filings that later settled them. */
-  record: {
-    periods: number
-    reports: number
-    median_abs_error_pct: number | null
-    median_lead_days: number | null
-  }
 }
 
 export interface ClaimView {

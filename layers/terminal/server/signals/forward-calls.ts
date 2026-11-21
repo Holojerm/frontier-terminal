@@ -29,7 +29,7 @@ import {
   runStatements,
   type PipelineDb,
 } from '#layers/core/server/pipeline/store'
-import { filedFigures } from '../utils/terminal-ground-truth'
+import { filedFigures } from '../../../press/server/utils/terminal-ground-truth'
 import { REGISTERED_CALLS } from './forward-calls-registered'
 import { conceptsOf, forwardFiler } from './forward-filers'
 

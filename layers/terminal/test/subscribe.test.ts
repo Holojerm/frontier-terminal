@@ -10,9 +10,9 @@ import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '../../../server/db/schema'
-import { BATCH_SIZE, sendMail, type MailMessage } from '../server/utils/resend'
+import { BATCH_SIZE, sendMail, type MailMessage } from '../../core/server/utils/resend'
 import { subscribeBody, cleanFromPath } from '../shared/utils/subscribe'
-import { subscribeConfig } from '../server/utils/subscribe-config'
+import { subscribeConfig } from '../../core/server/utils/subscribe-config'
 import { confirmationMail, fanOutDigest } from '../server/utils/subscriber-mail'
 import {
   CONFIRM_TTL_DAYS,

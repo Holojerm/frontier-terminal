@@ -6,8 +6,8 @@ import { renderEmail } from '#server/utils/render-email'
 import type { ExtensionDb } from '#server/utils/extensions'
 
 import { buildThesisDigest, type DigestInput } from '../theses/digest'
-import { BATCH_SIZE, sendMail, type MailMessage } from './resend'
-import type { SubscribeConfig } from './subscribe-config'
+import { BATCH_SIZE, sendMail, type MailMessage } from '../../../core/server/utils/resend'
+import type { SubscribeConfig } from '../../../core/server/utils/subscribe-config'
 import {
   markDigestSent,
   selectDigestRecipients,

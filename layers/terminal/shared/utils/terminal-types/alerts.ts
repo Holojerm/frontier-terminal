@@ -1,4 +1,4 @@
-import type { AlertSeverity, AlertTierFilter } from '../terminal-tiers'
+import type { AlertSeverity, AlertTierFilter } from '../../../../core/shared/utils/terminal-tiers'
 import type {
   FieldDiff,
   Prov,

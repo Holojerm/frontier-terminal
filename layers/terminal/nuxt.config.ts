@@ -5,14 +5,14 @@
 export default defineNuxtConfig({
   $meta: { name: 'terminal' },
   runtimeConfig: {
-    // Owner mail (layers/terminal/server/utils/owner-mail.ts): the weekly thesis
+    // Owner mail (layers/core/server/utils/owner-mail.ts): the weekly thesis
     // digest and the press brief. `to` must be the verified destination the
     // [[send_email]] OWNER_EMAIL binding is pinned to; `from` must be on a zone
     // in the account with Email Routing enabled. Either empty = those mails are
     // skipped. NUXT_OWNER_EMAIL_TO / NUXT_OWNER_EMAIL_FROM in [vars]; not secrets.
     ownerEmailTo: '',
     ownerEmailFrom: '',
-    // Public digest subscriptions (layers/terminal/server/utils/subscribe-config.ts).
+    // Public digest subscriptions (layers/core/server/utils/subscribe-config.ts).
     // Both set = the subscribe form renders, /api/subscribe/* answers and the
     // weekly digest fans out to confirmed subscribers through Resend. Either
     // empty = the whole feature is off: no form, those routes 404, no fan-out.
