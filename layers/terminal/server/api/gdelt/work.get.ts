@@ -1,6 +1,6 @@
 // GET /api/gdelt/work — the next GDELT GKG files the press side has not read,
 // oldest first, and the vocabulary whose words decide which rows the job posts
-// back, for the Actions job (scripts/gdelt-search.ts) on the owner's Mac mini.
+// back, for the GDELT job (scripts/gdelt-search.ts) on the owner's Mac mini.
 // Once nothing is unread, `figure_files` lists files read before reported
 // figures existed, for the job to read again for those alone. Once those are
 // read too, `archive_files` lists files from before GKG_FROM to read for

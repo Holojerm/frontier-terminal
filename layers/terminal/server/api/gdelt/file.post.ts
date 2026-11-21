@@ -1,4 +1,4 @@
-// POST /api/gdelt/file — one GDELT GKG file the Actions job read, the next one
+// POST /api/gdelt/file — one GDELT GKG file the mini's job read, the next one
 // /api/gdelt/work handed out: how many rows it held and the rows carrying a
 // vocabulary word, compacted. The Worker keeps a row with only the names its
 // own vocabulary holds (recordGkgFile); nothing is matched to an alert here.

@@ -1,5 +1,6 @@
-// The GDELT side of the track record — `bun run gdelt:search`, run twice an hour by
-// .github/workflows/gdelt-search.yml (the owner's Mac mini, or a hosted runner while it is down).
+// The GDELT side of the track record — `bun run gdelt:search`, run every 30 minutes on the
+// owner's Mac mini by a launchd job outside this repo (~/agent-jobs/gdelt-search.sh), or by
+// hand from .github/workflows/gdelt-search.yml while the mini is down.
 //
 // Reads GDELT's 15-minute GKG files (layers/terminal/server/pipeline/track-record/gkg.ts),
 // each once, oldest first:
@@ -95,7 +96,7 @@ const token = process.env.GDELT_TOKEN?.trim()
 if (!token) {
   annotate(
     'warning',
-    'GDELT_TOKEN is not set; no GDELT file was read (see .github/workflows/gdelt-search.yml)',
+    'GDELT_TOKEN is not set; no GDELT file was read (see the header of scripts/gdelt-search.ts)',
   )
   process.exit(0)
 }

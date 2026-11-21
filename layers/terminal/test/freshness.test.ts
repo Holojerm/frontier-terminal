@@ -430,13 +430,13 @@ describe('the producers off the Worker', () => {
     await db.delete(schema.socialPosts)
   })
 
-  it('flags the GDELT job when files have been owed for nine hours and none was read', async () => {
+  it('flags the GDELT job when files have been owed for two hours and none was read', async () => {
     await db.delete(schema.gdeltFiles)
     const run = () => checkFreshness(db, memoryMarker(), [gdeltFreshnessCheck], NOW)
     // Nothing read: the queue has been owed since 2026-09-01.
     expect(await run()).toEqual({ 'gdelt-search': 'stale' })
 
-    // A backlog still owed, but the job read a file two hours ago: it is working through it.
+    // A backlog still owed, but the job read a file an hour ago: it is working through it.
     await db.insert(schema.gdeltFiles).values({
       stamp: '20260901000000',
       url: 'http://data.gdeltproject.org/gdeltv2/20260901000000.gkg.csv.zip',
@@ -444,16 +444,16 @@ describe('the producers off the Worker', () => {
       rows: 1200,
       matched: 0,
       raw_key: null,
-      fetched_at: '2026-11-06T10:00:00.000Z',
-      recorded_at: '2026-11-06T10:00:00.000Z',
+      fetched_at: '2026-11-06T11:00:00.000Z',
+      recorded_at: '2026-11-06T11:00:00.000Z',
     })
     expect(await run()).toEqual({ 'gdelt-search': 'fresh' })
 
-    // GitHub's scheduler leaves gaps of nearly eight hours between healthy runs.
-    await db.update(schema.gdeltFiles).set({ recorded_at: '2026-11-06T04:00:00.000Z' })
+    // A run that spent its 40 minutes on the archive, then the next run.
+    await db.update(schema.gdeltFiles).set({ recorded_at: '2026-11-06T10:00:00.000Z' })
     expect(await run()).toEqual({ 'gdelt-search': 'fresh' })
 
-    await db.update(schema.gdeltFiles).set({ recorded_at: '2026-11-06T02:00:00.000Z' })
+    await db.update(schema.gdeltFiles).set({ recorded_at: '2026-11-06T09:50:00.000Z' })
     expect(await run()).toEqual({ 'gdelt-search': 'stale' })
   })
 

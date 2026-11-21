@@ -6,7 +6,7 @@
 // runs off the Worker, read from the rows that producer writes:
 //
 //   judge         the judge routine (claude.ai), judge_runs — critical
-//   gdelt-search  the GDELT Actions job (.github/workflows/gdelt-search.yml),
+//   gdelt-search  the GDELT job on the Mac mini (scripts/gdelt-search.ts),
 //                 gdelt_files
 //   social-outbox the social outbox, social_posts — its sender is in the
 //                 vendored layer and records no heartbeat
@@ -32,17 +32,17 @@ import { ENTITY_IDENTIFIERS, type EntityIdentifier } from './terminal-identifier
 const HOUR_MS = 60 * 60 * 1000
 
 /**
- * The GDELT job is scheduled twice an hour and GitHub's scheduler skips
- * triggers: hourly, it fired 2 of 12 on 2026-11-06, healthy runs sat up to
- * 7h37m apart that week (issue #301), and 10h49m apart on 2026-11-09
- * (issue #323), which is why it now has two triggers an hour. The limit
- * stays wide enough to clear the spread that remains.
+ * The GDELT job runs every 30 minutes from launchd on the Mac mini, and a run
+ * reads the new files before any archive pass (up to 40 minutes), so a healthy
+ * job records a file at least hourly. Two hours means the mini or the job has
+ * stopped. It was nine while GitHub's scheduler ran the job and left gaps of
+ * up to 10h49m (issues #301, #323).
  */
-export const GDELT_SILENCE_MS = 9 * HOUR_MS
+export const GDELT_SILENCE_MS = 2 * HOUR_MS
 
 export const gdeltFreshnessCheck: FreshnessCheck = {
   key: 'gdelt-search',
-  label: 'The GDELT file job (GitHub Actions › GDELT search)',
+  label: 'The GDELT file job (launchd on the Mac mini)',
   kind: 'gdelt_search_silent',
   maxAgeMs: GDELT_SILENCE_MS,
   path: '/api/gdelt/work',
