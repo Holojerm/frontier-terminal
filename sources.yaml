@@ -3299,13 +3299,14 @@ call_sources:
       Terms of Service effective 2026-07-01, section 4.3: "Customer shall
       retain all right, title and interest in and to the Customer Data",
       and AssemblyAI may use it to improve its models unless the account
-      opts out. Section 4.4: Output "may contain errors and misstatements",
+      opts out; the owner opted out on 2026-11-21. Section 4.4: Output "may contain errors and misstatements",
       and the customer may not "represent that any Output is
       human-generated", so a quote from a replay is labelled as our machine
       transcript. Billing: $0.21 an hour for the model, plus $0.05 for key
       terms, $0.05 for a prompt, $0.02 for speaker labels and $0.02 for
-      speaker identification. Spend is capped at $40 of the $50 free
-      credit (calls/assemblyai.ts). Read 2026-11-21.
+      speaker identification. Spend is capped at $10 per UTC calendar
+      month (MONTHLY_SPEND_CAP_USD, calls/assemblyai.ts); AssemblyAI offers
+      alerts but no hard limit of its own. Read 2026-11-21.
     rights: restricted
 
 
@@ -3564,7 +3565,7 @@ listed_hiring_sources:
     ticker: RIOT
     company: Riot Platforms
     url: https://api.rippling.com/platform/api/ats/v1/board/riot-platforms-careers/jobs
-    verdict: deferred (owner's call)
+    verdict: cut (owner's call, 2026-11-21: not worth the terms risk or a new reader)
     reason: >-
       The Rippling board API answers (84 roles at 2026-11-21) and
       ats.rippling.com/robots.txt disallows only /internal/. Rippling's terms
@@ -3575,7 +3576,7 @@ listed_hiring_sources:
     ticker: HPE
     company: HPE
     url: https://hpe.wd5.myworkdayjobs.com/Jobsathpe
-    verdict: deferred (owner's call)
+    verdict: cut (owner's call, 2026-11-21: not worth the terms risk or a new reader)
     reason: >-
       The Workday board answers and its robots.txt allows /Jobsathpe/.
       hpe.com's terms of use timed out from every client we tried, so we have
@@ -3584,7 +3585,7 @@ listed_hiring_sources:
     ticker: DELL
     company: Dell
     url: https://enterpriseplatform.dell.com/hcmUI/CandidateExperience/en/sites/careers
-    verdict: deferred (owner's call)
+    verdict: cut (owner's call, 2026-11-21: not worth the terms risk or a new reader)
     reason: >-
       jobs.dell.com now redirects to Oracle Recruiting Cloud. Dell's site terms
       (dell.com/en-us/legal/lp/site-terms-of-use-copyright) have no clause on
@@ -3594,7 +3595,7 @@ listed_hiring_sources:
     ticker: MSFT
     company: Microsoft
     url: https://apply.careers.microsoft.com/api/pcsx/search
-    verdict: deferred (owner's call)
+    verdict: cut (owner's call, 2026-11-21: not worth the terms risk or a new reader)
     reason: >-
       robots.txt allows /api/pcsx, but the search API serves ten roles a
       request (2,405 open on 2026-11-21), and Microsoft's terms of use bar
