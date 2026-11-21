@@ -15,8 +15,7 @@ import './parsers/sec/prospectus-revenue'
 import './parsers/sec/prospectus'
 // Status pages and the OpenRouter model catalog (the reliability layer's own manifest)
 import '#layers/reliability/server/pipeline/parsers.manifest'
-// Misalignment disclosures
-import './parsers/disclosures/openai-misalignment-reports'
-import './parsers/disclosures/openai-misalignment-report'
+// Misalignment disclosures (the models layer's own manifest)
+import '#layers/models/server/pipeline/parsers.manifest'
 // OpenRouter usage rankings (the adoption layer's own manifest)
 import '#layers/adoption/server/pipeline/parsers.manifest'

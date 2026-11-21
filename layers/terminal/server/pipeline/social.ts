@@ -29,7 +29,7 @@ import {
 import { absoluteUrl } from '#shared/utils/site'
 import { AXIS_OF } from '../utils/terminal-alerts'
 import { effectiveClassMap } from '#layers/pricing/server/pipeline/class-map'
-import { MODEL_FLOOR_RULE } from './model-floor'
+import { MODEL_FLOOR_RULE } from '#layers/core/server/utils/terminal-asof'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 
 /** Alerts before posting went live are history, not news. */

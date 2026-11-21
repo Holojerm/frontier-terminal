@@ -4,7 +4,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import { disclosureKey } from '#layers/core/server/pipeline/contracts'
-import { deriveSources } from '../server/pipeline/derived'
+import { deriveSources } from '#server/registries/lanes'
 import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { pendingChanges } from '#layers/core/server/pipeline/judge/pending'
 import { runRefresh } from '../../core/server/pipeline/refresh'

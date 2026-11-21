@@ -14,12 +14,13 @@ import type {
 import type { FetchSource } from '#layers/core/server/pipeline/sources'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { ADOPTION_LANES } from '#layers/adoption/server/pipeline/lanes'
+import { MODEL_DERIVED_LANES, MODEL_LANES } from '#layers/models/server/pipeline/lanes'
+import { modelFloorAlerts } from '#layers/models/server/pipeline/model-floor'
 import { PRICE_DERIVED_LANES, PRICE_LANES } from '#layers/pricing/server/pipeline/lanes'
 import { RELIABILITY_LANES } from '#layers/reliability/server/pipeline/lanes'
 import { TALENT_LANES } from '#layers/talent/server/pipeline/lanes'
 import { GREENHOUSE_REDACTION } from '#layers/talent/server/pipeline/redact'
 import { deriveSources as deriveShellSources } from '#layers/terminal/server/pipeline/derived'
-import { modelFloorAlerts } from '#layers/terminal/server/pipeline/model-floor'
 import { prospectusFloorAlerts } from '#layers/terminal/server/pipeline/prospectus-floor'
 import {
   DERIVED_LANES as TERMINAL_DERIVED_LANES,
@@ -31,11 +32,13 @@ export const LANES: Readonly<Record<string, Lane>> = {
   ...TALENT_LANES,
   ...RELIABILITY_LANES,
   ...TERMINAL_LANES,
+  ...MODEL_LANES,
   ...ADOPTION_LANES,
 }
 
 export const DERIVED_LANES: readonly { prefix: string; lane: Lane }[] = [
   ...TERMINAL_DERIVED_LANES,
+  ...MODEL_DERIVED_LANES,
   ...PRICE_DERIVED_LANES,
 ]
 
