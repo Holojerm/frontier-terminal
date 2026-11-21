@@ -185,6 +185,8 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
     'first_seen_at',
     tables.recipeObservations.date,
   ),
+  // Windowed like the recipe_observations rows it is computed from.
+  download_series: windowed(['date'], 'date, the day the value is for', 'fetched_at'),
   filed_facts: windowed(['end'], 'end, the period end', 'first_seen_at', tables.filedFacts.end),
   filed_guidance: windowed(
     ['filed'],

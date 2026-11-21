@@ -37,13 +37,13 @@ export const CLOUDFLARE_THESIS: ThesisDef = {
       id: 'cloudflare-developer-adoption',
       n: 2,
       text: 'Developer adoption compounds',
-      signal_label: 'npm downloads of wrangler, the Workers CLI, over the trailing 28 days',
+      signal_label:
+        'npm downloads of wrangler, the Workers CLI, over the trailing 28 days, divided by the median of five non-AI npm packages',
       kill_condition: 'The trailing 4 weeks fall 30% below their 26-week high',
       spec: {
         kind: 'measured',
-        signal: 'recipe-trailing-sum',
+        signal: 'npm-normalized-trailing-sum',
         recipe: 'npm-wrangler',
-        key: 'wrangler',
         days: 28,
         format: 'count',
         rule: { rule: 'drawdown-from-high', drop: 0.3, days: 182, min_days: 30 },

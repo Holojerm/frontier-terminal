@@ -1828,6 +1828,86 @@ recipe_sources:
       Every tarball fetch counts, CI and mirrors included, so read the
       trend, not the level. A range longer than 18 months is clipped
       without an error; whole days of zeros are npm outages, not demand.
+  npm-control-react:
+    company: frontier-labs
+    url: https://api.npmjs.org/downloads/range/{start}:{end}/react
+    format: JSON, npm downloads API (documented in the npm/registry repository), one row per day
+    verdict: include
+    terms: >-
+      npm's open-source terms bar automating access to the Website, then:
+      "You may replicate data from the Public Registry using the Public
+      APIs per this Agreement." No robots.txt on api.npmjs.org. Read
+      2026-11-20.
+    rights: upstream
+    caveats: >-
+      One of five non-AI packages. The lab packages are divided by their
+      median, so registry-wide swings cancel. Read from 2025-05-13, like
+      the lab packages. Whole days of zeros are npm outages and are
+      flagged in the payload.
+  npm-control-typescript:
+    company: frontier-labs
+    url: https://api.npmjs.org/downloads/range/{start}:{end}/typescript
+    format: JSON, npm downloads API (documented in the npm/registry repository), one row per day
+    verdict: include
+    terms: >-
+      npm's open-source terms bar automating access to the Website, then:
+      "You may replicate data from the Public Registry using the Public
+      APIs per this Agreement." No robots.txt on api.npmjs.org. Read
+      2026-11-20.
+    rights: upstream
+    caveats: >-
+      One of five non-AI packages. The lab packages are divided by their
+      median, so registry-wide swings cancel. Read from 2025-05-13, like
+      the lab packages. Whole days of zeros are npm outages and are
+      flagged in the payload.
+  npm-control-express:
+    company: frontier-labs
+    url: https://api.npmjs.org/downloads/range/{start}:{end}/express
+    format: JSON, npm downloads API (documented in the npm/registry repository), one row per day
+    verdict: include
+    terms: >-
+      npm's open-source terms bar automating access to the Website, then:
+      "You may replicate data from the Public Registry using the Public
+      APIs per this Agreement." No robots.txt on api.npmjs.org. Read
+      2026-11-20.
+    rights: upstream
+    caveats: >-
+      One of five non-AI packages. The lab packages are divided by their
+      median, so registry-wide swings cancel. Read from 2025-05-13, like
+      the lab packages. Whole days of zeros are npm outages and are
+      flagged in the payload.
+  npm-control-lodash:
+    company: frontier-labs
+    url: https://api.npmjs.org/downloads/range/{start}:{end}/lodash
+    format: JSON, npm downloads API (documented in the npm/registry repository), one row per day
+    verdict: include
+    terms: >-
+      npm's open-source terms bar automating access to the Website, then:
+      "You may replicate data from the Public Registry using the Public
+      APIs per this Agreement." No robots.txt on api.npmjs.org. Read
+      2026-11-20.
+    rights: upstream
+    caveats: >-
+      One of five non-AI packages. The lab packages are divided by their
+      median, so registry-wide swings cancel. Read from 2025-05-13, like
+      the lab packages. Whole days of zeros are npm outages and are
+      flagged in the payload.
+  npm-control-axios:
+    company: frontier-labs
+    url: https://api.npmjs.org/downloads/range/{start}:{end}/axios
+    format: JSON, npm downloads API (documented in the npm/registry repository), one row per day
+    verdict: include
+    terms: >-
+      npm's open-source terms bar automating access to the Website, then:
+      "You may replicate data from the Public Registry using the Public
+      APIs per this Agreement." No robots.txt on api.npmjs.org. Read
+      2026-11-20.
+    rights: upstream
+    caveats: >-
+      One of five non-AI packages. The lab packages are divided by their
+      median, so registry-wide swings cancel. Read from 2025-05-13, like
+      the lab packages. Whole days of zeros are npm outages and are
+      flagged in the payload.
   pypi-openai:
     company: openai
     url: https://pypistats.org/api/packages/openai/overall?mirrors=false

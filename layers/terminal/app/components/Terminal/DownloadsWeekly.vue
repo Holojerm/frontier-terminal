@@ -6,19 +6,31 @@
 // the table has its total and how many days it rests on. Each registry's
 // history starts where its API's reach did, and the line under the charts
 // gives that week, so a short line isn't read as a young package.
+//
+// `measure` picks the series: raw weekly totals, npm downloads divided by
+// the control basket (normalized), or each core SDK's share of its
+// registry's tracked SDKs. The derived two are ratios of sums, fair on a
+// week missing a day, so they break only under MIN_RATIO_DAYS. Shares share
+// one y-axis top, so their heights compare.
 
-import { newestFullWeek, weekColumns, weekValues } from '../../../shared/utils/adoption-weeks'
-import { compactCount, count } from '../../../shared/utils/terminal-format'
+import { weekColumns, weekValues } from '../../../shared/utils/adoption-weeks'
+import { compactCount, count, sharePct } from '../../../shared/utils/terminal-format'
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
-import type { AdoptionData } from '../../../shared/utils/recipe-views'
+import type { AdoptionData, AdoptionRatioWeek } from '../../../shared/utils/recipe-views'
 import type { TableColumn } from '../../types/terminal-ui'
 
-const props = defineProps<{
-  downloads: AdoptionData['downloads']
-  caveat: string
-  /** 'sdk' or 'agent' to show one kind. */
-  kind?: 'sdk' | 'agent'
-}>()
+const props = withDefaults(
+  defineProps<{
+    downloads: AdoptionData['downloads']
+    caveat: string
+    /** 'sdk' or 'agent' to show one kind. */
+    kind?: 'sdk' | 'agent'
+    measure?: 'raw' | 'normalized' | 'share'
+  }>(),
+  { kind: undefined, measure: 'raw' },
+)
+
+const MIN_RATIO_DAYS = 4
 
 const stamps = useStamps()
 
@@ -26,21 +38,60 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const monthLabel = (d: string) => `${MONTHS[Number(d.slice(5, 7)) - 1]} ’${d.slice(2, 4)}`
 const weekLabel = (d: string) => `Week of ${stamps.date(d)}`
 
+interface Week {
+  week: string
+  days: number
+  value: number
+  /** Drawn: a full raw week, or a ratio week with MIN_RATIO_DAYS. */
+  drawn: boolean
+}
+
+const weeksOf = (d: AdoptionData['downloads'][number]): Week[] => {
+  if (props.measure === 'raw')
+    return d.weekly.map((w) => ({ week: w.week, days: w.days, value: w.total, drawn: !w.partial }))
+  const ratio: AdoptionRatioWeek[] = props.measure === 'share' ? d.share : d.normalized
+  return ratio.map((w) => ({ ...w, drawn: w.days >= MIN_RATIO_DAYS }))
+}
+
+const format = computed(() => (props.measure === 'share' ? sharePct : count))
+const tick = computed(() => (props.measure === 'share' ? sharePct : compactCount))
+const what = computed(() =>
+  props.measure === 'share'
+    ? 'share of tracked SDK downloads'
+    : props.measure === 'normalized'
+      ? 'downloads against npm'
+      : 'downloads',
+)
+
 const packages = computed(() =>
   props.downloads
-    .filter((d) => (!props.kind || d.kind === props.kind) && d.weekly.length > 0)
-    .map((d) => ({ ...d, newest: newestFullWeek(d.weekly) }))
-    .sort((a, b) => (b.newest?.total ?? -1) - (a.newest?.total ?? -1)),
+    .filter((d) => !props.kind || d.kind === props.kind)
+    .map((d) => {
+      const weeks = weeksOf(d)
+      const drawn = weeks.filter((w) => w.drawn)
+      return { ...d, weeks, newest: drawn.at(-1) ?? null }
+    })
+    .filter((d) => d.weeks.length > 0)
+    .sort((a, b) => (b.newest?.value ?? -1) - (a.newest?.value ?? -1)),
+)
+
+const yMax = computed(() =>
+  props.measure === 'share'
+    ? Math.max(...packages.value.flatMap((p) => p.weeks.filter((w) => w.drawn).map((w) => w.value)))
+    : undefined,
 )
 
 const charts = computed(() =>
   packages.value.map((p) => {
-    const x = weekColumns(p.weekly[0]!.week, p.weekly.at(-1)!.week)
-    return {
-      ...p,
-      x,
-      series: [{ id: p.recipe_id, label: p.package, values: weekValues(p.weekly, x) }],
-    }
+    const x = weekColumns(p.weeks[0]!.week, p.weeks.at(-1)!.week)
+    const values =
+      props.measure === 'raw'
+        ? weekValues(p.weekly, x)
+        : (() => {
+            const at = new Map(p.weeks.map((w) => [w.week, w]))
+            return x.map((c) => (at.get(c)?.drawn ? at.get(c)!.value : null))
+          })()
+    return { ...p, x, series: [{ id: p.recipe_id, label: p.package, values }] }
   }),
 )
 
@@ -49,7 +100,7 @@ const starts = computed(() => {
   const first = (r: 'npm' | 'PyPI') =>
     packages.value
       .filter((p) => p.registry === r)
-      .map((p) => p.weekly[0]!.week)
+      .map((p) => p.weeks[0]!.week)
       .sort()[0] ?? null
   return { npm: first('npm'), pypi: first('PyPI') }
 })
@@ -64,14 +115,14 @@ const columns = computed<TableColumn[]>(() => [
   })),
 ])
 
-const cell = (w: { total: number; days: number; partial: boolean } | undefined) =>
-  !w ? '—' : w.partial ? `${count(w.total)} (${w.days} of 7 days)` : count(w.total)
+const cell = (w: Week | undefined) =>
+  !w ? '—' : w.days < 7 ? `${format.value(w.value)} (${w.days} of 7 days)` : format.value(w.value)
 
 const rows = computed(() => {
   const at = new Map(
-    packages.value.map((p) => [p.recipe_id, new Map(p.weekly.map((w) => [w.week, w]))]),
+    packages.value.map((p) => [p.recipe_id, new Map(p.weeks.map((w) => [w.week, w]))]),
   )
-  const weeks = [...new Set(packages.value.flatMap((p) => p.weekly.map((w) => w.week)))].sort()
+  const weeks = [...new Set(packages.value.flatMap((p) => p.weeks.map((w) => w.week)))].sort()
   return weeks.reverse().map((week) => ({
     week,
     ...Object.fromEntries(
@@ -83,6 +134,26 @@ const rows = computed(() => {
 const sources = computed(() =>
   packages.value.flatMap((p) => (p.source ? [p.source] : [])).slice(0, 2),
 )
+
+const caveatLabel = computed(() =>
+  props.measure === 'share'
+    ? 'tracked SDKs only'
+    : props.measure === 'normalized'
+      ? 'against all of npm'
+      : 'downloads, not users',
+)
+
+const caption = computed(() => {
+  const unit =
+    props.measure === 'share'
+      ? 'SDK share of tracked SDK downloads'
+      : props.measure === 'normalized'
+        ? 'SDK downloads against npm'
+        : props.kind === 'agent'
+          ? 'Coding-agent package downloads'
+          : 'SDK downloads'
+  return `${unit} per week, newest first`
+})
 </script>
 
 <template>
@@ -96,7 +167,7 @@ const sources = computed(() =>
       <div class="grid gap-x-6 gap-y-4 sm:grid-cols-2 lg:grid-cols-3">
         <section
           v-for="c in charts"
-          :id="`weekly-${c.recipe_id}`"
+          :id="`${measure === 'raw' ? 'weekly' : measure}-${c.recipe_id}`"
           :key="c.recipe_id"
           class="min-w-0 space-y-1"
         >
@@ -114,19 +185,20 @@ const sources = computed(() =>
               <span class="text-toned"> · {{ c.registry }} · {{ LAB_DISPLAY[c.lab] }}</span>
             </span>
             <span class="shrink-0 font-mono text-highlighted">{{
-              c.newest ? compactCount(c.newest.total) : '—'
+              c.newest ? tick(c.newest.value) : '—'
             }}</span>
           </h3>
           <TerminalLineChart
             v-if="c.x.length > 1"
             :x="c.x"
             :series="c.series"
-            :format="count"
-            :tick-format="compactCount"
+            :format="format"
+            :tick-format="tick"
             :height="140"
+            :y-max="yMax"
             :x-label="monthLabel"
             :point-label="weekLabel"
-            :title="`${c.package} downloads on ${c.registry} per week, week of ${stamps.date(c.x[0]!)} to week of ${stamps.date(c.x.at(-1)!)}`"
+            :title="`${c.package} ${what} on ${c.registry} per week, week of ${stamps.date(c.x[0]!)} to week of ${stamps.date(c.x.at(-1)!)}`"
           />
           <TerminalGap v-else inline title="One week on record so far." />
           <TerminalProvenanceTag
@@ -155,11 +227,7 @@ const sources = computed(() =>
       hide="Hide the weekly table"
     >
       <TerminalTable
-        :caption="
-          kind === 'agent'
-            ? 'Coding-agent package downloads per week, newest first'
-            : 'SDK downloads per week, newest first'
-        "
+        :caption="caption"
         :columns="columns"
         :rows="rows"
         :row-key="(r) => r.week"
@@ -167,9 +235,6 @@ const sources = computed(() =>
       />
     </TerminalExpand>
 
-    <TerminalSources
-      :sources="sources"
-      :caveats="[{ text: caveat, label: 'downloads, not users' }]"
-    />
+    <TerminalSources :sources="sources" :caveats="[{ text: caveat, label: caveatLabel }]" />
   </div>
 </template>

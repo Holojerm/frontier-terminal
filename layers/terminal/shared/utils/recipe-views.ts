@@ -21,6 +21,15 @@ export interface AdoptionWeek {
   partial: boolean
 }
 
+/** One ISO week of a derived download series: a ratio of sums over the days on record. */
+export interface AdoptionRatioWeek {
+  /** The Monday, YYYY-MM-DD. */
+  week: string
+  /** Days of the week the ratio rests on. */
+  days: number
+  value: number
+}
+
 export interface AgentPrWeek extends AdoptionWeek {
   /** Any day of the week was counted after the fact, from the PRs that still existed. */
   retrospective: boolean
@@ -50,8 +59,27 @@ export interface AdoptionData {
     through: string | null
     /** Every complete week on record, oldest first; the week still running is left out. */
     weekly: AdoptionWeek[]
+    /** npm only: downloads ÷ the control index (download-series.ts), as a 28-day window and per week. */
+    normalized_last_28d: number | null
+    normalized_prior_28d: number | null
+    normalized: AdoptionRatioWeek[]
+    /** Core SDKs only: the share of the registry’s tracked core SDK downloads, last 28 days and per week. */
+    share_28d: number | null
+    share: AdoptionRatioWeek[]
+    /** Stable ids of this package’s derived series (DOWNLOAD_SERIES), null where it has none. */
+    series: { normalized: string | null; share: string | null }
     source: RecipeCitation | null
   }[]
+  /** The non-AI npm packages the normalized series are divided by. */
+  controls: {
+    series_id: string
+    base: { from: string; to: string }
+    packages: { recipe_id: string; package: string; source: RecipeCitation | null }[]
+    /** The index’s mean per week: 1.0 is the base weeks’ registry volume. */
+    index: AdoptionRatioWeek[]
+    /** Days npm reported zero for every package (stats outages), left out of every series. */
+    outage_days: string[]
+  }
   agent_prs: {
     recipe_id: string
     lab: LabId
@@ -62,7 +90,13 @@ export interface AdoptionData {
     weekly: AgentPrWeek[]
     source: RecipeCitation | null
   }[]
-  caveats: { ramp: string; downloads: string; agent_prs: string }
+  caveats: {
+    ramp: string
+    downloads: string
+    normalized: string
+    share: string
+    agent_prs: string
+  }
 }
 
 export interface LimitRow {
