@@ -13,6 +13,7 @@ import type {
 } from '#layers/core/server/pipeline/lanes'
 import type { FetchSource } from '#layers/core/server/pipeline/sources'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import { ADOPTION_LANES } from '#layers/adoption/server/pipeline/lanes'
 import { PRICE_DERIVED_LANES, PRICE_LANES } from '#layers/pricing/server/pipeline/lanes'
 import { RELIABILITY_LANES } from '#layers/reliability/server/pipeline/lanes'
 import { TALENT_LANES } from '#layers/talent/server/pipeline/lanes'
@@ -30,6 +31,7 @@ export const LANES: Readonly<Record<string, Lane>> = {
   ...TALENT_LANES,
   ...RELIABILITY_LANES,
   ...TERMINAL_LANES,
+  ...ADOPTION_LANES,
 }
 
 export const DERIVED_LANES: readonly { prefix: string; lane: Lane }[] = [

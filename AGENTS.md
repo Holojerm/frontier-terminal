@@ -86,6 +86,9 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 ├── layers/reliability/     # Domain layer: status parsers and lanes, incidents (live and archived), latency
 │                           # probes, the reliability record and deploy checks, /api/incidents, /api/probes,
 │                           # /api/reliability. Uses core, and pricing's class map for the probe targets.
+├── layers/adoption/        # Domain layer: OpenRouter rankings and implied spend, the Ramp, npm, PyPI and
+│                           # GitHub agent-PR recipes and the download series, /rankings, /api/rankings,
+│                           # /api/spend, /api/adoption. Uses core, and reliability's OpenRouter id map.
 ├── layers/terminal/        # Fork-owned layer: every domain not yet split out (parsers, lanes, theses,
 │                           # queries, pages, components, tables, tests). Same folder shapes as the app
 │                           # (app/, server/, shared/, test/); auto-registered, not in layers.lock.json.

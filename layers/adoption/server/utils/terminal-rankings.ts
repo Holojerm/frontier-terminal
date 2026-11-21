@@ -3,7 +3,7 @@
 // lab's top models in that window, a 30-day daily series, and the weekly
 // share over the whole stored history. Read-only over
 // the `entities` table like the rest of terminal-db.ts; split out because the
-// arithmetic is its own thing and layers/terminal/test/terminal-rankings.test.ts drives the
+// arithmetic is its own thing and layers/adoption/test/terminal-rankings.test.ts drives the
 // pure half without a database.
 //
 // Windows are counted in DAYS PRESENT, newest first, not calendar days from
@@ -12,23 +12,21 @@
 
 import { and, desc, eq, like, max, sql } from 'drizzle-orm'
 
+import type { LabId, Prov, ProviderId } from '#layers/core/shared/utils/terminal-types/common'
 import type {
-  LabId,
   DateWindow,
-  Prov,
-  ProviderId,
   ProviderShare,
   ProviderTopModels,
   RankingDay,
   RankingWeek,
   RankingsCoverage,
   RankingsData,
-} from '../../shared/utils/terminal-types'
+} from '../../shared/utils/terminal-types/rankings'
 
 import * as tables from '#server/db/schema'
 import { asOfFromDetail } from '../pipeline/as-of'
 import { manifestFixtures } from '#layers/core/server/pipeline/parsers/fixture-provenance'
-import { providerOfOpenRouterId } from '../../../reliability/server/pipeline/parsers/openrouter'
+import { providerOfOpenRouterId } from '#layers/reliability/server/pipeline/parsers/openrouter'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import {
   sourceReads,

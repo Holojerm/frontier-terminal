@@ -1,7 +1,7 @@
 import { describe, expect, it } from 'vitest'
 
 import { newestFullWeek, weekColumns, weekValues } from '../shared/utils/adoption-weeks'
-import { weeklySums } from '../server/utils/terminal-recipe-views'
+import { weeklySums } from '../server/utils/terminal-adoption'
 
 const days = (from: string, n: number, value = 1, retrospective = false) =>
   Array.from({ length: n }, (_, i) => ({

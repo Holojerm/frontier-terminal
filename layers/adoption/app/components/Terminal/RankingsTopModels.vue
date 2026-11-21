@@ -3,7 +3,7 @@
 // permaslug verbatim — a variant ranks as its own row there, so it does here.
 
 import { sharePct } from '#layers/core/shared/utils/terminal-format'
-import type { ProviderTopModels } from '../../../shared/utils/terminal-types'
+import type { ProviderTopModels } from '../../../shared/utils/terminal-types/rankings'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const watchlist = useWatchlist()

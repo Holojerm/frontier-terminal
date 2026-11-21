@@ -51,7 +51,7 @@ import {
   rankingsMeta,
   summarizeRankings,
   type RankingObservation,
-} from './terminal-rankings'
+} from '#layers/adoption/server/utils/terminal-rankings'
 
 type Row = typeof tables.recipeObservations.$inferSelect
 

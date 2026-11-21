@@ -11,7 +11,7 @@ import {
   EPOCH_DATA_CENTERS,
   EPOCH_DATA_CENTER_TIMELINES,
 } from '#layers/compute/server/recipes/epoch-data-centers'
-import { GITHUB_AGENT_RECIPES } from '#layers/terminal/server/theses/recipes/github-agent-prs'
+import { GITHUB_AGENT_RECIPES } from '#layers/adoption/server/recipes/github-agent-prs'
 import { GPU_RECIPES } from '#layers/compute/server/recipes/gpu-recipes'
 import { GREENHOUSE_CLOUDFLARE } from '#layers/talent/server/recipes/greenhouse-departments'
 import { INVESTEE_RECIPES } from '#layers/terminal/server/theses/recipes/investee-facts'
@@ -21,10 +21,10 @@ import {
   NPM_CONTROL_RECIPES,
   NPM_LAB_RECIPES,
   NPM_WRANGLER,
-} from '#layers/terminal/server/theses/recipes/npm-downloads'
+} from '#layers/adoption/server/recipes/npm-downloads'
 import { PAY_RECIPES } from '#layers/talent/server/recipes/pay-bands'
-import { PYPI_LAB_RECIPES } from '#layers/terminal/server/theses/recipes/pypi-downloads'
-import { RAMP_AI_INDEX } from '#layers/terminal/server/theses/recipes/ramp-ai-index'
+import { PYPI_LAB_RECIPES } from '#layers/adoption/server/recipes/pypi-downloads'
+import { RAMP_AI_INDEX } from '#layers/adoption/server/recipes/ramp-ai-index'
 import { RATE_LIMIT_RECIPES } from '#layers/pricing/server/recipes/rate-limits'
 import {
   SEC_REVENUE_AKAM,

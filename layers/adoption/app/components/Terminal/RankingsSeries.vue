@@ -7,7 +7,8 @@
 // picture alone.
 
 import { compactTokens } from '#layers/core/shared/utils/terminal-format'
-import type { ProviderId, RankingDay } from '../../../shared/utils/terminal-types'
+import type { ProviderId } from '#layers/core/shared/utils/terminal-types/common'
+import type { RankingDay } from '../../../shared/utils/terminal-types/rankings'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const stamps = useStamps()

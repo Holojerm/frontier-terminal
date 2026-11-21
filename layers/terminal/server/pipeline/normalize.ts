@@ -11,7 +11,6 @@ import {
   sharesKey,
   statementKey,
   stableStringify,
-  rankingKey,
   revenueKey,
   type DisclosureRow,
   type EntityRow,
@@ -21,7 +20,6 @@ import {
   type OfferingRow,
   type ProspectusOutput,
   type Provider,
-  type RankingRow,
   type RegistrationDocumentRow,
   type RevenueRow,
 } from '../../../core/server/pipeline/contracts'
@@ -46,23 +44,6 @@ export function normalizeFiling(
   provider: Provider = 'other',
 ): EntityRow {
   return toEntity(filingKey(row.accession_no), 'filing', provider, snapshotId, row)
-}
-
-// A ranking row is one (UTC day, model) observation. Its provider is the
-// permaslug prefix the parser already resolved; total_tokens is the whole
-// content, so a revised count diffs as one 'modified' row for that day.
-export function normalizeRanking(row: RankingRow, snapshotId: string): EntityRow {
-  return toEntity(
-    rankingKey(row.date, row.model_permaslug),
-    'ranking',
-    row.provider,
-    snapshotId,
-    row,
-  )
-}
-
-export function normalizeRankings(rows: readonly RankingRow[], snapshotId: string): EntityRow[] {
-  return collapse(rows.map((row) => normalizeRanking(row, snapshotId)))
 }
 
 // One row per resolved lab, keyed by provider: a second resolving hit for

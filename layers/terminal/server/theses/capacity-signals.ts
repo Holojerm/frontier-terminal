@@ -23,7 +23,7 @@ import {
   GUIDANCE_MEASURES,
   type StoredGuidance,
 } from '../utils/terminal-ground-truth-guidance'
-import { daysBefore } from '../utils/terminal-rankings'
+import { daysBefore } from '#layers/adoption/server/utils/terminal-rankings'
 import { spotRead } from '#layers/compute/server/utils/terminal-utilization'
 import { gpuState, median, type GpuObservation } from '#layers/compute/server/recipes/gpu-series'
 import type { SignalDeps, SignalReading } from './signals'

@@ -40,6 +40,7 @@ import { HISTORY_TABLES } from '#layers/core/server/export-tables/history'
 import { CLAIM_TABLES } from '#layers/terminal/server/export-tables/theses'
 import { PRESS_TABLES } from '#layers/terminal/server/export-tables/press'
 import { RECIPE_TABLES } from '#layers/terminal/server/export-tables/recipes'
+import { DOWNLOAD_TABLES } from '#layers/adoption/server/export-tables/downloads'
 import { GRID_LOAD_TABLES } from '#layers/compute/server/export-tables/grid-load'
 import { LISTED_HIRING_TABLES } from '#layers/talent/server/export-tables/listed-hiring'
 import { EXPOSURE_TABLES } from '#layers/terminal/server/export-tables/exposure'
@@ -65,6 +66,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ...CLAIM_TABLES,
   ...PRESS_TABLES,
   ...RECIPE_TABLES,
+  ...DOWNLOAD_TABLES,
   ...EXPOSURE_TABLES,
   ...REFERENCE_TABLES,
   ...SIGNAL_TABLES,

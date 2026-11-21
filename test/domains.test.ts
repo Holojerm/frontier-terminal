@@ -46,6 +46,7 @@ describe('the domain table', () => {
   it('matches the layers this repo has', () => {
     expect(
       tableProblems(DOMAIN_LAYERS, [
+        'adoption',
         'compute',
         'core',
         'pricing',
@@ -59,6 +60,7 @@ describe('the domain table', () => {
     expect(DOMAIN_LAYERS.pricing.uses).toEqual(['core'])
     expect(DOMAIN_LAYERS.talent.uses).toEqual(['core'])
     expect(DOMAIN_LAYERS.reliability.uses).toEqual(['core', 'pricing'])
+    expect(DOMAIN_LAYERS.adoption.uses).toEqual(['core', 'reliability'])
   })
 })
 
