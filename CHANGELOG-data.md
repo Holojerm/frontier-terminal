@@ -23,7 +23,7 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
-## 1.15.0 (2026-11-21)
+## 1.16.0 (2026-11-21)
 
 `/api/utilization` gains `benchmark_rounds`: every stored MLPerf Inference
 round side by side (v5.1 and v6.0 today). A row is one accelerator on one
@@ -38,6 +38,21 @@ accelerators. `footnote` is the citation MLCommons requires, and `sources`
 cites each round. It is null until two rounds are stored. `implied` still
 reads the newest round alone. The MCP tool `get_utilization` returns it too.
 No table columns changed.
+
+## 1.15.0 (2026-11-21)
+
+OpenAI moved its misalignment reports from alignment.openai.com to
+openai.com/safety-alignment/misalignment-reports/, and its index stopped
+printing each report's model and the context it was observed in. Each
+report's own page still prints both:
+
+- `disclosure_timelines` gains `model` and `observed_during`, verbatim from
+  the report page's first line ("Internal research model · RL training").
+- `disclosures.model` and `disclosures.observed_during` are null on OpenAI
+  rows from 2026-11-20, and `disclosures.entry_url` points at the new address.
+- `disclosure_timelines.disclosed_on` is also read from a "First posted"
+  line, which most report pages now print, and `lines` drops "Last updated"
+  as it drops "Report updated".
 
 ## 1.14.0 (2026-11-21)
 

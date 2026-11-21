@@ -15,13 +15,15 @@ import { printedDate, textOf } from '../../server/pipeline/parsers/disclosures/h
 import { parseOpenAiMisalignmentReport } from '../../server/pipeline/parsers/disclosures/openai-misalignment-report'
 import { parseOpenAiMisalignmentReports } from '../../server/pipeline/parsers/disclosures/openai-misalignment-reports'
 import { fixtureText, provenanceOf } from './fixtures'
+import { committedIndexItems, indexPage, withReport } from './misalignment-index'
 
 // Disclosure lane golden tests. Expected values are read off the committed
-// fixtures (index fetched 2026-10-04, report pages 2026-09-27) and fixtures/manifest.json, never live.
+// fixtures (index and report pages fetched 2026-11-21) and fixtures/manifest.json, never live.
 
 const INDEX = fixtureText('fixtures/disclosures/openai-misalignment-reports.html')
 const page = (slug: string) =>
   fixtureText(`fixtures/disclosures/openai-misalignment-report-${slug}.html`)
+const BASE = 'https://openai.com/safety-alignment/misalignment-reports/'
 const DNS = 'an-agent-used-dns-to-reach-an-external-chatbot'
 const SELF_REPLICATING = 'self-replicating-prompt-injections-exist'
 const UPLOADING = 'uploading-files-to-the-internet-in-order-to-cite-them'
@@ -29,15 +31,17 @@ const UPLOADING = 'uploading-files-to-the-internet-in-order-to-cite-them'
 describe('the misalignment index', () => {
   const { rows, skipped } = parseOpenAiMisalignmentReports(INDEX)
 
-  test('12 reports and 3 notices, nothing skipped, provenance from the manifest', () => {
+  test('26 reports and 3 notices, the 9 the HTML hides behind "Load more" included', () => {
     expect(DisclosureIndexOutput.safeParse({ rows }).success).toBe(true)
     expect(skipped).toEqual([])
-    expect(rows.filter((r) => r.kind === 'report')).toHaveLength(12)
+    expect(rows.filter((r) => r.kind === 'report')).toHaveLength(26)
     expect(rows.filter((r) => r.kind === 'notice').map((r) => r.entry_id)).toEqual([
       'rubygems',
       'dsewiki',
       'hugging-face',
     ])
+    // The oldest report is past the 20 the markup renders; only the payload has it.
+    expect(rows.map((r) => r.entry_id)).toContain(UPLOADING)
     const prov = provenanceOf('openai-misalignment-reports')
     for (const r of rows) {
       expect(r.provider).toBe('openai')
@@ -46,31 +50,26 @@ describe('the misalignment index', () => {
     }
   })
 
-  test('a report is the page’s own words: title, summary, model and context verbatim', () => {
+  test('a report is the page’s own words; the index prints no model any more', () => {
     const dns = rows.find((r) => r.entry_id === DNS)!
     expect(dns).toMatchObject({
       kind: 'report',
       title: 'An agent used DNS to reach an external chatbot',
-      model: 'Internal research model',
-      observed_during: 'RL training',
+      model: null,
+      observed_during: null,
       listed_on: '2026-09-25',
-      entry_url: `https://alignment.openai.com/misalignment-reports/${DNS}/`,
+      entry_url: `${BASE}${DNS}/`,
     })
     expect(dns.summary).toBe(
       'An agent attempting to complete a search-based training task queried a public chatbot service through a gap in our internet-access restrictions: insufficient DNS filtering in its training sandbox.',
     )
     // Typographic apostrophes are kept as printed, not "cleaned".
-    expect(
-      rows.find(
-        (r) => r.entry_id === 'unauthorized-artifactory-writes-and-cross-sample-communication',
-      )!.summary,
-    ).toContain('OpenAI’s')
-    expect(
-      rows.find((r) => r.entry_id === 'encouraging-deception-in-compaction-summaries')!.model,
-    ).toBe('5.6-sol')
+    expect(rows.find((r) => r.entry_id.startsWith('using-peers-work-to-gain'))!.title).toBe(
+      'Using peers’ work to gain unauthorized access to OpenAI research infrastructure',
+    )
   })
 
-  test('a notice links to its update as printed, and carries no model', () => {
+  test('a notice links to its update as printed, keeps the id the old index gave it, and carries no model', () => {
     const hf = rows.find((r) => r.entry_id === 'hugging-face')!
     expect(hf).toMatchObject({
       kind: 'notice',
@@ -83,52 +82,47 @@ describe('the misalignment index', () => {
     })
   })
 
-  test('a report without a model line keeps its row with no model, nothing invented', () => {
-    const bare = INDEX.replace(
-      '<p class="report-topics">Internal research model · RL training</p>',
-      '',
-    )
-    const dns = parseOpenAiMisalignmentReports(bare).rows.find((r) => r.entry_id === DNS)!
-    expect(dns).toMatchObject({ model: null, observed_during: null })
-    // A model line with no separator is a model, not a context.
-    const lone = INDEX.replace(
-      '<p class="report-topics">Internal research model · RL training</p>',
-      '<p class="report-topics">Internal research model</p>',
-    )
-    expect(parseOpenAiMisalignmentReports(lone).rows.find((r) => r.entry_id === DNS)).toMatchObject(
-      { model: 'Internal research model', observed_during: null },
-    )
-  })
-
   test('an index with no entries yet is an empty result, not a failure', () => {
-    const empty = INDEX.replace(/<tbody class="report-entry"[\s\S]*?<\/tbody>/g, '')
-    expect(empty).not.toContain('report-entry')
-    expect(empty).toContain('class="cb-index"')
-    expect(parseOpenAiMisalignmentReports(empty)).toEqual({ rows: [], skipped: [] })
+    expect(parseOpenAiMisalignmentReports(indexPage([]))).toEqual({ rows: [], skipped: [] })
   })
 
   test('a redesigned page fails the source instead of emptying it', () => {
     expect(() => parseOpenAiMisalignmentReports('<html><body>moved</body></html>')).toThrow(
-      'no <tbody class="report-entry"> entries',
+      'no "items" payload',
     )
-    // Entries present but no report title link: every one is skipped, none is a report.
-    const noReports = INDEX.replaceAll('class="report-title"', 'class="other-title"')
-    expect(() => parseOpenAiMisalignmentReports(noReports)).toThrow('parsed as a report')
+    // The page's own markup alone is not enough: the HTML lists only the first 20.
+    expect(() =>
+      parseOpenAiMisalignmentReports(INDEX.replace(/self\.__next_f\.push/g, 'self.other.push')),
+    ).toThrow('no "items" payload')
+    // Entries present but none a report: the source fails rather than reading as empty.
+    const notices = committedIndexItems().filter((i) => i.filters.type[0] === 'notices')
+    expect(() => parseOpenAiMisalignmentReports(indexPage(notices))).toThrow('parsed as a report')
   })
 
-  test('an entry missing its link is skipped by name, not dropped silently', () => {
-    const broken = INDEX.replace(
-      /(id="report-an-agent-used-dns-to-reach-an-external-chatbot"[\s\S]*?)<a class="report-title" href="[^"]*">/,
-      '$1<a class="report-title" href="/elsewhere/">',
+  test('an entry it cannot read is skipped by name, not dropped silently', () => {
+    const out = parseOpenAiMisalignmentReports(
+      indexPage(withReport(DNS, (i) => ({ ...i, href: '/elsewhere/' }))),
     )
-    const out = parseOpenAiMisalignmentReports(broken)
-    expect(out.rows).toHaveLength(14)
+    expect(out.rows).toHaveLength(28)
     expect(out.skipped).toEqual([
       {
         entry: 'An agent used DNS to reach an external chatbot',
-        reason: 'report link is not /misalignment-reports/<slug>/: /elsewhere/',
+        reason: 'report link is not /safety-alignment/misalignment-reports/<slug>/: /elsewhere/',
       },
     ])
+    const untyped = parseOpenAiMisalignmentReports(
+      indexPage(withReport(DNS, (i) => ({ ...i, filters: { type: ['stories'] } }))),
+    )
+    expect(untyped.skipped.map((s) => s.reason)).toEqual([
+      'type is not reports or notices: ["stories"]',
+    ])
+  })
+
+  test('the synthetic page parses exactly as the committed one', () => {
+    expect(parseOpenAiMisalignmentReports(indexPage(committedIndexItems()))).toEqual({
+      rows,
+      skipped,
+    })
   })
 
   test('keys: provider + kind + entry id; a revision is one modified row', () => {
@@ -141,9 +135,11 @@ describe('the misalignment index', () => {
 
     // Bump the DNS report's "Last updated" date alone.
     const revised = parseOpenAiMisalignmentReports(
-      INDEX.replace(
-        /(id="report-an-agent-used-dns[\s\S]*?data-label="Last updated"><time datetime=")2026-09-25/,
-        '$12026-10-02',
+      indexPage(
+        withReport(DNS, (i) => ({
+          ...i,
+          reportDates: { ...i.reportDates, lastUpdated: '2026-10-02' },
+        })),
       ),
     )
     const changes = diff(
@@ -162,7 +158,15 @@ describe('the misalignment index', () => {
     const before = normalizeDisclosures(rows, 'snap-1')
     const after = normalizeDisclosures(
       parseOpenAiMisalignmentReports(
-        INDEX.replaceAll('insufficient DNS filtering', 'insufficient DNS and proxy filtering'),
+        indexPage(
+          withReport(DNS, (i) => ({
+            ...i,
+            description: i.description.replace(
+              'insufficient DNS filtering',
+              'insufficient DNS and proxy filtering',
+            ),
+          })),
+        ),
       ).rows,
       'snap-2',
     )
@@ -173,18 +177,22 @@ describe('the misalignment index', () => {
 })
 
 describe('a report page', () => {
-  test('layout one: sample and discovery lines verbatim, discovery read as a date', () => {
+  test('the scope line is the model and context; dates are read, "Last updated" is dropped', () => {
     const out = parseOpenAiMisalignmentReport(page(DNS), DNS)
     expect(DisclosureReportPageOutput.safeParse(out).success).toBe(true)
     expect(out.rows[0]).toMatchObject({
       entry_id: DNS,
       title: 'An agent used DNS to reach an external chatbot',
+      model: 'Internal research model',
+      observed_during: 'RL training',
       lines: [
-        { label: 'Sample', value: 'Sep 20, 2026' },
         { label: 'Discovery', value: 'Sep 20, 2026' },
+        { label: 'Incident date', value: 'Sep 20, 2026' },
+        { label: 'First posted', value: 'Sep 25, 2026' },
+        { label: 'Sample', value: 'Sep 20, 2026' },
       ],
       discovered_on: '2026-09-20',
-      disclosed_on: null,
+      disclosed_on: '2026-09-25',
       ...provenanceOf(`openai-misalignment-report-${DNS}`),
     })
   })
@@ -196,6 +204,8 @@ describe('a report page', () => {
       provenanceOf(`openai-misalignment-report-${SELF_REPLICATING}`),
     )
     expect(out.rows[0]).toMatchObject({
+      model: 'GPT-Red-style internal model based on GPT-5.4-mini',
+      observed_during: 'RL self-play training',
       lines: [
         { label: 'Discovery date', value: 'Jun 27, 2026' },
         { label: 'Disclosure date', value: 'Sep 25, 2026' },
@@ -205,7 +215,7 @@ describe('a report page', () => {
     })
   })
 
-  test('layout two, and an occurrence naming two dates stays verbatim', () => {
+  test('an occurrence naming two dates stays verbatim', () => {
     const out = parseOpenAiMisalignmentReport(
       page(UPLOADING),
       UPLOADING,
@@ -214,23 +224,41 @@ describe('a report page', () => {
     expect(out.rows[0]).toMatchObject({
       title: 'Uploading files to the internet in order to cite them',
       lines: [
-        { label: 'Samples', value: 'Jan 24, 2026 and Oct 22, 2025' },
         { label: 'Discovery', value: 'May 25, 2026' },
+        { label: 'Incident dates', value: 'Jan 24, 2026; Oct 22, 2025' },
+        { label: 'First posted', value: 'Sep 16, 2026' },
+        { label: 'Samples', value: 'Jan 24, 2026 and Oct 22, 2025' },
       ],
       discovered_on: '2026-05-25',
-      disclosed_on: null,
+      disclosed_on: '2026-09-16',
+    })
+  })
+
+  test('a scope line without a separator is a model, not a context; none is no model', () => {
+    const lone = page(DNS).replace(
+      '<strong>Internal research model · RL training</strong>',
+      '<strong>Internal research model</strong>',
+    )
+    expect(parseOpenAiMisalignmentReport(lone, DNS).rows[0]).toMatchObject({
+      model: 'Internal research model',
+      observed_during: null,
+    })
+    const bare = page(DNS).replace('<strong>Internal research model · RL training</strong>', '')
+    expect(parseOpenAiMisalignmentReport(bare, DNS).rows[0]).toMatchObject({
+      model: null,
+      observed_during: null,
     })
   })
 
   test('refuses a page it cannot place or read', () => {
     expect(() => parseOpenAiMisalignmentReport(page(DNS), null)).toThrow('derived for')
-    expect(() => parseOpenAiMisalignmentReport('<html></html>', DNS)).toThrow('no <article')
-    const twoDiscoveries = page(DNS)
-      .replace('Sample: </span>', 'Discovered: </span>')
-      .replace(
-        '>Sep 20, 2026</span></p><p data-docx-paragraph="4"',
-        '>Sep 19, 2026</span></p><p data-docx-paragraph="4"',
-      )
+    expect(() => parseOpenAiMisalignmentReport('<html></html>', DNS)).toThrow(
+      'no <div data-safety-report-metadata>',
+    )
+    const twoDiscoveries = page(DNS).replace(
+      'Incident date: Sep 20, 2026',
+      'Discovered: Sep 19, 2026',
+    )
     expect(() => parseOpenAiMisalignmentReport(twoDiscoveries, DNS)).toThrow('two different')
   })
 
@@ -262,6 +290,8 @@ describe('lanes and text helpers', () => {
 
   test('textOf decodes entities and drops tags', () => {
     expect(textOf('<span>A &amp; B&#x27;s <br>line</span>')).toBe("A & B's line")
+    // React's separator between adjacent text nodes is not text.
+    expect(textOf('Discovered: Jul 9, 2026<!-- -->')).toBe('Discovered: Jul 9, 2026')
     // An unknown or prototype-named entity is left as printed, never looked up.
     expect(textOf('&constructor; &bogus;')).toBe('&constructor; &bogus;')
   })

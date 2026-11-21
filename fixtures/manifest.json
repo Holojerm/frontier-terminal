@@ -485,42 +485,42 @@
     {
       "path": "fixtures/disclosures/openai-misalignment-reports.html",
       "source_id": "openai-misalignment-reports",
-      "source_url": "https://alignment.openai.com/misalignment-reports/",
-      "fetched_at": "2026-10-08T23:43:06Z",
+      "source_url": "https://openai.com/safety-alignment/misalignment-reports/",
+      "fetched_at": "2026-11-21T01:53:24Z",
       "http_status": 200,
-      "raw_bytes": 43435,
+      "raw_bytes": 368495,
       "trim": "none — committed whole",
-      "note": "Server-rendered HTML (Vercel, ETag + Last-Modified 2026-10-07T18:10:41Z). 12 reports and 3 notices, one <tbody class=\"report-entry\" id=\"report-*|notice-*\"> each: a title row (<a class=\"report-title\"> with the report link, Incident / First posted / Last updated <time datetime> cells) and a description row (<a class=\"description-content\"> holding the observation <p> and, on reports, two <p class=\"report-topics\">: Model · Observed-during, then the topics). Notices have no Last updated cell and link to an openai.com update. Replaces the 2026-10-04 capture: the 2026-10-07 redesign swapped the <details class=\"cb-entry\"> list for a sortable table. The site's rss.xml stops at 2026-07-21 and lists none of these, so this page is the only index."
+      "note": "Server-rendered Next.js page on openai.com (Cloudflare), fetched with the poller's User-Agent after the 308 from alignment.openai.com/misalignment-reports/. 26 reports and 3 notices (Hugging Face, DSEwiki, RubyGems). The HTML renders the first 20 behind a Load more button; all 29 are one \"items\" array in the self.__next_f flight payload, each with title, href, description, reportDates (incidents, discovered, firstPosted, lastUpdated) and filters.type. No model or observed-during line on the index any more. Replaces the 2026-10-08 capture of the <tbody class=\"report-entry\"> table on alignment.openai.com."
     },
     {
       "path": "fixtures/disclosures/openai-misalignment-report-an-agent-used-dns-to-reach-an-external-chatbot.html",
       "source_id": "openai-misalignment-report-an-agent-used-dns-to-reach-an-external-chatbot",
-      "source_url": "https://alignment.openai.com/misalignment-reports/an-agent-used-dns-to-reach-an-external-chatbot/",
-      "fetched_at": "2026-09-27T03:20:33Z",
+      "source_url": "https://openai.com/safety-alignment/misalignment-reports/an-agent-used-dns-to-reach-an-external-chatbot/",
+      "fetched_at": "2026-11-21T01:55:16Z",
       "http_status": 200,
-      "raw_bytes": 56284,
+      "raw_bytes": 426706,
       "trim": "none — committed whole",
-      "note": "One representative per-report page for the derived openai-misalignment-report-<slug> sources (server/pipeline/derived.ts): the determinism gate runs the shared parser on this page. Metadata cell reads 'Internal research model · RL training' / 'Sample: Sep 20, 2026' / 'Discovery: Sep 20, 2026' / 'Report updated: Sep 25, 2026'."
+      "note": "One representative per-report page for the derived openai-misalignment-report-<slug> sources (server/pipeline/derived.ts): the determinism gate runs the shared parser on this page. Its <div data-safety-report-metadata> reads '<strong>Internal research model · RL training</strong>' / 'Discovery: Sep 20, 2026' / 'Incident date: Sep 20, 2026' / 'First posted: Sep 25, 2026' / 'Last updated: Sep 25, 2026' / 'Sample: Sep 20, 2026'."
     },
     {
       "path": "fixtures/disclosures/openai-misalignment-report-self-replicating-prompt-injections-exist.html",
       "source_id": "openai-misalignment-report-self-replicating-prompt-injections-exist",
-      "source_url": "https://alignment.openai.com/misalignment-reports/self-replicating-prompt-injections-exist/",
-      "fetched_at": "2026-09-27T03:20:33Z",
+      "source_url": "https://openai.com/safety-alignment/misalignment-reports/self-replicating-prompt-injections-exist/",
+      "fetched_at": "2026-11-21T01:55:17Z",
       "http_status": 200,
-      "raw_bytes": 89067,
+      "raw_bytes": 463326,
       "trim": "none — committed whole",
-      "note": "Test fixture: the one report of nine that prints its own 'Disclosure date: Sep 25, 2026' line (label and value in one span), beside 'Discovery date: Jun 27, 2026'."
+      "note": "Test fixture: the one report of 26 that prints 'Disclosure date: Sep 25, 2026' instead of a First posted line, beside 'Discovery date: Jun 27, 2026' and 'Report updated: Sep 25, 2026'."
     },
     {
       "path": "fixtures/disclosures/openai-misalignment-report-uploading-files-to-the-internet-in-order-to-cite-them.html",
       "source_id": "openai-misalignment-report-uploading-files-to-the-internet-in-order-to-cite-them",
-      "source_url": "https://alignment.openai.com/misalignment-reports/uploading-files-to-the-internet-in-order-to-cite-them/",
-      "fetched_at": "2026-09-27T03:22:19Z",
+      "source_url": "https://openai.com/safety-alignment/misalignment-reports/uploading-files-to-the-internet-in-order-to-cite-them/",
+      "fetched_at": "2026-11-21T01:55:21Z",
       "http_status": 200,
-      "raw_bytes": 105685,
+      "raw_bytes": 450009,
       "trim": "none — committed whole",
-      "note": "Test fixture: the second page layout (data-source-index paragraphs, no data-web-metadata attributes), and an occurrence line naming two dates ('Samples: Jan 24, 2026 and Oct 22, 2025') that is kept verbatim, never read as one date."
+      "note": "Test fixture: occurrence lines naming two dates ('Incident dates: Jan 24, 2026; Oct 22, 2025', 'Samples: Jan 24, 2026 and Oct 22, 2025') that are kept verbatim, never read as one date."
     },
     {
       "path": "fixtures/sec/xbrl-segment-googl-2026-10-29.xml",

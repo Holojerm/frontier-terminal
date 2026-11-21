@@ -25,9 +25,15 @@ export function decodeEntities(text: string): string {
   })
 }
 
-/** Visible text of an HTML fragment: `<br>` is a space, every other tag is dropped. */
+/** Visible text of an HTML fragment: `<br>` is a space, every other tag and comment is dropped
+ * (React leaves `<!-- -->` between adjacent text nodes). */
 export function textOf(fragment: string): string {
-  return decodeEntities(fragment.replace(/<br\s*\/?>/gi, ' ').replace(/<\/?[a-z][^>]*>/gi, ''))
+  return decodeEntities(
+    fragment
+      .replace(/<!--[\s\S]*?-->/g, '')
+      .replace(/<br\s*\/?>/gi, ' ')
+      .replace(/<\/?[a-z][^>]*>/gi, ''),
+  )
     .replace(/\s+/g, ' ')
     .trim()
 }
