@@ -1,7 +1,6 @@
-// The price catalog and matrix, one SKU's history, the SKU keys the sitemap
-// lists, and model releases.
+// The price catalog and matrix, one SKU's history, and model releases.
 
-import { and, eq, max, min, sql } from 'drizzle-orm'
+import { and, eq, min } from 'drizzle-orm'
 import type {
   LabId,
   MatrixCell,
@@ -31,7 +30,6 @@ import {
   ARCHIVED_AS_OF_METHOD,
   ARCHIVED_LABS_AS_OF_METHOD,
   archivedCatalogAt,
-  archivedPriceKeys,
   archivedRowsForKey,
   beforeLiveFloor,
   labLiveFloors,
@@ -41,7 +39,6 @@ import {
 import {
   archivedPriceHistory,
   byDetectedAt,
-  dayOf,
   priceHistory,
   releaseEvents,
   sparkOf,
@@ -609,64 +606,6 @@ export async function queryPriceHistory(
     removed: entities.length === 0 && newest?.change_type === 'removed',
     archive_only: points.length > 0 && points.every((p) => p.basis === 'archived'),
   }
-}
-
-/**
- * Every SKU on record with its newest observation. `history` is whether the key
- * has a revision or an archived capture, i.e. whether its page shows more than
- * one price. A listing alone ('added') is still one price.
- */
-export async function queryPriceKeys(
-  db: PipelineDb,
-): Promise<{ entity_key: string; lastmod: string; history: boolean }[]> {
-  const [current, logged, archived] = await Promise.all([
-    db
-      .select({ entity_key: tables.entities.entity_key, at: max(tables.entities.fetched_at) })
-      .from(tables.entities)
-      .where(eq(tables.entities.entity_type, 'model'))
-      .groupBy(tables.entities.entity_key),
-    db
-      .select({
-        entity_key: tables.changes.entity_key,
-        at: max(tables.changes.detected_at),
-        revisions: sql<number>`sum(case when ${tables.changes.change_type} = 'modified' then 1 else 0 end)`,
-      })
-      .from(tables.changes)
-      .where(eq(tables.changes.entity_type, 'model'))
-      .groupBy(tables.changes.entity_key),
-    archivedPriceKeys(db),
-  ])
-  const newest = new Map<string, string>()
-  for (const row of [...current, ...logged, ...archived]) {
-    if (!row.at) continue
-    const seen = newest.get(row.entity_key)
-    if (!seen || Date.parse(row.at) > Date.parse(seen)) newest.set(row.entity_key, row.at)
-  }
-  const withHistory = new Set([
-    ...logged.filter((row) => Number(row.revisions) > 0).map((row) => row.entity_key),
-    ...archived.map((row) => row.entity_key),
-  ])
-  return [...newest]
-    .map(([entity_key, at]) => ({
-      entity_key,
-      lastmod: dayOf(at),
-      history: withHistory.has(entity_key),
-    }))
-    .sort((a, b) => byString(a.entity_key, b.entity_key))
-}
-
-/**
- * The SKU pages worth a crawler's budget. A base SKU (`model:<lab>:<slug>`) is
- * always listed: it is the page that answers "what does <model> cost". A tier
- * variant (`…:batch`, `…:flex`, `…:priority`) is listed once its price has a
- * history; until then its page is the base page's table with one cell changed,
- * and ~450 of those would make templated near-duplicates most of the sitemap.
- * Unlisted pages stay indexable and linked; they are just not advertised.
- */
-export function sitemapPriceKeys<T extends { entity_key: string; history: boolean }>(
-  skus: T[],
-): T[] {
-  return skus.filter((sku) => sku.history || sku.entity_key.split(':').length <= 3)
 }
 
 // ---- releases --------------------------------------------------------------
