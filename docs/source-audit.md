@@ -982,3 +982,40 @@ Taiwan's listed companies must publish the month before's revenue by the 10th (S
 | Korea Customs Service releases | 10-day, 20-day and monthly figures, fetchable without a key through KCS's own document viewer. KOGL Type 1 since about October 2026; earlier releases carry no mark | **Deferred** to the next PR; history before the mark free-site only |
 
 Ties from each Taiwan company to whom it builds for or supplies are quotes from NVIDIA's and AMD's 10-Ks, NVIDIA, OpenAI, Samsung, Micron and Meta newsrooms, and Wiwynn's annual report (`layers/terminal/server/curated/print-ties.json`). No hyperscaler tie for Quanta, Wiwynn, TSMC, Gigabyte or Delta came from a primary source, so none is listed.
+
+## Addendum, 2026-11-21: hiring at the listed companies
+
+Checked to see whether the listed companies around the labs post their open roles somewhere we may read. The hypothesis the signals harness tests: data-center operations, site and construction hiring comes two to three quarters before megawatts are energized, and before revenue at the neoclouds and miners. So the boards that matter most are the hosts': neoclouds, miners turning host, and the hyperscalers' data-center teams.
+
+| Company | Board | robots.txt | Terms (read 2026-11-21) | Verdict |
+|---|---|---|---|---|
+| CoreWeave (CRWV), Nebius (NBIS), Galaxy (GLXY), Hut 8 (HUT), Cipher Digital (CIFR), Astera Labs (ALAB) | Greenhouse job board API, `/departments` | Disallows only `/embed/` | Greenhouse: "Job Board data is publicly available". No company terms we found address automated reading | Include |
+| Cerebras (CBRS) | Ashby posting API | None (401) | Ashby documents it as public | Include |
+| Credo (CRDO) | HiBob careers API | None served | Credo's legal page and HiBob's terms say nothing on automated access | Include |
+| Google (GOOGL) | Careers feed, already read by the careers lane | As `google-careers` | As `google-careers` | Include, data-center roles only, from the archived copy |
+| IREN | HiBob | None served | Bars "any text or data mining or web scraping" of its sites or services provided through them | Cut |
+| NVIDIA (NVDA) | Workday | Allows the career site | Bars "any robot, spider, scraper, crawler, data mining tool" | Cut |
+| Oracle (ORCL) | Oracle Recruiting | — | Bars "any robot, spider, scraper or other automated means" | Cut |
+| Meta (META) | metacareers.com | "Collection of data … through automated means is prohibited" | — | Cut |
+| Amazon (AMZN) | amazon.jobs search | Allows search | Its A to Z Conditions of Use exclude "any use of data mining, robots, or similar data gathering and extraction tools" | Cut |
+| Supermicro (SMCI) | — | 403 to a non-browser client | — | Cut |
+| Arista (ANET) | — | Careers page 406s; no board API answers | — | Cut |
+| Core Scientific (CORZ) | Greenhouse, sign-in only | — | — | Cut |
+| Applied Digital (APLD), TeraWulf (WULF) | ADP Workforce Now | Redirects to sign-in | No public job API | Cut |
+| Riot (RIOT) | Rippling board API | Disallows only `/internal/` | Rippling's terms render only in a browser; unread | Deferred |
+| HPE | Workday | Allows `/Jobsathpe/` | hpe.com's terms timed out from every client | Deferred |
+| Dell (DELL) | Oracle Recruiting Cloud | — | Site terms silent; needs a reader of its own | Deferred |
+| Microsoft (MSFT) | Eightfold search API | Allows `/api/pcsx` | Bars any means "not intentionally made available"; ten roles a request | Deferred |
+
+The exact sentences are in `sources.yaml` under `listed_hiring_sources`.
+
+**How a role is classed.** By rule, from the board's own title, then its department (`classifyRole` in `layers/terminal/shared/utils/listed-hiring.ts`, tested on titles from every captured board). Data-center: operations, site, construction, facilities, commissioning, environmental health and safety, power and interconnection, real estate and site selection. Infrastructure: GPU, HPC, cluster, fleet, site reliability, networking, storage, Kubernetes, bare metal. A corporate function is other on any team: a recruiter for data-center operations, an accountant for construction, an account executive selling to data centers. On the captured boards: CoreWeave 44 data-center and 49 infrastructure of 316, Nebius 82 and 92 of 367, Cerebras 18 and 32 of 132, and 256 Google data-center roles of the 2,820 Google-employer roles in the feed (its DATA_CENTER_OPERATIONS category, plus titles naming data-center work in other categories).
+
+**Limits.**
+
+- **A chipmaker's data-center roles are noise.** Astera's and Credo's "data center" roles mostly sell to data centers, so only their totals are registered as signals.
+- **One board, one company.** Galaxy's board covers its trading business. Hut 8's lists American Bitcoin's roles.
+- **HiBob's API isn't documented.** A changed payload fails the read instead of emptying the board, and a board that lists no roles after ten or more fails too.
+- **History starts at our first read.** Closed roles before 2026-11-21 aren't known, so the harness reads "not enough history" until the series grows.
+
+**Verdict: include the nine boards above under `listed_hiring_sources`, read daily at 04:00 UTC.** The owner approved the alpha program on 2026-11-20. The four deferred boards wait on the owner.

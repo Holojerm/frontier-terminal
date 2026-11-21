@@ -197,6 +197,9 @@ const securityHeaders = {
 //                other task's requests queue in front of a probe.
 //   0 4 * * *  — seo:indexnow submits the sitemap URLs changed since its last
 //                accepted run to IndexNow (server/utils/indexnow.ts).
+//              — hiring:listed reads the listed companies' job boards, one request
+//                each, and streams Google's from the careers lane's archived copy
+//                (layers/terminal/server/listed-hiring/read.ts).
 //   29 5 * * TUE — power:verify re-reads each utility, regulator and company page
 //                the power-sites table cites and spools an ops event for a quote
 //                that is gone (layers/terminal/server/power/verify.ts).
@@ -218,7 +221,7 @@ const SCHEDULED_TASKS: Record<string, string[]> = {
     'prints:read',
   ],
   '7 * * * *': ['probes:latency'],
-  '0 4 * * *': ['seo:indexnow'],
+  '0 4 * * *': ['seo:indexnow', 'hiring:listed'],
   '29 5 * * TUE': ['power:verify'],
   '40 6 * * *': ['signals:prices'],
   '10 7 * * *': ['signals:run'],

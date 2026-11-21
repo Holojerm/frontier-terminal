@@ -10,6 +10,7 @@
 // rollups (pipeline/probes/, probe_days).
 
 import { PRINT_ENTITIES } from '../../shared/utils/prints'
+import { LISTED_BOARDS } from '../../shared/utils/listed-hiring'
 import type { LabId } from '../../shared/utils/terminal-types'
 import type {
   SignalEntityKind,
@@ -43,6 +44,8 @@ export type SignalSource =
   | { kind: 'ercot_large_loads'; metric: 'observed_peak_mw' | 'approved_to_energize_mw' }
   /** A Taiwan company's monthly revenue (hardware_prints): the year-on-year change its first release stated. */
   | { kind: 'prints'; series: 'tw_revenue'; entity: string }
+  /** A listed company's job board (listed_hiring_reads): every open role, or its data-center roles. */
+  | { kind: 'listed_hiring'; board: string; metric: 'total' | 'datacenter' }
 
 export interface SignalDef {
   /** Stable: results, exports and links key on it. Never reuse a retired id. */
@@ -311,6 +314,50 @@ const twRevenue = (entity: (typeof PRINT_ENTITIES)[number]): SignalDef => ({
     entity.id === 'tsmc' ? '2015-01-01' : entity.id === 'accton' ? '2023-07-01' : '2026-10-01',
 })
 
+/**
+ * The stocks a host's data-center hiring should lead beyond its own: the GPU
+ * maker it buys from, and the tenants and lessees its filings name
+ * (suppliers.json). Hiring for a site comes before the megawatts, and the
+ * megawatts before the revenue.
+ */
+export const LISTED_HIRING_TICKERS: Readonly<Record<string, readonly string[]>> = {
+  CRWV: ['NVDA'],
+  NBIS: ['NVDA', 'MSFT'],
+  GLXY: ['CRWV'],
+  HUT: ['ANT'],
+  CIFR: ['AMZN', 'GOOGL'],
+  GOOGL: ['AVGO'],
+}
+
+/**
+ * A listed company's open roles, as each week's last read. History starts
+ * at our first read of the boards, so every series is thin for now.
+ */
+const listedHiring = (
+  board: string,
+  ticker: string,
+  company: string,
+  metric: 'total' | 'datacenter',
+): SignalDef => ({
+  id: `listed-hiring-${ticker.toLowerCase()}-${metric === 'total' ? 'open-roles' : 'datacenter-roles'}`,
+  label: metric === 'total' ? `Open roles, ${company}` : `Data-center roles, ${company}`,
+  entity: { kind: 'listed', id: ticker },
+  tickers: metric === 'total' ? [ticker] : [ticker, ...(LISTED_HIRING_TICKERS[ticker] ?? [])],
+  source: { kind: 'listed_hiring', board, metric },
+  transform: 'level',
+  frequency: 'weekly',
+  test: 'lead_lag',
+  aggregate: 'last',
+  available_after_days: 1,
+  history_from: '2026-11-21',
+})
+
+/** Every board's total, and a host's data-center roles: a chipmaker's "data center" roles sell to them. */
+const LISTED_HIRING_SIGNALS: readonly SignalDef[] = LISTED_BOARDS.flatMap((b) => [
+  ...(b.scope === 'all' ? [listedHiring(b.id, b.ticker, b.company, 'total')] : []),
+  ...(b.host ? [listedHiring(b.id, b.ticker, b.company, 'datacenter')] : []),
+])
+
 export const SIGNALS: readonly SignalDef[] = [
   npm('npm-anthropic-sdk', 'anthropic', '@anthropic-ai/sdk npm downloads'),
   npm('npm-claude-code', 'anthropic', 'Claude Code npm downloads'),
@@ -408,6 +455,7 @@ export const SIGNALS: readonly SignalDef[] = [
   ercot('observed_peak_mw', 'ERCOT large load observed, sum of monthly peaks'),
   ercot('approved_to_energize_mw', 'ERCOT large load approved to energize'),
   ...PRINT_ENTITIES.filter((e) => e.series === 'tw_revenue').map(twRevenue),
+  ...LISTED_HIRING_SIGNALS,
 ]
 
 /** Where a series is read from, in the names /data and the exports use. */
@@ -437,5 +485,7 @@ export function sourceLabel(source: SignalSource): string {
       return `ercot_large_load_facts: ${source.metric}, first stated`
     case 'prints':
       return `hardware_prints: ${source.series} ${source.entity}, stated year-on-year change, first release`
+    case 'listed_hiring':
+      return `listed_hiring_reads: ${source.board}, ${source.metric === 'total' ? 'open roles' : 'data-center roles'}`
   }
 }

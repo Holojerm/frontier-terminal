@@ -23,6 +23,21 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.23.0 (2026-11-21)
+
+Hiring at the listed companies around the labs. Two new tables:
+
+- `listed_jobs` has every role the job boards of CoreWeave, Nebius, Galaxy,
+  Hut 8, Cipher Digital, Cerebras, Astera Labs and Credo have listed since our
+  first read, and Google's data-center roles, each classed as data-center work,
+  infrastructure engineering or other, with when it was first listed and when
+  it closed.
+- `listed_hiring_reads` has each daily read's counts.
+
+`/api/hiring/listed` and `get_listed_hiring` derive the weekly levels and their
+change on the week before. The dictionary's sources gain
+`listed_hiring_sources`.
+
 ## 1.22.0 (2026-11-21)
 
 A new table, `hardware_prints`: the monthly revenue of TSMC, Hon Hai, Quanta,

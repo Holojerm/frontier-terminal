@@ -3172,6 +3172,299 @@ print_sources:
       pages' own terms were not read one by one. Taken: one attributed
       sentence per tie, with its URL, never the page. Read 2026-11-21.
     rights: restricted
+
+# The listed companies' job boards behind /api/hiring/listed
+# (layers/terminal/server/listed-hiring/, LISTED_BOARDS and LISTED_CUTS in
+# layers/terminal/shared/utils/listed-hiring.ts). Read daily at 04:00 UTC,
+# one request per board. Every candidate is here, read or cut, with its terms
+# and robots.txt as read 2026-11-21 (docs/source-audit.md, "Listed-company
+# hiring").
+listed_hiring_sources:
+  listed-coreweave-greenhouse:
+    ticker: CRWV
+    company: CoreWeave
+    url: https://boards-api.greenhouse.io/v1/boards/coreweave/departments
+    format: JSON, Greenhouse job board departments with each open job inline (~320 kB)
+    verdict: include
+    terms: >-
+      Greenhouse (developers.greenhouse.io/job-board.html): "Job Board data is
+      publicly available, so authentication is not required for any GET
+      endpoints." boards-api.greenhouse.io/robots.txt disallows only /embed/.
+      CoreWeave's own terms (docs.coreweave.com/policies/terms-of-service) are
+      its cloud service's and say nothing about its job board. Taken: title,
+      department, location and first-published date per open role, daily; no
+      posting body and no names of people. Read 2026-11-21.
+    rights: ours
+    fixture: fixtures/listed-hiring/coreweave-greenhouse.json
+    caveats: 316 roles at 2026-11-21.
+  listed-nebius-greenhouse:
+    ticker: NBIS
+    company: Nebius
+    url: https://boards-api.greenhouse.io/v1/boards/nebius/departments
+    format: JSON, Greenhouse job board departments, nested (a parent lists its own jobs; a job keeps its deepest department)
+    verdict: include
+    terms: >-
+      Same Greenhouse terms and robots.txt as listed-coreweave-greenhouse.
+      Nebius's terms of use (docs.nebius.com/legal/terms-of-use) say nothing
+      about automated reading. Taken: as for CoreWeave, daily. Read
+      2026-11-21.
+    rights: ours
+    fixture: fixtures/listed-hiring/nebius-greenhouse.json
+    caveats: 367 roles at 2026-11-21.
+  listed-galaxy-greenhouse:
+    ticker: GLXY
+    company: Galaxy Digital
+    url: https://boards-api.greenhouse.io/v1/boards/galaxydigitalservices/departments
+    format: JSON, Greenhouse job board departments
+    verdict: include
+    terms: >-
+      Same Greenhouse terms and robots.txt as listed-coreweave-greenhouse.
+      Galaxy's site terms (galaxy.com/terms) have no clause on robots,
+      scrapers or automated access. Taken: as for CoreWeave, daily. Read
+      2026-11-21.
+    rights: ours
+    fixture: fixtures/listed-hiring/galaxy-greenhouse.json
+    caveats: >-
+      56 roles at 2026-11-21. One board for all of Galaxy, its trading and
+      asset management as well as its data centers (Helios).
+  listed-hut8-greenhouse:
+    ticker: HUT
+    company: Hut 8
+    url: https://boards-api.greenhouse.io/v1/boards/hut8/departments
+    format: JSON, Greenhouse job board departments
+    verdict: include
+    terms: >-
+      Same Greenhouse terms and robots.txt as listed-coreweave-greenhouse.
+      hut8.com/terms renders only in a browser; the board itself is
+      Greenhouse's. Taken: as for CoreWeave, daily. Read 2026-11-21.
+    rights: ours
+    fixture: fixtures/listed-hiring/hut8-greenhouse.json
+    caveats: >-
+      47 roles at 2026-11-21. Includes roles at American Bitcoin, the miner
+      Hut 8 controls, under that department.
+  listed-cipher-greenhouse:
+    ticker: CIFR
+    company: Cipher Digital
+    url: https://boards-api.greenhouse.io/v1/boards/cipherminingtechnologiesinc/departments
+    format: JSON, Greenhouse job board departments
+    verdict: include
+    terms: >-
+      Same Greenhouse terms and robots.txt as listed-coreweave-greenhouse.
+      Cipher's terms of use (cipherdigital.com/terms-of-use) have no clause on
+      robots, scrapers or automated access; ciphermining.com/careers links
+      this board. Taken: as for CoreWeave, daily. Read 2026-11-21.
+    rights: ours
+    fixture: fixtures/listed-hiring/cipher-greenhouse.json
+    caveats: 6 roles at 2026-11-21. Formerly Cipher Mining; the board keeps the old name.
+  listed-cerebras-ashby:
+    ticker: CBRS
+    company: Cerebras
+    url: https://api.ashbyhq.com/posting-api/job-board/cerebras
+    format: JSON, Ashby posting API (~2 MB with posting bodies, which are dropped)
+    verdict: include
+    terms: >-
+      Ashby documents this as its public job posting API
+      (developers.ashbyhq.com/docs/public-job-posting-api); api.ashbyhq.com has
+      no robots.txt (401). Cerebras's terms of service are its cloud
+      service's and say nothing about its job board. Taken: title,
+      department, location and published date per listed role, daily; no
+      posting body and no names of people. Read 2026-11-21.
+    rights: ours
+    fixture: fixtures/listed-hiring/cerebras-ashby.json
+    caveats: 132 roles at 2026-11-21 (Sunnyvale, so Cerebras Systems).
+  listed-astera-greenhouse:
+    ticker: ALAB
+    company: Astera Labs
+    url: https://boards-api.greenhouse.io/v1/boards/asteralabs/departments
+    format: JSON, Greenhouse job board departments
+    verdict: include
+    terms: >-
+      Same Greenhouse terms and robots.txt as listed-coreweave-greenhouse.
+      asteralabs.com/terms-of-use has no clause on robots, scrapers or
+      automated access. Taken: as for CoreWeave, daily. Read 2026-11-21.
+    rights: ours
+    fixture: fixtures/listed-hiring/astera-greenhouse.json
+    caveats: >-
+      175 roles at 2026-11-21. A chip and connectivity maker: its
+      data-center count is mostly facilities and safety, and roles that sell
+      to data centers stay other.
+  listed-credo-hibob:
+    ticker: CRDO
+    company: Credo
+    url: https://credo.careers.hibob.com/api/job-ad
+    format: JSON, HiBob careers API (the payload credo.careers.hibob.com reads, with a companyidentifier header)
+    verdict: include
+    terms: >-
+      credosemi.com/careers links its roles to credo.careers.hibob.com.
+      Credo's legal page (credosemi.com/legal) and HiBob's terms
+      (hibob.com/privacy/terms-and-conditions) have no clause on robots,
+      scrapers or automated access. The careers host serves no robots.txt (it
+      answers with the app page). Taken: title, department, site, country and
+      published date per role, daily; no posting body and no names of people.
+      Read 2026-11-21.
+    rights: ours
+    fixture: fixtures/listed-hiring/credo-hibob.json
+    caveats: >-
+      21 roles at 2026-11-21. Departments carry a cost-centre code ("5310 US
+      Architecture & FW R&D"), stored verbatim and classed without it. Not a
+      documented API: a changed payload fails the read rather than emptying
+      the board.
+  listed-google-careers:
+    ticker: GOOGL
+    company: Google
+    url: https://www.google.com/about/careers/applications/jobs/feed.xml
+    format: XML job feed, Alphabet-wide (~19 MB), read from the careers lane's archived copy (sources › google-careers)
+    verdict: include — data-center roles only
+    terms: >-
+      Same feed, terms and robots.txt as google-careers. No request of its
+      own: the newest copy the careers lane archived is streamed from R2.
+      Taken: job id, title, categories, locations and published date for
+      Google-employer roles our rule classes as data-center work, daily.
+      Read 2026-11-21.
+    rights: ours
+    fixture: fixtures/listed-hiring/google-careers.xml
+    caveats: >-
+      256 roles classed data-center at 2026-11-21 (187 filed under
+      DATA_CENTER_OPERATIONS), of 2,820 Google-employer roles. Data-center
+      roles only, so there is no total. DeepMind and YouTube roles are not
+      counted here. The fixture is 39 of the feed's 3,131 jobs as fetched
+      2026-11-21T07:05:21Z, with posting bodies emptied; it has no
+      fixtures/manifest.json entry because google-careers' entry already
+      names the feed's URL, and the tests key fixtures by URL.
+  listed-iren:
+    ticker: IREN
+    company: IREN
+    url: https://iren.careers.hibob.com/jobs
+    verdict: cut
+    reason: >-
+      iren.com/legal/terms-of-use: "You shall not conduct, facilitate,
+      authorise or permit any text or data mining or web scraping in relation
+      to our Websites or any services provided via, or in relation to, our
+      Websites", including any robot, bot, spider or scraper. Its board is
+      linked from its site. Read 2026-11-21.
+  listed-nvidia-workday:
+    ticker: NVDA
+    company: NVIDIA
+    url: https://nvidia.wd5.myworkdayjobs.com/NVIDIAExternalCareerSite
+    verdict: cut
+    reason: >-
+      nvidia.com/en-us/about-nvidia/terms-of-service bars using "any robot,
+      spider, scraper, crawler, data mining tool, data gathering or
+      extraction tool" to access or monitor any portion of NVIDIA's sites.
+      Its Workday site's robots.txt allows /NVIDIAExternalCareerSite/, but
+      the terms win. Read 2026-11-21.
+  listed-oracle-careers:
+    ticker: ORCL
+    company: Oracle
+    url: https://careers.oracle.com/
+    verdict: cut
+    reason: >-
+      oracle.com/legal/terms: "You agree not to use any robot, spider,
+      scraper or other automated means to access the Site ... without
+      Oracle's express written permission." Read 2026-11-21.
+  listed-meta-careers:
+    ticker: META
+    company: Meta
+    url: https://www.metacareers.com/
+    verdict: cut
+    reason: >-
+      metacareers.com/robots.txt: "Collection of data on Facebook through
+      automated means is prohibited unless you have express written
+      permission from Facebook." Read 2026-11-21.
+  listed-amazon-jobs:
+    ticker: AMZN
+    company: Amazon
+    url: https://www.amazon.jobs/en/search.json
+    verdict: cut
+    reason: >-
+      amazon.jobs's legal notices point to the Amazon A to Z Conditions of Use
+      (atoz.amazon/en-us/conditions-of-use), which exclude "any use of data
+      mining, robots, or similar data gathering and extraction tools."
+      robots.txt alone would allow its search. Read 2026-11-21.
+  listed-supermicro:
+    ticker: SMCI
+    company: Supermicro
+    url: https://www.supermicro.com/en/about/careers
+    verdict: cut
+    reason: >-
+      supermicro.com answers 403 (Access Denied) to a non-browser client,
+      robots.txt included, so there is no stated permission to read it. We
+      found no public board API. Read 2026-11-21.
+  listed-arista:
+    ticker: ANET
+    company: Arista
+    url: https://www.arista.com/en/careers
+    verdict: cut
+    reason: >-
+      arista.com/en/careers answers 406 to a non-browser client, and no
+      Greenhouse, Ashby, Lever or Workday board answers for it. Read
+      2026-11-21.
+  listed-core-scientific:
+    ticker: CORZ
+    company: Core Scientific
+    url: https://corescientific.com/careers/
+    verdict: cut
+    reason: >-
+      Its careers page links a Greenhouse board that needs a sign-in; the
+      public board API answers 404 for every slug we tried. Read 2026-11-21.
+  listed-applied-digital:
+    ticker: APLD
+    company: Applied Digital
+    url: https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html
+    verdict: cut
+    reason: >-
+      Its board is on ADP Workforce Now, which has no public job API, and
+      workforcenow.adp.com/robots.txt redirects to ADP's sign-in. Read
+      2026-11-21.
+  listed-terawulf:
+    ticker: WULF
+    company: TeraWulf
+    url: https://workforcenow.adp.com/mascsr/default/mdf/recruitment/recruitment.html
+    verdict: cut
+    reason: >-
+      As Applied Digital: an ADP Workforce Now board, with no public job API.
+      Read 2026-11-21.
+  listed-riot-rippling:
+    ticker: RIOT
+    company: Riot Platforms
+    url: https://api.rippling.com/platform/api/ats/v1/board/riot-platforms-careers/jobs
+    verdict: deferred (owner's call)
+    reason: >-
+      The Rippling board API answers (84 roles at 2026-11-21) and
+      ats.rippling.com/robots.txt disallows only /internal/. Rippling's terms
+      (app.rippling.com/legal/user) render only in a browser, so we have not
+      read them, and riotplatforms.com links no terms page. Not read until
+      they are.
+  listed-hpe-workday:
+    ticker: HPE
+    company: HPE
+    url: https://hpe.wd5.myworkdayjobs.com/Jobsathpe
+    verdict: deferred (owner's call)
+    reason: >-
+      The Workday board answers and its robots.txt allows /Jobsathpe/.
+      hpe.com's terms of use timed out from every client we tried, so we have
+      not read them. Not read until they are. A Workday reader would be new.
+  listed-dell-oracle:
+    ticker: DELL
+    company: Dell
+    url: https://enterpriseplatform.dell.com/hcmUI/CandidateExperience/en/sites/careers
+    verdict: deferred (owner's call)
+    reason: >-
+      jobs.dell.com now redirects to Oracle Recruiting Cloud. Dell's site terms
+      (dell.com/en-us/legal/lp/site-terms-of-use-copyright) have no clause on
+      automated access, but the board needs an Oracle Recruiting reader this
+      change doesn't add.
+  listed-microsoft-careers:
+    ticker: MSFT
+    company: Microsoft
+    url: https://apply.careers.microsoft.com/api/pcsx/search
+    verdict: deferred (owner's call)
+    reason: >-
+      robots.txt allows /api/pcsx, but the search API serves ten roles a
+      request (2,405 open on 2026-11-21), and Microsoft's terms of use bar
+      obtaining information "through any means not intentionally made
+      available". Not read until the owner decides.
+
 department_clusters:
   physical-infrastructure:
     label: Physical infrastructure

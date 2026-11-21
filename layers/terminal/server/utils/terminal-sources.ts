@@ -394,6 +394,29 @@ export function readPrintSources(sourcesYaml: string): IdentifierSourceEntry[] {
   }))
 }
 
+/** A listed company's job board, read or cut (sources.yaml `listed_hiring_sources`). */
+export interface ListedHiringSourceEntry extends ArchiveSourceEntry {
+  ticker: string
+  company: string
+  /** Why a board is not read, on a cut. */
+  reason: string | null
+}
+
+/** sources.yaml `listed_hiring_sources`: every board looked at for /api/hiring/listed, with its verdict. */
+export function readListedHiringSources(sourcesYaml: string): ListedHiringSourceEntry[] {
+  return readBlock(sourcesYaml.split('\n'), 'listed_hiring_sources').map((block) => ({
+    id: block.id,
+    ticker: block.fields.ticker ?? '',
+    company: block.fields.company ?? '',
+    url: block.fields.url ?? null,
+    verdict: block.fields.verdict ?? '',
+    terms: block.fields.terms ?? null,
+    rights: rightsOf(block.id, block.fields.rights),
+    caveat: block.fields.caveats ?? null,
+    reason: block.fields.reason ?? null,
+  }))
+}
+
 /** Every include source and every deliberate cut, as sources.yaml states them. */
 export function readSourceRegistry(sourcesYaml: string): SourceRegistry {
   const lines = sourcesYaml.split('\n')
