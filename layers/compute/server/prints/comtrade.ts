@@ -44,7 +44,7 @@ const daRow = z.object({
   lastReleased: z.string(),
 })
 
-export interface ComtradeRelease {
+interface ComtradeRelease {
   /** YYYY-MM */
   period: string
   classification: string

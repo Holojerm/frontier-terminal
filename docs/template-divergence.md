@@ -103,6 +103,7 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 - `scripts/lib/oauth1.ts` — OAuth 1.0a signing for x-post.ts
 - `server/utils/purge.ts` — retention for the single-use credential tables (magic-link tokens, MCP connect codes); this app has neither (ops events are pruned by pruneOpsEvents)
 - `scripts/check-forkless.ts` (and the `forkless:check` / `ci:forkless` steps) — the template's proof that a fork can drop billing, referral and lifecycle email; it builds those forks in temp copies, so it is the template's gate, not a fork's
+- `scripts/check-mcp.ts` (and the `mcp:check` step), `scripts/mcp-pack.ts`, `scripts/mcp-publish.ts`, `scripts/lib/mcp-context.ts`, `scripts/lib/mcp-listing.ts`, `scripts/lib/mcp-tools.ts` — the template's tooling for a separate MCP worker in `mcp/` and its directory listings; this app has no `mcp/` worker (the core layer serves /mcp itself) and is listed in no MCP directory
 - `server/types/extension-types.ts`, `test/lib/layers.ts` — what the template's full extensions registry and its billing-aware browser specs import; this app's trimmed `extensions.ts` and its own a11y/CSP route lists use neither
 
 ## Customized: kept on purpose
@@ -116,7 +117,7 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 - `scripts/check-design-tokens.ts` — the app's own palette ramp in the allowed-color list is `iris`, not `clay`
 - `scripts/check-mirrors.ts` — reference pass only; the template's mirror pass compares server/utils/users.ts with mcp/src/server.ts, neither of which exists here (upstream candidate: skip a mirror whose files are absent)
 - `scripts/check-seo.ts` — no content/blog pass; adds a rule that every publicPage value is a literal, because Nuxt drops the whole key otherwise (upstream candidate)
-- `scripts/ci.ts` — the gate list matches this app's checks: no `forkless:check` (not a template fork shape with optional billing/referral layers to strip); adds `globals:check`, the module-load gate for Workers' deploy error 10021 (upstream candidate), `surfaces:check`, which reads this product's routes, MCP tools and export tables (product-specific), and `domains:check`, which holds the fork-owned layers to domains.config.ts (product-specific)
+- `scripts/ci.ts` — the gate list matches this app's checks: no `forkless:check` and no `mcp:check` (see the MCP-worker tooling above) (not a template fork shape with optional billing/referral layers to strip); adds `globals:check`, the module-load gate for Workers' deploy error 10021 (upstream candidate), `surfaces:check`, which reads this product's routes, MCP tools and export tables (product-specific), and `domains:check`, which holds the fork-owned layers to domains.config.ts (product-specific)
 - `scripts/generate-brand-assets.ts` — display face at weight 500 and waits for the font stylesheets before shooting the OG image (upstream candidate: the stylesheet wait)
 - `server/api/status.get.ts` — public, with per-source freshness: the status payload is built by collectStatus() in fleet-status.ts, which the MCP get_status tool shares
 - `server/plugins/error-logger.ts` — no PostHog $exception capture or session lookup; logs errorDetail() from the core layer so the cause of a D1 fault reaches the digest

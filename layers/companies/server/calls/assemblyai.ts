@@ -21,17 +21,17 @@
 import { LAB_DISPLAY } from '../../../core/shared/utils/lab-names'
 
 export const ASSEMBLYAI_API = 'https://api.assemblyai.com'
-export const SPEECH_MODEL = 'assemblyai-stt-3-7'
+const SPEECH_MODEL = 'assemblyai-stt-3-7'
 
 /** USD per hour of audio for the model and every add-on we request. */
-export const RATE_PER_HOUR = {
+const RATE_PER_HOUR = {
   model: 0.21,
   keyterms: 0.05,
   prompt: 0.05,
   diarization: 0.02,
   speaker_identification: 0.02,
 } as const
-export const USD_PER_HOUR = Object.values(RATE_PER_HOUR).reduce((a, b) => a + b, 0)
+const USD_PER_HOUR = Object.values(RATE_PER_HOUR).reduce((a, b) => a + b, 0)
 
 /**
  * The owner's cap on AssemblyAI spend per UTC calendar month (2026-11-21, once
@@ -81,12 +81,12 @@ const SPELLING: readonly { from: string[]; to: string }[] = [
   { from: ['Swepco', 'Swep Co'], to: 'SWEPCO' },
 ]
 
-export interface CallSpeaker {
+interface CallSpeaker {
   name: string
   title: string
 }
 
-export interface AudioCompany {
+interface AudioCompany {
   ticker: string
   company: string
   speakers?: readonly CallSpeaker[]
@@ -190,10 +190,10 @@ export function mp3Kbps(head: Uint8Array): number | null {
 }
 
 /** Seconds of audio a file of `bytes` holds at `kbps`. */
-export const audioSeconds = (bytes: number, kbps: number) => (bytes * 8) / (kbps * 1000)
+const audioSeconds = (bytes: number, kbps: number) => (bytes * 8) / (kbps * 1000)
 
 /** A WAV file's bytes per second from its RIFF header, or null (Amazon posted its replays so until 2024). */
-export function wavByteRate(head: Uint8Array): number | null {
+function wavByteRate(head: Uint8Array): number | null {
   const tag = (at: number) => String.fromCharCode(...head.subarray(at, at + 4))
   const u32 = (at: number) =>
     (head[at]! | (head[at + 1]! << 8) | (head[at + 2]! << 16) | (head[at + 3]! << 24)) >>> 0
@@ -221,10 +221,10 @@ export function replaySeconds(head: Uint8Array, bytes: number): number {
 export const costOf = (seconds: number) => (seconds / 3600) * USD_PER_HOUR
 
 /** A file of unknown bitrate is costed as 32 kbps, the lowest speech MP3s use: an upper bound. */
-export const FALLBACK_KBPS = 32
+const FALLBACK_KBPS = 32
 
 /** How AssemblyAI refused a request, as the run needs to act on it. */
-export type AssemblyRefusal = 'credits' | 'auth' | 'other'
+type AssemblyRefusal = 'credits' | 'auth' | 'other'
 
 /** Credits exhausted, a billing hold or a paused account: stop submitting until the owner acts. */
 export function refusalOf(status: number, body: string): AssemblyRefusal {

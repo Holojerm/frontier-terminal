@@ -25,7 +25,7 @@ export const LANES: Readonly<Record<string, Lane>> = {
   ...ADOPTION_LANES,
 }
 
-export const DERIVED_LANES: readonly { prefix: string; lane: Lane }[] = [
+const DERIVED_LANES: readonly { prefix: string; lane: Lane }[] = [
   ...COMPANY_DERIVED_LANES,
   ...MODEL_DERIVED_LANES,
   ...PRICE_DERIVED_LANES,

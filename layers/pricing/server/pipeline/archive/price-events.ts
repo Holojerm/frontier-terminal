@@ -63,7 +63,7 @@ export interface ArchivedPriceEvent {
   source_url: string
 }
 
-export interface SkippedEvent {
+interface SkippedEvent {
   kind: PriceEventKind
   provider: string
   model: string
@@ -95,7 +95,7 @@ function inputPrice(payload: string): number | null {
 const samePrice = (a: number, b: number) => Math.abs(a - b) <= 1e-9 * Math.max(a, b)
 
 /** A lab can announce a price change before its page shows it: a price note this far before the copy before still dates it. */
-export const PRICE_NOTE_LEAD_DAYS = 14
+const PRICE_NOTE_LEAD_DAYS = 14
 
 /**
  * The release note that dates an event: on or after the day before the copy
@@ -104,7 +104,7 @@ export const PRICE_NOTE_LEAD_DAYS = 14
  * of the copy that shows it, naming the model, and talking about price when
  * the event is a price change. The earliest wins.
  */
-export function datingNote(
+function datingNote(
   notes: readonly ReleaseNote[],
   provider: string,
   model: string,
@@ -124,16 +124,16 @@ export function datingNote(
   return best
 }
 
-export interface DerivedEvents {
+interface DerivedEvents {
   events: ArchivedPriceEvent[]
   skipped: SkippedEvent[]
 }
 
 /** A price that moves and moves back within this many days is a misread copy, not two changes. */
-export const FLICKER_DAYS = 30
+const FLICKER_DAYS = 30
 
 /** Copies at most this far apart bound a release closely enough for a note inside them to date it. */
-export const NARROW_WINDOW_DAYS = 31
+const NARROW_WINDOW_DAYS = 31
 
 interface RawChange {
   model: string

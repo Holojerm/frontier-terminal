@@ -9,7 +9,7 @@ import { REVENUE_CONCEPTS } from '../../../companies/server/calls/actuals'
 import { CALL_COMPANIES } from '../../../companies/server/calls/curated'
 import { REGISTERED_CALLS } from './forward-calls-registered'
 
-export interface ForwardFiler {
+interface ForwardFiler {
   company: string
   cik: string
   /** The calendar month the fiscal year ends in. */
@@ -17,7 +17,7 @@ export interface ForwardFiler {
 }
 
 /** Filers a forward call names that the call reader doesn't cover. */
-export const FORWARD_FILERS: Readonly<Record<string, ForwardFiler>> = {
+const FORWARD_FILERS: Readonly<Record<string, ForwardFiler>> = {
   MU: { company: 'Micron', cik: '0000723125', fy_end_month: 8 },
 }
 

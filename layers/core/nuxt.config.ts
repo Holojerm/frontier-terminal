@@ -10,6 +10,7 @@
 // scripts/check-domains.ts enforces both.
 export default defineNuxtConfig({
   $meta: { name: 'core' },
+  modules: ['@vueuse/nuxt'],
   runtimeConfig: {
     // Bearer the judge routine presents to /api/judge/* (layers/core/server/utils/judge-auth.ts).
     // Unset = those routes 404 and no judge exists. Same shape and floor as the

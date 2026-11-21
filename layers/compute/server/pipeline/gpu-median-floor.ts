@@ -27,10 +27,10 @@ export const GPU_MEDIAN_RULE = 'gpu-median-floor' as const
 /** How far back the earlier read is, in days. */
 export const WINDOW_DAYS = 7
 /** A move of this many percent or more is notable; CRITICAL_PCT or more is critical. */
-export const NOTABLE_PCT = 5
-export const CRITICAL_PCT = 15
+const NOTABLE_PCT = 5
+const CRITICAL_PCT = 15
 /** Providers priced on both reads below which there is no median to speak of. */
-export const MIN_PROVIDERS = 3
+const MIN_PROVIDERS = 3
 
 const DAY_MS = 86_400_000
 
@@ -42,7 +42,7 @@ export function moveTier(pct: number): Severity | null {
   return size >= CRITICAL_PCT ? 'critical' : size >= NOTABLE_PCT ? 'notable' : null
 }
 
-export interface ProviderMove {
+interface ProviderMove {
   provider: string
   before: number
   after: number
@@ -54,7 +54,7 @@ export interface ProviderMove {
   fetched_at: string
 }
 
-export interface MedianMove {
+interface MedianMove {
   gpu: GpuModel
   before: number
   after: number
@@ -136,7 +136,7 @@ export function headlineFor(move: MedianMove): string {
   )
 }
 
-export interface GpuMedianAlert {
+interface GpuMedianAlert {
   change: ChangeRow
   alert: AlertRow
 }
@@ -218,7 +218,7 @@ function alreadySaid(
   })
 }
 
-export interface GpuMedianReport {
+interface GpuMedianReport {
   /** Why nothing was compared: a failed provider, or nothing stored yet. */
   skipped: string | null
   written: number

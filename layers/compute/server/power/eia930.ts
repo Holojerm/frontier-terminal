@@ -6,7 +6,7 @@
 export const EIA930_FIRST_PERIOD = '2018H1'
 export const BACKFILL_PER_RUN = 4
 /** How long after a half closes its file is still re-read. */
-export const REVISION_WINDOW_DAYS = 42
+const REVISION_WINDOW_DAYS = 42
 
 const DEMAND_COLUMN = 'Demand (MW) (Adjusted)'
 

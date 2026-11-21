@@ -19,7 +19,7 @@ export function extractPypiDownloads(body: string, pkg: string): Observation[] {
   return rows.map((d) => ({ key: pkg, date: d.date, value: d.downloads, payload: {} }))
 }
 
-export function pypiRecipe(id: string, company: CompanyId, pkg: string, what: string): Recipe {
+function pypiRecipe(id: string, company: CompanyId, pkg: string, what: string): Recipe {
   return {
     id,
     company,

@@ -15,7 +15,7 @@ import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 // filings from its submissions feed, and each such filing's primary document
 // from its filing index. Each is a DerivedKind in COMPANY_DERIVED_KINDS.
 
-export interface ResolvedFiler {
+interface ResolvedFiler {
   provider: Provider
   cik: string
   name: string
@@ -42,9 +42,9 @@ export async function resolvedFilers(db: PipelineDb): Promise<ResolvedFiler[]> {
 }
 
 /** Periodic filings a segment source is derived for, per filer: one fiscal year's worth. */
-export const SEGMENT_FILINGS_PER_FILER = 4
+const SEGMENT_FILINGS_PER_FILER = 4
 
-export interface SegmentFiling {
+interface SegmentFiling {
   ticker: string
   cik: string
   segment: string
@@ -98,9 +98,9 @@ export async function segmentFilings(
 }
 
 /** Registration filings an index source is derived for, per resolved lab: the S-1 and its latest amendments. */
-export const REGISTRATION_FILINGS_PER_FILER = 3
+const REGISTRATION_FILINGS_PER_FILER = 3
 
-export interface RegistrationFiling {
+interface RegistrationFiling {
   provider: Provider
   cik: string
   form: string
@@ -147,7 +147,7 @@ export async function registrationFilings(db: PipelineDb): Promise<RegistrationF
   return out
 }
 
-export interface RegistrationDocument extends RegistrationFiling {
+interface RegistrationDocument extends RegistrationFiling {
   document: string
 }
 

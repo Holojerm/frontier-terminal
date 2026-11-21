@@ -7,14 +7,14 @@
 
 import type { ReleaseNote } from './release-notes'
 
-export interface LimitCapture {
+interface LimitCapture {
   id: string
   provider: string
   captured_at: string
   source_url: string
 }
 
-export interface LimitRowIn {
+interface LimitRowIn {
   capture_id: string
   recipe_id: string
   key: string

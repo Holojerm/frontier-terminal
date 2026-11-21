@@ -28,7 +28,7 @@ type Stored = typeof tables.supplierPassages.$inferSelect
 type Insert = typeof tables.supplierPassages.$inferInsert
 
 /** The row id: the same five fields the export has always keyed passages on. */
-export const passageId = (
+const passageId = (
   r: Pick<CuratedSupplierRow, 'ticker' | 'relation' | 'counterparty' | 'source_url' | 'quote'>,
 ) =>
   contentHash({

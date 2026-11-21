@@ -74,7 +74,7 @@ export const JudgeClassMapping = z.strictObject({
 })
 export type JudgeClassMapping = z.infer<typeof JudgeClassMapping>
 
-export interface SourcePage {
+interface SourcePage {
   source_id: string
   source_url: string
   fetched_at: string
@@ -83,7 +83,7 @@ export interface SourcePage {
 }
 
 /** The newest good snapshot of a source, as text — what the drift check last read. */
-export async function latestPage(
+async function latestPage(
   db: PipelineDb,
   readRaw: RawReader,
   sourceId: string,
@@ -121,7 +121,7 @@ export async function latestSnapshot(
   }
 }
 
-export type ReviewCell =
+type ReviewCell =
   | {
       provider: LabId
       class: ModelClassId
@@ -183,7 +183,7 @@ async function launchesSince(
  * the window, for the mapping in effect, and the gaps of a provider that
  * launched a model within it.
  */
-export async function cellsUnderReview(
+async function cellsUnderReview(
   db: PipelineDb,
   classMap: readonly ClassEntry[],
   now: Date,
@@ -234,7 +234,7 @@ export async function cellsUnderReview(
   return out.sort((a, b) => `${a.provider}:${a.class}`.localeCompare(`${b.provider}:${b.class}`))
 }
 
-export interface ClassMapReview {
+interface ClassMapReview {
   cells: ReviewCell[]
   /** The pages each cell's provider may cite, once per source. */
   pages: SourcePage[]
@@ -290,7 +290,7 @@ export function modelNamedBy(basis: string, slugs: Iterable<string>): string | n
   return outermost.length === 1 ? outermost[0]! : null
 }
 
-export type ClassMapRejectionReason =
+type ClassMapRejectionReason =
   | 'not-under-review'
   | 'not-a-launched-model'
   | 'wrong-source'
@@ -301,7 +301,7 @@ export type ClassMapRejectionReason =
   | 'basis-is-another-models-card'
   | 'unchanged'
 
-export interface ClassMapRejection {
+interface ClassMapRejection {
   mapping: JudgeClassMapping
   reason: ClassMapRejectionReason
   detail: string
@@ -321,7 +321,7 @@ export interface ClassMapResult {
 export const requotedKey = (cell: { provider: string; class: string; model_slug: string }) =>
   `${cell.provider}:${cell.class}:${cell.model_slug}`
 
-export const CLASS_MAP_OPS_PATH = '/api/judge/alerts'
+const CLASS_MAP_OPS_PATH = '/api/judge/alerts'
 
 /** The provider's current model rows: slug -> catalog descriptions printed for it. */
 async function listedModels(db: PipelineDb, provider: string): Promise<Map<string, Set<string>>> {

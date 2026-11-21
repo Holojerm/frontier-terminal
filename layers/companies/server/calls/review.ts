@@ -28,9 +28,9 @@ import type { DocSentence } from './text'
 import { judgeReview } from '#layers/core/server/pipeline/judge/review'
 
 /** Documents offered per judge run, newest call first. */
-export const GUIDANCE_REVIEW_LIMIT = 3
+const GUIDANCE_REVIEW_LIMIT = 3
 /** Sentences offered per document. */
-export const GUIDANCE_EXCERPTS = 40
+const GUIDANCE_EXCERPTS = 40
 
 const CANDIDATE =
   /\b(?:expect|anticipat|guid|outlook|forecast|target|project)\w*\b[^.]*?(?:\$\s?\d|\d\s?(?:%|percent))|(?:\$\s?\d|\d\s?(?:%|percent))[^.]*?\b(?:expect|anticipat|guid|outlook|forecast|target|project)\w*\b/i
@@ -47,13 +47,13 @@ const JudgeGuidanceStatement = z.strictObject({
   quote: z.string().min(10).max(400),
 })
 
-export const JudgeGuidanceReading = z.strictObject({
+const JudgeGuidanceReading = z.strictObject({
   document_id: z.string().min(1).max(120),
   statements: JudgeGuidanceStatement.array().max(20),
 })
 export type JudgeGuidanceReading = z.infer<typeof JudgeGuidanceReading>
 
-export interface GuidanceReview {
+interface GuidanceReview {
   document_id: string
   ticker: string
   company: string
@@ -172,7 +172,7 @@ export function checkStatement(
   return null
 }
 
-export interface GuidanceReviewReport {
+interface GuidanceReviewReport {
   accepted: number
   judged: number
   rejected: { reason: string; detail: string; document_id: string }[]

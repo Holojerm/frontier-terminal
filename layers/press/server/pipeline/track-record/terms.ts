@@ -18,7 +18,7 @@ export interface SearchTerms {
 }
 
 /** Names the press uses for each tracked lab (GDELT matching is case-insensitive). */
-export const LAB_NAMES: Readonly<Record<string, readonly string[]>> = {
+const LAB_NAMES: Readonly<Record<string, readonly string[]>> = {
   openai: ['OpenAI', 'ChatGPT'],
   anthropic: ['Anthropic', 'Claude'],
   google: ['Google', 'Gemini', 'DeepMind'],
@@ -49,7 +49,7 @@ const CAPEX = ['capex', 'capital expenditures']
 const GUIDANCE = ['guidance', 'outlook']
 
 /** What the press calls an SEC form's event. */
-export function formTerms(form: string): string[] {
+function formTerms(form: string): string[] {
   const f = form.toUpperCase()
   if (/^(S-1|F-1|424B)/.test(f)) return IPO
   if (f.startsWith('10-Q')) return ['earnings', 'quarterly results', '10-Q']
@@ -212,7 +212,7 @@ function termsOf(change: ChangeRow): SearchTerms | null {
 }
 
 /** Phrases kept per group: an alert citing many rows would otherwise match most of the press. */
-export const MAX_PHRASES = 4
+const MAX_PHRASES = 4
 
 /**
  * The terms for an alert: every cited row's terms, merged. Job rows add their

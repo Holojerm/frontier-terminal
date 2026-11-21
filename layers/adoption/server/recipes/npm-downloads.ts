@@ -52,7 +52,7 @@ export function npmRange(now: Date, newest: string | null, from?: string) {
   return { start: day(start), end: day(end) }
 }
 
-export function npmRecipe(
+function npmRecipe(
   id: string,
   company: CompanyId,
   pkg: string,

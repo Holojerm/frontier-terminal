@@ -30,15 +30,12 @@ import { judgeReview } from '#layers/core/server/pipeline/judge/review'
 // event, never a repair.
 
 /** The parts the judge may read. The rest are spooled for a parser fix only. */
-export const JUDGE_READABLE_PARTS = [
-  'revenue',
-  'offering',
-] as const satisfies readonly ProspectusPart[]
-export type JudgeReadablePart = (typeof JUDGE_READABLE_PARTS)[number]
+const JUDGE_READABLE_PARTS = ['revenue', 'offering'] as const satisfies readonly ProspectusPart[]
+type JudgeReadablePart = (typeof JUDGE_READABLE_PARTS)[number]
 
 const SPANS = { 3: 'three months', 6: 'six months', 9: 'nine months', 12: 'year' } as const
 
-export const JudgeFilingReading = z.discriminatedUnion('part', [
+const JudgeFilingReading = z.discriminatedUnion('part', [
   z.strictObject({
     source_id: z.string().min(1).max(200),
     part: z.literal('revenue'),
@@ -64,7 +61,7 @@ const REVENUE_CHARS = 24_000
 const COVER_CHARS = 16_000
 const WINDOW = 500
 
-export interface FilingReview {
+interface FilingReview {
   source_id: string
   accession_no: string
   form: string
@@ -280,7 +277,7 @@ export function checkReading(
   return { ok: true, checked: { part: 'offering', values: { price_low, price_high, price } } }
 }
 
-export interface FilingReport {
+interface FilingReport {
   accepted: number
   alerts: number
   rejected: { reason: string; detail: string; source_id: string }[]
@@ -330,7 +327,7 @@ function readingAlert(
 }
 
 /** Gate and store the filing readings of one judge run; raise one alert per filing. */
-export async function applyFilingReadings(
+async function applyFilingReadings(
   db: PipelineDb,
   readRaw: RawReader,
   readings: readonly JudgeFilingReading[],

@@ -304,8 +304,6 @@ bun run surfaces:check # Fail when a product route or table misses a surface (pa
 bun run domains:check # Fail when a layer imports (or auto-imports) a layer domains.config.ts does not let it,
                       # the app root reaches past core outside server/registries/, two owners define one
                       # auto-imported name, a uses/public entry is unused, or a ?raw import has no file
-bun run mcp:check     # The template's gate for a separate MCP worker in mcp/. Inert here: there is no mcp/
-                      # directory (our MCP endpoint is the app's own /mcp route), so it passes with nothing to check
 bun run test:a11y     # Playwright/Chromium browser suites: axe over every public route
                       # (light + dark) AND the Content-Security-Policy spec (test/csp/)
 bun run perf          # Page-load harness: throttled cold-cache runs per route, medians, Server-Timing
@@ -317,7 +315,7 @@ bun run db:migrate:remote # Apply migrations to production D1 (Workers Builds ru
 bun db:studio         # Open Drizzle Studio (visual DB browser)
 bun run keys:issue -- --client "<name>" --tier research|systematic --months 12 [--remote]
                       # Licensee API key: prints the key once, stores its SHA-256 (keys:list, keys:revoke)
-bun run ci            # Every gate, concurrently (scripts/ci.ts): format (writes; checks in CI), email:build, lint, design/brand/mirror/seo/fleet/crons/mcp/migrations/surfaces/domains:check
+bun run ci            # Every gate, concurrently (scripts/ci.ts): format (writes; checks in CI), email:build, lint, design/brand/mirror/seo/fleet/crons/migrations/surfaces/domains:check
                       # gates, typecheck, test, build — Workers Builds runs this. NO browser suites: that image cannot
                       # launch Chromium (see Gotchas). CI_SERIAL=1 runs the gates one at a time.
 bun run ci:fast       # While iterating: format (writes), cheap gates + typecheck + tests touched since origin/main, no build

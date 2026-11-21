@@ -35,14 +35,14 @@ import { judgeReview } from '#layers/core/server/pipeline/judge/review'
  * and the prices holds other models' too, and nothing here could tell a
  * Contributor price from a Standard one. Those wait for the parser fix.
  */
-export const PRICE_REVIEW_SOURCES: readonly string[] = [
+const PRICE_REVIEW_SOURCES: readonly string[] = [
   'openai-pricing-md',
   'anthropic-pricing-md',
   'mistral-pricing-md',
 ]
 
 /** A page longer than this is not offered: a cut page reads as rows gone. */
-export const PRICE_REVIEW_MAX_CHARS = 120_000
+const PRICE_REVIEW_MAX_CHARS = 120_000
 
 const price = z.number().nonnegative().nullable()
 
@@ -59,7 +59,7 @@ export type JudgePriceReading = z.infer<typeof JudgePriceReading>
 const PRICE_FIELDS = ['input_per_mtok', 'cached_input_per_mtok', 'output_per_mtok'] as const
 type Prices = Pick<PriceRow, (typeof PRICE_FIELDS)[number]>
 
-export interface PriceReview {
+interface PriceReview {
   source_id: string
   source_url: string
   fetched_at: string
@@ -237,7 +237,7 @@ export function checkPriceReading(
   }
 }
 
-export interface PriceReport {
+interface PriceReport {
   /** Readings that held, whether or not the price moved. */
   accepted: number
   /** Of those, the SKUs whose stored price changed. */

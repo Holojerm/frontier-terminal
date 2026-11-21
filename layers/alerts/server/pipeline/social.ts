@@ -59,7 +59,7 @@ const alertUrl = (origin: string, id: string) => absoluteUrl(origin, `/alerts/${
 const LINK_IN_REPLY: Record<SocialService, boolean> = { x: true, bluesky: false }
 
 /** `text` with its link, either inline or as the reply under it. */
-export function withLink(service: SocialService, text: string, url: string): string[] {
+function withLink(service: SocialService, text: string, url: string): string[] {
   return LINK_IN_REPLY[service]
     ? [fitSocialText(service, text), `Source and details: ${url}`]
     : [fitSocialText(service, text, url)]
@@ -177,7 +177,7 @@ export async function enqueueCriticalAlerts(
   return queued
 }
 
-export interface WeeklyDigest {
+interface WeeklyDigest {
   /** Last day of the week reported, as the post names it. */
   weekTo: Date
   counts: { pricing: number; hiring: number; sec: number; incidents: number; disclosures: number }
@@ -236,7 +236,7 @@ export function composeWeeklyDigest(
 }
 
 /** The seven days to `now`, read from the change log and the alerts. */
-export async function readWeeklyDigest(db: PipelineDb, now: Date): Promise<WeeklyDigest> {
+async function readWeeklyDigest(db: PipelineDb, now: Date): Promise<WeeklyDigest> {
   const since = new Date(now.getTime() - 7 * DAY_MS).toISOString()
   const inWeek = (column: typeof tables.changes.detected_at | typeof tables.alerts.created_at) =>
     sql`datetime(${column}) >= datetime(${since})`

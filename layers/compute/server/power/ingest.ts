@@ -31,21 +31,21 @@ import { restampTies, seedHandTies, settleDocument, type PowerDocumentRef } from
 
 export const DOCS_PER_RUN = 4
 /** Runs a day of the filings lane: each site is searched in one of them. */
-export const SEARCH_SLOTS = 4
+const SEARCH_SLOTS = 4
 /** How far back a site no one has read is searched. */
 const LOOKBACK_MS = 180 * 86_400_000
 /** A site already read is searched from a month before the newest filing stored for it. */
 const OVERLAP_MS = 30 * 86_400_000
 export const FAILED_RETRY_MS = 86_400_000
 /** The day the hand read covered filings through: a site it read is searched from here. */
-export const HAND_READ_THROUGH = '2026-11-19'
+const HAND_READ_THROUGH = '2026-11-19'
 
 /** The forms searched, and read when the hit is the main document or a press-release exhibit. */
-export const POWER_FORMS: readonly string[] = ['10-K', '10-Q', '8-K', '20-F', '6-K', 'S-1', 'S-1/A']
+const POWER_FORMS: readonly string[] = ['10-K', '10-Q', '8-K', '20-F', '6-K', 'S-1', 'S-1/A']
 
 export const KIND_READ_FAILED = 'power_site_read_failed'
 
-export interface PowerDoc {
+interface PowerDoc {
   document_id: string
   accession_no: string
   cik: string
@@ -142,7 +142,7 @@ export const documentRef = (
   }
 }
 
-export interface PowerDeps {
+interface PowerDeps {
   raw: RawStore
   fetcher: SourceFetcher
   now: Date
@@ -323,7 +323,7 @@ export async function runPowerSiteReads(db: PipelineDb, deps: PowerDeps): Promis
   return report
 }
 
-export const rawKey = (d: Pick<PowerDoc, 'document_id'>) =>
+const rawKey = (d: Pick<PowerDoc, 'document_id'>) =>
   `power-sites/${d.document_id.replace(':', '/')}`
 
 type DocumentInsert = typeof tables.powerSiteDocuments.$inferInsert

@@ -141,7 +141,3 @@ export const LIMITS_ARCHIVE_NOT_COVERED: readonly { provider: LabId; reason: str
       'dev.meta.ai’s rate-limit page has copies only from 2026-08, three months before our first read.',
   },
 ]
-
-export function limitsEraById(id: string): LimitsEra | null {
-  return LIMITS_ARCHIVE_ERAS.find((e) => e.id === id) ?? null
-}

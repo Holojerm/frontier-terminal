@@ -7,21 +7,21 @@
 
 import { readCappedBody } from '../../utils/pipeline-fetch'
 
-export const WAYBACK_USER_AGENT =
+const WAYBACK_USER_AGENT =
   'FrontierTerminal/1.0 (+https://frontierterm.com; one-off history backfill from the Wayback Machine)'
 
 /** The pause between any two requests to archive.org. ~15 a minute at most. */
 export const WAYBACK_PACE_MS = 4_000
 
 /** Waits after a 429 or 5xx before the next attempt; the last failure is recorded, not retried forever. */
-export const WAYBACK_BACKOFF_MS: readonly number[] = [30_000, 120_000, 300_000]
+const WAYBACK_BACKOFF_MS: readonly number[] = [30_000, 120_000, 300_000]
 
 /**
  * Largest capture the backfill will hold. The biggest archived pricing page
  * (docs.anthropic.com, 2025) is ~2.1 MB; anything far past that is not a
  * pricing page and is skipped with its reason.
  */
-export const WAYBACK_MAX_BYTES = 6 * 1024 * 1024
+const WAYBACK_MAX_BYTES = 6 * 1024 * 1024
 
 export interface CdxCapture {
   /** 14 digits, yyyyMMddhhmmss, UTC. */
@@ -105,16 +105,16 @@ export function sampleCaptures(captures: readonly CdxCapture[], cadenceDays: num
   return out
 }
 
-export type WaybackResult =
+type WaybackResult =
   | { ok: true; status: number; text: string; bytes: number; finalUrl: string }
   | { ok: false; detail: string }
 
-export interface WaybackClient {
+interface WaybackClient {
   /** One paced GET to archive.org, following redirects only within web.archive.org. */
   get(url: string): Promise<WaybackResult>
 }
 
-export interface WaybackClientOptions {
+interface WaybackClientOptions {
   fetch?: typeof globalThis.fetch
   sleep?: (ms: number) => Promise<void>
   paceMs?: number

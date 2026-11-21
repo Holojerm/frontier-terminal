@@ -25,7 +25,7 @@ export type { ArchiveAxis }
 export type CaptureAxis = ArchiveAxis | 'gpu' | 'status' | 'limits'
 
 /** What a capture row needs of its era, on any axis; a GPU or status era may name its format and end. */
-export interface EraRef {
+interface EraRef {
   id: string
   provider: string
   url: string

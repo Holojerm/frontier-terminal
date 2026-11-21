@@ -26,7 +26,7 @@ const FORBIDDEN_CALLS: Readonly<Record<string, string>> = {
 const NEW_DATE = 'the clock reads 1970-01-01 in global scope, so the value is wrong'
 
 /** A comment carrying this on the flagged line or the line above silences it. */
-export const IGNORE_MARK = 'global-scope-ok'
+const IGNORE_MARK = 'global-scope-ok'
 
 /** How many factory calls deep a module-scope call is followed. */
 const MAX_DEPTH = 3
@@ -243,7 +243,7 @@ export function globalScopeFindings(host: SourceHost, file: string): Finding[] {
 }
 
 /** Forget parsed files, so a host's later edits are read afresh. */
-export function resetGlobalScopeCache(): void {
+function resetGlobalScopeCache(): void {
   parsed.clear()
 }
 

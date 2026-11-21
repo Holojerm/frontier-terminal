@@ -41,7 +41,7 @@ export const DOCS_PER_RUN = 6
 const LOOKBACK_MS = 365 * 86_400_000
 export const FAILED_RETRY_MS = 86_400_000
 
-export interface SupplierDoc {
+interface SupplierDoc {
   accession_no: string
   form: string
   filed: string
@@ -131,7 +131,7 @@ export const documentRef = (
   period: periodOf(d.form, d.report_date),
 })
 
-export interface SupplierDeps {
+interface SupplierDeps {
   raw: RawStore
   fetcher: SourceFetcher
   now: Date

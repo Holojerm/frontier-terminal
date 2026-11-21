@@ -38,7 +38,7 @@ export function normalizePrices(rows: readonly PriceRow[], snapshotId: string): 
 // A recommendation row is one mapped matrix cell checked against the page it
 // was transcribed from; `present` is part of the content, so the check
 // flipping is a 'modified' change and an unchanged verdict diffs to nothing.
-export function normalizeRecommendation(row: RecommendationRow, snapshotId: string): EntityRow {
+function normalizeRecommendation(row: RecommendationRow, snapshotId: string): EntityRow {
   return toEntity(
     recommendationKey(row.provider, row.class),
     'recommendation',
