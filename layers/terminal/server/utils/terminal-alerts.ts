@@ -1,7 +1,7 @@
 // The movement band, the alert feed and its permalinks, and the overview
 // that leads with both.
 
-import { and, asc, count, desc, eq, gt, inArray, lt, max, ne, or, sql } from 'drizzle-orm'
+import { and, asc, count, desc, eq, gt, gte, inArray, lt, max, ne, or, sql } from 'drizzle-orm'
 
 import { ENTITY_AXIS, entityTypesOf, type AlertAxis } from '../../shared/utils/terminal-labs'
 
@@ -93,14 +93,23 @@ export async function queryMovement(db: PipelineDb): Promise<MovementSummary> {
     windowFrom = new Date(Date.parse(latest) - MOVEMENT_WINDOW_HOURS * 3_600_000).toISOString()
     // datetime() on both sides: stored stamps may carry milliseconds or not,
     // and a plain string compare between the two spellings is only right by
-    // accident.
-    const inWindow = await db
-      .select({ entity_type: tables.changes.entity_type, n: count() })
-      .from(tables.changes)
-      .where(
-        and(isEvent(), sql`datetime(${tables.changes.detected_at}) >= datetime(${windowFrom})`),
-      )
-      .groupBy(tables.changes.entity_type)
+    // accident. datetime() also hides the column from every index, so a plain
+    // compare against the window's start cut to the second goes first: either
+    // spelling of an instant at or after that second sorts at or after it, so
+    // it drops nothing the exact test keeps, and it bounds the read to the
+    // window (the whole log otherwise, 21k rows a call). The index is named
+    // because the planner otherwise answers a GROUP BY entity_type by walking
+    // all of changes_type_detected_idx.
+    const inWindow = await db.all<{ entity_type: string; n: number }>(
+      sql`select ${tables.changes.entity_type} as entity_type, count(*) as n
+        from ${tables.changes} indexed by changes_detected_id_idx
+        where ${and(
+          isEvent(),
+          gte(tables.changes.detected_at, windowFrom.slice(0, 19)),
+          sql`datetime(${tables.changes.detected_at}) >= datetime(${windowFrom})`,
+        )}
+        group by ${tables.changes.entity_type}`,
+    )
     // The total is the sum of the axes the band prints, never more.
     for (const row of inWindow) {
       const axis = AXIS_OF[row.entity_type]
