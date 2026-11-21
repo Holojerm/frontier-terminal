@@ -9,6 +9,8 @@ import { boardLabel, count, signed } from '../../../shared/utils/terminal-format
 import { dayLabel } from '../../../shared/utils/thesis-format'
 import type { ClusterSeries, HiringHistoryData } from '../../../shared/utils/terminal-types'
 
+const stamps = useStamps()
+
 const watchlist = useWatchlist()
 
 const props = defineProps<{
@@ -64,7 +66,7 @@ const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
       :series="chart.series"
       :format="count"
       :x-label="dayLabel"
-      :title="`Open ${label} roles per day at ${chart.series.map((s) => s.label).join(', ')} from ${chart.x[0]} to ${chart.x.at(-1)}`"
+      :title="`Open ${label} roles per day at ${chart.series.map((s) => s.label).join(', ')} from ${stamps.date(chart.x[0] ?? '')} to ${stamps.date(chart.x.at(-1) ?? '')}`"
     />
 
     <div class="grid gap-3 @2xl:grid-cols-2 @6xl:grid-cols-4">

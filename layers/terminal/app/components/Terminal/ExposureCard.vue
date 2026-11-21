@@ -46,10 +46,10 @@ const chartSeries = computed(() =>
 
 const period = (p: ExposurePoint) =>
   p.months === null
-    ? `at ${p.end}`
+    ? `at ${stamps.date(p.end)}`
     : p.months === 3
-      ? `quarter to ${p.end}`
-      : `${p.months} months to ${p.end}`
+      ? `quarter to ${stamps.date(p.end)}`
+      : `${p.months} months to ${stamps.date(p.end)}`
 
 const latest = computed(() =>
   props.series
@@ -109,6 +109,7 @@ const caveats = computed<CaveatRef[]>(() =>
 const tagLine = computed(() =>
   props.series.map((s) => `${s.concept}${s.dims ? ` on ${s.dims}` : ''}`).join('; '),
 )
+const stamps = useStamps()
 </script>
 
 <template>
@@ -161,7 +162,7 @@ const tagLine = computed(() =>
             target="_blank"
             rel="noopener noreferrer"
             class="underline underline-offset-2 hover:text-default"
-            >{{ r.filing.form }} {{ r.filing.filed }}</a
+            >{{ r.filing.form }} {{ stamps.date(r.filing.filed) }}</a
           >
         </template>
       </TerminalTable>
@@ -176,14 +177,18 @@ const tagLine = computed(() =>
             v-for="{ s, x: r } in superseded"
             :key="`${s.id}|${r.accession_no}|${r.start}|${r.end}`"
           >
-            {{ s.label }}, {{ r.start ? `${r.start} to ${r.end}` : `at ${r.end}` }}:
-            <span class="font-mono">{{ fmt(r.value) }}</span> in the
+            {{ s.label }},
+            {{
+              r.start
+                ? `${stamps.date(r.start)} to ${stamps.date(r.end)}`
+                : `at ${stamps.date(r.end)}`
+            }}: <span class="font-mono">{{ fmt(r.value) }}</span> in the
             <a
               :href="r.filing_url"
               target="_blank"
               rel="noopener noreferrer"
               class="underline underline-offset-2 hover:text-default"
-              >{{ r.form }} filed {{ r.filed }}</a
+              >{{ r.form }} filed {{ stamps.date(r.filed) }}</a
             >
           </li>
         </ul>

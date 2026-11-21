@@ -422,7 +422,9 @@ screen the way a terminal function key does. The data below it is the content.
   reader's zone and clock and names the zone ('Aug 25 7:08 PM EDT', 'Aug 25 23:08Z' in UTC). The
   `<time>`'s `datetime` and tooltip keep the exact stored UTC value. A date printed alone (a
   filing period, a UTC-day chart bucket) is a UTC date and never shifts. It reads through
-  `useStamps().day`, in the reader's date form. A column keeps one form all the way down: a
+  `useStamps().day`, in the reader's date form. A filing period, a filing date or a planned
+  date reads through `useStamps().date`, which always names the year: `day` drops the current
+  year, and the server-rendered page has no clock to tell which year that is. A column keeps one form all the way down: a
   "When" column is absolute, never relative for its first rows and absolute after. Starred labs reorder
   only lists in registry order, never a ranking, a timeline or a chart's stack.
 - **Deltas:** a sign the reader can see, never a color: `+12`, `−3` (U+2212), `±0`. Formatted

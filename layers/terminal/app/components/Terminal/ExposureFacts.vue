@@ -21,10 +21,10 @@ const fmt = (s: ExposureSeries, v: number) =>
 
 const period = (p: ExposurePoint) =>
   p.months === null
-    ? `at ${p.end}`
+    ? `at ${stamps.date(p.end)}`
     : p.months === 3
-      ? `quarter to ${p.end}`
-      : `${p.months} months to ${p.end}`
+      ? `quarter to ${stamps.date(p.end)}`
+      : `${p.months} months to ${stamps.date(p.end)}`
 
 const columns: TableColumn[] = [
   { key: 'label', label: 'Line' },
@@ -66,6 +66,7 @@ const sources = computed<Citation[]>(() => {
 const caveats = computed<CaveatRef[]>(() =>
   props.series.filter((s) => s.note).map((s) => ({ text: s.note!, label: s.label })),
 )
+const stamps = useStamps()
 </script>
 
 <template>
@@ -86,7 +87,7 @@ const caveats = computed<CaveatRef[]>(() =>
           target="_blank"
           rel="noopener noreferrer"
           class="underline underline-offset-2 hover:text-default"
-          >{{ r.filing.form }} {{ r.filing.filed }}</a
+          >{{ r.filing.form }} {{ stamps.date(r.filing.filed) }}</a
         >
       </template>
     </TerminalTable>
@@ -112,7 +113,7 @@ const caveats = computed<CaveatRef[]>(() =>
             target="_blank"
             rel="noopener noreferrer"
             class="underline underline-offset-2 hover:text-default"
-            >{{ r.filing.form }} {{ r.filing.filed }}</a
+            >{{ r.filing.form }} {{ stamps.date(r.filing.filed) }}</a
           >
         </template>
       </TerminalTable>

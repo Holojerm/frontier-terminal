@@ -65,6 +65,7 @@ const skuText = (m: SpendModel) =>
     : m.reason === 'free'
       ? 'OpenRouter free tier'
       : 'no catalog SKU matched'
+const stamps = useStamps()
 </script>
 
 <template>
@@ -82,7 +83,8 @@ const skuText = (m: SpendModel) =>
 
     <template v-else>
       <p v-if="spend.window" class="text-xs text-muted">
-        {{ spend.window.from }} → {{ spend.window.to }} · estimated at list prices
+        {{ stamps.date(spend.window.from) }} → {{ stamps.date(spend.window.to) }} · estimated at
+        list prices
       </p>
 
       <TerminalTable

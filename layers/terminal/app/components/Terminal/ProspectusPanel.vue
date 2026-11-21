@@ -19,10 +19,13 @@ import {
 } from '../../../shared/utils/terminal-prospectus'
 import type { Fact, TableColumn } from '../../types/terminal-ui'
 
+const stamps = useStamps()
+
 const props = defineProps<{ issuer: ProspectusIssuerView }>()
 
 const id = computed(() => `prospectus-${props.issuer.provider}`)
-const filingLabel = (f: Pick<ProspectusFilingRef, 'form' | 'filed'>) => `${f.form} of ${f.filed}`
+const filingLabel = (f: Pick<ProspectusFilingRef, 'form' | 'filed'>) =>
+  `${f.form} of ${stamps.date(f.filed)}`
 
 // ── statement of operations ────────────────────────────────────────────────
 
@@ -87,8 +90,8 @@ const scheduleRows = (c: CommitmentView) =>
 
 const scheduleNote = (c: CommitmentView) =>
   [
-    c.as_of ? `As of ${c.as_of}` : 'As stated',
-    `${c.form} of ${c.filed}`,
+    c.as_of ? `As of ${stamps.date(c.as_of)}` : 'As stated',
+    `${c.form} of ${stamps.date(c.filed)}`,
     c.schedule === 'contractual_obligations' ? 'MD&A' : 'commitments note',
     c.audited ? 'audited' : 'unaudited',
   ].join(' · ')
@@ -96,7 +99,7 @@ const scheduleNote = (c: CommitmentView) =>
 const singleFacts = computed<Fact[]>(() =>
   single.value.map((c) => ({
     key: `${c.schedule}-${c.as_of ?? c.accession_no}`,
-    label: `${SCHEDULE_TITLE[c.schedule]}${c.as_of ? `, as of ${c.as_of}` : ''} (${filingLabel(c)})`,
+    label: `${SCHEDULE_TITLE[c.schedule]}${c.as_of ? `, as of ${stamps.date(c.as_of)}` : ''} (${filingLabel(c)})`,
     value: `${c.approximate ? 'approx. ' : ''}${billions(c.lines[0]!.total)}`,
     mono: true,
     wide: true,
@@ -111,7 +114,7 @@ const concentrationColumns = (c: ConcentrationView): TableColumn[] => [
     key: `c${i}`,
     label: col.start
       ? periodName({ end: col.end, days: daysBetween(col.start, col.end) })
-      : `at ${col.end}`,
+      : `at ${stamps.date(col.end)}`,
     hint: col.unaudited ? 'unaudited' : undefined,
     numeric: true,
     class: 'text-default',

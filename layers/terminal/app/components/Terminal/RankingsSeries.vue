@@ -10,6 +10,8 @@ import { compactTokens } from '../../../shared/utils/terminal-format'
 import type { ProviderId, RankingDay } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
+const stamps = useStamps()
+
 const figures = useFigures()
 
 const props = defineProps<{ series: RankingDay[] }>()
@@ -129,7 +131,7 @@ const xLabels = computed(() =>
 )
 
 const describe = (day: RankingDay) =>
-  `${day.date}: ${STACK.map((s) => `${s.label} ${figures.tokens(day.tokens[s.id])}`).join(', ')}. Total ${figures.tokens(day.total)}`
+  `${stamps.date(day.date)}: ${STACK.map((s) => `${s.label} ${figures.tokens(day.tokens[s.id])}`).join(', ')}. Total ${figures.tokens(day.total)}`
 
 const uid = useId()
 

@@ -22,6 +22,7 @@ import {
   count,
   datedStamp,
   dayStamp,
+  fullDayStamp,
   isTimeZone,
   relativeStamp,
   type StampStyle,
@@ -126,6 +127,8 @@ export function useStamps() {
     relative: (iso: string) => relativeStamp(iso, now.value, style.value),
     /** A UTC date printed alone (YYYY-MM-DD): the reader's date form, never shifted by zone. */
     day: (date: string) => dayStamp(date, now.value, style.value),
+    /** A UTC date that always names its year: a filing period, a filing date, a planned date. */
+    date: (date: string) => fullDayStamp(date, style.value),
     /** An instant that always names its year, for a page read on paper. */
     dated: (iso: string) => datedStamp(iso, style.value),
     zone: computed(() => zoneName(style.value)),

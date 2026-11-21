@@ -52,7 +52,7 @@ const precise = (n: number) => {
 const derivedText = (f: GroundTruthFiled) => {
   const [long, short] = f.derived_from ?? []
   if (!long || !short) return ''
-  return `No filing prints this period. It’s ${precise(long.val)} for the period ending ${long.end} minus ${precise(short.val)} for the one ending ${short.end}.`
+  return `No filing prints this period. It’s ${precise(long.val)} for the period ending ${stamps.date(long.end)} minus ${precise(short.val)} for the one ending ${stamps.date(short.end)}.`
 }
 
 const rangeText = (r: GroundTruthResolution) =>
@@ -79,7 +79,7 @@ const summary = computed(() => {
 const heldText = computed(() => {
   const t = tally.value
   if (t.reports === 0 || !props.truth.first_stored_at) return ''
-  const since = props.truth.first_stored_at.slice(0, 10)
+  const since = stamps.date(props.truth.first_stored_at)
   return t.held === t.reports
     ? 'We had stored every one of them before the filing day.'
     : `We had stored ${t.held} of the ${t.reports} before the filing day. We began storing headlines on ${since} and read the earlier ones back from GDELT’s archive. Those show the press had the number first. Our store didn’t have it yet.`
@@ -142,7 +142,10 @@ const guidanceText = computed(() => {
   return parts.join(' ')
 })
 
-const dealsSince = computed(() => props.truth.deals.first_labeled_at?.slice(0, 10) ?? null)
+const dealsSince = computed(() => {
+  const at = props.truth.deals.first_labeled_at
+  return at ? stamps.date(at) : null
+})
 
 const pressText = (t: TrackRecordTally) =>
   t.matched === 0
@@ -450,7 +453,7 @@ const waitingKey = (w: GroundTruthWaiting) => `${w.lab}|${w.metric}|${w.currency
       <TerminalPanel
         id="alerts"
         title="Alerts against the press"
-        :note="`Notable and critical alerts since ${truth.alerts.from}. We compare when we saw the change with the first article about it.`"
+        :note="`Notable and critical alerts since ${stamps.date(truth.alerts.from)}. We compare when we saw the change with the first article about it.`"
         :more="{ label: 'Every alert with its first report', to: '/alerts?tab=track-record' }"
       >
         <div class="max-w-2xl space-y-2 text-sm text-default">
@@ -538,11 +541,11 @@ const waitingKey = (w: GroundTruthWaiting) => `${w.lab}|${w.metric}|${w.currency
           </p>
           <p>
             For capex guidance we read the earnings release each filer attaches to its 8-K (exhibit
-            99.1), for releases filed since {{ truth.guidance.since }}. We take the sentence that
-            names capital expenditures, says expect or anticipate, names a year and states an amount
-            in billions of dollars. We compare it with the capex the annual report files for that
-            year. A range is met when the filed figure is inside it, and a single figure within
-            {{ truth.tolerance_pct }}%. Otherwise we show how far outside it came in.
+            99.1), for releases filed since {{ stamps.date(truth.guidance.since) }}. We take the
+            sentence that names capital expenditures, says expect or anticipate, names a year and
+            states an amount in billions of dollars. We compare it with the capex the annual report
+            files for that year. A range is met when the filed figure is inside it, and a single
+            figure within {{ truth.tolerance_pct }}%. Otherwise we show how far outside it came in.
           </p>
           <p>
             Guidance given only on the earnings call isn’t here, because we don’t read call

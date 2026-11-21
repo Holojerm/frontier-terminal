@@ -13,6 +13,8 @@ import {
 } from '../../../shared/utils/suppliers'
 import type { TableColumn } from '../../types/terminal-ui'
 
+const stamps = useStamps()
+
 const props = defineProps<{ data: SuppliersData }>()
 
 const figures = useFigures()
@@ -66,7 +68,7 @@ const rows = computed(() =>
       text: supplierFigureText(f, figures.usd),
       meaning: f.meaning,
     })),
-    filing: `${r.form}, filed ${r.filed}`,
+    filing: `${r.form}, filed ${stamps.date(r.filed)}`,
     period: r.period,
     source_url: r.source_url,
     fetched_at: r.fetched_at,
