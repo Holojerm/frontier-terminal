@@ -387,7 +387,11 @@ async function parseAndStore(
     first_seen_at: row.fetched_at,
   })
 
-  const before = await currentEntities(deps.db, source.source_id)
+  const before = await currentEntities(
+    deps.db,
+    source.source_id,
+    lane.removals === 'append-only' ? parsed.entities.map((e) => e.entity_key) : undefined,
+  )
   const { changes: all, upserts } = diff(before, parsed.entities, fetched_at, source.url)
   const kept = lane.removals === 'set' ? all : all.filter((c) => c.change_type !== 'removed')
   const added = kept.filter((c) => c.change_type === 'added')
