@@ -14,8 +14,8 @@
 //
 // Dynamic routes are the other half, and they cannot work that way: one
 // route-table entry describes N URLs, so the hook skips them by design. The
-// alert permalinks (/alerts/:id), the SKU pages (/prices/[key]) and the
-// filing pages (/filings/[accession]) are registered as a public page source
+// SKU pages (/prices/[key]) and the filing pages (/filings/[accession]) are
+// registered as a public page source
 // by the terminal layer (layers/terminal/server/utils/terminal-page-source.ts)
 // and collected through server/utils/public-pages.ts, each with its own lastmod.
 // The data pages (/prices, /hiring, a lab page, …) are dated by their own

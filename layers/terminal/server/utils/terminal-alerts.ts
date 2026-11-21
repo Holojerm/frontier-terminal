@@ -7,7 +7,6 @@ import { ENTITY_AXIS, entityTypesOf, type AlertAxis } from '../../shared/utils/t
 
 import { count as countLabel, money } from '../../shared/utils/terminal-format'
 import {
-  alertTier,
   severitiesOf,
   type AlertSeverity,
   type AlertTierFilter,
@@ -468,31 +467,6 @@ export async function queryAlert(
   const rows = await db.select().from(tables.alerts).where(eq(tables.alerts.id, id)).limit(1)
   const [alert] = await resolveAlerts(db, rows, toChangeDetail)
   return alert ? { ...stampOf(ctx), alert } : null
-}
-
-export interface AlertPermalink {
-  id: string
-  tier: ReturnType<typeof alertTier>
-  /** The alert's own created_at — its lastmod, since an alert row is never rewritten. */
-  created_at: string
-}
-
-/** Every alert, newest first, for the sitemap's dynamic entries. */
-export async function alertPermalinks(db: PipelineDb, limit = 5000): Promise<AlertPermalink[]> {
-  const rows = await db
-    .select({
-      id: tables.alerts.id,
-      severity: tables.alerts.severity,
-      created_at: tables.alerts.created_at,
-    })
-    .from(tables.alerts)
-    .orderBy(desc(tables.alerts.created_at), asc(tables.alerts.id))
-    .limit(limit)
-  return rows.map((row) => ({
-    id: row.id,
-    tier: alertTier(row.severity as AlertSeverity),
-    created_at: row.created_at,
-  }))
 }
 
 // ---- overview --------------------------------------------------------------

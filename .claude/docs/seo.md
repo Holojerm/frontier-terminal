@@ -30,12 +30,13 @@ The `useSeo()` one-call-per-page contract, how `publicPage` meta feeds both `sit
   the app owns as data is registered, not hand-added to the routes: from a Nitro plugin,
   `registerPublicPageSource({ key, list(db, { buildDate }), llmsHeading?, defaults? })`
   (`server/utils/public-pages.ts`) puts each returned `{ path, title?, description?, lastmod? }`
-  in `sitemap.xml` with its own `lastmod`. The alert, SKU and filing pages are one source,
+  in `sitemap.xml` with its own `lastmod`. The SKU and filing pages are one source,
   `layers/terminal/server/utils/terminal-page-source.ts`, registered by
   `layers/terminal/server/plugins/public-pages.ts`; it sets no `llmsHeading` because `/llms.txt`
   is a static map that never wakes D1. SKU pages go through `sitemapPriceKeys()`: every base SKU,
   but a tier variant (`:batch`, `:flex`, …) only once its price has a history, so templated
-  near-duplicates are not most of the sitemap. A source that throws is logged, skipped, and makes the
+  near-duplicates are not most of the sitemap. Alert permalinks are left out for the same
+  reason: each restates a change already on its axis page. A source that throws is logged, skipped, and makes the
   sitemap `no-store`. `registerRobotsDisallow(['/mcp'])` adds private paths to `robots.txt`.
   The page still declares `publicPage` (the gate's invariant is per-page), with a comment
   saying the values are inert.

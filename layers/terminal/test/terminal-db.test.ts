@@ -15,7 +15,6 @@ import { ENTITY_AXIS } from '../shared/utils/terminal-labs'
 import type { PriceRowView } from '../shared/utils/terminal-types'
 import {
   AXIS_OF,
-  alertPermalinks,
   parseAlertCursor,
   queryAlert,
   queryAlerts,
@@ -1095,15 +1094,6 @@ describe('the ticker/alert split', () => {
     expect(overview.info_count).toBe(9)
     expect(overview.info).toHaveLength(8) // OVERVIEW_INFO caps the band; the count says 9
     expect(overview.info.every((a) => a.severity === 'info')).toBe(true)
-  })
-
-  it('enumerates every permalink for the sitemap with its own tier and date', async () => {
-    const links = await alertPermalinks(db)
-    expect(links).toHaveLength(12)
-    expect(links.filter((l) => l.tier === 'alert')).toHaveLength(3)
-    expect(links.filter((l) => l.tier === 'info')).toHaveLength(9)
-    expect(links[0]!.created_at).toBe(T(11))
-    expect(await alertPermalinks(db, 3)).toHaveLength(3)
   })
 
   it('fieldTable lists every field of either side; fieldDiff is its changed subset', () => {
