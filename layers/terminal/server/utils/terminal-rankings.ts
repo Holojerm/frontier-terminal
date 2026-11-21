@@ -1,6 +1,7 @@
 // The demand-share axis: OpenRouter's daily usage rankings, folded into a
 // 7-day token share per lab (and its change against the 7 days before), each
-// lab's top models in that window, and a 30-day daily series. Read-only over
+// lab's top models in that window, a 30-day daily series, and the weekly
+// share over the whole stored history. Read-only over
 // the `entities` table like the rest of terminal-db.ts; split out because the
 // arithmetic is its own thing and layers/terminal/test/terminal-rankings.test.ts drives the
 // pure half without a database.
@@ -19,6 +20,7 @@ import type {
   ProviderShare,
   ProviderTopModels,
   RankingDay,
+  RankingWeek,
   RankingsCoverage,
   RankingsData,
 } from '../../shared/utils/terminal-types'
@@ -228,6 +230,84 @@ export async function rankingObservations(
   return out
 }
 
+/** One (ISO week, permaslug prefix) group of the long-run read. */
+export interface WeekPrefixTokens {
+  /** The week's Monday. */
+  week: string
+  /** Text before the permaslug's `/`, or the whole slug for the aggregated `other` row. */
+  prefix: string
+  tokens: number
+  /** Bit i set when the week's day i (Monday = 0) has a row in this group. */
+  mask: number
+}
+
+const popcount = (mask: number) => {
+  let n = 0
+  for (let m = mask; m; m &= m - 1) n++
+  return n
+}
+const highestBit = (mask: number) => 31 - Math.clz32(mask)
+
+/** Pure: the weekly share per lab from the grouped rows, oldest week first. */
+export function foldRankingWeeks(groups: readonly WeekPrefixTokens[]): RankingWeek[] {
+  const weeks = new Map<string, { tokens: Record<ProviderId, number>; mask: number }>()
+  for (const g of groups) {
+    let w = weeks.get(g.week)
+    if (!w) weeks.set(g.week, (w = { tokens: emptyTokens(), mask: 0 }))
+    w.tokens[providerOfOpenRouterId(g.prefix)] += g.tokens
+    w.mask |= g.mask
+  }
+  return [...weeks.entries()]
+    .sort(([a], [b]) => byString(a, b))
+    .map(([week, { tokens, mask }]) => {
+      const total = PROVIDERS.reduce((acc, p) => acc + tokens[p], 0)
+      const share = emptyTokens() as Record<ProviderId, number | null>
+      for (const p of PROVIDERS) share[p] = total > 0 ? tokens[p] / total : null
+      return {
+        week,
+        from: daysBefore(week, -highestBit(mask & -mask)),
+        to: daysBefore(week, -highestBit(mask)),
+        days: popcount(mask),
+        tokens,
+        total,
+        share,
+      }
+    })
+}
+
+/**
+ * The whole stored history, summed in D1 by ISO week and permaslug prefix:
+ * a few rows per week instead of ~50 a day. The lab is mapped from the prefix
+ * in foldRankingWeeks, for the reason rankingObservations gives. Which days a
+ * group covers comes back as a bitmask (SUM(DISTINCT 1 << day) is an OR over
+ * seven bits), so the days present in a week are the union across its groups
+ * from the same single scan.
+ */
+export async function rankingWeeks(db: PipelineDb): Promise<RankingWeek[]> {
+  const groups = await db.all<WeekPrefixTokens>(
+    sql`select week, prefix, sum(tokens) as tokens, sum(distinct 1 << day) as mask
+      from (
+        select
+          date(d, '-6 days', 'weekday 1') as week,
+          (cast(strftime('%w', d) as integer) + 6) % 7 as day,
+          case when instr(s, '/') > 0 then substr(s, 1, instr(s, '/') - 1) else s end as prefix,
+          t as tokens
+        from (
+          select
+            json_extract(${tables.entities.payload}, '$.date') as d,
+            json_extract(${tables.entities.payload}, '$.model_permaslug') as s,
+            json_extract(${tables.entities.payload}, '$.total_tokens') as t
+          from ${tables.entities}
+          where ${isRanking}
+        )
+        where typeof(s) = 'text' and typeof(t) in ('integer', 'real')
+      )
+      where week is not null
+      group by week, prefix`,
+  )
+  return foldRankingWeeks(groups)
+}
+
 /** meta.as_of from the newest run whose detail carries one (lanes.ts). */
 export async function rankingsAsOf(db: PipelineDb): Promise<string | null> {
   const [row] = await db
@@ -245,8 +325,9 @@ export async function rankingsAsOf(db: PipelineDb): Promise<string | null> {
 }
 
 export async function queryRankings(db: PipelineDb, ctx: QueryContext): Promise<RankingsData> {
-  const [rows, reads, as_of] = await Promise.all([
+  const [rows, weekly, reads, as_of] = await Promise.all([
     rankingObservations(db),
+    rankingWeeks(db),
     sourceReads(db),
     rankingsAsOf(db),
   ])
@@ -258,6 +339,7 @@ export async function queryRankings(db: PipelineDb, ctx: QueryContext): Promise<
     shares: summary.shares,
     top_models: summary.top_models,
     series: summary.series,
+    weekly,
   }
 }
 

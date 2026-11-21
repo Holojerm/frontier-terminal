@@ -35,6 +35,21 @@ export interface RankingDay {
   total: number
 }
 
+/** One ISO week (Monday to Sunday, UTC) of the whole stored history. */
+export interface RankingWeek {
+  /** The week's Monday. */
+  week: string
+  /** First and last day present in the week; a partial week shares over the days it has. */
+  from: string
+  to: string
+  /** Days present, 1..7. */
+  days: number
+  tokens: Record<ProviderId, number>
+  total: number
+  /** 0..1 of the week's total across every provider, `other` included, as ProviderShare.share. */
+  share: Record<ProviderId, number | null>
+}
+
 export interface DateWindow {
   from: string
   to: string
@@ -74,4 +89,6 @@ export interface RankingsData extends Stamp {
   shares: ProviderShare[]
   top_models: ProviderTopModels[]
   series: RankingDay[]
+  /** Every stored week, oldest first: the long-run share per lab. */
+  weekly: RankingWeek[]
 }
