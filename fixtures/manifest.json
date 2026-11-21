@@ -2178,6 +2178,26 @@
       "note": "TSMC March 2015 Revenue Report, the oldest layout the backfill reads."
     },
     {
+      "path": "fixtures/prints/tsm-revenue-20200810.htm",
+      "source_id": "tsmc-revenue-6k",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1046179/000156459020038543/tsm-6k_20200810.htm",
+      "fetched_at": "2026-11-21T13:40:00Z",
+      "http_status": 200,
+      "raw_bytes": 178509,
+      "trim": "none — committed whole",
+      "note": "TSMC July 2020 Revenue Report: a month-on-month decrease in full-width parentheses (（12.3）), which failed the table read in production."
+    },
+    {
+      "path": "fixtures/prints/tsm-revenue-20191108.htm",
+      "source_id": "tsmc-revenue-6k",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1046179/000156459019041985/tsm-6k_20191108.htm",
+      "fetched_at": "2026-11-21T13:45:00Z",
+      "http_status": 200,
+      "raw_bytes": 194561,
+      "trim": "none — committed whole",
+      "note": "TSMC October 2019 Revenue Report: the table is headed \"(in NT$ million)\", which failed the table read in production."
+    },
+    {
       "path": "fixtures/prints/accton-monthly.html",
       "source_id": "accton-monthly-revenue",
       "source_url": "https://www.accton.com/monthly-merge/",

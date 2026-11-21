@@ -80,11 +80,13 @@ const fetcher: SourceFetcher = async (s) => {
 }
 const deps = { raw, fetcher, now: () => NOW }
 
+// Two full recipe runs over 18 months of daily rows: well under a second locally,
+// but past the default 10 s hook timeout on a loaded Workers Builds machine.
 beforeAll(async () => {
   // Twice: a control's first run reads 540 days from 2025-05-13, its second the rest.
   await runRecipes(db, deps, [...NPM_CONTROL_RECIPES, ...NPM_LAB_RECIPES])
   await runRecipes(db, deps, [...NPM_CONTROL_RECIPES, ...NPM_LAB_RECIPES])
-})
+}, 120_000)
 
 const row = (date: string, value: number, outage = false): DayRow => ({
   date,
