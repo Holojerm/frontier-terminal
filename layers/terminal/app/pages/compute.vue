@@ -85,7 +85,7 @@ const sites = computed(() =>
       v-if="gpu"
       id="gpu"
       title="GPU rental prices"
-      note="On-demand list price per GPU-hour, first-party pages only. The Compute thesis divides flagship token prices by the H100 median."
+      note="On-demand list price per GPU-hour, from each provider’s own page."
       :more="{ label: 'The Compute thesis', to: '/theses/compute' }"
     >
       <TerminalGpuMedians :gpu="gpu" />
@@ -95,7 +95,7 @@ const sites = computed(() =>
       <TerminalPanel
         id="spot"
         title="Spot against on-demand"
-        note="The same instance at its spot price and its on-demand price, per provider. Spot moves toward on-demand when spare capacity runs short."
+        note="The same instance at its spot and on-demand prices, per provider."
       >
         <TerminalSpotPrices :spot="utilization.spot" />
       </TerminalPanel>
@@ -104,7 +104,7 @@ const sites = computed(() =>
         v-if="gpu?.history.dates.length"
         id="gpu-history"
         title="Prices over time"
-        note="The median on-demand price, and the spot price as a share of on-demand, on each day a provider’s page changed."
+        note="The median on-demand price, and spot as a share of on-demand."
       >
         <TerminalGpuHistory :history="gpu.history" :sources="gpuSources" />
       </TerminalPanel>
@@ -112,8 +112,8 @@ const sites = computed(() =>
       <TerminalPanel
         v-if="gpu?.archived"
         id="gpu-archived"
-        title="Before we read the pages"
-        note="On-demand list prices on the Internet Archive’s copies of each provider’s own price page, one a week, until we began reading it ourselves."
+        title="Archived GPU prices"
+        note="Weekly median on-demand price on the Internet Archive’s copies of each provider’s price page."
       >
         <TerminalGpuArchive :archived="gpu.archived" />
       </TerminalPanel>
@@ -122,7 +122,7 @@ const sites = computed(() =>
         v-if="utilization.implied"
         id="implied-load"
         title="Implied load on Google’s fleet"
-        note="Alphabet’s stated token volume at each benchmark model’s speed, as a share of Epoch AI’s estimate of Google’s fleet. A range per model, never one number."
+        note="Alphabet’s stated token volume at each benchmark model’s speed, as a share of Epoch AI’s estimate of Google’s fleet. A range per model."
       >
         <TerminalImpliedLoad :implied="utilization.implied" :shape="utilization.demand_shape" />
       </TerminalPanel>
@@ -150,7 +150,7 @@ const sites = computed(() =>
       <TerminalPanel
         id="power"
         title="Data-center power per lab"
-        note="Epoch AI’s estimate, credited to each lab Epoch names as a user at #confident or #likely."
+        note="Epoch AI’s estimate, for sites where Epoch names the lab a confident or likely user."
       >
         <TerminalDataCenterPower :data="power" />
       </TerminalPanel>
@@ -159,7 +159,7 @@ const sites = computed(() =>
         v-if="suppliers?.sites.length || suppliers?.uncovered.length"
         id="suppliers"
         title="Who powers the lab sites"
-        note="The utility, generator, equipment maker or site host we read for each site Epoch credits to a lab, with the page it comes from. Planned is Epoch’s furthest estimate."
+        note="The utility, generator, equipment maker or site host for each lab site. Planned is Epoch’s furthest estimate."
       >
         <TerminalPowerSites :data="suppliers" />
       </TerminalPanel>
@@ -167,7 +167,7 @@ const sites = computed(() =>
       <TerminalPanel
         id="sites"
         title="Every site"
-        :note="`${count(power.sites)} sites in Epoch’s data as of ${stamps.day(power.snapshot)}, largest first. Owner and users are as Epoch writes them.`"
+        :note="`${count(power.sites)} sites in Epoch’s data as of ${stamps.day(power.snapshot)}, largest first.`"
       >
         <TerminalTable
           caption="AI data centers tracked by Epoch AI, with estimated power and named users"

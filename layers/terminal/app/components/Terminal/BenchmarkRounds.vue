@@ -56,7 +56,7 @@ const leftOut = computed(() => {
 <template>
   <div class="space-y-3">
     <TerminalTable
-      caption="MLPerf Inference tokens per second per accelerator in each stored round, per accelerator and benchmark at the same accelerator count, unverified by MLCommons"
+      caption="MLPerf Inference tokens per second per accelerator, per round, unverified by MLCommons"
       :columns="columns"
       :rows="rows"
       :row-key="(r) => r.key"
