@@ -12,6 +12,12 @@
 //      read within the hour. A 6-K that isn't a revenue report is kept as
 //      `other` and never fetched again; a failed one is retried after a day.
 //
+//   4. UN Comtrade (comtrade.ts): getDA once a run, then each Korea month that
+//      is new or whose lastReleased moved, oldest first, one preview call
+//      each, at most COMTRADE_PERIODS_PER_RUN a run, COMTRADE_SPACING_MS
+//      apart (the keyless API answers 429 to a second call within a second).
+//      The first backfill of 156 months takes about seven runs.
+//
 // Each step's failure is spooled as one ops event and the other step still runs.
 
 import { and, eq, inArray } from 'drizzle-orm'
@@ -43,6 +49,13 @@ import {
   parseKcsViewer,
   hasFigures,
 } from './kcs'
+import {
+  COMTRADE,
+  comtradeAvailabilityUrl,
+  comtradePreviewUrl,
+  parseComtradeAvailability,
+  parseComtradePreview,
+} from './comtrade'
 import { storeObservations } from './store'
 
 export const KIND_PRINT_READ_FAILED = 'print_read_failed'
@@ -86,6 +99,8 @@ export const KCS_RUN_BUDGET_MS = 4 * 60_000
 export const KCS_BOARD_PAGES_PER_RUN = 4
 /** The print_documents row that holds the board backfill's next page, or `listed` once done. */
 export const KCS_BOARD_DOC = 'kcs:board'
+export const COMTRADE_PERIODS_PER_RUN = 24
+export const COMTRADE_SPACING_MS = 1_500
 export const FAILED_RETRY_MS = 86_400_000
 export const LIVE_WINDOW_MS = 2 * 86_400_000
 
@@ -93,6 +108,8 @@ export interface PrintDeps {
   raw: RawStore
   fetcher: SourceFetcher
   now: Date
+  /** Waits between Comtrade calls; tests pass a no-op. */
+  sleep?: (ms: number) => Promise<void>
 }
 
 export interface FeedReport {
@@ -114,10 +131,20 @@ export interface KcsReport {
   pending: number
 }
 
+export interface ComtradeReport {
+  /** Months getDA lists from 2013 on. */
+  listed: number
+  read: number
+  added: number
+  revised: number
+  pending: number
+}
+
 export interface PrintReadReport {
   feeds: Record<string, FeedReport>
   tsmc: { read: number; reports: number; added: number; revised: number; pending: number }
   kcs: KcsReport
+  comtrade: ComtradeReport
 }
 
 async function sha256(text: string): Promise<string> {
@@ -518,6 +545,102 @@ export async function readKcs(db: PipelineDb, deps: PrintDeps): Promise<KcsRepor
   return report
 }
 
+/**
+ * Each Korea month Comtrade lists, read when it is new or its lastReleased has
+ * moved. A month's print_documents row holds the lastReleased it was read at
+ * (detail), so a re-release is read again; a different figure becomes the
+ * next vintage, the same figure is no row.
+ */
+export async function readComtrade(db: PipelineDb, deps: PrintDeps): Promise<ComtradeReport> {
+  const report: ComtradeReport = { listed: 0, read: 0, added: 0, revised: 0, pending: 0 }
+  const sleep = deps.sleep ?? ((ms: number) => new Promise<void>((r) => setTimeout(r, ms)))
+  const docs = tables.printDocuments
+  const da = await deps.fetcher({
+    source_id: COMTRADE.source_id,
+    url: comtradeAvailabilityUrl(),
+    ext: 'json',
+  })
+  if (!da.ok) {
+    await fail(db, `${COMTRADE.source_id}: getDA ${da.detail}`)
+    return report
+  }
+  let releases
+  try {
+    releases = parseComtradeAvailability(da.text)
+  } catch (error) {
+    await fail(db, `${COMTRADE.source_id}: ${String(error)}`)
+    return report
+  }
+  report.listed = releases.length
+  const held = new Map(
+    (
+      await db
+        .select({
+          doc_id: docs.doc_id,
+          status: docs.status,
+          detail: docs.detail,
+          fetched_at: docs.fetched_at,
+        })
+        .from(docs)
+        .where(eq(docs.source_id, COMTRADE.source_id))
+    ).map((d) => [d.doc_id, d]),
+  )
+  const docId = (period: string) => `comtrade:${COMTRADE.reporter}:${period}`
+  const due = releases.filter((r) => {
+    const d = held.get(docId(r.period))
+    if (!d) return true
+    if (d.status === 'failed')
+      return deps.now.getTime() - Date.parse(d.fetched_at) > FAILED_RETRY_MS
+    return d.detail !== r.last_released
+  })
+  report.pending = Math.max(0, due.length - COMTRADE_PERIODS_PER_RUN)
+
+  for (const [i, r] of due.slice(0, COMTRADE_PERIODS_PER_RUN).entries()) {
+    if (i > 0) await sleep(COMTRADE_SPACING_MS)
+    const url = comtradePreviewUrl(r.period)
+    const at = new Date().toISOString()
+    const doc = {
+      doc_id: docId(r.period),
+      source_id: COMTRADE.source_id,
+      filed: r.last_released.slice(0, 10),
+      source_url: url,
+      fetched_at: at,
+    }
+    report.read++
+    const res = await deps.fetcher({ source_id: COMTRADE.source_id, url, ext: 'json' })
+    if (!res.ok) {
+      await upsertDoc(db, { ...doc, status: 'failed', detail: res.detail, raw_key: null })
+      if (res.status === 429) {
+        await fail(db, `${COMTRADE.source_id}: HTTP 429`)
+        break
+      }
+      continue
+    }
+    try {
+      const o = parseComtradePreview(res.text, r)
+      // Listed but not served yet: read again next run.
+      if (!o) continue
+      const raw_key = `prints/comtrade/${COMTRADE.reporter}-${COMTRADE.cmd}-${r.period}-${r.last_released.slice(0, 10)}.json`
+      await deps.raw.put(raw_key, res.text, 'application/json')
+      const stored = await storeObservations(db, [o], {
+        source_id: COMTRADE.source_id,
+        source_url: url,
+        fetched_at: at,
+        raw_key,
+        basis:
+          deps.now.getTime() - Date.parse(r.last_released) < LIVE_WINDOW_MS ? 'live' : 'backfill',
+      })
+      await upsertDoc(db, { ...doc, status: 'read', detail: r.last_released, raw_key })
+      report.added += stored.added
+      report.revised += stored.revised
+    } catch (error) {
+      await upsertDoc(db, { ...doc, status: 'failed', detail: String(error), raw_key: null })
+      await fail(db, `${COMTRADE.source_id} ${r.period}: ${String(error)}`)
+    }
+  }
+  return report
+}
+
 async function upsertDoc(
   db: PipelineDb,
   row: typeof tables.printDocuments.$inferInsert,
@@ -561,5 +684,9 @@ export async function runPrintReads(db: PipelineDb, deps: PrintDeps): Promise<Pr
       pending: -1,
     }
   })
-  return { feeds, tsmc, kcs }
+  const comtrade = await readComtrade(db, deps).catch(async (error: unknown) => {
+    await fail(db, `${COMTRADE.source_id}: ${String(error)}`)
+    return { listed: 0, read: 0, added: 0, revised: 0, pending: -1 }
+  })
+  return { feeds, tsmc, kcs, comtrade }
 }

@@ -3,7 +3,8 @@
 // its newest month, the change on a year earlier as the release states it,
 // the last two years as a sparkline and when we first held the figure; then
 // Korea's chip exports, one row per window (the first 10 and 20 days, the
-// month); then the quoted ties naming who each company builds for or supplies.
+// month), and UN Comtrade's HS 8542 months with the change we compute; then
+// the quoted ties naming who each company builds for or supplies.
 
 import type { PrintsData } from '../../../shared/utils/prints'
 import { grouped, signedPercent } from '../../../shared/utils/terminal-format'
@@ -23,7 +24,7 @@ const columns: TableColumn[] = [
 
 const rows = computed(() =>
   props.data.series
-    .filter((s) => s.entity.series === 'tw_revenue')
+    .filter((s) => s.series === 'tw_revenue')
     .map((s) => {
       const months = s.points.filter((p) => p.window === 'month')
       const newest = months[0] ?? null
@@ -50,7 +51,7 @@ const krColumns: TableColumn[] = [
 ]
 const WINDOW_LABEL = { d10: 'First 10 days', d20: 'First 20 days', month: 'Whole month' } as const
 const korea = computed(() => {
-  const points = props.data.series.find((s) => s.entity.series === 'kr_chip_exports')?.points ?? []
+  const points = props.data.series.find((s) => s.series === 'kr_chip_exports')?.points ?? []
   return (['d10', 'd20', 'month'] as const).map((w) => ({
     key: w,
     label: WINDOW_LABEL[w],
@@ -61,6 +62,45 @@ const krSources = computed(() =>
   korea.value.flatMap((r) =>
     r.newest
       ? [{ source_url: r.newest.source_url, fetched_at: r.newest.first_seen_at, label: r.label }]
+      : [],
+  ),
+)
+
+const hsColumns: TableColumn[] = [
+  { key: 'series', label: 'Series' },
+  { key: 'month', label: 'Month' },
+  { key: 'exports', label: 'Exports', numeric: true, hint: 'US$ billion' },
+  { key: 'yoy', label: 'YoY', numeric: true, hint: 'ours, from the values' },
+  { key: 'trend', label: 'Since 2013' },
+  { key: 'seen', label: 'Released' },
+]
+const hs8542 = computed(() => {
+  const points = props.data.series.find((s) => s.series === 'kr_hs8542_exports')?.points ?? []
+  const newest = points[0] ?? null
+  const yearAgo = newest
+    ? points.find(
+        (p) => p.period === `${Number(newest.period.slice(0, 4)) - 1}${newest.period.slice(4)}`,
+      )
+    : undefined
+  return [
+    {
+      key: 'kr_hs8542_exports',
+      newest,
+      yoy: newest && yearAgo ? (newest.value / yearAgo.value - 1) * 100 : null,
+      spark: points.toReversed().map((p) => p.value),
+    },
+  ]
+})
+const hsSources = computed(() =>
+  hs8542.value.flatMap((r) =>
+    r.newest
+      ? [
+          {
+            source_url: r.newest.source_url,
+            fetched_at: r.newest.first_seen_at,
+            label: `UN Comtrade, ${r.newest.period}`,
+          },
+        ]
       : [],
   ),
 )
@@ -80,7 +120,7 @@ const ties = computed(() =>
 const sources = computed(() => {
   const seen = new Map<string, { source_url: string; fetched_at: string }>()
   for (const s of props.data.series) {
-    if (s.entity.series !== 'tw_revenue') continue
+    if (s.series !== 'tw_revenue') continue
     for (const p of s.points.slice(0, 1))
       seen.set(p.source_url, { source_url: p.source_url, fetched_at: p.first_seen_at })
   }
@@ -158,6 +198,43 @@ const billions = (v: number) => grouped(v / 1e9, 1)
     </TerminalTable>
     <TerminalSources :sources="krSources">
       <span>Korea Customs Service, under KOGL Type 1 (Korea Open Government License)</span>
+    </TerminalSources>
+
+    <TerminalTable
+      caption="Korea’s exports of HS 8542 (electronic integrated circuits) to the world, newest month"
+      :columns="hsColumns"
+      :rows="hs8542"
+      :row-key="(r) => r.key"
+      :gap="(r) => r.newest === null"
+      :gap-columns="['month', 'exports', 'yoy', 'trend', 'seen']"
+      nested
+      stack
+    >
+      <template #cell-series>
+        <span class="text-highlighted">HS 8542 integrated circuits</span>
+      </template>
+      <template #cell-month="{ row: r }">{{ r.newest?.period }}</template>
+      <template #cell-exports="{ row: r }">
+        <span v-if="r.newest">{{ billions(r.newest.value) }}</span>
+      </template>
+      <template #cell-yoy="{ row: r }">
+        {{ r.yoy == null ? '—' : signedPercent(r.yoy) }}
+      </template>
+      <template #cell-trend="{ row: r }">
+        <TerminalSparkline v-if="r.spark.length > 1" :values="r.spark" />
+        <span v-else class="text-muted">—</span>
+      </template>
+      <template #cell-seen="{ row: r }">
+        <span v-if="r.newest" class="text-xs text-muted">
+          {{ stamps.absolute(r.newest.published_at ?? r.newest.first_seen_at) }}
+        </span>
+      </template>
+      <template #gap>
+        <span class="text-sm text-muted">No month read yet.</span>
+      </template>
+    </TerminalTable>
+    <TerminalSources :sources="hsSources">
+      <span>Source: UN Comtrade.</span>
     </TerminalSources>
 
     <TerminalExpand

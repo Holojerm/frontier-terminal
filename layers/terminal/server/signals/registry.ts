@@ -44,8 +44,12 @@ export type SignalSource =
   | { kind: 'grid_load'; ba: string; period: 'month' | 'week' }
   /** ERCOT's large-load figures (ercot_large_load_facts), each month as the first report that states it put it. */
   | { kind: 'ercot_large_loads'; metric: 'observed_peak_mw' | 'approved_to_energize_mw' }
-  /** A print series (hardware_prints) in one window: the year-on-year change its first release stated. */
-  | { kind: 'prints'; series: PrintSeries; entity: string; window?: PrintWindow }
+  /**
+   * A print series (hardware_prints) in one window: the year-on-year change its
+   * first release stated, or with `yoy: 'derived'` (a source that states none)
+   * the change we compute from the values as they stood when the month was public.
+   */
+  | { kind: 'prints'; series: PrintSeries; entity: string; window?: PrintWindow; yoy?: 'derived' }
   /** Each filing that settles a company's call guidance (guidance_resolutions), signed: the error against the guided midpoint, positive for a beat. */
   | { kind: 'guidance_surprise'; ticker: string; metric?: 'capex' }
   /** A listed company's job board (listed_hiring_reads): every open role, or its data-center roles. */
@@ -294,6 +298,38 @@ const ercot = (
 })
 
 /**
+ * Korea's HS 8542 exports from UN Comtrade, with the year-on-year change we
+ * compute from the values. Each month is dated public at the lastReleased of
+ * its dataset, since the figure we hold is the one Comtrade serves now. Korea
+ * is released in yearly batches, and 2014 to 2022 were re-released in 2024 and
+ * 2025, so most of the history shares a few public days; the harness shrinks
+ * such a sample to its independent returns and reports it thin until monthly
+ * releases build up. available_after_days is the fallback for a month with no
+ * release time: the shortest lag getDA shows from a month’s end to its
+ * lastReleased (90 days, December 2013).
+ */
+const krHs8542: SignalDef = {
+  id: 'kr-hs8542-exports',
+  label: 'Korea HS 8542 exports (UN Comtrade), month, year on year',
+  entity: { kind: 'supplier', id: 'kr-semiconductors' },
+  tickers: ['MU', 'NVDA'],
+  source: {
+    kind: 'prints',
+    series: 'kr_hs8542_exports',
+    entity: 'kr-semiconductors',
+    window: 'month',
+    yoy: 'derived',
+  },
+  transform: 'change',
+  frequency: 'monthly',
+  test: 'lead_lag',
+  aggregate: 'last',
+  available_after_days: 90,
+  // The first change needs January 2013 as its base.
+  history_from: '2014-01-01',
+}
+
+/**
  * A Taiwan company's monthly revenue as first released, read as the
  * year-on-year change the release states. Revenue is due by the 10th of the
  * next month (Securities and Exchange Act art. 36), and TSMC files its 6-K the
@@ -525,6 +561,7 @@ export const SIGNALS: readonly SignalDef[] = [
   krChips('d10', 'Korea chip exports, first 10 days, year on year', 0),
   krChips('d20', 'Korea chip exports, first 20 days, year on year', 0),
   krChips('month', 'Korea chip exports, month, year on year', 20),
+  krHs8542,
   ...GUIDANCE_SIGNAL_COMPANIES.map(([ticker, company]) => guidanceSurprise(ticker, company)),
   // Amazon guides net capex, which isn't scored (calls/actuals.ts).
   capexSurprise('MSFT', 'Microsoft'),
@@ -560,7 +597,7 @@ export function sourceLabel(source: SignalSource): string {
     case 'ercot_large_loads':
       return `ercot_large_load_facts: ${source.metric}, first stated`
     case 'prints':
-      return `hardware_prints: ${source.series} ${source.entity}${source.window && source.window !== 'month' ? ` ${source.window}` : ''}, stated year-on-year change, first release`
+      return `hardware_prints: ${source.series} ${source.entity}${source.window && source.window !== 'month' ? ` ${source.window}` : ''}, ${source.yoy === 'derived' ? 'year-on-year change computed from the values as public' : 'stated year-on-year change'}, first release`
     case 'guidance_surprise':
       return `guidance_resolutions: ${source.ticker}${source.metric ? ` ${source.metric}` : ''}, error against the guided midpoint`
     case 'listed_hiring':

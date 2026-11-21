@@ -1,7 +1,7 @@
 <script setup lang="ts">
 // The hardware layer: the monthly prints of the foundry, the server builders and
 // their suppliers in Taiwan and Korea's chip exports (read hourly from the
-// exchange, TSMC's 6-Ks and Korea Customs Service's releases,
+// exchange, TSMC's 6-Ks, Korea Customs Service's releases and UN Comtrade,
 // layers/terminal/shared/utils/prints.ts), then the chip and hardware suppliers whose
 // own filings tie them to a lab or a cloud. The compute-rental and hosting
 // suppliers stay on /dependencies beside the graph.
@@ -15,7 +15,7 @@ definePageMeta({
     priority: '0.7',
     title: 'Hardware',
     summary:
-      'The monthly revenue of TSMC and the Taiwan server, networking and power makers as first printed, with each revision, Korea’s chip exports for the first 10 and 20 days and the whole month, the quoted ties naming who each company builds for, and the chip, memory, networking, server and cooling companies whose own SEC filings tie them to a lab or a cloud, each with its source page.',
+      'The monthly revenue of TSMC and the Taiwan server, networking and power makers as first printed, with each revision, Korea’s chip exports for the first 10 and 20 days and the whole month, Korea’s HS 8542 integrated-circuit exports since 2013 from UN Comtrade, the quoted ties naming who each company builds for, and the chip, memory, networking, server and cooling companies whose own SEC filings tie them to a lab or a cloud, each with its source page.',
   },
 })
 
