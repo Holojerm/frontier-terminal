@@ -15,7 +15,7 @@ import * as tables from '#server/db/schema'
 import type { OwnerMessage } from '../utils/owner-mail'
 import type { MailMessage } from '../utils/resend'
 import { absoluteUrl } from '#shared/utils/site'
-import { PROSPECTUS_FLOOR_RULE } from './prospectus-floor'
+import { PROSPECTUS_FLOOR_RULE } from '../../../companies/server/pipeline/prospectus-floor'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 
 /** Alerts before briefs went live are history, not news. */

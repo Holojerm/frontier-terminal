@@ -13,6 +13,7 @@ import {
   type PipelineDb,
 } from '#layers/core/server/pipeline/store'
 import type { RawReader } from '#layers/core/server/pipeline/raw'
+import { judgeReview } from '#layers/core/server/pipeline/judge/review'
 
 // The judge's fallback for a price list whose parser is failing. A vendor
 // reshapes its pricing page, the parser throws, and until the parser is fixed
@@ -345,3 +346,14 @@ export async function applyPriceReadings(
   }
   return report
 }
+
+/** The price review (server/registries/judge.ts): prices read from a price list whose parser is failing. */
+export const PRICE_REVIEW = judgeReview({
+  key: 'prices',
+  reading: JudgePriceReading,
+  max: 400,
+  empty: { accepted: 0, changed: 0, rejected: [] } as PriceReport,
+  apply: ({ db, readRaw, now }, readings) => applyPriceReadings(db, readRaw, readings, now),
+  rejected: { noun: 'price reading(s)', subject: 'source_id' },
+  offer: { key: 'price_review', read: ({ db, readRaw }) => priceReview(db, readRaw) },
+})

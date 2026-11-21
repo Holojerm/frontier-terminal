@@ -7,11 +7,11 @@ import { fillFromFixtures, type FixtureFillReport } from '../server/dev/fixture-
 import type { LockStore } from '#layers/core/server/pipeline/lock'
 import type { RawStore } from '#layers/core/server/pipeline/raw'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { queryDependencies } from '../server/utils/terminal-dependencies'
-import { queryExposure } from '../server/utils/terminal-exposure'
+import { queryDependencies } from '../../companies/server/utils/terminal-dependencies'
+import { queryExposure } from '../../companies/server/utils/terminal-exposure'
 import { queryGroundTruth } from '../server/utils/terminal-ground-truth'
-import { queryProspectus } from '../server/utils/terminal-prospectus'
-import { queryRevenue } from '../server/utils/terminal-revenue'
+import { queryProspectus } from '../../companies/server/utils/terminal-prospectus'
+import { queryRevenue } from '../../companies/server/utils/terminal-revenue'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The offline fill, as dev:fixtures and the browser suites run it. The suites

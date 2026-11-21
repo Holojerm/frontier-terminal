@@ -23,6 +23,7 @@ import {
   type Amount,
   type ReportedLab,
 } from './figures'
+import { judgeReview } from '#layers/core/server/pipeline/judge/review'
 
 /** Headlines offered per run. */
 export const FIGURE_REVIEW_LIMIT = 60
@@ -309,3 +310,14 @@ export async function applyFigureReadings(
   }
   return report
 }
+
+/** The figure review (server/registries/judge.ts): labeled figures in press headlines. */
+export const FIGURE_REVIEW = judgeReview({
+  key: 'figures',
+  reading: JudgeFigureReading,
+  max: 100,
+  empty: { accepted: 0, inserted: 0, rejected: [] } as FigureReport,
+  apply: ({ db, now }, readings) => applyFigureReadings(db, readings, now),
+  rejected: { noun: 'figure reading(s)', subject: 'article_id' },
+  offer: { key: 'figure_review', read: ({ db }) => figureReview(db) },
+})

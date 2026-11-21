@@ -23,7 +23,7 @@ import { and, asc, desc, eq, inArray, lte, max, sql } from 'drizzle-orm'
 import * as tables from '#server/db/schema'
 
 import { deployDriftCheck } from '../../../reliability/server/pipeline/deploy-watch'
-import { judgeFreshnessCheck } from '../pipeline/judge/watchdog'
+import { judgeFreshnessCheck } from '../../../core/server/pipeline/judge/watchdog'
 import { GKG_READY_MS, stampIso } from '../pipeline/track-record/gkg'
 import { oldestUnread } from '../pipeline/track-record/search'
 import {
@@ -31,7 +31,10 @@ import {
   taskHeartbeatCheck,
   type FreshnessCheck,
 } from '#layers/core/server/utils/freshness'
-import { ENTITY_IDENTIFIERS, type EntityIdentifier } from './terminal-identifiers'
+import {
+  ENTITY_IDENTIFIERS,
+  type EntityIdentifier,
+} from '../../../companies/server/utils/terminal-identifiers'
 
 const HOUR_MS = 60 * 60 * 1000
 

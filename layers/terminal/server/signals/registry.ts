@@ -14,8 +14,8 @@ import {
   type PrintSeries,
   type PrintWindow,
 } from '#layers/compute/shared/utils/prints'
-import { FOREIGN_FILERS } from '../calls/actuals'
-import { curatedCalls } from '../calls/curated'
+import { FOREIGN_FILERS } from '../../../companies/server/calls/actuals'
+import { curatedCalls } from '../../../companies/server/calls/curated'
 import { LISTED_BOARDS } from '../../../talent/shared/utils/listed-hiring'
 import type { LabId } from '../../shared/utils/terminal-types'
 import type {

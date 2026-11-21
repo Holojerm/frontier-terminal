@@ -498,7 +498,7 @@ export async function queryCoverage(db: PipelineDb, ctx: QueryContext): Promise<
       derived_from: null,
     }
   })
-  // Sources the store derived for itself (layers/terminal/server/pipeline/derived.ts) have no
+  // Sources the store derived for itself (layers/companies/server/pipeline/derived.ts) have no
   // registry entry; they are listed after the audited ones, named by their
   // template, so nothing that was fetched is invisible here.
   //

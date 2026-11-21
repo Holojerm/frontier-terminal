@@ -7,7 +7,7 @@
 // the three have no point-in-time read.
 
 import { powerSitesStamp } from '#layers/compute/server/power/stamp'
-import { suppliersStamp } from '../suppliers/store'
+import { suppliersStamp } from '../../../companies/server/suppliers/store'
 import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
 import { labQuerySchema } from '#layers/core/server/utils/lab-query'

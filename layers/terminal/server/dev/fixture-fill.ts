@@ -5,7 +5,7 @@
 // and fixture-fill.test.ts against the test database, so a page that would
 // sweep empty in the browser suites fails a unit test first.
 
-import { runFiledFacts, type FiledFactsReport } from '../exposure/ingest'
+import { runFiledFacts, type FiledFactsReport } from '../../../companies/server/exposure/ingest'
 import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import type { RawReader, RawStore } from '#layers/core/server/pipeline/raw'
 import type { LockRetry, LockStore } from '#layers/core/server/pipeline/lock'
@@ -18,7 +18,10 @@ import type { FetchSource } from '#layers/core/server/pipeline/sources'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { runPowerSiteReads, type PowerReadReport } from '#layers/compute/server/power/ingest'
 import { runPrintReads, type PrintReadReport } from '#layers/compute/server/prints/ingest'
-import { runSupplierReads, type SupplierReadReport } from '../suppliers/ingest'
+import {
+  runSupplierReads,
+  type SupplierReadReport,
+} from '../../../companies/server/suppliers/ingest'
 import { evaluateTheses } from '../theses/evaluate'
 import { runRecipes } from '../theses/recipes/run'
 

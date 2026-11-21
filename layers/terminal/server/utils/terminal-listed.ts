@@ -12,16 +12,16 @@ import type {
 } from '../../shared/utils/listed'
 import { PRINT_ENTITY, type PrintTie } from '#layers/compute/shared/utils/prints'
 import type { PowerSitesData } from '#layers/compute/shared/utils/power-sites'
-import { SUPPLIER_RELATIONS, type SuppliersData } from '../../shared/utils/suppliers'
+import { SUPPLIER_RELATIONS, type SuppliersData } from '../../../companies/shared/utils/suppliers'
 import { SUPPLIER_LAYERS } from '#layers/core/shared/utils/supplier-layers'
-import type { DependenciesData } from '../../shared/utils/terminal-dependencies'
+import type { DependenciesData } from '../../../companies/shared/utils/terminal-dependencies'
 
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import type { QueryContext } from '#layers/core/server/utils/terminal-db'
-import { queryDependencies } from './terminal-dependencies'
+import { queryDependencies } from '../../../companies/server/utils/terminal-dependencies'
 import { queryPowerSites } from '#layers/compute/server/utils/terminal-datacenters'
 import { printTies } from '#layers/compute/server/utils/terminal-prints'
-import { querySuppliers } from './terminal-suppliers'
+import { querySuppliers } from '../../../companies/server/utils/terminal-suppliers'
 
 export const LISTED_RULE =
   'One row per listed company that the graph, the suppliers table, the power table or the hardware prints name. Each tie is what a filing or a cited page says, and the tables measure different things, so the rows aren’t ranked. A row says a source names the company. It isn’t a view on the stock. Not investment advice.'

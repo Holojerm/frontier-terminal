@@ -11,7 +11,7 @@ import {
   headlinePeriods,
   periodName,
   revenueFilings,
-} from '../shared/utils/terminal-filings'
+} from '../../companies/shared/utils/terminal-filings'
 import type {
   RevenueData,
   RevenuePeriod,

@@ -4,9 +4,10 @@
 // map. A domain whose queries read a block adds its reader here.
 
 import { readFiledFactSources } from '#layers/core/server/utils/terminal-sources'
-import { parseDerivedSourcesBlock } from '#layers/terminal/server/pipeline/derived'
-import { parseRevenueFilersBlock } from '#layers/terminal/server/pipeline/parsers/sec/revenue-filers'
-import { parseCikWhitelistBlock } from '#layers/terminal/server/pipeline/parsers/sec/whitelist'
+import { parseDerivedSourcesBlock } from '#layers/core/server/pipeline/derived'
+import { DERIVED_FROM } from './derived'
+import { parseRevenueFilersBlock } from '#layers/companies/server/pipeline/parsers/sec/revenue-filers'
+import { parseCikWhitelistBlock } from '#layers/companies/server/pipeline/parsers/sec/whitelist'
 import { parseDepartmentClusters } from '#layers/talent/server/utils/terminal-clusters'
 
 export const QUERY_CONTEXT_BLOCKS = {
@@ -16,7 +17,7 @@ export const QUERY_CONTEXT_BLOCKS = {
   revenueFilers: parseRevenueFilersBlock,
   whitelist: parseCikWhitelistBlock,
   /** derived_sources: the templates, for naming derived sources on the coverage panel. */
-  derivedTemplates: parseDerivedSourcesBlock,
+  derivedTemplates: (sourcesYaml: string) => parseDerivedSourcesBlock(sourcesYaml, DERIVED_FROM),
   /** filed_fact_sources: the hyperscalers the exposure series read. */
   filedFactSources: (sourcesYaml: string) =>
     readFiledFactSources(sourcesYaml, parseCikWhitelistBlock(sourcesYaml)),

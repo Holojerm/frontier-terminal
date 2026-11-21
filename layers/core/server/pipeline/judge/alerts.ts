@@ -2,8 +2,8 @@ import { z } from 'zod'
 
 import { AlertRow, contentHash, type ChangeRow } from '../contracts'
 
-// The alert half of the judge lane's contract (the reviews each domain adds are
-// in layers/terminal/server/pipeline/judge/contract.ts). The Worker owns the data and
+// The alert half of the judge lane's contract (contract.ts adds the reviews
+// each domain registers in server/registries/judge.ts). The Worker owns the data and
 // every gate; the routine only reasons. What the routine may send back is derived entirely from the AlertRow contract:
 // it emits ONLY severity/headline/explanation/change_ids, and id, rule,
 // created_at and provenance are stamped here from the cited change rows, so

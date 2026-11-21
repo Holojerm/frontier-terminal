@@ -52,7 +52,7 @@ export const TIMESTAMP_FIELDS: Readonly<Record<string, readonly string[]>> = {
  */
 // 'filed_fact', 'guidance', 'guidance_check' and 'gpu_price' changes exist
 // only as the citation of a rule-based alert that is already written
-// (layers/terminal/server/exposure/alerts.ts, guidance-alerts.ts,
+// (layers/companies/server/exposure/alerts.ts, guidance-alerts.ts,
 // layers/compute/server/pipeline/gpu-median-floor.ts).
 export const JUDGE_EXCLUDED_ENTITY_TYPES = [
   'ranking',
@@ -109,7 +109,7 @@ export function isTimestampOnlyChange(change: {
  * already whitelisted or resolved, so those rows always carry one. A lab's
  * OWN first S-1 arrives before it is whitelisted and so is filtered here —
  * and is exactly what the deterministic cik-resolved rule fires on
- * (layers/terminal/server/pipeline/filing-floors.ts), at `critical`, with no model in the loop. From
+ * (layers/companies/server/pipeline/filing-floors.ts), at `critical`, with no model in the loop. From
  * the next poll the lab is whitelisted and its filings reach the judge.
  */
 export function isUntrackedFilingChange(change: {

@@ -1,6 +1,6 @@
 // GET /api/alerts/:id — one alert with every cited change row in full
 // (before and after, field by field), for the permalink page. Ids are
-// contentHash() output (layers/terminal/server/pipeline/judge/contract.ts › buildAlertRows),
+// contentHash() output (layers/core/server/pipeline/judge/alerts.ts › buildAlertRows),
 // so anything that is not 64 hex characters is a 404 before D1 is asked.
 
 import { z } from 'zod'

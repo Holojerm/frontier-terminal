@@ -11,7 +11,7 @@ import { extractChangelog } from '../server/theses/recipes/cloudflare-changelog'
 import { extractDepartments } from '../../talent/server/recipes/greenhouse-departments'
 import { NPM_WRANGLER, extractDownloads } from '../../adoption/server/recipes/npm-downloads'
 import { RECIPES } from '#server/registries/recipes'
-import { extractQuarterlyRevenue } from '../server/theses/recipes/sec-revenue'
+import { extractQuarterlyRevenue } from '../../companies/server/recipes/sec-revenue'
 import { yoyGrowth } from '../server/theses/recipe-signals'
 
 // The Cloudflare thesis's recipes against fixtures captured 2026-10-09

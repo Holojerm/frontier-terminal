@@ -9,7 +9,7 @@ import { tableAfterHeading, usdAmount } from './md-table'
 
 // openai-model-md-<slug> — https://developers.openai.com/api/docs/models/<slug>.md
 // One page per priced Standard-tier SKU, derived from openai-pricing-md
-// (layers/terminal/server/pipeline/derived.ts). The page prints what the catalog and pricing
+// (layers/companies/server/pipeline/derived.ts). The page prints what the catalog and pricing
 // pages do not — the context window, max output and knowledge cutoff — and
 // the same $/MTok prices under "### Text tokens". One PriceRow, tier null,
 // so it shares its key with the catalog and pricing rows and the three pages

@@ -24,7 +24,7 @@ import {
   lockRefusal,
   type SchemaLock,
 } from '#layers/core/server/utils/data-schema'
-import { ENTITY_SECURITIES } from '../server/utils/terminal-entities'
+import { ENTITY_SECURITIES } from '../../companies/server/utils/terminal-entities'
 import changelogMd from '~~/CHANGELOG-data.md?raw'
 import schemaLock from '~~/schema.lock.json'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'

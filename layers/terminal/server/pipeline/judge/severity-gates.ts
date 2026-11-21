@@ -1,6 +1,6 @@
 import type { ChangeRow } from '#layers/core/server/pipeline/contracts'
 import type { FloorClamp } from '../../../../talent/server/pipeline/hiring-floor'
-import { isRoutine8K, rootForm } from '../parsers/sec/forms'
+import { isRoutine8K, rootForm } from '../../../../companies/server/pipeline/parsers/sec/forms'
 import { requotedKey } from '#layers/pricing/server/pipeline/judge/class-map'
 
 // Worker-side severity rules for the judge's filing and pricing alerts, the

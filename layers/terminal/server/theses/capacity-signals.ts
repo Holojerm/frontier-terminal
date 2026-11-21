@@ -8,21 +8,21 @@
 
 import { and, eq, gte } from 'drizzle-orm'
 
-import type { ExposureTicker } from '../../shared/utils/terminal-exposure'
+import type { ExposureTicker } from '../../../companies/shared/utils/terminal-exposure'
 import type { SignalSpec } from '../../shared/utils/thesis-types'
 
 import * as tables from '#server/db/schema'
 import type { ProbeDayRow } from '#server/db/schema'
-import { FILER_NAMES, type StoredFact } from '../exposure/series'
+import { FILER_NAMES, type StoredFact } from '../../../companies/server/exposure/series'
 import { PRIMARY_PLACEMENT } from '../../../reliability/server/pipeline/probes/placement'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
-import { filedFactsAt } from '../utils/terminal-exposure'
+import { filedFactsAt } from '../../../companies/server/utils/terminal-exposure'
 import {
   filedActual,
   fiscalYear,
   GUIDANCE_MEASURES,
   type StoredGuidance,
-} from '../utils/terminal-ground-truth-guidance'
+} from '../../../companies/server/utils/terminal-ground-truth-guidance'
 import { daysBefore } from '#layers/adoption/server/utils/terminal-rankings'
 import { spotRead } from '#layers/compute/server/utils/terminal-utilization'
 import { gpuState, median, type GpuObservation } from '#layers/compute/server/recipes/gpu-series'

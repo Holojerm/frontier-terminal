@@ -5,7 +5,7 @@
 // page header and the axis panels cannot disagree about a number.
 
 import { alertLabs } from './terminal-labs'
-import { LAB_DISPLAY, LABS } from '../../../core/shared/utils/lab-names'
+import { LAB_DISPLAY, LABS, labPath } from '../../../core/shared/utils/lab-names'
 import type {
   AlertView,
   LabId,
@@ -24,8 +24,6 @@ import type {
   SpendData,
   SpendProviderView,
 } from './terminal-types'
-
-export const labPath = (lab: LabId) => `/labs/${lab}`
 
 /**
  * The lab pages, in the shape `definePageMeta({ publicPage })` produces for a
