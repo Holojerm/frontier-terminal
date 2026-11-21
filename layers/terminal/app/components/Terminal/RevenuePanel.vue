@@ -78,6 +78,7 @@ const badge = (p: RevenueProviderView) =>
         ? BADGE.segment
         : BADGE.parent
       : BADGE.none
+const stamps = useStamps()
 </script>
 
 <template>
@@ -131,8 +132,8 @@ const badge = (p: RevenueProviderView) =>
             nested
           >
             <template #cell-period="{ row: r }">
-              <time :datetime="r.start">{{ r.start }}</time> →
-              <time :datetime="r.end">{{ r.end }}</time>
+              <time :datetime="r.start">{{ stamps.date(r.start) }}</time> →
+              <time :datetime="r.end">{{ stamps.date(r.end) }}</time>
               <span class="text-muted"> · {{ periodLabel(r.days) }}</span>
               <span v-if="r.unaudited" class="text-muted"> · unaudited</span>
             </template>
@@ -146,7 +147,7 @@ const badge = (p: RevenueProviderView) =>
                 :title="`Every period in accession ${r.accession_no}`"
                 >{{ r.form }}</NuxtLink
               >
-              filed <time :datetime="r.filed">{{ r.filed }}</time>
+              filed <time :datetime="r.filed">{{ stamps.date(r.filed) }}</time>
               ·
               <a
                 :href="r.filing_url"

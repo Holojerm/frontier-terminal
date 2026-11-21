@@ -36,6 +36,7 @@ const foldedText = (p: RevenueProviderView) =>
     : p.filer?.relation === 'issuer'
       ? 'S-1 filed, no revenue read yet'
       : 'Filer known, no XBRL revenue read yet'
+const stamps = useStamps()
 </script>
 
 <template>
@@ -58,8 +59,8 @@ const foldedText = (p: RevenueProviderView) =>
       />
     </template>
     <template #cell-period="{ row: p }">
-      <time :datetime="p.periods[0]!.start">{{ p.periods[0]!.start }}</time> →
-      <time :datetime="p.periods[0]!.end">{{ p.periods[0]!.end }}</time>
+      <time :datetime="p.periods[0]!.start">{{ stamps.date(p.periods[0]!.start) }}</time> →
+      <time :datetime="p.periods[0]!.end">{{ stamps.date(p.periods[0]!.end) }}</time>
       <span class="block text-muted">{{ periodLabel(p.periods[0]!.days) }}</span>
     </template>
     <template #cell-value="{ row: p }">
@@ -76,7 +77,7 @@ const foldedText = (p: RevenueProviderView) =>
         :title="`Accession ${p.periods[0]!.accession_no} · tag ${p.periods[0]!.tag}`"
         >{{ p.periods[0]!.form }}</a
       >
-      filed <time :datetime="p.periods[0]!.filed">{{ p.periods[0]!.filed }}</time>
+      filed <time :datetime="p.periods[0]!.filed">{{ stamps.date(p.periods[0]!.filed) }}</time>
     </template>
     <template #cell-source="{ row: p }">
       <TerminalSources :sources="p.sources.slice(0, 1)" />

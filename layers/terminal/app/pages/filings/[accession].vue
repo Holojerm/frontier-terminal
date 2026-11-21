@@ -133,6 +133,7 @@ useSeo({
 })
 
 const rowKey = (r: FilingPeriod) => r.entity_key
+const stamps = useStamps()
 </script>
 
 <template>
@@ -174,8 +175,8 @@ const rowKey = (r: FilingPeriod) => r.entity_key
           <span v-if="r.unaudited" class="text-muted"> · unaudited</span>
         </template>
         <template #cell-dates="{ row: r }">
-          <time :datetime="r.start">{{ r.start }}</time> →
-          <time :datetime="r.end">{{ r.end }}</time>
+          <time :datetime="r.start">{{ stamps.date(r.start) }}</time> →
+          <time :datetime="r.end">{{ stamps.date(r.end) }}</time>
           <span class="sr-only"> ({{ periodLabel(r.days) }})</span>
         </template>
         <template #cell-val="{ row: r }">
@@ -190,7 +191,7 @@ const rowKey = (r: FilingPeriod) => r.entity_key
             <NuxtLink
               :to="filingPath(r.restated_by.accession_no)"
               class="underline underline-offset-2 hover:text-default"
-              >{{ r.restated_by.form }} of {{ r.restated_by.filed }}</NuxtLink
+              >{{ r.restated_by.form }} of {{ stamps.date(r.restated_by.filed) }}</NuxtLink
             >
           </template>
           <template v-else>current</template>
@@ -244,7 +245,9 @@ const rowKey = (r: FilingPeriod) => r.entity_key
             class="text-default underline underline-offset-2 hover:text-highlighted"
             >{{ o.title }}</NuxtLink
           >
-          <span class="text-muted"> · filed <time :datetime="o.filed">{{ o.filed }}</time></span>
+          <span class="text-muted">
+            · filed <time :datetime="o.filed">{{ stamps.date(o.filed) }}</time></span
+          >
         </li>
       </ul>
     </TerminalPanel>

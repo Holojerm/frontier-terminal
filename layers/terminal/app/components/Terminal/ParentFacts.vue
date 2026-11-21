@@ -7,6 +7,8 @@ import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type { ParentFact, ParentsData } from '../../../shared/utils/recipe-views'
 import type { TableColumn } from '../../types/terminal-ui'
 
+const stamps = useStamps()
+
 const figures = useFigures()
 
 const props = defineProps<{ parents: ParentsData }>()
@@ -29,7 +31,8 @@ const rowsOf = (p: ParentsData['parents'][number]) =>
   p.facts.map((f) => ({
     key: `${f.key}|${f.date}`,
     label: f.label,
-    period: f.span === 'instant' ? `at ${f.date}` : `${f.span} to ${f.date}`,
+    period:
+      f.span === 'instant' ? `at ${stamps.date(f.date)}` : `${f.span} to ${stamps.date(f.date)}`,
     value: value(f),
   }))
 </script>

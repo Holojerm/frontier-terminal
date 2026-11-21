@@ -255,8 +255,9 @@ const summary = computed(() => summarizeLab(lab, data.value))
 const lede = computed(() => labLede(summary.value) ?? undefined)
 const display = summary.value.display
 const fmt = useFigures()
+const stamps = useStamps()
 const figures = computed(() =>
-  readoutCells(summary.value, rankings.data.value?.provenance, fmt.usd),
+  readoutCells(summary.value, rankings.data.value?.provenance, fmt.usd, stamps.date),
 )
 // The readout as two groups. Power has no axis of its own, so it joins here
 // and nowhere else: under economics, where the site nav files Compute.
@@ -312,7 +313,7 @@ const spendOf = computed(() =>
 const archivedHiring = computed(() => {
   const points = hiring.data.value?.providers[0]?.archived ?? []
   if (points.length === 0) return null
-  return { copies: points.length, from: points[0]!.at.slice(0, 10), first: points[0]!.total }
+  return { copies: points.length, from: stamps.date(points[0]!.at), first: points[0]!.total }
 })
 
 const hiringOf = computed(() =>
@@ -335,7 +336,6 @@ const pairs = COMPARE_PAIRS.filter((pair) => pair.includes(lab))
 
 // The incidents behind the strain count, newest first: already this lab's
 // newest INCIDENTS_SHOWN, cut on the server above.
-const stamps = useStamps()
 const recentIncidents = computed(() => incidents.data.value?.incidents ?? [])
 const incidentColumns: TableColumn[] = [
   { key: 'started', label: 'Started', class: 'whitespace-nowrap font-mono text-xs' },

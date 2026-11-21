@@ -13,6 +13,7 @@ import {
   edgarName,
   exactStamp,
   exactUsd,
+  fullDayStamp,
   gpuHour,
   grouped,
   hostOf,
@@ -252,6 +253,14 @@ describe('dayStamp / datedStamp', () => {
     expect(dayStamp('2026-08-03', NOW, tokyo)).toBe('Aug 3')
     expect(dayStamp('2026-08-03', NOW, nyIso)).toBe('2026-08-03')
     expect(dayStamp('soon', NOW)).toBe('soon')
+  })
+
+  it('names the year of a filing period or a planned date, with no clock to drop it', () => {
+    expect(fullDayStamp('2026-09-30')).toBe('Sep 30 2026')
+    expect(fullDayStamp('2028-03-17T00:00:00Z')).toBe('Mar 17 2028')
+    const nyIso = { zone: 'America/New_York', hour12: true, iso: true, relative: true }
+    expect(fullDayStamp('2026-09-30', nyIso)).toBe('2026-09-30')
+    expect(fullDayStamp('soon')).toBe('soon')
   })
 
   it('always names the year on a printed stamp', () => {

@@ -9,6 +9,8 @@ import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type { PayData } from '../../../shared/utils/recipe-views'
 import type { TableColumn } from '../../types/terminal-ui'
 
+const stamps = useStamps()
+
 const watchlist = useWatchlist()
 
 const figures = useFigures()
@@ -39,7 +41,10 @@ const rows = computed(() =>
         median: figures.usd(c.median),
         range: `${figures.usd(c.p25)}–${figures.usd(c.p75)}`,
         n: `${count(c.n)}${c.key === 'all' ? ` of ${count(b.roles_on_board)}` : ''}`,
-        change: ch === null ? `first read ${b.date}` : `${pctLabel(ch)} since ${c.previous!.date}`,
+        change:
+          ch === null
+            ? `first read ${stamps.date(b.date)}`
+            : `${pctLabel(ch)} since ${stamps.date(c.previous!.date)}`,
         departments: c.departments,
       }
     }),

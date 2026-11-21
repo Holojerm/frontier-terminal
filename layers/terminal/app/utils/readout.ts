@@ -54,6 +54,8 @@ export function readoutCells(
   s: LabSummary,
   rankingsSource: Prov | null | undefined,
   usd: (n: number) => string = compactUsd,
+  /** A date printed alone, in the reader's form (useStamps().day). */
+  day: (date: string) => string = (date) => date,
 ): Record<ReadoutAxis, ReadoutCell> {
   const at = (id: string) => `${labPath(s.lab)}#${id}`
   const cell = (axis: ReadoutAxis, id: string, c: Partial<ReadoutCell>): ReadoutCell => ({
@@ -86,7 +88,7 @@ export function readoutCells(
   const revenue = r.newest
     ? cell('revenue', 'revenue', {
         value: usd(r.newest.val),
-        sub: `${periodLabel(r.newest.days)} to ${r.newest.end}${revenueScope(r.view)}`,
+        sub: `${periodLabel(r.newest.days)} to ${day(r.newest.end)}${revenueScope(r.view)}`,
         source: r.newest,
       })
     : cell('revenue', 'revenue', {

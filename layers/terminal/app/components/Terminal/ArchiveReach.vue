@@ -29,7 +29,8 @@ const COLUMNS: TableColumn[] = [
   { key: 'gaps', label: 'Gaps before that', class: 'text-muted' },
 ]
 
-const day = (iso: string | null) => (iso ? iso.slice(0, 10) : '—')
+const stamps = useStamps()
+const day = (iso: string | null) => (iso ? stamps.date(iso) : '—')
 const from = (r: ArchiveReach) => r.archived_from ?? r.live_from
 </script>
 
@@ -66,7 +67,8 @@ const from = (r: ArchiveReach) => r.archived_from ?? r.live_from
     <template #cell-gaps="{ row: r }">
       <ul v-if="r.gaps.length" class="space-y-1">
         <li v-for="g in r.gaps" :key="g.from">
-          <span class="font-mono">{{ g.from }} – {{ g.until }}</span>: {{ g.reason }}
+          <span class="font-mono">{{ stamps.date(g.from) }} – {{ stamps.date(g.until) }}</span>:
+          {{ g.reason }}
         </li>
       </ul>
       <span v-else>—</span>

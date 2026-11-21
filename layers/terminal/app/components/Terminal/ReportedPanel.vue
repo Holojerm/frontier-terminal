@@ -73,7 +73,7 @@ const status = computed(() => {
   const c = props.reported.coverage
   const files = c.files_read + c.files_waiting
   return [
-    `We’ve read ${c.files_read.toLocaleString('en-US')} of ${files.toLocaleString('en-US')} GDELT files since ${c.from.slice(0, 10)} for these headlines.`,
+    `We’ve read ${c.files_read.toLocaleString('en-US')} of ${files.toLocaleString('en-US')} GDELT files since ${stamps.date(c.from)} for these headlines.`,
     c.unread
       ? `${c.unread} ${c.unread === 1 ? 'headline waits' : 'headlines wait'} to be read.`
       : '',

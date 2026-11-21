@@ -44,8 +44,10 @@ const widest = computed(() => Math.max(...props.rankings.shares.map((s) => s.sha
 
     <template v-else>
       <p v-if="window" class="text-xs text-muted">
-        {{ window.from }} → {{ window.to }}
-        <template v-if="prior"> · Δ vs {{ prior.from }} → {{ prior.to }}</template>
+        {{ stamps.date(window.from) }} → {{ stamps.date(window.to) }}
+        <template v-if="prior">
+          · Δ vs {{ stamps.date(prior.from) }} → {{ stamps.date(prior.to) }}</template
+        >
         <template v-else> · no earlier window yet</template>
       </p>
 
