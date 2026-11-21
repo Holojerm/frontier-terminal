@@ -169,6 +169,8 @@ const billions = (v: number) => grouped(v / 1e9, 1)
       :row-key="(r) => r.key"
       :gap="(r) => r.newest === null"
       :gap-columns="['month', 'exports', 'yoy', 'seen']"
+      :fold-gaps="() => 'no-release'"
+      :row-name="(r) => r.label"
       nested
       stack
     >
@@ -188,7 +190,7 @@ const billions = (v: number) => grouped(v / 1e9, 1)
         </span>
       </template>
       <template #gap>
-        <span class="text-sm text-muted">No release read yet.</span>
+        <span>No release read yet</span>
       </template>
     </TerminalTable>
     <TerminalSources :sources="krSources">

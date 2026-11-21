@@ -320,9 +320,14 @@ const indexOf = computed(() => new Map(props.rows.map((r, i) => [r, i])))
             :class="c.numeric ? 'text-right' : undefined"
           >
             {{ c.label }}
-            <span v-if="c.hint" class="block max-w-48 whitespace-normal font-normal">{{
-              c.hint
-            }}</span>
+            <!-- `ml-auto`: a capped block sits at the left of a wide numeric
+                 column, away from the label above it. -->
+            <span
+              v-if="c.hint"
+              class="block max-w-48 whitespace-normal font-normal"
+              :class="c.numeric ? 'ml-auto' : undefined"
+              >{{ c.hint }}</span
+            >
           </th>
         </tr>
       </thead>
