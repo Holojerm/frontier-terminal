@@ -3,7 +3,7 @@
 import { recipeRunsStamp } from '../utils/terminal-db'
 import { gpuRunsStamp, queryGpuPrices } from '../utils/terminal-gpu'
 import { queryAdoption, VIEW_RECIPES } from '../utils/terminal-recipe-views'
-import { SHARE_WINDOW_DAYS, queryRankings } from '../utils/terminal-rankings'
+import { SERIES_DAYS, SHARE_WINDOW_DAYS, queryRankings } from '../utils/terminal-rankings'
 import { querySpend } from '../utils/terminal-spend'
 import { json, READ_ONLY, PROVENANCE, type McpKit } from './kit'
 
@@ -15,8 +15,9 @@ export function registerDemandTools({ server, deps }: McpKit): void {
       description:
         'OpenRouter’s daily usage rankings folded into token share per lab over the newest ' +
         `${SHARE_WINDOW_DAYS} days present (shares[].share, 0..1) with the change against the ${SHARE_WINDOW_DAYS} before ` +
-        '(delta_pp, percentage points; null when there is no prior window), each lab’s top models in the window, and a daily ' +
-        'series. This is OpenRouter share — one aggregator’s routed traffic, top 50 models a day plus an aggregated `other` — ' +
+        '(delta_pp, percentage points; null when there is no prior window), each lab’s top models in the window, a daily ' +
+        `series of the newest ${SERIES_DAYS} days, and weekly[]: every stored ISO week (Monday start, UTC), oldest first, with ` +
+        'tokens and share (0..1, same denominator as shares[]) per lab and the days present (a partial week shares over those). This is OpenRouter share — one aggregator’s routed traffic, top 50 models a day plus an aggregated `other` — ' +
         'NOT market share, revenue share or total usage; say so when you cite it. Windows are days present in the store, ' +
         'not calendar days (meta.coverage names them). status is ok, not_configured (no API key on the poller, nothing fetched) ' +
         'or no_rows. The data is CC BY 4.0 and republication requires the citation carried in meta.citation, with OpenRouter’s ' +

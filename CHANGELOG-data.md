@@ -23,6 +23,16 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.12.0 (2026-11-20)
+
+`/api/rankings` gains `weekly`: each lab's share of OpenRouter tokens per ISO
+week (Monday to Sunday, UTC) over every day we have stored, oldest week
+first. Each week has its `tokens` and `share` per lab, `other` included, the
+same way `shares` counts them. `from`, `to` and `days` say which days of the
+week are on record, so a partial week's share rests on fewer days. The MCP
+tool `get_rankings` returns it too. No table columns changed, and the
+per-model rows still aren't exported.
+
 ## 1.11.0 (2026-11-20)
 
 `power_site_ties` keeps up with new filings. Its first rows were read by

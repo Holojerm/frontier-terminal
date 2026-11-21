@@ -13,7 +13,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Demand',
     summary:
-      'Each frontier lab’s share of tokens routed through OpenRouter over the newest seven days, the implied spend share at list price, a 30-day series and the top models per lab; then the share of US businesses on Ramp paying each lab, SDK and coding-agent downloads on npm and PyPI, and coding-agent pull requests on GitHub. None of it is market share.',
+      'Each frontier lab’s share of tokens routed through OpenRouter over the newest seven days, the implied spend share at list price, a 30-day series, weekly share over the whole history and the top models per lab; then the share of US businesses on Ramp paying each lab, SDK and coding-agent downloads on npm and PyPI, and coding-agent pull requests on GitHub. None of it is market share.',
   },
 })
 
@@ -96,6 +96,15 @@ const tabs = computed(() => [
             note="Tokens routed per UTC day, stacked by lab."
           >
             <TerminalRankingsSeries :series="rankings.series" />
+          </TerminalPanel>
+
+          <TerminalPanel
+            v-if="rankings.status === 'ok'"
+            id="weekly"
+            title="Weekly share"
+            note="Each lab’s share of all OpenRouter tokens per week (Monday to Sunday, UTC), counting the daily top 50 and the “other” row. The charts share one y-axis, so their heights compare."
+          >
+            <TerminalRankingsWeekly :rankings="rankings" />
           </TerminalPanel>
 
           <TerminalPanel
