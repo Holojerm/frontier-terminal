@@ -625,7 +625,11 @@ export default defineNuxtConfig({
 
   // Nitro — Cloudflare Workers preset for production build
   nitro: {
-    preset: 'cloudflare_module',
+    // cloudflare_module plus one export: `$DurableObject`, a Durable Object that
+    // runs this app inside it. The latency probes run in one, made with a
+    // location hint, so they leave from one place (wrangler.toml › Probe
+    // placement). Every other handler is cloudflare_module's.
+    preset: 'cloudflare-durable',
     // The worker preset minifies the server bundle with terser, in-process: about
     // 1.4 GB of the build's 4.8 GB peak and half its CPU (2026-11-20). The browser
     // suites build on a 5 GB VM (test/server/start.ts), and minifying the server

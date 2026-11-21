@@ -66,7 +66,8 @@ export function registerOperationsTools({ server, deps }: McpKit): void {
       description:
         'Our own measurement, not a vendor’s page. Once an hour we send each lab’s flagship model one fixed streaming request (probe.prompt, capped at probe.max_tokens) ' +
         'through OpenRouter, pinned to the lab’s own endpoint with no fallback, and time the reply. labs has one entry per tracked lab. status probed carries latest (the newest probe: outcome, http_status, ' +
-        'ttft_ms, total_ms, output_tokens, tokens_per_second, ran_from as cloudflare:<colo>), window (the trailing window_days of complete days) and days (one reading per UTC day, newest first, history_days back). ' +
+        'ttft_ms, total_ms, output_tokens, tokens_per_second, ran_from as cloudflare:<colo>, placement, served_by_pinned, rate_limit_headers), window (the trailing window_days of complete days) and days (one reading per UTC day, newest first, history_days back). ' +
+        'days and window are the pinned series only: probes sent from one place, placement.hint (enam, eastern North America), since placement.since. other_series holds every other placement apart, among them unpinned, the probes before that, sent from whichever colo ran the job; never join it to days. ' +
         'A day gives probes, ok, rate_limited, failed, strained_share ((rate_limited + failed) ÷ probes), peak_tps and offpeak_tps (median tokens per second in the lab’s fixed UTC peak and off-peak hours, named in hours; ' +
         'null under three good probes) and peak_to_offpeak (under 1 means slower in working hours). complete is false for the current UTC day. Probes refused because of our key, credit or the router are left out of probes. ' +
         'status not_probed is a lab with no first-party endpoint to probe, with the reason in gap, never a zero. status waiting is a target with no probe stored yet. since is the first day probed: history starts there and cannot be backfilled. ' +

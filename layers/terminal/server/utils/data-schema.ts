@@ -296,6 +296,19 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       },
     },
   },
+  {
+    version: '1.18.0',
+    date: '2026-11-21',
+    summary:
+      'The latency probes now leave from one place, a Cloudflare data center in eastern North America, instead of whichever data center ran the hourly job (15 in the first day), so a lab’s times no longer include a varying distance to the router. latency_probes gains placement (enam, or unpinned for every probe before the change), served_by_pinned and rate_limit_headers. probe_days gains placement as part of its key: a day is never read across placements, and the changeover day has a row for each. /api/probes serves the pinned series as each lab’s days and window, and the unpinned history apart, in other_series.',
+    tables: {
+      latency_probes: { added: ['placement', 'served_by_pinned', 'rate_limit_headers'] },
+      probe_days: {
+        added: ['placement'],
+        note: 'The key is now lab, day and placement. Rows from before the change have placement unpinned.',
+      },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

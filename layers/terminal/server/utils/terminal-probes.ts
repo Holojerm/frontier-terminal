@@ -1,6 +1,8 @@
 // GET /api/probes and the get_probes MCP tool: the hourly latency probes as a
 // strain reading per lab. Reads the daily rollup (probe_days) and each lab's
-// newest probe, never the raw quarter.
+// newest probe, never the raw quarter. A lab's days are the pinned series
+// (PRIMARY_PLACEMENT) only; every other placement, and the unpinned probes
+// from before placement, is served beside it as a series of its own.
 
 import { desc, eq, gte, max, min } from 'drizzle-orm'
 
@@ -10,6 +12,7 @@ import type {
   LabId,
   ProbeDayView,
   ProbeLabView,
+  ProbeSeriesView,
   ProbeWindowView,
   ProbesData,
 } from '../../shared/utils/terminal-types'
@@ -17,6 +20,12 @@ import type {
 import * as tables from '#server/db/schema'
 import type { ProbeDayRow } from '#server/db/schema'
 import { peakToOffpeak, strainedShare } from '../pipeline/probes/daily'
+import {
+  PRIMARY_PLACEMENT,
+  PROBE_PLACEMENTS,
+  UNPINNED,
+  placementLabel,
+} from '../pipeline/probes/placement'
 import {
   PROBE_ENDPOINT,
   PROBE_GAPS,
@@ -45,7 +54,8 @@ export const PROBES_METHOD =
 export const PROBES_CAVEAT =
   'This is a reading of strain at one hourly sample, from one account, through one router. It isn’t utilization, and we haven’t shown that it predicts anything. ' +
   'An hourly probe misses short bursts of rate limiting. Six of these models reason before they answer, each for as long as it chooses, so compare a lab with its own history and not with another lab. ' +
-  'Each probe leaves from whichever Cloudflare data center ran it, and the row says which.'
+  `Every probe leaves from one place, a Cloudflare data center in ${placementLabel(PRIMARY_PLACEMENT)}, and the row says which. ` +
+  'Probes from before that left from whichever data center ran them, so their times include the distance to the router. They are kept apart, never mixed into the reading.'
 
 const DAY_MS = 86_400_000
 const dayOf = (at: Date) => at.toISOString().slice(0, 10)
@@ -54,6 +64,7 @@ function dayView(row: ProbeDayRow, today: string): ProbeDayView {
   return {
     day: row.day,
     complete: row.day < today,
+    placement: row.placement,
     model: row.model,
     probes: row.probes,
     ok: row.ok,
@@ -93,6 +104,26 @@ export function probeWindow(days: readonly ProbeDayView[], from: string): ProbeW
   }
 }
 
+/** Parsed rate-limit headers, or null when there were none or the stored text isn't an object. */
+function headersOf(text: string | null): Record<string, string> | null {
+  if (!text) return null
+  try {
+    const value: unknown = JSON.parse(text)
+    return value !== null && typeof value === 'object' && !Array.isArray(value)
+      ? (value as Record<string, string>)
+      : null
+  } catch {
+    return null
+  }
+}
+
+/** Pinned placements in PROBE_PLACEMENTS order after the primary, then unpinned, then anything else stored. */
+function seriesOrder(placement: string): number {
+  if (placement === UNPINNED) return PROBE_PLACEMENTS.length
+  const i = PROBE_PLACEMENTS.indexOf(placement as (typeof PROBE_PLACEMENTS)[number])
+  return i === -1 ? PROBE_PLACEMENTS.length + 1 : i
+}
+
 /** Changes whenever a probe is stored: the cache key beside the poll stamp. */
 export async function probesStamp(db: PipelineDb): Promise<string> {
   const [row] = await db
@@ -120,13 +151,18 @@ export async function queryProbes(db: PipelineDb, ctx: QueryContext): Promise<Pr
   const historyFrom = dayOf(new Date(now.getTime() - PROBE_HISTORY_DAYS * DAY_MS))
   const windowFrom = dayOf(new Date(now.getTime() - PROBE_WINDOW_DAYS * DAY_MS))
   const p = tables.latencyProbes
-  const [dayRows, [first], latest] = await Promise.all([
+  const d = tables.probeDays
+  const [dayRows, [first], [firstPinned], latest] = await Promise.all([
     db
       .select()
       .from(tables.probeDays)
       .where(gte(tables.probeDays.day, historyFrom))
       .orderBy(desc(tables.probeDays.day)),
-    db.select({ day: min(tables.probeDays.day) }).from(tables.probeDays),
+    db.select({ day: min(d.day) }).from(d),
+    db
+      .select({ day: min(d.day) })
+      .from(d)
+      .where(eq(d.placement, PRIMARY_PLACEMENT)),
     // One indexed read per lab: a group-by over the table would read every probe ever stored.
     Promise.all(
       PROBE_TARGETS.map((t) =>
@@ -156,10 +192,25 @@ export async function queryProbes(db: PipelineDb, ctx: QueryContext): Promise<Pr
             latest: null,
             window: null,
             days: [],
+            other_series: [],
           },
         ]
       }
-      const days = dayRows.filter((d) => d.lab === lab).map((d) => dayView(d, today))
+      const own = dayRows.filter((row) => row.lab === lab).map((row) => dayView(row, today))
+      const days = own.filter((row) => row.placement === PRIMARY_PLACEMENT)
+      const others = [...new Set(own.map((row) => row.placement))]
+        .filter((placement) => placement !== PRIMARY_PLACEMENT)
+        .sort((a, b) => seriesOrder(a) - seriesOrder(b))
+        .map((placement): ProbeSeriesView => {
+          const series = own.filter((row) => row.placement === placement)
+          return {
+            placement,
+            label: placementLabel(placement),
+            pinned: placement !== UNPINNED,
+            window: probeWindow(series, windowFrom),
+            days: series,
+          }
+        })
       const last = newest.get(lab)
       return [
         {
@@ -181,13 +232,17 @@ export async function queryProbes(db: PipelineDb, ctx: QueryContext): Promise<Pr
                 output_tokens: last.output_tokens,
                 tokens_per_second: last.tokens_per_second,
                 ran_from: last.ran_from,
+                placement: last.placement,
                 served_by: last.served_by,
+                served_by_pinned: last.served_by_pinned,
+                rate_limit_headers: headersOf(last.rate_limit_headers),
                 source_url: last.source_url,
                 fetched_at: last.fetched_at,
               }
             : null,
           window: probeWindow(days, windowFrom),
           days,
+          other_series: others,
         },
       ]
     })
@@ -198,6 +253,11 @@ export async function queryProbes(db: PipelineDb, ctx: QueryContext): Promise<Pr
     window_days: PROBE_WINDOW_DAYS,
     history_days: PROBE_HISTORY_DAYS,
     since: first?.day ?? null,
+    placement: {
+      hint: PRIMARY_PLACEMENT,
+      label: placementLabel(PRIMARY_PLACEMENT),
+      since: firstPinned?.day ?? null,
+    },
     labs,
     probe: {
       endpoint: PROBE_ENDPOINT,
