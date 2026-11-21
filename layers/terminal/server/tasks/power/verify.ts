@@ -5,9 +5,9 @@
 
 import { db } from '@nuxthub/db'
 
-import { createFetcher } from '../../pipeline/fetch'
+import { createFetcher } from '#layers/core/server/pipeline/fetch'
 import { verifyHandTies } from '../../power/verify'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

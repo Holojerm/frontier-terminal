@@ -8,7 +8,7 @@ import payAnthropic from '~~/fixtures/recipes/pay-anthropic.json?raw'
 import ramp from '~~/fixtures/recipes/ramp-ai-index.html?raw'
 import msft from '~~/fixtures/recipes/sec-msft-openai.xml?raw'
 import * as schema from '~~/server/db/schema'
-import type { SourceFetcher } from '../server/pipeline/fetch'
+import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { EPOCH_DATA_CENTERS } from '../server/theses/recipes/epoch-data-centers'
 import { INVESTEE_RECIPES } from '../server/theses/recipes/investee-facts'
 import { PAY_RECIPES } from '../server/theses/recipes/pay-bands'
@@ -22,7 +22,7 @@ import {
   queryParents,
   queryPay,
 } from '../server/utils/terminal-recipe-views'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The panels' read side over a store the recipe runner filled from the
 // committed fixtures: the numbers a page shows are the sources' own.

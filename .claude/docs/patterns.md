@@ -94,23 +94,41 @@ const recent = await db.select().from(schema.opsEvents).where(gt(schema.opsEvent
 await db.run(sql`SELECT * FROM users`)
 ```
 
-### Product code reaches core through registries
+### Product code reaches the app's template files through registries
 
-Core files stay the template's. The product (`layers/terminal/`) registers what is its own from
+The app's template files stay the template's. The product layers register what is their own from
 Nitro plugins; tests call the same `register…()` function, because plugins don't run under vitest.
 
 - **Fleet counters**: `registerFleetExtraContributor({ key, collect })` in
   `server/utils/extensions.ts`; the numbers land in `extra` on `GET /api/fleet`. Counts only.
   See `layers/terminal/server/plugins/fleet-counters.ts`.
 - **Native rate-limit budgets**: `rateLimit()` delegates to Cloudflare's binding only when a call
-  site's numbers equal a registered budget. Core registers `NATIVE_LIMITER` (30/60s); the terminal
+  site's numbers equal a registered budget. The app registers `NATIVE_LIMITER` (30/60s); the core layer
   adds `RATE_LIMITER_60` with `registerNativeLimiter()` next to its `[[ratelimits]]` block
-  (`layers/terminal/server/plugins/rate-limits.ts`). Named budgets that stay on KV, such as
-  `PERMALINK_LIMIT`, live in `layers/terminal/server/utils/rate-limits.ts`.
+  (`layers/core/server/plugins/rate-limits.ts`). Named budgets that stay on KV, such as
+  `PERMALINK_LIMIT`, live in `layers/core/server/utils/rate-limits.ts`.
 - **Dynamic public pages and robots paths**: `registerPublicPageSource()` and
   `registerRobotsDisallow()` in `server/utils/public-pages.ts`. See `seo.md`.
 
 Where the app still differs from a template-owned file, `docs/template-divergence.md` says why.
+
+### Lists of every domain live at the app root
+
+The `core` layer never names a domain, yet the refresh, the MCP server and the export routes each
+need every domain's entries. Those lists are composition roots in `server/registries/`, the way
+`server/db/schema.ts` composes every layer's tables, and core imports them as `#server/registries/…`:
+
+| Registry | What a domain adds |
+| --- | --- |
+| `lanes.ts` | its `LANES` and `DERIVED_LANES`, spread in (`set-lanes.ts` when a lane is a set) |
+| `mcp-tools.ts` | its `register…Tools` in `MCP_TOOLS`, in tools/list order |
+| `export-tables.ts` | its `…_TABLES` record, spread into `EXPORT_TABLES` in export order |
+| `recipes.ts` | its recipes, in run order |
+| `query-context.ts` | a reader for each sources.yaml block its queries take from `QueryContext` |
+
+Core defines each entry's type. An event that crosses the direction is a Nitro hook instead: the
+judge calls `judge:applied` when a run's verdicts land, and the theses layer subscribes
+(`layers/terminal/server/plugins/theses-judged.ts`). `bun run domains:check` holds the direction.
 
 ### Vendored layers
 

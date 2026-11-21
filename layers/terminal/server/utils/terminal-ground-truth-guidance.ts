@@ -27,7 +27,7 @@ import type {
 import * as tables from '#server/db/schema'
 import { GUIDANCE_SINCE } from '../exposure/guidance'
 import { FILER_NAMES, filingUrl, type StoredFact } from '../exposure/series'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { filedBefore } from './terminal-exposure'
 import { middle } from './terminal-reported'
 

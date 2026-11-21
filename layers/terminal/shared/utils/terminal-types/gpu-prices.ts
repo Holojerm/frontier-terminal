@@ -1,4 +1,4 @@
-import type { Prov, Stamp } from './common'
+import type { Prov, Stamp } from '#layers/core/shared/utils/terminal-types/common'
 
 /** One published on-demand price, normalized to USD per GPU-hour (layers/terminal/server/theses/recipes/gpu-prices.ts). */
 export interface GpuPriceView extends Prov {

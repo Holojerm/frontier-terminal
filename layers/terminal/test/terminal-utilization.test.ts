@@ -14,7 +14,7 @@ import crwvFacts from '~~/fixtures/recipes/sec-companyfacts-crwv.json?raw'
 import crwvRelease from '~~/fixtures/recipes/sec-crwv-active-power.html?raw'
 import googlRelease from '~~/fixtures/recipes/sec-googl-api-tokens.html?raw'
 import * as schema from '~~/server/db/schema'
-import type { SourceFetcher } from '../server/pipeline/fetch'
+import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import type { Recipe } from '../server/theses/recipes/contract'
 import {
   SEC_CRWV_ACTIVE_POWER,
@@ -44,7 +44,7 @@ import {
 } from '../server/theses/recipes/mlperf-inference'
 import { runRecipes } from '../server/theses/recipes/run'
 import { SEC_REVENUE_CRWV } from '../server/theses/recipes/sec-revenue'
-import { queryContext } from '../server/utils/terminal-db'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import {
   SPOT_QUORUM,
   coreweaveQuarters,
@@ -58,7 +58,7 @@ import {
   spotRead,
   type RoundResult,
 } from '../server/utils/terminal-utilization'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The utilization read: the recipes it adds against fixtures fetched
 // 2026-11-20 (fixtures/manifest.json), the bounds arithmetic on its own, and

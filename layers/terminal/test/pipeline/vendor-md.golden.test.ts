@@ -5,7 +5,7 @@ import {
   EdgarSubmissionsOutput,
   VendorMdPricingOutput,
   modelKey,
-} from '../../server/pipeline/contracts'
+} from '#layers/core/server/pipeline/contracts'
 import {
   FROM_NOTE,
   parseAnthropicModelsOverviewMd,
@@ -26,7 +26,7 @@ import {
   parseCikWhitelistBlock,
   whitelistCikFor,
 } from '../../server/pipeline/parsers/sec/whitelist'
-import { fixtureText, provenanceOf } from './fixtures'
+import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 import catalog1008 from '~/fixtures/pricing/anthropic-models-overview.2026-10-08.md?raw'
 import pricing1008 from '~/fixtures/pricing/anthropic-pricing.2026-10-08.md?raw'
 

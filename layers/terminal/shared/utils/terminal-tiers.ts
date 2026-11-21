@@ -1,6 +1,6 @@
 // Minor changes versus alerts: the one materiality split every surface agrees on.
 //
-// The severity enum (layers/terminal/server/pipeline/contracts/rows.ts › severityEnum) is the
+// The severity enum (layers/core/server/pipeline/contracts/rows.ts › severityEnum) is the
 // stored datum; the tier is a reading of it. `info` is the minor-changes tier — what
 // moved, low stakes: a role added, a title reworded, a location shuffled.
 // It was called the ticker until 2026-11-04; a fund reads a `ticker` field as a

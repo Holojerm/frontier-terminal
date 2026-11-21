@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { ChangeRow } from '../server/pipeline/contracts'
+import { ChangeRow } from '#layers/core/server/pipeline/contracts'
 import {
   GPU_MEDIAN_RULE,
   gpuMedianAlert,
@@ -12,11 +12,11 @@ import {
   moveTier,
   writeGpuMedianAlerts,
 } from '../server/pipeline/gpu-median-floor'
-import { JUDGE_EXCLUDED_ENTITY_TYPES } from '../server/pipeline/judge/pending'
-import type { GpuObservation } from '../server/theses/compute-signals'
+import { JUDGE_EXCLUDED_ENTITY_TYPES } from '#layers/core/server/pipeline/judge/pending'
+import type { GpuObservation } from '../server/theses/recipes/gpu-series'
 import { queryAlerts } from '../server/utils/terminal-alerts'
-import { queryContext } from '../server/utils/terminal-db'
-import { fixtureText } from './pipeline/fixtures'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 const o = (
   provider: string,

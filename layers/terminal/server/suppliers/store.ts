@@ -12,8 +12,13 @@ import {
 } from '../../shared/utils/suppliers'
 import type { LabId } from '../../shared/utils/terminal-types'
 import curated from '../curated/suppliers.json'
-import { contentHash } from '../pipeline/contracts/keys'
-import { chunk, D1_MAX_BOUND_PARAMS, runStatements, type PipelineDb } from '../pipeline/store'
+import { contentHash } from '#layers/core/server/pipeline/contracts/keys'
+import {
+  chunk,
+  D1_MAX_BOUND_PARAMS,
+  runStatements,
+  type PipelineDb,
+} from '#layers/core/server/pipeline/store'
 import { contains } from './excerpts'
 import { PERIODIC_FORMS } from './filers'
 

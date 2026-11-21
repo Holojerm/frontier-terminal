@@ -3,9 +3,9 @@ import {
   VendorMdPricingOutput,
   type PriceRow,
   type Provenance,
-} from '../../contracts'
+} from '#layers/core/server/pipeline/contracts'
 import { textOf } from '../disclosures/html-text'
-import { fixtureProvenance } from '../fixture-provenance'
+import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 
 // alibaba-pricing-html — www.alibabacloud.com/help/en/model-studio/model-pricing
 // Alibaba Cloud's international site. Server-rendered HTML, one <h3> per model

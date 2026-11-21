@@ -16,7 +16,7 @@ import { LABS } from '../shared/utils/terminal-lab-summary'
 import { archiveRows, captureId } from '../server/pipeline/archive/rows'
 import { usdPerMillion } from '../server/pipeline/parsers/pricing/html-table'
 import { archivedPriceHistory, type ArchivedPrice } from '../server/utils/terminal-history'
-import { readArchiveSources } from '../server/utils/terminal-sources'
+import { readArchiveSources } from '#layers/core/server/utils/terminal-sources'
 import sourcesYaml from '~~/sources.yaml?raw'
 
 // The Wayback client and the archive's pure plumbing: the CDX query, capture

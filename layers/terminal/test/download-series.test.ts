@@ -3,7 +3,7 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import type { SourceFetcher } from '../server/pipeline/fetch'
+import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import {
   CONTROL_INDEX_ID,
   DOWNLOAD_SERIES,
@@ -24,7 +24,7 @@ import {
   extractDownloads,
   npmRange,
 } from '../server/theses/recipes/npm-downloads'
-import { RECIPES } from '../server/theses/recipes/registry'
+import { RECIPES } from '#server/registries/recipes'
 import { runRecipes } from '../server/theses/recipes/run'
 import { queryAdoption } from '../server/utils/terminal-recipe-views'
 import { ANTHROPIC_THESIS } from '../server/theses/anthropic'

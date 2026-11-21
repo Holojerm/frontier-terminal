@@ -23,11 +23,28 @@ import type {
 } from '../../shared/utils/terminal-types'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '../pipeline/store'
-import { ALERTS_METHOD, alertsKnownAt, judgeCutoffAt } from './terminal-asof'
-import { byString, fieldDiff, fieldTable, num, parseJson, str, type Json } from './terminal-json'
-import { sourceReads, stampOf, tableCounts, type QueryContext } from './terminal-db'
-import { countsByKey } from './row-counts'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import {
+  ALERTS_METHOD,
+  alertsKnownAt,
+  judgeCutoffAt,
+} from '#layers/core/server/utils/terminal-asof'
+import {
+  byString,
+  fieldDiff,
+  fieldTable,
+  num,
+  parseJson,
+  str,
+  type Json,
+} from '#layers/core/server/utils/terminal-json'
+import {
+  sourceReads,
+  stampOf,
+  tableCounts,
+  type QueryContext,
+} from '#layers/core/server/utils/terminal-db'
+import { countsByKey } from '#layers/core/server/utils/row-counts'
 
 // ---- movement (the signal band) ---------------------------------------------
 
@@ -68,7 +85,7 @@ export const AXIS_OF: Readonly<Record<string, BandAxis>> = Object.fromEntries(
 // construction), so they are out of "what moved" entirely — the window's
 // anchor included, or a ranking tick would pull the 24h window past a price
 // change detected the day before. Same exclusion as the judge's pending
-// query (layers/terminal/server/pipeline/judge/pending.ts › JUDGE_EXCLUDED_ENTITY_TYPES).
+// query (layers/core/server/pipeline/judge/pending.ts › JUDGE_EXCLUDED_ENTITY_TYPES).
 const NOT_AN_EVENT = 'ranking'
 const isEvent = () => ne(tables.changes.entity_type, NOT_AN_EVENT)
 

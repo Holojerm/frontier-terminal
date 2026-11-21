@@ -3,7 +3,7 @@
 // forward calls. Statistics only. No price, return series or bar is ever part
 // of it (layers/terminal/test/signals-private.test.ts).
 
-import type { Stamp } from './terminal-types/common'
+import type { Stamp } from '#layers/core/shared/utils/terminal-types/common'
 
 export const SIGNAL_HORIZONS = [1, 5, 20, 60] as const
 export type SignalHorizon = (typeof SIGNAL_HORIZONS)[number]

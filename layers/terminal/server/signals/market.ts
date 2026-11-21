@@ -20,7 +20,7 @@
 import { sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 
 export const DATABENTO_BASE = 'https://hist.databento.com/v0'
 export const EQUS_DATASET = 'EQUS.SUMMARY'

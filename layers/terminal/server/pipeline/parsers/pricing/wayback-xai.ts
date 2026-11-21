@@ -1,4 +1,9 @@
-import { VendorMdPricingOutput, modelKey, type PriceRow, type Provenance } from '../../contracts'
+import {
+  VendorMdPricingOutput,
+  modelKey,
+  type PriceRow,
+  type Provenance,
+} from '#layers/core/server/pipeline/contracts'
 import { htmlSections, htmlText, stripInvisible, usdPerMillion } from './html-table'
 import { tableAfterHeading } from './md-table'
 import { parseXaiModelsMd } from './xai-models'

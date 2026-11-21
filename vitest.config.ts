@@ -19,7 +19,7 @@ import { defineConfig } from 'vitest/config'
 // transform and evaluate ~10 MB of strings in workerd (about 2 s per file). A plain JSON
 // binding was copied into every file's worker at spawn, used or not: ~0.45 s per file,
 // over a third of the suite's wall time at 13 MB. Only the files that import
-// layers/terminal/test/pipeline/fixtures.ts fetch it now.
+// layers/core/test/pipeline/fixtures.ts fetch it now.
 function readFixtures(): Record<string, string> {
   const out: Record<string, string> = { 'sources.yaml': readFileSync('sources.yaml', 'utf8') }
   const walk = (dir: string) => {

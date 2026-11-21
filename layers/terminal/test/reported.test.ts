@@ -22,9 +22,9 @@ import {
 } from '../server/pipeline/reported/store'
 import { parseGkgRow } from '../server/pipeline/track-record/gkg'
 import { recordGkgFile } from '../server/pipeline/track-record/search'
-import { queryContext } from '../server/utils/terminal-db'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { middle, quarterOf, queryReported } from '../server/utils/terminal-reported'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Reported figures: the headline matcher, storing figure rows from a GKG file
 // (first read and backfill), the judge's gate, and the /revenue payload. No

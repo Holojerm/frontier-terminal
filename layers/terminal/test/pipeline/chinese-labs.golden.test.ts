@@ -1,13 +1,13 @@
 import { describe, expect, test } from 'vitest'
 
-import { VendorMdPricingOutput } from '../../server/pipeline/contracts'
+import { VendorMdPricingOutput } from '#layers/core/server/pipeline/contracts'
 import { parseAlibabaPricingHtml } from '../../server/pipeline/parsers/pricing/alibaba-pricing'
 import { parseDeepseekPricingMd } from '../../server/pipeline/parsers/pricing/deepseek-pricing'
 import { parseMoonshotModelsMd } from '../../server/pipeline/parsers/pricing/moonshot-models'
 import { parseEdgarSubmissions } from '../../server/pipeline/parsers/sec/edgar-submissions'
 import { parseCikWhitelistBlock } from '../../server/pipeline/parsers/sec/whitelist'
 import { parseDeepseekStatus } from '../../server/pipeline/parsers/status/deepseek-status'
-import { fixtureText, provenanceOf } from './fixtures'
+import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // DeepSeek, Alibaba (Qwen) and Moonshot AI (Kimi), registered 2026-11-04
 // (docs/source-audit.md). Every expected number below is read off the

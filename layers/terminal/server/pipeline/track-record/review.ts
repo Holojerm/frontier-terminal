@@ -14,9 +14,9 @@ import { asc, inArray } from 'drizzle-orm'
 import { z } from 'zod'
 
 import * as tables from '#server/db/schema'
-import { ChangeRow, contentHash } from '../contracts'
-import { corpusOf, groundingFailure } from '../judge/grounding'
-import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '../store'
+import { ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
+import { corpusOf, groundingFailure } from '#layers/core/server/pipeline/judge/grounding'
+import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '#layers/core/server/pipeline/store'
 
 /** Candidates offered per alert and kind per run. */
 export const REVIEW_PER_SIDE = 5

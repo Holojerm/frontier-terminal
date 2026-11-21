@@ -3,11 +3,11 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { OPENROUTER_KEY_UNSET, type SourceFetcher } from '../server/pipeline/fetch'
+import { OPENROUTER_KEY_UNSET, type SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { runRefresh, type RawStore, type RefreshDeps } from '../server/pipeline/refresh'
-import { terminalStamps } from '../server/utils/terminal-cache'
-import { queryContext, queryCoverage } from '../server/utils/terminal-db'
-import { EXPORT_TABLES } from '../server/utils/terminal-export'
+import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
+import { queryContext, queryCoverage } from '#layers/core/server/utils/terminal-db'
+import { EXPORT_TABLES } from '#server/registries/export-tables'
 import {
   SERIES_DAYS,
   daysBefore,
@@ -16,7 +16,7 @@ import {
   summarizeRankings,
   type RankingObservation,
 } from '../server/utils/terminal-rankings'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The share arithmetic without a database, then the query against the real
 // D1 in each of the three states the panel has to render honestly.

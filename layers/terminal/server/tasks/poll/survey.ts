@@ -7,16 +7,16 @@ import { kv } from '@nuxthub/kv'
 
 import sourcesYaml from 'raw:~~/sources.yaml'
 
-import { createFetcher } from '../../pipeline/fetch'
-import { unstorageLockStore } from '../../pipeline/lock'
+import { createFetcher } from '#layers/core/server/pipeline/fetch'
+import { unstorageLockStore } from '#layers/core/server/pipeline/lock'
 import { blobRawStore, runPoll } from '../../pipeline/poll'
 import { writeGpuMedianAlerts } from '../../pipeline/gpu-median-floor'
 import { paceSec } from '../../pipeline/sec-pace'
 import { evaluateTheses } from '../../theses/evaluate'
 import { runRecipes } from '../../theses/recipes/run'
 import { recordOpsEvent } from '#server/utils/ops'
-import { warmAfterPoll } from '../../utils/cache-warm-task'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { warmAfterPoll } from '#layers/core/server/utils/cache-warm-task'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

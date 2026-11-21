@@ -1,24 +1,24 @@
 import { and, lt, max, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { FreshnessCheck } from '../../utils/freshness'
-import type { PipelineDb } from '../store'
+import type { FreshnessCheck } from '#layers/core/server/utils/freshness'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import {
   detectedAfter,
   isTimestampOnlyChange,
   isUntrackedFilingChange,
   judgeEligible,
   judgedThrough,
-} from './pending'
+} from '#layers/core/server/pipeline/judge/pending'
 import { JUDGE_OPS_PATH } from './submit'
 
-// The judge's freshness check (layers/terminal/server/utils/freshness.ts). The
+// The judge's freshness check (layers/core/server/utils/freshness.ts). The
 // routine runs on the owner's claude.ai account, so the Worker cannot see
 // whether it is enabled, out of budget, or failing before it reaches the API —
 // the only evidence is the absence of judge_runs rows. The routine runs hourly,
 // so three hours of owed changes with no run is three missed runs: an outage,
 // and a critical line in the ops digest (judge_silent,
-// layers/terminal/server/utils/terminal-ops-severity.ts). The run itself reports
+// layers/core/server/utils/terminal-ops-severity.ts). The run itself reports
 // success while blocked (a 403 from its environment's proxy ends the run
 // cleanly), so this is the only check that sees it.
 

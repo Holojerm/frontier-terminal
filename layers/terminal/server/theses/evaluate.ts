@@ -11,9 +11,9 @@ import type { CompanyId } from '../../shared/utils/companies'
 import type { HiringHistoryData } from '../../shared/utils/terminal-types'
 
 import * as tables from '#server/db/schema'
-import { contentHash } from '../pipeline/contracts'
-import { judgedThrough } from '../pipeline/judge/pending'
-import { chunk, D1_MAX_BOUND_PARAMS, type PipelineDb } from '../pipeline/store'
+import { contentHash } from '#layers/core/server/pipeline/contracts'
+import { judgedThrough } from '#layers/core/server/pipeline/judge/pending'
+import { chunk, D1_MAX_BOUND_PARAMS, type PipelineDb } from '#layers/core/server/pipeline/store'
 import { daysBefore } from '../utils/terminal-rankings'
 import { hiringHistoryFor } from './compute-signals'
 import { evaluateJudgedClaim, type StoredVerdict } from './judged-status'
@@ -210,4 +210,19 @@ export async function evaluateTheses(
     }
   }
   return runs
+}
+
+/**
+ * The `judge:applied` subscriber (layers/terminal/server/plugins/theses-judged.ts): a
+ * judge run's verdicts change only judged claims, so only those are evaluated
+ * again, and the status log is updated here rather than on the next survey tick.
+ */
+export async function evaluateJudgedTheses(ctx: {
+  db: PipelineDb
+  sourcesYaml: string
+  now: Date
+}): Promise<void> {
+  await evaluateTheses(ctx.db, { sourcesYaml: ctx.sourcesYaml, now: () => ctx.now }, undefined, {
+    judgedOnly: true,
+  })
 }

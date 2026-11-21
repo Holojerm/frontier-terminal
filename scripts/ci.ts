@@ -45,6 +45,7 @@ const cheap = [
   'layers:check',
   'patches:check',
   'surfaces:check',
+  'domains:check',
 ].map((s) => run(s))
 
 const background = fast ? run('test', '--changed', 'origin/main', '--passWithNoTests') : run('test')

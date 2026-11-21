@@ -5,7 +5,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import { PRINT_TABLES } from '../server/export-tables/prints'
-import type { FetchOutcome, SourceFetcher } from '../server/pipeline/fetch'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { KCS, KCS_BOARD_DOC, readKcs } from '../server/prints/ingest'
 import {
   hasFigures,
@@ -25,11 +25,11 @@ import {
 import { printsStamp } from '../server/prints/store'
 import { createLoader } from '../server/signals/sources'
 import { SIGNALS } from '../server/signals/registry'
-import { readPrintSources } from '../server/utils/terminal-sources'
-import { queryContext } from '../server/utils/terminal-db'
+import { readPrintSources } from '#layers/core/server/utils/terminal-sources'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { printRows, queryPrints } from '../server/utils/terminal-prints'
 import { PRINT_HELD_SOURCES } from '../shared/utils/prints'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Korea Customs Service's releases on the committed bytes: the board, four
 // release pages (three under KOGL Type 1, one with no mark), the viewer's

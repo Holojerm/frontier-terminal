@@ -1,5 +1,5 @@
 import { index, integer, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { provenance } from './columns'
+import { provenance } from '../../../../core/server/db/tables/columns'
 
 // ─────────────────────────────────────────────
 // Grid load where the lab sites are (layers/terminal/server/power/grid-load*.ts, /api/grid-load)

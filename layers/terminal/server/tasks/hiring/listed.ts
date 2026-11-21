@@ -7,9 +7,9 @@
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
 
-import { userAgentFor } from '../../pipeline/fetch'
+import { userAgentFor } from '#layers/core/server/pipeline/fetch'
 import { runListedHiring } from '../../listed-hiring/read'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

@@ -1,4 +1,4 @@
-import type { ChangeRow } from '../contracts'
+import type { ChangeRow } from '#layers/core/server/pipeline/contracts'
 import type { FloorClamp } from '../hiring-floor'
 import { isRoutine8K, rootForm } from '../parsers/sec/forms'
 import { requotedKey } from './class-map'

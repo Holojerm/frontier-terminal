@@ -3,12 +3,12 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { StoredEntityRow } from '../server/pipeline/contracts'
-import { insertRows } from '../server/pipeline/store'
-import { terminalStamps } from '../server/utils/terminal-cache'
-import { queryContext } from '../server/utils/terminal-db'
+import { StoredEntityRow } from '#layers/core/server/pipeline/contracts'
+import { insertRows } from '#layers/core/server/pipeline/store'
+import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { isThirdPartyOnly, queryIncidents } from '../server/utils/terminal-incidents'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The home page's Capacity strain table showed "Degraded Gemini 4 Carbon" as
 // xAI's open incident. SpaceXAI's status feed carries Cursor's "Third-party

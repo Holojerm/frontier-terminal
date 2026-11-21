@@ -3,15 +3,15 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { contentHash } from '../../server/pipeline/contracts'
+import { contentHash } from '#layers/core/server/pipeline/contracts'
 import {
   OPENROUTER_KEY_UNSET,
   createFetcher,
   needsOpenRouterKey,
   type FetchOutcome,
   type SourceFetcher,
-} from '../../server/pipeline/fetch'
-import { pendingChanges } from '../../server/pipeline/judge/pending'
+} from '#layers/core/server/pipeline/fetch'
+import { pendingChanges } from '#layers/core/server/pipeline/judge/pending'
 import { asOfFromDetail } from '../../server/pipeline/as-of'
 import { providerOfOpenRouterId } from '../../server/pipeline/parsers/openrouter'
 import { parseOpenRouterRankings } from '../../server/pipeline/parsers/openrouter-rankings'
@@ -21,9 +21,9 @@ import {
   type RawStore,
   type RefreshDeps,
 } from '../../server/pipeline/refresh'
-import { includeSources } from '../../server/pipeline/sources'
+import { includeSources } from '#layers/core/server/pipeline/sources'
 import { queryMovement } from '../../server/utils/terminal-alerts'
-import { fixtureText, manifest, provenanceOf } from './fixtures'
+import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // The demand-share source end to end: the parser against the first keyed
 // fetch (30 UTC days, 1,530 rows — fixtures/manifest.json),

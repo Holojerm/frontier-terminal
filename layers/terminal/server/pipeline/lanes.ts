@@ -7,7 +7,7 @@ import {
   type FilingRow,
   type Provenance,
   type Provider,
-} from './contracts'
+} from '#layers/core/server/pipeline/contracts'
 import {
   normalizeDisclosureTimelines,
   normalizeDisclosures,
@@ -376,7 +376,8 @@ const PROSPECTUS_REVENUE_LANE: Lane = {
   },
 }
 
-const DERIVED_LANES: readonly { prefix: string; lane: Lane }[] = [
+/** Lanes for derived sources, matched by source-id prefix (server/registries/lanes.ts › laneFor). */
+export const DERIVED_LANES: readonly { prefix: string; lane: Lane }[] = [
   { prefix: 'edgar-submissions-', lane: SUBMISSIONS_LANE },
   { prefix: 'edgar-companyfacts-', lane: COMPANYFACTS_LANE },
   { prefix: 'xbrl-segment-', lane: XBRL_SEGMENT_LANE },
@@ -386,18 +387,6 @@ const DERIVED_LANES: readonly { prefix: string; lane: Lane }[] = [
   { prefix: 'google-model-md-', lane: GOOGLE_MODEL_PAGE_LANE },
   { prefix: 'openai-misalignment-report-', lane: MISALIGNMENT_REPORT_PAGE_LANE },
 ]
-
-/** The lane for a source id: a registered one exactly, a derived one by prefix. */
-export function laneFor(sourceId: string): Lane | undefined {
-  return LANES[sourceId] ?? DERIVED_LANES.find((d) => sourceId.startsWith(d.prefix))?.lane
-}
-
-/** The key a derived source id carries after its template prefix, or null. */
-export function derivedKeyOf(sourceId: string): string | null {
-  if (LANES[sourceId]) return null
-  const d = DERIVED_LANES.find((x) => sourceId.startsWith(x.prefix))
-  return d ? sourceId.slice(d.prefix.length) : null
-}
 
 // The pages the class map (layers/terminal/server/utils/terminal-classes.ts) is transcribed
 // from also carry the drift check on that map: one 'recommendation' row per
@@ -586,7 +575,7 @@ export const LANES: Readonly<Record<string, Lane>> = {
   // The disclosure index IS the current set: a report taken down is a
   // 'removed' change the judge should see, not a window scrolling on. Its
   // printed date is in each row but never wakes the judge on its own
-  // (judge/pending.ts › isTimestampOnlyChange).
+  // (layers/core/server/pipeline/judge/pending.ts › isTimestampOnlyChange).
   'openai-misalignment-reports': set((html, { prov, snapshotId }) => {
     const { rows, skipped } = parseOpenAiMisalignmentReports(html, prov)
     return {

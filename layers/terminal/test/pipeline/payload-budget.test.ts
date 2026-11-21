@@ -4,17 +4,17 @@ import manifestJson from '~~/fixtures/manifest.json'
 import sourcesYaml from '~~/sources.yaml?raw'
 
 import { parseDerivedSourcesBlock } from '../../server/pipeline/derived'
-import { MAX_BODY_BYTES } from '../../server/pipeline/fetch'
+import { MAX_BODY_BYTES } from '#layers/core/server/pipeline/fetch'
 import {
   CAREERS_SOURCES,
   isRegistrationSource,
   sourceIdsForScope,
 } from '../../server/pipeline/scopes'
-import { includeSources, type FetchSource } from '../../server/pipeline/sources'
+import { includeSources, type FetchSource } from '#layers/core/server/pipeline/sources'
 import { TRIPWIRE_REFRESH } from '../../server/pipeline/tripwire'
-import { RECIPES } from '../../server/theses/recipes/registry'
-import { EXPORT_PAGE_SIZE } from '../../server/utils/terminal-export-views'
-import { PARQUET_ROW_GROUP_BYTES } from '../../server/utils/terminal-parquet'
+import { RECIPES } from '#server/registries/recipes'
+import { EXPORT_PAGE_SIZE } from '#layers/core/server/utils/terminal-export-views'
+import { PARQUET_ROW_GROUP_BYTES } from '#layers/core/server/utils/terminal-parquet'
 
 // The payload-size gate. Every cron invocation is one Worker isolate with
 // 128 MB, and the poll loop holds each payload several times over (wire bytes,
@@ -125,7 +125,7 @@ const OWN_LANE_FIX =
   'layers/terminal/server/pipeline/scopes.ts like CAREERS_SOURCES, a task under ' +
   'layers/terminal/server/tasks/poll/, and one cron string on a minute no other trigger uses, in ' +
   'both SCHEDULED_TASKS (nuxt.config.ts) and [triggers] crons (wrangler.toml). A recipe moves out ' +
-  'of RECIPES (layers/terminal/server/theses/recipes/registry.ts) into a task of its own the same way.'
+  'of RECIPES (server/registries/recipes.ts) into a task of its own the same way.'
 
 function budgetViolations(lanes: readonly Lane[], sizeOf: (id: string) => Size | null): string[] {
   const out: string[] = []
@@ -233,7 +233,7 @@ const productionLanes: readonly Lane[] = [
   },
   {
     name: 'survey',
-    where: `${SCOPES} + theses/recipes/registry.ts, 0 */6`,
+    where: `${SCOPES} + server/registries/recipes.ts, 0 */6`,
     ids: [
       ...sourceIdsForScope('survey', known),
       ...productionExtras('survey'),

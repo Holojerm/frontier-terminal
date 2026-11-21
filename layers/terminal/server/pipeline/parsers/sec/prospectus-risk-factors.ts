@@ -1,4 +1,4 @@
-import { RiskFactorsRow, type Provenance } from '../../contracts'
+import { RiskFactorsRow, type Provenance } from '#layers/core/server/pipeline/contracts'
 import type { RegistrationTarget } from './filing-index'
 import type { DocLine, DocText } from './prospectus-doc'
 

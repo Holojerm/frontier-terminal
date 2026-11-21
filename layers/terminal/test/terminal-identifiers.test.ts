@@ -10,8 +10,8 @@ import {
   SEC_TICKERS,
   identifiersPayload,
 } from '../server/utils/terminal-identifiers'
-import { PROVIDER_ORDER } from '../server/utils/terminal-sources'
-import { fixtureText, manifest } from './pipeline/fixtures'
+import { PROVIDER_ORDER } from '#layers/core/server/utils/terminal-sources'
+import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The registry is hand-written, so every identifier in it is checked against
 // the response it was read from (fixtures/identifiers/), and every source URL

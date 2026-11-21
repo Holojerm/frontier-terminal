@@ -18,13 +18,13 @@ import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { recordOpsEvent } from '#server/utils/ops'
 import { filedFactsSkip, runFiledFacts } from '../../exposure/ingest'
-import { createFetcher } from '../../pipeline/fetch'
-import { unstorageLockStore } from '../../pipeline/lock'
+import { createFetcher } from '#layers/core/server/pipeline/fetch'
+import { unstorageLockStore } from '#layers/core/server/pipeline/lock'
 import { blobRawReader } from '../../pipeline/judge/class-map'
 import { blobRawStore, runPoll } from '../../pipeline/poll'
 import { paceSec } from '../../pipeline/sec-pace'
-import { warmAfterPoll } from '../../utils/cache-warm-task'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { warmAfterPoll } from '#layers/core/server/utils/cache-warm-task'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

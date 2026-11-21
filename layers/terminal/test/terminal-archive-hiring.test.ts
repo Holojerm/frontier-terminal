@@ -4,23 +4,20 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import { HISTORY_LICENSE, PAID_LICENSE } from '#shared/utils/license'
-import type { SourceFetcher } from '../server/pipeline/fetch'
+import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { hiringEraById } from '../server/pipeline/archive/hiring-eras'
 import { hiringRows } from '../server/pipeline/archive/rows'
 import { runRefresh, type RawStore } from '../server/pipeline/refresh'
-import { includeSources } from '../server/pipeline/sources'
-import { PointInTimeError, pollStampAt } from '../server/utils/terminal-asof'
-import { terminalStamps } from '../server/utils/terminal-cache'
-import {
-  assertArchiveKnowable,
-  queryHiringReach,
-  queryPriceReach,
-} from '../server/utils/terminal-archive'
-import { queryContext } from '../server/utils/terminal-db'
+import { includeSources } from '#layers/core/server/pipeline/sources'
+import { PointInTimeError, pollStampAt } from '#layers/core/server/utils/terminal-asof'
+import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
+import { queryHiringReach, queryPriceReach } from '../server/utils/terminal-archive'
+import { assertArchiveKnowable } from '#layers/core/server/utils/archive-floor'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { queryHiring, queryHiringHistory } from '../server/utils/terminal-hiring'
-import { exportTable } from '../server/utils/terminal-export'
-import { licenseWindow } from '../server/utils/terminal-export-history'
-import { fixtureText, manifest } from './pipeline/fixtures'
+import { exportTable } from '#server/registries/export-tables'
+import { licenseWindow } from '#layers/core/server/utils/terminal-export-history'
+import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The archived hiring history on the read side: archived points before the
 // live series on /api/hiring/history, /api/hiring as of an instant before our

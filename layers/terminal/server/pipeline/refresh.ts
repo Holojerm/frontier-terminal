@@ -13,32 +13,27 @@ import {
   type Provider,
   type SourceRunRow,
   type StoredEntityRow,
-} from './contracts'
-import { diff, repeatChangeId } from './diff'
+} from '#layers/core/server/pipeline/contracts'
+import { diff, repeatChangeId } from '#layers/core/server/pipeline/diff'
 import { modelFloorAlerts } from './model-floor'
 import { prospectusFloorAlerts } from './prospectus-floor'
-import type { SourceFetcher } from './fetch'
-import {
-  contextFingerprint,
-  derivedKeyOf,
-  laneFor,
-  type ContextBlock,
-  type ParseContext,
-} from './lanes'
+import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import { derivedKeyOf, laneFor } from '#server/registries/lanes'
+import { contextFingerprint, type ContextBlock, type ParseContext } from './lanes'
 import {
   cooldownEndsAt,
   RATE_LIMIT_MAX_COOLDOWN_MS,
   rateLimitAlertDue,
   rateLimitSince,
   type RunSummary,
-} from './rate-limit'
+} from '#layers/core/server/pipeline/rate-limit'
 import { deriveSources, resolvedFilers } from './derived'
-import { manifestFixtures } from './parsers/fixture-provenance'
+import { manifestFixtures } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 import { parsePendingFilersBlock } from './parsers/sec/pending-filers'
 import { parseRevenueFilersBlock } from './parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock } from './parsers/sec/whitelist'
 import { JoinRaceError } from './parsers/hiring/common'
-import { includeSources, type FetchSource } from './sources'
+import { includeSources, type FetchSource } from '#layers/core/server/pipeline/sources'
 import {
   applyDiff,
   currentEntities,
@@ -54,7 +49,7 @@ import {
   unstoredAlerts,
   type GoodSnapshot,
   type PipelineDb,
-} from './store'
+} from '#layers/core/server/pipeline/store'
 import { redactPayload } from './redact'
 
 // One poll tick: fetch → hash → snapshot → parse → normalize → diff → store,

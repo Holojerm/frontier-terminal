@@ -5,9 +5,9 @@
 // one lab's summary and entries, cut from the cached all-lab payload.
 
 import { queryDisclosures } from '../utils/terminal-disclosures'
-import { serveTerminal, terminalDb } from '../utils/terminal-handler'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
 import { disclosuresForLab, labQuerySchema } from '../utils/terminal-lab-cuts'
-import { rateLimitTerminal } from '../utils/api-access'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'disclosures', limit: 60, windowSeconds: 60 })

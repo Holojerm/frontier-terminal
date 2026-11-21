@@ -6,8 +6,8 @@ import {
   stableStringify as contractsStableStringify,
   type FilingRow,
   type PriceRow,
-} from '../../server/pipeline/contracts'
-import { diff } from '../../server/pipeline/diff'
+} from '#layers/core/server/pipeline/contracts'
+import { diff } from '#layers/core/server/pipeline/diff'
 import {
   normalizeFilings,
   normalizeJobs,
@@ -16,7 +16,7 @@ import {
   stableStringify,
   type JobRow,
 } from '../../server/pipeline/normalize'
-import { fixtureText, provenanceOf } from './fixtures'
+import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // Normalize + diff golden tests. Done-bar: diff of two entity sets produces
 // ChangeRow[] that validate, and a change is reproducible from the two

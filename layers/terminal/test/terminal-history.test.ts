@@ -3,16 +3,19 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { contentHash } from '../server/pipeline/contracts'
-import type { SourceFetcher } from '../server/pipeline/fetch'
+import { contentHash } from '#layers/core/server/pipeline/contracts'
+import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { runRefresh, type RawStore, type RefreshDeps } from '../server/pipeline/refresh'
-import { includeSources } from '../server/pipeline/sources'
-import { terminalStamps } from '../server/utils/terminal-cache'
-import { queryContext, queryDataFreshness } from '../server/utils/terminal-db'
+import { includeSources } from '#layers/core/server/pipeline/sources'
+import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
+import {
+  baselineInstants,
+  queryContext,
+  queryDataFreshness,
+} from '#layers/core/server/utils/terminal-db'
 import { queryHiringHistory } from '../server/utils/terminal-hiring'
 import { queryPriceHistory, queryPrices, queryReleases } from '../server/utils/terminal-prices'
 import {
-  baselineInstants,
   compareWindow,
   dailyInstants,
   departmentSeries,
@@ -22,7 +25,7 @@ import {
   releaseEvents,
   sparkOf,
 } from '../server/utils/terminal-history'
-import { fixtureText, manifest } from './pipeline/fixtures'
+import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The three history derivations, first as pure functions over a handful of
 // typed rows (every rule has one row that exercises it), then against a real

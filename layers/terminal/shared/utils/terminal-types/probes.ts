@@ -1,4 +1,4 @@
-import type { LabId, Prov, Stamp } from './common'
+import type { LabId, Prov, Stamp } from '#layers/core/shared/utils/terminal-types/common'
 
 /** One lab's reading for one UTC day, from that day's hourly probes. */
 export interface ProbeDayView extends Prov {

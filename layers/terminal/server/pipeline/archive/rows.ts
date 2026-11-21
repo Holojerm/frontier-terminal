@@ -6,7 +6,7 @@
 // in, rows out. scripts/wayback-backfill.ts does the fetching and the writing.
 
 import type * as tables from '#server/db/schema'
-import { contentHash, contentHashOfText } from '../contracts'
+import { contentHash, contentHashOfText } from '#layers/core/server/pipeline/contracts'
 import { normalizePrices } from '../normalize'
 import { gpuObservations } from '../../theses/recipes/gpu-prices'
 import type { ArchiveEra } from './eras'
@@ -15,6 +15,7 @@ import type { LimitsEra } from './limits-eras'
 import { liveDepartment, type HiringEra } from './hiring-eras'
 import type { StatusEra } from './status-eras'
 import { captureInstant, captureUrl, type CdxCapture } from './wayback'
+import type { ArchiveAxis } from '#layers/core/server/utils/archive-floor'
 
 export type ArchiveCaptureRow = typeof tables.archiveCaptures.$inferInsert
 export type ArchivedPriceRow = typeof tables.archivedPrices.$inferInsert
@@ -26,7 +27,7 @@ export type ArchivedRateLimitRow = typeof tables.archivedRateLimits.$inferInsert
 export const ARCHIVED_BASIS = 'archived'
 
 /** The lab axes, whose archived rows answer an as_of before the live record (terminal-archive.ts). */
-export type ArchiveAxis = 'pricing' | 'hiring'
+export type { ArchiveAxis }
 
 /**
  * Every axis a capture's rows can go to; gpu (archived_gpu_prices) is per

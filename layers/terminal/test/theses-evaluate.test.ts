@@ -4,12 +4,12 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { insertRows } from '../server/pipeline/store'
+import { insertRows } from '#layers/core/server/pipeline/store'
 import { evaluateTheses } from '../server/theses/evaluate'
-import { queryContext } from '../server/utils/terminal-db'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { daysBefore } from '../server/utils/terminal-rankings'
 import { queryTheses } from '../server/utils/terminal-theses'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The evaluator against a real D1, seeded with the rows the pipeline would
 // have stored: 40 days of rankings, two priced SKUs, and an Anthropic job

@@ -1,11 +1,10 @@
 import type { AlertSeverity, AlertTierFilter } from '../terminal-tiers'
-import type { Prov, ProviderId, Stamp } from './common'
-
-export interface FieldDiff {
-  field: string
-  before: string | null
-  after: string | null
-}
+import type {
+  FieldDiff,
+  Prov,
+  ProviderId,
+  Stamp,
+} from '#layers/core/shared/utils/terminal-types/common'
 
 export interface ChangeView extends Prov {
   id: string

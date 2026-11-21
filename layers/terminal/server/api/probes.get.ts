@@ -5,8 +5,8 @@
 // cut from the cached all-lab payload. `as_of` is refused, since each day is
 // dated and nothing here is rewritten later.
 
-import { rateLimitTerminal } from '../utils/api-access'
-import { serveTerminal, terminalDb } from '../utils/terminal-handler'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
 import { labQuerySchema, probesForLab } from '../utils/terminal-lab-cuts'
 import { probesStamp, queryProbes } from '../utils/terminal-probes'
 

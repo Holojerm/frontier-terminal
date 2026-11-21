@@ -6,8 +6,8 @@
 // cites the board and the read (layers/terminal/server/listed-hiring/query.ts).
 
 import { listedHiringStamp, queryListedHiring } from '../../listed-hiring/query'
-import { rateLimitTerminal } from '../../utils/api-access'
-import { serveTerminal, terminalDb } from '../../utils/terminal-handler'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'hiring-listed', limit: 60, windowSeconds: 60 })

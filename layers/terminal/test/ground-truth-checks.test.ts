@@ -14,7 +14,7 @@ import {
 } from '../server/exposure/guidance'
 import { runFiledFacts } from '../server/exposure/ingest'
 import type { StoredFact } from '../server/exposure/series'
-import type { FetchOutcome, FetchSource } from '../server/pipeline/fetch'
+import type { FetchOutcome, FetchSource } from '#layers/core/server/pipeline/fetch'
 import { figureHeadline } from '../server/pipeline/reported/figures'
 import {
   applyFigureReadings,
@@ -23,7 +23,7 @@ import {
   reviewId,
   type JudgeFigure,
 } from '../server/pipeline/reported/review'
-import { queryContext } from '../server/utils/terminal-db'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { queryGroundTruth } from '../server/utils/terminal-ground-truth'
 import {
   dealTally,
@@ -41,7 +41,7 @@ import {
   type StoredGuidance,
 } from '../server/utils/terminal-ground-truth-guidance'
 import type { StoredDeal } from '../server/utils/terminal-reported'
-import { fixtureText, provenanceOf } from './pipeline/fixtures'
+import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // The two ground-truth checks beside revenue. Guidance: the parser on trimmed
 // earnings releases as EDGAR served them on 2026-11-19, scored against capex

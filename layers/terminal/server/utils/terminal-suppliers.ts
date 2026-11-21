@@ -12,7 +12,7 @@ import {
   type SupplierShare,
   type SuppliersData,
 } from '../../shared/utils/suppliers'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { currentPassages, rowOf } from '../suppliers/store'
 
 export const SUPPLIERS_RULE =

@@ -21,8 +21,8 @@
 
 import { lookup } from 'node:dns/promises'
 
-import { keyRefusal } from '../layers/terminal/server/utils/api-key-token'
-import { SCHEMA_VERSION } from '../layers/terminal/server/utils/data-schema'
+import { keyRefusal } from '../layers/core/server/utils/api-key-token'
+import { SCHEMA_VERSION } from '../layers/core/server/utils/data-schema'
 import {
   deriveWebhookSecret,
   fetchWebhookSender,

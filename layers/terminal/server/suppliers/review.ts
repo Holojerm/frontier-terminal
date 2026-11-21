@@ -25,7 +25,7 @@ import {
   type CuratedSupplierRow,
 } from '../../shared/utils/suppliers'
 import type { RawReader } from '../pipeline/judge/class-map'
-import { chunk, runStatements, type PipelineDb } from '../pipeline/store'
+import { chunk, runStatements, type PipelineDb } from '#layers/core/server/pipeline/store'
 import * as tables from '#server/db/schema'
 import { comparable } from '../utils/quote-match'
 import { contains, documentText, figureWritten, supplierExcerpts } from './excerpts'

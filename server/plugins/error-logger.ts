@@ -18,7 +18,7 @@
 // the exception it was trying to record.
 import { db } from '@nuxthub/db'
 
-import { errorDetail } from '#layers/terminal/server/utils/error-detail'
+import { errorDetail } from '#layers/core/server/utils/error-detail'
 
 import { pathForLog, logEvent } from '../utils/log'
 import { recordOpsEvent } from '../utils/ops'

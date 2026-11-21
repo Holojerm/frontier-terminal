@@ -21,7 +21,12 @@ import { inArray, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
-import { chunk, rowsPerStatement, runStatements, type PipelineDb } from '../store'
+import {
+  chunk,
+  rowsPerStatement,
+  runStatements,
+  type PipelineDb,
+} from '#layers/core/server/pipeline/store'
 
 export const SMOKE_WORKFLOW = 'post-deploy-smoke.yml'
 export const GITHUB_USER_AGENT =

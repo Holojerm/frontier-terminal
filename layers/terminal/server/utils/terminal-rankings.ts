@@ -27,11 +27,19 @@ import type {
 
 import * as tables from '#server/db/schema'
 import { asOfFromDetail } from '../pipeline/as-of'
-import { manifestFixtures } from '../pipeline/parsers/fixture-provenance'
+import { manifestFixtures } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 import { providerOfOpenRouterId } from '../pipeline/parsers/openrouter'
-import type { PipelineDb } from '../pipeline/store'
-import { sourceReads, type QueryContext, type SourceReads } from './terminal-db'
-import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import {
+  sourceReads,
+  type QueryContext,
+  type SourceReads,
+} from '#layers/core/server/utils/terminal-db'
+import {
+  PROVIDER_DISPLAY,
+  PROVIDER_ORDER,
+  labelOf,
+} from '#layers/core/server/utils/terminal-sources'
 
 export const RANKINGS_SOURCE_ID = 'openrouter-rankings-daily'
 export const SHARE_WINDOW_DAYS = 7

@@ -15,30 +15,29 @@ import verda from '~~/fixtures/recipes/gpu-verda.html?raw'
 import crwv from '~~/fixtures/recipes/sec-companyfacts-crwv.json?raw'
 
 import * as schema from '~~/server/db/schema'
-import { insertRows } from '../server/pipeline/store'
+import { insertRows } from '#layers/core/server/pipeline/store'
 import { crusoeRows, googleCloudRows } from '../server/theses/recipes/gpu-pages'
-import type { SourceFetcher } from '../server/pipeline/fetch'
+import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import {
   blendedPrice,
-  gpuMedian,
   gpuSetChange,
   labSetChange,
-  median,
   sumAcrossLabs,
-  type GpuObservation,
 } from '../server/theses/compute-signals'
+import { gpuMedian, median, type GpuObservation } from '../server/theses/recipes/gpu-series'
 import { COMPUTE_THESIS } from '../server/theses/compute'
 import { evaluateTheses } from '../server/theses/evaluate'
 import type { Recipe } from '../server/theses/recipes/contract'
 import { gpuOf, gpuPriceObservation } from '../server/theses/recipes/gpu-prices'
-import { GPU_RECIPES, RECIPES } from '../server/theses/recipes/registry'
+import { RECIPES } from '#server/registries/recipes'
+import { GPU_RECIPES } from '../server/theses/recipes/gpu-recipes'
 import { runRecipes } from '../server/theses/recipes/run'
 import { evaluateClaim, type MeasuredClaim, type StoredReading } from '../server/theses/status'
-import { queryContext, queryCoverage } from '../server/utils/terminal-db'
+import { queryContext, queryCoverage } from '#layers/core/server/utils/terminal-db'
 import { queryGpuPrices } from '../server/utils/terminal-gpu'
 import { daysBefore } from '../server/utils/terminal-rankings'
 import { queryTheses } from '../server/utils/terminal-theses'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The Compute thesis: the GPU price recipes against pages captured
 // 2026-11-02 (fixtures/manifest.json), the equal-weight medians, the

@@ -1,6 +1,6 @@
-import type { PollScope } from './contracts'
+import type { PollScope } from '#layers/core/server/pipeline/contracts'
 import { freshRegistrationKey } from './prospectus-floor'
-import type { FetchSource } from './sources'
+import type { FetchSource } from '#layers/core/server/pipeline/sources'
 
 // Which sources each cron tick polls. One file, so the two tasks under
 // layers/terminal/server/tasks/poll/ share a policy instead of two lists that drift.

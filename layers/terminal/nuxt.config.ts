@@ -1,7 +1,7 @@
-// The terminal layer: Frontier Terminal's product code — the fetch pipeline, the thesis layer,
-// the query layer, the pages and components, and their tables and tests. Fork-owned: authored
-// here, not vendored, so not in layers.lock.json. Depends on core only; pipeline, theses and
-// terminal import each other, so they are one layer.
+// The terminal layer: every domain not yet split out of it — the parsers and lanes, the thesis
+// layer, the per-domain queries, the pages and components, and their tables and tests. Fork-owned:
+// authored here, not vendored, so not in layers.lock.json. Builds on the core layer
+// (domains.config.ts); the domains leave it one layer at a time, and what stays is the shell.
 export default defineNuxtConfig({
   $meta: { name: 'terminal' },
   runtimeConfig: {

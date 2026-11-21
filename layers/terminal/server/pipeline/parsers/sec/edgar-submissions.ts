@@ -4,8 +4,8 @@ import {
   type FilingRow,
   type ParserId,
   type Provenance,
-} from '../../contracts'
-import { fixtureProvenance } from '../fixture-provenance'
+} from '#layers/core/server/pipeline/contracts'
+import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 import { eightKItems, isTrackedForm, rootForm } from './forms'
 import { parseCikWhitelistBlock, whitelistCikFor, type CikWhitelist } from './whitelist'
 

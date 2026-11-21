@@ -8,7 +8,7 @@
 import { db } from '@nuxthub/db'
 
 import { runTrackRecordSearch } from '../../pipeline/track-record/search'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

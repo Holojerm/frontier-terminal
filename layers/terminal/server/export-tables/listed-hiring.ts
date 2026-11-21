@@ -1,9 +1,9 @@
-// Hiring at the listed companies: every role their boards have listed, and each read's counts. Part of EXPORT_TABLES (utils/terminal-export.ts), which fixes the order.
+// Hiring at the listed companies: every role their boards have listed, and each read's counts. Part of EXPORT_TABLES (server/registries/export-tables.ts), which fixes the order.
 
 import { lte } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import { plainTable, type ExportTable } from '../utils/terminal-export-views'
+import { plainTable, type ExportTable } from '#layers/core/server/utils/terminal-export-views'
 
 const BOARD_MEANING =
   'The board, as sources.yaml › listed_hiring_sources names it (listed-coreweave-greenhouse, listed-google-careers).'

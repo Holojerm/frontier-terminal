@@ -13,7 +13,7 @@ import type {
 } from '../../shared/utils/terminal-types'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { clusterSeries } from './terminal-clusters'
 import { HIRING_ARCHIVE_CAVEATS, type HiringArchiveProvider } from '../pipeline/archive/hiring-eras'
 import {
@@ -22,10 +22,10 @@ import {
   HIRING_ARCHIVE_METHOD,
   archivedHiringPoints,
   queryHiringReach,
-  beforeLiveFloor,
   labLiveFloors,
   labsBeforeFloor,
 } from './terminal-archive'
+import { beforeLiveFloor } from '#layers/core/server/utils/archive-floor'
 import {
   byDetectedAt,
   compareWindow,
@@ -36,8 +36,13 @@ import {
   openRolesAt,
   type OpenRole,
 } from './terminal-history'
-import { byString, parseJson, str } from './terminal-json'
-import { HIRING_SOURCES, PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
+import { byString, parseJson, str } from '#layers/core/server/utils/terminal-json'
+import {
+  HIRING_SOURCES,
+  PROVIDER_DISPLAY,
+  PROVIDER_ORDER,
+  labelOf,
+} from '#layers/core/server/utils/terminal-sources'
 import {
   atOf,
   confirmedAt,
@@ -47,7 +52,7 @@ import {
   sourceReads,
   stampOf,
   type QueryContext,
-} from './terminal-db'
+} from '#layers/core/server/utils/terminal-db'
 
 // ---- hiring ----------------------------------------------------------------
 

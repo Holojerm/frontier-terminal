@@ -32,14 +32,18 @@ import {
   RiskFactorsRow,
   SharesRow,
   StatementRow,
-} from '../pipeline/contracts'
+} from '#layers/core/server/pipeline/contracts'
 import { riskFactorChanges } from '../pipeline/parsers/sec/prospectus-risk-factors'
 import { OPTIONAL_LINES } from '../pipeline/parsers/sec/prospectus-statement'
-import type { PipelineDb } from '../pipeline/store'
-import { sourceReads, type QueryContext } from './terminal-db'
-import { byString } from './terminal-json'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import { sourceReads, type QueryContext } from '#layers/core/server/utils/terminal-db'
+import { byString } from '#layers/core/server/utils/terminal-json'
 import { filingIndexUrl, prospectusSourcePrefix } from './terminal-revenue'
-import { PROVIDER_DISPLAY, PROVIDER_ORDER, labelOf } from './terminal-sources'
+import {
+  PROVIDER_DISPLAY,
+  PROVIDER_ORDER,
+  labelOf,
+} from '#layers/core/server/utils/terminal-sources'
 
 export const PROSPECTUS_RULE =
   'Read from the lab’s own registration statements (S-1 and its amendments) as printed. That covers the statement of operations line by line, the contractual-commitment schedules, the 10%-customer tables, “The Offering” share counts, and the risk-factor headings. ' +

@@ -23,22 +23,22 @@ import {
   bumpOf,
   lockRefusal,
   type SchemaLock,
-} from '../server/utils/data-schema'
+} from '#layers/core/server/utils/data-schema'
 import { ENTITY_SECURITIES } from '../server/utils/terminal-entities'
 import changelogMd from '~~/CHANGELOG-data.md?raw'
 import schemaLock from '~~/schema.lock.json'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 import {
   EXPORT_HISTORY,
   LICENSE_COLUMN,
   licenseWindow,
-} from '../server/utils/terminal-export-history'
-import { EXPORT_TABLES } from '../server/utils/terminal-export'
-import { asOfColumns } from '../server/utils/terminal-export-views'
-import { csvLine } from '../server/utils/terminal-export-format'
+} from '#layers/core/server/utils/terminal-export-history'
+import { EXPORT_TABLES } from '#server/registries/export-tables'
+import { asOfColumns } from '#layers/core/server/utils/terminal-export-views'
+import { csvLine } from '#layers/core/server/utils/terminal-export-format'
 
 // The dictionary cannot drift from the exports: each column is declared with
-// its entry (terminal-export.ts), and the as_of columns are the ones a
+// its entry (server/registries/export-tables.ts), and the as_of columns are the ones a
 // point-in-time request really returns.
 
 const db = drizzle(env.DB, { schema })
@@ -264,7 +264,7 @@ describe('the schema version', () => {
       Object.values(EXPORT_TABLES).map((t) => [t.name, [...t.columns]]),
     )
     const remedy =
-      'Add a release to SCHEMA_RELEASES in layers/terminal/server/utils/data-schema.ts (adding is minor, removing or renaming is major) and an entry to CHANGELOG-data.md, then run bun run schema:lock'
+      'Add a release to SCHEMA_RELEASES in layers/core/server/utils/data-schema.ts (adding is minor, removing or renaming is major) and an entry to CHANGELOG-data.md, then run bun run schema:lock'
     expect(schemaLock.schema_version, remedy).toBe(SCHEMA_VERSION)
     expect(exported, remedy).toEqual(schemaLock.tables)
   })

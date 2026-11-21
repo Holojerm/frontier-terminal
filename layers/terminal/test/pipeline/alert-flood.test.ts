@@ -3,12 +3,12 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import type { FetchOutcome, SourceFetcher } from '../../server/pipeline/fetch'
-import type { LockStore } from '../../server/pipeline/lock'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import type { LockStore } from '#layers/core/server/pipeline/lock'
 import { runPoll, type PollDeps } from '../../server/pipeline/poll'
 import type { RawStore } from '../../server/pipeline/refresh'
-import type { PollScope } from '../../server/pipeline/contracts'
-import { fixtureText, manifest } from './fixtures'
+import type { PollScope } from '#layers/core/server/pipeline/contracts'
+import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The alert-flood regression, end to end: the cron entry point (runPoll) over
 // the whole committed fixture world, the way dev:fixtures and the crons drive

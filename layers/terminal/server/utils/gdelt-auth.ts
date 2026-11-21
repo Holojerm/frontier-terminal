@@ -7,7 +7,7 @@
 
 import type { H3Event } from 'h3'
 
-import { verifyJudgeToken } from './judge-auth'
+import { verifyJudgeToken } from '#layers/core/server/utils/judge-auth'
 
 export async function requireGdeltToken(event: H3Event): Promise<void> {
   const verdict = await verifyJudgeToken(

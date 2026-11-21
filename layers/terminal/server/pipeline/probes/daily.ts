@@ -8,7 +8,12 @@ import { and, gte, lt, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { medianOf } from '../../../shared/utils/terminal-reliability'
-import { chunk, rowsPerStatement, runStatements, type PipelineDb } from '../store'
+import {
+  chunk,
+  rowsPerStatement,
+  runStatements,
+  type PipelineDb,
+} from '#layers/core/server/pipeline/store'
 import { EXCLUDED_OUTCOMES, type ProbeOutcome } from './stream'
 import { PROBE_TARGETS, PROBE_WINDOWS, type ProbeTargetSpec, type ProbeWindow } from './targets'
 

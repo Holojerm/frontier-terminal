@@ -3,8 +3,8 @@ import {
   VendorMdPricingOutput,
   type PriceRow,
   type Provenance,
-} from '../../contracts'
-import { fixtureProvenance } from '../fixture-provenance'
+} from '#layers/core/server/pipeline/contracts'
+import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 import { tableAfterHeading, usdAmount } from './md-table'
 
 // deepseek-pricing-md — https://api-docs.deepseek.com/quick_start/pricing.md

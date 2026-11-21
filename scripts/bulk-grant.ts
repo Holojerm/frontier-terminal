@@ -9,7 +9,7 @@
 //
 // A grant mints one account-owned Cloudflare API token that can read the
 // objects of LICENSED_BUCKET and nothing else, expiring with the key
-// (layers/terminal/server/utils/bulk-grant.ts), and records it in D1
+// (layers/core/server/utils/bulk-grant.ts), and records it in D1
 // (bulk_grants). keys:revoke revokes a key's grants too.
 //
 // Minting a token needs a token that may manage tokens, which the `cf` login
@@ -32,8 +32,8 @@ import {
   r2Endpoint,
   s3SecretOf,
   staleGrants,
-} from '../layers/terminal/server/utils/bulk-grant'
-import { LICENSED_BUCKET } from '../layers/terminal/shared/utils/institutional'
+} from '../layers/core/server/utils/bulk-grant'
+import { LICENSED_BUCKET } from '../layers/core/shared/utils/institutional'
 import { ROOT, fail, lit, parseArgs, runSql } from './lib/d1-cli'
 
 const KEY_ID_SHAPE = /^key_[0-9a-f]{10}$/

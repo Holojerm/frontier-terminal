@@ -14,7 +14,7 @@
 
 import { parseOpenRouter, providerOfOpenRouterId } from '../parsers/openrouter'
 import { latestSnapshot, type RawReader } from '../judge/class-map'
-import type { PipelineDb } from '../store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import type { ClassEntry } from '../../utils/terminal-classes'
 import {
   PROBE_MONTHLY_BUDGET_USD,

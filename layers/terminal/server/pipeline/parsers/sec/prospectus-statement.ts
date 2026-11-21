@@ -1,4 +1,8 @@
-import { StatementRow, type Provenance, type StatementLine } from '../../contracts'
+import {
+  StatementRow,
+  type Provenance,
+  type StatementLine,
+} from '#layers/core/server/pipeline/contracts'
 import type { RegistrationTarget } from './filing-index'
 import { figure } from './prospectus-doc'
 import { readStatementTable, type StatementTable } from './prospectus-revenue'

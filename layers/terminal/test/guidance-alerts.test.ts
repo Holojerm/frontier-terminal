@@ -17,10 +17,10 @@ import {
 } from '../server/exposure/guidance-alerts'
 import { runFiledFacts } from '../server/exposure/ingest'
 import type { StoredFact } from '../server/exposure/series'
-import type { FetchOutcome, FetchSource } from '../server/pipeline/fetch'
+import type { FetchOutcome, FetchSource } from '#layers/core/server/pipeline/fetch'
 import { alertTerms } from '../server/pipeline/track-record/terms'
 import type { StoredGuidance } from '../server/utils/terminal-ground-truth-guidance'
-import { fixtureText, provenanceOf } from './pipeline/fixtures'
+import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // The capex-guidance rule (exposure/guidance-alerts.ts): a revision against
 // the filer's previous figure, held to its stored release; a 10-Q or 10-K

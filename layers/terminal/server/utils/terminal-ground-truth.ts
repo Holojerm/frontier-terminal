@@ -35,8 +35,8 @@ import { isNull } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { DEAL_WORDS } from '../pipeline/reported/figures'
-import type { PipelineDb } from '../pipeline/store'
-import type { QueryContext } from './terminal-db'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 import { EXPOSURE_METHOD, filedFactsAt } from './terminal-exposure'
 import {
   DEAL_LIMIT,

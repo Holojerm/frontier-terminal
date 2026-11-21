@@ -5,9 +5,9 @@ import {
   parserOutputSchemas,
   registeredParsers,
   type ParserId,
-} from '../../server/pipeline/contracts'
+} from '#layers/core/server/pipeline/contracts'
 import '../../server/pipeline/parsers.manifest'
-import { fixtureText, manifest } from './fixtures'
+import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // Determinism gate: every registered parser, run twice on its committed
 // fixture, must produce byte-identical output hashes. This is the boundary

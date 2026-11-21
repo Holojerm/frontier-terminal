@@ -14,9 +14,9 @@ import type {
 } from '../../shared/utils/terminal-types'
 
 import * as tables from '#server/db/schema'
-import { manifestFixtures } from '../pipeline/parsers/fixture-provenance'
+import { manifestFixtures } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 import { effectiveClassMap } from '../pipeline/class-map'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import {
   BASIS_STALE_NOTE,
   CLASS_GAPS,
@@ -31,11 +31,11 @@ import {
   ARCHIVED_LABS_AS_OF_METHOD,
   archivedCatalogAt,
   archivedRowsForKey,
-  beforeLiveFloor,
   labLiveFloors,
   labsBeforeFloor,
   queryPriceReach,
 } from './terminal-archive'
+import { beforeLiveFloor } from '#layers/core/server/utils/archive-floor'
 import {
   archivedPriceHistory,
   byDetectedAt,
@@ -43,8 +43,8 @@ import {
   releaseEvents,
   sparkOf,
 } from './terminal-history'
-import { byString, num, parseJson, str, type Json } from './terminal-json'
-import { PROVIDER_ORDER, labelOf } from './terminal-sources'
+import { byString, num, parseJson, str, type Json } from '#layers/core/server/utils/terminal-json'
+import { PROVIDER_ORDER, labelOf } from '#layers/core/server/utils/terminal-sources'
 import {
   PROVIDER_RANK,
   atOf,
@@ -56,7 +56,7 @@ import {
   sourceReads,
   stampOf,
   type QueryContext,
-} from './terminal-db'
+} from '#layers/core/server/utils/terminal-db'
 
 // ---- prices ----------------------------------------------------------------
 

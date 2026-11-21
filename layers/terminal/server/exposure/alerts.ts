@@ -17,7 +17,12 @@
 
 import { compactUsd } from '../../shared/utils/terminal-format'
 import type { ExposurePoint, ExposureSeries } from '../../shared/utils/terminal-exposure'
-import { AlertRow, ChangeRow, contentHash, type Provider } from '../pipeline/contracts'
+import {
+  AlertRow,
+  ChangeRow,
+  contentHash,
+  type Provider,
+} from '#layers/core/server/pipeline/contracts'
 import { alertKind, type AlertKind } from './series'
 
 export const FILED_FACT_RULE = 'filed-fact-floor' as const

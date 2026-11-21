@@ -5,7 +5,11 @@ import epochTimelines from '~~/fixtures/recipes/epoch-data-center-timelines.csv?
 import githubCount from '~~/fixtures/recipes/github-prs-copilot.json?raw'
 import npmClaudeCode from '~~/fixtures/recipes/npm-claude-code.json?raw'
 import pypiAnthropic from '~~/fixtures/recipes/pypi-anthropic.json?raw'
-import { GITHUB_TOKEN_UNSET, createFetcher, needsGithubToken } from '../server/pipeline/fetch'
+import {
+  GITHUB_TOKEN_UNSET,
+  createFetcher,
+  needsGithubToken,
+} from '#layers/core/server/pipeline/fetch'
 import { parseCsv } from '../server/theses/recipes/csv'
 import { extractSites, extractTimelines } from '../server/theses/recipes/epoch-data-centers'
 import {
@@ -17,7 +21,7 @@ import {
 } from '../server/theses/recipes/github-agent-prs'
 import { NPM_LAB_RECIPES, extractDownloads } from '../server/theses/recipes/npm-downloads'
 import { PYPI_LAB_RECIPES, extractPypiDownloads } from '../server/theses/recipes/pypi-downloads'
-import { RECIPES } from '../server/theses/recipes/registry'
+import { RECIPES } from '#server/registries/recipes'
 
 // The lab demand and supply recipes audited 2026-11-04 (docs/source-audit.md),
 // against fixtures fetched that morning. Golden values are the sources' own.

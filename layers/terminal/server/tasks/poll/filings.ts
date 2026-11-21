@@ -18,14 +18,14 @@ import { kv } from '@nuxthub/kv'
 
 import sourcesYaml from 'raw:~~/sources.yaml'
 
-import { createFetcher } from '../../pipeline/fetch'
-import { unstorageLockStore } from '../../pipeline/lock'
+import { createFetcher } from '#layers/core/server/pipeline/fetch'
+import { unstorageLockStore } from '#layers/core/server/pipeline/lock'
 import { blobRawStore, runPoll } from '../../pipeline/poll'
 import { paceSec } from '../../pipeline/sec-pace'
 import { KIND_READ_FAILED, runPowerSiteReads } from '../../power/ingest'
 import { runSupplierReads } from '../../suppliers/ingest'
-import { warmAfterPoll } from '../../utils/cache-warm-task'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { warmAfterPoll } from '#layers/core/server/utils/cache-warm-task'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

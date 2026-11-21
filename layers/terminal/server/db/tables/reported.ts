@@ -1,5 +1,5 @@
 import { index, integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { provenance } from './columns'
+import { provenance } from '../../../../core/server/db/tables/columns'
 
 // ─────────────────────────────────────────────
 // Reported figures: lab revenue, valuations and funding rounds as press

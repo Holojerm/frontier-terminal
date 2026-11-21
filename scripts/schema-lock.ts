@@ -2,7 +2,7 @@
 //
 // The lock is what layers/terminal/test/terminal-dictionary.test.ts holds the
 // exports to, so it is only rewritten when the newest release in
-// layers/terminal/server/utils/data-schema.ts accounts for every column that
+// layers/core/server/utils/data-schema.ts accounts for every column that
 // moved since the last lock (lockRefusal). Run it after adding a release, and
 // commit what it writes.
 
@@ -13,8 +13,8 @@ import {
   SCHEMA_VERSION,
   lockRefusal,
   type SchemaLock,
-} from '../layers/terminal/server/utils/data-schema'
-import { EXPORT_TABLES } from '../layers/terminal/server/utils/terminal-export'
+} from '../layers/core/server/utils/data-schema'
+import { EXPORT_TABLES } from '../server/registries/export-tables'
 
 const LOCK_FILE = join(import.meta.dir, '..', 'schema.lock.json')
 

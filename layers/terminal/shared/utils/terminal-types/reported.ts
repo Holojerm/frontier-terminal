@@ -1,4 +1,4 @@
-import type { LabId, Prov, Stamp } from './common'
+import type { LabId, Prov, Stamp } from '#layers/core/shared/utils/terminal-types/common'
 
 export type ReportedMetric =
   | 'revenue_run_rate'

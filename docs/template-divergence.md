@@ -116,10 +116,10 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 - `scripts/check-design-tokens.ts` — the app's own palette ramp in the allowed-color list is `iris`, not `clay`
 - `scripts/check-mirrors.ts` — reference pass only; the template's mirror pass compares server/utils/users.ts with mcp/src/server.ts, neither of which exists here (upstream candidate: skip a mirror whose files are absent)
 - `scripts/check-seo.ts` — no content/blog pass; adds a rule that every publicPage value is a literal, because Nuxt drops the whole key otherwise (upstream candidate)
-- `scripts/ci.ts` — the gate list matches this app's checks: no `forkless:check` (not a template fork shape with optional billing/referral layers to strip); adds `globals:check`, the module-load gate for Workers' deploy error 10021 (upstream candidate), and `surfaces:check`, which reads this product's routes, MCP tools and export tables (product-specific)
+- `scripts/ci.ts` — the gate list matches this app's checks: no `forkless:check` (not a template fork shape with optional billing/referral layers to strip); adds `globals:check`, the module-load gate for Workers' deploy error 10021 (upstream candidate), `surfaces:check`, which reads this product's routes, MCP tools and export tables (product-specific), and `domains:check`, which holds the fork-owned layers to domains.config.ts (product-specific)
 - `scripts/generate-brand-assets.ts` — display face at weight 500 and waits for the font stylesheets before shooting the OG image (upstream candidate: the stylesheet wait)
 - `server/api/status.get.ts` — public, with per-source freshness: the status payload is built by collectStatus() in fleet-status.ts, which the MCP get_status tool shares
-- `server/plugins/error-logger.ts` — no PostHog $exception capture or session lookup; logs errorDetail() from the terminal layer so the cause of a D1 fault reaches the digest
+- `server/plugins/error-logger.ts` — no PostHog $exception capture or session lookup; logs errorDetail() from the core layer so the cause of a D1 fault reaches the digest
 - `server/routes/llms.txt.get.ts` — no blog; a static map (no D1) that adds the data tables, the MCP endpoint and the licence block, shared with the MCP describe tool via crawler-pages.ts
 - `server/routes/sitemap.xml.get.ts` — no blog; dates each data page from its newest change row (dataLastmods) and lists the layer's static lab, compare and thesis pages
 - `server/tasks/seo/indexnow.ts` — ends in `export default withHeartbeat(task)` so the freshness checks see it run, like every task here (upstream candidate, with the registry)
@@ -132,7 +132,7 @@ An entry ending in `/` is a directory prefix: it also declares template files th
 
 ## Layers
 
-Vendored: `social` (pinned in `layers.lock.json`). Fork-owned, never in the lock: `terminal`.
+Vendored: `social` (pinned in `layers.lock.json`). Fork-owned, never in the lock: `core` and `terminal` (`domains.config.ts` says which may import which; `bun run domains:check` holds it).
 
 Left out on purpose, so the absence is a decision and not a gap:
 

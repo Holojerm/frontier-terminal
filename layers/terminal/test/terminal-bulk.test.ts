@@ -6,10 +6,10 @@ import { beforeAll, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import { HISTORY_LICENSE, PAID_LICENSE } from '~~/shared/utils/license'
-import { LICENSED_BUCKET } from '../shared/utils/institutional'
-import { contentHashOfText } from '../server/pipeline/contracts'
-import { insertRows } from '../server/pipeline/store'
-import { SCHEMA_VERSION, tableChangedAfter } from '../server/utils/data-schema'
+import { LICENSED_BUCKET } from '#layers/core/shared/utils/institutional'
+import { contentHashOfText } from '#layers/core/server/pipeline/contracts'
+import { insertRows } from '#layers/core/server/pipeline/store'
+import { SCHEMA_VERSION, tableChangedAfter } from '#layers/core/server/utils/data-schema'
 import {
   BULK_INDEX_PATH,
   buildOrder,
@@ -28,9 +28,9 @@ import {
   runBulkBuild,
   type BulkManifest,
   type BulkStore,
-} from '../server/utils/terminal-bulk'
-import { EXPORT_PAGE_SIZE, type ExportTable } from '../server/utils/terminal-export-views'
-import { EXPORT_TABLES } from '../server/utils/terminal-export'
+} from '#layers/core/server/utils/terminal-bulk'
+import { EXPORT_PAGE_SIZE, type ExportTable } from '#layers/core/server/utils/terminal-export-views'
+import { EXPORT_TABLES } from '#server/registries/export-tables'
 
 // The bulk feed against a real D1: files land in the store, gzipped CSV and
 // Parquet, with a SHA-256 that matches their bytes, the recent file is the

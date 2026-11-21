@@ -5,7 +5,7 @@ import { describe, expect, it } from 'vitest'
 import type { ThesisDef } from '../shared/utils/thesis-types'
 
 import * as schema from '~~/server/db/schema'
-import type { FetchOutcome, SourceFetcher } from '../server/pipeline/fetch'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { evaluateTheses } from '../server/theses/evaluate'
 import { evaluateJudgedClaim } from '../server/theses/judged-status'
 import {
@@ -20,7 +20,7 @@ import type { Recipe } from '../server/theses/recipes/contract'
 import { githubPrRecipe } from '../server/theses/recipes/github-agent-prs'
 import { runRecipes } from '../server/theses/recipes/run'
 import { applyClaimVerdicts, claimReview } from '../server/theses/verdicts'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The recipe engine on a made-up company: a quarterly revenue recipe, a
 // daily download recipe and a changelog recipe, fetched through a fake

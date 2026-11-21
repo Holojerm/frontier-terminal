@@ -6,15 +6,15 @@ import {
   contentHash,
   disclosureKey,
   disclosureTimelineKey,
-} from '../../server/pipeline/contracts'
-import { diff } from '../../server/pipeline/diff'
-import { isTimestampOnlyChange } from '../../server/pipeline/judge/pending'
-import { derivedKeyOf, laneFor } from '../../server/pipeline/lanes'
+} from '#layers/core/server/pipeline/contracts'
+import { diff } from '#layers/core/server/pipeline/diff'
+import { isTimestampOnlyChange } from '#layers/core/server/pipeline/judge/pending'
+import { derivedKeyOf, laneFor } from '#server/registries/lanes'
 import { normalizeDisclosureTimelines, normalizeDisclosures } from '../../server/pipeline/normalize'
 import { printedDate, textOf } from '../../server/pipeline/parsers/disclosures/html-text'
 import { parseOpenAiMisalignmentReport } from '../../server/pipeline/parsers/disclosures/openai-misalignment-report'
 import { parseOpenAiMisalignmentReports } from '../../server/pipeline/parsers/disclosures/openai-misalignment-reports'
-import { fixtureText, provenanceOf } from './fixtures'
+import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 import { committedIndexItems, indexPage, withReport } from './misalignment-index'
 
 // Disclosure lane golden tests. Expected values are read off the committed

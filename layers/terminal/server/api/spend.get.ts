@@ -2,9 +2,9 @@
 // share joined to each vendor's list prices, as a low/high range per lab
 // with the coverage of the join. Third-party channel, disclosed as such.
 
-import { serveTerminal, terminalDb } from '../utils/terminal-handler'
+import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
 import { querySpend } from '../utils/terminal-spend'
-import { rateLimitTerminal } from '../utils/api-access'
+import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'spend', limit: 60, windowSeconds: 60 })

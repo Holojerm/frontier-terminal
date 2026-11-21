@@ -13,10 +13,10 @@ import { thesisPages } from '../../shared/utils/thesis-format'
 import manifest from '~~/fleet.json'
 import { THESES } from '../theses/registry'
 import type { LlmsTxtInput, LlmsTxtSection } from '#server/utils/seo'
-import { BREAKING_NOTICE_DAYS, SCHEMA_VERSION } from './data-schema'
-import { AS_OF_ROUTES } from './terminal-asof'
+import { BREAKING_NOTICE_DAYS, SCHEMA_VERSION } from '#layers/core/server/utils/data-schema'
+import { AS_OF_ROUTES } from '#layers/core/server/utils/terminal-asof'
 import { DICTIONARY_NAME } from './terminal-dictionary'
-import { EXPORT_TABLES } from './terminal-export'
+import { EXPORT_TABLES } from '#server/registries/export-tables'
 
 /** The route-table pages plus the dynamic ones enumerable without a query. */
 export function crawlerPages(publicPages: PublicPage[] | undefined): PublicPage[] {

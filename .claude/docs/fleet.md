@@ -36,7 +36,7 @@ Three pieces:
   `layers/terminal/server/tasks/ops/watch.ts` (`ops:watch`, every 30 minutes) runs the
   watchdogs that spool their own events, then prunes the spool (`pruneOpsEvents()`; this app
   has no purge task). Mostly they are the **freshness checks**
-  (`layers/terminal/server/utils/freshness.ts`), one rule for
+  (`layers/core/server/utils/freshness.ts`), one rule for
   every part that can go quiet: a check is stale when work has been owed for longer than its limit
   and nothing succeeded within it, and it spools its kind once every six hours while that lasts.
   There is one check per scheduled task, read from the `task_heartbeats` row `withHeartbeat()`
@@ -55,8 +55,8 @@ Three pieces:
   `critical` (the product stopped working), `warning` (a part is degraded; also the default for a
   kind nobody registered), or `info` (the system handled it). Core escalates `server_error` to
   critical at `SERVER_ERROR_CRITICAL_COUNT` in 24 h; this app's kinds (`judge_silent` and
-  `all_sources_failed` are the critical ones) are in `layers/terminal/server/utils/terminal-ops-severity.ts`,
-  registered by `layers/terminal/server/plugins/ops-severity.ts`. Critical kinds carry a "What to do" line, and `/api/fleet` hands the severity to
+  `all_sources_failed` are the critical ones) are in `layers/core/server/utils/terminal-ops-severity.ts`,
+  registered by `layers/core/server/plugins/ops-severity.ts`. Critical kinds carry a "What to do" line, and `/api/fleet` hands the severity to
   the dashboard, which decides what reaches the inbox. Add a new kind to the table when you add its `recordOpsEvent` call.
 
 ## Social posting (layers/social)
@@ -68,7 +68,7 @@ Buffer. A new critical alert or launch is queued as a row by the EVENTS queue's
 `alerts.new` fan-out, and `social:digest` queues the weekly
 thread (`layers/terminal/server/pipeline/social.ts`); a delayed `social.drain`
 message sends each row when it is due, and the hourly `events:sweep` catches
-anything a lost message left (`layers/terminal/server/utils/events.ts`). The
+anything a lost message left (`layers/core/server/utils/events.ts`). The
 layer's own `social:post` task is not scheduled. A due post still queued after
 an hour spools `social_outbox_stalled`.
 
@@ -104,7 +104,7 @@ bun run webhooks:remove -- --id whk_0a1b2c3d4e [--remote]
   `NUXT_WEBHOOK_SIGNING_KEY="$(op read 'op://…')" bun run webhooks:add -- … --remote`.
   Rotating it breaks every webhook: each one goes `failing` with an ops event,
   and has to be removed and re-added with a new secret for the client.
-- **Trigger:** the EVENTS queue (`layers/terminal/server/utils/events.ts`).
+- **Trigger:** the EVENTS queue (`layers/core/server/utils/events.ts`).
   Writing an alert emits `alerts.new`; its fan-out queues the deliveries
   (`layers/terminal/server/utils/webhook-outbox.ts`) and schedules a
   `webhooks.drain` message for the first due row, and each drain reschedules
@@ -124,7 +124,7 @@ bun run webhooks:remove -- --id whk_0a1b2c3d4e [--remote]
 
 ## Bulk feed: Parquet and S3 grants (licensees)
 
-`bulk:build` (hourly at :41, `layers/terminal/server/utils/terminal-bulk.ts`) writes
+`bulk:build` (hourly at :41, `layers/core/server/utils/terminal-bulk.ts`) writes
 each table's `recent` and `full` cuts as a gzipped CSV and a gzip Parquet file
 (`terminal-parquet.ts`), from one pass over the table. The `recent` files go to
 `BLOB`; the `full` files and a manifest go to `frontier-terminal-bulk-licensed`

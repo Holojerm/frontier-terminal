@@ -4,8 +4,8 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import { deriveSources, segmentFilings } from '../../server/pipeline/derived'
-import type { SourceFetcher } from '../../server/pipeline/fetch'
-import { derivedKeyOf, laneFor } from '../../server/pipeline/lanes'
+import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import { derivedKeyOf, laneFor } from '#server/registries/lanes'
 import { parseRevenueFilersBlock } from '../../server/pipeline/parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock } from '../../server/pipeline/parsers/sec/whitelist'
 import {
@@ -16,12 +16,12 @@ import {
 } from '../../server/pipeline/parsers/sec/xbrl-segment'
 import { runRefresh, type RawStore } from '../../server/pipeline/refresh'
 import { sourceIdsForScope } from '../../server/pipeline/scopes'
-import { includeSources } from '../../server/pipeline/sources'
-import { terminalStamps } from '../../server/utils/terminal-cache'
-import { queryContext } from '../../server/utils/terminal-db'
+import { includeSources } from '#layers/core/server/pipeline/sources'
+import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
+import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { queryRevenue, segmentLabel } from '../../server/utils/terminal-revenue'
-import { labelOf } from '../../server/utils/terminal-sources'
-import { fixtureText, manifest, provenanceOf } from './fixtures'
+import { labelOf } from '#layers/core/server/utils/terminal-sources'
+import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // Google Cloud segment revenue: Alphabet's per-filing XBRL instance, derived
 // from its submissions feed. The parser on the committed 10-Q first, then the

@@ -12,9 +12,9 @@ import {
   spotToOnDemand,
 } from '../server/theses/capacity-signals'
 import { COMPUTE_THESIS } from '../server/theses/compute'
-import type { GpuObservation } from '../server/theses/compute-signals'
+import type { GpuObservation } from '../server/theses/recipes/gpu-series'
 import { gpuPricePayload } from '../server/theses/recipes/gpu-prices'
-import { RECIPES } from '../server/theses/recipes/registry'
+import { RECIPES } from '#server/registries/recipes'
 import { presentation } from '../server/theses/signals'
 import { evaluateClaim, type MeasuredClaim, type StoredReading } from '../server/theses/status'
 import { pressEarlyRead } from '../server/utils/terminal-ground-truth'

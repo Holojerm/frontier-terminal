@@ -14,7 +14,7 @@ import {
   GPU_ARCHIVE_STALE_DAYS,
   type ArchivedGpuCapture,
 } from '../server/utils/terminal-gpu-archive'
-import { readArchiveSources } from '../server/utils/terminal-sources'
+import { readArchiveSources } from '#layers/core/server/utils/terminal-sources'
 import sourcesYaml from '~~/sources.yaml?raw'
 
 // The archived GPU price pages' pure half: the era windows, the rules the

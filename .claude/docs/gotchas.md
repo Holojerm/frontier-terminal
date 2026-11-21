@@ -82,7 +82,7 @@ the latency are not.
 - Name the index (`indexed by <name>`) where the choice matters. A partial index is
   used only by a query that repeats its `WHERE` (`READ_RUN_STATUSES`), an expression
   index only by the same expression with the same literal.
-  `layers/terminal/test/query-plans.test.ts` holds those plans.
+  `layers/core/test/query-plans.test.ts` holds those plans.
 - drizzle-kit writes an expression index wrong (it quotes the expression as column
   names): correct that statement in the generated migration by hand.
 
@@ -113,10 +113,10 @@ keep it there; the gate can read an inline literal too, but one map is harder to
 
 A task that is wired correctly can still stop: the cron stops firing, the run is killed at
 the CPU limit, or it throws every tick. Every task file therefore ends in
-`export default withHeartbeat(task)` (`layers/terminal/server/utils/task-heartbeat.ts`),
+`export default withHeartbeat(task)` (`layers/core/server/utils/task-heartbeat.ts`),
 which records each run in `task_heartbeats`, and the freshness checks in `ops:watch`
 spool `task_silent` when a task has not completed in one missed run plus half an interval
-(`layers/terminal/server/utils/freshness.ts`). `layers/terminal/test/freshness.test.ts`
+(`layers/core/server/utils/freshness.ts`). `layers/terminal/test/freshness.test.ts`
 fails the build on a task file without it. A task that cannot carry the wrapper (one in a
 vendored layer) gets a check of its own in `TASK_CHECK_OVERRIDES`, with the reason.
 
@@ -219,7 +219,7 @@ typechecked and the gate stayed green. Fixing it surfaced six real errors here: 
 `defineTask` calls with more than one result shape needing an explicit result type
 (`layers/social/server/tasks/social/post.ts`, `layers/terminal/server/tasks/social/digest.ts`,
 `layers/terminal/server/tasks/dev/fixtures.ts`, `server/tasks/seo/indexnow.ts`), one function
-with a parameter type narrower than what it called (`layers/terminal/server/pipeline/rate-limit.ts`
+with a parameter type narrower than what it called (`layers/core/server/pipeline/rate-limit.ts`
 › `isRateLimitRun`, now `Pick<RunSummary, 'status' | 'detail'>`), and one handler missing a
 `noImplicitReturns` return (`server/middleware/canonical-host.ts`).
 

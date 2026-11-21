@@ -1,6 +1,6 @@
 // GET /api/judge/pending — the change rows the judge routine has not seen,
 // plus the prompt to judge them with. Bearer NUXT_JUDGE_TOKEN
-// (layers/terminal/server/utils/judge-auth.ts); 404 when unset, 401 on mismatch.
+// (layers/core/server/utils/judge-auth.ts); 404 when unset, 401 on mismatch.
 //
 // The prompt travels in the response so the routine judges with the prompt
 // this deploy shipped, whatever commit its own checkout happens to be on —
@@ -59,7 +59,11 @@ import { hiringBoards } from '../../pipeline/hiring-floor'
 import { blobRawReader, classMapReview } from '../../pipeline/judge/class-map'
 import { filingReview } from '../../pipeline/judge/filing-review'
 import { priceReview } from '../../pipeline/judge/price-review'
-import { JUDGE_CHANGE_LIMIT, incidentCounts, pendingChanges } from '../../pipeline/judge/pending'
+import {
+  JUDGE_CHANGE_LIMIT,
+  incidentCounts,
+  pendingChanges,
+} from '#layers/core/server/pipeline/judge/pending'
 import { stillListedRemovals } from '../../pipeline/judge/still-listed'
 import { figureReview } from '../../pipeline/reported/review'
 import { guidanceReview } from '../../calls/review'
@@ -67,7 +71,7 @@ import { powerSiteReview } from '../../power/review'
 import { supplierReview } from '../../suppliers/review'
 import { trackRecordReview } from '../../pipeline/track-record/review'
 import { claimReview, flagshipMap } from '../../theses/verdicts'
-import { requireJudgeToken } from '../../utils/judge-auth'
+import { requireJudgeToken } from '#layers/core/server/utils/judge-auth'
 import { parseDepartmentClusters } from '../../utils/terminal-clusters'
 
 export default defineEventHandler(async (event) => {

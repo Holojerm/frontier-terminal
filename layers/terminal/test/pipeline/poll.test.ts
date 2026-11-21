@@ -3,12 +3,12 @@ import { drizzle } from 'drizzle-orm/d1'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import type { SourceFetcher } from '../../server/pipeline/fetch'
-import { POLL_LOCK_KEY, type LockStore } from '../../server/pipeline/lock'
+import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import { POLL_LOCK_KEY, type LockStore } from '#layers/core/server/pipeline/lock'
 import { runPoll, type PollDeps } from '../../server/pipeline/poll'
 import type { RawStore } from '../../server/pipeline/refresh'
 import { isSurveyInstant } from '../../server/pipeline/scopes'
-import { fixtureText, manifest } from './fixtures'
+import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The cron-collision policy: edgar and the survey are both due at :00 of
 // every sixth hour, and the survey must be the one that runs there. Observed

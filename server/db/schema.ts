@@ -10,9 +10,10 @@ import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 //     append-only, in which case updated_at is omitted rather than lied about
 //   - Foreign keys: <table_singular>_id (e.g. provider_id)
 //
-// This site has no accounts. The two tables here are the ops substrate the
-// template shipped with; the pipeline and thesis tables live in the terminal
-// layer (layers/terminal/server/db/schema.ts) and are re-exported at the end.
+// This site has no accounts. The tables here are the ops substrate the
+// template shipped with; the store's tables live in the core layer
+// (layers/core/server/db/schema.ts), the domain tables in the terminal layer
+// (layers/terminal/server/db/schema.ts), and both are re-exported at the end.
 // ─────────────────────────────────────────────
 
 // Timestamps helper — spread into every table
@@ -70,8 +71,9 @@ export type NewOpsEvent = typeof opsEvents.$inferInsert
 // This file is the app's composition root for the database: it re-exports the
 // schema of every layer the app uses, so the typed `db` (and every `*Db` type
 // derived from this module) includes their tables. NuxtHub merges layer schemas
-// on its own; this line is what makes core's types and drizzle-kit see them.
-// The terminal layer owns the pipeline and thesis tables.
+// on its own; these lines are what make the typed `db` and drizzle-kit see them.
+// The core layer owns the store's tables, the terminal layer the domain tables.
+export * from '../../layers/core/server/db/schema'
 export * from '../../layers/terminal/server/db/schema'
 export * from '../../layers/social/server/db/schema'
 

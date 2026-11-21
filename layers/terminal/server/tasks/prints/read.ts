@@ -8,11 +8,11 @@
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
 
-import { createFetcher } from '../../pipeline/fetch'
+import { createFetcher } from '#layers/core/server/pipeline/fetch'
 import { blobRawStore } from '../../pipeline/poll'
 import { paceSec } from '../../pipeline/sec-pace'
 import { runPrintReads } from '../../prints/ingest'
-import { withHeartbeat } from '../../utils/task-heartbeat'
+import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

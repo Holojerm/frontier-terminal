@@ -3,8 +3,8 @@ import {
   VendorMdPricingOutput,
   type PriceRow,
   type Provenance,
-} from '../../contracts'
-import { fixtureProvenance } from '../fixture-provenance'
+} from '#layers/core/server/pipeline/contracts'
+import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 import { tableAfterHeading, usdAmount } from './md-table'
 
 // openai-model-md-<slug> — https://developers.openai.com/api/docs/models/<slug>.md

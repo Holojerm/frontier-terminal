@@ -23,7 +23,7 @@ import {
   limitValue,
   mdTables,
 } from '../server/theses/recipes/rate-limits'
-import { fixtureText } from './pipeline/fixtures'
+import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Parents' filings, published rate limits and posted pay, against fixtures
 // fetched 2026-11-04 (docs/source-audit.md). Golden values are the sources' own.

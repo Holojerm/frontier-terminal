@@ -13,7 +13,7 @@ import {
   HISTORY_PARAM,
   LICENSE_WINDOW_DAYS,
 } from '#shared/utils/license'
-import { REQUEST_BUDGETS } from '../../../shared/utils/institutional'
+import { REQUEST_BUDGETS } from '#layers/core/shared/utils/institutional'
 import { count } from '../../../shared/utils/terminal-format'
 import type { SchemaChangelogEntry } from '../../../shared/utils/terminal-types'
 

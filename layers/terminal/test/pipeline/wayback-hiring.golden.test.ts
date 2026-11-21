@@ -1,10 +1,10 @@
 import { describe, expect, test } from 'vitest'
 
-import { contentHash } from '../../server/pipeline/contracts'
+import { contentHash } from '#layers/core/server/pipeline/contracts'
 import { HIRING_ARCHIVE_ERAS, hiringEraById } from '../../server/pipeline/archive/hiring-eras'
 import { hiringRows } from '../../server/pipeline/archive/rows'
 import { captureInstant } from '../../server/pipeline/archive/wayback'
-import { fixtureText, manifest, provenanceOf } from './fixtures'
+import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // Golden tests for the archived job boards (archive/hiring-eras.ts): one
 // Internet Archive capture per era, trimmed as fixtures/manifest.json says

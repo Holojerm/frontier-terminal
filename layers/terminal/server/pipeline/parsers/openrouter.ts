@@ -1,5 +1,10 @@
-import { registerParser, OpenRouterOutput, type Provenance, type Provider } from '../contracts'
-import { fixtureProvenance } from './fixture-provenance'
+import {
+  registerParser,
+  OpenRouterOutput,
+  type Provenance,
+  type Provider,
+} from '#layers/core/server/pipeline/contracts'
+import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 
 // OpenRouter model list — CROSS-CHECK ONLY, never source of record
 // (sources.yaml: third-party restatement, no drift SLA, thin xAI coverage —

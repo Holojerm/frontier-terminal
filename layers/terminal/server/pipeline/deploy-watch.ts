@@ -1,4 +1,4 @@
-import type { FreshnessCheck } from '../utils/freshness'
+import type { FreshnessCheck } from '#layers/core/server/utils/freshness'
 
 // Deploy drift: is production running the commit main points at?
 //

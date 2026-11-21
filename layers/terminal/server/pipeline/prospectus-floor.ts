@@ -8,10 +8,10 @@ import {
   RiskFactorsRow,
   contentHash,
   type ChangeRow,
-} from './contracts'
+} from '#layers/core/server/pipeline/contracts'
 import { registrationTarget } from './parsers/sec/filing-index'
 import { riskFactorChanges, type RiskFactorChange } from './parsers/sec/prospectus-risk-factors'
-import type { PipelineDb } from './store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 
 // The prospectus-floor rule: a lab's new registration filing, once its
 // document is parsed, always alerts with what the filing says — the period

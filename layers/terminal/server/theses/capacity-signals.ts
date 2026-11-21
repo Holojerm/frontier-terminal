@@ -15,7 +15,7 @@ import * as tables from '#server/db/schema'
 import type { ProbeDayRow } from '#server/db/schema'
 import { FILER_NAMES, type StoredFact } from '../exposure/series'
 import { PRIMARY_PLACEMENT } from '../pipeline/probes/placement'
-import type { PipelineDb } from '../pipeline/store'
+import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { filedFactsAt } from '../utils/terminal-exposure'
 import {
   filedActual,
@@ -25,7 +25,7 @@ import {
 } from '../utils/terminal-ground-truth-guidance'
 import { daysBefore } from '../utils/terminal-rankings'
 import { spotRead } from '../utils/terminal-utilization'
-import { gpuState, median, type GpuObservation } from './compute-signals'
+import { gpuState, median, type GpuObservation } from './recipes/gpu-series'
 import type { SignalDeps, SignalReading } from './signals'
 
 type Spec<S extends string> = Extract<SignalSpec, { signal: S }>
