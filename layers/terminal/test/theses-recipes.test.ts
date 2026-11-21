@@ -17,6 +17,7 @@ import {
   type Point,
 } from '../server/theses/recipe-signals'
 import type { Recipe } from '../server/theses/recipes/contract'
+import { githubPrRecipe } from '../server/theses/recipes/github-agent-prs'
 import { runRecipes } from '../server/theses/recipes/run'
 import { applyClaimVerdicts, claimReview } from '../server/theses/verdicts'
 import { fixtureText } from './pipeline/fixtures'
@@ -401,5 +402,111 @@ describe('recipe signals and recipe-item claims', () => {
     expect(at([v('2026-10-01', 'major')], '2026-12-01T00:00:00Z')).toBe('weakening')
     expect(at([v('2026-10-01', 'minor')], '2026-10-20T00:00:00Z')).toBe('unresolved')
     expect(at([v('2026-10-01', 'minor')], '2027-01-15T00:00:00Z')).toBe('broken')
+  })
+})
+
+// GitHub's search answers for any past day, so the agent PR recipes walk back
+// from their oldest stored day (docs/source-audit.md, 2026-11-20).
+describe('recipe backfill', () => {
+  const recipe = githubPrRecipe(
+    'test-github-backfill',
+    'anthropic',
+    'Test',
+    'author:app/test',
+    '2026-09-28',
+  )
+  const dayOf = (url: string) => /created:(\d{4}-\d{2}-\d{2})/.exec(decodeURIComponent(url))![1]!
+  const asked: string[] = []
+  let failDay: string | null = null
+  let failWith: FetchOutcome = { ok: false, status: 500, detail: 'HTTP 500' }
+  // A zero count for every day: identical bodies, which a past day must still store.
+  const search: SourceFetcher = async (source) => {
+    const day = dayOf(source.url)
+    asked.push(day)
+    return day === failDay ? failWith : json({ total_count: 0, incomplete_results: false })
+  }
+  const rowsOf = async () =>
+    (await db.select().from(schema.recipeObservations))
+      .filter((r) => r.recipe_id === recipe.id)
+      .sort((a, b) => (a.date < b.date ? 1 : -1))
+  const opsFor = async () =>
+    (await db.select().from(schema.opsEvents)).filter((o) => o.detail?.startsWith(`${recipe.id}:`))
+  const run = async (at = NOW) =>
+    (await runRecipes(db, { raw, fetcher: search, now: () => at }, [recipe]))[0]!
+
+  it('stores yesterday live, then the days before it, labelled retrospective', async () => {
+    const result = await run()
+    expect(result).toMatchObject({ status: 'ok', detail: null, observations: 7 })
+    expect(asked).toEqual([
+      '2026-10-08',
+      '2026-10-07',
+      '2026-10-06',
+      '2026-10-05',
+      '2026-10-04',
+      '2026-10-03',
+      '2026-10-02',
+    ])
+    const rows = await rowsOf()
+    expect(rows.map((r) => [r.date, JSON.parse(r.payload)])).toEqual([
+      ['2026-10-08', {}],
+      ...asked.slice(1).map((d) => [d, { retrospective: true }]),
+    ])
+    expect(rows.every((r) => r.fetched_at === NOW.toISOString())).toBe(true)
+    expect(rows[1]!.source_url).toContain('created%3A2026-10-07')
+    expect(await opsFor()).toHaveLength(0)
+  })
+
+  it('continues from the oldest stored day when the live body is unchanged, down to launch', async () => {
+    asked.length = 0
+    expect(await run()).toMatchObject({ status: 'unchanged', observations: 4 })
+    expect(asked).toEqual(['2026-10-08', '2026-10-01', '2026-09-30', '2026-09-29', '2026-09-28'])
+    asked.length = 0
+    expect(await run()).toMatchObject({ status: 'unchanged', observations: 0 })
+    expect(asked).toEqual(['2026-10-08'])
+    expect((await rowsOf()).at(-1)!.date).toBe('2026-09-28')
+  })
+
+  it('stops at a failed day without a hole, and alerts on it unless it is a 429', async () => {
+    const fresh = { ...recipe, id: 'test-github-backfill-fail' }
+    const later = new Date('2026-10-12T12:00:00Z')
+    const runFresh = async () =>
+      (await runRecipes(db, { raw, fetcher: search, now: () => later }, [fresh]))[0]!
+    const alerts = async () =>
+      (await db.select().from(schema.opsEvents)).filter((o) => o.detail?.startsWith(`${fresh.id}:`))
+
+    failDay = '2026-10-09'
+    expect(await runFresh()).toMatchObject({
+      status: 'ok',
+      observations: 2,
+      detail: 'backfill as of 2026-10-10: HTTP 500',
+    })
+    expect((await alerts()).map((o) => o.kind)).toEqual(['recipe_failed'])
+
+    failWith = { ok: false, status: 429, detail: 'HTTP 429 (Retry-After 0s)' }
+    asked.length = 0
+    expect(await runFresh()).toMatchObject({
+      status: 'unchanged',
+      observations: 0,
+      detail: 'backfill as of 2026-10-10: HTTP 429 (Retry-After 0s)',
+    })
+    expect(asked).toEqual(['2026-10-11', '2026-10-09'])
+    expect(await alerts()).toHaveLength(1)
+
+    failDay = null
+    expect(await runFresh()).toMatchObject({ status: 'unchanged', observations: 6, detail: null })
+    const dates = (await db.select().from(schema.recipeObservations))
+      .filter((r) => r.recipe_id === fresh.id)
+      .map((r) => r.date)
+      .sort()
+    expect(dates).toEqual([
+      '2026-10-04',
+      '2026-10-05',
+      '2026-10-06',
+      '2026-10-07',
+      '2026-10-08',
+      '2026-10-09',
+      '2026-10-10',
+      '2026-10-11',
+    ])
   })
 })

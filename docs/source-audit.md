@@ -780,6 +780,31 @@ Checked because Google Cloud makes three H100 spot providers and the combined fi
 
 **Verdict: none yet.** Whether to read Nebius's API across two documents, and whether a fixed discount counts as a spot price, are the owner's calls.
 
+## Addendum, 2026-11-20: GitHub agent pull requests before the first live day
+
+The three `github-prs-*` recipes counted only yesterday, so each series started on the recipe's first run. GitHub's search API answers `created:<day>` for any past day, so the history is still there to ask for.
+
+**A past day is a retrospective count, not a snapshot.** `docs/thesis-engine.md` says a dataset "cannot be backfilled". That is about pages: a pricing page as it stood last March can't be fetched again. A search for a past day is a count taken today of the pull requests that still exist. A PR deleted since, or in a repository made private since, is missing. A PR in a repository made public since is counted. So a backfilled day is a different measurement from a live one, and it is labelled as one.
+
+**How it runs.** The Worker walks back on its own, with no owner step. Each survey tick (every six hours) counts yesterday, then the six days before the oldest stored day, oldest last, through the Worker's `NUXT_GITHUB_TOKEN`. Three agents at seven searches each is 21 a tick, inside the authenticated search limit of 30 a minute. The walk stops at the agent's public launch, read 2026-11-20:
+
+| Recipe | Floor | Launch |
+|---|---|---|
+| `github-prs-claude-code` | 2025-02-24 | Claude Code's research preview, released with Claude 3.7 Sonnet (anthropic.com/news/claude-3-7-sonnet) |
+| `github-prs-codex` | 2025-05-16 | Codex in ChatGPT (openai.com/index/introducing-codex). Before it, a `codex/` branch is someone else's |
+| `github-prs-jules` | 2025-05-20 | Jules's public beta (blog.google/technology/google-labs/jules). Google showed it to testers from December 2024 |
+
+At 24 days a day, Claude Code's 20 months fill in under four weeks, Codex's and Jules's in about three.
+
+**Rules the runner keeps** (`layers/terminal/server/theses/recipes/run.ts`, the recipe contract's `backfill`):
+
+- Every backfilled row carries `retrospective: true` in its payload, and the export carries the payload. Its `first_seen_at` and `fetched_at` are the day it was counted, so a point-in-time read never sees it earlier.
+- The walk runs only after the recipe's own run read its source, and it stops at the first failed day. The next tick asks for that day again, so the series has no hole.
+- A failed day raises `recipe_failed`, except a 429, which the next tick retries.
+- No thesis claim and no alert rule reads these recipes, so a past day can't become a change or an alert.
+
+**Verdict: include**, as retrospective counts, with the caveat on each entry in `sources.yaml` and on the adoption panel. Rights stay `not-cleared`.
+
 ## Addendum, 2026-11-20: GDELT GKG before 2026-09-01
 
 Checked because a buyer asked for press scored against filings, and Anthropic's S-1 (first filed 2026-10-26) prints revenue for 2023, 2024, 2025 and the first nine months of 2026, so press from well before `GKG_FROM` could be scored. GDELT publishes a GKG file for every quarter hour back to 2015, under the terms already read (`gdelt-gkg`). Measured 2026-11-20 between 23:15Z and 00:30Z with a generic client: HEAD requests, 21 files parsed with the pipeline's own `parseGkgRow` and `figureHeadline`, and a pilot read of six whole days. Production's counts come from its public export and its GitHub Actions logs. Nothing was stored.

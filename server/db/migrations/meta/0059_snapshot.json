@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "817d8e01-d6f1-4aa1-84c9-a4d591c3d0f5",
+  "id": "5fa84f68-bd11-4f16-8d23-dd7a3005697c",
   "prevId": "c343b6d1-1208-4d1e-bc85-245a46dc682e",
   "tables": {
     "instance_secrets": {
@@ -325,6 +325,14 @@
             "entity_key"
           ],
           "isUnique": false
+        },
+        "changes_type_detected_idx": {
+          "name": "changes_type_detected_idx",
+          "columns": [
+            "entity_type",
+            "detected_at"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {},
@@ -418,6 +426,14 @@
           "name": "entities_type_idx",
           "columns": [
             "entity_type"
+          ],
+          "isUnique": false
+        },
+        "entities_type_date_idx": {
+          "name": "entities_type_date_idx",
+          "columns": [
+            "entity_type",
+            "json_extract(payload, '$.date')"
           ],
           "isUnique": false
         }
@@ -631,6 +647,16 @@
             "started_at"
           ],
           "isUnique": false
+        },
+        "source_runs_read_idx": {
+          "name": "source_runs_read_idx",
+          "columns": [
+            "source_id",
+            "started_at",
+            "snapshot_id"
+          ],
+          "isUnique": false,
+          "where": "status in ('ok', 'unchanged', 'baseline')"
         }
       },
       "foreignKeys": {},
@@ -1494,6 +1520,13 @@
             "started_at"
           ],
           "isUnique": false
+        },
+        "recipe_runs_started_idx": {
+          "name": "recipe_runs_started_idx",
+          "columns": [
+            "started_at"
+          ],
+          "isUnique": false
         }
       },
       "foreignKeys": {},
@@ -2337,74 +2370,6 @@
           "columns": [
             "judged_at",
             "id"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "gdelt_archive_files": {
-      "name": "gdelt_archive_files",
-      "columns": {
-        "stamp": {
-          "name": "stamp",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "pass": {
-          "name": "pass",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "rows": {
-          "name": "rows",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "figures": {
-          "name": "figures",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "fetched_at": {
-          "name": "fetched_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "recorded_at": {
-          "name": "recorded_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "gdelt_archive_files_pass_idx": {
-          "name": "gdelt_archive_files_pass_idx",
-          "columns": [
-            "pass",
-            "stamp"
           ],
           "isUnique": false
         }
@@ -5058,6 +5023,14 @@
     "columns": {}
   },
   "internal": {
-    "indexes": {}
+    "indexes": {
+      "entities_type_date_idx": {
+        "columns": {
+          "json_extract(payload, '$.date')": {
+            "isExpression": true
+          }
+        }
+      }
+    }
   }
 }

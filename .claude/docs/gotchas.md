@@ -66,6 +66,26 @@ the quickest way to check by hand after a deploy —
 `curl -H "Authorization: Bearer $NUXT_FLEET_TOKEN" https://<app>/api/status | jq .migrations`
 (it 404s until `NUXT_FLEET_TOKEN` is set; see `.claude/docs/fleet.md`).
 
+## An index existing does not mean D1 uses it
+
+D1 keeps no planner statistics, so SQLite picks an index by rule of thumb, and an
+`ORDER BY` can win over a more selective seek. The coverage query read 13k rows a call
+because two "newest row of this source" subqueries seeked on the instant alone, where
+a tick starts every source at once. Nothing fails: the rows are right, the bill and
+the latency are not.
+
+- Read the plan and the cost on production, not locally (local `ANALYZE` data changes
+  the choice): `bunx wrangler d1 execute frontier-terminal-db --remote --json --command
+  "explain query plan …"`, then run the statement and read `meta.rows_read`.
+- `bunx wrangler d1 insights frontier-terminal-db --sort-by=reads --time-period=1d`
+  ranks what production runs by rows read.
+- Name the index (`indexed by <name>`) where the choice matters. A partial index is
+  used only by a query that repeats its `WHERE` (`READ_RUN_STATUSES`), an expression
+  index only by the same expression with the same literal.
+  `layers/terminal/test/query-plans.test.ts` holds those plans.
+- drizzle-kit writes an expression index wrong (it quotes the expression as column
+  names): correct that statement in the generated migration by hand.
+
 ## NuxtHub rewrites the generated wrangler config
 
 `wrangler.toml` is an input, not the deployed config. `nuxt build` writes

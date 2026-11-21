@@ -418,8 +418,15 @@
     {
       "idx": 59,
       "version": "6",
-      "when": 1795221478442,
-      "tag": "0059_massive_vertigo",
+      "when": 1795220172428,
+      "tag": "0059_scan_indexes",
+      "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "6",
+      "when": 1795221896849,
+      "tag": "0060_pink_the_captain",
       "breakpoints": true
     }
   ]

@@ -31,8 +31,12 @@ const props = withDefaults(
     rule?: { value: number; label: string }
     /** A top for the y-axis shared across a grid of charts, so their heights compare. */
     yMax?: number
+    /** Drawing height in px; small multiples draw shorter. */
+    height?: number
+    /** The hover readout's x text, when the axis ticks read shorter (`xLabel` otherwise). */
+    pointLabel?: (x: string) => string
   }>(),
-  { step: false },
+  { step: false, height: 220 },
 )
 
 // The drawing width is the box's own width in CSS pixels, measured on mount,
@@ -40,7 +44,7 @@ const props = withDefaults(
 // width. A fixed viewBox scaled with the box instead: capped, it left half a
 // wide panel empty; uncapped, it set the labels at twice the body size.
 const W = useChartWidth('box')
-const H = 220
+const H = computed(() => props.height)
 // 12px labels run about 7 units a character; 8 more is the gap to the line.
 const LABEL_CHAR = 7
 const END_ROOM = 84
@@ -92,7 +96,8 @@ const xAt = (i: number): number => {
   return PAD.value.l + ((times.value[i]! - t0) / span) * inner
 }
 const yAt = (v: number): number =>
-  PAD.value.t + (1 - (v - yMin.value) / (yMax.value - yMin.value)) * (H - PAD.value.t - PAD.value.b)
+  PAD.value.t +
+  (1 - (v - yMin.value) / (yMax.value - yMin.value)) * (H.value - PAD.value.t - PAD.value.b)
 
 const yTicks = computed(() =>
   [0, 0.25, 0.5, 0.75, 1].map((f) => yMin.value + f * (yMax.value - yMin.value)),
@@ -203,7 +208,7 @@ const readout = computed(() => {
     x: xAt(i),
     left: `${((xAt(i) / W.value) * 100).toFixed(1)}%`,
     flip: xAt(i) / W.value > 0.6,
-    label: props.xLabel(props.x[i]!),
+    label: (props.pointLabel ?? props.xLabel)(props.x[i]!),
     rows: props.series.map((s, k) => ({
       ink: INK[k] ?? INK[2],
       label: s.label,

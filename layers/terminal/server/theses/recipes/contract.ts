@@ -56,4 +56,15 @@ export interface Recipe {
    * document per run and moves on from the last one stored.
    */
   follow?(body: string, ctx: { newest: string | null }): string
+  /**
+   * Earlier runs a source can still answer for, fetched after this run's own
+   * URL in the order given (a search by date counts any past day, not only
+   * yesterday). Each is the URL that run would have fetched and the run date
+   * `extract` gets for it. `oldest` is the oldest stored date, null when
+   * nothing is stored. What these return is counted now, from what still
+   * exists upstream, so every row they store carries `retrospective: true` in
+   * its payload. The walk stops at the first failure, so a list that runs
+   * back from `oldest` leaves no hole.
+   */
+  backfill?(ctx: { oldest: string | null }): { url: string; date: string }[]
 }
