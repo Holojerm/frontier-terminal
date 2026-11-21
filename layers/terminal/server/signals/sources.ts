@@ -6,6 +6,7 @@
 import { and, eq, inArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
+import { PRIMARY_PLACEMENT } from '../pipeline/probes/placement'
 import type { PipelineDb } from '../pipeline/store'
 import type { QueryContext } from '../utils/terminal-db'
 import { queryGpuPrices } from '../utils/terminal-gpu'
@@ -126,26 +127,26 @@ export function createLoader(deps: LoadDeps) {
         return { kind: 'points', points: series.map((p) => ({ date: p.date, value: p.value })) }
       }
       case 'probe_days': {
+        // The pinned placement only: unpinned days left from whichever colo ran
+        // the cron, so their times carry a varying distance to the router.
         const rows = await deps.db
           .select({
             day: tables.probeDays.day,
-            placement: tables.probeDays.placement,
             probes: tables.probeDays.probes,
             rate_limited: tables.probeDays.rate_limited,
             failed: tables.probeDays.failed,
           })
           .from(tables.probeDays)
-          .where(eq(tables.probeDays.lab, source.lab))
-        // One reading a day: the pinned placement's where the changeover day has both.
-        const byDay = new Map<string, (typeof rows)[number]>()
-        for (const r of rows) {
-          if (r.probes === 0) continue
-          const held = byDay.get(r.day)
-          if (!held || held.placement === 'unpinned') byDay.set(r.day, r)
-        }
+          .where(
+            and(
+              eq(tables.probeDays.lab, source.lab),
+              eq(tables.probeDays.placement, PRIMARY_PLACEMENT),
+            ),
+          )
         return {
           kind: 'points',
-          points: [...byDay.values()]
+          points: rows
+            .filter((r) => r.probes > 0)
             .map((r) => ({ date: r.day, value: (r.rate_limited + r.failed) / r.probes }))
             .sort((a, b) => (a.date < b.date ? -1 : 1)),
         }

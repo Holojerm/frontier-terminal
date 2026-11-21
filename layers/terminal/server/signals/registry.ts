@@ -22,7 +22,7 @@ export type SignalSource =
   | { kind: 'recipe'; recipe: string; key?: string }
   /** A derived download series by its DOWNLOAD_SERIES id (theses/download-series.ts): normalized by the control basket, or a lab's SDK share. */
   | { kind: 'download_series'; id: string }
-  /** probe_days: the strained share, (rate_limited + failed) / probes. */
+  /** probe_days at the pinned placement: the strained share, (rate_limited + failed) / probes. */
   | { kind: 'probe_days'; lab: LabId }
   /** OpenRouter's weekly token share for one lab (terminal-rankings.ts › rankingWeeks). */
   | { kind: 'openrouter_share'; lab: LabId }
@@ -162,7 +162,7 @@ const probes = (labId: LabId, label: string): SignalDef => ({
   test: 'lead_lag',
   aggregate: 'last',
   available_after_days: 1,
-  history_from: '2026-11-19',
+  history_from: '2026-11-21',
 })
 
 const hiring = (labId: LabId, label: string): SignalDef => ({
