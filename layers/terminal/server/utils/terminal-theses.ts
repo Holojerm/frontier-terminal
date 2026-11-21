@@ -3,7 +3,7 @@
 // the stored readings by the same pure rules the evaluator uses, so the page
 // and the status-change log cannot disagree; status_since comes from the log.
 
-import { COMPANIES, companyName, gpuProviderName } from '../../shared/utils/companies'
+import { COMPANIES, companyName, gpuProviderName } from '#layers/core/shared/utils/companies'
 import type { LabId } from '../../shared/utils/terminal-types'
 import type { ClaimView, ReadingPoint, ThesesData } from '../../shared/utils/thesis-types'
 

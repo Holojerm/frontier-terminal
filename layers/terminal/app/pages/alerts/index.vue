@@ -11,7 +11,8 @@
 // fixed fetch, so nothing older than the newest page is out of reach.
 
 import { LABS } from '../../../shared/utils/terminal-lab-summary'
-import { ALERT_AXES, AXIS_DISPLAY, LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
+import { ALERT_AXES, AXIS_DISPLAY } from '../../../shared/utils/terminal-labs'
+import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import {
   CRITICAL_FEED_QUERY,
   INFO_FEED_QUERY,

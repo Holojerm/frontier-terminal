@@ -10,7 +10,7 @@ import {
   LICENSE_SPLIT_EFFECTIVE,
   LICENSE_WINDOW_DAYS,
 } from '#shared/utils/license'
-import { count } from '../../shared/utils/terminal-format'
+import { count } from '#layers/core/shared/utils/terminal-format'
 import { CRITICAL_FEED_QUERY, INFO_FEED_QUERY } from '../../shared/utils/terminal-tiers'
 import type {
   CoverageData,
@@ -20,7 +20,7 @@ import type {
   PricesData,
   SourceAxis,
 } from '../../shared/utils/terminal-types'
-import type { TableColumn } from '../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 definePageMeta({
   publicPage: {

@@ -4,21 +4,18 @@
 // its test, and a line here.
 
 import { CLOUDFLARE_CHANGELOG } from '#layers/terminal/server/theses/recipes/cloudflare-changelog'
-import type { Recipe } from '#layers/terminal/server/theses/recipes/contract'
-import { EARNINGS_RELEASE_RECIPES } from '#layers/terminal/server/theses/recipes/earnings-releases'
-import {
-  EPOCH_CHIP_TYPES,
-  EPOCH_CHIP_USERS,
-} from '#layers/terminal/server/theses/recipes/epoch-chip-users'
+import type { Recipe } from '#layers/core/server/recipes/contract'
+import { EARNINGS_RELEASE_RECIPES } from '#layers/compute/server/recipes/earnings-releases'
+import { EPOCH_CHIP_TYPES, EPOCH_CHIP_USERS } from '#layers/compute/server/recipes/epoch-chip-users'
 import {
   EPOCH_DATA_CENTERS,
   EPOCH_DATA_CENTER_TIMELINES,
-} from '#layers/terminal/server/theses/recipes/epoch-data-centers'
+} from '#layers/compute/server/recipes/epoch-data-centers'
 import { GITHUB_AGENT_RECIPES } from '#layers/terminal/server/theses/recipes/github-agent-prs'
-import { GPU_RECIPES } from '#layers/terminal/server/theses/recipes/gpu-recipes'
+import { GPU_RECIPES } from '#layers/compute/server/recipes/gpu-recipes'
 import { GREENHOUSE_CLOUDFLARE } from '#layers/terminal/server/theses/recipes/greenhouse-departments'
 import { INVESTEE_RECIPES } from '#layers/terminal/server/theses/recipes/investee-facts'
-import { MLPERF_INFERENCE } from '#layers/terminal/server/theses/recipes/mlperf-inference'
+import { MLPERF_INFERENCE } from '#layers/compute/server/recipes/mlperf-inference'
 import { NEWSROOM_RECIPES } from '#layers/terminal/server/pipeline/track-record/newsrooms'
 import {
   NPM_CONTROL_RECIPES,

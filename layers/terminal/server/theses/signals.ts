@@ -7,7 +7,7 @@
 // premium cannot: it joins today's list prices, so it only ever reads the
 // newest window, and its older readings are the ones earlier runs wrote.
 
-import { companyName, type CompanyId } from '../../shared/utils/companies'
+import { companyName, type CompanyId } from '#layers/core/shared/utils/companies'
 import type { HiringHistoryData, LabId } from '../../shared/utils/terminal-types'
 import type { ClaimDef, SignalSpec, ValueFormat } from '../../shared/utils/thesis-types'
 

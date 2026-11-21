@@ -19,6 +19,7 @@ import type {
 
 import type * as tables from '#server/db/schema'
 import { byString, fieldDiff, num, parseJson, str } from '#layers/core/server/utils/terminal-json'
+import { archiveSourceId } from '#layers/core/server/utils/archive-floor'
 
 type Change = typeof tables.changes.$inferSelect
 type Entity = typeof tables.entities.$inferSelect
@@ -123,9 +124,6 @@ export type ArchivedPrice = Pick<
   | 'source_url'
   | 'fetched_at'
 >
-
-/** archive_captures.id is `<era>:<timestamp>`; the point's source_id names the era. */
-export const archiveSourceId = (captureId: string) => `wayback:${captureId.split(':')[0]}`
 
 /**
  * One SKU's Internet Archive observations as points, oldest first: the first

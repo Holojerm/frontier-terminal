@@ -3,15 +3,15 @@
 // labeled report with its result, then the filed figures a deal can be held
 // to. A report no filed figure settles is listed with the reason, never scored.
 
-import { roundBillions, signedPercent } from '../../../shared/utils/terminal-format'
-import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
+import { roundBillions, signedPercent } from '#layers/core/shared/utils/terminal-format'
+import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import type {
   DealMetric,
   GroundTruthDeal,
   GroundTruthDealMeasure,
   GroundTruthDeals,
 } from '../../../shared/utils/terminal-types'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ deals: GroundTruthDeals; tolerancePct: number }>()
 

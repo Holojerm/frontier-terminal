@@ -9,6 +9,12 @@ import * as tables from '#server/db/schema'
 import type { PipelineDb } from '../pipeline/store'
 import { PointInTimeError, firstSnapshotAt } from './terminal-asof'
 
+/** The earliest instant the backfill looks at. */
+export const ARCHIVE_FROM = '2023-01-01T00:00:00.000Z'
+
+/** archive_captures.id is `<era>:<timestamp>`; a point's source_id names the era. */
+export const archiveSourceId = (captureId: string) => `wayback:${captureId.split(':')[0]}`
+
 /** The axes the Internet Archive backfill covers. */
 export type ArchiveAxis = 'pricing' | 'hiring'
 

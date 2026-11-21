@@ -1,4 +1,4 @@
-import type { LabId, SourceRef, Stamp } from '#layers/core/shared/utils/terminal-types/common'
+import type { LabId, SourceRef, Stamp } from '../../../../core/shared/utils/terminal-types/common'
 import type { DateWindow, RankingsData } from './rankings'
 
 /** One ranked model in the share window, joined to a stored SKU when one matched. */

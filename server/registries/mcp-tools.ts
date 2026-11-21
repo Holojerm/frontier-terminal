@@ -5,7 +5,7 @@
 
 import { MCP_SERVER_NAME, PROVENANCE, type McpKit } from '#layers/core/server/mcp/kit'
 import { registerAlertTools } from '#layers/terminal/server/mcp/alerts'
-import { registerComputeTools } from '#layers/terminal/server/mcp/compute'
+import { registerComputeTools } from '#layers/compute/server/mcp/compute'
 import { registerDemandTools } from '#layers/terminal/server/mcp/demand'
 import { registerExposureTools } from '#layers/terminal/server/mcp/exposure'
 import { registerFeedTools } from '#layers/terminal/server/mcp/feed'
@@ -15,6 +15,7 @@ import { registerOperationsTools } from '#layers/terminal/server/mcp/operations'
 import { registerPriceTools } from '#layers/terminal/server/mcp/prices'
 import { registerSignalTools } from '#layers/terminal/server/mcp/signals'
 import { registerThesisTools } from '#layers/terminal/server/mcp/theses'
+import { registerUtilizationTools } from '#layers/terminal/server/mcp/utilization'
 
 export const MCP_TOOLS: readonly ((kit: McpKit) => void)[] = [
   registerAlertTools,
@@ -24,6 +25,7 @@ export const MCP_TOOLS: readonly ((kit: McpKit) => void)[] = [
   registerDemandTools,
   registerFilingTools,
   registerExposureTools,
+  registerUtilizationTools,
   registerComputeTools,
   registerThesisTools,
   registerSignalTools,

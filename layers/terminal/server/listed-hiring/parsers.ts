@@ -4,7 +4,7 @@
 
 import { classifyRole, type BoardPlatform, type RoleClass } from '../../shared/utils/listed-hiring'
 import { all, field, locationOf } from '../pipeline/parsers/hiring/google-careers'
-import { decodeEntities } from '../pipeline/parsers/disclosures/html-text'
+import { decodeEntities } from '#layers/core/server/pipeline/parsers/html-text'
 
 export interface ListedRole {
   job_id: string

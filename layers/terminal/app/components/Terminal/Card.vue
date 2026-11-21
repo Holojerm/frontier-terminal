@@ -4,7 +4,7 @@
 // a count — then the body, then the sources. The heading is `h3` under a
 // panel and `h2` where the card sits directly under the page title.
 
-import type { Citation } from '../../types/terminal-ui'
+import type { Citation } from '#layers/core/app/types/terminal-ui'
 
 withDefaults(
   defineProps<{

@@ -6,7 +6,7 @@
 // needs the fields the headline did not mention as much as the ones it did.
 
 import type { ChangeDetailView } from '../../../shared/utils/terminal-types'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 defineProps<{ change: ChangeDetailView }>()
 

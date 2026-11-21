@@ -3,10 +3,10 @@
 // first seen and whether it changed a limit. The limits themselves are on
 // each lab's page (TerminalLimitsTable); this is the capacity view's index.
 
-import { count } from '../../../shared/utils/terminal-format'
-import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
+import { count } from '#layers/core/shared/utils/terminal-format'
+import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import type { LimitsData } from '../../../shared/utils/recipe-views'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const stamps = useStamps()
 

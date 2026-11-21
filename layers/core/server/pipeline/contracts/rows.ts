@@ -69,7 +69,7 @@ export const entityTypeEnum = z.enum([
   'guidance',
   'guidance_check',
   // 'gpu_price': the equal-weight H100 or B200 rental median on two reads
-  // seven days apart (layers/terminal/server/pipeline/gpu-median-floor.ts).
+  // seven days apart (layers/compute/server/pipeline/gpu-median-floor.ts).
   // Written only as the change its alert cites; the prices live in
   // recipe_observations.
   'gpu_price',

@@ -24,7 +24,7 @@
 
 import { inArray } from 'drizzle-orm'
 
-import { compactUsd } from '../../shared/utils/terminal-format'
+import { compactUsd } from '#layers/core/shared/utils/terminal-format'
 import type { ExposureTicker } from '../../shared/utils/terminal-exposure'
 
 import * as tables from '#server/db/schema'
@@ -35,7 +35,7 @@ import {
   contentHash,
   type Provider,
 } from '#layers/core/server/pipeline/contracts'
-import type { RawReader } from '../pipeline/judge/class-map'
+import type { RawReader } from '#layers/core/server/pipeline/raw'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import {
   GUIDANCE_MEASURES,

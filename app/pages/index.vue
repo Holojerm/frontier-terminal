@@ -9,7 +9,7 @@
 // nothing else. Fourteen cached endpoints, fetched in parallel on the server.
 
 import type { ListedData } from '#layers/terminal/shared/utils/listed'
-import type { UtilizationData } from '#layers/terminal/shared/utils/recipe-views'
+import type { UtilizationData } from '#layers/compute/shared/utils/compute-views'
 import { LABS } from '#layers/terminal/shared/utils/terminal-lab-summary'
 import type {
   DisclosuresData,

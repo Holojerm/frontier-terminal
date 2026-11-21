@@ -4,7 +4,7 @@
 // its provenance. The Atom feed and every list link here.
 
 import { DESCRIPTION_MAX } from '#shared/utils/seo-bounds'
-import { readableEdgarNames } from '../../../shared/utils/terminal-format'
+import { readableEdgarNames } from '#layers/core/shared/utils/terminal-format'
 import { alertTier } from '../../../shared/utils/terminal-tiers'
 import type { AlertDetailData } from '../../../shared/utils/terminal-types'
 

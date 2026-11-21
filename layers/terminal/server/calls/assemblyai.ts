@@ -18,7 +18,7 @@
 // - disfluencies off, so a quote reads as spoken without the fillers.
 // Word timestamps come with every transcript; we keep each sentence's start.
 
-import { LAB_DISPLAY } from '../../shared/utils/terminal-labs'
+import { LAB_DISPLAY } from '../../../core/shared/utils/lab-names'
 
 export const ASSEMBLYAI_API = 'https://api.assemblyai.com'
 export const SPEECH_MODEL = 'assemblyai-stt-3-7'

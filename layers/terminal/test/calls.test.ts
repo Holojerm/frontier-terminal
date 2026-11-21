@@ -57,7 +57,7 @@ import {
   spokenSentences,
 } from '../server/calls/text'
 import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
-import { decoded, pdfPages } from '../server/power/pdf-text'
+import { decoded, pdfPages } from '#layers/core/server/pipeline/pdf-text'
 import { queryCallGuidance } from '../server/utils/terminal-call-guidance'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'

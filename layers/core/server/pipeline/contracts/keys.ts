@@ -33,6 +33,12 @@ export function recommendationKey(provider: Provider, klass: string): string {
   return `recommendation:${provider}:${klass}`
 }
 
+/** The accession number in an EDGAR archive URL, dashed, or null. */
+export function accessionOf(url: string): string | null {
+  const m = /\/Archives\/edgar\/data\/\d+\/(\d{10})(\d{2})(\d{6})\//.exec(url)
+  return m ? `${m[1]}-${m[2]}-${m[3]}` : null
+}
+
 export function filingKey(accessionNo: string): string {
   return `filing:${accessionNo}`
 }

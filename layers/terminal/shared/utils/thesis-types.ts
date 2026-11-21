@@ -2,7 +2,7 @@
 // GET /api/theses payload built from them. Shared so a thesis page renders
 // the same types the server computes.
 
-import type { CompanyId } from './companies'
+import type { CompanyId } from '../../../core/shared/utils/companies'
 import type { LabId, Stamp } from './terminal-types'
 
 export type ClaimStatus = 'holding' | 'weakening' | 'broken' | 'unresolved'

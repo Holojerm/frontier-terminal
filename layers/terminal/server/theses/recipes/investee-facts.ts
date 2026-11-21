@@ -14,7 +14,7 @@
 // Amazon's marks follow observable prices, so they are not Anthropic's
 // valuation (docs/source-audit.md, 2026-11-04).
 
-import type { Observation, Recipe } from './contract'
+import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 
 interface Context {
   dims: [string, string][]

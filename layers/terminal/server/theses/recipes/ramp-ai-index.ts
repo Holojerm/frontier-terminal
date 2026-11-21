@@ -11,7 +11,7 @@
 // states no license, so only these monthly rates are kept, never the
 // industry, size or state tables (docs/source-audit.md, 2026-11-04).
 
-import type { Observation, Recipe } from './contract'
+import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 
 interface MonthRow {
   date_month: string

@@ -4,7 +4,7 @@
 // time in the payload. Anthropic and xAI publish no feed (sources.yaml cut).
 
 import { contentHashOfText } from '#layers/core/server/pipeline/contracts'
-import type { Observation, Recipe } from '../../theses/recipes/contract'
+import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 
 /** Posts older than this are not kept: the track record starts 2026-09-08 and looks 7 days back. */
 export const NEWSROOM_FROM = '2026-08-01'

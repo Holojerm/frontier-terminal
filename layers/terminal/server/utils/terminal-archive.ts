@@ -16,12 +16,7 @@ import type {
   PriceReach,
   PriceRowView,
 } from '../../shared/utils/terminal-types'
-import {
-  ARCHIVE_ERAS,
-  ARCHIVE_FROM,
-  ARCHIVE_GAPS,
-  ARCHIVE_NOT_COVERED,
-} from '../pipeline/archive/eras'
+import { ARCHIVE_ERAS, ARCHIVE_GAPS, ARCHIVE_NOT_COVERED } from '../pipeline/archive/eras'
 import {
   HIRING_ARCHIVE_ERAS,
   HIRING_ARCHIVE_GAPS,
@@ -32,9 +27,9 @@ import {
 } from '../pipeline/archive/hiring-eras'
 import type { ArchiveAxis } from '../pipeline/archive/rows'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
-import { parsedOn } from '#layers/core/server/utils/archive-floor'
+import { parsedOn, ARCHIVE_FROM, archiveSourceId } from '#layers/core/server/utils/archive-floor'
 import { inCluster, type DepartmentCluster } from './terminal-clusters'
-import { archiveSourceId, type ArchivedPrice } from './terminal-history'
+import type { ArchivedPrice } from './terminal-history'
 import { byString, num, parseJson, str } from '#layers/core/server/utils/terminal-json'
 import {
   HIRING_SOURCES,

@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import powerSites from '../server/curated/power-sites.json?raw'
+import powerSites from '#layers/compute/server/curated/power-sites.json?raw'
 import suppliers from '../server/curated/suppliers.json?raw'
 import { DOWNLOAD_SERIES } from '../server/theses/download-series'
 import { BENCHMARKS, MARKET_SYMBOLS } from '../server/signals/market'

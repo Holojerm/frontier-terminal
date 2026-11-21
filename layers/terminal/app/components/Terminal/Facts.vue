@@ -3,7 +3,7 @@
 // sets them in columns, for a header block; `list` sets one pair per line,
 // for the computed facts under a reading. A `#<key>` slot replaces a value.
 
-import type { Fact } from '../../types/terminal-ui'
+import type { Fact } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{
   items: Fact[]

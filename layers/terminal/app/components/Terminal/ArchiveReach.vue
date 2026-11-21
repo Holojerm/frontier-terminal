@@ -5,9 +5,9 @@
 // or board. A lab with no archived history says why instead of showing an
 // empty span.
 
-import { labName } from '../../../shared/utils/terminal-labs'
+import { labName } from '#layers/core/shared/utils/lab-names'
 import type { ArchiveReach } from '../../../shared/utils/terminal-types'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const watchlist = useWatchlist()
 

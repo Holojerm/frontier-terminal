@@ -5,15 +5,12 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import * as schema from '~~/server/db/schema'
 import curated from '../server/curated/suppliers.json'
 import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
-import { contains, figureWritten, supplierExcerpts } from '../server/suppliers/excerpts'
+import { figureWritten, supplierExcerpts } from '../server/suppliers/excerpts'
+import { contains } from '#layers/core/server/pipeline/document-text'
+import { accessionOf } from '#layers/core/server/pipeline/contracts/keys'
 import { periodOf, runSupplierReads, supplierDocuments } from '../server/suppliers/ingest'
 import { applySupplierReadings, checkPassage, supplierReview } from '../server/suppliers/review'
-import {
-  accessionOf,
-  currentPassages,
-  seedHandPassages,
-  suppliersStamp,
-} from '../server/suppliers/store'
+import { currentPassages, seedHandPassages, suppliersStamp } from '../server/suppliers/store'
 import { querySuppliers } from '../server/utils/terminal-suppliers'
 
 // The suppliers reader end to end on a made-up filer history: the hand-read

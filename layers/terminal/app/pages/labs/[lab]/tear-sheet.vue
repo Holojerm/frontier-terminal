@@ -17,8 +17,8 @@ import {
   LICENSE_WINDOW_DAYS,
   attributionLine,
 } from '#shared/utils/license'
-import { readableEdgarNames } from '../../../../shared/utils/terminal-format'
-import { LAB_SITE } from '../../../../shared/utils/terminal-labs'
+import { readableEdgarNames } from '#layers/core/shared/utils/terminal-format'
+import { LAB_SITE } from '#layers/core/shared/utils/lab-names'
 import { isLab, labPath, tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
 import { alertPath } from '../../../../shared/utils/terminal-tiers'
 import type { ExposureData } from '../../../../shared/utils/terminal-exposure'

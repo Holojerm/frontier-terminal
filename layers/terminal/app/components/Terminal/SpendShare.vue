@@ -6,9 +6,9 @@
 // could not price named rather than shown at zero. Third-party channel,
 // list price, disclosed as both.
 
-import { sharePct } from '../../../shared/utils/terminal-format'
+import { sharePct } from '#layers/core/shared/utils/terminal-format'
 import type { SpendData, SpendModel, SpendProviderView } from '../../../shared/utils/terminal-types'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const watchlist = useWatchlist()
 

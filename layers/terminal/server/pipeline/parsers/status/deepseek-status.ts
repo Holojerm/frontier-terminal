@@ -4,7 +4,7 @@ import {
   type IncidentRow,
   type Provenance,
 } from '#layers/core/server/pipeline/contracts'
-import { decodeEntities, textOf } from '../disclosures/html-text'
+import { decodeEntities, textOf } from '#layers/core/server/pipeline/parsers/html-text'
 import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
 
 // deepseek-status — status.deepseek.com/history.rss, the RSS history of

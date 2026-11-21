@@ -20,9 +20,9 @@ import { recordOpsEvent } from '#server/utils/ops'
 import { filedFactsSkip, runFiledFacts } from '../../exposure/ingest'
 import { createFetcher } from '#layers/core/server/pipeline/fetch'
 import { unstorageLockStore } from '#layers/core/server/pipeline/lock'
-import { blobRawReader } from '../../pipeline/judge/class-map'
-import { blobRawStore, runPoll } from '../../pipeline/poll'
-import { paceSec } from '../../pipeline/sec-pace'
+import { blobRawReader, blobRawStore } from '#layers/core/server/pipeline/raw'
+import { runPoll } from '../../pipeline/poll'
+import { paceSec } from '#layers/core/server/pipeline/sec-pace'
 import { warmAfterPoll } from '#layers/core/server/utils/cache-warm-task'
 import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
@@ -35,7 +35,7 @@ const task = defineTask({
   async run({ context }) {
     const config = useRuntimeConfig()
     // One paced fetcher for the tick, so the SEC spacing counts the poll's
-    // feeds and the filed facts together (pipeline/sec-pace.ts).
+    // feeds and the filed facts together (layers/core/server/pipeline/sec-pace.ts).
     const fetcher = paceSec(
       createFetcher({
         secContactEmail: config.secContactEmail,

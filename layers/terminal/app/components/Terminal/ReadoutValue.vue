@@ -4,7 +4,7 @@
 // stated gap. The figure's title names the source host and fetch instant, so
 // it is one hover from where it came from; the lab page cites it in full.
 
-import { hostOf } from '../../../shared/utils/terminal-format'
+import { hostOf } from '#layers/core/shared/utils/terminal-format'
 import type { ReadoutCell } from '../../utils/readout'
 
 const stamps = useStamps()

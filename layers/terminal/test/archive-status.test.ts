@@ -1,6 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-import { ARCHIVE_FROM } from '../server/pipeline/archive/eras'
+import { ARCHIVE_FROM } from '#layers/core/server/utils/archive-floor'
 import { statusRows } from '../server/pipeline/archive/rows'
 import {
   OPENAI_INCIDENTIO_FROM,

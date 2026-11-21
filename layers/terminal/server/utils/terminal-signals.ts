@@ -15,9 +15,9 @@ import {
   type SignalStat,
   type SignalsData,
 } from '../../shared/utils/signals'
-import { GRID_AREAS } from '../../shared/utils/grid-load'
-import { PRINT_ENTITIES } from '../../shared/utils/prints'
-import { labName } from '../../shared/utils/terminal-labs'
+import { GRID_AREAS } from '#layers/compute/shared/utils/grid-load'
+import { PRINT_ENTITIES } from '#layers/compute/shared/utils/prints'
+import { labName } from '#layers/core/shared/utils/lab-names'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { forwardCallViews } from '../signals/forward-calls'
 import { SIGNALS, sourceLabel } from '../signals/registry'

@@ -23,7 +23,7 @@
 // filed-fact rule (alerts.ts) runs over each filer that gained facts, and the
 // guidance rule (guidance-alerts.ts) over each that gained facts or guidance.
 //
-// Every request goes to SEC, under its fair-access limit (pipeline/sec-pace.ts).
+// Every request goes to SEC, under its fair-access limit (layers/core/server/pipeline/sec-pace.ts).
 // When SEC answers 429 the run stops fetching: the rest of the run is deferred,
 // the 429 is stored as a failed read so the next runs sit out the cooldown
 // (pipeline/rate-limit.ts, a longer Retry-After extends it), and the tick
@@ -40,11 +40,10 @@ import {
   type FetchOutcome,
   type SourceFetcher,
 } from '#layers/core/server/pipeline/fetch'
-import type { RawReader } from '../pipeline/judge/class-map'
+import type { RawReader, RawStore } from '#layers/core/server/pipeline/raw'
 import { parseCikWhitelistBlock } from '../pipeline/parsers/sec/whitelist'
 import type { PollOutcome } from '../pipeline/poll'
 import { cooldownEndsAt, isRateLimitRun } from '#layers/core/server/pipeline/rate-limit'
-import type { RawStore } from '../pipeline/refresh'
 import type { FetchSource } from '#layers/core/server/pipeline/sources'
 import {
   chunk,

@@ -11,6 +11,12 @@ export interface Prov {
   failing_since?: string
 }
 
+/** A recipe-read figure's citation: which recipe, labelled for a reader. */
+export interface RecipeCitation extends Prov {
+  recipe_id: string
+  label: string
+}
+
 export type ProviderId =
   | 'openai'
   | 'anthropic'

@@ -6,7 +6,7 @@
 // hydrates one button and never the zone list.
 
 import { LABS } from '../../../shared/utils/terminal-lab-summary'
-import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
+import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import { DEFAULTS, browserZone, type ReaderPrefs } from '../../composables/useReaderPrefs'
 
 const colorMode = useColorMode()

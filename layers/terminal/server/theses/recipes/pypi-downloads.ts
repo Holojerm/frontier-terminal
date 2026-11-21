@@ -5,8 +5,8 @@
 // to go to BigQuery instead, which a handful of packages a day is not.
 // CI installs count like people, so read the trend, not the level.
 
-import type { CompanyId } from '../../../shared/utils/companies'
-import type { Observation, Recipe } from './contract'
+import type { CompanyId } from '#layers/core/shared/utils/companies'
+import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 
 export function extractPypiDownloads(body: string, pkg: string): Observation[] {
   const doc = JSON.parse(body) as {

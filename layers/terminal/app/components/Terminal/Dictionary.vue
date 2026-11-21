@@ -6,7 +6,7 @@
 // section; `open` is the list of open tables, so the page can open one too.
 
 import type { DataDictionary, DictionaryColumn } from '../../../shared/utils/terminal-types'
-import type { Fact, TableColumn } from '../../types/terminal-ui'
+import type { Fact, TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ dictionary: DataDictionary }>()
 const open = defineModel<string[]>('open', { default: () => [] })

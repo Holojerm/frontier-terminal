@@ -6,7 +6,7 @@
 // parent, by filing, or by site), with counts for that set. No `as_of`: two of
 // the three have no point-in-time read.
 
-import { powerSitesStamp } from '../power/stamp'
+import { powerSitesStamp } from '#layers/compute/server/power/stamp'
 import { suppliersStamp } from '../suppliers/store'
 import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'

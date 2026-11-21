@@ -8,8 +8,8 @@
 // `by_key` and `by_lab` breakdowns, a year-earlier base, a trailing window,
 // and the Compute thesis's flagship prices and GPU medians.
 
-import { companyName, gpuProviderName } from './companies'
-import { absoluteStamp, compactUsd, count, money } from './terminal-format'
+import { companyName, gpuProviderName } from '../../../core/shared/utils/companies'
+import { absoluteStamp, compactUsd, count, money } from '../../../core/shared/utils/terminal-format'
 import type { PublicPage } from '#shared/utils/site'
 import type {
   ClaimStatus,
@@ -362,10 +362,6 @@ function computeRows(d: Record<string, unknown>): DetailRow[] {
   if (typeof d.void_reason === 'string') rows.push({ label: 'Not counted', value: d.void_reason })
   return rows
 }
-
-/** 'Oct 8' for a YYYY-MM-DD chart tick. */
-export const dayLabel = (date: string) =>
-  absoluteStamp(`${date}T00:00:00Z`).replace(/ \d\d:\d\dZ$/, '')
 
 // ---- judged facts ------------------------------------------------------------
 

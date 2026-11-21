@@ -1,5 +1,5 @@
 import type { AlertSeverity } from '../terminal-tiers'
-import type { ProviderId, Stamp } from '#layers/core/shared/utils/terminal-types/common'
+import type { ProviderId, Stamp } from '../../../../core/shared/utils/terminal-types/common'
 
 /**
  * Where one side of an alert's track record stands. `matched` is the only

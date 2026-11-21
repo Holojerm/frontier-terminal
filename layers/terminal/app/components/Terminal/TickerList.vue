@@ -4,7 +4,7 @@
 // and the explanation and cited rows live there. Provenance still travels on
 // every line, because a minor-change line is a datum too.
 
-import { readableEdgarNames } from '../../../shared/utils/terminal-format'
+import { readableEdgarNames } from '#layers/core/shared/utils/terminal-format'
 import { alertPath } from '../../../shared/utils/terminal-tiers'
 import type { AlertView } from '../../../shared/utils/terminal-types'
 

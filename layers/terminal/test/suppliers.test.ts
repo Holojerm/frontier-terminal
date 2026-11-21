@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { comparable, pageText } from '../server/utils/quote-match'
+import { comparable, pageText } from '#layers/core/server/utils/quote-match'
 import curated from '../server/curated/suppliers.json'
 import { buildSuppliers } from '../server/utils/terminal-suppliers'
 import { curatedSuppliers, supplierFigureText, type SupplierRow } from '../shared/utils/suppliers'

@@ -2,7 +2,7 @@
 // on each run's date. A board is a current state, not a history, so the
 // series starts on the first run and grows a point per day.
 
-import type { Recipe } from './contract'
+import type { Recipe } from '#layers/core/server/recipes/contract'
 
 export function extractDepartments(body: string, ctx: { date: string }) {
   const doc = JSON.parse(body) as { departments?: { id: number; name: string; jobs?: unknown[] }[] }

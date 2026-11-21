@@ -1,6 +1,6 @@
 import { and, eq, inArray, lt, sql } from 'drizzle-orm'
 
-import { LAB_DISPLAY } from '../../shared/utils/terminal-labs'
+import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 
 import * as tables from '#server/db/schema'
 import {

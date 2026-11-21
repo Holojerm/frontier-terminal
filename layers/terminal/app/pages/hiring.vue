@@ -5,16 +5,16 @@
 // cut and xAI's board carries its entity-blend caveat, both stated in the
 // by-lab table the overview leads with.
 
-import { boardLabel, count, signed } from '../../shared/utils/terminal-format'
-import { dayLabel } from '../../shared/utils/thesis-format'
+import { boardLabel, count, signed, dayLabel } from '#layers/core/shared/utils/terminal-format'
+import type { DataCentersData } from '#layers/compute/shared/utils/compute-views'
 import type {
   ArchivedHiringPoint,
   HiringHistoryData,
   HiringHistoryProvider,
 } from '../../shared/utils/terminal-types'
-import type { DataCentersData, PayData } from '../../shared/utils/recipe-views'
+import type { PayData } from '../../shared/utils/recipe-views'
 import type { ListedHiringData } from '../../shared/utils/listed-hiring'
-import type { TableColumn } from '../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const watchlist = useWatchlist()
 

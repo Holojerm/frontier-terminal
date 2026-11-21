@@ -1,5 +1,5 @@
-import type { Stamp } from '#layers/core/shared/utils/terminal-types/common'
-import type { TableCounts } from '#layers/core/shared/utils/terminal-types/coverage'
+import type { Stamp } from '../../../../core/shared/utils/terminal-types/common'
+import type { TableCounts } from '../../../../core/shared/utils/terminal-types/coverage'
 import type { AlertView } from './alerts'
 
 /**

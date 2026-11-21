@@ -7,7 +7,7 @@
 import { desc, eq, gte, max, min } from 'drizzle-orm'
 
 import { medianOf } from '../../shared/utils/terminal-reliability'
-import { LAB_DISPLAY } from '../../shared/utils/terminal-labs'
+import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import type {
   LabId,
   ProbeDayView,

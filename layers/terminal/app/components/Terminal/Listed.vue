@@ -13,11 +13,11 @@ import {
   listedTieText,
   type ListedData,
 } from '../../../shared/utils/listed'
-import { count } from '../../../shared/utils/terminal-format'
+import { count } from '#layers/core/shared/utils/terminal-format'
 import type { ListedHiringData } from '../../../shared/utils/listed-hiring'
-import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
+import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import type { LabId } from '../../../shared/utils/terminal-types'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ data: ListedData; lab?: LabId | readonly [LabId, LabId] }>()
 

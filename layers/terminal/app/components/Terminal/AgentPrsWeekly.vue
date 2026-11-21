@@ -8,10 +8,10 @@
 // and the later series' end dot marks where it happens.
 
 import { newestFullWeek, weekColumns, weekValues } from '../../../shared/utils/adoption-weeks'
-import { compactCount, count } from '../../../shared/utils/terminal-format'
-import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
+import { compactCount, count } from '#layers/core/shared/utils/terminal-format'
+import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import type { AdoptionData } from '../../../shared/utils/recipe-views'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ agents: AdoptionData['agent_prs']; caveat: string }>()
 

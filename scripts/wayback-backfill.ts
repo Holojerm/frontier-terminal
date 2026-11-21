@@ -39,7 +39,7 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 import { ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/eras'
-import { GPU_ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/gpu-eras'
+import { GPU_ARCHIVE_ERAS } from '../layers/compute/server/pipeline/archive/gpu-eras'
 import { HIRING_ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/hiring-eras'
 import { LIMITS_ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/limits-eras'
 import { STATUS_ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/status-eras'

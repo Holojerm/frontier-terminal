@@ -2,7 +2,7 @@ import { recordOpsEvent } from '#server/utils/ops'
 import type { PollScope } from '#layers/core/server/pipeline/contracts'
 import { withPollLock, type LockRetry, type LockStore } from '#layers/core/server/pipeline/lock'
 import { manifestFixtures } from '#layers/core/server/pipeline/parsers/fixture-provenance'
-import { runRefresh, type RawStore, type RefreshDeps, type RefreshReport } from './refresh'
+import { runRefresh, type RefreshDeps, type RefreshReport } from './refresh'
 import { isRegistrationSource, isSurveyInstant, sourceIdsForScope } from './scopes'
 import { deriveSources } from './derived'
 import { includeSources } from '#layers/core/server/pipeline/sources'
@@ -42,17 +42,6 @@ export type PollOutcome =
   | { status: 'ran'; result: RefreshReport }
   | { status: 'skipped'; heldBy: string }
   | { status: 'yielded'; to: 'survey' }
-
-/** NuxtHub's `blob` (or anything with its put signature) as a RawStore. */
-export function blobRawStore(blob: {
-  put(pathname: string, body: string, options?: { contentType?: string }): Promise<unknown>
-}): RawStore {
-  return {
-    put: async (key, body, contentType) => {
-      await blob.put(key, body, { contentType })
-    },
-  }
-}
 
 export async function runPoll(scope: PollScope, deps: PollDeps): Promise<PollOutcome> {
   const { lock, surveyLockRetry, ...refreshDeps } = deps

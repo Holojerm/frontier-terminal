@@ -189,9 +189,9 @@ enabled = true
 #                   bulk:build —the bulk feed's gzipped CSVs and Parquet files in R2, built once a
 #                   UTC day and resumed hourly (layers/core/server/utils/terminal-bulk.ts)
 #                   prints:read — the Taiwan monthly revenue feeds, TSMC's revenue 6-Ks and
-#                   Korea Customs Service's export releases (layers/terminal/server/prints/ingest.ts)
+#                   Korea Customs Service's export releases (layers/compute/server/prints/ingest.ts)
 #   "29 5 * * TUE"  power:verify — re-reads each utility, regulator and company page the
-#                   power-sites table cites (layers/terminal/server/power/verify.ts)
+#                   power-sites table cites (layers/compute/server/power/verify.ts)
 #   "7 * * * *"     probes:latency — one timed streaming request per lab's flagship model
 #                   (layers/terminal/server/pipeline/probes/), alone in its invocation
 #   "40 6 * * *"    signals:prices — Databento daily closes once EQUS.SUMMARY has the US session,

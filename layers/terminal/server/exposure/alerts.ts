@@ -15,7 +15,7 @@
 // `critical` for a series' first point (a filer names a lab in a new line) or
 // when a commitment or stake moves CRITICAL_MOVE or more.
 
-import { compactUsd } from '../../shared/utils/terminal-format'
+import { compactUsd } from '#layers/core/shared/utils/terminal-format'
 import type { ExposurePoint, ExposureSeries } from '../../shared/utils/terminal-exposure'
 import {
   AlertRow,

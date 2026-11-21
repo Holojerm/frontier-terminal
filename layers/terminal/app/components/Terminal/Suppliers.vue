@@ -9,11 +9,11 @@ import {
   SUPPLIER_LAYER_LABEL,
   SUPPLIER_RELATION_LABEL,
   supplierFigureText,
-  type SupplierLayer,
   type SupplierShare,
   type SuppliersData,
 } from '../../../shared/utils/suppliers'
-import type { TableColumn } from '../../types/terminal-ui'
+import type { SupplierLayer } from '#layers/core/shared/utils/supplier-layers'
+import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const stamps = useStamps()
 

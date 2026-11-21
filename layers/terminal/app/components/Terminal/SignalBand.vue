@@ -4,7 +4,7 @@
 // change counts by axis, then an explicit quiet state — a terminal that
 // cannot say "nothing moved" is a terminal you have to re-read every morning.
 
-import { readableEdgarNames } from '../../../shared/utils/terminal-format'
+import { readableEdgarNames } from '#layers/core/shared/utils/terminal-format'
 import { alertPath, INFO_TIER_LABEL } from '../../../shared/utils/terminal-tiers'
 import type { OverviewData } from '../../../shared/utils/terminal-types'
 
