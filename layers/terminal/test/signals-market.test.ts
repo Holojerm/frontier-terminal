@@ -166,4 +166,57 @@ describe('pullMarket', () => {
       'Databento XNAS.ITCH 402: Insufficient credits.',
     ])
   })
+
+  it('retries a gateway timeout, and gives up after the last retry', async () => {
+    let dailyCalls = 0
+    const waits: number[] = []
+    const fetcher = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).includes('metadata')) return Response.json({ end: '2024-07-16T00:00:00Z' })
+      const body = new URLSearchParams(String(init?.body))
+      if (body.get('dataset') === 'EQUS.SUMMARY') {
+        dailyCalls++
+        return dailyCalls === 1
+          ? new Response('error code: 504', { status: 504 })
+          : new Response(DAILY)
+      }
+      return new Response('error code: 504', { status: 504 })
+    }) as typeof fetch
+    const report = await pullMarket(
+      db,
+      {
+        apiKey: 'k',
+        fetch: fetcher,
+        now: new Date('2024-07-16T07:00:00Z'),
+        sleep: async (ms) => {
+          waits.push(ms)
+        },
+      },
+      { symbols: ['AVGO'] },
+    )
+    expect(dailyCalls).toBe(2)
+    expect(report.daily.rows).toBe(2)
+    // The backfill kept failing: one try and two retries, then reported.
+    expect(report.failed.map((f) => f.detail)).toEqual(['Databento XNAS.ITCH 504: error code: 504'])
+    expect(waits).toEqual([2_000, 2_000, 8_000])
+  })
+
+  it('splits a first pull of many symbols into batches', async () => {
+    const batches: number[] = []
+    const fetcher = (async (input: RequestInfo | URL, init?: RequestInit) => {
+      if (String(input).includes('metadata')) return Response.json({ end: '2024-07-16T00:00:00Z' })
+      const body = new URLSearchParams(String(init?.body))
+      if (body.get('dataset') === 'EQUS.SUMMARY')
+        batches.push(body.get('symbols')!.split(',').length)
+      return new Response(
+        'ts_event,rtype,publisher_id,instrument_id,open,high,low,close,volume,symbol\n',
+      )
+    }) as typeof fetch
+    const symbols = Array.from({ length: 30 }, (_, i) => `S${i}`)
+    await pullMarket(
+      db,
+      { apiKey: 'k', fetch: fetcher, now: new Date('2024-07-16T07:00:00Z'), sleep: async () => {} },
+      { symbols, backfillLimit: 0 },
+    )
+    expect(batches).toEqual([12, 12, 6])
+  })
 })

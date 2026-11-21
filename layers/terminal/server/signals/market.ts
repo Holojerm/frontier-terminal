@@ -30,6 +30,8 @@ export const ITCH_FROM = '2018-05-01'
 export const ITCH_THROUGH = '2024-06-30'
 /** Symbols backfilled a run: about 1,500 sessions each, so a run stays well inside a cron invocation. */
 export const BACKFILL_PER_RUN = 16
+/** Symbols per request on a symbol's first daily pull, which asks for the whole dataset. */
+export const FIRST_PULL_BATCH = 12
 /** Sessions re-pulled on each daily run, for prints revised after the fact. */
 export const REPULL_DAYS = 7
 
@@ -151,6 +153,8 @@ export interface MarketDeps {
   apiKey: string
   fetch: typeof fetch
   now: Date
+  /** Between retries; tests pass a no-op. Defaults to setTimeout. */
+  sleep?: (ms: number) => Promise<void>
 }
 
 // ── Databento ───────────────────────────────────────────────────────────────
@@ -214,28 +218,56 @@ async function eachLine(res: Response, onLine: (line: string) => void): Promise<
   onLine(rest)
 }
 
-const post = (deps: Pick<MarketDeps, 'apiKey' | 'fetch'>, path: string, body: URLSearchParams) =>
-  deps.fetch(`${DATABENTO_BASE}/${path}`, {
-    method: 'POST',
-    headers: {
-      Authorization: authHeader(deps.apiKey),
-      'Content-Type': 'application/x-www-form-urlencoded',
-    },
-    body,
-  })
+/** Waits before each retry of a Databento request that failed with a gateway error. */
+export const RETRY_DELAYS_MS = [2_000, 8_000] as const
+
+/**
+ * A request retried on 429 and 5xx. Databento's edge answers a slow query with
+ * a bare 504 that a second try usually clears (2026-11-21: the first run's one
+ * pull failed that way, and the same query from the mini took 3.5 s).
+ */
+async function withRetry(
+  deps: Pick<MarketDeps, 'sleep'>,
+  attempt: () => Promise<Response>,
+): Promise<Response> {
+  let res = await attempt()
+  for (const delay of RETRY_DELAYS_MS) {
+    if (res.status !== 429 && res.status < 500) return res
+    await (deps.sleep ?? ((ms: number) => new Promise((r) => setTimeout(r, ms))))(delay)
+    res = await attempt()
+  }
+  return res
+}
+
+const post = (
+  deps: Pick<MarketDeps, 'apiKey' | 'fetch' | 'sleep'>,
+  path: string,
+  body: URLSearchParams,
+) =>
+  withRetry(deps, () =>
+    deps.fetch(`${DATABENTO_BASE}/${path}`, {
+      method: 'POST',
+      headers: {
+        Authorization: authHeader(deps.apiKey),
+        'Content-Type': 'application/x-www-form-urlencoded',
+      },
+      body,
+    }),
+  )
 
 /**
  * Where a dataset's data ends now, as the ISO instant Databento gives. A
  * request whose end is later is refused (422), so every pull is clamped to it.
  */
 export async function datasetEnd(
-  deps: Pick<MarketDeps, 'apiKey' | 'fetch'>,
+  deps: Pick<MarketDeps, 'apiKey' | 'fetch' | 'sleep'>,
   dataset: string,
   schema: string,
 ): Promise<string> {
-  const res = await deps.fetch(
-    `${DATABENTO_BASE}/metadata.get_dataset_range?${new URLSearchParams({ dataset })}`,
-    { headers: { Authorization: authHeader(deps.apiKey) } },
+  const res = await withRetry(deps, () =>
+    deps.fetch(`${DATABENTO_BASE}/metadata.get_dataset_range?${new URLSearchParams({ dataset })}`, {
+      headers: { Authorization: authHeader(deps.apiKey) },
+    }),
   )
   const text = await res.text()
   if (!res.ok)
@@ -248,7 +280,7 @@ export async function datasetEnd(
 
 /** One timeseries.get_range request as CSV, streamed row by row. Throws with Databento's message, never the key. */
 export async function getRange(
-  deps: Pick<MarketDeps, 'apiKey' | 'fetch'>,
+  deps: Pick<MarketDeps, 'apiKey' | 'fetch' | 'sleep'>,
   q: { dataset: string; symbols: readonly string[]; schema: string; start: string; end: string },
   onBar: (bar: CsvBar) => void,
 ): Promise<void> {
@@ -428,7 +460,11 @@ export async function pullMarket(
   const fresh = symbols.filter((s) => through(s, EQUS_DATASET) === null)
   const known = symbols.filter((s) => through(s, EQUS_DATASET) !== null)
   const groups: { symbols: readonly string[]; start: string }[] = []
-  if (fresh.length) groups.push({ symbols: fresh, start: EQUS_FROM })
+  // A first pull asks for the whole dataset, so it goes in small batches: one
+  // slow batch then fails alone and the rest still land.
+  for (let i = 0; i < fresh.length; i += FIRST_PULL_BATCH) {
+    groups.push({ symbols: fresh.slice(i, i + FIRST_PULL_BATCH), start: EQUS_FROM })
+  }
   if (known.length) {
     const oldest = known.map((s) => through(s, EQUS_DATASET)!).sort()[0]!
     const start = addDays(oldest, -REPULL_DAYS)
