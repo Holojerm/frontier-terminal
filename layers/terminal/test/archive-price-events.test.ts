@@ -6,14 +6,14 @@ import geminiNotes from '~~/fixtures/release-notes/gemini-release-notes.md?raw'
 import openaiChangelog from '~~/fixtures/release-notes/openai-changelog.md?raw'
 import xaiNotes from '~~/fixtures/release-notes/xai-release-notes.md?raw'
 
-import { ARCHIVE_UNTIL } from '../server/pipeline/archive/eras'
+import { ARCHIVE_UNTIL } from '../../pricing/server/pipeline/archive/eras'
 import {
   derivePriceEvents,
   type EventCapture,
   type EventPriceRow,
-} from '../server/pipeline/archive/price-events'
-import releaseNotesJson from '../server/pipeline/archive/release-notes.json'
-import { releaseNotesFile } from '../server/pipeline/archive/release-notes-file'
+} from '../../pricing/server/pipeline/archive/price-events'
+import releaseNotesJson from '../../pricing/server/pipeline/archive/release-notes.json'
+import { releaseNotesFile } from '../../pricing/server/pipeline/archive/release-notes-file'
 import {
   canonicalModel,
   modelNames,
@@ -23,7 +23,7 @@ import {
   parseOpenAiChangelog,
   parseXaiReleaseNotes,
   type ReleaseNote,
-} from '../server/pipeline/archive/release-notes'
+} from '../../pricing/server/pipeline/archive/release-notes'
 import { eventDays, eventStudy, maxWindowDays } from '../server/signals/harness'
 import { addDays, buildPanel } from '../server/signals/market'
 

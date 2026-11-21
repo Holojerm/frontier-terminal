@@ -7,12 +7,13 @@ import { and, eq, inArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { gridMonths, gridWeeks } from '#layers/compute/shared/utils/grid-load'
-import { ARCHIVE_UNTIL } from '../pipeline/archive/eras'
-import { LIMITS_ARCHIVE_ERAS, LIMITS_LIVE_FROM } from '../pipeline/archive/limits-eras'
-import { limitChanges, type LimitChange } from '../pipeline/archive/limit-events'
-import { derivePriceEvents, type ArchivedPriceEvent } from '../pipeline/archive/price-events'
-import releaseNotes from '../pipeline/archive/release-notes.json'
-import type { ReleaseNotesFile } from '../pipeline/archive/release-notes-file'
+import { ARCHIVE_UNTIL } from '#layers/pricing/server/pipeline/archive/eras'
+import { LIMITS_LIVE_FROM } from '#layers/pricing/server/pipeline/archive/limits-eras'
+import type { ArchivedPriceEvent } from '#layers/pricing/server/pipeline/archive/price-events'
+import {
+  archivedLimitChanges,
+  archivedPriceEvents,
+} from '#layers/pricing/server/utils/terminal-price-archive'
 import { PRIMARY_PLACEMENT } from '../pipeline/probes/placement'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { KCS } from '#layers/compute/server/prints/ingest'
@@ -38,83 +39,6 @@ export interface LoadDeps {
 
 /** The first day the live loaders count: the archived price lists end here. */
 const LIVE_FROM = ARCHIVE_UNTIL.slice(0, 10)
-
-/**
- * Launches and price changes the archived price lists show (price-events.ts),
- * before the live record starts. Each keeps its date window, so the harness
- * leaves a loosely dated one out of the short horizons.
- */
-export async function archivedPriceEvents(db: PipelineDb): Promise<ArchivedPriceEvent[]> {
-  const [captures, rows] = await Promise.all([
-    db
-      .select({
-        id: tables.archiveCaptures.id,
-        era: tables.archiveCaptures.era,
-        provider: tables.archiveCaptures.provider,
-        captured_at: tables.archiveCaptures.captured_at,
-        source_url: tables.archiveCaptures.source_url,
-      })
-      .from(tables.archiveCaptures)
-      .where(
-        and(
-          eq(tables.archiveCaptures.axis, 'pricing'),
-          eq(tables.archiveCaptures.status, 'parsed'),
-        ),
-      ),
-    db
-      .select({
-        capture_id: tables.archivedPrices.capture_id,
-        entity_key: tables.archivedPrices.entity_key,
-        payload: tables.archivedPrices.payload,
-      })
-      .from(tables.archivedPrices),
-  ])
-  const file = releaseNotes as ReleaseNotesFile
-  return derivePriceEvents(captures, rows, file.notes, file.coverage).events.filter(
-    (e) => e.date < LIVE_FROM,
-  )
-}
-
-/** The parsed archived copies of the labs' rate-limit pages, oldest first. */
-export async function archivedLimitCopies(db: PipelineDb) {
-  const copies = await db
-    .select({
-      id: tables.archiveCaptures.id,
-      provider: tables.archiveCaptures.provider,
-      era: tables.archiveCaptures.era,
-      captured_at: tables.archiveCaptures.captured_at,
-      source_url: tables.archiveCaptures.source_url,
-    })
-    .from(tables.archiveCaptures)
-    .where(
-      and(eq(tables.archiveCaptures.axis, 'limits'), eq(tables.archiveCaptures.status, 'parsed')),
-    )
-    .orderBy(tables.archiveCaptures.captured_at)
-  const recipes = new Map(LIMITS_ARCHIVE_ERAS.map((e) => [e.id, e.recipe_id]))
-  return copies.flatMap((c) => {
-    const recipe_id = recipes.get(c.era)
-    return recipe_id ? [{ ...c, recipe_id }] : []
-  })
-}
-
-/** Every limit that moved between consecutive archived copies (limit-events.ts). */
-export async function archivedLimitChanges(db: PipelineDb): Promise<LimitChange[]> {
-  const [copies, rows] = await Promise.all([
-    archivedLimitCopies(db),
-    db
-      .select({
-        capture_id: tables.archivedRateLimits.capture_id,
-        recipe_id: tables.archivedRateLimits.recipe_id,
-        key: tables.archivedRateLimits.key,
-        model: tables.archivedRateLimits.model,
-        tier: tables.archivedRateLimits.tier,
-        metric: tables.archivedRateLimits.metric,
-        value: tables.archivedRateLimits.value,
-      })
-      .from(tables.archivedRateLimits),
-  ])
-  return limitChanges(copies, rows, (releaseNotes as ReleaseNotesFile).notes)
-}
 
 const archivedEvent = (e: ArchivedPriceEvent): EventPoint =>
   e.window_days > 0

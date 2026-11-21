@@ -8,11 +8,10 @@ import {
   type PriceRow,
 } from '#layers/core/server/pipeline/contracts'
 import { diff } from '#layers/core/server/pipeline/diff'
+import { normalizePrices, priceTier } from '../../../pricing/server/pipeline/normalize'
 import {
   normalizeFilings,
   normalizeJobs,
-  normalizePrices,
-  priceTier,
   stableStringify,
   type JobRow,
 } from '../../server/pipeline/normalize'

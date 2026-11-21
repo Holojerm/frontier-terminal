@@ -506,3 +506,19 @@ export function periodLabel(days: number): string {
   if (days >= 80) return 'quarter'
   return `${days} days`
 }
+
+/** 'Sep 22, 2026' in UTC. A quoted sentence needs the year a stamp leaves out. */
+export function longDate(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`
+}
+
+/** '$4.00 per million input tokens and $20.00 per million output tokens'; null when neither is set. */
+export function pricePhrase(input: number | null, output: number | null): string | null {
+  const parts = [
+    input === null ? null : `${money(input)} per million input tokens`,
+    output === null ? null : `${money(output)} per million output tokens`,
+  ].filter((p): p is string => p !== null)
+  return parts.length ? parts.join(' and ') : null
+}

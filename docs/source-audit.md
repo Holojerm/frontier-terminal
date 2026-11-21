@@ -493,7 +493,7 @@ DeepSeek's RSS feed gives each incident's start and its newest status, and no en
 
 ## Addendum, 2026-11-04: Internet Archive (API price history before 2026-08-25)
 
-Checked for the price-history backfill (`scripts/wayback-backfill.ts`, eras in `layers/terminal/server/pipeline/archive/eras.ts`). Our own capture starts 2026-08-25. The Wayback Machine holds the labs' own pricing pages from before then. Every CDX listing and capture below was fetched on 2026-11-04 with a User-Agent naming this site, one request at a time, 4 seconds apart.
+Checked for the price-history backfill (`scripts/wayback-backfill.ts`, eras in `layers/pricing/server/pipeline/archive/eras.ts`). Our own capture starts 2026-08-25. The Wayback Machine holds the labs' own pricing pages from before then. Every CDX listing and capture below was fetched on 2026-11-04 with a User-Agent naming this site, one request at a time, 4 seconds apart.
 
 **Terms.** archive.org/about/terms.php is now a script shell, so the terms were read from the Archive's own capture of that page (dated 31 Dec 2014, unchanged since). Access to the Collections is "granted for scholarship and research purposes only". Use must be "limited to noninfringing or fair use under copyright law". Users agree "not to interfere with the work of other users or Archive personnel, servers, or resources", and published research should list the Archive in its bibliography. The Archive claims no license over the pages it holds; they stay the labs'. We take only the price facts each lab printed about its own API. web.archive.org/robots.txt is a 404 and archive.org/robots.txt disallows only `/control/` and `/report/`. A page a site owner excluded isn't replayed, so it never reaches us. The CDX server's documentation (the wayback-cdx-server README in github.com/internetarchive/wayback) states no rate limit, so we pace ourselves and back off on a 429 or 5xx.
 
@@ -526,7 +526,7 @@ Totals on the local run: 171 captures read (2,726 rows, 260 SKU keys, 187 of the
 
 ### Second pass, 2026-11-04: the gaps above, Google, xAI, Mistral, DeepSeek, Alibaba, Moonshot
 
-Same client, same pace and User-Agent, same terms. CDX listings were plain URL queries (one prefix sweep on openai.com/api/pricing hit a 503 and then a 504, and was stopped instead of retried). Every era below has a parser, a trimmed fixture recorded in `fixtures/manifest.json`, and a golden test in `layers/terminal/test/pipeline/wayback-labs.golden.test.ts`. Counts are from the local run, one capture per week of each era.
+Same client, same pace and User-Agent, same terms. CDX listings were plain URL queries (one prefix sweep on openai.com/api/pricing hit a 503 and then a 504, and was stopped instead of retried). Every era below has a parser, a trimmed fixture recorded in `fixtures/manifest.json`, and a golden test in `layers/pricing/test/pipeline/wayback-labs.golden.test.ts`. Counts are from the local run, one capture per week of each era.
 
 | Lab | Era (URL) | Window | Shape | Read | Skipped |
 |---|---|---|---|---|---|
@@ -1094,7 +1094,7 @@ Three backfills of series the terminal already carries, approved by the owner on
 
 ### Launch and price events from the archived price lists
 
-Derived each harness run from `archived_prices` (the Internet Archive backfill above), never stored (`layers/terminal/server/pipeline/archive/price-events.ts`). A launch is a model's first appearance on its lab's list; a price change is a SKU's input price moving between two consecutive copies that both print it. Events end where the live record starts (`ARCHIVE_UNTIL`, 2026-08-25); the live loaders start there.
+Derived each harness run from `archived_prices` (the Internet Archive backfill above), never stored (`layers/pricing/server/pipeline/archive/price-events.ts`). A launch is a model's first appearance on its lab's list; a price change is a SKU's input price moving between two consecutive copies that both print it. Events end where the live record starts (`ARCHIVE_UNTIL`, 2026-08-25); the live loaders start there.
 
 **Dating.** A copy only bounds an event: it happened between the copy before and the copy that shows it, about a week apart at the backfill's cadence. The labs' own release notes date most of them (`sources.yaml › archive_sources › release-notes`; pages committed under `fixtures/release-notes/`, reduced to `release-notes.json` by `bun run release-notes`). A note dates an event when it names the model (one spelling for "Claude 3.5 Sonnet", "Claude Sonnet 3.5" and `claude-3-5-sonnet-20240620`) and falls inside the window, or up to 14 days before it for a price change, since a lab can announce a cut before its page shows it. An event no note dates keeps its window: it is dated at the copy before, and the harness scores it only at horizons the window allows (`maxWindowDays`: within two days for 1 and 5 sessions; up to 14 days at 20 sessions and 42 at 60).
 
@@ -1124,7 +1124,7 @@ Registered: `msft-openai-other-income`, `amzn-anthropic-upward-marks` and `googl
 
 ### Rate limits and usage tiers from Internet Archive copies
 
-`scripts/wayback-backfill.ts --axis limits`; eras in `layers/terminal/server/pipeline/archive/limits-eras.ts`, rows in `archived_rate_limits` keyed as the live `limits-anthropic` recipe keys its own (`sources.yaml › archive_sources › wayback-limits`). Same client, pace, User-Agent and terms as the price backfill. CDX listings read 2026-11-21:
+`scripts/wayback-backfill.ts --axis limits`; eras in `layers/pricing/server/pipeline/archive/limits-eras.ts`, rows in `archived_rate_limits` keyed as the live `limits-anthropic` recipe keys its own (`sources.yaml › archive_sources › wayback-limits`). Same client, pace, User-Agent and terms as the price backfill. CDX listings read 2026-11-21:
 
 | Lab | URL | Copies (months) | Read |
 |---|---|---|---|

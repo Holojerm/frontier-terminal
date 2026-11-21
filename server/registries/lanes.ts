@@ -3,15 +3,19 @@
 // beside its parsers and adds them here. Read-path code that only asks whether
 // a source is a 'set' lane reads set-lanes.ts instead, which imports no parser.
 
+import type { Lane } from '#layers/core/server/pipeline/lanes'
+import { PRICE_DERIVED_LANES, PRICE_LANES } from '#layers/pricing/server/pipeline/lanes'
 import {
   DERIVED_LANES as TERMINAL_DERIVED_LANES,
   LANES as TERMINAL_LANES,
-  type Lane,
 } from '#layers/terminal/server/pipeline/lanes'
 
-export const LANES: Readonly<Record<string, Lane>> = { ...TERMINAL_LANES }
+export const LANES: Readonly<Record<string, Lane>> = { ...PRICE_LANES, ...TERMINAL_LANES }
 
-export const DERIVED_LANES: readonly { prefix: string; lane: Lane }[] = [...TERMINAL_DERIVED_LANES]
+export const DERIVED_LANES: readonly { prefix: string; lane: Lane }[] = [
+  ...TERMINAL_DERIVED_LANES,
+  ...PRICE_DERIVED_LANES,
+]
 
 /** The lane for a source id: a registered one exactly, a derived one by prefix. */
 export function laneFor(sourceId: string): Lane | undefined {

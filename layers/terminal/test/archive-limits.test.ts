@@ -4,13 +4,16 @@ import radio2024 from '~~/fixtures/limits/wayback/anthropic-rate-limits-2024-04.
 import tabs2024 from '~~/fixtures/limits/wayback/anthropic-rate-limits-2024-10.html?raw'
 import tabs2025 from '~~/fixtures/limits/wayback/anthropic-rate-limits-2025-07.html?raw'
 
-import { limitChanges } from '../server/pipeline/archive/limit-events'
-import { LIMITS_ARCHIVE_ERAS, LIMITS_LIVE_FROM } from '../server/pipeline/archive/limits-eras'
+import { limitChanges } from '../../pricing/server/pipeline/archive/limit-events'
+import {
+  LIMITS_ARCHIVE_ERAS,
+  LIMITS_LIVE_FROM,
+} from '../../pricing/server/pipeline/archive/limits-eras'
 import { limitsRows } from '../server/pipeline/archive/rows'
 import {
   parseAnthropicLimitsHtml,
   tierName,
-} from '../server/pipeline/parsers/limits/wayback-anthropic-limits'
+} from '../../pricing/server/pipeline/parsers/limits/wayback-anthropic-limits'
 
 const value = (rows: { key: string; value: number | null }[], key: string) =>
   rows.find((r) => r.key === key)?.value

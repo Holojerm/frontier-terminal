@@ -1,6 +1,8 @@
 import { describe, expect, it } from 'vitest'
 
-import { labLede, longDate, skuLede } from '../shared/utils/terminal-ledes'
+import { skuLede } from '../../pricing/shared/utils/price-ledes'
+import { longDate } from '../../core/shared/utils/terminal-format'
+import { labLede } from '../shared/utils/terminal-ledes'
 import type { LabSummary } from '../shared/utils/terminal-lab-summary'
 import type { PriceHistoryData, PricePoint } from '../shared/utils/terminal-types'
 

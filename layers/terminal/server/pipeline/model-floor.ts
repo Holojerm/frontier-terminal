@@ -10,6 +10,7 @@ import {
   type ChangeRow,
 } from '#layers/core/server/pipeline/contracts'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import { MODEL_FLOOR_RULE } from '#layers/core/server/utils/terminal-asof'
 
 // The model-floor rule: a model slug no vendor catalog in the store has
 // listed before always alerts, with no model in the loop.
@@ -30,7 +31,7 @@ import type { PipelineDb } from '#layers/core/server/pipeline/store'
 // change log is read too: without it a model listed before this rule existed
 // would be announced as new when it came back.
 
-export const MODEL_FLOOR_RULE = 'model-floor' as const
+export { MODEL_FLOOR_RULE }
 
 /** A slug as vendors write them. Anything else is a parser reading a table
  * cell as a name; the judge still sees the row, but no launch is announced. */

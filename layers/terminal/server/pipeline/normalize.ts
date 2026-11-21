@@ -1,7 +1,5 @@
 import {
   AshbyJobRow,
-  EntityRow,
-  contentHash,
   disclosureKey,
   disclosureTimelineKey,
   documentKey,
@@ -15,25 +13,23 @@ import {
   sharesKey,
   statementKey,
   jobKey,
-  modelKey,
   stableStringify,
   rankingKey,
-  recommendationKey,
   revenueKey,
   type DisclosureRow,
+  type EntityRow,
   type DisclosureTimelineRow,
   type FilerRow,
   type FilingRow,
   type IncidentRow,
   type OfferingRow,
   type ProspectusOutput,
-  type PriceRow,
   type Provider,
   type RankingRow,
-  type RecommendationRow,
   type RegistrationDocumentRow,
   type RevenueRow,
 } from '../../../core/server/pipeline/contracts'
+import { collapse, toEntity } from '../../../core/server/pipeline/normalize'
 
 // Normalize: validated parser-output rows -> EntityRow (boundary table,
 // "normalize" = DETERMINISTIC). Pure functions of their inputs: no clock,
@@ -48,53 +44,8 @@ export type JobRow = ReturnType<typeof AshbyJobRow.parse>
 // a change event is reproducible from the stored payloads alone.
 export { stableStringify }
 
-// payload/content_hash cover the row MINUS source_url/fetched_at.
-// Provenance travels in the EntityRow columns instead: hashing fetched_at
-// would mark every row "modified" on every re-fetch even when the source
-// content is byte-identical, poisoning every diff downstream.
-function toEntity(
-  entity_key: string,
-  entity_type: EntityRow['entity_type'],
-  provider: Provider,
-  snapshotId: string,
-  row: Record<string, unknown> & { source_url: string; fetched_at: string },
-): EntityRow {
-  const { source_url, fetched_at, ...content } = row
-  return EntityRow.parse({
-    entity_key,
-    entity_type,
-    provider,
-    snapshot_id: snapshotId,
-    content_hash: contentHash(content),
-    payload: stableStringify(content),
-    source_url,
-    fetched_at,
-  })
-}
-
 export function normalizeJob(row: JobRow, snapshotId: string): EntityRow {
   return toEntity(jobKey(row.provider, row.job_id), 'job', row.provider, snapshotId, row)
-}
-
-// A scheduled price ("$Y starting Jan 1, 2027" — Google's promo strings) is
-// its own SKU row beside the current one, with the same slug and tier. The
-// contract says tier disambiguates promo windows, so the window's start date
-// joins the tier here: the current row keeps the bare key, the scheduled row
-// gets `<tier>@<effective_from>`. When the date arrives and the page drops
-// the promo text, the diff reads as one modified row and one removed row.
-export function priceTier(row: Pick<PriceRow, 'tier' | 'effective_from'>): string | null {
-  if (!row.effective_from) return row.tier
-  return `${row.tier ?? 'standard'}@${row.effective_from}`
-}
-
-export function normalizePrice(row: PriceRow, snapshotId: string): EntityRow {
-  return toEntity(
-    modelKey(row.provider, row.model_slug, priceTier(row)),
-    'model',
-    row.provider,
-    snapshotId,
-    row,
-  )
 }
 
 // FilingRow carries no provider field: EDGAR filers (SPCX, MSFT, ...) are
@@ -119,36 +70,8 @@ export function normalizeIncident(row: IncidentRow, snapshotId: string): EntityR
   )
 }
 
-const byEntityKey = (a: EntityRow, b: EntityRow): number =>
-  a.entity_key < b.entity_key ? -1 : a.entity_key > b.entity_key ? 1 : 0
-
-// SKU dedupe (boundary table, normalize row): byte-identical repeats of one
-// entity_key collapse to a single row; the same key with DIFFERENT content
-// is a parser bug (incomplete tier disambiguation) and must fail loudly
-// rather than silently pick a winner.
-function collapse(rows: EntityRow[]): EntityRow[] {
-  const byKey = new Map<string, EntityRow>()
-  for (const row of rows) {
-    const existing = byKey.get(row.entity_key)
-    if (existing) {
-      if (existing.content_hash !== row.content_hash) {
-        throw new Error(
-          `conflicting rows for entity_key ${row.entity_key}: hashes ${existing.content_hash} vs ${row.content_hash}`,
-        )
-      }
-      continue
-    }
-    byKey.set(row.entity_key, row)
-  }
-  return [...byKey.values()].sort(byEntityKey)
-}
-
 export function normalizeJobs(rows: readonly JobRow[], snapshotId: string): EntityRow[] {
   return collapse(rows.map((row) => normalizeJob(row, snapshotId)))
-}
-
-export function normalizePrices(rows: readonly PriceRow[], snapshotId: string): EntityRow[] {
-  return collapse(rows.map((row) => normalizePrice(row, snapshotId)))
 }
 
 // A ranking row is one (UTC day, model) observation. Its provider is the
@@ -166,26 +89,6 @@ export function normalizeRanking(row: RankingRow, snapshotId: string): EntityRow
 
 export function normalizeRankings(rows: readonly RankingRow[], snapshotId: string): EntityRow[] {
   return collapse(rows.map((row) => normalizeRanking(row, snapshotId)))
-}
-
-// A recommendation row is one mapped matrix cell checked against the page it
-// was transcribed from; `present` is part of the content, so the check
-// flipping is a 'modified' change and an unchanged verdict diffs to nothing.
-export function normalizeRecommendation(row: RecommendationRow, snapshotId: string): EntityRow {
-  return toEntity(
-    recommendationKey(row.provider, row.class),
-    'recommendation',
-    row.provider,
-    snapshotId,
-    row,
-  )
-}
-
-export function normalizeRecommendations(
-  rows: readonly RecommendationRow[],
-  snapshotId: string,
-): EntityRow[] {
-  return collapse(rows.map((row) => normalizeRecommendation(row, snapshotId)))
 }
 
 // One row per resolved lab, keyed by provider: a second resolving hit for

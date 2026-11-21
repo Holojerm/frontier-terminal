@@ -1,13 +1,6 @@
 import { cikResolvedAlerts, periodicFloorAlerts, s1FloorAlerts } from './filing-floors'
-import {
-  contentHash,
-  type AlertRow,
-  type ChangeRow,
-  type EntityRow,
-  type FilingRow,
-  type Provenance,
-  type Provider,
-} from '#layers/core/server/pipeline/contracts'
+import type { FilingRow } from '#layers/core/server/pipeline/contracts'
+import { setLane, type Lane } from '#layers/core/server/pipeline/lanes'
 import {
   normalizeDisclosureTimelines,
   normalizeDisclosures,
@@ -18,9 +11,7 @@ import {
   normalizeOfferings,
   normalizeJobs,
   normalizeProspectusDetails,
-  normalizePrices,
   normalizeRankings,
-  normalizeRecommendations,
   normalizeRevenues,
 } from './normalize'
 import { parseOpenAiMisalignmentReport } from './parsers/disclosures/openai-misalignment-report'
@@ -31,25 +22,10 @@ import { parseMistralAshby } from './parsers/hiring/mistral-ashby'
 import { parseOpenaiAshby } from './parsers/hiring/openai-ashby'
 import { parseXaiGreenhouse } from './parsers/hiring/xai-greenhouse'
 import { parseOpenRouterRankings } from './parsers/openrouter-rankings'
-import { parseAnthropicModelsOverviewMd } from './parsers/pricing/anthropic-models-overview'
-import { parseAnthropicPricingMd } from './parsers/pricing/anthropic-pricing'
-import { parseGoogleModelPage } from './parsers/pricing/google-model-page'
-import { parseGooglePricingPage } from './parsers/pricing/google-pricing'
-import { META_LINE_PAGES, parseMetaModelsMd } from './parsers/pricing/meta-models'
-import { parseMetaPricingMd } from './parsers/pricing/meta-pricing'
-import { parseAlibabaPricingHtml } from './parsers/pricing/alibaba-pricing'
-import { parseDeepseekPricingMd } from './parsers/pricing/deepseek-pricing'
-import { parseMistralModelsMd } from './parsers/pricing/mistral-models'
-import { parseMoonshotModelsMd } from './parsers/pricing/moonshot-models'
-import { parseMistralPricingMd } from './parsers/pricing/mistral-pricing'
-import { parseOpenAiModelsMd } from './parsers/pricing/openai-models'
-import { parseOpenAiModelPage } from './parsers/pricing/openai-model-page'
-import { parseOpenAiPricingMd } from './parsers/pricing/openai-pricing'
-import { parseXaiModelsMd } from './parsers/pricing/xai-models'
 import { COMPANYFACTS_SOURCES, parseEdgarCompanyfacts } from './parsers/sec/edgar-companyfacts'
 import { FTS_SOURCES, parseEdgarFts } from './parsers/sec/edgar-fts'
 import { archivesCik, parseFilingIndex, registrationTarget } from './parsers/sec/filing-index'
-import { resolveFilers, type PendingFilers } from './parsers/sec/pending-filers'
+import { resolveFilers } from './parsers/sec/pending-filers'
 import { SUBMISSIONS_SOURCES, parseEdgarSubmissions } from './parsers/sec/edgar-submissions'
 import { parseProspectus } from './parsers/sec/prospectus'
 import { freshFiling, freshRegistrationKey } from './prospectus-floor'
@@ -59,6 +35,7 @@ import {
   type RevenueFilers,
 } from './parsers/sec/revenue-filers'
 import { parseXbrlSegment, segmentTarget } from './parsers/sec/xbrl-segment'
+import type { CikWhitelist } from './parsers/sec/whitelist'
 import { parseAnthropicStatus } from './parsers/status/anthropic-status'
 import { DEEPSEEK_ATOM, parseDeepseekStatus } from './parsers/status/deepseek-status'
 import { parseGoogleCloudStatus } from './parsers/status/google-cloud-status'
@@ -66,112 +43,16 @@ import { parseMistralStatus } from './parsers/status/mistral-status'
 import { parseOpenaiStatus } from './parsers/status/openai-status'
 import { parseXaiStatus } from './parsers/status/xai-status'
 import { asOfFromDetail } from './as-of'
-import { recommendationRows } from './recommendations'
-import type { ClassEntry } from '../utils/terminal-classes'
-import type { CikWhitelist } from './parsers/sec/whitelist'
 
-// How each include source turns a fetched body into entities — the join
-// between the registry (which runs parsers on committed fixtures with fixture
-// provenance) and a live tick (which stamps the fetch's own provenance and
-// joins against payloads fetched in the same tick).
-//
-// A source with no lane is fetched and snapshotted but yields no entities:
-// the Greenhouse /departments feeds exist to be joined, and the OpenRouter
-// model list is a cross-check that must never become a source of record
-// (sources.yaml). The OpenRouter rankings feed DOES have a lane: it is the
-// source of record for the demand-share axis, held out as one aggregator's
-// traffic rather than the market's.
+// Every lane of the domains still in the shell: hiring, SEC filings and
+// revenue, status pages, disclosures and the OpenRouter rankings. The lane
+// contract is core's (layers/core/server/pipeline/lanes.ts); pricing's lanes
+// are in layers/pricing/server/pipeline/lanes.ts, and server/registries/lanes.ts
+// assembles both. The OpenRouter rankings feed has a lane: it is the source of
+// record for the demand-share axis, held out as one aggregator's traffic
+// rather than the market's.
 
-export interface ParseContext {
-  prov: Provenance
-  snapshotId: string
-  /** Body of a side source fetched in this same tick; throws if it was not. */
-  side: (sourceId: string) => string
-  whitelist: CikWhitelist
-  /** sources.yaml revenue_filers — which lab a company-facts filer belongs to. */
-  revenueFilers: RevenueFilers
-  /** sources.yaml pending_filers — the labs whose CIK an S-1 hit may resolve. */
-  pendingFilers: PendingFilers
-  /** Labs already resolved (or tagged in the audited file): the resolver leaves them alone. */
-  resolvedProviders: ReadonlySet<Provider>
-  /** For a derived source, the key it was derived for (a CIK or a slug); null for a registered one. */
-  derivedKey: string | null
-  /** The class map in effect this tick (layers/terminal/server/pipeline/class-map.ts); the seed when omitted. */
-  classMap?: readonly ClassEntry[]
-}
-
-export interface ParseResult {
-  entities: EntityRow[]
-  /** Anything the parser saw and deliberately did not turn into rows. */
-  note?: string
-  /**
-   * Parts of the page the parser could not read, while the rest stored. Each
-   * is spooled, and the page is read again next tick (refresh.ts › INCOMPLETE).
-   */
-  problems?: string[]
-}
-
-export interface Lane {
-  /** Source ids that must be fetched in the same tick for parse() to run. */
-  sides: readonly string[]
-  /**
-   * 'set': the page IS the current set, so an entity that disappears is a
-   * removal (a job closed, a model delisted). 'append-only': the feed is a
-   * recent-filings window, and a filing scrolling out of it was not un-filed —
-   * no removal is recorded and the entity stays.
-   */
-  removals: 'set' | 'append-only'
-  /**
-   * A source's first parse is normally a quiet baseline: what was there
-   * before we watched is not news. True when this source's first parse IS
-   * the event — a registration document is its own source, so its first and
-   * only content is the filing itself. Called with the derived key and the
-   * fetch time.
-   */
-  firstIsNews?: (derivedKey: string | null, fetchedAt: string) => boolean
-  /**
-   * The sources.yaml-derived blocks parse() reads. They go into the context
-   * fingerprint (contextFingerprint), so an unchanged page is parsed again
-   * when one of them changes — a filer retagged, a CIK whitelisted.
-   */
-  reads?: readonly ContextBlock[]
-  parse(text: string, ctx: ParseContext): ParseResult
-  alerts?: (changes: readonly ChangeRow[]) => AlertRow[]
-}
-
-export type ContextBlock = 'whitelist' | 'revenueFilers' | 'pendingFilers' | 'resolvedProviders'
-
-/**
- * Bump when a parser change makes the same bytes yield different rows. Every
- * lane's next tick then parses its unchanged page again and rewrites the
- * stored rows in place without logging a change: a parser learning to read a
- * field is not the vendor changing it.
- */
-export const PARSER_VERSION = 1
-
-/** Hashable form of a context block: stableStringify reads a Map or Set as
- * `{}`, so those become their entries, sorted so insertion order is moot. */
-function canonical(block: ParseContext[ContextBlock]): unknown {
-  if (!(block instanceof Map) && !(block instanceof Set)) return block
-  const entries: unknown[] = block instanceof Map ? [...block.entries()] : [...block]
-  return entries.sort((a, b) => {
-    const [x, y] = [JSON.stringify(a), JSON.stringify(b)]
-    return x < y ? -1 : x > y ? 1 : 0
-  })
-}
-
-/** The parser version, every config block the lane reads, and the URL its rows cite, hashed. */
-export function contextFingerprint(
-  lane: Lane,
-  ctx: Pick<ParseContext, ContextBlock>,
-  sourceUrl: string,
-): string {
-  const blocks: Record<string, unknown> = {}
-  for (const name of lane.reads ?? []) blocks[name] = canonical(ctx[name])
-  return contentHash({ parser_version: PARSER_VERSION, source_url: sourceUrl, ...blocks })
-}
-
-const set = (parse: Lane['parse']): Lane => ({ sides: [], removals: 'set', parse })
+const set = setLane
 
 /**
  * Each filing's lab, read off its whitelisted CIK: a lab's own registration
@@ -295,26 +176,6 @@ const XBRL_SEGMENT_LANE: Lane = {
   },
 }
 
-// A derived OpenAI model page: one SKU row that must be the slug it was
-// derived for (the parser checks). The page IS the SKU's current state.
-const OPENAI_MODEL_PAGE_LANE: Lane = {
-  sides: [],
-  removals: 'set',
-  parse: (text, { prov, snapshotId, derivedKey }) => ({
-    entities: normalizePrices(parseOpenAiModelPage(text, derivedKey, prov).rows, snapshotId),
-  }),
-}
-
-// A derived Google model page: the context window the pricing page omits,
-// one unpriced row under the slug's Standard key (the parser checks the slug).
-const GOOGLE_MODEL_PAGE_LANE: Lane = {
-  sides: [],
-  removals: 'set',
-  parse: (text, { prov, snapshotId, derivedKey }) => ({
-    entities: normalizePrices(parseGoogleModelPage(text, derivedKey ?? '', prov).rows, snapshotId),
-  }),
-}
-
 // A derived misalignment report page: the dates the index omits, one row.
 // The page IS the report's current state.
 const MISALIGNMENT_REPORT_PAGE_LANE: Lane = {
@@ -328,7 +189,6 @@ const MISALIGNMENT_REPORT_PAGE_LANE: Lane = {
   }),
 }
 
-/** Lanes for derived sources, by id prefix (layers/terminal/server/pipeline/derived.ts). */
 // A derived filing index: the one primary document of a registration filing.
 const FILING_INDEX_LANE: Lane = {
   sides: [],
@@ -383,99 +243,10 @@ export const DERIVED_LANES: readonly { prefix: string; lane: Lane }[] = [
   { prefix: 'xbrl-segment-', lane: XBRL_SEGMENT_LANE },
   { prefix: 'filing-index-', lane: FILING_INDEX_LANE },
   { prefix: 'prospectus-revenue-', lane: PROSPECTUS_REVENUE_LANE },
-  { prefix: 'openai-model-md-', lane: OPENAI_MODEL_PAGE_LANE },
-  { prefix: 'google-model-md-', lane: GOOGLE_MODEL_PAGE_LANE },
   { prefix: 'openai-misalignment-report-', lane: MISALIGNMENT_REPORT_PAGE_LANE },
 ]
 
-// The pages the class map (layers/terminal/server/utils/terminal-classes.ts) is transcribed
-// from also carry the drift check on that map: one 'recommendation' row per
-// mapped cell, beside the page's price rows (recommendations.ts).
-const checked = (sourceId: string, text: string, { prov, snapshotId, classMap }: ParseContext) =>
-  normalizeRecommendations(recommendationRows(sourceId, text, prov, classMap), snapshotId)
-// A class-map page with no lane of its own, read as a side: its check row is
-// stored with the lane that joins it, under that lane's fetch provenance, as
-// every stored row is. The cell names the side page as its basis (basis_source_id).
-const checkedSide = (sourceId: string, ctx: ParseContext) =>
-  checked(sourceId, ctx.side(sourceId), ctx)
-
 export const LANES: Readonly<Record<string, Lane>> = {
-  'openai-models-md': set((text, ctx) => ({
-    entities: [
-      ...normalizePrices(parseOpenAiModelsMd(text, ctx.prov).rows, ctx.snapshotId),
-      ...checked('openai-models-md', text, ctx),
-    ],
-  })),
-  'openai-pricing-md': set((text, { prov, snapshotId }) => ({
-    entities: normalizePrices(parseOpenAiPricingMd(text, prov).rows, snapshotId),
-  })),
-  'anthropic-models-md': set((text, ctx) => ({
-    entities: [
-      ...normalizePrices(parseAnthropicModelsOverviewMd(text, ctx.prov).rows, ctx.snapshotId),
-      ...checked('anthropic-models-md', text, ctx),
-    ],
-  })),
-  'anthropic-pricing-md': set((text, { prov, snapshotId }) => ({
-    entities: normalizePrices(parseAnthropicPricingMd(text, prov).rows, snapshotId),
-  })),
-  'xai-models-md': set((text, ctx) => ({
-    entities: [
-      ...normalizePrices(parseXaiModelsMd(text, ctx.prov).rows, ctx.snapshotId),
-      ...checked('xai-models-md', text, ctx),
-    ],
-  })),
-  // The availability tables are on each text line's own page (meta-models.ts).
-  // Muse Spark's page also carries the balanced cell's sentence.
-  'meta-models-md': {
-    sides: Object.values(META_LINE_PAGES),
-    removals: 'set',
-    parse: (text, ctx) => ({
-      entities: [
-        ...normalizePrices(parseMetaModelsMd(text, ctx.side, ctx.prov).rows, ctx.snapshotId),
-        ...checked('meta-models-md', text, ctx),
-        ...checkedSide('meta-muse-spark-md', ctx),
-      ],
-    }),
-  },
-  'meta-pricing-md': set((text, { prov, snapshotId }) => ({
-    entities: normalizePrices(parseMetaPricingMd(text, prov).rows, snapshotId),
-  })),
-  // No class-map check: Mistral's pages print no tier sentence to watch.
-  'mistral-models-md': set((text, { prov, snapshotId }) => ({
-    entities: normalizePrices(parseMistralModelsMd(text, prov).rows, snapshotId),
-  })),
-  'mistral-pricing-md': set((text, { prov, snapshotId }) => ({
-    entities: normalizePrices(parseMistralPricingMd(text, prov).rows, snapshotId),
-  })),
-  // Catalog and prices on one page; no class-map check: it prints no tier sentence.
-  'deepseek-pricing-md': set((text, { prov, snapshotId }) => ({
-    entities: normalizePrices(parseDeepseekPricingMd(text, prov).rows, snapshotId),
-  })),
-  'alibaba-pricing-html': set((html, { prov, snapshotId }) => ({
-    entities: normalizePrices(parseAlibabaPricingHtml(html, prov).rows, snapshotId),
-  })),
-  // Prices come from the pricing page above; this page is polled only for
-  // the sentences Alibaba's class-map cells rest on.
-  'alibaba-models-html': set((html, ctx) => ({
-    entities: checked('alibaba-models-html', html, ctx),
-  })),
-  // Catalog only: Moonshot's price tables are not in the served page.
-  'moonshot-models-md': set((text, ctx) => ({
-    entities: [
-      ...normalizePrices(parseMoonshotModelsMd(text, ctx.prov).rows, ctx.snapshotId),
-      ...checked('moonshot-models-md', text, ctx),
-    ],
-  })),
-  'google-pricing-html': set((html, { prov, snapshotId }) => {
-    const { rows, skipped } = parseGooglePricingPage(html, prov)
-    return {
-      entities: normalizePrices(rows, snapshotId),
-      note: skipped.length ? `${skipped.length} sections/tables skipped` : undefined,
-    }
-  }),
-  // Prices come from the pricing page above; this page is polled only for
-  // the sentences Google's class-map cells rest on.
-  'google-models-md': set((text, ctx) => ({ entities: checked('google-models-md', text, ctx) })),
   'openai-ashby': set((text, { prov, snapshotId }) => ({
     entities: normalizeJobs(parseOpenaiAshby(text, prov).rows, snapshotId),
   })),

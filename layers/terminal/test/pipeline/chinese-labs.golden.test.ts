@@ -1,9 +1,9 @@
 import { describe, expect, test } from 'vitest'
 
 import { VendorMdPricingOutput } from '#layers/core/server/pipeline/contracts'
-import { parseAlibabaPricingHtml } from '../../server/pipeline/parsers/pricing/alibaba-pricing'
-import { parseDeepseekPricingMd } from '../../server/pipeline/parsers/pricing/deepseek-pricing'
-import { parseMoonshotModelsMd } from '../../server/pipeline/parsers/pricing/moonshot-models'
+import { parseAlibabaPricingHtml } from '../../../pricing/server/pipeline/parsers/pricing/alibaba-pricing'
+import { parseDeepseekPricingMd } from '../../../pricing/server/pipeline/parsers/pricing/deepseek-pricing'
+import { parseMoonshotModelsMd } from '../../../pricing/server/pipeline/parsers/pricing/moonshot-models'
 import { parseEdgarSubmissions } from '../../server/pipeline/parsers/sec/edgar-submissions'
 import { parseCikWhitelistBlock } from '../../server/pipeline/parsers/sec/whitelist'
 import { parseDeepseekStatus } from '../../server/pipeline/parsers/status/deepseek-status'

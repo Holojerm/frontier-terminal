@@ -11,7 +11,7 @@ import { includeSources } from '#layers/core/server/pipeline/sources'
 import { AlertRow, contentHash } from '#layers/core/server/pipeline/contracts'
 import { insertRows } from '#layers/core/server/pipeline/store'
 import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
-import { MODEL_CLASS_MAP, NO_ROW_GAP } from '../server/utils/terminal-classes'
+import { MODEL_CLASS_MAP, NO_ROW_GAP } from '../../pricing/server/utils/terminal-classes'
 import { ENTITY_AXIS } from '../shared/utils/terminal-labs'
 import type { PriceRowView } from '../shared/utils/terminal-types'
 import {
@@ -21,7 +21,7 @@ import {
   queryAlerts,
   queryOverview,
 } from '../server/utils/terminal-alerts'
-import { buildMatrix, queryPrices } from '../server/utils/terminal-prices'
+import { buildMatrix, queryPrices } from '../../pricing/server/utils/terminal-prices'
 import { queryContext, queryCoverage, sourceReads } from '#layers/core/server/utils/terminal-db'
 import { queryHiring } from '../server/utils/terminal-hiring'
 import { queryIncidents } from '../server/utils/terminal-incidents'

@@ -56,7 +56,7 @@ import {
   type PinnedProbeTarget,
   type ProbeTarget,
 } from '../server/pipeline/probes/targets'
-import { MODEL_CLASS_MAP } from '../server/utils/terminal-classes'
+import { MODEL_CLASS_MAP } from '../../pricing/server/utils/terminal-classes'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { PROBE_BINDING, dispatchPinnedProbes } from '../server/utils/probe-runner'
 import { probesStamp, queryProbes } from '../server/utils/terminal-probes'

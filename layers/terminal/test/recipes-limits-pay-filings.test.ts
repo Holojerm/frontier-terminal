@@ -22,7 +22,7 @@ import {
   extractXaiLimits,
   limitValue,
   mdTables,
-} from '../server/theses/recipes/rate-limits'
+} from '../../pricing/server/recipes/rate-limits'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Parents' filings, published rate limits and posted pay, against fixtures

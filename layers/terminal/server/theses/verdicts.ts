@@ -17,7 +17,7 @@ import { verdictsOf, type ClaimDef, type ThesisDef } from '../../shared/utils/th
 
 import * as tables from '#server/db/schema'
 import { ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
-import { effectiveClassMap } from '../pipeline/class-map'
+import { effectiveClassMap } from '#layers/pricing/server/pipeline/class-map'
 import { groundingFailure } from '#layers/core/server/pipeline/judge/grounding'
 import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '#layers/core/server/pipeline/store'
 import { daysBefore } from '../utils/terminal-rankings'

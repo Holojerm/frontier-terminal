@@ -37,7 +37,7 @@ import {
   type ProbeTargetSpec,
 } from '../pipeline/probes/targets'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
-import { MODEL_CLASS_MAP } from './terminal-classes'
+import { MODEL_CLASS_MAP } from '#layers/pricing/server/utils/terminal-classes'
 import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 
 export const PROBE_WINDOW_DAYS = 7

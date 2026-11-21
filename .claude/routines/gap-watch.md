@@ -11,7 +11,7 @@ enabled: true
 
 The terminal states its gaps instead of guessing: every source the audit cut is listed under
 `cut:` in `sources.yaml` with the reason it was cut, and every matrix cell with no mapping
-is listed in `CLASS_GAPS` in `layers/terminal/server/utils/terminal-classes.ts` with the reason no vendor
+is listed in `CLASS_GAPS` in `layers/pricing/server/utils/terminal-classes.ts` with the reason no vendor
 sentence answers it. The pipeline re-checks only what is mapped (a mapped cell's sentence is
 re-read on every poll). The one exception is a launch: for 48 hours after a lab lists a new
 model, the judge is offered that lab's empty cells for the launched models only. Nothing
@@ -48,7 +48,7 @@ on the shared one.
 2. Build the checklist:
 
    - every entry under `cut:` in `sources.yaml` (id, verdict, reason);
-   - every entry of `CLASS_GAPS` in `layers/terminal/server/utils/terminal-classes.ts` (provider, class,
+   - every entry of `CLASS_GAPS` in `layers/pricing/server/utils/terminal-classes.ts` (provider, class,
      reason), and the pages that provider's class map rests on (`CLASS_MAP_SOURCES` in the
      same file, resolved to URLs through `sources.yaml`; a provider with no entry there has
      no page yet, so search its own docs for one).
