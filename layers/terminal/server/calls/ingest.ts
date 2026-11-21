@@ -10,7 +10,7 @@
 //      and their guidance stored in filed_guidance;
 //   4. AssemblyAI: each submitted job is checked once (no polling loop), a
 //      finished one is read like a transcript, and new replays are submitted
-//      while the spend stays under SPEND_CAP_USD;
+//      while the month's spend stays under MONTHLY_SPEND_CAP_USD;
 //   5. for each ticker with guidance whose period has ended, the XBRL concepts
 //      it is scored on, at most once a day each; then each statement the facts
 //      now settle gets its guidance_resolutions row.
@@ -46,7 +46,7 @@ import {
   parseSentences,
   speakerMapping,
   refusalOf,
-  SPEND_CAP_USD,
+  MONTHLY_SPEND_CAP_USD,
   transcriptRequest,
 } from './assemblyai'
 import { CALL_COMPANIES, callCompany, curatedCalls, type CallCompany } from './curated'
@@ -504,11 +504,18 @@ export async function readTextDocuments(
 }
 
 /** What AssemblyAI has cost so far: billed for finished jobs, estimated for running ones. */
-export async function assemblySpend(db: PipelineDb): Promise<number> {
+/** AssemblyAI spend in the UTC calendar month of `now`, dated by submission (or first sight, for a job sent from the mini). */
+export async function assemblySpend(db: PipelineDb, now: Date): Promise<number> {
+  const monthStart = `${now.toISOString().slice(0, 7)}-01T00:00:00Z`
   const [row] = await db
     .select({ usd: sql<number | null>`sum(${tables.callDocuments.cost_usd})` })
     .from(tables.callDocuments)
-    .where(eq(tables.callDocuments.kind, 'audio'))
+    .where(
+      and(
+        eq(tables.callDocuments.kind, 'audio'),
+        sql`coalesce(${tables.callDocuments.submitted_at}, ${tables.callDocuments.first_seen_at}) >= ${monthStart}`,
+      ),
+    )
   return row?.usd ?? 0
 }
 
@@ -597,7 +604,7 @@ export async function runAudio(
     })
     out.collected++
   }
-  let spent = await assemblySpend(db)
+  let spent = await assemblySpend(db, deps.now)
   // A job submitted from the mini has no estimate on its row: count it as an hour.
   spent +=
     audio.filter((d) => d.status === 'submitted' && d.cost_usd === null).length * costOf(3600)
@@ -608,10 +615,10 @@ export async function runAudio(
       continue
     }
     const estimate = costOf(seconds)
-    if (spent + estimate > SPEND_CAP_USD) {
+    if (spent + estimate > MONTHLY_SPEND_CAP_USD) {
       await recordOpsEvent(db, {
         kind: KIND_ASSEMBLYAI_CREDITS,
-        detail: `spend cap: $${spent.toFixed(2)} spent of $${SPEND_CAP_USD}; ${doc.ticker} ${doc.call_date} not submitted`,
+        detail: `spend cap: $${spent.toFixed(2)} spent this month of $${MONTHLY_SPEND_CAP_USD}; ${doc.ticker} ${doc.call_date} not submitted`,
       })
       break
     }
