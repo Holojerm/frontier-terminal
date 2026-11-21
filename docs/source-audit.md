@@ -779,3 +779,22 @@ Checked because Google Cloud makes three H100 spot providers and the combined fi
 - **A fourth provider turns the combined figure on.** With CoreWeave, Azure, Google Cloud and one more, `/compute` prints a median share and claim 7 of the Compute thesis starts to count. Azure hasn't moved and Verda's wouldn't, so which provider is fourth decides how much of that median is a market.
 
 **Verdict: none yet.** Whether to read Nebius's API across two documents, and whether a fixed discount counts as a spot price, are the owner's calls.
+
+## Addendum, 2026-11-20: MLPerf Inference rounds before v6.0
+
+Checked so tokens per second per accelerator has a history across chip generations. Each `mlcommons/inference_results_v*` repository was read through the GitHub API, and each `summary_results.json` was fetched from `raw.githubusercontent.com` on 2026-11-21 00:15Z (2026-11-20 in New York) with a generic client.
+
+| Round | Summary file | Shape against v6.0 | License | Verdict |
+|---|---|---|---|---|
+| v6.0 | 200, 784,457 bytes, 520 results | The shape the recipe was written for | Apache License 2.0 (`LICENSE.md`) | **Included** since 2026-11-19 |
+| v5.1 | 200, 2,221,336 bytes, 1,448 results, every one `"version": "v5.1"` | The same field names and values, except that `Total Accelerators` is missing. It gives `Nodes` and `a#` (accelerators per node). In v6.0, `Total Accelerators` equals `Nodes` × `a#` on all 156 kept results, so the count is that product. Closed, available, Server results in tokens per second: 155, across llama2-70b-99 and -99.9, llama3.1-8b, llama3.1-405b, mixtral-8x7b and deepseek-r1. Six are CPU-only (`a#` empty), leaving 149 | Apache License 2.0. `LICENSE.md` was added on 2026-01-16 (commit f40471c) | **Include** |
+| v5.0 | 200, 27,696,289 bytes, 17,454 results | The same as v5.1. 248 kept results, including gptj and llama2-70b-interactive | No license file, and GitHub detects none. The only license files are inside submitters' vendored code (`closed/AMD/setup/vllm/LICENSE` and similar) | **Cut**: no license for the results. Revisit if MLCommons adds one, as it did for v5.1 |
+| v4.1, v4.0, v3.1, v3.0 | 404 | No summary file. Results are per-run `mlperf_log_summary.txt` files, one per system, model and scenario. v4.1 has llama2-70b and mixtral among them | Apache License 2.0 | **Not read**: a different shape and hundreds of fetches per round |
+
+Rounds are dated by MLCommons's announcements: v5.1 on 2025-09-09 (`mlcommons.org/2025/09/mlperf-inference-v5-1-results/`) and v6.0 on 2026-04-01 (`mlcommons.org/2026/04/mlperf-inference-v6-0-results/`).
+
+**How they are stored.** One recipe (`mlperf-inference-datacenter`) with a fixed list of rounds. Each row is dated by its round and cites its round's URL and round label. A run reads the oldest listed round newer than the newest stored date, through the `newest` the contract already passes to `url`, so the runner needs no change. Each past round is read once, and the newest round is re-read every survey. Migration 0059 clears the v6.0 rows dated by their fetch day (2026-11-20), so the first two surveys after deploy read v5.1 and then v6.0. For about six hours in between, the implied read on `/compute` shows v5.1, labeled as v5.1.
+
+**Surfaces.** The implied read on `/compute`, `/api/utilization` and the `get_utilization` MCP tool show one benchmark round, the newest stored, and name it in the footnote and citation. The bulk export carries every round's rows, each with its `round`, date and source URL. No thesis or alert reads this recipe, so a past round never appears as a change.
+
+**Verdict: include v5.1. Cut v5.0 until it has a license. Leave v4.1 and earlier unread.**
