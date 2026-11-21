@@ -6,8 +6,8 @@
 // beside the any-AI line, for the lab pages.
 
 import { grouped } from '#layers/core/shared/utils/terminal-format'
-import type { AdoptionData } from '../../../shared/utils/recipe-views'
-import type { LabId } from '../../../shared/utils/terminal-types'
+import type { AdoptionData } from '../../../shared/utils/adoption-views'
+import type { LabId } from '#layers/core/shared/utils/terminal-types/common'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{

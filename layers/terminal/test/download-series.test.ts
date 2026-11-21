@@ -4,29 +4,29 @@ import { beforeAll, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
+import { readNormalizedTrailing } from '../server/theses/download-signals'
 import {
   CONTROL_INDEX_ID,
   DOWNLOAD_SERIES,
   controlIndex,
   normalizedSeries,
   readDownloadSeries,
-  readNormalizedTrailing,
   seriesById,
   shareSeries,
   trailingRatio,
   weeklyRatio,
   type DayRow,
-} from '../server/theses/download-series'
+} from '../../adoption/server/recipes/download-series'
 import {
   NPM_CONTROL_RECIPES,
   NPM_HISTORY_FROM,
   NPM_LAB_RECIPES,
   extractDownloads,
   npmRange,
-} from '../server/theses/recipes/npm-downloads'
+} from '../../adoption/server/recipes/npm-downloads'
 import { RECIPES } from '#server/registries/recipes'
 import { runRecipes } from '../server/theses/recipes/run'
-import { queryAdoption } from '../server/utils/terminal-recipe-views'
+import { queryAdoption } from '../../adoption/server/utils/terminal-adoption'
 import { ANTHROPIC_THESIS } from '../server/theses/anthropic'
 
 // The derived download series over a store the recipe runner filled with

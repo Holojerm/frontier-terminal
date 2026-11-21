@@ -17,7 +17,7 @@ import {
   type Point,
 } from '../server/theses/recipe-signals'
 import type { Recipe } from '#layers/core/server/recipes/contract'
-import { githubPrRecipe } from '../server/theses/recipes/github-agent-prs'
+import { githubPrRecipe } from '../../adoption/server/recipes/github-agent-prs'
 import { runRecipes } from '../server/theses/recipes/run'
 import { applyClaimVerdicts, claimReview } from '../server/theses/verdicts'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'

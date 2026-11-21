@@ -18,5 +18,5 @@ import '#layers/reliability/server/pipeline/parsers.manifest'
 // Misalignment disclosures
 import './parsers/disclosures/openai-misalignment-reports'
 import './parsers/disclosures/openai-misalignment-report'
-// OpenRouter usage rankings (demand share)
-import './parsers/openrouter-rankings'
+// OpenRouter usage rankings (the adoption layer's own manifest)
+import '#layers/adoption/server/pipeline/parsers.manifest'
