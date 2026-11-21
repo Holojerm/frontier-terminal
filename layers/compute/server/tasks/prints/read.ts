@@ -1,7 +1,9 @@
 // Cron task: the hardware prints, hourly at :41 (layers/compute/server/prints/ingest.ts).
 // Taiwan's revenue lands in a month's first ten days, TSMC's 6-K within hours, and
 // KCS at 09:00 KST on the 1st, 11th, about the 15th and 21st, so an hourly read
-// puts first_seen_at within the hour. EDGAR requests go through the SEC pacer.
+// puts first_seen_at within the hour. KCS comes through the Mac mini's relay (core
+// pipeline/relay.ts), one page a run: about four hours. EDGAR requests go through
+// the SEC pacer.
 
 import { paceSec } from '#layers/core/server/pipeline/sec-pace'
 import { runPrintReads } from '../../prints/ingest'

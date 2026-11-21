@@ -2,7 +2,7 @@ import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { PRINT_TABLES } from '../server/export-tables/prints'
-import { KCS, KCS_BOARD_DOC, readKcs } from '../server/prints/ingest'
+import { FAILED_RETRY_MS, KCS, KCS_BOARD_DOC, readKcs } from '../server/prints/ingest'
 import {
   hasFigures,
   kcsAttachments,
@@ -22,6 +22,8 @@ import { printsStamp } from '../server/prints/store'
 import { createLoader } from '#layers/signals/server/signals/sources'
 import { SIGNALS } from '#layers/signals/server/signals/registry'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
+import { relayMemory } from '#layers/core/test/pipeline/relay-memory'
+import { putRelayCopy, RELAY_MAX_AGE_MS, wantedUrls } from '#layers/core/server/pipeline/relay'
 
 // Korea Customs Service's releases on the committed bytes: the board, four
 // release pages (three under KOGL Type 1, one with no mark), the viewer's
@@ -317,6 +319,139 @@ describe('readKcs', () => {
       .from(schema.printDocuments)
       .where(eq(schema.printDocuments.doc_id, KCS_BOARD_DOC))
     expect(state).toMatchObject({ status: 'listing', detail: '5' })
+  })
+})
+
+// customs.go.kr never answers a Worker (HTTP 522), so in production every page
+// above comes from the Mac mini job's copies (core pipeline/relay.ts).
+describe('readKcs through the relay', () => {
+  const never = (async () => {
+    throw new Error('the network was called')
+  }) as typeof globalThis.fetch
+  const setup = () => {
+    const m = relayMemory()
+    const raw = new Map<string, string>()
+    const deps = {
+      raw: { put: async (key: string, body: string) => void raw.set(key, body) },
+      fetcher: createFetcher({
+        appUrl: 'https://frontier-terminal.example',
+        secContactEmail: '',
+        fetch: never,
+        relay: m.store,
+      }),
+      relay: m.store,
+      now: new Date('2026-11-21T08:41:00Z'),
+    }
+    return { m, raw, deps }
+  }
+  /** One run of the mini's job: every URL on its list, answered from the fixtures and posted. */
+  const jobRun = async (m: ReturnType<typeof relayMemory>, fetched_at = new Date()) => {
+    const urls = await wantedUrls(m.kv)
+    for (const url of urls) {
+      const got = await fetcher({ source_id: KCS.reader, url, ext: 'html' })
+      await putRelayCopy(m.blob, {
+        url,
+        status: got.ok ? 200 : 404,
+        fetched_at: fetched_at.toISOString(),
+        body: new TextEncoder().encode(got.ok ? got.text : ''),
+        contentType: 'text/html',
+      })
+    }
+    return urls
+  }
+  const releasePages = RELEASES.map((sn) => kcsReleaseUrl(sn, HASH[sn]!)).sort()
+
+  it('waits a run for each page, reads the same figures, and leaves only the board’s first page on the job’s list', async () => {
+    const { m, raw, deps } = setup()
+
+    // Nothing relayed yet: the board's pages are asked for together.
+    expect(await readKcs(db, deps)).toMatchObject({ board: 'listing', pages: 0, read: 0 })
+    expect(await jobRun(m)).toEqual([1, 2, 3, 4].map(kcsBoardUrl).sort())
+
+    // The board is listed; its later pages leave the list and each release's page joins it.
+    expect(await readKcs(db, deps)).toMatchObject({ board: 'listed', read: 0, waiting: 4 })
+    expect(await jobRun(m)).toEqual([kcsBoardUrl(1), ...releasePages].sort())
+
+    // The page, then the viewer's id, then the text: a run each.
+    expect(await readKcs(db, deps)).toMatchObject({ read: 0, waiting: 4, added: 0 })
+    expect(await jobRun(m)).toHaveLength(1 + 4 + 4)
+    expect(await readKcs(db, deps)).toMatchObject({ read: 0, waiting: 4, added: 0 })
+    expect(await jobRun(m)).toHaveLength(1 + 4 + 4 + 4)
+    expect(await db.select().from(schema.hardwarePrints)).toEqual([])
+
+    expect(await readKcs(db, deps)).toMatchObject({
+      read: 4,
+      marked: 2,
+      unmarked: 1,
+      waiting: 0,
+      pending: 0,
+    })
+    const rows = await db.select().from(schema.hardwarePrints)
+    expect(
+      rows
+        .map((r) => [r.source_id, r.period, r.window, r.value, r.observed_as])
+        .sort((a, b) => String(a).localeCompare(String(b))),
+    ).toEqual([
+      [KCS.unmarked, '2026-09', 'd20', 34_128e6, 'print'],
+      [KCS.marked, '2025-10', 'month', 15_862e6, 'year_ago'],
+      [KCS.marked, '2026-10', 'month', 56_702e6, 'print'],
+      [KCS.marked, '2026-11', 'd10', 16_632e6, 'print'],
+    ])
+    expect(raw.get('prints/kcs/10182926.txt')).toBe(texts('10182926'))
+    // The licence split is the direct read's: the unmarked release stays held.
+    expect((await printRows(db)).some((r) => PRINT_HELD_SOURCES.includes(r.source_id))).toBe(false)
+
+    // Every release's pages are off the list and their copies dropped.
+    expect(await wantedUrls(m.kv)).toEqual([kcsBoardUrl(1)])
+    expect(m.objects.size).toBe(2)
+    // A wait is never a failure.
+    expect(await db.select().from(schema.opsEvents)).toEqual([])
+    expect(await readKcs(db, deps)).toMatchObject({ pages: 1, read: 0, waiting: 0, added: 0 })
+  })
+
+  it('spools a failure when the job’s copy of the board has gone stale', async () => {
+    const { m, deps } = setup()
+    await readKcs(db, deps)
+    await jobRun(m, new Date(Date.now() - RELAY_MAX_AGE_MS - 60_000))
+    expect(await readKcs(db, deps)).toMatchObject({ pages: 0, read: 0 })
+    const events = await db.select().from(schema.opsEvents)
+    expect(events).toHaveLength(1)
+    expect(events[0]!.detail).toMatch(/^kcs-chip-exports: board page 1 relay: .* older than 6h/)
+  })
+
+  it('fails a release whose page the source refused the mini, and asks again after a day', async () => {
+    const { m, deps } = setup()
+    await readKcs(db, deps)
+    await jobRun(m)
+    await readKcs(db, deps)
+    const refused = releasePages[0]!
+    const sn = /nttSn=(\d+)/.exec(refused)![1]!
+    await jobRun(m)
+    await putRelayCopy(m.blob, {
+      url: refused,
+      status: 403,
+      fetched_at: new Date().toISOString(),
+      body: new Uint8Array(0),
+      contentType: 'text/html',
+    })
+    expect(await readKcs(db, deps)).toMatchObject({ read: 1, waiting: 3 })
+    const status = async () =>
+      (
+        await db
+          .select()
+          .from(schema.printDocuments)
+          .where(eq(schema.printDocuments.doc_id, `kcs:${sn}`))
+      )[0]!.status
+    expect(await status()).toBe('failed')
+    expect(await wantedUrls(m.kv)).not.toContain(refused)
+
+    // A day on it is due again, and the dropped copy makes the ask a wait, not the old 403.
+    // The failed row is stamped with the wall clock, so the day is counted from it.
+    const later = { ...deps, now: new Date(Date.now() + FAILED_RETRY_MS + 3_600_000) }
+    await readKcs(db, later)
+    expect(await status()).toBe('failed')
+    expect(await wantedUrls(m.kv)).toContain(refused)
+    expect(await db.select().from(schema.opsEvents)).toEqual([])
   })
 })
 

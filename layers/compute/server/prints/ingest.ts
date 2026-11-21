@@ -10,7 +10,8 @@ import { and, eq, inArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
-import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
+import { activeRelay, type RelayStore } from '#layers/core/server/pipeline/relay'
+import type { FetchOutcome, SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
 import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import {
@@ -74,7 +75,11 @@ export const KCS = {
 } as const
 
 const TSMC_DOCS_PER_RUN = 20
-/** Three GETs a release on a slow host: the first backfill takes about a day and a half of runs. */
+/**
+ * Three GETs a release on a slow host. Through the relay each GET is a run's
+ * wait (the page, the viewer's id, the text), so a release takes three runs
+ * and the first backfill about five days.
+ */
 const KCS_DOCS_PER_RUN = 12
 /**
  * Wall time a run spends on releases. KCS answers in a second or two but has
@@ -93,6 +98,12 @@ const LIVE_WINDOW_MS = 2 * 86_400_000
 interface PrintDeps {
   raw: RawStore
   fetcher: SourceFetcher
+  /**
+   * customs.go.kr does not answer Workers' egress, so the fetcher reads the Mac
+   * mini job's copies; the reader takes each page it is done with off the job's
+   * list. Defaults to the registered relay (core relay.ts).
+   */
+  relay?: RelayStore | null
   now: Date
   /** Waits between Comtrade calls; tests pass a no-op. */
   sleep?: (ms: number) => Promise<void>
@@ -115,7 +126,12 @@ export interface KcsReport {
   added: number
   revised: number
   pending: number
+  /** Releases left as they are until the relay brings their next page. */
+  waiting: number
 }
+
+/** The relay has no copy yet: a wait for the job's next run, not a failure. */
+const awaited = (res: FetchOutcome): boolean => !res.ok && 'skipped' in res
 
 export interface ComtradeReport {
   /** Months getDA lists from 2013 on. */
@@ -312,8 +328,15 @@ async function readTsmc6k(db: PipelineDb, deps: PrintDeps): Promise<PrintReadRep
  * held no release is read, so the backfill reads in release order and a
  * month's provisional figure (the 1st) is its first vintage, the confirmed
  * one (about the 15th) the next.
+ *
+ * Through the relay a page asked for the first time arrives by the next run,
+ * so the board's later pages are asked for together and a release moves one
+ * step a run. A release that is waiting is left untouched; one that settles
+ * (read, set aside or failed) has its pages taken off the job's list. The
+ * board's first page stays on it.
  */
 export async function readKcs(db: PipelineDb, deps: PrintDeps): Promise<KcsReport> {
+  const relay = deps.relay === undefined ? activeRelay() : deps.relay
   const report: KcsReport = {
     pages: 0,
     board: 'listing',
@@ -323,6 +346,7 @@ export async function readKcs(db: PipelineDb, deps: PrintDeps): Promise<KcsRepor
     added: 0,
     revised: 0,
     pending: 0,
+    waiting: 0,
   }
   const started = Date.now()
   const docs = tables.printDocuments
@@ -337,10 +361,17 @@ export async function readKcs(db: PipelineDb, deps: PrintDeps): Promise<KcsRepor
     ? [1]
     : [1, ...Array.from({ length: KCS_BOARD_PAGES_PER_RUN - 1 }, (_, i) => next + i)]
 
+  let waiting = false
   for (const page of pages) {
     const url = kcsBoardUrl(page)
     const res = await deps.fetcher({ source_id: KCS.reader, url, ext: 'html' })
+    // The pages after one the relay has not brought are only asked for.
+    if (waiting) continue
     if (!res.ok) {
+      if (awaited(res)) {
+        waiting = true
+        continue
+      }
       await fail(db, `${KCS.reader}: board page ${page} ${res.detail}`)
       if (page === 1) return report
       break
@@ -375,6 +406,10 @@ export async function readKcs(db: PipelineDb, deps: PrintDeps): Promise<KcsRepor
     }
   }
   report.board = listed ? 'listed' : 'listing'
+  // The backfill's pages are read once: the ones behind the cursor, or all of them at the end.
+  await relay
+    ?.done(pages.filter((p) => p > 1 && (listed || p < next)).map(kcsBoardUrl))
+    .catch(() => {})
   await upsertDoc(db, {
     doc_id: KCS_BOARD_DOC,
     source_id: KCS.reader,
@@ -418,10 +453,16 @@ export async function readKcs(db: PipelineDb, deps: PrintDeps): Promise<KcsRepor
     const title = d.detail ?? ''
     const release = kcsRelease(title, d.filed)
     const at = new Date().toISOString()
+    // Every page asked for on this release's behalf, taken off the relay job's list when it settles.
+    const asked = [d.source_url]
+    // A miss costs only the job's refetches until the list entry expires, so it never fails the release.
+    const settled = async () => {
+      await relay?.done(asked).catch(() => {})
+    }
     // A failed release keeps its title, which is what says what it is for;
     // the error goes to the ops spool.
-    const failed = (status = 'failed') =>
-      upsertDoc(db, {
+    const failed = async (status = 'failed') => {
+      await upsertDoc(db, {
         doc_id: d.doc_id,
         source_id: KCS.reader,
         filed: d.filed,
@@ -431,12 +472,18 @@ export async function readKcs(db: PipelineDb, deps: PrintDeps): Promise<KcsRepor
         source_url: d.source_url,
         fetched_at: at,
       })
+      await settled()
+    }
     if (!release) {
       await failed('other')
       continue
     }
-    report.read++
     const page = await deps.fetcher({ source_id: KCS.reader, url: d.source_url, ext: 'html' })
+    if (awaited(page)) {
+      report.waiting++
+      continue
+    }
+    report.read++
     if (!page.ok) {
       await failed()
       if (page.status === 429) {
@@ -451,25 +498,28 @@ export async function readKcs(db: PipelineDb, deps: PrintDeps): Promise<KcsRepor
       // a release before its attachment: none is tried again tomorrow.
       let texts: string | null = null
       let reached = true
+      let body: FetchOutcome | null = null
       for (const attachment of kcsAttachments(parsed)) {
-        const viewer = await deps.fetcher({
-          source_id: KCS.reader,
-          url: kcsViewerUrl(attachment.file_key),
-          ext: 'json',
-        })
-        const body = viewer.ok
-          ? await deps.fetcher({
-              source_id: KCS.reader,
-              url: kcsTextsUrl(parseKcsViewer(viewer.text)),
-              ext: 'txt',
-            })
-          : viewer
+        const viewerUrl = kcsViewerUrl(attachment.file_key)
+        asked.push(viewerUrl)
+        body = await deps.fetcher({ source_id: KCS.reader, url: viewerUrl, ext: 'json' })
+        if (body.ok) {
+          const textsUrl = kcsTextsUrl(parseKcsViewer(body.text))
+          asked.push(textsUrl)
+          body = await deps.fetcher({ source_id: KCS.reader, url: textsUrl, ext: 'txt' })
+        }
         if (!body.ok) {
           reached = false
           break
         }
         texts = body.text
         if (hasFigures(texts)) break
+      }
+      if (body && awaited(body)) {
+        // Its page is here but its viewer id or text is not: not read this run.
+        report.read--
+        report.waiting++
+        continue
       }
       if (texts === null || !reached) {
         await failed()
@@ -492,6 +542,7 @@ export async function readKcs(db: PipelineDb, deps: PrintDeps): Promise<KcsRepor
           source_url: d.source_url,
           fetched_at: at,
         })
+        await settled()
         continue
       }
       const released = reading.observations[0]!.published_at ?? `${d.filed}T00:00:00Z`
@@ -512,6 +563,7 @@ export async function readKcs(db: PipelineDb, deps: PrintDeps): Promise<KcsRepor
         source_url: d.source_url,
         fetched_at: at,
       })
+      await settled()
       if (parsed.kogl_type1) report.marked++
       else report.unmarked++
       report.added += stored.added
@@ -661,6 +713,7 @@ export async function runPrintReads(db: PipelineDb, deps: PrintDeps): Promise<Pr
       added: 0,
       revised: 0,
       pending: -1,
+      waiting: 0,
     }
   })
   const comtrade = await readComtrade(db, deps).catch(async (error: unknown) => {
