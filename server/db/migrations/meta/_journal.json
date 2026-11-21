@@ -414,6 +414,13 @@
       "when": 1795214116777,
       "tag": "0058_complex_spyke",
       "breakpoints": true
+    },
+    {
+      "idx": 59,
+      "version": "6",
+      "when": 1795221478442,
+      "tag": "0059_massive_vertigo",
+      "breakpoints": true
     }
   ]
 }

@@ -14,7 +14,9 @@
 # nothing.
 #
 # Cost: about a minute a run once caught up (two files, ~10 MB of
-# downloads). The repo is public, so hosted minutes are free too.
+# downloads). The repo is public, so hosted minutes are free too. Until the
+# archive before 2026-09-01 is read (layers/terminal/server/pipeline/reported/archive.ts),
+# each run spends its idle minutes on it, up to the 40-minute stop.
 
 name: GDELT search
 

@@ -14,6 +14,7 @@ import { z } from 'zod'
 import * as tables from '#server/db/schema'
 import { contentHash } from '../contracts'
 import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '../store'
+import { GKG_FROM } from '../track-record/gkg'
 import {
   DEAL_WORDS,
   REPORTED_LABS,
@@ -131,8 +132,10 @@ export function earliestPerHeadline(articles: readonly Article[]): Article[] {
 }
 
 /**
- * The FIGURE REVIEW block: unread headlines, oldest first, then headlines to
- * read again for deals, at most `limit`.
+ * The FIGURE REVIEW block, at most `limit`: unread headlines from GKG_FROM on,
+ * oldest first, then unread archive headlines (archive.ts), then headlines to
+ * read again for deals. The archive's thousands wait behind the live ones, so
+ * a backfill never holds up a headline that ran today.
  */
 export async function figureReview(
   db: PipelineDb,
@@ -148,8 +151,10 @@ export async function figureReview(
     db,
     heads.map((a) => a.title_key),
   )
+  const unread = heads.filter((a) => !done.has(a.title_key))
   return [
-    ...heads.filter((a) => !done.has(a.title_key)),
+    ...unread.filter((a) => a.published_at >= GKG_FROM),
+    ...unread.filter((a) => a.published_at < GKG_FROM),
     ...heads.filter((a) => needsDealReading(a.title, done.get(a.title_key))),
   ]
     .slice(0, limit)

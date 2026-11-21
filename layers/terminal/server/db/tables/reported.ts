@@ -72,3 +72,24 @@ export const reportedFigures = sqliteTable(
     index('reported_figures_judged_idx').on(t.judged_at, t.id),
   ],
 )
+
+// One row per GDELT GKG file from before GKG_FROM read for figure headlines
+// alone (pipeline/reported/archive.ts): no mentions are kept from these files,
+// so no alert is ever matched against them. scout: the first file of each
+// hour, read for every day. fill: the other three quarter hours of the days
+// the scout found figures on, and the day either side.
+export const gdeltArchiveFiles = sqliteTable(
+  'gdelt_archive_files',
+  {
+    stamp: text('stamp').primaryKey(),
+    pass: text('pass').notNull(), // scout | fill
+    status: text('status').notNull(), // ok | missing
+    rows: integer('rows').notNull(),
+    // Figure headlines the Worker kept from the file.
+    figures: integer('figures').notNull(),
+    fetched_at: text('fetched_at').notNull(),
+    recorded_at: text('recorded_at').notNull(),
+  },
+  // archiveWork reads max(stamp) per pass on every call.
+  (t) => [index('gdelt_archive_files_pass_idx').on(t.pass, t.stamp)],
+)
