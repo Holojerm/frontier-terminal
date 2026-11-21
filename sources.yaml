@@ -3248,7 +3248,12 @@ print_sources:
       viewer's id, the viewer's text: three GETs, five where the PDF's text
       lost its digits and the HWP is read too), oldest first, at most 12 a
       run. A release's rows go here only when its own page carries the
-      Type 1 block. Read 2026-11-21.
+      Type 1 block. Read 2026-11-21. The host never answered a Worker (HTTP
+      522 on every read, 2026-11-21) and answers the Mac mini 200 with the
+      same User-Agent, so every page is fetched by the mini's relay job
+      (layers/core/server/pipeline/relay.ts): the board's first page each
+      half hour, and a release's pages each half hour for the three hourly
+      runs it takes to read it, after which they leave the job's list.
     rights: upstream
     caveats: >-
       Customs-basis figures, revised until the year's statistics are
