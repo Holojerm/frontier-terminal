@@ -207,14 +207,19 @@ const signed = (s: string) => {
  */
 export function parseTsmcRevenue6k(html: string, accepted_at: string): PrintObservation[] | null {
   // Each cell is its own tag: a space where a tag was keeps adjacent figures apart.
-  const text = pageText(html.replace(/<[^>]+>/g, ' ')).replace(/\s+/g, ' ')
+  // Some 2020 reports write a decrease in full-width parentheses: "（12.3）".
+  const text = pageText(html.replace(/<[^>]+>/g, ' '))
+    .replace(/（/g, '(')
+    .replace(/）/g, ')')
+    .replace(/\s+/g, ' ')
   const head = new RegExp(`TSMC (${MONTHS.join('|')}) (\\d{4}) Revenue Report`).exec(text)
   if (!head) return null
   const period = `${head[2]}-${String(MONTHS.indexOf(head[1]!) + 1).padStart(2, '0')}`
   const n = '([\\d,]+)'
   const p = '(\\(?\\s*-?[\\d.]+\\s*\\)?)'
   const table = new RegExp(
-    `\\(Unit: ?NT\\$ ?million\\).*?Net Revenues?\\s+${n}\\s+${n}\\s+${p}\\s+${n}\\s+${p}`,
+    // "(Unit:NT$ million)", or "(in NT$ million)" as October 2019's report has it.
+    `\\((?:Unit: ?|in )NT\\$ ?million\\).*?Net Revenues?\\s+${n}\\s+${n}\\s+${p}\\s+${n}\\s+${p}`,
   ).exec(text)
   if (!table) throw new Error(`TSMC ${period} revenue report: no table`)
   const base = {
