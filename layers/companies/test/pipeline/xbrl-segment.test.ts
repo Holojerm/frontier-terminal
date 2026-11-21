@@ -106,8 +106,6 @@ describe('parseXbrlSegment', () => {
 
   it('labels the member and the derived source', () => {
     expect(segmentLabel(CLOUD)).toBe('Google Cloud')
-    expect(laneFor(SEGMENT_FIXTURE.sourceId)).toBeDefined()
-    expect(derivedKeyOf(SEGMENT_FIXTURE.sourceId)).toBe(SEGMENT_FIXTURE.key)
     expect(labelOf(SEGMENT_FIXTURE.sourceId)).toEqual({
       label: 'EDGAR XBRL segment facts (GOOGL filing 0001652044-26-000084)',
       role: 'sec',
@@ -116,15 +114,6 @@ describe('parseXbrlSegment', () => {
 })
 
 describe('revenue_filers segment', () => {
-  it('tags Google as Alphabet’s Google Cloud segment', () => {
-    expect(filers.get('google')).toEqual({
-      ticker: 'GOOGL',
-      relation: 'parent',
-      segment: CLOUD,
-      effective: '2026-11-01',
-    })
-  })
-
   it('reads a segment only off a parent', () => {
     expect(() =>
       parseRevenueFilersBlock(

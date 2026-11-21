@@ -3,7 +3,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { checkLaunchCoverage } from '../../../models/server/pipeline/launch-watch'
 import { runRefresh } from '../../../core/server/pipeline/refresh'
 import { isPollInstant, runTripwire } from '../../../models/server/pipeline/tripwire'
-import { fixtureText, manifest, raw } from '#layers/core/test/pipeline/fixtures'
+import { fixtureFetcher, fixtureText, manifest, raw } from '#layers/core/test/pipeline/fixtures'
 
 // Launch day, end to end on the workerd D1/R2 bindings: a lab ships a model
 // and rewrites its "start with" sentence, and the terminal has to (1) poll the
@@ -14,16 +14,15 @@ import { fixtureText, manifest, raw } from '#layers/core/test/pipeline/fixtures'
 
 const sourcesYaml = fixtureText('sources.yaml')
 
-const byUrl = new Map(manifest.fixtures.map((f) => [f.source_url, fixtureText(f.path)]))
 const idToUrl = new Map(manifest.fixtures.map((f) => [f.source_id, f.source_url]))
 
+/** The committed fixtures, recording the order sources were fetched in. */
 function fetcher(overrides: Record<string, string> = {}): SourceFetcher & { calls: string[] } {
   const calls: string[] = []
-  const fn = async (source: { source_id: string; url: string }) => {
+  const serve = fixtureFetcher(overrides)
+  const fn: SourceFetcher = async (source) => {
     calls.push(source.source_id)
-    const text = overrides[source.source_id] ?? byUrl.get(source.url)
-    if (text === undefined) throw new Error(`no fixture for ${source.url}`)
-    return { ok: true as const, status: 200, text, bytes: text.length }
+    return serve(source)
   }
   return Object.assign(fn, { calls })
 }
@@ -54,6 +53,9 @@ const ANTHROPIC = ['anthropic-models-md', 'anthropic-pricing-md']
 async function poll(ids: readonly string[], f: SourceFetcher, at: string) {
   return runRefresh({ db, raw, fetcher: f, sourcesYaml, now: clockAt(at) }, 'survey', ids)
 }
+
+const trip = (f: SourceFetcher, lock: LockStore, at: string) =>
+  runTripwire({ db, raw, fetcher: f, sourcesYaml, lock, now: clockAt(at) })
 
 // ── The launch, as a rewrite of the committed pages ─────────────────────────
 
@@ -230,14 +232,7 @@ describe('tripwire', () => {
     }
 
     const f = fetcher()
-    const outcome = await runTripwire({
-      db,
-      raw,
-      fetcher: f,
-      sourcesYaml,
-      lock: memoryKv(),
-      now: clockAt('2026-09-22T12:05:00Z'),
-    })
+    const outcome = await trip(f, memoryKv(), '2026-09-22T12:05:00Z')
     expect(outcome).toEqual({ status: 'quiet', checked: TRIPWIRE_BASE })
     // Meta's catalog joins each text line's own page, fetched in the same tick.
     const META = TRIPWIRE_BASE.indexOf('meta-models-md') + 1
@@ -267,35 +262,16 @@ describe('tripwire', () => {
     })
     await poll(TRIPWIRE_BASE, fetcher(), '2026-09-22T12:00:00Z')
 
-    const outcome = await runTripwire({
-      db,
-      raw,
-      fetcher: fetcher(),
-      sourcesYaml,
-      lock: memoryKv(),
-      now: clockAt('2026-09-22T12:05:00Z'),
-    })
+    const outcome = await trip(fetcher(), memoryKv(), '2026-09-22T12:05:00Z')
     expect(outcome).toEqual({ status: 'quiet', checked: TRIPWIRE_BASE })
   })
 
   it('reads a side page that fails as no change, not as a trip', async () => {
     await poll(TRIPWIRE_BASE, fetcher(), '2026-09-22T12:00:00Z')
-    const ok = fetcher()
-    const sparkDown = Object.assign(
-      async (source: { source_id: string; url: string }) =>
-        source.source_id === 'meta-muse-spark-md'
-          ? { ok: false as const, status: 503, detail: 'HTTP 503' }
-          : ok(source),
-      { calls: ok.calls },
-    )
-    const outcome = await runTripwire({
-      db,
-      raw,
-      fetcher: sparkDown,
-      sourcesYaml,
-      lock: memoryKv(),
-      now: clockAt('2026-09-22T12:05:00Z'),
+    const sparkDown = fixtureFetcher({
+      'meta-muse-spark-md': { ok: false, status: 503, detail: 'HTTP 503' },
     })
+    const outcome = await trip(sparkDown, memoryKv(), '2026-09-22T12:05:00Z')
     expect(outcome).toEqual({ status: 'quiet', checked: TRIPWIRE_BASE })
   })
 
@@ -318,14 +294,7 @@ describe('tripwire', () => {
       'anthropic-models-md': modelsRepointed(),
       'anthropic-pricing-md': pricingLaunched(),
     })
-    const outcome = await runTripwire({
-      db,
-      raw,
-      fetcher: launched,
-      sourcesYaml,
-      lock: kv,
-      now: clockAt('2026-09-22T18:05:00Z'),
-    })
+    const outcome = await trip(launched, kv, '2026-09-22T18:05:00Z')
     expect(outcome).toMatchObject({ status: 'tripped', by: ['anthropic-models-md'] })
     const tripwireRuns = (await runs()).filter((r) => r.scope === 'tripwire')
     expect(tripwireRuns.map((r) => r.source_id).sort()).toEqual(
@@ -344,18 +313,8 @@ describe('tripwire', () => {
     expect((await alerts()).map((a) => a.rule)).toEqual(['model-floor'])
 
     // Five minutes on, the Anthropic page is cooling down and the rest match.
-    const next = await runTripwire({
-      db,
-      raw,
-      fetcher: launched,
-      sourcesYaml,
-      lock: kv,
-      now: clockAt('2026-09-22T18:10:00Z'),
-    })
-    expect(next).toEqual({
-      status: 'quiet',
-      checked: TRIPWIRE_BASE,
-    })
+    const next = await trip(launched, kv, '2026-09-22T18:10:00Z')
+    expect(next).toEqual({ status: 'quiet', checked: TRIPWIRE_BASE })
     expect(kv.keys.has('tripwire:cooldown:anthropic-models-md')).toBe(true)
   })
 
@@ -363,14 +322,11 @@ describe('tripwire', () => {
     await poll(TRIPWIRE_BASE, fetcher(), '2026-09-22T12:00:00Z')
     const kv = memoryKv()
     kv.keys.set('poll:lock', 'survey@2026-09-22T18:00:00Z')
-    const outcome = await runTripwire({
-      db,
-      raw,
-      fetcher: fetcher({ 'anthropic-models-md': modelsRepointed() }),
-      sourcesYaml,
-      lock: kv,
-      now: clockAt('2026-09-22T18:05:00Z'),
-    })
+    const outcome = await trip(
+      fetcher({ 'anthropic-models-md': modelsRepointed() }),
+      kv,
+      '2026-09-22T18:05:00Z',
+    )
     expect(outcome).toMatchObject({ status: 'tripped', skipped: 'survey@2026-09-22T18:00:00Z' })
     expect(kv.keys.has('tripwire:cooldown:anthropic-models-md')).toBe(false)
   })

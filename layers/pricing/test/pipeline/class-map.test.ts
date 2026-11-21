@@ -382,8 +382,10 @@ describe('a judge re-mapping', () => {
     expect(report.class_map).toEqual({ accepted: 1, rejected: [] })
   })
 
-  it('accepts the sentence with its apostrophe curled where the page has it straight', async () => {
-    const report = await submit([proposal({ basis: NEW_FLAGSHIP.replace("'", '’') })])
+  it('accepts the sentence with its apostrophe straight where the page has it curled', async () => {
+    const straight = NEW_FLAGSHIP.replace('’', "'")
+    expect(straight).not.toBe(NEW_FLAGSHIP)
+    const report = await submit([proposal({ basis: straight })])
     expect(report.class_map).toEqual({ accepted: 1, rejected: [] })
   })
 

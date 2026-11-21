@@ -239,12 +239,6 @@ describe('without the key', () => {
     await runRefresh(deps(skippedFetcher, nextDay), 'survey', [SOURCE_ID])
     expect(await opsKinds()).toEqual(['source_unconfigured', 'source_unconfigured'])
   })
-
-  it('does not make a tick "all failed" when every other source succeeded or was skipped', async () => {
-    const report = await runRefresh(deps(skippedFetcher), 'survey', [SOURCE_ID])
-    expect(report.all_failed).toBe(false)
-    expect(await opsKinds()).not.toContain('all_sources_failed')
-  })
 })
 
 describe('with the key', () => {

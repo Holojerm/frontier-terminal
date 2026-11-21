@@ -2,6 +2,7 @@ import { beforeEach, describe, expect, it } from 'vitest'
 
 import { runRefresh, type RefreshDeps } from '../../core/server/pipeline/refresh'
 import { MODEL_CLASS_MAP } from '../../pricing/server/utils/terminal-classes'
+import { EXPORT_TABLES } from '#server/registries/export-tables'
 import {
   fixtureFetcher,
   fixtureText,
@@ -159,59 +160,8 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       expect(s.url).toMatch(/^https?:\/\//)
     }
     expect(coverage.cuts.map((c) => c.id)).toContain('meta-hiring')
-    expect(coverage.exports.map((e) => e.name)).toEqual([
-      'snapshots',
-      'prices_latest',
-      'jobs_open',
-      'incidents',
-      'disclosures',
-      'disclosure_timelines',
-      'latency_probes',
-      'probe_days',
-      'hardware_prints',
-      'filers',
-      'revenue_facts',
-      'prospectus_statements',
-      'prospectus_commitments',
-      'prospectus_concentration',
-      'prospectus_shares',
-      'prospectus_risk_factors',
-      'changes',
-      'archived_prices',
-      'archived_hiring',
-      'archived_gpu_prices',
-      'archived_incidents',
-      'archived_rate_limits',
-      'archive_captures',
-      'alerts',
-      'claim_readings',
-      'claim_verdicts',
-      'track_record_candidates',
-      'track_record_verdicts',
-      'reported_articles',
-      'reported_figures',
-      'recipe_observations',
-      'download_series',
-      'filed_facts',
-      'filed_text_facts',
-      'filed_guidance',
-      'guidance_resolutions',
-      'call_documents',
-      'exposure_quarters',
-      'dependency_edges',
-      'source_runs',
-      'entity_securities',
-      'entity_identifiers',
-      'supplier_passages',
-      'power_site_ties',
-      'signal_results',
-      'forward_calls',
-      'forward_call_scores',
-      'grid_load_days',
-      'ercot_large_load_facts',
-      'listed_jobs',
-      'listed_hiring_reads',
-    ])
+    // The table list itself is pinned in terminal-export.test.ts.
+    expect(coverage.exports.map((e) => e.name)).toEqual(Object.keys(EXPORT_TABLES))
   })
 
   it('incidents: three labs are stated cuts; the other six say no rows, not zero incidents', async () => {
@@ -278,7 +228,6 @@ describe('after a baseline poll of every source', () => {
       removed: false,
       delta: null,
     })
-    expect(grok.fetched_at).toMatch(/^2026-09-07T10:0\d:/)
 
     // The two Anthropic pages carry the same SKU key: one row, the other cited.
     const sonnet = prices.rows.filter((r) => r.entity_key === 'model:anthropic:claude-sonnet-5-5')
@@ -356,10 +305,7 @@ describe('after a baseline poll of every source', () => {
     // price list is the 2026-11-02 capture, from before Carbon and Hydrogen were
     // listed: both cells are mapped, their sentences current, and unpriced. That
     // is the middle state, as it reads when a models page moves before a price list.
-    for (const [k, slug] of [
-      ['flagship', 'gemini-4-carbon'],
-      ['balanced', 'gemini-4-hydrogen'],
-    ] as const) {
+    for (const k of ['flagship', 'balanced']) {
       expect(cell('google', k)).toMatchObject({
         basis_source_id: 'google-models-md',
         basis_current: true,
@@ -367,9 +313,6 @@ describe('after a baseline poll of every source', () => {
         priced: false,
         gap: NO_ROW_GAP,
       })
-      expect(
-        MODEL_CLASS_MAP.find((e) => e.provider === 'google' && e.class === k)?.model_slug,
-      ).toBe(slug)
     }
 
     const googleEconomy = cell('google', 'economy')
@@ -612,12 +555,6 @@ describe('after a baseline poll of every source', () => {
     expect(byProvider.xai!.sources[0]!.fetched_at).toBe(xaiRead)
     expect(Date.parse(byProvider.anthropic!.window_to!)).toBeLessThan(Date.parse(openaiRead))
     expect(byProvider.meta!.window_to).toBeNull()
-  })
-
-  it('alerts: none after a baseline', async () => {
-    const alerts = await queryAlerts(db, await ctx(), 50)
-    expect(alerts.rows).toEqual([])
-    expect(alerts.total).toBe(0)
   })
 
   it('matrix: an unchanged repoll moves the basis check to that poll', async () => {

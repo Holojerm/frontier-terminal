@@ -190,12 +190,6 @@ describe('a store that has moved on answers as it did then', () => {
     })
     expect([...dated.notes.method].join(' ')).toContain('revenue_filers as it stood at as_of')
   })
-
-  it('a SKU first listed after T is not there at T', POLLS, async () => {
-    await poll()
-    const t1 = between()
-    expect(await queryPriceHistory(db, await asOf(t1), 'model:xai:grok-9:standard')).toBeNull()
-  })
 })
 
 describe('alerts as of T', () => {

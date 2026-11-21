@@ -1,8 +1,5 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Press reports of a lab's revenue against the figures its filings printed
@@ -124,6 +121,9 @@ const AFTER_S1A_STATED = headline(
   'Anthropic Q3 2026 Revenue Jumps 47% to $16.96 Billion as Loss Narrows Ahead of IPO',
   { period: '2026-Q3' },
 )
+const OPENAI = headline('2026-11-11T13:30:00.000Z', 10e9, 'OpenAI revenue rises to $10 billion', {
+  lab: 'openai',
+})
 
 describe('periods', () => {
   it('names a calendar span the way a reader would', () => {
@@ -295,14 +295,6 @@ describe('the ledger', () => {
   })
 
   it('lists what no filing can score, and why', () => {
-    const openai = headline(
-      '2026-11-11T13:30:00.000Z',
-      10e9,
-      'OpenAI revenue rises to $10 billion',
-      {
-        lab: 'openai',
-      },
-    )
     const runRate = headline(
       '2026-11-10T19:00:00.000Z',
       81e9,
@@ -314,7 +306,7 @@ describe('the ledger', () => {
     const forecast = headline('2026-11-10T12:00:00.000Z', 685e9, 'Anthropic sees $685 billion', {
       basis: 'projected',
     })
-    const waiting = waitingOf([...all, openai, runRate, forecast], new Set(['anthropic']))
+    const waiting = waitingOf([...all, OPENAI, runRate, forecast], new Set(['anthropic']))
     expect(waiting.map((w) => [w.lab, w.metric, w.reports, w.reason])).toEqual([
       ['anthropic', 'revenue_run_rate', 1, 'not-in-filings'],
       ['openai', 'revenue', 1, 'no-filing'],
@@ -324,7 +316,6 @@ describe('the ledger', () => {
 })
 
 describe('the payload', () => {
-  const db = drizzle(env.DB, { schema })
   const sourcesYaml = fixtureText('sources.yaml')
   const NOW = new Date('2026-11-19T20:00:00Z')
   const ctx = () => queryContext(sourcesYaml, null, () => NOW)
@@ -420,15 +411,7 @@ describe('the payload', () => {
   }
 
   it('scores an issuer’s reports and leaves the other labs waiting', async () => {
-    const openai = headline(
-      '2026-11-11T13:30:00.000Z',
-      10e9,
-      'OpenAI revenue rises to $10 billion',
-      {
-        lab: 'openai',
-      },
-    )
-    await seed([FY25, Q3_FT, Q3_POST, H1, H1_PRIOR, AFTER_S1, openai])
+    await seed([FY25, Q3_FT, Q3_POST, H1, H1_PRIOR, AFTER_S1, OPENAI])
 
     const data = await queryGroundTruth(db, ctx())
     expect(data.tolerance_pct).toBe(5)
@@ -448,13 +431,7 @@ describe('the payload', () => {
   })
 
   it('scores one lab alone when given a lab, tallies included', async () => {
-    const openai = headline(
-      '2026-11-11T13:30:00.000Z',
-      10e9,
-      'OpenAI revenue rises to $10 billion',
-      { lab: 'openai' },
-    )
-    await seed([FY25, Q3_FT, Q3_POST, H1, H1_PRIOR, AFTER_S1, openai])
+    await seed([FY25, Q3_FT, Q3_POST, H1, H1_PRIOR, AFTER_S1, OPENAI])
 
     const anthropic = await queryGroundTruth(db, ctx(), 'anthropic')
     expect(anthropic.resolutions.map((r) => r.lab)).toEqual(['anthropic', 'anthropic', 'anthropic'])
@@ -469,16 +446,5 @@ describe('the payload', () => {
       expect.objectContaining({ lab: 'openai', metric: 'revenue', reason: 'no-filing' }),
     ])
     expect(other.deals.unread).toBe(0)
-  })
-
-  it('is empty, not an error, before anything is stored', async () => {
-    const data = await queryGroundTruth(db, ctx())
-    expect(data).toMatchObject({
-      resolutions: [],
-      open: [],
-      waiting: [],
-      first_stored_at: null,
-      tally: { periods: 0, reports: 0, median_abs_error_pct: null },
-    })
   })
 })

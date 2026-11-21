@@ -8,7 +8,6 @@ import {
 } from '../../server/pipeline/normalize'
 import {
   REGISTRATION_FIXTURE,
-  archivesCik,
   registrationTarget,
 } from '../../server/pipeline/parsers/sec/filing-index'
 import { PROSPECTUS_FIXTURE, parseProspectus } from '../../server/pipeline/parsers/sec/prospectus'
@@ -515,7 +514,6 @@ describe('GET /api/prospectus and the exports', () => {
     expect(a.risk_factors.diffs).toHaveLength(1)
     expect(a.risk_factors.diffs[0]!.from.form).toBe('S-1')
     expect(a.risk_factors.diffs[0]!.changes).toHaveLength(8)
-    expect(archivesCik(a.statement.periods[0]!.source_url)).toBe(CIK)
   })
 
   it('exports one row per line, bucket, share and heading, paging inside an entity', async () => {

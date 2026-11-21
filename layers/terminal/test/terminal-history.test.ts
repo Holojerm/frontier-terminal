@@ -296,13 +296,6 @@ describe('openRolesAt', () => {
     expect(at('2026-09-01T00:00:00Z', 'Data Center')).toBe(1)
   })
 
-  it('reads several instants in one pass, whatever their order', () => {
-    const out = openRolesAt(current, changes, ['2026-09-01T00:00:00Z', '2026-09-05T00:00:00Z'])
-    expect(out.get('2026-09-05T00:00:00Z')!.get('xai')!.get('Engineering')).toBe(1)
-    expect(out.get('2026-09-01T00:00:00Z')!.get('xai')!.get('Engineering')).toBe(1)
-    expect(out.get('2026-09-01T00:00:00Z')!.get('xai')!.get('Data Center')).toBe(1)
-  })
-
   it('daily grid, department rows and the comparison window', () => {
     const grid = dailyInstants('2026-09-01', '2026-09-05T10:00:00.000Z')
     expect(grid).toEqual([

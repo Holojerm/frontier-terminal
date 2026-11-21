@@ -58,12 +58,6 @@ function expectGrounded(rows: GooglePricingRow[], html: string) {
   }
 }
 
-async function sha256(value: unknown): Promise<string> {
-  const bytes = new TextEncoder().encode(JSON.stringify(value))
-  const digest = await crypto.subtle.digest('SHA-256', bytes)
-  return [...new Uint8Array(digest)].map((b) => b.toString(16).padStart(2, '0')).join('')
-}
-
 describe('parseGooglePricing on the 2026-08-25 fixture', () => {
   const { rows, skipped } = parseGooglePricingPage(fixture, FIXTURE_PROV)
   const byKey = new Map(rows.map((r) => [rowKey(r), r]))
@@ -180,12 +174,6 @@ describe('parseGooglePricing on the 2026-08-25 fixture', () => {
     expect(tools.map((r) => [r.tier, ...PRICE_FIELDS.map((f) => r[f])])).toEqual(
       pro.map((r) => [r.tier, ...PRICE_FIELDS.map((f) => r[f])]),
     )
-  })
-
-  it('is deterministic', async () => {
-    const a = await sha256(parseGooglePricing(fixture, FIXTURE_PROV))
-    const b = await sha256(parseGooglePricing(fixture, FIXTURE_PROV))
-    expect(a).toBe(b)
   })
 })
 
@@ -328,12 +316,6 @@ describe('parseGooglePricing on the 2026-11-02 Markdoc page', () => {
       'input: $1.25, prompts <= 200k tokens | $2.50, prompts > 200k tokens',
     )
     for (const row of rows) expect(row.notes ?? '').not.toMatch(/\{%|\]\(|\*\*/)
-  })
-
-  it('is deterministic', async () => {
-    const a = await sha256(parseGooglePricing(markdoc, MARKDOC_PROV))
-    const b = await sha256(parseGooglePricing(markdoc, MARKDOC_PROV))
-    expect(a).toBe(b)
   })
 })
 

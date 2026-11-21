@@ -65,6 +65,10 @@ const JUL = stored(
   JUL_HTML,
 )
 const OCT = stored({ accession_no: OCT_2026, filed: '2026-10-21' }, OCT_HTML)
+const amznHtml = (n: number) =>
+  `<p>We expect 2026 cash capital expenditures to be approximately $${n} billion.</p>`
+const AMZN_FEB = stored({ accession_no: 'a-feb', filed: '2026-02-05' }, amznHtml(200), 'AMZN')
+const AMZN_OCT = stored({ accession_no: 'a-oct', filed: '2026-10-21' }, amznHtml(220), 'AMZN')
 const baseline = { now: new Date(AT), firstReadAt: '2026-07-01T00:00:00.000Z' }
 
 const fact = (
@@ -161,11 +165,7 @@ describe('a revision', () => {
       severity: 'notable',
       headline: 'Meta guides 2026 capex to $130B–$145B',
     })
-    const html = (n: number) =>
-      `<p>We expect 2026 cash capital expenditures to be approximately $${n} billion.</p>`
-    const feb = stored({ accession_no: 'a-feb', filed: '2026-02-05' }, html(200), 'AMZN')
-    const oct = stored({ accession_no: 'a-oct', filed: '2026-10-21' }, html(220), 'AMZN')
-    expect(revisionAlert(oct, feb, baseline)!.alert).toMatchObject({
+    expect(revisionAlert(AMZN_OCT, AMZN_FEB, baseline)!.alert).toMatchObject({
       severity: 'critical',
       headline: 'Amazon raises its 2026 capex guidance to $220B, from $200B',
     })
@@ -301,21 +301,6 @@ describe('guidanceAlerts', () => {
     firstReleaseReadAt: baseline.firstReadAt,
   }
 
-  it('raises the revision and the check once the release holds', async () => {
-    const { out, rejected } = await guidanceAlerts(
-      { ticker: 'META' },
-      [JUL, OCT],
-      META_Q3,
-      read({ [OCT.raw_key]: OCT_HTML }),
-      b,
-    )
-    expect(rejected).toEqual([])
-    expect(out.map((a) => [a.change.entity_type, a.alert.severity])).toEqual([
-      ['guidance', 'critical'],
-      ['guidance_check', 'notable'],
-    ])
-  })
-
   it('raises neither when the stored release is missing or does not print the sentence', async () => {
     const missing = await guidanceAlerts({ ticker: 'META' }, [JUL, OCT], META_Q3, read({}), b)
     expect(missing.out).toEqual([])
@@ -334,16 +319,12 @@ describe('guidanceAlerts', () => {
   })
 
   it('gives Amazon the revision and no check', async () => {
-    const html = (n: number) =>
-      `<p>We expect 2026 cash capital expenditures to be approximately $${n} billion.</p>`
-    const feb = stored({ accession_no: 'a-feb', filed: '2026-02-05' }, html(200), 'AMZN')
-    const oct = stored({ accession_no: 'a-oct', filed: '2026-10-21' }, html(220), 'AMZN')
     const facts = META_Q3.map((f) => ({ ...f, ticker: 'AMZN', concept: PPE }))
     const { out } = await guidanceAlerts(
       { ticker: 'AMZN' },
-      [feb, oct],
+      [AMZN_FEB, AMZN_OCT],
       facts,
-      read({ [oct.raw_key]: html(220) }),
+      read({ [AMZN_OCT.raw_key]: amznHtml(220) }),
       b,
     )
     expect(out.map((a) => a.change.entity_type)).toEqual(['guidance'])

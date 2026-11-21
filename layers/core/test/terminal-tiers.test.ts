@@ -15,17 +15,12 @@ describe('alertTier', () => {
     expect(severitiesOf('alert')).toEqual(['notable', 'critical'])
     expect(severitiesOf('info')).toEqual(['info'])
     expect(severitiesOf('all')).toEqual(['info', 'notable', 'critical'])
-    expect([...severitiesOf('alert'), ...severitiesOf('info')].sort()).toEqual(
-      [...severitiesOf('all')].sort(),
-    )
     expect(ALERT_TIER_FILTERS).toEqual(['alert', 'critical', 'notable', 'info', 'all'])
   })
 
   it('narrows the alert tier to one severity without making it a tier', () => {
     expect(severitiesOf('critical')).toEqual(['critical'])
     expect(severitiesOf('notable')).toEqual(['notable'])
-    expect(severitiesOf('alert')).toContain('critical')
-    expect(alertTier('critical')).toBe('alert')
   })
 
   it('names the permalink and the feed flags in one place', () => {

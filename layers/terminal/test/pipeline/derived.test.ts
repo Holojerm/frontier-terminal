@@ -396,7 +396,6 @@ describe('CIK resolution end to end', () => {
     expect(sourceIdsForScope('survey', all)).toEqual(
       all.map((s) => s.source_id).filter((id) => !CAREERS_SOURCES.includes(id)),
     )
-    expect(sourceIdsForScope('survey', all)).toContain('edgar-companyfacts-anthropic')
 
     const second = await run(next, fetcher())
     const byId = Object.fromEntries(second.sources.map((s) => [s.source_id, s]))

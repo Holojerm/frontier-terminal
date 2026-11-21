@@ -546,6 +546,34 @@ function depsWith(over: Partial<CallDeps> = {}): CallDeps {
   }
 }
 
+const audioDeps = (fetch: (url: string | URL | Request, init?: RequestInit) => Promise<Response>) =>
+  depsWith({ assemblyKey: 'k', fetch: fetch as typeof globalThis.fetch })
+
+// The first 64 KiB of a 192 kbps MP3, as a ranged GET returns it.
+const mp3Head = () => {
+  const head = new Uint8Array(65536)
+  head.set([0xff, 0xfb, 0xb0, 0x00])
+  return new Response(head, { status: 206, headers: { 'content-range': 'bytes 0-65535/76030272' } })
+}
+
+// Every other ticker's feed read just now, so `ticker`'s is the stalest.
+async function readAllBut(ticker: string) {
+  for (const t of CALL_TICKERS.filter((x) => x !== ticker)) {
+    await db.insert(schema.filedFactReads).values({
+      id: `r-${t}`,
+      ticker: t,
+      kind: 'call-submissions',
+      accession_no: null,
+      status: 'ok',
+      detail: null,
+      content_hash: null,
+      facts: 0,
+      started_at: '2026-11-21T08:59:00Z',
+      source_url: 'x',
+    })
+  }
+}
+
 const docRow = (over: Partial<typeof schema.callDocuments.$inferInsert>) => ({
   id: `doc-${Math.random().toString(36).slice(2)}`,
   ticker: 'AMD',
@@ -593,21 +621,7 @@ describe('the reader', () => {
   })
 
   it('finds the earnings exhibits, reads them, and stores the outlook', async () => {
-    // Every other ticker read just now, so AMD's feed is the stalest.
-    for (const t of CALL_TICKERS.filter((x) => x !== 'AMD')) {
-      await db.insert(schema.filedFactReads).values({
-        id: `r-${t}`,
-        ticker: t,
-        kind: 'call-submissions',
-        accession_no: null,
-        status: 'ok',
-        detail: null,
-        content_hash: null,
-        facts: 0,
-        started_at: '2026-11-21T08:59:00Z',
-        source_url: 'x',
-      })
-    }
+    await readAllBut('AMD')
     const deps = depsWith()
     const found = await discoverExhibits(db, deps)
     expect(found.filings).toBe(1)
@@ -664,10 +678,7 @@ describe('the reader', () => {
     )
     const fetch = async (url: string | URL | Request) =>
       String(url).endsWith('/sentences') ? new Response(SENTENCES) : new Response(JOB)
-    const out = await runAudio(
-      db,
-      depsWith({ assemblyKey: 'k', fetch: fetch as typeof globalThis.fetch }),
-    )
+    const out = await runAudio(db, audioDeps(fetch))
     expect(out).toMatchObject({ collected: 1, statements: 2 })
     const [doc] = await db.select().from(schema.callDocuments)
     expect(doc).toMatchObject({ status: 'read', statements: 2 })
@@ -719,19 +730,15 @@ describe('the reader', () => {
         url: 'https://example.com/new.mp3',
       }),
     ])
-    const head = new Uint8Array(65536)
-    head.set([0xff, 0xfb, 0xb0, 0x00])
-    const ranged = async () =>
-      new Response(head, { status: 206, headers: { 'content-range': 'bytes 0-65535/76030272' } })
     let posted = 0
     const fetch = async (_url: string | URL | Request, init?: RequestInit) => {
       if (init?.method === 'POST') {
         posted++
         return new Response('{"error":"Your account has insufficient credits"}', { status: 401 })
       }
-      return ranged()
+      return mp3Head()
     }
-    await runAudio(db, depsWith({ assemblyKey: 'k', fetch: fetch as typeof globalThis.fetch }))
+    await runAudio(db, audioDeps(fetch))
     expect(posted).toBe(0)
     let events = await db.select().from(schema.opsEvents)
     expect(events.map((e) => e.kind)).toEqual([KIND_ASSEMBLYAI_CREDITS])
@@ -742,7 +749,7 @@ describe('the reader', () => {
       .set({ cost_usd: 1 })
       .where(eq(schema.callDocuments.status, 'read'))
     await db.delete(schema.opsEvents)
-    await runAudio(db, depsWith({ assemblyKey: 'k', fetch: fetch as typeof globalThis.fetch }))
+    await runAudio(db, audioDeps(fetch))
     expect(posted).toBe(1)
     events = await db.select().from(schema.opsEvents)
     expect(events.map((e) => e.kind)).toEqual([KIND_ASSEMBLYAI_CREDITS])
@@ -771,30 +778,15 @@ describe('the reader', () => {
   })
 
   it('lists the backfill from the paged files once, then reads index pages newest first', async () => {
-    for (const t of CALL_TICKERS.filter((x) => x !== 'QCOM')) {
-      await db.insert(schema.filedFactReads).values({
-        id: `r-${t}`,
-        ticker: t,
-        kind: 'call-submissions',
-        accession_no: null,
-        status: 'ok',
-        detail: null,
-        content_hash: null,
-        facts: 0,
-        started_at: '2026-11-21T08:59:00Z',
-        source_url: 'x',
-      })
-    }
+    await readAllBut('QCOM')
     const asked: string[] = []
-    const pages: Record<string, string> = {
+    const pages = fetcherOf({
       'https://data.sec.gov/submissions/CIK0000804328.json': QCOM_FEED,
       [QCOM_PAGE_URL]: QCOM_PAGE,
-    }
+    })
     const fetcher: SourceFetcher = async (s) => {
       asked.push(s.url)
-      return pages[s.url] === undefined
-        ? { ok: false, status: 404, detail: 'HTTP 404' }
-        : ok(pages[s.url]!)
+      return pages(s)
     }
     const deps = depsWith({ fetcher, limits: { submissions: 1, indexPages: 1 } })
     expect(await listFilings(db, deps)).toBe(5)
@@ -850,23 +842,15 @@ describe('the reader', () => {
     const now = new Date('2026-11-21T09:00:00Z')
     expect(await assemblySpend(db, now, 'monthly')).toBe(0)
     expect(await assemblySpend(db, now, 'backfill')).toBeCloseTo(BACKFILL_SPEND_CAP_USD - 0.1, 6)
-    const head = new Uint8Array(65536)
-    head.set([0xff, 0xfb, 0xb0, 0x00])
     const posted: string[] = []
     const fetch = async (_url: string | URL | Request, init?: RequestInit) => {
       if (init?.method === 'POST') {
         posted.push(JSON.parse(String(init.body)).audio_url)
         return new Response(`{"id":"00000000-0000-4000-8000-00000000000${posted.length}"}`)
       }
-      return new Response(head, {
-        status: 206,
-        headers: { 'content-range': 'bytes 0-65535/76030272' },
-      })
+      return mp3Head()
     }
-    const out = await runAudio(
-      db,
-      depsWith({ assemblyKey: 'k', fetch: fetch as typeof globalThis.fetch }),
-    )
+    const out = await runAudio(db, audioDeps(fetch))
     // The new call goes on the month's cap; the old one would pass the backfill's ceiling.
     expect(posted).toEqual(['https://example.com/new.mp3'])
     expect(out.backfill_spent_usd).toBeCloseTo(BACKFILL_SPEND_CAP_USD - 0.1, 6)

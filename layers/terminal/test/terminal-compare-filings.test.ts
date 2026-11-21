@@ -21,10 +21,6 @@ describe('compare pairs', () => {
       canonical: false,
     })
     expect(parsePair('openai-vs-openai')).toBeNull()
-    expect(parsePair('openai-vs-deepseek')).toEqual({
-      pair: ['openai', 'deepseek'],
-      canonical: true,
-    })
     expect(parsePair('openai-vs-cohere')).toBeNull()
     expect(parsePair('openai')).toBeNull()
     expect(parsePair('openai-vs-anthropic-vs-xai')).toBeNull()

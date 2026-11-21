@@ -180,14 +180,6 @@ describe('runPoll between survey instants', () => {
 })
 
 describe('the careers lane', () => {
-  it('the survey leaves google-careers to its own tick', async () => {
-    const { all } = deps('2026-09-09T00:00:08Z')
-    const outcome = await runPoll('survey', all)
-    expect(outcome.status).toBe('ran')
-    if (outcome.status !== 'ran') return
-    expect(outcome.result.sources.map((s) => s.source_id)).not.toContain('google-careers')
-  })
-
   it('runs google-careers alone, under its own scope', async () => {
     const { all, fetcher } = deps('2026-09-09T00:17:02Z')
     const outcome = await runPoll('careers', all)

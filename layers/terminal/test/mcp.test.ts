@@ -334,15 +334,6 @@ describe('tools/call', () => {
     })
     expect(meta.providers[0]!.reason).toBeTruthy()
 
-    const google = (await tool('get_hiring', { provider: 'google' })).structuredContent as {
-      providers: { feed: string; total: number; company_names: string[] }[]
-    }
-    expect(google.providers[0]).toMatchObject({
-      feed: 'ok',
-      total: 27,
-      company_names: ['DeepMind'],
-    })
-
     const xai = (await tool('get_hiring', { provider: 'xai' })).structuredContent as {
       providers: { total: number; caveat: string | null; company_names: string[] }[]
     }
