@@ -610,18 +610,16 @@ describe('the judge’s guidance review', () => {
   it('offers a document the parser found nothing in, and gates what comes back', async () => {
     const raw_key = 'calls/amd/test.json'
     store.set(raw_key, JSON.stringify({ url: 'x', sentences }))
-    await db
-      .insert(schema.callDocuments)
-      .values(
-        docRow({
-          id: 'doc-judge',
-          kind: 'transcript',
-          status: 'read',
-          statements: 0,
-          raw_key,
-          call_date: '2026-11-03',
-        }),
-      )
+    await db.insert(schema.callDocuments).values(
+      docRow({
+        id: 'doc-judge',
+        kind: 'transcript',
+        status: 'read',
+        statements: 0,
+        raw_key,
+        call_date: '2026-11-03',
+      }),
+    )
     const now = new Date('2026-11-21T09:00:00Z')
     const offered = await guidanceReview(db, async (k) => store.get(k) ?? null, now)
     expect(offered.map((o) => [o.document_id, o.excerpts.length, o.reported])).toEqual([
