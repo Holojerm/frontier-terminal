@@ -23,6 +23,22 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.16.0 (2026-11-21)
+
+`/api/utilization` gains `benchmark_rounds`: every stored MLPerf Inference
+round side by side (v5.1 and v6.0 today). A row is one accelerator on one
+benchmark at one accelerator count, and `results` has one entry per round in
+`rounds`, oldest first: the round's fastest result in tokens per second per
+accelerator (our division, unverified by MLCommons), with its `result_id`,
+`submitter` and `system`, or null where the round has none. `change` is the
+newest result over the one before it, less one. Only accelerators with a
+like-for-like result in two rounds have rows. `accelerators_left_out` counts
+the rest, and `mixed_results` counts results from systems that mix
+accelerators. `footnote` is the citation MLCommons requires, and `sources`
+cites each round. It is null until two rounds are stored. `implied` still
+reads the newest round alone. The MCP tool `get_utilization` returns it too.
+No table columns changed.
+
 ## 1.15.0 (2026-11-21)
 
 OpenAI moved its misalignment reports from alignment.openai.com to
