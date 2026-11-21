@@ -19,7 +19,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Compute',
     summary:
-      'On-demand H100 and B200 rental list prices from ten first-party provider pages with the median across them, spot prices against on-demand per provider, both charted on each day a provider’s page changed, the weekly median back to 2023 from the Internet Archive’s copies of those pages, Alphabet’s stated token volume as a bounded share of Google’s estimated fleet, CoreWeave’s revenue per megawatt of active power, Epoch AI’s estimate of data-center power per frontier lab and per site, and the utilities, generators and equipment makers tied to each lab’s sites, each with its source page.',
+      'On-demand H100 and B200 rental list prices from ten first-party provider pages with the median across them, spot prices against on-demand per provider, both charted on each day a provider’s page changed, the weekly median back to 2023 from the Internet Archive’s copies of those pages, Alphabet’s stated token volume as a bounded share of Google’s estimated fleet, MLPerf Inference tokens per second per accelerator in each round we hold, CoreWeave’s revenue per megawatt of active power, Epoch AI’s estimate of data-center power per frontier lab and per site, and the utilities, generators and equipment makers tied to each lab’s sites, each with its source page.',
   },
 })
 
@@ -125,6 +125,15 @@ const sites = computed(() =>
         note="Alphabet’s stated token volume at each benchmark model’s speed, as a share of Epoch AI’s estimate of Google’s fleet. A range per model, never one number."
       >
         <TerminalImpliedLoad :implied="utilization.implied" :shape="utilization.demand_shape" />
+      </TerminalPanel>
+
+      <TerminalPanel
+        v-if="utilization.benchmark_rounds"
+        id="benchmark-rounds"
+        title="Benchmark speed, round over round"
+        :note="`MLPerf Inference tokens per second per accelerator in ${utilization.benchmark_rounds.rounds.join(' and ')}, for each accelerator with results in more than one round.`"
+      >
+        <TerminalBenchmarkRounds :rounds="utilization.benchmark_rounds" />
       </TerminalPanel>
 
       <TerminalPanel

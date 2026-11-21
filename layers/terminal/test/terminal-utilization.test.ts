@@ -38,6 +38,7 @@ import {
   MLPERF_ROUNDS,
   extractMlperf,
   mlperfFootnote,
+  mlperfRoundsFootnote,
   mlperfUrl,
   nextMlperfRound,
 } from '../server/theses/recipes/mlperf-inference'
@@ -51,8 +52,11 @@ import {
   h100eOf,
   impliedRows,
   listPriceFloor,
+  mlperfChip,
   queryUtilization,
+  roundRows,
   spotRead,
+  type RoundResult,
 } from '../server/utils/terminal-utilization'
 import { fixtureText } from './pipeline/fixtures'
 
@@ -352,6 +356,22 @@ describe('MLPerf Inference', () => {
   })
 })
 
+describe('MLPerf rounds footnote', () => {
+  it('names every round compared, its retrieval, the basis of the change and the unverified statement', () => {
+    const footnote = mlperfRoundsFootnote([
+      { round: 'v5.1', retrieved: '2026-11-20' },
+      { round: 'v6.0', retrieved: '2026-11-21' },
+    ])
+    expect(footnote).toContain(
+      'MLPerf® Inference v5.1 and v6.0, Datacenter, Closed division, Server scenario. Retrieved from https://github.com/mlcommons/inference_results_v5.1 on 2026-11-20 and https://github.com/mlcommons/inference_results_v6.0 on 2026-11-21.',
+    )
+    expect(footnote).toContain('the change between rounds is our comparison')
+    expect(footnote).toContain('MLPerf Compatibility Table')
+    expect(footnote).toContain('Result not verified by MLCommons Association.')
+    expect(footnote).toContain('See www.mlcommons.org for more information.')
+  })
+})
+
 describe('Epoch AI chip data', () => {
   it('reads Google’s running fleet with its percentiles', () => {
     const fleet = extractChipUsers(chipUsers).find(
@@ -512,6 +532,92 @@ describe('impliedRows', () => {
     })
     expect(models.find((m) => m.model === 'large')!.share).toEqual({ low: 2.5, high: 10 })
     expect(unrated_results).toBe(1)
+  })
+})
+
+describe('mlperfChip', () => {
+  it('names one chip per system, without the system’s count or the submitter’s tag', () => {
+    expect(mlperfChip('AMD Instinct MI355X 288GB HBM3e (x87)')).toEqual({
+      key: 'amd instinct mi355x 288gb hbm3e',
+      label: 'AMD Instinct MI355X 288GB HBM3e',
+    })
+    expect(mlperfChip('[MAXSUN] MS-Intel Arc Pro B60 Dual 48G Turbo')!.label).toBe(
+      'MS-Intel Arc Pro B60 Dual 48G Turbo',
+    )
+    // A power cap is a different configuration, so it stays its own chip.
+    expect(mlperfChip('AMD Instinct MI355X 288GB HBM3e (Power Cap 1000 W)')!.label).toBe(
+      'AMD Instinct MI355X 288GB HBM3e (Power Cap 1000 W)',
+    )
+  })
+
+  it('names no chip for a system that mixes them', () => {
+    expect(
+      mlperfChip('AMD Instinct MI300X 192GB HBM3 (x32), AMD Instinct MI325X 256GB HBM3e (x16)'),
+    ).toBeNull()
+    expect(
+      mlperfChip(
+        'AMD Instinct MI300X 192GB HBM3 (x8) and AMD Instinct MI325X 256GB HBM3e (x8) and AMD Instinct MI355X 288GB HBM3e (x8)',
+      ),
+    ).toBeNull()
+  })
+})
+
+describe('roundRows', () => {
+  const result = (
+    round: string,
+    result_id: string,
+    per_accelerator: number,
+    over: Partial<RoundResult> = {},
+  ): RoundResult => ({
+    round,
+    result_id,
+    model: 'llama3.1-8b',
+    accelerator: 'NVIDIA B200-SXM-180GB',
+    accelerators: 8,
+    submitter: 'NVIDIA',
+    system: 'DGX B200',
+    per_accelerator,
+    ...over,
+  })
+
+  it('keeps each round’s fastest result and the change from the round before', () => {
+    const { rows } = roundRows(
+      [result('v5.1', '5.1-1', 1000), result('v5.1', '5.1-2', 1200), result('v6.0', '6.0-1', 1500)],
+      ['v5.1', 'v6.0'],
+    )
+    expect(rows).toHaveLength(1)
+    expect(rows[0]!.results.map((r) => r!.result_id)).toEqual(['5.1-2', '6.0-1'])
+    expect(rows[0]!.change).toBeCloseTo(0.25, 9)
+  })
+
+  it('compares only at the same accelerator count, and counts the chip left out', () => {
+    const out = roundRows(
+      [result('v5.1', '5.1-1', 1000), result('v6.0', '6.0-1', 900, { accelerators: 72 })],
+      ['v5.1', 'v6.0'],
+    )
+    expect(out.rows).toEqual([])
+    expect(out.accelerators_left_out).toBe(1)
+  })
+
+  it('keeps the SXM and NVL versions of a chip apart, and leaves mixed systems out', () => {
+    const out = roundRows(
+      [
+        result('v5.1', '5.1-1', 1000, { accelerator: 'NVIDIA H200-SXM-141GB' }),
+        result('v6.0', '6.0-1', 900, { accelerator: 'NVIDIA H200-NVL-141GB' }),
+        result('v6.0', '6.0-2', 900, { accelerator: 'A (x4), B (x4)' }),
+      ],
+      ['v5.1', 'v6.0'],
+    )
+    expect(out).toEqual({ rows: [], accelerators_left_out: 2, mixed_results: 1 })
+  })
+
+  it('with three rounds, leaves a gap where one is missing and compares the newest two present', () => {
+    const { rows } = roundRows(
+      [result('a', 'a-1', 1000), result('c', 'c-1', 3000)],
+      ['a', 'b', 'c'],
+    )
+    expect(rows[0]!.results.map((r) => r?.result_id ?? null)).toEqual(['a-1', null, 'c-1'])
+    expect(rows[0]!.change).toBeCloseTo(2, 9)
   })
 })
 
@@ -727,6 +833,49 @@ describe('queryUtilization', () => {
     // CoreWeave's own list: $6.155 for an H100, $8.60 for a B200 rated 2.5265 H100e.
     expect(cw!.floor!.list_usd_per_h100e_hour.high).toBe(6.155)
     expect(cw!.floor!.list_usd_per_h100e_hour.low).toBeCloseTo(8.6 / 2.5265, 3)
+  })
+
+  it('sets v5.1 beside v6.0 per chip, benchmark and accelerator count, with both rounds cited', async () => {
+    const { benchmark_rounds: br } = await query()
+    expect(br!.rounds).toEqual(['v5.1', 'v6.0'])
+    expect(br!.rows).toHaveLength(24)
+    expect(new Set(br!.rows.map((r) => r.accelerator)).size).toBe(8)
+    // 19 chips across the two rounds, 8 of them with a like-for-like pair.
+    expect(br!.accelerators_left_out).toBe(11)
+    // Four v5.1 results and two v6.0 results come from clusters mixing AMD chips.
+    expect(br!.mixed_results).toBe(6)
+    for (const r of br!.rows) expect(r.results.every((x) => x !== null)).toBe(true)
+    // One NVL72 rack in each round: the rack-scale reading stays a rack-scale reading.
+    const rack = br!.rows.find(
+      (r) => r.accelerator === 'NVIDIA GB200' && r.model === 'deepseek-r1',
+    )!
+    expect(rack.accelerators).toBe(72)
+    expect(rack.change).toBeCloseTo(
+      rack.results[1]!.per_accelerator / rack.results[0]!.per_accelerator - 1,
+      9,
+    )
+    expect(br!.footnote).toBe(
+      mlperfRoundsFootnote([
+        { round: 'v5.1', retrieved: '2026-11-20' },
+        { round: 'v6.0', retrieved: '2026-11-20' },
+      ]),
+    )
+    expect(br!.sources.map((s) => s.source_url)).toEqual([mlperfUrl('v5.1'), mlperfUrl('v6.0')])
+  })
+
+  it('never pairs results whose node layout differs, on either stored round', async () => {
+    // The rule keys on the accelerator count. Check it against the layout each summary states.
+    const layout = new Map<string, string>()
+    for (const body of [mlperf51, mlperf]) {
+      for (const r of JSON.parse(body) as { ID: string; Nodes: number; 'a#': number | string }[]) {
+        layout.set(r.ID, `${r.Nodes}x${r['a#']}`)
+      }
+    }
+    const { benchmark_rounds: br } = await query()
+    for (const r of br!.rows) {
+      const shapes = new Set(r.results.map((x) => layout.get(x!.result_id)))
+      expect(shapes.size, `${r.accelerator} ${r.model}`).toBe(1)
+    }
   })
 
   it('has no demand shape without rankings rows, and says nothing in its place', async () => {

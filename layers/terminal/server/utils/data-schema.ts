@@ -262,6 +262,12 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
     summary:
       '/api/adoption gains weekly on each downloads and agent_prs entry: the total per ISO week (Monday to Sunday, UTC) over every stored day, oldest first, through the newest week whose Sunday is on record. days says how many of its days are stored, and partial is true when one is missing. An agent_prs week is also retrospective when any of its days was counted later, from the pull requests that still existed. get_adoption returns it too. No table columns changed.',
   },
+  {
+    version: '1.15.0',
+    date: '2026-11-21',
+    summary:
+      '/api/utilization gains benchmark_rounds: every stored MLPerf Inference round side by side, per accelerator and benchmark at the same accelerator count, with each round’s fastest result in tokens per second per accelerator (our division, unverified by MLCommons) and its result ID, change from the round before, the count of accelerators and mixed-accelerator results left out, a footnote and a source per round. It is null until two rounds are stored, and implied still reads the newest round alone. get_utilization returns it too. No table columns changed.',
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version
