@@ -159,9 +159,7 @@ const POINT_COLUMNS: TableColumn[] = [
       <span class="font-mono">{{ history.entity_key }}</span>
       <template v-if="history.context_window"> · {{ history.context_window }} context</template>
       <template v-if="history.removed"> · delisted</template>
-      <template v-if="history.archive_only">
-        · only in the Internet Archive, from before we started checking the page</template
-      >
+      <template v-if="history.archive_only"> · Internet Archive only</template>
     </template>
 
     <!-- Chart and its table side by side from xl: the table is the chart's
@@ -170,7 +168,7 @@ const POINT_COLUMNS: TableColumn[] = [
       <TerminalPanel
         id="chart"
         title="$ per million tokens"
-        :note="`${history.points.length} observation${history.points.length === 1 ? '' : 's'} on record. A price holds until the next observation, so the line steps.`"
+        :note="`${history.points.length} observation${history.points.length === 1 ? '' : 's'}. A price holds until the next one.`"
       >
         <TerminalLineChart
           v-if="chart.series.length && chart.x.length > 1"
@@ -235,15 +233,11 @@ const POINT_COLUMNS: TableColumn[] = [
         </TerminalTable>
         <template #foot>
           <template v-if="archivedCount">
-            The {{ archivedCount }} “Internet Archive” point{{ archivedCount === 1 ? '' : 's' }}
-            come from the Internet Archive’s copy of the lab’s own pricing page, from before we
-            started checking it. Each is the first copy we read that showed that price. We read
-            about one copy a week, so a change can be up to a week earlier than shown. The source
-            link opens that copy.
+            “Internet Archive” points are from roughly weekly copies of the lab’s pricing page, so a
+            change can be up to a week earlier than shown.
           </template>
-          A “first seen” point is the price before our first recorded change. It held from our first
-          check of the page, and any move in between would show up as its own row. A “current” point
-          is the price as of the latest check that changed it.
+          “First seen” is the price at our first check. “Current” is the price since the latest
+          change.
         </template>
       </TerminalPanel>
     </div>

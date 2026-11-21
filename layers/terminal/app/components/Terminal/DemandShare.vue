@@ -12,17 +12,7 @@ const watchlist = useWatchlist()
 
 const stamps = useStamps()
 
-const props = defineProps<{
-  rankings: RankingsData
-  /** On the landing page: drop the list of references evaluated and not ingested. */
-  compact?: boolean
-}>()
-
-/** Evaluated for this axis and cut (sources.yaml `cut`): linked, never fetched. */
-const EXTERNAL = [
-  { label: 'Artificial Analysis', url: 'https://artificialanalysis.ai/' },
-  { label: 'LMArena (arena.ai)', url: 'https://arena.ai/' },
-]
+const props = defineProps<{ rankings: RankingsData }>()
 
 const window = computed(() => props.rankings.meta.coverage.window)
 const prior = computed(() => props.rankings.meta.coverage.prior_window)
@@ -115,17 +105,5 @@ const widest = computed(() => Math.max(...props.rankings.shares.map((s) => s.sha
       >
       <span v-else-if="rankings.source.license">{{ rankings.source.license }}</span>
     </TerminalSources>
-    <p v-if="!compact" class="text-xs text-muted">
-      Considered and left out (license terms, or no data feed):
-      <template v-for="(ref, i) in EXTERNAL" :key="ref.url">
-        <a
-          :href="ref.url"
-          target="_blank"
-          rel="noopener noreferrer"
-          class="py-1.5 underline underline-offset-2 hover:text-default"
-          >{{ ref.label }}</a
-        ><template v-if="i < EXTERNAL.length - 1">, </template>
-      </template>
-    </p>
   </div>
 </template>

@@ -139,7 +139,7 @@ const sizeRows = computed(() =>
   <TerminalPanel
     id="graph"
     title="Who buys from whom, and who funds whom"
-    :note="graph.rule"
+    note="Filed figures only. Deals reported in the press aren’t drawn. Not investment advice."
     :more="{ label: 'Every series behind these figures', to: '/exposure' }"
   >
     <TerminalGap
@@ -300,10 +300,8 @@ const sizeRows = computed(() =>
         </li>
       </ul>
       <p class="text-xs text-muted">
-        A circle’s area follows the figure under its name. For a cloud company the contracts are its
-        backlog, what customers have signed to pay it. For a lab they are its obligations, what it
-        has signed to pay. A line’s width follows the figure printed on it. Lines carry different
-        kinds of figure, so compare widths only between lines with the same words.
+        Circle area follows the figure under its name. Line width follows the figure on the line.
+        Compare widths only between lines with the same words.
       </p>
     </template>
   </TerminalPanel>

@@ -81,11 +81,6 @@ const combined = computed(() => props.spot.combined.filter((c) => c.providers > 
       </p>
     </template>
 
-    <TerminalSources
-      :caveats="[
-        { text: spot.method, label: 'method' },
-        { text: spot.caveat, label: 'how to read it' },
-      ]"
-    />
+    <TerminalSources :caveats="[{ text: spot.caveat, label: 'how to read it' }]" />
   </div>
 </template>

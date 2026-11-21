@@ -164,11 +164,10 @@ const stamps = useStamps()
             <p v-if="overflow(p)">+ {{ overflow(p) }} more periods</p>
             <p v-if="p.superseded.length">
               {{ p.superseded.length }} earlier value{{ p.superseded.length === 1 ? '' : 's' }} for
-              these periods restated by a later filing. The revenue_facts export has them.
+              these periods restated by a later filing (in the revenue_facts export).
             </p>
             <p v-if="fromProspectus(p)">
-              Read from the S-1’s Consolidated Statements of Operations, because the filing has no
-              XBRL financials. A later filing’s figure for the same period replaces it.
+              From the S-1’s printed statement of operations, which has no XBRL.
             </p>
             <p v-if="p.tags.length">
               XBRL tag{{ p.tags.length === 1 ? '' : 's' }}:
@@ -203,7 +202,5 @@ const stamps = useStamps()
       </p>
       <TerminalSources :sources="unreportedSources" :caveats="unreportedCaveats" />
     </div>
-
-    <p class="text-xs text-muted">{{ revenue.rule }}</p>
   </div>
 </template>

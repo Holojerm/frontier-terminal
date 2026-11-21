@@ -1,11 +1,10 @@
 <script setup lang="ts">
 // GPU rental prices before our first read of each provider's page: the
 // weekly median over the Internet Archive's copies, one chart per GPU, then
-// how far each provider's copies reach, the stretches with none, and every
-// copy with its source. Archived points never reach the thesis; the panel
-// says so in its foot.
+// how far each provider's copies reach and every copy with its source. The
+// method is on /data and in the payload's `method`; the panel only credits
+// the Archive, which its terms ask for.
 
-import { HISTORY_LICENSE } from '#shared/utils/license'
 import { count, gpuHour } from '../../../shared/utils/terminal-format'
 import { dayLabel } from '../../../shared/utils/thesis-format'
 import type { ArchivedGpuPoint, GpuArchiveView } from '../../../shared/utils/terminal-types'
@@ -35,7 +34,7 @@ const charts = computed(() =>
 const reachColumns: TableColumn[] = [
   { key: 'provider', label: 'Provider' },
   { key: 'span', label: 'Copies from' },
-  { key: 'read', label: 'Read · skipped', numeric: true },
+  { key: 'read', label: 'Copies', numeric: true },
   { key: 'h100', label: 'H100, first → last' },
   { key: 'gaps', label: 'Gaps', class: 'text-muted' },
 ]
@@ -77,7 +76,7 @@ const copies = computed(() =>
           :format="gpuHour"
           :x-label="monthLabel"
           step
-          :title="`Weekly median on-demand ${c.gpu} list price per GPU-hour across the Internet Archive’s copies of the provider pages, ${dayLabel(first)} to ${dayLabel(last)}`"
+          :title="`Weekly median on-demand ${c.gpu} price per GPU-hour, ${dayLabel(first)} to ${dayLabel(last)}`"
         />
       </TerminalCard>
     </div>
@@ -98,30 +97,21 @@ const copies = computed(() =>
         >
         <span v-else class="text-muted">none read</span>
       </template>
-      <template #cell-read="{ row: r }"
-        >{{ count(r.points.length) }} · {{ count(r.skipped) }}</template
-      >
+      <template #cell-read="{ row: r }">{{ count(r.points.length) }}</template>
       <template #cell-h100="{ row: r }">{{ ends(r.points, 'h100') }}</template>
       <template #cell-gaps="{ row: r }">
         <ul v-if="r.gaps.length" class="space-y-1">
-          <li v-for="g in r.gaps" :key="g.from">
-            <span class="font-mono">{{ stamps.date(g.from) }} – {{ stamps.date(g.until) }}</span>:
-            {{ g.reason }}
+          <li v-for="g in r.gaps" :key="g.from" class="font-mono">
+            {{ stamps.date(g.from) }} – {{ stamps.date(g.until) }}
           </li>
         </ul>
         <span v-else>—</span>
       </template>
     </TerminalTable>
 
-    <ul v-if="archived.not_covered.length" class="space-y-1 text-sm text-muted">
-      <li v-for="n in archived.not_covered" :key="n.provider">
-        <span class="text-default">{{ n.provider_name }}:</span> {{ n.reason }}
-      </li>
-    </ul>
-
     <TerminalExpand show="Every copy, as a table" hide="Hide the copies">
       <TerminalTable
-        caption="Each Internet Archive copy of a GPU provider’s price page we read, with the provider’s own median price per GPU, newest first"
+        caption="Each archived copy of a provider’s price page, newest first"
         :columns="copyColumns"
         :rows="copies"
         :row-key="(a) => `${a.source_id}:${a.at}`"
@@ -140,12 +130,15 @@ const copies = computed(() =>
       </TerminalTable>
     </TerminalExpand>
 
-    <TerminalSources :caveats="[{ text: archived.method, label: 'method' }]" />
-    <p class="text-xs text-muted">
-      Each copy is the page as the Archive saw it on that day. We read the copies back in 2026, so
-      this site didn’t hold these prices at the time, and they never reach the Compute thesis. Every
-      row is in the <span class="font-mono">archived_gpu_prices</span> table on /data, under
-      {{ HISTORY_LICENSE.short }}.
+    <p class="text-xs text-toned">
+      Source: copies of each provider’s price page in the
+      <a
+        href="https://web.archive.org/"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="py-1.5 underline underline-offset-2 hover:text-default"
+        >Internet Archive</a
+      >.
     </p>
   </div>
 </template>

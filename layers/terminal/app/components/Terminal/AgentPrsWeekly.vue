@@ -3,8 +3,7 @@
 // One chart per agent on its own y-axis: each agent leaves a different trace,
 // so a shared axis would invite reading them as shares. The weeks walked back
 // after we began were counted later, from the PRs that still existed, so they
-// draw as their own named series and the text under each chart says where the
-// daily counts begin (sources.yaml › github-prs-*). The daily series starts
+// draw as their own named series (sources.yaml › github-prs-*). The daily series starts
 // at the last week counted later, so the line doesn't break at the handover,
 // and the later series' end dot marks where it happens.
 
@@ -38,8 +37,6 @@ const charts = computed(() =>
       ...a,
       x,
       newest: newestFullWeek(a.weekly),
-      firstDaily,
-      anyLater,
       // Daily always takes the first slot, so "counted later" keeps one ink on
       // every chart, including one with no daily week yet.
       series: [
@@ -121,15 +118,7 @@ const rows = computed(() => {
             :title="`Public GitHub pull requests from ${c.agent} per week, week of ${stamps.date(c.x[0]!)} to week of ${stamps.date(c.x.at(-1)!)}`"
           />
           <TerminalGap v-else inline title="One week counted so far." />
-          <p class="text-xs text-muted">
-            <template v-if="c.anyLater && c.firstDaily">
-              Counted daily from the week of {{ stamps.date(c.firstDaily) }}. Earlier weeks were
-              counted later.
-            </template>
-            <template v-else-if="c.anyLater">Every week so far was counted later.</template>
-            <template v-else>Every week was counted on the day after.</template>
-            Search: <code>{{ c.query }}</code>
-          </p>
+          <p class="text-xs text-muted">Search: <code>{{ c.query }}</code></p>
           <TerminalProvenanceTag
             v-if="c.source"
             :source-url="c.source.source_url"
@@ -140,10 +129,7 @@ const rows = computed(() => {
         </section>
       </div>
       <p class="text-xs text-muted">
-        Monday to Sunday, UTC. The newest figure is the last full week. A week missing a day breaks
-        the line, and the table shows its total. Weeks counted later are counts taken on a later day
-        of the pull requests that still existed then. A PR deleted or made private since is missing,
-        and one in a repository made public since is counted.
+        Weeks run Monday to Sunday, UTC. Weeks counted later miss PRs deleted or made private since.
       </p>
     </template>
 

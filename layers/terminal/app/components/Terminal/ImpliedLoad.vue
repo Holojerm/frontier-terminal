@@ -104,11 +104,11 @@ const fleet = computed(() => props.implied.fleet)
     </TerminalTable>
 
     <p class="text-xs text-muted">
-      Each row is a pair of bounds for one benchmark model, and no row is an estimate of Google’s
-      utilization. A row above 100% is a model size Google’s average token can’t be running at.
+      Bounds per benchmark model, not a utilization estimate. Above 100%, Google’s average token
+      can’t be running at that model’s size.
       <template v-if="implied.unrated_results">
-        {{ implied.unrated_results }} results are left out because Epoch rates no H100-equivalent
-        for their accelerator.
+        {{ implied.unrated_results }} results left out: Epoch rates no H100-equivalent for their
+        accelerator.
       </template>
     </p>
 
@@ -141,10 +141,7 @@ const fleet = computed(() => props.implied.fleet)
         implied.benchmark.source,
         implied.chip_ratings,
       ]"
-      :caveats="[
-        { text: implied.method, label: 'method' },
-        { text: implied.caveat, label: 'why it’s a range' },
-      ]"
+      :caveats="[{ text: implied.caveat, label: 'why it’s a range' }]"
     >
       <span>CC BY 4.0, Epoch AI</span>
     </TerminalSources>

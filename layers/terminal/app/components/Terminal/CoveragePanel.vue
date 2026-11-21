@@ -155,8 +155,6 @@ const auditNote = (r: SourceCoverage | RecipeCoverage) =>
         <h3 class="text-sm text-highlighted">Thesis recipes</h3>
         <p class="text-xs text-muted">
           Other sources the theses read, such as GPU rental prices and companies outside the labs.
-          We store them apart from the lab tables and keep the raw bytes of every fetch that
-          changed.
         </p>
       </div>
       <TerminalTable

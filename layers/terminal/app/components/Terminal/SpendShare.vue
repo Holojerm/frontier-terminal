@@ -118,15 +118,14 @@ const stamps = useStamps()
 
       <!-- The two shares have different universes; say which, or a reader divides one by the other. -->
       <p class="text-xs text-muted">
-        Spend share is of the implied dollars of the labs we could price. Token share is of every
-        tracked lab’s tokens, priced or not.
+        Spend share is of the labs we could price. Token share is of every tracked lab.
       </p>
 
       <p
         v-if="spend.excluded.length"
         class="flex flex-wrap items-center gap-x-1 text-xs text-muted"
       >
-        Left out of the dollar share because we can’t price them:
+        Not priced:
         {{ spend.excluded.map((e) => e.display).join(', ') }}
         <TerminalCaveatMark
           name="Why some labs are left out of the dollar share"
@@ -136,8 +135,7 @@ const stamps = useStamps()
 
       <p class="text-xs text-muted">
         {{ figures.tokens(spend.totals.other_tokens) }} of
-        {{ figures.tokens(spend.totals.tokens) }} tokens went to models outside the labs we track
-        and are not priced.
+        {{ figures.tokens(spend.totals.tokens) }} tokens went to models outside the labs we track.
       </p>
 
       <TerminalExpand

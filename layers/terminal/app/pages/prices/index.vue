@@ -59,8 +59,7 @@ useSeo({
       >
         <TerminalPriceMatrix :matrix="prices.matrix" />
         <template #foot>
-          {{ prices.matrix.tier_note }} Each placement follows the vendor’s own docs. The info
-          button quotes the sentence.
+          {{ prices.matrix.tier_note }}
         </template>
       </TerminalPanel>
 
@@ -82,7 +81,7 @@ useSeo({
         v-if="prices.reach?.length"
         id="history"
         title="How far back"
-        note="Each SKU’s page shows its full price history. Before we started checking, it comes from the Internet Archive’s copies of the lab’s own pricing page."
+        note="How far back each lab’s price history goes, with the Internet Archive’s copies of its pricing page."
         flush
       >
         <TerminalArchiveReach :reach="prices.reach" flow />

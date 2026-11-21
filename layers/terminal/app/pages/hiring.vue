@@ -5,7 +5,6 @@
 // cut and xAI's board carries its entity-blend caveat, both stated in the
 // by-lab table the overview leads with.
 
-import { HISTORY_LICENSE } from '#shared/utils/license'
 import { boardLabel, count, signed } from '../../shared/utils/terminal-format'
 import { dayLabel } from '../../shared/utils/thesis-format'
 import type {
@@ -137,7 +136,7 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
 <template>
   <TerminalPage
     title="Hiring"
-    lede="Open roles per day for each lab, rebuilt from the changes we’ve recorded on each job board. We don’t estimate anything."
+    lede="Open roles per day for each lab, from its own job board."
     :as-of="hiring?.as_of"
     :error="Boolean(error)"
     error-title="Hiring history didn’t load"
@@ -159,7 +158,7 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
           title="Open roles over time"
           :note="
             anyLog
-              ? `${count(hiring.log.changes)} recorded job changes from ${stamps.date(hiring.log.from ?? '')} to ${stamps.date(hiring.log.to ?? '')}, worked backwards from each board’s current listing.`
+              ? `${count(hiring.log.changes)} recorded job changes, ${stamps.date(hiring.log.from ?? '')} to ${stamps.date(hiring.log.to ?? '')}.`
               : 'No job changes recorded yet. Each board shows only its current listing.'
           "
         >
@@ -174,7 +173,7 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
           <TerminalGap
             v-else
             title="No series to draw yet."
-            reason="A line needs a board with a current listing and at least two days of data. Our first check of each board sets its starting point."
+            reason="A line needs two days of a board’s listing."
             :action="{ label: 'See coverage', to: '/data#coverage' }"
           />
 
@@ -196,8 +195,8 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
         <TerminalPanel
           v-if="archivedBoards.length || hiring.reach.length"
           id="archived"
-          title="Before we read the boards"
-          note="Open roles on the Internet Archive’s copies of each lab’s own job board, one a week, until we began reading it ourselves."
+          title="Archived job boards"
+          note="Open roles on the Internet Archive’s weekly copies of each lab’s job board."
         >
           <div class="grid gap-3 lg:grid-cols-2">
             <TerminalCard
@@ -260,13 +259,14 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
             flow
           />
           <template #foot>
-            Each copy is the board as the Archive saw it on that day. We read the copies back in
-            2026, so this site didn’t hold these numbers at the time. A copy that lists every role
-            gives departments. A copy that pages its list gives only the board’s own total, with no
-            Infra count. We skip a copy we can’t read with confidence. Every copy, with its
-            departments, is in the
-            <span class="font-mono">archived_hiring</span> table on /data, under
-            {{ HISTORY_LICENSE.short }}.
+            Source: copies of each job board in the
+            <a
+              href="https://web.archive.org/"
+              target="_blank"
+              rel="noopener noreferrer"
+              class="py-1.5 underline underline-offset-2 hover:text-default"
+              >Internet Archive</a
+            >.
           </template>
         </TerminalPanel>
       </template>
@@ -284,7 +284,7 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
           v-if="power?.snapshot"
           id="power"
           title="Data-center power"
-          note="Epoch AI’s estimate of the power each lab’s data centers draw. That’s what the buildout roles are building."
+          note="Epoch AI’s estimate of the power each lab’s data centers draw."
           :more="{ label: 'Every site, and GPU rental prices', to: '/compute' }"
         >
           <TerminalDataCenterPower :data="power" />
