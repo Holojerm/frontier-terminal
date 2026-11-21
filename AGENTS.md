@@ -198,7 +198,7 @@ Each of these has a full contract in its own doc — this is the one-line versio
 - **Public API** — every `/api/*` route is public and read-only, with four bearer-gated
   exceptions: `/api/fleet` (portfolio dashboard), `/api/judge/*` (the judge routine, a
   writer — `layers/terminal/server/utils/judge-auth.ts`), `/api/ops/events` (the ops-triage
-  routine's read of the ops spool, `NUXT_OPS_TOKEN`) and `/api/gdelt/*` (the GitHub Actions job
+  routine's read of the ops spool, `NUXT_OPS_TOKEN`) and `/api/gdelt/*` (the Mac mini job
   that reads GDELT's 15-minute GKG files and posts back the rows naming a tracked lab, filer
   or model family, the other writer, `NUXT_GDELT_TOKEN`). No session; a route that takes input validates it
   with Zod and calls `rateLimit()` (`rateLimitTerminal()` on the public product routes).
