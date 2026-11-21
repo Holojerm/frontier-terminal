@@ -15,6 +15,8 @@ const props = withDefaults(
     stamp?: boolean
     /** One line, age in the tooltip. Defaults to on inside a TerminalTable. */
     compact?: boolean
+    /** On one line, print the label instead of the host, where the row prints that host already. */
+    named?: boolean
     /**
      * A later read of the source that still showed this datum. fetchedAt only
      * moves when the datum changes, so without this an unchanged price
@@ -73,7 +75,7 @@ const failingNote = computed(() =>
       rel="noopener noreferrer"
       :title="`${label ? `${label}\n` : ''}${sourceUrl}\n${exactReading}${failingNote ? `\n${failingNote}` : ''}`"
       class="inline-block max-w-40 truncate leading-6 underline underline-offset-2 hover:text-default"
-      >{{ hostOf(sourceUrl) }}</a
+      >{{ named ? text : hostOf(sourceUrl) }}</a
     >
     <UIcon
       v-if="failing"

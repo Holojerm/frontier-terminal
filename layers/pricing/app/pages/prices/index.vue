@@ -14,7 +14,8 @@ definePageMeta({
 
 const { data: prices, error } = await useFetch<PricesData>('/api/prices')
 
-// `?provider=xai` preselects the catalog filter (how a lab page links here).
+// `?provider=xai` preselects the catalog filter (how a lab page links here). The catalog reads
+// its own `?page=`.
 const route = useRoute()
 const provider = typeof route.query.provider === 'string' ? route.query.provider : undefined
 

@@ -385,6 +385,10 @@ does. The data below it is the content.
   long as its rows (`TerminalTable` `flow`), with its header sticky under the site header.
   So does a table whose rows are all the reading, like the like-for-like price matrix, where
   a cap would hide four of nine labs.
+  A primary table of hundreds of rows prints a page of them at a time: the price catalog
+  prints 25 (a phone stacks each to about 280px), with `UPagination` under it and one control
+  that prints them all for find-in-page. The page is in `?page=` and the pager's controls are
+  links, so every page of rows is server-rendered and a crawler can walk them.
   A secondary table in a multi-panel layout scrolls in its own box, capped at 70% of the
   small viewport height (`70svh`, never `dvh`: a dvh cap resizes as the mobile URL bar shows
   and hides, and the page jumps mid-scroll), header sticky to the box. A box that scrolls is a
@@ -393,6 +397,8 @@ does. The data below it is the content.
 - **Source cells:** a citation in a table cell is one line: the host as a link, the age and
   exact fetch stamp in its tooltip and a screen-reader `<time>`. The panel footer prints every
   source with its visible age, so provenance stays within reach while a row stays one line.
+  A second citation in a row whose source cell prints the same host links by name instead
+  (`named`: the catalog's "model page" beside a context window).
 - **Failing sources:** the page's as-of stamp is the newest check of any source. A source
   whose checks have all failed for six hours keeps its last datum, so its citation says
   "checks failing since" with the time, in `text-warning` (a warning icon in a table cell). A

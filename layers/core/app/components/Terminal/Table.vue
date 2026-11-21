@@ -131,8 +131,11 @@ const fade = reactive({ left: false, right: false, bottom: false })
 function measure() {
   const el = box.value
   if (!el) return
-  const x = el.scrollWidth > el.clientWidth + 1
-  const y = el.scrollHeight > el.clientHeight + 1
+  // A `flow` table at `lg` and up is not a scroll box: what overhangs it (a last-column
+  // link's tap padding) is not clipped, so it gets no fade and no tab stop.
+  const { overflowX, overflowY } = getComputedStyle(el)
+  const x = overflowX !== 'visible' && el.scrollWidth > el.clientWidth + 1
+  const y = overflowY !== 'visible' && el.scrollHeight > el.clientHeight + 1
   scrolls.value = x || y
   fade.left = x && el.scrollLeft > 1
   fade.right = x && el.scrollLeft + el.clientWidth < el.scrollWidth - 1
