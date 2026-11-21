@@ -11,6 +11,21 @@ export interface RecipeCitation extends Prov {
   label: string
 }
 
+/** One ISO week (Monday to Sunday, UTC) of a daily count, summed. */
+export interface AdoptionWeek {
+  /** The Monday, YYYY-MM-DD. */
+  week: string
+  /** Days of the week on record; under 7 is `partial`, and `total` covers only those. */
+  days: number
+  total: number
+  partial: boolean
+}
+
+export interface AgentPrWeek extends AdoptionWeek {
+  /** Any day of the week was counted after the fact, from the PRs that still existed. */
+  retrospective: boolean
+}
+
 export interface AdoptionData {
   as_of: string | null
   ramp: {
@@ -33,6 +48,8 @@ export interface AdoptionData {
     last_28d: number | null
     prior_28d: number | null
     through: string | null
+    /** Every complete week on record, oldest first; the week still running is left out. */
+    weekly: AdoptionWeek[]
     source: RecipeCitation | null
   }[]
   agent_prs: {
@@ -41,6 +58,8 @@ export interface AdoptionData {
     agent: string
     query: string
     days: { date: string; value: number }[]
+    /** Every complete week on record, oldest first; the week still running is left out. */
+    weekly: AgentPrWeek[]
     source: RecipeCitation | null
   }[]
   caveats: { ramp: string; downloads: string; agent_prs: string }

@@ -84,6 +84,8 @@ export function registerDemandTools({ server, deps }: McpKit): void {
         'so this is the newest release (release_seen, data_version). Google and Meta aren’t in Ramp’s vendor series. downloads: each lab’s SDK and coding-agent packages on npm and PyPI, ' +
         'last_28d against prior_28d through a date. Every download counts, CI and bots included, so read the trend, never the level, and never as users. ' +
         'agent_prs: per coding agent, daily counts of public GitHub pull requests that carry its trace (the query says which). Each agent leaves a different trace, so the counts are not shares of one market. ' +
+        'Both have weekly: per ISO week (Monday to Sunday, UTC; week is the Monday), oldest first, the total over the days on record (days), through the newest week whose Sunday is stored. partial is true when a day is missing, so its total covers fewer days. ' +
+        'npm reaches back 540 days from our first read and PyPI 180 days, so a short series is the registry’s reach, not a young package. An agent_prs week is retrospective when any day was counted later from the PRs that still existed (deleted or private PRs missing). ' +
         'caveats has the full caveat for each. Not investment advice. ' +
         PROVENANCE,
       annotations: READ_ONLY,
