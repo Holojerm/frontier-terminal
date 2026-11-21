@@ -194,11 +194,29 @@ export async function insertRows<T extends TableName>(
 
 /** The current entity set for one source, as contract rows (store-only
  * columns dropped) so it can go straight into diff(). */
-export async function currentEntities(db: PipelineDb, sourceId: string): Promise<EntityRow[]> {
+/**
+ * A source's stored entities, or only those under `keys`. An append-only
+ * source never removes a row, so its diff needs only the keys the new parse
+ * holds: the OpenRouter rankings keep every day since 2025-01-01, and a tick
+ * re-reads 30 of them. The keys go in as one JSON parameter, past D1's cap.
+ */
+export async function currentEntities(
+  db: PipelineDb,
+  sourceId: string,
+  keys?: readonly string[],
+): Promise<EntityRow[]> {
+  const bySource = eq(tables.entities.source_id, sourceId)
   const rows = await db
     .select()
     .from(tables.entities)
-    .where(eq(tables.entities.source_id, sourceId))
+    .where(
+      keys
+        ? and(
+            bySource,
+            sql`${tables.entities.entity_key} IN (SELECT value FROM json_each(${JSON.stringify(keys)}))`,
+          )
+        : bySource,
+    )
   return rows.map(({ source_id: _source, first_seen_at: _first, ...row }) => EntityRow.parse(row))
 }
 
