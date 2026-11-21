@@ -146,3 +146,84 @@ export interface SignalsData extends Stamp {
   method: string
   credit: string
 }
+
+/** Clears the Bonferroni bar out of sample, with the same sign in sample. */
+export function signalCellHolds(cell: SignalCell, bonferroniP: number | null): boolean {
+  return (
+    bonferroniP !== null &&
+    cell.out.status === 'ok' &&
+    cell.in.status === 'ok' &&
+    cell.out.p_value !== null &&
+    cell.out.p_value < bonferroniP &&
+    Math.sign(cell.out.estimate ?? 0) === Math.sign(cell.in.estimate ?? 0)
+  )
+}
+
+/**
+ * clears: at least one of its tests holds. tested: it has a held-out number and none holds.
+ * waiting: no test has the minimum sample yet, or the run couldn't read the series.
+ */
+export type SignalVerdict = 'clears' | 'tested' | 'waiting'
+
+export interface SignalScorecardRow extends SignalSeriesView {
+  verdict: SignalVerdict
+  /**
+   * The held-out result the row shows: the smallest p among the tests that hold, else the
+   * smallest p of all its tests. Null while it waits.
+   */
+  best: SignalCell | null
+}
+
+export interface SignalScorecard {
+  /** Series with a held-out number: those that clear first, each run by smallest p. */
+  tested: SignalScorecardRow[]
+  /** Series without one, in registry order. */
+  waiting: SignalScorecardRow[]
+  counts: {
+    total: number
+    tested: number
+    clears: number
+    fails: number
+    waiting: number
+    /** Of the waiting, those the run couldn't read. */
+    unread: number
+  }
+}
+
+const smallestP = (cells: SignalCell[]): SignalCell | null =>
+  cells.reduce<SignalCell | null>(
+    (a, b) => (a === null || b.out.p_value! < a.out.p_value! ? b : a),
+    null,
+  )
+
+/** The scorecard's reading order. Every series lands in exactly one group. */
+export function signalScorecard(
+  data: Pick<SignalsData, 'series' | 'bonferroni_p'>,
+): SignalScorecard {
+  const rows = data.series.map((s): SignalScorecardRow => {
+    const scored = s.cells.filter((c) => c.out.status === 'ok' && c.out.p_value !== null)
+    const holding = scored.filter((c) => signalCellHolds(c, data.bonferroni_p))
+    return {
+      ...s,
+      verdict: holding.length ? 'clears' : scored.length ? 'tested' : 'waiting',
+      best: smallestP(holding.length ? holding : scored),
+    }
+  })
+  const byP = (a: SignalScorecardRow, b: SignalScorecardRow) =>
+    a.best!.out.p_value! - b.best!.out.p_value!
+  const clears = rows.filter((r) => r.verdict === 'clears').sort(byP)
+  const fails = rows.filter((r) => r.verdict === 'tested').sort(byP)
+  const waiting = rows.filter((r) => r.verdict === 'waiting')
+  return {
+    tested: [...clears, ...fails],
+    waiting,
+    counts: {
+      total: rows.length,
+      tested: clears.length + fails.length,
+      clears: clears.length,
+      fails: fails.length,
+      waiting: waiting.length,
+      unread: waiting.filter((r) => r.error).length,
+    },
+  }
+}
