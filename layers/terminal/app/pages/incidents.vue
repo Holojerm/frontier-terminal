@@ -2,7 +2,8 @@
 // Every status-page incident in the last 90 days, newest first, each linked
 // to the vendor's own incident page and stamped with the fetch it was read
 // from, under the per-lab summary the overview leads with and our own hourly
-// latency probes: what each vendor posted beside what we measured.
+// latency probes: what each vendor posted beside what we measured. Below the
+// list, the monthly counts from before the live feeds, from archived copies.
 
 import { labName } from '../../shared/utils/terminal-labs'
 import type { IncidentView, IncidentsData, ProbesData } from '../../shared/utils/terminal-types'
@@ -15,7 +16,7 @@ definePageMeta({
     priority: '0.8',
     title: 'Incidents',
     summary:
-      'Status-page incidents posted by OpenAI, Anthropic, and Google (Gemini / Vertex AI only) over the last 90 days. Each shows impact, status, components, start, and resolution, linked to the vendor’s incident page. The page also shows our own hourly latency probes of each lab’s flagship model.',
+      'Status-page incidents posted by OpenAI, Anthropic, and Google (Gemini / Vertex AI only) over the last 90 days. Each shows impact, status, components, start, and resolution, linked to the vendor’s incident page. The page also shows our own hourly latency probes of each lab’s flagship model, and incidents per month back to 2023 from the Internet Archive’s copies of each lab’s status feed.',
   },
 })
 
@@ -197,6 +198,14 @@ const columns: TableColumn[] = [
           Duration is resolution minus start, as the feed states them. Anthropic’s feed states them
           to the minute and publishes no impact, so its impact reads “not published”.
         </template>
+      </TerminalPanel>
+
+      <TerminalPanel
+        v-if="incidents.archived"
+        id="archived"
+        title="Incidents per month, before we read the feeds"
+      >
+        <TerminalIncidentArchive :archived="incidents.archived" />
       </TerminalPanel>
     </template>
   </TerminalPage>

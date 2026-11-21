@@ -24,6 +24,10 @@ import { decodeEntities, textOf } from '../disclosures/html-text'
 // Update stamps print no year and stop at the minute. The year is the one
 // that puts the stamp at or before the entry's own `updated` stamp (a day of
 // slack for a clock edge), so an incident open across New Year reads right.
+// Each stamp ends in the page's time zone, by abbreviation. The live feed
+// prints UTC; older pages printed their own zone (OpenAI and Anthropic PDT
+// and PST, DeepSeek CST for China), so the caller names the zones a page
+// used and an abbreviation it didn't name throws.
 
 const INCIDENT_WORDS = ['investigating', 'identified', 'monitoring', 'resolved', 'postmortem']
 // Scheduled maintenances share the feed; they are not incidents.
@@ -43,12 +47,21 @@ function tag(entry: string, name: string): string | null {
   return m ? m[1]! : null
 }
 
-/** UTC instant for a "Mon D, HH:MM" stamp, in the year that keeps it at or before `anchorMs`. */
-export function updateStamp(stamp: string, anchorMs: number): string {
-  const m = stamp.match(/^([A-Za-z]{3}) (\d{1,2})(?:, (\d{4}))?,? (\d{2}):(\d{2}) UTC$/)
+/** Minutes east of UTC, per zone abbreviation a page prints. */
+export type StampZones = Readonly<Record<string, number>>
+
+const UTC_ONLY: StampZones = { UTC: 0 }
+
+/** UTC instant for a "Mon D, HH:MM ZONE" stamp, in the year that keeps it at or before `anchorMs`. */
+export function updateStamp(stamp: string, anchorMs: number, zones: StampZones = UTC_ONLY): string {
+  const m = stamp.match(/^([A-Za-z]{3}) (\d{1,2})(?:, (\d{4}))?,? (\d{2}):(\d{2}) ([A-Z]{2,5})$/)
   const month = m ? MONTHS.indexOf(m[1]!.toLowerCase()) : -1
-  if (!m || month === -1) throw new Error(`unparseable update stamp: ${stamp}`)
-  const at = (year: number) => Date.UTC(year, month, Number(m[2]), Number(m[4]), Number(m[5]))
+  const offset = m ? zones[m[6]!] : undefined
+  if (!m || month === -1 || offset === undefined) {
+    throw new Error(`unparseable update stamp: ${stamp}`)
+  }
+  const at = (year: number) =>
+    Date.UTC(year, month, Number(m[2]), Number(m[4]), Number(m[5])) - offset * 60_000
   let ms: number
   if (m[3]) ms = at(Number(m[3]))
   else {
@@ -58,7 +71,7 @@ export function updateStamp(stamp: string, anchorMs: number): string {
   return new Date(ms).toISOString()
 }
 
-function parseEntry(entry: string) {
+function parseEntry(entry: string, zones: StampZones) {
   const link = entry.match(/<link\s[^>]*rel="alternate"[^>]*href="([^"]+)"/)?.[1]
   const code = link?.match(/^https:\/\/[^/]+\/incidents\/([a-z0-9]+)$/)?.[1]
   if (!link || !code) throw new Error(`entry has no /incidents/<code> link: ${link ?? 'none'}`)
@@ -85,21 +98,25 @@ function parseEntry(entry: string) {
     const word = p.match(/<strong>([\s\S]*?)<\/strong>/)?.[1]
     if (!small || !word)
       throw new Error(`entry ${code}: unrecognized paragraph: ${text.slice(0, 80)}`)
-    updates.push({ at: updateStamp(textOf(small), anchorMs), word: textOf(word).toLowerCase() })
+    updates.push({
+      at: updateStamp(textOf(small), anchorMs, zones),
+      word: textOf(word).toLowerCase(),
+    })
   }
   return { code, link, title, updates, components }
 }
 
 export function parseStatuspageAtom(
-  provider: 'openai' | 'anthropic' | 'mistral',
+  provider: 'openai' | 'anthropic' | 'mistral' | 'deepseek',
   text: string,
   prov: Provenance,
+  zones: StampZones = UTC_ONLY,
 ) {
   const seen = new Set<string>()
   const rows: IncidentRow[] = []
   let maintenances = 0
   for (const entry of text.match(/<entry>[\s\S]*?<\/entry>/g) ?? []) {
-    const { code, link, title, updates, components } = parseEntry(entry)
+    const { code, link, title, updates, components } = parseEntry(entry, zones)
     if (seen.has(code)) continue // one row per id (stable key)
     seen.add(code)
     const words = updates.map((u) => u.word).filter((w) => w !== 'update')

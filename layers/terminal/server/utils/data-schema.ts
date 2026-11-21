@@ -283,6 +283,19 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
     summary:
       '/api/utilization gains benchmark_rounds: every stored MLPerf Inference round side by side, per accelerator and benchmark at the same accelerator count, with each round’s fastest result in tokens per second per accelerator (our division, unverified by MLCommons) and its result ID, change from the round before, the count of accelerators and mixed-accelerator results left out, a footnote and a source per round. It is null until two rounds are stored, and implied still reads the newest round alone. get_utilization returns it too. No table columns changed.',
   },
+  {
+    version: '1.17.0',
+    date: '2026-11-21',
+    summary:
+      'Status-page incident history from before our status feed checks began, read from the Internet Archive’s copies of each lab’s own feed: a new archived_incidents table (one row per incident, in the newest copy’s state, shaped like the live incident rows), status as a new axis value on archive_captures, and its covers_from column (how far back a status copy reaches). The rows carry CC BY-NC 4.0, like the other archived tables, and a licence key doesn’t relabel them. /api/incidents gains archived.',
+    tables: {
+      archived_incidents: { note: 'New table.' },
+      archive_captures: {
+        added: ['covers_from'],
+        note: 'axis can now be status (incidents in archived_incidents).',
+      },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

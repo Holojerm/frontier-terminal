@@ -125,6 +125,12 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
     'fetched_at',
     tables.archivedGpuPrices.captured_at,
   ),
+  archived_incidents: windowed(
+    ['captured_at'],
+    'captured_at, when the Internet Archive took the newest copy listing the incident',
+    'fetched_at',
+    tables.archivedIncidents.captured_at,
+  ),
   archive_captures: windowed(
     ['captured_at'],
     'captured_at, when the Internet Archive saw the page',
