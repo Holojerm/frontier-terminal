@@ -9,11 +9,11 @@ import type {
   HiringHistoryProvider,
   HiringProviderView,
   HiringSource,
-} from '../../shared/utils/terminal-types/hiring'
-import type { LabId } from '#layers/core/shared/utils/terminal-types/common'
+} from '../../shared/types/hiring'
+import type { LabId } from '#layers/core/shared/types/common'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { clusterSeries } from './terminal-clusters'
 import { HIRING_ARCHIVE_CAVEATS, type HiringArchiveProvider } from '../pipeline/archive/hiring-eras'
 import {

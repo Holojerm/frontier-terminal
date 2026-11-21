@@ -2,8 +2,8 @@ import {
   StatuspageIncidentsOutput,
   registerParser,
   type Provenance,
-} from '#layers/core/server/pipeline/contracts'
-import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+} from '#layers/core/server/utils/contracts'
+import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { parseStatuspageAtom } from './statuspage-atom'
 
 // anthropic-status — status.claude.com's Atom incident history. Its

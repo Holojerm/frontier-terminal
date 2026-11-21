@@ -6,16 +6,6 @@
 
 import { describe, expect, it } from 'vitest'
 
-import {
-  HEADER_SIDECAR,
-  HTML_CACHE_TTL_SECONDS,
-  headerValue,
-  htmlCacheKey,
-  isCacheableDocument,
-  isStorableResponse,
-  HTML_CLIENT_CACHE_CONTROL,
-} from '../server/utils/html-cache'
-
 describe('htmlCacheKey', () => {
   it('changes when the poll stamp changes, which is the whole invalidation story', () => {
     const a = htmlCacheKey('/', '2026-09-22T10:00:00.000Z', 2026)

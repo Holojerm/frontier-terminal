@@ -1,12 +1,8 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, beforeEach, describe, expect, it } from 'vitest'
 
 import epochTimelines from '~~/fixtures/recipes/epoch-data-center-timelines.csv?raw'
 import epochSites from '~~/fixtures/recipes/epoch-data-centers.csv?raw'
-import * as schema from '~~/server/db/schema'
-import { contentHash } from '#layers/core/server/pipeline/contracts/keys'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { mwWritten, powerExcerpts, roleStated } from '../server/power/excerpts'
 import { filerOf, runPowerSiteReads, searchHits, searchUrl, sitesDue } from '../server/power/ingest'
 import {
@@ -23,7 +19,6 @@ import {
   EPOCH_DATA_CENTER_TIMELINES,
 } from '../server/recipes/epoch-data-centers'
 import { runRecipes } from '#layers/core/server/recipes/run'
-import { queryPowerSites } from '../server/utils/terminal-datacenters'
 
 // The power-sites reader end to end on a made-up filing: the hand-read rows
 // seed the table, EDGAR full-text search finds TeraWulf's next 10-Q naming
@@ -31,7 +26,6 @@ import { queryPowerSites } from '../server/utils/terminal-datacenters'
 // checked against the stored filing before the table moves. Then the weekly
 // re-read of the pages off EDGAR, and the pure checks on their own.
 
-const db = drizzle(env.DB, { schema })
 const HAND = handTies()
 const SITE = 'Anthropic Lake Mariner'
 

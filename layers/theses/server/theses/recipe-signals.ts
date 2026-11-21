@@ -8,7 +8,7 @@ import { and, eq, inArray } from 'drizzle-orm'
 import type { SignalSpec } from '../../shared/utils/thesis-types'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { RECIPES } from '#server/registries/recipes'
 import type { SignalReading } from './signals'
 

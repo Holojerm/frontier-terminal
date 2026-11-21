@@ -12,7 +12,7 @@
 // Internet Archive (status-page incidents)". Stretches no copy covers are in
 // STATUS_ARCHIVE_GAPS.
 
-import type { LabId } from '../../../../core/shared/utils/terminal-types/common'
+import type { LabId } from '../../../../core/shared/types/common'
 import {
   googleCloudArchived,
   incidentioRssArchived,

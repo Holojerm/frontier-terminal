@@ -13,14 +13,9 @@
 import { and, desc, eq, gte, inArray, notInArray } from 'drizzle-orm'
 import { z } from 'zod'
 
-import { verdictsOf, type ClaimDef, type ThesisDef } from '../../shared/utils/thesis-types'
-
 import * as tables from '#server/db/schema'
-import { ChangeRow, contentHash } from '#layers/core/server/pipeline/contracts'
 import { effectiveClassMap } from '#layers/pricing/server/pipeline/class-map'
 import { groundingFailure } from '#layers/core/server/pipeline/judge/grounding'
-import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '#layers/core/server/pipeline/store'
-import { daysBefore } from '#layers/adoption/server/utils/terminal-rankings'
 import { claimCandidates, recipeCandidates, type Candidate, type FlagshipMap } from './candidates'
 import { THESES } from './registry'
 import { judgeReview } from '#layers/core/server/pipeline/judge/review'

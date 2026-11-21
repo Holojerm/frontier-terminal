@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest'
 
-import { ARCHIVE_FROM } from '#layers/core/server/utils/archive-floor'
 import {
   GPU_ARCHIVE_ERAS,
   GPU_ARCHIVE_GAPS,
@@ -10,12 +9,6 @@ import {
 import { archiveRawKey } from '#layers/core/server/pipeline/archive/captures'
 import { gpuRows } from '#layers/compute/server/pipeline/archive/rows'
 import { lambdaArchivedRows } from '../server/pipeline/parsers/gpu/wayback-gpu'
-import {
-  archivedGpuSeries,
-  GPU_ARCHIVE_STALE_DAYS,
-  type ArchivedGpuCapture,
-} from '../server/utils/terminal-gpu-archive'
-import { readArchiveSources } from '#layers/core/server/utils/terminal-sources'
 import sourcesYaml from '~~/sources.yaml?raw'
 
 // The archived GPU price pages' pure half: the era windows, the rules the

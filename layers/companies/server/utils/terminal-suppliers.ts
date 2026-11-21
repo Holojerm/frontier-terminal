@@ -5,14 +5,6 @@
 // (../suppliers/). Nothing here is estimated or joined to another source: a
 // company's row says what its filing says, in the filing's words.
 
-import {
-  type SupplierCompany,
-  type SupplierGap,
-  type SupplierRow,
-  type SupplierShare,
-  type SuppliersData,
-} from '../../shared/utils/suppliers'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { currentPassages, rowOf } from '../suppliers/store'
 
 export const SUPPLIERS_RULE =

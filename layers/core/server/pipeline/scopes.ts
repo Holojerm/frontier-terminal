@@ -1,5 +1,5 @@
-import type { PollScope } from './contracts'
-import type { FetchSource } from './sources'
+import type { PollScope } from '../utils/contracts'
+import type { FetchSource } from '../utils/pipeline-sources'
 import { SCOPE_ENTRIES } from '#server/registries/scopes'
 
 // Which sources each cron tick polls. The policy is here; which sources ride

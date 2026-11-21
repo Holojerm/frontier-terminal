@@ -3,13 +3,6 @@ import { createStorage } from 'unstorage'
 import cloudflareKvBinding from 'unstorage/drivers/cloudflare-kv-binding'
 import { describe, expect, it } from 'vitest'
 
-import {
-  POLL_LOCK_KEY,
-  POLL_LOCK_TTL_SECONDS,
-  unstorageLockStore,
-  withPollLock,
-} from '../../server/pipeline/lock'
-
 // The poll mutex, through the same unstorage driver NuxtHub's `kv` uses in
 // production, over the real KV binding.
 

@@ -15,7 +15,7 @@
 // without a release, and the test also fails a release filed under too small
 // a bump.
 
-import type { SchemaChangelogEntry } from '../../shared/utils/terminal-types/coverage'
+import type { SchemaChangelogEntry } from '../../shared/types/coverage'
 
 export interface TableChange {
   added?: readonly string[]

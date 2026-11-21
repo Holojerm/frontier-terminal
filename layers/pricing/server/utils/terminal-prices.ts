@@ -1,7 +1,7 @@
 // The price catalog and matrix, and one SKU's history.
 
 import { and, eq } from 'drizzle-orm'
-import type { LabId, ProviderId } from '#layers/core/shared/utils/terminal-types/common'
+import type { LabId, ProviderId } from '#layers/core/shared/types/common'
 import type {
   MatrixCell,
   PriceDeltaView,
@@ -9,11 +9,11 @@ import type {
   PriceMatrix,
   PriceRowView,
   PricesData,
-} from '../../shared/utils/terminal-types/prices'
+} from '../../shared/types/prices'
 
 import * as tables from '#server/db/schema'
 import { effectiveClassMap } from '../pipeline/class-map'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import {
   BASIS_STALE_NOTE,
   CLASS_GAPS,

@@ -26,15 +26,6 @@ import { deployDriftCheck } from '../../../reliability/server/pipeline/deploy-wa
 import { judgeFreshnessCheck } from '../../../core/server/pipeline/judge/watchdog'
 import { GKG_READY_MS, stampIso } from '../../../press/server/pipeline/track-record/gkg'
 import { oldestUnread } from '../../../press/server/pipeline/track-record/search'
-import {
-  heartbeatLoader,
-  taskHeartbeatCheck,
-  type FreshnessCheck,
-} from '#layers/core/server/utils/freshness'
-import {
-  ENTITY_IDENTIFIERS,
-  type EntityIdentifier,
-} from '../../../companies/server/utils/terminal-identifiers'
 
 const HOUR_MS = 60 * 60 * 1000
 

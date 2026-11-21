@@ -1,14 +1,7 @@
-import { env } from 'cloudflare:test'
 import { eq } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import { insertRows } from '#layers/core/server/pipeline/store'
 import { evaluateTheses } from '../server/theses/evaluate'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { daysBefore } from '../../adoption/server/utils/terminal-rankings'
-import { queryTheses } from '../server/utils/terminal-theses'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The evaluator against a real D1, seeded with the rows the pipeline would
@@ -17,7 +10,6 @@ import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 // a second run with nothing new writes no status rows, and that the API
 // payload reads back the same statuses.
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const NEWEST = '2026-10-07'
 const NOW = new Date('2026-10-08T12:00:00Z')

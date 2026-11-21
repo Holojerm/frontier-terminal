@@ -6,12 +6,6 @@
 // source and fetch time. The site list is the page's long table and runs with
 // the page rather than in a box.
 
-import { count } from '#layers/core/shared/utils/terminal-format'
-import type { GridLoadData } from '../../shared/utils/grid-load'
-import type { PowerSitesData } from '../../shared/utils/power-sites'
-import type { DataCentersData } from '../../shared/utils/compute-views'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
-
 definePageMeta({
   publicPage: {
     changefreq: 'daily',

@@ -5,8 +5,8 @@ import {
   type Provenance,
   type Provider,
   type RegistrationDocumentRow,
-} from '#layers/core/server/pipeline/contracts'
-import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+} from '#layers/core/server/utils/contracts'
+import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 
 // filing-index-<provider>-<form>-<filed>-<accession> — EDGAR's index page for
 // one registration filing (www.sec.gov/Archives/edgar/data/{cik}/{accession}/

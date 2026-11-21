@@ -10,7 +10,7 @@
 import { and, asc, count, desc, eq, inArray, lte, max, min } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { PriceReach, PriceRowView } from '../../shared/utils/terminal-types/prices'
+import type { PriceReach, PriceRowView } from '../../shared/types/prices'
 import {
   ARCHIVE_ERAS,
   ARCHIVE_GAPS,
@@ -22,7 +22,7 @@ import { limitChanges, type LimitChange } from '../pipeline/archive/limit-events
 import { derivePriceEvents, type ArchivedPriceEvent } from '../pipeline/archive/price-events'
 import releaseNotes from '../pipeline/archive/release-notes.json'
 import type { ReleaseNotesFile } from '../pipeline/archive/release-notes-file'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { parsedOn, archiveSourceId } from '#layers/core/server/utils/archive-floor'
 import type { ArchivedPrice } from './terminal-price-history'
 import { byString, num, parseJson, str } from '#layers/core/server/utils/terminal-json'

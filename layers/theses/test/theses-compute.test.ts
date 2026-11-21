@@ -1,5 +1,4 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import azure from '~~/fixtures/recipes/gpu-azure.json?raw'
@@ -14,10 +13,7 @@ import together from '~~/fixtures/recipes/gpu-together.html?raw'
 import verda from '~~/fixtures/recipes/gpu-verda.html?raw'
 import crwv from '~~/fixtures/recipes/sec-companyfacts-crwv.json?raw'
 
-import * as schema from '~~/server/db/schema'
-import { insertRows } from '#layers/core/server/pipeline/store'
 import { crusoeRows, googleCloudRows } from '#layers/compute/server/recipes/gpu-pages'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import {
   blendedPrice,
   gpuSetChange,
@@ -33,10 +29,6 @@ import { RECIPES } from '#server/registries/recipes'
 import { GPU_RECIPES } from '#layers/compute/server/recipes/gpu-recipes'
 import { runRecipes } from '../../core/server/recipes/run'
 import { evaluateClaim, type MeasuredClaim, type StoredReading } from '../server/theses/status'
-import { queryContext, queryCoverage } from '#layers/core/server/utils/terminal-db'
-import { queryGpuPrices } from '#layers/compute/server/utils/terminal-gpu'
-import { daysBefore } from '../../adoption/server/utils/terminal-rankings'
-import { queryTheses } from '../server/utils/terminal-theses'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The Compute thesis: the GPU price recipes against pages captured
@@ -380,7 +372,6 @@ describe('sustained drawdown', () => {
 
 // ---- one evaluation over a seeded store --------------------------------------
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const NOW = new Date('2026-11-02T12:00:00Z')
 const NEWEST_RANKING = '2026-11-01'

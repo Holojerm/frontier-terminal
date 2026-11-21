@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import type { MeasuredRule } from '../shared/utils/thesis-types'
-
 import { ANTHROPIC_THESIS } from '../server/theses/anthropic'
 import {
   evaluateClaim,
@@ -13,7 +11,6 @@ import {
   type MeasuredClaim,
   type StoredReading,
 } from '../server/theses/status'
-import { daysBefore } from '../../adoption/server/utils/terminal-rankings'
 
 // The kill-condition rules on typed readings: weekly checkpoints, the half-way
 // "weakening" band, and the history a rule needs before it will say anything.

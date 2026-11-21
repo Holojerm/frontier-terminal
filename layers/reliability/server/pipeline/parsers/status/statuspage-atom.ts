@@ -2,7 +2,7 @@ import {
   StatuspageIncidentsOutput,
   type IncidentRow,
   type Provenance,
-} from '../../../../../core/server/pipeline/contracts'
+} from '../../../../../core/server/utils/contracts'
 import { decodeEntities, textOf } from '../../../../../core/server/pipeline/parsers/html-text'
 
 // Statuspage's Atom incident history (/history.atom). Read where robots.txt

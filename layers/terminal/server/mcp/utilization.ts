@@ -2,11 +2,6 @@
 // revenue and OpenRouter's demand shape (terminal-utilization-query.ts), so it
 // stays in the shell with that query. Registered just before the compute tools.
 
-import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
-import { SPOT_QUORUM } from '#layers/compute/server/utils/terminal-utilization'
-import { queryUtilization, UTILIZATION_RECIPES } from '../utils/terminal-utilization-query'
-import { json, READ_ONLY, PROVENANCE, type McpKit } from '#layers/core/server/mcp/kit'
-
 export function registerUtilizationTools({ server, deps }: McpKit): void {
   server.registerTool(
     'get_utilization',

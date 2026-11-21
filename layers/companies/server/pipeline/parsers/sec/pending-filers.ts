@@ -1,4 +1,4 @@
-import { FilerRow, type FilingRow, type Provider } from '#layers/core/server/pipeline/contracts'
+import { FilerRow, type FilingRow, type Provider } from '#layers/core/server/utils/contracts'
 
 // The CIK resolver: which lab a registration filing belongs to, decided by
 // the pending_filers block in sources.yaml and nothing else. HONESTY RULE,

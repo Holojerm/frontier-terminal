@@ -1,4 +1,4 @@
-import { ChangeRow, contentHash, type EntityRow } from './contracts'
+import { ChangeRow, contentHash, type EntityRow } from '../utils/contracts'
 
 // Diff: two entity sets -> ChangeRow[] (boundary table, "diff" =
 // DETERMINISTIC). Keyed on entity_key; added/removed by key presence,

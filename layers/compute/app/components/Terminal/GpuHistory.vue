@@ -6,9 +6,8 @@
 // the quorum it draws each provider, which is three lines at most. A range is
 // drawn at its lower end and printed in full in the table under the charts.
 
-import { gpuHour, sharePct, dayLabel } from '#layers/core/shared/utils/terminal-format'
-import type { GpuHistoryView, SpotShare } from '../../../shared/utils/terminal-types/gpu-prices'
-import type { Citation, TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { GpuHistoryView } from '../../../shared/types/gpu-prices'
+import type { Citation } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ history: GpuHistoryView; sources?: Citation[] }>()
 

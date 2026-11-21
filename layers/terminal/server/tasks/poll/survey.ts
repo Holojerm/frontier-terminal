@@ -1,23 +1,13 @@
 // Cron task: poll every include source every six hours (layers/core/server/pipeline/scopes.ts).
 // Same wiring and the same reasons as poll/edgar.ts.
 
-import { blob } from '@nuxthub/blob'
-import { db } from '@nuxthub/db'
-import { kv } from '@nuxthub/kv'
-
 import sourcesYaml from 'raw:~~/sources.yaml'
 
-import { createFetcher } from '#layers/core/server/pipeline/fetch'
-import { unstorageLockStore } from '#layers/core/server/pipeline/lock'
 import { runPoll } from '#layers/core/server/pipeline/poll'
-import { blobRawStore } from '#layers/core/server/pipeline/raw'
 import { writeGpuMedianAlerts } from '#layers/compute/server/pipeline/gpu-median-floor'
 import { paceSec } from '#layers/core/server/pipeline/sec-pace'
 import { evaluateTheses } from '../../../../theses/server/theses/evaluate'
 import { runRecipes } from '../../../../core/server/recipes/run'
-import { recordOpsEvent } from '#server/utils/ops'
-import { warmAfterPoll } from '#layers/core/server/utils/cache-warm-task'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

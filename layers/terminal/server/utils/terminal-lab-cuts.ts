@@ -6,9 +6,6 @@
 // can't be cut here, because the trim would hide the lab's older rows; ground
 // truth filters inside its query instead (queryGroundTruth's `lab`).
 
-import { listedSubset, type ListedCompany, type ListedData } from '../../shared/utils/listed'
-import type { LabId } from '../../shared/utils/terminal-types'
-
 /** Tied to the lab by being it or its parent, by a filing that names it, or by a site it uses. */
 export const listedTiedTo = (c: ListedCompany, lab: LabId): boolean =>
   c.lab === lab || c.labs.includes(lab) || c.site_labs.includes(lab)

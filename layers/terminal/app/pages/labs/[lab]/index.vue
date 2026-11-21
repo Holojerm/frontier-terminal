@@ -5,33 +5,10 @@
 // number here is the same number there — same query, same cache, same
 // provenance. The lab is a route parameter; a name outside the tracked labs is a 404.
 
-import { COMPARE_PAIRS, comparePath, pairTitle } from '../../../../shared/utils/terminal-compare'
-import { isLab } from '#layers/core/shared/utils/lab-names'
-import { summarizeLab, tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
-import { LAB_SITE } from '#layers/core/shared/utils/lab-names'
-import type { DataCentersData } from '#layers/compute/shared/utils/compute-views'
 import { count } from '#layers/core/shared/utils/terminal-format'
-import { labLede } from '../../../../shared/utils/terminal-ledes'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
-import type { ListedData } from '../../../../shared/utils/listed'
-import type { ThesesData, ThesisView } from '../../../../../theses/shared/utils/thesis-types'
-import type {
-  AlertsData,
-  DisclosuresData,
-  GroundTruthData,
-  HiringHistoryData,
-  IncidentsData,
-  PricesData,
-  ProbesData,
-  RankingsData,
-  ReleasesData,
-  RevenueData,
-  SpendData,
-} from '../../../../shared/utils/terminal-types'
-import type { LimitsData } from '#layers/pricing/shared/utils/limits'
-import type { PayData } from '../../../../../talent/shared/utils/pay'
-import type { AdoptionData } from '#layers/adoption/shared/utils/adoption-views'
-import type { ParentsData } from '../../../../../companies/shared/utils/recipe-views'
+import type { ThesisView } from '../../../../../theses/shared/utils/thesis-types'
+import type { IncidentsData } from '../../../../../reliability/shared/types/incidents'
+import type { PricesData } from '../../../../../pricing/shared/types/prices'
 // Inert for a dynamic route: the collecting hook skips paths with a
 // parameter, and sitemap.xml / llms.txt append the lab pages from
 // layers/terminal/shared/utils/terminal-lab-summary.ts. Declared anyway — the seo gate's

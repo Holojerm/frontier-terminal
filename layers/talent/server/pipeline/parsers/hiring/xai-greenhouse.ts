@@ -2,8 +2,8 @@ import {
   GreenhouseJobsOutput,
   registerParser,
   type Provenance,
-} from '#layers/core/server/pipeline/contracts'
-import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+} from '#layers/core/server/utils/contracts'
+import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { parseGreenhouseBoard } from './common'
 
 // xAI job board via Greenhouse. Every row carries company_name "SpaceXAI" —

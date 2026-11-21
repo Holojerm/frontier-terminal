@@ -9,7 +9,7 @@ import { z } from 'zod'
 
 import type { SupplierLayer } from '../../../core/shared/utils/supplier-layers'
 import { LAB_SITE } from '../../../core/shared/utils/lab-names'
-import type { LabId } from '../../../core/shared/utils/terminal-types/common'
+import type { LabId } from '../../../core/shared/types/common'
 
 export const PRINT_SERIES = ['tw_revenue', 'kr_chip_exports', 'kr_hs8542_exports'] as const
 export type PrintSeries = (typeof PRINT_SERIES)[number]

@@ -1,8 +1,6 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import { parseEdgarCompanyfacts } from '../server/pipeline/parsers/sec/edgar-companyfacts'
 import {
   filerAt,
@@ -10,25 +8,13 @@ import {
   revenueProviderFor,
 } from '../server/pipeline/parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock } from '../server/pipeline/parsers/sec/whitelist'
-import type { SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { runRefresh } from '../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/pipeline/raw'
-import { includeSources } from '#layers/core/server/pipeline/sources'
-import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import {
-  filingIndexUrl,
-  queryRevenue,
-  revenuePeriodFromPayload,
-  splitPeriods,
-} from '../server/utils/terminal-revenue'
 import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // The disclosed-revenue axis: the company-facts parser on its committed
 // fixture, the revenue_filers reader, the period arithmetic as a pure
 // function, and the query against a D1 seeded through runRefresh.
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const whitelist = parseCikWhitelistBlock(sourcesYaml)
 const filers = parseRevenueFilersBlock(sourcesYaml)

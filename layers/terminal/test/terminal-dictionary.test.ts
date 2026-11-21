@@ -3,39 +3,10 @@ import { drizzle } from 'drizzle-orm/d1'
 import { describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { buildLlmsTxt } from '~~/server/utils/seo'
-import { llmsTxtInput } from '../server/utils/crawler-pages'
-import {
-  DATA_TYPES,
-  DICTIONARY_CSV_COLUMNS,
-  DICTIONARY_NAME,
-  TABLE_META,
-  dataDictionary,
-  dictionaryCsv,
-} from '../server/utils/terminal-dictionary'
-import {
-  BREAKING_NOTICE_DAYS,
-  SCHEMA_RELEASES,
-  SCHEMA_VERSION,
-  type SchemaRelease,
-  bumpCovers,
-  bumpNeeded,
-  bumpOf,
-  lockRefusal,
-  type SchemaLock,
-} from '#layers/core/server/utils/data-schema'
-import { ENTITY_SECURITIES } from '../../companies/server/utils/terminal-entities'
 import changelogMd from '~~/CHANGELOG-data.md?raw'
 import schemaLock from '~~/schema.lock.json'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
-import {
-  EXPORT_HISTORY,
-  LICENSE_COLUMN,
-  licenseWindow,
-} from '#layers/core/server/utils/terminal-export-history'
 import { EXPORT_TABLES } from '#server/registries/export-tables'
-import { asOfColumns } from '#layers/core/server/utils/terminal-export-views'
-import { csvLine } from '#layers/core/server/utils/terminal-export-format'
 
 // The dictionary cannot drift from the exports: each column is declared with
 // its entry (server/registries/export-tables.ts), and the as_of columns are the ones a

@@ -5,12 +5,6 @@
 // source's first snapshot — as a step chart and as the point-by-point table
 // with the fetch each point was read from.
 
-import { money, tierLabel } from '#layers/core/shared/utils/terminal-format'
-import { labName } from '#layers/core/shared/utils/lab-names'
-import { skuLede } from '../../../shared/utils/price-ledes'
-import type { PriceHistoryData, PricePoint } from '../../../shared/utils/terminal-types/prices'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
-
 // A dynamic route is one pattern, not N pages, so the sitemap hook skips it,
 // and the SKU pages are kept out of the sitemap on purpose (terminal-page-source.ts).
 // These values are inert and exist for the per-page invariant scripts/check-seo.ts holds.

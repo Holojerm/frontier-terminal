@@ -2,8 +2,6 @@
 // (terminal-handler.ts › liveStamp), not a bare 500: #182 was a query that threw
 // past that mapping, so the status and the digest called it a bug in our code.
 
-import { createError } from 'h3'
-
 const D1_FAULT = /^Failed query: |D1_|SQLITE_|Network connection lost|storage (?:operation|caused)/i
 
 function messages(error: unknown): string[] {

@@ -2,21 +2,14 @@
 // line: no export, route, MCP tool, page or bulk file reads market_bars, and
 // what the harness publishes carries no price.
 
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import sourcesYaml from '~~/sources.yaml?raw'
-import * as schema from '~~/server/db/schema'
 import { SURFACE_WAIVERS } from '~~/surfaces.waivers'
 import { addDays } from '../server/signals/market'
 import { runSignals } from '../server/signals/run'
 import { SIGNALS } from '../server/signals/registry'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { EXPORT_TABLES } from '#server/registries/export-tables'
-import { querySignals } from '../server/utils/terminal-signals'
-
-const db = drizzle(env.DB, { schema })
 
 const PRIVATE_TABLES = ['market_bars', 'market_fetches']
 

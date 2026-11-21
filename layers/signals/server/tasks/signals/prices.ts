@@ -6,11 +6,7 @@
 // The key is the Worker secret DATABENTO_API_KEY. Without it the task does
 // nothing and says so in its result.
 
-import { db } from '@nuxthub/db'
-
-import { recordOpsEvent } from '#server/utils/ops'
 import { pullMarket, type PullReport } from '../../signals/market'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 export const MARKET_PULL_FAILED_KIND = 'market_pull_failed'
 

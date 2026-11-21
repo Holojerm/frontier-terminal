@@ -1,11 +1,7 @@
-import { env } from 'cloudflare:test'
 import { eq } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import { PRINT_TABLES } from '../server/export-tables/prints'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { KCS, KCS_BOARD_DOC, readKcs } from '../server/prints/ingest'
 import {
   hasFigures,
@@ -25,10 +21,6 @@ import {
 import { printsStamp } from '../server/prints/store'
 import { createLoader } from '#layers/signals/server/signals/sources'
 import { SIGNALS } from '#layers/signals/server/signals/registry'
-import { readPrintSources } from '#layers/core/server/utils/terminal-sources'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { printRows, queryPrints } from '../server/utils/terminal-prints'
-import { PRINT_HELD_SOURCES } from '../shared/utils/prints'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Korea Customs Service's releases on the committed bytes: the board, four
@@ -37,7 +29,6 @@ import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 // to end against a fake fetcher, and the rights split: a release with no
 // licence mark reaches the signals harness and nothing else.
 
-const db = drizzle(env.DB, { schema })
 const f = (name: string) => fixtureText(`fixtures/prints/${name}`)
 
 const BOARD = f('kcs-board.html')

@@ -10,17 +10,6 @@
 // more" pages back through the whole history by cursor rather than slicing one
 // fixed fetch, so nothing older than the newest page is out of reach.
 
-import { LABS } from '#layers/core/shared/utils/lab-names'
-import { ALERT_AXES, AXIS_DISPLAY } from '../../../shared/utils/terminal-labs'
-import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
-import {
-  CRITICAL_FEED_QUERY,
-  INFO_FEED_QUERY,
-  INFO_TIER_LABEL,
-} from '../../../../core/shared/utils/terminal-tiers'
-import type { AlertView, AlertsData } from '../../../shared/utils/terminal-types/alerts'
-import type { TrackRecordData } from '../../../../press/shared/utils/terminal-types/track-record'
-
 const watchlist = useWatchlist()
 
 definePageMeta({

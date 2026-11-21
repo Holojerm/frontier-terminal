@@ -1,19 +1,11 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import type { ClaimDef, JudgedSpec, ThesisDef } from '../shared/utils/thesis-types'
-
-import * as schema from '~~/server/db/schema'
-import { contentHash, type ChangeRow } from '#layers/core/server/pipeline/contracts'
 import { submitJudgeRun } from '../../core/server/pipeline/judge/submit'
 import { ANTHROPIC_THESIS } from '../server/theses/anthropic'
 import { claimCandidates } from '../server/theses/candidates'
 import { evaluateJudgedTheses } from '../server/theses/evaluate'
 import { evaluateJudgedClaim, type StoredVerdict } from '../server/theses/judged-status'
 import { claimReview } from '../server/theses/verdicts'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { queryTheses } from '../server/utils/terminal-theses'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Judged claims end to end: which changes the Worker offers, the status rules
@@ -21,7 +13,6 @@ import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 // submit path — a verdict on a change the Worker would not offer, with a
 // verdict the claim does not allow, or with an ungrounded rationale is dropped.
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const claim = (id: string) => ANTHROPIC_THESIS.claims.find((c) => c.id === id)!
 const PRICE_WAR = claim('anthropic-rival-price-war')

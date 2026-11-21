@@ -2,8 +2,6 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { errorDetail } from '../server/utils/error-detail'
-
 describe('errorDetail', () => {
   it('folds the cause into the wrapper, which is the whole point', () => {
     // What layers/core/server/utils/terminal-handler.ts throws when D1 is unreachable.

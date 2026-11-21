@@ -5,10 +5,7 @@
 // stored by the poll, and the GDELT files are read on the owner's Mac mini
 // (scripts/gdelt-search.ts).
 
-import { db } from '@nuxthub/db'
-
 import { runTrackRecordSearch } from '../../pipeline/track-record/search'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

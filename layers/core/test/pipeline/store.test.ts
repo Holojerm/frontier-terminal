@@ -1,27 +1,11 @@
-import { env } from 'cloudflare:test'
 import { sql } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import { ChangeRow, contentHash } from '../../server/pipeline/contracts'
 import { changeId, repeatChangeId } from '../../server/pipeline/diff'
-import {
-  D1_MAX_BOUND_PARAMS,
-  StoreValidationError,
-  applyDiff,
-  chunk,
-  insertRows,
-  latestGoodSnapshots,
-  repeatedChangeIds,
-  rowsPerStatement,
-} from '../../server/pipeline/store'
 
 // The write chokepoint against a real D1. The property that matters is the
 // provenance gate: a row without source_url + fetched_at never reaches the
 // table, and a bad row in a batch keeps the whole batch out.
-
-const db = drizzle(env.DB, { schema })
 
 const PROV = {
   source_url: 'https://boards-api.greenhouse.io/v1/boards/xai/jobs',

@@ -5,8 +5,6 @@
 // (shared/utils/license.ts). Commercial licensing is paused, so this page
 // offers none.
 
-import { CONTACT_EMAIL, mailto } from '../../shared/utils/contact'
-
 definePageMeta({
   publicPage: {
     changefreq: 'yearly',

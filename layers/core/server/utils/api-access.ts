@@ -9,17 +9,7 @@
 // routes (/api/fleet, /api/judge, /api/ops, /api/gdelt, /api/relay) read their own bearer
 // and never come through here, and neither do /mcp and /alerts.xml.
 
-import { db } from '@nuxthub/db'
-import { kv } from '@nuxthub/kv'
 import type { H3Event } from 'h3'
-
-import { logEvent } from '#server/utils/log'
-import { rateLimit } from '#server/utils/rate-limit'
-
-import { REQUEST_BUDGETS } from '../../shared/utils/institutional'
-import type { ApiKeyTier } from './api-key-token'
-import { createUsageCounter, type UsageCounter } from './api-key-usage'
-import { KEY_REFUSALS, verifyApiKey, type ApiKey } from './api-keys'
 
 /** `event.context` key the resolved caller is kept under: ApiKey, or null for anonymous. */
 const CONTEXT_KEY = 'terminalApiKey'

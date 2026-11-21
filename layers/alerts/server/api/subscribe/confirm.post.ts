@@ -2,14 +2,6 @@
 // emailed link. A POST, so a mail scanner that only fetches links cannot
 // subscribe anyone.
 
-import { db } from '@nuxthub/db'
-
-import { rateLimit } from '#server/utils/rate-limit'
-
-import { tokenBody } from '../../../shared/utils/subscribe'
-import { requireSubscribe } from '../../../../core/server/utils/subscribe-config'
-import { confirmSubscription } from '../../utils/subscribers'
-
 export default defineEventHandler(async (event) => {
   requireSubscribe(event)
   await rateLimit(event, { name: 'subscribe-confirm', limit: 20, windowSeconds: 600 })

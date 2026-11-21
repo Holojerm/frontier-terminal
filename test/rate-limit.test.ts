@@ -7,26 +7,9 @@
 // seconds. checkRateLimit takes the native bindings the same way.
 
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
 import WRANGLER_TOML from '../wrangler.toml?raw'
-import * as schema from '../server/db/schema'
-import {
-  checkRateLimit,
-  clearNativeLimitersForTest,
-  consumeRateLimit,
-  d1RateLimitStore,
-  getNativeLimiters,
-  NATIVE_LIMITER,
-  nativeFor,
-  pruneRateLimits,
-  registerNativeLimiter,
-  type NativeRateLimiter,
-  type RateLimitStore,
-} from '../server/utils/rate-limit'
-
-const db = drizzle(env.DB, { schema })
 
 /** A counter in memory. One JavaScript statement per hit, so it is atomic too. */
 function makeStore(): RateLimitStore & { buckets: () => string[]; hits: () => number } {

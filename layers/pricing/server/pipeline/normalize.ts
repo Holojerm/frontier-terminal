@@ -4,7 +4,7 @@ import {
   type EntityRow,
   type PriceRow,
   type RecommendationRow,
-} from '../../../core/server/pipeline/contracts'
+} from '../../../core/server/utils/contracts'
 import { collapse, toEntity } from '../../../core/server/pipeline/normalize'
 
 // Normalize the price lists: validated price and drift-check rows ->

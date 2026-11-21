@@ -1,17 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { listedForLab } from '../server/utils/terminal-lab-cuts'
-import { buildListed } from '../server/utils/terminal-listed'
-import { buildSuppliers } from '../../companies/server/utils/terminal-suppliers'
-import { listedBoth, listedEvidence, listedGroup, listedTieText } from '../shared/utils/listed'
-import type { PowerTicker } from '#layers/compute/shared/utils/power-sites'
 import curated from '../../companies/server/curated/suppliers.json'
-import { curatedSuppliers, type SupplierRow } from '../../companies/shared/utils/suppliers'
-import type {
-  DependencyEdge,
-  DependencyFigure,
-  DependencyNode,
-} from '../../companies/shared/utils/terminal-dependencies'
 
 // The three company tables as one list, over small tables of our own, then
 // over the hand-read suppliers file.

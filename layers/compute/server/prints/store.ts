@@ -7,7 +7,7 @@
 import { and, desc, eq, inArray, notInArray, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import type { PrintObservation } from './parse'
 import { PRINT_HELD_SOURCES, type PrintBasis } from '../../shared/utils/prints'
 

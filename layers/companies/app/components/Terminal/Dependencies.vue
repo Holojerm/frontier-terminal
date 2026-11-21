@@ -4,16 +4,7 @@
 // another as a line. The drawing is the overview. The tables under it carry
 // every figure with its period and filing, so nothing is only in the picture.
 
-import { count } from '#layers/core/shared/utils/terminal-format'
-import {
-  figurePeriod,
-  layoutDependencies,
-  type DependenciesData,
-  type DependencyEdge,
-  type DependencyFigure,
-  type DependencyMeasure,
-} from '../../../shared/utils/terminal-dependencies'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import { type DependenciesData } from '../../../shared/utils/terminal-dependencies'
 
 const stamps = useStamps()
 

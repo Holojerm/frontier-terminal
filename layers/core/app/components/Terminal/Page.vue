@@ -6,14 +6,6 @@
 // A data page (anything not `narrow` prose) ends with the data license, since
 // most of them show history older than its CC BY window.
 
-import {
-  DATA_LICENSE,
-  HISTORY_LICENSE,
-  LICENSE_SPLIT_EFFECTIVE,
-  LICENSE_WINDOW_DAYS,
-} from '#shared/utils/license'
-import { exactStamp } from '#layers/core/shared/utils/terminal-format'
-
 const stamps = useStamps()
 
 withDefaults(

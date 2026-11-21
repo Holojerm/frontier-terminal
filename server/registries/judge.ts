@@ -22,7 +22,6 @@ import { POWER_SITE_REVIEW } from '#layers/compute/server/power/review'
 import { CLASS_MAP_REVIEW } from '#layers/pricing/server/pipeline/judge/class-map'
 import { PRICE_REVIEW } from '#layers/pricing/server/pipeline/judge/price-review'
 import { hiringBoards } from '#layers/talent/server/pipeline/hiring-floor'
-import { parseDepartmentClusters } from '#layers/talent/server/utils/terminal-clusters'
 import {
   screenJudgeAlerts,
   type ScreenOptions,

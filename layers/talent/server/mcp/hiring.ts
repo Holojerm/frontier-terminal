@@ -2,18 +2,6 @@
 
 import { z } from 'zod'
 import { listedHiringStamp, queryListedHiring } from '../listed-hiring/query'
-import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
-import { HIRING_WINDOW_DAYS, queryHiring, queryHiringHistory } from '../utils/terminal-hiring'
-import { PAY_RECIPE_IDS, queryPay } from '../utils/terminal-pay'
-import {
-  ProviderSchema,
-  json,
-  READ_ONLY,
-  AsOfSchema,
-  asOfErrors,
-  PROVENANCE,
-  type McpKit,
-} from '#layers/core/server/mcp/kit'
 
 export function registerHiringTools({ server, deps, read }: McpKit): void {
   server.registerTool(

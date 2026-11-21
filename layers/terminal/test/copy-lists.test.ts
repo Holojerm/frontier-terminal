@@ -7,12 +7,10 @@
 import { describe, expect, it } from 'vitest'
 
 import readme from '~~/README.md?raw'
-import { LICENSE_SPLIT_EFFECTIVE, LICENSE_WINDOW_DAYS } from '#shared/utils/license'
 import about from '../app/pages/about.vue?raw'
 import license from '../app/pages/license.vue?raw'
 import prices from '../../pricing/app/pages/prices/index.vue?raw'
 import releases from '../../models/app/pages/releases.vue?raw'
-import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 
 const labs = Object.entries(LAB_DISPLAY)
   .filter(([id]) => id !== 'other')

@@ -18,13 +18,9 @@
 // call withHeartbeat() fails the build unless the registry gives it a check
 // of its own, with the reason (TASK_CHECK_OVERRIDES).
 
-import { db } from '@nuxthub/db'
 import type { Task, TaskEvent, TaskResult } from 'nitropack/types'
 
 import * as tables from '#server/db/schema'
-import { logEvent } from '#server/utils/log'
-import { recordOpsEvent } from '#server/utils/ops'
-import type { PipelineDb } from '../pipeline/store'
 
 /** Spooled once per run that throws; the detail names the task. */
 export const TASK_FAILED_KIND = 'task_failed'

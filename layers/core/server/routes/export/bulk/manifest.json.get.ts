@@ -8,15 +8,6 @@
 // Sync by comparing each entry's sha256 with the copy you have. The manifest
 // itself answers If-None-Match and If-Modified-Since with a 304.
 
-import { blob } from '@nuxthub/blob'
-
-import { sha256Hex } from '#server/utils/hash'
-
-import { cacheControlFor, rateLimitTerminal } from '../../../utils/api-access'
-import { SCHEMA_VERSION, SCHEMA_VERSION_HEADER } from '../../../utils/data-schema'
-import { headResponse } from '../../../utils/head-response'
-import { bulkManifest, notModified, readBulkIndex } from '../../../utils/terminal-bulk'
-
 export default defineEventHandler(async (event) => {
   const key = await rateLimitTerminal(event, { name: 'bulk', limit: 60, windowSeconds: 60 })
   const index = await readBulkIndex(blob)

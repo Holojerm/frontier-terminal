@@ -1,10 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { figurePeriod, layoutDependencies } from '../shared/utils/terminal-dependencies'
-import type { ExposureData, ExposureTicker } from '../shared/utils/terminal-exposure'
-import type { ProspectusData } from '../shared/utils/terminal-prospectus'
 import { EXPOSURE_GAPS, FILER_NAMES, buildSeries, type StoredFact } from '../server/exposure/series'
-import { buildDependencies, dependencyEdges } from '../server/utils/terminal-dependencies'
 
 // The dependency graph on the figures the filings carried on 2026-11-19:
 // which line each tagged fact lands on and which way it points, what sizes a

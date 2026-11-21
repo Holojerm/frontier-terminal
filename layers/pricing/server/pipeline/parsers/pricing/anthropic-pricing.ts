@@ -4,8 +4,8 @@ import {
   modelKey,
   type PriceRow,
   type Provenance,
-} from '../../../../../core/server/pipeline/contracts'
-import { fixtureProvenance } from '../../../../../core/server/pipeline/parsers/fixture-provenance'
+} from '../../../../../core/server/utils/contracts'
+import { fixtureProvenance } from '../../../../../core/server/utils/fixture-provenance'
 import { isoDate, tableAfterHeading, usdAmount } from './md-table'
 
 // anthropic-pricing-md — https://platform.claude.com/docs/en/about-claude/pricing.md

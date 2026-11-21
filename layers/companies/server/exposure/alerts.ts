@@ -22,7 +22,7 @@ import {
   ChangeRow,
   contentHash,
   type Provider,
-} from '#layers/core/server/pipeline/contracts'
+} from '#layers/core/server/utils/contracts'
 import { alertKind, type AlertKind } from './series'
 
 export const FILED_FACT_RULE = 'filed-fact-floor' as const

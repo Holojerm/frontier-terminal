@@ -2,7 +2,7 @@ import { and, eq, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { derivedSourceId, type DerivedKind } from '#layers/core/server/pipeline/derived'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 
 // The misalignment report pages derived from OpenAI's index (core's derived.ts
 // has the mechanism): each report slug on openai-misalignment-reports fills the

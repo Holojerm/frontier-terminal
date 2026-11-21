@@ -5,11 +5,6 @@
 // latency probes: what each vendor posted beside what we measured. Below the
 // list, the monthly counts from before the live feeds, from archived copies.
 
-import { labName } from '#layers/core/shared/utils/lab-names'
-import type { IncidentView, IncidentsData, ProbesData } from '../../shared/utils/terminal-types'
-import type { LimitsData } from '#layers/pricing/shared/utils/limits'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
-
 definePageMeta({
   publicPage: {
     changefreq: 'daily',

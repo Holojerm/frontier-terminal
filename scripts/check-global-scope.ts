@@ -8,18 +8,20 @@
 // the factory's default parameter called crypto.randomUUID(), and main stopped
 // deploying until #170. The clock reads are not refused, only wrong.
 //
-// A module-scope call to a function this file declares or imports by a relative
-// or alias path (#server, #shared, #layers, ~~, ~) is followed up to three
+// A module-scope call to a function this file declares, imports by a relative
+// or alias path (#server, #shared, #layers, ~~, ~), or calls as one of our own
+// Nitro auto-imports (.nuxt/types/nitro-imports.d.ts) is followed up to three
 // calls deep: its omitted parameters' defaults and its body run at load too.
-// Not followed: a Nuxt auto-import called without an import, a method call
-// (obj.make()), a package, or a re-export. Escape hatch: `global-scope-ok` in a
-// comment on the flagged line or the line above, saying why.
+// Not followed: a method call (obj.make()), a package, or a re-export. Escape
+// hatch: `global-scope-ok` in a comment on the flagged line or the line above,
+// saying why.
 //
 // Scans server/ and every layers/*/server/, skipping tests.
 
 import { existsSync, readdirSync, readFileSync } from 'node:fs'
 import { dirname, join, relative, resolve } from 'node:path'
 
+import { generatedImports } from './lib/auto-imports'
 import { globalScopeFindings, runSelfTest, type SourceHost } from './lib/global-scope'
 import { walk } from './lib/walk'
 
@@ -41,7 +43,15 @@ const ALIASES: readonly [string, string][] = [
   ['~/', ROOT],
 ]
 
+const autoImports = new Map<string, { file: string; name: string }>()
+for (const i of generatedImports(ROOT, 'server')) {
+  if (!i.from.startsWith(ROOT) || i.from.includes('/node_modules/')) continue
+  const file = [`${i.from}.ts`, join(i.from, 'index.ts')].find((p) => existsSync(p))
+  if (file) autoImports.set(i.as, { file, name: i.name })
+}
+
 const host: SourceHost = {
+  autoImport: (name) => autoImports.get(name) ?? null,
   read: (file) => (existsSync(file) ? readFileSync(file, 'utf8') : null),
   resolve: (from, specifier) => {
     let base: string | null = null

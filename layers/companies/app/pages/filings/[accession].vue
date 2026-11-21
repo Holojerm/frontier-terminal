@@ -5,21 +5,6 @@
 // the cached /api/revenue payload (layers/companies/shared/utils/terminal-filings.ts), so the
 // figures are the revenue panel's, regrouped by filing.
 
-import { count, periodLabel } from '#layers/core/shared/utils/terminal-format'
-import {
-  ACCESSION_RE,
-  filerName,
-  filingPath,
-  filingTitle,
-  periodName,
-  revenueFilings,
-  type FilingPeriod,
-} from '../../../shared/utils/terminal-filings'
-import { labPath } from '../../../../core/shared/utils/lab-names'
-import { LAB_SITE } from '#layers/core/shared/utils/lab-names'
-import type { RevenueData } from '../../../shared/utils/terminal-types/revenue'
-import type { Fact, TableColumn } from '#layers/core/app/types/terminal-ui'
-
 const figures = useFigures()
 
 // Inert for a dynamic route: server/routes/sitemap.xml.get.ts enumerates the

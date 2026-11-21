@@ -43,6 +43,8 @@ export interface SourceHost {
   read(file: string): string | null
   /** The file an import specifier names, or null when it is a package or cannot be found. */
   resolve(fromFile: string, specifier: string): string | null
+  /** The file and export name an auto-imported name comes from, or null when it is not one of ours. */
+  autoImport?(name: string): { file: string; name: string } | null
 }
 
 type FunctionLike = ts.FunctionLikeDeclaration
@@ -128,7 +130,34 @@ function declarationOf(
       }
     }
   }
-  return null
+  const auto = bindsAtTop(sf, name) ? null : host.autoImport?.(name)
+  const autoSf = auto ? parse(host, auto.file) : null
+  return autoSf ? declarationOf(host, autoSf, auto!.name, seen) : null
+}
+
+/** Whether the module's top level declares or imports `name`, which hides an auto-import of it. */
+function bindsAtTop(sf: ts.SourceFile, name: string): boolean {
+  return sf.statements.some((stmt) => {
+    if (
+      (ts.isFunctionDeclaration(stmt) ||
+        ts.isClassDeclaration(stmt) ||
+        ts.isEnumDeclaration(stmt)) &&
+      stmt.name?.text === name
+    )
+      return true
+    if (ts.isVariableStatement(stmt)) {
+      return stmt.declarationList.declarations.some(
+        (d) => ts.isIdentifier(d.name) && d.name.text === name,
+      )
+    }
+    if (ts.isImportDeclaration(stmt) && stmt.importClause) {
+      const { name: def, namedBindings: nb } = stmt.importClause
+      if (def?.text === name) return true
+      if (nb && ts.isNamespaceImport(nb)) return nb.name.text === name
+      return !!nb && nb.elements.some((el) => el.name.text === name)
+    }
+    return false
+  })
 }
 
 /**
@@ -226,6 +255,8 @@ export function resetGlobalScopeCache(): void {
 export const SELF_TEST: readonly {
   name: string
   files: Readonly<Record<string, string>>
+  /** Auto-imported names and the file each comes from. */
+  autoImports?: Readonly<Record<string, string>>
   expect: readonly string[]
 }[] = [
   {
@@ -289,6 +320,26 @@ export const SELF_TEST: readonly {
     ],
   },
   {
+    name: 'the #169 factory auto-imported, with no import line',
+    files: {
+      'routes/a.ts': 'const usage = createUsageCounter()\n',
+      'utils/api-key-usage.ts':
+        'export function createUsageCounter(isolate = crypto.randomUUID()) {\n  return { isolate }\n}\n',
+    },
+    autoImports: { createUsageCounter: 'utils/api-key-usage.ts' },
+    expect: ['createUsageCounter() → crypto.randomUUID()'],
+  },
+  {
+    name: 'a local function of the same name hides the auto-import',
+    files: {
+      'routes/a.ts':
+        'function createUsageCounter() { return 1 }\nconst usage = createUsageCounter()\n',
+      'utils/api-key-usage.ts': 'export const createUsageCounter = () => crypto.randomUUID()\n',
+    },
+    autoImports: { createUsageCounter: 'utils/api-key-usage.ts' },
+    expect: [],
+  },
+  {
     name: 'a factory whose body, not its parameters, does the work',
     files: {
       'a.ts': 'function seed() { return Math.random() }\nconst s = seed()\n',
@@ -309,6 +360,10 @@ export function runSelfTest(): string[] {
         const dir = from.includes('/') ? from.slice(0, from.lastIndexOf('/') + 1) : ''
         const path = `${dir}${spec.replace(/^\.\//, '')}.ts`
         return path in c.files ? path : null
+      },
+      autoImport: (name) => {
+        const file = c.autoImports?.[name]
+        return file ? { file, name } : null
       },
     }
     const entry = Object.keys(c.files)[0]!

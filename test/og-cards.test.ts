@@ -5,7 +5,6 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { ogCardPath } from '../shared/utils/og'
 import { cardOfPage, clip, ogCardFile, routeOfPageFile, titleSize } from '../scripts/lib/og-source'
 
 const PAGE = `<script setup lang="ts">

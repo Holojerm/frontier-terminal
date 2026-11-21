@@ -5,17 +5,7 @@
 // A send that fails throws, and withHeartbeat spools it as task_failed, which
 // the fleet dashboard reports.
 
-import { db } from '@nuxthub/db'
-
-import { getIdentitySalt } from '#server/utils/identity'
-
 import { buildThesisDigest } from '../../theses/digest'
-import { loadDigestInput } from '../../utils/digest-input'
-import { getOwnerMailer } from '../../../../core/server/utils/owner-mail'
-import { subscribeConfig } from '../../../../core/server/utils/subscribe-config'
-import { sendSubscriberDigest } from '../../../../alerts/server/utils/subscriber-mail'
-import { purgeStalePending } from '../../../../alerts/server/utils/subscribers'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 interface CloudflareTaskContext {
   cloudflare?: { env?: Record<string, unknown> }

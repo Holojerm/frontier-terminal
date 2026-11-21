@@ -8,11 +8,11 @@
 // newest window, and its older readings are the ones earlier runs wrote.
 
 import { companyName, type CompanyId } from '#layers/core/shared/utils/companies'
-import type { HiringHistoryData } from '../../../talent/shared/utils/terminal-types/hiring'
-import type { LabId } from '../../../core/shared/utils/terminal-types/common'
+import type { HiringHistoryData } from '../../../talent/shared/types/hiring'
+import type { LabId } from '../../../core/shared/types/common'
 import type { ClaimDef, SignalSpec, ValueFormat } from '../../shared/utils/thesis-types'
 
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import {
   rankingObservations,
   type RankingObservation,

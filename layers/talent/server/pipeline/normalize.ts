@@ -1,4 +1,4 @@
-import { AshbyJobRow, jobKey, type EntityRow } from '../../../core/server/pipeline/contracts'
+import { AshbyJobRow, jobKey, type EntityRow } from '../../../core/server/utils/contracts'
 import { collapse, toEntity } from '../../../core/server/pipeline/normalize'
 
 // Normalize the job boards: validated job rows -> EntityRow (boundary table,

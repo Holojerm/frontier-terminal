@@ -4,10 +4,6 @@
 // lab's top models — all from OpenRouter's usage rankings (CC BY 4.0) and,
 // for the dollars, the vendors' own price pages.
 
-import type { AdoptionData } from '../../shared/utils/adoption-views'
-import type { RankingsData } from '../../shared/utils/terminal-types/rankings'
-import type { SpendData } from '../../shared/utils/terminal-types/spend'
-
 definePageMeta({
   publicPage: {
     changefreq: 'daily',

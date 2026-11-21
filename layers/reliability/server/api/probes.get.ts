@@ -5,11 +5,6 @@
 // cut from the cached all-lab payload. `as_of` is refused, since each day is
 // dated and nothing here is rewritten later.
 
-import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
-import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
-import { labQuerySchema } from '#layers/core/server/utils/lab-query'
-import { probesForLab, probesStamp, queryProbes } from '../utils/terminal-probes'
-
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'probes', limit: 60, windowSeconds: 60 })
   const { lab } = await getValidatedQuery(event, labQuerySchema.parse)

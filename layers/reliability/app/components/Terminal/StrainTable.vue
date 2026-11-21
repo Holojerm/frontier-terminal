@@ -6,11 +6,7 @@
 // after the history does is marked partial, not low. A feed the audit cut is
 // a row that says so (sources.yaml `cut.meta-status`).
 
-import type {
-  IncidentProviderView,
-  IncidentsData,
-} from '../../../shared/utils/terminal-types/incidents'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { IncidentsData } from '../../../shared/types/incidents'
 
 const watchlist = useWatchlist()
 

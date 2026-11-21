@@ -3,17 +3,6 @@
 // the same whether the address is new, pending, confirmed or unsubscribed, so
 // the form cannot be used to learn who subscribes. 404 until Resend is set up.
 
-import { db } from '@nuxthub/db'
-
-import { logEvent } from '#server/utils/log'
-import { rateLimit } from '#server/utils/rate-limit'
-
-import { subscribeBody } from '../../../shared/utils/subscribe'
-import { sendMail } from '../../../../core/server/utils/resend'
-import { requireSubscribe } from '../../../../core/server/utils/subscribe-config'
-import { confirmationMail } from '../../utils/subscriber-mail'
-import { requestSubscription } from '../../utils/subscribers'
-
 export default defineEventHandler(async (event) => {
   const cfg = requireSubscribe(event)
   await rateLimit(event, { name: 'subscribe', limit: 5, windowSeconds: 600 })

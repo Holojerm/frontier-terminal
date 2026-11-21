@@ -9,14 +9,6 @@
 
 import { z } from 'zod'
 
-import { ALERT_AXES } from '../../shared/utils/terminal-labs'
-import { LABS } from '#layers/core/shared/utils/lab-names'
-import { ALERT_TIER_FILTERS, tierFilterOf } from '../../../core/shared/utils/terminal-tiers'
-
-import { parseAlertCursor, queryAlerts } from '../utils/terminal-alerts'
-import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
-import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
-
 const querySchema = z.object({
   limit: z.coerce.number().int().min(1).max(500).default(200),
   tier: z.preprocess(tierFilterOf, z.enum(ALERT_TIER_FILTERS).default('all')),

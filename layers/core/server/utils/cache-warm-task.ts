@@ -3,8 +3,6 @@
 // (layers/core/server/utils/cache-warm.ts). A quiet poll costs one D1 read
 // and one KV read, because the marker for its stamp already exists.
 
-import { runTask } from 'nitropack/runtime'
-
 /** Never fails the poll that called it: the data is stored either way, only the warm is lost. */
 export async function warmAfterPoll(context: unknown): Promise<void> {
   try {

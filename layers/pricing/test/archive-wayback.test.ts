@@ -12,12 +12,9 @@ import {
   waybackStamp,
 } from '../../core/server/pipeline/archive/wayback'
 import { ARCHIVE_ERAS, ARCHIVE_NOT_COVERED, ARCHIVE_UNTIL } from '../server/pipeline/archive/eras'
-import { LABS } from '../../core/shared/utils/lab-names'
 import { captureId } from '../../core/server/pipeline/archive/captures'
 import { archiveRows } from '../server/pipeline/archive/rows'
 import { usdPerMillion } from '../server/pipeline/parsers/pricing/html-table'
-import { archivedPriceHistory, type ArchivedPrice } from '../server/utils/terminal-price-history'
-import { readArchiveSources } from '#layers/core/server/utils/terminal-sources'
 import sourcesYaml from '~~/sources.yaml?raw'
 
 // The Wayback client and the archive's pure plumbing: the CDX query, capture

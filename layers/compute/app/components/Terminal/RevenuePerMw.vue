@@ -4,9 +4,7 @@
 // its own list prices: a floor with no upper bound, because filings don't
 // separate contract discount from idle capacity.
 
-import { compactUsd, count, sharePct } from '#layers/core/shared/utils/terminal-format'
 import type { UtilizationData } from '../../../shared/utils/compute-views'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ coreweave: NonNullable<UtilizationData['coreweave']> }>()
 

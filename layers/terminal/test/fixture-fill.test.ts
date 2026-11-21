@@ -1,17 +1,7 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it, vi } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import { fillFromFixtures, type FixtureFillReport } from '../server/dev/fixture-fill'
-import type { LockStore } from '#layers/core/server/pipeline/lock'
-import type { RawStore } from '#layers/core/server/pipeline/raw'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { queryDependencies } from '../../companies/server/utils/terminal-dependencies'
-import { queryExposure } from '../../companies/server/utils/terminal-exposure'
-import { queryGroundTruth } from '../../press/server/utils/terminal-ground-truth'
-import { queryProspectus } from '../../companies/server/utils/terminal-prospectus'
-import { queryRevenue } from '../../companies/server/utils/terminal-revenue'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The offline fill, as dev:fixtures and the browser suites run it. The suites
@@ -23,7 +13,6 @@ import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 // Six polls of every fixture source, then the recipes and theses, in workerd.
 const FILL = 120_000
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const raw: RawStore = {
   put: async (key, body, contentType) => {

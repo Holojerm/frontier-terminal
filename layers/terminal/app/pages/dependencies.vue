@@ -4,10 +4,6 @@
 // figure one company's filing puts on another. The series behind every
 // figure are on /exposure and /revenue.
 
-import type { ListedData } from '../../shared/utils/listed'
-import type { SuppliersData } from '../../../companies/shared/utils/suppliers'
-import type { DependenciesData } from '../../../companies/shared/utils/terminal-dependencies'
-
 definePageMeta({
   publicPage: {
     changefreq: 'daily',

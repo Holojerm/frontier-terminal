@@ -3,7 +3,7 @@
 // Each post is one observation, keyed by its guid, with its exact publication
 // time in the payload. Anthropic and xAI publish no feed (sources.yaml cut).
 
-import { contentHashOfText } from '#layers/core/server/pipeline/contracts'
+import { contentHashOfText } from '#layers/core/server/utils/contracts'
 import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 
 /** Posts older than this are not kept: the track record starts 2026-09-08 and looks 7 days back. */

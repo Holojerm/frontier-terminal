@@ -4,9 +4,7 @@
 // limited or failed, over the trailing window of complete days. A lab with no
 // reading yet, or none possible, is a row that says why.
 
-import { grouped, pctLabel } from '#layers/core/shared/utils/terminal-format'
-import type { ProbeLabView, ProbesData } from '../../../shared/utils/terminal-types/probes'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { ProbesData } from '../../../shared/types/probes'
 
 const props = defineProps<{ probes: ProbesData }>()
 

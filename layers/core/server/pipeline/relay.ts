@@ -13,8 +13,8 @@
 
 import { z } from 'zod'
 
-import { contentHashOfText } from './contracts/keys'
-import type { FetchOutcome } from './fetch'
+import { contentHashOfText } from '../utils/contracts/keys'
+import type { FetchOutcome } from '../utils/pipeline-fetch'
 
 export const RELAYED_HOSTS: readonly string[] = ['status.mistral.ai', 'www.ercot.com']
 

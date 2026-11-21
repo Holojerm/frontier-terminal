@@ -2,26 +2,8 @@
 // Worker env, for the queue consumer and the events:sweep backstop. Each
 // outbox is null when its secret is unset, which is how an unconfigured
 // outbox stays free: its steps never touch D1.
-//
-// `db` and `kv` are imported explicitly for the reason terminal-handler.ts gives.
-
-import { db } from '@nuxthub/db'
-import { kv } from '@nuxthub/kv'
-
-import { createBufferPublisher } from '#layers/social/server/utils/buffer'
-import { readSocialConfig } from '#layers/social/server/utils/social'
-import { recordOpsEvent } from '#server/utils/ops'
 
 import { parsePressList } from '../../../press/server/pipeline/press'
-import { SCHEMA_VERSION } from '#layers/core/server/utils/data-schema'
-import type { EventDeps } from './event-work'
-import type { MailMessage } from '../../../core/server/utils/resend'
-import type { CacheStore } from '#layers/core/server/utils/terminal-cache'
-import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
-import { getOwnerMailer } from '../../../core/server/utils/owner-mail'
-import { sendMail } from '../../../core/server/utils/resend'
-import { subscribeConfig } from '../../../core/server/utils/subscribe-config'
-import { fetchWebhookSender, signingKeyRefusal } from './webhook-sign'
 
 export const kvStore: CacheStore = {
   get: (key) => kv.getItem(key),

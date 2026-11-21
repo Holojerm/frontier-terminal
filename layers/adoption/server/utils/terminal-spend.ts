@@ -17,17 +17,13 @@
 
 import { eq } from 'drizzle-orm'
 
-import type { LabId, SourceRef } from '#layers/core/shared/utils/terminal-types/common'
-import type { DateWindow } from '../../shared/utils/terminal-types/rankings'
-import type {
-  SpendData,
-  SpendModel,
-  SpendProviderView,
-} from '../../shared/utils/terminal-types/spend'
+import type { LabId, SourceRef } from '#layers/core/shared/types/common'
+import type { DateWindow } from '../../shared/types/rankings'
+import type { SpendData, SpendModel, SpendProviderView } from '../../shared/types/spend'
 
 import * as tables from '#server/db/schema'
 import { providerOfOpenRouterId } from '#layers/reliability/server/pipeline/parsers/openrouter'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { sourceReads, type QueryContext } from '#layers/core/server/utils/terminal-db'
 import { byString, num, parseJson, str } from '#layers/core/server/utils/terminal-json'
 import {

@@ -4,16 +4,7 @@
 // the newest report and a median per quarter for figures given as fact, then
 // every recent headline, talks and forecasts included.
 
-import { count } from '#layers/core/shared/utils/terminal-format'
-import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
-import type {
-  ReportedBasis,
-  ReportedData,
-  ReportedHeadline,
-  ReportedMetric,
-  ReportedSeries,
-} from '../../../shared/utils/terminal-types/reported'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { ReportedData } from '../../../shared/types/reported'
 
 const figures = useFigures()
 

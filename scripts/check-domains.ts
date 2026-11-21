@@ -3,13 +3,13 @@
 // The product code is split into Nuxt layers by business domain, on a shared
 // `core` (AGENTS.md › Directory Structure). Nothing in Nuxt stops one layer
 // reaching into another: a relative path, `#layers/<name>/…` and `~~/layers/…`
-// all resolve, and every layer's server/utils and shared/utils are
+// all resolve, and every layer's server/utils, shared/utils and shared/types are
 // auto-imported into every other with no import line at all. So this fails on:
 //
 //   - an import, explicit or auto, against the direction in domains.config.ts
 //     (core imports no other fork-owned layer), or of a domain file that is not
 //     on that domain's public list;
-//   - a server/utils or shared/utils export name defined by two owners (the app
+//   - a server/utils, shared/utils or shared/types export name defined by two owners (the app
 //     or a layer): Nuxt keeps one and drops the other without an error;
 //   - the same for app/utils and app/composables names, which every page,
 //     component and plugin sees (a .vue file's script and template both count);
@@ -84,7 +84,7 @@ const defsOf = (sub: string): Definition[] =>
       ),
   )
 const serverDefs = defsOf('server/utils')
-const sharedDefs = defsOf('shared/utils')
+const sharedDefs = [...defsOf('shared/utils'), ...defsOf('shared/types')]
 const appDefs = [...defsOf('app/utils'), ...defsOf('app/composables')]
 
 const clashes = new Set<string>()

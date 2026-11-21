@@ -4,8 +4,6 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { pathForLog } from '../server/utils/log'
-
 describe('pathForLog', () => {
   it('drops the query string', () => {
     expect(pathForLog('/api/pricing?provider=openai&t=signed-token')).toBe('/api/pricing')

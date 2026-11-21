@@ -7,12 +7,12 @@
 
 import { and, desc, eq, lt } from 'drizzle-orm'
 
-import type { HiringHistoryData } from '../../../talent/shared/utils/terminal-types/hiring'
-import type { LabId } from '../../../core/shared/utils/terminal-types/common'
+import type { HiringHistoryData } from '../../../talent/shared/types/hiring'
+import type { LabId } from '../../../core/shared/types/common'
 import type { SignalSpec } from '../../shared/utils/thesis-types'
 
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { queryHiringHistory } from '../../../talent/server/utils/terminal-hiring'
 import { queryPrices } from '#layers/pricing/server/utils/terminal-prices'

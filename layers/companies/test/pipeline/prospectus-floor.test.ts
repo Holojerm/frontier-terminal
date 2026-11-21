@@ -1,9 +1,5 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import type { RevenueRow } from '#layers/core/server/pipeline/contracts'
 import { diff } from '#layers/core/server/pipeline/diff'
 import { normalizeOfferings, normalizeRevenues } from '../../server/pipeline/normalize'
 import {
@@ -14,14 +10,12 @@ import { parseProspectusOffering } from '../../server/pipeline/parsers/sec/prosp
 import { parseProspectusRevenue } from '../../server/pipeline/parsers/sec/prospectus-revenue'
 import { prospectusFloorAlerts, usd } from '../../server/pipeline/prospectus-floor'
 import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
-import { includeSources } from '#layers/core/server/pipeline/sources'
 import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // What a lab's registration filing says, read off its own document: the cover
 // terms (prospectus-offering.ts) and the prospectus-floor alert that sets
 // them and the revenue against the lab's previous filing.
 
-const db = drizzle(env.DB, { schema })
 const CIK = '0002130357'
 const S1 = registrationTarget(REGISTRATION_FIXTURE.key)
 const S1A = registrationTarget('anthropic-s-1-a-2026-11-02-0001628280-26-068676')

@@ -6,17 +6,6 @@
 
 import { desc, eq, gte, max, min } from 'drizzle-orm'
 
-import { medianOf } from '../../shared/utils/terminal-reliability'
-import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
-import type { LabId } from '../../../core/shared/utils/terminal-types/common'
-import type {
-  ProbeDayView,
-  ProbeLabView,
-  ProbeSeriesView,
-  ProbeWindowView,
-  ProbesData,
-} from '../../shared/utils/terminal-types/probes'
-
 import * as tables from '#server/db/schema'
 import type { ProbeDayRow } from '#server/db/schema'
 import { peakToOffpeak, strainedShare } from '../pipeline/probes/daily'
@@ -36,9 +25,6 @@ import {
   PROBE_WINDOWS,
   type ProbeTargetSpec,
 } from '../pipeline/probes/targets'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
-import { MODEL_CLASS_MAP } from '#layers/pricing/server/utils/terminal-classes'
-import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 
 export const PROBE_WINDOW_DAYS = 7
 export const PROBE_HISTORY_DAYS = 90

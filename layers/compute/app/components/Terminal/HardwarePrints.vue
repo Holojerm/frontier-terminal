@@ -7,8 +7,6 @@
 // the quoted ties naming who each company builds for or supplies.
 
 import type { PrintsData } from '../../../shared/utils/prints'
-import { grouped, signedPercent } from '#layers/core/shared/utils/terminal-format'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ data: PrintsData }>()
 const stamps = useStamps()

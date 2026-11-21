@@ -10,8 +10,6 @@ import { env } from 'cloudflare:test'
 
 import manifestJson from '~~/fixtures/manifest.json'
 
-import { fixtureProvenance } from '../../server/pipeline/parsers/fixture-provenance'
-
 export const manifest = manifestJson
 
 const files: Readonly<Record<string, string>> = await (

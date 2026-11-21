@@ -1,7 +1,7 @@
 // The tracked labs by name: how a reader sees each id, each lab's homepage,
 // and the vendor spellings other sources use for them.
 
-import type { LabId, ProviderId } from './terminal-types/common'
+import type { LabId, ProviderId } from '../types/common'
 
 /** The tracked labs, in the registry order every page lists them in. */
 export const LABS: readonly LabId[] = [

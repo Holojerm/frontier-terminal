@@ -2,11 +2,7 @@
 // see what the email is before subscribing. The subscriber copy without an
 // unsubscribe link. 404 with the rest of the feature until Resend is set up.
 
-import { rateLimit } from '#server/utils/rate-limit'
-
 import { buildThesisDigest } from '../theses/digest'
-import { loadDigestInput } from '../utils/digest-input'
-import { requireSubscribe } from '../../../core/server/utils/subscribe-config'
 
 export default defineEventHandler(async (event) => {
   const cfg = requireSubscribe(event)

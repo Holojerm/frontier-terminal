@@ -1,11 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
 import judgePrompt from '../../core/server/pipeline/judge/judge-explain.prompt.md?raw'
-import {
-  clusterSeries,
-  inCluster,
-  parseDepartmentClusters,
-} from '../server/utils/terminal-clusters'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The buildout cluster is named once, in sources.yaml, and read by two

@@ -13,9 +13,9 @@
 import { inArray } from 'drizzle-orm'
 
 import { LAB_OF_NAME } from '#layers/core/shared/utils/lab-names'
-import type { LabId } from '#layers/core/shared/utils/terminal-types/common'
+import type { LabId } from '#layers/core/shared/types/common'
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { EPOCH_DATA_CENTERS } from '../recipes/epoch-data-centers'
 
 export interface SiteSearch {

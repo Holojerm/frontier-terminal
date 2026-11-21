@@ -5,13 +5,7 @@
 // button. The popover's content renders only while it is open, so the header
 // hydrates one button and never the zone list.
 
-import { LABS } from '#layers/core/shared/utils/lab-names'
-import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
-import {
-  DEFAULTS,
-  browserZone,
-  type ReaderPrefs,
-} from '#layers/core/app/composables/useReaderPrefs'
+import { DEFAULTS, type ReaderPrefs } from '#layers/core/app/composables/useReaderPrefs'
 
 const colorMode = useColorMode()
 const { prefs, set, reset } = useReaderPrefs()

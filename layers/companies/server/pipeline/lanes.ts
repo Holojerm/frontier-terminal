@@ -1,5 +1,5 @@
 import { cikResolvedAlerts, periodicFloorAlerts, s1FloorAlerts } from './filing-floors'
-import type { FilingRow } from '#layers/core/server/pipeline/contracts'
+import type { FilingRow } from '#layers/core/server/utils/contracts'
 import type { Lane } from '#layers/core/server/pipeline/lanes'
 import {
   normalizeDocuments,

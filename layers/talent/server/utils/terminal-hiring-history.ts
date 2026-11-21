@@ -7,11 +7,7 @@
 // (server/db/schema.ts), so every past state is the current state with the
 // changes after that instant undone. No clock is read: `now` is an argument.
 
-import type {
-  DeptCompare,
-  DeptSeries,
-  HiringCompare,
-} from '../../shared/utils/terminal-types/hiring'
+import type { DeptCompare, DeptSeries, HiringCompare } from '../../shared/types/hiring'
 
 import type * as tables from '#server/db/schema'
 import { byString, parseJson, str } from '../../../core/server/utils/terminal-json'

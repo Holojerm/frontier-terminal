@@ -5,14 +5,8 @@
 // puts first_seen_at within the hour of the source. UN Comtrade's getDA is
 // one call a run. EDGAR requests go through the SEC pacer.
 
-import { blob } from '@nuxthub/blob'
-import { db } from '@nuxthub/db'
-
-import { createFetcher } from '#layers/core/server/pipeline/fetch'
-import { blobRawStore } from '#layers/core/server/pipeline/raw'
 import { paceSec } from '#layers/core/server/pipeline/sec-pace'
 import { runPrintReads } from '../../prints/ingest'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

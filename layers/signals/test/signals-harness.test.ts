@@ -1,6 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import { MIN_SAMPLE } from '../shared/utils/signals'
 import {
   abnormalReturn,
   changesOf,

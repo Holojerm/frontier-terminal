@@ -7,20 +7,7 @@
 // every week, quiet weeks included: a digest that stops arriving is the
 // signal that something broke.
 
-import { companyName } from '#layers/core/shared/utils/companies'
-import { earlyReadSummary } from '../../shared/utils/thesis-format'
-import type {
-  ClaimDef,
-  ClaimStatus,
-  ClaimView,
-  ThesesData,
-  VerdictView,
-} from '../../shared/utils/thesis-types'
-import type { CompanyId } from '#layers/core/shared/utils/companies'
-
 import type { ClaimStatusChange, RecipeRun } from '#server/db/schema'
-import { renderEmail, type RenderedEmail } from '#server/utils/render-email'
-import { daysBefore } from '#layers/adoption/server/utils/terminal-rankings'
 import { NPM_CONTROL_RECIPES } from '#layers/adoption/server/recipes/npm-downloads'
 import { THESES } from './registry'
 import { presentation } from './signals'

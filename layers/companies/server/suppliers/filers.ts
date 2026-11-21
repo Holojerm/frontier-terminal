@@ -4,7 +4,7 @@
 // under; the filings lane reads their new documents (ingest.ts).
 
 import type { SupplierLayer } from '#layers/core/shared/utils/supplier-layers'
-import type { LabId } from '../../../core/shared/utils/terminal-types/common'
+import type { LabId } from '../../../core/shared/types/common'
 
 export interface SupplierFiler {
   ticker: string

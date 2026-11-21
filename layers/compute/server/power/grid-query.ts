@@ -13,25 +13,7 @@ import { max } from 'drizzle-orm'
 import { z } from 'zod'
 
 import * as tables from '#server/db/schema'
-import {
-  GRID_AREAS,
-  GRID_LOAD_CAVEAT,
-  GRID_NAME_TO_BA,
-  gridMonths,
-  gridWeeks,
-  type ErcotLargeLoadFact,
-  type ErcotLargeLoads,
-  type ErcotMonth,
-  type GridAreaReading,
-  type GridLoadData,
-  type GridLoadGap,
-  type GridSiteLink,
-  type GridTicker,
-} from '../../shared/utils/grid-load'
-import type { PowerSitesData } from '../../shared/utils/power-sites'
 import curated from '../curated/grid-areas.json'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
-import { queryPowerSites } from '../utils/terminal-datacenters'
 import { ercotFactsStored, ercotReportCount } from './ercot-large-loads'
 import { gridLoadDays, gridLoadFilesRead } from './grid-load'
 import { powerSitesStamp } from './stamp'

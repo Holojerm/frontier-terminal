@@ -3,7 +3,7 @@
 // of five public filers, and from Amazon's words on Anthropic before it
 // tagged them. Shared so the page and the server agree on one shape.
 
-import type { Prov } from '../../../core/shared/utils/terminal-types/common'
+import type { Prov } from '../../../core/shared/types/common'
 
 export type ExposureGroup = 'capex' | 'rpo' | 'openai' | 'anthropic'
 

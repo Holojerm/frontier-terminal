@@ -3,8 +3,8 @@ import {
   registerParser,
   type IncidentRow,
   type Provenance,
-} from '../../../../../core/server/pipeline/contracts'
-import { fixtureProvenance } from '../../../../../core/server/pipeline/parsers/fixture-provenance'
+} from '../../../../../core/server/utils/contracts'
+import { fixtureProvenance } from '../../../../../core/server/utils/fixture-provenance'
 
 // google-cloud-status — status.cloud.google.com/incidents.json, Google
 // Cloud's own format (not Statuspage). The feed is Alphabet-cloud-wide, so

@@ -4,8 +4,6 @@
 
 import manifest from '~~/fleet.json'
 
-import { datasetRequestUrl } from '../../../shared/utils/thesis-format'
-
 defineProps<{ caveat: string }>()
 
 const requestUrl = datasetRequestUrl(manifest.links.github)

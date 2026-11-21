@@ -4,13 +4,7 @@
 // ticker and horizon behind a toggle. A result under the minimum sample reads
 // "not enough history", never a number.
 
-import type {
-  SignalCell,
-  SignalSeriesView,
-  SignalStat,
-  SignalsData,
-} from '../../../shared/utils/signals'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { SignalsData } from '../../../shared/utils/signals'
 
 const props = defineProps<{ data: SignalsData }>()
 

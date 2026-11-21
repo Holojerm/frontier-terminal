@@ -1,8 +1,5 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import {
   parseAshbyBoard,
   parseGreenhouseDepartments,
@@ -13,23 +10,11 @@ import { queryListedHiring } from '../server/listed-hiring/query'
 import { EMPTIED_BOARD_FLOOR, readListedBoard, runListedHiring } from '../server/listed-hiring/read'
 import { SIGNALS } from '../../signals/server/signals/registry'
 import { createLoader } from '../../signals/server/signals/sources'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { readListedHiringSources } from '#layers/core/server/utils/terminal-sources'
-import {
-  LISTED_BOARDS,
-  LISTED_CUTS,
-  classifyRole,
-  weekOf,
-  weeklyCounts,
-  type ListedBoard,
-} from '../shared/utils/listed-hiring'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Hiring at the listed companies: the classifier, the four board readers
 // against their captured bytes, the daily read's point-in-time store, and
 // the series the signals harness reads.
-
-const db = drizzle(env.DB, { schema })
 
 const fixture = (name: string) => fixtureText(`fixtures/listed-hiring/${name}`)
 const board = (id: string) => LISTED_BOARDS.find((b) => b.id === id)!

@@ -5,10 +5,7 @@
 // Epoch puts at 0 MW (planned, not yet drawing power) states that gap
 // instead of printing a zero.
 
-import { compactCount, count } from '#layers/core/shared/utils/terminal-format'
-import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import type { DataCentersData } from '../../../shared/utils/compute-views'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ data: DataCentersData; labs?: string[] }>()
 const stamps = useStamps()

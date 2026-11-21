@@ -2,8 +2,8 @@ import {
   StatuspageIncidentsOutput,
   registerParser,
   type Provenance,
-} from '#layers/core/server/pipeline/contracts'
-import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+} from '#layers/core/server/utils/contracts'
+import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { parseStatuspageIncidents } from './statuspage'
 
 // openai-status — status.openai.com incidents (Statuspage v2). No component

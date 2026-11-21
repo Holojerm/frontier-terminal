@@ -7,47 +7,8 @@
 // here: how a cut table answers as_of, and each table's grain, cadence and
 // licensing.
 
-import type {
-  DataDictionary,
-  DictionaryColumn,
-  DictionaryJoin,
-  DictionaryTable,
-  DictionaryType,
-  SourceAxis,
-  SourceLicensing,
-  SourceRights,
-} from '../../shared/utils/terminal-types'
-import {
-  DATA_LICENSE,
-  HISTORY_LICENSE,
-  HISTORY_PARAM,
-  LICENSE_SPLIT_EFFECTIVE,
-  LICENSE_WINDOW_DAYS,
-} from '#shared/utils/license'
 import { parseCikWhitelistBlock } from '../../../companies/server/pipeline/parsers/sec/whitelist'
-import { SCHEMA_VERSION, schemaChangelog } from '#layers/core/server/utils/data-schema'
-import { ALERTS_METHOD } from '#layers/core/server/utils/terminal-asof'
-import {
-  AS_OF_VERIFIED,
-  AS_OF_VERIFIED_DOC,
-  asOfColumns,
-  type ExportTable,
-} from '#layers/core/server/utils/terminal-export-views'
 import { EXPORT_TABLES } from '#server/registries/export-tables'
-import { LICENSE_COLUMN, historyRule } from '#layers/core/server/utils/terminal-export-history'
-import { csvLine } from '#layers/core/server/utils/terminal-export-format'
-import { JOINING_NOTE } from '../../../companies/server/utils/terminal-identifiers'
-import {
-  readArchiveSources,
-  readFiledFactSources,
-  readIdentifierSources,
-  readGridLoadSources,
-  readListedHiringSources,
-  readPowerSiteSources,
-  readPrintSources,
-  readCallSources,
-  readSourceRegistry,
-} from '#layers/core/server/utils/terminal-sources'
 
 /** Served at /export/dictionary.json and .csv; no export table may take the name. */
 export const DICTIONARY_NAME = 'dictionary'

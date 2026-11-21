@@ -2,7 +2,7 @@ import {
   contentHashOfText,
   SnapshotRow,
   StoredEntityRow,
-} from '../../../core/server/pipeline/contracts'
+} from '../../../core/server/utils/contracts'
 import { normalizeRankings } from './normalize'
 import { parseOpenRouterRankings } from './parsers/openrouter-rankings'
 

@@ -12,7 +12,7 @@
 import { inArray } from 'drizzle-orm'
 import type { z } from 'zod'
 
-import type { LabId, SourceRef } from '../../../core/shared/utils/terminal-types/common'
+import type { LabId, SourceRef } from '../../../core/shared/types/common'
 import type {
   CommitmentView,
   ConcentrationView,
@@ -32,10 +32,10 @@ import {
   RiskFactorsRow,
   SharesRow,
   StatementRow,
-} from '#layers/core/server/pipeline/contracts'
+} from '#layers/core/server/utils/contracts'
 import { riskFactorChanges } from '../pipeline/parsers/sec/prospectus-risk-factors'
 import { OPTIONAL_LINES } from '../pipeline/parsers/sec/prospectus-statement'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { sourceReads, type QueryContext } from '#layers/core/server/utils/terminal-db'
 import { byString } from '#layers/core/server/utils/terminal-json'
 import { filingIndexUrl, prospectusSourcePrefix } from './terminal-revenue'

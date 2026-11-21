@@ -2,7 +2,7 @@
 // layer's normalized download series (layers/adoption/server/recipes/download-series.ts).
 
 import type { SignalSpec } from '../../shared/utils/thesis-types'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { readDownloadSeries, trailingRatio } from '#layers/adoption/server/recipes/download-series'
 import type { SignalReading } from './signals'
 

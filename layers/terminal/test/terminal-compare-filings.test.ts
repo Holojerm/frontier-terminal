@@ -1,23 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  COMPARE_PAGES,
-  COMPARE_PAIRS,
-  comparePath,
-  parsePair,
-} from '../shared/utils/terminal-compare'
-import {
-  filingTitle,
-  headlinePeriods,
-  periodName,
-  revenueFilings,
-} from '../../companies/shared/utils/terminal-filings'
-import type {
-  RevenueData,
-  RevenuePeriod,
-  RevenueProviderView,
-} from '../shared/utils/terminal-types'
-
 describe('compare pairs', () => {
   it('lists every unordered pair once, in LABS order', () => {
     // Nine labs: 9 × 8 / 2.

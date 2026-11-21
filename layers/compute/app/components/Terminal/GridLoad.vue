@@ -4,10 +4,8 @@
 // month by month on one shared scale, and the sites with the page that places
 // each one. The numbers in the charts are in the table too.
 
-import { count, signedPercent } from '#layers/core/shared/utils/terminal-format'
 import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
-import { monthLabel, type GridLoadData } from '../../../shared/utils/grid-load'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import { type GridLoadData } from '../../../shared/utils/grid-load'
 
 const props = defineProps<{ data: GridLoadData }>()
 

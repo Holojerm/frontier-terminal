@@ -1,12 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { includeSources } from '#layers/core/server/pipeline/sources'
 import { RECIPES } from '#server/registries/recipes'
-import {
-  SOURCE_LABELS,
-  labelOf,
-  readSourceRegistry,
-} from '#layers/core/server/utils/terminal-sources'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The UI reads caveats straight out of sources.yaml. These tests pin that

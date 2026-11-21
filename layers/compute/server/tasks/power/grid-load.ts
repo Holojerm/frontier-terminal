@@ -5,14 +5,8 @@
 // reports (power/ercot-large-loads.ts). Alone in its invocation: each file is
 // a long download, and nothing else should wait behind it.
 
-import { blob } from '@nuxthub/blob'
-import { db } from '@nuxthub/db'
-
-import { createFetcher, userAgentFor } from '#layers/core/server/pipeline/fetch'
 import { runErcotLargeLoads } from '../../power/ercot-large-loads'
 import { runGridLoad } from '../../power/grid-load'
-import { recordOpsEvent } from '#server/utils/ops'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

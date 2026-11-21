@@ -2,9 +2,7 @@
 // Each lab's most-routed models in the share window. The slug is OpenRouter's
 // permaslug verbatim — a variant ranks as its own row there, so it does here.
 
-import { sharePct } from '#layers/core/shared/utils/terminal-format'
-import type { ProviderTopModels } from '../../../shared/utils/terminal-types/rankings'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { ProviderTopModels } from '../../../shared/types/rankings'
 
 const watchlist = useWatchlist()
 

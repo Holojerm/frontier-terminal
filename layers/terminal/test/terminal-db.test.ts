@@ -1,31 +1,8 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import { contentHashOfText } from '#layers/core/server/pipeline/contracts'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { runRefresh, type RefreshDeps } from '../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/pipeline/raw'
-import { includeSources } from '#layers/core/server/pipeline/sources'
-import { AlertRow, contentHash } from '#layers/core/server/pipeline/contracts'
-import { insertRows } from '#layers/core/server/pipeline/store'
-import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
-import { MODEL_CLASS_MAP, NO_ROW_GAP } from '../../pricing/server/utils/terminal-classes'
-import { ENTITY_AXIS } from '../../alerts/shared/utils/terminal-labs'
-import type { PriceRowView } from '../shared/utils/terminal-types'
-import {
-  AXIS_OF,
-  parseAlertCursor,
-  queryAlert,
-  queryAlerts,
-  queryOverview,
-} from '../../alerts/server/utils/terminal-alerts'
-import { buildMatrix, queryPrices } from '../../pricing/server/utils/terminal-prices'
-import { queryContext, queryCoverage, sourceReads } from '#layers/core/server/utils/terminal-db'
-import { queryHiring } from '../../talent/server/utils/terminal-hiring'
-import { queryIncidents } from '../../reliability/server/utils/terminal-incidents'
-import { fieldDiff, fieldTable } from '#layers/core/server/utils/terminal-json'
+import { MODEL_CLASS_MAP } from '../../pricing/server/utils/terminal-classes'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The UI's query layer against a real D1, seeded the way production is: the
@@ -36,7 +13,6 @@ import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 // price revision wins, every class quote greps back out of its fixture, and
 // the signal window is anchored to the newest detection.
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const ALL = includeSources(sourcesYaml, manifest.fixtures)
 const ALL_IDS = ALL.map((s) => s.source_id)

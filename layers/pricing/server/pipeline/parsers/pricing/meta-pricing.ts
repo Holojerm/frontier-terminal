@@ -4,8 +4,8 @@ import {
   modelKey,
   type PriceRow,
   type Provenance,
-} from '#layers/core/server/pipeline/contracts'
-import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+} from '#layers/core/server/utils/contracts'
+import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { tableAfterHeading, usdAmount } from './md-table'
 
 // meta-pricing-md — https://dev.meta.ai/docs/pricing-rate-limits.md

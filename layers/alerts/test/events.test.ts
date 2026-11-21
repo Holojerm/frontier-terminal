@@ -4,39 +4,10 @@
 // is owed; a lost message is caught by the hourly sweep; and a duplicate or
 // unreadable message never does harm.
 
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import type { SocialPublisher } from '#layers/social/server/utils/buffer'
 import { JUDGED_HOLD_MS } from '../server/pipeline/social'
-import { expiryAfter } from '#layers/core/server/utils/api-key-token'
-import { handleEventBatch, type QueueMessageLike } from '../server/utils/event-consumer'
-import {
-  FANOUT_SETTLE_SECONDS,
-  PENDING_RECHECK_SECONDS,
-  fanOutAlerts,
-  runSocialDrain,
-  runWebhookDrain,
-  sweepEvents,
-  type EventDeps,
-  type PressDeps,
-} from '../server/utils/event-work'
-import {
-  MAX_DELAY_SECONDS,
-  delaySecondsUntil,
-  emitEvent,
-  scheduleDrain,
-  scheduledKey,
-  setEventSender,
-  type EventMessage,
-} from '#layers/core/server/utils/events'
-import type { MailMessage } from '../../core/server/utils/resend'
-import type { CacheStore } from '#layers/core/server/utils/terminal-cache'
-import { signingKeyId, type WebhookRequest } from '../server/utils/webhook-sign'
 
-const db = drizzle(env.DB, { schema })
 const NOW = new Date('2026-11-07T12:00:00.000Z')
 const at = (seconds: number) => new Date(NOW.getTime() + seconds * 1000)
 const KEY = 'k'.repeat(40)

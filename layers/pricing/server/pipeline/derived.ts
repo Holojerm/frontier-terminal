@@ -1,9 +1,9 @@
 import { and, eq, like, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { Provider } from '#layers/core/server/pipeline/contracts'
+import type { Provider } from '#layers/core/server/utils/contracts'
 import { derivedSourceId, type DerivedKind } from '#layers/core/server/pipeline/derived'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 
 // The model pages derived from the price lists (core's derived.ts has the
 // mechanism): a priced OpenAI model slug from openai-pricing-md and a priced

@@ -1,14 +1,10 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import migration from '~~/server/db/migrations/0053_correct_google_reworded_sentence_alert.sql?raw'
-import { AlertRow, ChangeRow } from '#layers/core/server/pipeline/contracts'
 import { requotedKey } from '../../../pricing/server/pipeline/judge/class-map'
 import { corpusOf, groundingFailure } from '#layers/core/server/pipeline/judge/grounding'
 import { clampRoutineAlerts } from '../../server/pipeline/judge/severity-gates'
-import { insertRows } from '#layers/core/server/pipeline/store'
 
 // On 2026-11-18 Google cut the last clause of gemini-4-hydrogen's card. The
 // drift check reported the quoted sentence gone, and the judge's alert read
@@ -16,8 +12,6 @@ import { insertRows } from '#layers/core/server/pipeline/store'
 // model stayed mapped on the shortened sentence. The alert and the change row
 // it cites are copied here from production (/api/alerts and
 // /export/changes.json).
-
-const db = drizzle(env.DB, { schema })
 
 const OLD_BASIS =
   'Brings cutting-edge intelligence to everyone, with speed and efficiency for everyday coding and agentic workflows, featuring a shared 1M context window and long decodes up to 1M tokens.'

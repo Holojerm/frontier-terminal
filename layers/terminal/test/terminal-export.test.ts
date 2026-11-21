@@ -1,42 +1,12 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import { asOfLicense, licenseWindowStart, rowLicense, withLicense } from '~~/shared/utils/license'
-import { PointInTimeError } from '#layers/core/server/utils/terminal-asof'
-import { contentHash, contentHashOfText } from '#layers/core/server/pipeline/contracts'
-import { insertRows } from '#layers/core/server/pipeline/store'
 import { seedHandTies } from '#layers/compute/server/power/store'
 import { seedHandPassages } from '../../companies/server/suppliers/store'
-import { EXPORT_PAGE_SIZE, exportFilter } from '#layers/core/server/utils/terminal-export-views'
 import { EXPORT_TABLES, exportTable, WITHDRAWN_EXPORTS } from '#server/registries/export-tables'
-import {
-  collect,
-  csvCell,
-  csvChunks,
-  csvLine,
-  defuseFormula,
-  jsonChunks,
-  jsonEnvelopeChunks,
-  parseExportPath,
-  streamOf,
-} from '#layers/core/server/utils/terminal-export-format'
-import {
-  historyRule,
-  licenseHeaders,
-  licenseWindow,
-  parseExportQuery,
-  windowOf,
-  sampleOf,
-  SAMPLE_ROWS,
-} from '#layers/core/server/utils/terminal-export-history'
 
 // Bulk exports against a real D1: every table has provenance columns, the
 // CSV is RFC 4180, the JSON parses back to the same rows, and a table larger
 // than one page streams whole.
-
-const db = drizzle(env.DB, { schema })
 
 const PROV = {
   source_url: 'https://docs.x.ai/developers/models.md',

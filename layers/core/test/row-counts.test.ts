@@ -1,10 +1,6 @@
 import { env } from 'cloudflare:test'
 import { and, eq, sql } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/d1'
 import { describe, expect, it } from 'vitest'
-
-import * as schema from '~~/server/db/schema'
-import { countedTotals, countsByKey } from '../server/utils/row-counts'
 
 // row_counts and alert_cites are written by triggers (migration 0060), never
 // by the pipeline. These write the counted tables the ways the writers do
@@ -12,7 +8,6 @@ import { countedTotals, countsByKey } from '../server/utils/row-counts'
 // a count(*) or a walk of change_ids would say. The tests share one store, so
 // each uses its own ids.
 
-const db = drizzle(env.DB, { schema })
 const AT = '2026-08-22T12:00:00.000Z'
 const prov = { source_url: 'https://example.com/a', fetched_at: AT }
 

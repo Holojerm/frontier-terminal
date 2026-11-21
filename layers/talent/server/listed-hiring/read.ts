@@ -12,15 +12,6 @@
 import { and, desc, eq, inArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import { recordOpsEvent } from '#server/utils/ops'
-import { LISTED_BOARDS, type ListedBoard } from '../../shared/utils/listed-hiring'
-import { contentHashOfText } from '#layers/core/server/pipeline/contracts'
-import {
-  chunk,
-  D1_MAX_BOUND_PARAMS,
-  runStatements,
-  type PipelineDb,
-} from '#layers/core/server/pipeline/store'
 import { parseBoard, readGoogleFeed, type ListedRole } from './parsers'
 
 export const BOARD_TIMEOUT_MS = 30_000

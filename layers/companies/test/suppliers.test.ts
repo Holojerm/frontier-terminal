@@ -1,9 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import { comparable, pageText } from '#layers/core/server/utils/quote-match'
 import curated from '../server/curated/suppliers.json'
-import { buildSuppliers } from '../server/utils/terminal-suppliers'
-import { curatedSuppliers, supplierFigureText, type SupplierRow } from '../shared/utils/suppliers'
 
 // The suppliers view over a small table of our own, so the grouping is tested
 // apart from whatever the hand-read file holds, then the file's own rules.

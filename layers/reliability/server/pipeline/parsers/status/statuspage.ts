@@ -2,7 +2,7 @@ import {
   StatuspageIncidentsOutput,
   type IncidentRow,
   type Provenance,
-} from '#layers/core/server/pipeline/contracts'
+} from '#layers/core/server/utils/contracts'
 
 // Statuspage v2 incidents feed (/api/v2/incidents.json), shared by the
 // OpenAI, Anthropic and Mistral status pages. Deterministic: no clocks, no locale

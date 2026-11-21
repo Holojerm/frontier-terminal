@@ -1,23 +1,8 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
-
-import * as schema from '~~/server/db/schema'
-import { insertRows } from '../server/pipeline/store'
-import {
-  TERMINAL_CACHE_TTL_SECONDS,
-  cachedTerminal,
-  sharedTerminalStamp,
-  terminalCacheKey,
-  terminalStamps,
-  type CacheStore,
-} from '../server/utils/terminal-cache'
 
 // The cache is keyed by the poll tick, so a poll invalidates it by
 // construction; and it fails open, so a KV hiccup slows a page rather than
 // breaking it.
-
-const db = drizzle(env.DB, { schema })
 
 function mapStore() {
   const map = new Map<string, unknown>()

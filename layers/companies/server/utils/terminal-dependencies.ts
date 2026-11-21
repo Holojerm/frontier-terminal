@@ -24,7 +24,7 @@ import type {
 import { labName } from '#layers/core/shared/utils/lab-names'
 import type { ProspectusData } from '../../shared/utils/terminal-prospectus'
 
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 import { queryExposure } from './terminal-exposure'
 import { queryProspectus } from './terminal-prospectus'

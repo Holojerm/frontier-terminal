@@ -36,22 +36,7 @@
 // holds one row group of decoded rows at a time (terminal-parquet.ts). A table
 // that ever outgrows that needs R2's multipart upload here.
 
-import {
-  DATA_LICENSE,
-  HISTORY_LICENSE,
-  PAID_LICENSE,
-  licenseWindowStart,
-  type LicenseRef,
-} from '#shared/utils/license'
-
-import { LICENSED_BUCKET } from '../../shared/utils/institutional'
-import type { PipelineDb } from '../pipeline/store'
-import { SCHEMA_VERSION, tableChangedAfter } from './data-schema'
 import { ARCHIVED_EXPORTS, EXPORT_TABLES } from '#server/registries/export-tables'
-import { EXPORT_PAGE_SIZE, type ExportTable } from './terminal-export-views'
-import { LICENSE_COLUMN, historyRule, inWindow, licenseWindow } from './terminal-export-history'
-import { csvLine, exportPages } from './terminal-export-format'
-import { parquetBuilder } from './terminal-parquet'
 
 export const BULK_VARIANTS = ['recent', 'full'] as const
 export type BulkVariant = (typeof BULK_VARIANTS)[number]

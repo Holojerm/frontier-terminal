@@ -7,44 +7,11 @@
 // while revalidating: TERMINAL_CACHE_CONTROL), while the HTML cache
 // (plugins/html-cache.ts) is keyed on the stamp and never serves a page
 // rendered from an older one.
-//
-// `db` and `kv` are imported explicitly, not auto-imported — the auto-import
-// typechecks everywhere and is not injected everywhere at runtime
-// (.claude/docs/gotchas.md › kv auto-import).
 
 import { db } from '@nuxthub/db'
-import { kv } from '@nuxthub/kv'
 import type { H3Event } from 'h3'
 
 import sourcesYaml from 'raw:~~/sources.yaml'
-
-import { LICENSE_SPLIT_EFFECTIVE, asOfLicense } from '#shared/utils/license'
-
-import {
-  AS_OF_PARAM,
-  PointInTimeError,
-  asOfRefusal,
-  assertKnowable,
-  parseAsOfQuery,
-  pointInTimeMeta,
-  pollStampAt,
-  type AsOfPayload,
-  type PointInTimeMeta,
-} from './terminal-asof'
-import { cacheControlFor, resolvedApiKey } from './api-access'
-import { withDatabaseFault } from './d1-fault'
-import { failingSources, markFailing } from './source-health'
-import { assertArchiveKnowable } from './archive-floor'
-import { serverTimingHeader, timed, type ServerTiming } from './server-timing'
-import { paidLicensed, served } from './terminal-envelope'
-import {
-  cachedTerminal,
-  sharedTerminalStamp,
-  terminalStamps,
-  type CacheOptions,
-  type TerminalStamps,
-} from './terminal-cache'
-import { queryContext, type QueryContext } from './terminal-db'
 
 /** A minute fresh at the edge, then up to four more served stale while revalidating. The KV entry is keyed by the data stamp, so it never outlives the data. */
 export const TERMINAL_CACHE_CONTROL = 'public, max-age=60, stale-while-revalidate=240'

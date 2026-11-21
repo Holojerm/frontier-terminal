@@ -21,12 +21,8 @@
 
 import { z } from 'zod'
 
-import { curatedPowerSites, POWER_ROLES } from '../../shared/utils/power-sites'
 import curated from '../curated/power-sites.json'
-import type { RawReader } from '#layers/core/server/pipeline/raw'
 import { contains, documentText } from '#layers/core/server/pipeline/document-text'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
-import { comparable } from '#layers/core/server/utils/quote-match'
 import { mwWritten, powerExcerpts, roleStated, siteNamed } from './excerpts'
 import { documentRef, filerOf, pendingDocuments } from './ingest'
 import { epochLabSites } from './sites'

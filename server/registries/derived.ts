@@ -5,8 +5,8 @@
 // context (query-context.ts) reads the template names without every parser.
 
 import { deriveFromTemplates, type DerivedKind } from '#layers/core/server/pipeline/derived'
-import type { FetchSource } from '#layers/core/server/pipeline/sources'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { FetchSource } from '#layers/core/server/utils/pipeline-sources'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { COMPANY_DERIVED_KINDS } from '#layers/companies/server/pipeline/derived'
 import { MODEL_DERIVED_KINDS } from '#layers/models/server/pipeline/derived'
 import { PRICE_DERIVED_KINDS } from '#layers/pricing/server/pipeline/derived'

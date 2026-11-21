@@ -1,8 +1,5 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import {
   adjustSplits,
   buildPanel,
@@ -14,8 +11,6 @@ import {
   readCsv,
   unexplainedJumps,
 } from '../server/signals/market'
-
-const db = drizzle(env.DB, { schema })
 
 const DAILY = `ts_event,rtype,publisher_id,instrument_id,open,high,low,close,volume,symbol
 2024-07-10T00:00:00.000000000Z,35,90,1429,1746.0,1766.4,1726.3,1744.690000000,4107420,AVGO

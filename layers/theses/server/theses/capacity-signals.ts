@@ -15,7 +15,7 @@ import * as tables from '#server/db/schema'
 import type { ProbeDayRow } from '#server/db/schema'
 import { FILER_NAMES, type StoredFact } from '../../../companies/server/exposure/series'
 import { PRIMARY_PLACEMENT } from '../../../reliability/server/pipeline/probes/placement'
-import type { PipelineDb } from '#layers/core/server/pipeline/store'
+import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { filedFactsAt } from '../../../companies/server/utils/terminal-exposure'
 import {
   filedActual,
