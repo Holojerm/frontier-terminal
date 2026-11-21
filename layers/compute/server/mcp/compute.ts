@@ -1,6 +1,7 @@
 // Compute around the labs: how much power each lab's sites draw, who powers them, the grid
 // load where they sit and the hardware prints. get_utilization is the shell's (server/mcp/utilization.ts
-// in the terminal layer).
+// in the terminal layer). get_gpu_prices registers apart, between the adoption layer's
+// demand and adoption tools, where it has always been listed.
 
 import { z } from 'zod'
 import { gridLoadStamp, queryGridLoad } from '../power/grid-query'
@@ -8,6 +9,7 @@ import { powerSitesStamp } from '../power/stamp'
 import { printsStamp } from '../prints/store'
 import { queryPrints } from '../utils/terminal-prints'
 import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
+import { gpuRunsStamp, queryGpuPrices } from '../utils/terminal-gpu'
 import {
   DATACENTER_RECIPES,
   queryDataCenters,
@@ -129,5 +131,35 @@ export function registerComputeTools({ server, deps }: McpKit): void {
       if (!entity) return json(data)
       return json({ ...data, series: data.series.filter((s) => s.entity.id === entity) })
     },
+  )
+}
+
+export function registerGpuPriceTools({ server, deps }: McpKit): void {
+  server.registerTool(
+    'get_gpu_prices',
+    {
+      title: 'GPU rental prices',
+      description:
+        'On-demand H100 and B200 rental prices from first-party price pages and documented price APIs (Lambda, CoreWeave, Nebius, ' +
+        'Crusoe, Together AI, DigitalOcean, Verda, Azure, Oracle, Google Cloud), normalized to usd_per_gpu_hour: an instance price divided by its GPUs, ' +
+        'with gpus_per_instance, instance_usd_per_hour, region and config kept as printed. medians counts each provider once, at the ' +
+        'median of its own counted rows; PCIe and NVL cards have counted=false. failed names providers whose page failed today; they are ' +
+        'left out, never carried forward. history gives, per GPU, the median and the spot price as a share of on-demand (low and high bounds) ' +
+        'on each date a provider’s page changed, ending on today’s read; provider_changes names each date a provider joined or left the median, which moves it with no price moving, and its method says how to read it. archived (null before the backfill) is the history from before our first ' +
+        'read: the Internet Archive’s weekly copies of the same providers’ price pages (basis archived, source_id wayback:<era>), a weekly ' +
+        'median per GPU, each provider’s points with the copy as source_url, and gaps with the reason; it never reaches the thesis. ' +
+        '/export/archived_gpu_prices.csv has every archived row. These are list prices, not transaction prices (see caveat). The Compute thesis divides the ' +
+        'flagship token price by the H100 median. ' +
+        PROVENANCE,
+      annotations: READ_ONLY,
+    },
+    async () =>
+      json(
+        await deps.serve(
+          'gpu-prices',
+          (ctx) => queryGpuPrices(deps.db, ctx),
+          await gpuRunsStamp(deps.db),
+        ),
+      ),
   )
 }

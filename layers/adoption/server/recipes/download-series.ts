@@ -17,14 +17,12 @@
 import { inArray } from 'drizzle-orm'
 
 import type { CompanyId } from '#layers/core/shared/utils/companies'
-import type { SignalSpec } from '../../shared/utils/thesis-types'
 
 import * as tables from '#server/db/schema'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import type { Recipe } from '#layers/core/server/recipes/contract'
-import { NPM_CONTROL_RECIPES, NPM_LAB_RECIPES, NPM_WRANGLER } from './recipes/npm-downloads'
-import { PYPI_LAB_RECIPES } from './recipes/pypi-downloads'
-import type { SignalReading } from './signals'
+import { NPM_CONTROL_RECIPES, NPM_LAB_RECIPES, NPM_WRANGLER } from './npm-downloads'
+import { PYPI_LAB_RECIPES } from './pypi-downloads'
 
 /** Four Monday-to-Sunday weeks the control index is 1.0 over. */
 export const CONTROL_BASE = { from: '2025-06-02', to: '2025-06-29' } as const
@@ -386,30 +384,4 @@ export function seriesById(series: DownloadSeries, id: string): SeriesPoint[] | 
   if (def.measure === 'control-index') return series.index
   const of = def.measure === 'normalized' ? series.normalized : series.share
   return of.get(def.recipe_id!) ?? []
-}
-
-/**
- * A claim's readings: the package's downloads over the trailing `days` ÷
- * the control index, on every day at least three quarters of the window is
- * on record. The raw sum and the days it rests on go in the detail.
- */
-export async function readNormalizedTrailing(
-  db: PipelineDb,
-  spec: Extract<SignalSpec, { signal: 'npm-normalized-trailing-sum' }>,
-): Promise<SignalReading[]> {
-  const series = await readDownloadSeries(db)
-  const raw = (series.rows.get(spec.recipe) ?? []).filter((r) => !r.outage)
-  return trailingRatio(raw, series.index, spec.days, Math.ceil((spec.days * 3) / 4)).map((p) => ({
-    date: p.date,
-    value: p.value,
-    detail: {
-      days: spec.days,
-      downloads: p.num,
-      control_index: p.den,
-      days_on_record: p.days,
-      compare: null,
-    },
-    source_url: p.source_url,
-    fetched_at: p.fetched_at,
-  }))
 }

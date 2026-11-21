@@ -20,8 +20,8 @@ import type { CompanyId } from '#layers/core/shared/utils/companies'
 
 import type { ClaimStatusChange, RecipeRun } from '#server/db/schema'
 import { renderEmail, type RenderedEmail } from '#server/utils/render-email'
-import { daysBefore } from '../utils/terminal-rankings'
-import { NPM_CONTROL_RECIPES } from './recipes/npm-downloads'
+import { daysBefore } from '#layers/adoption/server/utils/terminal-rankings'
+import { NPM_CONTROL_RECIPES } from '#layers/adoption/server/recipes/npm-downloads'
 import { THESES } from './registry'
 import { presentation } from './signals'
 

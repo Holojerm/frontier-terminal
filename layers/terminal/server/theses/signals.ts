@@ -12,8 +12,15 @@ import type { HiringHistoryData, LabId } from '../../shared/utils/terminal-types
 import type { ClaimDef, SignalSpec, ValueFormat } from '../../shared/utils/thesis-types'
 
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
-import { rankingObservations, type RankingObservation } from '../utils/terminal-rankings'
-import { splitPermaslug, catalogRows, summarizeSpend } from '../utils/terminal-spend'
+import {
+  rankingObservations,
+  type RankingObservation,
+} from '#layers/adoption/server/utils/terminal-rankings'
+import {
+  splitPermaslug,
+  catalogRows,
+  summarizeSpend,
+} from '#layers/adoption/server/utils/terminal-spend'
 import { PROVIDER_ORDER } from '#layers/core/server/utils/terminal-sources'
 import { capexGuidanceShortfalls, gpuSpotToOnDemand, probePeakToOffpeak } from './capacity-signals'
 import {
@@ -23,7 +30,7 @@ import {
   flagshipPriceToGpu,
   labsCombinedShare,
 } from './compute-signals'
-import { readNormalizedTrailing } from './download-series'
+import { readNormalizedTrailing } from './download-signals'
 import { readRecipeSignal } from './recipe-signals'
 import { secRevenueGrowth } from './sec-signals'
 import type { Formatter } from './status'

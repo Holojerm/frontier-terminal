@@ -12,9 +12,9 @@ import {
   type SourceFetcher,
 } from '#layers/core/server/pipeline/fetch'
 import { pendingChanges } from '#layers/core/server/pipeline/judge/pending'
-import { asOfFromDetail } from '../../server/pipeline/as-of'
+import { asOfFromDetail } from '../../../adoption/server/pipeline/as-of'
 import { providerOfOpenRouterId } from '../../../reliability/server/pipeline/parsers/openrouter'
-import { parseOpenRouterRankings } from '../../server/pipeline/parsers/openrouter-rankings'
+import { parseOpenRouterRankings } from '../../../adoption/server/pipeline/parsers/openrouter-rankings'
 import {
   SKIPPED_EVENT_INTERVAL_MS,
   runRefresh,

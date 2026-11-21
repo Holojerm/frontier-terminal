@@ -7,7 +7,7 @@ import * as schema from '~~/server/db/schema'
 import { insertRows } from '#layers/core/server/pipeline/store'
 import { evaluateTheses } from '../server/theses/evaluate'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { daysBefore } from '../server/utils/terminal-rankings'
+import { daysBefore } from '../../adoption/server/utils/terminal-rankings'
 import { queryTheses } from '../server/utils/terminal-theses'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 

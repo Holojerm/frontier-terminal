@@ -106,7 +106,7 @@ export const NPM_HISTORY_FROM = '2025-05-13'
  * The control basket: heavily used packages no AI lab or tracked company
  * publishes a signal through, and that no lab SDK depends on (so a lab's
  * installs don't pull them in). The lab series are divided by its median
- * (layers/terminal/server/theses/download-series.ts). Not wrangler:
+ * (layers/adoption/server/recipes/download-series.ts). Not wrangler:
  * Cloudflare is a tracked company and wrangler is its thesis's signal.
  * Read from NPM_HISTORY_FROM, so every lab day has a control day.
  */

@@ -7,7 +7,11 @@
 // list price, disclosed as both.
 
 import { sharePct } from '#layers/core/shared/utils/terminal-format'
-import type { SpendData, SpendModel, SpendProviderView } from '../../../shared/utils/terminal-types'
+import type {
+  SpendData,
+  SpendModel,
+  SpendProviderView,
+} from '../../../shared/utils/terminal-types/spend'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const watchlist = useWatchlist()

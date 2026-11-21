@@ -5,7 +5,7 @@
 
 import { count } from '#layers/core/shared/utils/terminal-format'
 import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
-import type { AdoptionData } from '../../../shared/utils/recipe-views'
+import type { AdoptionData } from '../../../shared/utils/adoption-views'
 import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const stamps = useStamps()

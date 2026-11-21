@@ -17,7 +17,7 @@ import type {
   SignalSpec,
 } from '../../shared/utils/thesis-types'
 
-import { daysBefore } from '../utils/terminal-rankings'
+import { daysBefore } from '#layers/adoption/server/utils/terminal-rankings'
 
 export interface StoredReading {
   date: string

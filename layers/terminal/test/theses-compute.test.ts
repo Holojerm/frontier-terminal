@@ -35,7 +35,7 @@ import { runRecipes } from '../server/theses/recipes/run'
 import { evaluateClaim, type MeasuredClaim, type StoredReading } from '../server/theses/status'
 import { queryContext, queryCoverage } from '#layers/core/server/utils/terminal-db'
 import { queryGpuPrices } from '#layers/compute/server/utils/terminal-gpu'
-import { daysBefore } from '../server/utils/terminal-rankings'
+import { daysBefore } from '../../adoption/server/utils/terminal-rankings'
 import { queryTheses } from '../server/utils/terminal-theses'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 

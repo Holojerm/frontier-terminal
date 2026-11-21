@@ -6,7 +6,7 @@
 // (layers/terminal/test/signals-registry.test.ts).
 //
 // Sources other sessions own are registered by id only: the npm and PyPI
-// recipes and their derived series (theses/download-series.ts) and the probe
+// recipes and their derived series (layers/adoption/server/recipes/download-series.ts) and the probe
 // rollups (pipeline/probes/, probe_days).
 
 import {
@@ -28,7 +28,7 @@ import type {
 export type SignalSource =
   /** recipe_observations rows of one recipe and key. */
   | { kind: 'recipe'; recipe: string; key?: string }
-  /** A derived download series by its DOWNLOAD_SERIES id (theses/download-series.ts): normalized by the control basket, or a lab's SDK share. */
+  /** A derived download series by its DOWNLOAD_SERIES id (layers/adoption/server/recipes/download-series.ts): normalized by the control basket, or a lab's SDK share. */
   | { kind: 'download_series'; id: string }
   /** probe_days at the pinned placement: the strained share, (rate_limited + failed) / probes. */
   | { kind: 'probe_days'; lab: LabId }

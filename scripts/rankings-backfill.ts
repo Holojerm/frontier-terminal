@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // One-off backfill of OpenRouter's daily rankings from 2025-01-01 to the day
-// before the oldest one stored (layers/terminal/server/pipeline/rankings-history.ts).
+// before the oldest one stored (layers/adoption/server/pipeline/rankings-history.ts).
 // Never on a cron: the owner runs it, and a re-run asks only for days still
 // missing.
 //
@@ -21,7 +21,7 @@ import { Database } from 'bun:sqlite'
 import { existsSync, mkdirSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
-import type { Window } from '../layers/terminal/server/pipeline/rankings-history'
+import type { Window } from '../layers/adoption/server/pipeline/rankings-history'
 
 const ROOT = join(import.meta.dir, '..')
 
@@ -34,7 +34,7 @@ Bun.plugin({
   },
 })
 const { backfillWindows, RANKINGS_SOURCE_ID, windowRows, windowUrl } =
-  await import('../layers/terminal/server/pipeline/rankings-history')
+  await import('../layers/adoption/server/pipeline/rankings-history')
 const LOCAL_DB = join(ROOT, '.data/db/sqlite.db')
 const LOCAL_BLOB = join(ROOT, '.data/blob')
 const D1_NAME = 'frontier-terminal-db'
