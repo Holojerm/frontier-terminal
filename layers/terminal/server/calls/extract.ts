@@ -66,7 +66,7 @@ const FORWARD =
   /\b(?:expect(?:s|ed|ing)?|anticipat(?:e|es|ing)|guid(?:e|ance|ing)|outlook|forecast(?:s|ing)?|project(?:s|ing)?|we see|target(?:s|ing)?|plan(?:s)? to|now (?:see|estimate))\b/i
 // A result already in, or guidance being recalled rather than given.
 const PAST =
-  /\b(?:was|were|came in|reported|delivered|reached|totall?ed|exceed(?:ed|ing)|beat|(?:in line with|consistent with) (?:our|the) (?:guidance|outlook|expectations)|(?:at|near|above|below|exceed\w*) the (?:high|low) end of our|ahead of (?:our|the)|versus (?:our|the)|we said|previously|last quarter we|had expected|original(?:ly)?)\b/i
+  /\b(?:was|were|came in|reported|delivered|reached|totall?ed|exceed(?:ed|ing)|beat|(?:in line with|consistent with) (?:our |the )?(?:guidance|outlook|expectations)|(?:at|near|above|below|exceed\w*) the (?:high|low) end of our|ahead of (?:our|the)|versus (?:our|the)|we said|previously|last quarter we|had expected|original(?:ly)?)\b/i
 
 const METRIC_WORDS: readonly { metric: Metric; re: RegExp }[] = [
   {
@@ -96,27 +96,45 @@ const SCALE: Readonly<Record<string, number>> = {
 const NUM = String.raw`(\d{1,3}(?:,\d{3})*(?:\.\d+)?|\d+(?:\.\d+)?)`
 const SCALE_WORD = String.raw`(trillion|billion|million|bn|mn|[bm])\b`
 const MONEY_RANGE = new RegExp(
-  String.raw`\$\s?${NUM}\s?(?:${SCALE_WORD})?\s?(?:-|–|—|to|and)\s?\$?\s?${NUM}\s?${SCALE_WORD}`,
+  String.raw`\$\s?${NUM}\s?(?:${SCALE_WORD})?\s?(?:-|–|—|to|and)\s?(?:US)?\$?\s?${NUM}\s?${SCALE_WORD}`,
   'i',
 )
+const PLUS_MINUS = String.raw`(?:plus or\s+(?:m\s?inus|negative)|\+\s?\/\s?-|±)`
+export const PLUS_MINUS_RE = new RegExp(PLUS_MINUS, 'i')
+const WORD_NUMBERS: Readonly<Record<string, number>> = {
+  one: 1,
+  two: 2,
+  three: 3,
+  four: 4,
+  five: 5,
+  six: 6,
+  seven: 7,
+  eight: 8,
+  nine: 9,
+  ten: 10,
+}
+const BAND_NUM = String.raw`(\d+(?:\.\d+)?|${Object.keys(WORD_NUMBERS).join('|')})`
 const MONEY_BAND_PCT = new RegExp(
-  String.raw`\$\s?${NUM}\s?${SCALE_WORD},?\s+plus or\s+(?:m\s?inus|negative)\s+${NUM}\s?(?:%|percent)`,
+  String.raw`\$\s?${NUM}\s?${SCALE_WORD},?\s*${PLUS_MINUS}\s*${BAND_NUM}\s?(?:%|percent)`,
   'i',
 )
 const MONEY_BAND_ABS = new RegExp(
-  String.raw`\$\s?${NUM}\s?${SCALE_WORD},?\s+plus or\s+(?:m\s?inus|negative)\s+\$\s?${NUM}\s?${SCALE_WORD}`,
+  String.raw`\$\s?${NUM}\s?${SCALE_WORD},?\s*${PLUS_MINUS}\s*\$\s?${NUM}\s?${SCALE_WORD}`,
   'i',
 )
 const MONEY_ONE = new RegExp(String.raw`\$\s?${NUM}\s?${SCALE_WORD}`, 'i')
 const PCT = String.raw`${NUM}\s?(?:%|percent)`
 const PCT_RANGE = new RegExp(String.raw`${NUM}\s?(?:%|percent)?\s?(?:-|–|—|to|and)\s?${PCT}`, 'i')
-const PCT_BAND = new RegExp(
-  String.raw`${PCT},?\s+plus or\s+(?:m\s?inus|negative)\s+${NUM}\s?basis points`,
+const PCT_BAND = new RegExp(String.raw`${PCT},?\s*${PLUS_MINUS}\s*${NUM}\s?basis points`, 'i')
+// "GAAP and non-GAAP gross margins are expected to be 63.3 percent and 63.5
+// percent, respectively, plus or minus 50 basis points": two guides, not a range.
+const RESPECTIVELY = new RegExp(
+  String.raw`^${PCT}\s+and\s+${PCT},?\s+respectively(?:,?\s*${PLUS_MINUS}\s*${NUM}\s?basis points)?`,
   'i',
 )
 const PCT_ONE = new RegExp(PCT, 'i')
 
-const num = (s: string) => Number(s.replace(/,/g, ''))
+const num = (s: string) => WORD_NUMBERS[s.toLowerCase()] ?? Number(s.replace(/,/g, ''))
 const scale = (s: string | undefined) => (s ? (SCALE[s.toLowerCase()] ?? 1) : 1)
 
 interface Amount {
@@ -141,9 +159,10 @@ export function firstAmount(text: string): Amount | null {
   const found: Amount[] = []
   const add = (
     m: RegExpExecArray | null,
-    f: (m: RegExpExecArray) => Omit<Amount, 'at' | 'length'>,
+    f: (m: RegExpExecArray) => Omit<Amount, 'at' | 'length'> | null,
   ) => {
-    if (m) found.push({ ...f(m), at: m.index, length: m[0].length })
+    const a = m && f(m)
+    if (m && a) found.push({ ...a, at: m.index, length: m[0].length })
   }
   add(MONEY_BAND_PCT.exec(text), (m) => {
     const mid = num(m[1]!) * scale(m[2])
@@ -181,6 +200,9 @@ export function firstAmount(text: string): Amount | null {
     bound: 'range',
   }))
   add(PCT_ONE.exec(text), (m) => {
+    // "in the mid-70% range" names no figure.
+    if (/\b(?:mid|high|low|upper|lower)[- ]$/i.test(text.slice(Math.max(0, m.index - 6), m.index)))
+      return null
     const v = num(m[1]!)
     return { unit: 'percent', low: v, high: v, bound: boundBefore(text, m.index) }
   })
@@ -224,6 +246,12 @@ const year4 = (y: string) => {
   return n < 100 ? 2000 + n : n
 }
 
+/** What stands before the base of a comparison ("compared with second quarter 2017"). */
+const COMPARED =
+  /\b(?:compared (?:with|to)|versus|vs\.?|relative to|against|from)\s+(?:the\s+)?(?:same\s+(?:period|quarter)\s+(?:of|in)\s+)?(?:the\s+)?$/i
+/** A year inside a date ("ending June 30, 2018") is part of the date, not a period. */
+const NOT_IN_DATE = String.raw`(?<!\b(?:${[...MONTHS, 'jan', 'feb', 'mar', 'apr', 'jun', 'jul', 'aug', 'sep', 'sept', 'oct', 'nov', 'dec'].join('|')})\.?\s+\d{1,2},?\s+)`
+
 /**
  * Every period a sentence names, with where, relative to the reported
  * quarter. A quarter with no year is the next one of that number, except the
@@ -249,6 +277,7 @@ export function periodsIn(
       const period = f(m)
       if (!period) continue
       taken.push([at, at + m[0].length])
+      if (COMPARED.test(text.slice(Math.max(0, at - 40), at))) continue
       out.push({ period, at })
     }
   }
@@ -273,7 +302,7 @@ export function periodsIn(
     fiscalPeriod(fyEndMonth, year4(m[1]!), null),
   )
   if (fyEndMonth === 12) {
-    each(/\b(?:calendar\s+)?(20\d\d)\b(?![-–]\d)/g, (m) =>
+    each(new RegExp(String.raw`${NOT_IN_DATE}\b(?:calendar\s+)?(20\d\d)\b(?![-–]\d)`, 'gi'), (m) =>
       fiscalPeriod(fyEndMonth, Number(m[1]), null),
     )
   }
@@ -303,6 +332,8 @@ const OUTLOOK_REACH = 12
 
 /** A figure with no period of its own takes the last figure's, this many sentences on at most. */
 const CARRY_SENTENCES = 16
+
+const RESTATED = /\b(?:remains? unchanged|unchanged from|reiterat\w*)\b/i
 
 const OUTLOOK_CONTEXT =
   /\b(?:outlook|guidance|turning to|turn to|looking ahead|for the|moving to)\b/i
@@ -338,6 +369,16 @@ function revenueKind(
 ): { metric: Metric; segment: string | null } | null {
   const before = text.slice(Math.max(0, at - 60), at)
   if (/\b(?:run[- ]rate|ARR|recurring|average annual|annualized)\s*$/i.test(before)) return null
+  // "cost of revenue", "cost of sales": a cost, not revenue.
+  if (/\bcosts? of\s*$/i.test(before)) return null
+  // A utility's "retail electricity sales" are kilowatt-hours, not revenue.
+  if (
+    /^sales$/i.test(text.slice(at, end)) &&
+    /\b(?:electric(?:ity)?|retail|kwh|weather[- ]normalized|load|energy|gas|volumes?|units?)\s+$/i.test(
+      before,
+    )
+  )
+    return null
   const words = before
     .replace(/[•▪●·]/g, ' ')
     .split(/\s+/)
@@ -362,7 +403,7 @@ function revenueKind(
   if (phrase && !/^segments?$/i.test(phrase)) return { metric: 'segment_revenue', segment: phrase }
   // "revenue at Electrification", "revenues in Data Center"
   const after =
-    /^\s+(?:at|in|for|from)\s+((?:[A-Z][\w&-]*)(?:\s+(?:and\s+)?[A-Z][\w&-]*){0,3})/.exec(
+    /^\s+(?:at|in|for|from)\s+(?:our\s+)?((?:[A-Z][\w&-]*)(?:\s+(?:and\s+)?[A-Z][\w&-]*){0,3})/.exec(
       text.slice(end),
     )
   if (after && !/^(?:Q[1-4]|The|Our|Fiscal|FY)/.test(after[1]!)) {
@@ -433,7 +474,14 @@ function amountFor(
     !/\bto\b/.test(clause.slice(amount.at, amount.at + amount.length))
   )
     return null
-  if (NOT_LEVEL.test(clause.slice(amount.at + amount.length))) return null
+  const rest = clause.slice(amount.at + amount.length)
+  if (NOT_LEVEL.test(rest)) return null
+  // "$150 million of QTL revenues", "16-17% non-GAAP operating margin": the figure is the next measure's.
+  if (
+    /^\s+(?:in|of)\s+(?:[\w-]+\s+){0,2}(?:revenues?|sales)\b/i.test(rest) ||
+    /^\s*(?:non-GAAP\s+|GAAP\s+|adjusted\s+)?(?:operating|EBITDA|net income|tax)\b/i.test(rest)
+  )
+    return null
   return { amount, clause }
 }
 
@@ -458,6 +506,115 @@ export function quoteOf(sentence: string, at: number): string {
 
 const isQuestion = (s: string) => s.trim().endsWith('?')
 
+/** How many sentences after an outlook's lead-in its list runs, at most. */
+const LIST_REACH = 14
+/** A sentence longer than this is prose, and ends a list. */
+const LIST_ITEM_MAX = 300
+const LEAD =
+  /:\s*$|\bthe following\b|^(?:[\w&'’-]+\s+){0,6}(?:business\s+|financial\s+)?(?:outlook|guidance)(?:\s+summary)?(?:\s*\(\+\))?:?$/i
+const NOT_LEAD = /\b(?:results?|compared|versus|reconciliation of|actual)\b/i
+const LABEL =
+  /^(?:(?:GAAP|non-GAAP)\s+)?(?:total\s+|net\s+)?(?:revenues?|net sales|sales|gross margins?(?:\s*%)?|capital expenditures|capex)\s*\*?(?:\s*\(\d\))?\s*:?$/i
+
+/** A cell that is only an amount ("$4.8B - $5.6B", "~25%"). */
+function amountOnly(text: string): boolean {
+  if (text.length > 48) return false
+  const a = firstAmount(text)
+  if (!a) return false
+  return (
+    text
+      .slice(0, a.at)
+      .concat(text.slice(a.at + a.length))
+      .replace(/[~≈()*\d\s.,]/g, '').length <= 3
+  )
+}
+
+interface Item extends DocSentence {
+  /** Under an outlook's lead-in: forward-looking without saying so again. */
+  listed: boolean
+  /** Where the list's lead-in is, for its period. */
+  lead: number | null
+}
+
+/**
+ * The document's sentences with outlook lists marked, and each table row
+ * under one ("Revenues", "$5.4B", "$4.8B - $5.6B") joined into one sentence:
+ * the label and the row's last amount, which is the guidance column.
+ */
+export function outlookItems(sentences: readonly DocSentence[]): Item[] {
+  const out: Item[] = []
+  let lead: number | null = null
+  let until = -1
+  for (let i = 0; i < sentences.length; i++) {
+    const s = sentences[i]!
+    const text = s.text
+    if (text.length > LIST_ITEM_MAX) until = -1
+    const inList = i <= until
+    if (
+      text.length <= 200 &&
+      (FORWARD.test(text) || /\b(?:outlook|guidance)\b/i.test(text)) &&
+      LEAD.test(text) &&
+      !NOT_LEAD.test(text) &&
+      !PAST.test(text)
+    ) {
+      out.push({ ...s, listed: false, lead: null })
+      lead = out.length - 1
+      until = i + LIST_REACH
+      continue
+    }
+    if (inList && LABEL.test(text)) {
+      let j = i + 1
+      while (j < sentences.length && j <= i + 3 && amountOnly(sentences[j]!.text)) j++
+      if (j > i + 1) {
+        // "$16.3 billion" then "+/- $500 million": the band belongs to the cell before it.
+        let from = j - 1
+        if (from > i + 1 && /^\s*(?:plus or|\+\s?\/\s?-|±)/i.test(sentences[from]!.text)) from--
+        const cells = sentences
+          .slice(from, j)
+          .map((c) => c.text)
+          .join(' ')
+        out.push({
+          ...s,
+          text: `${text.replace(/[\s:*]+$/, '')}${from > i + 1 ? ' … ' : ' '}${cells}`,
+          listed: true,
+          lead,
+        })
+        i = j - 1
+        continue
+      }
+    }
+    out.push({ ...s, listed: inList && !PAST.test(text), lead: inList ? lead : null })
+  }
+  return out
+}
+
+/** "GAAP and non-GAAP … X% and Y%, respectively": the two guides, by basis, or null. */
+function respectively(
+  text: string,
+  clause: string,
+  amount: Amount,
+): { basis: 'gaap' | 'non_gaap'; amount: Amount }[] | null {
+  if (amount.unit !== 'percent' || !/\bGAAP and non[\s-]*GAAP\b/i.test(text)) return null
+  const m = RESPECTIVELY.exec(clause.slice(amount.at))
+  if (!m) return null
+  const band = m[3] ? num(m[3]) / 100 : 0
+  const at = (v: number): Amount => ({
+    ...amount,
+    low: Math.round((v - band) * 1e4) / 1e4,
+    high: Math.round((v + band) * 1e4) / 1e4,
+    bound: band ? 'range' : 'about',
+  })
+  return [
+    { basis: 'gaap', amount: at(num(m[1]!)) },
+    { basis: 'non_gaap', amount: at(num(m[2]!)) },
+  ]
+}
+
+const TWO_COLUMNS = /\b(?:Q[1-4]|FY)\s?'?\d{2,4}\s+(?:Q[1-4]|FY)\s?'?\d{2,4}\b/
+
+/** A goal over several years is not one period's guidance. */
+const MULTI_YEAR = /\bCAGR\b|compound annual|\b(?:two|three|four|five|\d)-year\b|multi-year/i
+
 /** Every statement in a document's sentences, in order, without repeats. */
 export function extractStatements(
   sentences: readonly DocSentence[],
@@ -467,8 +624,9 @@ export function extractStatements(
   const seen = new Set<string>()
   const allowed = ctx.speakers ? new Set(ctx.speakers.map((s) => s.toLowerCase())) : null
   let last: { period: FiscalPeriod; at: number } | null = null
-  for (let i = 0; i < sentences.length; i++) {
-    const s = sentences[i]!
+  const items = outlookItems(sentences)
+  for (let i = 0; i < items.length; i++) {
+    const s = items[i]!
     const text = s.text
     // A sentence back on the quarter just reported ends any outlook being carried.
     if (
@@ -479,7 +637,10 @@ export function extractStatements(
       last = null
     if (text.length > 600 || isQuestion(text)) continue
     if (allowed && (!s.speaker || !allowed.has(s.speaker.toLowerCase()))) continue
-    if (!FORWARD.test(text) || PAST.test(text)) continue
+    if ((!FORWARD.test(text) && !s.listed) || PAST.test(text)) continue
+    if (MULTI_YEAR.test(text)) continue
+    // A slide's column headers ("Q2 2021 FY 2021 Revenue ~$3.6 Billion"): which column is whose isn't known.
+    if (TWO_COLUMNS.test(text)) continue
     // An analyst restating the guide in a transcript without speaker labels.
     if (
       /\byour (?:guide|guidance|outlook|forecast)\b|\byou (?:guided|said|mentioned)\b/i.test(text)
@@ -492,6 +653,19 @@ export function extractStatements(
       const mention = mentions[k]!
       let metric = mention.metric
       let segment: string | null = null
+      // "Operating Expenses/Revenue %": a ratio to revenue, not revenue.
+      if (text[mention.at - 1] === '/') continue
+      // A backlog stated before "we expect" is the backlog now, not a guide.
+      if (metric === 'backlog' && !s.listed && (FORWARD.exec(text)?.index ?? 0) > mention.at)
+        continue
+      // Growth or maintenance capex is part of the total the filings print.
+      if (
+        metric === 'capex' &&
+        /\b(?:growth|maintenance|sustaining|expansion)\s+$/i.test(
+          text.slice(Math.max(0, mention.at - 14), mention.at),
+        )
+      )
+        continue
       if (metric === 'revenue') {
         const kind = revenueKind(text, mention.at, mention.end)
         if (!kind) continue
@@ -522,14 +696,17 @@ export function extractStatements(
       let period = namedPeriod(text, ctx, mention.at)
       const ahead = (p: FiscalPeriod | null) => (p && p.end > ctx.reported.end ? p : null)
       for (let back = 1; !period && back <= OUTLOOK_REACH && i - back >= 0; back++) {
-        const prev = sentences[i - back]!.text
-        if (OUTLOOK_CONTEXT.test(prev)) {
+        const prev = items[i - back]!.text
+        const inList = s.lead !== null && i - back >= s.lead
+        // "Our full year outlook remains unchanged": a guide restated in passing sets no period for what follows.
+        if (RESTATED.test(prev)) continue
+        if (inList || OUTLOOK_CONTEXT.test(prev)) {
           period = ahead(periodsIn(prev, ctx).find((p) => ahead(p.period))?.period ?? null)
         }
       }
       // An outlook read figure by figure: the period of the last one a few sentences back.
       if (!period && last && i - last.at <= CARRY_SENTENCES) period = last.period
-      if (!period && /plus or\s+(?:m\s?inus|negative)/i.test(amountText))
+      if (!period && PLUS_MINUS_RE.test(amountText))
         period = nextQuarter(ctx.fyEndMonth, ctx.reported)
       // Capex given with no period is the fiscal year's: no one guides a quarter's unnamed.
       if (!period && metric === 'capex' && amount.unit === 'USD' && amount.high >= 1e9) {
@@ -548,40 +725,56 @@ export function extractStatements(
         !/year[- ]over[- ]year|year[- ]on[- ]year|\byoy\b|from (?:a|the) year/i.test(text)
       )
         continue
-      const basis = /\bGAAP and non[\s-]*GAAP\b/i.test(text)
+      // "GAAP revenue of $77.0 billion and non-GAAP revenue of $72.5 billion": each its own.
+      const just = text.slice(Math.max(0, mention.at - 24), mention.at)
+      const local = /\bGAAP and non[\s-]*GAAP\s+$/i.test(just)
+        ? 'gaap'
+        : /\bnon[\s-]*GAAP\s+$/i.test(just)
+          ? 'non_gaap'
+          : /\bGAAP\s+$/.test(just)
+            ? 'gaap'
+            : null
+      // A margin's basis may be stated anywhere in its sentence; a dollar figure's only
+      // just before it, since "non-GAAP EPS" later in the sentence says nothing of revenue.
+      const sentenceBasis = /\bGAAP and non[\s-]*GAAP\b/i.test(text)
         ? 'gaap'
         : /\bnon[\s-]*GAAP\b/i.test(text)
           ? 'non_gaap'
           : /\bGAAP\b/.test(text)
             ? 'gaap'
             : null
-      const key = [
-        metric,
-        segment,
-        unit,
-        period.fiscal_year,
-        period.quarter,
-        amount.low,
-        amount.high,
-      ].join('|')
-      if (seen.has(key)) continue
-      seen.add(key)
-      last = { period, at: i }
-      out.push({
-        metric,
-        segment,
-        basis,
-        unit,
-        bound: amount.bound,
-        low: amount.low,
-        high: amount.high,
-        period,
-        quote: quoteOf(text, mention.at),
-        sentence: text,
-        page: s.page,
-        at_ms: s.at_ms,
-        speaker: s.speaker,
-      })
+      const basis = local ?? (metric === 'gross_margin' ? sentenceBasis : null)
+      const variants = respectively(text, clause, amount) ?? [{ basis, amount }]
+      for (const v of variants) {
+        const key = [
+          metric,
+          segment,
+          variants.length > 1 ? v.basis : null,
+          unit,
+          period.fiscal_year,
+          period.quarter,
+          v.amount.low,
+          v.amount.high,
+        ].join('|')
+        if (seen.has(key)) continue
+        seen.add(key)
+        last = { period, at: i }
+        out.push({
+          metric,
+          segment,
+          basis: v.basis,
+          unit,
+          bound: v.amount.bound,
+          low: v.amount.low,
+          high: v.amount.high,
+          period,
+          quote: quoteOf(text, mention.at),
+          sentence: text,
+          page: s.page,
+          at_ms: s.at_ms,
+          speaker: s.speaker,
+        })
+      }
     }
   }
   return out

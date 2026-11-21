@@ -15,6 +15,26 @@ export const CallCompany = z.strictObject({
   ticker: z.string().regex(/^[A-Z]{1,5}$/),
   company: z.string().min(1),
   cik: z.string().regex(/^\d{10}$/),
+  /**
+   * The registrant's earlier CIK, for a company that redomiciled: its
+   * earnings filings until `until` are read, and its XBRL scores them.
+   */
+  prior_cik: z
+    .strictObject({
+      cik: z.string().regex(/^\d{10}$/),
+      until: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
+    })
+    .optional(),
+  /**
+   * The registrant's filings before this are another business's (a reverse
+   * merger, a divested parent), so no call before it is read.
+   */
+  history_from: z
+    .string()
+    .regex(/^\d{4}-\d{2}-\d{2}$/)
+    .optional(),
+  /** Exhibits a subsidiary files under the parent's CIK, by file name or description. */
+  skip_exhibits: z.string().min(1).optional(),
   /** The calendar month the fiscal year ends in. */
   fy_end_month: z.number().int().min(1).max(12),
   posts: z.enum(POSTS),
@@ -38,6 +58,8 @@ export const CuratedDocument = z.strictObject({
   /** An AssemblyAI job submitted from the mini for the backfill: the Worker collects it. */
   job_id: z.string().uuid().optional(),
   submitted_at: z.string().optional(),
+  /** What the mini costed the job at before submitting it, counted on its basis until collected. */
+  estimate_usd: z.number().nonnegative().optional(),
 })
 export type CuratedDocument = z.infer<typeof CuratedDocument>
 

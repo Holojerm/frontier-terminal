@@ -3,14 +3,20 @@
 //   1. curated documents (curated/earnings-calls.json) not held yet become
 //      call_documents rows; a replay submitted from the mini arrives as
 //      `submitted` with its job id;
-//   2. EDGAR, a few tickers a run: each earnings 8-K (item 2.02) or 6-K since
-//      CALLS_SINCE not yet listed, and the EX-99 exhibits on its index page;
-//   3. text documents (exhibits, transcripts, remarks) not read yet, oldest
+//   2. EDGAR: a few tickers' submissions feeds a run, with the paged files
+//      that reach back to BACKFILL_SINCE, list each earnings 8-K (item 2.02)
+//      or 6-K not yet listed; then a fixed number of listed filings' index
+//      pages, newest first, give their EX-99 exhibits. A new filing goes
+//      ahead of the backfill, and the backfill resumes where the last run
+//      stopped;
+//   3. text documents (exhibits, transcripts, remarks) not read yet, newest
 //      call first: fetched, cut into sentences, kept in R2 (never served),
 //      and their guidance stored in filed_guidance;
 //   4. AssemblyAI: each submitted job is checked once (no polling loop), a
 //      finished one is read like a transcript, and new replays are submitted
-//      while the month's spend stays under MONTHLY_SPEND_CAP_USD;
+//      while their basis has room: a call since BACKFILL_BEFORE under the
+//      month's MONTHLY_SPEND_CAP_USD, an older one under the one-time
+//      BACKFILL_SPEND_CAP_USD;
 //   5. for each ticker with guidance whose period has ended, the XBRL concepts
 //      it is scored on, at most once a day each; then each statement the facts
 //      now settle gets its guidance_resolutions row.
@@ -19,7 +25,7 @@
 // running out, or AssemblyAI refusing the key, spools its own event and stops
 // submitting until a run finds credits again.
 
-import { and, asc, eq, inArray, isNull, lt, ne, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, isNull, lt, ne, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
@@ -39,35 +45,63 @@ import {
 } from './actuals'
 import {
   ASSEMBLYAI_API,
-  audioSeconds,
+  BACKFILL_BEFORE,
+  BACKFILL_SPEND_CAP_USD,
   costOf,
-  FALLBACK_KBPS,
-  mp3Kbps,
+  replaySeconds,
   parseSentences,
   speakerMapping,
   refusalOf,
   MONTHLY_SPEND_CAP_USD,
+  spendBasis,
   transcriptRequest,
+  type SpendBasis,
 } from './assemblyai'
 import { forwardConceptNeeds, forwardFiler } from '../signals/forward-filers'
 import { CALL_COMPANIES, callCompany, curatedCalls, type CallCompany } from './curated'
-import { CALLS_SINCE, earningsExhibits, earningsFilings } from './edgar'
+import {
+  BACKFILL_SINCE,
+  earningsExhibits,
+  earningsFilings,
+  olderPages,
+  pageFilings,
+  type EarningsFiling,
+  type Exhibit,
+} from './edgar'
 import { extractStatements, type Statement } from './extract'
 import { fiscalPeriod, periodLabel, reportedQuarter } from './periods'
-import { htmlSentences, pdfSentences, spokenSentences, type DocSentence } from './text'
+import {
+  docxSentences,
+  htmlSentences,
+  pdfSentences,
+  spokenSentences,
+  type DocSentence,
+} from './text'
 
 export const KIND_CALL_READ_FAILED = 'call_read_failed'
 export const KIND_ASSEMBLYAI_CREDITS = 'assemblyai_credits'
 
-export const SUBMISSIONS_PER_RUN = 3
-export const INDEX_PAGES_PER_RUN = 8
-export const TEXT_DOCS_PER_RUN = 16
-export const AUDIO_SUBMITS_PER_RUN = 3
-export const CONCEPT_READS_PER_RUN = 20
+/**
+ * What one hourly run reads. SEC requests go through the pacer at 4 a second:
+ * three feeds, their paged files, 40 index pages and up to 40 exhibits take
+ * about 25 seconds. A document costs tens of milliseconds of CPU (a 300 KB
+ * transcript PDF about 20). The 2018 backfill, about 2,100 filings and 2,600
+ * documents, drains in about 60 runs, newest first, with any new call read first.
+ */
+export const CALL_LIMITS = {
+  submissions: 3,
+  indexPages: 40,
+  textDocs: 40,
+  audioSubmits: 3,
+  conceptReads: 20,
+}
+export type CallLimits = typeof CALL_LIMITS
 export const RETRY_AFTER_MS = 86_400_000
+/** Facts kept from a company-concept document: a year before the backfill, so a 2018 growth guide has its base. */
+export const FACTS_SINCE = '2017-01-01'
 export const MAX_ATTEMPTS = 3
-/** A text document over this is not a transcript. */
-export const DOC_MAX_BYTES = 8 * 1024 * 1024
+/** A text document over this is not a transcript (Hut 8 posts 12 MB ones). */
+export const DOC_MAX_BYTES = 16 * 1024 * 1024
 /** The call sources read here; `release` rows are the hyperscaler capex reader's. */
 export const CALL_SOURCES = ['exhibit', 'transcript', 'remarks', 'audio'] as const
 
@@ -82,16 +116,27 @@ export interface CallDeps {
   /** NUXT_ASSEMBLYAI_API_KEY; empty = audio is neither submitted nor collected. */
   assemblyKey: string
   now: Date
+  /** Overrides for one run (a local backfill run reads more). */
+  limits?: Partial<CallLimits>
 }
 
 export interface CallReadReport {
   curated: number
+  listed: number
   filings: number
   exhibits: number
   read: number
   statements: number
   failed: number
-  audio: { collected: number; submitted: number; pending: number; spent_usd: number }
+  audio: {
+    collected: number
+    submitted: number
+    pending: number
+    /** This month's spend on calls since BACKFILL_BEFORE. */
+    spent_usd: number
+    /** The backfill's spend, all time, against BACKFILL_SPEND_CAP_USD. */
+    backfill_spent_usd: number
+  }
   concepts: number
   resolved: number
 }
@@ -142,6 +187,7 @@ export async function syncCurated(db: PipelineDb, now: Date): Promise<number> {
         status: d.job_id ? 'submitted' : 'pending',
         job_id: d.job_id ?? null,
         submitted_at: d.submitted_at ?? null,
+        cost_usd: d.estimate_usd ?? null,
         first_seen_at: at,
         source_url: d.url,
         fetched_at: at,
@@ -195,51 +241,37 @@ async function logRead(
   })
 }
 
-/** Step 2: new earnings filings and their exhibits. */
-export async function discoverExhibits(
-  db: PipelineDb,
-  deps: CallDeps,
-): Promise<{ filings: number; exhibits: number }> {
+interface Listed {
+  form: '8-K' | '6-K'
+  filed: string
+  cik: string
+}
+
+/** The submissions feeds of a company: its own, and its earlier CIK's until it redomiciled. */
+function feedsOf(c: CallCompany): { cik: string; until: string | null }[] {
+  return [{ cik: c.cik, until: null }, ...(c.prior_cik ? [c.prior_cik] : [])]
+}
+
+/** The first day a company's calls are read from. */
+export const callsSince = (c: Pick<CallCompany, 'history_from'>) =>
+  c.history_from && c.history_from > BACKFILL_SINCE ? c.history_from : BACKFILL_SINCE
+
+/**
+ * Step 2a: list each earnings filing of a few tickers not listed yet. A feed's
+ * paged files hold filings that never change, so each is read until it reads
+ * cleanly once; the listed filings wait as `listed` rows for step 2b.
+ */
+export async function listFilings(db: PipelineDb, deps: CallDeps): Promise<number> {
   const at = deps.now.toISOString()
-  let filings = 0
-  let exhibits = 0
-  let pages = 0
-  for (const ticker of await staleTickers(db, SUBMISSIONS_PER_RUN)) {
+  const limits = { ...CALL_LIMITS, ...deps.limits }
+  let listed = 0
+  for (const ticker of await staleTickers(db, limits.submissions)) {
     const c = callCompany(ticker)
-    const url = `https://data.sec.gov/submissions/CIK${c.cik}.json`
-    const res = await deps.fetcher({ source_id: 'call-edgar-submissions', url, ext: 'json' })
-    if (!res.ok) {
-      await logRead(
-        db,
-        { ticker, kind: 'call-submissions', status: 'failed', detail: res.detail, url, facts: 0 },
-        deps.now,
-      )
-      await fail(db, `${ticker} submissions: ${res.detail}`)
-      continue
-    }
-    let found
-    try {
-      found = earningsFilings(res.text, c.cik, CALLS_SINCE)
-    } catch (error) {
-      await logRead(
-        db,
-        {
-          ticker,
-          kind: 'call-submissions',
-          status: 'failed',
-          detail: String(error),
-          url,
-          facts: 0,
-        },
-        deps.now,
-      )
-      await fail(db, `${ticker} submissions: ${String(error)}`)
-      continue
-    }
+    const since = callsSince(c)
     const known = new Set(
       (
         await db
-          .selectDistinct({ accession_no: tables.filedFactReads.accession_no })
+          .select({ accession_no: tables.filedFactReads.accession_no })
           .from(tables.filedFactReads)
           .where(
             and(
@@ -250,79 +282,204 @@ export async function discoverExhibits(
           )
       ).map((r) => r.accession_no),
     )
-    let listed = 0
-    for (const f of found) {
-      if (known.has(f.accession_no)) continue
-      if (pages >= INDEX_PAGES_PER_RUN) break
-      pages++
-      const idx = await deps.fetcher({
-        source_id: 'call-edgar-index',
-        url: f.index_url,
-        ext: 'html',
-      })
-      let list: ReturnType<typeof earningsExhibits> = []
-      let detail: string | null = null
-      if (idx.ok) {
-        try {
-          list = earningsExhibits(idx.text, c.cik, f.accession_no, f.form)
-        } catch (error) {
-          detail = String(error)
+    const pagesRead = new Set(
+      (
+        await db
+          .select({ url: tables.filedFactReads.source_url })
+          .from(tables.filedFactReads)
+          .where(
+            and(
+              eq(tables.filedFactReads.ticker, ticker),
+              eq(tables.filedFactReads.kind, 'call-submissions-page'),
+              eq(tables.filedFactReads.status, 'ok'),
+            ),
+          )
+      ).map((r) => r.url),
+    )
+    let found = 0
+    let failed: string | null = null
+    for (const feed of feedsOf(c)) {
+      const url = `https://data.sec.gov/submissions/CIK${feed.cik}.json`
+      const res = await deps.fetcher({ source_id: 'call-edgar-submissions', url, ext: 'json' })
+      if (!res.ok) {
+        failed = `${url}: ${res.detail}`
+        break
+      }
+      const filings: EarningsFiling[] = []
+      let pages: string[]
+      try {
+        filings.push(...earningsFilings(res.text, feed.cik, since))
+        pages = olderPages(res.text, feed.cik, since).filter((p) => !pagesRead.has(p))
+      } catch (error) {
+        failed = `${url}: ${String(error)}`
+        break
+      }
+      const pageReads: { url: string; detail: string | null; facts: number }[] = []
+      for (const page of pages) {
+        const pres = await deps.fetcher({
+          source_id: 'call-edgar-submissions',
+          url: page,
+          ext: 'json',
+        })
+        let rows: EarningsFiling[] = []
+        let detail: string | null = pres.ok ? null : pres.detail
+        if (pres.ok) {
+          try {
+            rows = pageFilings(pres.text, feed.cik, since)
+          } catch (error) {
+            detail = String(error)
+          }
         }
-      } else detail = idx.detail
-      await db
-        .insert(tables.filedFactReads)
-        .values({
-          id: contentHash({ read: 'call-filing', accession: f.accession_no }),
-          ticker,
-          kind: 'call-filing',
-          accession_no: f.accession_no,
-          status: detail ? 'failed' : 'ok',
-          detail,
-          content_hash: null,
-          facts: list.length,
-          started_at: at,
-          source_url: f.index_url,
-        })
-        .onConflictDoUpdate({
-          target: tables.filedFactReads.id,
-          set: { status: detail ? 'failed' : 'ok', detail, facts: list.length, started_at: at },
-        })
-      if (detail) continue
-      filings++
-      listed++
-      const { q, label } = reported(c, f.filed)
-      for (const e of list) {
-        const written = await db
-          .insert(tables.callDocuments)
-          .values({
-            id: docId(e.url),
-            ticker,
-            call_date: f.filed,
-            period_label: label,
-            fiscal_year: q.fiscal_year,
-            fiscal_quarter: q.quarter!,
-            kind: 'exhibit',
-            url: e.url,
-            page_url: f.index_url,
-            produced_by: e.type,
-            accession_no: f.accession_no,
-            status: 'pending',
-            first_seen_at: at,
-            source_url: e.url,
-            fetched_at: at,
+        filings.push(...rows)
+        pageReads.push({ url: page, detail, facts: rows.length })
+      }
+      const fresh = filings.filter(
+        (f) => !known.has(f.accession_no) && (feed.until === null || f.filed <= feed.until),
+      )
+      const values = fresh.map((f) => ({
+        id: contentHash({ read: 'call-filing', accession: f.accession_no }),
+        ticker,
+        kind: 'call-filing',
+        accession_no: f.accession_no,
+        status: 'listed',
+        detail: JSON.stringify({ form: f.form, filed: f.filed, cik: feed.cik } satisfies Listed),
+        content_hash: null,
+        facts: 0,
+        started_at: at,
+        source_url: f.index_url,
+      }))
+      for (const part of chunk(values, Math.floor(D1_MAX_BOUND_PARAMS / 10))) {
+        await db
+          .insert(tables.filedFactReads)
+          .values(part)
+          .onConflictDoUpdate({
+            target: tables.filedFactReads.id,
+            set: { status: 'listed', detail: sql`excluded.detail`, started_at: at },
           })
-          .onConflictDoNothing()
-          .returning({ id: tables.callDocuments.id })
-        exhibits += written.length
+      }
+      for (const f of fresh) known.add(f.accession_no)
+      found += fresh.length
+      // A page counts as read only once its filings are listed.
+      for (const p of pageReads) {
+        await logRead(
+          db,
+          {
+            ticker,
+            kind: 'call-submissions-page',
+            status: p.detail ? 'failed' : 'ok',
+            detail: p.detail,
+            url: p.url,
+            facts: p.facts,
+          },
+          deps.now,
+        )
+        if (p.detail) await fail(db, `${ticker} ${p.url}: ${p.detail}`)
       }
     }
+    const url = `https://data.sec.gov/submissions/CIK${c.cik}.json`
     await logRead(
       db,
-      { ticker, kind: 'call-submissions', status: 'ok', detail: null, url, facts: listed },
+      {
+        ticker,
+        kind: 'call-submissions',
+        status: failed ? 'failed' : 'ok',
+        detail: failed,
+        url,
+        facts: found,
+      },
       deps.now,
     )
+    if (failed) await fail(db, `${ticker} submissions: ${failed}`)
+    listed += found
+  }
+  return listed
+}
+
+/** Step 2b: the index pages of listed filings, newest filing first, and the EX-99 exhibits on each. */
+export async function readFilingIndexes(
+  db: PipelineDb,
+  deps: CallDeps,
+): Promise<{ filings: number; exhibits: number }> {
+  const at = deps.now.toISOString()
+  const limits = { ...CALL_LIMITS, ...deps.limits }
+  const queue = await db
+    .select()
+    .from(tables.filedFactReads)
+    .where(
+      and(
+        eq(tables.filedFactReads.kind, 'call-filing'),
+        eq(tables.filedFactReads.status, 'listed'),
+      ),
+    )
+    .orderBy(
+      desc(sql`json_extract(${tables.filedFactReads.detail}, '$.filed')`),
+      asc(tables.filedFactReads.id),
+    )
+    .limit(limits.indexPages)
+  let filings = 0
+  let exhibits = 0
+  for (const row of queue) {
+    const c = CALL_COMPANIES.get(row.ticker)
+    if (!c || !row.accession_no) continue
+    const f = JSON.parse(row.detail ?? '{}') as Partial<Listed>
+    if (!f.form || !f.filed || !f.cik) continue
+    const idx = await deps.fetcher({
+      source_id: 'call-edgar-index',
+      url: row.source_url,
+      ext: 'html',
+    })
+    let list: Exhibit[] = []
+    let detail: string | null = null
+    if (idx.ok) {
+      try {
+        const skip = c.skip_exhibits ? new RegExp(c.skip_exhibits, 'i') : undefined
+        list = earningsExhibits(idx.text, f.cik, row.accession_no, f.form, skip)
+      } catch (error) {
+        detail = String(error)
+      }
+    } else detail = idx.detail
+    await db
+      .update(tables.filedFactReads)
+      .set({ status: detail ? 'failed' : 'ok', detail, facts: list.length, started_at: at })
+      .where(eq(tables.filedFactReads.id, row.id))
+    if (detail) continue
+    filings++
+    const { q, label } = reported(c, f.filed)
+    for (const e of list) {
+      const written = await db
+        .insert(tables.callDocuments)
+        .values({
+          id: docId(e.url),
+          ticker: row.ticker,
+          call_date: f.filed,
+          period_label: label,
+          fiscal_year: q.fiscal_year,
+          fiscal_quarter: q.quarter!,
+          kind: 'exhibit',
+          url: e.url,
+          page_url: row.source_url,
+          produced_by: e.type,
+          accession_no: row.accession_no,
+          status: 'pending',
+          first_seen_at: at,
+          source_url: e.url,
+          fetched_at: at,
+        })
+        .onConflictDoNothing()
+        .returning({ id: tables.callDocuments.id })
+      exhibits += written.length
+    }
   }
   return { filings, exhibits }
+}
+
+/** Step 2: new earnings filings and their exhibits, then the backfill's, newest first. */
+export async function discoverExhibits(
+  db: PipelineDb,
+  deps: CallDeps,
+): Promise<{ filings: number; exhibits: number; listed: number }> {
+  const listed = await listFilings(db, deps)
+  return { listed, ...(await readFilingIndexes(db, deps)) }
 }
 
 type Doc = typeof tables.callDocuments.$inferSelect
@@ -429,8 +586,10 @@ async function markFailed(db: PipelineDb, doc: Doc, detail: string, now: Date) {
 
 const isPdf = (bytes: Uint8Array) =>
   bytes[0] === 0x25 && bytes[1] === 0x50 && bytes[2] === 0x44 && bytes[3] === 0x46
+const isZip = (bytes: Uint8Array) =>
+  bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04
 
-/** One text document's sentences: a PDF's pages, or an HTML page's blocks. */
+/** One text document's sentences: a PDF's pages, a Word file's paragraphs, or an HTML page's blocks. */
 export async function documentSentences(
   doc: Pick<Doc, 'url'>,
   deps: Pick<CallDeps, 'fetcher' | 'fetch' | 'userAgent'>,
@@ -460,10 +619,17 @@ export async function documentSentences(
       return { ok: false, detail: `pdf: ${String(error)}` }
     }
   }
+  if (isZip(bytes)) {
+    try {
+      return { ok: true, sentences: await docxSentences(bytes) }
+    } catch (error) {
+      return { ok: false, detail: `docx: ${String(error)}` }
+    }
+  }
   return { ok: true, sentences: htmlSentences(new TextDecoder().decode(bytes)) }
 }
 
-/** Step 3: text documents not read yet, oldest call first. */
+/** Step 3: text documents not read yet, newest call first, so a new call is never behind the backfill. */
 export async function readTextDocuments(
   db: PipelineDb,
   deps: CallDeps,
@@ -479,8 +645,8 @@ export async function readTextDocuments(
         sql`(${tables.callDocuments.attempts} = 0 or ${tables.callDocuments.fetched_at} < ${retryBefore})`,
       ),
     )
-    .orderBy(asc(tables.callDocuments.call_date), asc(tables.callDocuments.id))
-    .limit(TEXT_DOCS_PER_RUN)
+    .orderBy(desc(tables.callDocuments.call_date), asc(tables.callDocuments.id))
+    .limit({ ...CALL_LIMITS, ...deps.limits }.textDocs)
   let read = 0
   let statements = 0
   let failed = 0
@@ -504,20 +670,45 @@ export async function readTextDocuments(
   return { read, statements, failed }
 }
 
-/** What AssemblyAI has cost so far: billed for finished jobs, estimated for running ones. */
-/** AssemblyAI spend in the UTC calendar month of `now`, dated by submission (or first sight, for a job sent from the mini). */
-export async function assemblySpend(db: PipelineDb, now: Date): Promise<number> {
+/**
+ * AssemblyAI spend on one basis: billed for finished jobs, estimated for
+ * running ones, and an hour for a job sent from the mini with no estimate.
+ * The month's is the calls since BACKFILL_BEFORE submitted in the UTC month
+ * of `now` (dated by submission, or first sight); the backfill's is every
+ * older call's, ever.
+ */
+export async function assemblySpend(
+  db: PipelineDb,
+  now: Date,
+  basis: SpendBasis = 'monthly',
+): Promise<number> {
   const monthStart = `${now.toISOString().slice(0, 7)}-01T00:00:00Z`
+  const d = tables.callDocuments
   const [row] = await db
-    .select({ usd: sql<number | null>`sum(${tables.callDocuments.cost_usd})` })
-    .from(tables.callDocuments)
+    .select({
+      usd: sql<number | null>`sum(${d.cost_usd})`,
+      unestimated: sql<
+        number | null
+      >`sum(case when ${d.cost_usd} is null and ${d.status} = 'submitted' then 1 else 0 end)`,
+    })
+    .from(d)
     .where(
       and(
-        eq(tables.callDocuments.kind, 'audio'),
-        sql`coalesce(${tables.callDocuments.submitted_at}, ${tables.callDocuments.first_seen_at}) >= ${monthStart}`,
+        eq(d.kind, 'audio'),
+        basis === 'backfill'
+          ? lt(d.call_date, BACKFILL_BEFORE)
+          : and(
+              sql`${d.call_date} >= ${BACKFILL_BEFORE}`,
+              sql`coalesce(${d.submitted_at}, ${d.first_seen_at}) >= ${monthStart}`,
+            ),
       ),
     )
-  return row?.usd ?? 0
+  return (row?.usd ?? 0) + (row?.unestimated ?? 0) * costOf(3600)
+}
+
+const CAP: Record<SpendBasis, number> = {
+  monthly: MONTHLY_SPEND_CAP_USD,
+  backfill: BACKFILL_SPEND_CAP_USD,
 }
 
 /** A replay's length from its size and its MP3 header, as an upper bound when the header can't be read. */
@@ -537,7 +728,7 @@ async function estimateSeconds(
   )
   const head = new Uint8Array(await res.arrayBuffer())
   if (!Number.isFinite(total) || total <= 0) return null
-  return audioSeconds(total, mp3Kbps(head) ?? FALLBACK_KBPS)
+  return replaySeconds(head, total)
 }
 
 /** Step 4: collect finished jobs, then submit new replays under the cap. */
@@ -545,7 +736,14 @@ export async function runAudio(
   db: PipelineDb,
   deps: CallDeps,
 ): Promise<CallReadReport['audio'] & { statements: number }> {
-  const out = { collected: 0, submitted: 0, pending: 0, spent_usd: 0, statements: 0 }
+  const out = {
+    collected: 0,
+    submitted: 0,
+    pending: 0,
+    spent_usd: 0,
+    backfill_spent_usd: 0,
+    statements: 0,
+  }
   if (!deps.assemblyKey) return out
   const doFetch = deps.fetch ?? globalThis.fetch
   const headers = { authorization: deps.assemblyKey }
@@ -605,23 +803,38 @@ export async function runAudio(
     })
     out.collected++
   }
-  let spent = await assemblySpend(db, deps.now)
-  // A job submitted from the mini has no estimate on its row: count it as an hour.
-  spent +=
-    audio.filter((d) => d.status === 'submitted' && d.cost_usd === null).length * costOf(3600)
-  for (const doc of audio.filter((d) => d.status === 'pending').slice(0, AUDIO_SUBMITS_PER_RUN)) {
+  const spent: Record<SpendBasis, number> = {
+    monthly: await assemblySpend(db, deps.now, 'monthly'),
+    backfill: await assemblySpend(db, deps.now, 'backfill'),
+  }
+  const capped = new Set<SpendBasis>()
+  // New calls first: a replay since BACKFILL_BEFORE never waits behind the backfill.
+  const pending = audio
+    .filter((d) => d.status === 'pending')
+    .sort((a, b) => b.call_date.localeCompare(a.call_date))
+  const maxSubmits = { ...CALL_LIMITS, ...deps.limits }.audioSubmits
+  let tries = 0
+  for (const doc of pending) {
+    if (tries >= maxSubmits) break
+    const basis = spendBasis(doc.call_date)
+    if (capped.has(basis)) continue
+    tries++
     const seconds = await estimateSeconds(doc.url, deps).catch(() => null)
     if (seconds === null) {
       await markFailed(db, doc, 'replay not reachable', deps.now)
       continue
     }
     const estimate = costOf(seconds)
-    if (spent + estimate > MONTHLY_SPEND_CAP_USD) {
+    if (spent[basis] + estimate > CAP[basis]) {
+      capped.add(basis)
       await recordOpsEvent(db, {
         kind: KIND_ASSEMBLYAI_CREDITS,
-        detail: `spend cap: $${spent.toFixed(2)} spent this month of $${MONTHLY_SPEND_CAP_USD}; ${doc.ticker} ${doc.call_date} not submitted`,
+        detail:
+          basis === 'backfill'
+            ? `backfill ceiling: $${spent.backfill.toFixed(2)} spent of $${BACKFILL_SPEND_CAP_USD}; ${doc.ticker} ${doc.call_date} not submitted`
+            : `spend cap: $${spent.monthly.toFixed(2)} spent this month of $${MONTHLY_SPEND_CAP_USD}; ${doc.ticker} ${doc.call_date} not submitted`,
       })
-      break
+      continue
     }
     const res = await doFetch(`${ASSEMBLYAI_API}/v2/transcript`, {
       method: 'POST',
@@ -642,7 +855,7 @@ export async function runAudio(
     }
     const job = JSON.parse(body) as { id?: string }
     if (!job.id) continue
-    spent += estimate
+    spent[basis] += estimate
     out.submitted++
     await db
       .update(tables.callDocuments)
@@ -654,7 +867,8 @@ export async function runAudio(
       })
       .where(eq(tables.callDocuments.id, doc.id))
   }
-  out.spent_usd = spent
+  out.spent_usd = spent.monthly
+  out.backfill_spent_usd = spent.backfill
   return out
 }
 
@@ -712,19 +926,30 @@ export async function readConcepts(
   extra: readonly { ticker: string; concept: string }[] = [],
 ): Promise<number> {
   const dayAgo = new Date(deps.now.getTime() - 86_400_000).toISOString()
-  const wanted: { ticker: string; concept: string }[] = []
+  const wanted: { ticker: string; concept: string; cik: string }[] = []
   const byTicker = new Map<string, GuidanceRow[]>()
   for (const g of open) {
     if (unscorable(g.ticker, g)) continue
     byTicker.set(g.ticker, [...(byTicker.get(g.ticker) ?? []), g])
   }
   for (const [ticker, rows] of byTicker) {
+    const c = CALL_COMPANIES.get(ticker)
+    if (!c) continue
+    // A redomiciled filer's earlier quarters are in its earlier CIK's facts.
+    const prior =
+      c.prior_cik && rows.some((r) => (r.period_start ?? '') <= c.prior_cik!.until)
+        ? c.prior_cik.cik
+        : null
     for (const concept of neededConcepts(ticker, rows)) {
-      wanted.push({ ticker, concept })
+      wanted.push({ ticker, concept, cik: c.cik })
+      if (prior) wanted.push({ ticker, concept, cik: prior })
     }
   }
   const asked = new Set(wanted.map((w) => `${w.ticker}|${w.concept}`))
-  for (const w of extra) if (!asked.has(`${w.ticker}|${w.concept}`)) wanted.push(w)
+  for (const w of extra) {
+    const cik = forwardFiler(w.ticker)?.cik
+    if (cik && !asked.has(`${w.ticker}|${w.concept}`)) wanted.push({ ...w, cik })
+  }
   if (!wanted.length) return 0
   const recent = await db
     .select({ ticker: tables.filedFactReads.ticker, url: tables.filedFactReads.source_url })
@@ -738,10 +963,8 @@ export async function readConcepts(
   const done = new Set(recent.map((r) => r.url))
   let reads = 0
   for (const w of wanted) {
-    if (reads >= CONCEPT_READS_PER_RUN) break
-    const c = forwardFiler(w.ticker)
-    if (!c) continue
-    const url = conceptUrl(c.cik, w.concept)
+    if (reads >= { ...CALL_LIMITS, ...deps.limits }.conceptReads) break
+    const url = conceptUrl(w.cik, w.concept)
     if (done.has(url)) continue
     reads++
     const res = await deps.fetcher({ source_id: 'call-edgar-companyconcept', url, ext: 'json' })
@@ -764,7 +987,7 @@ export async function readConcepts(
     }
     let facts
     try {
-      facts = parseCompanyConcept(res.text, c.cik)
+      facts = parseCompanyConcept(res.text, w.cik)
     } catch (error) {
       await logRead(
         db,
@@ -784,7 +1007,7 @@ export async function readConcepts(
     const raw_key = `calls/facts/${w.ticker.toLowerCase()}/${w.concept.split(':')[1]}-${contentHashOfText(res.text).slice(0, 16)}.json`
     await deps.raw.put(raw_key, res.text, 'application/json')
     const rows = facts
-      .filter((f) => f.end >= '2023-01-01')
+      .filter((f) => f.end >= FACTS_SINCE)
       .map((f) => ({
         id: contentHash({
           ticker: w.ticker,
@@ -795,7 +1018,7 @@ export async function readConcepts(
           accession_no: f.accession_no,
         }),
         ticker: w.ticker,
-        cik: c.cik,
+        cik: w.cik,
         concept: f.concept,
         dims: '',
         start: f.start,
@@ -882,12 +1105,13 @@ export async function resolveStatements(
 export async function runCallReads(db: PipelineDb, deps: CallDeps): Promise<CallReadReport> {
   const report: CallReadReport = {
     curated: 0,
+    listed: 0,
     filings: 0,
     exhibits: 0,
     read: 0,
     statements: 0,
     failed: 0,
-    audio: { collected: 0, submitted: 0, pending: 0, spent_usd: 0 },
+    audio: { collected: 0, submitted: 0, pending: 0, spent_usd: 0, backfill_spent_usd: 0 },
     concepts: 0,
     resolved: 0,
   }

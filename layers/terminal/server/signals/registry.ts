@@ -397,7 +397,7 @@ const guidanceSurprise = (ticker: string, company: string): SignalDef => ({
   test: 'event',
   signed: true,
   available_after_days: 0,
-  history_from: '2025-10-01',
+  history_from: '2018-01-01',
 })
 
 /** The chip and network makers a hyperscaler's capex is expected to lead. */

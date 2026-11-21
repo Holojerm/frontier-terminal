@@ -405,6 +405,41 @@ function resourcesOf(objects: Map<number, PdfObject>, page: number): string {
   return ''
 }
 
+/**
+ * A content stream's text, and the text of each form XObject it draws with
+ * `Do` (FactSet's and LSEG's transcripts put every page's text in one),
+ * read with the form's own resources, or the caller's when it has none.
+ */
+async function streamText(
+  objects: Map<number, PdfObject>,
+  stream: string,
+  resources: string,
+  cache: Map<number, FontMap>,
+  depth: number,
+): Promise<string> {
+  let text = contentText(stream, await fontMaps(objects, resources, cache))
+  if (depth >= 4 || !/\bDo\b/.test(stream)) return text
+  const xobjects = resolveDict(objects, entry(resources, 'XObject'))
+  for (const m of stream.matchAll(/\/([^\s/<>[\]()]+)\s+Do\b/g)) {
+    const named = new RegExp(
+      String.raw`\/${m[1]!.replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}\s+(\d+)\s+\d+\s+R`,
+    ).exec(xobjects)
+    const form = named ? objects.get(Number(named[1])) : undefined
+    if (!form?.stream || !/\/Subtype\s*\/Form\b/.test(form.head)) continue
+    const own = entry(form.head, 'Resources')
+    text +=
+      '\n' +
+      (await streamText(
+        objects,
+        decoder.decode(await decoded(form)),
+        own ? resolveDict(objects, own) : resources,
+        cache,
+        depth + 1,
+      ))
+  }
+  return text
+}
+
 /** The text of every page, in page order. Throws on a file it cannot read at all. */
 export async function pdfPages(bytes: Uint8Array): Promise<string[]> {
   const objects = await allObjects(bytes)
@@ -415,13 +450,14 @@ export async function pdfPages(bytes: Uint8Array): Promise<string[]> {
   const pages: string[] = []
   for (const page of pageList(objects, root)) {
     const head = objects.get(page)!.head
-    const fonts = await fontMaps(objects, resourcesOf(objects, page), cache)
+    const resources = resourcesOf(objects, page)
     const contents = entry(head, 'Contents') ?? ''
     let text = ''
     for (const r of contents.matchAll(/(\d+)\s+\d+\s+R/g)) {
       const obj = objects.get(Number(r[1]))
       if (!obj?.stream) continue
-      text += contentText(decoder.decode(await decoded(obj)), fonts) + '\n'
+      text +=
+        (await streamText(objects, decoder.decode(await decoded(obj)), resources, cache, 0)) + '\n'
     }
     pages.push(text)
   }

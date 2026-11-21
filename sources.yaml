@@ -3276,6 +3276,16 @@ call_sources:
       pacer. www.sec.gov/robots.txt allows /Archives/edgar/data. Taken: each
       exhibit's text, kept privately in R2, and the guidance figures it
       states with a quote of at most 25 words. Read 2026-11-21.
+    caveats: >-
+      Read back to 2018-01-01 (owner's backfill, 2026-11-21): the
+      submissions feed's paged files hold the older filings, about 2,100
+      earnings 8-Ks and 6-Ks for the 45, drained at 40 index pages and 40 documents an hour.
+      Marvell's and Broadcom's filings before they redomiciled are read
+      under their earlier CIKs; Nebius's (Yandex until July 2024) and
+      TeraWulf's (IKONICS until December 2021) are not, and DTE Gas's
+      releases under DTE Energy's CIK are skipped. TSMC's 6-Ks before
+      October 2019 carry the release in the 6-K itself, with no exhibit, so
+      nothing is read from them.
     rights: ours
   call-xbrl-companyconcept:
     publisher: SEC EDGAR XBRL company-concept API
@@ -3292,7 +3302,7 @@ call_sources:
   call-transcripts-company:
     publisher: The companies' own IR sites and file hosts (Microsoft, Alphabet, Meta, AMD, Dell, HPE, CoreWeave, GE Vernova, Hut 8, IREN, Intel, Super Micro, Core Scientific)
     url: https://ir.amd.com/financial-information/financial-results
-    format: PDF or HTML transcripts and prepared remarks, on q4cdn.com, cloudfront.net, cdn.sanity.io and the companies' own domains
+    format: PDF, HTML or Word (Microsoft until January 2022) transcripts and prepared remarks, on q4cdn.com, cloudfront.net, cdn.sanity.io, cdn-dynmedia-1.microsoft.com and the companies' own domains
     verdict: include, quote-only
     terms: >-
       Each file is one the company links from its own results or event
@@ -3307,7 +3317,12 @@ call_sources:
     caveats: >-
       A transcript is the company's or its vendor's rendering of the call;
       where the PDF names its producer (LSEG, FactSet, S&P Global,
-      Bloomberg) the document row says so.
+      Bloomberg) the document row says so. The 2018 backfill (2026-11-21)
+      found each older file by hand from the results or event page that
+      links it, live or in a Wayback Machine capture of that page, and on
+      Q4-hosted sites from the feed the page itself renders from; every
+      file was fetched once with our client. Depth per company is in
+      curated/earnings-calls.json and docs/source-audit.md.
   call-transcripts-vendor:
     publisher: LSEG StreetEvents, FactSet CallStreet, S&P Global Market Intelligence and Bloomberg transcripts the companies host (Qualcomm, NVIDIA, CoreWeave, DTE, Ciena)
     url: https://s204.q4cdn.com/645488518/files/content_files/Q4FY26-Earnings-Conference-Call_Transcript_11-5-26_Final.pdf
@@ -3322,17 +3337,18 @@ call_sources:
       the company's own page for the file. Read 2026-11-21.
     rights: restricted
   call-audio-company:
-    publisher: Call replays a company posts as an MP3 file (Amazon on its IR file host, AEP on docs.aep.com)
+    publisher: Call replays a company posts as a media file (Amazon on its IR file host, AEP on docs.aep.com, Intel on its IR file host until Q1 2021)
     url: https://docs.aep.com/docs/newsroom/resources/earnings/2026-10/2026q3_conf_call.mp3
-    format: MP3, sent by URL to AssemblyAI, which fetches it
+    format: MP3 or WAV (Amazon until 2024), sent by URL to AssemblyAI, which fetches it
     verdict: include, quote-only
     terms: >-
       Only a media file the company itself links from its event page,
       without registration, is transcribed. The audio is never stored or
       served here, and our transcript stays in private R2 storage; a
       published row is a figure, a quote of at most 25 words, the time into
-      the replay, and a link to the company's page. Amazon keeps its replay
-      up for about three months, so earlier calls are gone. Read 2026-11-21.
+      the replay, and a link to the company's page. Amazon's replays are up
+      from Q1 2020 (all but Q2 2021), AEP's from 2018, Intel's from 2018 to
+      Q1 2021. Read 2026-11-21.
     rights: restricted
   assemblyai:
     publisher: AssemblyAI (speech-to-text processor)
@@ -3349,8 +3365,11 @@ call_sources:
       transcript. Billing: $0.21 an hour for the model, plus $0.05 for key
       terms, $0.05 for a prompt, $0.02 for speaker labels and $0.02 for
       speaker identification. Spend is capped at $10 per UTC calendar
-      month (MONTHLY_SPEND_CAP_USD, calls/assemblyai.ts); AssemblyAI offers
-      alerts but no hard limit of its own. Read 2026-11-21.
+      month (MONTHLY_SPEND_CAP_USD, calls/assemblyai.ts) for calls since
+      2025-10-01, and the replays of older calls have a one-time ceiling of
+      their own, $75 (BACKFILL_SPEND_CAP_USD, approved 2026-11-21), so the
+      backfill never spends the month's cap; AssemblyAI offers alerts but no
+      hard limit of its own. Read 2026-11-21.
     rights: restricted
 
 
@@ -4092,8 +4111,8 @@ cut:
       We transcribe only a file a company posts, so the calls of Oracle,
       Broadcom, Marvell, Arista, Applied Optoelectronics, Applied Digital,
       IREN, TeraWulf, Riot, Akamai, Celestica, Astera Labs and the Q&A of
-      Intel, Super Micro, Nebius and Core Scientific are gaps. Read
-      2026-11-21.
+      Intel (since Q2 2021), Super Micro, Nebius and Core Scientific are
+      gaps. Read 2026-11-21.
   call-ir-sites-blocked:
     verdict: cut (refuses automated clients)
     reason: >-
@@ -4102,5 +4121,8 @@ cut:
       investors.cipherdigital.com, investor.galaxy.com and
       wecenergygroup.com answer an identified client with HTTP 403 or a bot
       challenge, so their posted transcripts can't be fetched; only their
-      EDGAR exhibits are read. Entergy's terms bar automatic reading
+      EDGAR exhibits are read. So do corporate.celestica.com, which linked
+      call MP3s from 2019 to 2023, and hut8.com's old upload folder (call
+      MP3s from 2018 to 2025, behind a bot challenge since); not worked
+      around. Entergy's terms bar automatic reading
       (power-site-unread). Read 2026-11-21.

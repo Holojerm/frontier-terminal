@@ -140,6 +140,62 @@ export async function pdfSentences(bytes: Uint8Array): Promise<DocSentence[]> {
   )
 }
 
+const u16 = (b: Uint8Array, at: number) => b[at]! | (b[at + 1]! << 8)
+const u32 = (b: Uint8Array, at: number) => (u16(b, at) | (u16(b, at + 2) << 16)) >>> 0
+
+/** One file of a zip archive, by name, inflated. Null when the archive has no such file. */
+export async function zipEntry(bytes: Uint8Array, name: string): Promise<Uint8Array | null> {
+  // The end-of-central-directory record is in the last 64 KiB.
+  let eocd = -1
+  for (let i = bytes.length - 22; i >= Math.max(0, bytes.length - 65_557); i--) {
+    if (u32(bytes, i) === 0x06054b50) {
+      eocd = i
+      break
+    }
+  }
+  if (eocd < 0) throw new Error('not a zip archive')
+  const count = u16(bytes, eocd + 10)
+  let at = u32(bytes, eocd + 16)
+  for (let n = 0; n < count; n++) {
+    if (u32(bytes, at) !== 0x02014b50) throw new Error('bad zip central directory')
+    const method = u16(bytes, at + 10)
+    const size = u32(bytes, at + 20)
+    const nameLen = u16(bytes, at + 28)
+    const extra = u16(bytes, at + 30)
+    const comment = u16(bytes, at + 32)
+    const local = u32(bytes, at + 42)
+    const entry = new TextDecoder().decode(bytes.subarray(at + 46, at + 46 + nameLen))
+    at += 46 + nameLen + extra + comment
+    if (entry !== name) continue
+    const start = local + 30 + u16(bytes, local + 26) + u16(bytes, local + 28)
+    const data = bytes.subarray(start, start + size)
+    if (method === 0) return data
+    if (method !== 8) throw new Error(`zip method ${method}`)
+    const stream = new Blob([new Uint8Array(data)])
+      .stream()
+      .pipeThrough(new DecompressionStream('deflate-raw'))
+    return new Uint8Array(await new Response(stream).arrayBuffer())
+  }
+  return null
+}
+
+/** A Word document's sentences, paragraph by paragraph (Microsoft posted its transcripts so until 2022). */
+export async function docxSentences(bytes: Uint8Array): Promise<DocSentence[]> {
+  const xml = await zipEntry(bytes, 'word/document.xml')
+  if (!xml) throw new Error('no word/document.xml')
+  const paragraphs = new TextDecoder()
+    .decode(xml)
+    .split(/<\/w:p>/)
+    .map((p) =>
+      [...p.matchAll(/<w:t(?:\s[^>]*)?>([^<]*)<\/w:t>|<w:tab\/>/g)]
+        .map((m) => m[1] ?? ' ')
+        .join(''),
+    )
+  return releaseBlocks(paragraphs.map((p) => `<p>${p}</p>`).join('')).flatMap((block) =>
+    sentencesOf(block).map((text) => ({ text, page: null, at_ms: null, speaker: null })),
+  )
+}
+
 /** An HTML page's (or EDGAR exhibit's) sentences. */
 export function htmlSentences(html: string): DocSentence[] {
   return releaseBlocks(html).flatMap((block) =>

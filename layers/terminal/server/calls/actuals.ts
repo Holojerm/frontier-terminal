@@ -83,6 +83,8 @@ export function unscorable(
     return 'Files as a foreign private issuer: its quarters come in 6-Ks, with no XBRL to score against.'
   if (s.metric === 'segment_revenue') return 'A segment’s revenue isn’t in the filed facts we read.'
   if (s.metric === 'ai_revenue') return 'No filing states this AI figure as its own line.'
+  if (s.metric === 'revenue' && s.basis === 'non_gaap')
+    return 'Guided as non-GAAP revenue; filings print GAAP revenue only.'
   if (s.metric === 'gross_margin' && s.basis !== 'gaap')
     return 'Guided on a non-GAAP basis, or the basis isn’t stated; filings print GAAP only.'
   if (s.metric === 'capex' && conceptsFor(ticker, 'capex') === null)

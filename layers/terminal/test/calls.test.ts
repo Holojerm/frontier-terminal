@@ -1,6 +1,6 @@
 import { env } from 'cloudflare:test'
 import { drizzle } from 'drizzle-orm/d1'
-import { eq } from 'drizzle-orm'
+import { and, eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
@@ -13,8 +13,10 @@ import {
   type ConceptFact,
 } from '../server/calls/actuals'
 import {
+  BACKFILL_SPEND_CAP_USD,
   costOf,
   keytermsFor,
+  spendBasis,
   mp3Kbps,
   parseSentences,
   refusalOf,
@@ -23,13 +25,21 @@ import {
   transcriptRequest,
 } from '../server/calls/assemblyai'
 import { CALL_TICKERS, callCompany, curatedCalls } from '../server/calls/curated'
-import { earningsExhibits, earningsFilings } from '../server/calls/edgar'
+import {
+  BACKFILL_SINCE,
+  earningsExhibits,
+  earningsFilings,
+  olderPages,
+  pageFilings,
+} from '../server/calls/edgar'
 import { extractStatements, firstAmount, quoteOf, QUOTE_MAX_WORDS } from '../server/calls/extract'
 import {
   assemblySpend,
   discoverExhibits,
   KIND_ASSEMBLYAI_CREDITS,
+  listFilings,
   readConcepts,
+  readFilingIndexes,
   readTextDocuments,
   resolveStatements,
   runAudio,
@@ -39,9 +49,15 @@ import {
 } from '../server/calls/ingest'
 import { fiscalPeriod, nextQuarter, periodLabel, reportedQuarter } from '../server/calls/periods'
 import { applyGuidanceReadings, checkStatement, guidanceReview } from '../server/calls/review'
-import { htmlSentences, repairWords, sentencesOf, spokenSentences } from '../server/calls/text'
+import {
+  docxSentences,
+  htmlSentences,
+  repairWords,
+  sentencesOf,
+  spokenSentences,
+} from '../server/calls/text'
 import type { FetchOutcome, SourceFetcher } from '../server/pipeline/fetch'
-import { decoded } from '../server/power/pdf-text'
+import { decoded, pdfPages } from '../server/power/pdf-text'
 import { queryCallGuidance } from '../server/utils/terminal-call-guidance'
 import { queryContext } from '../server/utils/terminal-db'
 import { fixtureText } from './pipeline/fixtures'
@@ -57,6 +73,22 @@ const SUBMISSIONS = fixtureText('fixtures/calls/amd-submissions.json')
 const INDEX = fixtureText('fixtures/calls/amd-8k-index.htm')
 const OUTLOOK = fixtureText('fixtures/calls/amd-q3-2026-release-outlook.htm')
 const CONCEPT = fixtureText('fixtures/calls/amd-revenue-companyconcept.json')
+const QCOM_FEED = fixtureText('fixtures/calls/qcom-submissions.json')
+const QCOM_PAGE = fixtureText('fixtures/calls/qcom-submissions-001.json')
+const QCOM_PAGE_URL = 'https://data.sec.gov/submissions/CIK0000804328-submissions-001.json'
+const TSM_INDEX = fixtureText('fixtures/calls/tsm-6k-index-2021.htm')
+const OLD = JSON.parse(fixtureText('fixtures/calls/exhibit-excerpts-2018-2022.json')) as {
+  calls: {
+    ticker: string
+    call_date: string
+    fy_end_month: number
+    sentences: { text: string; page: number | null; at_ms: null; speaker: null }[]
+  }[]
+}
+const DOCX = Uint8Array.from(
+  atob(fixtureText('fixtures/calls/msft-fy19-q3-transcript.docx.b64').replace(/\s+/g, '')),
+  (c) => c.charCodeAt(0),
+)
 const SENTENCES = fixtureText('fixtures/calls/assemblyai-amzn-q3-2026-sentences.json')
 const JOB = fixtureText('fixtures/calls/assemblyai-amzn-q3-2026-job.json')
 const EXCERPTS = JSON.parse(fixtureText('fixtures/calls/transcript-excerpts.json')) as {
@@ -99,6 +131,18 @@ describe('fiscal calendars', () => {
 })
 
 describe('text repair', () => {
+  it('reads a Word transcript, paragraph by paragraph', async () => {
+    const s = await docxSentences(DOCX)
+    expect(s[0]!.text).toBe('Now let’s move to next quarter’s outlook.')
+    // A full-year capex outlook restated in passing doesn't take the quarter's segment guides.
+    const out = extractStatements(s, { fyEndMonth: 6, reported: reportedQuarter(6, '2019-04-24') })
+    expect(out.map((x) => [x.segment, periodLabel(6, x.period)])).toContainEqual([
+      'Intelligent Cloud',
+      'Q4 FY2019',
+    ])
+    expect(out.every((x) => x.period.quarter === 4)).toBe(true)
+  })
+
   it('joins the words a PDF split and closes up letter-spaced runs', () => {
     const doc =
       'We expect revenue. We said it. We know. W e expect revenue of $9 billio n, plus or m inus 2%.'
@@ -126,6 +170,24 @@ describe('text repair', () => {
     const cut = full.subarray(0, full.length - 4)
     const out = await decoded({ head: '<< /Filter /FlateDecode >>', stream: cut })
     expect(new TextDecoder().decode(out)).toBe(text)
+  })
+})
+
+describe('PDF text', () => {
+  it('reads the text a page draws through a form XObject', async () => {
+    const pdf = [
+      '%PDF-1.6',
+      '1 0 obj <</Type /Catalog /Pages 2 0 R>> endobj',
+      '2 0 obj <</Type /Pages /Kids [3 0 R] /Count 1>> endobj',
+      '3 0 obj <</Type /Page /Parent 2 0 R /Contents 4 0 R /Resources <</XObject <</Fm0 5 0 R>> /Font <</F1 6 0 R>>>>>> endobj',
+      '4 0 obj <</Length 12>> stream\nq /Fm0 Do Q\nendstream endobj',
+      '5 0 obj <</Type /XObject /Subtype /Form /Length 39>> stream\nBT /F1 12 Tf (We expect revenue.) Tj ET\nendstream endobj',
+      '6 0 obj <</Type /Font /Subtype /Type1 /BaseFont /Helvetica /Encoding /WinAnsiEncoding>> endobj',
+      'trailer <</Root 1 0 R>>',
+      '%%EOF',
+    ].join('\n')
+    const pages = await pdfPages(new TextEncoder().encode(pdf))
+    expect(pages[0]).toContain('We expect revenue.')
   })
 })
 
@@ -367,6 +429,81 @@ describe('AssemblyAI', () => {
   })
 })
 
+describe('EDGAR back to 2018', () => {
+  it('names the paged files that reach back to 2018, and reads their earnings 8-Ks', () => {
+    expect(olderPages(QCOM_FEED, '0000804328', BACKFILL_SINCE)).toEqual([QCOM_PAGE_URL])
+    const old = pageFilings(QCOM_PAGE, '0000804328', BACKFILL_SINCE)
+    // Item 2.02 only, and nothing filed before 2018.
+    expect(old.map((f) => f.filed)).toEqual(['2018-01-31', '2018-04-25', '2018-07-25'])
+    expect(old[0]!.index_url).toMatch(/^https:\/\/www\.sec\.gov\/Archives\/edgar\/data\/804328\//)
+    expect(() => pageFilings('{"form":[]}', '0000804328', BACKFILL_SINCE)).toThrow()
+  })
+
+  it('keeps a 6-K exhibit whose description only repeats its type, and skips a subsidiary’s', () => {
+    const acc = '0001564590-21-018896'
+    const ex = earningsExhibits(TSM_INDEX, '0001046179', acc, '6-K')
+    expect(ex.map((e) => e.type)).toEqual(['EX-99.1', 'EX-99.2'])
+    expect(earningsExhibits(TSM_INDEX, '0001046179', acc, '6-K', /ex991/)).toHaveLength(1)
+  })
+})
+
+describe('2018-2022 releases', () => {
+  const read = (ticker: string) => {
+    const c = OLD.calls.find((x) => x.ticker === ticker)!
+    return extractStatements(c.sentences, {
+      fyEndMonth: c.fy_end_month,
+      reported: reportedQuarter(c.fy_end_month, c.call_date),
+    }).map((s) => ({ ...s, label: periodLabel(c.fy_end_month, s.period) }))
+  }
+
+  it('reads a spelled-out band, and GAAP and non-GAAP margins given "respectively"', () => {
+    const nvda = read('NVDA')
+    expect(nvda[0]).toMatchObject({ metric: 'revenue', label: 'Q2 FY2019', bound: 'range' })
+    expect(nvda[0]!.low).toBeCloseTo(3.038e9, -5)
+    const margins = nvda.filter((s) => s.metric === 'gross_margin')
+    expect(margins.map((s) => [s.basis, s.low, s.high])).toEqual([
+      ['gaap', 62.8, 63.8],
+      ['non_gaap', 63, 64],
+    ])
+    expect(read('MRVL')[0]).toMatchObject({ low: 1_033_050_000, high: 1_096_950_000 })
+  })
+
+  it('takes the guided quarter, not the one compared against or a date’s year', () => {
+    expect(read('AMZN')).toEqual([
+      expect.objectContaining({ metric: 'revenue', low: 51e9, high: 54e9, label: 'Q2 2018' }),
+    ])
+    expect(read('CLS')[0]).toMatchObject({ low: 1.575e9, label: 'Q2 2018' })
+  })
+
+  it('reads an outlook list and an outlook table under their lead-in', () => {
+    expect(read('AAOI').map((s) => [s.metric, s.low, s.high, s.label])).toEqual([
+      ['revenue', 75e6, 81e6, 'Q2 2018'],
+      ['gross_margin', 39.5, 41, 'Q2 2018'],
+    ])
+    expect(read('QCOM')).toEqual([
+      expect.objectContaining({ metric: 'revenue', low: 4.8e9, high: 5.6e9, label: 'Q3 FY2018' }),
+    ])
+    expect(read('BE').map((s) => [s.metric, s.low, s.high, s.label])).toEqual([
+      ['revenue', 950e6, 1e9, '2021'],
+      ['gross_margin', 25, 25, '2021'],
+    ])
+  })
+
+  it('gives each figure its own basis', () => {
+    expect(read('INTC').map((s) => [s.basis, s.low])).toEqual([
+      ['gaap', 77e9],
+      ['non_gaap', 72.5e9],
+    ])
+    expect(
+      unscorable('INTC', { metric: 'revenue', unit: 'USD', basis: 'non_gaap', segment: null }),
+    ).toMatch(/non-GAAP/)
+  })
+
+  it('takes no multi-year target, part of capex, backlog now, kilowatt-hours or slide columns', () => {
+    for (const t of ['HPE', 'WMB', 'COHR', 'PNW', 'AMD']) expect(read(t), t).toEqual([])
+  })
+})
+
 describe('the curated list', () => {
   it('covers the 45 companies, each with a reason where it posts nothing we read', () => {
     expect(CALL_TICKERS).toHaveLength(45)
@@ -445,7 +582,11 @@ describe('the reader', () => {
       .select()
       .from(schema.callDocuments)
       .where(eq(schema.callDocuments.kind, 'audio'))
-    expect(audio.every((a) => a.status === 'submitted' && a.job_id)).toBe(true)
+    // Every backfill replay was sent from the mini; a newer one waits for the Worker, on the month's cap.
+    for (const a of audio) {
+      expect(a.status, a.url).toBe(a.job_id ? 'submitted' : 'pending')
+      if (spendBasis(a.call_date) === 'backfill') expect(a.job_id, a.url).toBeTruthy()
+    }
   })
 
   it('finds the earnings exhibits, reads them, and stores the outlook', async () => {
@@ -607,6 +748,110 @@ describe('the reader', () => {
       .from(schema.callDocuments)
       .where(eq(schema.callDocuments.url, 'https://example.com/new.mp3'))
     expect(pending!.status).toBe('pending')
+  })
+
+  it('lists the backfill from the paged files once, then reads index pages newest first', async () => {
+    for (const t of CALL_TICKERS.filter((x) => x !== 'QCOM')) {
+      await db.insert(schema.filedFactReads).values({
+        id: `r-${t}`,
+        ticker: t,
+        kind: 'call-submissions',
+        accession_no: null,
+        status: 'ok',
+        detail: null,
+        content_hash: null,
+        facts: 0,
+        started_at: '2026-11-21T08:59:00Z',
+        source_url: 'x',
+      })
+    }
+    const asked: string[] = []
+    const pages: Record<string, string> = {
+      'https://data.sec.gov/submissions/CIK0000804328.json': QCOM_FEED,
+      [QCOM_PAGE_URL]: QCOM_PAGE,
+    }
+    const fetcher: SourceFetcher = async (s) => {
+      asked.push(s.url)
+      return pages[s.url] === undefined
+        ? { ok: false, status: 404, detail: 'HTTP 404' }
+        : ok(pages[s.url]!)
+    }
+    const deps = depsWith({ fetcher, limits: { submissions: 1, indexPages: 1 } })
+    expect(await listFilings(db, deps)).toBe(5)
+    expect(asked).toEqual(['https://data.sec.gov/submissions/CIK0000804328.json', QCOM_PAGE_URL])
+    asked.length = 0
+    await readFilingIndexes(db, deps)
+    // The newest listed filing first: the feed's own, before the backfill's.
+    expect(asked).toHaveLength(1)
+    expect(asked[0]).toContain('0000804328-26-000127')
+    // The page read cleanly once is never read again; nothing is listed twice, but the
+    // filing whose index failed is listed again.
+    asked.length = 0
+    await db
+      .delete(schema.filedFactReads)
+      .where(
+        and(
+          eq(schema.filedFactReads.ticker, 'QCOM'),
+          eq(schema.filedFactReads.kind, 'call-submissions'),
+        ),
+      )
+    expect(await listFilings(db, { ...deps, now: new Date('2026-11-22T09:00:00Z') })).toBe(1)
+    expect(asked).toEqual(['https://data.sec.gov/submissions/CIK0000804328.json'])
+  })
+
+  it('keeps the backfill’s spend apart from the month’s, and stops it at its ceiling', async () => {
+    expect(spendBasis('2025-09-30')).toBe('backfill')
+    expect(spendBasis('2025-10-01')).toBe('monthly')
+    await db.insert(schema.callDocuments).values([
+      docRow({
+        ticker: 'AEP',
+        kind: 'audio',
+        status: 'read',
+        call_date: '2019-10-24',
+        cost_usd: BACKFILL_SPEND_CAP_USD - 0.1,
+        submitted_at: '2026-11-21T08:00:00Z',
+        url: 'https://example.com/2019.mp3',
+      }),
+      docRow({
+        ticker: 'AEP',
+        kind: 'audio',
+        status: 'pending',
+        call_date: '2019-07-25',
+        url: 'https://example.com/2019-july.mp3',
+      }),
+      docRow({
+        ticker: 'AEP',
+        kind: 'audio',
+        status: 'pending',
+        call_date: '2026-10-28',
+        url: 'https://example.com/new.mp3',
+      }),
+    ])
+    const now = new Date('2026-11-21T09:00:00Z')
+    expect(await assemblySpend(db, now, 'monthly')).toBe(0)
+    expect(await assemblySpend(db, now, 'backfill')).toBeCloseTo(BACKFILL_SPEND_CAP_USD - 0.1, 6)
+    const head = new Uint8Array(65536)
+    head.set([0xff, 0xfb, 0xb0, 0x00])
+    const posted: string[] = []
+    const fetch = async (_url: string | URL | Request, init?: RequestInit) => {
+      if (init?.method === 'POST') {
+        posted.push(JSON.parse(String(init.body)).audio_url)
+        return new Response(`{"id":"00000000-0000-4000-8000-00000000000${posted.length}"}`)
+      }
+      return new Response(head, {
+        status: 206,
+        headers: { 'content-range': 'bytes 0-65535/76030272' },
+      })
+    }
+    const out = await runAudio(
+      db,
+      depsWith({ assemblyKey: 'k', fetch: fetch as typeof globalThis.fetch }),
+    )
+    // The new call goes on the month's cap; the old one would pass the backfill's ceiling.
+    expect(posted).toEqual(['https://example.com/new.mp3'])
+    expect(out.backfill_spent_usd).toBeCloseTo(BACKFILL_SPEND_CAP_USD - 0.1, 6)
+    const events = await db.select().from(schema.opsEvents)
+    expect(events.map((e) => e.detail)).toEqual([expect.stringMatching(/backfill ceiling/)])
   })
 
   it('sends nothing to AssemblyAI without a key', async () => {

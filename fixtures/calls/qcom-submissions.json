@@ -1,0 +1,48 @@
+{
+ "cik": "0000804328",
+ "name": "QUALCOMM INC/DE",
+ "filings": {
+  "recent": {
+   "accessionNumber": [
+    "0000804328-26-000127",
+    "0000804328-26-000085"
+   ],
+   "filingDate": [
+    "2026-11-04",
+    "2026-07-29"
+   ],
+   "form": [
+    "8-K",
+    "8-K"
+   ],
+   "items": [
+    "2.02,9.01",
+    "2.02,9.01"
+   ],
+   "primaryDocument": [
+    "qcom-20261104.htm",
+    "qcom-20260729.htm"
+   ]
+  },
+  "files": [
+   {
+    "name": "CIK0000804328-submissions-001.json",
+    "filingCount": 2004,
+    "filingFrom": "2009-10-02",
+    "filingTo": "2018-10-07"
+   },
+   {
+    "name": "CIK0000804328-submissions-002.json",
+    "filingCount": 2001,
+    "filingFrom": "2003-02-11",
+    "filingTo": "2009-09-30"
+   },
+   {
+    "name": "CIK0000804328-submissions-003.json",
+    "filingCount": 223,
+    "filingFrom": "1995-02-08",
+    "filingTo": "2003-02-09"
+   }
+  ]
+ }
+}
