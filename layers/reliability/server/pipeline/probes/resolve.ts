@@ -25,7 +25,7 @@ import {
 /** One model in the OpenRouter catalog, as the openrouter-models parser reads it. */
 export type OpenRouterModelRow = ReturnType<typeof parseOpenRouter>['rows'][number]
 
-export const CATALOG_SOURCE_ID = 'openrouter-models'
+const CATALOG_SOURCE_ID = 'openrouter-models'
 
 /** Spooled per lab and run: no catalog row serves the class map's flagship, or it has no price. */
 export const PROBE_MODEL_UNRESOLVED_KIND = 'probe_model_unresolved'
@@ -44,7 +44,7 @@ export interface ProbeSkip {
   detail: string
 }
 
-export interface ResolvedTargets {
+interface ResolvedTargets {
   targets: ProbeTarget[]
   skipped: ProbeSkip[]
 }

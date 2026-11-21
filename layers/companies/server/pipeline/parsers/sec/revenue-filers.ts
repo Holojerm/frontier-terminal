@@ -17,7 +17,7 @@ import type { CikWhitelist } from './whitelist'
 // today's block; an as_of read before that day reads the lab as untagged,
 // which is what the block said then.
 
-export type FilerRelation = 'issuer' | 'parent'
+type FilerRelation = 'issuer' | 'parent'
 
 export interface RevenueFiler {
   ticker: string

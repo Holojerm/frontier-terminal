@@ -31,7 +31,7 @@ export const PROBE_MAX_TOKENS = 160
 export const PROBE_TIMEOUT_MS = 45_000
 
 /** Where a lab's working day falls, for the peak and off-peak hours below. */
-export type ProbeMarket = 'americas' | 'europe' | 'china'
+type ProbeMarket = 'americas' | 'europe' | 'china'
 
 export interface ProbeWindow {
   /** UTC hours (0–23) counted as the working day. */
@@ -159,7 +159,7 @@ export const PROBE_TARGETS: readonly ProbeTargetSpec[] = [
   { lab: 'moonshot', provider: 'moonshotai', effort: 'none', note: null, market: 'china' },
 ]
 
-export interface ProbeGap {
+interface ProbeGap {
   lab: LabId
   /** The model the owner chose for this lab, unprobed. */
   model: string

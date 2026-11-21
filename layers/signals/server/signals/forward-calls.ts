@@ -23,7 +23,7 @@ export const FORWARD_CALLS = REGISTERED_CALLS
 export const KIND_FORWARD_CALLS_FAILED = 'forward_calls_failed'
 
 /** The call as its forward_calls row, written at `at`. */
-export function callRow(
+function callRow(
   c: ForwardCall,
   appUrl: string,
   at: string,
@@ -49,7 +49,7 @@ export function callRow(
   }
 }
 
-export function callOf(row: typeof tables.forwardCalls.$inferSelect): ForwardCall {
+function callOf(row: typeof tables.forwardCalls.$inferSelect): ForwardCall {
   return {
     id: row.id,
     rule: row.rule as ForwardCall['rule'],
@@ -139,7 +139,7 @@ export interface Settled {
 }
 
 /** One score row per method for a settled call. */
-export function scoreRows(
+function scoreRows(
   call: ForwardCall,
   actual: Settled,
   now: Date,

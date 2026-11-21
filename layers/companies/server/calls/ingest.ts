@@ -72,7 +72,7 @@ import {
   type DocSentence,
 } from './text'
 
-export const KIND_CALL_READ_FAILED = 'call_read_failed'
+const KIND_CALL_READ_FAILED = 'call_read_failed'
 export const KIND_ASSEMBLYAI_CREDITS = 'assemblyai_credits'
 
 /**
@@ -82,7 +82,7 @@ export const KIND_ASSEMBLYAI_CREDITS = 'assemblyai_credits'
  * transcript PDF about 20). The 2018 backfill, about 2,100 filings and 2,600
  * documents, drains in about 60 runs, newest first, with any new call read first.
  */
-export const CALL_LIMITS = {
+const CALL_LIMITS = {
   submissions: 3,
   indexPages: 40,
   textDocs: 40,
@@ -90,12 +90,12 @@ export const CALL_LIMITS = {
   conceptReads: 20,
 }
 export type CallLimits = typeof CALL_LIMITS
-export const RETRY_AFTER_MS = 86_400_000
+const RETRY_AFTER_MS = 86_400_000
 /** Facts kept from a company-concept document: a year before the backfill, so a 2018 growth guide has its base. */
 export const FACTS_SINCE = '2017-01-01'
-export const MAX_ATTEMPTS = 3
+const MAX_ATTEMPTS = 3
 /** A text document over this is not a transcript (Hut 8 posts 12 MB ones). */
-export const DOC_MAX_BYTES = 16 * 1024 * 1024
+const DOC_MAX_BYTES = 16 * 1024 * 1024
 /** The call sources read here; `release` rows are the hyperscaler capex reader's. */
 export const CALL_SOURCES = ['exhibit', 'transcript', 'remarks', 'audio'] as const
 
@@ -124,7 +124,7 @@ export interface CallDeps {
   limits?: Partial<CallLimits>
 }
 
-export interface CallReadReport {
+interface CallReadReport {
   curated: number
   listed: number
   filings: number
@@ -279,7 +279,7 @@ function feedsOf(c: CallCompany): { cik: string; until: string | null }[] {
 }
 
 /** The first day a company's calls are read from. */
-export const callsSince = (c: Pick<CallCompany, 'history_from'>) =>
+const callsSince = (c: Pick<CallCompany, 'history_from'>) =>
   c.history_from && c.history_from > BACKFILL_SINCE ? c.history_from : BACKFILL_SINCE
 
 /**
@@ -610,7 +610,7 @@ const isZip = (bytes: Uint8Array) =>
   bytes[0] === 0x50 && bytes[1] === 0x4b && bytes[2] === 0x03 && bytes[3] === 0x04
 
 /** One text document's sentences: a PDF's pages, a Word file's paragraphs, or an HTML page's blocks. */
-export async function documentSentences(
+async function documentSentences(
   doc: Pick<Doc, 'url'>,
   deps: Pick<CallDeps, 'fetcher' | 'fetch' | 'userAgent'>,
 ): Promise<{ ok: true; sentences: DocSentence[] } | { ok: false; detail: string }> {

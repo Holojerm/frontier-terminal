@@ -27,7 +27,7 @@ export interface FactInput {
 }
 
 /** The non-dimensional concepts read from company facts: capex, finance leases, total backlog. */
-export const COMPANYFACTS_CONCEPTS = [
+const COMPANYFACTS_CONCEPTS = [
   'PaymentsToAcquirePropertyPlantAndEquipment',
   'PaymentsToAcquireProductiveAssets',
   'FinanceLeasePrincipalPayments',

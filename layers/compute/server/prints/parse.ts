@@ -123,9 +123,9 @@ export function parseTwseRevenue(body: string): PrintObservation[] {
 
 export const TSMC_CIK = '0001046179'
 /** The first month the backfill reads: the oldest 6-K in EDGAR's recent submissions list. */
-export const TSMC_BACKFILL_FROM = '2015-01-01'
+const TSMC_BACKFILL_FROM = '2015-01-01'
 
-export interface TsmcCandidate {
+interface TsmcCandidate {
   accession_no: string
   filed: string
   /** EDGAR's acceptance time, ISO 8601 UTC. */

@@ -18,11 +18,11 @@
 
 export type ErcotSeries = 'operational-overview' | 'monthly'
 
-export const ERCOT_ORIGIN = 'https://www.ercot.com'
-export const ERCOT_BOARD_URL = `${ERCOT_ORIGIN}/committees/board`
-export const ERCOT_PRESENTATIONS_URL = `${ERCOT_ORIGIN}/news/presentations`
+const ERCOT_ORIGIN = 'https://www.ercot.com'
+const ERCOT_BOARD_URL = `${ERCOT_ORIGIN}/committees/board`
+const ERCOT_PRESENTATIONS_URL = `${ERCOT_ORIGIN}/news/presentations`
 /** The first year whose overviews state the observed figure. */
-export const ERCOT_FIRST_YEAR = 2025
+const ERCOT_FIRST_YEAR = 2025
 
 /** The listing pages a run reads: the Board page, each earlier year's, and the presentations page. */
 export function ercotListings(now: Date): { url: string; series: ErcotSeries }[] {
@@ -70,14 +70,14 @@ export function ercotReportLinks(html: string, series: ErcotSeries): ErcotReport
   return [...out.values()].sort((a, b) => a.posted.localeCompare(b.posted))
 }
 
-export type ErcotMetric =
+type ErcotMetric =
   | 'approved_to_energize_mw'
   | 'observed_peak_mw'
   | 'observed_energized_mw'
   | 'approved_not_operational_mw'
   | 'queue_mw'
 
-export interface ErcotFact {
+interface ErcotFact {
   metric: ErcotMetric
   /** YYYY-MM */
   period: string

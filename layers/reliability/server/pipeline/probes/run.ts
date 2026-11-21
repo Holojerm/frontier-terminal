@@ -20,7 +20,7 @@ import {
   type ProbeTarget,
 } from './targets'
 
-export interface ProbeRunDeps extends Omit<ProbeDeps, 'apiKey'> {
+interface ProbeRunDeps extends Omit<ProbeDeps, 'apiKey'> {
   /** NUXT_OPENROUTER_API_KEY. Empty = nothing is probed and nothing is stored. */
   apiKey: string | undefined
   raw: RawStore

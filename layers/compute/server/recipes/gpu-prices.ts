@@ -49,7 +49,6 @@ export const gpuPricePayload = z.object({
   spot_low_usd_per_gpu_hour: z.number().positive().nullable().default(null),
   spot_high_usd_per_gpu_hour: z.number().positive().nullable().default(null),
 })
-export type GpuPricePayload = z.infer<typeof gpuPricePayload>
 
 export const gpuPriceObservation = z.object({
   key: z.string().min(1),

@@ -21,7 +21,7 @@ interface AzureItem {
  * API names the SKU, not its GPU count). An unknown size fails the run rather
  * than being divided by a guess.
  */
-export const AZURE_GPUS_PER_VM: Readonly<Record<string, number>> = {
+const AZURE_GPUS_PER_VM: Readonly<Record<string, number>> = {
   ND96: 8,
   NC40: 1,
   NCC40: 1,
@@ -29,7 +29,7 @@ export const AZURE_GPUS_PER_VM: Readonly<Record<string, number>> = {
 }
 
 /** The ND H100 v5 family is the 8-GPU SXM board; the NC families are H100 NVL cards. */
-export function azureRows(body: string): GpuRow[] {
+function azureRows(body: string): GpuRow[] {
   const doc = JSON.parse(body) as { Items?: AzureItem[]; NextPageLink?: string | null }
   if (!Array.isArray(doc.Items)) throw new Error('not an Azure retail prices page')
   if (doc.NextPageLink) throw new Error('Azure answered with more than one page')

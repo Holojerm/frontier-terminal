@@ -9,8 +9,8 @@
 // flapping site produces one "down" and one "up", not a stream of both.
 
 export const WINDOW = 3
-export const DOWN_AFTER = 2
-export const UP_AFTER = 3
+const DOWN_AFTER = 2
+const UP_AFTER = 3
 
 export interface ProbeState {
   /** Newest last: true = every request in that run passed. */

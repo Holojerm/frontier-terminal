@@ -9,7 +9,7 @@ export const WINDOW_DAYS = 7
 
 const DAY_MS = 86_400_000
 
-export interface SawIt {
+interface SawIt {
   at: string
   source_url: string
   change_id: string
@@ -22,12 +22,12 @@ export interface SawIt {
  * removed row's first sighting, weeks earlier, and that migration rewrote
  * them, so reading detected_at keeps saw-it times stable either way.
  */
-export function seenAt(change: Pick<SawItChange, 'change_type' | 'fetched_at' | 'detected_at'>) {
+function seenAt(change: Pick<SawItChange, 'change_type' | 'fetched_at' | 'detected_at'>) {
   return new Date(change.change_type === 'removed' ? change.detected_at : change.fetched_at)
 }
 
 /** When the terminal saw it: the earliest cited change row by seenAt. Ties keep the smallest id. */
-export interface SawItChange {
+interface SawItChange {
   id: string
   change_type: string
   fetched_at: string

@@ -18,7 +18,7 @@ export function rootForm(form: string): string {
  * private issuer's annual report (Alibaba's), the 10-K's counterpart. Its 6-K
  * is not tracked: 122 of BABA's newest 200 filings are 6-Ks (results,
  * buyback tallies, notices), and none carries a form-level signal. */
-export const TRACKED_FORMS: readonly string[] = ['S-1', '424B4', '10-Q', '10-K', '20-F', '8-K']
+const TRACKED_FORMS: readonly string[] = ['S-1', '424B4', '10-Q', '10-K', '20-F', '8-K']
 
 export function isTrackedForm(form: string): boolean {
   return TRACKED_FORMS.includes(rootForm(form))

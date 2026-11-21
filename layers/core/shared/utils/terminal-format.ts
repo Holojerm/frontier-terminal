@@ -4,7 +4,7 @@
 //
 // SSR note: a relative label needs a clock, and the server's clock is not
 // the reader's. Components pass `now = null` on the server and set it after
-// mount (layers/core/app/composables/useNow.ts), so first paint is the absolute form and
+// mount (layers/core/app/composables/useClock.ts), so first paint is the absolute form and
 // a hydration mismatch on a provenance stamp cannot happen.
 //
 // The reader's zone is the same story. Page HTML is cached and shared, so the

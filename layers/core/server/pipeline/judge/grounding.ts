@@ -40,7 +40,7 @@ export interface AlertGroundingRejection {
   detail: string
 }
 
-export interface AlertGroundingResult {
+interface AlertGroundingResult {
   accepted: JudgeAlert[]
   rejected: AlertGroundingRejection[]
 }
@@ -66,7 +66,7 @@ const clockKey = (clock: string) => clock.replace(/^(\d):/, '0$1:')
  * under 60. A timestamp's date stays in the text, where its parts still
  * ground a printed date; its clock grounds only a clock in the alert.
  */
-export function splitClocks(text: string): { rest: string; clocks: Set<string> } {
+function splitClocks(text: string): { rest: string; clocks: Set<string> } {
   const clocks = new Set<string>()
   const keep = (clock: string) => {
     const key = clockKey(clock)
@@ -87,7 +87,7 @@ export function splitClocks(text: string): { rest: string; clocks: Set<string> }
 }
 
 /** Identifier words joined by "-", "." or "/" that carry a digit, lowercased. */
-export function slugLikeTokens(text: string): Set<string> {
+function slugLikeTokens(text: string): Set<string> {
   const tokens = new Set<string>()
   for (const m of text.toLowerCase().matchAll(/\b[a-z][a-z0-9]*(?:[-./][a-z0-9]+)+\b/g)) {
     if (/\d/.test(m[0]!)) tokens.add(m[0]!)
@@ -95,7 +95,7 @@ export function slugLikeTokens(text: string): Set<string> {
   return tokens
 }
 
-export function quotedSpans(text: string): string[] {
+function quotedSpans(text: string): string[] {
   return [...text.matchAll(/"([^"]+)"/g)].map((m) => m[1]!)
 }
 
@@ -122,7 +122,7 @@ function spanIsGrounded(span: string, corpusLower: string): boolean {
  * as an invented number (issue #54). Only slugs count, so a date's
  * "2026-10" never grounds 2026.1.
  */
-export function slugVersions(text: string): Set<string> {
+function slugVersions(text: string): Set<string> {
   const versions = new Set<string>()
   for (const slug of slugLikeTokens(text)) {
     for (const m of slug.matchAll(/(?<![\d.])(\d+)-(\d+)(?![\d.])/g)) {

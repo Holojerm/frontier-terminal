@@ -21,18 +21,18 @@ import { sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 
-export const DATABENTO_BASE = 'https://hist.databento.com/v0'
-export const EQUS_DATASET = 'EQUS.SUMMARY'
-export const ITCH_DATASET = 'XNAS.ITCH'
-export const EQUS_FROM = '2024-07-01'
-export const ITCH_FROM = '2018-05-01'
+const DATABENTO_BASE = 'https://hist.databento.com/v0'
+const EQUS_DATASET = 'EQUS.SUMMARY'
+const ITCH_DATASET = 'XNAS.ITCH'
+const EQUS_FROM = '2024-07-01'
+const ITCH_FROM = '2018-05-01'
 export const ITCH_THROUGH = '2024-06-30'
 /** Symbols backfilled a run: about 1,500 sessions each, so a run stays well inside a cron invocation. */
 export const BACKFILL_PER_RUN = 16
 /** Symbols per request on a symbol's first daily pull, which asks for the whole dataset. */
-export const FIRST_PULL_BATCH = 12
+const FIRST_PULL_BATCH = 12
 /** Sessions re-pulled on each daily run, for prints revised after the fact. */
-export const REPULL_DAYS = 7
+const REPULL_DAYS = 7
 
 /** The benchmarks every abnormal return is measured against. */
 export const BENCHMARKS = ['SPY', 'QQQ'] as const
@@ -95,9 +95,7 @@ export const MARKET_SYMBOLS = [
 ] as const
 
 /** A symbol that traded under another ticker before a date (inclusive). */
-export const SYMBOL_ALIASES: Readonly<
-  Record<string, readonly { symbol: string; until: string }[]>
-> = {
+const SYMBOL_ALIASES: Readonly<Record<string, readonly { symbol: string; until: string }[]>> = {
   META: [{ symbol: 'FB', until: '2022-06-08' }],
   // II-VI took Coherent's ticker when it bought Coherent; COHR before then is the old company.
   COHR: [{ symbol: 'IIVI', until: '2022-09-07' }],
@@ -109,7 +107,7 @@ export const SYMBOL_ALIASES: Readonly<
  * company, a spin-off the closes don't adjust for, or thin prints on the
  * Nasdaq feed before a listing moved.
  */
-export const HISTORY_FROM: Readonly<Record<string, { date: string; why: string }>> = {
+const HISTORY_FROM: Readonly<Record<string, { date: string; why: string }>> = {
   CORZ: { date: '2024-01-24', why: 'relisted out of bankruptcy; the old equity was cancelled' },
   HUT: { date: '2023-12-04', why: 'Hut 8 Corp, the merged company, replaced Hut 8 Mining' },
   DELL: { date: '2021-11-02', why: 'the VMware spin-off, which the closes don’t adjust for' },
@@ -120,7 +118,7 @@ export const HISTORY_FROM: Readonly<Record<string, { date: string; why: string }
 }
 
 /** Overnight moves unexplainedJumps() would flag that are real: checked against the news, not a split. */
-export const CONFIRMED_MOVES: readonly string[] = [
+const CONFIRMED_MOVES: readonly string[] = [
   'CRDO 2023-02-15', // guidance cut on a customer's lower orders
   'CIFR 2022-05-10', // the May 2022 crypto selloff
 ]
@@ -130,7 +128,7 @@ export const CONFIRMED_MOVES: readonly string[] = [
  * became `ratio` shares, so every close before it is divided by `ratio`.
  * unexplainedJumps() flags any overnight move this list doesn't account for.
  */
-export const KNOWN_SPLITS: readonly { symbol: string; date: string; ratio: number }[] = [
+const KNOWN_SPLITS: readonly { symbol: string; date: string; ratio: number }[] = [
   { symbol: 'NVDA', date: '2021-07-20', ratio: 4 },
   { symbol: 'NVDA', date: '2024-06-10', ratio: 10 },
   { symbol: 'AVGO', date: '2024-07-15', ratio: 10 },
@@ -142,14 +140,14 @@ export const KNOWN_SPLITS: readonly { symbol: string; date: string; ratio: numbe
   { symbol: 'ETR', date: '2024-12-13', ratio: 2 },
 ]
 
-export interface Bar {
+interface Bar {
   symbol: string
   date: string
   close: number
   volume: number
 }
 
-export interface MarketDeps {
+interface MarketDeps {
   apiKey: string
   fetch: typeof fetch
   now: Date
@@ -163,7 +161,7 @@ function authHeader(apiKey: string): string {
   return `Basic ${btoa(`${apiKey}:`)}`
 }
 
-export interface CsvBar {
+interface CsvBar {
   ts: string
   close: number
   volume: number
@@ -174,7 +172,7 @@ export interface CsvBar {
  * Reads CSV lines into bars, header first. Fed a line at a time, so a large
  * response is parsed as it streams and never held whole.
  */
-export function csvReader(onBar: (bar: CsvBar) => void) {
+function csvReader(onBar: (bar: CsvBar) => void) {
   let cols: { ts: number; close: number; volume: number; symbol: number } | null = null
   return (line: string) => {
     if (!line) return
@@ -219,7 +217,7 @@ async function eachLine(res: Response, onLine: (line: string) => void): Promise<
 }
 
 /** Waits before each retry of a Databento request that failed with a gateway error. */
-export const RETRY_DELAYS_MS = [2_000, 8_000] as const
+const RETRY_DELAYS_MS = [2_000, 8_000] as const
 
 /**
  * A request retried on 429 and 5xx. Databento's edge answers a slow query with
@@ -259,7 +257,7 @@ const post = (
  * Where a dataset's data ends now, as the ISO instant Databento gives. A
  * request whose end is later is refused (422), so every pull is clamped to it.
  */
-export async function datasetEnd(
+async function datasetEnd(
   deps: Pick<MarketDeps, 'apiKey' | 'fetch' | 'sleep'>,
   dataset: string,
   schema: string,
@@ -279,7 +277,7 @@ export async function datasetEnd(
 }
 
 /** One timeseries.get_range request as CSV, streamed row by row. Throws with Databento's message, never the key. */
-export async function getRange(
+async function getRange(
   deps: Pick<MarketDeps, 'apiKey' | 'fetch' | 'sleep'>,
   q: { dataset: string; symbols: readonly string[]; schema: string; start: string; end: string },
   onBar: (bar: CsvBar) => void,
@@ -376,7 +374,7 @@ const ROWS_PER_INSERT = 400
  * Every value is checked against a strict pattern or is a finite number
  * before it is written into the SQL.
  */
-export async function storeBars(
+async function storeBars(
   db: PipelineDb,
   bars: readonly Bar[],
   dataset: string,

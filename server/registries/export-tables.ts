@@ -78,8 +78,6 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ...LISTED_HIRING_TABLES,
 }
 
-export const EXPORT_TABLE_NAMES = Object.keys(EXPORT_TABLES)
-
 /**
  * The tables read from Internet Archive copies (each axis's terminal-*-archive.ts). They
  * answer as_of by when the Archive saw the page, so an instant before our

@@ -34,7 +34,7 @@ import {
 
 const READING_COLUMNS = 8
 
-export interface ClaimRun {
+interface ClaimRun {
   claim_id: string
   readings_written: number
   status: ClaimStatus
@@ -82,7 +82,7 @@ export async function storedReadings(
   return readings
 }
 
-export function evaluationOf(
+function evaluationOf(
   claim: MeasuredClaim,
   readings: readonly StoredReading[],
   now: Date,

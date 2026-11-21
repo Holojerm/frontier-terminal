@@ -33,7 +33,7 @@ export interface PollDeps extends Omit<RefreshDeps, 'db'> {
  * next tick is thirty minutes away. The careers and filings lanes are
  * six-hourly too, so they retry the same way.
  */
-export const SURVEY_LOCK_RETRY: LockRetry = { retries: 5, delayMs: 15_000 }
+const SURVEY_LOCK_RETRY: LockRetry = { retries: 5, delayMs: 15_000 }
 
 /** The six-hourly scopes: a lost tick is six hours stale, so they retry the lock and report a skip. */
 const SIX_HOURLY: ReadonlySet<PollScope> = new Set(['survey', 'careers', 'filings'])

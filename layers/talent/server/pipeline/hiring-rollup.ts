@@ -40,7 +40,7 @@ export function lastCompleteWeek(now: Date): { start: string; end: string } {
 const roles = (n: number) => `${n} role${n === 1 ? '' : 's'}`
 
 /** One lab's roll-up alert, from its week of changes and their score. */
-export function composeRollup(
+function composeRollup(
   week: { start: string; end: string },
   move: BoardMove,
   changes: readonly ChangeRow[],

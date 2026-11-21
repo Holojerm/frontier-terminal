@@ -13,10 +13,10 @@ import { RATE_LIMITED_DETAIL } from '../utils/pipeline-fetch'
 //
 // Pure: callers pass the run history and the clock.
 
-export const RATE_LIMIT_COOLDOWN_MS = 60 * 60 * 1000
+const RATE_LIMIT_COOLDOWN_MS = 60 * 60 * 1000
 export const RATE_LIMIT_MAX_COOLDOWN_MS = 6 * 60 * 60 * 1000
-export const RATE_LIMIT_ALERT_AFTER_MS = 6 * 60 * 60 * 1000
-export const RATE_LIMIT_REALERT_MS = 24 * 60 * 60 * 1000
+const RATE_LIMIT_ALERT_AFTER_MS = 6 * 60 * 60 * 1000
+const RATE_LIMIT_REALERT_MS = 24 * 60 * 60 * 1000
 /**
  * Recipes run once per survey tick (every 6 hours), so the sources' six hours
  * would be a streak of two runs, one more 429 than a limiter's bad half day.

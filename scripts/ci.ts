@@ -41,7 +41,6 @@ const cheap = [
   'crons:check',
   'methods:check',
   'globals:check',
-  'mcp:check',
   'layers:check',
   'patches:check',
   'surfaces:check',

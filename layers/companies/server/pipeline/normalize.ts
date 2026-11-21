@@ -34,7 +34,7 @@ export { stableStringify }
 // whitelisted public companies, not the private big-4 labs, so the default
 // is "other". The SEC lanes override it only when a filing is a lab's own
 // (the S-1 public-flip moment): revenue-filers.ts › issuerProviderFor.
-export function normalizeFiling(
+function normalizeFiling(
   row: FilingRow,
   snapshotId: string,
   provider: Provider = 'other',
@@ -131,11 +131,7 @@ export function normalizeProspectusDetails(
 // itself carries only the filer. `val` is the whole content, so a restated
 // figure in a later filing is a new key (the accession differs), and a
 // corrected value under the SAME accession diffs as 'modified'.
-export function normalizeRevenue(
-  row: RevenueRow,
-  snapshotId: string,
-  provider: Provider,
-): EntityRow {
+function normalizeRevenue(row: RevenueRow, snapshotId: string, provider: Provider): EntityRow {
   return toEntity(
     revenueKey(row.cik, row.tag, row.accession_no, row.start, row.end, row.segment),
     'revenue',

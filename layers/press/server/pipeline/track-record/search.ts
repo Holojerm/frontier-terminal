@@ -52,10 +52,10 @@ import { TRACK_RECORD_FROM, sawIt, searchState, trackWindow, type TrackWindow } 
 export const MATERIAL_SEVERITIES = ['notable', 'critical'] as const
 
 /** GKG files handed out per /api/gdelt/work call: about two minutes of the job's reading. */
-export const GKG_FILES_PER_CALL = 24
+const GKG_FILES_PER_CALL = 24
 
 /** Newsroom posts kept per alert, earliest first. */
-export const NEWSROOM_CANDIDATE_LIMIT = 10
+const NEWSROOM_CANDIDATE_LIMIT = 10
 
 /** Articles kept per alert: the earliest ones, since the first report is the one that counts. */
 export const PRESS_CANDIDATE_LIMIT = 20
@@ -67,14 +67,14 @@ export const titleKey = (title: string) =>
     .replace(/[^a-z0-9]+/g, ' ')
     .trim()
 
-export interface AlertForSearch {
+interface AlertForSearch {
   id: string
   created_at: string
   changes: ChangeRow[]
 }
 
 /** Notable and critical alerts since TRACK_RECORD_FROM, oldest first, with their cited rows. */
-export async function materialAlerts(db: PipelineDb): Promise<AlertForSearch[]> {
+async function materialAlerts(db: PipelineDb): Promise<AlertForSearch[]> {
   const alerts = await db
     .select({
       id: tables.alerts.id,
@@ -104,7 +104,7 @@ export async function materialAlerts(db: PipelineDb): Promise<AlertForSearch[]> 
   }))
 }
 
-export interface NewsroomPost {
+interface NewsroomPost {
   key: string
   title: string
   link: string
@@ -115,7 +115,7 @@ export interface NewsroomPost {
 }
 
 /** Stored newsroom posts of `recipeIds` published inside the window. */
-export async function newsroomPosts(
+async function newsroomPosts(
   db: PipelineDb,
   recipeIds: readonly string[],
   window: TrackWindow,
@@ -151,15 +151,12 @@ export async function newsroomPosts(
 }
 
 /** The newsroom recipes for the labs an alert's rows belong to. */
-export function newsroomsFor(changes: readonly ChangeRow[]): string[] {
+function newsroomsFor(changes: readonly ChangeRow[]): string[] {
   return [...new Set(changes.map((c) => NEWSROOM_OF[c.provider]?.id).filter(Boolean))] as string[]
 }
 
 /** Posts that carry one of the alert's `what` phrases, earliest first, capped. */
-export function newsroomCandidates(
-  posts: readonly NewsroomPost[],
-  terms: SearchTerms,
-): NewsroomPost[] {
+function newsroomCandidates(posts: readonly NewsroomPost[], terms: SearchTerms): NewsroomPost[] {
   return posts
     .filter((p) => matchesWhat(`${p.title} ${p.summary}`, terms))
     .slice(0, NEWSROOM_CANDIDATE_LIMIT)
@@ -180,11 +177,11 @@ async function searchesOf(db: PipelineDb) {
     .from(tables.trackRecordSearches)
 }
 
-export interface SearchDeps {
+interface SearchDeps {
   now: () => Date
 }
 
-export interface SearchRunReport {
+interface SearchRunReport {
   /** Newsroom searches written this run. */
   newsroom: number
   /** GDELT searches written this run: alerts whose window's files have all been read. */
@@ -250,7 +247,7 @@ const nextAfter = (last: string | null) =>
   last ? gkgStamp(Date.parse(stampIso(last)) + GKG_SLOT_MS) : gkgStamp(Date.parse(GKG_FROM))
 
 /** The quarter hours whose file is due and not read yet, oldest first. */
-export function unreadStamps(now: Date, last: string | null): string[] {
+function unreadStamps(now: Date, last: string | null): string[] {
   return gkgSlots(now, stampIso(nextAfter(last)))
 }
 
@@ -456,7 +453,7 @@ async function pressCandidates(
   return out
 }
 
-export interface GkgWork {
+interface GkgWork {
   files: { stamp: string; url: string }[]
   /** The words a row must carry to be posted as a mention (mentions.ts). */
   vocabulary: string[]
@@ -476,7 +473,7 @@ export async function gkgWork(
   }
 }
 
-export interface GkgFileInput {
+interface GkgFileInput {
   stamp: string
   /** When the job downloaded the file. */
   fetched_at: string
@@ -488,7 +485,7 @@ export interface GkgFileInput {
   mentions: GkgMention[]
 }
 
-export type GkgFileOutcome =
+type GkgFileOutcome =
   | {
       recorded: true
       mentions: number

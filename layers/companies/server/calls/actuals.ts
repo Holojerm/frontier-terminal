@@ -29,24 +29,24 @@ export const REVENUE_CONCEPTS = [
   'us-gaap:SalesRevenueNet',
 ] as const
 export const PPE = 'us-gaap:PaymentsToAcquirePropertyPlantAndEquipment'
-export const PRODUCTIVE = 'us-gaap:PaymentsToAcquireProductiveAssets'
-export const GROSS_PROFIT = 'us-gaap:GrossProfit'
+const PRODUCTIVE = 'us-gaap:PaymentsToAcquireProductiveAssets'
+const GROSS_PROFIT = 'us-gaap:GrossProfit'
 export const RPO = 'us-gaap:RevenueRemainingPerformanceObligation'
 
 /** A single guided figure is met within this many percent; a guided percentage within half a point. */
-export const ABOUT_TOLERANCE_PCT = 5
-export const ABOUT_TOLERANCE_POINTS = 0.5
+const ABOUT_TOLERANCE_PCT = 5
+const ABOUT_TOLERANCE_POINTS = 0.5
 /** A dollar figure further than this from the filed total is some other measure, not a miss. */
-export const NOT_SAME_MEASURE = 0.6
+const NOT_SAME_MEASURE = 0.6
 /** A guided percentage further than this many points from the filed one is some other measure too. */
-export const NOT_SAME_POINTS = 20
+const NOT_SAME_POINTS = 20
 /** A period ended this long ago with no filed figure is unscored, not open. */
 export const NO_FILING_DAYS = 150
 
 const EXPOSURE = new Set<string>(Object.keys(GUIDANCE_MEASURES))
 
 /** The concepts a metric is scored from, for one ticker. Null when it isn't scored. */
-export function conceptsFor(ticker: string, metric: string): string[] | null {
+function conceptsFor(ticker: string, metric: string): string[] | null {
   switch (metric) {
     case 'revenue':
       return [...REVENUE_CONCEPTS]
@@ -308,7 +308,7 @@ export function actualFor(
   }
 }
 
-export type ScoreState = 'met' | 'above' | 'below'
+type ScoreState = 'met' | 'above' | 'below'
 
 /** The guided figure against the filed one: a state, and the error as a share. */
 export function score(

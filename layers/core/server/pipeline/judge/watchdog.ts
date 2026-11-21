@@ -21,7 +21,7 @@ import { JUDGE_OPS_PATH } from './submit'
 // cleanly), so this is the only check that sees it.
 
 const HOUR_MS = 60 * 60 * 1000
-export const JUDGE_SILENCE_MS = 3 * HOUR_MS
+const JUDGE_SILENCE_MS = 3 * HOUR_MS
 
 export const judgeFreshnessCheck: FreshnessCheck = {
   key: 'judge',
