@@ -23,6 +23,20 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.20.0 (2026-11-21)
+
+A signal scorecard at /signals.
+
+- New table `signal_results`, one row per series, ticker, horizon (1, 5, 20
+  and 60 trading days) and sample (`in`, or `out` for the held-out newest
+  third). `estimate` is the correlation between the series' change and the
+  ticker's return less SPY's, or for an event series the mean abnormal
+  return. A result under the minimum sample is `thin`, with no estimate.
+- New route `/api/signals` and MCP tool `get_signals`: every registered
+  series with its results, the number of tests run, and the forward calls.
+- Statistics only. The daily closes behind them are licensed for internal use
+  and aren't published.
+
 ## 1.19.0 (2026-11-21)
 
 Package downloads made comparable. Raw counts of every growing package rise

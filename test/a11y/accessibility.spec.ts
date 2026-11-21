@@ -48,6 +48,7 @@ const ROUTES = [
   '/revenue',
   '/exposure',
   '/ground-truth',
+  '/signals',
   '/hiring',
   '/releases',
   '/rankings',

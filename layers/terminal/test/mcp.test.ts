@@ -206,6 +206,7 @@ describe('tools/list', () => {
       'get_reliability',
       'get_reported',
       'get_revenue',
+      'get_signals',
       'get_spend',
       'get_status',
       'get_suppliers',
@@ -260,6 +261,7 @@ describe('tools/list', () => {
       'get_rate_limits',
       'get_pay',
       'get_parents',
+      'get_signals',
     ]) {
       expect(instructions, name).toContain(name)
     }

@@ -1,0 +1,335 @@
+// The signal registry: one entry per series the harness scores against the
+// tickers it is expected to lead. A new dataset registers by adding one entry
+// here, with a `source` the loaders in ./sources.ts already read, or a new
+// source kind there. Every ticker must be one market.ts pulls (MARKET_SYMBOLS),
+// and every series attaches to a lab, a listed company or a site
+// (layers/terminal/test/signals-registry.test.ts).
+//
+// Sources other sessions own are registered by id only: the npm and PyPI
+// recipes and their derived series (theses/download-series.ts) and the probe
+// rollups (pipeline/probes/, probe_days).
+
+import type { LabId } from '../../shared/utils/terminal-types'
+import type {
+  SignalEntityKind,
+  SignalFrequency,
+  SignalTest,
+  SignalTransform,
+} from '../../shared/utils/signals'
+
+export type SignalSource =
+  /** recipe_observations rows of one recipe and key. */
+  | { kind: 'recipe'; recipe: string; key?: string }
+  /** A derived download series by its DOWNLOAD_SERIES id (theses/download-series.ts): normalized by the control basket, or a lab's SDK share. */
+  | { kind: 'download_series'; id: string }
+  /** probe_days: the strained share, (rate_limited + failed) / probes. */
+  | { kind: 'probe_days'; lab: LabId }
+  /** OpenRouter's weekly token share for one lab (terminal-rankings.ts › rankingWeeks). */
+  | { kind: 'openrouter_share'; lab: LabId }
+  /** The daily GPU history behind /api/gpu-prices: the cross-provider median list price, or the spot share's midpoint. */
+  | { kind: 'gpu'; gpu: 'H100' | 'B200'; metric: 'median' | 'spot_share' }
+  /** Open roles on the lab's job board, from the history behind /api/hiring/history. */
+  | { kind: 'hiring'; lab: LabId }
+  /** A new model on the lab's price list: model-floor alerts. */
+  | { kind: 'launches'; lab: LabId }
+  /** A listed model's input price moving on the lab's price list (changes on `model`). */
+  | { kind: 'price_changes'; lab: LabId; direction: 'cut' | 'raise' }
+  /** Each filed revenue period the press had reported first, signed by whether the filing beat the reports. */
+  | { kind: 'revenue_vs_reported'; lab: LabId }
+
+export interface SignalDef {
+  /** Stable: results, exports and links key on it. Never reuse a retired id. */
+  id: string
+  label: string
+  entity: { kind: SignalEntityKind; id: string }
+  /** The tickers the series is expected to lead. Each one is a test, so keep the list short. */
+  tickers: readonly string[]
+  source: SignalSource
+  transform: SignalTransform
+  frequency: SignalFrequency
+  /**
+   * lead_lag correlates each period's change with forward returns. event
+   * averages the abnormal return around each event; `signed` multiplies it by
+   * the sign of the event's value first.
+   */
+  test: SignalTest
+  signed?: boolean
+  /** How a daily source folds into the series' period: summed (flows), averaged, or its last value (levels). */
+  aggregate?: 'sum' | 'mean' | 'last'
+  /**
+   * Days after a period ends before its value is public. A return is measured
+   * from the first session after that, so the test never reads a number
+   * before anyone could have.
+   */
+  available_after_days: number
+  /** When the source's history starts. */
+  history_from: string
+}
+
+/** The listed companies each lab's series are tested against: its own listing, then its closest ties in /api/listed. */
+export const LAB_TICKERS: Readonly<Partial<Record<LabId, readonly string[]>>> = {
+  anthropic: ['ANT', 'AMZN', 'GOOGL', 'AVGO'],
+  openai: ['MSFT', 'ORCL', 'NVDA', 'CRWV'],
+  google: ['GOOGL', 'AVGO', 'MRVL'],
+  meta: ['META', 'AMD', 'NBIS'],
+  xai: ['NVDA', 'DELL', 'SMCI'],
+  mistral: ['NVDA'],
+  deepseek: ['NVDA', 'AVGO'],
+}
+
+const lab = (id: LabId) => ({ kind: 'lab' as const, id })
+const tickersOf = (id: LabId): readonly string[] => LAB_TICKERS[id] ?? []
+
+/** npm downloads divided by the non-AI control basket, so a registry-wide swing cancels out. */
+const npm = (recipe: string, labId: LabId, label: string): SignalDef => ({
+  id: recipe,
+  label,
+  entity: lab(labId),
+  tickers: tickersOf(labId),
+  source: { kind: 'download_series', id: `${recipe}-normalized` },
+  transform: 'normalized',
+  frequency: 'weekly',
+  test: 'lead_lag',
+  aggregate: 'sum',
+  available_after_days: 1,
+  history_from: '2025-05-13',
+})
+
+/** A lab's core SDK as a share of the tracked labs' core SDKs on one registry. */
+const sdkShare = (recipe: string, labId: LabId, label: string, from: string): SignalDef => ({
+  id: `${recipe}-share`,
+  label,
+  entity: lab(labId),
+  tickers: tickersOf(labId),
+  source: { kind: 'download_series', id: `${recipe}-share` },
+  transform: 'share',
+  frequency: 'weekly',
+  test: 'lead_lag',
+  aggregate: 'mean',
+  available_after_days: 1,
+  history_from: from,
+})
+
+const pypi = (recipe: string, labId: LabId, label: string): SignalDef => ({
+  id: recipe,
+  label,
+  entity: lab(labId),
+  tickers: tickersOf(labId),
+  source: { kind: 'recipe', recipe },
+  transform: 'level',
+  frequency: 'weekly',
+  test: 'lead_lag',
+  aggregate: 'sum',
+  available_after_days: 1,
+  history_from: '2026-04-08',
+})
+
+const ramp = (key: string, labId: LabId, label: string): SignalDef => ({
+  id: `ramp-ai-index-${key}`,
+  label,
+  entity: lab(labId),
+  tickers: tickersOf(labId),
+  source: { kind: 'recipe', recipe: 'ramp-ai-index', key },
+  transform: 'share',
+  frequency: 'monthly',
+  test: 'lead_lag',
+  // Ramp publishes a month's index in the middle of the next month.
+  available_after_days: 20,
+  history_from: '2023-07-01',
+})
+
+const openrouter = (labId: LabId, label: string): SignalDef => ({
+  id: `openrouter-share-${labId}`,
+  label,
+  entity: lab(labId),
+  tickers: tickersOf(labId),
+  source: { kind: 'openrouter_share', lab: labId },
+  transform: 'share',
+  frequency: 'weekly',
+  test: 'lead_lag',
+  available_after_days: 1,
+  history_from: '2025-08-01',
+})
+
+const probes = (labId: LabId, label: string): SignalDef => ({
+  id: `probes-strain-${labId}`,
+  label,
+  entity: lab(labId),
+  tickers: tickersOf(labId),
+  source: { kind: 'probe_days', lab: labId },
+  transform: 'share',
+  frequency: 'weekly',
+  test: 'lead_lag',
+  aggregate: 'last',
+  available_after_days: 1,
+  history_from: '2026-11-19',
+})
+
+const hiring = (labId: LabId, label: string): SignalDef => ({
+  id: `hiring-open-roles-${labId}`,
+  label,
+  entity: lab(labId),
+  tickers: tickersOf(labId),
+  source: { kind: 'hiring', lab: labId },
+  transform: 'level',
+  frequency: 'weekly',
+  test: 'lead_lag',
+  aggregate: 'last',
+  available_after_days: 1,
+  history_from: '2026-08-25',
+})
+
+const launches = (labId: LabId, label: string): SignalDef => ({
+  id: `launches-${labId}`,
+  label,
+  entity: lab(labId),
+  tickers: tickersOf(labId),
+  source: { kind: 'launches', lab: labId },
+  transform: 'level',
+  frequency: 'event',
+  test: 'event',
+  available_after_days: 0,
+  history_from: '2026-09-22',
+})
+
+const priceCuts = (labId: LabId, label: string): SignalDef => ({
+  id: `price-cuts-${labId}`,
+  label,
+  entity: lab(labId),
+  tickers: tickersOf(labId),
+  source: { kind: 'price_changes', lab: labId, direction: 'cut' },
+  transform: 'level',
+  frequency: 'event',
+  test: 'event',
+  available_after_days: 0,
+  history_from: '2026-08-25',
+})
+
+const gpu = (
+  id: string,
+  label: string,
+  g: 'H100' | 'B200',
+  metric: 'median' | 'spot_share',
+): SignalDef => ({
+  id,
+  label,
+  entity: { kind: 'listed', id: 'NVDA' },
+  tickers: ['NVDA', 'CRWV', 'NBIS', 'ORCL'],
+  source: { kind: 'gpu', gpu: g, metric },
+  transform: metric === 'median' ? 'level' : 'share',
+  frequency: 'weekly',
+  test: 'lead_lag',
+  aggregate: 'last',
+  available_after_days: 1,
+  history_from: '2026-11-07',
+})
+
+export const SIGNALS: readonly SignalDef[] = [
+  npm('npm-anthropic-sdk', 'anthropic', '@anthropic-ai/sdk npm downloads'),
+  npm('npm-claude-code', 'anthropic', 'Claude Code npm downloads'),
+  npm('npm-claude-agent-sdk', 'anthropic', 'Claude Agent SDK npm downloads'),
+  npm('npm-openai', 'openai', 'openai npm downloads'),
+  npm('npm-codex', 'openai', 'Codex CLI npm downloads'),
+  npm('npm-openai-agents', 'openai', 'OpenAI Agents SDK npm downloads'),
+  npm('npm-google-genai', 'google', '@google/genai npm downloads'),
+  npm('npm-gemini-cli', 'google', 'Gemini CLI npm downloads'),
+  npm('npm-mistral', 'mistral', 'Mistral npm downloads'),
+  sdkShare(
+    'npm-anthropic-sdk',
+    'anthropic',
+    'Anthropic share of lab SDK npm downloads',
+    '2025-05-13',
+  ),
+  sdkShare('npm-openai', 'openai', 'OpenAI share of lab SDK npm downloads', '2025-05-13'),
+  sdkShare('npm-google-genai', 'google', 'Google share of lab SDK npm downloads', '2025-05-13'),
+  sdkShare(
+    'pypi-anthropic',
+    'anthropic',
+    'Anthropic share of lab SDK PyPI downloads',
+    '2026-04-08',
+  ),
+  sdkShare('pypi-openai', 'openai', 'OpenAI share of lab SDK PyPI downloads', '2026-04-08'),
+  pypi('pypi-anthropic', 'anthropic', 'anthropic PyPI downloads'),
+  pypi('pypi-claude-agent-sdk', 'anthropic', 'claude-agent-sdk PyPI downloads'),
+  pypi('pypi-openai', 'openai', 'openai PyPI downloads'),
+  pypi('pypi-openai-agents', 'openai', 'openai-agents PyPI downloads'),
+  pypi('pypi-google-genai', 'google', 'google-genai PyPI downloads'),
+  pypi('pypi-mistralai', 'mistral', 'mistralai PyPI downloads'),
+  pypi('pypi-xai-sdk', 'xai', 'xai-sdk PyPI downloads'),
+  ramp('anthropic', 'anthropic', 'Ramp AI Index, Anthropic adoption'),
+  ramp('openai', 'openai', 'Ramp AI Index, OpenAI adoption'),
+  ramp('xai', 'xai', 'Ramp AI Index, xAI adoption'),
+  openrouter('anthropic', 'OpenRouter token share, Anthropic'),
+  openrouter('openai', 'OpenRouter token share, OpenAI'),
+  openrouter('google', 'OpenRouter token share, Google'),
+  openrouter('xai', 'OpenRouter token share, xAI'),
+  openrouter('deepseek', 'OpenRouter token share, DeepSeek'),
+  probes('anthropic', 'Probe strain, Anthropic'),
+  probes('openai', 'Probe strain, OpenAI'),
+  probes('google', 'Probe strain, Google'),
+  hiring('anthropic', 'Open roles, Anthropic'),
+  hiring('openai', 'Open roles, OpenAI'),
+  hiring('google', 'Open roles, Google DeepMind'),
+  hiring('xai', 'Open roles, xAI'),
+  hiring('meta', 'Open roles, Meta'),
+  launches('anthropic', 'Model launches, Anthropic'),
+  launches('openai', 'Model launches, OpenAI'),
+  launches('google', 'Model launches, Google'),
+  launches('xai', 'Model launches, xAI'),
+  priceCuts('anthropic', 'Price cuts, Anthropic'),
+  priceCuts('openai', 'Price cuts, OpenAI'),
+  priceCuts('google', 'Price cuts, Google'),
+  gpu('gpu-h100-median', 'H100 median list price', 'H100', 'median'),
+  gpu('gpu-b200-median', 'B200 median list price', 'B200', 'median'),
+  gpu('gpu-h100-spot-share', 'H100 spot share', 'H100', 'spot_share'),
+  {
+    id: 'revenue-vs-reported-anthropic',
+    label: 'Anthropic filed revenue against press reports',
+    entity: lab('anthropic'),
+    tickers: tickersOf('anthropic'),
+    source: { kind: 'revenue_vs_reported', lab: 'anthropic' },
+    transform: 'change',
+    frequency: 'event',
+    test: 'event',
+    signed: true,
+    available_after_days: 0,
+    history_from: '2026-10-26',
+  },
+  {
+    id: 'revenue-vs-reported-openai',
+    label: 'OpenAI filed revenue against press reports',
+    entity: lab('openai'),
+    tickers: tickersOf('openai'),
+    source: { kind: 'revenue_vs_reported', lab: 'openai' },
+    transform: 'change',
+    frequency: 'event',
+    test: 'event',
+    signed: true,
+    available_after_days: 0,
+    history_from: '2026-10-26',
+  },
+]
+
+/** Where a series is read from, in the names /data and the exports use. */
+export function sourceLabel(source: SignalSource): string {
+  switch (source.kind) {
+    case 'recipe':
+      return `recipe_observations: ${source.recipe}${source.key ? ` (${source.key})` : ''}`
+    case 'download_series':
+      return `download_series: ${source.id}`
+    case 'probe_days':
+      return `probe_days: ${source.lab}`
+    case 'openrouter_share':
+      return 'rankings: OpenRouter weekly tokens'
+    case 'gpu':
+      return `gpu-prices history: ${source.gpu} ${source.metric === 'median' ? 'median' : 'spot share'}`
+    case 'hiring':
+      return `jobs: ${source.lab} open roles`
+    case 'launches':
+      return 'alerts: model-floor'
+    case 'price_changes':
+      return 'changes: model input price'
+    case 'revenue_vs_reported':
+      return 'ground truth: filed revenue against reported'
+  }
+}

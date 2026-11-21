@@ -321,6 +321,15 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       },
     },
   },
+  {
+    version: '1.20.0',
+    date: '2026-11-21',
+    summary:
+      'A signal scorecard. A new signal_results table has, for each registered series, each ticker it is expected to lead and each horizon (1, 5, 20 and 60 trading days), the in-sample and held-out statistic: a correlation with forward returns less SPY’s, or for events a mean abnormal return. A result under the minimum sample is thin and has no estimate. New route /api/signals and MCP tool get_signals serve it with the forward calls. Statistics only: the prices behind them aren’t published.',
+    tables: {
+      signal_results: { note: 'New table.' },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

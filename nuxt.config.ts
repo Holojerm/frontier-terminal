@@ -209,6 +209,8 @@ const SCHEDULED_TASKS: Record<string, string[]> = {
   '7 * * * *': ['probes:latency'],
   '0 4 * * *': ['seo:indexnow'],
   '29 5 * * TUE': ['power:verify'],
+  '40 6 * * *': ['signals:prices'],
+  '10 7 * * *': ['signals:run'],
 }
 
 /**

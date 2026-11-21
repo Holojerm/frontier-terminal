@@ -40,6 +40,7 @@ import { PRESS_TABLES } from '../export-tables/press'
 import { RECIPE_TABLES } from '../export-tables/recipes'
 import { EXPOSURE_TABLES } from '../export-tables/exposure'
 import { REFERENCE_TABLES } from '../export-tables/reference'
+import { SIGNAL_TABLES } from '../export-tables/signals'
 import type { ExportTable } from './terminal-export-views'
 
 /**
@@ -61,6 +62,7 @@ export const EXPORT_TABLES: Readonly<Record<string, ExportTable>> = {
   ...RECIPE_TABLES,
   ...EXPOSURE_TABLES,
   ...REFERENCE_TABLES,
+  ...SIGNAL_TABLES,
 }
 
 export const EXPORT_TABLE_NAMES = Object.keys(EXPORT_TABLES)
