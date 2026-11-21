@@ -1,17 +1,13 @@
-// What Frontier Terminal says in public, and when. The social layer
-// (layers/social) owns sending; this file only decides what to enqueue.
-//
-// Three things post, all composed from stored rows only — no model writes the
-// text, so a post can say nothing the alert page doesn't:
-//   - every critical alert: its headline and its permalink, which carries
-//     the source URL and fetch time. A judged alert waits an hour first, so
+// What Frontier Terminal posts in public, and when. The social layer (layers/social) sends;
+// this file decides what to enqueue. Posts are composed from stored rows only (no model
+// writes the text), so a post says nothing the alert page doesn't:
+//   - every critical alert: headline and permalink. A judged alert waits an hour first, so
 //     a bad call can be suppressed before it is public.
-//   - a launch of a model the vendor recommends (enqueueLaunchAlerts): the
-//     model-floor alert, the same headline-and-permalink shape.
+//   - a launch of a model the vendor recommends (enqueueLaunchAlerts), same shape.
 //   - a weekly thread: what moved, by axis, and the week's critical alerts.
 //
-// On X the link goes in a self-reply, never the lead post: X ranks posts
-// carrying an external link lower. Bluesky does not, so it keeps one post.
+// On X the link goes in a self-reply, never the lead post: X ranks posts carrying an
+// external link lower. Bluesky does not, so it keeps one post.
 
 import { and, count, desc, eq, gte, inArray, ne, sql } from 'drizzle-orm'
 
@@ -25,11 +21,10 @@ export const SOCIAL_EPOCH = '2026-11-02T00:00:00.000Z'
 export const JUDGED_HOLD_MS = 60 * 60_000
 
 /**
- * When a judged alert's hold ends: an hour after the alert was written, not
- * after created_at. created_at is the cited evidence's fetch time, which the
- * hourly judge reads up to an hour or more later, so a hold counted from it
- * was mostly spent before anyone could see the alert to suppress it. A row
- * without a write time (before the column) holds from created_at.
+ * When a judged alert's hold ends: an hour after the alert was written, not after
+ * created_at. created_at is the cited evidence's fetch time, which the hourly judge reads
+ * an hour or more later, so a hold from it was mostly spent before anyone saw the alert. A
+ * row without a write time holds from created_at.
  */
 export function heldUntil(alert: {
   rule: string
@@ -69,14 +64,12 @@ function withLink(service: SocialService, text: string, url: string): string[] {
 export const LAUNCH_POST_WINDOW_MS = 48 * 60 * 60_000
 
 /**
- * Queue each recent launch of a model its vendor recommends: a model-floor
- * alert (always notable, never critical) whose slug fills a like-for-like
- * cell in the class map in effect. Most new slugs are image, speech and
- * embedding SKUs, and none of them were ever posted; but the new flagship of a
- * tracked lab is the news this account exists for, and qwen4-max (2026-11-16)
- * went unposted like every launch before it. A launch the class map takes up
- * later (the seed, or the judge within its own 48-hour review) is posted then,
- * if still inside the window. Returns how many rows were new.
+ * Queue each recent launch of a model its vendor recommends: a model-floor alert (always
+ * notable, never critical) whose slug fills a like-for-like cell in the class map in
+ * effect. Most new slugs are image, speech and embedding SKUs, which are never posted; a
+ * tracked lab's new flagship is. A launch the class map takes up later (the seed, or the
+ * judge within its 48-hour review) is posted then, if still inside the window. Returns how
+ * many rows were new.
  */
 export async function enqueueLaunchAlerts(
   db: PipelineDb,

@@ -57,9 +57,7 @@ function tokenPrices(name: string, cell: string): Map<TokenLabel, number> | null
   return out
 }
 
-// prov defaults to the fixture manifest's record (single-arg behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead.
+// One-argument calls read the fixture's provenance, keeping the determinism gate byte-identical.
 export function parseMistralPricingMd(
   text: string,
   prov: Provenance = fixtureProvenance('mistral-pricing-md'),

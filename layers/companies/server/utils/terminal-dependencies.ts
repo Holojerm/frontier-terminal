@@ -1,12 +1,7 @@
-// The dependency graph: who the labs buy from and who funds them, built from
-// two payloads the site already serves. Lines come from /api/exposure (what a
-// public company's XBRL tags on a named counterparty). Node sizes come from
-// each company's own filing: a filer's backlog and capex from the same
-// series, a lab's aggregate obligations from its prospectus (/api/prospectus).
-//
-// Nothing here is estimated, and no press-reported deal is drawn. A line
-// exists only where a filing names the counterparty, so the figure a reader
-// expects and doesn't see is listed as a gap with the reason.
+// The dependency graph, built from /api/exposure (lines: what a filer's XBRL tags
+// on a named counterparty) and each company's own filing (node sizes; a lab's
+// obligations from /api/prospectus). Nothing is estimated and no press deal drawn:
+// a line needs a filing that names the counterparty, else it is listed as a gap.
 
 import type {
   DependenciesData,

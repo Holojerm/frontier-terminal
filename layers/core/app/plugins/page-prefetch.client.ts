@@ -1,24 +1,13 @@
-// Prefetch a page's data on link intent, so a client-side navigation does not
-// start its API calls only at the click.
+// Prefetch a page's data on link intent. NuxtLink prefetches a route's JS, not
+// its data, so after the click each useFetch downloads untrimmed API responses
+// from the browser (13 calls and 3.2 s for /labs/anthropic on a throttled phone).
 //
-// NuxtLink already prefetches a route's JS when the link scrolls into view, but
-// not its data: each page's useFetch calls run after the click, from the
-// browser, and download the full API responses that a server render would
-// have trimmed (13 calls and 3.2 s for /labs/anthropic on a throttled phone).
-//
-// On intent (a pointer resting on the link, focus, touchstart, mousedown) this
-// asks /api/page-data for the target page's hydration payload: one request,
-// served from the stamp-keyed HTML cache when the page is there, holding every
-// useFetch result already transformed. On the navigation it hands that data to
-// Nuxt through `nuxtApp.static.data`, the slot Nuxt's own payload plugin fills
-// for prerendered routes and the one useFetch's default getCachedData reads on
-// a client navigation. The seeded keys are removed once the page has rendered,
-// so later navigations fetch fresh data.
-//
-// Each prefetch can be a page render, which spends the visitor's API rate
-// limit on an HTML-cache miss, so a pointer has to rest on the link, a path
-// runs once per TTL, concurrency and the per-minute count are capped, and
-// Save-Data or slow connections are skipped.
+// On intent (a resting pointer, focus, touchstart, mousedown) this asks
+// /api/page-data for the target's hydration payload, seeds it into
+// `nuxtApp.static.data` (what useFetch's default getCachedData reads on a client
+// navigation), and removes it once the page renders. A prefetch can spend the
+// visitor's rate limit on a render, so paths run once per TTL, concurrency and
+// the per-minute count are capped, and Save-Data or slow connections are skipped.
 
 // `parsePayload` is Nuxt's own reviver-aware payload parser; it is not part of
 // the public `#app` exports, so this reaches into the composable directly.

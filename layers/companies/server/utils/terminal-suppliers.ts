@@ -1,9 +1,6 @@
-// The suppliers table: the chip, hardware and compute-rental companies whose
-// own SEC filings tie them to a lab or a cloud. The rows start from the
-// hand-read file (../curated/suppliers.json) and grow as the filings lane
-// reads each company's new documents and the judge reads them
-// (../suppliers/). Nothing here is estimated or joined to another source: a
-// company's row says what its filing says, in the filing's words.
+// The suppliers table: chip, hardware and compute-rental companies whose own SEC
+// filings tie them to a lab or a cloud, from the hand-read file
+// (../curated/suppliers.json) plus what the judge reads (../suppliers/).
 
 import { currentPassages, rowOf } from '../suppliers/store'
 

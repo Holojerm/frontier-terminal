@@ -1,12 +1,11 @@
 import { index, primaryKey, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { provenance } from '../../../../core/server/db/tables/columns'
 
-// Claim readings — one row per (claim, data date): the measured value a
-// thesis claim is checked against (layers/theses/server/theses). The newest date is
-// rewritten while its data is still moving (OpenRouter revises trailing
-// days); a reading whose inputs cannot be recomputed later — the spend
-// premium joins today's list prices — is only ever written for the newest
-// date, so a later price change never rewrites a past week.
+// Claim readings, one row per (claim, data date): the measured value a thesis claim is
+// checked against (layers/theses/server/theses). The newest date is rewritten while its
+// data is still moving (OpenRouter revises trailing days). A reading whose inputs cannot
+// be recomputed later (the spend premium joins today's list prices) is only ever written
+// for the newest date, so a later price change never rewrites a past week.
 export const claimReadings = sqliteTable(
   'claim_readings',
   {
@@ -25,9 +24,9 @@ export const claimReadings = sqliteTable(
   ],
 )
 
-// Claim status changes — append-only, one row each time a claim's computed
-// status differs from its previous row. The thesis's revision trail and the
-// weekly digest's input; the current status is the newest row per claim.
+// Claim status changes, append-only: one row each time a claim's computed status differs
+// from its previous row. The thesis's revision trail and the weekly digest's input; the
+// current status is the newest row per claim.
 export const claimStatusChanges = sqliteTable(
   'claim_status_changes',
   {
@@ -43,12 +42,12 @@ export const claimStatusChanges = sqliteTable(
   (t) => [index('claim_status_changes_claim_idx').on(t.claim_id, t.changed_at)],
 )
 
-// Claim verdicts — append-only, one per (claim, subject): the judge's rating
-// of one candidate event for a judged thesis claim (layers/theses/server/theses/verdicts.ts).
-// subject is what the verdict is about — the change for a price cut, the
-// incident's entity_key for an outage, so an incident updated twice is rated
-// once. facts are what the Worker computed (a cut's size, an outage's hours);
-// rationale is the judge's, grounded against the cited change and the facts.
+// Claim verdicts, append-only, one per (claim, subject): the judge's rating of one
+// candidate event for a judged thesis claim (layers/theses/server/theses/verdicts.ts).
+// subject is what the verdict is about: the change for a price cut, the incident's
+// entity_key for an outage, so an incident updated twice is rated once. facts are what
+// the Worker computed (a cut's size, an outage's hours); rationale is the judge's,
+// grounded against the cited change and the facts.
 export const claimVerdicts = sqliteTable(
   'claim_verdicts',
   {

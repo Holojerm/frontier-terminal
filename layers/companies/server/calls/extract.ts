@@ -1,21 +1,17 @@
 // Forward-looking numeric guidance in a call document, read deterministically.
 //
-// A sentence is taken when it looks ahead (expect, anticipate, guidance,
-// outlook…), does not report a result already in (was, came in, exceeded…),
-// isn't a question, and states an amount after a metric it names: capex,
-// revenue (total, a segment's, or an AI line), gross margin, or backlog. The
-// amount is the first after the metric word, as a range ("$73 - 76 billion",
-// "between 11% and 13%"), a figure with a band ("$108 billion, plus or minus
-// 2%", "74%, plus or minus 50 basis points"), or one figure (about, at least,
-// at most). A growth rate on revenue is kept as growth, year on year or
-// sequential, as the sentence says.
+// A sentence is taken when it looks ahead (expect, anticipate, guidance, outlook…), does
+// not report a result already in (was, came in, exceeded…), isn't a question, and states
+// an amount after a metric it names: capex, revenue (total, a segment's, or an AI line),
+// gross margin, or backlog. The amount is the first after the metric word: a range
+// ("$73 - 76 billion", "between 11% and 13%"), a figure with a band ("$108 billion, plus
+// or minus 2%", "74%, plus or minus 50 basis points"), or one figure (about, at least, at
+// most). A growth rate on revenue is kept as growth, year on year or sequential.
 //
-// The period is the one the sentence names ("the fourth quarter", "Q4",
-// "fiscal 2027", "full year"), else the one a nearby outlook sentence names,
-// else the next quarter for a "plus or minus" figure. A period that isn't
-// after the quarter the call reported is a result, not guidance, and is
-// dropped. Anything else the parser can't place is left for the judge
-// (review.ts) rather than guessed. Pure.
+// The period is the one the sentence names ("the fourth quarter", "Q4", "fiscal 2027",
+// "full year"), else a nearby outlook sentence's, else the next quarter for a "plus or
+// minus" figure. A period not after the reported quarter is a result and is dropped.
+// Anything else the parser can't place is left for the judge (review.ts). Pure.
 
 import { fiscalPeriod, nextQuarter, quarterEnding, type FiscalPeriod } from './periods'
 import type { DocSentence } from './text'

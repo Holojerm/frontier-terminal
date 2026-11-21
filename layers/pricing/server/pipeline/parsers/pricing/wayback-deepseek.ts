@@ -21,14 +21,12 @@ import { htmlGridTables, htmlText, stripInvisible } from './html-table'
 //   spanning every model column.
 //   from mid-2026: transposed, a PEAK and an OFF-PEAK band, the live layout.
 //
-// Prices are read as printed in USD; a CNY table is never read and a CNY
-// cell where USD is expected throws. As live (deepseek-pricing.ts), the
-// cache-miss input is the input price, the cache-hit input is the cached-
-// input price, and the list price is the untiered row. The band the page
-// called DISCOUNT PRICE in 2025 (UTC 16:30-00:30, 50% or 75% off) and
-// OFF-PEAK from 2026 is in both cases a lower price for set hours of the day,
-// which the live parser files as tier `off_peak`; both are filed there, and
-// each row keeps the band's printed label and hours in notes.
+// Prices are read as printed in USD; a CNY table is never read and a CNY cell where USD is
+// expected throws. As live (deepseek-pricing.ts), the cache-miss input is the input price, the
+// cache-hit input the cached-input price, and the list price the untiered row. DISCOUNT PRICE
+// (2025, UTC 16:30-00:30, 50% or 75% off) and OFF-PEAK (2026) are both a lower price for set
+// hours of the day, filed as tier `off_peak` as live; each row keeps the band's printed label
+// and hours in notes.
 
 const MODEL = /^deepseek-[a-z0-9][a-z0-9.-]*$/
 

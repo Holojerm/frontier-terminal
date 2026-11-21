@@ -1,13 +1,7 @@
-// What a lab's own registration filings print beyond revenue: the whole
-// statement of operations, commitments, customer concentration, share counts
-// and risk-factor headings (layers/companies/server/pipeline/parsers/sec/prospectus.ts).
-//
-// The statement follows the revenue axis's rule (terminal-revenue.ts): each
-// period once, from the newest filing that reports it, the earlier filing's
-// figures kept as superseded. A commitment schedule is shown per as-of date
-// from the newest filing that states it; concentration, shares and the
-// risk-factor headings from the newest filing; and each amendment's
-// risk-factor headings are compared with the filing before it.
+// What a lab's registration filings print beyond revenue
+// (layers/companies/server/pipeline/parsers/sec/prospectus.ts). Each period and
+// commitment date comes from the newest filing that reports it (earlier figures
+// kept as superseded), like terminal-revenue.ts.
 
 import { inArray } from 'drizzle-orm'
 import type { z } from 'zod'

@@ -1,13 +1,10 @@
 #!/usr/bin/env bun
 // One-off backfill of history from before this site watched the labs, from
 // the Internet Archive's captures of each lab's own pages
-// (layers/terminal/server/pipeline/archive/): API price lists (eras.ts, rows
-// in archived_prices), job boards (hiring-eras.ts, counts in
-// archived_hiring), GPU rental price pages (gpu-eras.ts, prices in
-// archived_gpu_prices), status feeds (status-eras.ts, one row per
-// incident in archived_incidents) and rate-limit pages (limits-eras.ts, rows
-// in archived_rate_limits). Never on a cron: the owner runs it, and
-// re-runs are idempotent.
+// (layers/terminal/server/pipeline/archive/): API price lists, job boards, GPU
+// rental price pages, status feeds (one row per incident) and rate-limit pages,
+// each with its own eras file and archive table. The owner runs it,
+// never a cron; re-runs are idempotent.
 //
 //   bun run backfill:wayback -- --plan                     list what would be fetched
 //   bun run backfill:wayback                               local dev DB (.data/db/sqlite.db)
@@ -25,13 +22,13 @@
 // (re-parse captures already recorded, from the saved bytes where we have
 // them), --retry-skipped (re-fetch and re-parse only skipped ones).
 //
-// Resumable: a capture already in archive_captures is not fetched again, so
-// an interrupted run picks up where it stopped. Polite: one request at a
-// time, WAYBACK_PACE_MS apart, backing off on 429/5xx (wayback.ts).
+// Resumable: a capture already in archive_captures is not fetched again.
+// Polite: one request at a time, WAYBACK_PACE_MS apart, backing off on 429/5xx
+// (wayback.ts).
 //
 // Bytes are saved under .data/blob/archive/… (the local R2 the dev server
 // reads) with a sidecar recording when they were fetched; --remote also puts
-// them in the production bucket. A --remote run after a local one re-uses the
+// them in the production bucket. A --remote run after a local one reuses the
 // saved bytes and their fetch time rather than asking the Archive again.
 
 import { Database } from 'bun:sqlite'

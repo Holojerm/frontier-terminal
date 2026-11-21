@@ -22,7 +22,7 @@ is a draft the owner readies.
    If the queue is empty, journal a no-op and stop.
 2. Read `AGENTS.md` for the project's stack and coding standards, then fix the bug:
    - Branch: `fix/<issue-number>-<slug>` off `main`.
-   - Write or update a test that fails before the fix and passes after — a fix without a
+   - Write or update a test that fails before the fix and passes after. A fix without a
      regression test isn't done unless the bug is genuinely untestable (say why in the PR).
    - Keep the diff minimal: fix the bug, don't refactor around it (`_shared.md` rule 7).
 3. Verify with the repo's own gate: `bun run ci` (lint + typecheck + test + build). Don't open

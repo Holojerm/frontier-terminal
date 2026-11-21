@@ -9,7 +9,7 @@
 const archive = (cik: string, accession: string) =>
   `https://www.sec.gov/Archives/edgar/data/${Number(cik)}/${accession.replace(/-/g, '')}/`
 
-/** Earnings filings filed before this aren't read (owner's backfill, 2026-11-21). */
+/** Earnings filings filed before this aren't read: the backfill's floor. */
 export const BACKFILL_SINCE = '2018-01-01'
 
 export interface EarningsFiling {

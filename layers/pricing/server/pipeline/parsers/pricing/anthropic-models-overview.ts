@@ -8,14 +8,11 @@ import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { tableAfterHeading } from './md-table'
 
 // anthropic-models-md — https://platform.claude.com/docs/en/models/overview.md
-// Catalog parser: the "Latest models" table (headed "Compare models" until
-// 2026-11-11) is transposed (features as
-// rows, one column per current model). It contributes the fields the
-// pricing page does not print — context window, description — plus the
-// vendor's own API ids. model_slug is taken from the printed "Claude API
-// alias" row: the alias is the durable key across snapshot re-pins (the
-// pinned "Claude API ID" for Haiku 4.5 carries a date suffix), and it
-// matches anthropic-pricing-md's slugs so the two sources join on modelKey.
+// Catalog parser: the "Latest models" table is transposed (features as rows, one column per
+// current model). It adds what the pricing page does not print (context window, description)
+// plus the vendor's own API ids. model_slug is the printed "Claude API alias" row: the alias
+// survives snapshot re-pins (Haiku 4.5's pinned "Claude API ID" carries a date suffix) and
+// matches anthropic-pricing-md's slugs, so the two sources join on modelKey.
 
 function stripLinks(cell: string): string {
   return cell.replace(/\[([^\]]+)\]\([^)]*\)/g, '$1').trim()
@@ -47,15 +44,12 @@ export function catalogDescription(notes: string): string {
   return trimmed.endsWith(`. ${FROM_NOTE}`) ? trimmed.slice(0, -`. ${FROM_NOTE}`.length) : trimmed
 }
 
-// prov defaults to the fixture manifest's record (single-arg behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead.
+// One-argument calls read the fixture's provenance, keeping the determinism gate byte-identical.
 export function parseAnthropicModelsOverviewMd(
   text: string,
   prov: Provenance = fixtureProvenance('anthropic-models-md'),
 ) {
-  // The page renamed "## Compare models" to "## Latest models" on 2026-11-11;
-  // older captures (the 2026-10-08 pair) still carry the old heading.
+  // Older captures (the 2026-10-08 pair) still carry the old "## Compare models" heading.
   const heading = text.split('\n').some((l) => l.trim() === '## Latest models')
     ? '## Latest models'
     : '## Compare models'

@@ -1,8 +1,7 @@
 <script setup lang="ts">
-// Coverage reference, not a finding: which sources back this terminal, when
-// each was last fetched, how its last poll ended, and what caveat the audit
-// attached to it. An analyst reads it to decide whether a number can be
-// trusted, not every visit — which is why it sits last.
+// Coverage reference, not a finding: which sources back this terminal, when each was last
+// fetched, how its last poll ended, and the audit's caveat for it. An analyst reads it to
+// decide whether a number can be trusted, not on every visit, so it sits last.
 
 import type { CoverageData } from '../../../../core/shared/types/coverage'
 
@@ -57,8 +56,8 @@ const recipeColumns: TableColumn[] = [
   { key: 'caveat', label: 'Caveat and terms' },
 ]
 
-// The caveat, then the terms reading and what our licence covers — the same
-// three facts for a lab source and a recipe.
+// The caveat, then the terms reading and what our licence covers: the same three facts
+// for a lab source and a recipe.
 const RIGHTS_NOTE: Record<SourceRights, string> = {
   ours: 'Covered by our license.',
   restricted:

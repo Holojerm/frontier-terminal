@@ -71,10 +71,9 @@ export async function assertArchiveKnowable(
 /**
  * Where each lab's live record begins: the first fetch of its own pricing
  * pages ('pricing'), or of its primary job board ('hiring'). Labs joined at
- * different times (DeepSeek and Alibaba on 2026-11-04), so one floor for all
- * of them dropped a later lab between the archive's end and its own first
- * fetch. A lab never fetched has no entry; a lab with no board is left out of
- * 'hiring' entirely (labsBeforeFloor never names it).
+ * different times, so one floor for all of them dropped a later lab between
+ * the archive's end and its own first fetch. A lab never fetched has no entry;
+ * a lab with no board is left out of 'hiring' (labsBeforeFloor never names it).
  */
 export async function labLiveFloors(
   db: PipelineDb,

@@ -1,8 +1,8 @@
-// One quotable paragraph per lab (a SKU's is the pricing layer's price-ledes.ts), built from the numbers the page
-// already renders. Answer engines quote a sentence, not a tile grid, so the
-// figures in the header also appear once as plain text that names the lab, the
-// number, the unit, and the date. Nothing here is a figure the page doesn't
-// show beside it; a missing value drops its sentence instead of a placeholder.
+// One quotable paragraph per lab (a SKU's is the pricing layer's price-ledes.ts), built
+// from the numbers the page already renders. Answer engines quote a sentence, not a tile
+// grid, so the header figures also appear once as plain text naming the lab, the number,
+// the unit and the date. Nothing here is a figure the page doesn't show beside it; a
+// missing value drops its sentence instead of a placeholder.
 
 export function labLede(s: LabSummary): string | null {
   const sentences: string[] = []

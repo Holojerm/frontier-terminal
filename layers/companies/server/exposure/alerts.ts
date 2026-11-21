@@ -1,18 +1,14 @@
-// The filed-fact rule: when a new 10-Q or 10-K moves a hyperscaler series,
-// one alert that states the number ("Amazon marks its Anthropic stake up by
-// $X", "Microsoft’s capex hits $Y"), citing one change row that carries the
-// point and the one before it. No model in the loop.
+// The filed-fact rule: when a new 10-Q or 10-K moves a hyperscaler series, one alert that
+// states the number ("Amazon marks its Anthropic stake up by $X", "Microsoft’s capex hits
+// $Y"), citing one change row carrying the point and the one before. No model in the loop.
 //
-// Only a series' newest point qualifies, only from a filing filed in the last
-// FRESH_DAYS, and only once the filer has history: the first read of a filer
-// is a quiet baseline, so turning the feature on does not alert on the last
-// two weeks of filings. Ids hash the series, the period and the accession, so
-// a re-run writes nothing twice.
+// Only a series' newest point qualifies, only from a filing in the last FRESH_DAYS, and
+// only once the filer has history: a filer's first read is a quiet baseline. Ids hash the
+// series, period and accession, so a re-run writes nothing twice.
 //
-// A point for a period an earlier filing already reported (a 10-Q repeating
-// last quarter's balance, or restating it) doesn't alert, and neither does a
-// balance that ends where the point before it did. The tier is `notable`,
-// `critical` for a series' first point (a filer names a lab in a new line) or
+// A point for a period an earlier filing already reported (a repeat or restatement)
+// doesn't alert, nor does a balance that ends where the point before did. The tier is
+// `notable`; `critical` for a series' first point (a filer names a lab in a new line) or
 // when a commitment or stake moves CRITICAL_MOVE or more.
 
 import { compactUsd } from '#layers/core/shared/utils/terminal-format'

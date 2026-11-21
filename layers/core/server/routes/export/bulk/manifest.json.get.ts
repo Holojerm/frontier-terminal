@@ -1,12 +1,9 @@
-// GET /export/bulk/manifest.json — the bulk feed's index: per table, the URL
-// of its gzipped CSV and of its Parquet file, rows, bytes, SHA-256, build
-// time, schema version, and license. Anonymous callers are listed the
-// trailing-window files (CC BY 4.0); a licensee's key is listed the
-// full-history files, with their keys in the licensed S3 bucket. The files are rebuilt
-// once a UTC day (layers/core/server/utils/terminal-bulk.ts).
-//
-// Sync by comparing each entry's sha256 with the copy you have. The manifest
-// itself answers If-None-Match and If-Modified-Since with a 304.
+// GET /export/bulk/manifest.json: per table, the URLs of its gzipped CSV and
+// Parquet file, rows, bytes, SHA-256, build time, schema version and license.
+// Anonymous callers get the trailing-window files (CC BY 4.0), a licensee's key
+// the full-history files in the licensed S3 bucket. Rebuilt daily
+// (layers/core/server/utils/terminal-bulk.ts). Sync by comparing sha256; the
+// manifest itself answers If-None-Match and If-Modified-Since with a 304.
 
 export default defineEventHandler(async (event) => {
   const key = await rateLimitTerminal(event, { name: 'bulk', limit: 60, windowSeconds: 60 })

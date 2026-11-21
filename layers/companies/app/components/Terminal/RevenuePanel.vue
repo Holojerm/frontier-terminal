@@ -1,11 +1,9 @@
 <script setup lang="ts">
-// Disclosed revenue per lab, primary source only. Three states, each said
-// in words: no audited disclosure (nothing shown, and the press run-rate
-// that would fill the space is named as deliberately absent); a public
-// parent's figure — consolidated, or one segment it reports — labelled as
-// the parent's; the lab's own filing — XBRL, or the statement of operations
-// printed in an S-1 that tags none. Every value links to the filing that
-// reported it, and to its page here.
+// Disclosed revenue per lab, primary source only. Three states, each said in words: no
+// audited disclosure (the press run-rate that would fill the space is named as absent); a
+// public parent's figure (consolidated or one segment), labeled as the parent's; the lab's
+// own filing (XBRL, or the statement of operations an S-1 prints untagged). Every value
+// links to its filing and to its page here.
 
 import type { RevenueData } from '../../../shared/types/revenue'
 
@@ -179,8 +177,8 @@ const stamps = useStamps()
       </TerminalCard>
     </div>
 
-    <!-- The honest gap: nothing shown, and the number that would have filled
-         the space named as deliberately absent. Each lab keeps its anchor. -->
+    <!-- The gap: nothing shown, and the number that would fill the space named as absent.
+         Each lab keeps its anchor. -->
     <div
       v-if="unreported.length"
       class="space-y-2 rounded border border-dashed border-default p-3 font-sans"

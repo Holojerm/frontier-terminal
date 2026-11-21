@@ -1,11 +1,10 @@
 import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 
-// Judge runs — one row per POST /api/judge/alerts (layers/terminal/server/pipeline/judge).
-// judged_through is the cursor GET /api/judge/pending reads: a change is
-// pending while its detected_at is newer than the newest judged_through
-// here. NULL when the run advanced nothing — a body that failed the schema
-// gate is recorded (rejection_reason says why) without moving the cursor,
-// so the changes it was about are offered again next hour.
+// Judge runs: one row per POST /api/judge/alerts. judged_through is the cursor
+// GET /api/judge/pending reads: a change is pending while its detected_at is
+// newer than the newest judged_through here. NULL when the run advanced nothing:
+// a body that failed the schema gate is recorded (rejection_reason says why)
+// without moving the cursor, so its changes are offered again next hour.
 export const judgeRuns = sqliteTable(
   'judge_runs',
   {

@@ -1,26 +1,23 @@
-// Find candidates for each material alert: the GDELT articles and the lab's
-// own newsroom posts within WINDOW_DAYS either side of when the terminal saw
-// the change, matched on terms built from the cited change rows (terms.ts).
-// Candidates only: the judge decides which are the same event (review.ts).
-// Both sides are matched once, by the */5 cron (runTrackRecordSearch), when
-// an alert's window has closed.
+// Find candidates for each material alert: the GDELT articles and the lab's own
+// newsroom posts within WINDOW_DAYS either side of when the terminal saw the
+// change, matched on terms built from the cited change rows (terms.ts).
+// Candidates only: the judge decides which are the same event (review.ts). Both
+// sides are matched once, by the */5 cron (runTrackRecordSearch), when an alert's
+// window has closed.
 //
 // The newsroom side reads posts the poll already stored.
 //
 // The press side reads GDELT's 15-minute GKG files (gkg.ts), each once, in
-// order, off the Worker: an Actions job (scripts/gdelt-search.ts) asks
-// /api/gdelt/work for the next unread files and the vocabulary (gkgWork),
-// reads each file, and posts its row count and the rows carrying a
-// vocabulary word to /api/gdelt/file (recordGkgFile), which keeps them
-// (mentions.ts). Once every file through an alert's window has been read,
-// the cron matches the alert against the rows kept for its window, earliest
-// first, and writes the side's search row. Its window_start says where the
-// search actually began (mentions.ts › pressSearchedFrom), and the page
-// leaves a window searched only in part out of the lead/lag tally.
+// order, off the Worker: a job (scripts/gdelt-search.ts) asks /api/gdelt/work for
+// the next unread files and the vocabulary (gkgWork), reads each file, and posts
+// its row count and the rows carrying a vocabulary word to /api/gdelt/file
+// (recordGkgFile), which keeps them (mentions.ts). Once every file through an
+// alert's window is read, the cron matches the alert against that window's kept
+// rows, earliest first, and writes the side's search row. Its window_start says
+// where the search began (mentions.ts › pressSearchedFrom).
 //
-// GDELT's search API was used before (rows with a DOC API source_url). It
-// limits requests per IP and answered most queries with a 429 from every IP
-// we tried.
+// GDELT's search API (rows with a DOC API source_url) is not used: it limits
+// requests per IP and answered most queries with a 429 from every IP we tried.
 
 import { and, asc, count, eq, gte, inArray, max } from 'drizzle-orm'
 
@@ -402,10 +399,10 @@ export async function runTrackRecordSearch(
 }
 
 /**
- * The kept GKG rows in an alert's window that match its terms, earliest
- * first, one per headline, up to PRESS_CANDIDATE_LIMIT. Press candidates the
- * alert already holds count toward both: alerts whose windows were open when
- * the job still matched each file as it read it have some.
+ * The kept GKG rows in an alert's window that match its terms, earliest first,
+ * one per headline, up to PRESS_CANDIDATE_LIMIT. Press candidates the alert
+ * already holds (from when the job matched each file as it read it) count
+ * toward both.
  */
 async function pressCandidates(
   db: PipelineDb,
@@ -479,7 +476,6 @@ interface GkgFileInput {
   fetched_at: string
   /** missing: GDELT answered 404, it never published that quarter hour. */
   status: 'ok' | 'missing'
-  /** Rows the file held. */
   rows: number
   /** Every row carrying a vocabulary word, compacted. */
   mentions: GkgMention[]
@@ -496,12 +492,12 @@ type GkgFileOutcome =
   | { recorded: false; reason: 'not-next' }
 
 /**
- * Store one GKG file the job read: its row, and the rows it carried that name
- * a vocabulary word (mentions.ts), with the vocabulary they were kept by.
- * Only for the next file in the run, once it is due, so the files read are a
- * contiguous run from GKG_FROM and the last one read says what has been. The
- * vocabulary is the Worker's own as the file is recorded: a posted row is
- * kept with the names in it, and a row with none is counted as rejected.
+ * Store one GKG file the job read: its row, and its rows naming a vocabulary
+ * word (mentions.ts) with the vocabulary they were kept by. Only the next file
+ * in the run, once due, so the files read are a contiguous run from GKG_FROM and
+ * the last one read says how far reading has got. The vocabulary is the
+ * Worker's own as the file is recorded: a posted row is kept with the names in
+ * it, and a row with none counts as rejected.
  */
 export async function recordGkgFile(
   db: PipelineDb,

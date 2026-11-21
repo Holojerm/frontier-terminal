@@ -1,12 +1,11 @@
-// The track-record payload (the Track record tab on /alerts): for each material alert since TRACK_RECORD_FROM,
-// when we saw the change against the first same-event press article and
-// newsroom post. A side shows a time only when the judge rated a candidate
-// the same event and every earlier candidate was rated not; anything short of
-// that is a stated state ("not yet rated"), never a guessed lead.
+// The track-record payload (the Track record tab on /alerts): for each material alert since
+// TRACK_RECORD_FROM, when we saw the change against the first same-event press article and
+// newsroom post. A side shows a time only when the judge rated a candidate the same event and
+// every earlier candidate was rated not; anything else is a stated state ("not yet rated"),
+// never a guessed lead.
 //
-// Every table read here is append-only, so `as_of` is a cut on the column
-// that says when each row was written (searched_at, found_at, judged_at), and
-// the alerts are the ones the store held then (terminal-asof.ts).
+// Every table read here is append-only, so `as_of` cuts on each row's write time (searched_at,
+// found_at, judged_at), and the alerts are the ones the store held then (terminal-asof.ts).
 
 import { and, asc, gte, inArray, lte } from 'drizzle-orm'
 

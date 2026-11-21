@@ -26,7 +26,7 @@ export interface TableColumn {
   label: string
   /** Right-aligned mono figures. */
   numeric?: boolean
-  /** Rendered beside the gap cell instead of under it — the source column. */
+  /** Rendered beside the gap cell instead of under it (the source column). */
   keep?: boolean
   /** A second header line: what the column answers. */
   hint?: string

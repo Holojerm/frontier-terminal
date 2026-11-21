@@ -1,11 +1,9 @@
-// GET /api/alerts?tier=&lab=&topic=&cursor=&limit= — newest first, each with
-// its cited change rows resolved. `tier` is the materiality split
-// (layers/core/shared/utils/terminal-tiers.ts): `alert` (notable, critical),
-// `critical` or `notable` alone, `info` (minor changes; `ticker` is its old name
-// and still accepted), or `all`. `lab` and `topic` keep alerts citing a row from
-// that lab or on that axis. `cursor` is a page's `next_cursor`, for the older
-// page after it. Every parameter is part of the cache key. `as_of` returns the
-// alerts the store held at that instant (terminal-asof.ts › alertsKnownAt).
+// GET /api/alerts?tier=&lab=&topic=&cursor=&limit=: newest first, cited change rows
+// resolved. `tier` (layers/core/shared/utils/terminal-tiers.ts): `alert` (notable,
+// critical), `critical` or `notable` alone, `info` (minor changes; `ticker` still
+// accepted), or `all`. `lab` and `topic` keep alerts citing a row from that lab or axis.
+// `cursor` is a page's `next_cursor`. Every parameter is in the cache key. `as_of` returns
+// the alerts the store held at that instant (terminal-asof.ts › alertsKnownAt).
 
 import { z } from 'zod'
 

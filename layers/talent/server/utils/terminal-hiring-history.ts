@@ -34,13 +34,12 @@ const deptOf = (payload: Record<string, unknown> | null): string =>
 export type OpenCounts = Map<string, Map<string, number>>
 
 /**
- * Open roles per provider and department at each of `instants` (any order),
- * by walking the change log backwards from `current`. Undoing an `added`
- * closes the role, undoing a `removed` reopens it in its last department,
- * undoing a `modified` restores its previous department. A change that
- * cannot be undone against the set — an added role the current set no
- * longer holds, because it closed between the last imported poll and this
- * store's baseline — is skipped rather than pushed below zero.
+ * Open roles per provider and department at each of `instants` (any order), by walking
+ * the change log backwards from `current`. Undoing an `added` closes the role, undoing a
+ * `removed` reopens it in its last department, undoing a `modified` restores its previous
+ * department. A change that cannot be undone against the set (an added role the current
+ * set no longer holds, because it closed between the last imported poll and this store's
+ * baseline) is skipped rather than pushed below zero.
  */
 export function openRolesAt(
   current: readonly OpenRole[],
@@ -143,8 +142,8 @@ export function departmentSeries(
 }
 
 /**
- * Now against the point `windowDays` back, or the first point when the
- * series is younger than that — `days` reports the real gap either way.
+ * Now against the point `windowDays` back, or the first point when the series is younger
+ * than that; `days` reports the real gap either way.
  */
 export function compareWindow(
   dates: readonly string[],

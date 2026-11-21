@@ -1,15 +1,13 @@
 // Reading filed XBRL facts out of the two documents EDGAR serves them in.
 //
-// Company facts (data.sec.gov/api/xbrl/companyfacts) carry every
-// non-dimensional fact a filer ever tagged, once per filing that reported it,
-// with the accession and filing date. That is the whole history of a capex or
-// a total-RPO line in one request. It drops every fact whose context names a
-// dimension, so a segment's backlog or a line tagged on an investee member
-// (msft:OpenAIGlobalLlcMember) is only in each filing's own instance file,
-// which the second reader parses.
+// Company facts (data.sec.gov/api/xbrl/companyfacts) carry every non-dimensional fact a
+// filer ever tagged, once per filing, with accession and filing date: a capex or total-RPO
+// history in one request. They drop every fact whose context names a dimension, so a
+// segment's backlog or a line on an investee member (msft:OpenAIGlobalLlcMember) is only
+// in each filing's own instance file, which the second reader parses.
 //
-// Both are pure and throw on a shape they do not recognise: a source that
-// cannot be read is a failed read, never an empty one.
+// Both are pure and throw on a shape they don't recognize: an unreadable source is a
+// failed read, never an empty one.
 
 /** One fact as a filing reported it, before the filer's ticker and CIK are attached. */
 export interface FactInput {

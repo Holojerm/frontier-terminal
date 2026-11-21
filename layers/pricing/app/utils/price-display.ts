@@ -37,10 +37,9 @@ export interface PriceMove {
 export const SAME_PRICE = 'same price'
 
 /**
- * The price fields a modified row moved, input then output then cached. A
- * field that held its value is not a move: reading the input first whatever
- * it did printed an output-only cut as "0% in". The matrix, the price table
- * and the tear sheet all read moves from here, so they name the same field.
+ * The price fields a modified row moved, input then output then cached. A field that held its
+ * value is not a move (reading input first printed an output-only cut as "0% in"). The matrix,
+ * the price table and the tear sheet all read moves from here, so they name the same field.
  */
 export function priceMoves(d: PriceDeltaView): PriceMove[] {
   const sides: [PriceMove['side'], number | null, number | null][] = [

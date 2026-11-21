@@ -1,19 +1,17 @@
-// This app's tiers for its ops event kinds, registered with core's
-// registry (server/utils/ops-severity.ts) by plugins/ops-severity.ts.
+// This app's tiers for its ops event kinds, registered with core's registry
+// (server/utils/ops-severity.ts) by plugins/ops-severity.ts. A tier is about what
+// the owner has to do:
 //
-// The tiers are about what the owner has to do, not how alarming the word in
-// the kind sounds:
+// - critical: the product has stopped doing its job (no data coming in, no alert
+//   judged, or the site failing requests wholesale; core escalates server_error
+//   itself at SERVER_ERROR_CRITICAL_COUNT). The digest subject leads with
+//   [Critical].
+// - warning: one part is degraded or stale.
+// - info: handled, or a known setup state. Shown on the board only; fleet never
+//   mails them.
 //
-// - critical — the product has stopped doing its job: no data is coming in,
-//   no alert is being judged, or the site is failing requests wholesale (core
-//   escalates server_error itself, at SERVER_ERROR_CRITICAL_COUNT). The
-//   digest subject leads with [Critical]; filter on it to make the phone buzz.
-// - warning — one part is degraded or stale. Worth a look today.
-// - info — the system handled it, or it is a setup state already known. These
-//   show on the board only; fleet never mails them.
-//
-// A kind missing from the table is a warning: a new failure path should be
-// seen before anyone decides it can be quiet. Add a kind here when you add its
+// A kind missing from the table is a warning, so a new failure path is seen
+// before anyone decides it can be quiet. Add a kind here with its
 // recordOpsEvent call.
 
 export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {

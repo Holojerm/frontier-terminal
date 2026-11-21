@@ -1,14 +1,12 @@
-// Capex guidance as an earnings release prints it. A filer furnishes the
-// release as exhibit 99.1 of an 8-K with item 2.02, and some releases state
-// what the filer expects to spend on capex in a fiscal year, as one figure or
-// a range. This reads that sentence and nothing else.
+// Capex guidance as an earnings release prints it (exhibit 99.1 of an 8-K with item 2.02):
+// the sentence stating what the filer expects to spend on capex in a fiscal year, as one
+// figure or a range, and nothing else.
 //
-// A sentence is taken when it names capital expenditures, says expect or
-// anticipate, names a year, and states an amount in billions of dollars. The
-// amount is the first one after the words "capital expenditures", or the last
-// one before them when none follows ("invest about $200 billion in capital
-// expenditures"). A release with no such sentence yields nothing: guidance
-// given only on the call isn't in the release; layers/companies/server/calls/ reads the calls.
+// A sentence is taken when it names capital expenditures, says expect or anticipate, names
+// a year, and states an amount in billions of dollars. The amount is the first after
+// "capital expenditures", or the last before them when none follows ("invest about $200
+// billion in capital expenditures"). Guidance given only on the call isn't in the release;
+// layers/companies/server/calls/ reads the calls.
 //
 // Pure, and dependency-free like facts.ts.
 

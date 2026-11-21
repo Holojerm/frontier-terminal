@@ -1,7 +1,6 @@
-// The hand-read side of the call reader (curated/earnings-calls.json): for
-// each of the 45 listed companies, what it posts for its calls and why it
-// posts nothing we can read; and each transcript, set of remarks or replay
-// it posts on its own hosts. EDGAR exhibits are found by the reader.
+// The hand-read side of the call reader (curated/earnings-calls.json): for each listed
+// company, what it posts for its calls and why it posts nothing we can read, and each
+// transcript, set of remarks or replay on its own hosts. The reader finds EDGAR exhibits.
 
 import { z } from 'zod'
 

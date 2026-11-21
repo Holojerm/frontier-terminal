@@ -43,7 +43,7 @@ export interface PriceRowView extends Prov {
   delta: PriceDeltaView | null
   /** Other sources carrying the same SKU key (the two Anthropic pages both do). */
   also_listed_by: string[]
-  /** Observations of this SKU on record — change rows plus the current row (see PriceHistoryData). */
+  /** Observations of this SKU on record: change rows plus the current row (see PriceHistoryData). */
   revisions: number
   /** One price field across those observations, oldest first; null until there are two. */
   spark: { field: 'input_per_mtok' | 'output_per_mtok'; values: (number | null)[] } | null
@@ -76,9 +76,8 @@ export interface MatrixCell {
   basis: string | null
   basis_source_id: string | null
   /**
-   * Whether `basis` was found on the vendor page at the last poll of
-   * `basis_source_id`; null when that page has not been polled since the
-   * check was introduced, or the cell is unmapped.
+   * Whether `basis` was found on the vendor page at the last poll of `basis_source_id`; null
+   * when that page has not been polled with the check yet, or the cell is unmapped.
    */
   basis_current: boolean | null
   /** fetched_at of the newest poll of `basis_source_id` that confirmed `basis_current`. */
@@ -95,7 +94,7 @@ export interface PriceMatrix {
   classes: ClassColumn[]
   providers: LabId[]
   cells: MatrixCell[]
-  /** Which tier the matrix reads — stated in the UI. */
+  /** Which tier the matrix reads, stated in the UI. */
   tier_note: string
 }
 
@@ -116,11 +115,10 @@ export interface PricesData extends Stamp {
 }
 
 /**
- * One observation of a SKU: a change row (added / modified / removed), the
- * current entity row, or — when the earliest change carries a before state
- * — that state as of the source's first snapshot ('baseline'). `at` is the
- * instant of the observation (detected_at for a change, fetched_at
- * otherwise) and the Prov fields say which fetch it was read from.
+ * One observation of a SKU: a change row (added / modified / removed), the current entity row,
+ * or, when the earliest change carries a before state, that state as of the source's first
+ * snapshot ('baseline'). `at` is the instant of the observation (detected_at for a change,
+ * fetched_at otherwise) and the Prov fields say which fetch it was read from.
  */
 export interface PricePoint extends Prov {
   at: string

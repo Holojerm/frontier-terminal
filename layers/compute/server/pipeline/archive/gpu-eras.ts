@@ -1,15 +1,8 @@
-// The eras of each GPU provider's price page, as the Internet Archive holds
-// them: which URL the provider priced its on-demand GPUs on, over which
-// window, and which parser reads that layout. Windows are half-open
-// [from, until) and never overlap within a provider, so the provider's
-// prices at an instant are the newest parsed capture of the one era
-// covering it. Every era ends by the day its live recipe began
-// (GPU_ARCHIVE_UNTIL): from then on recipe_observations is the record.
-//
-// How each window was found: the CDX listing of each candidate URL, and a
-// read of the captures on either side of each layout change
-// (docs/source-audit.md › "Addendum, 2026-11-20: Internet Archive (GPU rental prices)"). A stretch
-// with no readable copy is stated in GPU_ARCHIVE_GAPS.
+// Each GPU provider's price-page eras in the Internet Archive: URL, half-open window
+// [from, until) and parser. Windows never overlap within a provider, and each ends
+// by GPU_ARCHIVE_UNTIL, after which recipe_observations is the record. How they
+// were found: docs/source-audit.md › "Addendum, 2026-11-20: Internet Archive (GPU rental prices)".
+// Stretches with no readable copy are in GPU_ARCHIVE_GAPS.
 
 import type { CompanyId } from '../../../../core/shared/utils/companies'
 import { oracleRows } from '../../recipes/gpu-apis'

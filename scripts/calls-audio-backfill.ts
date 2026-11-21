@@ -4,13 +4,12 @@
 //   ASSEMBLYAI_API_KEY="$(op read 'op://Agents/assemblyai/credential')" bun scripts/calls-audio-backfill.ts [--dry-run] [--spend]
 //
 // Each curated `audio` document of a call held before BACKFILL_BEFORE with no
-// job yet is costed from its size and MP3 header before it is sent, newest
-// call first, and none is sent once the next would pass the ceiling. Each job
-// id, submission time and estimate is written back to
-// curated/earnings-calls.json at once, so a second run resumes; the Worker
-// collects the transcripts (calls/ingest.ts, step 4), with no polling here.
-// --spend asks AssemblyAI for every backfill job's billed length and prints
-// what has been spent. The key is read from the environment and never printed.
+// job yet is costed from its size and MP3 header, newest call first, and none
+// is sent once the next would pass the ceiling. Each job id, submission time
+// and estimate is written to curated/earnings-calls.json at once, so a rerun
+// resumes; the Worker collects the transcripts (calls/ingest.ts, step 4).
+// --spend prints what the backfill jobs have been billed. The key is read
+// from the environment and never printed.
 
 import { join } from 'node:path'
 

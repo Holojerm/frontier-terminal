@@ -7,20 +7,20 @@
 //   bun run bulk:grant -- --sweep --remote     # revoke grants whose key was revoked or expired
 //   bun run bulk:grants [-- --remote]          # list
 //
-// A grant mints one account-owned Cloudflare API token that can read the
-// objects of LICENSED_BUCKET and nothing else, expiring with the key
+// A grant mints one account-owned Cloudflare API token that reads only the
+// objects of LICENSED_BUCKET, expiring with the key
 // (layers/core/server/utils/bulk-grant.ts), and records it in D1
 // (bulk_grants). keys:revoke revokes a key's grants too.
 //
-// Minting a token needs a token that may manage tokens, which the `cf` login
-// is not. Pass one in BULK_GRANT_API_TOKEN for this command only, e.g.
+// Minting needs a token that may manage tokens, which the `cf` login can't.
+// Pass one in BULK_GRANT_API_TOKEN for this command only, e.g.
 //   BULK_GRANT_API_TOKEN="$(op read 'op://…')" bun run bulk:grant -- …
-// It goes to the `cf` child process and nowhere else: not to wrangler (which
-// would try it against D1), not to a log. The account id comes from
+// It goes only to the `cf` child process (not to wrangler, which would try it
+// against D1, and not to a log). The account id comes from
 // CLOUDFLARE_ACCOUNT_ID or, failing that, the `cf` login's only account.
 //
-// The S3 secret is printed once, on stdout, and never stored: Cloudflare
-// keeps the token, D1 keeps its id. Everything else goes to stderr, so
+// The S3 secret is printed once, on stdout, and never stored (Cloudflare keeps
+// the token, D1 its id). Everything else goes to stderr, so
 // `bun run bulk:grant -- … | pbcopy` copies the credentials alone.
 
 import {

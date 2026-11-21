@@ -1,10 +1,8 @@
 <script setup lang="ts">
-// GPU rental prices over time: per GPU, the median on-demand price and the
-// spot price as a share of on-demand, on each day a provider's page changed.
-// Two measures of different scale, so two charts per GPU over the same dates.
-// The spot chart draws the combined share once the payload prints one; below
-// the quorum it draws each provider, which is three lines at most. A range is
-// drawn at its lower end and printed in full in the table under the charts.
+// GPU rental prices over time: per GPU, the median on-demand price and spot as a
+// share of on-demand, on each day a provider's page changed (two scales, two
+// charts). Below the quorum the spot chart draws each provider. A range is drawn
+// at its lower end and printed in full in the table.
 
 import type { GpuHistoryView } from '../../../shared/types/gpu-prices'
 import type { Citation } from '#layers/core/app/types/terminal-ui'

@@ -1,18 +1,15 @@
-// The EVENTS queue's producer wiring and consumer (layers/core/server/utils/events.ts
-// says what the queue is for; event-consumer.ts routes a batch).
+// The EVENTS queue's producer wiring and consumer (layers/core/server/utils/events.ts says
+// what the queue is for; event-consumer.ts routes a batch).
 //
-// Producer: emitEvent() sends through `globalThis.__env__.EVENTS`, which
-// Nitro's cloudflare-module handler sets before every fetch, scheduled and
-// queue invocation. It is read at send time, not here, because a plugin runs
-// before any invocation has an env. Off Cloudflare the binding is absent and
-// emitEvent() reports unsent, which leaves the work to the hourly sweep.
+// Producer: emitEvent() sends through `globalThis.__env__.EVENTS`, which Nitro's
+// cloudflare-module handler sets before every invocation. It is read at send time because
+// a plugin runs before any invocation has an env. Off Cloudflare the binding is absent and
+// emitEvent() reports unsent, leaving the work to the hourly sweep.
 //
-// Consumer: Nitro's preset already exports queue() and only `waitUntil`s the
-// `cloudflare:queue` hook, so every ack() and retry() runs after the handler
-// returned. That is safe because of Cloudflare's default that a consumer's
-// batch is not acknowledged until its waitUntil promises settle, which
-// wrangler.toml pins with `queue_consumer_wait_for_wait_until`. Do not remove
-// that flag. The same shape as the template's email-queue consumer.
+// Consumer: Nitro's preset exports queue() and only `waitUntil`s the `cloudflare:queue`
+// hook, so every ack() and retry() runs after the handler returns. That is safe only
+// because a batch is not acknowledged until its waitUntil promises settle, which
+// wrangler.toml pins with `queue_consumer_wait_for_wait_until`. Do not remove that flag.
 
 export default defineNitroPlugin((nitro) => {
   setEventSender({

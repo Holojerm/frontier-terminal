@@ -1,12 +1,8 @@
 <script setup lang="ts">
-// The shell every reading sits in (DESIGN.md › Terminal primitives): a
-// bordered box with a header strip — title, one-line note, and a meta slot
-// for the panel's own stamp or count — then the body, then a footer for the
-// sources and the one link onward. `flush` drops the body padding so a
-// table's rows run to the border, the way a terminal grid does.
-//
-// The note sits on `bg-muted`, so it is `text-toned`: `text-muted` on that
-// strip is the light-mode pairing DESIGN.md › Surface and text rules warns of.
+// The shell every reading sits in (DESIGN.md › Terminal primitives). `flush` drops
+// the body padding so a table's rows run to the border. The note sits on
+// `bg-muted`, so it is `text-toned`: `text-muted` there is the light-mode pairing
+// DESIGN.md › Surface and text rules warns of.
 
 defineProps<{
   id: string

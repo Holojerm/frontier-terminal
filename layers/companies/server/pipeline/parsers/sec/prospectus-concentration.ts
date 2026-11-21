@@ -3,12 +3,9 @@ import { cellText, type RegistrationTarget } from './filing-index'
 import { MONTHS, findAll, iso, tableAfter, tableGrid, type DocText } from './prospectus-doc'
 import { periodColumns } from './prospectus-revenue'
 
-// Customer concentration, from the notes' two "10% or more" tables: share of
-// revenue per period and share of accounts receivable per balance-sheet date.
-// The filing names customers by letter and marks a period under the threshold
-// "*" ("Less than 10% of total"); both are kept as printed, the star as null.
-// A filing that prints neither table discloses no concentration and yields no
-// row; a table that is there but not the expected shape throws.
+// Customer concentration from the notes' two "10% or more" tables (revenue per
+// period, receivables per balance-sheet date). "*" ("Less than 10% of total") is
+// null. No table yields no row; a table of the wrong shape throws.
 
 const TABLES = [
   {
@@ -27,9 +24,8 @@ const TABLE_GAP = 5000
 const STAR_NOTE = /\*\s*Less than 10% of total/
 
 /**
- * "As of December 31," spanning 2024 and 2025, then "As of September 30,"
- * over 2026: balance-sheet dates. The years increase across both groups, so
- * each year is matched to the header whose columns it sits under.
+ * Balance-sheet dates under "As of December 31," and "As of September 30,". The
+ * years increase across both groups, so each year takes the header it sits under.
  */
 function asOfColumns(tableHtml: string): ConcentrationRow['columns'] {
   const grid = tableGrid(tableHtml)

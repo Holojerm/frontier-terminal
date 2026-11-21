@@ -1,8 +1,7 @@
-// The listed-companies table: one row per ticker across the dependency
-// graph, the suppliers table, the power table and the hardware prints' ties. It joins three payloads
-// the site already serves and adds no figure of its own, so a reader gets
-// the whole list of names in one place and follows each tie back to the
-// table that holds its filing or page.
+// The listed-companies table: one row per ticker across the dependency graph, the
+// suppliers table, the power table and the hardware prints' ties. It joins payloads the
+// site already serves and adds no figure of its own, so a reader gets every name in one
+// place and follows each tie back to the table that holds its filing or page.
 
 export const LISTED_RULE =
   'One row per listed company that the graph, the suppliers table, the power table or the hardware prints name. Each tie is what a filing or a cited page says, and the tables measure different things, so the rows aren’t ranked. A row says a source names the company. It isn’t a view on the stock. Not investment advice.'

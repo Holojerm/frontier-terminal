@@ -223,7 +223,7 @@ export const VERDICTS = {
 export const verdictsOf = (spec: JudgedSpec): readonly string[] =>
   spec.review === 'recipe-items' ? spec.verdicts : VERDICTS[spec.review]
 
-/** Your ruling on a material verdict — committed to the thesis, never set by the judge. */
+/** The owner's ruling on a material verdict: committed to the thesis, never set by the judge. */
 export interface Confirmation {
   /** The verdict's subject: the incident or disclosure entity_key. */
   subject: string
@@ -331,7 +331,7 @@ export interface ClaimView {
   kill_line?: number | null
   /** The newest reading, with the detail the signal recorded beside it. */
   latest: (ReadingPoint & { detail: unknown; source_url: string; fetched_at: string }) | null
-  /** Oldest first, newest last — up to the history the rule reads. */
+  /** Oldest first, up to the history the rule reads. */
   series: ReadingPoint[]
   /** Judged claims: every verdict the rule reads, newest first. */
   verdicts: VerdictView[]
@@ -345,7 +345,7 @@ export interface VerdictView {
   provider: CompanyId
   verdict: string
   rationale: string
-  /** What the Worker computed about the event — the judge never supplies a number. */
+  /** What the Worker computed about the event; the judge never supplies a number. */
   facts: Record<string, unknown>
   detected_at: string
   judged_at: string

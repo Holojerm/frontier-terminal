@@ -19,9 +19,9 @@ export interface SourceRunStamp {
   detail: string | null
   scope: string
   /**
-   * The url this run actually fetched. Usually the same as the newest
-   * snapshot's, and the only record of it when the run produced no snapshot
-   * — a 404 is fetched and stored nowhere else.
+   * The url this run fetched. Usually the newest snapshot's, and the only
+   * record of it when the run produced no snapshot (a 404 is stored nowhere
+   * else).
    */
   source_url: string
 }
@@ -42,13 +42,12 @@ export interface SourceCoverage {
   provider: ProviderId | 'all'
   axis: SourceAxis
   role: SourceRole
-  /** The audit's own words, read from sources.yaml — never paraphrased here. */
+  /** The audit's own words, read from sources.yaml, never paraphrased. */
   caveat: string | null
   /**
    * The licence the source itself states, verbatim from sources.yaml. Null
-   * where it states none, which is most of them — a pricing page publishes
-   * facts without publishing terms, and inventing terms on its behalf would be
-   * exactly the kind of claim the provenance rule exists to prevent.
+   * where it states none (most of them): a pricing page publishes facts
+   * without terms, and inventing terms for it would break the provenance rule.
    */
   license: string | null
   /**
@@ -251,7 +250,7 @@ export interface RecipeCoverage {
 
 export interface CoverageData extends Stamp {
   sources: SourceCoverage[]
-  /** Deliberate cuts from sources.yaml — what is NOT tracked, and why. */
+  /** Deliberate cuts from sources.yaml: what is not tracked, and why. */
   cuts: CutSource[]
   /** The thesis recipes, which store outside the lab tables. */
   recipes: RecipeCoverage[]

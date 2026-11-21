@@ -1,23 +1,10 @@
-// One run of the suppliers reader, after each filings-lane poll (six-hourly):
-//
-//   1. the hand-read rows are copied into supplier_passages once (store.ts);
-//   2. each filer's submissions feed lists its documents of the forms it is
-//      read for (filers.ts), filed after its newest hand-read row and within
-//      the last year;
-//   3. the newest of those not yet read are fetched, at most DOCS_PER_RUN a
-//      run across filers, and stored in R2. A document read once is never
-//      fetched again; a failed one is retried after a day;
-//   4. a row whose quote a later document of the same form repeats now cites
-//      that document (restampPassages);
-//   5. a document whose text names a counterparty or a customer share waits
-//      for the judge (review.ts). One that names none is settled now: the
-//      rows of its form it no longer repeats have ended (settleDocument).
-//
-// Only the primary document is read: an exhibit to an 8-K or 6-K (a press
-// release, interim statements) is not, and the table says so.
-//
-// Every request goes to SEC through the lane's paced fetcher. On a 429 the run
-// stops fetching and spools one ops event; the next run starts over.
+// One run of the suppliers reader, after each filings-lane poll. Hand-read rows
+// are seeded once (store.ts); each filer's new documents of its forms (filers.ts)
+// are fetched, at most DOCS_PER_RUN a run, and stored in R2, read once each; rows
+// a later same-form document repeats are restamped; a document naming a
+// counterparty or customer share waits for the judge (review.ts), and one naming
+// none is settled now. Only primary documents are read, not exhibits. On a SEC 429
+// the run stops and spools one ops event.
 
 import { and, eq, gt, inArray, isNull } from 'drizzle-orm'
 

@@ -49,7 +49,6 @@ export interface CallStatement {
   ticker: string
   company: string
   call_date: string
-  /** The quarter the call reported. */
   call_period: string
   metric: CallMetric
   segment: string | null

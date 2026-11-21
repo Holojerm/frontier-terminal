@@ -1,13 +1,9 @@
-// Server-Timing for the read path: where a request's wall time went.
+// Server-Timing for the read path: which stage (the D1 stamp read, a KV payload,
+// the HTML edge cache, the render) a slow request spent its time in, so
+// `bun run perf` and devtools can attribute a cache miss without a log tail.
 //
-// A slow first load on this site is a cache miss somewhere — the D1 stamp read,
-// a KV payload, the HTML edge cache, the render — and from outside every one of
-// them looks the same: a long TTFB. The header names the stage, so `bun run perf`
-// and a browser's devtools can attribute a miss without a log tail.
-//
-// Workers freezes the clock between I/O events, so a duration here is I/O wait
-// plus whatever CPU ran before the next I/O. That is the cost a reader pays,
-// which is what this is for; it is not a CPU profile.
+// Workers freezes the clock between I/O events, so a duration is I/O wait plus
+// the CPU before the next I/O: what a reader pays, not a CPU profile.
 
 export interface ServerTiming {
   name: string

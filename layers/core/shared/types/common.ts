@@ -58,7 +58,7 @@ export type RunStatus = 'ok' | 'unchanged' | 'failed' | 'baseline' | 'skipped' |
 
 /** Where the numbers on a page stand in time. Every payload carries one. */
 export interface Stamp {
-  /** Newest source_runs.started_at — the poll tick this data reflects; null before the first tick. */
+  /** Newest source_runs.started_at: the poll tick this data reflects; null before the first tick. */
   as_of: string | null
   /** When this payload was computed (it may then sit in the cache for up to five minutes). */
   computed_at: string

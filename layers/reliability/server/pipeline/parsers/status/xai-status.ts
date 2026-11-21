@@ -84,9 +84,7 @@ function readItem(xml: string): Item {
   }
 }
 
-// prov defaults to the fixture manifest's record (fixture-only behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead.
+// One-argument calls read the fixture's provenance, keeping the determinism gate byte-identical.
 export function parseXaiStatus(text: string, prov: Provenance = fixtureProvenance('xai-status')) {
   if (!text.includes('<rss')) throw new Error('xai-status: not an RSS document')
   const byGuid = new Map<string, Item[]>()

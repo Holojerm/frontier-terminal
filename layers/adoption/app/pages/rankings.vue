@@ -1,8 +1,7 @@
 <script setup lang="ts">
-// The demand-share axis in full: the share bars, the implied spend share
-// the tokens decompose into at list price, the 30-day series, and each
-// lab's top models — all from OpenRouter's usage rankings (CC BY 4.0) and,
-// for the dollars, the vendors' own price pages.
+// The demand-share axis in full: share bars, implied spend share at list price, the 30-day
+// series and each lab's top models, from OpenRouter's usage rankings (CC BY 4.0) and the
+// vendors' price pages.
 
 definePageMeta({
   publicPage: {

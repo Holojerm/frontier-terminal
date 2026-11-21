@@ -1,9 +1,6 @@
-// Parsers for the Internet Archive's copies of GPU rental price pages, one
-// per page layout the live recipes (server/recipes/gpu-pages.ts) don't read.
-// Each returns the rows the live extractor would: the same labels, GPU
-// counts and configs where the page prints them, so an archived row keys
-// like the live row for the same offering. Each throws when the section it
-// reads is missing, so a capture in another shape is skipped with the reason.
+// Parsers for Internet Archive copies of GPU price pages, one per layout the live
+// recipes (server/recipes/gpu-pages.ts) don't read. Each returns rows keyed like the
+// live row, and throws when its section is missing so the capture is skipped.
 
 import {
   cellText,
@@ -258,11 +255,10 @@ export function nebiusGpuHourArchivedRows(body: string): GpuRow[] {
 }
 
 /**
- * Crusoe, spring to autumn 2025: the "GPU Pricing" table (from September
- * "GPU VM pricing"), one row per GPU
- * ("NVIDIA H100 80GB SXM"), priced per GPU-hour ("$ 3.90 /hr") in its
- * On-Demand column. Spot ("Contact Sales" for the H100 then) and the reserved
- * columns are other products.
+ * Crusoe, spring to autumn 2025: the "GPU Pricing" table (from September "GPU VM
+ * pricing"), one row per GPU ("NVIDIA H100 80GB SXM"), priced per GPU-hour
+ * ("$ 3.90 /hr") in its On-Demand column. Spot ("Contact Sales" for the H100
+ * then) and the reserved columns are other products.
  */
 export function crusoeTableArchivedRows(body: string): GpuRow[] {
   const table = need(

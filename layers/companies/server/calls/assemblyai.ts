@@ -34,15 +34,14 @@ const RATE_PER_HOUR = {
 const USD_PER_HOUR = Object.values(RATE_PER_HOUR).reduce((a, b) => a + b, 0)
 
 /**
- * The owner's cap on AssemblyAI spend per UTC calendar month (2026-11-21, once
- * billing was on). AssemblyAI has no hard limit of its own, only alerts.
+ * The owner's cap on AssemblyAI spend per UTC calendar month. AssemblyAI has no hard limit
+ * of its own, only alerts.
  */
 export const MONTHLY_SPEND_CAP_USD = 10
 
 /**
- * The owner's one-time ceiling for transcribing the replays of calls held
- * since 2018 (2026-11-21): about 210 hours. It is its own basis, so the
- * backfill never spends the monthly cap that new calls need.
+ * The owner's one-time ceiling for transcribing replays of calls held since 2018 (about
+ * 210 hours). A separate basis, so the backfill never spends the monthly cap new calls need.
  */
 export const BACKFILL_SPEND_CAP_USD = 75
 /** A call held before this is the backfill's; one since, the month's. */

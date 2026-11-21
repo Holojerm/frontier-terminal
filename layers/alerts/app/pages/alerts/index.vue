@@ -1,14 +1,11 @@
 <script setup lang="ts">
-// Every alert, newest first, split by materiality: the alerts (notable,
-// critical) lead, the minor changes (info) follow as one line each. Each
-// headline is a permalink to the alert with its cited rows in full. The Atom
-// feed at /alerts.xml carries the alerts; ?include=info adds the minor changes.
+// Every alert, newest first: alerts (notable, critical) lead, minor changes (info) follow
+// as one line each. The Atom feed at /alerts.xml carries the alerts; ?include=info adds the
+// minor changes.
 //
-// The filters (?lab=, ?topic=, ?tier=critical|notable) are the /api/alerts
-// parameters, spelled the same, so a filtered view is a link someone can send.
-// Lab and topic narrow both lists; the level narrows the alert list. "Show
-// more" pages back through the whole history by cursor rather than slicing one
-// fixed fetch, so nothing older than the newest page is out of reach.
+// The filters (?lab=, ?topic=, ?tier=critical|notable) are the /api/alerts parameters, so a
+// filtered view is a shareable link. Lab and topic narrow both lists; the level narrows the
+// alert list. "Show more" pages back by cursor, so the whole history is reachable.
 
 const watchlist = useWatchlist()
 
@@ -82,9 +79,8 @@ const minorQuery = computed(() => ({
   limit: PAGE,
 }))
 
-// The rows print when, lab, topic, headline and one figure; the explanation and
-// the cited changes are on each permalink, so slimAlerts keeps only what the
-// rows read. A hiring alert cites 150 changes; in full they were most of the page.
+// slimAlerts keeps only what the rows read (the explanation and cited changes are on each
+// permalink). A hiring alert cites 150 changes, which in full were most of the page.
 const slim = (d: AlertsData): AlertsData => ({ ...d, rows: slimAlerts(d.rows) })
 
 const [{ data: alerts, error: alertsError }, { data: minor, error: minorError }, { data: record }] =

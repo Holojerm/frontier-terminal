@@ -10,9 +10,7 @@ import { parseStatuspageIncidents } from './statuspage'
 // field on this page, so Vibe and Le Chat incidents count alongside API ones
 // (sources.yaml caveat).
 
-// prov defaults to the fixture manifest's record (fixture-only behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead.
+// One-argument calls read the fixture's provenance, keeping the determinism gate byte-identical.
 export function parseMistralStatus(
   text: string,
   prov: Provenance = fixtureProvenance('mistral-status'),

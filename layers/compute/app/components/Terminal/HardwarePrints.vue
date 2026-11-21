@@ -1,10 +1,7 @@
 <script setup lang="ts">
-// The hardware layer's monthly prints (/api/prints): one row per company with
-// its newest month, the change on a year earlier as the release states it,
-// the last two years as a sparkline and when we first held the figure; then
-// Korea's chip exports, one row per window (the first 10 and 20 days, the
-// month), and UN Comtrade's HS 8542 months with the change we compute; then
-// the quoted ties naming who each company builds for or supplies.
+// The hardware layer's monthly prints (/api/prints): per company its newest month,
+// change on a year, a two-year sparkline and first sighting; Korea's chip exports
+// by window; UN Comtrade's HS 8542; and the quoted ties.
 
 import type { PrintsData } from '../../../shared/utils/prints'
 

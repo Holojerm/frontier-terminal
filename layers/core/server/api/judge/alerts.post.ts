@@ -1,15 +1,10 @@
-// POST /api/judge/alerts — the judge routine's verdicts. Bearer
-// NUXT_JUDGE_TOKEN (layers/core/server/utils/judge-auth.ts). The body is gated raw, as
-// text, so the schema check sees exactly what the model produced; what
-// survives it is grounded against the cited change rows as D1 holds them,
-// stamped, and written through the store's one chokepoint
-// (layers/core/server/pipeline/judge/submit.ts). Any class_map re-mapping is checked
-// against the vendor page as R2 holds it (layers/pricing/server/pipeline/judge/class-map.ts).
-//
-// 422 when the whole body failed the schema gate or the cursor check
-// (layers/core/server/pipeline/judge/submit.ts › checkCursor) — that run is recorded and
-// nothing else is; the 200 carries counts, including grounding rejections,
-// because a partially accepted run is still a run.
+// POST /api/judge/alerts: the judge routine's verdicts, bearer NUXT_JUDGE_TOKEN
+// (layers/core/server/utils/judge-auth.ts). The body is gated raw, as text, so
+// the schema sees exactly what the model produced; survivors are grounded
+// against the cited change rows as D1 holds them and written through
+// layers/core/server/pipeline/judge/submit.ts. 422 when the whole body fails the
+// schema gate or the cursor check; otherwise 200 with counts, since a partially
+// accepted run is still a run.
 
 import sourcesYaml from 'raw:~~/sources.yaml'
 

@@ -2,18 +2,11 @@
 // (server/utils/log.ts) is the other half, keeping the query string out.
 
 /**
- * An error's message with whatever it wrapped folded in.
- *
- * `createError({ cause })` is how this app rethrows a failure it could not
- * handle — layers/core/server/utils/terminal-handler.ts turns any D1 fault into one
- * `503 Database unavailable` and hangs the real error off `cause`. The digest
- * that reaches a human carried only the wrapper, so every distinct way the
- * database can fail arrived as the same sentence and the mail said nothing a
- * reader could act on. The cause is the part worth having.
- *
- * Only one level is unwrapped on purpose: a chain deeper than that is a stack
- * trace, and the stack is already on the log line beside this. The one
- * exception is a failed Drizzle query (queryDetail).
+ * An error's message with its `cause` folded in.
+ * layers/core/server/utils/terminal-handler.ts rethrows every D1 fault as one
+ * `503 Database unavailable` with the real error as `cause`, so a digest of the
+ * wrapper alone says nothing actionable. One level only (deeper is a stack
+ * trace, already on the log line), except a failed Drizzle query (queryDetail).
  */
 export function errorDetail(error: unknown): string {
   const message = messageOf(error)

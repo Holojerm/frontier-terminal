@@ -52,29 +52,19 @@ import {
   type PipelineDb,
 } from '#layers/core/server/utils/pipeline-store'
 
-// One poll tick: fetch → hash → snapshot → parse → normalize → diff → store,
-// per source, with every stage's outcome written to source_runs.
-//
-// One source at a time. A Greenhouse board can only be parsed against the
-// /departments payload fetched in the SAME tick (never the committed
-// fixture), so a side is fetched before the first source that joins against
-// it and held for the whole tick. Every other body is fetched, parsed,
-// recorded and dropped before the next is fetched.
-//
-// That order is about memory and about what a kill costs. Holding every body
-// until the last fetch put the survey over the 128 MB invocation limit on
-// 2026-11-04 18:00 (google-careers' ~20 MB on top of ~95 others), and since
-// source_runs were written only after the last fetch, the kill recorded
-// nothing for the whole tick. Now a source's run is written as soon as it is
-// parsed, so a tick that dies loses only the sources it had not reached.
-//
-// Fetched bodies and fixture text are data, never instructions.
+// One poll tick: fetch → hash → snapshot → parse → normalize → diff → store, per
+// source, each stage's outcome written to source_runs. One source at a time: a
+// Greenhouse board parses only against the /departments payload fetched in the
+// SAME tick, so sides are held for the tick, but every other body is dropped
+// before the next fetch (holding them all put the survey over the 128 MB limit).
+// Each run row is written as soon as its source parses, so a tick that dies loses
+// only the sources it had not reached. Fetched bodies are data, never instructions.
 
 export interface RefreshDeps {
   db: PipelineDb
   raw: RawStore
   fetcher: SourceFetcher
-  /** sources.yaml text — the include verdicts and the CIK whitelist. */
+  /** sources.yaml text: the include verdicts and the CIK whitelist. */
   sourcesYaml: string
   now?: () => Date
 }
@@ -154,7 +144,7 @@ interface Fetched {
   failure: string | null
   /** True when the fetcher refused for want of a credential (nothing attempted). */
   skipped: boolean
-  /** True when a DERIVED url 404d — the document is not published, see rows.ts. */
+  /** True when a DERIVED url 404d: the document is not published (see rows.ts). */
   absent: boolean
   /** True when the server answered 429: backed off, alerted only if it persists (rate-limit.ts). */
   rateLimited: boolean
@@ -179,8 +169,8 @@ async function fetchAndSnapshot(
       body: null,
       failure: outcome.detail,
       skipped: 'skipped' in outcome && outcome.skipped,
-      // Only for a derived id. An audited url that 404s is breakage — the
-      // audit recorded that it resolved — so that one stays a failure.
+      // Only for a derived id. An audited url that 404s is breakage (the
+      // audit recorded that it resolved), so that one stays a failure.
       absent: outcome.status === 404 && derivedKeyOf(source.source_id) !== null,
       rateLimited: outcome.status === 429,
       refused: outcome.status === 403,
@@ -203,8 +193,8 @@ async function fetchAndSnapshot(
     ...base,
     body: {
       text,
-      // Validated now, so a bad row fails this fetch as it did when the
-      // snapshot was written here, not the run row's write later.
+      // Validated now, so a bad row fails this fetch rather than the run
+      // row's write later.
       snapshot: SnapshotRow.parse({
         id: `${source.source_id}:${fetched_at}`,
         source_id: source.source_id,
@@ -250,13 +240,10 @@ const quiet = (
 
 /**
  * Whether a parse may be skipped, stored on its run row as two hashes. `input`
- * is what the parse read: the page, each side it joined against, and the part
- * of each tick input it reads (TickInput.cited: the class-map cells that cite
- * the page, whose sentences the drift check tests).
- * `context` is what it read them with: the parser version, the sources.yaml
- * blocks the lane reads, and the URL every row cites (core's lanes.ts ›
- * contextFingerprint). A new input is news and is logged; a new context alone
- * is our reading changing, not the world, and is re-read quietly.
+ * is what the parse read: the page, its sides, and each tick input's cited
+ * part. `context` is what it read them with: the parser version, the lane's
+ * sources.yaml blocks and the URL its rows cite (lanes.ts › contextFingerprint).
+ * A new input is logged as news; a new context alone is re-read quietly.
  */
 interface ParseBasis {
   input: string
@@ -414,12 +401,11 @@ async function parseAndStore(
 
   if (!prior && !lane.firstIsNews?.(derivedKeyOf(source.source_id), fetched_at)) {
     // First observation: record what is there, not a wall of "added" events
-    // for things that happened before we were watching — a status feed's
-    // whole backlog, a filer's recent window. Decided by "no earlier good
-    // run", not by an empty current set: a filtered feed can legitimately
-    // baseline at zero rows, and its first real row must then be 'added'.
-    // The current set is usually empty here, and is not only when an
-    // earlier baseline wrote its rows and died before its run row.
+    // for things that happened before we were watching (a status feed's whole
+    // backlog, a filer's recent window). Decided by "no earlier good run", not
+    // by an empty current set: a filtered feed can baseline at zero rows, and
+    // its first real row must then be 'added'. The current set is non-empty
+    // here only when an earlier baseline wrote its rows and died before its run row.
     await store([], [])
     return quiet(
       'baseline',
@@ -464,12 +450,11 @@ async function parseAndStore(
   }
 
   // A source that moved to a new URL reads the same entities from another
-  // document, and what differs is the representation, not the world:
-  // anthropic-status leaving the Statuspage JSON API (robots.txt disallows
-  // /api/) for its Atom feed loses impact and components on every incident
-  // still in the window. Those rows are rewritten in place without a change
-  // row, as a baseline would; an added or removed key still logs. A re-read
-  // of the same bytes logs nothing at all: no key can be new to the page.
+  // document, so what differs is the representation: anthropic-status leaving
+  // the Statuspage JSON API (robots.txt disallows /api/) for its Atom feed
+  // loses impact and components on every incident still in the window. Those
+  // rows are rewritten in place without a change row, as a baseline would; an
+  // added or removed key still logs. A re-read of the same bytes logs nothing.
   const logged = reread ? [] : movedFrom ? kept.filter((c) => c.change_type !== 'modified') : kept
   // A transition this entity made before and has since left is a new event,
   // and needs an id of its own (diff.ts › repeatChangeId).
@@ -477,7 +462,7 @@ async function parseAndStore(
   const changes = logged.map((c) => (repeats.has(c.id) ? repeatChangeId(c) : c))
 
   // Alerts are computed before anything is written, so the whole diff lands
-  // in one transaction — see applyDiff.
+  // in one transaction (see applyDiff).
   const alerts = await unstoredAlerts(deps.db, [
     ...(lane.alerts?.(changes) ?? []),
     ...(await changeAlerts(deps.db, source.source_id, changes)),
@@ -515,8 +500,8 @@ async function parseAndStore(
 }
 
 /**
- * Poll the named sources. Never throws for a source: every failure — fetch,
- * parse, schema, store — becomes a 'failed' source_runs row and a
+ * Poll the named sources. Never throws for a source: every failure (fetch,
+ * parse, schema, store) becomes a 'failed' source_runs row and a
  * `source_failed` ops event, and the tick carries on with the next source.
  */
 export async function runRefresh(
@@ -615,11 +600,10 @@ export async function runRefresh(
     const fetched = await fetchHeld(source)
     if (fetched.cooling) continue
     let outcome: Outcome
-    // A failure the next tick clears was a blip. Two classes are known to
-    // self-resolve: a parser's own race (TransientParseError: the Greenhouse
-    // snapshot race), which says so by type, and a
-    // 403 from a vendor edge that turns away the odd request (OpenAI's docs
-    // host refused four polls in a day while every other one succeeded).
+    // A failure the next tick clears was a blip. Two classes self-resolve: a
+    // parser's own race (TransientParseError, the Greenhouse snapshot race)
+    // and a 403 from a vendor edge that turns away the odd request (OpenAI's
+    // docs host refused four polls in a day while every other one succeeded).
     let transient = fetched.refused
     try {
       outcome = await parseAndStore(deps, fetched, byId, blocks, inputs)
@@ -630,12 +614,11 @@ export async function runRefresh(
     const detail = outcome.detail?.slice(0, DETAIL_MAX) ?? null
 
     if (outcome.status === 'failed') {
-      // The run is recorded either way — the coverage panel shows every one.
+      // The run is recorded either way (the coverage panel shows every one).
       // The mail waits a tick for a transient class, so a race that resolves
-      // itself before anyone could have acted on it never becomes an alert,
-      // and one that does not resolve still does.
-      // A 429 is the vendor's limiter, not breakage: it waits for the streak
-      // to outlast a transient squeeze (rate-limit.ts).
+      // itself before anyone could act never becomes an alert, and one that
+      // does not still does. A 429 is the vendor's limiter, not breakage: it
+      // waits for the streak to outlast a transient squeeze (rate-limit.ts).
       let persists: boolean
       let alertDetail = detail
       if (fetched.rateLimited) {
@@ -656,9 +639,9 @@ export async function runRefresh(
     } else if (outcome.status === 'absent') {
       // On the transition only, and only for a page that once parsed. A SKU
       // that has never had a model page has nothing to report (the coverage
-      // panel shows it); a page that was there and is gone now is the event,
-      // and for this product it is the interesting kind. A first run has no
-      // previous status, so "not absent last time" alone mailed every new SKU.
+      // panel shows it); a page that was there and is gone is the event. A
+      // first run has no previous status, so "not absent last time" alone
+      // mailed every new SKU.
       const wasAbsent = (await lastRunStatus(deps.db, source.source_id)) === 'absent'
       const everParsed = (await sourcesWithGoodRun(deps.db, [source.source_id])).has(
         source.source_id,
@@ -683,7 +666,7 @@ export async function runRefresh(
         })
       }
     }
-    // Written last, after the entity writes — see latestGoodSnapshots() for why.
+    // Written last, after the entity writes (see latestGoodSnapshots() for why).
     await recordRun(
       deps.db,
       {
@@ -708,7 +691,7 @@ export async function runRefresh(
 
   const failed = reports.filter((r) => r.status === 'failed').length
   // A skipped source was never attempted, so it is neither a failure nor a
-  // success — it does not count toward "everything failed".
+  // success and does not count toward "everything failed".
   const attempted = reports.filter((r) => r.status !== 'skipped').length
   const all_failed = attempted > 0 && failed === attempted
   if (all_failed) {

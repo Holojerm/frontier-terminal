@@ -1,7 +1,6 @@
 // Cron task: the earnings-call reader, hourly at :07 (layers/companies/server/calls/ingest.ts).
-// A call's release reaches EDGAR within minutes and its transcript within a
-// day or two, so an hourly read puts first_seen_at within the hour. Each
-// AssemblyAI job submitted on one run is collected on a later one.
+// Releases reach EDGAR within minutes, so hourly keeps first_seen_at within the
+// hour; an AssemblyAI job submitted on one run is collected on a later one.
 
 import { runCallReads } from '../../calls/ingest'
 import { paceSec } from '#layers/core/server/pipeline/sec-pace'

@@ -1,9 +1,6 @@
 <script setup lang="ts">
-// The compute layer: what renting a GPU costs and how full the capacity looks
-// from outside. All read the thesis recipes (GPU price pages, SEC filings,
-// MLPerf results and Epoch AI's datasets). Every figure has its source and
-// fetch time. The hardware prints and the power panels moved to /hardware and
-// /power; MOVED forwards their old anchors there.
+// The compute layer: GPU rental costs and how full capacity looks from outside.
+// MOVED forwards the old anchors of panels now on /hardware and /power.
 
 definePageMeta({
   publicPage: {

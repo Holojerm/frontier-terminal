@@ -2,10 +2,8 @@
 
 **Load this when:** adding a dataset, route, table or page.
 
-A dataset that reaches only its own page is half shipped. In November several did: the home
-page, tear sheet, MCP tools, bulk exports and alerts still described the original seven axes.
-`bun run surfaces:check` (in `bun run ci` and `ci:fast`) makes every gap either closed or
-written down.
+A dataset that reaches only its own page is half shipped. `bun run surfaces:check` (in
+`bun run ci` and `ci:fast`) makes every gap either closed or written down.
 
 ## What a dataset reaches
 
@@ -23,7 +21,7 @@ written down.
 The lab page and tear sheet are asked for only when a route is per lab. A route is per lab
 when it takes `?lab=` (`lab: z.…` in its query schema, or `lab` destructured from
 `getValidatedQuery`), or when the lab page or tear sheet already reads it. A lab-specific read
-uses the route's `?lab=` on the server. It never filters an all-lab payload in the page.
+uses the route's `?lab=` on the server and never filters an all-lab payload in the page.
 
 Routes checked: every GET under each fork-owned layer's `server/api/` except the writers in `judge/`,
 `gdelt/` and `subscribe/`. Tables checked: every `sqliteTable` in each layer's `server/db/tables/`.
@@ -56,11 +54,10 @@ one of:
 - `not yet:` a gap someone should close.
 
 The gate fails on a gap with no waiver, on a waiver whose gap is gone (stale), and on an
-empty or multi-line reason. So the PR that closes a gap deletes its waiver in the same diff,
-and a `not yet:` waiver never outlives its fix.
+empty or multi-line reason, so the PR that closes a gap deletes its waiver in the same diff.
 
 Add a waiver only after deciding the surface is wrong for this dataset or can't be built in
-this PR. "Didn't get to it" is a `not yet:`, written down where the next agent will see it.
+this PR. "Didn't get to it" is a `not yet:`.
 
 ## Adding a dataset
 

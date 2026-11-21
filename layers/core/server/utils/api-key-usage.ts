@@ -1,20 +1,10 @@
-// Requests per key per UTC day, in KV, so the owner can see who uses what
-// (`bun run keys:list`, and the totals on /api/fleet). Never public.
-//
-// A counter shared by every isolate would be a read-modify-write per request:
-// it races, and at a licensee's ten requests a second it runs into KV's limit
-// of one write a second per key. So each isolate counts in memory and writes
-// its own running total to its own shard,
-//
-//   apikey-usage:<YYYY-MM-DD>:<key id>:<isolate>
-//
-// at most once per USAGE_FLUSH_MS. No shard is written by two isolates, so a
-// write never needs a read first, and the day's count is the sum of its
-// shards. The total is in the shard's KV metadata too, so one `list` (wrangler
-// kv key list in scripts/keys.ts) reads a day without a get per shard.
-//
-// It can undercount: an isolate evicted between flushes loses what it counted
-// since the last one. That's fine for seeing who uses what. It isn't billing.
+// Requests per key per UTC day, in KV, for `bun run keys:list` and the /api/fleet
+// totals. Never public. A shared counter would race and hit KV's one write a
+// second per key, so each isolate counts in memory and writes its running total,
+// at most once per USAGE_FLUSH_MS, to its own shard
+// (`apikey-usage:<YYYY-MM-DD>:<key id>:<isolate>`); a day is the sum of its
+// shards. The total is also in each shard's metadata, so one `list` reads a day.
+// An isolate evicted between flushes loses its count: fine for usage, not billing.
 
 export const USAGE_PREFIX = 'apikey-usage'
 export const USAGE_FLUSH_MS = 30_000

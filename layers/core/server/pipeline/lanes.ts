@@ -9,17 +9,11 @@ import type { PipelineDb } from '../utils/pipeline-store'
 import type { LaneBlocks, TickInputs } from '#server/registries/lane-context'
 
 // The lane contract: how each include source turns a fetched body into
-// entities — the join between the registry (which runs parsers on committed
-// fixtures with fixture provenance) and a live tick (which stamps the fetch's
-// own provenance and joins against payloads fetched in the same tick). Each
-// domain defines its lanes beside its parsers; server/registries/lanes.ts
-// assembles them, and server/registries/lane-context.ts types what a parse
-// reads beyond its own fetch.
-//
-// A source with no lane is fetched and snapshotted but yields no entities:
-// the Greenhouse /departments feeds exist to be joined, and the OpenRouter
-// model list is a cross-check that must never become a source of record
-// (sources.yaml).
+// entities, shared by the fixture registry and the live tick. Domains define
+// lanes beside their parsers; server/registries/lanes.ts assembles them. A
+// source with no lane is fetched and snapshotted but yields no entities: the
+// Greenhouse /departments feeds exist to be joined, and the OpenRouter model
+// list must never become a source of record (sources.yaml).
 
 export interface ParseContext extends LaneBlocks, Partial<TickInputs> {
   prov: Provenance
@@ -54,22 +48,21 @@ export interface Lane {
   /**
    * 'set': the page IS the current set, so an entity that disappears is a
    * removal (a job closed, a model delisted). 'append-only': the feed is a
-   * recent-filings window, and a filing scrolling out of it was not un-filed —
-   * no removal is recorded and the entity stays.
+   * recent-filings window and a filing scrolling out of it was not un-filed,
+   * so no removal is recorded and the entity stays.
    */
   removals: 'set' | 'append-only'
   /**
-   * A source's first parse is normally a quiet baseline: what was there
-   * before we watched is not news. True when this source's first parse IS
-   * the event — a registration document is its own source, so its first and
-   * only content is the filing itself. Called with the derived key and the
-   * fetch time.
+   * A source's first parse is normally a quiet baseline: what was there before
+   * we watched is not news. True when the first parse IS the event: a
+   * registration document is its own source, so its only content is the
+   * filing. Called with the derived key and the fetch time.
    */
   firstIsNews?: (derivedKey: string | null, fetchedAt: string) => boolean
   /**
    * The sources.yaml-derived blocks parse() reads. They go into the context
    * fingerprint (contextFingerprint), so an unchanged page is parsed again
-   * when one of them changes — a filer retagged, a CIK whitelisted.
+   * when one of them changes (a filer retagged, a CIK whitelisted).
    */
   reads?: readonly ContextBlock[]
   parse(text: string, ctx: ParseContext): ParseResult

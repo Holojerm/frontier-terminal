@@ -1,9 +1,7 @@
 <script setup lang="ts">
-// A stated absence (DESIGN.md › Empty states and gaps). `title` says what is
-// missing, `reason` says why, because an empty panel that cannot explain
-// itself reads as a broken one. Inline, it sits in the table cell or line
-// where the number would have been, the reason behind an info control; as a
-// block it is a dashed box with at most one action.
+// A stated absence (DESIGN.md › Empty states and gaps): `title` says what is
+// missing, `reason` why. Inline it sits where the number would be, the reason
+// behind an info control; as a block it is a dashed box with at most one action.
 
 defineProps<{
   title: string

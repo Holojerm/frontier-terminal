@@ -1,13 +1,9 @@
 // The request side of licensee keys: read the key once per request, refuse a
-// bad one with a 401, and spend the right budget.
-//
-// Keys only raise limits and change the license a history row is labeled
-// with. They never unlock a different fact, a row the public site doesn't
-// have yet, or a source the owner can't license (payloads are `rights: ours`
-// only, server/routes/export/payloads). Every public route that takes a key
-// calls rateLimitTerminal() first, in place of core's rateLimit(). The gated
-// routes (/api/fleet, /api/judge, /api/ops, /api/gdelt, /api/relay) read their own bearer
-// and never come through here, and neither do /mcp and /alerts.xml.
+// bad one with a 401, and spend the right budget. Keys only raise limits and
+// change a history row's license label, never unlock data (payloads are
+// `rights: ours` only). Public routes that take a key call rateLimitTerminal()
+// instead of core's rateLimit(); the bearer-gated routes, /mcp and /alerts.xml
+// never come here.
 
 import type { H3Event } from 'h3'
 
@@ -71,14 +67,10 @@ export type Budget = 'read' | 'export'
 const keyedLimit = (tier: ApiKeyTier, budget: Budget): number => REQUEST_BUDGETS[tier][budget]
 
 /**
- * Core's rateLimit(), keyed: anonymous callers spend `opts` per IP exactly as
- * before, and a key spends its tier's budget per key. `budget` says which of
- * the tier's budgets a route draws on.
- *
- * The `read` budget is the public, read-only, high-volume path, so it passes
- * `exact: false`: where its numbers match a native limiter (READ_PATH_LIMITER,
- * KEYED_READ_LIMITERS) that limiter decides alone and no D1 write is made per
- * read. The `export` budget walks whole tables and stays exact.
+ * Core's rateLimit(), keyed: anonymous callers spend `opts` per IP, a key its
+ * tier's `budget` per key. The `read` budget passes `exact: false`, so where a
+ * native limiter matches (READ_PATH_LIMITER, KEYED_READ_LIMITERS) it decides
+ * alone with no D1 write per read; `export` walks whole tables and stays exact.
  */
 export async function rateLimitTerminal(
   event: H3Event,

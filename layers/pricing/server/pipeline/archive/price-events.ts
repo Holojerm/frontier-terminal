@@ -1,24 +1,18 @@
-// Launches and price changes read off the archived price lists
-// (archived_prices), for the event studies on the labs' tickers. Pure: the
-// parsed captures and their rows in, events out. Nothing is stored; the
-// signal loader derives them each run (signals/sources.ts), so a re-parse or
-// a narrower capture window reaches the harness without a migration.
+// Launches and price changes read off the archived price lists (archived_prices), for the
+// event studies on the labs' tickers. Pure and never stored: the signal loader derives them
+// each run (signals/sources.ts), so a re-parse or a narrower capture window needs no migration.
 //
-// A launch is a model's first appearance on its lab's list; a price change is
-// a SKU's input price moving between two consecutive copies that both list
-// it. Either is known only to fall between the copy before and the copy that
-// shows it, so each event carries that window. Where the lab's own release
-// notes (release-notes.ts) date a note naming the model inside the window,
-// the event takes the note's date and URL; otherwise it is dated at the
-// window's start and keeps the window's width as its uncertainty, which the
-// harness uses to leave it out of the short horizons (harness.ts ›
-// maxWindowDays).
+// A launch is a model's first appearance on its lab's list; a price change is a SKU's input
+// price moving between two consecutive copies that both list it. Each is known only to fall
+// between the copy before and the copy that shows it, so it carries that window. A release
+// note (release-notes.ts) naming the model inside the window gives the event its date and URL;
+// otherwise it is dated at the window's start, and the harness uses the window's width to keep
+// it out of the short horizons (harness.ts › maxWindowDays).
 //
-// Never counted twice: every era ends by ARCHIVE_UNTIL, and the live loaders
-// start there. Never guessed: a model or price seen first on a copy read by a
-// different parser than the copy before (an era boundary) is an event only
-// when a release note dates it inside the window, since a new page layout
-// can list models the old parser never read.
+// Never counted twice: every era ends by ARCHIVE_UNTIL, where the live loaders start. Never
+// guessed: a model or price first seen on a copy read by a different parser than the copy
+// before (an era boundary) is an event only when a release note dates it inside the window,
+// since a new page layout can list models the old parser never read.
 
 import { canonicalModel, type ReleaseNote } from './release-notes'
 

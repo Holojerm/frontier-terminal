@@ -1,8 +1,6 @@
 <script setup lang="ts">
-// The lead band: what changed, as a table an analyst can scan in one
-// breath. Alert rows first, then the minor changes as one line, then the raw
-// change counts by axis, then an explicit quiet state — a terminal that
-// cannot say "nothing moved" is a terminal you have to re-read every morning.
+// The lead band: alert rows, then the minor changes as one line, then raw change counts by
+// axis, then an explicit quiet state, so "nothing moved" is said rather than inferred.
 
 import type { OverviewData } from '../../../shared/types/overview'
 

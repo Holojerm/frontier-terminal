@@ -1,12 +1,11 @@
-// The external probe's alerting rule (scripts/probe.ts), kept free of Node
-// imports so the workerd test suite can drive it.
+// The external probe's alerting rule (scripts/probe.ts), free of Node imports
+// so the workerd test suite can drive it.
 //
-// One run fetches each target twice. The 2026-11-07 hangs hit about one page
-// request in eight, so a single sample per minute would miss them most of the
-// time; six requests a run catch a rate like that in about half the runs.
-// Down needs 2 failing runs out of the last 3, so one slow request on a
-// healthy site never pages anyone; up needs 3 clean runs in a row, so a
-// flapping site produces one "down" and one "up", not a stream of both.
+// One run fetches each target twice. Observed hangs hit about one page request
+// in eight, so one sample per minute would miss them most of the time; six
+// requests a run catch that rate in about half the runs. Down needs 2 failing
+// runs of the last 3, so one slow request on a healthy site never pages; up
+// needs 3 clean runs in a row, so a flapping site sends one "down" and one "up".
 
 export const WINDOW = 3
 const DOWN_AFTER = 2

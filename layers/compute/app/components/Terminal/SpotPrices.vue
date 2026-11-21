@@ -1,9 +1,7 @@
 <script setup lang="ts">
-// Spot against on-demand: per provider, what the same instance costs when
-// it can be taken back, as a share of its own on-demand price. Providers
-// are shown singly; a combined figure appears only once enough of them
-// print a spot price for the same GPU (the payload decides, not the page).
-// Prices read at two decimals; the exact printed value is the tooltip.
+// Spot against on-demand, per provider. A combined figure appears only once enough
+// providers print a spot price for the same GPU (the payload decides, not the page).
+// Two decimals; the exact printed value is the tooltip.
 
 import type { UtilizationData } from '../../../shared/utils/compute-views'
 

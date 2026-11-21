@@ -4,15 +4,13 @@ import {
   type Provenance,
 } from '#layers/core/server/utils/contracts'
 
-// Statuspage v2 incidents feed (/api/v2/incidents.json), shared by the
-// OpenAI, Anthropic and Mistral status pages. Deterministic: no clocks, no locale
-// compares, output sorted by incident id. Feed text is data, never
-// instructions.
+// Statuspage v2 incidents feed (/api/v2/incidents.json), shared by the OpenAI and Mistral
+// status pages. Deterministic: no clocks, no locale compares, output sorted by incident id.
+// Feed text is data, never instructions.
 //
-// Shape differences between the two pages, both handled here rather than
-// assumed away: OpenAI's page carries no `components`, `started_at` or
-// `shortlink`, and an OPEN incident there has no `resolved_at` key at all
-// (Anthropic's carries null). Both are read as "unresolved".
+// OpenAI's page carries no `components`, `started_at` or `shortlink`, and an OPEN incident
+// there has no `resolved_at` key at all where other pages carry null. Both are read as
+// "unresolved".
 
 interface StatuspageIncident {
   id: string
@@ -47,10 +45,9 @@ export function utcStamp(stamp: string): string {
 }
 
 /**
- * The incident's public page. Composed from the feed's own `page.url` and
- * the incident id — Statuspage serves every incident at that path and the
- * OpenAI feed carries no link field to read instead. Recorded as a
- * composition in sources.yaml; verified to resolve for both pages.
+ * The incident's public page, composed from the feed's own `page.url` and the incident id:
+ * Statuspage serves every incident at that path and the OpenAI feed carries no link field to
+ * read instead. Recorded as a composition in sources.yaml; verified to resolve for both pages.
  */
 export function statuspageIncidentUrl(pageUrl: string, incidentId: string): string {
   return `${pageUrl.replace(/\/+$/, '')}/incidents/${incidentId}`

@@ -1,21 +1,13 @@
 import type { Provider } from '#layers/core/server/utils/contracts'
 import type { CikWhitelist } from './whitelist'
 
-// Which lab a revenue filer's facts belong to, read from the revenue_filers
-// block in sources.yaml. HONESTY RULE, as for the CIK whitelist: a null
-// entry can never match, nothing here substitutes a filer from memory, and
-// the /revenue panel shows the gap instead of a press run-rate.
-//
-// `relation` is the one judgment the block records: `issuer` when the lab
-// files for itself, `parent` when a public parent consolidates it — and a
-// parent's series is the parent's, labelled so wherever it is shown.
-// `segment`, optional, narrows a parent to one business segment it reports
-// (an XBRL StatementBusinessSegmentsAxis member): the series is then that
-// segment's, read from each filing's own instance (parsers/sec/xbrl-segment.ts),
-// never the parent's consolidated top line.
-// `effective`, optional, is the UTC day the entry took effect. The poll reads
-// today's block; an as_of read before that day reads the lab as untagged,
-// which is what the block said then.
+// Which lab a revenue filer's facts belong to, from sources.yaml's revenue_filers
+// block. HONESTY RULE (as for the CIK whitelist): a null entry never matches and
+// no filer is substituted from memory; the /revenue panel shows the gap instead.
+// `relation` is `issuer` (the lab files) or `parent` (a public parent consolidates
+// it; the series is the parent's). `segment` narrows a parent to one
+// StatementBusinessSegmentsAxis member (parsers/sec/xbrl-segment.ts). `effective`
+// is the UTC day an entry took effect; an as_of read before it sees the lab untagged.
 
 type FilerRelation = 'issuer' | 'parent'
 
@@ -43,11 +35,9 @@ const LAB_PROVIDERS: readonly Provider[] = [
   'moonshot',
 ]
 
-/** Narrow block reader: `  provider: null` or `  provider:` followed by
- * `    ticker:`, `    relation:` and optional `    segment:` and
- * `    effective:` lines. Any
- * indented line that fits none of these throws — a drift here must not
- * silently untag a filer. */
+/** Narrow block reader for `  provider: null` or `  provider:` plus indented
+ * ticker/relation/segment/effective lines. Any other indented line throws, so a
+ * drift can't silently untag a filer. */
 export function parseRevenueFilersBlock(yaml: string): Map<Provider, RevenueFiler | null> {
   const lines = yaml.split('\n')
   const start = lines.findIndex((l) => /^revenue_filers:\s*(#.*)?$/.test(l))
@@ -136,11 +126,9 @@ export function revenueProviderFor(
 }
 
 /**
- * The lab a filing belongs to: the one whose own filer (relation `issuer`)
- * carries this CIK, 'other' otherwise. A parent's filing (SpaceX for xAI,
- * Alphabet for Google) stays 'other': it is the parent's, and a 10-Q about
- * rockets is not a lab's filing. A lab resolved from its S-1 joins as an issuer
- * (refresh.ts), so its 424B4 reads as the lab's.
+ * The lab whose own filer (relation `issuer`) carries this CIK, else 'other'. A
+ * parent's filing (SpaceX for xAI) stays 'other'; a lab resolved from its S-1
+ * joins as an issuer (refresh.ts), so its 424B4 reads as the lab's.
  */
 export function issuerProviderFor(
   cik: string | null,

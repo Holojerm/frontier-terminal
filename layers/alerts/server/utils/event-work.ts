@@ -1,10 +1,7 @@
-// What each EVENTS message does (layers/core/server/utils/events.ts says
-// why the queue exists). Every dependency is passed in, so
-// layers/alerts/test/events.test.ts drives the whole thing against workerd's D1
-// with fakes for Buffer, the webhook sender, the mail binding and the queue.
-//
-// The outboxes are unchanged: these functions call the same idempotent
-// enqueue and drain steps the */5 tasks used to, then decide when the next
+// What each EVENTS message does (layers/core/server/utils/events.ts says why the queue
+// exists). Every dependency is passed in, so layers/alerts/test/events.test.ts drives it
+// against workerd's D1 with fakes for Buffer, the webhook sender, the mail binding and the
+// queue. The enqueue and drain steps are idempotent; these functions decide when the next
 // drain is owed.
 
 import { and, asc, eq } from 'drizzle-orm'
@@ -31,9 +28,8 @@ import { enqueueCriticalAlerts, enqueueLaunchAlerts } from '../pipeline/social'
 export const FANOUT_SETTLE_SECONDS = 60
 
 /**
- * When a drain leaves due rows behind (Buffer's per-drain limit, a retried
- * post, a delivery waiting on the poll stamp), the next one runs this much
- * later. The same pace the five-minute tick kept, now only while work is owed.
+ * When a drain leaves due rows behind (Buffer's per-drain limit, a retried post, a
+ * delivery waiting on the poll stamp), the next one runs this much later.
  */
 export const PENDING_RECHECK_SECONDS = 300
 

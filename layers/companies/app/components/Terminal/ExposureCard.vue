@@ -1,10 +1,9 @@
 <script setup lang="ts">
-// One filer's chart on /exposure: the series that share a chart id (a cash
-// capex line and its finance-lease line, a total backlog and its cloud
-// figure), a quarter per column, and the same numbers as a table one click
-// away with the filing behind each value. A flow is charted by quarter only;
-// a longer period the filer tags without a quarter (Amazon's nine-month
-// marks) is in the table, labelled with its length.
+// One filer's chart on /exposure: the series sharing a chart id (a cash capex line and its
+// finance-lease line, a backlog and its cloud figure), a quarter per column, with the same
+// numbers as a table one click away. A flow is charted by quarter only; a longer period
+// tagged without a quarter (Amazon's nine-month marks) is in the table, labeled with its
+// length.
 
 import type { ExposurePoint, ExposureSeries } from '../../../shared/utils/terminal-exposure'
 

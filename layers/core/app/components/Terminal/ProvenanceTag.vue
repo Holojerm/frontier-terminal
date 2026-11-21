@@ -1,28 +1,17 @@
 <script setup lang="ts">
-// The graded axis, as a component: an always-visible inline citation.
-// Compact by design — a full URL and an ISO string on every row buried the
-// numbers they were meant to support. What shows is the host and a readable
-// age; the exact URL is the link and the exact fetch timestamp is the
-// <time>'s datetime and its tooltip, one hover or one click away, never
-// dropped.
-//
-// In a table cell it is one line: the host alone (never the longer label),
-// truncated, with the age
-// and the exact stamp in the link's tooltip and in a screen-reader-only
-// <time>. The panel's footer still prints every source with its age, so a
-// row trades a repeated "2h ago" for a row that is one line tall.
-//
-// Each link is `leading-6`: at text-xs its line box was 16px, under the 24px
-// target floor (DESIGN.md › Target size), and these sit stacked in table cells
-// and footers where axe found 120+ of them once the pages had real rows.
+// An always-visible inline citation: the host and a readable age, with the exact
+// URL as the link and the exact fetch time in the <time>'s datetime and tooltip.
+// In a table cell it is one line (host only, truncated) since the panel's footer
+// prints every source. Links are `leading-6`: at text-xs the 16px line box missed
+// the 24px target floor (DESIGN.md › Target size).
 
 const props = withDefaults(
   defineProps<{
     sourceUrl: string
     fetchedAt: string
-    /** Replaces the host as the link text — where the label names the source already. */
+    /** Replaces the host as the link text, where the label names the source already. */
     label?: string
-    /** Hide the link and show only the age — where the URL is already linked beside it. */
+    /** Hide the link and show only the age, where the URL is already linked beside it. */
     stamp?: boolean
     /** One line, age in the tooltip. Defaults to on inside a TerminalTable. */
     compact?: boolean
@@ -33,10 +22,9 @@ const props = withDefaults(
      */
     checkedAt?: string | null
     /**
-     * When this source's checks began failing, on a source that has failed
-     * every check for hours (Prov.failing_since). The page's "as of" is the
-     * newest check of any source, so without this the last datum read from a
-     * dead source looks as current as the rest.
+     * When this source began failing every check (Prov.failing_since). The page's
+     * "as of" is the newest check of any source, so without this a dead source's
+     * last datum looks as current as the rest.
      */
     failingSince?: string | null
   }>(),

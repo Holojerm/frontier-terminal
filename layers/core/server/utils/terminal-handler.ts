@@ -1,12 +1,10 @@
 // What every terminal API route does around its query: read the poll tick,
-// build the query context, and serve the payload through the KV cache. The
-// routes under server/api/ are a line or two each because of this.
+// build the query context, and serve the payload through the KV cache.
 //
-// Freshness differs by door, on purpose: a JSON response may trail the newest
-// stamp by up to five minutes at the edge (fresh for one, then served stale
-// while revalidating: TERMINAL_CACHE_CONTROL), while the HTML cache
-// (plugins/html-cache.ts) is keyed on the stamp and never serves a page
-// rendered from an older one.
+// Freshness differs by door: a JSON response may trail the newest stamp by up to
+// five minutes at the edge (TERMINAL_CACHE_CONTROL), while the HTML cache
+// (plugins/html-cache.ts) is keyed on the stamp and never serves a page rendered
+// from an older one.
 
 import { db } from '@nuxthub/db'
 import type { H3Event } from 'h3'
@@ -28,15 +26,13 @@ export type AsOfMode = 'none' | 'snapshot' | 'pricing' | 'hiring' | 'filed'
 export type RebuiltAsOf = Exclude<AsOfMode, 'none'>
 
 /**
- * The payload for `name` in the current tick, computed with `query` on a
- * cache miss. An empty database is an ordinary case here: every query
- * returns an honest empty shape, never a 500. A database that cannot be
- * reached is the one thing that should fail loudly — Nitro turns the throw
- * into a 503 and the error plugin spools an ops event.
+ * The payload for `name` in the current tick, computed with `query` on a cache
+ * miss. An empty database gets an honest empty shape, never a 500. An
+ * unreachable one throws, which Nitro turns into a 503 and the error plugin
+ * spools as an ops event.
  *
- * Takes no event so the MCP tools (layers/core/server/utils/mcp.ts) read through the
- * same KV entries the JSON routes fill: one cache, whichever door a client
- * comes in by.
+ * Takes no event so the MCP tools (layers/core/server/utils/mcp.ts) read the
+ * same KV entries the JSON routes fill.
  */
 export async function terminalPayload<T>(
   name: string,
@@ -69,9 +65,9 @@ function failingNow(stamp: TerminalStamps): Promise<Record<string, string>> {
 /**
  * `terminalPayload` as of the instant `at` (a validated `as_of`): the query
  * runs with ctx.at set and the payload carries `point_in_time`. The entry is
- * keyed on `at` as well as the live stamp, so a historical payload and the
- * live one never share a key, and a poll still rotates both — a late write
- * about an earlier instant (a judge alert) is picked up on the next tick.
+ * keyed on `at` as well as the live stamp, so a historical payload and the live
+ * one never share a key, and a poll still rotates both, so a late write about an
+ * earlier instant (a judge alert) is picked up on the next tick.
  */
 export async function terminalPayloadAt<T extends object | null>(
   name: string,

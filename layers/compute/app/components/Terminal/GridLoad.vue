@@ -1,8 +1,6 @@
 <script setup lang="ts">
-// Demand on each grid a lab site sits in (EIA-930): the newest whole month
-// against the same month a year before, a small chart per grid of that change
-// month by month on one shared scale, and the sites with the page that places
-// each one. The numbers in the charts are in the table too.
+// Demand on each grid a lab site sits in (EIA-930): the newest month against a year
+// before, a small chart per grid on one shared scale, and the sites placing each.
 
 import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import { type GridLoadData } from '../../../shared/utils/grid-load'

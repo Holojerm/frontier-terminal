@@ -1,26 +1,24 @@
 import type { ManifestFixture } from './fixture-provenance'
 
-// The source list is never invented in code: sources.yaml carries the
-// include verdicts (transcribed from docs/source-audit.md) and
-// fixtures/manifest.json records what was actually fetched — e.g. edgar-fts's
-// full query string, edgar-submissions' resolved CIK. Pure function of both
-// texts so it runs anywhere (Worker, workerd tests) and is trivially
-// reproducible.
+// sources.yaml carries the include verdicts (from docs/source-audit.md) and
+// fixtures/manifest.json records what was fetched (edgar-fts's full query string,
+// edgar-submissions' resolved CIK). A pure function of both texts, so it runs in
+// the Worker and in workerd tests.
 
 export interface FetchSource {
-  /** Canonical id (manifest source_id — matches snapshot rows). */
+  /** Manifest source_id; matches snapshot rows. */
   source_id: string
-  /** Concrete audited URL, incl. query strings (manifest source_url). */
+  /** Concrete audited URL, query string included (manifest source_url). */
   url: string
   /** Payload extension for stored raw payloads ("json" | "md" | "html"). */
   ext: string
 }
 
 /**
- * Include-verdict sources from sources.yaml, in file order. Narrow reader
- * (same no-YAML-dependency approach as parsers/sec/whitelist.ts): top-level
- * `sources:` block, 2-space-indented ids, 4-space-indented `verdict:` and
- * `fixture:` keys. Each entry is joined to the manifest on the fixture path.
+ * Include-verdict sources from sources.yaml, in file order, joined to the
+ * manifest on the fixture path. A narrow reader with no YAML dependency (like
+ * parsers/sec/whitelist.ts): top-level `sources:` block, 2-space-indented ids,
+ * 4-space-indented `verdict:` and `fixture:` keys.
  */
 export function includeSources(
   sourcesYaml: string,

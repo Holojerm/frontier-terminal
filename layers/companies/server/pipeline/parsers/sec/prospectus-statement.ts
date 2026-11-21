@@ -7,22 +7,14 @@ import type { RegistrationTarget } from './filing-index'
 import { figure } from './prospectus-doc'
 import type { StatementTable } from './prospectus-revenue'
 
-// The whole statement of operations a registration document prints — the
-// table prospectus-revenue.ts reads one row of — as one row per period, every
-// line verbatim. Lines the parser knows get a canonical key so a reader can
-// ask for "operating income" across filers; the rest keep their own label.
-//
-// It fails loudly rather than return a partial statement:
-//   - every line must carry one value per period column, or be a section
-//     heading with none;
-//   - revenue, total operating expenses, operating income or loss, net income
-//     or loss, a per-share line and a weighted-average share line must all be
-//     present;
-//   - every "Total …" line must equal the lines above it since the last
-//     heading, total or operating line, and operating income must equal
-//     revenue (or gross profit, where printed) less total operating expenses,
-//     each within the statement's rounding. A column that slid one cell left
-//     fails here.
+// The whole statement of operations as one row per period, every line verbatim.
+// Known lines get a canonical key so a reader can ask for "operating income"
+// across filers. It throws rather than return a partial statement: every line has
+// one value per column or none (a heading); revenue, operating expenses, operating
+// income, net income, a per-share and a weighted-average share line are present;
+// every "Total …" line foots, and operating income equals revenue (or gross
+// profit) less total operating expenses, within rounding. A column that slid one
+// cell left fails here.
 
 const CANONICAL: readonly [RegExp, string][] = [
   [/^(?:Total )?Revenues?$/i, 'revenue'],

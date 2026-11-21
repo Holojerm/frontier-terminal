@@ -1,18 +1,15 @@
-// Package downloads made comparable: raw counts of any growing AI package fit
-// any other (2026-11-20 alpha audit), so the lab series are read two more ways.
+// Package downloads made comparable. Raw counts of any growing AI package fit any other, so
+// the lab series are read two more ways:
 //
-//   normalized: npm downloads ÷ the control basket's index. The index is the
-//   median, over the non-AI controls (NPM_CONTROL_RECIPES), of each control's
-//   downloads as a multiple of its own mean over CONTROL_BASE. A registry-wide
-//   swing moves every control and cancels; the result is downloads at
+//   normalized: npm downloads ÷ the control basket's index, the median over the non-AI
+//   controls (NPM_CONTROL_RECIPES) of each control's downloads as a multiple of its own
+//   mean over CONTROL_BASE. A registry-wide swing cancels; the result is downloads at
 //   CONTROL_BASE's registry volume.
-//   share: each lab's core SDK as a share of the tracked labs' core SDKs on
-//   the same registry, per day (SHARE_SETS).
+//   share: each lab's core SDK as a share of the tracked labs' core SDKs on the same
+//   registry, per day (SHARE_SETS).
 //
-// Computed from recipe_observations on every read, like recipe-signals.ts, so
-// nothing here is stored. A day npm reported as an outage (payload.outage) is
-// left out, never read as zero. Every series has a stable id in
-// DOWNLOAD_SERIES for readers outside the adoption view.
+// Computed from recipe_observations on every read; nothing is stored. A day npm reported
+// as an outage (payload.outage) is left out, never read as zero.
 
 import { inArray } from 'drizzle-orm'
 

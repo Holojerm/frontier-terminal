@@ -1,8 +1,7 @@
 <script setup lang="ts">
-// GPU rental list prices: per GPU the median across providers, then each
-// provider once at the median of its own counted rows, with its page.
-// Prices read at two decimals so the column lines up; the exact value a
-// provider printed ($6.155) is the tooltip.
+// GPU rental list prices: per GPU the median across providers, then each provider
+// at the median of its counted rows. Two decimals so the column lines up; the exact
+// printed value ($6.155) is the tooltip.
 
 import type { GpuPricesData } from '../../../shared/types/gpu-prices'
 

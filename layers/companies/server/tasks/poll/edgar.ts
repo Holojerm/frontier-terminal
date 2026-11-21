@@ -1,14 +1,7 @@
 // Cron task: poll the EDGAR feeds and the model catalogs every 30 minutes
-// (layers/core/server/pipeline/scopes.ts).
-//
-// Scheduled from nuxt.config.ts (SCHEDULED_TASKS) and matched by the
-// [triggers] crons entry in wrangler.toml; `bun run crons:check` fails the
-// build when the two disagree. Imports are explicit, as in ops/watch.ts: a
-// task is an untested bundling surface that runs unattended.
-//
-// sources.yaml arrives as text through Nitro's `raw:` import — there is no
-// filesystem in a Worker, and the whitelist must come from the audited file,
-// never from a number typed into code (parsers/sec/whitelist.ts).
+// (layers/core/server/pipeline/scopes.ts). Imports are explicit, as in ops/watch.ts.
+// sources.yaml comes in through Nitro's `raw:` import: a Worker has no filesystem,
+// and the whitelist must come from the audited file (parsers/sec/whitelist.ts).
 
 import sourcesYaml from 'raw:~~/sources.yaml'
 
@@ -39,10 +32,8 @@ const task = defineTask({
       fetcher,
       sourcesYaml,
     })
-    // The hyperscaler filed facts (layers/companies/server/exposure/) run after
-    // a poll that ran, and not at all when it yielded to the survey or found
-    // the lock held: two invocations fetching SEC at once broke its 10/s limit
-    // on 2026-11-04 (18 instance reads answered 429 at 18:01). A failure is
+    // The filed facts (layers/companies/server/exposure/) run only after a poll that
+    // ran: two invocations fetching SEC at once break its 10/s limit. A failure is
     // spooled, never thrown over the poll.
     const skip = filedFactsSkip(result, fetcher.secRateLimited !== null)
     if (skip) console.warn(JSON.stringify({ kind: 'filed_facts_skipped', reason: skip }))

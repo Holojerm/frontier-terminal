@@ -16,9 +16,7 @@ const CATALOG_HEADING = '## Browse our full catalog of models'
 // "- [GPT-5.6 Sol](/api/docs/models/gpt-5.6-sol.md): Frontier model ..." (a line of the vendor page, not a repo path; refs-check-ignore)
 const ENTRY = /^- \[([^\]]+)\]\(\/api\/docs\/models\/([^)]+?)\.md\): (.+)$/
 
-// prov defaults to the fixture manifest's record (single-arg behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead.
+// One-argument calls read the fixture's provenance, keeping the determinism gate byte-identical.
 export function parseOpenAiModelsMd(
   text: string,
   prov: Provenance = fixtureProvenance('openai-models-md'),

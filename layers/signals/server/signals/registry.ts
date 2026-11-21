@@ -1,13 +1,12 @@
-// The signal registry: one entry per series the harness scores against the
-// tickers it is expected to lead. A new dataset registers by adding one entry
-// here, with a `source` the loaders in ./sources.ts already read, or a new
-// source kind there. Every ticker must be one market.ts pulls (MARKET_SYMBOLS),
-// and every series attaches to a lab, a listed company or a site
+// The signal registry: one entry per series the harness scores against the tickers it is
+// expected to lead. A new dataset adds one entry here, with a `source` the loaders in
+// ./sources.ts already read, or a new source kind there. Every ticker must be one market.ts
+// pulls (MARKET_SYMBOLS), and every series attaches to a lab, a listed company or a site
 // (layers/signals/test/signals-registry.test.ts).
 //
-// Sources other sessions own are registered by id only: the npm and PyPI
-// recipes and their derived series (layers/adoption/server/recipes/download-series.ts) and the probe
-// rollups (pipeline/probes/, probe_days).
+// Sources other layers own are registered by id only: the npm and PyPI recipes and their
+// derived series (layers/adoption/server/recipes/download-series.ts) and the probe rollups
+// (pipeline/probes/, probe_days).
 
 import { FOREIGN_FILERS } from '../../../companies/server/calls/actuals'
 import { curatedCalls } from '../../../companies/server/calls/curated'

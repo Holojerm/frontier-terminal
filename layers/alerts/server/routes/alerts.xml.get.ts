@@ -1,9 +1,7 @@
-// GET /alerts.xml — the alert feed as Atom, for a reader that wants to be
-// told rather than to come and look. Alerts only by default (notable,
-// critical); `?include=info` adds the minor changes (`?include=ticker`, the
-// old name, still does) and `?tier=critical` narrows it to critical alerts.
-// Asking for both is a 400: they pull in opposite directions. Same cached
-// payloads as /api/alerts; layers/alerts/server/utils/terminal-feed.ts owns the document.
+// GET /alerts.xml: the alert feed as Atom. Alerts only by default (notable, critical);
+// `?include=info` adds the minor changes (`?include=ticker` still does) and
+// `?tier=critical` narrows to critical. Asking for both is a 400. Same cached payloads as
+// /api/alerts; layers/alerts/server/utils/terminal-feed.ts owns the document.
 
 import { z } from 'zod'
 

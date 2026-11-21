@@ -16,11 +16,9 @@ interface SawIt {
 }
 
 /**
- * When a row's change was first in hand. An added or modified row carries
- * the fetch that observed it. A removal counts from the run that noticed it
- * was gone: removals diffed before migration 0036 were stamped with the
- * removed row's first sighting, weeks earlier, and that migration rewrote
- * them, so reading detected_at keeps saw-it times stable either way.
+ * When a row's change was first in hand. An added or modified row carries the
+ * fetch that observed it; a removal counts from the run that noticed it was
+ * gone (detected_at).
  */
 function seenAt(change: Pick<SawItChange, 'change_type' | 'fetched_at' | 'detected_at'>) {
   return new Date(change.change_type === 'removed' ? change.detected_at : change.fetched_at)

@@ -1,10 +1,8 @@
 <script setup lang="ts">
-// The readout: one row per lab, one column per axis, the number and its
-// delta and nothing else. This is what an investor glances at and leaves
-// with. Every figure links to the lab page section that carries its full
-// provenance (layers/terminal/app/utils/readout.ts derives the cells for both).
-// On a phone each lab stacks as a short block, one axis per line, rather than
-// a 1,300px row in a 356px box.
+// The readout: one row per lab, one column per axis, the number and its delta and nothing
+// else. Every figure links to the lab page section that carries its full provenance
+// (layers/terminal/app/utils/readout.ts derives the cells for both). On a phone each lab
+// stacks as a short block, one axis per line, rather than a 1,300px row in a 356px box.
 
 import { type LabInputs } from '../../../shared/utils/terminal-lab-summary'
 import type { LabId } from '../../../../core/shared/types/common'

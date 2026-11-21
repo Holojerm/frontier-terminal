@@ -1,14 +1,7 @@
-// Bearer check for /api/judge/*.
-//
-// The judge routine runs on the owner's claude.ai account with no session
-// here, so it presents NUXT_JUDGE_TOKEN — the same shape as the fleet
-// dashboard's bearer, checked by the same function (SHA-256 digests under a
-// constant-time compare, 32-character floor). The verdicts map to the same
-// two non-200s as /api/fleet, for the same reasons: 404 when no token is
-// configured, so a Worker without a judge advertises nothing, and a loud
-// 401 when one is and the request did not present it.
-//
-// One wart from the reuse: a too-short token logs `fleet_token_too_short`.
+// Bearer check for /api/judge/*: NUXT_JUDGE_TOKEN, checked by the fleet
+// bearer's function (constant-time SHA-256 compare, 32-character floor, so a
+// short token logs `fleet_token_too_short`). 404 when no token is configured,
+// so a Worker without a judge advertises nothing; 401 on a missing or wrong one.
 
 import type { H3Event } from 'h3'
 

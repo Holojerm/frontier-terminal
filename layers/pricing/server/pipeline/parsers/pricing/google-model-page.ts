@@ -8,35 +8,29 @@ import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 
 // google-model-md-<slug> — https://aistudio.google.com/docs/models/<slug>.md
 // One page per priced Standard-tier SKU, derived from google-pricing-html
-// (layers/companies/server/pipeline/derived.ts). The pricing page prints no context windows;
-// this page does, in a "Property | Description" table whose "Token limits"
-// row reads either
+// (layers/pricing/server/pipeline/derived.ts). The pricing page prints no context windows;
+// this page does, in a "Property | Description" table whose "Token limits" row reads either
 //   **Input token limit** 1,048,576 **Output token limit** 65,536
 // or, on newer cards,
 //   **Context window (unified input and output token limit)** 1,048,576 **Max output** 65,536 …
-// The first number is stored as the context window, as printed; the whole
-// cell, links unwrapped, is the row's note, so the label Google used and the
-// max output travel with it. No prices: the page links to the pricing page
-// instead. One row, tier "standard", so it shares the pricing row's key; the
-// catalog view lends its window to every tier of the slug, citing this page.
+// The first number is stored as the context window, as printed; the whole cell, links
+// unwrapped, is the row's note, so Google's label and the max output travel with it. No
+// prices. One row, tier "standard", so it shares the pricing row's key; the catalog view lends
+// its window to every tier of the slug, citing this page.
 //
 // Two renderings of that table, both read:
 //
-//   Markdoc (from 2026-11-03, when ai.google.dev/gemini-api/docs/models/<slug>
-//   began 301-ing to aistudio.google.com/docs/models/<slug> and the .md.txt
-//   export started to 404): a `{% table %}` block (some carry
-//   `variant="model"`) headed "Property | Description", whose rows
-//   are separated by `---` lines and whose cells open with `* ` at the
-//   table's own indent. A label cell wraps its text in `{% section %}` and
-//   `{% icon /%}` tags, and "Token limits" carries a `[[*]](/docs/tokens)`
+//   Markdoc (aistudio.google.com, from 2026-11-03): a `{% table %}` block (some carry
+//   `variant="model"`) headed "Property | Description", rows separated by `---` lines, cells
+//   opening with `* ` at the table's own indent. A label cell wraps its text in
+//   `{% section %}` and `{% icon /%}` tags, and "Token limits" carries a `[[*]](/docs/tokens)`
 //   footnote, on some pages inside `{% sup %}`.
 //
 //   Markdown pipe table (the ai.google.dev .md.txt export, until 2026-11-03).
 //
-// A page can carry several model tables (the Robotics-ER page has three).
-// The one read is the table whose "Model code" names the slug the source was
-// derived for; no such table throws, and the source fails rather than
-// storing a page under the wrong SKU.
+// A page can carry several model tables (the Robotics-ER page has three). The one read is the
+// table whose "Model code" names the slug the source was derived for; with none the source
+// fails rather than storing a page under the wrong SKU.
 
 const PROPERTY_HEADER = /^\|\s*Property\s*\|\s*Description\s*\|\s*$/
 const CELLS = /^\|\s*(.+?)\s*\|\s*(.*?)\s*\|\s*$/

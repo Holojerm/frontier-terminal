@@ -6,8 +6,8 @@ import {
 import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { compareByJobId } from './common'
 
-// OpenAI job board via Ashby's posting API. Department and team are inline
-// on every job object — no join needed.
+// OpenAI job board via Ashby's posting API. Department and team are inline on every job
+// object, so no join is needed.
 
 interface AshbyJob {
   id: string
@@ -20,22 +20,20 @@ interface AshbyJob {
   isListed?: boolean
 }
 
-// A posting the board hides (isListed: false) is not an open role on the
-// public board, the same rule wayback-boards.ts applies to archived boards.
-// A listed posting with no title cannot be stored (titles are never
-// invented), so it is skipped: one half-filled posting must not stall the
-// whole board (#411). More than a handful means the payload itself moved
-// (a renamed field), as does a board whose every posting is untitled, and a
-// silent mass "removal" would be worse than a failed poll, so those throw.
+// A posting the board hides (isListed: false) is not an open role, the same rule
+// wayback-boards.ts applies to archived boards. A listed posting with no title cannot be
+// stored (titles are never invented), so it is skipped rather than stalling the board.
+// More than a handful, or a board whose every posting is untitled, means the payload moved
+// (a renamed field); a silent mass "removal" would be worse than a failed poll, so those
+// throw.
 export const MAX_UNTITLED_JOBS = 3
 
 function hasTitle(job: AshbyJob): job is AshbyJob & { title: string } {
   return typeof job.title === 'string' && job.title.trim() !== ''
 }
 
-// prov defaults to the fixture manifest's record (single-arg behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead.
+// prov defaults to the fixture manifest's record, so single-arg output is byte-identical
+// for the determinism gate; the refresh orchestrator passes the live fetch's provenance.
 export function parseOpenaiAshby(
   fixtureText: string,
   prov: Provenance = fixtureProvenance('openai-ashby'),
@@ -71,8 +69,7 @@ export function parseOpenaiAshby(
       fetched_at: prov.fetched_at,
     }))
     .sort(compareByJobId)
-  // Validating inside parse makes contract conformance part of the parser's
-  // own done-bar, not just the tests'.
+  // Validated inside parse, so a contract break fails the parser and not only the tests.
   return AshbyJobsOutput.parse({ rows })
 }
 

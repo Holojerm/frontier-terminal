@@ -4,27 +4,18 @@ import * as tables from '#server/db/schema'
 import type { AlertGroundingRejection } from '#layers/core/server/pipeline/judge/grounding'
 import type { JudgeAlert } from '#layers/core/server/pipeline/judge/alerts'
 
-// A model that one page of a lab stopped listing while another page of the
-// same lab still lists it has not been delisted. Each catalog is a set lane
-// (server/registries/set-lanes.ts), so a row that leaves the page is logged as `removed`,
-// and a removal reads like a withdrawal. On 2026-11-09 Anthropic's models
-// overview dropped claude-fable-5-1 from its table when claude-fable-5-2
-// launched. The pricing page still listed it at the same prices, and the
-// API still served it, but the judge wrote "Anthropic delists
-// claude-fable-5-1, launches claude-fable-5-2 and claude-mythos-5-2".
+// A model one page of a lab stopped listing while another still lists it has
+// not been delisted. Catalogs are set lanes (server/registries/set-lanes.ts), so
+// a dropped row logs as `removed` and reads like a withdrawal: when Anthropic's
+// models overview dropped claude-fable-5-1, the judge wrote "Anthropic delists
+// claude-fable-5-1, launches claude-fable-5-2 and claude-mythos-5-2" while the
+// pricing page and API still had it.
 //
-// Two halves, the same split as the hiring floor:
-//   - GET /api/judge/pending hands the judge, per pending model removal, the
-//     pages that still list that model (the STILL LISTED block), so it can
-//     write "drops claude-fable-5-1 from its models overview" instead.
-//   - POST /api/judge/alerts binds it: an alert whose sentence names a
-//     still-listed model next to a delisting word is rejected, and an
-//     alert that cites nothing but such removals is stored as `info`
-//     (severity-gates.ts). Both read the store at submit time.
-//
-// "Still listed" is read from `entities`, the current rows of every source:
-// the same provider and model_slug on any page, any tier. A removal whose
-// model no page lists any more is a real delisting and passes untouched.
+// GET /api/judge/pending hands the judge, per pending model removal, the pages
+// still listing it (STILL LISTED). POST /api/judge/alerts rejects an alert that
+// puts a delisting word next to a still-listed model, and stores as `info` one
+// citing only such removals (severity-gates.ts). "Still listed" is the same
+// provider and model_slug in `entities` on any page, any tier.
 
 interface StillListedRemoval {
   change_id: string
@@ -99,13 +90,11 @@ export async function stillListedRemovals(
 }
 
 /**
- * Words that say a model was withdrawn rather than dropped from one page,
- * each with the root that grounds it when a cited record uses it (null:
- * a phrase no record grounds). Deliberately coarse, like grounding: a
- * tripwire on the words that misled, not a reading of the sentence.
- * "removes" and "drops" alone are not here: "drops claude-fable-5-1 from its
- * models overview" is the accurate sentence. A removal put on the whole
- * catalog or the API is.
+ * Words that say a model was withdrawn rather than dropped from one page, each
+ * with the root that grounds it when a cited record uses it (null: a phrase no
+ * record grounds). A coarse tripwire, like grounding. "removes" and "drops"
+ * alone are not here: "drops claude-fable-5-1 from its models overview" is the
+ * accurate sentence. A removal put on the whole catalog or the API is.
  */
 const DELISTING: readonly { pattern: RegExp; root: string | null }[] = [
   { pattern: /\bde-?list\w*/g, root: 'delist' },

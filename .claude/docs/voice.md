@@ -1,9 +1,7 @@
 # Voice
 
-How the site's words should sound. It's modeled on Jeremy's own writing and on what Jeremy cuts
-from AI drafts.
-
-Read this before writing or changing anything a visitor reads.
+How the site's words should sound, modeled on Jeremy's own writing and on what he cuts from AI
+drafts. Read it before writing or changing anything a visitor reads.
 
 ## Scope
 
@@ -41,8 +39,8 @@ badges, empty states, and table captions can be fragments.
 
 ## What a panel shows
 
-The owner's rule (2026-11-21): a panel shows its data, a one-line source credit, and source
-links. Provenance travels in the links, not in prose. "Just chart it."
+A panel shows its data, a one-line source credit, and source links. Provenance travels in the
+links, not in prose. "Just chart it."
 
 - **Keep:** the data, titles and axis labels, a one-line credit, and per-row or per-tooltip
   source links and fetch times.
@@ -66,7 +64,7 @@ links. Provenance travels in the links, not in prose. "Just chart it."
 
 ## What makes copy sound like AI
 
-These are the patterns Jeremy cuts. Avoid all of them.
+Avoid all of these.
 
 | Pattern | Example from the site | Instead |
 | --- | --- | --- |

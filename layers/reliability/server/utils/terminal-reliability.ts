@@ -1,9 +1,8 @@
-// The /api/reliability payload (/data#reliability): how each source's checks
-// went, when the site's data was older than we say it is, how fast a filing
-// reached an alert, and each deploy's smoke test. Every figure is computed
-// here from stored rows: the daily rollup and poll ticks, filing detections,
-// and deploy checks (layers/reliability/server/pipeline/reliability/), plus the
-// corrections log. Reads are bounded by the 90-day window on indexed columns.
+// The /api/reliability payload (/data#reliability): how each source's checks went, when
+// the site's data was older than we say, how fast a filing reached an alert, and each
+// deploy's smoke test. Computed from stored rows (the rollup, poll ticks, filing
+// detections and deploy checks in layers/reliability/server/pipeline/reliability/, plus
+// the corrections log); reads are bounded by the 90-day window on indexed columns.
 
 import { and, desc, eq, gte, inArray, max, min, sql } from 'drizzle-orm'
 

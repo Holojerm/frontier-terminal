@@ -1,9 +1,7 @@
 <script setup lang="ts">
-// GPU rental prices before our first read of each provider's page: the
-// weekly median over the Internet Archive's copies, one chart per GPU, then
-// how far each provider's copies reach and every copy with its source. The
-// method is on /data and in the payload's `method`; the panel only credits
-// the Archive, which its terms ask for.
+// GPU rental prices before our first live read: weekly medians over the Internet
+// Archive's copies, per GPU, then each provider's reach and copies. The method is
+// on /data; the panel only credits the Archive, which its terms ask for.
 
 import type { GpuArchiveView } from '../../../shared/types/gpu-prices'
 

@@ -14,10 +14,10 @@ export function withSchemaVersion<T>(payload: T): T {
 }
 
 /**
- * What every door hands out — the JSON routes and the MCP tools alike
- * (terminal-handler.ts › terminalPayload, terminalPayloadAt): the license split
- * and the schema version, added after the cache. The license window moves
- * daily and a cached payload must not carry yesterday's.
+ * What every door hands out (the JSON routes and the MCP tools, via
+ * terminal-handler.ts › terminalPayload, terminalPayloadAt): the license split
+ * and the schema version, added after the cache because the license window
+ * moves daily and a cached payload must not carry yesterday's.
  */
 export const served = <T>(payload: T): T => withSchemaVersion(withLicense(payload))
 

@@ -1,13 +1,7 @@
-// GET /api/grid-load's payload: each balancing authority a lab site sits in,
-// its demand as monthly and weekly averages with the change on a year
-// before, the sites and listed companies that put it there, and ERCOT's
-// large-load vintages.
-//
-// A site is placed in an authority two ways, and the row says which: a page
-// names the site's grid operator (a grid row of power_site_ties), or a page
-// ties the site to a utility and EIA-861 puts that utility in the authority
-// (curated/grid-areas.json, one row of EIA's 2025 Sales to Ultimate Customers
-// file per utility). A site neither places is listed as unplaced.
+// GET /api/grid-load's payload. A site is placed in an authority two ways, and the
+// row says which: a page names its grid operator (a grid row of power_site_ties),
+// or EIA-861 puts its utility there (curated/grid-areas.json, EIA's 2025 Sales to
+// Ultimate Customers file). A site neither places is listed as unplaced.
 
 import { max } from 'drizzle-orm'
 import { z } from 'zod'

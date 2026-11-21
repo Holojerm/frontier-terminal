@@ -9,35 +9,28 @@ import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { isoDate, tablesUnderHeading, usdAmount } from './md-table'
 
 // openai-pricing-md — https://developers.openai.com/api/docs/pricing.md
-// The markdown twin of the platform pricing page, which did not exist at
-// the 2026-08-25 audit (the marketing page is Cloudflare-403'd; the models
-// page prints no prices). One section per service tier — Standard, Batch,
-// Flex, Fast, Ultrafast — each a current-model table with short- and
-// long-context columns, most followed by a legacy table that prints one
-// band (Input | Output | Cached input).
+// The markdown twin of the platform pricing page (the marketing page is Cloudflare-403'd; the
+// models page prints no prices). One section per service tier (Standard, Batch, Flex, Fast,
+// Ultrafast), each a current-model table with short- and long-context columns, most followed
+// by a legacy table that prints one band (Input | Output | Cached input).
 //
-// One PriceRow per (model, service tier, context band). The Standard
-// short-context row carries tier null so it shares modelKey with the
-// catalog row from openai-models-md and the two pages read as one SKU
-// (the Anthropic pair works the same way); every other band is its own
-// tier and never collapsed or averaged. A legacy row is that tier's
-// short-context row. A "(<272K context length)" annotation on a model cell
-// is the short-context bound: it is kept verbatim in notes, never turned
-// into a context_window the page does not print. The cache-write columns
-// have no PriceRow field and are not stored. Columns are read by name, so
-// a reorder is harmless; an added or dropped column still throws. The
-// "Grouped Pricing Table" sections (cyber, audio, image, realtime, tools)
-// are not the token price list and are deliberately not parsed.
+// One PriceRow per (model, service tier, context band). The Standard short-context row carries
+// tier null so it shares modelKey with openai-models-md's catalog row and the two pages read
+// as one SKU (the Anthropic pair works the same way); every other band is its own tier, never
+// collapsed or averaged. A legacy row is that tier's short-context row. A "(<272K context
+// length)" annotation on a model cell is the short-context bound: kept verbatim in notes,
+// never turned into a context_window the page does not print. The cache-write columns have no
+// PriceRow field and are not stored. Columns are read by name, so a reorder is harmless; an
+// added or dropped column still throws. The "Grouped Pricing Table" sections (cyber, audio,
+// image, realtime, tools) are not the token price list and are not parsed.
 //
-// A launch can price Ultrafast on a schedule (GPT-6.2 Astra and Sol,
-// 2026-11-17): a "promotion" table in force now and a "list" table from a
-// date the page prints only in prose ("… through February 28, 2027, and 6
-// times the Standard rate starting March 1, 2027"). The promotion rows end
-// on that date and the list rows start on it, the shape google-pricing gives
-// a promo cell, so the list rows key as `ultrafast@<date>` (normalize.ts ›
-// priceTier). The two tables come and go together, and never without the
-// date: a schedule we cannot date fails the source rather than storing a
-// future price as today's.
+// A launch can price Ultrafast on a schedule (GPT-6.2 Astra and Sol): a "promotion" table in
+// force now and a "list" table from a date the page prints only in prose ("… through February
+// 28, 2027, and 6 times the Standard rate starting March 1, 2027"). The promotion rows end on
+// that date and the list rows start on it, the shape google-pricing gives a promo cell, so the
+// list rows key as `ultrafast@<date>` (normalize.ts › priceTier). The two tables come and go
+// together, and never without the date: a schedule we cannot date fails the source rather
+// than storing a future price as today's.
 
 type Window = 'promotion' | 'list'
 

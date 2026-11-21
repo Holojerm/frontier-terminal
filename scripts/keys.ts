@@ -7,13 +7,12 @@
 //   bun run keys:list [-- --remote]
 //
 // Without --remote these work on the local dev database, .data/db/sqlite.db
-// (the one `bun dev` serves; see .claude/docs/gotchas.md). With --remote they
-// run against production D1 through `wrangler d1 execute`.
+// (the one `bun dev` serves; see .claude/docs/gotchas.md); with --remote, on
+// production D1 through `wrangler d1 execute`.
 //
-// The key is printed once, on stdout, and nowhere else: not to a file, not to
-// a log, and not into the wrangler command, which carries only its SHA-256.
-// Everything else goes to stderr, so `bun run keys:issue -- … | pbcopy` copies
-// the key alone.
+// The key is printed once, on stdout, and nowhere else (no file, no log, and
+// not the wrangler command, which carries only its SHA-256). Everything else
+// goes to stderr, so `bun run keys:issue -- … | pbcopy` copies the key alone.
 
 import {
   API_KEY_TIERS,

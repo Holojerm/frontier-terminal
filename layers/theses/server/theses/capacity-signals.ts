@@ -1,10 +1,8 @@
-// The Compute thesis's capacity signals, added 2026-11-20: what GPU owners
-// charge for capacity they can take back, whether the filers that pay for the
-// buildout still guide the same capex, and whether the labs' own endpoints
-// slow down in working hours. Each reads rows another part of the site
-// already stores (GPU price recipes, earnings releases, hourly probes); none
-// fetches anything. The arithmetic is pure and exported for
-// layers/theses/test/theses-capacity.test.ts.
+// The Compute thesis's capacity signals: what GPU owners charge for capacity
+// they can take back, whether the filers paying for the buildout still guide
+// the same capex, and whether the labs' endpoints slow down in working hours.
+// Each reads rows the site already stores; none fetches anything. The
+// arithmetic is pure and exported for layers/theses/test/theses-capacity.test.ts.
 
 import { and, eq, gte } from 'drizzle-orm'
 
@@ -287,11 +285,10 @@ type ProbeDay = Pick<
 
 /**
  * One reading per complete day: over the `days` up to it, each lab's median
- * peak-hours throughput over its median off-peak throughput, on the model it
- * ran last, and the median of those across labs. A lab is compared only with
- * itself; the labs' speeds are never compared with each other. The share of
- * probes that were rate limited or failed is recorded beside it and read by
- * no rule.
+ * peak-hours throughput over its median off-peak throughput (on the model it
+ * ran last), and the median of those across labs. A lab is compared only with
+ * itself. The share of probes rate limited or failed is recorded beside it and
+ * read by no rule.
  */
 export function peakThroughputReadings(
   rows: readonly ProbeDay[],

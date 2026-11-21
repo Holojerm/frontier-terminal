@@ -15,14 +15,12 @@ import {
 } from './html-table'
 import { tablesUnderHeading } from './md-table'
 
-// OpenAI's own pricing pages as the Internet Archive captured them, before the
-// docs origin served markdown (archive/eras.ts names each era's URL and
-// window). One PriceRow per model id and service tier, the same keys
-// openai-pricing-md writes, so an archived observation of gpt-4o lands on
-// the live SKU's history. Only the token price lists are read; fine-tuning,
-// embeddings, images, audio, realtime and tools are not, exactly as live.
-// Anything the parser does not recognise throws, and the capture is skipped
-// with the error as its reason: no row is ever guessed.
+// OpenAI's own pricing pages as the Internet Archive captured them, before the docs origin
+// served markdown (archive/eras.ts names each era's URL and window). One PriceRow per model id
+// and service tier, the same keys openai-pricing-md writes, so an archived observation of
+// gpt-4o lands on the live SKU's history. Only the token price lists are read, as live.
+// Anything the parser does not recognise throws, and the capture is skipped with the error as
+// its reason: no row is ever guessed.
 
 /** An API model id as the pages print it: gpt-4o-2024-05-13, o1-mini, chatgpt-4o-latest. */
 const MODEL_ID = /^(?:gpt|chatgpt|o\d|davinci|babbage)[a-z0-9.-]*$/
@@ -250,10 +248,9 @@ export function parseOpenAiPricingHtml2024(html: string, prov: Provenance) {
         rows.push(...rowsFor(m[1]!, amounts(m[2]!), at.h, prov))
       }
     }
-    // A family that prints token prices the grammar did not read is a layout
-    // we do not know (January 2025 moved each header into its row). Reading
-    // the families we do know and dropping the rest would turn the unread
-    // ones into delistings, so the whole capture is skipped instead.
+    // A family printing token prices the grammar did not read is a layout we do not know
+    // (January 2025 moved each header into its row). Dropping it would turn its models into
+    // delistings, so the whole capture is skipped instead.
     if (rows.length === before && passed.length === passedBefore && PRICED.test(section.text)) {
       throw new Error(
         `${section.title || 'untitled section'}: prices in a layout this parser does not read`,
@@ -535,20 +532,18 @@ function textTokenTables(sections: readonly HtmlSection[]) {
 }
 
 /**
- * From March 2026 the docs pricing page showed only "Our latest models" in
- * each service-tier tab and drew the full list behind a "View all" button.
- * The full list is still in the server-rendered HTML: each tab's table is an
- * <astro-island> whose `props` attribute holds that tab's tier and its rows
- * (model, then one number per short-context column). Those props are read
- * here, and nothing from the island's script.
+ * From March 2026 the docs pricing page showed only "Our latest models" in each service-tier
+ * tab and drew the full list behind a "View all" button. The full list is still in the
+ * server-rendered HTML: each tab's table is an <astro-island> whose `props` attribute holds
+ * that tab's tier and its rows (model, then one number per short-context column). Only those
+ * props are read, nothing from the island's script.
  *
- * The props name no columns, so the columns are taken from the page's own
- * visible tables (Model | Input | Cached input | [Cache writes |] Output):
- * every visible table must agree on them, each props row must have exactly
- * that many cells, and every visible row's short-context prices must equal
- * the same model's props row in some tier. A page where any of that fails
- * is skipped. Long-context columns, printed only for the latest models, are
- * not read here, as the March 2026 era before this one did not read them.
+ * The props name no columns, so the columns come from the page's visible tables (Model |
+ * Input | Cached input | [Cache writes |] Output): every visible table must agree on them, each
+ * props row must have exactly that many cells, and every visible row's short-context prices
+ * must equal the same model's props row in some tier, or the page is skipped. Long-context
+ * columns, printed only for the latest models, are not read, as the March 2026 era before
+ * this one did not read them.
  */
 export function parseOpenAiDocsPricingIslands(html: string, prov: Provenance) {
   const sections = htmlSections(html)

@@ -1,7 +1,7 @@
-// Central parser manifest. Every DETERMINISTIC parser module is imported
-// here (side-effect registration) — the determinism test iterates exactly
-// this registry. The judge lane never registers; it goes through the
-// agent-output gate instead.
+// Central parser manifest. Every deterministic parser module is imported here
+// (side-effect registration), and the determinism test iterates exactly this
+// registry. The judge lane never registers; it goes through the agent-output
+// gate instead.
 // Hiring (the talent layer's own manifest)
 import '#layers/talent/server/pipeline/parsers.manifest'
 // Vendor-md pricing/catalog (the pricing layer's own manifest)

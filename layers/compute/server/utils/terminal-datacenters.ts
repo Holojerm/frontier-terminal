@@ -1,8 +1,5 @@
-// The read side of Epoch AI's data-center recipes: each query turns
-// recipe_observations into one panel's payload (compute-views.ts and
-// power-sites.ts in this layer's shared/utils). Every figure keeps the URL it
-// was read from and when; a recipe with no stored rows yet yields an empty
-// entry, never a guess.
+// Epoch AI's data-center recipes turned into panel payloads (compute-views.ts and
+// power-sites.ts in this layer's shared/utils).
 
 import { inArray } from 'drizzle-orm'
 

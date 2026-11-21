@@ -1,5 +1,6 @@
-// GET /api/limits — The API rate limits OpenAI, Anthropic, xAI and Meta publish, per model, tier and metric, with the date of the last change. Read from the thesis recipes
-// (layers/pricing/server/utils/terminal-limits.ts); every figure cites its source and fetch time.
+// GET /api/limits: the API rate limits OpenAI, Anthropic, xAI and Meta publish, per model, tier
+// and metric, with the date of the last change. Read from the thesis recipes
+// (layers/pricing/server/utils/terminal-limits.ts).
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'limits', limit: 60, windowSeconds: 60 })

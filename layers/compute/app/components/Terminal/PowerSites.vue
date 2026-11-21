@@ -1,10 +1,8 @@
 <script setup lang="ts">
-// Who supplies power to the sites Epoch AI credits to a lab. Two tables: the
-// listed companies with the sites behind each, then every company we read,
-// one row per page so each row keeps its own source and quote. A lab site we
-// have read no company for gets a row too, with the gap where the company
-// would be. A site's power is Epoch's and sits on the site's rows only: summed
-// per company it would read as what the company supplies, which no page says.
+// Who supplies power to Epoch's lab sites: listed companies with their sites, then
+// one row per page read; a site with no company read gets a gap row. A site's
+// power sits on its own rows only: summed per company it would read as what the
+// company supplies, which no page says.
 
 import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import { type PowerSitesData } from '../../../shared/utils/power-sites'

@@ -16,30 +16,18 @@ import {
 } from './filing-index'
 import { MONTHS, figure, iso } from './prospectus-doc'
 
-// prospectus-revenue-<provider>-<form>-<filed>-<accession> — the primary
-// document of a lab's own registration filing, located by its filing index
-// (filing-index.ts). A registration statement need not tag its financials in
-// XBRL — Anthropic's S-1 of 2026-10-26 tags only the filing-fee exhibit — so
-// until the issuer's first 10-Q, its audited revenue exists only as the
-// statement of operations printed in the document. This parser reads that
-// one statement's revenue row; prospectus-statement.ts reads the rest of the
-// same table through readStatementTable():
+// prospectus-revenue-<provider>-<form>-<filed>-<accession>: the primary document of
+// a lab's own registration filing (located via filing-index.ts). A registration
+// statement need not tag its financials in XBRL, so until the issuer's first 10-Q
+// its audited revenue exists only in the printed statement of operations. This
+// parser reads its revenue row; prospectus-statement.ts reads the rest through
+// readStatementTable().
 //
-//   - the statement is a heading whose whole text is "Consolidated
-//     Statements of Operations", followed within a few KB by a units line
-//     ("(In millions" / "(In thousands") and a table — a table-of-contents
-//     entry has no units line and is skipped;
-//   - periods come from the table's own column headers ("Year Ended
-//     December 31," over 2023 2024 2025), never from the filing date;
-//   - the revenue row is the first whose label is "Revenue", "Revenues" or
-//     "Total revenue(s)", stored under that label verbatim;
-//   - every statement occurrence that qualifies must agree, or the parse
-//     throws: two different figures for one period in one document is a
-//     parse error, not a choice.
-//
-// Interim columns are flagged `unaudited` — a registration statement's
-// interim financials always are. The statement prints no CIK; it is the one
-// the derived URL was composed with.
+// The statement is a heading reading exactly "Consolidated Statements of
+// Operations" with a units line ("(In millions" / "(In thousands") and a table
+// within a few KB; a table-of-contents entry has no units line. Periods come from
+// the column headers, never the filing date. Every qualifying occurrence must
+// agree, or the parse throws.
 
 const TITLE = /<[^>]+>\s*Consolidated Statements of Operations\s*</gi
 const LOOKAHEAD = 4000

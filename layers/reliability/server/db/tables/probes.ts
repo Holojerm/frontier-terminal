@@ -35,10 +35,8 @@ export const latencyProbes = sqliteTable(
     generation_id: text('generation_id'),
     // Where the request left from: `cloudflare:<colo>`, or `local` off the Worker.
     ran_from: text('ran_from').notNull(),
-    // The location hint of the Durable Object that ran the probe
-    // (pipeline/probes/placement.ts), or `unpinned`: every row from before
-    // placement, which left from whichever colo ran the cron. The default is
-    // what flagged those rows; every run since writes its own.
+    // The location hint of the Durable Object that ran the probe (pipeline/probes/placement.ts),
+    // or `unpinned` for rows from before placement, which left from whichever colo ran the cron.
     placement: text('placement').notNull().default('unpinned'),
     // Whether the router says the pinned provider served it (served_by against
     // provider); null when the stream named nobody.

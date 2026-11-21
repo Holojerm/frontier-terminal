@@ -1,13 +1,9 @@
 <script setup lang="ts">
-// Tabs over a page's sections, for a page whose panels answer several
-// separate questions (DESIGN.md › Terminal primitives). Each tab's content is
-// a named slot, `#<value>`.
-//
-// Every tab renders on the server and stays in the document, hidden — never
-// unmounted — so a crawler, find-in-page and the axe sweep see all of it. The
-// open tab lives in `?tab=` (absent for the first), so a link can name it and
-// the server renders that tab open. An anchor (`/hiring#pay`) that lands in a
-// closed tab opens it and scrolls there: every section keeps its old link.
+// Tabs over a page's sections (DESIGN.md › Terminal primitives); each tab's
+// content is a named slot, `#<value>`. Every tab renders on the server and
+// stays in the document, hidden, so crawlers, find-in-page and axe see it all.
+// The open tab is `?tab=` (absent for the first), and an anchor in a closed tab
+// opens it.
 
 export interface TerminalTab {
   value: string

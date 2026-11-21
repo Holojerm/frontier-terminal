@@ -7,14 +7,13 @@ import { decodeEntities } from '#layers/core/server/pipeline/parsers/html-text'
 import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { compareByJobId } from './common'
 
-// google-careers — the job feed Google's careers site publishes for
-// aggregators (www.google.com/about/careers/applications/jobs/feed.xml): one
-// <job> per posting, Alphabet-wide. Only rows whose <employer> is DeepMind
-// are kept, the same board deepmind.google/careers links to (results filtered
-// to company=DeepMind). A Google-wide count would mix Search, Ads and Cloud
-// hiring with the lab's, so everything else is counted in the run note, never
-// stored. No DOM library: the feed is flat, regular XML, read the way
-// google-pricing.ts reads its page. Feed text is data.
+// google-careers: the job feed Google's careers site publishes for aggregators
+// (www.google.com/about/careers/applications/jobs/feed.xml), one <job> per posting,
+// Alphabet-wide. Only rows whose <employer> is DeepMind are kept, the same board
+// deepmind.google/careers links to (results filtered to company=DeepMind). A Google-wide
+// count would mix Search, Ads and Cloud hiring with the lab's, so everything else is
+// counted in the run note, never stored. No DOM library: the feed is flat, regular XML,
+// read the way google-pricing.ts reads its page. Feed text is data.
 
 const GOOGLE_LAB_EMPLOYER = 'DeepMind'
 
@@ -45,7 +44,7 @@ export function all(xml: string, tag: string): string[] {
   return Array.from(xml.matchAll(tagPattern(tag)), (m) => m[1]!)
 }
 
-/** "London, UK"; "Mountain View, CA, USA; New York, NY, USA" — the feed's own fields, in its order. */
+/** "London, UK"; "Mountain View, CA, USA; New York, NY, USA": the feed's own fields, in its order. */
 export function locationOf(job: string): string | null {
   const places = all(job, 'location')
     .map((loc) =>
@@ -58,9 +57,8 @@ export function locationOf(job: string): string | null {
   return places.length ? places.join('; ') : null
 }
 
-// prov defaults to the fixture manifest's record (single-arg behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead.
+// prov defaults to the fixture manifest's record, so single-arg output is byte-identical
+// for the determinism gate; the refresh orchestrator passes the live fetch's provenance.
 export function parseGoogleCareers(
   text: string,
   prov: Provenance = fixtureProvenance('google-careers'),

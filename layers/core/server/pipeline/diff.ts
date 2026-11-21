@@ -1,10 +1,9 @@
 import { ChangeRow, contentHash, type EntityRow } from '../utils/contracts'
 
-// Diff: two entity sets -> ChangeRow[] (boundary table, "diff" =
-// DETERMINISTIC). Keyed on entity_key; added/removed by key presence,
-// modified by content_hash inequality. detected_at is an INPUT — this module
-// never reads a clock, so a change event is reproducible from two stored
-// snapshots alone.
+// Diff: two entity sets -> ChangeRow[], deterministic. Keyed on entity_key:
+// added/removed by key presence, modified by content_hash inequality.
+// detected_at is an input; this module never reads a clock, so a change event
+// is reproducible from two stored snapshots alone.
 
 function indexByKey(rows: readonly EntityRow[], side: 'before' | 'after'): Map<string, EntityRow> {
   const byKey = new Map<string, EntityRow>()
@@ -24,13 +23,11 @@ function indexByKey(rows: readonly EntityRow[], side: 'before' | 'after'): Map<s
 interface Diff {
   changes: ChangeRow[]
   /**
-   * The after rows the store must write: every added or modified row, plus
-   * any whose content is unchanged but whose provider or source_url differs
-   * from the stored row. Neither is in the content hash, so no change is
-   * logged for those, yet the stored row would otherwise keep the old value
-   * forever: a revenue filer retagged to another lab in sources.yaml, or a
-   * source that moved URL with byte-identical content. The world did not
-   * change, our description of it did.
+   * The after rows the store must write: every added or modified row, plus any
+   * whose content is unchanged but whose provider or source_url differs from
+   * the stored row (a revenue filer retagged to another lab in sources.yaml, a
+   * source that moved URL). Neither field is in the content hash, so no change
+   * is logged, but the stored row would otherwise keep the old value forever.
    */
   upserts: EntityRow[]
 }
@@ -49,9 +46,8 @@ export function diff(
   const beforeByKey = indexByKey(before, 'before')
   const afterByKey = indexByKey(after, 'after')
 
-  // Union of keys, sorted — output order never depends on input order or
-  // Map iteration order. Each key yields at most one ChangeRow, so
-  // entity_key alone is a total order over the output.
+  // Union of keys, sorted, so output order never depends on input or Map order.
+  // Each key yields at most one ChangeRow, so entity_key alone orders the output.
   const keys = [...new Set([...beforeByKey.keys(), ...afterByKey.keys()])].sort((a, b) =>
     a < b ? -1 : a > b ? 1 : 0,
   )
@@ -80,9 +76,7 @@ export function diff(
 
     changes.push(
       ChangeRow.parse({
-        // Deterministic id: pure function of the entity and the two
-        // content hashes, so two runs over the same snapshots produce
-        // byte-identical ids.
+        // Deterministic: two runs over the same snapshots produce byte-identical ids.
         id: changeId(key, b?.content_hash ?? null, a?.content_hash ?? null),
         entity_key: key,
         entity_type: evidence.entity_type,

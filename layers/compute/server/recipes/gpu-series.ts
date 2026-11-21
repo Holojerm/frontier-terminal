@@ -1,7 +1,5 @@
-// The GPU rental price series the GPU recipes store: today's (or a past day's)
-// observations, and each GPU's median across providers, one vote per provider.
-// /api/gpu-prices, its archive, the GPU median alerts, utilization and the
-// Compute thesis all read prices through here.
+// The GPU price series: observations for a day and each GPU's median across
+// providers, one vote each. Every reader of GPU prices goes through here.
 
 import { and, desc, eq, lte, max } from 'drizzle-orm'
 

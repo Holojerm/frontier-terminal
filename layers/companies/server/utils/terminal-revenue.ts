@@ -1,14 +1,7 @@
-// The disclosed-revenue axis: what a lab, or the public parent that
-// consolidates it, has reported to the SEC — in XBRL, or, for a lab whose
-// registration statement tags no financials, in the statement of operations
-// that statement prints — and, for the labs that have reported nothing,
-// exactly that. Primary source only: a press
-// run-rate is a claim about a number, not the number, and the panel says so
-// instead of printing one.
-//
-// Read-only over the `entities` table like terminal-db.ts; split out because
-// the period arithmetic (which filing's value a period is shown from) is its
-// own thing and layers/companies/test/terminal-revenue.test.ts drives the pure half.
+// The disclosed-revenue axis: what a lab or its consolidating parent reported to
+// the SEC (XBRL, or a registration statement's printed statement of operations),
+// and for labs that reported nothing, exactly that. Primary source only: no press
+// run-rate. layers/companies/test/terminal-revenue.test.ts drives the pure half.
 
 import { eq } from 'drizzle-orm'
 

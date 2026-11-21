@@ -3,21 +3,13 @@ import type { RegistrationTarget } from './filing-index'
 import { cellText } from './filing-index'
 import { DATE_PATTERN, docText, findAll, isoDate, tableAfter, type DocText } from './prospectus-doc'
 
-// Share counts from the prospectus summary's "The Offering" table — shares
-// offered by the company and by selling stockholders, the underwriters'
-// option, and each class outstanding after the offering — and the sentence
-// under it that states the pre-offering basis ("is based on N shares of our
-// Class A common stock, … outstanding as of September 30, 2026"). Once a
-// concurrent private placement is announced, the rows and that sentence say
-// "after this offering and the concurrent private placement".
-//
-// A summary that runs past a page ends its table there; the rest of it is a
-// second table after the page number and "Table of Contents".
-//
-// A preliminary prospectus prints the frame with the counts blank ("shares",
-// "shares (or shares if the underwriters exercise …)") until the price range
-// is set; each blank is null. A row whose value is not a share count in one
-// of those shapes throws, and so does a summary with no outstanding-after row.
+// Share counts from the prospectus summary's "The Offering" table and the
+// pre-offering basis sentence under it; once a concurrent private placement is
+// announced they read "after this offering and the concurrent private placement".
+// A summary that runs past a page continues in a second table after the page
+// number and "Table of Contents". A preliminary prospectus prints the counts blank
+// until the price range is set; each blank is null. A value in no known shape
+// throws, as does a summary with no outstanding-after row.
 
 const TABLE_GAP = 3000
 const PAGE_BREAK = /^(?:\d{1,3} )?Table of Contents$/

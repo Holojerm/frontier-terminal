@@ -1,34 +1,32 @@
-// Domain boundary gate — run with `bun run domains:check`, wired into `bun run ci` and `ci:fast`.
+// Domain boundary gate: `bun run domains:check`, in `bun run ci` and `ci:fast`.
 //
-// The product code is split into Nuxt layers by business domain, on a shared
-// `core` (AGENTS.md › Directory Structure). Nothing in Nuxt stops one layer
-// reaching into another: a relative path, `#layers/<name>/…` and `~~/layers/…`
-// all resolve, and every layer's server/utils, shared/utils and shared/types are
-// auto-imported into every other with no import line at all. So this fails on:
+// Product code is split into Nuxt layers by business domain on a shared `core`
+// (AGENTS.md › Directory Structure). Nuxt doesn't stop one layer reaching into
+// another: a relative path, `#layers/<name>/…` and `~~/layers/…` all resolve,
+// and every layer's server/utils, shared/utils and shared/types are
+// auto-imported into every other. So this fails on:
 //
 //   - an import, explicit or auto, against the direction in domains.config.ts
 //     (core imports no other fork-owned layer), or of a domain file that is not
 //     on that domain's public list;
-//   - a server/utils, shared/utils or shared/types export name defined by two owners (the app
-//     or a layer): Nuxt keeps one and drops the other without an error;
-//   - the same for app/utils and app/composables names, which every page,
-//     component and plugin sees (a .vue file's script and template both count);
+//   - a server/utils, shared/utils or shared/types export name defined by two
+//     owners (the app or a layer): Nuxt keeps one and drops the other silently;
+//   - the same for app/utils and app/composables names (a .vue file's script
+//     and template both count);
 //   - a component a layer's .vue file names that is registered by a layer it
-//     does not use, or a component name two owners register (the later layer wins);
+//     doesn't use, or a component name two owners register (the later layer wins);
 //   - a `uses` entry the layer never imports, auto-imports or renders, or a
-//     `public` entry no other layer reads, so the table says only what the code does;
+//     `public` entry no other layer reads;
 //   - a `?raw` import of a file that is not there (no typecheck sees one);
-//   - a fork-owned layer the table does not name, or a table entry with no layer.
-//
+//   - a fork-owned layer the table does not name, or a table entry with no layer;
 //   - an app-root file outside server/registries/ and server/db/schema.ts that
 //     imports a layer above core (other than its shared/ types), or whose server
-//     or shared code auto-imports one: the app is the composition root, and it
-//     composes through those files. Its pages and layout may use any layer's
-//     app/utils and components, as a layer's pages do (the home page is the
-//     shell's home inputs at the template's app-owned path);
+//     or shared code auto-imports one: the app composes through those files.
+//     Its pages and layout may use any layer's app/utils and components.
 //
-// Tests and scripts are exempt, as in layers:check, apart from the `?raw` check. Vendored layers are checked by layers:check, not here. A layer's root
-// files (its nuxt.config.ts) are read for explicit imports only.
+// Tests and scripts are exempt, as in layers:check, except from the `?raw`
+// check. Vendored layers are checked by layers:check. A layer's root files
+// (its nuxt.config.ts) are read for explicit imports only.
 
 import { existsSync, readdirSync, readFileSync, statSync } from 'node:fs'
 import { join, relative, resolve } from 'node:path'

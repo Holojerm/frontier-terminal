@@ -24,7 +24,7 @@ export interface IncidentProviderView {
   display: string
   /** no_public_feed: an audited cut; no_rows: feed registered, nothing parsed yet. */
   feed: 'ok' | 'no_public_feed' | 'no_rows'
-  /** Set for no_public_feed — the audit verdict, never a number. */
+  /** Set for no_public_feed: the audit verdict, never a number. */
   reason: string | null
   /** The audit's caveat for the feed (e.g. Google's product filter), in its own words. */
   caveat: string | null
@@ -40,7 +40,7 @@ export interface IncidentProviderView {
   prior_window: number
   /** Currently open (resolved_at null), newest first. */
   open: IncidentView[]
-  /** Earliest started_at held for this provider — where the count's history begins. */
+  /** Earliest started_at held for this provider: where the count's history begins. */
   coverage_from: string | null
   sources: SourceRef[]
 }

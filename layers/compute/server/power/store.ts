@@ -25,7 +25,7 @@ type Insert = typeof tables.powerSiteTies.$inferInsert
 /** Forms a filer restates in full each period: a row its next one drops has ended. */
 export const PERIODIC_FORMS: readonly string[] = ['10-Q', '10-K', '20-F']
 
-/** The row id: the same five fields the export has always keyed ties on. */
+/** The row id: the five fields the export keys ties on. */
 export const tieId = (t: {
   site: string
   role: string

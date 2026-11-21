@@ -1,15 +1,10 @@
 import { OfferingRow, type Provenance } from '#layers/core/server/utils/contracts'
 import { cellText, type RegistrationTarget } from './filing-index'
 
-// The offering terms on a registration filing's cover — the facing page and
-// the prospectus cover, both inside the document's first pages. Read from the
-// same body as prospectus-revenue.ts, by the same derived source.
-//
-// An IPO's S-1 amendments differ mostly in what the cover fills in: the
-// original leaves the price range blank ("between $ and $ ."), and the
-// amendment that sets it is the one the roadshow launches on. So a blank is
-// recorded as null, and a cover with no range or price sentence at all yields
-// no row rather than a row of nulls that would read as "blank".
+// The offering terms on a registration filing's cover. An S-1's original leaves
+// the price range blank ("between $ and $ ."), and the amendment that sets it
+// launches the roadshow, so a blank is null; a cover with no range or price
+// sentence yields no row, since a row of nulls would read as "blank".
 
 /** Generous: Anthropic's facing page and cover end near byte 105,000. */
 const COVER_BYTES = 200_000

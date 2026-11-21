@@ -14,7 +14,7 @@ export default defineEventHandler(async (event) => {
   const { lab } = await getValidatedQuery(event, labQuerySchema.parse)
   const stamp = await reportedStamp(terminalDb)
   return serveTerminal(event, 'ground-truth', (ctx) => queryGroundTruth(terminalDb, ctx, lab), {
-    // The all-lab entry keeps the key it always had.
+    // The all-lab entry keys on the stamp alone.
     variant: lab ? `${stamp}:${lab}` : stamp,
     asOf: 'snapshot',
   })

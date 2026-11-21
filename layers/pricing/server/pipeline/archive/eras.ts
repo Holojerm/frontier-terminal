@@ -63,7 +63,7 @@ export interface ArchiveEra {
   until: string
   /** What the page looked like, for the audit and the reach panel. */
   shape: string
-  /** `passed`: rows the page printed that the parser deliberately did not read, named on the capture. */
+  /** `passed`: rows the page printed that the parser skips on purpose, named on the capture. */
   parse: (text: string, prov: Provenance) => { rows: PriceRow[]; passed?: string[] }
 }
 

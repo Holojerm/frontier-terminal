@@ -1,9 +1,7 @@
 <script setup lang="ts">
-// Epoch AI's estimate of data-center power, per lab by named user. A shared
-// site counts in full for each lab that uses it, so the rows do not add up
-// to the total, which is stated on its own line. A lab whose every site
-// Epoch puts at 0 MW (planned, not yet drawing power) states that gap
-// instead of printing a zero.
+// Epoch AI's data-center power per lab. A shared site counts in full for each lab,
+// so rows don't sum to the total, which is stated on its own line. A lab whose sites
+// are all at 0 MW (planned) states that gap instead of a zero.
 
 import type { DataCentersData } from '../../../shared/utils/compute-views'
 

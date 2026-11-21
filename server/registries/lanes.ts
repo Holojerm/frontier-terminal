@@ -1,9 +1,10 @@
 // Every lane the refresh runs: how each include source's fetched body becomes
-// entities, what is redacted from a fetched body before it is stored, the
+// entities, what is redacted from a fetched body before it is stored, and the
 // alerts that read the store beyond a lane's changes (the sources the store
-// derives for itself are derived.ts's). The app's composition root for lanes; each domain defines its lanes beside its
-// parsers and adds them here. Read-path code that only asks whether a source
-// is a 'set' lane reads set-lanes.ts instead, which imports no parser.
+// derives for itself are derived.ts's). The app's composition root for lanes;
+// each domain defines its lanes beside its parsers and adds them here.
+// Read-path code that only asks whether a source is a 'set' lane reads
+// set-lanes.ts instead, which imports no parser.
 
 import type { ChangeAlertRule, Lane, PayloadRedaction } from '#layers/core/server/pipeline/lanes'
 import { ADOPTION_LANES } from '#layers/adoption/server/pipeline/lanes'

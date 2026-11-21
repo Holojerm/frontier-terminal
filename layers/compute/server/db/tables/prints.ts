@@ -4,11 +4,8 @@ import { provenance } from '../../../../core/server/db/tables/columns'
 // ─────────────────────────────────────────────
 // Hardware prints (layers/compute/server/prints/, /hardware#prints)
 // ─────────────────────────────────────────────
-// One row per figure as a source first showed it: a Taiwan company's revenue
-// for a month, or Korea's chip exports for a month or its first 10 or 20 days.
-// Append-only. A release that restates a month we hold (the month before, the
-// same month a year earlier) at a different figure adds a row with the next
-// vintage; nothing is ever updated. A chain of vintages is per source, so
+// One row per figure as a source first showed it. Append-only: a restated month at
+// a different figure adds the next vintage. Vintage chains are per source, so
 // TSMC's 6-K (NT$ million) and the exchange feed (NT$ thousand) never read as
 // revising each other.
 export const hardwarePrints = sqliteTable(

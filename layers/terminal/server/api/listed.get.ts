@@ -1,10 +1,9 @@
-// GET /api/listed?lab= — every listed company the dependency graph, the
-// suppliers table and the power table name, one row per ticker, with what each
-// table says ties it to a lab (layers/terminal/server/utils/terminal-listed.ts).
-// It joins /api/dependencies, /api/suppliers and /api/power-sites and adds no
-// figure of its own. `lab` keeps the companies tied to that lab (as it or its
-// parent, by filing, or by site), with counts for that set. No `as_of`: two of
-// the three have no point-in-time read.
+// GET /api/listed?lab=: every listed company the dependency graph, the suppliers table and
+// the power table name, one row per ticker, with what each table says ties it to a lab
+// (layers/terminal/server/utils/terminal-listed.ts). It joins /api/dependencies,
+// /api/suppliers and /api/power-sites and adds no figure of its own. `lab` keeps the
+// companies tied to that lab (as it or its parent, by filing, or by site), with counts for
+// that set. No `as_of`: two of the three have no point-in-time read.
 
 import { powerSitesStamp } from '#layers/compute/server/power/stamp'
 import { suppliersStamp } from '../../../companies/server/suppliers/store'

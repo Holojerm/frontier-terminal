@@ -1,12 +1,8 @@
 <script setup lang="ts">
-// Alerts as rows, not as a feed: when, which lab, which axis, what moved,
-// and the one number behind it. Everything else an alert carries — the
-// explanation, the rule that fired it, the cited rows, the source — is on
-// the permalink, one click from the headline. Lab and axis are read off the
-// cited rows (layers/alerts/shared/utils/terminal-labs.ts), so a row that cites nothing
-// says so with a dash rather than a guess. "When" is one form down the
-// column: the absolute stamp. A relative age that turned absolute past a day
-// made the column switch forms partway down.
+// Alerts as rows: when, which lab, which axis, what moved and the one number behind it; the
+// rest is on the permalink. Lab and axis are read off the cited rows
+// (layers/alerts/shared/utils/terminal-labs.ts), so a row citing nothing shows a dash.
+// "When" is always the absolute stamp, so the column keeps one form.
 
 import type { AlertView } from '../../../shared/types/alerts'
 

@@ -1,14 +1,14 @@
 // The judge's half of the judged claims. GET /api/judge/pending offers each
 // judged claim's candidate events as a CLAIM REVIEW block; POST
-// /api/judge/alerts sends back one verdict per candidate, and this file gates
-// them: the claim must be judged, the item must be one the Worker itself
-// would offer for it, the verdict one the claim allows, and the rationale
-// grounded in the item's record and the Worker's own facts. Only then is a
-// claim_verdicts row written — once per (claim, subject).
+// /api/judge/alerts returns one verdict per candidate, and this file gates
+// them: the claim must be judged, the item one the Worker itself would offer,
+// the verdict one the claim allows, and the rationale grounded in the item's
+// record and the Worker's own facts. Only then is a claim_verdicts row
+// written, once per (claim, subject).
 //
-// Candidates come from two places: the pending change rows (price cuts,
-// incidents, disclosures), and for recipe-items claims, recipe observations
-// not yet rated. `change_id` in the judge's output names either.
+// Candidates are the pending change rows (price cuts, incidents, disclosures)
+// or, for recipe-items claims, unrated recipe observations. `change_id` in the
+// judge's output names either.
 
 import { and, desc, eq, gte, inArray, notInArray } from 'drizzle-orm'
 import { z } from 'zod'
@@ -92,9 +92,9 @@ async function ratedSubjects(
 
 /**
  * The CLAIM REVIEW block: judged claims with candidates only. A subject the
- * claim has rated is not offered again: a verdict is stored once per
- * (claim, subject), so asking twice — a second source printing the same cut
- * an hour later — only spends the judge's time.
+ * claim has rated is not offered again: a verdict is stored once per (claim,
+ * subject), so asking twice (a second source printing the same cut an hour
+ * later) only spends the judge's time.
  */
 export async function claimReview(
   db: PipelineDb,

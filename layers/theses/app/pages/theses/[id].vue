@@ -1,14 +1,13 @@
 <script setup lang="ts">
-// One thesis, claim by claim: status against the kill condition, the reason,
-// and the evidence — a series for a measured claim, a verdict list for a
-// judged one. The id is a route parameter; one the registry does not hold is
-// a 404.
+// One thesis, claim by claim: status against the kill condition, the reason, and the
+// evidence (a series for a measured claim, a verdict list for a judged one). The id is a
+// route parameter; one the registry does not hold is a 404.
 
 import manifest from '~~/fleet.json'
 
-// Inert for a dynamic route: the collecting hook skips paths with a
-// parameter, and sitemap.xml / llms.txt append one page per thesis from the
-// registry. Declared anyway — the seo gate's invariant is per-page.
+// Inert for a dynamic route: the collecting hook skips paths with a parameter, and
+// sitemap.xml / llms.txt append one page per thesis from the registry. Declared anyway:
+// the seo gate's invariant is per-page.
 definePageMeta({
   publicPage: {
     changefreq: 'daily',

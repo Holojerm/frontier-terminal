@@ -1,11 +1,7 @@
-// Who supplies power to the data-center sites Epoch AI ties to a lab, and the
-// listed companies that puts beside each site (GET /api/power-sites, the
-// /power page). The sites, their power and their users are Epoch's. The
-// companies are ours, each read from one public page: a filing, a regulator's
-// page or the company's own, never press coverage. The first were read by hand
-// (layers/compute/server/curated/power-sites.json); new SEC filings naming a
-// site are found and read as they are filed (layers/compute/server/power/).
-// Every link is stored in D1 (power_site_ties) with its basis.
+// Who supplies power to the sites Epoch AI ties to a lab (GET /api/power-sites,
+// /power). Sites, power and users are Epoch's; companies are ours, each from one
+// public page (never press), by hand (layers/compute/server/curated/power-sites.json)
+// or from new SEC filings (layers/compute/server/power/).
 
 import { z } from 'zod'
 

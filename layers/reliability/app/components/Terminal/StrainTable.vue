@@ -1,10 +1,9 @@
 <script setup lang="ts">
-// Capacity strain as one row per lab: incidents in the newest window
-// against the prior one, what is open now, and the open incident by name.
-// A count is a proxy for what the vendor chose to post — never an SLA — so
-// each row carries the feed's caveat, and a prior-window count that starts
-// after the history does is marked partial, not low. A feed the audit cut is
-// a row that says so (sources.yaml `cut.meta-status`).
+// Capacity strain as one row per lab: incidents in the newest window against the prior one,
+// what is open now, and the open incident by name. A count is a proxy for what the vendor
+// chose to post (never an SLA), so each row carries the feed's caveat, and a prior-window
+// count that starts after the history does is marked partial, not low. A feed the audit cut
+// is a row that says so (sources.yaml `cut.meta-status`).
 
 import type { IncidentsData } from '../../../shared/types/incidents'
 
@@ -69,9 +68,8 @@ const columns = computed<TableColumn[]>(() => [
       <span :class="p.open.length ? 'text-warning' : undefined">{{ p.open.length }}</span>
     </template>
     <template #cell-incident="{ row: p }">
-      <!-- The title on its own line, then its impact and age. Sharing one
-           line, the nowrap age took most of the box and cut titles to six
-           characters. The title still truncates (full text in the tooltip). -->
+      <!-- The title on its own line, then its impact and age: on one shared line the nowrap
+           age cut titles to six characters. The title still truncates (full text in the tooltip). -->
       <span v-if="p.open[0]" class="block max-w-72 min-w-0">
         <a
           :href="p.open[0].incident_url"

@@ -77,11 +77,10 @@ function priceCut(change: ChangeRow, flagships: FlagshipMap): Record<string, unk
 }
 
 /**
- * One price cut, however many sources print it. A model's price row lives in
- * several sources (a pricing page, a models list), each diffing to its own
- * change row with its own id, so keying on the change rated one cut two or
- * three times and counted each. The model's key, the price it was cut to and
- * the UTC day it was seen name the event instead.
+ * One price cut, however many sources print it. A model's price row appears in
+ * several sources, each diffing to its own change row, so keying on the change
+ * rated and counted one cut two or three times. The model's key, the price it
+ * was cut to and the UTC day it was seen name the event instead.
  */
 export function cutSubject(change: ChangeRow, facts: Record<string, unknown>): string {
   const day = new Date(change.detected_at).toISOString().slice(0, 10)

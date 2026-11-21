@@ -1,39 +1,15 @@
 <script setup lang="ts" generic="T">
-// The one table (DESIGN.md › Component behavior › Tables). Semantic where
-// UTable cannot be: the first column is a row header, and a row whose source
-// has nothing to show keeps its label and its `keep` columns (the source,
-// usually) and states the gap in one cell spanning the rest — never a run of
-// dashes that reads as zeros.
+// The one table (DESIGN.md › Component behavior › Tables). The first column (or
+// the `rowHeader` one) is a row header. A row whose source has nothing to show
+// keeps its label and its `keep` columns and states the gap in one spanning
+// cell, never a run of dashes that reads as zeros.
 //
-// The row header is the first column unless `rowHeader` names another — the
-// headline of an alert row, say, where the time column leads.
-//
-// Cells render `row[key]` unless a `#cell-<key>` slot is given. `nested` is
-// the smaller form for a table inside a card: `text-xs`, tighter rows, no
-// outer inset.
-//
-// A secondary table scrolls in its own box: capped at 70% of the viewport,
-// the header sticky to the top of the box, a wide table scrolling sideways
-// inside it. The cap is svh, not dvh: dvh follows the mobile URL bar, which
-// shows and hides as the page scrolls, so every capped box resized mid-swipe
-// and everything below it jumped. The page's primary table (`flow`) runs as long as its rows
-// instead, so the page never scrolls a box inside a scroll. A box that does
-// scroll is a named, focusable region so a keyboard can scroll it (WCAG
-// 2.1.1; axe scrollable-region-focusable). Its clipped edges fade, so a reader
-// can see there is more to the side or below; the fade drops while the box
-// has focus, since a mask would also hide the focus ring.
-//
-// `stack` is the phone form: below `sm` each row becomes a short block, the
-// row header first and full width, then one label/value line per cell (or a
-// shared line for the columns marked `stack: 'inline'`). The table keeps its
-// markup and its header for a screen reader; only the layout changes.
-//
-// `foldGaps` puts every gap row after the figures and folds rows that state
-// the same gap into one line naming them all, the way /revenue names its
-// unreported labs once. `group` splits the rows into bodies headed by one
-// spanning line, for a column that would otherwise repeat one reason down
-// every row. `bands` adds a header row above the column labels, each band a
-// `colgroup` heading over the columns it names.
+// A secondary table scrolls in a box capped at 70svh (dvh follows the mobile URL
+// bar, so capped boxes resized mid-swipe and the page jumped). The primary table
+// (`flow`) runs as long as its rows, so the page never scrolls a box inside a
+// scroll. A scrolling box is a named, focusable region so a keyboard can scroll
+// it (WCAG 2.1.1). Its clipped edges fade, except on focus, since a mask would
+// also hide the focus ring.
 
 import type { TableBand, TableColumn } from '#layers/core/app/types/terminal-ui'
 
@@ -110,12 +86,11 @@ const gapKeys = computed(
 // Source cells inside a table render on one line (ProvenanceTag reads this).
 provide(IN_TERMINAL_TABLE, true)
 
-// Cell padding is set once on the <table> for every cell, not on each cell:
-// repeated per cell it was about a quarter of /prices' markup. The selectors
-// reach only this table's own rows (`>*>tr>*`), never a table nested in a cell.
-// The reader's compact density halves the row padding. It is a `data-density`
-// on <html>, set before first paint (plugins/reader-prefs.ts), so the class
-// list is the same on the server and the client.
+// Cell padding is set once on the <table>: per cell it was about a quarter of
+// /prices' markup. `>*>tr>*` reaches only this table's own rows, never a table
+// nested in a cell. Compact density is a `data-density` on <html> set before
+// first paint (plugins/reader-prefs.ts), so the class list matches on server and
+// client.
 const pad = computed(() => [
   props.nested
     ? '[&>*>tr>*]:px-2 [&>*>tr>*]:py-1 in-data-[density=compact]:[&>*>tr>*]:py-0.5'
@@ -129,10 +104,10 @@ const pad = computed(() => [
   props.bands?.length ? '[&>thead>tr:first-child>*]:pb-0' : undefined,
 ])
 
-// The phone form, set once on the <table> like the padding. Its selectors
-// name `tbody` and `td`/`th`, so they outrank the padding's `*`s. A cell's
-// label is its column's, from `data-label`; `data-stack` marks the inline and
-// hidden ones. Below `sm` the header row is only for a screen reader.
+// The phone form, set once on the <table> like the padding. Its selectors name
+// `tbody` and `td`/`th`, so they outrank the padding's `*`s. A cell's label comes
+// from `data-label`; `data-stack` marks the inline and hidden ones. Below `sm` the
+// header row is only for a screen reader.
 const stacked = computed(() =>
   props.stack
     ? [
@@ -167,7 +142,6 @@ function measure() {
 useResizeObserver(() => [box.value, box.value?.firstElementChild as HTMLElement | null], measure)
 useEventListener(box, 'scroll', measure, { passive: true })
 
-/** The row's header cell: the column named by `rowHeader`, else the first. */
 const isHeader = (c: TableColumn) => c.key === (props.rowHeader ?? props.columns[0]?.key)
 
 const cellClass = (c: TableColumn) => [
@@ -307,8 +281,7 @@ const indexOf = computed(() => new Map(props.rows.map((r, i) => [r, i])))
   >
     <!-- Inline links get a 24px-plus tap area from padding (the -mx-1 cancels the
            side padding's layout), which an inline box spends outside the line, so
-           rows keep their density. Flex links carry
-           their own min-h-6. -->
+           rows keep their density. Flex links carry their own min-h-6. -->
     <table
       class="w-full [&_:is(td,th)_a:not(.min-h-6)]:-mx-1 [&_:is(td,th)_a:not(.min-h-6)]:px-1 [&_:is(td,th)_a:not(.min-h-6)]:py-1.5"
       :class="[nested ? 'text-xs' : 'text-sm', pad, stacked]"

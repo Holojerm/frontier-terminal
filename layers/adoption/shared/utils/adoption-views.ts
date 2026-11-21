@@ -1,7 +1,5 @@
-// The payload behind the adoption panels (layers/adoption/server/utils/terminal-adoption.ts):
-// enterprise adoption, package downloads and coding-agent PRs, read from the
-// thesis recipes audited on 2026-11-04. Every figure carries the URL it was
-// read from and when, like the lab panels.
+// The payload behind the adoption panels (layers/adoption/server/utils/terminal-adoption.ts),
+// read from the thesis recipes. Every figure carries its source URL and fetch time.
 
 /** One ISO week (Monday to Sunday, UTC) of a daily count, summed. */
 export interface AdoptionWeek {

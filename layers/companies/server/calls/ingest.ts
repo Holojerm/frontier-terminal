@@ -1,29 +1,24 @@
 // One run of the call reader, hourly (tasks/calls/read.ts):
 //
-//   1. curated documents (curated/earnings-calls.json) not held yet become
-//      call_documents rows; a replay submitted from the mini arrives as
-//      `submitted` with its job id;
-//   2. EDGAR: a few tickers' submissions feeds a run, with the paged files
-//      that reach back to BACKFILL_SINCE, list each earnings 8-K (item 2.02)
-//      or 6-K not yet listed; then a fixed number of listed filings' index
-//      pages, newest first, give their EX-99 exhibits. A new filing goes
-//      ahead of the backfill, and the backfill resumes where the last run
-//      stopped;
-//   3. text documents (exhibits, transcripts, remarks) not read yet, newest
-//      call first: fetched, cut into sentences, kept in R2 (never served),
-//      and their guidance stored in filed_guidance;
-//   4. AssemblyAI: each submitted job is checked once (no polling loop), a
-//      finished one is read like a transcript, and new replays are submitted
-//      while their basis has room: a call since BACKFILL_BEFORE under the
-//      month's MONTHLY_SPEND_CAP_USD, an older one under the one-time
-//      BACKFILL_SPEND_CAP_USD;
-//   5. for each ticker with guidance whose period has ended, the XBRL concepts
-//      it is scored on, at most once a day each; then each statement the facts
-//      now settle gets its guidance_resolutions row.
+//   1. curated documents (curated/earnings-calls.json) not held yet become call_documents
+//      rows; a replay submitted from the mini arrives as `submitted` with its job id;
+//   2. EDGAR: a few tickers' submissions feeds a run (with the paged files back to
+//      BACKFILL_SINCE) list each earnings 8-K (item 2.02) or 6-K not yet listed; then a
+//      fixed number of listed filings' index pages, newest first, give their EX-99
+//      exhibits. A new filing goes ahead of the backfill;
+//   3. text documents not read yet, newest call first: fetched, cut into sentences, kept
+//      in R2 (never served), and their guidance stored in filed_guidance;
+//   4. AssemblyAI: each submitted job is checked once (no polling loop), a finished one is
+//      read like a transcript, and new replays are submitted while their basis has room
+//      (a call since BACKFILL_BEFORE under MONTHLY_SPEND_CAP_USD, an older one under
+//      BACKFILL_SPEND_CAP_USD);
+//   5. for each ticker with guidance whose period has ended, the XBRL concepts it is
+//      scored on, at most once a day each; then each statement the facts now settle gets
+//      its guidance_resolutions row.
 //
-// A failed step spools one ops event and the next step still runs. Credits
-// running out, or AssemblyAI refusing the key, spools its own event and stops
-// submitting until a run finds credits again.
+// A failed step spools one ops event and the next step still runs. Running out of
+// credits, or AssemblyAI refusing the key, spools its own event and stops submitting until
+// a run finds credits again.
 
 import { and, asc, desc, eq, inArray, isNull, lt, ne, sql } from 'drizzle-orm'
 

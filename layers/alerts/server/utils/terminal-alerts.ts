@@ -30,10 +30,9 @@ const BAND_OF: Readonly<Record<AlertAxis, BandAxis | null>> = {
 }
 
 /**
- * The band bucket of each change entity type, derived from the shared axis
- * map so a new entity type is counted on an axis the moment it has one. A
- * hand-kept copy here missed six SEC types, and the band's total counted
- * changes no axis showed.
+ * The band bucket of each change entity type, derived from the shared axis map so a new
+ * entity type is counted the moment it has an axis. A hand-kept copy missed six SEC types,
+ * and the band's total counted changes no axis showed.
  */
 export const AXIS_OF: Readonly<Record<string, BandAxis>> = Object.fromEntries(
   Object.entries(ENTITY_AXIS).flatMap(([type, axis]) => {
@@ -42,21 +41,17 @@ export const AXIS_OF: Readonly<Record<string, BandAxis>> = Object.fromEntries(
   }),
 )
 
-// Ranking rows are a daily time series, not events (~50 new rows a day by
-// construction), so they are out of "what moved" entirely — the window's
-// anchor included, or a ranking tick would pull the 24h window past a price
-// change detected the day before. Same exclusion as the judge's pending
-// query (layers/core/server/pipeline/judge/pending.ts › JUDGE_EXCLUDED_ENTITY_TYPES).
+// Ranking rows are a daily series (~50 new rows a day), not events, so they are out of
+// "what moved" entirely, the window's anchor included (else a ranking tick would pull the
+// 24h window past a price change from the day before). Same exclusion as the judge's
+// pending query (layers/core/server/pipeline/judge/pending.ts › JUDGE_EXCLUDED_ENTITY_TYPES).
 const NOT_AN_EVENT = 'ranking'
 const isEvent = () => ne(tables.changes.entity_type, NOT_AN_EVENT)
 
 /**
- * Reported window: 24h back from the NEWEST detection, not from the reader's
- * clock. A terminal opened on Monday must still say what moved on Friday
- * rather than "nothing recently" — and the window's start ships with the
- * number so the claim is checkable. window_from is derived from the same
- * max() the counts filter on — deriving it per entity type instead reports a
- * window the counts were never filtered on.
+ * Reported window: 24h back from the NEWEST detection, not the reader's clock, so a
+ * terminal opened on Monday still says what moved on Friday; the window's start ships with
+ * the number. window_from comes from the same max() the counts filter on.
  */
 export async function queryMovement(db: PipelineDb): Promise<MovementSummary> {
   // The count from row_counts and the newest detection as one index seek per
@@ -78,15 +73,12 @@ export async function queryMovement(db: PipelineDb): Promise<MovementSummary> {
   let windowFrom: string | null = null
   if (latest !== null && totalChanges > 0) {
     windowFrom = new Date(Date.parse(latest) - MOVEMENT_WINDOW_HOURS * 3_600_000).toISOString()
-    // datetime() on both sides: stored stamps may carry milliseconds or not,
-    // and a plain string compare between the two spellings is only right by
-    // accident. datetime() also hides the column from every index, so a plain
-    // compare against the window's start cut to the second goes first: either
-    // spelling of an instant at or after that second sorts at or after it, so
-    // it drops nothing the exact test keeps, and it bounds the read to the
-    // window (the whole log otherwise, 21k rows a call). The index is named
-    // because the planner otherwise answers a GROUP BY entity_type by walking
-    // all of changes_type_detected_idx.
+    // datetime() on both sides: stored stamps may or may not carry milliseconds, and a
+    // plain string compare between the spellings is right only by accident. datetime()
+    // hides the column from every index, so a plain compare against the window start cut to
+    // the second goes first: it drops nothing the exact test keeps and bounds the read to
+    // the window (else the whole log, 21k rows a call). The index is named because the
+    // planner otherwise walks all of changes_type_detected_idx for the GROUP BY entity_type.
     const inWindow = await db.all<{ entity_type: string; n: number }>(
       sql`select ${tables.changes.entity_type} as entity_type, count(*) as n
         from ${tables.changes} indexed by changes_detected_id_idx

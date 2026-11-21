@@ -1,10 +1,9 @@
 // What a licensee key changes, in one place for the server and for /data.
 //
 // The rate limits here are the numbers the server enforces
-// (layers/core/server/utils/rate-limits.ts reads them), so the page that
-// documents them can't drift from the limiter. The license a key labels older
-// rows with is PAID_LICENSE in shared/utils/license.ts. Prices are not here:
-// they're by email.
+// (layers/core/server/utils/rate-limits.ts reads them), so the page that documents
+// them can't drift from the limiter. The license a key labels older rows with is
+// PAID_LICENSE in shared/utils/license.ts.
 
 export type KeyTier = 'research' | 'systematic'
 

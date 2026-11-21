@@ -1,10 +1,7 @@
 <script setup lang="ts">
-// The power layer: Epoch AI's estimate of data-center power per lab and per
-// site, who powers each lab site (read from filings and pages,
-// layers/compute/shared/utils/power-sites.ts), and the grid load where the sites are
-// (EIA-930 and ERCOT, layers/compute/shared/utils/grid-load.ts). Every figure has its
-// source and fetch time. The site list is the page's long table and runs with
-// the page rather than in a box.
+// The power layer: Epoch AI's data-center power, who powers each lab site
+// (layers/compute/shared/utils/power-sites.ts) and the grid load around them
+// (layers/compute/shared/utils/grid-load.ts). The site list runs with the page, not in a box.
 
 definePageMeta({
   publicPage: {

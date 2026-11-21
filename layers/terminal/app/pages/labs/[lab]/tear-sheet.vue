@@ -1,15 +1,11 @@
 <script setup lang="ts">
-// One lab on one printed page (US Letter or A4): the lab page's readout plus
-// press reports against filings, the hyperscaler lines and listed companies
-// that name the lab, the newest alerts and the thesis,
-// with every figure footnoted to a source list at the foot. The payloads are
-// the ones the lab page reads, each narrowed to this lab on the server before
-// it reaches the hydration payload; layers/terminal/app/utils/tear-sheet.ts
-// turns them into the sheet.
+// One lab on one printed page (US Letter or A4). The payloads are the lab page's, each
+// narrowed to this lab on the server before it reaches the hydration payload;
+// layers/terminal/app/utils/tear-sheet.ts turns them into the sheet.
 //
-// Print: the layout hides the site header and footer, this page hides its own
-// controls, and the sheet resets the colour tokens to black on white so dark
-// mode prints the same as light. Links print their short URL beside them.
+// Print: the layout hides the site header and footer, this page hides its own controls,
+// and the sheet resets the colour tokens to black on white so dark mode prints the same as
+// light. Links print their short URL beside them.
 
 // Inert for a dynamic route, as on the lab page: sitemap.xml and llms.txt list
 // the sheets from TEAR_SHEET_PAGES (terminal-lab-summary.ts).

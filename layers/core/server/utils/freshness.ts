@@ -1,36 +1,20 @@
-// Freshness checks: is each part of the pipeline still producing?
+// Freshness checks: is each part of the pipeline still producing? Failures
+// record their own ops events; these catch a part that simply stops (a cron that
+// no longer fires, a run killed at the CPU limit, an off-Worker job nobody starts).
 //
-// The ops digest hears about failures because each pipeline records one
-// (source_failed, bulk_build_failed, …). It hears nothing when a part simply
-// stops: a cron that no longer fires, a run killed at the CPU limit, a job off
-// the Worker (the judge routine, the GDELT job) that nobody starts. On
-// 2026-11-06 the GDELT job's GitHub schedule never fired, and four hours
-// passed with no signal at all. These checks are that signal.
+// A check reads its evidence, owedSince (when work became owed and still is;
+// null: nothing owed) and lastOkAt (null: never; undefined: nothing records one),
+// and is stale when work has been owed longer than maxAgeMs and nothing
+// succeeded within maxAgeMs. Without owed work, silence is correct. A stale
+// check spools one ops event, and a KV marker holds repeats to one per
+// FRESHNESS_REPEAT_MS. ops:watch runs every check each half hour.
 //
-// One rule for every check. A check reads its own evidence:
-//
-//   owedSince  when work became owed and is still owed (null: nothing owed)
-//   lastOkAt   the last success (null: never; undefined: nothing records one)
-//
-// and is stale when work has been owed for longer than maxAgeMs and nothing
-// succeeded within maxAgeMs either. Owed work is what makes silence a problem:
-// a judge with no changes to read, or a GDELT job with no due searches, is
-// quiet because it should be. A stale check spools one ops event of its kind,
-// then a KV marker holds the repeat to once every FRESHNESS_REPEAT_MS while
-// it lasts. ops:watch runs every check each half hour.
-//
-// Two sources of checks, both built by freshnessChecks() in
-// terminal-freshness.ts:
-//
-//   - one per scheduled task, from runtimeConfig.scheduledTasks and the
-//     task_heartbeats table (task-heartbeat.ts), with the limit derived from
-//     its cron: one missed run plus half an interval, at least 30 minutes;
-//   - one per producer off the Worker, or per task whose heartbeat cannot say
-//     enough, with its evidence read from the rows that producer writes;
-//   - the deploy of main (pipeline/deploy-watch.ts).
-//
-// layers/terminal/test/freshness.test.ts fails the build when a scheduled task
-// has no heartbeat and no check of its own, or a check's kind has no tier.
+// freshnessChecks() (terminal-freshness.ts) builds one check per scheduled task
+// from task_heartbeats (limit: one missed run plus half an interval, at least 30
+// minutes), one per off-Worker producer or task whose heartbeat says too little,
+// and one for the deploy of main (pipeline/deploy-watch.ts).
+// layers/terminal/test/freshness.test.ts fails when a scheduled task has no
+// check, or a check's kind has no tier.
 
 import * as tables from '#server/db/schema'
 
@@ -108,7 +92,6 @@ export function silentFor(lastOk: string | null, now: Date): string {
   return `for ${Math.floor(age(lastOk, now) / HOUR_MS)}h (since ${lastOk})`
 }
 
-/** The ops event's one line. */
 export function staleDetail(check: FreshnessCheck, evidence: FreshnessEvidence, now: Date): string {
   const success =
     evidence.lastOkAt === undefined
@@ -225,9 +208,8 @@ const EXPECTED_MARKER_TTL_SECONDS = 90 * 24 * 60 * 60
 
 /**
  * When the checker first saw a task with no heartbeat row. A task added by a
- * deploy is owed from about then, not from when monitoring started: counting
- * from monitoring start flagged events:sweep as silent eleven minutes before
- * its first scheduled run (2026-11-07).
+ * deploy is owed from about then: counting from monitoring start flagged
+ * events:sweep as silent eleven minutes before its first scheduled run.
  */
 async function firstExpected(marker: MarkerStore, task: string, now: Date): Promise<string> {
   const key = expectedMarkerKey(task)

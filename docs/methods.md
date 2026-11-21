@@ -1,9 +1,7 @@
 # Methods
 
-How the figures on a few pages are formed. These paragraphs used to sit on the pages
-themselves; they moved here on 2026-11-20, when the pages were cut back to the data, a source
-credit and links. Each dataset's one-line method is also in its table description on `/data`
-and in the `method` field of its API route.
+How the figures on a few pages are formed. Each dataset's one-line method is also in its table
+description on `/data` and in the `method` field of its API route.
 
 ## Revenue: how a lab gets a number
 
@@ -110,7 +108,7 @@ Before our first read of each lab's status feed, the monthly counts on `/inciden
 the Internet Archive's copies of the same feed. A feed lists only its newest incidents, so a
 copy speaks for incidents that started from the oldest start it lists (`covers_from`) to the
 moment the Archive took it. An incident listed in many copies is one row, in the newest copy's
-state. A month is drawn only where the copies reach all of it; a month they reach in part is a
+state. A month is drawn only where the copies reach all of it. A month they reach in part is a
 break in the line, and `/api/incidents` gives its count and the share reached. Counts are
 filtered as the live feed is. We don't compute uptime or durations from copies, since they
 can't promise every incident. Archived incidents never reach the live windows, alerts or the

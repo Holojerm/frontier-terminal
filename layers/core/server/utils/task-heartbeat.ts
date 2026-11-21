@@ -1,22 +1,16 @@
-// The heartbeat every scheduled task records (task_heartbeats, schema.ts).
-//
-// Usage, in every file under */server/tasks/:
-//
-//   const task = defineTask({ meta: { name: 'poll:survey', … }, async run() { … } })
+// The heartbeat every scheduled task records (task_heartbeats, schema.ts). Every
+// file under */server/tasks/ ends with
 //
 //   export default withHeartbeat(task)
 //
-// withHeartbeat() runs the task unchanged and, when it ends, upserts one row:
-// last_completed_at when run() resolved, last_failed_at and last_error when it
-// threw. A throw also spools one TASK_FAILED_KIND ops event and an error log
-// line, then the run resolves with no result, so no task needs a whole-run
-// try/catch of its own. Neither write fails the task: a D1 hiccup here costs
-// one heartbeat, not the task's result.
+// When run() ends it upserts one row: last_completed_at on resolve;
+// last_failed_at and last_error on a throw, which also spools one
+// TASK_FAILED_KIND ops event and logs, then resolves with no result, so no task
+// needs its own whole-run try/catch. Neither write fails the task.
 //
-// The freshness checks read these rows (freshness.ts). Coverage is enforced by
-// layers/terminal/test/freshness.test.ts: a scheduled task whose file does not
-// call withHeartbeat() fails the build unless the registry gives it a check
-// of its own, with the reason (TASK_CHECK_OVERRIDES).
+// freshness.ts reads these rows. layers/terminal/test/freshness.test.ts fails the
+// build when a scheduled task's file doesn't call withHeartbeat() and
+// TASK_CHECK_OVERRIDES gives it no check of its own.
 
 import type { Task, TaskEvent, TaskResult } from 'nitropack/types'
 
@@ -58,7 +52,6 @@ export async function recordHeartbeat(target: PipelineDb, o: HeartbeatOutcome): 
     })
 }
 
-/** Wrap a task definition so each run records its heartbeat. */
 export function withHeartbeat<R = unknown>(
   def: Task<R>,
   target: () => PipelineDb = () => db,

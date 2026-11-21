@@ -6,17 +6,17 @@ import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 // Convention:
 //   - Table names: snake_case plural (e.g. ops_events)
 //   - Column names: snake_case
-//   - All tables have: id, created_at, and updated_at — unless the table is
-//     append-only, in which case updated_at is omitted rather than lied about
+//   - All tables have id, created_at and updated_at; an append-only table
+//     omits updated_at
 //   - Foreign keys: <table_singular>_id (e.g. provider_id)
 //
-// This site has no accounts. The tables here are the ops substrate the
-// template shipped with; the store's tables live in the core layer
-// (layers/core/server/db/schema.ts), each domain's tables in its own layer
-// (layers/<name>/server/db/schema.ts), and all are re-exported at the end.
+// This site has no accounts. These are the template's ops tables; the store's
+// tables live in the core layer (layers/core/server/db/schema.ts), each
+// domain's in its own layer (layers/<name>/server/db/schema.ts), all
+// re-exported at the end.
 // ─────────────────────────────────────────────
 
-// Timestamps helper — spread into every table
+// Timestamps helper, spread into every table
 const timestamps = {
   createdAt: integer('created_at', { mode: 'timestamp' })
     .$defaultFn(() => new Date())
@@ -27,17 +27,17 @@ const timestamps = {
     .notNull(),
 }
 
-// Instance secrets — server-generated derivation salts, one row each.
+// Instance secrets: server-generated derivation salts, one row each.
 //
-// A salt that must be stable for the life of the deployment cannot be derived
-// from an operator-rotatable secret, and making it its own env var is a setup
-// step every fork would have to remember. So it is generated here, once, at
-// random, and never rotated (server/utils/identity.ts).
+// A salt that must stay stable for the deployment's life can't be derived from
+// an operator-rotatable secret, and its own env var would be a setup step
+// every fork must remember. So it is generated here once, at random, and never
+// rotated (server/utils/identity.ts).
 //
-// Server-generated derivation material ONLY. Never user input, never anything
-// rendered, never anything a request can name — an id here is chosen by code in
-// this repo, so this table can never become a generic key/value store that a
-// handler writes into. It holds no personal data and is not exported.
+// Server-generated derivation material only: never user input, never
+// rendered, never anything a request can name (ids are chosen by code in this
+// repo), so it can't become a generic key/value store. It holds no personal
+// data and is not exported.
 export const instanceSecrets = sqliteTable('instance_secrets', {
   // A constant chosen in code, e.g. IDENTITY_SALT_ID. Not user-supplied.
   id: text('id').primaryKey(),
@@ -47,12 +47,11 @@ export const instanceSecrets = sqliteTable('instance_secrets', {
     .notNull(),
 })
 
-// Ops events — the alerting spool. Anything that should wake the owner up gets
-// a row here; the fleet dashboard reads it through GET /api/fleet (`ops.kinds`)
-// and does the mailing. This exists because Workers Logs cannot be alerted on:
-// the only component that knows a request blew up is the Worker itself, at the
-// moment it happens. Pruned after OPS_EVENT_RETENTION_DAYS by ops:watch
-// (layers/terminal/server/tasks/ops/watch.ts).
+// Ops events: the alerting spool. Anything that should wake the owner gets a
+// row; the fleet dashboard reads it through GET /api/fleet (`ops.kinds`) and
+// does the mailing. Workers Logs can't be alerted on, and only the Worker knows
+// a request blew up as it happens. Pruned after OPS_EVENT_RETENTION_DAYS by
+// ops:watch (layers/terminal/server/tasks/ops/watch.ts).
 export const opsEvents = sqliteTable('ops_events', {
   id: text('id')
     .primaryKey()
@@ -63,16 +62,15 @@ export const opsEvents = sqliteTable('ops_events', {
   ...timestamps,
 })
 
-// Type exports — use these in your app, not raw Drizzle types
+// Type exports: use these, not raw Drizzle types
 export type OpsEvent = typeof opsEvents.$inferSelect
 export type NewOpsEvent = typeof opsEvents.$inferInsert
 
 // ── Layer tables ────────────────────────────────────────────────────────────
-// This file is the app's composition root for the database: it re-exports the
-// schema of every layer the app uses, so the typed `db` (and every `*Db` type
-// derived from this module) includes their tables. NuxtHub merges layer schemas
-// on its own; these lines are what make the typed `db` and drizzle-kit see them.
-// The core layer owns the store's tables, each domain layer its own.
+// The app's composition root for the database: re-exporting every layer's
+// schema is what makes the typed `db` (and every `*Db` type derived from this
+// module) and drizzle-kit see their tables. NuxtHub merges layer schemas on
+// its own.
 export * from '../../layers/core/server/db/schema'
 export * from '../../layers/compute/server/db/schema'
 export * from '../../layers/pricing/server/db/schema'

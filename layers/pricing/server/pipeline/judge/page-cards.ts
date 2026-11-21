@@ -1,27 +1,22 @@
-// The descriptions a class-map page prints on each model's own card, for the
-// providers whose stored model rows do not carry them. Anthropic's, OpenAI's,
-// xAI's and Moonshot's models pages are parsed into catalog rows whose notes
-// ARE the description, so the gate in class-map.ts reads those. Google's and
-// Alibaba's models pages are polled only for the class-map sentences
-// (lanes.ts), and their catalog rows come from pricing pages whose notes are
-// tier text: without this, a judge re-mapping onto a Google or Alibaba card
-// sentence could never pass, though the seed itself rests on such sentences
-// (issue #360).
+// The descriptions a class-map page prints on each model's own card, for providers whose
+// stored model rows do not carry them. Anthropic's, OpenAI's, xAI's and Moonshot's models pages
+// parse into catalog rows whose notes ARE the description, so the gate in class-map.ts reads
+// those. Google's and Alibaba's models pages are polled only for class-map sentences
+// (lanes.ts), and their catalog rows come from pricing pages whose notes are tier text: without
+// this, a re-mapping onto a Google or Alibaba card sentence could never pass, though the seed
+// rests on such sentences (#360).
 //
-// A description belongs to a card only when the card itself says which model
-// it is: Google's by its `*Model code*` line or its `/docs/models/<slug>` link,
-// Alibaba's by its `/detail/<slug>` link or a doc link matching its title. A
-// card that names no model adds
-// nothing. The text is returned as printed, so the gate's comparison stays the
-// same verbatim rule basisOnPage applies.
+// A description belongs to a card only when the card says which model it is: Google's by its
+// `*Model code*` line or its `/docs/models/<slug>` link, Alibaba's by its `/detail/<slug>` link
+// or a doc link matching its title. A card that names no model adds nothing. The text is
+// returned as printed, so the gate keeps the verbatim rule basisOnPage applies.
 //
-// The same map works the other way: a card's description is about that card's
-// model, whatever else it mentions. Argon's card compares itself to Carbon
-// ("…lower token spend per turn compared to Gemini 4 Carbon…"), which the
-// naming rule read as naming Carbon, and on 2026-11-10 the gate accepted it as
-// the basis for Carbon's flagship cell (cardOwners, issue #360 follow-up).
-// The drift check (recommendations.ts) reads it the same way: a sentence that
-// moved to another model's card has left the mapped model's (issue #405).
+// The map also works the other way: a card's description is about that card's model, whatever
+// else it mentions. Argon's card compares itself to Carbon ("…lower token spend per turn
+// compared to Gemini 4 Carbon…"), which the naming rule read as naming Carbon, so the gate
+// accepted it for Carbon's flagship cell (cardOwners). The drift check (recommendations.ts)
+// reads cards the same way: a sentence that moved to another model's card has left the mapped
+// model's (#405).
 
 /** Typographic single and double quotes → their ASCII forms. */
 export function foldQuotes(text: string): string {
@@ -82,12 +77,11 @@ const googleCards: CardReader = (text) => {
 }
 
 /**
- * Alibaba's model list: an `<a class="adoc-help-center-card">` per model,
- * linking to its console `/detail/<slug>` page, with the description as the
- * body's one paragraph. A newer card (qwen4-max, 2026-11-16) links to its
- * doc page, `/help/en/model-studio/<slug>`, instead; that link names the
- * model only when its last segment is the card's own title, since the same
- * path holds docs that are not models.
+ * Alibaba's model list: an `<a class="adoc-help-center-card">` per model, linking to its
+ * console `/detail/<slug>` page, with the description as the body's one paragraph. A newer card
+ * (qwen4-max) links to its doc page, `/help/en/model-studio/<slug>`, instead; that link names
+ * the model only when its last segment is the card's own title, since the same path holds docs
+ * that are not models.
  */
 const alibabaCards: CardReader = (html) => {
   const out: CardDescriptions = new Map()

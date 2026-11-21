@@ -1,10 +1,8 @@
-// Vitest config — uses @cloudflare/vitest-plugin so tests run inside the
-// same `workerd` runtime that Cloudflare runs in production. Server-side code
-// gets real D1, KV, and R2 bindings via the `cloudflare:test` import, with
-// each test file getting its own isolated storage.
+// Vitest config: @cloudflare/vitest-plugin runs tests inside the same `workerd`
+// runtime as production, with real D1, KV and R2 bindings via the
+// `cloudflare:test` import and isolated storage per test file.
 //
-// Tests live in `test/` (alongside `app/`, `server/`). Co-located *.test.ts
-// inside `server/` is also picked up.
+// Tests live in `test/`; co-located *.test.ts inside `server/` is also picked up.
 //
 // Docs: https://developers.cloudflare.com/workers/testing/vitest-integration/
 
@@ -30,11 +28,10 @@ const appImports = generatedImports(ROOT, 'app').filter(
 )
 
 // Every committed fixture (plus sources.yaml) keyed by repo-relative path, served to the
-// tests by a Node-side service binding. Importing them with `?raw` made each test file
-// transform and evaluate ~10 MB of strings in workerd (about 2 s per file). A plain JSON
-// binding was copied into every file's worker at spawn, used or not: ~0.45 s per file,
-// over a third of the suite's wall time at 13 MB. Only the files that import
-// layers/core/test/pipeline/fixtures.ts fetch it now.
+// tests by a Node-side service binding, so only the files that import
+// layers/core/test/pipeline/fixtures.ts pay for them. `?raw` imports made each test file
+// evaluate ~10 MB of strings in workerd (about 2 s per file), and a plain JSON binding
+// was copied into every file's worker at spawn, used or not (~0.45 s per file).
 function readFixtures(): Record<string, string> {
   const out: Record<string, string> = { 'sources.yaml': readFileSync('sources.yaml', 'utf8') }
   const walk = (dir: string) => {
@@ -73,9 +70,9 @@ export default defineConfig({
     cloudflareTest(async () => ({
       wrangler: { configPath: './wrangler.toml' },
       miniflare: {
-        // The real migrations, handed to test/setup.ts (which applies them to
-        // each test file's isolated D1) — so tests exercise the real tables
-        // rather than a hand-written copy that drifts.
+        // The real migrations, handed to test/setup.ts, which applies them to
+        // each test file's isolated D1, so tests use the real tables rather than
+        // a hand-written copy that drifts.
         bindings: {
           TEST_MIGRATIONS: await readD1Migrations(migrationsPath),
         },
