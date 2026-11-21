@@ -14,7 +14,7 @@ import { registerHiringTools } from '#layers/talent/server/mcp/hiring'
 import { registerOperationsTools } from '#layers/terminal/server/mcp/operations'
 import { registerReliabilityTools } from '#layers/reliability/server/mcp/reliability'
 import { registerPriceTools } from '#layers/pricing/server/mcp/prices'
-import { registerReleaseTools } from '#layers/terminal/server/mcp/releases'
+import { registerDisclosureTools, registerReleaseTools } from '#layers/models/server/mcp/models'
 import { registerSignalTools } from '#layers/terminal/server/mcp/signals'
 import { registerThesisTools } from '#layers/terminal/server/mcp/theses'
 import { registerUtilizationTools } from '#layers/terminal/server/mcp/utilization'
@@ -26,6 +26,7 @@ export const MCP_TOOLS: readonly ((kit: McpKit) => void)[] = [
   registerHiringTools,
   registerReliabilityTools,
   registerOperationsTools,
+  registerDisclosureTools,
   registerDemandTools,
   registerGpuPriceTools,
   registerAdoptionTools,

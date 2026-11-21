@@ -49,6 +49,7 @@ describe('the domain table', () => {
         'adoption',
         'compute',
         'core',
+        'models',
         'pricing',
         'reliability',
         'talent',
@@ -61,6 +62,7 @@ describe('the domain table', () => {
     expect(DOMAIN_LAYERS.talent.uses).toEqual(['core'])
     expect(DOMAIN_LAYERS.reliability.uses).toEqual(['core', 'pricing'])
     expect(DOMAIN_LAYERS.adoption.uses).toEqual(['core', 'reliability'])
+    expect(DOMAIN_LAYERS.models.uses).toEqual(['core', 'pricing'])
   })
 })
 

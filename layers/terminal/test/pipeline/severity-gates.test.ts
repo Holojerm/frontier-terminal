@@ -8,7 +8,7 @@ import { requotedKey } from '../../../pricing/server/pipeline/judge/class-map'
 import { incidentCounts } from '#layers/core/server/pipeline/judge/pending'
 import { clampRoutineAlerts } from '../../server/pipeline/judge/severity-gates'
 import { submitJudgeRun } from '../../server/pipeline/judge/submit'
-import { modelFloorAlerts } from '../../server/pipeline/model-floor'
+import { modelFloorAlerts } from '../../../models/server/pipeline/model-floor'
 import {
   EIGHT_K_ITEMS_FROM,
   parseEdgarSubmissions,

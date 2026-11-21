@@ -1,4 +1,4 @@
-// Cron task: the five-minute launch tripwire (layers/terminal/server/pipeline/tripwire.ts).
+// Cron task: the five-minute launch tripwire (layers/models/server/pipeline/tripwire.ts).
 // Same wiring and the same reasons as poll/edgar.ts.
 
 import { blob } from '@nuxthub/blob'
