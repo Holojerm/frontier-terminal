@@ -15,7 +15,7 @@ import {
   type RunTally,
   type SourceReliability,
 } from '../../../../reliability/shared/utils/terminal-reliability'
-import { alertPath } from '../../../shared/utils/terminal-tiers'
+import { alertPath } from '../../../../core/shared/utils/terminal-tiers'
 import type { Fact, TableColumn } from '#layers/core/app/types/terminal-ui'
 
 import manifest from '~~/fleet.json'

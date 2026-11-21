@@ -20,11 +20,11 @@
 // that POST /api/judge/alerts enforces (layers/talent/server/pipeline/hiring-floor.ts).
 // `track_record_review` lists, per material alert, the press articles and
 // newsroom posts found around it that still need a same-event rating
-// (layers/terminal/server/pipeline/track-record/review.ts); like
+// (layers/press/server/pipeline/track-record/review.ts); like
 // `claim_review`, it can be non-empty when `changes` is empty.
 // `figure_review` lists press headlines that state a lab's revenue,
 // valuation or funding and are not yet read
-// (layers/terminal/server/pipeline/reported/review.ts); it too can be
+// (layers/press/server/pipeline/reported/review.ts); it too can be
 // non-empty when `changes` is empty.
 // `filing_review` lists fresh registration filings whose revenue or cover
 // terms the parser could not read, with the document text to read them from

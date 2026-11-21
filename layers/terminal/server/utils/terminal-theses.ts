@@ -18,7 +18,7 @@ import { confirmationOf } from '../theses/judged-status'
 import { THESES } from '../theses/registry'
 import { valueFormatOf } from '../theses/signals'
 import type { QueryContext } from '#layers/core/server/utils/terminal-db'
-import { queryPressEarlyRead } from './terminal-ground-truth'
+import { queryPressEarlyRead } from '../../../press/server/utils/terminal-ground-truth'
 
 export const THESES_CAVEAT =
   'This is a research journal. It isn’t investment advice. Each status is computed from our stored data against kill conditions written before the data arrived. ' +

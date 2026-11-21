@@ -7,7 +7,7 @@ import { db } from '@nuxthub/db'
 import { rateLimit } from '#server/utils/rate-limit'
 
 import { tokenBody } from '../../../shared/utils/subscribe'
-import { requireSubscribe } from '../../utils/subscribe-config'
+import { requireSubscribe } from '../../../../core/server/utils/subscribe-config'
 import { confirmSubscription } from '../../utils/subscribers'
 
 export default defineEventHandler(async (event) => {

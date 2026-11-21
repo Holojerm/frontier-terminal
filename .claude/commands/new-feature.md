@@ -22,7 +22,7 @@ Settle these first, and ask if the answer isn't clear:
    `app/pages/index.vue`.
 4. **Does a change matter?** Decide whether a move in this data should raise an alert, and how
    it would be judged (a deterministic rule or the judge routine). See
-   `layers/terminal/shared/utils/terminal-tiers.ts`.
+   `layers/core/shared/utils/terminal-tiers.ts`.
 
 Product code goes in `layers/terminal/`, mirroring the app's folders. Read
 [`.claude/docs/patterns.md`](../docs/patterns.md) for the route, query and component shapes,

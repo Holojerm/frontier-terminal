@@ -34,8 +34,22 @@ export const DOMAIN_LAYERS = {
       'server/pipeline/parsers/sec/whitelist.ts',
       // Its parser manifest, which the shell's manifest imports.
       'server/pipeline/parsers.manifest.ts',
-      // The prospectus floor's rule name, which the shell's press notes read.
+      // The prospectus floor's rule name, which the press notes read.
       'server/pipeline/prospectus-floor.ts',
+    ],
+  },
+  press: {
+    // The ground truth scores press reports against companies' filed revenue, facts and guidance.
+    uses: ['core', 'companies'],
+    public: [
+      // Its queries (the reported figures, the track record, the ground truth and the press early
+      // read), which the lab page, the tear sheet, the alerts tools, the theses and the signals read.
+      'server/utils/',
+      // The press notes, which the shell's event fan-out composes and sends.
+      'server/pipeline/press.ts',
+      // The GKG file clock and the oldest unread file, which the shell's freshness reads.
+      'server/pipeline/track-record/gkg.ts',
+      'server/pipeline/track-record/search.ts',
     ],
   },
   compute: {
@@ -142,6 +156,7 @@ export const DOMAIN_LAYERS = {
       'reliability',
       'adoption',
       'models',
+      'press',
     ],
   },
 } satisfies LayerTable

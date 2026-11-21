@@ -28,8 +28,8 @@ import {
   type ScreenOptions,
 } from '#layers/terminal/server/pipeline/judge/screen'
 import { stillListedRemovals } from '#layers/terminal/server/pipeline/judge/still-listed'
-import { FIGURE_REVIEW } from '#layers/terminal/server/pipeline/reported/review'
-import { TRACK_RECORD_REVIEW } from '#layers/terminal/server/pipeline/track-record/review'
+import { FIGURE_REVIEW } from '#layers/press/server/pipeline/reported/review'
+import { TRACK_RECORD_REVIEW } from '#layers/press/server/pipeline/track-record/review'
 import { CLAIM_REVIEW } from '#layers/terminal/server/theses/verdicts'
 
 export const JUDGE_REVIEWS: readonly JudgeReview[] = [

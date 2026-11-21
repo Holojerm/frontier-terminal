@@ -17,9 +17,9 @@ import { gpuPricePayload } from '#layers/compute/server/recipes/gpu-prices'
 import { RECIPES } from '#server/registries/recipes'
 import { presentation } from '../server/theses/signals'
 import { evaluateClaim, type MeasuredClaim, type StoredReading } from '../server/theses/status'
-import { pressEarlyRead } from '../server/utils/terminal-ground-truth'
+import { pressEarlyRead } from '../../press/server/utils/terminal-ground-truth'
 import type { StoredGuidance } from '../../companies/server/utils/terminal-ground-truth-guidance'
-import type { StoredHeadline } from '../server/utils/terminal-reported'
+import type { StoredHeadline } from '../../press/server/utils/terminal-reported'
 
 // The Compute thesis's capacity claims (7 to 9) and the press early read
 // beside Anthropic's revenue claim. Tables of our own, except the spot prices,

@@ -6,7 +6,7 @@ import { blob } from '@nuxthub/blob'
 import { z } from 'zod'
 
 import { isRelayed, putRelayCopy, RELAY_MAX_BYTES } from '#layers/core/server/pipeline/relay'
-import { requireGdeltToken } from '../../utils/gdelt-auth'
+import { requireGdeltToken } from '../../../../press/server/utils/gdelt-auth'
 
 /** The job posts each URL as soon as it has it. */
 const FETCHED_AT_SLACK_MS = 15 * 60_000

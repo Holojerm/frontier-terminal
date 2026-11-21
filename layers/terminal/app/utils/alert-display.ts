@@ -1,15 +1,10 @@
-// How an alert reads: the badge for each severity and change type, and the
-// one-line text behind each rule's caveat. Shared by the list, the ticker and
-// the permalink so a severity never wears two icons. DESIGN.md › Never convey
-// state by color alone: every badge pairs its color with an icon and a word.
+// How an alert reads: the badge for each change type, and the one-line text
+// behind each rule's caveat. Shared by the list, the ticker and the permalink.
+// The severity badge is core's (layers/core/app/utils/severity-badge.ts).
+// DESIGN.md › Never convey state by color alone: every badge pairs its color
+// with an icon and a word.
 
 import type { AlertView, ChangeView } from '../../shared/utils/terminal-types'
-
-export const SEVERITY_BADGE = {
-  critical: { color: 'error', icon: 'i-lucide-siren' },
-  notable: { color: 'warning', icon: 'i-lucide-triangle-alert' },
-  info: { color: 'info', icon: 'i-lucide-info' },
-} as const satisfies Record<AlertView['severity'], { color: string; icon: string }>
 
 export const CHANGE_BADGE = {
   added: { color: 'success', icon: 'i-lucide-plus' },

@@ -551,13 +551,13 @@ export default defineNuxtConfig({
     // IndexNow key, public by design (/indexnow-key.txt serves it). Set in
     // wrangler.toml [vars] as NUXT_INDEXNOW_KEY. See server/utils/indexnow.ts.
     indexnowKey: '',
-    // The press list (layers/terminal/server/pipeline/press.ts): JSON array of
+    // The press list (layers/press/server/pipeline/press.ts): JSON array of
     // { name, outlet, email?, tips_email?, priority }. A Worker secret because it
     // names people and this repo is public. `wrangler secret put NUXT_PRESS_LIST`.
     pressList: '',
     // The from address on press notes, on a domain verified in Resend. With
     // NUXT_RESEND_API_KEY set, notes go straight to reporters; without, the
-    // owner gets a brief of mailto: links (layers/terminal/server/pipeline/press.ts).
+    // owner gets a brief of mailto: links (layers/press/server/pipeline/press.ts).
     pressEmailFrom: '',
     // SEC fair-access policy requires a contact email in the User-Agent of
     // every request to sec.gov hosts. Empty = the EDGAR sources are skipped
@@ -565,7 +565,7 @@ export default defineNuxtConfig({
     // A Worker secret: `wrangler secret put NUXT_SEC_CONTACT_EMAIL`.
     secContactEmail: '',
     // Bearer the mini's GDELT and relay jobs (scripts/gdelt-search.ts, scripts/relay-fetch.ts)
-    // present to /api/gdelt/* and /api/relay/* (layers/terminal/server/utils/gdelt-auth.ts). The same value is the
+    // present to /api/gdelt/* and /api/relay/* (layers/press/server/utils/gdelt-auth.ts). The same value is the
     // repository secret GDELT_TOKEN and the mini's ~/agent-jobs/.gdelt-token. Unset = those routes 404 and no GDELT file
     // is read. `wrangler secret put NUXT_GDELT_TOKEN`; 32+ chars.
     gdeltToken: '',

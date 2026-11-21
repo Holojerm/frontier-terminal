@@ -10,7 +10,7 @@ import {
   severitiesOf,
   type AlertSeverity,
   type AlertTierFilter,
-} from '../../shared/utils/terminal-tiers'
+} from '../../../core/shared/utils/terminal-tiers'
 import type {
   AlertDetailData,
   AlertView,

@@ -1,0 +1,231 @@
+// The reported-figures payload (the "Reported in the press" panel on /revenue):
+// each private lab's revenue, valuation and funding as press headlines state
+// them, the newest report and a median per quarter, kept apart from anything
+// filed. A headline syndicated to many outlets counts once, at its earliest
+// copy. Only figures the judge read as `reported` feed the series; talks and
+// forecasts are listed, never averaged in.
+//
+// Every table read here is append-only, so `as_of` is a cut on found_at,
+// judged_at and figures_at.
+
+import { and, count, inArray, isNotNull, isNull, lte, max, eq } from 'drizzle-orm'
+
+import type { DealMetric } from '../../shared/utils/terminal-types/ground-truth'
+import type { LabId } from '../../../core/shared/utils/terminal-types/common'
+import type {
+  ReportedBasis,
+  ReportedData,
+  ReportedHeadline,
+  ReportedMetric,
+  ReportedQuarter,
+  ReportedSeries,
+} from '../../shared/utils/terminal-types/reported'
+
+import * as tables from '#server/db/schema'
+import { GKG_FROM } from '../pipeline/track-record/gkg'
+import { earliestPerHeadline, isDealMetric } from '../pipeline/reported/review'
+import { D1_MAX_BOUND_PARAMS, chunk, type PipelineDb } from '#layers/core/server/pipeline/store'
+import type { QueryContext } from '#layers/core/server/utils/terminal-db'
+import { middle } from '#layers/core/server/utils/terminal-median'
+
+/** Headlines listed under "recent". */
+export const RECENT_LIMIT = 30
+
+/** Quarters shown per series. */
+export const QUARTERS_SHOWN = 4
+
+/** A cache variant: the newest article, reading and backfilled file, which the poll stamp does not see. */
+export async function reportedStamp(db: PipelineDb): Promise<string> {
+  const [[a], [r], [f]] = await Promise.all([
+    db.select({ at: max(tables.reportedArticles.found_at) }).from(tables.reportedArticles),
+    db.select({ at: max(tables.reportedReviews.judged_at) }).from(tables.reportedReviews),
+    db.select({ at: max(tables.gdeltFiles.figures_at) }).from(tables.gdeltFiles),
+  ])
+  return `${a?.at ?? 'none'}|${r?.at ?? 'none'}|${f?.at ?? 'none'}`
+}
+
+/** 2026-11-02T18:15:00Z -> 2026-Q4 */
+export function quarterOf(iso: string): string {
+  return `${iso.slice(0, 4)}-Q${Math.floor((Number(iso.slice(5, 7)) - 1) / 3) + 1}`
+}
+
+/** One series per lab, metric and currency from `reported` figures, newest report first. */
+export function seriesOf(headlines: readonly ReportedHeadline[]): ReportedSeries[] {
+  const groups = new Map<string, ReportedHeadline[]>()
+  for (const h of headlines) {
+    if (h.basis !== 'reported') continue
+    const key = `${h.lab}|${h.metric}|${h.currency}`
+    groups.set(key, [...(groups.get(key) ?? []), h])
+  }
+  const out: ReportedSeries[] = []
+  for (const group of groups.values()) {
+    group.sort((a, b) => b.published_at.localeCompare(a.published_at))
+    const byQuarter = new Map<string, number[]>()
+    for (const h of group) {
+      const q = quarterOf(h.published_at)
+      byQuarter.set(q, [...(byQuarter.get(q) ?? []), h.amount])
+    }
+    const quarters: ReportedQuarter[] = [...byQuarter.entries()]
+      .sort(([a], [b]) => b.localeCompare(a))
+      .slice(0, QUARTERS_SHOWN)
+      .map(([quarter, amounts]) => ({
+        quarter,
+        median: middle(amounts),
+        low: Math.min(...amounts),
+        high: Math.max(...amounts),
+        reports: amounts.length,
+      }))
+    const latest = group[0]!
+    out.push({
+      lab: latest.lab,
+      metric: latest.metric,
+      currency: latest.currency,
+      latest,
+      quarters,
+    })
+  }
+  return out.sort(
+    (a, b) => a.lab.localeCompare(b.lab) || METRIC_ORDER[a.metric] - METRIC_ORDER[b.metric],
+  )
+}
+
+const METRIC_ORDER: Readonly<Record<ReportedMetric, number>> = {
+  revenue_run_rate: 0,
+  revenue: 1,
+  valuation: 2,
+  funding: 3,
+  funding_total: 4,
+}
+
+/** A headline as the payload lists it, plus when we stored its earliest copy. */
+export type StoredHeadline = ReportedHeadline & { found_at: string }
+
+/** A deal size one headline states: the same row, with the deal's metric and its other company. */
+export type StoredDeal = Omit<StoredHeadline, 'metric' | 'period'> & {
+  metric: DealMetric
+  counterparty: string | null
+  judged_at: string
+}
+
+/**
+ * Every figure the judge kept, at its headline's earliest copy, newest first,
+ * and the headline keys read. Deal sizes are kept apart in `deals`: they are
+ * not a lab's own revenue, valuation or funding.
+ */
+export async function storedHeadlines(
+  db: PipelineDb,
+  at: string | null,
+): Promise<{
+  headlines: StoredHeadline[]
+  deals: StoredDeal[]
+  keys: string[]
+  /** Each headline key's title, at its earliest copy. */
+  titles: Map<string, string>
+}> {
+  const [figures, articles] = await Promise.all([
+    db
+      .select()
+      .from(tables.reportedFigures)
+      .where(at ? lte(tables.reportedFigures.judged_at, at) : undefined),
+    db
+      .select()
+      .from(tables.reportedArticles)
+      .where(at ? lte(tables.reportedArticles.found_at, at) : undefined),
+  ])
+
+  const copies = new Map<string, Set<string>>()
+  for (const a of articles) {
+    copies.set(a.title_key, (copies.get(a.title_key) ?? new Set()).add(a.outlet))
+  }
+  const earliest = new Map(earliestPerHeadline(articles).map((a) => [a.title_key, a]))
+
+  const headlines: StoredHeadline[] = []
+  const deals: StoredDeal[] = []
+  for (const f of figures) {
+    const article = earliest.get(f.title_key)
+    if (!article) continue
+    const row = {
+      lab: f.lab as LabId,
+      basis: f.basis as ReportedBasis,
+      currency: f.currency as 'USD' | 'EUR',
+      amount: f.amount,
+      amount_text: f.amount_text,
+      title: article.title,
+      outlet: article.outlet,
+      url: article.url,
+      published_at: article.published_at,
+      outlets: copies.get(f.title_key)?.size ?? 1,
+      source_url: article.url,
+      fetched_at: article.fetched_at,
+      found_at: article.found_at,
+    }
+    if (isDealMetric(f.metric)) {
+      deals.push({
+        ...row,
+        metric: f.metric,
+        counterparty: f.counterparty,
+        judged_at: f.judged_at,
+      })
+    } else {
+      headlines.push({ ...row, metric: f.metric as ReportedMetric, period: f.period })
+    }
+  }
+  headlines.sort((a, b) => b.published_at.localeCompare(a.published_at))
+  deals.sort((a, b) => b.published_at.localeCompare(a.published_at))
+  return {
+    headlines,
+    deals,
+    keys: [...earliest.keys()],
+    titles: new Map([...earliest].map(([key, a]) => [key, a.title])),
+  }
+}
+
+export async function queryReported(db: PipelineDb, ctx: QueryContext): Promise<ReportedData> {
+  const at = ctx.at
+  const [stored, [read], [waiting]] = await Promise.all([
+    storedHeadlines(db, at),
+    db
+      .select({ n: count() })
+      .from(tables.gdeltFiles)
+      .where(
+        at
+          ? and(isNotNull(tables.gdeltFiles.figures_at), lte(tables.gdeltFiles.figures_at, at))
+          : isNotNull(tables.gdeltFiles.figures_at),
+      ),
+    db
+      .select({ n: count() })
+      .from(tables.gdeltFiles)
+      .where(and(eq(tables.gdeltFiles.status, 'ok'), isNull(tables.gdeltFiles.figures_at))),
+  ])
+  const headlines = stored.headlines.map(({ found_at: _found, ...h }): ReportedHeadline => h)
+
+  const reviewed = new Set<string>()
+  for (const group of chunk(stored.keys, D1_MAX_BOUND_PARAMS - 1)) {
+    const rows = await db
+      .select({ title_key: tables.reportedReviews.title_key })
+      .from(tables.reportedReviews)
+      .where(
+        at
+          ? and(
+              inArray(tables.reportedReviews.title_key, group),
+              lte(tables.reportedReviews.judged_at, at),
+            )
+          : inArray(tables.reportedReviews.title_key, group),
+      )
+    for (const r of rows) reviewed.add(r.title_key)
+  }
+
+  return {
+    series: seriesOf(headlines),
+    recent: headlines.slice(0, RECENT_LIMIT),
+    coverage: {
+      from: GKG_FROM,
+      files_read: read?.n ?? 0,
+      // A point-in-time payload can't rewind a file that was waiting then; it reports today's.
+      files_waiting: waiting?.n ?? 0,
+      unread: stored.keys.filter((k) => !reviewed.has(k)).length,
+    },
+    as_of: ctx.as_of,
+    computed_at: ctx.now().toISOString(),
+  }
+}
