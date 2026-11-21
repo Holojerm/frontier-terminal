@@ -36,7 +36,7 @@ interface SubmissionsDoc {
  * `modified` and hand the judge every 8-K in each filer's window again. */
 export const EIGHT_K_ITEMS_FROM = '2026-11-09'
 
-export interface SubmissionsParse {
+interface SubmissionsParse {
   rows: FilingRow[]
   /** Rows dropped by the form filter — reported on the run, never silently. */
   skipped: number

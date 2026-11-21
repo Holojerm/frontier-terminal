@@ -26,18 +26,18 @@ import { storeFigureRows, type FigureRow, type FigureRowsOutcome } from './store
 export const ARCHIVE_FROM = '2023-01-01T00:00:00.000Z'
 
 /** Files handed out per /api/gdelt/work call: a day's worth, under a minute of the job's reading. */
-export const ARCHIVE_FILES_PER_CALL = 96
+const ARCHIVE_FILES_PER_CALL = 96
 
 /** Distinct figure headlines a day's scout files must carry for the day to be filled. */
-export const ARCHIVE_HOT_HEADLINES = 2
+const ARCHIVE_HOT_HEADLINES = 2
 
 /** Days filled either side of a hot day. */
-export const ARCHIVE_WINDOW_DAYS = 1
+const ARCHIVE_WINDOW_DAYS = 1
 
 /** A revenue headline is what the ground truth scores against a filing, so one alone makes a day hot. */
 const REVENUE_WORDS = /\b(revenues?|sales|run[- ]rate|annuali[sz]ed|ARR)\b/i
 
-export type ArchivePass = 'scout' | 'fill'
+type ArchivePass = 'scout' | 'fill'
 
 const HOUR_MS = 3_600_000
 const DAY_MS = 86_400_000
@@ -70,7 +70,7 @@ export function scoutStamps(last: string | null, limit: number): string[] {
   return out
 }
 
-export interface ArchiveArticle {
+interface ArchiveArticle {
   published_at: string
   title_key: string
   title: string
@@ -159,7 +159,7 @@ export async function archiveWork(
   return toFiles(fillStamps(fillDays(hotDays(articles)), await lastOf(db, 'fill'), limit))
 }
 
-export interface ArchiveFileInput {
+interface ArchiveFileInput {
   stamp: string
   fetched_at: string
   /** missing: GDELT answered 404 for that quarter hour. */
@@ -168,7 +168,7 @@ export interface ArchiveFileInput {
   figures: readonly FigureRow[]
 }
 
-export type ArchiveFileOutcome =
+type ArchiveFileOutcome =
   | ({ recorded: true } & FigureRowsOutcome)
   | { recorded: false; reason: 'outside-archive' | 'already-read' }
 

@@ -293,7 +293,7 @@ const gpu = (
  * makers and hosts. WMB and BE aren't here: Meta Prometheus's plant is behind
  * the meter, and no page names a grid for Stargate New Mexico.
  */
-export const GRID_TICKERS: Readonly<Record<string, readonly string[]>> = {
+const GRID_TICKERS: Readonly<Record<string, readonly string[]>> = {
   ERCO: ['GEV', 'CIFR'],
   PJM: ['AEP'],
   MISO: ['DTE', 'WEC', 'ETR'],
@@ -446,7 +446,7 @@ const guidanceSurprise = (ticker: string, company: string): SignalDef => ({
 })
 
 /** The chip and network makers a hyperscaler's capex is expected to lead. */
-export const CAPEX_LEADS: readonly string[] = ['NVDA', 'AVGO', 'AMD', 'ANET']
+const CAPEX_LEADS: readonly string[] = ['NVDA', 'AVGO', 'AMD', 'ANET']
 
 /** A hyperscaler's filed capex against the capex it guided on its calls, tested on the suppliers it buys from. */
 const capexSurprise = (ticker: string, company: string): SignalDef => ({
@@ -458,7 +458,7 @@ const capexSurprise = (ticker: string, company: string): SignalDef => ({
 })
 
 /** The companies whose calls are read, by ticker; the four foreign filers have no scorable quarters. */
-export const GUIDANCE_SIGNAL_COMPANIES: readonly [string, string][] = curatedCalls.companies
+const GUIDANCE_SIGNAL_COMPANIES: readonly [string, string][] = curatedCalls.companies
   .filter((c) => !FOREIGN_FILERS.has(c.ticker))
   .map((c) => [c.ticker, c.company])
 
@@ -468,7 +468,7 @@ export const GUIDANCE_SIGNAL_COMPANIES: readonly [string, string][] = curatedCal
  * (suppliers.json). Hiring for a site comes before the megawatts, and the
  * megawatts before the revenue.
  */
-export const LISTED_HIRING_TICKERS: Readonly<Record<string, readonly string[]>> = {
+const LISTED_HIRING_TICKERS: Readonly<Record<string, readonly string[]>> = {
   CRWV: ['NVDA'],
   NBIS: ['NVDA', 'MSFT'],
   GLXY: ['CRWV'],

@@ -23,7 +23,7 @@ export const GKG_SLOT_MS = 15 * 60_000
 export const GKG_READY_MS = 30 * 60_000
 
 /** Columns in a GKG 2.1 row. */
-export const GKG_COLUMNS = 27
+const GKG_COLUMNS = 27
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
@@ -53,7 +53,7 @@ export function gkgSlots(now: Date, from: string = GKG_FROM): string[] {
   return out
 }
 
-export interface GkgArticle {
+interface GkgArticle {
   record_id: string
   /** When GDELT read it: its file's quarter hour, ISO UTC. */
   seen_at: string

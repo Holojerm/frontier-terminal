@@ -19,7 +19,7 @@ import { parseCikWhitelistBlock, type CikWhitelist } from './whitelist'
 
 const SEGMENT_AXIS = 'us-gaap:StatementBusinessSegmentsAxis'
 
-export interface SegmentTarget {
+interface SegmentTarget {
   ticker: string
   cik: string
   segment: string

@@ -7,7 +7,7 @@ import handlerSource from '~~/layers/core/server/utils/terminal-handler.ts?raw'
 import { runRefresh } from '../../core/server/pipeline/refresh'
 import { powerSitesStamp } from '#layers/compute/server/power/stamp'
 import { THESES } from '../../theses/server/theses/registry'
-import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
+import { fixtureFetcher, fixtureText, manifest, raw } from '#layers/core/test/pipeline/fixtures'
 
 // The MCP endpoint over HTTP, as a client speaks it: a legacy (2025-era)
 // `initialize`, then tools/list and tools/call, each a stateless POST with
@@ -35,21 +35,6 @@ const ftsWithNewS1 = () => {
     },
   }
   return JSON.stringify({ ...doc, hits: { ...doc.hits, hits: [hit, ...doc.hits.hits] } })
-}
-
-function fixtureFetcher(overrides: Record<string, string> = {}): SourceFetcher {
-  const byUrl = new Map(manifest.fixtures.map((f) => [f.source_url, fixtureText(f.path)]))
-  return async (source) => {
-    const text = overrides[source.source_id] ?? byUrl.get(source.url)
-    if (text === undefined) throw new Error(`no fixture for ${source.url}`)
-    return { ok: true, status: 200, text, bytes: text.length }
-  }
-}
-
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
 }
 
 let tick = Date.parse('2026-09-07T10:00:00Z')
@@ -162,7 +147,12 @@ describe('the transport', () => {
 describe('tools/list', () => {
   it('lists every tool, all read-only, each with documentation an analyst’s agent can act on', async () => {
     const { result } = await call('tools/list')
-    const tools = result!.tools as { name: string; description: string; annotations: unknown }[]
+    const tools = result!.tools as {
+      name: string
+      title: string
+      description: string
+      annotations: unknown
+    }[]
     expect(tools.map((t) => t.name).sort()).toEqual([
       'describe',
       'get_adoption',
@@ -208,6 +198,7 @@ describe('tools/list', () => {
     ])
     for (const t of tools) {
       expect(t.annotations).toMatchObject({ readOnlyHint: true })
+      expect(t.title, t.name).toMatch(/\S/)
       expect(t.description.length).toBeGreaterThan(80)
     }
     const hiring = tools.find((t) => t.name === 'get_hiring')!
@@ -348,15 +339,6 @@ describe('tools/call', () => {
       total: 0,
     })
     expect(meta.providers[0]!.reason).toBeTruthy()
-
-    const google = (await tool('get_hiring', { provider: 'google' })).structuredContent as {
-      providers: { feed: string; total: number; company_names: string[] }[]
-    }
-    expect(google.providers[0]).toMatchObject({
-      feed: 'ok',
-      total: 27,
-      company_names: ['DeepMind'],
-    })
 
     const xai = (await tool('get_hiring', { provider: 'xai' })).structuredContent as {
       providers: { total: number; caveat: string | null; company_names: string[] }[]

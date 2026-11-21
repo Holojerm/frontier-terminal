@@ -21,9 +21,9 @@ import { THESES } from './registry'
 import { judgeReview } from '#layers/core/server/pipeline/judge/review'
 
 /** Unrated recipe items offered per claim per run; the rest wait an hour. */
-export const RECIPE_CANDIDATE_LIMIT = 20
+const RECIPE_CANDIDATE_LIMIT = 20
 
-export const JudgeClaimVerdict = z.strictObject({
+const JudgeClaimVerdict = z.strictObject({
   claim_id: z.string().min(1),
   change_id: z.string().min(1),
   verdict: z.string().min(1),
@@ -31,7 +31,7 @@ export const JudgeClaimVerdict = z.strictObject({
 })
 export type JudgeClaimVerdict = z.infer<typeof JudgeClaimVerdict>
 
-export async function flagshipMap(db: PipelineDb): Promise<FlagshipMap> {
+async function flagshipMap(db: PipelineDb): Promise<FlagshipMap> {
   const entries = await effectiveClassMap(db)
   return new Map(
     entries.filter((e) => e.class === 'flagship').map((e) => [e.provider, e.model_slug]),
@@ -60,7 +60,7 @@ async function unratedItems(db: PipelineDb, claim: ClaimDef) {
     .limit(RECIPE_CANDIDATE_LIMIT)
 }
 
-export interface ClaimReview {
+interface ClaimReview {
   claim_id: string
   claim: string
   rubric: string
@@ -135,7 +135,7 @@ export async function claimReview(
   return out
 }
 
-export interface VerdictReport {
+interface VerdictReport {
   accepted: number
   inserted: number
   rejected: { reason: string; detail: string; claim_id: string; change_id: string }[]

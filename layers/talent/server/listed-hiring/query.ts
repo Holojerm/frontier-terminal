@@ -7,7 +7,7 @@ import { and, desc, eq, isNull, max } from 'drizzle-orm'
 import * as tables from '#server/db/schema'
 
 /** Data-center roles listed per board on the page and in the tool. */
-export const DATACENTER_ROLES_SHOWN = 12
+const DATACENTER_ROLES_SHOWN = 12
 
 /** The cache variant: the newest read, so a new read is a new payload. */
 export async function listedHiringStamp(db: PipelineDb): Promise<string> {

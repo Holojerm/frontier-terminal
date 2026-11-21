@@ -279,8 +279,6 @@ bun run surfaces:check # Fail when a product route or table misses a surface (pa
 bun run domains:check # Fail when a layer imports (or auto-imports) a layer domains.config.ts does not let it,
                       # the app root reaches past core outside server/registries/, two owners define one
                       # auto-imported name, a uses/public entry is unused, or a ?raw import has no file
-bun run mcp:check     # The template's gate for a separate MCP worker in mcp/. Inert here: there is no mcp/
-                      # directory (our MCP endpoint is the app's own /mcp route), so it passes with nothing to check
 bun run test:a11y     # Playwright/Chromium: axe over every public route (light + dark) AND the CSP spec (test/csp/)
 bun run perf          # Page-load harness: throttled cold-cache runs per route, medians, Server-Timing
                       # stages, --bust to skip the HTML cache, --out/--compare for before/after

@@ -2,6 +2,7 @@
 // in, answers out, so test/domains.test.ts can drive every rule without a
 // filesystem or the TypeScript parser (which cannot load in workerd).
 
+import { endOfString } from './brace-match'
 import { blankNonCode } from './method-bodies'
 
 /** One fork-owned layer: which layers it may import, and what it lets others import. */
@@ -79,7 +80,7 @@ export function edgeProblem(table: LayerTable, from: string, to: string): string
 }
 
 /** Files at the app root that compose the layers, and so may import any of them. */
-export const isComposition = (file: string) =>
+const isComposition = (file: string) =>
   file.startsWith('server/registries/') || file === 'server/db/schema.ts'
 
 /**
@@ -102,7 +103,7 @@ export function appRootProblem(table: LayerTable, from: string, to: string): str
 const SPECIFIER =
   /\b(?:from\s*|import\s*\(\s*|import\s+|vi\.(?:mock|doMock|importActual)\s*\(\s*)(['"])([^'"\n]+)\1/g
 
-export interface Specifier {
+interface Specifier {
   line: number
   spec: string
 }
@@ -118,7 +119,7 @@ export function importSpecifiers(source: string): Specifier[] {
 }
 
 /** Comments blanked (newlines kept), strings left whole: a specifier is a string. */
-function blankComments(source: string): string {
+export function blankComments(source: string): string {
   let out = ''
   let i = 0
   while (i < source.length) {
@@ -130,10 +131,10 @@ function blankComments(source: string): string {
       out += source.slice(i, stop).replace(/[^\n]/g, ' ')
       i = stop
     } else if (ch === '"' || ch === "'" || ch === '`') {
-      let j = i + 1
-      while (j < source.length && source[j] !== ch) j += source[j] === '\\' ? 2 : 1
-      out += source.slice(i, j + 1)
-      i = j + 1
+      const end = endOfString(source, i)
+      const stop = end === -1 ? source.length : end + 1
+      out += source.slice(i, stop)
+      i = stop
     } else {
       out += ch
       i += 1
@@ -194,7 +195,7 @@ export interface Definition {
 }
 
 /** The owner of a file: its layer's name, or `app` for the app root. */
-export function ownerOf(file: string): string {
+function ownerOf(file: string): string {
   return layerPath(file)?.layer ?? 'app'
 }
 

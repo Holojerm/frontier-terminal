@@ -31,16 +31,16 @@ import { FORWARD_CALLS, recordCalls, resolveForwardCalls, settle } from './forwa
 import { forwardFiler, PRINT_RULES, ruleConcepts, type PrintRule } from './forward-filers'
 
 /** Guidance first read before this was registered by hand (forward-calls-registered.ts). */
-export const RULES_FROM = '2026-11-22'
+const RULES_FROM = '2026-11-22'
 /** A bias needs this many settled statements: the company's own, then every company's. */
-export const OWN_BIAS_MIN = 2
-export const POOLED_BIAS_MIN = 5
+const OWN_BIAS_MIN = 2
+const POOLED_BIAS_MIN = 5
 /** A guided figure this far from the last comparable filed one is a misread, not a forecast. */
-export const PLAUSIBLE = [0.4, 3] as const
+const PLAUSIBLE = [0.4, 3] as const
 /** A prints call is recorded at most this many days after its quarter ends. */
-export const PRINT_WINDOW_DAYS = 14
+const PRINT_WINDOW_DAYS = 14
 /** History pairs for the median ratio. */
-export const RATIO_QUARTERS = 4
+const RATIO_QUARTERS = 4
 
 const METRICS: readonly ForwardMetric[] = ['revenue', 'capex', 'backlog']
 const WORD: Record<ForwardMetric, string> = {
@@ -473,7 +473,7 @@ export async function printRatioCalls(db: PipelineDb, now: Date): Promise<Forwar
 }
 
 /** Every rule's new calls. */
-export async function ruleCalls(db: PipelineDb, now: Date): Promise<ForwardCall[]> {
+async function ruleCalls(db: PipelineDb, now: Date): Promise<ForwardCall[]> {
   return [...(await guidanceBiasCalls(db, now)), ...(await printRatioCalls(db, now))]
 }
 

@@ -17,12 +17,12 @@ import { corpusOf, groundingFailure } from '#layers/core/server/pipeline/judge/g
 import { judgeReview } from '#layers/core/server/pipeline/judge/review'
 
 /** Candidates offered per alert and kind per run. */
-export const REVIEW_PER_SIDE = 5
+const REVIEW_PER_SIDE = 5
 
 /** Candidates offered per run, across every alert. */
-export const REVIEW_LIMIT = 60
+const REVIEW_LIMIT = 60
 
-export const JudgeTrackRecordVerdict = z.strictObject({
+const JudgeTrackRecordVerdict = z.strictObject({
   candidate_id: z.string().regex(/^[0-9a-f]{64}$/),
   same_event: z.boolean(),
   rationale: z.string().min(1).max(400),
@@ -32,7 +32,7 @@ export type JudgeTrackRecordVerdict = z.infer<typeof JudgeTrackRecordVerdict>
 type Candidate = typeof tables.trackRecordCandidates.$inferSelect
 type Verdict = typeof tables.trackRecordVerdicts.$inferSelect
 
-export interface TrackRecordReview {
+interface TrackRecordReview {
   alert_id: string
   headline: string
   explanation: string
@@ -166,14 +166,14 @@ export async function trackRecordReview(
   return out
 }
 
-export interface TrackRecordVerdictReport {
+interface TrackRecordVerdictReport {
   accepted: number
   inserted: number
   rejected: { reason: string; detail: string; candidate_id: string }[]
 }
 
 /** What a rationale may cite: the candidate as shown, the alert's own text, and its change rows. */
-export function reviewCorpus(
+function reviewCorpus(
   candidate: Pick<Candidate, 'kind' | 'title' | 'snippet' | 'outlet' | 'published_at'>,
   alert: Pick<typeof tables.alerts.$inferSelect, 'headline' | 'explanation'>,
   changes: readonly ChangeRow[],

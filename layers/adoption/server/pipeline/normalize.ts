@@ -6,7 +6,7 @@ import { collapse, toEntity } from '../../../core/server/pipeline/normalize'
 // A ranking row is one (UTC day, model) observation. Its provider is the
 // permaslug prefix the parser already resolved; total_tokens is the whole
 // content, so a revised count diffs as one 'modified' row for that day.
-export function normalizeRanking(row: RankingRow, snapshotId: string): EntityRow {
+function normalizeRanking(row: RankingRow, snapshotId: string): EntityRow {
   return toEntity(
     rankingKey(row.date, row.model_permaslug),
     'ranking',

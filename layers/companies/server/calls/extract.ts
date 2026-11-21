@@ -50,7 +50,7 @@ export interface Statement {
   speaker: string | null
 }
 
-export interface ExtractContext {
+interface ExtractContext {
   fyEndMonth: number
   /** The quarter the call reported. */
   reported: FiscalPeriod
@@ -99,7 +99,7 @@ const MONEY_RANGE = new RegExp(
   'i',
 )
 const PLUS_MINUS = String.raw`(?:plus or\s+(?:m\s?inus|negative)|\+\s?\/\s?-|±)`
-export const PLUS_MINUS_RE = new RegExp(PLUS_MINUS, 'i')
+const PLUS_MINUS_RE = new RegExp(PLUS_MINUS, 'i')
 const WORD_NUMBERS: Readonly<Record<string, number>> = {
   one: 1,
   two: 2,
@@ -256,10 +256,7 @@ const NOT_IN_DATE = String.raw`(?<!\b(?:${[...MONTHS, 'jan', 'feb', 'mar', 'apr'
  * quarter. A quarter with no year is the next one of that number, except the
  * reported quarter's own number, which names the quarter just reported.
  */
-export function periodsIn(
-  text: string,
-  ctx: ExtractContext,
-): { period: FiscalPeriod; at: number }[] {
+function periodsIn(text: string, ctx: ExtractContext): { period: FiscalPeriod; at: number }[] {
   const { fyEndMonth, reported } = ctx
   const out: { period: FiscalPeriod; at: number }[] = []
   const quarterOf = (q: number, year: number | null) => {
@@ -317,7 +314,7 @@ export function periodsIn(
 }
 
 /** The period named nearest `anchor` (or first, with no anchor), or null. */
-export function namedPeriod(text: string, ctx: ExtractContext, anchor = 0): FiscalPeriod | null {
+function namedPeriod(text: string, ctx: ExtractContext, anchor = 0): FiscalPeriod | null {
   const found = periodsIn(text, ctx)
   if (!found.length) return null
   found.sort((a, b) => Math.abs(a.at - anchor) - Math.abs(b.at - anchor) || a.at - b.at)
@@ -541,7 +538,7 @@ interface Item extends DocSentence {
  * under one ("Revenues", "$5.4B", "$4.8B - $5.6B") joined into one sentence:
  * the label and the row's last amount, which is the guidance column.
  */
-export function outlookItems(sentences: readonly DocSentence[]): Item[] {
+function outlookItems(sentences: readonly DocSentence[]): Item[] {
   const out: Item[] = []
   let lead: number | null = null
   let until = -1

@@ -7,7 +7,7 @@
 import type { CompanyId } from '../../../core/shared/utils/companies'
 import type { Observation, Recipe } from '../../../core/server/recipes/contract'
 
-export interface MdTable {
+interface MdTable {
   /** The nearest `##` heading above the table. */
   section: string
   /** The nearest `###` heading below that section, or ''. */

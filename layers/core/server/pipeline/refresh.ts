@@ -95,7 +95,7 @@ export const CONTENT_TYPES: Readonly<Record<string, string>> = {
   xml: 'application/xml',
 }
 
-export function rawKeyFor(source: FetchSource, fetchedAt: string): string {
+function rawKeyFor(source: FetchSource, fetchedAt: string): string {
   return `raw/${source.source_id}/${fetchedAt}.${source.ext}`
 }
 
@@ -279,12 +279,12 @@ function citedInputs(inputs: TickInputs, sourceIds: readonly string[]): Record<s
  * changed, or a parser that lost a section than a lab that halved its hiring;
  * the zero-row guard alone let a page that kept one row through.
  */
-export const MASS_REMOVAL_SHARE = 0.5
+const MASS_REMOVAL_SHARE = 0.5
 /** Below this many current entities the share is noise: a two-model catalog
  * that drops one is half its set and is an ordinary removal. */
-export const MASS_REMOVAL_MIN_SET = 20
+const MASS_REMOVAL_MIN_SET = 20
 /** How a refused mass removal's run detail starts, so the next run can find it. */
-export const MASS_REMOVAL_DETAIL = 'parse would remove'
+const MASS_REMOVAL_DETAIL = 'parse would remove'
 
 type ContextBlocks = Pick<ParseContext, ContextBlock>
 

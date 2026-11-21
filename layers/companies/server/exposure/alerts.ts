@@ -21,13 +21,13 @@ import {
 } from '#layers/core/server/utils/contracts'
 import { alertKind, type AlertKind } from './series'
 
-export const FILED_FACT_RULE = 'filed-fact-floor' as const
+const FILED_FACT_RULE = 'filed-fact-floor' as const
 
 /** How recent a filing must be for its point to alert. */
 export const FRESH_DAYS = 14
 
 /** A commitment or stake that moves this much against the point before is critical. */
-export const CRITICAL_MOVE = 0.25
+const CRITICAL_MOVE = 0.25
 
 const PROVIDER_OF: Readonly<Record<string, Provider>> = {
   openai: 'openai',
@@ -137,7 +137,7 @@ const relativeMove = (from: number, to: number) =>
   from === 0 ? (to === 0 ? 0 : Infinity) : Math.abs(to - from) / Math.abs(from)
 
 /** The alert's tier, and the sentence that says why when it's critical. */
-export function severityFor(
+function severityFor(
   kind: AlertKind,
   series: ExposureSeries,
   p: ExposurePoint,
@@ -164,7 +164,7 @@ export function severityFor(
   return { severity: 'notable', why: '' }
 }
 
-export interface FiledFactAlert {
+interface FiledFactAlert {
   change: ChangeRow
   alert: AlertRow
 }

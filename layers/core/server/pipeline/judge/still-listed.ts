@@ -17,7 +17,7 @@ import type { JudgeAlert } from '#layers/core/server/pipeline/judge/alerts'
 // citing only such removals (severity-gates.ts). "Still listed" is the same
 // provider and model_slug in `entities` on any page, any tier.
 
-export interface StillListedRemoval {
+interface StillListedRemoval {
   change_id: string
   provider: string
   model_slug: string

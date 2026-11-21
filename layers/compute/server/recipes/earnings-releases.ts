@@ -36,7 +36,7 @@ export function releaseUrl(body: string, cik: string, newest: string | null): st
 }
 
 /** The release as running text: tags dropped, entities decoded, whitespace collapsed. */
-export function releaseText(html: string): string {
+function releaseText(html: string): string {
   if (!/<(?:html|document|body)\b/i.test(html)) throw new Error('not an HTML document')
   return decodeEntities(
     html.replace(/<(script|style)\b[\s\S]*?<\/\1>/gi, ' ').replace(/<[^>]+>/g, ' '),
@@ -63,7 +63,7 @@ export function quarterOf(text: string): { date: string; label: string } {
 }
 
 /** The day the release went out, from its dateline ("MOUNTAIN VIEW, Calif. – October 28, 2026 –"), or null. */
-export function releasedOn(text: string): string | null {
+function releasedOn(text: string): string | null {
   const m =
     /[–—-]\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(\d{4})\s*[–—-]/.exec(
       text.slice(0, 600),

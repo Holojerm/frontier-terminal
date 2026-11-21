@@ -77,10 +77,10 @@ import {
 
 export const INSTANCES_PER_RUN = 24
 /** Two requests each: the filing's index page, then the release. */
-export const RELEASES_PER_RUN = 4
+const RELEASES_PER_RUN = 4
 /** A primary document runs to 7 MB, so few a run. */
-export const TEXTS_PER_RUN = 2
-export const COMPANYFACTS_INTERVAL_MS = 6 * 60 * 60 * 1000
+const TEXTS_PER_RUN = 2
+const COMPANYFACTS_INTERVAL_MS = 6 * 60 * 60 * 1000
 /** A failed instance is retried after this long, not every run. */
 export const FAILED_RETRY_MS = 24 * 60 * 60 * 1000
 
@@ -426,7 +426,7 @@ async function readRelease(
 }
 
 /** A 10-Q or 10-K's primary document: what its instance URL names, as .htm. */
-export const primaryUrl = (doc: InstanceDocument) => doc.url.replace(/_htm\.xml$/, '.htm')
+const primaryUrl = (doc: InstanceDocument) => doc.url.replace(/_htm\.xml$/, '.htm')
 
 /** Store one filing's text facts; returns how many were new. */
 async function storeTextFacts(

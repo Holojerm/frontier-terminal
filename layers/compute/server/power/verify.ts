@@ -9,9 +9,9 @@ import { inArray } from 'drizzle-orm'
 import * as tables from '#server/db/schema'
 import { currentTies, seedHandTies } from './store'
 
-export const KIND_QUOTE_GONE = 'power_quote_gone'
+const KIND_QUOTE_GONE = 'power_quote_gone'
 
-export interface PowerCheck {
+interface PowerCheck {
   site: string
   what: string
   source_url: string
@@ -20,7 +20,7 @@ export interface PowerCheck {
   reason: string | null
 }
 
-export interface PowerVerifyReport {
+interface PowerVerifyReport {
   seeded: number
   checks: PowerCheck[]
 }

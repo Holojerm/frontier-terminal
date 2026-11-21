@@ -22,7 +22,7 @@ const HOUR_MS = 60 * 60 * 1000
 const STALE_CELL_AFTER_MS = HOUR_MS
 const STALE_CELL_RENOTIFY_SECONDS = (6 * HOUR_MS) / 1000
 
-export interface StaleCell {
+interface StaleCell {
   provider: string
   class: string
   model_slug: string
@@ -30,7 +30,7 @@ export interface StaleCell {
   since: string
 }
 
-export interface LaunchCoverage {
+interface LaunchCoverage {
   stale_cells: StaleCell[]
 }
 

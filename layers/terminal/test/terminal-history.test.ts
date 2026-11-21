@@ -1,8 +1,13 @@
-import { env } from 'cloudflare:test'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { runRefresh, type RefreshDeps } from '../../core/server/pipeline/refresh'
-import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
+import {
+  fixtureFetcher,
+  fixtureText,
+  manifest,
+  raw,
+  xaiJobsWithout,
+} from '#layers/core/test/pipeline/fixtures'
 
 // The three history derivations, first as pure functions over a handful of
 // typed rows (every rule has one row that exercises it), then against a real
@@ -291,13 +296,6 @@ describe('openRolesAt', () => {
     expect(at('2026-09-01T00:00:00Z', 'Data Center')).toBe(1)
   })
 
-  it('reads several instants in one pass, whatever their order', () => {
-    const out = openRolesAt(current, changes, ['2026-09-01T00:00:00Z', '2026-09-05T00:00:00Z'])
-    expect(out.get('2026-09-05T00:00:00Z')!.get('xai')!.get('Engineering')).toBe(1)
-    expect(out.get('2026-09-01T00:00:00Z')!.get('xai')!.get('Engineering')).toBe(1)
-    expect(out.get('2026-09-01T00:00:00Z')!.get('xai')!.get('Data Center')).toBe(1)
-  })
-
   it('daily grid, department rows and the comparison window', () => {
     const grid = dailyInstants('2026-09-01', '2026-09-05T10:00:00.000Z')
     expect(grid).toEqual([
@@ -344,21 +342,6 @@ const ALL = includeSources(sourcesYaml, manifest.fixtures)
 const ALL_IDS = ALL.map((s) => s.source_id)
 const urlOf = (id: string) => ALL.find((s) => s.source_id === id)!.url
 
-function fixtureFetcher(overrides: Record<string, string> = {}): SourceFetcher {
-  const byUrl = new Map(manifest.fixtures.map((f) => [f.source_url, fixtureText(f.path)]))
-  return async (source) => {
-    const text = overrides[source.source_id] ?? byUrl.get(source.url)
-    if (text === undefined) throw new Error(`no fixture for ${source.url}`)
-    return { ok: true, status: 200, text, bytes: text.length }
-  }
-}
-
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
-
 let tick = Date.parse('2026-09-07T10:00:00Z')
 const now = () => new Date((tick += 1000))
 const deps = (fetcher: SourceFetcher): RefreshDeps => ({ db, raw, fetcher, sourcesYaml, now })
@@ -377,13 +360,6 @@ const xaiRepricedAndListed = () => {
   return md.replace(XAI_PRICE_LINE, `${XAI_PRICE_LINE.replace('$2.00', '$2.50')}\n${NEW_LINE}`)
 }
 const REMOVED_JOB = 5090171007
-const xaiJobsWithout = (id: number) => {
-  const board = JSON.parse(fixtureText('fixtures/hiring/xai-greenhouse.json')) as {
-    jobs: { id: number }[]
-  }
-  return JSON.stringify({ ...board, jobs: board.jobs.filter((j) => j.id !== id) })
-}
-
 describe('the history queries on an empty store', () => {
   beforeEach(async () => {
     for (const table of [

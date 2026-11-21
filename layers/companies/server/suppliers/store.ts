@@ -27,8 +27,8 @@ const HAND = curatedSuppliers.parse(curated).rows
 type Stored = typeof tables.supplierPassages.$inferSelect
 type Insert = typeof tables.supplierPassages.$inferInsert
 
-/** The row id: the five fields the export keys passages on. */
-export const passageId = (
+/** The row id: the same five fields the export has always keyed passages on. */
+const passageId = (
   r: Pick<CuratedSupplierRow, 'ticker' | 'relation' | 'counterparty' | 'source_url' | 'quote'>,
 ) =>
   contentHash({

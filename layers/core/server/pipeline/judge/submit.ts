@@ -28,13 +28,13 @@ export const JUDGE_OPS_PATH = '/api/judge/alerts'
  * (layers/theses/server/plugins/theses-judged.ts), so the judge never
  * imports the code that reads its verdicts.
  */
-export interface JudgeAppliedContext {
+interface JudgeAppliedContext {
   db: PipelineDb
   sourcesYaml: string
   now: Date
 }
 
-export type JudgeAppliedHook = (ctx: JudgeAppliedContext) => void | Promise<void>
+type JudgeAppliedHook = (ctx: JudgeAppliedContext) => void | Promise<void>
 
 declare module 'nitropack/types' {
   interface NitroRuntimeHooks {
@@ -42,7 +42,7 @@ declare module 'nitropack/types' {
   }
 }
 
-export interface JudgeRunReport {
+interface JudgeRunReport {
   /** Change ids the routine said it looked at. */
   changes_seen: number
   /** Alerts that passed the gate, grounding and the screen's rejections. */

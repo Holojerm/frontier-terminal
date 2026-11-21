@@ -43,7 +43,7 @@ export const CONTROL_INDEX_ID = 'npm-control-index'
 export const normalizedId = (recipeId: string) => `${recipeId}-normalized`
 export const shareId = (recipeId: string) => `${recipeId}-share`
 
-export interface DownloadSeriesDef {
+interface DownloadSeriesDef {
   id: string
   measure: 'normalized' | 'share' | 'control-index'
   registry: 'npm' | 'PyPI'
@@ -201,7 +201,7 @@ export function shareSeries(members: ReadonlyMap<string, readonly DayRow[]>) {
   return { shares: out, totals: ascending(totals) }
 }
 
-export interface RatioWeek {
+interface RatioWeek {
   /** The Monday, YYYY-MM-DD. */
   week: string
   /** Days of the week both series have. */
@@ -316,7 +316,7 @@ export function dayRows(rows: readonly Row[]): DayRow[] {
   )
 }
 
-export interface DownloadSeries {
+interface DownloadSeries {
   /** The stored daily rows each series was computed from, by recipe id. */
   rows: ReadonlyMap<string, readonly DayRow[]>
   index: SeriesPoint[]
@@ -329,7 +329,7 @@ export interface DownloadSeries {
 }
 
 /** Every recipe the derived series read. */
-export const DOWNLOAD_SERIES_RECIPES: readonly string[] = [
+const DOWNLOAD_SERIES_RECIPES: readonly string[] = [
   ...new Set([
     ...NPM_CONTROL_RECIPES.map((r) => r.id),
     ...NORMALIZED_RECIPES.map((r) => r.id),

@@ -64,7 +64,8 @@ export const SUPPLIER_FILERS: readonly SupplierFiler[] = [
   filer('WULF', 1083301, 'TeraWulf', 'hosting'),
 ]
 
-export interface Counterparty {
+interface Counterparty {
+  /** The name a row carries. */
   name: string
   /** Every spelling a document uses, the name included. Matched case-sensitively on word boundaries. */
   spellings: readonly string[]

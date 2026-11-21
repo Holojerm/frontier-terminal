@@ -16,8 +16,8 @@ import { inArray, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 
-export const SMOKE_WORKFLOW = 'post-deploy-smoke.yml'
-export const GITHUB_USER_AGENT =
+const SMOKE_WORKFLOW = 'post-deploy-smoke.yml'
+const GITHUB_USER_AGENT =
   'frontier-terminal-reliability (+https://frontierterm.com/data#reliability)'
 
 const ETAG_KEY = 'reliability:github:etag'
@@ -36,11 +36,7 @@ export function workflowRunsUrl(slug: string): string {
   return `https://api.github.com/repos/${slug}/actions/workflows/${SMOKE_WORKFLOW}/runs?branch=main&per_page=100`
 }
 
-export function workflowPageUrl(repoUrl: string): string {
-  return `${repoUrl.replace(/\/$/, '')}/actions/workflows/${SMOKE_WORKFLOW}?query=branch%3Amain`
-}
-
-export interface DeployCheckRow {
+interface DeployCheckRow {
   run_id: string
   head_sha: string
   status: string
@@ -105,12 +101,12 @@ export function parseWorkflowRuns(
 }
 
 /** The slice of the KV store this needs; tests pass a Map-backed fake. */
-export interface ReliabilityKv {
+interface ReliabilityKv {
   get(key: string): Promise<unknown>
   set(key: string, value: unknown, opts?: { ttl?: number }): Promise<unknown>
 }
 
-export type DeployReport =
+type DeployReport =
   | { status: 'stored'; runs: number }
   | { status: 'not-modified' }
   | { status: 'parked'; until: string }

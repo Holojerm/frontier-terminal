@@ -9,7 +9,7 @@ export const WINDOW_DAYS = 7
 
 const DAY_MS = 86_400_000
 
-export interface SawIt {
+interface SawIt {
   at: string
   source_url: string
   change_id: string
@@ -20,12 +20,12 @@ export interface SawIt {
  * fetch that observed it; a removal counts from the run that noticed it was
  * gone (detected_at).
  */
-export function seenAt(change: Pick<SawItChange, 'change_type' | 'fetched_at' | 'detected_at'>) {
+function seenAt(change: Pick<SawItChange, 'change_type' | 'fetched_at' | 'detected_at'>) {
   return new Date(change.change_type === 'removed' ? change.detected_at : change.fetched_at)
 }
 
 /** When the terminal saw it: the earliest cited change row by seenAt. Ties keep the smallest id. */
-export interface SawItChange {
+interface SawItChange {
   id: string
   change_type: string
   fetched_at: string

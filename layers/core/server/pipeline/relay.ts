@@ -10,13 +10,13 @@ import { z } from 'zod'
 import { contentHashOfText } from '../utils/contracts/keys'
 import type { FetchOutcome } from '../utils/pipeline-fetch'
 
-export const RELAYED_HOSTS: readonly string[] = ['status.mistral.ai', 'www.ercot.com']
+const RELAYED_HOSTS: readonly string[] = ['status.mistral.ai', 'www.ercot.com']
 
 /** Both relayed sources are read six-hourly; the job runs every 30 minutes. */
 export const RELAY_MAX_AGE_MS = 6 * 3_600_000
 
 /** How long a URL stays on the job's list after the pipeline last asked for it. */
-export const RELAY_WANT_TTL_S = 3 * 86_400
+const RELAY_WANT_TTL_S = 3 * 86_400
 
 export const RELAY_MAX_BYTES = 20 * 1024 * 1024
 

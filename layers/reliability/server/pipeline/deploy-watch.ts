@@ -15,7 +15,7 @@
 
 const MINUTE_MS = 60 * 1000
 /** Under the 30-minute tick, so cron jitter cannot push the alert a tick later. */
-export const DRIFT_AFTER_MS = 25 * MINUTE_MS
+const DRIFT_AFTER_MS = 25 * MINUTE_MS
 const FIRST_SEEN_TTL_SECONDS = 7 * 24 * 60 * 60
 
 export const driftFirstSeenKey = (head: string) => `deploy:first-seen:${head}`

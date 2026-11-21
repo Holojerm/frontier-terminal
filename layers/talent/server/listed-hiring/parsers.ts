@@ -15,7 +15,7 @@ export interface ListedRole {
 }
 
 /** Listed postings with no title can't be stored; more than this means the payload moved. */
-export const MAX_UNTITLED = 3
+const MAX_UNTITLED = 3
 
 const text = (v: unknown): string | null =>
   typeof v === 'string' && v.trim() !== '' ? v.trim() : null
@@ -173,14 +173,14 @@ export function parseHibobBoard(body: string): ListedRole[] {
 }
 
 /** The employer the hyperscaler board counts: Google itself, not DeepMind or YouTube. */
-export const GOOGLE_EMPLOYER = 'Google'
+const GOOGLE_EMPLOYER = 'Google'
 
 /**
  * Data-center roles in Google's careers feed. Categories are Google's own
  * enum labels (DATA_CENTER_OPERATIONS), read with the underscores as spaces.
  * Only roles classed datacenter are kept: the feed is read for nothing else.
  */
-export function googleDatacenterRole(job: string): ListedRole | null {
+function googleDatacenterRole(job: string): ListedRole | null {
   const employer = field(job, 'employer')
   const id = field(job, 'jobid')
   const title = field(job, 'title')

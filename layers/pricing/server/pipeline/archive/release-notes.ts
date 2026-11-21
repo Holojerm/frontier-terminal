@@ -27,9 +27,9 @@ export interface ReleaseNote {
   limits: boolean
 }
 
-export const TITLE_CHARS = 120
+const TITLE_CHARS = 120
 
-export interface ReleaseNoteSource {
+interface ReleaseNoteSource {
   provider: ArchiveProvider
   url: string
   ext: 'md' | 'html'
@@ -203,12 +203,11 @@ function requireNotes(notes: ReleaseNote[], what: string): ReleaseNote[] {
 
 // ── the pages ───────────────────────────────────────────────────────────────
 
-export const ANTHROPIC_RELEASE_NOTES_URL =
-  'https://platform.claude.com/docs/en/release-notes/overview.md'
-export const OPENAI_CHANGELOG_URL = 'https://developers.openai.com/api/docs/changelog.md'
-export const GEMINI_RELEASE_NOTES_URL = 'https://ai.google.dev/gemini-api/docs/changelog.md.txt'
-export const XAI_RELEASE_NOTES_URL = 'https://docs.x.ai/developers/release-notes.md'
-export const DEEPSEEK_NEWS_URL = 'https://api-docs.deepseek.com/updates'
+const ANTHROPIC_RELEASE_NOTES_URL = 'https://platform.claude.com/docs/en/release-notes/overview.md'
+const OPENAI_CHANGELOG_URL = 'https://developers.openai.com/api/docs/changelog.md'
+const GEMINI_RELEASE_NOTES_URL = 'https://ai.google.dev/gemini-api/docs/changelog.md.txt'
+const XAI_RELEASE_NOTES_URL = 'https://docs.x.ai/developers/release-notes.md'
+const DEEPSEEK_NEWS_URL = 'https://api-docs.deepseek.com/updates'
 
 /** Anthropic: one `### June 20, 2024` heading per day, bullets under it. */
 export function parseAnthropicReleaseNotes(md: string): ReleaseNote[] {

@@ -14,11 +14,11 @@ import {
 import { ercotFacts, ercotListings, ercotReportLinks, type ErcotReportLink } from './ercot-reports'
 import { pdfPages } from '#layers/core/server/pipeline/pdf-text'
 
-export const REPORTS_PER_RUN = 12
-export const REPORT_MAX_BYTES = 20 * 1024 * 1024
+const REPORTS_PER_RUN = 12
+const REPORT_MAX_BYTES = 20 * 1024 * 1024
 const RETRY_MS = 86_400_000
 
-export interface ErcotDeps {
+interface ErcotDeps {
   /** The listing pages are HTML: the pipeline's fetcher. */
   fetcher: SourceFetcher
   /** R2, binary. */
@@ -30,7 +30,7 @@ export interface ErcotDeps {
   now: Date
 }
 
-export interface ErcotRunReport {
+interface ErcotRunReport {
   listed: number
   read: {
     url: string

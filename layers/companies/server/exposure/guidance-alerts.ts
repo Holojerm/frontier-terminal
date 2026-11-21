@@ -44,14 +44,14 @@ import { FRESH_DAYS } from './alerts'
 import { guidanceIn, releaseBlocks } from './guidance'
 import { FILER_NAMES, filingUrl, type StoredFact } from './series'
 
-export const GUIDANCE_RULE = 'guidance-floor' as const
+const GUIDANCE_RULE = 'guidance-floor' as const
 
 const PROVIDER_OF: Readonly<Partial<Record<ExposureTicker, Provider>>> = {
   GOOGL: 'google',
   META: 'meta',
 }
 
-export interface GuidanceAlert {
+interface GuidanceAlert {
   change: ChangeRow
   alert: AlertRow
 }
@@ -103,7 +103,7 @@ export function unverified(g: StoredGuidance, html: string): string | null {
 
 // ---- revisions -------------------------------------------------------------
 
-export type Revision = 'first' | 'raised' | 'cut' | 'narrowed' | 'widened' | 'restated'
+type Revision = 'first' | 'raised' | 'cut' | 'narrowed' | 'widened' | 'restated'
 
 /** How a figure moved against the filer's previous one for the same year. */
 export function revisionOf(
@@ -149,7 +149,7 @@ export function previousGuidance(
   )
 }
 
-export function revisionHeadline(g: StoredGuidance, prev: StoredGuidance | null): string {
+function revisionHeadline(g: StoredGuidance, prev: StoredGuidance | null): string {
   const filer = filerOf(g)
   const year = yearName(g.ticker as ExposureTicker, g.fiscal_year)
   const now = rangeText(g.low, g.high)
@@ -245,7 +245,7 @@ export function revisionAlert(
 // ---- checks against a 10-Q or 10-K -----------------------------------------
 
 /** One filing's year-to-date capex for a fiscal year, as GUIDANCE_MEASURES adds it up. */
-export interface FiledYearToDate {
+interface FiledYearToDate {
   ticker: ExposureTicker
   cik: string
   fiscal_year: number
@@ -351,7 +351,7 @@ export function guidanceFor(
   )
 }
 
-export type CheckVerdict = 'inside' | 'below' | 'above' | 'met'
+type CheckVerdict = 'inside' | 'below' | 'above' | 'met'
 
 /** Within the range, or within TOLERANCE_PCT of a single figure, as the ground-truth score reads it. */
 const within = (value: number, low: number, high: number) =>
@@ -364,7 +364,7 @@ const within = (value: number, low: number, high: number) =>
  * the range. Inside it, the implied rest of the year sits inside what the range
  * needs; outside, it doesn't. A 10-K's is the year itself, met or not.
  */
-export function checkVerdict(
+function checkVerdict(
   ytd: Pick<FiledYearToDate, 'value' | 'months'>,
   g: Pick<StoredGuidance, 'low' | 'high'>,
 ) {
@@ -384,7 +384,7 @@ export function checkVerdict(
   }
 }
 
-export function checkHeadline(ytd: FiledYearToDate, g: StoredGuidance): string {
+function checkHeadline(ytd: FiledYearToDate, g: StoredGuidance): string {
   const filer = FILER_NAMES[ytd.ticker]
   const year = yearName(ytd.ticker, ytd.fiscal_year)
   const range = `its ${rangeText(g.low, g.high)} guidance`
@@ -508,7 +508,7 @@ export function checkAlert(
 
 // ---- the run ---------------------------------------------------------------
 
-export interface GuidanceBaselines {
+interface GuidanceBaselines {
   now: Date
   /** The filer's first release read: guidance it stored is the baseline. */
   firstReleaseReadAt: string | null

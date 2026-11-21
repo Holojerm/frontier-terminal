@@ -6,7 +6,7 @@ import { z } from 'zod'
 
 import curatedJson from '../curated/earnings-calls.json'
 
-export const POSTS = ['transcript', 'remarks', 'webcast', 'none'] as const
+const POSTS = ['transcript', 'remarks', 'webcast', 'none'] as const
 
 const Speaker = z.strictObject({ name: z.string().min(1), title: z.string().min(1) })
 
@@ -47,7 +47,7 @@ export const CallCompany = z.strictObject({
 })
 export type CallCompany = z.infer<typeof CallCompany>
 
-export const CuratedDocument = z.strictObject({
+const CuratedDocument = z.strictObject({
   ticker: z.string(),
   call_date: z.string().regex(/^\d{4}-\d{2}-\d{2}$/),
   kind: z.enum(['transcript', 'remarks', 'audio']),

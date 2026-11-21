@@ -192,11 +192,9 @@ describe('grouped', () => {
   })
 
   it('reaches the prospectus statement in every unit', () => {
+    // USD and USD/share are read in prospectus-details.test.ts.
     expect(statementValue(-1_260_000, 'shares')).toBe('−1,260')
-    expect(statementValue(-1_260_000_000, 'USD')).toBe('−1,260')
-    expect(statementValue(-0.42, 'USD/share')).toBe('−0.42')
     expect(millions(-1_260_400_000)).toBe('−1,260.4')
-    expect(statementValue(null, 'USD')).toBe('—')
     for (const v of [statementValue(-1_260_000, 'shares'), millions(-5e8)]) {
       expect(v).not.toContain('-')
     }

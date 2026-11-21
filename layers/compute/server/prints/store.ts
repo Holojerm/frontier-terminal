@@ -9,7 +9,7 @@ import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import type { PrintObservation } from './parse'
 import { PRINT_HELD_SOURCES, type PrintBasis } from '../../shared/utils/prints'
 
-export interface PrintWrite {
+interface PrintWrite {
   source_id: string
   source_url: string
   fetched_at: string

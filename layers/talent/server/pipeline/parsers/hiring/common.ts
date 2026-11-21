@@ -12,7 +12,7 @@ export function compareByJobId(a: { job_id: string }, b: { job_id: string }): nu
 
 // ---- Greenhouse (shared by anthropic + xai boards) -------------------------
 
-export interface GreenhouseJob {
+interface GreenhouseJob {
   id: number
   title: string
   location: { name: string } | null

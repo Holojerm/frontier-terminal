@@ -1,11 +1,10 @@
-import { env } from 'cloudflare:test'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { ARCHIVE_ERAS } from '../server/pipeline/archive/eras'
 import { archiveRows } from '../server/pipeline/archive/rows'
 import { runRefresh } from '../../core/server/pipeline/refresh'
 import { exportTable } from '#server/registries/export-tables'
-import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
+import { fixtureFetcher, fixtureText, manifest, raw } from '#layers/core/test/pipeline/fixtures'
 
 // The archived price history on the read side: archived points before live
 // ones on a SKU's page, an archive-only SKU, /api/prices as of an instant
@@ -16,17 +15,7 @@ const POLLS = { timeout: 60_000 }
 const sourcesYaml = fixtureText('sources.yaml')
 const ALL = includeSources(sourcesYaml, manifest.fixtures)
 
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
-const fetcher: SourceFetcher = async (source) => {
-  const f = manifest.fixtures.find((x) => x.source_url === source.url)
-  if (!f) throw new Error(`no fixture for ${source.url}`)
-  const text = fixtureText(f.path)
-  return { ok: true, status: 200, text, bytes: text.length }
-}
+const fetcher = fixtureFetcher()
 let tick = Date.parse('2026-09-07T10:00:00Z')
 const now = () => new Date((tick += 1000))
 const poll = () =>

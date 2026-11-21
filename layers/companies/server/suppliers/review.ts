@@ -17,7 +17,7 @@ import { PASSAGE_ROWS_PER_INSERT, currentPassages, insertOf, settleDocument } fr
 import { judgeReview } from '#layers/core/server/pipeline/judge/review'
 
 /** Documents offered per judge run, oldest filing first. */
-export const SUPPLIER_REVIEW_LIMIT = 6
+const SUPPLIER_REVIEW_LIMIT = 6
 
 const JudgeSupplierPassage = z.strictObject({
   relation: z.enum(SUPPLIER_RELATIONS),
@@ -37,14 +37,14 @@ const JudgeSupplierPassage = z.strictObject({
     .nullable(),
 })
 
-export const JudgeSupplierReading = z.strictObject({
+const JudgeSupplierReading = z.strictObject({
   document_id: z.string().min(1).max(40),
   passages: JudgeSupplierPassage.array().max(30),
 })
 export type JudgeSupplierReading = z.infer<typeof JudgeSupplierReading>
 type Passage = z.infer<typeof JudgeSupplierPassage>
 
-export interface SupplierReview {
+interface SupplierReview {
   document_id: string
   ticker: string
   company: string
@@ -122,7 +122,7 @@ export function checkPassage(p: Passage, text: string): { reason: string; detail
   return null
 }
 
-export interface SupplierReport {
+interface SupplierReport {
   accepted: number
   ended: number
   settled: number

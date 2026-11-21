@@ -15,11 +15,11 @@ import * as tables from '#server/db/schema'
 const DAY_MS = 86_400_000
 
 /** How far back the first run reaches, and how long rolled rows are kept. */
-export const ROLLUP_RETAIN_DAYS = 120
+const ROLLUP_RETAIN_DAYS = 120
 /** Days of runs read and folded at a time. */
-export const CHUNK_DAYS = 15
+const CHUNK_DAYS = 15
 /** Wall time after which a run stops between chunks and leaves the rest for the next hour. */
-export const RUN_BUDGET_MS = 25_000
+const RUN_BUDGET_MS = 25_000
 /** rollup_state's row for this rollup. */
 export const ROLLUP_NAME = 'source_runs'
 
@@ -32,7 +32,7 @@ export interface RunPoint {
   status: string
 }
 
-export interface DayRoll {
+interface DayRoll {
   source_id: string
   day: string
   runs: number
@@ -45,7 +45,7 @@ export interface DayRoll {
   gap_to: string | null
 }
 
-export interface TickRoll {
+interface TickRoll {
   scope: string
   started_at: string
   runs: number

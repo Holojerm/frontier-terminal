@@ -157,7 +157,7 @@ export function crusoeRows(body: string): GpuRow[] {
 }
 
 /** Together AI: the GPU Clusters table, column "ON-Demand", priced per GPU-hour. */
-export function togetherRows(body: string): GpuRow[] {
+function togetherRows(body: string): GpuRow[] {
   const table = need(
     tablesOf(contentOf(body)).find(
       (t) =>

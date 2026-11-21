@@ -1,7 +1,7 @@
 import { misalignmentIndexItems } from '../../server/pipeline/parsers/disclosures/openai-misalignment-reports'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
-export type IndexItem = Record<string, unknown> & {
+type IndexItem = Record<string, unknown> & {
   title: string
   href: string
   description: string

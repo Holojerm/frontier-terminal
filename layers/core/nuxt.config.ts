@@ -5,6 +5,7 @@
 // `#server/registries/…`), and scripts/check-domains.ts enforces both.
 export default defineNuxtConfig({
   $meta: { name: 'core' },
+  modules: ['@vueuse/nuxt'],
   runtimeConfig: {
     // Bearer the judge routine presents to /api/judge/* (layers/core/server/utils/judge-auth.ts).
     // Unset = those routes 404. Same shape and length floor as the fleet token;

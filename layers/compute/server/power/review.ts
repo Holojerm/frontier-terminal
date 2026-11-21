@@ -17,7 +17,7 @@ import { currentTies, insertTies, settleDocument, tieId } from './store'
 import { judgeReview } from '#layers/core/server/pipeline/judge/review'
 
 /** Documents offered per judge run, oldest filing first. */
-export const POWER_SITE_REVIEW_LIMIT = 4
+const POWER_SITE_REVIEW_LIMIT = 4
 
 const JudgePowerTie = z.strictObject({
   role: z.enum(POWER_ROLES),
@@ -27,7 +27,7 @@ const JudgePowerTie = z.strictObject({
   quote: z.string().min(20).max(400),
 })
 
-export const JudgePowerSiteReading = z.strictObject({
+const JudgePowerSiteReading = z.strictObject({
   document_id: z.string().min(1).max(120),
   site: z.string().min(1).max(120),
   ties: JudgePowerTie.array().max(12),
@@ -35,7 +35,7 @@ export const JudgePowerSiteReading = z.strictObject({
 export type JudgePowerSiteReading = z.infer<typeof JudgePowerSiteReading>
 type Tie = z.infer<typeof JudgePowerTie>
 
-export interface PowerSiteReview {
+interface PowerSiteReview {
   document_id: string
   /** Epoch's name for the site, to send back with the reading. */
   site: string
@@ -182,7 +182,7 @@ export function listingOf(company: string, filerDisplay: string): Listing {
   return { company, parent: null, ticker: null, unlisted: 'not matched to a listing' }
 }
 
-export interface PowerSiteReport {
+interface PowerSiteReport {
   accepted: number
   ended: number
   settled: number

@@ -42,7 +42,7 @@ export const tieId = (t: {
   })
 
 /** The filer's CIK in an EDGAR archive URL, unpadded, or null. */
-export function cikOf(url: string): string | null {
+function cikOf(url: string): string | null {
   const m = /\/Archives\/edgar\/data\/(\d+)\//.exec(url)
   return m ? String(Number(m[1])) : null
 }
@@ -134,7 +134,7 @@ export function handTies(table: CuratedPowerSites = curatedPowerSites.parse(cura
 }
 
 /** Rows per insert under D1's bound-parameter limit: 22 columns each. */
-export const TIE_ROWS_PER_INSERT = Math.floor(D1_MAX_BOUND_PARAMS / 22)
+const TIE_ROWS_PER_INSERT = Math.floor(D1_MAX_BOUND_PARAMS / 22)
 
 /** Copy the hand-read rows in, once: a row already stored, ended or not, is left as it is. */
 export async function seedHandTies(db: PipelineDb, rows: Insert[] = handTies()): Promise<number> {

@@ -12,7 +12,7 @@ import { ercotFactsStored, ercotReportCount } from './ercot-large-loads'
 import { gridLoadDays, gridLoadFilesRead } from './grid-load'
 import { powerSitesStamp } from './stamp'
 
-export const curatedGridAreas = z.object({
+const curatedGridAreas = z.object({
   source_url: z.url(),
   file: z.string().min(1),
   columns: z.string().min(1),
@@ -33,7 +33,7 @@ export const GRID_AREA_TABLE = curatedGridAreas.parse(curated)
 const WEEKS_SHOWN = 104
 
 /** Where each lab site sits, from its ties: a grid row first, else a utility EIA-861 places. */
-export function placeSites(power: PowerSitesData): {
+function placeSites(power: PowerSitesData): {
   placed: Map<string, GridSiteLink[]>
   unplaced: GridLoadData['unplaced']
 } {
@@ -82,7 +82,7 @@ export function placeSites(power: PowerSitesData): {
 }
 
 /** The listed companies tied to the sites placed in one authority. */
-export function areaTickers(power: PowerSitesData, sites: readonly string[]): GridTicker[] {
+function areaTickers(power: PowerSitesData, sites: readonly string[]): GridTicker[] {
   const out = new Map<string, GridTicker>()
   for (const s of power.sites) {
     if (!sites.includes(s.name)) continue

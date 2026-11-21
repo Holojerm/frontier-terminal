@@ -44,7 +44,7 @@ import {
 } from './comtrade'
 import { storeObservations } from './store'
 
-export const KIND_PRINT_READ_FAILED = 'print_read_failed'
+const KIND_PRINT_READ_FAILED = 'print_read_failed'
 
 export const TWSE_REVENUE = {
   source_id: 'twse-monthly-revenue',
@@ -73,24 +73,24 @@ export const KCS = {
   unmarked: 'kcs-chip-exports-unmarked',
 } as const
 
-export const TSMC_DOCS_PER_RUN = 20
+const TSMC_DOCS_PER_RUN = 20
 /** Three GETs a release on a slow host: the first backfill takes about a day and a half of runs. */
-export const KCS_DOCS_PER_RUN = 12
+const KCS_DOCS_PER_RUN = 12
 /**
  * Wall time a run spends on releases. KCS answers in a second or two but has
  * taken over 30, and prints:read shares its invocation with other tasks.
  */
-export const KCS_RUN_BUDGET_MS = 4 * 60_000
+const KCS_RUN_BUDGET_MS = 4 * 60_000
 /** Board pages read a run until the whole board is held (about 24 pages). */
-export const KCS_BOARD_PAGES_PER_RUN = 4
+const KCS_BOARD_PAGES_PER_RUN = 4
 /** The print_documents row that holds the board backfill's next page, or `listed` once done. */
 export const KCS_BOARD_DOC = 'kcs:board'
-export const COMTRADE_PERIODS_PER_RUN = 24
-export const COMTRADE_SPACING_MS = 1_500
+const COMTRADE_PERIODS_PER_RUN = 24
+const COMTRADE_SPACING_MS = 1_500
 export const FAILED_RETRY_MS = 86_400_000
-export const LIVE_WINDOW_MS = 2 * 86_400_000
+const LIVE_WINDOW_MS = 2 * 86_400_000
 
-export interface PrintDeps {
+interface PrintDeps {
   raw: RawStore
   fetcher: SourceFetcher
   now: Date
@@ -143,14 +143,14 @@ async function fail(db: PipelineDb, detail: string): Promise<void> {
 }
 
 /** A page or feed that states its whole history (or its newest month) in one body. */
-export interface PrintFeed {
+interface PrintFeed {
   source_id: string
   url: string
   ext: 'json' | 'html'
   parse: (body: string) => PrintObservation[]
 }
 
-export const PRINT_FEEDS: readonly PrintFeed[] = [
+const PRINT_FEEDS: readonly PrintFeed[] = [
   { ...TWSE_REVENUE, ext: 'json', parse: parseTwseRevenue },
   { ...ACCTON_REVENUE, ext: 'html', parse: parseAcctonRevenue },
 ]
@@ -160,11 +160,7 @@ export const PRINT_FEEDS: readonly PrintFeed[] = [
  * first read is the backfill: what it held then was printed before we looked,
  * so its first_seen_at is our read, not the release.
  */
-export async function readFeed(
-  db: PipelineDb,
-  deps: PrintDeps,
-  feed: PrintFeed,
-): Promise<FeedReport> {
+async function readFeed(db: PipelineDb, deps: PrintDeps, feed: PrintFeed): Promise<FeedReport> {
   const fetched_at = deps.now.toISOString()
   const res = await deps.fetcher({ source_id: feed.source_id, url: feed.url, ext: feed.ext })
   if (!res.ok) {
@@ -214,10 +210,7 @@ export async function readFeed(
   return { status: 'read', ...stored }
 }
 
-export async function readTsmc6k(
-  db: PipelineDb,
-  deps: PrintDeps,
-): Promise<PrintReadReport['tsmc']> {
+async function readTsmc6k(db: PipelineDb, deps: PrintDeps): Promise<PrintReadReport['tsmc']> {
   const report = { read: 0, reports: 0, added: 0, revised: 0, pending: 0 }
   const sub = await deps.fetcher({
     source_id: `${TSMC_6K.source_id}-submissions`,

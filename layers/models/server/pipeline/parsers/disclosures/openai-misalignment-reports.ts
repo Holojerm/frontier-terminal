@@ -32,12 +32,12 @@ import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 //      yet), not a failure.
 //   4. Provenance is an argument. Nothing here reads a clock.
 
-export interface SkippedEntry {
+interface SkippedEntry {
   entry: string
   reason: string
 }
 
-export interface MisalignmentIndexResult {
+interface MisalignmentIndexResult {
   rows: DisclosureRow[]
   skipped: SkippedEntry[]
 }

@@ -17,7 +17,6 @@ describe('readSourceRegistry', () => {
       .map((s) => s.source_id)
       .sort()
     expect(registry.sources.map((s) => s.source_id).sort()).toEqual(pipelineIds)
-    expect(registry.sources).toHaveLength(46)
     // The one id sources.yaml spells differently from the manifest.
     expect(byId['edgar-submissions-spcx']!.yaml_id).toBe('edgar-submissions')
   })

@@ -77,7 +77,7 @@ export const LAB_MEMBERS: Readonly<
 export type AlertKind = 'figure' | 'commitment' | 'stake'
 
 /** Lab-group series that raise an alert when a new filing moves them, by `<lab>|<concept>`. */
-export const ALERTING_LAB_CONCEPTS: Readonly<Record<string, AlertKind>> = {
+const ALERTING_LAB_CONCEPTS: Readonly<Record<string, AlertKind>> = {
   'openai|us-gaap:NonoperatingIncomeExpense': 'figure',
   'openai|us-gaap:RevenueFromContractWithCustomerExcludingAssessedTax': 'figure',
   'openai|us-gaap:AccountsReceivableNet': 'figure',
@@ -121,7 +121,7 @@ const RPO_START =
 const amazonTotal = (dims: string, end: string) =>
   dims === '' || dims === `${RPO_START}=${nextDay(end)}`
 
-export const SERIES_DEFS: readonly SeriesDef[] = [
+const SERIES_DEFS: readonly SeriesDef[] = [
   {
     id: 'msft-capex',
     ticker: 'MSFT',
@@ -327,7 +327,7 @@ const LAB_NOTES: Readonly<Record<string, string>> = {
 const localName = (qname: string) => qname.slice(qname.indexOf(':') + 1)
 
 /** `PaymentsToAcquireThing` → `Payments to acquire thing`. */
-export function humanize(concept: string): string {
+function humanize(concept: string): string {
   const words = localName(concept)
     .replace(/([a-z0-9])([A-Z])/g, '$1 $2')
     .toLowerCase()
@@ -637,7 +637,7 @@ export interface StoredTextFact extends StoredFact {
   sentence: string
 }
 
-export const TEXT_LABELS: Readonly<Record<TextMetric, string>> = {
+const TEXT_LABELS: Readonly<Record<TextMetric, string>> = {
   notes_invested: 'Convertible notes bought, as stated in the filing',
   notes_commitment: 'Further notes committed to, due by the date shown',
   notes_fair_value: 'Fair value of the convertible notes',
@@ -649,7 +649,7 @@ export const TEXT_LABELS: Readonly<Record<TextMetric, string>> = {
     'Private holdings at carrying value, primarily Anthropic preferred stock',
 }
 
-export const TEXT_NOTE =
+const TEXT_NOTE =
   'Read from the filing’s words, before Amazon tagged Anthropic in its XBRL. Each point quotes its sentence. Where Amazon says “primarily”, the figure includes other companies.'
 
 /**

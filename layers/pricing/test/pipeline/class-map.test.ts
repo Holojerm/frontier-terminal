@@ -13,7 +13,7 @@ import { cardDescriptions, cardOwners } from '../../server/pipeline/judge/page-c
 import { submitJudgeRun } from '../../../core/server/pipeline/judge/submit'
 import { recommendationRows } from '../../server/pipeline/recommendations'
 import { runRefresh } from '../../../core/server/pipeline/refresh'
-import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
+import { fixtureText, manifest, raw } from '#layers/core/test/pipeline/fixtures'
 
 // The judge re-mapping a price-matrix cell. Pure halves first, then the whole
 // path against the workerd D1 and R2: a real poll of the committed Anthropic
@@ -48,11 +48,6 @@ function launched(page: string): string {
 }
 const LAUNCHED = launched(FIXTURE)
 
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
 const readRaw: RawReader = async (key) => {
   const object = await env.BLOB.get(key)
   return object ? object.text() : null
@@ -387,8 +382,10 @@ describe('a judge re-mapping', () => {
     expect(report.class_map).toEqual({ accepted: 1, rejected: [] })
   })
 
-  it('accepts the sentence with its apostrophe curled where the page has it straight', async () => {
-    const report = await submit([proposal({ basis: NEW_FLAGSHIP.replace("'", '’') })])
+  it('accepts the sentence with its apostrophe straight where the page has it curled', async () => {
+    const straight = NEW_FLAGSHIP.replace('’', "'")
+    expect(straight).not.toBe(NEW_FLAGSHIP)
+    const report = await submit([proposal({ basis: straight })])
     expect(report.class_map).toEqual({ accepted: 1, rejected: [] })
   })
 
@@ -775,7 +772,6 @@ describe('a launch re-opens its lab’s empty cells (Gemini 4 Hydrogen, 2026-11-
 describe('a cell resting on a join page (Meta balanced, 2026-11-13)', () => {
   // Meta's balanced sentence is on Muse Spark's own page, which has no lane:
   // the models page's lane reads it as a side and checks the sentence there.
-  const META = fixtureText('fixtures/pricing/meta-models.md')
   const SPARK_PAGE = fixtureText('fixtures/pricing/meta-muse-spark.md')
   const SPARK_URL = 'https://dev.meta.ai/docs/muse-spark.md'
   const SEED = MODEL_CLASS_MAP.find((e) => e.provider === 'meta' && e.class === 'balanced')!

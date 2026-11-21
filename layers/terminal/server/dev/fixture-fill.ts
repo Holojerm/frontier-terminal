@@ -73,7 +73,7 @@ const forRecipes: Choose = (candidates, source) =>
   candidates.at(-1) ??
   null
 
-export interface FixtureFillDeps {
+interface FixtureFillDeps {
   db: PipelineDb
   raw: RawStore
   /** Reads back what `raw` stored (FiledFactsDeps.readRaw). */

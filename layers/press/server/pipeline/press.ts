@@ -14,7 +14,7 @@ import * as tables from '#server/db/schema'
 import { PROSPECTUS_FLOOR_RULE } from '../../../companies/server/pipeline/prospectus-floor'
 
 /** Alerts before briefs went live are history, not news. */
-export const PRESS_EPOCH = '2026-11-05T00:00:00.000Z'
+const PRESS_EPOCH = '2026-11-05T00:00:00.000Z'
 
 const LOOKBACK = 10
 
@@ -92,7 +92,7 @@ const esc = (s: string) =>
   s.replace(/&/g, '&amp;').replace(/</g, '&lt;').replace(/>/g, '&gt;').replace(/"/g, '&quot;')
 
 /** The sender's name on a note: the person who signs it. */
-export const PRESS_FROM_NAME = 'Jeremy Ettlinger'
+const PRESS_FROM_NAME = 'Jeremy Ettlinger'
 
 /** One reporter's note as mail, sent as written in pressDraft. */
 export function pressMessage(

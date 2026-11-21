@@ -95,7 +95,7 @@ export interface TickInput<T> {
  * stored rows in place without logging a change: a parser learning to read a
  * field is not the vendor changing it.
  */
-export const PARSER_VERSION = 1
+const PARSER_VERSION = 1
 
 /** Hashable form of a context block: stableStringify reads a Map or Set as
  * `{}`, so those become their entries, sorted so insertion order is moot. */

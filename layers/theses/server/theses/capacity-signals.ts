@@ -40,7 +40,7 @@ const pick = (p: Prov): Prov => ({ source_url: p.source_url, fetched_at: p.fetch
 
 // ---- spot against on-demand ----------------------------------------------------
 
-export interface SpotProvider extends Prov {
+interface SpotProvider extends Prov {
   on_demand: number
   spot_low: number
   spot_high: number
@@ -106,7 +106,7 @@ export async function gpuSpotToOnDemand(
 
 const midpoint = (g: { low: number; high: number }) => (g.low + g.high) / 2
 
-export interface GuidanceFiler {
+interface GuidanceFiler {
   filer: string
   state: 'ok' | 'cut' | 'under'
   /** The fiscal year still running that the filer guides, at its newest release. Null with none. */
@@ -132,7 +132,7 @@ export interface GuidanceFiler {
   } | null
 }
 
-export interface GuidanceShortfalls {
+interface GuidanceShortfalls {
   /** Filers that cut or landed under. */
   value: number
   filers: Partial<Record<ExposureTicker, GuidanceFiler>>

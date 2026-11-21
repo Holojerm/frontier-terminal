@@ -16,12 +16,12 @@ import { readDownloadSeries, seriesById } from '#layers/adoption/server/recipes/
 import type { EventPoint, Point } from './harness'
 import type { SignalSource } from './registry'
 
-export type Loaded = { kind: 'points'; points: Point[] } | { kind: 'events'; events: EventPoint[] }
+type Loaded = { kind: 'points'; points: Point[] } | { kind: 'events'; events: EventPoint[] }
 
 /** The print reader whose document log dates each Korean release (print_documents.filed is KCS's posting day). */
 const KCS_READER = KCS.reader
 
-export interface LoadDeps {
+interface LoadDeps {
   db: PipelineDb
   ctx: QueryContext
 }

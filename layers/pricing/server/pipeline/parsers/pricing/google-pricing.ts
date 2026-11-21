@@ -49,12 +49,12 @@ export interface Provenance {
 
 /** A model section (or one tier table inside it) the parser did not turn
  * into rows, with the reason. Callers must surface these. */
-export interface SkippedSection {
+interface SkippedSection {
   slug: string
   reason: string
 }
 
-export interface GooglePricingResult {
+interface GooglePricingResult {
   rows: GooglePricingRow[]
   skipped: SkippedSection[]
 }

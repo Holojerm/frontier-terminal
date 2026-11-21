@@ -31,6 +31,7 @@ import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 // written by hand. A test says so where it made a headline up.
 
 const TOLERANCE = 5
+const HASH = (n: number) => n.toString(16).padStart(64, '0')
 
 const META = '0001326801'
 const GOOGL = '0001652044'
@@ -774,7 +775,6 @@ describe('labeling deals', () => {
     counterparty: 'Lambda',
     ...over,
   })
-  const HASH = (n: number) => n.toString(16).padStart(64, '0')
 
   beforeEach(async () => {
     await db.delete(schema.reportedFigures)
@@ -1075,7 +1075,6 @@ describe('reading releases and serving both checks', () => {
   })
 
   it('serves each deal report with its result, and counts headlines still owed a reading', async () => {
-    const HASH = (n: number) => n.toString(16).padStart(64, '0')
     const rows: [StoredDeal, string | null][] = [
       [LAMBDA, '2026-11-20T06:00:00.000Z'],
       [BROADCOM, null],
@@ -1151,6 +1150,13 @@ describe('reading releases and serving both checks', () => {
 
   it('is empty, not an error, before anything is stored', async () => {
     const data = await queryGroundTruth(db, ctx())
+    expect(data).toMatchObject({
+      resolutions: [],
+      open: [],
+      waiting: [],
+      first_stored_at: null,
+      tally: { periods: 0, reports: 0, median_abs_error_pct: null },
+    })
     expect(data.deals).toMatchObject({
       reports: [],
       unread: 0,

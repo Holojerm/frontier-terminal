@@ -1,25 +1,52 @@
-// Reader settings (time and figure style, table density, lab order), kept in
-// localStorage and never sent to the server. Cached page HTML is shared, so the
-// server always renders DEFAULTS as UTC_STYLE and stored settings load after
-// hydration (plugins/reader-prefs.client.ts); density alone is set before first
-// paint (plugins/reader-prefs.ts) because it moves layout. The server never
-// writes the module-level ref, so requests cannot leak settings.
+// Reader settings: how times and figures read, how tightly tables sit, and
+// which labs come first. Stored per browser in localStorage and never sent to
+// the server.
+//
+// Page HTML is cached and shared by every reader, so the server always renders
+// DEFAULTS read as UTC_STYLE. The stored settings load once hydration has
+// finished (plugins/reader-prefs.client.ts), the same handoff useClock makes for
+// relative ages, so a hydration mismatch cannot happen. Density is the
+// exception: plugins/reader-prefs.ts sets it on <html> before first paint,
+// because it moves layout rather than text.
+//
+// One module-level ref. The server never writes it, so requests cannot leak
+// settings into each other.
 
 import { DEFAULTS, PREFS_KEY, type ReaderPrefs } from '../../shared/utils/reader-prefs'
 
 export { DEFAULTS, PREFS_KEY, type ReaderPrefs }
 
-const prefs = ref<ReaderPrefs>(DEFAULTS)
+/** Only what differs from the defaults, so a later default change reaches readers who never chose. */
+const serializer = {
+  read: (raw: string): ReaderPrefs => {
+    try {
+      return parsePrefs(JSON.parse(raw))
+    } catch {
+      return DEFAULTS
+    }
+  },
+  write: (p: ReaderPrefs) =>
+    JSON.stringify(
+      Object.fromEntries(
+        Object.entries(p).filter(
+          ([k, v]) => JSON.stringify(v) !== JSON.stringify(DEFAULTS[k as keyof ReaderPrefs]),
+        ),
+      ),
+    ),
+}
+
+// Another tab's change arrives through the storage event useLocalStorage listens to.
+const stored = import.meta.client
+  ? useLocalStorage<ReaderPrefs>(PREFS_KEY, DEFAULTS, {
+      serializer,
+      writeDefaults: false,
+      // Private mode or a full quota: the setting still applies to this tab.
+      onError: () => {},
+    })
+  : shallowRef(DEFAULTS)
 /** False through SSR and hydration: everything reads as the server rendered it. */
 const loaded = ref(false)
-
-function read(): ReaderPrefs {
-  try {
-    return parsePrefs(JSON.parse(localStorage.getItem(PREFS_KEY) ?? '{}'))
-  } catch {
-    return DEFAULTS
-  }
-}
+const prefs = computed<ReaderPrefs>(() => (loaded.value ? stored.value : DEFAULTS))
 
 function applyDensity(p: ReaderPrefs) {
   if (p.density === 'compact') document.documentElement.dataset.density = 'compact'
@@ -28,30 +55,16 @@ function applyDensity(p: ReaderPrefs) {
 
 /** Called once by the client plugin, after hydration. */
 export function loadReaderPrefs() {
-  prefs.value = read()
   loaded.value = true
-  applyDensity(prefs.value)
+  watch(prefs, applyDensity, { immediate: true })
 }
 
 export function useReaderPrefs() {
   const set = (patch: Partial<ReaderPrefs>) => {
-    prefs.value = parsePrefs({ ...prefs.value, ...patch })
-    applyDensity(prefs.value)
-    try {
-      // Only what differs from the defaults, so a later default change reaches readers who never chose.
-      const diff = Object.fromEntries(
-        Object.entries(prefs.value).filter(
-          ([k, v]) => JSON.stringify(v) !== JSON.stringify(DEFAULTS[k as keyof ReaderPrefs]),
-        ),
-      )
-      if (Object.keys(diff).length) localStorage.setItem(PREFS_KEY, JSON.stringify(diff))
-      else localStorage.removeItem(PREFS_KEY)
-    } catch {
-      // Private mode or a full quota: the setting still applies to this tab.
-    }
+    stored.value = parsePrefs({ ...prefs.value, ...patch })
   }
   return {
-    prefs: readonly(prefs),
+    prefs,
     loaded: readonly(loaded),
     set,
     reset: () => set(DEFAULTS),
@@ -89,7 +102,7 @@ export function useStampStyle() {
  * a template or a computed and they re-render when either changes.
  */
 export function useStamps() {
-  const now = useNow()
+  const now = useClock()
   const style = useStampStyle()
   return {
     now,

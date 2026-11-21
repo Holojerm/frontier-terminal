@@ -16,8 +16,6 @@ import { PROBE_ENDPOINT, PROBE_TIMEOUT_MS, probeRequestBody, type ProbeTarget } 
  */
 export type ProbeOutcome = 'ok' | 'rate_limited' | 'failed' | 'timeout' | 'setup' | 'router'
 
-/** The outcomes that count as strain at the lab. */
-export const STRAINED_OUTCOMES: readonly ProbeOutcome[] = ['rate_limited', 'failed', 'timeout']
 /** The outcomes that say nothing about the lab. */
 export const EXCLUDED_OUTCOMES: readonly ProbeOutcome[] = ['setup', 'router']
 
@@ -59,7 +57,7 @@ const record = (v: unknown): Record<string, unknown> | null =>
   v !== null && typeof v === 'object' && !Array.isArray(v) ? (v as Record<string, unknown>) : null
 
 /** An error object from a JSON body or a stream chunk; null when `value` is not one. */
-export function parseStreamError(value: unknown): StreamError | null {
+function parseStreamError(value: unknown): StreamError | null {
   const error = record(value)
   if (!error) return null
   const metadata = record(error.metadata)
@@ -167,9 +165,9 @@ export function createStreamReader() {
 }
 
 /** The shortest span between first and last token we will divide by. */
-export const MIN_GENERATION_MS = 200
+const MIN_GENERATION_MS = 200
 
-export interface ProbeMeasurement {
+interface ProbeMeasurement {
   ttft_ms: number | null
   total_ms: number
   output_tokens: number | null
@@ -224,7 +222,7 @@ export interface ProbeEnd {
  * error under another code whose words say it was rate limited (OpenRouter
  * has wrapped an upstream limit in a 502 with that message).
  */
-export function isRateLimit(error: StreamError | null, httpStatus: number | null): boolean {
+function isRateLimit(error: StreamError | null, httpStatus: number | null): boolean {
   if (httpStatus === 429 || error?.code === 429 || error?.provider_code === '429') return true
   return error !== null && /rate.?limit|too many requests/i.test(error.message)
 }
@@ -273,9 +271,9 @@ export function classify(end: ProbeEnd): { outcome: ProbeOutcome; detail: string
 }
 
 /** One read of the response body: when it arrived (ms after the request) and what it held. */
-export type TraceRead = [offset_ms: number, text: string]
+type TraceRead = [offset_ms: number, text: string]
 
-export interface ProbeResult extends ProbeMeasurement {
+interface ProbeResult extends ProbeMeasurement {
   outcome: ProbeOutcome
   detail: string | null
   http_status: number | null

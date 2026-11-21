@@ -16,9 +16,9 @@ import { parseOpenRouterRankings } from './parsers/openrouter-rankings'
 export const RANKINGS_SOURCE_ID = 'openrouter-rankings-daily'
 export const RANKINGS_URL = 'https://openrouter.ai/api/v1/datasets/rankings-daily'
 /** The dataset's first day. */
-export const RANKINGS_FROM = '2025-01-01'
+const RANKINGS_FROM = '2025-01-01'
 /** end_date minus start_date may be at most 366 days; 365 keeps clear of the edge. */
-export const MAX_SPAN_DAYS = 365
+const MAX_SPAN_DAYS = 365
 
 const DAY_MS = 86_400_000
 const shift = (date: string, days: number) =>
@@ -49,7 +49,7 @@ export function windowUrl({ start, end }: Window): string {
   return `${RANKINGS_URL}?start_date=${start}&end_date=${end}`
 }
 
-export interface WindowRows {
+interface WindowRows {
   snapshot: SnapshotRow
   entities: StoredEntityRow[]
   as_of: string | undefined

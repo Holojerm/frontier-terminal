@@ -6,14 +6,14 @@
 import { recordDetections, type DetectionReport, type RawReader } from './acceptance'
 import { rollSourceRuns, type RollupReport } from './rollup'
 
-export interface ReliabilityDeps {
+interface ReliabilityDeps {
   raw: RawReader
   now: Date
 }
 
 type Part<T> = T | { error: string }
 
-export interface ReliabilityReport {
+interface ReliabilityReport {
   rollup: Part<RollupReport>
   detections: Part<DetectionReport>
 }

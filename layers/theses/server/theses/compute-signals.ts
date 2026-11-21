@@ -39,7 +39,7 @@ export const blendedPrice = (input: number, output: number, wi: number, wo: numb
 
 // ---- flagship prices ---------------------------------------------------------
 
-export interface FlagshipPrice extends Prov {
+interface FlagshipPrice extends Prov {
   model_slug: string
   input_per_mtok: number
   output_per_mtok: number
@@ -48,7 +48,7 @@ export interface FlagshipPrice extends Prov {
   basis_current: boolean | null
 }
 
-export interface FlagshipState {
+interface FlagshipState {
   date: string
   median: number | null
   flagships: Partial<Record<LabId, FlagshipPrice>>
@@ -287,7 +287,7 @@ export async function labsCombinedShare(
 }
 
 /** One lab's cluster series, as the hiring history reconstructs it. */
-export interface LabSeries extends Prov {
+interface LabSeries extends Prov {
   lab: LabId
   dates: readonly string[]
   series: readonly number[]

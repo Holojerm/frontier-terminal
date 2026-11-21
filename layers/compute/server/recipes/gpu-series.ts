@@ -40,13 +40,13 @@ export interface GpuObservation extends Prov {
   spot_high?: number | null
 }
 
-export interface GpuProviderPrice extends Prov {
+interface GpuProviderPrice extends Prov {
   /** The median of the provider's counted rows: each provider is one vote. */
   value: number
   rows: number
 }
 
-export interface GpuMedian {
+interface GpuMedian {
   gpu: GpuModel
   median: number | null
   providers: Record<string, GpuProviderPrice>
@@ -71,7 +71,7 @@ export function gpuMedian(gpu: GpuModel, obs: readonly GpuObservation[]): GpuMed
   return { gpu, median: m === null ? null : round(m), providers }
 }
 
-export interface GpuState {
+interface GpuState {
   observations: GpuObservation[]
   /** Providers whose newest run failed, so none of their prices count today. */
   failed: Record<string, string>

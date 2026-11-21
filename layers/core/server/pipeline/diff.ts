@@ -20,7 +20,7 @@ function indexByKey(rows: readonly EntityRow[], side: 'before' | 'after'): Map<s
   return byKey
 }
 
-export interface Diff {
+interface Diff {
   changes: ChangeRow[]
   /**
    * The after rows the store must write: every added or modified row, plus any

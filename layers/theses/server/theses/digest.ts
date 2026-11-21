@@ -27,7 +27,7 @@ const defOf = (id: string): ClaimDef | undefined =>
   THESES.flatMap((t) => t.claims).find((c) => c.id === id)
 
 /** Whether a verdict moves its claim toward the kill condition. */
-export function countsAgainst(def: ClaimDef, company: CompanyId, v: VerdictView): boolean {
+function countsAgainst(def: ClaimDef, company: CompanyId, v: VerdictView): boolean {
   if (def.spec.kind !== 'judged') return false
   switch (def.spec.review) {
     case 'flagship-price-cuts':
@@ -40,7 +40,7 @@ export function countsAgainst(def: ClaimDef, company: CompanyId, v: VerdictView)
 }
 
 /** The recipes a claim reads, its comparison set's included. */
-export function recipesOf(def: ClaimDef): string[] {
+function recipesOf(def: ClaimDef): string[] {
   const spec = def.spec
   if (spec.kind === 'judged') return spec.review === 'recipe-items' ? [spec.recipe] : []
   if (spec.signal === 'recipe-yoy-growth') return [spec.recipe, ...spec.compare_recipes]
@@ -70,7 +70,7 @@ function weekLine(claim: ClaimView): string | null {
 }
 
 /** One line naming the event a verdict is about, from the Worker's facts. */
-export function eventLabel(v: VerdictView): string {
+function eventLabel(v: VerdictView): string {
   const f = v.facts
   if (typeof f.cut_pct === 'number') return `${String(f.model_slug)} −${f.cut_pct}%`
   if (typeof f.hours === 'number') {

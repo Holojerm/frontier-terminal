@@ -88,7 +88,7 @@ export async function decoded(obj: PdfObject): Promise<Uint8Array> {
   throw new Error(`unsupported filter ${filter}`)
 }
 
-export async function allObjects(bytes: Uint8Array): Promise<Map<number, PdfObject>> {
+async function allObjects(bytes: Uint8Array): Promise<Map<number, PdfObject>> {
   const text = decoder.decode(bytes)
   if (!text.startsWith('%PDF')) throw new Error('not a PDF')
   if (/\/Encrypt\s+\d+\s+\d+\s+R/.test(text)) throw new Error('encrypted PDF')
@@ -159,7 +159,7 @@ const hexToUtf16 = (hex: string) => {
   return s
 }
 
-export function parseCMap(cmap: string): FontMap {
+function parseCMap(cmap: string): FontMap {
   const map = new Map<number, string>()
   const space = /begincodespacerange\s*<([0-9A-Fa-f]+)>/.exec(cmap)
   const bytes: 1 | 2 = space && space[1]!.length <= 2 ? 1 : 2
@@ -269,7 +269,7 @@ function show(codes: number[], font: FontMap | undefined): string {
 }
 
 /** The text a content stream shows, with a space or line break between runs. */
-export function contentText(stream: string, fonts: Map<string, FontMap>): string {
+function contentText(stream: string, fonts: Map<string, FontMap>): string {
   let out = ''
   let font: FontMap | undefined
   const operands: (string | { codes: number[] } | (number | { codes: number[] })[])[] = []

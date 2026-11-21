@@ -45,9 +45,6 @@ export const placementLabel = (placement: string): string =>
     ? PROBE_LOCATIONS[placement as ProbeLocationHint]
     : 'whichever Cloudflare data center ran it'
 
-export const isProbeLocation = (value: unknown): value is ProbeLocationHint =>
-  typeof value === 'string' && Object.hasOwn(PROBE_LOCATIONS, value)
-
 /** One object per placement. A new name, never reused: the hint only applies when the object is created. */
 export const probeObjectName = (hint: ProbeLocationHint) => `probes-${hint}`
 

@@ -128,29 +128,19 @@ const stacked = computed(() =>
 const box = ref<HTMLElement | null>(null)
 const scrolls = ref(false)
 const fade = reactive({ left: false, right: false, bottom: false })
-let observer: ResizeObserver | undefined
-let measure: (() => void) | undefined
-onMounted(() => {
+function measure() {
   const el = box.value
   if (!el) return
-  measure = () => {
-    const x = el.scrollWidth > el.clientWidth + 1
-    const y = el.scrollHeight > el.clientHeight + 1
-    scrolls.value = x || y
-    fade.left = x && el.scrollLeft > 1
-    fade.right = x && el.scrollLeft + el.clientWidth < el.scrollWidth - 1
-    fade.bottom = y && el.scrollTop + el.clientHeight < el.scrollHeight - 1
-  }
-  observer = new ResizeObserver(measure)
-  observer.observe(el)
-  if (el.firstElementChild) observer.observe(el.firstElementChild)
-  el.addEventListener('scroll', measure, { passive: true })
-  measure()
-})
-onBeforeUnmount(() => {
-  observer?.disconnect()
-  if (measure) box.value?.removeEventListener('scroll', measure)
-})
+  const x = el.scrollWidth > el.clientWidth + 1
+  const y = el.scrollHeight > el.clientHeight + 1
+  scrolls.value = x || y
+  fade.left = x && el.scrollLeft > 1
+  fade.right = x && el.scrollLeft + el.clientWidth < el.scrollWidth - 1
+  fade.bottom = y && el.scrollTop + el.clientHeight < el.scrollHeight - 1
+}
+// The box and the table inside it: either one resizing can start or stop a scroll.
+useResizeObserver(() => [box.value, box.value?.firstElementChild as HTMLElement | null], measure)
+useEventListener(box, 'scroll', measure, { passive: true })
 
 const isHeader = (c: TableColumn) => c.key === (props.rowHeader ?? props.columns[0]?.key)
 

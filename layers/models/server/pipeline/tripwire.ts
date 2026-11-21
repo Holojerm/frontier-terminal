@@ -25,7 +25,7 @@ import { runRefresh, type RefreshReport } from '#layers/core/server/pipeline/ref
 /** The pages a launch lands on first: one catalog per lab (Google's and DeepSeek's are
  * their price lists; Alibaba's is its recommended-models page), plus Google's models
  * page, which carries its class-map sentences. */
-export const TRIPWIRE_SOURCES: readonly string[] = [
+const TRIPWIRE_SOURCES: readonly string[] = [
   'anthropic-models-md',
   'openai-models-md',
   'xai-models-md',
@@ -60,8 +60,8 @@ const HALF_HOUR_MS = 30 * 60 * 1000
  * an unchanged body, so the stored rows lag the new parser and the tripwire sees
  * a difference every tick. By expiry, the half-hourly poll has had a turn.
  */
-export const TRIPWIRE_COOLDOWN_SECONDS = 25 * 60
-export const cooldownKey = (sourceId: string) => `tripwire:cooldown:${sourceId}`
+const TRIPWIRE_COOLDOWN_SECONDS = 25 * 60
+const cooldownKey = (sourceId: string) => `tripwire:cooldown:${sourceId}`
 
 /**
  * True on the half-hour ticks, when poll:edgar (and every sixth hour
@@ -73,7 +73,7 @@ export function isPollInstant(now: Date): boolean {
   return nearestTick % HALF_HOUR_MS === 0
 }
 
-export type TripwireOutcome =
+type TripwireOutcome =
   | { status: 'yielded' }
   | { status: 'quiet'; checked: string[] }
   | { status: 'tripped'; by: string[]; skipped: string }

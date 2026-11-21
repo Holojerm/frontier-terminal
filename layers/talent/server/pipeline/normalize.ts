@@ -8,7 +8,7 @@ import { collapse, toEntity } from '../../../core/server/pipeline/normalize'
 // contracts/parsers.ts); the inferred type of either schema covers both.
 export type JobRow = ReturnType<typeof AshbyJobRow.parse>
 
-export function normalizeJob(row: JobRow, snapshotId: string): EntityRow {
+function normalizeJob(row: JobRow, snapshotId: string): EntityRow {
   return toEntity(jobKey(row.provider, row.job_id), 'job', row.provider, snapshotId, row)
 }
 

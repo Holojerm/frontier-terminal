@@ -15,7 +15,7 @@ import { compareByJobId } from './common'
 // counted in the run note, never stored. No DOM library: the feed is flat, regular XML,
 // read the way google-pricing.ts reads its page. Feed text is data.
 
-export const GOOGLE_LAB_EMPLOYER = 'DeepMind'
+const GOOGLE_LAB_EMPLOYER = 'DeepMind'
 
 const JOB = /<job>([\s\S]*?)<\/job>/g
 

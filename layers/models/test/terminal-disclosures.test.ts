@@ -1,10 +1,9 @@
-import { env } from 'cloudflare:test'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { deriveSources } from '#server/registries/derived'
 import { pendingChanges } from '#layers/core/server/pipeline/judge/pending'
 import { runRefresh } from '../../core/server/pipeline/refresh'
-import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
+import { fixtureText, manifest, raw } from '#layers/core/test/pipeline/fixtures'
 import { indexPage, withReport } from './pipeline/misalignment-index'
 
 // The disclosures axis end to end: poll the index, derive one page per
@@ -20,11 +19,6 @@ const SELF_REPLICATING = 'self-replicating-prompt-injections-exist'
 const UPLOADING = 'uploading-files-to-the-internet-in-order-to-cite-them'
 const DECEPTION = 'encouraging-deception-in-compaction-summaries'
 
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
 let tick = Date.parse('2026-09-27T06:00:00Z')
 const now = () => new Date((tick += 1000))
 const run = (ids: readonly string[], fetcher: SourceFetcher) =>

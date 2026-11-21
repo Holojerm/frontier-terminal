@@ -8,33 +8,43 @@ import { basisOnPage, flattenMdLinks } from '../recommendations'
 import { cardDescriptions, cardOwners, type CardDescriptions } from './page-cards'
 import { judgeReview } from '#layers/core/server/pipeline/judge/review'
 
-// The judge's second job: re-mapping a like-for-like matrix cell whose vendor sentence has
-// left the page. The rule is the one terminal-classes.ts states for the hand-written seed (a
-// class is what the vendor's own docs recommend, quoted verbatim), and the Worker enforces it
-// the way grounding.ts enforces the explain rule: the model proposes, deterministic checks
-// decide, and a rejection is silence plus an ops event, never a repair.
+// The judge's second job: re-mapping a like-for-like matrix cell whose vendor
+// sentence has left the page. The rule is the one terminal-classes.ts states
+// for the hand-written seed — a class is what the vendor's own docs recommend,
+// quoted verbatim — and the Worker enforces it the way grounding.ts enforces
+// the explain rule: the model proposes, deterministic checks decide, and a
+// rejection is silence plus an ops event, never a repair.
 //
-// A cell is under review when its drift check (recommendations.ts) found the sentence gone
-// within REVIEW_WINDOW_MS, or when it is a gap (no mapping, CLASS_GAPS says why) and the
-// provider launched a model within REVIEW_WINDOW_MS: a launch is when a vendor writes the
-// sentence a gap lacked, and only a mapped cell has a sentence to lose. A gap re-opened by a
-// launch may take only a launched model; the older models were weighed when the gap was written.
+// A cell is under review in one of two ways. Its drift check
+// (recommendations.ts) found the current sentence gone within
+// REVIEW_WINDOW_MS. Or it is a gap (no mapping, CLASS_GAPS says why) and the
+// provider launched a model within REVIEW_WINDOW_MS: a launch is when a vendor
+// writes the sentence a gap lacked. Gemini 4 Hydrogen was listed on
+// 2026-11-12 with a card that answers Google's balanced column, and nothing
+// offered that cell to anyone, because only a mapped cell has a sentence to
+// lose. A gap re-opened by a launch may be filled only with a launched model:
+// the older models were weighed when the gap was written.
 //
 // A proposal is accepted only if ALL of these hold:
-//   1. the cell is under review, as above. A cell whose sentence is still on the page is never
-//      re-mapped, whatever the model thinks of a newer model ("start here" is the vendor's call);
-//   2. basis_source_id is one of that provider's class-map pages (CLASS_MAP_SOURCES);
-//   3. the basis sentence is on that page verbatim (the newest good stored snapshot, links
-//      flattened), the same substring rule as the drift check;
+//   1. the cell is under review, as above. A cell whose sentence is still on
+//      the page is never re-mapped, whatever the model thinks of a newer
+//      model — "start here" is the vendor's call. A gap re-opened by a launch
+//      takes only a model the launch listed;
+//   2. basis_source_id is one of that provider's class-map pages
+//      (CLASS_MAP_SOURCES);
+//   3. the basis sentence is on that page verbatim — the newest good stored
+//      snapshot, links flattened — the same substring rule as the drift check;
 //   4. model_slug is a model this store currently lists for the provider;
-//   5. the sentence names that model and no other listed one (slug, case and punctuation
-//      folded: "Claude Opus 5.5" names claude-opus-5-5, never claude-opus-5; modelNamedBy), or
-//      IS that model's catalog description (Anthropic's compare table describes rather than
-//      names), or the description on that model's own card on the page (Google's and Alibaba's
-//      cards, page-cards.ts, since their stored rows carry pricing notes);
-//   6. the sentence is not ANOTHER model's card description: a card is about its own model,
-//      whatever it mentions (Argon's card compares Argon to Carbon, which rule 5 reads as
-//      naming Carbon; cardOwners);
+//   5. the sentence names that model and no other listed one (its slug, case
+//      and punctuation folded: "Claude Opus 5.5" names claude-opus-5-5, never
+//      claude-opus-5 — modelNamedBy) or IS that model's catalog description
+//      (Anthropic's compare table describes, it does not name) or the
+//      description on that model's own card on the page (Google's and
+//      Alibaba's cards, page-cards.ts: their stored rows carry pricing notes,
+//      not descriptions);
+//   6. the sentence is not ANOTHER model's card description. A card is about
+//      its own model, whatever it mentions: Argon's card compares Argon to
+//      Carbon, which the naming rule in 5 reads as naming Carbon (cardOwners);
 //   7. it differs from the mapping in effect.
 // The written row's provenance is the snapshot the sentence was found in.
 
@@ -64,7 +74,7 @@ export const JudgeClassMapping = z.strictObject({
 })
 export type JudgeClassMapping = z.infer<typeof JudgeClassMapping>
 
-export interface SourcePage {
+interface SourcePage {
   source_id: string
   source_url: string
   fetched_at: string
@@ -72,8 +82,8 @@ export interface SourcePage {
   text: string
 }
 
-/** The newest good snapshot of a source, as text (what the drift check last read). */
-export async function latestPage(
+/** The newest good snapshot of a source, as text — what the drift check last read. */
+async function latestPage(
   db: PipelineDb,
   readRaw: RawReader,
   sourceId: string,
@@ -111,7 +121,7 @@ export async function latestSnapshot(
   }
 }
 
-export type ReviewCell =
+type ReviewCell =
   | {
       provider: LabId
       class: ModelClassId
@@ -173,7 +183,7 @@ async function launchesSince(
  * the window, for the mapping in effect, and the gaps of a provider that
  * launched a model within it.
  */
-export async function cellsUnderReview(
+async function cellsUnderReview(
   db: PipelineDb,
   classMap: readonly ClassEntry[],
   now: Date,
@@ -224,7 +234,7 @@ export async function cellsUnderReview(
   return out.sort((a, b) => `${a.provider}:${a.class}`.localeCompare(`${b.provider}:${b.class}`))
 }
 
-export interface ClassMapReview {
+interface ClassMapReview {
   cells: ReviewCell[]
   /** The pages each cell's provider may cite, once per source. */
   pages: SourcePage[]
@@ -268,9 +278,9 @@ export function basisNamesModel(basis: string, slug: string): boolean {
 }
 
 /**
- * The slug a sentence names, among a provider's listed models: the named one no longer named
- * slug extends ("GPT-6 Astra" names gpt-6-astra even when a bare gpt-6 is also listed). Null
- * when it names none.
+ * The slug a sentence names, among a provider's listed models: of the named
+ * ones, the one no longer named slug extends — "GPT-6 Astra" names gpt-6-astra
+ * even when a bare gpt-6 is also listed. Null when it names none.
  */
 export function modelNamedBy(basis: string, slugs: Iterable<string>): string | null {
   const named = [...slugs].filter((slug) => basisNamesModel(basis, slug))
@@ -280,7 +290,7 @@ export function modelNamedBy(basis: string, slugs: Iterable<string>): string | n
   return outermost.length === 1 ? outermost[0]! : null
 }
 
-export type ClassMapRejectionReason =
+type ClassMapRejectionReason =
   | 'not-under-review'
   | 'not-a-launched-model'
   | 'wrong-source'
@@ -291,7 +301,7 @@ export type ClassMapRejectionReason =
   | 'basis-is-another-models-card'
   | 'unchanged'
 
-export interface ClassMapRejection {
+interface ClassMapRejection {
   mapping: JudgeClassMapping
   reason: ClassMapRejectionReason
   detail: string
@@ -311,7 +321,7 @@ export interface ClassMapResult {
 export const requotedKey = (cell: { provider: string; class: string; model_slug: string }) =>
   `${cell.provider}:${cell.class}:${cell.model_slug}`
 
-export const CLASS_MAP_OPS_PATH = '/api/judge/alerts'
+const CLASS_MAP_OPS_PATH = '/api/judge/alerts'
 
 /** The provider's current model rows: slug -> catalog descriptions printed for it. */
 async function listedModels(db: PipelineDb, provider: string): Promise<Map<string, Set<string>>> {

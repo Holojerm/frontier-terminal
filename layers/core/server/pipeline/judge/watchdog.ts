@@ -17,7 +17,7 @@ import { JUDGE_OPS_PATH } from './submit'
 // run is an outage (judge_silent, layers/core/server/utils/terminal-ops-severity.ts).
 
 const HOUR_MS = 60 * 60 * 1000
-export const JUDGE_SILENCE_MS = 3 * HOUR_MS
+const JUDGE_SILENCE_MS = 3 * HOUR_MS
 
 export const judgeFreshnessCheck: FreshnessCheck = {
   key: 'judge',

@@ -5,7 +5,7 @@ import {
 } from '#layers/core/server/utils/contracts'
 import type { RegistrationTarget } from './filing-index'
 import { figure } from './prospectus-doc'
-import { readStatementTable, type StatementTable } from './prospectus-revenue'
+import type { StatementTable } from './prospectus-revenue'
 
 // The whole statement of operations as one row per period, every line verbatim.
 // Known lines get a canonical key so a reader can ask for "operating income"
@@ -141,15 +141,6 @@ function checkFooting(lines: Printed[], columns: number): void {
       )
     }
   }
-}
-
-export function parseProspectusStatement(
-  html: string,
-  target: RegistrationTarget,
-  cik: string,
-  prov: Provenance,
-): StatementRow[] {
-  return statementRows(readStatementTable(html), target, cik, prov)
 }
 
 /** One row per period of a statement already read. */

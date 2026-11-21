@@ -111,7 +111,7 @@ export async function pruneMentions(db: PipelineDb, now: Date): Promise<void> {
   await db.delete(tables.gkgMentions).where(lt(tables.gkgMentions.seen_at, before))
 }
 
-export type KeptMention = Omit<typeof tables.gkgMentions.$inferSelect, 'names'> & {
+type KeptMention = Omit<typeof tables.gkgMentions.$inferSelect, 'names'> & {
   names: string[]
 }
 

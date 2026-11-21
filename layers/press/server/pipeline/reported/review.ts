@@ -23,9 +23,9 @@ import {
 import { judgeReview } from '#layers/core/server/pipeline/judge/review'
 
 /** Headlines offered per run. */
-export const FIGURE_REVIEW_LIMIT = 60
+const FIGURE_REVIEW_LIMIT = 60
 
-export const FIGURE_METRICS = [
+const FIGURE_METRICS = [
   'revenue_run_rate',
   'revenue',
   'valuation',
@@ -38,7 +38,7 @@ export const FIGURE_METRICS = [
  * investment: what one company put into the lab. financing: what one company
  * lends it. commitment_total: everything the lab has agreed to buy, from all.
  */
-export const DEAL_METRICS = ['commitment', 'investment', 'financing', 'commitment_total'] as const
+const DEAL_METRICS = ['commitment', 'investment', 'financing', 'commitment_total'] as const
 export type DealMetric = (typeof DEAL_METRICS)[number]
 
 export const METRICS = [...FIGURE_METRICS, ...DEAL_METRICS] as const
@@ -50,7 +50,7 @@ export const isDealMetric = (metric: string): metric is DealMetric =>
 /** A deal with one other company, which the label must name. */
 const namesCounterparty = (metric: string) => isDealMetric(metric) && metric !== 'commitment_total'
 
-export const BASES = ['reported', 'sought', 'projected'] as const
+const BASES = ['reported', 'sought', 'projected'] as const
 export type Basis = (typeof BASES)[number]
 
 /** A year, a quarter or a month: 2028, 2026-Q3, 2026-09. */
@@ -68,7 +68,7 @@ export const JudgeFigure = z.strictObject({
 })
 export type JudgeFigure = z.infer<typeof JudgeFigure>
 
-export const JudgeFigureReading = z.strictObject({
+const JudgeFigureReading = z.strictObject({
   article_id: z.string().regex(/^[0-9a-f]{64}$/),
   /** Empty when the headline states no figure we track. */
   figures: JudgeFigure.array().max(6),
@@ -77,7 +77,7 @@ export type JudgeFigureReading = z.infer<typeof JudgeFigureReading>
 
 type Article = typeof tables.reportedArticles.$inferSelect
 
-export interface FigureReview {
+interface FigureReview {
   article_id: string
   title: string
   outlet: string
@@ -166,7 +166,7 @@ export async function figureReview(
     }))
 }
 
-export interface FigureReport {
+interface FigureReport {
   accepted: number
   inserted: number
   rejected: { reason: string; detail: string; article_id: string }[]

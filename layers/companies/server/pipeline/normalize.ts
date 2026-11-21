@@ -30,11 +30,11 @@ import { collapse, toEntity } from '../../../core/server/pipeline/normalize'
 // a change event is reproducible from the stored payloads alone.
 export { stableStringify }
 
-// FilingRow carries no provider field: EDGAR filers (SPCX, MSFT, ...) are whitelisted
-// public companies, not the private labs, so the default is "other". The SEC lanes
-// override it only when a filing is a lab's own (the S-1 public-flip moment):
-// revenue-filers.ts › issuerProviderFor.
-export function normalizeFiling(
+// FilingRow carries no provider field: EDGAR filers (SPCX, MSFT, ...) are
+// whitelisted public companies, not the private big-4 labs, so the default
+// is "other". The SEC lanes override it only when a filing is a lab's own
+// (the S-1 public-flip moment): revenue-filers.ts › issuerProviderFor.
+function normalizeFiling(
   row: FilingRow,
   snapshotId: string,
   provider: Provider = 'other',
@@ -70,9 +70,9 @@ export function normalizeOfferings(rows: readonly OfferingRow[], snapshotId: str
   )
 }
 
-// What else one registration document prints (parsers/sec/prospectus.ts), keyed per
-// filing (and per period for the statement), so an amendment's rows sit beside the
-// original's rather than replacing them.
+// What else one registration document prints (parsers/sec/prospectus.ts),
+// keyed per filing — and per period for the statement — so an amendment's
+// rows sit beside the original's rather than replacing them.
 export function normalizeProspectusDetails(
   out: Pick<
     ProspectusOutput,
@@ -131,11 +131,7 @@ export function normalizeProspectusDetails(
 // itself carries only the filer. `val` is the whole content, so a restated
 // figure in a later filing is a new key (the accession differs), and a
 // corrected value under the SAME accession diffs as 'modified'.
-export function normalizeRevenue(
-  row: RevenueRow,
-  snapshotId: string,
-  provider: Provider,
-): EntityRow {
+function normalizeRevenue(row: RevenueRow, snapshotId: string, provider: Provider): EntityRow {
   return toEntity(
     revenueKey(row.cik, row.tag, row.accession_no, row.start, row.end, row.segment),
     'revenue',

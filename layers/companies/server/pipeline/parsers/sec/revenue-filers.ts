@@ -9,7 +9,7 @@ import type { CikWhitelist } from './whitelist'
 // StatementBusinessSegmentsAxis member (parsers/sec/xbrl-segment.ts). `effective`
 // is the UTC day an entry took effect; an as_of read before it sees the lab untagged.
 
-export type FilerRelation = 'issuer' | 'parent'
+type FilerRelation = 'issuer' | 'parent'
 
 export interface RevenueFiler {
   ticker: string

@@ -25,7 +25,7 @@ import { htmlSections, unrenderInlineMath, usdPerMillion, type HtmlSection } fro
 const OLD_ORDER = /^Claude (\d+(?:\.\d+)?) (Opus|Sonnet|Haiku)$/
 
 /** "Claude 3.5 Haiku" -> "Claude Haiku 3.5"; every other name verbatim. */
-export function currentOrder(name: string): string {
+function currentOrder(name: string): string {
   const m = name.match(OLD_ORDER)
   return m ? `Claude ${m[2]} ${m[1]}` : name
 }
@@ -122,7 +122,7 @@ function modelCell(text: string): string {
  * heading as `#`×level, each table as a pipe table. Only headings and tables
  * survive, which is all parseAnthropicPricingMd reads.
  */
-export function sectionsAsMarkdown(sections: readonly HtmlSection[]): string {
+function sectionsAsMarkdown(sections: readonly HtmlSection[]): string {
   const lines: string[] = []
   for (const s of sections) {
     if (s.level > 0) lines.push('', `${'#'.repeat(s.level)} ${s.heading}`, '')

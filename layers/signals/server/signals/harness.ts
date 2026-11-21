@@ -44,7 +44,7 @@ export function periodKey(date: string, period: Period): string {
   return addDays(date, -((dow + 6) % 7))
 }
 
-export function nextPeriod(key: string, period: Period): string {
+function nextPeriod(key: string, period: Period): string {
   if (period === 'day') return addDays(key, 1)
   if (period === 'week') return addDays(key, 7)
   const [y, m] = key.split('-').map(Number) as [number, number]
@@ -239,7 +239,7 @@ function betaContinuedFraction(a: number, b: number, x: number): number {
 }
 
 /** The regularized incomplete beta function I_x(a, b). */
-export function incompleteBeta(x: number, a: number, b: number): number {
+function incompleteBeta(x: number, a: number, b: number): number {
   if (x <= 0) return 0
   if (x >= 1) return 1
   const front = Math.exp(
@@ -269,14 +269,14 @@ function median(values: readonly number[]): number {
 }
 
 /** Median sessions between consecutive entries. */
-export function spacingOf(entries: readonly number[]): number {
+function spacingOf(entries: readonly number[]): number {
   const gaps: number[] = []
   for (let i = 1; i < entries.length; i++) gaps.push(entries[i]! - entries[i - 1]!)
   return median(gaps)
 }
 
 /** Fewest independent returns a test runs on, once overlap is taken out. */
-export const MIN_EFFECTIVE = 3
+const MIN_EFFECTIVE = 3
 
 const thin = (n: number): SignalStat => ({
   status: 'thin',
@@ -286,7 +286,7 @@ const thin = (n: number): SignalStat => ({
   p_value: null,
 })
 
-export function correlationStat(
+function correlationStat(
   pairs: readonly { entry: number; x: number; y: number }[],
   h: number,
   min: number,
@@ -311,7 +311,7 @@ export function correlationStat(
   }
 }
 
-export function meanStat(
+function meanStat(
   rows: readonly { entry: number; car: number }[],
   h: number,
   min: number,

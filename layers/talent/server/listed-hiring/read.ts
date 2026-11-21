@@ -14,10 +14,10 @@ import { and, desc, eq, inArray } from 'drizzle-orm'
 import * as tables from '#server/db/schema'
 import { parseBoard, readGoogleFeed, type ListedRole } from './parsers'
 
-export const BOARD_TIMEOUT_MS = 30_000
+const BOARD_TIMEOUT_MS = 30_000
 
 /** The careers lane's source whose archived copy the Google board reads. */
-export const GOOGLE_FEED_SOURCE = 'google-careers'
+const GOOGLE_FEED_SOURCE = 'google-careers'
 
 /**
  * A board that had this many roles and now lists none has more likely changed
@@ -25,7 +25,7 @@ export const GOOGLE_FEED_SOURCE = 'google-careers'
  */
 export const EMPTIED_BOARD_FLOOR = 10
 
-export interface ListedHiringDeps {
+interface ListedHiringDeps {
   /** R2 write. */
   put(key: string, body: string, contentType: string): Promise<void>
   /** R2 read as a stream, for the archived careers feed. */
@@ -35,7 +35,7 @@ export interface ListedHiringDeps {
   now: Date
 }
 
-export interface BoardResult {
+interface BoardResult {
   board: string
   status: 'read' | 'failed'
   total: number | null

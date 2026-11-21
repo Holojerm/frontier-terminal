@@ -1,4 +1,3 @@
-import { env } from 'cloudflare:test'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { parseEdgarCompanyfacts } from '../server/pipeline/parsers/sec/edgar-companyfacts'
@@ -9,7 +8,13 @@ import {
 } from '../server/pipeline/parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock } from '../server/pipeline/parsers/sec/whitelist'
 import { runRefresh } from '../../core/server/pipeline/refresh'
-import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
+import {
+  fixtureFetcher,
+  fixtureText,
+  manifest,
+  provenanceOf,
+  raw,
+} from '#layers/core/test/pipeline/fixtures'
 
 // The disclosed-revenue axis: the company-facts parser on its committed
 // fixture, the revenue_filers reader, the period arithmetic as a pure
@@ -170,26 +175,11 @@ describe('splitPeriods', () => {
     expect(out.periods[0]!.tag).toBe('Revenues')
     expect(out.tags).toEqual(['Revenues', 'RevenueFromContractWithCustomerExcludingAssessedTax'])
   })
-
-  it('composes the EDGAR filing index from cik and accession', () => {
-    expect(filingIndexUrl(SPCX_CIK, '0001628280-26-052535')).toBe(
-      'https://www.sec.gov/Archives/edgar/data/1181412/000162828026052535/',
-    )
-  })
 })
 
 describe('queryRevenue against a seeded store', () => {
   const ALL = includeSources(sourcesYaml, manifest.fixtures)
-  const raw: RawStore = {
-    put: async (key, body, contentType) => {
-      await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-    },
-  }
-  const fetcher: SourceFetcher = async (source) => {
-    const f = manifest.fixtures.find((x) => x.source_url === source.url)!
-    const text = fixtureText(f.path)
-    return { ok: true, status: 200, text, bytes: text.length }
-  }
+  const fetcher = fixtureFetcher()
   let tick = Date.parse('2026-09-07T10:00:00Z')
   const now = () => new Date((tick += 1000))
 

@@ -35,7 +35,7 @@ const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', '
 const isoZ = (ms: number) => new Date(ms).toISOString().replace('.000Z', 'Z')
 
 /** RFC 822 with a numeric offset, "Tue, 03 Nov 2026 16:58:16 +0800", as the same instant in UTC. */
-export function rfc822OffsetToIso(stamp: string): string {
+function rfc822OffsetToIso(stamp: string): string {
   const m = stamp
     .trim()
     .match(
@@ -51,7 +51,7 @@ export function rfc822OffsetToIso(stamp: string): string {
 }
 
 /** RFC 3339 with an offset, "2026-11-03T18:48:02+08:00", as the same instant in UTC. */
-export function rfc3339ToIso(stamp: string): string {
+function rfc3339ToIso(stamp: string): string {
   if (!/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:Z|[+-]\d{2}:\d{2})$/.test(stamp.trim())) {
     throw new Error(`deepseek-status: unparseable date: ${stamp}`)
   }

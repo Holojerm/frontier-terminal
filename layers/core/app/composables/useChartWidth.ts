@@ -7,20 +7,9 @@
 export function useChartWidth(refKey: string, initial = 640, min = 280) {
   const box = useTemplateRef<HTMLElement>(refKey)
   const width = ref(initial)
-  let observer: ResizeObserver | undefined
-
-  onMounted(() => {
-    const el = box.value
-    if (!el) return
-    const measure = () => {
-      const w = Math.round(el.clientWidth)
-      if (w > 0) width.value = Math.max(min, w)
-    }
-    observer = new ResizeObserver(measure)
-    observer.observe(el)
-    measure()
+  useResizeObserver(box, () => {
+    const w = Math.round(box.value?.clientWidth ?? 0)
+    if (w > 0) width.value = Math.max(min, w)
   })
-  onBeforeUnmount(() => observer?.disconnect())
-
   return width
 }

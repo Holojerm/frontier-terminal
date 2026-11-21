@@ -22,7 +22,7 @@ export interface SiteSearch {
 const DC = 'data center'
 
 /** Filings' names for the sites we know, keyed by Epoch's name, exactly. */
-export const SITE_SEARCH: Readonly<Record<string, SiteSearch>> = {
+const SITE_SEARCH: Readonly<Record<string, SiteSearch>> = {
   'Anthropic Lake Mariner': { terms: ['Lake Mariner'], with: null },
   'Core42 Lake Mariner': { terms: ['Lake Mariner'], with: null },
   'Anthropic Barber Lake': { terms: ['Barber Lake'], with: null },
