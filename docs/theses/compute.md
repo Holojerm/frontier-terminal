@@ -88,7 +88,7 @@ Kill conditions were registered on 2026-11-02, before any reading existed, and a
 These sit beside the claims as context. None sets a status.
 
 - **Who the buildout pays.** `/dependencies#suppliers` lists the chip and compute suppliers whose filings name a lab or a cloud as a customer, each with the passage. `/dependencies#listed` puts every listed company the site ties to a lab in one table. Read them with claim 5: CoreWeave's revenue depends on a few customers, and these tables say which filings name them.
-- **Who powers the sites.** `/compute#suppliers` lists the utilities, generators and hosts at the data centers Epoch AI credits to a lab. Read it with claim 6.
+- **Who powers the sites.** `/power#suppliers` lists the utilities, generators and hosts at the data centers Epoch AI credits to a lab. Read it with claim 6.
 - **Deal sizes.** `/ground-truth` scores press reports of a deal's size against the filing that printed it later. A commitment that shrinks between the headline and the filing is a reason to reread claims 5 and 8.
 - **Load bounds.** `/compute` shows implied load from free sources, as bounds. It is an estimate with wide error and feeds no claim.
 

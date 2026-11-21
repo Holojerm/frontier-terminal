@@ -3,7 +3,7 @@
 //
 // The sites are Epoch AI's: every site in its newest data-center snapshot that
 // names a tracked lab as a user at #confident or #likely (the same rule as the
-// /compute panel, terminal-recipe-views.ts). Epoch's names are its own labels
+// /power panel, terminal-recipe-views.ts). Epoch's names are its own labels
 // ("OpenAI Stargate Abilene"), not words a filing uses, so a site we know has
 // the place or project name filings write for it in SITE_SEARCH. A site Epoch
 // adds later gets its name with the labs, the owner and the brand words taken

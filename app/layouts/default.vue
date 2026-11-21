@@ -71,7 +71,13 @@ const GROUPS: NavGroup[] = [
         description: 'Who buys from and funds whom, as a graph.',
       },
       { label: 'Demand', to: '/rankings', description: 'OpenRouter, Ramp, downloads, agents.' },
-      { label: 'Compute', to: '/compute', description: 'GPU rental prices and data-center power.' },
+      { label: 'Compute', to: '/compute', description: 'GPU rental prices and utilization.' },
+      {
+        label: 'Hardware',
+        to: '/hardware',
+        description: 'Taiwan monthly revenue, Korea chip exports, suppliers.',
+      },
+      { label: 'Power', to: '/power', description: 'Data-center power, site ties, grid load.' },
     ],
   },
   {

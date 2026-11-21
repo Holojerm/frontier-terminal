@@ -2,7 +2,7 @@ import { index, integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core
 import { provenance } from './columns'
 
 // ─────────────────────────────────────────────
-// Hardware prints (layers/terminal/server/prints/, /compute#prints)
+// Hardware prints (layers/terminal/server/prints/, /hardware#prints)
 // ─────────────────────────────────────────────
 // One row per figure as a source first showed it: a Taiwan company's revenue
 // for a month, or Korea's chip exports for a month or its first 10 or 20 days.
