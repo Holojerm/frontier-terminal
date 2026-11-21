@@ -50,6 +50,7 @@ const bands = READOUT_GROUPS.map((g) => ({ label: g.label, keys: g.axes }))
     :rows="rows"
     :row-key="(r) => r.lab"
     stack
+    flow
   >
     <template #cell-lab="{ row }">
       <!-- Two stacked links, so each is at least 24px tall (WCAG 2.5.8). -->

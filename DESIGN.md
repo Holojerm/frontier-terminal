@@ -402,7 +402,8 @@ does. The data below it is the content.
   tab is in `?tab=`, every tab renders on the server and stays in the document, and an
   anchor into a closed tab opens it. The overview and single-question pages never tab.
 - **Charts:** drawn at their box's own pixel width, so a chart fills its panel and its labels
-  stay 12px at any width.
+  stay 12px at any width. A line chart has three inks (primary, highlighted, muted). A fourth
+  series is muted and dashed, a fifth muted and dotted, in the legend and the hover readout too.
 - **Settings:** one `i-lucide-settings-2` button opens `TerminalSettings`, a popover with color
   mode, time zone, clock, date form, relative ages, dollar-figure form, row spacing, and a lab
   watchlist. Every setting lives in this browser's localStorage and applies after hydration,
