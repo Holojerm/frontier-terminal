@@ -22,7 +22,7 @@ const rows = computed(() =>
         lab,
         display: s.display,
         cells: readoutCells(s, props.data.rankings?.provenance, figures.usd, stamps.date),
-        alert: s.alerts[0] ?? null,
+        alert: newestAlert(s.alerts),
       }
     }),
 )

@@ -105,16 +105,13 @@ const [prices, revenue, rankings, hiring, incidents, alerts] = await Promise.all
       providers: rest.providers.filter((p) => inPair(p.provider)),
     }),
   }),
-  useFetch<AlertsData>('/api/alerts', {
+  // The readout shows each lab's newest alert and nothing else, which the
+  // overview carries per lab: two rows at most.
+  useFetch('/api/overview', {
     key: `compare-alerts:${key}`,
-    query: { tier: 'all', limit: 200 },
-    // The readout shows each lab's newest alert and nothing else, so that is
-    // all that is kept: two rows, not the ~600KB page.
-    transform: (d: AlertsData): AlertsData => ({
-      ...d,
-      rows: [...new Set(pair.map((lab) => d.rows.find((r) => alertLabs(r).includes(lab))))].filter(
-        (r) => r !== undefined,
-      ),
+    transform: (d: OverviewData): Pick<AlertsData, 'as_of' | 'rows'> => ({
+      as_of: d.as_of,
+      rows: slimAlerts(d.lab_alerts.filter((a) => alertLabs(a).some(inPair))),
     }),
   }),
 ])

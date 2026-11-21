@@ -30,6 +30,8 @@ export interface OverviewData extends Stamp {
   /** Newest alert-tier rows first (notable, critical), with their cited change rows. */
   alerts: AlertView[]
   alert_count: number
+  /** Each lab's newest alert-tier row, newest first; an alert citing two labs is listed once. */
+  lab_alerts: AlertView[]
   /** Newest minor changes first (severity info) — what moved, low stakes. */
   info: AlertView[]
   info_count: number

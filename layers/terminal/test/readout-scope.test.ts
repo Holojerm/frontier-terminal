@@ -1,10 +1,31 @@
 import { describe, expect, it } from 'vitest'
 
-import { READOUT_AXES, READOUT_GROUPS, powerCell, revenueScope } from '../app/utils/readout'
+import {
+  READOUT_AXES,
+  READOUT_GROUPS,
+  newestAlert,
+  powerCell,
+  revenueScope,
+} from '../app/utils/readout'
 
 describe('READOUT_GROUPS', () => {
   it('puts every axis in one group, in the strip’s order', () => {
     expect(READOUT_GROUPS.flatMap((g) => [...g.axes])).toEqual([...READOUT_AXES])
+  })
+})
+
+describe('newestAlert', () => {
+  const row = (id: string, severity: 'info' | 'notable' | 'critical') => ({ id, severity })
+
+  it('skips minor changes for the newest notable or critical row', () => {
+    const rows = [row('role-added', 'info'), row('filing', 'critical'), row('sku', 'notable')]
+    expect(newestAlert(rows)?.id).toBe('filing')
+    expect(newestAlert([row('retitle', 'info'), row('sku', 'notable')])?.id).toBe('sku')
+  })
+
+  it('is null when a lab has only minor changes, or nothing', () => {
+    expect(newestAlert([row('role-added', 'info'), row('retitle', 'info')])).toBeNull()
+    expect(newestAlert([])).toBeNull()
   })
 })
 
