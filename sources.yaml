@@ -3199,6 +3199,50 @@ print_sources:
       (PRINT_HELD_SOURCES). Fetched as under kcs-chip-exports. Read
       2026-11-21.
     rights: not-cleared
+  un-comtrade-hs8542:
+    publisher: UN Comtrade (United Nations Statistics Division), keyless public API
+    url: https://comtradeapi.un.org/public/v1/getDA/C/M/HS?reporterCode=410
+    format: >-
+      JSON. getDA lists Korea's monthly datasets with firstReleased and
+      lastReleased; /public/v1/preview/C/M/HS returns one period a call
+      (reporterCode=410, cmdCode=8542, flowCode=X, partnerCode=0,
+      partner2Code=0, customsCode=C00, motCode=0), US$ FOB
+    verdict: include
+    license: UN Comtrade terms (https://comtradeplus.un.org/en/license-agreement)
+    citation: >-
+      Source: UN Comtrade.
+    terms: >-
+      The re-dissemination policy (uncomtrade.org/docs/re-dissemination-of-data/)
+      says "permission is not required for the following use cases:
+      Publication of limited amounts of UN Comtrade data in a few tables,
+      graphs, visualization in printed or digital platform", "Free-of-charge
+      data extraction and/or streaming application offering only a small
+      number of records (up to 100,000)" and "Free-of-charge data
+      visualization and/or data analytics application". For paid products,
+      "A "limited amount" is defined as a database containing fewer than
+      100,000 records in total." Attribution: "Use "Source: UN Comtrade.""
+      We hold one row per month from 2013 (about 160), served free. The same
+      page says "A commercial API or streaming service requires the
+      applicable fee-bearing distribution arrangement … regardless of
+      database size", so if commercial licensing resumes these rows stay out
+      of the paid tiers until there is one. The licence agreement (s.5) bars
+      "automated browsing or downloading" without permission "except as may
+      otherwise be expressly permitted"; the public API is the means
+      Comtrade offers for it, and the owner approved this use on 2026-11-21.
+      No key. The keyless preview answers 429 to a second call within a
+      second, so calls are 1.5 s apart, at most 24 a run. Taken: Korea's
+      world exports of HS 8542 per month and each dataset's lastReleased,
+      read when a month is new or re-released. Read 2026-11-21.
+    rights: restricted
+    caveats: >-
+      HS 8542 (electronic integrated circuits) is narrower than Korea
+      Customs Service's semiconductor (반도체) headline, which also counts
+      discrete devices and other lines, so the two are separate series. The
+      classification moves with HS editions (H4 to 2016, H5 2017 to 2021, H6
+      from 2022); heading 8542 is unchanged across them. Korea is released
+      in yearly batches, and 2014 to 2022 were re-released in 2024 and 2025,
+      so a month is dated public at its lastReleased, often years after it
+      ended. Comtrade states no year-on-year change; any shown is ours.
   print-ties-filings:
     publisher: SEC EDGAR filings (NVIDIA 10-K, AMD 10-K)
     url: https://www.sec.gov/Archives/edgar/data/

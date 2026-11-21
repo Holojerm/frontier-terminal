@@ -2,8 +2,8 @@
 // Taiwan's revenue lands over the first ten days of a month and TSMC's 6-K
 // within hours of its release, and Korea Customs Service posts at 09:00 KST
 // (00:00 UTC) on the 1st, 11th, about the 15th and 21st, so an hourly read
-// puts first_seen_at within the hour of the source. EDGAR requests go
-// through the SEC pacer.
+// puts first_seen_at within the hour of the source. UN Comtrade's getDA is
+// one call a run. EDGAR requests go through the SEC pacer.
 
 import { blob } from '@nuxthub/blob'
 import { db } from '@nuxthub/db'
@@ -18,7 +18,7 @@ const task = defineTask({
   meta: {
     name: 'prints:read',
     description:
-      'Read the Taiwan monthly revenue feeds, TSMC’s revenue 6-Ks and Korea Customs Service’s export releases; store new figures',
+      'Read the Taiwan monthly revenue feeds, TSMC’s revenue 6-Ks, Korea Customs Service’s export releases and UN Comtrade’s Korea HS 8542 months; store new figures',
   },
   async run() {
     const config = useRuntimeConfig()

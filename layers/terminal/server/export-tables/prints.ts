@@ -11,7 +11,7 @@ const t = tables.hardwarePrints
 export const PRINT_TABLES = {
   hardware_prints: plainTable(
     'hardware_prints',
-    'Monthly prints from the hardware layer around the labs: the revenue of TSMC, the Taiwan server builders (Hon Hai, Quanta, Wistron, Wiwynn, Gigabyte), Accton and Delta, and Korea’s semiconductor exports for the first 10 and 20 days of a month and the whole month, as each source first gave it. A release that restates a month we hold at a different figure adds a row with the next vintage, so no figure is ever overwritten and a backtest can take each month as it stood at any time. Chains of vintages are per source. Rows with basis backfill were read after the release, from an archive of releases; their published_at, where set, is the release time. Korea Customs Service figures are KOGL Type 1 (attribute Korea Customs Service and the release URL). Its releases before October 2026 carry no licence mark and are not exported.',
+    'Monthly prints from the hardware layer around the labs: the revenue of TSMC, the Taiwan server builders (Hon Hai, Quanta, Wistron, Wiwynn, Gigabyte), Accton and Delta, and Korea’s semiconductor exports for the first 10 and 20 days of a month and the whole month, as each source first gave it. A release that restates a month we hold at a different figure adds a row with the next vintage, so no figure is ever overwritten and a backtest can take each month as it stood at any time. Chains of vintages are per source. Rows with basis backfill were read after the release, from an archive of releases; their published_at, where set, is the release time. Korea Customs Service figures are KOGL Type 1 (attribute Korea Customs Service and the release URL). Its releases before October 2026 carry no licence mark and are not exported. Korea’s HS 8542 exports since 2013 are from UN Comtrade (Source: UN Comtrade.), each dated at the release Comtrade last made of its month.',
     tables.hardwarePrints,
     {
       id: {
@@ -22,12 +22,12 @@ export const PRINT_TABLES = {
       series: {
         type: 'text',
         meaning:
-          'tw_revenue (a Taiwan company’s consolidated monthly revenue) or kr_chip_exports (Korea’s semiconductor exports, customs basis).',
+          'tw_revenue (a Taiwan company’s consolidated monthly revenue), kr_chip_exports (Korea’s semiconductor exports, customs basis, from Korea Customs Service) or kr_hs8542_exports (Korea’s exports of HS 8542, electronic integrated circuits, to the world, from UN Comtrade; narrower than kr_chip_exports, never spliced with it).',
       },
       entity: {
         type: 'text',
         meaning:
-          'The company: tsmc, hon-hai, quanta, wistron, wiwynn, gigabyte, accton or delta, or kr-semiconductors for Korea’s chip exports. Not yet in entity_identifiers; join on ticker. TSMC’s US listing is TSM.',
+          'The company: tsmc, hon-hai, quanta, wistron, wiwynn, gigabyte, accton or delta, or kr-semiconductors for both Korea series. Not yet in entity_identifiers; join on ticker. TSMC’s US listing is TSM.',
       },
       ticker: {
         type: 'text',
@@ -51,7 +51,7 @@ export const PRINT_TABLES = {
         unit: 'percent',
         nullable: true,
         meaning:
-          'The change on the same month a year earlier, as the release states it. Null on a restated month.',
+          'The change on the same month a year earlier, as the release states it. Null on a restated month, and on every kr_hs8542_exports row: UN Comtrade states none.',
       },
       observed_as: {
         type: 'text',
@@ -71,7 +71,7 @@ export const PRINT_TABLES = {
         type: 'timestamp',
         nullable: true,
         meaning:
-          'When the source says the release was made public, in UTC: the 6-K’s EDGAR acceptance time, or the embargo time (보도시점) on a Korea Customs Service release. Null where the source states none.',
+          'When the source says the release was made public, in UTC: the 6-K’s EDGAR acceptance time, the embargo time (보도시점) on a Korea Customs Service release, or the lastReleased of UN Comtrade’s dataset for the month (the release that put this figure out). Null where the source states none.',
       },
       due_on: {
         type: 'date',
@@ -93,7 +93,8 @@ export const PRINT_TABLES = {
       source_url: {
         type: 'text',
         provenance: true,
-        meaning: 'The feed, page or 6-K read, or the Korea Customs Service release page.',
+        meaning:
+          'The feed, page or 6-K read, the Korea Customs Service release page, or the UN Comtrade API call.',
       },
       fetched_at: {
         type: 'timestamp',

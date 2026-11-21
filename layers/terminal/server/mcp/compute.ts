@@ -126,12 +126,12 @@ export function registerComputeTools({ server, deps }: McpKit): void {
     {
       title: 'Monthly hardware prints: Taiwan revenue and Korea chip exports, point in time',
       description:
-        'The monthly revenue of TSMC (2330.TW, TSM), Hon Hai (2317.TW), Quanta (2382.TW), Wistron (3231.TW), Wiwynn (6669.TW), Gigabyte (2376.TW), Accton (2345.TW) and Delta (2308.TW), in TWD, and Korea’s semiconductor exports (entity kr-semiconductors) in USD for the first 10 days (window d10), the first 20 days (d20) and the whole month, from Korea Customs Service releases under KOGL Type 1. ' +
-        'series has one entry per company or country series: entity (with leads, the basket tickers the series is meant to lead, and layer), points newest month first, revisions (how many stored rows revise a month already held) and ties. ' +
-        'A point is the month’s newest figure from its finest source, first_value the first figure that source gave where it later changed, yoy_pct as the release states it, ' +
-        'first_seen_at (when our read first held it; for history read after the fact, the read, not the release) and published_at (the release time where the source states one: TSMC’s 6-K EDGAR acceptance, a KCS release’s embargo time). ' +
+        'The monthly revenue of TSMC (2330.TW, TSM), Hon Hai (2317.TW), Quanta (2382.TW), Wistron (3231.TW), Wiwynn (6669.TW), Gigabyte (2376.TW), Accton (2345.TW) and Delta (2308.TW), in TWD, and Korea’s semiconductor exports (entity kr-semiconductors) in USD for the first 10 days (window d10), the first 20 days (d20) and the whole month, from Korea Customs Service releases under KOGL Type 1, and Korea’s HS 8542 (integrated circuits) exports since 2013 from UN Comtrade (series kr_hs8542_exports, same entity; cite "Source: UN Comtrade."). ' +
+        'series has one entry per company or country series: entity (with leads, the basket tickers the series is meant to lead, and layer), series (the series id), points newest month first, revisions (how many stored rows revise a month already held) and ties. ' +
+        'A point is the month’s newest figure from its finest source, first_value the first figure that source gave where it later changed, yoy_pct as the release states it (null for kr_hs8542_exports, which states none), ' +
+        'first_seen_at (when our read first held it; for history read after the fact, the read, not the release) and published_at (the release time where the source states one: TSMC’s 6-K EDGAR acceptance, a KCS release’s embargo time, a Comtrade dataset’s lastReleased). ' +
         'Each tie is a quote from a filing, an annual report or a company statement naming who the company builds for or supplies (NVIDIA, AMD, OpenAI, Meta), with its URL. ' +
-        'gaps says what is not covered, including history before our first read for six of the eight Taiwan companies and Korea before October 2026. Every vintage is in the hardware_prints export. Not investment advice. ' +
+        'gaps says what is not covered, including history before our first read for six of the eight Taiwan companies and Korea Customs Service’s figures for January to September 2026. Every vintage is in the hardware_prints export. Not investment advice. ' +
         'Optional entity keeps one company. ' +
         PROVENANCE,
       inputSchema: z.object({ entity: z.string().optional() }),

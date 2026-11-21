@@ -10,6 +10,7 @@ import * as tables from '#server/db/schema'
 import {
   curatedPrintTies,
   PRINT_ENTITIES,
+  PRINT_EXTRA_SERIES,
   PRINT_HELD_SOURCES,
   type PrintGap,
   type PrintPoint,
@@ -32,9 +33,9 @@ export const PRINT_GAPS: readonly PrintGap[] = [
   },
   {
     id: 'kr-history',
-    title: 'Korea chip exports before October 2026',
+    title: 'Korea chip exports, January to September 2026',
     reason:
-      'Korea Customs Service’s releases before October 2026 carry no open licence mark, and KCS asks to be consulted before an unmarked work is reused. We don’t show them.',
+      'Korea Customs Service’s releases before October 2026 carry no open licence mark, and KCS asks to be consulted before an unmarked work is reused, so we don’t show them. 2013 to 2025 is covered by UN Comtrade’s HS 8542 series; January to September 2026 waits on KCS.',
   },
 ]
 
@@ -117,15 +118,22 @@ export function buildPrints(
   ties: readonly PrintTie[],
 ): Pick<PrintsData, 'series' | 'gaps'> {
   return {
-    series: PRINT_ENTITIES.map((entity) => {
-      const mine = rows.filter((r) => r.entity === entity.id)
-      return {
-        entity,
-        points: buildPoints(mine),
-        revisions: mine.filter((r) => r.vintage > 1).length,
-        ties: ties.filter((t) => t.entity === entity.id),
-      }
-    }),
+    series: PRINT_ENTITIES.flatMap((entity) =>
+      [
+        entity.series,
+        ...PRINT_EXTRA_SERIES.filter((x) => x.entity === entity.id).map((x) => x.series),
+      ].map((series) => {
+        const mine = rows.filter((r) => r.entity === entity.id && r.series === series)
+        return {
+          entity,
+          series,
+          points: buildPoints(mine),
+          revisions: mine.filter((r) => r.vintage > 1).length,
+          // On the entity's own series only, so a company's ties are listed once.
+          ties: series === entity.series ? ties.filter((t) => t.entity === entity.id) : [],
+        }
+      }),
+    ),
     gaps: [...PRINT_GAPS],
   }
 }
