@@ -5,6 +5,9 @@ import { describe, expect, it } from 'vitest'
 
 import { DOMAIN_LAYERS } from '../domains.config'
 import {
+  componentFindings,
+  componentName,
+  componentRefs,
   declaredExports,
   duplicateNames,
   edgeProblem,
@@ -164,5 +167,66 @@ describe('fileFindings', () => {
       [1, 'imports #layers/terminal/server/pipeline/lanes'],
       [4, 'uses queryPrices (auto-imported from layers/terminal/server/utils/terminal-prices.ts)'],
     ])
+  })
+})
+
+describe('auto-registered components', () => {
+  it('names a component the way Nuxt does', () => {
+    expect(componentName('Terminal/Table.vue')).toBe('TerminalTable')
+    expect(componentName('Terminal/TerminalTable.vue')).toBe('TerminalTable')
+    expect(componentName('TearSheet/Gap.vue')).toBe('TearSheetGap')
+    expect(componentName('Brand/Logo.vue')).toBe('BrandLogo')
+    expect(componentName('price-matrix/index.vue')).toBe('PriceMatrix')
+  })
+
+  it('reads the template tags, PascalCase or kebab, without Lazy, and never a type argument', () => {
+    const source = [
+      '<script setup lang="ts">',
+      'const rows = ref<TerminalGap[]>([])',
+      '</script>',
+      '<template>',
+      '  <TerminalPage>',
+      '    <LazyTerminalTable />',
+      '    <terminal-panel />',
+      '    <div />',
+      '  </TerminalPage>',
+      '</template>',
+    ].join('\n')
+    expect(componentRefs(source)).toEqual([
+      { name: 'TerminalPage', line: 5 },
+      { name: 'TerminalTable', line: 6 },
+      { name: 'TerminalPanel', line: 7 },
+    ])
+  })
+
+  it('flags a component from a layer the file may not use, and nothing else', () => {
+    const defined = new Map([
+      ['TerminalTable', 'layers/core/app/components/Terminal/Table.vue'],
+      ['TerminalGpuMedians', 'layers/compute/app/components/Terminal/GpuMedians.vue'],
+      ['TerminalReadoutStrip', 'layers/terminal/app/components/Terminal/ReadoutStrip.vue'],
+      ['BrandLogo', 'app/components/Brand/Logo.vue'],
+    ])
+    const page = '<template><TerminalTable /><TerminalReadoutStrip /><BrandLogo /></template>'
+    expect(componentFindings(TABLE, 'layers/compute/app/pages/compute.vue', page, defined)).toEqual(
+      [
+        {
+          file: 'layers/compute/app/pages/compute.vue',
+          line: 1,
+          message: expect.stringContaining('compute may not use terminal'),
+        },
+      ],
+    )
+    const shell = '<template><TerminalGpuMedians /><TerminalTable /></template>'
+    expect(componentFindings(TABLE, 'layers/terminal/app/pages/x.vue', shell, defined)).toEqual([])
+    expect(componentFindings(TABLE, 'layers/core/test/x.vue', page, defined)).toEqual([])
+  })
+
+  it('flags a component name two owners register', () => {
+    expect(
+      duplicateNames([
+        { name: 'TerminalTable', file: 'layers/core/app/components/Terminal/Table.vue' },
+        { name: 'TerminalTable', file: 'layers/terminal/app/components/Terminal/Table.vue' },
+      ]),
+    ).toHaveLength(1)
   })
 })
