@@ -81,8 +81,6 @@ const sources = computed(() =>
     <TerminalSources
       :sources="sources"
       :caveats="[{ text: caveat, label: 'downloads, not users' }]"
-    >
-      <span>Each package links to the download data we read.</span>
-    </TerminalSources>
+    />
   </div>
 </template>

@@ -160,7 +160,7 @@ const stamps = useStamps()
     <TerminalPanel
       id="periods"
       title="Reported revenue"
-      :note="`Every period this ${filing.form} reported, newest first. We mark any earlier-period figure that a later filing restated.`"
+      :note="`Every period this ${filing.form} reported, newest first. Restated figures are marked.`"
       :more="{ label: `Everything on ${filing.display}`, to: labPath(filing.provider) }"
       flush
     >
@@ -219,9 +219,7 @@ const stamps = useStamps()
 
     <div class="space-y-1 text-xs text-muted">
       <p v-if="fromProspectus">
-        Read from the filing’s Consolidated Statements of Operations, because the filing tags no
-        financials in XBRL. A later filing’s value for the same period replaces it on the revenue
-        page. That page also has
+        From the filing’s printed statement of operations, which has no XBRL. The revenue page has
         <NuxtLink
           :to="`/revenue#prospectus-${filing.provider}`"
           class="underline underline-offset-2 hover:text-default"
@@ -229,7 +227,6 @@ const stamps = useStamps()
           factors</NuxtLink
         >.
       </p>
-      <p>{{ data?.rule }}</p>
     </div>
 
     <TerminalPanel

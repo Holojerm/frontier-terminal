@@ -146,8 +146,7 @@ const stamps = useStamps()
       </TerminalTable>
 
       <p v-if="printed.length" class="max-w-2xl text-sm text-muted">
-        A release counts only when it prints the figure. Guidance given on the earnings call isn’t
-        here, because we don’t read call transcripts.
+        Guidance given only on the earnings call isn’t here.
       </p>
     </div>
   </TerminalPanel>

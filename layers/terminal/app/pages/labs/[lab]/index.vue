@@ -487,7 +487,7 @@ const tabs = computed(() => [
         <TerminalPanel
           id="prices"
           title="API prices"
-          note="$ per million tokens. The like-for-like classes come first, then every priced SKU on the vendor’s page."
+          note="$ per million tokens."
           :more="
             labSkus > (prices.data.value?.rows.length ?? 0)
               ? {
@@ -533,7 +533,7 @@ const tabs = computed(() => [
             v-if="parents.data.value?.parents.length"
             id="parents"
             title="What its investor discloses"
-            note="Facts a public investor tags with this lab in its newest 10-Q or 10-K. These are the investor’s own figures. They aren’t the lab’s revenue."
+            note="The investor’s own figures from its newest 10-Q or 10-K. They aren’t the lab’s revenue."
             :more="{ label: 'Every quarter, on Exposure', to: `/exposure#${lab}` }"
           >
             <TerminalParentFacts :parents="parents.data.value" />
@@ -563,7 +563,7 @@ const tabs = computed(() => [
           <TerminalPanel
             id="demand"
             title="Top models on OpenRouter"
-            note="Most-routed models over the last 7 days, as a share of this lab’s own tokens. It’s one aggregator’s traffic, so treat it as a rough read."
+            note="Most-routed models, last 7 days, as a share of this lab’s OpenRouter tokens."
             :more="{ label: 'Every lab, and the 30-day series', to: '/rankings' }"
           >
             <TerminalRankingsTopModels
@@ -576,7 +576,7 @@ const tabs = computed(() => [
           <TerminalPanel
             id="spend"
             title="Implied spend share"
-            note="This lab’s OpenRouter tokens at its list prices, per model. Shares are of the tracked labs’ total (not all OpenRouter traffic)."
+            note="This lab’s OpenRouter tokens at list price. Share of the tracked labs’ total."
           >
             <TerminalSpendShare v-if="spendOf" :spend="spendOf" />
             <TerminalGap v-else title="No rankings data yet." />
@@ -622,8 +622,8 @@ const tabs = computed(() => [
           >
             <TerminalHiringSummary v-if="hiringOf" :history="hiringOf" />
             <p v-if="archivedHiring" class="px-3 py-2 text-xs text-muted">
-              Before we read the board: {{ count(archivedHiring.copies) }} Internet Archive copies
-              from <span class="font-mono">{{ archivedHiring.from }}</span>, when it listed
+              Archived: {{ count(archivedHiring.copies) }} Internet Archive copies from
+              <span class="font-mono">{{ archivedHiring.from }}</span>, when the board listed
               {{ count(archivedHiring.first) }} open roles.
               <NuxtLink
                 :to="`/hiring#archived-${lab}`"
@@ -666,7 +666,7 @@ const tabs = computed(() => [
             v-if="probes.data.value?.labs.length"
             id="probes"
             title="Measured strain"
-            :note="`One timed request an hour to ${display}’s flagship model. Working hours against night, over the last ${probes.data.value.window_days} complete days.`"
+            :note="`Hourly timed requests to ${display}’s flagship model, working hours against night, last ${probes.data.value.window_days} days.`"
             :more="{ label: 'Every lab, and how we probe', to: '/incidents#probes' }"
             flush
           >
@@ -740,7 +740,7 @@ const tabs = computed(() => [
           v-if="limits.data.value?.pages.length"
           id="limits"
           title="Published rate limits"
-          note="As the lab’s docs print them, per model and tier. We record a new version only when a limit changes."
+          note="As the lab’s docs print them, per model and tier."
           :more="{ label: 'Every lab', to: '/incidents#limits' }"
         >
           <TerminalLimitsTable

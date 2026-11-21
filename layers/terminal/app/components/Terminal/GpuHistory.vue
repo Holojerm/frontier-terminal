@@ -114,8 +114,7 @@ const rows = computed(() =>
             :title="`Median on-demand ${c.gpu} list price per GPU-hour across providers, ${dayLabel(first)} to ${dayLabel(last)}`"
           />
           <p v-if="c.notes.length" class="text-xs text-muted">
-            Providers counted changed, which moves the median with no price moving.
-            {{ c.notes.join('. ') }}.
+            Providers counted changed: {{ c.notes.join('. ') }}.
           </p>
         </div>
         <div class="space-y-1">
@@ -157,6 +156,6 @@ const rows = computed(() =>
       />
     </TerminalExpand>
 
-    <TerminalSources :sources="sources" :caveats="[{ text: history.method, label: 'method' }]" />
+    <TerminalSources :sources="sources" />
   </div>
 </template>

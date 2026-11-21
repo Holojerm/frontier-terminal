@@ -155,7 +155,7 @@ const code = 'font-mono text-highlighted'
   <TerminalPanel
     id="reliability"
     title="Reliability"
-    note="How our own feed has held up: checks by source, stale data, filing alerts against EDGAR, deploys, and corrections. Every figure comes from stored records."
+    note="How our own feed has held up: checks by source, stale data, filing alerts against EDGAR, deploys, and corrections."
   >
     <TerminalGap
       v-if="error || !data"
@@ -168,8 +168,7 @@ const code = 'font-mono text-highlighted'
       <section class="space-y-2" aria-labelledby="reliability-sources">
         <h3 id="reliability-sources" class="text-highlighted">Checks by source</h3>
         <p class="max-w-3xl text-muted">
-          A good check is one where the source answered: new content, the same content, or a page
-          that isn’t there. Pages we build per model or per filing are grouped by kind. Worst first.
+          A good check is one where the source answered. Worst first.
           <template v-if="data.sources.first_day">
             Counted from <time :datetime="data.sources.first_day">{{ data.sources.first_day }}</time
             ><template v-if="data.sources.rolled_through">
@@ -243,10 +242,9 @@ const code = 'font-mono text-highlighted'
           When our data was older than we say
         </h3>
         <p class="max-w-3xl text-muted">
-          We say how often we check on
-          <NuxtLink to="/about#latency" :class="link">the About page</NuxtLink>. These are the
-          stretches, over the last {{ data.days.long }} days, when no check ran in which most
-          sources answered. A check can run late by the grace shown before we count it.
+          Stretches in the last {{ data.days.long }} days with no check in which most sources
+          answered, against the schedule on
+          <NuxtLink to="/about#latency" :class="link">the About page</NuxtLink>.
         </p>
         <TerminalGap v-if="data.building" title="Building history" :reason="buildingReason" />
         <div v-for="lane in data.building ? [] : data.freshness" :key="lane.id" class="space-y-2">
@@ -295,12 +293,8 @@ const code = 'font-mono text-highlighted'
       <section class="space-y-2" aria-labelledby="reliability-filings">
         <h3 id="reliability-filings" class="text-highlighted">SEC filings: EDGAR to our alert</h3>
         <p class="max-w-3xl text-muted">
-          Each filing one of our rules alerted on (S-1s and amendments, 424B4s, 10-Qs and 10-Ks of
-          the companies we track, and a lab’s first registration). No model writes these alerts, so
-          the alert time is when the check that saw the filing ran. We read EDGAR’s acceptance time
-          from the copy of the filer’s submissions feed or filing index we stored. EDGAR doesn’t
-          publish a filing accepted after 5:30 p.m. Eastern until 6:00 a.m. Eastern on its filing
-          date, so we time those from release too.
+          Each filing one of our rules alerted on, timed from EDGAR’s acceptance and from its public
+          release.
         </p>
         <TerminalGap
           v-if="data.detection.rows.length === 0"
@@ -374,9 +368,8 @@ const code = 'font-mono text-highlighted'
             }}</template>
           </TerminalTable>
           <p class="text-muted">
-            Alerts our judge writes (8-Ks, say) aren’t timed here. The
-            <NuxtLink to="/alerts?tab=track-record" :class="link">track record</NuxtLink> times
-            every notable alert against the first press report.
+            Judged alerts (8-Ks, say) are timed on the
+            <NuxtLink to="/alerts?tab=track-record" :class="link">track record</NuxtLink>.
           </p>
         </template>
       </section>
@@ -384,22 +377,19 @@ const code = 'font-mono text-highlighted'
       <section class="space-y-2" aria-labelledby="reliability-deploys">
         <h3 id="reliability-deploys" class="text-highlighted">Deploys</h3>
         <p class="max-w-3xl text-muted">
-          Every push to main runs a smoke test once it’s live. It waits for production to serve that
-          commit, then checks the main pages and routes. A test cut short by a newer push shows as
-          superseded. We read the results from
+          The smoke test each push to main runs once it’s live, from
           <a
             :href="data.deploys.workflow_url"
             target="_blank"
             rel="noopener noreferrer"
             :class="link"
             >GitHub Actions</a
-          >
-          every hour.
+          >.
         </p>
         <TerminalGap
           v-if="data.deploys.fetched_at === null"
           title="Not read from GitHub yet"
-          reason="GitHub limits reads without a token by IP address, and Cloudflare’s servers share theirs with other sites, so GitHub can refuse our read for a while. When it does, we wait for its limit to reset (up to an hour) and try again. After any other failure we try again the next hour. The results are public on GitHub Actions meanwhile."
+          reason="GitHub is rate-limiting our read. We try again within the hour. The results are public on GitHub Actions meanwhile."
         />
         <TerminalGap
           v-else-if="data.deploys.rows.length === 0"

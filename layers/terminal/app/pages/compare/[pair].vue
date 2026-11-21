@@ -215,16 +215,11 @@ const readout = computed(() => ({
 <template>
   <TerminalPage
     :title="title"
-    :lede="`${LAB_DISPLAY[a]} and ${LAB_DISPLAY[b]} side by side on everything we track. Each lab’s own page has the full detail.`"
+    :lede="`${LAB_DISPLAY[a]} and ${LAB_DISPLAY[b]} side by side on everything we track.`"
     :as-of="alerts.data.value?.as_of"
     :error="failed"
   >
-    <TerminalPanel
-      id="readout"
-      title="Readout"
-      note="Both labs at a glance. Every figure links to the lab’s page, which cites its source."
-      flush
-    >
+    <TerminalPanel id="readout" title="Readout" note="Both labs at a glance." flush>
       <TerminalReadoutStrip :labs="pair" :data="readout" />
     </TerminalPanel>
 
@@ -301,10 +296,10 @@ const readout = computed(() => ({
         <TerminalPanel
           id="demand"
           title="Demand share"
-          note="Share of OpenRouter tokens over the last 7 days. It’s one aggregator’s traffic, so treat it as a rough read on demand."
+          note="Share of OpenRouter tokens, last 7 days."
           :more="{ label: 'Every lab, and the 30-day series', to: '/rankings' }"
         >
-          <TerminalDemandShare v-if="rankings.data.value" :rankings="rankings.data.value" compact />
+          <TerminalDemandShare v-if="rankings.data.value" :rankings="rankings.data.value" />
         </TerminalPanel>
       </template>
 
@@ -322,7 +317,7 @@ const readout = computed(() => ({
         <TerminalPanel
           id="buildout"
           title="Infrastructure buildout"
-          note="Open roles in physical-infrastructure departments, added up across each board’s department names."
+          note="Open roles in physical-infrastructure departments."
         >
           <TerminalBuildoutPanel v-if="hiring.data.value" :history="hiring.data.value" />
         </TerminalPanel>
@@ -347,7 +342,7 @@ const readout = computed(() => ({
           v-if="probes.data.value?.labs.length"
           id="probes"
           title="Measured strain"
-          :note="`One timed request an hour to each lab’s flagship model. Working hours against night, over the last ${probes.data.value.window_days} complete days.`"
+          :note="`Hourly timed requests to each lab’s flagship model, working hours against night, last ${probes.data.value.window_days} days.`"
           :more="{ label: 'Every lab, and how we probe', to: '/incidents#probes' }"
           flush
         >

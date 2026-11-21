@@ -137,8 +137,8 @@ const shareOfBoard = (p: HiringHistoryData['providers'][number], n: number) => {
     </p>
 
     <p class="text-xs text-muted">
-      We count a department when the board’s own label contains Data Center, Infrastructure,
-      Facilities, Energy, Construction, Compute, or Hardware, unless it also says “Software”.
+      Departments labeled Data Center, Infrastructure, Facilities, Energy, Construction, Compute, or
+      Hardware, without “Software”.
     </p>
   </div>
 </template>

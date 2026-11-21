@@ -39,6 +39,31 @@ Plain words. Say the thing, then stop.
 Running prose (About, License, Contact, thesis bodies) uses full sentences. Panel notes,
 badges, empty states, and table captions can be fragments.
 
+## What a panel shows
+
+The owner's rule (2026-11-21): a panel shows its data, a one-line source credit, and source
+links. Provenance travels in the links, not in prose. "Just chart it."
+
+- **Keep:** the data, titles and axis labels, a one-line credit, and per-row or per-tooltip
+  source links and fetch times.
+- **Keep what a licence or terms require.** The OpenRouter citation ("Source: OpenRouter
+  (openrouter.ai/rankings), as of …", CC BY 4.0). The MLPerf attribution string, including
+  "Result not verified by MLCommons Association". A short Internet Archive credit ("Source:
+  copies of … in the Internet Archive"). The GDELT Project credit with a link to
+  gdeltproject.org. An Epoch AI credit ("CC BY 4.0, Epoch AI"). Check `license`, `citation` and
+  `terms` in `sources.yaml` for every source a panel shows.
+- **Keep a caveat that prevents a real misreading, in a few words** in a title, axis label,
+  caveat label or footnote: "OpenRouter share, not market share", "Each chart has its own
+  scale", "They aren't the lab's revenue". Never a paragraph.
+- **Cut:** how the data was read, event time against read time, "we read these copies back in
+  2026", what does or doesn't reach the thesis, the judge or alerts, how a median or window is
+  formed, a `method` caveat, and anything that restates what the chart shows.
+- **Where method goes:** the export-table description on `/data` (one sentence per dataset),
+  the API envelope's `method` field (for machine readers), `docs/methods.md` for a page's
+  longer method, or `docs/source-audit.md` for what a source is and why we read it.
+- **Leave alone:** the CC BY-NC label on the export and licence pages, the data-licence line
+  every data page ends with, and "Not investment advice".
+
 ## What makes copy sound like AI
 
 These are the patterns Jeremy cuts. Avoid all of them.
