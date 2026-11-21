@@ -23,6 +23,17 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.13.0 (2026-11-20)
+
+GPU rental price history from before our GPU price checks began (2026-11-01),
+read from the Internet Archive's weekly copies of each provider's own price
+page. A new `archived_gpu_prices` table has one row per priced H100 or B200
+configuration per copy, keyed and shaped like the live `gpu-*` rows in
+`recipe_observations`, with the copy as `source_url`. `archive_captures.axis`
+can now be `gpu`. The rows are CC BY-NC 4.0, like the other archived tables,
+and a licence key doesn't relabel them. `/api/gpu-prices` gains `archived`
+(null until the backfill has run).
+
 ## 1.12.0 (2026-11-20)
 
 `/api/rankings` gains `weekly`: each lab's share of OpenRouter tokens per ISO

@@ -2464,6 +2464,33 @@ archive_sources:
       is not the Google careers feed the live lane reads, and the two counts
       don't join. Archived counts carry basis archived and CC BY-NC 4.0, and
       never reach the hiring floor, the weekly roll-up, the judge or a thesis.
+  wayback-gpu:
+    url: https://web.archive.org/cdx/search/cdx
+    format: CDX JSON (one row per capture), then each capture's raw bytes via https://web.archive.org/web/<timestamp>id_/<url>
+    verdict: include
+    terms: >-
+      The same Internet Archive Terms of Use, robots.txt and pace as
+      wayback-pricing (the same client, one request at a time, 4 seconds
+      apart, the same back-off and User-Agent). The archived pages belong to
+      the GPU providers that published them: the price pages the live gpu-*
+      recipes read, or the page each provider priced its on-demand GPUs on
+      before (lambdalabs.com, nebius.ai, datacrunch.io, together.ai's GPU
+      clusters page). What we take is the on-demand price per GPU-hour each
+      page printed for an H100 or B200 configuration, never the page text.
+      Taken once per backfill run: one capture per page per week, 2023-01 to
+      2026-11-01, the first day of the live recipes
+      (layers/terminal/server/pipeline/archive/gpu-eras.ts). Read 2026-11-20.
+    rights: not-cleared
+    caveats: >-
+      A capture is the page as the Archive's crawler saw it, so a price
+      change is dated to the first weekly capture that shows it: up to a week
+      late. Each page layout has its own parser; a copy in a layout none
+      reads, or that prices no H100 or B200 on demand, is skipped with the
+      reason (archive_captures, axis gpu). Where a page priced an instance,
+      the price is divided by its GPUs, as the live recipes do. Archived rows
+      carry basis archived and CC BY-NC 4.0, stay in archived_gpu_prices, and
+      never reach the GPU median floor, the Compute thesis, the alerts or the
+      judge.
 
 # Where entity_identifiers and entity_securities get their identifiers
 # (layers/terminal/server/utils/terminal-identifiers.ts). Read by hand when the

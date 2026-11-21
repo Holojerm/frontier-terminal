@@ -246,6 +246,16 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
     summary:
       '/api/rankings gains weekly: each lab’s share of OpenRouter tokens per ISO week (Monday to Sunday, UTC) over every stored day, oldest first, with tokens and share per lab (other included, as in shares) and the days of the week on record. get_rankings returns it too. No table columns changed, and the per-model rows still aren’t exported.',
   },
+  {
+    version: '1.13.0',
+    date: '2026-11-20',
+    summary:
+      'GPU rental price history from before our GPU price checks began, read from the Internet Archive’s copies of each provider’s own price page: a new archived_gpu_prices table (one row per priced configuration per copy, keyed like the live gpu-* rows), and gpu as a new axis value on archive_captures. The rows carry CC BY-NC 4.0, like the other archived tables, and a licence key doesn’t relabel them.',
+    tables: {
+      archived_gpu_prices: { note: 'New table.' },
+      archive_captures: { note: 'axis can now be gpu (rows in archived_gpu_prices).' },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

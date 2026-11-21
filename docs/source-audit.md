@@ -844,3 +844,41 @@ Also possible, not checked: GDELT's public BigQuery table (`gdelt-bq.gdeltv2.gkg
 - **Fill.** Every other quarter hour of each day whose scout files carried two distinct figure headlines or one stating revenue, and of the day either side. Coverage that runs for a week is filled day by day. A day is judged on its scout files alone, so the fill can't widen itself. Each hot day costs at most three days of files, about 1.5 GB. How many days qualify is known only once the scout is done.
 - **Figures only.** The job posts only figure headlines (`/api/gdelt/archive`), recorded in `gdelt_archive_files` apart from `gdelt_files`, so `GKG_FROM`, the live cursor and freshness are unchanged. No mention is kept from an archive file, so no alert is matched against one.
 - **Live first.** `/api/gdelt/work` hands out archive files only when no live file and no figure backlog is waiting. The job downloads four archive files at a time and posts them in order. The judge's queue offers headlines from 2026-09-01 on before any archive headline.
+
+## Addendum, 2026-11-20: Internet Archive (GPU rental prices)
+
+Checked for the GPU price backfill (`scripts/wayback-backfill.ts --axis gpu`; eras in `layers/terminal/server/pipeline/archive/gpu-eras.ts`, parsers for the layouts the live recipes don't read in `layers/terminal/server/pipeline/parsers/gpu/wayback-gpu.ts`). The live `gpu-*` recipes start 2026-11-01 (Google Cloud 2026-11-20). Same client, pace, User-Agent and terms as the price backfill above: one request at a time, 4 seconds apart, the same back-off. The User-Agent now says "history backfill" rather than naming the price and hiring backfills, so the next axis can reuse it. Every CDX listing and capture below was fetched on 2026-11-20 and 21. Rights: `not-cleared` (`sources.yaml › archive_sources › wayback-gpu`). Rows are CC BY-NC 4.0 under any key (`ARCHIVED_EXPORTS`).
+
+**URLs checked** (CDX, plain URL queries, 2023-01 → 2026-11-08). Lambda: `lambda.ai/pricing`, `lambdalabs.com/service/gpu-cloud`, `…/gpu-cloud/pricing`, `lambdalabs.com/pricing` (none), `lambda.ai/service/gpu-cloud`. CoreWeave: `coreweave.com/pricing`, `coreweave.com/gpu-cloud-pricing`, `coreweave.com/pricing/classic`. Nebius: `nebius.com/prices`, `nebius.ai/prices`, `nebius.com/prices-ai-studio` (inference prices, not read). Crusoe: `crusoe.ai/cloud/pricing` (with and without `www.`), `crusoe.ai/pricing` (none). Together AI: `together.ai/pricing`, `together.ai/gpu-clusters`. DigitalOcean: `digitalocean.com/pricing/gpu-droplets`, `paperspace.com/pricing` (Paperspace's own product, not read). Verda: `verda.com/pricing`, `datacrunch.io/products`, `datacrunch.io/pricing` (none), `datacrunch.io/`. Oracle: the Price List API URL the live recipe reads (4 copies). Azure: the filtered Retail Prices query the live recipe sends (none). Google Cloud: the accelerator-optimized pricing page (15 copies from 2026-03-19). One copy every ~60 days of each was read by hand first, to find the layouts.
+
+**Layouts and the counting rule.** Each era is one page in one layout, read like the live recipe: the on-demand price per GPU-hour, an instance price divided by the GPU count the page prints, PCIe and NVL cards kept but not counted. Reserved, commitment, spot-only and inference-endpoint prices are other products. Lambda's late-2023 table printed a "2023 Price" and a "2024 Price (effective 1/1/2024)" column; the copy is read as of its own day, so a price not yet in effect is not a price. Together's pricing page until 2026 priced the H100 only as a dedicated inference endpoint, which the live recipe excludes; its GPU-clusters page printed on-demand cluster prices from March 2026, and an inference build of the cluster is left out. Google's page drops its closing tags, so its copies count as whole when they end at `</footer>`.
+
+| Provider | Era (URL) | Window | Shape | Read | Skipped |
+|---|---|---|---|---|---|
+| Lambda | lambdalabs.com/service/gpu-cloud | 2023-01 → 2025-03-28 | on-demand table per instance, per instance-hour, then per GPU-hour | 45 | 9 (no H100 before May 2023) |
+| Lambda | lambda.ai/service/gpu-cloud | 2025-03-28 → 2025-06-04 | the same table | 5 | 0 |
+| Lambda | lambda.ai/pricing | 2025-06-04 → 2025-11-15 | a table per GPU-count tab | 12 | 0 |
+| Lambda | lambda.ai/pricing | 2025-11-15 → 2026-11-01 | "Instances pricing", read live | 27 | 0 |
+| CoreWeave | coreweave.com/pricing | 2025-01 → 2026-04 | Webflow lists, "Instance Price (Per Hour)" | 31 | 0 |
+| CoreWeave | coreweave.com/pricing | 2026-04 → 2026-11-01 | on-demand and spot, read live | 18 | 0 |
+| Nebius | nebius.ai/prices | 2023-11 → 2024-11 | "GPU type: H100 SXM5. PAYG price – $4.85/h" | 10 | 0 |
+| Nebius | nebius.com/prices | 2024-11 → 2025-07 | a VM table with an On demand column, then per GPU | 12 | 0 |
+| Nebius | nebius.com/prices | 2025-07 → 2026-04 | "NVIDIA GPU Instances", "Price per GPU-hour" | 8 | 0 |
+| Nebius | nebius.com/prices | 2026-04 → 2026-11-01 | "On-demand, GPU-hour", read live | 10 | 1 (a column headed "GPU-hour", one copy) |
+| Crusoe | crusoe.ai/cloud/pricing | 2024-05 → 2025-11 | "GPU Pricing" table | 6 | 2 (no H100 in 2024) |
+| Crusoe | crusoe.ai/cloud/pricing | 2025-11 → 2026-10-26 | Webflow list, "GPU model, On-demand, Current spot" | 13 | 0 |
+| Crusoe | crusoe.ai/cloud/pricing | 2026-10-26 → 2026-11-01 | read live | 1 | 0 |
+| Together AI | together.ai/gpu-clusters | 2026-02 → 2026-11-01 | a card per cluster, on-demand per GPU-hour | 25 | 2 (no prices yet) |
+| DigitalOcean | digitalocean.com/pricing/gpu-droplets | 2024-10 → 2026-11-01 | a card per GPU, read live | 33 | 2 (unlabelled cards; one replayed from another day) |
+| Verda | datacrunch.io/products | 2023-01 → 2025-09 | a table per GPU family, on-demand per instance-hour | 16 | 4 (no H100 before September 2023) |
+| Verda | verda.com/pricing | 2026-07 → 2026-11-01 | read live | 10 | 0 |
+| Oracle | Price List API | 2026-08 → 2026-11-01 | read live | 4 | 0 |
+| Google Cloud | accelerator-optimized pricing | 2026-03 → 2026-11-01 | read live | 4 | 4 (no machine table; two cut short) |
+
+Totals on the local run (one copy per week of each era): 290 copies read (852 rows, 55 keys), 24 skipped. Earliest readable copy per provider: Lambda 2023-05-12, Verda (DataCrunch) 2023-09-23, Nebius 2023-11-01, DigitalOcean 2024-10-20, CoreWeave 2025-01-01, Crusoe 2025-04-03, Together AI 2026-03-08, Oracle 2026-08-12, Google Cloud 2026-09-21. The copies are 42 kB to 6.0 MB, 121 MB in all.
+
+**Findings.** Lambda's 8x H100 SXM went from $2.59 per GPU-hour (2023) to $3.49 (2024), back to $2.99 (late 2024 to 2025) and $3.99 by May 2026. CoreWeave's HGX H100 instance stayed at $49.24 an hour ($6.155 per GPU) on every copy since January 2025. DataCrunch's 1x H100 fell from $3.50 (2023) to $1.77 (August 2025) before Verda's $4.79 at the live start. DigitalOcean's single-H100 card read $6.74 until August 2025, $3.39 from late September (beside an 8-GPU card at $2.99 a GPU-hour until November) and $4.41 from late August 2026. Together's cluster H100 read $2.99 from March 2026, $5.49 from late May (one copy at $4.79 in June) and $3.99 from August.
+
+**Gaps.** Stated in `GPU_ARCHIVE_GAPS`, each with its reason: Lambda before 2023-05-12; CoreWeave before 2025 (it priced each GPU as a component, with vCPUs and RAM on top, which isn't the instance price the live page prints); Nebius before 2023-11-01 and 2024-09-15 → 2024-11-15 (the move to nebius.com); Crusoe before 2025-04-03; Together before 2026-03-08; DigitalOcean before 2024-10-20; Verda before 2023-09-23 and 2025-09 → 2026-07 (no copy of either products page); Oracle before 2026-08-12; Google Cloud before 2026-09-21. Not covered (`GPU_ARCHIVE_NOT_COVERED`): Azure, whose query has no copy. Within an era, the weekly median drops a provider whose newest copy is more than 90 days old, so a stretch with few copies shows as fewer providers, never a carried price.
+
+**Verdict.** Include, as a one-off backfill (never on a cron), `rights: not-cleared`. Archived rows carry `basis: archived` and stay in `archived_gpu_prices`: the median floor, the Compute thesis, the alerts and the judge read `recipe_observations` only. `/compute` and `get_gpu_prices` show them as `archived`, and `/export/archived_gpu_prices` has every row.

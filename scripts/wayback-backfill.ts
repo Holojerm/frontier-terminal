@@ -2,17 +2,19 @@
 // One-off backfill of history from before this site watched the labs, from
 // the Internet Archive's captures of each lab's own pages
 // (layers/terminal/server/pipeline/archive/): API price lists (eras.ts, rows
-// in archived_prices) and job boards (hiring-eras.ts, counts in
-// archived_hiring). Never on a cron: the owner runs it, and re-runs are
+// in archived_prices), job boards (hiring-eras.ts, counts in
+// archived_hiring) and GPU rental price pages (gpu-eras.ts, prices in
+// archived_gpu_prices). Never on a cron: the owner runs it, and re-runs are
 // idempotent.
 //
 //   bun run backfill:wayback -- --plan                     list what would be fetched
 //   bun run backfill:wayback                               local dev DB (.data/db/sqlite.db)
 //   bun run backfill:wayback -- --era openai-api-pricing-2024 --limit 20
 //   bun run backfill:wayback -- --axis hiring              job boards only
+//   bun run backfill:wayback -- --axis gpu                 GPU rental price pages only
 //   bun run backfill:wayback -- --remote                   production D1 + R2, through wrangler
 //
-// Flags: --axis pricing|hiring (default both), --provider <id>, --era <id>,
+// Flags: --axis pricing|hiring|gpu (default all three), --provider <id>, --era <id>,
 // --cadence-days <n> (default 7: one
 // capture per week of each era), --limit <n> captures this run, --redo
 // (re-parse captures already recorded, from the saved bytes where we have
@@ -32,14 +34,16 @@ import { existsSync, mkdirSync, readFileSync, writeFileSync } from 'node:fs'
 import { dirname, join } from 'node:path'
 
 import { ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/eras'
+import { GPU_ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/gpu-eras'
 import { HIRING_ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/hiring-eras'
 import {
   archiveRawKey,
   archiveRows,
   captureId,
+  gpuRows,
   hiringRows,
   skippedCapture,
-  type ArchiveAxis,
+  type CaptureAxis,
   type ArchiveCaptureRow,
 } from '../layers/terminal/server/pipeline/archive/rows'
 import {
@@ -165,9 +169,9 @@ function insert(table: string, row: Row, verb = 'INSERT OR REPLACE'): string {
 
 /** One era of either axis: its window, and how a capture becomes rows in which table. */
 interface Job {
-  axis: ArchiveAxis
+  axis: CaptureAxis
   era: { id: string; provider: string; url: string; from: string; until: string }
-  table: 'archived_prices' | 'archived_hiring'
+  table: 'archived_prices' | 'archived_hiring' | 'archived_gpu_prices'
   rows(capture: CdxCapture, text: string, bytes: number, fetchedAt: string): Built
 }
 
@@ -193,6 +197,15 @@ const JOBS: readonly Job[] = [
     rows: (c, text, bytes, at) => {
       const out = hiringRows(era, c, text, bytes, at)
       return { capture: out.capture, rows: out.counts }
+    },
+  })),
+  ...GPU_ARCHIVE_ERAS.map((era): Job => ({
+    axis: 'gpu',
+    era,
+    table: 'archived_gpu_prices',
+    rows: (c, text, bytes, at) => {
+      const out = gpuRows(era, c, text, bytes, at)
+      return { capture: out.capture, rows: out.prices }
     },
   })),
 ]
@@ -247,8 +260,8 @@ async function main() {
     fail('--limit must be a positive whole number.')
   }
   const axis = flags.get('axis')
-  if (axis !== undefined && axis !== 'pricing' && axis !== 'hiring') {
-    fail('--axis must be pricing or hiring.')
+  if (axis !== undefined && axis !== 'pricing' && axis !== 'hiring' && axis !== 'gpu') {
+    fail('--axis must be pricing, hiring or gpu.')
   }
   const jobs = JOBS.filter(
     (j) =>
