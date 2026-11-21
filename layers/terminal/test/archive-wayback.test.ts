@@ -12,7 +12,7 @@ import {
   waybackStamp,
 } from '../server/pipeline/archive/wayback'
 import { ARCHIVE_ERAS, ARCHIVE_NOT_COVERED, ARCHIVE_UNTIL } from '../server/pipeline/archive/eras'
-import { LABS } from '../shared/utils/terminal-lab-summary'
+import { LABS } from '../../core/shared/utils/lab-names'
 import { archiveRows, captureId } from '../server/pipeline/archive/rows'
 import { usdPerMillion } from '../server/pipeline/parsers/pricing/html-table'
 import { archivedPriceHistory, type ArchivedPrice } from '../server/utils/terminal-history'

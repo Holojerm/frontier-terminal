@@ -72,7 +72,8 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 /
 ├── layers/core/            # Fork-owned layer every domain builds on: the ingest store and its contracts,
 │                           # query plumbing (terminal-db, -asof, -cache, -handler), the export and MCP
-│                           # frameworks, API keys, events producer, heartbeats. Names no domain.
+│                           # frameworks, API keys, events producer, heartbeats, and the UI kit every
+│                           # page is built from (app/components/Terminal/, reader prefs). Names no domain.
 ├── layers/compute/         # Domain layer: GPU prices, data centers, utilization reads, power sites and
 │                           # grid load, hardware prints, /compute and /power. Uses core only.
 ├── layers/terminal/        # Fork-owned layer: every domain not yet split out (parsers, lanes, theses,
@@ -84,7 +85,7 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 │   ├── app.config.ts       # GENERATED from DESIGN.md — NuxtUI colors + component defaults
 │   ├── components/         # Reusable UI components
 │   │   ├── Brand/          # Logo.vue — the mark; every icon is generated from it
-│   │   └── [Feature]/      # Group by feature — Terminal/ and Thesis/ live in layers/terminal/app/
+│   │   └── [Feature]/      # Group by feature — Terminal/ and Thesis/ live in the layers' app/
 │   ├── composables/        # Shared stateful logic (useSeo, …)
 │   ├── layouts/            # Page layouts
 │   ├── pages/              # File-based routing

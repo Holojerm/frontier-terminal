@@ -4,12 +4,12 @@
 //
 // SSR note: a relative label needs a clock, and the server's clock is not
 // the reader's. Components pass `now = null` on the server and set it after
-// mount (layers/terminal/app/composables/useNow.ts), so first paint is the absolute form and
+// mount (layers/core/app/composables/useNow.ts), so first paint is the absolute form and
 // a hydration mismatch on a provenance stamp cannot happen.
 //
 // The reader's zone is the same story. Page HTML is cached and shared, so the
 // server always reads in UTC_STYLE, and the reader's StampStyle
-// (layers/terminal/app/composables/useReaderPrefs.ts) applies after hydration.
+// (layers/core/app/composables/useReaderPrefs.ts) applies after hydration.
 // Only a reading with a time of day moves with the zone. A date printed alone
 // (a filing period, a UTC-day chart bucket, a first-seen day) is a UTC date
 // and prints as stored, so a day never shifts under a reader near midnight.

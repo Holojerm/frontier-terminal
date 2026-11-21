@@ -6,7 +6,8 @@
 // provenance. The lab is a route parameter; a name outside the tracked labs is a 404.
 
 import { COMPARE_PAIRS, comparePath, pairTitle } from '../../../../shared/utils/terminal-compare'
-import { isLab, summarizeLab, tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
+import { isLab } from '#layers/core/shared/utils/lab-names'
+import { summarizeLab, tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
 import { LAB_SITE } from '#layers/core/shared/utils/lab-names'
 import type { DataCentersData } from '#layers/compute/shared/utils/compute-views'
 import { count } from '#layers/core/shared/utils/terminal-format'

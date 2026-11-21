@@ -3,6 +3,23 @@
 
 import type { LabId, ProviderId } from './terminal-types/common'
 
+/** The tracked labs, in the registry order every page lists them in. */
+export const LABS: readonly LabId[] = [
+  'openai',
+  'anthropic',
+  'google',
+  'xai',
+  'meta',
+  'mistral',
+  'deepseek',
+  'alibaba',
+  'moonshot',
+] as const
+
+export function isLab(s: string): s is LabId {
+  return (LABS as readonly string[]).includes(s)
+}
+
 export const LAB_DISPLAY: Record<ProviderId, string> = {
   openai: 'OpenAI',
   anthropic: 'Anthropic',

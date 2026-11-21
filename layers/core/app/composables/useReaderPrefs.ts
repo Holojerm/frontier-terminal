@@ -12,8 +12,8 @@
 // One module-level ref, like useNow. The server never writes it, so requests
 // cannot leak settings into each other.
 
-import { isLab } from '../../shared/utils/terminal-lab-summary'
-import type { LabId } from '../../shared/utils/terminal-types'
+import { isLab } from '../../shared/utils/lab-names'
+import type { LabId } from '../../shared/utils/terminal-types/common'
 import {
   UTC_STYLE,
   absoluteStamp,

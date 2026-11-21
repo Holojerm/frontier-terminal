@@ -6,7 +6,7 @@
 
 import { z } from 'zod'
 import { listedSubset, type ListedCompany, type ListedData } from '../../shared/utils/listed'
-import { LABS } from '../../shared/utils/terminal-lab-summary'
+import { LABS } from '../../../core/shared/utils/lab-names'
 import type { DisclosuresData, LabId, ProbesData } from '../../shared/utils/terminal-types'
 
 export const labQuerySchema = z.object({ lab: z.enum(LABS as [LabId, ...LabId[]]).optional() })
