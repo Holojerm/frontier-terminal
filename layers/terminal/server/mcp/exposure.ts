@@ -20,7 +20,9 @@ export function registerExposureTools({ server, deps, read }: McpKit): void {
       description:
         'Quarterly series from 2020 built from the filed XBRL facts of Microsoft, Alphabet, Amazon, Meta and Oracle: capex (the cash line each tags, with finance leases ' +
         'beside it where the filer counts them, never added), remaining performance obligations (total, plus Microsoft commercial and Google Cloud where tagged), ' +
-        'and every fact Microsoft tags on OpenAI (msft:OpenAIGlobalLlcMember) and Amazon on Anthropic (amzn:AnthropicMember). Each series names its concept and dims; ' +
+        'and every fact Microsoft tags on OpenAI (msft:OpenAIGlobalLlcMember) and Amazon on Anthropic (amzn:AnthropicMember). Before Amazon tagged Anthropic (its 10-Q of 2026-04-30), ' +
+        'the figures its filings stated in words from 2023-10 are series with basis text and concept text:<metric>, each point quoting its sentence (quote) and any qualifier ' +
+        '(“primarily” means the figure includes other companies). Each series names its concept and dims; ' +
         'points are oldest first, each from the newest filing that reported it, with accession, form, filing date and filing_url. derived marks a quarter computed as a ' +
         'year-to-date figure less the one a quarter shorter (less names it). superseded lists values a later filing restated. These are the filer’s numbers: ' +
         'Microsoft’s OpenAI line is what Microsoft recognized, not OpenAI’s result, and Amazon’s marks are not Anthropic’s valuation. gaps lists what the filings ' +

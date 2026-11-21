@@ -31,6 +31,22 @@ const rowsOf = (p: LimitsData['pages'][number]) =>
   }))
 
 const pagesShown = computed(() => props.pages)
+
+const changeColumns: TableColumn[] = [
+  { key: 'between', label: 'Between copies' },
+  { key: 'limit', label: 'Limit' },
+  { key: 'before', label: 'Before', numeric: true },
+  { key: 'after', label: 'After', numeric: true },
+]
+
+const changeRows = (a: NonNullable<LimitsData['pages'][number]['archived']>) =>
+  a.changes.map((c) => ({
+    id: `${c.window_to}|${c.model}|${c.tier}|${c.metric}`,
+    between: `${c.window_from.slice(0, 10)} – ${c.window_to.slice(0, 10)}`,
+    limit: `${c.model}, ${c.tier}, ${c.metric}`,
+    before: fmt(c.before),
+    after: fmt(c.after),
+  }))
 </script>
 
 <template>
@@ -50,6 +66,21 @@ const pagesShown = computed(() => props.pages)
         nested
       />
       <TerminalSources :sources="[p.source]" />
+      <template v-if="p.archived">
+        <p class="text-xs text-muted">
+          Internet Archive copies, {{ p.archived.from.slice(0, 10) }} to
+          {{ p.archived.to.slice(0, 10) }}: {{ count(p.archived.copies) }} read,
+          {{ count(p.archived.changes.length) }} changes
+        </p>
+        <TerminalTable
+          v-if="p.archived.changes.length"
+          :caption="`Changes in archived copies: ${p.covers}`"
+          :columns="changeColumns"
+          :rows="changeRows(p.archived)"
+          :row-key="(r) => r.id"
+          nested
+        />
+      </template>
     </div>
     <TerminalSources :caveats="[{ text: caveat, label: 'stated policy only' }]" />
   </div>

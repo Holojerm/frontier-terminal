@@ -11,6 +11,7 @@ import { normalizePrices } from '../normalize'
 import { gpuObservations } from '../../theses/recipes/gpu-prices'
 import type { ArchiveEra } from './eras'
 import type { GpuEra } from './gpu-eras'
+import type { LimitsEra } from './limits-eras'
 import { liveDepartment, type HiringEra } from './hiring-eras'
 import type { StatusEra } from './status-eras'
 import { captureInstant, captureUrl, type CdxCapture } from './wayback'
@@ -20,6 +21,7 @@ export type ArchivedPriceRow = typeof tables.archivedPrices.$inferInsert
 export type ArchivedHiringRow = typeof tables.archivedHiring.$inferInsert
 export type ArchivedGpuPriceRow = typeof tables.archivedGpuPrices.$inferInsert
 export type ArchivedIncidentInsert = typeof tables.archivedIncidents.$inferInsert
+export type ArchivedRateLimitRow = typeof tables.archivedRateLimits.$inferInsert
 
 export const ARCHIVED_BASIS = 'archived'
 
@@ -31,11 +33,14 @@ export type ArchiveAxis = 'pricing' | 'hiring'
  * provider, not per lab, and status (archived_incidents) is one row per
  * incident across copies, not per copy.
  */
-export type CaptureAxis = ArchiveAxis | 'gpu' | 'status'
+export type CaptureAxis = ArchiveAxis | 'gpu' | 'status' | 'limits'
 
 /** What a capture row needs of its era, on any axis; a GPU or status era may name its format and end. */
-type EraRef = Pick<ArchiveEra | HiringEra | GpuEra | StatusEra, 'id' | 'provider' | 'url'> & {
-  ext?: GpuEra['ext'] | StatusEra['ext']
+type EraRef = Pick<
+  ArchiveEra | HiringEra | GpuEra | StatusEra | LimitsEra,
+  'id' | 'provider' | 'url'
+> & {
+  ext?: GpuEra['ext'] | StatusEra['ext'] | LimitsEra['ext']
   end?: RegExp
 }
 
@@ -337,5 +342,73 @@ export function statusRows(
       covers_from: read.covers_from,
     },
     incidents,
+  }
+}
+
+/**
+ * One rate-limit page capture -> its archived_rate_limits rows, keyed as the
+ * live recipe keys its own. A throw is a skip with the parser's reason; what
+ * the copy printed that couldn't be tied to a tier is named in the detail.
+ */
+export function limitsRows(
+  era: LimitsEra,
+  capture: CdxCapture,
+  text: string,
+  bytes: number,
+  fetchedAt: string,
+): { capture: ArchiveCaptureRow; limits: ArchivedRateLimitRow[] } {
+  const id = captureId(era, capture.timestamp)
+  const captured_at = captureInstant(capture.timestamp)
+  const stored = storedOf(era, capture, text, bytes)
+  let read
+  try {
+    assertWhole(era, text)
+    read = era.parse(text)
+    if (read.rows.length === 0) throw new Error('no limits on the copy')
+    // A copy can render one table twice; the same limit at two values is a copy we can't read.
+    const seen = new Map<string, number | null>()
+    const once: typeof read.rows = []
+    for (const r of read.rows) {
+      if (!seen.has(r.key)) {
+        seen.set(r.key, r.value)
+        once.push(r)
+      } else if (seen.get(r.key) !== r.value) {
+        throw new Error(`the copy prints ${r.key} at two values`)
+      }
+    }
+    read = { ...read, rows: once }
+  } catch (error) {
+    const message = error instanceof Error ? error.message : String(error)
+    return {
+      capture: skippedCapture(era, capture, fetchedAt, message, stored, 'limits'),
+      limits: [],
+    }
+  }
+  const source_url = captureUrl(capture.timestamp, capture.original)
+  const limits: ArchivedRateLimitRow[] = read.rows.map((r) => ({
+    id: contentHash({ capture: id, key: r.key }).slice(0, 32),
+    capture_id: id,
+    provider: era.provider,
+    recipe_id: era.recipe_id,
+    key: r.key,
+    model: r.model,
+    tier: r.tier,
+    metric: r.metric,
+    value: r.value,
+    payload: JSON.stringify({ model: r.model, tier: r.tier, metric: r.metric, printed: r.printed }),
+    captured_at,
+    original_url: capture.original,
+    basis: ARCHIVED_BASIS,
+    source_url,
+    fetched_at: fetchedAt,
+  }))
+  return {
+    capture: {
+      ...skippedCapture(era, capture, fetchedAt, '', stored, 'limits'),
+      status: 'parsed',
+      detail: read.passed.length ? `not read: ${read.passed.join('; ')}`.slice(0, 500) : null,
+      rows: limits.length,
+    },
+    limits,
   }
 }

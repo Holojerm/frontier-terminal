@@ -12,6 +12,7 @@
 // Microsoft recognized, not OpenAI's result, and Amazon's upward marks follow
 // observable prices for its preferred stock, not Anthropic's valuation.
 
+import type { TextMetric } from './text-facts'
 import type {
   ExposureGap,
   ExposureGroup,
@@ -364,16 +365,18 @@ const filingOf = (f: StoredFact) => ({
 })
 
 /** Per period, the newest filing's fact; the rest that differ from it, as superseded. */
-function current(facts: readonly StoredFact[]): {
-  byPeriod: Map<string, StoredFact>
+function current<T extends StoredFact>(
+  facts: readonly T[],
+): {
+  byPeriod: Map<string, T>
   superseded: ExposureSuperseded[]
 } {
-  const groups = new Map<string, StoredFact[]>()
+  const groups = new Map<string, T[]>()
   for (const f of facts) {
     const k = `${f.start ?? ''}|${f.end}`
     groups.set(k, [...(groups.get(k) ?? []), f])
   }
-  const byPeriod = new Map<string, StoredFact>()
+  const byPeriod = new Map<string, T>()
   const superseded: ExposureSuperseded[] = []
   for (const [k, group] of groups) {
     const sorted = [...group].sort(newer)
@@ -626,3 +629,72 @@ export const EXPOSURE_GAPS: readonly ExposureGap[] = [
     reason: 'Meta’s filings carry no remaining performance obligations fact.',
   },
 ]
+
+// ── what a filing says in words ─────────────────────────────────────────────
+
+/** A filed_text_facts row as the series read it. */
+export interface StoredTextFact extends StoredFact {
+  lab: string
+  metric: TextMetric
+  qualifier: string | null
+  sentence: string
+}
+
+export const TEXT_LABELS: Readonly<Record<TextMetric, string>> = {
+  notes_invested: 'Convertible notes bought, as stated in the filing',
+  notes_commitment: 'Further notes committed to, due by the date shown',
+  notes_fair_value: 'Fair value of the convertible notes',
+  investment_value: 'Notes and preferred stock, estimated value',
+  preferred_recorded: 'Preferred stock on the balance sheet',
+  upward_adjustment: 'Upward marks on private holdings, primarily Anthropic',
+  conversion_gain: 'Gain on notes converted to preferred stock, primarily Anthropic',
+  preferred_carrying_value:
+    'Private holdings at carrying value, primarily Anthropic preferred stock',
+}
+
+export const TEXT_NOTE =
+  'Read from the filing’s words, before Amazon tagged Anthropic in its XBRL. Each point quotes its sentence. Where Amazon says “primarily”, the figure includes other companies.'
+
+/**
+ * One series per metric of what a filer said about a lab in words, each
+ * period from the newest filing that stated it, like the tagged series.
+ */
+export function textSeries(rows: readonly StoredTextFact[]): ExposureSeries[] {
+  const groups = new Map<string, StoredTextFact[]>()
+  for (const r of rows) {
+    const k = `${r.ticker}|${r.lab}|${r.metric}`
+    groups.set(k, [...(groups.get(k) ?? []), r])
+  }
+  const out: ExposureSeries[] = []
+  for (const [k, group] of groups) {
+    const [ticker, lab, metric] = k.split('|') as [
+      ExposureTicker,
+      'openai' | 'anthropic',
+      TextMetric,
+    ]
+    const { byPeriod, superseded } = current(group)
+    const points = [...byPeriod.values()]
+      .map((f) => ({ ...point(f), quote: f.sentence, qualifier: f.qualifier }))
+      .sort((a, b) =>
+        a.end < b.end ? -1 : a.end > b.end ? 1 : (a.start ?? '') < (b.start ?? '') ? -1 : 1,
+      )
+    const id = `${ticker.toLowerCase()}-${lab}-text-${metric.replace(/_/g, '-')}`
+    out.push({
+      id,
+      ticker,
+      filer: FILER_NAMES[ticker],
+      group: lab,
+      chart: id,
+      label: TEXT_LABELS[metric],
+      concept: `text:${metric}`,
+      dims: '',
+      kind: group.some((f) => f.start !== null) ? 'flow' : 'balance',
+      unit: 'USD',
+      note: TEXT_NOTE,
+      basis: 'text',
+      points,
+      superseded,
+    })
+  }
+  return out.sort((a, b) => (a.points[0]!.end < b.points[0]!.end ? -1 : 1))
+}

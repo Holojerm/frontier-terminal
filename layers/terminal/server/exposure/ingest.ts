@@ -12,7 +12,11 @@
 //      again: a filing does not change after it is accepted;
 //   4. each earnings release (an 8-K with item 2.02) since GUIDANCE_SINCE not
 //      yet read, for the capex guidance it prints (guidance.ts): the filing's
-//      index page, then its exhibit 99.1, at most RELEASES_PER_RUN a run.
+//      index page, then its exhibit 99.1, at most RELEASES_PER_RUN a run;
+//   5. for a filer in TEXT_FACT_FILERS, each 10-Q/10-K primary document in
+//      its window not yet read, for what it says about a lab in words before
+//      it tagged it (text-facts.ts), at most TEXTS_PER_RUN a run. The window
+//      is closed, so these reads end once its filings are read.
 //
 // Facts are append-only (filed_facts). The raw bytes of every document that
 // produced facts go to R2 first, so each row's raw_key resolves. Then the
@@ -57,6 +61,7 @@ import {
   type ReleaseDocument,
 } from './guidance'
 import { writeGuidanceAlerts } from './guidance-alerts'
+import { TEXT_FACT_FILERS, extractTextFacts, type TextFact } from './text-facts'
 import {
   LAB_MEMBERS,
   SERIES_SINCE,
@@ -69,6 +74,8 @@ import {
 export const INSTANCES_PER_RUN = 24
 /** Two requests each: the filing's index page, then the release. */
 export const RELEASES_PER_RUN = 4
+/** A primary document runs to 7 MB, so few a run. */
+export const TEXTS_PER_RUN = 2
 export const COMPANYFACTS_INTERVAL_MS = 6 * 60 * 60 * 1000
 /** A failed instance is retried after this long, not every run. */
 export const FAILED_RETRY_MS = 24 * 60 * 60 * 1000
@@ -122,7 +129,7 @@ type ReadKey = Pick<Read, 'ticker' | 'kind' | 'accession_no'>
 
 interface Read {
   ticker: string
-  kind: 'submissions' | 'companyfacts' | 'instance' | 'release'
+  kind: 'submissions' | 'companyfacts' | 'instance' | 'release' | 'text'
   accession_no: string | null
   status: 'ok' | 'unchanged' | 'failed'
   detail: string | null
@@ -415,6 +422,115 @@ async function readRelease(
   }
 }
 
+/** A 10-Q or 10-K's primary document: what its instance URL names, as .htm. */
+export const primaryUrl = (doc: InstanceDocument) => doc.url.replace(/_htm\.xml$/, '.htm')
+
+/** Store one filing's text facts; returns how many were new. */
+async function storeTextFacts(
+  db: PipelineDb,
+  filer: Filer,
+  doc: InstanceDocument,
+  lab: string,
+  facts: readonly TextFact[],
+  prov: { raw_key: string; source_url: string; now: string },
+): Promise<number> {
+  const rows = facts.map((f) => ({
+    id: contentHash({
+      ticker: filer.ticker,
+      metric: f.metric,
+      start: f.start,
+      end: f.end,
+      accession_no: doc.accession_no,
+    }),
+    ticker: filer.ticker,
+    cik: filer.cik,
+    lab,
+    metric: f.metric,
+    start: f.start,
+    end: f.end,
+    value: f.value,
+    unit: 'USD',
+    qualifier: f.qualifier,
+    sentence: f.sentence,
+    form: doc.form,
+    filed: doc.filed,
+    accession_no: doc.accession_no,
+    raw_key: prov.raw_key,
+    first_seen_at: prov.now,
+    source_url: prov.source_url,
+    fetched_at: prov.now,
+  }))
+  let added = 0
+  for (const part of chunk(rows, Math.floor(D1_MAX_BOUND_PARAMS / TEXT_FACT_COLUMNS))) {
+    const written = await db
+      .insert(tables.filedTextFacts)
+      .values(part)
+      .onConflictDoNothing()
+      .returning({ id: tables.filedTextFacts.id })
+    added += written.length
+  }
+  return added
+}
+
+const TEXT_FACT_COLUMNS = 19
+
+/** One 10-Q or 10-K's primary document, for the figures it states about a lab in words. */
+async function readText(
+  db: PipelineDb,
+  filer: Filer,
+  doc: InstanceDocument,
+  fetchSec: SecFetch,
+  deps: FiledFactsDeps,
+  now: string,
+): Promise<Read | null> {
+  const spec = TEXT_FACT_FILERS[filer.ticker]!
+  const url = primaryUrl(doc)
+  const base = { ticker: filer.ticker, kind: 'text' as const, accession_no: doc.accession_no }
+  const fetched = await fetchSec(
+    { source_id: `${filer.id}-${doc.accession_no}-text`, url, ext: 'html' },
+    base,
+  )
+  if (!fetched) return null
+  if (!fetched.ok) {
+    return {
+      ...base,
+      status: 'failed',
+      detail: fetched.detail,
+      content_hash: null,
+      facts: 0,
+      source_url: url,
+    }
+  }
+  let facts: TextFact[]
+  try {
+    facts = extractTextFacts(fetched.text, spec.name)
+  } catch (error) {
+    return {
+      ...base,
+      status: 'failed',
+      detail: `extract: ${String(error)}`,
+      content_hash: null,
+      facts: 0,
+      source_url: url,
+    }
+  }
+  const raw_key = `filed-facts/${filer.ticker.toLowerCase()}/${doc.accession_no}.htm`
+  if (facts.length) await deps.raw.put(raw_key, fetched.text, 'text/html')
+  const added = await storeTextFacts(db, filer, doc, spec.lab, facts, {
+    raw_key,
+    source_url: url,
+    now,
+  })
+  return {
+    ...base,
+    status: 'ok',
+    detail: facts.length ? null : 'no figure about the lab in a wording the reader knows',
+    content_hash: contentHashOfText(fetched.text),
+    facts: added,
+    source_url: url,
+  }
+}
+
 /**
  * Accessions with an ok read of `kind`, and those that failed within
  * FAILED_RETRY_MS. A 429 is not the document failing: it waits out the
@@ -423,7 +539,7 @@ async function readRelease(
 async function documentState(
   db: PipelineDb,
   ticker: string,
-  kind: 'instance' | 'release',
+  kind: 'instance' | 'release' | 'text',
   now: Date,
 ) {
   const rows = await db
@@ -575,6 +691,7 @@ export async function runFiledFacts(
   const reads: Read[] = []
   const queue: { filer: Filer; docs: InstanceDocument[] }[] = []
   const releases: { filer: Filer; docs: ReleaseDocument[] }[] = []
+  const texts: { filer: Filer; docs: InstanceDocument[] }[] = []
 
   // After the first 429 nothing else is fetched; each request the run would
   // still have made is counted instead.
@@ -654,6 +771,20 @@ export async function runFiledFacts(
         docs: docs.filter((d) => !done.has(d.accession_no) && !failedRecently.has(d.accession_no)),
       })
     }
+    const textSpec = TEXT_FACT_FILERS[filer.ticker]
+    const textDocs = textSpec
+      ? docs.filter((d) => d.filed >= textSpec.since && d.filed < textSpec.until)
+      : []
+    if (textDocs.length) {
+      const { done, failedRecently } = await documentState(db, filer.ticker, 'text', deps.now)
+      texts.push({
+        filer,
+        docs: textDocs
+          .filter((d) => !done.has(d.accession_no) && !failedRecently.has(d.accession_no))
+          // Oldest first: the series fills from its start.
+          .reverse(),
+      })
+    }
     if (filed.length) {
       const { done, failedRecently } = await documentState(db, filer.ticker, 'release', deps.now)
       releases.push({
@@ -682,6 +813,17 @@ export async function runFiledFacts(
       if (!doc || budget === 0) continue
       budget--
       const read = await readRelease(db, q.filer, doc, fetchSec, deps, now)
+      if (read) reads.push(read)
+    }
+  }
+
+  // Last: a closed window of old filings, read a few a run until it is done.
+  for (let budget = TEXTS_PER_RUN; budget > 0 && texts.some((q) => q.docs.length);) {
+    for (const q of texts) {
+      const doc = q.docs.shift()
+      if (!doc || budget === 0) continue
+      budget--
+      const read = await readText(db, q.filer, doc, fetchSec, deps, now)
       if (read) reads.push(read)
     }
   }
