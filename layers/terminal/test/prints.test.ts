@@ -35,6 +35,8 @@ const SUBMISSIONS = fixtureText('fixtures/prints/tsm-submissions.json')
 const TSM_2026 = fixtureText('fixtures/prints/tsm-revenue-20261110.htm')
 const TSM_2019 = fixtureText('fixtures/prints/tsm-revenue-20190410.htm')
 const TSM_2015 = fixtureText('fixtures/prints/tsm-revenue-20150410.htm')
+const TSM_2020 = fixtureText('fixtures/prints/tsm-revenue-20200810.htm')
+const TSM_2019_OCT = fixtureText('fixtures/prints/tsm-revenue-20191108.htm')
 
 const pick = (obs: PrintObservation[], entity: string, observed_as: string) =>
   obs.find((o) => o.entity === entity && o.observed_as === observed_as)!
@@ -97,6 +99,23 @@ describe('parseTsmcRevenue6k', () => {
       period: '2015-03',
       value: 72_269e6,
       yoy_pct: 44.7,
+    })
+    // A month-on-month decrease in full-width parentheses: "（12.3）".
+    const july2020 = parseTsmcRevenue6k(TSM_2020, 'x')!
+    expect(pick(july2020, 'tsmc', 'print')).toMatchObject({
+      period: '2020-07',
+      value: 105_963e6,
+      yoy_pct: 25,
+    })
+    expect(pick(july2020, 'tsmc', 'prior_month')).toMatchObject({
+      period: '2020-06',
+      value: 120_878e6,
+    })
+    // The table headed "(in NT$ million)" rather than "(Unit:NT$ million)".
+    expect(pick(parseTsmcRevenue6k(TSM_2019_OCT, 'x')!, 'tsmc', 'print')).toMatchObject({
+      period: '2019-10',
+      value: 106_040e6,
+      yoy_pct: 4.4,
     })
   })
 
