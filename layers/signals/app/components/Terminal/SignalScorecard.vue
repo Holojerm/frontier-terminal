@@ -1,147 +1,100 @@
 <script setup lang="ts">
-// The scorecard: one row per registered series, its held-out result at the
-// ticker and horizon with the smallest p-value, and the full grid of every
-// ticker and horizon behind a toggle. A result under the minimum sample reads
-// "not enough history", never a number.
+// The scorecard, in reading order: the counts, then every series with a
+// held-out result (those that clear the bar first), then the series still
+// waiting on history, closed by default. The waiting rows stay in the document,
+// so an alert's link to one (/signals#<series id>) opens the group and lands on it.
 
 import type { SignalsData } from '../../../shared/utils/signals'
 
 const props = defineProps<{ data: SignalsData }>()
 
-const stamps = useStamps()
+const card = computed(() => signalScorecard(props.data))
 
-const fmtEstimate = (s: SignalSeriesView, stat: SignalStat) => {
-  if (stat.estimate === null) return ''
-  if (s.test === 'lead_lag') return `r ${grouped(stat.estimate, 2)}`
-  return signedPercent(stat.estimate * 100)
+const figures = computed(() => {
+  const c = card.value.counts
+  return [
+    { label: 'Tested', value: grouped(c.tested), sub: `of ${grouped(c.total)} series` },
+    { label: 'Clear the bar held out', value: grouped(c.clears) },
+    { label: 'Tested, don’t clear the bar', value: grouped(c.fails) },
+    {
+      label: 'Waiting on history',
+      value: grouped(c.waiting),
+      sub: c.unread ? `${grouped(c.unread)} couldn’t be read` : undefined,
+    },
+  ]
+})
+
+const waitingOpen = ref(false)
+const route = useRoute()
+
+/** Open the waiting group when the hash names one of its series, then bring the row into view. */
+async function followHash() {
+  const id = decodeURIComponent(route.hash.slice(1))
+  if (!id || !card.value.waiting.some((r) => r.id === id)) return
+  waitingOpen.value = true
+  await nextTick()
+  // A frame later, once the group has its height: the row has nowhere to scroll to before.
+  requestAnimationFrame(() => document.getElementById(id)?.scrollIntoView())
 }
 
-const fmtP = (p: number | null) =>
-  p === null ? '' : p < 0.001 ? 'p < 0.001' : `p ${grouped(p, 3)}`
-
-/** Clears the Bonferroni bar out of sample, with the same sign in sample. */
-const holds = (cell: SignalCell) =>
-  props.data.bonferroni_p !== null &&
-  cell.out.status === 'ok' &&
-  cell.in.status === 'ok' &&
-  cell.out.p_value !== null &&
-  cell.out.p_value < props.data.bonferroni_p &&
-  Math.sign(cell.out.estimate ?? 0) === Math.sign(cell.in.estimate ?? 0)
-
-const best = (s: SignalSeriesView): SignalCell | null => {
-  const ok = s.cells.filter((c) => c.out.status === 'ok' && c.out.p_value !== null)
-  if (!ok.length) return null
-  return ok.reduce((a, b) => (b.out.p_value! < a.out.p_value! ? b : a))
-}
-
-const rows = computed(() =>
-  props.data.series.map((s) => ({
-    ...s,
-    best: best(s),
-    scored: s.cells.filter((c) => c.out.status === 'ok').length,
-  })),
-)
-
-const columns: TableColumn[] = [
-  { key: 'label', label: 'Series' },
-  { key: 'entity', label: 'Measures', stack: 'inline' },
-  { key: 'tickers', label: 'Tested against', class: 'min-w-40' },
-  { key: 'history', label: 'History', hint: 'periods or event days' },
-  { key: 'best', label: 'Best held out', hint: 'smallest p of its tests' },
-]
-
-const gridColumns = computed<TableColumn[]>(() => [
-  { key: 'ticker', label: 'Ticker' },
-  ...props.data.horizons.map((h) => ({
-    key: `h${h}`,
-    label: `${h} day${h === 1 ? '' : 's'}`,
-    hint: 'held out (in sample)',
-    numeric: true,
-  })),
-])
-
-const statText = (s: SignalSeriesView, stat: SignalStat) =>
-  stat.status === 'ok' ? `${fmtEstimate(s, stat)}, ${fmtP(stat.p_value)}` : `too few (n ${stat.n})`
-
-/** One row per ticker, each horizon's held-out and in-sample text ready to print. */
-const gridRows = (s: SignalSeriesView) =>
-  s.tickers.map((ticker) => ({
-    ticker,
-    cells: Object.fromEntries(
-      props.data.horizons.map((h) => {
-        const c = s.cells.find((x) => x.ticker === ticker && x.horizon === h)
-        return [
-          `h${h}`,
-          c
-            ? { out: statText(s, c.out), in: statText(s, c.in), holds: holds(c) }
-            : { out: '', in: '', holds: false },
-        ]
-      }),
-    ) as Record<string, { out: string; in: string; holds: boolean }>,
-  }))
+onMounted(followHash)
+watch(() => route.hash, followHash)
 </script>
 
 <template>
-  <TerminalTable
-    caption="Every registered series and its best held-out result"
-    :columns="columns"
-    :rows="rows"
-    :row-key="(r) => r.id"
-    :row-id="(r) => r.id"
-    align="top"
-    flow
-    stack
-  >
-    <template #cell-label="{ row }">
-      <span class="block text-highlighted">{{ row.label }}</span>
-      <span class="block font-mono text-xs text-muted">{{ row.source }}</span>
-      <TerminalExpand v-if="row.observations > 0" show="All tests" hide="Hide tests">
-        <TerminalTable
-          :caption="`${row.label}: every ticker and horizon`"
-          :columns="gridColumns"
-          :rows="gridRows(row)"
-          :row-key="(g) => g.ticker"
-          nested
-        >
-          <template v-for="h in data.horizons" :key="h" #[`cell-h${h}`]="{ row: g }">
-            <span :class="g.cells[`h${h}`]?.holds ? 'text-primary' : ''">{{
-              g.cells[`h${h}`]?.out
-            }}</span>
-            <span class="block text-muted">({{ g.cells[`h${h}`]?.in }})</span>
-          </template>
-        </TerminalTable>
-      </TerminalExpand>
-    </template>
-    <template #cell-entity="{ row }">{{ row.entity.label }}</template>
-    <template #cell-tickers="{ row }">
-      <span class="font-mono">{{ row.tickers.join(' ') }}</span>
-    </template>
-    <template #cell-history="{ row }">
-      <template v-if="row.error">
-        <TerminalGap inline title="Couldn’t read" :reason="row.error" />
-      </template>
-      <template v-else>
-        <span class="font-mono">{{ row.observations }}</span>
-        <span v-if="row.from && row.to" class="block text-xs text-muted">
-          {{ stamps.date(row.from) }} to {{ stamps.date(row.to) }}
-        </span>
-      </template>
-    </template>
-    <template #cell-best="{ row }">
-      <template v-if="row.best">
-        <span class="font-mono" :class="holds(row.best) ? 'text-primary' : ''">
-          {{ row.best.ticker }} {{ row.best.horizon }}d {{ fmtEstimate(row, row.best.out) }}
-        </span>
-        <span class="block font-mono text-xs text-muted">
-          {{ fmtP(row.best.out.p_value) }}, n {{ row.best.out.n }}
-        </span>
-      </template>
-      <TerminalGap
-        v-else
-        inline
-        title="Not enough history"
-        :reason="`A held-out result needs ${row.test === 'event' ? data.min_sample.event.out : data.min_sample.lead_lag.out} ${row.test === 'event' ? 'event days' : 'periods'} with a return to pair with.`"
+  <div>
+    <dl class="grid grid-cols-2 gap-x-6 gap-y-4 border-b border-default p-3 sm:grid-cols-4">
+      <TerminalFigure
+        v-for="f in figures"
+        :key="f.label"
+        :label="f.label"
+        :value="f.value"
+        :sub="f.sub"
       />
-    </template>
-  </TerminalTable>
+    </dl>
+
+    <TerminalSignalRows
+      v-if="card.tested.length"
+      :data="data"
+      :rows="card.tested"
+      caption="Every tested series and its best held-out result"
+    />
+    <div v-else class="p-3">
+      <TerminalGap title="No series has enough history yet." />
+    </div>
+
+    <UCollapsible
+      v-if="card.waiting.length"
+      v-model:open="waitingOpen"
+      :unmount-on-hide="false"
+      class="border-t border-default"
+      :ui="{ content: 'data-[state=open]:animate-none data-[state=closed]:animate-none' }"
+    >
+      <UButton
+        variant="ghost"
+        color="neutral"
+        block
+        trailing-icon="i-lucide-chevron-down"
+        class="group justify-start gap-x-3 rounded-none px-3 py-2 text-left"
+        :ui="{
+          trailingIcon: 'ms-auto transition-transform group-data-[state=open]:rotate-180',
+        }"
+      >
+        <span class="flex flex-wrap items-baseline gap-x-3">
+          <span class="text-sm text-highlighted">Waiting on history</span>
+          <span class="text-xs text-muted">{{ grouped(card.counts.waiting) }} series</span>
+        </span>
+      </UButton>
+      <template #content>
+        <div class="border-t border-default">
+          <TerminalSignalRows
+            :data="data"
+            :rows="card.waiting"
+            caption="Every series waiting on history and what it still needs"
+            waiting
+          />
+        </div>
+      </template>
+    </UCollapsible>
+  </div>
 </template>
