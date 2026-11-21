@@ -49,6 +49,19 @@ const RELEASES_SHOWN = ALERTS_SHOWN
 type LabPrices = PricesData & { lab_skus: number }
 type LabIncidents = IncidentsData & { incident_count: number }
 
+// The lab's minor changes read as one line: how many, and the newest. Started before the
+// rest are awaited, so it runs beside them.
+const minorFetch = useFetch('/api/alerts', {
+  key: `lab-minor:${lab}`,
+  query: { tier: 'info', limit: 1, lab },
+  transform: ({ total, rows: [newest] }: AlertsData) => ({
+    total,
+    newest: newest
+      ? { id: newest.id, headline: newest.headline, created_at: newest.created_at }
+      : null,
+  }),
+})
+
 // No explicit generic on the reshaping fetches: it would pin the data type to
 // the response type, which a transform that adds a field cannot satisfy.
 const [prices, revenue, rankings, spend, hiring, incidents, releases, alerts] = await Promise.all([
@@ -118,13 +131,16 @@ const [prices, revenue, rankings, spend, hiring, incidents, releases, alerts] = 
   }),
   // Narrowed to the lab on the server (the same any-cited-row predicate as
   // alertLabs), so `total` is the lab's whole history, not its share of the newest 200.
+  // The alert tier only: a week of single hiring-board changes would fill the panel.
   useFetch<AlertsData>('/api/alerts', {
     key: `lab-alerts:${lab}`,
-    query: { tier: 'all', limit: ALERTS_SHOWN, lab },
+    query: { tier: 'alert', limit: ALERTS_SHOWN, lab },
     // The table prints lab, topic, headline and one figure; see slimAlerts.
     transform: (d: AlertsData): AlertsData => ({ ...d, rows: slimAlerts(d.rows) }),
   }),
 ])
+
+const minor = await minorFetch
 
 // The thesis recipes' panels, each narrowed to this lab on the server.
 const [adoption, limits, pay, parents, power] = await Promise.all([
@@ -254,7 +270,7 @@ useSeo({
 })
 
 const failed = computed(() =>
-  [prices, revenue, rankings, spend, hiring, incidents, releases, alerts].some(
+  [prices, revenue, rankings, spend, hiring, incidents, releases, alerts, minor].some(
     (r) => r.error.value !== null && r.error.value !== undefined,
   ),
 )
@@ -401,7 +417,7 @@ const tabs = computed(() => [
           <TerminalPanel
             id="alerts"
             title="Alerts"
-            :note="`Alerts and minor changes whose cited rows name ${display}, newest first.`"
+            :note="`Notable and critical alerts that cite ${display}, newest first.`"
             :more="
               alertCount > labAlerts.length
                 ? { label: `All ${alertCount} on the alerts page`, to: `/alerts?lab=${lab}` }
@@ -412,6 +428,16 @@ const tabs = computed(() => [
             <TerminalSignalTable v-if="labAlerts.length" :alerts="labAlerts" flow scoped />
             <TerminalGap v-else-if="alerts.data.value" title="No alert cites this lab yet." />
             <TerminalGap v-else title="Didn’t load." />
+            <div
+              v-if="minor.data.value?.total"
+              :class="labAlerts.length ? 'border-t border-default p-3' : undefined"
+            >
+              <TerminalMinorLine
+                :count="minor.data.value.total"
+                :to="`/alerts?lab=${lab}#minor-changes`"
+                :newest="minor.data.value.newest"
+              />
+            </div>
           </TerminalPanel>
 
           <TerminalPanel

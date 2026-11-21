@@ -444,10 +444,34 @@ export async function queryAlert(
 export const OVERVIEW_ALERTS = 10
 export const OVERVIEW_INFO = 8
 
+/**
+ * Each lab's newest alert-tier row, newest first. A lab that alerts rarely sits
+ * far outside the newest OVERVIEW_ALERTS, and the readout would otherwise say it
+ * has none. An alert citing two labs is listed once.
+ */
+async function newestAlertPerLab(db: PipelineDb, ctx: QueryContext): Promise<AlertView[]> {
+  const known = ctx.at === null ? undefined : alertsKnownAt(ctx.at, await judgeCutoffAt(db, ctx.at))
+  const perLab = await Promise.all(
+    LABS.map((lab) =>
+      db
+        .select()
+        .from(tables.alerts)
+        .where(and(tierWhere('alert'), citesWhere({ lab }), known))
+        .orderBy(desc(tables.alerts.created_at), asc(tables.alerts.id))
+        .limit(1),
+    ),
+  )
+  const rows = [...new Map(perLab.flat().map((row) => [row.id, row])).values()].sort(
+    (a, b) => b.created_at.localeCompare(a.created_at) || a.id.localeCompare(b.id),
+  )
+  return resolveAlerts(db, rows, toChangeView)
+}
+
 export async function queryOverview(db: PipelineDb, ctx: QueryContext): Promise<OverviewData> {
-  const [movement, alerts, info, totals, reads] = await Promise.all([
+  const [movement, alerts, labAlerts, info, totals, reads] = await Promise.all([
     queryMovement(db),
     queryAlerts(db, ctx, OVERVIEW_ALERTS, 'alert'),
+    newestAlertPerLab(db, ctx),
     queryAlerts(db, ctx, OVERVIEW_INFO, 'info'),
     tableCounts(db),
     sourceReads(db).then((r) => r.reads),
@@ -460,6 +484,7 @@ export async function queryOverview(db: PipelineDb, ctx: QueryContext): Promise<
     movement,
     alerts: alerts.rows,
     alert_count: alerts.total,
+    lab_alerts: labAlerts,
     info: info.rows,
     info_count: info.total,
     totals,

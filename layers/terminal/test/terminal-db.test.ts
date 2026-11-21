@@ -995,6 +995,34 @@ describe('the ticker/alert split', () => {
     expect(overview.info.every((a) => a.severity === 'info')).toBe(true)
   })
 
+  it('the overview carries each lab’s newest alert-tier row, however far back, and never a minor change', async () => {
+    const cite = (id: string, provider: string, at: string) => ({
+      ...job(98, at),
+      id,
+      entity_key: `model:${provider}:${id}`,
+      entity_type: 'model',
+      provider,
+    })
+    // Anthropic's only alert is older than every xAI row; its newest row is a minor change.
+    const old = cite('anthropic-price', 'anthropic', '2026-08-01T00:00:00Z')
+    const minor = cite('anthropic-retitle', 'anthropic', T(30))
+    const shared = cite('openai-price', 'openai', T(31))
+    await insertRows(db, 'changes', [old, minor, shared])
+    const both = { ...alertRow('notable', shared.id, T(31)), id: 'openai-and-xai' }
+    both.change_ids = JSON.stringify([shared.id, job(0, T(0)).id])
+    await insertRows(db, 'alerts', [
+      { ...alertRow('notable', old.id, old.detected_at), id: 'anthropic-old' },
+      alertRow('info', minor.id, T(30)),
+      both,
+    ])
+
+    const { lab_alerts } = await queryOverview(db, await ctx())
+    // One row for the alert citing two labs, newest first.
+    expect(lab_alerts.map((a) => a.id)).toEqual(['openai-and-xai', 'anthropic-old'])
+    expect(lab_alerts.every((a) => a.severity !== 'info')).toBe(true)
+    expect(lab_alerts[1]!.changes.map((c) => c.provider)).toEqual(['anthropic'])
+  })
+
   it('fieldTable lists every field of either side; fieldDiff is its changed subset', () => {
     expect(fieldTable({ a: 1, b: 'x' }, { a: 2, b: 'x', c: true })).toEqual([
       { field: 'a', before: '1', after: '2' },

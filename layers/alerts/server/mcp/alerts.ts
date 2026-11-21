@@ -11,7 +11,7 @@ export function registerAlertTools({ server, deps, read }: McpKit): void {
         `The signal band. movement counts change rows by axis (pricing, hiring, sec) inside a ${MOVEMENT_WINDOW_HOURS}h window ` +
         'anchored to the NEWEST detection (window_from..latest_detected_at), not to the clock — so a quiet weekend still reports Friday’s moves. ' +
         'total_changes is the all-time denominator; sources_not_yet_compared counts sources with a single snapshot (nothing to diff yet). ' +
-        'alerts are the newest notable/critical rows with their cited change rows and alert_count the total on file; info is the ' +
+        'alerts are the newest notable/critical rows with their cited change rows and alert_count the total on file; lab_alerts is each lab’s newest notable/critical row; info is the ' +
         'minor-changes tier (severity info: what moved, low stakes) and info_count its total. ' +
         'A change row is a diff between two snapshots, never a re-read of current state. ' +
         PROVENANCE,
