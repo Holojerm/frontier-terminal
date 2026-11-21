@@ -80,6 +80,12 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
     action:
       'The probes Durable Object for the placement in the detail did not return a report, so that placement may have stored no probes this hour. The detail has its status or error; look in the Worker logs for the /_probes/run request inside the object. The hours missed cannot be backfilled.',
   },
+  // tasks/signals/prices.ts: a Databento pull failed.
+  market_pull_failed: {
+    severity: 'warning',
+    action:
+      'A Databento pull for the signals harness failed. The detail has Databento’s message: 401 means DATABENTO_API_KEY is wrong or unset, 402 or 403 that credits ran out or the dataset needs a licence. The harness keeps scoring on the closes it already has.',
+  },
   // pipeline/probes/resolve.ts: a flagship target's model is chosen on every run.
   probe_model_unresolved: {
     severity: 'warning',

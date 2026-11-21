@@ -207,6 +207,7 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
   ),
   entity_securities: whole('it’s a hand-checked lookup of labs to securities.', null),
   entity_identifiers: whole('it’s a lookup of one row per company.', null),
+  signal_results: whole('the statistics are recomputed whole every day.', null),
   supplier_passages: whole('it’s a table of passages read by hand and kept in code.', null),
   power_site_ties: whole(
     'rows are restamped to newer filings and ended in place, so the table holds the ties as read now.',

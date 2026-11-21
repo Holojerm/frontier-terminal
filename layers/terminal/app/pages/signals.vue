@@ -1,0 +1,72 @@
+<script setup lang="ts">
+// The signal scorecard: every registered series tested against the stocks it
+// is expected to lead, failures included, and the forward calls. Method detail
+// is in the signal_results description on /data and the API's `method`.
+
+import type { SignalsData } from '../../shared/utils/signals'
+
+definePageMeta({
+  publicPage: {
+    changefreq: 'daily',
+    priority: '0.7',
+    title: 'Signals',
+    summary:
+      'Every series we track (package downloads, the Ramp AI Index, OpenRouter share, GPU prices, probe strain, open roles, launches, price cuts, filed revenue) tested against the stocks it should lead: correlation with forward returns less SPY at 1, 5, 20 and 60 trading days, and event studies, with the newest third held out. Also dated forward calls, scored when the filing prints. Research, not investment advice.',
+  },
+})
+
+const { data, error } = await useFetch<SignalsData>('/api/signals')
+
+useSeo({
+  title: 'Signals: AI lab data tested against the stocks it should lead',
+  description:
+    'Each Frontier Terminal series tested against forward returns of the listed companies tied to it, with a held-out sample and forward calls.',
+  dateModified: data.value?.as_of,
+})
+
+const stamps = useStamps()
+
+const note = computed(() => {
+  const d = data.value
+  if (!d) return ''
+  const parts = [`${d.series.length} series`, `${d.tests} tests with enough history`]
+  if (d.bonferroni_p !== null) parts.push(`0.05 / ${d.tests} = ${d.bonferroni_p.toPrecision(2)}`)
+  if (d.prices_through) parts.push(`closes through ${stamps.date(d.prices_through)}`)
+  return `${parts.join(', ')}.`
+})
+</script>
+
+<template>
+  <TerminalPage
+    title="Signals"
+    lede="Each series we track, tested against the stocks it should lead. The newest third of every series is held out. A result needs 10 held-out periods or 4 held-out event days before it gets a number."
+    :as-of="data?.as_of"
+    :error="Boolean(error)"
+    error-title="Signals didn’t load"
+    error-body="Try reloading in a minute."
+  >
+    <template v-if="data">
+      <TerminalGap
+        v-if="!data.run"
+        title="No run yet."
+        reason="The scorecard is computed once a day after the US close."
+      />
+      <TerminalPanel
+        id="scorecard"
+        title="Scorecard"
+        :note="note"
+        :more="{ label: 'Method and download', to: '/data#signal_results' }"
+        flush
+      >
+        <TerminalSignalScorecard :data="data" />
+        <template #foot>
+          Highlighted: clears 0.05 divided by the number of tests, held out, with the same sign in
+          sample. {{ data.credit }}
+        </template>
+      </TerminalPanel>
+      <TerminalPanel id="forward-calls" title="Forward calls">
+        <TerminalForwardCalls :calls="data.forward_calls" />
+      </TerminalPanel>
+    </template>
+  </TerminalPage>
+</template>

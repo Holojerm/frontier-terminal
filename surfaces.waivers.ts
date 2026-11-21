@@ -67,6 +67,8 @@ export const SURFACE_WAIVERS = {
       'covered: prospectus rows are sec and revenue change rows (ENTITY_AXIS), read in full on /revenue',
     '/api/releases': 'covered: a new SKU is a pricing change row (ENTITY_AXIS), read on /prices',
     '/api/reliability': 'internal: the feed’s own track record; failures spool ops events',
+    '/api/signals':
+      'internal: scores the other datasets against stock returns; it raises no alert of its own',
     '/api/reported': 'not yet: press headlines are judged for the track record, not alerted',
     '/api/spend': 'derived: joins OpenRouter share (demand) to list prices (pricing), both axes',
     '/api/suppliers':
@@ -93,12 +95,16 @@ export const SURFACE_WAIVERS = {
     gdelt_files: 'internal: the GKG read cursor',
     gkg_mentions: 'internal: third-party GDELT rows kept for matching, then dropped',
     judge_runs: 'internal: the judge routine’s cursor',
+    market_bars:
+      'internal: Databento closes licensed for internal use only; signal_results exports what is derived from them',
+    market_fetches: 'internal: the Databento pull cursor behind market_bars',
     poll_ticks: 'internal: poll tick log behind the freshness gaps',
     price_readings:
       'internal: the judge’s re-reads of failing price pages; the prices land in prices_latest',
     recipe_runs: 'internal: the recipe fetch log; recipe_observations is exported',
     reported_reviews: 'internal: which headlines the judge has read',
     rollup_state: 'internal: how far the source_runs rollup has rolled',
+    signal_runs: 'internal: the signals harness’s run log; signal_results is exported',
     source_run_days: 'derived: a daily rollup of source_runs, which is exported',
     row_counts:
       'derived: per-key row counts of entities, changes, alerts and recipe_observations, all exported',
