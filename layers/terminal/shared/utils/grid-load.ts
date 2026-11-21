@@ -15,18 +15,44 @@ export interface GridArea {
   name: string
   /** What the page calls it. */
   short: string
+  /**
+   * The clock EIA keeps the authority's local days on: its API's timezone facet,
+   * and the IANA zone that counts each day's hours. Checked against the six-month
+   * files' daily sums on 2026-11-21.
+   */
+  zone: { eia: 'Eastern' | 'Central' | 'Arizona'; iana: string }
 }
+
+const EASTERN = { eia: 'Eastern', iana: 'America/New_York' } as const
+const CENTRAL = { eia: 'Central', iana: 'America/Chicago' } as const
+// EIA keeps El Paso Electric on standard time all year, like Arizona.
+const ARIZONA = { eia: 'Arizona', iana: 'America/Phoenix' } as const
 
 /** The authorities stored: every one a tracked lab site sits in or is likely to. */
 export const GRID_AREAS: readonly GridArea[] = [
-  { ba: 'ERCO', name: 'Electric Reliability Council of Texas, Inc.', short: 'ERCOT' },
-  { ba: 'PJM', name: 'PJM Interconnection, LLC', short: 'PJM' },
-  { ba: 'MISO', name: 'Midcontinent Independent System Operator, Inc.', short: 'MISO' },
-  { ba: 'NYIS', name: 'New York Independent System Operator', short: 'NYISO' },
-  { ba: 'AZPS', name: 'Arizona Public Service Company', short: 'APS (Arizona)' },
-  { ba: 'SOCO', name: 'Southern Company Services, Inc. - Trans', short: 'Southern Company' },
-  { ba: 'TVA', name: 'Tennessee Valley Authority', short: 'TVA' },
-  { ba: 'EPE', name: 'El Paso Electric Company', short: 'El Paso Electric' },
+  {
+    ba: 'ERCO',
+    name: 'Electric Reliability Council of Texas, Inc.',
+    short: 'ERCOT',
+    zone: CENTRAL,
+  },
+  { ba: 'PJM', name: 'PJM Interconnection, LLC', short: 'PJM', zone: EASTERN },
+  {
+    ba: 'MISO',
+    name: 'Midcontinent Independent System Operator, Inc.',
+    short: 'MISO',
+    zone: CENTRAL,
+  },
+  { ba: 'NYIS', name: 'New York Independent System Operator', short: 'NYISO', zone: EASTERN },
+  { ba: 'AZPS', name: 'Arizona Public Service Company', short: 'APS (Arizona)', zone: ARIZONA },
+  {
+    ba: 'SOCO',
+    name: 'Southern Company Services, Inc. - Trans',
+    short: 'Southern Company',
+    zone: CENTRAL,
+  },
+  { ba: 'TVA', name: 'Tennessee Valley Authority', short: 'TVA', zone: CENTRAL },
+  { ba: 'EPE', name: 'El Paso Electric Company', short: 'El Paso Electric', zone: ARIZONA },
 ]
 
 export const GRID_AREA_CODES: ReadonlySet<string> = new Set(GRID_AREAS.map((a) => a.ba))

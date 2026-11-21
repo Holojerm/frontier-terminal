@@ -2117,6 +2117,16 @@
       "http_status": 200,
       "raw_bytes": 95083,
       "trim": "only the lines linking a /files/docs/ PDF, verbatim"
+    },
+    {
+      "path": "fixtures/grid-load/eia-api-daily-central-2026-07-01.json",
+      "source_id": "eia930-api",
+      "source_url": "https://api.eia.gov/v2/electricity/rto/daily-region-data/data/?frequency=daily&data[0]=value&facets[respondent][]=ERCO&facets[respondent][]=MISO&facets[type][]=D&facets[timezone][]=Central&start=2026-07-01&end=2026-07-02&sort[0][column]=period&sort[0][direction]=asc&offset=0&length=5000",
+      "fetched_at": "2026-11-21T07:05:00Z",
+      "http_status": 200,
+      "raw_bytes": 1603,
+      "trim": "none — committed whole; the key went in the X-Api-Key header and the response carries none",
+      "note": "ERCO's two days equal the six-month file's adjusted hours summed by Data Date (fixtures/grid-load/eia930-balance-2026-jul-dec.csv): 1670661 and 1667769 MWh."
     }
   ]
 }

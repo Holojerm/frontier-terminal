@@ -566,6 +566,11 @@ export default defineNuxtConfig({
     // openrouter.ai/api/v1/chat/completions; empty = no probe runs. A Worker secret:
     // `op read "op://…" | bunx wrangler secret put NUXT_OPENROUTER_API_KEY`.
     openrouterApiKey: '',
+    // EIA API v2 key for grid load (layers/terminal/server/power/eia-api.ts), sent as the
+    // X-Api-Key header to api.eia.gov only, never in a URL. Empty = the EIA-930 six-month
+    // files are read instead, as they are for 2018 and whenever the API fails. A Worker
+    // secret: `op read "op://Agents/eia/credential" | bunx wrangler secret put NUXT_EIA_API_KEY`.
+    eiaApiKey: '',
     // Bearer for GitHub's search API, which the coding-agent PR recipes read
     // (layers/terminal/server/theses/recipes/github-agent-prs.ts). A fine-grained
     // token with no permissions is enough: public data only. Empty = those

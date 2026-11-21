@@ -13,6 +13,7 @@ import {
   periodsThrough,
   readEia930,
 } from '../server/power/eia930'
+import { eiaDailyUrl, hoursInLocalDay, readEiaDaily, zoneGroups } from '../server/power/eia-api'
 import { runErcotLargeLoads } from '../server/power/ercot-large-loads'
 import {
   ercotFacts,
@@ -20,7 +21,7 @@ import {
   ercotReportLinks,
   reportPeriod,
 } from '../server/power/ercot-reports'
-import { runGridLoad } from '../server/power/grid-load'
+import { API_PERIOD, runGridLoad } from '../server/power/grid-load'
 import { GRID_AREA_TABLE, ercotSeries, queryGridLoad } from '../server/power/grid-query'
 import { pdfPages } from '../server/power/pdf-text'
 import { seedHandTies } from '../server/power/store'
@@ -102,6 +103,48 @@ describe('EIA-930 files', () => {
     expect(() =>
       readEia930('"Balancing Authority","Data Date","Demand (MW)"\nERCO,07/01/2026,5\n'),
     ).toThrow(/Demand \(MW\) \(Adjusted\)/)
+  })
+})
+
+describe('EIA API v2', () => {
+  const API = fixtureText('fixtures/grid-load/eia-api-daily-central-2026-07-01.json')
+
+  it('reads the same days the six-month file sums to', () => {
+    const { days, total } = readEiaDaily(API)
+    expect(total).toBe(4)
+    const files = readEia930(EIA).days.filter((d) => d.ba === 'ERCO')
+    expect(days.filter((d) => d.ba === 'ERCO')).toEqual(files)
+    expect(days.find((d) => d.ba === 'MISO')).toEqual({
+      ba: 'MISO',
+      date: '2026-07-01',
+      mwh: 2466800,
+      hours: 24,
+    })
+  })
+
+  it('counts a local day’s hours across clock changes', () => {
+    expect(hoursInLocalDay('2026-03-08', 'America/Chicago')).toBe(23)
+    expect(hoursInLocalDay('2026-11-01', 'America/New_York')).toBe(25)
+    expect(hoursInLocalDay('2026-03-08', 'America/Phoenix')).toBe(24)
+    expect(hoursInLocalDay('2026-07-01', 'America/Chicago')).toBe(24)
+  })
+
+  it('asks per clock, with no key in the URL', () => {
+    expect([...zoneGroups().keys()].sort()).toEqual(['Arizona', 'Central', 'Eastern'])
+    const url = eiaDailyUrl({
+      bas: ['ERCO', 'MISO'],
+      zone: 'Central',
+      start: '2019-01-01',
+      offset: 0,
+    })
+    expect(url).not.toMatch(/api_key/i)
+    expect(new URL(url).searchParams.getAll('facets[respondent][]')).toEqual(['ERCO', 'MISO'])
+  })
+
+  it('refuses a row on another clock or a response with no data', () => {
+    const wrong = API.replace(/"timezone":"Central"/, '"timezone":"Eastern"')
+    expect(() => readEiaDaily(wrong)).toThrow(/not Central/)
+    expect(() => readEiaDaily('{"error":"invalid api_key"}')).toThrow(/EIA API error/)
   })
 })
 
@@ -325,6 +368,74 @@ describe('the EIA-930 run', () => {
 
     const second = await runGridLoad(db, { put, fetch, userAgent: 'test', now: NOW })
     expect(second[0]).toMatchObject({ period: '2026H2', status: 'unchanged' })
+  })
+})
+
+describe('the EIA-930 run with a key', () => {
+  const NOW = new Date('2026-11-21T06:00:00Z')
+  const KEY = 'k3y-for-the-test-0000000000000000000000'
+  const API = fixtureText('fixtures/grid-load/eia-api-daily-central-2026-07-01.json')
+  const seen: { url: string; key: string | undefined }[] = []
+  const apiFetch = (fail: boolean) =>
+    (async (input: RequestInfo | URL, init?: RequestInit) => {
+      const url = String(input)
+      seen.push({ url, key: (init?.headers as Record<string, string>)['X-Api-Key'] })
+      if (url.startsWith('https://api.eia.gov/')) {
+        if (fail) return new Response('{}', { status: 503 })
+        // Every clock answers with the Central fixture; only its own authorities are kept.
+        const zone = new URL(url).searchParams.get('facets[timezone][]')
+        return new Response(zone === 'Central' ? API : '{"response":{"total":"0","data":[]}}', {
+          status: 200,
+        })
+      }
+      if (url === eia930FileUrl('2018H1') || url === eia930FileUrl('2018H2')) {
+        return new Response(EIA, { status: 200 })
+      }
+      return new Response('', { status: 404 })
+    }) as typeof globalThis.fetch
+
+  it('reads 2019 on from the API, with the key in a header only, and 2018 from the files', async () => {
+    seen.length = 0
+    const r = await runGridLoad(db, {
+      put,
+      fetch: apiFetch(false),
+      userAgent: 'test',
+      now: NOW,
+      apiKey: KEY,
+    })
+    expect(r.map((x) => [x.period, x.status])).toEqual([
+      [API_PERIOD, 'read'],
+      ['2018H1', 'read'],
+      ['2018H2', 'read'],
+    ])
+    const api = seen.filter((s) => s.url.startsWith('https://api.eia.gov/'))
+    expect(api).toHaveLength(3)
+    expect(api.every((s) => s.key === KEY && !s.url.includes(KEY))).toBe(true)
+    expect(
+      seen
+        .filter((s) => !s.url.startsWith('https://api.eia.gov/'))
+        .every((s) => s.key === undefined),
+    ).toBe(true)
+    const days = await db.select().from(schema.gridLoadDays)
+    const miso = days.find((d) => d.ba === 'MISO' && d.date === '2026-07-01')!
+    expect(miso.source_url.startsWith('https://api.eia.gov/')).toBe(true)
+    expect(JSON.stringify(days)).not.toContain(KEY)
+    expect([...stored.values()].some((b) => typeof b === 'string' && b.includes(KEY))).toBe(false)
+  })
+
+  it('falls back to the files when the API fails, and says so', async () => {
+    const r = await runGridLoad(db, {
+      put,
+      fetch: apiFetch(true),
+      userAgent: 'test',
+      now: NOW,
+      apiKey: KEY,
+    })
+    expect(r[0]).toMatchObject({ period: API_PERIOD, status: 'failed' })
+    expect(r[1]!.period).toBe('2026H2')
+    const ops = await db.select().from(schema.opsEvents)
+    expect(ops[0]!.detail).toContain('reading the six-month files instead')
+    expect(ops.some((o) => (o.detail ?? '').includes(KEY))).toBe(false)
   })
 })
 
