@@ -83,6 +83,7 @@ export const ARCHIVED_EXPORTS: ReadonlySet<string> = new Set([
   'archived_hiring',
   'archived_gpu_prices',
   'archived_incidents',
+  'archived_rate_limits',
   'archive_captures',
 ])
 

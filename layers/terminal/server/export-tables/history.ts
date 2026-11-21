@@ -329,6 +329,84 @@ export const HISTORY_TABLES = {
     [tables.archivedIncidents.captured_at, tables.archivedIncidents.id],
     byColumn(tables.archivedIncidents.captured_at),
   ),
+  archived_rate_limits: plainTable(
+    'archived_rate_limits',
+    'Rate-limit history from before we read the labs’ limits pages: one row per limit per Internet Archive copy of Anthropic’s rate-limit page we could read, from March 2024. Keyed as the live limits-anthropic recipe keys its rows. source_url is the copy, captured_at when the Archive saw the page. Never mixed into the live tables.',
+    tables.archivedRateLimits,
+    {
+      id: {
+        type: 'text',
+        key: true,
+        meaning: 'The first 32 hex characters of the SHA-256 of capture_id and key.',
+      },
+      capture_id: {
+        type: 'text',
+        meaning:
+          'The copy the row was read from: <era>:<14-digit Wayback timestamp>, as in archive_captures.',
+      },
+      provider: PROVIDER,
+      recipe_id: {
+        type: 'text',
+        meaning: 'The live recipe the row continues (limits-anthropic), as in recipe_observations.',
+      },
+      key: {
+        type: 'text',
+        meaning: '<model>|<tier>|<metric>, the key the live recipe uses.',
+      },
+      model: {
+        type: 'text',
+        meaning:
+          'The model as the page printed it, or for a usage-tier row what the column states: spend cap, credit purchase to reach tier, max credit purchase, or wait to reach tier.',
+      },
+      tier: {
+        type: 'text',
+        meaning:
+          'The usage tier, with “Build Tier 1” read as Tier 1 (Anthropic’s 2024 name for it).',
+      },
+      metric: {
+        type: 'text',
+        meaning:
+          'RPM, TPM, TPD, ITPM or OTPM for a rate; USD per month, USD or days for a usage-tier row.',
+      },
+      value: {
+        type: 'number',
+        nullable: true,
+        unit: 'the row’s metric',
+        meaning: 'The limit as printed. Null where the page printed no figure (N/A).',
+      },
+      payload: {
+        type: 'json',
+        meaning:
+          'model, tier and metric, and the tier label and column header as the copy printed them.',
+      },
+      captured_at: {
+        type: 'timestamp',
+        meaning:
+          'When the Internet Archive captured the page, in UTC: the moment these limits were on it.',
+      },
+      original_url: {
+        type: 'text',
+        meaning: 'The lab’s own rate-limit page the Archive captured.',
+      },
+      basis: {
+        type: 'text',
+        meaning: 'Always archived: read from a copy, not observed by this site.',
+      },
+      source_url: {
+        type: 'text',
+        provenance: true,
+        meaning:
+          'The Wayback Machine copy (https://web.archive.org/web/<timestamp>id_/<original_url>).',
+      },
+      fetched_at: {
+        type: 'timestamp',
+        provenance: true,
+        meaning: 'When we read the copy back from the Archive, in UTC.',
+      },
+    },
+    [tables.archivedRateLimits.captured_at, tables.archivedRateLimits.id],
+    byColumn(tables.archivedRateLimits.captured_at),
+  ),
   archive_captures: plainTable(
     'archive_captures',
     'Every Internet Archive copy the price-, hiring-, GPU-price- and incident-history backfill considered: read (with how many rows it gave) or skipped, with the reason. A skipped copy gave no rows; nothing on it was guessed.',
@@ -357,7 +435,7 @@ export const HISTORY_TABLES = {
       status: {
         type: 'text',
         meaning:
-          'parsed (its rows are in archived_prices, archived_hiring, archived_gpu_prices or archived_incidents, by axis) or skipped (no rows; detail says why).',
+          'parsed (its rows are in archived_prices, archived_hiring, archived_gpu_prices, archived_incidents or archived_rate_limits, by axis) or skipped (no rows; detail says why).',
       },
       detail: {
         type: 'text',
@@ -396,7 +474,7 @@ export const HISTORY_TABLES = {
       axis: {
         type: 'text',
         meaning:
-          'pricing (a lab’s pricing page; rows in archived_prices), hiring (a lab’s job board; rows in archived_hiring), gpu (a GPU provider’s price page; rows in archived_gpu_prices) or status (a lab’s status feed; incidents in archived_incidents).',
+          'pricing (a lab’s pricing page; rows in archived_prices), hiring (a lab’s job board; rows in archived_hiring), gpu (a GPU provider’s price page; rows in archived_gpu_prices), status (a lab’s status feed; incidents in archived_incidents) or limits (a lab’s rate-limit page; rows in archived_rate_limits).',
       },
       source_url: {
         type: 'text',

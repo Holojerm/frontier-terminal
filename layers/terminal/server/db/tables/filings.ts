@@ -34,6 +34,40 @@ export const filedFacts = sqliteTable(
   ],
 )
 
+// Figures a filer states about a lab only in its filing's words, before it
+// tags them (layers/terminal/server/exposure/text-facts.ts): Amazon on
+// Anthropic in its 10-Qs and 10-Ks from 2023-10 until amzn:AnthropicMember
+// in 2026-04. One row per (filing, metric, period), so every filing's
+// statement is kept and a series reads each period's first. `sentence` is
+// the filing's own words; `qualifier` is 'primarily' where Amazon says the
+// figure is mostly, not wholly, the lab's. Append-only.
+export const filedTextFacts = sqliteTable(
+  'filed_text_facts',
+  {
+    id: text('id').primaryKey(),
+    ticker: text('ticker').notNull(),
+    cik: text('cik').notNull(),
+    lab: text('lab').notNull(),
+    metric: text('metric').notNull(),
+    start: text('start'), // null for a balance or a commitment
+    end: text('end').notNull(),
+    value: real('value').notNull(),
+    unit: text('unit').notNull(), // USD
+    qualifier: text('qualifier'), // approximately | primarily
+    sentence: text('sentence').notNull(),
+    form: text('form').notNull(),
+    filed: text('filed').notNull(),
+    accession_no: text('accession_no').notNull(),
+    raw_key: text('raw_key').notNull(),
+    first_seen_at: text('first_seen_at').notNull(),
+    ...provenance,
+  },
+  (t) => [
+    index('filed_text_facts_series_idx').on(t.ticker, t.metric, t.end),
+    index('filed_text_facts_filed_idx').on(t.filed, t.id),
+  ],
+)
+
 // Filed-fact reads — one row per document fetch: a filer's company facts,
 // one filing's instance, or one earnings release (exposure/guidance.ts, where
 // `facts` counts the guidance rows it printed). An instance or release read
@@ -44,7 +78,7 @@ export const filedFactReads = sqliteTable(
   {
     id: text('id').primaryKey(),
     ticker: text('ticker').notNull(),
-    kind: text('kind').notNull(), // companyfacts | instance | release
+    kind: text('kind').notNull(), // companyfacts | instance | release | text
     accession_no: text('accession_no'), // null for company facts
     status: text('status').notNull(), // ok | unchanged | failed
     detail: text('detail'),

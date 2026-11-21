@@ -20,7 +20,9 @@ import {
   FILER_NAMES,
   FISCAL_YEAR_END,
   buildSeries,
+  textSeries,
   type StoredFact,
+  type StoredTextFact,
 } from '../exposure/series'
 import type { PipelineDb } from '../pipeline/store'
 import type { QueryContext } from './terminal-db'
@@ -29,7 +31,7 @@ export const EXPOSURE_METHOD =
   'filed facts: every XBRL fact filed before the UTC day of as_of, each quarter from the newest of those filings. A fact counts from the day after its filing date, whenever we read it, so source_url and fetched_at can postdate as_of.'
 
 export const EXPOSURE_RULE =
-  'Filed XBRL facts only (the SEC’s tagged financial data), each linked to its filing. Every series is the filer’s own number, never the lab’s. As of a past instant, a fact counts from the day after its filing date.'
+  'Filed XBRL facts (the SEC’s tagged financial data), and before Amazon tagged Anthropic, the figures its filings stated in words, each quoted. Each is linked to its filing. Every series is the filer’s own number, never the lab’s. As of a past instant, a fact counts from the day after its filing date.'
 
 /** UTC day of an instant: facts filed before it count at that instant. */
 export const filedBefore = (at: string) => at.slice(0, 10)
@@ -65,13 +67,45 @@ export function filedFactsAt(db: PipelineDb, at: string | null): Promise<StoredF
     )
 }
 
+/** Every figure a filer stated about a lab in words, filed before the UTC day of `at`, or all of them. */
+export async function textFactsAt(db: PipelineDb, at: string | null): Promise<StoredTextFact[]> {
+  const t = tables.filedTextFacts
+  const rows = await db
+    .select({
+      ticker: t.ticker,
+      lab: t.lab,
+      metric: t.metric,
+      concept: t.metric,
+      dims: t.lab,
+      start: t.start,
+      end: t.end,
+      value: t.value,
+      unit: t.unit,
+      form: t.form,
+      filed: t.filed,
+      accession_no: t.accession_no,
+      cik: t.cik,
+      qualifier: t.qualifier,
+      sentence: t.sentence,
+      source_url: t.source_url,
+      fetched_at: t.fetched_at,
+    })
+    .from(t)
+    .where(at ? lt(t.filed, filedBefore(at)) : undefined)
+  return rows as StoredTextFact[]
+}
+
 export async function queryExposure(db: PipelineDb, ctx: QueryContext): Promise<ExposureData> {
   const at = ctx.at
   if (at) {
     ctx.notes.method.add(EXPOSURE_METHOD)
     ctx.notes.eventTime = true
   }
-  const [facts, state] = await Promise.all([filedFactsAt(db, at), readState(db, null)])
+  const [facts, text, state] = await Promise.all([
+    filedFactsAt(db, at),
+    textFactsAt(db, at),
+    readState(db, null),
+  ])
   return {
     as_of: ctx.as_of,
     computed_at: ctx.now().toISOString(),
@@ -91,7 +125,7 @@ export async function queryExposure(db: PipelineDb, ctx: QueryContext): Promise<
         instances_read: s?.instances_read ?? 0,
       }
     }),
-    series: buildSeries(facts),
+    series: [...buildSeries(facts), ...textSeries(text)],
     gaps: [...EXPOSURE_GAPS],
   }
 }

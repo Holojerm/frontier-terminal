@@ -4,8 +4,9 @@
 // (layers/terminal/server/pipeline/archive/): API price lists (eras.ts, rows
 // in archived_prices), job boards (hiring-eras.ts, counts in
 // archived_hiring), GPU rental price pages (gpu-eras.ts, prices in
-// archived_gpu_prices) and status feeds (status-eras.ts, one row per
-// incident in archived_incidents). Never on a cron: the owner runs it, and
+// archived_gpu_prices), status feeds (status-eras.ts, one row per
+// incident in archived_incidents) and rate-limit pages (limits-eras.ts, rows
+// in archived_rate_limits). Never on a cron: the owner runs it, and
 // re-runs are idempotent.
 //
 //   bun run backfill:wayback -- --plan                     list what would be fetched
@@ -14,9 +15,10 @@
 //   bun run backfill:wayback -- --axis hiring              job boards only
 //   bun run backfill:wayback -- --axis gpu                 GPU rental price pages only
 //   bun run backfill:wayback -- --axis status              status feeds only
+//   bun run backfill:wayback -- --axis limits              rate-limit pages only
 //   bun run backfill:wayback -- --remote                   production D1 + R2, through wrangler
 //
-// Flags: --axis pricing|hiring|gpu|status (default all four), --provider <id>, --era <id>,
+// Flags: --axis pricing|hiring|gpu|status|limits (default all five), --provider <id>, --era <id>,
 // --cadence-days <n> (default 7: one capture per week of each era; a status
 // era sets its own, every copy for a feed that lists only its newest 25),
 // --limit <n> captures this run, --redo
@@ -39,6 +41,7 @@ import { dirname, join } from 'node:path'
 import { ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/eras'
 import { GPU_ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/gpu-eras'
 import { HIRING_ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/hiring-eras'
+import { LIMITS_ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/limits-eras'
 import { STATUS_ARCHIVE_ERAS } from '../layers/terminal/server/pipeline/archive/status-eras'
 import {
   archiveRawKey,
@@ -46,6 +49,7 @@ import {
   captureId,
   gpuRows,
   hiringRows,
+  limitsRows,
   skippedCapture,
   statusRows,
   type CaptureAxis,
@@ -176,7 +180,12 @@ function insert(table: string, row: Row, verb = 'INSERT OR REPLACE'): string {
 interface Job {
   axis: CaptureAxis
   era: { id: string; provider: string; url: string; from: string; until: string }
-  table: 'archived_prices' | 'archived_hiring' | 'archived_gpu_prices' | 'archived_incidents'
+  table:
+    | 'archived_prices'
+    | 'archived_hiring'
+    | 'archived_gpu_prices'
+    | 'archived_incidents'
+    | 'archived_rate_limits'
   /** One copy per this many days unless --cadence-days says otherwise. */
   cadenceDays?: number
   rows(capture: CdxCapture, text: string, bytes: number, fetchedAt: string): Built
@@ -213,6 +222,15 @@ const JOBS: readonly Job[] = [
     rows: (c, text, bytes, at) => {
       const out = gpuRows(era, c, text, bytes, at)
       return { capture: out.capture, rows: out.prices }
+    },
+  })),
+  ...LIMITS_ARCHIVE_ERAS.map((era): Job => ({
+    axis: 'limits',
+    era,
+    table: 'archived_rate_limits',
+    rows: (c, text, bytes, at) => {
+      const out = limitsRows(era, c, text, bytes, at)
+      return { capture: out.capture, rows: out.limits }
     },
   })),
   ...STATUS_ARCHIVE_ERAS.map((era): Job => ({
@@ -301,8 +319,11 @@ async function main() {
     fail('--limit must be a positive whole number.')
   }
   const axis = flags.get('axis')
-  if (axis !== undefined && !['pricing', 'hiring', 'gpu', 'status'].includes(String(axis))) {
-    fail('--axis must be pricing, hiring, gpu or status.')
+  if (
+    axis !== undefined &&
+    !['pricing', 'hiring', 'gpu', 'status', 'limits'].includes(String(axis))
+  ) {
+    fail('--axis must be pricing, hiring, gpu, status or limits.')
   }
   const jobs = JOBS.filter(
     (j) =>

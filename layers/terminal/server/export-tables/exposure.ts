@@ -222,6 +222,66 @@ export const EXPOSURE_TABLES = {
     undefined,
     { ticker: tables.filedFacts.ticker },
   ),
+  filed_text_facts: plainTable(
+    'filed_text_facts',
+    'What Amazon’s 10-Qs and 10-Ks said about Anthropic in words before it tagged amzn:AnthropicMember (filings from 2023-10-27 to 2026-02-06): each convertible note bought, the notes committed to, their fair value, and later the gains and upward marks Anthropic brought. One row per figure per filing, with the sentence that states it. Amazon’s numbers, never Anthropic’s. Rows are never edited.',
+    tables.filedTextFacts,
+    {
+      id: {
+        type: 'text',
+        key: true,
+        meaning: 'SHA-256 (hex) of ticker, metric, start, end, and accession_no.',
+      },
+      ticker: { type: 'text', meaning: 'The filer: AMZN.' },
+      cik: CIK,
+      lab: { type: 'text', meaning: 'The lab the sentence names: anthropic.' },
+      metric: {
+        type: 'text',
+        meaning:
+          'notes_invested (notes bought over the period), notes_commitment (notes still to be bought, by end), notes_fair_value, investment_value (notes and preferred stock together), preferred_recorded (preferred stock on the balance sheet), upward_adjustment (marks on private holdings over the period), conversion_gain (gain on notes converted to preferred stock over the period), or preferred_carrying_value.',
+      },
+      start: {
+        type: 'date',
+        nullable: true,
+        meaning: 'The period’s first day. Null for a balance or a commitment, which is at end.',
+      },
+      end: {
+        type: 'date',
+        meaning: 'The period’s last day, the balance date, or the commitment’s due date.',
+      },
+      value: { type: 'number', unit: 'USD', meaning: 'The figure as the sentence states it.' },
+      unit: { type: 'text', meaning: 'Always USD: every figure read is in dollars.' },
+      qualifier: {
+        type: 'text',
+        nullable: true,
+        meaning:
+          'approximately when the sentence says so; primarily when Amazon says the figure is mostly from Anthropic, so it includes other companies. Null otherwise.',
+      },
+      sentence: { type: 'text', meaning: 'The filing’s sentence, as printed.' },
+      form: { type: 'text', meaning: 'The filing’s form: 10-Q or 10-K.' },
+      filed: { type: 'date', meaning: 'The filing date EDGAR gives the accession.' },
+      accession_no: { type: 'text', meaning: 'The filing’s EDGAR accession number.' },
+      raw_key: {
+        type: 'text',
+        meaning: 'Key of the filing’s primary document in this site’s object store (R2).',
+      },
+      first_seen_at: { type: 'timestamp', meaning: 'When we first read the figure, in UTC.' },
+      source_url: {
+        type: 'text',
+        provenance: true,
+        meaning: 'The filing’s primary document on sec.gov.',
+      },
+      fetched_at: {
+        type: 'timestamp',
+        provenance: true,
+        meaning: 'When that read ran, in UTC. A row is never rewritten.',
+      },
+    },
+    [tables.filedTextFacts.filed, tables.filedTextFacts.id],
+    async (_db, at) => lt(tables.filedTextFacts.filed, filedBefore(at)),
+    undefined,
+    { ticker: tables.filedTextFacts.ticker },
+  ),
   filed_guidance: plainTable(
     'filed_guidance',
     'Forward guidance as a company stated it. source release: the capex figure in each earnings release Microsoft, Alphabet, Amazon, Meta, and Oracle furnish (exhibit 99.1 of an 8-K with item 2.02), one row per fiscal year, with the release’s own sentence. The other sources are the earnings calls of the 45 listed companies: an 8-K or 6-K exhibit, a transcript or prepared remarks the company posts, or our transcript of the replay; one row per figure, with a quote of at most 25 words. guidance_resolutions holds how each was settled. Rows are never edited.',

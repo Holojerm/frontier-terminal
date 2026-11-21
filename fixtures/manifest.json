@@ -2557,6 +2557,126 @@
       "http_status": 200,
       "raw_bytes": 124246,
       "trim": "every string field over 400 characters (the posting body: description, requirements, responsibilities, benefits) removed from each jobAdDetails entry; every other field verbatim"
+    },
+    {
+      "path": "fixtures/limits/wayback/anthropic-rate-limits-2024-04.html",
+      "source_id": "wayback-anthropic-rate-limits-2024-20240402100356",
+      "source_url": "https://web.archive.org/web/20240402100356id_/https://docs.anthropic.com/claude/reference/rate-limits",
+      "fetched_at": "2026-11-21T14:51:00.944Z",
+      "http_status": 200,
+      "raw_bytes": 268101,
+      "trim": "scripts, styles, svg, noscript, template, comments, class and style attributes removed, 268101 -> 32791 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://docs.anthropic.com/claude/reference/rate-limits taken 20240402100356 (era anthropic-rate-limits-2024, layers/terminal/server/pipeline/archive/limits-eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/limits/wayback/anthropic-rate-limits-2024-10.html",
+      "source_id": "wayback-anthropic-rate-limits-docs-2024-20241002220803",
+      "source_url": "https://web.archive.org/web/20241002220803id_/https://docs.anthropic.com/en/api/rate-limits",
+      "fetched_at": "2026-11-21T14:51:10.921Z",
+      "http_status": 200,
+      "raw_bytes": 964722,
+      "trim": "scripts, styles, svg, noscript, template, comments, class and style attributes removed, 964722 -> 15526 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://docs.anthropic.com/en/api/rate-limits taken 20241002220803 (era anthropic-rate-limits-docs-2024, layers/terminal/server/pipeline/archive/limits-eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/limits/wayback/anthropic-rate-limits-2025-07.html",
+      "source_id": "wayback-anthropic-rate-limits-docs-2024-20250705031720",
+      "source_url": "https://web.archive.org/web/20250705031720id_/https://docs.anthropic.com/en/api/rate-limits",
+      "fetched_at": "2026-11-21T14:51:20.961Z",
+      "http_status": 200,
+      "raw_bytes": 2121676,
+      "trim": "scripts, styles, svg, noscript, template, comments, class and style attributes removed, 2121676 -> 30410 bytes; the era parser gives the same rows on the raw capture",
+      "note": "Internet Archive capture of https://docs.anthropic.com/en/api/rate-limits taken 20250705031720 (era anthropic-rate-limits-docs-2024, layers/terminal/server/pipeline/archive/limits-eras.ts). source_url is the capture; fetched_at is when we read it back."
+    },
+    {
+      "path": "fixtures/release-notes/openai-changelog.md",
+      "source_id": "release-notes-openai",
+      "source_url": "https://developers.openai.com/api/docs/changelog.md",
+      "fetched_at": "2026-11-21T14:29:39.000Z",
+      "http_status": 200,
+      "raw_bytes": 85141,
+      "trim": "none",
+      "note": "The lab’s release-notes page as it stood when read, for dating the archived price events (layers/terminal/server/pipeline/archive/release-notes.ts). bun run release-notes rebuilds release-notes.json from it."
+    },
+    {
+      "path": "fixtures/release-notes/anthropic-release-notes.md",
+      "source_id": "release-notes-anthropic",
+      "source_url": "https://platform.claude.com/docs/en/release-notes/overview.md",
+      "fetched_at": "2026-11-21T14:29:38.000Z",
+      "http_status": 200,
+      "raw_bytes": 146400,
+      "trim": "none",
+      "note": "The lab’s release-notes page as it stood when read, for dating the archived price events (layers/terminal/server/pipeline/archive/release-notes.ts). bun run release-notes rebuilds release-notes.json from it."
+    },
+    {
+      "path": "fixtures/release-notes/gemini-release-notes.md",
+      "source_id": "release-notes-google",
+      "source_url": "https://ai.google.dev/gemini-api/docs/changelog.md.txt",
+      "fetched_at": "2026-11-21T14:29:39.000Z",
+      "http_status": 200,
+      "raw_bytes": 73176,
+      "trim": "none",
+      "note": "The lab’s release-notes page as it stood when read, for dating the archived price events (layers/terminal/server/pipeline/archive/release-notes.ts). bun run release-notes rebuilds release-notes.json from it."
+    },
+    {
+      "path": "fixtures/release-notes/xai-release-notes.md",
+      "source_id": "release-notes-xai",
+      "source_url": "https://docs.x.ai/developers/release-notes.md",
+      "fetched_at": "2026-11-21T14:29:40.000Z",
+      "http_status": 200,
+      "raw_bytes": 20171,
+      "trim": "none",
+      "note": "The lab’s release-notes page as it stood when read, for dating the archived price events (layers/terminal/server/pipeline/archive/release-notes.ts). bun run release-notes rebuilds release-notes.json from it."
+    },
+    {
+      "path": "fixtures/release-notes/deepseek-news.html",
+      "source_id": "release-notes-deepseek",
+      "source_url": "https://api-docs.deepseek.com/updates",
+      "fetched_at": "2026-11-21T14:29:41.000Z",
+      "http_status": 200,
+      "raw_bytes": 57618,
+      "trim": "none",
+      "note": "The lab’s release-notes page as it stood when read, for dating the archived price events (layers/terminal/server/pipeline/archive/release-notes.ts). bun run release-notes rebuilds release-notes.json from it."
+    },
+    {
+      "path": "fixtures/filed-facts/text/amzn-2023-10-27-10-Q.htm",
+      "source_id": "filed-facts-amzn-text-2023-10-27-10-Q",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872423000018/amzn-20230930.htm",
+      "fetched_at": "2026-11-21T14:31:36.000Z",
+      "http_status": 200,
+      "raw_bytes": 1390361,
+      "trim": "only the p, div and td blocks that name Anthropic kept, 1390361 -> 1449 bytes; the text reader gives the same figures on the whole document",
+      "note": "Amazon’s 10-Q filed 2023-10-27, its primary document. Read for filed_text_facts (layers/terminal/server/exposure/text-facts.ts)."
+    },
+    {
+      "path": "fixtures/filed-facts/text/amzn-2025-02-07-10-K.htm",
+      "source_id": "filed-facts-amzn-text-2025-02-07-10-K",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872425000004/amzn-20241231.htm",
+      "fetched_at": "2026-11-21T14:31:32.000Z",
+      "http_status": 200,
+      "raw_bytes": 1922460,
+      "trim": "only the p, div and td blocks that name Anthropic kept, 1922460 -> 4973 bytes; the text reader gives the same figures on the whole document",
+      "note": "Amazon’s 10-K filed 2025-02-07, its primary document. Read for filed_text_facts (layers/terminal/server/exposure/text-facts.ts)."
+    },
+    {
+      "path": "fixtures/filed-facts/text/amzn-2025-10-31-10-Q.htm",
+      "source_id": "filed-facts-amzn-text-2025-10-31-10-Q",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872425000123/amzn-20250930.htm",
+      "fetched_at": "2026-11-21T14:31:28.000Z",
+      "http_status": 200,
+      "raw_bytes": 1405984,
+      "trim": "only the p, div and td blocks that name Anthropic kept, 1405984 -> 12915 bytes; the text reader gives the same figures on the whole document",
+      "note": "Amazon’s 10-Q filed 2025-10-31, its primary document. Read for filed_text_facts (layers/terminal/server/exposure/text-facts.ts)."
+    },
+    {
+      "path": "fixtures/filed-facts/text/amzn-2026-02-06-10-K.htm",
+      "source_id": "filed-facts-amzn-text-2026-02-06-10-K",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/1018724/000101872426000004/amzn-20251231.htm",
+      "fetched_at": "2026-11-21T14:31:28.000Z",
+      "http_status": 200,
+      "raw_bytes": 1968447,
+      "trim": "only the p, div and td blocks that name Anthropic kept, 1968447 -> 10881 bytes; the text reader gives the same figures on the whole document",
+      "note": "Amazon’s 10-K filed 2026-02-06, its primary document. Read for filed_text_facts (layers/terminal/server/exposure/text-facts.ts)."
     }
   ]
 }

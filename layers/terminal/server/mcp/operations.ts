@@ -97,7 +97,8 @@ export function registerOperationsTools({ server, deps }: McpKit): void {
         '(requests or tokens per minute, per day, …), and rows is one per model and tier with values per metric (null is none published) and text where the page gives a limit in words ' +
         '(“256 concurrent streams”). snapshot is the newest reading and previous the one before it once a change has been seen; changed counts the limits that differ between them. ' +
         'A new reading is stored only when a limit changes. Limits reflect tier design and abuse control as much as capacity, and they change in announced steps, so a raised limit is not a measure of spare capacity. ' +
-        'Google and Mistral publish no per-model limits. Optional provider keeps one lab’s page. ' +
+        'Google and Mistral publish no per-model limits. archived, where not null, is what Internet Archive copies of the same page show before our first read: how many copies were read, their span, and each limit that moved between two copies (before, after, and the two copies’ times; the change happened between them). ' +
+        'Optional provider keeps one lab’s page. ' +
         PROVENANCE,
       inputSchema: z.object({ provider: ProviderSchema.optional() }),
       annotations: READ_ONLY,

@@ -172,6 +172,7 @@ describe('earnings releases', () => {
         value: 32_000_000_000,
         payload: {
           quarter: 'Q3 2026',
+          released: '2026-10-28',
           qualifier: 'nearly',
           sentence:
             'Overall, our first-party model APIs are now processing nearly 32 billion tokens per minute, more than four times what we processed a year ago.',
@@ -222,6 +223,7 @@ describe('earnings releases', () => {
         value: 1500,
         payload: {
           quarter: 'Q2 2026',
+          released: '2026-08-11',
           qualifier: null,
           sentence: 'Expanded active power by nearly 500 MWs to reach 1.5 GW',
         },

@@ -23,6 +23,24 @@ is smaller than its changes need. `bun run schema:lock` rewrites the lock only
 when the newest release in `layers/terminal/server/utils/data-schema.ts` says
 exactly which columns changed.
 
+## 1.28.0 (2026-11-21)
+
+History before the live record. Two new tables:
+
+- `archived_rate_limits` holds Anthropic's rate limits and usage tiers from
+  Internet Archive copies of its rate-limit page, from March 2024 to
+  2026-11-04, keyed as the live `limits-anthropic` rows are. `archive_captures`
+  gains the axis value `limits`. `/api/limits` and `get_rate_limits` gain
+  `archived` on each page: how many copies were read, their span, and each
+  limit that moved between two copies.
+- `filed_text_facts` holds what Amazon's 10-Qs and 10-Ks said about Anthropic
+  in words, from 2023-10 until it tagged `amzn:AnthropicMember` in 2026-04:
+  each figure with its sentence, and `primarily` where Amazon says the figure
+  includes other companies. `/api/exposure` and `get_exposure` show them as
+  series with `basis` `text`, each point quoting its sentence.
+
+The dictionary's sources gain `wayback-limits` and `release-notes`.
+
 ## 1.27.0 (2026-11-21)
 
 Forward calls. Two new tables:
