@@ -498,6 +498,13 @@
       "when": 1795250835548,
       "tag": "0070_low_maestro",
       "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "6",
+      "when": 1795270751828,
+      "tag": "0071_complete_wasp",
+      "breakpoints": true
     }
   ]
 }

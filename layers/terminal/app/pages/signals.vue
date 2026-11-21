@@ -26,6 +26,12 @@ useSeo({
 
 const stamps = useStamps()
 
+const callsNote = computed(() => {
+  const calls = data.value?.forward_calls ?? []
+  const settled = calls.filter((c) => c.actual).length
+  return `${calls.length} calls, ${settled} settled.`
+})
+
 const note = computed(() => {
   const d = data.value
   if (!d) return ''
@@ -64,8 +70,14 @@ const note = computed(() => {
           sample. {{ data.credit }}
         </template>
       </TerminalPanel>
-      <TerminalPanel id="forward-calls" title="Forward calls">
+      <TerminalPanel
+        id="forward-calls"
+        title="Forward calls"
+        :note="callsNote"
+        :more="{ label: 'Download', to: '/data#forward_calls' }"
+      >
         <TerminalForwardCalls :calls="data.forward_calls" />
+        <template #foot>{{ data.forward_rule }}</template>
       </TerminalPanel>
     </template>
   </TerminalPage>

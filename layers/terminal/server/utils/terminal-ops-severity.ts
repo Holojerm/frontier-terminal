@@ -156,6 +156,14 @@ export const TERMINAL_OPS_SEVERITY: Record<string, OpsKindPolicy> = {
   // A stored capex-guidance sentence is not in its stored release, or no
   // longer reads as its figure: the parser and the store disagree.
   guidance_unverified: { severity: 'warning' },
+  // tasks/signals/run.ts: recording or settling the forward calls threw. The
+  // harness still ran; calls whose window passes while this fails are not
+  // recorded, and scores land on the next good run.
+  forward_calls_failed: {
+    severity: 'warning',
+    action:
+      'Recording or settling the forward calls threw (layers/terminal/server/signals/forward-rules.ts). The detail has the error. A prints call whose 14-day window passes before a fix is lost for that quarter; scores are written on the next good run.',
+  },
   recipe_failed: { severity: 'warning' },
   recipes_run_failed: { severity: 'warning' },
   gpu_median_alerts_failed: { severity: 'warning' },
