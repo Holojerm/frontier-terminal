@@ -99,25 +99,22 @@ describe('buildThesisDigest', () => {
     expect(d.text).not.toContain('No claim changed status')
   })
 
+  const material: VerdictView = {
+    subject: 'incident:anthropic:abc',
+    change_id: 'c1',
+    provider: 'anthropic',
+    verdict: 'material',
+    rationale: 'Hit the API for 3.5 hours.',
+    facts: { title: 'Elevated errors on Claude API', impact: null, hours: 3.5 },
+    detected_at: '2026-10-10T06:00:00Z',
+    judged_at: '2026-10-10T07:00:00Z',
+    confirmation: null,
+    source_url: 'https://status.claude.com/history.atom',
+    fetched_at: '2026-10-10T06:00:00Z',
+  }
+
   it('lists this week’s verdicts and the material events awaiting confirmation', () => {
-    const safety = view('anthropic-safety-asset', {
-      status: 'weakening',
-      verdicts: [
-        {
-          subject: 'incident:anthropic:abc',
-          change_id: 'c1',
-          provider: 'anthropic',
-          verdict: 'material',
-          rationale: 'Hit the API for 3.5 hours.',
-          facts: { title: 'Elevated errors on Claude API', impact: null, hours: 3.5 },
-          detected_at: '2026-10-10T06:00:00Z',
-          judged_at: '2026-10-10T07:00:00Z',
-          confirmation: null,
-          source_url: 'https://status.claude.com/history.atom',
-          fetched_at: '2026-10-10T06:00:00Z',
-        },
-      ],
-    })
+    const safety = view('anthropic-safety-asset', { status: 'weakening', verdicts: [material] })
     const d = build([safety])
     expect(d.text).toContain(
       'Claim 5 · Anthropic · material · "Elevated errors on Claude API" (3.5h, impact not published)',
@@ -127,23 +124,7 @@ describe('buildThesisDigest', () => {
   })
 
   it('leaves the owner’s confirmation queue out of the public copy and links the theses page', () => {
-    const safety = view('anthropic-safety-asset', {
-      verdicts: [
-        {
-          subject: 'incident:anthropic:abc',
-          change_id: 'c1',
-          provider: 'anthropic',
-          verdict: 'material',
-          rationale: 'Hit the API for 3.5 hours.',
-          facts: { title: 'Elevated errors on Claude API', impact: null, hours: 3.5 },
-          detected_at: '2026-10-10T06:00:00Z',
-          judged_at: '2026-10-10T07:00:00Z',
-          confirmation: null,
-          source_url: 'https://status.claude.com/history.atom',
-          fetched_at: '2026-10-10T06:00:00Z',
-        },
-      ],
-    })
+    const safety = view('anthropic-safety-asset', { verdicts: [material] })
     const input = {
       data: data([safety]),
       changes: [],

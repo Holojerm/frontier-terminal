@@ -143,20 +143,19 @@ const PROVIDERS = [
 ] as const
 
 /** One read of every seeded provider on `date`, H100 at `prices` (one per provider). */
-async function seedRead(date: string, prices: readonly number[], status = 'ok') {
+async function seedRead(date: string, prices: readonly number[]) {
   const at = `${date}T06:00:00.000Z`
   for (const [i, [recipe_id, company]] of PROVIDERS.entries()) {
     await db.insert(schema.recipeRuns).values({
       id: `${recipe_id}:${date}`,
       recipe_id,
       started_at: at,
-      status,
-      detail: status === 'failed' ? 'HTTP 500' : null,
+      status: 'ok',
+      detail: null,
       content_hash: null,
       observations: 1,
       source_url: `https://${company}.example/pricing`,
     })
-    if (status === 'failed') continue
     await db.insert(schema.recipeObservations).values({
       id: `${recipe_id}:h100:${date}`,
       recipe_id,

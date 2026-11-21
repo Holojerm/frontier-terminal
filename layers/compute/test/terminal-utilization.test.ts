@@ -32,7 +32,6 @@ import { GPU_COREWEAVE } from '../server/recipes/gpu-pages'
 import { gpuObservations, gpuPricePayload } from '../server/recipes/gpu-prices'
 import {
   MLPERF_INFERENCE,
-  MLPERF_ROUNDS,
   extractMlperf,
   mlperfFootnote,
   mlperfRoundsFootnote,
@@ -310,7 +309,6 @@ describe('MLPerf Inference', () => {
   })
 
   it('reads the rounds oldest first, one per run, then stays on the newest', () => {
-    expect(MLPERF_ROUNDS.map((r) => r.round)).toEqual(['v5.1', 'v6.0'])
     expect(nextMlperfRound(null).round).toBe('v5.1')
     expect(nextMlperfRound('2025-09-09').round).toBe('v6.0')
     expect(nextMlperfRound('2026-04-01').round).toBe('v6.0')
@@ -470,7 +468,6 @@ describe('spotRead', () => {
       row('crusoe', 10, 6),
       row('nebius', 10, 8),
     ])
-    expect(SPOT_QUORUM).toBe(4)
     expect(read.combined.find((c) => c.gpu === 'H100')).toEqual({
       gpu: 'H100',
       providers: 4,

@@ -35,6 +35,7 @@ import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 // join that places each lab site in a balancing authority.
 
 const EIA = fixtureText('fixtures/grid-load/eia930-balance-2026-jul-dec.csv')
+const API = fixtureText('fixtures/grid-load/eia-api-daily-central-2026-07-01.json')
 const pdf = (path: string) => {
   const bin = atob(fixtureText(path).replace(/\s+/g, ''))
   const out = new Uint8Array(bin.length)
@@ -99,8 +100,6 @@ describe('EIA-930 files', () => {
 })
 
 describe('EIA API v2', () => {
-  const API = fixtureText('fixtures/grid-load/eia-api-daily-central-2026-07-01.json')
-
   it('reads the same days the six-month file sums to', () => {
     const { days, total } = readEiaDaily(API)
     expect(total).toBe(4)
@@ -294,6 +293,12 @@ describe('ERCOT’s reports', () => {
 // ─── End to end, against D1 ───────────────────────────────────────────────────
 
 const ok = (text: string): FetchOutcome => ({ ok: true, status: 200, text, bytes: text.length })
+// D1 binds at most 100 parameters a statement: 12 rows of 8 columns.
+const insertDays = async (rows: (typeof schema.gridLoadDays.$inferInsert)[]) => {
+  for (let i = 0; i < rows.length; i += 12) {
+    await db.insert(schema.gridLoadDays).values(rows.slice(i, i + 12))
+  }
+}
 const EPOCH: Record<string, string> = {}
 const stored = new Map<string, unknown>()
 const put = async (key: string, body: string | Uint8Array) => {
@@ -366,7 +371,6 @@ describe('the EIA-930 run', () => {
 describe('the EIA-930 run with a key', () => {
   const NOW = new Date('2026-11-21T06:00:00Z')
   const KEY = 'k3y-for-the-test-0000000000000000000000'
-  const API = fixtureText('fixtures/grid-load/eia-api-daily-central-2026-07-01.json')
   const seen: { url: string; key: string | undefined }[] = []
   const apiFetch = (fail: boolean) =>
     (async (input: RequestInfo | URL, init?: RequestInit) => {
@@ -495,10 +499,7 @@ describe('the ERCOT run and the payload', () => {
         fetched_at: NOW.toISOString(),
       })),
     )
-    // D1 binds at most 100 parameters a statement: 12 rows of 8 columns.
-    for (let i = 0; i < rows.length; i += 12) {
-      await db.insert(schema.gridLoadDays).values(rows.slice(i, i + 12))
-    }
+    await insertDays(rows)
     const data = await queryGridLoad(db)
     const area = (ba: string) => data.areas.find((a) => a.ba === ba)
     expect(area('ERCO')?.sites.map((s) => s.site)).toEqual(
@@ -538,9 +539,7 @@ describe('the ERCOT run and the payload', () => {
       source_url: eia930FileUrl('2026H2'),
       fetched_at: NOW.toISOString(),
     }))
-    for (let i = 0; i < rows.length; i += 12) {
-      await db.insert(schema.gridLoadDays).values(rows.slice(i, i + 12))
-    }
+    await insertDays(rows)
     const load = createLoader({ db, ctx: queryContext(fixtureText('sources.yaml'), null, NOW) })
     const source = (id: string) => SIGNALS.find((s) => s.id === id)!.source
     const monthly = await load(source('grid-load-pjm-monthly-yoy'))

@@ -30,15 +30,6 @@ function storable(body: string, headers: Record<string, string>): Response {
 const uniquePath = () => `/p-${crypto.randomUUID()}`
 
 describe('the edge cache round-trip', () => {
-  it('stores a document and serves it back byte-identical', async () => {
-    const key = htmlCacheKey(uniquePath(), 'stamp-a', YEAR)
-    await caches.default.put(new Request(key), storable(HTML, { 'content-type': 'text/html' }))
-
-    const hit = await caches.default.match(new Request(key))
-    expect(hit).toBeDefined()
-    expect(await hit!.text()).toBe(HTML)
-  })
-
   it('round-trips the real response headers through the sidecar', async () => {
     const key = htmlCacheKey(uniquePath(), 'stamp-a', YEAR)
     const original = { 'content-type': 'text/html;charset=utf-8', 'x-nitro-ssr': '1' }
@@ -82,7 +73,7 @@ describe('the edge cache round-trip', () => {
     ).toBeUndefined()
   })
 
-  it('does not confuse two paths under one stamp', async () => {
+  it('serves each path its own document, byte-identical, under one stamp', async () => {
     const a = uniquePath()
     const b = uniquePath()
     await caches.default.put(

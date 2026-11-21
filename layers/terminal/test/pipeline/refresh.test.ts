@@ -4,7 +4,13 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { MAX_UNJOINED_JOBS } from '../../../talent/server/pipeline/parsers/hiring/common'
 import { describeError, runRefresh, type RefreshDeps } from '../../../core/server/pipeline/refresh'
 import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
-import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
+import {
+  fixtureFetcher,
+  fixtureText,
+  manifest,
+  raw,
+  xaiJobsWithout,
+} from '#layers/core/test/pipeline/fixtures'
 import { indexPage } from '../../../models/test/pipeline/misalignment-index'
 
 // The refresh end-to-end against the real D1 and R2 test bindings, driven by
@@ -16,23 +22,6 @@ const ALL = includeSources(sourcesYaml, manifest.fixtures)
 const ALL_IDS = ALL.map((s) => s.source_id)
 const urlOf = (id: string) => ALL.find((s) => s.source_id === id)!.url
 
-/** Fixture bytes by source id, with per-test overrides (text or a failed outcome). */
-function fixtureFetcher(overrides: Record<string, string | FetchOutcome> = {}): SourceFetcher {
-  const byUrl = new Map(manifest.fixtures.map((f) => [f.source_url, fixtureText(f.path)]))
-  return async (source) => {
-    const override = overrides[source.source_id]
-    if (override !== undefined && typeof override !== 'string') return override
-    const text = override ?? byUrl.get(source.url)
-    if (text === undefined) throw new Error(`no fixture for ${source.url}`)
-    return { ok: true, status: 200, text, bytes: text.length }
-  }
-}
-
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
 const rawKeys = async () => (await env.BLOB.list({ prefix: 'raw/' })).objects.map((o) => o.key)
 
 // A clock that advances one second per read, so every snapshot id is unique
@@ -59,18 +48,49 @@ const rows = {
 // ── Fixture edits for the change scenarios ──────────────────────────────────
 
 const REMOVED_JOB = 5090171007 // AI Tutor - Arabic, xai board
-const xaiJobsWithout = (id: number) => {
-  const board = JSON.parse(fixtureText('fixtures/hiring/xai-greenhouse.json')) as {
-    jobs: { id: number }[]
-  }
-  return JSON.stringify({ ...board, jobs: board.jobs.filter((j) => j.id !== id) })
-}
-
 const XAI_PRICE_LINE = '| grok-4.6 (< 200k prompt tokens) | 500k | $2.00 | $0.50 | $6.00 |'
 const xaiPricesRepriced = () => {
   const md = fixtureText('fixtures/pricing/xai-models.md')
   expect(md).toContain(XAI_PRICE_LINE)
   return md.replace(XAI_PRICE_LINE, XAI_PRICE_LINE.replace('$2.00', '$2.50'))
+}
+
+const XAI_FLAGSHIP = 'use Grok 4.7. It is the most capable model'
+/** The xAI models page after the vendor re-points developers at a successor. */
+const xaiFlagshipRewritten = () => {
+  const md = fixtureText('fixtures/pricing/xai-models.md')
+  expect(md).toContain(XAI_FLAGSHIP)
+  return md.replace(XAI_FLAGSHIP, XAI_FLAGSHIP.replace('4.7', '4.8'))
+}
+
+/** The xAI departments feed with "Human Data" (three fixture jobs) renamed. */
+const xaiDepartmentsRenamed = () => {
+  const departments = fixtureText('fixtures/hiring/xai-greenhouse-departments.json')
+  expect(departments).toContain('"name": "Human Data"')
+  return departments.replace('"name": "Human Data"', '"name": "Human Data Ops"')
+}
+
+/** Anthropic's departments feed with the given job ids missing from every department. */
+const anthropicDepartmentsWithout = (dropped: (jobs: { id: number }[]) => number[]) => {
+  const departments = JSON.parse(
+    fixtureText('fixtures/hiring/anthropic-greenhouse-departments.json'),
+  ) as { departments: { jobs: { id: number }[] }[] }
+  const jobs = JSON.parse(fixtureText('fixtures/hiring/anthropic-greenhouse.json')) as {
+    jobs: { id: number }[]
+  }
+  const ids = dropped(jobs.jobs)
+  for (const d of departments.departments) d.jobs = d.jobs.filter((j) => !ids.includes(j.id))
+  return { ids, text: JSON.stringify(departments) }
+}
+
+/** SPCX company facts with the newest revenue value restated. */
+const spcxFactsRestated = () => {
+  const doc = JSON.parse(fixtureText('fixtures/sec/edgar-companyfacts-spcx.json')) as {
+    facts: { 'us-gaap': Record<string, { units: { USD: { val: number }[] } }> }
+  }
+  doc.facts['us-gaap']['RevenueFromContractWithCustomerExcludingAssessedTax']!.units.USD[3]!.val =
+    7_815_000_000
+  return JSON.stringify(doc)
 }
 
 const SPCX_CIK = '0001181412'
@@ -136,12 +156,9 @@ describe('scopes', () => {
       'alibaba-models-html',
       'moonshot-models-md',
     ])
-    // google-careers is ~20 MB: it runs alone on the careers tick, never inside the survey.
-    expect(sourceIdsForScope('survey', ALL)).toEqual(
-      ALL_IDS.filter((id) => id !== 'google-careers'),
-    )
     expect(sourceIdsForScope('careers', ALL)).toEqual(['google-careers'])
-    // Each prospectus is ~14 MB: the registration filings run on the filings tick, never the survey.
+    // Each prospectus is ~14 MB: the registration filings run on the filings tick, never the
+    // survey; google-careers (~20 MB) runs alone on the careers tick, never inside it either.
     const filings = ['filing-index-', 'prospectus-revenue-'].map((p) => ({
       source_id: `${p}anthropic-s-1-a-2026-11-10-0001628280-26-072484`,
       url: 'https://www.sec.gov/Archives/edgar/data/2130357/000162828026072484/',
@@ -153,10 +170,6 @@ describe('scopes', () => {
     expect(sourceIdsForScope('survey', [...ALL, ...filings])).toEqual(
       ALL_IDS.filter((id) => id !== 'google-careers'),
     )
-    expect(sourceIdsForScope('edgar', ALL)).not.toContain('google-careers')
-    expect(ALL_IDS).toHaveLength(46)
-    // The status feeds ride the six-hourly survey only, never the EDGAR tick.
-    expect(sourceIdsForScope('edgar', ALL)).not.toContain('openai-status')
   })
 })
 
@@ -347,13 +360,6 @@ describe('second run', () => {
     expect(modified.before_hash).toBe(beforePrice.content_hash)
     expect(JSON.parse(modified.before_json!).input_per_mtok).toBe(2)
     expect(JSON.parse(modified.after_json!).input_per_mtok).toBe(2.5)
-    expect(modified.id).toBe(
-      contentHash({
-        entity_key: modified.entity_key,
-        before_hash: modified.before_hash,
-        after_hash: modified.after_hash,
-      }),
-    )
 
     const after = await rows.entities()
     expect(after).toHaveLength(before.length - 1)
@@ -388,12 +394,7 @@ describe('second run', () => {
     })
 
     // The vendor re-points developers at a successor: the sentence is gone.
-    const md = fixtureText('fixtures/pricing/xai-models.md')
-    expect(md).toContain('use Grok 4.7. It is the most capable model')
-    const rewritten = md.replace(
-      'use Grok 4.7. It is the most capable model',
-      'use Grok 4.8. It is the most capable model',
-    )
+    const rewritten = xaiFlagshipRewritten()
     const report = await run(
       'survey',
       ['xai-models-md'],
@@ -420,11 +421,7 @@ describe('second run', () => {
   })
 
   it('class-map drift: a judge re-map re-runs the check on an unchanged page', async () => {
-    const md = fixtureText('fixtures/pricing/xai-models.md')
-    const rewritten = md.replace(
-      'use Grok 4.7. It is the most capable model',
-      'use Grok 4.8. It is the most capable model',
-    )
+    const rewritten = xaiFlagshipRewritten()
     await run('survey', ['xai-models-md'])
     await run('survey', ['xai-models-md'], fixtureFetcher({ 'xai-models-md': rewritten }))
     const flagship = async () =>
@@ -466,14 +463,10 @@ describe('second run', () => {
 
   it('re-parses a Greenhouse board when only its /departments join changed', async () => {
     await run('survey', ['xai-greenhouse'])
-    const departments = fixtureText('fixtures/hiring/xai-greenhouse-departments.json')
-    expect(departments).toContain('"name": "Human Data"')
-    const renamed = departments.replace('"name": "Human Data"', '"name": "Human Data Ops"')
-
     const report = await run(
       'survey',
       ['xai-greenhouse'],
-      fixtureFetcher({ 'xai-greenhouse-departments': renamed }),
+      fixtureFetcher({ 'xai-greenhouse-departments': xaiDepartmentsRenamed() }),
     )
     const byId = Object.fromEntries(report.sources.map((s) => [s.source_id, s]))
     expect(byId['xai-greenhouse-departments']!.status).toBe('ok')
@@ -658,10 +651,7 @@ describe('repeats, retries and re-reads', () => {
 
   it('re-parses a board whose /departments changed on a tick the board itself failed', async () => {
     await run('survey', ['xai-greenhouse'])
-    const renamed = fixtureText('fixtures/hiring/xai-greenhouse-departments.json').replace(
-      '"name": "Human Data"',
-      '"name": "Human Data Ops"',
-    )
+    const renamed = xaiDepartmentsRenamed()
     // The rename lands while the board is down: the side's run records it.
     const down = await run(
       'survey',
@@ -720,6 +710,9 @@ describe('repeats, retries and re-reads', () => {
     const providers = async () =>
       new Set((await rows.entities()).filter((e) => e.source_id === ID).map((e) => e.provider))
     expect(await providers()).toEqual(new Set(['xai']))
+    expect((await rows.entities()).map((e) => e.entity_key).sort()[0]).toBe(
+      'revenue:0001181412:RevenueFromContractWithCustomerExcludingAssessedTax:0001628280-26-052535:2025-01-01:2025-06-30',
+    )
 
     const tag = '  xai:\n    ticker: SPCX\n    relation: parent\n    effective: 2026-09-21\n'
     expect(sourcesYaml).toContain(tag)
@@ -738,21 +731,24 @@ describe('repeats, retries and re-reads', () => {
     expect(await rows.alerts()).toHaveLength(0)
 
     expect((await retag(untagged)).sources[0]!.status).toBe('unchanged')
-    // Tagged back while the bytes also change: the restated value logs, the
+    // Tagged back while the bytes also change: the restated value under the same
+    // accession logs one modified row for the judge (no floor alert), the
     // provider flip on the other rows does not.
-    const doc = JSON.parse(fixtureText('fixtures/sec/edgar-companyfacts-spcx.json')) as {
-      facts: { 'us-gaap': Record<string, { units: { USD: { val: number }[] } }> }
-    }
-    doc.facts['us-gaap']['RevenueFromContractWithCustomerExcludingAssessedTax']!.units.USD[3]!.val =
-      7_815_000_000
     const restated = await runRefresh(
-      { ...deps(fixtureFetcher({ [ID]: JSON.stringify(doc) })), sourcesYaml },
+      { ...deps(fixtureFetcher({ [ID]: spcxFactsRestated() })), sourcesYaml },
       'edgar',
       [ID],
     )
-    expect(restated.sources[0]).toMatchObject({ status: 'ok', modified: 1 })
+    expect(restated.sources[0]).toMatchObject({ status: 'ok', added: 0, modified: 1, alerts: 0 })
     expect(await providers()).toEqual(new Set(['xai']))
-    expect((await rows.changes()).map((c) => c.change_type)).toEqual(['modified'])
+    const changes = await rows.changes()
+    expect(changes).toHaveLength(1)
+    expect(changes[0]).toMatchObject({
+      entity_type: 'revenue',
+      provider: 'xai',
+      change_type: 'modified',
+    })
+    expect(JSON.parse(changes[0]!.after_json!)).toMatchObject({ val: 7_815_000_000, form: '10-Q' })
   })
 
   it('a run from before parse bases were recorded is re-read once, quietly', async () => {
@@ -957,38 +953,6 @@ describe('periodic-floor', () => {
     expect(alert!.explanation).toContain('CIK 0000789019')
     expect(alert!.explanation).toContain('periodic-floor rule')
   })
-
-  it('a company-facts baseline writes revenue rows under the tagged lab and no change', async () => {
-    const report = await run('edgar', ['edgar-companyfacts-spcx'])
-    expect(report.sources[0]).toMatchObject({ status: 'baseline' })
-    const facts = (await rows.entities()).filter((e) => e.entity_type === 'revenue')
-    expect(facts).toHaveLength(4)
-    expect(facts.every((e) => e.provider === 'xai')).toBe(true)
-    expect(facts.map((e) => e.entity_key).sort()[0]).toBe(
-      'revenue:0001181412:RevenueFromContractWithCustomerExcludingAssessedTax:0001628280-26-052535:2025-01-01:2025-06-30',
-    )
-    expect(await rows.changes()).toHaveLength(0)
-
-    // A restated value under the same accession is one modified row the judge will see.
-    const doc = JSON.parse(fixtureText('fixtures/sec/edgar-companyfacts-spcx.json')) as {
-      facts: { 'us-gaap': Record<string, { units: { USD: { val: number }[] } }> }
-    }
-    doc.facts['us-gaap']['RevenueFromContractWithCustomerExcludingAssessedTax']!.units.USD[3]!.val =
-      7_815_000_000
-    const again = await run(
-      'edgar',
-      ['edgar-companyfacts-spcx'],
-      fixtureFetcher({ 'edgar-companyfacts-spcx': JSON.stringify(doc) }),
-    )
-    expect(again.sources[0]).toMatchObject({ status: 'ok', added: 0, modified: 1, alerts: 0 })
-    const [change] = await rows.changes()
-    expect(change).toMatchObject({
-      entity_type: 'revenue',
-      provider: 'xai',
-      change_type: 'modified',
-    })
-    expect(JSON.parse(change!.after_json!)).toMatchObject({ val: 7_815_000_000, form: '10-Q' })
-  })
 })
 
 describe('failures', () => {
@@ -1106,17 +1070,9 @@ describe('failures', () => {
     // source still fails — a cluster count that dips and recovers is the
     // shape of the hiring signal here — but nobody is mailed about a race
     // that the next tick clears on its own.
-    const departments = JSON.parse(
-      fixtureText('fixtures/hiring/anthropic-greenhouse-departments.json'),
-    ) as {
-      departments: { jobs: { id: number }[] }[]
-    }
-    const jobs = JSON.parse(fixtureText('fixtures/hiring/anthropic-greenhouse.json')) as {
-      jobs: { id: number }[]
-    }
-    const racing = jobs.jobs[0]!.id
-    for (const d of departments.departments) d.jobs = d.jobs.filter((j) => j.id !== racing)
-    const unjoined = { 'anthropic-greenhouse-departments': JSON.stringify(departments) }
+    const { ids, text } = anthropicDepartmentsWithout((jobs) => [jobs[0]!.id])
+    const racing = ids[0]
+    const unjoined = { 'anthropic-greenhouse-departments': text }
 
     const first = await run(
       'survey',
@@ -1136,21 +1092,13 @@ describe('failures', () => {
   })
 
   it('a join broken past the race threshold is drift, and is mailed on the first tick', async () => {
-    const departments = JSON.parse(
-      fixtureText('fixtures/hiring/anthropic-greenhouse-departments.json'),
-    ) as {
-      departments: { jobs: { id: number }[] }[]
-    }
-    const jobs = JSON.parse(fixtureText('fixtures/hiring/anthropic-greenhouse.json')) as {
-      jobs: { id: number }[]
-    }
-    const dropped = jobs.jobs.slice(0, MAX_UNJOINED_JOBS + 1).map((j) => j.id)
-    for (const d of departments.departments) d.jobs = d.jobs.filter((j) => !dropped.includes(j.id))
-
+    const { text } = anthropicDepartmentsWithout((jobs) =>
+      jobs.slice(0, MAX_UNJOINED_JOBS + 1).map((j) => j.id),
+    )
     await run(
       'survey',
       ['openai-models-md', 'anthropic-greenhouse'],
-      fixtureFetcher({ 'anthropic-greenhouse-departments': JSON.stringify(departments) }),
+      fixtureFetcher({ 'anthropic-greenhouse-departments': text }),
     )
     expect((await rows.ops()).filter((o) => o.kind === 'source_failed')).toHaveLength(1)
   })

@@ -1,8 +1,7 @@
-import { env } from 'cloudflare:test'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { runPoll, type PollDeps } from '../../server/pipeline/poll'
-import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
+import { fixtureFetcher, fixtureText, manifest, raw } from '#layers/core/test/pipeline/fixtures'
 
 // The alert-flood regression, end to end: the cron entry point (runPoll) over
 // the whole committed fixture world, the way dev:fixtures and the crons drive
@@ -25,11 +24,6 @@ const OUTAGE_MAILS_PER_SOURCE_CAP = 1
 const POLLS = { timeout: 60_000 }
 
 const sourcesYaml = fixtureText('sources.yaml')
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
 
 const world = () => new Map(manifest.fixtures.map((f) => [f.source_url, fixtureText(f.path)]))
 
@@ -37,15 +31,7 @@ const world = () => new Map(manifest.fixtures.map((f) => [f.source_url, fixtureT
 // no committed fixture. They answer 404 as in dev:fixtures, and the counts below
 // ignore them: their failures are the fixture world's gap, not the pipeline's.
 const NO_FIXTURE: FetchOutcome = { ok: false, status: 404, detail: 'no fixture for this URL' }
-
-function fixtureFetcher(): SourceFetcher {
-  const byUrl = world()
-  return async (source) => {
-    const text = byUrl.get(source.url)
-    if (text === undefined) return NO_FIXTURE
-    return { ok: true, status: 200, text, bytes: text.length }
-  }
-}
+const fixtures = () => fixtureFetcher({}, NO_FIXTURE)
 
 const down =
   (outcome: FetchOutcome): SourceFetcher =>
@@ -114,14 +100,14 @@ describe('alert flood', () => {
     'a cold start alerts at most the cap, and the same bytes again alert nothing',
     POLLS,
     async () => {
-      await tick('2026-09-09T01:30:00Z', fixtureFetcher())
+      await tick('2026-09-09T01:30:00Z', fixtures())
       const first = await counts()
       expect(first.alerts).toBeLessThanOrEqual(COLD_START_ALERT_CAP)
       // Guard against a vacuous pass: the world really was polled.
       expect((await db.select().from(schema.snapshots)).length).toBeGreaterThan(40)
 
-      await tick('2026-09-09T07:30:00Z', fixtureFetcher())
-      await tick('2026-09-09T13:30:00Z', fixtureFetcher())
+      await tick('2026-09-09T07:30:00Z', fixtures())
+      await tick('2026-09-09T13:30:00Z', fixtures())
       const after = await counts()
       expect(after.alerts).toBe(first.alerts)
       expect(after.ops).toBe(first.ops)
@@ -132,7 +118,7 @@ describe('alert flood', () => {
     'a day-long total outage mails each source at most once and raises no alerts',
     POLLS,
     async () => {
-      await tick('2026-09-09T01:30:00Z', fixtureFetcher())
+      await tick('2026-09-09T01:30:00Z', fixtures())
       const baseline = await counts()
 
       const outage = down({ ok: false, status: 429, detail: 'HTTP 429' })

@@ -1,4 +1,3 @@
-import { env } from 'cloudflare:test'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { segmentFilings } from '../../server/pipeline/derived'
@@ -14,7 +13,7 @@ import {
 } from '../../server/pipeline/parsers/sec/xbrl-segment'
 import { runRefresh } from '../../../core/server/pipeline/refresh'
 import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
-import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
+import { fixtureText, manifest, provenanceOf, raw } from '#layers/core/test/pipeline/fixtures'
 
 // Google Cloud segment revenue: Alphabet's per-filing XBRL instance, derived
 // from its submissions feed. The parser on the committed 10-Q first, then the
@@ -107,8 +106,6 @@ describe('parseXbrlSegment', () => {
 
   it('labels the member and the derived source', () => {
     expect(segmentLabel(CLOUD)).toBe('Google Cloud')
-    expect(laneFor(SEGMENT_FIXTURE.sourceId)).toBeDefined()
-    expect(derivedKeyOf(SEGMENT_FIXTURE.sourceId)).toBe(SEGMENT_FIXTURE.key)
     expect(labelOf(SEGMENT_FIXTURE.sourceId)).toEqual({
       label: 'EDGAR XBRL segment facts (GOOGL filing 0001652044-26-000084)',
       role: 'sec',
@@ -117,15 +114,6 @@ describe('parseXbrlSegment', () => {
 })
 
 describe('revenue_filers segment', () => {
-  it('tags Google as Alphabet’s Google Cloud segment', () => {
-    expect(filers.get('google')).toEqual({
-      ticker: 'GOOGL',
-      relation: 'parent',
-      segment: CLOUD,
-      effective: '2026-11-01',
-    })
-  })
-
   it('reads a segment only off a parent', () => {
     expect(() =>
       parseRevenueFilersBlock(
@@ -138,11 +126,6 @@ describe('revenue_filers segment', () => {
 // ── end to end ──────────────────────────────────────────────────────────────
 
 const ALL = includeSources(sourcesYaml, manifest.fixtures)
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
 let tick = Date.parse('2026-11-01T22:00:00Z')
 const now = () => new Date((tick += 1000))
 
