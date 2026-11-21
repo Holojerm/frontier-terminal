@@ -6,7 +6,7 @@
 // redirects to it, and anything else is a 404.
 
 import { percent } from '#layers/core/shared/utils/terminal-format'
-import { alertLabs } from '../../../shared/utils/terminal-labs'
+import { alertLabs } from '../../../../alerts/shared/utils/terminal-labs'
 import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import { comparePath, pairTitle, parsePair } from '../../../shared/utils/terminal-compare'
 import { labPath } from '../../../../core/shared/utils/lab-names'

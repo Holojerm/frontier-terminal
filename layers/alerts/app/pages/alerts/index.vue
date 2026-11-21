@@ -18,7 +18,8 @@ import {
   INFO_FEED_QUERY,
   INFO_TIER_LABEL,
 } from '../../../../core/shared/utils/terminal-tiers'
-import type { AlertView, AlertsData, TrackRecordData } from '../../../shared/utils/terminal-types'
+import type { AlertView, AlertsData } from '../../../shared/utils/terminal-types/alerts'
+import type { TrackRecordData } from '../../../../press/shared/utils/terminal-types/track-record'
 
 const watchlist = useWatchlist()
 

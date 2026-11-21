@@ -14,7 +14,7 @@ import {
 } from '../server/pipeline/gpu-median-floor'
 import { JUDGE_EXCLUDED_ENTITY_TYPES } from '#layers/core/server/pipeline/judge/pending'
 import type { GpuObservation } from '../server/recipes/gpu-series'
-import { queryAlerts } from '#layers/terminal/server/utils/terminal-alerts'
+import { queryAlerts } from '#layers/alerts/server/utils/terminal-alerts'
 import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 

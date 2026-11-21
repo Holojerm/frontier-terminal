@@ -6,7 +6,7 @@ import {
   buildAlertsAtom,
   feedPath,
 } from '../server/utils/terminal-feed'
-import type { AlertView } from '../shared/utils/terminal-types'
+import type { AlertView } from '../shared/utils/terminal-types/alerts'
 
 // The Atom feed as a document. workerd has no XML parser, so well-formedness
 // is checked the way it fails in practice — an unescaped character or an

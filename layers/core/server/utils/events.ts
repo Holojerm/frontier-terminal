@@ -2,7 +2,7 @@
 //
 // A new alert used to wait for the */5 tick, and that tick read D1 every five
 // minutes whether or not anything was owed. Now the code that writes alerts
-// emits `alerts.new`, and the consumer (layers/terminal/server/plugins/events-queue.ts)
+// emits `alerts.new`, and the consumer (layers/alerts/server/plugins/events-queue.ts)
 // fans out to the social outbox, the webhook outbox and the press briefs, then
 // schedules a delayed drain for each outbox at its earliest due row. A drain
 // that leaves work behind schedules itself again; an empty outbox schedules

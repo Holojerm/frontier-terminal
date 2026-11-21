@@ -13,8 +13,8 @@ import { buildThesisDigest } from '../../theses/digest'
 import { loadDigestInput } from '../../utils/digest-input'
 import { getOwnerMailer } from '../../../../core/server/utils/owner-mail'
 import { subscribeConfig } from '../../../../core/server/utils/subscribe-config'
-import { sendSubscriberDigest } from '../../utils/subscriber-mail'
-import { purgeStalePending } from '../../utils/subscribers'
+import { sendSubscriberDigest } from '../../../../alerts/server/utils/subscriber-mail'
+import { purgeStalePending } from '../../../../alerts/server/utils/subscribers'
 import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 interface CloudflareTaskContext {
@@ -48,11 +48,20 @@ const task = defineTask({
 
     if (subscribe) {
       const purged = await purgeStalePending(db, input.now)
-      const fan = await sendSubscriberDigest(db, subscribe, await getIdentitySalt(db), {
-        ...input,
-        appName,
-        appUrl: subscribe.appUrl,
-      })
+      const fan = await sendSubscriberDigest(
+        db,
+        subscribe,
+        await getIdentitySalt(db),
+        input.now,
+        (unsubscribeUrl) =>
+          buildThesisDigest({
+            ...input,
+            appName,
+            appUrl: subscribe.appUrl,
+            audience: 'public',
+            unsubscribeUrl,
+          }),
+      )
       result.subscribers = { ...fan, purged }
       if (fan.failedBatches > 0) {
         throw new Error(

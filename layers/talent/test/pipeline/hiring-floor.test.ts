@@ -17,7 +17,7 @@ import {
   writeHiringRollups,
 } from '../../server/pipeline/hiring-rollup'
 import { submitJudgeRun } from '../../../core/server/pipeline/judge/submit'
-import { enqueueCriticalAlerts } from '../../../terminal/server/pipeline/social'
+import { enqueueCriticalAlerts } from '../../../alerts/server/pipeline/social'
 import { insertRows } from '#layers/core/server/pipeline/store'
 import { parseDepartmentClusters } from '../../server/utils/terminal-clusters'
 import { NO_DEPARTMENT } from '../../server/utils/terminal-hiring-history'

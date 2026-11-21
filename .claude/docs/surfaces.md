@@ -16,7 +16,7 @@ written down.
 | The tear sheet | `layers/terminal/app/pages/labs/[lab]/tear-sheet.vue` | same, for the sheet |
 | An MCP tool | `layers/<name>/server/mcp/<domain>.ts`, listed in `server/registries/mcp-tools.ts` | `serve('<name>'` or `read('<name>'` with the route's cache name |
 | The bulk export | `EXPORT_TABLES` in `server/registries/export-tables.ts`, composed from `layers/<name>/server/export-tables/<domain>.ts` | an export builder reads the table |
-| An alert axis | `AXIS_PATH` in `layers/terminal/shared/utils/terminal-labs.ts` | the route sits under an axis page (`/api/hiring/history` is under `/hiring`), or the axis's `AXIS_ROUTES` entry names it (`/api/gpu-prices` on `compute`) |
+| An alert axis | `AXIS_PATH` in `layers/alerts/shared/utils/terminal-labs.ts` | the route sits under an axis page (`/api/hiring/history` is under `/hiring`), or the axis's `AXIS_ROUTES` entry names it (`/api/gpu-prices` on `compute`) |
 | The overview | `app/pages/index.vue` | not gated: only headline datasets belong there |
 | `llms.txt` and the sitemap | `definePageMeta({ publicPage })` | `bun run seo:check` |
 
@@ -26,7 +26,7 @@ when it takes `?lab=` (`lab: z.…` in its query schema, or `lab` destructured f
 uses the route's `?lab=` on the server. It never filters an all-lab payload in the page.
 
 Routes checked: every GET under `layers/terminal/server/api/` except the writers in `judge/`,
-`gdelt/` and `subscribe/`. Tables checked: every `sqliteTable` in `layers/terminal/server/db/tables/`.
+`gdelt/` and `subscribe/`. Tables checked: every `sqliteTable` in each layer's `server/db/tables/`.
 Template routes and tables (`server/`) are not product data.
 
 ## Reading the matrix

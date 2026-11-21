@@ -66,7 +66,7 @@ for a slug in a flagship, balanced or economy cell, within 48 hours), and a
 Monday what-moved thread post to the app's X and Bluesky accounts through
 Buffer. A new critical alert or launch is queued as a row by the EVENTS queue's
 `alerts.new` fan-out, and `social:digest` queues the weekly
-thread (`layers/terminal/server/pipeline/social.ts`); a delayed `social.drain`
+thread (`layers/alerts/server/pipeline/social.ts`); a delayed `social.drain`
 message sends each row when it is due, and the hourly `events:sweep` catches
 anything a lost message left (`layers/core/server/utils/events.ts`). The
 layer's own `social:post` task is not scheduled. A due post still queued after
@@ -106,7 +106,7 @@ bun run webhooks:remove -- --id whk_0a1b2c3d4e [--remote]
   and has to be removed and re-added with a new secret for the client.
 - **Trigger:** the EVENTS queue (`layers/core/server/utils/events.ts`).
   Writing an alert emits `alerts.new`; its fan-out queues the deliveries
-  (`layers/terminal/server/utils/webhook-outbox.ts`) and schedules a
+  (`layers/alerts/server/utils/webhook-outbox.ts`) and schedules a
   `webhooks.drain` message for the first due row, and each drain reschedules
   itself while deliveries are owed, which is how backoff retries run. The
   hourly `events:sweep` covers a lost message. Unset key = the outbox is skipped

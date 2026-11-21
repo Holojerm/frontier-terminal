@@ -17,5 +17,4 @@
 
 export * from './tables/theses'
 export * from './tables/archive'
-export * from './tables/subscribers'
 export * from './tables/signals'

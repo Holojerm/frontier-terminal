@@ -116,7 +116,7 @@ Public digest subscriptions, off until `NUXT_RESEND_API_KEY` (secret) and
 Unset, there is no form, `/api/subscribe/*` and `/digest` answer 404, and the Monday task skips
 the fan-out. The owner's digest never depends on it.
 
-- **Table.** `subscribers` (`layers/terminal/server/db/schema.ts`): pending, confirmed or
+- **Table.** `subscribers` (`layers/alerts/server/db/tables/subscribers.ts`): pending, confirmed or
   unsubscribed. The confirm token is stored hashed; the unsubscribe token is an HMAC of the row
   id under the instance salt, so it is not stored and never expires. Pending rows that never
   confirm are deleted after 30 days by the digest task. Unsubscribed rows stay, marked.
@@ -129,7 +129,7 @@ the fan-out. The owner's digest never depends on it.
 - **Digest copy.** `buildThesisDigest({ audience: 'public' })` drops the owner's confirmation
   queue and cron footnote. The subscriber copy is rendered once with a placeholder for the
   unsubscribe link, then filled per recipient. `/digest` renders the same copy with no link.
-- **Fan-out.** `sendSubscriberDigest` (`layers/terminal/server/utils/subscriber-mail.ts`): up to 2,500
+- **Fan-out.** `sendSubscriberDigest` (`layers/alerts/server/utils/subscriber-mail.ts`): up to 2,500
   recipients a run, 50 per Resend batch call. A row is marked (`last_digest_at`) only after its
   batch is accepted and is skipped for 6 days, so re-running `theses:digest` mails only the ones
   that missed. A failed batch throws, which spools `task_failed` for the fleet dashboard.

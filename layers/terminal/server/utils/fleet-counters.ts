@@ -10,7 +10,7 @@ import type { ExtensionDb } from '#server/utils/extensions'
 
 import { launchCoverage } from '#layers/models/server/pipeline/launch-watch'
 import { countedTotals } from '#layers/core/server/utils/row-counts'
-import { countConfirmed } from './subscribers'
+import { countConfirmed } from '../../../alerts/server/utils/subscribers'
 
 export async function collectTerminalCounters(
   db: ExtensionDb,
