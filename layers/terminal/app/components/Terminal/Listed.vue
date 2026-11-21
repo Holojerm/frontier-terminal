@@ -4,7 +4,8 @@
 // each table ties the company to and links to the table that has the figures.
 // With `lab` (a lab page) the payload is the companies tied to that lab
 // (/api/listed?lab=), and the counts are of that set. With two labs (a compare
-// page) it is the companies tied to both.
+// page) it is the companies tied to both. A company whose job board we read
+// links to its open roles on /hiring.
 
 import {
   listedEvidence,
@@ -12,11 +13,25 @@ import {
   listedTieText,
   type ListedData,
 } from '../../../shared/utils/listed'
+import { count } from '../../../shared/utils/terminal-format'
+import type { ListedHiringData } from '../../../shared/utils/listed-hiring'
 import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import type { LabId } from '../../../shared/utils/terminal-types'
 import type { TableColumn } from '../../types/terminal-ui'
 
 const props = defineProps<{ data: ListedData; lab?: LabId | readonly [LabId, LabId] }>()
+
+const { data: hiring } = await useFetch<ListedHiringData>('/api/hiring/listed')
+
+/** "316 open roles, 44 data-center" for a company whose board we read. */
+function hiringEvidence(ticker: string): { text: string; to: string }[] {
+  const b = hiring.value?.boards.find((x) => x.ticker === ticker && x.latest)
+  if (!b?.latest) return []
+  const dc = `${count(b.latest.datacenter)} data-center`
+  const text =
+    b.latest.total === null ? `${dc} roles open` : `${count(b.latest.total)} open roles, ${dc}`
+  return [{ text, to: `/hiring#listed-${ticker}` }]
+}
 
 const columns: TableColumn[] = [
   { key: 'ticker', label: 'Ticker' },
@@ -32,7 +47,7 @@ const rows = computed(() =>
     company: c.company,
     group: listedGroup(c),
     says: c.ties.map((t) => listedTieText(t, c)),
-    evidence: c.ties.map((t) => listedEvidence(t)),
+    evidence: [...c.ties.map((t) => listedEvidence(t)), ...hiringEvidence(c.ticker)],
   })),
 )
 

@@ -388,6 +388,16 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       call_documents: { note: 'New table.' },
     },
   },
+  {
+    version: '1.25.0',
+    date: '2026-11-21',
+    summary:
+      'Hiring at the listed companies around the labs. listed_jobs has every role the job boards of CoreWeave, Nebius, Galaxy, Hut 8, Cipher Digital, Cerebras, Astera Labs and Credo have listed since our first read, and Google’s data-center roles, each classed as data-center work, infrastructure engineering or other, with when it was first listed and when it closed. listed_hiring_reads has each daily read’s counts. /api/hiring/listed and get_listed_hiring derive the weekly levels and their change on the week before. The dictionary’s sources gain listed_hiring_sources.',
+    tables: {
+      listed_jobs: { note: 'New table.' },
+      listed_hiring_reads: { note: 'New table.' },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

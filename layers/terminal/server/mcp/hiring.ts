@@ -1,6 +1,7 @@
 // Open roles now and over time, and the pay the boards post.
 
 import { z } from 'zod'
+import { listedHiringStamp, queryListedHiring } from '../listed-hiring/query'
 import { recipeRunsStamp } from '../utils/terminal-db'
 import { HIRING_WINDOW_DAYS, queryHiring, queryHiringHistory } from '../utils/terminal-hiring'
 import { queryPay, VIEW_RECIPES } from '../utils/terminal-recipe-views'
@@ -89,6 +90,34 @@ export function registerHiringTools({ server, deps, read }: McpKit): void {
           providers: slim.providers.filter((p) => p.provider === provider),
         })
       }),
+  )
+
+  server.registerTool(
+    'get_listed_hiring',
+    {
+      title: 'Open roles at the listed companies around the labs',
+      description:
+        'Open roles on the job boards of listed companies around the labs, read daily: neoclouds and miners turning host (CoreWeave, Nebius, Galaxy, Hut 8, Cipher Digital, Cerebras), chip and connectivity makers (Astera Labs, Credo), and Google’s data-center roles only. ' +
+        'boards: per company (ticker), latest (the newest read: total, datacenter and infrastructure roles, source_url and fetched_at), weeks (each UTC week’s last read, with total_change and datacenter_change on the week before) and datacenter_roles (the newest data-center roles, titles verbatim). ' +
+        'Each role is classed by rule from the board’s own title and department (rule says how): datacenter is data-center operations, site, construction, facilities and power; infrastructure is GPU and infrastructure engineering. ' +
+        'A chipmaker’s data-center count is noise (host false): its roles sell to data centers. Google’s board has no total (scope datacenter). The hypothesis it tests: site hiring comes before megawatts and revenue; history starts 2026-11-21, so say there is not enough yet. ' +
+        'cut lists the companies whose boards are not read and why (their terms, robots.txt, or no public API). Not investment advice. ' +
+        PROVENANCE,
+      inputSchema: z.object({
+        ticker: z.string().max(8).optional().describe('Keep one company, by US ticker (CRWV).'),
+      }),
+      annotations: READ_ONLY,
+    },
+    async ({ ticker }) => {
+      const data = await deps.serve(
+        'hiring-listed',
+        () => queryListedHiring(deps.db),
+        await listedHiringStamp(deps.db),
+      )
+      if (!ticker) return json(data)
+      const t = ticker.toUpperCase()
+      return json({ ...data, boards: data.boards.filter((b) => b.ticker === t) })
+    },
   )
 
   server.registerTool(
