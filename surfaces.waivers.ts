@@ -77,6 +77,8 @@ export const SURFACE_WAIVERS = {
   },
 
   export: {
+    alert_cites:
+      'derived: the lab and entity type of each alert’s cited changes; alerts and changes are exported',
     api_keys: 'internal: licensee credentials (hashes)',
     bulk_grants: 'internal: S3 tokens for the licensed bucket',
     claim_status_changes:
@@ -98,6 +100,8 @@ export const SURFACE_WAIVERS = {
     reported_reviews: 'internal: which headlines the judge has read',
     rollup_state: 'internal: how far the source_runs rollup has rolled',
     source_run_days: 'derived: a daily rollup of source_runs, which is exported',
+    row_counts:
+      'derived: per-key row counts of entities, changes, alerts and recipe_observations, all exported',
     source_stats: 'derived: per-source counts of snapshots and source_runs, both exported',
     subscribers: 'internal: email addresses',
     power_site_documents:

@@ -1,7 +1,7 @@
 {
   "version": "6",
   "dialect": "sqlite",
-  "id": "b6873abb-1848-4417-879b-889deebf8e50",
+  "id": "3905b3a5-1229-431c-9747-922ea80c6203",
   "prevId": "5fa84f68-bd11-4f16-8d23-dd7a3005697c",
   "tables": {
     "instance_secrets": {
@@ -123,6 +123,64 @@
       },
       "foreignKeys": {},
       "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "alert_cites": {
+      "name": "alert_cites",
+      "columns": {
+        "alert_id": {
+          "name": "alert_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "provider": {
+          "name": "provider",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "entity_type": {
+          "name": "entity_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {
+        "alert_cites_provider_idx": {
+          "name": "alert_cites_provider_idx",
+          "columns": [
+            "provider",
+            "entity_type",
+            "alert_id"
+          ],
+          "isUnique": false
+        },
+        "alert_cites_type_idx": {
+          "name": "alert_cites_type_idx",
+          "columns": [
+            "entity_type",
+            "alert_id"
+          ],
+          "isUnique": false
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "alert_cites_alert_id_provider_entity_type_pk": {
+          "columns": [
+            "alert_id",
+            "provider",
+            "entity_type"
+          ],
+          "name": "alert_cites_alert_id_provider_entity_type_pk"
+        }
+      },
       "uniqueConstraints": {},
       "checkConstraints": {}
     },
@@ -446,6 +504,45 @@
             "entity_key"
           ],
           "name": "entities_source_id_entity_key_pk"
+        }
+      },
+      "uniqueConstraints": {},
+      "checkConstraints": {}
+    },
+    "row_counts": {
+      "name": "row_counts",
+      "columns": {
+        "table_name": {
+          "name": "table_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "key": {
+          "name": "key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        },
+        "n": {
+          "name": "n",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {},
+      "compositePrimaryKeys": {
+        "row_counts_table_name_key_pk": {
+          "columns": [
+            "table_name",
+            "key"
+          ],
+          "name": "row_counts_table_name_key_pk"
         }
       },
       "uniqueConstraints": {},
@@ -2370,74 +2467,6 @@
           "columns": [
             "judged_at",
             "id"
-          ],
-          "isUnique": false
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "checkConstraints": {}
-    },
-    "gdelt_archive_files": {
-      "name": "gdelt_archive_files",
-      "columns": {
-        "stamp": {
-          "name": "stamp",
-          "type": "text",
-          "primaryKey": true,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "pass": {
-          "name": "pass",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "status": {
-          "name": "status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "rows": {
-          "name": "rows",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "figures": {
-          "name": "figures",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "fetched_at": {
-          "name": "fetched_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "recorded_at": {
-          "name": "recorded_at",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        }
-      },
-      "indexes": {
-        "gdelt_archive_files_pass_idx": {
-          "name": "gdelt_archive_files_pass_idx",
-          "columns": [
-            "pass",
-            "stamp"
           ],
           "isUnique": false
         }
