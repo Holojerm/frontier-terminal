@@ -29,6 +29,7 @@ const columns: TableColumn[] = [
 ]
 
 const priced = (r: ReleaseView) => r.input_per_mtok !== null || r.output_per_mtok !== null
+const stamps = useStamps()
 </script>
 
 <template>
@@ -43,7 +44,7 @@ const priced = (r: ReleaseView) => r.input_per_mtok !== null || r.output_per_mto
   >
     <template #cell-seen="{ row: r }">
       <time :datetime="r.first_seen_at" :title="r.first_seen_at">{{
-        r.first_seen_at.slice(0, 10)
+        stamps.date(r.first_seen_at)
       }}</time>
     </template>
     <template #cell-model="{ row: r }">

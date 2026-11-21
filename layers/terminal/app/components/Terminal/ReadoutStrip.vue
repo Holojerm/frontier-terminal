@@ -31,7 +31,7 @@ const rows = computed(() =>
       return {
         lab,
         display: s.display,
-        cells: readoutCells(s, props.data.rankings?.provenance, figures.usd),
+        cells: readoutCells(s, props.data.rankings?.provenance, figures.usd, stamps.date),
         alert: s.alerts[0] ?? null,
       }
     }),

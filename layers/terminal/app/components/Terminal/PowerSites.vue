@@ -11,6 +11,8 @@ import { LAB_DISPLAY } from '../../../shared/utils/terminal-labs'
 import { POWER_ROLE_LABEL, type PowerSitesData } from '../../../shared/utils/power-sites'
 import type { TableColumn } from '../../types/terminal-ui'
 
+const stamps = useStamps()
+
 const props = defineProps<{ data: PowerSitesData }>()
 
 const mw = (v: number) => `${count(Math.round(v))} MW`
@@ -56,7 +58,10 @@ const siteCells = (s: {
   site: s.name,
   labs: labs(s.labs),
   now: mw(s.mw_now),
-  planned: s.mw_planned === null ? '—' : `${mw(s.mw_planned)} by ${s.planned_date}`,
+  planned:
+    s.mw_planned === null
+      ? '—'
+      : `${mw(s.mw_planned)}${s.planned_date ? ` by ${stamps.date(s.planned_date)}` : ''}`,
 })
 
 const gapOf = computed(() => new Map(props.data.gaps.map((g) => [g.site, g])))

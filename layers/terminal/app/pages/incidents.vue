@@ -115,7 +115,7 @@ const columns: TableColumn[] = [
           <p>
             We measure this ourselves<template v-if="probes.since">
               and have since
-              <time :datetime="probes.since">{{ probes.since }}</time></template
+              <time :datetime="probes.since">{{ stamps.date(probes.since) }}</time></template
             >. It’s a reading of strain from one hourly sample. It isn’t utilization, and we haven’t
             shown that it predicts anything. Every day’s reading is at
             <NuxtLink to="/api/probes" external class="font-mono underline underline-offset-2"

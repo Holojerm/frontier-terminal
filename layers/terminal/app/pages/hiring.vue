@@ -159,7 +159,7 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
           title="Open roles over time"
           :note="
             anyLog
-              ? `${count(hiring.log.changes)} recorded job changes from ${hiring.log.from?.slice(0, 10)} to ${hiring.log.to?.slice(0, 10)}, worked backwards from each board’s current listing.`
+              ? `${count(hiring.log.changes)} recorded job changes from ${stamps.date(hiring.log.from ?? '')} to ${stamps.date(hiring.log.to ?? '')}, worked backwards from each board’s current listing.`
               : 'No job changes recorded yet. Each board shows only its current listing.'
           "
         >
@@ -169,7 +169,7 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
             :series="chart.series"
             :format="count"
             :x-label="dayLabel"
-            :title="`Open roles per day at ${chart.series.map((s) => s.label).join(', ')} from ${chart.x[0]} to ${chart.x.at(-1)}`"
+            :title="`Open roles per day at ${chart.series.map((s) => s.label).join(', ')} from ${stamps.date(chart.x[0] ?? '')} to ${stamps.date(chart.x.at(-1) ?? '')}`"
           />
           <TerminalGap
             v-else
@@ -214,8 +214,8 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
                 />
                 <span>
                   {{ count(p.archived.length) }} copies,
-                  <span class="font-mono">{{ p.archived[0]!.at.slice(0, 10) }}</span> to
-                  <span class="font-mono">{{ p.archived.at(-1)!.at.slice(0, 10) }}</span>
+                  <span class="font-mono">{{ stamps.date(p.archived[0]!.at) }}</span> to
+                  <span class="font-mono">{{ stamps.date(p.archived.at(-1)!.at) }}</span>
                 </span>
               </template>
               <TerminalLineChart
@@ -224,7 +224,7 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
                 :series="archivedSeries(p)"
                 :format="count"
                 :x-label="monthLabel"
-                :title="`Open roles on the Internet Archive’s copies of the ${p.display} job board, ${p.archived[0]!.at.slice(0, 10)} to ${p.archived.at(-1)!.at.slice(0, 10)}`"
+                :title="`Open roles on the Internet Archive’s copies of the ${p.display} job board, ${stamps.date(p.archived[0]!.at)} to ${stamps.date(p.archived.at(-1)!.at)}`"
               />
               <TerminalExpand show="Show the copies" hide="Hide the copies">
                 <TerminalTable
@@ -234,7 +234,7 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
                   :row-key="(a) => `${a.source_id}:${a.at}`"
                   nested
                 >
-                  <template #cell-at="{ row: a }">{{ a.at.slice(0, 10) }}</template>
+                  <template #cell-at="{ row: a }">{{ stamps.date(a.at) }}</template>
                   <template #cell-total="{ row: a }">{{ count(a.total) }}</template>
                   <template #cell-infra="{ row: a }">
                     <span v-if="infraOf(a) !== null">{{ count(infraOf(a)!) }}</span>
@@ -314,7 +314,7 @@ const deptColumns = (p: HiringHistoryProvider): TableColumn[] => [
                   <span class="font-mono">{{
                     signed(p.compare.total_now - p.compare.total_then)
                   }}</span>
-                  since {{ p.compare.at }}
+                  since {{ stamps.date(p.compare.at) }}
                 </span>
               </template>
 

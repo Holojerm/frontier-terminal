@@ -15,6 +15,8 @@ import {
 } from '../../../shared/utils/terminal-dependencies'
 import type { TableColumn } from '../../types/terminal-ui'
 
+const stamps = useStamps()
+
 const props = defineProps<{ graph: DependenciesData }>()
 
 const figures = useFigures()
@@ -78,7 +80,7 @@ const summary = computed(
 
 const filingOf = (f: DependencyFigure) => ({
   url: f.filing_url,
-  text: `${f.form} ${f.filed}`,
+  text: `${f.form} ${stamps.date(f.filed)}`,
 })
 
 const lineColumns: TableColumn[] = [
