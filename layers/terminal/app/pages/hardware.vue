@@ -28,7 +28,7 @@ useSeo({
   title: 'TSMC and Taiwan AI server monthly revenue, Korea chip exports, and AI hardware suppliers',
   description:
     'Monthly revenue of TSMC and the Taiwan server and component makers as first printed, Korea’s chip exports, and the hardware suppliers whose filings name a lab.',
-  dateModified: prints.value?.as_of ?? undefined,
+  dateModified: prints.value?.as_of,
 })
 </script>
 
