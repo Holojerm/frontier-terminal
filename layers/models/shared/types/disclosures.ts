@@ -1,5 +1,3 @@
-import type { LabId, Prov, SourceRef, Stamp } from '../../../core/shared/types/common'
-
 /**
  * The dates on one report's own page. `lines` is the page's metadata cell,
  * verbatim; the two dates below are read out of it and never inferred.

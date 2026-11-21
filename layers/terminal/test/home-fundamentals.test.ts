@@ -7,11 +7,6 @@ import {
   truthFigure,
   utilizationFigure,
 } from '../app/utils/home-fundamentals'
-import type { ListedData } from '../shared/utils/listed'
-import type { UtilizationData } from '#layers/compute/shared/utils/compute-views'
-import type { GpuPricesData } from '../../compute/shared/types/gpu-prices'
-import type { GroundTruthData } from '../../press/shared/types/ground-truth'
-import type { ThesesData } from '../../theses/shared/utils/thesis-types'
 
 const AT = '2026-11-19T12:00:00.000Z'
 const src = (host: string, fetched_at = AT) => ({ source_url: `https://${host}/`, fetched_at })

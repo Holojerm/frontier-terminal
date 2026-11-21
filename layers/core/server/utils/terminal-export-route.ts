@@ -6,11 +6,6 @@
 import type { H3Event } from 'h3'
 import sourcesYaml from 'raw:~~/sources.yaml'
 
-import { HISTORY_LICENSE, PAID_LICENSE, licenseSplit } from '#shared/utils/license'
-import { cacheControlFor, rateLimitTerminal } from '#layers/core/server/utils/api-access'
-import { SCHEMA_VERSION, SCHEMA_VERSION_HEADER } from '#layers/core/server/utils/data-schema'
-import { PointInTimeError, assertKnowable } from '#layers/core/server/utils/terminal-asof'
-import { headResponse } from '#layers/core/server/utils/head-response'
 import { DICTIONARY_NAME, dataDictionary, dictionaryCsv } from '#server/registries/dictionary'
 import {
   ARCHIVED_EXPORTS,
@@ -18,22 +13,6 @@ import {
   exportTable,
   WITHDRAWN_EXPORTS,
 } from '#server/registries/export-tables'
-import {
-  LICENSE_COLUMN,
-  licenseHeaders,
-  licenseWindow,
-  parseExportQuery,
-  sampleOf,
-} from '#layers/core/server/utils/terminal-export-history'
-import {
-  csvChunks,
-  jsonChunks,
-  jsonEnvelopeChunks,
-  parseExportPath,
-  streamOf,
-} from '#layers/core/server/utils/terminal-export-format'
-import { exportFilter, type ExportTable } from '#layers/core/server/utils/terminal-export-views'
-import { terminalDb } from '#layers/core/server/utils/terminal-handler'
 
 const CONTENT_TYPES = {
   csv: 'text/csv; charset=utf-8',

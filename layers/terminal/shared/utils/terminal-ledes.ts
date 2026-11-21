@@ -4,15 +4,6 @@
 // number, the unit, and the date. Nothing here is a figure the page doesn't
 // show beside it; a missing value drops its sentence instead of a placeholder.
 
-import {
-  compactUsd,
-  count,
-  periodLabel,
-  pricePhrase,
-  sharePct,
-} from '../../../core/shared/utils/terminal-format'
-import type { LabSummary } from './terminal-lab-summary'
-
 export function labLede(s: LabSummary): string | null {
   const sentences: string[] = []
   const subject = () => (sentences.length ? 'It' : s.display)

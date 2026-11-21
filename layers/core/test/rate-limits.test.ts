@@ -8,22 +8,6 @@ import { afterEach, describe, expect, it } from 'vitest'
 
 import WRANGLER_TOML from '../../../wrangler.toml?raw'
 
-import {
-  clearNativeLimitersForTest,
-  getNativeLimiters,
-  nativeFor,
-  NATIVE_LIMITER,
-  registerNativeLimiter,
-  type NativeRateLimiter,
-} from '../../../server/utils/rate-limit'
-import {
-  KEYED_EXPORT_LIMIT,
-  KEYED_READ_LIMITERS,
-  PAYLOAD_LIMIT,
-  PERMALINK_LIMIT,
-  READ_PATH_LIMITER,
-} from '../server/utils/rate-limits'
-
 const fake = (): NativeRateLimiter => ({ limit: async () => ({ success: true }) })
 
 // Reads every [[ratelimits]] block out of wrangler.toml. miniflare builds the bindings from this

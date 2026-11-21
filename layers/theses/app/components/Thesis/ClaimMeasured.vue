@@ -2,8 +2,6 @@
 // A measured claim: the newest reading with its provenance, the series behind
 // it, and the same numbers as a table (the chart never gates a value).
 
-import { detailRows, formatTick, formatValue, valueKind } from '../../../shared/utils/thesis-format'
-import { dayLabel } from '#layers/core/shared/utils/terminal-format'
 import type { ClaimView } from '../../../shared/utils/thesis-types'
 
 const props = defineProps<{ claim: ClaimView }>()

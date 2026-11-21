@@ -1,9 +1,6 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { readNormalizedTrailing } from '../server/theses/download-signals'
 import {
   CONTROL_INDEX_ID,
@@ -26,7 +23,6 @@ import {
 } from '../../adoption/server/recipes/npm-downloads'
 import { RECIPES } from '#server/registries/recipes'
 import { runRecipes } from '../../core/server/recipes/run'
-import { queryAdoption } from '../../adoption/server/utils/terminal-adoption'
 import { ANTHROPIC_THESIS } from '../server/theses/anthropic'
 
 // The derived download series over a store the recipe runner filled with
@@ -71,7 +67,6 @@ const body = (url: string) => {
   return JSON.stringify({ start, end, package: pkg, downloads: days })
 }
 
-const db = drizzle(env.DB, { schema })
 const NOW = new Date('2026-11-21T06:00:00Z')
 const raw = { put: async (key: string, b: string) => void (await env.BLOB.put(key, b)) }
 const fetcher: SourceFetcher = async (s) => {

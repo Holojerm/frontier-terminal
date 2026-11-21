@@ -1,23 +1,17 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import { ChangeRow, contentHash } from '#layers/core/server/utils/contracts'
 import {
   falseDelisting,
   slugPattern,
   stillListedRemovals,
 } from '../../server/pipeline/judge/still-listed'
 import { submitJudgeRun } from '../../server/pipeline/judge/submit'
-import { insertRows } from '#layers/core/server/utils/pipeline-store'
 
 // A model one page of a lab drops while another page still lists it is not
 // delisted. The scenario is 2026-11-09: Anthropic's models overview dropped
 // claude-fable-5-1 at the claude-fable-5-2 launch, the pricing page kept it,
 // and the judge wrote "Anthropic delists claude-fable-5-1".
 
-const db = drizzle(env.DB, { schema })
 const AT = '2026-11-09T19:00:58.859Z'
 const OVERVIEW = 'https://platform.claude.com/docs/en/models/overview.md'
 const PRICING = 'https://platform.claude.com/docs/en/about-claude/pricing.md'

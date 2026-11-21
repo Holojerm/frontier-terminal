@@ -1,6 +1,5 @@
 import { env } from 'cloudflare:test'
 import { eq } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import gkgFixture from '~~/fixtures/track-record/gkg-20260929183000.gkg.csv?raw'
@@ -8,10 +7,7 @@ import deepmindFeed from '~~/fixtures/recipes/newsroom-google-deepmind.xml?raw'
 import metaFeed from '~~/fixtures/recipes/newsroom-meta.xml?raw'
 import mistralFeed from '~~/fixtures/recipes/newsroom-mistral.xml?raw'
 import openaiFeed from '~~/fixtures/recipes/newsroom-openai.xml?raw'
-import * as schema from '~~/server/db/schema'
-import { contentHash, type ChangeRow } from '#layers/core/server/utils/contracts'
 import { submitJudgeRun } from '../../core/server/pipeline/judge/submit'
-import { insertRows } from '#layers/core/server/utils/pipeline-store'
 import {
   GKG_FROM,
   gkgSlots,
@@ -54,8 +50,6 @@ import {
   trackWindow,
 } from '../server/pipeline/track-record/window'
 import { NEWSROOM_FROM, extractNewsroom } from '../server/pipeline/track-record/newsrooms'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { queryTrackRecord, sideOf, tally } from '../server/utils/terminal-track-record'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The track record: deterministic search terms from the cited change rows,
@@ -64,7 +58,6 @@ import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 // ratings. No network and no model: the GKG rows are a committed fixture (real
 // rows from 2026-09-29), and the ratings are written here.
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 
 const HASH = (n: number) => n.toString(16).padStart(64, '0')

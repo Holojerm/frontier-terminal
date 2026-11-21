@@ -4,16 +4,7 @@
 // Scheduled every five minutes from nuxt.config.ts (SCHEDULED_TASKS); a tick
 // whose (build, stamp) is already warm costs one D1 read and one KV read.
 
-import { db } from '@nuxthub/db'
-import { kv } from '@nuxthub/kv'
-
-import { LAB_PAGES } from '../../../shared/utils/terminal-lab-summary'
-import { POLL_LOCK_KEY } from '#layers/core/server/utils/pipeline-lock'
-import { thesisPages } from '../../../../theses/shared/utils/thesis-format'
 import { THESES } from '../../../../theses/server/theses/registry'
-import { warmCaches, warmPaths } from '#layers/core/server/utils/cache-warm'
-import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 interface CloudflareTaskContext {
   cloudflare?: { context?: { waitUntil?: (promise: Promise<unknown>) => void } }

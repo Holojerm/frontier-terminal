@@ -1,7 +1,3 @@
-import type { Stamp } from '../../../core/shared/types/common'
-import type { TableCounts } from '../../../core/shared/types/coverage'
-import type { AlertView } from './alerts'
-
 /**
  * What moved. Counts come from the `changes` table, which is reproducible
  * from two snapshots — never from a re-read of the current state.

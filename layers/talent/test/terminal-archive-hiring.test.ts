@@ -1,24 +1,10 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import { HISTORY_LICENSE, PAID_LICENSE } from '#shared/utils/license'
-import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { hiringEraById } from '../server/pipeline/archive/hiring-eras'
 import { hiringRows } from '../../talent/server/pipeline/archive/rows'
 import { runRefresh } from '../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
-import { includeSources } from '#layers/core/server/utils/pipeline-sources'
-import { PointInTimeError, pollStampAt } from '#layers/core/server/utils/terminal-asof'
-import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
-import { queryPriceReach } from '../../pricing/server/utils/terminal-price-archive'
-import { queryHiringReach } from '../server/utils/terminal-hiring-archive'
-import { assertArchiveKnowable } from '#layers/core/server/utils/archive-floor'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { queryHiring, queryHiringHistory } from '../server/utils/terminal-hiring'
 import { exportTable } from '#server/registries/export-tables'
-import { licenseWindow } from '#layers/core/server/utils/terminal-export-history'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The archived hiring history on the read side: archived points before the
@@ -27,7 +13,6 @@ import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 // price reach and the live counts never see a board copy).
 
 const POLLS = { timeout: 60_000 }
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const ALL = includeSources(sourcesYaml, manifest.fixtures)
 

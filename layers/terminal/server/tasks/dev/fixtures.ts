@@ -11,16 +11,9 @@
 // in dev, and the body reads fixtures/ from the working directory, which a
 // Worker does not have.
 
-import { blob } from '@nuxthub/blob'
-import { db } from '@nuxthub/db'
-import { kv } from '@nuxthub/kv'
-
 import sourcesYaml from 'raw:~~/sources.yaml'
 
 import { fillFromFixtures, type FixtureFillReport } from '../../dev/fixture-fill'
-import { blobRawReader, blobRawStore } from '#layers/core/server/utils/pipeline-raw'
-import { unstorageLockStore } from '#layers/core/server/utils/pipeline-lock'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask<string | FixtureFillReport>({
   meta: {

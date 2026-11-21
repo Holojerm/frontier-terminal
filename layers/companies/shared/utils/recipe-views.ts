@@ -5,8 +5,6 @@
 // talent layer's shared/utils/pay.ts). Every figure carries the URL it was
 // read from and when, like the lab panels.
 
-import type { LabId, RecipeCitation } from '../../../core/shared/types/common'
-
 export interface ParentFact {
   key: string
   label: string

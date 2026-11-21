@@ -4,9 +4,7 @@
 // restatements and the parent/issuer distinction in full are on /revenue.
 // Labs with the same gap share one line after the figures.
 
-import { count, periodLabel } from '#layers/core/shared/utils/terminal-format'
-import type { RevenueData, RevenueProviderView } from '../../../shared/types/revenue'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { RevenueData } from '../../../shared/types/revenue'
 
 const watchlist = useWatchlist()
 

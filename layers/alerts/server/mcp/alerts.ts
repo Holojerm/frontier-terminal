@@ -1,26 +1,6 @@
 // What moved: the overview, the alert feed, and how early each alert was.
 
 import { z } from 'zod'
-import { ALERT_AXES } from '../../shared/utils/terminal-labs'
-import { LABS } from '#layers/core/shared/utils/lab-names'
-import { ALERT_TIER_FILTERS } from '../../../core/shared/utils/terminal-tiers'
-import {
-  MOVEMENT_WINDOW_HOURS,
-  queryAlert,
-  queryAlerts,
-  queryOverview,
-} from '../utils/terminal-alerts'
-import { queryTrackRecord } from '../../../press/server/utils/terminal-track-record'
-import {
-  ALERT_SEARCH_DEPTH,
-  json,
-  failure,
-  READ_ONLY,
-  AsOfSchema,
-  asOfErrors,
-  PROVENANCE,
-  type McpKit,
-} from '#layers/core/server/utils/mcp-kit'
 
 export function registerAlertTools({ server, deps, read }: McpKit): void {
   server.registerTool(

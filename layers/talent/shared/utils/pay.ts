@@ -3,8 +3,6 @@
 // cell, against the reading before. Every figure carries the URL it was read
 // from and when.
 
-import type { LabId, RecipeCitation } from '../../../core/shared/types/common'
-
 export interface PayCell {
   key: string
   label: string

@@ -4,30 +4,9 @@
 // over these functions, which take the db and the clock, so they run in workerd
 // against a real D1.
 
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '../../../server/db/schema'
-import { BATCH_SIZE, sendMail, type MailMessage } from '../../core/server/utils/resend'
-import { subscribeBody, cleanFromPath } from '../shared/utils/subscribe'
-import { subscribeConfig } from '../../core/server/utils/subscribe-config'
-import { confirmationMail, fanOutDigest } from '../server/utils/subscriber-mail'
-import {
-  CONFIRM_TTL_DAYS,
-  PENDING_PURGE_DAYS,
-  confirmSubscription,
-  countConfirmed,
-  markDigestSent,
-  purgeStalePending,
-  requestSubscription,
-  selectDigestRecipients,
-  unsubscribe,
-  unsubscribeToken,
-} from '../server/utils/subscribers'
-
-const db = drizzle(env.DB, { schema })
 const NOW = new Date('2026-11-09T13:00:00Z')
 const later = (minutes: number) => new Date(NOW.getTime() + minutes * 60_000)
 const SECRET = 'test-salt'

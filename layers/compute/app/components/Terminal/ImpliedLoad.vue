@@ -5,15 +5,7 @@
 // a pair of bounds per model, with the sentence the volume came from and the
 // footnote MLCommons requires beside a figure it has not verified.
 
-import {
-  compactCount,
-  compactTokens,
-  count,
-  sharePct,
-  splitInstants,
-} from '#layers/core/shared/utils/terminal-format'
-import type { Bounds, UtilizationData } from '../../../shared/utils/compute-views'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { UtilizationData } from '../../../shared/utils/compute-views'
 
 type Implied = NonNullable<UtilizationData['implied']>
 

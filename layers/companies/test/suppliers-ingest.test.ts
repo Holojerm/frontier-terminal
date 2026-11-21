@@ -1,24 +1,17 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import curated from '../server/curated/suppliers.json'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { figureWritten, supplierExcerpts } from '../server/suppliers/excerpts'
 import { contains } from '#layers/core/server/pipeline/document-text'
-import { accessionOf } from '#layers/core/server/utils/contracts/keys'
 import { periodOf, runSupplierReads, supplierDocuments } from '../server/suppliers/ingest'
 import { applySupplierReadings, checkPassage, supplierReview } from '../server/suppliers/review'
 import { currentPassages, seedHandPassages, suppliersStamp } from '../server/suppliers/store'
-import { querySuppliers } from '../server/utils/terminal-suppliers'
 
 // The suppliers reader end to end on a made-up filer history: the hand-read
 // rows seed the table, a new 10-Q is read and offered to the judge, and what
 // the judge sends back is checked against the stored document before the
 // table moves. Then the pure checks on their own.
 
-const db = drizzle(env.DB, { schema })
 const HAND = (curated as { rows: { ticker: string }[] }).rows
 
 const AMD_CIK = '0000002488'

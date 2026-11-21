@@ -1,5 +1,3 @@
-import type { LabId, Prov, Stamp } from '../../../core/shared/types/common'
-
 /** One lab's reading for one UTC day, from that day's hourly probes. */
 export interface ProbeDayView extends Prov {
   /** YYYY-MM-DD, UTC. */

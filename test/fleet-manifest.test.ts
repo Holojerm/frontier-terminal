@@ -6,13 +6,6 @@
 
 import { describe, expect, it } from 'vitest'
 
-import {
-  FLEET_MANIFEST_SCHEMA_VERSION,
-  FleetManifestSchema,
-  placeholderBindings,
-  type FleetManifestInput,
-} from '../shared/utils/fleet-manifest'
-
 import templateManifest from '../fleet.json'
 
 const valid: FleetManifestInput = {

@@ -9,17 +9,6 @@
 
 import manifest from '~~/fleet.json'
 
-import {
-  attributionLine,
-  CODE_LICENSE,
-  DATA_LICENSE,
-  HISTORY_LICENSE,
-  HISTORY_PARAM,
-  LICENSE_SPLIT_EFFECTIVE,
-  LICENSE_WINDOW_DAYS,
-} from '#shared/utils/license'
-import type { CoverageData } from '../../../core/shared/types/coverage'
-
 definePageMeta({
   publicPage: {
     changefreq: 'yearly',

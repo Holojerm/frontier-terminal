@@ -3,17 +3,6 @@
 // newest thesis status change. Each function is a `useFetch` transform, so the
 // page's hydration payload holds five small figures instead of five payloads.
 
-import type { ListedData } from '../../shared/utils/listed'
-import type { Bounds, UtilizationData } from '#layers/compute/shared/utils/compute-views'
-import { labName } from '#layers/core/shared/utils/lab-names'
-import { count, money, percent, dayLabel } from '#layers/core/shared/utils/terminal-format'
-import type { GpuPricesData } from '../../../compute/shared/types/gpu-prices'
-import type { GroundTruthData } from '../../../press/shared/types/ground-truth'
-import type { Prov } from '../../../core/shared/types/common'
-import { STATUS_META, thesisPath } from '../../../theses/shared/utils/thesis-format'
-import type { ThesesData } from '../../../theses/shared/utils/thesis-types'
-import type { GapRef } from '#layers/core/app/types/terminal-ui'
-
 export interface FundamentalFigure {
   label: string
   value: string | null

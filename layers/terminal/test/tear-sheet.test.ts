@@ -10,22 +10,7 @@ import {
   SHEET_ALERTS,
   truthInput,
 } from '../app/utils/tear-sheet'
-import type { ListedData } from '../shared/utils/listed'
 import { cellDelta, priceCitation } from '../../pricing/app/utils/price-display'
-import { PROVIDER_ORDER } from '#layers/core/server/utils/terminal-sources'
-import type { ExposureData } from '../../companies/shared/utils/terminal-exposure'
-import { LABS } from '../../core/shared/utils/lab-names'
-import { TEAR_SHEET_PAGES } from '../shared/utils/terminal-lab-summary'
-import type { AlertView } from '../../alerts/shared/types/alerts'
-import type { GroundTruthData } from '../../press/shared/types/ground-truth'
-import type {
-  MatrixCell,
-  PriceDeltaView,
-  PriceRowView,
-  PricesData,
-} from '../../pricing/shared/types/prices'
-import type { RankingsData } from '../../adoption/shared/types/rankings'
-import type { RevenueData } from '../../companies/shared/types/revenue'
 
 const AT = '2026-11-04T18:00:03.511Z'
 

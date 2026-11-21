@@ -5,15 +5,6 @@
 
 import manifest from '~~/fleet.json'
 
-import {
-  DATA_LICENSE,
-  HISTORY_LICENSE,
-  LICENSE_SPLIT_EFFECTIVE,
-  LICENSE_WINDOW_DAYS,
-} from '#shared/utils/license'
-import { CORRECTIONS } from '#layers/core/shared/utils/corrections'
-import type { CoverageData } from '../../../core/shared/types/coverage'
-
 definePageMeta({
   publicPage: {
     changefreq: 'monthly',

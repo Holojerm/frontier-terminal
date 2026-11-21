@@ -1,41 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  UTC_STYLE,
-  absoluteStamp,
-  boardLabel,
-  compactCount,
-  compactTokens,
-  compactUsd,
-  count,
-  datedStamp,
-  dayStamp,
-  edgarName,
-  exactStamp,
-  exactUsd,
-  fullDayStamp,
-  gpuHour,
-  grouped,
-  hostOf,
-  money,
-  readableEdgarNames,
-  splitInstants,
-  tierLabel,
-  pctChange,
-  pctLabel,
-  percent,
-  preciseUsd,
-  relativeStamp,
-  roundBillions,
-  signed,
-  signedPercent,
-  trimmed,
-  zoneName,
-} from '#layers/core/shared/utils/terminal-format'
-import { formatTick, formatValue } from '../../theses/shared/utils/thesis-format'
-import { millions, statementValue } from '../../companies/shared/utils/terminal-prospectus'
-import { DEFAULTS, labsFirst, parsePrefs } from '../../core/shared/utils/reader-prefs'
-
 // How a stored value reads. The rule is relative inside a day, absolute
 // beyond it, exact value always one hover away — and never a relative label
 // rendered on the server, whose clock is not the reader's.

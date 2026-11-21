@@ -8,17 +8,7 @@
 // column: the absolute stamp. A relative age that turned absolute past a day
 // made the column switch forms partway down.
 
-import {
-  AXIS_DISPLAY,
-  alertAxis,
-  alertDelta,
-  alertLabs,
-  clipHeadline,
-} from '../../../shared/utils/terminal-labs'
-import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
-import { alertPath } from '../../../../core/shared/utils/terminal-tiers'
 import type { AlertView } from '../../../shared/types/alerts'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{
   alerts: AlertView[]

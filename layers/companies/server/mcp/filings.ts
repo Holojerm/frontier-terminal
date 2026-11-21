@@ -3,19 +3,7 @@
 // are the press layer's (layers/press/server/mcp/press.ts).
 
 import { z } from 'zod'
-import { queryProspectus } from '../utils/terminal-prospectus'
-import { queryRevenue } from '../utils/terminal-revenue'
 import { CALL_TICKERS } from '../calls/curated'
-import { callGuidanceStamp, queryCallGuidance } from '../utils/terminal-call-guidance'
-import {
-  ProviderSchema,
-  json,
-  READ_ONLY,
-  AsOfSchema,
-  asOfErrors,
-  PROVENANCE,
-  type McpKit,
-} from '#layers/core/server/utils/mcp-kit'
 
 export function registerFilingTools({ server, deps, read }: McpKit): void {
   server.registerTool(

@@ -4,8 +4,6 @@
 // the infrastructure cluster. A page's useFetch transform runs on the server,
 // so whatever it drops never reaches the page payload.
 
-import type { HiringHistoryData } from '../../shared/types/hiring'
-
 /** Totals and cluster counts only: departments are in the API and /export/archived_hiring. */
 export function slimArchive(d: HiringHistoryData): HiringHistoryData {
   return {

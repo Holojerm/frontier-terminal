@@ -1,15 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  indexNowPayloads,
-  indexNowSkipReason,
-  isValidIndexNowKey,
-  parseSitemapUrls,
-  urlsChangedSince,
-  INDEXNOW_MAX_URLS,
-} from '../server/utils/indexnow'
-import { buildSitemap } from '../server/utils/seo'
-
 const KEY = 'a1b2c3d4e5f60718'
 
 describe('parseSitemapUrls', () => {

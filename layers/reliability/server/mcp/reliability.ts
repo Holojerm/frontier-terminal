@@ -1,20 +1,6 @@
 // Capacity strain as the labs post it and as we measure it: status-page incidents and latency probes.
 
 import { z } from 'zod'
-import {
-  INCIDENT_HISTORY_DAYS,
-  INCIDENT_WINDOW_DAYS,
-  incidentArchiveStamp,
-  queryIncidents,
-} from '../utils/terminal-incidents'
-import { probesStamp, queryProbes } from '../utils/terminal-probes'
-import {
-  ProviderSchema,
-  json,
-  READ_ONLY,
-  PROVENANCE,
-  type McpKit,
-} from '#layers/core/server/utils/mcp-kit'
 
 export function registerReliabilityTools({ server, deps }: McpKit): void {
   server.registerTool(

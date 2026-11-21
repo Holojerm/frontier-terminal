@@ -1,19 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  BODY_TOO_LARGE,
-  FETCH_ATTEMPTS,
-  MAX_BODY_BYTES,
-  REDIRECT_REFUSED,
-  SEC_CONTACT_UNSET,
-  RATE_LIMITED_DETAIL,
-  createFetcher,
-  parseRetryAfter,
-  readCappedBody,
-  userAgentFor,
-} from '../../server/utils/pipeline-fetch'
-import type { FetchSource } from '../../server/utils/pipeline-sources'
-
 // The fetch stage with a scripted `fetch`: nothing here reaches the network.
 
 const APP = { appUrl: 'https://frontier-terminal.example', secContactEmail: '' }

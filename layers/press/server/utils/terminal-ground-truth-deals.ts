@@ -12,21 +12,7 @@
 // What can be compared is scored like revenue (terminal-ground-truth.ts): only
 // against a figure not yet filed on the day of the report, within TOLERANCE_PCT.
 
-import type { ExposureTicker } from '../../../companies/shared/utils/terminal-exposure'
-import type {
-  DealMetric,
-  DealUnsettledReason,
-  GroundTruthDeal,
-  GroundTruthDealFiled,
-  GroundTruthDealMeasure,
-  GroundTruthDealTally,
-} from '../../shared/types/ground-truth'
-import type { LabId } from '../../../core/shared/types/common'
-
-import { labName } from '#layers/core/shared/utils/lab-names'
 import { FILER_NAMES, filingUrl, type StoredFact } from '../../../companies/server/exposure/series'
-import { middle } from '../../../core/server/utils/terminal-median'
-import { type StoredDeal } from './terminal-reported'
 
 /** Deal reports listed. The tally counts all of them. */
 export const DEAL_LIMIT = 100

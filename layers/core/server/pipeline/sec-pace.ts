@@ -1,6 +1,3 @@
-import { isSecHost, type FetchOutcome, type SourceFetcher } from '../utils/pipeline-fetch'
-import type { FetchSource } from '../utils/pipeline-sources'
-
 // SEC's fair-access policy caps a client at 10 requests a second
 // (sec.gov/os/accessing-edgar-data); past it SEC answers 429, and a client
 // that keeps going can have its egress blocked. A tick fetches its SEC

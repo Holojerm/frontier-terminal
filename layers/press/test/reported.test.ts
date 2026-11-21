@@ -1,11 +1,8 @@
-import { env } from 'cloudflare:test'
 import { eq } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import figureRowsFixture from '~~/fixtures/reported/gkg-figure-rows.tsv?raw'
 import gkgFixture from '~~/fixtures/track-record/gkg-20260929183000.gkg.csv?raw'
-import * as schema from '~~/server/db/schema'
 import { submitJudgeRun } from '../../core/server/pipeline/judge/submit'
 import { amountsIn, figureHeadline, labsIn } from '../server/pipeline/reported/figures'
 import {
@@ -22,9 +19,6 @@ import {
 } from '../server/pipeline/reported/store'
 import { parseGkgRow } from '../server/pipeline/track-record/gkg'
 import { recordGkgFile } from '../server/pipeline/track-record/search'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { middle } from '../../core/server/utils/terminal-median'
-import { quarterOf, queryReported } from '../server/utils/terminal-reported'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // Reported figures: the headline matcher, storing figure rows from a GKG file
@@ -32,7 +26,6 @@ import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 // network and no model: the rows are real GDELT rows read 2026-11-07 from
 // files between 2026-09-04 and 2026-11-02, and the readings are written here.
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const NOW = new Date('2026-11-07T12:00:00Z')
 

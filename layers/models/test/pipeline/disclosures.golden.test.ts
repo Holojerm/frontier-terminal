@@ -1,12 +1,5 @@
 import { describe, expect, test } from 'vitest'
 
-import {
-  DisclosureIndexOutput,
-  DisclosureReportPageOutput,
-  contentHash,
-  disclosureKey,
-  disclosureTimelineKey,
-} from '#layers/core/server/utils/contracts'
 import { diff } from '#layers/core/server/pipeline/diff'
 import { isTimestampOnlyChange } from '#layers/core/server/pipeline/judge/pending'
 import { derivedKeyOf, laneFor } from '#server/registries/lanes'

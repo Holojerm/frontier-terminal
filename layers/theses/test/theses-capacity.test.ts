@@ -3,8 +3,6 @@ import { describe, expect, it } from 'vitest'
 import azure from '~~/fixtures/recipes/gpu-azure.json?raw'
 import coreweave from '~~/fixtures/recipes/gpu-coreweave.html?raw'
 
-import type { RevenuePeriod } from '../../companies/shared/types/revenue'
-import { detailRows, earlyReadLines, earlyReadSummary } from '../shared/utils/thesis-format'
 import type { StoredFact } from '../../companies/server/exposure/series'
 import {
   guidanceShortfalls,
@@ -17,9 +15,6 @@ import { gpuPricePayload } from '#layers/compute/server/recipes/gpu-prices'
 import { RECIPES } from '#server/registries/recipes'
 import { presentation } from '../server/theses/signals'
 import { evaluateClaim, type MeasuredClaim, type StoredReading } from '../server/theses/status'
-import { pressEarlyRead } from '../../press/server/utils/terminal-ground-truth'
-import type { StoredGuidance } from '../../companies/server/utils/terminal-ground-truth-guidance'
-import type { StoredHeadline } from '../../press/server/utils/terminal-reported'
 
 // The Compute thesis's capacity claims (7 to 9) and the press early read
 // beside Anthropic's revenue claim. Tables of our own, except the spot prices,

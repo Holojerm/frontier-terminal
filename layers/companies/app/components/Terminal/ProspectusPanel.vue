@@ -5,19 +5,7 @@
 // headings with what each amendment changed. A line the statement does not
 // print and a count the filing leaves blank are stated as gaps, never filled.
 
-import { periodName } from '../../../shared/utils/terminal-filings'
-import { grouped } from '#layers/core/shared/utils/terminal-format'
-import {
-  billions,
-  millions,
-  statementValue,
-  type CommitmentView,
-  type ConcentrationView,
-  type ProspectusFilingRef,
-  type ProspectusIssuerView,
-  type StatementLineView,
-} from '../../../shared/utils/terminal-prospectus'
-import type { Fact, TableColumn } from '#layers/core/app/types/terminal-ui'
+import { type ProspectusIssuerView } from '../../../shared/utils/terminal-prospectus'
 
 const stamps = useStamps()
 

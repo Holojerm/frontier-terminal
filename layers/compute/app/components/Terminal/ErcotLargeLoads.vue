@@ -5,9 +5,7 @@
 // its large-load queue wherever a report states one. Each row cites the
 // report and the sentence it is read from.
 
-import { count, trimmed } from '#layers/core/shared/utils/terminal-format'
-import { monthLabel, type ErcotLargeLoads } from '../../../shared/utils/grid-load'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import { type ErcotLargeLoads } from '../../../shared/utils/grid-load'
 
 const props = defineProps<{ ercot: ErcotLargeLoads; caveat: string }>()
 

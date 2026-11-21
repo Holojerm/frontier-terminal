@@ -1,22 +1,8 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import { OPENROUTER_KEY_UNSET, type SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { runRefresh, type RefreshDeps } from '../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
-import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
-import { queryContext, queryCoverage } from '#layers/core/server/utils/terminal-db'
 import { EXPORT_TABLES } from '#server/registries/export-tables'
-import {
-  SERIES_DAYS,
-  daysBefore,
-  foldRankingWeeks,
-  queryRankings,
-  summarizeRankings,
-  type RankingObservation,
-} from '../server/utils/terminal-rankings'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The share arithmetic without a database, then the query against the real
@@ -207,7 +193,6 @@ describe('foldRankingWeeks', () => {
 
 // ── against D1 ──────────────────────────────────────────────────────────────
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const SOURCE_ID = 'openrouter-rankings-daily'
 const raw: RawStore = {

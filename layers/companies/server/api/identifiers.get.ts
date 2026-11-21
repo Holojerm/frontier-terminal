@@ -5,10 +5,6 @@
 
 import { z } from 'zod'
 
-import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
-import { serveTerminal } from '#layers/core/server/utils/terminal-handler'
-import { identifiersPayload } from '../utils/terminal-identifiers'
-
 const Query = z.object({
   entity: z
     .string()

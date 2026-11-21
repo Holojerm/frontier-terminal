@@ -21,21 +21,7 @@
 // and the whole plugin no-ops. layers/core/test/html-cache-edge.test.ts covers the Cache API
 // half in workerd, where it does exist.
 
-import { db } from '@nuxthub/db'
 import type { H3Event } from 'h3'
-
-import {
-  CACHE_STATUS,
-  HEADER_SIDECAR,
-  HTML_CACHE_TTL_SECONDS,
-  HTML_CLIENT_CACHE_CONTROL,
-  headerValue,
-  htmlCacheKey,
-  isCacheableDocument,
-  isStorableResponse,
-} from '../utils/html-cache'
-import { serverTimingHeader, timed, type ServerTiming } from '../utils/server-timing'
-import { sharedTerminalStamp, terminalStamps } from '../utils/terminal-cache'
 
 interface RenderResponse {
   body?: unknown

@@ -5,23 +5,6 @@
 // there. The pair is a route parameter in LABS order; the reverse spelling
 // redirects to it, and anything else is a 404.
 
-import { percent } from '#layers/core/shared/utils/terminal-format'
-import { alertLabs } from '../../../../alerts/shared/utils/terminal-labs'
-import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
-import { comparePath, pairTitle, parsePair } from '../../../shared/utils/terminal-compare'
-import { labPath } from '../../../../core/shared/utils/lab-names'
-import { listedBoth, type ListedData } from '../../../shared/utils/listed'
-import type { AlertsData } from '../../../../alerts/shared/types/alerts'
-import type { GroundTruthData } from '../../../../press/shared/types/ground-truth'
-import type { HiringHistoryData } from '../../../../talent/shared/types/hiring'
-import type { IncidentsData } from '../../../../reliability/shared/types/incidents'
-import type { LabId } from '../../../../core/shared/types/common'
-import type { PricesData } from '../../../../pricing/shared/types/prices'
-import type { ProbesData } from '../../../../reliability/shared/types/probes'
-import type { RankingsData } from '../../../../adoption/shared/types/rankings'
-import type { RevenueData } from '../../../../companies/shared/types/revenue'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
-
 // Inert for a dynamic route: sitemap.xml and llms.txt append the compare
 // pages from layers/terminal/shared/utils/terminal-compare.ts. Declared anyway — the seo
 // gate's invariant is per-page.

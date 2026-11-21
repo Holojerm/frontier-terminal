@@ -5,9 +5,7 @@
 // method is on /data and in the payload's `method`; the panel only credits
 // the Archive, which its terms ask for.
 
-import { count, gpuHour, dayLabel } from '#layers/core/shared/utils/terminal-format'
-import type { ArchivedGpuPoint, GpuArchiveView } from '../../../shared/types/gpu-prices'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { GpuArchiveView } from '../../../shared/types/gpu-prices'
 
 const props = defineProps<{ archived: GpuArchiveView }>()
 

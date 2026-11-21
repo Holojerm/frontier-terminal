@@ -3,10 +3,6 @@
 // licensee's key the license that key holds on older data. Pure, so
 // layers/core/test/api-keys.test.ts drives it without Nitro.
 
-import { HISTORY_LICENSE, PAID_LICENSE, licenseSplit, withLicense } from '#shared/utils/license'
-
-import { SCHEMA_VERSION } from './data-schema'
-
 /**
  * The payload with `schema_version` first (data-schema.ts). Added after the
  * cache, so a release never waits on a cached entry to roll over. An array or

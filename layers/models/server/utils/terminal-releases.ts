@@ -4,14 +4,6 @@
 import { and, eq, min } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { ReleasesData } from '../../shared/types/releases'
-import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
-import {
-  loadBaselineInstants,
-  sourceIdForUrl,
-  stampOf,
-  type QueryContext,
-} from '#layers/core/server/utils/terminal-db'
 import { releaseEvents } from './terminal-history'
 
 export async function queryReleases(db: PipelineDb, ctx: QueryContext): Promise<ReleasesData> {

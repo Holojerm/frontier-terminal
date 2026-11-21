@@ -1,8 +1,6 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import migration from '~~/server/db/migrations/0049_correct_google_flagship.sql?raw'
 import { effectiveClassMap } from '../../server/pipeline/class-map'
 import { cardDescriptions, cardOwners } from '../../server/pipeline/judge/page-cards'
@@ -17,8 +15,6 @@ import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 // own page rules against the bytes it came from. It is not in
 // fixtures/manifest.json: the poll suites serve one fixture per source URL, and
 // the seed is transcribed from the older capture.
-
-const db = drizzle(env.DB, { schema })
 
 const PAGE = fixtureText('fixtures/pricing/google-models.2026-11-11.md')
 const ARGON_CARD =

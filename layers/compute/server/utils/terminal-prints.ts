@@ -7,19 +7,6 @@ import { notInArray } from 'drizzle-orm'
 import printTiesJson from '../curated/print-ties.json'
 
 import * as tables from '#server/db/schema'
-import {
-  curatedPrintTies,
-  PRINT_ENTITIES,
-  PRINT_EXTRA_SERIES,
-  PRINT_HELD_SOURCES,
-  type PrintGap,
-  type PrintPoint,
-  type PrintRow,
-  type PrintsData,
-  type PrintTie,
-} from '../../shared/utils/prints'
-import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
-import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 
 export const PRINTS_RULE =
   'Each figure is kept as a source first gave it. A later, different figure for the same month is a new row, so a revision never replaces what was printed. first_seen_at is when our read first held it; published_at is the release time where the source states one. A tie is a quote from a filing or a company statement. Not investment advice.'

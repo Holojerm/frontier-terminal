@@ -1,8 +1,5 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import {
   ARCHIVE_FROM,
   archiveWork,
@@ -23,7 +20,6 @@ import { storeFigureRows, titleKey } from '../server/pipeline/reported/store'
 // as GDELT carried them on 2025-03-03 (read 2026-11-20); outlets and URLs are
 // placeholders.
 
-const db = drizzle(env.DB, { schema })
 const NOW = new Date('2026-11-21T12:00:00Z')
 
 const row = (title: string, n: number) => ({

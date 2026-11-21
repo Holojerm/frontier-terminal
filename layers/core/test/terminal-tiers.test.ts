@@ -1,15 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import {
-  ALERT_TIER_FILTERS,
-  alertPath,
-  alertTier,
-  CRITICAL_FEED_QUERY,
-  severitiesOf,
-  INFO_FEED_QUERY,
-  tierFilterOf,
-} from '../shared/utils/terminal-tiers'
-
 // The materiality split, pinned: every surface (signal band, /alerts, the
 // feed, the sitemap) reads severity through these, so the mapping is a
 // contract rather than a convention.

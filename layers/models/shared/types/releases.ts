@@ -1,5 +1,3 @@
-import type { Prov, ProviderId, Stamp } from '../../../core/shared/types/common'
-
 /** A SKU first listed after a source's baseline: an `added` change on a model row. */
 export interface ReleaseView extends Prov {
   change_id: string

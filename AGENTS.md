@@ -168,7 +168,8 @@ tick is a domain's `ScopeEntry` in `server/registries/scopes.ts`; the tick polic
 - **TypeScript everywhere.** No `.js` files except config files that require it.
 - **Strict mode on.** Don't disable TypeScript strict checks to make things compile faster.
 - **No `any` types.** Use `unknown` and narrow, or define proper types.
-- **Nuxt auto-imports.** Never manually import `ref`, `computed`, `useState`, `useFetch`, etc. — Nuxt auto-imports these.
+- **Nuxt auto-imports.** Never import what Nuxt auto-imports: Vue and Nuxt composables, NuxtHub's `db`/`schema`/`kv`/`blob`, and each layer's `server/utils`, `shared/{utils,types}` and `app/{utils,composables}`. Those top-level folders are a layer's published API; nested folders are internals, imported by relative path.
+  Schema files, `scripts/`, config files and what they import run outside Nitro and Vite, so they keep explicit imports.
 - **No `console.log` in committed code.** Use `console.warn`/`console.error` for real issues only.
 
 - **Worked examples** — a full `<script setup>` component, a Zod-validated API route,

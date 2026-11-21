@@ -1,14 +1,10 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import type { FilingRow } from '#layers/core/server/utils/contracts'
 import { resolvedFilers } from '../../../companies/server/pipeline/derived'
 import { derivedSourceId, parseDerivedSourcesBlock } from '#layers/core/server/pipeline/derived'
 import { googlePricedSlugs, openAiPricedSlugs } from '../../../pricing/server/pipeline/derived'
 import { DERIVED_FROM, deriveSources } from '#server/registries/derived'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { derivedKeyOf, laneFor } from '#server/registries/lanes'
 import { parseGoogleModelPage } from '../../../pricing/server/pipeline/parsers/pricing/google-model-page'
 import { parseOpenAiModelPage } from '../../../pricing/server/pipeline/parsers/pricing/openai-model-page'
@@ -18,15 +14,8 @@ import {
   resolveFilers,
 } from '../../../companies/server/pipeline/parsers/sec/pending-filers'
 import { runRefresh } from '../../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
 import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
 import { CAREERS_SOURCES } from '../../../talent/server/pipeline/scopes'
-import { includeSources } from '#layers/core/server/utils/pipeline-sources'
-import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
-import { queryContext, queryCoverage } from '#layers/core/server/utils/terminal-db'
-import { queryPrices } from '../../../pricing/server/utils/terminal-prices'
-import { queryRevenue } from '../../../companies/server/utils/terminal-revenue'
-import { labelOf } from '#layers/core/server/utils/terminal-sources'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The two things the store derives for itself: a lab's CIK from its own S-1
@@ -34,7 +23,6 @@ import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 // the pricing page. Pure halves first, then the refresh end-to-end against
 // the workerd D1 with a fetcher that serves the derived URLs.
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const pending = parsePendingFilersBlock(sourcesYaml)
 const ALL = includeSources(sourcesYaml, manifest.fixtures)

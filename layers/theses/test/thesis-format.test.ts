@@ -1,16 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
 import { THESES } from '../server/theses/registry'
-import {
-  datasetRequestUrl,
-  detailRows,
-  factRows,
-  formatValue,
-  journalUrl,
-  statusCounts,
-  thesisPages,
-  valueKind,
-} from '../shared/utils/thesis-format'
 
 describe('measured values', () => {
   it('reads the unit off the shape of the detail the signal recorded', () => {

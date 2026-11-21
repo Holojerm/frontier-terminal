@@ -5,7 +5,6 @@
 // caveat, the CC BY 4.0 citation, and the two references that were evaluated
 // and NOT ingested all ship visibly, not behind a control.
 
-import { ppLabel, sharePct } from '#layers/core/shared/utils/terminal-format'
 import type { RankingsData } from '../../../shared/types/rankings'
 
 const watchlist = useWatchlist()

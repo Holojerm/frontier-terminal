@@ -1,10 +1,7 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import { INSTANCES_PER_RUN, filedFactsSkip, runFiledFacts } from '../server/exposure/ingest'
-import type { FetchOutcome, FetchSource } from '#layers/core/server/utils/pipeline-fetch'
+import type { FetchSource } from '#layers/core/server/utils/pipeline-fetch'
 import { SEC_MIN_INTERVAL_MS, paceSec } from '#layers/core/server/pipeline/sec-pace'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
@@ -13,7 +10,6 @@ import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 // beside the survey's own SEC fetches. Now it stays off that instant, paces
 // its requests, and on a 429 stops, sits out the cooldown, and says so once.
 
-const db = drizzle(env.DB, { schema })
 const MSFT = '0000789019'
 const AMZN = '0001018724'
 const MSFT_Q = '0001193125-26-436133'

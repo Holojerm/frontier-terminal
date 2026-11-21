@@ -4,12 +4,10 @@
 // it (pipeline/reported/archive.ts). The Worker matches each headline again
 // before it keeps it. 409 for a file outside the archive or already read.
 
-import { db } from '@nuxthub/db'
 import { z } from 'zod'
 
 import { recordArchiveFile } from '../../pipeline/reported/archive'
 import { MAX_FIGURES_PER_FILE } from '../../pipeline/reported/store'
-import { requireGdeltToken } from '../../utils/gdelt-auth'
 
 /** A fetch time this far off the Worker's clock is refused: the job posts each file at once. */
 const FETCHED_AT_SLACK_MS = 15 * 60_000

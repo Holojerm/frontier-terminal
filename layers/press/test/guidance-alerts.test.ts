@@ -1,9 +1,6 @@
-import { env } from 'cloudflare:test'
 import { eq } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import { extractGuidance } from '../../companies/server/exposure/guidance'
 import {
   checkAlert,
@@ -17,9 +14,8 @@ import {
 } from '../../companies/server/exposure/guidance-alerts'
 import { runFiledFacts } from '../../companies/server/exposure/ingest'
 import type { StoredFact } from '../../companies/server/exposure/series'
-import type { FetchOutcome, FetchSource } from '#layers/core/server/utils/pipeline-fetch'
+import type { FetchSource } from '#layers/core/server/utils/pipeline-fetch'
 import { alertTerms } from '../server/pipeline/track-record/terms'
-import type { StoredGuidance } from '../../companies/server/utils/terminal-ground-truth-guidance'
 import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // The capex-guidance rule (exposure/guidance-alerts.ts): a revision against
@@ -30,7 +26,6 @@ import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 // test, with the $130–145 billion range Meta's October release names as its
 // prior outlook.
 
-const db = drizzle(env.DB, { schema })
 const META = '0001326801'
 const AMZN = '0001018724'
 const PPE = 'us-gaap:PaymentsToAcquirePropertyPlantAndEquipment'

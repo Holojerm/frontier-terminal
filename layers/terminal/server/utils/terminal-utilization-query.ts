@@ -6,11 +6,7 @@
 
 import { inArray } from 'drizzle-orm'
 
-import type { UtilizationData } from '#layers/compute/shared/utils/compute-views'
-import type { RecipeCitation } from '#layers/core/shared/types/common'
-
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { gpuState, median } from '#layers/compute/server/recipes/gpu-series'
 import {
   SEC_CRWV_ACTIVE_POWER,
@@ -26,32 +22,7 @@ import {
   mlperfRoundsFootnote,
 } from '#layers/compute/server/recipes/mlperf-inference'
 import { GPU_RECIPES } from '#layers/compute/server/recipes/gpu-recipes'
-import {
-  COREWEAVE_CAVEAT,
-  COREWEAVE_METHOD,
-  FLEET_KEY,
-  IMPLIED_CAVEAT,
-  IMPLIED_METHOD,
-  ROUNDS_METHOD,
-  SPOT_CAVEAT,
-  SPOT_METHOD,
-  SPOT_QUORUM,
-  coreweaveQuarters,
-  impliedRows,
-  listPriceFloor,
-  roundRows,
-  spotRead,
-} from '#layers/compute/server/utils/terminal-utilization'
 import { SEC_REVENUE_CRWV } from '../../../companies/server/recipes/sec-revenue'
-import { sourceReads, type QueryContext } from '#layers/core/server/utils/terminal-db'
-import { byString } from '#layers/core/server/utils/terminal-json'
-import {
-  rankingObservations,
-  rankingsAsOf,
-  rankingsMeta,
-  summarizeRankings,
-  type RankingObservation,
-} from '#layers/adoption/server/utils/terminal-rankings'
 
 type Row = typeof tables.recipeObservations.$inferSelect
 

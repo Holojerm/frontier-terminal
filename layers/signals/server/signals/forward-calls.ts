@@ -6,13 +6,6 @@
 // once, the first time a filing after the call settles its period.
 
 import * as tables from '#server/db/schema'
-import type {
-  ForwardCall,
-  ForwardCallView,
-  ForwardInput,
-  ForwardMethod,
-} from '../../shared/utils/signals'
-import type { RevenueData } from '../../../companies/shared/types/revenue'
 import {
   flowSum,
   instantOf,
@@ -22,14 +15,6 @@ import {
 } from '../../../companies/server/calls/actuals'
 import { conceptFacts } from '../../../companies/server/calls/ingest'
 import { filingUrl } from '../../../companies/server/exposure/series'
-import { contentHash } from '#layers/core/server/utils/contracts'
-import {
-  chunk,
-  rowsPerStatement,
-  runStatements,
-  type PipelineDb,
-} from '#layers/core/server/utils/pipeline-store'
-import { filedFigures } from '../../../press/server/utils/terminal-ground-truth'
 import { REGISTERED_CALLS } from './forward-calls-registered'
 import { conceptsOf, forwardFiler } from './forward-filers'
 

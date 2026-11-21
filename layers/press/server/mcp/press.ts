@@ -3,17 +3,6 @@
 // before its exposure tools (server/registries/mcp-tools.ts).
 
 import { z } from 'zod'
-import { queryGroundTruth } from '../utils/terminal-ground-truth'
-import { queryReported, reportedStamp } from '../utils/terminal-reported'
-import {
-  ProviderSchema,
-  json,
-  READ_ONLY,
-  AsOfSchema,
-  asOfErrors,
-  PROVENANCE,
-  type McpKit,
-} from '#layers/core/server/utils/mcp-kit'
 
 export function registerPressTools({ server, deps, read }: McpKit): void {
   server.registerTool(

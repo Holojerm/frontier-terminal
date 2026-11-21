@@ -19,16 +19,8 @@
 
 import { z } from 'zod'
 
-import {
-  SUPPLIER_RELATIONS,
-  SUPPLIER_UNITS,
-  type CuratedSupplierRow,
-} from '../../shared/utils/suppliers'
-import type { RawReader } from '#layers/core/server/utils/pipeline-raw'
 import { contains, documentText } from '#layers/core/server/pipeline/document-text'
-import { chunk, runStatements, type PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import * as tables from '#server/db/schema'
-import { comparable } from '#layers/core/server/utils/quote-match'
 import { figureWritten, supplierExcerpts } from './excerpts'
 import { SUPPLIER_FILERS, counterpartyNamed } from './filers'
 import { documentRef, pendingDocuments } from './ingest'

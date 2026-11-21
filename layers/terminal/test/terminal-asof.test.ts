@@ -1,32 +1,8 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
-import { contentHash } from '#layers/core/server/utils/contracts'
 import { runRefresh } from '../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
-import { includeSources } from '#layers/core/server/utils/pipeline-sources'
-import { insertRows } from '#layers/core/server/utils/pipeline-store'
-import {
-  AS_OF_ROUTES,
-  AsOfInstant,
-  PointInTimeError,
-  assertKnowable,
-  entitiesAt,
-  judgeCutoffAt,
-  pollStampAt,
-} from '#layers/core/server/utils/terminal-asof'
-import { isCacheableDocument } from '#layers/core/server/utils/html-cache'
-import { terminalCacheKey, terminalStamps } from '#layers/core/server/utils/terminal-cache'
-import { queryAlerts } from '../../alerts/server/utils/terminal-alerts'
-import { queryContext, type QueryContext } from '#layers/core/server/utils/terminal-db'
-import { queryHiring, queryHiringHistory } from '../../talent/server/utils/terminal-hiring'
-import { queryPriceHistory, queryPrices } from '../../pricing/server/utils/terminal-prices'
-import { collect, csvChunks, jsonChunks } from '#layers/core/server/utils/terminal-export-format'
 import { exportTable } from '#server/registries/export-tables'
-import { queryRevenue } from '../../companies/server/utils/terminal-revenue'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // Point-in-time reads. The golden property: a query asked `as_of` an instant
@@ -38,7 +14,6 @@ import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 // A poll of every fixture source takes seconds in workerd.
 const POLLS = { timeout: 60_000 }
 
-const db = drizzle(env.DB, { schema })
 // This store runs in September 2026, before some revenue_filers entries took
 // effect. The round-trip tests below compare a live read then with an as_of
 // read now, so they read the block as if every entry had always held; the

@@ -20,8 +20,6 @@
 // segment's revenue and an AI line aren't in the facts we read, so they stay
 // unscored. Pure.
 
-import type { ExposureTicker } from '../../shared/utils/terminal-exposure'
-import { GUIDANCE_MEASURES } from '../utils/terminal-ground-truth-guidance'
 import { daysBetween, fiscalPeriod, PERIOD_SLACK_DAYS, type FiscalPeriod } from './periods'
 
 export const REVENUE_CONCEPTS = [

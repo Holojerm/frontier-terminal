@@ -2,45 +2,11 @@
 // filtering, and the outbox against a real D1 (idempotent enqueue, the public
 // and judged-hold gates, retries, the one ops event when a webhook fails).
 
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { eq } from 'drizzle-orm'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import { PAID_LICENSE } from '~~/shared/utils/license'
 import { JUDGED_HOLD_MS } from '../server/pipeline/social'
-import { expiryAfter } from '#layers/core/server/utils/api-key-token'
-import {
-  WEBHOOK_ALERT_LOOKBACK_MS,
-  drainWebhookDeliveries,
-  enqueueWebhookDeliveries,
-  type WebhookDrainOptions,
-} from '../server/utils/webhook-outbox'
-import {
-  deriveWebhookSecret,
-  fetchWebhookSender,
-  generateWebhookId,
-  nextWebhookAttemptAt,
-  webhookRetryDelayMs,
-  WEBHOOK_RETRY_WINDOW_MS,
-  signedWebhookRequest,
-  signingKeyId,
-  signingKeyRefusal,
-  signWebhookBody,
-  verifyWebhookSignature,
-  WEBHOOK_ID_SHAPE,
-  type WebhookRequest,
-} from '../server/utils/webhook-sign'
-import { addressRefusal, isPrivateAddress, webhookUrlRefusal } from '../server/utils/webhook-url'
-import {
-  exampleWebhookPayload,
-  severityReaches,
-  WEBHOOK_HEADERS,
-  type WebhookPayload,
-} from '../shared/utils/webhooks'
-
-const db = drizzle(env.DB, { schema })
+import { WEBHOOK_ALERT_LOOKBACK_MS } from '../server/utils/webhook-outbox'
 
 const KEY = 'k'.repeat(40)
 const ORIGIN = 'https://frontierterm.com'

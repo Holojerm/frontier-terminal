@@ -5,19 +5,6 @@
 // test, and the corrections log. Every figure comes from /api/reliability,
 // which computes it from stored records (terminal-reliability.ts).
 
-import { count, percent } from '#layers/core/shared/utils/terminal-format'
-import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
-import {
-  durationLabel,
-  type DeployCheck,
-  type FilingDetection,
-  type ReliabilityData,
-  type RunTally,
-  type SourceReliability,
-} from '../../../shared/utils/terminal-reliability'
-import { alertPath } from '../../../../core/shared/utils/terminal-tiers'
-import type { Fact, TableColumn } from '#layers/core/app/types/terminal-ui'
-
 import manifest from '~~/fleet.json'
 
 const stamps = useStamps()

@@ -4,15 +4,6 @@
 // after the shell's get_rate_limits (server/registries/mcp-tools.ts).
 
 import { z } from 'zod'
-import { queryDisclosures } from '../utils/terminal-disclosures'
-import { queryReleases } from '../utils/terminal-releases'
-import {
-  ProviderSchema,
-  json,
-  READ_ONLY,
-  PROVENANCE,
-  type McpKit,
-} from '#layers/core/server/utils/mcp-kit'
 
 export function registerReleaseTools({ server, deps }: McpKit): void {
   server.registerTool(

@@ -1,11 +1,6 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { describe, expect, it } from 'vitest'
 
-import type { ThesisDef } from '../shared/utils/thesis-types'
-
-import * as schema from '~~/server/db/schema'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { evaluateTheses } from '../server/theses/evaluate'
 import { evaluateJudgedClaim } from '../server/theses/judged-status'
 import {
@@ -27,7 +22,6 @@ import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 // fetcher; the runner's storage and failure rules; the recipe signals; and
 // a recipe-items claim rated through the verdict gate.
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const NOW = new Date('2026-10-09T12:00:00Z')
 

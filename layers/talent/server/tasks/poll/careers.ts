@@ -5,18 +5,9 @@
 // and inside the survey it pushed the tick over the 128 MB limit, which killed
 // every source the survey had not yet recorded.
 
-import { blob } from '@nuxthub/blob'
-import { db } from '@nuxthub/db'
-import { kv } from '@nuxthub/kv'
-
 import sourcesYaml from 'raw:~~/sources.yaml'
 
-import { createFetcher } from '#layers/core/server/utils/pipeline-fetch'
-import { unstorageLockStore } from '#layers/core/server/utils/pipeline-lock'
 import { runPoll } from '#layers/core/server/pipeline/poll'
-import { blobRawStore } from '#layers/core/server/utils/pipeline-raw'
-import { warmAfterPoll } from '#layers/core/server/utils/cache-warm-task'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

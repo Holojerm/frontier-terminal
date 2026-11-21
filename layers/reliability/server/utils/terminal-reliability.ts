@@ -7,35 +7,10 @@
 
 import { and, desc, eq, gte, inArray, max, min, sql } from 'drizzle-orm'
 
-import { CORRECTIONS } from '../../../core/shared/utils/corrections'
-import {
-  DETECTION_RULES,
-  FRESHNESS_LANES,
-  RELIABILITY_DAYS,
-  medianOf,
-  minutesBetween,
-  type DeployCheck,
-  type FilingDetection,
-  type FreshnessLane,
-  type ReliabilityData,
-  type RunGap,
-  type SourceReliability,
-  type StalePeriod,
-} from '../../shared/utils/terminal-reliability'
-import type { ProviderId, SourceAxis } from '../../../core/shared/types/common'
-
 import * as tables from '#server/db/schema'
-import { manifestFixtures } from '#layers/core/server/utils/fixture-provenance'
 import { filingIndexUrl, releasedAt } from '../pipeline/reliability/acceptance'
 import { ROLLUP_NAME, addDays, dayOf } from '../pipeline/reliability/rollup'
 import { statedIntervalMinutes } from '#layers/core/server/pipeline/scopes'
-import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
-import type { QueryContext } from '#layers/core/server/utils/terminal-db'
-import {
-  PROVIDER_ORDER,
-  derivedTemplateOf,
-  labelOf,
-} from '#layers/core/server/utils/terminal-sources'
 
 /** Stale periods listed per lane, newest first; the totals count them all. */
 const PERIODS_SHOWN = 50

@@ -6,10 +6,8 @@
 // would be. A site's power is Epoch's and sits on the site's rows only: summed
 // per company it would read as what the company supplies, which no page says.
 
-import { count } from '#layers/core/shared/utils/terminal-format'
 import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
-import { POWER_ROLE_LABEL, type PowerSitesData } from '../../../shared/utils/power-sites'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import { type PowerSitesData } from '../../../shared/utils/power-sites'
 
 const stamps = useStamps()
 

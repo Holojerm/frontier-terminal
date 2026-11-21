@@ -1,18 +1,9 @@
 // Cron task: the five-minute launch tripwire (layers/models/server/pipeline/tripwire.ts).
 // Same wiring and the same reasons as poll/edgar.ts.
 
-import { blob } from '@nuxthub/blob'
-import { db } from '@nuxthub/db'
-import { kv } from '@nuxthub/kv'
-
 import sourcesYaml from 'raw:~~/sources.yaml'
 
-import { createFetcher } from '#layers/core/server/utils/pipeline-fetch'
-import { unstorageLockStore } from '#layers/core/server/utils/pipeline-lock'
-import { blobRawStore } from '#layers/core/server/utils/pipeline-raw'
 import { runTripwire } from '../../pipeline/tripwire'
-import { warmAfterPoll } from '#layers/core/server/utils/cache-warm-task'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

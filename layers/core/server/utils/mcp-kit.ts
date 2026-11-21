@@ -3,18 +3,7 @@
 
 import type { CallToolResult } from '@modelcontextprotocol/server'
 import { z } from 'zod'
-import {
-  DATA_LICENSE,
-  HISTORY_LICENSE,
-  LICENSE_SPLIT_EFFECTIVE,
-  LICENSE_WINDOW_DAYS,
-} from '#shared/utils/license'
-import { PointInTimeError, parseAsOfQuery } from './terminal-asof'
-import type { QueryContext } from './terminal-db'
-import { PROVIDER_ORDER } from './terminal-sources'
-import type { RebuiltAsOf } from './terminal-handler'
 import type { McpServer } from '@modelcontextprotocol/server'
-import type { McpDeps } from './mcp'
 
 export const MCP_SERVER_NAME = 'frontier-terminal'
 

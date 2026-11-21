@@ -1,11 +1,6 @@
 import { and, eq, gt, inArray, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import { boardLabel } from '#layers/core/shared/utils/terminal-format'
-import { inCluster, type DepartmentCluster } from '../utils/terminal-clusters'
-import { NO_DEPARTMENT, openRolesAt, type OpenRole } from '../utils/terminal-hiring-history'
-import type { ChangeRow } from '#layers/core/server/utils/contracts'
-import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 
 // The hiring materiality floor: when a set of job changes is worth the alert
 // tier. A move counts relative to the board or department it happens on,

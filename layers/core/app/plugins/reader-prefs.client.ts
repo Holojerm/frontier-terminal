@@ -2,7 +2,7 @@
 // client render matches the cached server HTML, and keeps other tabs in step
 // when the settings change in one of them.
 
-import { PREFS_KEY, loadReaderPrefs } from '#layers/core/app/composables/useReaderPrefs'
+import { PREFS_KEY } from '#layers/core/app/composables/useReaderPrefs'
 
 export default defineNuxtPlugin((nuxtApp) => {
   if (nuxtApp.isHydrating) nuxtApp.hooks.hookOnce('app:suspense:resolve', loadReaderPrefs)

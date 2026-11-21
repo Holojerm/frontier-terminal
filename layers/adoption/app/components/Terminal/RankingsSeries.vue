@@ -6,10 +6,8 @@
 // always, and a table view of the same numbers so nothing rests on the
 // picture alone.
 
-import { compactTokens } from '#layers/core/shared/utils/terminal-format'
 import type { ProviderId } from '#layers/core/shared/types/common'
 import type { RankingDay } from '../../../shared/types/rankings'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const stamps = useStamps()
 

@@ -10,21 +10,11 @@
 // filesystem in a Worker, and the whitelist must come from the audited file,
 // never from a number typed into code (parsers/sec/whitelist.ts).
 
-import { blob } from '@nuxthub/blob'
-import { db } from '@nuxthub/db'
-import { kv } from '@nuxthub/kv'
-
 import sourcesYaml from 'raw:~~/sources.yaml'
 
-import { recordOpsEvent } from '#server/utils/ops'
 import { filedFactsSkip, runFiledFacts } from '../../exposure/ingest'
-import { createFetcher } from '#layers/core/server/utils/pipeline-fetch'
-import { unstorageLockStore } from '#layers/core/server/utils/pipeline-lock'
-import { blobRawReader, blobRawStore } from '#layers/core/server/utils/pipeline-raw'
 import { runPoll } from '#layers/core/server/pipeline/poll'
 import { paceSec } from '#layers/core/server/pipeline/sec-pace'
-import { warmAfterPoll } from '#layers/core/server/utils/cache-warm-task'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

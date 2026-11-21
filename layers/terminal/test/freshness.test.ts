@@ -1,10 +1,7 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import layersLock from '~~/layers.lock.json'
 import nuxtConfigSource from '~~/nuxt.config.ts?raw'
-import * as schema from '~~/server/db/schema'
 import { readScheduledTasks } from '~~/scripts/lib/scheduled-tasks'
 import {
   deployDriftCheck,
@@ -12,39 +9,14 @@ import {
   fetchMainHead,
   parseRefAdvertisement,
 } from '../../reliability/server/pipeline/deploy-watch'
-import type { LockStore } from '#layers/core/server/utils/pipeline-lock'
-import {
-  FRESHNESS_CHECK_FAILED_KIND,
-  checkFreshness,
-  cronIntervalMs,
-  freshnessMarkerKey,
-  freshnessOf,
-  expectedMarkerKey,
-  taskHeartbeatCheck,
-  taskMaxAgeMs,
-  type FreshnessCheck,
-} from '#layers/core/server/utils/freshness'
-import {
-  TASK_CHECK_OVERRIDES,
-  freshnessChecks,
-  gdeltFreshnessCheck,
-  listingStatusCheck,
-  listingStatusCheckOf,
-  socialOutboxFreshnessCheck,
-} from '../server/utils/terminal-freshness'
-import { TERMINAL_OPS_SEVERITY } from '#layers/core/server/utils/terminal-ops-severity'
-import {
-  TASK_FAILED_KIND,
-  recordHeartbeat,
-  withHeartbeat,
-} from '#layers/core/server/utils/task-heartbeat'
+import { FRESHNESS_CHECK_FAILED_KIND } from '#layers/core/server/utils/freshness'
+import { TASK_FAILED_KIND } from '#layers/core/server/utils/task-heartbeat'
 
 // The freshness checks (server/utils/freshness.ts): the coverage gate that
 // keeps every scheduled task and every producer off the Worker under one rule,
 // then the rule itself, the heartbeat behind the task checks, each producer's
 // evidence against a real D1, and the deploy of main.
 
-const db = drizzle(env.DB, { schema })
 const SCHEDULED = readScheduledTasks(nuxtConfigSource)
 
 // Every task file in the app and its layers, as source text.

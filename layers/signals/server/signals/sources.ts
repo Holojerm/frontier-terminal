@@ -6,24 +6,13 @@
 import { and, eq, inArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import { gridMonths, gridWeeks } from '#layers/compute/shared/utils/grid-load'
 import { ARCHIVE_UNTIL } from '#layers/pricing/server/pipeline/archive/eras'
 import { LIMITS_LIVE_FROM } from '#layers/pricing/server/pipeline/archive/limits-eras'
 import type { ArchivedPriceEvent } from '#layers/pricing/server/pipeline/archive/price-events'
-import {
-  archivedLimitChanges,
-  archivedPriceEvents,
-} from '#layers/pricing/server/utils/terminal-price-archive'
 import { PRIMARY_PLACEMENT } from '../../../reliability/server/pipeline/probes/placement'
-import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { KCS } from '#layers/compute/server/prints/ingest'
 import { shiftPeriod } from '#layers/compute/server/prints/parse'
-import type { QueryContext } from '#layers/core/server/utils/terminal-db'
-import { queryGpuPrices } from '#layers/compute/server/utils/terminal-gpu'
-import { queryGroundTruth } from '../../../press/server/utils/terminal-ground-truth'
-import { queryHiringHistory } from '../../../talent/server/utils/terminal-hiring'
 import { readDownloadSeries, seriesById } from '#layers/adoption/server/recipes/download-series'
-import { rankingWeeks } from '#layers/adoption/server/utils/terminal-rankings'
 import type { EventPoint, Point } from './harness'
 import type { SignalSource } from './registry'
 

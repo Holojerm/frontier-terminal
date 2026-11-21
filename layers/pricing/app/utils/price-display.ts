@@ -2,15 +2,6 @@
 // and the move since the previous revision. Shared by the matrix and the
 // front page's flagship grid so one cell never explains itself two ways.
 
-import {
-  absoluteStamp,
-  money,
-  pctChange,
-  pctLabel,
-} from '#layers/core/shared/utils/terminal-format'
-import type { Prov } from '#layers/core/shared/types/common'
-import type { MatrixCell, PriceDeltaView, PriceRowView } from '../../shared/types/prices'
-
 /** The vendor sentence behind a cell, and the last poll's word on whether it is still there. */
 export function basisText(
   c: MatrixCell,

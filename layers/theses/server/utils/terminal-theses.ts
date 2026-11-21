@@ -3,11 +3,6 @@
 // the stored readings by the same pure rules the evaluator uses, so the page
 // and the status-change log cannot disagree; status_since comes from the log.
 
-import { COMPANIES, companyName, gpuProviderName } from '#layers/core/shared/utils/companies'
-import type { LabId } from '../../../core/shared/types/common'
-import type { ClaimView, ReadingPoint, ThesesData } from '../../shared/utils/thesis-types'
-
-import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import {
   currentEvaluation,
   latestStatusChange,
@@ -17,8 +12,6 @@ import {
 import { confirmationOf } from '../theses/judged-status'
 import { THESES } from '../theses/registry'
 import { valueFormatOf } from '../theses/signals'
-import type { QueryContext } from '#layers/core/server/utils/terminal-db'
-import { queryPressEarlyRead } from '../../../press/server/utils/terminal-ground-truth'
 
 export const THESES_CAVEAT =
   'This is a research journal. It isn’t investment advice. Each status is computed from our stored data against kill conditions written before the data arrived. ' +

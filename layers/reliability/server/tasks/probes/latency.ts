@@ -12,16 +12,8 @@
 // and open /_nitro/tasks/probes:latency. It probes in-process, stored as
 // `unpinned`, and spends real credit (about two cents).
 
-import { db } from '@nuxthub/db'
-
 import { UNPINNED } from '../../pipeline/probes/placement'
 import type { ProbeRunReport } from '../../pipeline/probes/run'
-import {
-  dispatchPinnedProbes,
-  runProbesHere,
-  type PinnedProbeResult,
-} from '../../utils/probe-runner'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

@@ -1,6 +1,5 @@
 import { env } from 'cloudflare:test'
 import { eq } from 'drizzle-orm'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import chipTypes from '~~/fixtures/recipes/epoch-chip-types.csv?raw'
@@ -13,8 +12,6 @@ import mlperf from '~~/fixtures/recipes/mlperf-inference-datacenter-v6.0.json?ra
 import crwvFacts from '~~/fixtures/recipes/sec-companyfacts-crwv.json?raw'
 import crwvRelease from '~~/fixtures/recipes/sec-crwv-active-power.html?raw'
 import googlRelease from '~~/fixtures/recipes/sec-googl-api-tokens.html?raw'
-import * as schema from '~~/server/db/schema'
-import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import type { Recipe } from '#layers/core/server/recipes/contract'
 import {
   SEC_CRWV_ACTIVE_POWER,
@@ -44,22 +41,6 @@ import {
 } from '../server/recipes/mlperf-inference'
 import { runRecipes } from '#layers/core/server/recipes/run'
 import { SEC_REVENUE_CRWV } from '#layers/companies/server/recipes/sec-revenue'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import {
-  SPOT_QUORUM,
-  coreweaveQuarters,
-  h100eOf,
-  impliedRows,
-  listPriceFloor,
-  mlperfChip,
-  roundRows,
-  spotRead,
-  type RoundResult,
-} from '../server/utils/terminal-utilization'
-import {
-  demandShape,
-  queryUtilization,
-} from '#layers/terminal/server/utils/terminal-utilization-query'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The utilization read: the recipes it adds against fixtures fetched
@@ -691,7 +672,6 @@ describe('demandShape', () => {
 
 // ── The payload, over a store the runner filled ─────────────────────────────
 
-const db = drizzle(env.DB, { schema })
 const NOW = new Date('2026-11-20T06:00:00Z')
 const raw = { put: async (key: string, body: string) => void (await env.BLOB.put(key, body)) }
 const ok = (body: string) => ({ ok: true as const, status: 200, text: body, bytes: body.length })

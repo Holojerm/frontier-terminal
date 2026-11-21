@@ -2,18 +2,6 @@
 // models layer's (layers/models/server/mcp/models.ts), registered right after.
 
 import { z } from 'zod'
-import { queryPriceHistory, queryPrices } from '../utils/terminal-prices'
-import {
-  ProviderSchema,
-  SkuKeySchema,
-  json,
-  failure,
-  READ_ONLY,
-  AsOfSchema,
-  asOfErrors,
-  PROVENANCE,
-  type McpKit,
-} from '#layers/core/server/utils/mcp-kit'
 
 export function registerPriceTools({ server, deps, read }: McpKit): void {
   server.registerTool(

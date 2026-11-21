@@ -5,16 +5,6 @@
 
 import { afterEach, describe, expect, it, vi } from 'vitest'
 
-import {
-  clearPublicPagesForTest,
-  collectPublicPages,
-  getRobotsDisallow,
-  registerPublicPageSource,
-  registerRobotsDisallow,
-} from '../server/utils/public-pages'
-import type { ExtensionDb } from '../server/utils/extensions'
-import { buildLlmsTxt, buildRobotsTxt, sitemapResponse } from '../server/utils/seo'
-
 // Sources receive the client; these tests fake it the way test/extensions does
 // not need to, because no source here reads it.
 const DB = {} as ExtensionDb

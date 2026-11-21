@@ -3,8 +3,6 @@
 // the snapshot before, and the Internet Archive copies of the same page. Every
 // figure carries the URL it was read from and when.
 
-import type { LabId, RecipeCitation } from '../../../core/shared/types/common'
-
 export interface LimitRow {
   model: string
   tier: string

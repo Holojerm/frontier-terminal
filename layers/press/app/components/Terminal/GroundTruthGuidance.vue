@@ -4,13 +4,7 @@
 // and what we compare it with. A filer whose guidance we can't score is named
 // with the reason.
 
-import { grouped, roundBillions } from '#layers/core/shared/utils/terminal-format'
-import type {
-  GroundTruthGuidance,
-  GroundTruthGuidanceData,
-  GroundTruthGuidanceFiler,
-} from '../../../../companies/shared/types/guidance'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
+import type { GroundTruthGuidanceData } from '../../../../companies/shared/types/guidance'
 
 const props = defineProps<{ guidance: GroundTruthGuidanceData; tolerancePct: number }>()
 

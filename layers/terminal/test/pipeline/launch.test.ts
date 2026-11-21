@@ -1,17 +1,9 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { checkLaunchCoverage } from '../../../models/server/pipeline/launch-watch'
-import type { LockStore } from '#layers/core/server/utils/pipeline-lock'
 import { runRefresh } from '../../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
 import { isPollInstant, runTripwire } from '../../../models/server/pipeline/tripwire'
-import { registerFleetExtraContributor } from '~~/server/utils/extensions'
-import { collectFleetCounters } from '~~/server/utils/fleet-status'
-import { collectTerminalCounters } from '../../server/utils/fleet-counters'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // Launch day, end to end on the workerd D1/R2 bindings: a lab ships a model
@@ -21,7 +13,6 @@ import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 // the old flagship. The rewrite replays the Opus 5.5 launch of 2026-09-22 as a
 // hypothetical Opus 6 on the committed (Opus 5.5) pages.
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 
 const raw: RawStore = {

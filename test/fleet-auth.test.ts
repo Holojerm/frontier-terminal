@@ -6,8 +6,6 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { bearerToken, FLEET_TOKEN_MIN_LENGTH, verifyFleetToken } from '../server/utils/fleet-auth'
-
 const CURRENT = 'current-token-0123456789abcdef0123456789abcdef'
 const PREVIOUS = 'previous-token-0123456789abcdef0123456789abcde'
 

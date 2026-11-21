@@ -1,5 +1,3 @@
-import type { Prov, Stamp } from '../../../core/shared/types/common'
-
 /** One published on-demand price, normalized to USD per GPU-hour (layers/compute/server/recipes/gpu-prices.ts). */
 export interface GpuPriceView extends Prov {
   provider: string

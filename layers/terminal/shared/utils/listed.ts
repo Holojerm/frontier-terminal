@@ -5,15 +5,6 @@
 // whose monthly prints /compute reads. Nothing here is new
 // data. Each tie points back at the table that holds its figures and quotes.
 
-import { POWER_ROLE_LABEL, type PowerRole } from '../../../compute/shared/utils/power-sites'
-import {
-  SUPPLIER_LAYER_LABEL,
-  SUPPLIER_RELATION_LABEL,
-  type SupplierRelation,
-} from '../../../companies/shared/utils/suppliers'
-import type { SupplierLayer } from '../../../core/shared/utils/supplier-layers'
-import { labName } from '../../../core/shared/utils/lab-names'
-
 /** A filer on the graph: the lines its own XBRL draws to another company. */
 export interface ListedGraphTie {
   source: 'graph'

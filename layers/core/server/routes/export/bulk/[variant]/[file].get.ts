@@ -5,20 +5,6 @@
 // live there (BulkFile.stored). The file's SHA-256 is its ETag, so a client
 // that has it gets a 304.
 
-import { blob } from '@nuxthub/blob'
-
-import { cacheControlFor, rateLimitTerminal } from '../../../../utils/api-access'
-import { SCHEMA_VERSION_HEADER } from '../../../../utils/data-schema'
-import { headResponse } from '../../../../utils/head-response'
-import {
-  BULK_CONTENT_TYPES,
-  byteRange,
-  bulkFileOf,
-  licensedStoreOf,
-  notModified,
-  readBulkIndex,
-} from '../../../../utils/terminal-bulk'
-
 export default defineEventHandler(async (event) => {
   const key = await rateLimitTerminal(event, { name: 'bulk-file', limit: 60, windowSeconds: 60 })
   const variant = getRouterParam(event, 'variant')

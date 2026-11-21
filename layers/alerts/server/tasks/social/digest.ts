@@ -3,14 +3,7 @@
 // the EVENTS queue (layers/core/server/utils/events.ts) to send it. With no
 // Buffer key it returns before touching the database.
 
-import { db } from '@nuxthub/db'
-
-import { readSocialConfig } from '#layers/social/server/utils/social'
 import { enqueueWeeklyDigest } from '../../pipeline/social'
-import { FANOUT_SETTLE_SECONDS } from '../../utils/event-work'
-import { kvStore } from '../../utils/event-runtime'
-import { scheduleDrain } from '#layers/core/server/utils/events'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 // The result type is spelled out because TypeScript infers it from the first
 // `return` alone, and this task has two shapes.

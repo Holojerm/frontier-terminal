@@ -2,8 +2,6 @@
 // due-diligence reviewer reads on /data#reliability. Shared so the page states
 // the same thresholds the server applies.
 
-import type { ProviderId, SourceAxis } from '../../../core/shared/types/common'
-
 /** The two look-back windows, in UTC days counting today. */
 export const RELIABILITY_DAYS = { short: 30, long: 90 } as const
 

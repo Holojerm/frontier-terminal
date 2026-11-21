@@ -1,12 +1,6 @@
 import { describe, expect, test } from 'vitest'
 
-import {
-  ChangeRow,
-  contentHash,
-  stableStringify as contractsStableStringify,
-  type FilingRow,
-  type PriceRow,
-} from '#layers/core/server/utils/contracts'
+import { stableStringify as contractsStableStringify } from '#layers/core/server/utils/contracts'
 import { diff } from '#layers/core/server/pipeline/diff'
 import { normalizePrices, priceTier } from '../../../pricing/server/pipeline/normalize'
 import { normalizeJobs, type JobRow } from '../../../talent/server/pipeline/normalize'

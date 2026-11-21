@@ -1,14 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import type { RankingObservation } from '../server/utils/terminal-rankings'
-import {
-  matchSku,
-  slugTokens,
-  splitPermaslug,
-  summarizeSpend,
-  type SkuPrice,
-} from '../server/utils/terminal-spend'
-
 // The implied-spend join, as pure arithmetic over a handful of typed rows:
 // the slug match between OpenRouter's permaslugs and the vendors' SKU
 // slugs, the low/high range, coverage, and the labs it refuses to price.

@@ -8,16 +8,8 @@
 // its axis page leads with, so the overview is the axis pages' summaries and
 // nothing else. Fourteen cached endpoints, fetched in parallel on the server.
 
-import type { DisclosuresData } from '#layers/models/shared/types/disclosures'
-import type { HiringHistoryData } from '#layers/talent/shared/types/hiring'
 import type { IncidentsData } from '#layers/reliability/shared/types/incidents'
-import { LABS } from '#layers/core/shared/utils/lab-names'
-import type { OverviewData } from '#layers/alerts/shared/types/overview'
-import type { PricesData } from '#layers/pricing/shared/types/prices'
-import type { RankingsData } from '#layers/adoption/shared/types/rankings'
 import type { ReleasesData } from '#layers/models/shared/types/releases'
-import type { RevenueData } from '#layers/companies/shared/types/revenue'
-import type { SpendData } from '#layers/adoption/shared/types/spend'
 
 definePageMeta({
   publicPage: {

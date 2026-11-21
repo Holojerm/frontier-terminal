@@ -7,12 +7,6 @@
 //
 // Imports are explicit for the reason layers/terminal/server/tasks/ops/watch.ts spells out.
 
-import { logEvent } from '#server/utils/log'
-
-import { sweepEvents } from '../../utils/event-work'
-import { eventDeps } from '../../utils/event-runtime'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
-
 interface CloudflareTaskContext {
   cloudflare?: { env?: Record<string, unknown> }
 }

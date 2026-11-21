@@ -1,16 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import { COMPANIES } from '#layers/core/shared/utils/companies'
-import { ENTITY_SECURITIES } from '../server/utils/terminal-entities'
-import {
-  ENTITY_IDENTIFIERS,
-  ENTITY_IDENTIFIER_COLUMNS,
-  GLEIF_LEIS,
-  GLEIF_RECORDS,
-  SEC_TICKERS,
-  identifiersPayload,
-} from '../server/utils/terminal-identifiers'
-import { PROVIDER_ORDER } from '#layers/core/server/utils/terminal-sources'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The registry is hand-written, so every identifier in it is checked against

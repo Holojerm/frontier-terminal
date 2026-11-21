@@ -1,8 +1,6 @@
 <script setup lang="ts">
 // The in/out price pair, $ per million tokens, as every surface prints it.
 
-import { money } from '#layers/core/shared/utils/terminal-format'
-
 defineProps<{ input: number | null; output: number | null }>()
 </script>
 

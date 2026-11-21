@@ -11,14 +11,9 @@
 // nothing else is; the 200 carries counts, including grounding rejections,
 // because a partially accepted run is still a run.
 
-import { blob } from '@nuxthub/blob'
-import { db } from '@nuxthub/db'
-
 import sourcesYaml from 'raw:~~/sources.yaml'
 
-import { blobRawReader } from '#layers/core/server/utils/pipeline-raw'
 import { submitJudgeRun } from '../../pipeline/judge/submit'
-import { requireJudgeToken } from '#layers/core/server/utils/judge-auth'
 
 /** 200 alerts of long prose fit in a tenth of this; anything bigger is not a judge output. */
 const MAX_BODY_BYTES = 512 * 1024

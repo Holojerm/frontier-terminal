@@ -1,10 +1,6 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import tiesJson from '../server/curated/print-ties.json'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { ACCTON_REVENUE, runPrintReads, TSMC_6K, TWSE_REVENUE } from '../server/prints/ingest'
 import {
   parseAcctonRevenue,
@@ -17,17 +13,11 @@ import {
   type PrintObservation,
 } from '../server/prints/parse'
 import { printsStamp, storeObservations } from '../server/prints/store'
-import { buildListed } from '#layers/terminal/server/utils/terminal-listed'
-import { buildPoints, printRows, printTies, queryPrints } from '../server/utils/terminal-prints'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { curatedPrintTies, PRINT_ENTITIES } from '../shared/utils/prints'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The print reader on the committed bytes: the exchange feed, Accton's page
 // and three of TSMC's 6-Ks (2015, 2019, 2026), then the append-only store and
 // the reader end to end against a fake fetcher.
-
-const db = drizzle(env.DB, { schema })
 
 const TWSE = fixtureText('fixtures/prints/twse-t187ap05_L.json')
 const ACCTON = fixtureText('fixtures/prints/accton-monthly.html')

@@ -5,16 +5,6 @@
 import { and, desc, eq, isNull, max } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import {
-  LISTED_BOARDS,
-  LISTED_CUTS,
-  LISTED_HIRING_RULE,
-  weeklyCounts,
-  type ListedHiringBoard,
-  type ListedHiringData,
-  type RoleClass,
-} from '../../shared/utils/listed-hiring'
-import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 
 /** Data-center roles listed per board on the page and in the tool. */
 export const DATACENTER_ROLES_SHOWN = 12

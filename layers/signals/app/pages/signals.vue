@@ -3,8 +3,6 @@
 // is expected to lead, failures included, and the forward calls. Method detail
 // is in the signal_results description on /data and the API's `method`.
 
-import type { SignalsData } from '../../shared/utils/signals'
-
 definePageMeta({
   publicPage: {
     changefreq: 'daily',

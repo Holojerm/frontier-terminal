@@ -5,9 +5,7 @@
 // are stored. Every figure carries its result ID, the word "unverified" the
 // Results Messaging Guidelines put beside each score, and the footnote.
 
-import { count, pctLabel } from '#layers/core/shared/utils/terminal-format'
 import type { UtilizationData } from '../../../shared/utils/compute-views'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 type Rounds = NonNullable<UtilizationData['benchmark_rounds']>
 

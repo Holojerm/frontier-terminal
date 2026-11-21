@@ -3,14 +3,8 @@
 // day or two, so an hourly read puts first_seen_at within the hour. Each
 // AssemblyAI job submitted on one run is collected on a later one.
 
-import { blob } from '@nuxthub/blob'
-import { db } from '@nuxthub/db'
-
 import { runCallReads } from '../../calls/ingest'
-import { blobRawReader, blobRawStore } from '#layers/core/server/utils/pipeline-raw'
-import { createFetcher, userAgentFor } from '#layers/core/server/utils/pipeline-fetch'
 import { paceSec } from '#layers/core/server/pipeline/sec-pace'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

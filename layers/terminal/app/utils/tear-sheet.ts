@@ -8,49 +8,6 @@
 // A printed page has no tooltips or popovers, so every gap carries its reason
 // as text and every citation is a numbered footnote with the URL spelled out.
 
-import type {
-  ExposureData,
-  ExposurePoint,
-  ExposureSeries,
-} from '../../../companies/shared/utils/terminal-exposure'
-import {
-  UTC_STYLE,
-  compactUsd,
-  count,
-  datedStamp,
-  money,
-  percent,
-  periodLabel,
-  ppLabel,
-  preciseUsd,
-  sharePct,
-  signed,
-  signedPercent,
-  type StampStyle,
-} from '#layers/core/shared/utils/terminal-format'
-import { listedGroup, listedTieText, type ListedData } from '../../shared/utils/listed'
-import { summarizeLab, type LabInputs } from '../../shared/utils/terminal-lab-summary'
-import type { AlertSeverity } from '../../../core/shared/utils/terminal-tiers'
-import {
-  SAME_PRICE,
-  moveText,
-  priceCitation,
-  priceMoves,
-} from '#layers/pricing/app/utils/price-display'
-import type {
-  GroundTruthData,
-  GroundTruthDealTally,
-  GroundTruthResolution,
-  GroundTruthTally,
-} from '../../../press/shared/types/ground-truth'
-import type { IncidentsData } from '../../../reliability/shared/types/incidents'
-import type { LabId, Prov } from '../../../core/shared/types/common'
-import type { ModelClassId, PriceDeltaView, PricesData } from '../../../pricing/shared/types/prices'
-import type { RevenueProviderView } from '../../../companies/shared/types/revenue'
-import { statusCounts, STATUS_META, thesisPath } from '../../../theses/shared/utils/thesis-format'
-import type { ThesesData } from '../../../theses/shared/utils/thesis-types'
-import { feedGap } from '#layers/core/app/utils/feed-gap'
-
 /** How many alerts the sheet lists: enough to show what moved, few enough to fit the page. */
 export const SHEET_ALERTS = 5
 /** How many revenue periods: the newest filing usually reports a quarter and its year to date. */

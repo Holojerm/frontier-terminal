@@ -8,11 +8,6 @@
 
 import { powerSitesStamp } from '#layers/compute/server/power/stamp'
 import { suppliersStamp } from '../../../companies/server/suppliers/store'
-import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
-import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
-import { labQuerySchema } from '#layers/core/server/utils/lab-query'
-import { listedForLab } from '../utils/terminal-lab-cuts'
-import { queryListed } from '../utils/terminal-listed'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'listed', limit: 60, windowSeconds: 60 })

@@ -3,8 +3,6 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { buildAiCatalog, SERVER_CARD_TYPE } from '../server/utils/ai-catalog'
-
 describe('buildAiCatalog', () => {
   it('links to the Server Card on the MCP worker, anchored to the app’s domain', () => {
     expect(

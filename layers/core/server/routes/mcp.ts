@@ -7,13 +7,7 @@
 // budget: one MCP exchange is one request, and an agent that loops is the
 // same abuse as a script that loops.
 
-import { db } from '@nuxthub/db'
-import { toWebRequest } from 'h3'
-
 import { llmsTxtInput } from '#server/registries/crawler-pages'
-import { createTerminalMcpHandler } from '#layers/core/server/utils/mcp'
-import { llmsTxtResponse } from '#server/utils/seo'
-import { terminalPayload, terminalPayloadAt } from '#layers/core/server/utils/terminal-handler'
 
 // Built on first use, per isolate: runtime config is fixed for the life of
 // the isolate, and the modern-era handler is meant to be constructed once.

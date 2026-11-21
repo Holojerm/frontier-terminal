@@ -11,22 +11,12 @@
 // searches EDGAR for new filings naming a quarter of Epoch's lab sites and
 // fetches the newest few (layers/compute/server/power/ingest.ts).
 
-import { blob } from '@nuxthub/blob'
-import { db } from '@nuxthub/db'
-import { recordOpsEvent } from '#server/utils/ops'
-import { kv } from '@nuxthub/kv'
-
 import sourcesYaml from 'raw:~~/sources.yaml'
 
-import { createFetcher } from '#layers/core/server/utils/pipeline-fetch'
-import { unstorageLockStore } from '#layers/core/server/utils/pipeline-lock'
 import { runPoll } from '#layers/core/server/pipeline/poll'
-import { blobRawStore } from '#layers/core/server/utils/pipeline-raw'
 import { paceSec } from '#layers/core/server/pipeline/sec-pace'
 import { KIND_READ_FAILED, runPowerSiteReads } from '#layers/compute/server/power/ingest'
 import { runSupplierReads } from '../../../../companies/server/suppliers/ingest'
-import { warmAfterPoll } from '#layers/core/server/utils/cache-warm-task'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

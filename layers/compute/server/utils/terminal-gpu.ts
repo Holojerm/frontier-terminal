@@ -5,18 +5,10 @@
 
 import { count, desc, eq, inArray, max } from 'drizzle-orm'
 
-import { gpuProviderName } from '#layers/core/shared/utils/companies'
-import type { GpuHistoryView, GpuPricesData } from '../../shared/types/gpu-prices'
-
 import * as tables from '#server/db/schema'
-import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { gpuMedian, gpuState, type GpuObservation } from '../recipes/gpu-series'
 import { GPU_MODELS, gpuPricePayload } from '../recipes/gpu-prices'
 import { GPU_RECIPES } from '../recipes/gpu-recipes'
-import { recipeRunsStamp, type QueryContext } from '#layers/core/server/utils/terminal-db'
-import { queryGpuArchive } from './terminal-gpu-archive'
-import { byString } from '#layers/core/server/utils/terminal-json'
-import { SPOT_QUORUM, spotRead } from './terminal-utilization'
 
 export const GPU_PRICES_METHOD =
   'On-demand list prices from first-party price pages and documented price APIs, in USD per GPU-hour (an instance price divided by its GPUs). ' +

@@ -7,14 +7,6 @@
 // insists on for every datum, so the format's strictness costs nothing and
 // buys a feed reader that cannot misfile an alert.
 
-import { escapeXml, normalizeOrigin } from '#shared/utils/site'
-import {
-  alertPath,
-  CRITICAL_FEED_QUERY,
-  INFO_FEED_QUERY,
-} from '../../../core/shared/utils/terminal-tiers'
-import type { AlertView } from '../../shared/types/alerts'
-
 /** `alert` is the default feed; `all` adds the minor changes; `critical` keeps only critical alerts. */
 export type FeedTier = 'alert' | 'critical' | 'all'
 

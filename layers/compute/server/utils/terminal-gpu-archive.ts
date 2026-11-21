@@ -8,20 +8,14 @@
 
 import { asc, eq } from 'drizzle-orm'
 
-import { gpuProviderName } from '#layers/core/shared/utils/companies'
-import type { ArchivedGpuPoint, GpuArchiveView } from '../../shared/types/gpu-prices'
-
 import * as tables from '#server/db/schema'
 import {
   GPU_ARCHIVE_GAPS,
   GPU_ARCHIVE_NOT_COVERED,
   GPU_ARCHIVE_UNTIL,
 } from '../pipeline/archive/gpu-eras'
-import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { gpuMedian, type GpuObservation } from '../recipes/gpu-series'
 import { GPU_MODELS, gpuPricePayload } from '../recipes/gpu-prices'
-import { archiveSourceId } from '#layers/core/server/utils/archive-floor'
-import { byString } from '#layers/core/server/utils/terminal-json'
 
 /** A provider's newest copy counts toward a week's median for this long, then drops out. */
 export const GPU_ARCHIVE_STALE_DAYS = 90

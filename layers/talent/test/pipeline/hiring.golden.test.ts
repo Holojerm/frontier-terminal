@@ -1,12 +1,5 @@
 import { describe, expect, test } from 'vitest'
 
-import {
-  AshbyJobsOutput,
-  CareersFeedJobsOutput,
-  GreenhouseJobsOutput,
-  contentHash,
-  jobKey,
-} from '#layers/core/server/utils/contracts'
 import { parseAnthropicGreenhouse } from '../../server/pipeline/parsers/hiring/anthropic-greenhouse'
 import { parseGoogleCareers } from '../../server/pipeline/parsers/hiring/google-careers'
 import { parseMistralAshby } from '../../server/pipeline/parsers/hiring/mistral-ashby'

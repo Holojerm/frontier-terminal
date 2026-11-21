@@ -1,11 +1,8 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import { registrationDocuments, registrationFilings } from '../../server/pipeline/derived'
 import { deriveSources } from '#server/registries/derived'
-import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { derivedKeyOf, laneFor } from '#server/registries/lanes'
 import {
   REGISTRATION_FIXTURE,
@@ -18,12 +15,6 @@ import { parseProspectusRevenue } from '../../server/pipeline/parsers/sec/prospe
 import { filingReview } from '../../server/pipeline/judge/filing-review'
 import { submitJudgeRun } from '../../../core/server/pipeline/judge/submit'
 import { runRefresh } from '../../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
-import { includeSources } from '#layers/core/server/utils/pipeline-sources'
-import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { queryRevenue } from '../../server/utils/terminal-revenue'
-import { labelOf } from '#layers/core/server/utils/terminal-sources'
 import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // Revenue from a lab's own S-1 when the filing tags no financial XBRL: the
@@ -31,7 +22,6 @@ import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/
 // statement of operations is read. The parsers on Anthropic's S-1 first,
 // then the two-hop derivation and the revenue panel end to end.
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const ANTHROPIC_CIK = '0002130357'
 const ACCESSION = '0001628280-26-067168'

@@ -1,13 +1,5 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import { StoredEntityRow } from '#layers/core/server/utils/contracts'
-import { insertRows } from '#layers/core/server/utils/pipeline-store'
-import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { isThirdPartyOnly, queryIncidents } from '../server/utils/terminal-incidents'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The home page's Capacity strain table showed "Degraded Gemini 4 Carbon" as
@@ -15,7 +7,6 @@ import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 // Model Providers" component, which posts other labs' outages; the two rows
 // below are copied from production's /api/incidents (2026-11-20).
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 
 const incident = (id: string, title: string, components: string[], resolved_at: string | null) =>

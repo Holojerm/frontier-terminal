@@ -10,17 +10,6 @@
 
 import { and, asc, gte, inArray, lte } from 'drizzle-orm'
 
-import type { ProviderId } from '../../../core/shared/types/common'
-import type {
-  TrackRecordData,
-  TrackRecordHit,
-  TrackRecordRow,
-  TrackRecordSide,
-  TrackRecordState,
-  TrackRecordTally,
-} from '../../shared/types/track-record'
-import type { AlertSeverity } from '../../../core/shared/utils/terminal-tiers'
-
 import * as tables from '#server/db/schema'
 import { MATERIAL_SEVERITIES, searchedInPart } from '../pipeline/track-record/search'
 import {
@@ -32,13 +21,6 @@ import {
   searchState,
   trackWindow,
 } from '../pipeline/track-record/window'
-import {
-  D1_MAX_BOUND_PARAMS,
-  chunk,
-  type PipelineDb,
-} from '#layers/core/server/utils/pipeline-store'
-import { alertsKnownAt, judgeCutoffAt } from '#layers/core/server/utils/terminal-asof'
-import type { QueryContext } from '#layers/core/server/utils/terminal-db'
 
 type Candidate = typeof tables.trackRecordCandidates.$inferSelect
 type Verdict = typeof tables.trackRecordVerdicts.$inferSelect

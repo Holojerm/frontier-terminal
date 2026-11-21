@@ -23,10 +23,6 @@ import { gzipSync } from 'node:zlib'
 
 import { ByteWriter, ParquetWriter } from 'hyparquet-writer/src/index.js'
 
-import type { DictionaryType } from '../../shared/types/coverage'
-import { LICENSE_COLUMN } from './terminal-export-history'
-import { type ExportTable } from './terminal-export-views'
-
 type Row = Record<string, unknown>
 type WriterOptions = ConstructorParameters<typeof ParquetWriter>[0]
 type SchemaElement = WriterOptions['schema'][number]

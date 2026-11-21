@@ -1,8 +1,6 @@
 import { and, eq, inArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { ChangeRow } from '#layers/core/server/utils/contracts'
-import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import type { AlertGroundingRejection } from '#layers/core/server/pipeline/judge/grounding'
 import type { JudgeAlert } from '#layers/core/server/pipeline/judge/alerts'
 

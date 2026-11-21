@@ -1,10 +1,5 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import type { ForwardCall } from '../shared/utils/signals'
-import { contentHash } from '#layers/core/server/utils/contracts'
 import {
   allCalls,
   callRange,
@@ -25,7 +20,6 @@ import {
 // a call settles against a filing made after it, and the rules record the
 // calls they should from guidance and prints.
 
-const db = drizzle(env.DB, { schema })
 const APP = 'https://frontierterm.com'
 const NONE = { providers: [] }
 const NOW = new Date('2026-11-22T07:10:00Z')

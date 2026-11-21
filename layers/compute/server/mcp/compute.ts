@@ -7,21 +7,6 @@ import { z } from 'zod'
 import { gridLoadStamp, queryGridLoad } from '../power/grid-query'
 import { powerSitesStamp } from '../power/stamp'
 import { printsStamp } from '../prints/store'
-import { queryPrints } from '../utils/terminal-prints'
-import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
-import { gpuRunsStamp, queryGpuPrices } from '../utils/terminal-gpu'
-import {
-  DATACENTER_RECIPES,
-  queryDataCenters,
-  queryPowerSites,
-} from '../utils/terminal-datacenters'
-import {
-  ProviderSchema,
-  json,
-  READ_ONLY,
-  PROVENANCE,
-  type McpKit,
-} from '#layers/core/server/utils/mcp-kit'
 
 export function registerComputeTools({ server, deps }: McpKit): void {
   server.registerTool(

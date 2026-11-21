@@ -1,11 +1,7 @@
 import { eq } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import { recordOpsEvent } from '#server/utils/ops'
-import { basisChecks } from '#layers/pricing/server/utils/terminal-prices'
 import { effectiveClassMap } from '#layers/pricing/server/pipeline/class-map'
-import type { LockStore } from '#layers/core/server/utils/pipeline-lock'
-import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 
 // Launch-day coverage: does the site show a launch it has already stored?
 //

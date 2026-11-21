@@ -3,9 +3,7 @@
 // "Opened" is a UTC date and reads in the same date form as the claim dates
 // below it (useStamps().day), never as the raw YYYY-MM-DD.
 
-import { POSITION_LABEL } from '../../../shared/utils/thesis-format'
 import type { ThesisCardView } from '../../../shared/utils/thesis-format'
-import type { Fact } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ thesis: Omit<ThesisCardView, 'claims'> }>()
 const stamps = useStamps()

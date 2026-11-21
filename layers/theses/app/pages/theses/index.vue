@@ -3,9 +3,6 @@
 // into the claim-by-claim page. Nothing here knows which companies exist;
 // the list is whatever /api/theses returns.
 
-import { thesisCardView, type ThesisCardView } from '../../../shared/utils/thesis-format'
-import type { ThesesData } from '../../../shared/utils/thesis-types'
-
 definePageMeta({
   publicPage: {
     changefreq: 'daily',

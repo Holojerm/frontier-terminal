@@ -5,15 +5,8 @@
 // one row per filed passage, so every figure keeps its quote and document.
 // /hardware passes `layers` to list the chip and hardware makers only.
 
-import {
-  SUPPLIER_LAYER_LABEL,
-  SUPPLIER_RELATION_LABEL,
-  supplierFigureText,
-  type SupplierShare,
-  type SuppliersData,
-} from '../../../shared/utils/suppliers'
+import { type SuppliersData } from '../../../shared/utils/suppliers'
 import type { SupplierLayer } from '#layers/core/shared/utils/supplier-layers'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const stamps = useStamps()
 

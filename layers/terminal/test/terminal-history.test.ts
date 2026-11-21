@@ -1,30 +1,7 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import { contentHash } from '#layers/core/server/utils/contracts'
-import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { runRefresh, type RefreshDeps } from '../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
-import { includeSources } from '#layers/core/server/utils/pipeline-sources'
-import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
-import {
-  baselineInstants,
-  queryContext,
-  queryDataFreshness,
-} from '#layers/core/server/utils/terminal-db'
-import { queryHiringHistory } from '../../talent/server/utils/terminal-hiring'
-import { queryReleases } from '../../models/server/utils/terminal-releases'
-import { queryPriceHistory, queryPrices } from '../../pricing/server/utils/terminal-prices'
-import { priceHistory, sparkOf } from '../../pricing/server/utils/terminal-price-history'
-import {
-  compareWindow,
-  dailyInstants,
-  departmentSeries,
-  openRolesAt,
-} from '../../talent/server/utils/terminal-hiring-history'
-import { isBaseline, releaseEvents } from '../../models/server/utils/terminal-history'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The three history derivations, first as pure functions over a handful of
@@ -362,7 +339,6 @@ describe('openRolesAt', () => {
 
 // ── Against a real D1 ────────────────────────────────────────────────────────
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const ALL = includeSources(sourcesYaml, manifest.fixtures)
 const ALL_IDS = ALL.map((s) => s.source_id)

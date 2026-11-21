@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
-import type { FetchOutcome, SourceFetcher } from '../../server/utils/pipeline-fetch'
 import { SEC_MIN_INTERVAL_MS, paceSec } from '../../server/pipeline/sec-pace'
-import type { FetchSource } from '../../server/utils/pipeline-sources'
 
 // The SEC pacer: request starts to an SEC host at least SEC_MIN_INTERVAL_MS
 // apart, other hosts untouched, the first 429 remembered for the tick.

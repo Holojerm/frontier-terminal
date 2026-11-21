@@ -1,9 +1,5 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import { AlertRow, ChangeRow, contentHash } from '#layers/core/server/utils/contracts'
 import { diff } from '#layers/core/server/pipeline/diff'
 import { buildAlertRows } from '#layers/core/server/pipeline/judge/alerts'
 import { gateJudgeSubmission } from '../../../core/server/pipeline/judge/contract'
@@ -17,14 +13,10 @@ import {
 } from '#layers/core/server/pipeline/judge/pending'
 import { submitJudgeRun } from '../../../core/server/pipeline/judge/submit'
 import { judgeFreshnessCheck } from '../../../core/server/pipeline/judge/watchdog'
-import { checkFreshness, freshnessMarkerKey } from '#layers/core/server/utils/freshness'
-import type { LockStore } from '#layers/core/server/utils/pipeline-lock'
 import { normalizePrices } from '../../../pricing/server/pipeline/normalize'
 import { normalizeJobs } from '../../../talent/server/pipeline/normalize'
 import { parseXaiGreenhouse } from '../../../talent/server/pipeline/parsers/hiring/xai-greenhouse'
 import { parseXaiModelsMd } from '../../../pricing/server/pipeline/parsers/pricing/xai-models'
-import { insertRows } from '#layers/core/server/utils/pipeline-store'
-import { verifyJudgeToken } from '#layers/core/server/utils/judge-auth'
 import injection from './canned/judge-explain.injection.synthetic.txt?raw'
 import inventedNumber from './canned/judge-explain.invented-number.synthetic.txt?raw'
 import live from './canned/judge-explain.live.txt?raw'
@@ -40,8 +32,6 @@ import { fixtureText, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 // every adversarial variant is rejected for its typed reason with the
 // alerts table left alone and a judge_rejected event spooled. No model is
 // ever invoked; transcripts in canned/ are data, never instructions.
-
-const db = drizzle(env.DB, { schema })
 
 // ---- Change set, built deterministically from committed fixtures ---------
 // The scenario the canned/ transcripts were captured against, so the ids

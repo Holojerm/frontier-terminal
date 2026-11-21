@@ -5,15 +5,11 @@ import sourcesYaml from '~~/sources.yaml?raw'
 
 import { parseDerivedSourcesBlock } from '#layers/core/server/pipeline/derived'
 import { DERIVED_FROM } from '#server/registries/derived'
-import { MAX_BODY_BYTES } from '#layers/core/server/utils/pipeline-fetch'
 import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
 import { CAREERS_SOURCES } from '../../../talent/server/pipeline/scopes'
 import { isRegistrationSource } from '../../../companies/server/pipeline/scopes'
-import { includeSources, type FetchSource } from '#layers/core/server/utils/pipeline-sources'
 import { TRIPWIRE_REFRESH } from '../../../models/server/pipeline/tripwire'
 import { RECIPES } from '#server/registries/recipes'
-import { EXPORT_PAGE_SIZE } from '#layers/core/server/utils/terminal-export-views'
-import { PARQUET_ROW_GROUP_BYTES } from '#layers/core/server/utils/terminal-parquet'
 
 // The payload-size gate. Every cron invocation is one Worker isolate with
 // 128 MB, and the poll loop holds each payload several times over (wire bytes,

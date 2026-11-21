@@ -3,10 +3,6 @@
 // owns the mechanism; this is the product's side of it, registered from
 // layers/core/server/plugins/rate-limits.ts.
 
-import type { NativeLimiterSpec } from '#server/utils/rate-limit'
-
-import { REQUEST_BUDGETS } from '../../shared/utils/institutional'
-
 /**
  * The public read path: every /api/* route the terminal's pages fetch asks for
  * 60/60s. Core's own RATE_LIMITER (30/60s) carries the two writers, export and

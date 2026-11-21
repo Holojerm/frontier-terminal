@@ -12,29 +12,7 @@
 // One module-level ref, like useNow. The server never writes it, so requests
 // cannot leak settings into each other.
 
-import { isLab } from '../../shared/utils/lab-names'
-import type { LabId } from '../../shared/types/common'
-import {
-  UTC_STYLE,
-  absoluteStamp,
-  compactTokens,
-  compactUsd,
-  count,
-  datedStamp,
-  dayStamp,
-  fullDayStamp,
-  isTimeZone,
-  relativeStamp,
-  type StampStyle,
-  zoneName,
-} from '#layers/core/shared/utils/terminal-format'
-import {
-  DEFAULTS,
-  PREFS_KEY,
-  labsFirst,
-  parsePrefs,
-  type ReaderPrefs,
-} from '../../shared/utils/reader-prefs'
+import { DEFAULTS, PREFS_KEY, type ReaderPrefs } from '../../shared/utils/reader-prefs'
 
 export { DEFAULTS, PREFS_KEY, type ReaderPrefs }
 

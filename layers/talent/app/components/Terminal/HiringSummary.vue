@@ -5,13 +5,8 @@
 // /hiring. A board with no public feed is a row that says so; the xAI entity
 // blend ships as a visible mark on its row, as the source audit requires.
 
-import { boardLabel, count, signed } from '#layers/core/shared/utils/terminal-format'
-import type {
-  ClusterSeries,
-  HiringHistoryData,
-  HiringHistoryProvider,
-} from '../../../shared/types/hiring'
-import type { GapRef, TableColumn } from '#layers/core/app/types/terminal-ui'
+import { count } from '#layers/core/shared/utils/terminal-format'
+import type { HiringHistoryData } from '../../../shared/types/hiring'
 
 const watchlist = useWatchlist()
 

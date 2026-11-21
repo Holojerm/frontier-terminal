@@ -7,36 +7,6 @@
 
 import { describe, expect, it } from 'vitest'
 
-import {
-  buildLlmsTxt,
-  buildRobotsTxt,
-  buildSitemap,
-  crawlerCacheControl,
-  dataLastmods,
-  llmsTxtResponse,
-  sitemapResponse,
-  AI_CRAWLERS,
-  CRAWLER_CACHE_CONTROL,
-  DEGRADED_CACHE_CONTROL,
-} from '../server/utils/seo'
-import type { SiteContext } from '../shared/utils/schema'
-import { canonicalRedirect } from '../shared/utils/site'
-import {
-  articleSchema,
-  breadcrumbSchema,
-  dataCatalogSchema,
-  datasetSchema,
-  exportDistribution,
-  jsonLdGraph,
-  labOrganizationSchema,
-  openTemporalCoverage,
-  organizationSchema,
-  webPageSchema,
-  websiteSchema,
-} from '../shared/utils/schema'
-import { DATA_LICENSE, HISTORY_LICENSE } from '../shared/utils/license'
-import { absoluteUrl, canonicalPath, escapeXml, normalizeOrigin } from '../shared/utils/site'
-
 const SITE: SiteContext = {
   appName: 'Frontier Terminal',
   appUrl: 'https://example.com',

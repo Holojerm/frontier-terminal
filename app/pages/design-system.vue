@@ -1,6 +1,4 @@
 <script setup lang="ts">
-import type { Fact, TableColumn } from '#layers/core/app/types/terminal-ui'
-
 // Living style guide — every token and component state from DESIGN.md on one
 // page, in both color modes. This is the verification surface: after editing
 // DESIGN.md and running /design-sync, screenshot this route to confirm the

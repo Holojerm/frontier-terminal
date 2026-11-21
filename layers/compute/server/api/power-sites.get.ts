@@ -5,9 +5,6 @@
 // (layers/compute/server/power/); `gaps` names each lab site with none yet.
 
 import { powerSitesStamp } from '../power/stamp'
-import { serveTerminal, terminalDb } from '#layers/core/server/utils/terminal-handler'
-import { queryPowerSites } from '../utils/terminal-datacenters'
-import { rateLimitTerminal } from '#layers/core/server/utils/api-access'
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'power-sites', limit: 60, windowSeconds: 60 })

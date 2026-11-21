@@ -9,7 +9,6 @@
 // source_url and the R2 copy of each response carry none. A response that
 // somehow contains it is refused before it is stored.
 
-import { GRID_AREAS, type GridArea } from '../../shared/utils/grid-load'
 import type { GridDay } from './eia930'
 
 export const EIA_API_ORIGIN = 'https://api.eia.gov'

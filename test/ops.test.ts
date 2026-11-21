@@ -2,22 +2,7 @@
 // the unauthenticated writer is throttled, retention prunes by age. The
 // per-kind summary the fleet dashboard reads is tested in test/fleet-status.test.ts.
 
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
-
-import * as schema from '../server/db/schema'
-import {
-  OPS_EVENT_RETENTION_DAYS,
-  pruneOpsEvents,
-  recentOpsEvents,
-  recordOpsEvent,
-  recordUnauthenticatedOpsEvent,
-  resetUnauthenticatedOpsThrottleForTest,
-  UNAUTHENTICATED_OPS_INTERVAL_MS,
-} from '../server/utils/ops'
-
-const db = drizzle(env.DB, { schema })
 
 const DAY_MS = 24 * 60 * 60 * 1000
 const NOW = new Date('2026-08-21T12:00:00.000Z')

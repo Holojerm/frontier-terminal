@@ -1,10 +1,5 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { describe, expect, it } from 'vitest'
 
-import type { ExposurePoint, ExposureSeries } from '../shared/utils/terminal-exposure'
-
-import * as schema from '~~/server/db/schema'
 import { filedFactAlert, headlineFor } from '../server/exposure/alerts'
 import {
   extractCompanyfacts,
@@ -19,12 +14,8 @@ import {
   quarterly,
   type StoredFact,
 } from '../server/exposure/series'
-import type { FetchOutcome, FetchSource } from '#layers/core/server/utils/pipeline-fetch'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
+import type { FetchSource } from '#layers/core/server/utils/pipeline-fetch'
 import { EXPORT_TABLES } from '#server/registries/export-tables'
-import { collect, csvChunks } from '#layers/core/server/utils/terminal-export-format'
-import { queryExposure } from '../server/utils/terminal-exposure'
-import { readFiledFactSources } from '#layers/core/server/utils/terminal-sources'
 import { parseCikWhitelistBlock } from '../server/pipeline/parsers/sec/whitelist'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
@@ -32,7 +23,6 @@ import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 // the quarterly series and their restatements, the run's fetch policy and its
 // quiet first read, the alert a new filing raises, and as_of by filing date.
 
-const db = drizzle(env.DB, { schema })
 const MSFT = '0000789019'
 const AMZN = '0001018724'
 const MSFT_Q = '0001193125-26-436133'

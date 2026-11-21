@@ -2,15 +2,6 @@
 // incidents and probes (server/registries/mcp-tools.ts), where the tool list has always had it.
 
 import { z } from 'zod'
-import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
-import { LIMIT_RECIPE_IDS, queryLimits } from '../utils/terminal-limits'
-import {
-  ProviderSchema,
-  json,
-  READ_ONLY,
-  PROVENANCE,
-  type McpKit,
-} from '#layers/core/server/utils/mcp-kit'
 
 export function registerRateLimitTools({ server, deps }: McpKit): void {
   server.registerTool(

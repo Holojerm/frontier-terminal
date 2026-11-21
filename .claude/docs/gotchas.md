@@ -130,10 +130,7 @@ one of them.
 Note that Nitro **skips scheduled tasks under vitest** (`isTest` in its task runtime). Put
 the logic in a `server/utils/` function that takes `db` (and any binding it needs) as an
 argument and test that, as `server/utils/ops.ts` does — a test driving the task wrapper
-tests the shim. For the same reason, a task must import `db`/`blob` **explicitly** from
-`@nuxthub/db` / `@nuxthub/blob` rather than relying on the auto-imports: a task is an
-untested bundling surface that runs unattended, and the `kv is not defined` failure in
-the gotcha below would surface as a cron event failing with nobody watching.
+tests the shim.
 
 Anything a sweep filters on needs an **index**. A `LIMIT` bounds rows *deleted*, not rows
 *examined* — so an unindexed predicate full-scans the table on every tick and gets slower
@@ -167,16 +164,32 @@ The fix is the environment, not the app: install the Node that `.node-version` n
 `vite.ssr.noExternal: ['zod']` makes the pages render under Bun, but it is a workaround for an
 environment CI does not have — do not commit it.
 
-## NuxtHub's auto-imports don't reach every file at runtime
+## An auto-import that typechecks can still be missing at runtime
 
-`kv` and `db` are declared in `.nuxt/types/nitro-imports.d.ts`, so they **typecheck** anywhere in
-`server/`. They are not always **injected** at runtime: in `server/utils/rate-limit.ts` the
-auto-imported handle once resolved to a `ReferenceError` while the build, typecheck, and lint were
-all green. Because the rate limiter fails open by design, the only symptom was a
-`rate_limit_unavailable` line in the logs — the feature was simply off.
+Nuxt writes every auto-imported name to `.nuxt/types/nitro-imports.d.ts` (server) and
+`.nuxt/imports.d.ts` (app) and the typecheck reads those lists. Injection is a separate step:
+unimport scans each file it transforms for the names it uses and adds their imports. NuxtHub's
+`db`, `kv` and `blob` go through the same `addServerImports` path as our own utils, so they are
+not special. A `ReferenceError: x is not defined` with a green typecheck has one of three causes:
 
-Import them explicitly (`import { db } from '@nuxthub/db'`, `import { kv } from '@nuxthub/kv'`) in server utils. More generally: when a
-NuxtHub auto-import is load-bearing, check the running logs, not just the type checker.
+- **Stale `.nuxt`.** A util was added, renamed or moved since the last `nuxt prepare`, dev or
+  build. Run `bunx nuxt prepare`. vitest and `globals:check` read the same lists
+  (`scripts/lib/auto-imports.ts`), so they go stale with it.
+- **The file runs outside Nitro and Vite.** bun scripts, drizzle-kit, NuxtHub's schema bundler,
+  `nuxt.config` and the Playwright suites inject nothing. Those files, and every file they
+  import, keep explicit imports.
+- **unimport's scan missed the name.** It matches with regexes, and Nitro runs it on the
+  TypeScript source, before esbuild. A name used only in a cast (`z.enum(LABS as [LabId])`),
+  only after a division (`D1_MAX_BOUND_PARAMS / COLUMNS`, read as a regex literal) or only
+  inside a template literal's `${}` is not seen, and a module-level destructuring of the same
+  name (`const { kv } = …`) hides it for the whole file. vitest scans the JavaScript after
+  esbuild, so a cast passes there and fails only in the build. The switch to auto-imports
+  checked every dropped import with unimport's own `detectImports`, on both, and kept the 19
+  it would have lost. Keep the import where a name is used like that.
+
+The `kv`/`db` `ReferenceError` once seen in `server/utils/rate-limit.ts` was one of these; its
+cause was never recorded. When an auto-import sits on a path that fails open, check the running
+logs, not just the type checker.
 
 ## A `fatal` 404 pages the owner unless `server/error.ts` is in the chain
 
@@ -225,9 +238,8 @@ with a parameter type narrower than what it called (`layers/core/server/pipeline
 
 - Keep the root `tsconfig.json` as it is. Compiler options go in `nuxt.config.ts` ›
   `typescript.tsConfig`; set in the root file they reach no project.
-- A removed auto-import is now `TS2304` in the gate, even where a test replaces the name with
-  `vi.stubGlobal`. It does not cover the case above (a name that typechecks but is not
-  injected), and nothing typechecks `test/` or `scripts/`.
+- A removed auto-import is now `TS2304` in the gate. It does not cover a name that typechecks
+  but is not injected (the gotcha above), and nothing typechecks `test/` or `scripts/`.
 
 ## NuxtUI v4 needs an explicit CSS entry
 
@@ -335,9 +347,9 @@ random values, timers and I/O there; the clock reads 1970 there instead. `global
 parses `server/` and `layers/*/server/` and flags `crypto.randomUUID`,
 `crypto.getRandomValues`, `Math.random`, `setTimeout`, `setInterval`, `fetch`, `Date.now`
 and an argument-less `new Date()` outside a function, and follows module-scope calls into
-functions it can resolve (same file, or a relative or alias import), up to three calls deep,
-including omitted parameters' defaults. It does not follow Nuxt auto-imports called with no
-import, method calls or re-exports. Fix by making the value on first use, as #170 did;
+functions it can resolve (same file, a relative or alias import, or one of our own Nitro
+auto-imports), up to three calls deep, including omitted parameters' defaults. It does not
+follow method calls or re-exports. Fix by making the value on first use, as #170 did;
 `// global-scope-ok: <why>` silences a line that is safe. The gate checks itself on #169's
 pattern before every scan, because the TypeScript parser it uses cannot load in vitest.
 

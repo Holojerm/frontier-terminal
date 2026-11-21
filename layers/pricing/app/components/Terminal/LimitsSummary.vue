@@ -3,10 +3,7 @@
 // first seen and whether it changed a limit. The limits themselves are on
 // each lab's page (TerminalLimitsTable); this is the capacity view's index.
 
-import { count } from '#layers/core/shared/utils/terminal-format'
-import { LAB_DISPLAY } from '#layers/core/shared/utils/lab-names'
 import type { LimitsData } from '../../../shared/utils/limits'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const stamps = useStamps()
 

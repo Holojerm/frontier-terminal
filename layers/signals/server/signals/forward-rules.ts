@@ -18,13 +18,6 @@
 import { and, eq, gt, gte, inArray, lt } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import { PRINT_HELD_SOURCES, type PrintWindow } from '#layers/compute/shared/utils/prints'
-import type {
-  ForwardCall,
-  ForwardInput,
-  ForwardMethod,
-  ForwardMetric,
-} from '../../shared/utils/signals'
 import { unscorable, type ConceptFact } from '../../../companies/server/calls/actuals'
 import { CALL_SOURCES, conceptFacts } from '../../../companies/server/calls/ingest'
 import {
@@ -34,8 +27,6 @@ import {
   type FiscalPeriod,
 } from '../../../companies/server/calls/periods'
 import { filingUrl } from '../../../companies/server/exposure/series'
-import type { RevenueData } from '../../../companies/shared/types/revenue'
-import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 import { FORWARD_CALLS, recordCalls, resolveForwardCalls, settle } from './forward-calls'
 import { forwardFiler, PRINT_RULES, ruleConcepts, type PrintRule } from './forward-filers'
 

@@ -1,11 +1,8 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
 import { segmentFilings } from '../../server/pipeline/derived'
 import { deriveSources } from '#server/registries/derived'
-import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { derivedKeyOf, laneFor } from '#server/registries/lanes'
 import { parseRevenueFilersBlock } from '../../server/pipeline/parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock } from '../../server/pipeline/parsers/sec/whitelist'
@@ -16,20 +13,13 @@ import {
   segmentTarget,
 } from '../../server/pipeline/parsers/sec/xbrl-segment'
 import { runRefresh } from '../../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
 import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
-import { includeSources } from '#layers/core/server/utils/pipeline-sources'
-import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
-import { queryRevenue, segmentLabel } from '../../server/utils/terminal-revenue'
-import { labelOf } from '#layers/core/server/utils/terminal-sources'
 import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // Google Cloud segment revenue: Alphabet's per-filing XBRL instance, derived
 // from its submissions feed. The parser on the committed 10-Q first, then the
 // derivation and the revenue panel end to end against the workerd D1.
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const filers = parseRevenueFilersBlock(sourcesYaml)
 const whitelist = parseCikWhitelistBlock(sourcesYaml)

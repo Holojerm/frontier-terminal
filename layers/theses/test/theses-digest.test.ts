@@ -1,7 +1,5 @@
 import { describe, expect, it } from 'vitest'
 
-import type { ClaimView, ThesesData, ThesisDef, VerdictView } from '../shared/utils/thesis-types'
-
 import type { ClaimStatusChange } from '~~/server/db/schema'
 import { ANTHROPIC_THESIS } from '../server/theses/anthropic'
 import { CLOUDFLARE_THESIS } from '../server/theses/cloudflare'

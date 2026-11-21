@@ -1,6 +1,5 @@
 import { describe, expect, test } from 'vitest'
 
-import { includeSources } from '../../server/utils/pipeline-sources'
 import { fixtureText, manifest } from './fixtures'
 
 // includeSources joins sources.yaml (the include verdicts) to

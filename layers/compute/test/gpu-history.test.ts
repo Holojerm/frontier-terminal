@@ -1,8 +1,6 @@
 import { describe, expect, it } from 'vitest'
 
 import { gpuMedian } from '../server/recipes/gpu-series'
-import { gpuHistory, type StoredGpuRead } from '../server/utils/terminal-gpu'
-import { spotRead } from '../server/utils/terminal-utilization'
 
 const prov = { source_url: 'https://example.test/pricing', fetched_at: '2026-11-20T00:00:00Z' }
 

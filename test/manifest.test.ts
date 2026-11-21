@@ -15,8 +15,6 @@
 
 import { describe, expect, it } from 'vitest'
 
-import { buildManifest, withBase } from '../server/utils/manifest'
-
 describe('withBase', () => {
   it('leaves a root deploy alone', () => {
     expect(withBase('/', '/')).toBe('/')

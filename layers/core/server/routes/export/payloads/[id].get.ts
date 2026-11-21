@@ -7,23 +7,7 @@
 // we never stored. A snapshot never changes, so its content hash is the ETag
 // and a client that already has it gets a 304.
 
-import { blob } from '@nuxthub/blob'
-
 import sourcesYaml from 'raw:~~/sources.yaml'
-
-import { rateLimit } from '#server/utils/rate-limit'
-
-import { requireApiKeyTier } from '../../../utils/api-access'
-import { headResponse } from '../../../utils/head-response'
-import { PAYLOAD_LIMIT } from '../../../utils/rate-limits'
-import { terminalDb } from '../../../utils/terminal-handler'
-import {
-  isSnapshotId,
-  payloadRefusal,
-  snapshotById,
-  sourceRights,
-} from '../../../utils/terminal-payloads'
-import { readSourceRegistry } from '../../../utils/terminal-sources'
 
 let registry: ReturnType<typeof readSourceRegistry> | undefined
 

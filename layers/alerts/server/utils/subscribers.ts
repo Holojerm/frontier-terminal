@@ -5,10 +5,6 @@
 import { and, count, eq, inArray, isNull, lt, or } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { ExtensionDb } from '#server/utils/extensions'
-import { base64url, sha256Hex, timingSafeEqual } from '#server/utils/hash'
-
-import { cleanFromPath } from '../../shared/utils/subscribe'
 
 /** A confirmation link works for a week; a pending row is deleted after a month. */
 export const CONFIRM_TTL_DAYS = 7

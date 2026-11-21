@@ -3,24 +3,7 @@
 // table with its columns, its current row count, and CSV/JSON downloads,
 // then the data dictionary that documents every column of them.
 
-import {
-  DATA_LICENSE,
-  HISTORY_LICENSE,
-  HISTORY_PARAM,
-  LICENSE_SPLIT_EFFECTIVE,
-  LICENSE_WINDOW_DAYS,
-} from '#shared/utils/license'
 import { count } from '#layers/core/shared/utils/terminal-format'
-import { CRITICAL_FEED_QUERY, INFO_FEED_QUERY } from '../../../core/shared/utils/terminal-tiers'
-import type {
-  CoverageData,
-  DataDictionary,
-  ExportTableInfo,
-} from '../../../core/shared/types/coverage'
-import type { HiringHistoryData } from '../../../talent/shared/types/hiring'
-import type { PricesData } from '../../../pricing/shared/types/prices'
-import type { SourceAxis } from '../../../core/shared/types/common'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 definePageMeta({
   publicPage: {

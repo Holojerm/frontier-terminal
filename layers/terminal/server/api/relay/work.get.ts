@@ -2,11 +2,7 @@
 // pipeline asked for lately, each with the User-Agent to send, for the Mac
 // mini's relay job (scripts/relay-fetch.ts). Bearer-gated with the mini's token.
 
-import { kv } from '@nuxthub/kv'
-
-import { userAgentFor } from '#layers/core/server/utils/pipeline-fetch'
 import { wantedUrls } from '#layers/core/server/pipeline/relay'
-import { requireGdeltToken } from '../../../../press/server/utils/gdelt-auth'
 
 export default defineEventHandler(async (event) => {
   await rateLimit(event, { name: 'relay', limit: 60, windowSeconds: 60 })

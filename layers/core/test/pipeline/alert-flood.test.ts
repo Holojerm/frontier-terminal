@@ -1,13 +1,7 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
-import type { LockStore } from '#layers/core/server/utils/pipeline-lock'
 import { runPoll, type PollDeps } from '../../server/pipeline/poll'
-import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
-import type { PollScope } from '#layers/core/server/utils/contracts'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The alert-flood regression, end to end: the cron entry point (runPoll) over
@@ -30,7 +24,6 @@ const OUTAGE_MAILS_PER_SOURCE_CAP = 1
 // workerd and more in Workers Builds, where the build runs alongside vitest.
 const POLLS = { timeout: 60_000 }
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const raw: RawStore = {
   put: async (key, body, contentType) => {

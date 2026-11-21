@@ -3,11 +3,7 @@
 // its invocation: it fetches a page per utility, regulator or company the
 // table cites, none of them SEC's.
 
-import { db } from '@nuxthub/db'
-
-import { createFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { verifyHandTies } from '../../power/verify'
-import { withHeartbeat } from '#layers/core/server/utils/task-heartbeat'
 
 const task = defineTask({
   meta: {

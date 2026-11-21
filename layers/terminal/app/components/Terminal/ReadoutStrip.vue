@@ -6,16 +6,8 @@
 // On a phone each lab stacks as a short block, one axis per line, rather than
 // a 1,300px row in a 356px box.
 
-import { clipHeadline } from '../../../../alerts/shared/utils/terminal-labs'
-import { labPath } from '../../../../core/shared/utils/lab-names'
-import {
-  summarizeLab,
-  tearSheetPath,
-  type LabInputs,
-} from '../../../shared/utils/terminal-lab-summary'
-import { alertPath } from '../../../../core/shared/utils/terminal-tiers'
+import { type LabInputs } from '../../../shared/utils/terminal-lab-summary'
 import type { LabId } from '../../../../core/shared/types/common'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const props = defineProps<{ labs: readonly LabId[]; data: LabInputs }>()
 

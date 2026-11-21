@@ -5,10 +5,6 @@
 // has no primary source for most of these companies yet, and this page's
 // job is to say so precisely and to be ready the day that changes.
 
-import type { ProspectusData } from '../../../companies/shared/utils/terminal-prospectus'
-import type { ReportedData } from '../../../press/shared/types/reported'
-import type { RevenueData } from '../../../companies/shared/types/revenue'
-
 const watchlist = useWatchlist()
 
 definePageMeta({

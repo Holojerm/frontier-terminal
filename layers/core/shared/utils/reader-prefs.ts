@@ -2,10 +2,6 @@
 // holds the live state). Pure, so the parsing and ordering rules are tested
 // without a browser.
 
-import { isTimeZone } from './terminal-format'
-import { LABS } from './lab-names'
-import type { LabId } from '../types/common'
-
 export const PREFS_KEY = 'ft:reader-prefs'
 
 export interface ReaderPrefs {

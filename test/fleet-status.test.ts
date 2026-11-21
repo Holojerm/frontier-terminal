@@ -9,23 +9,6 @@ import { env } from 'cloudflare:test'
 import { drizzle } from 'drizzle-orm/d1'
 import { afterEach, beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '../server/db/schema'
-import { clearExtensionsForTest, registerFleetExtraContributor } from '../server/utils/extensions'
-import {
-  collectFleetCounters,
-  FLEET_OPS_KIND_LIMIT,
-  compareMigrations,
-  readAppliedMigrations,
-  repoMigrations,
-} from '../server/utils/fleet-status'
-import {
-  registerOpsSeverity,
-  resetOpsSeverityForTest,
-  SERVER_ERROR_CRITICAL_COUNT,
-} from '../server/utils/ops-severity'
-
-const db = drizzle(env.DB, { schema })
-
 const NOW = new Date('2026-08-22T12:00:00.000Z')
 const DAY_MS = 24 * 60 * 60 * 1000
 

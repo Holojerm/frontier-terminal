@@ -3,7 +3,6 @@ import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
-import { contentHash, type PriceRow } from '#layers/core/server/utils/contracts'
 import {
   applyPriceReadings,
   checkPriceReading,
@@ -15,7 +14,6 @@ import { normalizePrices } from '../../server/pipeline/normalize'
 import { parseAnthropicPricingMd } from '../../server/pipeline/parsers/pricing/anthropic-pricing'
 import { parseMistralPricingMd } from '../../server/pipeline/parsers/pricing/mistral-pricing'
 import { parseOpenAiPricingMd } from '../../server/pipeline/parsers/pricing/openai-pricing'
-import { insertRows } from '#layers/core/server/utils/pipeline-store'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 // The judge reads a price list while its parser is failing; the Worker checks

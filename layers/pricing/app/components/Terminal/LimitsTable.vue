@@ -3,9 +3,7 @@
 // and tier, a column per metric the page prints. "None" is the page's own
 // word for no limit on that metric, kept rather than shown as a zero.
 
-import { count } from '#layers/core/shared/utils/terminal-format'
 import type { LimitsData } from '../../../shared/utils/limits'
-import type { TableColumn } from '#layers/core/app/types/terminal-ui'
 
 const figures = useFigures()
 

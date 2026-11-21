@@ -1,9 +1,5 @@
-import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import { ChangeRow } from '#layers/core/server/utils/contracts'
 import {
   GPU_MEDIAN_RULE,
   gpuMedianAlert,
@@ -14,8 +10,6 @@ import {
 } from '../server/pipeline/gpu-median-floor'
 import { JUDGE_EXCLUDED_ENTITY_TYPES } from '#layers/core/server/pipeline/judge/pending'
 import type { GpuObservation } from '../server/recipes/gpu-series'
-import { queryAlerts } from '#layers/alerts/server/utils/terminal-alerts'
-import { queryContext } from '#layers/core/server/utils/terminal-db'
 import { fixtureText } from '#layers/core/test/pipeline/fixtures'
 
 const o = (
@@ -140,8 +134,6 @@ describe('the GPU median rule, pure', () => {
 })
 
 // ---- the rule over a seeded store ---------------------------------------------
-
-const db = drizzle(env.DB, { schema })
 
 const PROVIDERS = [
   ['gpu-lambda', 'lambda'],

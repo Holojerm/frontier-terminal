@@ -1,18 +1,9 @@
 import { env } from 'cloudflare:test'
-import { drizzle } from 'drizzle-orm/d1'
 import { beforeEach, describe, expect, it } from 'vitest'
 
-import * as schema from '~~/server/db/schema'
-import { contentHash, type PollScope } from '#layers/core/server/utils/contracts'
-import type { FetchOutcome, SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { MAX_UNJOINED_JOBS } from '../../../talent/server/pipeline/parsers/hiring/common'
 import { describeError, runRefresh, type RefreshDeps } from '../../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
 import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
-import { includeSources } from '#layers/core/server/utils/pipeline-sources'
-import { registerFleetExtraContributor } from '~~/server/utils/extensions'
-import { collectFleetCounters, latestFetchBySource } from '~~/server/utils/fleet-status'
-import { collectTerminalCounters } from '../../server/utils/fleet-counters'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 import { indexPage } from '../../../models/test/pipeline/misalignment-index'
 
@@ -20,7 +11,6 @@ import { indexPage } from '../../../models/test/pipeline/misalignment-index'
 // a fetcher that serves the committed fixtures (edited in place for the
 // change scenarios). No network anywhere in this file.
 
-const db = drizzle(env.DB, { schema })
 const sourcesYaml = fixtureText('sources.yaml')
 const ALL = includeSources(sourcesYaml, manifest.fixtures)
 const ALL_IDS = ALL.map((s) => s.source_id)

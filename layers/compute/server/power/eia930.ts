@@ -3,8 +3,6 @@
 // keeps the tracked authorities' lines and sums their hours into days. The
 // fetch and the store are in grid-load.ts.
 
-import { GRID_AREA_CODES } from '../../shared/utils/grid-load'
-
 export const EIA930_FIRST_PERIOD = '2018H1'
 export const BACKFILL_PER_RUN = 4
 /** How long after a half closes its file is still re-read. */

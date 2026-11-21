@@ -4,30 +4,9 @@ import { beforeAll, describe, expect, it } from 'vitest'
 
 import * as schema from '~~/server/db/schema'
 import handlerSource from '~~/layers/core/server/utils/terminal-handler.ts?raw'
-import type { SourceFetcher } from '#layers/core/server/utils/pipeline-fetch'
 import { runRefresh } from '../../core/server/pipeline/refresh'
-import type { RawStore } from '#layers/core/server/utils/pipeline-raw'
-import { includeSources } from '#layers/core/server/utils/pipeline-sources'
-import { ALERT_SEARCH_DEPTH } from '#layers/core/server/utils/mcp-kit'
-import { createTerminalMcpHandler, type McpDeps } from '#layers/core/server/utils/mcp'
-import {
-  assertKnowable,
-  pointInTimeMeta,
-  pollStampAt,
-} from '#layers/core/server/utils/terminal-asof'
-import { SCHEMA_VERSION } from '#layers/core/server/utils/data-schema'
-import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
-import { queryContext, recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
-import { ADOPTION_RECIPE_IDS } from '#layers/adoption/server/utils/terminal-adoption'
-import { PARENT_RECIPE_IDS } from '#layers/companies/server/utils/terminal-parents'
-import { LIMIT_RECIPE_IDS } from '#layers/pricing/server/utils/terminal-limits'
-import { PAY_RECIPE_IDS } from '#layers/talent/server/utils/terminal-pay'
-import { DATACENTER_RECIPES } from '#layers/compute/server/utils/terminal-datacenters'
 import { powerSitesStamp } from '#layers/compute/server/power/stamp'
-import { reportedStamp } from '../../press/server/utils/terminal-reported'
-import { UTILIZATION_RECIPES } from '#layers/terminal/server/utils/terminal-utilization-query'
 import { THESES } from '../../theses/server/theses/registry'
-import { served } from '#layers/core/server/utils/terminal-envelope'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 
 // The MCP endpoint over HTTP, as a client speaks it: a legacy (2025-era)
