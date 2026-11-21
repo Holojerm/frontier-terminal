@@ -4,7 +4,13 @@ import { beforeEach, describe, expect, it } from 'vitest'
 import { MAX_UNJOINED_JOBS } from '../../../talent/server/pipeline/parsers/hiring/common'
 import { describeError, runRefresh, type RefreshDeps } from '../../../core/server/pipeline/refresh'
 import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
-import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
+import {
+  fixtureFetcher,
+  fixtureText,
+  manifest,
+  raw,
+  xaiJobsWithout,
+} from '#layers/core/test/pipeline/fixtures'
 import { indexPage } from '../../../models/test/pipeline/misalignment-index'
 
 // The refresh end-to-end against the real D1 and R2 test bindings, driven by
@@ -16,23 +22,6 @@ const ALL = includeSources(sourcesYaml, manifest.fixtures)
 const ALL_IDS = ALL.map((s) => s.source_id)
 const urlOf = (id: string) => ALL.find((s) => s.source_id === id)!.url
 
-/** Fixture bytes by source id, with per-test overrides (text or a failed outcome). */
-function fixtureFetcher(overrides: Record<string, string | FetchOutcome> = {}): SourceFetcher {
-  const byUrl = new Map(manifest.fixtures.map((f) => [f.source_url, fixtureText(f.path)]))
-  return async (source) => {
-    const override = overrides[source.source_id]
-    if (override !== undefined && typeof override !== 'string') return override
-    const text = override ?? byUrl.get(source.url)
-    if (text === undefined) throw new Error(`no fixture for ${source.url}`)
-    return { ok: true, status: 200, text, bytes: text.length }
-  }
-}
-
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
 const rawKeys = async () => (await env.BLOB.list({ prefix: 'raw/' })).objects.map((o) => o.key)
 
 // A clock that advances one second per read, so every snapshot id is unique
@@ -59,13 +48,6 @@ const rows = {
 // ── Fixture edits for the change scenarios ──────────────────────────────────
 
 const REMOVED_JOB = 5090171007 // AI Tutor - Arabic, xai board
-const xaiJobsWithout = (id: number) => {
-  const board = JSON.parse(fixtureText('fixtures/hiring/xai-greenhouse.json')) as {
-    jobs: { id: number }[]
-  }
-  return JSON.stringify({ ...board, jobs: board.jobs.filter((j) => j.id !== id) })
-}
-
 const XAI_PRICE_LINE = '| grok-4.6 (< 200k prompt tokens) | 500k | $2.00 | $0.50 | $6.00 |'
 const xaiPricesRepriced = () => {
   const md = fixtureText('fixtures/pricing/xai-models.md')

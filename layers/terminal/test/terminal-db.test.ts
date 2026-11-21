@@ -1,9 +1,14 @@
-import { env } from 'cloudflare:test'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { runRefresh, type RefreshDeps } from '../../core/server/pipeline/refresh'
 import { MODEL_CLASS_MAP } from '../../pricing/server/utils/terminal-classes'
-import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
+import {
+  fixtureFetcher,
+  fixtureText,
+  manifest,
+  raw,
+  xaiJobsWithout,
+} from '#layers/core/test/pipeline/fixtures'
 
 // The UI's query layer against a real D1, seeded the way production is: the
 // committed fixtures pushed through runRefresh (fetch → parse → normalize →
@@ -18,23 +23,6 @@ const ALL = includeSources(sourcesYaml, manifest.fixtures)
 const ALL_IDS = ALL.map((s) => s.source_id)
 const urlOf = (id: string) => ALL.find((s) => s.source_id === id)!.url
 
-function fixtureFetcher(overrides: Record<string, string | FetchOutcome> = {}): SourceFetcher {
-  const byUrl = new Map(manifest.fixtures.map((f) => [f.source_url, fixtureText(f.path)]))
-  return async (source) => {
-    const override = overrides[source.source_id]
-    if (override !== undefined && typeof override !== 'string') return override
-    const text = override ?? byUrl.get(source.url)
-    if (text === undefined) throw new Error(`no fixture for ${source.url}`)
-    return { ok: true, status: 200, text, bytes: text.length }
-  }
-}
-
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
-
 const T0 = Date.parse('2026-09-07T10:00:00Z')
 let tick = T0
 const now = () => new Date((tick += 1000))
@@ -48,13 +36,6 @@ const ctx = async () => queryContext(sourcesYaml, (await terminalStamps(db)).pol
 // ── Fixture edits for the change scenarios ──────────────────────────────────
 
 const REMOVED_JOB = 5090171007 // AI Tutor - Arabic, xai board
-const xaiJobsWithout = (id: number) => {
-  const board = JSON.parse(fixtureText('fixtures/hiring/xai-greenhouse.json')) as {
-    jobs: { id: number }[]
-  }
-  return JSON.stringify({ ...board, jobs: board.jobs.filter((j) => j.id !== id) })
-}
-
 const XAI_PRICE_LINE = '| grok-4.7 (< 200k prompt tokens) | 500k | $2.00 | $0.50 | $6.00 |'
 const xaiRepricedAndDelisted = () => {
   const md = fixtureText('fixtures/pricing/xai-models.md')

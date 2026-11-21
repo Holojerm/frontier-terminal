@@ -1,4 +1,3 @@
-import { env } from 'cloudflare:test'
 import { beforeAll, describe, expect, it } from 'vitest'
 
 import { parseEdgarCompanyfacts } from '../server/pipeline/parsers/sec/edgar-companyfacts'
@@ -9,7 +8,7 @@ import {
 } from '../server/pipeline/parsers/sec/revenue-filers'
 import { parseCikWhitelistBlock } from '../server/pipeline/parsers/sec/whitelist'
 import { runRefresh } from '../../core/server/pipeline/refresh'
-import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
+import { fixtureText, manifest, provenanceOf, raw } from '#layers/core/test/pipeline/fixtures'
 
 // The disclosed-revenue axis: the company-facts parser on its committed
 // fixture, the revenue_filers reader, the period arithmetic as a pure
@@ -180,11 +179,6 @@ describe('splitPeriods', () => {
 
 describe('queryRevenue against a seeded store', () => {
   const ALL = includeSources(sourcesYaml, manifest.fixtures)
-  const raw: RawStore = {
-    put: async (key, body, contentType) => {
-      await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-    },
-  }
   const fetcher: SourceFetcher = async (source) => {
     const f = manifest.fixtures.find((x) => x.source_url === source.url)!
     const text = fixtureText(f.path)

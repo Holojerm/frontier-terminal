@@ -1,4 +1,3 @@
-import { env } from 'cloudflare:test'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { pendingChanges } from '#layers/core/server/pipeline/judge/pending'
@@ -10,7 +9,7 @@ import {
   runRefresh,
   type RefreshDeps,
 } from '../../../core/server/pipeline/refresh'
-import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
+import { fixtureText, manifest, provenanceOf, raw } from '#layers/core/test/pipeline/fixtures'
 
 // The demand-share source end to end: the parser against the first keyed
 // fetch (30 UTC days, 1,530 rows — fixtures/manifest.json),
@@ -168,11 +167,6 @@ describe('the keyed fetch', () => {
 
 // ── the refresh, against the real D1 ────────────────────────────────────────
 
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
 let tick = Date.parse('2026-09-07T10:00:00Z')
 const now = () => new Date((tick += 1000))
 const deps = (fetcher: SourceFetcher, clock = now): RefreshDeps => ({

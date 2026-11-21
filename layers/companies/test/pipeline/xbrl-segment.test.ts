@@ -1,4 +1,3 @@
-import { env } from 'cloudflare:test'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { segmentFilings } from '../../server/pipeline/derived'
@@ -14,7 +13,7 @@ import {
 } from '../../server/pipeline/parsers/sec/xbrl-segment'
 import { runRefresh } from '../../../core/server/pipeline/refresh'
 import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
-import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
+import { fixtureText, manifest, provenanceOf, raw } from '#layers/core/test/pipeline/fixtures'
 
 // Google Cloud segment revenue: Alphabet's per-filing XBRL instance, derived
 // from its submissions feed. The parser on the committed 10-Q first, then the
@@ -138,11 +137,6 @@ describe('revenue_filers segment', () => {
 // ── end to end ──────────────────────────────────────────────────────────────
 
 const ALL = includeSources(sourcesYaml, manifest.fixtures)
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
 let tick = Date.parse('2026-11-01T22:00:00Z')
 const now = () => new Date((tick += 1000))
 

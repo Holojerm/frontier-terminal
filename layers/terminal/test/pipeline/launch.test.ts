@@ -1,10 +1,9 @@
-import { env } from 'cloudflare:test'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { checkLaunchCoverage } from '../../../models/server/pipeline/launch-watch'
 import { runRefresh } from '../../../core/server/pipeline/refresh'
 import { isPollInstant, runTripwire } from '../../../models/server/pipeline/tripwire'
-import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
+import { fixtureText, manifest, raw } from '#layers/core/test/pipeline/fixtures'
 
 // Launch day, end to end on the workerd D1/R2 bindings: a lab ships a model
 // and rewrites its "start with" sentence, and the terminal has to (1) poll the
@@ -14,12 +13,6 @@ import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
 // hypothetical Opus 6 on the committed (Opus 5.5) pages.
 
 const sourcesYaml = fixtureText('sources.yaml')
-
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
 
 const byUrl = new Map(manifest.fixtures.map((f) => [f.source_url, fixtureText(f.path)]))
 const idToUrl = new Map(manifest.fixtures.map((f) => [f.source_id, f.source_url]))

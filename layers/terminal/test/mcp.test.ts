@@ -7,7 +7,7 @@ import handlerSource from '~~/layers/core/server/utils/terminal-handler.ts?raw'
 import { runRefresh } from '../../core/server/pipeline/refresh'
 import { powerSitesStamp } from '#layers/compute/server/power/stamp'
 import { THESES } from '../../theses/server/theses/registry'
-import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
+import { fixtureFetcher, fixtureText, manifest, raw } from '#layers/core/test/pipeline/fixtures'
 
 // The MCP endpoint over HTTP, as a client speaks it: a legacy (2025-era)
 // `initialize`, then tools/list and tools/call, each a stateless POST with
@@ -35,21 +35,6 @@ const ftsWithNewS1 = () => {
     },
   }
   return JSON.stringify({ ...doc, hits: { ...doc.hits, hits: [hit, ...doc.hits.hits] } })
-}
-
-function fixtureFetcher(overrides: Record<string, string> = {}): SourceFetcher {
-  const byUrl = new Map(manifest.fixtures.map((f) => [f.source_url, fixtureText(f.path)]))
-  return async (source) => {
-    const text = overrides[source.source_id] ?? byUrl.get(source.url)
-    if (text === undefined) throw new Error(`no fixture for ${source.url}`)
-    return { ok: true, status: 200, text, bytes: text.length }
-  }
-}
-
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
 }
 
 let tick = Date.parse('2026-09-07T10:00:00Z')

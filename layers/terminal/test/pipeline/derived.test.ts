@@ -1,4 +1,3 @@
-import { env } from 'cloudflare:test'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { resolvedFilers } from '../../../companies/server/pipeline/derived'
@@ -16,7 +15,7 @@ import {
 import { runRefresh } from '../../../core/server/pipeline/refresh'
 import { sourceIdsForScope } from '../../../core/server/pipeline/scopes'
 import { CAREERS_SOURCES } from '../../../talent/server/pipeline/scopes'
-import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
+import { fixtureText, manifest, raw } from '#layers/core/test/pipeline/fixtures'
 
 // The two things the store derives for itself: a lab's CIK from its own S-1
 // (and the feeds that follow from it), and the OpenAI per-model pages from
@@ -278,11 +277,6 @@ describe('the OpenAI model page parser', () => {
 
 // ── end to end ──────────────────────────────────────────────────────────────
 
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
 let tick = Date.parse('2026-09-22T04:00:00Z')
 const now = () => new Date((tick += 1000))
 const run = (ids: readonly string[], fetcher: SourceFetcher, scope: 'edgar' | 'survey' = 'edgar') =>

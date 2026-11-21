@@ -1,9 +1,13 @@
-import { env } from 'cloudflare:test'
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { runRefresh } from '../../core/server/pipeline/refresh'
 import { exportTable } from '#server/registries/export-tables'
-import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
+import {
+  fixtureFetcher as fetcher,
+  fixtureText,
+  manifest,
+  raw,
+} from '#layers/core/test/pipeline/fixtures'
 
 // Point-in-time reads. The golden property: a query asked `as_of` an instant
 // returns what the same query returned live at that instant, after the store
@@ -22,21 +26,6 @@ const datedYaml = fixtureText('sources.yaml')
 const sourcesYaml = datedYaml.replace(/^ {4}effective: .*\n/gm, '')
 const ALL = includeSources(sourcesYaml, manifest.fixtures)
 const ALL_IDS = ALL.map((s) => s.source_id)
-
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
-
-function fetcher(overrides: Record<string, string> = {}): SourceFetcher {
-  const byUrl = new Map(manifest.fixtures.map((f) => [f.source_url, fixtureText(f.path)]))
-  return async (source) => {
-    const text = overrides[source.source_id] ?? byUrl.get(source.url)
-    if (text === undefined) throw new Error(`no fixture for ${source.url}`)
-    return { ok: true, status: 200, text, bytes: text.length }
-  }
-}
 
 let tick = Date.parse('2026-09-07T10:00:00Z')
 const now = () => new Date((tick += 1000))

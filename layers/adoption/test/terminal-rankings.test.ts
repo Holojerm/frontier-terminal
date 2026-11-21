@@ -1,9 +1,8 @@
-import { env } from 'cloudflare:test'
 import { beforeEach, describe, expect, it } from 'vitest'
 
 import { runRefresh, type RefreshDeps } from '../../core/server/pipeline/refresh'
 import { EXPORT_TABLES } from '#server/registries/export-tables'
-import { fixtureText } from '#layers/core/test/pipeline/fixtures'
+import { fixtureText, raw } from '#layers/core/test/pipeline/fixtures'
 
 // The share arithmetic without a database, then the query against the real
 // D1 in each of the three states the panel has to render honestly.
@@ -195,11 +194,6 @@ describe('foldRankingWeeks', () => {
 
 const sourcesYaml = fixtureText('sources.yaml')
 const SOURCE_ID = 'openrouter-rankings-daily'
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
 let tick = Date.parse('2026-09-07T10:00:00Z')
 const now = () => new Date((tick += 1000))
 const deps = (fetcher: SourceFetcher): RefreshDeps => ({ db, raw, fetcher, sourcesYaml, now })

@@ -13,7 +13,7 @@ import { cardDescriptions, cardOwners } from '../../server/pipeline/judge/page-c
 import { submitJudgeRun } from '../../../core/server/pipeline/judge/submit'
 import { recommendationRows } from '../../server/pipeline/recommendations'
 import { runRefresh } from '../../../core/server/pipeline/refresh'
-import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'
+import { fixtureText, manifest, raw } from '#layers/core/test/pipeline/fixtures'
 
 // The judge re-mapping a price-matrix cell. Pure halves first, then the whole
 // path against the workerd D1 and R2: a real poll of the committed Anthropic
@@ -48,11 +48,6 @@ function launched(page: string): string {
 }
 const LAUNCHED = launched(FIXTURE)
 
-const raw: RawStore = {
-  put: async (key, body, contentType) => {
-    await env.BLOB.put(key, body, { httpMetadata: { contentType } })
-  },
-}
 const readRaw: RawReader = async (key) => {
   const object = await env.BLOB.get(key)
   return object ? object.text() : null
