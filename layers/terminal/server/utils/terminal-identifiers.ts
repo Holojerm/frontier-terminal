@@ -220,7 +220,7 @@ export const ENTITY_IDENTIFIERS: readonly EntityIdentifier[] = [
       share_class_figi: 'BBG0118LR3P8',
       figi_fetched_at: FIGI_SECOND,
     },
-    note: 'Listed on the Nasdaq Global Select Market as ANT: the 424B4 of 2026-11-19 prices the IPO at $83.00 a share, and SEC’s ticker file lists ANT on Nasdaq.',
+    note: 'Listed on the Nasdaq Global Select Market as ANT, trading since 2026-11-19 (the pricing term sheet’s trade date): the 424B4 of 2026-11-19 prices the IPO at $83.00 a share, and SEC’s ticker file lists ANT on Nasdaq.',
   }),
   identified({
     entity_id: 'google',

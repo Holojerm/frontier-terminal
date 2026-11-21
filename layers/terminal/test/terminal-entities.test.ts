@@ -103,6 +103,13 @@ describe('ENTITY_SECURITIES', () => {
     expect(cover).toMatch(
       /approved to list our Class A common stock on the Nasdaq Global Select Market under the symbol “ANT\.”/,
     )
+    const pricing = fixtureText('fixtures/sec/anthropic-fwp-pricing.html')
+      .replace(/<[^>]+>/g, ' ')
+      .replace(/&#58;/g, ':')
+      .replace(/\s+/g, ' ')
+    expect(pricing).toContain('Symbol: ANT (Nasdaq Global Select Market)')
+    expect(pricing).toContain('Trade Date: November 19, 2026')
+    expect(ant.note).toContain('trading since 2026-11-19')
   })
 
   it('gives each security the MIC and FIGI OpenFIGI lists for its symbol', () => {

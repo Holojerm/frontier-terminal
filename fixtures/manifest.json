@@ -1193,6 +1193,15 @@
       "note": "Anthropic, PBC's final prospectus (424B4, filed 2026-11-19): initial public offering price $83.00 a share; approved to list Class A common stock on the Nasdaq Global Select Market under the symbol “ANT.” The evidence for the listed status in entity_securities and entity_identifiers."
     },
     {
+      "path": "fixtures/sec/anthropic-fwp-pricing.html",
+      "source_id": "identifiers-anthropic-fwp-pricing",
+      "source_url": "https://www.sec.gov/Archives/edgar/data/2130357/000162828026074937/anthropicpbc-fwppricing.htm",
+      "fetched_at": "2026-11-21T01:50:06Z",
+      "http_status": 200,
+      "raw_bytes": 18371,
+      "note": "Anthropic, PBC's pricing term sheet (free writing prospectus dated 2026-11-18, filed 2026-11-19), untrimmed: Symbol ANT (Nasdaq Global Select Market), price to public $83.00, pricing date November 18, trade date November 19, settlement date November 20, 2026. The evidence for the first trade date in entity_securities and entity_identifiers."
+    },
+    {
       "path": "fixtures/sec/edgar-submissions-anthropic.json",
       "source_id": "edgar-submissions-anthropic",
       "source_url": "https://data.sec.gov/submissions/CIK0002130357.json",
