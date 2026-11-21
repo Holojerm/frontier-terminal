@@ -1,7 +1,5 @@
-// The hyperscaler exposure payload (GET /api/exposure, the /exposure page,
-// the get_exposure MCP tool): quarterly series built from the filed XBRL facts
-// of five public filers, and from Amazon's words on Anthropic before it
-// tagged them. Shared so the page and the server agree on one shape.
+// The hyperscaler exposure payload (GET /api/exposure, /exposure, get_exposure),
+// shared so the page and the server agree on one shape.
 
 import type { Prov } from '../../../core/shared/types/common'
 

@@ -1,15 +1,12 @@
 import { index, integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
 import { provenance } from './columns'
 
-// Recipe observations — what a thesis recipe (layers/terminal/server/theses/recipes/) read
-// from its source: one row per (recipe, key, date). A key is what the number
-// is of (a revenue tag, a department, a package), the date what it is for (a
-// quarter end, a day). Rewritten only when a re-read gives a different value
-// or payload, so fetched_at says when this value was last read, and raw_key
-// points at the stored bytes it was read from. Kept apart from `entities`:
-// these companies are not the terminal's labs, and none of the lab
-// panels or the lab judge read this table. One alert rule does: the GPU
-// median rule (layers/compute/server/pipeline/gpu-median-floor.ts).
+// Recipe observations: what a thesis recipe read, one row per (recipe, key,
+// date), the key what the number is of and the date what it is for. Rewritten
+// only when a re-read differs, so fetched_at is the last read. Kept apart from
+// `entities` (these are not the terminal's labs); the lab panels and judge
+// never read it, but the GPU median rule does
+// (layers/compute/server/pipeline/gpu-median-floor.ts).
 export const recipeObservations = sqliteTable(
   'recipe_observations',
   {
@@ -27,7 +24,7 @@ export const recipeObservations = sqliteTable(
   (t) => [
     index('recipe_observations_recipe_idx').on(t.recipe_id, t.key, t.date),
     // recipeCoverage() finds each recipe's newest fetch. Without this it read
-    // about 5.9M rows a run, 63% of all D1 reads on 2026-11-07.
+    // about 5.9M rows a run, 63% of all D1 reads.
     index('recipe_observations_fetched_idx').on(t.recipe_id, t.fetched_at),
   ],
 )

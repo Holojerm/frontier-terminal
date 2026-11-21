@@ -1,18 +1,9 @@
-// What a public parent tags about a private lab in its own XBRL: every fact
-// whose context names the lab's member on any dimension. Microsoft tags
-// OpenAI (msft:OpenAIGlobalLlcMember) on its recognized gain or loss, its
-// stake, the revenue and receivables OpenAI brings it and its funding
-// commitment; Amazon tags Anthropic (amzn:AnthropicMember) on the upward
-// adjustments to its preferred stock, the shares held, the credit facility
-// and the remaining performance obligation Anthropic added. Company facts
-// drops dimensional facts, so the recipe reads the newest 10-Q or 10-K's
-// instance file, found through the filer's submissions feed.
-//
-// These are the parent's numbers, never the lab's. Microsoft accounts for
-// OpenAI at hypothetical liquidation value and books dilution gains in the
-// same line, so its figure divided by its stake is not OpenAI's result;
-// Amazon's marks follow observable prices, so they are not Anthropic's
-// valuation (docs/source-audit.md, 2026-11-04).
+// What a public parent tags about a private lab in its own XBRL: every fact whose
+// context names the lab's member (msft:OpenAIGlobalLlcMember, amzn:AnthropicMember),
+// read from the newest 10-Q/10-K instance since company facts drop dimensions.
+// These are the parent's numbers, never the lab's: Microsoft accounts at
+// hypothetical liquidation value with dilution gains in the same line, and
+// Amazon's marks follow observable prices (docs/source-audit.md).
 
 import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 

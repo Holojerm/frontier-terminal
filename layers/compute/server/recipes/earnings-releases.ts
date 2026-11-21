@@ -1,18 +1,8 @@
-// One sentence a company prints in its quarterly earnings release (the
-// EX-99.1 of an Item 2.02 8-K) and tags nowhere: Alphabet's API tokens per
-// minute, CoreWeave's active power. EDGAR full-text search finds the releases
-// that use the phrase, so one hop reaches the exhibit itself and the stored
-// source URL is the document the sentence was read from.
-//
-// A run reads one release. The first run reads the oldest; each later run
-// reads the one after the newest stored quarter, so the history fills one
-// release per run and then waits on the newest. A quarter whose release
-// drops the phrase is not in the search answer: the series ends at the last
-// quarter that printed it, and the view shows that quarter's date.
-//
-// The wording changes every quarter ("nearly 32 billion", "Surpassed 1 GW"),
-// so the sentence is stored verbatim beside the number and the qualifier is
-// kept. A sentence the reader cannot place fails the run.
+// A figure a company prints in its earnings release (EX-99.1 of an Item 2.02 8-K)
+// and tags nowhere: Alphabet's API tokens per minute, CoreWeave's active power.
+// EDGAR full-text search finds the releases; a run reads one, oldest first, then
+// waits on the newest. The wording changes every quarter, so the sentence is
+// stored verbatim with its qualifier; one the reader can't place fails the run.
 
 import type { CompanyId } from '#layers/core/shared/utils/companies'
 

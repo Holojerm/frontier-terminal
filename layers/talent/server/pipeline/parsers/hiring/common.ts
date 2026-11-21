@@ -4,8 +4,8 @@ import { TransientParseError } from '#layers/core/server/pipeline/lanes'
 // Shared helpers for the hiring lane. Deterministic: no clocks, no
 // randomness, no locale-sensitive compares.
 
-// Plain code-unit compare — localeCompare is environment-sensitive and
-// would break the determinism gate's cross-machine promise.
+// Plain code-unit compare: localeCompare is environment-sensitive and would break the
+// determinism gate's cross-machine promise.
 export function compareByJobId(a: { job_id: string }, b: { job_id: string }): number {
   return a.job_id < b.job_id ? -1 : a.job_id > b.job_id ? 1 : 0
 }
@@ -29,28 +29,21 @@ interface GreenhouseDepartment {
 /**
  * A join mismatch small enough to be the snapshot race rather than drift.
  *
- * The board is two HTTP requests about a second apart, so a job posted
- * between them is in /jobs and not yet in /departments. Anthropic's board
- * failed this way on 2026-09-18 over a single job id.
- *
- * The throw itself is right and stays: dropping the job, or emitting it with
- * a null department, both move a cluster count by one for a tick, and a
- * cluster count that dips and recovers is exactly the shape of the hiring
- * signal this terminal alerts on. Losing one tick is cheaper than a headline
- * saying a lab pulled a role it did not pull. What the type changes is who
- * hears about it: a TransientParseError (layers/core/server/pipeline/lanes.ts), for which
- * the refresh raises the ops event only when the next tick has not cleared it.
+ * The board is two HTTP requests about a second apart, so a job posted between them is in
+ * /jobs and not yet in /departments. The throw stays: dropping the job, or emitting it
+ * with a null department, moves a cluster count by one for a tick, and a count that dips
+ * and recovers is the shape of the hiring signal this terminal alerts on. Losing one tick
+ * is cheaper than a headline saying a lab pulled a role it did not pull. The type changes
+ * who hears about it: for a TransientParseError (layers/core/server/pipeline/lanes.ts) the
+ * refresh raises the ops event only when the next tick has not cleared it.
  */
 export class JoinRaceError extends TransientParseError {}
 
 /**
- * Unjoined jobs that can still be the race rather than a changed payload.
- *
- * Above this the two feeds disagree about more than a second's worth of
- * postings, which is drift — and if Greenhouse stops listing ids under
- * departments at all, every job is unjoined at once and lands well clear of
- * it. Five is loose enough for a busy second and tight enough to still be a
- * tripwire.
+ * Unjoined jobs that can still be the race rather than a changed payload. Above this the
+ * two feeds disagree about more than a second's worth of postings, which is drift; if
+ * Greenhouse stops listing ids under departments, every job is unjoined at once and lands
+ * well clear of it.
  */
 export const MAX_UNJOINED_JOBS = 5
 
@@ -78,10 +71,9 @@ export function greenhouseRow(
   }
 }
 
-// A Greenhouse jobs payload carries NO department field; department comes
-// only from the /departments join, which is why every Greenhouse parser
-// takes two payloads. Live boards are joined against their own live
-// /departments, never against the committed fixture.
+// A Greenhouse jobs payload carries no department field, so every Greenhouse parser takes
+// the /departments payload too. Live boards are joined against their own live
+// /departments, never the committed fixture.
 export function parseGreenhouseBoard(
   provider: 'anthropic' | 'xai',
   jobsText: string,
@@ -96,8 +88,8 @@ export function parseGreenhouseBoard(
   const deptByJobId = new Map<number, string>()
   for (const dept of departmentsPayload.departments) {
     for (const job of dept.jobs) {
-      // First mapping wins (file order — deterministic). The committed
-      // fixtures are join-consistent: no job id appears under two departments.
+      // First mapping wins (file order, deterministic). The committed fixtures are
+      // join-consistent: no job id appears under two departments.
       if (!deptByJobId.has(job.id)) deptByJobId.set(job.id, dept.name)
     }
   }

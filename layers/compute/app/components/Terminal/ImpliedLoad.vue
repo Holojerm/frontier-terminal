@@ -1,9 +1,7 @@
 <script setup lang="ts">
-// Implied load: Alphabet's stated tokens per minute, turned into the
-// H100-equivalents that volume would keep busy at each benchmark model's
-// speed, as a share of Epoch AI's range for Google's running fleet. Always
-// a pair of bounds per model, with the sentence the volume came from and the
-// footnote MLCommons requires beside a figure it has not verified.
+// Implied load: Alphabet's stated tokens per minute as H100-equivalents kept busy at
+// each benchmark model's speed, as a share of Epoch's range for Google's fleet.
+// Always a pair of bounds, with the source sentence and MLCommons's footnote.
 
 import type { UtilizationData } from '../../../shared/utils/compute-views'
 

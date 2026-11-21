@@ -60,11 +60,10 @@ const earliest = (xs: (string | null)[]) =>
   xs.filter((x): x is string => x !== null).sort()[0] ?? null
 
 /**
- * One entity's months, newest first. Each month's figure is the newest one
- * from its finest source (the exchange feed's NT$ thousand over a 6-K's NT$
- * million); first_value is that source's first figure where it later
- * changed. first_seen_at and published_at are the earliest
- * any source gave.
+ * One entity's months, newest first. Each month's figure is the newest one from
+ * its finest source (the exchange feed's NT$ thousand over a 6-K's NT$ million);
+ * first_value is that source's first figure where it later changed. first_seen_at
+ * and published_at are the earliest any source gave.
  */
 export function buildPoints(rows: PrintRow[]): PrintPoint[] {
   const months = new Map<string, PrintRow[]>()

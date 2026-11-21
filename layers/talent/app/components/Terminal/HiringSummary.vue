@@ -1,9 +1,9 @@
 <script setup lang="ts">
-// Hiring as one row per lab — open roles, the change over the comparison
-// window, the physical-infrastructure cluster and its change, and the
-// department that moved most. Department mix and the daily series are on
-// /hiring. A board with no public feed is a row that says so; the xAI entity
-// blend ships as a visible mark on its row, as the source audit requires.
+// Hiring as one row per lab: open roles, the change over the comparison window, the
+// physical-infrastructure cluster and its change, and the department that moved most.
+// Department mix and the daily series are on /hiring. A board with no public feed is a row
+// that says so; the xAI entity blend is a visible mark on its row, as the source audit
+// requires.
 
 import { count } from '#layers/core/shared/utils/terminal-format'
 import type { HiringHistoryData } from '../../../shared/types/hiring'

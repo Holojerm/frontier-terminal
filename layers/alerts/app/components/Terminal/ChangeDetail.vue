@@ -1,9 +1,7 @@
 <script setup lang="ts">
-// One cited change row, read in full: what the entity was and what it is
-// now, field by field, with the fields that moved marked. An alert is a claim
-// about these rows and may cite nothing else, so the permalink shows the
-// whole record rather than the diff alone — a reader checking the claim
-// needs the fields the headline did not mention as much as the ones it did.
+// One cited change row in full: what the entity was and is now, field by field, with the
+// moved fields marked. An alert may cite nothing but these rows, so a reader checking the
+// claim needs the fields the headline did not mention too.
 
 import type { ChangeDetailView } from '../../../shared/types/alerts'
 

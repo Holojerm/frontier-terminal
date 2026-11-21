@@ -13,13 +13,9 @@ import type { PipelineDb } from '../../utils/pipeline-store'
 // export and on every public endpoint; they just do not wake the judge.
 
 /**
- * Cap on what one judge run considers, taken oldest first. Changes the model
- * stays SILENT about are never cited, so without a cursor every run would
- * re-send the whole history; with the cursor a cap still matters for a run
- * over a backlog, where a bounded prompt beats an exhaustive one. Oldest
- * first because the cursor moves to the newest change offered: a newest-first
- * cap moved it past everything the cap left out, which was then never judged.
- * The route reports total_pending so a bite of the cap is never silent.
+ * Cap on what one judge run considers, oldest first: the cursor moves to the
+ * newest change offered, so a newest-first cap skipped everything it left out.
+ * The route reports total_pending so the cap never bites silently.
  */
 export const JUDGE_CHANGE_LIMIT = 200
 
@@ -44,14 +40,13 @@ export const TIMESTAMP_FIELDS: Readonly<Record<string, readonly string[]>> = {
 }
 
 /**
- * Entity types the judge never sees. 'ranking' rows are a time series — one
- * (UTC day, model) observation each, ~50 new rows a day by construction — not
- * events; offering them would wake the judge every morning to read a table.
- * Demand-share movement is read off /api/rankings instead. The same set is
- * excluded from the signal band's counts (layers/alerts/server/utils/terminal-alerts.ts).
+ * Entity types the judge never sees. 'ranking' rows are a daily time series
+ * (~50 rows a day), not events; demand share is read off /api/rankings. The
+ * signal band's counts exclude the same set
+ * (layers/alerts/server/utils/terminal-alerts.ts).
  */
 // 'filed_fact', 'guidance', 'guidance_check' and 'gpu_price' changes exist
-// only as the citation of a rule-based alert that is already written
+// only as citations of rule-based alerts already written
 // (layers/companies/server/exposure/alerts.ts, guidance-alerts.ts,
 // layers/compute/server/pipeline/gpu-median-floor.ts).
 export const JUDGE_EXCLUDED_ENTITY_TYPES = [
@@ -86,31 +81,18 @@ export function isTimestampOnlyChange(change: {
 }
 
 /**
- * A `filing` change about a company this terminal does not track.
+ * A `filing` change about a company this terminal does not track. The EDGAR
+ * full-text tripwires sweep every filer for "Anthropic" and "OpenAI"
+ * (sources.yaml: "Open keyword sweeps across all filers are confirmed noisy
+ * (micro-cap false positives) — whitelist only."). Those hits are stored and
+ * diffed, but the judge wrote headlines tying them to a lab through the search
+ * query alone, which grounding rejected; s1-floor already alerts on
+ * whitelisted rows only.
  *
- * The two EDGAR full-text tripwires sweep every filer for the words
- * "Anthropic" and "OpenAI", and sources.yaml records the verdict on that
- * plainly: "Open keyword sweeps across all filers are confirmed noisy
- * (micro-cap false positives) — whitelist only." A micro-cap whose S-1 names
- * a lab in its risk factors is a hit, and the row is kept — the tripwire only
- * works because every hit is stored and diffed. What it is not is an event
- * about a frontier lab.
- *
- * The deterministic rules already read it that way: s1-floor alerts on
- * whitelisted rows only. The judge did not, and the prompt tells it every
- * filing record is alert-worthy, so it wrote headlines like "Oura Inc. (OURA)
- * files S-1/A matching an EDGAR full-text search for 'Anthropic'" — where the
- * only thing tying the filing to a lab was the query, which is not in the
- * record. The grounding gate rejected them, correctly, five times in two
- * weeks. This stops them being offered in the first place.
- *
- * `whitelist_cik` is the discriminator, and it is safe to filter on: a
- * submissions or company-facts feed is only ever derived for a CIK that is
- * already whitelisted or resolved, so those rows always carry one. A lab's
- * OWN first S-1 arrives before it is whitelisted and so is filtered here —
- * and is exactly what the deterministic cik-resolved rule fires on
- * (layers/companies/server/pipeline/filing-floors.ts), at `critical`, with no model in the loop. From
- * the next poll the lab is whitelisted and its filings reach the judge.
+ * `whitelist_cik` is safe to filter on: submissions and company-facts feeds are
+ * derived only for whitelisted or resolved CIKs. A lab's own first S-1 arrives
+ * before it is whitelisted and is filtered here, but the cik-resolved rule
+ * (layers/companies/server/pipeline/filing-floors.ts) alerts on it at `critical`.
  */
 export function isUntrackedFilingChange(change: {
   entity_type: string

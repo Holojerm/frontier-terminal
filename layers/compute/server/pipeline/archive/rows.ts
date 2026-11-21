@@ -23,11 +23,8 @@ import type { GpuEra } from './gpu-eras'
 type ArchivedGpuPriceRow = typeof tables.archivedGpuPrices.$inferInsert
 
 /**
- * One GPU price page capture -> its archived_gpu_prices rows, validated by
- * the live recipes' contract (gpu-prices.ts › gpuObservations): the same
- * keys, the same payload, and the same refusal of a page that prices one
- * key twice or names no H100 or B200 on-demand price. A throw is a skip with
- * the reason.
+ * One capture -> its archived_gpu_prices rows, validated by the live contract
+ * (gpu-prices.ts › gpuObservations). A throw is a skip with the reason.
  */
 export function gpuRows(
   era: GpuEra,

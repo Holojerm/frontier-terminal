@@ -1,8 +1,6 @@
-// The append-only write for hardware_prints. A figure is stored when the
-// source has never given one for its month, or gave a different one last
-// time; the same figure again is not a row. Each source's documents are read
-// in release order (ingest.ts), so a chain's first vintage is the first
-// release that printed the month.
+// The append-only write for hardware_prints: a figure is stored when the source
+// gave none for its month or a different one last time. Sources are read in
+// release order (ingest.ts), so a chain's first vintage is the first release.
 
 import { and, desc, eq, inArray, notInArray, sql } from 'drizzle-orm'
 

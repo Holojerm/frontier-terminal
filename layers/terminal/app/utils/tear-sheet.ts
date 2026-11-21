@@ -1,12 +1,10 @@
-// One lab on one printed page: the lab page's readout, press reports against
-// the filings, the hyperscaler lines and listed companies that name the lab,
-// the newest alerts and the thesis, each figure numbered
-// against a source list at the foot. Built from the same payloads the lab
-// page reads, through summarizeLab, so the sheet and the lab page cannot
-// disagree about a number.
+// One lab on one printed page: the lab page's readout, press reports against the filings,
+// the hyperscaler lines and listed companies that name the lab, the newest alerts and the
+// thesis, each figure numbered against a source list at the foot. Built from the lab
+// page's payloads through summarizeLab, so the sheet and the lab page cannot disagree.
 //
-// A printed page has no tooltips or popovers, so every gap carries its reason
-// as text and every citation is a numbered footnote with the URL spelled out.
+// A printed page has no tooltips or popovers, so every gap carries its reason as text and
+// every citation is a numbered footnote with the URL spelled out.
 
 /** How many alerts the sheet lists: enough to show what moved, few enough to fit the page. */
 export const SHEET_ALERTS = 5

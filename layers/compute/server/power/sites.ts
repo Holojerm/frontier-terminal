@@ -1,14 +1,8 @@
-// The lab sites the power table covers, and the words EDGAR full-text search
-// is asked for to find a filing that names one.
-//
-// The sites are Epoch AI's: every site in its newest data-center snapshot that
-// names a tracked lab as a user at #confident or #likely (the same rule as the
-// /power panel, terminal-datacenters.ts). Epoch's names are its own labels
-// ("OpenAI Stargate Abilene"), not words a filing uses, so a site we know has
-// the place or project name filings write for it in SITE_SEARCH. A site Epoch
-// adds later gets its name with the labs, the owner and the brand words taken
-// out, searched beside "data center" (searchFor): a best guess, and the gap
-// for that site stays on the table until a filing or a person reads it.
+// The lab sites the power table covers and the EDGAR full-text search terms for
+// each. Sites are Epoch AI's that name a tracked lab at #confident or #likely.
+// Epoch's labels ("OpenAI Stargate Abilene") aren't filing words, so SITE_SEARCH
+// holds the names filings use; a new site falls back to searchFor's best guess and
+// keeps its gap until a filing or a person reads it.
 
 import { inArray } from 'drizzle-orm'
 

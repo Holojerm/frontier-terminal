@@ -1,33 +1,30 @@
 import { NO_DEPARTMENT } from '../../../utils/terminal-hiring-history'
 import { decodeEntities, textOf } from '../../../../../core/server/pipeline/parsers/html-text'
 
-// The labs' job boards as the Internet Archive captured them
-// (archive/hiring-eras.ts names each era's URL and window). Each parser
-// reads one capture into the counts the live hiring lane derives from a
-// board: open roles in total and per department, by the board's own
-// department labels. Nothing per role is kept, only the counts.
+// The labs' job boards as the Internet Archive captured them (archive/hiring-eras.ts
+// names each era's URL and window). Each parser reads one capture into the counts the live
+// hiring lane derives: open roles in total and per department, by the board's own labels.
+// Nothing per role is kept.
 //
-// A capture counts only when it lists every open role, or states the
-// board's own total. A list cut short by paging, a "show more" button or a
-// script the Archive did not run is not a count, so:
+// A capture counts only when it lists every open role or states the board's own total. A
+// list cut short by paging, a "show more" button or a script the Archive did not run is
+// not a count, so:
 //
-//   boards.greenhouse.io/<board> (to early 2025): every opening, grouped by
-//     department, in one page. Counted per department.
-//   boards-api.greenhouse.io/v1/boards/<board>/departments: every job under
-//     its department, the live join. Counted per department.
-//   boards-api.greenhouse.io/v1/boards/<board>/jobs: every job, with no
-//     department. Total only.
-//   job-boards.greenhouse.io/<board> (from 2025): 50 roles a page, with the
-//     board's own `total`. Per department only when one page holds them all;
-//     otherwise the stated total alone.
-//   jobs.ashbyhq.com/<org>: every listed posting with its department, in the
-//     page's app data. Counted per department.
-//   jobs.lever.co/<org>: every posting, grouped by the board's top-level
-//     category. Counted per category.
+//   boards.greenhouse.io/<board> (to early 2025): every opening, grouped by department,
+//     in one page. Counted per department.
+//   boards-api.greenhouse.io/v1/boards/<board>/departments: every job under its
+//     department, the live join. Counted per department.
+//   boards-api.greenhouse.io/v1/boards/<board>/jobs: every job, no department. Total only.
+//   job-boards.greenhouse.io/<board> (from 2025): 50 roles a page, with the board's own
+//     `total`. Per department only when one page holds them all; else the total alone.
+//   jobs.ashbyhq.com/<org>: every listed posting with its department, in the page's app
+//     data. Counted per department.
+//   jobs.lever.co/<org>: every posting, grouped by the board's top-level category.
+//     Counted per category.
 //
-// A throw is a skip with the message as its reason (archive/rows.ts). A
-// board listing no role at all is a skip too: on these pages it means the
-// board moved or the capture holds a shell, never that the lab hired nobody.
+// A throw is a skip with the message as its reason (archive/rows.ts). A board listing no
+// role is a skip too: on these pages it means the board moved or the capture holds a
+// shell, never that the lab hired nobody.
 
 export interface ArchivedDepartmentCount {
   /** The department as the board printed it, entities decoded and trimmed. */

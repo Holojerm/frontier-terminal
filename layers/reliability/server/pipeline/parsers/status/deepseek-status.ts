@@ -80,9 +80,7 @@ function atomUpdates(atom: string): Map<string, string> {
 
 const byString = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0)
 
-// prov defaults to the fixture manifest's record (fixture-only behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead.
+// One-argument calls read the fixture's provenance, keeping the determinism gate byte-identical.
 export function parseDeepseekStatus(
   text: string,
   atom: string,

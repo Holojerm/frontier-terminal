@@ -2,22 +2,19 @@ import type { FloorClamp } from '../../../../talent/server/pipeline/hiring-floor
 import { isRoutine8K, rootForm } from '../../../../companies/server/pipeline/parsers/sec/forms'
 import { requotedKey } from '#layers/pricing/server/pipeline/judge/class-map'
 
-// Worker-side severity rules for the judge's filing and pricing alerts, the
-// counterpart of the hiring floor (hiring-floor.ts). The prompt states the same
-// rules, but only these bind. Each only lowers a severity, and only when every
-// change an alert cites is one the rule covers: a price cut cited beside a
-// launch is carried by the launch.
+// Worker-side severity rules for the judge's filing and pricing alerts, the counterpart of
+// the hiring floor (hiring-floor.ts). The prompt states the same rules, but only these
+// bind. Each only lowers a severity, and only when every change an alert cites is one the
+// rule covers: a price cut cited beside a launch is carried by the launch.
 //
-// A model removal that another page of the lab still lists
-// (still-listed.ts) is a page dropping a row, not a delisting: an alert that
-// cites only such removals is a ticker line, whatever model it names.
+// A model removal that another page of the lab still lists (still-listed.ts) is a page
+// dropping a row, not a delisting: an alert citing only such removals is a ticker line.
 //
-// A class-map sentence gone from the page says one sentence is gone. When the
-// same run re-quotes the cell for the model it already held (class-map.ts ›
-// ClassMapResult.requoted), the vendor reworded the sentence and recommends
-// what it did: Google cut "featuring a shared 1M context window…" from
-// Hydrogen's card on 2026-11-18, and the alert read "no longer position
-// gemini-4-hydrogen as its balanced-class pick".
+// A class-map sentence gone from the page says one sentence is gone. When the same run
+// re-quotes the cell for the model it already held (class-map.ts › ClassMapResult.requoted),
+// the vendor reworded the sentence and still recommends the model. Example: Google cut
+// "featuring a shared 1M context window…" from Hydrogen's card, and the alert read "no
+// longer position gemini-4-hydrogen as its balanced-class pick".
 
 interface PriceFields {
   provider?: string

@@ -5,9 +5,8 @@
 // (matchesArticle); termList writes that rule out for the search row. A
 // newsroom post is already the lab's own, so it is matched on `what` alone.
 //
-// Terms are deliberately broad. A candidate is not a match: the judge rates
-// each one as the same event or not, so a broad term costs a rating, while a
-// narrow one loses the article for good.
+// Terms are broad: the judge rates each candidate as the same event or not, so a
+// broad term costs a rating, while a narrow one loses the article for good.
 
 import type { ChangeRow } from '#layers/core/server/utils/contracts'
 

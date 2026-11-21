@@ -1,20 +1,10 @@
-// EIA-930 demand for the balancing authorities that hold a tracked lab site.
-// With NUXT_EIA_API_KEY set, EIA's API v2 gives the days from 2019 on
-// (eia-api.ts) and the six-month Grid Monitor files only 2018; without it, or
-// on a run where the API fails, the files give everything. Each file
-// is one half-year of every authority's hours, 30 to 47 MB: over the
-// pipeline fetcher's body cap, so it is read here as a stream, one line at a
-// time, and only the lines of the tracked authorities are kept. Those lines
-// go to R2 verbatim, beside the file's header, so every stored day has its
-// source bytes; the rest of the file is never held.
-//
-// A day is the sum of the hourly "Demand (MW) (Adjusted)" values, EIA's
-// cleaned copy of what each authority reports, over the hours that carry one:
-// megawatt-hours, with the hour count beside it so a short day reads as one.
-//
-// Each run reads the current half (skipped when EIA's ETag has not moved), the
-// half before it for six weeks after it closes (EIA revises), and walks back
-// through unread halves to EIA930_FIRST_PERIOD, BACKFILL_PER_RUN at a time.
+// EIA-930 demand for the balancing authorities holding a tracked lab site: the API
+// (eia-api.ts) from 2019 when NUXT_EIA_API_KEY is set, else the six-month Grid
+// Monitor files. A file is 30 to 47 MB, over the fetcher's body cap, so it is
+// streamed and only tracked authorities' lines go to R2 with the header. A day sums
+// "Demand (MW) (Adjusted)" over hours with a value, with the hour count kept. Each
+// run reads the current half (skipped on an unchanged ETag), the previous half for
+// six weeks (EIA revises), and BACKFILL_PER_RUN older halves.
 
 import { and, eq, inArray, max, sql } from 'drizzle-orm'
 
@@ -149,7 +139,6 @@ async function readFile(
   }
 }
 
-/** Each authority's newest stored day. */
 async function newestDays(db: PipelineDb): Promise<Map<string, string>> {
   const rows = await db
     .select({ ba: tables.gridLoadDays.ba, at: max(tables.gridLoadDays.date) })

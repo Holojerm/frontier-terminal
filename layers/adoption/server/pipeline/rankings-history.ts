@@ -6,13 +6,12 @@ import {
 import { normalizeRankings } from './normalize'
 import { parseOpenRouterRankings } from './parsers/openrouter-rankings'
 
-// OpenRouter's rankings from before the live source began reading them
-// (scripts/rankings-backfill.ts). The live fetch takes the endpoint's default
-// trailing 30 days, so the stored series starts 2026-08-10. The dataset itself
-// goes back to 2025-01-01 and takes start_date/end_date at most 366 days apart
-// (openrouter.ai/docs/cookbook/administration/data-api, read 2026-11-20). It
-// is the same dataset under the same license, so its rows go into the live
-// source's entities as they are, each citing the windowed URL it came from.
+// OpenRouter's rankings from before the live source began (scripts/rankings-backfill.ts).
+// The live fetch takes the default trailing 30 days, so the stored series starts
+// 2026-08-10. The dataset goes back to 2025-01-01 and takes start_date/end_date at most 366
+// days apart (openrouter.ai/docs/cookbook/administration/data-api, read 2026-11-20). Same
+// dataset and license, so its rows go into the live source's entities as they are, each
+// citing its windowed URL.
 
 export const RANKINGS_SOURCE_ID = 'openrouter-rankings-daily'
 export const RANKINGS_URL = 'https://openrouter.ai/api/v1/datasets/rankings-daily'

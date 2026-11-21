@@ -1,12 +1,7 @@
-// GPU rental prices: the contract every gpu-* recipe's observations obey, and
-// the helpers their extractors share. One observation is one published
-// on-demand price for one H100 or B200 configuration, normalized to USD per
-// GPU-hour, with the provider's own label, configuration and region beside it
-// (null where the page prints none).
-//
-// Only first-party price pages and documented price APIs feed these recipes
-// (docs/source-audit.md › GPU rental prices). The Compute thesis reads them
-// through layers/theses/server/theses/compute-signals.ts.
+// The contract every gpu-* recipe's observations obey, and the extractors' shared
+// helpers. One observation is one on-demand price for one H100 or B200
+// configuration in USD per GPU-hour. Only first-party pages and documented APIs
+// feed these (docs/source-audit.md › GPU rental prices).
 
 import { z } from 'zod'
 

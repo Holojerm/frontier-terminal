@@ -1,15 +1,13 @@
 <script setup lang="ts">
-// One revenue-bearing SEC filing at a URL that can be cited: every period it
-// reported, the value, the tag or statement row it was read from, and whether
-// a later filing restated it — with the EDGAR link on every line. Read from
-// the cached /api/revenue payload (layers/companies/shared/utils/terminal-filings.ts), so the
-// figures are the revenue panel's, regrouped by filing.
+// One revenue-bearing SEC filing at a citable URL: every period it reported, the value,
+// the tag or statement row it came from, and whether a later filing restated it, with the
+// EDGAR link on every line. Regrouped from the cached /api/revenue payload
+// (layers/companies/shared/utils/terminal-filings.ts).
 
 const figures = useFigures()
 
-// Inert for a dynamic route: server/routes/sitemap.xml.get.ts enumerates the
-// filings from the revenue payload instead. Declared anyway — the seo gate's
-// invariant is per-page.
+// Inert for a dynamic route (server/routes/sitemap.xml.get.ts enumerates the filings from
+// the revenue payload), but the seo gate checks every page.
 definePageMeta({
   publicPage: {
     changefreq: 'yearly',

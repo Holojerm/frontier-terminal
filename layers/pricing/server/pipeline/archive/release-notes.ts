@@ -1,15 +1,13 @@
-// The labs' own dated release notes, read to date the events the archived
-// price lists show (price-events.ts). A copy of a pricing page says a model
-// was listed by the day the Archive saw it; the lab's changelog says the day
-// it shipped. Each note keeps its date, the page it is on, a short title, the
-// model names it mentions and whether it talks about price, nothing more.
+// The labs' own dated release notes, read to date the events the archived price lists show
+// (price-events.ts): a pricing-page copy says a model was listed by the day the Archive saw it,
+// the changelog says the day it shipped. Each note keeps its date, page, a short title, the
+// model names it mentions and whether it talks about price or rate limits.
 //
-// Read from the pages as they stand now: OpenAI's changelog from October
-// 2023, Anthropic's platform release notes from May 2024, the Gemini API
-// release notes from December 2023 and DeepSeek's API news from May 2024.
-// xAI's release notes give a month, not a day, so only a note that states a
-// full date is kept. Mistral's changelog renders in the browser and is not
-// read. Terms: sources.yaml › archive_recipes › release-notes.
+// Read from the pages as they stand now: OpenAI's changelog from October 2023, Anthropic's
+// platform release notes from May 2024, the Gemini API release notes from December 2023 and
+// DeepSeek's API news from May 2024. xAI's notes give a month, not a day, so only a note that
+// states a full date is kept. Mistral's changelog renders in the browser and is not read.
+// Terms: sources.yaml › archive_recipes › release-notes.
 
 import type { ArchiveProvider } from './eras'
 

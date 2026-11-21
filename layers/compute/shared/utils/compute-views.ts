@@ -1,7 +1,5 @@
-// The payloads behind the compute panels read from recipes: Epoch AI's
-// data-center power (/api/datacenters) and the utilization reads
-// (/api/utilization: spot against on-demand, implied load, MLPerf rounds,
-// revenue per megawatt). Every figure carries the URL it was read from and when.
+// The payloads behind the recipe-read compute panels: /api/datacenters and
+// /api/utilization.
 
 import type { LabId, Prov, RecipeCitation } from '../../../core/shared/types/common'
 

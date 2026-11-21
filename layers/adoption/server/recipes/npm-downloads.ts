@@ -1,10 +1,8 @@
-// Daily downloads of an npm package, from the registry's public downloads
-// API. Every run re-reads the whole window the API answers in one request
-// (540 days to yesterday): npm fills in outage days weeks later, and a
-// shorter re-read kept them as zeros for good (Sep and Oct 2026). Downloads
-// count CI and coding agents as much as people, so read the trend, not the
-// level. npm's terms allow replicating registry data "using the Public APIs"
-// (docs/source-audit.md, 2026-11-04).
+// Daily downloads of an npm package from the registry's public downloads API. Every run
+// re-reads the whole window one request answers (540 days to yesterday): npm fills in
+// outage days weeks later, and a shorter re-read kept them as zeros for good. Downloads
+// count CI and coding agents as much as people, so read the trend, not the level. npm's
+// terms allow replicating registry data "using the Public APIs" (docs/source-audit.md).
 
 import type { CompanyId } from '#layers/core/shared/utils/companies'
 import type { Recipe } from '#layers/core/server/recipes/contract'

@@ -1,10 +1,8 @@
 <script setup lang="ts">
-// Package downloads per lab, the newest 28 days against the 28 before, from
-// npm and PyPI. A table rather than a chart: the registries count different
-// things (npm counts every tarball, pypistats drops mirrors) and the levels
-// are not comparable across packages, only each package's own change. That
-// raw change rides on growth across all of npm, so the adjusted change (npm
-// only, divided by the control basket) and each core SDK's share sit beside it.
+// Package downloads per lab, the newest 28 days against the 28 before (npm, PyPI). A table:
+// the registries count different things (npm every tarball, pypistats drops mirrors), so
+// only each package's own change compares. That change rides on all-of-npm growth, so the
+// adjusted change (npm only, ÷ the control basket) and each core SDK's share sit beside it.
 
 import type { AdoptionData } from '../../../shared/utils/adoption-views'
 

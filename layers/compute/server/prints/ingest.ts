@@ -1,24 +1,10 @@
-// One run of the print reader, hourly (tasks/prints/read.ts):
-//
-//   1. the feeds (PRINT_FEEDS): the exchange's monthly revenue feed (TWSE
-//      OpenAPI t187ap05_L, the newest month for every listed company) and
-//      Accton's own revenue page (40 months). A set of figures we haven't
-//      held is stored in R2 once, with its body; its rows go through storeObservations, so a month
-//      first appears the hour the feed first carries it.
-//   2. TSMC's revenue 6-Ks on EDGAR: each 6-K filed in the first twelve days
-//      of a month since 2015, read once, oldest first, at most TSMC_DOCS_PER_RUN
-//      a run. Oldest first keeps each vintage chain in release order, so the
-//      first backfill takes about a day of runs; after it, each new report is
-//      read within the hour. A 6-K that isn't a revenue report is kept as
-//      `other` and never fetched again; a failed one is retried after a day.
-//
-//   4. UN Comtrade (comtrade.ts): getDA once a run, then each Korea month that
-//      is new or whose lastReleased moved, oldest first, one preview call
-//      each, at most COMTRADE_PERIODS_PER_RUN a run, COMTRADE_SPACING_MS
-//      apart (the keyless API answers 429 to a second call within a second).
-//      The first backfill of 156 months takes about seven runs.
-//
-// Each step's failure is spooled as one ops event and the other step still runs.
+// One run of the print reader, hourly (tasks/prints/read.ts): the feeds
+// (PRINT_FEEDS: TWSE OpenAPI t187ap05_L and Accton's page), stored in R2 only when
+// their figures change; TSMC's revenue 6-Ks, oldest first so vintages stay in
+// release order, at most TSMC_DOCS_PER_RUN; Korea Customs Service's releases
+// (readKcs); and UN Comtrade months that are new or re-released,
+// COMTRADE_SPACING_MS apart (the keyless API 429s a second call within a second).
+// Each step's failure is spooled as one ops event and the other steps still run.
 
 import { and, eq, inArray } from 'drizzle-orm'
 

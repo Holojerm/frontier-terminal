@@ -6,23 +6,21 @@ import { laneFor } from '#server/registries/lanes'
 import type { PollDeps } from '#layers/core/server/pipeline/poll'
 import { runRefresh, type RefreshReport } from '#layers/core/server/pipeline/refresh'
 
-// The launch tripwire, every five minutes: fetch each lab's model catalog,
-// parse it in memory, and compare the parsed rows with the stored ones. Only
-// when they differ (a new model, a price, the vendor's recommendation
-// sentence) does it run a real poll of the catalogs and price lists.
+// The launch tripwire, every five minutes: fetch each lab's model catalog, parse
+// it in memory, and compare the parsed rows with the stored ones. Only when they
+// differ (a new model, a price, the vendor's recommendation sentence) does it run
+// a real poll of the catalogs and price lists.
 //
-// It compares parsed rows and not body hashes because the Google pricing page
-// is re-rendered with different bytes on every request, so a hash check
-// would trip every tick. Parsed rows change only when the catalog does.
+// It compares parsed rows, not body hashes, because the Google pricing page
+// re-renders with different bytes on every request.
 //
-// A quiet tick writes nothing: no snapshot, no source_runs row, no R2
-// object. The terminal's cache key is the newest source_runs stamp
-// (layers/core/server/utils/terminal-cache.ts), so a quiet tripwire leaves every cached
-// page valid, and a tripped one invalidates them as any poll does.
+// A quiet tick writes nothing (no snapshot, source_runs row or R2 object). The
+// cache key is the newest source_runs stamp
+// (layers/core/server/utils/terminal-cache.ts), so a quiet tripwire leaves every
+// cached page valid and a tripped one invalidates them as any poll does.
 //
-// News and RSS feeds were considered as the trigger and rejected: Anthropic
-// and xAI publish none, OpenAI's is 740 KB, and the catalog is the page the
-// terminal quotes anyway.
+// News and RSS feeds were rejected as the trigger: Anthropic and xAI publish
+// none, OpenAI's is 740 KB, and the catalog is the page the terminal quotes.
 
 /** The pages a launch lands on first: one catalog per lab (Google's and DeepSeek's are
  * their price lists; Alibaba's is its recommended-models page), plus Google's models
@@ -55,14 +53,12 @@ const TICK_MS = 5 * 60 * 1000
 const HALF_HOUR_MS = 30 * 60 * 1000
 
 /**
- * A source that tripped is not checked again for this long. If the poll it
- * triggered could not store the change (the page fails refresh's own
- * checks), the tripwire would otherwise re-run that poll every five minutes
- * and spool the same failure each time. The same holds after a deploy that
- * changes a parser: refresh does not re-parse an unchanged body, so the
- * stored rows lag the new parser until the page next changes, and the
- * tripwire sees a difference every tick. By the time this expires, the
- * half-hourly poll has had a turn at it.
+ * A source that tripped isn't checked again for this long. Otherwise, when the
+ * poll it triggered can't store the change (the page fails refresh's own
+ * checks), the tripwire would re-run that poll every five minutes and spool the
+ * same failure. The same holds after a parser change: refresh doesn't re-parse
+ * an unchanged body, so the stored rows lag the new parser and the tripwire sees
+ * a difference every tick. By expiry, the half-hourly poll has had a turn.
  */
 export const TRIPWIRE_COOLDOWN_SECONDS = 25 * 60
 export const cooldownKey = (sourceId: string) => `tripwire:cooldown:${sourceId}`

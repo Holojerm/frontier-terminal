@@ -1,11 +1,10 @@
-// The weekly thesis digest: every claim's status, what moved in the last
-// seven days, what the judge rated, which recipes failed, and what awaits
-// your confirmation. It builds understanding, not trades, so evidence against
-// the thesis leads: weaker claims first, then verdicts that count toward a
-// kill condition. Pure — it takes the GET /api/theses payload and the week's
-// rows — so the wording is tested without a database or a mail binding. Sent
-// every week, quiet weeks included: a digest that stops arriving is the
-// signal that something broke.
+// The weekly thesis digest: every claim's status, what moved in the last seven
+// days, what the judge rated, which recipes failed, and what awaits
+// confirmation. Evidence against the thesis leads: weaker claims first, then
+// verdicts that count toward a kill condition. Pure (it takes the GET
+// /api/theses payload and the week's rows), so the wording is tested without a
+// database or a mail binding. Sent every week, quiet weeks included, so a
+// digest that stops arriving signals a breakage.
 
 import type { ClaimStatusChange, RecipeRun } from '#server/db/schema'
 import { NPM_CONTROL_RECIPES } from '#layers/adoption/server/recipes/npm-downloads'

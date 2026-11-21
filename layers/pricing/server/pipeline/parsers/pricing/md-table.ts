@@ -12,10 +12,9 @@ const rowCells = (line: string): string[] =>
 
 const isSeparator = (cells: string[]): boolean => cells.every((c) => /^:?-{3,}:?$/.test(c))
 
-/** Cells of the first pipe table after the given heading line. Header row
- * included; the `---` separator row is dropped. Throws if the heading or a
- * table under it is missing — a vanished table must fail loudly, not emit
- * an empty (and silently wrong) snapshot. */
+/** Cells of the first pipe table after the given heading line, header row included and the
+ * `---` separator row dropped. Throws if the heading or its table is missing, so a vanished
+ * table fails loudly instead of emitting an empty (and silently wrong) snapshot. */
 export function tableAfterHeading(text: string, heading: string): string[][] {
   const lines = text.split('\n')
   const start = lines.findIndex((l) => l.trim() === heading)

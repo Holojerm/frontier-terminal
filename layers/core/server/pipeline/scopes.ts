@@ -2,37 +2,24 @@ import type { PollScope } from '../utils/contracts'
 import type { FetchSource } from '../utils/pipeline-sources'
 import { SCOPE_ENTRIES } from '#server/registries/scopes'
 
-// Which sources each cron tick polls. The policy is here; which sources ride
-// which tick is each domain's, in its ScopeEntry, assembled in order in
-// server/registries/scopes.ts › SCOPE_ENTRIES.
+// Which sources each cron tick polls. The policy is here; each domain's
+// ScopeEntry says which sources ride which tick (server/registries/scopes.ts ›
+// SCOPE_ENTRIES).
 //
-//   edgar   */30 * * * *   the feeds where latency is worth polling for: the
-//                          SEC feeds (the FTS tripwire, one submissions feed per
-//                          whitelisted CIK, company facts for each tagged
-//                          revenue filer) and the vendors' model catalogs. The
-//                          scope keeps its stored name 'edgar' (pollScopeEnum,
-//                          source_runs, /api/status).
-//   survey  0 */6 * * *    every include source but the careers and filings
-//                          lanes'. It re-checks the edgar tick's sources on
-//                          purpose: an unchanged re-fetch diffs to zero, and
-//                          the overlap means a stalled edgar tick goes covered,
-//                          not blind.
+//   edgar   */30 * * * *   SEC feeds and the vendors' model catalogs, where
+//                          latency matters ('edgar' is the stored name).
+//   survey  0 */6 * * *    every include source but careers' and filings'. It
+//                          re-checks edgar's sources, so a stalled edgar tick
+//                          stays covered.
 //   careers 17 */6 * * *   the careers feeds too big to share the survey.
-//   filings 47 */6 * * *   the registration filings: three ~14 MB
-//                          prospectuses by 2026-11-10, which put the survey
-//                          over its budget.
+//   filings 47 */6 * * *   the registration filings (~14 MB prospectuses).
 //
-// A Worker invocation has 128 MB, and a payload is held as bytes, as a string,
-// and again while it is hashed and archived. The 2026-11-04 18:00 survey was
-// killed for memory (exceededMemory, 4.9 s CPU) on google-careers' first tick,
-// and a kill loses every source the tick had not yet recorded. A source that
-// big runs on its own tick, so its footprint can never take the survey down.
-// Minute 17 is one no other trigger fires on (the five-minute crons land on
-// :15 and :20), and well after the survey has released the poll lock.
+// A Worker invocation has 128 MB, and a payload is held as bytes, as a string
+// and again while hashed and archived; google-careers' first tick killed the
+// survey for memory, losing every source not yet recorded. So big sources get
+// their own tick, on minutes no other trigger uses.
 //
-// Because 6h is a multiple of 30m the two are due at the same instant every
-// sixth hour. The survey is a superset, so at that instant edgar yields
-// (poll.ts) rather than racing it for the lock.
+// At the shared six-hourly instant edgar yields to the survey (poll.ts).
 
 /** One domain's share of a tick's sources, in the order the tick polls them. */
 export interface ScopeEntry {

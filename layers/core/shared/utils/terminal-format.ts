@@ -1,18 +1,16 @@
-// How a stored value READS. Every timestamp is ISO 8601 with a timezone and
-// every price is the vendor's number; nothing here reformats data at rest,
-// it only decides the reading form and keeps the exact value one hover away.
+// How a stored value reads. Every timestamp is ISO 8601 with a timezone and every
+// price is the vendor's number; nothing here reformats data at rest, and the
+// exact value stays one hover away.
 //
-// SSR note: a relative label needs a clock, and the server's clock is not
-// the reader's. Components pass `now = null` on the server and set it after
-// mount (layers/core/app/composables/useNow.ts), so first paint is the absolute form and
-// a hydration mismatch on a provenance stamp cannot happen.
+// SSR: the server's clock isn't the reader's, so components pass `now = null` on
+// the server and set it after mount (layers/core/app/composables/useNow.ts). First
+// paint is the absolute form, so a provenance stamp never mismatches on hydration.
 //
-// The reader's zone is the same story. Page HTML is cached and shared, so the
-// server always reads in UTC_STYLE, and the reader's StampStyle
-// (layers/core/app/composables/useReaderPrefs.ts) applies after hydration.
-// Only a reading with a time of day moves with the zone. A date printed alone
-// (a filing period, a UTC-day chart bucket, a first-seen day) is a UTC date
-// and prints as stored, so a day never shifts under a reader near midnight.
+// Likewise the zone: page HTML is cached and shared, so the server reads in
+// UTC_STYLE and the reader's StampStyle (layers/core/app/composables/useReaderPrefs.ts)
+// applies after hydration. Only a reading with a time of day moves with the zone.
+// A date printed alone (a filing period, a UTC-day chart bucket, a first-seen
+// day) is a UTC date and prints as stored, so a day never shifts near midnight.
 
 const MONTHS = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec']
 
@@ -24,7 +22,7 @@ const pad = (n: number) => String(n).padStart(2, '0')
 
 /** How an instant reads: which zone, which clock, which date form, and whether ages are relative. */
 export interface StampStyle {
-  /** An IANA zone. 'UTC' keeps the 'Z' suffix the site has always printed. */
+  /** An IANA zone. 'UTC' keeps the 'Z' suffix. */
   zone: string
   hour12: boolean
   /** '2026-08-25' instead of 'Aug 25'. */
@@ -110,7 +108,7 @@ function timeOf(w: Wall, style: StampStyle): string {
   return style.hour12 ? `${clock} UTC` : `${clock}Z`
 }
 
-/** 'Aug 25 23:08Z' — same-year absolute; adds the year when it differs. */
+/** 'Aug 25 23:08Z': same-year absolute; adds the year when it differs. */
 export function absoluteStamp(
   iso: string,
   now: number | null = null,
@@ -167,12 +165,9 @@ export function hostOf(url: string): string {
 }
 
 /**
- * $/Mtok as printed: '$2.00', '$0.075', '—' for absent.
- *
- * Two decimals is the default, but never at the cost of a digit the vendor
- * published: a flat toFixed(2) turns Gemini's $0.075 into "$0.07" — a price
- * quoted 7% below the source cited beside it. Values carrying more precision
- * keep it.
+ * $/Mtok as printed: '$2.00', '$0.075', '—' for absent. Two decimals by
+ * default, but never at the cost of a digit the vendor published: toFixed(2)
+ * would turn Gemini's $0.075 into "$0.07", 7% below the source cited beside it.
  */
 export function money(v: number | null): string {
   if (v === null) return '—'

@@ -1,20 +1,10 @@
-// ERCOT's large-load figures, read from its own monthly PDFs without the
-// network: where the reports are listed, and the sentences the figures are
-// read from. The fetch and the store are in ercot-large-loads.ts.
-//
-// Two series. The Monthly Operational Overview, posted with each Board of
-// Directors meeting's materials, has carried one sentence since April 2025:
-// "Of the 9,456 MW that have received Approval to Energize, ERCOT has observed
-// a non-simultaneous monthly peak consumption of 4,132 MW in September 2026".
-// The month it names is not always the report's own (the December 2025
-// overview states January 2026), and a later report can restate a month, so
-// each report is kept as a vintage. The ERCOT Monthly, on the presentations
-// page, states the size of the large-load interconnection queue in some
-// issues, each worded its own way; only the wordings below are read, and an
-// issue that states none is stored as read with no figure.
-//
-// The queue's breakdown on the overview's queue slide is a chart, not text,
-// and is not read.
+// ERCOT's large-load figures, parsed from its monthly PDFs (fetch and store are in
+// ercot-large-loads.ts). The Monthly Operational Overview carries one sentence
+// ("Of the 9,456 MW that have received Approval to Energize, ERCOT has observed a
+// non-simultaneous monthly peak consumption of 4,132 MW in September 2026"); the
+// month it names isn't always the report's, and later reports restate months, so
+// each report is a vintage. The ERCOT Monthly states the queue in varying words;
+// only the wordings below are read.
 
 export type ErcotSeries = 'operational-overview' | 'monthly'
 

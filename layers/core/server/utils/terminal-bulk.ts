@@ -1,40 +1,32 @@
-// The bulk feed: every export table as a gzipped CSV and as a Parquet file in
-// R2, rebuilt once a UTC day, with a manifest a client syncs from
+// The bulk feed: every export table as a gzipped CSV and a Parquet file in R2,
+// rebuilt once a UTC day, with a manifest a client syncs from
 // (GET /export/bulk/manifest.json).
 //
-// Two cuts per table. `recent` is what /export/<table>.csv serves by default
-// (the trailing LICENSE_WINDOW_DAYS, CC BY 4.0), and it's what an anonymous
-// caller's manifest lists. `full` is every row, labeled per row with its
-// license, the older ones PAID_LICENSE: only a licensee's key sees it. Both
-// cuts, in both formats, come from one pass over the table: `recent` is the
-// `full` rows dated inside the window, without the license column. A table
-// that isn't cut by age is the same in both, so it is written once and both
-// index entries name that one file.
+// Two cuts per table, both from one pass. `recent` is what /export/<table>.csv
+// serves by default (the trailing LICENSE_WINDOW_DAYS, CC BY 4.0) and what an
+// anonymous caller's manifest lists. `full` is every row, each labeled with its
+// license (older ones PAID_LICENSE), for a licensee's key only. A table not cut by
+// age is written once and both index entries name that file.
 //
-// The `full` files live in a second bucket that holds nothing else
-// (LICENSED_BUCKET), with a manifest of their own, and /export/bulk/full/*
-// serves them from there. A licensee's S3 credentials are scoped to that
-// bucket, read-only (scripts/bulk-grant.ts), so S3 access can never reach the
-// raw payloads or anything anonymous callers can't see either. A Worker
-// without the binding (local dev, tests) keeps them in the blob store.
+// The `full` files live in their own bucket (LICENSED_BUCKET) with their own
+// manifest, served by /export/bulk/full/*. A licensee's S3 credentials are
+// read-only and scoped to that bucket (scripts/bulk-grant.ts), so S3 access can't
+// reach raw payloads or anything else. A Worker without the binding (local dev,
+// tests) keeps them in the blob store.
 //
-// Built by a cron (tasks/bulk/build.ts), not on request. A request for a file
-// is then one R2 read and no D1 at all, however many licensees sync, and each
-// file has a SHA-256 and a build time a client can compare before it
-// downloads. The build is resumable. Each run builds the cuts not yet built
-// today, smallest first, until BUILD_BUDGET_MS is spent, and saves the index
-// after every cut, so nothing built is lost if the run is cut short. A cut
-// that failed today goes to the back of the queue, so one table that keeps
-// failing can't hold up the rest. It keeps yesterday's files meanwhile.
+// Built by a cron (tasks/bulk/build.ts), not on request, so a file request is one
+// R2 read and no D1, and each file has a SHA-256 and build time a client can
+// compare before downloading. The build is resumable: each run builds the cuts not
+// yet built today, smallest first, until BUILD_BUDGET_MS is spent, saving the
+// index after every cut. A cut that failed today goes to the back, so one failing
+// table can't hold up the rest; yesterday's files stay meanwhile.
 //
-// A schema release only rebuilds the tables it changes (isCurrent). The rest
-// keep today's files, which state the schema version they were built under.
+// A schema release rebuilds only the tables it changes (isCurrent).
 //
-// Sizes, checked 2026-11-04 on the production feed: the biggest table is
-// snapshots at ~61k rows, 2.2 MB gzipped and about as much again as Parquet.
-// Both files are assembled in memory before their puts; the Parquet writer
-// holds one row group of decoded rows at a time (terminal-parquet.ts). A table
-// that ever outgrows that needs R2's multipart upload here.
+// Both files are assembled in memory before their puts (the biggest table,
+// snapshots, was ~61k rows and 2.2 MB gzipped on 2026-11-04); the Parquet writer
+// holds one row group at a time (terminal-parquet.ts). A table that outgrows that
+// needs R2's multipart upload here.
 
 import { ARCHIVED_EXPORTS, EXPORT_TABLES } from '#server/registries/export-tables'
 
@@ -53,17 +45,17 @@ export const BULK_INDEX_PATH = 'bulk/index.json'
 
 /**
  * Wall time a run may spend starting cuts. An hourly cron may run for 15
- * minutes, and the build waits on D1, not the CPU: on 2026-11-05 a run spent
- * 672 ms of CPU in 23.6 s of wall time. The old 20 s budget let one run build
- * about one table. The margin covers the cut in progress when this runs out.
+ * minutes, and the build waits on D1, not the CPU (a measured run spent 672 ms
+ * of CPU in 23.6 s of wall time). The margin covers the cut in progress when
+ * this runs out.
  */
 export const BUILD_BUDGET_MS = 8 * 60_000
 
 /**
- * D1 queries a run may plan for. D1 refuses a Worker invocation's queries past
- * its per-invocation limit (1,000 on Workers Paid), so a run stops starting
- * cuts before it gets there and leaves the rest to the next. On 2026-11-05 a
- * full rebuild needed about 400.
+ * D1 queries a run may plan for. D1 refuses an invocation's queries past its
+ * per-invocation limit (1,000 on Workers Paid), so a run stops starting cuts
+ * before then and leaves the rest to the next. A full rebuild needed about 400
+ * on 2026-11-05.
  */
 export const D1_READ_BUDGET = 800
 
@@ -363,10 +355,9 @@ export function isCurrent(
 }
 
 /**
- * The order a run builds its tables in: those that haven't failed today
- * first, then by how many rows they had last time, smallest (or never built)
- * first. So the cheap tables are done early, and a table that fails every
- * time is tried once, last, instead of first in every run.
+ * Build order: tables that haven't failed today first, then by last run's row
+ * count, smallest (or never built) first. Cheap tables finish early, and a
+ * table that always fails is tried once, last.
  */
 export function buildOrder(index: BulkIndex, tables: readonly string[], today: string): string[] {
   const failedToday = (table: string) => index.failures?.[table]?.at.slice(0, 10) === today

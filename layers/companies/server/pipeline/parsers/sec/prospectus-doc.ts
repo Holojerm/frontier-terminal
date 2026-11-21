@@ -1,12 +1,9 @@
 import { cellText, decodeEntities, tableRows } from './filing-index'
 
-// Reading a registration document's prose, not just its tables. EDGAR's
-// rendering of a Workiva prospectus positions every printed line absolutely:
-// each line is its own `<div style="…line-height:…">` holding `<font>` runs,
-// so a paragraph is a run of line divs and a heading is a run whose every
-// font is bold italic. This module turns the document into those lines, with
-// their byte offsets, so a parser can find an anchor sentence in the text and
-// then read the `<table>` that follows it in the bytes.
+// A registration document's prose as lines. EDGAR renders a Workiva prospectus as
+// one absolutely positioned `<div style="…line-height:…">` of `<font>` runs per
+// printed line. Lines keep byte offsets, so a parser can find an anchor sentence
+// and then read the `<table>` after it.
 
 export interface DocLine {
   /** Byte offset of the line's `<div>`. */
@@ -50,7 +47,6 @@ function fontOf(attributes: string, outer: Font): Font {
   }
 }
 
-/** Every printed line in document order. */
 export function docLines(html: string): DocLine[] {
   const lines: DocLine[] = []
   for (const m of html.matchAll(LINE)) {

@@ -1,21 +1,16 @@
-// Each production deploy's smoke-test result, read from GitHub. The
-// post-deploy-smoke workflow (.github/workflows/post-deploy-smoke.yml) runs on
-// every push to main and fails when production doesn't serve that commit or
-// serves it broken. The repo is public, so its runs are readable without a
-// token: no secret, and no write path into the site.
+// Each production deploy's smoke-test result, read from GitHub. The post-deploy-smoke
+// workflow (.github/workflows/post-deploy-smoke.yml) runs on every push to main and fails
+// when production doesn't serve that commit or serves it broken. The repo is public, so no
+// secret is needed and there is no write path into the site.
 //
-// One read returns the last 100 runs, so a read GitHub refuses loses nothing:
-// the next good read fills the gap. The read runs hourly, authenticated by
-// NUXT_GITHUB_TOKEN (5,000 an hour, per token; any token that can read public
-// repositories will do). Without one, refusals are the normal case: the
-// unauthenticated REST limit is 60 an hour per IP, Workers share egress IPs
-// with every other tenant, and the first production read (2026-11-05 06:41)
-// got a 403 with the hour's budget already spent. So a 403 or 429 parks the
-// read until GitHub's reset, and the stored ETag is sent (a 304 doesn't count
-// against the limit).
+// One read returns the last 100 runs, so a refused read loses nothing. NUXT_GITHUB_TOKEN
+// (any token that can read public repositories) allows 5,000 reads an hour. Without one,
+// refusals are normal: the unauthenticated limit is 60 an hour per IP, and Workers share
+// egress IPs with every other tenant. So a 403 or 429 parks the read until GitHub's reset,
+// and the stored ETag is sent (a 304 doesn't count against the limit).
 //
-// A newly failed run also spools deploy_smoke_failed: GitHub mails a failed
-// run to whoever triggered it, and under the merge queue that is a bot.
+// A newly failed run also spools deploy_smoke_failed: GitHub mails a failed run to whoever
+// triggered it, and under the merge queue that is a bot.
 
 import { inArray, sql } from 'drizzle-orm'
 

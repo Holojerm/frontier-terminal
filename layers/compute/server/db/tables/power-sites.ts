@@ -4,15 +4,10 @@ import { provenance } from '../../../../core/server/db/tables/columns'
 // ─────────────────────────────────────────────
 // Who powers the lab sites (layers/compute/server/power/, /api/power-sites)
 // ─────────────────────────────────────────────
-// One row per company a public page ties to one of Epoch AI's lab sites, and
-// one per site whose grid a page names (role `grid`). `basis` is hand (read by
-// a person into curated/power-sites.json and copied here) or judge (read by
-// the judge from an SEC document the filings lane found and stored, and
-// checked word for word by the Worker). `fetched_at` is the last time the page
-// was fetched and the quote found on it. A row from an SEC filing ends when the
-// filer's next document of the same periodic form, naming the site, no longer
-// has its quote; a row from any other page is re-checked weekly
-// (power/verify.ts) and spools an ops event when its quote is gone.
+// One row per company a public page ties to an Epoch lab site, and per site whose
+// grid a page names (role `grid`). `basis` is hand or judge. A row from an SEC
+// filing ends when the filer's next same-form document drops its quote; others are
+// re-checked weekly (power/verify.ts).
 export const powerSiteTies = sqliteTable(
   'power_site_ties',
   {
@@ -45,11 +40,9 @@ export const powerSiteTies = sqliteTable(
   (t) => [index('power_site_ties_site_idx').on(t.site, t.ended_at)],
 )
 
-// One row per SEC document EDGAR full-text search found naming a lab site, per
-// site it was found for (power/ingest.ts). A document is fetched once: a filing
-// does not change after it is accepted. `excerpts` counts the runs of its text
-// around the site's name that speak of power; a document with any is offered
-// to the judge until `judged_at` is set (power/review.ts).
+// One row per SEC document full-text search found naming a lab site, per site
+// (power/ingest.ts). Fetched once; one with power `excerpts` is offered to the
+// judge until `judged_at` is set (power/review.ts).
 export const powerSiteDocuments = sqliteTable(
   'power_site_documents',
   {

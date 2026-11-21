@@ -1,15 +1,12 @@
 import { RATE_LIMITED_DETAIL } from '../utils/pipeline-fetch'
 
-// Backing off a source that answers 429. The fetcher no longer retries a 429
-// in-tick (fetch.ts); this file decides what the refresh does instead:
+// Backing off a source that answers 429 (the fetcher does not retry one in-tick).
 //
-//   cooldown  after a 429 the source is not fetched again until the cooldown
-//             passes (a Retry-After longer than the default extends it). A
-//             cooling tick writes no run and no event: nothing was attempted.
-//   alert     a 429 run is still recorded as 'failed' (the coverage panel stays
-//             honest) but raises `source_failed` only once the 429s have run
-//             unbroken for RATE_LIMIT_ALERT_AFTER_MS, then again each further
-//             day. One good fetch ends the streak.
+//   cooldown  the source is not fetched again until the cooldown passes (longer
+//             with a longer Retry-After); a cooling tick writes no run.
+//   alert     the 429 run is recorded as 'failed', but raises `source_failed`
+//             only once 429s have run unbroken for RATE_LIMIT_ALERT_AFTER_MS,
+//             then once a day. One good fetch ends the streak.
 //
 // Pure: callers pass the run history and the clock.
 

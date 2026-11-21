@@ -1,13 +1,7 @@
-// EIA-930 daily demand from EIA's API v2 (daily-region-data), the primary
-// read when NUXT_EIA_API_KEY is set. It is the same series as the six-month
-// files (eia930.ts): EIA's daily value for an authority on its own local
-// clock equals the file's adjusted hours summed by Data Date, checked for all
-// eight authorities on 2026-11-21. The API starts on 2019-01-01, a day ahead
-// of the files at the newest end; 2018 still comes from the files.
-//
-// The key goes in the X-Api-Key header, never the URL, so the stored
-// source_url and the R2 copy of each response carry none. A response that
-// somehow contains it is refused before it is stored.
+// EIA-930 daily demand from EIA's API v2 (daily-region-data), the primary read
+// when NUXT_EIA_API_KEY is set; the same series as the six-month files (eia930.ts),
+// from 2019-01-01. The key goes in the X-Api-Key header, never the URL, so stored
+// source_url and R2 copies carry none; a response containing it is refused.
 
 import type { GridDay } from './eia930'
 

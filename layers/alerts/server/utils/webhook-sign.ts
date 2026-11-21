@@ -1,13 +1,11 @@
-// Webhook secrets and signatures. No database, so
-// scripts/webhooks.ts (plain bun) and the Worker sign the same way.
+// Webhook secrets and signatures. No database, so scripts/webhooks.ts (plain bun) and the
+// Worker sign the same way.
 //
-// HMAC needs the raw secret at signing time, so storing only a hash of it
-// can't work. Instead of storing it encrypted, it is derived: the secret for
-// webhook W is HMAC-SHA256(NUXT_WEBHOOK_SIGNING_KEY, "ftwh-secret:v1:" + W).
-// D1 holds no secret material at all, only the secret's SHA-256 as a
-// fingerprint. Whoever holds the Worker secret can recompute every webhook
-// secret, exactly as with encryption under it; rotating it invalidates them
-// all, which signing_key_id makes loud (see the webhooks table).
+// HMAC needs the raw secret at signing time, so a stored hash can't work. The secret is
+// derived instead: for webhook W it is HMAC-SHA256(NUXT_WEBHOOK_SIGNING_KEY,
+// "ftwh-secret:v1:" + W). D1 holds only the secret's SHA-256 as a fingerprint. Rotating the
+// Worker secret invalidates every webhook secret, which signing_key_id makes loud (see the
+// webhooks table).
 
 import {
   WEBHOOK_HEADERS,

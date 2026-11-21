@@ -1,7 +1,6 @@
 <script setup lang="ts">
-// The digest signup's one line in a page header. The form itself sits after
-// the page's data: above it, it pushed the alerts table a third of a phone
-// screen down, and its button outranked the content.
+// The digest signup's one line in a page header. The form itself sits after the page's
+// data, so it doesn't push the content down or outrank it.
 
 const enabled = useSubscribeEnabled()
 </script>

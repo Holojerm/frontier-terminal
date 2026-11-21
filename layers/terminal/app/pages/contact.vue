@@ -1,9 +1,7 @@
 <script setup lang="ts">
-// How to reach the people behind the terminal: corrections first, then
-// everything else. Nothing here is for sale. The data is free to read, the
-// last 90 days are CC BY, and the full history is CC BY-NC
-// (shared/utils/license.ts). Commercial licensing is paused, so this page
-// offers none.
+// How to reach the people behind the terminal: corrections first, then everything else.
+// The data is free to read, the last 90 days are CC BY, and the full history is CC BY-NC
+// (shared/utils/license.ts). This page offers no commercial licensing.
 
 definePageMeta({
   publicPage: {

@@ -1,14 +1,11 @@
-// The latency probes' fixed workload: one model per lab, one prompt, one
-// output cap, once an hour (tasks/probes/latency.ts). Everything a probe
-// sends is in this file but the model, which for a lab's flagship cell is
-// chosen on every run (probes/resolve.ts), so the probes follow a new
-// flagship without an edit here. A change to any of it is a visible series
-// break: each row stores the model and route it used.
+// The latency probes' fixed workload: one model per lab, one prompt, one output cap,
+// hourly (tasks/probes/latency.ts). A flagship cell's model is chosen on every run
+// (probes/resolve.ts), so the probes follow a new flagship without an edit here. Any other
+// change here is a visible series break: each row stores the model and route it used.
 //
-// Route: OpenRouter, pinned to the lab's own endpoint with fallbacks off
-// (owner's decision, 2026-11-19). One key the Worker already has, at the cost
-// of one hop in front of every lab and no reading for a lab OpenRouter serves
-// only through third parties.
+// Route: OpenRouter, pinned to the lab's own endpoint with fallbacks off. One key the
+// Worker already has, at the cost of one hop in front of every lab and no reading for a
+// lab OpenRouter serves only through third parties.
 
 export const PROBE_ROUTE = 'openrouter'
 export const PROBE_ENDPOINT = 'https://openrouter.ai/api/v1/chat/completions'
@@ -111,7 +108,6 @@ export interface DerivedProbeTarget extends ProbeTargetBase {
 export interface PinnedProbeTarget extends ProbeTargetBase {
   /** OpenRouter's model id. */
   model: string
-  /** Why this model. */
   note: string
   /** USD per million tokens on OpenRouter when the target was set. */
   list_price: ProbePrice
@@ -138,9 +134,8 @@ export interface ProbeTarget extends ProbeTargetBase {
 }
 
 /**
- * Each probed lab's workload. Every target today is a flagship cell, so its
- * model is derived; a pinned target (note set, model and list_price given)
- * is for a lab whose docs name no flagship.
+ * Each probed lab's workload. A flagship cell's model is derived; a pinned target (note,
+ * model and list_price set) is for a lab whose docs name no flagship.
  */
 export const PROBE_TARGETS: readonly ProbeTargetSpec[] = [
   { lab: 'openai', provider: 'openai', effort: 'low', note: null, market: 'americas' },
@@ -177,16 +172,16 @@ export const PROBE_GAPS: readonly ProbeGap[] = [
   {
     lab: 'meta',
     model: 'meta/muse-wonder',
-    // Dropped 2026-11-21 (owner's decision, #600): at effort `minimal` and a cap of 480, about one
-    // probe in six was 478 reasoning tokens and no answer. More room would take Meta past $10 a month.
+    // At effort `minimal` and a cap of 480, about one probe in six was 478 reasoning tokens
+    // and no answer. More room would take Meta past $10 a month.
     reason:
       'Meta’s own endpoint spends the output cap on reasoning often enough, even at its lowest reasoning setting, that about one probe in six gets no answer to time. We take no reading.',
   },
   {
     lab: 'mistral',
     model: 'mistralai/mistral-large-4-0',
-    // Dropped 2026-11-20 (owner's decision, #486): at effort `low` on mistral/zdr the reply was
-    // cap − 1 reasoning tokens at a cap of 480 and again at 3,160, so more room never bought an answer.
+    // At effort `low` on mistral/zdr the reply was cap − 1 reasoning tokens at a cap of 480
+    // and again at 3,160, so more room never bought an answer.
     reason:
       'Mistral’s own endpoint spends the whole output cap on reasoning, even at its lowest reasoning setting and a cap of 3,160 tokens, so a probe never gets an answer to time. We take no reading.',
   },

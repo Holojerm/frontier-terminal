@@ -13,23 +13,12 @@ import { registrationTarget } from './parsers/sec/filing-index'
 import { riskFactorChanges, type RiskFactorChange } from './parsers/sec/prospectus-risk-factors'
 import type { PipelineDb } from '#layers/core/server/utils/pipeline-store'
 
-// The prospectus-floor rule: a lab's new registration filing, once its
-// document is parsed, always alerts with what the filing says — the period
-// its financials now run to, revenue for it, and the price range or price on
-// its cover — set against the lab's previous registration filing. No model in
-// the loop.
-//
-// The s1-floor alert fires the moment the filing is listed and can only say
-// that it exists. This one follows within two edgar ticks (the filing index,
-// then the document) and carries the substance — including which risk-factor
-// headings an amendment added or removed against the filing before it. When
-// the headings arrive on their own (a document read again after the lane
-// learned to read them), they alert on their own, and only if a heading was
-// added or removed: a reworded heading is recorded, not announced.
-//
-// A filing older than FRESH_DAYS never alerts: a registration source derived
-// for a filing the store had not seen (a new derived template, a newly
-// resolved lab's back catalogue) is history, not news.
+// The prospectus-floor rule: once a lab's new registration filing is parsed, it
+// alerts with its latest period, revenue and cover price or range, against the
+// lab's previous registration filing. The s1-floor alert can only say the filing
+// exists; this one carries the substance. Headings that arrive on their own alert
+// only if one was added or removed. A filing older than FRESH_DAYS never alerts:
+// a newly derived back catalogue is history, not news.
 
 export const PROSPECTUS_FLOOR_RULE = 'prospectus-floor' as const
 export const FRESH_DAYS = 14

@@ -1,11 +1,10 @@
-// Surfaces gate — run with `bun run surfaces:check`, wired into `bun run ci` and `ci:fast`.
+// Surfaces gate: `bun run surfaces:check`, in `bun run ci` and `ci:fast`.
 //
-// A dataset added to the store has to reach every place a reader looks for it:
-// a page, the lab page and tear sheet when it is per lab, an MCP tool, the bulk
-// export, and an alert axis. Datasets added in November reached their own page
-// and nothing else, and no gate noticed. This one derives the matrix from the
-// code (scripts/lib/surfaces.ts says how each surface is read), and fails on a
-// gap that surfaces.waivers.ts does not name, or on a waiver whose gap is gone.
+// A dataset in the store has to reach every place a reader looks for it: a
+// page, the lab page and tear sheet when it is per lab, an MCP tool, the bulk
+// export, and an alert axis. This derives the matrix from the code
+// (scripts/lib/surfaces.ts says how each surface is read) and fails on a gap
+// that surfaces.waivers.ts does not name, or on a waiver whose gap is gone.
 //
 //   bun run surfaces:check            # the gate
 //   bun run surfaces:check --matrix   # print every route and table, gaps marked

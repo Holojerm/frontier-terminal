@@ -1,18 +1,9 @@
-// Which securities carry each tracked lab and filer: the table a fund joins
-// this data to its own book with. Six of the nine labs are private, so most
-// rows say how a lab reaches a listed security (a parent, a disclosed
-// investor) or that none does.
-//
-// Every CIK is one sources.yaml already holds (cik_whitelist, recipe_sources,
-// or a filer resolved from its own S-1), and every symbol and exchange is the
-// one EDGAR's submissions feed lists for that CIK (fixtures/sec/).
-// layers/companies/test/terminal-entities.test.ts fails when a row stops
-// matching either. Nothing here is typed in from memory: a filer the terminal
-// reads no filing from has no row.
-//
-// A parent or investor row cites the filing that discloses the relationship
-// (disclosed_in), and a listed row carries the MIC and composite FIGI that
-// entity_identifiers (terminal-identifiers.ts) verified for its symbol.
+// Which securities carry each tracked lab and filer: the table a fund joins this
+// data to its book with. Most labs are private, so most rows say how a lab reaches
+// a listed security (a parent, a disclosed investor) or that none does. Every CIK
+// is one sources.yaml holds and every symbol one EDGAR's submissions feed lists
+// for it (fixtures/sec/); layers/companies/test/terminal-entities.test.ts fails on
+// drift. A parent or investor row cites its disclosing filing (disclosed_in).
 
 export const ENTITY_SECURITY_COLUMNS = [
   'entity',

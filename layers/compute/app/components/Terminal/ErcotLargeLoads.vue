@@ -1,9 +1,7 @@
 <script setup lang="ts">
-// ERCOT's own count of large loads (mostly data centers): what it has
-// approved to energize and the sum of each approved load's own monthly
-// peak, per month from the newest report that states it, and the size of
-// its large-load queue wherever a report states one. Each row cites the
-// report and the sentence it is read from.
+// ERCOT's own count of large loads: approved to energize and the sum of each
+// approved load's monthly peak, per month from the newest report that states it,
+// and the queue size where stated. Each row cites its report and sentence.
 
 import { type ErcotLargeLoads } from '../../../shared/utils/grid-load'
 

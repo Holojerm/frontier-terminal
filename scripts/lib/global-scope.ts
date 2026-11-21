@@ -5,11 +5,10 @@
 // does I/O (Cloudflare error 10021, "Disallowed operation called within global
 // scope"). Clocks are not refused but read the Unix epoch there, so a
 // timestamp taken at load is silently wrong. Dev, vitest and the build all run
-// the same code happily; only the deploy says no.
+// such code fine; only the deploy fails.
 //
-// Uses the TypeScript parser already installed for vue-tsc. It cannot load in
-// workerd, so the gate proves itself on SELF_TEST before scanning, on every run,
-// instead of in vitest.
+// Uses the TypeScript parser installed for vue-tsc. It cannot load in workerd,
+// so the gate runs SELF_TEST before every scan instead of a vitest suite.
 
 import ts from 'typescript'
 

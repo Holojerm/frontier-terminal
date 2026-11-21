@@ -1,8 +1,7 @@
 <script setup lang="ts">
-// One readout cell inline, for a table: the figure (linked to the lab page
-// section that carries it in full), its delta, and a sub-line — or the
-// stated gap. The figure's title names the source host and fetch instant, so
-// it is one hover from where it came from; the lab page cites it in full.
+// One readout cell inline, for a table: the figure (linked to the lab page section that
+// carries it in full), its delta and a sub-line, or the stated gap. The figure's title
+// names the source host and fetch instant, so it is one hover from where it came from.
 
 import type { ReadoutCell } from '../../utils/readout'
 

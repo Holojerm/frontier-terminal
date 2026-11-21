@@ -1,7 +1,5 @@
-// What a lab's own registration filings print beyond revenue — the payload of
-// GET /api/prospectus and the MCP tool get_prospectus — and the formatting the
-// panel and the filing page share. Every figure is the filing's own, with the
-// filing it came from and the URL and fetch time of the document it was read off.
+// The /api/prospectus and get_prospectus payload, and the formatting the panel and
+// the filing page share.
 
 import { grouped, trimmed } from '../../../core/shared/utils/terminal-format'
 import type { LabId, Prov, SourceRef } from '../../../core/shared/types/common'
@@ -128,7 +126,7 @@ export interface ProspectusData {
   rule: string
 }
 
-/** '33,242' / '−1,260' — a dollar figure in millions as a statement prints it, sign visible. */
+/** '33,242' / '−1,260': a dollar figure in millions as a statement prints it, sign visible. */
 export function millions(n: number): string {
   const m = Math.round(n / 1e5) / 10
   return grouped(m, Number.isInteger(m) ? 0 : 1)

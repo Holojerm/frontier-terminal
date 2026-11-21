@@ -1,10 +1,8 @@
-// Detection latency for SEC filings: for each filing a rule alert cites, when
-// EDGAR accepted it and when we alerted. The acceptance time is read back from
-// bytes the poll already stored in R2: the filer's submissions JSON
-// (acceptanceDateTime, UTC) or, for a filer without one yet, the filing's
-// index page ("Accepted", Eastern time). No new SEC fetch, so the history goes
-// back as far as the stored payloads do, and a filing that no stored payload
-// lists is recorded as missing rather than guessed.
+// Detection latency for SEC filings: for each filing a rule alert cites, when EDGAR
+// accepted it and when we alerted. Acceptance is read back from bytes the poll already
+// stored in R2: the filer's submissions JSON (acceptanceDateTime, UTC) or, for a filer
+// without one yet, the filing's index page ("Accepted", Eastern time). No new SEC fetch; a
+// filing no stored payload lists is recorded as missing, never guessed.
 
 import { and, eq, gte, inArray, like, max, or } from 'drizzle-orm'
 

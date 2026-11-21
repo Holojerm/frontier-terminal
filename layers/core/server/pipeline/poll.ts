@@ -8,30 +8,25 @@ import { isSurveyInstant, isUntilParsedSource, sourceIdsForScope } from './scope
 import { includeSources } from '../utils/pipeline-sources'
 import { sourcesWithGoodRun } from '../utils/pipeline-store'
 
-// What a poll task does, minus the bindings: decide whether this tick is
-// ours, take the lock, resolve the scope, run the refresh, say one line about
-// it. The poll tasks (each domain's server/tasks/poll/) call this so they are
-// thin shims over one behaviour.
-//
-// At the shared six-hourly instant edgar yields without touching the lock:
-// the survey re-fetches the edgar tick's sources (scopes.ts), so nothing is lost, and the
-// alternative — whichever wins the lock runs — let the survey lose twice in
-// a row in production and left pricing and hiring twelve hours stale.
+// What a poll task does, minus the bindings: claim the tick, take the lock,
+// resolve the scope, run the refresh, log one line. At the shared six-hourly
+// instant edgar yields without touching the lock, since the survey re-fetches
+// its sources (scopes.ts); letting whichever won the lock run left pricing and
+// hiring twelve hours stale.
 
 export interface PollDeps extends Omit<RefreshDeps, 'db'> {
   db: RefreshDeps['db']
   lock: LockStore
-  /** Overrides SURVEY_LOCK_RETRY. Tests only — production uses the constant. */
+  /** Overrides SURVEY_LOCK_RETRY, for tests only. */
   surveyLockRetry?: LockRetry
 }
 
 /**
  * How long the survey keeps trying for the lock: 5 × 15 s, well inside one
  * cron invocation. Covers KV's eventual consistency and a stale key from a
- * crashed tick (at most the 10-min TTL, usually far less). Edgar never
- * retries — at the shared instant it has already yielded, and otherwise its
- * next tick is thirty minutes away. The careers and filings lanes are
- * six-hourly too, so they retry the same way.
+ * crashed tick (at most the 10-min TTL). Edgar never retries: at the shared
+ * instant it has already yielded, and otherwise its next tick is thirty
+ * minutes away. The six-hourly careers and filings lanes retry the same way.
  */
 export const SURVEY_LOCK_RETRY: LockRetry = { retries: 5, delayMs: 15_000 }
 
@@ -47,7 +42,7 @@ export async function runPoll(scope: PollScope, deps: PollDeps): Promise<PollOut
   const { lock, surveyLockRetry, ...refreshDeps } = deps
   const now = (deps.now ?? (() => new Date()))()
 
-  // One line per tick, always — a quiet poll is still evidence the cron fired.
+  // One line per tick, always: a quiet poll is still evidence the cron fired.
   if (scope === 'edgar' && isSurveyInstant(now)) {
     console.warn(JSON.stringify({ kind: 'poll_yielded', scope, to: 'survey' }))
     return { status: 'yielded', to: 'survey' }
@@ -82,7 +77,7 @@ export async function runPoll(scope: PollScope, deps: PollDeps): Promise<PollOut
 
   if (outcome.skipped) {
     console.warn(JSON.stringify({ kind: 'poll_skipped', scope, heldBy: outcome.heldBy }))
-    // A skipped survey is six hours of stale pricing and hiring — the owner
+    // A skipped survey is six hours of stale pricing and hiring, so the owner
     // hears about it. A skipped edgar tick is covered thirty minutes later.
     if (SIX_HOURLY.has(scope)) {
       await recordOpsEvent(deps.db, {

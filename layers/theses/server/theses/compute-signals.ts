@@ -1,9 +1,9 @@
-// The Compute thesis's measured signals. Two read today's state and cannot be
-// recomputed for a past day — the flagship prices (the class map is code,
-// not a stored history) and the token-price-to-GPU ratio built on them — so
-// each run writes only its newest reading. The other two rebuild their whole
-// history from stored rows, as the Anthropic thesis's do. The arithmetic is
-// pure and exported for layers/theses/test/theses-compute.test.ts.
+// The Compute thesis's measured signals. Two read today's state and can't be
+// recomputed for a past day (the flagship prices, since the class map is code
+// rather than stored history, and the token-price-to-GPU ratio built on them),
+// so each run writes only its newest reading. The other two rebuild their whole
+// history from stored rows. The arithmetic is pure and exported for
+// layers/theses/test/theses-compute.test.ts.
 
 import { and, desc, eq, lt } from 'drizzle-orm'
 
@@ -123,7 +123,7 @@ async function previousDetail(
   return prev ? (JSON.parse(prev.detail) as Record<string, unknown>) : null
 }
 
-/** Labs whose mapped flagship differs from the claim's previous reading — a step to explain, not a revision. */
+/** Labs whose mapped flagship differs from the claim's previous reading: a step to explain, not a revision. */
 function flagshipChanges(
   before: PreviousFlagships,
   state: FlagshipState,

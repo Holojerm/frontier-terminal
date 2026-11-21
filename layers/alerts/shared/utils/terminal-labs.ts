@@ -1,8 +1,6 @@
-// How an alert reads in one table row: which lab, which axis, and the one
-// number that moved. An alert row stores none of these — it stores a
-// headline and the change ids it cites — so all three are read off the
-// cited rows, never off the prose. An alert whose rows did not resolve
-// reads as "—" on every column rather than as a guess.
+// How an alert reads in one table row: which lab, which axis, and the one number that
+// moved. An alert row stores only a headline and the change ids it cites, so all three are
+// read off the cited rows, never the prose; rows that did not resolve read as "—".
 
 import { pctChange, pctLabel, readableEdgarNames } from '../../../core/shared/utils/terminal-format'
 import type { AlertView, ChangeView } from '../types/alerts'

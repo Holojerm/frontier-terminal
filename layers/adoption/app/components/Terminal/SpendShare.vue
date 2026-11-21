@@ -1,10 +1,8 @@
 <script setup lang="ts">
-// Implied spend share: the demand-share tokens joined to each vendor's
-// list prices. Rendered as a range per lab (every token at the input price
-// to every token at the output price), beside the token share it was
-// derived from, with the join's coverage on every row and the labs it
-// could not price named rather than shown at zero. Third-party channel,
-// list price, disclosed as both.
+// Implied spend share: demand-share tokens joined to each vendor's list prices, as a range
+// per lab (all tokens at input price to all at output price) beside the token share, with
+// the join's coverage per row and unpriced labs named rather than shown at zero.
+// Third-party channel, list price, disclosed as both.
 
 import type { SpendData } from '../../../shared/types/spend'
 
@@ -18,10 +16,8 @@ const props = defineProps<{
   compact?: boolean
 }>()
 
-// A range reads min–max. Dollars are ordered by construction (input price ≤
-// output price); a share is not — a lab with cheap output can hold a larger
-// slice at the input bound than at the output bound — so both ends are
-// sorted before printing.
+// Dollars are ordered by construction (input ≤ output price); a share is not (a lab with
+// cheap output can hold a larger slice at the input bound), so both ends are sorted.
 const range = (a: number | null, b: number | null, f: (n: number) => string) => {
   if (a === null || b === null) return '—'
   const [low, high] = a <= b ? [a, b] : [b, a]

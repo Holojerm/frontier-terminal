@@ -58,18 +58,17 @@ export type PriceRow = z.infer<typeof PriceRow>
 // Vendor .md parsers (openai / anthropic / xai) — deterministic.
 export const VendorMdPricingOutput = z.strictObject({ rows: z.array(PriceRow) })
 
-// Google pricing — the one agent-parsed source. Same row shape; provider
+// Google pricing: the one agent-parsed source. Same row shape; provider
 // pinned. This schema IS the validation gate agent output must pass.
 export const GooglePricingOutput = z.strictObject({
   rows: z.array(PriceRow.extend({ provider: z.literal('google') })),
 })
 
-// What the model is actually ASKED for: the row minus its provenance.
-// source_url/fetched_at are never the model's to supply — code stamps them
-// from the fetch record, the same rule the judge lane follows for
-// id/rule/created_at/provenance. A field code can determine is a field the
-// model cannot get wrong, cannot be talked into changing by page content,
-// and does not spend output tokens writing.
+// What the model is ASKED for: the row minus its provenance. Code stamps
+// source_url/fetched_at from the fetch record, as the judge lane does for
+// id/rule/created_at/provenance: a field code sets is one the model cannot get
+// wrong, cannot be talked into changing by page content, and spends no output
+// tokens on.
 export const GooglePricingAgentOutput = z.strictObject({
   rows: z.array(
     PriceRow.omit({ source_url: true, fetched_at: true }).extend({
@@ -117,15 +116,12 @@ export type FilerRow = z.infer<typeof FilerRow>
 
 // ---- Revenue (XBRL company facts) -----------------------------------------
 
-// One duration fact from data.sec.gov/api/xbrl/companyfacts, or from one
-// filing's XBRL instance (parsers/sec/xbrl-segment.ts): the filer's value for
-// one revenue tag over one period, as one filing reported it. Values are the
-// filer's own XBRL numbers in USD, never scaled or rounded; `tag` travels with
-// the row because filers switch tags between years and the reader, not the
-// parser, decides which tag a period is read from. `segment` is the
-// StatementBusinessSegmentsAxis member a segment fact was reported on, absent
-// on a consolidated fact — absent rather than null so the companyfacts rows
-// keep the content hash they were stored under.
+// One duration fact from data.sec.gov/api/xbrl/companyfacts or one filing's
+// XBRL instance (parsers/sec/xbrl-segment.ts), in the filer's own USD, never
+// scaled. `tag` travels with the row because filers switch tags between years.
+// `segment` is the StatementBusinessSegmentsAxis member, absent (not null) on
+// a consolidated fact so companyfacts rows keep the content hash they were
+// stored under.
 export const RevenueRow = z.strictObject({
   cik: z.string().regex(/^\d{10}$/),
   entity_name: z.string().min(1),
@@ -383,8 +379,8 @@ export type ProspectusOutput = z.infer<typeof ProspectusOutput>
 // and its status is the most recent update's (AVAILABLE once resolved).
 // `impact` is null where the feed publishes none (Statuspage's Atom history,
 // anthropic-status): never inferred from an update's wording.
-// `updated_at` is deliberately absent — Statuspage re-stamps it on every
-// posted update, and a row that changed only there is not a change.
+// `updated_at` is absent: Statuspage re-stamps it on every posted update, and
+// a row that changed only there is not a change.
 export const IncidentRow = z.strictObject({
   provider: providerEnum,
   incident_id: z.string().min(1),
@@ -420,11 +416,11 @@ const entryId = z.string().regex(/^[a-z0-9]+(?:-[a-z0-9]+)*$/)
 // One row per entry on a disclosure index. Everything a reader sees is the
 // page's own text, stored verbatim: the title, the one-sentence summary, and
 // the model and the context it was observed in where the index prints them
-// (OpenAI's stopped on 2026-11-20; its report pages carry them, on
-// DisclosureTimelineRow). `listed_on` is the date the index
-// prints beside the entry; it moves when a report is revised, so a change
-// there alone never wakes the judge (judge/pending.ts), but it is kept,
-// because the earliest one observed is the report's publication date.
+// (OpenAI's does not; its report pages carry them, on DisclosureTimelineRow).
+// `listed_on` is the date the index prints beside the entry. It moves when a
+// report is revised, so a change there alone never wakes the judge
+// (judge/pending.ts), but it is kept because the earliest one observed is the
+// report's publication date.
 export const DisclosureRow = z.strictObject({
   provider: providerEnum,
   kind: z.enum(['report', 'notice']),
@@ -494,7 +490,7 @@ export type RankingRow = z.infer<typeof RankingRow>
 // the live body of the page its sentence was transcribed from
 // (layers/pricing/server/pipeline/recommendations.ts). `present` is the whole verdict: the
 // sentence is either on the page, byte for byte after link-flattening, or it
-// is not — nothing is inferred about what replaced it.
+// is not. Nothing is inferred about what replaced it.
 export const RecommendationRow = z.strictObject({
   provider: providerEnum,
   class: z.string().min(1),

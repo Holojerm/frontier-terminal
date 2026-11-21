@@ -1,22 +1,18 @@
-// GENERATED FROM /DESIGN.md — edit that file, then run `/design-sync`.
+// GENERATED FROM /DESIGN.md: edit that file, then run `/design-sync`. Hand-edits are
+// overwritten on the next sync. Raw values (palette, type scale, radius) belong in
+// app/assets/css/main.css.
 //
-// Hand-edits here will be overwritten on the next sync. Raw values (palette,
-// type scale, radius) belong in app/assets/css/main.css.
-//
-// Keep this file small. Before adding a component override, read the resolved
-// theme at .nuxt/ui/<component>.ts — most of what you would write here is
-// already NuxtUI's default, and a `slots` override loses to any `variants`
+// Before adding a component override, read the resolved theme at .nuxt/ui/<component>.ts:
+// most of it is already NuxtUI's default, and a `slots` override loses to any `variants`
 // entry that touches the same property.
 
 export default defineAppConfig({
   ui: {
-    // DESIGN.md › Color › Semantic assignments.
-    // `iris` is the custom ramp in main.css; the rest are Tailwind built-ins.
-    // Every color named here must have all 11 shades available.
+    // DESIGN.md › Color › Semantic assignments. `iris` is the custom ramp in main.css; the
+    // rest are Tailwind built-ins. Every color named here needs all 11 shades.
     //
-    // `zinc` rather than `slate` for the neutral: with a violet accent a
-    // blue-tinted grey makes the whole page one hue and the accent stops
-    // reading as an accent.
+    // `zinc` rather than `slate`: a blue-tinted neutral beside the violet accent makes the
+    // page one hue and the accent stops reading as an accent.
     colors: {
       primary: 'iris',
       secondary: 'zinc',
@@ -27,11 +23,8 @@ export default defineAppConfig({
       error: 'rose',
     },
 
-    // DESIGN.md › Component behavior › Cards. NuxtUI's `subtle` variant is
-    // already "elevated surface + hairline ring + no shadow" — expressing it
-    // as a variant default rather than a slot override keeps tailwind-merge
-    // out of the picture. Radius and padding come from --ui-radius and the
-    // component's own mobile-first defaults.
+    // DESIGN.md › Component behavior › Cards. NuxtUI's `subtle` variant is already elevated
+    // surface, hairline ring and no shadow; a variant default keeps tailwind-merge out of it.
     card: {
       defaultVariants: {
         variant: 'subtle',
@@ -58,24 +51,18 @@ export default defineAppConfig({
       },
     },
 
-    // DESIGN.md › Component behavior › Long-form content.
-    //
-    // NuxtUI registers its Prose* components as soon as @nuxt/content is
-    // installed, and <ContentRenderer> maps every markdown node onto them. They
-    // use the semantic token layer already — these are the two defaults that
-    // contradict DESIGN.md, and nothing else.
+    // DESIGN.md › Component behavior › Long-form content. With @nuxt/content installed,
+    // <ContentRenderer> maps every markdown node onto NuxtUI's Prose* components; these are
+    // the only two defaults that contradict DESIGN.md.
     prose: {
-      // The display face carries its own weight (500, set in main.css's base
-      // layer), so NuxtUI's `font-bold` would both contradict DESIGN.md ›
-      // Typography and lose the tracking the base rule applies.
+      // The display face carries its own weight (500, in main.css's base layer); NuxtUI's
+      // `font-bold` would contradict DESIGN.md › Typography and lose the base rule's tracking.
       h1: { slots: { base: 'font-normal' } },
       h2: { slots: { base: 'font-normal' } },
       h3: { slots: { base: 'font-normal' } },
-      // DESIGN.md › Accessibility › Contrast: an inline prose link is
-      // underlined, because colour alone is not a distinction (WCAG 1.4.1).
-      // NuxtUI's default is a transparent bottom border that only appears on
-      // hover — invisible to a reader who never hovers, and to axe's
-      // link-in-text-block rule.
+      // DESIGN.md › Accessibility › Contrast: inline prose links are underlined, since color
+      // alone is no distinction (WCAG 1.4.1). NuxtUI's default border shows only on hover,
+      // which axe's link-in-text-block rule fails.
       a: { base: 'border-b-0 underline underline-offset-2 hover:decoration-2' },
     },
   },

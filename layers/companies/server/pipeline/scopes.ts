@@ -18,22 +18,16 @@ const EDGAR_SOURCES: readonly string[] = [
   'edgar-companyfacts-spcx',
 ]
 
-// A fresh registration filing's index and document ride the edgar tick until
-// each has parsed once, so what an S-1 amendment says reaches an alert within
-// an hour of the filing rather than at the next six-hourly tick. After that
-// only the filings lane re-checks them: a filed document never changes, and a
-// prospectus runs to 14 MB.
+// A fresh registration's index and document ride the edgar tick until each has
+// parsed once, so an amendment alerts within the hour. After that only the
+// filings lane re-checks them: a filed document never changes, and runs to 14 MB.
 export const REGISTRATION_PREFIXES = ['filing-index-', 'prospectus-revenue-']
 
 export function isRegistrationSource(id: string): boolean {
   return REGISTRATION_PREFIXES.some((p) => id.startsWith(p))
 }
 
-/**
- * The SEC feeds on the edgar tick: the static ones, then the derived EDGAR
- * feeds (a resolved lab's submissions and company facts,
- * layers/companies/server/pipeline/derived.ts), then fresh registrations.
- */
+/** The edgar tick's SEC feeds: static, derived (layers/companies/server/pipeline/derived.ts), then fresh registrations. */
 export const EDGAR_SCOPE: ScopeEntry = {
   sources: EDGAR_SOURCES,
   prefixes: ['edgar-'],

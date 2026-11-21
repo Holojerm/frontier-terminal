@@ -1,9 +1,6 @@
-// The revenue axis regrouped by filing: one entry per accession that reported
-// at least one period the panel reads, with every value that filing reported —
-// the ones the panel still shows and the ones a later filing restated. Derived
-// from the cached /api/revenue payload, so a filing page and the revenue panel
-// cannot disagree about a number, and the sitemap enumerates exactly the
-// filings a page exists for.
+// The revenue axis regrouped by filing, derived from the cached /api/revenue
+// payload so a filing page and the revenue panel can't disagree, and the sitemap
+// lists exactly the filings a page exists for.
 
 export interface FilingPeriod extends RevenuePeriod {
   /** The later filing whose value for the same period the revenue panel shows instead; null when this one is shown. */
@@ -77,10 +74,10 @@ export function revenueFilings(data: RevenueData): RevenueFiling[] {
 }
 
 /**
- * A period as an analyst names it: FY2025, H1 2026, Q3 2026, 9M 2026. Named
- * from the dates, never from the fact's fy/fp, which describe the filing — a
- * 10-Q's prior-year comparative carries the current fiscal period. A span
- * that does not end on a calendar quarter is named by its length and end month.
+ * A period as an analyst names it: FY2025, H1 2026, Q3 2026, 9M 2026. Named from
+ * the dates, never the fact's fy/fp, which describe the filing (a 10-Q's prior-year
+ * comparative carries the current fiscal period). An off-quarter span is named by
+ * its length and end month.
  */
 export function periodName(p: Pick<RevenuePeriod, 'end' | 'days'>): string {
   const year = p.end.slice(0, 4)
@@ -98,10 +95,9 @@ export function periodName(p: Pick<RevenuePeriod, 'end' | 'days'>): string {
 }
 
 /**
- * The periods a filing is about, as its title names them: every period ending
- * on its newest end date, and the newest full year when that is not among
- * them (an S-1's audited year beside its interim half). Comparatives — the
- * same span a year earlier — are left to the table.
+ * The periods a filing's title names: every period ending on its newest end date,
+ * plus the newest full year when absent (an S-1's audited year beside its interim
+ * half). Comparatives are left to the table.
  */
 export function headlinePeriods(periods: readonly RevenuePeriod[]): RevenuePeriod[] {
   const newestEnd = periods.reduce((m, p) => (p.end > m ? p.end : m), '')

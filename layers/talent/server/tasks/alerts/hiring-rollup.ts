@@ -1,5 +1,5 @@
-// Cron task: the weekly hiring roll-up, Monday 13:00 UTC — one alert per lab
-// for the week that ended at midnight (layers/talent/server/pipeline/hiring-rollup.ts).
+// Cron task: the weekly hiring roll-up (Monday 13:00 UTC), one alert per lab for the week
+// that ended at midnight (layers/talent/server/pipeline/hiring-rollup.ts).
 
 import sourcesYaml from 'raw:~~/sources.yaml'
 

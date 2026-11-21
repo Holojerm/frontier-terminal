@@ -22,8 +22,8 @@ export async function collectTerminalCounters(
       .from(tables.sourceStats)
     return row?.total ?? 0
   }
-  // Newest tick per scope that fetched anything at all (not 'failed'), and the
-  // newest failure — as epoch ms because `extra` is numbers only. 0 = never.
+  // Newest tick per scope that fetched anything at all (not 'failed'), and the newest
+  // failure, as epoch ms because `extra` is numbers only. 0 = never.
   const lastTick = async (scope: string, failed: boolean) => {
     const [row] = await db
       .select({ at: max(tables.sourceRuns.started_at) })

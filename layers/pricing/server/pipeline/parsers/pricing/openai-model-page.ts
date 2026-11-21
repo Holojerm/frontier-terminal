@@ -9,15 +9,15 @@ import { tableAfterHeading, usdAmount } from './md-table'
 
 // openai-model-md-<slug> — https://developers.openai.com/api/docs/models/<slug>.md
 // One page per priced Standard-tier SKU, derived from openai-pricing-md
-// (layers/companies/server/pipeline/derived.ts). The page prints what the catalog and pricing
-// pages do not — the context window, max output and knowledge cutoff — and
-// the same $/MTok prices under "### Text tokens". One PriceRow, tier null,
-// so it shares its key with the catalog and pricing rows and the three pages
-// read as one SKU; the row carrying the window wins the catalog view.
+// (layers/pricing/server/pipeline/derived.ts). The page prints what the catalog and pricing
+// pages do not (context window, max output, knowledge cutoff) and the same $/MTok prices
+// under "### Text tokens". One PriceRow, tier null, so it shares its key with the catalog and
+// pricing rows and the three pages read as one SKU; the row carrying the window wins the
+// catalog view.
 //
-// The page's own "Model ID" must equal the slug the source was derived for.
-// A mismatch (a redirect, a renamed page) throws, and the source fails
-// rather than storing a page under the wrong SKU.
+// The page's own "Model ID" must equal the slug the source was derived for. A mismatch (a
+// redirect, a renamed page) throws, so the source fails rather than storing a page under the
+// wrong SKU.
 
 const MODEL_ID = /^Model ID: `([^`]+)`\s*$/m
 const CONTEXT_WINDOW = /^- ([\d,]+) context window\s*$/m

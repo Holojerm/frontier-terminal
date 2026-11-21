@@ -19,13 +19,12 @@ const at = (iso: string) => Date.parse(iso)
 // ---- price history ---------------------------------------------------------
 
 /**
- * Every observation of one SKU key, oldest first. Each change row is a
- * point (a removal carries the last price seen); each current entity row is
- * a 'current' point unless it is the same fetch a change already recorded —
- * an entity rewrite and its change share a fetched_at. When the earliest
- * change carries a before state, that state held from the source's first
- * snapshot until the change (any move in between would be in the log), so
- * it opens the series as a 'baseline' point stamped with that snapshot.
+ * Every observation of one SKU key, oldest first. Each change row is a point (a removal
+ * carries the last price seen); each current entity row is a 'current' point unless it is the
+ * same fetch a change already recorded (an entity rewrite and its change share a fetched_at).
+ * When the earliest change carries a before state, that state held from the source's first
+ * snapshot until the change (any move in between would be in the log), so it opens the
+ * series as a 'baseline' point stamped with that snapshot.
  */
 export function priceHistory(
   entities: readonly Entity[],

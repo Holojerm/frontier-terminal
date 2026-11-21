@@ -1,9 +1,8 @@
-// Cron task: the weekly thesis digest, Monday 13:00 UTC (layers/theses/server/theses/digest.ts).
-// The owner's copy goes through the OWNER_EMAIL send_email binding; with no
-// binding configured it is skipped. Confirmed subscribers get the public copy
-// through Resend, and only when NUXT_RESEND_API_KEY and the from address are set.
-// A send that fails throws, and withHeartbeat spools it as task_failed, which
-// the fleet dashboard reports.
+// Weekly thesis digest, Monday 13:00 UTC (layers/theses/server/theses/digest.ts).
+// The owner's copy goes through the OWNER_EMAIL send_email binding (skipped
+// without one); confirmed subscribers get the public copy through Resend once
+// NUXT_RESEND_API_KEY and the from address are set. A failed send throws, so
+// withHeartbeat spools it as task_failed.
 
 import { buildThesisDigest } from '../../theses/digest'
 

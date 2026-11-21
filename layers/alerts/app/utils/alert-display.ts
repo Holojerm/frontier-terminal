@@ -1,8 +1,7 @@
-// How an alert reads: the badge for each change type, and the one-line text
-// behind each rule's caveat. Shared by the list, the ticker and the permalink.
-// The severity badge is core's (layers/core/app/utils/severity-badge.ts).
-// DESIGN.md › Never convey state by color alone: every badge pairs its color
-// with an icon and a word.
+// How an alert reads: the badge for each change type and the one-line text behind each
+// rule's caveat. The severity badge is core's (layers/core/app/utils/severity-badge.ts).
+// DESIGN.md › Never convey state by color alone: every badge pairs its color with an icon
+// and a word.
 
 export const CHANGE_BADGE = {
   added: { color: 'success', icon: 'i-lucide-plus' },

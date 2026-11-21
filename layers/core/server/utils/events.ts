@@ -1,20 +1,11 @@
-// The EVENTS queue: what replaced the five-minute clock for alert delivery.
-//
-// A new alert used to wait for the */5 tick, and that tick read D1 every five
-// minutes whether or not anything was owed. Now the code that writes alerts
-// emits `alerts.new`, and the consumer (layers/alerts/server/plugins/events-queue.ts)
-// fans out to the social outbox, the webhook outbox and the press briefs, then
-// schedules a delayed drain for each outbox at its earliest due row. A drain
-// that leaves work behind schedules itself again; an empty outbox schedules
-// nothing, so a quiet day costs nothing.
-//
-// The queue carries triggers, never state. social_posts, webhook_deliveries
-// and the press KV markers stay the record, and every handler is idempotent,
-// so a duplicate or replayed message is harmless and a lost one is picked up
-// by the hourly events:sweep backstop.
-//
-// Emitting goes through a module-level sender, null by default, so pipeline
-// code and its tests never need a Worker env. The plugin installs the real one.
+// The EVENTS queue drives alert delivery. Alert writers emit `alerts.new`; the
+// consumer (layers/alerts/server/plugins/events-queue.ts) fans out to the social
+// and webhook outboxes and the press briefs, then schedules a delayed drain per
+// outbox at its earliest due row, so a quiet day costs no D1 reads. The queue
+// carries triggers, never state: the outbox tables and press KV markers are the
+// record and every handler is idempotent, so a duplicate is harmless and a lost
+// message is caught by the hourly events:sweep. The sender is module-level and
+// null by default, so pipeline code and tests need no Worker env.
 
 import { z } from 'zod'
 
@@ -22,7 +13,7 @@ import { logEvent } from '#server/utils/log'
 
 import type { CacheStore } from './terminal-cache'
 
-/** Binding name — must match `binding` in `[[queues.producers]]` in wrangler.toml. */
+/** Binding name; must match `binding` in `[[queues.producers]]` in wrangler.toml. */
 export const EVENTS_QUEUE_BINDING = 'EVENTS'
 
 /** Queues refuses a longer delay. */
@@ -85,12 +76,10 @@ export function delaySecondsUntil(
 export const scheduledKey = (type: EventType) => `events:scheduled:${type}`
 
 /**
- * Schedule a drain at `delaySeconds` unless one is already scheduled at or
- * before that moment. Every alert in a poll emits `alerts.new`, and each
- * fan-out would otherwise start its own self-renewing drain chain; the KV
- * marker collapses them to roughly one. KV is eventually consistent, so two
- * chains can still start together; they stay harmless because drains are
- * idempotent, and the next schedule sees the marker.
+ * Schedule a drain at `delaySeconds` unless one is already due by then. Every
+ * alert in a poll emits `alerts.new`; the KV marker collapses their drain
+ * chains to about one. KV lag can still start two, which idempotent drains
+ * tolerate.
  */
 export async function scheduleDrain(
   store: CacheStore,

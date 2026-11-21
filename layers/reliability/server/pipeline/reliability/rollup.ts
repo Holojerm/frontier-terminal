@@ -1,15 +1,12 @@
-// The daily rollup of source_runs behind /data#reliability: one row per
-// (source, UTC day) and one per poll tick. source_runs grows by ~1,000 rows a
-// day for good; the page reads ~150 rollup rows a day of history instead.
+// The daily rollup of source_runs behind /data#reliability: one row per (source, UTC day)
+// and one per poll tick. source_runs grows ~1,000 rows a day; the page reads ~150 rollup
+// rows a day instead.
 //
-// Incremental. Each run re-rolls from the start of the newest day already
-// rolled (that day may have gained runs since), and a day's longest gap is
-// measured from the previous good run whatever day it fell on, which the
-// rollup itself supplies. History is read CHUNK_DAYS at a time, so a backfill
-// never holds months of runs in memory at once, and a run stops after
-// RUN_BUDGET_MS; 90 days measured about a second of CPU, so a fresh deploy
-// catches up in its first run. rollup_state records how far it got, and the
-// page computes nothing past that point.
+// Incremental: each run re-rolls from the start of the newest rolled day (it may have
+// gained runs), and a day's longest gap is measured from the previous good run on any day,
+// which the rollup supplies. History is read CHUNK_DAYS at a time so a backfill never holds
+// months of runs in memory, and a run stops after RUN_BUDGET_MS (90 days took about a
+// second of CPU). rollup_state records how far it got; the page computes nothing past it.
 
 import { and, eq, gte, lt, max, sql } from 'drizzle-orm'
 

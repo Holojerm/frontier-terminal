@@ -1,9 +1,8 @@
 <script setup lang="ts">
-// The disclosed-revenue axis: what each lab, or the public parent that
-// consolidates it, has reported to the SEC, and — for the labs that have
-// reported nothing — exactly that. The one number an investor wants most
-// has no primary source for most of these companies yet, and this page's
-// job is to say so precisely and to be ready the day that changes.
+// The disclosed-revenue axis: what each lab, or the public parent that consolidates it,
+// has reported to the SEC, and for the labs that have reported nothing, exactly that. Most
+// of these companies have no primary source for revenue yet; this page says so precisely
+// and is ready the day that changes.
 
 const watchlist = useWatchlist()
 

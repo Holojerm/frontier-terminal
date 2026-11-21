@@ -1,10 +1,6 @@
-// Grid load where the lab sites are (GET /api/grid-load, the /power page):
-// EIA-930 demand per balancing authority holding a tracked site, as monthly
-// and weekly averages with their change on a year before, and ERCOT's own
-// count of the large loads it has let energize. A load reading, not a
-// measure of how busy any data center is: an authority's demand moves with
-// weather, the economy and every other customer, and nothing here separates
-// the sites' share of it.
+// Grid load where the lab sites are (GET /api/grid-load, /power). A load reading,
+// not a measure of how busy a data center is: demand moves with weather, the
+// economy and every other customer, and nothing here separates the sites' share.
 
 export interface GridArea {
   /** EIA-930's respondent code. */
@@ -15,8 +11,7 @@ export interface GridArea {
   short: string
   /**
    * The clock EIA keeps the authority's local days on: its API's timezone facet,
-   * and the IANA zone that counts each day's hours. Checked against the six-month
-   * files' daily sums on 2026-11-21.
+   * and the IANA zone that counts each day's hours.
    */
   zone: { eia: 'Eastern' | 'Central' | 'Arizona'; iana: string }
 }

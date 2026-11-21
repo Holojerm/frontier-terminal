@@ -1,16 +1,11 @@
-// Implied spend share: the demand-share rankings (tokens per model per UTC
-// day, OpenRouter) joined to the price catalog (USD per million tokens, the
-// vendors' own pages) — one join over data already in the store. Tokens say
-// who is used; tokens × list price says where the dollars would go at list,
-// which is the "tokens to open source, economics to the frontier labs"
-// decomposition an investor wants and the rankings alone cannot give.
+// Implied spend share: the OpenRouter rankings (tokens per model per UTC day) joined to the
+// price catalog (USD per million tokens, the vendors' pages). Tokens × list price says
+// where the dollars would go at list, which the rankings alone cannot.
 //
-// Held out exactly as far as it deserves. It is one routing channel's
-// traffic, not market revenue; the rankings carry total tokens with no
-// prompt/completion split, so every figure is a pair of bounds — all tokens
-// at the input price, all at the output price — never a point; and a model
-// the catalog does not list is counted in tokens and excluded from dollars,
-// with coverage printed beside the share so the gap is never hidden.
+// One routing channel's traffic, not market revenue. The rankings carry total tokens with
+// no prompt/completion split, so every figure is a pair of bounds (all tokens at the input
+// price, all at the output price). A model the catalog does not list counts in tokens and
+// is excluded from dollars, with coverage printed beside the share.
 //
 // The pure half (summarizeSpend, matchSku) has no clock and no database;
 // layers/adoption/test/terminal-spend.test.ts drives it on fixture rows.

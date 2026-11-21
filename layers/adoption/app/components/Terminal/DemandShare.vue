@@ -1,9 +1,7 @@
 <script setup lang="ts">
-// Demand share: each lab's slice of the tokens OpenRouter routed in the newest
-// seven days, and how that slice moved against the seven before. A proxy, and
-// held out as one: it is OpenRouter's traffic, not the market's, and the
-// caveat, the CC BY 4.0 citation, and the two references that were evaluated
-// and NOT ingested all ship visibly, not behind a control.
+// Demand share: each lab's slice of the tokens OpenRouter routed in the newest seven days,
+// and its move against the seven before. It is OpenRouter's traffic, not the market's, so
+// the caveat, the CC BY 4.0 citation and the two references not ingested always ship visibly.
 
 import type { RankingsData } from '../../../shared/types/rankings'
 

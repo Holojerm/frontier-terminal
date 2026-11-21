@@ -1,15 +1,14 @@
 // The source-reading half of `bun run surfaces:check` (scripts/check-surfaces.ts).
-//
 // Strings in, answers out, so test/surfaces.test.ts can drive every rule without
 // a filesystem. The gate keeps the walk, the waiver file and the report.
 //
-// Every surface is read from the code that provides it, never from a list of
-// what exists: a route's MCP tool is a `serve('<name>'` whose name is the
-// route's `serveTerminal(event, '<name>'`, a page's read is a `useFetch('/api/…'`
-// (or `$fetch`) in its script or in a component it renders, an export is a
-// builder call in the export registry, and an alert axis is the AXIS_PATH page a
-// route sits under (or an AXIS_ROUTES entry naming it). The waiver file is the only hand-kept part, and it lists
-// what is missing, with why.
+// Every surface is read from the code that provides it, never from a list: a
+// route's MCP tool is a `serve('<name>'` whose name is the route's
+// `serveTerminal(event, '<name>'`, a page's read is a `useFetch('/api/…'` (or
+// `$fetch`) in its script or in a component it renders, an export is a builder
+// call in the export registry, and an alert axis is the AXIS_PATH page a route
+// sits under (or an AXIS_ROUTES entry naming it). The waiver file is the only
+// hand-kept part: what is missing, and why.
 
 import { endOfString, findClosing, sliceBalanced } from './brace-match'
 import { blankComments } from './mcp-tools'

@@ -1,10 +1,6 @@
-// Reads of the archived GPU rental prices (archived_gpu_prices,
-// archive_captures axis gpu): the Internet Archive's copies of each
-// provider's own price page, backfilled by scripts/wayback-backfill.ts
-// --axis gpu. Kept out of the live derivations on purpose: gpuState, the
-// median floor, the Compute thesis and the alerts read recipe_observations
-// only. Every point says it was archived (basis, a wayback: source id, the
-// copy as source_url).
+// Reads of archived GPU prices (archived_gpu_prices, backfilled by
+// scripts/wayback-backfill.ts --axis gpu). Kept out of the live derivations:
+// gpuState, the median floor, the Compute thesis and the alerts.
 
 import { asc, eq } from 'drizzle-orm'
 

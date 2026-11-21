@@ -1,11 +1,9 @@
-// Reads of the archived hiring history (archive_captures, archived_hiring):
-// the Internet Archive's captures of each lab's own job board, backfilled by
-// scripts/wayback-backfill.ts. The archived price lists are read in
-// layers/pricing/server/utils/terminal-price-archive.ts. Kept out of the live derivations on
-// purpose. A live point says what this store saw when it looked; an archived
-// one says what the Archive saw, and we read it back years later. Every
-// archived row a payload carries says so (basis 'archived', a wayback:
-// source id, the capture URL as source_url).
+// Reads of the archived hiring history (archive_captures, archived_hiring): the Internet
+// Archive's captures of each lab's own job board, backfilled by scripts/wayback-backfill.ts
+// (archived price lists: layers/pricing/server/utils/terminal-price-archive.ts). Kept out
+// of the live derivations: a live point says what this store saw when it looked, an
+// archived one what the Archive saw, read back years later. Every archived row a payload
+// carries says so (basis 'archived', a wayback: source id, the capture URL as source_url).
 
 import { asc, eq, lte } from 'drizzle-orm'
 

@@ -1,23 +1,21 @@
 import type { LabId, Prov, SourceRef, Stamp } from '../../../core/shared/types/common'
 
 /**
- * One reported period: the filer's own XBRL value for one revenue tag over
- * start..end, from the filing that reported it. When a later filing
- * restates the same period, `superseded_by` names it and the newest
- * filing's value is the one the period table shows.
+ * One reported period: the filer's XBRL value for one revenue tag over start..end.
+ * When a later filing restates it, `superseded_by` names that filing.
  */
 export interface RevenuePeriod extends Prov {
   entity_key: string
   start: string
   end: string
-  /** Calendar days in the period — ~91 reads as a quarter, ~182 a half, ~365 a year. */
+  /** Calendar days in the period: ~91 reads as a quarter, ~182 a half, ~365 a year. */
   days: number
   fy: number | null
   fp: string | null
   form: string
   filed: string
   accession_no: string
-  /** EDGAR's filing index for the accession — composed from cik + accession, verified to resolve. */
+  /** EDGAR's filing index for the accession, composed from cik + accession and verified to resolve. */
   filing_url: string
   /** The XBRL tag, or for a prospectus value the statement's own row label. */
   tag: string
@@ -52,7 +50,7 @@ export interface RevenueFilerView {
     filing_url: string
   } | null
   source_id: string
-  /** The audit's caveat for the feed — for a parent, the words that say whose revenue this is. */
+  /** The audit's caveat for the feed; for a parent, the words that say whose revenue this is. */
   caveat: string | null
 }
 

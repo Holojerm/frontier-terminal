@@ -1,17 +1,16 @@
-// Page-load harness — `bun run perf`. Not a CI gate: one network's numbers are
-// too noisy to fail a build on. Run it before and after a performance change.
+// Page-load harness: `bun run perf`. Not a CI gate (one network's numbers are
+// too noisy to fail a build on); run it before and after a performance change.
 //
 // Each run is a fresh browser context (empty HTTP cache) on a throttled
-// mid-tier-phone profile, so the numbers are a first visit's, not a
-// repeat visitor's. Reports the median of --runs per route, plus what the
-// server said about the document: x-html-cache (hit/miss) and Server-Timing
-// (layers/core/server/utils/server-timing.ts) — a long TTFB is only
-// actionable once you know which stage it was spent in.
+// mid-tier-phone profile, so the numbers are a first visit's. Reports the
+// median of --runs per route, plus the document's x-html-cache (hit/miss) and
+// Server-Timing (layers/core/server/utils/server-timing.ts), which says which
+// stage a long TTFB was spent in.
 //
-// Real visitors on this site almost always miss the HTML cache: it is per data
-// centre and its key rotates on every poll. A run against a warm cache
-// therefore flatters the site. --bust appends a query string, which the HTML
-// cache refuses to key on, so every run renders.
+// Real visitors almost always miss the HTML cache (it is per data centre and
+// its key rotates on every poll), so a warm-cache run flatters the site.
+// --bust appends a query string, which the HTML cache refuses to key on, so
+// every run renders.
 //
 //   bun run perf                                   # prod, 3 runs per route
 //   bun run perf --base https://x.localhost --runs 5
@@ -39,7 +38,7 @@ const DEFAULT_ROUTES = [
   '/about',
 ]
 
-/** Slow 4G with a 4x CPU slowdown — Lighthouse's mobile profile, roughly. */
+/** Slow 4G with a 4x CPU slowdown, roughly Lighthouse's mobile profile. */
 const THROTTLE = { latencyMs: 150, downKbps: 1600, upKbps: 750, cpu: 4 }
 
 const { values } = parseArgs({

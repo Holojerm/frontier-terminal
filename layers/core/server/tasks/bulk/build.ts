@@ -1,13 +1,10 @@
 // Cron task: rebuild the bulk feed's files in R2 (layers/core/server/utils/terminal-bulk.ts).
-// Hourly at :41, so it never shares an invocation with the survey (:00) or the
-// careers (:17) and filings (:47) lanes. A run builds only what isn't built yet today, so most
-// hours it reads the index and stops. A file that fails is spooled for the ops
-// digest and retried next hour, after everything else, with yesterday's copy
-// still served.
-//
-// The licensed bucket arrives on the env Nitro hands a scheduled task
-// (layers/core/server/utils/owner-mail.ts says why that beats `cloudflare:workers`). Without
-// the binding the build still runs and keeps the `full` files in the blob store.
+// Hourly at :41, off the survey (:00), careers (:17) and filings (:47) minutes.
+// It builds only what isn't built today, so most hours it reads the index and
+// stops; a failed file is spooled and retried next hour while yesterday's stays
+// served. The licensed bucket comes on the task's env
+// (layers/core/server/utils/owner-mail.ts says why); without it the `full`
+// files stay in the blob store.
 
 const task = defineTask({
   meta: {

@@ -1,8 +1,6 @@
-// One run of the ERCOT large-load reader, daily with the EIA-930 read: read
-// the listing pages (ercot-reports.ts), fetch each report not read yet (at
-// most REPORTS_PER_RUN, oldest first, so vintages arrive in order), keep its
-// bytes in R2, and store the figures it states with their sentences. A report
-// is read once; one that failed is tried again after a day.
+// One run of the ERCOT large-load reader (daily, with the EIA-930 read): at most
+// REPORTS_PER_RUN reports, oldest first so vintages arrive in order, each read
+// once with its bytes in R2; a failed one is retried after a day.
 
 import { desc, inArray } from 'drizzle-orm'
 

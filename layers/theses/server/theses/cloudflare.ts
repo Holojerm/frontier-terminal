@@ -1,6 +1,5 @@
-// Thesis 2, transcribed from docs/theses/cloudflare.md — that page is the
-// journal of record; this is its machine-readable half. Every signal reads a
-// recipe (server/registries/recipes.ts); nothing here touches the lab pipeline.
+// Thesis 2, transcribed from docs/theses/cloudflare.md (the journal of record).
+// Every signal reads a recipe (server/registries/recipes.ts), never the lab pipeline.
 
 import type { ThesisDef } from '../../shared/utils/thesis-types'
 

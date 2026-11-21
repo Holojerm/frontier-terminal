@@ -1,15 +1,13 @@
 // Cron task: the filings lane, six-hourly at :47 (layers/companies/server/pipeline/scopes.ts ›
 // REGISTRATION_PREFIXES). Same wiring and the same reasons as poll/edgar.ts.
 //
-// Its own invocation because its own memory: each S-1 and amendment runs to
-// ~14 MB, and with a third one in it the survey would carry ~124 MiB of the
-// 128 MB that killed it on 2026-11-04 (payload-budget.test.ts).
+// Its own invocation for its own memory: each S-1 and amendment runs to ~14 MB, and with a
+// third one the survey would carry ~124 MiB of the 128 MB limit (payload-budget.test.ts).
 //
-// After the poll, the suppliers reader fetches the suppliers' new 10-Qs,
-// 10-Ks, 8-Ks, 20-Fs and 6-Ks (layers/companies/server/suppliers/ingest.ts),
-// one document at a time, for the same reason. Then the power-sites reader
-// searches EDGAR for new filings naming a quarter of Epoch's lab sites and
-// fetches the newest few (layers/compute/server/power/ingest.ts).
+// After the poll, the suppliers reader fetches the suppliers' new 10-Qs, 10-Ks, 8-Ks,
+// 20-Fs and 6-Ks (layers/companies/server/suppliers/ingest.ts), one document at a time, for
+// the same reason. Then the power-sites reader searches EDGAR for new filings naming a
+// quarter of Epoch's lab sites and fetches the newest few (layers/compute/server/power/ingest.ts).
 
 import sourcesYaml from 'raw:~~/sources.yaml'
 

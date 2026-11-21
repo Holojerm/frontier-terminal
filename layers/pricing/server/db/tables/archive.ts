@@ -30,14 +30,12 @@ export const archivedPrices = sqliteTable(
   ],
 )
 
-// One row per (capture, limit): what an archived copy of a lab's rate-limit
-// page printed, keyed as the live limits-* recipe keys its rows
-// (`<model>|<tier>|<metric>`, theses/recipes/rate-limits.ts), so one function
-// renders both. A usage-tier row's model names the column: spend cap, credit
-// purchase to reach tier, max credit purchase, wait to reach tier. value is
-// null where the copy printed no figure (N/A). Never a live row: basis is
-// always 'archived', and nothing here reaches recipe_observations, the
-// thesis or the judge.
+// One row per (capture, limit): what an archived copy of a lab's rate-limit page printed, keyed
+// as the live limits-* recipe keys its rows (`<model>|<tier>|<metric>`,
+// theses/recipes/rate-limits.ts), so one function renders both. A usage-tier row's model names
+// the column: spend cap, credit purchase to reach tier, max credit purchase, wait to reach
+// tier. value is null where the copy printed no figure (N/A). Always basis 'archived'; nothing
+// here reaches recipe_observations, the thesis or the judge.
 export const archivedRateLimits = sqliteTable(
   'archived_rate_limits',
   {

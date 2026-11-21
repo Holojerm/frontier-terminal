@@ -1,8 +1,6 @@
 <script setup lang="ts">
-// The provenance footer (DESIGN.md › Terminal primitives): one citation per
-// source, then the caveats as controls that can actually be read, then
-// anything the axis adds (a license line). One layout everywhere, so a reader
-// learns once where a number's source is.
+// The provenance footer (DESIGN.md › Terminal primitives): citations, then caveats,
+// then anything the axis adds. One layout everywhere.
 
 import type { CaveatRef, Citation } from '#layers/core/app/types/terminal-ui'
 

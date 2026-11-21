@@ -1,24 +1,10 @@
-// MLPerf Inference, datacenter suite: the published token throughput of each
-// submitted system, from each round's results repository and its own summary
-// file (Apache 2.0). It is the only public, reviewed measure of tokens per
-// second on named hardware, and the reason an implied utilization is a pair
-// of bounds: the same accelerator serves a 405B model about 100 times slower
-// than an 8B one.
-//
-// Kept: closed division, systems marked available, the Server scenario, and
-// results in tokens per second. One observation per result. `value` is our
-// division of the system's result by its accelerator count. MLCommons does
-// not review that figure, so every surface that shows it says so and cites
-// the result ID (MLPerf Results Messaging Guidelines; docs/source-audit.md,
-// 2026-11-19).
-//
-// A round is published once and dated by MLCommons's announcement, so each
-// row's date is its round's. A run reads the oldest listed round newer than
-// the newest stored, so the rounds arrive one per run, oldest first, and the
-// runs after that re-read the newest round alone (a correction to it still
-// lands). A new round is a new line in MLPERF_ROUNDS, added by hand with its
-// fixture. A round older than the newest stored is never read: adding one
-// means clearing this recipe's rows, as migration 0062 did.
+// MLPerf Inference datacenter results (Apache 2.0): the only public, reviewed
+// tokens per second on named hardware. Kept: closed division, available systems,
+// Server scenario, tokens/s. `value` is our per-accelerator division, which
+// MLCommons doesn't review, so every surface says so and cites the result ID.
+// Rounds arrive one per run, oldest first, then the newest is re-read. A round
+// older than the newest stored is never read: adding one means clearing this
+// recipe's rows, as migration 0062 did.
 
 import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 

@@ -29,10 +29,9 @@ import type { CikWhitelist } from './parsers/sec/whitelist'
 // server/registries/lanes.ts assembles every layer's lanes.
 
 /**
- * Each filing's lab, read off its whitelisted CIK: a lab's own registration
- * filings (Anthropic's S-1, its amendments and 424B4) are the lab's; a
- * parent's or a supplier's stay 'other'. Before this every filing was 'other',
- * so /alerts listed Anthropic's 424B4 under Lab "Other".
+ * Each filing's lab, read off its whitelisted CIK: a lab's own registration filings
+ * (Anthropic's S-1, its amendments and 424B4) are the lab's; a parent's or a supplier's
+ * stay 'other'.
  */
 const filingProvider =
   (whitelist: CikWhitelist, revenueFilers: RevenueFilers) => (row: FilingRow) =>
@@ -94,10 +93,10 @@ function submissionsLanes(): Record<string, Lane> {
   return lanes
 }
 
-// One company-facts lane per tagged revenue filer. Facts accumulate (a
-// 10-K restates the prior year's quarters under a new accession), so the
-// lane is append-only; the provider is the lab the filer is tagged to in
-// sources.yaml, 'other' when the tag is gone — never a guess from the name.
+// One company-facts lane per tagged revenue filer. Facts accumulate (a 10-K restates the
+// prior year's quarters under a new accession), so the lane is append-only; the provider
+// is the lab the filer is tagged to in sources.yaml, 'other' when the tag is gone (never a
+// guess from the name).
 const COMPANYFACTS_LANE: Lane = {
   sides: [],
   removals: 'append-only',

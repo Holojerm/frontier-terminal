@@ -1,10 +1,7 @@
 <script setup lang="ts">
-// The hardware layer: the monthly prints of the foundry, the server builders and
-// their suppliers in Taiwan and Korea's chip exports (read hourly from the
-// exchange, TSMC's 6-Ks, Korea Customs Service's releases and UN Comtrade,
-// layers/compute/shared/utils/prints.ts), then the chip and hardware suppliers whose
-// own filings tie them to a lab or a cloud. The compute-rental and hosting
-// suppliers stay on /dependencies beside the graph.
+// The hardware layer: Taiwan's monthly prints and Korea's chip exports
+// (layers/compute/shared/utils/prints.ts), then the chip and hardware suppliers. The
+// compute-rental and hosting suppliers stay on /dependencies beside the graph.
 
 definePageMeta({
   publicPage: {

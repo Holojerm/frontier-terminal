@@ -1,7 +1,5 @@
-// GET /api/gpu-prices and the get_gpu_prices MCP tool: today's on-demand GPU
-// rental prices from the GPU recipes, every row with its provider page and
-// fetch time, the equal-weight medians the Compute thesis divides by, and the
-// archived weekly series from before the recipes began (terminal-gpu-archive.ts).
+// GET /api/gpu-prices and get_gpu_prices: today's on-demand prices, the equal-weight
+// medians, and the archived weekly series (terminal-gpu-archive.ts).
 
 import { count, desc, eq, inArray, max } from 'drizzle-orm'
 
@@ -41,7 +39,6 @@ export async function gpuRunsStamp(db: PipelineDb): Promise<string> {
   return archived?.n ? `${runs}|archive:${archived.n}:${archived.at}` : runs
 }
 
-/** One stored price row, with the recipe that stored it and the day it was read. */
 export type StoredGpuRead = GpuObservation & { recipe_id: string; date: string }
 
 /**

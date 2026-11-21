@@ -1,7 +1,5 @@
-// Whether a quoted passage is on the page it was read from: the suppliers
-// reader's check of a stored filing (layers/companies/server/suppliers/), the
-// power-sites reader's (layers/compute/server/power/) and its weekly re-read
-// of the pages off EDGAR (power/verify.ts).
+// Whether a quoted passage is on the page it was read from (the suppliers and
+// power-sites readers, and power/verify.ts's weekly re-read).
 
 const ENTITIES: Record<string, string> = {
   amp: '&',
@@ -33,10 +31,9 @@ export function pageText(html: string): string {
 }
 
 /**
- * What two passages are compared on. Whitespace goes, because a tag boundary
- * or a line wrap moves it. Curly quotes and dashes fold to plain ones, because
- * a page and a copy of it disagree on those and on nothing a reader would
- * call a different sentence.
+ * What two passages are compared on. Whitespace goes, since a tag boundary or a
+ * line wrap moves it. Curly quotes and dashes fold to plain ones, since a page
+ * and a copy of it differ on those and on nothing a reader would notice.
  */
 export function comparable(text: string): string {
   return text

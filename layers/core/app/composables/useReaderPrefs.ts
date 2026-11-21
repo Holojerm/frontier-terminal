@@ -1,16 +1,9 @@
-// Reader settings: how times and figures read, how tightly tables sit, and
-// which labs come first. Stored per browser in localStorage and never sent to
-// the server.
-//
-// Page HTML is cached and shared by every reader, so the server always renders
-// DEFAULTS read as UTC_STYLE. The stored settings load once hydration has
-// finished (plugins/reader-prefs.client.ts), the same handoff useNow makes for
-// relative ages, so a hydration mismatch cannot happen. Density is the
-// exception: plugins/reader-prefs.ts sets it on <html> before first paint,
-// because it moves layout rather than text.
-//
-// One module-level ref, like useNow. The server never writes it, so requests
-// cannot leak settings into each other.
+// Reader settings (time and figure style, table density, lab order), kept in
+// localStorage and never sent to the server. Cached page HTML is shared, so the
+// server always renders DEFAULTS as UTC_STYLE and stored settings load after
+// hydration (plugins/reader-prefs.client.ts); density alone is set before first
+// paint (plugins/reader-prefs.ts) because it moves layout. The server never
+// writes the module-level ref, so requests cannot leak settings.
 
 import { DEFAULTS, PREFS_KEY, type ReaderPrefs } from '../../shared/utils/reader-prefs'
 

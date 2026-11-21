@@ -1,9 +1,8 @@
 <script setup lang="ts">
-// The buildout signal: open roles in the physical-infrastructure department
-// cluster (sources.yaml `department_clusters`) per lab, now against the
-// comparison instant, with the board's own department labels that were
-// summed listed under the number — the sum is checkable, never a black box.
-// The line chart (full page) draws the cluster per day across the boards.
+// The buildout signal: open roles in the physical-infrastructure department cluster
+// (sources.yaml `department_clusters`) per lab, now against the comparison instant, with
+// the board's own department labels listed under the number so the sum is checkable. The
+// line chart (full page) draws the cluster per day across the boards.
 
 import type { HiringHistoryData } from '../../../shared/types/hiring'
 

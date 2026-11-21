@@ -65,7 +65,6 @@ export const SUPPLIER_FILERS: readonly SupplierFiler[] = [
 ]
 
 export interface Counterparty {
-  /** The name a row carries. */
   name: string
   /** Every spelling a document uses, the name included. Matched case-sensitively on word boundaries. */
   spellings: readonly string[]

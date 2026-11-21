@@ -1,15 +1,13 @@
-// Department clusters, read from the department_clusters block in
-// sources.yaml: a named set of match terms over each board's own department
-// labels. The physical-infrastructure cluster is the buildout signal — open
-// roles in Data Center / Infrastructure / Facilities / Energy / Construction
-// (and the like) per lab per day — and its terms are stated in the audited
-// file, never typed into the query layer, so the judge prompt and the panel
-// name the same departments (layers/talent/test/terminal-clusters.test.ts pins the pair).
+// Department clusters, read from the department_clusters block in sources.yaml: a named
+// set of match terms over each board's own department labels. The physical-infrastructure
+// cluster is the buildout signal (open roles in Data Center / Infrastructure / Facilities /
+// Energy / Construction and the like, per lab per day). Its terms live in the audited
+// file, never the query layer, so the judge prompt and the panel name the same departments
+// (layers/talent/test/terminal-clusters.test.ts pins the pair).
 //
-// Matching is a whole-word, case-insensitive substring test on the label,
-// minus any label that carries an `exclude` term ("Software Engineering -
-// Infrastructure" is code, not concrete). Which labels matched ships beside
-// every count, so the sum is never a black box.
+// Matching is a whole-word, case-insensitive substring test on the label, minus any label
+// that carries an `exclude` term ("Software Engineering - Infrastructure" is code, not
+// concrete). The matched labels ship beside every count.
 
 import type { ClusterSeries, DeptSeries } from '../../shared/types/hiring'
 
@@ -76,7 +74,6 @@ const wordRegex = (term: string) =>
     `(^|[^a-z0-9])${term.toLowerCase().replace(/[.*+?^${}()|[\]\\]/g, '\\$&')}($|[^a-z0-9])`,
   )
 
-/** True when a department label belongs to the cluster. */
 export function inCluster(department: string, cluster: DepartmentCluster): boolean {
   const label = department.toLowerCase()
   if (cluster.exclude.some((t) => wordRegex(t).test(label))) return false

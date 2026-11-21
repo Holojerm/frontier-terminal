@@ -1,13 +1,12 @@
-// A derived view of the history the store already holds, as pure functions
-// over rows: the model-release timeline (open roles per day are the talent
-// layer's terminal-hiring-history.ts, a SKU's price series the pricing layer's
-// terminal-price-history.ts). terminal-releases.ts fetches the rows; nothing
-// here touches D1, so layers/terminal/test/terminal-history.test.ts drives
-// every rule with a handful of fixture rows.
+// A derived view of the stored history, as pure functions over rows: the
+// model-release timeline (open roles per day are the talent layer's
+// terminal-hiring-history.ts, a SKU's price series the pricing layer's
+// terminal-price-history.ts). terminal-releases.ts fetches the rows; nothing here
+// touches D1 or reads a clock.
 //
-// The store keeps the CURRENT entity set plus an append-only change log
-// (server/db/schema.ts), so every past state is the current state with the
-// changes after that instant undone. No clock is read.
+// The store keeps the current entity set plus an append-only change log
+// (server/db/schema.ts), so every past state is the current one with the later
+// changes undone.
 
 import type * as tables from '#server/db/schema'
 

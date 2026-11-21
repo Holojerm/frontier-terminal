@@ -1,8 +1,6 @@
-// Pure parsers for Korea Customs Service's export releases (customs.go.kr
-// press board, bbsId 1362): the board listing, a release's own page, its
-// document viewer's answer and the text the viewer extracts from the
-// attachment (HWP, HWPX or PDF alike). Bytes in, values out; a body that
-// isn't what KCS sends throws.
+// Pure parsers for Korea Customs Service's export releases (customs.go.kr press
+// board, bbsId 1362): the board, a release page, the document viewer's answer and
+// the attachment text. A body that isn't what KCS sends throws.
 
 import type { PrintWindow } from '../../shared/utils/prints'
 import type { PrintObservation } from './parse'

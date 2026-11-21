@@ -1,10 +1,8 @@
-// Published API rate limits, per lab, model, tier and metric, from the labs'
-// own Markdown docs. Limits are tier design and abuse control as much as
-// capacity, and they move in announced steps (OpenAI cut five tiers to three
-// on 2026-10-06; Anthropic raised limits on 2026-06-26), so each change is
-// stored as a dated snapshot of the whole table: one row per limit, dated the
-// run that first saw it. Google and Mistral publish no per-model limits (cut
-// in sources.yaml). Audited in docs/source-audit.md, 2026-11-04.
+// Published API rate limits, per lab, model, tier and metric, from the labs' own Markdown
+// docs. Limits are tier design and abuse control as much as capacity, and they move in
+// announced steps, so each change is stored as a dated snapshot of the whole table: one row
+// per limit, dated the run that first saw it. Google and Mistral publish no per-model limits
+// (cut in sources.yaml). Audited in docs/source-audit.md.
 
 import type { CompanyId } from '../../../core/shared/utils/companies'
 import type { Observation, Recipe } from '../../../core/server/recipes/contract'

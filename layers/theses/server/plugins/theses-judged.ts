@@ -1,6 +1,6 @@
-// Re-evaluates the judged thesis claims after each judge run lands its verdicts
-// (layers/core/server/pipeline/judge/submit.ts calls `judge:applied`). A hook,
-// not an import, so the judge runner never depends on the theses that read it.
+// Re-evaluates the judged thesis claims once a judge run lands its verdicts
+// (layers/core/server/pipeline/judge/submit.ts calls `judge:applied`). A hook
+// keeps the judge runner from depending on the theses that read it.
 
 import { evaluateJudgedTheses } from '../theses/evaluate'
 

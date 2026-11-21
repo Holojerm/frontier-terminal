@@ -1,16 +1,12 @@
-// The terminal's rate-limit budgets: the second native binding it declares, and
-// the named numbers its permalink routes spend. Core (server/utils/rate-limit.ts)
-// owns the mechanism; this is the product's side of it, registered from
-// layers/core/server/plugins/rate-limits.ts.
+// The terminal's rate-limit budgets. Core (server/utils/rate-limit.ts) owns the
+// mechanism; these are registered from layers/core/server/plugins/rate-limits.ts.
 
 /**
- * The public read path: every /api/* route the terminal's pages fetch asks for
- * 60/60s. Core's own RATE_LIMITER (30/60s) carries the two writers, export and
- * judge; this is the `[[ratelimits]]` block named RATE_LIMITER_60 in
- * wrangler.toml, and it MUST match that block's numbers —
- * layers/core/test/rate-limits.test.ts probes the real binding and fails if
- * they drift, because a mismatch does not throw, it just quietly stops anything
- * from using the native path.
+ * The public read path: 60/60s for every /api/* route the pages fetch (core's
+ * RATE_LIMITER, 30/60s, carries the export and judge writers). This is the
+ * `[[ratelimits]]` block RATE_LIMITER_60 in wrangler.toml and MUST match its
+ * numbers: a mismatch doesn't throw, it silently stops the native path.
+ * layers/core/test/rate-limits.test.ts probes the real binding.
  */
 export const READ_PATH_LIMITER: NativeLimiterSpec = {
   binding: 'RATE_LIMITER_60',
@@ -19,39 +15,33 @@ export const READ_PATH_LIMITER: NativeLimiterSpec = {
 }
 
 /**
- * The budget for a permalink family — `/api/alerts/:id`, `/api/prices/:key`.
+ * The budget for a permalink family (`/api/alerts/:id`, `/api/prices/:key`).
  *
- * Sized off the sitemap rather than off a feeling. robots.txt invites fifteen
- * crawlers onto every public page, and server/routes/sitemap.xml.get.ts
- * enumerates one URL per SKU and one per alert — 378 and 184 when this was
- * written, both growing with the store. A budget smaller than a full family
- * means every crawl half-completes, and what the crawler gets for the rest is
- * an error where the most citable documents on this site should be. So the
- * number has to clear a whole pass inside one window, with room to grow.
+ * Sized off the sitemap: robots.txt invites crawlers onto every public page, and
+ * server/routes/sitemap.xml.get.ts lists one URL per SKU and one per alert,
+ * hundreds each and growing. A smaller budget means every crawl half-completes
+ * and gets errors on the most citable pages, so it must clear a whole pass in
+ * one window, with room to grow.
  *
- * It is still a ceiling, not a formality: 500/60s is eight requests a second
- * sustained, which no reader and no crawler comes near and a scraping loop
- * passes in a blink. Both routes answer from the KV cache behind an edge
- * cache (TERMINAL_CACHE_CONTROL), so a hit that reaches this is already the
- * cheap kind.
+ * It is still a ceiling: 500/60s is about eight requests a second sustained,
+ * which a scraping loop passes quickly. Both routes answer from the KV cache
+ * behind an edge cache (TERMINAL_CACHE_CONTROL), so a hit that reaches this is
+ * cheap.
  */
 export const PERMALINK_LIMIT = 500
 
 /**
- * Licensee keys (layers/core/server/utils/api-access.ts). A keyed request
- * is counted per key instead of per IP, against its tier's budget, on its own
- * native binding: at ten or twenty requests a second, a KV counter would
- * overrun KV's one-write-a-second-per-key limit and count nothing useful.
- * Each MUST match its `[[ratelimits]]` block in wrangler.toml, which
- * layers/core/test/rate-limits.test.ts probes.
+ * Licensee keys (layers/core/server/utils/api-access.ts), counted per key on
+ * their tier's own native binding: at ten or twenty requests a second, a KV
+ * counter would overrun KV's one-write-a-second-per-key limit. Each MUST match
+ * its `[[ratelimits]]` block in wrangler.toml (layers/core/test/rate-limits.test.ts
+ * probes them).
  *
- *   research    600/60s on every /api route and the bulk feed: ten a second,
- *               ten times the anonymous read budget.
- *   systematic  1,200/60s: twenty a second, for a client that syncs the API
- *               on a schedule.
+ *   research    600/60s on every /api route and the bulk feed.
+ *   systematic  1,200/60s, for a client that syncs the API on a schedule.
  *
- * The native binding counts per Cloudflare location. A licensee's servers sit
- * in one place, so that's the budget they see.
+ * The native binding counts per Cloudflare location; a licensee's servers sit in
+ * one place, so that is the budget they see.
  */
 export const KEYED_READ_LIMITERS = {
   research: {
@@ -67,10 +57,10 @@ export const KEYED_READ_LIMITERS = {
 } as const satisfies Record<string, NativeLimiterSpec>
 
 /**
- * A live `/export/<table>` reads the whole table from D1 on every request, so
- * a key gets twice the anonymous budget here, not twenty times: the bulk feed
- * (/export/bulk/manifest.json) is the way to take every table daily. 60/60s is
- * READ_PATH_LIMITER's pair, so it runs on that binding.
+ * A live `/export/<table>` reads the whole table from D1, so a key gets only
+ * twice the anonymous budget here; the bulk feed (/export/bulk/manifest.json) is
+ * for taking every table daily. 60/60s pairs with READ_PATH_LIMITER, so it runs
+ * on that binding.
  */
 export const KEYED_EXPORT_LIMIT = REQUEST_BUDGETS.research.export
 

@@ -1,13 +1,8 @@
-// The hyperscaler exposure payload: every series built from filed_facts
-// (layers/companies/server/exposure/series.ts), the filers they come from, and
-// the figures the filings don't tag. Read-only.
-//
-// As of T it counts the facts filed before T's UTC day. That is event time,
-// not the store's knowledge time the other routes use: a filed fact was public
-// from its filing date whether or not we had read it yet, so the history goes
-// back to 2020 even though the store's first snapshot is from 2026. Counting
-// from the day after the filing date keeps a filing accepted late on T's own
-// day out of T.
+// The hyperscaler exposure payload built from filed_facts
+// (layers/companies/server/exposure/series.ts). As of T it counts facts filed before
+// T's UTC day: event time, not the store's knowledge time other routes use, since a
+// filed fact was public from its filing date. The day after the filing date keeps a
+// filing accepted late on T's own day out of T.
 
 import { and, lt, ne } from 'drizzle-orm'
 

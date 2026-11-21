@@ -1,19 +1,11 @@
 import { activeRelay, isRelayed, relayedOutcome, type RelayStore } from '../pipeline/relay'
 import type { FetchSource } from './pipeline-sources'
 
-// Fetch stage (boundary table: DETERMINISTIC). An HTTP GET against an
-// audited URL with retries and the right User-Agent — no judgment, no
-// parsing. URLs only ever arrive as FetchSource rows, which
-// includeSources() joins from sources.yaml and fixtures/manifest.json; this
-// module never composes one.
-//
-// The body is data. Nothing in it is read here beyond its length.
-//
-// Two bounds, because the other side of every one of these URLs is somebody
-// else's server: each attempt aborts at FETCH_TIMEOUT_MS, and a body over
-// MAX_BODY_BYTES is abandoned mid-stream rather than held. Neither is
-// configurable — a source that needs either relaxed is a source worth
-// looking at.
+// Fetch stage (boundary table: DETERMINISTIC): an HTTP GET with retries and the
+// right User-Agent, no parsing. URLs arrive only as FetchSource rows from
+// includeSources(); this module never composes one. The body is data. Each
+// attempt aborts at FETCH_TIMEOUT_MS and a body over MAX_BODY_BYTES is abandoned
+// mid-stream; neither is configurable, since a source needing more is worth a look.
 
 export type FetchOutcome =
   | { ok: true; status: number; text: string; bytes: number }
@@ -56,7 +48,7 @@ export function isSecHost(url: string): boolean {
 }
 
 export interface UserAgentOptions {
-  /** NUXT_SEC_CONTACT_EMAIL — required by sec.gov, unused elsewhere. */
+  /** NUXT_SEC_CONTACT_EMAIL: required by sec.gov, unused elsewhere. */
   secContactEmail: string
   /** The site's public origin, so a webmaster can see who is fetching. */
   appUrl: string
@@ -77,9 +69,9 @@ export function userAgentFor(url: string, options: UserAgentOptions): string | n
 }
 
 export interface FetcherOptions extends UserAgentOptions {
-  /** NUXT_OPENROUTER_API_KEY — sent only to openrouter.ai/api/v1/datasets/*. Never logged. */
+  /** NUXT_OPENROUTER_API_KEY: sent only to openrouter.ai/api/v1/datasets/*. Never logged. */
   openrouterApiKey?: string
-  /** NUXT_GITHUB_TOKEN — sent only to api.github.com/search/*. Never logged. */
+  /** NUXT_GITHUB_TOKEN: sent only to api.github.com/search/*. Never logged. */
   githubToken?: string
   fetch?: typeof globalThis.fetch
   sleep?: (ms: number) => Promise<void>
@@ -95,7 +87,7 @@ export const FETCH_BACKOFF_MS: readonly number[] = [500, 2000]
 /**
  * Per attempt, not per fetch. A source that has not answered in this long is
  * not going to, and an unbounded wait ties up the poll tick until the
- * platform kills it — which looks like a hung cron, not a slow vendor.
+ * platform kills it, which looks like a hung cron, not a slow vendor.
  */
 export const FETCH_TIMEOUT_MS = 30_000
 
@@ -110,20 +102,14 @@ export const MAX_BODY_BYTES = 32 * 1024 * 1024
 
 export const BODY_TOO_LARGE = `body exceeds ${MAX_BODY_BYTES} bytes`
 
-/** A credentialed request will not chase a redirect — see createFetcher. */
+/** A credentialed request will not chase a redirect (see createFetcher). */
 export const REDIRECT_REFUSED = 'refused a redirect on a credentialed request'
 
 /**
- * The body, or null when it is over `maxBytes`.
- *
- * Streamed rather than `response.text()`ed so an oversized payload is
- * abandoned mid-flight instead of being materialised first and measured
- * after. `content-length` short-circuits the common case; the stream cap is
- * what covers a chunked response that declares nothing.
- *
- * `bytes` is now what came off the wire rather than the re-encoded length of
- * the decoded text. Those agree for well-formed UTF-8, and where they differ
- * the wire count is the honest one.
+ * The body, or null when it is over `maxBytes`. Streamed so an oversized body
+ * is abandoned mid-flight, not materialised first; `content-length`
+ * short-circuits the common case and the stream cap covers chunked responses.
+ * `bytes` is the wire count.
  */
 const EMPTY = new Uint8Array(0)
 
@@ -196,12 +182,10 @@ export function parseRetryAfter(header: string | null, now: number = Date.now())
 }
 
 /**
- * Build the fetcher the refresh runs with. SEC sources are refused up front
- * when no contact email is configured — never fetched anonymously — and the
- * refusal is a normal 'failed' outcome so it lands in source_runs and the
- * ops digest like any other failure. A keyed OpenRouter dataset without its
- * key is a 'skipped' outcome instead: not configured is a state, not an
- * outage, and the refresh throttles its ops event to one a day.
+ * Build the fetcher the refresh runs with. SEC sources without a contact email
+ * are refused (never fetched anonymously) as a 'failed' outcome; a keyed
+ * OpenRouter dataset without its key is 'skipped', a config state whose ops
+ * event the refresh throttles to one a day.
  */
 export function createFetcher(options: FetcherOptions): SourceFetcher {
   const doFetch = options.fetch ?? globalThis.fetch
@@ -217,9 +201,9 @@ export function createFetcher(options: FetcherOptions): SourceFetcher {
     const headers: Record<string, string> = { 'User-Agent': userAgent, Accept: '*/*' }
     // A request that carries a credential does not chase redirects. The header
     // is chosen from the URL we were given, so following a 302 would hand the
-    // key to whatever host answered it — the fetch spec strips Authorization
-    // across origins, but that is the platform's promise to keep, not ours to
-    // depend on for a secret.
+    // key to whatever host answered it. The fetch spec strips Authorization
+    // across origins, but that is the platform's promise, not one to depend on
+    // for a secret.
     const openrouter = needsOpenRouterKey(source.url)
     const github = needsGithubToken(source.url)
     const credentialed = openrouter || github

@@ -6,8 +6,8 @@ import { z } from 'zod'
 /** Lowercased and trimmed: the form the unique index sees. */
 export const normalizeEmail = (value: string): string => value.trim().toLowerCase()
 
-// Deliberately plain: one @, a dotted domain, no spaces. The confirmation mail
-// is the real validation; this only keeps obvious junk out of the table.
+// Plain: one @, a dotted domain, no spaces. The confirmation mail is the real validation;
+// this only keeps obvious junk out of the table.
 const EMAIL = /^[^\s@<>"',;:()[\]\\]+@[^\s@<>"',;:()[\]\\]+\.[^\s@<>"',;:()[\]\\]{2,}$/
 
 export const subscribeBody = z.object({

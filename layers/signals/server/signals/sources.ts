@@ -293,14 +293,12 @@ export function createLoader(deps: LoadDeps) {
       case 'prints': {
         if (source.yoy === 'derived')
           return { kind: 'points', points: await derivedYoy(deps.db, source) }
-        // Each month (or 10- or 20-day count) as the first release to state a
-        // year-on-year change put it: the earliest print row with one, from
-        // whichever source (a provisional Korean month can state the value
-        // alone, its confirmed release the change). It is dated public on
-        // the release's own time where it states one, else on the day KCS
-        // posted it (print_documents.filed), else available_after_days after
-        // the period. Every source is read, the held ones included
-        // (PRINT_HELD_SOURCES): the harness publishes statistics, never rows.
+        // Each month (or 10- or 20-day count) as the first release to state a year-on-year
+        // change put it: the earliest print row with one, from any source (a provisional
+        // Korean month can state the value alone, its confirmed release the change). Dated
+        // public at the release's own time where it states one, else the day KCS posted it
+        // (print_documents.filed), else available_after_days after the period. Held sources
+        // (PRINT_HELD_SOURCES) are read too: the harness publishes statistics, never rows.
         const t = tables.hardwarePrints
         const d = tables.printDocuments
         const rows = await deps.db

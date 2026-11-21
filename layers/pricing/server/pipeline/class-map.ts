@@ -64,11 +64,10 @@ export async function effectiveClassMap(
 }
 
 /**
- * The class-map cells checked against a source's page, in a stable order.
- * The judge re-maps a cell after the vendor edits the page, so the page is
- * usually unchanged by the next tick; without these in the parse's input the
- * check would keep testing the old sentence until the vendor edits the page
- * again. A cell resting on one of the lane's sides is checked here too
+ * The class-map cells checked against a source's page, in a stable order. The judge re-maps a
+ * cell after the vendor edits the page, so the next tick usually sees the same page; without
+ * these cells in the parse input, the check would keep testing the old sentence until the
+ * vendor edits the page again. A cell resting on one of the lane's sides is checked here too
  * (lanes.ts › checkedSide).
  */
 export function citedCells(classMap: readonly ClassEntry[], sourceIds: readonly string[]) {

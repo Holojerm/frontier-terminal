@@ -1,42 +1,33 @@
 // A KV cache for the terminal payloads, keyed by the poll tick. The TTL is
 // garbage collection only (TERMINAL_CACHE_TTL_SECONDS); freshness comes from the key.
 //
-// The key carries the newest source_runs.started_at and the newest write of
-// every writer outside the poll (terminalStamps), so a poll or a judge run
-// invalidates every cached payload by construction: the next request computes against
-// the new stamp and the old entries expire on their own. Nothing has to be
-// evicted, and a reader can never be served a payload from before the tick
-// the page says it reflects.
+// The key carries the newest source_runs.started_at and the newest write of every
+// writer outside the poll (terminalStamps), so a poll or a judge run invalidates
+// every cached payload by construction: nothing is evicted, and a reader never
+// gets a payload older than the tick the page says it reflects.
 //
-// Fails OPEN. A KV hiccup must not take the terminal down: the payload is
-// recomputed from D1 and the miss is logged. Takes the store explicitly so
-// layers/core/test/terminal-cache.test.ts drives it with a Map.
+// Fails open: on a KV error the payload is recomputed from D1 and the miss is
+// logged. Takes the store explicitly so layers/core/test/terminal-cache.test.ts
+// drives it with a Map.
 
 import { sql } from 'drizzle-orm'
 
 import type { PipelineDb } from './pipeline-store'
 import { timed, type ServerTimings } from './server-timing'
 
-/** The slice of unstorage's Storage the cache uses — lets tests pass a Map-backed fake. */
+/** The slice of unstorage's Storage the cache uses, so tests can pass a Map-backed fake. */
 export interface CacheStore {
   get(key: string): Promise<unknown>
   set(key: string, value: unknown, opts?: { ttl?: number }): Promise<unknown>
 }
 
 /**
- * Sized off the poll cadence, not off a feeling about freshness.
- *
- * The key carries the poll stamp, so an entry cannot outlive the tick it
- * describes: the next poll rotates every key and the old ones are orphaned
- * whatever their TTL. The TTL is therefore a garbage-collection deadline, not
- * a staleness bound, and shortening it cannot make a payload fresher — it can
- * only throw away a still-correct entry and make some reader recompute it from
- * D1.
- *
- * At the previous 300s that happened five times per 30-minute poll window, and
- * because all the payloads share one stamp they expired together: one unlucky
- * reader recomputed all eight from scratch. 40 minutes clears the half-hourly
- * poll with slack, so an entry now expires only after it is already orphaned.
+ * The key carries the poll stamp, so the next poll orphans every entry whatever
+ * its TTL. The TTL is a garbage-collection deadline, not a staleness bound:
+ * shortening it only throws away correct entries and makes a reader recompute
+ * from D1. The payloads share one stamp and expire together, so an early expiry
+ * makes one reader recompute all of them. 40 minutes clears the half-hourly poll
+ * with slack, so an entry expires only once it is orphaned.
  */
 export const TERMINAL_CACHE_TTL_SECONDS = 2400
 
@@ -49,16 +40,14 @@ export interface TerminalStamps {
 
 /**
  * The poll tick plus the newest write of each writer that changes a served
- * payload outside the poll: the judge (its alerts, then its judge_runs row,
- * then the class-map decisions and the claim and track-record verdicts, which
- * land after that row and so are keyed on their own), other alert writers (the
- * hiring rollup, exposure ingest), the thesis evaluation (it runs after the
- * survey's recipes, so it also moves past their writes), the track-record
- * searches and the candidates they and the GDELT backfill find, and the
- * filed-fact reads. Keyed on the poll alone, a judge run left every page on
- * the payload from before it until the next poll. One statement, each
- * subquery a max() on an indexed column. A route's own variant only adds
- * what this cannot see: its input, or a stamp from a table outside this list.
+ * payload outside the poll: the judge (its alerts, its judge_runs row, then the
+ * class-map decisions and the claim and track-record verdicts, which land after
+ * that row and so are keyed on their own), other alert writers (the hiring
+ * rollup, exposure ingest), the thesis evaluation (it runs after the survey's
+ * recipes), the track-record searches and the candidates they and the GDELT
+ * backfill find, and the filed-fact reads. One statement, each subquery a max()
+ * on an indexed column. A route's own variant adds only what this can't see:
+ * its input, or a stamp from a table outside this list.
  */
 export async function terminalStamps(db: PipelineDb): Promise<TerminalStamps> {
   const [row] = await db.all<Record<string, string | null>>(
@@ -92,32 +81,21 @@ const WRITERS = [
   'filed',
 ] as const
 
-/**
- * The stamp read currently in flight, if any. Module scope, so it is per
- * isolate rather than per request — which is the point.
- */
+/** The stamp read in flight, if any. Module scope, so it is shared per isolate, not per request. */
 let inFlightStamp: { promise: Promise<unknown>; startedAt: number } | null = null
 
 /**
- * `terminalStamps`, de-duplicated across concurrent callers.
+ * `terminalStamps`, de-duplicated across concurrent callers. The front page fans
+ * out to eight endpoints that start within milliseconds of each other, so
+ * sharing the first one's promise turns eight identical D1 queries into one.
  *
- * Rendering the front page fans out to eight endpoints, and each one used to
- * ask D1 for the same stamps independently: eight identical
- * queries, eight round-trips, one answer. They all start within a few
- * milliseconds of each other, so sharing the first one's promise collapses them
- * into a single query without changing a single result.
+ * Not a cache: the promise is dropped when it settles, so the next caller reads
+ * D1 again. Only reads that overlap in time share, a tighter window than D1's
+ * own read consistency. A rejection is shared too (one 503, not eight), and the
+ * cleared slot lets the next request retry.
  *
- * This is NOT a cache and deliberately not written as one. The promise is
- * dropped the moment it settles, so the next caller reads D1 again — there is no
- * TTL and no window in which a stale stamp can be handed out. The only sharing
- * is between reads that genuinely overlap in time, which is a tighter window
- * than D1's own read consistency.
- *
- * A rejection is shared too, so eight fan-out calls report one 503 rather than
- * eight — and because the slot is cleared on settle, the next request retries.
- *
- * `terminalStamps` itself stays an unmemoized read: callers that drive it across
- * writes to the same database must see each new value.
+ * `terminalStamps` itself stays unmemoized: callers that drive it across writes
+ * to the same database must see each new value.
  */
 export function sharedTerminalStamp<T>(
   read: () => Promise<T>,
@@ -139,15 +117,14 @@ export function sharedTerminalStamp<T>(
 /**
  * How long a caller waits on another caller's stamp read before issuing its own.
  *
- * The slot is per isolate, so concurrent *requests* share it, not just one
- * render's fan-out. Workers ties a D1 read to the request that started it: if
- * that request is cancelled (a reader closes the tab) the read never settles,
- * and a promise from an ended request context is dropped rather than resolved
- * in another (the handle_cross_request_promise_resolution flag). Before this
- * bound, every later page request in the isolate joined that dead promise and
- * hung with no bytes sent; frontierterm.com did exactly that on 2026-11-07.
- * A healthy stamp read takes 10–90ms, so a second's wait costs nothing on the
- * normal path, and an abandoned slot is replaced after it.
+ * The slot is per isolate, so concurrent requests share it. Workers ties a D1
+ * read to the request that started it: if that request is cancelled (a reader
+ * closes the tab) the read never settles, and a promise from an ended request
+ * context is dropped rather than resolved in another (the
+ * handle_cross_request_promise_resolution flag). Unbounded, every later page
+ * request in the isolate would join that dead promise and hang with no bytes
+ * sent. A healthy stamp read takes 10–90ms, so a second's wait costs nothing
+ * normally, and an abandoned slot is replaced after it.
  */
 export const STAMP_SHARE_WAIT_MS = 1000
 
@@ -179,12 +156,11 @@ export function terminalCacheKey(name: string, stamp: string | null): string {
 /**
  * How long a KV read may take before the recompute starts alongside it.
  *
- * A key this colo has read recently answers in 3–20ms. A key it has not —
- * the normal case on this site, where the cache:warm cron writes from one
- * data centre and readers arrive in others — took 0.5–2.6s in production on
- * 2026-11-04, whatever the value's size, while the recompute it stands in for
- * takes 10–700ms. Past this budget the read is almost certainly cold, so the
- * reader gets whichever of the two finishes first.
+ * A key this colo read recently answers in 3–20ms. A cold key (the normal case
+ * here: the cache:warm cron writes from one data center and readers arrive in
+ * others) took 0.5–2.6s in production whatever the value's size, while the
+ * recompute takes 10–700ms. Past this budget the read is almost certainly cold,
+ * so the reader gets whichever of the two finishes first.
  */
 export const KV_HEDGE_MS = 100
 
@@ -193,8 +169,7 @@ export interface CacheOptions {
   timings?: ServerTimings
   /**
    * The request's waitUntil. Given one, the write on a miss runs after the
-   * response is sent: a KV put costs 200–350ms in production, which a reader
-   * was paying on top of the recompute for a value they already had.
+   * response is sent, since a KV put costs 200–350ms in production.
    */
   defer?: (promise: Promise<unknown>) => void
   /** Overrides KV_HEDGE_MS; tests use it to make the race deterministic. */
@@ -204,10 +179,10 @@ export interface CacheOptions {
 type Read<T> = { found: true; value: T } | { found: false }
 
 /**
- * Serve `name` for the tick `stamp` from the store, computing and storing it
- * on a miss. `compute` runs at most once per (name, stamp) per TTL
- * under normal conditions; under a failing store it runs every time, which
- * is slower and still correct. A slow read is hedged (KV_HEDGE_MS).
+ * Serve `name` for the tick `stamp` from the store, computing and storing it on
+ * a miss. `compute` runs at most once per (name, stamp) per TTL normally, and
+ * every time under a failing store (slower, still correct). A slow read is
+ * hedged (KV_HEDGE_MS).
  */
 export async function cachedTerminal<T>(
   store: CacheStore,

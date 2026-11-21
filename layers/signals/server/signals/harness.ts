@@ -1,24 +1,21 @@
-// The statistics: pure functions of a series and a price panel, so the tests
-// drive them with made-up numbers.
+// The statistics: pure functions of a series and a price panel, so tests drive them with
+// made-up numbers.
 //
-// Lead-lag. A series is folded into its period (week or month), turned into
-// one change a period (log change for a level or a normalized level, a
-// difference for a share, as given for a change), and each change is dated at the first session after
-// it became public (registry › available_after_days). Its forward return over
-// h sessions is the ticker's return less the benchmark's. The statistic is the
-// Pearson correlation between the changes and those returns.
+// Lead-lag. A series is folded into its period (week or month) and turned into one change
+// a period (log change for a level or a normalized level, a difference for a share, as
+// given for a change). Each change is dated at the first session after it became public
+// (registry › available_after_days). Its forward return over h sessions is the ticker's
+// return less the benchmark's; the statistic is the Pearson correlation of the two.
 //
-// Event study. Each event day's abnormal return runs from the close of the
-// last session before the event to h sessions later (h = 1 is the event
-// day's own move). The statistic is the mean, signed by the event's value
-// where the registry says so. An event dated only to the gap between two
-// copies of a page counts at a horizon only when the gap is narrow enough
-// for it (maxWindowDays).
+// Event study. Each event day's abnormal return runs from the close of the last session
+// before the event to h sessions later (h = 1 is the event day's own move). The statistic
+// is the mean, signed by the event's value where the registry says so. An event dated only
+// to the gap between two copies of a page counts at a horizon only when the gap is narrow
+// enough (maxWindowDays).
 //
-// Both hold out the newest third of the series' observations by date, so the
-// out-of-sample number is one nobody could have fitted. Returns over h
-// sessions from observations fewer than h sessions apart overlap, so the
-// sample behind each p-value is shrunk to n × spacing / h.
+// Both hold out the newest third of observations by date, so the out-of-sample number is
+// one nobody could have fitted. Returns over h sessions from observations fewer than h
+// sessions apart overlap, so each p-value's sample is shrunk to n × spacing / h.
 
 import { addDays, type PricePanel } from './market'
 
@@ -303,7 +300,6 @@ export function correlationStat(
   if (r === null) return thin(n)
   const nEff = effectiveN(n, spacingOf(pairs.map((p) => p.entry)), h)
   const df = nEff - 2
-  // Too few independent returns to test: the overlap leaves under three.
   if (nEff < MIN_EFFECTIVE || Math.abs(r) >= 1) return thin(n)
   const t = r * Math.sqrt(df / (1 - r * r))
   return {

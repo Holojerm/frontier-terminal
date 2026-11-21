@@ -1,12 +1,8 @@
 <script setup lang="ts">
-// The terminal's front page. Reading order is priority order: every lab on
-// every axis, the figures around the labs, and what moved; then the axes
-// under the site nav's two groups, Economics (what things cost, what has been
-// disclosed, who is winning demand and where the implied dollars go) and
-// Operations (who is hiring, how strained the APIs are, what the labs
-// disclose about their models). Each panel is the same component
-// its axis page leads with, so the overview is the axis pages' summaries and
-// nothing else. Fourteen cached endpoints, fetched in parallel on the server.
+// The front page. Reading order is priority order: every lab on every axis, the figures
+// around the labs and what moved; then the axes under the nav's Economics and Operations
+// groups. Each panel is the one its axis page leads with. Fourteen cached endpoints,
+// fetched in parallel on the server.
 
 import type { IncidentsData } from '#layers/reliability/shared/types/incidents'
 import type { ReleasesData } from '#layers/models/shared/types/releases'
@@ -30,12 +26,10 @@ type IncidentsStrip = Omit<IncidentsData, 'incidents'> & { incident_count: numbe
 
 const config = useRuntimeConfig()
 
-// One source for the site's one-sentence claim — also used by /llms.txt and
-// the schema.org description, so all three agree.
+// Shared with /llms.txt and the schema.org description, so all three agree.
 const description = config.public.appDescription
 
-// The fundamentals row reads one figure from each of these, so each transform
-// keeps that figure and its citation and drops the rest of the payload. Started
+// The fundamentals row reads one figure (and its citation) from each of these. Started
 // before the other nine are awaited, so all fourteen run at once.
 const fundamentalsFetch = Promise.all([
   useFetch('/api/ground-truth', { transform: truthFigure }),
@@ -45,13 +39,9 @@ const fundamentalsFetch = Promise.all([
   useFetch('/api/theses', { transform: thesisFigure }),
 ])
 
-// `pick`/`transform` run on the server, before Nuxt serialises the result into
-// the hydration payload — so what is dropped here is not fetched-then-ignored,
-// it never reaches the HTML. Both of these were most of this page's weight:
-// /api/prices is 241 KB of which `rows` is 240 KB, and /api/incidents carries
-// ~40 KB of incident rows this page reduces to a single count. The full catalog
-// and the full list are each one link away on their own page, where they are
-// actually rendered.
+// `pick`/`transform` run on the server before serialization, so what is dropped never
+// reaches the HTML. /api/prices is 241 KB (240 KB of it `rows`) and /api/incidents carries
+// ~40 KB of rows this page reduces to a count.
 const [
   overview,
   prices,
@@ -94,9 +84,8 @@ const [
       providers: d.providers.map((p) => ({ ...p, departments: [], archived: [] })),
     }),
   }),
-  // No `useFetch<IncidentsData>` here: the explicit generic pins the data type
-  // as well as the response type, so a transform that reshapes cannot satisfy
-  // it. Annotating the transform's input types both ends instead.
+  // No `useFetch<IncidentsData>`: the explicit generic pins the data type too, so a
+  // reshaping transform cannot satisfy it. The transform's input is annotated instead.
   useFetch('/api/incidents', {
     transform: ({ incidents: rows, ...rest }: IncidentsData): IncidentsStrip => ({
       ...rest,
@@ -117,8 +106,7 @@ const fundamentalFigures = computed(() =>
 )
 
 useSeo({
-  // 'exact' because the brand should lead on the landing page — everywhere else
-  // useSeo appends `· AppName` for you.
+  // 'exact' so the brand leads; elsewhere useSeo appends `· AppName`.
   titleMode: 'exact',
   title: `${config.public.appName}: fundamentals on the frontier AI labs`,
   description,

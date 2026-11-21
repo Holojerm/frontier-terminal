@@ -8,41 +8,36 @@ import { isoDate } from './md-table'
 
 // google-pricing — https://aistudio.google.com/docs/pricing.md
 //
-// Deterministic parse — no model in the loop. Two renderings of one page, told
-// apart by their headings:
+// Deterministic parse of two renderings of one page, told apart by their headings:
 //
-//   Markdoc (from 2026-11-02, when ai.google.dev/gemini-api/docs/pricing began
-//   301-ing to a client-rendered AI Studio page): one `## Name {% id="<slug>" %}`
-//   per model, the API code(s) in backticks inside the `{% left-column %}` under
-//   it, then one `{% table %}` per tier inside a `{% tab title="Standard" %}`.
-//   Rows are separated by `---` lines and cells open with `* `; a line ending in
-//   two or more spaces is a hard break, the <br> of the HTML rendering.
+//   Markdoc (from 2026-11-02): one `## Name {% id="<slug>" %}` per model, the API code(s) in
+//   backticks inside the `{% left-column %}` under it, then one `{% table %}` per tier inside
+//   a `{% tab title="Standard" %}`. Rows are separated by `---` lines and cells open with `* `;
+//   a line ending in two or more spaces is a hard break, the <br> of the HTML rendering.
 //
-//   SSR HTML (until 2026-11-02): one `<h2 id="<slug>">` per model, the API code
-//   in a `<code>` element directly under it, then one `<table>` per tier under
-//   an `<h3>`. Kept because the hand-verified ground truth is on that fixture.
+//   SSR HTML (until 2026-11-02): one `<h2 id="<slug>">` per model, the API code in a `<code>`
+//   element directly under it, then one `<table>` per tier under an `<h3>`. Kept because the
+//   hand-verified ground truth is on that fixture.
 //
-// Either way every table is three columns (label, Free Tier, Paid Tier) and the
-// Paid Tier header names the unit — "per 1M tokens in USD" for the tables this
-// parser reads; per image / per second / per request for the ones it reports
-// as skipped. Tiers are Standard / Batch / Flex / Priority / Contributor.
+// Every table is three columns (label, Free Tier, Paid Tier) and the Paid Tier header names
+// the unit: "per 1M tokens in USD" for the tables read; per image / per second / per request
+// for the ones reported as skipped. Tiers are Standard / Batch / Flex / Priority / Contributor.
 //
-// No DOM or Markdown library: both are scanned with regexes over the raw
-// string. The page prints unescaped `<= 200k tokens` inside cells, so the HTML
-// tag regex only accepts `<` followed by a letter or `/`.
+// No DOM or Markdown library: regexes over the raw string. The page prints unescaped
+// `<= 200k tokens` inside cells, so the HTML tag regex only accepts `<` followed by a letter
+// or `/`.
 //
 // Honesty rules, in order of precedence:
-//   1. A slug is only ever the verbatim text of a <code> element (HTML) or a
-//      backtick span in the heading's left column (Markdoc).
-//   2. A price is only ever a `$` amount printed in the cell; a cell that
-//      prints no per-token amount yields null and a note carrying its text.
-//   3. A section or table whose structure is not recognised is reported in
-//      `skipped`, never dropped. Partial extraction that looks complete is
-//      the failure mode a model-driven extractor had on this page.
+//   1. A slug is only ever the verbatim text of a <code> element (HTML) or a backtick span in
+//      the heading's left column (Markdoc).
+//   2. A price is only ever a `$` amount printed in the cell; a cell that prints no per-token
+//      amount yields null and a note carrying its text.
+//   3. A section or table whose structure is not recognised is reported in `skipped`, never
+//      dropped: partial extraction that looks complete is how a model-driven extractor failed
+//      on this page.
 //   4. Provenance is an argument. Nothing here reads a clock.
 
-// The row shape is the shared PriceRow with provider pinned to "google".
-// Exported under the lane's own names so callers and tests read naturally.
+// The row shape is the shared PriceRow with provider pinned to "google", under the lane's own names.
 export const GooglePricingOutput = ContractGooglePricingOutput
 export const GooglePricingRow = GooglePricingOutput.shape.rows.element
 export type GooglePricingRow = z.infer<typeof GooglePricingRow>
@@ -93,7 +88,7 @@ const TH = /<th[^>]*>([\s\S]*?)<\/th>/g
 const TR = /<tr[^>]*>([\s\S]*?)<\/tr>/g
 const TD = /<td[^>]*>([\s\S]*?)<\/td>/g
 const BR = /<br\s*\/?>/g
-// `<` followed by a letter or `/` only — the page prints a literal "<= 200k".
+// `<` followed by a letter or `/` only: the page prints a literal "<= 200k".
 const TAG = /<\/?[a-zA-Z][^>]*>/g
 const FOOTNOTE = /<sup>[^<]*<\/sup>/g
 
@@ -369,10 +364,10 @@ function htmlSections(html: string): Section[] {
   })
 }
 
-/** The codes block under a heading: its left column or, on a section without
- * the two-column layout (deprecated models and Lyria since 2026-11), the lines
- * between the heading and the first `{% hr %}`. Never the body: a deprecation
- * callout below the rule names other models in backticks too. */
+/** The codes block under a heading: its left column or, on a section without the two-column
+ * layout (deprecated models and Lyria), the lines between the heading and the first
+ * `{% hr %}`. Never the body: a deprecation callout below the rule names other models in
+ * backticks too. */
 function markdownCodeBlock(body: string): string {
   const column = body.match(MD_LEFT_COLUMN)?.[1]
   if (column !== undefined) return column
@@ -400,13 +395,13 @@ function markdownSections(md: string): Section[] {
 }
 
 /**
- * Parse the Gemini API pricing page, in either rendering. `prov` is stamped
- * verbatim onto every row. Rows come back in page order (model, then tier, a
- * current-window row immediately before its scheduled one); `skipped` lists
- * every section or tier table that produced no rows, with the reason.
+ * Parse the Gemini API pricing page, in either rendering. `prov` is stamped verbatim onto
+ * every row. Rows come back in page order (model, then tier, a current-window row immediately
+ * before its scheduled one); `skipped` lists every section or tier table that produced no
+ * rows, with the reason.
  *
- * Throws only when the page has no model sections at all — a page whose
- * structure vanished must fail loudly rather than emit an empty snapshot.
+ * Throws only when the page has no model sections at all, so a page whose structure vanished
+ * fails loudly instead of emitting an empty snapshot.
  */
 export function parseGooglePricingPage(page: string, prov: Provenance): GooglePricingResult {
   const sections = page.includes('{% id="') ? markdownSections(page) : htmlSections(page)
@@ -454,10 +449,9 @@ export function parseGooglePricingPage(page: string, prov: Provenance): GooglePr
         rows.push({
           provider: 'google',
           model_slug: slug,
-          // A table outside any tier tab is the model's only paid tier. Keying it
-          // `standard` keeps the entity key stable when Google adds or drops the
-          // tab (the Live models lost theirs in the 2026-11-02 Markdoc move), and
-          // matches google-model-page and googlePricedSlugs.
+          // A table outside any tier tab is the model's only paid tier. Keying it `standard`
+          // keeps the entity key stable when Google adds or drops the tab, and matches
+          // google-model-page and googlePricedSlugs.
           tier: core.tier ?? 'standard',
           context_window: null,
           ...core.prices,
@@ -480,10 +474,9 @@ export function parseGooglePricing(page: string, prov: Provenance): GooglePricin
   return parseGooglePricingPage(page, prov).rows
 }
 
-// Registered so the determinism harness runs it twice on its fixture like every
-// other fixed parser. Until 2026-09-07 this source was agent-parsed and stayed
-// out of the registry on purpose; it is deterministic now. The source id keeps
-// its -html suffix: its stored entities and change history are keyed on it.
+// Registered so the determinism harness runs it twice on its fixture like every other fixed
+// parser. The source id keeps its -html suffix: its stored entities and change history are
+// keyed on it.
 registerParser({
   name: 'google-pricing-html',
   lane: 'vendor-md',

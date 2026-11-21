@@ -1,14 +1,12 @@
-// One latency probe: send the fixed request, time the stream, and say how it
-// ended. Reads OpenRouter's chat-completions stream as documented
-// (openrouter.ai/docs/api-reference/streaming): `data: {json}` lines,
-// `: OPENROUTER PROCESSING` comments while it waits on the provider, a final
-// chunk carrying `usage`, then `data: [DONE]`. A failure before the first byte
-// is a JSON error body with the HTTP status; one after it is a chunk with a
-// top-level `error` and the status stays 200.
+// One latency probe: send the fixed request, time the stream, say how it ended.
+// OpenRouter's stream (openrouter.ai/docs/api-reference/streaming): `data: {json}` lines,
+// `: OPENROUTER PROCESSING` keep-alives while it waits on the provider, a final chunk
+// carrying `usage`, then `data: [DONE]`. A failure before the first byte is a JSON error
+// body with the HTTP status; one after it is a chunk with a top-level `error` and the
+// status stays 200.
 //
-// Timing on Workers: the clock only moves when I/O completes, which is exactly
-// what a probe measures (each read of the stream is I/O), so `clock()` after a
-// read is the arrival time of those bytes.
+// On Workers the clock only moves when I/O completes, so `clock()` after a stream read is
+// the arrival time of those bytes.
 
 import { PROBE_ENDPOINT, PROBE_TIMEOUT_MS, probeRequestBody, type ProbeTarget } from './targets'
 
@@ -41,7 +39,6 @@ export interface StreamState {
   last_token_at: number | null
   /** Chunks that carried answer text. */
   token_chunks: number
-  /** True when any reasoning text was streamed. */
   reasoning_streamed: boolean
   output_tokens: number | null
   reasoning_tokens: number | null
@@ -178,10 +175,9 @@ export interface ProbeMeasurement {
   output_tokens: number | null
   reasoning_tokens: number | null
   /**
-   * Answer tokens that arrived after the first one, per second of the span
-   * between the first and last answer token. Reasoning tokens are left out,
-   * streamed or hidden: they came before the answer. Null when the answer
-   * came in too few pieces or too short a span to divide, or when reasoning
+   * Answer tokens after the first, per second of the first-to-last answer-token span.
+   * Reasoning tokens (streamed or hidden) are left out: they came before the answer. Null
+   * when the answer came in too few pieces or too short a span to divide, or when reasoning
    * was streamed and the usage does not say how many tokens it was.
    */
   tokens_per_second: number | null
@@ -234,13 +230,12 @@ export function isRateLimit(error: StreamError | null, httpStatus: number | null
 }
 
 /**
- * Whose problem it was. Any 429 is the lab's: OpenRouter sets no request cap
- * of its own on a paid model, so on a pinned route the limit is the
- * provider's (provider_code is kept where the body gives one). So is a
- * 502/503, or a 5xx naming the provider's code. Another 4xx is about our key,
- * credit, model id or request (`setup`), and so is a 200 whose stream we
- * could not read or whose output cap went to reasoning before any answer. A 500 with no provider code, or a
- * connection that never reached OpenRouter, is OpenRouter's (`router`).
+ * Whose problem it was. Any 429 is the lab's: OpenRouter sets no request cap of its own on
+ * a paid model, so on a pinned route the limit is the provider's. So is a 502/503, or a 5xx
+ * naming the provider's code. Another 4xx is about our key, credit, model id or request
+ * (`setup`), as is a 200 whose stream we could not read or whose output cap went to
+ * reasoning before any answer. A 500 with no provider code, or a connection that never
+ * reached OpenRouter, is OpenRouter's (`router`).
  */
 export function classify(end: ProbeEnd): { outcome: ProbeOutcome; detail: string | null } {
   if (end.timed_out) return { outcome: 'timeout', detail: 'no complete response in time' }

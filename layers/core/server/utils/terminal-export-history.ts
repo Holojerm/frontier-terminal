@@ -269,7 +269,6 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
   ),
 }
 
-/** The license window's rule for a registered table. */
 export function historyRule(name: string): HistoryRule {
   const rule = EXPORT_HISTORY[name]
   if (!rule) throw new Error(`no license-window rule for export ${name}`)
@@ -438,10 +437,9 @@ export function licenseHeaders(window: LicenseWindow): Record<string, string> {
 /** Rows in a sample file. */
 export const SAMPLE_ROWS = 50
 
-// A table that grows over time is sampled from its newest rows: its first rows
-// are the day the pipeline started, which shows a reader none of what it has
-// logged since. Each span is tried in turn until one holds a full sample, so
-// a busy log reads a few days and a quiet one a few months.
+// A table that grows is sampled from its newest rows, since its first rows are
+// from the day the pipeline started. Each span is tried in turn until one holds a
+// full sample, so a busy log reads a few days and a quiet one a few months.
 const SAMPLE_SPANS_DAYS = [3, 30, LICENSE_WINDOW_DAYS]
 const SAMPLE_PAGE = 500
 

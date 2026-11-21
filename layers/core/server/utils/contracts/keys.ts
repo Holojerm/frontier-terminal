@@ -107,12 +107,11 @@ export function filerKey(provider: Provider): string {
 }
 
 // One XBRL fact: a filer's value for one tag over one period, as one filing
-// reported it. The accession number is part of the key because a 10-K
-// restates the prior year's quarters — the same period from two filings is
-// two observations, and a value that differs between them is a restatement
-// the reader should be able to see, not a silent overwrite. A segment fact
-// carries its member, so one filing's segment and consolidated values for a
-// period are two rows; a consolidated key is unchanged.
+// reported it. The accession number is in the key because a 10-K restates the
+// prior year's quarters: the same period from two filings is two observations,
+// and a value that differs is a restatement the reader should see. A segment
+// fact carries its member, so one filing's segment and consolidated values for
+// a period are two rows; a consolidated key is unchanged.
 export function revenueKey(
   cik: string,
   tag: string,

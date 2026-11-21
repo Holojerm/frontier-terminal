@@ -1,8 +1,7 @@
 import { rankingKey, type EntityRow, type RankingRow } from '../../../core/server/utils/contracts'
 import { collapse, toEntity } from '../../../core/server/pipeline/normalize'
 
-// Normalize the OpenRouter rankings: validated ranking rows -> EntityRow
-// (boundary table, "normalize" = DETERMINISTIC).
+// OpenRouter rankings: validated ranking rows -> EntityRow (DETERMINISTIC).
 
 // A ranking row is one (UTC day, model) observation. Its provider is the
 // permaslug prefix the parser already resolved; total_tokens is the whole

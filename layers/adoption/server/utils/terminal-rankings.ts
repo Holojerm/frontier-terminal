@@ -1,14 +1,10 @@
-// The demand-share axis: OpenRouter's daily usage rankings, folded into a
-// 7-day token share per lab (and its change against the 7 days before), each
-// lab's top models in that window, a 30-day daily series, and the weekly
-// share over the whole stored history. Read-only over
-// the `entities` table like the rest of terminal-db.ts; split out because the
-// arithmetic is its own thing and layers/adoption/test/terminal-rankings.test.ts drives the
-// pure half without a database.
+// The demand-share axis: OpenRouter's daily rankings folded into a 7-day token share per
+// lab (and its change), top models, a 30-day series and the weekly history. Split from
+// terminal-db.ts so layers/adoption/test/terminal-rankings.test.ts drives the pure half
+// without a database.
 //
-// Windows are counted in DAYS PRESENT, newest first, not calendar days from
-// the reader's clock: a feed that lags two days still reports its newest
-// seven, and the dates the share rests on ship with the number.
+// Windows count DAYS PRESENT, newest first, not calendar days from the clock: a feed that
+// lags two days still reports its newest seven, and the dates ship with the number.
 
 import { and, desc, eq, like, max, sql } from 'drizzle-orm'
 
@@ -177,15 +173,12 @@ export function daysBefore(date: string, days: number): string {
 const isRanking = eq(tables.entities.entity_type, 'ranking')
 const dateOf = sql<string | null>`json_extract(${tables.entities.payload}, '$.date')`
 
-/** Observations for the newest `days` days — the table grows by ~50 rows
- * a day forever, so the read is bounded by date, never the whole type.
+/** Observations for the newest `days` days, bounded by date because the table grows by
+ * ~50 rows a day.
  *
- * The lab is read off the permaslug here, not off the stored provider column.
- * Rows older than OpenRouter's 30-day window are never re-parsed, so the
- * column keeps the prefix map of the day they were stored: a lab added later
- * (DeepSeek, Alibaba and Moonshot AI on 2026-11-04) would count from that day
- * on and as "other" before it, a step in every share that is the registry's,
- * not the market's. */
+ * The lab is read off the permaslug, not the stored provider column: rows older than
+ * OpenRouter's 30-day window are never re-parsed, so the column keeps the prefix map of
+ * the day they were stored, and a lab added later would count as "other" before that day. */
 export async function rankingObservations(
   db: PipelineDb,
   days: number = SERIES_DAYS,

@@ -1,6 +1,6 @@
-// Thesis 1, transcribed from docs/theses/anthropic.md — that page is the
-// journal of record; this is its machine-readable half. A threshold changed
-// here is a thesis revision: change the page's Revisions table in the same commit.
+// Thesis 1, transcribed from docs/theses/anthropic.md (the journal of record).
+// Changing a threshold here is a thesis revision: update the page's Revisions
+// table in the same commit.
 
 import type { ThesisDef } from '../../shared/utils/thesis-types'
 
@@ -92,10 +92,10 @@ export const ANTHROPIC_THESIS: ThesisDef = {
         kind: 'judged',
         review: 'incidents-and-disclosures',
         judged_from: '2026-10-09',
-        // Anthropic's status feed publishes no impact since 2026-11-04 (the Atom
-        // feed; robots.txt bars the JSON API), so its incidents qualify on
-        // duration alone and the rubric carries materiality. Rivals' feeds
-        // still state one and are still filtered by it.
+        // Anthropic's status feed (Atom; robots.txt bars the JSON API) publishes
+        // no impact since 2026-11-04, so its incidents qualify on duration alone
+        // and the rubric carries materiality. Rivals' feeds still state one and
+        // are filtered by it.
         rule: {
           rule: 'confirmed-material',
           impacts: ['major', 'critical', 'high'],
@@ -109,9 +109,8 @@ export const ANTHROPIC_THESIS: ThesisDef = {
         confirmations: [],
       },
     },
-    // Claims 6–8, added 2026-11-04 from the sources audited that day. Their
-    // history already existed when the kill conditions were written; the
-    // journal says so.
+    // Claims 6–8: their history already existed when the kill conditions were
+    // written (the journal says so).
     {
       id: 'anthropic-enterprise-lead',
       n: 6,
@@ -136,7 +135,7 @@ export const ANTHROPIC_THESIS: ThesisDef = {
       signal_label:
         'npm downloads of @anthropic-ai/sdk, trailing 28 days, divided by the median of five non-AI npm packages',
       kill_condition: '30% or more below its 90-day high for 4 straight weeks',
-      // Divided since 2026-11-20 (docs/theses/anthropic.md › Revisions).
+      // Divided: see docs/theses/anthropic.md › Revisions.
       spec: {
         kind: 'measured',
         signal: 'npm-normalized-trailing-sum',
@@ -163,8 +162,7 @@ export const ANTHROPIC_THESIS: ThesisDef = {
         rule: { rule: 'below-floor-periods', floor: 0.25, periods: 2 },
       },
     },
-    // Claim 9, the revenue claim the journal promised the S-1 would open.
-    // Written 2026-11-04 with the S-1's periods already in view.
+    // Claim 9: the revenue claim, written with the S-1's periods already in view.
     {
       id: 'anthropic-revenue-growth',
       n: 9,

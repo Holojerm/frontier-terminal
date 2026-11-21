@@ -1,14 +1,8 @@
-// The text of a PDF, page by page, read without a PDF library: enough for
-// the reports this layer reads (ERCOT's monthly PDFs, exported from Word),
-// not a general reader. It inflates Flate streams with the runtime's own
-// DecompressionStream, reads objects whether loose or packed in object
-// streams, maps each page's fonts through their ToUnicode CMaps, and joins
-// the strings its text operators show. Positioning is reduced to a space or
-// a line break, which is all a sentence-level regex needs.
-//
-// Unsupported (throws or returns less text, never wrong text): encrypted
-// files, filters other than FlateDecode, fonts with neither ToUnicode nor a
-// single-byte encoding.
+// The text of a PDF, page by page, without a PDF library: enough for the
+// reports this layer reads (ERCOT's monthly PDFs), not a general reader. Flate
+// streams, loose or packed objects, ToUnicode CMaps; positioning becomes a
+// space or a line break. Encrypted files, other filters, and fonts with neither
+// ToUnicode nor a single-byte encoding throw or yield less text, never wrong text.
 
 export const decoder = new TextDecoder('latin1')
 

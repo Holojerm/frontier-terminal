@@ -6,26 +6,24 @@ import { diff, repeatChangeId } from '#layers/core/server/pipeline/diff'
 import { normalizePrice } from '../normalize'
 import { judgeReview } from '#layers/core/server/pipeline/judge/review'
 
-// The judge's fallback for a price list whose parser is failing. A vendor
-// reshapes its pricing page, the parser throws, and until the parser is fixed
-// the terminal shows the last prices it read. Meanwhile GET /api/judge/pending
-// offers the page as a PRICE REVIEW entry, and the judge sends back, per SKU
-// the terminal already lists, the run of the page that states its prices.
+// The judge's fallback for a price list whose parser is failing. Until the parser is fixed the
+// terminal shows the last prices it read; meanwhile GET /api/judge/pending offers the page as a
+// PRICE REVIEW entry, and the judge sends back, per SKU the terminal already lists, the run of
+// the page that states its prices.
 //
-// The model finds the row and says which number is which. The Worker decides,
-// against the page as R2 holds it:
+// The model finds the row and says which number is which. The Worker decides, against the
+// page as R2 holds it:
 //   1. the source is still failing on that page, and the page was not read before;
-//   2. the SKU is one this source already lists (no additions, no removals:
-//      a launch is the catalog's job and a delisting needs a parser);
-//   3. the quote is on the page verbatim (whitespace folded) and names the
-//      model, and no longer-named model this source lists;
-//   4. every price sent is written in the quote, and a price the row had is
-//      still given (a reading cannot blank a price or invent a column).
-// A price that differs is stored through the ordinary diff, so the change
-// log, the judge and the alerts treat it as any other change, and the quote is
-// kept in price_readings. Which column a number belongs to is the model's
-// reading, so every changed price is spooled for the owner, and the fixed
-// parser's first read corrects the row if it disagrees.
+//   2. the SKU is one this source already lists (no additions, no removals: a launch is the
+//      catalog's job and a delisting needs a parser);
+//   3. the quote is on the page verbatim (whitespace folded) and names the model, and no
+//      longer-named model this source lists;
+//   4. every price sent is written in the quote, and a price the row had is still given (a
+//      reading cannot blank a price or invent a column).
+// A price that differs goes through the ordinary diff, so the change log, the judge and the
+// alerts treat it as any other change; the quote is kept in price_readings. Which column a
+// number belongs to is the model's reading, so every changed price is spooled for the owner,
+// and the fixed parser's first read corrects the row if it disagrees.
 
 /**
  * The price lists the judge may read: the ones that print a model and its

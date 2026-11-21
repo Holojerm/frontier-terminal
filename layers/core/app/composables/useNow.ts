@@ -1,9 +1,7 @@
-// Client clock for relative timestamps. Stays null through SSR so the server
-// renders the absolute form and hydration cannot mismatch; ticks once a
-// minute afterwards so "3m ago" does not go stale on an open terminal.
-//
-// One interval for the whole page: every ProvenanceTag reads the same ref
-// instead of each running a timer of its own.
+// Client clock for relative timestamps. Null through SSR so the server renders
+// the absolute form and hydration cannot mismatch; ticks once a minute after that
+// so "3m ago" stays current. One interval for the whole page, shared by every
+// ProvenanceTag.
 
 const now = ref<number | null>(null)
 let timer: ReturnType<typeof setInterval> | null = null

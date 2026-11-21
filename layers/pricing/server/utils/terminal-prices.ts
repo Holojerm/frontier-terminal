@@ -61,9 +61,8 @@ const isStandardTier = (tier: string | null): boolean => tier === null || tier =
 
 const pricedRow = (r: PriceRowView) => r.input_per_mtok !== null || r.output_per_mtok !== null
 
-/** Prefer a priced row, then the one carrying more fields (prices, then the
- * context window — the OpenAI model page beats the pricing page on that),
- * then the newest fetch. */
+/** Prefer a priced row, then the one carrying more fields (prices, then the context window,
+ * where the OpenAI model page beats the pricing page), then the newest fetch. */
 function preferRow(a: PriceRowView, b: PriceRowView): number {
   const priced = Number(pricedRow(b)) - Number(pricedRow(a))
   if (priced !== 0) return priced
@@ -115,13 +114,13 @@ function priceRowFromPayload(
 
 type ChangeRow = typeof tables.changes.$inferSelect
 
-/** Every model change, oldest first — the history behind deltas and sparklines. */
+/** Every model change, oldest first: the history behind deltas and sparklines. */
 async function modelChanges(db: PipelineDb): Promise<ChangeRow[]> {
   const rows = await db.select().from(tables.changes).where(eq(tables.changes.entity_type, 'model'))
   return rows.sort(byDetectedAt)
 }
 
-/** Earliest fetch per source URL — when watching began, for the opening history point. */
+/** Earliest fetch per source URL (when watching began), for the opening history point. */
 async function firstSnapshotByUrl(db: PipelineDb): Promise<Map<string, string>> {
   const rows = await firstSnapshotPerSource(db)
   return new Map(rows.map((r) => [r.source_url, r.fetched_at]))
@@ -390,7 +389,7 @@ async function archivedPrices(
 export interface BasisCheck {
   provider: string
   class: string
-  /** The slug the check was run for — a check for a superseded mapping is ignored. */
+  /** The slug the check was run for: a check for a superseded mapping is ignored. */
   model_slug: string
   present: boolean
   fetched_at: string
@@ -438,12 +437,11 @@ function scheduledAfter(row: PriceRowView, at: string | null): boolean {
 }
 
 /**
- * Joins the editorial class map (terminal-classes.ts) to real stored rows.
- * Nothing is computed about a model here: the map says which slug answers
- * which question, the store says what that slug costs, and anything the two
- * cannot answer becomes a stated gap. `checks` is the last poll's word on
- * whether each mapping's vendor sentence is still on the page. `classMap` is
- * the map in effect — the seed plus judge decisions (layers/pricing/server/pipeline/class-map.ts).
+ * Joins the editorial class map (terminal-classes.ts) to real stored rows. Nothing is computed
+ * about a model here: the map says which slug answers which question, the store says what that
+ * slug costs, and anything the two cannot answer becomes a stated gap. `checks` is the last
+ * poll's word on whether each mapping's vendor sentence is still on the page. `classMap` is
+ * the map in effect: the seed plus judge decisions (layers/pricing/server/pipeline/class-map.ts).
  */
 export function buildMatrix(
   rows: readonly PriceRowView[],
@@ -483,11 +481,10 @@ export function buildMatrix(
       const row =
         (bySlug.get(`${provider}:${entry.model_slug}`) ?? []).slice().sort(preferRow)[0] ?? null
       const priced = row !== null && pricedRow(row)
-      // A check for a slug this map no longer names is a verdict on the
-      // previous transcription, not this one: it waits for the next poll.
-      // Until then a judge decision's own verification — the Worker found the
-      // sentence on the stored page — is the newest word, and whichever of
-      // the two is newer wins.
+      // A check for a slug this map no longer names is a verdict on the previous
+      // transcription: it waits for the next poll. Until then a judge decision's own
+      // verification (the Worker found the sentence on the stored page) is the newest word,
+      // and whichever of the two is newer wins.
       const check = checks.get(`${provider}:${klass.id}`)
       const polled = check && check.model_slug === entry.model_slug ? check : null
       let current: { present: boolean; fetched_at: string } | null = polled

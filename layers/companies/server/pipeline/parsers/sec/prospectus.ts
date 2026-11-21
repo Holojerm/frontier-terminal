@@ -17,18 +17,12 @@ import { parseProspectusRiskFactors } from './prospectus-risk-factors'
 import { parseProspectusShares } from './prospectus-shares'
 import { statementRows } from './prospectus-statement'
 
-// Everything the prospectus-revenue lane reads from one registration
-// document: revenue and the cover terms, and the rest of what an analyst reads
-// an S-1 for — the whole statement of operations, commitments, customer
-// concentration, share counts and the risk-factor headings.
-//
-// Each part is parsed on its own. A part whose shape its parser does not know
-// is left empty and named in `failed`, and the rest are stored: on 2026-11-10
-// one reworded share-count sentence held back the revenue and the first price
-// range of Anthropic's Amendment No. 2 for two hours. The lane spools each
-// failed part and reads the document again on its next tick
-// (refresh.ts › ParseResult.problems), so a parser fix fills the gap. Only a
-// document in which every part fails is a failed run.
+// Everything the prospectus-revenue lane reads from one registration document.
+// Each part is parsed on its own: a part its parser can't read is left empty and
+// named in `failed`, and the rest are stored, so one reworded sentence can't hold
+// back revenue. The lane reads the document again next tick
+// (refresh.ts › ParseResult.problems), and only a document where every part fails
+// is a failed run.
 
 /** The amendment the composite parser is gated on (fixtures/manifest.json). */
 export const PROSPECTUS_FIXTURE = {

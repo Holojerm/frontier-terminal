@@ -78,13 +78,11 @@ const yearBefore = (end: string) => (b: { end: string }) =>
   Math.abs(dayOf(b.end) - (dayOf(end) - 365)) <= 21
 
 /**
- * Each quarter against the quarter ending a year earlier. Consecutive filings
- * report different spans (a quarter, a half, nine months), and a run of
- * "straight periods" read across them compared unlike things; so a reading
- * counts only when both sides are quarters, as filed or derived. A period
- * end with no such pair still gets its same-length year-on-year figure, for
- * the record, carrying a void_reason: the rules skip it and never count it
- * as a period.
+ * Each quarter against the quarter ending a year earlier. Filings report
+ * different spans (a quarter, a half, nine months), so a reading counts only
+ * when both sides are quarters, as filed or derived. A period end with no such
+ * pair still gets its same-length year-on-year figure for the record, with a
+ * void_reason: the rules skip it and never count it as a period.
  */
 export function revenueGrowth(periods: readonly Period[]): SignalReading[] {
   const qs = quarters(periods)

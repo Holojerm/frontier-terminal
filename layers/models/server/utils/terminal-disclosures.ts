@@ -1,21 +1,18 @@
 // The disclosures axis: each lab's own index of misalignment reports and
-// notices, the dates printed on each report's page, and how long each report
-// took from discovery to publication. Read-only over `entities` and
-// `changes`; split out like terminal-rankings.ts so the pure half
-// (summarizeDisclosures) is tested without a database.
+// notices, the dates printed on each report's page, and each report's days from
+// discovery to publication. Read-only over `entities` and `changes`; split out
+// like terminal-rankings.ts so the pure half (summarizeDisclosures) is tested
+// without a database.
 //
-// What this axis measures is disclosure practice. A lab with an index will
-// always show more entries than a lab without one, so nothing here ranks labs
-// on a count: a lab with no index carries the audit's reason
-// (sources.yaml `cut`) instead of a zero.
+// It measures disclosure practice, so nothing here ranks labs on a count: a lab
+// with no index carries the audit's reason (sources.yaml `cut`) instead of a zero.
 //
 // The publication date a lag is measured to is, in order:
 //   printed       the report page's own "Disclosure date" line;
 //   first_listed  the earliest date the index has printed beside the entry
-//                 across every observation this store holds — the current
-//                 row, plus every before/after in the change log. The index
-//                 date moves when a report is revised, so the earliest one
-//                 seen is the closest the store has to the day it went up.
+//                 across every observation held (the current row plus every
+//                 before/after in the change log). The index date moves on
+//                 revision, so the earliest seen is closest to the day it went up.
 
 import { eq, inArray } from 'drizzle-orm'
 
@@ -143,7 +140,7 @@ export function joinDisclosures(
       source_url: t.source_url,
       fetched_at: t.fetched_at,
     }
-    // OpenAI's index stopped printing the scope line on 2026-11-20; its page still does.
+    // The index no longer prints the scope line; the report page does.
     return {
       ...e,
       model: e.model ?? t.model,
@@ -176,7 +173,7 @@ export function summarizeDisclosures(
     const backing = DISCLOSURE_SOURCES[provider]
     const display = PROVIDER_DISPLAY[provider]
     if ('cut_id' in backing) {
-      // Honest cut — never a fabricated zero (sources.yaml `cut.<lab>-disclosures`).
+      // An honest cut, never a fabricated zero (sources.yaml `cut.<lab>-disclosures`).
       return {
         provider,
         display,

@@ -1,26 +1,22 @@
-// Point-in-time reads: what the terminal knew at an instant T, for the
-// `as_of` query parameter on the routes and exports that can answer it.
+// Point-in-time reads: what the terminal knew at an instant T, for the `as_of`
+// query parameter.
 //
-// Knowledge time, not event time. A row counts at T when this store held it
-// at T: a snapshot by its fetched_at, a change by its detected_at (the fetch
-// that observed it), a run by its started_at. Anything written later about an
-// earlier event — a judge alert, a re-read — is held back until it was
-// written, which is the look-ahead an analyst backtesting against this data
-// has to be protected from.
+// Knowledge time, not event time. A row counts at T when this store held it at
+// T: a snapshot by its fetched_at, a change by its detected_at, a run by its
+// started_at. Anything written later about an earlier event (a judge alert, a
+// re-read) is held back until it was written, so a backtest sees no look-ahead.
 //
-// The entity set is the one table rewritten in place, so its state at T is
-// rebuilt: for each (entity_key, source_url), the content the first change
-// after T replaced, else the current row if it was written by T. Each rebuilt
-// row is checked against the newest change at or before T, because the log
-// can miss a transition: change ids hash (key, before, after), so a role that
-// closes and reopens twice logs the second pair as duplicates, which are
-// skipped. A row whose two sides disagree is returned with its key in
-// `unverified` rather than silently trusted. A gap that leaves both sides
-// agreeing (a lost pair) cannot be seen from the log at all; the route docs
-// say so.
+// The entity set is rewritten in place, so its state at T is rebuilt: per
+// (entity_key, source_url), the content the first change after T replaced, else
+// the current row if it was written by T. Each rebuilt row is checked against
+// the newest change at or before T, because the log can miss a transition:
+// change ids hash (key, before, after), so a role that closes and reopens twice
+// logs the second pair as skipped duplicates. A row whose two sides disagree is
+// returned with its key in `unverified`. A lost pair that leaves both sides
+// agreeing can't be seen from the log; the route docs say so.
 //
-// Tables rewritten in place WITHOUT a log (claim_readings, recipe_observations)
-// cannot be rebuilt, and every surface that reads them refuses `as_of`.
+// Tables rewritten in place without a log (claim_readings, recipe_observations)
+// can't be rebuilt, and every surface that reads them refuses `as_of`.
 
 import { and, desc, eq, gt, gte, lt, lte, min, ne, or, type SQL } from 'drizzle-orm'
 import { z } from 'zod'
@@ -35,10 +31,10 @@ type Change = typeof tables.changes.$inferSelect
 export const AS_OF_PARAM = 'as_of'
 
 /**
- * `as_of`: an ISO-8601 timestamp with a zone (Z or ±hh:mm), not in the
- * future, normalized to UTC milliseconds — the form every stored stamp has,
- * so a string compare against them is a time compare. A date or a zoneless
- * time is refused: "2026-10-01" is a different instant in every timezone.
+ * `as_of`: an ISO-8601 timestamp with a zone (Z or ±hh:mm), not in the future,
+ * normalized to UTC milliseconds like every stored stamp, so a string compare is
+ * a time compare. A date or a zoneless time is refused: "2026-10-01" is a
+ * different instant in every timezone.
  */
 export const AsOfInstant = z
   .string()
@@ -360,11 +356,9 @@ export async function firstFetchByUrl(db: PipelineDb): Promise<Map<string, First
 }
 
 /**
- * The entity set of one type at `at` — or of one key, when `key` is given.
- * Two indexed reads: the current rows and the type's whole change log, by
- * key prefix (or by key). The log is what the live price and hiring
- * queries already read in full; nothing here touches snapshots beyond the
- * one-row-per-source first fetch.
+ * The entity set of one type at `at`, or of one key when `key` is given. Two
+ * indexed reads by key prefix (or key): the current rows and the type's whole
+ * change log. No snapshot reads beyond the one-row-per-source first fetch.
  */
 export async function rewindEntities(
   db: PipelineDb,

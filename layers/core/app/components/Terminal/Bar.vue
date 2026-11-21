@@ -1,8 +1,7 @@
 <script setup lang="ts">
-// A share bar (DESIGN.md › Terminal primitives): one track, one fill, scaled
-// to the widest value in its set. Decorative by contract — the number beside
-// it is the reading — so it is hidden from assistive tech. One hue: identity
-// is the row label, never the color.
+// A share bar (DESIGN.md › Terminal primitives) scaled to the widest value in its
+// set. Decorative (the number beside it is the reading), so it is hidden from
+// assistive tech. One hue: identity is the row label, never the color.
 
 const props = defineProps<{
   value: number | null

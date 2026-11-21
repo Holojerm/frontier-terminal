@@ -1,9 +1,7 @@
 <script setup lang="ts">
-// How far each lab's history reaches on one axis, prices or hiring: the
-// Internet Archive backfill (captures read and skipped, and the stretches
-// with no readable capture), then the first fetch of the lab's own live page
-// or board. A lab with no archived history says why instead of showing an
-// empty span.
+// How far each lab's history reaches on one axis: the Internet Archive backfill
+// (captures read and skipped, gaps), then the first live fetch. A lab with no
+// archived history says why instead of showing an empty span.
 
 import type { ArchiveReach } from '../../../shared/types/common'
 

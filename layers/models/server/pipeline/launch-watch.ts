@@ -5,20 +5,17 @@ import { effectiveClassMap } from '#layers/pricing/server/pipeline/class-map'
 
 // Launch-day coverage: does the site show a launch it has already stored?
 //
-// On the Opus 5.5 launch the rows were in the store from 18:01, and at 22:51
-// the site still showed no alert for it and Opus 5 as Anthropic's flagship,
-// marked "under review". The missing alert is model-floor.ts's to prevent: it
-// writes in the same transaction as the change rows. The stale cell is this
-// module's. Refresh spools one class_basis_stale the moment a cell loses its
-// sentence, but one line in one digest is easy to miss, so every half hour
-// this reports a matrix cell whose vendor sentence has been gone for more
-// than an hour (the judge, hourly at :17, has had its run and not re-mapped
-// it) as class_basis_still_stale, again every six hours until it is fixed.
-// Both stay: this one waits out the judge's run before asking the owner, so
-// it never fires at the flip and cannot stand in for refresh's event there.
+// A missing launch alert is model-floor.ts's to prevent (it writes in the same
+// transaction as the change rows); a stale matrix cell is this module's. Refresh
+// spools one class_basis_stale the moment a cell loses its vendor sentence, but
+// one digest line is easy to miss, so every half hour this reports a cell whose
+// sentence has been gone over an hour (the judge, hourly at :17, has had its run
+// and not re-mapped it) as class_basis_still_stale, then every six hours until it
+// is fixed. Waiting out the judge's run means it never fires at the flip, so it
+// can't stand in for refresh's event.
 //
-// The markers live in KV beside the poll lock. /api/fleet reports the count,
-// so the dashboard shows a stale cell before the digest is read.
+// The markers live in KV beside the poll lock. /api/fleet reports the count, so
+// the dashboard shows a stale cell before the digest is read.
 
 const HOUR_MS = 60 * 60 * 1000
 

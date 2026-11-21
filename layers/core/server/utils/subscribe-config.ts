@@ -1,6 +1,5 @@
-// Whether public subscriptions are switched on. They are inert until both the
-// Resend key and the from address are set, so the feature can ship before the
-// owner configures the provider: no form, 404s, no fan-out.
+// Public subscriptions stay inert (no form, 404s, no fan-out) until both the
+// Resend key and the from address are set.
 
 import type { H3Event } from 'h3'
 

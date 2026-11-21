@@ -7,29 +7,22 @@ import {
 import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { tableAfterHeading } from './md-table'
 
-// meta-models-md — https://dev.meta.ai/docs/models.md, joined with each
-// token-priced text line's own page (meta-muse-wonder-md, meta-muse-spark-md,
-// meta-muse-ember-md).
-// Catalog parser: prints no prices (they come from meta-pricing-md), so every
-// price field stays null. What it adds is which ids Model API serves and
-// their context window.
+// meta-models-md — https://dev.meta.ai/docs/models.md, joined with each token-priced text
+// line's own page (meta-muse-wonder-md, meta-muse-spark-md, meta-muse-ember-md).
+// Catalog parser: prints no prices (they come from meta-pricing-md), so every price field
+// stays null. It adds which ids Model API serves and their context window.
 //
-// models.md gives each line a `## <line>` section with a Model ID table; a
-// line whose table's Output is exactly "Text" is a token-priced text line
-// (Muse Image prints "Image", Voice "Text transcript", SAM "Boxes and masks",
-// and the open-weight Muse Glimmer and Muse Spark Open print no table). Its
-// context window is the table's "Context window" column where it has one;
-// Muse Ember's table (added 2026-11-09) has none, and the window is the
-// "Context window" row of its own page's "## At a glance" table instead. Until 2026-11-06 the page also carried a
-// "### <line> availability" table per line; since then that table is the
-// "## Availability" section of the line's own page, unchanged. Its rows name
-// an id in backticks and say whether pay-as-you-go serves it; a row with no
-// id ("Muse Wonder Full") or "Not available" there is a Muse Code-only
-// variant and is not an API SKU. The rows are the ones the single page gave.
+// models.md gives each line a `## <line>` section with a Model ID table; a line whose table's
+// Output is exactly "Text" is a token-priced text line (Muse Image prints "Image", Voice "Text
+// transcript", SAM "Boxes and masks", and the open-weight Muse Glimmer and Muse Spark Open
+// print no table). Its context window is the table's "Context window" column where it has
+// one; Muse Ember's table has none, so the window is the "Context window" row of its own
+// page's "## At a glance" table. Each line page's "## Availability" section names an id in
+// backticks per row and says whether pay-as-you-go serves it; a row with no id ("Muse Wonder
+// Full") or "Not available" there is a Muse Code-only variant and is not an API SKU.
 //
-// It fails loudly, never quietly short: on a text line with no registered
-// page (META_LINE_PAGES), and on an id models.md lists that its page's
-// availability table does not.
+// It fails loudly, never quietly short: on a text line with no registered page
+// (META_LINE_PAGES), and on an id models.md lists that its page's availability table does not.
 
 const API_COLUMN = 'Model API (pay-as-you-go)'
 const NOT_AVAILABLE = 'Not available'
@@ -82,9 +75,8 @@ function atAGlance(page: string, pageId: string, label: string): string {
   return row[1]
 }
 
-// prov defaults to the fixture manifest's record (single-arg behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead. `side` reads a join page by source id.
+// One-argument calls read the fixture's provenance, keeping the determinism gate byte-identical.
+// `side` reads a join page by source id.
 export function parseMetaModelsMd(
   text: string,
   side: (sourceId: string) => string,

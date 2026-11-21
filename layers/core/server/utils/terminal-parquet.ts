@@ -1,23 +1,19 @@
-// An export table as an Apache Parquet file, for the bulk feed
-// (terminal-bulk.ts). Same rows and columns as the CSV, typed by the data
-// dictionary (each export table's docs, server/registries/export-tables.ts), gzip-compressed.
+// An export table as an Apache Parquet file for the bulk feed (terminal-bulk.ts):
+// the CSV's rows and columns, typed by the data dictionary
+// (server/registries/export-tables.ts), gzip-compressed.
 //
-// The writer is hyparquet-writer: plain JavaScript, so it runs in workerd with
-// no WASM to instantiate. Its own codec is snappy; gzip comes from workerd's
-// node:zlib (nodejs_compat), and on the production tables it writes files
-// about a third smaller than snappy and a quarter smaller than the gzipped
-// CSV. Not zstd: workerd's zstdCompressSync throws "Unexpected end of file"
-// once a page compresses to more than ~40 KB, which failed every build of
-// snapshots and jobs_open on 2026-11-05 (layers/core/test/terminal-parquet.test.ts
-// keeps a page that size in the tests). It is fed one row group at a time and flushes each group's bytes out of
-// its buffer, so a build holds the compressed file so far plus one group of
-// decoded rows, never the table.
+// hyparquet-writer is plain JavaScript, so it runs in workerd with no WASM. Gzip
+// comes from workerd's node:zlib (nodejs_compat) and on the production tables
+// writes files about a third smaller than snappy. Not zstd: workerd's
+// zstdCompressSync throws "Unexpected end of file" once a page compresses past
+// ~40 KB (layers/core/test/terminal-parquet.test.ts keeps a page that size).
+// Rows go in one row group at a time and each group's bytes are flushed, so a
+// build holds the compressed file so far plus one group of decoded rows.
 //
-// Values are verbatim where the CSV defuses them: the formula apostrophe is a
-// spreadsheet's problem, and nothing executes a Parquet cell. A timestamp is
-// stored as its UTC instant in microseconds, so a vendor stamp's offset is not
-// kept (the CSV and JSON keep it as written). A JSON column holds the same
-// JSON value, re-serialized compactly.
+// Values are verbatim where the CSV defuses them: nothing executes a Parquet
+// cell. A timestamp is stored as its UTC instant in microseconds, so a vendor
+// stamp's offset is lost (the CSV and JSON keep it as written). A JSON column
+// holds the same value, re-serialized compactly.
 
 import { gzipSync } from 'node:zlib'
 

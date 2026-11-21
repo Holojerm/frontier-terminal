@@ -20,7 +20,7 @@ export const providerEnum = z.enum([
 ])
 // 'ranking' is a time series (one row per UTC day and model), not an event:
 // layers/core/server/pipeline/judge/pending.ts and queryMovement() both exclude it.
-// 'revenue' is one XBRL fact (a filer, a tag, a period, a filing) — an event
+// 'revenue' is one XBRL fact (a filer, a tag, a period, a filing): an event
 // when a new filing adds or restates one, so the judge does see it.
 // 'recommendation' is the drift check on the editorial class map
 // (layers/pricing/server/pipeline/recommendations.ts): one row per mapped (provider, class),
@@ -43,10 +43,10 @@ export const entityTypeEnum = z.enum([
   'disclosure',
   'disclosure_timeline',
   // 'document': a registration filing's primary document name, read off its
-  // EDGAR filing index — the key a prospectus-revenue source is derived from.
+  // EDGAR filing index: the key a prospectus-revenue source is derived from.
   'document',
-  // 'offering': the terms a registration filing's cover states — amendment
-  // number, price range, listing — one row per filing (prospectus-offering.ts).
+  // 'offering': the terms a registration filing's cover states (amendment
+  // number, price range, listing), one row per filing (prospectus-offering.ts).
   'offering',
   // What else a registration document prints (parsers/sec/prospectus-*.ts):
   // 'statement', the statement of operations for one period (one row per
@@ -91,13 +91,12 @@ export const alertRuleEnum = z.enum([
   'gpu-median-floor',
 ])
 // 'skipped': the source needs a credential the deploy does not have, so
-// nothing was attempted — distinct from 'failed' so a missing key is a
+// nothing was attempted. Kept apart from 'failed' so a missing key is a
 // configuration state on the coverage panel, not an outage in the digest.
 // 'absent': a DERIVED url 404s. The key is real (it came from a row the store
-// holds) and the document simply is not published — OpenAI prices SKUs whose
-// model page it never wrote. Distinct from 'failed' for the same reason
-// 'skipped' is: an audited url that 404s is breakage, because the audit said
-// it was there, but a derived one that 404s is a fact about the catalogue.
+// holds) and the document is not published: OpenAI prices SKUs whose model
+// page it never wrote. An audited url that 404s is breakage, since the audit
+// said it was there; a derived one that 404s is a fact about the catalogue.
 export const sourceRunStatusEnum = z.enum([
   'ok',
   'unchanged',

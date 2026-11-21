@@ -1,17 +1,13 @@
-// The eras of each lab's rate-limit page, as the Internet Archive holds them,
-// for the history before the live limits-* recipes (theses/recipes/
-// rate-limits.ts). Windows are half-open [from, until) and never overlap
-// within a lab; every era ends by LIMITS_LIVE_FROM, from when the live
-// recipes hold the record.
+// The eras of each lab's rate-limit page in the Internet Archive, for the history before the
+// live limits-* recipes (theses/recipes/rate-limits.ts). Windows are half-open [from, until),
+// never overlap within a lab, and end by LIMITS_LIVE_FROM, when the live recipes take over.
 //
-// Only Anthropic's copies read: its page moved from docs.anthropic.com to
-// docs.claude.com to platform.claude.com with the rest of its docs, and every
-// HTML copy prints the usage-tier table. OpenAI's rate-limit guide and model
-// pages are script shells in every copy (about 3 KB), xAI's docs render their
-// tables in the browser, and Meta's page has copies only from 2026-08: those
-// are LIMITS_ARCHIVE_NOT_COVERED. How each window was found:
-// docs/source-audit.md › "Addendum, 2026-11-21: Internet Archive (rate
-// limits and usage tiers)".
+// Only Anthropic's copies are read: every HTML copy prints the usage-tier table, across its
+// moves from docs.anthropic.com to docs.claude.com to platform.claude.com. OpenAI's rate-limit
+// guide and model pages are script shells in every copy (about 3 KB), xAI's docs render their
+// tables in the browser, and Meta's page has copies only from 2026-08: those are
+// LIMITS_ARCHIVE_NOT_COVERED. How each window was found: docs/source-audit.md › "Addendum,
+// 2026-11-21: Internet Archive (rate limits and usage tiers)".
 
 import type { LabId } from '../../../../core/shared/types/common'
 import { extractAnthropicLimits, mdTables } from '../../recipes/rate-limits'

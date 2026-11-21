@@ -1,67 +1,42 @@
-// A stamp-keyed edge cache for rendered HTML.
+// A stamp-keyed edge cache for rendered HTML. Not `routeRules: { swr }`:
+// stale-while-revalidate would serve a page whose `as_of` says 13:00 with
+// 12:30's numbers, so this cache has NO staleness window.
 //
-// ── Why this is not `routeRules: { swr }` ───────────────────────────────────
-// Stale-while-revalidate serves a document up to its window behind the `as_of`
-// stamp printed on that same document. On a site whose whole claim is that
-// every datum carries its source and its fetch time, a page that says 13:00 and
-// renders 12:30's numbers is not a cache hit, it is a wrong answer. So this
-// cache carries NO staleness window at all.
+// Like the JSON payloads (layers/core/server/utils/terminal-cache.ts), the key
+// holds the poll stamp: a poll moves the stamp, every key rotates, and the next
+// request re-renders. The TTL is garbage collection only. Learning the stamp
+// costs one D1 read (~90ms against ~900ms to render); `sharedTerminalStamp`
+// makes it one per render.
 //
-// ── How it avoids one ──────────────────────────────────────────────────────
-// The same construction layers/core/server/utils/terminal-cache.ts already uses for the
-// JSON payloads: the key contains the poll stamp. A poll writes a new
-// source_runs row, the stamp moves, every key rotates, and the next request
-// misses and re-renders. A reader cannot be served HTML from before the tick
-// that HTML claims to reflect — not because a timer expired, but because the
-// entry is unreachable by key. The TTL below is garbage collection, nothing
-// else.
-//
-// The cost of that guarantee is one D1 read per page request, to learn the
-// stamp before the key can be built. That is ~90ms against ~900ms to render,
-// and `sharedTerminalStamp` collapses it to one read per render.
-//
-// ── What makes the HTML safe to share between readers ──────────────────────
-// There are no accounts, no cookies and no personalisation, and colour mode is
-// resolved on the client — `layers/core/app/composables/useNow.ts` deliberately stays null
-// through SSR so the server emits absolute timestamps rather than "3m ago".
-// The render is therefore a pure function of (path, poll stamp). The one
-// exception is the footer's `new Date().getFullYear()`, which is why the year
-// is part of the key.
+// The HTML is safe to share: no accounts, cookies or personalisation, colour
+// mode is client-side, and `layers/core/app/composables/useNow.ts` stays null
+// through SSR. The one other input is the footer's `new Date().getFullYear()`,
+// so the year is part of the key.
 
 /** Garbage collection only. A poll rotates the key long before this matters. */
 export const HTML_CACHE_TTL_SECONDS = 2400
 
 /**
- * What a reader's browser may do with a cached document: reuse it for a minute,
- * the same window the JSON routes allow (TERMINAL_CACHE_CONTROL in
- * terminal-handler.ts), so the two doors never disagree by more than that.
- * Safe with the CSP because the policy is one static string per route
- * (routeRules in nuxt.config.ts), with no per-response nonce to go stale. No
- * `s-maxage`: Cloudflare does not edge-cache HTML on its own, and the stamp-keyed
- * entry above is the shared cache. Set only on a 200 document the cache stores
- * or serves, never on an error page.
+ * What a browser may do with a cached document: reuse it for a minute, like
+ * the JSON routes (TERMINAL_CACHE_CONTROL in terminal-handler.ts). Safe with
+ * the CSP, which is one static string per route with no nonce. No `s-maxage`:
+ * the stamp-keyed entry is the shared cache. Only on a 200 document the cache
+ * stores or serves.
  */
 export const HTML_CLIENT_CACHE_CONTROL = 'public, max-age=60'
 
 /**
- * Where the original response headers ride while the entry is in the cache.
- *
- * The stored copy needs its own `Cache-Control` for the Cache API to keep it,
- * and that value must never reach a reader: `public, max-age=2400` on a
- * document is exactly the browser-side staleness this cache exists to avoid.
- * So the real headers travel in this sidecar and are replayed on a hit, while
- * the storage `Cache-Control` is dropped.
+ * Where the original response headers ride while the entry is cached. The
+ * stored copy needs a long `Cache-Control` for the Cache API to keep it, which
+ * must never reach a browser, so the real headers travel here and are
+ * replayed on a hit.
  */
 export const HEADER_SIDECAR = 'x-html-cache-headers'
 
 /**
- * `hit` or `miss`, on every cacheable document.
- *
- * Not decoration: this cache's failure mode is silence. A missing `caches`
- * binding, a Cache API that throws, a key that never repeats — all of them fail
- * open into a normal render, which looks exactly like working correctly except
- * slower. This header is how anyone tells the difference from outside, and it is
- * what test/csp asserts a hit against.
+ * `hit` or `miss`, on every cacheable document. The cache fails open and
+ * silently, so this header is the only outside sign it works; test/csp
+ * asserts it.
  */
 export const CACHE_STATUS = 'x-html-cache'
 
@@ -77,13 +52,9 @@ export function htmlCacheKey(path: string, stamp: string | null, year: number): 
 }
 
 /**
- * Whether this request may be served from, or stored in, the cache.
- *
- * Deliberately narrow. A query string is excluded rather than keyed on: it is
- * an open set an attacker can walk to fill the cache with near-identical
- * copies, and no public page here varies on one. Anything but a plain GET, and
- * anything that did not render as a 200 HTML document, is left alone — an
- * error page cached under a stamp would outlive the condition that caused it.
+ * Whether this request may be served from, or stored in, the cache. Query
+ * strings are excluded, not keyed on: they are an open set an attacker could
+ * walk to fill the cache, and no public page varies on one. Only a plain GET.
  */
 export function isCacheableDocument(req: { method: string; path: string }): boolean {
   if (req.method !== 'GET') return false
@@ -111,7 +82,7 @@ export function isStorableResponse(res: {
   return type !== undefined && type.includes('text/html')
 }
 
-/** Case-insensitive lookup — h3 does not normalise what a render handler sets. */
+/** Case-insensitive lookup: h3 does not normalise what a render handler sets. */
 export function headerValue(
   headers: Record<string, string> | undefined,
   name: string,

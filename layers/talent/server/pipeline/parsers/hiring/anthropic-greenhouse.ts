@@ -6,15 +6,15 @@ import {
 import { fixtureProvenance } from '#layers/core/server/utils/fixture-provenance'
 import { parseGreenhouseBoard } from './common'
 
-// Anthropic job board via Greenhouse. The jobs endpoint carries NO
-// department field (sources.yaml caveat) — department comes only from the
-// /departments join, so the parser takes both payloads.
+// Anthropic job board via Greenhouse. The jobs endpoint carries no department field
+// (sources.yaml caveat), so department comes only from the /departments join and the
+// parser takes both payloads.
 
 const DEPARTMENTS_FIXTURE = 'fixtures/hiring/anthropic-greenhouse-departments.json'
 
-// prov defaults to the fixture manifest's record (fixture-only behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live provenance AND the live /departments payload.
+// prov defaults to the fixture manifest's record, so fixture-only output is byte-identical
+// for the determinism gate; the refresh orchestrator passes the live provenance and the
+// live /departments payload.
 export function parseAnthropicGreenhouse(
   fixtureText: string,
   departmentsText: string,

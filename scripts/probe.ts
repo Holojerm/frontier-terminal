@@ -2,14 +2,13 @@
 // emails the owner when it stops answering. Runs on the Mac mini as the
 // LaunchAgent com.holojerm.probe.frontier-terminal (bun run probe:install).
 //
-// Why it exists: a request that hangs records no 5xx, so neither the ops spool
-// nor Workers Issues sees it reliably, and nothing inside Cloudflare can see a
-// DNS, certificate or routing failure at all. On 2026-11-07 one page load in
-// eight hung for hours and no alert fired.
+// A request that hangs records no 5xx, so neither the ops spool nor Workers
+// Issues sees it reliably, and nothing inside Cloudflare can see a DNS,
+// certificate or routing failure at all.
 //
-// It alerts through ~/agent-jobs/notify.sh (Resend), not through the Worker's
-// own mail binding, so it still works when the Worker is the thing that's down.
-// The mini going down is covered separately by Cloudflare's tunnel-health email.
+// It alerts through ~/agent-jobs/notify.sh (Resend), not the Worker's own mail
+// binding, so it still works when the Worker is what's down. The mini going
+// down is covered by Cloudflare's tunnel-health email.
 //
 //   bun run scripts/probe.ts            # one run: check, update state, maybe email
 //   bun run scripts/probe.ts --dry      # one run, print the result, change nothing

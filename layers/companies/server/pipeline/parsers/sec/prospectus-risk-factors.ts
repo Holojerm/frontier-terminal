@@ -2,16 +2,11 @@ import { RiskFactorsRow, type Provenance } from '#layers/core/server/utils/contr
 import type { RegistrationTarget } from './filing-index'
 import type { DocLine, DocText } from './prospectus-doc'
 
-// Every risk-factor heading a registration document prints, in order, under
-// the "Risks Related to …" subsection it sits in. In a Workiva prospectus the
-// section opens on a display-size bold "Risk Factors" line and runs to the
-// next display-size title; a subsection is a bold, upright line between body
-// and display size; a heading is a run of lines whose every font is bold
-// italic. Page furniture (a page number, "Table of Contents") sits inside a
-// heading that crosses a page and is skipped; any other line ends it.
-//
-// What an amendment added, removed or reworded is a comparison between two
-// filings' rows — riskFactorChanges() below — not something one document says.
+// Every risk-factor heading a registration document prints, under its "Risks
+// Related to …" subsection. Workiva layout: the section runs from a display-size
+// bold "Risk Factors" line to the next display-size title; a subsection is a bold
+// upright line between body and display size; a heading is bold italic lines. Page
+// furniture inside a heading that crosses a page is skipped.
 
 const TITLE_PT = 14
 const BODY_MAX_PT = 11

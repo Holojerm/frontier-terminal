@@ -12,13 +12,13 @@ export interface HiringProviderView {
   display: string
   /** no_public_feed: an audited cut; no_rows: feed registered, nothing parsed yet. */
   feed: 'ok' | 'no_public_feed' | 'no_rows'
-  /** Set for no_public_feed — the audit verdict, never a number. */
+  /** Set for no_public_feed: the audit verdict, never a number. */
   reason: string | null
   total: number
   departments: DeptCount[]
   /** Travels with the data, e.g. the xAI SpaceXAI entity blend. */
   caveat: string | null
-  /** Distinct company_name values observed on the rows — the blend evidence. */
+  /** Distinct company_name values observed on the rows: the blend evidence. */
   company_names: string[]
   sources: HiringSource[]
 }
@@ -41,7 +41,7 @@ export interface DeptSeries {
 export interface ClusterSeries {
   id: string
   label: string
-  /** The board's own department labels that matched, largest today first — what was summed, visibly. */
+  /** The board's own department labels that matched (what was summed), largest today first. */
   departments: DeptCompare[]
   series: number[]
   now: number
@@ -58,8 +58,8 @@ export interface DeptCompare {
 }
 
 /**
- * Open roles now against an earlier instant: `window_days` back, or the
- * start of the series when that is younger — `days` says which it was.
+ * Open roles now against an earlier instant: `window_days` back, or the start of the
+ * series when that is younger (`days` says which).
  */
 export interface HiringCompare {
   at: string
@@ -90,7 +90,7 @@ export interface HiringHistoryProvider {
   /** Named department clusters from sources.yaml (the physical-infrastructure buildout signal), summed over the matched departments. */
   clusters: ClusterSeries[]
   compare: HiringCompare | null
-  /** Earliest snapshot of the provider's job board — where the series starts. */
+  /** Earliest snapshot of the provider's job board: where the series starts. */
   series_from: string | null
   /** This store's first (baseline) poll of the board; the log before it is imported history. */
   baseline_at: string | null

@@ -1,17 +1,9 @@
-// GET /api/page-data?path=/hiring — the data a page renders, without the page.
-//
-// The body is the page's own hydration payload (`__NUXT_DATA__`, devalue
-// format), so a client-side navigation can hand it to Nuxt instead of
-// starting every useFetch call at the click; the prefetch plugin
-// (layers/core/app/plugins/page-prefetch.client.ts) is the reader. Every
-// value in it is already in the page's HTML.
-//
-// The page is fetched in-process, so it is served by the stamp-keyed HTML
-// cache when the document is there and rendered (and stored) when it is not:
-// the payload is never older than the poll stamp, the same guarantee the
-// document carries (layers/core/server/utils/html-cache.ts). Nuxt's own
-// `/<path>/_payload.json` would need `cache`/`isr` route rules, which bring a
-// time-based cache with them.
+// GET /api/page-data?path=/hiring: a page's hydration payload (`__NUXT_DATA__`)
+// without the page, for layers/core/app/plugins/page-prefetch.client.ts. Fetched
+// in-process, so it comes from the stamp-keyed HTML cache or a fresh render and
+// is never older than the poll stamp (layers/core/server/utils/html-cache.ts).
+// Nuxt's own `/<path>/_payload.json` would need `cache`/`isr` route rules, which
+// bring a time-based cache.
 
 import { z } from 'zod'
 

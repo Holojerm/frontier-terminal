@@ -1,20 +1,16 @@
-// What the front page keeps of /api/overview before Nuxt serialises it into the
-// hydration payload. The page draws five alert rows, the newest minor change, and
-// each lab's newest alert in the readout; the API returns every alert with its
-// cited rows (about 110 kB of the page's 210 kB payload). Everything else is on
-// /alerts, one link away.
+// What the front page keeps of /api/overview before Nuxt serializes it: five alert rows,
+// the newest minor change and each lab's newest alert. The API returns every alert with its
+// cited rows (about 110 kB of the page's 210 kB payload).
 
 /** Rows on the signal band (SignalBand.vue SHOWN). */
 export const OVERVIEW_BAND_ROWS = 5
 
-// The explanation, the cited ids and each row's text are on the permalink; no row on
-// the page prints them. What it reads off `changes` is lab, axis and the one figure
-// that moved (alertLabs, alertAxis, alertDelta in terminal-labs.ts).
+// The explanation, cited ids and row text are on the permalink; the page reads only lab,
+// axis and the one figure that moved (alertLabs, alertAxis, alertDelta in terminal-labs.ts).
 //
-// What is left of a change is the same for most of the rows an alert cites (a
-// hiring batch is 150 "anthropic job added"), so equal ones are one object: the
-// payload serialiser writes a shared object once and points at it. With the
-// fields above, it took /alerts' payload from 550 kB to 150 kB.
+// Most rows an alert cites slim to the same thing (a hiring batch is 150 "anthropic job
+// added"), so equal ones share one object, which the payload serializer writes once. That
+// took /alerts' payload from 550 kB to 150 kB.
 export function slimAlerts(alerts: AlertView[]): AlertView[] {
   const seen = new Map<string, ChangeView>()
   const slim = (c: ChangeView): ChangeView => {

@@ -1,17 +1,16 @@
-// `bun run dev:seed` — fill the local dev DB with production's alerts and the
+// `bun run dev:seed`: fill the local dev DB with production's alerts and the
 // change rows they cite, so /alerts, the signal band and the alert permalinks
 // have something real to render.
 //
-// A local poll can't do this: alerts come mostly from the judge routine, which
-// runs in the cloud and writes through /api/judge. So this reads the public
-// /export routes instead (the trailing 90 days an anonymous reader gets) and
-// writes the rows as they are. Only those two tables: every other page fills
-// from a local poll, and its entity tables are not exported raw.
+// Alerts come mostly from the judge routine, which runs in the cloud, so a
+// local poll can't make them. This reads the public /export routes (the
+// trailing 90 days an anonymous reader gets) and writes the rows as they are.
+// Only those two tables: every other page fills from a local poll.
 //
 // Writes straight to .data/db/sqlite.db, the file the dev server reads
 // (.claude/docs/gotchas.md › Local D1 lives in two places). Run it with the dev
 // server stopped, or restart it after: a running server keeps its own
-// connection and won't see the rows. Re-running is safe: rows are keyed by id.
+// connection. Re-running is safe: rows are keyed by id.
 
 import { Database } from 'bun:sqlite'
 import { existsSync } from 'node:fs'

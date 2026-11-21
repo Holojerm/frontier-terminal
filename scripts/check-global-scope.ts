@@ -1,12 +1,12 @@
-// Global-scope gate — run with `bun run globals:check`, wired into `bun run ci`.
+// Global-scope gate: `bun run globals:check`, in `bun run ci`.
 //
 // Fails on server code that, at module load, generates random values, sets a
 // timer, fetches, or reads the clock: crypto.randomUUID, crypto.getRandomValues,
 // Math.random, setTimeout, setInterval, fetch, Date.now and an argument-less
-// new Date(). Workers refuse the first five at deploy (error 10021), after CI
-// has passed: #169 shipped `const usage = createUsageCounter()` at module scope,
-// the factory's default parameter called crypto.randomUUID(), and main stopped
-// deploying until #170. The clock reads are not refused, only wrong.
+// new Date(). Workers refuse all but the clock reads at deploy (error 10021),
+// after CI has passed: #169's module-scope factory, whose default parameter
+// called crypto.randomUUID(), stopped main deploying. The clock reads are not
+// refused, only wrong.
 //
 // A module-scope call to a function this file declares, imports by a relative
 // or alias path (#server, #shared, #layers, ~~, ~), or calls as one of our own

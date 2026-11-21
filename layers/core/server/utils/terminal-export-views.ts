@@ -32,9 +32,9 @@ export interface ExportTable {
   docs: ColumnDocs
   /**
    * One page of rows in a stable order, already reduced to `columns`: the
-   * first page for `after` null, else the rows that follow `after` (the last
-   * row of the previous page). Keyset, not OFFSET — an offset page re-reads
-   * every row before it, so streaming a table was quadratic in its size.
+   * first page for `after` null, else the rows after `after` (the last row of
+   * the previous page). Keyset, since an OFFSET page re-reads every row before
+   * it and makes streaming a table quadratic.
    */
   page(db: PipelineDb, after: Row | null, limit: number, where?: SQL): Promise<Row[]>
   count(db: PipelineDb): Promise<number>
@@ -343,8 +343,8 @@ export function entityView(
 }
 
 /**
- * An entity view with one output row per part of a payload — a statement's
- * lines, a schedule's buckets, a filing's headings. The keyset is the entity's
+ * An entity view with one output row per part of a payload (a statement's
+ * lines, a schedule's buckets, a filing's headings). The keyset is the entity's
  * (source_id, entity_key) plus the part's ordinal, so a page can end inside an
  * entity. `prepare` reads anything the parts are computed against (an earlier
  * filing's headings) once per page.
@@ -425,8 +425,8 @@ export function partsView<C>(
         .where(ofType)
       return rows.reduce((n, r) => n + explode(parsePayload(r.payload), context).length, 0)
     },
-    // #142 (as_of) and #144 (these views) merged in parallel; rewinding an
-    // exploded view through the change log is not built, so it says so.
+    // Rewinding an exploded view through the change log isn't built, so as_of
+    // refuses.
     at: () => Promise.reject(new PointInTimeError(PARTS_AS_OF_REFUSAL)),
     asOfRefusal: PARTS_AS_OF_REFUSAL,
     pointInTime: 'refused',

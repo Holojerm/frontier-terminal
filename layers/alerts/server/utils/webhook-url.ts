@@ -1,12 +1,11 @@
-// Which URLs a webhook may point at. The Worker POSTs to whatever is stored,
-// so this is the SSRF guard: https on port 443, a public DNS name, no IP
-// literal, no internal-only suffix. Checked by webhooks:add, again by
-// webhooks:test, and again before every send, so an edited row can't
-// bypass it. Pure, no aliases: scripts/webhooks.ts imports it.
+// Which URLs a webhook may point at: the SSRF guard. https on port 443, a public DNS name,
+// no IP literal, no internal-only suffix. Checked by webhooks:add, webhooks:test and before
+// every send, so an edited row can't bypass it. Pure, no aliases: scripts/webhooks.ts
+// imports it.
 //
-// A name can still resolve to a private address. The CLI resolves it on add
-// and refuses one that does (addressRefusal); the Worker can't resolve names,
-// and a Worker's fetch can't reach a private network anyway.
+// A name can still resolve to a private address. The CLI resolves it on add and refuses
+// one that does (addressRefusal); the Worker can't resolve names, and its fetch can't
+// reach a private network anyway.
 
 const MAX_URL_LENGTH = 2048
 

@@ -1,9 +1,7 @@
 <script setup lang="ts">
-// The reader's settings, behind one header button: color mode, how times and
-// figures read, table density, and the starred labs. Everything saves to this
-// browser as it changes (composables/useReaderPrefs.ts), so there is no save
-// button. The popover's content renders only while it is open, so the header
-// hydrates one button and never the zone list.
+// The reader's settings behind one header button. Changes save to this browser as
+// they happen (composables/useReaderPrefs.ts). The popover renders only while open,
+// so the header hydrates one button and never the zone list.
 
 import { DEFAULTS, type ReaderPrefs } from '#layers/core/app/composables/useReaderPrefs'
 
@@ -51,11 +49,10 @@ const zones = computed<Option<string>[]>(() => {
   ]
 })
 
-// One writable computed per setting, so every control is a plain v-model.
-// An inline `@update:model-value="f(key)"` would only call f, never the
-// setter it returns, and the control would silently do nothing.
-// Spelled out per field: a generic `bind(key)` over the readonly `prefs`
-// failed `computed`'s overloads in Workers Builds' typecheck.
+// One writable computed per setting, so each control is a plain v-model (an inline
+// `@update:model-value="f(key)"` would never call the setter f returns). Spelled
+// out per field: a generic `bind(key)` over the readonly `prefs` failed
+// `computed`'s overloads in Workers Builds' typecheck.
 const zone = computed({
   get: () => prefs.value.zone,
   set: (v: ReaderPrefs['zone']) => set({ zone: v }),

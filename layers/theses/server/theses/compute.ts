@@ -1,7 +1,7 @@
-// Thesis 3, transcribed from docs/theses/compute.md — that page is the
-// journal of record; this is its machine-readable half. The kill conditions
-// were registered before any reading existed: a threshold changed here is a
-// thesis revision, written in the page's Revisions table in the same commit.
+// Thesis 3, transcribed from docs/theses/compute.md (the journal of record).
+// The kill conditions were registered before any reading existed: changing a
+// threshold here is a thesis revision, logged in the page's Revisions table in
+// the same commit.
 
 import type { ThesisDef } from '../../shared/utils/thesis-types'
 
@@ -121,7 +121,7 @@ export const COMPUTE_THESIS: ThesisDef = {
       },
     },
     {
-      // Added 2026-11-04: a supply number beside claim 4's hiring proxy.
+      // A supply number beside claim 4's hiring proxy.
       id: 'compute-datacenter-power',
       n: 6,
       text: 'Data-center power keeps coming online',
@@ -135,8 +135,8 @@ export const COMPUTE_THESIS: ThesisDef = {
         rule: { rule: 'sustained-drawdown', drop: 0.2, days: 180, weeks: 4 },
       },
     },
-    // Claims 7 to 9 were added 2026-11-20, each before it had a reading that
-    // counts: see the journal's Revisions and Limits.
+    // Claims 7 to 9 were each registered before they had a reading that counts
+    // (see the journal's Revisions and Limits).
     {
       id: 'compute-gpu-spot-tight',
       n: 7,

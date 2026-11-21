@@ -1,20 +1,19 @@
-// The judge's reading of a call document the guidance parser found nothing
-// in. GET /api/judge/pending offers each transcript, set of remarks or
-// replay that was read with no statement but has sentences that look ahead
-// and state a figure, as a GUIDANCE REVIEW entry: those sentences, verbatim,
-// and the quarter the call reported. The judge sends back, per document, the
-// figures management guided, or none.
+// The judge's reading of a call document the guidance parser found nothing in.
+// GET /api/judge/pending offers each transcript, set of remarks or replay read with no
+// statement but with sentences that look ahead and state a figure, as a GUIDANCE REVIEW
+// entry (those sentences verbatim, and the reported quarter). The judge sends back, per
+// document, the figures management guided, or none.
 //
-// The model only finds the sentence and says what it states. The Worker
-// decides, against the document as R2 holds it:
+// The model only finds the sentence and says what it states. The Worker decides, against
+// the document as R2 holds it:
 //   1. the document was offered and is not judged yet;
 //   2. the quote is in the document verbatim and is at most QUOTE_MAX_WORDS words;
 //   3. the quote names the metric and states the guided figure, as the parser
 //      reads it (firstAmount, the same rules);
 //   4. the period ends after the reported quarter, within three fiscal years;
 //   5. the ticker, dates, source and provenance are set here, never by the model.
-// A statement that fails is dropped, with an ops event. Once a document is
-// answered it is judged and never offered again.
+// A statement that fails is dropped, with an ops event. An answered document is judged and
+// never offered again.
 
 import { and, desc, eq, inArray, isNull } from 'drizzle-orm'
 import { z } from 'zod'

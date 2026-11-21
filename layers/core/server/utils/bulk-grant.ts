@@ -1,13 +1,8 @@
 // The pure half of a licensee's S3 access to the licensed bulk bucket
-// (terminal-bulk.ts › LICENSED_BUCKET): what scripts/bulk-grant.ts asks the
-// Cloudflare API for, and how the answer becomes S3 credentials.
-//
-// A grant is one account-owned API token with a single policy: R2 object read
-// on that one bucket. It can list and get the licensed files and do nothing
-// else: no write, no other bucket (so never the raw payloads), no Cloudflare
-// API. Its expiry is the key's, so access ends when the key does even if
-// nobody runs the revoke. R2 derives S3 credentials from it: the access key id
-// is the token's id, the secret is the SHA-256 of the token's value
+// (terminal-bulk.ts › LICENSED_BUCKET). A grant is one account-owned API token
+// with a single policy, R2 object read on that bucket, expiring with the key,
+// so access ends even if nobody revokes it. R2 derives S3 credentials from it:
+// the access key id is the token's id, the secret the SHA-256 of its value
 // (developers.cloudflare.com/r2/api/tokens › Get S3 API credentials).
 
 import { keyRefusal } from './api-key-token'

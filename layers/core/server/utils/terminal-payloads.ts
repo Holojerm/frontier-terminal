@@ -3,12 +3,11 @@
 //
 // Only for sources whose sources.yaml `rights` is `ours`: facts a publisher
 // states about itself, read under terms and a robots.txt that allow it. A
-// `restricted` source's rows can be licensed as our compilation, but the page
-// is the publisher's and its terms restrict reading it, so we don't hand the
-// bytes on. A `not-cleared` source stays out of anything sold, and an
-// `upstream` dataset travels under its own license, not ours. None of the
-// three is served here whatever the key. A derived source (a model page, an
-// EDGAR filing index) takes the rights of the source it was derived from.
+// `restricted` page is the publisher's and its terms restrict reading it, a
+// `not-cleared` source stays out of anything sold, and an `upstream` dataset
+// travels under its own license, so none of those is served whatever the key.
+// A derived source (a model page, an EDGAR filing index) takes the rights of
+// the source it was derived from.
 
 import { eq } from 'drizzle-orm'
 

@@ -1,16 +1,8 @@
-// Epoch AI's "AI chip users" dataset (CC BY 4.0): how much compute each
-// leading developer uses, in H100-equivalents, as a median with the 5th and
-// 95th percentiles of Epoch's Monte Carlo model. This file is the model's
-// steps per lab and year: the inputs (Google's TPU fleet, the share of owned
-// chips that are running) and the totals built from them.
-//
-// A second file from Epoch's chip data rates each chip type in
-// H100-equivalents, which is how a result on another accelerator is put on
-// the same scale as the fleet estimate.
-//
-// Year-end estimates only, and Epoch calls them "substantially uncertain,
-// especially for Meta Superintelligence Labs and Google DeepMind". A reader
-// takes the percentiles with the median, never the median alone.
+// Epoch AI's "AI chip users" dataset (CC BY 4.0): each lab's compute in
+// H100-equivalents, median with 5th and 95th percentiles, plus a file rating each
+// chip type in H100-equivalents. Year-end estimates Epoch calls "substantially
+// uncertain, especially for Meta Superintelligence Labs and Google DeepMind", so
+// the percentiles always travel with the median.
 
 import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 import { parseCsv } from '#layers/core/server/recipes/csv'

@@ -1,9 +1,6 @@
-// GPU rental price pages: one recipe per provider whose first-party pricing
-// page is server-rendered HTML. Each reads only the self-serve on-demand
-// offering the page prices per hour; reserved, spot, preemptible, dedicated
-// inference endpoints and multi-week clusters are other products and are
-// skipped. Every extractor throws when the section it reads is missing, so a
-// redesign fails the run instead of storing an empty price list.
+// GPU rental price pages, one recipe per provider with a server-rendered pricing
+// page. Only the self-serve on-demand offering is read. Extractors throw when their
+// section is missing, so a redesign fails the run instead of storing nothing.
 
 import { cellText, contentOf, dollars, gpuOf, gpuRecipe, tablesOf, type GpuRow } from './gpu-prices'
 

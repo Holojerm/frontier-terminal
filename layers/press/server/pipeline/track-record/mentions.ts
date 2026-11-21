@@ -1,22 +1,19 @@
-// The GKG rows the press side matches against. Each GKG file is read once,
-// in order (scripts/gdelt-search.ts), and of each the Worker keeps only the
-// rows that carry a word from mentionVocabulary (a lab, a filer, a model
-// family's first word), compacted to what matchesArticle reads. Nothing is
-// matched as a file is read: when an alert's window closes, the cron matches
-// it once against the rows kept for that window (search.ts ›
-// runTrackRecordSearch), so the press from before the alert was written is
+// The GKG rows the press side matches against. Each GKG file is read once, in
+// order (scripts/gdelt-search.ts), and the Worker keeps only the rows carrying a
+// word from mentionVocabulary (a lab, a filer, a model family's first word),
+// compacted to what matchesArticle reads. Nothing is matched at read time: when
+// an alert's window closes, the cron matches it once against that window's kept
+// rows (search.ts › runTrackRecordSearch), so the press before the alert is
 // searched like the press after it.
 //
-// The kept rows hold every match only where the vocabulary covered the
-// alert's terms (termsInVocabulary). The vocabulary grows: a model family's
-// first word joins it when its first model is stored, so the files read
-// before then kept no row for that family. Each file therefore records the
-// vocabulary it was read with, and pressSearchedFrom checks the alert against
-// each file's own.
+// The kept rows hold every match only where the vocabulary covered the alert's
+// terms (termsInVocabulary). A model family's first word joins the vocabulary
+// when its first model is stored, so earlier files kept no row for that family.
+// Each file therefore records the vocabulary it was read with, and
+// pressSearchedFrom checks the alert against each file's own.
 //
-// Measured on eight files across 2026-11-06: about 53 kept rows a file, 5,100
-// a day, 1.5 MB a day compacted (78 MB verbatim, which is why rows are not
-// kept whole).
+// Measured on eight files across 2026-11-06: about 53 kept rows a file, 5,100 a
+// day, 1.5 MB a day compacted (78 MB verbatim, which is why rows aren't kept whole).
 
 import { and, eq, gte, lt, lte, max, sql } from 'drizzle-orm'
 
@@ -28,12 +25,11 @@ import { WINDOW_DAYS, type TrackWindow } from './window'
 const DAY_MS = 86_400_000
 
 /**
- * Rows are kept this long, measured from the Worker's clock: a whole window
- * and a day, so a window is still held when its search row is written, which
- * is as soon as its last file is read. A fixed span rather than one that
- * follows the alerts still waiting: some alert nearly always is, with its
- * window starting about two weeks back, so that would keep as much, and this
- * needs no alert list where it prunes and only the clock where it checks.
+ * Rows are kept this long by the Worker's clock: a whole window and a day, so a
+ * window is still held when its search row is written (as soon as its last file
+ * is read). A fixed span, because following the alerts still waiting would keep
+ * about as much (one nearly always is, its window starting about two weeks back)
+ * and would need an alert list where it prunes.
  */
 export const MENTION_RETAIN_DAYS = 2 * WINDOW_DAYS + 1
 
@@ -62,11 +58,10 @@ export async function retentionVocabulary(db: PipelineDb): Promise<string[]> {
 
 /**
  * The posted rows the Worker keeps, with only the names in `vocabulary`: a web
- * URL, a title, and at least one such name. The job reports what a row
- * carried; the Worker cannot see the file, so it bounds what a report may
- * claim rather than re-reading it. A name the vocabulary has since lost (a
- * delisted model) is dropped, so what is kept is what `vocabulary` alone
- * would have kept.
+ * URL, a title, and at least one such name. The Worker can't see the file, so it
+ * bounds what a report may claim. A name the vocabulary has since lost (a
+ * delisted model) is dropped, so what is kept is what `vocabulary` alone would
+ * have kept.
  */
 export function acceptedMentions(
   mentions: readonly GkgMention[],
@@ -111,7 +106,6 @@ export async function storeMentions(
 /** The earliest quarter hour whose kept rows are certainly all still held at `now`. */
 const keptSince = (now: Date) => now.getTime() - MENTION_RETAIN_DAYS * DAY_MS
 
-/** Drop rows past MENTION_RETAIN_DAYS. */
 export async function pruneMentions(db: PipelineDb, now: Date): Promise<void> {
   const before = new Date(keptSince(now)).toISOString()
   await db.delete(tables.gkgMentions).where(lt(tables.gkgMentions.seen_at, before))
@@ -148,12 +142,11 @@ export async function* mentionsIn(
 }
 
 /**
- * Where an alert's press search actually began: the window's start when every
- * file in it kept its rows by a vocabulary that covers the alert's terms,
- * otherwise the first instant after the last file that did not (one read
- * before rows were kept, or whose vocabulary lacked the alert's words), or
- * whose rows may have been pruned by `now`. The page leaves a window searched
- * only in part out of the lead/lag tally.
+ * Where an alert's press search began: the window's start when every file in it
+ * kept its rows by a vocabulary covering the alert's terms; otherwise the first
+ * instant after the last file that didn't (read before rows were kept, or with a
+ * vocabulary lacking the alert's words) or whose rows may be pruned by `now`.
+ * The page leaves a window searched only in part out of the lead/lag tally.
  */
 export async function pressSearchedFrom(
   db: PipelineDb,

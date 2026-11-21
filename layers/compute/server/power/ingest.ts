@@ -1,21 +1,9 @@
-// One run of the power-sites reader, after each filings-lane poll (six-hourly):
-//
-//   1. the hand-read rows are copied into power_site_ties once (store.ts);
-//   2. a quarter of Epoch's lab sites are searched each run, so each is
-//      searched once a day: EDGAR full-text search for the names filings use
-//      for the site (sites.ts), in 10-Qs, 10-Ks, 8-Ks, 20-Fs, 6-Ks and S-1s
-//      and their press-release exhibits filed since the site was last read;
-//   3. the newest documents not yet read are fetched, at most DOCS_PER_RUN a
-//      run across sites, and stored in R2. A document read once for a site is
-//      never fetched for it again; a failed one is retried after a day;
-//   4. a row whose quote a later filing of the same filer and form repeats now
-//      cites that filing (restampTies);
-//   5. a document whose text speaks of power near the site's name waits for
-//      the judge (review.ts). One that does not is settled now: the rows of
-//      its filer and periodic form it no longer repeats have ended.
-//
-// Every request goes to SEC through the lane's paced fetcher. On a 429 the run
-// stops fetching and spools one ops event; the next run starts over.
+// One run of the power-sites reader, after each filings-lane poll. Hand-read rows
+// are seeded once (store.ts); a quarter of the sites are searched each run
+// (sites.ts, EDGAR full-text search); the newest unread hits are fetched
+// (DOCS_PER_RUN) and stored in R2; repeated quotes are restamped (restampTies); a
+// document speaking of power near the site waits for the judge (review.ts), others
+// are settled now. On a SEC 429 the run stops and spools one ops event.
 
 import { and, eq, gt, isNull, max } from 'drizzle-orm'
 

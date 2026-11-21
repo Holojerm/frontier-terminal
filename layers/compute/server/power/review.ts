@@ -1,23 +1,10 @@
-// The judge's reading of an SEC document that names a lab site. GET
-// /api/judge/pending offers each document the reader stored and found power
-// spoken of near the site's name in (ingest.ts) as a POWER SITE REVIEW entry:
-// excerpts of its text, the site as Epoch has it, and the ties the table
-// already holds for that site. The judge sends back, per document, the
-// companies the document ties to the site's power, or none.
-//
-// The model only finds the sentence and says what it states. The Worker
-// decides, against the document as R2 holds it:
-//   1. the document was offered for that site and is not settled yet;
-//   2. the quote is in the document verbatim (see contains);
-//   3. the quote names the company and the site, by a name it was searched for;
-//   4. the quote says something of the kind the role claims (ROLE_CUES);
-//   5. a megawatt figure is written in the quote, in MW or GW;
-//   6. the ticker, parent, title, publisher, dates and provenance are set
-//      here, never by the model: a company is matched to a listing only when
-//      the hand-read table already lists it, or it is the filer itself.
-// A tie that fails is dropped, with an ops event. Once a document is answered
-// it is settled: rows of its filer and periodic form it no longer repeats
-// have ended.
+// The judge's reading of an SEC document naming a lab site, offered as a POWER SITE
+// REVIEW entry on /api/judge/pending. The model only finds the sentence; the Worker
+// checks it against the R2 copy: offered and unsettled, verbatim (see contains),
+// naming company and site, saying something of the role's kind (ROLE_CUES), any MW
+// figure written in MW or GW. Ticker, parent, dates and provenance are set here; a
+// company gets a listing only if the hand-read table lists it or it is the filer.
+// A failing tie is dropped with an ops event.
 
 import { z } from 'zod'
 

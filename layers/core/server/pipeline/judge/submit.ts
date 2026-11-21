@@ -47,14 +47,14 @@ export interface JudgeRunReport {
   changes_seen: number
   /** Alerts that passed the gate, grounding and the screen's rejections. */
   accepted: number
-  /** Accepted alerts written — accepted minus the ones already stored. */
+  /** Accepted alerts written: accepted minus the ones already stored. */
   inserted: number
   /** Rejected alerts: real model output that cited something it couldn't. */
   rejected: number
   rejections: { reason: string; detail: string; headline: string }[]
   /** Alerts stored below the severity sent (the screen's floors and gates). */
   clamped: JudgeClamp[]
-  /** Whole-body rejection at the schema gate or the cursor check — nothing reached grounding. */
+  /** Whole-body rejection at the schema gate or the cursor check; nothing reached grounding. */
   gate_rejection: { reason: string; detail: string } | null
   /** Each review's report, under its key (JUDGE_REVIEWS). */
   [review: string]: unknown
@@ -82,14 +82,12 @@ async function existingAlertIds(db: PipelineDb, ids: readonly string[]): Promise
 }
 
 /**
- * The cursor this run may store, or why `judged_through` is not one. The
- * routine sends the newest detected_at it was handed; anything else either
- * strands changes behind the cursor (too far ahead) or re-offers judged ones
- * (behind). It must not go back, must not pass the newest change GET
- * /api/judge/pending offers from the current cursor, and must be the newest
- * detected_at among the changes the run says it saw. A run that saw none (a
- * review-only run) holds the cursor where it is, and before the first cursor
- * stores none. Compared as instants: "…:00Z" and "…:00.000Z" are one cursor.
+ * The cursor this run may store, or why `judged_through` is not one. It must
+ * be the newest detected_at among the changes the run says it saw, not behind
+ * the current cursor and not past the newest change GET /api/judge/pending
+ * offers from it; otherwise changes are stranded or re-offered. A review-only
+ * run holds the cursor. Compared as instants: "…:00Z" and "…:00.000Z" are one
+ * cursor.
  */
 export async function checkCursor(
   db: PipelineDb,
@@ -181,7 +179,7 @@ function outsideWindow(
   return { inside, rejected }
 }
 
-/** The id buildAlertRows will stamp — the dedupe key. */
+/** The id buildAlertRows will stamp: the dedupe key. */
 const stampedId = (alert: { change_ids: readonly string[]; headline: string }) =>
   contentHash({ change_ids: [...new Set(alert.change_ids)].sort(), headline: alert.headline })
 

@@ -12,25 +12,21 @@ import { isoDate, tableAfterHeading, usdAmount } from './md-table'
 // Two per-model $/MTok tables are parsed:
 //   "## Model pricing"      -> base rows (tier null)
 //   "### Batch processing"  -> tier "batch" rows (50% list discount, printed)
-// A model priced by prompt length prints two rows, "Claude Haiku 5.5 (for
-// prompts up to 100,000 tokens)" and "(… over 100,000 tokens)". The short band
-// keeps the plain tier (null / "batch") so it joins the catalog row from
-// anthropic-models-md, whose "From" price it is; the long band is
-// "long_context" / "batch_long_context", the names openai-pricing-md uses.
-// Column mapping: input = "Base Input Tokens", cached input = "Cache Hits &
-// Refreshes" (the price paid to READ cached input — the analog of OpenAI's
-// "cached input" and xAI's "Cached input / 1M tokens"). The 5m/1h cache
-// WRITE prices have no schema column; they ride verbatim in notes so a
-// cache-tier repricing still changes the row's content hash and diffs.
-// The fast-mode table (one combined two-model row) is deliberately not
-// parsed.
+// A model priced by prompt length prints two rows, "Claude Haiku 5.5 (for prompts up to
+// 100,000 tokens)" and "(… over 100,000 tokens)". The short band keeps the plain tier (null /
+// "batch") so it joins anthropic-models-md's catalog row, whose "From" price it is; the long
+// band is "long_context" / "batch_long_context", the names openai-pricing-md uses.
+// Columns: input = "Base Input Tokens"; cached input = "Cache Hits & Refreshes" (the price to
+// READ cached input, like OpenAI's "cached input" and xAI's "Cached input / 1M tokens"). The
+// 5m/1h cache WRITE prices have no schema column, so they ride verbatim in notes and a
+// cache-tier repricing still changes the row's content hash. The fast-mode table (one
+// combined two-model row) is not parsed.
 //
-// A launch can price a model on a schedule (Claude Sonnet 5, June 2026): one
-// row "through August 31, 2026" (a link to the note saying so) and one
-// "starting September 1, 2026". The first ends the day after its last day and
-// the second starts then, the shape openai-pricing gives a promotion, so the
-// scheduled row keys as `standard@<date>` (normalize.ts › priceTier). A
-// schedule we can't date fails the source rather than storing a future price
+// A launch can price a model on a schedule (Claude Sonnet 5, June 2026): one row "through
+// August 31, 2026" (a link to the note saying so) and one "starting September 1, 2026". The
+// first ends the day after its last day and the second starts then, the shape openai-pricing
+// gives a promotion, so the scheduled row keys as `standard@<date>` (normalize.ts ›
+// priceTier). A schedule we can't date fails the source rather than storing a future price
 // as today's.
 
 // "Claude Opus 4.1 ([retired, except on Bedrock and Google Cloud](url))"
@@ -114,9 +110,7 @@ function splitModelCell(cell: string): ModelCell {
     : { name: cell, annotation: null, band: null }
 }
 
-// prov defaults to the fixture manifest's record (single-arg behavior is
-// byte-identical for the determinism gate); the refresh orchestrator passes
-// the live fetch's provenance instead.
+// One-argument calls read the fixture's provenance, keeping the determinism gate byte-identical.
 export function parseAnthropicPricingMd(
   text: string,
   prov: Provenance = fixtureProvenance('anthropic-pricing-md'),

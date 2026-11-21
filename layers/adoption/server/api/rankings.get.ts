@@ -1,8 +1,6 @@
-// GET /api/rankings — demand share from OpenRouter's usage rankings: 7-day
-// token share per lab with the change against the prior 7 days, each lab's
-// top models, the 30-day daily series, the weekly share over the whole stored
-// history, and the CC BY 4.0 citation. Cached in
-// KV for the current poll tick (layers/core/server/utils/terminal-handler.ts).
+// GET /api/rankings: OpenRouter demand share (7-day token share per lab and its change, top
+// models, the 30-day series, the weekly history, the CC BY 4.0 citation). Cached in KV for
+// the current poll tick (layers/core/server/utils/terminal-handler.ts).
 
 export default defineEventHandler(async (event) => {
   await rateLimitTerminal(event, { name: 'rankings', limit: 60, windowSeconds: 60 })

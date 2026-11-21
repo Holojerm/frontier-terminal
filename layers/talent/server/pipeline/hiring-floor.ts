@@ -2,24 +2,22 @@ import { and, eq, gt, inArray, sql } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 
-// The hiring materiality floor: when a set of job changes is worth the alert
-// tier. A move counts relative to the board or department it happens on,
-// never as a bare count, because the boards differ by 60x (Mistral ~13 open
-// roles, OpenAI ~810) and a department of 4 is not a department of 150.
+// The hiring materiality floor: when a set of job changes is worth the alert tier. A move
+// counts relative to the board or department it happens on, never as a bare count: boards
+// differ by 60x (Mistral ~13 open roles, OpenAI ~810) and a department of 4 is not a
+// department of 150.
 //
-// The judge applies the same rubric (judge-explain.prompt.md), but the
-// Worker enforces it: a judged hiring alert below the floor is clamped to
-// `info` at submit (judge/submit.ts), whatever severity the routine sent.
-// A net cut stays critical only if it empties a department. Critical is the
-// tier social.ts posts, and a batch of removals with no additions says
-// nothing about how much of the department is left.
-// The weekly roll-up (hiring-rollup.ts) uses it to pick its severity.
+// The judge applies the same rubric (judge-explain.prompt.md), but the Worker enforces it:
+// a judged hiring alert below the floor is clamped to `info` at submit (judge/submit.ts),
+// whatever severity the routine sent. A net cut stays critical only if it empties a
+// department: critical is the tier social.ts posts, and removals with no additions say
+// nothing about how much of the department is left. The weekly roll-up (hiring-rollup.ts)
+// uses the floor to pick its severity.
 //
-// Thresholds, set against the judged history to 2026-11-04 (32 alert-tier
-// hiring alerts; 22 of them fall below the floor — GTM churn of +2 on a
-// 566-role board, "Marketing goes dark" on a 5-of-50 cut — and the 10 that
-// clear it are the Human Data wind-down, the data-center and Compute moves,
-// and a 5-of-19 Data Science pull):
+// Thresholds were set against 32 judged alert-tier hiring alerts. The 22 below the floor
+// include GTM churn of +2 on a 566-role board and a 5-of-50 marketing cut; the 10 above it
+// are the Human Data wind-down, the data-center and Compute moves, and a 5-of-19 Data
+// Science pull.
 //   board       |net| >= max(5, 2% of the board)        Anthropic ~680 -> 14
 //   department  |net| >= 5 AND >= 20% of the department  25% would drop xAI's
 //                                                        first Human Data cut (-5 of 23)
@@ -27,8 +25,8 @@ import * as tables from '#server/db/schema'
 //   cluster     |net| >= max(3, 5% of the cluster)       the buildout signal;
 //                                                        xAI's ~150-role data-center
 //                                                        cluster needs 8, Anthropic's ~25 needs 3
-// `net` counts `added` minus `removed`. A `modified` that moves a role between
-// departments is a relabel, not a hire or a closure, and never counts.
+// `net` counts `added` minus `removed`. A `modified` that moves a role between departments
+// is a relabel and never counts.
 
 export const HIRING_FLOOR = {
   boardShare: 0.02,

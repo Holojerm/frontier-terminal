@@ -1,30 +1,17 @@
 import type { JudgeAlert } from './alerts'
 
-// Grounding check for the judge lane — the deterministic enforcement of the
-// explain rule: the model may cite only fields present in the change records
-// it was given, or it stays silent. Runs AFTER the schema gate (schema first,
-// then literalism). An alert survives only if
-//   1. every change_id names a change row actually supplied (unknown id ->
-//      the whole alert is rejected),
-//   2. every number printed in headline+explanation appears in the cited
-//      rows' before_json/after_json/entity_key ("$" and thousands-commas
-//      stripped, numeric value compared — "$7.50" grounds 7.5; a derived
-//      figure like "-33%" does not), or is the dotted version a cited slug
-//      spells with a dash ("Opus 5.5" grounds against claude-opus-5-5); a
-//      time of day grounds only as a time of day (splitClocks), so the 33 in
-//      a fetch stamp's "09:33:47" never grounds "cuts 33%",
-//   3. every slug-like token carrying a digit ("grok-4.6", "gemini-2.5-pro",
-//      "s-1") and every "double-quoted span" (how the prompt tells the model
-//      to cite job titles) appears verbatim, case-insensitively, in them —
-//      bar trailing sentence punctuation inside the closing quote, see
-//      spanIsGrounded.
-// Rejection is silence, not repair: a rejected alert is never inserted.
-// Deliberately coarse — a tripwire against invention, not a re-judging.
-//
-// The digit requirement on slugs is load-bearing: without it "near-term",
-// "cost-per-token" and "input/output" rejected every live model output
-// measured (3/3 runs, 2026-08-25). A tripwire that fires on ordinary prose
-// is not a tripwire.
+// Grounding check for the judge lane, run after the schema gate: the model may
+// cite only what is in the change records it was given. An alert survives only if
+//   1. every change_id names a supplied change row;
+//   2. every number in headline+explanation appears in the cited rows'
+//      before_json/after_json/entity_key ("$7.50" grounds 7.5; a derived "-33%"
+//      does not), or is the dotted version of a cited slug ("Opus 5.5" from
+//      claude-opus-5-5). A time of day grounds only a time of day (splitClocks);
+//   3. every slug-like token with a digit ("grok-4.6") and every "double-quoted
+//      span" appears verbatim, case-insensitively (spanIsGrounded).
+// A rejected alert is dropped, never repaired. It is a coarse tripwire against
+// invention, not a re-judging. Slugs need a digit because "near-term" and
+// "input/output" otherwise rejected every live output measured.
 
 export type AlertGroundingReason =
   | 'unknown-change-id'
@@ -100,13 +87,9 @@ export function quotedSpans(text: string): string[] {
 }
 
 /**
- * A quoted span grounds if it appears verbatim, or if it does once trailing
- * sentence punctuation is dropped. English typography puts the comma inside
- * the closing quote ("Foo," not "Foo",), so a title copied verbatim from a
- * record arrives with punctuation the record never had — three real alerts,
- * one of them `notable`, were rejected and lost that way (issue #23). The
- * span still has to match the record for its whole length; only the closing
- * punctuation is forgiven.
+ * A quoted span grounds if it appears verbatim, or does once trailing
+ * punctuation is dropped: English puts the comma inside the closing quote,
+ * which lost three real alerts (issue #23).
  */
 function spanIsGrounded(span: string, corpusLower: string): boolean {
   const lower = span.toLowerCase()
@@ -118,9 +101,8 @@ function spanIsGrounded(span: string, corpusLower: string): boolean {
 /**
  * Versions a slug spells with a dash, read as the dotted number a headline
  * prints: claude-opus-5-5 → 5.5. Records carry only the slug, so without this
- * the Opus 5.5 launch alert — a `critical` flagship price cut — was rejected
- * as an invented number (issue #54). Only slugs count, so a date's
- * "2026-10" never grounds 2026.1.
+ * a flagship price-cut alert was rejected as an invented number (issue #54).
+ * Only slugs count, so a date's "2026-10" never grounds 2026.1.
  */
 export function slugVersions(text: string): Set<string> {
   const versions = new Set<string>()
@@ -141,8 +123,8 @@ export function corpusOf(changes: readonly ChangeRow[]): string {
 
 /**
  * Why `text` fails grounding against `corpus` (the cited records' text), or
- * null when it passes — the number and term checks groundAlerts applies,
- * for any other judged text that must stay inside its records.
+ * null when it passes: groundAlerts' number and term checks, for any other
+ * judged text that must stay inside its records.
  */
 export function groundingFailure(
   text: string,

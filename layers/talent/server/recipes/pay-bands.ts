@@ -1,18 +1,15 @@
-// Posted salary bands on the labs' own job boards, which US pay-transparency
-// laws require. Each run reduces a board to a few cells: the median midpoint
-// of every USD annual band, overall and for research and software
-// engineering, with its quartiles and counts. One row per cell, dated the
-// run that saw it change; the board's bytes are kept in R2 for the roles
+// Posted salary bands on the labs' own job boards, which US pay-transparency laws require.
+// Each run reduces a board to a few cells: the median midpoint of every USD annual band,
+// overall and for research and software engineering, with quartiles and counts. One row
+// per cell, dated the run that saw it change; the board's bytes stay in R2 for the roles
 // behind each number.
 //
-// Bands are posted ranges, not offers; they cover US postings only and
-// exclude equity, the larger part of pay at these labs. The signal is a
-// cell's change over time, not the gap between labs: the department mapping
-// below is kept by hand ("Applied AI" is product engineering at OpenAI and
-// solutions architects at Anthropic), and sales is left out because Anthropic
-// posts on-target earnings and OpenAI base pay. xAI's structured pay field is
-// empty and Mistral posts none (cut in sources.yaml; docs/source-audit.md,
-// 2026-11-04).
+// Bands are posted ranges, not offers; they cover US postings only and exclude equity, the
+// larger part of pay at these labs. The signal is a cell's change over time, not the gap
+// between labs: the department mapping below is kept by hand ("Applied AI" is product
+// engineering at OpenAI and solutions architects at Anthropic), and sales is left out
+// because Anthropic posts on-target earnings and OpenAI base pay. xAI's structured pay
+// field is empty and Mistral posts none (cut in sources.yaml; docs/source-audit.md).
 
 import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 

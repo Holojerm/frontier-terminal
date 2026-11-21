@@ -1,11 +1,9 @@
-// Reads of the archived price lists and rate limits (archive_captures,
-// archived_prices, archived_rate_limits): the Internet Archive's captures of
-// each lab's own pricing and rate-limit pages, backfilled by
-// scripts/wayback-backfill.ts. Kept out of the live derivations on purpose.
-// A live point says what this store saw when it looked; an archived one says
-// what the Archive saw, and we read it back years later. Every archived row a
-// payload carries says so (basis 'archived', a wayback: source id, the capture
-// URL as source_url).
+// Reads of the archived price lists and rate limits (archive_captures, archived_prices,
+// archived_rate_limits): the Internet Archive's captures of each lab's own pricing and
+// rate-limit pages, backfilled by scripts/wayback-backfill.ts. Kept out of the live
+// derivations: a live point says what this store saw when it looked, an archived one what the
+// Archive saw. Every archived row a payload carries says so (basis 'archived', a wayback:
+// source id, the capture URL as source_url).
 
 import { and, asc, count, desc, eq, inArray, lte, max, min } from 'drizzle-orm'
 
@@ -227,7 +225,7 @@ export async function queryPriceReach(
   })
 }
 
-// ---- hiring ------------------------------------------------------------------
+// ---- events --------------------------------------------------------------------
 
 /**
  * Launches and price changes the archived price lists show (price-events.ts),

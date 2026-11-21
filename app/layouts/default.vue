@@ -1,13 +1,7 @@
 <script setup lang="ts">
-// The app shell for every page. One layout: there is no signed-in state to
-// adapt to. DESIGN.md › Component behavior › Navigation: a top row with the
-// mark, the Labs menu and the settings menu, and under it from `lg` the
-// axis bar: the entry points as links, and the axes grouped under Economics
-// and Operations, each a menu that opens on hover or click. Below
-// `lg` the axis bar becomes a right-side drawer that carries the whole site
-// map. The drawer closes on route change, not on click, so a redirect closes
-// it too. The footer is the disclaimer, the reference pages, and the
-// machine-readable exits (feed, repo).
+// The app shell for every page (no signed-in state, so one layout). DESIGN.md › Component
+// behavior › Navigation. Below `lg` the axis bar becomes a right-side drawer carrying the
+// whole site map. The drawer closes on route change, not on click, so a redirect closes it.
 
 import type { DropdownMenuItem, NavigationMenuItem } from '@nuxt/ui'
 
@@ -30,10 +24,8 @@ interface NavGroup {
   links: (NavLink & { description: string })[]
 }
 
-// Eleven flat axes no longer fit one row at `lg`, and a flat row weighed
-// Prices the same as Disclosures. The axes group under the two questions
-// they answer: what the labs' business costs and earns (Economics), and what
-// the labs are doing (Operations). The entry points stay one click.
+// The axes group under the two questions they answer: what the labs' business costs and
+// earns (Economics) and what the labs are doing (Operations). Entry points stay one click.
 const OVERVIEW: NavLink = { label: 'Overview', to: '/' }
 const ALERTS: NavLink = { label: 'Alerts', to: '/alerts' }
 const THESES: NavLink = { label: 'Theses', to: '/theses' }
@@ -158,9 +150,7 @@ watch(
 
 <template>
   <div class="flex min-h-dvh flex-col bg-default">
-    <!-- Skip link — WCAG 2.4.1. First focusable element on every page, so a
-         keyboard or screen-reader user can jump the nav instead of tabbing it on
-         each navigation. Visually hidden until focused. -->
+    <!-- Skip link (WCAG 2.4.1): the first focusable element, visually hidden until focused. -->
     <a
       href="#main"
       class="sr-only print:hidden focus:not-sr-only focus:absolute focus:left-4 focus:top-4 focus:z-50 focus:rounded-sm focus:bg-elevated focus:px-4 focus:py-2 focus:text-highlighted focus:ring-2 focus:ring-primary"
@@ -177,8 +167,6 @@ watch(
       <UContainer>
         <div class="flex h-(--ui-header-height) items-center justify-between gap-4">
           <div class="flex min-w-0 items-center gap-4">
-            <!-- The mark and the wordmark both come from BrandLogo, which is also
-                 what every generated icon is derived from (DESIGN.md › Brand mark). -->
             <NuxtLink to="/" class="min-touch flex items-center" :aria-label="`${appName} — home`">
               <BrandLogo />
             </NuxtLink>
@@ -222,12 +210,9 @@ watch(
         <nav aria-label="Primary, drawer">
           <div class="space-y-6">
             <div v-for="section in drawerSections" :key="section.label">
-              <!-- A real heading, not a styled div: the drawer is a list of
-                   lists, and a screen reader should be able to jump between
-                   them (DESIGN.md › Accessibility › Structure and labels).
-                   `text-toned`, not `text-dimmed`: dimmed is the disabled and
-                   placeholder token and is legitimately under AA, which is the
-                   wrong thing for 12px type that carries the structure. -->
+              <!-- A real heading so a screen reader can jump between lists (DESIGN.md ›
+                   Accessibility › Structure and labels). `text-toned`, not `text-dimmed`:
+                   dimmed is the placeholder token and sits under AA. -->
               <h3 class="mb-1 px-2.5 text-xs uppercase tracking-wide text-toned">
                 {{ section.label }}
               </h3>
@@ -251,13 +236,9 @@ watch(
       </template>
     </USlideover>
 
-    <!-- On paper the header and footer are hidden, so a printed page (the lab
-         tear sheets) is the content alone. -->
-    <!-- tabindex="-1" so the skip link moves focus here, not just the scroll
-         position — without it the next Tab lands back at the top of the nav.
-         The focus-visible rule protects elements a user can Tab to; `main` is only
-         ever focused programmatically by the skip link, and a ring around the whole
-         page region reads as a rendering bug. design-check-ignore -->
+    <!-- On paper the header and footer are hidden, so a printed tear sheet is the content alone. -->
+    <!-- tabindex="-1" so the skip link moves focus, not just the scroll position. `main` is
+         only focused programmatically, and a ring around the page reads as a bug. design-check-ignore -->
     <UContainer id="main" as="main" tabindex="-1" class="flex-1 py-6 focus:outline-none print:py-0">
       <slot />
     </UContainer>

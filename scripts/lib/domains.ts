@@ -1,9 +1,6 @@
-// The rules half of `bun run domains:check` (scripts/check-domains.ts).
-//
-// Strings in, answers out, so test/domains.test.ts can drive every rule without
-// a filesystem or the TypeScript parser (which cannot load in workerd). The gate
-// walks the layers, parses each file for the identifiers it leaves unresolved,
-// and hands both to the functions here.
+// The rules half of `bun run domains:check` (scripts/check-domains.ts). Strings
+// in, answers out, so test/domains.test.ts can drive every rule without a
+// filesystem or the TypeScript parser (which cannot load in workerd).
 
 import { blankNonCode } from './method-bodies'
 

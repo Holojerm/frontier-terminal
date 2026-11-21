@@ -1,10 +1,7 @@
-// UN Comtrade's keyless public API, for Korea's monthly exports of HS 8542
-// (electronic integrated circuits) to the world. getDA lists every monthly
-// dataset Korea has released with when it was first and last released; the
-// preview endpoint returns one period's figure (it refuses more than one
-// period a call). The figure is what Comtrade holds now, so it was public
-// from the dataset's lastReleased, not its firstReleased: that is the time
-// each row is dated (sources.yaml › print_sources › un-comtrade-hs8542).
+// UN Comtrade's keyless API for Korea's monthly HS 8542 exports to the world. getDA
+// lists each monthly dataset's release times; preview returns one period per call.
+// The figure is Comtrade's current one, so rows are dated by lastReleased, not
+// firstReleased (sources.yaml › print_sources › un-comtrade-hs8542).
 
 import { z } from 'zod'
 

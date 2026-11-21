@@ -24,11 +24,9 @@ import { printedDate, textOf } from '#layers/core/server/pipeline/parsers/html-t
 // Labels vary between reports ("Discovered", "Discovery date"; "Disclosure
 // date" where "First posted" would be; "Report updated" for "Last updated"),
 // so each date is read under every label the vendor has used, and only when
-// the value is exactly one date. The page does not print its own slug, so
-// the row carries the page's title and the read side joins it to the index
-// entry only when the titles agree. Until 2026-11-20 the page was an
-// `<article class="ap-doc">` on alignment.openai.com and the model line was
-// on the index instead.
+// the value is exactly one date. The page doesn't print its own slug, so the
+// row carries the page's title and the read side joins it to the index entry
+// only when the titles agree.
 
 const DISCOVERY_LABELS = new Set(['discovery', 'discovered', 'discovery date'])
 const DISCLOSURE_LABELS = new Set(['disclosure date', 'first posted'])

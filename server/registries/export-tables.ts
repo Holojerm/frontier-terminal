@@ -1,33 +1,32 @@
 // Bulk exports of the store: every table, as CSV or JSON, streamed in pages
 // so a 100k-row changes table never has to fit in Worker memory at once.
 //
-// The entity views (prices_latest, jobs_open, incidents, revenue_facts) flatten the JSON payload
-// into columns, because a CSV with a JSON blob in one cell is not a
-// spreadsheet anyone can sort. Provenance columns are always present and
-// always last: source_url and fetched_at on every table except source_runs,
-// which has no fetched_at by design (a failed run fetched nothing) and
-// carries started_at instead.
+// The entity views (prices_latest, jobs_open, incidents, revenue_facts)
+// flatten the JSON payload into columns, so the CSV sorts in a spreadsheet.
+// Provenance columns are always present and last: source_url and fetched_at on
+// every table but source_runs, which carries started_at instead (a failed run
+// fetched nothing).
 //
 // The CSV defuses cells a spreadsheet would execute (see defuseFormula); the
-// JSON is verbatim, because nothing executes a JSON string.
+// JSON is verbatim.
 //
-// The data license is split by age (shared/utils/license.ts), so a bulk export
-// of a table that grows over time serves the trailing window by default and
-// every row behind `?history=full`, each row then labeled in a `license`
-// column. EXPORT_HISTORY classifies every table and names the date it is cut on.
+// The data license is split by age (shared/utils/license.ts), so a table that
+// grows serves the trailing window by default and every row behind
+// `?history=full`, each row then labeled in a `license` column. EXPORT_HISTORY
+// classifies every table and names the date it is cut on.
 //
-// `?as_of=` (ExportTable.at) serves a table as the store held it at that instant:
-// an append-only table by the column that says when each row was written,
-// read as a range on the index its keyset already pages; an entity view
-// rebuilt from the change log (terminal-asof.ts); and a table rewritten in
-// place with no log refused with a 400, since its past is gone.
+// `?as_of=` (ExportTable.at) serves a table as the store held it at that
+// instant: an append-only table by the column that says when each row was
+// written, read as a range on the index its keyset already pages; an entity
+// view rebuilt from the change log (terminal-asof.ts); and a table rewritten
+// in place with no log refused with a 400, since its past is gone.
 //
 // This file is the registry (EXPORT_TABLES) and the app's composition root for
-// exports: composed in order from each layer's records in server/export-tables/;
+// exports, composed in order from each layer's records in server/export-tables/;
 // a new table goes in its domain's file and, for a new file, one line here. The
-// parts each table is built from are in layers/core/server/utils/terminal-export-views.ts,
-// the license window in terminal-export-history.ts, and the CSV and JSON
-// encoding in terminal-export-format.ts.
+// table parts are in layers/core/server/utils/terminal-export-views.ts, the
+// license window in terminal-export-history.ts, and the CSV and JSON encoding
+// in terminal-export-format.ts.
 //
 // Pure functions of the Drizzle client, so layers/terminal/test/terminal-export.test.ts can
 // drive them against the workerd D1 and read the bytes back.

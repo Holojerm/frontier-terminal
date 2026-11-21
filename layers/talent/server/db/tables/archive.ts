@@ -6,15 +6,14 @@ import { provenance } from '../../../../core/server/db/tables/columns'
 // archive_captures (layers/core/server/db/tables/archive.ts), which logs
 // the captures of every archived axis.
 
-// One row per (capture, count): what an archived job board listed. Each
-// parsed capture writes one `board` row (open roles on the whole board) and,
-// when the capture lists every role with its department, one `department`
-// row per department, summing to the board row. `label` is the department as
-// the board printed it then; `department` is the live department it files
-// under (layers/talent/server/pipeline/archive/hiring-eras.ts › liveDepartment), the label itself unless
-// the board's own id ties it to a live one. Counts only: no role, title or
-// person is stored. Never a live row: basis is always 'archived', and
-// nothing here reaches the hiring floor, the roll-up, the judge or a thesis.
+// One row per (capture, count): what an archived job board listed. Each parsed capture
+// writes one `board` row (open roles on the whole board) and, when the capture lists every
+// role with its department, one `department` row per department, summing to the board row.
+// `label` is the department as the board printed it then; `department` is the live
+// department it files under, the label itself unless the board's own id ties it to a live
+// one (layers/talent/server/pipeline/archive/hiring-eras.ts › liveDepartment). Counts only:
+// no role, title or person is stored. basis is always 'archived', and nothing here reaches
+// the hiring floor, the roll-up, the judge or a thesis.
 export const archivedHiring = sqliteTable(
   'archived_hiring',
   {

@@ -1,14 +1,8 @@
-// Epoch AI's AI data centers dataset (CC BY 4.0): power, H100-equivalents
-// and capital cost per site, estimated from satellite imagery, permits and
-// filings. Two files: the sites as they stand now, with owner and users,
-// and each site's timeline of dated estimates, planned dates included.
-//
-// The estimates are Epoch's: 80% of power estimates fall within a factor of
-// 1.4, compute is mostly derived from power, and coverage starts with sites
-// operational in 2024 or later. Owner and Users differ (Colossus is owned by
-// SpaceXAI and used by Anthropic), and each name carries Epoch's confidence
-// tag, so both are kept verbatim; a signal attributes by Users at #confident
-// or #likely (docs/source-audit.md, 2026-11-04).
+// Epoch AI's AI data centers dataset (CC BY 4.0): power, H100-equivalents and cost
+// per site, now and as a dated timeline. Epoch's estimates (80% of power within a
+// factor of 1.4; coverage from sites operational in 2024). Owner and Users differ
+// and carry confidence tags, so both are kept verbatim; signals attribute by Users
+// at #confident or #likely (docs/source-audit.md).
 
 import type { Observation, Recipe } from '#layers/core/server/recipes/contract'
 import { parseCsv } from '#layers/core/server/recipes/csv'

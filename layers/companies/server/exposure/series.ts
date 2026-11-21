@@ -1,16 +1,14 @@
-// What the filed facts are turned into: one quarterly series per filer and
-// line, oldest first, each point from the newest filing that reported it.
+// The filed facts as series: one quarterly series per filer and line, oldest first, each
+// point from the newest filing that reported it.
 //
-// A cash-flow line is tagged year to date (a 10-Q's six or nine months, a
-// 10-K's year), so a quarter is read directly where the filing tags three
-// months and otherwise derived as the year-to-date figure less the one a
-// quarter shorter, and marked derived with the figure it took away. A
-// balance (backlog, a stake) is read at each period end. A value a later
-// filing restated is kept as superseded, never dropped.
+// A cash-flow line is tagged year to date, so a quarter is read directly where the filing
+// tags three months, else derived as the year-to-date figure less the one a quarter
+// shorter, and marked derived with the figure it took away. A balance (backlog, a stake)
+// is read at each period end. A value a later filing restated is kept as superseded.
 //
-// Every series is the filer's number. Microsoft's line on OpenAI is what
-// Microsoft recognized, not OpenAI's result, and Amazon's upward marks follow
-// observable prices for its preferred stock, not Anthropic's valuation.
+// Every series is the filer's number. Microsoft's line on OpenAI is what Microsoft
+// recognized, not OpenAI's result, and Amazon's upward marks follow observable prices for
+// its preferred stock, not Anthropic's valuation.
 
 import type { TextMetric } from './text-facts'
 import type {
@@ -300,7 +298,6 @@ export const SERIES_DEFS: readonly SeriesDef[] = [
   },
 ]
 
-/** Plain names for the concepts the parents tag on a lab, by concept. */
 /** Plain names for the concepts a parent tags on a lab, by `<lab>|<concept>`. */
 const LAB_LABELS: Readonly<Record<string, string>> = {
   'openai|us-gaap:NonoperatingIncomeExpense': 'Gain or loss Microsoft recognized on OpenAI',

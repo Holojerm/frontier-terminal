@@ -1,8 +1,7 @@
-// POST /_probes/run?placement= — runs the hourly latency probes, inside the
-// placement's Durable Object only. The cron sends it to the object
-// (layers/reliability/server/utils/probe-runner.ts › dispatchPinnedProbes). On
-// the public Worker it is a 404, so no outside request can make the probes
-// run from its own colo.
+// POST /_probes/run?placement= runs the hourly latency probes, only inside the placement's
+// Durable Object (layers/reliability/server/utils/probe-runner.ts › dispatchPinnedProbes
+// sends it there). On the public Worker it is a 404, so no outside request can make the
+// probes run from its own colo.
 
 import { z } from 'zod'
 
