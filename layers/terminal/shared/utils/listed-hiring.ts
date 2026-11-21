@@ -195,23 +195,24 @@ export const LISTED_CUTS: readonly { ticker: string; company: string; reason: st
     ticker: 'RIOT',
     company: 'Riot Platforms',
     reason:
-      'Not yet: its Rippling board answers, but Rippling’s terms did not load for us to read.',
+      'Not read: Rippling’s terms did not load for us to read, and one miner’s board adds little to the hosts already read.',
   },
   {
     ticker: 'HPE',
     company: 'HPE',
-    reason: 'Not yet: its Workday board answers, but HPE’s terms page did not load for us to read.',
+    reason:
+      'Not read: HPE’s terms page did not load for us to read, and the server makers are covered by the Taiwan prints.',
   },
   {
     ticker: 'DELL',
     company: 'Dell',
-    reason: 'Not yet: its board is on Oracle Recruiting Cloud, which needs a reader of its own.',
+    reason:
+      'Not read: its board is on Oracle Recruiting Cloud, which needs a reader of its own, and the server makers are covered by the Taiwan prints.',
   },
   {
     ticker: 'MSFT',
     company: 'Microsoft',
-    reason:
-      'Not yet: its search API serves ten roles a request, and its terms bar any means it does not intentionally make available.',
+    reason: 'Not read: its terms bar any means it does not intentionally make available.',
   },
 ]
 

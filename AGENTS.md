@@ -8,9 +8,12 @@ and is read on demand.
 Frontier Terminal is a free, public, read-only terminal of fundamentals on the frontier AI
 labs (OpenAI, Anthropic, Google, xAI, Meta, Mistral, DeepSeek, Alibaba (Qwen), Moonshot AI (Kimi)).
 Per lab: API price lists, hiring, SEC filings and disclosed revenue, status-page incidents and
-latency probes, misalignment disclosures, and OpenRouter demand share. Around the labs: the
-public companies tied to them (exposure, dependencies, suppliers, listed companies), compute
-(GPU prices, data-center power), and ground truth (press reports scored against later filings).
+latency probes, misalignment disclosures, and OpenRouter demand share. Around the labs, on one
+spine (labs → compute → hardware → power): the public companies tied to them (exposure,
+dependencies, suppliers, listed companies and their hiring), compute (GPU prices), hardware
+(Taiwan monthly revenue, Korea chip exports), power (data-center sites, grid load), and ground
+truth (press reports and earnings-call guidance scored against later filings). Every series
+registers in a signal registry and /signals grades it against the stocks it should lead.
 The terminal's data is the product. Theses are a layer on top, the retail-facing angle. No
 accounts, no sign-in, no payments. Every datum carries its source URL and fetch timestamp.
 

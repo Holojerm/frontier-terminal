@@ -7,9 +7,12 @@ For each lab it tracks API price lists, hiring (including data center and infras
 SEC filings and disclosed revenue, OpenRouter demand share with the spend share it implies,
 status-page incidents and latency probes, and misalignment disclosures. Around the labs it tracks
 the public companies tied to them: hyperscaler capex and backlog, the dependency graph of who
-sells to and funds whom, chip and power suppliers, and GPU rental prices. Ground truth scores
-press reports of lab revenue and deals against the filings that came later. Theses sit on top of
-the data, as short arguments with the numbers that would break them.
+sells to and funds whom, chip and power suppliers, their hiring, GPU rental prices, Taiwan's
+monthly server and chip revenue, Korea's chip exports, and grid load where the lab sites are.
+Ground truth scores press reports of lab revenue and deals, and what the listed companies guided
+on their earnings calls, against the filings that came later. Signals tests every series against
+the stocks it should lead, out of sample, with dated forward calls. Theses sit on top of the
+data, as short arguments with the numbers that would break them.
 
 Every number links to the page we read it from and shows when we read it. Not investment advice.
 
