@@ -943,6 +943,16 @@
       "note": "Internet Archive capture of https://docs.anthropic.com/en/docs/about-claude/pricing taken 20250610103300 (era anthropic-pricing-docs-2025, layers/terminal/server/pipeline/archive/eras.ts). source_url is the capture; fetched_at is when we read it back."
     },
     {
+      "path": "fixtures/pricing/wayback/anthropic-pricing-md-2026-07.md",
+      "source_id": "wayback-anthropic-pricing-md-2026-20260719184415",
+      "source_url": "https://web.archive.org/web/20260719184415id_/https://platform.claude.com/docs/en/about-claude/pricing.md",
+      "fetched_at": "2026-11-21T15:39:16.000Z",
+      "http_status": 200,
+      "raw_bytes": 36869,
+      "trim": "none",
+      "note": "Internet Archive capture of https://platform.claude.com/docs/en/about-claude/pricing.md taken 20260719184415 (era anthropic-pricing-md-2026, layers/terminal/server/pipeline/archive/eras.ts): Claude Sonnet 5 at its introductory price through August 31, 2026 and the standard price scheduled from September 1. source_url is the capture; fetched_at is when we read it back."
+    },
+    {
       "path": "fixtures/pricing/wayback/openai-docs-pricing-2026-07.html",
       "source_id": "wayback-openai-docs-pricing-2026b-20260717100803",
       "source_url": "https://web.archive.org/web/20260717100803id_/https://developers.openai.com/api/docs/pricing",

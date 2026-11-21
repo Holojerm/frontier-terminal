@@ -21,6 +21,7 @@ const FIXTURES = [
   ['openai-pricing-md-2026', '20260729122800', W('openai-pricing-2026-07.md')],
   ['anthropic-models-2024c', '20240620143535', W('anthropic-models-2024-06.html')],
   ['anthropic-pricing-docs-2025', '20250610103300', W('anthropic-pricing-2025-06.html')],
+  ['anthropic-pricing-md-2026', '20260719184415', W('anthropic-pricing-md-2026-07.md')],
 ] as const
 
 function parse(era: string, timestamp: string, text: string) {
@@ -161,5 +162,24 @@ describe('archived pricing pages', () => {
     expect(prices(find(out.rows, 'claude-haiku-3-5', 'batch'))).toEqual([0.4, null, 2])
     // The same key the live pricing.md writes for this model.
     expect(prices(find(out.rows, 'claude-sonnet-3-7'))).toEqual([3, 0.3, 15])
+  })
+
+  test('platform.claude.com pricing.md, July 2026: a scheduled price, dated, under the model’s own slug', () => {
+    const { out } = parse(
+      'anthropic-pricing-md-2026',
+      '20260719184415',
+      W('anthropic-pricing-md-2026-07.md'),
+    )
+    // "| Claude Sonnet 5 [through August 31, 2026](…) |" and "| Claude Sonnet 5 starting September 1, 2026 |"
+    const sonnet5 = out.rows.filter((r) => r.model_slug === 'claude-sonnet-5')
+    expect(
+      sonnet5.map((r) => [r.tier, r.input_per_mtok, r.effective_from, r.effective_until]),
+    ).toEqual([
+      [null, 2, null, '2026-09-01'],
+      [null, 3, '2026-09-01', null],
+      ['batch', 1, null, '2026-09-01'],
+      ['batch', 1.5, '2026-09-01', null],
+    ])
+    expect(out.rows.some((r) => /[[\](),]/.test(r.model_slug))).toBe(false)
   })
 })
