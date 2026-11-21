@@ -121,10 +121,19 @@ export function parseKcsReleasePage(html: string): KcsReleasePage {
   return { kogl_type1, attachments }
 }
 
-/** The attachment whose text is read: the PDF where there is one, else the first. */
-export function kcsAttachment(page: KcsReleasePage): { name: string; file_key: string } | null {
-  return page.attachments.find((a) => /\.pdf$/i.test(a.name)) ?? page.attachments[0] ?? null
+/** The attachments in the order their text is tried: the PDF first, then the HWP or HWPX. */
+export function kcsAttachments(page: KcsReleasePage): { name: string; file_key: string }[] {
+  const pdf = (a: { name: string }) => (/\.pdf$/i.test(a.name) ? 0 : 1)
+  return [...page.attachments].sort((a, b) => pdf(a) - pdf(b))
 }
+
+/**
+ * Whether the viewer's text kept the release's numbers. Some PDFs draw their
+ * digits as shapes, so the text has the words and none of the figures (June
+ * 2021's confirmed release: 123 digits). Every release with its numbers has
+ * over 200; that one's HWP has them.
+ */
+export const hasFigures = (text: string): boolean => (text.match(/\d/g)?.length ?? 0) >= 200
 
 /** The viewer's JSONP answer, `viewCallback({"url":"<document id>","status":"SUCCESS"})`. */
 export function parseKcsViewer(body: string): string {
@@ -189,6 +198,26 @@ export function kcsPublishedAt(text: string): string | null {
   return new Date(utc).toISOString()
 }
 
+/**
+ * Which columns of a commodity row are the month and the same month a year
+ * earlier. The layout has moved: a year earlier then the month (2017 on),
+ * the month then a year earlier (late 2016), or a year earlier, the two
+ * months before and the month (early 2017). The pair whose change is the
+ * stated one, to its rounding, is the answer.
+ */
+function monthColumns(values: number[], yoy: number): { month: number; yearAgo: number } | null {
+  const last = values.length - 1
+  const candidates: [number, number][] = [
+    [values[1]!, values[0]!],
+    [values[0]!, values[1]!],
+    [values[last]!, values[0]!],
+  ]
+  for (const [month, yearAgo] of candidates) {
+    if (yearAgo > 0 && Math.abs((month / yearAgo - 1) * 100 - yoy) <= 0.1) return { month, yearAgo }
+  }
+  return null
+}
+
 export type KcsReading =
   | { kind: 'figures'; observations: PrintObservation[] }
   | { kind: 'none'; reason: string }
@@ -236,21 +265,32 @@ export function parseKcsChipExports(text: string, release: KcsRelease): KcsReadi
   // The table row, in the unit the table states.
   const row =
     release.window === 'month'
-      ? /^[ \t]*\(\s*반\s*도\s*체\s*\)[ \t]+([\d,]+)[ \t]+([\d,]+)[ \t]+(△?\s*-?[\d.]+)/m.exec(t)
-      : /^[ \t]*반\s*도\s*체[ \t]+([\d,]+)[ \t]+(△?\s*-?[\d.]+)/m.exec(t)
+      ? /^[ \t]*\(\s*반\s*도\s*체\s*\)((?:[ \t]+[\d,]+){2,4})[ \t]+(△?\s*-?\d+\.\d)/m.exec(t)
+      : /^[ \t]*반\s*도\s*체[ \t]+([\d,]+)[ \t]+(△?\s*-?\d+(?:\.\d)?)/m.exec(t)
 
   let value: number
   let yoy: number | null
   let yearAgo: number | null = null
   if (row) {
     const unit = unitOf(t, row.index)
+    yoy = change(row[2]!)
     if (release.window === 'month') {
-      yearAgo = num(row[1]!) * unit
-      value = num(row[2]!) * unit
-      yoy = change(row[3]!)
+      const pair = monthColumns(
+        row[1]!
+          .trim()
+          .split(/[ \t]+/)
+          .map(num),
+        yoy,
+      )
+      if (!pair) {
+        throw new Error(
+          `kcs ${release.period} month: no two columns of "${row[0].trim()}" give ${yoy}%`,
+        )
+      }
+      value = pair.month * unit
+      yearAgo = pair.yearAgo * unit
     } else {
       value = num(row[1]!) * unit
-      yoy = change(row[2]!)
     }
     if (stated && Math.abs(stated.value - value) >= stated.step) {
       throw new Error(

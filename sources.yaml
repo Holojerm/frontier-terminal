@@ -3174,8 +3174,9 @@ print_sources:
       from the 1–10 day, 1–20 day and confirmed monthly releases, and the
       embargo time (보도시점). The board is read hourly, page 1 only once the
       whole board is held; each release is read once (its page, the
-      viewer's id, the viewer's text: three GETs), oldest first, at most 12
-      a run. A release's rows go here only when its own page carries the
+      viewer's id, the viewer's text: three GETs, five where the PDF's text
+      lost its digits and the HWP is read too), oldest first, at most 12 a
+      run. A release's rows go here only when its own page carries the
       Type 1 block. Read 2026-11-21.
     rights: upstream
     caveats: >-

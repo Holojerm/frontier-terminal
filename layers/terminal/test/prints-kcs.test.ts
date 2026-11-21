@@ -8,7 +8,8 @@ import { PRINT_TABLES } from '../server/export-tables/prints'
 import type { FetchOutcome, SourceFetcher } from '../server/pipeline/fetch'
 import { KCS, KCS_BOARD_DOC, readKcs } from '../server/prints/ingest'
 import {
-  kcsAttachment,
+  hasFigures,
+  kcsAttachments,
   kcsBoardUrl,
   kcsPublishedAt,
   kcsRelease,
@@ -99,10 +100,12 @@ describe('the release page and viewer', () => {
   it('reads the KOGL Type 1 block, and its absence', () => {
     const marked = parseKcsReleasePage(f('kcs-release-10182926.html'))
     expect(marked.kogl_type1).toBe(true)
-    expect(kcsAttachment(marked)).toEqual({
-      name: '261111 2026년 11월 1일 - 11월 10일 수출입 현황.pdf',
-      file_key: '315cfcb06b903fc9721e383c914b8874',
-    })
+    expect(kcsAttachments(marked)).toEqual([
+      {
+        name: '261111 2026년 11월 1일 - 11월 10일 수출입 현황.pdf',
+        file_key: '315cfcb06b903fc9721e383c914b8874',
+      },
+    ])
     expect(parseKcsReleasePage(f('kcs-release-10177443.html')).kogl_type1).toBe(false)
   })
 
@@ -145,6 +148,29 @@ describe('parseKcsChipExports', () => {
     expect(nov17).toMatchObject({ value: 9_828e6, yoy_pct: 68.5 })
   })
 
+  it('finds the month and a year earlier wherever the table puts them, by the stated change', () => {
+    // September 2016: the month, then a year earlier (5,734 against 5,895 is −2.7%).
+    expect(
+      figures(texts('38728'), { period: '2016-09', window: 'month' }).map((o) => [
+        o.period,
+        o.value,
+      ]),
+    ).toEqual([
+      ['2016-09', 5_734e6],
+      ['2015-09', 5_895e6],
+    ])
+    // January 2017: a year earlier, November, December, then January.
+    expect(
+      figures(texts('40045'), { period: '2017-01', window: 'month' }).map((o) => [
+        o.period,
+        o.value,
+      ]),
+    ).toEqual([
+      ['2017-01', 6_497e6],
+      ['2016-01', 4_591e6],
+    ])
+  })
+
   it('takes a provisional month stated only in 억 달러 at that precision', () => {
     expect(figures(texts('10163364'), { period: '2026-04', window: 'month' })).toMatchObject([
       { value: 320e8, yoy_pct: null },
@@ -168,8 +194,11 @@ describe('parseKcsChipExports', () => {
     const text = texts('10183383')
     const release = { period: '2026-10', window: 'month' } as const
     expect(() =>
-      parseKcsChipExports(text.replace('15,862 56,702', '15,862 66,702'), release),
+      parseKcsChipExports(text.replace('증가한 \n567\n억', '증가한 \n667\n억'), release),
     ).toThrow(/table/)
+    expect(() =>
+      parseKcsChipExports(text.replace('15,862 56,702', '15,862 66,702'), release),
+    ).toThrow(/columns/)
     const d10 = texts('10182926')
     expect(() =>
       parseKcsChipExports(d10.replace(/\(단위 : 백만 달러, 전년동기대비 %\)/, '(단위 : 톤)'), {
@@ -177,6 +206,18 @@ describe('parseKcsChipExports', () => {
         window: 'd10',
       }),
     ).toThrow(/unit/)
+  })
+
+  it('tries the PDF first, then the HWP, and tells a text that lost its digits', () => {
+    const page = parseKcsReleasePage(
+      `<ul class="list_file">` +
+        `<a onClick="viewer('/streamdocs/v4/documents/view/tnnf/aa')" title="r.hwp 바로보기">` +
+        `<a onClick="viewer('/streamdocs/v4/documents/view/tnnf/bb')" title="r.pdf 바로보기">`,
+    )
+    expect(kcsAttachments(page).map((a) => a.file_key)).toEqual(['bb', 'aa'])
+    expect(hasFigures(texts('10183383'))).toBe(true)
+    // A PDF that draws its digits as shapes reads as words alone.
+    expect(hasFigures(texts('10183383').replace(/\d/g, ''))).toBe(false)
   })
 
   it('reads a time only where the release states one', () => {
@@ -203,7 +244,7 @@ for (const sn of RELEASES) {
   const page = f(`kcs-release-${sn}.html`)
   const viewer = f(`kcs-viewer-${sn}.json`)
   routes.set(kcsReleaseUrl(sn, HASH[sn]!), page)
-  routes.set(kcsViewerUrl(kcsAttachment(parseKcsReleasePage(page))!.file_key), viewer)
+  routes.set(kcsViewerUrl(kcsAttachments(parseKcsReleasePage(page))[0]!.file_key), viewer)
   routes.set(kcsTextsUrl(parseKcsViewer(viewer)), texts(sn))
 }
 const requested: string[] = []

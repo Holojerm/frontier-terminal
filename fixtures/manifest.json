@@ -2338,6 +2338,24 @@
       "http_status": 200,
       "raw_bytes": 28940,
       "trim": "none — committed whole (November 2017 confirmed (HWP): \"98억 3천만 달러\")"
+    },
+    {
+      "path": "fixtures/prints/kcs-texts-38728.txt",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/streamdocs/v4/documents/72059271377126001/texts",
+      "fetched_at": "2026-11-21T08:04:43Z",
+      "http_status": 200,
+      "raw_bytes": 26373,
+      "trim": "none — committed whole (September 2016 confirmed (HWP): the month before the same month a year earlier)"
+    },
+    {
+      "path": "fixtures/prints/kcs-texts-40045.txt",
+      "source_id": "kcs-chip-exports",
+      "source_url": "https://www.customs.go.kr/streamdocs/v4/documents/72059212332244149/texts",
+      "fetched_at": "2026-11-21T08:03:41Z",
+      "http_status": 200,
+      "raw_bytes": 25043,
+      "trim": "none — committed whole (January 2017 confirmed (HWP): a year earlier, the two months before and the month)"
     }
   ]
 }

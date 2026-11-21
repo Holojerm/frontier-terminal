@@ -30,7 +30,7 @@ import {
   type PrintObservation,
 } from './parse'
 import {
-  kcsAttachment,
+  kcsAttachments,
   kcsBoardUrl,
   KCS_PAGE_SIZE,
   kcsRelease,
@@ -41,6 +41,7 @@ import {
   parseKcsChipExports,
   parseKcsReleasePage,
   parseKcsViewer,
+  hasFigures,
 } from './kcs'
 import { storeObservations } from './store'
 
@@ -76,6 +77,11 @@ export const KCS = {
 export const TSMC_DOCS_PER_RUN = 20
 /** Three GETs a release on a slow host: the first backfill takes about a day and a half of runs. */
 export const KCS_DOCS_PER_RUN = 12
+/**
+ * Wall time a run spends on releases. KCS answers in a second or two but has
+ * taken over 30, and prints:read shares its invocation with other tasks.
+ */
+export const KCS_RUN_BUDGET_MS = 4 * 60_000
 /** Board pages read a run until the whole board is held (about 24 pages). */
 export const KCS_BOARD_PAGES_PER_RUN = 4
 /** The print_documents row that holds the board backfill's next page, or `listed` once done. */
@@ -312,6 +318,7 @@ export async function readKcs(db: PipelineDb, deps: PrintDeps): Promise<KcsRepor
     revised: 0,
     pending: 0,
   }
+  const started = Date.now()
   const docs = tables.printDocuments
   const fetched_at = deps.now.toISOString()
   const [state] = await db
@@ -400,6 +407,7 @@ export async function readKcs(db: PipelineDb, deps: PrintDeps): Promise<KcsRepor
   report.pending = Math.max(0, due.length - KCS_DOCS_PER_RUN)
 
   for (const d of due.slice(0, KCS_DOCS_PER_RUN)) {
+    if (Date.now() - started > KCS_RUN_BUDGET_MS) break
     const ntt_sn = d.doc_id.slice(4)
     const title = d.detail ?? ''
     const release = kcsRelease(title, d.filed)
@@ -433,36 +441,40 @@ export async function readKcs(db: PipelineDb, deps: PrintDeps): Promise<KcsRepor
     }
     try {
       const parsed = parseKcsReleasePage(page.text)
-      const attachment = kcsAttachment(parsed)
-      // KCS sometimes posts the release before its attachment: tried again tomorrow.
-      if (!attachment) {
+      // The first attachment whose text kept its numbers. KCS sometimes posts
+      // a release before its attachment: none is tried again tomorrow.
+      let texts: string | null = null
+      let reached = true
+      for (const attachment of kcsAttachments(parsed)) {
+        const viewer = await deps.fetcher({
+          source_id: KCS.reader,
+          url: kcsViewerUrl(attachment.file_key),
+          ext: 'json',
+        })
+        const body = viewer.ok
+          ? await deps.fetcher({
+              source_id: KCS.reader,
+              url: kcsTextsUrl(parseKcsViewer(viewer.text)),
+              ext: 'txt',
+            })
+          : viewer
+        if (!body.ok) {
+          reached = false
+          break
+        }
+        texts = body.text
+        if (hasFigures(texts)) break
+      }
+      if (texts === null || !reached) {
         await failed()
         continue
       }
-      const viewer = await deps.fetcher({
-        source_id: KCS.reader,
-        url: kcsViewerUrl(attachment.file_key),
-        ext: 'json',
-      })
-      if (!viewer.ok) {
-        await failed()
-        continue
-      }
-      const texts = await deps.fetcher({
-        source_id: KCS.reader,
-        url: kcsTextsUrl(parseKcsViewer(viewer.text)),
-        ext: 'txt',
-      })
-      if (!texts.ok) {
-        await failed()
-        continue
-      }
-      const reading = parseKcsChipExports(texts.text, release)
+      const reading = parseKcsChipExports(texts, release)
       const source_id = parsed.kogl_type1 ? KCS.marked : KCS.unmarked
       const raw_key = `prints/kcs/${ntt_sn}.txt`
       // The page is kept with the text: its licence block is what put the rows on one side or the other.
       await deps.raw.put(`prints/kcs/${ntt_sn}.html`, page.text, 'text/html')
-      await deps.raw.put(raw_key, texts.text, 'text/plain; charset=utf-8')
+      await deps.raw.put(raw_key, texts, 'text/plain; charset=utf-8')
       if (reading.kind === 'none') {
         await upsertDoc(db, {
           doc_id: d.doc_id,
