@@ -347,6 +347,13 @@ describe('GDELT GKG files', () => {
     expect(parseGkgRow('not\ta\trow')).toBeNull()
   })
 
+  it('keeps an entity past U+10FFFF as written instead of throwing', () => {
+    // A 2023 archive file held one; String.fromCodePoint threw and ended the run.
+    expect(cnetRow).toContain('Big Subscription')
+    const row = cnetRow.replace('Big Subscription', 'Big &#99999999; &#x110000; &#38; Subscription')
+    expect(parseGkgRow(row)?.title).toContain('Big &#99999999; &#x110000; & Subscription')
+  })
+
   it('unzips a file whose local header defers its sizes', async () => {
     const zip = await zipOf(`${FIXTURE_STAMP}.gkg.csv`, gkgFixture)
     expect(new TextDecoder().decode(await unzipOne(zip))).toBe(gkgFixture)
