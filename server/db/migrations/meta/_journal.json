@@ -456,6 +456,13 @@
       "when": 1795229972303,
       "tag": "0064_striped_komodo",
       "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "6",
+      "when": 1795236805777,
+      "tag": "0065_jazzy_champions",
+      "breakpoints": true
     }
   ]
 }

@@ -35,6 +35,17 @@ export const latencyProbes = sqliteTable(
     generation_id: text('generation_id'),
     // Where the request left from: `cloudflare:<colo>`, or `local` off the Worker.
     ran_from: text('ran_from').notNull(),
+    // The location hint of the Durable Object that ran the probe
+    // (pipeline/probes/placement.ts), or `unpinned`: every row from before
+    // placement, which left from whichever colo ran the cron. The default is
+    // what flagged those rows; every run since writes its own.
+    placement: text('placement').notNull().default('unpinned'),
+    // Whether the router says the pinned provider served it (served_by against
+    // provider); null when the stream named nobody.
+    served_by_pinned: integer('served_by_pinned', { mode: 'boolean' }),
+    // The response's rate-limit headers (x-ratelimit-*, retry-after) as a JSON
+    // object, null when it sent none.
+    rate_limit_headers: text('rate_limit_headers'),
     raw_key: text('raw_key'),
     ...provenance,
   },
@@ -44,15 +55,18 @@ export const latencyProbes = sqliteTable(
   ],
 )
 
-// One row per (lab, UTC day), re-rolled from latency_probes after every run
+// One row per (lab, UTC day, placement), re-rolled from latency_probes after every run
 // for the days it touched: the strain reading the page and the API serve, so
 // neither reads a quarter of raw probes. model is the day's newest; a day that
-// changed model is rolled from the newest model's probes only.
+// changed model is rolled from the newest model's probes only. Placements are
+// never mixed: an unpinned day and a pinned one are separate rows.
 export const probeDays = sqliteTable(
   'probe_days',
   {
     lab: text('lab').notNull(),
     day: text('day').notNull(), // YYYY-MM-DD, UTC
+    // latency_probes.placement of every probe the row was rolled from.
+    placement: text('placement').notNull().default('unpinned'),
     model: text('model').notNull(),
     route: text('route').notNull(),
     // Probes that say something about the lab: every outcome but setup and router.
@@ -74,7 +88,10 @@ export const probeDays = sqliteTable(
     rolled_at: text('rolled_at').notNull(),
     ...provenance,
   },
-  (t) => [primaryKey({ columns: [t.lab, t.day] }), index('probe_days_day_idx').on(t.day)],
+  (t) => [
+    primaryKey({ columns: [t.lab, t.day, t.placement] }),
+    index('probe_days_day_idx').on(t.day),
+  ],
 )
 
 export type LatencyProbeRow = typeof latencyProbes.$inferSelect

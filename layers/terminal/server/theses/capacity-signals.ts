@@ -6,7 +6,7 @@
 // fetches anything. The arithmetic is pure and exported for
 // layers/terminal/test/theses-capacity.test.ts.
 
-import { gte } from 'drizzle-orm'
+import { and, eq, gte } from 'drizzle-orm'
 
 import type { ExposureTicker } from '../../shared/utils/terminal-exposure'
 import type { SignalSpec } from '../../shared/utils/thesis-types'
@@ -14,6 +14,7 @@ import type { SignalSpec } from '../../shared/utils/thesis-types'
 import * as tables from '#server/db/schema'
 import type { ProbeDayRow } from '#server/db/schema'
 import { FILER_NAMES, type StoredFact } from '../exposure/series'
+import { PRIMARY_PLACEMENT } from '../pipeline/probes/placement'
 import type { PipelineDb } from '../pipeline/store'
 import { filedFactsAt } from '../utils/terminal-exposure'
 import {
@@ -346,7 +347,11 @@ export function peakThroughputReadings(
   return out
 }
 
-/** The labs' peak-hours throughput against off-peak, from the daily roll of the hourly probes. */
+/**
+ * The labs' peak-hours throughput against off-peak, from the daily roll of the
+ * hourly probes sent from the pinned placement. Unpinned days are left out:
+ * their times mix the distance to the router into the lab's.
+ */
 export async function probePeakToOffpeak(
   db: PipelineDb,
   spec: Spec<'probe-peak-to-offpeak'>,
@@ -357,6 +362,11 @@ export async function probePeakToOffpeak(
   const rows = await db
     .select()
     .from(tables.probeDays)
-    .where(gte(tables.probeDays.day, daysBefore(today, historyDays + spec.days)))
+    .where(
+      and(
+        gte(tables.probeDays.day, daysBefore(today, historyDays + spec.days)),
+        eq(tables.probeDays.placement, PRIMARY_PLACEMENT),
+      ),
+    )
   return peakThroughputReadings(rows, today, spec)
 }
