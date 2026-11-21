@@ -8,7 +8,7 @@
 import manifest from '~~/fleet.json'
 
 import { REQUEST_BUDGETS } from '#layers/core/shared/utils/institutional'
-import type { SchemaChangelogEntry } from '../../../../core/shared/types/coverage'
+import type { SchemaChangelogEntry } from '../../../shared/types/coverage'
 
 defineProps<{
   schemaVersion?: string
