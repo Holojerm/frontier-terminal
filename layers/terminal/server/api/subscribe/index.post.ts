@@ -9,8 +9,8 @@ import { logEvent } from '#server/utils/log'
 import { rateLimit } from '#server/utils/rate-limit'
 
 import { subscribeBody } from '../../../shared/utils/subscribe'
-import { sendMail } from '../../utils/resend'
-import { requireSubscribe } from '../../utils/subscribe-config'
+import { sendMail } from '../../../../core/server/utils/resend'
+import { requireSubscribe } from '../../../../core/server/utils/subscribe-config'
 import { confirmationMail } from '../../utils/subscriber-mail'
 import { requestSubscription } from '../../utils/subscribers'
 

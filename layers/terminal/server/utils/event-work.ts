@@ -10,7 +10,7 @@
 import { and, asc, eq } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
-import type { OwnerMailer } from './owner-mail'
+import type { OwnerMailer } from '../../../core/server/utils/owner-mail'
 import { drainSocialPosts, type SocialConfig } from '#layers/social/server/utils/social'
 import type { SocialPublisher } from '#layers/social/server/utils/buffer'
 
@@ -22,8 +22,8 @@ import {
   type PressAlert,
   type PressContact,
   type PressOutcome,
-} from '../pipeline/press'
-import type { MailMessage } from './resend'
+} from '../../../press/server/pipeline/press'
+import type { MailMessage } from '../../../core/server/utils/resend'
 import { enqueueCriticalAlerts, enqueueLaunchAlerts } from '../pipeline/social'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 import { delaySecondsUntil, scheduleDrain } from '#layers/core/server/utils/events'

@@ -17,7 +17,7 @@ import {
   CRITICAL_FEED_QUERY,
   INFO_FEED_QUERY,
   INFO_TIER_LABEL,
-} from '../../../shared/utils/terminal-tiers'
+} from '../../../../core/shared/utils/terminal-tiers'
 import type { AlertView, AlertsData, TrackRecordData } from '../../../shared/utils/terminal-types'
 
 const watchlist = useWatchlist()

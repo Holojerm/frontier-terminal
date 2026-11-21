@@ -6,7 +6,7 @@
 // still served.
 //
 // The licensed bucket arrives on the env Nitro hands a scheduled task
-// (layers/terminal/server/utils/owner-mail.ts says why that beats `cloudflare:workers`). Without
+// (layers/core/server/utils/owner-mail.ts says why that beats `cloudflare:workers`). Without
 // the binding the build still runs and keeps the `full` files in the blob store.
 
 import { blob } from '@nuxthub/blob'

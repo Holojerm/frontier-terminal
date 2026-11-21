@@ -21,7 +21,7 @@ import { queryContext, recipeRunsStamp } from '#layers/core/server/utils/termina
 import { VIEW_RECIPES } from '../server/utils/terminal-recipe-views'
 import { DATACENTER_RECIPES } from '#layers/compute/server/utils/terminal-datacenters'
 import { powerSitesStamp } from '#layers/compute/server/power/stamp'
-import { reportedStamp } from '../server/utils/terminal-reported'
+import { reportedStamp } from '../../press/server/utils/terminal-reported'
 import { UTILIZATION_RECIPES } from '#layers/terminal/server/utils/terminal-utilization-query'
 import { THESES } from '../server/theses/registry'
 import { served } from '#layers/core/server/utils/terminal-envelope'

@@ -5,7 +5,7 @@
 // every line, because a minor-change line is a datum too.
 
 import { readableEdgarNames } from '#layers/core/shared/utils/terminal-format'
-import { alertPath } from '../../../shared/utils/terminal-tiers'
+import { alertPath } from '../../../../core/shared/utils/terminal-tiers'
 import type { AlertView } from '../../../shared/utils/terminal-types'
 
 defineProps<{ alerts: AlertView[] }>()
