@@ -8,7 +8,7 @@
 // about a third smaller than snappy and a quarter smaller than the gzipped
 // CSV. Not zstd: workerd's zstdCompressSync throws "Unexpected end of file"
 // once a page compresses to more than ~40 KB, which failed every build of
-// snapshots and jobs_open on 2026-11-05 (layers/terminal/test/terminal-parquet.test.ts
+// snapshots and jobs_open on 2026-11-05 (layers/core/test/terminal-parquet.test.ts
 // keeps a page that size in the tests). It is fed one row group at a time and flushes each group's bytes out of
 // its buffer, so a build holds the compressed file so far plus one group of
 // decoded rows, never the table.

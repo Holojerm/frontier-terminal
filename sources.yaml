@@ -1376,7 +1376,7 @@ derived_sources:
 # the lab tables, so it is registered here rather than under `sources:`;
 # /api/coverage lists every recipe and reads its caveat and terms from this
 # block. Every recipe in the registry has an entry here;
-# layers/terminal/test/terminal-sources.test.ts fails when one does not.
+# layers/core/test/terminal-sources.test.ts fails when one does not.
 # Fixture provenance: fixtures/manifest.json.
 recipe_sources:
   # The Cloudflare thesis (docs/theses/cloudflare.md, opened 2026-10-09).

@@ -10,7 +10,7 @@
 import { db } from '@nuxthub/db'
 import { toWebRequest } from 'h3'
 
-import { llmsTxtInput } from '../utils/crawler-pages'
+import { llmsTxtInput } from '#server/registries/crawler-pages'
 import { createTerminalMcpHandler } from '#layers/core/server/utils/mcp'
 import { llmsTxtResponse } from '#server/utils/seo'
 import { terminalPayload, terminalPayloadAt } from '#layers/core/server/utils/terminal-handler'

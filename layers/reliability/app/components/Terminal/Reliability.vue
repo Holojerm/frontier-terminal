@@ -14,7 +14,7 @@ import {
   type ReliabilityData,
   type RunTally,
   type SourceReliability,
-} from '../../../../reliability/shared/utils/terminal-reliability'
+} from '../../../shared/utils/terminal-reliability'
 import { alertPath } from '../../../../core/shared/utils/terminal-tiers'
 import type { Fact, TableColumn } from '#layers/core/app/types/terminal-ui'
 

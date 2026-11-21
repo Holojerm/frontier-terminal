@@ -1,14 +1,11 @@
-// The terminal layer: every domain not yet split out of it — the parsers and lanes, the
-// per-domain queries, the pages and components, and their tables and tests. Fork-owned:
-// authored here, not vendored, so not in layers.lock.json. Builds on the core layer
-// (domains.config.ts); the domains leave it one layer at a time, and what stays is the shell.
+// The terminal layer: the shell. What reads several domains at once and so belongs to none:
+// the lab page and tear sheet, the compare pages, the home page's inputs, the axis pages that
+// join domains (/revenue, /dependencies, /hiring, /incidents), /data with its dictionary, the
+// site pages (/about, /license, /contact), the listed-company and utilization views, the
+// ticks that run several domains' readers after one poll, the ops watch and fleet counters,
+// the judge's alert screen, the crawler page lists and the OG cards. Fork-owned, not in
+// layers.lock.json. It uses any layer below it (domains.config.ts) and nothing uses it: core
+// and the app root reach it only through server/registries/.
 export default defineNuxtConfig({
   $meta: { name: 'terminal' },
-  runtimeConfig: {
-    // Optional. Authenticates the reliability:deploys read of the public smoke
-    // test runs (layers/reliability/server/pipeline/reliability/deploys.ts), which
-    // GitHub otherwise limits per shared Workers IP. Any token that can read
-    // public repositories; a Worker secret: NUXT_GITHUB_TOKEN.
-    githubToken: '',
-  },
 })

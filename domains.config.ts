@@ -32,8 +32,6 @@ export const DOMAIN_LAYERS = {
       // The SEC forms the shell's severity gates read, and the whitelist its dictionary reads.
       'server/pipeline/parsers/sec/forms.ts',
       'server/pipeline/parsers/sec/whitelist.ts',
-      // Its parser manifest, which the shell's manifest imports.
-      'server/pipeline/parsers.manifest.ts',
       // The prospectus floor's rule name, which the press notes read.
       'server/pipeline/prospectus-floor.ts',
     ],
@@ -59,13 +57,14 @@ export const DOMAIN_LAYERS = {
       // Its queries and its recipes, which the utilization query, the theses and the signals read.
       'server/utils/',
       'server/recipes/',
-      // What the shell's ticks and backfill still call by name until they read registries.
+      // The power-site and prints readers and stamps the shell's filings tick, listed views and
+      // fixture fill call by name (the prints are also a signal's source), and the GPU median
+      // rule its survey tick runs.
       'server/power/ingest.ts',
       'server/power/stamp.ts',
       'server/prints/ingest.ts',
       'server/prints/parse.ts',
       'server/pipeline/gpu-median-floor.ts',
-      'server/pipeline/archive/gpu-eras.ts',
     ],
   },
   pricing: {
@@ -79,11 +78,8 @@ export const DOMAIN_LAYERS = {
       'server/pipeline/class-map.ts',
       // The class-map re-mappings the shell's judge alert screen applies and gates on.
       'server/pipeline/judge/class-map.ts',
-      // The archive eras and price and limit events the shell's backfill rows and signals read.
+      // The archive eras and price and limit events the signals read.
       'server/pipeline/archive/',
-      // The price normalizer the shell's archive rows reuse, and its parser manifest.
-      'server/pipeline/normalize.ts',
-      'server/pipeline/parsers.manifest.ts',
       // The price formatting the lab readout and the tear sheet share.
       'app/utils/price-display.ts',
     ],
@@ -94,12 +90,8 @@ export const DOMAIN_LAYERS = {
       // Its queries (open roles now and over time, the archived boards, posted pay, the
       // department clusters), which the lab page, the tear sheet, the theses and the signals read.
       'server/utils/',
-      // The hiring floor the shell's judge runner clamps and reports against.
+      // The hiring floor the shell's judge alert screen clamps and gates against.
       'server/pipeline/hiring-floor.ts',
-      // The archive eras the shell's backfill rows read.
-      'server/pipeline/archive/hiring-eras.ts',
-      // Its parser manifest, which the shell's manifest imports.
-      'server/pipeline/parsers.manifest.ts',
       // The archive trims the shell's lab, compare and tear-sheet pages apply.
       'app/utils/hiring-archive.ts',
     ],
@@ -110,13 +102,9 @@ export const DOMAIN_LAYERS = {
       // Its queries (incidents, the incident archive, the probes, the reliability record), which
       // the lab page, the tear sheet, the overview, the theses and the signals read.
       'server/utils/',
-      // The OpenRouter id-to-lab map, which the shell's rankings and spend reads share.
+      // The OpenRouter id-to-lab map, which the adoption layer's rankings and spend reads share.
       'server/pipeline/parsers/openrouter.ts',
-      // Its parser manifest, which the shell's manifest imports.
-      'server/pipeline/parsers.manifest.ts',
-      // The status-feed archive eras the shell's backfill rows read.
-      'server/pipeline/archive/status-eras.ts',
-      // The probe placements the shell's capacity signals read.
+      // The probe placements the theses' capacity signals and the signals read.
       'server/pipeline/probes/placement.ts',
       // The deploy watch the shell's ops watch and freshness read, and the deploy checks feed.ts reads.
       'server/pipeline/deploy-watch.ts',
@@ -132,8 +120,6 @@ export const DOMAIN_LAYERS = {
       // Its recipes and the download series derived from them, which the theses and the
       // signals read.
       'server/recipes/',
-      // Its parser manifest, which the shell's manifest imports.
-      'server/pipeline/parsers.manifest.ts',
     ],
   },
   models: {
@@ -142,8 +128,6 @@ export const DOMAIN_LAYERS = {
       // The launch-coverage watch, which the shell's ops watch spools from and its fleet
       // counters report.
       'server/pipeline/launch-watch.ts',
-      // Its parser manifest, which the shell's manifest imports.
-      'server/pipeline/parsers.manifest.ts',
     ],
   },
   alerts: {
@@ -201,7 +185,6 @@ export const DOMAIN_LAYERS = {
       'press',
       'alerts',
       'theses',
-      'signals',
     ],
   },
 } satisfies LayerTable

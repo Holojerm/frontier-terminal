@@ -1,6 +1,6 @@
 // Which sources are 'set' lanes (the page IS the current set), kept apart from
 // lanes.ts so read-path code (core's confirmedAt) can ask without importing
-// every parser. layers/terminal/test/pipeline/lane-removals.test.ts pins this
+// every parser. layers/core/test/pipeline/lane-removals.test.ts pins this
 // table to LANES.
 
 const SET_SOURCES: ReadonlySet<string> = new Set([

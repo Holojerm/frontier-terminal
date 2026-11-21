@@ -7,17 +7,14 @@ import {
   STATUS_ARCHIVE_ERAS,
   STATUS_LIVE_FROM,
   statusEraById,
-} from '../../reliability/server/pipeline/archive/status-eras'
-import { updateStamp } from '../../reliability/server/pipeline/parsers/status/statuspage-atom'
+} from '../server/pipeline/archive/status-eras'
+import { updateStamp } from '../server/pipeline/parsers/status/statuspage-atom'
 import {
   incidentioRssArchived,
   ulidInstant,
   xaiArchived,
-} from '../../reliability/server/pipeline/parsers/status/wayback-status'
-import {
-  incidentArchiveSeries,
-  type StatusCopy,
-} from '../../reliability/server/utils/terminal-incident-archive'
+} from '../server/pipeline/parsers/status/wayback-status'
+import { incidentArchiveSeries, type StatusCopy } from '../server/utils/terminal-incident-archive'
 import { readArchiveSources } from '#layers/core/server/utils/terminal-sources'
 import sourcesYaml from '~~/sources.yaml?raw'
 

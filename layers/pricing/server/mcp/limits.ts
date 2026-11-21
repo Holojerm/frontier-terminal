@@ -1,11 +1,9 @@
-// Capacity strain: published rate limits. The incidents and latency probes are the reliability
-// layer's (layers/reliability/server/mcp/reliability.ts), the misalignment disclosures the models
-// layer's (layers/models/server/mcp/models.ts).
+// Capacity strain: published rate limits. Registered right after the reliability layer's
+// incidents and probes (server/registries/mcp-tools.ts), where the tool list has always had it.
 
 import { z } from 'zod'
 import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
-import { queryLimits } from '#layers/pricing/server/utils/terminal-limits'
-import { VIEW_RECIPES } from '../utils/terminal-recipe-views'
+import { LIMIT_RECIPE_IDS, queryLimits } from '../utils/terminal-limits'
 import {
   ProviderSchema,
   json,
@@ -14,7 +12,7 @@ import {
   type McpKit,
 } from '#layers/core/server/mcp/kit'
 
-export function registerOperationsTools({ server, deps }: McpKit): void {
+export function registerRateLimitTools({ server, deps }: McpKit): void {
   server.registerTool(
     'get_rate_limits',
     {
@@ -34,7 +32,7 @@ export function registerOperationsTools({ server, deps }: McpKit): void {
       const data = await deps.serve(
         'limits',
         () => queryLimits(deps.db),
-        await recipeRunsStamp(deps.db, VIEW_RECIPES.limits),
+        await recipeRunsStamp(deps.db, LIMIT_RECIPE_IDS),
       )
       if (!provider) return json(data)
       return json({ ...data, pages: data.pages.filter((p) => p.lab === provider) })

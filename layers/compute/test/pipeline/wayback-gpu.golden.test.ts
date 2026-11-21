@@ -1,8 +1,8 @@
 import { describe, expect, test } from 'vitest'
 
 import { GPU_ARCHIVE_ERAS, gpuEraById } from '../../server/pipeline/archive/gpu-eras'
-import { gpuRows } from '#layers/terminal/server/pipeline/archive/rows'
-import { captureInstant, sameOriginal } from '#layers/terminal/server/pipeline/archive/wayback'
+import { gpuRows } from '#layers/compute/server/pipeline/archive/rows'
+import { captureInstant, sameOriginal } from '#layers/core/server/pipeline/archive/wayback'
 import { fixtureText, manifest, provenanceOf } from '#layers/core/test/pipeline/fixtures'
 
 // Golden tests for the archived GPU price pages (archive/gpu-eras.ts): one

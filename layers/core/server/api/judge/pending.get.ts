@@ -35,7 +35,7 @@
 // usually `[]`, and it too can be non-empty when `changes` is empty.
 // `still_listed` lists, per model removal among `changes`, the pages of the
 // same lab that still list that model, so a page dropping a row is not
-// written up as a delisting (layers/terminal/server/pipeline/judge/still-listed.ts);
+// written up as a delisting (layers/core/server/pipeline/judge/still-listed.ts);
 // usually `[]`.
 // `supplier_review` lists the suppliers' new SEC documents that name a lab, a
 // cloud or a customer share, each with excerpts and the rows already held for

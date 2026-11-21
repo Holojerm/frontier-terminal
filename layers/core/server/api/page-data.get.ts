@@ -3,7 +3,7 @@
 // The body is the page's own hydration payload (`__NUXT_DATA__`, devalue
 // format), so a client-side navigation can hand it to Nuxt instead of
 // starting every useFetch call at the click; the prefetch plugin
-// (layers/terminal/app/plugins/page-prefetch.client.ts) is the reader. Every
+// (layers/core/app/plugins/page-prefetch.client.ts) is the reader. Every
 // value in it is already in the page's HTML.
 //
 // The page is fetched in-process, so it is served by the stamp-keyed HTML

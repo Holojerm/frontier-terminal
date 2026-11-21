@@ -1,15 +1,17 @@
-import { index, integer, real, sqliteTable, text } from 'drizzle-orm/sqlite-core'
-import { provenance } from '../../../../core/server/db/tables/columns'
+import { index, integer, sqliteTable, text } from 'drizzle-orm/sqlite-core'
+import { provenance } from './columns'
 
 // ─────────────────────────────────────────────
-// Archived price history (layers/terminal/server/pipeline/archive/)
+// Archive captures (layers/core/server/pipeline/archive/)
 // ─────────────────────────────────────────────
-// Price history from before this site watched the labs, read from the
-// Internet Archive's captures of each lab's own pricing page. Kept apart from
+// History from before this site watched the labs, read from the Internet
+// Archive's captures of each source's own page. Kept apart from
 // snapshots/entities/changes on purpose: those say what this store saw and
 // when, and a capture we fetched in 2026 of a page as it stood in 2023 is
-// neither. Nothing here moves the live floor (source_stats) or reaches the
-// judge, the alert rules, or the live catalog.
+// neither. Nothing archived moves the live floor (source_stats) or reaches the
+// judge, the alert rules, or the live catalog. Each axis's archived rows are
+// its domain's table (archived_prices, archived_hiring, archived_gpu_prices,
+// archived_incidents, archived_rate_limits); this is the log they share.
 
 // One row per Wayback capture the backfill considered: parsed, or skipped
 // with the reason. The id is `<era>:<14-digit timestamp>`, so a re-run skips
@@ -40,31 +42,4 @@ export const archiveCaptures = sqliteTable(
     ...provenance, // source_url: the Wayback capture URL (it embeds original_url)
   },
   (t) => [index('archive_captures_provider_idx').on(t.provider, t.status, t.captured_at)],
-)
-
-// One row per (capture, priced row): what an archived GPU rental price page
-// listed, in the shape the live gpu-* recipes store (recipe_observations).
-// key and payload are the live recipe's (gpu-prices.ts › gpuObservations),
-// so one function renders both; value is the on-demand USD per GPU-hour.
-// Never a live row: basis is always 'archived', and nothing here reaches the
-// GPU median floor, the Compute thesis, the judge or the alerts.
-export const archivedGpuPrices = sqliteTable(
-  'archived_gpu_prices',
-  {
-    id: text('id').primaryKey(),
-    capture_id: text('capture_id').notNull(),
-    provider: text('provider').notNull(),
-    key: text('key').notNull(),
-    gpu: text('gpu').notNull(), // H100 | B200
-    value: real('value').notNull(),
-    payload: text('payload').notNull(),
-    captured_at: text('captured_at').notNull(),
-    original_url: text('original_url').notNull(),
-    basis: text('basis').notNull(), // 'archived'
-    ...provenance,
-  },
-  (t) => [
-    index('archived_gpu_prices_provider_idx').on(t.provider, t.gpu, t.captured_at),
-    index('archived_gpu_prices_captured_id_idx').on(t.captured_at, t.id),
-  ],
 )
