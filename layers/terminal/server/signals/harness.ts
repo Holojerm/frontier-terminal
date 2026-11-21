@@ -11,7 +11,9 @@
 // Event study. Each event day's abnormal return runs from the close of the
 // last session before the event to h sessions later (h = 1 is the event
 // day's own move). The statistic is the mean, signed by the event's value
-// where the registry says so.
+// where the registry says so. An event dated only to the gap between two
+// copies of a page counts at a horizon only when the gap is narrow enough
+// for it (maxWindowDays).
 //
 // Both hold out the newest third of the series' observations by date, so the
 // out-of-sample number is one nobody could have fitted. Returns over h
@@ -407,15 +409,37 @@ export interface EventPoint {
   date: string
   /** Signs the abnormal return when the series is signed. */
   value: number
+  /**
+   * Days the event's date could be off by: an event known only to fall
+   * between two copies of a page is dated at the first and keeps the gap.
+   * Absent or 0 for a dated event.
+   */
+  window_days?: number
 }
 
-/** One event a day: same-day events are one market reaction. Values add. */
+/**
+ * The widest date window an event may carry at a horizon of h sessions.
+ * Below 20 sessions the date must be known to within two days; from 20 on,
+ * the window may span up to half the horizon's calendar days, so the return
+ * from the close before the window still covers the event.
+ */
+export function maxWindowDays(h: number): number {
+  return h < 20 ? 2 : Math.floor((h * 7) / 10)
+}
+
+/** One event a day: same-day events are one market reaction. Values add; the narrowest window holds. */
 export function eventDays(events: readonly EventPoint[]): EventPoint[] {
-  const by = new Map<string, number>()
-  for (const e of events) by.set(e.date, (by.get(e.date) ?? 0) + e.value)
-  return [...by.entries()]
-    .map(([date, value]) => ({ date, value }))
-    .sort((a, b) => (a.date < b.date ? -1 : 1))
+  const by = new Map<string, EventPoint>()
+  for (const e of events) {
+    const prev = by.get(e.date)
+    const window = Math.min(prev?.window_days ?? Infinity, e.window_days ?? 0)
+    by.set(e.date, {
+      date: e.date,
+      value: (prev?.value ?? 0) + e.value,
+      ...(window > 0 ? { window_days: window } : {}),
+    })
+  }
+  return [...by.values()].sort((a, b) => (a.date < b.date ? -1 : 1))
 }
 
 export function eventStudy(
@@ -436,6 +460,7 @@ export function eventStudy(
       }
       for (const e of days) {
         if (signed && e.value === 0) continue
+        if ((e.window_days ?? 0) > maxWindowDays(h)) continue
         const base = sessionBefore(panel.dates, e.date)
         const ar = abnormalReturn(panel, ticker, benchmark, base, h)
         if (ar === null) continue

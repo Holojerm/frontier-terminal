@@ -54,6 +54,26 @@ export type SignalSource =
   | { kind: 'guidance_surprise'; ticker: string; metric?: 'capex' }
   /** A listed company's job board (listed_hiring_reads): every open role, or its data-center roles. */
   | { kind: 'listed_hiring'; board: string; metric: 'total' | 'datacenter' }
+  /**
+   * A filer's quarterly figure on a lab as first filed: the 3-month facts on
+   * `member` (filed_facts), and before it tagged them the same figure read
+   * from its words (filed_text_facts › text_metric). Public on its filing date.
+   */
+  | {
+      kind: 'filed_quarters'
+      ticker: string
+      concept: string
+      member: string
+      text_metric?: string
+    }
+  /**
+   * A recipe's quarterly figure as the log change on the quarter before.
+   * Public on payload.released where the row has it, else lag_days after the
+   * quarter's end.
+   */
+  | { kind: 'quarterly_growth'; recipe: string; key: string; lag_days: number }
+  /** A published rate limit or spend cap raised: archived copies of the page (archived_rate_limits), then the live limits recipe. */
+  | { kind: 'limit_raises'; recipe: string }
 
 export interface SignalDef {
   /** Stable: results, exports and links key on it. Never reuse a retired id. */
@@ -197,7 +217,15 @@ const hiring = (labId: LabId, label: string): SignalDef => ({
   history_from: '2026-08-25',
 })
 
-const launches = (labId: LabId, label: string): SignalDef => ({
+/**
+ * Launches and price cuts run from the archived price lists (each lab's
+ * first archive era, pipeline/archive/eras.ts) to 2026-08-25, then from the
+ * live record. An archived event is dated by the lab's release note where one
+ * names it, else at the copy before it, keeping the gap between the copies;
+ * the harness scores a gap wider than two days only at the 20- and 60-session
+ * horizons (harness.ts › maxWindowDays).
+ */
+const launches = (labId: LabId, label: string, from: string): SignalDef => ({
   id: `launches-${labId}`,
   label,
   entity: lab(labId),
@@ -207,10 +235,10 @@ const launches = (labId: LabId, label: string): SignalDef => ({
   frequency: 'event',
   test: 'event',
   available_after_days: 0,
-  history_from: '2026-09-22',
+  history_from: from,
 })
 
-const priceCuts = (labId: LabId, label: string): SignalDef => ({
+const priceCuts = (labId: LabId, label: string, from: string): SignalDef => ({
   id: `price-cuts-${labId}`,
   label,
   entity: lab(labId),
@@ -220,7 +248,34 @@ const priceCuts = (labId: LabId, label: string): SignalDef => ({
   frequency: 'event',
   test: 'event',
   available_after_days: 0,
-  history_from: '2026-08-25',
+  history_from: from,
+})
+
+/**
+ * What a hyperscaler files about a lab, quarter by quarter, as first filed.
+ * Microsoft has tagged its OpenAI line since its 10-Q for the quarter to
+ * 2024-09-30; Amazon tagged Anthropic from 2026, and its words carry the
+ * quarters before. Thin for years: a quarter is one point.
+ */
+const filedQuarters = (
+  id: string,
+  label: string,
+  labId: LabId,
+  ticker: string,
+  source: Extract<SignalSource, { kind: 'filed_quarters' }>,
+  from: string,
+): SignalDef => ({
+  id,
+  label,
+  entity: lab(labId),
+  tickers: [ticker],
+  source,
+  transform: 'change',
+  frequency: 'monthly',
+  test: 'lead_lag',
+  aggregate: 'last',
+  available_after_days: 0,
+  history_from: from,
 })
 
 const gpu = (
@@ -509,13 +564,77 @@ export const SIGNALS: readonly SignalDef[] = [
   hiring('google', 'Open roles, Google DeepMind'),
   hiring('xai', 'Open roles, xAI'),
   hiring('meta', 'Open roles, Meta'),
-  launches('anthropic', 'Model launches, Anthropic'),
-  launches('openai', 'Model launches, OpenAI'),
-  launches('google', 'Model launches, Google'),
-  launches('xai', 'Model launches, xAI'),
-  priceCuts('anthropic', 'Price cuts, Anthropic'),
-  priceCuts('openai', 'Price cuts, OpenAI'),
-  priceCuts('google', 'Price cuts, Google'),
+  launches('anthropic', 'Model launches, Anthropic', '2024-03-01'),
+  launches('openai', 'Model launches, OpenAI', '2023-01-01'),
+  launches('google', 'Model launches, Google', '2023-12-01'),
+  launches('xai', 'Model launches, xAI', '2024-11-04'),
+  launches('deepseek', 'Model launches, DeepSeek', '2024-05-01'),
+  launches('mistral', 'Model launches, Mistral', '2023-12-01'),
+  priceCuts('anthropic', 'Price cuts, Anthropic', '2024-03-01'),
+  priceCuts('openai', 'Price cuts, OpenAI', '2023-01-01'),
+  priceCuts('google', 'Price cuts, Google', '2023-12-01'),
+  priceCuts('xai', 'Price cuts, xAI', '2024-11-04'),
+  priceCuts('deepseek', 'Price cuts, DeepSeek', '2024-05-01'),
+  filedQuarters(
+    'msft-openai-other-income',
+    'Microsoft’s quarterly gain or loss on OpenAI, as first filed',
+    'openai',
+    'MSFT',
+    {
+      kind: 'filed_quarters',
+      ticker: 'MSFT',
+      concept: 'us-gaap:NonoperatingIncomeExpense',
+      member: 'msft:OpenAIGlobalLlcMember',
+    },
+    '2024-07-01',
+  ),
+  filedQuarters(
+    'amzn-anthropic-upward-marks',
+    'Amazon’s quarterly upward marks on Anthropic, as first filed',
+    'anthropic',
+    'AMZN',
+    {
+      kind: 'filed_quarters',
+      ticker: 'AMZN',
+      concept:
+        'us-gaap:EquitySecuritiesWithoutReadilyDeterminableFairValueUpwardPriceAdjustmentAnnualAmount',
+      member: 'amzn:AnthropicMember',
+      text_metric: 'upward_adjustment',
+    },
+    '2025-07-01',
+  ),
+  {
+    id: 'googl-api-tokens',
+    label: 'Alphabet’s stated API tokens per minute, change on the quarter',
+    entity: lab('google'),
+    tickers: ['GOOGL'],
+    source: {
+      kind: 'quarterly_growth',
+      recipe: 'sec-googl-api-tokens',
+      key: 'api_tokens_per_minute',
+      // Alphabet's releases have gone out 22 to 36 days after the quarter.
+      lag_days: 36,
+    },
+    transform: 'change',
+    frequency: 'monthly',
+    test: 'lead_lag',
+    aggregate: 'last',
+    available_after_days: 0,
+    history_from: '2025-07-01',
+  },
+  {
+    id: 'limit-raises-anthropic',
+    label: 'Rate limits and spend caps raised, Anthropic',
+    entity: lab('anthropic'),
+    tickers: tickersOf('anthropic'),
+    source: { kind: 'limit_raises', recipe: 'limits-anthropic' },
+    transform: 'level',
+    frequency: 'event',
+    test: 'event',
+    available_after_days: 0,
+    // The first copy of the page the Archive holds that reads.
+    history_from: '2024-03-01',
+  },
   gpu('gpu-h100-median', 'H100 median list price', 'H100', 'median'),
   gpu('gpu-b200-median', 'B200 median list price', 'B200', 'median'),
   gpu('gpu-h100-spot-share', 'H100 spot share', 'H100', 'spot_share'),
@@ -587,9 +706,9 @@ export function sourceLabel(source: SignalSource): string {
     case 'hiring':
       return `jobs: ${source.lab} open roles`
     case 'launches':
-      return 'alerts: model-floor'
+      return 'archived_prices: first listing, to 2026-08-25; then alerts: model-floor'
     case 'price_changes':
-      return 'changes: model input price'
+      return 'archived_prices: input price between copies, to 2026-08-25; then changes: model input price'
     case 'revenue_vs_reported':
       return 'ground truth: filed revenue against reported'
     case 'grid_load':
@@ -602,5 +721,11 @@ export function sourceLabel(source: SignalSource): string {
       return `guidance_resolutions: ${source.ticker}${source.metric ? ` ${source.metric}` : ''}, error against the guided midpoint`
     case 'listed_hiring':
       return `listed_hiring_reads: ${source.board}, ${source.metric === 'total' ? 'open roles' : 'data-center roles'}`
+    case 'filed_quarters':
+      return `filed_facts: ${source.ticker} ${source.concept} on ${source.member}${source.text_metric ? `, before that filed_text_facts: ${source.text_metric}` : ''}, 3 months, first filed`
+    case 'limit_raises':
+      return `archived_rate_limits, then recipe_observations: ${source.recipe}, each limit raised`
+    case 'quarterly_growth':
+      return `recipe_observations: ${source.recipe} (${source.key}), log change on the quarter, public on its release`
   }
 }

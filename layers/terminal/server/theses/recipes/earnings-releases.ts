@@ -72,6 +72,32 @@ export function quarterOf(text: string): { date: string; label: string } {
   return { date: `${m[2]}-${QUARTER_END[m[1]!.toLowerCase()]}`, label: `Q${n} ${m[2]}` }
 }
 
+/** The day the release went out, from its dateline ("MOUNTAIN VIEW, Calif. – October 28, 2026 –"), or null. */
+export function releasedOn(text: string): string | null {
+  const m =
+    /[–—-]\s*(January|February|March|April|May|June|July|August|September|October|November|December)\s+(\d{1,2}),\s+(\d{4})\s*[–—-]/.exec(
+      text.slice(0, 600),
+    )
+  if (!m) return null
+  const month = String(
+    [
+      'January',
+      'February',
+      'March',
+      'April',
+      'May',
+      'June',
+      'July',
+      'August',
+      'September',
+      'October',
+      'November',
+      'December',
+    ].indexOf(m[1]!) + 1,
+  ).padStart(2, '0')
+  return `${m[3]}-${month}-${m[2]!.padStart(2, '0')}`
+}
+
 const QUALIFIER = /\b(nearly|almost|approximately|about|over|more than|surpassed|at least)\s*$/i
 
 const qualifierBefore = (text: string): string | null =>
@@ -92,6 +118,7 @@ export function extractApiTokens(html: string): Observation[] {
       value: Number(m[1]) * (m[2] === 'trillion' ? 1e12 : 1e9),
       payload: {
         quarter: quarter.label,
+        released: releasedOn(text),
         qualifier: qualifierBefore(text.slice(0, m.index)),
         sentence: text.slice(start, end === -1 ? undefined : end + 1),
       },
@@ -126,6 +153,7 @@ export function extractActivePower(html: string): Observation[] {
       value: m[3]!.toUpperCase() === 'GW' ? n * 1000 : n,
       payload: {
         quarter: quarter.label,
+        released: releasedOn(text),
         qualifier: m[1]?.trim().toLowerCase() ?? null,
         sentence: sentence.trim(),
       },
@@ -150,6 +178,8 @@ function earningsRelease(opts: {
     ext: 'html',
     follow: (body, ctx) => releaseUrl(body, opts.cik, ctx.newest),
     extract: (body) => opts.extract(body),
+    // 1: the release's dateline is kept as payload.released.
+    revision: 1,
   }
 }
 

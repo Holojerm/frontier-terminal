@@ -62,6 +62,7 @@ import { PAY_RECIPES } from '../theses/recipes/pay-bands'
 import { PYPI_LAB_RECIPES } from '../theses/recipes/pypi-downloads'
 import { RAMP_AI_INDEX } from '../theses/recipes/ramp-ai-index'
 import { RATE_LIMIT_RECIPES } from '../theses/recipes/rate-limits'
+import { archivedLimitChanges, archivedLimitCopies } from '../signals/sources'
 
 type Row = typeof tables.recipeObservations.$inferSelect
 
@@ -344,7 +345,7 @@ function derivedWindows(
 // ── Rate limits ─────────────────────────────────────────────────────────────
 
 export const LIMITS_CAVEAT =
-  'The limits each lab publishes in its docs. They reflect tier design and abuse control as much as capacity, and they change in announced steps. We store a new reading only when a limit changes. Google and Mistral publish no per-model limits.'
+  'The limits each lab publishes in its docs. They reflect tier design and abuse control as much as capacity, and they change in announced steps. We store a new reading only when a limit changes. Google and Mistral publish no per-model limits. Anthropic’s history before our first read is from Internet Archive copies of the same page.'
 
 function snapshotRows(rows: readonly Row[]): { metrics: string[]; rows: LimitRow[] } {
   const metrics: string[] = []
@@ -367,10 +368,35 @@ function snapshotRows(rows: readonly Row[]): { metrics: string[]; rows: LimitRow
 }
 
 export async function queryLimits(db: PipelineDb): Promise<LimitsData> {
-  const rows = await rowsOf(
-    db,
-    RATE_LIMIT_RECIPES.map((r) => r.id),
-  )
+  const [rows, copies, changes] = await Promise.all([
+    rowsOf(
+      db,
+      RATE_LIMIT_RECIPES.map((r) => r.id),
+    ),
+    archivedLimitCopies(db),
+    archivedLimitChanges(db),
+  ])
+  const archivedOf = (recipe_id: string) => {
+    const own = copies.filter((c) => c.recipe_id === recipe_id)
+    if (own.length === 0) return null
+    return {
+      copies: own.length,
+      from: own[0]!.captured_at,
+      to: own.at(-1)!.captured_at,
+      changes: changes
+        .filter((c) => c.recipe_id === recipe_id)
+        .map((c) => ({
+          model: c.model,
+          tier: c.tier,
+          metric: c.metric,
+          before: c.before,
+          after: c.after,
+          window_from: c.window_from,
+          window_to: c.window_to,
+          source_url: c.source_url,
+        })),
+    }
+  }
   const pages = RATE_LIMIT_RECIPES.flatMap((recipe) => {
     if (!isLab(recipe.company)) return []
     const rs = rows.filter((r) => r.recipe_id === recipe.id)
@@ -391,6 +417,7 @@ export async function queryLimits(db: PipelineDb): Promise<LimitsData> {
         previous,
         changed,
         source: cite(recipe.id, `${companyName(recipe.company)} rate limits`, newestRow(now)!),
+        archived: archivedOf(recipe.id),
       },
     ]
   })

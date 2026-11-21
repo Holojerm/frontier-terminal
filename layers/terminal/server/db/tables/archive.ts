@@ -25,7 +25,7 @@ export const archiveCaptures = sqliteTable(
     captured_at: text('captured_at').notNull(),
     status: text('status').notNull(), // parsed | skipped
     // pricing (archived_prices) | hiring (archived_hiring) | gpu (archived_gpu_prices)
-    // | status (archived_incidents): which table the rows went to.
+    // | status (archived_incidents) | limits (archived_rate_limits): which table the rows went to.
     axis: text('axis').notNull().default('pricing'),
     detail: text('detail'),
     content_hash: text('content_hash'),
@@ -160,3 +160,35 @@ export const archivedIncidents = sqliteTable(
 )
 
 export type ArchivedIncidentRow = typeof archivedIncidents.$inferSelect
+
+// One row per (capture, limit): what an archived copy of a lab's rate-limit
+// page printed, keyed as the live limits-* recipe keys its rows
+// (`<model>|<tier>|<metric>`, theses/recipes/rate-limits.ts), so one function
+// renders both. A usage-tier row's model names the column: spend cap, credit
+// purchase to reach tier, max credit purchase, wait to reach tier. value is
+// null where the copy printed no figure (N/A). Never a live row: basis is
+// always 'archived', and nothing here reaches recipe_observations, the
+// thesis or the judge.
+export const archivedRateLimits = sqliteTable(
+  'archived_rate_limits',
+  {
+    id: text('id').primaryKey(),
+    capture_id: text('capture_id').notNull(),
+    provider: text('provider').notNull(),
+    recipe_id: text('recipe_id').notNull(),
+    key: text('key').notNull(),
+    model: text('model').notNull(),
+    tier: text('tier').notNull(),
+    metric: text('metric').notNull(),
+    value: real('value'),
+    payload: text('payload').notNull(),
+    captured_at: text('captured_at').notNull(),
+    original_url: text('original_url').notNull(),
+    basis: text('basis').notNull(), // 'archived'
+    ...provenance,
+  },
+  (t) => [
+    index('archived_rate_limits_key_idx').on(t.recipe_id, t.key, t.captured_at),
+    index('archived_rate_limits_captured_id_idx').on(t.captured_at, t.id),
+  ],
+)

@@ -122,8 +122,31 @@ export interface LimitsData {
     /** Limits whose value differs from the previous snapshot. */
     changed: number
     source: RecipeCitation
+    /** Internet Archive copies of the same page before the live record, or null where none read. */
+    archived: ArchivedLimits | null
   }[]
   caveat: string
+}
+
+/** One limit that moved between two archived copies. */
+export interface ArchivedLimitChange {
+  model: string
+  tier: string
+  metric: string
+  before: number
+  after: number
+  /** The copy before and the copy that shows the new value. */
+  window_from: string
+  window_to: string
+  /** The copy that shows it. */
+  source_url: string
+}
+
+export interface ArchivedLimits {
+  copies: number
+  from: string
+  to: string
+  changes: ArchivedLimitChange[]
 }
 
 export interface PayCell {

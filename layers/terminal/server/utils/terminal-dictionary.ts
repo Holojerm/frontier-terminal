@@ -96,6 +96,8 @@ const AS_OF_CUT: Readonly<Record<string, string>> = {
   listed_hiring_reads: 'Rows with read_at at or before as_of: when we read the board.',
   filed_facts:
     'Rows whose filing date is before the UTC day of as_of. A fact counts from the day after its filing, whenever we read it, so this table answers as_of back to 2019.',
+  filed_text_facts:
+    'Rows whose filing date is before the UTC day of as_of. A figure counts from the day after its filing, whenever we read it, so this table answers as_of back to 2023-10.',
   filed_guidance:
     'Rows whose release or call was filed or held before the UTC day of as_of. A figure counts from the day after it was stated, whenever we read it, so this table answers as_of back to 2024 for the release capex and to October 2025 for the calls.',
   guidance_resolutions:
@@ -116,6 +118,8 @@ const AS_OF_CUT: Readonly<Record<string, string>> = {
     'Rows with captured_at at or before as_of: when the Internet Archive saw the provider’s price page, not when we read the copy (fetched_at, always later). So a backtest gets the page as it stood then, which this site did not hold at the time.',
   archived_incidents:
     'Rows with captured_at at or before as_of: when the Internet Archive took the newest copy listing the incident, not when we read it (fetched_at, always later). A row holds the newest copy’s state only, so a backtest at an earlier as_of misses incidents whose newest copy is later, and gets no older state of the rest.',
+  archived_rate_limits:
+    'Rows with captured_at at or before as_of: when the Internet Archive saw the rate-limit page, not when we read the copy (fetched_at, always later). So a backtest gets the page as it stood then, which this site did not hold at the time.',
   archive_captures:
     'Rows with captured_at at or before as_of: when the Internet Archive saw the page, not when we read the copy.',
   source_runs: 'Rows with started_at at or before as_of.',
@@ -383,6 +387,17 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
     joins: [byTicker, byCik],
     feeds: ['filed_facts'],
   },
+  filed_text_facts: {
+    grain: 'One row per figure a filing states about a lab in words, per filing.',
+    cadence:
+      'Read once: Amazon’s 10-Qs and 10-Ks from 2023-10-27 to 2026-02-06, a few a run of the filed-facts reader.',
+    event: 'end',
+    knowledge: 'filed',
+    start:
+      'Amazon’s 10-Q for the quarter to 2023-09-30, the first to name Anthropic, to its 10-K for 2025. From its 10-Q of 2026-04-30 Amazon tags Anthropic (filed_facts).',
+    joins: [byTicker, byCik],
+    feeds: ['filed_facts'],
+  },
   filed_guidance: {
     grain:
       'One row per figure: a release’s capex for a fiscal year (source release), or a metric and period a call document guides.',
@@ -473,6 +488,17 @@ export const TABLE_META: Readonly<Record<string, TableMeta>> = {
       'Archived only. From the oldest copy of each feed (OpenAI and Anthropic from January 2023, DeepSeek from June 2024, xAI from January 2025, Google Cloud’s copies each reaching a year back) to the day each live status lane began. Mistral has no copies.',
     joins: [byProvider],
     feeds: [{ ids: ['wayback-status'] }],
+  },
+  archived_rate_limits: {
+    grain:
+      'One row per limit per Internet Archive copy of a lab’s rate-limit page we could read: per-model rates where the copy names the tier, and the usage-tier table.',
+    cadence: 'Once per backfill run, not on a schedule.',
+    event: 'captured_at',
+    knowledge: 'fetched_at',
+    start:
+      'Archived only. Anthropic from March 2024 (the oldest copy that reads) to 2026-11-04, the first run of the live limits recipes. OpenAI’s, xAI’s and Meta’s pages have no copies that read.',
+    joins: [byProvider],
+    feeds: [{ ids: ['wayback-limits'] }],
   },
   archive_captures: {
     grain: 'One row per Internet Archive copy the backfill considered.',

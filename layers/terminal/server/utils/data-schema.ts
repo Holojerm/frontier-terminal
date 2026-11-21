@@ -419,6 +419,16 @@ export const SCHEMA_RELEASES: readonly SchemaRelease[] = [
       forward_call_scores: { note: 'New table.' },
     },
   },
+  {
+    version: '1.28.0',
+    date: '2026-11-21',
+    summary:
+      'History before the live record. archived_rate_limits holds Anthropic’s rate limits and usage tiers from Internet Archive copies of its rate-limit page from March 2024, keyed as limits-anthropic; archive_captures gains axis limits, and /api/limits and get_rate_limits list what moved between copies. filed_text_facts holds what Amazon’s 10-Qs and 10-Ks said about Anthropic in words from 2023-10 until it tagged amzn:AnthropicMember, each figure with its sentence; /api/exposure and get_exposure show them as text series. The dictionary’s sources gain wayback-limits and release-notes.',
+    tables: {
+      archived_rate_limits: { note: 'New table.' },
+      filed_text_facts: { note: 'New table.' },
+    },
+  },
 ]
 
 export const SCHEMA_VERSION = SCHEMA_RELEASES.at(-1)!.version

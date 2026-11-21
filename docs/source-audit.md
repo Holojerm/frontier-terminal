@@ -1049,3 +1049,58 @@ The exact sentences are in `sources.yaml` under `listed_hiring_sources`.
 - **History starts at our first read.** Closed roles before 2026-11-21 aren't known, so the harness reads "not enough history" until the series grows.
 
 **Verdict: include the nine boards above under `listed_hiring_sources`, read daily at 04:00 UTC.** The owner approved the alpha program on 2026-11-20. On 2026-11-21 the owner cut the four deferred boards (Riot, HPE, Dell, Microsoft): the terms risk or a new reader isn't worth it for one miner and two server makers the Taiwan prints already cover, and Microsoft's terms bar it.
+
+## Addendum, 2026-11-21: history backfills (launch and price events, hyperscaler disclosures, rate limits)
+
+Three backfills of series the terminal already carries, approved by the owner on 2026-11-21. Each keeps its history apart from the live tables and says how far it reached.
+
+### Launch and price events from the archived price lists
+
+Derived each harness run from `archived_prices` (the Internet Archive backfill above), never stored (`layers/terminal/server/pipeline/archive/price-events.ts`). A launch is a model's first appearance on its lab's list; a price change is a SKU's input price moving between two consecutive copies that both print it. Events end where the live record starts (`ARCHIVE_UNTIL`, 2026-08-25); the live loaders start there.
+
+**Dating.** A copy only bounds an event: it happened between the copy before and the copy that shows it, about a week apart at the backfill's cadence. The labs' own release notes date most of them (`sources.yaml › archive_sources › release-notes`; pages committed under `fixtures/release-notes/`, reduced to `release-notes.json` by `bun run release-notes`). A note dates an event when it names the model (one spelling for "Claude 3.5 Sonnet", "Claude Sonnet 3.5" and `claude-3-5-sonnet-20240620`) and falls inside the window, or up to 14 days before it for a price change, since a lab can announce a cut before its page shows it. An event no note dates keeps its window: it is dated at the copy before, and the harness scores it only at horizons the window allows (`maxWindowDays`: within two days for 1 and 5 sessions; up to 14 days at 20 sessions and 42 at 60).
+
+**What the notes cover.** OpenAI's changelog from 2023-10-06, the Gemini API release notes from 2023-12-13, Anthropic's platform release notes from 2024-05-10, DeepSeek's API news from 2024-05-17. From those days a launch needs a note in its window: a name that appears on a list with no note is usually a model listed late (OpenAI's `babbage-002`, a year after release), so it is skipped with the reason. A model a note named before the copy before is skipped as listed late. xAI's notes give a month, not a day, and Mistral's changelog renders in the browser, so their events keep their windows. A price that moves and moves back within 30 days is a misread copy and both moves are dropped; an event first seen on a copy read by a different parser than the copy before is kept only when a note dates it.
+
+**Reach, local run** (the same eras and cadence as production's backfill, which holds 8,084 rows):
+
+| Lab | Launches (dated by a release note) | Price cuts (dated) | Price raises (dated) |
+|---|---|---|---|
+| OpenAI | 57 (54) | 17 (14) | 0 |
+| Anthropic | 15 (15) | 1 (0) | 0 |
+| Google | 31 (31) | 6 (0) | 2 (0) |
+| DeepSeek | 4 (4) | 3 (2) | 5 (1) |
+| xAI | 12 (0) | 3 (0) | 0 |
+| Mistral | 11 (0) | 7 (0) | 1 (0) |
+| Alibaba | 8 (0) | 2 (0) | 0 |
+
+185 events from 396 parsed copies (8,150 `archived_prices` rows, 2023-03-07 → 2026-08-24), 121 of them dated by a release note; 52 more skipped with their reasons. Alibaba's are derived but not registered: it has no ticker in the panel.
+
+### Hyperscaler disclosures about the labs, back to 2023
+
+- **Microsoft on OpenAI.** Its 10-Q for the quarter to 2024-09-30 (filed 2024-10-30) is the first to tag `msft:OpenAIGlobalLlcMember`, and the filed-facts reader already reads every instance since 2020, point in time by filing date (`filed_facts`; production's exposure series reach the quarter to 2024-06-30). Its 10-Qs and 10-Ks from 2023-04 to 2024-07 name OpenAI only as a partner: no sentence in them states a figure about it (each read on 2026-11-21). So the line starts in 2024; nothing earlier exists to backfill.
+- **Amazon on Anthropic.** Amazon tags `amzn:AnthropicMember` from its 10-Q of 2026-04-30. Its ten 10-Qs and 10-Ks from 2023-10-27 to 2026-02-06 state Anthropic figures only in words, and the filed-facts reader now reads each primary document once, two a run (`filed_text_facts`, `layers/terminal/server/exposure/text-facts.ts`): each note bought (Q3 2023 $1.25 billion, Q1 2024 $2.75 billion, Q4 2024 $1.3 billion, Q2 2025 $1.3 billion, Q4 2025 $1.4 billion), the notes committed to, their fair value, and from 2025 the gains on converted notes and upward marks. Eight wordings are read; a sentence that matches none is not. On the local run: 45 rows, 22 distinct figures, the first filed 2023-10-27. Where Amazon says a figure is "primarily" from Anthropic the row says so. Fixtures of four layouts are under `fixtures/filed-facts/text/`.
+- **Alphabet's token volume.** EDGAR full-text search finds "tokens" in Alphabet's earnings releases only from 2025-10-29 (Q3 2025), so `sec-googl-api-tokens` already starts where the disclosure does. Each release's dateline is now kept, so the harness dates a quarter by its release.
+
+Registered: `msft-openai-other-income`, `amzn-anthropic-upward-marks` and `googl-api-tokens`, each a quarter as first filed or released. They are thin for years.
+
+### Rate limits and usage tiers from Internet Archive copies
+
+`scripts/wayback-backfill.ts --axis limits`; eras in `layers/terminal/server/pipeline/archive/limits-eras.ts`, rows in `archived_rate_limits` keyed as the live `limits-anthropic` recipe keys its own (`sources.yaml › archive_sources › wayback-limits`). Same client, pace, User-Agent and terms as the price backfill. CDX listings read 2026-11-21:
+
+| Lab | URL | Copies (months) | Read |
+|---|---|---|---|
+| Anthropic | docs.anthropic.com/claude/reference/rate-limits | 2024-03 → 2024-05 | yes |
+| Anthropic | docs.anthropic.com/en/api/rate-limits | 2024-05 → 2025-09 | yes |
+| Anthropic | docs.claude.com/en/api/rate-limits | 2025-09 → 2025-11 | yes |
+| Anthropic | platform.claude.com/docs/en/api/rate-limits (.md from 2026-06) | 2025-11 → 2026-11 | yes |
+| OpenAI | platform.openai.com/docs/guides/rate-limits | 37 months from 2023-01 | no: every copy is a 3 KB script shell |
+| OpenAI | developers.openai.com model pages (.md) | from 2026-10 | no: after our first read |
+| xAI | docs.x.ai/docs/models, …/consumption-and-rate-limits, developers/rate-limits | 2025-01 → 2026-11 | no: the tables render in the browser |
+| Meta | dev.meta.ai/docs/pricing-rate-limits | from 2026-08 | no |
+
+**Layout drift.** Every Anthropic copy prints its usage-tier table, and its columns are read by header: the last column was the monthly spend cap ("Max usage per month") until 2025, the most a tier may deposit ("Max credit purchase") after, and from 2026 both, the cap as "Monthly Spend Limit"; each is its own row. "Build Tier 1" is read as Tier 1. The per-model rate tables sit in tier tabs: early March 2024 prints one table with a row per tier for all models, March to May 2024 labels each tier's table, and from May 2024 the copies render only the first tab (Tier 1), which is read as Tier 1. From 2025-03 the copies render every tab's table with no label, plus one more, so no table can be tied to a tier and those rates are skipped with the reason; from 2025-11 they render none, and the 2026 `.md` copies carry every tier again. **Reach, local run:** 67 copies of Anthropic's page read, none skipped (1,535 rows, 2024-03-06 → 2026-10-30): the usage-tier table in all 67, per-model rates in 26 (2024-03 → 2025-02, and the two 2026 `.md` copies). Nine limits moved between copies, all raises: Claude 3 Haiku's and Sonnet's tokens per day in April 2024 (a 20-day window), and Tier 4's and Tier 1's spend caps on 2026-03-13 and 2026-05-12 (dated by Anthropic's release notes). OpenAI, xAI and Meta: no copy that reads.
+
+A raised limit or cap is registered as an event series, `limit-raises-anthropic`, dated by a release note that talks about rate limits inside the window, else by the window.
+
+**Verdict: include.** Rights stay `not-cleared` for the archived copies and the release notes; the SEC filings are `ours`.

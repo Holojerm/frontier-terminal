@@ -137,6 +137,12 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
     'fetched_at',
     tables.archivedIncidents.captured_at,
   ),
+  archived_rate_limits: windowed(
+    ['captured_at'],
+    'captured_at, when the Internet Archive saw the page',
+    'fetched_at',
+    tables.archivedRateLimits.captured_at,
+  ),
   archive_captures: windowed(
     ['captured_at'],
     'captured_at, when the Internet Archive saw the page',
@@ -194,6 +200,12 @@ export const EXPORT_HISTORY: Readonly<Record<string, HistoryRule>> = {
   // Windowed like the recipe_observations rows it is computed from.
   download_series: windowed(['date'], 'date, the day the value is for', 'fetched_at'),
   filed_facts: windowed(['end'], 'end, the period end', 'first_seen_at', tables.filedFacts.end),
+  filed_text_facts: windowed(
+    ['end'],
+    'end, the period end',
+    'first_seen_at',
+    tables.filedTextFacts.end,
+  ),
   filed_guidance: windowed(
     ['filed'],
     'filed, the filing or call date',

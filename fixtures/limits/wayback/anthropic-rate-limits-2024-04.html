@@ -1,0 +1,334 @@
+<!DOCTYPE html><html lang="en" data-color-mode="system"><head><meta charset="utf-8"><meta http-equiv="X-UA-Compatible" content="IE=edge"><meta name="readme-deploy" content="5.41.0"><meta name="readme-subdomain" content="anthropic-claude"><meta name="readme-basepath-childProject" content="claude"><meta name="readme-version" content="1.0"><title>Rate limits</title><meta name="twitter:title" content="Rate limits"><meta name="description" property="og:description" content="To mitigate against misuse and manage capacity on our API, we have implemented limits on how much an organization can use the Claude API.We have two types of limits: Usage limits set a maximum monthly cost an organization can incur for API usage.Rate limits restrict the number of API requests an org..."><meta name="twitter:description" content="To mitigate against misuse and manage capacity on our API, we have implemented limits on how much an organization can use the Claude API.We have two types of limits: Usage limits set a maximum monthly cost an organization can incur for API usage.Rate limits restrict the number of API requests an org..."><meta name="viewport" content="width=device-width, initial-scale=1.0"><meta name="twitter:card" content="summary_large_image"><meta name="title" property="og:title" content="Rate limits"><meta property="og:site_name" content="Claude"><link id="favicon" rel="shortcut icon" href="https://files.readme.io/69d2014-favicon.ico" type="image/x-icon"><link rel="canonical" href="https://docs.anthropic.com/claude/reference/rate-limits"><link data-chunk="Diff" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/Diff.4e54bf1241e6843d6f7f.css">
+<link data-chunk="New" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/New.201d638cdb75867b5e8e.css">
+<link data-chunk="routes-Tutorials" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/routes-Tutorials.148b8ecb401c1a035c7d.css">
+<link data-chunk="List" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/List.ed6b2c1b7de2719f65e8.css">
+<link data-chunk="routes-Changelog" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/routes-Changelog.2143029241ae2e32eeb8.css">
+<link data-chunk="Page" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/Page.201d638cdb75867b5e8e.css">
+<link data-chunk="routes-Discuss" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/routes-Discuss.4b7fd1bde3e01607d9c2.css">
+<link data-chunk="Editor" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/Editor.b0203929e6826eb6167d.css">
+<link data-chunk="routes-Suggestions-ngz-Header" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/routes-Suggestions-ngz-Header.0f3cc7b3c9b6779eaadb.css">
+<link data-chunk="CustomPage" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/CustomPage.dad176dfc372813c629c.css">
+<link data-chunk="routes-Landing" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/routes-Landing.373b55d1571a0e375fd3.css">
+<link data-chunk="routes-Reference" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/routes-Reference.a24fb16bf1f329eb36ec.css">
+<link data-chunk="routes-Doc" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/routes-Doc.7ead69415ddc98b8da69.css">
+<link data-chunk="routes-PageNotFound" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/routes-PageNotFound.1ada8671884e2a5b981e.css">
+<link data-chunk="Header" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/Header.1572b0598b8b56f809ed.css">
+<link data-chunk="Header" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/4508.ba7f66de89b40af051c2.css">
+<link data-chunk="routes-SuperHub-Island" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/routes-SuperHub-Island.c27ed88302e65c85d7e3.css">
+<link data-chunk="main" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/main.73316b467fddf046e46a.css">
+<link data-chunk="main" rel="preload" as="style" href="https://cdn.readme.io/public/hub/web/ui-styles.34388e4caf4477368f6c.css">
+<link data-chunk="main" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/main.cf110d65ee0c2c88adb4.js">
+<link data-chunk="routes-SuperHub-Island" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/2458.fb8e51536e6f9fa7eb07.js">
+<link data-chunk="routes-SuperHub-Island" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/4855.9c8237f5c662c7033126.js">
+<link data-chunk="routes-SuperHub-Island" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/2711.5ebebe999430f9e0ba6d.js">
+<link data-chunk="routes-SuperHub-Island" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/routes-SuperHub-Island.17a1e32a33f423e6306f.js">
+<link data-chunk="Header" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/1052.1430928206790d56a959.js">
+<link data-chunk="Header" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/1725.a0eff53214c3db130166.js">
+<link data-chunk="Header" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/4923.617eab1c8cb9029e80a5.js">
+<link data-chunk="Header" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/4990.92a3d3bc1d47d33b59ff.js">
+<link data-chunk="Header" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/951.b4289c2de5055253850e.js">
+<link data-chunk="Header" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/5283.d46c94d05287dd859635.js">
+<link data-chunk="Header" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/7434.cc700286920c13e7b879.js">
+<link data-chunk="Header" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/8980.ef0ba97d816ab75d8609.js">
+<link data-chunk="Header" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/4508.c463f384829ece4e1d01.js">
+<link data-chunk="Header" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/8994.bf5c2d87ef54ae09c44c.js">
+<link data-chunk="Header" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/7828.e36f8d03b4b9a2f6d81a.js">
+<link data-chunk="Header" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/Header.0cf35a95a0cfaaef2aa6.js">
+<link data-chunk="routes-PageNotFound" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/routes-PageNotFound.994fee82e654a707c9a3.js">
+<link data-chunk="Footer" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/Footer.ebc8499ce58d1fc89b9a.js">
+<link data-chunk="core-icons-chevron-up-down-svg" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/core-icons-chevron-up-down-svg.446e81ab9226a91b9f43.js">
+<link data-chunk="routes-Doc" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/7452.3bb932d836aa61860c59.js">
+<link data-chunk="routes-Doc" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/3858.a383740051dc465ac4d6.js">
+<link data-chunk="routes-Doc" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/2004.abf7ac0a14fc3ac3bcb4.js">
+<link data-chunk="routes-Doc" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/routes-Doc.396809b2251b1ddcd97b.js">
+<link data-chunk="routes-Reference" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/6662.0008311f89d23caaef39.js">
+<link data-chunk="routes-Reference" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/6302.e5ba3f935a90ef80c6ab.js">
+<link data-chunk="routes-Reference" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/2543.6a5938f8571d34b0b77c.js">
+<link data-chunk="routes-Reference" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/7952.2d979ce7d3dba6501995.js">
+<link data-chunk="routes-Reference" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/routes-Reference.66de724d72960d322b1e.js">
+<link data-chunk="core-icons-more-vertical-svg" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/core-icons-more-vertical-svg.280be53d25081dd127e2.js">
+<link data-chunk="core-icons-arrow-right-svg" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/core-icons-arrow-right-svg.c3858e56409cd416f202.js">
+<link data-chunk="routes-Landing" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/5748.edfb6665749a9c534a51.js">
+<link data-chunk="routes-Landing" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/routes-Landing.e90ca7a5255c202521b3.js">
+<link data-chunk="CustomPage" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/CustomPage.b1e31eba4aab7bb74370.js">
+<link data-chunk="core-icons-arrow-up-right-svg" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/core-icons-arrow-up-right-svg.960d73747b79599e0415.js">
+<link data-chunk="routes-Suggestions-ngz-Header" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/routes-Suggestions-ngz-Header.91d9996adb321d22c5f7.js">
+<link data-chunk="Editor" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/1953.d91d286c884e0f41c782.js">
+<link data-chunk="Editor" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/Editor.39375f008efb4578a318.js">
+<link data-chunk="core-icons-x-circle-svg" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/core-icons-x-circle-svg.586c5bf9fc6d359aac2e.js">
+<link data-chunk="core-icons-suggested-edits-svg" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/core-icons-suggested-edits-svg.28aa712e84ce36e8f647.js">
+<link data-chunk="core-icons-chevron-down-svg" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/core-icons-chevron-down-svg.69482defe71a0868b959.js">
+<link data-chunk="routes-Discuss" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/routes-Discuss.ac497b5cd4cb635d2d74.js">
+<link data-chunk="Page" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/9708.65321bf5cdf416e9dd07.js">
+<link data-chunk="Page" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/8231.242ac4e426ede7250477.js">
+<link data-chunk="Page" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/108.3553c4eb717ec0f47a2e.js">
+<link data-chunk="Page" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/Page.3b7116dd8c92cf84a8fb.js">
+<link data-chunk="routes-Changelog" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/routes-Changelog.979d42618774ca3a2e92.js">
+<link data-chunk="Post" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/7055.d0f34d55f925f5cfbd3e.js">
+<link data-chunk="Post" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/Post.c1c7c1d26a2debb45ab2.js">
+<link data-chunk="List" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/List.80e1249cb66e81115e39.js">
+<link data-chunk="core-icons-trending-up-svg" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/core-icons-trending-up-svg.6294b69f75e32f34630b.js">
+<link data-chunk="core-icons-callout-info-svg" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/core-icons-callout-info-svg.2447588795d5f146d7fd.js">
+<link data-chunk="routes-Tutorials" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/routes-Tutorials.c4457b7f86706f6126f9.js">
+<link data-chunk="core-icons-star-svg" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/core-icons-star-svg.3639abe34a0f99273d1b.js">
+<link data-chunk="core-icons-inbox-svg" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/core-icons-inbox-svg.06cc96183cba63c0257d.js">
+<link data-chunk="New" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/New.31ea4a12b157639c5bb2.js">
+<link data-chunk="Diff" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/9350.ece16c3f64b2967302c3.js">
+<link data-chunk="Diff" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/Diff.56d2748e440547bc6350.js">
+<link data-chunk="core-icons-x-svg" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/core-icons-x-svg.439229b15d1c9d353b2b.js">
+<link data-chunk="core-icons-eye-svg" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/core-icons-eye-svg.b375b9d07b07e1e79471.js">
+<link data-chunk="core-icons-message-circle-svg" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/core-icons-message-circle-svg.2b34f4cfcc6bae1d5861.js">
+<link data-chunk="core-icons-save-svg" rel="preload" as="script" href="https://cdn.readme.io/public/hub/web/core-icons-save-svg.a9085a0f6de9dfad8d12.js">
+<link data-chunk="main" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/ui-styles.34388e4caf4477368f6c.css">
+<link data-chunk="main" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/main.73316b467fddf046e46a.css">
+<link data-chunk="routes-SuperHub-Island" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/routes-SuperHub-Island.c27ed88302e65c85d7e3.css">
+<link data-chunk="Header" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/4508.ba7f66de89b40af051c2.css">
+<link data-chunk="Header" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/Header.1572b0598b8b56f809ed.css">
+<link data-chunk="routes-PageNotFound" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/routes-PageNotFound.1ada8671884e2a5b981e.css">
+<link data-chunk="routes-Doc" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/routes-Doc.7ead69415ddc98b8da69.css">
+<link data-chunk="routes-Reference" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/routes-Reference.a24fb16bf1f329eb36ec.css">
+<link data-chunk="routes-Landing" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/routes-Landing.373b55d1571a0e375fd3.css">
+<link data-chunk="CustomPage" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/CustomPage.dad176dfc372813c629c.css">
+<link data-chunk="routes-Suggestions-ngz-Header" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/routes-Suggestions-ngz-Header.0f3cc7b3c9b6779eaadb.css">
+<link data-chunk="Editor" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/Editor.b0203929e6826eb6167d.css">
+<link data-chunk="routes-Discuss" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/routes-Discuss.4b7fd1bde3e01607d9c2.css">
+<link data-chunk="Page" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/Page.201d638cdb75867b5e8e.css">
+<link data-chunk="routes-Changelog" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/routes-Changelog.2143029241ae2e32eeb8.css">
+<link data-chunk="List" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/List.ed6b2c1b7de2719f65e8.css">
+<link data-chunk="routes-Tutorials" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/routes-Tutorials.148b8ecb401c1a035c7d.css">
+<link data-chunk="New" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/New.201d638cdb75867b5e8e.css">
+<link data-chunk="Diff" rel="stylesheet" href="https://cdn.readme.io/public/hub/web/Diff.4e54bf1241e6843d6f7f.css"><meta name="loadedProject" content="claude"><meta name="parentProject" content="anthropic"><meta name="childrenProjects" content="[{&quot;subdomain&quot;:&quot;anthropic-claude&quot;,&quot;subpath&quot;:&quot;claude&quot;,&quot;name&quot;:&quot;Claude&quot;,&quot;_id&quot;:&quot;64666bce5cd1dd00337bd6c1&quot;}]"><meta name="siblingProjects" content="[{&quot;subdomain&quot;:&quot;anthropic-claude&quot;,&quot;name&quot;:&quot;Claude&quot;,&quot;_id&quot;:&quot;64666bce5cd1dd00337bd6c1&quot;}]">
+</head><body><div id="ssr-top"></div><div id="ssr-main"><div><header><div><div><div tabindex="-1"><a href="#content" target="_self">Jump to Content</a></div><div><a href="https://docs.anthropic.com/" target="_self"><img alt="Claude" src="https://files.readme.io/22c44d1-ant_logo_full.svg"/></a></div><div><div><div><div data-testid="flyout"><div><a href="/claude/docs" target="_self"><i></i><span>User guides</span></a><a aria-current="page" href="/claude/reference" target="_self"><i></i><span>API reference</span></a><a href="/claude/page/prompts" target="_self"><i></i><span>Prompt library</span></a><hr/><a href="/login?redirect_uri=/reference/rate-limits" target="_self" to="/login?redirect_uri=/reference/rate-limits">Log In</a><a href="https://docs.anthropic.com/" target="_self"><img alt="Claude" src="https://files.readme.io/22c44d1-ant_logo_full.svg"/></a></div></div></div><button aria-label="Toggle navigation menu" type="button"></button></div><div><i></i></div></div><div><span><a href="/login?redirect_uri=/claude/reference/rate-limits" target="_self">Log In</a></span><div><button aria-label="Toggle to light mode" id="ThemeToggle-button-static-id-placeholder" aria-haspopup="dialog" type="button"></button></div><div><button aria-label="Search" data-symbol="⌘"><div></div></button></div></div></div></div><div><div><div><nav><a href="/claude/docs" target="_self"><i></i><span>User guides</span></a><a aria-current="page" href="/claude/reference" target="_self"><i></i><span>API reference</span></a><a href="/claude/page/prompts" target="_self"><i></i><span>Prompt library</span></a></nav><div><button aria-label="Search" data-symbol="⌘"><div></div><div>Search</div><div></div></button></div></div></div><button align="center" justify="between" type="button"><span>Loading…</span><span></span></button></div><div id="hub-search-results"><div><div role="button" tabindex="0"></div></div></div></header><main id="Explorer"><nav aria-label="Page navigation" id="reference-sidebar"><div><button aria-keyshortcuts="Control+/ Meta+/">JUMP TO</button></div><div><section><h2>Using the API</h2><ul><li><a target="_self" href="/claude/reference/getting-started-with-the-api"><span><span>Getting started</span></span></a></li><li><a target="_self" href="/claude/reference/ip-addresses"><span><span>IP addresses</span></span></a></li><li><a target="_self" href="/claude/reference/versions"><span><span>Versions</span></span></a></li><li><a target="_self" href="/claude/reference/errors"><span><span>Errors</span></span></a></li><li><a aria-current="page" target="_self" href="/claude/reference/rate-limits"><span><span>Rate limits</span></span></a></li><li><a target="_self" href="/claude/reference/client-sdks"><span><span>Client SDKs</span></span></a></li><li><a target="_self" href="/claude/reference/supported-regions"><span><span>Supported regions</span></span></a></li><li><a target="_self" href="/claude/reference/need-support-contact-us"><span><span>Getting help</span></span></a></li></ul></section><section><h2>Anthropic API</h2><ul><li><a target="_self" href="/claude/reference/messages_post"><span><button aria-expanded="false" aria-label="Show subpages for Messages"><i></i></button><span>Messages</span></span></a><ul><li><a target="_self" href="/claude/reference/messages_post"><span><span>Create a Message</span></span><span data-testid="http-method">post</span></a></li><li><a target="_self" href="/claude/reference/messages-streaming"><span><span>Streaming Messages</span></span></a></li><li><a target="_self" href="/claude/reference/migrating-from-text-completions-to-messages"><span><span>Migrating from Text Completions</span></span></a></li><li><a target="_self" href="/claude/reference/messages-examples"><span><span>Messages examples</span></span></a></li></ul></li><li><a target="_self" href="/claude/reference/complete_post"><span><button aria-expanded="false" aria-label="Show subpages for Text Completions"><i></i></button><span>Text Completions</span></span></a><ul><li><a target="_self" href="/claude/reference/complete_post"><span><span>Create a Text Completion</span></span><span data-testid="http-method">post</span></a></li><li><a target="_self" href="/claude/reference/streaming"><span><span>Streaming Text Completions</span></span></a></li><li><a target="_self" href="/claude/reference/prompt-validation"><span><span>Prompt validation</span></span></a></li></ul></li></ul></section><section><h2>Amazon Bedrock API</h2><ul><li><a target="_self" href="/claude/reference/claude-on-amazon-bedrock"><span><span>Amazon Bedrock API</span></span></a></li></ul></section><section><h2>Vertex ai</h2><ul><li><a target="_self" href="/claude/reference/claude-on-vertex-ai"><span><span>Vertex AI API</span></span></a></li></ul></section></div></nav><article id="content"><header data-raycast-oas="false"><div><div><div><div data-testid="flyout"><nav aria-label="Page navigation" id="reference-sidebar"><div><button aria-keyshortcuts="Control+/ Meta+/">JUMP TO</button></div><div><section><h2>Using the API</h2><ul><li><a target="_self" href="/claude/reference/getting-started-with-the-api"><span><span>Getting started</span></span></a></li><li><a target="_self" href="/claude/reference/ip-addresses"><span><span>IP addresses</span></span></a></li><li><a target="_self" href="/claude/reference/versions"><span><span>Versions</span></span></a></li><li><a target="_self" href="/claude/reference/errors"><span><span>Errors</span></span></a></li><li><a aria-current="page" target="_self" href="/claude/reference/rate-limits"><span><span>Rate limits</span></span></a></li><li><a target="_self" href="/claude/reference/client-sdks"><span><span>Client SDKs</span></span></a></li><li><a target="_self" href="/claude/reference/supported-regions"><span><span>Supported regions</span></span></a></li><li><a target="_self" href="/claude/reference/need-support-contact-us"><span><span>Getting help</span></span></a></li></ul></section><section><h2>Anthropic API</h2><ul><li><a target="_self" href="/claude/reference/messages_post"><span><button aria-expanded="false" aria-label="Show subpages for Messages"><i></i></button><span>Messages</span></span></a><ul><li><a target="_self" href="/claude/reference/messages_post"><span><span>Create a Message</span></span><span data-testid="http-method">post</span></a></li><li><a target="_self" href="/claude/reference/messages-streaming"><span><span>Streaming Messages</span></span></a></li><li><a target="_self" href="/claude/reference/migrating-from-text-completions-to-messages"><span><span>Migrating from Text Completions</span></span></a></li><li><a target="_self" href="/claude/reference/messages-examples"><span><span>Messages examples</span></span></a></li></ul></li><li><a target="_self" href="/claude/reference/complete_post"><span><button aria-expanded="false" aria-label="Show subpages for Text Completions"><i></i></button><span>Text Completions</span></span></a><ul><li><a target="_self" href="/claude/reference/complete_post"><span><span>Create a Text Completion</span></span><span data-testid="http-method">post</span></a></li><li><a target="_self" href="/claude/reference/streaming"><span><span>Streaming Text Completions</span></span></a></li><li><a target="_self" href="/claude/reference/prompt-validation"><span><span>Prompt validation</span></span></a></li></ul></li></ul></section><section><h2>Amazon Bedrock API</h2><ul><li><a target="_self" href="/claude/reference/claude-on-amazon-bedrock"><span><span>Amazon Bedrock API</span></span></a></li></ul></section><section><h2>Vertex ai</h2><ul><li><a target="_self" href="/claude/reference/claude-on-vertex-ai"><span><span>Vertex AI API</span></span></a></li></ul></section></div></nav></div></div><button aria-label="Toggle reference sidebar" type="button"></button></div><header id="content-head"><h1>Rate limits</h1></header></div></header><div data-testid="RDMD"><p>To mitigate against misuse and manage capacity on our API, we have implemented limits on how much an organization can use the Claude API.</p>
+<p>We have two types of limits:</p>
+<ol>
+<li><strong>Usage limits</strong> set a maximum monthly cost an organization can incur for API usage.</li>
+<li><strong>Rate limits</strong> restrict the number of API requests an organization can make over a defined period of time. </li>
+</ol>
+<h1 align=""><div id="about-our-limits"></div><div><div id="section-about-our-limits"></div>About our limits</div><a aria-label="Skip link to About our limits" href="#about-our-limits"></a></h1>
+<ul>
+<li>Limits are designed to prevent API abuse, while minimizing impact on common customer usage patterns.</li>
+<li>Limits are defined by usage tier, where each tier is associated with a different set of usage and rate limits.</li>
+<li>Your organization will increase tiers automatically as you reach certain thresholds while using the API.<br/>
+Limits are set at the organization level. You can see your organization’s limits in <a target="_self" href="https://console.anthropic.com/settings/plans">Plans and Billing</a> in the <a target="_self" href="https://console.anthropic.com/">Console</a>.</li>
+<li>You may hit rate limits over shorter time intervals. For instance, a rate of 60 requests per minute (RPM) may be enforced as 1 request per second. Short bursts of requests at a high volume can surpass the rate limit and result in rate limit errors.</li>
+<li>The limits outlined below are our standard limits and apply to the “Build” API plan. If you’re seeking higher, custom limits, contact sales by clicking &quot;Select Plan&quot; in <a target="_self" href="https://console.anthropic.com/settings/plans">the console</a> to move to our custom “Scale” plan.</li>
+<li>All Claude models currently have the same usage and rate limits.</li>
+</ul>
+<h1 align=""><div id="usage-limits"></div><div><div id="section-usage-limits"></div>Usage limits</div><a aria-label="Skip link to Usage limits" href="#usage-limits"></a></h1>
+<p>Each usage tier has a limit on how much you can use the API each calendar month. Once you reach the usage limit of your tier, until you qualify for the next tier, you will have to wait until the next month to be able to use the API again.</p>
+<p>To qualify for the next tier, you must meet a deposit requirement and a mandatory wait period. Higher tiers require longer wait periods. Note, to minimize the risk of overfunding your account, you cannot deposit more than your monthly usage limit.</p>
+<div><div>
+  <div>
+    <table>
+      <thead>
+        <tr>
+          <th rowspan="2">Usage tier</th>
+          <th colspan="2">Requirements to advance to tier</th>
+          <th rowspan="2">Max usage per month</th>
+        </tr>
+        <tr>
+          <th>Credit purchase</th>
+          <th>Wait after first purchase</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td>Free</td>
+          <td>N/A</td>
+          <td>0 days</td>
+          <td>$10</td>
+        </tr>
+        <tr>
+          <td>Build Tier 1</td>
+          <td>$5</td>
+          <td>0 days</td>
+          <td>$100</td>
+        </tr>
+        <tr>
+          <td>Build Tier 2</td>
+          <td>$40</td>
+          <td>7 days</td>
+          <td>$500</td>
+        </tr>
+        <tr>
+          <td>Build Tier 3</td>
+          <td>$200</td>
+          <td>7 days</td>
+          <td>$1,000</td>
+        </tr>
+        <tr>
+          <td>Build Tier 4</td>
+          <td>$400</td>
+          <td>14 days</td>
+          <td>$5,000</td>
+        </tr>
+        <tr>
+          <td>Scale</td>
+          <td>N/A</td>
+          <td>N/A</td>
+          <td>N/A</td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+</div></div>
+<h1 align=""><div id="rate-limits"></div><div><div id="section-rate-limits"></div>Rate limits</div><a aria-label="Skip link to Rate limits" href="#rate-limits"></a></h1>
+<p>Our rate limits are currently measured in requests per minute, tokens per minute, and tokens per day for each model class. If you exceed any of the rate limits you will get a <a target="_self" href="https://docs.anthropic.com/claude/reference/errors">429 error</a>. Click on the rate limit tier to view relevant rate limits.</p>
+<div>
+<div>
+  <input checked id="ratelimit-free" name="ratelimit" type="radio">
+  <label for="ratelimit-free">Free</label>
+  <input id="ratelimit-tier1" name="ratelimit" type="radio">
+  <label for="ratelimit-tier1">Build Tier 1</label>
+  <input id="ratelimit-tier2" name="ratelimit" type="radio">
+  <label for="ratelimit-tier2">Build Tier 2</label>
+  <input id="ratelimit-tier3" name="ratelimit" type="radio">
+  <label for="ratelimit-tier3">Build Tier 3</label>
+  <input id="ratelimit-tier4" name="ratelimit" type="radio">
+  <label for="ratelimit-tier4">Build Tier 4</label>
+  <div id="free">
+     <table>
+        <tr>
+           <th>Model Tier</th>
+           <th>Requests per minute (RPM)</th>
+           <th>Tokens per minute (TPM)</th>
+           <th>Tokens per day (TPD)</th>
+        </tr>
+        <tr>
+           <td>Claude 3 Haiku</td>
+           <td>5</td>
+           <td>25,000</td>
+           <td>300,000</td>
+        </tr>
+        <tr>
+           <td>Claude 3 Sonnet</td>
+           <td>5</td>
+           <td>20,000</td>
+           <td>300,000</td>
+        </tr>
+        <tr>
+           <td>Claude 3 Opus</td>
+           <td>5</td>
+           <td>10,000</td>
+           <td>300,000</td>
+        </tr>
+     </table>
+  </div>
+  <div id="tier1">
+     <table>
+        <tr>
+           <th>Model Tier</th>
+           <th>Requests per minute (RPM)</th>
+           <th>Tokens per minute (TPM)</th>
+           <th>Tokens per day (TPD)</th>
+        </tr>
+        <tr>
+           <td>Claude 3 Haiku</td>
+           <td>50</td>
+           <td>50,000</td>
+           <td>1,000,000</td>
+        </tr>
+        <tr>
+           <td>Claude 3 Sonnet</td>
+           <td>50</td>
+           <td>40,000</td>
+           <td>1,000,000</td>
+        </tr>
+        <tr>
+           <td>Claude 3 Opus</td>
+           <td>50</td>
+           <td>20,000</td>
+           <td>1,000,000</td>
+        </tr>
+     </table>
+  </div>
+  <div id="tier2">
+     <table>
+        <tr>
+           <th>Model Tier</th>
+           <th>Requests per minute (RPM)</th>
+           <th>Tokens per minute (TPM)</th>
+           <th>Tokens per day (TPD)</th>
+        </tr>
+        <tr>
+           <td>Claude 3 Haiku</td>
+           <td>1,000</td>
+           <td>100,000</td>
+           <td>2,500,000</td>
+        </tr>
+        <tr>
+           <td>Claude 3 Sonnet</td>
+           <td>1,000</td>
+           <td>80,000</td>
+           <td>2,500,000</td>
+        </tr>
+        <tr>
+           <td>Claude 3 Opus</td>
+           <td>1,000</td>
+           <td>40,000</td>
+           <td>2,500,000</td>
+        </tr>
+     </table>
+  </div>
+  <div id="tier3">
+     <table>
+        <tr>
+           <th>Model Tier</th>
+           <th>Requests per minute (RPM)</th>
+           <th>Tokens per minute (TPM)</th>
+           <th>Tokens per day (TPD)</th>
+        </tr>
+        <tr>
+           <td>Claude 3 Haiku</td>
+           <td>2,000</td>
+           <td>200,000</td>
+           <td>5,000,000</td>
+        </tr>
+        <tr>
+           <td>Claude 3 Sonnet</td>
+           <td>2,000</td>
+           <td>160,000</td>
+           <td>5,000,000</td>
+        </tr>
+        <tr>
+           <td>Claude 3 Opus</td>
+           <td>2,000</td>
+           <td>80,000</td>
+           <td>5,000,000</td>
+        </tr>
+     </table>
+  </div>
+  <div id="tier4">
+     <table>
+        <tr>
+           <th>Model Tier</th>
+           <th>Requests per minute (RPM)</th>
+           <th>Tokens per minute (TPM)</th>
+           <th>Tokens per day (TPD)</th>
+        </tr>
+        <tr>
+           <td>Claude 3 Haiku</td>
+           <td>4,000</td>
+           <td>400,000</td>
+           <td>10,000,000</td>
+        </tr>
+        <tr>
+           <td>Claude 3 Sonnet</td>
+           <td>4,000</td>
+           <td>400,000</td>
+           <td>10,000,000</td>
+        </tr>
+        <tr>
+           <td>Claude 3 Opus</td>
+           <td>4,000</td>
+           <td>400,000</td>
+           <td>10,000,000</td>
+        </tr>
+     </table>
+  </div>
+</div></div></div></article><section><nav><ul><li><a href="#"><i></i>Table of Contents</a></li><li><ul>
+<li><a href="#about-our-limits">About our limits</a></li>
+<li><a href="#usage-limits">Usage limits</a></li>
+<li><a href="#rate-limits">Rate limits</a></li>
+</ul></li></ul></nav></section><div id="response-headers-modal-root"></div><div id="tutorialmodal-root"></div><div id="QuickNav-modal-root"></div><div id="QuickNav-mobile-modal-root"></div></main><footer aria-label="Status banner"></footer><div id="ChatGPT-modal"></div></div></div><div></div><div></div><div id="hub-container"><div><div state-container ng-attr-id="{{state.current().root !== 'docs' &amp;&amp; 'react-app-content-container'}}"><div id="replace-view" ng-non-bindable></div></div></div></div><footer></footer><div id="ssr-end">
+</div></body></html>

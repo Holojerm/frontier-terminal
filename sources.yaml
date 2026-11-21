@@ -2623,6 +2623,65 @@ archive_sources:
       copies. Mistral's status feed has no copies. Archived rows carry basis
       archived and CC BY-NC 4.0, stay in archived_incidents, and never reach
       entities, the incident windows, the alerts or the judge.
+  wayback-limits:
+    url: https://web.archive.org/cdx/search/cdx
+    format: CDX JSON (one row per capture), then each capture's raw bytes via https://web.archive.org/web/<timestamp>id_/<url>
+    verdict: include
+    terms: >-
+      The same Internet Archive Terms of Use, robots.txt and pace as
+      wayback-pricing (the same client, one request at a time, 4 seconds
+      apart, the same back-off and User-Agent). The archived pages belong to
+      the lab that published them, read under the terms of the live
+      limits-anthropic recipe; platform.claude.com's robots.txt disallows
+      only /api/, and docs.anthropic.com and docs.claude.com redirect there.
+      What we take is the usage-tier table and the per-model limits, keyed
+      as the live recipe keys them, never the page text. Taken once per
+      backfill run: one copy a week of each URL Anthropic's rate-limit page
+      had, 2024-03 to 2026-11-04 (layers/terminal/server/pipeline/archive/limits-eras.ts).
+      Read 2026-11-21.
+    rights: not-cleared
+    caveats: >-
+      Every copy prints the usage-tier table. Its last column was the
+      monthly spend cap until 2025 and the most a tier may deposit after,
+      so each is its own row, by its header. The per-model rate tables sit
+      in tier tabs: the 2024 copies label each tier or render only the
+      first tab, and those are read; from 2025-03 the copies render every
+      tab with no label, or none, so their rates are skipped with the reason
+      and only the .md copies of 2026 carry them again. OpenAI's rate-limit
+      guide is a script shell in every copy, xAI's docs draw their tables in
+      the browser, and Meta's page has copies only from 2026-08: none of the
+      three is read. Archived rows carry basis archived and CC BY-NC 4.0 and
+      stay in archived_rate_limits, apart from recipe_observations.
+  release-notes:
+    url: https://developers.openai.com/api/docs/changelog.md
+    format: >-
+      The labs' release-notes pages, read once and committed under
+      fixtures/release-notes/: OpenAI's changelog (.md), Anthropic's platform
+      release notes (platform.claude.com/docs/en/release-notes/overview.md),
+      the Gemini API release notes (ai.google.dev/gemini-api/docs/changelog.md.txt),
+      xAI's release notes (docs.x.ai/developers/release-notes.md) and
+      DeepSeek's API news (api-docs.deepseek.com/updates)
+    verdict: include
+    terms: >-
+      The same sites and terms as the live price lists and rate-limit pages
+      (sources: openai-models-md, anthropic-pricing-md, google-models-md,
+      xai-models-md, deepseek-pricing). Each robots.txt allows the page
+      (platform.claude.com disallows only /api/, ai.google.dev only
+      authuser query strings). What we take is each note's date, its first
+      words as a title, the model names it mentions and whether it talks
+      about price, to date the launches and price changes the archived
+      price lists show (layers/terminal/server/pipeline/archive/price-events.ts).
+      Read 2026-11-21.
+    rights: not-cleared
+    caveats: >-
+      Each lab's page as it stands now, which can drop or reword old notes.
+      OpenAI's changelog dates notes from 2023-10-06, Gemini's from
+      2023-12-13, Anthropic's from 2024-05-10 and DeepSeek's from
+      2024-05-17; from those days an archived event needs a note naming its
+      model inside its capture window, or it is skipped. xAI's notes give a
+      month, not a day, so only an item stating its date is kept, and
+      Mistral's changelog is drawn in the browser and isn't read: their
+      events keep their capture windows.
 
 # Where entity_identifiers and entity_securities get their identifiers
 # (layers/terminal/server/utils/terminal-identifiers.ts). Read by hand when the
@@ -2772,7 +2831,13 @@ filed_fact_sources:
       timing axis (the amount expected from the day after the period end),
       which company facts drops, so those quarters come from each instance.
       Its Anthropic marks follow observable prices and aren't Anthropic's
-      valuation.
+      valuation. Before its 10-Q of 2026-04-30 Amazon tagged nothing on
+      Anthropic, so its 10-Qs and 10-Ks from 2023-10-27 to 2026-02-06 are
+      read once more as text (each filing's primary document, a few a run):
+      the notes bought and committed, their fair value, and the gains and
+      upward marks, each with its sentence (filed_text_facts,
+      layers/terminal/server/exposure/text-facts.ts). Where Amazon says a
+      figure is "primarily" Anthropic's, the row says so. Read 2026-11-21.
   filed-facts-meta:
     ticker: META
     url: https://data.sec.gov/api/xbrl/companyfacts/CIK0001326801.json

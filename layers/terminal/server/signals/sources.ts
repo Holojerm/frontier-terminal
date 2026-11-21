@@ -7,6 +7,12 @@ import { and, eq, inArray } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { gridMonths, gridWeeks } from '../../shared/utils/grid-load'
+import { ARCHIVE_UNTIL } from '../pipeline/archive/eras'
+import { LIMITS_ARCHIVE_ERAS, LIMITS_LIVE_FROM } from '../pipeline/archive/limits-eras'
+import { limitChanges, type LimitChange } from '../pipeline/archive/limit-events'
+import { derivePriceEvents, type ArchivedPriceEvent } from '../pipeline/archive/price-events'
+import releaseNotes from '../pipeline/archive/release-notes.json'
+import type { ReleaseNotesFile } from '../pipeline/archive/release-notes-file'
 import { PRIMARY_PLACEMENT } from '../pipeline/probes/placement'
 import type { PipelineDb } from '../pipeline/store'
 import { KCS } from '../prints/ingest'
@@ -29,6 +35,91 @@ export interface LoadDeps {
   db: PipelineDb
   ctx: QueryContext
 }
+
+/** The first day the live loaders count: the archived price lists end here. */
+const LIVE_FROM = ARCHIVE_UNTIL.slice(0, 10)
+
+/**
+ * Launches and price changes the archived price lists show (price-events.ts),
+ * before the live record starts. Each keeps its date window, so the harness
+ * leaves a loosely dated one out of the short horizons.
+ */
+export async function archivedPriceEvents(db: PipelineDb): Promise<ArchivedPriceEvent[]> {
+  const [captures, rows] = await Promise.all([
+    db
+      .select({
+        id: tables.archiveCaptures.id,
+        era: tables.archiveCaptures.era,
+        provider: tables.archiveCaptures.provider,
+        captured_at: tables.archiveCaptures.captured_at,
+        source_url: tables.archiveCaptures.source_url,
+      })
+      .from(tables.archiveCaptures)
+      .where(
+        and(
+          eq(tables.archiveCaptures.axis, 'pricing'),
+          eq(tables.archiveCaptures.status, 'parsed'),
+        ),
+      ),
+    db
+      .select({
+        capture_id: tables.archivedPrices.capture_id,
+        entity_key: tables.archivedPrices.entity_key,
+        payload: tables.archivedPrices.payload,
+      })
+      .from(tables.archivedPrices),
+  ])
+  const file = releaseNotes as ReleaseNotesFile
+  return derivePriceEvents(captures, rows, file.notes, file.coverage).events.filter(
+    (e) => e.date < LIVE_FROM,
+  )
+}
+
+/** The parsed archived copies of the labs' rate-limit pages, oldest first. */
+export async function archivedLimitCopies(db: PipelineDb) {
+  const copies = await db
+    .select({
+      id: tables.archiveCaptures.id,
+      provider: tables.archiveCaptures.provider,
+      era: tables.archiveCaptures.era,
+      captured_at: tables.archiveCaptures.captured_at,
+      source_url: tables.archiveCaptures.source_url,
+    })
+    .from(tables.archiveCaptures)
+    .where(
+      and(eq(tables.archiveCaptures.axis, 'limits'), eq(tables.archiveCaptures.status, 'parsed')),
+    )
+    .orderBy(tables.archiveCaptures.captured_at)
+  const recipes = new Map(LIMITS_ARCHIVE_ERAS.map((e) => [e.id, e.recipe_id]))
+  return copies.flatMap((c) => {
+    const recipe_id = recipes.get(c.era)
+    return recipe_id ? [{ ...c, recipe_id }] : []
+  })
+}
+
+/** Every limit that moved between consecutive archived copies (limit-events.ts). */
+export async function archivedLimitChanges(db: PipelineDb): Promise<LimitChange[]> {
+  const [copies, rows] = await Promise.all([
+    archivedLimitCopies(db),
+    db
+      .select({
+        capture_id: tables.archivedRateLimits.capture_id,
+        recipe_id: tables.archivedRateLimits.recipe_id,
+        key: tables.archivedRateLimits.key,
+        model: tables.archivedRateLimits.model,
+        tier: tables.archivedRateLimits.tier,
+        metric: tables.archivedRateLimits.metric,
+        value: tables.archivedRateLimits.value,
+      })
+      .from(tables.archivedRateLimits),
+  ])
+  return limitChanges(copies, rows, (releaseNotes as ReleaseNotesFile).notes)
+}
+
+const archivedEvent = (e: ArchivedPriceEvent): EventPoint =>
+  e.window_days > 0
+    ? { date: e.date, value: 1, window_days: e.window_days }
+    : { date: e.date, value: 1 }
 
 /** A recipe key written as a vintage (`anthropic@2026-11-07`): an older read of the same row. */
 const VINTAGE = /@\d{4}-\d{2}-\d{2}$/
@@ -108,6 +199,7 @@ export function createLoader(deps: LoadDeps) {
       return { date: a.created_at.slice(0, 10), provider: first ? providers.get(first) : undefined }
     })
   })
+  const archived = memo(() => archivedPriceEvents(deps.db))
   const modelChanges = memo(() =>
     deps.db
       .select({
@@ -194,14 +286,22 @@ export function createLoader(deps: LoadDeps) {
       case 'launches':
         return {
           kind: 'events',
-          events: (await launchAlerts())
-            .filter((a) => a.provider === source.lab)
-            .map((a) => ({ date: a.date, value: 1 })),
+          events: [
+            ...(await archived())
+              .filter((e) => e.kind === 'launch' && e.provider === source.lab)
+              .map(archivedEvent),
+            ...(await launchAlerts())
+              .filter((a) => a.provider === source.lab && a.date >= LIVE_FROM)
+              .map((a) => ({ date: a.date, value: 1 })),
+          ],
         }
       case 'price_changes': {
-        const events: EventPoint[] = []
+        const kind = source.direction === 'cut' ? 'price_cut' : 'price_raise'
+        const events: EventPoint[] = (await archived())
+          .filter((e) => e.kind === kind && e.provider === source.lab)
+          .map(archivedEvent)
         for (const c of await modelChanges()) {
-          if (c.provider !== source.lab) continue
+          if (c.provider !== source.lab || c.detected_at.slice(0, 10) < LIVE_FROM) continue
           const before = inputPrice(c.before_json)
           const after = inputPrice(c.after_json)
           if (before === null || after === null || before === after) continue
@@ -349,6 +449,96 @@ export function createLoader(deps: LoadDeps) {
             })),
         }
       }
+      case 'limit_raises': {
+        // Archived copies to the live start, then the live recipe's
+        // snapshots: each limit or cap raised between two readings. The live
+        // recipe runs daily, so a change is dated to within a day.
+        const archived = (await archivedLimitChanges(deps.db)).filter(
+          (c) =>
+            c.recipe_id === source.recipe &&
+            c.after > c.before &&
+            c.date < LIMITS_LIVE_FROM.slice(0, 10),
+        )
+        const live = await deps.db
+          .select({
+            key: tables.recipeObservations.key,
+            date: tables.recipeObservations.date,
+            value: tables.recipeObservations.value,
+          })
+          .from(tables.recipeObservations)
+          .where(eq(tables.recipeObservations.recipe_id, source.recipe))
+        const byKey = new Map<string, { date: string; value: number | null }[]>()
+        for (const r of live) byKey.set(r.key, [...(byKey.get(r.key) ?? []), r])
+        const events: EventPoint[] = archived.map((c) =>
+          c.window_days > 0
+            ? { date: c.date, value: 1, window_days: c.window_days }
+            : { date: c.date, value: 1 },
+        )
+        for (const list of byKey.values()) {
+          list.sort((a, b) => (a.date < b.date ? -1 : 1))
+          for (let i = 1; i < list.length; i++) {
+            const [a, b] = [list[i - 1]!.value, list[i]!.value]
+            if (a !== null && b !== null && b > a)
+              events.push({ date: list[i]!.date, value: 1, window_days: 1 })
+          }
+        }
+        return { kind: 'events', events }
+      }
+      case 'filed_quarters': {
+        // Each quarter as the first filing that stated it: what was public
+        // then. A later filing's comparative is a restatement nobody had.
+        const facts = await deps.db
+          .select({
+            dims: tables.filedFacts.dims,
+            start: tables.filedFacts.start,
+            end: tables.filedFacts.end,
+            value: tables.filedFacts.value,
+            filed: tables.filedFacts.filed,
+          })
+          .from(tables.filedFacts)
+          .where(
+            and(
+              eq(tables.filedFacts.ticker, source.ticker),
+              eq(tables.filedFacts.concept, source.concept),
+            ),
+          )
+        const text = source.text_metric
+          ? await deps.db
+              .select({
+                start: tables.filedTextFacts.start,
+                end: tables.filedTextFacts.end,
+                value: tables.filedTextFacts.value,
+                filed: tables.filedTextFacts.filed,
+              })
+              .from(tables.filedTextFacts)
+              .where(
+                and(
+                  eq(tables.filedTextFacts.ticker, source.ticker),
+                  eq(tables.filedTextFacts.metric, source.text_metric),
+                ),
+              )
+          : []
+        const onMember = facts.filter((f) =>
+          f.dims.split(';').every((d) => d.endsWith(`=${source.member}`)),
+        )
+        return { kind: 'points', points: firstFiledQuarters([...onMember, ...text]) }
+      }
+      case 'quarterly_growth': {
+        const rows = await deps.db
+          .select({
+            date: tables.recipeObservations.date,
+            value: tables.recipeObservations.value,
+            payload: tables.recipeObservations.payload,
+          })
+          .from(tables.recipeObservations)
+          .where(
+            and(
+              eq(tables.recipeObservations.recipe_id, source.recipe),
+              eq(tables.recipeObservations.key, source.key),
+            ),
+          )
+        return { kind: 'points', points: quarterlyGrowth(rows, source.lag_days) }
+      }
       case 'revenue_vs_reported':
         return {
           kind: 'events',
@@ -421,4 +611,65 @@ async function derivedYoy(
     })
   }
   return points.sort((a, b) => (a.date < b.date ? -1 : 1))
+}
+
+const QUARTER_DAYS = { min: 80, max: 100 }
+
+const daysBetween = (start: string, end: string) =>
+  Math.round((Date.parse(`${end}T00:00:00Z`) - Date.parse(`${start}T00:00:00Z`)) / 86_400_000) + 1
+
+/** Each 3-month period's first-filed value, dated by its month and public on its filing date. */
+export function firstFiledQuarters(
+  rows: readonly { start: string | null; end: string; value: number; filed: string }[],
+): Point[] {
+  const first = new Map<string, { value: number; filed: string }>()
+  for (const r of rows) {
+    if (!r.start) continue
+    const d = daysBetween(r.start, r.end)
+    if (d < QUARTER_DAYS.min || d > QUARTER_DAYS.max) continue
+    const f = first.get(r.end)
+    if (!f || r.filed < f.filed) first.set(r.end, { value: r.value, filed: r.filed })
+  }
+  return [...first.entries()]
+    .sort(([a], [b]) => (a < b ? -1 : 1))
+    .map(([end, f]) => ({ date: `${end.slice(0, 7)}-01`, value: f.value, available: f.filed }))
+}
+
+/**
+ * The log change of a quarterly figure on the quarter before, dated by the
+ * quarter's last month: public on payload.released where the row has it,
+ * else lagDays after the quarter's end. A quarter with no figure breaks the
+ * chain.
+ */
+export function quarterlyGrowth(
+  rows: readonly { date: string; value: number | null; payload: string }[],
+  lagDays: number,
+): Point[] {
+  const sorted = rows
+    .filter((r): r is typeof r & { value: number } => r.value !== null && r.value > 0)
+    .sort((a, b) => (a.date < b.date ? -1 : 1))
+  const out: Point[] = []
+  for (let i = 1; i < sorted.length; i++) {
+    const [prev, cur] = [sorted[i - 1]!, sorted[i]!]
+    const gap = daysBetween(prev.date, cur.date) - 1
+    if (gap < QUARTER_DAYS.min || gap > QUARTER_DAYS.max) continue
+    let released: string | null = null
+    try {
+      const v = (JSON.parse(cur.payload) as { released?: unknown }).released
+      released = typeof v === 'string' && /^\d{4}-\d{2}-\d{2}$/.test(v) ? v : null
+    } catch {
+      released = null
+    }
+    const available =
+      released ??
+      new Date(Date.parse(`${cur.date}T00:00:00Z`) + lagDays * 86_400_000)
+        .toISOString()
+        .slice(0, 10)
+    out.push({
+      date: `${cur.date.slice(0, 7)}-01`,
+      value: Math.log(cur.value / prev.value),
+      available,
+    })
+  }
+  return out
 }

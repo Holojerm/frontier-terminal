@@ -1,6 +1,7 @@
 // The hyperscaler exposure payload (GET /api/exposure, the /exposure page,
 // the get_exposure MCP tool): quarterly series built from the filed XBRL facts
-// of five public filers. Shared so the page and the server agree on one shape.
+// of five public filers, and from Amazon's words on Anthropic before it
+// tagged them. Shared so the page and the server agree on one shape.
 
 import type { Prov } from './terminal-types'
 
@@ -35,6 +36,10 @@ export interface ExposurePoint extends ExposureFiling, Prov {
    * no quarter for that end (a nine-month figure). Null for a balance.
    */
   months: number | null
+  /** A figure read from the filing's words (series basis text): the sentence that states it. */
+  quote?: string
+  /** Text figures: 'approximately' or 'primarily' when the filing qualifies it. */
+  qualifier?: string | null
 }
 
 /** A value a later filing replaced with a different one. */
@@ -55,13 +60,15 @@ export interface ExposureSeries {
   /** Series drawn on one chart share a chart id. */
   chart: string
   label: string
-  /** The XBRL concept and the context's dimensions ('' for none) the series reads. */
+  /** The XBRL concept and the context's dimensions ('' for none) the series reads; text:<metric> for a text series. */
   concept: string
   dims: string
   /** flow: per quarter. balance: at each period end. */
   kind: 'flow' | 'balance'
   unit: string
   note: string | null
+  /** Set on a series read from the filings' words where the filer tags nothing. */
+  basis?: 'text'
   /** Oldest first. */
   points: ExposurePoint[]
   superseded: ExposureSuperseded[]
