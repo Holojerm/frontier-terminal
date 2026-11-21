@@ -172,6 +172,7 @@ export interface SourceLicensing {
     | 'identifiers'
     | 'power_sites'
     | 'grid_load'
+    | 'prints'
   rights: SourceRights | null
   /** The licence the source states, verbatim, or null. */
   license: string | null

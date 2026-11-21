@@ -211,6 +211,7 @@ describe('an empty store renders an honest empty state, never a throw', () => {
       'disclosure_timelines',
       'latency_probes',
       'probe_days',
+      'hardware_prints',
       'filers',
       'revenue_facts',
       'prospectus_statements',

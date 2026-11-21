@@ -121,6 +121,10 @@ describe('readSourceRegistry', () => {
       'gpu-stock-status',
       'power-site-press',
       'power-site-unread',
+      'mops-monthly-revenue-history',
+      'taiwan-ir-revenue-pages',
+      'census-hs-847150',
+      'kcs-chip-exports',
     ])
   })
 

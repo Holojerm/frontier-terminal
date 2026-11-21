@@ -9,6 +9,7 @@
 // recipes and their derived series (theses/download-series.ts) and the probe
 // rollups (pipeline/probes/, probe_days).
 
+import { PRINT_ENTITIES } from '../../shared/utils/prints'
 import type { LabId } from '../../shared/utils/terminal-types'
 import type {
   SignalEntityKind,
@@ -40,6 +41,8 @@ export type SignalSource =
   | { kind: 'grid_load'; ba: string; period: 'month' | 'week' }
   /** ERCOT's large-load figures (ercot_large_load_facts), each month as the first report that states it put it. */
   | { kind: 'ercot_large_loads'; metric: 'observed_peak_mw' | 'approved_to_energize_mw' }
+  /** A Taiwan company's monthly revenue (hardware_prints): the year-on-year change its first release stated. */
+  | { kind: 'prints'; series: 'tw_revenue'; entity: string }
 
 export interface SignalDef {
   /** Stable: results, exports and links key on it. Never reuse a retired id. */
@@ -283,6 +286,31 @@ const ercot = (
   history_from: '2025-04-01',
 })
 
+/**
+ * A Taiwan company's monthly revenue as first released, read as the
+ * year-on-year change the release states. Revenue is due by the 10th of the
+ * next month (Securities and Exchange Act art. 36), and TSMC files its 6-K the
+ * same day, so a month is public 10 days after it ends.
+ */
+const twRevenue = (entity: (typeof PRINT_ENTITIES)[number]): SignalDef => ({
+  id: `tw-revenue-${entity.id}`,
+  label: `${entity.name} monthly revenue, year on year`,
+  // TSMC has a US listing we price; the rest are listed only in Taipei.
+  entity: entity.us_ticker
+    ? { kind: 'listed', id: entity.us_ticker }
+    : { kind: 'supplier', id: entity.id },
+  tickers: entity.leads,
+  source: { kind: 'prints', series: 'tw_revenue', entity: entity.id },
+  transform: 'change',
+  frequency: 'monthly',
+  test: 'lead_lag',
+  aggregate: 'last',
+  available_after_days: 10,
+  // TSMC's 6-Ks reach back to 2015 and Accton's page to 2023-07; the others start at our first read.
+  history_from:
+    entity.id === 'tsmc' ? '2015-01-01' : entity.id === 'accton' ? '2023-07-01' : '2026-10-01',
+})
+
 export const SIGNALS: readonly SignalDef[] = [
   npm('npm-anthropic-sdk', 'anthropic', '@anthropic-ai/sdk npm downloads'),
   npm('npm-claude-code', 'anthropic', 'Claude Code npm downloads'),
@@ -379,6 +407,7 @@ export const SIGNALS: readonly SignalDef[] = [
   gridLoad('AZPS', 'APS (Arizona)', 'week'),
   ercot('observed_peak_mw', 'ERCOT large load observed, sum of monthly peaks'),
   ercot('approved_to_energize_mw', 'ERCOT large load approved to energize'),
+  ...PRINT_ENTITIES.filter((e) => e.series === 'tw_revenue').map(twRevenue),
 ]
 
 /** Where a series is read from, in the names /data and the exports use. */
@@ -406,5 +435,7 @@ export function sourceLabel(source: SignalSource): string {
       return `grid_load_days: ${source.ba}, ${source.period === 'month' ? 'monthly' : 'weekly'} against a year before`
     case 'ercot_large_loads':
       return `ercot_large_load_facts: ${source.metric}, first stated`
+    case 'prints':
+      return `hardware_prints: ${source.series} ${source.entity}, stated year-on-year change, first release`
   }
 }

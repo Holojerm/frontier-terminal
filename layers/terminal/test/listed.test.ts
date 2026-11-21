@@ -118,7 +118,14 @@ describe('buildListed', () => {
       'HOST',
       'UTIL',
     ])
-    expect(listed.counts).toEqual({ companies: 6, graph: 3, suppliers: 2, power: 2, lab_tied: 4 })
+    expect(listed.counts).toEqual({
+      companies: 6,
+      graph: 3,
+      suppliers: 2,
+      power: 2,
+      prints: 0,
+      lab_tied: 4,
+    })
   })
 
   it('reads a filer’s lines from the graph and counts their figures', () => {
@@ -197,6 +204,7 @@ describe('listedForLab', () => {
       graph: 0,
       suppliers: 0,
       power: 0,
+      prints: 0,
       lab_tied: 0,
     })
   })

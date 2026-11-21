@@ -966,3 +966,19 @@ The exact sentences are in `sources.yaml` under `grid_load_sources`.
 - **The PDF reader is ours.** No PDF library is installed, so `layers/terminal/server/power/pdf-text.ts` reads the text operators of Flate streams through each font's ToUnicode map. Spacing is collapsed, so a quote reads as the PDF's text, not its layout ("non -simultaneous").
 
 **Verdict: include `eia930-api`, `eia930-balance`, `eia861-utility-ba` and `ercot-large-loads` under `grid_load_sources`.** The owner approved the alpha program on 2026-11-20.
+
+## Addendum, 2026-11-21: hardware prints (Taiwan revenue, Korea chip exports)
+
+Taiwan's listed companies must publish the month before's revenue by the 10th (Securities and Exchange Act art. 36(1)(iii)). They land weeks before NVIDIA, Super Micro, Dell, HPE and AMD report the same quarter, so what we keep is each figure as it stood when first printed.
+
+| Source | What we found | Verdict |
+| --- | --- | --- |
+| TWSE OpenAPI `t187ap05_L` | 200, JSON, every listed company's newest month in NT$ thousand, with the month before and the year before restated. data.gov.tw dataset 18420 under OGDL v1, which allows commercial use and sublicensing and states it is compatible with CC BY 4.0. No robots.txt | **Include** (`twse-monthly-revenue`, upstream), hourly |
+| TSMC 6-K revenue reports | Every month since 2015 in EDGAR's recent list, one table in NT$ million, layout unchanged since 2015 except a decrease in parentheses. EDGAR's acceptance time dates each one | **Include** (`tsmc-revenue-6k`, ours), backfilled oldest first |
+| Accton's own page | 40 months in one server-rendered table, robots.txt allows it, no terms on reuse | **Include** (`accton-monthly-revenue`, restricted) |
+| MOPS history (mopsov.twse.com.tw) | Every company back to 2013 as HTML and UTF-8 CSV, but `User-Agent: * / Disallow: /`, and TWSE's terms bar crawlers and reuse of anything outside the open-data platform | **Cut**: needs TWSE's written consent |
+| Company IR pages | Wiwynn's terms forbid reproduction; Delta loads its figures from a disallowed /api/; Quanta, Wistron and Gigabyte block every non-browser request; Hon Hai's PDFs are allowed but need a PDF reader in the Worker | **Cut** for now |
+| Census HS 8471.50 | Public domain, but every keyless request now redirects to missing_key.html | **Cut** until a key is set |
+| Korea Customs Service releases | 10-day, 20-day and monthly figures, fetchable without a key through KCS's own document viewer. KOGL Type 1 since about October 2026; earlier releases carry no mark | **Deferred** to the next PR; history before the mark free-site only |
+
+Ties from each Taiwan company to whom it builds for or supplies are quotes from NVIDIA's and AMD's 10-Ks, NVIDIA, OpenAI, Samsung, Micron and Meta newsrooms, and Wiwynn's annual report (`layers/terminal/server/curated/print-ties.json`). No hyperscaler tie for Quanta, Wiwynn, TSMC, Gigabyte or Delta came from a primary source, so none is listed.
