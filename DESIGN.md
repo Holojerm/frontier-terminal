@@ -441,7 +441,7 @@ screen the way a terminal function key does. The data below it is the content.
 
 ### Terminal primitives
 
-Every page is composed from these, in `layers/terminal/app/components/Terminal/`. They own the classes; a page
+Every page is composed from these, in `layers/core/app/components/Terminal/`. They own the classes; a page
 passes data and copy. Their prop shapes live in `layers/core/app/types/terminal-ui.ts`, and the words for a
 feed with nothing to show live once in `layers/terminal/app/utils/feed-gap.ts`.
 

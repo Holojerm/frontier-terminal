@@ -10,7 +10,7 @@ Read this before writing or changing anything a visitor reads.
 Everything a visitor or a crawler reads: page text, ledes, panel titles and notes, empty
 states, alerts, `useSeo()` titles and descriptions, `publicPage` summaries, `/llms.txt`,
 export-table descriptions, the `cut:` reasons in `sources.yaml`, and the gap strings in
-`layers/terminal/server/utils/terminal-classes.ts`. `README.md` and `docs/` follow it too.
+`layers/pricing/server/utils/terminal-classes.ts`. `README.md` and `docs/` follow it too.
 
 Code comments aren't copy. They follow the comment rule in `AGENTS.md`.
 

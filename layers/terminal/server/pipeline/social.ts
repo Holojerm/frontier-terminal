@@ -28,7 +28,7 @@ import {
 } from '#layers/social/server/utils/social-text'
 import { absoluteUrl } from '#shared/utils/site'
 import { AXIS_OF } from '../utils/terminal-alerts'
-import { effectiveClassMap } from './class-map'
+import { effectiveClassMap } from '#layers/pricing/server/pipeline/class-map'
 import { MODEL_FLOOR_RULE } from './model-floor'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 

@@ -31,7 +31,12 @@ import {
 import { listedGroup, listedTieText, type ListedData } from '../../shared/utils/listed'
 import { summarizeLab, type LabInputs } from '../../shared/utils/terminal-lab-summary'
 import type { AlertSeverity } from '../../shared/utils/terminal-tiers'
-import { SAME_PRICE, moveText, priceCitation, priceMoves } from './price-display'
+import {
+  SAME_PRICE,
+  moveText,
+  priceCitation,
+  priceMoves,
+} from '#layers/pricing/app/utils/price-display'
 import type {
   GroundTruthData,
   GroundTruthDealTally,

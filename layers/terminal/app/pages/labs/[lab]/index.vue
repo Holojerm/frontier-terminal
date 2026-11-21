@@ -6,7 +6,8 @@
 // provenance. The lab is a route parameter; a name outside the tracked labs is a 404.
 
 import { COMPARE_PAIRS, comparePath, pairTitle } from '../../../../shared/utils/terminal-compare'
-import { isLab, summarizeLab, tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
+import { isLab } from '#layers/core/shared/utils/lab-names'
+import { summarizeLab, tearSheetPath } from '../../../../shared/utils/terminal-lab-summary'
 import { LAB_SITE } from '#layers/core/shared/utils/lab-names'
 import type { DataCentersData } from '#layers/compute/shared/utils/compute-views'
 import { count } from '#layers/core/shared/utils/terminal-format'
@@ -27,12 +28,8 @@ import type {
   RevenueData,
   SpendData,
 } from '../../../../shared/utils/terminal-types'
-import type {
-  AdoptionData,
-  LimitsData,
-  ParentsData,
-  PayData,
-} from '../../../../shared/utils/recipe-views'
+import type { LimitsData } from '#layers/pricing/shared/utils/limits'
+import type { AdoptionData, ParentsData, PayData } from '../../../../shared/utils/recipe-views'
 // Inert for a dynamic route: the collecting hook skips paths with a
 // parameter, and sitemap.xml / llms.txt append the lab pages from
 // layers/terminal/shared/utils/terminal-lab-summary.ts. Declared anyway — the seo gate's

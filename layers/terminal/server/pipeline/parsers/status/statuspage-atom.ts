@@ -2,8 +2,8 @@ import {
   StatuspageIncidentsOutput,
   type IncidentRow,
   type Provenance,
-} from '#layers/core/server/pipeline/contracts'
-import { decodeEntities, textOf } from '#layers/core/server/pipeline/parsers/html-text'
+} from '../../../../../core/server/pipeline/contracts'
+import { decodeEntities, textOf } from '../../../../../core/server/pipeline/parsers/html-text'
 
 // Statuspage's Atom incident history (/history.atom). Read where robots.txt
 // disallows the JSON API under /api/ (status.claude.com). Deterministic: no

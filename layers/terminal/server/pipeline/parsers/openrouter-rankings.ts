@@ -2,8 +2,8 @@ import {
   registerParser,
   OpenRouterRankingsOutput,
   type Provenance,
-} from '#layers/core/server/pipeline/contracts'
-import { fixtureProvenance } from '#layers/core/server/pipeline/parsers/fixture-provenance'
+} from '../../../../core/server/pipeline/contracts'
+import { fixtureProvenance } from '../../../../core/server/pipeline/parsers/fixture-provenance'
 import { providerOfOpenRouterId } from './openrouter'
 
 // OpenRouter daily usage rankings — the demand-share axis. For labs that are

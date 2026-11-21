@@ -23,7 +23,7 @@ import { terminalCacheKey, terminalStamps } from '#layers/core/server/utils/term
 import { queryAlerts } from '../server/utils/terminal-alerts'
 import { queryContext, type QueryContext } from '#layers/core/server/utils/terminal-db'
 import { queryHiring, queryHiringHistory } from '../server/utils/terminal-hiring'
-import { queryPriceHistory, queryPrices } from '../server/utils/terminal-prices'
+import { queryPriceHistory, queryPrices } from '../../pricing/server/utils/terminal-prices'
 import { collect, csvChunks, jsonChunks } from '#layers/core/server/utils/terminal-export-format'
 import { exportTable } from '#server/registries/export-tables'
 import { queryRevenue } from '../server/utils/terminal-revenue'
@@ -139,7 +139,7 @@ describe('as_of', () => {
 // Every API route as source text, keyed by its URL path ('/api/prices/<key>').
 const ROUTES = Object.fromEntries(
   Object.entries(
-    import.meta.glob('/layers/terminal/server/api/**/*.get.ts', {
+    import.meta.glob('/layers/*/server/api/**/*.get.ts', {
       query: '?raw',
       import: 'default',
       eager: true,

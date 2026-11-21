@@ -72,9 +72,12 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 /
 ├── layers/core/            # Fork-owned layer every domain builds on: the ingest store and its contracts,
 │                           # query plumbing (terminal-db, -asof, -cache, -handler), the export and MCP
-│                           # frameworks, API keys, events producer, heartbeats. Names no domain.
+│                           # frameworks, API keys, events producer, heartbeats, and the UI kit every
+│                           # page is built from (app/components/Terminal/, reader prefs). Names no domain.
 ├── layers/compute/         # Domain layer: GPU prices, data centers, utilization reads, power sites and
 │                           # grid load, hardware prints, /compute and /power. Uses core only.
+├── layers/pricing/         # Domain layer: price-list parsers and lanes, the class map and its drift
+│                           # check, archived prices and rate limits, /api/limits, /prices. Uses core only.
 ├── layers/terminal/        # Fork-owned layer: every domain not yet split out (parsers, lanes, theses,
 │                           # queries, pages, components, tables, tests). Same folder shapes as the app
 │                           # (app/, server/, shared/, test/); auto-registered, not in layers.lock.json.
@@ -84,7 +87,7 @@ restart. The rest are in [`.claude/docs/gotchas.md`](.claude/docs/gotchas.md).
 │   ├── app.config.ts       # GENERATED from DESIGN.md — NuxtUI colors + component defaults
 │   ├── components/         # Reusable UI components
 │   │   ├── Brand/          # Logo.vue — the mark; every icon is generated from it
-│   │   └── [Feature]/      # Group by feature — Terminal/ and Thesis/ live in layers/terminal/app/
+│   │   └── [Feature]/      # Group by feature — Terminal/ and Thesis/ live in the layers' app/
 │   ├── composables/        # Shared stateful logic (useSeo, …)
 │   ├── layouts/            # Page layouts
 │   ├── pages/              # File-based routing
@@ -132,7 +135,9 @@ each in `server/registries/` and `server/db/schema.ts`, and a row in `domains.co
 `public` list names what the layers above it may import. Inside a layer, imports are relative; across
 layers they are `#layers/<name>/…`, except in `shared/` and schema files, which use relative paths
 because bun scripts and drizzle-kit load them outside Nuxt. What needs another domain stays in
-`terminal` until that domain has its layer (the utilization query, `/hardware`).
+`terminal` until that domain has its layer (the utilization query, `/hardware`, the release
+timeline). A value every parse of a tick reads from a domain (the class map) is a tick input in
+`server/registries/lane-context.ts`, not a parameter of the refresh.
 
 ---
 

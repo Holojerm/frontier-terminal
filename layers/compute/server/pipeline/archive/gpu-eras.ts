@@ -11,7 +11,7 @@
 // (docs/source-audit.md › "Addendum, 2026-11-20: Internet Archive (GPU rental prices)"). A stretch
 // with no readable copy is stated in GPU_ARCHIVE_GAPS.
 
-import type { CompanyId } from '#layers/core/shared/utils/companies'
+import type { CompanyId } from '../../../../core/shared/utils/companies'
 import { oracleRows } from '../../recipes/gpu-apis'
 import {
   coreweaveArchivedRows,
@@ -34,7 +34,7 @@ import {
   nebiusRows,
   verdaRows,
 } from '../../recipes/gpu-pages'
-import { ARCHIVE_FROM } from '#layers/core/server/utils/archive-floor'
+import { ARCHIVE_FROM } from '../../../../core/server/utils/archive-floor'
 
 export type GpuArchiveProvider = Extract<
   CompanyId,

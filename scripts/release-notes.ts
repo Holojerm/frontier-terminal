@@ -1,6 +1,6 @@
 #!/usr/bin/env bun
 // The labs' release notes, reduced to what dates an archived price event
-// (layers/terminal/server/pipeline/archive/release-notes.ts): each dated
+// (layers/pricing/server/pipeline/archive/release-notes.ts): each dated
 // note before ARCHIVE_UNTIL that names a model, and the first day each lab's
 // notes cover. Reads the committed pages under fixtures/release-notes/ and
 // writes release-notes.json beside the reader, which the signal loader
@@ -13,15 +13,15 @@ import { writeFileSync } from 'node:fs'
 import { join } from 'node:path'
 
 import { userAgentFor } from '../layers/core/server/pipeline/fetch'
-import { ARCHIVE_UNTIL } from '../layers/terminal/server/pipeline/archive/eras'
+import { ARCHIVE_UNTIL } from '../layers/pricing/server/pipeline/archive/eras'
 import {
   RELEASE_NOTE_FIXTURES,
   releaseNotesFile,
-} from '../layers/terminal/server/pipeline/archive/release-notes-file'
-import { RELEASE_NOTE_SOURCES } from '../layers/terminal/server/pipeline/archive/release-notes'
+} from '../layers/pricing/server/pipeline/archive/release-notes-file'
+import { RELEASE_NOTE_SOURCES } from '../layers/pricing/server/pipeline/archive/release-notes'
 
 const ROOT = join(import.meta.dir, '..')
-const OUT = join(ROOT, 'layers/terminal/server/pipeline/archive/release-notes.json')
+const OUT = join(ROOT, 'layers/pricing/server/pipeline/archive/release-notes.json')
 
 if (process.argv.includes('--fetch')) {
   for (const source of RELEASE_NOTE_SOURCES) {

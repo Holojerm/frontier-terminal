@@ -23,7 +23,7 @@ export const providerEnum = z.enum([
 // 'revenue' is one XBRL fact (a filer, a tag, a period, a filing) — an event
 // when a new filing adds or restates one, so the judge does see it.
 // 'recommendation' is the drift check on the editorial class map
-// (layers/terminal/server/pipeline/recommendations.ts): one row per mapped (provider, class),
+// (layers/pricing/server/pipeline/recommendations.ts): one row per mapped (provider, class),
 // whose payload says whether the vendor sentence the mapping rests on is
 // still on the vendor's page. A flip to `present: false` is an event.
 export const entityTypeEnum = z.enum([

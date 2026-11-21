@@ -4,12 +4,12 @@
 //
 // SSR note: a relative label needs a clock, and the server's clock is not
 // the reader's. Components pass `now = null` on the server and set it after
-// mount (layers/terminal/app/composables/useNow.ts), so first paint is the absolute form and
+// mount (layers/core/app/composables/useNow.ts), so first paint is the absolute form and
 // a hydration mismatch on a provenance stamp cannot happen.
 //
 // The reader's zone is the same story. Page HTML is cached and shared, so the
 // server always reads in UTC_STYLE, and the reader's StampStyle
-// (layers/terminal/app/composables/useReaderPrefs.ts) applies after hydration.
+// (layers/core/app/composables/useReaderPrefs.ts) applies after hydration.
 // Only a reading with a time of day moves with the zone. A date printed alone
 // (a filing period, a UTC-day chart bucket, a first-seen day) is a UTC date
 // and prints as stored, so a day never shifts under a reader near midnight.
@@ -505,4 +505,20 @@ export function periodLabel(days: number): string {
   if (days >= 170) return 'half'
   if (days >= 80) return 'quarter'
   return `${days} days`
+}
+
+/** 'Sep 22, 2026' in UTC. A quoted sentence needs the year a stamp leaves out. */
+export function longDate(iso: string): string {
+  const d = new Date(iso)
+  if (Number.isNaN(d.getTime())) return iso
+  return `${MONTHS[d.getUTCMonth()]} ${d.getUTCDate()}, ${d.getUTCFullYear()}`
+}
+
+/** '$4.00 per million input tokens and $20.00 per million output tokens'; null when neither is set. */
+export function pricePhrase(input: number | null, output: number | null): string | null {
+  const parts = [
+    input === null ? null : `${money(input)} per million input tokens`,
+    output === null ? null : `${money(output)} per million output tokens`,
+  ].filter((p): p is string => p !== null)
+  return parts.length ? parts.join(' and ') : null
 }

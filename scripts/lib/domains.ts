@@ -235,3 +235,84 @@ export function fileFindings(
   }
   return findings
 }
+
+// ── Auto-registered components ──────────────────────────────────────────────
+
+const pascal = (segment: string) =>
+  segment
+    .split(/[-_.]/)
+    .filter(Boolean)
+    .map((part) => part[0]!.toUpperCase() + part.slice(1))
+    .join('')
+
+/**
+ * The name Nuxt registers a component under, from its path below a
+ * `components/` directory: its folders as a prefix, then its file name, with a
+ * file name that already starts with the prefix kept whole and `index` dropped.
+ */
+export function componentName(path: string): string {
+  const segments = path
+    .replace(/\.vue$/, '')
+    .split('/')
+    .map(pascal)
+  const file = segments.pop()!
+  const prefix = segments.join('')
+  if (file === 'Index') return prefix
+  return file.startsWith(prefix) ? file : prefix + file
+}
+
+/**
+ * Every component name a `.vue` file's template tags name, PascalCase, with any
+ * `Lazy` prefix dropped. Only the template is read, so a type argument in the
+ * script (`ref<Foo>`) is never taken for a tag.
+ */
+export function componentRefs(source: string): { name: string; line: number }[] {
+  const out: { name: string; line: number }[] = []
+  const start = source.indexOf('<template')
+  if (start === -1) return out
+  const end = source.lastIndexOf('</template>')
+  const template = source.slice(0, end === -1 ? source.length : end)
+  const tags = /<([A-Za-z][\w-]*)/g
+  tags.lastIndex = start
+  for (const match of template.matchAll(tags)) {
+    const tag = match[1]!
+    const name = /^[A-Z]/.test(tag) ? tag : tag.includes('-') ? pascal(tag) : null
+    if (!name) continue
+    out.push({
+      name: name.replace(/^Lazy(?=[A-Z])/, ''),
+      line: source.slice(0, match.index).split('\n').length,
+    })
+  }
+  return out
+}
+
+/**
+ * Components a `.vue` file names that live in a layer it may not use. `defined`
+ * maps each auto-registered component name to its file. Only `uses` is judged:
+ * a layer's components are open to every layer above it, as Nuxt registers them
+ * app-wide with no import to put on a public list.
+ */
+export function componentFindings(
+  table: LayerTable,
+  file: string,
+  source: string,
+  defined: ReadonlyMap<string, string>,
+): Finding[] {
+  const a = layerPath(file)
+  if (!a || isTest(a.rest) || !table[a.layer]) return []
+  const findings: Finding[] = []
+  const seen = new Set<string>()
+  for (const { name, line } of componentRefs(source)) {
+    const target = defined.get(name)
+    const b = target ? layerPath(target) : null
+    if (!target || !b || b.layer === a.layer || !table[b.layer] || seen.has(name)) continue
+    if (reachable(table, a.layer).has(b.layer)) continue
+    seen.add(name)
+    findings.push({
+      file,
+      line,
+      message: `uses <${name}> (from ${target}): ${a.layer} may not use ${b.layer} (domain table: ${a.layer} uses ${table[a.layer]!.uses.join(', ') || 'nothing'})`,
+    })
+  }
+  return findings
+}

@@ -25,7 +25,7 @@ import {
 import { PAY_RECIPES } from '#layers/terminal/server/theses/recipes/pay-bands'
 import { PYPI_LAB_RECIPES } from '#layers/terminal/server/theses/recipes/pypi-downloads'
 import { RAMP_AI_INDEX } from '#layers/terminal/server/theses/recipes/ramp-ai-index'
-import { RATE_LIMIT_RECIPES } from '#layers/terminal/server/theses/recipes/rate-limits'
+import { RATE_LIMIT_RECIPES } from '#layers/pricing/server/recipes/rate-limits'
 import {
   SEC_REVENUE_AKAM,
   SEC_REVENUE_CRWV,

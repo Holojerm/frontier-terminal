@@ -10,7 +10,7 @@
 
 import type { ListedData } from '#layers/terminal/shared/utils/listed'
 import type { UtilizationData } from '#layers/compute/shared/utils/compute-views'
-import { LABS } from '#layers/terminal/shared/utils/terminal-lab-summary'
+import { LABS } from '#layers/core/shared/utils/lab-names'
 import type {
   DisclosuresData,
   GpuPricesData,

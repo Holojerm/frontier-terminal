@@ -7,7 +7,7 @@
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
-import { effectiveClassMap } from '../class-map'
+import { effectiveClassMap } from '#layers/pricing/server/pipeline/class-map'
 import { OPENROUTER_KEY_UNSET } from '#layers/core/server/pipeline/fetch'
 import type { RawReader, RawStore } from '#layers/core/server/pipeline/raw'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'

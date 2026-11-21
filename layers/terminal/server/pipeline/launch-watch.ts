@@ -2,8 +2,8 @@ import { eq } from 'drizzle-orm'
 
 import * as tables from '#server/db/schema'
 import { recordOpsEvent } from '#server/utils/ops'
-import { basisChecks } from '../utils/terminal-prices'
-import { effectiveClassMap } from './class-map'
+import { basisChecks } from '#layers/pricing/server/utils/terminal-prices'
+import { effectiveClassMap } from '#layers/pricing/server/pipeline/class-map'
 import type { LockStore } from '#layers/core/server/pipeline/lock'
 import type { PipelineDb } from '#layers/core/server/pipeline/store'
 
@@ -88,7 +88,7 @@ export async function checkLaunchCoverage(
       detail:
         `${cell.provider} ${cell.class} still shows ${cell.model_slug}; its vendor sentence ` +
         `has been gone since ${cell.since}. The judge re-maps a cell under review from the ` +
-        'vendor page; if it has not, re-transcribe it in layers/terminal/server/utils/terminal-classes.ts.',
+        'vendor page; if it has not, re-transcribe it in layers/pricing/server/utils/terminal-classes.ts.',
     })
     await marker.put(key, now.toISOString(), STALE_CELL_RENOTIFY_SECONDS)
   }

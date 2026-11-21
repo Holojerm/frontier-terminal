@@ -12,16 +12,19 @@ import {
 import { applyClaimVerdicts, type VerdictReport } from '../../theses/verdicts'
 import { applyFigureReadings, type FigureReport } from '../reported/review'
 import { applyFilingReadings, type FilingReport } from './filing-review'
-import { applyPriceReadings, type PriceReport } from './price-review'
+import {
+  applyPriceReadings,
+  type PriceReport,
+} from '#layers/pricing/server/pipeline/judge/price-review'
 import { applySupplierReadings, type SupplierReport } from '../../suppliers/review'
 import { applyGuidanceReadings, type GuidanceReviewReport } from '../../calls/review'
 import { applyPowerSiteReadings, type PowerSiteReport } from '#layers/compute/server/power/review'
 import { applyTrackRecordVerdicts, type TrackRecordVerdictReport } from '../track-record/review'
 import { parseDepartmentClusters, type DepartmentCluster } from '../../utils/terminal-clusters'
-import { effectiveClassMap } from '../class-map'
+import { effectiveClassMap } from '#layers/pricing/server/pipeline/class-map'
 import { clampHiringAlerts, type FloorClamp } from '../hiring-floor'
 import { clampRoutineAlerts } from './severity-gates'
-import { applyClassMappings } from './class-map'
+import { applyClassMappings } from '#layers/pricing/server/pipeline/judge/class-map'
 import type { RawReader } from '#layers/core/server/pipeline/raw'
 import { emitEvent } from '#layers/core/server/utils/events'
 import { buildAlertRows } from '#layers/core/server/pipeline/judge/alerts'
@@ -78,7 +81,7 @@ export interface JudgeRunReport {
   clamped: FloorClamp[]
   /** Whole-body rejection at the schema gate or the cursor check — nothing reached grounding. */
   gate_rejection: { reason: string; detail: string } | null
-  /** Re-mappings of matrix cells under review (layers/terminal/server/pipeline/judge/class-map.ts). */
+  /** Re-mappings of matrix cells under review (layers/pricing/server/pipeline/judge/class-map.ts). */
   class_map: {
     accepted: number
     rejected: { reason: string; detail: string; cell: string; model_slug: string }[]

@@ -34,7 +34,7 @@
     "webhooks:list": "bun run scripts/webhooks.ts list",
     "webhooks:remove": "bun run scripts/webhooks.ts remove",
     "webhooks:test": "bun run scripts/webhooks.ts test",
-    "backfill:rankings": "bun run scripts/rankings-backfill.ts",
+    "backfill:rankings": "bun --tsconfig-override=.nuxt/tsconfig.server.json run scripts/rankings-backfill.ts",
     "backfill:wayback": "bun --tsconfig-override=.nuxt/tsconfig.server.json run scripts/wayback-backfill.ts",
     "release-notes": "bun --tsconfig-override=.nuxt/tsconfig.server.json run scripts/release-notes.ts",
     "rename": "bun run scripts/rename.ts",

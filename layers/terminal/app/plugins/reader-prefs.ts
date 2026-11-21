@@ -5,7 +5,7 @@
 // renders a different class and hydration has nothing to disagree about.
 // CSP already allows inline scripts for the color-mode guard (nuxt.config.ts).
 
-import { PREFS_KEY } from '../../shared/utils/reader-prefs'
+import { PREFS_KEY } from '#layers/core/shared/utils/reader-prefs'
 
 export default defineNuxtPlugin(() => {
   if (!import.meta.server) return

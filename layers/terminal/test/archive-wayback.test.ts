@@ -11,11 +11,18 @@ import {
   waybackClient,
   waybackStamp,
 } from '../server/pipeline/archive/wayback'
-import { ARCHIVE_ERAS, ARCHIVE_NOT_COVERED, ARCHIVE_UNTIL } from '../server/pipeline/archive/eras'
-import { LABS } from '../shared/utils/terminal-lab-summary'
+import {
+  ARCHIVE_ERAS,
+  ARCHIVE_NOT_COVERED,
+  ARCHIVE_UNTIL,
+} from '../../pricing/server/pipeline/archive/eras'
+import { LABS } from '../../core/shared/utils/lab-names'
 import { archiveRows, captureId } from '../server/pipeline/archive/rows'
-import { usdPerMillion } from '../server/pipeline/parsers/pricing/html-table'
-import { archivedPriceHistory, type ArchivedPrice } from '../server/utils/terminal-history'
+import { usdPerMillion } from '../../pricing/server/pipeline/parsers/pricing/html-table'
+import {
+  archivedPriceHistory,
+  type ArchivedPrice,
+} from '../../pricing/server/utils/terminal-price-history'
 import { readArchiveSources } from '#layers/core/server/utils/terminal-sources'
 import sourcesYaml from '~~/sources.yaml?raw'
 

@@ -1,7 +1,7 @@
 import type { ChangeRow } from '#layers/core/server/pipeline/contracts'
 import type { FloorClamp } from '../hiring-floor'
 import { isRoutine8K, rootForm } from '../parsers/sec/forms'
-import { requotedKey } from './class-map'
+import { requotedKey } from '#layers/pricing/server/pipeline/judge/class-map'
 
 // Worker-side severity rules for the judge's filing and pricing alerts, the
 // counterpart of the hiring floor (hiring-floor.ts). The prompt states the same

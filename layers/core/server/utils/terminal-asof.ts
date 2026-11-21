@@ -161,6 +161,9 @@ export async function judgeCutoffAt(db: PipelineDb, at: string): Promise<string 
 
 export const JUDGE_RULE = 'agent-judge'
 
+/** The model-floor rule's alerts (layers/terminal/server/pipeline/model-floor.ts), which the class-map judge also reads. */
+export const MODEL_FLOOR_RULE = 'model-floor' as const
+
 /**
  * Alerts the store held at `at`. Deterministic rules write their alert in the
  * tick that detected the change, stamped with that detection; a judge alert

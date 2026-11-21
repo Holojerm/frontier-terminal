@@ -14,8 +14,8 @@ import {
 } from '../../server/pipeline/derived'
 import type { FetchOutcome, SourceFetcher } from '#layers/core/server/pipeline/fetch'
 import { derivedKeyOf, laneFor } from '#server/registries/lanes'
-import { parseGoogleModelPage } from '../../server/pipeline/parsers/pricing/google-model-page'
-import { parseOpenAiModelPage } from '../../server/pipeline/parsers/pricing/openai-model-page'
+import { parseGoogleModelPage } from '../../../pricing/server/pipeline/parsers/pricing/google-model-page'
+import { parseOpenAiModelPage } from '../../../pricing/server/pipeline/parsers/pricing/openai-model-page'
 import {
   filerNameOf,
   parsePendingFilersBlock,
@@ -27,7 +27,7 @@ import { CAREERS_SOURCES, sourceIdsForScope } from '../../server/pipeline/scopes
 import { includeSources } from '#layers/core/server/pipeline/sources'
 import { terminalStamps } from '#layers/core/server/utils/terminal-cache'
 import { queryContext, queryCoverage } from '#layers/core/server/utils/terminal-db'
-import { queryPrices } from '../../server/utils/terminal-prices'
+import { queryPrices } from '../../../pricing/server/utils/terminal-prices'
 import { queryRevenue } from '../../server/utils/terminal-revenue'
 import { labelOf } from '#layers/core/server/utils/terminal-sources'
 import { fixtureText, manifest } from '#layers/core/test/pipeline/fixtures'

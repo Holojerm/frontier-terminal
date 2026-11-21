@@ -5,7 +5,7 @@ import suppliers from '../server/curated/suppliers.json?raw'
 import { DOWNLOAD_SERIES } from '../server/theses/download-series'
 import { BENCHMARKS, MARKET_SYMBOLS } from '../server/signals/market'
 import { LAB_TICKERS, SIGNALS, sourceLabel } from '../server/signals/registry'
-import { LABS } from '../shared/utils/terminal-lab-summary'
+import { LABS } from '../../core/shared/utils/lab-names'
 
 const symbols = new Set<string>(MARKET_SYMBOLS)
 const tickersIn = (json: string) => [...json.matchAll(/"ticker":\s*"([A-Z.]+)"/g)].map((m) => m[1]!)

@@ -22,7 +22,7 @@
 //
 // ── What makes the HTML safe to share between readers ──────────────────────
 // There are no accounts, no cookies and no personalisation, and colour mode is
-// resolved on the client — `layers/terminal/app/composables/useNow.ts` deliberately stays null
+// resolved on the client — `layers/core/app/composables/useNow.ts` deliberately stays null
 // through SSR so the server emits absolute timestamps rather than "3m ago".
 // The render is therefore a pure function of (path, poll stamp). The one
 // exception is the footer's `new Date().getFullYear()`, which is why the year

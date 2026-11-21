@@ -2,7 +2,8 @@
 
 import { z } from 'zod'
 import { recipeRunsStamp } from '#layers/core/server/utils/terminal-db'
-import { queryLimits, VIEW_RECIPES } from '../utils/terminal-recipe-views'
+import { queryLimits } from '#layers/pricing/server/utils/terminal-limits'
+import { VIEW_RECIPES } from '../utils/terminal-recipe-views'
 import {
   INCIDENT_HISTORY_DAYS,
   INCIDENT_WINDOW_DAYS,
